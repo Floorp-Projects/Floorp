@@ -204,7 +204,6 @@ static FrameCtorDebugFlags gFlags[] = {
 #endif
 
 #include "nsMenuFrame.h"
-#include "nsPopupSetFrame.h"
 #include "nsTreeColFrame.h"
 
 //------------------------------------------------------------------
@@ -220,8 +219,6 @@ nsIFrame* NS_NewTextBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 nsIFrame* NS_NewSplitterFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame* NS_NewMenuPopupFrame(PresShell* aPresShell, ComputedStyle* aStyle);
-
-nsIFrame* NS_NewPopupSetFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame* NS_NewMenuFrame(PresShell* aPresShell, ComputedStyle* aStyle,
                           uint32_t aFlags);
@@ -604,9 +601,6 @@ class MOZ_STACK_CLASS nsFrameConstructorState {
   PresShell* mPresShell;
   nsFrameManager* mFrameManager;
 
-  // Frames destined for the kPopupList.
-  AbsoluteFrameList mPopupList;
-
   // Containing block information for out-of-flow frames.
   AbsoluteFrameList mFixedList;
   AbsoluteFrameList mAbsoluteList;
@@ -637,11 +631,6 @@ class MOZ_STACK_CLASS nsFrameConstructorState {
   // This flag determines whether or not we want to wire the fixed-pos and
   // abs-pos lists together.
   bool mFixedPosIsAbsPos;
-
-  // A boolean to indicate whether we have a "pending" popupgroup.  That is, we
-  // have already created the FrameConstructionItem for the root popupgroup but
-  // we have not yet created the relevant frame.
-  bool mHavePendingPopupgroup;
 
   // If false (which is the default) then call SetPrimaryFrame() as needed
   // during frame construction.  If true, don't make any SetPrimaryFrame()
@@ -745,13 +734,11 @@ class MOZ_STACK_CLASS nsFrameConstructorState {
    *        positioned
    * @param aCanBeFloated pass false if the frame isn't allowed to be
    *        floated
-   * @param aIsOutOfFlowPopup pass true if the frame is an out-of-flow popup
-   *        (XUL-only)
    */
   void AddChild(nsIFrame* aNewFrame, nsFrameList& aFrameList,
                 nsIContent* aContent, nsContainerFrame* aParentFrame,
                 bool aCanBePositioned = true, bool aCanBeFloated = true,
-                bool aIsOutOfFlowPopup = false, bool aInsertAfter = false,
+                bool aInsertAfter = false,
                 nsIFrame* aInsertAfterFrame = nullptr);
 
   /**
@@ -789,7 +776,6 @@ class MOZ_STACK_CLASS nsFrameConstructorState {
   AbsoluteFrameList* GetOutOfFlowFrameList(nsIFrame* aNewFrame,
                                            bool aCanBePositioned,
                                            bool aCanBeFloated,
-                                           bool aIsOutOfFlowPopup,
                                            nsFrameState* aPlaceholderType);
 
   void ConstructBackdropFrameFor(nsIContent* aContent, nsIFrame* aFrame);
@@ -803,7 +789,6 @@ nsFrameConstructorState::nsFrameConstructorState(
     : mPresContext(aPresShell->GetPresContext()),
       mPresShell(aPresShell),
       mFrameManager(aPresShell->FrameConstructor()),
-      mPopupList(nullptr),
       mFixedList(aFixedContainingBlock),
       mAbsoluteList(aAbsoluteContainingBlock),
       mFloatedList(aFloatContainingBlock),
@@ -820,14 +805,8 @@ nsFrameConstructorState::nsFrameConstructorState(
       // block, use the abs-pos containing block's abs-pos list for fixed-pos
       // frames.
       mFixedPosIsAbsPos(aFixedContainingBlock == aAbsoluteContainingBlock),
-      mHavePendingPopupgroup(false),
       mCreatingExtraFrames(false),
       mHasRenderedLegend(false) {
-  nsIPopupContainer* popupContainer =
-      nsIPopupContainer::GetPopupContainer(aPresShell);
-  if (popupContainer) {
-    mPopupList.mContainingBlock = popupContainer->GetPopupSetFrame();
-  }
   MOZ_COUNT_CTOR(nsFrameConstructorState);
 }
 
@@ -854,7 +833,6 @@ void nsFrameConstructorState::ProcessFrameInsertionsForAllLists() {
   ProcessFrameInsertions(mFloatedList, nsIFrame::kFloatList);
   ProcessFrameInsertions(mAbsoluteList, nsIFrame::kAbsoluteList);
   ProcessFrameInsertions(mFixedList, nsIFrame::kFixedList);
-  ProcessFrameInsertions(mPopupList, nsIFrame::kPopupList);
 }
 
 void nsFrameConstructorState::PushAbsoluteContainingBlock(
@@ -1054,12 +1032,7 @@ void nsFrameConstructorState::ReparentFloats(nsContainerFrame* aNewParent) {
 
 AbsoluteFrameList* nsFrameConstructorState::GetOutOfFlowFrameList(
     nsIFrame* aNewFrame, bool aCanBePositioned, bool aCanBeFloated,
-    bool aIsOutOfFlowPopup, nsFrameState* aPlaceholderType) {
-  if (MOZ_UNLIKELY(aIsOutOfFlowPopup)) {
-    MOZ_ASSERT(mPopupList.mContainingBlock, "Must have a popup set frame!");
-    *aPlaceholderType = PLACEHOLDER_FOR_POPUP;
-    return &mPopupList;
-  }
+    nsFrameState* aPlaceholderType) {
   const nsStyleDisplay* disp = aNewFrame->StyleDisplay();
   if (aCanBeFloated && disp->IsFloatingStyle()) {
     *aPlaceholderType = PLACEHOLDER_FOR_FLOAT;
@@ -1111,7 +1084,7 @@ void nsFrameConstructorState::ConstructBackdropFrameFor(nsIContent* aContent,
 
   nsFrameState placeholderType;
   AbsoluteFrameList* frameList =
-      GetOutOfFlowFrameList(backdropFrame, true, true, false, &placeholderType);
+      GetOutOfFlowFrameList(backdropFrame, true, true, &placeholderType);
   MOZ_ASSERT(placeholderType & PLACEHOLDER_FOR_TOPLAYER);
 
   nsIFrame* placeholder = nsCSSFrameConstructor::CreatePlaceholderFrameFor(
@@ -1125,13 +1098,12 @@ void nsFrameConstructorState::ConstructBackdropFrameFor(nsIContent* aContent,
 void nsFrameConstructorState::AddChild(
     nsIFrame* aNewFrame, nsFrameList& aFrameList, nsIContent* aContent,
     nsContainerFrame* aParentFrame, bool aCanBePositioned, bool aCanBeFloated,
-    bool aIsOutOfFlowPopup, bool aInsertAfter, nsIFrame* aInsertAfterFrame) {
+    bool aInsertAfter, nsIFrame* aInsertAfterFrame) {
   MOZ_ASSERT(!aNewFrame->GetNextSibling(), "Shouldn't happen");
 
   nsFrameState placeholderType;
-  AbsoluteFrameList* outOfFlowFrameList =
-      GetOutOfFlowFrameList(aNewFrame, aCanBePositioned, aCanBeFloated,
-                            aIsOutOfFlowPopup, &placeholderType);
+  AbsoluteFrameList* outOfFlowFrameList = GetOutOfFlowFrameList(
+      aNewFrame, aCanBePositioned, aCanBeFloated, &placeholderType);
 
   // The comments in GetGeometricParent regarding root table frames
   // all apply here, unfortunately. Thus, we need to check whether
@@ -1188,8 +1160,7 @@ MOZ_NEVER_INLINE void nsFrameConstructorState::ProcessFrameInsertions(
        aChildListID == nsIFrame::kAbsoluteList) ||                           \
       ((&aFrameList == &mFixedList || &aFrameList == &mTopLayerFixedList) && \
        aChildListID == nsIFrame::kFixedList)
-  MOZ_ASSERT(NS_NONXUL_LIST_TEST || (&aFrameList == &mPopupList &&
-                                     aChildListID == nsIFrame::kPopupList),
+  MOZ_ASSERT(NS_NONXUL_LIST_TEST,
              "Unexpected aFrameList/aChildListID combination");
 
   if (aFrameList.IsEmpty()) {
@@ -2538,9 +2509,6 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
   mDocElementContainingBlock->AppendFrames(kPrincipalList,
                                            std::move(frameList));
 
-  MOZ_ASSERT(!state.mHavePendingPopupgroup,
-             "Should have proccessed pending popup group by now");
-
   return newFrame;
 }
 
@@ -3685,18 +3653,13 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
   } else {
     newFrame = (*data->mFunc.mCreationFunc)(mPresShell, computedStyle);
 
-    bool allowOutOfFlow = !(bits & FCDATA_DISALLOW_OUT_OF_FLOW);
-    bool isPopup = aItem.mIsPopup;
-    NS_ASSERTION(
-        !isPopup || (aState.mPopupList.mContainingBlock &&
-                     aState.mPopupList.mContainingBlock->IsPopupSetFrame()),
-        "Should have a containing block here!");
+    const bool allowOutOfFlow = !(bits & FCDATA_DISALLOW_OUT_OF_FLOW);
+    const bool isPopup = aItem.mIsPopup;
 
     nsContainerFrame* geometricParent =
-        isPopup ? aState.mPopupList.mContainingBlock
-                : (allowOutOfFlow
-                       ? aState.GetGeometricParent(*display, aParentFrame)
-                       : aParentFrame);
+        (isPopup || allowOutOfFlow)
+            ? aState.GetGeometricParent(*display, aParentFrame)
+            : aParentFrame;
 
     // In the non-scrollframe case, primaryFrame and newFrame are equal; in the
     // scrollframe case, newFrame is the scrolled frame while primaryFrame is
@@ -3777,21 +3740,10 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
     }
 
     aState.AddChild(primaryFrame, aFrameList, content, aParentFrame,
-                    allowOutOfFlow, allowOutOfFlow, isPopup);
+                    allowOutOfFlow, allowOutOfFlow);
 
     nsContainerFrame* newFrameAsContainer = do_QueryFrame(newFrame);
     if (newFrameAsContainer) {
-      // Icky XUL stuff, sadly
-
-      if (aItem.mIsRootPopupgroup) {
-        NS_ASSERTION(nsIPopupContainer::GetPopupContainer(mPresShell) &&
-                         nsIPopupContainer::GetPopupContainer(mPresShell)
-                                 ->GetPopupSetFrame() == newFrame,
-                     "Unexpected PopupSetFrame");
-        aState.mPopupList.mContainingBlock = newFrameAsContainer;
-        aState.mHavePendingPopupgroup = false;
-      }
-
       // Process the child content if requested
       nsFrameList childList;
       nsFrameConstructorSaveState absoluteSaveState;
@@ -4089,7 +4041,6 @@ nsCSSFrameConstructor::FindXULTagData(const Element& aElement,
 #else
       SIMPLE_XUL_CREATE(menubar, NS_NewMenuBarFrame),
 #endif /* XP_MACOSX */
-      SIMPLE_TAG_CHAIN(popupgroup, nsCSSFrameConstructor::FindPopupGroupData),
       SIMPLE_XUL_CREATE(iframe, NS_NewSubDocumentFrame),
       SIMPLE_XUL_CREATE(editor, NS_NewSubDocumentFrame),
       SIMPLE_XUL_CREATE(browser, NS_NewSubDocumentFrame),
@@ -4099,19 +4050,6 @@ nsCSSFrameConstructor::FindXULTagData(const Element& aElement,
       SIMPLE_XUL_CREATE(scrollbarbutton, NS_NewScrollbarButtonFrame)};
 
   return FindDataByTag(aElement, aStyle, sXULTagData, ArrayLength(sXULTagData));
-}
-
-/* static */
-const nsCSSFrameConstructor::FrameConstructionData*
-nsCSSFrameConstructor::FindPopupGroupData(const Element& aElement,
-                                          ComputedStyle&) {
-  if (!aElement.IsRootOfNativeAnonymousSubtree()) {
-    return nullptr;
-  }
-
-  static constexpr FrameConstructionData sPopupSetData =
-      SIMPLE_XUL_FCDATA(NS_NewPopupSetFrame);
-  return &sPopupSetData;
 }
 
 /* static */
@@ -4521,8 +4459,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
     }
     case StyleDisplayInside::MozPopup: {
       static constexpr FrameConstructionData data(
-          NS_NewMenuPopupFrame, FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_IS_POPUP |
-                                    FCDATA_SKIP_ABSPOS_PUSH);
+          NS_NewMenuPopupFrame, FCDATA_IS_POPUP | FCDATA_SKIP_ABSPOS_PUSH);
       return &data;
     }
     default:
@@ -5383,11 +5320,6 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
       (data->mBits & FCDATA_IS_POPUP) && (!aParentFrame ||  // Parent is inline
                                           !aParentFrame->IsMenuFrame());
 
-  if (isPopup && !aState.mPopupList.mContainingBlock &&
-      !aState.mHavePendingPopupgroup) {
-    return;
-  }
-
   const uint32_t bits = data->mBits;
 
   // Inside colgroups, suppress everything except columns.
@@ -5420,11 +5352,6 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
     // We need to keep this alive until the frame takes ownership.
     // This corresponds to the Release in ConstructFramesFromItem.
     item->mContent->AddRef();
-  }
-  item->mIsRootPopupgroup = aContent->IsRootOfNativeAnonymousSubtree() &&
-                            aContent->IsXULElement(nsGkAtoms::popupgroup);
-  if (item->mIsRootPopupgroup) {
-    aState.mHavePendingPopupgroup = true;
   }
   item->mIsPopup = isPopup;
 
@@ -5595,16 +5522,6 @@ void nsCSSFrameConstructor::ConstructFramesFromItem(
     // our generated content flag so we don't release or unbind it ourselves.
     item.mIsGeneratedContent = false;
   }
-}
-
-void nsCSSFrameConstructor::ReconstructDocElementHierarchy(
-    InsertionKind aInsertionKind) {
-  Element* rootElement = mDocument->GetRootElement();
-  if (!rootElement) {
-    /* nothing to do */
-    return;
-  }
-  RecreateFramesForContent(rootElement, aInsertionKind);
 }
 
 nsContainerFrame* nsCSSFrameConstructor::GetAbsoluteContainingBlock(
@@ -8364,16 +8281,6 @@ bool nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(
     return true;
   }
 
-  if (aFrame->IsPopupSetFrame()) {
-    nsIPopupContainer* popupContainer =
-        nsIPopupContainer::GetPopupContainer(mPresShell);
-    if (popupContainer && popupContainer->GetPopupSetFrame() == aFrame) {
-      TRACE("PopupSet");
-      ReconstructDocElementHierarchy(InsertionKind::Async);
-      return true;
-    }
-  }
-
   // Reconstruct if inflowFrame is parent's only child, and parent is, or has,
   // a non-fluid continuation, i.e. it was split by bidi resolution
   if (!inFlowFrame->GetPrevSibling() && !inFlowFrame->GetNextSibling() &&
@@ -9681,9 +9588,7 @@ void nsCSSFrameConstructor::ProcessChildren(
     itemsToConstruct.SetLineBoundaryAtEnd(true);
   }
 
-  // Create any anonymous frames we need here.  This must happen before the
-  // non-anonymous children are processed to ensure that popups are never
-  // constructed before the popupset.
+  // Create any anonymous frames we need here.
   AutoTArray<nsIAnonymousContentCreator::ContentInfo, 4> anonymousItems;
   GetAnonymousContent(aContent, aPossiblyLeafFrame, anonymousItems);
 #ifdef DEBUG
@@ -10046,7 +9951,7 @@ nsFirstLetterFrame* nsCSSFrameConstructor::CreateFloatingLetterFrame(
   }
 
   aState.AddChild(letterFrame, aResult, letterContent, aParentFrame, false,
-                  true, false, true, prevSibling);
+                  true, true, prevSibling);
 
   if (nextTextFrame) {
     aResult.AppendFrame(nullptr, nextTextFrame);

@@ -50,7 +50,7 @@ nsPlaceholderFrame* NS_NewPlaceholderFrame(mozilla::PresShell* aPresShell,
 
 #define PLACEHOLDER_TYPE_MASK                                                  \
   (PLACEHOLDER_FOR_FLOAT | PLACEHOLDER_FOR_ABSPOS | PLACEHOLDER_FOR_FIXEDPOS | \
-   PLACEHOLDER_FOR_POPUP | PLACEHOLDER_FOR_TOPLAYER)
+   PLACEHOLDER_FOR_TOPLAYER)
 
 /**
  * Implementation of a frame that's used as a placeholder for a frame that
@@ -78,7 +78,6 @@ class nsPlaceholderFrame final : public nsIFrame {
         aTypeBits == PLACEHOLDER_FOR_FLOAT ||
             aTypeBits == PLACEHOLDER_FOR_ABSPOS ||
             aTypeBits == PLACEHOLDER_FOR_FIXEDPOS ||
-            aTypeBits == PLACEHOLDER_FOR_POPUP ||
             aTypeBits == (PLACEHOLDER_FOR_TOPLAYER | PLACEHOLDER_FOR_ABSPOS) ||
             aTypeBits == (PLACEHOLDER_FOR_TOPLAYER | PLACEHOLDER_FOR_FIXEDPOS),
         "Unexpected type bit");

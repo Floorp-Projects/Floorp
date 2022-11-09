@@ -975,8 +975,11 @@ static bool ContainingBlockChangeAffectsDescendants(
         // they ignore their position style ... but they can't.
         NS_ASSERTION(!SVGUtils::IsInSVGTextSubtree(outOfFlow),
                      "SVG text frames can't be out of flow");
+        // Top-layer frames don't change containing block based on direct
+        // ancestors.
         auto* display = outOfFlow->StyleDisplay();
-        if (display->IsAbsolutelyPositionedStyle()) {
+        if (display->IsAbsolutelyPositionedStyle() &&
+            display->mTopLayer == StyleTopLayer::None) {
           const bool isContainingBlock =
               aIsFixedPosContainingBlock ||
               (aIsAbsPosContainingBlock &&
