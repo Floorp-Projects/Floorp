@@ -1,0 +1,11 @@
+<html class="reftest-wait">
+<head>
+<audio id=a src="adts-truncated.aac" controls></audio>
+<script>
+  a.play();
+  a.onerror = function() {
+    document.documentElement.removeAttribute("class");
+  }
+</script>
+</head>
+</html>
