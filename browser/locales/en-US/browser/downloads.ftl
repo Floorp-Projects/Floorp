@@ -227,3 +227,17 @@ downloads-more-downloading =
         [one] { $count } more file downloading
        *[other] { $count } more files downloading
     }
+
+## Download errors
+
+downloads-error-alert-title = Download Error
+# Variables:
+#   $extension (String): the name of the blocking extension.
+downloads-error-blocked-by = The download cannot be saved because it is blocked by { $extension }.
+# Used when the name of the blocking extension is unavailable.
+downloads-error-extension = The download cannot be saved because it is blocked by an extension.
+# Line breaks in this message are meaningful, and should be maintained.
+downloads-error-generic =
+    The download cannot be saved because an unknown error occurred.
+
+    Please try again.
