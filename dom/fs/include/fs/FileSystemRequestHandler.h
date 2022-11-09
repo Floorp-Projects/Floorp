@@ -52,11 +52,6 @@ class FileSystemRequestHandler {
                                const RefPtr<Promise>& aPromise,
                                ErrorResult& aError);
 
-  virtual void GetWritable(RefPtr<FileSystemManager>& aManager,
-                           const FileSystemEntryMetadata& aFile, bool aKeepData,
-                           const RefPtr<Promise>& aPromise,
-                           ErrorResult& aError);
-
   virtual void GetEntries(RefPtr<FileSystemManager>& aManager,
                           const EntryId& aDirectory, PageNumber aPage,
                           RefPtr<Promise> aPromise,

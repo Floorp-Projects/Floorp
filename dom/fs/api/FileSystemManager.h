@@ -39,12 +39,7 @@ class FileSystemRequestHandler;
 // `FileSystemManagerChild` which is required for communication with the parent
 // process. `FileSystemHandle` is also expected to hold `FileSystemManager`,
 // but it should never clear the strong reference during cycle collection's
-// unlink phase to keep the actor alive. `FileSystemSyncAccessHandle` and
-// `FileSystemWritableFileStream` are also expected to hold `FileSystemManager`,
-// and they shouldn't clear the strong reference during cycle collection's
-// unlink phase as well even though they have their own actor. Those actors
-// are managed by the top level actor, so if the top level actor is destroyed,
-// the whole chain of managed actors would be destroyed as well.
+// unlink phase.
 class FileSystemManager : public nsISupports {
  public:
   FileSystemManager(
