@@ -35,12 +35,12 @@ workers:
             provisioner: 'mobile-{level}'
             implementation: docker-worker
             os: linux
-            worker-type: b-linux
+            worker-type: b-linux-gcp
         b-android-large:
             provisioner: 'mobile-{level}'
             implementation: docker-worker
             os: linux
-            worker-type: b-linux-large
+            worker-type: b-linux-large-gcp
         dep-signing:
             provisioner: scriptworker-k8s
             implementation: scriptworker-signing
@@ -55,13 +55,13 @@ workers:
             provisioner: 'mobile-{level}'
             implementation: docker-worker
             os: linux
-            worker-type: 'images'
+            worker-type: 'images-gcp'
         # misc is used by taskgraph to generate tasks with more than 10 routes
         misc:
             provisioner: 'mobile-{level}'
             implementation: docker-worker
             os: linux
-            worker-type: 'b-linux'
+            worker-type: 'b-linux-gcp'
         push-apk:
             provisioner: scriptworker-k8s
             implementation: scriptworker-pushapk
