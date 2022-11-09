@@ -8,10 +8,7 @@
 
 from __future__ import absolute_import, unicode_literals
 
-try:
-    import blessings
-except ImportError:
-    blessings = None
+import blessed
 
 import codecs
 import json
@@ -117,7 +114,7 @@ class StructuredTerminalFormatter(StructuredHumanFormatter):
 
     def set_terminal(self, terminal):
         self.terminal = terminal
-        self._sgr0 = terminal.normal if terminal and blessings else ""
+        self._sgr0 = terminal.normal if terminal else ""
 
     def format(self, record):
         formatted_msg = record.msg.format(**record.params)
@@ -225,11 +222,10 @@ class LoggingManager(object):
 
     @property
     def terminal(self):
-        if not self._terminal and blessings:
-            # Sometimes blessings fails to set up the terminal. In that case,
-            # silently fail.
+        if not self._terminal:
+            # Sometimes blessed fails to set up the terminal, in that case, silently fail.
             try:
-                terminal = blessings.Terminal(stream=_wrap_stdstream(sys.stdout))
+                terminal = blessed.Terminal(stream=_wrap_stdstream(sys.stdout))
 
                 if terminal.is_a_tty:
                     self._terminal = terminal

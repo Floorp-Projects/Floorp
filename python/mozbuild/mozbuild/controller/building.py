@@ -648,7 +648,7 @@ class TerminalLoggingHandler(logging.Handler):
 class BuildProgressFooter(Footer):
     """Handles display of a build progress indicator in a terminal.
 
-    When mach builds inside a blessings-supported terminal, it will render
+    When mach builds inside a blessed-supported terminal, it will render
     progress information collected from a BuildMonitor. This class converts the
     state of BuildMonitor into terminal output.
     """
