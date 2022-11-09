@@ -646,7 +646,6 @@ FRAME_STATE_GROUP(Placeholder, nsPlaceholderFrame)
 FRAME_STATE_BIT(Placeholder, 20, PLACEHOLDER_FOR_FLOAT)
 FRAME_STATE_BIT(Placeholder, 21, PLACEHOLDER_FOR_ABSPOS)
 FRAME_STATE_BIT(Placeholder, 22, PLACEHOLDER_FOR_FIXEDPOS)
-FRAME_STATE_BIT(Placeholder, 23, PLACEHOLDER_FOR_POPUP)
 FRAME_STATE_BIT(Placeholder, 24, PLACEHOLDER_FOR_TOPLAYER)
 
 // This bit indicates that the out-of-flow frame's static position needs to be

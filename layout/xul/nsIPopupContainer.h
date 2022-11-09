@@ -8,7 +8,6 @@
 #define nsIPopupContainer_h___
 
 #include "nsQueryFrame.h"
-class nsPopupSetFrame;
 class nsIContent;
 
 namespace mozilla {
@@ -21,9 +20,6 @@ class Element;
 class nsIPopupContainer {
  public:
   NS_DECL_QUERYFRAME_TARGET(nsIPopupContainer)
-
-  virtual nsPopupSetFrame* GetPopupSetFrame() = 0;
-  virtual void SetPopupSetFrame(nsPopupSetFrame* aPopupSet) = 0;
 
   virtual mozilla::dom::Element* GetDefaultTooltip() = 0;
   virtual void SetDefaultTooltip(mozilla::dom::Element* aTooltip) = 0;

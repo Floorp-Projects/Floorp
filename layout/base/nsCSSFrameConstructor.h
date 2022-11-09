@@ -103,8 +103,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
 
   nsIFrame* ConstructRootFrame();
 
-  void ReconstructDocElementHierarchy(InsertionKind);
-
  private:
   enum Operation { CONTENTAPPEND, CONTENTINSERT };
 
@@ -1117,7 +1115,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
           mSuppressWhiteSpaceOptimizations(aSuppressWhiteSpaceOptimizations),
           mIsText(false),
           mIsGeneratedContent(false),
-          mIsRootPopupgroup(false),
           mIsAllInline(false),
           mIsBlock(false),
           mIsPopup(false),
@@ -1178,8 +1175,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
     // Whether this is a generated content container.
     // If it is, mContent is a strong pointer.
     bool mIsGeneratedContent : 1;
-    // Whether this is an item for the root popupgroup.
-    bool mIsRootPopupgroup : 1;
     // Whether construction from this item will create only frames that are
     // IsInlineOutside() in the principal child list.  This is not precise, but
     // conservative: if true the frames will really be inline, whereas if false
