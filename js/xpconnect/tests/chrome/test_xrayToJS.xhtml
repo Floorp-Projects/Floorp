@@ -235,10 +235,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
       "includes", "forEach", "map", "reduce", "reduceRight", "filter", "some", "every", "find",
       "findIndex", "copyWithin", "fill", Symbol.iterator, Symbol.unscopables, "entries", "keys",
       "values", "constructor", "flat", "flatMap", "at", "findLast", "findLastIndex"];
-  if (isNightlyBuild) {
-    gPrototypeProperties.Array.push("group");
-    gPrototypeProperties.Array.push("groupToMap");
-  }
   gConstructorProperties.Array =
     constructorProps(["isArray", "from", "of", Symbol.species]);
   for (let c of typedArrayClasses) {

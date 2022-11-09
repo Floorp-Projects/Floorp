@@ -611,7 +611,7 @@ bool shell::enablePropertyErrorMessageFix = false;
 bool shell::enableIteratorHelpers = false;
 bool shell::enableShadowRealms = false;
 #ifdef NIGHTLY_BUILD
-bool shell::enableArrayGrouping = true;
+bool shell::enableArrayGrouping = false;
 bool shell::enableArrayFromAsync = false;
 #endif
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY

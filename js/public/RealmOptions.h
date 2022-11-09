@@ -278,7 +278,7 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool iteratorHelpers_ = false;
   bool shadowRealms_ = false;
 #ifdef NIGHTLY_BUILD
-  bool arrayGrouping_ = true;
+  bool arrayGrouping_ = false;
   bool arrayFromAsync_ = false;
 #endif
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
