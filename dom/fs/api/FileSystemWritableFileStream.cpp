@@ -443,8 +443,6 @@ void FileSystemWritableFileStream::Seek(uint64_t aPosition,
   MOZ_ASSERT(!mClosed);
 
   // submit async seek
-  // XXX!!! this should be submitted to a TaskQueue instead of sync IO on
-  // mainthread!
   // XXX what happens if we read/write before seek finishes?
   // Should we block read/write if an async operation is pending?
   // Handle seek before write ('at')
@@ -462,8 +460,7 @@ void FileSystemWritableFileStream::Truncate(uint64_t aSize,
                                             RefPtr<Promise> aPromise) {
   MOZ_ASSERT(!mClosed);
 
-  // XXX!!! this should be submitted to a TaskQueue instead of sync IO on
-  // mainthread! submit async truncate
+  // submit async truncate
   // XXX what happens if we read/write before seek finishes?
   // Should we block read/write if an async operation is pending?
   // What if there's an error, and several operations are pending?
