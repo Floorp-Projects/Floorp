@@ -201,3 +201,21 @@ iframe {
   height: 100%;
   overflow-y: auto;
 }
+
+/* Used for both the computed view and the rule view, to truncate extremely
+long base64 URLs and other unexpectedly long text properties. */
+.propertyvalue-long-text {
+  /* Force inline-block to be able to set a max-width. */
+  display: inline-block;
+  /* Arbitrary max-width, this should allow the value to be inlined with the
+     property name in very wide containers */
+  max-width: 80%;
+  /* Add ellipsis. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* Introducing display: inline-block; shifts the vertical alignment, force to
+     align it to the parent's text */
+  vertical-align: text-top;
+  /* Force the long text to be rendered on a single line. */
+  white-space: nowrap;
+}

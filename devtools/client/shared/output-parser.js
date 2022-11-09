@@ -68,6 +68,13 @@ const BACKDROP_FILTER_ENABLED = Services.prefs.getBoolPref(
 );
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
+// Very long text properties should be truncated using CSS to avoid creating
+// extremely tall propertyvalue containers. 5000 characters is an arbitrary
+// limit. Assuming an average ruleview can hold 50 characters per line, this
+// should start truncating properties which would otherwise be 100 lines long.
+const TRUNCATE_LENGTH_THRESHOLD = 5000;
+const TRUNCATE_NODE_CLASSNAME = "propertyvalue-long-text";
+
 /**
  * This module is used to process CSS text declarations and output DOM fragments (to be
  * appended to panels in DevTools) for CSS values decorated with additional UI and
@@ -1824,6 +1831,10 @@ OutputParser.prototype = {
    */
   _appendNode(tagName, attributes, value = "") {
     const node = this._createNode(tagName, attributes, value);
+    if (value.length > TRUNCATE_LENGTH_THRESHOLD) {
+      node.classList.add(TRUNCATE_NODE_CLASSNAME);
+    }
+
     this.parsed.push(node);
   },
 
@@ -1836,7 +1847,11 @@ OutputParser.prototype = {
    */
   _appendTextNode(text) {
     const lastItem = this.parsed[this.parsed.length - 1];
-    if (typeof lastItem === "string") {
+    if (text.length > TRUNCATE_LENGTH_THRESHOLD) {
+      // If the text is too long, force creating a node, which will add the
+      // necessary classname to truncate the property correctly.
+      this._appendNode("span", {}, text);
+    } else if (typeof lastItem === "string") {
       this.parsed[this.parsed.length - 1] = lastItem + text;
     } else {
       this.parsed.push(text);
