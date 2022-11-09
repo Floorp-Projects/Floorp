@@ -1064,6 +1064,8 @@ int nr_ice_component_can_candidate_addr_pair(nr_transport_addr *local, nr_transp
   {
     if(local->ip_version != remote->ip_version)
       return(0);
+    if(local->protocol != remote->protocol)
+      return(0);
     if(nr_transport_addr_is_link_local(local) !=
        nr_transport_addr_is_link_local(remote))
       return(0);
