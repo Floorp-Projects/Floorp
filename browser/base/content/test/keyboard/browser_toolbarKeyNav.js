@@ -148,8 +148,12 @@ add_task(async function testTabStopsNoPageWithHomeButton() {
   RemoveHomeButton();
 });
 
-// Test tab stops with a page loaded.
-add_task(async function testTabStopsPageLoaded() {
+async function doTestTabStopsPageLoaded(aPageActionsVisible) {
+  info(`doTestTabStopsPageLoaded(${aPageActionsVisible})`);
+
+  BrowserPageActions.mainButtonNode.style.visibility = aPageActionsVisible
+    ? "visible"
+    : "";
   await BrowserTestUtils.withNewTab("https://example.com", async function() {
     await waitUntilReloadEnabled();
     startFromUrlBar();
@@ -164,10 +168,24 @@ add_task(async function testTabStopsPageLoaded() {
     await expectFocusAfterKey("Tab", "reload-button");
     await expectFocusAfterKey("Tab", "tracking-protection-icon-container");
     await expectFocusAfterKey("Tab", gURLBar.inputField);
-    await expectFocusAfterKey("Tab", "pageActionButton");
+    await expectFocusAfterKey(
+      "Tab",
+      aPageActionsVisible ? "pageActionButton" : "star-button-box"
+    );
     await expectFocusAfterKey("Tab", afterUrlBarButton);
     await expectFocusAfterKey("Tab", gBrowser.selectedBrowser);
   });
+}
+
+// Test tab stops with a page loaded.
+add_task(async function testTabStopsPageLoaded() {
+  is(
+    BrowserPageActions.mainButtonNode.style.visibility,
+    "visible",
+    "explicitly shown at the beginning of test"
+  );
+  await doTestTabStopsPageLoaded(false);
+  await doTestTabStopsPageLoaded(true);
 });
 
 // Test tab stops with a notification anchor visible.
@@ -266,7 +284,7 @@ add_task(async function testArrowsToolbarbuttons() {
   RemoveOldMenuSideButtons();
 });
 
-// Test that right/left arrows move through buttons wihch aren't toolbarbuttons
+// Test that right/left arrows move through buttons which aren't toolbarbuttons
 // but have role="button".
 add_task(async function testArrowsRoleButton() {
   await BrowserTestUtils.withNewTab("https://example.com", async function() {

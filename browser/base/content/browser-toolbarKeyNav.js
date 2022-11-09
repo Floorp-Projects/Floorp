@@ -63,16 +63,22 @@ ToolbarKeyboardNavigator = {
         return NodeFilter.FILTER_REJECT;
       }
 
-      // Skip invisible or disabled elements.
-      if (
-        aNode.hidden ||
-        aNode.disabled ||
-        aNode.style.visibility == "hidden"
-      ) {
+      // Skip disabled elements.
+      if (aNode.disabled) {
         return NodeFilter.FILTER_REJECT;
       }
+
+      // Skip invisible elements.
+      const visible = aNode.checkVisibility({
+        checkVisibilityCSS: true,
+        flush: false,
+      });
+      if (!visible) {
+        return NodeFilter.FILTER_REJECT;
+      }
+
       // This width check excludes the overflow button when there's no overflow.
-      let bounds = window.windowUtils.getBoundsWithoutFlushing(aNode);
+      const bounds = window.windowUtils.getBoundsWithoutFlushing(aNode);
       if (bounds.width == 0) {
         return NodeFilter.FILTER_SKIP;
       }
