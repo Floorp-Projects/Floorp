@@ -15,6 +15,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsCSSRendering.h"
 #include "nsPresContext.h"
+#include "nsPopupSetFrame.h"
 #include "nsGkAtoms.h"
 #include "nsIFrameInlines.h"
 #include "nsDisplayList.h"
@@ -37,7 +38,7 @@
 #  include "nsIDocShell.h"
 #endif
 
-//#define DEBUG_CANVAS_FOCUS
+// #define DEBUG_CANVAS_FOCUS
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -157,11 +158,24 @@ nsresult nsCanvasFrame::CreateAnonymousContent(
   // support context menus and tooltips.
   if (XRE_IsParentProcess() && doc->NodePrincipal()->IsSystemPrincipal()) {
     nsNodeInfoManager* nodeInfoManager = doc->NodeInfoManager();
-    RefPtr<NodeInfo> nodeInfo = nodeInfoManager->GetNodeInfo(
+    RefPtr<NodeInfo> nodeInfo =
+        nodeInfoManager->GetNodeInfo(nsGkAtoms::popupgroup, nullptr,
+                                     kNameSpaceID_XUL, nsINode::ELEMENT_NODE);
+
+    nsresult rv = NS_NewXULElement(getter_AddRefs(mPopupgroupContent),
+                                   nodeInfo.forget(), dom::NOT_FROM_PARSER);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mPopupgroupContent->SetProperty(nsGkAtoms::docLevelNativeAnonymousContent,
+                                    reinterpret_cast<void*>(true));
+
+    aElements.AppendElement(mPopupgroupContent);
+
+    nodeInfo = nodeInfoManager->GetNodeInfo(
         nsGkAtoms::tooltip, nullptr, kNameSpaceID_XUL, nsINode::ELEMENT_NODE);
 
-    nsresult rv = NS_NewXULElement(getter_AddRefs(mTooltipContent),
-                                   nodeInfo.forget(), dom::NOT_FROM_PARSER);
+    rv = NS_NewXULElement(getter_AddRefs(mTooltipContent), nodeInfo.forget(),
+                          dom::NOT_FROM_PARSER);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mTooltipContent->SetAttr(kNameSpaceID_None, nsGkAtoms::_default, u"true"_ns,
@@ -194,6 +208,9 @@ void nsCanvasFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
   if (mCustomContentContainer) {
     aElements.AppendElement(mCustomContentContainer);
   }
+  if (mPopupgroupContent) {
+    aElements.AppendElement(mPopupgroupContent);
+  }
   if (mTooltipContent) {
     aElements.AppendElement(mTooltipContent);
   }
@@ -208,9 +225,16 @@ void nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot,
   }
 
   aPostDestroyData.AddAnonymousContent(mCustomContentContainer.forget());
+  if (mPopupgroupContent) {
+    aPostDestroyData.AddAnonymousContent(mPopupgroupContent.forget());
+  }
   if (mTooltipContent) {
     aPostDestroyData.AddAnonymousContent(mTooltipContent.forget());
   }
+
+  MOZ_ASSERT(!mPopupSetFrame ||
+                 nsLayoutUtils::IsProperAncestorFrame(this, mPopupSetFrame),
+             "Someone forgot to clear popup set frame");
   nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
@@ -291,6 +315,14 @@ nsRect nsCanvasFrame::CanvasArea() const {
     result.UnionRect(result, nsRect(nsPoint(0, 0), portRect.Size()));
   }
   return result;
+}
+
+nsPopupSetFrame* nsCanvasFrame::GetPopupSetFrame() { return mPopupSetFrame; }
+
+void nsCanvasFrame::SetPopupSetFrame(nsPopupSetFrame* aPopupSet) {
+  MOZ_ASSERT(!aPopupSet || !mPopupSetFrame,
+             "Popup set is already defined! Only 1 allowed.");
+  mPopupSetFrame = aPopupSet;
 }
 
 Element* nsCanvasFrame::GetDefaultTooltip() { return mTooltipContent; }
@@ -696,6 +728,7 @@ void nsCanvasFrame::Reflow(nsPresContext* aPresContext,
   // overflow (painted by BuildPreviousPageOverflow in nsPageFrame.cpp).
   // We may have additional children which are placeholders for continuations
   // of fixed-pos content, see nsCSSFrameConstructor::ReplicateFixedFrames.
+  // We may also have a nsPopupSetFrame child (mPopupSetFrame).
   const WritingMode wm = aReflowInput.GetWritingMode();
   aDesiredSize.SetSize(wm, aReflowInput.ComputedSize());
   if (aReflowInput.ComputedBSize() == NS_UNCONSTRAINEDSIZE) {
@@ -707,6 +740,11 @@ void nsCanvasFrame::Reflow(nsPresContext* aPresContext,
   nsIFrame* nextKid = nullptr;
   for (auto* kidFrame = mFrames.FirstChild(); kidFrame; kidFrame = nextKid) {
     nextKid = kidFrame->GetNextSibling();
+    if (kidFrame == mPopupSetFrame) {
+      // This child is handled separately after this loop.
+      continue;
+    }
+
     ReflowOutput kidDesiredSize(aReflowInput);
     bool kidDirty = kidFrame->HasAnyStateBits(NS_FRAME_IS_DIRTY);
     WritingMode kidWM = kidFrame->GetWritingMode();
@@ -833,6 +871,23 @@ void nsCanvasFrame::Reflow(nsPresContext* aPresContext,
     ReflowOverflowContainerChildren(aPresContext, aReflowInput,
                                     aDesiredSize.mOverflowAreas,
                                     ReflowChildFlags::Default, aStatus);
+  }
+
+  if (mPopupSetFrame) {
+    MOZ_ASSERT(mFrames.ContainsFrame(mPopupSetFrame),
+               "Only normal flow supported.");
+    nsReflowStatus popupStatus;
+    ReflowOutput popupDesiredSize(aReflowInput.GetWritingMode());
+    WritingMode wm = mPopupSetFrame->GetWritingMode();
+    LogicalSize availSize = aReflowInput.ComputedSize(wm);
+    availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
+    ReflowInput popupReflowInput(aPresContext, aReflowInput, mPopupSetFrame,
+                                 availSize);
+    ReflowChild(mPopupSetFrame, aPresContext, popupDesiredSize,
+                popupReflowInput, 0, 0, ReflowChildFlags::NoMoveFrame,
+                popupStatus);
+    FinishReflowChild(mPopupSetFrame, aPresContext, popupDesiredSize,
+                      &popupReflowInput, 0, 0, ReflowChildFlags::NoMoveFrame);
   }
 
   FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize, aReflowInput,

@@ -39,15 +39,14 @@ const EVENT_TYPES = [
  * they need to read style or layout information, like other code normally does.
  */
 function is_visible(element) {
-  let win = element.ownerGlobal;
-  let style = win.getComputedStyle(element);
+  var style = element.ownerGlobal.getComputedStyle(element);
   if (style.display == "none") {
     return false;
   }
   if (style.visibility != "visible") {
     return false;
   }
-  if (win.XULPopupElement.isInstance(element) && element.state != "open") {
+  if (style.display == "-moz-popup" && element.state != "open") {
     return false;
   }
 
