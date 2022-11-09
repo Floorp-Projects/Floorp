@@ -4,7 +4,10 @@
 
 package org.mozilla.fenix.search.awesomebar
 
-import androidx.appcompat.content.res.AppCompatResources.getDrawable
+import android.content.Context
+import android.graphics.drawable.Drawable
+import androidx.annotation.VisibleForTesting
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.BlendModeColorFilterCompat.createBlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat.SRC_IN
 import androidx.core.graphics.drawable.toBitmap
@@ -12,6 +15,7 @@ import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.awesomebar.provider.BookmarksStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.CombinedHistorySuggestionProvider
@@ -29,6 +33,7 @@ import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.Core.Companion.METADATA_HISTORY_SUGGESTION_LIMIT
 import org.mozilla.fenix.components.Core.Companion.METADATA_SHORTCUT_SUGGESTION_LIMIT
 import org.mozilla.fenix.ext.components
@@ -46,9 +51,11 @@ class AwesomeBarView(
     val view: AwesomeBarWrapper,
     fromHomeFragment: Boolean,
 ) {
+    private var components: Components = activity.components
+    private val engineForSpeculativeConnects: Engine?
     private val sessionProvider: SessionSuggestionProvider
-    private val historyStorageProvider: HistoryStorageSuggestionProvider
-    private val combinedHistoryProvider: CombinedHistorySuggestionProvider
+    private val defaultHistoryStorageProvider: HistoryStorageSuggestionProvider
+    private val defaultCombinedHistoryProvider: CombinedHistorySuggestionProvider
     private val shortcutsEnginePickerProvider: ShortcutsSuggestionProvider
     private val bookmarksStorageSuggestionProvider: BookmarksStorageSuggestionProvider
     private val syncedTabsStorageSuggestionProvider: SyncedTabsStorageSuggestionProvider
@@ -94,10 +101,9 @@ class AwesomeBarView(
     }
 
     init {
-        val components = activity.components
         val primaryTextColor = activity.getColorFromAttr(R.attr.textPrimary)
 
-        val engineForSpeculativeConnects = when (activity.browsingModeManager.mode) {
+        engineForSpeculativeConnects = when (activity.browsingModeManager.mode) {
             BrowsingMode.Normal -> components.core.engine
             BrowsingMode.Private -> null
         }
@@ -112,7 +118,7 @@ class AwesomeBarView(
                 suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
             )
 
-        historyStorageProvider =
+        defaultHistoryStorageProvider =
             HistoryStorageSuggestionProvider(
                 components.core.historyStorage,
                 loadUrlUseCase,
@@ -121,7 +127,7 @@ class AwesomeBarView(
                 suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
             )
 
-        combinedHistoryProvider =
+        defaultCombinedHistoryProvider =
             CombinedHistorySuggestionProvider(
                 historyStorage = components.core.historyStorage,
                 historyMetadataStorage = components.core.historyStorage,
@@ -254,27 +260,34 @@ class AwesomeBarView(
     }
 
     @Suppress("ComplexMethod")
-    private fun getProvidersToAdd(
+    @VisibleForTesting
+    internal fun getProvidersToAdd(
         state: SearchProviderState,
     ): MutableSet<AwesomeBar.SuggestionProvider> {
         val providersToAdd = mutableSetOf<AwesomeBar.SuggestionProvider>()
 
         when (state.searchEngineSource) {
             is SearchEngineSource.History -> {
-                combinedHistoryProvider.setMaxNumberOfSuggestions(METADATA_HISTORY_SUGGESTION_LIMIT)
-                historyStorageProvider.setMaxNumberOfSuggestions(METADATA_HISTORY_SUGGESTION_LIMIT)
+                defaultCombinedHistoryProvider.setMaxNumberOfSuggestions(METADATA_HISTORY_SUGGESTION_LIMIT)
+                defaultHistoryStorageProvider.setMaxNumberOfSuggestions(METADATA_HISTORY_SUGGESTION_LIMIT)
             }
             else -> {
-                combinedHistoryProvider.setMaxNumberOfSuggestions(METADATA_SUGGESTION_LIMIT)
-                historyStorageProvider.setMaxNumberOfSuggestions(METADATA_SUGGESTION_LIMIT)
+                defaultCombinedHistoryProvider.setMaxNumberOfSuggestions(METADATA_SUGGESTION_LIMIT)
+                defaultHistoryStorageProvider.setMaxNumberOfSuggestions(METADATA_SUGGESTION_LIMIT)
             }
         }
 
-        if (state.showHistorySuggestions) {
+        if (state.showAllHistorySuggestions) {
             if (activity.settings().historyMetadataUIFeature) {
-                providersToAdd.add(combinedHistoryProvider)
+                providersToAdd.add(defaultCombinedHistoryProvider)
             } else {
-                providersToAdd.add(historyStorageProvider)
+                providersToAdd.add(defaultHistoryStorageProvider)
+            }
+        }
+
+        if (state.showHistorySuggestionsForCurrentEngine) {
+            getHistoryProvidersForSearchEngine(state.searchEngineSource)?.let {
+                providersToAdd.add(it)
             }
         }
 
@@ -299,6 +312,46 @@ class AwesomeBarView(
         }
 
         return providersToAdd
+    }
+
+    /**
+     * Get a new history suggestion provider that will return suggestions only from the current
+     * search engine's host.
+     * Used only for when unified search is active.
+     *
+     * @param searchEngineSource Search engine wrapper also informing about the selection type.
+     *
+     * @return A [CombinedHistorySuggestionProvider] or [HistoryStorageSuggestionProvider] depending
+     * on if the history metadata feature is enabled or `null` if the current engine's host is unknown.
+     */
+    @VisibleForTesting
+    internal fun getHistoryProvidersForSearchEngine(
+        searchEngineSource: SearchEngineSource,
+    ): AwesomeBar.SuggestionProvider? {
+        val searchEngineHostFilter = searchEngineSource.searchEngine?.resultsUrl?.host ?: return null
+
+        return if (activity.settings().historyMetadataUIFeature) {
+            CombinedHistorySuggestionProvider(
+                historyStorage = components.core.historyStorage,
+                historyMetadataStorage = components.core.historyStorage,
+                loadUrlUseCase = loadUrlUseCase,
+                icons = components.core.icons,
+                engine = engineForSpeculativeConnects,
+                maxNumberOfSuggestions = METADATA_SUGGESTION_LIMIT,
+                suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
+                resultsHostFilter = searchEngineHostFilter,
+            )
+        } else {
+            HistoryStorageSuggestionProvider(
+                historyStorage = components.core.historyStorage,
+                loadUrlUseCase = loadUrlUseCase,
+                icons = components.core.icons,
+                engine = engineForSpeculativeConnects,
+                maxNumberOfSuggestions = METADATA_SUGGESTION_LIMIT,
+                suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
+                resultsHostFilter = searchEngineHostFilter,
+            )
+        }
     }
 
     private fun getSelectedSearchSuggestionProvider(state: SearchProviderState): List<AwesomeBar.SuggestionProvider> {
@@ -366,7 +419,8 @@ class AwesomeBarView(
 
     data class SearchProviderState(
         val showSearchShortcuts: Boolean,
-        val showHistorySuggestions: Boolean,
+        val showHistorySuggestionsForCurrentEngine: Boolean,
+        val showAllHistorySuggestions: Boolean,
         val showBookmarkSuggestions: Boolean,
         val showSearchSuggestions: Boolean,
         val showSyncedTabsSuggestions: Boolean,
@@ -379,12 +433,18 @@ class AwesomeBarView(
         const val METADATA_SUGGESTION_LIMIT = 3
 
         const val GOOGLE_SEARCH_ENGINE_NAME = "Google"
+
+        @VisibleForTesting
+        internal fun getDrawable(context: Context, resId: Int): Drawable? {
+            return AppCompatResources.getDrawable(context, resId)
+        }
     }
 }
 
 fun SearchFragmentState.toSearchProviderState() = AwesomeBarView.SearchProviderState(
     showSearchShortcuts,
-    showHistorySuggestions,
+    showHistorySuggestionsForCurrentEngine,
+    showAllHistorySuggestions,
     showBookmarkSuggestions,
     showSearchSuggestions,
     showSyncedTabsSuggestions,

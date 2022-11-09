@@ -85,7 +85,9 @@ sealed class SearchEngineSource {
  * @property showSearchShortcutsSetting Whether the setting for showing search shortcuts is enabled
  * or disabled.
  * @property showClipboardSuggestions Whether or not to show clipboard suggestion in the AwesomeBar
- * @property showHistorySuggestions Whether or not to show history suggestions in the AwesomeBar
+ * @property showHistorySuggestionsForCurrentEngine Whether or not to show history suggestions for only
+ * the current search engine.
+ * @property showAllHistorySuggestions Whether or not to show history suggestions in the AwesomeBar
  * @property showBookmarkSuggestions Whether or not to show the bookmark suggestion in the AwesomeBar
  * @property showSyncedTabsSuggestions Whether or not to show the synced tabs suggestion in the AwesomeBar
  * @property showSessionSuggestions Whether or not to show the session suggestion in the AwesomeBar
@@ -104,7 +106,8 @@ data class SearchFragmentState(
     val areShortcutsAvailable: Boolean,
     val showSearchShortcutsSetting: Boolean,
     val showClipboardSuggestions: Boolean,
-    val showHistorySuggestions: Boolean,
+    val showHistorySuggestionsForCurrentEngine: Boolean,
+    val showAllHistorySuggestions: Boolean,
     val showBookmarkSuggestions: Boolean,
     val showSyncedTabsSuggestions: Boolean,
     val showSessionSuggestions: Boolean,
@@ -154,7 +157,8 @@ fun createInitialSearchFragmentState(
         areShortcutsAvailable = false,
         showSearchShortcutsSetting = settings.shouldShowSearchShortcuts,
         showClipboardSuggestions = settings.shouldShowClipboardSuggestions,
-        showHistorySuggestions = settings.shouldShowHistorySuggestions,
+        showHistorySuggestionsForCurrentEngine = false,
+        showAllHistorySuggestions = settings.shouldShowHistorySuggestions,
         showBookmarkSuggestions = settings.shouldShowBookmarkSuggestions,
         showSyncedTabsSuggestions = settings.shouldShowSyncedTabsSuggestions,
         showSessionSuggestions = true,
@@ -237,7 +241,8 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 showSearchSuggestions = action.settings.shouldShowSearchSuggestions,
                 showSearchShortcuts = action.settings.shouldShowSearchShortcuts,
                 showClipboardSuggestions = action.settings.shouldShowClipboardSuggestions,
-                showHistorySuggestions = action.settings.shouldShowHistorySuggestions,
+                showHistorySuggestionsForCurrentEngine = false, // we'll show all history
+                showAllHistorySuggestions = action.settings.shouldShowHistorySuggestions,
                 showBookmarkSuggestions = action.settings.shouldShowBookmarkSuggestions,
                 showSyncedTabsSuggestions = action.settings.shouldShowSyncedTabsSuggestions,
                 showSessionSuggestions = true,
@@ -251,7 +256,9 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                     false -> action.settings.shouldShowSearchShortcuts
                 },
                 showClipboardSuggestions = action.settings.shouldShowClipboardSuggestions,
-                showHistorySuggestions = when (action.settings.showUnifiedSearchFeature) {
+                showHistorySuggestionsForCurrentEngine = action.settings.showUnifiedSearchFeature &&
+                    action.settings.shouldShowHistorySuggestions && !action.engine.isGeneral,
+                showAllHistorySuggestions = when (action.settings.showUnifiedSearchFeature) {
                     true -> false
                     false -> action.settings.shouldShowHistorySuggestions
                 },
@@ -274,7 +281,8 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 showSearchSuggestions = false,
                 showSearchShortcuts = false,
                 showClipboardSuggestions = false,
-                showHistorySuggestions = true,
+                showHistorySuggestionsForCurrentEngine = false,
+                showAllHistorySuggestions = true,
                 showBookmarkSuggestions = false,
                 showSyncedTabsSuggestions = false,
                 showSessionSuggestions = false,
@@ -285,7 +293,8 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 showSearchSuggestions = false,
                 showSearchShortcuts = false,
                 showClipboardSuggestions = false,
-                showHistorySuggestions = false,
+                showHistorySuggestionsForCurrentEngine = false,
+                showAllHistorySuggestions = false,
                 showBookmarkSuggestions = true,
                 showSyncedTabsSuggestions = false,
                 showSessionSuggestions = false,
@@ -296,7 +305,8 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 showSearchSuggestions = false,
                 showSearchShortcuts = false,
                 showClipboardSuggestions = false,
-                showHistorySuggestions = false,
+                showHistorySuggestionsForCurrentEngine = false,
+                showAllHistorySuggestions = false,
                 showBookmarkSuggestions = false,
                 showSyncedTabsSuggestions = true,
                 showSessionSuggestions = true,
