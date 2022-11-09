@@ -127,11 +127,11 @@ var getComputedStyleProperty = async function(args) {
 };
 
 /**
- * Wait for "media-list-changed" events to settle on StyleEditorUI.
+ * Wait for "at-rules-list-changed" events to settle on StyleEditorUI.
  * Returns a promise that resolves the number of events caught while waiting.
  *
  * @param {StyleEditorUI} ui
- *        Current StyleEditorUI on which media-list-changed events should be fired.
+ *        Current StyleEditorUI on which at-rules-list-changed events should be fired.
  * @param {Number} delay
  */
 function waitForManyEvents(ui, delay) {
@@ -145,11 +145,11 @@ function waitForManyEvents(ui, delay) {
       // Wait for some time to catch subsequent events.
       timer = setTimeout(() => {
         // Remove the listener and resolve.
-        ui.off("media-list-changed", onEvent);
+        ui.off("at-rules-list-changed", onEvent);
         resolve(count);
       }, delay);
     };
-    ui.on("media-list-changed", onEvent);
+    ui.on("at-rules-list-changed", onEvent);
   });
 }
 

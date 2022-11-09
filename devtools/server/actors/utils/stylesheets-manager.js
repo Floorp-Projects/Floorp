@@ -70,13 +70,13 @@ const modifiedStyleSheets = new WeakMap();
  *        First arg is an object with the following properties:
  *        - resourceId {String}: The id that was assigned to the stylesheet
  *        - updateKind {String}: Which kind of update it is ("style-applied",
- *          "media-rules-changed", "matches-change", "property-change")
+ *          "at-rules-changed", "matches-change", "property-change")
  *        - updates {Object}: The update data
  */
 class StyleSheetsManager extends EventEmitter {
   _styleSheetCount = 0;
   _styleSheetMap = new Map();
-  // List of all watched media queries. Change listeners are being registered from _getMediaRules.
+  // List of all watched media queries. Change listeners are being registered from getAtRules.
   _mqlList = [];
 
   /**
@@ -343,17 +343,17 @@ class StyleSheetsManager extends EventEmitter {
     }
 
     // Remove event handler from all media query list we set to. We are going to re-set
-    // those handler properly from _getMediaRules.
+    // those handler properly from getAtRules.
     for (const mql of this._mqlList) {
       mql.onchange = null;
     }
 
-    const mediaRules = await this._getMediaRules(styleSheet);
+    const atRules = await this.getAtRules(styleSheet);
     this.emit("stylesheet-updated", {
       resourceId,
-      updateKind: "media-rules-changed",
+      updateKind: "at-rules-changed",
       updates: {
-        resourceUpdates: { mediaRules },
+        resourceUpdates: { atRules },
       },
     });
   }
@@ -564,17 +564,18 @@ class StyleSheetsManager extends EventEmitter {
   }
 
   /**
-   * Retrieve the media rules of a given stylesheet
+   * Retrieve the at-rules of a given stylesheet
    *
    * @param {StyleSheet} styleSheet
    * @returns {Array<Object>} An array of object of the following shape:
+   *           - type {String}
    *           - mediaText {String}
    *           - conditionText {String}
    *           - matches {Boolean}: true if the media rule matches the current state of the document
    *           - line {Number}
    *           - column {Number}
    */
-  async _getMediaRules(styleSheet) {
+  async getAtRules(styleSheet) {
     const resourceId = this._findStyleSheetResourceId(styleSheet);
     if (!resourceId) {
       return [];
@@ -647,7 +648,7 @@ class StyleSheetsManager extends EventEmitter {
       updates: {
         nestedResourceUpdates: [
           {
-            path: ["mediaRules", index, "matches"],
+            path: ["atRules", index, "matches"],
             value: mql.matches,
           },
         ],

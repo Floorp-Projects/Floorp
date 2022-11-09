@@ -5,8 +5,8 @@
 
 const TESTCASE_URI = TEST_BASE_HTTPS + "media-rules.html";
 
-const PREF_SHOW_MEDIA_SIDEBAR = "devtools.styleeditor.showMediaSidebar";
-const PREF_SIDEBAR_WIDTH = "devtools.styleeditor.mediaSidebarWidth";
+const PREF_SHOW_AT_RULES_SIDEBAR = "devtools.styleeditor.showAtRulesSidebar";
+const PREF_SIDEBAR_WIDTH = "devtools.styleeditor.atRulesSidebarWidth";
 const PREF_NAV_WIDTH = "devtools.styleeditor.navSidebarWidth";
 
 // Initial widths for the navigation and media sidebars, which will be set via
@@ -18,7 +18,7 @@ const MEDIA_WIDTH = 250;
 
 // Test that sidebar in the styleeditor can be resized.
 add_task(async function() {
-  await pushPref(PREF_SHOW_MEDIA_SIDEBAR, true);
+  await pushPref(PREF_SHOW_AT_RULES_SIDEBAR, true);
   await pushPref(PREF_NAV_WIDTH, NAV_WIDTH);
   await pushPref(PREF_SIDEBAR_WIDTH, MEDIA_WIDTH);
 

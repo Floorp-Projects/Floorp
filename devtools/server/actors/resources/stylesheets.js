@@ -73,7 +73,7 @@ class StyleSheetWatcher {
       fileName,
       href: styleSheet.href,
       isNew: isCreatedByDevTools,
-      mediaRules: await this._styleSheetsManager._getMediaRules(styleSheet),
+      atRules: await this._styleSheetsManager.getAtRules(styleSheet),
       nodeHref: this._styleSheetsManager._getNodeHref(styleSheet),
       ruleCount: styleSheet.cssRules.length,
       sourceMapBaseURL: this._styleSheetsManager._getSourcemapBaseURL(
