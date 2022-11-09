@@ -31,34 +31,59 @@ extern LazyLogModule gOPFSLog;
 
 namespace mozilla::dom {
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(
-    FileSystemWritableFileStream::StreamAlgorithms,
-    UnderlyingSinkAlgorithmsBase)
-NS_IMPL_CYCLE_COLLECTION_INHERITED(
-    FileSystemWritableFileStream::StreamAlgorithms,
-    UnderlyingSinkAlgorithmsBase, mStream)
+namespace {
+
+class WritableFileStreamUnderlyingSinkAlgorithms final
+    : public UnderlyingSinkAlgorithmsBase {
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(
+      WritableFileStreamUnderlyingSinkAlgorithms, UnderlyingSinkAlgorithmsBase)
+
+  explicit WritableFileStreamUnderlyingSinkAlgorithms(
+      FileSystemWritableFileStream& aStream)
+      : mStream(&aStream) {}
+
+  // Streams algorithms
+  void StartCallback(JSContext* aCx,
+                     WritableStreamDefaultController& aController,
+                     JS::MutableHandle<JS::Value> aRetVal,
+                     ErrorResult& aRv) override {
+    // https://streams.spec.whatwg.org/#writablestream-set-up
+    // Step 1. Let startAlgorithm be an algorithm that returns undefined.
+    aRetVal.setUndefined();
+  }
+
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> WriteCallback(
+      JSContext* aCx, JS::Handle<JS::Value> aChunk,
+      WritableStreamDefaultController& aController, ErrorResult& aRv) override;
+
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> AbortCallback(
+      JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
+      ErrorResult& aRv) override {
+    // https://streams.spec.whatwg.org/#writablestream-set-up
+    // Step 3.3. Return a promise resolved with undefined.
+    // (No abort algorithm is defined for this interface)
+    return Promise::CreateResolvedWithUndefined(mStream->GetParentObject(),
+                                                aRv);
+  }
+
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> CloseCallback(
+      JSContext* aCx, ErrorResult& aRv) override {
+    return mStream->Close(aRv);
+  };
+
+ private:
+  ~WritableFileStreamUnderlyingSinkAlgorithms() = default;
+
+  RefPtr<FileSystemWritableFileStream> mStream;
+};
+
+}  // namespace
 
 void FileSystemWritableFileStream::ClearActor() {
   MOZ_ASSERT(mActor);
 
   mActor = nullptr;
-}
-
-already_AddRefed<Promise>
-FileSystemWritableFileStream::StreamAlgorithms::WriteCallback(
-    JSContext* aCx, JS::Handle<JS::Value> aChunk,
-    WritableStreamDefaultController& aController, ErrorResult& aRv) {
-  // https://fs.spec.whatwg.org/#create-a-new-filesystemwritablefilestream
-  // Step 3. Let writeAlgorithm be an algorithm which takes a chunk argument ...
-  ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams chunkUnion;
-  if (!chunkUnion.Init(aCx, aChunk)) {
-    aRv.MightThrowJSException();
-    aRv.StealExceptionFromJSContext(aCx);
-    return nullptr;
-  }
-  // Step 3. ... and returns the result of running the write a chunk algorithm
-  // with stream and chunk.
-  return mStream->Write(chunkUnion, aRv);
 }
 
 // https://streams.spec.whatwg.org/#writablestream-set-up
@@ -87,7 +112,8 @@ FileSystemWritableFileStream::MaybeCreate(
       new FileSystemWritableFileStream(aGlobal, aManager, aMetadata, aActor);
 
   // Step 1 - 3
-  auto algorithms = MakeRefPtr<StreamAlgorithms>(*stream);
+  auto algorithms =
+      MakeRefPtr<WritableFileStreamUnderlyingSinkAlgorithms>(*stream);
 
   // Step 6. Let controller be a new WritableStreamDefaultController.
   auto controller =
@@ -458,6 +484,28 @@ FileSystemWritableFileStream::~FileSystemWritableFileStream() {
   if (mActor) {
     mActor->Close();
   }
+}
+
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(
+    WritableFileStreamUnderlyingSinkAlgorithms, UnderlyingSinkAlgorithmsBase)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(WritableFileStreamUnderlyingSinkAlgorithms,
+                                   UnderlyingSinkAlgorithmsBase, mStream)
+
+already_AddRefed<Promise>
+WritableFileStreamUnderlyingSinkAlgorithms::WriteCallback(
+    JSContext* aCx, JS::Handle<JS::Value> aChunk,
+    WritableStreamDefaultController& aController, ErrorResult& aRv) {
+  // https://fs.spec.whatwg.org/#create-a-new-filesystemwritablefilestream
+  // Step 3. Let writeAlgorithm be an algorithm which takes a chunk argument ...
+  ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams chunkUnion;
+  if (!chunkUnion.Init(aCx, aChunk)) {
+    aRv.MightThrowJSException();
+    aRv.StealExceptionFromJSContext(aCx);
+    return nullptr;
+  }
+  // Step 3. ... and returns the result of running the write a chunk algorithm
+  // with stream and chunk.
+  return mStream->Write(chunkUnion, aRv);
 }
 
 }  // namespace mozilla::dom
