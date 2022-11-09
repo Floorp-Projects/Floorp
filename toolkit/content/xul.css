@@ -270,7 +270,6 @@ panel {
 menupopup,
 panel,
 tooltip {
-  display: -moz-popup;
   position: absolute;
   -moz-top-layer: top;
   z-index: 2147483647;

@@ -422,8 +422,7 @@ bool nsFrameIterator::IsPopupFrame(nsIFrame* aFrame) {
   if (mSkipPopupChecks) {
     return false;
   }
-
-  return (aFrame && aFrame->StyleDisplay()->mDisplay == StyleDisplay::MozPopup);
+  return aFrame && aFrame->IsMenuPopupFrame();
 }
 
 // nsVisualIterator implementation

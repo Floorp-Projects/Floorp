@@ -5596,7 +5596,7 @@ class OverflowableToolbar {
         let style = win.getComputedStyle(child);
         if (
           style.display == "none" ||
-          style.display == "-moz-popup" ||
+          win.XULPopupElement.isInstance(child) ||
           (style.position != "static" && style.position != "relative")
         ) {
           continue;

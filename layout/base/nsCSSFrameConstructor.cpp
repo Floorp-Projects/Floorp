@@ -2399,14 +2399,12 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
   } else if (display->mDisplay == StyleDisplay::Flex ||
              display->mDisplay == StyleDisplay::WebkitBox ||
              display->mDisplay == StyleDisplay::Grid ||
-             display->mDisplay == StyleDisplay::MozBox ||
-             display->mDisplay == StyleDisplay::MozPopup) {
+             display->mDisplay == StyleDisplay::MozBox) {
     auto func = [&] {
       if (display->mDisplay == StyleDisplay::Grid) {
         return NS_NewGridContainerFrame;
       }
-      if ((display->mDisplay == StyleDisplay::MozBox ||
-           display->mDisplay == StyleDisplay::MozPopup) &&
+      if (display->mDisplay == StyleDisplay::MozBox &&
           !computedStyle->StyleVisibility()->EmulateMozBoxWithFlex()) {
         return NS_NewBoxFrame;
       }
@@ -4022,6 +4020,8 @@ const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindXULTagData(const Element& aElement,
                                       ComputedStyle& aStyle) {
   MOZ_ASSERT(aElement.IsXULElement());
+  static constexpr FrameConstructionData kPopupData(
+      NS_NewMenuPopupFrame, FCDATA_IS_POPUP | FCDATA_SKIP_ABSPOS_PUSH);
 
   static constexpr FrameConstructionDataByTag sXULTagData[] = {
       SIMPLE_XUL_CREATE(image, NS_NewImageBoxFrame),
@@ -4047,7 +4047,11 @@ nsCSSFrameConstructor::FindXULTagData(const Element& aElement,
       SIMPLE_XUL_CREATE(splitter, NS_NewSplitterFrame),
       SIMPLE_XUL_CREATE(slider, NS_NewSliderFrame),
       SIMPLE_XUL_CREATE(scrollbar, NS_NewScrollbarFrame),
-      SIMPLE_XUL_CREATE(scrollbarbutton, NS_NewScrollbarButtonFrame)};
+      SIMPLE_XUL_CREATE(scrollbarbutton, NS_NewScrollbarButtonFrame),
+      {nsGkAtoms::panel, kPopupData},
+      {nsGkAtoms::menupopup, kPopupData},
+      {nsGkAtoms::tooltip, kPopupData},
+  };
 
   return FindDataByTag(aElement, aStyle, sXULTagData, ArrayLength(sXULTagData));
 }
@@ -4455,11 +4459,6 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
       static constexpr FrameConstructionData data(
           ToCreationFunc(NS_NewRubyTextContainerFrame),
           FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby));
-      return &data;
-    }
-    case StyleDisplayInside::MozPopup: {
-      static constexpr FrameConstructionData data(
-          NS_NewMenuPopupFrame, FCDATA_IS_POPUP | FCDATA_SKIP_ABSPOS_PUSH);
       return &data;
     }
     default:
@@ -5465,15 +5464,6 @@ void nsCSSFrameConstructor::ConstructFramesFromItem(
     nsContainerFrame* aParentFrame, nsFrameList& aFrameList) {
   FrameConstructionItem& item = aIter.item();
   ComputedStyle* computedStyle = item.mComputedStyle;
-
-  const auto* disp = computedStyle->StyleDisplay();
-  MOZ_ASSERT(!disp->IsAbsolutelyPositionedStyle() ||
-                 disp->DisplayInside() != StyleDisplayInside::MozBox,
-             "This may be a frame that was previously blockified "
-             "but isn't any longer! It probably needs explicit "
-             "'display:block' to preserve behavior");
-  Unused << disp;  // (unused in configs that define the assertion away)
-
   if (item.mIsText) {
     // If this is collapsible whitespace next to a line boundary,
     // don't create a frame. item.IsWhitespace() also sets the
@@ -5843,10 +5833,6 @@ bool nsCSSFrameConstructor::IsValidSibling(nsIFrame* aSibling,
     }
 
     StyleDisplay display = aDisplay.value();
-    if (LayoutFrameType::Menu == parentType) {
-      return (StyleDisplay::MozPopup == display) ==
-             (StyleDisplay::MozPopup == siblingDisplay);
-    }
     // To have decent performance we want to return false in cases in which
     // reordering the two siblings has no effect on display.  To ensure
     // correctness, we MUST return false in cases where the two siblings have

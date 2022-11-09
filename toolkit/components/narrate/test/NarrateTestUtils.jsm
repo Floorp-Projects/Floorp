@@ -27,12 +27,15 @@ var NarrateTestUtils = {
   FORWARD: ".narrate-skip-next",
 
   isVisible(element) {
-    let style = element.ownerGlobal.getComputedStyle(element);
+    let win = element.ownerGlobal;
+    let style = win.getComputedStyle(element);
     if (style.display == "none") {
       return false;
-    } else if (style.visibility != "visible") {
+    }
+    if (style.visibility != "visible") {
       return false;
-    } else if (style.display == "-moz-popup" && element.state != "open") {
+    }
+    if (win.XULPopupElement.isInstance(element) && element.state != "open") {
       return false;
     }
 
