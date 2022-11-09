@@ -199,7 +199,12 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
   // Return here if there is a error within libjpeg.
   nsresult error_code;
   // This cast to nsresult makes sense because setjmp() returns whatever we
-  // passed to longjmp(), which was actually an nsresult.
+  // passed to longjmp(), which was actually an nsresult. These error codes
+  // have been translated from libjpeg error codes, like so:
+  // JERR_OUT_OF_MEMORY => NS_ERROR_OUT_OF_MEMORY
+  // JERR_UNKNOWN_MARKER => NS_ERROR_ILLEGAL_VALUE
+  // JERR_SOF_UNSUPPORTED =>  NS_ERROR_INVALID_CONTENT_ENCODING
+  // <any other error> => NS_ERROR_FAILURE
   if ((error_code = static_cast<nsresult>(setjmp(mErr.setjmp_buffer))) !=
       NS_OK) {
     bool fatal = true;
@@ -213,6 +218,22 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
       // This is a recoverable error. Consume the marker and continue.
       mInfo.unread_marker = 0;
       fatal = false;
+    } else if (error_code == NS_ERROR_INVALID_CONTENT_ENCODING) {
+      // The content is encoding frames with a format that libjpeg can't handle.
+      MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
+              ("} (setjmp returned NS_ERROR_INVALID_CONTENT_ENCODING)"));
+      // Check to see if we're in the done state, which indicates that we've
+      // already processed the main JPEG data.
+      bool inDoneState = (mState == JPEG_DONE);
+      // Whether we succeed or fail, we shouldn't send any more data.
+      mState = JPEG_SINK_NON_JPEG_TRAILER;
+
+      // If we're in the done state, we exit successfully and attempt to
+      // display the content we've already received. Otherwise, we fallthrough
+      // and treat this as a fatal error.
+      if (inDoneState) {
+        return Transition::TerminateSuccess();
+      }
     } else {
       // Error for another reason. (Possibly OOM.)
       mState = JPEG_ERROR;
@@ -688,6 +709,9 @@ my_error_exit(j_common_ptr cinfo) {
       break;
     case JERR_UNKNOWN_MARKER:
       error_code = NS_ERROR_ILLEGAL_VALUE;
+      break;
+    case JERR_SOF_UNSUPPORTED:
+      error_code = NS_ERROR_INVALID_CONTENT_ENCODING;
       break;
     default:
       error_code = NS_ERROR_FAILURE;
