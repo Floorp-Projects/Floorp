@@ -11,6 +11,7 @@ import mozilla.components.concept.fetch.Request
 import org.json.JSONArray
 import org.json.JSONObject
 import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.utils.toHexColor
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -40,11 +41,12 @@ class WallpaperMetadataFetcher(
         }.getOrElse { listOf() }
     }
 
-    private fun JSONObject.parseAsWallpapers(): List<Wallpaper> = with(getJSONArray("collections")) {
-        (0 until length()).map { index ->
-            getJSONObject(index).toCollectionOfWallpapers()
-        }.flatten()
-    }
+    private fun JSONObject.parseAsWallpapers(): List<Wallpaper> =
+        with(getJSONArray("collections")) {
+            (0 until length()).map { index ->
+                getJSONObject(index).toCollectionOfWallpapers()
+            }.flatten()
+        }
 
     private fun JSONObject.toCollectionOfWallpapers(): List<Wallpaper> {
         val collectionId = getString("id")
@@ -105,7 +107,7 @@ class WallpaperMetadataFetcher(
      * listed in the metadata.
      */
     private fun JSONObject.getArgbValueAsLong(propName: String): Long = "FF${getString(propName)}"
-        .toLong(radix = 16)
+        .toHexColor()
 
     companion object {
         internal const val currentJsonVersion = 1

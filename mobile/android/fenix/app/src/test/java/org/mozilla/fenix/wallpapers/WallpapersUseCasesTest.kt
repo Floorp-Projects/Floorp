@@ -25,6 +25,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.utils.toHexColor
 import org.mozilla.fenix.wallpapers.LegacyWallpaperMigration.Companion.TURNING_RED_PANDA_WALLPAPER_CARD_COLOR_DARK
 import org.mozilla.fenix.wallpapers.LegacyWallpaperMigration.Companion.TURNING_RED_PANDA_WALLPAPER_CARD_COLOR_LIGHT
 import org.mozilla.fenix.wallpapers.LegacyWallpaperMigration.Companion.TURNING_RED_PANDA_WALLPAPER_NAME
@@ -382,7 +383,7 @@ class WallpapersUseCasesTest {
         val allWallpapers = listOf(expiredWallpaper) + fakeRemoteWallpapers
         every { mockSettings.currentWallpaperName } returns TURNING_RED_PANDA_WALLPAPER_NAME
         every { mockSettings.shouldMigrateLegacyWallpaperCardColors } returns true
-        every { mockSettings.currentWallpaperTextColor } returns TURNING_RED_WALLPAPER_TEXT_COLOR.toLong(radix = 16)
+        every { mockSettings.currentWallpaperTextColor } returns TURNING_RED_WALLPAPER_TEXT_COLOR.toHexColor()
         coEvery { mockFileManager.lookupExpiredWallpaper(any()) } returns expiredWallpaper
         coEvery { mockMetadataFetcher.downloadWallpaperList() } returns allWallpapers
         coEvery { mockDownloader.downloadThumbnail(any()) } returns Wallpaper.ImageFileState.Downloaded
@@ -400,8 +401,8 @@ class WallpapersUseCasesTest {
         appStore.waitUntilIdle()
 
         verify { mockMigrationHelper.migrateExpiredWallpaperCardColors() }
-        verify { mockSettings.currentWallpaperCardColorLight = TURNING_RED_PANDA_WALLPAPER_CARD_COLOR_LIGHT.toLong(radix = 16) }
-        verify { mockSettings.currentWallpaperCardColorDark = TURNING_RED_PANDA_WALLPAPER_CARD_COLOR_DARK.toLong(radix = 16) }
+        verify { mockSettings.currentWallpaperCardColorLight = TURNING_RED_PANDA_WALLPAPER_CARD_COLOR_LIGHT.toHexColor() }
+        verify { mockSettings.currentWallpaperCardColorDark = TURNING_RED_PANDA_WALLPAPER_CARD_COLOR_DARK.toHexColor() }
     }
 
     @Test

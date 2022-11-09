@@ -11,6 +11,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.utils.toHexColor
 import org.mozilla.fenix.wallpapers.LegacyWallpaperMigration.Companion.TURNING_RED_MEI_WALLPAPER_NAME
 import org.mozilla.fenix.wallpapers.LegacyWallpaperMigration.Companion.TURNING_RED_PANDA_WALLPAPER_NAME
 import org.mozilla.fenix.wallpapers.LegacyWallpaperMigration.Companion.TURNING_RED_WALLPAPER_TEXT_COLOR
@@ -103,14 +104,14 @@ class LegacyWallpaperMigrationTest {
             migrationHelper.migrateLegacyWallpaper(TURNING_RED_MEI_WALLPAPER_NAME)
             assertTrue(getAllFiles(TURNING_RED_MEI_WALLPAPER_NAME).all { it.exists() })
             verify(exactly = 1) {
-                settings.currentWallpaperTextColor = TURNING_RED_WALLPAPER_TEXT_COLOR.toLong(radix = 16)
+                settings.currentWallpaperTextColor = TURNING_RED_WALLPAPER_TEXT_COLOR.toHexColor()
             }
 
             createAllLegacyFiles(TURNING_RED_PANDA_WALLPAPER_NAME)
             migrationHelper.migrateLegacyWallpaper(TURNING_RED_PANDA_WALLPAPER_NAME)
             assertTrue(getAllFiles(TURNING_RED_PANDA_WALLPAPER_NAME).all { it.exists() })
             verify(exactly = 2) {
-                settings.currentWallpaperTextColor = TURNING_RED_WALLPAPER_TEXT_COLOR.toLong(radix = 16)
+                settings.currentWallpaperTextColor = TURNING_RED_WALLPAPER_TEXT_COLOR.toHexColor()
             }
         }
     }
@@ -124,7 +125,7 @@ class LegacyWallpaperMigrationTest {
             assertFalse(getAllFiles(TURNING_RED_MEI_WALLPAPER_NAME).all { it.exists() })
             assertFalse(getAllFiles(TURNING_RED_PANDA_WALLPAPER_NAME).all { it.exists() })
             verify(exactly = 0) {
-                settings.currentWallpaperTextColor = TURNING_RED_WALLPAPER_TEXT_COLOR.toLong(radix = 16)
+                settings.currentWallpaperTextColor = TURNING_RED_WALLPAPER_TEXT_COLOR.toHexColor()
             }
         }
     }
@@ -138,14 +139,14 @@ class LegacyWallpaperMigrationTest {
             migrationHelper.migrateLegacyWallpaper(wallpaper1)
             assertFalse(getAllFiles(wallpaper1).all { it.exists() })
             verify(exactly = 0) {
-                settings.currentWallpaperTextColor = TURNING_RED_WALLPAPER_TEXT_COLOR.toLong(radix = 16)
+                settings.currentWallpaperTextColor = TURNING_RED_WALLPAPER_TEXT_COLOR.toHexColor()
             }
 
             createAllLegacyFiles(wallpaper2)
             migrationHelper.migrateLegacyWallpaper(wallpaper2)
             assertTrue(getAllFiles(wallpaper2).all { it.exists() })
             verify(exactly = 0) {
-                settings.currentWallpaperTextColor = TURNING_RED_WALLPAPER_TEXT_COLOR.toLong(radix = 16)
+                settings.currentWallpaperTextColor = TURNING_RED_WALLPAPER_TEXT_COLOR.toHexColor()
             }
         }
     }

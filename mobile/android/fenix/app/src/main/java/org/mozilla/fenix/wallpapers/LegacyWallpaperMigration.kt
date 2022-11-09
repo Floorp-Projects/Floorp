@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.utils.toHexColor
 import org.mozilla.fenix.wallpapers.Wallpaper.Companion.amethystName
 import org.mozilla.fenix.wallpapers.Wallpaper.Companion.beachVibeName
 import org.mozilla.fenix.wallpapers.Wallpaper.Companion.ceruleanName
@@ -93,7 +94,7 @@ class LegacyWallpaperMigration(
 
             // If an expired Turning Red wallpaper is successfully migrated
             if (wallpaperName == TURNING_RED_MEI_WALLPAPER_NAME || wallpaperName == TURNING_RED_PANDA_WALLPAPER_NAME) {
-                settings.currentWallpaperTextColor = TURNING_RED_WALLPAPER_TEXT_COLOR.toLong(radix = 16)
+                settings.currentWallpaperTextColor = TURNING_RED_WALLPAPER_TEXT_COLOR.toHexColor()
             }
         } catch (e: IOException) {
             Logger.error("Failed to migrate legacy wallpaper", e)
@@ -119,15 +120,15 @@ class LegacyWallpaperMigration(
             when (settings.currentWallpaperName) {
                 TURNING_RED_MEI_WALLPAPER_NAME -> {
                     settings.currentWallpaperCardColorLight =
-                        TURNING_RED_MEI_WALLPAPER_CARD_COLOR_LIGHT.toLong(radix = 16)
+                        TURNING_RED_MEI_WALLPAPER_CARD_COLOR_LIGHT.toHexColor()
                     settings.currentWallpaperCardColorDark =
-                        TURNING_RED_MEI_WALLPAPER_CARD_COLOR_DARK.toLong(radix = 16)
+                        TURNING_RED_MEI_WALLPAPER_CARD_COLOR_DARK.toHexColor()
                 }
                 TURNING_RED_PANDA_WALLPAPER_NAME -> {
                     settings.currentWallpaperCardColorLight =
-                        TURNING_RED_PANDA_WALLPAPER_CARD_COLOR_LIGHT.toLong(radix = 16)
+                        TURNING_RED_PANDA_WALLPAPER_CARD_COLOR_LIGHT.toHexColor()
                     settings.currentWallpaperCardColorDark =
-                        TURNING_RED_PANDA_WALLPAPER_CARD_COLOR_DARK.toLong(radix = 16)
+                        TURNING_RED_PANDA_WALLPAPER_CARD_COLOR_DARK.toHexColor()
                 }
             }
         }
