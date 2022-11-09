@@ -905,11 +905,7 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
     mPacketizerInput->Output(packet);
 
     // Downmix from mPacketizerInput->mChannels to mono if needed. We always
-    // have floats here, the packetizer performed the conversion. This handles
-    // sound cards with multiple physical jacks exposed as a single device with
-    // _n_ discrete channels, where only a single mic is plugged in. Those
-    // channels are not correlated temporaly since they are discrete channels,
-    // mixing is just a sum.
+    // have floats here, the packetizer performed the conversion.
     AutoTArray<float*, 8> deinterleavedPacketizedInputDataChannelPointers;
     uint32_t channelCountInput = 0;
     if (mPacketizerInput->mChannels > MAX_CHANNELS) {
@@ -919,12 +915,14 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
       deinterleavedPacketizedInputDataChannelPointers[0] =
           mDeinterleavedBuffer.Data();
       // Downmix to mono (and effectively have a planar buffer) by summing all
-      // channels in the first channel.
+      // channels in the first channel, and scaling by the number of channels to
+      // avoid clipping.
+      float gain = 1.f / mPacketizerInput->mChannels;
       size_t readIndex = 0;
       for (size_t i = 0; i < mPacketizerInput->mPacketSize; i++) {
         mDeinterleavedBuffer.Data()[i] = 0.;
         for (size_t j = 0; j < mPacketizerInput->mChannels; j++) {
-          mDeinterleavedBuffer.Data()[i] += packet[readIndex++];
+          mDeinterleavedBuffer.Data()[i] += gain * packet[readIndex++];
         }
       }
     } else {
