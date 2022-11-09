@@ -213,6 +213,7 @@ bool CPUInfo::bmi1Present = false;
 bool CPUInfo::bmi2Present = false;
 bool CPUInfo::lzcntPresent = false;
 bool CPUInfo::avx2Present = false;
+bool CPUInfo::fmaPresent = false;
 
 namespace js {
 namespace jit {
@@ -329,6 +330,10 @@ void CPUInfo::ComputeFlags() {
 
   static constexpr int POPCNTBit = 1 << 23;
   popcntPresent = (flagsEcx & POPCNTBit);
+
+  // Use the avxEnabled flag to enable/disable FMA.
+  static constexpr int FMABit = 1 << 12;
+  fmaPresent = (flagsEcx & FMABit) && avxEnabled;
 
   flagsEax = 0x80000001;
   ReadCPUInfo(&flagsEax, &flagsEbx, &flagsEcx, &flagsEdx);

@@ -4434,6 +4434,44 @@ class BaseAssembler : public GenericAssembler {
                                rm, src0, reg);
   }
 
+  // FMA instructions:
+
+  void vfmadd231ps_rrr(XMMRegisterID src1, XMMRegisterID src0,
+                       XMMRegisterID dst) {
+    spew("vfmadd213ps %s, %s, %s", XMMRegName(src1), XMMRegName(src0),
+         XMMRegName(dst));
+
+    m_formatter.threeByteOpVex(VEX_PD, OP3_VFMADD231PS_VxHxWx, ESCAPE_38,
+                               (RegisterID)src1, src0, (RegisterID)dst);
+  }
+
+  void vfnmadd231ps_rrr(XMMRegisterID src1, XMMRegisterID src0,
+                        XMMRegisterID dst) {
+    spew("vfnmadd213ps %s, %s, %s", XMMRegName(src1), XMMRegName(src0),
+         XMMRegName(dst));
+
+    m_formatter.threeByteOpVex(VEX_PD, OP3_VFNMADD231PS_VxHxWx, ESCAPE_38,
+                               (RegisterID)src1, src0, (RegisterID)dst);
+  }
+
+  void vfmadd231pd_rrr(XMMRegisterID src1, XMMRegisterID src0,
+                       XMMRegisterID dst) {
+    spew("vfmadd213pd %s, %s, %s", XMMRegName(src1), XMMRegName(src0),
+         XMMRegName(dst));
+
+    m_formatter.threeByteOpVex64(VEX_PD, OP3_VFMADD231PD_VxHxWx, ESCAPE_38,
+                                 (RegisterID)src1, src0, (RegisterID)dst);
+  }
+
+  void vfnmadd231pd_rrr(XMMRegisterID src1, XMMRegisterID src0,
+                        XMMRegisterID dst) {
+    spew("vfnmadd213pd %s, %s, %s", XMMRegName(src1), XMMRegName(src0),
+         XMMRegName(dst));
+
+    m_formatter.threeByteOpVex64(VEX_PD, OP3_VFNMADD231PD_VxHxWx, ESCAPE_38,
+                                 (RegisterID)src1, src0, (RegisterID)dst);
+  }
+
   // Misc instructions:
 
   void int3() {
@@ -5946,6 +5984,7 @@ class BaseAssembler : public GenericAssembler {
       m_buffer.putByteUnchecked(opcode);
       registerModRM(rm, reg);
     }
+#endif  // JS_CODEGEN_X64
 
     void threeByteOpVex64(VexOperandType ty, ThreeByteOpcodeID opcode,
                           ThreeByteEscape escape, RegisterID rm,
@@ -5965,7 +6004,6 @@ class BaseAssembler : public GenericAssembler {
       threeOpVex(ty, r, x, b, m, w, v, l, opcode);
       registerModRM(rm, reg);
     }
-#endif
 
     // Byte-operands:
     //
