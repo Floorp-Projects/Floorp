@@ -12,23 +12,23 @@
 ## data for the current website, and allow them to control it.
 
 origin-controls-no-access =
-    .label = Extension can’t access site data
+    .label = Extension Can’t Read and Change Data
 
 origin-controls-options =
-    .label = Extension can access site data:
+    .label = Extension Can Read and Change Data:
 
 origin-controls-option-all-domains =
-    .label = On all sites
+    .label = On All Sites
 
 origin-controls-option-when-clicked =
-    .label = When clicked
+    .label = Only When Clicked
 
 # This string denotes an option that grants the extension access to
 # the current site whenever they visit it.
 # Variables:
 #   $domain (String) - The domain for which the access is granted.
 origin-controls-option-always-on =
-    .label = Always on { $domain }
+    .label = Always Allow on { $domain }
 
 ## These strings are used to map Origin Controls states to user-friendly
 ## messages. They currently appear in the unified extensions panel.

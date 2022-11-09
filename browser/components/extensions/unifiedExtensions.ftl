@@ -26,10 +26,10 @@ unified-extensions-item-message-manage = Manage extension
 ## Extension's context menu
 
 unified-extensions-context-menu-manage-extension =
-    .label = Manage extension
+    .label = Manage Extension
 
 unified-extensions-context-menu-remove-extension =
-    .label = Remove extension
+    .label = Remove Extension
 
 unified-extensions-context-menu-report-extension =
-    .label = Report extension
+    .label = Report Extension
