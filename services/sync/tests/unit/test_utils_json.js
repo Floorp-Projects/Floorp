@@ -63,8 +63,7 @@ add_task(async function test_load_logging() {
   _("Verify that reads and read errors are logged.");
 
   // Write a file with some invalid JSON
-  let filePath = "weave/log.json";
-  let file = FileUtils.getFile("ProfD", filePath.split("/"), true);
+  let file = await IOUtils.getFile(PathUtils.profileDir, "weave", "log.json");
   let fos = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(
     Ci.nsIFileOutputStream
   );
