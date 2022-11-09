@@ -53,23 +53,36 @@ def rust_datatypes_filter(value):
             elif isinstance(value, enum.Enum):
                 yield (value.__class__.__name__ + "::" + util.Camelize(value.name))
             elif isinstance(value, set):
-                yield "vec!["
-                first = True
-                for subvalue in sorted(list(value)):
-                    if not first:
-                        yield ", "
-                    yield from self.iterencode(subvalue)
-                    first = False
-                yield "]"
+                yield from self.iterencode(sorted(list(value)))
             elif isinstance(value, list):
-                yield "vec!["
-                first = True
-                for subvalue in list(value):
-                    if not first:
-                        yield ", "
-                    yield from self.iterencode(subvalue)
-                    first = False
-                yield "]"
+                if len(value) > 8 and all(isinstance(v, str) for v in value):
+                    # For large enough sets and lists of strings, we use a single string
+                    # with an array of lengths and convert to a Vec at runtime. This yields
+                    # smaller code, data, and relocations than using vec![].
+                    yield "{"
+                    yield f"""const S: &'static str = "{"".join(value)}";"""
+                    lengths = [len(v) for v in value]
+                    largest = max(lengths)
+                    # Use a type adequate for the largest string.
+                    # In most cases, this will be u8.
+                    len_type = f"u{((largest.bit_length() + 7) // 8) * 8}"
+                    yield f"const LENGTHS: [{len_type}; {len(lengths)}] = {lengths};"
+                    yield "let mut offset = 0;"
+                    yield "LENGTHS.iter().map(|len| {"
+                    yield "  let start = offset;"
+                    yield "  offset += *len as usize;"
+                    yield "  S[start..offset].into()"
+                    yield "}).collect()"
+                    yield "}"
+                else:
+                    yield "vec!["
+                    first = True
+                    for subvalue in list(value):
+                        if not first:
+                            yield ", "
+                        yield from self.iterencode(subvalue)
+                        first = False
+                    yield "]"
             elif value is None:
                 yield "None"
             elif isinstance(value, str):
