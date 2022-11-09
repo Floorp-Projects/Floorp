@@ -34,11 +34,17 @@ class DocAccessiblePlatformExtParent;
  * an accessible document in a content process.
  */
 class DocAccessibleParent : public RemoteAccessible,
-                            public PDocAccessibleParent {
+                            public PDocAccessibleParent,
+                            public nsIMemoryReporter {
  public:
-  NS_INLINE_DECL_REFCOUNTING(DocAccessibleParent);
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMEMORYREPORTER
 
+ private:
   DocAccessibleParent();
+
+ public:
+  static already_AddRefed<DocAccessibleParent> New();
 
   /**
    * Set this as a top level document; i.e. it is not embedded by another remote
@@ -330,6 +336,7 @@ class DocAccessibleParent : public RemoteAccessible,
   virtual Accessible* FocusedChild() override;
 
   void URL(nsAString& aURL) const;
+  void URL(nsACString& aURL) const;
 
   virtual Relation RelationByType(RelationType aType) const override;
 
@@ -344,6 +351,8 @@ class DocAccessibleParent : public RemoteAccessible,
   nsTHashSet<uint64_t> mOnScreenAccessibles;
 
   static DocAccessibleParent* GetFrom(dom::BrowsingContext* aBrowsingContext);
+
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) override;
 
  private:
   ~DocAccessibleParent();

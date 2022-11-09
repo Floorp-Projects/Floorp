@@ -216,6 +216,9 @@ class AccAttributes {
       StringFromValueAndName(mName, *mValue, aValueString);
     }
 
+    // Size of the pair in the hash table.
+    size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf);
+
    private:
     nsAtom* mName;
     const AttrValueType* mValue;
@@ -258,6 +261,8 @@ class AccAttributes {
 #ifdef A11Y_LOG
   static void DebugPrint(const char* aPrefix, const AccAttributes& aAttributes);
 #endif
+
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf);
 
  private:
   static void StringFromValueAndName(nsAtom* aAttrName,

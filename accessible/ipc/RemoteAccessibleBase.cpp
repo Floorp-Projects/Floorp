@@ -1712,6 +1712,31 @@ Maybe<int32_t> RemoteAccessibleBase<Derived>::GetIntARIAAttr(
   return Nothing();
 }
 
+template <class Derived>
+size_t RemoteAccessibleBase<Derived>::SizeOfIncludingThis(
+    MallocSizeOf aMallocSizeOf) {
+  return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+}
+
+template <class Derived>
+size_t RemoteAccessibleBase<Derived>::SizeOfExcludingThis(
+    MallocSizeOf aMallocSizeOf) {
+  size_t size = 0;
+
+  // Count attributes.
+  if (mCachedFields) {
+    size += mCachedFields->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
+  // Count children
+  size += mChildren.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  for (Derived* child : mChildren) {
+    size += child->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
+  return size;
+}
+
 template class RemoteAccessibleBase<RemoteAccessible>;
 
 }  // namespace a11y

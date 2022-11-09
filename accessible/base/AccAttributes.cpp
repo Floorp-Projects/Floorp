@@ -5,7 +5,9 @@
 
 #include "AccAttributes.h"
 #include "StyleInfo.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/ToString.h"
+#include "nsAtom.h"
 
 using namespace mozilla::a11y;
 
@@ -204,3 +206,59 @@ void AccAttributes::DebugPrint(const char* aPrefix,
   printf("%s %s\n", aPrefix, NS_ConvertUTF16toUTF8(prettyString).get());
 }
 #endif
+
+size_t AccAttributes::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
+  size_t size =
+      aMallocSizeOf(this) + mData.ShallowSizeOfExcludingThis(aMallocSizeOf);
+
+  for (auto iter : *this) {
+    size += iter.SizeOfExcludingThis(aMallocSizeOf);
+  }
+
+  return size;
+}
+
+size_t AccAttributes::Entry::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) {
+  size_t size = 0;
+
+  {
+    AtomsSizes atomsSizes;
+    Name()->AddSizeOfIncludingThis(aMallocSizeOf, atomsSizes);
+    size += atomsSizes.mDynamicAtoms;
+  }
+
+  if (mValue->is<RefPtr<nsAtom>>()) {
+    AtomsSizes atomsSizes;
+    mValue->as<RefPtr<nsAtom>>()->AddSizeOfIncludingThis(aMallocSizeOf,
+                                                         atomsSizes);
+    size += atomsSizes.mDynamicAtoms;
+  } else if (mValue->is<nsTArray<int32_t>>()) {
+    size += mValue->as<nsTArray<int32_t>>().ShallowSizeOfExcludingThis(
+        aMallocSizeOf);
+  } else if (mValue->is<UniquePtr<nsString>>()) {
+    // String data will never be shared.
+    size += mValue->as<UniquePtr<nsString>>()->SizeOfIncludingThisIfUnshared(
+        aMallocSizeOf);
+  } else if (mValue->is<RefPtr<AccAttributes>>()) {
+    size +=
+        mValue->as<RefPtr<AccAttributes>>()->SizeOfIncludingThis(aMallocSizeOf);
+  } else if (mValue->is<UniquePtr<AccGroupInfo>>()) {
+    size += mValue->as<UniquePtr<AccGroupInfo>>()->SizeOfIncludingThis(
+        aMallocSizeOf);
+  } else if (mValue->is<UniquePtr<gfx::Matrix4x4>>()) {
+    size += aMallocSizeOf(mValue->as<UniquePtr<gfx::Matrix4x4>>().get());
+  } else if (mValue->is<nsTArray<uint64_t>>()) {
+    size += mValue->as<nsTArray<uint64_t>>().ShallowSizeOfExcludingThis(
+        aMallocSizeOf);
+  } else {
+    // This type is stored directly and already counted.
+    // Assert that we have exhausted all the remaining variant types.
+    MOZ_ASSERT(mValue->is<bool>() || mValue->is<float>() ||
+               mValue->is<double>() || mValue->is<int32_t>() ||
+               mValue->is<uint64_t>() || mValue->is<CSSCoord>() ||
+               mValue->is<FontSize>() || mValue->is<Color>() ||
+               mValue->is<DeleteEntry>());
+  }
+
+  return size;
+}
