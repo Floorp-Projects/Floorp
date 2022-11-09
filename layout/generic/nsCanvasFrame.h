@@ -12,14 +12,13 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "nsContainerFrame.h"
-#include "nsIScrollPositionListener.h"
-#include "nsIPopupContainer.h"
 #include "nsDisplayList.h"
 #include "nsIAnonymousContentCreator.h"
+#include "nsIPopupContainer.h"
+#include "nsIScrollPositionListener.h"
 
 class nsPresContext;
 class gfxContext;
-class nsPopupSetFrame;
 
 /**
  * Root frame class.
@@ -40,19 +39,16 @@ class nsCanvasFrame final : public nsContainerFrame,
   explicit nsCanvasFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : nsContainerFrame(aStyle, aPresContext, kClassID),
         mDoPaintFocus(false),
-        mAddedScrollPositionListener(false),
-        mPopupSetFrame(nullptr) {}
+        mAddedScrollPositionListener(false) {}
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsCanvasFrame)
 
-  nsPopupSetFrame* GetPopupSetFrame() override;
-  void SetPopupSetFrame(nsPopupSetFrame* aPopupSet) override;
   Element* GetDefaultTooltip() override;
   void SetDefaultTooltip(Element* aTooltip) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) override;
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) override;
 
   void SetInitialChildList(ChildListID aListID,
                            nsFrameList&& aChildList) override;
@@ -61,24 +57,23 @@ class nsCanvasFrame final : public nsContainerFrame,
                     const nsLineList::iterator* aPrevFrameLine,
                     nsFrameList&& aFrameList) override;
 #ifdef DEBUG
-  virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
+  void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
 #endif
 
-  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
-  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+  nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus& aStatus) override;
+  bool IsFrameOfType(uint32_t aFlags) const override {
     return nsContainerFrame::IsFrameOfType(
         aFlags & ~(nsIFrame::eCanContainOverflowContainers));
   }
 
   // nsIAnonymousContentCreator
-  virtual nsresult CreateAnonymousContent(
-      nsTArray<ContentInfo>& aElements) override;
-  virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
-                                        uint32_t aFilter) override;
+  nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
+  void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
+                                uint32_t aFilter) override;
 
   Element* GetCustomContentContainer() const { return mCustomContentContainer; }
 
@@ -99,20 +94,20 @@ class nsCanvasFrame final : public nsContainerFrame,
    */
   NS_IMETHOD SetHasFocus(bool aHasFocus);
 
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsDisplayListSet& aLists) override;
 
   void PaintFocus(mozilla::gfx::DrawTarget* aRenderingContext, nsPoint aPt);
 
   // nsIScrollPositionListener
-  virtual void ScrollPositionWillChange(nscoord aX, nscoord aY) override;
-  virtual void ScrollPositionDidChange(nscoord aX, nscoord aY) override {}
+  void ScrollPositionWillChange(nscoord aX, nscoord aY) override;
+  void ScrollPositionDidChange(nscoord aX, nscoord aY) override {}
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override;
+  nsresult GetFrameName(nsAString& aResult) const override;
 #endif
-  virtual nsresult GetContentForEvent(const mozilla::WidgetEvent* aEvent,
-                                      nsIContent** aContent) override;
+  nsresult GetContentForEvent(const mozilla::WidgetEvent* aEvent,
+                              nsIContent** aContent) override;
 
   nsRect CanvasArea() const;
 
@@ -122,10 +117,6 @@ class nsCanvasFrame final : public nsContainerFrame,
   bool mAddedScrollPositionListener;
 
   nsCOMPtr<Element> mCustomContentContainer;
-
- private:
-  nsPopupSetFrame* mPopupSetFrame;
-  nsCOMPtr<Element> mPopupgroupContent;
   nsCOMPtr<Element> mTooltipContent;
 };
 
@@ -142,31 +133,29 @@ class nsDisplayCanvasBackgroundColor final : public nsDisplaySolidColorBase {
                                  nsIFrame* aFrame)
       : nsDisplaySolidColorBase(aBuilder, aFrame, NS_RGBA(0, 0, 0, 0)) {}
 
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) const override {
+  nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override {
     nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
     *aSnap = true;
     return frame->CanvasArea() + ToReferenceFrame();
   }
-  virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
-                       HitTestState* aState,
-                       nsTArray<nsIFrame*>* aOutFrames) override {
+  void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+               HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) override {
     // We need to override so we don't consider border-radius.
     aOutFrames->AppendElement(mFrame);
   }
-  virtual bool CreateWebRenderCommands(
+  bool CreateWebRenderCommands(
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
       mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
-  virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
   void SetExtraBackgroundColor(nscolor aColor) { mColor = aColor; }
 
   NS_DISPLAY_DECL_NAME("CanvasBackgroundColor", TYPE_CANVAS_BACKGROUND_COLOR)
 
-  virtual void WriteDebugInfo(std::stringstream& aStream) override;
+  void WriteDebugInfo(std::stringstream& aStream) override;
 };
 
 class nsDisplayCanvasBackgroundImage : public nsDisplayBackgroundImage {
@@ -176,11 +165,11 @@ class nsDisplayCanvasBackgroundImage : public nsDisplayBackgroundImage {
                                           const InitData& aInitData)
       : nsDisplayBackgroundImage(aBuilder, aFrame, aInitData) {}
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
   // We still need to paint a background color as well as an image for this
   // item, so we can't support this yet.
-  virtual bool SupportsOptimizingToImage() const override { return false; }
+  bool SupportsOptimizingToImage() const override { return false; }
 
   bool IsSingleFixedPositionImage(nsDisplayListBuilder* aBuilder,
                                   const nsRect& aClipRect, gfxRect* aDestRect);
@@ -198,7 +187,7 @@ class nsDisplayCanvasThemedBackground : public nsDisplayThemedBackground {
     nsDisplayThemedBackground::Init(aBuilder);
   }
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
   NS_DISPLAY_DECL_NAME("CanvasThemedBackground", TYPE_CANVAS_THEMED_BACKGROUND)
 };

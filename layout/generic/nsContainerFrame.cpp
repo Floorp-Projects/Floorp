@@ -1087,10 +1087,10 @@ void nsContainerFrame::PositionChildViews(nsIFrame* aFrame) {
   }
 
   // Recursively walk aFrame's child frames.
-  // Process the additional child lists, but skip the popup list as the
-  // view for popups is managed by the parent. Currently only nsMenuFrame
-  // and nsPopupSetFrame have a popupList and during layout will adjust the
-  // view manually to position the popup.
+  // Process the additional child lists, but skip the popup list as the view for
+  // popups is managed by the parent.
+  // Currently only nsMenuFrame has a popupList and during layout will adjust
+  // the view manually to position the popup.
   for (const auto& [list, listID] : aFrame->ChildLists()) {
     if (listID == kPopupList) {
       continue;
