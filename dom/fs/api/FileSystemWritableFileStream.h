@@ -65,8 +65,6 @@ class FileSystemWritableFileStream final : public WritableStream {
       const ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams& aData,
       ErrorResult& aError);
 
-  bool DoSeek(RefPtr<Promise>& aPromise, uint64_t aPosition);
-
   already_AddRefed<Promise> Seek(uint64_t aPosition, ErrorResult& aError);
 
   already_AddRefed<Promise> Truncate(uint64_t aSize, ErrorResult& aError);
@@ -84,6 +82,8 @@ class FileSystemWritableFileStream final : public WritableStream {
   virtual ~FileSystemWritableFileStream();
 
   nsresult WriteBlob(Blob* aBlob, uint64_t& aWritten);
+
+  bool DoSeek(RefPtr<Promise>& aPromise, uint64_t aPosition);
 
   RefPtr<FileSystemWritableFileStreamChild> mActor;
   RefPtr<TaskQueue> mTaskQueue;
