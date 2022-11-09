@@ -2130,7 +2130,7 @@ template <typename T>
 bool js::gc::IsMarkedInternal(JSRuntime* rt, T* thing) {
   // Don't depend on the mark state of other cells during finalization.
   MOZ_ASSERT(!CurrentThreadIsGCFinalizing());
-  MOZ_ASSERT(!JS::RuntimeHeapIsMinorCollecting());
+  MOZ_ASSERT(rt->heapState() != JS::HeapState::MinorCollecting);
   MOZ_ASSERT(thing);
   CheckIsMarkedThing(thing);
 
