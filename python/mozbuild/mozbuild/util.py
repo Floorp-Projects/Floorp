@@ -26,10 +26,8 @@ import sys
 import time
 from collections import OrderedDict
 from io import BytesIO, StringIO
-from pathlib import Path
 
 import six
-from looseversion import LooseVersion as Version
 
 MOZBUILD_METRICS_PATH = os.path.abspath(
     os.path.join(__file__, "..", "..", "metrics.yaml")
@@ -1460,18 +1458,3 @@ def hexdump(buf):
         line += "|\n"
         lines.append(line)
     return lines
-
-
-def mozilla_build_version():
-    mozilla_build = os.environ.get("MOZILLABUILD")
-
-    version_file = Path(mozilla_build) / "VERSION"
-
-    assert version_file.exists(), (
-        f'The MozillaBuild VERSION file was not found at "{version_file}".\n'
-        "Please check if MozillaBuild is installed correctly and that the"
-        "`MOZILLABUILD` environment variable is to the correct path."
-    )
-
-    with version_file.open() as file:
-        return Version(file.readline().rstrip("\n"))

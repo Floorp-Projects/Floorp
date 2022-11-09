@@ -11,7 +11,7 @@ import six
 
 
 class NullTerminal(object):
-    """Replacement for `blessed.Terminal()` that does no formatting."""
+    """Replacement for `blessings.Terminal()` that does no formatting."""
 
     number_of_colors = 0
     width = 0
@@ -43,10 +43,11 @@ class NullTerminal(object):
 def Terminal(raises=False, disable_styling=False, **kwargs):
     if disable_styling:
         return NullTerminal(**kwargs)
+
     try:
-        import blessed
+        import blessings
     except Exception:
         if raises:
             raise
         return NullTerminal(**kwargs)
-    return blessed.Terminal(**kwargs)
+    return blessings.Terminal(**kwargs)

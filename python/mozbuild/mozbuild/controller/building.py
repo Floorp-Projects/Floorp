@@ -12,13 +12,18 @@ import logging
 import os
 import re
 import shutil
+import six
 import subprocess
 import sys
 import time
-from collections import Counter, OrderedDict, namedtuple
+
+from collections import (
+    Counter,
+    namedtuple,
+    OrderedDict,
+)
 from textwrap import TextWrapper
 
-import six
 from mach.site import CommandSiteManager
 
 try:
@@ -26,19 +31,28 @@ try:
 except Exception:
     psutil = None
 
-import mozfile
-import mozpack.path as mozpath
 from mach.mixin.logging import LoggingMixin
 from mach.util import get_state_dir
+import mozfile
 from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
 from mozterm.widgets import Footer
 
-from ..backend import get_backend_class
-from ..base import MozbuildObject
-from ..compilation.warnings import WarningsCollector, WarningsDatabase
-from ..testing import install_test_files
-from ..util import FileAvoidWrite, mkdir, resolve_target_to_make
+import mozpack.path as mozpath
+
 from .clobber import Clobberer
+from ..base import MozbuildObject
+from ..backend import get_backend_class
+from ..testing import install_test_files
+from ..compilation.warnings import (
+    WarningsCollector,
+    WarningsDatabase,
+)
+from ..util import (
+    FileAvoidWrite,
+    mkdir,
+    resolve_target_to_make,
+)
+
 
 FINDER_SLOW_MESSAGE = """
 ===================
@@ -634,7 +648,7 @@ class TerminalLoggingHandler(logging.Handler):
 class BuildProgressFooter(Footer):
     """Handles display of a build progress indicator in a terminal.
 
-    When mach builds inside a blessed-supported terminal, it will render
+    When mach builds inside a blessings-supported terminal, it will render
     progress information collected from a BuildMonitor. This class converts the
     state of BuildMonitor into terminal output.
     """
@@ -675,13 +689,10 @@ class OutputManager(LoggingMixin):
         terminal = log_manager.terminal
 
         # TODO convert terminal footer to config file setting.
-        if not terminal:
+        if not terminal or os.environ.get("MACH_NO_TERMINAL_FOOTER", None):
             return
         if os.environ.get("INSIDE_EMACS", None):
             return
-
-        if os.environ.get("MACH_NO_TERMINAL_FOOTER", None):
-            footer = None
 
         self.t = terminal
         self.footer = footer
