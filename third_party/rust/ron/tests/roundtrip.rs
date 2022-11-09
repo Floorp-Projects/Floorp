@@ -82,7 +82,7 @@ fn roundtrip_pretty() {
 
 #[test]
 fn roundtrip_sep_tuple_members() {
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, PartialEq, Eq, Serialize)]
     pub enum FileOrMem {
         File(String),
         Memory,

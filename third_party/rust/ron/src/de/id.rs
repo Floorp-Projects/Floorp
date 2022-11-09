@@ -71,6 +71,7 @@ impl<'a, 'b: 'a, 'c> de::Deserializer<'b> for &'c mut IdDeserializer<'a, 'b> {
         unimplemented!("IdDeserializer may only be used for identifiers")
     }
 
+    #[cfg(feature = "integer128")]
     fn deserialize_i128<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
@@ -106,6 +107,7 @@ impl<'a, 'b: 'a, 'c> de::Deserializer<'b> for &'c mut IdDeserializer<'a, 'b> {
         unimplemented!("IdDeserializer may only be used for identifiers")
     }
 
+    #[cfg(feature = "integer128")]
     fn deserialize_u128<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,

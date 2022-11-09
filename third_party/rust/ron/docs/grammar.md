@@ -126,8 +126,8 @@ tuple = "(", [value, { comma, value }, [comma]], ")";
 struct = unit_struct | tuple_struct | named_struct;
 unit_struct = ident | "()";
 tuple_struct = [ident], ws, tuple;
-named_struct = [ident], ws, "(", [named_field, { comma, named_field }, [comma]], ")";
-named_field = ident, ws, ":", value;
+named_struct = [ident], ws, "(", ws, [named_field, { comma, named_field }, [comma]], ")";
+named_field = ident, ws, ":", ws, value;
 ```
 
 ## Enum
