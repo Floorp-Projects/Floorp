@@ -284,7 +284,7 @@ function is_hidden(element) {
   if (style.visibility != "visible") {
     return true;
   }
-  if (XULPopupElement.isInstance(element)) {
+  if (style.display == "-moz-popup") {
     return ["hiding", "closed"].includes(element.state);
   }
 
