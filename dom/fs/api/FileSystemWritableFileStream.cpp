@@ -96,7 +96,6 @@ FileSystemWritableFileStream::FileSystemWritableFileStream(
   mFileDesc = PR_ImportFile(PROsfd(rawFD.release()));
 
   LOG(("Created WritableFileStream %p for fd %p", this, mFileDesc));
-  mActor->SetStream(this);
 }
 
 FileSystemWritableFileStream::~FileSystemWritableFileStream() {
