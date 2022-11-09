@@ -272,8 +272,6 @@ panel,
 tooltip {
   position: absolute;
   -moz-top-layer: top;
-  /* Popups can't have overflow */
-  contain: paint;
   z-index: 2147483647;
   text-shadow: none;
 }
