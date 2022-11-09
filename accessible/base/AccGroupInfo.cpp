@@ -300,6 +300,12 @@ Accessible* AccGroupInfo::NextItemTo(Accessible* aItem) {
   return nullptr;
 }
 
+size_t AccGroupInfo::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
+  // We don't count mParent or mItem since they (should be) counted
+  // as part of the document.
+  return aMallocSizeOf(this);
+}
+
 bool AccGroupInfo::ShouldReportRelations(role aRole, role aParentRole) {
   // We only want to report hierarchy-based node relations for items in tree or
   // list form.  ARIA level/owns relations are always reported.

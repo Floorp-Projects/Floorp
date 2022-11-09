@@ -6,6 +6,7 @@
 #define AccGroupInfo_h_
 
 #include "nsISupportsImpl.h"
+#include "mozilla/MemoryReporting.h"
 #include "Role.h"
 
 namespace mozilla {
@@ -65,6 +66,8 @@ class AccGroupInfo {
    * Return next item of the same group to the given item.
    */
   static Accessible* NextItemTo(Accessible* aItem);
+
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf);
 
  protected:
   AccGroupInfo(const Accessible* aItem, a11y::role aRole);

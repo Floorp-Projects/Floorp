@@ -369,6 +369,9 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
     }
   }
 
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf);
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf);
+
  protected:
   RemoteAccessibleBase(uint64_t aID, Derived* aParent,
                        DocAccessibleParent* aDoc, role aRole, AccType aType,
