@@ -16,6 +16,8 @@ class nsIGlobalObject;
 namespace mozilla {
 extern LazyLogModule gOPFSLog;
 
+template <typename T>
+class Buffer;
 class ErrorResult;
 
 namespace dom {
@@ -68,9 +70,21 @@ class FileSystemWritableFileStream final : public WritableStream {
 
   virtual ~FileSystemWritableFileStream();
 
-  nsresult WriteBlob(Blob* aBlob, uint64_t& aWritten);
+  template <typename T>
+  void Write(const T& aData, const Maybe<uint64_t> aPosition,
+             RefPtr<Promise> aPromise);
 
-  bool DoSeek(RefPtr<Promise>& aPromise, uint64_t aPosition);
+  void Seek(uint64_t aPosition, RefPtr<Promise> aPromise);
+
+  void Truncate(uint64_t aSize, RefPtr<Promise> aPromise);
+
+  Result<uint64_t, nsresult> WriteBuffer(Buffer<char>&& aBuffer,
+                                         const Maybe<uint64_t> aPosition);
+
+  Result<uint64_t, nsresult> WriteStream(nsCOMPtr<nsIInputStream> aStream,
+                                         const Maybe<uint64_t> aPosition);
+
+  Result<Ok, nsresult> SeekPosition(uint64_t aPosition);
 
   RefPtr<FileSystemManager> mManager;
 

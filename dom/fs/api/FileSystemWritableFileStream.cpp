@@ -6,6 +6,7 @@
 
 #include "FileSystemWritableFileStream.h"
 
+#include "mozilla/Buffer.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Blob.h"
 #include "mozilla/dom/FileSystemHandle.h"
@@ -218,13 +219,6 @@ already_AddRefed<Promise> FileSystemWritableFileStream::Write(
     return nullptr;
   }
 
-  nsCString utf8Str;
-  const uint8_t* data;
-  size_t length = 0;
-  uint64_t written = 0;
-  nsresult result;
-  UniquePtr<uint8_t> temp;
-
   if (mClosed) {
     promise->MaybeRejectWithTypeError("WritableFileStream closed");
     return promise.forget();
@@ -232,127 +226,67 @@ already_AddRefed<Promise> FileSystemWritableFileStream::Write(
 
   if (aData.IsWriteParams()) {
     const WriteParams& params = aData.GetAsWriteParams();
-    if (params.mType == WriteCommandType::Write) {
-      if (!params.mData.WasPassed()) {
-        aError.ThrowSyntaxError("write() requires data");
-        return nullptr;
-      }
-      if (params.mData.Value().IsNull()) {
-        promise->MaybeRejectWithTypeError("write() of null data");
-        return promise.forget();
-      }
-      if (params.mPosition.WasPassed()) {
-        if (params.mPosition.Value().IsNull()) {
-          promise->MaybeRejectWithTypeError("write() with null position");
-          return promise.forget();
-        }
-        if (!DoSeek(promise, params.mPosition.Value().Value())) {
-          return promise.forget();
-        }
-      }
-      if (params.mData.Value().Value().IsUSVString()) {
-        if (NS_WARN_IF(!AppendUTF16toUTF8(
-                params.mData.Value().Value().GetAsUSVString(), utf8Str,
-                mozilla::fallible))) {
+    switch (params.mType) {
+      case WriteCommandType::Write: {
+        if (!params.mData.WasPassed()) {
+          aError.ThrowSyntaxError("write() requires data");
           return nullptr;
         }
-        temp.reset(new uint8_t[utf8Str.Length() + 1]);
-        memcpy(temp.get(), PromiseFlatCString(utf8Str).get(),
-               utf8Str.Length() + 1);
-        data = (uint8_t*)temp.get();
-        length = strlen((char*)data);
-      } else if (params.mData.Value().Value().IsArrayBuffer()) {
-        const ArrayBuffer& buffer =
-            params.mData.Value().Value().GetAsArrayBuffer();
-        buffer.ComputeState();
-        data = buffer.Data();
-        length = buffer.Length();
-      } else if (params.mData.Value().Value().IsArrayBufferView()) {
-        const ArrayBufferView& buffer =
-            params.mData.Value().Value().GetAsArrayBufferView();
-        buffer.ComputeState();
-        data = buffer.Data();
-        length = buffer.Length();
-      } else if (params.mData.Value().Value().IsBlob()) {
-        RefPtr<Blob> blob = params.mData.Value().Value().GetAsBlob().get();
-        if (NS_FAILED(result = WriteBlob(blob, written))) {
-          promise->MaybeReject(result);
-        } else {
-          promise->MaybeResolve(written);
+
+        if (params.mData.Value().IsNull()) {
+          promise->MaybeRejectWithTypeError("write() of null data");
+          return promise.forget();
         }
+
+        Maybe<uint64_t> position;
+
+        if (params.mPosition.WasPassed()) {
+          if (params.mPosition.Value().IsNull()) {
+            promise->MaybeRejectWithTypeError("write() with null position");
+            return promise.forget();
+          }
+
+          position = Some(params.mPosition.Value().Value());
+        }
+
+        Write(params.mData.Value().Value(), position, promise);
         return promise.forget();
       }
-    } else if (params.mType == WriteCommandType::Seek) {
-      if (!params.mPosition.WasPassed()) {
-        aError.ThrowSyntaxError("seek() requires a position");
-        return nullptr;
-      }
-      if (params.mPosition.Value().IsNull()) {
-        promise->MaybeRejectWithTypeError("seek() with null position");
+
+      case WriteCommandType::Seek:
+        if (!params.mPosition.WasPassed()) {
+          aError.ThrowSyntaxError("seek() requires a position");
+          return nullptr;
+        }
+
+        if (params.mPosition.Value().IsNull()) {
+          promise->MaybeRejectWithTypeError("seek() with null position");
+          return promise.forget();
+        }
+
+        Seek(params.mPosition.Value().Value(), promise);
         return promise.forget();
-      }
-      return Seek(params.mPosition.Value().Value(), aError);
-    } else if (params.mType == WriteCommandType::Truncate) {
-      if (!params.mSize.WasPassed()) {
-        aError.ThrowSyntaxError("truncate() requires a size");
-        return nullptr;
-      }
-      if (params.mSize.Value().IsNull()) {
-        promise->MaybeRejectWithTypeError("truncate() with null size");
+
+      case WriteCommandType::Truncate:
+        if (!params.mSize.WasPassed()) {
+          aError.ThrowSyntaxError("truncate() requires a size");
+          return nullptr;
+        }
+
+        if (params.mSize.Value().IsNull()) {
+          promise->MaybeRejectWithTypeError("truncate() with null size");
+          return promise.forget();
+        }
+
+        Truncate(params.mSize.Value().Value(), promise);
         return promise.forget();
-      }
-      return Truncate(params.mSize.Value().Value(), aError);
+
+      default:
+        MOZ_CRASH("Bad WriteParams value!");
     }
-  } else if (aData.IsUSVString()) {
-    if (NS_WARN_IF(!AppendUTF16toUTF8(aData.GetAsUSVString(), utf8Str,
-                                      mozilla::fallible))) {
-      promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
-      return promise.forget();
-    }
-    temp.reset(new uint8_t[utf8Str.Length() + 1]);
-    memcpy(temp.get(), PromiseFlatCString(utf8Str).get(), utf8Str.Length() + 1);
-    data = (uint8_t*)temp.get();
-    length = strlen((char*)data);
-  } else if (aData.IsArrayBuffer()) {
-    const ArrayBuffer& buffer = aData.GetAsArrayBuffer();
-    buffer.ComputeState();
-    data = buffer.Data();
-    length = buffer.Length();
-  } else if (aData.IsArrayBufferView()) {
-    const ArrayBufferView& buffer = aData.GetAsArrayBufferView();
-    buffer.ComputeState();
-    data = buffer.Data();
-    length = buffer.Length();
-  } else if (aData.IsBlob()) {
-    if (NS_FAILED(result = WriteBlob(&aData.GetAsBlob(), written))) {
-      // XXX wpt tests check for throwing a NotFound error if the
-      // underlying file is removed, not the generic
-      // NS_ERROR_FILE_NOT_FOUND.  This is not in the spec
-      if (result == NS_ERROR_FILE_NOT_FOUND) {
-        promise->MaybeRejectWithNotFoundError("File not found");
-      } else {
-        promise->MaybeReject(result);
-      }
-    } else {
-      promise->MaybeResolve(written);
-    }
-    return promise.forget();
-  } else {
-    promise->MaybeReject(NS_ERROR_FAILURE);  // XXX
-    return promise.forget();
   }
 
-  const auto checkedLength = CheckedInt<PRInt32>(length);
-  QM_TRY(MOZ_TO_RESULT(checkedLength.isValid()), [&promise](const nsresult rv) {
-    promise->MaybeReject(rv);
-    return promise.forget();
-  });
-
-  UniquePtr<uint8_t> buffer(new uint8_t[checkedLength.value()]);
-  memcpy(buffer.get(), data, checkedLength.value());
-  written =
-      PR_Write(mFileDesc, buffer.get(), checkedLength.value());  // XXX  errors?
-  promise->MaybeResolve(written);
+  Write(aData, Nothing(), promise);
   return promise.forget();
 }
 
@@ -362,14 +296,13 @@ already_AddRefed<Promise> FileSystemWritableFileStream::Seek(
   if (aError.Failed()) {
     return nullptr;
   }
+
   if (mClosed) {
     promise->MaybeRejectWithTypeError("WritableFileStream closed");
     return promise.forget();
   }
-  if (DoSeek(promise, aPosition)) {
-    promise->MaybeResolveWithUndefined();
-  }  // on errors DoSeek rejects the promise
 
+  Seek(aPosition, promise);
   return promise.forget();
 }
 
@@ -379,10 +312,115 @@ already_AddRefed<Promise> FileSystemWritableFileStream::Truncate(
   if (aError.Failed()) {
     return nullptr;
   }
+
   if (mClosed) {
     promise->MaybeRejectWithTypeError("WritableFileStream closed");
     return promise.forget();
   }
+
+  Truncate(aSize, promise);
+  return promise.forget();
+}
+
+template <typename T>
+void FileSystemWritableFileStream::Write(const T& aData,
+                                         const Maybe<uint64_t> aPosition,
+                                         RefPtr<Promise> aPromise) {
+  auto rejectAndReturn = [&aPromise](const nsresult rv) {
+    if (rv == NS_ERROR_FILE_NOT_FOUND) {
+      aPromise->MaybeRejectWithNotFoundError("File not found");
+    } else {
+      aPromise->MaybeReject(rv);
+    }
+  };
+
+  // https://fs.spec.whatwg.org/#write-a-chunk
+  // Step 3.4.6 If data is a BufferSource, let dataBytes be a copy of data.
+  if (aData.IsArrayBuffer() || aData.IsArrayBufferView()) {
+    const auto dataSpan = [&aData]() {
+      if (aData.IsArrayBuffer()) {
+        const ArrayBuffer& buffer = aData.GetAsArrayBuffer();
+        buffer.ComputeState();
+        return Span{buffer.Data(), buffer.Length()};
+      }
+      MOZ_ASSERT(aData.IsArrayBufferView());
+      const ArrayBufferView& buffer = aData.GetAsArrayBufferView();
+      buffer.ComputeState();
+      return Span{buffer.Data(), buffer.Length()};
+    }();
+
+    auto maybeBuffer = Buffer<char>::CopyFrom(AsChars(dataSpan));
+    QM_TRY(MOZ_TO_RESULT(maybeBuffer.isSome()), rejectAndReturn);
+
+    QM_TRY_INSPECT(const auto& written,
+                   WriteBuffer(maybeBuffer.extract(), aPosition),
+                   rejectAndReturn);
+
+    aPromise->MaybeResolve(written);
+    return;
+  }
+
+  // Step 3.4.7 Otherwise, if data is a Blob ...
+  if (aData.IsBlob()) {
+    Blob& blob = aData.GetAsBlob();
+
+    nsCOMPtr<nsIInputStream> stream;
+    ErrorResult error;
+    blob.CreateInputStream(getter_AddRefs(stream), error);
+    QM_TRY((MOZ_TO_RESULT(!error.Failed()).mapErr([&error](const nsresult rv) {
+             return error.StealNSResult();
+           })),
+           rejectAndReturn);
+
+    QM_TRY_INSPECT(const auto& written,
+                   WriteStream(std::move(stream), aPosition), rejectAndReturn);
+
+    aPromise->MaybeResolve(written);
+    return;
+  }
+
+  // Step 3.4.8 Otherwise ...
+  MOZ_ASSERT(aData.IsUSVString());
+
+  uint32_t count;
+  UniquePtr<char[]> string(
+      ToNewUTF8String(aData.GetAsUSVString(), &count, fallible));
+  QM_TRY((MOZ_TO_RESULT(string.get()).mapErr([](const nsresult) {
+           return NS_ERROR_OUT_OF_MEMORY;
+         })),
+         rejectAndReturn);
+
+  Buffer<char> buffer(std::move(string), count);
+
+  QM_TRY_INSPECT(const auto& written, WriteBuffer(std::move(buffer), aPosition),
+                 rejectAndReturn);
+
+  aPromise->MaybeResolve(written);
+}
+
+void FileSystemWritableFileStream::Seek(uint64_t aPosition,
+                                        RefPtr<Promise> aPromise) {
+  MOZ_ASSERT(!mClosed);
+
+  // submit async seek
+  // XXX!!! this should be submitted to a TaskQueue instead of sync IO on
+  // mainthread!
+  // XXX what happens if we read/write before seek finishes?
+  // Should we block read/write if an async operation is pending?
+  // Handle seek before write ('at')
+  LOG_VERBOSE(("%p: Seeking to %" PRIu64, mFileDesc, aPosition));
+
+  QM_TRY(SeekPosition(aPosition), [&aPromise](const nsresult rv) {
+    aPromise->MaybeReject(rv);
+    return;
+  });
+
+  aPromise->MaybeResolveWithUndefined();
+}
+
+void FileSystemWritableFileStream::Truncate(uint64_t aSize,
+                                            RefPtr<Promise> aPromise) {
+  MOZ_ASSERT(!mClosed);
 
   // XXX!!! this should be submitted to a TaskQueue instead of sync IO on
   // mainthread! submit async truncate
@@ -394,86 +432,76 @@ already_AddRefed<Promise> FileSystemWritableFileStream::Truncate(
   // truncate filehandle (can extend with 0's)
   LOG(("%p: Truncate to %" PRIu64, mFileDesc, aSize));
   if (NS_WARN_IF(NS_FAILED(TruncFile(mFileDesc, aSize)))) {
-    promise->MaybeReject(NS_ErrorAccordingToNSPR());
-  } else {
-    // We truncated; per non-normative text in the spec (2.5.3) we should
-    // adjust the cursor position to be within the new file size
-    int64_t where = PR_Seek(mFileDesc, 0, PR_SEEK_CUR);
-    if (where == -1) {
-      promise->MaybeReject(NS_ErrorAccordingToNSPR());
-      return promise.forget();
-    }
-    if (where > (int64_t)aSize) {
-      where = PR_Seek(mFileDesc, 0, PR_SEEK_END);
-      if (where == -1) {
-        promise->MaybeReject(NS_ErrorAccordingToNSPR());
-      }
-    }
-    promise->MaybeResolveWithUndefined();
+    aPromise->MaybeReject(NS_ErrorAccordingToNSPR());
+    return;
   }
 
-  return promise.forget();
+  // We truncated; per non-normative text in the spec (2.5.3) we should
+  // adjust the cursor position to be within the new file size
+  int64_t where = PR_Seek(mFileDesc, 0, PR_SEEK_CUR);
+  if (where == -1) {
+    aPromise->MaybeReject(NS_ErrorAccordingToNSPR());
+    return;
+  }
+
+  if (where > (int64_t)aSize) {
+    where = PR_Seek(mFileDesc, 0, PR_SEEK_END);
+    if (where == -1) {
+      aPromise->MaybeReject(NS_ErrorAccordingToNSPR());
+      return;
+    }
+  }
+
+  aPromise->MaybeResolveWithUndefined();
 }
 
-nsresult FileSystemWritableFileStream::WriteBlob(Blob* aBlob,
-                                                 uint64_t& aWritten) {
-  NS_ENSURE_ARG_POINTER(aBlob);
-  if (mClosed) {
-    return NS_ERROR_DOM_NOT_FOUND_ERR;  // XXX
-  }
+Result<uint64_t, nsresult> FileSystemWritableFileStream::WriteBuffer(
+    Buffer<char>&& aBuffer, const Maybe<uint64_t> aPosition) {
+  Buffer<char> buffer = std::move(aBuffer);
 
-  nsresult rv;
-  nsCOMPtr<nsIInputStream> msgStream;
-  ErrorResult error;
-  aBlob->CreateInputStream(getter_AddRefs(msgStream), error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-  void* data = nullptr;
-  uint64_t length;
-  if (NS_WARN_IF(NS_FAILED(
-          rv = NS_ReadInputStreamToBuffer(msgStream, &data, -1, &length)))) {
-    return rv;
-  }
-
-  const auto checkedLength = CheckedInt<PRInt32>(length);
+  const auto checkedLength = CheckedInt<PRInt32>(buffer.Length());
   QM_TRY(MOZ_TO_RESULT(checkedLength.isValid()));
 
-  // XXX!!! this should be submitted to a TaskQueue instead of sync IO on
-  // mainthread!
-  aWritten += PR_Write(mFileDesc, data, checkedLength.value());  // XXX errors?
-  free(data);
-  return NS_OK;
+  if (aPosition) {
+    QM_TRY(SeekPosition(*aPosition));
+  }
+
+  return PR_Write(mFileDesc, buffer.Elements(), checkedLength.value());
 }
 
-bool FileSystemWritableFileStream::DoSeek(RefPtr<Promise>& aPromise,
-                                          uint64_t aPosition) {
-  // submit async seek
-  // XXX!!! this should be submitted to a TaskQueue instead of sync IO on
-  // mainthread!
-  // XXX what happens if we read/write before seek finishes?
-  // Should we block read/write if an async operation is pending?
-  // Handle seek before write ('at')
-  LOG_VERBOSE(("%p: Seeking to %" PRIu64, mFileDesc, aPosition));
-  const CheckedInt<PROffset32> checkedPosition(aPosition);
-  if (NS_WARN_IF(!checkedPosition.isValid())) {
-    return false;
-  }
-  int64_t where = PR_Seek(mFileDesc, checkedPosition.value(), PR_SEEK_SET);
-  if (where == -1) {
+Result<uint64_t, nsresult> FileSystemWritableFileStream::WriteStream(
+    nsCOMPtr<nsIInputStream> aStream, const Maybe<uint64_t> aPosition) {
+  MOZ_ASSERT(aStream);
+
+  void* rawBuffer = nullptr;
+  uint64_t length;
+  QM_TRY(MOZ_TO_RESULT(
+      NS_ReadInputStreamToBuffer(aStream, &rawBuffer, -1, &length)));
+
+  Buffer<char> buffer(UniquePtr<char[]>(reinterpret_cast<char*>(rawBuffer)),
+                      length);
+
+  QM_TRY_RETURN(WriteBuffer(std::move(buffer), aPosition));
+}
+
+Result<Ok, nsresult> FileSystemWritableFileStream::SeekPosition(
+    uint64_t aPosition) {
+  const auto checkedPosition = CheckedInt<int64_t>(aPosition);
+  QM_TRY(MOZ_TO_RESULT(checkedPosition.isValid()));
+
+  int64_t cnt = PR_Seek64(mFileDesc, checkedPosition.value(), PR_SEEK_SET);
+  if (cnt == int64_t(-1)) {
     LOG(("Failed to seek to %" PRIu64 " (errno %d)", aPosition, errno));
-    aPromise->MaybeReject(NS_ERROR_FAILURE);  // XXX
-    return false;
+    return Err(NS_ErrorAccordingToNSPR());
   }
 
-  if (where != (int64_t)aPosition) {
+  if (cnt != checkedPosition.value()) {
     LOG(("Failed to seek to %" PRIu64 " (errno %d), ended up at %" PRId64,
-         aPosition, errno, where));
-    aPromise->MaybeReject(NS_ERROR_FAILURE);  // XXX
-    return false;
+         aPosition, errno, cnt));
+    return Err(NS_ERROR_FAILURE);
   }
-  // caller resolves the promise for success
-  return true;
+
+  return Ok{};
 }
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(
