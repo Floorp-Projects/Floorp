@@ -1,22 +1,22 @@
 use crate::{is_zero, Line, Plane};
 
-use euclid::{approxeq::ApproxEq, default::Point2D, Point3D, Rect, Transform3D, Trig, Vector3D};
-use num_traits::{Float, One, Zero};
+use euclid::{
+    approxeq::ApproxEq,
+    default::{Point2D, Point3D, Rect, Transform3D, Vector3D},
+};
+use smallvec::SmallVec;
 
-use std::{fmt, iter, mem, ops};
+use std::{iter, mem};
 
 /// The projection of a `Polygon` on a line.
-pub struct LineProjection<T> {
+pub struct LineProjection {
     /// Projected value of each point in the polygon.
-    pub markers: [T; 4],
+    pub markers: [f64; 4],
 }
 
-impl<T> LineProjection<T>
-where
-    T: Copy + PartialOrd + ops::Sub<T, Output = T> + ops::Add<T, Output = T>,
-{
+impl LineProjection {
     /// Get the min/max of the line projection markers.
-    pub fn get_bounds(&self) -> (T, T) {
+    pub fn get_bounds(&self) -> (f64, f64) {
         let (mut a, mut b, mut c, mut d) = (
             self.markers[0],
             self.markers[1],
@@ -95,17 +95,17 @@ impl<T> Intersection<T> {
 
 /// A convex polygon with 4 points lying on a plane.
 #[derive(Debug, PartialEq)]
-pub struct Polygon<T, U, A> {
+pub struct Polygon<A> {
     /// Points making the polygon.
-    pub points: [Point3D<T, U>; 4],
+    pub points: [Point3D<f64>; 4],
     /// A plane describing polygon orientation.
-    pub plane: Plane<T, U>,
+    pub plane: Plane,
     /// A simple anchoring index to allow association of the
     /// produced split polygons with the original one.
     pub anchor: A,
 }
 
-impl<T: Clone, U, A: Copy> Clone for Polygon<T, U, A> {
+impl<A: Copy> Clone for Polygon<A> {
     fn clone(&self) -> Self {
         Polygon {
             points: [
@@ -120,30 +120,19 @@ impl<T: Clone, U, A: Copy> Clone for Polygon<T, U, A> {
     }
 }
 
-impl<T, U, A> Polygon<T, U, A>
+impl<A> Polygon<A>
 where
-    T: Copy
-        + fmt::Debug
-        + ApproxEq<T>
-        + ops::Sub<T, Output = T>
-        + ops::Add<T, Output = T>
-        + ops::Mul<T, Output = T>
-        + ops::Div<T, Output = T>
-        + Zero
-        + One
-        + Float,
-    U: fmt::Debug,
     A: Copy,
 {
     /// Construct a polygon from points that are already transformed.
     /// Return None if the polygon doesn't contain any space.
-    pub fn from_points(points: [Point3D<T, U>; 4], anchor: A) -> Option<Self> {
+    pub fn from_points(points: [Point3D<f64>; 4], anchor: A) -> Option<Self> {
         let edge1 = points[1] - points[0];
         let edge2 = points[2] - points[0];
         let edge3 = points[3] - points[0];
         let edge4 = points[3] - points[1];
 
-        if edge2.square_length() < T::epsilon() || edge4.square_length() < T::epsilon() {
+        if edge2.square_length() < f64::EPSILON || edge4.square_length() < f64::EPSILON {
             return None;
         }
 
@@ -170,71 +159,62 @@ where
     }
 
     /// Construct a polygon from a non-transformed rectangle.
-    pub fn from_rect(rect: Rect<T, U>, anchor: A) -> Self {
+    pub fn from_rect(rect: Rect<f64>, anchor: A) -> Self {
         let min = rect.min();
         let max = rect.max();
-        let _0 = T::zero();
         Polygon {
             points: [
                 min.to_3d(),
-                Point3D::new(max.x, min.y, _0),
+                Point3D::new(max.x, min.y, 0.0),
                 max.to_3d(),
-                Point3D::new(min.x, max.y, _0),
+                Point3D::new(min.x, max.y, 0.0),
             ],
             plane: Plane {
-                normal: Vector3D::new(T::zero(), T::zero(), T::one()),
-                offset: T::zero(),
+                normal: Vector3D::new(0.0, 0.0, 1.0),
+                offset: 0.0,
             },
             anchor,
         }
     }
 
     /// Construct a polygon from a rectangle with 3D transform.
-    pub fn from_transformed_rect<V>(
-        rect: Rect<T, V>,
-        transform: Transform3D<T, V, U>,
+    pub fn from_transformed_rect(
+        rect: Rect<f64>,
+        transform: Transform3D<f64>,
         anchor: A,
-    ) -> Option<Self>
-    where
-        T: Trig + ops::Neg<Output = T>,
-    {
+    ) -> Option<Self> {
         let min = rect.min();
         let max = rect.max();
-        let _0 = T::zero();
         let points = [
             transform.transform_point3d(min.to_3d())?,
-            transform.transform_point3d(Point3D::new(max.x, min.y, _0))?,
+            transform.transform_point3d(Point3D::new(max.x, min.y, 0.0))?,
             transform.transform_point3d(max.to_3d())?,
-            transform.transform_point3d(Point3D::new(min.x, max.y, _0))?,
+            transform.transform_point3d(Point3D::new(min.x, max.y, 0.0))?,
         ];
         Self::from_points(points, anchor)
     }
 
     /// Construct a polygon from a rectangle with an invertible 3D transform.
-    pub fn from_transformed_rect_with_inverse<V>(
-        rect: Rect<T, V>,
-        transform: &Transform3D<T, V, U>,
-        inv_transform: &Transform3D<T, U, V>,
+    pub fn from_transformed_rect_with_inverse(
+        rect: Rect<f64>,
+        transform: &Transform3D<f64>,
+        inv_transform: &Transform3D<f64>,
         anchor: A,
-    ) -> Option<Self>
-    where
-        T: Trig + ops::Neg<Output = T>,
-    {
+    ) -> Option<Self> {
         let min = rect.min();
         let max = rect.max();
-        let _0 = T::zero();
         let points = [
             transform.transform_point3d(min.to_3d())?,
-            transform.transform_point3d(Point3D::new(max.x, min.y, _0))?,
+            transform.transform_point3d(Point3D::new(max.x, min.y, 0.0))?,
             transform.transform_point3d(max.to_3d())?,
-            transform.transform_point3d(Point3D::new(min.x, max.y, _0))?,
+            transform.transform_point3d(Point3D::new(min.x, max.y, 0.0))?,
         ];
 
         // Compute the normal directly from the transformation. This guarantees consistent polygons
         // generated from various local rectanges on the same geometry plane.
         let normal_raw = Vector3D::new(inv_transform.m13, inv_transform.m23, inv_transform.m33);
         let normal_sql = normal_raw.square_length();
-        if normal_sql.approx_eq(&T::zero()) || transform.m44.approx_eq(&T::zero()) {
+        if normal_sql.approx_eq(&0.0) || transform.m44.approx_eq(&0.0) {
             None
         } else {
             let normal = normal_raw / normal_sql.sqrt();
@@ -251,7 +231,7 @@ where
 
     /// Bring a point into the local coordinate space, returning
     /// the 2D normalized coordinates.
-    pub fn untransform_point(&self, point: Point3D<T, U>) -> Point2D<T> {
+    pub fn untransform_point(&self, point: Point3D<f64>) -> Point2D<f64> {
         //debug_assert!(self.contains(point));
         // get axises and target vector
         let a = self.points[1] - self.points[0];
@@ -271,20 +251,16 @@ where
     }
 
     /// Transform a polygon by an affine transform (preserving straight lines).
-    pub fn transform<V>(&self, transform: &Transform3D<T, U, V>) -> Option<Polygon<T, V, A>>
-    where
-        T: Trig,
-        V: fmt::Debug,
-    {
+    pub fn transform(&self, transform: &Transform3D<f64>) -> Option<Polygon<A>> {
         let mut points = [Point3D::origin(); 4];
         for (out, point) in points.iter_mut().zip(self.points.iter()) {
             let mut homo = transform.transform_point3d_homogeneous(*point);
-            homo.w = homo.w.max(T::approx_epsilon());
+            homo.w = homo.w.max(f64::approx_epsilon());
             *out = homo.to_point3d()?;
         }
 
         //Note: this code path could be more efficient if we had inverse-transpose
-        //let n4 = transform.transform_point4d(&Point4D::new(T::zero(), T::zero(), T::one(), T::zero()));
+        //let n4 = transform.transform_point4d(&Point4D::new(0.0, 0.0, T::one(), 0.0));
         //let normal = Point3D::new(n4.x, n4.y, n4.z);
         Polygon::from_points(points, self.anchor)
     }
@@ -306,15 +282,15 @@ where
         let is_winding = edges
             .iter()
             .zip(edges[1..].iter())
-            .all(|(a, &b)| a.cross(b).dot(anchor) >= T::zero());
+            .all(|(a, &b)| a.cross(b).dot(anchor) >= 0.0);
         is_planar && is_winding
     }
 
     /// Check if the polygon doesn't contain any space. This may happen
     /// after a sequence of splits, and such polygons should be discarded.
     pub fn is_empty(&self) -> bool {
-        (self.points[0] - self.points[2]).square_length() < T::epsilon()
-            || (self.points[1] - self.points[3]).square_length() < T::epsilon()
+        (self.points[0] - self.points[2]).square_length() < f64::EPSILON
+            || (self.points[1] - self.points[3]).square_length() < f64::EPSILON
     }
 
     /// Check if this polygon contains another one.
@@ -325,7 +301,7 @@ where
 
     /// Project this polygon onto a 3D vector, returning a line projection.
     /// Note: we can think of it as a projection to a ray placed at the origin.
-    pub fn project_on(&self, vector: &Vector3D<T, U>) -> LineProjection<T> {
+    pub fn project_on(&self, vector: &Vector3D<f64>) -> LineProjection {
         LineProjection {
             markers: [
                 vector.dot(self.points[0].to_vector()),
@@ -337,7 +313,7 @@ where
     }
 
     /// Compute the line of intersection with an infinite plane.
-    pub fn intersect_plane(&self, other: &Plane<T, U>) -> Intersection<Line<T, U>> {
+    pub fn intersect_plane(&self, other: &Plane) -> Intersection<Line> {
         if other.are_outside(&self.points) {
             log::debug!("\t\tOutside of the plane");
             return Intersection::Outside;
@@ -352,7 +328,7 @@ where
     }
 
     /// Compute the line of intersection with another polygon.
-    pub fn intersect(&self, other: &Self) -> Intersection<Line<T, U>> {
+    pub fn intersect(&self, other: &Self) -> Intersection<Line> {
         if self.plane.are_outside(&other.points) || other.plane.are_outside(&self.points) {
             log::debug!("\t\tOne is completely outside of the other");
             return Intersection::Outside;
@@ -378,8 +354,8 @@ where
 
     fn split_impl(
         &mut self,
-        first: (usize, Point3D<T, U>),
-        second: (usize, Point3D<T, U>),
+        first: (usize, Point3D<f64>),
+        second: (usize, Point3D<f64>),
     ) -> (Option<Self>, Option<Self>) {
         //TODO: can be optimized for when the polygon has a redundant 4th vertex
         //TODO: can be simplified greatly if only working with triangles
@@ -464,7 +440,7 @@ where
     /// Split the polygon along the specified `Line`.
     /// Will do nothing if the line doesn't belong to the polygon plane.
     #[deprecated(note = "Use split_with_normal instead")]
-    pub fn split(&mut self, line: &Line<T, U>) -> (Option<Self>, Option<Self>) {
+    pub fn split(&mut self, line: &Line) -> (Option<Self>, Option<Self>) {
         log::debug!("\tSplitting");
         // check if the cut is within the polygon plane first
         if !is_zero(self.plane.normal.dot(line.dir))
@@ -488,7 +464,7 @@ where
             .zip(cuts.iter_mut())
         {
             if let Some(t) = line.intersect_edge(a..b) {
-                if t >= T::zero() && t < T::one() {
+                if t >= 0.0 && t < 1.0 {
                     *cut = Some(a + (b - a) * t);
                 }
             }
@@ -514,12 +490,12 @@ where
     /// Will do nothing if the line doesn't belong to the polygon plane.
     pub fn split_with_normal(
         &mut self,
-        line: &Line<T, U>,
-        normal: &Vector3D<T, U>,
+        line: &Line,
+        normal: &Vector3D<f64>,
     ) -> (Option<Self>, Option<Self>) {
         log::debug!("\tSplitting with normal");
         // figure out which side of the split does each point belong to
-        let mut sides = [T::zero(); 4];
+        let mut sides = [0.0; 4];
         let (mut cut_positive, mut cut_negative) = (None, None);
         for (side, point) in sides.iter_mut().zip(&self.points) {
             *side = normal.dot(*point - line.origin);
@@ -533,9 +509,9 @@ where
             .enumerate()
         {
             // figure out if an edge between 0 and 1 needs to be cut
-            let cut = if side0 < T::zero() && side1 >= T::zero() {
+            let cut = if side0 < 0.0 && side1 >= 0.0 {
                 &mut cut_positive
-            } else if side0 > T::zero() && side1 <= T::zero() {
+            } else if side0 > 0.0 && side1 <= 0.0 {
                 &mut cut_negative
             } else {
                 continue;
@@ -570,12 +546,93 @@ where
             (None, None)
         }
     }
+
+    /// Cut a polygon with another one.
+    ///
+    /// Write the resulting polygons in `front` and `back` if the polygon needs to be split.
+    pub fn cut(
+        &self,
+        poly: &Self,
+        front: &mut SmallVec<[Polygon<A>; 2]>,
+        back: &mut SmallVec<[Polygon<A>; 2]>,
+    ) -> PlaneCut {
+        //Note: we treat `self` as a plane, and `poly` as a concrete polygon here
+        let (intersection, dist) = match self.plane.intersect(&poly.plane) {
+            None => {
+                let ndot = self.plane.normal.dot(poly.plane.normal);
+                let dist = self.plane.offset - ndot * poly.plane.offset;
+                (Intersection::Coplanar, dist)
+            }
+            Some(_) if self.plane.are_outside(&poly.points[..]) => {
+                //Note: we can't start with `are_outside` because it's subject to FP precision
+                let dist = self.plane.signed_distance_sum_to(&poly);
+                (Intersection::Outside, dist)
+            }
+            Some(line) => {
+                //Note: distance isn't relevant here
+                (Intersection::Inside(line), 0.0)
+            }
+        };
+
+        match intersection {
+            //Note: we deliberately make the comparison wider than just with T::epsilon().
+            // This is done to avoid mistakenly ordering items that should be on the same
+            // plane but end up slightly different due to the floating point precision.
+            Intersection::Coplanar if is_zero(dist) => PlaneCut::Sibling,
+            Intersection::Coplanar | Intersection::Outside => {
+                if dist > 0.0 {
+                    front.push(poly.clone());
+                } else {
+                    back.push(poly.clone());
+                }
+
+                PlaneCut::Cut
+            }
+            Intersection::Inside(line) => {
+                let mut poly = poly.clone();
+                let (res_add1, res_add2) = poly.split_with_normal(&line, &self.plane.normal);
+
+                for sub in iter::once(poly)
+                    .chain(res_add1)
+                    .chain(res_add2)
+                    .filter(|p| !p.is_empty())
+                {
+                    let dist = self.plane.signed_distance_sum_to(&sub);
+                    if dist > 0.0 {
+                        front.push(sub)
+                    } else {
+                        back.push(sub)
+                    }
+                }
+
+                PlaneCut::Cut
+            }
+        }
+    }
+
+    /// Returns whether both polygon's planes are parallel.
+    pub fn is_aligned(&self, other: &Self) -> bool {
+        self.plane.normal.dot(other.plane.normal) > 0.0
+    }
+}
+
+/// The result of a polygon being cut by a plane.
+/// The "cut" here is an attempt to classify a plane as being
+/// in front or in the back of another one.
+#[derive(Debug, PartialEq)]
+pub enum PlaneCut {
+    /// The planes are one the same geometrical plane.
+    Sibling,
+    /// Planes are different, thus we can either determine that
+    /// our plane is completely in front/back of another one,
+    /// or split it into these sub-groups.
+    Cut,
 }
 
 #[test]
 fn test_split_precision() {
     // regression test for https://bugzilla.mozilla.org/show_bug.cgi?id=1678454
-    let mut polygon = Polygon::<_, (), ()> {
+    let mut polygon = Polygon::<()> {
         points: [
             Point3D::new(300.0102, 150.00958, 0.0),
             Point3D::new(606.0, 306.0, 0.0),

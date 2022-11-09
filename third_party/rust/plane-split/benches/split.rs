@@ -5,7 +5,7 @@ extern crate plane_split;
 extern crate test;
 
 use euclid::vec3;
-use plane_split::{make_grid, BspSplitter, Splitter};
+use plane_split::{make_grid, BspSplitter};
 use std::sync::Arc;
 
 #[bench]
