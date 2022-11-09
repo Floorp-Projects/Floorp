@@ -27,7 +27,7 @@
     "telemetryId": {
       "type": "string",
       "title": "Telemetry Id",
-      "description": "The telemetry Id as used for some of SEARCH_COUNTS telemetry."
+      "description": "The telemetry Id as used for search telemetry."
     },
     "webExtension": {
       "$ref": "#/definitions/webExtension"
@@ -324,7 +324,7 @@
       "type": "string",
       "title": "Telemetry Id",
       "pattern": "^[a-zA-Z0-9-$_]{0,100}$",
-      "description": "The telemetry Id as used for some of SEARCH_COUNTS telemetry."
+      "description": "The telemetry Id as used for search telemetry."
     },
     "webExtension": {
       "type": "object",

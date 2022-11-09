@@ -110,11 +110,9 @@ add_task(async function test_search() {
   info("Check the telemetries");
   await assertScalars([
     ["browser.engagement.navigation.urlbar_handoff", "search_enter", 1],
+    ["browser.search.content.urlbar_handoff", "example:tagged:ff", 1],
   ]);
-  await assertHistogram(histogram, [
-    ["example.in-content:sap:ff", 1],
-    ["other-Example.urlbar-handoff", 1],
-  ]);
+  await assertHistogram(histogram, [["other-Example.urlbar-handoff", 1]]);
   TelemetryTestUtils.assertEvents(
     [
       [

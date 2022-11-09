@@ -16,7 +16,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 });
 
 // The various histograms and scalars that we report to.
-const SEARCH_COUNTS_HISTOGRAM_KEY = "SEARCH_COUNTS";
 const SEARCH_CONTENT_SCALAR_BASE = "browser.search.content.";
 const SEARCH_WITH_ADS_SCALAR_BASE = "browser.search.withads.";
 const SEARCH_AD_CLICKS_SCALAR_BASE = "browser.search.adclicks.";
@@ -498,10 +497,6 @@ class TelemetryHandler {
     }
     // Default to organic to simplify things.
     // We override type in the sap cases.
-    // We have an oldType and type split, because the older telemetry uses "sap"
-    // and "sap-follow-on" versus "tagged-sap" and "tagged-follow-on".
-    // The latter is a more accurate description of what we're reporting.
-    let oldType = "organic";
     let type = "organic";
     let code;
     if (searchProviderInfo.codeParamName) {
@@ -509,17 +504,14 @@ class TelemetryHandler {
       if (code) {
         // The code is only included if it matches one of the specific ones.
         if (searchProviderInfo.taggedCodes.includes(code)) {
-          oldType = "sap";
           type = "tagged";
           if (
             searchProviderInfo.followOnParamNames &&
             searchProviderInfo.followOnParamNames.some(p => queries.has(p))
           ) {
-            oldType += "-follow-on";
             type += "-follow-on";
           }
         } else if (searchProviderInfo.organicCodes.includes(code)) {
-          oldType = "organic";
           type = "organic";
         } else if (searchProviderInfo.expectedOrganicCodes?.includes(code)) {
           code = "none";
@@ -557,7 +549,6 @@ class TelemetryHandler {
               cookieParam == followOnCookie.codeParamName &&
               searchProviderInfo.taggedCodes.includes(cookieValue)
             ) {
-              oldType = "sap-follow-on";
               type = "tagged-follow-on";
               code = cookieValue;
               break;
@@ -566,7 +557,7 @@ class TelemetryHandler {
         }
       }
     }
-    return { provider: searchProviderInfo.telemetryId, oldType, type, code };
+    return { provider: searchProviderInfo.telemetryId, type, code };
   }
 
   /**
@@ -574,26 +565,19 @@ class TelemetryHandler {
    *
    * @param {object} info The search provider information.
    * @param {string} info.provider The name of the provider.
-   * @param {string} info.oldType The type of search.
+   * @param {string} info.type The type of search.
    * @param {string} [info.code] The code for the provider.
    * @param {string} source Where the search originated from.
    * @param {string} url The url that was matched (for debug logging only).
    */
   _reportSerpPage(info, source, url) {
+    let payload = `${info.provider}:${info.type}:${info.code || "none"}`;
     Services.telemetry.keyedScalarAdd(
       SEARCH_CONTENT_SCALAR_BASE + source,
-      `${info.provider}:${info.type}:${info.code || "none"}`,
+      payload,
       1
     );
 
-    // SEARCH_COUNTS is now obsolete with the new scalar above, but is being
-    // kept whilst data is verified and telemetry is transitioned.
-    let payload = `${info.provider}.in-content:${info.oldType}:${info.code ||
-      "none"}`;
-    let histogram = Services.telemetry.getKeyedHistogramById(
-      SEARCH_COUNTS_HISTOGRAM_KEY
-    );
-    histogram.add(payload);
     lazy.logConsole.debug("Counting", payload, "for", url);
   }
 }
