@@ -651,6 +651,10 @@ skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle-d
 skip script test262/built-ins/Date/year-zero.js
 skip script test262/built-ins/Date/parse/year-zero.js
 
+# Local test262 copy not yet updated for https://github.com/tc39/test262/pull/3713
+skip script test262/intl402/Intl/supportedValuesOf/units.js
+skip script test262/intl402/NumberFormat/prototype/format/units-invalid.js
+
 
 ##############################################
 # Enable Iterator Helpers tests in the shell #
