@@ -33,7 +33,7 @@ setup(
         "Programming Language :: Python :: 3.5",
     ],
     install_requires=[
-        "blessings",
+        "blessed",
         "mozfile",
         "mozprocess",
         "six",

@@ -11,7 +11,7 @@ DEPS = ["six >= 1.13.0"]
 
 setup(
     name="mozterm",
-    description="Terminal abstractions built around the blessings module.",
+    description="Terminal abstractions built around the blessed module.",
     license="MPL 2.0",
     author="Andrew Halberstadt",
     author_email="ahalberstadt@mozilla.com",
