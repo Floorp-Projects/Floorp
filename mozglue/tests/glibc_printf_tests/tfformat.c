@@ -4113,7 +4113,7 @@ int main(int argc, char *argv[])
   sprint_double_type *dptr;
   for (dptr = sprint_doubles; dptr->line; dptr++)
     {
-      snprintf (buffer, sizeof(buffer), dptr->format_string, dptr->value);
+      sprintf (buffer, dptr->format_string, dptr->value);
       if (!matches(buffer, dptr->result))
 	{
 	  errcount++;
@@ -4122,7 +4122,7 @@ int main(int argc, char *argv[])
 		  dptr->line, dptr->format_string, buffer, dptr->result);
 	}
 
-      snprintf (buffer, sizeof(buffer), "%.999g", dptr->value);
+      sprintf (buffer, "%.999g", dptr->value);
       sscanf (buffer, "%lg", &d);
       if (dptr->value != d && !isnan(d))
 	{
@@ -4140,7 +4140,7 @@ int main(int argc, char *argv[])
     d = 1.0;
     for (i = 1; i < 50; ++i)
       d /= 2;
-    snprintf (buffer, sizeof(buffer), "%.100g", d);
+    sprintf (buffer, "%.100g", d);
     if (!matches (buffer, ref))
       {
 	++errcount;
