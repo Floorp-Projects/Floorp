@@ -8,7 +8,6 @@
 #define DOM_FS_FILESYSTEMWRITABLEFILESTREAM_H_
 
 #include "mozilla/Logging.h"
-#include "mozilla/TaskQueue.h"
 #include "mozilla/dom/Blob.h"
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/FileSystemWritableFileStreamChild.h"
@@ -69,10 +68,6 @@ class FileSystemWritableFileStream final : public WritableStream {
 
   already_AddRefed<Promise> Truncate(uint64_t aSize, ErrorResult& aError);
 
- protected:
-  RefPtr<FileSystemManager> mManager;
-  fs::FileSystemEntryMetadata mMetadata;
-
  private:
   FileSystemWritableFileStream(nsIGlobalObject* aGlobal,
                                RefPtr<FileSystemManager>& aManager,
@@ -85,8 +80,11 @@ class FileSystemWritableFileStream final : public WritableStream {
 
   bool DoSeek(RefPtr<Promise>& aPromise, uint64_t aPosition);
 
+  RefPtr<FileSystemManager> mManager;
+
   RefPtr<FileSystemWritableFileStreamChild> mActor;
-  RefPtr<TaskQueue> mTaskQueue;
+
+  fs::FileSystemEntryMetadata mMetadata;
 };
 
 }  // namespace dom

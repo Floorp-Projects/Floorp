@@ -85,8 +85,8 @@ FileSystemWritableFileStream::FileSystemWritableFileStream(
     const fs::FileSystemEntryMetadata& aMetadata)
     : WritableStream(aGlobal),
       mManager(aManager),
-      mMetadata(aMetadata),
-      mActor(std::move(aActor)) {
+      mActor(std::move(aActor)),
+      mMetadata(aMetadata) {
   LOG(("Created WritableFileStream %p for fd %p", this,
        mActor->MutableFileDescPtr()));
   mActor->SetStream(this);
