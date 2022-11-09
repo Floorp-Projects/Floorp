@@ -70,6 +70,7 @@ int nr_stun_client_ctx_create(char *label, nr_socket *sock, nr_transport_addr *p
 
     nr_socket_getaddr(sock,&ctx->my_addr);
     nr_transport_addr_copy(&ctx->peer_addr,peer);
+    assert(ctx->my_addr.protocol==ctx->peer_addr.protocol);
 
     if (RTO != 0) {
       ctx->rto_ms = RTO;
