@@ -41,19 +41,14 @@ class Promise;
 
 class FileSystemWritableFileStream final : public WritableStream {
  public:
+  static already_AddRefed<FileSystemWritableFileStream> Create(
+      nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
+      RefPtr<FileSystemWritableFileStreamChild> aActor,
+      const fs::FileSystemEntryMetadata& aMetadata);
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileSystemWritableFileStream,
                                            WritableStream)
-
-  static already_AddRefed<FileSystemWritableFileStream> MaybeCreate(
-      nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
-      const fs::FileSystemEntryMetadata& aMetadata,
-      RefPtr<FileSystemWritableFileStreamChild>& aActor);
-
-  FileSystemWritableFileStream(
-      nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
-      const fs::FileSystemEntryMetadata& aMetadata,
-      RefPtr<FileSystemWritableFileStreamChild>& aActor);
 
   void ClearActor();
 
@@ -81,9 +76,14 @@ class FileSystemWritableFileStream final : public WritableStream {
   fs::FileSystemEntryMetadata mMetadata;
 
  private:
-  nsresult WriteBlob(Blob* aBlob, uint64_t& aWritten);
+  FileSystemWritableFileStream(nsIGlobalObject* aGlobal,
+                               RefPtr<FileSystemManager>& aManager,
+                               RefPtr<FileSystemWritableFileStreamChild> aActor,
+                               const fs::FileSystemEntryMetadata& aMetadata);
 
   virtual ~FileSystemWritableFileStream();
+
+  nsresult WriteBlob(Blob* aBlob, uint64_t& aWritten);
 
   RefPtr<FileSystemWritableFileStreamChild> mActor;
   RefPtr<TaskQueue> mTaskQueue;

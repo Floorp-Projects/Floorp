@@ -85,6 +85,25 @@ void FileSystemWritableFileStream::ClearActor() {
   mActor = nullptr;
 }
 
+FileSystemWritableFileStream::FileSystemWritableFileStream(
+    nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
+    RefPtr<FileSystemWritableFileStreamChild> aActor,
+    const fs::FileSystemEntryMetadata& aMetadata)
+    : WritableStream(aGlobal),
+      mManager(aManager),
+      mMetadata(aMetadata),
+      mActor(std::move(aActor)) {
+  LOG(("Created WritableFileStream %p for fd %p", this,
+       mActor->MutableFileDescPtr()));
+  mActor->SetStream(this);
+}
+
+FileSystemWritableFileStream::~FileSystemWritableFileStream() {
+  if (mActor) {
+    mActor->Close();
+  }
+}
+
 // https://streams.spec.whatwg.org/#writablestream-set-up
 // * This is fallible because of OOM handling of JSAPI. See bug 1762233.
 // * Consider extracting this as UnderlyingSinkAlgorithmsWrapper if more classes
@@ -95,10 +114,10 @@ void FileSystemWritableFileStream::ClearActor() {
 // check automatically detect this situation?
 /* static */
 MOZ_CAN_RUN_SCRIPT_BOUNDARY already_AddRefed<FileSystemWritableFileStream>
-FileSystemWritableFileStream::MaybeCreate(
+FileSystemWritableFileStream::Create(
     nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
-    const fs::FileSystemEntryMetadata& aMetadata,
-    RefPtr<FileSystemWritableFileStreamChild>& aActor) {
+    RefPtr<FileSystemWritableFileStreamChild> aActor,
+    const fs::FileSystemEntryMetadata& aMetadata) {
   AutoJSAPI jsapi;
   if (!jsapi.Init(aGlobal)) {
     return nullptr;
@@ -108,7 +127,8 @@ FileSystemWritableFileStream::MaybeCreate(
   // Step 5. Perform ! InitializeWritableStream(stream).
   // (Done by the constructor)
   RefPtr<FileSystemWritableFileStream> stream =
-      new FileSystemWritableFileStream(aGlobal, aManager, aMetadata, aActor);
+      new FileSystemWritableFileStream(aGlobal, aManager, std::move(aActor),
+                                       aMetadata);
 
   // Step 1 - 3
   auto algorithms =
@@ -133,19 +153,6 @@ FileSystemWritableFileStream::MaybeCreate(
     return nullptr;
   }
   return stream.forget();
-}
-
-FileSystemWritableFileStream::FileSystemWritableFileStream(
-    nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
-    const fs::FileSystemEntryMetadata& aMetadata,
-    RefPtr<FileSystemWritableFileStreamChild>& aActor)
-    : WritableStream(aGlobal),
-      mManager(aManager),
-      mMetadata(aMetadata),
-      mActor(std::move(aActor)) {
-  LOG(("Created WritableFileStream %p for fd %p", this,
-       mActor->MutableFileDescPtr()));
-  mActor->SetStream(this);
 }
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(FileSystemWritableFileStream,
@@ -463,12 +470,6 @@ already_AddRefed<Promise> FileSystemWritableFileStream::Close(
 
   promise->MaybeResolveWithUndefined();
   return promise.forget();
-}
-
-FileSystemWritableFileStream::~FileSystemWritableFileStream() {
-  if (mActor) {
-    mActor->Close();
-  }
 }
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(
