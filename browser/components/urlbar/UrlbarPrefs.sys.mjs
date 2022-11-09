@@ -347,6 +347,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // The number of times the user has been shown the onboarding search tip.
   ["tipShownCount.searchTip_onboard", 0],
 
+  // The number of times the user has been shown the urlbar persisted search tip.
+  ["tipShownCount.searchTip_persist", 0],
+
   // The number of times the user has been shown the redirect search tip.
   ["tipShownCount.searchTip_redirect", 0],
 
