@@ -251,10 +251,6 @@ criteria = "safe-to-deploy"
 version = "0.13.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.binary-space-partition]]
-version = "0.1.2"
-criteria = "safe-to-deploy"
-
 [[exemptions.bincode]]
 version = "1.3.3"
 criteria = "safe-to-deploy"
@@ -1013,10 +1009,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.plain]]
 version = "0.2.3"
-criteria = "safe-to-deploy"
-
-[[exemptions.plane-split]]
-version = "0.17.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.plist]]

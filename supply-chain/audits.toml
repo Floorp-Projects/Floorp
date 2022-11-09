@@ -907,6 +907,12 @@ who = "John M. Schanck <jmschanck@gmail.com>"
 criteria = "safe-to-deploy"
 version = "0.1.1"
 
+[[audits.plane-split]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+version = "0.18.0"
+notes = "Mozilla-developed package, no unsafe code, no access to file system, network or other far reaching APIs."
+
 [[audits.precomputed-hash]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-deploy"
