@@ -235,7 +235,14 @@ js::DateTimeInfo::DateTimeInfo() {
 js::DateTimeInfo::~DateTimeInfo() = default;
 
 int64_t js::DateTimeInfo::toClampedSeconds(int64_t milliseconds) {
-  int64_t seconds = milliseconds / msPerSecond;
+  int64_t seconds = milliseconds / int64_t(msPerSecond);
+  int64_t millis = milliseconds % int64_t(msPerSecond);
+
+  // Round towards the start of time.
+  if (millis < 0) {
+    seconds -= 1;
+  }
+
   if (seconds > MaxTimeT) {
     seconds = MaxTimeT;
   } else if (seconds < MinTimeT) {

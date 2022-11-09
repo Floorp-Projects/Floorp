@@ -506,5 +506,33 @@ inTimeZone("Europe/Moscow", () => {
 
 });
 
+// bug 1799638
+inTimeZone("Asia/Tokyo", () => {
+  let dt1 = new Date(1948, Month.May, 1, 23, 59, 59);
+  assertDateTime(dt1, "Sat May 01 1948 23:59:59 GMT+0900 (Japan Standard Time)");
+  assertEq(dt1.getTimezoneOffset(), -540);
+
+  let dt2 = new Date(1948, Month.May, 1, 24, 0, 0);
+  assertDateTime(dt2, "Sun May 02 1948 01:00:00 GMT+1000 (Japan Daylight Time)");
+  assertEq(dt2.getTimezoneOffset(), -600);
+
+  let dt3 = new Date(1948, Month.May, 1, 23, 59, 59, 1);
+  assertDateTime(dt3, "Sat May 01 1948 23:59:59 GMT+0900 (Japan Standard Time)");
+  assertEq(dt3.getTimezoneOffset(), -540);
+});
+inTimeZone("America/New_York", () => {
+  let dt1 = new Date(1966, Month.April, 24, 1, 59, 59);
+  assertDateTime(dt1, "Sun Apr 24 1966 01:59:59 GMT-0500 (Eastern Standard Time)");
+  assertEq(dt1.getTimezoneOffset(), 300);
+
+  let dt2 = new Date(1966, Month.April, 24, 2, 0, 0);
+  assertDateTime(dt2, "Sun Apr 24 1966 03:00:00 GMT-0400 (Eastern Daylight Time)");
+  assertEq(dt2.getTimezoneOffset(), 240);
+
+  let dt3 = new Date(1966, Month.April, 24, 1, 59, 59, 1);
+  assertDateTime(dt3, "Sun Apr 24 1966 01:59:59 GMT-0500 (Eastern Standard Time)");
+  assertEq(dt3.getTimezoneOffset(), 300);
+});
+
 if (typeof reportCompare === "function")
     reportCompare(true, true);
