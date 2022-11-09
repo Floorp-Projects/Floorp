@@ -579,12 +579,21 @@ async function checkTip(win, expectedTip, closeView = true) {
         `Start your search in the address bar to see suggestions from ` +
         `${name} and your browsing history.`;
       break;
+    case UrlbarProviderSearchTips.TIP_TYPE.PERSIST:
+      heuristic = true;
+      title =
+        "Searching just got simpler." +
+        " Try making your search more specific here in the address bar." +
+        " To show the URL instead, visit Search, in settings.";
+      break;
   }
   Assert.equal(result.heuristic, heuristic);
   Assert.equal(result.displayed.title, title);
   Assert.equal(
     result.element.row._elements.get("tipButton").textContent,
-    `Okay, Got It`
+    expectedTip == UrlbarProviderSearchTips.TIP_TYPE.PERSIST
+      ? `Got it`
+      : `Okay, Got It`
   );
   Assert.ok(
     BrowserTestUtils.is_hidden(result.element.row._elements.get("helpButton"))
@@ -712,6 +721,9 @@ async function withDNSRedirect(domain, path, callback) {
 function resetSearchTipsProvider() {
   Services.prefs.clearUserPref(
     `browser.urlbar.tipShownCount.${UrlbarProviderSearchTips.TIP_TYPE.ONBOARD}`
+  );
+  Services.prefs.clearUserPref(
+    `browser.urlbar.tipShownCount.${UrlbarProviderSearchTips.TIP_TYPE.PERSIST}`
   );
   Services.prefs.clearUserPref(
     `browser.urlbar.tipShownCount.${UrlbarProviderSearchTips.TIP_TYPE.REDIRECT}`

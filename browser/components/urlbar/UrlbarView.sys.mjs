@@ -630,8 +630,7 @@ export class UrlbarView {
       //  * The search string starts with an `@` or a search restriction
       //    character
       this.oneOffSearchButtons.enable(
-        (firstResult.providerName != "UrlbarProviderSearchTips" ||
-          queryContext.trimmedSearchString) &&
+        firstResult.providerName != "UrlbarProviderSearchTips" &&
           queryContext.trimmedSearchString[0] != "@" &&
           (queryContext.trimmedSearchString[0] !=
             lazy.UrlbarTokenizer.RESTRICT.SEARCH ||

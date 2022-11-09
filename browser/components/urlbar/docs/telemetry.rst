@@ -157,6 +157,10 @@ urlbar.tips
     Incremented when the user picks the onboarding search tip.
   - ``searchTip_onboard-shown``
     Incremented when the onboarding search tip is shown.
+  - ``searchTip_persist-picked``
+    Incremented when the user picks the urlbar persisted search tip.
+  - ``searchTip_persist-shown``
+    Incremented when the url persisted search tip is shown.
   - ``searchTip_redirect-picked``
     Incremented when the user picks the redirect search tip.
   - ``searchTip_redirect-shown``
