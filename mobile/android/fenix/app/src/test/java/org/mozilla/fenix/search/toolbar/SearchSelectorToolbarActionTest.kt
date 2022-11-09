@@ -172,7 +172,7 @@ class SearchSelectorToolbarActionTest {
             store.dispatch(
                 SearchDefaultEngineSelected(
                     engine = testSearchEngine,
-                    browsingMode = BrowsingMode.Private,
+                    browsingMode = BrowsingMode.Normal,
                     settings = mockk(relaxed = true),
                 ),
             )
@@ -189,7 +189,7 @@ class SearchSelectorToolbarActionTest {
             store.dispatch(
                 SearchDefaultEngineSelected(
                     engine = testSearchEngine,
-                    browsingMode = BrowsingMode.Normal,
+                    browsingMode = BrowsingMode.Private,
                     settings = mockk(relaxed = true),
                 ),
             )
@@ -267,9 +267,12 @@ private val testSearchFragmentState = SearchFragmentState(
     showClipboardSuggestions = false,
     showHistorySuggestionsForCurrentEngine = true,
     showAllHistorySuggestions = false,
-    showBookmarkSuggestions = false,
-    showSyncedTabsSuggestions = false,
-    showSessionSuggestions = true,
+    showBookmarksSuggestionsForCurrentEngine = false,
+    showAllBookmarkSuggestions = false,
+    showSyncedTabsSuggestionsForCurrentEngine = false,
+    showAllSyncedTabsSuggestions = false,
+    showSessionSuggestionsForCurrentEngine = false,
+    showAllSessionSuggestions = true,
     tabId = "tabId",
     pastedText = "",
     searchAccessPoint = MetricsUtils.Source.SHORTCUT,

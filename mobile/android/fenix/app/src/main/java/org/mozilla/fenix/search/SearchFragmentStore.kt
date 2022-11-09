@@ -91,9 +91,15 @@ sealed class SearchEngineSource {
  * @property showHistorySuggestionsForCurrentEngine Whether or not to show history suggestions for only
  * the current search engine.
  * @property showAllHistorySuggestions Whether or not to show history suggestions in the AwesomeBar
- * @property showBookmarkSuggestions Whether or not to show the bookmark suggestion in the AwesomeBar
- * @property showSyncedTabsSuggestions Whether or not to show the synced tabs suggestion in the AwesomeBar
- * @property showSessionSuggestions Whether or not to show the session suggestion in the AwesomeBar
+ * @property showBookmarksSuggestionsForCurrentEngine Whether or not to show bookmarks suggestions for only
+ * the current search engine.
+ * @property showAllBookmarkSuggestions Whether or not to show the bookmark suggestion in the AwesomeBar
+ * @property showSyncedTabsSuggestionsForCurrentEngine Whether or not to show synced tabs suggestions for only
+ * the current search engine.
+ * @property showAllSyncedTabsSuggestions Whether or not to show the synced tabs suggestion in the AwesomeBar
+ * @property showSessionSuggestionsForCurrentEngine Whether or not to show local tabs suggestions for only
+ * the current search engine.
+ * @property showAllSessionSuggestions Whether or not to show the session suggestion in the AwesomeBar
  * @property pastedText The text pasted from the long press toolbar menu
  * @property clipboardHasUrl Indicates if the clipboard contains an URL.
  */
@@ -112,9 +118,12 @@ data class SearchFragmentState(
     val showSearchTermHistory: Boolean,
     val showHistorySuggestionsForCurrentEngine: Boolean,
     val showAllHistorySuggestions: Boolean,
-    val showBookmarkSuggestions: Boolean,
-    val showSyncedTabsSuggestions: Boolean,
-    val showSessionSuggestions: Boolean,
+    val showBookmarksSuggestionsForCurrentEngine: Boolean,
+    val showAllBookmarkSuggestions: Boolean,
+    val showSyncedTabsSuggestionsForCurrentEngine: Boolean,
+    val showAllSyncedTabsSuggestions: Boolean,
+    val showSessionSuggestionsForCurrentEngine: Boolean,
+    val showAllSessionSuggestions: Boolean,
     val tabId: String?,
     val pastedText: String? = null,
     val searchAccessPoint: MetricsUtils.Source,
@@ -161,9 +170,12 @@ fun createInitialSearchFragmentState(
         showSearchTermHistory = settings.showUnifiedSearchFeature && settings.shouldShowHistorySuggestions,
         showHistorySuggestionsForCurrentEngine = false,
         showAllHistorySuggestions = settings.shouldShowHistorySuggestions,
-        showBookmarkSuggestions = settings.shouldShowBookmarkSuggestions,
-        showSyncedTabsSuggestions = settings.shouldShowSyncedTabsSuggestions,
-        showSessionSuggestions = true,
+        showBookmarksSuggestionsForCurrentEngine = false,
+        showAllBookmarkSuggestions = settings.shouldShowBookmarkSuggestions,
+        showSyncedTabsSuggestionsForCurrentEngine = false,
+        showAllSyncedTabsSuggestions = settings.shouldShowSyncedTabsSuggestions,
+        showSessionSuggestionsForCurrentEngine = false,
+        showAllSessionSuggestions = true,
         tabId = tabId,
         pastedText = pastedText,
         searchAccessPoint = searchAccessPoint,
@@ -255,9 +267,12 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                     action.settings.shouldShowHistorySuggestions,
                 showHistorySuggestionsForCurrentEngine = false, // we'll show all history
                 showAllHistorySuggestions = action.settings.shouldShowHistorySuggestions,
-                showBookmarkSuggestions = action.settings.shouldShowBookmarkSuggestions,
-                showSyncedTabsSuggestions = action.settings.shouldShowSyncedTabsSuggestions,
-                showSessionSuggestions = true,
+                showBookmarksSuggestionsForCurrentEngine = false, // we'll show all bookmarks
+                showAllBookmarkSuggestions = action.settings.shouldShowBookmarkSuggestions,
+                showSyncedTabsSuggestionsForCurrentEngine = false, // we'll show all synced tabs
+                showAllSyncedTabsSuggestions = action.settings.shouldShowSyncedTabsSuggestions,
+                showSessionSuggestionsForCurrentEngine = false, // we'll show all local tabs
+                showAllSessionSuggestions = true,
             )
         is SearchFragmentAction.SearchShortcutEngineSelected ->
             state.copy(
@@ -276,15 +291,21 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                     true -> false
                     false -> action.settings.shouldShowHistorySuggestions
                 },
-                showBookmarkSuggestions = when (action.settings.showUnifiedSearchFeature) {
+                showBookmarksSuggestionsForCurrentEngine = action.settings.showUnifiedSearchFeature &&
+                    action.settings.shouldShowBookmarkSuggestions && !action.engine.isGeneral,
+                showAllBookmarkSuggestions = when (action.settings.showUnifiedSearchFeature) {
                     true -> false
                     false -> action.settings.shouldShowBookmarkSuggestions
                 },
-                showSyncedTabsSuggestions = when (action.settings.showUnifiedSearchFeature) {
+                showSyncedTabsSuggestionsForCurrentEngine = action.settings.showUnifiedSearchFeature &&
+                    action.settings.shouldShowSyncedTabsSuggestions && !action.engine.isGeneral,
+                showAllSyncedTabsSuggestions = when (action.settings.showUnifiedSearchFeature) {
                     true -> false
                     false -> action.settings.shouldShowSyncedTabsSuggestions
                 },
-                showSessionSuggestions = when (action.settings.showUnifiedSearchFeature) {
+                showSessionSuggestionsForCurrentEngine = action.settings.showUnifiedSearchFeature &&
+                    !action.engine.isGeneral,
+                showAllSessionSuggestions = when (action.settings.showUnifiedSearchFeature) {
                     true -> false
                     false -> true
                 },
@@ -298,9 +319,12 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 showSearchTermHistory = false,
                 showHistorySuggestionsForCurrentEngine = false,
                 showAllHistorySuggestions = true,
-                showBookmarkSuggestions = false,
-                showSyncedTabsSuggestions = false,
-                showSessionSuggestions = false,
+                showBookmarksSuggestionsForCurrentEngine = false,
+                showAllBookmarkSuggestions = false,
+                showSyncedTabsSuggestionsForCurrentEngine = false,
+                showAllSyncedTabsSuggestions = false,
+                showSessionSuggestionsForCurrentEngine = false,
+                showAllSessionSuggestions = false,
             )
         is SearchFragmentAction.SearchBookmarksEngineSelected ->
             state.copy(
@@ -311,9 +335,12 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 showSearchTermHistory = false,
                 showHistorySuggestionsForCurrentEngine = false,
                 showAllHistorySuggestions = false,
-                showBookmarkSuggestions = true,
-                showSyncedTabsSuggestions = false,
-                showSessionSuggestions = false,
+                showBookmarksSuggestionsForCurrentEngine = false,
+                showAllBookmarkSuggestions = true,
+                showSyncedTabsSuggestionsForCurrentEngine = false,
+                showAllSyncedTabsSuggestions = false,
+                showSessionSuggestionsForCurrentEngine = false,
+                showAllSessionSuggestions = false,
             )
         is SearchFragmentAction.SearchTabsEngineSelected ->
             state.copy(
@@ -324,9 +351,12 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 showSearchTermHistory = false,
                 showHistorySuggestionsForCurrentEngine = false,
                 showAllHistorySuggestions = false,
-                showBookmarkSuggestions = false,
-                showSyncedTabsSuggestions = true,
-                showSessionSuggestions = true,
+                showBookmarksSuggestionsForCurrentEngine = false,
+                showAllBookmarkSuggestions = false,
+                showSyncedTabsSuggestionsForCurrentEngine = false,
+                showAllSyncedTabsSuggestions = true,
+                showSessionSuggestionsForCurrentEngine = false,
+                showAllSessionSuggestions = true,
             )
         is SearchFragmentAction.ShowSearchShortcutEnginePicker ->
             state.copy(showSearchShortcuts = action.show && state.areShortcutsAvailable)

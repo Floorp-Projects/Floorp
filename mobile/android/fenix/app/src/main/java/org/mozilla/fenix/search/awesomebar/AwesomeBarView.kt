@@ -50,16 +50,13 @@ class AwesomeBarView(
     private val activity: HomeActivity,
     val interactor: AwesomeBarInteractor,
     val view: AwesomeBarWrapper,
-    fromHomeFragment: Boolean,
+    private val fromHomeFragment: Boolean,
 ) {
     private var components: Components = activity.components
     private val engineForSpeculativeConnects: Engine?
-    private val sessionProvider: SessionSuggestionProvider
     private val defaultHistoryStorageProvider: HistoryStorageSuggestionProvider
     private val defaultCombinedHistoryProvider: CombinedHistorySuggestionProvider
     private val shortcutsEnginePickerProvider: ShortcutsSuggestionProvider
-    private val bookmarksStorageSuggestionProvider: BookmarksStorageSuggestionProvider
-    private val syncedTabsStorageSuggestionProvider: SyncedTabsStorageSuggestionProvider
     private val defaultSearchSuggestionProvider: SearchSuggestionProvider
     private val defaultSearchActionProvider: SearchActionProvider
     private val searchEngineSuggestionProvider: SearchEngineSuggestionProvider
@@ -118,16 +115,6 @@ class AwesomeBarView(
             BrowsingMode.Normal -> components.core.engine
             BrowsingMode.Private -> null
         }
-        sessionProvider =
-            SessionSuggestionProvider(
-                activity.resources,
-                components.core.store,
-                selectTabUseCase,
-                components.core.icons,
-                getDrawable(activity, R.drawable.ic_search_results_tab),
-                excludeSelectedSession = !fromHomeFragment,
-                suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
-            )
 
         defaultHistoryStorageProvider =
             HistoryStorageSuggestionProvider(
@@ -146,29 +133,6 @@ class AwesomeBarView(
                 icons = components.core.icons,
                 engine = engineForSpeculativeConnects,
                 maxNumberOfSuggestions = METADATA_SUGGESTION_LIMIT,
-                suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
-            )
-
-        bookmarksStorageSuggestionProvider =
-            BookmarksStorageSuggestionProvider(
-                bookmarksStorage = components.core.bookmarksStorage,
-                loadUrlUseCase = loadUrlUseCase,
-                icons = components.core.icons,
-                indicatorIcon = getDrawable(activity, R.drawable.ic_search_results_bookmarks),
-                engine = engineForSpeculativeConnects,
-                suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
-            )
-
-        syncedTabsStorageSuggestionProvider =
-            SyncedTabsStorageSuggestionProvider(
-                components.backgroundServices.syncedTabsStorage,
-                loadUrlUseCase,
-                components.core.icons,
-                DeviceIndicators(
-                    getDrawable(activity, R.drawable.ic_search_results_device_desktop),
-                    getDrawable(activity, R.drawable.ic_search_results_device_mobile),
-                    getDrawable(activity, R.drawable.ic_search_results_device_tablet),
-                ),
                 suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
             )
 
@@ -308,20 +272,32 @@ class AwesomeBarView(
             }
         }
 
-        if (state.showBookmarkSuggestions) {
-            providersToAdd.add(bookmarksStorageSuggestionProvider)
+        if (state.showAllBookmarkSuggestions) {
+            providersToAdd.add(getBookmarksProvider(state.searchEngineSource))
+        }
+
+        if (state.showBookmarksSuggestionsForCurrentEngine) {
+            providersToAdd.add(getBookmarksProvider(state.searchEngineSource, true))
         }
 
         if (state.showSearchSuggestions) {
             providersToAdd.addAll(getSelectedSearchSuggestionProvider(state))
         }
 
-        if (state.showSyncedTabsSuggestions) {
-            providersToAdd.add(syncedTabsStorageSuggestionProvider)
+        if (state.showAllSyncedTabsSuggestions) {
+            providersToAdd.add(getSyncedTabsProvider(state.searchEngineSource))
         }
 
-        if (activity.browsingModeManager.mode == BrowsingMode.Normal && state.showSessionSuggestions) {
-            providersToAdd.add(sessionProvider)
+        if (state.showSyncedTabsSuggestionsForCurrentEngine) {
+            providersToAdd.add(getSyncedTabsProvider(state.searchEngineSource, true))
+        }
+
+        if (activity.browsingModeManager.mode == BrowsingMode.Normal && state.showAllSessionSuggestions) {
+            providersToAdd.add(getLocalTabsProvider(state.searchEngineSource))
+        }
+
+        if (activity.browsingModeManager.mode == BrowsingMode.Normal && state.showSessionSuggestionsForCurrentEngine) {
+            providersToAdd.add(getLocalTabsProvider(state.searchEngineSource, true))
         }
 
         if (!activity.settings().showUnifiedSearchFeature) {
@@ -450,15 +426,112 @@ class AwesomeBarView(
         }
     }
 
+    /**
+     * Get a synced tabs provider automatically configured to filter or not results from just the current search engine.
+     *
+     * @param searchEngineSource Search engine wrapper also informing about the selection type.
+     * @param filterByCurrentEngine Whether to apply a filter to the constructed provider such that
+     * it will return bookmarks only for the current search engine.
+     *
+     * @return [SyncedTabsStorageSuggestionProvider] providing suggestions for the [AwesomeBar].
+     */
+    @VisibleForTesting
+    internal fun getSyncedTabsProvider(
+        searchEngineSource: SearchEngineSource,
+        filterByCurrentEngine: Boolean = false,
+    ): SyncedTabsStorageSuggestionProvider {
+        val searchEngineHostFilter = when (filterByCurrentEngine) {
+            true -> searchEngineSource.searchEngine?.resultsUrl?.host
+            false -> null
+        }
+
+        return SyncedTabsStorageSuggestionProvider(
+            components.backgroundServices.syncedTabsStorage,
+            loadUrlUseCase,
+            components.core.icons,
+            DeviceIndicators(
+                getDrawable(activity, R.drawable.ic_search_results_device_desktop),
+                getDrawable(activity, R.drawable.ic_search_results_device_mobile),
+                getDrawable(activity, R.drawable.ic_search_results_device_tablet),
+            ),
+            suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
+            resultsHostFilter = searchEngineHostFilter,
+        )
+    }
+
+    /**
+     * Get a local tabs provider automatically configured to filter or not results from just the current search engine.
+     *
+     * @param searchEngineSource Search engine wrapper also informing about the selection type.
+     * @param filterByCurrentEngine Whether to apply a filter to the constructed provider such that
+     * it will return bookmarks only for the current search engine.
+     *
+     * @return [SessionSuggestionProvider] providing suggestions for the [AwesomeBar].
+     */
+    @VisibleForTesting
+    internal fun getLocalTabsProvider(
+        searchEngineSource: SearchEngineSource,
+        filterByCurrentEngine: Boolean = false,
+    ): SessionSuggestionProvider {
+        val searchEngineHostFilter = when (filterByCurrentEngine) {
+            true -> searchEngineSource.searchEngine?.resultsUrl?.host
+            false -> null
+        }
+
+        return SessionSuggestionProvider(
+            activity.resources,
+            components.core.store,
+            selectTabUseCase,
+            components.core.icons,
+            getDrawable(activity, R.drawable.ic_search_results_tab),
+            excludeSelectedSession = !fromHomeFragment,
+            suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
+            resultsHostFilter = searchEngineHostFilter,
+        )
+    }
+
+    /**
+     * Get a bookmarks provider automatically configured to filter or not results from just the current search engine.
+     *
+     * @param searchEngineSource Search engine wrapper also informing about the selection type.
+     * @param filterByCurrentEngine Whether to apply a filter to the constructed provider such that
+     * it will return bookmarks only for the current search engine.
+     *
+     * @return [BookmarksStorageSuggestionProvider] providing suggestions for the [AwesomeBar].
+     */
+    @VisibleForTesting
+    internal fun getBookmarksProvider(
+        searchEngineSource: SearchEngineSource,
+        filterByCurrentEngine: Boolean = false,
+    ): BookmarksStorageSuggestionProvider {
+        val searchEngineHostFilter = when (filterByCurrentEngine) {
+            true -> searchEngineSource.searchEngine?.resultsUrl?.host
+            false -> null
+        }
+
+        return BookmarksStorageSuggestionProvider(
+            bookmarksStorage = components.core.bookmarksStorage,
+            loadUrlUseCase = loadUrlUseCase,
+            icons = components.core.icons,
+            indicatorIcon = getDrawable(activity, R.drawable.ic_search_results_bookmarks),
+            engine = engineForSpeculativeConnects,
+            suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
+            resultsHostFilter = searchEngineHostFilter,
+        )
+    }
+
     data class SearchProviderState(
         val showSearchShortcuts: Boolean,
         val showSearchTermHistory: Boolean,
         val showHistorySuggestionsForCurrentEngine: Boolean,
         val showAllHistorySuggestions: Boolean,
-        val showBookmarkSuggestions: Boolean,
+        val showBookmarksSuggestionsForCurrentEngine: Boolean,
+        val showAllBookmarkSuggestions: Boolean,
         val showSearchSuggestions: Boolean,
-        val showSyncedTabsSuggestions: Boolean,
-        val showSessionSuggestions: Boolean,
+        val showSyncedTabsSuggestionsForCurrentEngine: Boolean,
+        val showAllSyncedTabsSuggestions: Boolean,
+        val showSessionSuggestionsForCurrentEngine: Boolean,
+        val showAllSessionSuggestions: Boolean,
         val searchEngineSource: SearchEngineSource,
     )
 
@@ -476,13 +549,16 @@ class AwesomeBarView(
 }
 
 fun SearchFragmentState.toSearchProviderState() = AwesomeBarView.SearchProviderState(
-    showSearchShortcuts,
-    showSearchTermHistory,
-    showHistorySuggestionsForCurrentEngine,
-    showAllHistorySuggestions,
-    showBookmarkSuggestions,
-    showSearchSuggestions,
-    showSyncedTabsSuggestions,
-    showSessionSuggestions,
-    searchEngineSource,
+    showSearchShortcuts = showSearchShortcuts,
+    showSearchTermHistory = showSearchTermHistory,
+    showHistorySuggestionsForCurrentEngine = showHistorySuggestionsForCurrentEngine,
+    showAllHistorySuggestions = showAllHistorySuggestions,
+    showBookmarksSuggestionsForCurrentEngine = showBookmarksSuggestionsForCurrentEngine,
+    showAllBookmarkSuggestions = showAllBookmarkSuggestions,
+    showSearchSuggestions = showSearchSuggestions,
+    showSyncedTabsSuggestionsForCurrentEngine = showSyncedTabsSuggestionsForCurrentEngine,
+    showAllSyncedTabsSuggestions = showAllSyncedTabsSuggestions,
+    showSessionSuggestionsForCurrentEngine = showSessionSuggestionsForCurrentEngine,
+    showAllSessionSuggestions = showAllSessionSuggestions,
+    searchEngineSource = searchEngineSource,
 )

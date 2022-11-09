@@ -62,6 +62,7 @@ class SearchFragmentStoreTest {
         every { settings.shouldShowSearchShortcuts } returns true
         every { settings.showUnifiedSearchFeature } returns true
         every { settings.shouldShowHistorySuggestions } returns true
+
         mockkStatic("org.mozilla.fenix.search.SearchFragmentStoreKt") {
             val expected = SearchFragmentState(
                 query = "",
@@ -78,9 +79,12 @@ class SearchFragmentStoreTest {
                 showSearchTermHistory = true,
                 showHistorySuggestionsForCurrentEngine = false,
                 showAllHistorySuggestions = true,
-                showBookmarkSuggestions = false,
-                showSyncedTabsSuggestions = false,
-                showSessionSuggestions = true,
+                showBookmarksSuggestionsForCurrentEngine = false,
+                showAllBookmarkSuggestions = false,
+                showSyncedTabsSuggestionsForCurrentEngine = false,
+                showAllSyncedTabsSuggestions = false,
+                showSessionSuggestionsForCurrentEngine = false,
+                showAllSessionSuggestions = true,
                 tabId = null,
                 pastedText = "pastedText",
                 searchAccessPoint = MetricsUtils.Source.ACTION,
@@ -96,7 +100,6 @@ class SearchFragmentStoreTest {
                     searchAccessPoint = MetricsUtils.Source.ACTION,
                 ),
             )
-
             assertEquals(
                 expected.copy(tabId = "tabId"),
                 createInitialSearchFragmentState(
@@ -143,9 +146,12 @@ class SearchFragmentStoreTest {
                 showSearchTermHistory = false,
                 showHistorySuggestionsForCurrentEngine = false,
                 showAllHistorySuggestions = false,
-                showBookmarkSuggestions = false,
-                showSyncedTabsSuggestions = false,
-                showSessionSuggestions = true,
+                showBookmarksSuggestionsForCurrentEngine = false,
+                showAllBookmarkSuggestions = false,
+                showSyncedTabsSuggestionsForCurrentEngine = false,
+                showAllSyncedTabsSuggestions = false,
+                showSessionSuggestionsForCurrentEngine = false,
+                showAllSessionSuggestions = true,
                 tabId = "tabId",
                 pastedText = "",
                 searchAccessPoint = MetricsUtils.Source.SHORTCUT,
@@ -195,15 +201,16 @@ class SearchFragmentStoreTest {
 
             assertNotSame(initialState, store.state)
             assertEquals(SearchEngineSource.Default(searchEngine), store.state.searchEngineSource)
+
             assertTrue(store.state.showSearchSuggestions)
             assertFalse(store.state.showSearchShortcuts)
             assertTrue(store.state.showClipboardSuggestions)
             assertFalse(store.state.showSearchTermHistory)
             assertFalse(store.state.showHistorySuggestionsForCurrentEngine)
             assertTrue(store.state.showAllHistorySuggestions)
-            assertFalse(store.state.showBookmarkSuggestions)
-            assertFalse(store.state.showSyncedTabsSuggestions)
-            assertTrue(store.state.showSessionSuggestions)
+            assertFalse(store.state.showAllBookmarkSuggestions)
+            assertFalse(store.state.showAllSyncedTabsSuggestions)
+            assertTrue(store.state.showAllSessionSuggestions)
             verify { shouldShowSearchSuggestions(BrowsingMode.Private, settings) }
         }
     }
@@ -212,7 +219,9 @@ class SearchFragmentStoreTest {
     fun `GIVEN unified search is enabled WHEN the search engine is updated to a general engine shortcut THEN search suggestions providers are updated`() = runTest {
         val initialState = emptyDefaultState(showHistorySuggestionsForCurrentEngine = false)
         val store = SearchFragmentStore(initialState)
-        every { searchEngine.isGeneral } returns true
+        val topicSpecificEngine: SearchEngine = mockk {
+            every { isGeneral } returns false
+        }
         every { settings.showUnifiedSearchFeature } returns true
         every { settings.shouldShowSearchShortcuts } returns true
         every { settings.shouldShowClipboardSuggestions } returns true
@@ -223,23 +232,52 @@ class SearchFragmentStoreTest {
 
         store.dispatch(
             SearchFragmentAction.SearchShortcutEngineSelected(
-                engine = searchEngine,
+                engine = topicSpecificEngine,
                 browsingMode = BrowsingMode.Normal,
                 settings = settings,
             ),
         ).join()
 
         assertNotSame(initialState, store.state)
-        assertEquals(SearchEngineSource.Shortcut(searchEngine), store.state.searchEngineSource)
+        assertEquals(SearchEngineSource.Shortcut(topicSpecificEngine), store.state.searchEngineSource)
         assertTrue(store.state.showSearchSuggestions)
+        assertFalse(store.state.showSearchShortcuts)
+        assertTrue(store.state.showClipboardSuggestions)
+        assertTrue(store.state.showSearchTermHistory)
+        assertTrue(store.state.showHistorySuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllHistorySuggestions)
+        assertTrue(store.state.showBookmarksSuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllBookmarkSuggestions)
+        assertTrue(store.state.showSyncedTabsSuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllSyncedTabsSuggestions)
+        assertTrue(store.state.showSessionSuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllSessionSuggestions)
+
+        every { settings.shouldShowSearchSuggestions } returns false
+        val generalEngine: SearchEngine = mockk {
+            every { isGeneral } returns true
+        }
+        store.dispatch(
+            SearchFragmentAction.SearchShortcutEngineSelected(
+                engine = generalEngine,
+                browsingMode = BrowsingMode.Normal,
+                settings = settings,
+            ),
+        ).join()
+        assertNotSame(initialState, store.state)
+        assertEquals(SearchEngineSource.Shortcut(generalEngine), store.state.searchEngineSource)
+        assertFalse(store.state.showSearchSuggestions)
         assertFalse(store.state.showSearchShortcuts)
         assertTrue(store.state.showClipboardSuggestions)
         assertTrue(store.state.showSearchTermHistory)
         assertFalse(store.state.showHistorySuggestionsForCurrentEngine)
         assertFalse(store.state.showAllHistorySuggestions)
-        assertFalse(store.state.showBookmarkSuggestions)
-        assertFalse(store.state.showSyncedTabsSuggestions)
-        assertFalse(store.state.showSessionSuggestions)
+        assertFalse(store.state.showBookmarksSuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllBookmarkSuggestions)
+        assertFalse(store.state.showSyncedTabsSuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllSyncedTabsSuggestions)
+        assertFalse(store.state.showSessionSuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllSessionSuggestions)
     }
 
     @Test
@@ -271,9 +309,12 @@ class SearchFragmentStoreTest {
         assertTrue(store.state.showSearchTermHistory)
         assertTrue(store.state.showHistorySuggestionsForCurrentEngine)
         assertFalse(store.state.showAllHistorySuggestions)
-        assertFalse(store.state.showBookmarkSuggestions)
-        assertFalse(store.state.showSyncedTabsSuggestions)
-        assertFalse(store.state.showSessionSuggestions)
+        assertFalse(store.state.showBookmarksSuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllBookmarkSuggestions)
+        assertFalse(store.state.showSyncedTabsSuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllSyncedTabsSuggestions)
+        assertTrue(store.state.showSessionSuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllSessionSuggestions)
     }
 
     @Test
@@ -305,9 +346,108 @@ class SearchFragmentStoreTest {
         assertFalse(store.state.showSearchTermHistory)
         assertFalse(store.state.showHistorySuggestionsForCurrentEngine)
         assertTrue(store.state.showAllHistorySuggestions)
-        assertFalse(store.state.showBookmarkSuggestions)
-        assertTrue(store.state.showSyncedTabsSuggestions)
-        assertTrue(store.state.showSessionSuggestions)
+        assertFalse(store.state.showAllBookmarkSuggestions)
+        assertTrue(store.state.showAllSyncedTabsSuggestions)
+        assertTrue(store.state.showAllSessionSuggestions)
+    }
+
+    @Test
+    fun `GIVEN unified search is enabled WHEN updating the search engine to a topic specific one THEN enable filtered bookmarks, history and tabs suggestions`() = runTest {
+        val initialState = emptyDefaultState()
+        val store = SearchFragmentStore(initialState)
+        val topicSpecificEngine1: SearchEngine = mockk(relaxed = true) {
+            every { name } returns "1"
+            every { isGeneral } returns false
+        }
+        every { settings.showUnifiedSearchFeature } returns true
+
+        every { settings.shouldShowBookmarkSuggestions } returns false
+        every { settings.shouldShowSyncedTabsSuggestions } returns false
+        store.dispatch(
+            SearchFragmentAction.SearchShortcutEngineSelected(
+                engine = topicSpecificEngine1,
+                browsingMode = BrowsingMode.Private,
+                settings = settings,
+            ),
+        ).join()
+        assertNotSame(initialState, store.state)
+        assertEquals(SearchEngineSource.Shortcut(topicSpecificEngine1), store.state.searchEngineSource)
+        assertFalse(store.state.showBookmarksSuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllBookmarkSuggestions)
+        assertFalse(store.state.showSyncedTabsSuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllSyncedTabsSuggestions)
+        assertTrue(store.state.showSessionSuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllSessionSuggestions)
+
+        val topicSpecificEngine2 = topicSpecificEngine1.copy(
+            name = "2",
+        )
+        every { settings.shouldShowBookmarkSuggestions } returns true
+        every { settings.shouldShowSyncedTabsSuggestions } returns true
+        store.dispatch(
+            SearchFragmentAction.SearchShortcutEngineSelected(
+                engine = topicSpecificEngine2,
+                browsingMode = BrowsingMode.Private,
+                settings = settings,
+            ),
+        ).join()
+        assertNotSame(initialState, store.state)
+        assertEquals(SearchEngineSource.Shortcut(topicSpecificEngine2), store.state.searchEngineSource)
+        assertTrue(store.state.showBookmarksSuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllBookmarkSuggestions)
+        assertTrue(store.state.showSyncedTabsSuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllSyncedTabsSuggestions)
+        assertTrue(store.state.showSessionSuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllSessionSuggestions)
+    }
+
+    @Test
+    fun `GIVEN unified search is disabled WHEN updating the search engine to a topic specific one THEN enable bookmarks and tabs suggestions if user enabled`() = runTest {
+        val initialState = emptyDefaultState()
+        val store = SearchFragmentStore(initialState)
+        val topicSpecificEngine1: SearchEngine = mockk(relaxed = true) {
+            every { id } returns "1"
+            every { isGeneral } returns false
+        }
+        every { settings.showUnifiedSearchFeature } returns true
+
+        every { settings.shouldShowBookmarkSuggestions } returns false
+        every { settings.shouldShowSyncedTabsSuggestions } returns true
+        store.dispatch(
+            SearchFragmentAction.SearchShortcutEngineSelected(
+                engine = topicSpecificEngine1,
+                browsingMode = BrowsingMode.Private,
+                settings = settings,
+            ),
+        ).join()
+        assertNotSame(initialState, store.state)
+        assertEquals(SearchEngineSource.Shortcut(topicSpecificEngine1), store.state.searchEngineSource)
+        assertFalse(store.state.showAllBookmarkSuggestions)
+        assertTrue(store.state.showSyncedTabsSuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllSyncedTabsSuggestions)
+        assertTrue(store.state.showSessionSuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllSessionSuggestions)
+
+        val topicSpecificEngine2 = topicSpecificEngine1.copy(
+            id = "2",
+        )
+        every { settings.shouldShowBookmarkSuggestions } returns true
+        every { settings.shouldShowSyncedTabsSuggestions } returns false
+        store.dispatch(
+            SearchFragmentAction.SearchShortcutEngineSelected(
+                engine = topicSpecificEngine2,
+                browsingMode = BrowsingMode.Private,
+                settings = settings,
+            ),
+        ).join()
+        assertNotSame(initialState, store.state)
+        assertEquals(SearchEngineSource.Shortcut(topicSpecificEngine2), store.state.searchEngineSource)
+        assertTrue(store.state.showBookmarksSuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllBookmarkSuggestions)
+        assertFalse(store.state.showSyncedTabsSuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllSyncedTabsSuggestions)
+        assertTrue(store.state.showSessionSuggestionsForCurrentEngine)
+        assertFalse(store.state.showAllSessionSuggestions)
     }
 
     @Test
@@ -325,9 +465,9 @@ class SearchFragmentStoreTest {
         assertFalse(store.state.showSearchTermHistory)
         assertFalse(store.state.showHistorySuggestionsForCurrentEngine)
         assertTrue(store.state.showAllHistorySuggestions)
-        assertFalse(store.state.showBookmarkSuggestions)
-        assertFalse(store.state.showSyncedTabsSuggestions)
-        assertFalse(store.state.showSessionSuggestions)
+        assertFalse(store.state.showAllBookmarkSuggestions)
+        assertFalse(store.state.showAllSyncedTabsSuggestions)
+        assertFalse(store.state.showAllSessionSuggestions)
     }
 
     @Test
@@ -345,9 +485,9 @@ class SearchFragmentStoreTest {
         assertFalse(store.state.showSearchTermHistory)
         assertFalse(store.state.showHistorySuggestionsForCurrentEngine)
         assertFalse(store.state.showAllHistorySuggestions)
-        assertTrue(store.state.showBookmarkSuggestions)
-        assertFalse(store.state.showSyncedTabsSuggestions)
-        assertFalse(store.state.showSessionSuggestions)
+        assertTrue(store.state.showAllBookmarkSuggestions)
+        assertFalse(store.state.showAllSyncedTabsSuggestions)
+        assertFalse(store.state.showAllSessionSuggestions)
     }
 
     @Test
@@ -365,9 +505,9 @@ class SearchFragmentStoreTest {
         assertFalse(store.state.showSearchTermHistory)
         assertFalse(store.state.showHistorySuggestionsForCurrentEngine)
         assertFalse(store.state.showAllHistorySuggestions)
-        assertFalse(store.state.showBookmarkSuggestions)
-        assertTrue(store.state.showSyncedTabsSuggestions)
-        assertTrue(store.state.showSessionSuggestions)
+        assertFalse(store.state.showAllBookmarkSuggestions)
+        assertTrue(store.state.showAllSyncedTabsSuggestions)
+        assertTrue(store.state.showAllSessionSuggestions)
     }
 
     @Test
@@ -588,7 +728,7 @@ class SearchFragmentStoreTest {
     }
 
     @Test
-    fun `GIVEN normal browsing mode and search suggestions enabled WHEN checking if search suggestions should be shown THEN return true`() {
+    fun `GIVEN normal browsing mode and search suggestions enabled WHEN checking if search suggedtions should be shown THEN return true`() {
         var settings: Settings = mockk {
             every { shouldShowSearchSuggestions } returns false
             every { shouldShowSearchSuggestionsInPrivate } returns false
@@ -603,7 +743,7 @@ class SearchFragmentStoreTest {
     }
 
     @Test
-    fun `GIVEN private browsing mode and search suggestions enabled WHEN checking if search suggestions should be shown THEN return true`() {
+    fun `GIVEN private browsing mode and search suggestions enabled WHEN checking if search suggedtions should be shown THEN return true`() {
         var settings: Settings = mockk {
             every { shouldShowSearchSuggestions } returns false
             every { shouldShowSearchSuggestionsInPrivate } returns false
@@ -645,9 +785,12 @@ class SearchFragmentStoreTest {
         showSearchTermHistory = true,
         showHistorySuggestionsForCurrentEngine = showHistorySuggestionsForCurrentEngine,
         showAllHistorySuggestions = false,
-        showBookmarkSuggestions = false,
-        showSyncedTabsSuggestions = false,
-        showSessionSuggestions = false,
+        showBookmarksSuggestionsForCurrentEngine = false,
+        showAllBookmarkSuggestions = false,
+        showSyncedTabsSuggestionsForCurrentEngine = false,
+        showAllSyncedTabsSuggestions = false,
+        showSessionSuggestionsForCurrentEngine = false,
+        showAllSessionSuggestions = false,
         searchAccessPoint = MetricsUtils.Source.NONE,
     )
 }

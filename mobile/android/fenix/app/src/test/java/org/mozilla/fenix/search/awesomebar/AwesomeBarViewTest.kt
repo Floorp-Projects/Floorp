@@ -264,17 +264,45 @@ class AwesomeBarViewTest {
     }
 
     @Test
-    fun `GIVEN normal browsing mode and needing to show tabs suggestions WHEN configuring providers THEN add the tabs provider`() {
+    fun `GIVEN normal browsing mode and needing to show all local tabs suggestions WHEN configuring providers THEN add the tabs provider`() {
         val settings: Settings = mockk(relaxed = true)
         every { activity.settings() } returns settings
         every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
         val state = getSearchProviderState(
-            searchEngineSource = SearchEngineSource.Shortcut(mockk(relaxed = true)),
+            showSessionSuggestionsForCurrentEngine = false,
+            searchEngineSource = SearchEngineSource.Shortcut(
+                mockk(relaxed = true) {
+                    every { resultsUrl.host } returns "test"
+                },
+            ),
         )
 
         val result = awesomeBarView.getProvidersToAdd(state)
 
-        assertEquals(1, result.filterIsInstance<SessionSuggestionProvider>().size)
+        val localSessionsProviders = result.filterIsInstance<SessionSuggestionProvider>()
+        assertEquals(1, localSessionsProviders.size)
+        assertNull(localSessionsProviders[0].resultsHostFilter)
+    }
+
+    @Test
+    fun `GIVEN normal browsing mode and needing to show filtered local tabs suggestions WHEN configuring providers THEN add the tabs provider with an engine filter`() {
+        val settings: Settings = mockk(relaxed = true)
+        every { activity.settings() } returns settings
+        every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
+        val state = getSearchProviderState(
+            showAllSessionSuggestions = false,
+            searchEngineSource = SearchEngineSource.Shortcut(
+                mockk(relaxed = true) {
+                    every { resultsUrl.host } returns "test"
+                },
+            ),
+        )
+
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        val localSessionsProviders = result.filterIsInstance<SessionSuggestionProvider>()
+        assertEquals(1, localSessionsProviders.size)
+        assertEquals("test", localSessionsProviders[0].resultsHostFilter)
     }
 
     @Test
@@ -289,6 +317,90 @@ class AwesomeBarViewTest {
         val result = awesomeBarView.getProvidersToAdd(state)
 
         assertEquals(0, result.filterIsInstance<SessionSuggestionProvider>().size)
+    }
+
+    @Test
+    fun `GIVEN needing to show all synced tabs suggestions WHEN configuring providers THEN add the synced tabs provider`() {
+        val settings: Settings = mockk(relaxed = true)
+        every { activity.settings() } returns settings
+        every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
+        val state = getSearchProviderState(
+            showSyncedTabsSuggestionsForCurrentEngine = false,
+            searchEngineSource = SearchEngineSource.Shortcut(
+                mockk(relaxed = true) {
+                    every { resultsUrl.host } returns "test"
+                },
+            ),
+        )
+
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        val localSessionsProviders = result.filterIsInstance<SyncedTabsStorageSuggestionProvider>()
+        assertEquals(1, localSessionsProviders.size)
+        assertNull(localSessionsProviders[0].resultsHostFilter)
+    }
+
+    @Test
+    fun `GIVEN needing to show filtered synced tabs suggestions WHEN configuring providers THEN add the synced tabs provider with an engine filter`() {
+        val settings: Settings = mockk(relaxed = true)
+        every { activity.settings() } returns settings
+        every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
+        val state = getSearchProviderState(
+            showAllSyncedTabsSuggestions = false,
+            searchEngineSource = SearchEngineSource.Shortcut(
+                mockk(relaxed = true) {
+                    every { resultsUrl.host } returns "test"
+                },
+            ),
+        )
+
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        val localSessionsProviders = result.filterIsInstance<SyncedTabsStorageSuggestionProvider>()
+        assertEquals(1, localSessionsProviders.size)
+        assertEquals("test", localSessionsProviders[0].resultsHostFilter)
+    }
+
+    @Test
+    fun `GIVEN needing to show all bookmarks suggestions WHEN configuring providers THEN add the bookmarks provider`() {
+        val settings: Settings = mockk(relaxed = true)
+        every { activity.settings() } returns settings
+        every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
+        val state = getSearchProviderState(
+            showBookmarksSuggestionsForCurrentEngine = false,
+            searchEngineSource = SearchEngineSource.Shortcut(
+                mockk(relaxed = true) {
+                    every { resultsUrl.host } returns "test"
+                },
+            ),
+        )
+
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        val localSessionsProviders = result.filterIsInstance<BookmarksStorageSuggestionProvider>()
+        assertEquals(1, localSessionsProviders.size)
+        assertNull(localSessionsProviders[0].resultsHostFilter)
+    }
+
+    @Test
+    fun `GIVEN needing to show filtered bookmarks suggestions WHEN configuring providers THEN add the bookmarks provider with an engine filter`() {
+        val settings: Settings = mockk(relaxed = true)
+        every { activity.settings() } returns settings
+        every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
+        val state = getSearchProviderState(
+            showAllBookmarkSuggestions = false,
+            searchEngineSource = SearchEngineSource.Shortcut(
+                mockk(relaxed = true) {
+                    every { resultsUrl.host } returns "test"
+                },
+            ),
+        )
+
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        val localSessionsProviders = result.filterIsInstance<BookmarksStorageSuggestionProvider>()
+        assertEquals(1, localSessionsProviders.size)
+        assertEquals("test", localSessionsProviders[0].resultsHostFilter)
     }
 
     @Test
@@ -329,7 +441,11 @@ class AwesomeBarViewTest {
         every { activity.settings() } returns settings
         every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
         val state = getSearchProviderState(
-            searchEngineSource = SearchEngineSource.Default(mockk(relaxed = true)),
+            searchEngineSource = SearchEngineSource.Default(
+                mockk(relaxed = true) {
+                    every { resultsUrl.host } returns "test"
+                },
+            ),
         )
 
         val result = awesomeBarView.getProvidersToAdd(state)
@@ -338,11 +454,20 @@ class AwesomeBarViewTest {
         assertEquals(2, historyProviders.size)
         assertNull(historyProviders[0].resultsHostFilter) // the general history provider
         assertNotNull(historyProviders[1].resultsHostFilter) // the filtered history provider
-        assertEquals(1, result.filterIsInstance<BookmarksStorageSuggestionProvider>().size)
+        val bookmarksProviders: List<BookmarksStorageSuggestionProvider> = result.filterIsInstance<BookmarksStorageSuggestionProvider>()
+        assertEquals(2, bookmarksProviders.size)
+        assertNull(bookmarksProviders[0].resultsHostFilter) // the general bookmarks provider
+        assertEquals("test", bookmarksProviders[1].resultsHostFilter) // the filtered bookmarks provider
         assertEquals(1, result.filterIsInstance<SearchActionProvider>().size)
         assertEquals(1, result.filterIsInstance<SearchSuggestionProvider>().size)
-        assertEquals(1, result.filterIsInstance<SyncedTabsStorageSuggestionProvider>().size)
-        assertEquals(1, result.filterIsInstance<SessionSuggestionProvider>().size)
+        val syncedTabsProviders: List<SyncedTabsStorageSuggestionProvider> = result.filterIsInstance<SyncedTabsStorageSuggestionProvider>()
+        assertEquals(2, syncedTabsProviders.size)
+        assertNull(syncedTabsProviders[0].resultsHostFilter) // the general synced tabs provider
+        assertEquals("test", syncedTabsProviders[1].resultsHostFilter) // the filtered synced tabs provider
+        val localTabsProviders: List<SessionSuggestionProvider> = result.filterIsInstance<SessionSuggestionProvider>()
+        assertEquals(2, localTabsProviders.size)
+        assertNull(localTabsProviders[0].resultsHostFilter) // the general tabs provider
+        assertEquals("test", localTabsProviders[1].resultsHostFilter) // the filtered tabs provider
         assertEquals(1, result.filterIsInstance<SearchEngineSuggestionProvider>().size)
     }
 
@@ -357,10 +482,13 @@ class AwesomeBarViewTest {
             showHistorySuggestionsForCurrentEngine = false,
             showSearchShortcuts = false,
             showAllHistorySuggestions = false,
-            showBookmarkSuggestions = false,
+            showBookmarksSuggestionsForCurrentEngine = false,
+            showAllBookmarkSuggestions = false,
             showSearchSuggestions = false,
-            showSyncedTabsSuggestions = false,
-            showSessionSuggestions = false,
+            showSyncedTabsSuggestionsForCurrentEngine = false,
+            showAllSyncedTabsSuggestions = false,
+            showSessionSuggestionsForCurrentEngine = false,
+            showAllSessionSuggestions = false,
             searchEngineSource = SearchEngineSource.Default(mockk(relaxed = true)),
         )
 
@@ -417,6 +545,54 @@ class AwesomeBarViewTest {
     }
 
     @Test
+    fun `GIVEN a filter is required WHEN configuring a bookmarks provider THEN include a url filter`() {
+        assertNotNull(
+            awesomeBarView.getBookmarksProvider(
+                searchEngineSource = mockk(relaxed = true),
+            ),
+        )
+
+        assertNotNull(
+            awesomeBarView.getBookmarksProvider(
+                searchEngineSource = mockk(relaxed = true),
+                filterByCurrentEngine = true,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN a filter is required WHEN configuring a synced tabs provider THEN include a url filter`() {
+        assertNotNull(
+            awesomeBarView.getSyncedTabsProvider(
+                searchEngineSource = mockk(relaxed = true),
+            ),
+        )
+
+        assertNotNull(
+            awesomeBarView.getSyncedTabsProvider(
+                searchEngineSource = mockk(relaxed = true),
+                filterByCurrentEngine = true,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN a filter is required WHEN configuring a local tabs provider THEN include a url filter`() {
+        assertNotNull(
+            awesomeBarView.getLocalTabsProvider(
+                searchEngineSource = mockk(relaxed = true),
+            ),
+        )
+
+        assertNotNull(
+            awesomeBarView.getLocalTabsProvider(
+                searchEngineSource = mockk(relaxed = true),
+                filterByCurrentEngine = true,
+            ),
+        )
+    }
+
+    @Test
     fun `GIVEN a search engine is not available WHEN asking for a search term provider THEN return null`() {
         val searchEngineSource: SearchEngineSource = SearchEngineSource.None
 
@@ -467,19 +643,25 @@ private fun getSearchProviderState(
     showSearchTermHistory: Boolean = true,
     showHistorySuggestionsForCurrentEngine: Boolean = true,
     showAllHistorySuggestions: Boolean = true,
-    showBookmarkSuggestions: Boolean = true,
+    showBookmarksSuggestionsForCurrentEngine: Boolean = true,
+    showAllBookmarkSuggestions: Boolean = true,
     showSearchSuggestions: Boolean = true,
-    showSyncedTabsSuggestions: Boolean = true,
-    showSessionSuggestions: Boolean = true,
+    showSyncedTabsSuggestionsForCurrentEngine: Boolean = true,
+    showAllSyncedTabsSuggestions: Boolean = true,
+    showSessionSuggestionsForCurrentEngine: Boolean = true,
+    showAllSessionSuggestions: Boolean = true,
     searchEngineSource: SearchEngineSource = SearchEngineSource.None,
 ) = SearchProviderState(
     showSearchShortcuts = showSearchShortcuts,
     showSearchTermHistory = showSearchTermHistory,
     showHistorySuggestionsForCurrentEngine = showHistorySuggestionsForCurrentEngine,
     showAllHistorySuggestions = showAllHistorySuggestions,
-    showBookmarkSuggestions = showBookmarkSuggestions,
+    showBookmarksSuggestionsForCurrentEngine = showBookmarksSuggestionsForCurrentEngine,
+    showAllBookmarkSuggestions = showAllBookmarkSuggestions,
     showSearchSuggestions = showSearchSuggestions,
-    showSyncedTabsSuggestions = showSyncedTabsSuggestions,
-    showSessionSuggestions = showSessionSuggestions,
+    showSyncedTabsSuggestionsForCurrentEngine = showSyncedTabsSuggestionsForCurrentEngine,
+    showAllSyncedTabsSuggestions = showAllSyncedTabsSuggestions,
+    showSessionSuggestionsForCurrentEngine = showSessionSuggestionsForCurrentEngine,
+    showAllSessionSuggestions = showAllSessionSuggestions,
     searchEngineSource = searchEngineSource,
 )

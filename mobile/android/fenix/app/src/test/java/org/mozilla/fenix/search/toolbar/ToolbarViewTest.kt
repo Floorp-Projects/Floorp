@@ -66,9 +66,12 @@ class ToolbarViewTest {
         showClipboardSuggestions = false,
         showHistorySuggestionsForCurrentEngine = true,
         showAllHistorySuggestions = false,
-        showBookmarkSuggestions = false,
-        showSyncedTabsSuggestions = false,
-        showSessionSuggestions = false,
+        showBookmarksSuggestionsForCurrentEngine = false,
+        showAllBookmarkSuggestions = false,
+        showSyncedTabsSuggestionsForCurrentEngine = false,
+        showAllSyncedTabsSuggestions = false,
+        showSessionSuggestionsForCurrentEngine = false,
+        showAllSessionSuggestions = false,
         searchAccessPoint = MetricsUtils.Source.NONE,
     )
 
