@@ -1117,7 +1117,7 @@ bool CanvasRenderingContext2D::ParseColor(const nsACString& aString,
   return true;
 }
 
-void CanvasRenderingContext2D::ResetBitmap() {
+void CanvasRenderingContext2D::ResetBitmap(bool aFreeBuffer) {
   if (mCanvasElement) {
     mCanvasElement->InvalidateCanvas();
   }
@@ -1131,7 +1131,13 @@ void CanvasRenderingContext2D::ResetBitmap() {
   bool forceReset = true;
   ReturnTarget(forceReset);
   mTarget = nullptr;
-  mBufferProvider = nullptr;
+  if (aFreeBuffer) {
+    mBufferProvider = nullptr;
+  } else if (mBufferProvider) {
+    // Try to keep the buffer around. However, we still need to clear the
+    // contents as if it was recreated before next use.
+    mBufferNeedsClear = true;
+  }
 
   // Since the target changes the backing texture will change, and this will
   // no longer be valid.
@@ -1385,15 +1391,23 @@ bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
 
   ScheduleStableStateCallback();
 
-  IntRect persistedRect =
-      canDiscardContent ? IntRect() : IntRect(0, 0, mWidth, mHeight);
+  IntRect persistedRect = canDiscardContent || mBufferNeedsClear
+                              ? IntRect()
+                              : IntRect(0, 0, mWidth, mHeight);
 
   if (mBufferProvider && !mBufferProvider->RequiresRefresh()) {
     mTarget = mBufferProvider->BorrowDrawTarget(persistedRect);
     if (mTarget && mTarget->IsValid()) {
-      if (!mBufferProvider->PreservesDrawingState()) {
+      // If the canvas was reset, then we need to clear the target in case its
+      // contents was somehow preserved. We only need to clear the target if
+      // the operation doesn't fill the entire canvas.
+      if (mBufferNeedsClear && !canDiscardContent) {
+        mTarget->ClearRect(canvasRect);
+      }
+      if (!mBufferProvider->PreservesDrawingState() || mBufferNeedsClear) {
         RestoreClipsAndTransformToTarget();
       }
+      mBufferNeedsClear = false;
       return true;
     }
   }
@@ -1415,7 +1429,8 @@ bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
   MOZ_ASSERT(newTarget);
   MOZ_ASSERT(newProvider);
 
-  bool needsClear = !canDiscardContent;
+  bool needsClear =
+      !canDiscardContent || (mBufferProvider && mBufferNeedsClear);
   if (newTarget->GetBackendType() == gfx::BackendType::SKIA &&
       (needsClear || !aWillClear)) {
     // Skia expects the unused X channel to contains 0xFF even for opaque
@@ -1426,7 +1441,7 @@ bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
   }
 
   // Try to copy data from the previous buffer provider if there is one.
-  if (!canDiscardContent && mBufferProvider &&
+  if (!canDiscardContent && mBufferProvider && !mBufferNeedsClear &&
       CopyBufferProvider(*mBufferProvider, *newTarget, persistedRect)) {
     needsClear = false;
   }
@@ -1437,6 +1452,7 @@ bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
 
   mTarget = std::move(newTarget);
   mBufferProvider = std::move(newProvider);
+  mBufferNeedsClear = false;
 
   RegisterAllocation();
   AddZoneWaitingForGC();
@@ -1597,10 +1613,18 @@ bool CanvasRenderingContext2D::TryBasicTarget(
   return true;
 }
 
+PersistentBufferProvider* CanvasRenderingContext2D::GetBufferProvider() {
+  if (mBufferProvider && mBufferNeedsClear) {
+    // Force the buffer to clear before it is used.
+    EnsureTarget();
+  }
+  return mBufferProvider;
+}
+
 Maybe<SurfaceDescriptor> CanvasRenderingContext2D::GetFrontBuffer(
     WebGLFramebufferJS*, const bool webvr) {
-  if (mBufferProvider) {
-    return mBufferProvider->GetFrontBuffer();
+  if (auto* provider = GetBufferProvider()) {
+    return provider->GetFrontBuffer();
   }
   return Nothing();
 }
@@ -1650,7 +1674,9 @@ void CanvasRenderingContext2D::RemoveAssociatedMemory() {
 }
 
 void CanvasRenderingContext2D::ClearTarget(int32_t aWidth, int32_t aHeight) {
-  ResetBitmap();
+  // Only free the buffer provider if the size no longer matches.
+  bool freeBuffer = aWidth != mWidth || aHeight != mHeight;
+  ResetBitmap(freeBuffer);
 
   mResetLayer = true;
 
@@ -1782,10 +1808,8 @@ UniquePtr<uint8_t[]> CanvasRenderingContext2D::GetImageBuffer(
 
   *aFormat = 0;
 
-  if (!mBufferProvider) {
-    if (!EnsureTarget()) {
-      return nullptr;
-    }
+  if (!GetBufferProvider() && !EnsureTarget()) {
+    return nullptr;
   }
 
   RefPtr<SourceSurface> snapshot = mBufferProvider->BorrowSnapshot();
@@ -5344,10 +5368,8 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
     return NS_OK;
   }
 
-  if (!mBufferProvider) {
-    if (!EnsureTarget()) {
-      return NS_ERROR_FAILURE;
-    }
+  if (!GetBufferProvider() && !EnsureTarget()) {
+    return NS_ERROR_FAILURE;
   }
 
   RefPtr<SourceSurface> snapshot = mBufferProvider->BorrowSnapshot();
