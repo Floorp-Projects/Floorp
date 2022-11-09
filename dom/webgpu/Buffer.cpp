@@ -43,9 +43,11 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Buffer)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 Buffer::Buffer(Device* const aParent, RawId aId, BufferAddress aSize,
-               uint32_t aUsage, ipc::Shmem&& aShmem)
-    : ChildOf(aParent), mId(aId), mSize(aSize), mUsage(aUsage), mShmem(aShmem) {
+               uint32_t aUsage, ipc::WritableSharedMemoryMapping&& aShmem)
+    : ChildOf(aParent), mId(aId), mSize(aSize), mUsage(aUsage) {
   mozilla::HoldJSObjects(this);
+  mShmem =
+      std::make_shared<ipc::WritableSharedMemoryMapping>(std::move(aShmem));
   MOZ_ASSERT(mParent);
 }
 
@@ -58,14 +60,16 @@ already_AddRefed<Buffer> Buffer::Create(Device* aDevice, RawId aDeviceId,
                                         const dom::GPUBufferDescriptor& aDesc,
                                         ErrorResult& aRv) {
   if (aDevice->IsLost()) {
-    RefPtr<Buffer> buffer =
-        new Buffer(aDevice, 0, aDesc.mSize, 0, ipc::Shmem());
+    RefPtr<Buffer> buffer = new Buffer(aDevice, 0, aDesc.mSize, 0,
+                                       ipc::WritableSharedMemoryMapping());
     return buffer.forget();
   }
 
   RefPtr<WebGPUChild> actor = aDevice->GetBridge();
 
-  ipc::Shmem shmem;
+  auto handle = ipc::UnsafeSharedMemoryHandle();
+  auto mapping = ipc::WritableSharedMemoryMapping();
+
   bool hasMapFlags = aDesc.mUsage & (dom::GPUBufferUsage_Binding::MAP_WRITE |
                                      dom::GPUBufferUsage_Binding::MAP_READ);
   if (hasMapFlags || aDesc.mMappedAtCreation) {
@@ -75,29 +79,28 @@ already_AddRefed<Buffer> Buffer::Create(Device* aDevice, RawId aDeviceId,
       return nullptr;
     }
     size_t size = checked.value();
-    if (size == 0) {
-      // Can't send zero-sized shmems.
-      size = 1;
-    }
 
-    if (!actor->AllocUnsafeShmem(size, &shmem)) {
+    auto maybeShmem = ipc::UnsafeSharedMemoryHandle::CreateAndMap(size);
+
+    if (maybeShmem.isNothing()) {
       aRv.ThrowAbortError(
           nsPrintfCString("Unable to allocate shmem of size %" PRIuPTR, size));
       return nullptr;
     }
 
+    handle = std::move(maybeShmem.ref().first);
+    mapping = std::move(maybeShmem.ref().second);
+
+    MOZ_RELEASE_ASSERT(mapping.Size() >= size);
+
     // zero out memory
-    memset(shmem.get<uint8_t>(), 0, size);
+    memset(mapping.Bytes().data(), 0, size);
   }
 
-  MaybeShmem maybeShmem = mozilla::null_t();
-  if (shmem.IsReadable()) {
-    maybeShmem = shmem;
-  }
-  RawId id = actor->DeviceCreateBuffer(aDeviceId, aDesc, std::move(maybeShmem));
+  RawId id = actor->DeviceCreateBuffer(aDeviceId, aDesc, std::move(handle));
 
   RefPtr<Buffer> buffer =
-      new Buffer(aDevice, id, aDesc.mSize, aDesc.mUsage, std::move(shmem));
+      new Buffer(aDevice, id, aDesc.mSize, aDesc.mUsage, std::move(mapping));
   if (aDesc.mMappedAtCreation) {
     // Mapped at creation's raison d'être is write access, since the buffer is
     // being created and there isn't anything interesting to read in it yet.
@@ -212,10 +215,17 @@ already_AddRefed<dom::Promise> Buffer::MapAsync(
   return promise.forget();
 }
 
+static void ExternalBufferFreeCallback(void* aContents, void* aUserData) {
+  Unused << aContents;
+  auto shm = static_cast<std::shared_ptr<ipc::WritableSharedMemoryMapping>*>(
+      aUserData);
+  delete shm;
+}
+
 void Buffer::GetMappedRange(JSContext* aCx, uint64_t aOffset,
                             const dom::Optional<uint64_t>& aSize,
                             JS::Rooted<JSObject*>* aObject, ErrorResult& aRv) {
-  if (!mMapped || !mShmem.IsReadable()) {
+  if (!mMapped) {
     aRv.ThrowInvalidStateError("Buffer is not mapped");
     return;
   }
@@ -233,8 +243,15 @@ void Buffer::GetMappedRange(JSContext* aCx, uint64_t aOffset,
     return;
   }
 
-  auto* const arrayBuffer = GetDevice().CreateExternalArrayBuffer(
-      aCx, checkedOffset.value(), checkedSize.value(), mShmem);
+  auto offset = checkedOffset.value();
+  auto size = checkedSize.value();
+  auto span = mShmem->Bytes().Subspan(offset, size);
+
+  std::shared_ptr<ipc::WritableSharedMemoryMapping>* userData =
+      new std::shared_ptr<ipc::WritableSharedMemoryMapping>(mShmem);
+  auto* const arrayBuffer = JS::NewExternalArrayBuffer(
+      aCx, size, span.data(), &ExternalBufferFreeCallback, userData);
+
   if (!arrayBuffer) {
     aRv.NoteJSContextException(aCx);
     return;
@@ -293,8 +310,8 @@ void Buffer::Unmap(JSContext* aCx, ErrorResult& aRv) {
   if (!hasMapFlags) {
     // We get here if the buffer was mapped at creation without map flags.
     // It won't be possible to map the buffer again so we can get rid of
-    // our shmem handle on this side. The parent side will deallocate it.
-    mShmem = ipc::Shmem();
+    // our shmem on this side.
+    mShmem = std::make_shared<ipc::WritableSharedMemoryMapping>();
   }
 
   if (!GetDevice().IsLost()) {
