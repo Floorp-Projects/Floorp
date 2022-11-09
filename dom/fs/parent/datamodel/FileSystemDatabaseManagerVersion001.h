@@ -12,6 +12,7 @@
 
 namespace mozilla::dom::fs::data {
 
+class FileSystemDataManager;
 class FileSystemFileManager;
 
 /**

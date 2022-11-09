@@ -39,10 +39,19 @@ namespace mozilla::dom::fs::test {
 using data::FileSystemDatabaseManagerVersion001;
 using data::FileSystemFileManager;
 
-static const Origin& getTestOrigin() {
-  static const Origin orig = "testOrigin"_ns;
+namespace {
+
+const Origin& getTestOrigin() {
+  static const Origin orig = "http://example.com"_ns;
   return orig;
 }
+
+quota::OriginMetadata TestOriginMetadataForDataManager() {
+  return quota::OriginMetadata{""_ns, "example.com"_ns, getTestOrigin(),
+                               quota::PERSISTENCE_TYPE_DEFAULT};
+}
+
+}  // namespace
 
 // This is a minimal mock  to allow us to safely call the lock methods
 // while avoiding assertions
@@ -100,7 +109,7 @@ static void MakeDatabaseManagerVersion001(
                                         NS_STREAMTRANSPORTSERVICE_CONTRACTID),
                 QM_VOID);
 
-  quota::OriginMetadata originmetadata = GetTestOriginMetadata();
+  quota::OriginMetadata originmetadata = TestOriginMetadataForDataManager();
   nsCString taskQueueName("OPFS "_ns + originmetadata.mOrigin);
 
   RefPtr<TaskQueue> ioTaskQueue =
