@@ -119,7 +119,6 @@ XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 
 EXTRA_JS_MODULES += [
     "AboutNewTab.jsm",
-    "AppUpdater.jsm",
     "AsyncTabSwitcher.jsm",
     "BrowserUIUtils.jsm",
     "BrowserUsageTelemetry.jsm",

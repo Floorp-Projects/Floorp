@@ -20,7 +20,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AppUpdater: "resource:///modules/AppUpdater.jsm",
+  AppUpdater: "resource://gre/modules/AppUpdater.jsm",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
 });
 

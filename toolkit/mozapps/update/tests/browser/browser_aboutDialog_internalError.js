@@ -4,7 +4,7 @@
 "use strict";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AppUpdater: "resource:///modules/AppUpdater.jsm",
+  AppUpdater: "resource://gre/modules/AppUpdater.jsm",
   sinon: "resource://testing-common/Sinon.jsm",
 });
 

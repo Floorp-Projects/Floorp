@@ -16,7 +16,7 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AppUpdater: "resource:///modules/AppUpdater.jsm",
+  AppUpdater: "resource://gre/modules/AppUpdater.jsm",
   DownloadUtils: "resource://gre/modules/DownloadUtils.jsm",
 });
 
