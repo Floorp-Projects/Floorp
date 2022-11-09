@@ -16,7 +16,7 @@
 
 
 # If a command fails then do not proceed and fail this script too.
-set -ex
+set -e
 
 #########################
 # The command line help #
@@ -120,7 +120,14 @@ function failure_check() {
     echo
     echo "RESULTS"
     echo
-    ls -la "${RESULTS_DIR}"
+    mkdir -p ${ARTIFACT_DIR}/github
+    chmod +x ${PATH_TEST}/parse-ui-test.py
+    ${PATH_TEST}/parse-ui-test.py \
+        --exit-code "${exitcode}" \
+        --log flank.log \
+        --results "${RESULTS_DIR}" \
+        --output-md "${ARTIFACT_DIR}/github/customCheckRunText.md" \
+	--device-type "${device_type}"
     echo
     echo
 }
@@ -128,8 +135,17 @@ function failure_check() {
 echo
 echo "EXECUTE TEST(S)"
 echo
-$JAVA_BIN -jar $FLANK_BIN android run --config=$flank_template --max-test-shards=$num_shards --app=$APK_APP --test=$APK_TEST --project=$GOOGLE_PROJECT --local-result-dir="${RESULTS_DIR}"
-exitcode=$?
 
+set -o pipefail && $JAVA_BIN -jar $FLANK_BIN android run \
+	--config=$flank_template \
+	--max-test-shards=$num_shards \
+	--app=$APK_APP --test=$APK_TEST \
+	--local-result-dir="${RESULTS_DIR}" \
+	--project=$GOOGLE_PROJECT \
+	--client-details=commit=${MOBILE_HEAD_REV:-None},pullRequest=${PULL_REQUEST_NUMBER:-None} \
+	| tee flank.log
+
+exitcode=$?
 failure_check
+
 exit $exitcode

@@ -5,7 +5,7 @@ gcloud:
   record-video: true
   timeout: 30m
   async: false
-  num-flaky-test-attempts: 1
+  num-flaky-test-attempts: 2
 
   app: /APP/PATH
   test: /TEST/PATH
@@ -28,5 +28,4 @@ flank:
   max-test-shards: -1
   num-test-runs: 1
   output-style: compact
-  repeat-tests: 1
   full-junit-result: true

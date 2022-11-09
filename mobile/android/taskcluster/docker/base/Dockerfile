@@ -39,6 +39,7 @@ RUN apt-get update -qq \
                           python-pip \
                           python3 \
                           python3-pip \
+                          python3-yaml \
                           locales \
                           unzip \
 			  mercurial \
