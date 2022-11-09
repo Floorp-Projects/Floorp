@@ -51,7 +51,6 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticPrefs_xul.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
@@ -694,7 +693,7 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
 
     // If the animate attribute is set to open, check for a transition and wait
     // for it to finish before firing the popupshown event.
-    if (StaticPrefs::xul_panel_animations_enabled() &&
+    if (LookAndFeel::GetInt(LookAndFeel::IntID::PanelAnimations) &&
         mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
                                            nsGkAtoms::animate, nsGkAtoms::open,
                                            eCaseMatters) &&
