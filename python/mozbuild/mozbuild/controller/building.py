@@ -12,18 +12,13 @@ import logging
 import os
 import re
 import shutil
-import six
 import subprocess
 import sys
 import time
-
-from collections import (
-    Counter,
-    namedtuple,
-    OrderedDict,
-)
+from collections import Counter, OrderedDict, namedtuple
 from textwrap import TextWrapper
 
+import six
 from mach.site import CommandSiteManager
 
 try:
@@ -31,28 +26,19 @@ try:
 except Exception:
     psutil = None
 
+import mozfile
+import mozpack.path as mozpath
 from mach.mixin.logging import LoggingMixin
 from mach.util import get_state_dir
-import mozfile
 from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
 from mozterm.widgets import Footer
 
-import mozpack.path as mozpath
-
-from .clobber import Clobberer
-from ..base import MozbuildObject
 from ..backend import get_backend_class
+from ..base import MozbuildObject
+from ..compilation.warnings import WarningsCollector, WarningsDatabase
 from ..testing import install_test_files
-from ..compilation.warnings import (
-    WarningsCollector,
-    WarningsDatabase,
-)
-from ..util import (
-    FileAvoidWrite,
-    mkdir,
-    resolve_target_to_make,
-)
-
+from ..util import FileAvoidWrite, mkdir, resolve_target_to_make
+from .clobber import Clobberer
 
 FINDER_SLOW_MESSAGE = """
 ===================
