@@ -12,8 +12,6 @@
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
-#include "prio.h"
-#include "private/pprio.h"
 
 namespace mozilla {
 extern LazyLogModule gOPFSLog;
@@ -25,6 +23,7 @@ extern LazyLogModule gOPFSLog;
   MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Debug, args)
 
 class nsIGlobalObject;
+struct PRFileDesc;
 
 namespace mozilla {
 

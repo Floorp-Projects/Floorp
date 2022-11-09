@@ -16,6 +16,8 @@
 #include "mozilla/dom/Promise-inl.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/StorageManager.h"
+#include "prio.h"
+#include "private/pprio.h"
 #include "xpcpublic.h"
 
 namespace mozilla::dom {
