@@ -10,6 +10,7 @@
 #include "ErrorList.h"
 #include "gtest/gtest.h"
 #include "mozilla/ErrorNames.h"
+#include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 
 namespace testing::internal {
@@ -59,6 +60,8 @@ struct OriginMetadata;
 namespace fs::test {
 
 quota::OriginMetadata GetTestOriginMetadata();
+
+const Origin& GetTestOrigin();
 
 }  // namespace fs::test
 }  // namespace mozilla::dom
