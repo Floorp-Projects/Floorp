@@ -1418,4 +1418,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         key = appContext.getPreferenceKey(R.string.pref_key_growth_set_as_default),
         default = false,
     )
+
+    var resumeGrowthLastSent by longPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_growth_resume_last_sent),
+        default = 0,
+    )
 }

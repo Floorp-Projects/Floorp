@@ -193,7 +193,7 @@ sealed class AppAction : Action {
     }
 
     /**
-     * Indicates that the app's metrics have been initialized and startup data can be sent.
+     * Indicates that the app has been resumed and metrics that relate to that should be sent.
      */
-    object MetricsInitializedAction : AppAction()
+    object ResumedMetricsAction : AppAction()
 }

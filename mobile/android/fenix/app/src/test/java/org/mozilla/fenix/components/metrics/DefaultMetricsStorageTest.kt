@@ -85,4 +85,35 @@ class DefaultMetricsStorageTest {
 
         assertTrue(updateSlot.captured)
     }
+
+    @Test
+    fun `GIVEN that it has been less than 24 hours since last resumed sent WHEN checked for sending THEN will not be sent`() = runTest(dispatcher) {
+        val currentTime = System.currentTimeMillis()
+        every { settings.resumeGrowthLastSent } returns currentTime
+
+        val result = storage.shouldTrack(Event.GrowthData.FirstAppOpenForDay)
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `GIVEN that it has been more than 24 hours since last resumed sent WHEN checked for sending THEN will be sent`() = runTest(dispatcher) {
+        val currentTime = System.currentTimeMillis()
+        every { settings.resumeGrowthLastSent } returns currentTime - 1000 * 60 * 60 * 24 * 2
+
+        val result = storage.shouldTrack(Event.GrowthData.FirstAppOpenForDay)
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun `WHEN last resumed state updated THEN settings updated accordingly`() = runTest(dispatcher) {
+        val updateSlot = slot<Long>()
+        every { settings.resumeGrowthLastSent } returns 0
+        every { settings.resumeGrowthLastSent = capture(updateSlot) } returns Unit
+
+        storage.updateSentState(Event.GrowthData.FirstAppOpenForDay)
+
+        assertTrue(updateSlot.captured > 0)
+    }
 }

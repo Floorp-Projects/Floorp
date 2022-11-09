@@ -43,14 +43,25 @@ internal class DefaultMetricsStorage(
                 Event.GrowthData.SetAsDefault -> {
                     !settings.setAsDefaultGrowthSent && checkDefaultBrowser()
                 }
+                Event.GrowthData.FirstAppOpenForDay -> {
+                    settings.resumeGrowthLastSent.hasBeenMoreThanDaySince()
+                }
             }
         }
 
     override suspend fun updateSentState(event: Event) = withContext(dispatcher) {
         when (event) {
-            Event.GrowthData.SetAsDefault -> settings.setAsDefaultGrowthSent = true
+            Event.GrowthData.SetAsDefault -> {
+                settings.setAsDefaultGrowthSent = true
+            }
+            Event.GrowthData.FirstAppOpenForDay -> {
+                settings.resumeGrowthLastSent = System.currentTimeMillis()
+            }
         }
     }
+
+    private fun Long.hasBeenMoreThanDaySince(): Boolean =
+        System.currentTimeMillis() - this > dayMillis
 
     companion object {
         private const val dayMillis: Long = 1000 * 60 * 60 * 24

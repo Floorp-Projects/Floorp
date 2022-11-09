@@ -310,4 +310,5 @@
 
     <!-- Growth Data -->
     <string name="pref_key_growth_set_as_default" translatable="false">pref_key_growth_set_as_default</string>
+    <string name="pref_key_growth_resume_last_sent" translatable="false">pref_key_growth_last_resumed</string>
 </resources>
