@@ -213,9 +213,7 @@ for (var i = 0; i < max; i++) {
     dynamicSlots(i);
     testNewObject1(i);
     testNewObjectWithBranchPruning(i);
-
-    // TODO: support undefined properties in scalar replacement (bug 1701711)
-    // unknownLoad(i);
+    unknownLoad(i);
 
     // TODO: support constructors in scalar replacement (bug 1700422)
     // createThisWithTemplate(i);
