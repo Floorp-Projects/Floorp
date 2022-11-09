@@ -29,6 +29,9 @@ FileSystemWritableFileStreamChild::~FileSystemWritableFileStreamChild() =
 
 void FileSystemWritableFileStreamChild::SetStream(
     FileSystemWritableFileStream* aStream) {
+  MOZ_ASSERT(aStream);
+  MOZ_ASSERT(!mStream);
+
   mStream = aStream;
 }
 

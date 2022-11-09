@@ -109,6 +109,9 @@ RefPtr<FileSystemSyncAccessHandle> MakeResolution(
 
   RefPtr<FileSystemSyncAccessHandle> result = new FileSystemSyncAccessHandle(
       aGlobal, aManager, actor, std::move(stream), aMetadata);
+
+  actor->SetAccessHandle(result);
+
   return result;
 }
 
@@ -127,6 +130,11 @@ RefPtr<FileSystemWritableFileStream> MakeResolution(
   RefPtr<FileSystemWritableFileStream> result =
       FileSystemWritableFileStream::Create(
           aGlobal, aManager, actor, properties.fileDescriptor(), aMetadata);
+
+  if (result) {
+    actor->SetStream(result);
+  }
+
   return result;
 }
 
