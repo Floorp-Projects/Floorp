@@ -196,7 +196,9 @@ void FileSystemWritableFileStream::Close() {
   PR_Close(mFileDesc);
   mFileDesc = nullptr;
 
-  mActor->SendClose();
+  if (mActor) {
+    mActor->SendClose();
+  }
 }
 
 // WebIDL Boilerplate
