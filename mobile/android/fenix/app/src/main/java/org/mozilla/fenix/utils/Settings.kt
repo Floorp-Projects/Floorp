@@ -1423,4 +1423,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         key = appContext.getPreferenceKey(R.string.pref_key_growth_resume_last_sent),
         default = 0,
     )
+
+    var uriLoadGrowthLastSent by longPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_growth_uri_load_last_sent),
+        default = 0,
+    )
 }

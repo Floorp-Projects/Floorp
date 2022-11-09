@@ -46,6 +46,9 @@ internal class DefaultMetricsStorage(
                 Event.GrowthData.FirstAppOpenForDay -> {
                     settings.resumeGrowthLastSent.hasBeenMoreThanDaySince()
                 }
+                Event.GrowthData.FirstUriLoadForDay -> {
+                    settings.uriLoadGrowthLastSent.hasBeenMoreThanDaySince()
+                }
             }
         }
 
@@ -56,6 +59,9 @@ internal class DefaultMetricsStorage(
             }
             Event.GrowthData.FirstAppOpenForDay -> {
                 settings.resumeGrowthLastSent = System.currentTimeMillis()
+            }
+            Event.GrowthData.FirstUriLoadForDay -> {
+                settings.uriLoadGrowthLastSent = System.currentTimeMillis()
             }
         }
     }

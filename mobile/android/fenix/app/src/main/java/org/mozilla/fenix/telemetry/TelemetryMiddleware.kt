@@ -15,13 +15,14 @@ import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.state.SessionState
-import mozilla.components.feature.search.telemetry.ads.AdsTelemetry
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.support.base.android.Clock
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.GleanMetrics.EngineTab as EngineMetrics
 
@@ -29,10 +30,11 @@ import org.mozilla.fenix.GleanMetrics.EngineTab as EngineMetrics
  * [Middleware] to record telemetry in response to [BrowserAction]s.
  *
  * @property settings reference to the application [Settings].
- * @property adsTelemetry reference to [AdsTelemetry] use to record search telemetry.
+ * @property metrics [MetricController] to pass events that have been mapped from actions
  */
 class TelemetryMiddleware(
     private val settings: Settings,
+    private val metrics: MetricController,
 ) : Middleware<BrowserState, BrowserAction> {
 
     private val logger = Logger("TelemetryMiddleware")
@@ -57,6 +59,9 @@ class TelemetryMiddleware(
             is EngineAction.KillEngineSessionAction -> {
                 val tab = context.state.findTabOrCustomTab(action.tabId)
                 onEngineSessionKilled(context.state, tab)
+            }
+            is EngineAction.LoadUrlAction -> {
+                metrics.track(Event.GrowthData.FirstUriLoadForDay)
             }
             else -> {
                 // no-op
