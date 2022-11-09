@@ -420,10 +420,21 @@ XPCOMUtils.defineLazyGetter(this, "PopupNotifications", () => {
     // Hide all PopupNotifications while the URL is being edited and the address
     // bar has focus or while async tab switching, including the virtual focus in
     // the results popup.
-    let shouldSuppress = () =>
-      (gURLBar.getAttribute("pageproxystate") != "valid" &&
-        (gURLBar.focused || gBrowser.selectedBrowser._awaitingSetURI)) ||
-      shouldSuppressPopupNotifications();
+    let shouldSuppress = () => {
+      // "Blank" pages, like about:welcome, have a pageproxystate of "invalid", but
+      // popups like CFRs should not automatically be suppressed when the address
+      // bar has focus on these pages as it disrupts user navigation using FN+F6.
+      // See `UrlbarInput.setURI()` where pageproxystate is set to "invalid" for
+      // all pages that the "isBlankPageURL" method returns true for.
+      const urlBarEdited = isBlankPageURL(gBrowser.currentURI.spec)
+        ? gURLBar.hasAttribute("usertyping")
+        : gURLBar.getAttribute("pageproxystate") != "valid";
+      return (
+        (urlBarEdited &&
+          (gURLBar.focused || gBrowser.selectedBrowser._awaitingSetURI)) ||
+        shouldSuppressPopupNotifications()
+      );
+    };
     return new PopupNotifications(
       gBrowser,
       document.getElementById("notification-popup"),
