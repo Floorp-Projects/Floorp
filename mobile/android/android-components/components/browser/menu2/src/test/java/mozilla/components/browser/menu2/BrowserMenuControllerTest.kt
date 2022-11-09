@@ -23,6 +23,7 @@ class BrowserMenuControllerTest {
     @Test
     fun `created popup window is displayed automatically`() {
         val menu: MenuController = BrowserMenuController()
+        menu.submitList(listOf(DecorativeTextMenuCandidate("Hello")))
 
         val anchor = Button(testContext)
         val popup = menu.show(anchor)
@@ -54,6 +55,8 @@ class BrowserMenuControllerTest {
     fun `dismissing the browser menu will dismiss the popup`() {
         var dismissed = false
         val menu: MenuController = BrowserMenuController()
+        menu.submitList(listOf(DecorativeTextMenuCandidate("Hello")))
+
         menu.register(
             object : MenuController.Observer {
                 override fun onDismiss() {

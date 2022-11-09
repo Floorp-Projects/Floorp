@@ -17,10 +17,14 @@ interface MenuController : Observable<MenuController.Observer> {
     /**
      * @param anchor The view on which to pin the popup window.
      * @param orientation The preferred orientation to show the popup window.
-     * @param forceOrientation When set to true, the orientation will be respected even when the
-     * menu doesn't fully fit.
+     * @param autoDismiss True if the popup window should be dismissed when the device orientation
+     * is changed.
      */
-    fun show(anchor: View, orientation: Orientation? = null, forceOrientation: Boolean = false): PopupWindow
+    fun show(
+        anchor: View,
+        orientation: Orientation? = null,
+        autoDismiss: Boolean = true,
+    ): PopupWindow
 
     /**
      * Dismiss the menu popup if the menu is visible.
