@@ -61,7 +61,6 @@ vendored:third_party/python/appdirs
 vendored:third_party/python/async_timeout
 vendored:third_party/python/attrs
 vendored:third_party/python/blessed
-vendored:third_party/python/blessings
 vendored:third_party/python/cbor2
 vendored:third_party/python/certifi
 vendored:third_party/python/chardet
