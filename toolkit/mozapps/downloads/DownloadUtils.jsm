@@ -37,15 +37,25 @@ var EXPORTED_SYMBOLS = ["DownloadUtils"];
  * convertTimeUnits(double aSecs)
  */
 
-const lazy = {};
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PluralForm",
-  "resource://gre/modules/PluralForm.jsm"
-);
-
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+const BYTE_UNITS = [
+  "download-utils-bytes",
+  "download-utils-kilobyte",
+  "download-utils-megabyte",
+  "download-utils-gigabyte",
+];
+
+const TIME_UNITS = [
+  "download-utils-short-seconds",
+  "download-utils-short-minutes",
+  "download-utils-short-hours",
+  "download-utils-short-days",
+];
+
+// These are the maximum values for seconds, minutes, hours corresponding
+// with TIME_UNITS without the last item
+const TIME_SIZES = [60, 60, 24];
 
 var localeNumberFormatCache = new Map();
 function getLocaleNumberFormat(fractionDigits) {
@@ -61,39 +71,7 @@ function getLocaleNumberFormat(fractionDigits) {
   return localeNumberFormatCache.get(fractionDigits);
 }
 
-const kDownloadProperties =
-  "chrome://mozapps/locale/downloads/downloads.properties";
-
-var gStr = {
-  statusFormat: "statusFormat3",
-  statusFormatInfiniteRate: "statusFormatInfiniteRate",
-  statusFormatNoRate: "statusFormatNoRate",
-  transferSameUnits: "transferSameUnits2",
-  transferDiffUnits: "transferDiffUnits2",
-  transferNoTotal: "transferNoTotal2",
-  timePair: "timePair3",
-  timeLeftSingle: "timeLeftSingle3",
-  timeLeftDouble: "timeLeftDouble3",
-  timeFewSeconds: "timeFewSeconds2",
-  timeUnknown: "timeUnknown2",
-  yesterday: "yesterday",
-  doneScheme: "doneScheme2",
-  doneFileScheme: "doneFileScheme",
-  units: ["bytes", "kilobyte", "megabyte", "gigabyte"],
-  // Update timeSize in convertTimeUnits if changing the length of this array
-  timeUnits: ["shortSeconds", "shortMinutes", "shortHours", "shortDays"],
-  infiniteRate: "infiniteRate",
-};
-
-// This lazily initializes the string bundle upon first use.
-Object.defineProperty(lazy, "gBundle", {
-  configurable: true,
-  enumerable: true,
-  get() {
-    delete this.gBundle;
-    return (this.gBundle = Services.strings.createBundle(kDownloadProperties));
-  },
-});
+const l10n = new Localization(["toolkit/downloads/downloadUtils.ftl"], true);
 
 // Keep track of at most this many second/lastSec pairs so that multiple calls
 // to getTimeLeft produce the same time left
@@ -133,18 +111,17 @@ var DownloadUtils = {
     let status;
     if (rate === "Infinity") {
       // Infinity download speed doesn't make sense. Show a localized phrase instead.
-      let params = [
+      status = l10n.formatValueSync("download-utils-status-infinite-rate", {
         transfer,
-        lazy.gBundle.GetStringFromName(gStr.infiniteRate),
         timeLeft,
-      ];
-      status = lazy.gBundle.formatStringFromName(
-        gStr.statusFormatInfiniteRate,
-        params
-      );
+      });
     } else {
-      let params = [transfer, rate, unit, timeLeft];
-      status = lazy.gBundle.formatStringFromName(gStr.statusFormat, params);
+      status = l10n.formatValueSync("download-utils-status", {
+        transfer,
+        rate,
+        unit,
+        timeLeft,
+      });
     }
     return [status, newLast];
   },
@@ -178,11 +155,10 @@ var DownloadUtils = {
       aLastSec
     );
 
-    let params = [transfer, timeLeft];
-    let status = lazy.gBundle.formatStringFromName(
-      gStr.statusFormatNoRate,
-      params
-    );
+    let status = l10n.formatValueSync("download-utils-status-no-rate", {
+      transfer,
+      timeLeft,
+    });
     return [status, newLast];
   },
 
@@ -245,19 +221,21 @@ var DownloadUtils = {
     let [total, totalUnits] = DownloadUtils.convertByteUnits(aMaxBytes);
 
     // Figure out which byte progress string to display
-    let name, values;
+    let name;
     if (aMaxBytes < 0) {
-      name = gStr.transferNoTotal;
-      values = [progress, progressUnits];
+      name = "download-utils-transfer-no-total";
     } else if (progressUnits == totalUnits) {
-      name = gStr.transferSameUnits;
-      values = [progress, total, totalUnits];
+      name = "download-utils-transfer-same-units";
     } else {
-      name = gStr.transferDiffUnits;
-      values = [progress, progressUnits, total, totalUnits];
+      name = "download-utils-transfer-diff-units";
     }
 
-    return lazy.gBundle.formatStringFromName(name, values);
+    return l10n.formatValueSync(name, {
+      progress,
+      progressUnits,
+      total,
+      totalUnits,
+    });
   },
 
   /**
@@ -279,7 +257,7 @@ var DownloadUtils = {
     }
 
     if (aSeconds < 0) {
-      return [lazy.gBundle.GetStringFromName(gStr.timeUnknown), aLastSec];
+      return [l10n.formatValueSync("download-utils-time-unknown"), aLastSec];
     }
 
     // Try to find a cached lastSec for the given second
@@ -315,34 +293,34 @@ var DownloadUtils = {
     let timeLeft;
     if (aSeconds < 4) {
       // Be friendly in the last few seconds
-      timeLeft = lazy.gBundle.GetStringFromName(gStr.timeFewSeconds);
+      timeLeft = l10n.formatValueSync("download-utils-time-few-seconds");
     } else {
       // Convert the seconds into its two largest units to display
       let [time1, unit1, time2, unit2] = DownloadUtils.convertTimeUnits(
         aSeconds
       );
 
-      let pair1 = lazy.gBundle.formatStringFromName(gStr.timePair, [
-        nf.format(time1),
-        unit1,
-      ]);
-      let pair2 = lazy.gBundle.formatStringFromName(gStr.timePair, [
-        nf.format(time2),
-        unit2,
-      ]);
+      const pair1 = l10n.formatValueSync("download-utils-time-pair", {
+        time: nf.format(time1),
+        unit: unit1,
+      });
 
       // Only show minutes for under 1 hour unless there's a few minutes left;
       // or the second pair is 0.
       if ((aSeconds < 3600 && time1 >= 4) || time2 == 0) {
-        timeLeft = lazy.gBundle.formatStringFromName(gStr.timeLeftSingle, [
-          pair1,
-        ]);
+        timeLeft = l10n.formatValueSync("download-utils-time-left-single", {
+          time: pair1,
+        });
       } else {
         // We've got 2 pairs of times to display
-        timeLeft = lazy.gBundle.formatStringFromName(gStr.timeLeftDouble, [
-          pair1,
-          pair2,
-        ]);
+        const pair2 = l10n.formatValueSync("download-utils-time-pair", {
+          time: nf.format(time2),
+          unit: unit2,
+        });
+        timeLeft = l10n.formatValueSync("download-utils-time-left-double", {
+          time1: pair1,
+          time2: pair2,
+        });
       }
     }
 
@@ -384,7 +362,7 @@ var DownloadUtils = {
       dateTimeCompact = dts.format(aDate);
     } else if (today - aDate < MS_PER_DAY) {
       // After yesterday started, show yesterday
-      dateTimeCompact = lazy.gBundle.GetStringFromName(gStr.yesterday);
+      dateTimeCompact = l10n.formatValueSync("download-utils-yesterday");
     } else if (today - aDate < 6 * MS_PER_DAY) {
       // After last week started, show day of week
       dateTimeCompact = aDate.toLocaleDateString(undefined, {
@@ -471,13 +449,13 @@ var DownloadUtils = {
     // Check if we need to show something else for the host
     if (uri.scheme == "file") {
       // Display special text for file protocol
-      displayHost = lazy.gBundle.GetStringFromName(gStr.doneFileScheme);
+      displayHost = l10n.formatValueSync("download-utils-done-file-scheme");
       fullHost = displayHost;
     } else if (!displayHost.length) {
       // Got nothing; show the scheme (data: about: moz-icon:)
-      displayHost = lazy.gBundle.formatStringFromName(gStr.doneScheme, [
-        uri.scheme,
-      ]);
+      displayHost = l10n.formatValueSync("download-utils-done-scheme", {
+        scheme: uri.scheme,
+      });
       fullHost = displayHost;
     } else if (uri.port != -1) {
       // Tack on the port if it's not the default port
@@ -502,7 +480,7 @@ var DownloadUtils = {
 
     // Convert to next unit if it needs 4 digits (after rounding), but only if
     // we know the name of the next unit
-    while (aBytes >= 999.5 && unitIndex < gStr.units.length - 1) {
+    while (aBytes >= 999.5 && unitIndex < BYTE_UNITS.length - 1) {
       aBytes /= 1024;
       unitIndex++;
     }
@@ -519,7 +497,7 @@ var DownloadUtils = {
       aBytes = getLocaleNumberFormat(fractionDigits).format(aBytes);
     }
 
-    return [aBytes, lazy.gBundle.GetStringFromName(gStr.units[unitIndex])];
+    return [aBytes, l10n.formatValueSync(BYTE_UNITS[unitIndex])];
   },
 
   /**
@@ -531,19 +509,15 @@ var DownloadUtils = {
    * @return 4-item array [first value, its unit, second value, its unit]
    */
   convertTimeUnits: function DU_convertTimeUnits(aSecs) {
-    // These are the maximum values for seconds, minutes, hours corresponding
-    // with gStr.timeUnits without the last item
-    let timeSize = [60, 60, 24];
-
     let time = aSecs;
     let scale = 1;
     let unitIndex = 0;
 
     // Keep converting to the next unit while we have units left and the
     // current one isn't the largest unit possible
-    while (unitIndex < timeSize.length && time >= timeSize[unitIndex]) {
-      time /= timeSize[unitIndex];
-      scale *= timeSize[unitIndex];
+    while (unitIndex < TIME_SIZES.length && time >= TIME_SIZES[unitIndex]) {
+      time /= TIME_SIZES[unitIndex];
+      scale *= TIME_SIZES[unitIndex];
       unitIndex++;
     }
 
@@ -555,7 +529,7 @@ var DownloadUtils = {
 
     // Convert the extra time to the next largest unit
     for (let index = 0; index < nextIndex; index++) {
-      extra /= timeSize[index];
+      extra /= TIME_SIZES[index];
     }
 
     let value2 = convertTimeUnitsValue(extra);
@@ -623,22 +597,19 @@ function convertTimeUnitsValue(aTime) {
 /**
  * Private helper for convertTimeUnits that gets the display units of a time
  *
- * @param aTime
+ * @param timeValue
  *        Time value for display
  * @param aIndex
  *        Index into gStr.timeUnits for the appropriate unit
  * @return The appropriate plural form of the unit for the time
  */
-function convertTimeUnitsUnits(aTime, aIndex) {
+function convertTimeUnitsUnits(timeValue, aIndex) {
   // Negative index would be an invalid unit, so just give empty
   if (aIndex < 0) {
     return "";
   }
 
-  return lazy.PluralForm.get(
-    aTime,
-    lazy.gBundle.GetStringFromName(gStr.timeUnits[aIndex])
-  );
+  return l10n.formatValueSync(TIME_UNITS[aIndex], { timeValue });
 }
 
 /**
