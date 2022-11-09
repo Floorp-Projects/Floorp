@@ -597,8 +597,55 @@ class StyleSheetsManager extends EventEmitter {
           continue;
         }
 
-        if (rule.type === CSSRule.MEDIA_RULE) {
-          rules.push(rule);
+        const line = InspectorUtils.getRelativeRuleLine(rule);
+        const column = InspectorUtils.getRuleColumn(rule);
+
+        const className = ChromeUtils.getClassName(rule);
+        if (className === "CSSMediaRule") {
+          let matches = false;
+
+          try {
+            const mql = win.matchMedia(rule.media.mediaText);
+            matches = mql.matches;
+            mql.onchange = this._onMatchesChange.bind(
+              this,
+              resourceId,
+              rules.length
+            );
+            this._mqlList.push(mql);
+          } catch (e) {
+            // Ignored
+          }
+
+          rules.push({
+            type: "media",
+            mediaText: rule.media.mediaText,
+            conditionText: rule.conditionText,
+            matches,
+            line,
+            column,
+          });
+        } else if (className === "CSSContainerRule") {
+          rules.push({
+            type: "container",
+            conditionText: rule.conditionText,
+            line,
+            column,
+          });
+        } else if (className === "CSSSupportsRule") {
+          rules.push({
+            type: "support",
+            conditionText: rule.conditionText,
+            line,
+            column,
+          });
+        } else if (className === "CSSLayerBlockRule") {
+          rules.push({
+            type: "layer",
+            layerName: rule.name,
+            line,
+            column,
+          });
         }
 
         if (rule.cssRules) {
@@ -607,27 +654,7 @@ class StyleSheetsManager extends EventEmitter {
       }
     };
     traverseRules(styleSheetRules);
-
-    return rules.map((rule, index) => {
-      let matches = false;
-
-      try {
-        const mql = win.matchMedia(rule.media.mediaText);
-        matches = mql.matches;
-        mql.onchange = this._onMatchesChange.bind(this, resourceId, index);
-        this._mqlList.push(mql);
-      } catch (e) {
-        // Ignored
-      }
-
-      return {
-        mediaText: rule.media.mediaText,
-        conditionText: rule.conditionText,
-        matches,
-        line: InspectorUtils.getRelativeRuleLine(rule),
-        column: InspectorUtils.getRuleColumn(rule),
-      };
-    });
+    return rules;
   }
 
   /**
@@ -637,7 +664,7 @@ class StyleSheetsManager extends EventEmitter {
    * @param {String} resourceId
    *        The id associated with the stylesheet
    * @param {Number} index
-   *        The index of the media rule relatively to all the other media rules of the stylesheet
+   *        The index of the media rule relatively to all the other at-rules of the stylesheet
    * @param {MediaQueryList} mql
    *        The result of matchMedia for the given media rule
    */

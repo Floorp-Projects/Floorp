@@ -25,12 +25,12 @@ add_task(async function() {
   // Test editor with @media rules
   const mediaEditor = ui.editors[0];
   await openEditor(mediaEditor);
-  testMediaEditor(mediaEditor);
+  testAtRulesEditor(mediaEditor);
 
   Services.prefs.clearUserPref(MAP_PREF);
 });
 
-function testMediaEditor(editor) {
+function testAtRulesEditor(editor) {
   const sidebar = editor.details.querySelector(".stylesheet-sidebar");
   is(sidebar.hidden, false, "sidebar is showing on editor with @media");
 
