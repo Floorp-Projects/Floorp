@@ -2293,6 +2293,8 @@ security.ui.protectionspopup:
       "settings",
       "full_report",
       "milestone_message",
+      "cookieb_toggle_on",
+      "cookieb_toggle_off",
     ]
     bug_numbers:
       - 1560327
@@ -2302,11 +2304,13 @@ security.ui.protectionspopup:
       - 1678201
       - 1739287
       - 1787249
+      - 1798669
     description: >
       User interaction by click events in the protections panel.
     expiry_version: never
     notification_emails:
       - pbz@mozilla.com
+      - tihuang@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-out
     record_in_processes:

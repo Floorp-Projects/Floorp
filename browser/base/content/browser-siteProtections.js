@@ -1123,6 +1123,8 @@ let cookieBannerSection = new (class {
         gBrowser.currentURI,
         this.#isPrivateBrowsing
       );
+
+      gProtectionsHandler.recordClick("cookieb_toggle_on");
     } else {
       // Disable the feature for the current site by setting an exception.
       Services.cookieBanners.setDomainPref(
@@ -1130,6 +1132,8 @@ let cookieBannerSection = new (class {
         Ci.nsICookieBannerService.MODE_DISABLED,
         this.#isPrivateBrowsing
       );
+
+      gProtectionsHandler.recordClick("cookieb_toggle_off");
     }
 
     this.#updateSwitchState({ hasException: !newState });
