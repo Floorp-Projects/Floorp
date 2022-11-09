@@ -414,6 +414,14 @@ var TESTS = [
       "Continue to Installation",
       "Should have seen the right button"
     );
+    is(
+      notification
+        .querySelector("#addon-install-blocked-info")
+        .getAttribute("href"),
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+        "unlisted-extensions-risks",
+      "Got the expected SUMO page as a learn more link in the addon-install-blocked panel"
+    );
     let message = panel.ownerDocument.getElementById(
       "addon-install-blocked-message"
     );
