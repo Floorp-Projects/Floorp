@@ -11,7 +11,7 @@
       "channel": "release",
       "userFacingName": "Firefox Android 2022 New User Onboarding",
       "userFacingDescription": "Firefox Android 2022 New User Onboarding experiment",
-      "isEnrollmentPaused": false,
+      "isEnrollmentPaused": true,
       "isRollout": false,
       "bucketConfig": {
         "randomizationUnit": "nimbus_id",
@@ -63,11 +63,12 @@
       ],
       "targeting": "((is_already_enrolled) || ((days_since_install < 7) && (app_version|versionCompare('106.!') >= 0)))",
       "startDate": "2022-10-05",
-      "enrollmentEndDate": "2022-10-29",
+      "enrollmentEndDate": "2022-11-01",
       "endDate": null,
       "proposedDuration": 73,
       "proposedEnrollment": 24,
-      "referenceBranch": "control"
+      "referenceBranch": "control",
+      "featureValidationOptOut": false
     }
   ]
 }
