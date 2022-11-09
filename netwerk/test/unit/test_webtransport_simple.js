@@ -115,3 +115,64 @@ add_task(async function test_closed_0ms() {
 add_task(async function test_closed_100ms() {
   test_closed("/closeafter100ms");
 });
+
+function WebTransportStreamCallback() {}
+
+WebTransportStreamCallback.prototype = {
+  QueryInterface: ChromeUtils.generateQI(["nsIWebTransportStreamCallback"]),
+
+  onBidirectionalStreamReady(aStream) {
+    Assert.ok(aStream != null);
+    this.finish(aStream);
+  },
+  onUnidirectionalStreamReady(aStream) {
+    Assert.ok(aStream != null);
+    this.finish(aStream);
+  },
+  onError(aError) {
+    this.finish(aError);
+  },
+};
+
+function streamCreatePromise(transport, bidi) {
+  return new Promise(resolve => {
+    let listener = new WebTransportStreamCallback().QueryInterface(
+      Ci.nsIWebTransportStreamCallback
+    );
+    listener.finish = resolve;
+
+    if (bidi) {
+      transport.createOutgoingBidirectionalStream(listener);
+    } else {
+      transport.createOutgoingUnidirectionalStream(listener);
+    }
+  });
+}
+
+add_task(async function test_wt_stream_create() {
+  let webTransport = NetUtil.newWebTransport().QueryInterface(
+    Ci.nsIWebTransport
+  );
+
+  let error = await streamCreatePromise(webTransport, true);
+  Assert.equal(error, Ci.nsIWebTransport.INVALID_STATE_ERROR);
+
+  await new Promise(resolve => {
+    let listener = new WebTransportListener().QueryInterface(
+      Ci.WebTransportSessionEventListener
+    );
+    listener.ready = resolve;
+
+    webTransport.asyncConnect(
+      NetUtil.newURI("https://" + host + "/success"),
+      Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal),
+      Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+      listener
+    );
+  });
+
+  await streamCreatePromise(webTransport, true);
+  await streamCreatePromise(webTransport, false);
+
+  webTransport.closeSession(0, "");
+});

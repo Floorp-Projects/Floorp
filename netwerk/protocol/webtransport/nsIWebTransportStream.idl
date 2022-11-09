@@ -1,0 +1,33 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[builtinclass, scriptable, uuid(d461b235-6291-4817-adcc-a2a3b3dfc10b)]
+interface nsIWebTransportReceiveStream : nsISupports {
+  // Sends the STOP_SENDING on the stream.
+  void sendStopSending(in uint8_t aError);
+};
+
+[builtinclass, scriptable, uuid(804f245c-52ea-403c-8a78-f751533bdd70)]
+interface nsIWebTransportSendStream : nsISupports {
+  // Sends the FIN on the stream.
+  void sendFin();
+
+  // Reset the stream with the specified error code.
+  void reset(in uint8_t aErrorCode);
+};
+
+[builtinclass, scriptable, uuid(f9ecb509-36db-4689-97d6-137639a08750)]
+interface nsIWebTransportBidirectionalStream : nsISupports {
+  // Sends the STOP_SENDING on the stream.
+  void sendStopSending(in uint8_t aError);
+
+  // Sends the FIN on the stream.
+  void sendFin();
+
+  // Reset the stream with the specified error code.
+  void reset(in uint8_t aErrorCode);
+};
