@@ -139,7 +139,6 @@ add_task(async function test_search() {
 
   await assertSearchSourcesTelemetry(
     {
-      "example.in-content:sap:ff": 1,
       "other-Example.urlbar": 1,
     },
     {
@@ -157,7 +156,6 @@ add_task(async function test_reload() {
 
   await assertSearchSourcesTelemetry(
     {
-      "example.in-content:sap:ff": 2,
       "other-Example.urlbar": 1,
     },
     {
@@ -176,7 +174,6 @@ add_task(async function test_reload() {
 
   await assertSearchSourcesTelemetry(
     {
-      "example.in-content:sap:ff": 2,
       "other-Example.urlbar": 1,
     },
     {
@@ -202,7 +199,6 @@ add_task(async function test_fresh_search() {
 
   await assertSearchSourcesTelemetry(
     {
-      "example.in-content:sap:ff": 1,
       "other-Example.urlbar": 1,
     },
     {
@@ -221,7 +217,6 @@ add_task(async function test_click_ad() {
 
   await assertSearchSourcesTelemetry(
     {
-      "example.in-content:sap:ff": 1,
       "other-Example.urlbar": 1,
     },
     {
@@ -240,7 +235,6 @@ add_task(async function test_go_back() {
 
   await assertSearchSourcesTelemetry(
     {
-      "example.in-content:sap:ff": 2,
       "other-Example.urlbar": 1,
     },
     {
@@ -260,7 +254,6 @@ add_task(async function test_go_back() {
 
   await assertSearchSourcesTelemetry(
     {
-      "example.in-content:sap:ff": 2,
       "other-Example.urlbar": 1,
     },
     {
@@ -287,7 +280,6 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
   await loadSearchPage();
   await assertSearchSourcesTelemetry(
     {
-      "example.in-content:sap:ff": 1,
       "other-Example.urlbar": 1,
     },
     {
@@ -300,7 +292,6 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
   await loadSearchPage();
   await assertSearchSourcesTelemetry(
     {
-      "example.in-content:sap:ff": 2,
       "other-Example.urlbar": 1,
       "other-Example.urlbar-persisted": 1,
     },
@@ -320,7 +311,6 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
   await pageLoadPromise;
   await assertSearchSourcesTelemetry(
     {
-      "example.in-content:sap:ff": 2,
       "other-Example.urlbar": 1,
       "other-Example.urlbar-persisted": 1,
     },
