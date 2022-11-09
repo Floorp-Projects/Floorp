@@ -1147,7 +1147,6 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
     transition-duration: 0.18s, 0.18s;
     transition-timing-function:
       var(--animation-easing-function), ease-out;
-    will-change: transform, opacity;
   }
 
   #BMB_bookmarksPopup[side="bottom"]:not([animate="false"]) {
