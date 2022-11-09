@@ -197,7 +197,7 @@ impl Default for PlaneSplitAnchor {
 }
 
 /// A concrete plane splitter type used in WebRender.
-pub type PlaneSplitter = BspSplitter<f64, WorldPixel, PlaneSplitAnchor>;
+pub type PlaneSplitter = BspSplitter<PlaneSplitAnchor>;
 
 /// An index into the scene's list of plane splitters
 #[derive(Debug, Copy, Clone)]
