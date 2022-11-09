@@ -288,6 +288,9 @@ bool Compartment::getNonWrapperObjectForCurrentCompartment(
 
 bool Compartment::getOrCreateWrapper(JSContext* cx, HandleObject existing,
                                      MutableHandleObject obj) {
+  // ScriptSourceObject is an internal object that we never need to wrap.
+  MOZ_ASSERT(!obj->is<ScriptSourceObject>());
+
   // If we already have a wrapper for this value, use it.
   if (ObjectWrapperMap::Ptr p = lookupWrapper(obj)) {
     obj.set(p->value().get());
