@@ -212,6 +212,16 @@ add_task(async function testRequestMIDIAccess() {
   info("Accept site permission addon install");
   addonInstallPanel = await onAddonInstallBlockedNotification;
   notification = addonInstallPanel.childNodes[0];
+
+  is(
+    notification
+      .querySelector("#addon-install-blocked-info")
+      .getAttribute("href"),
+    Services.urlFormatter.formatURLPref("app.support.baseURL") +
+      "site-permission-addons",
+    "Got the expected SUMO page as a learn more link in the addon-install-blocked panel"
+  );
+
   dialogPromise = waitForInstallDialog();
   notification.button.click();
   installDialog = await dialogPromise;
