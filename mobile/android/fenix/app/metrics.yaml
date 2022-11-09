@@ -198,6 +198,19 @@ events:
       - android-probes@mozilla.com
       - kbrosnan@mozilla.com
     expires: never
+  default_browser_notif_shown:
+    type: event
+    description: |
+      Default browser notification was shown to the user
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/27779
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/27780
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 122
   toolbar_menu_visible:
     type: event
     description: |

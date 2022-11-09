@@ -19,7 +19,9 @@ import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.ids.SharedIdsHelper
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
@@ -36,6 +38,7 @@ class DefaultBrowserNotificationWorker(
         ensureChannelExists()
         NotificationManagerCompat.from(applicationContext)
             .notify(NOTIFICATION_TAG, NOTIFICATION_ID, buildNotification())
+        Events.defaultBrowserNotifShown.record(NoExtras())
 
         // default browser notification should only happen once
         applicationContext.settings().defaultBrowserNotificationDisplayed = true
