@@ -83,6 +83,12 @@ XPCOMUtils.defineLazyGetter(lazy, "gCombinedDownloadIntegration", () => {
   return lazy.DownloadIntegration;
 });
 
+XPCOMUtils.defineLazyGetter(lazy, "stringBundle", () =>
+  Services.strings.createBundle(
+    "chrome://mozapps/locale/downloads/downloads.properties"
+  )
+);
+
 const Timer = Components.Constructor(
   "@mozilla.org/timer;1",
   "nsITimer",
@@ -887,7 +893,7 @@ export var DownloadIntegration = {
     // displayed in the user interface.
     let directoryPath = PathUtils.join(
       this._getDirectory(aName),
-      lazy.DownloadUIHelper.strings.downloadsFolder
+      lazy.stringBundle.GetStringFromName("downloadsFolder")
     );
 
     // Create the Downloads folder and ignore if it already exists.

@@ -11,8 +11,6 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
-
 // BrowserWindowTracker and PrivateBrowsingUtils are only used when opening downloaded files into a browser window
 ChromeUtils.defineESModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
@@ -22,17 +20,11 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
 
-const kStringBundleUrl =
-  "chrome://mozapps/locale/downloads/downloads.properties";
-
-const kStringsRequiringFormatting = {
-  fileExecutableSecurityWarning: true,
-  cancelDownloadsOKTextMultiple: true,
-  quitCancelDownloadsAlertMsgMultiple: true,
-  quitCancelDownloadsAlertMsgMacMultiple: true,
-  offlineCancelDownloadsAlertMsgMultiple: true,
-  leavePrivateBrowsingWindowsCancelDownloadsAlertMsgMultiple2: true,
-};
+XPCOMUtils.defineLazyGetter(
+  lazy,
+  "l10n",
+  () => new Localization(["toolkit/downloads/downloadUI.ftl"], true)
+);
 
 /**
  * Provides functions to handle status and messages in the user interface.
@@ -128,28 +120,6 @@ export var DownloadUIHelper = {
 };
 
 /**
- * Returns an object whose keys are the string names from the downloads string
- * bundle, and whose values are either the translated strings or functions
- * returning formatted strings.
- */
-XPCOMUtils.defineLazyGetter(DownloadUIHelper, "strings", function() {
-  let strings = {};
-  let sb = Services.strings.createBundle(kStringBundleUrl);
-  for (let string of sb.getSimpleEnumeration()) {
-    let stringName = string.key;
-    if (stringName in kStringsRequiringFormatting) {
-      strings[stringName] = function() {
-        // Convert "arguments" to a real array before calling into XPCOM.
-        return sb.formatStringFromName(stringName, Array.from(arguments));
-      };
-    } else {
-      strings[stringName] = string.value;
-    }
-  }
-  return strings;
-});
-
-/**
  * Allows displaying prompts related to downloads.
  *
  * @param aParent
@@ -198,13 +168,14 @@ DownloadPrompter.prototype = {
       // If the preference does not exist, continue with the prompt.
     }
 
-    let leafName = lazy.OS.Path.basename(path);
-
-    let s = DownloadUIHelper.strings;
-    return this._prompter.confirm(
-      s.fileExecutableSecurityWarningTitle,
-      s.fileExecutableSecurityWarning(leafName, leafName)
+    const title = lazy.l10n.formatValueSync(
+      "download-ui-file-executable-security-warning-title"
     );
+    const message = lazy.l10n.formatValueSync(
+      "download-ui-file-executable-security-warning",
+      { executable: PathUtils.filename(path) }
+    );
+    return this._prompter.confirm(title, message);
   },
 
   /**
@@ -229,59 +200,41 @@ DownloadPrompter.prototype = {
       return false;
     }
 
-    let s = DownloadUIHelper.strings;
-    let buttonFlags =
-      Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0 +
-      Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1;
-    let okButton =
-      aDownloadsCount > 1
-        ? s.cancelDownloadsOKTextMultiple(aDownloadsCount)
-        : s.cancelDownloadsOKText;
-    let title, message, cancelButton;
+    let message, cancelButton;
 
     switch (aPromptType) {
       case this.ON_QUIT:
-        title = s.quitCancelDownloadsAlertTitle;
-        if (AppConstants.platform != "macosx") {
-          message =
-            aDownloadsCount > 1
-              ? s.quitCancelDownloadsAlertMsgMultiple(aDownloadsCount)
-              : s.quitCancelDownloadsAlertMsg;
-          cancelButton = s.dontQuitButtonWin;
-        } else {
-          message =
-            aDownloadsCount > 1
-              ? s.quitCancelDownloadsAlertMsgMacMultiple(aDownloadsCount)
-              : s.quitCancelDownloadsAlertMsgMac;
-          cancelButton = s.dontQuitButtonMac;
-        }
+        message =
+          AppConstants.platform == "macosx"
+            ? "download-ui-confirm-quit-cancel-downloads-mac"
+            : "download-ui-confirm-quit-cancel-downloads";
+        cancelButton = "download-ui-dont-quit-button";
         break;
+
       case this.ON_OFFLINE:
-        title = s.offlineCancelDownloadsAlertTitle;
-        message =
-          aDownloadsCount > 1
-            ? s.offlineCancelDownloadsAlertMsgMultiple(aDownloadsCount)
-            : s.offlineCancelDownloadsAlertMsg;
-        cancelButton = s.dontGoOfflineButton;
+        message = "download-ui-confirm-offline-cancel-downloads";
+        cancelButton = "download-ui-dont-go-offline-button";
         break;
+
       case this.ON_LEAVE_PRIVATE_BROWSING:
-        title = s.leavePrivateBrowsingCancelDownloadsAlertTitle;
         message =
-          aDownloadsCount > 1
-            ? s.leavePrivateBrowsingWindowsCancelDownloadsAlertMsgMultiple2(
-                aDownloadsCount
-              )
-            : s.leavePrivateBrowsingWindowsCancelDownloadsAlertMsg2;
-        cancelButton = s.dontLeavePrivateBrowsingButton2;
+          "download-ui-confirm-leave-private-browsing-windows-cancel-downloads";
+        cancelButton = "download-ui-dont-leave-private-browsing-button";
         break;
     }
 
+    const buttonFlags =
+      Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0 +
+      Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1;
+
     let rv = this._prompter.confirmEx(
-      title,
-      message,
+      lazy.l10n.formatValueSync("download-ui-confirm-title"),
+      lazy.l10n.formatValueSync(message, { downloadsCount: aDownloadsCount }),
       buttonFlags,
-      okButton,
-      cancelButton,
+      lazy.l10n.formatValueSync("download-ui-cancel-downloads-ok", {
+        downloadsCount: aDownloadsCount,
+      }),
+      lazy.l10n.formatValueSync(cancelButton),
       null,
       null,
       {}
