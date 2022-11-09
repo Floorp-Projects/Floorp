@@ -56,7 +56,7 @@ use crate::frame_builder::{FrameBuilderConfig};
 use crate::glyph_rasterizer::{FontInstance, SharedFontResources};
 use crate::hit_test::HitTestingScene;
 use crate::intern::Interner;
-use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo, Filter, PlaneSplitter, PlaneSplitterIndex, PipelineInstanceId};
+use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo, Filter, PlaneSplitterIndex, PipelineInstanceId};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive};
 use crate::picture::{BlitReason, OrderedPictureChild, PrimitiveList, SurfaceInfo, PictureFlags};
 use crate::picture_graph::PictureGraph;
@@ -502,12 +502,14 @@ pub struct SceneBuilder<'a> {
     /// dependencies, without relying on recursion for those passes.
     picture_graph: PictureGraph,
 
-    /// A list of all the allocated plane splitters for this scene. A plane
+    /// Keep track of allocated plane splitters for this scene. A plane
     /// splitter is allocated whenever we encounter a new 3d rendering context.
     /// They are stored outside the picture since it makes it easier for them
     /// to be referenced by both the owning 3d rendering context and the child
     /// pictures that contribute to the splitter.
-    plane_splitters: Vec<PlaneSplitter>,
+    /// During scene building "allocating" a splitter is just incrementing an index.
+    /// Splitter objects themselves are allocated and recycled in the frame builder.
+    next_plane_splitter_index: usize,
 
     /// A list of all primitive instances in the scene. We store them as a single
     /// array so that multiple different systems (e.g. tile-cache, visibility, property
@@ -580,7 +582,7 @@ impl<'a> SceneBuilder<'a> {
             ),
             snap_to_device,
             picture_graph: PictureGraph::new(),
-            plane_splitters: Vec::new(),
+            next_plane_splitter_index: 0,
             prim_instances: Vec::new(),
             pipeline_instance_ids: FastHashMap::default(),
             surfaces: Vec::new(),
@@ -622,7 +624,7 @@ impl<'a> SceneBuilder<'a> {
             tile_cache_config,
             tile_cache_pictures,
             picture_graph: builder.picture_graph,
-            plane_splitters: builder.plane_splitters,
+            num_plane_splitters: builder.next_plane_splitter_index,
             prim_instances: builder.prim_instances,
             surfaces: builder.surfaces,
             clip_tree,
@@ -2091,8 +2093,8 @@ impl<'a> SceneBuilder<'a> {
                 .unwrap_or(self.spatial_tree.root_reference_frame_index());
 
             let plane_splitter_index = plane_splitter_index.unwrap_or_else(|| {
-                let index = self.plane_splitters.len();
-                self.plane_splitters.push(PlaneSplitter::new());
+                let index = self.next_plane_splitter_index;
+                self.next_plane_splitter_index += 1;
                 PlaneSplitterIndex(index)
             });
 

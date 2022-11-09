@@ -12,7 +12,7 @@ use crate::clip::{ClipStore, ClipTree};
 use crate::spatial_tree::SpatialTree;
 use crate::frame_builder::{FrameBuilderConfig};
 use crate::hit_test::{HitTester, HitTestingScene, HitTestingSceneStats};
-use crate::internal_types::{FastHashMap, PlaneSplitter};
+use crate::internal_types::FastHashMap;
 use crate::picture::SurfaceInfo;
 use crate::picture_graph::PictureGraph;
 use crate::prim_store::{PrimitiveStore, PrimitiveStoreStats, PictureIndex, PrimitiveInstance};
@@ -289,7 +289,7 @@ pub struct BuiltScene {
     pub tile_cache_config: TileCacheConfig,
     pub tile_cache_pictures: Vec<PictureIndex>,
     pub picture_graph: PictureGraph,
-    pub plane_splitters: Vec<PlaneSplitter>,
+    pub num_plane_splitters: usize,
     pub prim_instances: Vec<PrimitiveInstance>,
     pub surfaces: Vec<SurfaceInfo>,
     pub clip_tree: ClipTree,
@@ -308,7 +308,7 @@ impl BuiltScene {
             tile_cache_config: TileCacheConfig::new(0),
             tile_cache_pictures: Vec::new(),
             picture_graph: PictureGraph::new(),
-            plane_splitters: Vec::new(),
+            num_plane_splitters: 0,
             prim_instances: Vec::new(),
             surfaces: Vec::new(),
             clip_tree: ClipTree::new(),
