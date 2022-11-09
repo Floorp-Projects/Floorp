@@ -152,14 +152,18 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
   QM_TRY_UNWRAP(nsCOMPtr<nsIRandomAccessStream> stream,
                 NS_NewLocalFileRandomAccessStream(file), IPC_OK(), reportError);
 
-  autoUnlock.release();
-
   RandomAccessStreamParams streamParams =
       mozilla::ipc::SerializeRandomAccessStream(
           WrapMovingNotNullUnchecked(std::move(stream)));
 
   auto accessHandleParent =
       MakeRefPtr<FileSystemAccessHandleParent>(this, aRequest.entryId());
+
+  // Release the auto unlock helper just before calling
+  // SendPFileSystemAccessHandleConstructor which is responsible for destroying
+  // the actor if the sending fails (we call `UnlockExclusive` when the actor is
+  // destroyed).
+  autoUnlock.release();
 
   if (!SendPFileSystemAccessHandleConstructor(accessHandleParent)) {
     aResolver(NS_ERROR_FAILURE);
@@ -216,10 +220,15 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetWritable(
       mozilla::ipc::FILEToFileDescriptor(fileHandle);
 
   LOG(("Opened"));
-  autoUnlock.release();
 
   auto writableFileStreamParent =
       MakeRefPtr<FileSystemWritableFileStreamParent>(this, aRequest.entryId());
+
+  // Release the auto unlock helper just before calling
+  // SendPFileSystemWritableFileStreamConstructor which is responsible for
+  // destroying the actor if the sending fails (we call `UnlockExclusive` when
+  // the actor is destroyed).
+  autoUnlock.release();
 
   if (!SendPFileSystemWritableFileStreamConstructor(writableFileStreamParent)) {
     aResolver(NS_ERROR_FAILURE);
