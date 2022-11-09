@@ -257,7 +257,7 @@
     <string name="search_settings_menu_item">Leitarstillingar</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Leita núna að:</string>
+    <string name="search_header_menu_item">Leita núna með:</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
@@ -1953,4 +1953,6 @@
     <string name="a11y_action_label_expand">þenja út</string>
     <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
     <string name="a11y_action_label_wallpaper_collection_learn_more">opna tengil til að læra meira um þetta safn</string>
+    <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
+    <string name="a11y_action_label_read_article">lesa greinina</string>
 </resources>

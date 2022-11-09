@@ -261,7 +261,7 @@
     <string name="search_settings_menu_item">Impostazioni ricerca</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Questa volta cerca:</string>
+    <string name="search_header_menu_item">Questa volta cerca con:</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
@@ -2003,4 +2003,6 @@
     <string name="a11y_action_label_expand">espandi</string>
     <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
     <string name="a11y_action_label_wallpaper_collection_learn_more">apri il link per ulteriori informazioni su questa raccolta</string>
+    <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
+    <string name="a11y_action_label_read_article">leggere l’articolo</string>
 </resources>
