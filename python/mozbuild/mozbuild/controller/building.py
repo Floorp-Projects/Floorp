@@ -675,10 +675,13 @@ class OutputManager(LoggingMixin):
         terminal = log_manager.terminal
 
         # TODO convert terminal footer to config file setting.
-        if not terminal or os.environ.get("MACH_NO_TERMINAL_FOOTER", None):
+        if not terminal:
             return
         if os.environ.get("INSIDE_EMACS", None):
             return
+
+        if os.environ.get("MACH_NO_TERMINAL_FOOTER", None):
+            footer = None
 
         self.t = terminal
         self.footer = footer
