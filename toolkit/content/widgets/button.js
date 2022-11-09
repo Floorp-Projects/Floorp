@@ -182,7 +182,7 @@
         return NodeFilter.FILTER_REJECT;
       }
       // but it may be a popup element, in which case we look at "state"...
-      if (cs.display == "-moz-popup" && node.state != "open") {
+      if (XULPopupElement.isInstance(node) && node.state != "open") {
         return NodeFilter.FILTER_REJECT;
       }
       // OK - the node seems visible, so it is a candidate.

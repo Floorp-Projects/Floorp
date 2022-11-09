@@ -16,7 +16,6 @@ skip-if(Android) load chrome://reftest/content/crashtests/layout/xul/crashtests/
 load 329407-1.xml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/336962-1.xhtml
 skip-if(Android) load chrome://reftest/content/crashtests/layout/xul/crashtests/344228-1.xhtml
-load chrome://reftest/content/crashtests/layout/xul/crashtests/350460.xhtml
 skip-if(Android) load chrome://reftest/content/crashtests/layout/xul/crashtests/365151.xhtml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/366112-1.xhtml
 skip-if(Android) load chrome://reftest/content/crashtests/layout/xul/crashtests/366203-1.xhtml
