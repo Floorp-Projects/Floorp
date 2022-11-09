@@ -980,6 +980,10 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = 1;
       break;
     }
+    case IntID::PanelAnimations:
+      // Disabled for now for issues in some configurations, see bug 1385079.
+      aResult = 0;
+      break;
     case IntID::UseOverlayScrollbars: {
       aResult = StaticPrefs::widget_gtk_overlay_scrollbars_enabled();
       break;

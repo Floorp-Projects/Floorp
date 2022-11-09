@@ -1093,8 +1093,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
   appearance: none;
 }
 
-@supports -moz-bool-pref("xul.panel-animations.enabled") {
-@media (prefers-reduced-motion: no-preference) {
+@media (-moz-panel-animations) and (prefers-reduced-motion: no-preference) {
 @media (-moz-platform: macos) {
   /* On Mac, use the properties "-moz-window-transform" and "-moz-window-opacity"
      instead of "transform" and "opacity" for these animations.
@@ -1166,7 +1165,6 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
   #BMB_bookmarksPopup[animate][animate="cancel"] {
     transform: none;
   }
-}
 }
 }
 

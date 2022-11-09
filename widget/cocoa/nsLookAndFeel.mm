@@ -491,6 +491,9 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = nsCocoaFeatures::OnBigSurOrLater();
 #endif
       break;
+    case IntID::PanelAnimations:
+      aResult = 1;
+      break;
     default:
       aResult = 0;
       res = NS_ERROR_FAILURE;

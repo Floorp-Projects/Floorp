@@ -14674,22 +14674,6 @@
   mirror: once
 
 #---------------------------------------------------------------------------
-# Prefs starting with "xul."
-#---------------------------------------------------------------------------
-
-# Pref to control whether arrow-panel animations are enabled or not.
-# Transitions are currently disabled on Linux due to rendering issues on
-# certain configurations.
-- name: xul.panel-animations.enabled
-  type: bool
-#ifdef MOZ_WIDGET_GTK
-  value: false
-#else
-  value: true
-#endif
-  mirror: always
-
-#---------------------------------------------------------------------------
 # Prefs starting with "zoom."
 #---------------------------------------------------------------------------
 

@@ -92,7 +92,6 @@ pref_groups = [
     "view_source",
     "webgl",
     "widget",
-    "xul",
     "zoom",
 ]
 if CONFIG["OS_TARGET"] == "Android":
