@@ -301,7 +301,7 @@ void DarwinGamepadService::DeviceAdded(IOHIDDeviceRef device) {
   CFStringGetCString(productRef, product_name, sizeof(product_name),
                      kCFStringEncodingASCII);
   char buffer[256];
-  SprintfLiteral(buffer, "%x-%x-%s", vendorId, productId, product_name);
+  sprintf(buffer, "%x-%x-%s", vendorId, productId, product_name);
 
   bool defaultRemapper = false;
   RefPtr<GamepadRemapper> remapper =

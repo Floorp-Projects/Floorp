@@ -13,7 +13,6 @@
 #include "nsContentSecurityUtils.h"
 #include "nsTString.h"
 #include "nsStringFwd.h"
-#include "mozilla/Sprintf.h"
 
 #define ASSERT_STRCMP(first, second) ASSERT_TRUE(strcmp(first, second) == 0);
 
@@ -37,8 +36,8 @@ TEST(SmartCrashTrimmer, Test)
         std::string(1025, '.').c_str(), std::string(1025, 'A').c_str(),
         "Hello %s world %s!");
     char expected[1025];
-    SprintfLiteral(expected, "Hello %s world AAAAAAAAAAAAAAAAAAAAAAAAA!",
-                   std::string(984, '.').c_str());
+    sprintf(expected, "Hello %s world AAAAAAAAAAAAAAAAAAAAAAAAA!",
+            std::string(984, '.').c_str());
     ASSERT_STRCMP(ret.get(), expected);
   }
 }
