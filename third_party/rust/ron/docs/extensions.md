@@ -87,12 +87,12 @@ This feature enables RON to automatically unwrap newtype enum variants.
 #[derive(Deserialize)]
 struct Inner {
     pub a: u8,
-	pub b: bool,
+    pub b: bool,
 }
 #[derive(Deserialize)]
 pub enum Enum {
-	A(A),
-	B,
+    A(Inner),
+    B,
 }
 ```
 

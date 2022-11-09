@@ -71,15 +71,15 @@ fn seq() {
 
 #[test]
 fn unit() {
-    use ron::error::{Error, ErrorCode, Position};
+    use ron::error::{Error, Position, SpannedError};
 
     assert_eq!("()".parse(), Ok(Value::Unit));
     assert_eq!("Foo".parse(), Ok(Value::Unit));
 
     assert_eq!(
         "".parse::<Value>(),
-        Err(Error {
-            code: ErrorCode::Eof,
+        Err(SpannedError {
+            code: Error::Eof,
             position: Position { col: 1, line: 1 }
         })
     );

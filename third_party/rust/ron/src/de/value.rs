@@ -5,20 +5,18 @@ use serde::{
     Deserialize, Deserializer,
 };
 
-use crate::{
-    de,
-    value::{Map, Number, Value},
-};
+use crate::error::SpannedResult;
+use crate::value::{Map, Number, Value};
 
 impl std::str::FromStr for Value {
-    type Err = de::Error;
+    type Err = crate::error::SpannedError;
 
     /// Creates a value from a string reference.
-    fn from_str(s: &str) -> de::Result<Self> {
+    fn from_str(s: &str) -> SpannedResult<Self> {
         let mut de = super::Deserializer::from_str(s)?;
 
-        let val = Value::deserialize(&mut de)?;
-        de.end()?;
+        let val = Value::deserialize(&mut de).map_err(|e| de.span_error(e))?;
+        de.end().map_err(|e| de.span_error(e))?;
 
         Ok(val)
     }
@@ -56,6 +54,7 @@ impl<'de> Visitor<'de> for ValueVisitor {
         Ok(Value::Number(Number::new(v)))
     }
 
+    #[cfg(feature = "integer128")]
     fn visit_i128<E>(self, v: i128) -> Result<Self::Value, E>
     where
         E: Error,
@@ -70,6 +69,7 @@ impl<'de> Visitor<'de> for ValueVisitor {
         Ok(Value::Number(Number::new(v)))
     }
 
+    #[cfg(feature = "integer128")]
     fn visit_u128<E>(self, v: u128) -> Result<Self::Value, E>
     where
         E: Error,
@@ -229,12 +229,12 @@ mod tests {
 
     #[test]
     fn test_tuples_error() {
-        use crate::de::{Error, ErrorCode, Position};
+        use crate::de::{Error, Position, SpannedError};
 
         assert_eq!(
             Value::from_str("Foo:").unwrap_err(),
-            Error {
-                code: ErrorCode::TrailingCharacters,
+            SpannedError {
+                code: Error::TrailingCharacters,
                 position: Position { col: 4, line: 1 }
             },
         );
