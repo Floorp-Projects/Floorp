@@ -365,6 +365,7 @@ const TEST_GLOBAL = {
   PrivateBrowsingUtils: {
     isBrowserPrivate: () => false,
     isWindowPrivate: () => false,
+    permanentPrivateBrowsing: false,
   },
   DownloadsViewUI: {
     getDisplayName: () => "filename.ext",

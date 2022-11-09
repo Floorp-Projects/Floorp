@@ -165,15 +165,48 @@ add_task(async function test_activityAfterIdle() {
 
   idleTrigger.init(handlerStub);
 
+  // Test that the trigger fires under normal conditions.
+  let firedOnActive = new Promise(resolve =>
+    handlerStub.callsFake(() => resolve(true))
+  );
   mockIdleService._fireObservers("idle");
   await TestUtils.waitForTick();
-  Assert.ok(handlerStub.notCalled, "Not called when idle");
-
+  ok(handlerStub.notCalled, "Not called when idle");
   mockIdleService._fireObservers("active");
-  await BrowserTestUtils.waitForCondition(
-    () => handlerStub.calledOnce,
-    "Called once after idle"
+  ok(await firedOnActive, "Called once when active after idle");
+  handlerStub.reset();
+
+  // Test that the trigger does not fire when the active window is private.
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+  ok(PrivateBrowsingUtils.isWindowPrivate(privateWin), "Window is private");
+  await TestUtils.waitForTick();
+  mockIdleService._fireObservers("idle");
+  await TestUtils.waitForTick();
+  mockIdleService._fireObservers("active");
+  await TestUtils.waitForTick();
+  ok(handlerStub.notCalled, "Not called when active window is private");
+  await BrowserTestUtils.closeWindow(privateWin);
+  handlerStub.reset();
+
+  // Test that the trigger does not fire when the window is minimized, but does
+  // fire after the window is restored.
+  let firedOnRestore = new Promise(resolve =>
+    handlerStub.callsFake(() => resolve(true))
   );
+  window.minimize();
+  await BrowserTestUtils.waitForCondition(
+    () => window.windowState === window.STATE_MINIMIZED,
+    "Window should be minimized"
+  );
+  mockIdleService._fireObservers("idle");
+  await TestUtils.waitForTick();
+  mockIdleService._fireObservers("active");
+  await TestUtils.waitForTick();
+  ok(handlerStub.notCalled, "Not called when window is minimized");
+  window.restore();
+  ok(await firedOnRestore, "Called once after restoring minimized window");
 
   idleTrigger.uninit();
   sandbox.restore();

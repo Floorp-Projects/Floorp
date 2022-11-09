@@ -383,7 +383,9 @@ describe("ASRouterTriggerListeners", () => {
     describe("#init", () => {
       beforeEach(() => {
         addObsStub = sandbox.stub(global.Services.obs, "addObserver");
-        sandbox.stub(global.Services.wm, "getEnumerator").returns([]);
+        sandbox
+          .stub(global.Services.wm, "getEnumerator")
+          .returns([{ closed: false, document: { hidden: false } }]);
         idleListener.init(triggerHandler);
       });
       afterEach(() => {
