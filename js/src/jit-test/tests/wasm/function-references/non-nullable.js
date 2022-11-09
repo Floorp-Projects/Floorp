@@ -78,7 +78,37 @@ wasmValidateText(`(module
     local.tee 5
   )  
 )`);
-
+wasmFailValidateText(`(module
+  (elem declare 0)
+  (func
+    (local (ref func))
+    i32.const 0
+    if
+      ref.func 0
+      local.set 0
+    else
+      local.get 0
+      drop
+    end
+  )
+)`, /local\.get read from unset local/);
+wasmValidateText(`(module
+  (elem declare 0)
+  (func (result funcref)
+    (local (ref func) (ref func))
+    i32.const 0
+    if (result funcref)
+      ref.func 0
+      local.set 0
+      local.get 0
+    else
+      ref.func 0
+      local.tee 1
+      local.get 1
+      drop
+    end
+  )
+)`);
 
 // exported funcs can't take null in non-nullable params
 let {a} = wasmEvalText(`(module

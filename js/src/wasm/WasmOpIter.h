@@ -1335,6 +1335,10 @@ inline bool OpIter<Policy>::readElse(ResultType* paramType,
   valueStack_.infallibleAppend(elseParamStack_.end() - nparams, nparams);
   elseParamStack_.shrinkBy(nparams);
 
+  // Reset local state to the beginning of the 'if' block for the new block
+  // started by 'else'.
+  unsetLocals_.resetToBlock(controlStack_.length() - 1);
+
   block.switchToElse();
   return true;
 }
