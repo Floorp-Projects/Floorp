@@ -15,6 +15,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
+  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -804,11 +805,24 @@ class PageAction {
     const browser = this.window.gBrowser.selectedBrowser;
     const message = RecommendationMap.get(browser);
     const { content } = message;
+    let anchor;
 
     // A hacky way of setting the popup anchor outside the usual url bar icon box
-    // See https://searchfox.org/mozilla-central/rev/c5c002f81f08a73e04868e0c2bf0eb113f200b03/toolkit/modules/PopupNotifications.sys.mjs#40
-    browser.cfrpopupnotificationanchor =
-      this.window.document.getElementById(content.anchor_id) || this.container;
+    // See https://searchfox.org/mozilla-central/rev/847b64cc28b74b44c379f9bff4f415b97da1c6d7/toolkit/modules/PopupNotifications.jsm#42
+    //If the anchor has been moved to the overflow menu ('menu-panel') and an alt_anchor_id has been provided, we want to use the alt_anchor_id
+
+    if (
+      content.alt_anchor_id &&
+      lazy.CustomizableUI.getWidget(content.anchor_id).areaType === "menu-panel"
+    ) {
+      anchor = this.window.document.getElementById(content.alt_anchor_id);
+    } else {
+      anchor =
+        this.window.document.getElementById(content.anchor_id) ||
+        this.container;
+    }
+
+    browser.cfrpopupnotificationanchor = anchor;
 
     await this._renderPopup(message, browser);
   }

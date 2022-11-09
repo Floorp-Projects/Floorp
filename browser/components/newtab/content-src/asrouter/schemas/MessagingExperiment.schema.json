@@ -323,6 +323,10 @@
               "type": "string",
               "description": "A DOM element ID that the pop-over will be anchored."
             },
+            "alt_anchor_id": {
+              "type": "string",
+              "description": "An alternate DOM element ID that the pop-over will be anchored."
+            },
             "bucket_id": {
               "type": "string",
               "description": "A bucket identifier for the addon. This is used in order to anonymize telemetry for history-sensitive targeting."
