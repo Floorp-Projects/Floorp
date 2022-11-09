@@ -29,6 +29,7 @@ import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
 import mozilla.components.support.webextensions.WebExtensionSupport
 import org.mozilla.focus.biometrics.LockObserver
+import org.mozilla.focus.experiments.finishNimbusInitialization
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.navigation.StoreLink
 import org.mozilla.focus.nimbus.FocusNimbus
@@ -40,6 +41,7 @@ import org.mozilla.focus.utils.AdjustHelper
 import org.mozilla.focus.utils.AppConstants
 import kotlin.coroutines.CoroutineContext
 
+@Suppress("TooManyFunctions")
 open class FocusApplication : LocaleAwareApplication(), Provider, CoroutineScope {
     private var job = Job()
     override val coroutineContext: CoroutineContext
@@ -61,7 +63,7 @@ open class FocusApplication : LocaleAwareApplication(), Provider, CoroutineScope
         components.crashReporter.install(this)
 
         if (isMainProcess()) {
-            initializeNativeComponents()
+            initializeNimbus()
 
             PreferenceManager.setDefaultValues(this, R.xml.settings, false)
 
@@ -71,6 +73,8 @@ open class FocusApplication : LocaleAwareApplication(), Provider, CoroutineScope
             TelemetryWrapper.init(this)
             components.metrics.initialize(this)
             FactsProcessor.initialize()
+            finishSetupMegazord()
+
             ProfilerMarkerFactProcessor.create { components.engine.profiler }.register()
 
             enableStrictMode()
@@ -102,21 +106,53 @@ open class FocusApplication : LocaleAwareApplication(), Provider, CoroutineScope
         // no-op, LeakCanary is disabled by default
     }
 
+    protected open fun initializeNimbus() {
+        beginSetupMegazord()
+
+        // This lazily constructs the Nimbus object…
+        val nimbus = components.experiments
+        // … which we then can populate the feature configuration.
+        FocusNimbus.initialize { nimbus }
+    }
+
+    /**
+     * Initiate Megazord sequence! Megazord Battle Mode!
+     *
+     * The application-services combined libraries are known as the "megazord". We use the default `full`
+     * megazord - it contains everything that fenix needs, and (currently) nothing more.
+     *
+     * Documentation on what megazords are, and why they're needed:
+     * - https://github.com/mozilla/application-services/blob/master/docs/design/megazords.md
+     * - https://mozilla.github.io/application-services/docs/applications/consuming-megazord-libraries.html
+     *
+     * This is the initialization of the megazord without setting up networking, i.e. needing the
+     * engine for networking. This should do the minimum work necessary as it is done on the main
+     * thread, early in the app startup sequence.
+     */
+    private fun beginSetupMegazord() {
+        // Note: Megazord.init() must be called as soon as possible ...
+        // Megazord.init()
+
+        // ... but RustHttpConfig.setClient() and RustLog.enable() can be called later.
+
+        // Once application-services has switched to using the new
+        // error reporting system, RustLog shouldn't input a CrashReporter
+        // anymore.
+        // (https://github.com/mozilla/application-services/issues/4981).
+        RustLog.enable(components.crashReporter)
+    }
+
     @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
-    private fun initializeNativeComponents() {
+    private fun finishSetupMegazord() {
         GlobalScope.launch(Dispatchers.IO) {
             // We need to use an unwrapped client because native components do not support private
             // requests.
             @Suppress("Deprecation")
             RustHttpConfig.setClient(lazy { components.client.unwrap() })
-            RustLog.enable(components.crashReporter)
-            // We want to ensure Nimbus is initialized as early as possible so we can
-            // experiment on features close to startup.
-            // But we need viaduct (the RustHttp client) to be ready before we do.
-            components.experiments.initialize()
-            // This is the recommended way(Nimbus.api will be deprecated) to establish
-            // the connection between the Nimbus SDK (and thus the Nimbus server) and the generated code
-            FocusNimbus.initialize { components.experiments }
+
+            // Now viaduct (the RustHttp client) is initialized we can ask Nimbus to fetch
+            // experiments recipes from the server.
+            finishNimbusInitialization(components.experiments)
         }
     }
 

@@ -30,6 +30,8 @@ class TestFocusApplication : FocusApplication() {
     override val components: Components by lazy {
         Components(this, engineOverride = FakeEngine(), clientOverride = FakeClient())
     }
+
+    override fun initializeNimbus() = Unit
 }
 
 // Borrowed this from AC unit tests. This is something we should consider moving to support-test, so
