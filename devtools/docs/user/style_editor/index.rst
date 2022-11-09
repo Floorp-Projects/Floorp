@@ -24,7 +24,7 @@ The Style Editor is divided into three main sections:
 
 - :ref:`the style sheet pane on the left <style-editor-the-style-sheet-pane>`
 - :ref:`the editor on the right <style-editor-the-editor-pane>`
-- :ref:`the media sidebar <style-editor-the-media-sidebar>`
+- :ref:`the At-rules sidebar <style-editor-the-at-rules-sidebar>`
 
 
 .. _style-editor-the-style-sheet-pane:
@@ -56,17 +56,24 @@ The Style Editor supports autocomplete. Just start typing, and it will offer you
 You can switch autocomplete off in the :ref:`Style Editor settings <settings-style-editor>`.
 
 
-.. _style-editor-the-media-sidebar:
+.. _style-editor-the-at-rules-sidebar:
 
-The media sidebar
-*****************
+The At-rules sidebar
+********************
 
-The Style Editor displays a sidebar on the right-hand side whenever the current sheet contains any `@media rules <https://developer.mozilla.org/en-US/docs/Web/CSS/Media_Queries/Using_media_queries>`_. The sidebar lists the rules and provides a link to the line of the sheet where the rule is defined. Click an item to jump to that rule in the sheet. The condition text of the rule is greyed-out if the media query doesn’t currently apply.
+The Style Editor displays a sidebar on the right-hand side whenever the current sheet contains any of the following At-rules:
 
-.. image:: style-editor-media-sidebar-detail.png
+- `@media <https://developer.mozilla.org/en-US/docs/Web/CSS/Media_Queries/Using_media_queries>`_
+- `@supports <https://developer.mozilla.org/en-US/docs/Web/CSS/@supports>`_
+- `@layer <https://developer.mozilla.org/en-US/docs/Web/CSS/@layer>`_
+- `@container <https://developer.mozilla.org/en-US/docs/Web/CSS/Media_Queries/Using_media_queries>`_
+
+The sidebar lists the rules and provides a link to the line of the sheet where the rule is defined. Click an item to jump to that rule in the sheet. For ``@media`` rules, the condition text of the rule is greyed-out if the media query doesn’t currently apply.
+
+.. image:: style-editor-at-rules-sidebar-detail.png
   :class: center
 
-The media sidebar works especially well with :doc:`Responsive Design View <../responsive_design_mode/index>` for creating and debugging responsive layouts:
+The At-rules sidebar works especially well with :doc:`Responsive Design View <../responsive_design_mode/index>` for creating and debugging responsive layouts:
 
 .. raw:: html
 
@@ -102,7 +109,7 @@ Source maps enable the tools to map back from the generated CSS to the original 
 
 This means that if you use, for example, Sass, then the Style Editor will show you, and allow you to edit, Sass files, rather than the CSS that is generated from them:
 
-.. image:: style-editor-sourcemap-820.png
+.. image:: style-editor-sourcemap.png
   :class: center
 
 
