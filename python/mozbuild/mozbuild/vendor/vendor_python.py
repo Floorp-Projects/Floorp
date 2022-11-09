@@ -15,7 +15,6 @@ from mozbuild.base import MozbuildObject
 from mozfile import TemporaryDirectory
 from mozpack.files import FileFinder
 
-
 EXCLUDED_PACKAGES = {
     # dlmanager's package on PyPI only has metadata, but is missing the code.
     # https://github.com/parkouss/dlmanager/issues/1

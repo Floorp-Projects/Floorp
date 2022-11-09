@@ -41,13 +41,7 @@ endif
 # of cargo when running via `mach`.
 ifdef MACH_STDOUT_ISATTY
 ifeq (,$(findstring --color,$(cargo_build_flags)))
-ifeq (WINNT,$(HOST_OS_ARCH))
-# Bug 1417003: color codes are non-trivial on Windows.  For now,
-# prefer black and white to broken color codes.
-cargo_build_flags += --color=never
-else
 cargo_build_flags += --color=always
-endif
 endif
 endif
 
