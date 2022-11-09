@@ -179,8 +179,11 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
       return;
     }
 
+    // https://html.spec.whatwg.org/multipage/worklets.html#dom-worklet-addmodule
+    // Step 6.4.1. If script is null, then:
+    //   Step 1.1.2. Reject promise with an "AbortError" DOMException.
     if (!response->Ok()) {
-      RejectPromises(NS_ERROR_DOM_NETWORK_ERR);
+      RejectPromises(NS_ERROR_DOM_ABORT_ERR);
       return;
     }
 
