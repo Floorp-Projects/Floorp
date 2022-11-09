@@ -22,6 +22,14 @@ index 44acdee..6e01bed 100644
  	    -U__GNUC__ \
  	    -U__GNUC_MINOR__ \
  	    -U__GNUC_PATCHLEVEL__ \
+@@ -565,6 +567,7 @@ check-symbols: startup_files libc
+ 	    -U__BITINT_MAXWIDTH__ \
+ 	    -U__FLT_EVAL_METHOD__ -Wno-builtin-macro-redefined \
+ 	    | sed -e 's/__[[:upper:][:digit:]]*_ATOMIC_\([[:upper:][:digit:]_]*\)_LOCK_FREE/__compiler_ATOMIC_\1_LOCK_FREE/' \
++	    | sed -e 's/__GNUC_VA_LIST $$/__GNUC_VA_LIST 1/' \
+ 	    | grep -v '^#define __FLT16_' \
+ 	    | grep -v '^#define __\(BOOL\|INT_\(LEAST\|FAST\)\(8\|16\|32\|64\)\|INT\|LONG\|LLONG\|SHRT\)_WIDTH__' \
+ 	    > "$(SYSROOT_SHARE)/predefined-macros.txt"
 EOF
 
 mkdir -p build/install/wasi
