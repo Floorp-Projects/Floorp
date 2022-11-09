@@ -3,7 +3,7 @@
 [![CI](https://github.com/ron-rs/ron/actions/workflows/ci.yaml/badge.svg)](https://github.com/ron-rs/ron/actions/workflows/ci.yaml)
 [![codecov](https://img.shields.io/codecov/c/github/ron-rs/ron/codecov?token=x4Q5KA51Ul)](https://codecov.io/gh/ron-rs/ron)
 [![Crates.io](https://img.shields.io/crates/v/ron.svg)](https://crates.io/crates/ron)
-[![MSRV](https://img.shields.io/badge/MSRV-1.36.0-orange)](https://github.com/ron-rs/ron)
+[![MSRV](https://img.shields.io/badge/MSRV-1.56.0-orange)](https://github.com/ron-rs/ron)
 [![Docs](https://docs.rs/ron/badge.svg)](https://docs.rs/ron)
 [![Matrix](https://img.shields.io/matrix/ron-rs:matrix.org.svg)](https://matrix.to/#/#ron-rs:matrix.org)
 
@@ -13,7 +13,7 @@ structs, enums, tuples, arrays, generic maps, and primitive values.
 
 ## Example
 
-```rust
+```rust,ignore
 GameConfig( // optional struct name
     window_size: (800, 600),
     window_title: "PAC-MAN",
@@ -71,7 +71,7 @@ GameConfig( // optional struct name
 
 ### Same example in RON
 
-```rust
+```rust,ignore
 Scene( // class name is optional
     materials: { // this is a map
         "metal": (
@@ -107,6 +107,7 @@ Note the following advantages of RON over JSON:
 * Numbers: `42`, `3.14`, `0xFF`, `0b0110`
 * Strings: `"Hello"`, `"with\\escapes\n"`, `r#"raw string, great for regex\."#`
 * Booleans: `true`, `false`
+* Chars: `'e'`, `'\n'`
 * Optionals: `Some("string")`, `Some(Some(1.34))`, `None`
 * Tuples: `("abc", 1.23, true)`, `()`
 * Lists: `["abc", "def"]`
@@ -115,10 +116,38 @@ Note the following advantages of RON over JSON:
 
 > **Note:** Serde's data model represents fixed-size Rust arrays as tuple (instead of as list)
 
+## Quickstart
+
+### `Cargo.toml`
+
+```toml
+[dependencies]
+ron = "0.8"
+serde = { version = "1", features = ["derive"] }
+```
+
+### `main.rs`
+
+```rust
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Deserialize, Serialize)]
+struct MyStruct {
+    boolean: bool,
+    float: f32,
+}
+
+fn main() {
+    let x: MyStruct = ron::from_str("(boolean: true, float: 1.23)").unwrap();
+    
+    println!("RON: {}", ron::to_string(&x).unwrap());
+}
+```
+
 ## Tooling
 
 | Editor       | Plugin                                                      |
-|--------------|-------------------------------------------------------------|
+| ------------ | ----------------------------------------------------------- |
 | IntelliJ     | [intellij-ron](https://github.com/ron-rs/intellij-ron)      |
 | VS Code      | [a5huynh/vscode-ron](https://github.com/a5huynh/vscode-ron) |
 | Sublime Text | [RON](https://packagecontrol.io/packages/RON)               |

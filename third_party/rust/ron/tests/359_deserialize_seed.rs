@@ -46,11 +46,12 @@ fn test_deserialize_seed() {
 
     assert_eq!(
         ron::Options::default().from_str_seed("'a'", Seed(42)),
-        Err(ron::error::Error {
-            code: ron::ErrorCode::Message(String::from(
-                "invalid type: string \"a\", expected an integer"
-            )),
-            position: ron::error::Position { line: 0, col: 0 },
+        Err(ron::error::SpannedError {
+            code: ron::Error::InvalidValueForType {
+                expected: String::from("an integer"),
+                found: String::from("the string \"a\""),
+            },
+            position: ron::error::Position { line: 1, col: 4 },
         })
     );
 }
