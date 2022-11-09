@@ -243,7 +243,7 @@ class TestFileSystemManagerChild : public FileSystemManagerChild {
 
   MOCK_METHOD(
       void, SendGetAccessHandle,
-      (const FileSystemGetFileRequest& request,
+      (const FileSystemGetAccessHandleRequest& request,
        mozilla::ipc::ResolveCallback<FileSystemGetAccessHandleResponse>&&
            aResolve,
        mozilla::ipc::RejectCallback&& aReject),
