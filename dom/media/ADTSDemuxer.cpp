@@ -761,7 +761,6 @@ bool ADTSDemuxer::ADTSSniffer(const uint8_t* aData, const uint32_t aLength) {
   // header.
   uint64_t nextFrameHeaderOffset =
       currentFrame.Offset() + currentFrame.Length();
-  MOZ_ASSERT(aLength >= nextFrameHeaderOffset);
   return aLength > nextFrameHeaderOffset &&
          aLength - nextFrameHeaderOffset >= 2 &&
          adts::FrameHeader::MatchesSync(aData + nextFrameHeaderOffset);
