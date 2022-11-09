@@ -29,7 +29,6 @@ UNIFIED_SOURCES += [
     "nsMenuBarListener.cpp",
     "nsMenuFrame.cpp",
     "nsMenuPopupFrame.cpp",
-    "nsPopupSetFrame.cpp",
     "nsRepeatService.cpp",
     "nsScrollbarButtonFrame.cpp",
     "nsScrollbarFrame.cpp",

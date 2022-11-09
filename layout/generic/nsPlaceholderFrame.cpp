@@ -120,7 +120,7 @@ void nsPlaceholderFrame::Reflow(nsPresContext* aPresContext,
   // doesn't hold anyways because the default popupgroup goes before than the
   // default tooltip, for example).
   if (HasAnyStateBits(NS_FRAME_FIRST_REFLOW) &&
-      !HasAnyStateBits(PLACEHOLDER_FOR_POPUP) &&
+      !mOutOfFlowFrame->IsMenuPopupFrame() &&
       !mOutOfFlowFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     // Unfortunately, this can currently happen when the placeholder is in a
     // later continuation or later IB-split sibling than its out-of-flow (as
@@ -155,9 +155,6 @@ static nsIFrame::ChildListID ChildListIDForOutOfFlow(
   if (aPlaceholderState & PLACEHOLDER_FOR_FLOAT) {
     return nsIFrame::kFloatList;
   }
-  if (aPlaceholderState & PLACEHOLDER_FOR_POPUP) {
-    return nsIFrame::kPopupList;
-  }
   if (aPlaceholderState & PLACEHOLDER_FOR_FIXEDPOS) {
     return nsLayoutUtils::MayBeReallyFixedPos(aChild) ? nsIFrame::kFixedList
                                                       : nsIFrame::kAbsoluteList;
@@ -179,7 +176,8 @@ void nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot,
     // If aDestructRoot is not an ancestor of the out-of-flow frame,
     // then call RemoveFrame on it here.
     // Also destroy it here if it's a popup frame. (Bug 96291)
-    if (HasAnyStateBits(PLACEHOLDER_FOR_POPUP) ||
+    // FIXME(emilio): Is the popup special-case still needed?
+    if (oof->IsMenuPopupFrame() ||
         !nsLayoutUtils::IsProperAncestorFrame(aDestructRoot, oof)) {
       ChildListID listId = ChildListIDForOutOfFlow(GetStateBits(), oof);
       nsFrameManager* fm = PresContext()->FrameConstructor();
