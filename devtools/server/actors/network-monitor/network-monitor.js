@@ -192,11 +192,12 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
 
   onSetPreference({ data }) {
     if ("saveRequestAndResponseBodies" in data) {
-      this.observer.saveRequestAndResponseBodies =
-        data.saveRequestAndResponseBodies;
+      this.observer.setSaveRequestAndResponseBodies(
+        data.saveRequestAndResponseBodies
+      );
     }
     if ("throttleData" in data) {
-      this.observer.throttleData = data.throttleData;
+      this.observer.setThrottleData(data.throttleData);
     }
   },
 

@@ -102,7 +102,7 @@ class NetworkEventWatcher {
    *
    */
   getThrottleData() {
-    return this.listener.throttleData;
+    return this.listener.getThrottleData();
   }
 
   /**
@@ -112,7 +112,7 @@ class NetworkEventWatcher {
    *
    */
   setThrottleData(data) {
-    this.listener.throttleData = data;
+    this.listener.setThrottleData(data);
   }
 
   /**
@@ -120,7 +120,7 @@ class NetworkEventWatcher {
    * @param {Boolean} save
    */
   setSaveRequestAndResponseBodies(save) {
-    this.listener.saveRequestAndResponseBodies = save;
+    this.listener.setSaveRequestAndResponseBodies(save);
   }
 
   /**

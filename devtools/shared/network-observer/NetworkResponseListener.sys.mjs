@@ -416,16 +416,14 @@ export class NetworkResponseListener {
     }
 
     const channel = this.#httpActivity.channel;
-    const openResponse = this.#networkObserver.openResponses.getByChannelId(
-      channel.channelId
-    );
+    const openResponse = this.#networkObserver.getResponseByChannel(channel);
 
     if (!openResponse) {
       return;
     }
 
     this.#foundOpenResponse = true;
-    this.#networkObserver.openResponses.delete(channel);
+    this.#networkObserver.deleteResponseByChannel(channel);
 
     this.#httpActivity.owner.addResponseHeaders(openResponse.headers);
     this.#httpActivity.owner.addResponseCookies(openResponse.cookies);

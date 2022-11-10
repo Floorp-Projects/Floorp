@@ -173,23 +173,23 @@ export class NetworkObserver {
     );
   }
 
-  // TODO: Used by NetworkResponseListener, can be removed in favor of
-  // dedicated methods to get and remove responses.
-  get openResponses() {
-    return this.#openResponses;
+  getResponseByChannel(channel) {
+    return this.#openResponses.get(channel);
   }
 
-  // TODO: Can be replaced by an actual method, less error prone than a setter.
-  // Same comment for throttleData.
-  set saveRequestAndResponseBodies(save) {
+  deleteResponseByChannel(channel) {
+    return this.#openResponses.delete(channel);
+  }
+
+  setSaveRequestAndResponseBodies(save) {
     this.#saveRequestAndResponseBodies = save;
   }
 
-  get throttleData() {
+  getThrottleData() {
     return this.#throttleData;
   }
 
-  set throttleData(value) {
+  setThrottleData(value) {
     this.#throttleData = value;
     // Clear out any existing throttlers
     this.#throttler = null;
@@ -740,7 +740,7 @@ export class NetworkObserver {
    *        The HTTP activity object, or null if it is not found.
    */
   #findActivityObject(channel) {
-    return this.#openRequests.getByChannelId(channel.channelId);
+    return this.#openRequests.get(channel);
   }
 
   /**
