@@ -7,7 +7,6 @@
 #ifndef DOM_FS_FILESYSTEMSYNCACCESSHANDLE_H_
 #define DOM_FS_FILESYSTEMSYNCACCESSHANDLE_H_
 
-#include "mozilla/Logging.h"
 #include "mozilla/dom/PFileSystemManager.h"
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
@@ -16,7 +15,6 @@
 class nsIGlobalObject;
 
 namespace mozilla {
-extern LazyLogModule gOPFSLog;
 
 class ErrorResult;
 

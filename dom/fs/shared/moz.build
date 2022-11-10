@@ -6,11 +6,13 @@
 
 EXPORTS.mozilla.dom += [
     "FileSystemHelpers.h",
+    "FileSystemLog.h",
     "FileSystemTypes.h",
 ]
 
 UNIFIED_SOURCES += [
     "FileSystemHelpers.cpp",
+    "FileSystemLog.cpp",
 ]
 
 FINAL_LIBRARY = "xul"

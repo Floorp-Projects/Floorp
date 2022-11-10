@@ -10,6 +10,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Blob.h"
 #include "mozilla/dom/FileSystemHandle.h"
+#include "mozilla/dom/FileSystemLog.h"
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/FileSystemWritableFileStreamBinding.h"
 #include "mozilla/dom/FileSystemWritableFileStreamChild.h"
@@ -20,18 +21,6 @@
 #include "nsIInputStream.h"
 #include "nsNetUtil.h"
 #include "private/pprio.h"
-
-namespace mozilla {
-extern LazyLogModule gOPFSLog;
-}
-
-#define LOG(args) MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Verbose, args)
-
-#define LOG_VERBOSE(args) \
-  MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Verbose, args)
-
-#define LOG_DEBUG(args) \
-  MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Debug, args)
 
 namespace mozilla::dom {
 
@@ -396,6 +385,7 @@ void FileSystemWritableFileStream::Write(const T& aData,
                    WriteBuffer(maybeBuffer.extract(), aPosition),
                    rejectAndReturn);
 
+    LOG_VERBOSE(("WritableFileStream: Wrote %" PRId64, written));
     aPromise->MaybeResolve(written);
     return;
   }
@@ -415,6 +405,7 @@ void FileSystemWritableFileStream::Write(const T& aData,
     QM_TRY_INSPECT(const auto& written,
                    WriteStream(std::move(stream), aPosition), rejectAndReturn);
 
+    LOG_VERBOSE(("WritableFileStream: Wrote %" PRId64, written));
     aPromise->MaybeResolve(written);
     return;
   }
@@ -435,6 +426,7 @@ void FileSystemWritableFileStream::Write(const T& aData,
   QM_TRY_INSPECT(const auto& written, WriteBuffer(std::move(buffer), aPosition),
                  rejectAndReturn);
 
+  LOG_VERBOSE(("WritableFileStream: Wrote %" PRId64, written));
   aPromise->MaybeResolve(written);
 }
 
@@ -467,7 +459,7 @@ void FileSystemWritableFileStream::Truncate(uint64_t aSize,
   // Spec issues raised.
 
   // truncate filehandle (can extend with 0's)
-  LOG(("%p: Truncate to %" PRIu64, mFileDesc, aSize));
+  LOG_VERBOSE(("%p: Truncate to %" PRIu64, mFileDesc, aSize));
   if (NS_WARN_IF(NS_FAILED(TruncFile(mFileDesc, aSize)))) {
     aPromise->MaybeReject(NS_ErrorAccordingToNSPR());
     return;

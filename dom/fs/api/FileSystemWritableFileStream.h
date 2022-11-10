@@ -7,14 +7,12 @@
 #ifndef DOM_FS_FILESYSTEMWRITABLEFILESTREAM_H_
 #define DOM_FS_FILESYSTEMWRITABLEFILESTREAM_H_
 
-#include "mozilla/Logging.h"
 #include "mozilla/dom/PFileSystemManager.h"
 #include "mozilla/dom/WritableStream.h"
 
 class nsIGlobalObject;
 
 namespace mozilla {
-extern LazyLogModule gOPFSLog;
 
 template <typename T>
 class Buffer;

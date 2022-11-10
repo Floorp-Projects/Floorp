@@ -17,6 +17,7 @@
 #include "mozilla/dom/FileSystemFileHandle.h"
 #include "mozilla/dom/FileSystemHandle.h"
 #include "mozilla/dom/FileSystemHelpers.h"
+#include "mozilla/dom/FileSystemLog.h"
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/FileSystemManagerChild.h"
 #include "mozilla/dom/FileSystemSyncAccessHandle.h"
@@ -26,15 +27,6 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/ipc/RandomAccessStreamUtils.h"
-
-namespace mozilla {
-extern LazyLogModule gOPFSLog;
-}
-
-#define LOG(args) MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Verbose, args)
-
-#define LOG_DEBUG(args) \
-  MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Debug, args)
 
 namespace mozilla::dom::fs {
 
@@ -535,6 +527,7 @@ void FileSystemRequestHandler::GetEntries(
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aDirectory.IsEmpty());
   MOZ_ASSERT(aPromise);
+  LOG(("GetEntries, page %u", aPage));
 
   if (aManager->IsShutdown()) {
     aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
@@ -662,6 +655,7 @@ void FileSystemRequestHandler::Resolve(
   MOZ_ASSERT(!aEndpoints.parentId().IsEmpty());
   MOZ_ASSERT(!aEndpoints.childId().IsEmpty());
   MOZ_ASSERT(aPromise);
+  LOG(("Resolve"));
 
   if (aManager->IsShutdown()) {
     aError.Throw(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);

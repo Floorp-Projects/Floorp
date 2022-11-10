@@ -11,6 +11,7 @@
 #include "mozStorageHelper.h"
 #include "mozilla/dom/FileSystemDataManager.h"
 #include "mozilla/dom/FileSystemHandle.h"
+#include "mozilla/dom/FileSystemLog.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/PFileSystemManager.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
