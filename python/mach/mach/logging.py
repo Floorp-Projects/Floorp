@@ -17,8 +17,8 @@ import time
 
 import blessed
 import six
-from looseversion import LooseVersion as Version
 from mozbuild.util import mozilla_build_version
+from packaging.version import Version
 
 IS_WINDOWS = sys.platform.startswith("win")
 
