@@ -424,6 +424,8 @@ DIRS += [
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/base/log_severity_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/base/raw_logging_internal_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/base/throw_delegate_gn",
+    "/third_party/libwebrtc/third_party/abseil-cpp/absl/cleanup/cleanup_gn",
+    "/third_party/libwebrtc/third_party/abseil-cpp/absl/cleanup/cleanup_internal_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/container/compressed_tuple_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/container/flat_hash_map_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/container/inlined_vector_gn",
@@ -462,9 +464,7 @@ DIRS += [
 if CONFIG["OS_TARGET"] == "Android":
 
     DIRS += [
-        "/third_party/libwebrtc/rtc_base/ifaddrs_android_gn",
-        "/third_party/libwebrtc/third_party/abseil-cpp/absl/cleanup/cleanup_gn",
-        "/third_party/libwebrtc/third_party/abseil-cpp/absl/cleanup/cleanup_internal_gn"
+        "/third_party/libwebrtc/rtc_base/ifaddrs_android_gn"
     ]
 
 if CONFIG["OS_TARGET"] == "Darwin":
