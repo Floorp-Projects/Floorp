@@ -12,8 +12,6 @@
   preview/protections.ftl                          (../components/protections/content/protections.ftl)
   preview/interventions.ftl                        (../components/urlbar/content/interventions.ftl)
   preview/firefoxSuggest.ftl                       (../components/urlbar/content/firefoxSuggest.ftl)
-  preview/originControls.ftl                       (../components/extensions/originControls.ftl)
-  preview/unifiedExtensions.ftl                    (../components/extensions/unifiedExtensions.ftl)
   preview/identityCredentialNotification.ftl       (../components/credentialmanager/identityCredentialNotification.ftl)
   preview/protectionsPanel.ftl                     (../base/content/protectionsPanel.ftl)
   browser                                          (%browser/**/*.ftl)
