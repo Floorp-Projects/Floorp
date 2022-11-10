@@ -29,7 +29,7 @@ from io import BytesIO, StringIO
 from pathlib import Path
 
 import six
-from looseversion import LooseVersion as Version
+from packaging.version import Version
 
 MOZBUILD_METRICS_PATH = os.path.abspath(
     os.path.join(__file__, "..", "..", "metrics.yaml")
