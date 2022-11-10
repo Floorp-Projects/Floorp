@@ -23,4 +23,4 @@
 # don't change CLOBBER for WebIDL changes any more.
 
 
-Modified build files in third_party/libwebrtc - Bug 1790097 (MOZ) - update files in webrtc.json non_unified_sources
+Modified build files in third_party/libwebrtc - Bug 1790097 - Vendor libwebrtc from bf0da440ea
