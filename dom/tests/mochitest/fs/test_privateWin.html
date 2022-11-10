@@ -1,0 +1,58 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>OPFS private window test</title>
+
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+
+<script type="text/javascript">
+
+var mainWindow;
+
+function startTest() {
+  mainWindow = window.browsingContext.topChromeWindow;
+
+  doTest();
+}
+
+var contentPage = "http://mochi.test:8888/chrome/dom/fs/test/mochitest/page_blank.html";
+
+function testOnWindow(aIsPrivate, aCallback) {
+  var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
+  win.addEventListener("load", function() {
+    win.addEventListener("DOMContentLoaded", function onInnerLoad() {
+      if (win.content.location.href == "about:privatebrowsing") {
+        win.gBrowser.loadURI(contentPage, {
+           triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+        });
+        return;
+      }
+      win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
+      SimpleTest.executeSoon(function() { aCallback(win); });
+    }, true);
+  }, {capture: true, once: true});
+}
+
+function doTest() {
+  testOnWindow(true, function(privateWin) {
+    try {
+      let root = privateWin.navigator.storage.getDirectory();
+      ok(false, "Didn't block storage.getDirectory() in private browsing");
+    } catch(e) {
+      ok(true, "blocked storage.getDirectory() in private browsing");
+    }
+    privateWin.close();
+    SimpleTest.finish();
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body onload="startTest();">
+
+</body>
+</html>
