@@ -93,6 +93,12 @@ BASE_LINK = "http://gecko-docs.mozilla.org-l1.s3-website.us-west-2.amazonaws.com
 @CommandArgument(
     "--dump-trees", default=None, help="Dump the Sphinx trees to specified file."
 )
+@CommandArgument(
+    "--fatal-warnings",
+    dest="enable_fatal_warnings",
+    action="store_true",
+    help="Enable fatal warnings.",
+)
 @CommandArgument("--verbose", action="store_true", help="Run Sphinx in verbose mode")
 def build_docs(
     command_context,
@@ -108,6 +114,7 @@ def build_docs(
     write_url=None,
     linkcheck=None,
     dump_trees=None,
+    enable_fatal_warnings=False,
     verbose=None,
 ):
     # TODO: Bug 1704891 - move the ESLint setup tools to a shared place.
@@ -168,12 +175,13 @@ def build_docs(
     else:
         print("\nGenerated documentation:\n%s" % savedir)
 
-    fatal_warnings = _check_sphinx_warnings(warnings)
-    if fatal_warnings:
-        return die(
-            "failed to generate documentation:\n "
-            f"Got fatal warnings:\n{''.join(fatal_warnings)}"
-        )
+    if enable_fatal_warnings:
+        fatal_warnings = _check_sphinx_warnings(warnings)
+        if fatal_warnings:
+            return die(
+                "failed to generate documentation:\n "
+                f"Got fatal warnings:\n{''.join(fatal_warnings)}"
+            )
 
     # Upload the artifact containing the link to S3
     # This would be used by code-review to post the link to Phabricator
