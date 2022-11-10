@@ -99,12 +99,12 @@ bool FocusManager::IsFocused(const LocalAccessible* aAccessible) const {
   return false;
 }
 
-bool FocusManager::IsFocusWithin(const LocalAccessible* aContainer) const {
-  LocalAccessible* child = FocusedLocalAccessible();
+bool FocusManager::IsFocusWithin(const Accessible* aContainer) const {
+  Accessible* child = FocusedAccessible();
   while (child) {
     if (child == aContainer) return true;
 
-    child = child->LocalParent();
+    child = child->Parent();
   }
   return false;
 }
