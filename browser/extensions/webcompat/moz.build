@@ -70,6 +70,10 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["css"] += [
     "injections/css/bug1784351-movistar.com.ar-overflow-overlay-fix.css",
     "injections/css/bug1788685-microsoftedgetips.microsoft.com-gallery-fix.css",
     "injections/css/bug1789164-zdnet.com-cropped-section.css",
+    "injections/css/bug1799994-www.vivobarefoot.com-product-filters-fix.css",
+    "injections/css/bug1800000-www.honda.co.uk-choose-dealer-button-fix.css",
+    "injections/css/bug1800127-www.burgerking.es-webkit-fill-available-fix.css",
+    "injections/css/bug1800143-www.nintendo.co.jp-zoomed-in-image-scrolling-fix.css",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
@@ -90,8 +94,12 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug1774005-installtrigger-shim.js",
     "injections/js/bug1778239-m.pji.co.kr-banner-hide.js",
     "injections/js/bug1784302-effectiveType-shim.js",
-    "injections/js/bug1784309-bet365.com-math-pow.js",
     "injections/js/bug1787267-nintendo-window-OnetrustActiveGroups.js",
+    "injections/js/bug1795490-www.china-airlines.com-undisable-date-fields-on-mobile.js",
+    "injections/js/bug1799968-www.samsung.com-appVersion-linux-fix.js",
+    "injections/js/bug1799980-healow.com-infinite-loop-fix.js",
+    "injections/js/bug1800118-taszi.edupage.org-timetable-window.print-fix.js",
+    "injections/js/bug1800131-www.almosafer.com-undisable-date-fields.js",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [

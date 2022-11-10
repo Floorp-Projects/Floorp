@@ -581,6 +581,7 @@ const AVAILABLE_INJECTIONS = [
         "*://business.help.royalmail.com/app/webforms/*", // Bug 1786404
         "*://www.northcountrypublicradio.org/contact/subscribe.html*", // Bug 1778382,
         "*://www.schoolnutritionandfitness.com/*", // Bug 1793761
+        "*://mobilevikings.be/*/registration/*", // Bug 1797400
       ],
       js: [
         {
@@ -600,30 +601,6 @@ const AVAILABLE_INJECTIONS = [
       js: [
         {
           file: "injections/js/bug1784302-effectiveType-shim.js",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1784309",
-    platform: "all",
-    domain: "bet365.com",
-    bug: "1784309",
-    contentScripts: {
-      matches: [
-        "*://*.bet365.com/*",
-        "*://*.bet365.gr/*",
-        "*://*.bet365.com.au/*",
-        "*://*.bet365.de/*",
-        "*://*.bet365.es/*",
-        "*://*.bet365.ca/*",
-        "*://*.bet365.dk/*",
-        "*://*.bet365.mx/*",
-        "*://*.bet365.bet.ar/*",
-      ],
-      js: [
-        {
-          file: "injections/js/bug1784309-bet365.com-math-pow.js",
         },
       ],
     },
@@ -689,6 +666,8 @@ const AVAILABLE_INJECTIONS = [
         "*://*.nhcalaska.com/*",
         "*://*.securityproperties.com/*",
         "*://*.theloftsorlando.com/*",
+        "*://*.liveobserverpark.com/*", // #105244
+        "*://*.liveatlasathens.com/*", // #111189
       ],
       css: [
         {
@@ -768,6 +747,140 @@ const AVAILABLE_INJECTIONS = [
       css: [
         {
           file: "injections/css/bug1789164-zdnet.com-cropped-section.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1795490",
+    platform: "android",
+    domain: "www.china-airlines.com",
+    bug: "1795490",
+    contentScripts: {
+      matches: ["*://www.china-airlines.com/*"],
+      js: [
+        {
+          file:
+            "injections/js/bug1795490-www.china-airlines.com-undisable-date-fields-on-mobile.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1799968",
+    platform: "linux",
+    domain: "www.samsung.com",
+    bug: "1799968",
+    contentScripts: {
+      matches: ["*://www.samsung.com/*/watches/*/*"],
+      js: [
+        {
+          file:
+            "injections/js/bug1799968-www.samsung.com-appVersion-linux-fix.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1799980",
+    platform: "all",
+    domain: "healow.com",
+    bug: "1799980",
+    contentScripts: {
+      matches: ["*://healow.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1799980-healow.com-infinite-loop-fix.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1799994",
+    platform: "all",
+    domain: "www.vivobarefoot.com",
+    bug: "1799994",
+    contentScripts: {
+      matches: ["*://www.vivobarefoot.com/*"],
+      css: [
+        {
+          file:
+            "injections/css/bug1799994-www.vivobarefoot.com-product-filters-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1800000",
+    platform: "all",
+    domain: "www.honda.co.uk",
+    bug: "1800000",
+    contentScripts: {
+      matches: ["*://www.honda.co.uk/cars/book-a-service.html*"],
+      css: [
+        {
+          file:
+            "injections/css/bug1800000-www.honda.co.uk-choose-dealer-button-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1800118",
+    platform: "android",
+    domain: "taszi.edupage.org",
+    bug: "1800118",
+    contentScripts: {
+      matches: ["*://taszi.edupage.org/timetable/*"],
+      js: [
+        {
+          file:
+            "injections/js/bug1800118-taszi.edupage.org-timetable-window.print-fix.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1800127",
+    platform: "all",
+    domain: "www.burgerking.es",
+    bug: "1800127",
+    contentScripts: {
+      matches: ["*://www.burgerking.es/*"],
+      css: [
+        {
+          file:
+            "injections/css/bug1800127-www.burgerking.es-webkit-fill-available-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1800131",
+    platform: "all",
+    domain: "www.almosafer.com",
+    bug: "1800131",
+    contentScripts: {
+      matches: ["*://www.almosafer.com/mweb/flights-home*"],
+      js: [
+        {
+          file:
+            "injections/js/bug1800131-www.almosafer.com-undisable-date-fields.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1800143",
+    platform: "all",
+    domain: "www.nintendo.co.jp",
+    bug: "1800143",
+    contentScripts: {
+      matches: ["*://www.nintendo.co.jp/software/feature/*"],
+      css: [
+        {
+          file:
+            "injections/css/bug1800143-www.nintendo.co.jp-zoomed-in-image-scrolling-fix.css",
         },
       ],
     },

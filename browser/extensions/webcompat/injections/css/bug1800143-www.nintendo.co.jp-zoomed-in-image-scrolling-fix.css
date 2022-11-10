@@ -1,0 +1,11 @@
+/**
+ * www.nintendo.co.jp - Scrolling is interrupted on zoomed-in images
+ * Bug #1800143 - https://bugzilla.mozilla.org/show_bug.cgi?id=1800143
+ * WebCompat issue #108190 - https://webcompat.com/issues/108190
+ *
+ * The page is not adding a fallback for -webkit-user-drag: none,
+ * so we add pointer-events:none.
+ */
+.local-catalog__zoomImageContent img {
+  pointer-events: none;
+}
