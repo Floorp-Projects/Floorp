@@ -2512,6 +2512,8 @@ BrowserGlue.prototype = {
           lazy.NimbusFeatures.majorRelease2022.getVariable(
             "feltPrivacyWindowSeparation"
           ) &&
+          // We don't want a shortcut if it's been disabled, eg: by enterprise policy.
+          lazy.PrivateBrowsingUtils.enabled &&
           // Private Browsing shortcuts for packaged builds come with the package,
           // if they exist at all. We shouldn't try to create our own.
           !Services.sysinfo.getProperty("hasWinPackageId") &&
