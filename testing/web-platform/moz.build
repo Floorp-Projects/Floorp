@@ -456,6 +456,9 @@ with Files("tests/fonts/**"):
 with Files("tests/fonts/math/**"):
     BUG_COMPONENT = ("Core", "MathML")
 
+with Files("tests/fs/**"):
+    BUG_COMPONENT = ("Core", "DOM: File")
+
 with Files("tests/fullscreen/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
