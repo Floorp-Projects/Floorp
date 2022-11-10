@@ -53,8 +53,7 @@ uint16_t TraversalRule::Match(Accessible* aAcc) {
     return result;
   }
 
-  auto opacity = aAcc->Opacity();
-  if (opacity && *opacity == 0.0f) {
+  if (aAcc->Opacity() == 0.0f) {
     return result | nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
   }
 

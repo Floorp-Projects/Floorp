@@ -3555,9 +3555,9 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       fields->SetAttribute(nsGkAtoms::display, display);
     }
 
-    Maybe<float> opacity = Opacity();
-    if (opacity) {
-      fields->SetAttribute(nsGkAtoms::opacity, *opacity);
+    float opacity = Opacity();
+    if (opacity != 1.0f) {
+      fields->SetAttribute(nsGkAtoms::opacity, opacity);
     } else {
       fields->SetAttribute(nsGkAtoms::opacity, DeleteEntry());
     }
@@ -3833,12 +3833,12 @@ already_AddRefed<nsAtom> LocalAccessible::DisplayStyle() const {
   return nullptr;
 }
 
-Maybe<float> LocalAccessible::Opacity() const {
+float LocalAccessible::Opacity() const {
   if (nsIFrame* frame = GetFrame()) {
-    return Some(frame->StyleEffects()->mOpacity);
+    return frame->StyleEffects()->mOpacity;
   }
 
-  return Nothing();
+  return 1.0f;
 }
 
 void LocalAccessible::DOMNodeID(nsString& aID) const {
