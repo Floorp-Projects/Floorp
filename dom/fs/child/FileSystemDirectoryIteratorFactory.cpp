@@ -13,6 +13,7 @@
 #include "mozilla/dom/FileSystemDirectoryIterator.h"
 #include "mozilla/dom/FileSystemFileHandle.h"
 #include "mozilla/dom/FileSystemHandle.h"
+#include "mozilla/dom/FileSystemLog.h"
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/IterableIterator.h"
 #include "mozilla/dom/Promise.h"
@@ -121,6 +122,7 @@ class DoubleBufferQueueImpl
  protected:
   void next(nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
             RefPtr<Promise> aResult, ErrorResult& aError) {
+    LOG_VERBOSE(("next"));
     MOZ_ASSERT(aResult);
 
     Maybe<DataType> rawValue;

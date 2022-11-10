@@ -8,6 +8,7 @@
 
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/FileSystemDataManager.h"
+#include "mozilla/dom/FileSystemLog.h"
 #include "mozilla/dom/FileSystemManagerParent.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
@@ -16,15 +17,6 @@
 #include "mozilla/ipc/Endpoint.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsString.h"
-
-namespace mozilla {
-extern LazyLogModule gOPFSLog;
-}
-
-#define LOG(args) MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Verbose, args)
-
-#define LOG_DEBUG(args) \
-  MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Debug, args)
 
 namespace mozilla::dom {
 mozilla::ipc::IPCResult CreateFileSystemManagerParent(
@@ -70,6 +62,7 @@ mozilla::ipc::IPCResult CreateFileSystemManagerParent(
                       new FileSystemManagerParent(std::move(dataManager),
                                                   rootId);
 
+                  LOG(("Binding parent endpoint"));
                   if (!parentEndpoint.Bind(parent)) {
                     return CreateActorPromise::CreateAndReject(NS_ERROR_FAILURE,
                                                                __func__);

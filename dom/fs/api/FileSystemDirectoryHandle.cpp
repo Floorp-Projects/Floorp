@@ -13,6 +13,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FileSystemDirectoryHandleBinding.h"
 #include "mozilla/dom/FileSystemHandleBinding.h"
+#include "mozilla/dom/FileSystemLog.h"
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/PFileSystemManager.h"
 #include "mozilla/dom/Promise.h"
@@ -58,6 +59,7 @@ void FileSystemDirectoryHandle::InitAsyncIteratorData(
 
 already_AddRefed<Promise> FileSystemDirectoryHandle::GetNextIterationResult(
     FileSystemDirectoryHandle::iterator_t* aIterator, ErrorResult& aError) {
+  LOG_VERBOSE(("GetNextIterationResult"));
   return aIterator->Data().mImpl->Next(mGlobal, mManager, aError);
 }
 
@@ -131,6 +133,8 @@ already_AddRefed<Promise> FileSystemDirectoryHandle::Resolve(
   if (aError.Failed()) {
     return nullptr;
   }
+
+  LOG_VERBOSE(("Resolve"));
 
   fs::FileSystemEntryPair pair(mMetadata.entryId(),
                                aPossibleDescendant.GetId());

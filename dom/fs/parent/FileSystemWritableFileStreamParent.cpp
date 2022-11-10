@@ -7,6 +7,7 @@
 #include "FileSystemWritableFileStreamParent.h"
 
 #include "FileSystemDataManager.h"
+#include "mozilla/dom/FileSystemLog.h"
 #include "mozilla/dom/FileSystemManagerParent.h"
 
 namespace mozilla::dom {

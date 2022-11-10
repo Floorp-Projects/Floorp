@@ -11,6 +11,7 @@
 #include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/FileSystemAccessHandleParent.h"
 #include "mozilla/dom/FileSystemDataManager.h"
+#include "mozilla/dom/FileSystemLog.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/FileSystemWritableFileStreamParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
@@ -26,15 +27,6 @@
 #include "nsTArray.h"
 
 using IPCResult = mozilla::ipc::IPCResult;
-
-namespace mozilla {
-extern LazyLogModule gOPFSLog;
-}
-
-#define LOG(args) MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Verbose, args)
-
-#define LOG_DEBUG(args) \
-  MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Debug, args)
 
 namespace mozilla::dom {
 
@@ -142,7 +134,7 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
              aRequest.entryId(), type, lastModifiedMilliSeconds, path, file)),
          IPC_OK(), reportError);
 
-  if (MOZ_LOG_TEST(gOPFSLog, mozilla::LogLevel::Debug)) {
+  if (LOG_ENABLED()) {
     nsAutoString path;
     if (NS_SUCCEEDED(file->GetPath(path))) {
       LOG(("Opening SyncAccessHandle %s", NS_ConvertUTF16toUTF8(path).get()));
@@ -200,7 +192,7 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetWritable(
              aRequest.entryId(), type, lastModifiedMilliSeconds, path, file)),
          IPC_OK(), reportError);
 
-  if (MOZ_LOG_TEST(gOPFSLog, mozilla::LogLevel::Debug)) {
+  if (LOG_ENABLED()) {
     nsAutoString path;
     if (NS_SUCCEEDED(file->GetPath(path))) {
       LOG(("Opening Writable %s", NS_ConvertUTF16toUTF8(path).get()));
@@ -263,7 +255,7 @@ IPCResult FileSystemManagerParent::RecvGetFile(
              fileObject)),
          IPC_OK(), reportError);
 
-  if (MOZ_LOG_TEST(gOPFSLog, mozilla::LogLevel::Debug)) {
+  if (LOG_ENABLED()) {
     nsAutoString path;
     if (NS_SUCCEEDED(fileObject->GetPath(path))) {
       LOG(("Opening File as blob: %s", NS_ConvertUTF16toUTF8(path).get()));
@@ -305,6 +297,14 @@ IPCResult FileSystemManagerParent::RecvResolve(
       filePath,
       mDataManager->MutableDatabaseManagerPtr()->Resolve(aRequest.endpoints()),
       IPC_OK(), reportError);
+
+  if (LOG_ENABLED()) {
+    nsString path;
+    for (auto& entry : filePath) {
+      path.Append(entry);
+    }
+    LOG(("Resolve path: %s", NS_ConvertUTF16toUTF8(path).get()));
+  }
 
   if (filePath.IsEmpty()) {
     FileSystemResolveResponse response(Nothing{});

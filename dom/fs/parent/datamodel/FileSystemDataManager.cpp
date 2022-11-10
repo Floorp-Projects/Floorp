@@ -17,6 +17,7 @@
 #include "mozStorageCID.h"
 #include "mozilla/Result.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/dom/FileSystemLog.h"
 #include "mozilla/dom/FileSystemManagerParent.h"
 #include "mozilla/dom/quota/ClientImpl.h"
 #include "mozilla/dom/quota/DirectoryLock.h"
@@ -33,17 +34,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
-
-namespace mozilla {
-extern LazyLogModule gOPFSLog;
-}
-
-#define LOG(args) MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Verbose, args)
-
-#define LOG_DEBUG(args) \
-  MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Debug, args)
-#define LOG_VERBOSE(args) \
-  MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Verbose, args)
 
 namespace mozilla::dom::fs::data {
 

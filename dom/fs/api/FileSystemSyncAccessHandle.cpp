@@ -13,6 +13,7 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/dom/FileSystemAccessHandleChild.h"
 #include "mozilla/dom/FileSystemHandleBinding.h"
+#include "mozilla/dom/FileSystemLog.h"
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/FileSystemSyncAccessHandleBinding.h"
 #include "mozilla/dom/Promise.h"
@@ -24,16 +25,6 @@
 #include "nsNetCID.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
-
-namespace mozilla {
-
-LazyLogModule gOPFSLog("OPFS");
-
-}
-#define LOG(args) MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Verbose, args)
-
-#define LOG_DEBUG(args) \
-  MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Debug, args)
 
 namespace mozilla::dom {
 
@@ -209,7 +200,7 @@ already_AddRefed<Promise> FileSystemSyncAccessHandle::Truncate(
     return promise.forget();
   };
 
-  LOG_DEBUG(("%p: Truncate to %" PRIu64, mStream.get(), aSize));
+  LOG(("%p: Truncate to %" PRIu64, mStream.get(), aSize));
 
   QM_TRY(MOZ_TO_RESULT(mStream->Seek(nsISeekableStream::NS_SEEK_SET, aSize)),
          rejectAndReturn);
@@ -247,7 +238,7 @@ already_AddRefed<Promise> FileSystemSyncAccessHandle::GetSize(
                  MOZ_TO_RESULT_INVOKE_MEMBER(fileMetadata, GetSize),
                  rejectAndReturn);
 
-  LOG_DEBUG(("%p: GetSize %" PRIu64, mStream.get(), size));
+  LOG(("%p: GetSize %" PRIu64, mStream.get(), size));
 
   promise->MaybeResolve(size);
   return promise.forget();
@@ -270,7 +261,7 @@ already_AddRefed<Promise> FileSystemSyncAccessHandle::Flush(
     return promise.forget();
   };
 
-  LOG_DEBUG(("%p: Flush", mStream.get()));
+  LOG(("%p: Flush", mStream.get()));
 
   QM_TRY(MOZ_TO_RESULT(mStream->OutputStream()->Flush()), rejectAndReturn);
 
@@ -317,7 +308,7 @@ uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
   const auto offset = CheckedInt<int64_t>(at);
   QM_TRY(MOZ_TO_RESULT(offset.isValid()), throwAndReturn);
 
-  LOG(("%p: Seeking to %" PRIu64, mStream.get(), offset.value()));
+  LOG_VERBOSE(("%p: Seeking to %" PRIu64, mStream.get(), offset.value()));
 
   QM_TRY(MOZ_TO_RESULT(
              mStream->Seek(nsISeekableStream::NS_SEEK_SET, offset.value())),
@@ -339,13 +330,13 @@ uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
   nsCOMPtr<nsIOutputStream> outputStream;
 
   if (aRead) {
-    LOG(("%p: Reading %zu bytes", mStream.get(), dataSpan.Length()));
+    LOG_VERBOSE(("%p: Reading %zu bytes", mStream.get(), dataSpan.Length()));
 
     inputStream = mStream->InputStream();
 
     outputStream = FixedBufferOutputStream::Create(AsWritableChars(dataSpan));
   } else {
-    LOG(("%p: Writing %zu bytes", mStream.get(), dataSpan.Length()));
+    LOG_VERBOSE(("%p: Writing %zu bytes", mStream.get(), dataSpan.Length()));
 
     QM_TRY(MOZ_TO_RESULT(NS_NewByteInputStream(getter_AddRefs(inputStream),
                                                AsChars(dataSpan),
