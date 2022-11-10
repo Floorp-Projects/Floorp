@@ -620,8 +620,6 @@ toolbar[brighttext] {
   --tab-attention-icon-color: var(--lwt-tab-attention-icon-color, rgb(84,255,189));
 }
 
-/* Please keep this attention UI in sync with the one defined in
- * browser/themes/shared/addons/unified-extensions-item.css */
 .tabbrowser-tab:is([image], [pinned]) > .tab-stack > .tab-content[attention]:not([selected="true"]),
 .tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([selected="true"]),
 #firefox-view-button[attention] {

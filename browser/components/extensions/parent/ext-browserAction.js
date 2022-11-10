@@ -61,6 +61,13 @@ XPCOMUtils.defineLazyGetter(this, "browserAreas", () => {
   };
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gUnifiedExtensionsEnabled",
+  "extensions.unifiedExtensions.enabled",
+  false
+);
+
 function actionWidgetId(widgetId) {
   return `${widgetId}-browser-action`;
 }
@@ -219,7 +226,37 @@ this.browserAction = class extends ExtensionAPIPersistent {
         // Ensure the extension context menuitems are available by setting this
         // on all button children and the item.
         button.setAttribute("data-extensionid", extension.id);
-        button.classList.add("toolbarbutton-1");
+        button.classList.add(
+          "toolbarbutton-1",
+          "unified-extensions-item-action",
+          "subviewbutton"
+        );
+
+        if (gUnifiedExtensionsEnabled) {
+          let contents = document.createXULElement("vbox");
+          contents.classList.add("unified-extensions-item-contents");
+          contents.setAttribute("move-after-stack", "true");
+
+          let name = document.createXULElement("label");
+          name.classList.add("unified-extensions-item-name");
+          contents.appendChild(name);
+
+          let messageDefault = document.createXULElement("label");
+          messageDefault.classList.add(
+            "unified-extensions-item-message",
+            "unified-extensions-item-message-default"
+          );
+          contents.appendChild(messageDefault);
+
+          let messageHover = document.createXULElement("label");
+          messageHover.classList.add(
+            "unified-extensions-item-message",
+            "unified-extensions-item-message-hover"
+          );
+          contents.appendChild(messageHover);
+
+          button.appendChild(contents);
+        }
 
         let cog = document.createXULElement("toolbarbutton");
         cog.classList.add(
@@ -234,6 +271,10 @@ this.browserAction = class extends ExtensionAPIPersistent {
         cog.setAttribute("data-extensionid", extension.id);
 
         let node = document.createXULElement("toolbaritem");
+        node.setAttribute(
+          "unified-extensions",
+          String(gUnifiedExtensionsEnabled)
+        );
         node.classList.add(
           "toolbaritem-combined-buttons",
           "unified-extensions-item"
@@ -301,10 +342,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
         this.openPopupWithoutUserInteraction =
           event.detail?.openPopupWithoutUserInteraction === true;
 
-        // TODO: use class name when we update the style of the extensions in
-        // the panel, see Bug 1798324. For now, the first element is always the
-        // main/action button.
-        if (event.target == node.firstElementChild) {
+        if (event.target.classList.contains("unified-extensions-item-action")) {
           return "view";
         } else if (
           event.target.classList.contains("unified-extensions-item-open-menu")
@@ -686,6 +724,12 @@ this.browserAction = class extends ExtensionAPIPersistent {
       // This is set on the node so that it looks good in the toolbar.
       node.toggleAttribute("attention", attention);
 
+      if (gUnifiedExtensionsEnabled) {
+        button.querySelector(
+          ".unified-extensions-item-name"
+        ).textContent = this.extension?.name;
+      }
+
       if (tabData.badgeText) {
         button.setAttribute("badge", tabData.badgeText);
       } else {
@@ -736,6 +780,17 @@ this.browserAction = class extends ExtensionAPIPersistent {
 
     let icon16 = IconDetails.getPreferredIcon(icons, this.extension, 16).icon;
     let icon32 = IconDetails.getPreferredIcon(icons, this.extension, 32).icon;
+    let icon64 = IconDetails.getPreferredIcon(icons, this.extension, 64).icon;
+
+    if (gUnifiedExtensionsEnabled) {
+      return `
+        ${getStyle("menupanel-image", icon16)}
+        ${getStyle("menupanel-image-2x", icon32)}
+        ${getStyle("toolbar-image", icon32)}
+        ${getStyle("toolbar-image-2x", icon64)}
+      `;
+    }
+
     return `
       ${getStyle("menupanel-image", icon16)}
       ${getStyle("menupanel-image-2x", icon32)}

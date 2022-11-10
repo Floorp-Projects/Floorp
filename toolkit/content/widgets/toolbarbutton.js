@@ -161,7 +161,11 @@
         if (moveChildren.length) {
           let { badgeStack, icon } = this;
           for (let child of moveChildren) {
-            badgeStack.insertBefore(child, icon);
+            if (child.getAttribute("move-after-stack") === "true") {
+              this.appendChild(child);
+            } else {
+              badgeStack.insertBefore(child, icon);
+            }
           }
         }
       } else {
