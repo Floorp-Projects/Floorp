@@ -546,6 +546,13 @@ void nsHTMLCanvasFrame::AppendDirectlyOwnedAnonBoxes(
   aResult.AppendElement(OwnedAnonBox(mFrames.FirstChild()));
 }
 
+void nsHTMLCanvasFrame::UnionChildOverflow(
+    mozilla::OverflowAreas& aOverflowAreas) {
+  // Our one child (the canvas content anon box) is unpainted and isn't relevant
+  // for child-overflow purposes. So we need to provide our own trivial impl to
+  // avoid receiving the child-considering impl that we would otherwise inherit.
+}
+
 #ifdef ACCESSIBILITY
 a11y::AccType nsHTMLCanvasFrame::AccessibleType() {
   return a11y::eHTMLCanvasType;
