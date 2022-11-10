@@ -364,10 +364,6 @@
     <!-- Explanation text above the list of search engines-->
     <string name="preference_select_preferred_engine">เลือกเครื่องมือที่คุณต้องการ:</string>
 
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">แสดงเคล็ดลับหน้าจอหลัก</string>
-
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">เพิ่มเครื่องมือค้นหา</string>
 
@@ -510,6 +506,17 @@
 
     <!-- New Onboarding flow first screen button label-->
     <string name="onboarding_first_screen_button_text">เริ่มต้นใช้งาน</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s ไม่เหมือนบราวเซอร์อื่นๆ</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">เราล้างประวัติของคุณเมื่อคุณปิดแอพเพื่อความเป็นส่วนตัวกว่าปกติ</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">ทำให้ %1$s เป็นค่าเริ่มต้นของคุณเพื่อปกป้องข้อมูลของคุณด้วยทุกลิงก์ที่คุณเปิด</string>
 
     <!-- New Onboarding flow second screen make Focus default browser button label-->
     <string name="onboarding_second_screen_default_browser_button_text">ตั้งเป็นเบราว์เซอร์เริ่มต้น</string>
@@ -777,10 +784,6 @@
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">การดีบั๊กระยะไกลผ่าน USB/Wi-Fi</string>
 
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string moz:removedIn="103" name="biometric_auth_title">ปลดล็อค %1$s</string>
-
     <!-- Text Button for show biometric prompt -->
     <string name="show_biometric_button_text">ปลดล็อก</string>
 
@@ -789,13 +792,6 @@
 
     <!-- Subtitle text for biometric prompt pop-up -->
     <string name="biometric_prompt_subtitle">คุณสามารถใช้ลายนิ้วมือเพื่อใช้งานแอปปัจจุบันต่อได้</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string moz:removedIn="103" name="biometric_auth_description">สัมผัสเซนเซอร์ลายนิ้วมือเพื่อดำเนินการต่อ</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string moz:removedIn="103" name="biometric_auth_new_session">วาระใหม่</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -837,11 +833,6 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">ไซต์ทำงานอย่างไม่คาดคิด?\n ลองปิดการป้องกันการติดตาม</string>
 
-    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
-The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">ไซต์ไม่มีเนื้อหาอะไรเลยหรือทำงานแปลก ๆ?\n
-    ลองปิดการป้องกันการติดตามที่มากขึ้น</string>
-
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[รับการเข้าถึงด้วยการแตะครั้งเดียวไปยังไซต์ที่คุณใช้มากที่สุด%1$s เมนู > เพิ่มไปยังหน้าจอหลัก]]></string>
@@ -859,28 +850,8 @@ The new line here must be kept as the second half of the string is clickable for
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">เปิดลิงก์ในแท็บใหม่\n แตะค้างที่ลิงก์ใด ๆ ในหน้า</string>
 
-    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-      %1$s is a placeholder for the app name. -->
-    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">ต้องการดูเว็บไซต์รุ่นเต็มหรือไม่?\n
-        เปิด ไซต์เดสก์ท็อป จากเมนู %1$s</string>
-
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">ปิดเคล็ดลับในหน้าจอเริ่มต้น</string>
-
-    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
-     "Allowlist" is a replacement for the word whitelist. -->
-    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">ต้องการปิดการป้องกันการติดตามที่มากขึ้นสำหรับไซต์ที่คุณเชื่อถือหรือไม่?\n
-        เพิ่มลงในรายการอนุญาตในการตั้งค่า
-    </string>
-
-    <!-- Tip displayed on the home view about the changes in the new release.
-    %1$s is a placeholder for the app name -->
-    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">ใช่ เรามีรูปลักษณ์โฉมใหม่แล้ว!\n อ่านเพิ่มเติมเกี่ยวกับสิ่งนี้และการอัปเดตอื่น ๆ ของ %1$s</string>
-
-    <!-- Tip displayed on the home view about shortcuts
-    %1$s is a placeholder for the app name -->
-    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">สร้างทางลัดไปยังไซต์ที่คุณเข้าชมบ่อยที่สุด:\n
-    เลือก เพิ่มทางลัด จากเมนู %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">เปิดแท็บใหม่แล้ว</string>
@@ -1000,7 +971,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">ดูเหมือนว่าไซต์นี้พยายามจะตามรอยคุณ คลิกที่โล่สำหรับการตั้งค่าไซต์และสถิติการปิดกั้นตัวติดตาม</string>
+    <string name="cfr_for_toolbar_shield_icon2">จับได้แล้ว! เราได้หยุดไซต์นี้ไม่ให้สอดแนมคุณแล้ว แตะโล่เพื่อดูข้อมูลเกี่ยวกับสิ่งที่เรากำลังปิดกั้น</string>
 
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">ปิดป๊อปอัป</string>
@@ -1014,7 +985,7 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">ปิด</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">กำจัดข้อมูลส่วนตัว ประวัติการเรียกดู และอื่น ๆ จากวาระนี้โดยแตะที่ปุ่มถังขยะ ลองดูสิ!</string>
+    <string name="cfr_for_toolbar_delete_icon2">แตะที่นี่เพื่อทิ้งทุกอย่าง — ประวัติ คุกกี้ ทุกอย่าง — และเริ่มต้นใหม่ในแท็บใหม่</string>
 
     <!-- Promote SearchWidget Dialog -->
 
@@ -1031,6 +1002,10 @@ The new line here must be kept as the second half of the string is clickable for
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">เราจะปล่อยให้คุณท่องเว็บแบบส่วนตัว แต่เริ่มต้นในครั้งต่อไปเร็วขึ้นด้วยวิดเจ็ต %1$s บนหน้าโฮมของคุณ</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
     <string name="promote_search_widget_button_text">เพิ่มวิดเจ็ตไปที่หน้าจอหลัก</string>
 
     !-- This is te text of the snackbar that appears after the search widget was added successfully
