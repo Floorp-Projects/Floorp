@@ -290,7 +290,14 @@ void nsHttpConnection::StartSpdy(nsISSLSocketControl* sslControl,
 
   if (!mReportedSpdy) {
     mReportedSpdy = true;
-    gHttpHandler->ConnMgr()->ReportSpdyConnection(this, true);
+    // See bug 1797729.
+    // It's possible that we already have a HTTP/3 connection that can be
+    // coleased with this connection. We should avoid coalescing with the
+    // existing HTTP/3 connection if the transaction doesn't allow to use
+    // HTTP/3.
+    bool disallowHttp3 =
+        mTransaction ? mTransaction->Caps() & NS_HTTP_DISALLOW_HTTP3 : false;
+    gHttpHandler->ConnMgr()->ReportSpdyConnection(this, true, disallowHttp3);
   }
 
   // Setting the connection as reused allows some transactions that fail
@@ -1544,7 +1551,7 @@ nsresult nsHttpConnection::OnSocketWritable() {
           if (!mReportedSpdy && mTlsHandshaker->NPNComplete()) {
             mReportedSpdy = true;
             MOZ_ASSERT(!mEverUsedSpdy);
-            gHttpHandler->ConnMgr()->ReportSpdyConnection(this, false);
+            gHttpHandler->ConnMgr()->ReportSpdyConnection(this, false, false);
           }
 
           LOG(("  writing transaction request stream\n"));
