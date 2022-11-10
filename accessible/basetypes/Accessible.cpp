@@ -520,6 +520,11 @@ void Accessible::ApplyImplicitState(uint64_t& aState) const {
       }
     }
   }
+
+  Maybe<float> opacity = Opacity();
+  if (opacity && *opacity == 1.0f && !(aState & states::INVISIBLE)) {
+    aState |= states::OPAQUE1;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
