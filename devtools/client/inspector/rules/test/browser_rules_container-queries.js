@@ -90,6 +90,7 @@ add_task(async function() {
   });
 
   await assertQueryContainerTooltip({
+    inspector,
     view,
     ruleIndex: 1,
     expectedHeaderText: "<body#myBody.a-container.test>",
@@ -122,6 +123,7 @@ add_task(async function() {
     "Check that the query container tooltip works as expected for inherited rules as well"
   );
   await assertQueryContainerTooltip({
+    inspector,
     view,
     ruleIndex: 1,
     expectedHeaderText: "<section>",
@@ -131,6 +133,7 @@ add_task(async function() {
     ],
   });
   await assertQueryContainerTooltip({
+    inspector,
     view,
     ruleIndex: 2,
     expectedHeaderText: "<body#myBody.a-container.test>",
@@ -249,6 +252,7 @@ async function assertJumpToContainerButton(
 }
 
 async function assertQueryContainerTooltip({
+  inspector,
   view,
   ruleIndex,
   expectedHeaderText,
@@ -262,8 +266,16 @@ async function assertQueryContainerTooltip({
   // Ensure that the element can be targetted from EventUtils.
   tooltipTriggerEl.scrollIntoView();
 
-  const tooltip = view.tooltips.getTooltip("interactiveTooltip");
+  const {
+    waitForHighlighterTypeShown,
+    waitForHighlighterTypeHidden,
+  } = getHighlighterTestHelpers(inspector);
 
+  const onNodeHighlight = waitForHighlighterTypeShown(
+    inspector.highlighters.TYPES.BOXMODEL
+  );
+
+  const tooltip = view.tooltips.getTooltip("interactiveTooltip");
   const onTooltipReady = tooltip.once("shown");
   EventUtils.synthesizeMouseAtCenter(
     tooltipTriggerEl,
@@ -271,6 +283,7 @@ async function assertQueryContainerTooltip({
     tooltipTriggerEl.ownerDocument.defaultView
   );
   await onTooltipReady;
+  await onNodeHighlight;
 
   is(
     tooltip.panel.querySelector("header").textContent,
@@ -285,6 +298,9 @@ async function assertQueryContainerTooltip({
 
   info("Hide the tooltip");
   const onHidden = tooltip.once("hidden");
+  const onNodeUnhighlight = waitForHighlighterTypeHidden(
+    inspector.highlighters.TYPES.BOXMODEL
+  );
   // Move the mouse elsewhere to hide the tooltip
   EventUtils.synthesizeMouse(
     tooltipTriggerEl.ownerDocument.body,
@@ -294,4 +310,5 @@ async function assertQueryContainerTooltip({
     tooltipTriggerEl.ownerDocument.defaultView
   );
   await onHidden;
+  await onNodeUnhighlight;
 }
