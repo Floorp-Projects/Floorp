@@ -839,7 +839,8 @@ class MediaDecoderStateMachine::DecodingState
  *   SEEKING if any seek request.
  *   SHUTDOWN if any decode error.
  *   BUFFERING if playback can't continue due to lack of decoded data.
- *   COMPLETED when having decoded all audio data.
+ *   COMPLETED when the media resource is closed and no data is available
+ *             anymore.
  *   DECODING when media stops seamless looping.
  */
 class MediaDecoderStateMachine::LoopingDecodingState
