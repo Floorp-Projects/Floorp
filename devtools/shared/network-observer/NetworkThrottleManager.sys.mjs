@@ -27,31 +27,39 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
-/**
- * Construct a new nsIStreamListener that buffers data and provides a
- * method to notify another listener when data is available.  This is
- * used to throttle network data on a per-channel basis.
- *
- * After construction, @see setOriginalListener must be called on the
- * new object.
- *
- * @param {NetworkThrottleQueue} queue the NetworkThrottleQueue to
- *        which status changes should be reported
- */
-function NetworkThrottleListener(queue) {
-  this.queue = queue;
-  this.pendingData = [];
-  this.pendingException = null;
-  this.offset = 0;
-  this.responseStarted = false;
-  this.activities = {};
-}
+class NetworkThrottleListener {
+  #activities;
+  #offset;
+  #originalListener;
+  #pendingData;
+  #pendingException;
+  #queue;
+  #responseStarted;
 
-NetworkThrottleListener.prototype = {
-  QueryInterface: ChromeUtils.generateQI([
-    "nsIStreamListener",
-    "nsIInterfaceRequestor",
-  ]),
+  /**
+   * Construct a new nsIStreamListener that buffers data and provides a
+   * method to notify another listener when data is available.  This is
+   * used to throttle network data on a per-channel basis.
+   *
+   * After construction, @see setOriginalListener must be called on the
+   * new object.
+   *
+   * @param {NetworkThrottleQueue} queue the NetworkThrottleQueue to
+   *        which status changes should be reported
+   */
+  constructor(queue) {
+    this.QueryInterface = ChromeUtils.generateQI([
+      "nsIStreamListener",
+      "nsIInterfaceRequestor",
+    ]);
+
+    this.#activities = {};
+    this.#offset = 0;
+    this.#pendingData = [];
+    this.#pendingException = null;
+    this.#queue = queue;
+    this.#responseStarted = false;
+  }
 
   /**
    * Set the original listener for this object.  The original listener
@@ -62,31 +70,31 @@ NetworkThrottleListener.prototype = {
    *        for the channel, to which all requests will be sent
    */
   setOriginalListener(originalListener) {
-    this.originalListener = originalListener;
-  },
+    this.#originalListener = originalListener;
+  }
 
   /**
    * @see nsIStreamListener.onStartRequest.
    */
   onStartRequest(request) {
-    this.originalListener.onStartRequest(request);
-    this.queue.start(this);
-  },
+    this.#originalListener.onStartRequest(request);
+    this.#queue.start(this);
+  }
 
   /**
    * @see nsIStreamListener.onStopRequest.
    */
   onStopRequest(request, statusCode) {
-    this.pendingData.push({ request, statusCode });
-    this.queue.dataAvailable(this);
-  },
+    this.#pendingData.push({ request, statusCode });
+    this.#queue.dataAvailable(this);
+  }
 
   /**
    * @see nsIStreamListener.onDataAvailable.
    */
   onDataAvailable(request, inputStream, offset, count) {
-    if (this.pendingException) {
-      throw this.pendingException;
+    if (this.#pendingException) {
+      throw this.#pendingException;
     }
 
     const bin = new BinaryInputStream(inputStream);
@@ -96,9 +104,9 @@ NetworkThrottleListener.prototype = {
     const stream = new ArrayBufferInputStream();
     stream.setData(bytes, 0, count);
 
-    this.pendingData.push({ request, stream, count });
-    this.queue.dataAvailable(this);
-  },
+    this.#pendingData.push({ request, stream, count });
+    this.#queue.dataAvailable(this);
+  }
 
   /**
    * Allow some buffered data from this object to be forwarded to this
@@ -114,16 +122,16 @@ NetworkThrottleListener.prototype = {
    *         all available data has been sent.)
    */
   sendSomeData(bytesPermitted) {
-    if (this.pendingData.length === 0) {
+    if (this.#pendingData.length === 0) {
       // Shouldn't happen.
       return { length: 0, done: true };
     }
 
-    const { request, stream, count, statusCode } = this.pendingData[0];
+    const { request, stream, count, statusCode } = this.#pendingData[0];
 
     if (statusCode !== undefined) {
-      this.pendingData.shift();
-      this.originalListener.onStopRequest(request, statusCode);
+      this.#pendingData.shift();
+      this.#originalListener.onStopRequest(request, statusCode);
       return { length: 0, done: true };
     }
 
@@ -132,38 +140,38 @@ NetworkThrottleListener.prototype = {
     }
 
     try {
-      this.originalListener.onDataAvailable(
+      this.#originalListener.onDataAvailable(
         request,
         stream,
-        this.offset,
+        this.#offset,
         bytesPermitted
       );
     } catch (e) {
-      this.pendingException = e;
+      this.#pendingException = e;
     }
 
     let done = false;
     if (bytesPermitted === count) {
-      this.pendingData.shift();
+      this.#pendingData.shift();
       done = true;
     } else {
-      this.pendingData[0].count -= bytesPermitted;
+      this.#pendingData[0].count -= bytesPermitted;
     }
 
-    this.offset += bytesPermitted;
+    this.#offset += bytesPermitted;
     // Maybe our state has changed enough to emit an event.
-    this.maybeEmitEvents();
+    this.#maybeEmitEvents();
 
     return { length: bytesPermitted, done };
-  },
+  }
 
   /**
    * Return the number of pending data requests available for this
    * listener.
    */
   pendingCount() {
-    return this.pendingData.length;
-  },
+    return this.#pendingData.length;
+  }
 
   /**
    * This is called when an http activity event is delivered.  This
@@ -188,7 +196,7 @@ NetworkThrottleListener.prototype = {
       extraSizeData,
       extraStringData,
     };
-    this.activities[activitySubtype] = datum;
+    this.#activities[activitySubtype] = datum;
 
     if (
       activitySubtype ===
@@ -197,17 +205,17 @@ NetworkThrottleListener.prototype = {
       this.totalSize = extraSizeData;
     }
 
-    this.maybeEmitEvents();
-  },
+    this.#maybeEmitEvents();
+  }
 
   /**
    * This is called for a download throttler when the latency timeout
    * has ended.
    */
   responseStart() {
-    this.responseStarted = true;
-    this.maybeEmitEvents();
-  },
+    this.#responseStarted = true;
+    this.#maybeEmitEvents();
+  }
 
   /**
    * Check our internal state and emit any http activity events as
@@ -217,30 +225,32 @@ NetworkThrottleListener.prototype = {
    * data from the original event, and update the reported time to be
    * consistent with the delay we're introducing.
    */
-  maybeEmitEvents() {
-    if (this.responseStarted) {
-      this.maybeEmit(lazy.gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_START);
-      this.maybeEmit(
+  #maybeEmitEvents() {
+    if (this.#responseStarted) {
+      this.#maybeEmit(
+        lazy.gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_START
+      );
+      this.#maybeEmit(
         lazy.gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_HEADER
       );
     }
 
-    if (this.totalSize !== undefined && this.offset >= this.totalSize) {
-      this.maybeEmit(
+    if (this.totalSize !== undefined && this.#offset >= this.totalSize) {
+      this.#maybeEmit(
         lazy.gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE
       );
-      this.maybeEmit(
+      this.#maybeEmit(
         lazy.gActivityDistributor.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE
       );
     }
-  },
+  }
 
   /**
    * Emit an event for |code|, if the appropriate entry in
    * |activities| is defined.
    */
-  maybeEmit(code) {
-    if (this.activities[code] !== undefined) {
+  #maybeEmit(code) {
+    if (this.#activities[code] !== undefined) {
       const {
         callback,
         httpActivity,
@@ -249,7 +259,7 @@ NetworkThrottleListener.prototype = {
         activitySubtype,
         extraSizeData,
         extraStringData,
-      } = this.activities[code];
+      } = this.#activities[code];
       const now = Date.now() * 1000;
       callback(
         httpActivity,
@@ -260,56 +270,119 @@ NetworkThrottleListener.prototype = {
         extraSizeData,
         extraStringData
       );
-      this.activities[code] = undefined;
+      this.#activities[code] = undefined;
     }
-  },
-};
-
-/**
- * Construct a new queue that can be used to throttle the network for
- * a group of related network requests.
- *
- * meanBPS {Number} Mean bytes per second.
- * maxBPS {Number} Maximum bytes per second.
- * latencyMean {Number} Mean latency in milliseconds.
- * latencyMax {Number} Maximum latency in milliseconds.
- */
-function NetworkThrottleQueue(meanBPS, maxBPS, latencyMean, latencyMax) {
-  this.meanBPS = meanBPS;
-  this.maxBPS = maxBPS;
-  this.latencyMean = latencyMean;
-  this.latencyMax = latencyMax;
-
-  this.pendingRequests = new Set();
-  this.downloadQueue = [];
-  this.previousReads = [];
-
-  this.pumping = false;
+  }
 }
 
-NetworkThrottleQueue.prototype = {
+class NetworkThrottleQueue {
+  #downloadQueue;
+  #latencyMax;
+  #latencyMean;
+  #maxBPS;
+  #meanBPS;
+  #pendingRequests;
+  #previousReads;
+  #pumping;
+
   /**
-   * A helper function that, given a mean and a maximum, returns a
-   * random integer between (mean - (max - mean)) and max.
+   * Construct a new queue that can be used to throttle the network for
+   * a group of related network requests.
+   *
+   * meanBPS {Number} Mean bytes per second.
+   * maxBPS {Number} Maximum bytes per second.
+   * latencyMean {Number} Mean latency in milliseconds.
+   * latencyMax {Number} Maximum latency in milliseconds.
    */
-  random(mean, max) {
-    return mean - (max - mean) + Math.floor(2 * (max - mean) * Math.random());
-  },
+  constructor(meanBPS, maxBPS, latencyMean, latencyMax) {
+    this.#meanBPS = meanBPS;
+    this.#maxBPS = maxBPS;
+    this.#latencyMean = latencyMean;
+    this.#latencyMax = latencyMax;
+
+    this.#pendingRequests = new Set();
+    this.#downloadQueue = [];
+    this.#previousReads = [];
+
+    this.#pumping = false;
+  }
 
   /**
    * A helper function that lets the indicating listener start sending
    * data.  This is called after the initial round trip time for the
    * listener has elapsed.
    */
-  allowDataFrom(throttleListener) {
+  #allowDataFrom(throttleListener) {
     throttleListener.responseStart();
-    this.pendingRequests.delete(throttleListener);
+    this.#pendingRequests.delete(throttleListener);
     const count = throttleListener.pendingCount();
     for (let i = 0; i < count; ++i) {
-      this.downloadQueue.push(throttleListener);
+      this.#downloadQueue.push(throttleListener);
     }
-    this.pump();
-  },
+    this.#pump();
+  }
+
+  /**
+   * An internal function that permits individual listeners to send
+   * data.
+   */
+  #pump() {
+    // A redirect will cause two NetworkThrottleListeners to be on a
+    // listener chain.  In this case, we might recursively call into
+    // this method.  Avoid infinite recursion here.
+    if (this.#pumping) {
+      return;
+    }
+    this.#pumping = true;
+
+    const now = Date.now();
+    const oneSecondAgo = now - 1000;
+
+    while (
+      this.#previousReads.length &&
+      this.#previousReads[0].when < oneSecondAgo
+    ) {
+      this.#previousReads.shift();
+    }
+
+    const totalBytes = this.#previousReads.reduce((sum, elt) => {
+      return sum + elt.numBytes;
+    }, 0);
+
+    let thisSliceBytes = this.#random(this.#meanBPS, this.#maxBPS);
+    if (totalBytes < thisSliceBytes) {
+      thisSliceBytes -= totalBytes;
+      let readThisTime = 0;
+      while (thisSliceBytes > 0 && this.#downloadQueue.length) {
+        const { length, done } = this.#downloadQueue[0].sendSomeData(
+          thisSliceBytes
+        );
+        thisSliceBytes -= length;
+        readThisTime += length;
+        if (done) {
+          this.#downloadQueue.shift();
+        }
+      }
+      this.#previousReads.push({ when: now, numBytes: readThisTime });
+    }
+
+    // If there is more data to download, then schedule ourselves for
+    // one second after the oldest previous read.
+    if (this.#downloadQueue.length) {
+      const when = this.#previousReads[0].when + 1000;
+      lazy.setTimeout(this.#pump.bind(this), when - now);
+    }
+
+    this.#pumping = false;
+  }
+
+  /**
+   * A helper function that, given a mean and a maximum, returns a
+   * random integer between (mean - (max - mean)) and max.
+   */
+  #random(mean, max) {
+    return mean - (max - mean) + Math.floor(2 * (max - mean) * Math.random());
+  }
 
   /**
    * Notice a new listener object.  This is called by the
@@ -320,14 +393,14 @@ NetworkThrottleQueue.prototype = {
    * @param {NetworkThrottleListener} throttleListener the new listener
    */
   start(throttleListener) {
-    this.pendingRequests.add(throttleListener);
-    const delay = this.random(this.latencyMean, this.latencyMax);
+    this.#pendingRequests.add(throttleListener);
+    const delay = this.#random(this.#latencyMean, this.#latencyMax);
     if (delay > 0) {
-      lazy.setTimeout(() => this.allowDataFrom(throttleListener), delay);
+      lazy.setTimeout(() => this.#allowDataFrom(throttleListener), delay);
     } else {
-      this.allowDataFrom(throttleListener);
+      this.#allowDataFrom(throttleListener);
     }
-  },
+  }
 
   /**
    * Note that new data is available for a given listener.  Each time
@@ -337,66 +410,12 @@ NetworkThrottleQueue.prototype = {
    *        which has data available.
    */
   dataAvailable(throttleListener) {
-    if (!this.pendingRequests.has(throttleListener)) {
-      this.downloadQueue.push(throttleListener);
-      this.pump();
+    if (!this.#pendingRequests.has(throttleListener)) {
+      this.#downloadQueue.push(throttleListener);
+      this.#pump();
     }
-  },
-
-  /**
-   * An internal function that permits individual listeners to send
-   * data.
-   */
-  pump() {
-    // A redirect will cause two NetworkThrottleListeners to be on a
-    // listener chain.  In this case, we might recursively call into
-    // this method.  Avoid infinite recursion here.
-    if (this.pumping) {
-      return;
-    }
-    this.pumping = true;
-
-    const now = Date.now();
-    const oneSecondAgo = now - 1000;
-
-    while (
-      this.previousReads.length &&
-      this.previousReads[0].when < oneSecondAgo
-    ) {
-      this.previousReads.shift();
-    }
-
-    const totalBytes = this.previousReads.reduce((sum, elt) => {
-      return sum + elt.numBytes;
-    }, 0);
-
-    let thisSliceBytes = this.random(this.meanBPS, this.maxBPS);
-    if (totalBytes < thisSliceBytes) {
-      thisSliceBytes -= totalBytes;
-      let readThisTime = 0;
-      while (thisSliceBytes > 0 && this.downloadQueue.length) {
-        const { length, done } = this.downloadQueue[0].sendSomeData(
-          thisSliceBytes
-        );
-        thisSliceBytes -= length;
-        readThisTime += length;
-        if (done) {
-          this.downloadQueue.shift();
-        }
-      }
-      this.previousReads.push({ when: now, numBytes: readThisTime });
-    }
-
-    // If there is more data to download, then schedule ourselves for
-    // one second after the oldest previous read.
-    if (this.downloadQueue.length) {
-      const when = this.previousReads[0].when + 1000;
-      lazy.setTimeout(this.pump.bind(this), when - now);
-    }
-
-    this.pumping = false;
-  },
-};
+  }
+}
 
 /**
  * Construct a new object that can be used to throttle the network for
@@ -415,6 +434,8 @@ NetworkThrottleQueue.prototype = {
  * uploadBPSMean and uploadBPSMax are <= 0.
  */
 export class NetworkThrottleManager {
+  #downloadQueue;
+
   constructor({
     latencyMean,
     latencyMax,
@@ -424,9 +445,9 @@ export class NetworkThrottleManager {
     uploadBPSMax,
   }) {
     if (downloadBPSMax <= 0 && downloadBPSMean <= 0) {
-      this.downloadQueue = null;
+      this.#downloadQueue = null;
     } else {
-      this.downloadQueue = new NetworkThrottleQueue(
+      this.#downloadQueue = new NetworkThrottleQueue(
         downloadBPSMean,
         downloadBPSMax,
         latencyMean,
@@ -452,8 +473,8 @@ export class NetworkThrottleManager {
    *         download throttling is not being done.
    */
   manage(channel) {
-    if (this.downloadQueue) {
-      const listener = new NetworkThrottleListener(this.downloadQueue);
+    if (this.#downloadQueue) {
+      const listener = new NetworkThrottleListener(this.#downloadQueue);
       const originalListener = channel.setNewListener(listener);
       listener.setOriginalListener(originalListener);
       return listener;
