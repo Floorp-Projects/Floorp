@@ -78,6 +78,7 @@ SOURCES += [
 if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
     SOURCES += [
         'atsc_a53.c',
+        'av1_frame_split_bsf.c',
         'av1dec.c',
         'avpicture.c',
         'cbs.c',
