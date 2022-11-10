@@ -297,6 +297,12 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                   nsContainerFrame* aParentFrame,
                                   bool aIsFluid = true);
 
+  void SetNextPageContentFramePageName(const nsAtom* aAtom) {
+    MOZ_ASSERT(!mNextPageContentFramePageName,
+               "PageContentFrame page name was already set");
+    mNextPageContentFramePageName = aAtom;
+  }
+
   // Copy over fixed frames from aParentFrame's prev-in-flow
   nsresult ReplicateFixedFrames(nsPageContentFrame* aParentFrame);
 
@@ -2127,6 +2133,13 @@ class nsCSSFrameConstructor final : public nsFrameManager {
 
   // FrameConstructionItem arena + list of freed items available for re-use.
   mozilla::ArenaAllocator<4096, 8> mFCItemPool;
+
+  // This indicates what page name to use for the next nsPageContentFrame.
+  // Set when CSS named pages cause a breakpoint.
+  // This does not apply to the first page content frame, which has its name
+  // set by nsPageContentFrame::EnsurePageName() during first reflow.
+  RefPtr<const nsAtom> mNextPageContentFramePageName;
+
   struct FreeFCItemLink {
     FreeFCItemLink* mNext;
   };
