@@ -21,7 +21,7 @@ var UAHelpers = {
 
       if (userAgent.includes("Android")) {
         const RunningAndroidVersion =
-          userAgent.match(/Android\/[0-9.]+/) || "Android 6.0";
+          userAgent.match(/Android [0-9.]+/) || "Android 6.0";
         if (androidDevice) {
           UAHelpers._deviceAppropriateChromeUAs[
             key

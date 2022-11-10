@@ -715,7 +715,6 @@ const AVAILABLE_UA_OVERRIDES = [
         "*://fpt.dfp.microsoft.com/*", // #104237
         "*://ubank.com.au/*", // #104099
         "*://wifi.sncf/*", // #100194
-        "*://www.liveobserverpark.com/*", // #105244
         "*://www.metrobyt-mobile.com/*", // #105106
         "*://www.screwfix.com/*", // #96959
       ],
@@ -893,6 +892,24 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["*://business.help.royalmail.com/app/webforms/*"],
       uaTransformer: originalUA => {
         return originalUA.replace("Firefox", "FireFox");
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1790698 - UA override for wolf777.com
+     * Webcompat issue #103981 - https://webcompat.com/issues/103981
+     *
+     * Add 'Linux; ' next to the Android version or the site breaks
+     */
+    id: "bug1790698",
+    platform: "android",
+    domain: "wolf777.com",
+    bug: "1790698",
+    config: {
+      matches: ["*://wolf777.com/*"],
+      uaTransformer: originalUA => {
+        return originalUA.replace("Android", "Linux; Android");
       },
     },
   },
