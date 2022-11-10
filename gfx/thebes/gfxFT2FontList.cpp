@@ -114,7 +114,8 @@ already_AddRefed<SharedFTFace> FT2FontEntry::GetFTFace(bool aCommit) {
       }
     }
   } else {
-    face = Factory::NewSharedFTFace(nullptr, mFilename.get(), mFTFontIndex);
+    RefPtr<FTUserFontData> fd = new FTUserFontData(mFilename.get());
+    face = fd->CloneFace(mFTFontIndex);
     if (!face) {
       NS_WARNING("failed to create freetype face");
       return nullptr;

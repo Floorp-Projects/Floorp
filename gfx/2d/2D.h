@@ -1067,6 +1067,40 @@ class SharedFTFaceRefCountedData : public SharedFTFaceData {
   void ReleaseData() { static_cast<T*>(this)->Release(); }
 };
 
+// Helper class used for clearing out user font data when FT font
+// face is destroyed. Since multiple faces may use the same data, be
+// careful to assure that the data is only cleared out when all uses
+// expire. The font entry object contains a refptr to FTUserFontData and
+// each FT face created from that font entry contains a refptr to that
+// same FTUserFontData object.
+// This is also attached to FT faces for installed fonts (recording the
+// filename, rather than storing the font data) if variations are present.
+class FTUserFontData final
+    : public mozilla::gfx::SharedFTFaceRefCountedData<FTUserFontData> {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FTUserFontData)
+
+  FTUserFontData(const uint8_t* aData, uint32_t aLength)
+      : mFontData(aData), mLength(aLength) {}
+  explicit FTUserFontData(const char* aFilename) : mFilename(aFilename) {}
+
+  const uint8_t* FontData() const { return mFontData; }
+
+  already_AddRefed<mozilla::gfx::SharedFTFace> CloneFace(
+      int aFaceIndex = 0) override;
+
+ private:
+  ~FTUserFontData() {
+    if (mFontData) {
+      free((void*)mFontData);
+    }
+  }
+
+  std::string mFilename;
+  const uint8_t* mFontData = nullptr;
+  uint32_t mLength = 0;
+};
+
 /** SharedFTFace is a shared wrapper around an FT_Face. It is ref-counted,
  * unlike FT_Face itself, so that it may be shared among many users with
  * RefPtr. Users should take care to lock SharedFTFace before accessing any
@@ -1078,7 +1112,7 @@ class SharedFTFace : public external::AtomicRefCounted<SharedFTFace> {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SharedFTFace)
 
-  explicit SharedFTFace(FT_Face aFace, SharedFTFaceData* aData = nullptr);
+  explicit SharedFTFace(FT_Face aFace, SharedFTFaceData* aData);
   virtual ~SharedFTFace();
 
   FT_Face GetFace() const { return mFace; }

@@ -179,4 +179,64 @@ void UnscaledFontFreeType::ApplyVariationsToFace(
   }
 }
 
+#ifdef MOZ_WIDGET_ANDROID
+
+already_AddRefed<ScaledFont> UnscaledFontFreeType::CreateScaledFont(
+    Float aGlyphSize, const uint8_t* aInstanceData,
+    uint32_t aInstanceDataLength, const FontVariation* aVariations,
+    uint32_t aNumVariations) {
+  if (aInstanceDataLength < sizeof(ScaledFontFreeType::InstanceData)) {
+    gfxWarning() << "FreeType scaled font instance data is truncated.";
+    return nullptr;
+  }
+  const ScaledFontFreeType::InstanceData& instanceData =
+      *reinterpret_cast<const ScaledFontFreeType::InstanceData*>(aInstanceData);
+
+  RefPtr<SharedFTFace> face(InitFace());
+  if (!face) {
+    gfxWarning() << "Attempted to deserialize FreeType scaled font without "
+                    "FreeType face";
+    return nullptr;
+  }
+
+  if (aNumVariations > 0 && face->GetData()) {
+    if (RefPtr<SharedFTFace> varFace = face->GetData()->CloneFace()) {
+      face = varFace;
+    }
+  }
+
+  // Only apply variations if we have an explicitly cloned face.
+  if (aNumVariations > 0 && face != GetFace()) {
+    ApplyVariationsToFace(aVariations, aNumVariations, face->GetFace());
+  }
+
+  RefPtr<ScaledFontFreeType> scaledFont = new ScaledFontFreeType(
+      std::move(face), this, aGlyphSize, instanceData.mApplySyntheticBold);
+
+  return scaledFont.forget();
+}
+
+already_AddRefed<ScaledFont> UnscaledFontFreeType::CreateScaledFontFromWRFont(
+    Float aGlyphSize, const wr::FontInstanceOptions* aOptions,
+    const wr::FontInstancePlatformOptions* aPlatformOptions,
+    const FontVariation* aVariations, uint32_t aNumVariations) {
+  ScaledFontFreeType::InstanceData instanceData(aOptions, aPlatformOptions);
+  return CreateScaledFont(aGlyphSize, reinterpret_cast<uint8_t*>(&instanceData),
+                          sizeof(instanceData), aVariations, aNumVariations);
+}
+
+already_AddRefed<UnscaledFont> UnscaledFontFreeType::CreateFromFontDescriptor(
+    const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex) {
+  if (aDataLength == 0) {
+    gfxWarning() << "FreeType font descriptor is truncated.";
+    return nullptr;
+  }
+  const char* path = reinterpret_cast<const char*>(aData);
+  RefPtr<UnscaledFont> unscaledFont =
+      new UnscaledFontFreeType(std::string(path, aDataLength), aIndex);
+  return unscaledFont.forget();
+}
+
+#endif  // MOZ_WIDGET_ANDROID
+
 }  // namespace mozilla::gfx
