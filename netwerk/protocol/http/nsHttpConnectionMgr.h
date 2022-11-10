@@ -90,7 +90,8 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   // The connection manager needs to know when a normal HTTP connection has been
   // upgraded to SPDY because the dispatch and idle semantics are a little
   // bit different.
-  void ReportSpdyConnection(nsHttpConnection*, bool usingSpdy);
+  void ReportSpdyConnection(nsHttpConnection*, bool usingSpdy,
+                            bool disallowHttp3);
 
   void ReportHttp3Connection(HttpConnectionBase*);
 
@@ -295,7 +296,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
                                                          bool aNoHttp2,
                                                          bool aNoHttp3);
   void UpdateCoalescingForNewConn(HttpConnectionBase* conn,
-                                  ConnectionEntry* ent);
+                                  ConnectionEntry* ent, bool aNoHttp3);
 
   void ProcessSpdyPendingQ(ConnectionEntry* ent);
   void DispatchSpdyPendingQ(nsTArray<RefPtr<PendingTransactionInfo>>& pendingQ,

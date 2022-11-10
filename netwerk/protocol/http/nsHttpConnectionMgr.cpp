@@ -793,13 +793,13 @@ HttpConnectionBase* nsHttpConnectionMgr::FindCoalescableConnection(
 }
 
 void nsHttpConnectionMgr::UpdateCoalescingForNewConn(
-    HttpConnectionBase* newConn, ConnectionEntry* ent) {
+    HttpConnectionBase* newConn, ConnectionEntry* ent, bool aNoHttp3) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(newConn);
   MOZ_ASSERT(newConn->ConnectionInfo());
   MOZ_ASSERT(ent);
   MOZ_ASSERT(mCT.GetWeak(newConn->ConnectionInfo()->HashKey()) == ent);
-
+  LOG(("UpdateCoalescingForNewConn newConn=%p aNoHttp3=%d", newConn, aNoHttp3));
   HttpConnectionBase* existingConn =
       FindCoalescableConnection(ent, true, false, false);
   if (existingConn) {
@@ -816,10 +816,10 @@ void nsHttpConnectionMgr::UpdateCoalescingForNewConn(
       }
     } else if (existingConn->UsingHttp3() && newConn->UsingSpdy()) {
       RefPtr<nsHttpConnection> connTCP = do_QueryObject(newConn);
-      if (connTCP && !connTCP->IsForWebSocket()) {
+      if (connTCP && !connTCP->IsForWebSocket() && !aNoHttp3) {
         LOG(
-            ("UpdateCoalescingForNewConn() found existing active conn that "
-             "could have served newConn graceful close of newConn=%p to "
+            ("UpdateCoalescingForNewConn() found existing active H3 conn that "
+             "could have served H2 newConn graceful close of newConn=%p to "
              "migrate to existingConn %p\n",
              newConn, existingConn));
         newConn->DontReuse();
@@ -877,7 +877,8 @@ void nsHttpConnectionMgr::UpdateCoalescingForNewConn(
 // spdy with that host and update the coalescing hash
 // entries used for de-sharding hostsnames.
 void nsHttpConnectionMgr::ReportSpdyConnection(nsHttpConnection* conn,
-                                               bool usingSpdy) {
+                                               bool usingSpdy,
+                                               bool disallowHttp3) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   if (!conn->ConnectionInfo()) {
     return;
@@ -897,7 +898,7 @@ void nsHttpConnectionMgr::ReportSpdyConnection(nsHttpConnection* conn,
     PruneDeadConnectionsAfter(ttl);
   }
 
-  UpdateCoalescingForNewConn(conn, ent);
+  UpdateCoalescingForNewConn(conn, ent, disallowHttp3);
 
   nsresult rv = ProcessPendingQ(ent->mConnInfo);
   if (NS_FAILED(rv)) {
@@ -927,7 +928,7 @@ void nsHttpConnectionMgr::ReportHttp3Connection(HttpConnectionBase* conn) {
 
   mNumSpdyHttp3ActiveConns++;
 
-  UpdateCoalescingForNewConn(conn, ent);
+  UpdateCoalescingForNewConn(conn, ent, false);
   nsresult rv = ProcessPendingQ(ent->mConnInfo);
   if (NS_FAILED(rv)) {
     LOG(
