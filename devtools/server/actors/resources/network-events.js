@@ -62,9 +62,8 @@ class NetworkEventWatcher {
     // Boolean to know if we keep previous document network events or not.
     this.persist = false;
     this.listener = new lazy.NetworkObserver(
-      { sessionContext: watcherActor.sessionContext },
-      this.onNetworkEvent.bind(this),
-      this.shouldIgnoreChannel.bind(this)
+      this.shouldIgnoreChannel.bind(this),
+      this.onNetworkEvent.bind(this)
     );
 
     this.listener.init();
@@ -221,6 +220,12 @@ class NetworkEventWatcher {
    * Called by NetworkObserver in order to know if the channel should be ignored
    */
   shouldIgnoreChannel(channel) {
+    // First of all, check if the channel matches the watcherActor's session.
+    const filters = { sessionContext: this.watcherActor.sessionContext };
+    if (!lazy.NetworkUtils.matchRequest(channel, filters)) {
+      return true;
+    }
+
     // When we are in the browser toolbox in parent process scope,
     // the session context is still "all", but we are no longer watching frame and process targets.
     // In this case, we should ignore all requests belonging to a BrowsingContext that isn't in the parent process
