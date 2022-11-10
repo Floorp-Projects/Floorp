@@ -142,7 +142,8 @@ interface nsICertStorage : nsISupports {
    * serial - serial number, DER encoded
    * subject - subject name, DER encoded
    * pubkey - public key, DER encoded
-   * Must not be called from the main thread. See bug 1541212.
+   * In gecko, must not be called from the main thread. See bug 1541212.
+   * xpcshell tests may call this from the main thread.
    */
   [must_use]
   short getRevocationState(in Array<octet> issuer,
