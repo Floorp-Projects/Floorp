@@ -23,4 +23,4 @@
 # don't change CLOBBER for WebIDL changes any more.
 
 
-Modified build files in third_party/libwebrtc - Bug 1790097 - Vendor libwebrtc from cc7bd85748
+Modified build files in third_party/libwebrtc - Bug 1790097 - (fix-cc7bd85748) re-add mozilla's libopus include directories, and re-fix include paths
