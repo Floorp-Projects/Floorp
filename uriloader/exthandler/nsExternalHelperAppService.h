@@ -313,9 +313,6 @@ class nsExternalAppHandler final : public nsIStreamListener,
   void SetShouldCloseWindow() { mShouldCloseWindow = true; }
 
  protected:
-  // Record telemetry about a download that was attempted.
-  void RecordDownloadTelemetry(nsIChannel* aChannel, const char* aAction);
-
   bool IsDownloadSpam(nsIChannel* aChannel);
 
   ~nsExternalAppHandler();

@@ -480,21 +480,6 @@ downloads:
     record_in_processes: ["main"]
     release_channel_collection: opt-out
     expiry_version: never
-  helpertype:
-    description: >
-      Sent when a content type is handed off the external helper app service for handling because it cannot
-      be displayed directly.
-    bug_numbers: [1736864, 1754636]
-    extra_keys:
-      reason: The value "attachment", "sniffed" or "other"
-      type: The value "pdf", "octetstream" or "other"
-    notification_emails: ["rtestard@mozilla.com"]
-    objects: ["unknowntype"]
-    products:
-      - "firefox"
-    record_in_processes: ["main"]
-    release_channel_collection: opt-out
-    expiry_version: "109"
 
 form_autocomplete:
   show:
