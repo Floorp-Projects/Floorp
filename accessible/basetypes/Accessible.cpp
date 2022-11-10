@@ -7,6 +7,7 @@
 #include "AccGroupInfo.h"
 #include "ARIAMap.h"
 #include "nsAccUtils.h"
+#include "Relation.h"
 #include "States.h"
 #include "mozilla/a11y/HyperTextAccessibleBase.h"
 #include "mozilla/BasicEvents.h"
@@ -489,7 +490,37 @@ nsAtom* Accessible::LandmarkRole() const {
              : nullptr;
 }
 
-void Accessible::ApplyImplicitState(uint64_t& aState) const {}
+void Accessible::ApplyImplicitState(uint64_t& aState) const {
+  // If this is an ARIA item of the selectable widget and if it's focused and
+  // not marked unselected explicitly (i.e. aria-selected="false") then expose
+  // it as selected to make ARIA widget authors life easier.
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  if (roleMapEntry && !(aState & states::SELECTED) &&
+      ARIASelected().valueOr(true)) {
+    // Special case for tabs: focused tab or focus inside related tab panel
+    // implies selected state.
+    if (roleMapEntry->role == roles::PAGETAB) {
+      if (aState & states::FOCUSED) {
+        aState |= states::SELECTED;
+      } else {
+        // If focus is in a child of the tab panel surely the tab is selected!
+        Relation rel = RelationByType(RelationType::LABEL_FOR);
+        Accessible* relTarget = nullptr;
+        while ((relTarget = rel.Next())) {
+          if (relTarget->Role() == roles::PROPERTYPAGE &&
+              FocusMgr()->IsFocusWithin(relTarget)) {
+            aState |= states::SELECTED;
+          }
+        }
+      }
+    } else if (aState & states::FOCUSED) {
+      Accessible* container = nsAccUtils::GetSelectableContainer(this, aState);
+      if (container && !(container->State() & states::MULTISELECTABLE)) {
+        aState |= states::SELECTED;
+      }
+    }
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // KeyBinding class
