@@ -176,17 +176,24 @@ nsStaticAtom* nsAccUtils::NormalizeARIAToken(const AttrArray* aAttrs,
   return nullptr;
 }
 
-LocalAccessible* nsAccUtils::GetSelectableContainer(
-    LocalAccessible* aAccessible, uint64_t aState) {
+Accessible* nsAccUtils::GetSelectableContainer(const Accessible* aAccessible,
+                                               uint64_t aState) {
   if (!aAccessible) return nullptr;
 
   if (!(aState & states::SELECTABLE)) return nullptr;
 
-  LocalAccessible* parent = aAccessible;
-  while ((parent = parent->LocalParent()) && !parent->IsSelect()) {
+  const Accessible* parent = aAccessible;
+  while ((parent = parent->Parent()) && !parent->IsSelect()) {
     if (parent->Role() == roles::PANE) return nullptr;
   }
-  return parent;
+  return const_cast<Accessible*>(parent);
+}
+
+LocalAccessible* nsAccUtils::GetSelectableContainer(
+    LocalAccessible* aAccessible, uint64_t aState) {
+  Accessible* selectable =
+      GetSelectableContainer(static_cast<Accessible*>(aAccessible), aState);
+  return selectable ? selectable->AsLocal() : nullptr;
 }
 
 bool nsAccUtils::IsDOMAttrTrue(const LocalAccessible* aAccessible,

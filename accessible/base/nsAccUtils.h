@@ -91,6 +91,8 @@ class nsAccUtils {
    * @param  aAccessible  [in] the item accessible
    * @param  aState       [in] the state of the item accessible
    */
+  static Accessible* GetSelectableContainer(const Accessible* aAccessible,
+                                            uint64_t aState);
   static LocalAccessible* GetSelectableContainer(LocalAccessible* aAccessible,
                                                  uint64_t aState);
 
