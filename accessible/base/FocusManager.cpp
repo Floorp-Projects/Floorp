@@ -48,6 +48,35 @@ LocalAccessible* FocusManager::FocusedLocalAccessible() const {
   return nullptr;
 }
 
+Accessible* FocusManager::FocusedAccessible() const {
+  if (Accessible* focusedAcc = FocusedLocalAccessible()) {
+    return focusedAcc;
+  }
+
+  if (!XRE_IsParentProcess()) {
+    // DocAccessibleParent's don't exist in the content
+    // process, so we can't return anything useful if this
+    // is the case.
+    return nullptr;
+  }
+
+  nsFocusManager* focusManagerDOM = nsFocusManager::GetFocusManager();
+  if (!focusManagerDOM) {
+    return nullptr;
+  }
+
+  // If we call GetFocusedBrowsingContext from the chrome process
+  // it returns the BrowsingContext for the focused _window_, which
+  // is not helpful here. Instead use GetFocusedBrowsingContextInChrome
+  // which returns the content BrowsingContext that has focus.
+  dom::BrowsingContext* focusedContext =
+      focusManagerDOM->GetFocusedBrowsingContextInChrome();
+
+  DocAccessibleParent* focusedDoc =
+      DocAccessibleParent::GetFrom(focusedContext);
+  return focusedDoc ? focusedDoc->GetFocusedAcc() : nullptr;
+}
+
 bool FocusManager::IsFocused(const LocalAccessible* aAccessible) const {
   if (mActiveItem) return mActiveItem == aAccessible;
 
