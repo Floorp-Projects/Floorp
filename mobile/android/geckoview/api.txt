@@ -870,6 +870,7 @@ package org.mozilla.geckoview {
     ctor public GeckoSession(@Nullable GeckoSessionSettings);
     method @NonNull @UiThread public GeckoDisplay acquireDisplay();
     method @UiThread public void close();
+    method @AnyThread @NonNull public GeckoResult<Boolean> containsFormData();
     method @AnyThread public void exitFullScreen();
     method @NonNull @UiThread public SessionAccessibility getAccessibility();
     method @Nullable @UiThread public Autofill.Delegate getAutofillDelegate();

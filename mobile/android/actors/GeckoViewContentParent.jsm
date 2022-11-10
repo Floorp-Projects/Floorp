@@ -27,6 +27,10 @@ class GeckoViewContentParent extends GeckoViewActorParent {
     return this.sendQuery("CollectSessionState");
   }
 
+  async containsFormData() {
+    return this.sendQuery("ContainsFormData");
+  }
+
   restoreState({ history, switchId, formdata, scrolldata }) {
     if (Services.appinfo.sessionHistoryInParent) {
       const { browsingContext } = this.browser;

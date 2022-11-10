@@ -21,6 +21,7 @@ class GeckoViewContent extends GeckoViewModule {
       "GeckoView:DisplayMatches",
       "GeckoView:FindInPage",
       "GeckoView:RestoreState",
+      "GeckoView:ContainsFormData",
       "GeckoView:ScrollBy",
       "GeckoView:ScrollTo",
       "GeckoView:SetActive",
@@ -170,6 +171,9 @@ class GeckoViewContent extends GeckoViewModule {
       case "GeckoView:RestoreState":
         this.actor.restoreState(aData);
         break;
+      case "GeckoView:ContainsFormData":
+        this._containsFormData(aCallback);
+        break;
     }
   }
 
@@ -264,6 +268,10 @@ class GeckoViewContent extends GeckoViewModule {
         break;
       }
     }
+  }
+
+  async _containsFormData(aCallback) {
+    aCallback.onSuccess(await this.actor.containsFormData());
   }
 
   _findInPage(aData, aCallback) {
