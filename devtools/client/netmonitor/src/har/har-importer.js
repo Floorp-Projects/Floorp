@@ -124,7 +124,8 @@ HarImporter.prototype = {
             expires: afterRequest.expires,
             fetchCount: afterRequest.fetchCount,
             lastFetched: afterRequest.lastFetched,
-            eTag: afterRequest.eTag,
+            // TODO: eTag support, see Bug 1799844.
+            // eTag: afterRequest.eTag,
             _dataSize: afterRequest._dataSize,
             _lastModified: afterRequest._lastModified,
             _device: afterRequest._device,

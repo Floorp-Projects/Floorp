@@ -111,18 +111,32 @@ class CachePanel extends Component {
     if (
       cache.lastFetched ||
       cache.fetchCount ||
+      cache.storageDataSize ||
+      cache.lastModified | cache.expirationTime ||
+      cache.deviceID ||
+      // @backward-compat { version 108 } Once version 108 hits release, the
+      // server will no longer return `dataSize`, `expires` and `device`.
+      // Remove all the checks below.
       cache.dataSize ||
-      cache.lastModified | cache.expires ||
+      cache.expires ||
       cache.device
     ) {
       object = {
         [CACHE]: {
           [LAST_FETCHED]: this.getDate(cache.lastFetched) || NOT_AVAILABLE,
           [FETCH_COUNT]: cache.fetchCount || NOT_AVAILABLE,
-          [DATA_SIZE]: cache.dataSize || NOT_AVAILABLE,
+          // @backward-compat { version 108 } Once version 108 hits release,
+          // remove ` || cache.dataSize` below.
+          [DATA_SIZE]: cache.storageDataSize || cache.dataSize || NOT_AVAILABLE,
           [LAST_MODIFIED]: this.getDate(cache.lastModified) || NOT_AVAILABLE,
-          [EXPIRES]: this.getDate(cache.expires) || NOT_AVAILABLE,
-          [DEVICE]: cache.device || NOT_AVAILABLE,
+          [EXPIRES]:
+            // @backward-compat { version 108 } Once version 108 hits release,
+            // remove ` || cache.expires` below.
+            this.getDate(cache.expirationTime || cache.expires) ||
+            NOT_AVAILABLE,
+          // @backward-compat { version 108 } Once version 108 hits release,
+          // remove ` || cache.device` below.
+          [DEVICE]: cache.deviceID || cache.device || NOT_AVAILABLE,
         },
       };
     } else {

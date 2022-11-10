@@ -471,20 +471,35 @@ HarBuilder.prototype = {
     const cache = {};
 
     if (typeof cacheEntry !== "undefined") {
-      cache.expires = findKeys(cacheEntry, ["expires"]);
+      // @backward-compat { version 108 } Once version 108 hits release,
+      // remove `, "expires"` below.
+      cache.expires = findKeys(cacheEntry, ["expirationTime", "expires"]);
       cache.lastFetched = findKeys(cacheEntry, ["lastFetched"]);
-      cache.eTag = findKeys(cacheEntry, ["eTag"]);
+
+      // TODO: eTag support
+      // Har format expects cache entries to provide information about eTag,
+      // however this is not currently exposed on nsICacheEntry.
+      // This should be stored under cache.eTag. See Bug 1799844.
+
       cache.fetchCount = findKeys(cacheEntry, ["fetchCount"]);
 
       // har-importer.js, along with other files, use buildCacheEntry
       // initial value comes from properties without underscores.
       // this checks for both in appropriate order.
-      cache._dataSize = findKeys(cacheEntry, ["dataSize", "_dataSize"]);
+      // @backward-compat { version 108 } Once version 108 hits release,
+      // remove `, "dataSize"` below.
+      cache._dataSize = findKeys(cacheEntry, [
+        "storageDataSize",
+        "dataSize",
+        "_dataSize",
+      ]);
       cache._lastModified = findKeys(cacheEntry, [
         "lastModified",
         "_lastModified",
       ]);
-      cache._device = findKeys(cacheEntry, ["device", "_device"]);
+      // @backward-compat { version 108 } Once version 108 hits release,
+      // remove `, "device"` below.
+      cache._device = findKeys(cacheEntry, ["deviceID", "device", "_device"]);
     }
 
     return cache;
