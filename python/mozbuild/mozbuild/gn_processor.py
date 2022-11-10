@@ -197,6 +197,10 @@ def filter_gn_config(path, gn_result, sandbox_vars, input_vars, gn_target):
             "defines",
             "include_dirs",
             "cflags",
+            "cflags_c",
+            "cflags_cc",
+            "cflags_objc",
+            "cflags_objcc",
             "deps",
             "libs",
         ):
@@ -326,23 +330,24 @@ def process_gn_config(
         context_attrs["ASFLAGS"] = spec.get("asflags_mozilla", [])
         if use_defines_in_asflags and context_attrs["DEFINES"]:
             context_attrs["ASFLAGS"] += ["-D" + d for d in context_attrs["DEFINES"]]
-        flags = [_f for _f in spec.get("cflags", []) if _f in mozilla_flags]
-        if flags:
-            suffix_map = {
-                ".c": "CFLAGS",
-                ".cpp": "CXXFLAGS",
-                ".cc": "CXXFLAGS",
-                ".m": "CMFLAGS",
-                ".mm": "CMMFLAGS",
-            }
-            variables = (suffix_map[e] for e in extensions if e in suffix_map)
-            for var in variables:
-                for f in flags:
-                    # the result may be a string or a list.
-                    if isinstance(f, six.string_types):
-                        context_attrs.setdefault(var, []).append(f)
-                    else:
-                        context_attrs.setdefault(var, []).extend(f)
+        suffix_map = {
+            ".c": ("CFLAGS", ["cflags", "cflags_c"]),
+            ".cpp": ("CXXFLAGS", ["cflags", "cflags_cc"]),
+            ".cc": ("CXXFLAGS", ["cflags", "cflags_cc"]),
+            ".m": ("CMFLAGS", ["cflags", "cflags_objc"]),
+            ".mm": ("CMMFLAGS", ["cflags", "cflags_objcc"]),
+        }
+        variables = (suffix_map[e] for e in extensions if e in suffix_map)
+        for (var, flag_keys) in variables:
+            flags = [
+                _f for _k in flag_keys for _f in spec.get(_k, []) if _f in mozilla_flags
+            ]
+            for f in flags:
+                # the result may be a string or a list.
+                if isinstance(f, six.string_types):
+                    context_attrs.setdefault(var, []).append(f)
+                else:
+                    context_attrs.setdefault(var, []).extend(f)
 
         context_attrs["OS_LIBS"] = []
         for lib in spec.get("libs", []):
