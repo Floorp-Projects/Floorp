@@ -91,57 +91,83 @@ const HTTP_DOWNLOAD_ACTIVITIES = [
  *        methods which are used to add further network request/response information.
  */
 export class NetworkObserver {
-  #blockedURLs;
-  #decodedCertificateCache;
+  /**
+   * Array of URL-like patterns used for request blocking.
+   *
+   * @type {Array<string>}
+   */
+  #blockedURLs = [];
+  /**
+   * Used by NetworkHelper.parseSecurityInfo to skip decoding known certificates.
+   *
+   * @type {Map}
+   */
+  #decodedCertificateCache = new Map();
+  /**
+   * See constructor argument of the same name.
+   *
+   * @type {Function}
+   */
   #ignoreChannelFunction;
-  #interceptedChannels;
-  #isDestroyed;
+  /**
+   * Used to store channels intercepted for service-worker requests.
+   *
+   * @type {WeakSet}
+   */
+  #interceptedChannels = new WeakSet();
+  /**
+   * Explicit flag to check if this observer was already destroyed.
+   *
+   * @type {boolean}
+   */
+  #isDestroyed = false;
+  /**
+   * See constructor argument of the same name.
+   *
+   * @type {Function}
+   */
   #onNetworkEvent;
-  #openRequests;
-  #openResponses;
-  #responsePipeSegmentSize;
-  #saveRequestAndResponseBodies;
-  #throttleData;
-  #throttler;
+  /**
+   * Object that holds the HTTP activity objects for ongoing requests.
+   *
+   * @type {ChannelMap}
+   */
+  #openRequests = new lazy.ChannelMap();
+  /**
+   * Object that holds response data coming from this.#httpResponseExaminer.
+   * @type {ChannelMap}
+   */
+  #openResponses = new lazy.ChannelMap();
+  /**
+   * Network response bodies are piped through a buffer of the given size
+   * (in bytes).
+   *
+   * @type {Number}
+   */
+  #responsePipeSegmentSize = Services.prefs.getIntPref(
+    "network.buffer.cache.size"
+  );
+  /**
+   * Whether to save the bodies of network requests and responses.
+   *
+   * @type {boolean}
+   */
+  #saveRequestAndResponseBodies = true;
+  /**
+   * Throttling configuration, see constructor of NetworkThrottleManager
+   *
+   * @type {Object}
+   */
+  #throttleData = null;
+  /**
+   * NetworkThrottleManager instance, created when a valid throttleData is set.
+   * @type {NetworkThrottleManager}
+   */
+  #throttler = null;
 
   constructor(ignoreChannelFunction, onNetworkEvent) {
-    // Explicit flag to check if this observer was already destroyed.
-    this.#isDestroyed = false;
-
     this.#ignoreChannelFunction = ignoreChannelFunction;
     this.#onNetworkEvent = onNetworkEvent;
-
-    /**
-     * Object that holds the HTTP activity objects for ongoing requests.
-     */
-    this.#openRequests = new lazy.ChannelMap();
-
-    /**
-     * Object that holds response data coming from this.#httpResponseExaminer.
-     */
-    this.#openResponses = new lazy.ChannelMap();
-
-    this.#blockedURLs = [];
-
-    this.#throttleData = null;
-    this.#throttler = null;
-
-    // This is ultimately used by NetworkHelper.parseSecurityInfo to avoid
-    // repeatedly decoding already-seen certificates.
-    this.#decodedCertificateCache = new Map();
-
-    /**
-     * Whether to save the bodies of network requests and responses.
-     * @type boolean
-     */
-    this.#saveRequestAndResponseBodies = true;
-
-    // Network response bodies are piped through a buffer of the given size (in
-    // bytes).
-    this.#responsePipeSegmentSize = Services.prefs.getIntPref(
-      "network.buffer.cache.size"
-    );
-    this.#interceptedChannels = new WeakSet();
 
     // Start all platform observers.
     if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT) {

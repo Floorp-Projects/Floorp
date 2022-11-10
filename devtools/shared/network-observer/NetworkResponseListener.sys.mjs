@@ -40,47 +40,111 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
  *        repeatedly decoding previously-seen certificates.
  */
 export class NetworkResponseListener {
-  #bodySize;
-  #converter;
+  /**
+   * The uncompressed, decoded response body size.
+   *
+   * @type {Number}
+   */
+  #bodySize = 0;
+  /**
+   * nsIStreamListener created by nsIStreamConverterService.asyncConvertData
+   *
+   * @type {nsIStreamListener}
+   */
+  #converter = null;
+  /**
+   * See constructor argument of the same name.
+   *
+   * @type {Map}
+   */
   #decodedCertificateCache;
-  #foundOpenResponse;
+  /**
+   * This NetworkResponseListener tracks the NetworkObserver.openResponses
+   * object to find the associated uncached headers.
+   *
+   * @type {boolean}
+   */
+  #foundOpenResponse = false;
+  /**
+   * See constructor argument of the same name.
+   *
+   * @type {Object}
+   */
   #httpActivity;
-  #inputStream;
-  #isDestroyed;
-  #onSecurityInfo;
-  #offset;
+  /**
+   * Set from sink.inputStream, mainly to prevent GC.
+   *
+   * @type {nsIInputStream}
+   */
+  #inputStream = null;
+  /**
+   * Explicit flag to check if this listener was already destroyed.
+   *
+   * @type {boolean}
+   */
+  #isDestroyed = false;
+  /**
+   * Internal promise used to hold the completion of #getSecurityInfo.
+   *
+   * @type {Promise}
+   */
+  #onSecurityInfo = null;
+  /**
+   * Offset for the onDataAvailable calls where we pass the data from our pipe
+   * to the converter.
+   *
+   * @type {Number}
+   */
+  #offset = 0;
+  /**
+   * The NetworkObserver instance which created this listener.
+   *
+   * @type {NetworkObserver}
+   */
   #networkObserver;
-  #receivedData;
-  #request;
-  #sink;
-  #transferredSize;
-  #truncated;
+  /**
+   * Stores the received data as a string.
+   *
+   * @type {string}
+   */
+  #receivedData = "";
+  /**
+   * The nsIRequest we are started for.
+   *
+   * @type {nsIRequest}
+   */
+  #request = null;
+  /**
+   * The response will be written into the outputStream of this nsIPipe.
+   * Both ends of the pipe must be blocking.
+   *
+   * @type {nsIPipe}
+   */
+  #sink = null;
+  /**
+   * Response size on the wire, potentially compressed / encoded.
+   *
+   * @type {Number}
+   */
+  #transferredSize = null;
+  /**
+   * Indicates if the response had a size greater than response body limit.
+   *
+   * @type {boolean}
+   */
+  #truncated = false;
+  /**
+   * Backup for existing notificationCallbacks set on the monitored channel.
+   * Initialized in the constructor.
+   *
+   * @type {Object}
+   */
   #wrappedNotificationCallbacks;
 
   constructor(networkObserver, httpActivity, decodedCertificateCache) {
-    // Explicit flag to check if this listener was already destroyed.
-    this.#isDestroyed = false;
-
-    // The networkObserver instance which created this listener.
     this.#networkObserver = networkObserver;
-
-    // Stores the received data as a string.
-    this.#receivedData = "";
-
-    // The HttpActivity object associated with this response.
     this.#httpActivity = httpActivity;
-
-    // The uncompressed, decoded response body size.
-    this.#bodySize = 0;
-
-    // Indicates if the response had a size greater than response body limit.
-    this.#truncated = false;
-
-    // The nsIRequest we are started for.
-    this.#request = null;
-
-    // Response size on the wire, potentially compressed / encoded.
-    this.#transferredSize = null;
+    this.#decodedCertificateCache = decodedCertificateCache;
 
     // Note that this is really only needed for the non-e10s case.
     // See bug 1309523.
@@ -89,24 +153,6 @@ export class NetworkResponseListener {
     // internally so that we can forward getInterface requests to that object.
     this.#wrappedNotificationCallbacks = channel.notificationCallbacks;
     channel.notificationCallbacks = this;
-
-    // A Map of certificate fingerprints to decoded certificates, to avoid
-    // repeatedly decoding previously-seen certificates.
-    this.#decodedCertificateCache = decodedCertificateCache;
-
-    // This NetworkResponseListener tracks the NetworkObserver.openResponses
-    // object to find the associated uncached headers.
-    this.#foundOpenResponse = false;
-
-    // The response will be written into the outputStream of this nsIPipe.
-    // Both ends of the pipe must be blocking.
-    this.#sink = null;
-
-    // Set from sink.inputStream, mainly to prevent GC.
-    this.#inputStream = null;
-
-    // nsIStreamListener created by nsIStreamConverterService.asyncConvertData
-    this.#converter = null;
   }
 
   set inputStream(inputStream) {
