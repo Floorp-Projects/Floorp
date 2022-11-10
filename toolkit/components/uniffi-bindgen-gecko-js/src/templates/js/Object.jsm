@@ -1,5 +1,4 @@
-{%- let object = ci.get_object_definition(name).unwrap() %}
-
+{%- let object = ci.get_object_definition(name).unwrap() -%}
 class {{ object.nm() }} {
     // Use `init` to instantiate this class.
     // DO NOT USE THIS CONSTRUCTOR DIRECTLY

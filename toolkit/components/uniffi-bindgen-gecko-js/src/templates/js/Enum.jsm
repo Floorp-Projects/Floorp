@@ -1,6 +1,6 @@
-{%- let enum_ = ci.get_enum_definition(name).unwrap() %}
+{%- let enum_ = ci.get_enum_definition(name).unwrap() -%}
 
-{%- if enum_.is_flat() %}
+{%- if enum_.is_flat() -%}
 
 const {{ enum_.nm() }} = {
     {%- for variant in enum_.variants() %}
@@ -36,7 +36,7 @@ class {{ ffi_converter }} extends FfiConverterArrayBuffer {
     }
 }
 
-{%- else %}
+{%- else -%}
 
 class {{ enum_.nm() }} {}
 {%- for variant in enum_.variants() %}

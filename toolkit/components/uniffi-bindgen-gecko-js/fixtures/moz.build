@@ -8,14 +8,15 @@ FINAL_LIBRARY = "xul"
 
 components = [
     "Arithmetic",
-    "Customtypes",
+    "CustomTypes",
+    "ExternalTypes",
     "Geometry",
     "Rondpoint",
     "Sprites",
     "Todolist",
 ]
 
-EXTRA_JS_MODULES["components-utils"] = [
+EXTRA_JS_MODULES += [
     "generated/Rust{}.jsm".format(component) for component in components
 ]
 

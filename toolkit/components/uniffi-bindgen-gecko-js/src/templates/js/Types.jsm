@@ -51,19 +51,26 @@
 {%- include "Map.jsm" %}
 
 {%- when Type::Error with (name) %}
-{% include "Error.jsm" %}
+{%- include "Error.jsm" %}
 
-{% when Type::Enum with (name) %}
-{% include "Enum.jsm" %}
+{%- when Type::Enum with (name) %}
+{%- include "Enum.jsm" %}
 
-{% when Type::Object with (name) %}
-{% include "Object.jsm" %}
+{%- when Type::Object with (name) %}
+{%- include "Object.jsm" %}
 
 {%- when Type::Custom with { name, builtin } %}
-{% include "CustomType.jsm" %}
+{%- include "CustomType.jsm" %}
+
+{%- when Type::External with { name, crate_name } %}
+{%- include "ExternalType.jsm" %}
 
 {%- else %}
-{# TODO implement the other types #}
+{#- TODO implement the other types #}
 
 {%- endmatch %}
-{%- endfor %}
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("{{ ffi_converter }}");
+
+{% endfor %}

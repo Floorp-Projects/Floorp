@@ -279,6 +279,9 @@ class FfiConverterI64 extends FfiConverter {
     }
 }
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterI64");
+
 class FfiConverterString extends FfiConverter {
     static lift(buf) {
         const decoder = new TextDecoder();
@@ -304,6 +307,8 @@ class FfiConverterString extends FfiConverter {
     }
 }
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterString");
 
 class TabsBridgedEngine {
     // Use `init` to instantiate this class.
@@ -541,6 +546,8 @@ class FfiConverterTypeTabsBridgedEngine extends FfiConverter {
 
 EXPORTED_SYMBOLS.push("TabsBridgedEngine");
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeTabsBridgedEngine");
 
 class TabsStore {
     // Use `init` to instantiate this class.
@@ -701,6 +708,9 @@ class FfiConverterTypeTabsStore extends FfiConverter {
 
 EXPORTED_SYMBOLS.push("TabsStore");
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeTabsStore");
+
 class ClientRemoteTabs {
     constructor(clientId,clientName,deviceType,remoteTabs) {
         FfiConverterString.checkType("clientId", clientId);
@@ -758,6 +768,9 @@ class FfiConverterTypeClientRemoteTabs extends FfiConverter {
 }
 
 EXPORTED_SYMBOLS.push("ClientRemoteTabs");
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeClientRemoteTabs");
 
 class RemoteTabRecord {
     constructor(title,urlHistory,icon,lastUsed) {
@@ -817,6 +830,8 @@ class FfiConverterTypeRemoteTabRecord extends FfiConverter {
 
 EXPORTED_SYMBOLS.push("RemoteTabRecord");
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeRemoteTabRecord");
 
 const TabsDeviceType = {
     DESKTOP: 1,
@@ -883,6 +898,8 @@ class FfiConverterTypeTabsDeviceType extends FfiConverterArrayBuffer {
 
 EXPORTED_SYMBOLS.push("TabsDeviceType");
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeTabsDeviceType");
 
 
 
@@ -970,6 +987,9 @@ class FfiConverterTypeTabsError extends FfiConverterArrayBuffer {
     }
 }
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeTabsError");
+
 class FfiConverterOptionalstring extends FfiConverterArrayBuffer {
     static checkType(name, value) {
         if (value !== undefined && value !== null) {
@@ -1004,7 +1024,12 @@ class FfiConverterOptionalstring extends FfiConverterArrayBuffer {
         }
         return 1 + FfiConverterString.computeSize(value)
     }
-}class FfiConverterSequencestring extends FfiConverterArrayBuffer {
+}
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterOptionalstring");
+
+class FfiConverterSequencestring extends FfiConverterArrayBuffer {
     static read(dataStream) {
         const len = dataStream.readInt32();
         const arr = [];
@@ -1029,7 +1054,12 @@ class FfiConverterOptionalstring extends FfiConverterArrayBuffer {
         }
         return size;
     }
-}class FfiConverterSequenceTypeClientRemoteTabs extends FfiConverterArrayBuffer {
+}
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterSequencestring");
+
+class FfiConverterSequenceTypeClientRemoteTabs extends FfiConverterArrayBuffer {
     static read(dataStream) {
         const len = dataStream.readInt32();
         const arr = [];
@@ -1054,7 +1084,12 @@ class FfiConverterOptionalstring extends FfiConverterArrayBuffer {
         }
         return size;
     }
-}class FfiConverterSequenceTypeRemoteTabRecord extends FfiConverterArrayBuffer {
+}
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterSequenceTypeClientRemoteTabs");
+
+class FfiConverterSequenceTypeRemoteTabRecord extends FfiConverterArrayBuffer {
     static read(dataStream) {
         const len = dataStream.readInt32();
         const arr = [];
@@ -1079,7 +1114,12 @@ class FfiConverterOptionalstring extends FfiConverterArrayBuffer {
         }
         return size;
     }
-}class FfiConverterSequenceTypeTabsGuid extends FfiConverterArrayBuffer {
+}
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterSequenceTypeRemoteTabRecord");
+
+class FfiConverterSequenceTypeTabsGuid extends FfiConverterArrayBuffer {
     static read(dataStream) {
         const len = dataStream.readInt32();
         const arr = [];
@@ -1105,6 +1145,10 @@ class FfiConverterOptionalstring extends FfiConverterArrayBuffer {
         return size;
     }
 }
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterSequenceTypeTabsGuid");
+
 class FfiConverterTypeTabsGuid extends FfiConverter {
 
     static lift(buf) {  
@@ -1128,5 +1172,10 @@ class FfiConverterTypeTabsGuid extends FfiConverter {
     }
 }
 // TODO: We should also allow JS to customize the type eventually.
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeTabsGuid");
+
+
 
 

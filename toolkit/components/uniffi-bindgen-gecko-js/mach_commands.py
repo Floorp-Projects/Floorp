@@ -4,10 +4,8 @@
 
 import os
 import subprocess
-from mach.decorators import (
-    Command,
-    SubCommand,
-)
+
+from mach.decorators import Command, SubCommand
 
 # IMPORTANT: Please Request review from a DOM peer before
 # committing to using UniFFI. There are other ways to consume Rust from
@@ -23,6 +21,7 @@ FIXTURE_UDL_FILES = [
     "third_party/rust/uniffi-example-sprites/src/sprites.udl",
     "third_party/rust/uniffi-example-todolist/src/todolist.udl",
     "toolkit/components/uniffi-example-custom-types/src/custom-types.udl",
+    "toolkit/components/uniffi-fixture-external-types/src/external-types.udl",
 ]
 CPP_PATH = "toolkit/components/uniffi-js/UniFFIGeneratedScaffolding.cpp"
 JS_DIR = "toolkit/components/uniffi-bindgen-gecko-js/components/generated"

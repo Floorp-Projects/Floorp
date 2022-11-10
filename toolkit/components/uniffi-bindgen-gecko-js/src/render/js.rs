@@ -37,12 +37,43 @@ fn render_enum_literal(typ: &Type, variant_name: &str) -> String {
         panic!("Rendering an enum literal on a type that is not an enum")
     }
 }
+
 #[derive(Template)]
 #[template(path = "js/wrapper.jsm", escape = "none")]
 pub struct JSBindingsTemplate<'a> {
     pub ci: &'a ComponentInterface,
     pub function_ids: &'a FunctionIds<'a>,
     pub object_ids: &'a ObjectIds<'a>,
+}
+
+impl<'a> JSBindingsTemplate<'a> {
+    pub fn js_module_name(&self) -> String {
+        self.js_module_name_for_ci_namespace(self.ci.namespace())
+    }
+
+    fn external_type_module(&self, crate_name: &str) -> String {
+        format!(
+            "resource://gre/modules/{}",
+            self.js_module_name_for_crate_name(crate_name),
+        )
+    }
+
+    // TODO: Once https://phabricator.services.mozilla.com/D156116 is merged maybe the next two
+    // functions should use a map from the config file
+
+    fn js_module_name_for_ci_namespace(&self, namespace: &str) -> String {
+        // The plain namespace name is a bit too generic as a module name for m-c, so we
+        // prefix it with "Rust". Later we'll probably allow this to be customized.
+        format!("Rust{}.jsm", namespace.to_upper_camel_case())
+    }
+
+    fn js_module_name_for_crate_name(&self, crate_name: &str) -> String {
+        let namespace = match crate_name {
+            "uniffi_geometry" => "geometry",
+            s => s,
+        };
+        self.js_module_name_for_ci_namespace(namespace)
+    }
 }
 
 // Define extension traits with methods used in our template code

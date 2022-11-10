@@ -81,6 +81,7 @@ uniffi-example-rondpoint = { git = "https://github.com/mozilla/uniffi-rs.git", r
 uniffi-example-sprites = { git = "https://github.com/mozilla/uniffi-rs.git", rev = "bb2039f077a29dba0879372a67e764e6ace8e33f", optional = true }
 uniffi-example-todolist = { git = "https://github.com/mozilla/uniffi-rs.git", rev = "bb2039f077a29dba0879372a67e764e6ace8e33f", optional = true }
 uniffi-example-custom-types = { path = "../../../components/uniffi-example-custom-types/", optional = true }
+uniffi-fixture-external-types = { path = "../../../components/uniffi-fixture-external-types/", optional = true }
 
 # Note: `modern_sqlite` means rusqlite's bindings file be for a sqlite with
 # version less than or equal to what we link to. This isn't a problem because we
@@ -141,7 +142,7 @@ with_dbus = ["audio_thread_priority/with_dbus"]
 thread_sanitizer = ["xpcom/thread_sanitizer"]
 uniffi_fixtures = [
     "uniffi-example-arithmetic", "uniffi-example-geometry", "uniffi-example-rondpoint", "uniffi-example-sprites",
-    "uniffi-example-todolist", "uniffi-example-custom-types"
+    "uniffi-example-todolist", "uniffi-example-custom-types", "uniffi-fixture-external-types",
 ]
 webmidi_midir_impl = ["midir_impl"]
 
