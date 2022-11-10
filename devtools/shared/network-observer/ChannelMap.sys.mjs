@@ -86,17 +86,17 @@ export class ChannelMap {
   }
 
   /**
-   * Retrieve a value stored in the ChannelMap by the provided channel id.
+   * Retrieve a value stored in the ChannelMap by the provided channel.
    *
-   * @param {string} channelId
-   *     The channel id of the channel for which we are fetching the value.
+   * @param {nsIChannel} channel
+   *     The key to delete from the ChannelMap.
    *
    * @return {Object|null}
-   *     The value held for the provided channel id.
-   *     Null if the channel id did not match any known key.
+   *     The value held for the provided channel.
+   *     Null if the channel did not match any known key.
    */
-  getByChannelId(channelId) {
-    const ref = this.#refMap.get(channelId);
+  get(channel) {
+    const ref = this.#refMap.get(channel.channelId);
     const key = ref ? ref.deref() : null;
     if (!key) {
       return null;
