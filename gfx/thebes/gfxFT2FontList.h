@@ -15,18 +15,21 @@ namespace mozilla {
 namespace dom {
 class SystemFontListEntry;
 };
+namespace gfx {
+class FTUserFontData;
+};
 };  // namespace mozilla
 
 class FontNameCache;
 typedef struct FT_FaceRec_* FT_Face;
 class nsZipArchive;
 class WillShutdownObserver;
-class FTUserFontData;
 
 class FT2FontEntry final : public gfxFT2FontEntryBase {
   friend class gfxFT2FontList;
 
   using FontListEntry = mozilla::dom::SystemFontListEntry;
+  using FTUserFontData = mozilla::gfx::FTUserFontData;
 
  public:
   explicit FT2FontEntry(const nsACString& aFaceName)
