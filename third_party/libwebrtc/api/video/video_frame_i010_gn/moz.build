@@ -30,9 +30,12 @@ LOCAL_INCLUDES += [
     "/tools/profiler/public"
 ]
 
-UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/api/video/i010_buffer.cc",
+SOURCES += [
     "/third_party/libwebrtc/api/video/i210_buffer.cc"
+]
+
+UNIFIED_SOURCES += [
+    "/third_party/libwebrtc/api/video/i010_buffer.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
