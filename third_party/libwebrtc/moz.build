@@ -295,7 +295,7 @@ DIRS += [
     "/third_party/libwebrtc/modules/video_coding/timing/inter_frame_delay_gn",
     "/third_party/libwebrtc/modules/video_coding/timing/jitter_estimator_gn",
     "/third_party/libwebrtc/modules/video_coding/timing/rtt_filter_gn",
-    "/third_party/libwebrtc/modules/video_coding/timing_gn",
+    "/third_party/libwebrtc/modules/video_coding/timing/timing_module_gn",
     "/third_party/libwebrtc/modules/video_coding/video_codec_interface_gn",
     "/third_party/libwebrtc/modules/video_coding/video_coding_gn",
     "/third_party/libwebrtc/modules/video_coding/video_coding_utility_gn",
