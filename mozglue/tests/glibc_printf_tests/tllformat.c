@@ -34,7 +34,7 @@ main (void)
   sprint_int_type *iptr;
   for (iptr = sprint_ints; iptr->line; iptr++)
     {
-      sprintf (buffer, iptr->format_string, iptr->value);
+      snprintf (buffer, sizeof(buffer), iptr->format_string, iptr->value);
       if (strcmp (buffer, iptr->result) != 0)
 	{
 	  ++errcount;
