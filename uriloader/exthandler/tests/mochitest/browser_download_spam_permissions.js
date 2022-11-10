@@ -52,8 +52,6 @@ add_setup(async function() {
     Services.prefs.clearUserPref("browser.download.dir");
     await IOUtils.remove(tempDir.path, { recursive: true });
   });
-
-  Services.telemetry.clearEvents();
 });
 
 add_task(async function check_download_spam_permissions() {
@@ -123,22 +121,6 @@ add_task(async function check_download_spam_permissions() {
     TEST_URI,
     "The test URI should have blocked automatic downloads"
   );
-
-  let events = Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-    true
-  );
-  events = (events.parent || []).filter(
-    e => e[1] == "downloads" && e[2] == "helpertype"
-  );
-  is(events.length, 100, "should be 100 events");
-
-  let initialEvent = events.shift();
-  is(initialEvent[4], "save", "download is saved");
-
-  for (let event of events) {
-    is(event[4], "spam", "download is blocked");
-  }
 
   await savelink();
 });

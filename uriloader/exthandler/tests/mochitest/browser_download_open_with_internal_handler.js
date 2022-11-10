@@ -12,10 +12,6 @@ const { DownloadIntegration } = ChromeUtils.importESModule(
   "resource://gre/modules/DownloadIntegration.sys.mjs"
 );
 
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
-);
-
 const TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "https://example.com"
@@ -78,28 +74,6 @@ function alwaysAskForHandlingTypes(typeExtensions, ask = true) {
   return mimeInfos;
 }
 
-function checkTelemetry(desc, expectedAction, expectedType, expectedReason) {
-  let events = Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-    true
-  );
-  events = (events.parent || []).filter(
-    e => e[1] == "downloads" && e[2] == "helpertype"
-  );
-
-  if (expectedAction == "none") {
-    is(events.length, 0, desc + " number of events");
-    return;
-  }
-
-  is(events.length, 1, desc + " number of events");
-
-  let event = events[0];
-  is(event[4], expectedAction, desc + " telemetry action");
-  is(event[5].type, expectedType, desc + " telemetry type");
-  is(event[5].reason, expectedReason, desc + " telemetry reason");
-}
-
 add_setup(async function() {
   // Remove the security delay for the dialog during the test.
   await SpecialPowers.pushPrefEnv({
@@ -136,8 +110,6 @@ add_setup(async function() {
  * is clicked from pdf.js.
  */
 add_task(async function test_check_open_with_internal_handler() {
-  Services.telemetry.clearEvents();
-
   const mimeInfosToRestore = alwaysAskForHandlingTypes({
     "application/pdf": "pdf",
     "binary/octet-stream": "pdf",
@@ -173,13 +145,6 @@ add_task(async function test_check_open_with_internal_handler() {
     let internalHandlerRadio = doc.querySelector("#handleInternally");
 
     await waitForAcceptButtonToGetEnabled(doc);
-
-    checkTelemetry(
-      "open " + file + " internal",
-      "ask",
-      file.includes("octet") ? "octetstream" : "pdf",
-      "attachment"
-    );
 
     ok(!internalHandlerRadio.hidden, "The option should be visible for PDF");
     ok(internalHandlerRadio.selected, "The option should be selected");
@@ -219,13 +184,6 @@ add_task(async function test_check_open_with_internal_handler() {
     BrowserTestUtils.loadURI(newTab.linkedBrowser, TEST_PATH + file);
     let subDialogWindow = await subdialogPromise;
     let subDoc = subDialogWindow.document;
-
-    checkTelemetry(
-      "open " + file + " internal from current tab",
-      "ask",
-      file.includes("octet") ? "octetstream" : "pdf",
-      "attachment"
-    );
 
     // Prevent racing with initialization of the dialog and make sure that
     // the final state of the dialog has the correct visibility of the internal-handler option.
@@ -289,8 +247,6 @@ add_task(async function test_check_open_with_internal_handler() {
  * open the PDF into pdf.js
  */
 add_task(async function test_check_open_with_external_application() {
-  Services.telemetry.clearEvents();
-
   const mimeInfosToRestore = alwaysAskForHandlingTypes({
     "application/pdf": "pdf",
     "binary/octet-stream": "pdf",
@@ -326,13 +282,6 @@ add_task(async function test_check_open_with_external_application() {
         resolve();
       };
     });
-
-    checkTelemetry(
-      "open " + file + " external",
-      "ask",
-      file.includes("octet") ? "octetstream" : "pdf",
-      "attachment"
-    );
 
     let doc = dialogWindow.document;
     await waitForAcceptButtonToGetEnabled(doc);
@@ -543,7 +492,6 @@ add_task(
     await SpecialPowers.pushPrefEnv({
       set: [["image.webp.enabled", true]],
     });
-    Services.telemetry.clearEvents();
 
     const mimeInfosToRestore = alwaysAskForHandlingTypes({
       "binary/octet-stream": "xml",
@@ -576,13 +524,6 @@ add_task(
       // the final state of the dialog has the correct visibility of the internal-handler option.
       await waitForAcceptButtonToGetEnabled(doc);
 
-      checkTelemetry(
-        "open " + file + " for viewable internal type",
-        "ask",
-        file.endsWith(".webp") ? "other" : "octetstream",
-        "attachment"
-      );
-
       let fileDesc = file.substring(file.lastIndexOf(".") + 1);
 
       ok(
@@ -611,8 +552,6 @@ add_task(
  * for non-PDF, non-viewable-internally types.
  */
 add_task(async function test_internal_handler_hidden_with_other_type() {
-  Services.telemetry.clearEvents();
-
   const mimeInfosToRestore = alwaysAskForHandlingTypes({
     "text/plain": "txt",
   });
@@ -635,13 +574,6 @@ add_task(async function test_internal_handler_hidden_with_other_type() {
   // Prevent racing with initialization of the dialog and make sure that
   // the final state of the dialog has the correct visibility of the internal-handler option.
   await waitForAcceptButtonToGetEnabled(doc);
-
-  checkTelemetry(
-    "open file_txt_attachment_test.txt for non-viewable internal type",
-    "ask",
-    "other",
-    "attachment"
-  );
 
   let internalHandlerRadio = doc.querySelector("#handleInternally");
   ok(
@@ -753,9 +685,6 @@ add_task(
  * This test sets the action to internal. The files should open directly without asking.
  */
 add_task(async function test_check_open_with_internal_handler_noask() {
-  Services.telemetry.clearScalars();
-  Services.telemetry.clearEvents();
-
   const mimeInfosToRestore = alwaysAskForHandlingTypes(
     {
       "application/pdf": "pdf",
@@ -899,14 +828,6 @@ add_task(async function test_check_open_with_internal_handler_noask() {
               "original browser hasn't navigated"
             );
           }
-        );
-
-        let action = expectDialog ? "ask" : "internal";
-        checkTelemetry(
-          "open " + file + " internal",
-          openPDFDirectly ? "none" : action,
-          file.includes("octet") ? "octetstream" : "pdf",
-          "attachment"
         );
 
         await BrowserTestUtils.removeTab(gBrowser.selectedTab);

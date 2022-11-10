@@ -1565,7 +1565,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
 
   if (!mForceSave && StaticPrefs::browser_download_enable_spam_prevention() &&
       IsDownloadSpam(aChannel)) {
-    RecordDownloadTelemetry(aChannel, "spam");
     return NS_OK;
   }
 
@@ -1577,7 +1576,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     // cancel the request so no ui knows about this.
     mCanceled = true;
     request->Cancel(NS_ERROR_ABORT);
-    RecordDownloadTelemetry(aChannel, "forbidden");
     return NS_OK;
   }
 
@@ -1654,8 +1652,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     if (mTempFile) mTempFile->GetPath(path);
 
     SendStatusChange(kWriteError, transferError, request, path);
-
-    RecordDownloadTelemetry(aChannel, "savefailed");
 
     return NS_OK;
   }
@@ -1836,20 +1832,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   }
 #endif
 
-  nsAutoCString actionTelem;
-  if (alwaysAsk) {
-    actionTelem.AssignLiteral("ask");
-  } else if (shouldAutomaticallyHandleInternally) {
-    actionTelem.AssignLiteral("internal");
-  } else if (action == nsIMIMEInfo::useHelperApp ||
-             action == nsIMIMEInfo::useSystemDefault) {
-    actionTelem.AssignLiteral("external");
-  } else {
-    actionTelem.AssignLiteral("save");
-  }
-
-  RecordDownloadTelemetry(aChannel, actionTelem.get());
-
   if (alwaysAsk) {
     // Display the dialog
     mDialog = do_CreateInstance(NS_HELPERAPPLAUNCHERDLG_CONTRACTID, &rv);
@@ -1880,50 +1862,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     }
   }
   return NS_OK;
-}
-
-void nsExternalAppHandler::RecordDownloadTelemetry(nsIChannel* aChannel,
-                                                   const char* aAction) {
-  // Telemetry for helper app dialog
-
-  if (XRE_IsContentProcess()) {
-    return;
-  }
-
-  nsAutoCString reason;
-  switch (mReason) {
-    case nsIHelperAppLauncherDialog::REASON_SERVERREQUEST:
-      reason.AssignLiteral("attachment");
-      break;
-    case nsIHelperAppLauncherDialog::REASON_TYPESNIFFED:
-      reason.AssignLiteral("sniffed");
-      break;
-    case nsIHelperAppLauncherDialog::REASON_CANTHANDLE:
-    default:
-      reason.AssignLiteral("other");
-      break;
-  }
-
-  nsAutoCString contentTypeTelem;
-  nsAutoCString contentType;
-  aChannel->GetContentType(contentType);
-  if (contentType.EqualsIgnoreCase(APPLICATION_PDF)) {
-    contentTypeTelem.AssignLiteral("pdf");
-  } else if (contentType.EqualsIgnoreCase(APPLICATION_OCTET_STREAM) ||
-             contentType.EqualsIgnoreCase(BINARY_OCTET_STREAM)) {
-    contentTypeTelem.AssignLiteral("octetstream");
-  } else {
-    contentTypeTelem.AssignLiteral("other");
-  }
-
-  CopyableTArray<mozilla::Telemetry::EventExtraEntry> extra(1);
-  extra.AppendElement(
-      mozilla::Telemetry::EventExtraEntry{"type"_ns, contentTypeTelem});
-  extra.AppendElement(mozilla::Telemetry::EventExtraEntry{"reason"_ns, reason});
-
-  mozilla::Telemetry::RecordEvent(
-      mozilla::Telemetry::EventID::Downloads_Helpertype_Unknowntype,
-      mozilla::Some(aAction), mozilla::Some(extra));
 }
 
 bool nsExternalAppHandler::IsDownloadSpam(nsIChannel* aChannel) {
