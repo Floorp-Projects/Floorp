@@ -29,13 +29,12 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
  *      nsitraceablechannel-intercept-http-traffic/
  *
  * @constructor
- * @param object owner
- *        The response listener owner. This object needs to hold the
- *        |openResponses| object.
- * @param object httpActivity
+ * @param {NetworkObserver} networkObserver
+ *        The NetworkObserver instance which created this listener.
+ * @param {Object} httpActivity
  *        HttpActivity object associated with this request. See NetworkObserver
- *        for more information.
- * @param Map decodedCertificateCache
+ *        more information.
+ * @param {Map} decodedCertificateCache
  *        A Map of certificate fingerprints to decoded certificates, to avoid
  *        repeatedly decoding previously-seen certificates.
  */
@@ -46,9 +45,10 @@ export class NetworkResponseListener {
   #foundOpenResponse;
   #httpActivity;
   #inputStream;
+  #isDestroyed;
   #onSecurityInfo;
   #offset;
-  #owner;
+  #networkObserver;
   #receivedData;
   #request;
   #sink;
@@ -56,7 +56,7 @@ export class NetworkResponseListener {
   #truncated;
   #wrappedNotificationCallbacks;
 
-  constructor(owner, httpActivity, decodedCertificateCache) {
+  constructor(networkObserver, httpActivity, decodedCertificateCache) {
     this.QueryInterface = ChromeUtils.generateQI([
       "nsIStreamListener",
       "nsIInputStreamCallback",
@@ -64,8 +64,11 @@ export class NetworkResponseListener {
       "nsIInterfaceRequestor",
     ]);
 
-    // The response listener owner.
-    this.#owner = owner;
+    // Explicit flag to check if this listener was already destroyed.
+    this.#isDestroyed = false;
+
+    // The networkObserver instance which created this listener.
+    this.#networkObserver = networkObserver;
 
     // Stores the received data as a string.
     this.#receivedData = "";
@@ -402,12 +405,16 @@ export class NetworkResponseListener {
    * @private
    */
   #findOpenResponse() {
-    if (!this.#owner || this.#foundOpenResponse) {
+    if (this.#isDestroyed) {
+      return;
+    }
+
+    if (this.#foundOpenResponse) {
       return;
     }
 
     const channel = this.#httpActivity.channel;
-    const openResponse = this.#owner.openResponses.getByChannelId(
+    const openResponse = this.#networkObserver.openResponses.getByChannelId(
       channel.channelId
     );
 
@@ -416,7 +423,7 @@ export class NetworkResponseListener {
     }
 
     this.#foundOpenResponse = true;
-    this.#owner.openResponses.delete(channel);
+    this.#networkObserver.openResponses.delete(channel);
 
     this.#httpActivity.owner.addResponseHeaders(openResponse.headers);
     this.#httpActivity.owner.addResponseCookies(openResponse.cookies);
@@ -546,10 +553,12 @@ export class NetworkResponseListener {
     this.#wrappedNotificationCallbacks = null;
     this.#httpActivity = null;
     this.#sink = null;
-    this.inputStream = null;
+    this.#inputStream = null;
     this.#converter = null;
     this.#request = null;
-    this.#owner = null;
+    this.#networkObserver = null;
+
+    this.#isDestroyed = true;
   }
 
   /**
