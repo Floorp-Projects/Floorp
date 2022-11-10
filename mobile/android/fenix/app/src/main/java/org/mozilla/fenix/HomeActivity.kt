@@ -42,6 +42,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.state.SessionState
@@ -384,6 +385,11 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             DefaultBrowserNotificationWorker.setDefaultBrowserNotificationIfNeeded(applicationContext)
             ReEngagementNotificationWorker.setReEngagementNotificationIfNeeded(applicationContext)
         }
+
+        // This was done in order to refresh search engines when app is running in background
+        // and the user changes the system language
+        // More details here: https://github.com/mozilla-mobile/fenix/pull/27793#discussion_r1029892536
+        components.core.store.dispatch(SearchAction.RefreshSearchEnginesAction)
     }
 
     override fun onStart() {
