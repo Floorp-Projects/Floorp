@@ -22,8 +22,7 @@ class nsPageContentFrame final : public mozilla::ViewportFrame {
   NS_DECL_FRAMEARENA_HELPERS(nsPageContentFrame)
 
   friend nsPageContentFrame* NS_NewPageContentFrame(
-      mozilla::PresShell* aPresShell, ComputedStyle* aStyle,
-      already_AddRefed<const nsAtom> aPageName);
+      mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
   friend class nsPageFrame;
 
   // nsIFrame
@@ -36,8 +35,6 @@ class nsPageContentFrame final : public mozilla::ViewportFrame {
         aFlags & ~(nsIFrame::eCanContainOverflowContainers));
   }
 
-  const nsAtom* GetPageName() const { return mPageName; }
-
   void SetSharedPageData(nsSharedPageData* aPD) { mPD = aPD; }
 
   ComputeTransformFunction GetTransformGetter() const override;
@@ -49,21 +46,15 @@ class nsPageContentFrame final : public mozilla::ViewportFrame {
    */
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
 
-  void EnsurePageName();
-
 #ifdef DEBUG_FRAME_DUMP
   // Debugging
   nsresult GetFrameName(nsAString& aResult) const override;
-  void ExtraContainerFrameInfo(nsACString& aTo) const override;
 #endif
 
  protected:
   explicit nsPageContentFrame(ComputedStyle* aStyle,
-                              nsPresContext* aPresContext,
-                              already_AddRefed<const nsAtom> aPageName)
-      : ViewportFrame(aStyle, aPresContext, kClassID), mPageName(aPageName) {}
-
-  RefPtr<const nsAtom> mPageName;
+                              nsPresContext* aPresContext)
+      : ViewportFrame(aStyle, aPresContext, kClassID) {}
 
   // Note: this will be set before reflow, and it's strongly owned by our
   // nsPageSequenceFrame, which outlives us.
