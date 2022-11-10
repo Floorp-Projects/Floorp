@@ -29,7 +29,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/rtc_base/task_utils/pending_task_safety_flag.cc"
+    "/third_party/libwebrtc/api/task_queue/pending_task_safety_flag.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
