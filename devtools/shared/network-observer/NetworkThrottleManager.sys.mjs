@@ -48,11 +48,6 @@ class NetworkThrottleListener {
    *        which status changes should be reported
    */
   constructor(queue) {
-    this.QueryInterface = ChromeUtils.generateQI([
-      "nsIStreamListener",
-      "nsIInterfaceRequestor",
-    ]);
-
     this.#activities = {};
     this.#offset = 0;
     this.#pendingData = [];
@@ -273,6 +268,11 @@ class NetworkThrottleListener {
       this.#activities[code] = undefined;
     }
   }
+
+  QueryInterface = ChromeUtils.generateQI([
+    "nsIStreamListener",
+    "nsIInterfaceRequestor",
+  ]);
 }
 
 class NetworkThrottleQueue {
