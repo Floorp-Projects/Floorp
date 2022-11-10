@@ -1476,42 +1476,6 @@ uint64_t LocalAccessible::State() {
   // Apply ARIA states to be sure accessible states will be overridden.
   ApplyARIAState(&state);
 
-  // If this is an ARIA item of the selectable widget and if it's focused and
-  // not marked unselected explicitly (i.e. aria-selected="false") then expose
-  // it as selected to make ARIA widget authors life easier.
-  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
-  if (roleMapEntry && !(state & states::SELECTED) &&
-      (!mContent->IsElement() ||
-       !nsAccUtils::ARIAAttrValueIs(mContent->AsElement(),
-                                    nsGkAtoms::aria_selected, nsGkAtoms::_false,
-                                    eCaseMatters))) {
-    // Special case for tabs: focused tab or focus inside related tab panel
-    // implies selected state.
-    if (roleMapEntry->role == roles::PAGETAB) {
-      if (state & states::FOCUSED) {
-        state |= states::SELECTED;
-      } else {
-        // If focus is in a child of the tab panel surely the tab is selected!
-        Relation rel = RelationByType(RelationType::LABEL_FOR);
-        LocalAccessible* relTarget = nullptr;
-        while ((relTarget = rel.LocalNext())) {
-          if (relTarget->Role() == roles::PROPERTYPAGE &&
-              FocusMgr()->IsFocusWithin(relTarget)) {
-            state |= states::SELECTED;
-          }
-        }
-      }
-    } else if (state & states::FOCUSED) {
-      LocalAccessible* container =
-          nsAccUtils::GetSelectableContainer(this, state);
-      if (container &&
-          !nsAccUtils::HasDefinedARIAToken(container->GetContent(),
-                                           nsGkAtoms::aria_multiselectable)) {
-        state |= states::SELECTED;
-      }
-    }
-  }
-
   const uint32_t kExpandCollapseStates = states::COLLAPSED | states::EXPANDED;
   if ((state & kExpandCollapseStates) == kExpandCollapseStates) {
     // Cannot be both expanded and collapsed -- this happens in ARIA expanded
@@ -1536,11 +1500,6 @@ uint64_t LocalAccessible::State() {
   if ((state & states::COLLAPSED) || (state & states::EXPANDED)) {
     state |= states::EXPANDABLE;
   }
-
-  // For some reasons DOM node may have not a frame. We tract such accessibles
-  // as invisible.
-  nsIFrame* frame = GetFrame();
-  if (!frame) return state;
 
   Maybe<float> opacity = Opacity();
   if (opacity && *opacity == 1.0f && !(state & states::INVISIBLE)) {

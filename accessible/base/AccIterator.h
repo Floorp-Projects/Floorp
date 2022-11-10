@@ -7,8 +7,8 @@
 #ifndef mozilla_a11y_AccIterator_h__
 #define mozilla_a11y_AccIterator_h__
 
-#include "DocAccessible.h"
 #include "Filters.h"
+#include "mozilla/a11y/DocAccessible.h"
 #include "nsTArray.h"
 
 #include <memory>
