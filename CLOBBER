@@ -23,4 +23,4 @@
 # don't change CLOBBER for WebIDL changes any more.
 
 
-Modified build files in third_party/libwebrtc - Bug 1795982 - pt3 - re-enable building absl/base:throw_delegate for missing ThrowStdOutOfRange. r=ng
+Modified build files in third_party/libwebrtc - Bug 1790097 - Vendor libwebrtc from 4b97928b30
