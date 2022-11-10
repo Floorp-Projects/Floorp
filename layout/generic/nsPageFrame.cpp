@@ -50,7 +50,11 @@ nsPageFrame::~nsPageFrame() = default;
 
 nsReflowStatus nsPageFrame::ReflowPageContent(
     nsPresContext* aPresContext, const ReflowInput& aPageReflowInput) {
-  nsIFrame* const frame = PageContentFrame();
+  nsPageContentFrame* const frame = PageContentFrame();
+  // If this is the first page, it won't have its page name and computed style
+  // set yet. Before reflow, make sure that page name and computed style have
+  // been applied.
+  frame->EnsurePageName();
   // XXX Pay attention to the page's border and padding...
   //
   // Reflow our ::-moz-page-content frame, allowing it only to be as big as we

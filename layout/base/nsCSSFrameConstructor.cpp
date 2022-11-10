@@ -2728,6 +2728,9 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
         ConstructPrintedSheetFrame(mPresShell, mPageSequenceFrame, nullptr);
     SetInitialSingleChild(mPageSequenceFrame, printedSheetFrame);
 
+    MOZ_ASSERT(!mNextPageContentFramePageName,
+               "Next page name should not have been set.");
+
     // Create the first page, as the sole child (for now) of the printed sheet
     // frame that we just created.
     nsContainerFrame* canvasFrame;
@@ -2799,12 +2802,19 @@ nsContainerFrame* nsCSSFrameConstructor::ConstructPageFrame(
   // of the pages easier and faster.
   pageFrame->Init(nullptr, aParentFrame, aPrevPageFrame);
 
+  RefPtr<const nsAtom> pageName;
+  if (mNextPageContentFramePageName) {
+    pageName = mNextPageContentFramePageName.forget();
+  } else if (aPrevPageFrame) {
+    pageName = aPrevPageFrame->ComputePageValue();
+    MOZ_ASSERT(pageName,
+               "Page name from prev-in-flow should not have been null");
+  }
   RefPtr<ComputedStyle> pageContentPseudoStyle =
-      styleSet->ResolveNonInheritingAnonymousBoxStyle(
-          PseudoStyleType::pageContent);
+      styleSet->ResolvePageContentStyle(pageName);
 
-  nsContainerFrame* pageContentFrame =
-      NS_NewPageContentFrame(aPresShell, pageContentPseudoStyle);
+  nsContainerFrame* pageContentFrame = NS_NewPageContentFrame(
+      aPresShell, pageContentPseudoStyle, pageName.forget());
 
   // Initialize the page content frame and force it to have a view. Also make it
   // the containing block for fixed elements which are repeated on every page.
@@ -3763,6 +3773,11 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
       aState.MaybePushFloatContainingBlock(newFrameAsContainer, floatSaveState);
 
       if (bits & FCDATA_USE_CHILD_ITEMS) {
+        // At this point, we have not set up the auto value for this frame, and
+        // no caller will have set it so it is not redundant and therefor will
+        // not assert.
+        AutoFrameConstructionPageName pageNameTracker(aState,
+                                                      newFrameAsContainer);
         ConstructFramesFromItemList(
             aState, aItem.mChildItems, newFrameAsContainer,
             bits & FCDATA_IS_WRAPPER_ANON_BOX, childList);
@@ -6550,6 +6565,21 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
   nsFrameConstructorState state(
       mPresShell, GetAbsoluteContainingBlock(parentFrame, FIXED_POS),
       GetAbsoluteContainingBlock(parentFrame, ABS_POS), containingBlock);
+
+  if (mPresShell->GetPresContext()->IsPaginated() &&
+      StaticPrefs::layout_css_named_pages_enabled()) {
+    // Because this function can be called outside frame construction, we need
+    // to set state.mAutoPageNameValue based on what the parent frame's auto
+    // value is.
+    // Calling this from outside the frame constructor can violate many of the
+    // expectations in AutoFrameConstructionPageName, and unlike during frame
+    // construction we already have an auto value from parentFrame, so we do
+    // not use AutoFrameConstructionPageName here.
+    state.mAutoPageNameValue = parentFrame->GetAutoPageValue();
+#ifdef DEBUG
+    parentFrame->mWasVisitedByAutoFrameConstructionPageName = true;
+#endif
+  }
 
   LayoutFrameType frameType = parentFrame->Type();
 
