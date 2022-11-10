@@ -1,0 +1,10 @@
+[
+  {
+    "filename": "mitmproxy-8.1.1-linux.tar.gz",
+    "size": 90353267,
+    "algorithm": "sha512",
+    "digest": "d6d99dca35dc5797549e58f872067ba6a1bff9903db880eabb9993a224e35fba26a001c0665ce7a9983f1b2212aa9c83646a58e6000c5415aea731fa1fe7f46d",
+    "unpack": true,
+    "visibility": "public"
+  }
+]

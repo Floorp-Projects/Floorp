@@ -296,7 +296,7 @@ class Mitmproxy(Playback):
         else:
             # playback mode
             if len(self.playback_files) > 0:
-                if self.config["playback_version"] == "7.0.4":
+                if self.config["playback_version"] == "8.1.1":
                     command.extend(
                         [
                             "--set",
