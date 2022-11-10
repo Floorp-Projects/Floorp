@@ -72,7 +72,11 @@ def setup_test_harness(request, flavor="plain"):
                     if hasattr(os, "symlink"):
                         if not os.path.isdir(os.path.dirname(test_root)):
                             os.makedirs(os.path.dirname(test_root))
-                        os.symlink(files_dir, test_root)
+                        try:
+                            os.symlink(files_dir, test_root)
+                        except FileExistsError:
+                            # another pytest job set up the symlink - no problem
+                            pass
                     else:
                         shutil.copytree(files_dir, test_root)
         elif "TEST_HARNESS_ROOT" in os.environ:
