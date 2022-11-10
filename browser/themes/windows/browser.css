@@ -13,9 +13,6 @@
   --toolbar-non-lwt-textcolor: -moz-dialogtext;
   --toolbar-non-lwt-bgimage: linear-gradient(rgba(255,255,255,.15), rgba(255,255,255,.15));
 
-  --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) - 1px);
-  --toolbarbutton-border-radius: 4px;
-
   --panel-separator-color: ThreeDLightShadow;
 
   --chrome-content-separator-color: ThreeDShadow;

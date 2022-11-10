@@ -20,9 +20,6 @@
   --toolbar-non-lwt-bgimage: linear-gradient(rgba(255,255,255,.075), rgba(255,255,255,.075));
   --tab-selected-non-lwt-bgimage: linear-gradient(rgba(255,255,255,.15), rgba(255,255,255,.15));
 
-  --toolbarbutton-border-radius: 4px;
-  --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) - 1px);
-
   --panel-separator-color: ThreeDShadow;
 
   --chrome-content-separator-color: ThreeDShadow;
