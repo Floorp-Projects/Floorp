@@ -28,7 +28,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
 
-var EXPORTED_SYMBOLS = ["BridgeWrapperXPCOM", "BridgedEngine", "LogAdapter"];
+var EXPORTED_SYMBOLS = [
+  "BridgeWrapperXPCOM",
+  "BridgedEngine",
+  "BridgedStore",
+  "LogAdapter",
+];
 
 /**
  * A stub store that converts between raw decrypted incoming records and

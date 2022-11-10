@@ -169,6 +169,7 @@ add_task(async function test_tab_engine_skips_incoming_local_record() {
       equal(client.id, "fake-guid-00");
       equal(client.name, "Remote client");
       equal(client.type, "desktop");
+      Assert.ok(client.lastModified); // lastModified should be filled in once serverModified is populated from the server
       deepEqual(client.tabs, [
         {
           title: "title2",
