@@ -53,13 +53,13 @@ function buildResponseCacheObject(cacheEntry) {
   const cacheObject = {};
   try {
     if (cacheEntry.storageDataSize) {
-      cacheObject.dataSize = cacheEntry.storageDataSize;
+      cacheObject.storageDataSize = cacheEntry.storageDataSize;
     }
   } catch (e) {
     // We just need to handle this in case it's a js file of 0B.
   }
   if (cacheEntry.expirationTime) {
-    cacheObject.expires = cacheEntry.expirationTime;
+    cacheObject.expirationTime = cacheEntry.expirationTime;
   }
   if (cacheEntry.fetchCount) {
     cacheObject.fetchCount = cacheEntry.fetchCount;
@@ -71,7 +71,7 @@ function buildResponseCacheObject(cacheEntry) {
     cacheObject.lastModified = cacheEntry.lastModified;
   }
   if (cacheEntry.deviceID) {
-    cacheObject.device = cacheEntry.deviceID;
+    cacheObject.deviceID = cacheEntry.deviceID;
   }
   return cacheObject;
 }
