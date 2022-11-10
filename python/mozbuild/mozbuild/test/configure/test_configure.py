@@ -4,30 +4,22 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from six import StringIO
 import os
-import six
 import sys
 import textwrap
 import unittest
 
-from mozunit import (
-    main,
-    MockedOpen,
-)
-
+import mozpack.path as mozpath
+import six
+from mozbuild.configure import ConfigureError, ConfigureSandbox
 from mozbuild.configure.options import (
     InvalidOptionError,
     NegativeOptionValue,
     PositiveOptionValue,
 )
-from mozbuild.configure import (
-    ConfigureError,
-    ConfigureSandbox,
-)
-from mozbuild.util import exec_, memoized_property, ReadOnlyNamespace
-
-import mozpack.path as mozpath
+from mozbuild.util import ReadOnlyNamespace, exec_, memoized_property
+from mozunit import MockedOpen, main
+from six import StringIO
 
 test_data_path = mozpath.abspath(mozpath.dirname(__file__))
 test_data_path = mozpath.join(test_data_path, "data")
@@ -571,6 +563,20 @@ class TestConfigure(unittest.TestCase):
                 },
             )
 
+    def test_set_config_when_disable(self):
+        with self.moz_configure(
+            """
+            option('--disable-baz', help='Disable baz')
+            set_config('BAZ', True, when='--enable-baz')
+        """
+        ):
+            config = self.get_config()
+            self.assertEqual(config["BAZ"], True)
+            config = self.get_config(["--enable-baz"])
+            self.assertEqual(config["BAZ"], True)
+            config = self.get_config(["--disable-baz"])
+            self.assertEqual(config, {})
+
     def test_set_define(self):
         def get_config(*args):
             return self.get_config(*args, configure="set_define.configure")
@@ -627,6 +633,20 @@ class TestConfigure(unittest.TestCase):
                     "QUX": "qux",
                 },
             )
+
+    def test_set_define_when_disable(self):
+        with self.moz_configure(
+            """
+            option('--disable-baz', help='Disable baz')
+            set_define('BAZ', True, when='--enable-baz')
+        """
+        ):
+            config = self.get_config()
+            self.assertEqual(config["DEFINES"]["BAZ"], True)
+            config = self.get_config(["--enable-baz"])
+            self.assertEqual(config["DEFINES"]["BAZ"], True)
+            config = self.get_config(["--disable-baz"])
+            self.assertEqual(config["DEFINES"], {})
 
     def test_imply_option_simple(self):
         def get_config(*args):
