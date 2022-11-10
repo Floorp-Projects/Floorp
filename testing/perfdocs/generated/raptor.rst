@@ -6016,7 +6016,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **page timeout**: 60000
    * **playback**: mitmproxy
    * **playback pageset manifest**: null.manifest
-   * **playback version**: 5.1.1
+   * **playback version**: 8.1.1
    * **test script**: None
    * **test url**: `<None>`__
    * **type**: pageload
@@ -6196,7 +6196,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **page timeout**: 60000
    * **playback**: mitmproxy
    * **playback pageset manifest**: mitm5-linux-firefox-welcome.manifest
-   * **playback version**: 5.1.1
+   * **playback version**: 8.1.1
    * **test script**: welcome.js
    * **test url**: `<about:welcome>`__
    * **type**: pageload
@@ -18076,7 +18076,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **page timeout**: 60000
    * **playback**: mitmproxy
    * **playback pageset manifest**: mitm7-linux-firefox-cnn-nav.manifest
-   * **playback version**: 7.0.4
+   * **playback version**: 8.1.1
    * **test cmds**:  ["measure.start", "landing"], ["navigate", "https://www.cnn.com"], ["wait.byTime", 4000], ["measure.stop", ""], ["measure.start", "world"], ["click.byXpathAndWait", "/html/body/div[5]/div/div/header/div/div[1]/div/div[2]/nav/ul/li[2]/a"], ["wait.byTime", 1000], ["measure.stop", ""],
    * **test url**: `<https://www.cnn.com/>`__
    * **type**: pageload
@@ -18272,7 +18272,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **page timeout**: 90000
    * **playback**: mitmproxy
    * **playback pageset manifest**: mitm6-windows-firefox-facebook-nav.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test cmds**:  ["measure.start", "landing"], ["navigate", "https://www.facebook.com/"], ["wait.byTime", 5000], ["measure.stop", ""], ["measure.start", "marketplace"], ["navigate", "https://www.facebook.com/marketplace"], ["wait.byTime", 5000], ["measure.stop", ""], ["measure.start", "groups"], ["navigate", "https://www.facebook.com/groups/discover/"], ["wait.byTime", 5000], ["measure.stop", ""], ["measure.start", "friends"], ["navigate", "https://www.facebook.com/friends/"], ["wait.byTime", 5000], ["measure.stop", ""],
    * **test url**: `<https://www.facebook.com>`__
    * **type**: pageload
@@ -18468,7 +18468,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **page timeout**: 240000
    * **playback**: mitmproxy
    * **playback pageset manifest**: mitm6-windows-firefox-reddit-billgates-ama.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test cmds**:  ["measure.start", "billg-ama"], ["navigate", "https://www.reddit.com/r/IAmA/comments/m8n4vt/im_bill_gates_cochair_of_the_bill_and_melinda/"], ["wait.byTime", 5000], ["measure.stop", ""], ["measure.start", "members"], ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div[3]/div[2]/div/div[1]/div/div[4]/div[1]/div"], ["wait.byTime", 1000], ["measure.stop", ""],
    * **test url**: `<https://www.reddit.com/>`__
    * **type**: pageload
@@ -18664,7 +18664,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **page timeout**: 90000
    * **playback**: mitmproxy
    * **playback pageset manifest**: mitm6-windows-firefox-reddit-billgates-post.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test cmds**:  ["measure.start", "billg"], ["navigate", "https://www.reddit.com/user/thisisbillgates/"], ["wait.byTime", 500], ["measure.stop", ""], ["measure.start", "posts"], ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[2]/div/div/div/a[2]"], ["wait.byTime", 500], ["measure.stop", ""], ["measure.start", "comments"], ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[2]/div/div/div/a[3]"], ["wait.byTime", 500], ["measure.stop", ""], ["wait.byTime", 500],
    * **test url**: `<https://www.reddit.com/user/thisisbillgates/>`__
    * **type**: pageload
@@ -18860,7 +18860,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **page timeout**: 90000
    * **playback**: mitmproxy
    * **playback pageset manifest**: mitm6-windows-firefox-reddit-billgates-post.manifest
-   * **playback version**: 6.0.2
+   * **playback version**: 8.1.1
    * **test cmds**:  ["measure.start", "billg"], ["navigate", "https://www.reddit.com/user/thisisbillgates/"], ["wait.byTime", 500], ["measure.stop", ""], ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[2]/div/div/div/a[3]"], ["wait.byTime", 500], ["measure.start", "hot"], ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[4]/div[1]/div[1]/div[2]/a[2]"], ["wait.byTime", 500], ["measure.stop", ""], ["measure.start", "top"], ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[4]/div[1]/div[1]/div[2]/a[3]"], ["wait.byTime", 500], ["measure.stop", ""], ["wait.byTime", 500],
    * **test url**: `<https://www.reddit.com/user/thisisbillgates/>`__
    * **type**: pageload
