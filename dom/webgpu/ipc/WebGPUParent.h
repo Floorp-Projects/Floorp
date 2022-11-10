@@ -9,6 +9,7 @@
 #include "mozilla/webgpu/ffi/wgpu.h"
 #include "mozilla/webgpu/PWebGPUParent.h"
 #include "mozilla/webrender/WebRenderAPI.h"
+#include "mozilla/ipc/RawShmem.h"
 #include "WebGPUTypes.h"
 #include "base/timer.h"
 
@@ -37,7 +38,7 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvDeviceDestroy(RawId aDeviceId);
   ipc::IPCResult RecvCreateBuffer(RawId aDeviceId, RawId aBufferId,
                                   dom::GPUBufferDescriptor&& aDesc,
-                                  MaybeShmem&& aShmem);
+                                  ipc::UnsafeSharedMemoryHandle&& aShmem);
   ipc::IPCResult RecvBufferReturnShmem(RawId aBufferId, Shmem&& aShmem);
   ipc::IPCResult RecvBufferMap(RawId aBufferId, uint32_t aMode,
                                uint64_t aOffset, uint64_t size,
@@ -107,7 +108,7 @@ class WebGPUParent final : public PWebGPUParent {
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   struct BufferMapData {
-    Shmem mShmem;
+    ipc::WritableSharedMemoryMapping mShmem;
     // True if buffer's usage has MAP_READ or MAP_WRITE set.
     bool mHasMapFlags;
     uint64_t mMappedOffset;
