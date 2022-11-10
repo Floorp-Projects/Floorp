@@ -109,6 +109,10 @@ export const MultiStageAboutWelcome = props => {
     })();
   }, []);
 
+  // Save the active multi select state containing array of checkbox ids
+  // used in handleAction to update MULTI_ACTION data
+  const [activeMultiSelect, setActiveMultiSelect] = useState(null);
+
   // Get the active theme so the rendering code can make it selected
   // by default.
   const [activeTheme, setActiveTheme] = useState(null);
@@ -207,6 +211,8 @@ export const MultiStageAboutWelcome = props => {
               initialTheme={initialTheme}
               setActiveTheme={setActiveTheme}
               setInitialTheme={setInitialTheme}
+              activeMultiSelect={activeMultiSelect}
+              setActiveMultiSelect={setActiveMultiSelect}
               autoAdvance={screen.auto_advance}
               negotiatedLanguage={negotiatedLanguage}
               langPackInstallPhase={langPackInstallPhase}
@@ -313,6 +319,15 @@ export class WelcomeScreen extends React.PureComponent {
 
     let { action } = targetContent;
 
+    if (action.collectSelect) {
+      // Populate MULTI_ACTION data actions property with selected checkbox actions from tiles data
+      action.data = {
+        actions: this.props.activeMultiSelect.map(
+          id => props.content?.tiles?.data.find(ckbx => ckbx.id === id)?.action
+        ),
+      };
+    }
+
     if (["OPEN_URL", "SHOW_FIREFOX_ACCOUNTS"].includes(action.type)) {
       this.handleOpenURL(action, props.flowParams, props.UTMTerm);
     } else if (action.type) {
@@ -360,6 +375,8 @@ export class WelcomeScreen extends React.PureComponent {
         order={this.props.order}
         stepOrder={this.props.stepOrder}
         activeTheme={this.props.activeTheme}
+        activeMultiSelect={this.props.activeMultiSelect}
+        setActiveMultiSelect={this.props.setActiveMultiSelect}
         totalNumberOfScreens={this.props.totalNumberOfScreens}
         appAndSystemLocaleInfo={this.props.appAndSystemLocaleInfo}
         negotiatedLanguage={this.props.negotiatedLanguage}
