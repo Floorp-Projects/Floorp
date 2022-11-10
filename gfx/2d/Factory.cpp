@@ -200,6 +200,25 @@ namespace mozilla::gfx {
 #ifdef MOZ_ENABLE_FREETYPE
 FT_Library Factory::mFTLibrary = nullptr;
 StaticMutex Factory::mFTLock;
+
+already_AddRefed<SharedFTFace> FTUserFontData::CloneFace(int aFaceIndex) {
+  if (mFontData) {
+    RefPtr<SharedFTFace> face = Factory::NewSharedFTFaceFromData(
+        nullptr, mFontData, mLength, aFaceIndex, this);
+    if (!face ||
+        (FT_Select_Charmap(face->GetFace(), FT_ENCODING_UNICODE) != FT_Err_Ok &&
+         FT_Select_Charmap(face->GetFace(), FT_ENCODING_MS_SYMBOL) !=
+             FT_Err_Ok)) {
+      return nullptr;
+    }
+    return face.forget();
+  }
+  FT_Face face = Factory::NewFTFace(nullptr, mFilename.c_str(), aFaceIndex);
+  if (face) {
+    return MakeAndAddRef<SharedFTFace>(face, this);
+  }
+  return nullptr;
+}
 #endif
 
 #ifdef WIN32
@@ -649,11 +668,19 @@ FT_Face Factory::NewFTFace(FT_Library aFTLibrary, const char* aFileName,
 already_AddRefed<SharedFTFace> Factory::NewSharedFTFace(FT_Library aFTLibrary,
                                                         const char* aFilename,
                                                         int aFaceIndex) {
-  if (FT_Face face = NewFTFace(aFTLibrary, aFilename, aFaceIndex)) {
-    return MakeAndAddRef<SharedFTFace>(face);
-  } else {
+  FT_Face face = NewFTFace(aFTLibrary, aFilename, aFaceIndex);
+  if (!face) {
     return nullptr;
   }
+
+  // If the font has variations, we may later need to "clone" it in
+  // UnscaledFontFreeType::CreateScaledFont. To support this, we attach an
+  // FTUserFontData that records the filename used to instantiate the face.
+  RefPtr<FTUserFontData> data;
+  if (face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
+    data = new FTUserFontData(aFilename);
+  }
+  return MakeAndAddRef<SharedFTFace>(face, data);
 }
 
 FT_Face Factory::NewFTFaceFromData(FT_Library aFTLibrary, const uint8_t* aData,
