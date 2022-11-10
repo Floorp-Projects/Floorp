@@ -14,6 +14,12 @@
     <string name="content_description_disable_private_browsing_button">ปิดใช้งานการเรียกดูแบบส่วนตัว</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">ค้นหาหรือป้อนที่อยู่</string>
+    <!-- Placeholder text shown in search bar when using history search -->
+    <string name="history_search_hint">ค้นหาประวัติ</string>
+    <!-- Placeholder text shown in search bar when using bookmarks search -->
+    <string name="bookmark_search_hint">ค้นหาที่คั่นหน้า</string>
+    <!-- Placeholder text shown in search bar when using tabs search -->
+    <string name="tab_search_hint">ค้นหาแท็บ</string>
     <!-- Placeholder text shown in the search bar when using application search engines -->
     <string name="application_search_hint">ป้อนคำค้นหา</string>
     <!-- No Open Tabs Message Description -->
@@ -128,13 +134,6 @@
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">แสดงปุ่มแท็บล่าสุดทั้งหมด</string>
-    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
-        The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">การค้นหา \&quot;%1$s\&quot; ของคุณ</string>
-
-    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d เว็บไซต์</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">ดูแท็บที่ซิงค์ทั้งหมด</string>
@@ -303,6 +302,9 @@
     <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
     <string name="sync_cfr_message">กำลังซิงค์แท็บของคุณ! เรียกดูต่อจากที่คุณค้างไว้บนอุปกรณ์อื่นๆ ของคุณ</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">ปิด</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">เปิดแท็บ %1$s ใหม่</string>
@@ -459,8 +461,10 @@
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">เยี่ยมชมล่าสุด</string>
     <!-- Title for the customize home screen section with Pocket. -->
-    <string name="customize_toggle_pocket">Pocket</string>
+    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket_2">เรื่องราวที่จุดประกายความคิด</string>
     <!-- Title for the customize home screen section with sponsored Pocket stories. -->
     <string name="customize_toggle_pocket_sponsored">เรื่องราวที่ได้รับการสนับสนุน</string>
     <!-- Title for the opening wallpaper settings screen -->
@@ -485,11 +489,6 @@
     <string name="wallpaper_select_error_snackbar_message">ไม่สามารถเปลี่ยนรูปพื้นหลัง</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
     <string name="wallpaper_learn_more">เรียนรู้เพิ่มเติม</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">เปลี่ยนวอลเปเปอร์โดยแตะโลโก้หน้าแรกของ Firefox</string>
-    <!-- This is the accessibility content description for the wallpapers functionality. Users are
-    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">โลโก้ Firefox - เปลี่ยนวอลเปเปอร์, ปุ่ม</string>
 
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">คลาสสิค %s</string>
@@ -642,6 +641,11 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">ปิด</string>
 
+    <!-- Dialog button text for confirming open all tabs -->
+    <string name="open_all_warning_confirm">แท็บที่เปิด</string>
+    <!-- Dialog button text for canceling open all tabs -->
+    <string name="open_all_warning_cancel">ยกเลิก</string>
+
     <!-- Text to show users they have one site in the history group section of the History fragment.
     %d is a placeholder for the number of sites in the group. -->
     <string name="history_search_group_site">%d เว็บไซต์</string>
@@ -671,10 +675,6 @@
     <string name="tab_view_list">รายการ</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">เส้นตาราง</string>
-    <!-- Option for search term tab groups -->
-    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">ค้นหากลุ่ม</string>
-    <!-- Summary text for search term tab groups -->
-    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">จัดกลุ่มเว็บไซต์ที่เกี่ยวข้องกัน</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">ปิดแท็บ</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -827,19 +827,6 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">ไม่มีประวัติที่นี่</string>
 
-    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">ซิงค์จากอุปกรณ์อื่น</string>
-    <!-- The page title for browsing history coming from other devices. -->
-    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">จากอุปกรณ์อื่นๆ</string>
-
-    <!-- The synced history sign in dialog message -->
-    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">ลงชื่อเข้าเพื่อดูประวัติที่ซิงค์จากอุปกรณ์อื่น ๆ ของคุณ</string>
-    <!-- The synced history sign in dialog button text -->
-    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">ลงชื่อเข้า</string>
-
-    <!-- The synced history sign in dialog create a new account link -->
-    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>หรือสร้างบัญชี Firefox เพื่อเริ่มซิงค์</u>]]></string>
-
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">การดาวน์โหลดถูกลบ</string>
@@ -889,6 +876,10 @@
     <string name="bookmark_menu_open_in_new_tab_button">เปิดในแท็บใหม่</string>
     <!-- Bookmark overflow menu open in private tab button -->
     <string name="bookmark_menu_open_in_private_tab_button">เปิดในแท็บส่วนตัว</string>
+    <!-- Bookmark overflow menu open all in tabs button -->
+    <string name="bookmark_menu_open_all_in_tabs_button">เปิดทั้งหมดในแท็บใหม่</string>
+    <!-- Bookmark overflow menu open all in private tabs button -->
+    <string name="bookmark_menu_open_all_in_private_tabs_button">เปิดทั้งหมดในแท็บส่วนตัว</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">ลบ</string>
     <!--Bookmark overflow menu save button -->
@@ -1065,6 +1056,8 @@
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">แบ่งปัน</string>
+    <!-- Text for the Save to PDF feature in the share menu -->
+    <string name="share_save_to_pdf">บันทึกเป็น PDF</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">ส่งไปยังอุปกรณ์</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1076,9 +1069,11 @@
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">คัดลอกไปยังคลิปบอร์ดแล้ว</string>
     <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">ลงชื่อเข้าใช้เพื่อซิงค์</string>
+    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">ลงชื่อเข้าใช้เพื่อซิงค์</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">ลงชื่อเข้าไปยัง Sync</string>
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data">ซิงค์และบันทึกข้อมูล</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">ส่งไปยังอุปกรณ์ทั้งหมด</string>
     <!-- An option from the share dialog to reconnect to sync -->
@@ -1917,7 +1912,7 @@
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">ค้นพบสิ่งอื่น</string>
     <!-- Title of an app feature. Smaller than a heading.-->
-    <string name="pocket_stories_feature_title">ขับเคลื่อนโดย Pocket</string>
+    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">ขับเคลื่อนโดย Pocket</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
     <string name="pocket_stories_feature_caption">ส่วนหนึ่งของตระกูล Firefox %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
@@ -1931,4 +1926,12 @@
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">ไปยังการตั้งค่า</string>
     <string name="firefox_suggest_header">Firefox Suggest</string>
+
+    <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
+    <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
+    <string name="a11y_action_label_collapse">ยุบ</string>
+    <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
+    <string name="a11y_action_label_expand">ขยาย</string>
+    <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
+    <string name="a11y_action_label_read_article">อ่านบทความ</string>
 </resources>

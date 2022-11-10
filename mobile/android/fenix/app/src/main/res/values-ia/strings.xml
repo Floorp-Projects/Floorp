@@ -260,7 +260,7 @@
     <string name="search_settings_menu_item">Parametros de recerca</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Iste vice cercar:</string>
+    <string name="search_header_menu_item">Iste vice cercar per:</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->

@@ -262,7 +262,7 @@
     <string name="search_settings_menu_item">搜尋設定</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">這次搜尋:</string>
+    <string name="search_header_menu_item">這次搜尋使用:</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
@@ -1992,4 +1992,6 @@
     <string name="a11y_action_label_expand">展開</string>
     <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
     <string name="a11y_action_label_wallpaper_collection_learn_more">開啟鏈結，了解此收藏集的更多資訊</string>
+    <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
+    <string name="a11y_action_label_read_article">閱讀此文章</string>
 </resources>

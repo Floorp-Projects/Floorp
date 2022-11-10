@@ -14,6 +14,12 @@
     <string name="content_description_disable_private_browsing_button">Çaktivizo shfletim privat</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Bëni kërkim ose jepni adresë</string>
+    <!-- Placeholder text shown in search bar when using history search -->
+    <string name="history_search_hint">Kërkoni në historik</string>
+    <!-- Placeholder text shown in search bar when using bookmarks search -->
+    <string name="bookmark_search_hint">Kërkoni te faqerojtësit</string>
+    <!-- Placeholder text shown in search bar when using tabs search -->
+    <string name="tab_search_hint">Kërkoni në skeda</string>
     <!-- Placeholder text shown in the search bar when using application search engines -->
     <string name="application_search_hint">Jepni terma kërkimi</string>
     <!-- No Open Tabs Message Description -->
@@ -39,8 +45,10 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">Faqerojtës së fundi</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Faqerojtës së fundi</string>
 
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Ruajtur së fundi</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Shfaqi krejt faqerojtësit e ruajtur</string>
 
@@ -73,6 +81,9 @@
     <string name="open_in_app_cfr_positive_button_text">Shko te rregullimet</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Hidhe tej</string>
+
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">Hidhe tej</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Lypset hyrje në kamera. Kaloni te rregullimet e Android-it, prekni Leje, dhe prekni Lejoje.</string>
@@ -118,18 +129,13 @@
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Shfaq butonin për krejt skedat së fundi</string>
-    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
-        The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">Kërkimi juaj për \&quot;%1$s\&quot;</string>
-
-    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d sajte</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Shihni krejt skedat e njëkohësuara</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">Pajisje e njëkohësuar</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Hiqe</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Hiqe</string>
@@ -246,24 +252,31 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">Ç’ka të re në %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Ç’ka të re në %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">Tani është më e lehtë t’ia rifilloni atje ku e latë.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Tani është më e lehtë t’ia rifilloni atje ku e latë.</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">Faqe hyrëse e personalizuar %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Faqe hyrëse e personalizuar %1$s</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">Kaloni te skeda tuajat të hapura, faqerojtës dhe historik shfletimesh.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Kaloni te skeda tuajat të hapura, faqerojtës dhe historik shfletimesh.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Skeda të qëruara, të sistemuara</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Skeda të qëruara, të sistemuara</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Spastroni rrëmujën e skedave, me skemë të përmirësuar dhe skeda me vetëmbyllje.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Spastroni rrëmujën e skedave, me skemë të përmirësuar dhe skeda me vetëmbyllje.</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">Kërkime së fundi</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Kërkime së fundi</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">Rivizitoni kërkimet tuaja më të reja prej faqes tuaj hyrëse dhe skedash.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Rivizitoni kërkimet tuaja më të reja prej faqes tuaj hyrëse dhe skedash.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Faqja juaj hyrëse në Firefox, e personalizuar, tani e bën më të lehtë të riktheheni atje ku e latë. Gjeni skedat, faqerojtësit dhe përfundime kërkimi tuajat më të freskëta.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Faqja juaj hyrëse në Firefox, e personalizuar, tani e bën më të lehtë të riktheheni atje ku e latë. Gjeni skedat, faqerojtësit dhe përfundime kërkimi tuajat më të freskëta.</string>
+
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Fillojani</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Hyni</string>
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">Mbylle</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -353,8 +366,6 @@
     <string name="preferences_gestures">Gjeste</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Përshtateni</string>
-    <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Njëkohësoni faqerojtës, historik, etj me Llogarinë tuaj Firefox</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Llogari Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -421,7 +432,7 @@
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Vizituar së fundi</string>
     <!-- Title for the customize home screen section with Pocket. -->
-    <string name="customize_toggle_pocket">Pocket</string>
+    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">Sfonde</string>
@@ -435,11 +446,17 @@
     <string name="wallpaper_updated_snackbar_message">Sfondi u përditësua!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Shiheni</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Ndryshojeni sfondin duke prekur stemën e faqes hyrëse të Firefox-it</string>
-    <!-- This is the accessibility content description for the wallpapers functionality. Users are
-    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Stemë Firefox-i - ndryshoni sfondin, buton</string>
+
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">Riprovoni</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">Mësoni më tepër</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">Shtoni pakëz ngjyrë</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">Zgjidhni një sfond që ju thotë diçka.</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">Eksploroni më tepër sfonde</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -522,8 +539,8 @@
     <string name="preference_experiments_summary_2">E lejon Mozilla-n të instalojë dhe xhirojë studime</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Aktivizo Sync-un</string>
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">Njëkohësoni dhe ruani të dhënat tuaja</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Bëni hyrjen që të rilidhet</string>
     <!-- Preference for removing FxA account -->
@@ -581,6 +598,9 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Mbylleni</string>
 
+    <!-- Dialog button text for canceling open all tabs -->
+    <string name="open_all_warning_cancel">Anuloje</string>
+
     <!-- Text to show users they have one site in the history group section of the History fragment.
     %d is a placeholder for the number of sites in the group. -->
     <string name="history_search_group_site">%d sajt</string>
@@ -610,10 +630,6 @@
     <string name="tab_view_list">Listë</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Rrjetë</string>
-    <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Grupe kërkimi</string>
-    <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Gruponi tok sajte të afërt</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Mbylli skedat</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -718,8 +734,6 @@
 
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Ruaj skeda në koleksion</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Menu skedash</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Fshije koleksionin</string>
     <!-- Text for the menu button to rename a collection -->
@@ -738,9 +752,6 @@
     <string name="delete_from_history">Fshije prej historiku</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Mënyrë Private)</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Skeda të tjera</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -768,11 +779,6 @@
     <string name="history_older">Më i vjetër</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">S’ka historik këtu</string>
-
-    <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">Hyni</string>
-    <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>Ose krijoni një llogari Firefox, që të fillojë njëkohësimi</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -823,6 +829,10 @@
     <string name="bookmark_menu_open_in_new_tab_button">Hape në skedë të re</string>
     <!-- Bookmark overflow menu open in private tab button -->
     <string name="bookmark_menu_open_in_private_tab_button">Hape në skedë private</string>
+    <!-- Bookmark overflow menu open all in tabs button -->
+    <string name="bookmark_menu_open_all_in_tabs_button">Hapi krejt në skeda të reja</string>
+    <!-- Bookmark overflow menu open all in private tabs button -->
+    <string name="bookmark_menu_open_all_in_private_tabs_button">Hapi krejt në skeda private</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Fshije</string>
     <!--Bookmark overflow menu save button -->
@@ -1000,6 +1010,8 @@
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Ndajeni me të tjerë</string>
+    <!-- Text for the Save to PDF feature in the share menu -->
+    <string name="share_save_to_pdf">Ruaje si PDF</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Dërgojeni në pajisje</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1011,9 +1023,11 @@
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">U kopjua në të papastër</string>
     <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">Që të njëkohësoni, bëni hyrjen </string>
+    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Që të njëkohësoni, bëni hyrjen </string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Për Njëkohësim, bëni hyrjen</string>
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data">Njëkohësoni dhe ruani të dhëna</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Dërgoje te krejt pajisjet</string>
     <!-- An option from the share dialog to reconnect to sync -->
@@ -1140,8 +1154,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Dil</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Kjo do të fshijë krejt të dhënat tuaja të shfletimit.</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Interval kohor për t’u fshirë</string>
     <!-- Body text of a delete browsing data dialog. -->
@@ -1177,19 +1189,23 @@
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">Mirë se vini te %s!</string>
+    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Mirë se vini te %s!</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">Një shfletues i ndërtuar për njerëzit, jo për fitime.</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Njëkohësoni Firefox-in mes pajisjesh</string>
+    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Njëkohësoni Firefox-in mes pajisjesh</string>
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">Vazhdoni atje ku e latë</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string name="onboarding_manual_sign_in_description_2">Sillni faqerojtës, historik dhe fjalëkalime te %1$s në këtë pajisje.</string>
+    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Sillni faqerojtës, historik dhe fjalëkalime te %1$s në këtë pajisje.</string>
     <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">Regjistrohuni</string>
+    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Regjistrohuni</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Njëkohësimi është aktiv</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_3">Privatësi gjithnjë në punë</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Privatësi gjithnjë në punë</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_4">%1$s i pengon vetvetiu shoqëritë t’ju ndjekin ju fshehtas nëpër internet.</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s i pengon vetvetiu shoqëritë t’ju ndjekin ju fshehtas nëpër internet.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standarde (parazgjedhje)</string>
     <!-- text for standard blocking option button description -->
@@ -1201,12 +1217,12 @@
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Zgjidhni vendosjen e panelit tuaj</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description_1">Vendoseni panelin diku ku e përdorni kollaj. Mbajeni në fund, ose kalojeni në krye.</string>
+    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Vendoseni panelin diku ku e përdorni kollaj. Mbajeni në fund, ose kalojeni në krye.</string>
     <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">Privatësia juaj</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Privatësia juaj</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string name="onboarding_privacy_notice_description2">E kemi hartuar %s për t’ju dhënë kontroll mbi ç’ndani me të tjerë në internet dhe ç’ndani me ne.</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">E kemi hartuar %s për t’ju dhënë kontroll mbi ç’ndani me të tjerë në internet dhe ç’ndani me ne.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Lexoni shënimin tonë mbi privatësinë</string>
 
@@ -1831,7 +1847,7 @@
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Zbuloni më tepër</string>
     <!-- Title of an app feature. Smaller than a heading.-->
-    <string name="pocket_stories_feature_title">Bazuar në Pocket.</string>
+    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">Bazuar në Pocket.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
     <string name="pocket_stories_feature_caption">Pjesë e Familjes Firefox. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
@@ -1845,4 +1861,7 @@
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Kalo te rregullimet</string>
     <string name="firefox_suggest_header">Firefox-i Sugjeron</string>
+
+    <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
+    <string name="a11y_action_label_read_article">lexoni artikullin</string>
 </resources>

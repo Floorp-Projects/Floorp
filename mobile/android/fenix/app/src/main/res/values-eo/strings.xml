@@ -1971,4 +1971,6 @@
     <string name="a11y_action_label_expand">malfaldi</string>
     <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
     <string name="a11y_action_label_wallpaper_collection_learn_more">malfermi ligilon por havi pli da informo pri tiu ĉi kolekto</string>
+    <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
+    <string name="a11y_action_label_read_article">legi la artikolon</string>
 </resources>

@@ -261,7 +261,7 @@
     <string name="search_settings_menu_item">Søkjeinnstillingar</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Søk denne gongen:</string>
+    <string name="search_header_menu_item">Søk denne gongen med:</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
@@ -1985,4 +1985,4 @@
     <string name="a11y_action_label_expand">fald ut</string>
     <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
     <string name="a11y_action_label_wallpaper_collection_learn_more">opne lenka for å lære meir om denne samlinga</string>
-</resources>
+    </resources>
