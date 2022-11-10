@@ -8,10 +8,11 @@
 
 #include "js/RootingAPI.h"
 #include "mozilla/dom/Nullable.h"
-#include "mozilla/ipc/Shmem.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
 #include "nsTArray.h"
 #include "ObjectModel.h"
+#include "mozilla/ipc/RawShmem.h"
+#include <memory>
 
 namespace mozilla {
 class ErrorResult;
@@ -22,9 +23,6 @@ template <typename T>
 class Optional;
 }  // namespace dom
 
-namespace ipc {
-class Shmem;
-}  // namespace ipc
 namespace webgpu {
 
 class Device;
@@ -63,7 +61,7 @@ class Buffer final : public ObjectBase, public ChildOf<Device> {
 
  private:
   Buffer(Device* const aParent, RawId aId, BufferAddress aSize, uint32_t aUsage,
-         ipc::Shmem&& aShmem);
+         ipc::WritableSharedMemoryMapping&& aShmem);
   virtual ~Buffer();
   Device& GetDevice() { return *mParent; }
   void Drop();
@@ -83,7 +81,7 @@ class Buffer final : public ObjectBase, public ChildOf<Device> {
   RefPtr<dom::Promise> mMapRequest;
   // mShmem does not point to a shared memory segment if the buffer is not
   // mappable.
-  ipc::Shmem mShmem;
+  std::shared_ptr<ipc::WritableSharedMemoryMapping> mShmem;
 };
 
 }  // namespace webgpu
