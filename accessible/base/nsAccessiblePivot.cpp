@@ -495,8 +495,7 @@ uint16_t RuleCache::Match(Accessible* aAcc) {
     }
 
     if (nsIAccessibleTraversalRule::PREFILTER_TRANSPARENT & mPreFilter) {
-      Maybe<float> opacity = aAcc->Opacity();
-      if (opacity && *opacity == 0.0f) {
+      if (aAcc->Opacity() == 0.0f) {
         return result | nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
       }
     }

@@ -774,7 +774,7 @@ class LocalAccessible : public nsISupports, public Accessible {
 
   virtual already_AddRefed<nsAtom> DisplayStyle() const override;
 
-  virtual Maybe<float> Opacity() const override;
+  virtual float Opacity() const override;
 
   virtual void DOMNodeID(nsString& aID) const override;
 
