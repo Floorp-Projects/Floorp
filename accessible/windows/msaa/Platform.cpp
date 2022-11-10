@@ -156,7 +156,7 @@ void a11y::ProxyStateChangeEvent(RemoteAccessible* aTarget, uint64_t, bool) {
 void a11y::ProxyFocusEvent(RemoteAccessible* aTarget,
                            const LayoutDeviceIntRect& aCaretRect) {
   FocusManager* focusMgr = FocusMgr();
-  if (focusMgr && focusMgr->FocusedAccessible()) {
+  if (focusMgr && focusMgr->FocusedLocalAccessible()) {
     // This is a focus event from a remote document, but focus has moved out
     // of that document into the chrome since that event was sent. For example,
     // this can happen when choosing File menu -> New Tab. See bug 1471466.

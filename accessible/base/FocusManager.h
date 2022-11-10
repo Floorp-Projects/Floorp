@@ -29,9 +29,10 @@ class FocusManager {
   virtual ~FocusManager();
 
   /**
-   * Return a focused accessible.
+   * Return the currently focused LocalAccessible. If a remote document has
+   * focus, this will return null.
    */
-  LocalAccessible* FocusedAccessible() const;
+  LocalAccessible* FocusedLocalAccessible() const;
 
   /**
    * Return true if given accessible is focused.
