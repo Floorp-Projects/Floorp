@@ -68,7 +68,10 @@ sysroot-wasm32-wasi-clang-15:
         symbol: TL(sysroot-wasi-15)
     run:
         script: build-sysroot-wasi.sh
-        toolchain-alias: sysroot-wasm32-wasi
+        toolchain-alias:
+            by-project:
+                toolchains: null
+                default: sysroot-wasm32-wasi
         toolchain-artifact: public/build/sysroot-wasm32-wasi.tar.zst
     fetches:
         fetch:
@@ -85,6 +88,10 @@ sysroot-wasm32-wasi-clang-trunk:
         symbol: TL(sysroot-wasi-trunk)
     run:
         script: build-sysroot-wasi.sh
+        toolchain-alias:
+            by-project:
+                toolchains: sysroot-wasm32-wasi
+                default: null
         toolchain-artifact: public/build/sysroot-wasm32-wasi.tar.zst
     fetches:
         fetch:
