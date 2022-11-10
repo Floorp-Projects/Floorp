@@ -18,6 +18,7 @@ exclude: true
   [`getCookieBannerMode`][108.4], [`setCookieBannerMode`][108.5], [`getCookieBannerModePrivateBrowsing`][108.6] and [`setCookieBannerModePrivateBrowsing`][108.7] to [`ContentBlocking.Settings`][81.2]
   ([bug 1790724]({{bugzilla}}1790724))
 - Added [`GeckoSession.GeckoPrintException`][108.9] to improver error reporting while generating a PDF from website, ([bug 1798402]({{bugzilla}}1798402)).
+- Added [`GeckoSession.containsFormData`][108.10] that returns a `GeckoResult<Boolean>` for whether or not a session has form data, ([bug 1777506]({{bugzilla}}1777506)).
 
 [108.1]: {{javadoc_uri}}/ContentBlocking.CookieBannerMode.html
 [108.2]: {{javadoc_uri}}/ContentBlocking.Settings.Builder.html#cookieBannerHandlingMode(int)
@@ -27,6 +28,7 @@ exclude: true
 [108.6]: {{javadoc_uri}}/ContentBlocking.Settings.html#getCookieBannerModePrivateBrowsing()
 [108.7]: {{javadoc_uri}}/ContentBlocking.Settings.html#setCookieBannerModePrivateBrowsing(int)
 [108.9]: {{javadoc_uri}}/GeckoSession.GeckoPrintException.html
+[108.10]: {{javadoc_uri}}/GeckoSession.html#containsFormData()
 
 ## v107
 - Removed deprecated [`cookieLifetime`][103.2]
@@ -1259,4 +1261,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: cf5a16319482a1c4ee12a982a3bfe59b3d08ab09
+[api-version]: 03c2cc7a451001bafc2ea252e28ba40f7227f111

@@ -345,6 +345,26 @@ class ProgressDelegateTest : BaseSessionTest() {
     }
 
     @WithDisplay(width = 400, height = 400)
+    @Test fun containsFormData() {
+        val startUri = createTestUrl(SAVE_STATE_PATH)
+        mainSession.loadUri(startUri)
+        sessionRule.waitForPageStop()
+
+        val formData = mainSession.containsFormData()
+        sessionRule.waitForResult(formData).let {
+            assertThat("There should be no form data", it, equalTo(false))
+        }
+
+        mainSession.evaluateJS("document.querySelector('#name').value = 'the name';")
+        mainSession.evaluateJS("document.querySelector('#name').dispatchEvent(new Event('input'));")
+
+        val formData2 = mainSession.containsFormData()
+        sessionRule.waitForResult(formData2).let {
+            assertThat("There should be form data", it, equalTo(true))
+        }
+    }
+
+    @WithDisplay(width = 400, height = 400)
     @Test fun saveAndRestoreStateNewSession() {
         // TODO: Bug 1648158
         assumeThat(sessionRule.env.isFission, equalTo(false))

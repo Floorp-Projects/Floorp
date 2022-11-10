@@ -2684,6 +2684,16 @@ public class GeckoSession {
     mEventDispatcher.dispatch("GeckoView:RestoreState", state.mState);
   }
 
+  /**
+   * Get whether this GeckoSession has form data.
+   *
+   * @return a {@link GeckoResult} result of if there is existing form data.
+   */
+  @AnyThread
+  public @NonNull GeckoResult<Boolean> containsFormData() {
+    return mEventDispatcher.queryBoolean("GeckoView:ContainsFormData");
+  }
+
   // This is the GeckoDisplay acquired via acquireDisplay(), if any.
   private GeckoDisplay mDisplay;
 

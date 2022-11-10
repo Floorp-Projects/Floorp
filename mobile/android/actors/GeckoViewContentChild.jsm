@@ -254,9 +254,22 @@ class GeckoViewContentChild extends GeckoViewActorChild {
       case "CollectSessionState": {
         return this.collectSessionState();
       }
+      case "ContainsFormData": {
+        return this.containsFormData();
+      }
     }
 
     return null;
+  }
+
+  async containsFormData() {
+    const { contentWindow } = this;
+    let formdata = SessionStoreUtils.collectFormData(contentWindow);
+    formdata = lazy.PrivacyFilter.filterFormData(formdata || {});
+    if (formdata) {
+      return true;
+    }
+    return false;
   }
 
   async restoreSessionState(message) {
