@@ -68,6 +68,8 @@ class nsAccUtils {
    */
   static nsStaticAtom* NormalizeARIAToken(const AttrArray* aAttrs,
                                           nsAtom* aAttr);
+  static nsStaticAtom* NormalizeARIAToken(mozilla::dom::Element* aElement,
+                                          nsAtom* aAttr);
 
   /**
    * Return document accessible for the given DOM node.
