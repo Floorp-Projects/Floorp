@@ -79,8 +79,11 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(
     : mWebGL(webgl) {
   const auto& fb = mWebGL->mBoundDrawFramebuffer;
 
-  std::unordered_map<uint32_t, const webgl::SamplerUniformInfo*>
-      samplerByTexUnit;
+  auto& samplerByTexUnit =
+      mWebGL->mReuseable_ScopedResolveTexturesForDraw_samplerByTexUnit;
+  if (!samplerByTexUnit.empty()) {
+    samplerByTexUnit.clear();
+  }
 
   MOZ_ASSERT(mWebGL->mActiveProgramLinkInfo);
   const auto& samplerUniforms = mWebGL->mActiveProgramLinkInfo->samplerUniforms;
@@ -93,8 +96,6 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(
       MOZ_ASSERT(texUnit < texList.Length());
 
       {
-        samplerByTexUnit.reserve(
-            32);  // Only allocate if we need, but don't start too small.
         auto& prevSamplerForTexUnit = samplerByTexUnit[texUnit];
         if (!prevSamplerForTexUnit) {
           prevSamplerForTexUnit = &uniform;
