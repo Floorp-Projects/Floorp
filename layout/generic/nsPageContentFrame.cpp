@@ -6,6 +6,7 @@
 #include "nsPageContentFrame.h"
 
 #include "mozilla/PresShell.h"
+#include "mozilla/PresShellInlines.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/dom/Document.h"
 
@@ -19,10 +20,11 @@
 
 using namespace mozilla;
 
-nsPageContentFrame* NS_NewPageContentFrame(PresShell* aPresShell,
-                                           ComputedStyle* aStyle) {
-  return new (aPresShell)
-      nsPageContentFrame(aStyle, aPresShell->GetPresContext());
+nsPageContentFrame* NS_NewPageContentFrame(
+    PresShell* aPresShell, ComputedStyle* aStyle,
+    already_AddRefed<const nsAtom> aPageName) {
+  return new (aPresShell) nsPageContentFrame(
+      aStyle, aPresShell->GetPresContext(), std::move(aPageName));
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsPageContentFrame)
@@ -399,8 +401,35 @@ void nsPageContentFrame::AppendDirectlyOwnedAnonBoxes(
   aResult.AppendElement(mFrames.FirstChild());
 }
 
+void nsPageContentFrame::EnsurePageName() {
+  if (mPageName) {
+    return;
+  }
+  MOZ_ASSERT(!GetPrevInFlow(),
+             "Only the first page should initially have a null page name.");
+  // This was the first page, we need to find our own page name and then set
+  // our computed style based on that.
+  mPageName = ComputePageValue();
+
+  MOZ_ASSERT(mPageName, "Page name should never be null");
+  // We don't need to resolve any further styling if the page name is empty.
+  if (mPageName == nsGkAtoms::_empty) {
+    return;
+  }
+  RefPtr<ComputedStyle> pageContentPseudoStyle =
+      PresShell()->StyleSet()->ResolvePageContentStyle(mPageName);
+  SetComputedStyleWithoutNotification(pageContentPseudoStyle);
+}
+
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsPageContentFrame::GetFrameName(nsAString& aResult) const {
   return MakeFrameName(u"PageContent"_ns, aResult);
+}
+void nsPageContentFrame::ExtraContainerFrameInfo(nsACString& aTo) const {
+  if (mPageName) {
+    aTo += " [page=";
+    aTo += nsAtomCString(mPageName);
+    aTo += "]";
+  }
 }
 #endif
