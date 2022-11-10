@@ -90,6 +90,9 @@ class JSObject
   // The Shape is stored in the cell header.
   js::Shape* shape() const { return headerPtr(); }
 
+  // Like shape(), but uses getAtomic to read the header word.
+  js::Shape* shapeMaybeForwarded() const { return headerPtrAtomic(); }
+
 #ifndef JS_64BIT
   // Ensure fixed slots have 8-byte alignment on 32-bit platforms.
   uint32_t padding_;

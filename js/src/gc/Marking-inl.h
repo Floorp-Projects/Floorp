@@ -105,7 +105,7 @@ inline T MaybeForwarded(T t) {
 }
 
 inline const JSClass* MaybeForwardedObjectClass(const JSObject* obj) {
-  Shape* shape = MaybeForwarded(obj->shape());
+  Shape* shape = MaybeForwarded(obj->shapeMaybeForwarded());
   BaseShape* baseShape = MaybeForwarded(shape->base());
   return baseShape->clasp();
 }

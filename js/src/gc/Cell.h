@@ -106,11 +106,17 @@ class CellColor {
 
 // Cell header word. Stores GC flags and derived class data.
 //
-// This is atomic since it can be read from and written to by different
-// threads during compacting GC, in a limited way. Specifically, writes that
-// update the derived class data can race with reads that check the forwarded
-// flag. The writes do not change the forwarded flag (which is always false in
-// this situation).
+// Loads of GC flags + all stores are marked as (relaxed) atomic operations,
+// to deal with the following benign data race during compacting GC:
+//
+// - Thread 1 checks isForwarded (which is always false in this situation).
+// - Thread 2 updates the derived class data (without changing the forwarded
+//   flag).
+//
+// To improve performance, we don't use atomic operations for get() because
+// atomic operations inhibit certain compiler optimizations: GCC and Clang are
+// unable to fold multiple loads even if they're both relaxed atomics. This is
+// especially a problem for chained loads such as obj->shape->base->clasp.
 class HeaderWord {
   // Indicates whether the cell has been forwarded (moved) by generational or
   // compacting GC and is now a RelocationOverlay.
@@ -119,9 +125,6 @@ class HeaderWord {
 
   uintptr_t value_;
 
-  uintptr_t getAtomic() const {
-    return __atomic_load_n(&value_, __ATOMIC_RELAXED);
-  }
   void setAtomic(uintptr_t value) {
     __atomic_store_n(&value_, value, __ATOMIC_RELAXED);
   }
@@ -132,9 +135,14 @@ class HeaderWord {
   static_assert(gc::CellFlagBitsReservedForGC >= 3,
                 "Not enough flag bits reserved for GC");
 
+  uintptr_t getAtomic() const {
+    return __atomic_load_n(&value_, __ATOMIC_RELAXED);
+  }
+
   // Accessors for derived class data.
   uintptr_t get() const {
-    uintptr_t value = getAtomic();
+    // Note: non-atomic load. See class comment.
+    uintptr_t value = value_;
     MOZ_ASSERT((value & RESERVED_MASK) == 0);
     return value;
   }
@@ -816,6 +824,11 @@ class alignas(gc::CellAlignBytes) CellWithTenuredGCPointer : public BaseCell {
     staticAsserts();
     MOZ_ASSERT(this->flags() == 0);
     return reinterpret_cast<PtrT*>(uintptr_t(this->header_.get()));
+  }
+  PtrT* headerPtrAtomic() const {
+    staticAsserts();
+    MOZ_ASSERT(this->flags() == 0);
+    return reinterpret_cast<PtrT*>(uintptr_t(this->header_.getAtomic()));
   }
 
   void unbarrieredSetHeaderPtr(PtrT* newValue) {
