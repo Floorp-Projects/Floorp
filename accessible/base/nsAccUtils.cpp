@@ -176,6 +176,19 @@ nsStaticAtom* nsAccUtils::NormalizeARIAToken(const AttrArray* aAttrs,
   return nullptr;
 }
 
+nsStaticAtom* nsAccUtils::NormalizeARIAToken(dom::Element* aElement,
+                                             nsAtom* aAttr) {
+  if (auto* htmlElement = nsGenericHTMLElement::FromNode(aElement);
+      htmlElement && !aElement->HasAttr(aAttr)) {
+    const auto* defaults = GetARIADefaults(htmlElement);
+    if (!defaults) {
+      return nsGkAtoms::_empty;
+    }
+    return NormalizeARIAToken(defaults, aAttr);
+  }
+  return NormalizeARIAToken(&aElement->GetAttrs(), aAttr);
+}
+
 Accessible* nsAccUtils::GetSelectableContainer(const Accessible* aAccessible,
                                                uint64_t aState) {
   if (!aAccessible) return nullptr;
