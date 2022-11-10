@@ -79,7 +79,7 @@ const HTTP_DOWNLOAD_ACTIVITIES = [
  * routed to the remote Web Console.
  *
  * @constructor
- * @param object filters
+ * @param {Object} filters
  *        Object with the filters to use for network requests:
  *        - window (nsIDOMWindow): filter network requests by the associated
  *          window object.
@@ -90,33 +90,40 @@ const HTTP_DOWNLOAD_ACTIVITIES = [
  *        Filters are optional. If any of these filters match the request is
  *        logged (OR is applied). If no filter is provided then all requests are
  *        logged.
- * @param object owner
- *        The network observer owner. This object needs to hold:
- *        - onNetworkEvent(requestInfo)
- *          This method is invoked once for every new network request and it is
- *          given the initial network request information as an argument.
- *          onNetworkEvent() must return an object which holds several add*()
- *          methods which are used to add further network request/response information.
- *        - shouldIgnoreChannel(channel) [optional]
- *          In additional to `lazy.NetworkUtils.matchRequest`, allow to ignore even more
- *          requests.
+ * @param {Function(NetworkEvent): owner} onNetworkEvent
+ *        This method is invoked once for every new network request with a single
+ *        "networkEvent" argument, which is an object created by
+ *        NetworkUtils:createNetworkEvent, containing initial network request
+ *        information as an argument.
+ *        onNetworkEvent() must return an "owner" object which holds several add*()
+ *        methods which are used to add further network request/response information.
+ * @param {Function(nsIChannel): boolean} ignoreChannelFunction [optional]
+ *        If provided, only channels which are both compatible with the `filters`
+ *        argument and which return `false` for the `ignoreChannelFunction` will
+ *        be monitored.
  */
 export class NetworkObserver {
   #blockedURLs;
   #decodedCertificateCache;
   #filters;
+  #ignoreChannelFunction;
   #interceptedChannels;
+  #isDestroyed;
+  #onNetworkEvent;
   #openRequests;
   #openResponses;
-  #owner;
   #responsePipeSegmentSize;
   #saveRequestAndResponseBodies;
   #throttleData;
   #throttler;
 
-  constructor(filters, owner) {
+  constructor(filters, onNetworkEvent, ignoreChannelFunction) {
+    // Explicit flag to check if this observer was already destroyed.
+    this.#isDestroyed = false;
+
     this.#filters = filters;
-    this.#owner = owner;
+    this.#onNetworkEvent = onNetworkEvent;
+    this.#ignoreChannelFunction = ignoreChannelFunction;
 
     /**
      * Object that holds the HTTP activity objects for ongoing requests.
@@ -224,8 +231,8 @@ export class NetworkObserver {
    */
   #shouldIgnoreChannel(channel) {
     if (
-      typeof this.#owner.shouldIgnoreChannel == "function" &&
-      this.#owner.shouldIgnoreChannel(channel)
+      typeof this.#ignoreChannelFunction == "function" &&
+      this.#ignoreChannelFunction(channel)
     ) {
       return true;
     }
@@ -257,7 +264,7 @@ export class NetworkObserver {
   #httpFailedOpening = DevToolsInfaillibleUtils.makeInfallible(
     (subject, topic) => {
       if (
-        !this.#owner ||
+        this.#isDestroyed ||
         topic != "http-on-failed-opening-request" ||
         !(subject instanceof Ci.nsIHttpChannel)
       ) {
@@ -286,7 +293,7 @@ export class NetworkObserver {
   #httpStopRequest = DevToolsInfaillibleUtils.makeInfallible(
     (subject, topic) => {
       if (
-        !this.#owner ||
+        this.#isDestroyed ||
         topic != "http-on-stop-request" ||
         !(subject instanceof Ci.nsIHttpChannel)
       ) {
@@ -366,7 +373,7 @@ export class NetworkObserver {
       // NetworkResponseListener is responsible with updating the httpActivity
       // object with the data from the new object in openResponses.
       if (
-        !this.#owner ||
+        this.#isDestroyed ||
         (topic != "http-on-examine-response" &&
           topic != "http-on-examine-cached-response" &&
           topic != "http-on-failed-opening-request") ||
@@ -608,7 +615,7 @@ export class NetworkObserver {
     extraStringData
   ) {
     if (
-      !this.#owner ||
+      this.#isDestroyed ||
       (activityType != gActivityDistributor.ACTIVITY_TYPE_HTTP_TRANSACTION &&
         activityType != gActivityDistributor.ACTIVITY_TYPE_SOCKET_TRANSPORT)
     ) {
@@ -722,7 +729,7 @@ export class NetworkObserver {
     httpActivity.isXHR = event.isXHR;
     httpActivity.private = event.private;
     httpActivity.fromServiceWorker = fromServiceWorker;
-    httpActivity.owner = this.#owner.onNetworkEvent(event);
+    httpActivity.owner = this.#onNetworkEvent(event);
 
     // Bug 1489217 - Avoid watching for response content for blocked or in-progress requests
     // as it can't be observed and would throw if we try.
@@ -1473,11 +1480,14 @@ export class NetworkObserver {
       "service-worker-synthesized-response"
     );
 
-    this.#owner = null;
     this.#filters = null;
+    this.#ignoreChannelFunction = null;
+    this.#onNetworkEvent = null;
     this.#throttler = null;
     this.#decodedCertificateCache.clear();
     this.clear();
+
+    this.#isDestroyed = true;
   }
 }
 

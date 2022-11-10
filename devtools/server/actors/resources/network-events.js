@@ -63,10 +63,8 @@ class NetworkEventWatcher {
     this.persist = false;
     this.listener = new lazy.NetworkObserver(
       { sessionContext: watcherActor.sessionContext },
-      {
-        onNetworkEvent: this.onNetworkEvent.bind(this),
-        shouldIgnoreChannel: this.shouldIgnoreChannel.bind(this),
-      }
+      this.onNetworkEvent.bind(this),
+      this.shouldIgnoreChannel.bind(this)
     );
 
     this.listener.init();
