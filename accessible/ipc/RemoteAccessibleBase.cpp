@@ -1115,6 +1115,8 @@ uint64_t RemoteAccessibleBase<Derived>::State() {
       }
     }
 
+    ApplyImplicitState(state);
+
     auto* cbc = mDoc->GetBrowsingContext();
     if (cbc && !cbc->IsActive()) {
       // If our browsing context is _not_ active, we're in a background tab

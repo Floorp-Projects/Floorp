@@ -1547,6 +1547,7 @@ uint64_t LocalAccessible::State() {
     state |= states::OPAQUE1;
   }
 
+  ApplyImplicitState(state);
   return state;
 }
 
