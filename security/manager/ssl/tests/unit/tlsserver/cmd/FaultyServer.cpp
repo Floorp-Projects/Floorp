@@ -12,6 +12,8 @@
 #include "sslimpl.h"
 #include "TLSServer.h"
 
+#include "mozilla/Sprintf.h"
+
 using namespace mozilla;
 using namespace mozilla::test;
 
@@ -96,7 +98,7 @@ int DoCallback(const char* path) {
   }
 
   char request[512];
-  sprintf(request, "GET %s HTTP/1.0\r\n\r\n", path);
+  SprintfLiteral(request, "GET %s HTTP/1.0\r\n\r\n", path);
   SendAll(socket.get(), request, strlen(request));
   char buf[4096];
   memset(buf, 0, sizeof(buf));
@@ -139,7 +141,7 @@ void SecretCallbackFailZeroRtt(PRFileDesc* fd, PRUint16 epoch,
     }
 
     char path[256];
-    sprintf(path, "/callback/%d", epoch);
+    SprintfLiteral(path, "/callback/%d", epoch);
     DoCallback(path);
 
     fprintf(stderr, "0RTT handler, configuring alert\n");

@@ -24,6 +24,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/JSONWriter.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtr.h"
 #include "DMD.h"
 
@@ -58,7 +59,7 @@ class FpWriteFunc final : public mozilla::JSONWriteFunc {
 // This stops otherwise-unused variables from being optimized away.
 static void UseItOrLoseIt(void* aPtr, int aSeven) {
   char buf[64];
-  int n = sprintf(buf, "%p\n", aPtr);
+  int n = SprintfLiteral(buf, "%p\n", aPtr);
   if (n == 20 + aSeven) {
     fprintf(stderr, "well, that is surprising");
   }
@@ -95,11 +96,11 @@ void Foo(int aSeven) {
 
 void TestEmpty(const char* aTestName, const char* aMode) {
   char filename[128];
-  sprintf(filename, "complete-%s-%s.json", aTestName, aMode);
+  SprintfLiteral(filename, "complete-%s-%s.json", aTestName, aMode);
   auto f = MakeUnique<FpWriteFunc>(filename);
 
   char options[128];
-  sprintf(options, "--mode=%s --stacks=full", aMode);
+  SprintfLiteral(options, "--mode=%s --stacks=full", aMode);
   ResetEverything(options);
 
   // Zero for everything.
@@ -108,13 +109,14 @@ void TestEmpty(const char* aTestName, const char* aMode) {
 
 void TestFull(const char* aTestName, int aNum, const char* aMode, int aSeven) {
   char filename[128];
-  sprintf(filename, "complete-%s%d-%s.json", aTestName, aNum, aMode);
+  SprintfLiteral(filename, "complete-%s%d-%s.json", aTestName, aNum, aMode);
   auto f = MakeUnique<FpWriteFunc>(filename);
 
   // The --show-dump-stats=yes is there just to give that option some basic
   // testing, e.g. ensure it doesn't crash. It's hard to test much beyond that.
   char options[128];
-  sprintf(options, "--mode=%s --stacks=full --show-dump-stats=yes", aMode);
+  SprintfLiteral(options, "--mode=%s --stacks=full --show-dump-stats=yes",
+                 aMode);
   ResetEverything(options);
 
   // Analyze 1: 1 freed, 9 out of 10 unreported.
@@ -277,11 +279,11 @@ void TestFull(const char* aTestName, int aNum, const char* aMode, int aSeven) {
 
 void TestPartial(const char* aTestName, const char* aMode, int aSeven) {
   char filename[128];
-  sprintf(filename, "complete-%s-%s.json", aTestName, aMode);
+  SprintfLiteral(filename, "complete-%s-%s.json", aTestName, aMode);
   auto f = MakeUnique<FpWriteFunc>(filename);
 
   char options[128];
-  sprintf(options, "--mode=%s", aMode);
+  SprintfLiteral(options, "--mode=%s", aMode);
   ResetEverything(options);
 
   int kTenThousand = aSeven + 9993;
