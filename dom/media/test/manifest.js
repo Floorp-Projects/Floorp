@@ -921,6 +921,7 @@ var gErrorTests = [
   { name: "bug603918.webm", type: "video/webm" },
   { name: "bug604067.webm", type: "video/webm" },
   { name: "bug1535980.webm", type: "video/webm" },
+  { name: "bug1799787.webm", type: "video/webm" },
   { name: "bogus.duh", type: "bogus/duh" },
 ];
 

@@ -551,38 +551,46 @@ MediaResult AOMDecoder::ReadSequenceHeaderInfo(
   br.ReadBit();  // enable_intra_edge_filter
 
   if (reducedStillPicture) {
-    aDestInfo = tempInfo;
-    return NS_OK;
-  }
-
-  br.ReadBit();  // enable_interintra_compound
-  br.ReadBit();  // enable_masked_compound
-  br.ReadBit();  // enable_warped_motion
-  br.ReadBit();  // enable_dual_filter
-
-  const bool enableOrderHint = br.ReadBit();
-
-  if (enableOrderHint) {
-    br.ReadBit();  // enable_jnt_comp
-    br.ReadBit();  // enable_ref_frame_mvs
-  }
-
-  uint8_t forceScreenContentTools;
-
-  if (br.ReadBit()) {             // seq_choose_screen_content_tools
-    forceScreenContentTools = 2;  // SELECT_SCREEN_CONTENT_TOOLS
+    // enable_interintra_compound = 0
+    // enable_masked_compound = 0
+    // enable_warped_motion = 0
+    // enable_dual_filter = 0
+    // enable_order_hint = 0
+    // enable_jnt_comp = 0
+    // enable_ref_frame_mvs = 0
+    // seq_force_screen_content_tools = SELECT_SCREEN_CONTENT_TOOLS
+    // seq_force_integer_mv = SELECT_INTEGER_MV
+    // OrderHintBits = 0
   } else {
-    forceScreenContentTools = br.ReadBits(1);
-  }
+    br.ReadBit();  // enable_interintra_compound
+    br.ReadBit();  // enable_masked_compound
+    br.ReadBit();  // enable_warped_motion
+    br.ReadBit();  // enable_dual_filter
 
-  if (forceScreenContentTools > 0) {
-    if (!br.ReadBit()) {  // seq_choose_integer_mv
-      br.ReadBit();       // seq_force_integer_mv
+    const bool enableOrderHint = br.ReadBit();
+
+    if (enableOrderHint) {
+      br.ReadBit();  // enable_jnt_comp
+      br.ReadBit();  // enable_ref_frame_mvs
     }
-  }
 
-  if (enableOrderHint) {
-    br.ReadBits(3);  // order_hint_bits_minus_1
+    uint8_t forceScreenContentTools;
+
+    if (br.ReadBit()) {             // seq_choose_screen_content_tools
+      forceScreenContentTools = 2;  // SELECT_SCREEN_CONTENT_TOOLS
+    } else {
+      forceScreenContentTools = br.ReadBits(1);
+    }
+
+    if (forceScreenContentTools > 0) {
+      if (!br.ReadBit()) {  // seq_choose_integer_mv
+        br.ReadBit();       // seq_force_integer_mv
+      }
+    }
+
+    if (enableOrderHint) {
+      br.ReadBits(3);  // order_hint_bits_minus_1
+    }
   }
 
   br.ReadBit();  // enable_superres
@@ -673,7 +681,7 @@ MediaResult AOMDecoder::ReadSequenceHeaderInfo(
   }
   if (!correct) {
     return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                       "AV1 sequence header was parsed incorrectly");
+                       "AV1 sequence header was corrupted");
   }
   // end trailing_bits( )
 
