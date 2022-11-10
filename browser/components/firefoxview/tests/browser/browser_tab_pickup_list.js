@@ -418,6 +418,8 @@ add_task(async function test_time_updates_correctly() {
 
 /**
  * Ensure that tabs sync when a user reloads Firefox View.
+ * This is accomplished by asserting that a new set of tabs are loaded
+ * on page reload.
  */
 add_task(async function test_tabs_sync_on_user_page_reload() {
   await withFirefoxView({}, async browser => {
@@ -427,7 +429,7 @@ add_task(async function test_tabs_sync_on_user_page_reload() {
     sandbox.stub(SyncedTabs._internal, "syncTabs").resolves(true);
     const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
     let mockTabs1 = getMockTabData(syncedTabsData1);
-    let mockTabs2 = getMockTabData(syncedTabsData5);
+    let expectedTabsAfterReload = getMockTabData(syncedTabsData3);
     syncedTabsMock.returns(mockTabs1);
 
     await setupListState(browser);
@@ -441,7 +443,7 @@ add_task(async function test_tabs_sync_on_user_page_reload() {
     ok(true, "Firefox View has been reloaded");
     ok(TabsSetupFlowManager.waitingForTabs, "waitingForTabs is true");
 
-    syncedTabsMock.returns(mockTabs2);
+    syncedTabsMock.returns(expectedTabsAfterReload);
     Services.obs.notifyObservers(null, "services.sync.tabs.changed");
     ok(!TabsSetupFlowManager.waitingForTabs, "waitingForTabs is false");
 
@@ -450,14 +452,10 @@ add_task(async function test_tabs_sync_on_user_page_reload() {
     await BrowserTestUtils.waitForMutationCondition(
       syncedTabsList,
       { childList: true },
-      () => syncedTabsList.firstChild.textContent.includes("Example2")
+      () =>
+        syncedTabsList.firstChild.textContent.includes("Sandboxes - Sinon.JS")
     );
-    const timeLabel = document.querySelector("span.synced-tab-li-time");
-    await BrowserTestUtils.waitForMutationCondition(
-      timeLabel,
-      { childList: true },
-      () => timeLabel.textContent.includes("now")
-    );
+
     sandbox.restore();
     cleanup_tab_pickup();
   });
