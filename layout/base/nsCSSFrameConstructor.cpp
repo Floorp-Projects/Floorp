@@ -4066,14 +4066,6 @@ nsCSSFrameConstructor::FindXULButtonData(const Element& aElement,
                            eCaseMatters)) {
     return &sXULMenuData;
   }
-
-#ifdef MOZ_THUNDERBIRD
-  if (aElement.AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                           u"menu-button"_ns, eCaseMatters)) {
-    return &sXULMenuData;
-  }
-#endif
-
   return nullptr;
 }
 
