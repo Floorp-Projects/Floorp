@@ -3405,34 +3405,34 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
 
       if (frame && frame->IsTextFrame()) {
         nsTArray<int32_t> charData;
-        nsTextFrame* currTextFrame = do_QueryFrame(frame);
-        bool isFirstContinuation = true;
-        while (currTextFrame) {
-          nsRect t = currTextFrame->GetRect();
-          nsTArray<nsRect> charBounds;
-          currTextFrame->GetCharacterRectsInRange(
-              currTextFrame->GetContentOffset(), currTextFrame->GetContentEnd(),
-              charBounds);
-          for (const nsRect& rect : charBounds) {
-            // We expect each char rect to be relative to the text leaf
-            // acc this text lives in. Unfortunately, GetCharacterRectsInRange
-            // returns rects relative to their continuation. Add the
-            // continuation's relative position here to make our final
-            // rect relative to the text leaf acc. We avoid doing any sort of
-            // offsetting for the first continuation because the x, y coords
-            // of the first continuation's rect are the x, y coords of the text
-            // frame, which are not necessarily 0, 0. Chars in the first cont
-            // are also already relative to the text frame, so they don't need
-            // adjustment.
-            charData.AppendElement(rect.x + (isFirstContinuation ? 0 : t.x));
-            charData.AppendElement(rect.y + (isFirstContinuation ? 0 : t.y));
-            charData.AppendElement(rect.width);
-            charData.AppendElement(rect.height);
-          }
-          currTextFrame = currTextFrame->GetNextContinuation();
-          isFirstContinuation = false;
-        }
 
+        if (nsTextFrame* currTextFrame = do_QueryFrame(frame)) {
+          nsRect frameRect = currTextFrame->GetRect();
+          while (currTextFrame) {
+            nsRect contRect = currTextFrame->GetRect();
+            nsTArray<nsRect> charBounds;
+            currTextFrame->GetCharacterRectsInRange(
+                currTextFrame->GetContentOffset(),
+                currTextFrame->GetContentEnd(), charBounds);
+            for (const nsRect& charRect : charBounds) {
+              // We expect each char rect to be relative to the text leaf
+              // acc this text lives in. Unfortunately, GetCharacterRectsInRange
+              // returns rects relative to their continuation. Add the
+              // continuation's relative position here to make our final
+              // rect relative to the text leaf acc. Continuation rects include
+              // the padding of their parent text frame, so we compute the
+              // relative offset here instead of using `contRect`'s coordinates
+              // outright.
+              int computedX = charRect.x + (contRect.x - frameRect.x);
+              int computedY = charRect.y + (contRect.y - frameRect.y);
+              charData.AppendElement(computedX);
+              charData.AppendElement(computedY);
+              charData.AppendElement(charRect.width);
+              charData.AppendElement(charRect.height);
+            }
+            currTextFrame = currTextFrame->GetNextContinuation();
+          }
+        }
         if (charData.Length()) {
           fields->SetAttribute(nsGkAtoms::characterData, std::move(charData));
         }
