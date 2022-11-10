@@ -381,6 +381,9 @@ def test(command_context, what, extra_args, **log_args):
     Do not forget the - (minus sign) after --log-grouped!
 
     `./mach test --log-grouped - devtools/client/shared/redux/middleware/xpcshell/`
+
+    To learn more about arguments for each test type/flavor/harness, please run
+    `./mach <test-harness> --help`. For example, `./mach mochitest --help`.
     """
     from mozlog.commandline import setup_logging
     from mozlog.handlers import StreamHandler
