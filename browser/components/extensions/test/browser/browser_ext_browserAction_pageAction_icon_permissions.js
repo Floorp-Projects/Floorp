@@ -74,14 +74,14 @@ add_task(async function testDefaultDetails() {
   let icons = [
     "foo/bar.png",
     "/foo/bar.png",
-    { "19": "foo/bar.png" },
     { "38": "foo/bar.png" },
+    { "70": "foo/bar.png" },
   ];
 
   if (window.devicePixelRatio > 1) {
-    icons.push({ "19": "baz/quux.png", "38": "foo/bar.png" });
+    icons.push({ "38": "baz/quux.png", "70": "foo/bar.png" });
   } else {
-    icons.push({ "19": "foo/bar.png", "38": "baz/quux@2x.png" });
+    icons.push({ "38": "foo/bar.png", "70": "baz/quux@2x.png" });
   }
 
   let expectedURL = new RegExp(

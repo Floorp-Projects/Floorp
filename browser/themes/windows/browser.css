@@ -467,12 +467,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 /* Make menu items larger when opened through touch. */
-#widget-overflow[touchmode] .toolbarbutton-1,
-panel[touchmode] .PanelUI-subView .subviewbutton,
-menupopup[touchmode] menu,
-menupopup[touchmode] menuitem {
+panel[touchmode],
+menupopup[touchmode] {
   --arrowpanel-menuitem-padding-block: 12px;
-  padding-block: var(--arrowpanel-menuitem-padding-block);
+  --arrowpanel-menuitem-padding: var(--arrowpanel-menuitem-padding-block) var(--arrowpanel-menuitem-padding-inline);
 }
 
 #contentAreaContextMenu[touchmode] > #context-navigation > menuitem {

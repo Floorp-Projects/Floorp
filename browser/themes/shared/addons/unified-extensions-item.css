@@ -30,7 +30,7 @@ unified-extensions-item[attention] {
 }
 
 unified-extensions-item[attention] {
-  background-position-x: left var(--dot-position);
+  background-position: left var(--dot-position) bottom 0px;
 }
 
 unified-extensions-item[attention]:-moz-locale-dir(rtl) {
@@ -44,7 +44,7 @@ unified-extensions-item[attention]:-moz-locale-dir(rtl) {
 /* The padding-block for menuitems is set to 0 in compact mode which, with the
  * extension icon being 32px in this case, makes the item look crowded even for
  * compact mode. */
-:root[uidensity="compact"] .unified-extensions-item-action {
+:root[uidensity="compact"] panel:not([touchmode]) .unified-extensions-item-action {
   padding-block: 4px;
 }
 
@@ -60,7 +60,10 @@ unified-extensions-item[secondary-button-hovered="true"] .unified-extensions-ite
   color: inherit;
 }
 
-.unified-extensions-item-icon {
+.unified-extensions-item-icon,
+/* When the unified extensions pref is enabled, we also want to increase the
+ * size of the icons in the extension CUI widgets. */
+#unified-extensions-panel .unified-extensions-item[unified-extensions="true"] .webextension-browser-action > .toolbarbutton-badge-stack > .toolbarbutton-icon {
   height: var(--icon-size);
   width: var(--icon-size);
   margin-inline-end: 6px;
@@ -73,6 +76,8 @@ unified-extensions-item[secondary-button-hovered="true"] .unified-extensions-ite
 
 .unified-extensions-item-name,
 .unified-extensions-item-message {
+  margin: 0;
+  padding-inline-start: .5em;
   width: 22em;
   word-break: break-word;
 }
@@ -82,32 +87,67 @@ unified-extensions-item[secondary-button-hovered="true"] .unified-extensions-ite
 }
 
 unified-extensions-item[secondary-button-hovered="true"] .unified-extensions-item-message:not(.unified-extensions-item-message-hover),
-unified-extensions-item:not([secondary-button-hovered="true"]) .unified-extensions-item-message-hover {
+unified-extensions-item:not([secondary-button-hovered="true"]) .unified-extensions-item-message-hover,
+/* The two selectors below are for CUI widgets. */
+.unified-extensions-item[secondary-button-hovered="true"] .unified-extensions-item-message:not(.unified-extensions-item-message-hover),
+.unified-extensions-item:not([secondary-button-hovered="true"]) .unified-extensions-item-message-hover {
   display: none;
 }
 
 .unified-extensions-item-open-menu.subviewbutton {
   list-style-image: url("chrome://global/skin/icons/settings.svg");
   margin: 0;
-  margin-inline-end: 8px;
-  padding: 8px;
+  margin-inline-end: var(--arrowpanel-menuitem-margin-inline);
+  /* Have the icon even padding all around by default */
+  padding: var(--arrowpanel-menuitem-padding-inline);
 }
 
 .unified-extensions-item-open-menu.subviewbutton > .toolbarbutton-text {
   display: none;
 }
 
-/* browser action CUI widget styles */
+/* --- browser action CUI widget styles --- */
 
 /* Hide secondary (menu) button when the widget is in the list of widgets in
- * customization mode */
-toolbaritem:not([cui-areatype="panel"], [overflowedItem=true]).unified-extensions-item .unified-extensions-item-open-menu {
+ * customization mode. */
+toolbaritem.unified-extensions-item:not([cui-areatype="panel"], [overflowedItem=true]) .unified-extensions-item-open-menu {
   display: none;
 }
 
-/* Don't flex the menu/cog/gear button when displayed in panel */
+/* Hide subviewbutton label by default, it should only be shown in the overflow
+ * panel and the palette. */
+toolbaritem.unified-extensions-item[cui-areatype="toolbar"] .toolbarbutton-text {
+  display: none;
+}
+
+/* Hide unified extensions content by default */
+toolbaritem.unified-extensions-item:not([overflowedItem="true"]) .unified-extensions-item-contents {
+  display: none;
+}
+
 toolbaritem.unified-extensions-item .unified-extensions-item-open-menu.subviewbutton {
   -moz-box-flex: 0;
+  margin-inline-start: var(--arrowpanel-menuitem-margin-inline);
+  padding: var(--arrowpanel-menuitem-padding);
+}
+
+/* --- browser action CUI widget styles in the overflow/unified extensions panel --- */
+
+/* Align CUI widgets with the custom elements in the unified extensions panel. */
+#unified-extensions-panel toolbaritem.unified-extensions-item {
+  max-width: max-content;
+}
+
+/* Show CUI widget label in overflow panel when the unified extensions pref is
+ * not set. */
+.widget-overflow-list toolbaritem.unified-extensions-item[unified-extensions="false"] .unified-extensions-item-action .toolbarbutton-text {
+  text-align: start;
+  display: block;
+}
+
+/* This will be removed as part of 1777484 */
+panel toolbaritem.unified-extensions-item .unified-extensions-item-message {
+  display: none;
 }
 
 .widget-overflow-list .unified-extensions-item[attention] {
@@ -115,5 +155,13 @@ toolbaritem.unified-extensions-item .unified-extensions-item-open-menu.subviewbu
 }
 
 .widget-overflow-list .unified-extensions-item[attention]:-moz-locale-dir(rtl) {
-  background-position: right 12px bottom;
+  background-position-x: right 12px;
+}
+
+#unified-extensions-panel .unified-extensions-item[attention] {
+  background-position: left calc(12px + var(--arrowpanel-menuitem-margin-inline)) bottom;
+}
+
+#unified-extensions-panel .unified-extensions-item[attention]:-moz-locale-dir(rtl) {
+  background-position-x: right calc(12px + var(--arrowpanel-menuitem-margin-inline));
 }
