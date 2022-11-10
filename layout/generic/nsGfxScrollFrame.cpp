@@ -1341,11 +1341,8 @@ nscoord nsHTMLScrollFrame::GetLogicalBaseline(WritingMode aWritingMode) const {
   // because the scrolled frame handles our padding.)
   LogicalMargin border = GetLogicalUsedBorder(aWritingMode);
 
-  // Clamp the baseline to the border rect. See bug 1791069.
-  return std::clamp(
-      border.BStart(aWritingMode) +
-          mHelper.mScrolledFrame->GetLogicalBaseline(aWritingMode),
-      0, GetLogicalSize().BSize(aWritingMode));
+  return border.BStart(aWritingMode) +
+         mHelper.mScrolledFrame->GetLogicalBaseline(aWritingMode);
 }
 
 void nsHTMLScrollFrame::AdjustForPerspective(nsRect& aScrollableOverflow) {
