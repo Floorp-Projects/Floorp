@@ -49,10 +49,12 @@ class Injections {
   }
 
   async registerContentScripts() {
-    const platformMatches = ["all"];
-    let platformInfo = await browser.runtime.getPlatformInfo();
-    platformMatches.push(platformInfo.os == "android" ? "android" : "desktop");
-
+    const platformInfo = await browser.runtime.getPlatformInfo();
+    const platformMatches = [
+      "all",
+      platformInfo.os,
+      platformInfo.os == "android" ? "android" : "desktop",
+    ];
     for (const injection of this._availableInjections) {
       if (platformMatches.includes(injection.platform)) {
         injection.availableOnPlatform = true;
