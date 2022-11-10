@@ -7,7 +7,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  getCacheEntry: "resource://devtools/shared/platform/CacheEntry.sys.mjs",
+  getResponseCacheObject:
+    "resource://devtools/shared/platform/CacheEntry.sys.mjs",
   NetworkHelper:
     "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
 });
@@ -353,12 +354,13 @@ export class NetworkResponseListener {
    * Fetches cache information from CacheEntry
    * @private
    */
-  #fetchCacheInformation() {
+  async #fetchCacheInformation() {
+    // TODO: This method is async and #httpActivity is nullified in the #destroy
+    // method of this class. Backup httpActivity to avoid errors here.
     const httpActivity = this.#httpActivity;
-    lazy.getCacheEntry(this.#request, descriptor => {
-      httpActivity.owner.addResponseCache({
-        responseCache: descriptor,
-      });
+    const cacheEntry = await lazy.getResponseCacheObject(this.#request);
+    httpActivity.owner.addResponseCache({
+      responseCache: cacheEntry,
     });
   }
 
