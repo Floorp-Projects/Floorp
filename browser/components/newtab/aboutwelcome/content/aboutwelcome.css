@@ -620,11 +620,15 @@ html {
   width: 300px;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .welcome-text h2 {
-  color: #5B5B66;
   margin: 10px 0 0;
   min-height: 1em;
   font-size: 15px;
   line-height: 1.5;
+}
+@media (prefers-contrast: no-preference) {
+  .onboardingContainer .screen[pos=split] .section-main .main-content .welcome-text h2 {
+    color: #5B5B66;
+  }
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .welcome-text h1,
 .onboardingContainer .screen[pos=split] .section-main .main-content .primary {
@@ -717,7 +721,7 @@ html {
 .onboardingContainer .screen[pos=split] .tiles-theme-container .theme {
   min-width: 38px;
 }
-@media (prefers-color-scheme: dark) {
+@media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
   .onboardingContainer .screen[pos=split] .section-main .main-content .welcome-text h2 {
     color: #CFCFD8;
   }
