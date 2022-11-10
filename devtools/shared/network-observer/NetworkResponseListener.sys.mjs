@@ -58,13 +58,6 @@ export class NetworkResponseListener {
   #wrappedNotificationCallbacks;
 
   constructor(networkObserver, httpActivity, decodedCertificateCache) {
-    this.QueryInterface = ChromeUtils.generateQI([
-      "nsIStreamListener",
-      "nsIInputStreamCallback",
-      "nsIRequestObserver",
-      "nsIInterfaceRequestor",
-    ]);
-
     // Explicit flag to check if this listener was already destroyed.
     this.#isDestroyed = false;
 
@@ -602,4 +595,11 @@ export class NetworkResponseListener {
       this.#offset = 0;
     }
   }
+
+  QueryInterface = ChromeUtils.generateQI([
+    "nsIStreamListener",
+    "nsIInputStreamCallback",
+    "nsIRequestObserver",
+    "nsIInterfaceRequestor",
+  ]);
 }
