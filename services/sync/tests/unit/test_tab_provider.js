@@ -23,7 +23,7 @@ add_task(async function test_getAllTabs() {
   equal(tabs[0].urlHistory.length, 1);
   equal(tabs[0].urlHistory[0], "http://bar.com/");
   equal(tabs[0].icon, "");
-  equal(tabs[0].lastUsed, 2000);
+  equal(tabs[0].lastUsed, 2); // windowenumerator returns in ms but the getAllTabs() returns in seconds
 
   _("Get all tabs, and check that filtering works.");
   provider.getWindowEnumerator = mockGetWindowEnumerator.bind(this, [

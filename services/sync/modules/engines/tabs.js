@@ -97,7 +97,13 @@ TabEngine.prototype = {
     };
 
     let tabs = await TabProvider.getAllTabs(true);
-    await this._rustStore.setLocalTabs(tabs);
+    await this._rustStore.setLocalTabs(
+      tabs.map(tab => {
+        // rust wants lastUsed in MS but the provider gives it in seconds
+        tab.lastUsed = tab.lastUsed * 1000;
+        return tab;
+      })
+    );
 
     for (let remoteClient of clientsEngine.remoteClients) {
       let id = remoteClient.id;
@@ -183,7 +189,11 @@ TabEngine.prototype = {
         continue;
       }
       let client = {
-        tabs: rustClient.remoteTabs,
+        tabs: rustClient.remoteTabs.map(tab => {
+          // rust gives us ms but js uses seconds
+          tab.lastUsed = tab.lastUsed / 1000;
+          return tab;
+        }),
         lastModified: this._store.clientsLastSync[remoteClient.id] || 0,
         ...remoteClient,
       };
@@ -408,7 +418,7 @@ const TabProvider = {
           title: tab.linkedBrowser.contentTitle || "",
           urlHistory: [url],
           icon: "",
-          lastUsed: Math.floor(tab.lastAccessed || 0),
+          lastUsed: Math.floor((tab.lastAccessed || 0) / 1000),
         };
         allTabs.push(thisTab);
         // Use the favicon service for the icon url - we can wait for the promises at the end.
