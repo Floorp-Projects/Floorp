@@ -1714,6 +1714,7 @@ bool nsXULPopupManager::IsPopupOpen(nsIContent* aPopup) {
                      item->Frame()->PopupState() == ePopupHiding ||
                      item->Frame()->PopupState() == ePopupInvisible,
                  "popup in open list not actually open");
+    Unused << item;
     return true;
   }
   return false;
