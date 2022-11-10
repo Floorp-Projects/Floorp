@@ -15,6 +15,9 @@ AddonTestUtils.createAppInfo(
 const { ExtensionScriptingStore } = ChromeUtils.import(
   "resource://gre/modules/ExtensionScriptingStore.jsm"
 );
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
 
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
@@ -72,9 +75,18 @@ add_task(async function test_hasPersistedScripts_startup_cache() {
   });
   await extension1.awaitMessage("unregisterContentScripts:done");
 
+  const store = ExtensionScriptingStore._getStoreForTesting();
+
+  // Wait for the scripts to be cleared from the store
+  // to prevent a race that would trigger intermittent
+  // failure on the startupCache assertion that follows.
+  await TestUtils.waitForCondition(async () => {
+    const scripts = await store.getAll(extension1.id);
+    return !scripts.length;
+  }, "Wait for stored scripts list to be empty");
+
   await assertIsPersistentScriptsCachedFlag(extension1, false);
 
-  const store = ExtensionScriptingStore._getStoreForTesting();
   const storeGetAllSpy = sinon.spy(store, "getAll");
   const cleanupSpies = () => {
     storeGetAllSpy.restore();
