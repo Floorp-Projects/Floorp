@@ -28,10 +28,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIStyleSheetService"
 );
 
-// Stale rows are removed on a timer with this timeout.  Tests can override this
-// by setting UrlbarView.removeStaleRowsTimeout.
-const DEFAULT_REMOVE_STALE_ROWS_TIMEOUT = 400;
-
 // Query selector for selectable elements in tip and dynamic results.
 const SELECTABLE_ELEMENT_SELECTOR = "[role=button], [selectable=true]";
 
@@ -52,6 +48,9 @@ function getUniqueId(prefix) {
  * Receives and displays address bar autocomplete results.
  */
 export class UrlbarView {
+  // Stale rows are removed on a timer with this timeout.
+  static removeStaleRowsTimeout = 400;
+
   /**
    * @param {UrlbarInput} input
    *   The UrlbarInput instance belonging to this UrlbarView instance.
@@ -2710,8 +2709,6 @@ export class UrlbarView {
     this.#enableOrDisableRowWrap();
   }
 }
-
-UrlbarView.removeStaleRowsTimeout = DEFAULT_REMOVE_STALE_ROWS_TIMEOUT;
 
 /**
  * Implements a QueryContext cache, working as a circular buffer, when a new
