@@ -737,6 +737,16 @@ details[open] > .page-section-header > .twisty {
 }
 
 @media (prefers-contrast) {
+  .synced-tab-a {
+    border-color: FieldText;
+  }
+  .synced-tab-a,
+  .synced-tab-a:hover,
+  .synced-tab-a:active,
+  .synced-tab-a:hover:active,
+  .synced-tab-a:visited {
+    color: LinkText;
+  }
   .synced-tab-a:focus-visible {
     box-shadow: none;
     outline: var(--in-content-focus-outline);
@@ -950,6 +960,12 @@ details[open] > .page-section-header > .twisty {
   margin-inline-end: 10px;
 }
 
+@media (prefers-contrast) {
+  .synced-tab-li .favicon {
+    color: LinkText;
+  }
+}
+
 .synced-tab-li .icon {
   vertical-align: bottom;
   margin-inline-end: 5px;
@@ -1048,4 +1064,16 @@ details[open] > .page-section-header > .twisty {
   letter-spacing: 0.02em;
   margin-inline-start: 4px;
   color: #000000;
+}
+
+@media (prefers-contrast) {
+  .last-active-badge {
+    border: 1px solid CanvasText;
+  }
+  .dot {
+    background-color: FieldText;
+  }
+  .badge-text {
+    color: FieldText;
+  }
 }
