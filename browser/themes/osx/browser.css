@@ -12,9 +12,6 @@
   --toolbar-non-lwt-textcolor: -moz-dialogtext;
   --toolbar-non-lwt-bgimage: none;
 
-  --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) + 1px);
-  --toolbarbutton-border-radius: 4px;
-
   --panel-separator-color: hsla(210,4%,10%,.14);
 
   --arrowpanel-field-background: rgba(249,249,250,.3);

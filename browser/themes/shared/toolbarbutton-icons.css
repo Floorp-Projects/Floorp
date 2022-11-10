@@ -346,7 +346,7 @@ toolbar {
 
 #zoom-in-button > .toolbarbutton-icon {
   /* This padding is used to center the icon */
-  padding-inline-start: 7px;
+  padding-inline-start: calc(var(--toolbarbutton-inner-padding) - 1px);
 }
 
 #PlacesChevron,
