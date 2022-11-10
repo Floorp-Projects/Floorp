@@ -211,6 +211,22 @@ events:
     notification_emails:
       - android-probes@mozilla.com
     expires: 122
+  marketing_notification_allowed:
+    type: boolean
+    description: |
+      True if marketing notifications are allowed, otherwise false.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/27795
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/27797
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 122
+    metadata:
+      tags:
+        - Notifications
   toolbar_menu_visible:
     type: event
     description: |
@@ -1752,6 +1768,24 @@ metrics:
     metadata:
       tags:
         - Wallpapers
+  notifications_allowed:
+    type: boolean
+    description: |
+      True if notifications are allowed, otherwise false.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/27795
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/27797
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 122
+    metadata:
+      tags:
+        - Notifications
 
 customize_home:
   most_visited_sites:

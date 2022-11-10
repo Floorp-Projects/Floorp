@@ -22,6 +22,7 @@ import androidx.work.WorkerParameters
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.ids.SharedIdsHelper
 import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.GleanMetrics.Events.marketingNotificationAllowed
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
@@ -35,9 +36,9 @@ class DefaultBrowserNotificationWorker(
 ) : Worker(context, workerParameters) {
 
     override fun doWork(): Result {
-        ensureChannelExists()
+        val channelId = ensureChannelExists()
         NotificationManagerCompat.from(applicationContext)
-            .notify(NOTIFICATION_TAG, NOTIFICATION_ID, buildNotification())
+            .notify(NOTIFICATION_TAG, NOTIFICATION_ID, buildNotification(channelId))
         Events.defaultBrowserNotifShown.record(NoExtras())
 
         // default browser notification should only happen once
@@ -49,8 +50,7 @@ class DefaultBrowserNotificationWorker(
     /**
      * Build the default browser notification.
      */
-    private fun buildNotification(): Notification {
-        val channelId = ensureChannelExists()
+    private fun buildNotification(channelId: String): Notification {
         val intent = Intent(applicationContext, HomeActivity::class.java)
         intent.putExtra(INTENT_DEFAULT_BROWSER_NOTIFICATION, true)
 
@@ -87,6 +87,7 @@ class DefaultBrowserNotificationWorker(
      * Returns the channel id to be used for notifications.
      */
     private fun ensureChannelExists(): String {
+        var channelEnabled = true
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationManager: NotificationManager =
                 applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -98,7 +99,20 @@ class DefaultBrowserNotificationWorker(
             )
 
             notificationManager.createNotificationChannel(channel)
+
+            val existingChannel = notificationManager.getNotificationChannel(NOTIFICATION_CHANNEL_ID)
+            channelEnabled =
+                existingChannel != null && existingChannel.importance != NotificationManager.IMPORTANCE_NONE
         }
+
+        @Suppress("TooGenericExceptionCaught")
+        val notificationsEnabled = try {
+            NotificationManagerCompat.from(applicationContext).areNotificationsEnabled()
+        } catch (e: Exception) {
+            false
+        }
+
+        marketingNotificationAllowed.set(notificationsEnabled && channelEnabled)
 
         return NOTIFICATION_CHANNEL_ID
     }
