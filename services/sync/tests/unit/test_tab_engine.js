@@ -175,7 +175,7 @@ add_task(async function test_tab_engine_skips_incoming_local_record() {
           title: "title2",
           urlHistory: ["http://bar.com/"],
           icon: "",
-          lastUsed: 3000000,
+          lastUsed: 3000,
         },
       ]);
       await syncFinish.call(engine);
