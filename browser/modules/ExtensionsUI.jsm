@@ -638,10 +638,6 @@ var ExtensionsUI = {
       return;
     }
 
-    popup.ownerGlobal.MozXULElement.insertFTLIfNeeded(
-      "preview/originControls.ftl"
-    );
-
     let uri = popup.ownerGlobal.gBrowser.currentURI;
     let state = lazy.OriginControls.getState(policy, uri);
 
