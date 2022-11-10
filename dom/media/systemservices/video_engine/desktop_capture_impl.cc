@@ -15,6 +15,7 @@
 #include <string>
 
 #include "api/video/i420_buffer.h"
+#include "base/scoped_nsautorelease_pool.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "libyuv.h"  // NOLINT
 #include "modules/include/module_common_types.h"
@@ -671,6 +672,9 @@ void DesktopCaptureImpl::ProcessIter() {
 #if !defined(_WIN32)
   int64_t startProcessTime = rtc::TimeNanos();
 #endif
+
+  // Don't leak while we're looping
+  base::ScopedNSAutoreleasePool autoreleasepool;
 
 #if defined(WEBRTC_MAC)
   // Give cycles to the RunLoop so frame callbacks can happen
