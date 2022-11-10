@@ -66,6 +66,7 @@ class DefaultDelete<FcObjectSet> {
 
 class gfxFontconfigFontEntry final : public gfxFT2FontEntryBase {
   friend class gfxFcPlatformFontList;
+  using FTUserFontData = mozilla::gfx::FTUserFontData;
 
  public:
   // used for system fonts with explicit patterns
