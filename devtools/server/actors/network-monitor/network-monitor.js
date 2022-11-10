@@ -69,7 +69,6 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
       this.shouldIgnoreChannel,
       this.onNetworkEvent
     );
-    this.observer.init();
 
     this.stackTraces = new Set();
     this.lastFrames = new Map();

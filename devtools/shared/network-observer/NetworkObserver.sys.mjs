@@ -135,12 +135,7 @@ export class NetworkObserver {
      * @type boolean
      */
     this.#saveRequestAndResponseBodies = true;
-  }
 
-  /**
-   * The network monitor initializer.
-   */
-  init() {
     // Network response bodies are piped through a buffer of the given size (in
     // bytes).
     this.#responsePipeSegmentSize = Services.prefs.getIntPref(
@@ -148,6 +143,7 @@ export class NetworkObserver {
     );
     this.#interceptedChannels = new WeakSet();
 
+    // Start all platform observers.
     if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT) {
       gActivityDistributor.addObserver(this);
       Services.obs.addObserver(
