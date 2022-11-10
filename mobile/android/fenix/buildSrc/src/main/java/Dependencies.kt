@@ -234,11 +234,11 @@ object Deps {
     //   https://developer.android.com/jetpack/androidx/releases/test
     // For the full IDs of these test dependencies, see:
     //   https://developer.android.com/training/testing/set-up-project#android-test-dependencies
-    private const val androidx_test_shared_version = "1.4.0" // this appears to be shared with many deps.
-    private const val androidx_test_junit = "1.1.3"
-    private const val androidx_test_orchestrator = "1.4.1"
+    private const val androidx_test_shared_version = "1.5.0" // this appears to be shared with many deps.
+    private const val androidx_test_junit = "1.1.4"
+    private const val androidx_test_orchestrator = "1.4.2"
     const val androidx_test_core = "androidx.test:core:$androidx_test_shared_version"
-    private const val androidx_espresso_version = "3.4.0"
+    private const val androidx_espresso_version = "3.5.0"
     const val espresso_core = "androidx.test.espresso:espresso-core:$androidx_espresso_version"
     const val espresso_contrib = "androidx.test.espresso:espresso-contrib:$androidx_espresso_version"
     const val espresso_idling_resources = "androidx.test.espresso:espresso-idling-resource:$androidx_espresso_version"
