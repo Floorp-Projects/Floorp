@@ -23,4 +23,4 @@
 # don't change CLOBBER for WebIDL changes any more.
 
 
-Modified build files in third_party/libwebrtc - Bug 1790097 - Vendor libwebrtc from fbf66ddddf
+Modified build files in third_party/libwebrtc - Bug 1790097 - (fix-2377226851) restrict deps in timing_unittests
