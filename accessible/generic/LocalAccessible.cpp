@@ -3558,7 +3558,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     float opacity = Opacity();
     if (opacity != 1.0f) {
       fields->SetAttribute(nsGkAtoms::opacity, opacity);
-    } else {
+    } else if (aUpdateType == CacheUpdateType::Update) {
       fields->SetAttribute(nsGkAtoms::opacity, DeleteEntry());
     }
   }
@@ -3599,7 +3599,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
           }
         }
         fields->SetAttribute(nsGkAtoms::headers, std::move(headers));
-      } else {
+      } else if (aUpdateType == CacheUpdateType::Update) {
         fields->SetAttribute(nsGkAtoms::headers, DeleteEntry());
       }
     }
