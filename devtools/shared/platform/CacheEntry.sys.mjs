@@ -10,33 +10,33 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 /**
- * Flag for cache session being initialized.
+ * Global cache session object.
  */
-let isCacheSessionInitialized = false;
+let gCacheSession = null;
 
 /**
- * Cache session object.
+ * Get (and create if necessary) a cache session / cache storage session.
+ *
+ * @param {nsIRequest} request
  */
-let cacheSession = null;
-
-/**
- * Initializes our cache session / cache storage session.
- */
-function initializeCacheSession(request) {
-  try {
-    const cacheService = Services.cache2;
-    if (cacheService) {
-      let loadContext = lazy.NetworkHelper.getRequestLoadContext(request);
-      if (!loadContext) {
-        // Get default load context if we can't fetch.
-        loadContext = Services.loadContextInfo.default;
+function getCacheSession(request) {
+  if (!gCacheSession) {
+    try {
+      const cacheService = Services.cache2;
+      if (cacheService) {
+        let loadContext = lazy.NetworkHelper.getRequestLoadContext(request);
+        if (!loadContext) {
+          // Get default load context if we can't fetch.
+          loadContext = Services.loadContextInfo.default;
+        }
+        gCacheSession = cacheService.diskCacheStorage(loadContext);
       }
-      cacheSession = cacheService.diskCacheStorage(loadContext);
-      isCacheSessionInitialized = true;
+    } catch (e) {
+      gCacheSession = null;
     }
-  } catch (e) {
-    isCacheSessionInitialized = false;
   }
+
+  return gCacheSession;
 }
 
 /**
@@ -79,17 +79,20 @@ function buildResponseCacheObject(cacheEntry) {
 /**
  * Does the fetch for the cache entry from the session.
  *
- * @param string request
- *        The request object.
- * @param Function onCacheEntryAvailable
- *        callback function.
+ * @param {nsIRequest} request
+ *     The request object.
+ *
+ * @returns {Promise}
+ *     Promise which resolve a response cache object object, or null if none
+ *     was available.
  */
-export function getCacheEntry(request, onCacheEntryAvailable) {
-  if (!isCacheSessionInitialized) {
-    initializeCacheSession(request);
+export function getResponseCacheObject(request) {
+  const cacheSession = getCacheSession(request);
+  if (!cacheSession) {
+    return null;
   }
 
-  if (cacheSession) {
+  return new Promise(resolve => {
     cacheSession.asyncOpenURI(
       request.URI,
       "",
@@ -101,14 +104,12 @@ export function getCacheEntry(request, onCacheEntryAvailable) {
         onCacheEntryAvailable: (cacheEntry, isnew, status) => {
           if (cacheEntry) {
             const cacheObject = buildResponseCacheObject(cacheEntry);
-            onCacheEntryAvailable(cacheObject);
+            resolve(cacheObject);
           } else {
-            onCacheEntryAvailable(null);
+            resolve(null);
           }
         },
       }
     );
-  } else {
-    onCacheEntryAvailable(null);
-  }
+  });
 }
