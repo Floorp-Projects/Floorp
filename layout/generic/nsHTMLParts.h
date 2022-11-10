@@ -112,9 +112,8 @@ class nsPageFrame;
 nsPageFrame* NS_NewPageFrame(mozilla::PresShell* aPresShell,
                              mozilla::ComputedStyle* aStyle);
 class nsPageContentFrame;
-nsPageContentFrame* NS_NewPageContentFrame(
-    mozilla::PresShell* aPresShell, mozilla::ComputedStyle* aStyle,
-    already_AddRefed<const nsAtom> aPageName);
+nsPageContentFrame* NS_NewPageContentFrame(mozilla::PresShell* aPresShell,
+                                           mozilla::ComputedStyle* aStyle);
 nsIFrame* NS_NewPageBreakFrame(mozilla::PresShell* aPresShell,
                                mozilla::ComputedStyle* aStyle);
 class nsFirstLetterFrame;

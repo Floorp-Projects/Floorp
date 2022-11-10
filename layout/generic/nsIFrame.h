@@ -1636,10 +1636,6 @@ class nsIFrame : public nsQueryFrame {
     return GetLogicalBaseline(GetWritingMode());
   }
 
-  // Gets the page-name value to be used for the page that contains this frame
-  // during paginated reflow.
-  const nsAtom* ComputePageValue() const MOZ_NONNULL_RETURN;
-
   ///////////////////////////////////////////////////////////////////////////////
   // The public visibility API.
   ///////////////////////////////////////////////////////////////////////////////
