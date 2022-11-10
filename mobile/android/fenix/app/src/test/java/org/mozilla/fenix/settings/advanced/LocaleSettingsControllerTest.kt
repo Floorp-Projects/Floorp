@@ -14,6 +14,8 @@ import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyAll
+import mozilla.components.browser.state.action.SearchAction
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.locale.LocaleManager
 import mozilla.components.support.locale.LocaleUseCases
 import org.junit.Before
@@ -24,6 +26,7 @@ class LocaleSettingsControllerTest {
 
     private val activity = mockk<Activity>(relaxed = true)
     private val localeSettingsStore: LocaleSettingsStore = mockk(relaxed = true)
+    private val browserStore: BrowserStore = mockk(relaxed = true)
     private val localeUseCases: LocaleUseCases = mockk(relaxed = true)
     private val mockState = LocaleSettingsState(mockk(), mockk(), mockk())
 
@@ -35,6 +38,7 @@ class LocaleSettingsControllerTest {
             DefaultLocaleSettingsController(
                 activity,
                 localeSettingsStore,
+                browserStore,
                 localeUseCases,
             ),
         )
@@ -53,6 +57,7 @@ class LocaleSettingsControllerTest {
 
         verifyAll(inverse = true) {
             localeSettingsStore.dispatch(LocaleSettingsAction.Select(selectedLocale))
+            browserStore.dispatch(SearchAction.RefreshSearchEnginesAction)
             LocaleManager.setNewLocale(activity, locale = selectedLocale)
             activity.recreate()
         }
@@ -77,6 +82,7 @@ class LocaleSettingsControllerTest {
         controller.handleLocaleSelected(selectedLocale)
 
         verify { localeSettingsStore.dispatch(LocaleSettingsAction.Select(selectedLocale)) }
+        verify { browserStore.dispatch(SearchAction.RefreshSearchEnginesAction) }
         verify { LocaleManager.setNewLocale(activity, localeUseCases, selectedLocale) }
         verify { activity.recreate() }
         verify { activity.overridePendingTransition(0, 0) }
@@ -101,6 +107,7 @@ class LocaleSettingsControllerTest {
         controller.handleLocaleSelected(selectedLocale)
 
         verify { localeSettingsStore.dispatch(LocaleSettingsAction.Select(selectedLocale)) }
+        verify { browserStore.dispatch(SearchAction.RefreshSearchEnginesAction) }
         verify { LocaleManager.setNewLocale(activity, localeUseCases, selectedLocale) }
         verify { activity.recreate() }
         verify { activity.overridePendingTransition(0, 0) }
@@ -120,6 +127,7 @@ class LocaleSettingsControllerTest {
 
         verifyAll(inverse = true) {
             localeSettingsStore.dispatch(LocaleSettingsAction.Select(selectedLocale))
+            browserStore.dispatch(SearchAction.RefreshSearchEnginesAction)
             LocaleManager.resetToSystemDefault(activity, localeUseCases)
             activity.recreate()
             with(controller) {
@@ -141,6 +149,7 @@ class LocaleSettingsControllerTest {
         controller.handleDefaultLocaleSelected()
 
         verify { localeSettingsStore.dispatch(LocaleSettingsAction.Select(selectedLocale)) }
+        verify { browserStore.dispatch(SearchAction.RefreshSearchEnginesAction) }
         verify { LocaleManager.resetToSystemDefault(activity, localeUseCases) }
         verify { activity.recreate() }
         verify { activity.overridePendingTransition(0, 0) }

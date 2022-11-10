@@ -420,11 +420,7 @@ class SettingsSearchTest {
                 "Bing",
                 "Amazon.com",
                 "DuckDuckGo",
-                "eBay",
-                /* Disabled Arabic Wikipedia verification
-                   until https://github.com/mozilla-mobile/fenix/issues/12236 gets fixed
-                 "ويكيبيديا (ar)"
-                */
+                "ويكيبيديا (ar)",
             )
         }
     }

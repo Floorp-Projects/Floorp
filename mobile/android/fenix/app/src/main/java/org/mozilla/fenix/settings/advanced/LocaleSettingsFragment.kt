@@ -58,6 +58,7 @@ class LocaleSettingsFragment : Fragment(), MenuProvider {
             controller = DefaultLocaleSettingsController(
                 activity = requireActivity(),
                 localeSettingsStore = localeSettingsStore,
+                browserStore = browserStore,
                 localeUseCase = localeUseCase,
             ),
         )

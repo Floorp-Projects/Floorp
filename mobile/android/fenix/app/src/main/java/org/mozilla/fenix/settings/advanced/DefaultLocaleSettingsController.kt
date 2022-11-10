@@ -6,6 +6,8 @@ package org.mozilla.fenix.settings.advanced
 
 import android.app.Activity
 import android.content.Context
+import mozilla.components.browser.state.action.SearchAction
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.locale.LocaleManager
 import mozilla.components.support.locale.LocaleUseCases
 import org.mozilla.fenix.nimbus.FxNimbus
@@ -20,6 +22,7 @@ interface LocaleSettingsController {
 class DefaultLocaleSettingsController(
     private val activity: Activity,
     private val localeSettingsStore: LocaleSettingsStore,
+    private val browserStore: BrowserStore,
     private val localeUseCase: LocaleUseCases,
 ) : LocaleSettingsController {
 
@@ -30,6 +33,7 @@ class DefaultLocaleSettingsController(
             return
         }
         localeSettingsStore.dispatch(LocaleSettingsAction.Select(locale))
+        browserStore.dispatch(SearchAction.RefreshSearchEnginesAction)
         LocaleManager.setNewLocale(activity, localeUseCase, locale)
         LocaleManager.updateBaseConfiguration(activity, locale)
 
@@ -44,6 +48,7 @@ class DefaultLocaleSettingsController(
             return
         }
         localeSettingsStore.dispatch(LocaleSettingsAction.Select(localeSettingsStore.state.localeList[0]))
+        browserStore.dispatch(SearchAction.RefreshSearchEnginesAction)
         LocaleManager.resetToSystemDefault(activity, localeUseCase)
         LocaleManager.updateBaseConfiguration(activity, localeSettingsStore.state.localeList[0])
 
