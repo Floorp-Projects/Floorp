@@ -2,17 +2,15 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const Arithmetic = ChromeUtils.import(
-  "resource://gre/modules/components-utils/RustArithmetic.jsm"
+  "resource://gre/modules/RustArithmetic.jsm"
 );
-const Geometry = ChromeUtils.import(
-  "resource://gre/modules/components-utils/RustGeometry.jsm"
-);
+const Geometry = ChromeUtils.import("resource://gre/modules/RustGeometry.jsm");
 
 const { TodoList } = ChromeUtils.import(
-  "resource://gre/modules/components-utils/RustTodolist.jsm"
+  "resource://gre/modules/RustTodolist.jsm"
 );
 const { Stringifier } = ChromeUtils.import(
-  "resource://gre/modules/components-utils/RustRondpoint.jsm"
+  "resource://gre/modules/RustRondpoint.jsm"
 );
 
 add_task(async function() {

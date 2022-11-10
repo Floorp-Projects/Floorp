@@ -6,7 +6,6 @@ use anyhow::{Context, Result};
 use askama::Template;
 use camino::Utf8PathBuf;
 use clap::Parser;
-use heck::ToTitleCase;
 use std::fs::File;
 use std::io::Write;
 
@@ -78,17 +77,13 @@ fn render_js(
     object_ids: &ObjectIds,
 ) -> Result<()> {
     for ci in ci_list {
-        // The plain namespace name is a bit too generic as a module name for m-c, so we
-        // prefix it with "Rust". Later we'll probably allow this to be customized.
-        let path = out_dir.join(format!("Rust{}.jsm", ci.namespace().to_title_case()));
-        render(
-            path,
-            JSBindingsTemplate {
-                ci,
-                function_ids: &function_ids,
-                object_ids: &object_ids,
-            },
-        )?;
+        let template = JSBindingsTemplate {
+            ci,
+            function_ids: &function_ids,
+            object_ids: &object_ids,
+        };
+        let path = out_dir.join(template.js_module_name());
+        render(path, template)?;
     }
     Ok(())
 }

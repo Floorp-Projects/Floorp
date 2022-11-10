@@ -2198,6 +2198,7 @@ dependencies = [
  "uniffi-example-rondpoint",
  "uniffi-example-sprites",
  "uniffi-example-todolist",
+ "uniffi-fixture-external-types",
  "url",
  "viaduct",
  "webext_storage_bridge",
@@ -5767,6 +5768,17 @@ dependencies = [
  "lazy_static",
  "thiserror",
  "uniffi",
+ "uniffi_build",
+ "uniffi_macros",
+]
+
+[[package]]
+name = "uniffi-fixture-external-types"
+version = "0.21.0"
+dependencies = [
+ "thiserror",
+ "uniffi",
+ "uniffi-example-geometry",
  "uniffi_build",
  "uniffi_macros",
 ]

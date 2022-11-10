@@ -9,6 +9,6 @@ dictionary CustomTypesDemo {
     Handle handle;
 };
 
-namespace customtypes {
+namespace custom_types {
     CustomTypesDemo get_custom_types_demo(CustomTypesDemo? demo);
 };

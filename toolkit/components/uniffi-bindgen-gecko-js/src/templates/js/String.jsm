@@ -1,5 +1,3 @@
-
-
 class FfiConverterString extends FfiConverter {
     static lift(buf) {
         const decoder = new TextDecoder();
@@ -24,4 +22,3 @@ class FfiConverterString extends FfiConverter {
         return 4 + encoder.encode(value).length
     }
 }
-  

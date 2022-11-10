@@ -111,7 +111,8 @@ extern "C" {
   RustBuffer todolist_aa33_get_default_list(RustCallStatus*);
   void todolist_aa33_set_default_list(void *, RustCallStatus*);
   RustBuffer todolist_aa33_create_entry_with(RustBuffer, RustCallStatus*);
-  RustBuffer customtypes_fb46_get_custom_types_demo(RustBuffer, RustCallStatus*);
+  RustBuffer custom_types_8ecd_get_custom_types_demo(RustBuffer, RustCallStatus*);
+  double external_types_54cc_gradient(RustBuffer, RustCallStatus*);
 }
 
 // Define pointer types
@@ -486,9 +487,13 @@ Maybe<already_AddRefed<Promise>> UniFFIFixturesCallAsync(const GlobalObject& aGl
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
       return Some(CallHandler::CallAsync(todolist_aa33_create_entry_with, aGlobal, aArgs, "todolist_aa33_create_entry_with: "_ns, aError));
     }
-    case 107: { // customtypes:customtypes_fb46_get_custom_types_demo
+    case 107: { // custom_types:custom_types_8ecd_get_custom_types_demo
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(customtypes_fb46_get_custom_types_demo, aGlobal, aArgs, "customtypes_fb46_get_custom_types_demo: "_ns, aError));
+      return Some(CallHandler::CallAsync(custom_types_8ecd_get_custom_types_demo, aGlobal, aArgs, "custom_types_8ecd_get_custom_types_demo: "_ns, aError));
+    }
+    case 108: { // external_types:external_types_54cc_gradient
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(external_types_54cc_gradient, aGlobal, aArgs, "external_types_54cc_gradient: "_ns, aError));
     }
   }
   return Nothing();
@@ -931,9 +936,14 @@ bool UniFFIFixturesCallSync(const GlobalObject& aGlobal, uint64_t aId, const Seq
       CallHandler::CallSync(todolist_aa33_create_entry_with, aGlobal, aArgs, aReturnValue, "todolist_aa33_create_entry_with: "_ns, aError);
       return true;
     }
-    case 107: { // customtypes:customtypes_fb46_get_custom_types_demo
+    case 107: { // custom_types:custom_types_8ecd_get_custom_types_demo
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(customtypes_fb46_get_custom_types_demo, aGlobal, aArgs, aReturnValue, "customtypes_fb46_get_custom_types_demo: "_ns, aError);
+      CallHandler::CallSync(custom_types_8ecd_get_custom_types_demo, aGlobal, aArgs, aReturnValue, "custom_types_8ecd_get_custom_types_demo: "_ns, aError);
+      return true;
+    }
+    case 108: { // external_types:external_types_54cc_gradient
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(external_types_54cc_gradient, aGlobal, aArgs, aReturnValue, "external_types_54cc_gradient: "_ns, aError);
       return true;
     }
   }

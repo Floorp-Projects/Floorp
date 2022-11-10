@@ -1,0 +1,10 @@
+// A type defined in the `geometry` component
+[External="uniffi_geometry"]
+typedef extern Point;
+
+[External="uniffi_geometry"]
+typedef extern Line;
+
+namespace external_types {
+    double gradient(Line? value);
+};

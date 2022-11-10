@@ -233,6 +233,9 @@ class FfiConverterF64 extends FfiConverter {
     }
 }
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterF64");
+
 class FfiConverterString extends FfiConverter {
     static lift(buf) {
         const decoder = new TextDecoder();
@@ -257,6 +260,9 @@ class FfiConverterString extends FfiConverter {
         return 4 + encoder.encode(value).length
     }
 }
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterString");
 
 class Line {
     constructor(start,end) {
@@ -304,6 +310,9 @@ class FfiConverterTypeLine extends FfiConverter {
 
 EXPORTED_SYMBOLS.push("Line");
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeLine");
+
 class Point {
     constructor(coordX,coordY) {
         FfiConverterF64.checkType("coordX", coordX);
@@ -348,7 +357,12 @@ class FfiConverterTypePoint extends FfiConverter {
     }
 }
 
-EXPORTED_SYMBOLS.push("Point");class FfiConverterOptionalTypePoint extends FfiConverterArrayBuffer {
+EXPORTED_SYMBOLS.push("Point");
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypePoint");
+
+class FfiConverterOptionalTypePoint extends FfiConverterArrayBuffer {
     static checkType(name, value) {
         if (value !== undefined && value !== null) {
             FfiConverterTypePoint.checkType(name, value)
@@ -383,6 +397,11 @@ EXPORTED_SYMBOLS.push("Point");class FfiConverterOptionalTypePoint extends FfiCo
         return 1 + FfiConverterTypePoint.computeSize(value)
     }
 }
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterOptionalTypePoint");
+
+
 
 
 function gradient(ln) {

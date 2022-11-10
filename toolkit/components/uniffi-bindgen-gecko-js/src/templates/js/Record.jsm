@@ -1,5 +1,4 @@
-{% let record = ci.get_record_definition(name).unwrap() %}
-
+{%- let record = ci.get_record_definition(name).unwrap() -%}
 class {{ record.nm() }} {
     constructor({{ record.constructor_field_list() }}) {
         {%- for field in record.fields() %}

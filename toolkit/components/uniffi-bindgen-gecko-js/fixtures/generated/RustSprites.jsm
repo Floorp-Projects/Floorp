@@ -253,6 +253,9 @@ class FfiConverterF64 extends FfiConverter {
     }
 }
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterF64");
+
 class FfiConverterString extends FfiConverter {
     static lift(buf) {
         const decoder = new TextDecoder();
@@ -278,6 +281,8 @@ class FfiConverterString extends FfiConverter {
     }
 }
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterString");
 
 class Sprite {
     // Use `init` to instantiate this class.
@@ -411,6 +416,9 @@ class FfiConverterTypeSprite extends FfiConverter {
 
 EXPORTED_SYMBOLS.push("Sprite");
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeSprite");
+
 class Point {
     constructor(x,y) {
         FfiConverterF64.checkType("x", x);
@@ -457,6 +465,9 @@ class FfiConverterTypePoint extends FfiConverter {
 
 EXPORTED_SYMBOLS.push("Point");
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypePoint");
+
 class Vector {
     constructor(dx,dy) {
         FfiConverterF64.checkType("dx", dx);
@@ -501,7 +512,12 @@ class FfiConverterTypeVector extends FfiConverter {
     }
 }
 
-EXPORTED_SYMBOLS.push("Vector");class FfiConverterOptionalTypePoint extends FfiConverterArrayBuffer {
+EXPORTED_SYMBOLS.push("Vector");
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeVector");
+
+class FfiConverterOptionalTypePoint extends FfiConverterArrayBuffer {
     static checkType(name, value) {
         if (value !== undefined && value !== null) {
             FfiConverterTypePoint.checkType(name, value)
@@ -536,6 +552,11 @@ EXPORTED_SYMBOLS.push("Vector");class FfiConverterOptionalTypePoint extends FfiC
         return 1 + FfiConverterTypePoint.computeSize(value)
     }
 }
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterOptionalTypePoint");
+
+
 
 
 function translate(position,direction) {

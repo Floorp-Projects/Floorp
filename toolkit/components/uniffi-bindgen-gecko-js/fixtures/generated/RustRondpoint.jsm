@@ -300,7 +300,12 @@ class FfiConverterU8 extends FfiConverter {
     static read(dataStream) {
         return dataStream.readUint8()
     }
-}class FfiConverterI8 extends FfiConverter {
+}
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterU8");
+
+class FfiConverterI8 extends FfiConverter {
     static checkType(name, value) {
         super.checkType(name, value);
         if (!Number.isInteger(value)) {
@@ -325,7 +330,12 @@ class FfiConverterU8 extends FfiConverter {
     static read(dataStream) {
         return dataStream.readInt8()
     }
-}class FfiConverterU16 extends FfiConverter {
+}
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterI8");
+
+class FfiConverterU16 extends FfiConverter {
     static checkType(name, value) {
         super.checkType(name, value);
         if (!Number.isInteger(value)) {
@@ -350,7 +360,12 @@ class FfiConverterU8 extends FfiConverter {
     static read(dataStream) {
         return dataStream.readUint16()
     }
-}class FfiConverterI16 extends FfiConverter {
+}
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterU16");
+
+class FfiConverterI16 extends FfiConverter {
     static checkType(name, value) {
         super.checkType(name, value);
         if (!Number.isInteger(value)) {
@@ -375,7 +390,12 @@ class FfiConverterU8 extends FfiConverter {
     static read(dataStream) {
         return dataStream.readInt16()
     }
-}class FfiConverterU32 extends FfiConverter {
+}
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterI16");
+
+class FfiConverterU32 extends FfiConverter {
     static checkType(name, value) {
         super.checkType(name, value);
         if (!Number.isInteger(value)) {
@@ -400,7 +420,12 @@ class FfiConverterU8 extends FfiConverter {
     static read(dataStream) {
         return dataStream.readUint32()
     }
-}class FfiConverterI32 extends FfiConverter {
+}
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterU32");
+
+class FfiConverterI32 extends FfiConverter {
     static checkType(name, value) {
         super.checkType(name, value);
         if (!Number.isInteger(value)) {
@@ -425,7 +450,12 @@ class FfiConverterU8 extends FfiConverter {
     static read(dataStream) {
         return dataStream.readInt32()
     }
-}class FfiConverterU64 extends FfiConverter {
+}
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterI32");
+
+class FfiConverterU64 extends FfiConverter {
     static checkType(name, value) {
         super.checkType(name, value);
         if (!Number.isSafeInteger(value)) {
@@ -450,7 +480,12 @@ class FfiConverterU8 extends FfiConverter {
     static read(dataStream) {
         return dataStream.readUint64()
     }
-}class FfiConverterI64 extends FfiConverter {
+}
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterU64");
+
+class FfiConverterI64 extends FfiConverter {
     static checkType(name, value) {
         super.checkType(name, value);
         if (!Number.isSafeInteger(value)) {
@@ -472,7 +507,12 @@ class FfiConverterU8 extends FfiConverter {
     static read(dataStream) {
         return dataStream.readInt64()
     }
-}class FfiConverterF32 extends FfiConverter {
+}
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterI64");
+
+class FfiConverterF32 extends FfiConverter {
     static computeSize() {
         return 4;
     }
@@ -488,7 +528,12 @@ class FfiConverterU8 extends FfiConverter {
     static read(dataStream) {
         return dataStream.readFloat32()
     }
-}class FfiConverterF64 extends FfiConverter {
+}
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterF32");
+
+class FfiConverterF64 extends FfiConverter {
     static computeSize() {
         return 8;
     }
@@ -504,7 +549,12 @@ class FfiConverterU8 extends FfiConverter {
     static read(dataStream) {
         return dataStream.readFloat64()
     }
-}class FfiConverterBool extends FfiConverter {
+}
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterF64");
+
+class FfiConverterBool extends FfiConverter {
     static computeSize() {
         return 1;
     }
@@ -525,6 +575,9 @@ class FfiConverterU8 extends FfiConverter {
         return this.lift(dataStream.readUint8())
     }
 }
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterBool");
 
 class FfiConverterString extends FfiConverter {
     static lift(buf) {
@@ -551,6 +604,8 @@ class FfiConverterString extends FfiConverter {
     }
 }
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterString");
 
 class Optionneur {
     // Use `init` to instantiate this class.
@@ -1013,6 +1068,8 @@ class FfiConverterTypeOptionneur extends FfiConverter {
 
 EXPORTED_SYMBOLS.push("Optionneur");
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeOptionneur");
 
 class Retourneur {
     // Use `init` to instantiate this class.
@@ -1315,6 +1372,8 @@ class FfiConverterTypeRetourneur extends FfiConverter {
 
 EXPORTED_SYMBOLS.push("Retourneur");
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeRetourneur");
 
 class Stringifier {
     // Use `init` to instantiate this class.
@@ -1569,6 +1628,9 @@ class FfiConverterTypeStringifier extends FfiConverter {
 
 EXPORTED_SYMBOLS.push("Stringifier");
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeStringifier");
+
 class Dictionnaire {
     constructor(un,deux,petitNombre,grosNombre) {
         FfiConverterTypeEnumeration.checkType("un", un);
@@ -1626,6 +1688,9 @@ class FfiConverterTypeDictionnaire extends FfiConverter {
 }
 
 EXPORTED_SYMBOLS.push("Dictionnaire");
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeDictionnaire");
 
 class DictionnaireNombres {
     constructor(petitNombre,courtNombre,nombreSimple,grosNombre) {
@@ -1685,6 +1750,9 @@ class FfiConverterTypeDictionnaireNombres extends FfiConverter {
 
 EXPORTED_SYMBOLS.push("DictionnaireNombres");
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeDictionnaireNombres");
+
 class DictionnaireNombresSignes {
     constructor(petitNombre,courtNombre,nombreSimple,grosNombre) {
         FfiConverterI8.checkType("petitNombre", petitNombre);
@@ -1742,6 +1810,9 @@ class FfiConverterTypeDictionnaireNombresSignes extends FfiConverter {
 }
 
 EXPORTED_SYMBOLS.push("DictionnaireNombresSignes");
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeDictionnaireNombresSignes");
 
 class OptionneurDictionnaire {
     constructor(i8Var = -8,u8Var = 8,i16Var = -16,u16Var = 0x10,i32Var = -32,u32Var = 32,i64Var = -64,u64Var = 64,floatVar = 4.0,doubleVar = 8.0,booleanVar = true,stringVar = "default",listVar = [],enumerationVar = Enumeration.DEUX,dictionnaireVar = null) {
@@ -1867,6 +1938,9 @@ class FfiConverterTypeOptionneurDictionnaire extends FfiConverter {
 
 EXPORTED_SYMBOLS.push("OptionneurDictionnaire");
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeOptionneurDictionnaire");
+
 class MinusculeMajusculeDict {
     constructor(minusculeMajusculeField) {
         FfiConverterBool.checkType("minusculeMajusculeField", minusculeMajusculeField);
@@ -1907,6 +1981,8 @@ class FfiConverterTypeminusculeMajusculeDict extends FfiConverter {
 
 EXPORTED_SYMBOLS.push("MinusculeMajusculeDict");
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeminusculeMajusculeDict");
 
 const Enumeration = {
     UN: 1,
@@ -1952,8 +2028,8 @@ class FfiConverterTypeEnumeration extends FfiConverterArrayBuffer {
 
 EXPORTED_SYMBOLS.push("Enumeration");
 
-
-
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeEnumeration");
 
 class EnumerationAvecDonnees {}
 EnumerationAvecDonnees.Zero = class extends EnumerationAvecDonnees{
@@ -2041,8 +2117,8 @@ class FfiConverterTypeEnumerationAvecDonnees extends FfiConverterArrayBuffer {
 
 EXPORTED_SYMBOLS.push("EnumerationAvecDonnees");
 
-
-
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeEnumerationAvecDonnees");
 
 const MinusculeMajusculeEnum = {
     MINUSCULE_MAJUSCULE_VARIANT: 1,
@@ -2073,6 +2149,9 @@ class FfiConverterTypeminusculeMajusculeEnum extends FfiConverterArrayBuffer {
 }
 
 EXPORTED_SYMBOLS.push("MinusculeMajusculeEnum");
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeminusculeMajusculeEnum");
 
 class FfiConverterOptionali32 extends FfiConverterArrayBuffer {
     static checkType(name, value) {
@@ -2108,7 +2187,12 @@ class FfiConverterOptionali32 extends FfiConverterArrayBuffer {
         }
         return 1 + FfiConverterI32.computeSize(value)
     }
-}class FfiConverterOptionalstring extends FfiConverterArrayBuffer {
+}
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterOptionali32");
+
+class FfiConverterOptionalstring extends FfiConverterArrayBuffer {
     static checkType(name, value) {
         if (value !== undefined && value !== null) {
             FfiConverterString.checkType(name, value)
@@ -2142,7 +2226,12 @@ class FfiConverterOptionali32 extends FfiConverterArrayBuffer {
         }
         return 1 + FfiConverterString.computeSize(value)
     }
-}class FfiConverterOptionalTypeminusculeMajusculeEnum extends FfiConverterArrayBuffer {
+}
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterOptionalstring");
+
+class FfiConverterOptionalTypeminusculeMajusculeEnum extends FfiConverterArrayBuffer {
     static checkType(name, value) {
         if (value !== undefined && value !== null) {
             FfiConverterTypeminusculeMajusculeEnum.checkType(name, value)
@@ -2176,7 +2265,12 @@ class FfiConverterOptionali32 extends FfiConverterArrayBuffer {
         }
         return 1 + FfiConverterTypeminusculeMajusculeEnum.computeSize(value)
     }
-}class FfiConverterSequencestring extends FfiConverterArrayBuffer {
+}
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterOptionalTypeminusculeMajusculeEnum");
+
+class FfiConverterSequencestring extends FfiConverterArrayBuffer {
     static read(dataStream) {
         const len = dataStream.readInt32();
         const arr = [];
@@ -2201,7 +2295,12 @@ class FfiConverterOptionali32 extends FfiConverterArrayBuffer {
         }
         return size;
     }
-}class FfiConverterSequenceTypeEnumeration extends FfiConverterArrayBuffer {
+}
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterSequencestring");
+
+class FfiConverterSequenceTypeEnumeration extends FfiConverterArrayBuffer {
     static read(dataStream) {
         const len = dataStream.readInt32();
         const arr = [];
@@ -2226,7 +2325,12 @@ class FfiConverterOptionali32 extends FfiConverterArrayBuffer {
         }
         return size;
     }
-}class FfiConverterMapStringTypeEnumerationAvecDonnees extends FfiConverterArrayBuffer {
+}
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterSequenceTypeEnumeration");
+
+class FfiConverterMapStringTypeEnumerationAvecDonnees extends FfiConverterArrayBuffer {
     static read(dataStream) {
         const len = dataStream.readInt32();
         const map = {};
@@ -2257,6 +2361,11 @@ class FfiConverterOptionali32 extends FfiConverterArrayBuffer {
         return size;
     }
 }
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterMapStringTypeEnumerationAvecDonnees");
+
+
 
 
 function copieDictionnaire(d) {

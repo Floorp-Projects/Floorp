@@ -239,6 +239,9 @@ class FfiConverterI64 extends FfiConverter {
     }
 }
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterI64");
+
 class FfiConverterString extends FfiConverter {
     static lift(buf) {
         const decoder = new TextDecoder();
@@ -263,6 +266,9 @@ class FfiConverterString extends FfiConverter {
         return 4 + encoder.encode(value).length
     }
 }
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterString");
 
 class CustomTypesDemo {
     constructor(url,handle) {
@@ -308,7 +314,12 @@ class FfiConverterTypeCustomTypesDemo extends FfiConverter {
     }
 }
 
-EXPORTED_SYMBOLS.push("CustomTypesDemo");class FfiConverterOptionalTypeCustomTypesDemo extends FfiConverterArrayBuffer {
+EXPORTED_SYMBOLS.push("CustomTypesDemo");
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeCustomTypesDemo");
+
+class FfiConverterOptionalTypeCustomTypesDemo extends FfiConverterArrayBuffer {
     static checkType(name, value) {
         if (value !== undefined && value !== null) {
             FfiConverterTypeCustomTypesDemo.checkType(name, value)
@@ -343,6 +354,10 @@ EXPORTED_SYMBOLS.push("CustomTypesDemo");class FfiConverterOptionalTypeCustomTyp
         return 1 + FfiConverterTypeCustomTypesDemo.computeSize(value)
     }
 }
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterOptionalTypeCustomTypesDemo");
+
 class FfiConverterTypeHandle extends FfiConverter {
 
     static lift(buf) {  
@@ -366,6 +381,10 @@ class FfiConverterTypeHandle extends FfiConverter {
     }
 }
 // TODO: We should also allow JS to customize the type eventually.
+
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeHandle");
+
 class FfiConverterTypeUrl extends FfiConverter {
 
     static lift(buf) {  
@@ -390,6 +409,11 @@ class FfiConverterTypeUrl extends FfiConverter {
 }
 // TODO: We should also allow JS to customize the type eventually.
 
+// Export the FFIConverter object to make external types work.
+EXPORTED_SYMBOLS.push("FfiConverterTypeUrl");
+
+
+
 
 function getCustomTypesDemo(demo) {
     
@@ -398,7 +422,7 @@ function getCustomTypesDemo(demo) {
     const functionCall = () => {
         FfiConverterOptionalTypeCustomTypesDemo.checkType("demo", demo);
         return UniFFIScaffolding.callAsync(
-            107, // customtypes:customtypes_fb46_get_custom_types_demo
+            107, // custom_types:custom_types_8ecd_get_custom_types_demo
             FfiConverterOptionalTypeCustomTypesDemo.lower(demo),
         )
     }
