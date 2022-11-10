@@ -1299,6 +1299,27 @@ html {
 .onboardingContainer .tiles-delayed {
   animation: fadein 0.4s;
 }
+.onboardingContainer .multi-select-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-block: -1em 1em;
+  color: #5B5B66;
+  font-weight: 400;
+  font-size: 14px;
+  transition: var(--transition);
+  z-index: 1;
+}
+.onboardingContainer .multi-select-container .checkbox-container {
+  display: flex;
+  margin-bottom: 16px;
+  align-items: center;
+}
+@media (prefers-color-scheme: dark) {
+  .onboardingContainer .multi-select-container {
+    color: #CFCFD8;
+  }
+}
 .onboardingContainer .mobile-downloads .qr-code-image {
   margin: 24px 0 10px;
   width: 113px;
@@ -1634,7 +1655,8 @@ html {
 .onboardingContainer .dialog-initial .brand-logo {
   transition-delay: 0.6s;
 }
-.onboardingContainer .dialog-initial .welcome-text {
+.onboardingContainer .dialog-initial .welcome-text,
+.onboardingContainer .dialog-initial .multi-select-container {
   transition-delay: 0.8s;
 }
 .onboardingContainer .dialog-initial .colorway-variations,
@@ -1719,6 +1741,7 @@ html {
   opacity: 0.2;
 }
 .onboardingContainer.transition-in .screen:not([pos=corner]) .welcome-text,
+.onboardingContainer.transition-in .screen:not([pos=corner]) .multi-select-container,
 .onboardingContainer.transition-in .screen:not([pos=corner]) .colorway-variations,
 .onboardingContainer.transition-in .screen:not([pos=corner]) .tiles-theme-section,
 .onboardingContainer.transition-in .screen:not([pos=corner]) .colorway-text,
@@ -1755,7 +1778,8 @@ html {
 .onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .main-content {
   overflow: hidden;
 }
-.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .welcome-text {
+.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .welcome-text,
+.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .multi-select-container {
   opacity: 0;
   translate: 0 var(--translate);
   transition-delay: 0.1s;

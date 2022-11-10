@@ -41,6 +41,7 @@ module.exports = {
         "content-src/aboutwelcome/components/MultiStageAboutWelcome.jsx",
         "content-src/aboutwelcome/components/MultiStageScreen.jsx",
         "content-src/aboutwelcome/components/MultiStageProtonScreen.jsx",
+        "content-src/aboutwelcome/components/MultiSelect.jsx",
         "content-src/aboutwelcome/components/ReturnToAMO.jsx",
         "content-src/asrouter/templates/OnboardingMessage/**",
         "content-src/asrouter/templates/FirstRun/**",

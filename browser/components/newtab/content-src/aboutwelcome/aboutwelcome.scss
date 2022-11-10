@@ -1330,6 +1330,30 @@ html {
     animation: fadein 0.4s;
   }
 
+  .multi-select-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-block: -1em 1em;
+    color: #5B5B66;
+    font-weight: 400;
+    font-size: 14px;
+    transition: var(--transition);
+    z-index: 1;
+
+    .checkbox-container {
+      display: flex;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .multi-select-container {
+      color: #CFCFD8;
+    }
+  }
+
   .mobile-downloads {
 
     .qr-code-image {
@@ -1742,7 +1766,8 @@ html {
       transition-delay: 0.6s;
     }
 
-    .welcome-text {
+    .welcome-text,
+    .multi-select-container {
       transition-delay: 0.8s;
     }
 
@@ -1858,6 +1883,7 @@ html {
 
     .screen:not([pos='corner']) {
       .welcome-text,
+      .multi-select-container,
       .colorway-variations,
       .tiles-theme-section,
       .colorway-text,
@@ -1907,7 +1933,8 @@ html {
         overflow: hidden;
       }
 
-      .welcome-text {
+      .welcome-text,
+      .multi-select-container {
         opacity: 0;
         translate: 0 var(--translate);
         transition-delay: 0.1s;

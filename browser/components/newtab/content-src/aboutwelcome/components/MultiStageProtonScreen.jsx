@@ -6,6 +6,7 @@ import React, { useEffect, useState } from "react";
 import { Localized } from "./MSLocalized";
 import { Colorways } from "./MRColorways";
 import { MobileDownloads } from "./MobileDownloads";
+import { MultiSelect } from "./MultiSelect";
 import { Themes } from "./Themes";
 import { SecondaryCTA, StepsIndicator } from "./MultiStageAboutWelcome";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -35,6 +36,8 @@ export const MultiStageProtonScreen = props => {
       id={props.id}
       order={props.order}
       activeTheme={props.activeTheme}
+      activeMultiSelect={props.activeMultiSelect}
+      setActiveMultiSelect={props.setActiveMultiSelect}
       totalNumberOfScreens={props.totalNumberOfScreens}
       handleAction={props.handleAction}
       isFirstCenteredScreen={props.isFirstCenteredScreen}
@@ -188,6 +191,16 @@ export class ProtonScreen extends React.PureComponent {
         content.tiles.data ? (
           <MobileDownloads
             data={content.tiles.data}
+            handleAction={this.props.handleAction}
+          />
+        ) : null}
+        {content.tiles &&
+        content.tiles.type === "multiselect" &&
+        content.tiles.data ? (
+          <MultiSelect
+            content={content}
+            activeMultiSelect={this.props.activeMultiSelect}
+            setActiveMultiSelect={this.props.setActiveMultiSelect}
             handleAction={this.props.handleAction}
           />
         ) : null}
