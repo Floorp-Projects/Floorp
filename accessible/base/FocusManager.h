@@ -68,7 +68,7 @@ class FocusManager {
   /**
    * Return true if focused accessible is within the given container.
    */
-  bool IsFocusWithin(const LocalAccessible* aContainer) const;
+  bool IsFocusWithin(const Accessible* aContainer) const;
 
   /**
    * Return whether the given accessible is focused or contains the focus or
