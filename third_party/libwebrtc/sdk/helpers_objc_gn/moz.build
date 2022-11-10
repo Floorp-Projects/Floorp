@@ -46,8 +46,8 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/sdk/objc/helpers/AVCaptureSession+DevicePosition.mm",
-    "/third_party/libwebrtc/sdk/objc/helpers/NSString+StdString.mm",
+    "/third_party/libwebrtc/sdk/objc/helpers/AVCaptureSession+RTCDevicePosition.mm",
+    "/third_party/libwebrtc/sdk/objc/helpers/NSString+RTCStdString.mm",
     "/third_party/libwebrtc/sdk/objc/helpers/RTCDispatcher.m"
 ]
 
