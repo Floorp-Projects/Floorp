@@ -477,11 +477,14 @@ html {
             }
 
             h2 {
-              color: #5B5B66;
               margin: 10px 0 0;
               min-height: 1em;
               font-size: 15px;
               line-height: 1.5;
+
+              @media (prefers-contrast: no-preference) {
+                color: #5B5B66;
+              }
             }
           }
 
@@ -593,7 +596,7 @@ html {
         }
       }
 
-      @media (prefers-color-scheme: dark) {
+      @media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
         .section-main .main-content {
           .welcome-text h2 {
             color: #CFCFD8;
