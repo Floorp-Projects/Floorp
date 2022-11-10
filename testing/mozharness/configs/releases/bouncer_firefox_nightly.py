@@ -7,7 +7,6 @@ config = {
     "products": {
         "installer-latest": {
             "product-name": "Firefox-nightly-latest",
-            "check_uptake": True,
             "platforms": [
                 "linux",
                 "linux64",
@@ -19,7 +18,6 @@ config = {
         },
         "installer-latest-ssl": {
             "product-name": "Firefox-nightly-latest-SSL",
-            "check_uptake": True,
             "platforms": [
                 "linux",
                 "linux64",
@@ -31,7 +29,6 @@ config = {
         },
         "installer-latest-l10n-ssl": {
             "product-name": "Firefox-nightly-latest-l10n-SSL",
-            "check_uptake": True,
             "platforms": [
                 "linux",
                 "linux64",
@@ -43,7 +40,6 @@ config = {
         },
         "msi-latest": {
             "product-name": "Firefox-nightly-msi-latest-SSL",
-            "check_uptake": True,
             "platforms": [
                 "win",
                 "win64",
@@ -51,7 +47,6 @@ config = {
         },
         "msi-latest-l10n": {
             "product-name": "Firefox-nightly-msi-latest-l10n-SSL",
-            "check_uptake": True,
             "platforms": [
                 "win",
                 "win64",
@@ -59,7 +54,6 @@ config = {
         },
         "stub-installer": {
             "product-name": "Firefox-nightly-stub",
-            "check_uptake": True,
             "platforms": [
                 "win",
                 "win64",
@@ -68,7 +62,6 @@ config = {
         },
         "stub-installer-l10n": {
             "product-name": "Firefox-nightly-stub-l10n",
-            "check_uptake": True,
             "platforms": [
                 "win",
                 "win64",

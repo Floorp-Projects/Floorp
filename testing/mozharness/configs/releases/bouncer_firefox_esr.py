@@ -10,7 +10,6 @@ config = {
         # products using versions are for release automation via release-bouncer-check-firefox
         "installer": {
             "product-name": "Firefox-%(version)s",
-            "check_uptake": True,
             "platforms": [
                 "linux",
                 "linux64",
@@ -22,7 +21,6 @@ config = {
         },
         "installer-latest": {
             "product-name": "Firefox-esr-latest",
-            "check_uptake": True,
             "platforms": [
                 "linux",
                 "linux64",
@@ -34,7 +32,6 @@ config = {
         },
         "installer-next-latest": {
             "product-name": "Firefox-esr-next-latest",
-            "check_uptake": True,
             "platforms": [
                 "linux",
                 "linux64",
@@ -46,7 +43,6 @@ config = {
         },
         "installer-ssl": {
             "product-name": "Firefox-%(version)s-SSL",
-            "check_uptake": True,
             "platforms": [
                 "linux",
                 "linux64",
@@ -58,7 +54,6 @@ config = {
         },
         "installer-latest-ssl": {
             "product-name": "Firefox-esr-latest-SSL",
-            "check_uptake": True,
             "platforms": [
                 "linux",
                 "linux64",
@@ -70,7 +65,6 @@ config = {
         },
         "installer-next-latest-ssl": {
             "product-name": "Firefox-esr-next-latest-SSL",
-            "check_uptake": True,
             "platforms": [
                 "linux",
                 "linux64",
@@ -82,7 +76,6 @@ config = {
         },
         "msi": {
             "product-name": "Firefox-%(version)s-msi-SSL",
-            "check_uptake": True,
             "platforms": [
                 "win",
                 "win64",
@@ -90,7 +83,6 @@ config = {
         },
         "msi-latest": {
             "product-name": "Firefox-esr-msi-latest-SSL",
-            "check_uptake": True,
             "platforms": [
                 "win",
                 "win64",
@@ -98,7 +90,6 @@ config = {
         },
         "msi-next-latest": {
             "product-name": "Firefox-esr-next-msi-latest-SSL",
-            "check_uptake": True,
             "platforms": [
                 "win",
                 "win64",
@@ -106,7 +97,6 @@ config = {
         },
         "msix": {
             "product-name": "Firefox-%(version)s-msix-SSL",
-            "check_uptake": True,
             "platforms": [
                 "win",
                 "win64",
@@ -114,7 +104,6 @@ config = {
         },
         "msix-latest": {
             "product-name": "Firefox-esr-msix-latest-SSL",
-            "check_uptake": True,
             "platforms": [
                 "win",
                 "win64",
@@ -122,7 +111,6 @@ config = {
         },
         "msix-next-latest": {
             "product-name": "Firefox-esr-next-msix-latest-SSL",
-            "check_uptake": True,
             "platforms": [
                 "win",
                 "win64",
@@ -130,7 +118,6 @@ config = {
         },
         "complete-mar": {
             "product-name": "Firefox-%(version)s-Complete",
-            "check_uptake": True,
             "platforms": [
                 "linux",
                 "linux64",
@@ -144,7 +131,6 @@ config = {
     "partials": {
         "releases-dir": {
             "product-name": "Firefox-%(version)s-Partial-%(prev_version)s",
-            "check_uptake": True,
             "platforms": [
                 "linux",
                 "linux64",

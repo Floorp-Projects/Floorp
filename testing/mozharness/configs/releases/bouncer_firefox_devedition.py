@@ -10,7 +10,6 @@ config = {
         # products using versions are for release automation via release-bouncer-check-firefox
         "installer": {
             "product-name": "Devedition-%(version)s",
-            "check_uptake": True,
             "platforms": [
                 "linux",
                 "linux64",
@@ -22,7 +21,6 @@ config = {
         },
         "installer-latest": {
             "product-name": "Firefox-devedition-latest",
-            "check_uptake": True,
             "platforms": [
                 "linux",
                 "linux64",
@@ -34,7 +32,6 @@ config = {
         },
         "installer-ssl": {
             "product-name": "Devedition-%(version)s-SSL",
-            "check_uptake": True,
             "platforms": [
                 "linux",
                 "linux64",
@@ -46,7 +43,6 @@ config = {
         },
         "installer-latest-ssl": {
             "product-name": "Firefox-devedition-latest-SSL",
-            "check_uptake": True,
             "platforms": [
                 "linux",
                 "linux64",
@@ -58,7 +54,6 @@ config = {
         },
         "msi": {
             "product-name": "Devedition-%(version)s-msi-SSL",
-            "check_uptake": True,
             "platforms": [
                 "win",
                 "win64",
@@ -66,7 +61,6 @@ config = {
         },
         "msi-latest": {
             "product-name": "Firefox-devedition-msi-latest-SSL",
-            "check_uptake": True,
             "platforms": [
                 "win",
                 "win64",
@@ -74,7 +68,6 @@ config = {
         },
         "msix": {
             "product-name": "Devedition-%(version)s-msix-SSL",
-            "check_uptake": True,
             "platforms": [
                 "win",
                 "win64",
@@ -82,7 +75,6 @@ config = {
         },
         "msix-latest": {
             "product-name": "Firefox-devedition-msix-latest-SSL",
-            "check_uptake": True,
             "platforms": [
                 "win",
                 "win64",
@@ -90,7 +82,6 @@ config = {
         },
         "stub-installer": {
             "product-name": "Devedition-%(version)s-stub",
-            "check_uptake": True,
             "platforms": [
                 "win",
                 "win64",
@@ -99,7 +90,6 @@ config = {
         },
         "stub-installer-latest": {
             "product-name": "Firefox-devedition-stub",
-            "check_uptake": True,
             "platforms": [
                 "win",
                 "win64",
@@ -108,7 +98,6 @@ config = {
         },
         "complete-mar": {
             "product-name": "Devedition-%(version)s-Complete",
-            "check_uptake": True,
             "platforms": [
                 "linux",
                 "linux64",
@@ -122,7 +111,6 @@ config = {
     "partials": {
         "releases-dir": {
             "product-name": "Devedition-%(version)s-Partial-%(prev_version)s",
-            "check_uptake": True,
             "platforms": [
                 "linux",
                 "linux64",
