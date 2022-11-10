@@ -921,20 +921,20 @@ class MediaDecoderStateMachine::LoopingDecodingState
              ? MediaData::TypeToStr(mDataWaitingTimestampAdjustment->mType)
              : "none");
     if (ShouldDiscardLoopedData(MediaData::Type::AUDIO_DATA)) {
-      mMaster->mAudioDataRequest.DisconnectIfExists();
       DiscardLoopedData(MediaData::Type::AUDIO_DATA);
     }
     if (ShouldDiscardLoopedData(MediaData::Type::VIDEO_DATA)) {
-      mMaster->mVideoDataRequest.DisconnectIfExists();
       DiscardLoopedData(MediaData::Type::VIDEO_DATA);
     }
 
     if (mMaster->HasAudio() && HasDecodedLastAudioFrame()) {
       SLOG("Mark audio queue as finished");
+      mMaster->mAudioDataRequest.DisconnectIfExists();
       AudioQueue().Finish();
     }
     if (mMaster->HasVideo() && HasDecodedLastVideoFrame()) {
       SLOG("Mark video queue as finished");
+      mMaster->mVideoDataRequest.DisconnectIfExists();
       VideoQueue().Finish();
     }
 
