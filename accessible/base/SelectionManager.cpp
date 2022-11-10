@@ -134,8 +134,8 @@ void SelectionManager::ProcessTextSelChangeEvent(AccEvent* aEvent) {
   AccTextSelChangeEvent* event = downcast_accEvent(aEvent);
   if (!event->IsCaretMoveOnly() &&
       !(event->mSel->IsCollapsed() && event->mSel != mCurrCtrlNormalSel &&
-        FocusMgr() && FocusMgr()->FocusedAccessible() &&
-        FocusMgr()->FocusedAccessible()->IsTextField())) {
+        FocusMgr() && FocusMgr()->FocusedLocalAccessible() &&
+        FocusMgr()->FocusedLocalAccessible()->IsTextField())) {
     nsEventShell::FireEvent(aEvent);
   }
 

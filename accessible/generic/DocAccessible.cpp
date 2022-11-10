@@ -273,7 +273,7 @@ void DocAccessible::ApplyARIAState(uint64_t* aState) const {
 Accessible* DocAccessible::FocusedChild() {
   // Return an accessible for the current global focus, which does not have to
   // be contained within the current document.
-  if (Accessible* focusedAcc = FocusMgr()->FocusedAccessible()) {
+  if (Accessible* focusedAcc = FocusMgr()->FocusedLocalAccessible()) {
     return focusedAcc;
   }
   nsFocusManager* focusManagerDOM = nsFocusManager::GetFocusManager();
