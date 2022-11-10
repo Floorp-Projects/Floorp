@@ -390,3 +390,31 @@ XXX</pre>`,
     iframe: !isWinNoCache,
   }
 );
+
+/**
+ * Test character bounds in a pre with padding.
+ */
+addAccessibleTask(
+  `
+  <style>
+    @font-face {
+      font-family: Ahem;
+      src: url(${CURRENT_CONTENT_DIR}e10s/fonts/Ahem.sjs);
+    }
+    pre {
+      font: 20px/20px Ahem;
+      padding: 20px;
+    }
+  </style>
+  <pre id="t">XX
+XXX</pre>`,
+  async function(browser, docAcc) {
+    await testTextNode(docAcc, browser, "t");
+    await testChar(docAcc, browser, "t", 3);
+  },
+  {
+    chrome: true,
+    topLevel: !isWinNoCache,
+    iframe: !isWinNoCache,
+  }
+);
