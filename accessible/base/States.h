@@ -295,9 +295,9 @@ const uint64_t LAST_ENTRY = CURRENT;
 /**
  * States that must be calculated by RemoteAccessible and are thus not cached.
  */
-const uint64_t kRemoteCalculatedStates = states::FOCUSED | states::INVISIBLE |
-                                         states::OFFSCREEN | states::ENABLED |
-                                         states::SENSITIVE | states::COLLAPSED;
+const uint64_t kRemoteCalculatedStates =
+    states::FOCUSED | states::INVISIBLE | states::OFFSCREEN | states::ENABLED |
+    states::SENSITIVE | states::COLLAPSED | states::OPAQUE1;
 
 }  // namespace a11y
 }  // namespace mozilla

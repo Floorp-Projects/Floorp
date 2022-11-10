@@ -1096,18 +1096,6 @@ uint64_t RemoteAccessibleBase<Derived>::State() {
       }
     }
 
-    // Fetch our current opacity value from the cache.
-    auto opacity = Opacity();
-    if (opacity && *opacity == 1.0f) {
-      state |= states::OPAQUE1;
-    } else {
-      // If we can't retrieve an opacity value, or if the value we retrieve
-      // is less than one, ensure the OPAQUE1 bit is cleared.
-      // It's possible this bit was set in the cached `rawState` vector, but
-      // we've since been notified of a style change invalidating that state.
-      state &= ~states::OPAQUE1;
-    }
-
     auto* browser = static_cast<dom::BrowserParent*>(Document()->Manager());
     if (browser == dom::BrowserParent::GetFocused()) {
       if (this == Document()->GetFocusedAcc()) {

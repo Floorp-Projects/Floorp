@@ -1501,11 +1501,6 @@ uint64_t LocalAccessible::State() {
     state |= states::EXPANDABLE;
   }
 
-  Maybe<float> opacity = Opacity();
-  if (opacity && *opacity == 1.0f && !(state & states::INVISIBLE)) {
-    state |= states::OPAQUE1;
-  }
-
   ApplyImplicitState(state);
   return state;
 }
@@ -3561,7 +3556,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
 
     Maybe<float> opacity = Opacity();
-    if (opacity && !(NativeState() & states::INVISIBLE)) {
+    if (opacity) {
       fields->SetAttribute(nsGkAtoms::opacity, *opacity);
     } else {
       fields->SetAttribute(nsGkAtoms::opacity, DeleteEntry());
