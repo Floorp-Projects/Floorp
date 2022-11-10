@@ -48,9 +48,9 @@ async def test_console_entry_sync_callstack(
 
     if expect_stack:
         expected_stack = [
-            {"columnNumber": 42, "functionName": "foo", "lineNumber": 4, "url": url},
-            {"columnNumber": 34, "functionName": "bar", "lineNumber": 5, "url": url},
-            {"columnNumber": 17, "functionName": "", "lineNumber": 6, "url": url},
+            {"columnNumber": 41, "functionName": "foo", "lineNumber": 4, "url": url},
+            {"columnNumber": 33, "functionName": "bar", "lineNumber": 5, "url": url},
+            {"columnNumber": 16, "functionName": "", "lineNumber": 6, "url": url},
         ]
     else:
         expected_stack = None
@@ -95,9 +95,9 @@ async def test_javascript_entry_sync_callstack(
     on_entry_added = wait_for_event("log.entryAdded")
 
     expected_stack = [
-        {"columnNumber": 36, "functionName": "foo", "lineNumber": 4, "url": url},
-        {"columnNumber": 30, "functionName": "bar", "lineNumber": 5, "url": url},
-        {"columnNumber": 13, "functionName": "", "lineNumber": 6, "url": url},
+        {"columnNumber": 35, "functionName": "foo", "lineNumber": 4, "url": url},
+        {"columnNumber": 29, "functionName": "bar", "lineNumber": 5, "url": url},
+        {"columnNumber": 12, "functionName": "", "lineNumber": 6, "url": url},
     ]
 
     await bidi_session.browsing_context.navigate(
