@@ -17,6 +17,7 @@ class Document;
 
 namespace a11y {
 
+class Accessible;
 class AccEvent;
 class LocalAccessible;
 class DocAccessible;
@@ -33,6 +34,11 @@ class FocusManager {
    * focus, this will return null.
    */
   LocalAccessible* FocusedLocalAccessible() const;
+
+  /**
+   * Return the currently focused Accessible, local or remote.
+   */
+  Accessible* FocusedAccessible() const;
 
   /**
    * Return true if given accessible is focused.
