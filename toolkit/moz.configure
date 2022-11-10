@@ -2657,21 +2657,12 @@ include("../build/moz.configure/nss.configure")
 # Enable or disable running in background task mode: headless for
 # periodic, short-lived, maintenance tasks.
 # ==============================================================================
-
-
 option(
     "--disable-backgroundtasks",
     help="Disable running in background task mode",
 )
-
-
-@depends("--enable-backgroundtasks")
-def background_tasks(value):
-    return bool(value)
-
-
-set_config("MOZ_BACKGROUNDTASKS", background_tasks)
-set_define("MOZ_BACKGROUNDTASKS", background_tasks)
+set_config("MOZ_BACKGROUNDTASKS", True, when="--enable-backgroundtasks")
+set_define("MOZ_BACKGROUNDTASKS", True, when="--enable-backgroundtasks")
 
 
 # Update-related programs: updater, maintenance service, update agent,
