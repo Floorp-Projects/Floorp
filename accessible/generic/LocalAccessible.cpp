@@ -1425,6 +1425,9 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
       RefPtr<AccEvent> event =
           new AccSelChangeEvent(widget, this, selChangeType);
       mDoc->FireDelayedEvent(event);
+      if (aAttribute == nsGkAtoms::aria_selected) {
+        mDoc->QueueCacheUpdate(this, CacheDomain::State);
+      }
     }
 
     return;
@@ -3532,12 +3535,24 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
 
   // State is only included in the initial push. Thereafter, cached state is
   // updated via events.
-  if (aCacheDomain & CacheDomain::State &&
-      aUpdateType == CacheUpdateType::Initial) {
-    uint64_t state = State();
-    // Exclude states which must be calculated by RemoteAccessible.
-    state &= ~kRemoteCalculatedStates;
-    fields->SetAttribute(nsGkAtoms::state, state);
+  if (aCacheDomain & CacheDomain::State) {
+    if (aUpdateType == CacheUpdateType::Initial) {
+      // Most states are updated using state change events, so we only send
+      // these for the initial cache push.
+      uint64_t state = State();
+      // Exclude states which must be calculated by RemoteAccessible.
+      state &= ~kRemoteCalculatedStates;
+      fields->SetAttribute(nsGkAtoms::state, state);
+    }
+    // If aria-selected isn't specified, there may be no SELECTED state.
+    // However, aria-selected can be implicit in some cases when an item is
+    // focused. We don't want to do this if aria-selected is explicitly
+    // set to "false", so we need to differentiate between false and unset.
+    if (auto ariaSelected = ARIASelected()) {
+      fields->SetAttribute(nsGkAtoms::aria_selected, *ariaSelected);
+    } else if (aUpdateType == CacheUpdateType::Update) {
+      fields->SetAttribute(nsGkAtoms::aria_selected, DeleteEntry());  // Unset.
+    }
   }
 
   if (aCacheDomain & CacheDomain::GroupInfo && mContent) {
@@ -3905,6 +3920,20 @@ void LocalAccessible::LiveRegionAttributes(nsAString* aLive,
   if (aBusy) {
     nsAccUtils::GetARIAAttr(el, nsGkAtoms::aria_busy, *aBusy);
   }
+}
+
+Maybe<bool> LocalAccessible::ARIASelected() const {
+  if (dom::Element* el = Elm()) {
+    nsStaticAtom* atom =
+        nsAccUtils::NormalizeARIAToken(el, nsGkAtoms::aria_selected);
+    if (atom == nsGkAtoms::_true) {
+      return Some(true);
+    }
+    if (atom == nsGkAtoms::_false) {
+      return Some(false);
+    }
+  }
+  return Nothing();
 }
 
 void LocalAccessible::StaticAsserts() const {

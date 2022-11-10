@@ -1326,6 +1326,14 @@ void RemoteAccessibleBase<Derived>::LiveRegionAttributes(
 }
 
 template <class Derived>
+Maybe<bool> RemoteAccessibleBase<Derived>::ARIASelected() const {
+  if (mCachedFields) {
+    return mCachedFields->GetAttribute<bool>(nsGkAtoms::aria_selected);
+  }
+  return Nothing();
+}
+
+template <class Derived>
 nsAtom* RemoteAccessibleBase<Derived>::GetPrimaryAction() const {
   if (mCachedFields) {
     if (auto action =
