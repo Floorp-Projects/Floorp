@@ -29,7 +29,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/modules/video_coding/jitter_estimator.cc"
+    "/third_party/libwebrtc/modules/video_coding/timing/jitter_estimator.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
