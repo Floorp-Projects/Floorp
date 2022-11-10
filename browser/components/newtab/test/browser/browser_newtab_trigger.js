@@ -49,8 +49,18 @@ add_task(async function test_abouthome_trigger() {
     "After about:newtab finishes loading"
   );
 
+  const { callCount } = ASRouter.sendTriggerMessage;
+  ok(callCount >= 1, `sendTriggerMessage was called ${callCount} time(s)`);
+  let defaultCheckCall;
+  for (let i = 0; i < callCount; i++) {
+    const call = sendTriggerMessageSpy.getCall(i);
+    if (call.args[0].id === "defaultBrowserCheck") {
+      defaultCheckCall = call;
+    }
+  }
+
   Assert.equal(
-    sendTriggerMessageSpy.firstCall.args[0].id,
+    defaultCheckCall.args[0].id,
     "defaultBrowserCheck",
     "Found the expected trigger"
   );

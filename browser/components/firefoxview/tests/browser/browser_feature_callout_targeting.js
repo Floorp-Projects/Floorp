@@ -17,6 +17,7 @@ add_task(async function test_firefox_view_colorways_reminder_targeting() {
   ASRouter.resetMessageState();
 
   const PICKUP_REMINDER_ID = "FIREFOX_VIEW_TAB_PICKUP_REMINDER";
+
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.firefox-view.feature-tour", `{"screen":"","complete":true}`],
