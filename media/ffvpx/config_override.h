@@ -1,6 +1,3 @@
-#ifndef MOZ_FFVPX_CONFIG_OVERRIDE_H
-#define MOZ_FFVPX_CONFIG_OVERRIDE_H
-
 // This file contains overrides for config.h, that can be platform-specific.
 
 #ifdef MOZ_LIBAV_FFT
@@ -34,6 +31,4 @@
 #define CONFIG_VP8_VAAPI_HWACCEL 0
 #define CONFIG_VP9_VAAPI_HWACCEL 0
 #define CONFIG_AV1_VAAPI_HWACCEL 0
-#endif
-
 #endif
