@@ -322,6 +322,13 @@ class Accessible {
                                     Maybe<bool>* aAtomic,
                                     nsAString* aBusy) const = 0;
 
+  /**
+   * Get the aria-selected state. aria-selected not being specified is not
+   * always the same as aria-selected="false". If not specified, Nothing() will
+   * be returned.
+   */
+  virtual Maybe<bool> ARIASelected() const = 0;
+
   LayoutDeviceIntSize Size() const;
 
   LayoutDeviceIntPoint Position(uint32_t aCoordType);

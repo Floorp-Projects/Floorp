@@ -782,6 +782,8 @@ class LocalAccessible : public nsISupports, public Accessible {
                                     Maybe<bool>* aAtomic,
                                     nsAString* aBusy) const override;
 
+  virtual Maybe<bool> ARIASelected() const override;
+
  protected:
   virtual ~LocalAccessible();
 

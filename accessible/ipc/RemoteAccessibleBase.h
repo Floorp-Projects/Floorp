@@ -199,6 +199,8 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
                                     Maybe<bool>* aAtomic,
                                     nsAString* aBusy) const override;
 
+  virtual Maybe<bool> ARIASelected() const override;
+
   virtual uint8_t ActionCount() const override;
 
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
