@@ -40,6 +40,22 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
  *        repeatedly decoding previously-seen certificates.
  */
 export class NetworkResponseListener {
+  #bodySize;
+  #converter;
+  #decodedCertificateCache;
+  #foundOpenResponse;
+  #httpActivity;
+  #inputStream;
+  #onSecurityInfo;
+  #offset;
+  #owner;
+  #receivedData;
+  #request;
+  #sink;
+  #transferredSize;
+  #truncated;
+  #wrappedNotificationCallbacks;
+
   constructor(owner, httpActivity, decodedCertificateCache) {
     this.QueryInterface = ChromeUtils.generateQI([
       "nsIStreamListener",
@@ -48,19 +64,62 @@ export class NetworkResponseListener {
       "nsIInterfaceRequestor",
     ]);
 
-    this.owner = owner;
-    this.receivedData = "";
-    this.httpActivity = httpActivity;
-    this.bodySize = 0;
+    // The response listener owner.
+    this.#owner = owner;
+
+    // Stores the received data as a string.
+    this.#receivedData = "";
+
+    // The HttpActivity object associated with this response.
+    this.#httpActivity = httpActivity;
+
+    // The uncompressed, decoded response body size.
+    this.#bodySize = 0;
+
     // Indicates if the response had a size greater than response body limit.
-    this.truncated = false;
+    this.#truncated = false;
+
+    // The nsIRequest we are started for.
+    this.#request = null;
+
+    // Response size on the wire, potentially compressed / encoded.
+    this.#transferredSize = null;
+
     // Note that this is really only needed for the non-e10s case.
     // See bug 1309523.
-    const channel = this.httpActivity.channel;
-    this._wrappedNotificationCallbacks = channel.notificationCallbacks;
+    const channel = this.#httpActivity.channel;
+    // If the channel already had notificationCallbacks, hold them here
+    // internally so that we can forward getInterface requests to that object.
+    this.#wrappedNotificationCallbacks = channel.notificationCallbacks;
     channel.notificationCallbacks = this;
-    this._decodedCertificateCache = decodedCertificateCache;
+
+    // A Map of certificate fingerprints to decoded certificates, to avoid
+    // repeatedly decoding previously-seen certificates.
+    this.#decodedCertificateCache = decodedCertificateCache;
+
+    // This NetworkResponseListener tracks the NetworkObserver.openResponses
+    // object to find the associated uncached headers.
+    this.#foundOpenResponse = false;
+
+    // The response will be written into the outputStream of this nsIPipe.
+    // Both ends of the pipe must be blocking.
+    this.#sink = null;
+
+    // Set from sink.inputStream, mainly to prevent GC.
+    this.#inputStream = null;
+
+    // nsIStreamListener created by nsIStreamConverterService.asyncConvertData
+    this.#converter = null;
   }
+
+  set inputStream(inputStream) {
+    this.#inputStream = inputStream;
+  }
+
+  set sink(sink) {
+    this.#sink = sink;
+  }
+
   // nsIInterfaceRequestor implementation
 
   /**
@@ -71,8 +130,8 @@ export class NetworkResponseListener {
     if (iid.equals(Ci.nsIProgressEventSink)) {
       return this;
     }
-    if (this._wrappedNotificationCallbacks) {
-      return this._wrappedNotificationCallbacks.getInterface(iid);
+    if (this.#wrappedNotificationCallbacks) {
+      return this.#wrappedNotificationCallbacks.getInterface(iid);
     }
     throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   }
@@ -81,12 +140,12 @@ export class NetworkResponseListener {
    * Forward notifications for interfaces this object implements, in case other
    * objects also implemented them.
    */
-  _forwardNotification(iid, method, args) {
-    if (!this._wrappedNotificationCallbacks) {
+  #forwardNotification(iid, method, args) {
+    if (!this.#wrappedNotificationCallbacks) {
       return;
     }
     try {
-      const impl = this._wrappedNotificationCallbacks.getInterface(iid);
+      const impl = this.#wrappedNotificationCallbacks.getInterface(iid);
       impl[method].apply(impl, args);
     } catch (e) {
       if (e.result != Cr.NS_ERROR_NO_INTERFACE) {
@@ -94,61 +153,6 @@ export class NetworkResponseListener {
       }
     }
   }
-
-  /**
-   * This NetworkResponseListener tracks the NetworkObserver.openResponses object
-   * to find the associated uncached headers.
-   * @private
-   */
-  _foundOpenResponse = false;
-
-  /**
-   * If the channel already had notificationCallbacks, hold them here internally
-   * so that we can forward getInterface requests to that object.
-   */
-  _wrappedNotificationCallbacks = null;
-
-  /**
-   * A Map of certificate fingerprints to decoded certificates, to avoid repeatedly
-   * decoding previously-seen certificates.
-   */
-  _decodedCertificateCache = null;
-
-  /**
-   * The response listener owner.
-   */
-  owner = null;
-
-  /**
-   * The response will be written into the outputStream of this nsIPipe.
-   * Both ends of the pipe must be blocking.
-   */
-  sink = null;
-
-  /**
-   * The HttpActivity object associated with this response.
-   */
-  httpActivity = null;
-
-  /**
-   * Stores the received data as a string.
-   */
-  receivedData = null;
-
-  /**
-   * The uncompressed, decoded response body size.
-   */
-  bodySize = null;
-
-  /**
-   * Response size on the wire, potentially compressed / encoded.
-   */
-  transferredSize = null;
-
-  /**
-   * The nsIRequest we are started for.
-   */
-  request = null;
 
   /**
    * Set the async listener for the given nsIAsyncInputStream. This allows us to
@@ -182,24 +186,24 @@ export class NetworkResponseListener {
    * @param unsigned long count
    */
   onDataAvailable(request, inputStream, offset, count) {
-    this._findOpenResponse();
+    this.#findOpenResponse();
     const data = lazy.NetUtil.readInputStreamToString(inputStream, count);
 
-    this.bodySize += count;
+    this.#bodySize += count;
 
-    if (!this.httpActivity.discardResponseBody) {
+    if (!this.#httpActivity.discardResponseBody) {
       const limit = Services.prefs.getIntPref(
         "devtools.netmonitor.responseBodyLimit"
       );
-      if (this.receivedData.length <= limit || limit == 0) {
-        this.receivedData += lazy.NetworkHelper.convertToUnicode(
+      if (this.#receivedData.length <= limit || limit == 0) {
+        this.#receivedData += lazy.NetworkHelper.convertToUnicode(
           data,
           request.contentCharset
         );
       }
-      if (this.receivedData.length > limit && limit > 0) {
-        this.receivedData = this.receivedData.substr(0, limit);
-        this.truncated = true;
+      if (this.#receivedData.length > limit && limit > 0) {
+        this.#receivedData = this.#receivedData.substr(0, limit);
+        this.#truncated = true;
       }
     }
   }
@@ -214,18 +218,18 @@ export class NetworkResponseListener {
   onStartRequest(request) {
     request = request.QueryInterface(Ci.nsIChannel);
     // Converter will call this again, we should just ignore that.
-    if (this.request) {
+    if (this.#request) {
       return;
     }
 
-    this.request = request;
-    this._onSecurityInfo = this._getSecurityInfo();
-    this._findOpenResponse();
+    this.#request = request;
+    this.#onSecurityInfo = this.#getSecurityInfo();
+    this.#findOpenResponse();
     // We need to track the offset for the onDataAvailable calls where
     // we pass the data from our pipe to the converter.
-    this.offset = 0;
+    this.#offset = 0;
 
-    const channel = this.request;
+    const channel = this.#request;
 
     // Bug 1372115 - We should load bytecode cached requests from cache as the actual
     // channel content is going to be optimized data that reflects platform internals
@@ -243,18 +247,18 @@ export class NetworkResponseListener {
     if (isOptimizedContent) {
       let charset;
       try {
-        charset = this.request.contentCharset;
+        charset = this.#request.contentCharset;
       } catch (e) {
         // Accessing the charset sometimes throws NS_ERROR_NOT_AVAILABLE when
         // reloading the page
       }
       if (!charset) {
-        charset = this.httpActivity.charset;
+        charset = this.#httpActivity.charset;
       }
       lazy.NetworkHelper.loadFromCache(
-        this.httpActivity.url,
+        this.#httpActivity.url,
         charset,
-        this._onComplete.bind(this)
+        this.#onComplete.bind(this)
       );
       return;
     }
@@ -266,7 +270,7 @@ export class NetworkResponseListener {
     // do that for Service workers as they are run in the child
     // process.
     if (
-      !this.httpActivity.fromServiceWorker &&
+      !this.#httpActivity.fromServiceWorker &&
       channel instanceof Ci.nsIEncodedChannel &&
       channel.contentEncodings &&
       !channel.applyConversion
@@ -288,27 +292,27 @@ export class NetworkResponseListener {
         // There can be multiple conversions applied
         const enc = encodings[i].toLowerCase();
         if (acceptedEncodings.indexOf(enc) > -1) {
-          this.converter = scs.asyncConvertData(
+          this.#converter = scs.asyncConvertData(
             enc,
             "uncompressed",
             nextListener,
             null
           );
-          nextListener = this.converter;
+          nextListener = this.#converter;
         }
       }
-      if (this.converter) {
-        this.converter.onStartRequest(this.request, null);
+      if (this.#converter) {
+        this.#converter.onStartRequest(this.#request, null);
       }
     }
     // Asynchronously wait for the data coming from the request.
-    this.setAsyncListener(this.sink.inputStream, this);
+    this.setAsyncListener(this.#sink.inputStream, this);
   }
 
   /**
    * Parse security state of this request and report it to the client.
    */
-  async _getSecurityInfo() {
+  async #getSecurityInfo() {
     // Many properties of the securityInfo (e.g., the server certificate or HPKP
     // status) are not available in the content process and can't be even touched safely,
     // because their C++ getters trigger assertions. This function is called in content
@@ -321,16 +325,16 @@ export class NetworkResponseListener {
     // the nsIRequest received in onStartRequest. If response to this request
     // was a redirect from http to https, the request object seems to contain
     // security info for the https request after redirect.
-    const secinfo = this.httpActivity.channel.securityInfo;
+    const secinfo = this.#httpActivity.channel.securityInfo;
     const info = await lazy.NetworkHelper.parseSecurityInfo(
       secinfo,
-      this.request.loadInfo.originAttributes,
-      this.httpActivity,
-      this._decodedCertificateCache
+      this.#request.loadInfo.originAttributes,
+      this.#httpActivity,
+      this.#decodedCertificateCache
     );
     let isRacing = false;
     try {
-      const channel = this.httpActivity.channel;
+      const channel = this.#httpActivity.channel;
       if (channel instanceof Ci.nsICacheInfoChannel) {
         isRacing = channel.isRacing();
       }
@@ -339,16 +343,16 @@ export class NetworkResponseListener {
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1582589
     }
 
-    this.httpActivity.owner.addSecurityInfo(info, isRacing);
+    this.#httpActivity.owner.addSecurityInfo(info, isRacing);
   }
 
   /**
    * Fetches cache information from CacheEntry
    * @private
    */
-  _fetchCacheInformation() {
-    const httpActivity = this.httpActivity;
-    lazy.getCacheEntry(this.request, descriptor => {
+  #fetchCacheInformation() {
+    const httpActivity = this.#httpActivity;
+    lazy.getCacheEntry(this.#request, descriptor => {
       httpActivity.owner.addResponseCache({
         responseCache: descriptor,
       });
@@ -364,11 +368,11 @@ export class NetworkResponseListener {
   onStopRequest() {
     // Bug 1429365: onStopRequest may be called after onComplete for resources loaded
     // from bytecode cache.
-    if (!this.httpActivity) {
+    if (!this.#httpActivity) {
       return;
     }
-    this._findOpenResponse();
-    this.sink.outputStream.close();
+    this.#findOpenResponse();
+    this.#sink.outputStream.close();
   }
 
   // nsIProgressEventSink implementation
@@ -378,14 +382,14 @@ export class NetworkResponseListener {
    * size on the wire, which may be compressed / encoded.
    */
   onProgress(request, progress, progressMax) {
-    this.transferredSize = progress;
+    this.#transferredSize = progress;
     // Need to forward as well to keep things like Download Manager's progress
     // bar working properly.
-    this._forwardNotification(Ci.nsIProgressEventSink, "onProgress", arguments);
+    this.#forwardNotification(Ci.nsIProgressEventSink, "onProgress", arguments);
   }
 
   onStatus() {
-    this._forwardNotification(Ci.nsIProgressEventSink, "onStatus", arguments);
+    this.#forwardNotification(Ci.nsIProgressEventSink, "onStatus", arguments);
   }
 
   /**
@@ -397,13 +401,13 @@ export class NetworkResponseListener {
    *
    * @private
    */
-  _findOpenResponse() {
-    if (!this.owner || this._foundOpenResponse) {
+  #findOpenResponse() {
+    if (!this.#owner || this.#foundOpenResponse) {
       return;
     }
 
-    const channel = this.httpActivity.channel;
-    const openResponse = this.owner.openResponses.getByChannelId(
+    const channel = this.#httpActivity.channel;
+    const openResponse = this.#owner.openResponses.getByChannelId(
       channel.channelId
     );
 
@@ -411,11 +415,11 @@ export class NetworkResponseListener {
       return;
     }
 
-    this._foundOpenResponse = true;
-    this.owner.openResponses.delete(channel);
+    this.#foundOpenResponse = true;
+    this.#owner.openResponses.delete(channel);
 
-    this.httpActivity.owner.addResponseHeaders(openResponse.headers);
-    this.httpActivity.owner.addResponseCookies(openResponse.cookies);
+    this.#httpActivity.owner.addResponseHeaders(openResponse.headers);
+    this.#httpActivity.owner.addResponseCookies(openResponse.cookies);
   }
 
   /**
@@ -425,41 +429,41 @@ export class NetworkResponseListener {
    * @return void
    */
   onStreamClose() {
-    if (!this.httpActivity) {
+    if (!this.#httpActivity) {
       return;
     }
     // Remove our listener from the request input stream.
-    this.setAsyncListener(this.sink.inputStream, null);
+    this.setAsyncListener(this.#sink.inputStream, null);
 
-    this._findOpenResponse();
-    if (this.request.fromCache || this.httpActivity.responseStatus == 304) {
-      this._fetchCacheInformation();
+    this.#findOpenResponse();
+    if (this.#request.fromCache || this.#httpActivity.responseStatus == 304) {
+      this.#fetchCacheInformation();
     }
 
-    if (!this.httpActivity.discardResponseBody && this.receivedData.length) {
-      this._onComplete(this.receivedData);
+    if (!this.#httpActivity.discardResponseBody && this.#receivedData.length) {
+      this.#onComplete(this.#receivedData);
     } else if (
-      !this.httpActivity.discardResponseBody &&
-      this.httpActivity.responseStatus == 304
+      !this.#httpActivity.discardResponseBody &&
+      this.#httpActivity.responseStatus == 304
     ) {
       // Response is cached, so we load it from cache.
       let charset;
       try {
-        charset = this.request.contentCharset;
+        charset = this.#request.contentCharset;
       } catch (e) {
         // Accessing the charset sometimes throws NS_ERROR_NOT_AVAILABLE when
         // reloading the page
       }
       if (!charset) {
-        charset = this.httpActivity.charset;
+        charset = this.#httpActivity.charset;
       }
       lazy.NetworkHelper.loadFromCache(
-        this.httpActivity.url,
+        this.#httpActivity.url,
         charset,
-        this._onComplete.bind(this)
+        this.#onComplete.bind(this)
       );
     } else {
-      this._onComplete();
+      this.#onComplete();
     }
   }
 
@@ -471,27 +475,27 @@ export class NetworkResponseListener {
    *        Optional, the received data coming from the response listener or
    *        from the cache.
    */
-  _onComplete(data) {
+  #onComplete(data) {
     // Make sure all the security and response content info are sent
-    this._getResponseContent(data);
-    this._onSecurityInfo.then(() => this._destroy());
+    this.#getResponseContent(data);
+    this.#onSecurityInfo.then(() => this.#destroy());
   }
 
   /**
    * Create the response object and send it to the client.
    */
-  _getResponseContent(data) {
+  #getResponseContent(data) {
     const response = {
       mimeType: "",
       text: data || "",
     };
 
-    response.size = this.bodySize;
+    response.size = this.#bodySize;
     response.transferredSize =
-      this.transferredSize + this.httpActivity.headersSize;
+      this.#transferredSize + this.#httpActivity.headersSize;
 
     try {
-      response.mimeType = this.request.contentType;
+      response.mimeType = this.#request.contentType;
     } catch (ex) {
       // Ignore.
     }
@@ -508,18 +512,18 @@ export class NetworkResponseListener {
       }
     }
 
-    if (response.mimeType && this.request.contentCharset) {
-      response.mimeType += "; charset=" + this.request.contentCharset;
+    if (response.mimeType && this.#request.contentCharset) {
+      response.mimeType += "; charset=" + this.#request.contentCharset;
     }
 
-    this.receivedData = "";
+    this.#receivedData = "";
 
     let id;
     let reason;
 
     try {
-      const properties = this.request.QueryInterface(Ci.nsIPropertyBag);
-      reason = this.request.loadInfo.requestBlockingReason;
+      const properties = this.#request.QueryInterface(Ci.nsIPropertyBag);
+      reason = this.#request.loadInfo.requestBlockingReason;
       id = properties.getProperty("cancelledByExtension");
 
       // WebExtensionPolicy is not available for workers
@@ -530,22 +534,22 @@ export class NetworkResponseListener {
       // "cancelledByExtension" doesn't have to be available.
     }
 
-    this.httpActivity.owner.addResponseContent(response, {
-      discardResponseBody: this.httpActivity.discardResponseBody,
-      truncated: this.truncated,
+    this.#httpActivity.owner.addResponseContent(response, {
+      discardResponseBody: this.#httpActivity.discardResponseBody,
+      truncated: this.#truncated,
       blockedReason: reason,
       blockingExtension: id,
     });
   }
 
-  _destroy() {
-    this._wrappedNotificationCallbacks = null;
-    this.httpActivity = null;
-    this.sink = null;
+  #destroy() {
+    this.#wrappedNotificationCallbacks = null;
+    this.#httpActivity = null;
+    this.#sink = null;
     this.inputStream = null;
-    this.converter = null;
-    this.request = null;
-    this.owner = null;
+    this.#converter = null;
+    this.#request = null;
+    this.#owner = null;
   }
 
   /**
@@ -557,7 +561,7 @@ export class NetworkResponseListener {
    * @returns void
    */
   onInputStreamReady(stream) {
-    if (!(stream instanceof Ci.nsIAsyncInputStream) || !this.httpActivity) {
+    if (!(stream instanceof Ci.nsIAsyncInputStream) || !this.#httpActivity) {
       return;
     }
 
@@ -571,22 +575,22 @@ export class NetworkResponseListener {
 
     if (available != -1) {
       if (available != 0) {
-        if (this.converter) {
-          this.converter.onDataAvailable(
-            this.request,
+        if (this.#converter) {
+          this.#converter.onDataAvailable(
+            this.#request,
             stream,
-            this.offset,
+            this.#offset,
             available
           );
         } else {
-          this.onDataAvailable(this.request, stream, this.offset, available);
+          this.onDataAvailable(this.#request, stream, this.#offset, available);
         }
       }
-      this.offset += available;
+      this.#offset += available;
       this.setAsyncListener(stream, this);
     } else {
       this.onStreamClose();
-      this.offset = 0;
+      this.#offset = 0;
     }
   }
 }
