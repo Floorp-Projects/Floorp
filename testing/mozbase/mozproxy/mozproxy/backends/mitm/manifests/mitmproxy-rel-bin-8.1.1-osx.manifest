@@ -1,0 +1,10 @@
+[
+  {
+    "filename": "mitmproxy-8.1.1-osx.tar.gz",
+    "size": 45230764,
+    "algorithm": "sha512",
+    "digest": "5ce3893a295c211a05d106f434fa6876dc9d32777c5d6bf1c04aff6ca530fe2dae2140db28b974917c92a4d42892591cf734f6c564ad8ff9ed6093e5d90ee737",
+    "unpack": true,
+    "visibility": "public"
+  }
+]
