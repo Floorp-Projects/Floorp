@@ -44,6 +44,11 @@ mozilla::ipc::IPCResult CreateFileSystemManagerParent(
       quota::QuotaManager::GetInfoFromValidatedPrincipalInfo(aPrincipalInfo),
       quota::PERSISTENCE_TYPE_DEFAULT);
 
+  // Block use for now in PrivateBrowsing
+  QM_TRY(OkIf(!OriginAttributes::IsPrivateBrowsing(originMetadata.mOrigin)),
+         IPC_OK(),
+         [aResolver](const auto&) { aResolver(NS_ERROR_DOM_NOT_ALLOWED_ERR); });
+
   LOG(("CreateFileSystemManagerParent, origin: %s",
        originMetadata.mOrigin.get()));
 
