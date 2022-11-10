@@ -36,7 +36,7 @@ loader.lazyRequireGetter(
 const TRANSITION_PSEUDO_CLASS = ":-moz-styleeditor-transitioning";
 const TRANSITION_DURATION_MS = 500;
 const TRANSITION_BUFFER_MS = 1000;
-const TRANSITION_RULE_SELECTOR = `:root${TRANSITION_PSEUDO_CLASS}, :root${TRANSITION_PSEUDO_CLASS} *`;
+const TRANSITION_RULE_SELECTOR = `:root${TRANSITION_PSEUDO_CLASS}, :root${TRANSITION_PSEUDO_CLASS} *:not(:-moz-native-anonymous)`;
 const TRANSITION_SHEET =
   "data:text/css;charset=utf-8," +
   encodeURIComponent(`
