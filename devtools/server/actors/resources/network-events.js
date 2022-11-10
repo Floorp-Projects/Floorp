@@ -66,7 +66,6 @@ class NetworkEventWatcher {
       this.onNetworkEvent.bind(this)
     );
 
-    this.listener.init();
     Services.obs.addObserver(this, "window-global-destroyed");
   }
 
