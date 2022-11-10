@@ -2358,13 +2358,7 @@ spacer[part="overflow-end-indicator"] {
   background-color: var(--toolbar-field-focus-background-color) !important;
 }
 
-#urlbar[focused],
-#searchbar[focused] {
-  /* -moz-accent-color won't work in a var... */
-  border: 2px solid -moz-accent-color !important;
-  padding: 0 !important;
-  margin: 0 !important;
-}
+
 
 /* if only focused, don't break out the urlbar */
 #urlbar[focused]:not([open]) {
@@ -2375,7 +2369,7 @@ spacer[part="overflow-end-indicator"] {
 
 #urlbar[open],
 #searchbar[open] {
-  top: 10px;
+  top: 10px !important;;
   border: 0 !important;
   padding: 0 !important;
   border-radius: 8px !important;
