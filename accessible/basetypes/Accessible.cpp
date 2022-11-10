@@ -489,6 +489,8 @@ nsAtom* Accessible::LandmarkRole() const {
              : nullptr;
 }
 
+void Accessible::ApplyImplicitState(uint64_t& aState) const {}
+
 ////////////////////////////////////////////////////////////////////////////////
 // KeyBinding class
 
