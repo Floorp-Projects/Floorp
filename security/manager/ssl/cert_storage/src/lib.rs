@@ -1556,8 +1556,8 @@ impl CertStorage {
         pub_key: *const ThinVec<u8>,
         state: *mut i16,
     ) -> nserror::nsresult {
-        // TODO (bug 1541212): We really want to restrict this to non-main-threads only, but we
-        // can't do so until bug 1406854 is fixed.
+        // TODO (bug 1541212): We really want to restrict this to non-main-threads only in non-test
+        // contexts, but we can't do so until bug 1406854 is fixed.
         if issuer.is_null() || serial.is_null() || subject.is_null() || pub_key.is_null() {
             return NS_ERROR_NULL_POINTER;
         }

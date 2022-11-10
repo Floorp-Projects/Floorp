@@ -172,7 +172,8 @@ const updateCertBlocklist = async function({
     created = current;
   }
 
-  for (let item of deleted) {
+  let toDelete = deleted.concat(updated.map(u => u.old));
+  for (let item of toDelete) {
     if (item.issuerName && item.serialNumber) {
       items.push(
         new IssuerAndSerialRevocationState(
