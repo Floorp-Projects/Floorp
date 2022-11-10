@@ -79,17 +79,9 @@ const HTTP_DOWNLOAD_ACTIVITIES = [
  * routed to the remote Web Console.
  *
  * @constructor
- * @param {Object} filters
- *        Object with the filters to use for network requests:
- *        - window (nsIDOMWindow): filter network requests by the associated
- *          window object.
- *        - matchExactWindow (Boolean): only has effect when `window` is provided too.
- *        When set to true, only requests associated with this specific window will be returned.
- *        When false, the requests from parent windows will be retrieved.
- *        - browserId (number): filter requests by their top frame's Browser Element.
- *        Filters are optional. If any of these filters match the request is
- *        logged (OR is applied). If no filter is provided then all requests are
- *        logged.
+ * @param {Function(nsIChannel): boolean} ignoreChannelFunction
+ *        This function will be called for every detected channel to decide if it
+ *        should be monitored or not.
  * @param {Function(NetworkEvent): owner} onNetworkEvent
  *        This method is invoked once for every new network request with a single
  *        "networkEvent" argument, which is an object created by
@@ -97,15 +89,10 @@ const HTTP_DOWNLOAD_ACTIVITIES = [
  *        information as an argument.
  *        onNetworkEvent() must return an "owner" object which holds several add*()
  *        methods which are used to add further network request/response information.
- * @param {Function(nsIChannel): boolean} ignoreChannelFunction [optional]
- *        If provided, only channels which are both compatible with the `filters`
- *        argument and which return `false` for the `ignoreChannelFunction` will
- *        be monitored.
  */
 export class NetworkObserver {
   #blockedURLs;
   #decodedCertificateCache;
-  #filters;
   #ignoreChannelFunction;
   #interceptedChannels;
   #isDestroyed;
@@ -117,13 +104,12 @@ export class NetworkObserver {
   #throttleData;
   #throttler;
 
-  constructor(filters, onNetworkEvent, ignoreChannelFunction) {
+  constructor(ignoreChannelFunction, onNetworkEvent) {
     // Explicit flag to check if this observer was already destroyed.
     this.#isDestroyed = false;
 
-    this.#filters = filters;
-    this.#onNetworkEvent = onNetworkEvent;
     this.#ignoreChannelFunction = ignoreChannelFunction;
+    this.#onNetworkEvent = onNetworkEvent;
 
     /**
      * Object that holds the HTTP activity objects for ongoing requests.
@@ -220,30 +206,11 @@ export class NetworkObserver {
     return this.#throttler;
   }
 
-  /**
-   * Given a network channel, should this observer ignore this request
-   * based on the filters passed as constructor arguments.
-   *
-   * @param {nsIHttpChannel/nsIWebSocketChannel} channel
-   *        The request that should be inspected or ignored.
-   * @return {boolean}
-   *         Return true, if the request should be ignored.
-   */
-  #shouldIgnoreChannel(channel) {
-    if (
-      typeof this.#ignoreChannelFunction == "function" &&
-      this.#ignoreChannelFunction(channel)
-    ) {
-      return true;
-    }
-    return !lazy.NetworkUtils.matchRequest(channel, this.#filters);
-  }
-
   #serviceWorkerRequest = DevToolsInfaillibleUtils.makeInfallible(
     (subject, topic, data) => {
       const channel = subject.QueryInterface(Ci.nsIHttpChannel);
 
-      if (this.#shouldIgnoreChannel(channel)) {
+      if (this.#ignoreChannelFunction(channel)) {
         return;
       }
 
@@ -272,7 +239,7 @@ export class NetworkObserver {
       }
 
       const channel = subject.QueryInterface(Ci.nsIHttpChannel);
-      if (this.#shouldIgnoreChannel(channel)) {
+      if (this.#ignoreChannelFunction(channel)) {
         return;
       }
 
@@ -301,7 +268,7 @@ export class NetworkObserver {
       }
 
       const channel = subject.QueryInterface(Ci.nsIHttpChannel);
-      if (this.#shouldIgnoreChannel(channel)) {
+      if (this.#ignoreChannelFunction(channel)) {
         return;
       }
 
@@ -388,7 +355,7 @@ export class NetworkObserver {
       subject.QueryInterface(Ci.nsIClassifiedChannel);
       const channel = subject.QueryInterface(Ci.nsIHttpChannel);
 
-      if (this.#shouldIgnoreChannel(channel)) {
+      if (this.#ignoreChannelFunction(channel)) {
         return;
       }
 
@@ -518,7 +485,7 @@ export class NetworkObserver {
     const throttler = this.#getThrottler();
     if (throttler) {
       const channel = subject.QueryInterface(Ci.nsIHttpChannel);
-      if (this.#shouldIgnoreChannel(channel)) {
+      if (this.#ignoreChannelFunction(channel)) {
         return;
       }
       logPlatformEvent("http-on-modify-request", channel);
@@ -761,7 +728,7 @@ export class NetworkObserver {
    * @return void
    */
   #onRequestHeader(channel, timestamp, extraStringData) {
-    if (this.#shouldIgnoreChannel(channel)) {
+    if (this.#ignoreChannelFunction(channel)) {
       return;
     }
 
@@ -1480,7 +1447,6 @@ export class NetworkObserver {
       "service-worker-synthesized-response"
     );
 
-    this.#filters = null;
     this.#ignoreChannelFunction = null;
     this.#onNetworkEvent = null;
     this.#throttler = null;
