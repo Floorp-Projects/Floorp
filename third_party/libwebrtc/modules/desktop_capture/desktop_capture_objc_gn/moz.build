@@ -6,6 +6,10 @@
   ### This moz.build was AUTOMATICALLY GENERATED from a GN config,  ###
   ### DO NOT edit it by hand.                                       ###
 
+CMMFLAGS += [
+    "-fobjc-arc"
+]
+
 COMPILE_FLAGS["OS_INCLUDES"] = []
 AllowCompilerWarnings()
 
