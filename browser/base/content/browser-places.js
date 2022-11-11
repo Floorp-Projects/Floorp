@@ -1701,7 +1701,7 @@ var BookmarkingUI = {
     aIsRemoval
   ) {
     if (aNode.id == "import-button") {
-      this._updateImportButton(aNode, aContainer);
+      this._updateImportButton(aNode, aIsRemoval ? null : aContainer);
     }
   },
 
