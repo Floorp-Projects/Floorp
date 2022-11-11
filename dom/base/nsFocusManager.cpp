@@ -1327,6 +1327,26 @@ void nsFocusManager::NotifyFocusStateChange(Element* aElement,
     }
   }
 
+  // Special case for <input type="checkbox"> and <input type="radio">.
+  // The other browsers cancel active state when they gets lost focus, but
+  // does not do it for the other elements such as <button> and <a href="...">.
+  // Additionally, they may be activated with <label>, but they will get focus
+  // at `click`, but activated at `mousedown`.  Therefore, we need to cancel
+  // active state at moving focus.
+  if (RefPtr<nsPresContext> presContext =
+          aElement->GetPresContext(Element::PresContextFor::eForComposedDoc)) {
+    RefPtr<EventStateManager> esm =
+        presContext ? presContext->EventStateManager() : nullptr;
+    HTMLInputElement* activeInputElement =
+        HTMLInputElement::FromNodeOrNull(esm->GetActiveContent());
+    if (activeInputElement &&
+        (activeInputElement->ControlType() == FormControlType::InputCheckbox ||
+         activeInputElement->ControlType() == FormControlType::InputRadio) &&
+        !activeInputElement->State().HasState(ElementState::FOCUS)) {
+      esm->SetContentState(nullptr, ElementState::ACTIVE);
+    }
+  }
+
   for (nsIContent* content = aElement; content && content != commonAncestor;
        content = content->GetFlattenedTreeParent()) {
     Element* element = Element::FromNode(content);

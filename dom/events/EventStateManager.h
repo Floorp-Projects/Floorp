@@ -159,6 +159,8 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    */
   bool SetContentState(nsIContent* aContent, ElementState aState);
 
+  nsIContent* GetActiveContent() const { return mActiveContent; }
+
   void NativeAnonymousContentRemoved(nsIContent* aAnonContent);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void ContentRemoved(dom::Document* aDocument,
                                                   nsIContent* aContent);

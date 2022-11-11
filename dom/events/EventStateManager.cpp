@@ -36,6 +36,7 @@
 #include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/FrameLoaderBinding.h"
+#include "mozilla/dom/HTMLLabelElement.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/PointerEventHandler.h"
@@ -113,7 +114,6 @@
 #include "nsIController.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/HTMLLabelElement.h"
 #include "mozilla/dom/Record.h"
 #include "mozilla/dom/Selection.h"
 
@@ -3944,6 +3944,15 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       break;
 
     case eKeyUp:
+      // If space key is released, we need to inactivate the element which was
+      // activated by preceding space key down.
+      // XXX Currently, we don't store the reason of activation.  Therefore,
+      //     this may cancel what is activated by a mousedown, but it must not
+      //     cause actual problem in web apps in the wild since it must be
+      //     rare case that users release space key during a mouse click/drag.
+      if (aEvent->AsKeyboardEvent()->ShouldWorkAsSpaceKey()) {
+        ClearGlobalActiveContent(this);
+      }
       break;
 
     case eKeyPress: {
