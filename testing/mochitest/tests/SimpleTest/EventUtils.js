@@ -1,29 +1,5 @@
 /**
  * EventUtils provides some utility methods for creating and sending DOM events.
- * Current methods:
- *  sendMouseEvent
- *  sendDragEvent
- *  sendChar
- *  sendString
- *  sendKey
- *  sendWheelAndPaint
- *  sendWheelAndPaintNoFlush
- *  synthesizeMouse
- *  synthesizeMouseAtCenter
- *  synthesizeNativeMouseEvent
- *  synthesizeWheel
- *  synthesizeWheelAtPoint
- *  synthesizeKey
- *  synthesizeNativeKey
- *  synthesizeMouseExpectEvent
- *  synthesizeKeyExpectEvent
- *  synthesizeDragOver
- *  synthesizeDropAfterDragOver
- *  synthesizeDrop
- *  synthesizePlainDragAndDrop
- *  synthesizePlainDragAndCancel
- *  synthesizeTouch
- *  synthesizeTouchAtCenter
  *
  *  When adding methods to this file, please add a performance test for it.
  */
@@ -215,15 +191,6 @@ async function promiseElementReadyForUserInput(
   throw new Error("The element or the window did not become interactive");
 }
 
-/**
- * Send a mouse event to the node aTarget (aTarget can be an id, or an
- * actual node) . The "event" passed in to aEvent is just a JavaScript
- * object with the properties set that the real mouse event object should
- * have. This includes the type of the mouse event.
- * E.g. to send an click event to the node with id 'node' you might do this:
- *
- * sendMouseEvent({type:'click'}, 'node');
- */
 function getElement(id) {
   return typeof id == "string" ? document.getElementById(id) : id;
 }
@@ -253,6 +220,16 @@ function computeButtons(aEvent, utils) {
   return utils.MOUSE_BUTTONS_NOT_SPECIFIED;
 }
 
+/**
+ * Send a mouse event to the node aTarget (aTarget can be an id, or an
+ * actual node) . The "event" passed in to aEvent is just a JavaScript
+ * object with the properties set that the real mouse event object should
+ * have. This includes the type of the mouse event. Pretty much all those
+ * properties are optional.
+ * E.g. to send an click event to the node with id 'node' you might do this:
+ *
+ * ``sendMouseEvent({type:'click'}, 'node');``
+ */
 function sendMouseEvent(aEvent, aTarget, aWindow) {
   if (
     ![
@@ -482,8 +459,8 @@ function sendString(aStr, aWindow) {
 
 /**
  * Send the non-character key aKey to the focused node.
- * The name of the key should be the part that comes after "DOM_VK_" in the
- *   KeyEvent constant name for this key.
+ * The name of the key should be the part that comes after ``DOM_VK_`` in the
+ * KeyEvent constant name for this key.
  * No modifiers are handled at this point.
  */
 function sendKey(aKey, aWindow) {
@@ -1003,8 +980,8 @@ function sendWheelAndPaint(
 
 /**
  * Similar to sendWheelAndPaint but without flushing layout for obtaining
- * |aTarget| position in |aWindow| before sending the wheel event.
- * |aOffsetX| and |aOffsetY| should be offsets against aWindow.
+ * ``aTarget`` position in ``aWindow`` before sending the wheel event.
+ * ``aOffsetX`` and ``aOffsetY`` should be offsets against aWindow.
  */
 function sendWheelAndPaintNoFlush(
   aTarget,
@@ -1070,23 +1047,56 @@ function synthesizeNativeTap(
   utils.sendNativeTouchTap(x, y, aLongTap, observer);
 }
 
+/**
+ * Similar to synthesizeMouse but generates a native widget level event
+ * (so will actually move the "real" mouse cursor etc. Be careful because
+ * this can impact later code as well! (e.g. with hover states etc.)
+ *
+ * @description There are 3 mutually exclusive ways of indicating the location of the
+ * mouse event: set ``atCenter``, or pass ``offsetX`` and ``offsetY``,
+ * or pass ``screenX`` and ``screenY``. Do not attempt to mix these.
+ *
+ * @param {object} aParams
+ * @param {string} aParams.type "click", "mousedown", "mouseup" or "mousemove"
+ * @param {Element} aParams.target Origin of offsetX and offsetY, must be an element
+ * @param {Boolean} [aParams.atCenter]
+ *        Instead of offsetX/Y, synthesize the event at center of `target`.
+ * @param {Number} [aParams.offsetX]
+ *        X offset in `target` (in CSS pixels if `scale` is "screenPixelsPerCSSPixel")
+ * @param {Number} [aParams.offsetY]
+ *        Y offset in `target` (in CSS pixels if `scale` is "screenPixelsPerCSSPixel")
+ * @param {Number} [aParams.screenX]
+ *        X offset in screen (in CSS pixels if `scale` is "screenPixelsPerCSSPixel"),
+ *        Neither offsetX/Y nor atCenter must be set if this is set.
+ * @param {Number} [aParams.screenY]
+ *        Y offset in screen (in CSS pixels if `scale` is "screenPixelsPerCSSPixel"),
+ *        Neither offsetX/Y nor atCenter must be set if this is set.
+ * @param {String} [aParams.scale="screenPixelsPerCSSPixel"]
+ *        If scale is "screenPixelsPerCSSPixel", devicePixelRatio will be used.
+ *        If scale is "inScreenPixels", clientX/Y nor scaleX/Y are not adjusted with screenPixelsPerCSSPixel.
+ * @param {Number} [aParams.button=0]
+ *        Defaults to 0, if "click", "mousedown", "mouseup", set same value as DOM MouseEvent.button
+ * @param {Object} [aParams.modifiers={}]
+ *        Active modifiers, see `_parseNativeModifiers`
+ * @param {Window} [aParams.win=window]
+ *        The window to use its utils. Defaults to the window in which EventUtils.js is running.
+ * @param {Element} [aParams.elementOnWidget=target]
+ *        Defaults to target. If element under the point is in another widget from target's widget,
+ *        e.g., when it's in a XUL <panel>, specify this.
+ */
 function synthesizeNativeMouseEvent(aParams, aCallback = null) {
   const {
-    type, // "click", "mousedown", "mouseup" or "mousemove"
-    target, // Origin of offsetX and offsetY, must be an element
-    offsetX, // X offset in `target` (in CSS pixels if `scale` is "screenPixelsPerCSSPixel*")
-    offsetY, // Y offset in `target` (in CSS pixels if `scale` is "screenPixelsPerCSSPixel*")
-    atCenter, // Instead of offsetX/Y, synthesize the event at center of `target`
-    screenX, // X offset in screen (in CSS pixels if `scale` is "screenPixelsPerCSSPixel*"), offsetX/Y nor atCenter must not be set if this is set
-    screenY, // Y offset in screen (in CSS pixels if `scale` is "screenPixelsPerCSSPixel*"), offsetX/Y nor atCenter must not be set if this is set
-    // If scale is "screenPixelsPerCSSPixel", devicePixelRatio will be used.
-    // If scale is "inScreenPixels", clientX/Y nor scaleX/Y are not adjusted with screenPixelsPerCSSPixel*.
+    type,
+    target,
+    offsetX,
+    offsetY,
+    atCenter,
+    screenX,
+    screenY,
     scale = "screenPixelsPerCSSPixel",
-    button = 0, // if "click", "mousedown", "mouseup", set same value as DOM MouseEvent.button
-    modifiers = {}, // Active modifiers, see `_parseNativeModifiers`
-    win = window, // The window to use its utils
-    // If element under the point is in another widget from target's widget,
-    //  e.g., when it's in a XUL <panel>, specify this.
+    button = 0,
+    modifiers = {},
+    win = window,
     elementOnWidget = target,
   } = aParams;
   if (atCenter) {
@@ -1317,46 +1327,60 @@ function synthesizeAndWaitNativeMouseMove(
  * Synthesize a key event. It is targeted at whatever would be targeted by an
  * actual keypress by the user, typically the focused element.
  *
- * aKey should be:
- *  - key value (recommended).  If you specify a non-printable key name,
- *    append "KEY_" prefix.  Otherwise, specifying a printable key, the
- *    key value should be specified.
- *  - keyCode name starting with "VK_" (e.g., VK_RETURN).  This is available
- *    only for compatibility with legacy API.  Don't use this with new tests.
+ * @param {String} aKey
+ *        Should be either:
  *
- * aEvent is an object which may contain the properties:
- *  - code: If you don't specify this explicitly, it'll be guessed from aKey
- *          of US keyboard layout.  Note that this value may be different
- *          between browsers.  For example, "Insert" is never set only on
- *          macOS since actual key operation won't cause this code value.
- *          In such case, the value becomes empty string.
- *          If you need to emulate non-US keyboard layout or virtual keyboard
- *          which doesn't emulate hardware key input, you should set this value
- *          to empty string explicitly.
- *  - repeat: If you emulates auto-repeat, you should set the count of repeat.
- *            This method will automatically synthesize keydown (and keypress).
- *  - location: If you want to specify this, you can specify this explicitly.
- *              However, if you don't specify this value, it will be computed
- *              from code value.
- *  - type: Basically, you shouldn't specify this.  Then, this function will
- *          synthesize keydown (, keypress) and keyup.
- *          If keydown is specified, this only fires keydown (and keypress if
- *          it should be fired).
- *          If keyup is specified, this only fires keyup.
- *  - accelKey, altKey, altGraphKey, ctrlKey, capsLockKey, fnKey, fnLockKey,
- *    numLockKey, metaKey, osKey, scrollLockKey, shiftKey, symbolKey,
- *    symbolLockKey:
- *        Basically, you shouldn't use these attributes.  nsITextInputProcessor
- *        manages modifier key state when you synthesize modifier key events.
- *        However, if some of these attributes are true, this function activates
- *        the modifiers only during dispatching the key events.
- *        Note that if some of these values are false, they are ignored (i.e.,
- *        not inactivated with this function).
- *  - keyCode: Must be 0 - 255 (0xFF). If this is specified explicitly,
- *             .keyCode value is initialized with this value.
+ *        - key value (recommended).  If you specify a non-printable key name,
+ *          prepend the ``KEY_`` prefix.  Otherwise, specifying a printable key, the
+ *          key value should be specified.
  *
- * aWindow is optional, and defaults to the current window object.
- * aCallback is optional, use the callback for receiving notifications of TIP.
+ *        - keyCode name starting with ``VK_`` (e.g., ``VK_RETURN``).  This is available
+ *          only for compatibility with legacy API.  Don't use this with new tests.
+ *
+ * @param {Object} [aEvent]
+ *        Optional event object with more specifics about the key event to
+ *        synthesize.
+ * @param {String} [aEvent.code]
+ *        If you don't specify this explicitly, it'll be guessed from aKey
+ *        of US keyboard layout.  Note that this value may be different
+ *        between browsers.  For example, "Insert" is never set only on
+ *        macOS since actual key operation won't cause this code value.
+ *        In such case, the value becomes empty string.
+ *        If you need to emulate non-US keyboard layout or virtual keyboard
+ *        which doesn't emulate hardware key input, you should set this value
+ *        to empty string explicitly.
+ * @param {Number} [aEvent.repeat]
+ *        If you emulate auto-repeat, you should set the count of repeat.
+ *        This method will automatically synthesize keydown (and keypress).
+ * @param {*} aEvent.location
+ *        If you want to specify this, you can specify this explicitly.
+ *        However, if you don't specify this value, it will be computed
+ *        from code value.
+ * @param {String} aEvent.type
+ *        Basically, you shouldn't specify this.  Then, this function will
+ *        synthesize keydown (, keypress) and keyup.
+ *        If keydown is specified, this only fires keydown (and keypress if
+ *        it should be fired).
+ *        If keyup is specified, this only fires keyup.
+ * @param {Number} aEvent.keyCode
+ *        Must be 0 - 255 (0xFF). If this is specified explicitly,
+ *        .keyCode value is initialized with this value.
+ * @param {Window} aWindow
+ *        Is optional and defaults to the current window object.
+ * @param {Function} aCallback
+ *        Is optional and can be used to receive notifications from TIP.
+ *
+ * @description
+ * ``accelKey``, ``altKey``, ``altGraphKey``, ``ctrlKey``, ``capsLockKey``,
+ * ``fnKey``, ``fnLockKey``, ``numLockKey``, ``metaKey``, ``osKey``,
+ * ``scrollLockKey``, ``shiftKey``, ``symbolKey``, ``symbolLockKey``
+ * Basically, you shouldn't use these attributes.  nsITextInputProcessor
+ * manages modifier key state when you synthesize modifier key events.
+ * However, if some of these attributes are true, this function activates
+ * the modifiers only during dispatching the key events.
+ * Note that if some of these values are false, they are ignored (i.e.,
+ * not inactivated with this function).
+ *
  */
 function synthesizeKey(aKey, aEvent = undefined, aWindow = window, aCallback) {
   var event = aEvent === undefined || aEvent === null ? {} : aEvent;
@@ -2744,24 +2768,37 @@ function createDragEventObject(
 /**
  * Emulate a event sequence of dragstart, dragenter, and dragover.
  *
- * @param aSrcElement   The element to use to start the drag.
- * @param aDestElement  The element to fire the dragover, dragenter events
- * @param aDragData     The data to supply for the data transfer.
- *                      This data is in the format:
- *                        [ [ {type: value, data: value}, ...], ... ]
- *                      Pass null to avoid modifying dataTransfer.
- * @param aDropEffect   The drop effect to set during the dragstart event, or
- *                      'move' if null.
- * @param aWindow       Optional; Defaults to the current window object.
- * @param aDestWindow   Optional; Defaults to aWindow.
- *                      Used when aDestElement is in a different window than
- *                      aSrcElement.
- * @param aDragEvent    Optional; Defaults to empty object. Overwrites an object
- *                      passed to sendDragEvent.
- * @return              A two element array, where the first element is the
- *                      value returned from sendDragEvent for
- *                      dragover event, and the second element is the
- *                      dataTransfer for the current drag session.
+ * @param {Element} aSrcElement
+ *        The element to use to start the drag.
+ * @param {Element} aDestElement
+ *        The element to fire the dragover, dragenter events
+ * @param {Array}   aDragData
+ *        The data to supply for the data transfer.
+ *        This data is in the format:
+ *
+ *        [
+ *          [
+ *            {"type": value, "data": value },
+ *            ...,
+ *          ],
+ *          ...
+ *        ]
+ *
+ *        Pass null to avoid modifying dataTransfer.
+ * @param {String} [aDropEffect="move"]
+ *        The drop effect to set during the dragstart event, or 'move' if omitted.
+ * @param {Window} [aWindow=window]
+ *        The window in which the drag happens. Defaults to the window in which
+ *        EventUtils.js is loaded.
+ * @param {Window} [aDestWindow=aWindow]
+ *        Used when aDestElement is in a different window than aSrcElement.
+ *        Default is to match ``aWindow``.
+ * @param {Object} [aDragEvent={}]
+ *        Defaults to empty object. Overwrites an object passed to sendDragEvent.
+ * @return {Array}
+ *        A two element array, where the first element is the value returned
+ *        from sendDragEvent for dragover event, and the second element is the
+ *        dataTransfer for the current drag session.
  */
 function synthesizeDragOver(
   aSrcElement,
@@ -2851,16 +2888,19 @@ function synthesizeDragOver(
  * Emulate the drop event and mouseup event.
  * This should be called after synthesizeDragOver.
  *
- * @param aResult        The first element of the array returned from
- *                       synthesizeDragOver.
- * @param aDataTransfer  The second element of the array returned from
- *                       synthesizeDragOver.
- * @param aDestElement   The element to fire the drop event.
- * @param aDestWindow    Optional; Defaults to the current window object.
- * @param aDragEvent     Optional; Defaults to empty object. Overwrites an
- *                       object passed to sendDragEvent.
- * @return               "none" if aResult is true,
- *                       aDataTransfer.dropEffect otherwise.
+ * @param {*} aResult
+ *        The first element of the array returned from ``synthesizeDragOver``.
+ * @param {DataTransfer} aDataTransfer
+ *        The second element of the array returned from ``synthesizeDragOver``.
+ * @param {Element} aDestElement
+ *        The element on which to fire the drop event.
+ * @param {Window} [aDestWindow=window]
+ *        The window in which the drop happens. Defaults to the window in which
+ *        EventUtils.js is loaded.
+ * @param {Object} [aDragEvent={}]
+ *        Defaults to empty object. Overwrites an object passed to sendDragEvent.
+ * @return {String}
+ *        "none" if aResult is true, ``aDataTransfer.dropEffect`` otherwise.
  */
 function synthesizeDropAfterDragOver(
   aResult,
@@ -2897,21 +2937,35 @@ function synthesizeDropAfterDragOver(
  * Emulate a drag and drop by emulating a dragstart and firing events dragenter,
  * dragover, and drop.
  *
- * @param aSrcElement   The element to use to start the drag.
- * @param aDestElement  The element to fire the dragover, dragenter events
- * @param aDragData     The data to supply for the data transfer.
- *                      This data is in the format:
- *                        [ [ {type: value, data: value}, ...], ... ]
- *                      Pass null to avoid modifying dataTransfer.
- * @param aDropEffect   The drop effect to set during the dragstart event, or
- *                      'move' if null.
- * @param aWindow       Optional; Defaults to the current window object.
- * @param aDestWindow   Optional; Defaults to aWindow.
- *                      Used when aDestElement is in a different window than
- *                      aSrcElement.
- * @param aDragEvent    Optional; Defaults to empty object. Overwrites an object
- *                      passed to sendDragEvent.
- * @return              The drop effect that was desired.
+ * @param {Element} aSrcElement
+ *        The element to use to start the drag.
+ * @param {Element} aDestElement
+ *        The element to fire the dragover, dragenter events
+ * @param {Array}   aDragData
+ *        The data to supply for the data transfer.
+ *        This data is in the format:
+ *
+ *            [
+ *              [
+ *                {"type": value, "data": value },
+ *                ...,
+ *              ],
+ *              ...
+ *            ]
+ *
+ *        Pass null to avoid modifying dataTransfer.
+ * @param {String} [aDropEffect="move"]
+ *        The drop effect to set during the dragstart event, or 'move' if omitted..
+ * @param {Window} [aWindow=window]
+ *        The window in which the drag happens. Defaults to the window in which
+ *        EventUtils.js is loaded.
+ * @param {Window} [aDestWindow=aWindow]
+ *        Used when aDestElement is in a different window than aSrcElement.
+ *        Default is to match ``aWindow``.
+ * @param {Object} [aDragEvent={}]
+ *        Defaults to empty object. Overwrites an object passed to sendDragEvent.
+ * @return {String}
+ *        The drop effect that was desired.
  */
 function synthesizeDrop(
   aSrcElement,
@@ -2995,36 +3049,41 @@ function _computeSrcElementFromSrcSelection(aSrcSelection) {
  * Note that if synthesized dragstart is canceled, this throws an exception
  * because in such case, Gecko does not start drag session.
  *
- * @param aParams
- *        {
- *          dragEvent:    The DnD events will be generated with modifiers
- *                        specified with this.
- *          srcElement:   The element to start dragging.  If srcSelection is
- *                        set, this is computed for element at focus node.
- *          srcSelection: The selection to start to drag, set null if
- *                        srcElement is set.
- *          destElement:  The element to drop on. Pass null to emulate
- *                        a drop on an invalid target.
- *          srcX:         The initial x coordinate inside srcElement or
- *                        ignored if srcSelection is set.
- *          srcY:         The initial y coordinate inside srcElement or
- *                        ignored if srcSelection is set.
- *          stepX:        The x-axis step for mousemove inside srcElement
- *          stepY:        The y-axis step for mousemove inside srcElement
- *          finalX:       The final x coordinate inside srcElement
- *          finalY:       The final x coordinate inside srcElement
- *          id:           The pointer event id
- *          srcWindow:    The window for dispatching event on srcElement,
- *                        defaults to the current window object
- *          destWindow:   The window for dispatching event on destElement,
- *                        defaults to the current window object
- *          expectCancelDragStart:  Set to true if the test cancels "dragstart"
- *          expectSrcElementDisconnected:
- *                        Set to true if srcElement will be disconnected and
- *                        "dragend" event won't be fired.
- *          logFunc:      Set function which takes one argument if you need
- *                        to log rect of target.  E.g., `console.log`.
- *        }
+ * @param {Object} aParams
+ * @param {Event} aParams.dragEvent
+ *                The DnD events will be generated with modifiers specified with this.
+ * @param {Element} aParams.srcElement
+ *                The element to start dragging.  If srcSelection is
+ *                set, this is computed for element at focus node.
+ * @param {Selection|nil} aParams.srcSelection
+ *                The selection to start to drag, set null if srcElement is set.
+ * @param {Element|nil} aParams.destElement
+ *                The element to drop on. Pass null to emulate a drop on an invalid target.
+ * @param {Number} aParams.srcX
+ *                The initial x coordinate inside srcElement or ignored if srcSelection is set.
+ * @param {Number} aParams.srcY
+ *                The initial y coordinate inside srcElement or ignored if srcSelection is set.
+ * @param {Number} aParams.stepX
+ *                The x-axis step for mousemove inside srcElement
+ * @param {Number} aParams.stepY
+ *                The y-axis step for mousemove inside srcElement
+ * @param {Number} aParams.finalX
+ *                The final x coordinate inside srcElement
+ * @param {Number} aParams.finalY
+ *                The final x coordinate inside srcElement
+ * @param {Any} aParams.id
+ *                The pointer event id
+ * @param {Window} aParams.srcWindow
+ *                The window for dispatching event on srcElement, defaults to the current window object.
+ * @param {Window} aParams.destWindow
+ *                The window for dispatching event on destElement, defaults to the current window object.
+ * @param {Boolean} aParams.expectCancelDragStart
+ *                Set to true if the test cancels "dragstart"
+ * @param {Boolean} aParams.expectSrcElementDisconnected
+ *                Set to true if srcElement will be disconnected and
+ *                "dragend" event won't be fired.
+ * @param {Function} aParams.logFunc
+ *                Set function which takes one argument if you need to log rect of target.  E.g., `console.log`.
  */
 // eslint-disable-next-line complexity
 async function synthesizePlainDragAndDrop(aParams) {
@@ -3484,26 +3543,46 @@ function _checkDataTransferItems(aDataTransfer, aExpectedDragData) {
 }
 
 /**
+ * This callback type is used with ``synthesizePlainDragAndCancel()``.
+ * It should compare ``actualData`` and ``expectedData`` and return
+ * true if the two should be considered equal, false otherwise.
+ *
+ * @callback eqTest
+ * @param {*} actualData
+ * @param {*} expectedData
+ * @return {boolean}
+ */
+
+/**
  * synthesizePlainDragAndCancel() synthesizes drag start with
  * synthesizePlainDragAndDrop(), but always cancel it with preventing default
  * of "dragstart".  Additionally, this checks whether the dataTransfer of
  * "dragstart" event has only expected items.
  *
- * @param aParams       The params which is set to the argument of
- *                      synthesizePlainDragAndDrop().
- * @param aExpectedDataTransferItems
- *                      All expected dataTransfer items.
- *                      This data is in the format:
- *                         [ [ {type: value, data: value, test: function}, ... ], ... ]
- *                      can be null.
- *                      eqTest is an optional function if comparison can't be
- *                      done with x == y;
- *                      function (actualData, expectedData) {return boolean}
- * @return              true if aExpectedDataTransferItems matches with
- *                      DragEvent.dataTransfer of "dragstart" event.
- *                      Otherwise, the dataTransfer object (may be null) or
- *                      thrown exception, NOT false.  Therefore, you shouldn't
- *                      use
+ * @param {Object} aParams
+ *        The params which is set to the argument of ``synthesizePlainDragAndDrop()``.
+ * @param {Array} aExpectedDataTransferItems
+ *        All expected dataTransfer items.
+ *        This data is in the format:
+ *
+ *        [
+ *          [
+ *            {"type": value, "data": value, eqTest: function}
+ *            ...,
+ *          ],
+ *          ...
+ *        ]
+ *
+ *        This can also be null.
+ *        You can optionally provide ``eqTest`` {@type eqTest} if the
+ *        comparison to the expected data transfer items can't be done
+ *        with x == y;
+ * @return {boolean}
+ *        true if aExpectedDataTransferItems matches with
+ *        DragEvent.dataTransfer of "dragstart" event.
+ *        Otherwise, the dataTransfer object (may be null) or
+ *        thrown exception, NOT false.  Therefore, you shouldn't
+ *        use.
  */
 async function synthesizePlainDragAndCancel(
   aParams,

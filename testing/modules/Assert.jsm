@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// http://wiki.commonjs.org/wiki/Unit_Testing/1.0
-// When you see a javadoc comment that contains a number, it's a reference to a
-// specific section of the CommonJS spec.
-//
 // Originally from narwhal.js (http://narwhaljs.org)
 // Copyright (c) 2009 Thomas Robinson <280north.com>
 // MIT license: http://opensource.org/licenses/MIT
@@ -19,17 +15,27 @@ const { ObjectUtils } = ChromeUtils.import(
 );
 
 /**
+ * This module is based on the
+ * `CommonJS spec <https://wiki.commonjs.org/wiki/Unit_Testing/1.0>`_
+ *
+ * When you see a jsdoc comment that contains a number, it's a reference to a
+ * specific section of the CommonJS spec.
+ *
  * 1. The assert module provides functions that throw AssertionError's when
  * particular conditions are not met.
  *
- * To use the module you may instantiate it first, which allows consumers
- * to override certain behavior on the newly obtained instance. For examples,
- * see the javadoc comments for the `report` member function.
+ * To use the module you may instantiate it first.
  *
- * The isDefault argument is used by test suites to set reporterFunc as the
- * default used by the global instance, which is called for example by other
- * test-only modules. This is false when the reporter is set by content scripts,
- * because they may still run in the parent process.
+ * @param {reporterFunc} reporterFunc
+ *        Allows consumers to override reporting for this instance.
+ * @param {boolean} isDefault
+ *        Used by test suites to set ``reporterFunc`` as the default
+ *        used by the global instance, which is called for example
+ *        by other test-only modules. This is false when the
+ *        reporter is set by content scripts, because they may still
+ *        run in the parent process.
+ *
+ * @class
  */
 function Assert(reporterFunc, isDefault) {
   if (reporterFunc) {
@@ -100,7 +106,13 @@ function getMessage(error, prefix = "") {
 /**
  * 2. The AssertionError is defined in assert.
  *
- * Example:
+ * At present only the four keys mentioned below are used and
+ * understood by the spec. Implementations or sub modules can pass
+ * other keys to the AssertionError's constructor - they will be
+ * ignored.
+ *
+ * @example
+ *
  * new assert.AssertionError({
  *   message: message,
  *   actual: actual,
@@ -109,10 +121,6 @@ function getMessage(error, prefix = "") {
  *   truncate: truncate
  * });
  *
- * At present only the four keys mentioned above are used and
- * understood by the spec. Implementations or sub modules can pass
- * other keys to the AssertionError's constructor - they will be
- * ignored.
  */
 Assert.AssertionError = function(options) {
   this.name = "AssertionError";
@@ -138,19 +146,25 @@ Assert.AssertionError.prototype = Object.create(Error.prototype, {
   },
 });
 
-var proto = Assert.prototype;
+Assert.prototype._reporter = null;
 
-proto._reporter = null;
 /**
- * Set a custom assertion report handler function. Arguments passed in to this
- * function are:
- * err (AssertionError|null) An error object when the assertion failed or null
- *                           when it passed
- * message (string) Message describing the assertion
- * stack (stack) Stack trace of the assertion function
+ * This callback type is used for custom assertion report handling.
  *
- * Example:
- * ```js
+ * @callback reporterFunc
+ * @param {AssertionError|null} err
+ *        An error object when the assertion failed, or null when it passed.
+ * @param {String} message
+ *        Message describing the assertion.
+ * @param {Stack} stack
+ *        Stack trace of the assertion function.
+ */
+
+/**
+ * Set a custom assertion report handler function.
+ *
+ * @example
+ *
  * Assert.setReporter(function customReporter(err, message, stack) {
  *   if (err) {
  *     do_report_result(false, err.message, err.stack);
@@ -158,12 +172,11 @@ proto._reporter = null;
  *     do_report_result(true, message, stack);
  *   }
  * });
- * ```
  *
- * @param reporterFunc
- *        (function) Report handler function
+ * @param {reporterFunc} reporterFunc
+ *        Report handler function.
  */
-proto.setReporter = function(reporterFunc) {
+Assert.prototype.setReporter = function(reporterFunc) {
   this._reporter = reporterFunc;
 };
 
@@ -177,26 +190,25 @@ proto.setReporter = function(reporterFunc) {
  * but consumers of this module (think: xpcshell-test, mochitest) may want to
  * override this default implementation.
  *
- * Example:
- * ```js
+ * @example
+ *
  * // The following will report an assertion failure.
  * this.report(1 != 2, 1, 2, "testing JS number math!", "==");
- * ```
  *
- * @param failed
- *        (boolean) Indicates if the assertion failed or not
- * @param actual
- *        (mixed) The result of evaluating the assertion
- * @param expected (optional)
- *        (mixed) Expected result from the test author
- * @param message (optional)
- *        (string) Short explanation of the expected result
- * @param operator (optional)
- *        (string) Operation qualifier used by the assertion method (ex: '==')
- * @param truncate (optional) [true]
- *        (boolean) Whether or not `actual` and `expected` should be truncated when printing
+ * @param {boolean} failed
+ *        Indicates if the assertion failed or not.
+ * @param {*} actual
+ *        The result of evaluating the assertion.
+ * @param {*} [expected]
+ *        Expected result from the test author.
+ * @param {String} [message]
+ *        Short explanation of the expected result.
+ * @param {String} [operator]
+ *        Operation qualifier used by the assertion method (ex: '==').
+ * @param {boolean} [truncate=true]
+ *        Whether or not ``actual`` and ``expected`` should be truncated when printing.
  */
-proto.report = function(
+Assert.prototype.report = function(
   failed,
   actual,
   expected,
@@ -231,17 +243,17 @@ proto.report = function(
 
 /**
  * 4. Pure assertion tests whether a value is truthy, as determined by !!guard.
- * assert.ok(guard, message_opt);
- * This statement is equivalent to assert.equal(true, !!guard, message_opt);.
- * To test strictly for the value true, use assert.strictEqual(true, guard,
- * message_opt);.
+ * ``assert.ok(guard, message_opt);``
+ * This statement is equivalent to ``assert.equal(true, !!guard, message_opt);``.
+ * To test strictly for the value true, use ``assert.strictEqual(true, guard,
+ * message_opt);``.
  *
- * @param value
- *        (mixed) Test subject to be evaluated as truthy
- * @param message (optional)
- *        (string) Short explanation of the expected result
+ * @param {*} value
+ *        Test subject to be evaluated as truthy.
+ * @param {String} [message]
+ *        Short explanation of the expected result.
  */
-proto.ok = function(value, message) {
+Assert.prototype.ok = function(value, message) {
   if (arguments.length > 2) {
     this.report(
       true,
@@ -257,31 +269,34 @@ proto.ok = function(value, message) {
 
 /**
  * 5. The equality assertion tests shallow, coercive equality with ==.
- * assert.equal(actual, expected, message_opt);
+ * ``assert.equal(actual, expected, message_opt);``
  *
- * @param actual
- *        (mixed) Test subject to be evaluated as equivalent to `expected`
- * @param expected
- *        (mixed) Test reference to evaluate against `actual`
- * @param message (optional)
- *        (string) Short explanation of the expected result
+ * @param {*} actual
+ *        Test subject to be evaluated as equivalent to ``expected``.
+ * @param {*} expected
+ *        Test reference to evaluate against ``actual``.
+ * @param {String} [message]
+ *        Short explanation of the expected result.
  */
-proto.equal = function equal(actual, expected, message) {
+Assert.prototype.equal = function equal(actual, expected, message) {
   this.report(actual != expected, actual, expected, message, "==");
 };
 
 /**
  * 6. The non-equality assertion tests for whether two objects are not equal
- * with != assert.notEqual(actual, expected, message_opt);
+ * with ``!=``
  *
- * @param actual
- *        (mixed) Test subject to be evaluated as NOT equivalent to `expected`
- * @param expected
- *        (mixed) Test reference to evaluate against `actual`
- * @param message (optional)
- *        (string) Short explanation of the expected result
+ * @example
+ * assert.notEqual(actual, expected, message_opt);
+ *
+ * @param {*} actual
+ *        Test subject to be evaluated as NOT equivalent to ``expected``.
+ * @param {*} expected
+ *        Test reference to evaluate against ``actual``.
+ * @param {String} [message]
+ *        Short explanation of the expected result.
  */
-proto.notEqual = function notEqual(actual, expected, message) {
+Assert.prototype.notEqual = function notEqual(actual, expected, message) {
   this.report(actual == expected, actual, expected, message, "!=");
 };
 
@@ -294,14 +309,14 @@ proto.notEqual = function notEqual(actual, expected, message) {
  * `JSON.stringify` is not designed to be used for this purpose; objects may
  * have ambiguous `toJSON()` implementations that would influence the test.
  *
- * @param actual
- *        (mixed) Test subject to be evaluated as equivalent to `expected`, including nested properties
- * @param expected
- *        (mixed) Test reference to evaluate against `actual`
- * @param message (optional)
- *        (string) Short explanation of the expected result
+ * @param {*} actual
+ *        Test subject to be evaluated as equivalent to ``expected``, including nested properties.
+ * @param {*} expected
+ *        Test reference to evaluate against ``actual``.
+ * @param {String} [message]
+ *        Short explanation of the expected result.
  */
-proto.deepEqual = function deepEqual(actual, expected, message) {
+Assert.prototype.deepEqual = function deepEqual(actual, expected, message) {
   this.report(
     !ObjectUtils.deepEqual(actual, expected),
     actual,
@@ -316,14 +331,19 @@ proto.deepEqual = function deepEqual(actual, expected, message) {
  * 8. The non-equivalence assertion tests for any deep inequality.
  * assert.notDeepEqual(actual, expected, message_opt);
  *
- * @param actual
- *        (mixed) Test subject to be evaluated as NOT equivalent to `expected`, including nested properties
- * @param expected
- *        (mixed) Test reference to evaluate against `actual`
- * @param message (optional)
- *        (string) Short explanation of the expected result
+ * @param {*} actual
+ *        Test subject to be evaluated as NOT equivalent to ``expected``, including nested
+ *        properties.
+ * @param {*} expected
+ *        Test reference to evaluate against ``actual``.
+ * @param {String} [message]
+ *        Short explanation of the expected result.
  */
-proto.notDeepEqual = function notDeepEqual(actual, expected, message) {
+Assert.prototype.notDeepEqual = function notDeepEqual(
+  actual,
+  expected,
+  message
+) {
   this.report(
     ObjectUtils.deepEqual(actual, expected),
     actual,
@@ -336,31 +356,35 @@ proto.notDeepEqual = function notDeepEqual(actual, expected, message) {
 
 /**
  * 9. The strict equality assertion tests strict equality, as determined by ===.
- * assert.strictEqual(actual, expected, message_opt);
+ * ``assert.strictEqual(actual, expected, message_opt);``
  *
- * @param actual
- *        (mixed) Test subject to be evaluated as strictly equivalent to `expected`
- * @param expected
- *        (mixed) Test reference to evaluate against `actual`
- * @param message (optional)
- *        (string) Short explanation of the expected result
+ * @param {*} actual
+ *        Test subject to be evaluated as strictly equivalent to ``expected``.
+ * @param {*} expected
+ *        Test reference to evaluate against ``actual``.
+ * @param {String} [message]
+ *        Short explanation of the expected result.
  */
-proto.strictEqual = function strictEqual(actual, expected, message) {
+Assert.prototype.strictEqual = function strictEqual(actual, expected, message) {
   this.report(actual !== expected, actual, expected, message, "===");
 };
 
 /**
  * 10. The strict non-equality assertion tests for strict inequality, as
- * determined by !==.  assert.notStrictEqual(actual, expected, message_opt);
+ * determined by !==. ``assert.notStrictEqual(actual, expected, message_opt);``
  *
- * @param actual
- *        (mixed) Test subject to be evaluated as NOT strictly equivalent to `expected`
- * @param expected
- *        (mixed) Test reference to evaluate against `actual`
- * @param message (optional)
- *        (string) Short explanation of the expected result
+ * @param {*} actual
+ *        Test subject to be evaluated as NOT strictly equivalent to ``expected``.
+ * @param {*} expected
+ *        Test reference to evaluate against ``actual``.
+ * @param {String} [message]
+ *        Short explanation of the expected result.
  */
-proto.notStrictEqual = function notStrictEqual(actual, expected, message) {
+Assert.prototype.notStrictEqual = function notStrictEqual(
+  actual,
+  expected,
+  message
+) {
   this.report(actual === expected, actual, expected, message, "!==");
 };
 
@@ -417,16 +441,16 @@ function expectedException(actual, expected) {
  * Assert.throws(() => testBody(), /hello/);
  * ```
  *
- * @param block
- *        (function) Function block to evaluate and catch eventual thrown errors
- * @param expected
- *        (mixed) This parameter can be either a RegExp or a function. The
- *        function is either the error type's constructor, or it's a method that returns a boolean
- *        that describes the test outcome.
- * @param message (optional)
- *        (string) Short explanation of the expected result
+ * @param {Function} block
+ *        Function to evaluate and catch eventual thrown errors.
+ * @param {RegExp|Function} expected
+ *        This parameter can be either a RegExp or a function. The function is
+ *        either the error type's constructor, or it's a method that returns
+ *        a boolean that describes the test outcome.
+ * @param {String} [message]
+ *        Short explanation of the expected result.
  */
-proto.throws = function(block, expected, message) {
+Assert.prototype.throws = function(block, expected, message) {
   checkExpectedArgument(this, "throws", expected);
 
   // `true` if we realize that we have added an
@@ -482,14 +506,14 @@ proto.throws = function(block, expected, message) {
  * A promise that is expected to reject:
  * assert.rejects(promise, expected, message);
  *
- * @param promise
- *        (promise) A promise that is expected to reject
- * @param expected (optional)
- *        (mixed) Test reference to evaluate against the rejection result
- * @param message (optional)
- *        (string) Short explanation of the expected result
+ * @param {Promise} promise
+ *        A promise that is expected to reject.
+ * @param {?} [expected]
+ *        Test reference to evaluate against the rejection result.
+ * @param {String} [message]
+ *        Short explanation of the expected result.
  */
-proto.rejects = function(promise, expected, message) {
+Assert.prototype.rejects = function(promise, expected, message) {
   checkExpectedArgument(this, "rejects", expected);
   return new Promise((resolve, reject) => {
     return promise
@@ -536,14 +560,14 @@ function compareNumbers(expression, lhs, rhs, message, operator) {
  * The lhs must be greater than the rhs.
  * assert.greater(lhs, rhs, message_opt);
  *
- * @param lhs
- *        (number) The left-hand side value
- * @param rhs
- *        (number) The right-hand side value
- * @param message (optional)
- *        (string) Short explanation of the comparison result
+ * @param {Number} lhs
+ *        The left-hand side value.
+ * @param {Number} rhs
+ *        The right-hand side value.
+ * @param {String} [message]
+ *        Short explanation of the comparison result.
  */
-proto.greater = function greater(lhs, rhs, message) {
+Assert.prototype.greater = function greater(lhs, rhs, message) {
   compareNumbers.call(this, lhs <= rhs, lhs, rhs, message, ">");
 };
 
@@ -551,14 +575,14 @@ proto.greater = function greater(lhs, rhs, message) {
  * The lhs must be greater than or equal to the rhs.
  * assert.greaterOrEqual(lhs, rhs, message_opt);
  *
- * @param lhs
- *        (number) The left-hand side value
- * @param rhs
- *        (number) The right-hand side value
- * @param message (optional)
- *        (string) Short explanation of the comparison result
+ * @param {Number} [lhs]
+ *        The left-hand side value.
+ * @param {Number} [rhs]
+ *        The right-hand side value.
+ * @param {String} [message]
+ *        Short explanation of the comparison result.
  */
-proto.greaterOrEqual = function greaterOrEqual(lhs, rhs, message) {
+Assert.prototype.greaterOrEqual = function greaterOrEqual(lhs, rhs, message) {
   compareNumbers.call(this, lhs < rhs, lhs, rhs, message, ">=");
 };
 
@@ -566,14 +590,14 @@ proto.greaterOrEqual = function greaterOrEqual(lhs, rhs, message) {
  * The lhs must be less than the rhs.
  * assert.less(lhs, rhs, message_opt);
  *
- * @param lhs
- *        (number) The left-hand side value
- * @param rhs
- *        (number) The right-hand side value
- * @param message (optional)
- *        (string) Short explanation of the comparison result
+ * @param {Number} [lhs]
+ *        The left-hand side value.
+ * @param {Number} [rhs]
+ *        The right-hand side value.
+ * @param {String} [message]
+ *        Short explanation of the comparison result.
  */
-proto.less = function less(lhs, rhs, message) {
+Assert.prototype.less = function less(lhs, rhs, message) {
   compareNumbers.call(this, lhs >= rhs, lhs, rhs, message, "<");
 };
 
@@ -581,14 +605,14 @@ proto.less = function less(lhs, rhs, message) {
  * The lhs must be less than or equal to the rhs.
  * assert.lessOrEqual(lhs, rhs, message_opt);
  *
- * @param lhs
- *        (number) The left-hand side value
- * @param rhs
- *        (number) The right-hand side value
- * @param message (optional)
- *        (string) Short explanation of the comparison result
+ * @param {Number} [lhs]
+ *        The left-hand side value.
+ * @param {Number} [rhs]
+ *        The right-hand side value.
+ * @param {String} [message]
+ *        Short explanation of the comparison result.
  */
-proto.lessOrEqual = function lessOrEqual(lhs, rhs, message) {
+Assert.prototype.lessOrEqual = function lessOrEqual(lhs, rhs, message) {
   compareNumbers.call(this, lhs > rhs, lhs, rhs, message, "<=");
 };
 
@@ -598,16 +622,16 @@ proto.lessOrEqual = function lessOrEqual(lhs, rhs, message) {
  * string it will be interpreted as a regular expression so take care to escape
  * special characters such as "?" or "(" if you need the actual characters.
  *
- * @param lhs
- *        (string) The string to be tested.
- * @param rhs
- *        (string | RegExp) The regular expression that the string will be
- *        tested with. Note that if passed as a string, this will be interpreted
+ * @param {String} lhs
+ *        The string to be tested.
+ * @param {String|RegExp} rhs
+ *        The regular expression that the string will be tested with.
+ *        Note that if passed as a string, this will be interpreted.
  *        as a regular expression.
- * @param message (optional)
- *        (string) Short explanation of the comparison result
+ * @param {String} [message]
+ *        Short explanation of the comparison result.
  */
-proto.stringMatches = function stringMatches(lhs, rhs, message) {
+Assert.prototype.stringMatches = function stringMatches(lhs, rhs, message) {
   if (typeof rhs != "string" && !instanceOf(rhs, "RegExp")) {
     this.report(
       true,
@@ -649,14 +673,14 @@ proto.stringMatches = function stringMatches(lhs, rhs, message) {
 /**
  * The lhs must be a string that contains the rhs string.
  *
- * @param lhs
- *        (string) The string to be tested.
- * @param rhs
- *        (string) The string to be found.
- * @param message (optional)
- *        (string) Short explanation of the comparison result
+ * @param {String} lhs
+ *        The string to be tested (haystack).
+ * @param {String} rhs
+ *        The string to be found (needle).
+ * @param {String} [message]
+ *        Short explanation of the expected result.
  */
-proto.stringContains = function stringContains(lhs, rhs, message) {
+Assert.prototype.stringContains = function stringContains(lhs, rhs, message) {
   if (typeof lhs != "string" || typeof rhs != "string") {
     this.report(
       true,
