@@ -47,6 +47,7 @@ class PerftestResultsHandler(object):
         fission=True,
         perfstats=False,
         test_bytecode_cache=False,
+        extra_summary_methods=[],
         **kwargs
     ):
         self.gecko_profile = gecko_profile
@@ -68,6 +69,7 @@ class PerftestResultsHandler(object):
         self.perfstats = perfstats
         self.test_bytecode_cache = test_bytecode_cache
         self.existing_results = None
+        self.extra_summary_methods = extra_summary_methods
 
     @abstractmethod
     def add(self, new_result_json):
@@ -968,6 +970,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
             self.supporting_data,
             test_config.get("subtest_alert_on", []),
             self.app,
+            self.extra_summary_methods,
         )
         output.set_browser_meta(self.browser_name, self.browser_version)
         output.summarize(test_names)

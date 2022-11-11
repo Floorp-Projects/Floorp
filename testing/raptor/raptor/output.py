@@ -10,6 +10,7 @@ from __future__ import absolute_import, division, print_function
 import six
 import filters
 
+import copy
 import json
 import os
 
@@ -35,7 +36,9 @@ VISUAL_METRICS = [
 class PerftestOutput(object):
     """Abstract base class to handle output of perftest results"""
 
-    def __init__(self, results, supporting_data, subtest_alert_on, app):
+    def __init__(
+        self, results, supporting_data, subtest_alert_on, app, extra_summary_methods=[]
+    ):
         """
         - results : list of RaptorTestResult instances
         """
@@ -48,6 +51,7 @@ class PerftestOutput(object):
         self.subtest_alert_on = subtest_alert_on
         self.browser_name = None
         self.browser_version = None
+        self.extra_summary_methods = extra_summary_methods
 
     @abstractmethod
     def summarize(self, test_names):
@@ -1532,18 +1536,44 @@ class BrowsertimeOutput(PerftestOutput):
         replicates.
         """
 
+        def _filter(data):
+            import numpy as np
+
+            # Apply a gaussian filter
+            data = np.asarray(data)
+            data = data[np.where(data > np.mean(data) - np.std(data) * 2)[0]]
+            data = list(data[np.where(data < np.mean(data) + np.std(data) * 2)[0]])
+
+            return data
+
+        def _process_alt_method(subtest, alternative_method):
+            # Don't filter with less than 10 data points
+            data = subtest["replicates"]
+            if len(subtest["replicates"]) > 10:
+                data = _filter(data)
+            if alternative_method == "geomean":
+                subtest["value"] = round(filters.geometric_mean(data), 1)
+            elif alternative_method == "mean":
+                subtest["value"] = round(filters.mean(data), 1)
+
         # converting suites and subtests into lists, and sorting them
-        def _process(subtest):
+        def _process(subtest, alternative_method=""):
             if test["type"] == "power":
                 subtest["value"] = filters.mean(subtest["replicates"])
             elif subtest["name"] in VISUAL_METRICS or subtest["name"].startswith(
                 "perfstat"
             ):
-                subtest["value"] = filters.median(subtest["replicates"])
+                if alternative_method in ("geomean", "mean"):
+                    _process_alt_method(subtest, alternative_method)
+                else:
+                    subtest["value"] = filters.median(subtest["replicates"])
             else:
-                subtest["value"] = filters.median(
-                    filters.ignore_first(subtest["replicates"], 1)
-                )
+                if alternative_method in ("geomean", "mean"):
+                    _process_alt_method(subtest, alternative_method)
+                else:
+                    subtest["value"] = filters.median(
+                        filters.ignore_first(subtest["replicates"], 1)
+                    )
             return subtest
 
         def _process_suite(suite):
@@ -1552,6 +1582,25 @@ class BrowsertimeOutput(PerftestOutput):
                 for subtest in suite["subtests"].values()
                 if subtest["replicates"]
             ]
+
+            # Duplicate for different summary values if needed
+            if self.extra_summary_methods:
+                new_subtests = []
+                for subtest in suite["subtests"]:
+                    try:
+                        for alternative_method in self.extra_summary_methods:
+                            new_subtest = copy.deepcopy(subtest)
+                            new_subtest[
+                                "name"
+                            ] = f"{new_subtest['name']} ({alternative_method})"
+                            _process(new_subtest, alternative_method)
+                            new_subtests.append(new_subtest)
+                    except Exception as e:
+                        # Ignore failures here
+                        LOG.info(f"Failed to summarize with alternative methods: {e}")
+                        pass
+                suite["subtests"].extend(new_subtests)
+
             suite["subtests"].sort(key=lambda subtest: subtest["name"])
 
             # for benchmarks there is generally more than one subtest in each cycle

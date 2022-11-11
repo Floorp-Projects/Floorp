@@ -163,10 +163,14 @@ browsertime-tp6-essential:
                         - --conditioned-profile=settled
                         - --collect-perfstats
                         - --extra-profiler-run
+                        - --extra-summary-methods=mean
+                        - --extra-summary-methods=geomean
                     default:
                         - --chimera
                         - --conditioned-profile=settled
                         - --extra-profiler-run
+                        - --extra-summary-methods=mean
+                        - --extra-summary-methods=geomean
         raptor:
             apps: [firefox, chrome, chromium]
             test: tp6

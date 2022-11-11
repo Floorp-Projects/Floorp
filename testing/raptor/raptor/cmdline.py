@@ -492,6 +492,15 @@ def create_parser(mach_interface=False):
         help="If set, the test will collect perfstats in addition to "
         "the regular metrics it gathers.",
     )
+    add_arg(
+        "--extra-summary-methods",
+        dest="extra_summary_methods",
+        action="append",
+        default=[],
+        metavar="OPTION",
+        help="Alternative methods for summarizing technical and visual pageload metrics. "
+        "Options: geomean, mean.",
+    )
 
     add_logging_group(parser)
     return parser
