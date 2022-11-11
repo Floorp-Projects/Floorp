@@ -730,15 +730,15 @@ void nsRange::ParentChainChanged(nsIContent* aContent) {
 
 bool nsRange::IsPointComparableToRange(const nsINode& aContainer,
                                        uint32_t aOffset,
-                                       ErrorResult& aRv) const {
+                                       ErrorResult& aErrorResult) const {
   // our range is in a good state?
   if (!mIsPositioned) {
-    aRv.Throw(NS_ERROR_NOT_INITIALIZED);
+    aErrorResult.Throw(NS_ERROR_NOT_INITIALIZED);
     return false;
   }
 
   if (!aContainer.IsInclusiveDescendantOf(mRoot)) {
-    aRv.ThrowWrongDocumentError("Node is not in the same document as the range");
+    aErrorResult.Throw(NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
     return false;
   }
 
@@ -747,18 +747,17 @@ bool nsRange::IsPointComparableToRange(const nsINode& aContainer,
                "Start and end of a range must be either both native anonymous "
                "content or not.");
   if (aContainer.ChromeOnlyAccess() != chromeOnlyAccess) {
-    aRv.ThrowInvalidNodeTypeError(
-        "Trying to compare restricted with unrestricted nodes");
+    aErrorResult.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
     return false;
   }
 
   if (aContainer.NodeType() == nsINode::DOCUMENT_TYPE_NODE) {
-    aRv.ThrowInvalidNodeTypeError("Trying to compare with a document");
+    aErrorResult.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
     return false;
   }
 
   if (aOffset > aContainer.Length()) {
-    aRv.ThrowInvalidNodeTypeError("Offset is out of bounds");
+    aErrorResult.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return false;
   }
 
@@ -812,10 +811,6 @@ bool nsRange::IntersectsNode(nsINode& aNode, ErrorResult& aRv) {
 
   const Maybe<uint32_t> nodeIndex = parent->ComputeIndexOf(&aNode);
   if (nodeIndex.isNothing()) {
-    return false;
-  }
-
-  if (!IsPointComparableToRange(*parent, *nodeIndex, IgnoreErrors())) {
     return false;
   }
 
