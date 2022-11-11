@@ -20,7 +20,6 @@ import mozilla.components.concept.sync.AuthFlowError
 import mozilla.components.concept.sync.AuthFlowUrl
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.DeviceConfig
-import mozilla.components.concept.sync.InFlightMigrationState
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.ServiceResult
@@ -41,8 +40,6 @@ import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.asAuthFlowUrl
 import mozilla.components.service.fxa.asSyncAuthInfo
 import mozilla.components.service.fxa.intoSyncType
-import mozilla.components.service.fxa.sharing.AccountSharing
-import mozilla.components.service.fxa.sharing.ShareableAccount
 import mozilla.components.service.fxa.sync.SyncManager
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
@@ -54,7 +51,6 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import mozilla.components.support.base.utils.NamedThreadFactory
-import org.json.JSONObject
 import java.io.Closeable
 import java.lang.Exception
 import java.lang.IllegalArgumentException
@@ -81,31 +77,6 @@ const val AUTH_CHECK_CIRCUIT_BREAKER_COUNT = 10
 // due to long period of inactivity will trigger a few 401s, and that shouldn't be a cause for concern.
 
 const val MAX_NETWORK_RETRIES = 3
-
-/**
- * Describes a result of running [FxaAccountManager.migrateFromAccount].
- */
-enum class MigrationResult {
-    /**
-     * Sign-in failed due to an intermittent problem (such as a network failure). A retry attempt will
-     * be performed automatically during account manager initialization, or as a side-effect of certain
-     * user actions (e.g. triggering a sync).
-     *
-     * Applications may treat this account as "authenticated" after seeing this result.
-     */
-    WillRetry,
-
-    /**
-     * Sign-in succeeded with no issues.
-     * Applications may treat this account as "authenticated" after seeing this result.
-     */
-    Success,
-
-    /**
-     * Sign-in failed due to non-recoverable issues.
-     */
-    Failure,
-}
 
 /**
  * An account manager which encapsulates various internal details of an account lifecycle and provides
@@ -225,39 +196,6 @@ open class FxaAccountManager(
     }
 
     /**
-     * Queries trusted FxA Auth providers available on the device, returning a list of [ShareableAccount]
-     * in an order of preference. Any of the returned [ShareableAccount] may be used with
-     * [migrateFromAccount] to sign-in into an FxA account without any required user input.
-     */
-    fun shareableAccounts(context: Context): List<ShareableAccount> {
-        return AccountSharing.queryShareableAccounts(context)
-    }
-
-    /**
-     * Uses a provided [fromAccount] to sign-in into a corresponding FxA account without any required
-     * user input. Once sign-in completes, any registered [AccountObserver.onAuthenticated] listeners
-     * will be notified and [authenticatedAccount] will refer to the new account.
-     * This may fail in case of network errors, or if provided credentials are not valid.
-     * @param reuseSessionToken Whether or not to reuse existing session token (which is part of the [ShareableAccount].
-     * @return A deferred boolean flag indicating success (if true) of the sign-in operation.
-     */
-    suspend fun migrateFromAccount(
-        fromAccount: ShareableAccount,
-        reuseSessionToken: Boolean = false,
-    ): MigrationResult = withContext(coroutineContext) {
-        processQueue(Event.Account.MigrateFromAccount(fromAccount, reuseSessionToken))
-
-        when (val s = state) {
-            is State.Idle -> when (s.accountState) {
-                AccountState.Authenticated -> MigrationResult.Success
-                AccountState.IncompleteMigration -> MigrationResult.WillRetry
-                else -> MigrationResult.Failure
-            }
-            else -> MigrationResult.Failure
-        }
-    }
-
-    /**
      * @return A list of currently supported [SyncEngine]s. `null` if sync isn't configured.
      */
     fun supportedSyncEngines(): Set<SyncEngine>? {
@@ -300,12 +238,6 @@ open class FxaAccountManager(
             // Can't sync while we're still doing stuff.
             is State.Active -> Unit
             is State.Idle -> when (s.accountState) {
-                // If we're in an incomplete migration state, try to complete it.
-                // This is one of our trigger points for retrying - when a user asks us to sync.
-                // Another trigger point is the startup flow of the account manager itself.
-                AccountState.IncompleteMigration -> {
-                    processQueue(Event.Account.RetryMigration)
-                }
                 // All good, request a sync.
                 AccountState.Authenticated -> {
                     // Make sure auth cache is populated before we try to sync.
@@ -358,7 +290,6 @@ open class FxaAccountManager(
     fun authenticatedAccount(): OAuthAccount? = when (val s = state) {
         is State.Idle -> when (s.accountState) {
             AccountState.Authenticated,
-            AccountState.IncompleteMigration,
             AccountState.AuthenticationProblem,
             -> account
             else -> null
@@ -559,14 +490,7 @@ open class FxaAccountManager(
             Event.Progress.FailedToCompleteAuth -> {
                 notifyObservers { onFlowError(AuthFlowError.FailedToCompleteAuth) }
             }
-            is Event.Progress.FailedToCompleteMigration -> {
-                notifyObservers { onFlowError(AuthFlowError.FailedToMigrate) }
-            }
             else -> Unit
-        }
-        AccountState.IncompleteMigration -> {
-            via as Event.Progress.IncompleteMigration
-            Unit
         }
         AccountState.Authenticated -> when (via) {
             is Event.Progress.CompletedAuthentication -> {
@@ -602,11 +526,7 @@ open class FxaAccountManager(
             when (accountOnDisk) {
                 is AccountOnDisk.New -> Event.Progress.AccountNotFound
                 is AccountOnDisk.Restored -> {
-                    when (account.isInMigrationState()) {
-                        null -> Event.Progress.AccountRestored
-                        InFlightMigrationState.REUSE_SESSION_TOKEN -> Event.Progress.IncompleteMigration(true)
-                        InFlightMigrationState.COPY_SESSION_TOKEN -> Event.Progress.IncompleteMigration(false)
-                    }
+                    Event.Progress.AccountRestored
                 }
             }
         }
@@ -690,49 +610,6 @@ open class FxaAccountManager(
                     }
                 }
             }
-            is Event.Progress.Migrated -> {
-                val authType = when (via.reusedSessionToken) {
-                    true -> AuthType.MigratedReuse
-                    false -> AuthType.MigratedCopy
-                }
-                when (withRetries(logger, MAX_NETWORK_RETRIES) { finalizeDevice(authType) }) {
-                    is Result.Success -> {
-                        if (authenticationSideEffects("CompletingAuthentication:Migrated")) {
-                            Event.Progress.CompletedAuthentication(authType)
-                        } else {
-                            Event.Progress.FailedToCompleteAuth
-                        }
-                    }
-                    Result.Failure -> {
-                        resetAccount()
-                        Event.Progress.FailedToCompleteMigration
-                    }
-                }
-            }
-            else -> null
-        }
-        ProgressState.MigratingAccount -> when (via) {
-            Event.Account.RetryMigration -> {
-                val migrationState = account.isInMigrationState()
-                if (migrationState == null) {
-                    // Expected to see ourselves in a migration state, but we weren't.
-                    Event.Progress.FailedToCompleteMigration
-                } else {
-                    tryToMigrate(migrationState.reuseSessionToken) {
-                        account.retryMigrateFromSessionToken()
-                    }
-                }
-            }
-            is Event.Account.MigrateFromAccount -> {
-                tryToMigrate(via.reuseSessionToken) {
-                    account.migrateFromAccount(via.account.authInfo, via.reuseSessionToken)
-                }
-            }
-            is Event.Progress.IncompleteMigration -> {
-                tryToMigrate(via.reuseSessionToken) {
-                    account.retryMigrateFromSessionToken()
-                }
-            }
             else -> null
         }
         ProgressState.RecoveringFromAuthProblem -> {
@@ -810,24 +687,6 @@ open class FxaAccountManager(
             null
         }
         is State.Active -> internalStateSideEffects(forState, via)
-    }
-
-    private suspend fun tryToMigrate(
-        reuseSessionToken: Boolean,
-        migrationBlock: suspend () -> JSONObject?,
-    ): Event.Progress {
-        return if (migrationBlock() != null) {
-            Event.Progress.Migrated(reuseSessionToken)
-        } else {
-            // null json means 'migrationBlock' call above failed. We expect account to be still
-            // in a migrating state, and if it isn't declare this migration a failure.
-            if (account.isInMigrationState() == null) {
-                resetAccount()
-                Event.Progress.FailedToCompleteMigration
-            } else {
-                Event.Progress.IncompleteMigration(reuseSessionToken)
-            }
-        }
     }
 
     private suspend fun resetAccount() {

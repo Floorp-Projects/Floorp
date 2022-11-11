@@ -22,8 +22,6 @@ import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceConfig
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.DeviceType
-import mozilla.components.concept.sync.InFlightMigrationState
-import mozilla.components.concept.sync.MigratingAccountInfo
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.OAuthScopedKey
 import mozilla.components.concept.sync.Profile
@@ -31,9 +29,7 @@ import mozilla.components.concept.sync.ServiceResult
 import mozilla.components.concept.sync.StatePersistenceCallback
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.GlobalAccountManager
-import mozilla.components.service.fxa.manager.MigrationResult
 import mozilla.components.service.fxa.manager.SyncEnginesStorage
-import mozilla.components.service.fxa.sharing.ShareableAccount
 import mozilla.components.service.fxa.sync.SyncDispatcher
 import mozilla.components.service.fxa.sync.SyncManager
 import mozilla.components.service.fxa.sync.SyncReason
@@ -45,7 +41,6 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -188,300 +183,6 @@ class FxaAccountManagerTest {
         override fun onError(error: Exception?) {
             onErrorCount++
         }
-    }
-
-    @Test
-    fun `migrating an account via copyAccountAsync - creating a new session token`() = runTest {
-        // We'll test three scenarios:
-        // - hitting a network issue during migration
-        // - hitting an auth issue during migration (bad credentials)
-        // - all good, migrated successfully
-        val accountStorage: AccountStorage = mock()
-        val profile = Profile("testUid", "test@example.com", null, "Test Profile")
-        val constellation: DeviceConstellation = mockDeviceConstellation()
-        val account = StatePersistenceTestableAccount(profile, constellation)
-        val accountObserver: AccountObserver = mock()
-
-        val manager = TestableFxaAccountManager(
-            testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"),
-            accountStorage,
-            setOf(DeviceCapability.SEND_TAB),
-            null,
-            this.coroutineContext,
-        ) {
-            account
-        }
-        manager.register(accountObserver)
-
-        // We don't have an account at the start.
-        `when`(accountStorage.read()).thenReturn(null)
-        manager.start()
-
-        // Bad package name.
-        var migratableAccount = ShareableAccount(
-            email = "test@example.com",
-            sourcePackage = "org.mozilla.firefox",
-            authInfo = MigratingAccountInfo("session", "kSync", "kXCS"),
-        )
-
-        // TODO Need to mock inputs into - mock a PackageManager, and have it return PackageInfo with the right signature.
-//        AccountSharing.isTrustedPackage
-
-        // We failed to migrate for some reason.
-        account.migrationResult = MigrationResult.Failure
-        assertEquals(
-            MigrationResult.Failure,
-            manager.migrateFromAccount(migratableAccount),
-        )
-
-        assertEquals("session", account.latestMigrateAuthInfo!!.sessionToken)
-        assertEquals("kSync", account.latestMigrateAuthInfo!!.kSync)
-        assertEquals("kXCS", account.latestMigrateAuthInfo!!.kXCS)
-
-        assertNull(manager.authenticatedAccount())
-
-        // Prepare for a successful migration.
-        `when`(constellation.finalizeDevice(eq(AuthType.MigratedCopy), any())).thenReturn(ServiceResult.Ok)
-
-        // Success.
-        account.migrationResult = MigrationResult.Success
-        migratableAccount = migratableAccount.copy(
-            authInfo = MigratingAccountInfo("session2", "kSync2", "kXCS2"),
-        )
-
-        assertEquals(
-            MigrationResult.Success,
-            manager.migrateFromAccount(migratableAccount),
-        )
-
-        assertEquals("session2", account.latestMigrateAuthInfo!!.sessionToken)
-        assertEquals("kSync2", account.latestMigrateAuthInfo!!.kSync)
-        assertEquals("kXCS2", account.latestMigrateAuthInfo!!.kXCS)
-
-        assertNotNull(manager.authenticatedAccount())
-        assertEquals(profile, manager.accountProfile())
-
-        verify(constellation, times(1)).finalizeDevice(eq(AuthType.MigratedCopy), any())
-        verify(accountObserver, times(1)).onAuthenticated(account, AuthType.MigratedCopy)
-    }
-
-    @Test
-    fun `migrating an account via migrateAccountAsync - reusing existing session token`() = runTest {
-        // We'll test three scenarios:
-        // - hitting a network issue during migration
-        // - hitting an auth issue during migration (bad credentials)
-        // - all good, migrated successfully
-        val accountStorage: AccountStorage = mock()
-        val profile = Profile("testUid", "test@example.com", null, "Test Profile")
-        val constellation: DeviceConstellation = mockDeviceConstellation()
-        val account = StatePersistenceTestableAccount(profile, constellation)
-        val accountObserver: AccountObserver = mock()
-
-        val manager = TestableFxaAccountManager(
-            testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"),
-            accountStorage,
-            setOf(DeviceCapability.SEND_TAB),
-            null,
-            this.coroutineContext,
-        ) {
-            account
-        }
-        manager.register(accountObserver)
-
-        // We don't have an account at the start.
-        `when`(accountStorage.read()).thenReturn(null)
-        manager.start()
-
-        // Bad package name.
-        var migratableAccount = ShareableAccount(
-            email = "test@example.com",
-            sourcePackage = "org.mozilla.firefox",
-            authInfo = MigratingAccountInfo("session", "kSync", "kXCS"),
-        )
-
-        // TODO Need to mock inputs into - mock a PackageManager, and have it return PackageInfo with the right signature.
-//        AccountSharing.isTrustedPackage
-
-        // We failed to migrate for some reason.
-        account.migrationResult = MigrationResult.Failure
-        assertEquals(
-            MigrationResult.Failure,
-            manager.migrateFromAccount(migratableAccount, reuseSessionToken = true),
-        )
-
-        assertEquals("session", account.latestMigrateAuthInfo!!.sessionToken)
-        assertEquals("kSync", account.latestMigrateAuthInfo!!.kSync)
-        assertEquals("kXCS", account.latestMigrateAuthInfo!!.kXCS)
-
-        assertNull(manager.authenticatedAccount())
-
-        // Prepare for a successful migration.
-        `when`(constellation.finalizeDevice(eq(AuthType.MigratedReuse), any())).thenReturn(ServiceResult.Ok)
-
-        // Success.
-        account.migrationResult = MigrationResult.Success
-        migratableAccount = migratableAccount.copy(
-            authInfo = MigratingAccountInfo("session2", "kSync2", "kXCS2"),
-        )
-
-        assertEquals(
-            MigrationResult.Success,
-            manager.migrateFromAccount(migratableAccount, reuseSessionToken = true),
-        )
-
-        assertEquals("session2", account.latestMigrateAuthInfo!!.sessionToken)
-        assertEquals("kSync2", account.latestMigrateAuthInfo!!.kSync)
-        assertEquals("kXCS2", account.latestMigrateAuthInfo!!.kXCS)
-
-        assertNotNull(manager.authenticatedAccount())
-        assertEquals(profile, manager.accountProfile())
-
-        verify(constellation, times(1)).finalizeDevice(eq(AuthType.MigratedReuse), any())
-        verify(accountObserver, times(1)).onAuthenticated(account, AuthType.MigratedReuse)
-    }
-
-    @Test
-    fun `migrating an account via migrateAccountAsync - retry scenario`() = runTest {
-        val accountStorage: AccountStorage = mock()
-        val profile = Profile("testUid", "test@example.com", null, "Test Profile")
-        val constellation: DeviceConstellation = mockDeviceConstellation()
-        val account = StatePersistenceTestableAccount(profile, constellation)
-        val accountObserver: AccountObserver = mock()
-
-        val manager = TestableFxaAccountManager(
-            testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"),
-            accountStorage,
-            setOf(DeviceCapability.SEND_TAB),
-            null,
-            this.coroutineContext,
-        ) {
-            account
-        }
-        manager.register(accountObserver)
-
-        // We don't have an account at the start.
-        `when`(accountStorage.read()).thenReturn(null)
-        manager.start()
-
-        // Bad package name.
-        val migratableAccount = ShareableAccount(
-            email = "test@example.com",
-            sourcePackage = "org.mozilla.firefox",
-            authInfo = MigratingAccountInfo("session", "kSync", "kXCS"),
-        )
-
-        // TODO Need to mock inputs into - mock a PackageManager, and have it return PackageInfo with the right signature.
-//        AccountSharing.isTrustedPackage
-
-        // We failed to migrate for some reason. 'WillRetry' in this case assumes reuse flow.
-        account.migrationResult = MigrationResult.WillRetry
-        assertEquals(
-            MigrationResult.WillRetry,
-            manager.migrateFromAccount(migratableAccount, reuseSessionToken = true),
-        )
-
-        assertEquals("session", account.latestMigrateAuthInfo!!.sessionToken)
-        assertEquals("kSync", account.latestMigrateAuthInfo!!.kSync)
-        assertEquals("kXCS", account.latestMigrateAuthInfo!!.kXCS)
-
-        assertNotNull(manager.authenticatedAccount())
-        assertNull(manager.accountProfile())
-
-        // Prepare for a successful migration.
-        `when`(constellation.finalizeDevice(eq(AuthType.MigratedReuse), any())).thenReturn(ServiceResult.Ok)
-        account.migrationResult = MigrationResult.Success
-        account.migrationRetrySuccess = true
-
-        // 'sync now' user action will trigger a sign-in retry.
-        manager.syncNow(SyncReason.User)
-
-        assertNotNull(manager.authenticatedAccount())
-        assertEquals(profile, manager.accountProfile())
-
-        verify(constellation, times(1)).finalizeDevice(eq(AuthType.MigratedReuse), any())
-        verify(accountObserver, times(1)).onAuthenticated(account, AuthType.MigratedReuse)
-    }
-
-    @Test
-    fun `restored account has an in-flight migration, retries and fails`() = runTest {
-        val accountStorage: AccountStorage = mock()
-        val profile = Profile("testUid", "test@example.com", null, "Test Profile")
-        val constellation: DeviceConstellation = mockDeviceConstellation()
-        val account = StatePersistenceTestableAccount(profile, constellation)
-
-        val manager = TestableFxaAccountManager(
-            testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"),
-            accountStorage,
-            setOf(DeviceCapability.SEND_TAB),
-            null,
-            this.coroutineContext,
-        ) {
-            account
-        }
-
-        `when`(constellation.finalizeDevice(eq(AuthType.MigratedReuse), any())).thenReturn(ServiceResult.Ok)
-        // We have an account at the start.
-        `when`(accountStorage.read()).thenReturn(account)
-
-        account.migrationResult = MigrationResult.WillRetry
-        account.migrationRetrySuccess = false
-
-        assertNull(account.persistenceCallback)
-        manager.start()
-        // Make sure a persistence callback was registered while pumping the state machine.
-        assertNotNull(account.persistenceCallback)
-
-        // Assert that neither ensureCapabilities nor initialization fired.
-        verify(constellation, never()).finalizeDevice(any(), any())
-
-        // Assert that we do not refresh device state.
-        verify(constellation, never()).refreshDevices()
-
-        // Finally, assert that we see an account with an inflight migration.
-        assertNotNull(manager.authenticatedAccount())
-        assertNull(manager.accountProfile())
-    }
-
-    @Test
-    fun `restored account has an in-flight migration, retries and succeeds`() = runTest {
-        val accountStorage: AccountStorage = mock()
-        val profile = Profile("testUid", "test@example.com", null, "Test Profile")
-        val constellation: DeviceConstellation = mockDeviceConstellation()
-        val account = StatePersistenceTestableAccount(profile, constellation)
-
-        val manager = TestableFxaAccountManager(
-            testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"),
-            accountStorage,
-            setOf(DeviceCapability.SEND_TAB),
-            null,
-            this.coroutineContext,
-        ) {
-            account
-        }
-
-        `when`(constellation.finalizeDevice(eq(AuthType.MigratedReuse), any())).thenReturn(ServiceResult.Ok)
-        // We have an account at the start.
-        `when`(accountStorage.read()).thenReturn(account)
-
-        account.migrationResult = MigrationResult.WillRetry
-        account.migrationRetrySuccess = true
-
-        assertNull(account.persistenceCallback)
-        manager.start()
-        // Make sure a persistence callback was registered while pumping the state machine.
-        assertNotNull(account.persistenceCallback)
-
-        verify(constellation).finalizeDevice(eq(AuthType.MigratedReuse), any())
-
-        // Finally, assert that we see an account in good standing.
-        assertNotNull(manager.authenticatedAccount())
-        assertFalse(manager.accountNeedsReauth())
-        assertEquals(profile, manager.accountProfile())
     }
 
     @Test
@@ -728,15 +429,12 @@ class FxaAccountManagerTest {
         private val constellation: DeviceConstellation,
         val ableToRecoverFromAuthError: Boolean = false,
         val tokenServerEndpointUrl: String? = null,
-        var migrationResult: MigrationResult = MigrationResult.Failure,
-        var migrationRetrySuccess: Boolean = false,
         val accessToken: (() -> AccessTokenInfo)? = null,
     ) : OAuthAccount {
 
         var persistenceCallback: StatePersistenceCallback? = null
         var checkAuthorizationStatusCalled = false
         var authErrorDetectedCalled = false
-        var latestMigrateAuthInfo: MigratingAccountInfo? = null
 
         override suspend fun beginOAuthFlow(scopes: Set<String>, entryPoint: String): AuthFlowUrl? {
             return AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")
@@ -760,29 +458,6 @@ class FxaAccountManagerTest {
 
         override suspend fun completeOAuthFlow(code: String, state: String): Boolean {
             return true
-        }
-
-        override suspend fun migrateFromAccount(authInfo: MigratingAccountInfo, reuseSessionToken: Boolean): JSONObject? {
-            latestMigrateAuthInfo = authInfo
-            return when (migrationResult) {
-                MigrationResult.Failure, MigrationResult.WillRetry -> null
-                MigrationResult.Success -> JSONObject()
-            }
-        }
-
-        override fun isInMigrationState(): InFlightMigrationState? {
-            return when (migrationResult) {
-                MigrationResult.Success -> InFlightMigrationState.REUSE_SESSION_TOKEN
-                MigrationResult.WillRetry -> InFlightMigrationState.REUSE_SESSION_TOKEN
-                else -> null
-            }
-        }
-
-        override suspend fun retryMigrateFromSessionToken(): JSONObject? {
-            return when (migrationRetrySuccess) {
-                true -> JSONObject()
-                false -> null
-            }
         }
 
         override suspend fun getAccessToken(singleScope: String): AccessTokenInfo? {
@@ -915,7 +590,6 @@ class FxaAccountManagerTest {
             "Test Profile",
         )
         `when`(mockAccount.getProfile(ignoreCache = false)).thenReturn(profile)
-        `when`(mockAccount.isInMigrationState()).thenReturn(null)
         // We have an account at the start.
         `when`(accountStorage.read()).thenReturn(mockAccount)
         `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")

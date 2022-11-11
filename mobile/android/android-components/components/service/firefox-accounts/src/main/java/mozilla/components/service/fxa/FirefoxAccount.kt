@@ -13,7 +13,6 @@ import kotlinx.coroutines.withContext
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.sync.AuthFlowUrl
 import mozilla.components.concept.sync.DeviceConstellation
-import mozilla.components.concept.sync.MigratingAccountInfo
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.StatePersistenceCallback
 import mozilla.components.support.base.log.logger.Logger
@@ -144,29 +143,6 @@ class FirefoxAccount internal constructor(
             throw e
         } catch (e: FxaException) {
             null
-        }
-    }
-
-    override suspend fun migrateFromAccount(
-        authInfo: MigratingAccountInfo,
-        reuseSessionToken: Boolean,
-    ) = withContext(scope.coroutineContext) {
-        if (reuseSessionToken) {
-            handleFxaExceptions(logger, "migrateFromSessionToken", { null }) {
-                inner.migrateFromSessionToken(authInfo.sessionToken, authInfo.kSync, authInfo.kXCS)
-            }
-        } else {
-            handleFxaExceptions(logger, "copyFromSessionToken", { null }) {
-                inner.copyFromSessionToken(authInfo.sessionToken, authInfo.kSync, authInfo.kXCS)
-            }
-        }
-    }
-
-    override fun isInMigrationState() = inner.isInMigrationState().into()
-
-    override suspend fun retryMigrateFromSessionToken() = withContext(scope.coroutineContext) {
-        handleFxaExceptions(logger, "retryMigrateFromSessionToken", { null }) {
-            inner.retryMigrateFromSessionToken()
         }
     }
 

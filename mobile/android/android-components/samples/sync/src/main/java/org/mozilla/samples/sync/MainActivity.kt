@@ -398,7 +398,6 @@ class MainActivity :
                     when (error) {
                         AuthFlowError.FailedToBeginAuth -> "Failed to begin authentication"
                         AuthFlowError.FailedToCompleteAuth -> "Failed to complete authentication"
-                        AuthFlowError.FailedToMigrate -> "Failed to migrate"
                     },
                 )
             }

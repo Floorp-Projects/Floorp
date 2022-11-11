@@ -9,7 +9,6 @@ import mozilla.appservices.fxaclient.AccessTokenInfo
 import mozilla.appservices.fxaclient.AccountEvent
 import mozilla.appservices.fxaclient.Device
 import mozilla.appservices.fxaclient.IncomingDeviceCommand
-import mozilla.appservices.fxaclient.MigrationState
 import mozilla.appservices.fxaclient.Profile
 import mozilla.appservices.fxaclient.ScopedKey
 import mozilla.appservices.fxaclient.TabHistoryEntry
@@ -17,7 +16,6 @@ import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.Avatar
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceType
-import mozilla.components.concept.sync.InFlightMigrationState
 import mozilla.components.concept.sync.OAuthScopedKey
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.appservices.fxaclient.DeviceCapability as RustDeviceCapability
@@ -264,15 +262,4 @@ fun IncomingDeviceCommand.TabReceived.into(): mozilla.components.concept.sync.De
         from = this.sender?.into(),
         entries = this.payload.entries.map { it.into() },
     )
-}
-
-/**
- * Conversion function from fxaclient's data structure to ours.
- */
-fun MigrationState.into(): InFlightMigrationState? {
-    return when (this) {
-        MigrationState.NONE -> null
-        MigrationState.COPY_SESSION_TOKEN -> InFlightMigrationState.COPY_SESSION_TOKEN
-        MigrationState.REUSE_SESSION_TOKEN -> InFlightMigrationState.REUSE_SESSION_TOKEN
-    }
 }

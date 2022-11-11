@@ -16,12 +16,6 @@ class StateKtTest {
                     Event.Account.Start -> State.Active(ProgressState.Initializing)
                     Event.Account.BeginEmailFlow -> State.Active(ProgressState.BeginningAuthentication)
                     is Event.Account.BeginPairingFlow -> State.Active(ProgressState.BeginningAuthentication)
-                    is Event.Account.MigrateFromAccount -> State.Active(ProgressState.MigratingAccount)
-                    else -> null
-                }
-                AccountState.IncompleteMigration -> when (event) {
-                    Event.Account.RetryMigration -> State.Active(ProgressState.MigratingAccount)
-                    Event.Account.Logout -> State.Active(ProgressState.LoggingOut)
                     else -> null
                 }
                 AccountState.Authenticated -> when (event) {
@@ -40,7 +34,6 @@ class StateKtTest {
                 ProgressState.Initializing -> when (event) {
                     Event.Progress.AccountNotFound -> State.Idle(AccountState.NotAuthenticated)
                     Event.Progress.AccountRestored -> State.Active(ProgressState.CompletingAuthentication)
-                    is Event.Progress.IncompleteMigration -> State.Active(ProgressState.MigratingAccount)
                     else -> null
                 }
                 ProgressState.BeginningAuthentication -> when (event) {
@@ -53,12 +46,6 @@ class StateKtTest {
                     Event.Progress.FailedToCompleteAuth -> State.Idle(AccountState.NotAuthenticated)
                     Event.Progress.FailedToCompleteAuthRestore -> State.Idle(AccountState.NotAuthenticated)
                     is Event.Progress.CompletedAuthentication -> State.Idle(AccountState.Authenticated)
-                    else -> null
-                }
-                ProgressState.MigratingAccount -> when (event) {
-                    Event.Progress.FailedToCompleteMigration -> State.Idle(AccountState.NotAuthenticated)
-                    is Event.Progress.Migrated -> State.Active(ProgressState.CompletingAuthentication)
-                    is Event.Progress.IncompleteMigration -> State.Idle(AccountState.IncompleteMigration)
                     else -> null
                 }
                 ProgressState.RecoveringFromAuthProblem -> when (event) {
@@ -84,21 +71,16 @@ class StateKtTest {
             "CancelAuth" -> Event.Progress.CancelAuth
             "AuthenticationError" -> Event.Account.AuthenticationError("fxa op")
             "AccessTokenKeyError" -> Event.Account.AccessTokenKeyError
-            "MigrateFromAccount" -> Event.Account.MigrateFromAccount(mock(), true)
-            "RetryMigration" -> Event.Account.RetryMigration
             "Logout" -> Event.Account.Logout
             "AccountNotFound" -> Event.Progress.AccountNotFound
             "AccountRestored" -> Event.Progress.AccountRestored
             "AuthData" -> Event.Progress.AuthData(mock())
-            "IncompleteMigration" -> Event.Progress.IncompleteMigration(true)
-            "Migrated" -> Event.Progress.Migrated(true)
             "LoggedOut" -> Event.Progress.LoggedOut
             "FailedToRecoverFromAuthenticationProblem" -> Event.Progress.FailedToRecoverFromAuthenticationProblem
             "RecoveredFromAuthenticationProblem" -> Event.Progress.RecoveredFromAuthenticationProblem
             "CompletedAuthentication" -> Event.Progress.CompletedAuthentication(mock())
             "FailedToBeginAuth" -> Event.Progress.FailedToBeginAuth
             "FailedToCompleteAuth" -> Event.Progress.FailedToCompleteAuth
-            "FailedToCompleteMigration" -> Event.Progress.FailedToCompleteMigration
             "FailedToCompleteAuthRestore" -> Event.Progress.FailedToCompleteAuthRestore
             else -> {
                 throw AssertionError("Unknown event: $eventClassSimpleName")

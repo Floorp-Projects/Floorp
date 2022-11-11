@@ -5,7 +5,6 @@
 package mozilla.components.concept.sync
 
 import kotlinx.coroutines.Deferred
-import org.json.JSONObject
 
 /**
  * An object that represents a login flow initiated by [OAuthAccount].
@@ -159,36 +158,6 @@ interface OAuthAccount : AutoCloseable {
     fun registerPersistenceCallback(callback: StatePersistenceCallback)
 
     /**
-     * Attempts to migrate from an existing session token without user input.
-     * Passed-in session token will be reused.
-     *
-     * @param authInfo Auth info necessary for signing in
-     * @param reuseSessionToken Whether or not session token should be reused; reusing session token
-     * means that FxA device record will be inherited
-     * @return JSON object with the result of the migration or 'null' if it failed.
-     * For up-to-date schema, see underlying implementation in
-     * https://github.com/mozilla/application-services/blob/v0.49.0/components/fxa-client/src/migrator.rs#L10
-     * At the moment, it's just "{total_duration: long}".
-     */
-    suspend fun migrateFromAccount(authInfo: MigratingAccountInfo, reuseSessionToken: Boolean): JSONObject?
-
-    /**
-     * Checks if there's a migration in-flight. An in-flight migration means that we've tried to migrate
-     * via [migrateFromAccount], and failed for intermittent (e.g. network) reasons. When an in-flight
-     * migration is present, we can retry using [retryMigrateFromSessionToken].
-     * @return InFlightMigrationState indicating specific migration state. [null] if not in a migration state.
-     */
-    fun isInMigrationState(): InFlightMigrationState?
-
-    /**
-     * Retries an in-flight migration attempt.
-     * @return JSON object with the result of the retry attempt or 'null' if it failed.
-     * For up-to-date schema, see underlying implementation in https://github.com/mozilla/application-services/blob/v0.49.0/components/fxa-client/src/migrator.rs#L10
-     * At the moment, it's just "{total_duration: long}".
-     */
-    suspend fun retryMigrateFromSessionToken(): JSONObject?
-
-    /**
      * Returns the device constellation for the current account
      *
      * @return Device constellation for the current account
@@ -269,7 +238,7 @@ sealed class AuthType {
 }
 
 /**
- * Different types of errors that may be encountered during authorization and migration flows.
+ * Different types of errors that may be encountered during authorization.
  * Intermittent network problems are the most common reason for these errors.
  */
 enum class AuthFlowError {
@@ -282,11 +251,6 @@ enum class AuthFlowError {
      * Couldn't complete authorization after user entered valid credentials/paired correctly.
      */
     FailedToCompleteAuth,
-
-    /**
-     * Unrecoverable error during account migration.
-     */
-    FailedToMigrate,
 }
 
 /**
