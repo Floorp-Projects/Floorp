@@ -463,7 +463,12 @@ SyncScheduler.prototype = {
         this._log.trace(
           "Engine " + data + " successfully applied " + numItems + " items."
         );
-        if (numItems) {
+        // Bug 1800186 - the tabs engine always reports incoming items, so we don't
+        // want special scheduling in this scenario.
+        // (However, even when we fix the underlying cause of that, we probably still can
+        // ignore tabs here - new incoming tabs don't need to trigger the extra syncs we do
+        // based on this flag.)
+        if (data != "tabs" && numItems) {
           this.hasIncomingItems = true;
         }
         if (subject.newFailed) {
