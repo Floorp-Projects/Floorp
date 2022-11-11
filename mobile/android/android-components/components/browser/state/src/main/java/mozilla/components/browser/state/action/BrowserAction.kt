@@ -1335,6 +1335,11 @@ sealed class HistoryMetadataAction : BrowserAction() {
  */
 sealed class SearchAction : BrowserAction() {
     /**
+     * Refreshes the list of search engines.
+     */
+    object RefreshSearchEnginesAction : SearchAction()
+
+    /**
      * Sets the [RegionState] (region of the user).
      */
     data class SetRegionAction(val regionState: RegionState) : SearchAction()

@@ -14,6 +14,7 @@ internal object SearchReducer {
      */
     fun reduce(state: BrowserState, action: SearchAction): BrowserState {
         return when (action) {
+            is SearchAction.RefreshSearchEnginesAction -> state // This is handled in [RegionMiddleware].
             is SearchAction.SetSearchEnginesAction -> state.setSearchEngines(action)
             is SearchAction.SetRegionAction -> state.setRegion(action)
             is SearchAction.UpdateCustomSearchEngineAction -> state.updateCustomSearchEngine(action)

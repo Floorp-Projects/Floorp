@@ -5,6 +5,7 @@
 package mozilla.components.feature.search.region
 
 import mozilla.components.browser.state.action.InitAction
+import mozilla.components.browser.state.action.SearchAction.RefreshSearchEnginesAction
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.service.location.LocationService
@@ -118,6 +119,35 @@ class RegionMiddlewareTest {
         store.waitUntilIdle()
 
         assertEquals("DE", store.state.search.region!!.home)
+        assertEquals("DE", store.state.search.region!!.current)
+    }
+
+    @Test
+    fun `GIVEN a locale is already selected WHEN the locale changes THEN update region on RefreshSearchEngines`() = runTestOnMain {
+        val middleware = RegionMiddleware(FakeContext(), locationService, dispatcher)
+        middleware.regionManager = regionManager
+
+        locationService.region = LocationService.Region("FR", "France")
+
+        val store = BrowserStore(
+            middleware = listOf(middleware),
+        )
+
+        store.dispatch(InitAction).joinBlocking()
+        middleware.updateJob?.joinBlocking()
+        store.waitUntilIdle()
+
+        assertEquals("FR", store.state.search.region!!.home)
+        assertEquals("FR", store.state.search.region!!.current)
+
+        locationService.region = LocationService.Region("DE", "Germany")
+        regionManager.update()
+
+        store.dispatch(RefreshSearchEnginesAction).joinBlocking()
+        middleware.updateJob?.joinBlocking()
+        store.waitUntilIdle()
+
+        assertEquals("FR", store.state.search.region!!.home)
         assertEquals("DE", store.state.search.region!!.current)
     }
 }

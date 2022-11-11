@@ -42,7 +42,7 @@ class RegionMiddleware(
         next: (BrowserAction) -> Unit,
         action: BrowserAction,
     ) {
-        if (action is InitAction) {
+        if (action is InitAction || action is SearchAction.RefreshSearchEnginesAction) {
             updateJob = determineRegion(context.store)
         }
 

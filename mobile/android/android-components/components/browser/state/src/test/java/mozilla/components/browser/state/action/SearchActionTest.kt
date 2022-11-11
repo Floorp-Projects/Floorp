@@ -323,4 +323,16 @@ class SearchActionTest {
 
         assertEquals("banana", store.state.search.customSearchEngines[0].id)
     }
+
+    @Test
+    fun `GIVEN the search state of the browser WHEN refreshing the list of search engines THEN do not modify the state`() {
+        val state = BrowserState(
+            search = mock(),
+        )
+        val store = BrowserStore(state)
+
+        store.dispatch(SearchAction.RefreshSearchEnginesAction).joinBlocking()
+
+        assertEquals(state.search, store.state.search)
+    }
 }
