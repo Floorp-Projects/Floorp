@@ -3770,13 +3770,14 @@ CipherKey IndexedDBCipherKeyManager::Ensure(const nsCString& aDatabaseID,
 
   auto& dbKeyStore =
       lockedPrivateBrowsingInfoHashTable->LookupOrInsert(aDatabaseID);
+
   return dbKeyStore.LookupOrInsertWith(keyStoreID, [] {
-    // XXX Generate key using proper random data, such that we can ensure
-    // the use of unique IVs per key by discriminating by database's file
-    // id & offset.
+    // Generate a new key if one corresponding to keyStoreID
+    // does not exists already.
     auto keyOrErr = IndexedDBCipherStrategy::GenerateKey();
 
-    // XXX Propagate the error to the caller rather than asserting.
+    // Bug1800110 Propagate the error to the caller rather than asserting.
+    MOZ_RELEASE_ASSERT(keyOrErr.isOk());
     return keyOrErr.unwrap();
   });
 }

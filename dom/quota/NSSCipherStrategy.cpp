@@ -110,8 +110,7 @@ nsresult NSSCipherStrategy::Cipher(const Span<uint8_t> aIv,
   // aIn and aOut may not overlap resp. be the same, so we can't do this
   // in-place.
   const SECStatus rv = PK11_AEADOp(
-      mPK11Context->get(), CKG_GENERATE_COUNTER,
-      /* TODO use this for the discriminator */ 0, iv.Elements(), iv.Length(),
+      mPK11Context->get(), CKG_GENERATE_COUNTER, 0, iv.Elements(), iv.Length(),
       nullptr, 0, aOut.Elements(), &outLen, aOut.Length(), tag.Elements(),
       tag.Length(), aIn.Elements(), aIn.Length());
 
