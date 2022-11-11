@@ -434,17 +434,14 @@ that do not depend on XUL, or even ones testing other layout engines.
 Running Tests
 -------------
 
-(If you're not using a DEBUG build, first set browser.dom.window.dump.enabled,
-devtools.console.stdout.chrome and devtools.console.stdout.content to true (in
-about:config, in the profile you'll be using to run the tests).
-Create the option as a new boolean if it doesn't exist already. If you skip
-this step you won't get any output in the terminal.)
+To run a given reftest use something like the following ::
 
-At some point in the future there will hopefully be a cleaner way to do
-this.  For now, go to your object directory, and run (perhaps using
-``MOZ_NO_REMOTE=1`` or the ``-profile <directory>`` option) ::
+./mach reftest <path to individual test or directory>
 
-./firefox -reftest /path/to/srcdir/mozilla/layout/reftests/reftest.list > reftest.out
+As an example, if we wanted to run the reftests relevant to async scrolling,
+run something like the following::
+
+./mach reftest ./layout/reftest/async-scrolling &> reftest.out
 
 and then search/grep reftest.out for "UNEXPECTED".
 
@@ -452,7 +449,8 @@ There are two scripts provided to convert the reftest.out to HTML.
 clean-reftest-output.pl converts reftest.out into simple HTML, stripping
 lines from the log that aren't relevant.  reftest-to-html.pl converts
 the output into html that makes it easier to visually check for
-failures.
+failures. See :ref:`debugging failures <debugging-failures>` for
+more details on making sense of reftest results.
 
 Testable Areas
 --------------
