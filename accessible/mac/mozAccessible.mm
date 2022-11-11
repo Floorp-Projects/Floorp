@@ -571,8 +571,10 @@ struct RoleDescrComparator {
 
   nsAutoString title;
   mGeckoAccessible->Name(title);
+  if (nsCoreUtils::IsWhitespaceString(title)) {
+    return @"";
+  }
 
-  title.CompressWhitespace();
   return nsCocoaUtils::ToNSString(title);
 
   NS_OBJC_END_TRY_BLOCK_RETURN(nil);
