@@ -114,28 +114,33 @@ function registerActors() {
 
 registerActors();
 
+/**
+ * BrowserTestUtils provides useful test utilities for working with the browser
+ * in browser mochitests. Most common operations (opening, closing and switching
+ * between tabs and windows, loading URLs, waiting for events in the parent or
+ * content process, clicking things in the content process, registering about
+ * pages, etc.) have dedicated helpers on this object.
+ *
+ * @class
+ */
 var BrowserTestUtils = {
   /**
    * Loads a page in a new tab, executes a Task and closes the tab.
    *
-   * @param options
-   *        An object  or string.
+   * @param {Object|String} options
    *        If this is a string it is the url to open and will be opened in the
    *        currently active browser window.
-   *        If an object it should have the following properties:
-   *        {
-   *          gBrowser:
-   *            Reference to the "tabbrowser" element where the new tab should
-   *            be opened.
-   *          url:
-   *            String with the URL of the page to load.
-   *        }
-   * @param taskFn
-   *        Generator function representing a Task that will be executed while
+   * @param {tabbrowser} [options.gBrowser
+   *        A reference to the ``tabbrowser`` element where the new tab should
+   *        be opened,
+   * @param {string} options.url
+   *        The URL of the page to load.
+   * @param {Function} taskFn
+   *        Async function representing that will be executed while
    *        the tab is loaded. The first argument passed to the function is a
    *        reference to the browser object for the new tab.
    *
-   * @return {} Returns the value that is returned from taskFn.
+   * @return {Any} Returns the value that is returned from taskFn.
    * @resolves When the tab has been closed.
    * @rejects Any exception from taskFn is propagated.
    */
@@ -403,10 +408,10 @@ var BrowserTestUtils = {
    * This can be used in conjunction with any synchronous method for starting a
    * load, like the "addTab" method on "tabbrowser", and must be called before
    * yielding control to the event loop. Note that calling this after multiple
-   * successive load operations can be racy, so a |wantLoad| should be specified
+   * successive load operations can be racy, so ``wantLoad`` should be specified
    * in these cases.
    *
-   * This function works by listening for custom load events on |browser|. These
+   * This function works by listening for custom load events on ``browser``. These
    * are sent by a BrowserTestUtils window actor in response to "load" and
    * "DOMContentLoaded" content events.
    *
@@ -549,7 +554,7 @@ var BrowserTestUtils = {
    * @param {Boolean} aboutBlank [optional]
    *        If false, about:blank loads are ignored and we continue
    *        to wait.
-   * @param {function or null} checkFn [optional]
+   * @param {function|null} checkFn [optional]
    *        If checkFn(browser) returns false, the load is ignored
    *        and we continue to wait.
    *
@@ -835,16 +840,17 @@ var BrowserTestUtils = {
   /**
    * Waits for the next browser window to open and be fully loaded.
    *
-   * @param aParams
-   *        {
-   *          url: A string (optional). If set, we will wait until the initial
-   *               browser in the new window has loaded a particular page.
-   *               If unset, the initial browser may or may not have finished
-   *               loading its first page when the resulting Promise resolves.
-   *          anyWindow: True to wait for the url to be loaded in any new
-   *                     window, not just the next one opened.
-   *          maybeErrorPage: See browserLoaded function.
-   *        }
+   * @param {Object} aParams
+   * @param {string} [aParams.url]
+   *        If set, we will wait until the initial browser in the new window
+   *        has loaded a particular page.
+   *        If unset, the initial browser may or may not have finished
+   *        loading its first page when the resulting Promise resolves.
+   * @param {bool} [aParams.anyWindow]
+   *        True to wait for the url to be loaded in any new
+   *        window, not just the next one opened.
+   * @param {bool} [aParams.maybeErrorPage]
+   *        See ``browserLoaded`` function.
    * @return {Promise}
    *         A Promise which resolves the next time that a DOM window
    *         opens and the delayed startup observer notification fires.
@@ -1051,9 +1057,9 @@ var BrowserTestUtils = {
    * This relies on OpenBrowserWindow in browser.js, and waits for the window
    * to be completely loaded before resolving.
    *
-   * @param {Object}
+   * @param {Object} options
    *        Options to pass to OpenBrowserWindow. Additionally, supports:
-   *        - waitForTabURL
+   * @param {bool} options.waitForTabURL
    *          Forces the initial browserLoaded check to wait for the tab to
    *          load the given URL (instead of about:blank)
    *
@@ -1108,7 +1114,7 @@ var BrowserTestUtils = {
   /**
    * Closes a window.
    *
-   * @param {Window}
+   * @param {Window} win
    *        A window to close.
    *
    * @return {Promise}
@@ -1125,7 +1131,7 @@ var BrowserTestUtils = {
   /**
    * Returns a Promise that resolves when a window has finished closing.
    *
-   * @param {Window}
+   * @param {Window} win
    *        The closing window.
    *
    * @return {Promise}
@@ -1174,9 +1180,9 @@ var BrowserTestUtils = {
    * Returns a Promise that resolves once the SessionStore information for the
    * given tab is updated and all listeners are called.
    *
-   * @param (tab) tab
+   * @param {xul:tab} tab
    *        The tab that will be removed.
-   * @returns (Promise)
+   * @returns {Promise}
    * @resolves When the SessionStore information is updated.
    */
   waitForSessionStoreUpdate(tab) {
@@ -1198,26 +1204,29 @@ var BrowserTestUtils = {
   /**
    * Waits for an event to be fired on a specified element.
    *
-   * Usage:
+   * @example
+   *
    *    let promiseEvent = BrowserTestUtils.waitForEvent(element, "eventName");
    *    // Do some processing here that will cause the event to be fired
    *    // ...
    *    // Now wait until the Promise is fulfilled
    *    let receivedEvent = await promiseEvent;
    *
-   * The promise resolution/rejection handler for the returned promise is
-   * guaranteed not to be called until the next event tick after the event
-   * listener gets called, so that all other event listeners for the element
-   * are executed before the handler is executed.
+   * @example
+   *    // The promise resolution/rejection handler for the returned promise is
+   *    // guaranteed not to be called until the next event tick after the event
+   *    // listener gets called, so that all other event listeners for the element
+   *    // are executed before the handler is executed.
    *
    *    let promiseEvent = BrowserTestUtils.waitForEvent(element, "eventName");
    *    // Same event tick here.
    *    await promiseEvent;
    *    // Next event tick here.
    *
-   * If some code, such like adding yet another event listener, needs to be
-   * executed in the same event tick, use raw addEventListener instead and
-   * place the code inside the event listener.
+   * @example
+   *    // If some code, such like adding yet another event listener, needs to be
+   *    // executed in the same event tick, use raw addEventListener instead and
+   *    // place the code inside the event listener.
    *
    *    element.addEventListener("load", () => {
    *      // Add yet another event listener in the same event tick as the load
@@ -1229,14 +1238,14 @@ var BrowserTestUtils = {
    *        The element that should receive the event.
    * @param {string} eventName
    *        Name of the event to listen to.
-   * @param {bool} capture [optional]
+   * @param {bool} [capture]
    *        True to use a capturing listener.
-   * @param {function} checkFn [optional]
+   * @param {function} [checkFn]
    *        Called with the Event object as argument, should return true if the
    *        event is the expected one, or false if it should be ignored and
    *        listening should continue. If not specified, the first event with
    *        the specified name resolves the returned promise.
-   * @param {bool} wantsUntrusted [optional]
+   * @param {bool} [wantsUntrusted=false]
    *        True to receive synthetic events dispatched by web content.
    *
    * @note Because this function is intended for testing, any error in checkFn
@@ -1376,7 +1385,7 @@ var BrowserTestUtils = {
    * Waits for the select popup to be shown. This is needed because the select
    * dropdown is created lazily.
    *
-   * @param {Window}
+   * @param {Window} win
    *        A window to expect the popup in.
    *
    * @return {Promise}
@@ -1474,6 +1483,8 @@ var BrowserTestUtils = {
    * This is an internal method to be invoked by
    * BrowserTestUtilsParent.jsm when a content event we were listening for
    * happens.
+   *
+   * @private
    */
   _receivedContentEventListener(listenerId, browserId) {
     let listenerData = this._contentEventListeners.get(listenerId);
@@ -1489,6 +1500,8 @@ var BrowserTestUtils = {
   /**
    * This is an internal method that cleans up any state from content event
    * listeners.
+   *
+   * @private
    */
   _cleanupContentEventListeners() {
     this._contentEventListeners.clear();
@@ -1832,13 +1845,13 @@ var BrowserTestUtils = {
 
   /**
    * Create enough tabs to cause a tab overflow in the given window.
-   * @param registerCleanupFunction {Function}
+   * @param {Function} registerCleanupFunction
    *    The test framework doesn't keep its cleanup stuff anywhere accessible,
    *    so the first argument is a reference to your cleanup registration
    *    function, allowing us to clean up after you if necessary.
-   * @param win {Window}
+   * @param {Window} win
    *    The window where the tabs need to be overflowed.
-   * @param overflowAtStart {boolean}
+   * @param {boolean} overflowAtStart
    *    Determines whether the new tabs are added at the beginning of the
    *    URL bar or at the end of it.
    */
@@ -2250,16 +2263,17 @@ var BrowserTestUtils = {
    * Waits for a <xul:notification> with a particular value to appear
    * for the <xul:notificationbox> of the passed in browser.
    *
-   * @param tabbrowser (<xul:tabbrowser>)
+   * @param {xul:tabbrowser} tabbrowser
    *        The gBrowser that hosts the browser that should show
    *        the notification. For most tests, this will probably be
    *        gBrowser.
-   * @param browser (<xul:browser>)
+   * @param {xul:browser} browser
    *        The browser that should be showing the notification.
-   * @param notificationValue (string)
+   * @param {String} notificationValue
    *        The "value" of the notification, which is often used as
    *        a unique identifier. Example: "plugin-crashed".
-   * @return Promise
+   *
+   * @return {Promise}
    *        Resolves to the <xul:notification> that is being shown.
    */
   waitForNotificationBar(tabbrowser, browser, notificationValue) {
@@ -2274,13 +2288,14 @@ var BrowserTestUtils = {
    * Waits for a <xul:notification> with a particular value to appear
    * in the global <xul:notificationbox> of the given browser window.
    *
-   * @param win (<xul:window>)
+   * @param {Window} win
    *        The browser window in whose global notificationbox the
    *        notification is expected to appear.
-   * @param notificationValue (string)
+   * @param {String} notificationValue
    *        The "value" of the notification, which is often used as
    *        a unique identifier. Example: "captive-portal-detected".
-   * @return Promise
+   *
+   * @return {Promise}
    *        Resolves to the <xul:notification> that is being shown.
    */
   waitForGlobalNotificationBar(win, notificationValue) {
@@ -2314,11 +2329,11 @@ var BrowserTestUtils = {
    * transitions that start after this function is called and resolves once all
    * started transitions complete.
    *
-   * @param element (Element)
+   * @param {Element} element
    *        The element that will transition.
-   * @param timeout (number)
+   * @param {Number} timeout
    *        The maximum time to wait in milliseconds. Defaults to 5 seconds.
-   * @return Promise
+   * @return {Promise}
    *        Resolves when transitions complete or rejects if the timeout is hit.
    */
   waitForTransition(element, timeout = 5000) {
@@ -2356,22 +2371,25 @@ var BrowserTestUtils = {
 
   _knownAboutPages: new Set(),
   _loadedAboutContentScript: false,
+
   /**
    * Registers an about: page with particular flags in both the parent
    * and any content processes. Returns a promise that resolves when
    * registration is complete.
    *
-   * @param registerCleanupFunction (Function)
+   * @param {Function} registerCleanupFunction
    *        The test framework doesn't keep its cleanup stuff anywhere accessible,
    *        so the first argument is a reference to your cleanup registration
    *        function, allowing us to clean up after you if necessary.
-   * @param aboutModule (String)
+   * @param {String} aboutModule
    *        The name of the about page.
-   * @param pageURI (String)
+   * @param {String} pageURI
    *        The URI the about: page should point to.
-   * @param flags (Number)
+   * @param {Number} flags
    *        The nsIAboutModule flags to use for registration.
-   * @returns Promise that resolves when registration has finished.
+   *
+   * @returns {Promise}
+   *        Promise that resolves when registration has finished.
    */
   registerAboutPage(registerCleanupFunction, aboutModule, pageURI, flags) {
     // Return a promise that resolves when registration finished.
@@ -2501,6 +2519,7 @@ var BrowserTestUtils = {
    *        click.
    * @param {string} uri
    *        The URI of the dialog to wait for.  Defaults to the common dialog.
+   *
    * @return {Promise}
    *         A Promise which resolves when a "domwindowopened" notification
    *         for a dialog has been fired by the window watcher and the
@@ -2570,11 +2589,14 @@ var BrowserTestUtils = {
    *      any explicitly expected by using contentTopicObserved will cause
    *      stopObservingTopics to reject with an error.
    *      For example:
+   *
    *        await BrowserTestUtils.startObservingTopics(bc, ["a", "b", "c"]);
    *        await BrowserTestUtils contentTopicObserved(bc, "a", 2);
    *        await BrowserTestUtils.stopObservingTopics(bc, ["a", "b", "c"]);
+   *
    *      This will expect two "a" notifications to occur, but will fail if more
    *      than two occur, or if any "b" or "c" notifications occur.
+   *
    * Note that this function doesn't handle adding a listener for the same topic
    * more than once. To do that, use the aCount argument.
    *
@@ -2608,9 +2630,9 @@ var BrowserTestUtils = {
    * Calling this function more than once adds additional topics to be observed without
    * replacing the existing ones.
    *
-   * @param aBrowsingContext
+   * @param {BrowsingContext} aBrowsingContext
    *        The browsing context associated with the content process to listen to.
-   * @param {array of strings} aTopics array of observer topics
+   * @param {String[]} aTopics array of observer topics
    * @returns {Promise} resolves when the listeners have been added.
    */
   startObservingTopics(aBrowsingContext, aTopics) {
@@ -2626,9 +2648,9 @@ var BrowserTestUtils = {
   /**
    * Stop listening to a set of observer topics.
    *
-   * @param aBrowsingContext
+   * @param {BrowsingContext} aBrowsingContext
    *        The browsing context associated with the content process to listen to.
-   * @param {array of strings} aTopics array of observer topics. If empty, then all
+   * @param {String[]} aTopics array of observer topics. If empty, then all
    *                           current topics being listened to are removed.
    * @returns {Promise} promise that fails if an unexpected observer occurs.
    */
@@ -2644,7 +2666,7 @@ var BrowserTestUtils = {
 
   /**
    * Sends a message to a specific BrowserTestUtils window actor.
-   * @param aBrowsingContext
+   * @param {BrowsingContext} aBrowsingContext
    *        The browsing context where the actor lives.
    * @param {string} aMessageName
    *        Name of the message to be sent to the actor.
@@ -2664,7 +2686,7 @@ var BrowserTestUtils = {
 
   /**
    * Sends a query to a specific BrowserTestUtils window actor.
-   * @param aBrowsingContext
+   * @param {BrowsingContext} aBrowsingContext
    *        The browsing context where the actor lives.
    * @param {string} aMessageName
    *        Name of the message to be sent to the actor.
