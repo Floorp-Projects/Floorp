@@ -121,12 +121,6 @@
     <string name="recent_tabs_show_all">Barchasini koʻrsatish</string>
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Barcha oxirgi varaqlarni koʻrsatish tugmasi</string>
-    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
-        The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">\&quot;%1$s\&quot; uchun qidiruvingiz</string>
-    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d ta sayt</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Barcha sinxronlangan varaqlarni qidirish</string>
@@ -450,7 +444,7 @@
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Oxirgi ochilgan</string>
     <!-- Title for the customize home screen section with Pocket. -->
-    <string name="customize_toggle_pocket">Pocket</string>
+    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
     <!-- Title for the customize home screen section with sponsored Pocket stories. -->
     <string name="customize_toggle_pocket_sponsored">Homiy maqolalari</string>
@@ -466,11 +460,6 @@
     <string name="wallpaper_updated_snackbar_message">Fon rasmi yangilandi!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Koʻrish</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Firefox bosh sahifasi logotipiga teginish orqali fon rasmini oʻzgartiring</string>
-    <!-- This is the accessibility content description for the wallpapers functionality. Users are
-    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Firefox logotipi – fon rasmi, tugmani oʻzgartiring</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -647,10 +636,6 @@
     <string name="tab_view_list">Roʻyxat</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Jadval</string>
-    <!-- Option for search term tab groups -->
-    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Guruhlarni qidirish</string>
-    <!-- Summary text for search term tab groups -->
-    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Aloqador saytlarni birgalikda guruhlang</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Varaqlarni yopish</string>
 
@@ -954,7 +939,7 @@
     <string name="share_link_recent_apps_subheader">Yaqinda ishlatilgan</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Sinxronlash uchun hisobingizga kiring</string>
-    <!-- An option from the share dialog to send link to all other sync devices -->
+     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Barcha qurilmalarga joʻnatish</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">Sinxronizatsiyaga qayta ulanish</string>
@@ -1021,6 +1006,107 @@
 
     <!-- Sample text for accessibility font size -->
     <string name="accessibility_text_size_sample_text_1">Bu namuna matn. Bu sozlamalar yordamida hajmni kattalashtirish yoki kamaytirishda matn qanday koʻrinishini namoyish etadi.</string>
+
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Veb-saytlardagi matnni kattaroq yoki kichikroq qiling</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">Shrift hajmi</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_2">Avtomatik shrift hajmlari</string>
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Shrift hajmi Android sozlamalaringizga mos keladi. Bu yerda shrift hajmini boshqarishni oʻchirib qoʻying.</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Brauzer maʼlumotlarini oʻchirish</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title_2">Varaqlarni ochish</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">%d ta varaq</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">Brauzer tarixi va sayt maʼlumotlari</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d ta manzil</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Cookie fayllar</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Koʻp saytlardan chiqib ketasiz</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Keshlangan rasmlar va fayllar</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Xotiradan boʻsh joy ochadi</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">Sayt ruxsatlari</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">Brauzer maʼlumotlarini oʻchirish</string>
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Chiqish vaqtida brauzer maʼlumotlarini oʻchirish</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Asosiy menyudan \&quot;Chiqish\&quot;ni tanlaganingizda, brauzer maʼlumotlari avtomatik ravishda oʻchiriladi</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Chiqish</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s tanlangan brauzer maʼlumotlarini oʻchiradi.</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">Bekor qilish</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">Oʻchirish</string>
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">Brauzer maʼlumotlari oʻchirildi</string>
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Brauzer maʼlumotlari oʻchirilmoqda…</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">%sga xush kelibsiz!</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Sinxronizatsiya yoqilgan</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">Standart</string>
+
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Qatʼiy</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Sizning maxfiyligingiz</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Maxfiylik toʻgʻrisidagi bildirishnomamizni oʻqing</string>
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Koʻrishni boshlash</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Mavzungizni tanlang</string>
+
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Avtomatik</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Qurilmangiz sozlamalarga moslashadi</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Qorongʻi mavzu</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Yorqin mavzu</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Varaqlar yuborildi!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Varaq yuborildi!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Yuborib boʻlmadi</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">QAYTA URINING</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">Kodni skanerlang</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[KompYuteringizda Firefoxni oching va <b>https://firefox.com/pair</b>ga oʻting]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Skanerlashga tayyor</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">Kamera bilan tizimga kiring</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">Buning oʻrniga e-pochtadan foydalaning</string>
 
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">Barcha veb-saytlarni kattalashtirish</string>
