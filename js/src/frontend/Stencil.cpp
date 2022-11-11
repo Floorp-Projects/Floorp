@@ -2760,22 +2760,20 @@ bool CompilationStencil::deserializeStencils(JSContext* cx, ErrorContext* ec,
   return true;
 }
 
-ExtensibleCompilationStencil::ExtensibleCompilationStencil(JSContext* cx,
-                                                           ScriptSource* source)
+ExtensibleCompilationStencil::ExtensibleCompilationStencil(ScriptSource* source)
     : alloc(CompilationStencil::LifoAllocChunkSize),
       source(source),
       parserAtoms(alloc) {}
 
 ExtensibleCompilationStencil::ExtensibleCompilationStencil(
-    JSContext* cx, CompilationInput& input)
+    CompilationInput& input)
     : canLazilyParse(CanLazilyParse(input.options)),
       alloc(CompilationStencil::LifoAllocChunkSize),
       source(input.source),
       parserAtoms(alloc) {}
 
 ExtensibleCompilationStencil::ExtensibleCompilationStencil(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-    RefPtr<ScriptSource> source)
+    const JS::ReadOnlyCompileOptions& options, RefPtr<ScriptSource> source)
     : canLazilyParse(CanLazilyParse(options)),
       alloc(CompilationStencil::LifoAllocChunkSize),
       source(std::move(source)),
@@ -2784,7 +2782,7 @@ ExtensibleCompilationStencil::ExtensibleCompilationStencil(
 CompilationState::CompilationState(JSContext* cx,
                                    LifoAllocScope& parserAllocScope,
                                    CompilationInput& input)
-    : ExtensibleCompilationStencil(cx, input),
+    : ExtensibleCompilationStencil(input),
       directives(input.options.forceStrictMode()),
       usedNames(cx),
       parserAllocScope(parserAllocScope),
