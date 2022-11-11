@@ -196,6 +196,8 @@
       return this.shadowRoot.querySelector(".dialog-button-box");
     }
 
+    // NOTE(emilio): This has to match AppWindow::IntrinsicallySizeShell, to
+    // prevent flickering, see bug 1799394.
     _sizeToPreferredSize() {
       const docEl = document.documentElement;
       const prefWidth = (() => {
