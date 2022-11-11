@@ -10,9 +10,6 @@
 
 namespace js {
 
-/* static */
-SharedImmutableStringsCache SharedImmutableStringsCache::singleton_;
-
 SharedImmutableString::SharedImmutableString(
     SharedImmutableStringsCache::StringBox* box)
     : box_(box) {
