@@ -103,7 +103,7 @@ class CacheIOThread final : public nsIThreadObserver {
  private:
   static void ThreadFunc(void* aClosure);
   void ThreadFunc();
-  void LoopOneLevel(uint32_t aLevel) MOZ_REQUIRES(mMonitor);
+  void LoopOneLevel(uint32_t aLevel);
   bool EventsPending(uint32_t aLastLevel = LAST_LEVEL);
   nsresult DispatchInternal(already_AddRefed<nsIRunnable> aRunnable,
                             uint32_t aLevel);
@@ -111,27 +111,27 @@ class CacheIOThread final : public nsIThreadObserver {
 
   static CacheIOThread* sSelf;
 
-  mozilla::Monitor mMonitor{"CacheIOThread"};
+  mozilla::Monitor mMonitor MOZ_UNANNOTATED{"CacheIOThread"};
   PRThread* mThread{nullptr};
   // Only set in Init(), before the thread is started, which reads it but never
   // writes
   UniquePtr<detail::NativeThreadHandle> mNativeThreadHandle;
   Atomic<nsIThread*> mXPCOMThread{nullptr};
   Atomic<uint32_t, Relaxed> mLowestLevelWaiting{LAST_LEVEL};
-  uint32_t mCurrentlyExecutingLevel{0};  // only accessed on CacheIO Thread
+  uint32_t mCurrentlyExecutingLevel{0};
 
   // Keeps the length of the each event queue, since LoopOneLevel moves all
   // events into a local array.
   Atomic<int32_t> mQueueLength[LAST_LEVEL];
 
-  EventQueue mEventQueue[LAST_LEVEL] MOZ_GUARDED_BY(mMonitor);
+  EventQueue mEventQueue[LAST_LEVEL];
   // Raised when nsIEventTarget.Dispatch() is called on this thread
   Atomic<bool, Relaxed> mHasXPCOMEvents{false};
   // See YieldAndRerun() above
   bool mRerunCurrentEvent{false};  // Only accessed on the cache thread
   // Signal to process all pending events and then shutdown
   // Synchronized by mMonitor
-  bool mShutdown MOZ_GUARDED_BY(mMonitor){false};
+  bool mShutdown{false};
   // If > 0 there is currently an I/O operation on the thread that
   // can be canceled when after shutdown, see the Shutdown() method
   // for usage. Made a counter to allow nesting of the Cancelable class.
@@ -139,7 +139,7 @@ class CacheIOThread final : public nsIThreadObserver {
   // Event counter that increases with every event processed.
   Atomic<uint32_t, Relaxed> mEventCounter{0};
 #ifdef DEBUG
-  bool mInsideLoop MOZ_GUARDED_BY(mMonitor){true};
+  bool mInsideLoop{true};
 #endif
 };
 

@@ -178,8 +178,7 @@ CacheFile::~CacheFile() {
 
 nsresult CacheFile::Init(const nsACString& aKey, bool aCreateNew,
                          bool aMemoryOnly, bool aSkipSizeCheck, bool aPriority,
-                         bool aPinned, CacheFileListener* aCallback)
-    MOZ_NO_THREAD_SAFETY_ANALYSIS {
+                         bool aPinned, CacheFileListener* aCallback) {
   MOZ_ASSERT(!mListener);
   MOZ_ASSERT(!mHandle);
 
