@@ -354,14 +354,33 @@ function checkRectFuzzy(aRect, aExpectedRect, aEpsilon, aMessage) {
   isfuzzy(aRect.top, aExpectedRect.top, aEpsilon.top, aMessage + " top is wrong");
   isfuzzy(aRect.width, aExpectedRect.width, aEpsilon.width, aMessage + ": width is wrong");
   isfuzzy(aRect.height, aExpectedRect.height, aEpsilon.height, aMessage + ": height is wrong");
-  return aRect.left <= aExpectedRect.left - aEpsilon.left &&
-         aRect.left <= aExpectedRect.left + aEpsilon.left &&
-         aRect.top == aExpectedRect.top - aEpsilon.top &&
-         aRect.top == aExpectedRect.top + aEpsilon.top &&
-         aRect.width == aExpectedRect.width - aEpsilon.width &&
-         aRect.width == aExpectedRect.width + aEpsilon.width &&
-         aRect.height == aExpectedRect.height - aEpsilon.height &&
-         aRect.height == aExpectedRect.height + aEpsilon.height;
+  return (aRect.left >= aExpectedRect.left - aEpsilon.left &&
+          aRect.left <= aExpectedRect.left + aEpsilon.left) &&
+         (aRect.top >= aExpectedRect.top - aEpsilon.top &&
+          aRect.top <= aExpectedRect.top + aEpsilon.top) &&
+         (aRect.width >= aExpectedRect.width - aEpsilon.width &&
+          aRect.width <= aExpectedRect.width + aEpsilon.width) &&
+         (aRect.height >= aExpectedRect.height - aEpsilon.height &&
+          aRect.height <= aExpectedRect.height + aEpsilon.height);
+}
+
+function getRectArray(aQueryTextRectArrayResult) {
+  let rects = [];
+  for (let i = 0; ; i++) {
+    let rect = { left: {}, top: {}, width: {}, height: {} };
+    try {
+      aQueryTextRectArrayResult.getCharacterRect(i, rect.left, rect.top, rect.width, rect.height);
+    } catch (e) {
+      break;
+    }
+    rects.push({
+      left: rect.left.value,
+      top: rect.top.value,
+      width: rect.width.value,
+      height: rect.height.value,
+    });
+  }
+  return rects;
 }
 
 function checkRectArray(aQueryTextRectArrayResult, aExpectedTextRectArray, aMessage)
@@ -4154,6 +4173,170 @@ function runQueryTextRectInContentEditableTest()
   tooBigOffsetAsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 7, 1);
   if (checkQueryContentResult(tooBigOffsetAsArray, description + "rect array for too big offset")) {
     checkRectArray(tooBigOffsetAsArray, [tooBigOffset], description + "query text rect array result with too big offset should match with each query text rect result");
+  }
+
+  if (!(function test_query_text_rects_across_invisible_text() {
+    contenteditable.innerHTML = "<div>\n<div>abc</div></div>";
+                        // \n    0    1 2    345
+                        // \r\n  01   2345   678
+    description = `runQueryTextRectInContentEditableTest: test_query_text_rects_across_invisible_text: "${
+      contenteditable.innerHTML.replace(/\n/g, "\\n")
+    }",`;
+    // rect of "a"
+    const rectA = synthesizeQueryTextRect(kLFLen * 3, 1);
+    if (!checkQueryContentResult(rectA, `${description} rect of "a"`)) {
+      return false;
+    }
+    const rectArrayFromStartToA = synthesizeQueryTextRectArray(0, kLFLen * 3 + 1);
+    if (!checkQueryContentResult(rectArrayFromStartToA, `${description} rect array from invisible text to "a"`)) {
+      return false;
+    }
+    const fromStartToARects = getRectArray(rectArrayFromStartToA);
+    if (!checkRect(
+      fromStartToARects[kLFLen * 3],
+      rectA,
+      `${description} rect for "a" in array should be same as the result of query only it`
+    )) {
+      return false;
+    }
+    return checkRect(
+      fromStartToARects[kLFLen * 2],
+      fromStartToARects[0],
+      `${description} rect for the linebreak in invisible text node should be same as first linebreak`
+    );
+  })()) {
+    return;
+  }
+
+  function test_query_text_rects_starting_from_invisible_text() {
+    contenteditable.innerHTML = "<div>\n<div>abc</div></div>";
+                        // \n    0    1 2    345
+                        // \r\n  01   2345   678
+    description = `runQueryTextRectInContentEditableTest: test_query_text_rects_starting_from_invisible_text: "${
+      contenteditable.innerHTML.replace(/\n/g, "\\n")
+    }",`;
+    // rect of "a"
+    const rectA = synthesizeQueryTextRect(kLFLen * 3, 1);
+    if (!checkQueryContentResult(rectA, `${description} rect of "a"`)) {
+      return false;
+    }
+    const rectArrayFromInvisibleToA = synthesizeQueryTextRectArray(kLFLen, kLFLen * 2 + 1);
+    if (!checkQueryContentResult(rectArrayFromInvisibleToA, `${description} rect array from invisible text to "a"`)) {
+      return false;
+    }
+    const fromInvisibleToARects = getRectArray(rectArrayFromInvisibleToA);
+    if (!checkRect(
+      fromInvisibleToARects[kLFLen * 2],
+      rectA,
+      `${description} rect for "a" in array should be same as the result of query only it`
+    )) {
+      return false;
+    }
+    // For now the rect of characters in invisible text node should be caret rect
+    // before the following line break.  This is inconsistent from the result of
+    // the query text rect array event starting from the previous visible line
+    // break or character, but users anyway cannot insert text into the invisible
+    // text node only with user's operation.  Therefore, this won't be problem
+    // in usual web apps.
+    const caretRectBeforeLineBreakBeforeA = fromInvisibleToARects[kLFLen];
+    return checkRect(
+      fromInvisibleToARects[0],
+      caretRectBeforeLineBreakBeforeA,
+      `${description} rect for the linebreak in invisible text node should be same as caret rect before the following visible linebreak before "a"`
+    );
+  }
+  if (!test_query_text_rects_starting_from_invisible_text()) {
+    return;
+  }
+
+  if (kLFLen > 1) {
+    function test_query_text_rects_starting_from_middle_of_invisible_linebreak() {
+      contenteditable.innerHTML = "<div>\n<div>abc</div></div>";
+                          // \n    0    1 2    345
+                          // \r\n  01   2345   678
+      description = `runQueryTextRectInContentEditableTest: test_query_text_rects_starting_from_middle_of_invisible_linebreak: "${
+        contenteditable.innerHTML.replace(/\n/g, "\\n")
+      }",`;
+      // rect of "a"
+      const rectA = synthesizeQueryTextRect(kLFLen * 3, 1);
+      if (!checkQueryContentResult(rectA, `${description} rect of "a"`)) {
+        return false;
+      }
+      const rectArrayFromInvisibleToA = synthesizeQueryTextRectArray(kLFLen + 1, 1 + kLFLen + 1);
+      if (!checkQueryContentResult(rectArrayFromInvisibleToA, `${description} rect array from invisible text to "a"`)) {
+        return false;
+      }
+      const fromInvisibleToARects = getRectArray(rectArrayFromInvisibleToA);
+      if (!checkRect(
+        fromInvisibleToARects[1 + kLFLen],
+        rectA,
+        `${description} rect for "a" in array should be same as the result of query only it`
+      )) {
+        return false;
+      }
+      // For now the rect of characters in invisible text node should be caret rect
+      // before the following line break.  This is inconsistent from the result of
+      // the query text rect array event starting from the previous visible line
+      // break or character, but users anyway cannot insert text into the invisible
+      // text node only with user's operation.  Therefore, this won't be problem
+      // in usual web apps.
+      const caretRectBeforeLineBreakBeforeA = fromInvisibleToARects[1];
+      return checkRect(
+        fromInvisibleToARects[0],
+        caretRectBeforeLineBreakBeforeA,
+        `${description} rect for the linebreak in invisible text node should be same as caret rect before the following visible linebreak before "a"`
+      );
+    }
+    if (!test_query_text_rects_starting_from_middle_of_invisible_linebreak()) {
+      return;
+    }
+  }
+
+  function test_query_text_rects_ending_with_invisible_text() {
+    contenteditable.innerHTML = "<div><div>abc</div>\n</div>";
+                        // \n    0    1    234      5
+                        // \r\n  01   23   456      78
+    description = `runQueryTextRectInContentEditableTest: test_query_text_rects_ending_with_invisible_text: "${
+      contenteditable.innerHTML.replace(/\n/g, "\\n")
+    }",`;
+    // rect of "c"
+    const rectC = synthesizeQueryTextRect(kLFLen * 2 + 2, 1);
+    if (!checkQueryContentResult(rectC, `${description} rect of "c"`)) {
+      return false;
+    }
+    const rectArrayFromCToInvisible = synthesizeQueryTextRectArray(kLFLen * 2 + 2, 1 + kLFLen);
+    if (!checkQueryContentResult(rectArrayFromCToInvisible, `${description} rect array from "c" to invisible linebreak`)) {
+      return false;
+    }
+    const fromCToInvisibleRects = getRectArray(rectArrayFromCToInvisible);
+    if (!checkRect(
+      fromCToInvisibleRects[0],
+      rectC,
+      `${description} rect for "c" in array should be same as the result of query only it`
+    )) {
+      return false;
+    }
+    const caretRectAfterC = {
+      left: rectC.left + rectC.width,
+      top: rectC.top,
+      width: 1,
+      height: rectC.height,
+    };
+    return checkRectFuzzy(
+      fromCToInvisibleRects[1],
+      caretRectAfterC,
+      {
+        left: 1,
+        top: 0,
+        width: 0,
+        height: 0,
+      },
+      `${description} rect for the linebreak in invisible text node should be same as caret rect after "c"`
+    );
+  }
+  if (!test_query_text_rects_ending_with_invisible_text()) {
+    // eslint-disable-next-line no-useless-return
+    return;
   }
 }
 

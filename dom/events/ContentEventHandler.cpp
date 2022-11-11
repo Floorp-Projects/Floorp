@@ -10,6 +10,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/IMEStateManager.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RangeUtils.h"
@@ -1853,13 +1854,19 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
   bool isVertical = false;
   LayoutDeviceIntRect rect;
   uint32_t offset = aEvent->mInput.mOffset;
-  const uint32_t kEndOffset = offset + aEvent->mInput.mLength;
+  const uint32_t kEndOffset = aEvent->mInput.EndOffset();
   bool wasLineBreaker = false;
   // lastCharRect stores the last charRect value (see below for the detail of
   // charRect).
   nsRect lastCharRect;
   // lastFrame is base frame of lastCharRect.
+  // TODO: We should look for this if the first text is not visible.  However,
+  //       users cannot put caret invisible text and users cannot type in it
+  //       at least only with user's operations.  Therefore, we don't need to
+  //       fix this immediately.
   nsIFrame* lastFrame = nullptr;
+  nsAutoString flattenedAllText;
+  flattenedAllText.SetIsVoid(true);
   while (offset < kEndOffset) {
     RefPtr<Text> lastTextNode;
     RawRange rawRange;
@@ -1869,6 +1876,10 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    // TODO: When we crossed parent block boundary now, we should fill pending
+    //       character rects with caret rect after the last visible character
+    //       rect.
 
     // If the range is collapsed, offset has already reached the end of the
     // contents.
@@ -1880,23 +1891,57 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
     FrameAndNodeOffset firstFrame = GetFirstFrameInRangeForTextRect(rawRange);
 
     // If GetFirstFrameInRangeForTextRect() does not return valid frame, that
-    // means that there are no visible frames having text or the offset reached
-    // the end of contents.
+    // means that the offset reached the end of contents or there is no visible
+    // frame in the range generating flattened text.
     if (!firstFrame.IsValid()) {
-      nsAutoString allText;
-      rv = GenerateFlatTextContent(mRootElement, allText, lineBreakType);
-      // If the offset doesn't reach the end of contents yet but there is no
-      // frames for the node, that means that current offset's node is hidden
-      // by CSS or something.  Ideally, we should handle it with the last
-      // visible text node's last character's rect, but it's not usual cases
-      // in actual web services.  Therefore, currently, we should make this
-      // case fail.
-      if (NS_WARN_IF(NS_FAILED(rv)) || offset < allText.Length()) {
-        return NS_ERROR_FAILURE;
+      if (flattenedAllText.IsVoid()) {
+        flattenedAllText.SetIsVoid(false);
+        if (NS_WARN_IF(NS_FAILED(GenerateFlatTextContent(
+                mRootElement, flattenedAllText, lineBreakType)))) {
+          NS_WARNING("ContentEventHandler::GenerateFlatTextContent() failed");
+          return NS_ERROR_FAILURE;
+        }
       }
-      // Otherwise, we should append caret rect at the end of the contents
-      // later.
-      break;
+      // If we've reached end of the root, append caret rect at the end of
+      // the root later.
+      if (offset >= flattenedAllText.Length()) {
+        break;
+      }
+      // Otherwise, we're in an invisible node. If the node is followed by a
+      // block boundary causing a line break, we can use the boundary.
+      // Otherwise, if the node follows a block boundary of a parent block, we
+      // can use caret rect at previous visible frame causing flattened text.
+      const uint32_t remainingLengthInCurrentRange = [&]() {
+        if (lastTextNode) {
+          if (rawRange.GetStartContainer() == lastTextNode) {
+            if (rawRange.StartOffset() < lastTextNode->TextDataLength()) {
+              return lastTextNode->TextDataLength() - rawRange.StartOffset();
+            }
+            return 0u;
+          }
+          // Must be there are not nodes which may cause generating text.
+          // Therefore, we can skip all nodes before the last found text node
+          // and all text in the last text node.
+          return lastTextNode->TextDataLength();
+        }
+        if (rawRange.GetStartContainer() &&
+            rawRange.GetStartContainer()->IsContent() &&
+            ShouldBreakLineBefore(*rawRange.GetStartContainer()->AsContent(),
+                                  mRootElement)) {
+          if (kBRLength != 1u && offset - aEvent->mInput.mOffset < kBRLength) {
+            // Don't return kBRLength if start position is less than the length
+            // of a line-break because the offset may be between CRLF on
+            // Windows.  In the case, we will be again here and gets same
+            // result and we need to pay the penalty only once.  Therefore, we
+            // can keep going without complicated check.
+            return 1u;
+          }
+          return kBRLength;
+        }
+        return 0u;
+      }();
+      offset += std::max(1u, remainingLengthInCurrentRange);
+      continue;
     }
 
     nsIContent* firstContent = firstFrame.mFrame->GetContent();
@@ -1983,7 +2028,7 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
       // compute it with the cached last character's rect.  (However, don't
       // use this path if it's a <br> frame because trusting <br> frame's rect
       // is better than guessing the rect from the previous character.)
-      if (!firstFrame->IsBrFrame() && aEvent->mInput.mOffset != offset) {
+      if (!firstFrame->IsBrFrame() && !aEvent->mReply->mRectArray.IsEmpty()) {
         baseFrame = lastFrame;
         brRect = lastCharRect;
         if (!wasLineBreaker) {
@@ -2081,6 +2126,29 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
       // return non-empty rect.
       EnsureNonEmptyRect(rect);
 
+      // If we found some invisible characters followed by current visible
+      // character, make their rects same as caret rect before the first visible
+      // character because IME may want to put their UI next to the rect of the
+      // invisible character for next input.
+      // Note that chars do not contain the invisible characters.
+      if (i == 0u && MOZ_LIKELY(offset > aEvent->mInput.mOffset)) {
+        const uint32_t offsetInRange =
+            offset - CheckedInt<uint32_t>(aEvent->mInput.mOffset).value();
+        if (offsetInRange > aEvent->mReply->mRectArray.Length()) {
+          LayoutDeviceIntRect caretRectBefore = rect;
+          if (isVertical) {
+            caretRectBefore.height = 1;
+          } else {
+            caretRectBefore.width = 1;
+          }
+          for ([[maybe_unused]] uint32_t index : IntegerRange<uint32_t>(
+                   offsetInRange - aEvent->mReply->mRectArray.Length())) {
+            aEvent->mReply->mRectArray.AppendElement(caretRectBefore);
+          }
+          MOZ_ASSERT(aEvent->mReply->mRectArray.Length() == offsetInRange);
+        }
+      }
+
       aEvent->mReply->mRectArray.AppendElement(rect);
       offset++;
 
@@ -2112,6 +2180,31 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
       // rect of first character of a line.
       aEvent->mReply->mRectArray.AppendElement(rect);
       offset++;
+    }
+  }
+
+  // If we've not handled some invisible character rects, fill them as caret
+  // rect after the last visible character.
+  if (!aEvent->mReply->mRectArray.IsEmpty()) {
+    const uint32_t offsetInRange =
+        offset - CheckedInt<uint32_t>(aEvent->mInput.mOffset).value();
+    if (offsetInRange > aEvent->mReply->mRectArray.Length()) {
+      LayoutDeviceIntRect caretRectAfter =
+          aEvent->mReply->mRectArray.LastElement();
+      if (isVertical) {
+        caretRectAfter.y = caretRectAfter.YMost() + 1;
+        caretRectAfter.height = 1;
+        MOZ_ASSERT(caretRectAfter.width);
+      } else {
+        caretRectAfter.x = caretRectAfter.XMost() + 1;
+        caretRectAfter.width = 1;
+        MOZ_ASSERT(caretRectAfter.height);
+      }
+      for ([[maybe_unused]] uint32_t index : IntegerRange<uint32_t>(
+               offsetInRange - aEvent->mReply->mRectArray.Length())) {
+        aEvent->mReply->mRectArray.AppendElement(caretRectAfter);
+      }
+      MOZ_ASSERT(aEvent->mReply->mRectArray.Length() == offsetInRange);
     }
   }
 
