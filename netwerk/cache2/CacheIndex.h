@@ -823,8 +823,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   NS_IMETHOD OnFileOpened(CacheFileHandle* aHandle, nsresult aResult) override;
   void OnFileOpenedInternal(FileOpenHelper* aOpener, CacheFileHandle* aHandle,
                             nsresult aResult,
-                            const StaticMutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(sLock);
+                            const StaticMutexAutoLock& aProofOfLock);
   NS_IMETHOD OnDataWritten(CacheFileHandle* aHandle, const char* aBuf,
                            nsresult aResult) override;
   NS_IMETHOD OnDataRead(CacheFileHandle* aHandle, char* aBuf,
@@ -838,7 +837,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   void PreShutdownInternal();
 
   // This method returns false when index is not initialized or is shut down.
-  bool IsIndexUsable() MOZ_REQUIRES(sLock);
+  bool IsIndexUsable();
 
   // This method checks whether the entry has the same values of
   // originAttributes and isAnonymous. We don't expect to find a collision
@@ -857,8 +856,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
                               const uint32_t* aSize);
 
   // Merge all pending operations from mPendingUpdates into mIndex.
-  void ProcessPendingOperations(const StaticMutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(sLock);
+  void ProcessPendingOperations(const StaticMutexAutoLock& aProofOfLock);
 
   // Following methods perform writing of the index file.
   //
@@ -870,18 +868,14 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   //
   // Starts writing of index when both limits (minimal delay between writes and
   // minimum number of changes in index) were exceeded.
-  bool WriteIndexToDiskIfNeeded(const StaticMutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(sLock);
+  bool WriteIndexToDiskIfNeeded(const StaticMutexAutoLock& aProofOfLock);
   // Starts writing of index file.
-  void WriteIndexToDisk(const StaticMutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(sLock);
+  void WriteIndexToDisk(const StaticMutexAutoLock& aProofOfLock);
   // Serializes part of mIndex hashtable to the write buffer a writes the buffer
   // to the file.
-  void WriteRecords(const StaticMutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(sLock);
+  void WriteRecords(const StaticMutexAutoLock& aProofOfLock);
   // Finalizes writing process.
-  void FinishWrite(bool aSucceeded, const StaticMutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(sLock);
+  void FinishWrite(bool aSucceeded, const StaticMutexAutoLock& aProofOfLock);
 
   // Following methods perform writing of the journal during shutdown. All these
   // methods must be called only during shutdown since they write/delete files
@@ -891,11 +885,11 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   // When the log is written successfully, the dirty flag in index file is
   // cleared.
   nsresult GetFile(const nsACString& aName, nsIFile** _retval);
-  void RemoveFile(const nsACString& aName) MOZ_REQUIRES(sLock);
-  void RemoveAllIndexFiles() MOZ_REQUIRES(sLock);
-  void RemoveJournalAndTempFile() MOZ_REQUIRES(sLock);
+  void RemoveFile(const nsACString& aName);
+  void RemoveAllIndexFiles();
+  void RemoveJournalAndTempFile();
   // Writes journal to the disk and clears dirty flag in index header.
-  nsresult WriteLogToDisk() MOZ_REQUIRES(sLock);
+  nsresult WriteLogToDisk();
 
   // Following methods perform reading of the index from the disk.
   //
@@ -934,68 +928,56 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   // FF crashes during parsing of the index.
   //
   // Initiates reading index from disk.
-  void ReadIndexFromDisk(const StaticMutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(sLock);
+  void ReadIndexFromDisk(const StaticMutexAutoLock& aProofOfLock);
   // Starts reading data from index file.
-  void StartReadingIndex(const StaticMutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(sLock);
+  void StartReadingIndex(const StaticMutexAutoLock& aProofOfLock);
   // Parses data read from index file.
-  void ParseRecords(const StaticMutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(sLock);
+  void ParseRecords(const StaticMutexAutoLock& aProofOfLock);
   // Starts reading data from journal file.
-  void StartReadingJournal(const StaticMutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(sLock);
+  void StartReadingJournal(const StaticMutexAutoLock& aProofOfLock);
   // Parses data read from journal file.
-  void ParseJournal(const StaticMutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(sLock);
+  void ParseJournal(const StaticMutexAutoLock& aProofOfLock);
   // Merges entries from journal into mIndex.
-  void MergeJournal(const StaticMutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(sLock);
+  void MergeJournal(const StaticMutexAutoLock& aProofOfLock);
   // In debug build this method checks that we have no fresh entry in mIndex
   // after we finish reading index and before we process pending operations.
-  void EnsureNoFreshEntry() MOZ_REQUIRES(sLock);
+  void EnsureNoFreshEntry();
   // In debug build this method is called after processing pending operations
   // to make sure mIndexStats contains correct information.
-  void EnsureCorrectStats() MOZ_REQUIRES(sLock);
-
+  void EnsureCorrectStats();
   // Finalizes reading process.
-  void FinishRead(bool aSucceeded, const StaticMutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(sLock);
+  void FinishRead(bool aSucceeded, const StaticMutexAutoLock& aProofOfLock);
 
   // Following methods perform updating and building of the index.
   // Timer callback that starts update or build process.
   static void DelayedUpdate(nsITimer* aTimer, void* aClosure);
-  void DelayedUpdateLocked(const StaticMutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(sLock);
+  void DelayedUpdateLocked(const StaticMutexAutoLock& aProofOfLock);
   // Posts timer event that start update or build process.
-  nsresult ScheduleUpdateTimer(uint32_t aDelay) MOZ_REQUIRES(sLock);
-  nsresult SetupDirectoryEnumerator() MOZ_REQUIRES(sLock);
+  nsresult ScheduleUpdateTimer(uint32_t aDelay);
+  nsresult SetupDirectoryEnumerator();
   nsresult InitEntryFromDiskData(CacheIndexEntry* aEntry,
                                  CacheFileMetadata* aMetaData,
                                  int64_t aFileSize);
   // Returns true when either a timer is scheduled or event is posted.
-  bool IsUpdatePending() MOZ_REQUIRES(sLock);
+  bool IsUpdatePending();
   // Iterates through all files in entries directory that we didn't create/open
   // during this session, parses them and adds the entries to the index.
-  void BuildIndex(const StaticMutexAutoLock& aProofOfLock) MOZ_REQUIRES(sLock);
+  void BuildIndex(const StaticMutexAutoLock& aProofOfLock);
 
   bool StartUpdatingIndexIfNeeded(const StaticMutexAutoLock& aProofOfLock,
                                   bool aSwitchingToReadyState = false);
   // Starts update or build process or fires a timer when it is too early after
   // startup.
   void StartUpdatingIndex(bool aRebuild,
-                          const StaticMutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(sLock);
+                          const StaticMutexAutoLock& aProofOfLock);
   // Iterates through all files in entries directory that we didn't create/open
   // during this session and theirs last modified time is newer than timestamp
   // in the index header. Parses the files and adds the entries to the index.
-  void UpdateIndex(const StaticMutexAutoLock& aProofOfLock) MOZ_REQUIRES(sLock);
+  void UpdateIndex(const StaticMutexAutoLock& aProofOfLock);
   // Finalizes update or build process.
-  void FinishUpdate(bool aSucceeded, const StaticMutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(sLock);
+  void FinishUpdate(bool aSucceeded, const StaticMutexAutoLock& aProofOfLock);
 
-  void RemoveNonFreshEntries(const StaticMutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(sLock);
+  void RemoveNonFreshEntries(const StaticMutexAutoLock& aProofOfLock);
 
   enum EState {
     // Initial state in which the index is not usable
@@ -1049,129 +1031,122 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
 
   static char const* StateString(EState aState);
   void ChangeState(EState aNewState, const StaticMutexAutoLock& aProofOfLock);
-  void NotifyAsyncGetDiskConsumptionCallbacks() MOZ_REQUIRES(sLock);
+  void NotifyAsyncGetDiskConsumptionCallbacks();
 
   // Allocates and releases buffer used for reading and writing index.
-  void AllocBuffer() MOZ_REQUIRES(sLock);
-  void ReleaseBuffer() MOZ_REQUIRES(sLock);
+  void AllocBuffer();
+  void ReleaseBuffer();
 
   // Methods used by CacheIndexEntryAutoManage to keep the iterators up to date.
   void AddRecordToIterators(CacheIndexRecordWrapper* aRecord,
-                            const StaticMutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(sLock);
+                            const StaticMutexAutoLock& aProofOfLock);
   void RemoveRecordFromIterators(CacheIndexRecordWrapper* aRecord,
-                                 const StaticMutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(sLock);
+                                 const StaticMutexAutoLock& aProofOfLock);
   void ReplaceRecordInIterators(CacheIndexRecordWrapper* aOldRecord,
                                 CacheIndexRecordWrapper* aNewRecord,
-                                const StaticMutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(sLock);
+                                const StaticMutexAutoLock& aProofOfLock);
 
   // Memory reporting (private part)
-  size_t SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) const
-      MOZ_REQUIRES(sLock);
+  size_t SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) const;
 
   // Reports telemetry about cache, i.e. size, entry count and content type
   // stats.
-  void DoTelemetryReport() MOZ_REQUIRES(sLock);
+  void DoTelemetryReport();
 
-  static mozilla::StaticRefPtr<CacheIndex> gInstance MOZ_GUARDED_BY(sLock);
-
-  // sLock guards almost everything here...
-  // Also guards FileOpenHelper::mCanceled
-  static StaticMutex sLock;
+  static mozilla::StaticRefPtr<CacheIndex> gInstance;
+  static StaticMutex sLock MOZ_UNANNOTATED;
 
   nsCOMPtr<nsIFile> mCacheDirectory;
 
-  EState mState MOZ_GUARDED_BY(sLock){INITIAL};
+  EState mState{INITIAL};
   // Timestamp of time when the index was initialized. We use it to delay
   // initial update or build of index.
-  TimeStamp mStartTime MOZ_GUARDED_BY(sLock);
+  TimeStamp mStartTime;
   // Set to true in PreShutdown(), it is checked on variaous places to prevent
   // starting any process (write, update, etc.) during shutdown.
-  bool mShuttingDown MOZ_GUARDED_BY(sLock){false};
+  bool mShuttingDown{false};
   // When set to true, update process should start as soon as possible. This
   // flag is set whenever we find some inconsistency which would be fixed by
   // update process. The flag is checked always when switching to READY state.
   // To make sure we start the update process as soon as possible, methods that
   // set this flag should also call StartUpdatingIndexIfNeeded() to cover the
   // case when we are currently in READY state.
-  bool mIndexNeedsUpdate MOZ_GUARDED_BY(sLock){false};
+  bool mIndexNeedsUpdate{false};
   // Set at the beginning of RemoveAll() which clears the whole index. When
   // removing all entries we must stop any pending reading, writing, updating or
   // building operation. This flag is checked at various places and it prevents
   // we won't start another operation (e.g. canceling reading of the index would
   // normally start update or build process)
-  bool mRemovingAll MOZ_GUARDED_BY(sLock){false};
+  bool mRemovingAll{false};
   // Whether the index file on disk exists and is valid.
-  bool mIndexOnDiskIsValid MOZ_GUARDED_BY(sLock){false};
+  bool mIndexOnDiskIsValid{false};
   // When something goes wrong during updating or building process, we don't
   // mark index clean (and also don't write journal) to ensure that update or
   // build will be initiated on the next start.
-  bool mDontMarkIndexClean MOZ_GUARDED_BY(sLock){false};
+  bool mDontMarkIndexClean{false};
   // Timestamp value from index file. It is used during update process to skip
   // entries that were last modified before this timestamp.
-  uint32_t mIndexTimeStamp MOZ_GUARDED_BY(sLock){0};
+  uint32_t mIndexTimeStamp{0};
   // Timestamp of last time the index was dumped to disk.
   // NOTE: The index might not be necessarily dumped at this time. The value
   // is used to schedule next dump of the index.
-  TimeStamp mLastDumpTime MOZ_GUARDED_BY(sLock);
+  TimeStamp mLastDumpTime;
 
   // Timer of delayed update/build.
-  nsCOMPtr<nsITimer> mUpdateTimer MOZ_GUARDED_BY(sLock);
+  nsCOMPtr<nsITimer> mUpdateTimer;
   // True when build or update event is posted
-  bool mUpdateEventPending MOZ_GUARDED_BY(sLock){false};
+  bool mUpdateEventPending{false};
 
   // Helper members used when reading/writing index from/to disk.
   // Contains number of entries that should be skipped:
   //  - in hashtable when writing index because they were already written
   //  - in index file when reading index because they were already read
-  uint32_t mSkipEntries MOZ_GUARDED_BY(sLock){0};
+  uint32_t mSkipEntries{0};
   // Number of entries that should be written to disk. This is number of entries
   // in hashtable that are initialized and are not marked as removed when
   // writing begins.
-  uint32_t mProcessEntries MOZ_GUARDED_BY(sLock){0};
-  char* mRWBuf MOZ_GUARDED_BY(sLock){nullptr};
-  uint32_t mRWBufSize MOZ_GUARDED_BY(sLock){0};
-  uint32_t mRWBufPos MOZ_GUARDED_BY(sLock){0};
-  RefPtr<CacheHash> mRWHash MOZ_GUARDED_BY(sLock);
+  uint32_t mProcessEntries{0};
+  char* mRWBuf{nullptr};
+  uint32_t mRWBufSize{0};
+  uint32_t mRWBufPos{0};
+  RefPtr<CacheHash> mRWHash;
 
   // True if read or write operation is pending. It is used to ensure that
   // mRWBuf is not freed until OnDataRead or OnDataWritten is called.
-  bool mRWPending MOZ_GUARDED_BY(sLock){false};
+  bool mRWPending{false};
 
   // Reading of journal succeeded if true.
-  bool mJournalReadSuccessfully MOZ_GUARDED_BY(sLock){false};
+  bool mJournalReadSuccessfully{false};
 
   // Handle used for writing and reading index file.
-  RefPtr<CacheFileHandle> mIndexHandle MOZ_GUARDED_BY(sLock);
+  RefPtr<CacheFileHandle> mIndexHandle;
   // Handle used for reading journal file.
-  RefPtr<CacheFileHandle> mJournalHandle MOZ_GUARDED_BY(sLock);
+  RefPtr<CacheFileHandle> mJournalHandle;
   // Used to check the existence of the file during reading process.
-  RefPtr<CacheFileHandle> mTmpHandle MOZ_GUARDED_BY(sLock);
+  RefPtr<CacheFileHandle> mTmpHandle;
 
-  RefPtr<FileOpenHelper> mIndexFileOpener MOZ_GUARDED_BY(sLock);
-  RefPtr<FileOpenHelper> mJournalFileOpener MOZ_GUARDED_BY(sLock);
-  RefPtr<FileOpenHelper> mTmpFileOpener MOZ_GUARDED_BY(sLock);
+  RefPtr<FileOpenHelper> mIndexFileOpener;
+  RefPtr<FileOpenHelper> mJournalFileOpener;
+  RefPtr<FileOpenHelper> mTmpFileOpener;
 
   // Directory enumerator used when building and updating index.
-  nsCOMPtr<nsIDirectoryEnumerator> mDirEnumerator MOZ_GUARDED_BY(sLock);
+  nsCOMPtr<nsIDirectoryEnumerator> mDirEnumerator;
 
   // Main index hashtable.
-  nsTHashtable<CacheIndexEntry> mIndex MOZ_GUARDED_BY(sLock);
+  nsTHashtable<CacheIndexEntry> mIndex;
 
   // We cannot add, remove or change any entry in mIndex in states READING and
   // WRITING. We track all changes in mPendingUpdates during these states.
-  nsTHashtable<CacheIndexEntryUpdate> mPendingUpdates MOZ_GUARDED_BY(sLock);
+  nsTHashtable<CacheIndexEntryUpdate> mPendingUpdates;
 
   // Contains information statistics for mIndex + mPendingUpdates.
-  CacheIndexStats mIndexStats MOZ_GUARDED_BY(sLock);
+  CacheIndexStats mIndexStats;
 
   // When reading journal, we must first parse the whole file and apply the
   // changes iff the journal was read successfully. mTmpJournal is used to store
   // entries from the journal file. We throw away all these entries if parsing
   // of the journal fails or the hash does not match.
-  nsTHashtable<CacheIndexEntry> mTmpJournal MOZ_GUARDED_BY(sLock);
+  nsTHashtable<CacheIndexEntry> mTmpJournal;
 
   // FrecencyArray maintains order of entry records for eviction. Ideally, the
   // records would be ordered by frecency all the time, but since this would be
@@ -1242,14 +1217,14 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
     uint32_t mRemovedElements{0};
   };
 
-  FrecencyArray mFrecencyArray MOZ_GUARDED_BY(sLock);
+  FrecencyArray mFrecencyArray;
 
-  nsTArray<CacheIndexIterator*> mIterators MOZ_GUARDED_BY(sLock);
+  nsTArray<CacheIndexIterator*> mIterators;
 
   // This flag is true iff we are between CacheStorageService:Clear() and
   // processing all contexts to be evicted.  It will make UI to show
   // "calculating" instead of any intermediate cache size.
-  bool mAsyncGetDiskConsumptionBlocked MOZ_GUARDED_BY(sLock){false};
+  bool mAsyncGetDiskConsumptionBlocked{false};
 
   class DiskConsumptionObserver : public Runnable {
    public:
@@ -1298,11 +1273,10 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   };
 
   // List of async observers that want to get disk consumption information
-  nsTArray<RefPtr<DiskConsumptionObserver>> mDiskConsumptionObservers
-      MOZ_GUARDED_BY(sLock);
+  nsTArray<RefPtr<DiskConsumptionObserver>> mDiskConsumptionObservers;
 
   // Number of bytes written to the cache since the last telemetry report
-  uint64_t mTotalBytesWritten MOZ_GUARDED_BY(sLock){0};
+  uint64_t mTotalBytesWritten{0};
 };
 
 }  // namespace net

@@ -130,14 +130,14 @@ class DetailedCacheHitTelemetry {
   // 10-%15%, ...
   static const uint32_t kHitRateBuckets = 20;
 
-  // Protects sRecordCnt, sHRStats and Telemetry::Accumulated() calls.
-  static StaticMutex sLock;
+  // Protects sRecordCnt, sHitStats and Telemetry::Accumulated() calls.
+  static StaticMutex sLock MOZ_UNANNOTATED;
 
   // Counter of samples that is compared against kTotalSamplesReportLimit.
-  static uint32_t sRecordCnt MOZ_GUARDED_BY(sLock);
+  static uint32_t sRecordCnt;
 
   // Hit rate statistics for every cache size range.
-  static HitRate sHRStats[kNumOfRanges] MOZ_GUARDED_BY(sLock);
+  static HitRate sHRStats[kNumOfRanges];
 };
 
 class CachePerfStats {
@@ -203,11 +203,11 @@ class CachePerfStats {
     MMA mShortAvg;
   };
 
-  static StaticMutex sLock;
+  static StaticMutex sLock MOZ_UNANNOTATED;
 
-  static PerfData sData[LAST] MOZ_GUARDED_BY(sLock);
-  static uint32_t sCacheSlowCnt MOZ_GUARDED_BY(sLock);
-  static uint32_t sCacheNotSlowCnt MOZ_GUARDED_BY(sLock);
+  static PerfData sData[LAST];
+  static uint32_t sCacheSlowCnt;
+  static uint32_t sCacheNotSlowCnt;
 };
 
 void FreeBuffer(void* aBuf);
@@ -223,12 +223,12 @@ class CacheFileLock final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CacheFileLock)
   CacheFileLock() = default;
 
-  mozilla::Mutex& Lock() MOZ_RETURN_CAPABILITY(mLock) { return mLock; }
+  mozilla::Mutex& Lock() { return mLock; }
 
  private:
   ~CacheFileLock() = default;
 
-  mozilla::Mutex mLock{"CacheFile.mLock"};
+  mozilla::Mutex mLock MOZ_UNANNOTATED{"CacheFile.mLock"};
 };
 
 }  // namespace CacheFileUtils

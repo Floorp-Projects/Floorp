@@ -159,10 +159,7 @@ void CacheEntry::Callback::ExchangeEntry(CacheEntry* aEntry) {
   mEntry = aEntry;
 }
 
-// This is called on entries in another entry's mCallback array, under the lock
-// of that other entry.  No other threads can access this entry at this time.
-bool CacheEntry::Callback::DeferDoom(bool* aDoom) const
-    MOZ_NO_THREAD_SAFETY_ANALYSIS {
+bool CacheEntry::Callback::DeferDoom(bool* aDoom) const {
   MOZ_ASSERT(mEntry->mPinningKnown);
 
   if (MOZ_UNLIKELY(mDoomWhenFoundNonPinned) ||

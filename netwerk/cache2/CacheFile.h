@@ -47,9 +47,9 @@ class CacheFileListener : public nsISupports {
 
 NS_DEFINE_STATIC_IID_ACCESSOR(CacheFileListener, CACHEFILELISTENER_IID)
 
-class MOZ_CAPABILITY CacheFile final : public CacheFileChunkListener,
-                                       public CacheFileIOListener,
-                                       public CacheFileMetadataListener {
+class CacheFile final : public CacheFileChunkListener,
+                        public CacheFileIOListener,
+                        public CacheFileMetadataListener {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -140,17 +140,17 @@ class MOZ_CAPABILITY CacheFile final : public CacheFileChunkListener,
 
   virtual ~CacheFile();
 
-  void Lock() MOZ_CAPABILITY_ACQUIRE() { mLock->Lock().Lock(); }
-  void Unlock() MOZ_CAPABILITY_RELEASE() {
+  MOZ_PUSH_IGNORE_THREAD_SAFETY
+  void Lock() { mLock->Lock().Lock(); }
+  void Unlock() {
     // move the elements out of mObjsToRelease
     // so that they can be released after we unlock
     nsTArray<RefPtr<nsISupports>> objs = std::move(mObjsToRelease);
 
     mLock->Lock().Unlock();
   }
-  void AssertOwnsLock() const MOZ_ASSERT_CAPABILITY(this) {
-    mLock->Lock().AssertCurrentThreadOwns();
-  }
+  MOZ_POP_THREAD_SAFETY
+  void AssertOwnsLock() const { mLock->Lock().AssertCurrentThreadOwns(); }
   void ReleaseOutsideLock(RefPtr<nsISupports> aObject);
 
   enum ECallerType { READER = 0, WRITER = 1, PRELOADER = 2 };
@@ -187,13 +187,12 @@ class MOZ_CAPABILITY CacheFile final : public CacheFileChunkListener,
   bool HaveChunkListeners(uint32_t aIndex);
   void NotifyListenersAboutOutputRemoval();
 
-  bool IsDirty() MOZ_REQUIRES(this);
+  bool IsDirty();
   void WriteMetadataIfNeeded();
-  void WriteMetadataIfNeededLocked(bool aFireAndForget = false)
-      MOZ_REQUIRES(this);
-  void PostWriteTimer() MOZ_REQUIRES(this);
+  void WriteMetadataIfNeededLocked(bool aFireAndForget = false);
+  void PostWriteTimer();
 
-  void CleanUpCachedChunks() MOZ_REQUIRES(this);
+  void CleanUpCachedChunks();
 
   nsresult PadChunkWithZeroes(uint32_t aChunkIdx);
 
@@ -202,42 +201,38 @@ class MOZ_CAPABILITY CacheFile final : public CacheFileChunkListener,
 
   nsresult InitIndexEntry();
 
-  bool mOpeningFile MOZ_GUARDED_BY(this){false};
-  bool mReady MOZ_GUARDED_BY(this){false};
-  bool mMemoryOnly MOZ_GUARDED_BY(this){false};
-  bool mSkipSizeCheck MOZ_GUARDED_BY(this){false};
-  bool mOpenAsMemoryOnly MOZ_GUARDED_BY(this){false};
-  bool mPinned MOZ_GUARDED_BY(this){false};
-  bool mPriority MOZ_GUARDED_BY(this){false};
-  bool mDataAccessed MOZ_GUARDED_BY(this){false};
-  bool mDataIsDirty MOZ_GUARDED_BY(this){false};
-  bool mWritingMetadata MOZ_GUARDED_BY(this){false};
-  bool mPreloadWithoutInputStreams MOZ_GUARDED_BY(this){true};
-  uint32_t mPreloadChunkCount MOZ_GUARDED_BY(this){0};
-  nsresult mStatus MOZ_GUARDED_BY(this){NS_OK};
+  bool mOpeningFile{false};
+  bool mReady{false};
+  bool mMemoryOnly{false};
+  bool mSkipSizeCheck{false};
+  bool mOpenAsMemoryOnly{false};
+  bool mPinned{false};
+  bool mPriority{false};
+  bool mDataAccessed{false};
+  bool mDataIsDirty{false};
+  bool mWritingMetadata{false};
+  bool mPreloadWithoutInputStreams{true};
+  uint32_t mPreloadChunkCount{0};
+  nsresult mStatus{NS_OK};
   // Size of the whole data including eventual alternative data represenation.
-  int64_t mDataSize MOZ_GUARDED_BY(this){-1};
+  int64_t mDataSize{-1};
 
   // If there is alternative data present, it contains size of the original
   // data, i.e. offset where alternative data starts. Otherwise it is -1.
-  int64_t mAltDataOffset MOZ_GUARDED_BY(this){-1};
+  int64_t mAltDataOffset{-1};
 
-  nsCString mKey MOZ_GUARDED_BY(this);
-  nsCString mAltDataType
-      MOZ_GUARDED_BY(this);  // The type of the saved alt-data. May be empty.
+  nsCString mKey;
+  nsCString mAltDataType;  // The type of the saved alt-data. May be empty.
 
-  RefPtr<CacheFileHandle> mHandle MOZ_GUARDED_BY(this);
-  RefPtr<CacheFileMetadata> mMetadata MOZ_GUARDED_BY(this);
-  nsCOMPtr<CacheFileListener> mListener MOZ_GUARDED_BY(this);
-  nsCOMPtr<CacheFileIOListener> mDoomAfterOpenListener MOZ_GUARDED_BY(this);
+  RefPtr<CacheFileHandle> mHandle;
+  RefPtr<CacheFileMetadata> mMetadata;
+  nsCOMPtr<CacheFileListener> mListener;
+  nsCOMPtr<CacheFileIOListener> mDoomAfterOpenListener;
   Atomic<bool, Relaxed> mKill{false};
 
-  nsRefPtrHashtable<nsUint32HashKey, CacheFileChunk> mChunks
-      MOZ_GUARDED_BY(this);
-  nsClassHashtable<nsUint32HashKey, ChunkListeners> mChunkListeners
-      MOZ_GUARDED_BY(this);
-  nsRefPtrHashtable<nsUint32HashKey, CacheFileChunk> mCachedChunks
-      MOZ_GUARDED_BY(this);
+  nsRefPtrHashtable<nsUint32HashKey, CacheFileChunk> mChunks;
+  nsClassHashtable<nsUint32HashKey, ChunkListeners> mChunkListeners;
+  nsRefPtrHashtable<nsUint32HashKey, CacheFileChunk> mCachedChunks;
   // We can truncate data only if there is no input/output stream beyond the
   // truncate position, so only unused chunks can be thrown away. But it can
   // happen that we need to throw away a chunk that is still in mChunks (i.e.
@@ -245,32 +240,29 @@ class MOZ_CAPABILITY CacheFile final : public CacheFileChunkListener,
   // delete such chunk immediately but we need to ensure that such chunk won't
   // be returned by GetChunkLocked, so we move this chunk into mDiscardedChunks
   // and mark it as discarded.
-  nsTArray<RefPtr<CacheFileChunk>> mDiscardedChunks MOZ_GUARDED_BY(this);
+  nsTArray<RefPtr<CacheFileChunk>> mDiscardedChunks;
 
-  nsTArray<CacheFileInputStream*> mInputs MOZ_GUARDED_BY(this);
-  CacheFileOutputStream* mOutput MOZ_GUARDED_BY(this){nullptr};
+  nsTArray<CacheFileInputStream*> mInputs;
+  CacheFileOutputStream* mOutput{nullptr};
 
-  nsTArray<RefPtr<nsISupports>> mObjsToRelease MOZ_GUARDED_BY(this);
+  nsTArray<RefPtr<nsISupports>> mObjsToRelease;
   RefPtr<CacheFileUtils::CacheFileLock> mLock;
 };
 
-class MOZ_RAII MOZ_SCOPED_CAPABILITY CacheFileAutoLock {
+class CacheFileAutoLock {
  public:
-  explicit CacheFileAutoLock(CacheFile* aFile) MOZ_CAPABILITY_ACQUIRE(aFile)
-      : mFile(aFile), mLocked(true) {
+  explicit CacheFileAutoLock(CacheFile* aFile) : mFile(aFile), mLocked(true) {
     mFile->Lock();
   }
-  ~CacheFileAutoLock() MOZ_CAPABILITY_RELEASE() {
-    if (mLocked) {
-      mFile->Unlock();
-    }
+  ~CacheFileAutoLock() {
+    if (mLocked) mFile->Unlock();
   }
-  void Lock() MOZ_CAPABILITY_ACQUIRE() {
+  void Lock() {
     MOZ_ASSERT(!mLocked);
     mFile->Lock();
     mLocked = true;
   }
-  void Unlock() MOZ_CAPABILITY_RELEASE() {
+  void Unlock() {
     MOZ_ASSERT(mLocked);
     mFile->Unlock();
     mLocked = false;
