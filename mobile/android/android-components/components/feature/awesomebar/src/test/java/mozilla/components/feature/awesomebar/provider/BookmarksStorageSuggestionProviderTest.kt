@@ -12,6 +12,7 @@ import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.concept.storage.BookmarksStorage
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.utils.StorageUtils.levenshteinDistance
@@ -157,6 +158,56 @@ class BookmarksStorageSuggestionProviderTest {
         assertNull(suggestions[0].editSuggestion)
         assertEquals("http://www.mozilla.org", suggestions[0].description)
         verify(engine, times(1)).speculativeConnect(eq(suggestions[0].description!!))
+    }
+
+    @Test
+    fun `GIVEN no external filter WHEN querying bookmarks THEN query a low number of results`() = runTest {
+        val bookmarksSpy = spy(bookmarks)
+        val provider = BookmarksStorageSuggestionProvider(
+            bookmarksStorage = bookmarksSpy,
+            loadUrlUseCase = mock(),
+        )
+
+        provider.onInputChanged("moz")
+
+        verify(bookmarksSpy).searchBookmarks("moz", BOOKMARKS_SUGGESTION_LIMIT)
+    }
+
+    @Test
+    fun `GIVEN a results host filter WHEN querying bookmarks THEN query more than the usual default results for the host url`() = runTest {
+        val bookmarksSpy = spy(bookmarks)
+        val provider = BookmarksStorageSuggestionProvider(
+            bookmarksStorage = bookmarksSpy,
+            loadUrlUseCase = mock(),
+            resultsHostFilter = "test",
+        )
+
+        provider.onInputChanged("moz")
+
+        verify(bookmarksSpy).searchBookmarks(
+            "test",
+            BOOKMARKS_SUGGESTION_LIMIT * BOOKMARKS_RESULTS_TO_FILTER_SCALE_FACTOR,
+        )
+    }
+
+    @Test
+    fun `GIVEN a results host filter WHEN querying bookmarks THEN return only the results that pass through the filter`() = runTest {
+        val bookmarksSpy = spy(bookmarks)
+        val provider = BookmarksStorageSuggestionProvider(
+            bookmarksStorage = bookmarksSpy,
+            loadUrlUseCase = mock(),
+            resultsHostFilter = "https://mozilla.com".tryGetHostFromUrl(),
+        )
+
+        bookmarks.addItem("Other", "https://mozilla.com/firefox", newItem.title!!, null)
+        bookmarks.addItem("Test", "https://mozilla.com/focus", newItem.title!!, null)
+        bookmarks.addItem("Mozilla", "https://mozilla.org/firefox", newItem.title!!, null)
+
+        val suggestions = provider.onInputChanged("moz")
+
+        assertEquals(2, suggestions.size)
+        assertTrue(suggestions.map { it.description }.contains("https://mozilla.com/firefox"))
+        assertTrue(suggestions.map { it.description }.contains("https://mozilla.com/focus"))
     }
 
     @SuppressWarnings

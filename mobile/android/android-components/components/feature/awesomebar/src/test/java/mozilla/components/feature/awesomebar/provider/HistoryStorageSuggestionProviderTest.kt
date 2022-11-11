@@ -16,6 +16,7 @@ import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.facts.FactProcessor
 import mozilla.components.support.base.facts.Facts
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -302,5 +303,61 @@ class HistoryStorageSuggestionProviderTest {
             ),
             emittedFacts.first(),
         )
+    }
+
+    @Test
+    fun `GIVEN no external filter WHEN querying history THEN query the provided number of max results`() = runTest {
+        val history: HistoryStorage = mock()
+        val provider = HistoryStorageSuggestionProvider(
+            historyStorage = history,
+            loadUrlUseCase = mock(),
+            maxNumberOfSuggestions = 13,
+        )
+
+        provider.onInputChanged("moz")
+
+        verify(history).getSuggestions("moz", 13)
+    }
+
+    @Test
+    fun `GIVEN a results host filter WHEN querying history THEN query more than the usual default results for the host url`() = runTest {
+        val history: HistoryStorage = mock()
+        val provider = HistoryStorageSuggestionProvider(
+            historyStorage = history,
+            loadUrlUseCase = mock(),
+            maxNumberOfSuggestions = 13,
+            resultsHostFilter = "test",
+        )
+        val expectedQueryCount = 13 * HISTORY_RESULTS_TO_FILTER_SCALE_FACTOR
+
+        provider.onInputChanged("moz")
+
+        verify(history).getSuggestions("test", expectedQueryCount)
+    }
+
+    @Test
+    fun `GIVEN a results host filter WHEN querying history THEN return only the results that pass through the filter`() = runTest {
+        val history: HistoryStorage = mock()
+        doReturn(
+            listOf(
+                SearchResult("3", "https://mozilla.com/firefox", 10),
+                SearchResult("5", "http://firefox.com/mozilla", 10),
+                SearchResult("2", "http://allizom.com/focus/", 10),
+                SearchResult("4", "https://mozilla.com/thunderbird", 10),
+                SearchResult("16", "http://www.mozilla.com/firefox", 22),
+            ),
+        ).`when`(history).getSuggestions(anyString(), anyInt())
+
+        val provider = HistoryStorageSuggestionProvider(
+            historyStorage = history,
+            loadUrlUseCase = mock(),
+            resultsHostFilter = "https://mozilla.com".tryGetHostFromUrl(),
+        )
+
+        val suggestions = provider.onInputChanged("moz")
+
+        assertEquals(2, suggestions.size)
+        assertTrue(suggestions.map { it.description }.contains("https://mozilla.com/firefox"))
+        assertTrue(suggestions.map { it.description }.contains("https://mozilla.com/thunderbird"))
     }
 }

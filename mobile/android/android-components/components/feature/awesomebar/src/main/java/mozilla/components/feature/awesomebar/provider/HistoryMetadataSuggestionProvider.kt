@@ -5,6 +5,7 @@
 package mozilla.components.feature.awesomebar.provider
 
 import androidx.annotation.VisibleForTesting
+import androidx.core.net.toUri
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.awesomebar.AwesomeBar
@@ -22,6 +23,12 @@ import java.util.UUID
 const val DEFAULT_METADATA_SUGGESTION_LIMIT = 5
 
 /**
+ * Default suggestions limit multiplier when needing to filter results by an external url filter.
+ */
+@VisibleForTesting
+internal const val HISTORY_METADATA_RESULTS_TO_FILTER_SCALE_FACTOR = 10
+
+/**
  * A [AwesomeBar.SuggestionProvider] implementation that provides suggestions based on [HistoryMetadata].
  *
  * @param historyStorage an instance of the [HistoryStorage] used
@@ -36,6 +43,7 @@ const val DEFAULT_METADATA_SUGGESTION_LIMIT = 5
  * defaults to [DEFAULT_METADATA_SUGGESTION_LIMIT].
  * @param showEditSuggestion optional parameter to specify if the suggestion should show the edit button
  * @param suggestionsHeader optional parameter to specify if the suggestion should have a header
+ * @param resultsHostFilter Optional filter for the host url of the suggestions to show.
  */
 class HistoryMetadataSuggestionProvider(
     @get:VisibleForTesting internal val historyStorage: HistoryMetadataStorage,
@@ -45,6 +53,7 @@ class HistoryMetadataSuggestionProvider(
     @get:VisibleForTesting internal val maxNumberOfSuggestions: Int = DEFAULT_METADATA_SUGGESTION_LIMIT,
     private val showEditSuggestion: Boolean = true,
     private val suggestionsHeader: String? = null,
+    @get:VisibleForTesting val resultsHostFilter: String? = null,
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
@@ -59,13 +68,38 @@ class HistoryMetadataSuggestionProvider(
             return emptyList()
         }
 
-        val suggestions = historyStorage
-            .queryHistoryMetadata(text, maxNumberOfSuggestions)
-            .filter { it.totalViewTime > 0 }
+        val suggestions = when (resultsHostFilter) {
+            null -> getHistorySuggestions(text)
+            else -> getHistorySuggestionsFromHost(resultsHostFilter, text)
+        }
 
         suggestions.firstOrNull()?.key?.url?.let { url -> engine?.speculativeConnect(url) }
         return suggestions.into(this, icons, loadUrlUseCase, showEditSuggestion)
     }
+
+    /**
+     * Get up to [maxNumberOfSuggestions] history metadata suggestions matching [query].
+     *
+     * @param query String to filter history entry's title or URL by.
+     */
+    private suspend fun getHistorySuggestions(query: String) = historyStorage
+        .queryHistoryMetadata(query, maxNumberOfSuggestions)
+        .filter { it.totalViewTime > 0 }
+
+    /**
+     * Get up to [maxNumberOfSuggestions] history metadata suggestions matching [query] from the indicated [host].
+     *
+     * @param query String to filter history entry's title or URL by.
+     * @param host URL host to filter all history entry's URL host by.
+     */
+    private suspend fun getHistorySuggestionsFromHost(host: String, query: String) = historyStorage
+        .queryHistoryMetadata(host, maxNumberOfSuggestions * HISTORY_METADATA_RESULTS_TO_FILTER_SCALE_FACTOR)
+        .filter {
+            it.totalViewTime > 0 &&
+                it.key.url.toUri().host == host &&
+                (it.key.url.contains(query, true) || it.title?.contains(query, true) ?: false)
+        }
+        .take(maxNumberOfSuggestions)
 }
 
 internal suspend fun Iterable<HistoryMetadata>.into(

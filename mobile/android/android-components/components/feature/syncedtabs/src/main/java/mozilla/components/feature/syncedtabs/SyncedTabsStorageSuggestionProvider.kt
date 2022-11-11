@@ -4,6 +4,7 @@
 package mozilla.components.feature.syncedtabs
 
 import android.graphics.drawable.Drawable
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.storage.sync.TabEntry
@@ -13,6 +14,7 @@ import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.syncedtabs.facts.emitSyncedTabSuggestionClickedFact
 import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import java.util.UUID
 
 /**
@@ -25,6 +27,7 @@ class SyncedTabsStorageSuggestionProvider(
     private val icons: BrowserIcons? = null,
     private val deviceIndicators: DeviceIndicators = DeviceIndicators(),
     private val suggestionsHeader: String? = null,
+    @get:VisibleForTesting val resultsHostFilter: String? = null,
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
@@ -42,8 +45,9 @@ class SyncedTabsStorageSuggestionProvider(
             for (tab in tabs) {
                 val activeTabEntry = tab.active()
                 // This is a fairly naive match implementation, but this is what we do on Desktop 🤷.
-                if (activeTabEntry.url.contains(text, ignoreCase = true) ||
-                    activeTabEntry.title.contains(text, ignoreCase = true)
+                if ((activeTabEntry.url.contains(text, ignoreCase = true) ||
+                        activeTabEntry.title.contains(text, ignoreCase = true)) &&
+                    resultsHostFilter?.equals(activeTabEntry.url.tryGetHostFromUrl()) != false
                 ) {
                     results.add(
                         ClientTabPair(

@@ -12,6 +12,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -245,5 +246,34 @@ class SessionSuggestionProviderTest {
         assertEquals("a", suggestions.first().id)
         assertEquals("Wikipedia", suggestions.first().title)
         assertEquals("Switch to tab", suggestions.first().description)
+    }
+
+    @Test
+    fun `GIVEN a results host filter WHEN querying tabs THEN return only the results that pass through the filter`() = runTest {
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab(id = "a", url = "https://wikipedia.org"),
+                    createTab(id = "b", url = "https://mozilla.org/firefox"),
+                    createTab(id = "c", url = "https://mozilla.org/focus"),
+                    createTab(id = "d", url = "https://www.mozilla.org/vpn"),
+                ),
+                selectedTabId = "d",
+            ),
+        )
+        val resources: Resources = mock()
+        `when`(resources.getString(anyInt())).thenReturn("Switch to tab")
+        val provider = SessionSuggestionProvider(
+            resources = resources,
+            store = store,
+            selectTabUseCase = mock(),
+            resultsHostFilter = "https://mozilla.org".tryGetHostFromUrl(),
+        )
+
+        val suggestions = provider.onInputChanged("moz")
+
+        assertEquals(2, suggestions.size)
+        assertTrue(suggestions.map { it.title }.contains("https://mozilla.org/firefox"))
+        assertTrue(suggestions.map { it.title }.contains("https://mozilla.org/focus"))
     }
 }

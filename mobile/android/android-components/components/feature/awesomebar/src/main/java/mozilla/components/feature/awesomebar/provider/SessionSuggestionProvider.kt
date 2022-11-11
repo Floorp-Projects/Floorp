@@ -6,6 +6,7 @@ package mozilla.components.feature.awesomebar.provider
 
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.Deferred
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.Icon
@@ -17,6 +18,7 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.feature.awesomebar.R
 import mozilla.components.feature.awesomebar.facts.emitOpenTabSuggestionClickedFact
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import java.util.UUID
 
 /**
@@ -32,6 +34,7 @@ class SessionSuggestionProvider(
     private val indicatorIcon: Drawable? = null,
     private val excludeSelectedSession: Boolean = false,
     private val suggestionsHeader: String? = null,
+    @get:VisibleForTesting val resultsHostFilter: String? = null,
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
@@ -39,6 +42,7 @@ class SessionSuggestionProvider(
         return suggestionsHeader
     }
 
+    @Suppress("ComplexCondition")
     override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
         if (text.isEmpty()) {
             return emptyList()
@@ -54,6 +58,7 @@ class SessionSuggestionProvider(
 
         tabs.zip(iconRequests) { result, icon ->
             if (
+                resultsHostFilter?.equals(result.content.url.tryGetHostFromUrl()) != false &&
                 result.contains(text) &&
                 !result.content.private &&
                 shouldIncludeSelectedTab(state, result)

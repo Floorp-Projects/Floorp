@@ -14,6 +14,7 @@ import mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Flag
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
@@ -40,65 +41,8 @@ class SyncedTabsStorageSuggestionProviderTest {
     @Test
     fun `matches remote tabs`() = runTest {
         val provider = SyncedTabsStorageSuggestionProvider(syncedTabs, mock(), mock(), indicatorIcon)
-        val deviceTabs1 = SyncedDeviceTabs(
-            Device(
-                id = "client1",
-                displayName = "Foo Client",
-                deviceType = DeviceType.DESKTOP,
-                isCurrentDevice = false,
-                lastAccessTime = null,
-                capabilities = listOf(),
-                subscriptionExpired = false,
-                subscription = null,
-            ),
-            listOf(
-                Tab(
-                    listOf(
-                        TabEntry("Foo", "https://foo.bar", null), /* active tab */
-                        TabEntry("Bobo", "https://foo.bar", null),
-                        TabEntry("Foo", "https://bobo.bar", null),
-                    ),
-                    0,
-                    1,
-                ),
-                Tab(
-                    listOf(
-                        TabEntry("Hello Bobo", "https://foo.bar", null), /* active tab */
-                    ),
-                    0,
-                    5,
-                ),
-                Tab(
-                    listOf(
-                        TabEntry("In URL", "https://bobo.bar", null), /* active tab */
-                    ),
-                    0,
-                    2,
-                ),
-            ),
-        )
-        val deviceTabs2 = SyncedDeviceTabs(
-            Device(
-                id = "client2",
-                displayName = "Bar Client",
-                deviceType = DeviceType.MOBILE,
-                isCurrentDevice = false,
-                lastAccessTime = null,
-                capabilities = listOf(),
-                subscriptionExpired = false,
-                subscription = null,
-            ),
-            listOf(
-                Tab(
-                    listOf(
-                        TabEntry("Bar", "https://bar.bar", null),
-                        TabEntry("BOBO in CAPS", "https://obob.bar", null), /* active tab */
-                    ),
-                    1,
-                    1,
-                ),
-            ),
-        )
+        val deviceTabs1 = getDevice1Tabs()
+        val deviceTabs2 = getDevice2Tabs()
         whenever(syncedTabs.getSyncedDeviceTabs()).thenReturn(listOf(deviceTabs1, deviceTabs2))
         whenever(indicatorIcon.desktop).thenReturn(indicatorIconDesktop)
         whenever(indicatorIcon.mobile).thenReturn(indicatorIconMobile)
@@ -121,4 +65,89 @@ class SyncedTabsStorageSuggestionProviderTest {
         assertNotNull(suggestions[1].indicatorIcon)
         assertNotNull(suggestions[2].indicatorIcon)
     }
+
+    @Test
+    fun `GIVEN an external filter WHEN querying tabs THEN return only the results that pass through the filter`() = runTest {
+        val deviceTabs1 = getDevice1Tabs()
+        val deviceTabs2 = getDevice2Tabs()
+        whenever(syncedTabs.getSyncedDeviceTabs()).thenReturn(listOf(deviceTabs1, deviceTabs2))
+        whenever(indicatorIcon.desktop).thenReturn(indicatorIconDesktop)
+        whenever(indicatorIcon.mobile).thenReturn(indicatorIconMobile)
+
+        val provider = SyncedTabsStorageSuggestionProvider(
+            syncedTabs = syncedTabs,
+            loadUrlUseCase = mock(),
+            icons = mock(),
+            deviceIndicators = indicatorIcon,
+            resultsHostFilter = "https://foo.bar".tryGetHostFromUrl(),
+        )
+
+        val suggestions = provider.onInputChanged("foo")
+
+        assertEquals(2, suggestions.size)
+        // The url is behind the "onSuggestionClicked" lambda.
+        // Check the descriptions of the only two tabs that have the "foo.bar" host.
+        assertEquals(2, suggestions.map { it.description }.filter { it == "Foo Client" }.size)
+    }
 }
+
+private fun getDevice1Tabs() = SyncedDeviceTabs(
+    Device(
+        id = "client1",
+        displayName = "Foo Client",
+        deviceType = DeviceType.DESKTOP,
+        isCurrentDevice = false,
+        lastAccessTime = null,
+        capabilities = listOf(),
+        subscriptionExpired = false,
+        subscription = null,
+    ),
+    listOf(
+        Tab(
+            listOf(
+                TabEntry("Foo", "https://foo.bar", null), /* active tab */
+                TabEntry("Bobo", "https://foo.bar", null),
+                TabEntry("Foo", "https://bobo.bar", null),
+            ),
+            0,
+            1,
+        ),
+        Tab(
+            listOf(
+                TabEntry("Hello Bobo", "https://foo.bar", null), /* active tab */
+            ),
+            0,
+            5,
+        ),
+        Tab(
+            listOf(
+                TabEntry("In URL", "https://bobo.bar", null), /* active tab */
+            ),
+            0,
+            2,
+        ),
+    ),
+)
+
+private fun getDevice2Tabs() = SyncedDeviceTabs(
+    Device(
+        id = "client2",
+        displayName = "Bar Client",
+        deviceType = DeviceType.MOBILE,
+        isCurrentDevice = false,
+        lastAccessTime = null,
+        capabilities = listOf(),
+        subscriptionExpired = false,
+        subscription = null,
+    ),
+    listOf(
+        Tab(
+            listOf(
+                TabEntry("Bar", "https://bar.bar", null),
+                TabEntry("BOBO in CAPS", "https://obob.bar", null), /* active tab */
+            ),
+            1,
+            1,
+        ),
+    ),
+)

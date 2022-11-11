@@ -10,6 +10,9 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
 * **feature-awesomebar**
+  * 🆕 [Bug #1800268](https://bugzilla.mozilla.org/show_bug.cgi?id=1800268) A new optional lambda `resultsHostFilter` has been added to the constructors of some AwesomeBar suggestions providers. This will allow for external url filtering of the provided suggestions.
+
+* **feature-awesomebar**
   * 🆕 New `SearchTermSuggestionsProvider` that will show by default up to 2 search suggestions based on past searches the user has done with the current search engine. These suggestions will appear between the search action ones and the search suggestion ones. [bug #1804258](https://bugzilla.mozilla.org/show_bug.cgi?id=1804258).
 
 * **feature-downloads**:

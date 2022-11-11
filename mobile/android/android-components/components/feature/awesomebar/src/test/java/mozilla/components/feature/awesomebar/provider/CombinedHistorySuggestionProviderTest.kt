@@ -13,6 +13,7 @@ import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.concept.storage.HistoryMetadataStorage
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.SearchResult
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -22,6 +23,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.Mockito.anyInt
+import org.mockito.Mockito.anyString
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
@@ -266,5 +268,72 @@ class CombinedHistorySuggestionProviderTest {
         provider.resetToDefaultMaxSuggestions()
         suggestions = provider.onInputChanged("moz")
         assertEquals(5, suggestions.size)
+    }
+
+    @Test
+    fun `GIVEN no external filter WHEN querying history THEN query a low number of results`() = runTest {
+        val history: HistoryStorage = mock()
+        val metadata: HistoryMetadataStorage = mock()
+        doReturn(emptyList<HistoryMetadata>()).`when`(metadata).queryHistoryMetadata(eq("moz"), anyInt())
+        doReturn(emptyList<SearchResult>()).`when`(history).getSuggestions(eq("moz"), anyInt())
+
+        val provider = CombinedHistorySuggestionProvider(history, metadata, mock(), showEditSuggestion = false)
+
+        provider.onInputChanged("moz")
+
+        verify(history).getSuggestions("moz", DEFAULT_COMBINED_SUGGESTION_LIMIT)
+        verify(metadata).queryHistoryMetadata("moz", DEFAULT_COMBINED_SUGGESTION_LIMIT)
+    }
+
+    @Test
+    fun `GIVEN a results host filter WHEN querying history THEN query more than the usual default results for the host url`() = runTest {
+        val history: HistoryStorage = mock()
+        val metadata: HistoryMetadataStorage = mock()
+        doReturn(emptyList<HistoryMetadata>()).`when`(metadata).queryHistoryMetadata(eq("test"), anyInt())
+        doReturn(emptyList<SearchResult>()).`when`(history).getSuggestions(eq("test"), anyInt())
+        val expectedQueryCount = DEFAULT_COMBINED_SUGGESTION_LIMIT * COMBINED_HISTORY_RESULTS_TO_FILTER_SCALE_FACTOR
+
+        val provider = CombinedHistorySuggestionProvider(
+            historyStorage = history,
+            historyMetadataStorage = metadata,
+            loadUrlUseCase = mock(),
+            showEditSuggestion = false,
+            resultsHostFilter = "test",
+        )
+
+        provider.onInputChanged("moz")
+
+        verify(history).getSuggestions("test", expectedQueryCount)
+        verify(metadata).queryHistoryMetadata("test", expectedQueryCount)
+    }
+
+    @Test
+    fun `GIVEN a results host filter WHEN querying history THEN return only the results that pass through the filter`() = runTest {
+        val history: HistoryStorage = mock()
+        val metadata: HistoryMetadataStorage = mock()
+        doReturn(emptyList<HistoryMetadata>()).`when`(metadata).queryHistoryMetadata(anyString(), anyInt())
+        doReturn(
+            listOf(
+                SearchResult("3", "https://mozilla.com/firefox", 10),
+                SearchResult("5", "http://firefox.com/mozilla", 10),
+                SearchResult("2", "http://allizom.com/focus/", 10),
+                SearchResult("4", "https://mozilla.com/thunderbird", 10),
+                SearchResult("16", "http://www.mozilla.com/firefox", 22),
+            ),
+        ).`when`(history).getSuggestions(anyString(), anyInt())
+
+        val provider = CombinedHistorySuggestionProvider(
+            historyStorage = history,
+            historyMetadataStorage = metadata,
+            loadUrlUseCase = mock(),
+            showEditSuggestion = false,
+            resultsHostFilter = "https://mozilla.com".tryGetHostFromUrl(),
+        )
+
+        val suggestions = provider.onInputChanged("moz")
+
+        assertEquals(2, suggestions.size)
+        assertTrue(suggestions.map { it.description }.contains("https://mozilla.com/firefox"))
+        assertTrue(suggestions.map { it.description }.contains("https://mozilla.com/thunderbird"))
     }
 }

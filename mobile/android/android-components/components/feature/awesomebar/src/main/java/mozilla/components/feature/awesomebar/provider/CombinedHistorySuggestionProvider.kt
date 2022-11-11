@@ -4,6 +4,8 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import androidx.annotation.VisibleForTesting
+import androidx.core.net.toUri
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import mozilla.components.browser.icons.BrowserIcons
@@ -19,6 +21,12 @@ import java.util.UUID
  * Return 5 history suggestions by default.
  */
 const val DEFAULT_COMBINED_SUGGESTION_LIMIT = 5
+
+/**
+ * Default suggestions limit multiplier when needing to filter results by an external url filter.
+ */
+@VisibleForTesting
+internal const val COMBINED_HISTORY_RESULTS_TO_FILTER_SCALE_FACTOR = 10
 
 /**
  * A [AwesomeBar.SuggestionProvider] implementation that combines suggestions from
@@ -41,6 +49,7 @@ const val DEFAULT_COMBINED_SUGGESTION_LIMIT = 5
  * defaults to [DEFAULT_COMBINED_SUGGESTION_LIMIT].
  * @param showEditSuggestion optional parameter to specify if the suggestion should show the edit button
  * @param suggestionsHeader optional parameter to specify if the suggestion should have a header
+ * @param resultsHostFilter Optional filter for the host url of the suggestions to show.
  */
 @Suppress("LongParameterList")
 class CombinedHistorySuggestionProvider(
@@ -52,6 +61,7 @@ class CombinedHistorySuggestionProvider(
     internal var maxNumberOfSuggestions: Int = DEFAULT_COMBINED_SUGGESTION_LIMIT,
     private val showEditSuggestion: Boolean = true,
     private val suggestionsHeader: String? = null,
+    @get:VisibleForTesting val resultsHostFilter: String? = null,
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
@@ -68,16 +78,17 @@ class CombinedHistorySuggestionProvider(
         }
 
         val metadataSuggestionsAsync = async {
-            historyMetadataStorage
-                .queryHistoryMetadata(text, maxNumberOfSuggestions)
-                .filter { it.totalViewTime > 0 }
-                .into(this@CombinedHistorySuggestionProvider, icons, loadUrlUseCase, showEditSuggestion)
+            when (resultsHostFilter) {
+                null -> getMetadataSuggestions(text)
+                else -> getMetadataSuggestionsFromHost(resultsHostFilter, text)
+            }
         }
+
         val historySuggestionsAsync = async {
-            historyStorage.getSuggestions(text, maxNumberOfSuggestions)
-                .sortedByDescending { it.score }
-                .distinctBy { it.id }
-                .into(this@CombinedHistorySuggestionProvider, icons, loadUrlUseCase, showEditSuggestion)
+            when (resultsHostFilter) {
+                null -> getHistorySuggestions(text)
+                else -> getHistorySuggestionsFromHost(resultsHostFilter, text)
+            }
         }
 
         val metadataSuggestions = metadataSuggestionsAsync.await()
@@ -115,9 +126,69 @@ class CombinedHistorySuggestionProvider(
     }
 
     /**
+     * Get the maximum number of suggestions that will be provided.
+     */
+    @VisibleForTesting
+    fun getMaxNumberOfSuggestions() = maxNumberOfSuggestions
+
+    /**
      * Reset maximum number of suggestions to default.
      */
     fun resetToDefaultMaxSuggestions() {
         maxNumberOfSuggestions = DEFAULT_COMBINED_SUGGESTION_LIMIT
     }
+
+    /**
+     * Get up to [maxNumberOfSuggestions] history metadata suggestions matching [query].
+     *
+     * @param query String to filter bookmarks' title or URL by.
+     */
+    private suspend fun getMetadataSuggestions(query: String) = historyMetadataStorage
+        .queryHistoryMetadata(query, maxNumberOfSuggestions)
+        .filter { it.totalViewTime > 0 }
+        .into(this@CombinedHistorySuggestionProvider, icons, loadUrlUseCase, showEditSuggestion)
+
+    /**
+     * Get up to [maxNumberOfSuggestions] history metadata suggestions matching [query] from the indicated [host].
+     *
+     * @param query String to filter history entry's title or URL by.
+     * @param host URL host to filter all history entry's URL host by.
+     */
+    private suspend fun getMetadataSuggestionsFromHost(host: String, query: String) = historyMetadataStorage
+        .queryHistoryMetadata(host, maxNumberOfSuggestions * COMBINED_HISTORY_RESULTS_TO_FILTER_SCALE_FACTOR)
+        .filter {
+            it.totalViewTime > 0 &&
+                it.key.url.toUri().host == host &&
+                (it.key.url.contains(query, true) || it.title?.contains(query, true) ?: false)
+        }
+        .take(maxNumberOfSuggestions)
+        .into(this@CombinedHistorySuggestionProvider, icons, loadUrlUseCase, showEditSuggestion)
+
+    /**
+     * Get up to [maxNumberOfSuggestions] history suggestions matching [query].
+     *
+     * @param query String to filter history entry's title or URL by.
+     */
+    private suspend fun getHistorySuggestions(query: String) = historyStorage
+        .getSuggestions(query, maxNumberOfSuggestions)
+        .sortedByDescending { it.score }
+        .distinctBy { it.id }
+        .into(this@CombinedHistorySuggestionProvider, icons, loadUrlUseCase, showEditSuggestion)
+
+    /**
+     * Get up to [maxNumberOfSuggestions] history metadata suggestions matching [query] from the indicated [host].
+     *
+     * @param query String to filter history entry's title or URL by.
+     * @param host URL host to filter all bookmarks' URL host by.
+     */
+    private suspend fun getHistorySuggestionsFromHost(host: String, query: String) = historyStorage
+        .getSuggestions(host, maxNumberOfSuggestions * COMBINED_HISTORY_RESULTS_TO_FILTER_SCALE_FACTOR)
+        .distinctBy { it.id }
+        .sortedByDescending { it.score }
+        .filter {
+            it.url.toUri().host == host &&
+                (it.url.contains(query, true) || it.title?.contains(query, true) ?: false)
+        }
+        .take(maxNumberOfSuggestions)
+        .into(this@CombinedHistorySuggestionProvider, icons, loadUrlUseCase, showEditSuggestion)
 }

@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.engine.Engine
@@ -17,6 +18,7 @@ import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.facts.FactProcessor
 import mozilla.components.support.base.facts.Facts
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
@@ -25,6 +27,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.doReturn
@@ -34,6 +37,7 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 @ExperimentalCoroutinesApi // for runTest
+@RunWith(AndroidJUnit4::class)
 class HistoryMetadataSuggestionProviderTest {
     private val historyEntry = HistoryMetadata(
         key = HistoryMetadataKey("http://www.mozilla.com", null, null),
@@ -218,5 +222,61 @@ class HistoryMetadataSuggestionProviderTest {
         assertEquals(historyEntry.key.url, suggestions[0].description)
         assertEquals(historyEntry.title, suggestions[0].title)
         assertNull(suggestions[0].editSuggestion)
+    }
+
+    @Test
+    fun `GIVEN no external filter WHEN querying history THEN query a low number of results`() = runTest {
+        val storage: HistoryMetadataStorage = mock()
+        doReturn(emptyList<HistoryMetadata>()).`when`(storage).queryHistoryMetadata(anyString(), anyInt())
+        val provider = HistoryMetadataSuggestionProvider(storage, mock())
+
+        provider.onInputChanged("moz")
+
+        verify(storage).queryHistoryMetadata("moz", DEFAULT_METADATA_SUGGESTION_LIMIT)
+    }
+
+    @Test
+    fun `GIVEN a results host filter WHEN querying history THEN query more than the usual default results for the host url`() = runTest {
+        val storage: HistoryMetadataStorage = mock()
+        doReturn(emptyList<HistoryMetadata>()).`when`(storage).queryHistoryMetadata(anyString(), anyInt())
+        val expectedQueryCount = 2 * HISTORY_METADATA_RESULTS_TO_FILTER_SCALE_FACTOR
+
+        val provider = HistoryMetadataSuggestionProvider(
+            historyStorage = storage,
+            loadUrlUseCase = mock(),
+            maxNumberOfSuggestions = 2,
+            resultsHostFilter = "test",
+        )
+
+        provider.onInputChanged("moz")
+
+        verify(storage).queryHistoryMetadata("test", expectedQueryCount)
+    }
+
+    @Test
+    fun `GIVEN a results host filter WHEN querying history THEN return only the results that pass through the filter`() = runTest {
+        val storage: HistoryMetadataStorage = mock()
+        val metadataKey2 = HistoryMetadataKey("https://mozilla.com/firefox", null, null)
+        val historyEntry2 = HistoryMetadata(
+            key = metadataKey2,
+            title = "mozilla",
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis(),
+            totalViewTime = 10,
+            documentType = DocumentType.Regular,
+            previewImageUrl = null,
+        )
+        doReturn(listOf(historyEntry, historyEntry2)).`when`(storage).queryHistoryMetadata(anyString(), anyInt())
+
+        val provider = HistoryMetadataSuggestionProvider(
+            historyStorage = storage,
+            loadUrlUseCase = mock(),
+            resultsHostFilter = "https://mozilla.com".tryGetHostFromUrl(),
+        )
+
+        val suggestions = provider.onInputChanged("moz")
+
+        assertEquals(1, suggestions.size)
+        assertTrue(suggestions.map { it.description }.contains("https://mozilla.com/firefox"))
     }
 }
