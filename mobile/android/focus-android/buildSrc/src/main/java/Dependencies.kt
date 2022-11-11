@@ -63,7 +63,7 @@ object Versions {
 
     object ThirdParty {
         const val jna = "5.12.1"
-        const val leakcanary = "2.9.1"
+        const val leakcanary = "2.10"
         const val sentry = "6.6.0"
     }
 
