@@ -372,26 +372,19 @@ add_task(
     let { infoArray, infoMap } = await doMessage({});
 
     Assert.ok(
-      "RemoteSettingsClient.sync" in infoMap,
-      "RemoteSettingsClient.sync was invoked"
+      "RemoteSettingsClient.get" in infoMap,
+      "RemoteSettingsClient.get was invoked"
     );
 
     for (let info of infoArray) {
-      if ("RemoteSettingsClient.sync" in info) {
-        break;
-      }
-
       if ("RemoteSettingsClient.get" in info) {
+        const { options: calledOptions } = info["RemoteSettingsClient.get"];
         Assert.ok(
-          false,
-          "RemoteSettingsClient.sync not invoked before RemoteSettingsClient.get"
+          calledOptions.forceSync,
+          "RemoteSettingsClient.get was first called with `forceSync`"
         );
+        return;
       }
     }
-
-    Assert.ok(
-      true,
-      "RemoteSettingsClient.sync was invoked before any RemoteSettingsClient.get"
-    );
   }
 );

@@ -90,14 +90,8 @@ function monkeyPatchRemoteSettingsClient({
   last_modified = new Date().getTime(),
   data = [],
 }) {
-  lazy.RemoteSettingsClient.prototype.sync = async () => {
-    let response = { last_modified };
-    outputInfo({ "RemoteSettingsClient.sync": { response } });
-    return [response];
-  };
-
-  lazy.RemoteSettingsClient.prototype.get = async () => {
-    outputInfo({ "RemoteSettingsClient.get": { response: { data } } });
+  lazy.RemoteSettingsClient.prototype.get = async (options = {}) => {
+    outputInfo({ "RemoteSettingsClient.get": { options, response: { data } } });
     return data;
   };
 }
