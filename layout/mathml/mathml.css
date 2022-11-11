@@ -20,6 +20,8 @@ math {
   display: inline;
   font-size: inherit;
   font-style: normal;
+  font-weight: normal;
+  text-indent: 0;
   font-family: serif;
   line-height: normal;
   word-spacing: normal;
