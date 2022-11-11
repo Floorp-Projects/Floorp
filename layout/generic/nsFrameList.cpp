@@ -42,8 +42,8 @@ void nsFrameList::DestroyFrames() {
   mLastChild = nullptr;
 }
 
-void nsFrameList::DestroyFramesFrom(
-    nsIFrame* aDestructRoot, layout::PostFrameDestroyData& aPostDestroyData) {
+void nsFrameList::DestroyFramesFrom(nsIFrame* aDestructRoot,
+                                    PostFrameDestroyData& aPostDestroyData) {
   MOZ_ASSERT(aDestructRoot, "Missing destruct root");
 
   while (nsIFrame* frame = RemoveFirstChild()) {
@@ -437,7 +437,6 @@ void nsFrameList::VerifyList() const {
 #endif
 
 namespace mozilla {
-namespace layout {
 
 #ifdef DEBUG_FRAME_DUMP
 const char* ChildListName(FrameChildListID aListID) {
@@ -478,8 +477,6 @@ const char* ChildListName(FrameChildListID aListID) {
   return "UNKNOWN_FRAME_CHILD_LIST";
 }
 #endif
-
-}  // namespace layout
 
 AutoFrameListPtr::~AutoFrameListPtr() {
   if (mFrameList) {
