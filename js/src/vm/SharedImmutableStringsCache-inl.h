@@ -14,10 +14,11 @@ namespace js {
 template <typename IntoOwnedChars>
 [[nodiscard]] SharedImmutableString SharedImmutableStringsCache::getOrCreate(
     const char* chars, size_t length, IntoOwnedChars intoOwnedChars) {
+  MOZ_ASSERT(inner_);
   MOZ_ASSERT(chars);
   Hasher::Lookup lookup(Hasher::hashLongString(chars, length), chars, length);
 
-  auto locked = inner_.lock();
+  auto locked = inner_->lock();
   auto entry = locked->set.lookupForAdd(lookup);
   if (!entry) {
     OwnedChars ownedChars(intoOwnedChars());
@@ -26,7 +27,7 @@ template <typename IntoOwnedChars>
     }
     MOZ_ASSERT(ownedChars.get() == chars ||
                memcmp(ownedChars.get(), chars, length) == 0);
-    auto box = StringBox::Create(std::move(ownedChars), length, &inner_);
+    auto box = StringBox::Create(std::move(ownedChars), length, this->inner_);
     if (!box || !locked->set.add(entry, std::move(box))) {
       return SharedImmutableString();
     }
@@ -41,12 +42,13 @@ template <typename IntoOwnedTwoByteChars>
 SharedImmutableStringsCache::getOrCreate(
     const char16_t* chars, size_t length,
     IntoOwnedTwoByteChars intoOwnedTwoByteChars) {
+  MOZ_ASSERT(inner_);
   MOZ_ASSERT(chars);
   auto hash = Hasher::hashLongString(reinterpret_cast<const char*>(chars),
                                      length * sizeof(char16_t));
   Hasher::Lookup lookup(hash, chars, length);
 
-  auto locked = inner_.lock();
+  auto locked = inner_->lock();
   auto entry = locked->set.lookupForAdd(lookup);
   if (!entry) {
     OwnedTwoByteChars ownedTwoByteChars(intoOwnedTwoByteChars());
@@ -58,7 +60,7 @@ SharedImmutableStringsCache::getOrCreate(
         memcmp(ownedTwoByteChars.get(), chars, length * sizeof(char16_t)) == 0);
     OwnedChars ownedChars(reinterpret_cast<char*>(ownedTwoByteChars.release()));
     auto box = StringBox::Create(std::move(ownedChars),
-                                 length * sizeof(char16_t), &inner_);
+                                 length * sizeof(char16_t), this->inner_);
     if (!box || !locked->set.add(entry, std::move(box))) {
       return SharedImmutableTwoByteString();
     }
