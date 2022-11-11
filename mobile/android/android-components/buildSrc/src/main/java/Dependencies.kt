@@ -31,7 +31,7 @@ object Versions {
     const val zxing = "3.5.0"
     const val jna = "5.12.1"
     const val disklrucache = "2.0.2"
-    const val leakcanary = "2.9.1"
+    const val leakcanary = "2.10"
 
     const val mozilla_appservices = "95.0.1"
 
