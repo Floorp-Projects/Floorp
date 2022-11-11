@@ -183,10 +183,6 @@ class ScreenshotsHelper {
     });
   }
 
-  clickDownloadButton() {
-    mouse.click(this.endX - 60, this.endY + 30);
-  }
-
   clickCopyButton(overrideX = null, overrideY = null) {
     // click copy button with last x and y position from dragOverlay
     // the middle of the copy button is last X - 163 and last Y + 30.

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { getFilename } from "chrome://browser/content/screenshots/fileHelpers.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -25,12 +23,12 @@ export class ScreenshotsComponentParent extends JSWindowActorParent {
       case "Screenshots:CopyScreenshot":
         await ScreenshotsUtils.closePanel(browser);
         let copyBox = message.data;
-        ScreenshotsUtils.copyScreenshot(copyBox, browser);
+        ScreenshotsUtils.copyToClipboard(copyBox, browser);
         break;
       case "Screenshots:DownloadScreenshot":
         await ScreenshotsUtils.closePanel(browser);
         let { title, downloadBox } = message.data;
-        ScreenshotsUtils.downloadScreenshot(title, downloadBox, browser);
+        ScreenshotsUtils.download(title, downloadBox, browser);
         break;
       case "Screenshots:ShowPanel":
         ScreenshotsUtils.createOrDisplayButtons(browser);
@@ -334,13 +332,11 @@ export var ScreenshotsUtils = {
 
     snapshot.close();
   },
-  /**
-   * Creates a canvas and draws a snapshot of the screenshot on the canvas
-   * @param box The bounds of screenshots
-   * @param browser The current browser
-   * @returns The canvas and snapshot in an object
-   */
-  async createCanvas(box, browser) {
+  async copyToClipboard(box, browser) {
+    const imageTools = Cc["@mozilla.org/image/tools;1"].getService(
+      Ci.imgITools
+    );
+
     let rect = new DOMRect(box.x1, box.y1, box.width, box.height);
     let { ZoomManager } = browser.ownerGlobal;
     let zoom = ZoomManager.getZoomForBrowser(browser);
@@ -364,146 +360,156 @@ export var ScreenshotsUtils = {
 
     context.drawImage(snapshot, 0, 0);
 
-    return { canvas, snapshot };
-  },
-  /**
-   * Creates a blob from the canvas and will copy or download the screenshot
-   * depending on the action
-   * @param box The bounds of the screenshot
-   * @param browser The current browser
-   * @param params An object containing the following
-   *    action: "copy" or "downlaod"
-   *    title: (optional) The title for downloading the screenshot
-   */
-  async copyOrDownloadScreenshot(box, browser, params) {
-    let { canvas, snapshot } = await this.createCanvas(box, browser);
-
-    canvas.toBlob(async blob => {
+    canvas.toBlob(function(blob) {
+      let newImg = browser.ownerDocument.createElement("img");
       let url = URL.createObjectURL(blob);
-      if (params.action === "download") {
-        await this.downloadBlob(url, params.title, browser);
-      } else {
-        await this.copyBlob(
-          { blobUrl: url, blob },
-          browser.ownerDocument.createElement("img")
+
+      newImg.onload = function() {
+        // no longer need to read the blob so it's revoked
+        URL.revokeObjectURL(url);
+      };
+
+      newImg.src = url;
+
+      let reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = function() {
+        let base64data = reader.result;
+
+        const base64Data = base64data.replace("data:image/png;base64,", "");
+
+        const image = atob(base64Data);
+        const imgDecoded = imageTools.decodeImageFromBuffer(
+          image,
+          image.length,
+          "image/png"
         );
-      }
+
+        const transferable = Cc[
+          "@mozilla.org/widget/transferable;1"
+        ].createInstance(Ci.nsITransferable);
+        transferable.init(null);
+        transferable.addDataFlavor("image/png");
+        transferable.setTransferData("image/png", imgDecoded);
+
+        Services.clipboard.setData(
+          transferable,
+          null,
+          Services.clipboard.kGlobalClipboard
+        );
+      };
     });
 
     snapshot.close();
   },
-  /**
-   * Copy the screenshot
-   * @param box The bounds of the screenshots
-   * @param browser The current browser
-   */
-  async copyScreenshot(box, browser) {
-    await this.copyOrDownloadScreenshot(box, browser, { action: "copy" });
-  },
-  /**
-   * Copy the blob onto the clipboard
-   * {
-   *    @param blobUrl The url of the blob to copy
-   *    @param blob The blob to copy. Will be null when calling from screenshots.js
-   * }
-   * @param newImg A new image element needed for copying to the clipboard
-   */
-  async copyBlob(blobInfo, newImg) {
-    let { blob, blobUrl } = blobInfo;
-    // Guard against missing image data.
-    if (!blobUrl) {
-      return;
-    }
+  async download(title, box, browser) {
+    let rect = new DOMRect(box.x1, box.y1, box.width, box.height);
+    let { ZoomManager } = browser.ownerGlobal;
+    let zoom = ZoomManager.getZoomForBrowser(browser);
 
-    if (!blob) {
-      blob = await fetch(blobUrl).then(r => r.blob());
-    }
+    let browsingContext = BrowsingContext.get(browser.browsingContext.id);
 
-    const imageTools = Cc["@mozilla.org/image/tools;1"].getService(
-      Ci.imgITools
+    let snapshot = await browsingContext.currentWindowGlobal.drawSnapshot(
+      rect,
+      zoom,
+      "rgb(255,255,255)"
     );
 
-    newImg.onerror = function() {
-      URL.revokeObjectURL(blobUrl);
-    };
+    let canvas = browser.ownerDocument.createElementNS(
+      "http://www.w3.org/1999/xhtml",
+      "html:canvas"
+    );
+    let context = canvas.getContext("2d");
 
-    newImg.onload = function() {
-      // no longer need to read the blob so it's revoked
-      URL.revokeObjectURL(blobUrl);
-    };
+    canvas.width = snapshot.width;
+    canvas.height = snapshot.height;
 
-    newImg.src = blobUrl;
+    context.drawImage(snapshot, 0, 0);
 
-    let reader = new FileReader();
-    reader.readAsDataURL(blob);
-    reader.onloadend = function() {
-      let base64data = reader.result;
+    canvas.toBlob(async function(blob) {
+      // let newImg = browser.ownerDocument.createElement("img");
+      let url = URL.createObjectURL(blob);
 
-      const base64Data = base64data.replace("data:image/png;base64,", "");
+      // newImg.src = url;
 
-      const image = atob(base64Data);
-      const imgDecoded = imageTools.decodeImageFromBuffer(
-        image,
-        image.length,
-        "image/png"
-      );
+      let filename = ScreenshotsUtils.getFilename(title);
 
-      const transferable = Cc[
-        "@mozilla.org/widget/transferable;1"
-      ].createInstance(Ci.nsITransferable);
-      transferable.init(null);
-      transferable.addDataFlavor("image/png");
-      transferable.setTransferData("image/png", imgDecoded);
+      // Guard against missing image data.
+      if (!url) {
+        return;
+      }
 
-      Services.clipboard.setData(
-        transferable,
-        null,
-        Services.clipboard.kGlobalClipboard
-      );
-    };
-  },
-  /**
-   * Download the screenshot
-   * @param title The title of the current page
-   * @param box The bounds of the screenshot
-   * @param browser The current browser
-   */
-  async downloadScreenshot(title, box, browser) {
-    await this.copyOrDownloadScreenshot(box, browser, {
-      action: "download",
-      title,
+      // Check there is a .png extension to filename
+      if (!filename.match(/.png$/i)) {
+        filename += ".png";
+      }
+
+      const downloadsDir = await lazy.Downloads.getPreferredDownloadsDirectory();
+      const downloadsDirExists = await IOUtils.exists(downloadsDir);
+      if (downloadsDirExists) {
+        // If filename is absolute, it will override the downloads directory and
+        // still be applied as expected.
+        filename = PathUtils.join(downloadsDir, filename);
+      }
+
+      const sourceURI = Services.io.newURI(url);
+      const targetFile = new lazy.FileUtils.File(filename);
+
+      // Create download and track its progress.
+      try {
+        const download = await lazy.Downloads.createDownload({
+          source: sourceURI,
+          target: targetFile,
+        });
+        const list = await lazy.Downloads.getList(lazy.Downloads.ALL);
+        // add the download to the download list in the Downloads list in the Browser UI
+        list.add(download);
+
+        // Await successful completion of the save via the download manager
+        await download.start();
+        URL.revokeObjectURL(url);
+      } catch (ex) {}
     });
+
+    snapshot.close();
   },
-  /**
-   * Download the blob
-   * @param blobUrl The url of the blob to copy
-   * @param title The title of the current page
-   * @param browser The current browser
-   */
-  async downloadBlob(blobUrl, title, browser) {
-    // Guard against missing image data.
-    if (!blobUrl) {
-      return;
+  getFilename(filenameTitle) {
+    const date = new Date();
+    /* eslint-disable no-control-regex */
+    filenameTitle = filenameTitle
+      .replace(/[\\/]/g, "_")
+      .replace(/[\u200e\u200f\u202a-\u202e]/g, "")
+      .replace(/[\x00-\x1f\x7f-\x9f:*?|"<>;,+=\[\]]+/g, " ")
+      .replace(/^[\s\u180e.]+|[\s\u180e.]+$/g, "");
+    /* eslint-enable no-control-regex */
+    filenameTitle = filenameTitle.replace(/\s{1,4000}/g, " ");
+    const currentDateTime = new Date(
+      date.getTime() - date.getTimezoneOffset() * 60 * 1000
+    ).toISOString();
+    const filenameDate = currentDateTime.substring(0, 10);
+    const filenameTime = currentDateTime.substring(11, 19).replace(/:/g, "-");
+    let clipFilename = `Screenshot ${filenameDate} at ${filenameTime} ${filenameTitle}`;
+
+    // Crop the filename size at less than 246 bytes, so as to leave
+    // room for the extension and an ellipsis [...]. Note that JS
+    // strings are UTF16 but the filename will be converted to UTF8
+    // when saving which could take up more space, and we want a
+    // maximum of 255 bytes (not characters). Here, we iterate
+    // and crop at shorter and shorter points until we fit into
+    // 255 bytes.
+    let suffix = "";
+    for (let cropSize = 246; cropSize >= 0; cropSize -= 32) {
+      if (new Blob([clipFilename]).size > 246) {
+        clipFilename = clipFilename.substring(0, cropSize);
+        suffix = "[...]";
+      } else {
+        break;
+      }
     }
 
-    let filename = await getFilename(title, browser);
+    clipFilename += suffix;
 
-    const sourceURI = Services.io.newURI(blobUrl);
-    const targetFile = new lazy.FileUtils.File(filename);
-
-    // Create download and track its progress.
-    try {
-      const download = await lazy.Downloads.createDownload({
-        source: sourceURI,
-        target: targetFile,
-      });
-      const list = await lazy.Downloads.getList(lazy.Downloads.ALL);
-      // add the download to the download list in the Downloads list in the Browser UI
-      list.add(download);
-
-      // Await successful completion of the save via the download manager
-      await download.start();
-      URL.revokeObjectURL(blobUrl);
-    } catch (ex) {}
+    let extension = ".png";
+    return clipFilename + extension;
   },
 };
