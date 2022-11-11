@@ -33,7 +33,7 @@ function waitRemoteFullscreenExitEvents(aBrowsingContexts) {
                 return;
               }
 
-              ok(true, `check remote fullscreen event (${name})`);
+              ok(true, `check remote DOM fullscreen event (${name})`);
               document.removeEventListener("fullscreenchange", changeHandler);
               resolve();
             }
@@ -45,7 +45,11 @@ function waitRemoteFullscreenExitEvents(aBrowsingContexts) {
   return Promise.all(promises);
 }
 
-function waitFullscreenEvent(aDocument, aIsInFullscreen, aWaitUntil = false) {
+function waitDOMFullscreenEvent(
+  aDocument,
+  aIsInFullscreen,
+  aWaitUntil = false
+) {
   return new Promise(resolve => {
     function errorHandler() {
       ok(false, "should not get fullscreenerror event");
@@ -62,7 +66,7 @@ function waitFullscreenEvent(aDocument, aIsInFullscreen, aWaitUntil = false) {
       is(
         aIsInFullscreen,
         !!aDocument.fullscreenElement,
-        "check fullscreen (event)"
+        "check DOM fullscreen (event)"
       );
       aDocument.removeEventListener("fullscreenchange", changeHandler);
       aDocument.removeEventListener("fullscreenerror", errorHandler);
@@ -71,6 +75,29 @@ function waitFullscreenEvent(aDocument, aIsInFullscreen, aWaitUntil = false) {
 
     aDocument.addEventListener("fullscreenchange", changeHandler);
     aDocument.addEventListener("fullscreenerror", errorHandler);
+  });
+}
+
+function waitWidgetFullscreenEvent(
+  aWindow,
+  aIsInFullscreen,
+  aWaitUntil = false
+) {
+  return BrowserTestUtils.waitForEvent(aWindow, "fullscreen", false, aEvent => {
+    if (
+      aWaitUntil &&
+      aIsInFullscreen !=
+        aWindow.document.documentElement.hasAttribute("inFullscreen")
+    ) {
+      return false;
+    }
+
+    is(
+      aIsInFullscreen,
+      aWindow.document.documentElement.hasAttribute("inFullscreen"),
+      "check widget fullscreen (event)"
+    );
+    return true;
   });
 }
 
@@ -103,7 +130,12 @@ function waitForFullscreenState(
   aWaitUntil = false
 ) {
   return Promise.all([
-    waitFullscreenEvent(aDocument, aIsInFullscreen, aWaitUntil),
+    waitWidgetFullscreenEvent(
+      aDocument.defaultView,
+      aIsInFullscreen,
+      aWaitUntil
+    ),
+    waitDOMFullscreenEvent(aDocument, aIsInFullscreen, aWaitUntil),
     waitForFullScreenObserver(aDocument, aIsInFullscreen, aWaitUntil),
   ]);
 }
@@ -122,7 +154,7 @@ async function waitForFullscreenExit(aDocument) {
   };
   Services.obs.addObserver(observer, "fullscreen-painted");
 
-  await waitFullscreenEvent(aDocument, false, true);
+  await waitDOMFullscreenEvent(aDocument, false, true);
   // If there is a fullscreen-painted observer notified for inDOMFullscreen set,
   // we expect to have a subsequent fullscreen-painted observer notified with
   // inDOMFullscreen unset.

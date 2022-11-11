@@ -55,16 +55,17 @@ async function startTests(testFun, name) {
           await promiseFsState;
 
           // This test triggers a fullscreen request during the fullscreen exit
-          // process, so it could be possible that document goes into fullscreen
+          // process, so it could be possible that widget goes into fullscreen
           // mode again, but it should end up leave fullscreen mode again.
           if (window.fullScreen) {
-            info("still in fullscreen, wait again");
-            await waitForFullscreenState(document, false, true);
+            info("widget is still in fullscreen, wait again");
+            await waitWidgetFullscreenEvent(window, false, true);
           }
 
           // Ensure the browser exits fullscreen state.
+          ok(!window.fullScreen, "The widget should not be in fullscreen");
           ok(
-            !window.fullScreen,
+            !document.documentElement.hasAttribute("inFullscreen"),
             "The chrome window should not be in fullscreen"
           );
           ok(
