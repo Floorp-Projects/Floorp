@@ -2598,6 +2598,55 @@ void AppWindow::LoadPersistentWindowState() {
   loadValue(nsGkAtoms::sizemode);
 }
 
+void AppWindow::IntrinsicallySizeShell(const CSSIntSize& aWindowDiff,
+                                       int32_t& aSpecWidth,
+                                       int32_t& aSpecHeight) {
+  nsCOMPtr<nsIContentViewer> cv;
+  mDocShell->GetContentViewer(getter_AddRefs(cv));
+  if (!cv) {
+    return;
+  }
+  RefPtr<nsDocShell> docShell = mDocShell;
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  docShell->GetTreeOwner(getter_AddRefs(treeOwner));
+  if (!treeOwner) {
+    return;
+  }
+
+  CSSIntCoord maxWidth = 0;
+  CSSIntCoord maxHeight = 0;
+  CSSIntCoord prefWidth = 0;
+  if (RefPtr element = GetWindowDOMElement()) {
+    nsAutoString prefWidthAttr;
+    if (element->GetAttr(nsGkAtoms::prefwidth, prefWidthAttr)) {
+      // TODO: Make this more generic perhaps?
+      if (prefWidthAttr.EqualsLiteral("min-width")) {
+        if (auto* f = element->GetPrimaryFrame(FlushType::Frames)) {
+          const auto& coord = f->StylePosition()->mMinWidth;
+          if (coord.ConvertsToLength()) {
+            prefWidth = CSSPixel::FromAppUnitsRounded(coord.ToLength());
+          }
+        }
+      }
+    }
+  }
+
+  Maybe<CSSIntSize> size = cv->GetContentSize(maxWidth, maxHeight, prefWidth);
+  if (!size) {
+    return;
+  }
+  nsPresContext* pc = cv->GetPresContext();
+  MOZ_ASSERT(pc, "Should have pres context");
+
+  int32_t width = pc->CSSPixelsToDevPixels(size->width);
+  int32_t height = pc->CSSPixelsToDevPixels(size->height);
+  treeOwner->SizeShellTo(docShell, width, height);
+
+  // Update specified size for the final LoadPositionFromXUL call.
+  aSpecWidth = size->width + aWindowDiff.width;
+  aSpecHeight = size->height + aWindowDiff.height;
+}
+
 void AppWindow::SizeShell() {
   AutoRestore<bool> sizingShellFromXUL(mSizingShellFromXUL);
   mSizingShellFromXUL = true;
@@ -2610,7 +2659,7 @@ void AppWindow::SizeShell() {
     windowElement->GetAttr(nsGkAtoms::windowtype, windowType);
   }
 
-  CSSIntSize windowDiff = GetOuterToInnerSizeDifferenceInCSSPixels(
+  const CSSIntSize windowDiff = GetOuterToInnerSizeDifferenceInCSSPixels(
       mWindow, UnscaledDevicePixelsPerCSSPixel());
 
   // If we're using fingerprint resistance, we're going to resize the window
@@ -2652,28 +2701,9 @@ void AppWindow::SizeShell() {
     SetSpecifiedSize(specWidth, specHeight);
   }
 
+  // If LoadSizeFromXUL set the size, mIntrinsicallySized will be false.
   if (mIntrinsicallySized) {
-    // (if LoadSizeFromXUL set the size, mIntrinsicallySized will be false)
-    nsCOMPtr<nsIContentViewer> cv;
-    mDocShell->GetContentViewer(getter_AddRefs(cv));
-    if (cv) {
-      RefPtr<nsDocShell> docShell = mDocShell;
-      nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-      docShell->GetTreeOwner(getter_AddRefs(treeOwner));
-      if (treeOwner) {
-        if (Maybe<CSSIntSize> size = cv->GetContentSize()) {
-          nsPresContext* pc = cv->GetPresContext();
-          MOZ_ASSERT(pc, "Should have pres context");
-          int32_t width = pc->CSSPixelsToDevPixels(size->width);
-          int32_t height = pc->CSSPixelsToDevPixels(size->height);
-
-          treeOwner->SizeShellTo(docShell, width, height);
-          // Update specified size for the final LoadPositionFromXUL call.
-          specWidth = width + windowDiff.width;
-          specHeight = height + windowDiff.height;
-        }
-      }
-    }
+    IntrinsicallySizeShell(windowDiff, specWidth, specHeight);
   }
 
   // Now that we have set the window's final size, we can re-do its

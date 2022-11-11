@@ -374,6 +374,10 @@ class AppWindow final : public nsIBaseWindow,
   WidgetListenerDelegate mWidgetListenerDelegate;
 
  private:
+  MOZ_CAN_RUN_SCRIPT void IntrinsicallySizeShell(const CSSIntSize& aWindowDiff,
+                                                 int32_t& aSpecWidth,
+                                                 int32_t& aSpecHeight);
+
   // GetPrimaryBrowserParentSize is called from xpidl methods and we don't have
   // a good way to annotate those with MOZ_CAN_RUN_SCRIPT yet.  It takes no
   // refcounted args other than "this", and the "this" uses seem ok.
