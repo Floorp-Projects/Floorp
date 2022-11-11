@@ -8634,8 +8634,7 @@ static nsContentAndOffset FindLineBreakingFrame(nsIFrame* aFrame,
 
   // Iterate over children and call ourselves recursively
   if (aDirection == eDirPrevious) {
-    nsIFrame* child =
-        aFrame->GetChildList(nsIFrame::kPrincipalList).LastChild();
+    nsIFrame* child = aFrame->PrincipalChildList().LastChild();
     while (child && !result.mContent) {
       result = FindLineBreakingFrame(child, aDirection);
       child = child->GetPrevSibling();
