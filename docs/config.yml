@@ -47,6 +47,7 @@ categories:
         - testing/intermittent
         - testing/testing-policy
         - testing/ci-configs
+        - testing/browser-chrome
         - testing/chrome-tests
         - testing/marionette
         - testing/geckodriver
