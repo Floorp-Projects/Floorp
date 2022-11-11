@@ -36,7 +36,7 @@ nsresult XULButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
       if (!keyEvent) {
         break;
       }
-      if (NS_VK_SPACE == keyEvent->mKeyCode && aVisitor.mPresContext) {
+      if (keyEvent->ShouldWorkAsSpaceKey() && aVisitor.mPresContext) {
         EventStateManager* esm = aVisitor.mPresContext->EventStateManager();
         // :hover:active state
         esm->SetContentState(this, ElementState::HOVER);
@@ -69,7 +69,7 @@ nsresult XULButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
       if (!keyEvent) {
         break;
       }
-      if (NS_VK_SPACE == keyEvent->mKeyCode) {
+      if (keyEvent->ShouldWorkAsSpaceKey()) {
         mIsHandlingKeyEvent = false;
         ElementState buttonState = State();
         if (buttonState.HasAllStates(ElementState::ACTIVE |
