@@ -695,18 +695,10 @@ Relation RemoteAccessibleBase<Derived>::RelationByType(
     Pivot p = Pivot(mDoc);
     nsString href;
     Value(href);
-    if (!href.IsEmpty()) {
-      // `Value` will give us the entire URL, we're only interested in the ID
-      // after the hash. Split that part out.
-      for (auto s : href.Split('#')) {
-        href = s;
-      }
-      if (href.IsEmpty()) {
-        // This can happen if we encounter a link with an empty anchor:
-        // ie. <a href="#">hi</a>
-        return Relation();
-      }
-
+    int32_t i = href.FindChar('#');
+    int32_t len = static_cast<int32_t>(href.Length());
+    if (i != -1 && i < (len - 1)) {
+      nsDependentSubstring anchorName = Substring(href, i + 1, len);
       MustPruneSameDocRule rule;
       Accessible* nameMatch = nullptr;
       for (Accessible* match = p.Next(mDoc, rule); match;
@@ -714,12 +706,12 @@ Relation RemoteAccessibleBase<Derived>::RelationByType(
         nsString currID;
         match->DOMNodeID(currID);
         MOZ_ASSERT(match->IsRemote());
-        if (href.Equals(currID)) {
+        if (anchorName.Equals(currID)) {
           return Relation(match->AsRemote());
         }
         if (!nameMatch) {
           nsString currName = match->AsRemote()->GetCachedHTMLNameAttribute();
-          if (match->TagName() == nsGkAtoms::a && href.Equals(currName)) {
+          if (match->TagName() == nsGkAtoms::a && anchorName.Equals(currName)) {
             // If we find an element with a matching ID, we should return
             // that, but if we don't we should return the first anchor with
             // a matching name. To avoid doing two traversals, store the first
