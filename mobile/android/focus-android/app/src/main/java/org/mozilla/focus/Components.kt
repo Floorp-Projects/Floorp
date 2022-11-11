@@ -87,7 +87,7 @@ class Components(
     val appStore: AppStore by lazy {
         AppStore(
             AppState(
-                screen = Screen.Home,
+                screen = if (context.settings.isFirstRun) Screen.FirstRun else Screen.Home,
                 topSites = emptyList(),
             ),
         )

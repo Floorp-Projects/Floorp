@@ -28,6 +28,7 @@ import org.mozilla.focus.activity.IntentReceiverActivity
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.perf.Performance
+import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.utils.SearchUtils
 import org.robolectric.Robolectric
@@ -57,6 +58,9 @@ internal class ExternalIntentNavigationTest {
     @Test
     @Config(shadows = [ShadowPerformance::class])
     fun `GIVEN the onboarding should be shown and the app is used in a performance test WHEN the app is opened THEN show the homescreen`() {
+        // The AppStore is initialized before the test runs. By default isFirstRun is true. Simulate it being false.
+        appStore.dispatch(AppAction.ShowHomeScreen)
+        appStore.waitUntilIdle()
         activity.settings.isFirstRun = true
 
         ExternalIntentNavigation.handleAppOpened(null, activity)
@@ -68,6 +72,9 @@ internal class ExternalIntentNavigationTest {
     @Test
     @Config(shadows = [ShadowPerformance::class])
     fun `GIVEN the onboarding should not be shown and in a performance test WHEN the app is opened THEN show the home screen`() {
+        // The AppStore is initialized before the test runs. By default isFirstRun is true. Simulate it being false.
+        appStore.dispatch(AppAction.ShowHomeScreen)
+        appStore.waitUntilIdle()
         activity.settings.isFirstRun = false
 
         ExternalIntentNavigation.handleAppOpened(null, activity)
@@ -78,6 +85,9 @@ internal class ExternalIntentNavigationTest {
 
     @Test
     fun `GIVEN the onboarding should not be shown and not in a performance test WHEN the app is opened THEN show the home screen`() {
+        // The AppStore is initialized before the test runs. By default isFirstRun is true. Simulate it being false.
+        appStore.dispatch(AppAction.ShowHomeScreen)
+        appStore.waitUntilIdle()
         activity.settings.isFirstRun = false
 
         ExternalIntentNavigation.handleAppOpened(null, activity)
@@ -90,7 +100,6 @@ internal class ExternalIntentNavigationTest {
     fun `GIVEN a tab is already open WHEN trying to navigate to the current tab THEN navigate to it and return true`() {
         activity.components.tabsUseCases.addTab(url = "https://mozilla.com")
         activity.components.store.waitUntilIdle()
-
         val result = ExternalIntentNavigation.handleBrowserTabAlreadyOpen(activity)
         activity.components.appStore.waitUntilIdle()
 
@@ -101,6 +110,9 @@ internal class ExternalIntentNavigationTest {
 
     @Test
     fun `GIVEN no tabs are currently open WHEN trying to navigate to the current tab THEN navigate home and return false`() {
+        // The AppStore is initialized before the test runs. By default isFirstRun is true. Simulate it being false.
+        appStore.dispatch(AppAction.ShowHomeScreen)
+        appStore.waitUntilIdle()
         val result = ExternalIntentNavigation.handleBrowserTabAlreadyOpen(activity)
         activity.components.appStore.waitUntilIdle()
 
@@ -124,6 +136,9 @@ internal class ExternalIntentNavigationTest {
 
     @Test
     fun `GIVEN no text search from the search widget WHEN handling widget interactions THEN don't record telemetry, show the home screen and false true`() {
+        // The AppStore is initialized before the test runs. By default isFirstRun is true. Simulate it being false.
+        appStore.dispatch(AppAction.ShowHomeScreen)
+        appStore.waitUntilIdle()
         val bundle = Bundle()
 
         val result = ExternalIntentNavigation.handleWidgetTextSearch(bundle, activity)
@@ -159,6 +174,9 @@ internal class ExternalIntentNavigationTest {
 
     @Test
     fun `GIVEN no voice search WHEN handling widget interactions THEN don't open a new tab and return false`() {
+        // The AppStore is initialized before the test runs. By default isFirstRun is true. Simulate it being false.
+        appStore.dispatch(AppAction.ShowHomeScreen)
+        appStore.waitUntilIdle()
         val browserStore = activity.components.store
         val bundle = Bundle()
 
