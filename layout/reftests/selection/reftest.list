@@ -55,3 +55,6 @@ needs-focus fuzzy-if(!nativeThemePref,0-5,0-1) == 1478604.html 1478604-ref.html 
 
 needs-focus fuzzy-if(!nativeThemePref,0-3,0-13) == disabled-1.html disabled-1-notref.html
 needs-focus != disabled-2.html disabled-2-notref.html
+
+== shadow-tree-order-1.html shadow-tree-order-1-ref.html
+!= shadow-tree-order-1.html shadow-tree-order-1-notref.html

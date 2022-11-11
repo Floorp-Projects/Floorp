@@ -2857,11 +2857,11 @@ int32_t nsContentUtils::ComparePoints_Deprecated(
   const nsINode* node2 = aParent2;
   do {
     parents1.AppendElement(node1);
-    node1 = node1->GetParentNode();
+    node1 = node1->GetParentOrShadowHostNode();
   } while (node1);
   do {
     parents2.AppendElement(node2);
-    node2 = node2->GetParentNode();
+    node2 = node2->GetParentOrShadowHostNode();
   } while (node2);
 
   uint32_t pos1 = parents1.Length() - 1;
@@ -2883,6 +2883,15 @@ int32_t nsContentUtils::ComparePoints_Deprecated(
     const nsINode* child1 = parents1.ElementAt(--pos1);
     const nsINode* child2 = parents2.ElementAt(--pos2);
     if (child1 != child2) {
+      if (MOZ_UNLIKELY(child1->IsShadowRoot())) {
+        // Shadow roots come before light DOM per
+        // https://dom.spec.whatwg.org/#concept-shadow-including-tree-order
+        MOZ_ASSERT(!child2->IsShadowRoot(), "Two shadow roots?");
+        return -1;
+      }
+      if (MOZ_UNLIKELY(child2->IsShadowRoot())) {
+        return 1;
+      }
       const Maybe<uint32_t> child1Index =
           aParent1Cache ? aParent1Cache->ComputeIndexOf(parent, child1)
                         : parent->ComputeIndexOf(child1);

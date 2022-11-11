@@ -692,17 +692,10 @@ static int32_t CompareToRangeStart(const nsINode& aCompareNode,
                                    const nsRange& aRange) {
   MOZ_ASSERT(aRange.GetStartContainer());
   nsINode* start = aRange.GetStartContainer();
-  // If the nodes that we're comparing are not in the same document or in the
-  // same subtree, assume that aCompareNode will fall at the end of the ranges.
-  // NOTE(emilio): This is broken (bug 1590379). When fixed, shadow-including
-  // tree order[1] seems the most reasonable order, but if we choose other order
-  // than that code in nsPrintJob.cpp to deal with selection printing might need
-  // to be fixed.
-  //
-  // [1]: https://dom.spec.whatwg.org/#concept-shadow-including-tree-order
+  // If the nodes that we're comparing are not in the same document, assume that
+  // aCompareNode will fall at the end of the ranges.
   if (aCompareNode.GetComposedDoc() != start->GetComposedDoc() ||
-      !start->GetComposedDoc() ||
-      aCompareNode.SubtreeRoot() != start->SubtreeRoot()) {
+      !start->GetComposedDoc()) {
     NS_WARNING(
         "`CompareToRangeStart` couldn't compare nodes, pretending some order.");
     return 1;
@@ -721,8 +714,7 @@ static int32_t CompareToRangeEnd(const nsINode& aCompareNode,
   // If the nodes that we're comparing are not in the same document or in the
   // same subtree, assume that aCompareNode will fall at the end of the ranges.
   if (aCompareNode.GetComposedDoc() != end->GetComposedDoc() ||
-      !end->GetComposedDoc() ||
-      aCompareNode.SubtreeRoot() != end->SubtreeRoot()) {
+      !end->GetComposedDoc()) {
     NS_WARNING(
         "`CompareToRangeEnd` couldn't compare nodes, pretending some order.");
     return 1;
@@ -774,9 +766,16 @@ size_t Selection::StyledRanges::FindInsertionPoint(
 nsresult Selection::StyledRanges::SubtractRange(
     StyledRange& aRange, nsRange& aSubtract, nsTArray<StyledRange>* aOutput) {
   nsRange* range = aRange.mRange;
-
   if (NS_WARN_IF(!range->IsPositioned())) {
     return NS_ERROR_UNEXPECTED;
+  }
+
+  if (range->GetStartContainer()->SubtreeRoot() !=
+      aSubtract.GetStartContainer()->SubtreeRoot()) {
+    // These are ranges for different shadow trees, we can't subtract them in
+    // any sensible way.
+    aOutput->InsertElementAt(0, aRange);
+    return NS_OK;
   }
 
   // First we want to compare to the range start
@@ -1041,13 +1040,11 @@ nsresult Selection::StyledRanges::MaybeAddRangeAndTruncateOverlaps(
   if (maybeEndIndex.isNothing()) {
     // All ranges start after the given range. We can insert our range at
     // position 0, knowing there are no overlaps (handled below)
-    startIndex = 0;
-    endIndex = 0;
+    startIndex = endIndex = 0;
   } else if (maybeStartIndex.isNothing()) {
     // All ranges end before the given range. We can insert our range at
     // the end of the array, knowing there are no overlaps (handled below)
-    startIndex = mRanges.Length();
-    endIndex = startIndex;
+    startIndex = endIndex = mRanges.Length();
   } else {
     startIndex = *maybeStartIndex;
     endIndex = *maybeEndIndex;
@@ -1076,16 +1073,11 @@ nsresult Selection::StyledRanges::MaybeAddRangeAndTruncateOverlaps(
   // the two end points, startIndex and endIndex - 1 (which may point to the
   // same range) as these may partially overlap the new range. Any ranges
   // between these indices are fully overlapped by the new range, and so can be
-  // removed
-  nsTArray<StyledRange> overlaps;
-  // XXX(Bug 1631371) Check if this should use a fallible operation as it
-  // pretended earlier.
-  overlaps.InsertElementAt(0, mRanges[startIndex]);
-
+  // removed.
+  AutoTArray<StyledRange, 2> overlaps;
+  overlaps.AppendElement(mRanges[startIndex]);
   if (endIndex - 1 != startIndex) {
-    // XXX(Bug 1631371) Check if this should use a fallible operation as it
-    // pretended earlier.
-    overlaps.InsertElementAt(1, mRanges[endIndex - 1]);
+    overlaps.AppendElement(mRanges[endIndex - 1]);
   }
 
   // Remove all the overlapping ranges
@@ -1094,7 +1086,7 @@ nsresult Selection::StyledRanges::MaybeAddRangeAndTruncateOverlaps(
   }
   mRanges.RemoveElementsAt(startIndex, endIndex - startIndex);
 
-  nsTArray<StyledRange> temp;
+  AutoTArray<StyledRange, 3> temp;
   for (const size_t i : Reversed(IntegerRange(overlaps.Length()))) {
     nsresult rv = SubtractRange(overlaps[i], *aRange, &temp);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1106,13 +1098,9 @@ nsresult Selection::StyledRanges::MaybeAddRangeAndTruncateOverlaps(
                                            aRange->StartOffset(),
                                            CompareToRangeStart)};
 
-  // XXX(Bug 1631371) Check if this should use a fallible operation as it
-  // pretended earlier.
   temp.InsertElementAt(insertionPoint, StyledRange(aRange));
 
   // Merge the leftovers back in to mRanges
-  // XXX(Bug 1631371) Check if this should use a fallible operation as it
-  // pretended earlier.
   mRanges.InsertElementsAt(startIndex, temp);
 
   for (uint32_t i = 0; i < temp.Length(); ++i) {
