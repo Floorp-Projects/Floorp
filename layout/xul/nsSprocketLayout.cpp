@@ -31,7 +31,7 @@ nsBoxLayout* nsSprocketLayout::gInstance = nullptr;
 static Maybe<CSSOrderAwareFrameIterator> IterFor(nsIFrame* aBoxFrame) {
   Maybe<CSSOrderAwareFrameIterator> ret;
   if (aBoxFrame->IsXULBoxFrame()) {
-    ret.emplace(aBoxFrame, mozilla::layout::kPrincipalList,
+    ret.emplace(aBoxFrame, kPrincipalList,
                 CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
                 CSSOrderAwareFrameIterator::OrderState::Unknown,
                 CSSOrderAwareFrameIterator::OrderingProperty::BoxOrdinalGroup);

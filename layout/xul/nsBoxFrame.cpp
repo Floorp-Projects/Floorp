@@ -121,7 +121,7 @@ nsIFrame* nsBoxFrame::SlowOrdinalGroupAwareSibling(nsIFrame* aBox, bool aNext) {
     return nullptr;
   }
   CSSOrderAwareFrameIterator iter(
-      parent, layout::kPrincipalList,
+      parent, kPrincipalList,
       CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
       CSSOrderAwareFrameIterator::OrderState::Unknown,
       CSSOrderAwareFrameIterator::OrderingProperty::BoxOrdinalGroup);
@@ -921,8 +921,7 @@ void nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder* aBuilder,
                                              const nsDisplayListSet& aLists) {
   // Iterate over the children in CSS order.
   auto iter = CSSOrderAwareFrameIterator(
-      this, mozilla::layout::kPrincipalList,
-      CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
+      this, kPrincipalList, CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
       CSSOrderAwareFrameIterator::OrderState::Unknown,
       CSSOrderAwareFrameIterator::OrderingProperty::BoxOrdinalGroup);
   // Put each child's background onto the BlockBorderBackgrounds list

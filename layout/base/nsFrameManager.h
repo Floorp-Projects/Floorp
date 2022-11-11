@@ -30,11 +30,8 @@ class PresShell;
  * frame.
  */
 class nsFrameManager {
-  typedef mozilla::PresShell PresShell;
-  typedef mozilla::layout::FrameChildListID ChildListID;
-
  public:
-  explicit nsFrameManager(PresShell* aPresShell)
+  explicit nsFrameManager(mozilla::PresShell* aPresShell)
       : mPresShell(aPresShell), mRootFrame(nullptr) {
     MOZ_ASSERT(mPresShell, "need a pres shell");
   }
@@ -59,13 +56,15 @@ class nsFrameManager {
   void Destroy();
 
   // Functions for manipulating the frame model
-  void AppendFrames(nsContainerFrame* aParentFrame, ChildListID aListID,
+  void AppendFrames(nsContainerFrame* aParentFrame,
+                    mozilla::FrameChildListID aListID,
                     nsFrameList&& aFrameList);
 
-  void InsertFrames(nsContainerFrame* aParentFrame, ChildListID aListID,
-                    nsIFrame* aPrevFrame, nsFrameList&& aFrameList);
+  void InsertFrames(nsContainerFrame* aParentFrame,
+                    mozilla::FrameChildListID aListID, nsIFrame* aPrevFrame,
+                    nsFrameList&& aFrameList);
 
-  void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame);
+  void RemoveFrame(mozilla::FrameChildListID aListID, nsIFrame* aOldFrame);
 
   /*
    * Capture/restore frame state for the frame subtree rooted at aFrame.
@@ -91,7 +90,7 @@ class nsFrameManager {
 
  protected:
   // weak link, because the pres shell owns us
-  PresShell* MOZ_NON_OWNING_REF mPresShell;
+  mozilla::PresShell* MOZ_NON_OWNING_REF mPresShell;
   nsIFrame* mRootFrame;
 };
 
