@@ -140,6 +140,7 @@ def main(args=sys.argv[1:]):
             project=args.project,
             verbose=args.verbose,
             fission=args.fission,
+            extra_summary_methods=args.extra_summary_methods,
         )
     except Exception:
         traceback.print_exc()

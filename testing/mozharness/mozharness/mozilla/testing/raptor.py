@@ -600,6 +600,20 @@ class Raptor(
                     ),
                 },
             ],
+            [
+                ["--extra-summary-methods"],
+                {
+                    "action": "append",
+                    "metavar": "OPTION",
+                    "dest": "extra_summary_methods",
+                    "default": [],
+                    "help": (
+                        "Alternative methods for summarizing technical and visual"
+                        "pageload metrics."
+                        "Options: geomean, mean."
+                    ),
+                },
+            ],
         ]
         + testing_config_options
         + copy.deepcopy(code_coverage_config_options)
@@ -1007,7 +1021,13 @@ class Raptor(
             options.extend(["--test-bytecode-cache"])
         if self.config.get("collect_perfstats", False):
             options.extend(["--collect-perfstats"])
-
+        if self.config.get("extra_summary_methods"):
+            options.extend(
+                [
+                    "--extra-summary-methods={}".format(method)
+                    for method in self.config.get("extra_summary_methods")
+                ]
+            )
         if self.config.get("webext", False):
             options.extend(["--webext"])
         else:
