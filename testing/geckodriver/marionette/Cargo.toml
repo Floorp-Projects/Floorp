@@ -1,12 +1,12 @@
 [package]
 name = "marionette"
 version = "0.2.0"
-description = "Library implementing the client side of Gecko's Marionette remote automation protocol."
-keywords = ["mozilla", "firefox", "marionette", "webdriver"]
-repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/geckodriver/marionette"
-license = "MPL-2.0"
 authors = ["Mozilla"]
+description = "Library implementing the client side of Gecko's Marionette remote automation protocol."
 edition = "2018"
+keywords = ["mozilla", "firefox", "marionette", "webdriver"]
+license = "MPL-2.0"
+repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/geckodriver/marionette"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }

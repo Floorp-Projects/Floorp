@@ -1,13 +1,24 @@
 [package]
+edition = "2018"
 name = "geckodriver"
 version = "0.32.0"
-description = "Proxy for using WebDriver clients to interact with Gecko-based browsers."
-keywords = ["webdriver", "w3c", "httpd", "mozilla", "firefox"]
-repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/geckodriver"
-readme = "README.md"
-license = "MPL-2.0"
 authors = ["Mozilla"]
-edition = "2018"
+include = [
+    "/.cargo",
+    "/build.rs",
+    "/src"
+  ]
+description = "Proxy for using WebDriver clients to interact with Gecko-based browsers."
+readme = "README.md"
+keywords = [
+    "firefox",
+    "httpd",
+    "mozilla",
+    "w3c",
+    "webdriver",
+  ]
+license = "MPL-2.0"
+repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/geckodriver"
 
 [dependencies]
 base64 = "0.13"
