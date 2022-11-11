@@ -1999,9 +1999,10 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
         }
       }
       // If it's not a <br> frame and it's the first character rect at the
-      // queried range, we need to the previous character of the start of
-      // the queried range if there is a text node.
-      else if (!firstFrame->IsBrFrame() && lastTextNode) {
+      // queried range, we need the previous character rect of the start of
+      // the queried range if there is a visible text node.
+      else if (!firstFrame->IsBrFrame() && lastTextNode &&
+               lastTextNode->GetPrimaryFrame()) {
         FrameRelativeRect brRectRelativeToLastTextFrame =
             GuessLineBreakerRectAfter(*lastTextNode);
         if (NS_WARN_IF(!brRectRelativeToLastTextFrame.IsValid())) {
@@ -2342,10 +2343,11 @@ nsresult ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent) {
   //  +-<p>--------------------------------+
   //  |def                                 |
   //  +------------------------------------+
-  // Therefore, if the first frame isn't a <br> frame and there is a text
-  // node before the first node in the queried range, we should compute the
+  // Therefore, if the first frame isn't a <br> frame and there is a visible
+  // text node before the first node in the queried range, we should compute the
   // first rect with the previous character's rect.
-  else if (!firstFrame->IsBrFrame() && lastTextNode) {
+  else if (!firstFrame->IsBrFrame() && lastTextNode &&
+           lastTextNode->GetPrimaryFrame()) {
     FrameRelativeRect brRectAfterLastChar =
         GuessLineBreakerRectAfter(*lastTextNode);
     if (NS_WARN_IF(!brRectAfterLastChar.IsValid())) {
