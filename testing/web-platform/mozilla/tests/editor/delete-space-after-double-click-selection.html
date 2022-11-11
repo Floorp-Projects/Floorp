@@ -105,7 +105,17 @@
         }
         return test_driver.send_keys(editableElement, deleteKey);
       };
-
+      if (editableElement.tagName.toLowerCase() == "div") {
+        promise_test(async t => {
+          setValue("<p>abc def<span></span></p>");
+          await doubleClickAndDelete("abc de", "def");
+          await waitForRender();
+          assert_equals(
+            getValue(),
+            "<p>abc</p>",
+            "The <span> at the end of the string must be removed, as well as the whitespace in between words.");
+        }, `${editableElement.tagName}: An empty span at the end of the selection should be considered end of selection!`);
+      }
       promise_test(async t => {
         setValue("one two");
         await doubleClickAndDelete("on", "one");
