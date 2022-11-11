@@ -345,6 +345,44 @@ add_task(async function persistTipOnceOnDefaultSerp() {
   await SpecialPowers.popPrefEnv();
 });
 
+// The persist tip should not show in a window
+// with a selected tab containing a non-SERP url.
+add_task(async function noPersistTipInWindowWithNonSerpTab() {
+  await setDefaultEngine("Example");
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.showSearchTerms.featureGate", true]],
+  });
+
+  // Create a new window for the SERP to be loaded into.
+  let newWindow = await BrowserTestUtils.openNewBrowserWindow();
+
+  // Focus on the original window.
+  window.focus();
+  await waitForBrowserWindowActive(window);
+
+  // Load the SERP in the new window to initiate a background load.
+  let browserLoadedPromise = BrowserTestUtils.browserLoaded(
+    newWindow.gBrowser.selectedBrowser,
+    false,
+    SEARCH_SERP_URL
+  );
+  BrowserTestUtils.loadURI(newWindow.gBrowser.selectedBrowser, SEARCH_SERP_URL);
+  await browserLoadedPromise;
+
+  // Wait longer than the persist tip delay to check that the search tip
+  // doesn't show on the non-SERP tab.
+  await new Promise(resolve =>
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    setTimeout(resolve, UrlbarProviderSearchTips.SHOW_PERSIST_TIP_DELAY_MS * 2)
+  );
+  Assert.ok(!window.gURLBar.view.isOpen);
+
+  // Clean up.
+  await BrowserTestUtils.closeWindow(newWindow);
+  await SpecialPowers.popPrefEnv();
+  resetSearchTipsProvider();
+});
+
 // Tips should be shown at most once per session regardless of their type.
 add_task(async function oncePerSession() {
   await setDefaultEngine("Google");
@@ -380,3 +418,19 @@ add_task(async function shortcut_buttons_with_tip() {
     UrlbarProviderSearchTips.TIP_TYPE.ONBOARD
   );
 });
+
+function waitForBrowserWindowActive(win) {
+  return new Promise(resolve => {
+    if (Services.focus.activeWindow == win) {
+      resolve();
+    } else {
+      win.addEventListener(
+        "activate",
+        () => {
+          resolve();
+        },
+        { once: true }
+      );
+    }
+  });
+}

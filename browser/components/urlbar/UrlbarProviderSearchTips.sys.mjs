@@ -135,6 +135,10 @@ class ProviderSearchTips extends UrlbarProvider {
     return lazy.UrlbarProviderTopSites.PRIORITY + 1;
   }
 
+  get SHOW_PERSIST_TIP_DELAY_MS() {
+    return SHOW_PERSIST_TIP_DELAY_MS;
+  }
+
   /**
    * Unique name for the provider, used by the context to filter on providers.
    * Not using a unique name will cause the newest registration to win.
@@ -457,6 +461,17 @@ class ProviderSearchTips extends UrlbarProvider {
         window.gURLBar.getAttribute("pageproxystate") == "invalid" &&
         window.gURLBar.value != "" &&
         tip != TIPS.PERSIST
+      ) {
+        return;
+      }
+
+      // The tab that initiated the tip might not be in the same window
+      // as the one that is currently at the top. Only apply this search
+      // tip to a tab showing a search term.
+      if (
+        tip == TIPS.PERSIST &&
+        (!window.gBrowser.selectedBrowser.showingSearchTerms ||
+          !window.gBrowser.selectedBrowser.userTypedValue)
       ) {
         return;
       }
