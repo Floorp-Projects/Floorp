@@ -31,6 +31,7 @@ class EarlyHintsService {
 
  private:
   void CollectTelemetry(Maybe<uint32_t> aResponseStatus);
+  void CollectLinkTypeTelemetry(const nsAString& aRel);
 
   Maybe<TimeStamp> mFirstEarlyHint;
   uint32_t mEarlyHintsCount{0};
