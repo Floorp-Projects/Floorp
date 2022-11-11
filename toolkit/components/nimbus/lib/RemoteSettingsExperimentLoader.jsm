@@ -244,23 +244,9 @@ class _RemoteSettingsExperimentLoader {
     let recipes;
     let loadingError = false;
 
-    if (forceSync) {
-      try {
-        await this.remoteSettingsClient.sync({
-          trigger: "RemoteSettingsExperimentLoader",
-        });
-      } catch (e) {
-        lazy.log.debug(
-          "Error forcing sync of recipes from remote settings.",
-          e
-        );
-        Cu.reportError(e);
-        throw e;
-      }
-    }
-
     try {
       recipes = await this.remoteSettingsClient.get({
+        forceSync,
         // Throw instead of returning an empty list.
         emptyListFallback: false,
       });

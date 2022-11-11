@@ -398,6 +398,7 @@ class RemoteSettingsClient extends EventEmitter {
    * @param  {boolean} options.dumpFallback      Fallback to dump data if read of local DB fails (default: `true`).
    * @param  {boolean} options.emptyListFallback Fallback to empty list if no dump data and read of local DB fails (default: `true`).
    * @param  {boolean} options.loadDumpIfNewer   Use dump data if it is newer than local data (default: `true`).
+   * @param  {boolean} options.forceSync         Always synchronize from server before returning results (default: `false`).
    * @param  {boolean} options.syncIfEmpty       Synchronize from server if local data is empty (default: `true`).
    * @param  {boolean} options.verifySignature   Verify the signature of the local data (default: `false`).
    * @return {Promise}
@@ -408,6 +409,7 @@ class RemoteSettingsClient extends EventEmitter {
       order = "", // not sorted by default.
       dumpFallback = true,
       emptyListFallback = true,
+      forceSync = false,
       loadDumpIfNewer = true,
       syncIfEmpty = true,
     } = options;
@@ -416,10 +418,17 @@ class RemoteSettingsClient extends EventEmitter {
     const hasParallelCall = !!this._importingPromise;
     let data;
     try {
-      let lastModified = await this.db.getLastModified();
+      let lastModified = forceSync ? null : await this.db.getLastModified();
       let hasLocalData = lastModified !== null;
 
-      if (syncIfEmpty && !hasLocalData) {
+      if (forceSync) {
+        if (!this._importingPromise) {
+          this._importingPromise = (async () => {
+            await this.sync({ sendEvents: false, trigger: "forced" });
+            return true; // No need to re-verify signature after sync.
+          })();
+        }
+      } else if (syncIfEmpty && !hasLocalData) {
         // .get() was called before we had the chance to synchronize the local database.
         // We'll try to avoid returning an empty list.
         if (!this._importingPromise) {
