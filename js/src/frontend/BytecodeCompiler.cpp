@@ -214,7 +214,7 @@ class MOZ_STACK_CLASS ScriptCompiler : public SourceAwareCompiler<Unit> {
     return true;
   }
 
-  return stencilOut->source->assignSource(ec, input.options, srcBuf);
+  return stencilOut->source->assignSource(cx, ec, input.options, srcBuf);
 }
 
 [[nodiscard]] static bool TrySmoosh(
@@ -634,7 +634,7 @@ bool SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx,
 
   errorContext = ec;
 
-  if (!compilationState_.source->assignSource(ec, options, sourceBuffer_)) {
+  if (!compilationState_.source->assignSource(cx, ec, options, sourceBuffer_)) {
     return false;
   }
 
@@ -1132,7 +1132,7 @@ static GetCachedResult GetCachedLazyFunctionStencilMaybeInstantiate(
   }
 
   if (output.is<UniquePtr<ExtensibleCompilationStencil>>()) {
-    auto extensible = cx->make_unique<ExtensibleCompilationStencil>(input);
+    auto extensible = cx->make_unique<ExtensibleCompilationStencil>(cx, input);
     if (!extensible) {
       return GetCachedResult::Error;
     }
