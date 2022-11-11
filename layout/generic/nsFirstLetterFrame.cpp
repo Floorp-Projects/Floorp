@@ -68,7 +68,7 @@ void nsFirstLetterFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
 void nsFirstLetterFrame::SetInitialChildList(ChildListID aListID,
                                              nsFrameList&& aChildList) {
-  MOZ_ASSERT(aListID == kPrincipalList,
+  MOZ_ASSERT(aListID == FrameChildListID::Principal,
              "Principal child list is the only "
              "list that nsFirstLetterFrame should set via this function");
   for (nsIFrame* f : aChildList) {
@@ -311,11 +311,11 @@ void nsFirstLetterFrame::CreateContinuationForFloatingParent(
   }
 
   // XXX Bidi may not be involved but we have to use the list name
-  // kNoReflowPrincipalList because this is just like creating a continuation
-  // except we have to insert it in a different place and we don't want a
-  // reflow command to try to be issued.
-  parent->InsertFrames(kNoReflowPrincipalList, placeholderFrame, nullptr,
-                       nsFrameList(continuation, continuation));
+  // FrameChildListID::NoReflowPrincipal because this is just like creating a
+  // continuation except we have to insert it in a different place and we don't
+  // want a reflow command to try to be issued.
+  parent->InsertFrames(FrameChildListID::NoReflowPrincipal, placeholderFrame,
+                       nullptr, nsFrameList(continuation, continuation));
 
   *aContinuation = continuation;
 }

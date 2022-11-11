@@ -107,7 +107,7 @@ class ViewportFrame : public nsContainerFrame {
 
  private:
   mozilla::FrameChildListID GetAbsoluteListID() const override {
-    return kFixedList;
+    return FrameChildListID::Fixed;
   }
 
   nsView* mView;

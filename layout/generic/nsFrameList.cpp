@@ -441,35 +441,35 @@ namespace mozilla {
 #ifdef DEBUG_FRAME_DUMP
 const char* ChildListName(FrameChildListID aListID) {
   switch (aListID) {
-    case kPrincipalList:
+    case FrameChildListID::Principal:
       return "";
-    case kPopupList:
+    case FrameChildListID::Popup:
       return "PopupList";
-    case kCaptionList:
+    case FrameChildListID::Caption:
       return "CaptionList";
-    case kColGroupList:
+    case FrameChildListID::ColGroup:
       return "ColGroupList";
-    case kAbsoluteList:
+    case FrameChildListID::Absolute:
       return "AbsoluteList";
-    case kFixedList:
+    case FrameChildListID::Fixed:
       return "FixedList";
-    case kOverflowList:
+    case FrameChildListID::Overflow:
       return "OverflowList";
-    case kOverflowContainersList:
+    case FrameChildListID::OverflowContainers:
       return "OverflowContainersList";
-    case kExcessOverflowContainersList:
+    case FrameChildListID::ExcessOverflowContainers:
       return "ExcessOverflowContainersList";
-    case kOverflowOutOfFlowList:
+    case FrameChildListID::OverflowOutOfFlow:
       return "OverflowOutOfFlowList";
-    case kFloatList:
+    case FrameChildListID::Float:
       return "FloatList";
-    case kBulletList:
+    case FrameChildListID::Bullet:
       return "BulletList";
-    case kPushedFloatsList:
+    case FrameChildListID::PushedFloats:
       return "PushedFloatsList";
-    case kBackdropList:
+    case FrameChildListID::Backdrop:
       return "BackdropList";
-    case kNoReflowPrincipalList:
+    case FrameChildListID::NoReflowPrincipal:
       return "NoReflowPrincipalList";
   }
 

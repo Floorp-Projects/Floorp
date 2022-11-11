@@ -153,17 +153,18 @@ void nsPlaceholderFrame::Reflow(nsPresContext* aPresContext,
 static FrameChildListID ChildListIDForOutOfFlow(nsFrameState aPlaceholderState,
                                                 const nsIFrame* aChild) {
   if (aPlaceholderState & PLACEHOLDER_FOR_FLOAT) {
-    return kFloatList;
+    return FrameChildListID::Float;
   }
   if (aPlaceholderState & PLACEHOLDER_FOR_FIXEDPOS) {
-    return nsLayoutUtils::MayBeReallyFixedPos(aChild) ? kFixedList
-                                                      : kAbsoluteList;
+    return nsLayoutUtils::MayBeReallyFixedPos(aChild)
+               ? FrameChildListID::Fixed
+               : FrameChildListID::Absolute;
   }
   if (aPlaceholderState & PLACEHOLDER_FOR_ABSPOS) {
-    return kAbsoluteList;
+    return FrameChildListID::Absolute;
   }
   MOZ_DIAGNOSTIC_ASSERT(false, "unknown list");
-  return kFloatList;
+  return FrameChildListID::Float;
 }
 
 void nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot,

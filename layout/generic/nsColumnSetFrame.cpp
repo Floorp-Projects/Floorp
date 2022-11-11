@@ -1176,10 +1176,11 @@ void nsColumnSetFrame::Reflow(nsPresContext* aPresContext,
       aReflowInput.ComputedLogicalBorderPadding(aReflowInput.GetWritingMode())
           .IsAllZero(),
       "Only the column container can have border and padding!");
-  MOZ_ASSERT(GetChildList(kOverflowContainersList).IsEmpty() &&
-                 GetChildList(kExcessOverflowContainersList).IsEmpty(),
-             "ColumnSetFrame should store overflow containers in principal "
-             "child list!");
+  MOZ_ASSERT(
+      GetChildList(FrameChildListID::OverflowContainers).IsEmpty() &&
+          GetChildList(FrameChildListID::ExcessOverflowContainers).IsEmpty(),
+      "ColumnSetFrame should store overflow containers in principal "
+      "child list!");
 
   //------------ Handle Incremental Reflow -----------------
 
@@ -1259,7 +1260,7 @@ void nsColumnSetFrame::AppendDirectlyOwnedAnonBoxes(
 #ifdef DEBUG
 void nsColumnSetFrame::SetInitialChildList(ChildListID aListID,
                                            nsFrameList&& aChildList) {
-  MOZ_ASSERT(aListID != kPrincipalList || aChildList.OnlyChild(),
+  MOZ_ASSERT(aListID != FrameChildListID::Principal || aChildList.OnlyChild(),
              "initial principal child list must have exactly one child");
   nsContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
 }

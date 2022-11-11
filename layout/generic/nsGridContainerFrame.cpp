@@ -3035,7 +3035,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput {
   GridReflowInput(nsGridContainerFrame* aFrame, gfxContext& aRenderingContext,
                   const ReflowInput* aReflowInput,
                   const nsStylePosition* aGridStyle, const WritingMode& aWM)
-      : mIter(aFrame, kPrincipalList),
+      : mIter(aFrame, FrameChildListID::Principal),
         mGridStyle(aGridStyle),
         mCols(eLogicalAxisInline),
         mRows(eLogicalAxisBlock),
@@ -8854,7 +8854,8 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
       using Order = CSSOrderAwareFrameIterator::OrderState;
       bool ordered = gridReflowInput.mIter.ItemsAreAlreadyInOrder();
       auto orderState = ordered ? Order::Ordered : Order::Unordered;
-      iter.emplace(this, kPrincipalList, Filter::SkipPlaceholders, orderState);
+      iter.emplace(this, FrameChildListID::Principal, Filter::SkipPlaceholders,
+                   orderState);
       gridItems.emplace();
       for (; !iter->AtEnd(); iter->Next()) {
         auto child = **iter;
@@ -9432,8 +9433,8 @@ void nsGridContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
           ? OrderState::Ordered
           : OrderState::Unordered;
   CSSOrderAwareFrameIterator iter(
-      this, kPrincipalList, CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
-      order);
+      this, FrameChildListID::Principal,
+      CSSOrderAwareFrameIterator::ChildFilter::IncludeAll, order);
   const auto flags = DisplayFlagsForFlexOrGridItem();
   for (; !iter.AtEnd(); iter.Next()) {
     nsIFrame* child = *iter;
@@ -9461,7 +9462,7 @@ void nsGridContainerFrame::InsertFrames(
 
 void nsGridContainerFrame::RemoveFrame(ChildListID aListID,
                                        nsIFrame* aOldFrame) {
-  MOZ_ASSERT(aListID == kPrincipalList, "unexpected child list");
+  MOZ_ASSERT(aListID == FrameChildListID::Principal, "unexpected child list");
 
 #ifdef DEBUG
   SetDidPushItemsBitIfNeeded(aListID, aOldFrame);
@@ -9615,8 +9616,8 @@ void nsGridContainerFrame::CalculateBaselines(
     auto orderState = aIter->ItemsAreAlreadyInOrder()
                           ? Iter::OrderState::Ordered
                           : Iter::OrderState::Unordered;
-    Iter iter(this, kPrincipalList, Iter::ChildFilter::SkipPlaceholders,
-              orderState);
+    Iter iter(this, FrameChildListID::Principal,
+              Iter::ChildFilter::SkipPlaceholders, orderState);
     iter.SetItemCount(aGridItems->Length());
     FindItemInGridOrderResult gridOrderLastItem = FindLastItemInGridOrder(
         iter, *aGridItems,
@@ -9737,10 +9738,11 @@ void nsGridContainerFrame::StoreUsedTrackSizes(
 #ifdef DEBUG
 void nsGridContainerFrame::SetInitialChildList(ChildListID aListID,
                                                nsFrameList&& aChildList) {
-  ChildListIDs supportedLists = {kPrincipalList};
-  // We don't handle the kBackdropList frames in any way, but it only contains
-  // a placeholder for ::backdrop which is OK to not reflow (for now anyway).
-  supportedLists += kBackdropList;
+  ChildListIDs supportedLists = {FrameChildListID::Principal};
+  // We don't handle the FrameChildListID::Backdrop frames in any way, but it
+  // only contains a placeholder for ::backdrop which is OK to not reflow (for
+  // now anyway).
+  supportedLists += FrameChildListID::Backdrop;
   MOZ_ASSERT(supportedLists.contains(aListID), "unexpected child list");
 
   return nsContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
