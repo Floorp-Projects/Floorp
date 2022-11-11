@@ -135,6 +135,10 @@ const MESSAGES = () => {
       trigger: {
         id: "featureCalloutCheck",
       },
+      frequency: {
+        // Add the highest possible cap to ensure impressions are recorded while allowing the Spotlight to sync across windows/tabs with Firefox View open
+        lifetime: 100,
+      },
       targeting: `!inMr2022Holdback && source == "firefoxview" &&
        !'browser.newtabpage.activity-stream.asrouter.providers.cfr'|preferenceIsUserSet &&
        ${matchCurrentScreenTargeting(
