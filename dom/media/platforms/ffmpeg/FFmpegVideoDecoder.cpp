@@ -150,7 +150,6 @@ static AVPixelFormat ChooseVAAPIPixelFormat(AVCodecContext* aCodecContext,
         break;
     }
   }
-
   NS_WARNING("FFmpeg does not share any supported pixel formats.");
   return AV_PIX_FMT_NONE;
 }
@@ -320,7 +319,6 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
   releaseVAAPIdecoder.release();
   return NS_OK;
 }
-
 #endif
 
 FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::PtsCorrectionContext()
