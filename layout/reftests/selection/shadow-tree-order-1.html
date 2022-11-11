@@ -1,0 +1,18 @@
+<!doctype html>
+<p id="above">Something to <span>find</span> above</p>
+<p id="host"></p>
+<p id="below">Something to <span>find</span> below</p>
+<script>
+  document.getElementById("host").attachShadow({ mode: "open" }).innerHTML = `
+    Something to <span>find</span> in the shadow
+  `.trim();
+  let selection = getSelection();
+  selection.removeAllRanges();
+  for (let id of ["above", "host", "below"]) {
+    let element = document.getElementById(id);
+    let span = (element.shadowRoot || element).querySelector("span");
+    let range = document.createRange();
+    range.selectNode(span);
+    selection.addRange(range);
+  }
+</script>
