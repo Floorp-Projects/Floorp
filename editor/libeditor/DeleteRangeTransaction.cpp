@@ -57,12 +57,11 @@ DeleteRangeTransaction::MaybeExtendDeletingRangeWithSurroundingWhitespace(
   EditorRawDOMPoint startPoint(aRange.StartRef());
   EditorRawDOMPoint endPoint(aRange.EndRef());
   const bool maybeRangeStartsAfterWhiteSpace =
-      !(startPoint.IsStartOfContainer() && !startPoint.IsEndOfContainer() &&
-        startPoint.IsInTextNode());
+      startPoint.IsInTextNode() &&
+      !(startPoint.IsStartOfContainer() && !startPoint.IsEndOfContainer());
   const bool maybeRangeEndsAtWhiteSpace =
-      !((endPoint.IsEndOfContainer() && !endPoint.IsStartOfContainer() &&
-         endPoint.IsInTextNode()) ||
-        endPoint.IsBRElementAtEndOfContainer());
+      endPoint.IsInTextNode() &&
+      !(endPoint.IsEndOfContainer() && !endPoint.IsStartOfContainer());
   if (!maybeRangeStartsAfterWhiteSpace && !maybeRangeEndsAtWhiteSpace) {
     // no whitespace before or after word => nothing to do here.
     return NS_OK;
