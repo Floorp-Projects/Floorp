@@ -1673,9 +1673,11 @@ impl Device {
         // Software webrender relies on the unoptimized shader source.
         let use_optimized_shaders = use_optimized_shaders && !is_software_webrender;
 
-        // On the android emulator, glShaderSource can crash if the source
-        // strings are not null-terminated. See bug 1591945.
-        let requires_null_terminated_shader_source = is_emulator;
+        // On the android emulator, and possibly some Mali devices, glShaderSource
+        // can crash if the source strings are not null-terminated.
+        // See bug 1591945 and bug 1799722.
+        let requires_null_terminated_shader_source = is_emulator || renderer_name == "Mali-T628"
+            || renderer_name == "Mali-T720" || renderer_name == "Mali-T760";
 
         // The android emulator gets confused if you don't explicitly unbind any texture
         // from GL_TEXTURE_EXTERNAL_OES before binding another to GL_TEXTURE_2D. See bug 1636085.
