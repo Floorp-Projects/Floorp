@@ -172,6 +172,9 @@ const WCHAR *const IA2_RELATION_ERROR = L"error";
 /** This object is the error message for the target object. */
 const WCHAR *const IA2_RELATION_ERROR_FOR = L"errorFor";
 
+/** The target object is the anchor referenced by this link. */
+const WCHAR *const IA2_RELATION_LINKS_TO = L"linksTo";
+
 ///@}
 
 /** This interface gives access to an object's set of relations.

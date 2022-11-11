@@ -80,6 +80,7 @@ G_BEGIN_DECLS
  *@ATK_RELATION_ERROR_FOR: Reciprocal of %ATK_RELATION_ERROR_MESSAGE. Indicates that this object
  * contains an error message describing an invalid condition in the target object(s). @Since:
  * ATK_2.26.
+ *@ATK_RELATION_LINKS_TO: For an anchor link, indicates the element that the link is anchored to.
  *@ATK_RELATION_LAST_DEFINED: Not used, this value indicates the end of the enumeration.
  * 
  *Describes the type of the relation
@@ -107,6 +108,7 @@ typedef enum
   ATK_RELATION_DETAILS_FOR,
   ATK_RELATION_ERROR_MESSAGE,
   ATK_RELATION_ERROR_FOR,
+  ATK_RELATION_LINKS_TO,
   ATK_RELATION_LAST_DEFINED
 } AtkRelationType;
 
