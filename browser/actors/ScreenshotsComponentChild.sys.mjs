@@ -24,8 +24,6 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
         return this.getFullPageBounds();
       case "Screenshots:getVisibleBounds":
         return this.getVisibleBounds();
-      case "Screenshots:getDocumentTitle":
-        return this.getTitle();
     }
     return null;
   }
