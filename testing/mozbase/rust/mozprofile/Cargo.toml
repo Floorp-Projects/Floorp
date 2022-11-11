@@ -1,11 +1,15 @@
 [package]
+edition = "2018"
 name = "mozprofile"
 version = "0.9.0"
 authors = ["Mozilla"]
 description = "Library for working with Mozilla profiles."
-repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/rust/mozprofile"
+keywords = [
+    "firefox",
+    "mozilla",
+]
 license = "MPL-2.0"
-edition = "2018"
+repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/rust/mozprofile"
 
 [dependencies]
 tempfile = "3"

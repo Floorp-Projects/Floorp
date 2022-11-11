@@ -1,14 +1,21 @@
 [package]
+edition = "2018"
 name = "webdriver"
 version = "0.47.0"
 authors = ["Mozilla"]
+include = ["/src"]
 description = "Library implementing the wire protocol for the W3C WebDriver specification."
-keywords = ["webdriver", "browser", "automation", "protocol", "w3c"]
 documentation = "https://docs.rs/webdriver"
-repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/webdriver"
 readme = "README.md"
+keywords = [
+    "automation",
+    "browser",
+    "protocol",
+    "w3c",
+    "webdriver",
+]
 license = "MPL-2.0"
-edition = "2018"
+repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/webdriver"
 
 [features]
 default = ["server"]
