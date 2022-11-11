@@ -241,7 +241,7 @@ nsCanvasFrame::SetHasFocus(bool aHasFocus) {
 
 void nsCanvasFrame::SetInitialChildList(ChildListID aListID,
                                         nsFrameList&& aChildList) {
-  NS_ASSERTION(aListID != kPrincipalList || aChildList.IsEmpty() ||
+  NS_ASSERTION(aListID != FrameChildListID::Principal || aChildList.IsEmpty() ||
                    aChildList.OnlyChild(),
                "Primary child list can have at most one frame in it");
   nsContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
@@ -250,7 +250,7 @@ void nsCanvasFrame::SetInitialChildList(ChildListID aListID,
 void nsCanvasFrame::AppendFrames(ChildListID aListID,
                                  nsFrameList&& aFrameList) {
 #ifdef DEBUG
-  MOZ_ASSERT(aListID == kPrincipalList, "unexpected child list");
+  MOZ_ASSERT(aListID == FrameChildListID::Principal, "unexpected child list");
   if (!mFrames.IsEmpty()) {
     for (nsIFrame* f : aFrameList) {
       // We only allow native anonymous child frames to be in principal child
@@ -275,7 +275,7 @@ void nsCanvasFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
 
 #ifdef DEBUG
 void nsCanvasFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
-  MOZ_ASSERT(aListID == kPrincipalList, "unexpected child list");
+  MOZ_ASSERT(aListID == FrameChildListID::Principal, "unexpected child list");
   nsContainerFrame::RemoveFrame(aListID, aOldFrame);
 }
 #endif

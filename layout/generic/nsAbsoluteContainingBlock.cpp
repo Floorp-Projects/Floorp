@@ -161,7 +161,7 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
   // them contributing to overflow areas because that means we'll create new
   // pages ad infinitum if one of them overflows the page.
   if (aDelegatingFrame->IsPageContentFrame()) {
-    MOZ_ASSERT(mChildListID == kFixedList);
+    MOZ_ASSERT(mChildListID == FrameChildListID::Fixed);
     aOverflowAreas = nullptr;
   }
 
@@ -714,7 +714,7 @@ void nsAbsoluteContainingBlock::ResolveAutoMarginsAfterLayout(
 // reflow...
 
 // When bug 154892 is checked in, make sure that when
-// mChildListID == kFixedList, the height is unconstrained.
+// mChildListID == FrameChildListID::Fixed, the height is unconstrained.
 // since we don't allow replicated frames to split.
 
 void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(

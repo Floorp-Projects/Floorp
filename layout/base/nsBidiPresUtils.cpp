@@ -649,8 +649,8 @@ static void SplitInlineAncestors(nsContainerFrame* aParent,
       // The parent's continuation adopts the siblings after the split.
       MOZ_ASSERT(!newParent->IsBlockFrameOrSubclass(),
                  "blocks should not be IsBidiSplittable");
-      newParent->InsertFrames(kNoReflowPrincipalList, nullptr, nullptr,
-                              std::move(tail));
+      newParent->InsertFrames(FrameChildListID::NoReflowPrincipal, nullptr,
+                              nullptr, std::move(tail));
 
       // While passing &aLine to InsertFrames for a non-block isn't harmful
       // because it's a no-op, it doesn't really make sense.  However, the
@@ -664,10 +664,10 @@ static void SplitInlineAncestors(nsContainerFrame* aParent,
         parentLine = nullptr;
       }
 
-      // The list name kNoReflowPrincipalList would indicate we don't want
-      // reflow
-      grandparent->InsertFrames(kNoReflowPrincipalList, parent, parentLine,
-                                nsFrameList(newParent, newParent));
+      // The list name FrameChildListID::NoReflowPrincipal would indicate we
+      // don't want reflow
+      grandparent->InsertFrames(FrameChildListID::NoReflowPrincipal, parent,
+                                parentLine, nsFrameList(newParent, newParent));
     }
 
     frame = parent;
@@ -759,9 +759,10 @@ static void CreateContinuation(nsIFrame* aFrame,
   *aNewFrame = presShell->FrameConstructor()->CreateContinuingFrame(
       aFrame, parent, aIsFluid);
 
-  // The list name kNoReflowPrincipalList would indicate we don't want reflow
+  // The list name FrameChildListID::NoReflowPrincipal would indicate we don't
+  // want reflow
   // XXXbz this needs higher-level framelist love
-  parent->InsertFrames(kNoReflowPrincipalList, aFrame, parentLine,
+  parent->InsertFrames(FrameChildListID::NoReflowPrincipal, aFrame, parentLine,
                        nsFrameList(*aNewFrame, *aNewFrame));
 
   if (!aIsFluid) {
@@ -1387,7 +1388,7 @@ void nsBidiPresUtils::TraverseFrames(nsIFrame* aCurrentFrame,
     } else {
       // For a non-leaf frame, recurse into TraverseFrames
       nsIFrame* kid = frame->PrincipalChildList().FirstChild();
-      MOZ_ASSERT(!frame->GetChildList(kOverflowList).FirstChild(),
+      MOZ_ASSERT(!frame->GetChildList(FrameChildListID::Overflow).FirstChild(),
                  "should have drained the overflow list above");
       if (kid) {
         TraverseFrames(kid, aBpd);
