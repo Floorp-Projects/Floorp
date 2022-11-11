@@ -100,7 +100,7 @@ JS_PUBLIC_API bool JS::StartIncrementalEncoding(JSContext* cx,
     stencil = nullptr;
   } else {
     initial = cx->make_unique<frontend::ExtensibleCompilationStencil>(
-        cx, stencil->source);
+        stencil->source);
     if (!initial) {
       return false;
     }
