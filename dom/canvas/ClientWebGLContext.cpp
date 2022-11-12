@@ -3349,16 +3349,6 @@ void ClientWebGLContext::RawBufferData(GLenum target, const uint8_t* srcBytes,
 
 ////
 
-void ClientWebGLContext::RawBufferSubData(GLenum target,
-                                          WebGLsizeiptr dstByteOffset,
-                                          const uint8_t* srcBytes,
-                                          size_t srcLen) {
-  const FuncScope funcScope(*this, "bufferSubData");
-
-  Run<RPROC(BufferSubData)>(target, dstByteOffset,
-                            RawBuffer<>({srcBytes, srcLen}));
-}
-
 void ClientWebGLContext::BufferSubData(GLenum target,
                                        WebGLsizeiptr dstByteOffset,
                                        const dom::ArrayBuffer& src) {

@@ -50,7 +50,6 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.gfx += [
     "CompositorHitTestInfo.h",
-    "WPFGpuRaster.h",
 ]
 
 if CONFIG["MOZ_X11"]:

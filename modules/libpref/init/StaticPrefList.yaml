@@ -5592,11 +5592,6 @@
   value: 0.66
   mirror: always
 
-- name: gfx.canvas.accelerated.gpu-path-size
-  type: RelaxedAtomicUint32
-  value: 4
-  mirror: always
-
 # 0x7fff is the maximum supported xlib surface size and is more than enough for canvases.
 - name: gfx.canvas.max-size
   type: RelaxedAtomicInt32
