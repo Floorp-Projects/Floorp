@@ -199,7 +199,7 @@ void nsMenuFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 }
 
 const nsFrameList& nsMenuFrame::GetChildList(ChildListID aListID) const {
-  if (FrameChildListID::Popup == aListID) {
+  if (kPopupList == aListID) {
     nsFrameList* list = GetPopupList();
     return list ? *list : nsFrameList::EmptyList();
   }
@@ -210,7 +210,7 @@ void nsMenuFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
   nsBoxFrame::GetChildLists(aLists);
   nsFrameList* list = GetPopupList();
   if (list) {
-    list->AppendIfNonempty(aLists, FrameChildListID::Popup);
+    list->AppendIfNonempty(aLists, kPopupList);
   }
 }
 
@@ -256,8 +256,7 @@ void nsMenuFrame::SetPopupFrame(nsFrameList& aFrameList) {
 
 void nsMenuFrame::SetInitialChildList(ChildListID aListID,
                                       nsFrameList&& aChildList) {
-  if (aListID == FrameChildListID::Principal ||
-      aListID == FrameChildListID::Popup) {
+  if (aListID == kPrincipalList || aListID == kPopupList) {
     NS_ASSERTION(!HasPopup(), "SetInitialChildList called twice?");
 #ifdef DEBUG
     for (nsIFrame* f : aChildList) {
@@ -1006,8 +1005,7 @@ void nsMenuFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
 void nsMenuFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                                const nsLineList::iterator* aPrevFrameLine,
                                nsFrameList&& aFrameList) {
-  if (!HasPopup() && (aListID == FrameChildListID::Principal ||
-                      aListID == FrameChildListID::Popup)) {
+  if (!HasPopup() && (aListID == kPrincipalList || aListID == kPopupList)) {
     SetPopupFrame(aFrameList);
     if (HasPopup()) {
       PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
@@ -1026,8 +1024,7 @@ void nsMenuFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
 }
 
 void nsMenuFrame::AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) {
-  if (!HasPopup() && (aListID == FrameChildListID::Principal ||
-                      aListID == FrameChildListID::Popup)) {
+  if (!HasPopup() && (aListID == kPrincipalList || aListID == kPopupList)) {
     SetPopupFrame(aFrameList);
     if (HasPopup()) {
       PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,

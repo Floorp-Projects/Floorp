@@ -341,7 +341,7 @@ void nsHTMLFramesetFrame::SetInitialChildList(ChildListID aListID,
   // other hand, we're going to get a SetInitialChildList() with an empty list
   // and null list name after the frame constructor is done creating us.  So
   // just ignore that call.
-  if (aListID == FrameChildListID::Principal && aChildList.IsEmpty()) {
+  if (aListID == kPrincipalList && aChildList.IsEmpty()) {
     return;
   }
 

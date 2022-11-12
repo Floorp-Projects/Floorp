@@ -59,7 +59,7 @@ bool nsRubyTextContainerFrame::IsFrameOfType(uint32_t aFlags) const {
 void nsRubyTextContainerFrame::SetInitialChildList(ChildListID aListID,
                                                    nsFrameList&& aChildList) {
   nsContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
-  if (aListID == FrameChildListID::Principal) {
+  if (aListID == kPrincipalList) {
     UpdateSpanFlag();
   }
 }

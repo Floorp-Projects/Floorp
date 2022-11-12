@@ -567,7 +567,7 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
 
   bool foundOuter = false;
   CSSOrderAwareFrameIterator iter(
-      mParentBox, FrameChildListID::Principal,
+      mParentBox, layout::kPrincipalList,
       CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
       CSSOrderAwareFrameIterator::OrderState::Unknown,
       CSSOrderAwareFrameIterator::OrderingProperty::BoxOrdinalGroup);

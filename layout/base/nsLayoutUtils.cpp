@@ -573,7 +573,7 @@ void nsLayoutUtils::UnionChildOverflow(nsIFrame* aFrame,
                                        FrameChildListIDs aSkipChildLists) {
   // Iterate over all children except pop-ups.
   FrameChildListIDs skip(aSkipChildLists);
-  skip += FrameChildListID::Popup;
+  skip += nsIFrame::kPopupList;
 
   for (const auto& [list, listID] : aFrame->ChildLists()) {
     if (skip.contains(listID)) {
@@ -810,16 +810,16 @@ nsContainerFrame* nsLayoutUtils::LastContinuationWithChild(
 
 // static
 FrameChildListID nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame) {
-  FrameChildListID id = FrameChildListID::Principal;
+  nsIFrame::ChildListID id = nsIFrame::kPrincipalList;
 
   MOZ_DIAGNOSTIC_ASSERT(!aChildFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW));
 
   if (aChildFrame->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER)) {
     nsIFrame* pif = aChildFrame->GetPrevInFlow();
     if (pif->GetParent() == aChildFrame->GetParent()) {
-      id = FrameChildListID::ExcessOverflowContainers;
+      id = nsIFrame::kExcessOverflowContainersList;
     } else {
-      id = FrameChildListID::OverflowContainers;
+      id = nsIFrame::kOverflowContainersList;
     }
   } else {
     LayoutFrameType childType = aChildFrame->Type();
@@ -829,17 +829,17 @@ FrameChildListID nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame) {
       MOZ_ASSERT(parent->IsMenuFrame(),
                  "nsMenuPopupFrame should be out of flow if not under a menu");
       nsIFrame* firstPopup =
-          parent->GetChildList(FrameChildListID::Popup).FirstChild();
+          parent->GetChildList(nsIFrame::kPopupList).FirstChild();
       MOZ_ASSERT(!firstPopup || !firstPopup->GetNextSibling(),
                  "We assume popupList only has one child, but it has more.");
-      id = firstPopup == aChildFrame ? FrameChildListID::Popup
-                                     : FrameChildListID::Principal;
+      id = firstPopup == aChildFrame ? nsIFrame::kPopupList
+                                     : nsIFrame::kPrincipalList;
     } else if (LayoutFrameType::TableColGroup == childType) {
-      id = FrameChildListID::ColGroup;
+      id = nsIFrame::kColGroupList;
     } else if (aChildFrame->IsTableCaption()) {
-      id = FrameChildListID::Caption;
+      id = nsIFrame::kCaptionList;
     } else {
-      id = FrameChildListID::Principal;
+      id = nsIFrame::kPrincipalList;
     }
   }
 
@@ -849,7 +849,7 @@ FrameChildListID nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame) {
   nsContainerFrame* parent = aChildFrame->GetParent();
   bool found = parent->GetChildList(id).ContainsFrame(aChildFrame);
   if (!found) {
-    found = parent->GetChildList(FrameChildListID::Overflow)
+    found = parent->GetChildList(nsIFrame::kOverflowList)
                 .ContainsFrame(aChildFrame);
     MOZ_ASSERT(found, "not in child list");
   }
@@ -3590,8 +3590,7 @@ void nsLayoutUtils::AddBoxesForFrame(nsIFrame* aFrame,
   if (pseudoType == PseudoStyleType::tableWrapper) {
     AddBoxesForFrame(aFrame->PrincipalChildList().FirstChild(), aCallback);
     if (aCallback->mIncludeCaptionBoxForTable) {
-      nsIFrame* kid =
-          aFrame->GetChildList(FrameChildListID::Caption).FirstChild();
+      nsIFrame* kid = aFrame->GetChildList(nsIFrame::kCaptionList).FirstChild();
       if (kid) {
         AddBoxesForFrame(kid, aCallback);
       }
@@ -3626,8 +3625,7 @@ nsIFrame* nsLayoutUtils::GetFirstNonAnonymousFrame(nsIFrame* aFrame) {
       if (f) {
         return f;
       }
-      nsIFrame* kid =
-          aFrame->GetChildList(FrameChildListID::Caption).FirstChild();
+      nsIFrame* kid = aFrame->GetChildList(nsIFrame::kCaptionList).FirstChild();
       if (kid) {
         f = GetFirstNonAnonymousFrame(kid);
         if (f) {
@@ -6016,14 +6014,14 @@ nscoord nsLayoutUtils::CalculateContentBEnd(WritingMode aWM, nsIFrame* aFrame) {
   // calculation is intended to affect layout.
   LogicalSize overflowSize(aWM, aFrame->ScrollableOverflowRect().Size());
   if (overflowSize.BSize(aWM) > contentBEnd) {
-    FrameChildListIDs skip = {FrameChildListID::Overflow,
-                              FrameChildListID::ExcessOverflowContainers,
-                              FrameChildListID::OverflowOutOfFlow};
+    nsIFrame::ChildListIDs skip = {nsIFrame::kOverflowList,
+                                   nsIFrame::kExcessOverflowContainersList,
+                                   nsIFrame::kOverflowOutOfFlowList};
     nsBlockFrame* blockFrame = do_QueryFrame(aFrame);
     if (blockFrame) {
       contentBEnd =
           std::max(contentBEnd, CalculateBlockContentBEnd(aWM, blockFrame));
-      skip += FrameChildListID::Principal;
+      skip += nsIFrame::kPrincipalList;
     }
     for (const auto& [list, listID] : aFrame->ChildLists()) {
       if (!skip.contains(listID)) {
@@ -7597,8 +7595,8 @@ static void GetFontFacesForFramesInner(
     return;
   }
 
-  FrameChildListID childLists[] = {FrameChildListID::Principal,
-                                   FrameChildListID::Popup};
+  nsIFrame::ChildListID childLists[] = {nsIFrame::kPrincipalList,
+                                        nsIFrame::kPopupList};
   for (size_t i = 0; i < ArrayLength(childLists); ++i) {
     for (nsIFrame* child : aFrame->GetChildList(childLists[i])) {
       child = nsPlaceholderFrame::GetRealFrameFor(child);

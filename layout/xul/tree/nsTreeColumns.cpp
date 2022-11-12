@@ -439,7 +439,7 @@ void nsTreeColumns::EnsureColumns() {
 
     // Enumerate the columns in visible order
     CSSOrderAwareFrameIterator iter(
-        colFrame, FrameChildListID::Principal,
+        colFrame, mozilla::layout::kPrincipalList,
         CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
         CSSOrderAwareFrameIterator::OrderState::Unknown,
         CSSOrderAwareFrameIterator::OrderingProperty::BoxOrdinalGroup);

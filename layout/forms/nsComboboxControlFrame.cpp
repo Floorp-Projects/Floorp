@@ -836,7 +836,7 @@ nsIFrame* nsComboboxControlFrame::CreateFrameForDisplayNode() {
   textFrame->Init(mDisplayContent, mDisplayFrame, nullptr);
   mDisplayContent->SetPrimaryFrame(textFrame);
 
-  mDisplayFrame->SetInitialChildList(FrameChildListID::Principal,
+  mDisplayFrame->SetInitialChildList(kPrincipalList,
                                      nsFrameList(textFrame, textFrame));
   return mDisplayFrame;
 }

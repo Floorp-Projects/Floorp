@@ -82,11 +82,11 @@ void nsContainerFrame::SetInitialChildList(ChildListID aListID,
     MOZ_ASSERT(f->GetParent() == this, "Unexpected parent");
   }
 #endif
-  if (aListID == FrameChildListID::Principal) {
+  if (aListID == kPrincipalList) {
     MOZ_ASSERT(mFrames.IsEmpty(),
                "unexpected second call to SetInitialChildList");
     mFrames = std::move(aChildList);
-  } else if (aListID == FrameChildListID::Backdrop) {
+  } else if (aListID == kBackdropList) {
     MOZ_ASSERT(StyleDisplay()->mTopLayer != StyleTopLayer::None,
                "Only top layer frames should have backdrop");
     MOZ_ASSERT(HasAnyStateBits(NS_FRAME_OUT_OF_FLOW),
@@ -114,8 +114,7 @@ void nsContainerFrame::SetInitialChildList(ChildListID aListID,
 
 void nsContainerFrame::AppendFrames(ChildListID aListID,
                                     nsFrameList&& aFrameList) {
-  MOZ_ASSERT(aListID == FrameChildListID::Principal ||
-                 aListID == FrameChildListID::NoReflowPrincipal,
+  MOZ_ASSERT(aListID == kPrincipalList || aListID == kNoReflowPrincipalList,
              "unexpected child list");
 
   if (MOZ_UNLIKELY(aFrameList.IsEmpty())) {
@@ -125,7 +124,7 @@ void nsContainerFrame::AppendFrames(ChildListID aListID,
   DrainSelfOverflowList();  // ensure the last frame is in mFrames
   mFrames.AppendFrames(this, std::move(aFrameList));
 
-  if (aListID != FrameChildListID::NoReflowPrincipal) {
+  if (aListID != kNoReflowPrincipalList) {
     PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
                                   NS_FRAME_HAS_DIRTY_CHILDREN);
   }
@@ -134,8 +133,7 @@ void nsContainerFrame::AppendFrames(ChildListID aListID,
 void nsContainerFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                                     const nsLineList::iterator* aPrevFrameLine,
                                     nsFrameList&& aFrameList) {
-  MOZ_ASSERT(aListID == FrameChildListID::Principal ||
-                 aListID == FrameChildListID::NoReflowPrincipal,
+  MOZ_ASSERT(aListID == kPrincipalList || aListID == kNoReflowPrincipalList,
              "unexpected child list");
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");
@@ -147,15 +145,14 @@ void nsContainerFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   DrainSelfOverflowList();  // ensure aPrevFrame is in mFrames
   mFrames.InsertFrames(this, aPrevFrame, std::move(aFrameList));
 
-  if (aListID != FrameChildListID::NoReflowPrincipal) {
+  if (aListID != kNoReflowPrincipalList) {
     PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
                                   NS_FRAME_HAS_DIRTY_CHILDREN);
   }
 }
 
 void nsContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
-  MOZ_ASSERT(aListID == FrameChildListID::Principal ||
-                 aListID == FrameChildListID::NoReflowPrincipal,
+  MOZ_ASSERT(aListID == kPrincipalList || aListID == kNoReflowPrincipalList,
              "unexpected child list");
 
   AutoTArray<nsIFrame*, 10> continuations;
@@ -173,9 +170,8 @@ void nsContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
   // Loop and destroy aOldFrame and all of its continuations.
   //
   // Request a reflow on the parent frames involved unless we were explicitly
-  // told not to (FrameChildListID::NoReflowPrincipal).
-  const bool generateReflowCommand =
-      (FrameChildListID::NoReflowPrincipal != aListID);
+  // told not to (kNoReflowPrincipalList).
+  const bool generateReflowCommand = (kNoReflowPrincipalList != aListID);
   for (nsIFrame* continuation : Reversed(continuations)) {
     nsContainerFrame* parent = continuation->GetParent();
 
@@ -310,21 +306,21 @@ const nsFrameList& nsContainerFrame::GetChildList(ChildListID aListID) const {
   // We only know about the principal child list, the overflow lists,
   // and the backdrop list.
   switch (aListID) {
-    case FrameChildListID::Principal:
+    case kPrincipalList:
       return mFrames;
-    case FrameChildListID::Overflow: {
+    case kOverflowList: {
       nsFrameList* list = GetOverflowFrames();
       return list ? *list : nsFrameList::EmptyList();
     }
-    case FrameChildListID::OverflowContainers: {
+    case kOverflowContainersList: {
       nsFrameList* list = GetOverflowContainers();
       return list ? *list : nsFrameList::EmptyList();
     }
-    case FrameChildListID::ExcessOverflowContainers: {
+    case kExcessOverflowContainersList: {
       nsFrameList* list = GetExcessOverflowContainers();
       return list ? *list : nsFrameList::EmptyList();
     }
-    case FrameChildListID::Backdrop: {
+    case kBackdropList: {
       nsFrameList* list = GetProperty(BackdropProperty());
       return list ? *list : nsFrameList::EmptyList();
     }
@@ -334,29 +330,27 @@ const nsFrameList& nsContainerFrame::GetChildList(ChildListID aListID) const {
 }
 
 void nsContainerFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
-  mFrames.AppendIfNonempty(aLists, FrameChildListID::Principal);
+  mFrames.AppendIfNonempty(aLists, kPrincipalList);
 
   using T = mozilla::FrameProperties::UntypedDescriptor;
   mProperties.ForEach([this, aLists](const T& aProp, uint64_t aValue) {
     typedef const nsFrameList* L;
     if (aProp == OverflowProperty()) {
-      reinterpret_cast<L>(aValue)->AppendIfNonempty(aLists,
-                                                    FrameChildListID::Overflow);
+      reinterpret_cast<L>(aValue)->AppendIfNonempty(aLists, kOverflowList);
     } else if (aProp == OverflowContainersProperty()) {
       MOZ_ASSERT(IsFrameOfType(nsIFrame::eCanContainOverflowContainers),
                  "found unexpected OverflowContainersProperty");
       Unused << this;  // silence clang -Wunused-lambda-capture in opt builds
-      reinterpret_cast<L>(aValue)->AppendIfNonempty(
-          aLists, FrameChildListID::OverflowContainers);
+      reinterpret_cast<L>(aValue)->AppendIfNonempty(aLists,
+                                                    kOverflowContainersList);
     } else if (aProp == ExcessOverflowContainersProperty()) {
       MOZ_ASSERT(IsFrameOfType(nsIFrame::eCanContainOverflowContainers),
                  "found unexpected ExcessOverflowContainersProperty");
       Unused << this;  // silence clang -Wunused-lambda-capture in opt builds
       reinterpret_cast<L>(aValue)->AppendIfNonempty(
-          aLists, FrameChildListID::ExcessOverflowContainers);
+          aLists, kExcessOverflowContainersList);
     } else if (aProp == BackdropProperty()) {
-      reinterpret_cast<L>(aValue)->AppendIfNonempty(aLists,
-                                                    FrameChildListID::Backdrop);
+      reinterpret_cast<L>(aValue)->AppendIfNonempty(aLists, kBackdropList);
     }
     return true;
   });
@@ -1098,7 +1092,7 @@ void nsContainerFrame::PositionChildViews(nsIFrame* aFrame) {
   // Currently only nsMenuFrame has a popupList and during layout will adjust
   // the view manually to position the popup.
   for (const auto& [list, listID] : aFrame->ChildLists()) {
-    if (listID == FrameChildListID::Popup) {
+    if (listID == kPopupList) {
       continue;
     }
     for (nsIFrame* childFrame : list) {
@@ -1576,7 +1570,7 @@ bool nsContainerFrame::PushIncompleteChildren(
   nsFrameList incompleteList;
   nsFrameList overflowIncompleteList;
   auto* fc = PresShell()->FrameConstructor();
-  for (nsIFrame* child = PrincipalChildList().FirstChild(); child;) {
+  for (nsIFrame* child = GetChildList(kPrincipalList).FirstChild(); child;) {
     MOZ_ASSERT((aPushedItems.Contains(child) ? 1 : 0) +
                        (aIncompleteItems.Contains(child) ? 1 : 0) +
                        (aOverflowIncompleteItems.Contains(child) ? 1 : 0) <=
@@ -1858,7 +1852,7 @@ void nsContainerFrame::NormalizeChildLists() {
     DebugOnly<bool> nifNeedPushedItem = false;
     while (nif) {
       nsFrameList nifItems;
-      for (nsIFrame* nifChild = nif->PrincipalChildList().FirstChild();
+      for (nsIFrame* nifChild = nif->GetChildList(kPrincipalList).FirstChild();
            nifChild;) {
         nsIFrame* next = nifChild->GetNextSibling();
         if (!nifChild->GetPrevInFlow()) {
@@ -1878,8 +1872,7 @@ void nsContainerFrame::NormalizeChildLists() {
       }
       nifNeedPushedItem = true;
 
-      for (nsIFrame* nifChild =
-               nif->GetChildList(FrameChildListID::Overflow).FirstChild();
+      for (nsIFrame* nifChild = nif->GetChildList(kOverflowList).FirstChild();
            nifChild;) {
         nsIFrame* next = nifChild->GetNextSibling();
         if (!nifChild->GetPrevInFlow()) {
@@ -1911,7 +1904,7 @@ void nsContainerFrame::NormalizeChildLists() {
 
 void nsContainerFrame::NoteNewChildren(ChildListID aListID,
                                        const nsFrameList& aFrameList) {
-  MOZ_ASSERT(aListID == FrameChildListID::Principal, "unexpected child list");
+  MOZ_ASSERT(aListID == kPrincipalList, "unexpected child list");
   MOZ_ASSERT(IsFlexOrGridContainer(),
              "Only Flex / Grid containers can call this!");
 
@@ -2002,13 +1995,13 @@ nsIFrame* nsContainerFrame::GetFirstNonAnonBoxInSubtree(nsIFrame* aFrame) {
     // the table, for use in DOM comparisons to things outside of the table.)
     if (MOZ_UNLIKELY(aFrame->IsTableWrapperFrame())) {
       nsIFrame* captionDescendant = GetFirstNonAnonBoxInSubtree(
-          aFrame->GetChildList(FrameChildListID::Caption).FirstChild());
+          aFrame->GetChildList(kCaptionList).FirstChild());
       if (captionDescendant) {
         return captionDescendant;
       }
     } else if (MOZ_UNLIKELY(aFrame->IsTableFrame())) {
       nsIFrame* colgroupDescendant = GetFirstNonAnonBoxInSubtree(
-          aFrame->GetChildList(FrameChildListID::ColGroup).FirstChild());
+          aFrame->GetChildList(kColGroupList).FirstChild());
       if (colgroupDescendant) {
         return colgroupDescendant;
       }
@@ -3065,11 +3058,9 @@ void nsContainerFrame::SanityCheckChildListsBeforeReflow() const {
   const auto didPushItemsBit = IsFlexContainerFrame()
                                    ? NS_STATE_FLEX_DID_PUSH_ITEMS
                                    : NS_STATE_GRID_DID_PUSH_ITEMS;
-  ChildListIDs absLists = {FrameChildListID::Absolute, FrameChildListID::Fixed,
-                           FrameChildListID::OverflowContainers,
-                           FrameChildListID::ExcessOverflowContainers};
-  ChildListIDs itemLists = {FrameChildListID::Principal,
-                            FrameChildListID::Overflow};
+  ChildListIDs absLists = {kAbsoluteList, kFixedList, kOverflowContainersList,
+                           kExcessOverflowContainersList};
+  ChildListIDs itemLists = {kPrincipalList, kOverflowList};
   for (const nsIFrame* f = this; f; f = f->GetNextInFlow()) {
     MOZ_ASSERT(!f->HasAnyStateBits(didPushItemsBit),
                "At start of reflow, we should've pulled items back from all "
@@ -3077,9 +3068,8 @@ void nsContainerFrame::SanityCheckChildListsBeforeReflow() const {
                "the process.");
     for (const auto& [list, listID] : f->ChildLists()) {
       if (!itemLists.contains(listID)) {
-        MOZ_ASSERT(
-            absLists.contains(listID) || listID == FrameChildListID::Backdrop,
-            "unexpected non-empty child list");
+        MOZ_ASSERT(absLists.contains(listID) || listID == kBackdropList,
+                   "unexpected non-empty child list");
         continue;
       }
       for (const auto* child : list) {
@@ -3095,7 +3085,7 @@ void nsContainerFrame::SanityCheckChildListsBeforeReflow() const {
     const nsFrameList* oc = GetOverflowContainers();
     const nsFrameList* eoc = GetExcessOverflowContainers();
     const nsFrameList* pifEOC = pif->GetExcessOverflowContainers();
-    for (const nsIFrame* child : pif->PrincipalChildList()) {
+    for (const nsIFrame* child : pif->GetChildList(kPrincipalList)) {
       const nsIFrame* childNIF = child->GetNextInFlow();
       MOZ_ASSERT(!childNIF || mFrames.ContainsFrame(childNIF) ||
                  (pifEOC && pifEOC->ContainsFrame(childNIF)) ||
@@ -3110,11 +3100,10 @@ void nsContainerFrame::SetDidPushItemsBitIfNeeded(ChildListID aListID,
   MOZ_ASSERT(IsFlexOrGridContainer(),
              "Only Flex / Grid containers can call this!");
 
-  // Note that FrameChildListID::Principal doesn't mean aOldFrame must be on
-  // that list. It can also be on FrameChildListID::Overflow, in which case it
-  // might be a pushed item, and if it's the only pushed item our DID_PUSH_ITEMS
-  // bit will lie.
-  if (aListID == FrameChildListID::Principal && !aOldFrame->GetPrevInFlow()) {
+  // Note that kPrincipalList doesn't mean aOldFrame must be on that list.
+  // It can also be on kOverflowList, in which case it might be a pushed
+  // item, and if it's the only pushed item our DID_PUSH_ITEMS bit will lie.
+  if (aListID == kPrincipalList && !aOldFrame->GetPrevInFlow()) {
     // Since the bit may lie, set the mDidPushItemsBitMayLie value to true for
     // ourself and for all our prev-in-flows.
     nsContainerFrame* frameThatMayLie = this;
@@ -3146,7 +3135,7 @@ void nsContainerFrame::List(FILE* out, const char* aPrefix,
   }
 
   // Output rest of the child lists.
-  const ChildListIDs skippedListIDs = {FrameChildListID::Principal};
+  const ChildListIDs skippedListIDs = {kPrincipalList};
   ListChildLists(out, pfx.get(), aFlags, skippedListIDs);
 
   fprintf_stderr(out, "%s>\n", aPrefix);

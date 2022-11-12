@@ -121,7 +121,7 @@ nsIFrame* nsBoxFrame::SlowOrdinalGroupAwareSibling(nsIFrame* aBox, bool aNext) {
     return nullptr;
   }
   CSSOrderAwareFrameIterator iter(
-      parent, FrameChildListID::Principal,
+      parent, layout::kPrincipalList,
       CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
       CSSOrderAwareFrameIterator::OrderState::Unknown,
       CSSOrderAwareFrameIterator::OrderingProperty::BoxOrdinalGroup);
@@ -143,7 +143,7 @@ nsIFrame* nsBoxFrame::SlowOrdinalGroupAwareSibling(nsIFrame* aBox, bool aNext) {
 void nsBoxFrame::SetInitialChildList(ChildListID aListID,
                                      nsFrameList&& aChildList) {
   nsContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
-  if (aListID == FrameChildListID::Principal) {
+  if (aListID == kPrincipalList) {
     // initialize our list of infos.
     nsBoxLayoutState state(PresContext());
     if (mLayoutManager)
@@ -713,8 +713,7 @@ void nsBoxFrame::MarkIntrinsicISizesDirty() {
 }
 
 void nsBoxFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
-  MOZ_ASSERT(aListID == FrameChildListID::Principal,
-             "We don't support out-of-flow kids");
+  MOZ_ASSERT(aListID == kPrincipalList, "We don't support out-of-flow kids");
 
   nsPresContext* presContext = PresContext();
   nsBoxLayoutState state(presContext);
@@ -740,8 +739,7 @@ void nsBoxFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                "inserting after sibling frame with different parent");
   NS_ASSERTION(!aPrevFrame || mFrames.ContainsFrame(aPrevFrame),
                "inserting after sibling frame not in our child list");
-  MOZ_ASSERT(aListID == FrameChildListID::Principal,
-             "We don't support out-of-flow kids");
+  MOZ_ASSERT(aListID == kPrincipalList, "We don't support out-of-flow kids");
 
   nsBoxLayoutState state(PresContext());
 
@@ -758,8 +756,7 @@ void nsBoxFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
 }
 
 void nsBoxFrame::AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) {
-  MOZ_ASSERT(aListID == FrameChildListID::Principal,
-             "We don't support out-of-flow kids");
+  MOZ_ASSERT(aListID == kPrincipalList, "We don't support out-of-flow kids");
 
   nsBoxLayoutState state(PresContext());
 
@@ -924,7 +921,7 @@ void nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder* aBuilder,
                                              const nsDisplayListSet& aLists) {
   // Iterate over the children in CSS order.
   auto iter = CSSOrderAwareFrameIterator(
-      this, FrameChildListID::Principal,
+      this, mozilla::layout::kPrincipalList,
       CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
       CSSOrderAwareFrameIterator::OrderState::Unknown,
       CSSOrderAwareFrameIterator::OrderingProperty::BoxOrdinalGroup);

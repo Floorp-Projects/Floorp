@@ -207,7 +207,7 @@ void nsTableRowFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
 
 void nsTableRowFrame::AppendFrames(ChildListID aListID,
                                    nsFrameList&& aFrameList) {
-  NS_ASSERTION(aListID == FrameChildListID::Principal, "unexpected child list");
+  NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
 
   DrainSelfOverflowList();  // ensure the last frame is in mFrames
   const nsFrameList::Slice& newCells =
@@ -230,7 +230,7 @@ void nsTableRowFrame::AppendFrames(ChildListID aListID,
 void nsTableRowFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                                    const nsLineList::iterator* aPrevFrameLine,
                                    nsFrameList&& aFrameList) {
-  NS_ASSERTION(aListID == FrameChildListID::Principal, "unexpected child list");
+  NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");
   if (mFrames.IsEmpty() || (aPrevFrame && !aPrevFrame->GetNextSibling())) {
@@ -269,7 +269,7 @@ void nsTableRowFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
 }
 
 void nsTableRowFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
-  NS_ASSERTION(aListID == FrameChildListID::Principal, "unexpected child list");
+  NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
 
   MOZ_ASSERT((nsTableCellFrame*)do_QueryFrame(aOldFrame));
   nsTableCellFrame* cellFrame = static_cast<nsTableCellFrame*>(aOldFrame);

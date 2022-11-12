@@ -672,12 +672,11 @@ nsIFrame* ScrollAnchorContainer::FindAnchorIn(nsIFrame* aFrame) const {
     // Skip child lists that contain out-of-flow frames, we'll visit them by
     // following placeholders in the in-flow lists so that we visit these
     // frames in DOM order.
-    // XXX do we actually need to exclude FrameChildListID::OverflowOutOfFlow
-    // too?
-    if (listID == FrameChildListID::Absolute ||
-        listID == FrameChildListID::Fixed ||
-        listID == FrameChildListID::Float ||
-        listID == FrameChildListID::OverflowOutOfFlow) {
+    // XXX do we actually need to exclude kOverflowOutOfFlowList too?
+    if (listID == FrameChildListID::kAbsoluteList ||
+        listID == FrameChildListID::kFixedList ||
+        listID == FrameChildListID::kFloatList ||
+        listID == FrameChildListID::kOverflowOutOfFlowList) {
       continue;
     }
 
@@ -696,7 +695,7 @@ nsIFrame* ScrollAnchorContainer::FindAnchorIn(nsIFrame* aFrame) const {
   //
   // [1] https://github.com/w3c/csswg-drafts/issues/3465
   const nsFrameList& absPosList =
-      aFrame->GetChildList(FrameChildListID::Absolute);
+      aFrame->GetChildList(FrameChildListID::kAbsoluteList);
   if (nsIFrame* anchor = FindAnchorInList(absPosList)) {
     return anchor;
   }
