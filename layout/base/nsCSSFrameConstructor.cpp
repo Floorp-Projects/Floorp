@@ -5633,7 +5633,7 @@ static nsIFrame* FindAppendPrevSibling(nsIFrame* aParentFrame,
     return aNextSibling->GetPrevSibling();
   }
 
-  return aParentFrame->GetChildList(kPrincipalList).LastChild();
+  return aParentFrame->PrincipalChildList().LastChild();
 }
 
 /**
@@ -11365,8 +11365,7 @@ bool nsCSSFrameConstructor::WipeContainingBlock(
             // Try to find one after all
             nsIFrame* parentPrevCont = aFrame->GetPrevContinuation();
             while (parentPrevCont) {
-              prevSibling =
-                  parentPrevCont->GetChildList(kPrincipalList).LastChild();
+              prevSibling = parentPrevCont->PrincipalChildList().LastChild();
               if (prevSibling) {
                 break;
               }

@@ -2160,8 +2160,7 @@ const nsAtom* nsIFrame::ComputePageValue() const {
     const nsIFrame* firstNonPlaceholderFrame = nullptr;
     // If this is a container frame, inspect its in-flow children.
     if (const nsContainerFrame* containerFrame = do_QueryFrame(frame)) {
-      for (const nsIFrame* childFrame :
-           containerFrame->GetChildList(nsIFrame::kPrincipalList)) {
+      for (const nsIFrame* childFrame : containerFrame->PrincipalChildList()) {
         if (!childFrame->IsPlaceholderFrame()) {
           firstNonPlaceholderFrame = childFrame;
           break;
@@ -8634,8 +8633,7 @@ static nsContentAndOffset FindLineBreakingFrame(nsIFrame* aFrame,
 
   // Iterate over children and call ourselves recursively
   if (aDirection == eDirPrevious) {
-    nsIFrame* child =
-        aFrame->GetChildList(nsIFrame::kPrincipalList).LastChild();
+    nsIFrame* child = aFrame->PrincipalChildList().LastChild();
     while (child && !result.mContent) {
       result = FindLineBreakingFrame(child, aDirection);
       child = child->GetPrevSibling();

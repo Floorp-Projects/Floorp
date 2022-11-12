@@ -1570,7 +1570,7 @@ bool nsContainerFrame::PushIncompleteChildren(
   nsFrameList incompleteList;
   nsFrameList overflowIncompleteList;
   auto* fc = PresShell()->FrameConstructor();
-  for (nsIFrame* child = GetChildList(kPrincipalList).FirstChild(); child;) {
+  for (nsIFrame* child = PrincipalChildList().FirstChild(); child;) {
     MOZ_ASSERT((aPushedItems.Contains(child) ? 1 : 0) +
                        (aIncompleteItems.Contains(child) ? 1 : 0) +
                        (aOverflowIncompleteItems.Contains(child) ? 1 : 0) <=
@@ -1852,7 +1852,7 @@ void nsContainerFrame::NormalizeChildLists() {
     DebugOnly<bool> nifNeedPushedItem = false;
     while (nif) {
       nsFrameList nifItems;
-      for (nsIFrame* nifChild = nif->GetChildList(kPrincipalList).FirstChild();
+      for (nsIFrame* nifChild = nif->PrincipalChildList().FirstChild();
            nifChild;) {
         nsIFrame* next = nifChild->GetNextSibling();
         if (!nifChild->GetPrevInFlow()) {
@@ -3085,7 +3085,7 @@ void nsContainerFrame::SanityCheckChildListsBeforeReflow() const {
     const nsFrameList* oc = GetOverflowContainers();
     const nsFrameList* eoc = GetExcessOverflowContainers();
     const nsFrameList* pifEOC = pif->GetExcessOverflowContainers();
-    for (const nsIFrame* child : pif->GetChildList(kPrincipalList)) {
+    for (const nsIFrame* child : pif->PrincipalChildList()) {
       const nsIFrame* childNIF = child->GetNextInFlow();
       MOZ_ASSERT(!childNIF || mFrames.ContainsFrame(childNIF) ||
                  (pifEOC && pifEOC->ContainsFrame(childNIF)) ||
