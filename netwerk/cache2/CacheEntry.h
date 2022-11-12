@@ -111,7 +111,7 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
   nsCString const& GetURI() const { return mURI; }
   // Accessible at any time
   bool IsUsingDisk() const { return mUseDisk; }
-  bool IsReferenced() const;
+  bool IsReferenced() const MOZ_NO_THREAD_SAFETY_ANALYSIS;
   bool IsFileDoomed();
   bool IsDoomed() const { return mIsDoomed; }
   bool IsPinned() const { return mPinned; }
@@ -186,7 +186,7 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
 
     // Called when this callback record changes it's owning entry,
     // mainly during recreation.
-    void ExchangeEntry(CacheEntry* aEntry);
+    void ExchangeEntry(CacheEntry* aEntry) MOZ_REQUIRES(aEntry->mLock);
 
     // Returns true when an entry is about to be "defer" doomed and this is
     // a "defer" callback.  The caller must hold a lock (this entry is in the
@@ -268,7 +268,7 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
   // Loads from disk asynchronously
   bool Load(bool aTruncate, bool aPriority);
 
-  void RememberCallback(Callback& aCallback);
+  void RememberCallback(Callback& aCallback) MOZ_REQUIRES(mLock);
   void InvokeCallbacksLock();
   void InvokeCallbacks();
   bool InvokeCallbacks(bool aReadOnly);
@@ -285,10 +285,10 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
  private:
   friend class CacheEntryHandle;
   // Increment/decrements the number of handles keeping this entry.
-  void AddHandleRef() { ++mHandlesCount; }
-  void ReleaseHandleRef() { --mHandlesCount; }
+  void AddHandleRef() MOZ_REQUIRES(mLock) { ++mHandlesCount; }
+  void ReleaseHandleRef() MOZ_REQUIRES(mLock) { --mHandlesCount; }
   // Current number of handles keeping this entry.
-  uint32_t HandlesCount() const { return mHandlesCount; }
+  uint32_t HandlesCount() const MOZ_REQUIRES(mLock) { return mHandlesCount; }
 
  private:
   friend class CacheOutputCloseListener;
@@ -302,7 +302,7 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
   void StoreFrecency(double aFrecency);
 
   // Called only from DoomAlreadyRemoved()
-  void DoomFile();
+  void DoomFile() MOZ_REQUIRES(mLock);
   // When this entry is doomed the first time, this method removes
   // any force-valid timing info for this entry.
   void RemoveForcedValidity();
@@ -311,14 +311,16 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
       bool aMemoryOnly, nsICacheEntryOpenCallback* aCallback);
   void TransferCallbacks(CacheEntry& aFromEntry);
 
-  mozilla::Mutex mLock MOZ_UNANNOTATED{"CacheEntry"};
+  mozilla::Mutex mLock{"CacheEntry"};
 
   // Reflects the number of existing handles for this entry
-  ::mozilla::ThreadSafeAutoRefCnt mHandlesCount;
+  ::mozilla::ThreadSafeAutoRefCnt mHandlesCount MOZ_GUARDED_BY(mLock);
 
-  nsTArray<Callback> mCallbacks;
+  nsTArray<Callback> mCallbacks MOZ_GUARDED_BY(mLock);
   nsCOMPtr<nsICacheEntryDoomCallback> mDoomCallback;
 
+  // Set in CacheEntry::Load(), only - shouldn't need to be under lock
+  // XXX FIX?  is this correct?
   RefPtr<CacheFile> mFile;
 
   // Using ReleaseAcquire since we only control access to mFile with this.
@@ -346,9 +348,9 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
   // Following flags are all synchronized with the cache entry lock.
 
   // Whether security info has already been looked up in metadata.
-  bool mSecurityInfoLoaded : 1;
+  bool mSecurityInfoLoaded : 1 MOZ_GUARDED_BY(mLock);
   // Prevents any callback invocation
-  bool mPreventCallbacks : 1;
+  bool mPreventCallbacks : 1 MOZ_GUARDED_BY(mLock);
   // true: after load and an existing file, or after output stream has been
   //       opened.
   //       note - when opening an input stream, and this flag is false, output
@@ -356,10 +358,10 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
   //       behave correctly when EOF is reached (WOULD_BLOCK is returned).
   // false: after load and a new file, or dropped to back to false when a
   //        writer fails to open an output stream.
-  bool mHasData : 1;
+  bool mHasData : 1 MOZ_GUARDED_BY(mLock);
   // Whether the pinning state of the entry is known (equals to the actual state
   // of the cache file)
-  bool mPinningKnown : 1;
+  bool mPinningKnown : 1 MOZ_GUARDED_BY(mLock);
 
   static char const* StateString(uint32_t aState);
 
@@ -373,7 +375,7 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
   };
 
   // State of this entry.
-  EState mState{NOTLOADED};
+  EState mState MOZ_GUARDED_BY(mLock){NOTLOADED};
 
   enum ERegistration {
     NEVERREGISTERED = 0,  // The entry has never been registered
@@ -389,12 +391,12 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
   // output stream has been opened, we must open output stream internally
   // on CacheFile and hold until writer releases the entry or opens the output
   // stream for read (then we trade him mOutputStream).
-  nsCOMPtr<nsIOutputStream> mOutputStream;
+  nsCOMPtr<nsIOutputStream> mOutputStream MOZ_GUARDED_BY(mLock);
 
   // Weak reference to the current writter.  There can be more then one
   // writer at a time and OnHandleClosed() must be processed only for the
   // current one.
-  CacheEntryHandle* mWriter{nullptr};
+  CacheEntryHandle* mWriter MOZ_GUARDED_BY(mLock){nullptr};
 
   // Background thread scheduled operation.  Set (under the lock) one
   // of this flags to tell the background thread what to do.

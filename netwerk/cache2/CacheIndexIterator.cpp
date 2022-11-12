@@ -64,6 +64,7 @@ nsresult CacheIndexIterator::CloseInternal(nsresult aStatus) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  CacheIndex::sLock.AssertCurrentThreadOwns();
   DebugOnly<bool> removed = mIndex->mIterators.RemoveElement(this);
   MOZ_ASSERT(removed);
   mStatus = aStatus;
