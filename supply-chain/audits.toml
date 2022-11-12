@@ -1293,6 +1293,11 @@ who = "Glenn Watson <git@intuitionlibrary.com>"
 criteria = "safe-to-deploy"
 version = "0.1.2"
 
+[[audits.typed-arena-nomut]]
+who = "Lee Salzman <lsalzman@gmail.com>"
+criteria = "safe-to-deploy"
+version = "0.1.0"
+
 [[audits.uluru]]
 who = "Emilio Cobos Álvarez <emilio@crisal.io>"
 criteria = "safe-to-deploy"
@@ -1624,6 +1629,12 @@ Contains platform-specific FFI code for apple, mac, and windows. The windows cod
 also contains a small C file compiled at build-time. I audited all of it and it
 looks correct.
 """
+
+[[audits.wpf-gpu-raster]]
+who = "Lee Salzman <lsalzman@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.1.0"
+notes = "Written and maintained by Gfx team at Mozilla."
 
 [[audits.xmldecl]]
 who = "Henri Sivonen <hsivonen@hsivonen.fi>"

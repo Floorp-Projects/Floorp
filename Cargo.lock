@@ -2204,6 +2204,7 @@ dependencies = [
  "webext_storage_bridge",
  "webrender_bindings",
  "wgpu_bindings",
+ "wpf-gpu-raster",
  "xpcom",
  "xulstore",
 ]
@@ -5557,6 +5558,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "typed-arena-nomut"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bfc9d8d4e8c94375df96d6ac01a18c263d3d529bc4a53a207580ae9bc30e87c1"
+
+[[package]]
 name = "typenum"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6361,6 +6368,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d129932f4644ac2396cb456385cbf9e63b5b30c6e8dc4820bdca4eb082037a5"
 dependencies = [
  "winapi",
+]
+
+[[package]]
+name = "wpf-gpu-raster"
+version = "0.1.0"
+source = "git+https://github.com/FirefoxGraphics/wpf-gpu-raster?rev=11fc561cd9d9c206474efbdda78f73660254b510#11fc561cd9d9c206474efbdda78f73660254b510"
+dependencies = [
+ "typed-arena-nomut",
 ]
 
 [[package]]
