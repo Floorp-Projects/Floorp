@@ -18,6 +18,8 @@ using namespace mozilla;
 
 class nsFrameIterator : public nsIFrameEnumerator {
  public:
+  typedef nsIFrame::ChildListID ChildListID;
+
   NS_DECL_ISUPPORTS
 
   virtual void First() override;

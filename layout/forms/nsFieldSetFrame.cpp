@@ -789,15 +789,14 @@ void nsFieldSetFrame::SetInitialChildList(ChildListID aListID,
     // https://html.spec.whatwg.org/multipage/rendering.html#rendered-legend
     legend->AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
   }
-  MOZ_ASSERT(
-      aListID != FrameChildListID::Principal || GetInner() || GetLegend(),
-      "Setting principal child list should populate our inner frame "
-      "or our rendered legend");
+  MOZ_ASSERT(aListID != kPrincipalList || GetInner() || GetLegend(),
+             "Setting principal child list should populate our inner frame "
+             "or our rendered legend");
 }
 
 void nsFieldSetFrame::AppendFrames(ChildListID aListID,
                                    nsFrameList&& aFrameList) {
-  MOZ_ASSERT(aListID == FrameChildListID::NoReflowPrincipal &&
+  MOZ_ASSERT(aListID == kNoReflowPrincipalList &&
                  HasAnyStateBits(NS_FRAME_FIRST_REFLOW),
              "AppendFrames should only be used from "
              "nsCSSFrameConstructor::ConstructFieldSetFrame");
@@ -808,10 +807,9 @@ void nsFieldSetFrame::AppendFrames(ChildListID aListID,
 void nsFieldSetFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                                    const nsLineList::iterator* aPrevFrameLine,
                                    nsFrameList&& aFrameList) {
-  MOZ_ASSERT(
-      aListID == FrameChildListID::Principal && !aPrevFrame && !GetLegend(),
-      "InsertFrames should only be used to prepend a rendered legend "
-      "from nsCSSFrameConstructor::ConstructFramesFromItemList");
+  MOZ_ASSERT(aListID == kPrincipalList && !aPrevFrame && !GetLegend(),
+             "InsertFrames should only be used to prepend a rendered legend "
+             "from nsCSSFrameConstructor::ConstructFramesFromItemList");
   nsContainerFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine,
                                  std::move(aFrameList));
   MOZ_ASSERT(GetLegend());
@@ -910,7 +908,7 @@ void nsFieldSetFrame::EnsureChildContinuation(nsIFrame* aChild,
   if (aStatus.IsFullyComplete()) {
     if (nif) {
       // NOTE: we want to avoid our DEBUG version of RemoveFrame above.
-      nsContainerFrame::RemoveFrame(FrameChildListID::NoReflowPrincipal, nif);
+      nsContainerFrame::RemoveFrame(kNoReflowPrincipalList, nif);
       MOZ_ASSERT(!aChild->GetNextInFlow());
     }
   } else {

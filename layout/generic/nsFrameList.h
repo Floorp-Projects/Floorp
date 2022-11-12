@@ -27,26 +27,27 @@ class nsPresContext;
 
 namespace mozilla {
 class PresShell;
+namespace layout {
 class FrameChildList;
-enum class FrameChildListID {
+enum FrameChildListID {
   // The individual concrete child lists.
-  Principal,
-  Popup,
-  Caption,
-  ColGroup,
-  Absolute,
-  Fixed,
-  Overflow,
-  OverflowContainers,
-  ExcessOverflowContainers,
-  OverflowOutOfFlow,
-  Float,
-  Bullet,
-  PushedFloats,
-  Backdrop,
-  // A special alias for FrameChildListID::Principal that suppress the reflow
-  // request that is normally done when manipulating child lists.
-  NoReflowPrincipal,
+  kPrincipalList,
+  kPopupList,
+  kCaptionList,
+  kColGroupList,
+  kAbsoluteList,
+  kFixedList,
+  kOverflowList,
+  kOverflowContainersList,
+  kExcessOverflowContainersList,
+  kOverflowOutOfFlowList,
+  kFloatList,
+  kBulletList,
+  kPushedFloatsList,
+  kBackdropList,
+  // A special alias for kPrincipalList that suppress the reflow request that
+  // is normally done when manipulating child lists.
+  kNoReflowPrincipalList,
 };
 
 // A helper class for nsIFrame::Destroy[From].  It's defined here because
@@ -60,6 +61,7 @@ struct PostFrameDestroyData {
     mAnonymousContent.AppendElement(aContent);
   }
 };
+}  // namespace layout
 }  // namespace mozilla
 
 // Uncomment this to enable expensive frame-list integrity checking
@@ -143,8 +145,9 @@ class nsFrameList {
    * For each frame in this list: remove it from the list then call
    * DestroyFrom(aDestructRoot, aPostDestroyData) on it.
    */
-  void DestroyFramesFrom(nsIFrame* aDestructRoot,
-                         mozilla::PostFrameDestroyData& aPostDestroyData);
+  void DestroyFramesFrom(
+      nsIFrame* aDestructRoot,
+      mozilla::layout::PostFrameDestroyData& aPostDestroyData);
 
   void Clear() { mFirstChild = mLastChild = nullptr; }
 
@@ -328,8 +331,9 @@ class nsFrameList {
    * If this frame list is non-empty then append it to aLists as the
    * aListID child list.
    */
-  inline void AppendIfNonempty(nsTArray<mozilla::FrameChildList>* aLists,
-                               mozilla::FrameChildListID aListID) const {
+  inline void AppendIfNonempty(
+      nsTArray<mozilla::layout::FrameChildList>* aLists,
+      mozilla::layout::FrameChildListID aListID) const {
     if (NotEmpty()) {
       aLists->EmplaceBack(*this, aListID);
     }
@@ -460,6 +464,7 @@ class nsFrameList {
 };
 
 namespace mozilla {
+namespace layout {
 
 #ifdef DEBUG_FRAME_DUMP
 extern const char* ChildListName(FrameChildListID aListID);
@@ -474,6 +479,8 @@ class FrameChildList {
   nsFrameList mList;
   FrameChildListID mID;
 };
+
+}  // namespace layout
 
 /**
  * Simple "auto_ptr" for nsFrameLists allocated from the shell arena.

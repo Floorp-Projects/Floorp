@@ -206,7 +206,7 @@ nsDisplayWrapList* ViewportFrame::BuildDisplayListForTopLayer(
       continue;
     }
     if (nsIFrame* backdropPh =
-            frame->GetChildList(FrameChildListID::Backdrop).FirstChild()) {
+            frame->GetChildList(kBackdropList).FirstChild()) {
       MOZ_ASSERT(!backdropPh->GetNextSibling(), "more than one ::backdrop?");
       MOZ_ASSERT(backdropPh->HasAnyStateBits(NS_FRAME_FIRST_REFLOW),
                  "did you intend to reflow ::backdrop placeholders?");
@@ -254,7 +254,7 @@ nsDisplayWrapList* ViewportFrame::BuildDisplayListForTopLayer(
 #ifdef DEBUG
 void ViewportFrame::AppendFrames(ChildListID aListID,
                                  nsFrameList&& aFrameList) {
-  NS_ASSERTION(aListID == FrameChildListID::Principal, "unexpected child list");
+  NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
   NS_ASSERTION(GetChildList(aListID).IsEmpty(), "Shouldn't have any kids!");
   nsContainerFrame::AppendFrames(aListID, std::move(aFrameList));
 }
@@ -262,14 +262,14 @@ void ViewportFrame::AppendFrames(ChildListID aListID,
 void ViewportFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                                  const nsLineList::iterator* aPrevFrameLine,
                                  nsFrameList&& aFrameList) {
-  NS_ASSERTION(aListID == FrameChildListID::Principal, "unexpected child list");
+  NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
   NS_ASSERTION(GetChildList(aListID).IsEmpty(), "Shouldn't have any kids!");
   nsContainerFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine,
                                  std::move(aFrameList));
 }
 
 void ViewportFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
-  NS_ASSERTION(aListID == FrameChildListID::Principal, "unexpected child list");
+  NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
   nsContainerFrame::RemoveFrame(aListID, aOldFrame);
 }
 #endif

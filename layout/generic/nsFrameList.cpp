@@ -42,8 +42,8 @@ void nsFrameList::DestroyFrames() {
   mLastChild = nullptr;
 }
 
-void nsFrameList::DestroyFramesFrom(nsIFrame* aDestructRoot,
-                                    PostFrameDestroyData& aPostDestroyData) {
+void nsFrameList::DestroyFramesFrom(
+    nsIFrame* aDestructRoot, layout::PostFrameDestroyData& aPostDestroyData) {
   MOZ_ASSERT(aDestructRoot, "Missing destruct root");
 
   while (nsIFrame* frame = RemoveFirstChild()) {
@@ -437,39 +437,40 @@ void nsFrameList::VerifyList() const {
 #endif
 
 namespace mozilla {
+namespace layout {
 
 #ifdef DEBUG_FRAME_DUMP
 const char* ChildListName(FrameChildListID aListID) {
   switch (aListID) {
-    case FrameChildListID::Principal:
+    case kPrincipalList:
       return "";
-    case FrameChildListID::Popup:
+    case kPopupList:
       return "PopupList";
-    case FrameChildListID::Caption:
+    case kCaptionList:
       return "CaptionList";
-    case FrameChildListID::ColGroup:
+    case kColGroupList:
       return "ColGroupList";
-    case FrameChildListID::Absolute:
+    case kAbsoluteList:
       return "AbsoluteList";
-    case FrameChildListID::Fixed:
+    case kFixedList:
       return "FixedList";
-    case FrameChildListID::Overflow:
+    case kOverflowList:
       return "OverflowList";
-    case FrameChildListID::OverflowContainers:
+    case kOverflowContainersList:
       return "OverflowContainersList";
-    case FrameChildListID::ExcessOverflowContainers:
+    case kExcessOverflowContainersList:
       return "ExcessOverflowContainersList";
-    case FrameChildListID::OverflowOutOfFlow:
+    case kOverflowOutOfFlowList:
       return "OverflowOutOfFlowList";
-    case FrameChildListID::Float:
+    case kFloatList:
       return "FloatList";
-    case FrameChildListID::Bullet:
+    case kBulletList:
       return "BulletList";
-    case FrameChildListID::PushedFloats:
+    case kPushedFloatsList:
       return "PushedFloatsList";
-    case FrameChildListID::Backdrop:
+    case kBackdropList:
       return "BackdropList";
-    case FrameChildListID::NoReflowPrincipal:
+    case kNoReflowPrincipalList:
       return "NoReflowPrincipalList";
   }
 
@@ -477,6 +478,8 @@ const char* ChildListName(FrameChildListID aListID) {
   return "UNKNOWN_FRAME_CHILD_LIST";
 }
 #endif
+
+}  // namespace layout
 
 AutoFrameListPtr::~AutoFrameListPtr() {
   if (mFrameList) {
