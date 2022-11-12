@@ -81,7 +81,13 @@ const STATIC_SIDEBAR_L10N_LIST = {
 let BROWSER_SIDEBAR_DATA = JSON.parse(Services.prefs.getStringPref(`floorp.browser.sidebar2.data`, undefined))
 if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
   Services.prefs.addObserver(`floorp.browser.sidebar2.data`, function() {
+    let TEMP_BROWSER_SIDEBAR_DATA = JSON.parse(JSON.stringify(BROWSER_SIDEBAR_DATA))
     BROWSER_SIDEBAR_DATA = JSON.parse(Services.prefs.getStringPref(`floorp.browser.sidebar2.data`, undefined))
+    for(let elem of BROWSER_SIDEBAR_DATA.index){
+        if(JSON.stringify(BROWSER_SIDEBAR_DATA.data[elem]) != JSON.stringify(TEMP_BROWSER_SIDEBAR_DATA.data[elem])){
+            setSidebarPageSetting(elem)
+        }
+    }
     setSidebarIconView()
     setSidebarMode()
     setAllfavicons()

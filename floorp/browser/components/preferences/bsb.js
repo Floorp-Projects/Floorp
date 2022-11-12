@@ -38,6 +38,27 @@ gSubDialog.open(
 });
     document.getElementById("BSBDefault").addEventListener("command", function(){Services.prefs.clearUserPref(`floorp.browser.sidebar2.data`);});
   },
+  setURL(elemUrl,elem){
+switch(elemUrl){
+case "floorp//bmt":
+        elem.setAttribute("data-l10n-id","sidebar2-browser-manager-sidebar");
+        break;
+      case "floorp//bookmarks":
+        elem.setAttribute("data-l10n-id","sidebar2-bookmark-sidebar");
+        break;
+      case "floorp//history":
+        elem.setAttribute("data-l10n-id","sidebar2-history-sidebar");
+        break;
+      case "floorp//downloads":
+        elem.setAttribute("data-l10n-id","sidebar2-download-sidebar");
+        break;
+      case "floorp//tst":
+        elem.setAttribute("data-l10n-id","sidebar2-TST-sidebar");
+        break;
+      default:
+        elem.textContent = elemUrl
+      }
+  },
 
   panelSet(){
     this.BSBs = JSON.parse(Services.prefs.getStringPref(`floorp.browser.sidebar2.data`, undefined))
@@ -61,26 +82,9 @@ gSubDialog.open(
 
       let label = document.createXULElement("label");
       label.setAttribute("flex", 1);
+      label.classList.add("bsb_label")
       let BSBName = ""
-      switch(this.BSBs.data[container].url){
-case "floorp//bmt":
-        label.setAttribute("data-l10n-id","sidebar2-browser-manager-sidebar");
-        break;
-      case "floorp//bookmarks":
-        label.setAttribute("data-l10n-id","sidebar2-bookmark-sidebar");
-        break;
-      case "floorp//history":
-        label.setAttribute("data-l10n-id","sidebar2-history-sidebar");
-        break;
-      case "floorp//downloads":
-        label.setAttribute("data-l10n-id","sidebar2-download-sidebar");
-        break;
-      case "floorp//tst":
-        label.setAttribute("data-l10n-id","sidebar2-TST-sidebar");
-        break;
-      default:
-        label.textContent = this.BSBs.data[container].url
-      }
+this.setURL(this.BSBs.data[container].url,label)
       outer.appendChild(label);
 
       let containerButtons = document.createXULElement("hbox");
@@ -108,7 +112,7 @@ gSubDialog.open(
       containerButtons.appendChild(removeButton);
 
       this._list.appendChild(item);
-      }else{this._list.appendChild(document.getElementById(`BSB-${container}`))}
+      }else{this._list.appendChild(document.getElementById(`BSB-${container}`));this.setURL(this.BSBs.data[container].url,document.getElementById(`BSB-${container}`).querySelector(".bsb_label"))}
       }
        let BSBAll = document.querySelectorAll(".BSB-list")
        let sicon = BSBAll.length

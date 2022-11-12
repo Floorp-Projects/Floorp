@@ -93,11 +93,6 @@ return box_value
 }
 
 function setPref(){
-console.log(document.querySelector("#pageSelect").value)
-console.log(document.querySelector(".URLBox").value)
-console.log(document.querySelector("#userContext").value)
-console.log(document.querySelector("#userAgentCheck").checked)
-console.log(document.querySelector("#widthBox").value)
 let page = Number(document.querySelector("#pageSelect").value)
 let url = document.querySelector(".URLBox").value
 let container = Number(document.querySelector("#userContext").value)

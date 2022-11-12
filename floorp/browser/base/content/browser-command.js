@@ -91,9 +91,8 @@ async function setTreeStyleTabURL() {
   }, 50);
 }
 
-function setSidebarWidth(){
-    const webpanel_id = Services.prefs.getStringPref("floorp.browser.sidebar2.page", "");
-  if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false) && webpanel_id != "" && BROWSER_SIDEBAR_DATA.index.indexOf(webpanel_id) != -1) {
+function setSidebarWidth(webpanel_id){
+  if (webpanel_id != "" && BROWSER_SIDEBAR_DATA.index.indexOf(webpanel_id) != -1) {
 
     const panelWidth = BROWSER_SIDEBAR_DATA.data[webpanel_id].width ?? Services.prefs.getIntPref("floorp.browser.sidebar2.global.webpanel.width", undefined);
 
@@ -105,11 +104,18 @@ function setSidebarMode() {
     const webpanel_id = Services.prefs.getStringPref("floorp.browser.sidebar2.page", "");
   if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false) && webpanel_id != "" && BROWSER_SIDEBAR_DATA.index.indexOf(webpanel_id) != -1) {
 
-    const webpanelURL = BROWSER_SIDEBAR_DATA.data[webpanel_id].url
+    setSidebarPageSetting(webpanel_id)
+  }
+}
+
+function setSidebarPageSetting(webpanel_id){
+  const webpanelURL = BROWSER_SIDEBAR_DATA.data[webpanel_id].url
     const sidebar2elem = document.getElementById("sidebar2");
     const wibpanel_usercontext = BROWSER_SIDEBAR_DATA.data[webpanel_id].usercontext ?? 0
+    const webpanel_userAgent = BROWSER_SIDEBAR_DATA.data[webpanel_id].userAgent ?? false
 
-setSidebarWidth()
+
+setSidebarWidth(webpanel_id)
 
     switch (webpanelURL) {
       case "floorp//bmt":
@@ -155,15 +161,21 @@ setSidebarWidth()
           browserManagerSidebarWebpanel.setAttribute("initialBrowsingContextGroupId", "40");
           browserManagerSidebarWebpanel.setAttribute("type", "content");
           browserManagerSidebarWebpanel.setAttribute("remote", "true");
+          browserManagerSidebarWebpanel.setAttribute("changeuseragent", String(webpanel_userAgent));
           browserManagerSidebarWebpanel.setAttribute("maychangeremoteness", "true");
           browserManagerSidebarWebpanel.setAttribute("src", webpanelURL);
           document.getElementById("sidebar2-box").appendChild(browserManagerSidebarWebpanel);
         break;
         } else {
           document.getElementById(`webpanel${webpanel_id}`).setAttribute("src", webpanelURL);
+          if(document.getElementById(`webpanel${webpanel_id}`).getAttribute("changeuseragent") != String(webpanel_userAgent) || document.getElementById(`webpanel${webpanel_id}`).getAttribute("usercontextid") != wibpanel_usercontext){
+            document.getElementById(`webpanel${webpanel_id}`).setAttribute("usercontextid", wibpanel_usercontext);
+            document.getElementById(`webpanel${webpanel_id}`).setAttribute("changeuseragent", String(webpanel_userAgent));
+            document.getElementById(`webpanel${webpanel_id}`).reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE)
+          }
+
         }
     }
-  }
 }
 
 function changeSidebarVisibility() {
@@ -391,11 +403,7 @@ function UnloadWebpanel() {
 }
 
 function changeWebpanelUA() {
-  if("userAgent" in BROWSER_SIDEBAR_DATA.data[clickedWebpanel.replace("select-", "")]){
-    BROWSER_SIDEBAR_DATA.data[clickedWebpanel.replace("select-", "")].userAgent = !BROWSER_SIDEBAR_DATA.data[clickedWebpanel.replace("select-", "")].userAgent
-  }else{
-    BROWSER_SIDEBAR_DATA.data[clickedWebpanel.replace("select-", "")].userAgent = true
-  }
+  BROWSER_SIDEBAR_DATA.data[clickedWebpanel.replace("select-", "")].userAgent = ((document.getElementById(clickedWebpanel.replace("select-", "webpanel")).getAttribute("changeuseragent") ?? "false") == "false")
 
   Services.prefs.setStringPref(`floorp.browser.sidebar2.data`, JSON.stringify(BROWSER_SIDEBAR_DATA));
 
