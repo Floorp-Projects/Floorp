@@ -8,11 +8,7 @@ import { Colorways } from "./MRColorways";
 import { MobileDownloads } from "./MobileDownloads";
 import { MultiSelect } from "./MultiSelect";
 import { Themes } from "./Themes";
-import {
-  OnboardingVideo,
-  SecondaryCTA,
-  StepsIndicator,
-} from "./MultiStageAboutWelcome";
+import { SecondaryCTA, StepsIndicator } from "./MultiStageAboutWelcome";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { CTAParagraph } from "./CTAParagraph";
 import { HeroImage } from "./HeroImage";
@@ -303,7 +299,7 @@ export class ProtonScreen extends React.PureComponent {
     const isCenterPosition = content.position === "center" || !content.position;
     const hideStepsIndicator =
       autoAdvance ||
-      content?.video_container ||
+      content?.has_video ||
       (isFirstCenteredScreen && isLastCenteredScreen);
     const textColorClass = content.text_color
       ? `${content.text_color}-text`
@@ -315,7 +311,7 @@ export class ProtonScreen extends React.PureComponent {
           isFirstCenteredScreen,
           isLastCenteredScreen,
           includeNoodles,
-          content?.video_container
+          content?.has_video
         )
       : "";
 
@@ -383,12 +379,6 @@ export class ProtonScreen extends React.PureComponent {
                   />
                 ) : null}
               </div>
-              {content.video_container ? (
-                <OnboardingVideo
-                  content={content.video_container}
-                  handleAction={this.props.handleAction}
-                />
-              ) : null}
               {this.renderContentTiles()}
               {this.renderLanguageSwitcher()}
               <ProtonScreenActionButtons
