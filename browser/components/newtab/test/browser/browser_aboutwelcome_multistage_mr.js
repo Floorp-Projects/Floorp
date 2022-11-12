@@ -304,25 +304,14 @@ add_task(async function test_aboutwelcome_video_content() {
             navigate: true,
           },
         },
-        video_container: {
-          video_url: "",
-          action: {
-            navigate: true,
-          },
-          autoPlay: false,
-        },
+        has_video: true,
       },
     },
   ];
   await setAboutWelcomeMultiStage(JSON.stringify(TEST_CONTENT));
   let { cleanup, browser } = await openMRAboutWelcome();
 
-  await test_screen_content(
-    browser,
-    "Video exists",
-    ["main.with-video", "video[src='']"],
-    []
-  );
+  await test_screen_content(browser, ["main.with-video"], []);
   await SpecialPowers.popPrefEnv();
   await cleanup();
 });
