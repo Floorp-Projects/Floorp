@@ -2,9 +2,8 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-if (Services.prefs.getPrefType("floorp.browser.sidebar2.customurl0") != 0) {
-    if (Services.prefs.getStringPref(`floorp.browser.sidebar2.data`, "") == "{\"data\":{\"1\":{\"url\":\"floorp//bmt\",\"width\":600},\"2\":{\"url\":\"floorp//bookmarks\",\"width\":415},\"3\":{\"url\":\"floorp//history\",\"width\":415},\"4\":{\"url\":\"floorp//downloads\",\"width\":415},\"5\":{\"url\":\"floorp//tst\",\"width\":415},\"w1\":{\"url\":\"https://freasearch.org\"},\"w2\":{\"url\":\"https://translate.google.com\"}},\"index\":[\"1\",\"2\",\"3\",\"4\",\"5\",\"w1\",\"w2\"]}") {
+if (Services.prefs.getPrefType("floorp.browser.sidebar2.customurl2") != 0) {
+    if (Services.prefs.getStringPref(`floorp.browser.sidebar2.data`, "") == "{\"data\":{\"1\":{\"url\":\"floorp//bmt\",\"width\":600},\"2\":{\"url\":\"floorp//bookmarks\",\"width\":415},\"3\":{\"url\":\"floorp//history\",\"width\":415},\"4\":{\"url\":\"floorp//downloads\",\"width\":415},\"5\":{\"url\":\"floorp//tst\",\"width\":415},\"w1\":{\"url\":\"https://freasearch.org\"},\"w2\":{\"url\":\"https://translate.google.com\"}},\"index\":[\"1\",\"2\",\"3\",\"4\",\"5\",\"w1\",\"w2\"]}" || Services.prefs.getStringPref(`floorp.browser.sidebar2.data`, "") == "") {
         let updateObject = { "data": {}, "index": [] }
         let staticURL = ["floorp//bmt", "floorp//bookmarks", "floorp//history", "floorp//downloads", "floorp//tst"]
         for (let i = 0; i <= 4; i++) {
@@ -18,11 +17,11 @@ if (Services.prefs.getPrefType("floorp.browser.sidebar2.customurl0") != 0) {
             updateObject.data[String(i)] = objectInObject
             updateObject.index.push(String(i))
         }
-
+        let defaultURL = ["https://freasearch.org","https://translate.google.com"]
         for (let i = 0; i <= 19; i++) {
             let objectInObject = {}
-            if (Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${i}`, "") != "") {
-                objectInObject["url"] = Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${i}`, "")
+            if (Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${i}`, "") != "" || i < 2) {
+                objectInObject["url"] = Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${i}`, defaultURL[i] ?? "")
 
                 if (Services.prefs.getIntPref(`floorp.browser.sidebar2.customurl${i}.usercontext`, 0) != 0) {
                     objectInObject["usercontext"] = Services.prefs.getIntPref(`floorp.browser.sidebar2.customurl${i}.usercontext`, 0)
@@ -69,7 +68,7 @@ if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
 
 if(Services.prefs.getStringPref("floorp.browser.sidebar2.page") != "") setSidebarMode();
  })};
-
+Services.prefs.addObserver("floorp.browser.sidebar2.global.webpanel.width", setSidebarWidth)
 const DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT = 5 /* Static sidebar modes, that are unchangable by user. Starts from 0 */
 const DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT = 19 /* CustomURL modes, that are editable by user. Starts from 0 */
 const STATIC_SIDEBAR_L10N_LIST = {
@@ -90,9 +89,10 @@ if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
  }
 
 //startup functions
+const webpanel_id_ = Services.prefs.getStringPref("floorp.browser.sidebar2.page", "");
 setSidebarIconView();
-if(Services.prefs.getStringPref("floorp.browser.sidebar2.page") != "") setSidebarMode();
+if(webpanel_id_ != "" && BROWSER_SIDEBAR_DATA.index.indexOf(webpanel_id_) != -1) setSidebarMode();
 removeAttributeSelectedNode();
-if(Services.prefs.getStringPref("floorp.browser.sidebar2.page") != "") getSelectedNode().setAttribute("checked", "true");
+if(webpanel_id_ != "" && BROWSER_SIDEBAR_DATA.index.indexOf(webpanel_id_) != -1) getSelectedNode().setAttribute("checked", "true");
 setAllfavicons();
 changeSidebarVisibility();

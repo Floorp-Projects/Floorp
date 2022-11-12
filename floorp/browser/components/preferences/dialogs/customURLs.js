@@ -6,26 +6,52 @@
 const { ContextualIdentityService } = ChromeUtils.import(
     "resource://gre/modules/ContextualIdentityService.jsm"
   );
-
-function onSiteDelete() {
-    let URLBoxs = document.getElementsByClassName("URLBox");
-    for (let i = 0; i < URLBoxs.length; i++) {
-        URLBoxs[i].value = "";
-    }
+function setTitle(){
+let params = window.arguments[0] || {};
+let winElem = document.documentElement;
+  if (params.new) {
+    document.l10n.setAttributes(winElem, "bsb-add-title");
+  } else {
+    document.l10n.setAttributes(winElem, "bsb-setting-title");
+  }
 }
 
+setTitle();
+var bsbObject = {}
+var panelId = ""
+var newPanel = false
+var urlList = [
+"floorp//bmt",
+"floorp//bookmarks",
+"floorp//history",
+"floorp//downloads",
+"floorp//tst"
+]
+
 function onLoad() {
-    let elem = document.getElementsByClassName("BrowserSidebarSettingBox");
-    for (let i = 0; i < elem.length; i++) {
-        var num = i;
-        var url = Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${num}`, undefined);
-        elem[i].querySelector(".URLBox").value = url;
+bsbObject = JSON.parse(Services.prefs.getStringPref(`floorp.browser.sidebar2.data`, undefined))
+let params = window.arguments[0] || {};
+newPanel = params.new
+panelId = params.id
+let panelUserAgent = newPanel ? false : bsbObject.data[panelId].userAgent ?? false
+let panelWidth = newPanel ? 0 : bsbObject.data[panelId].width ?? 0
+
+document.addEventListener("dialogaccept", setPref);
+
+let panelUserContext = newPanel ? -1 : bsbObject.data[panelId].usercontext
+        var url = newPanel ? "" : ( bsbObject.data[params.id].url)
+let urlN = urlList.indexOf(url) + 1
+document.querySelector("#pageSelect").value = urlN
+setTimeout(setBox,1000)
+if(urlN == 0)        document.querySelector(".URLBox").value = url;
+        document.querySelector("#userAgentCheck").checked = panelUserAgent;
+        document.querySelector("#widthBox").value = panelWidth;
 
         let container_label = -1
-
-        let container_list = elem[i].querySelector("menupopup")
-
+        let container_list = document.querySelector("#userContextPopup")
+        let container_list_base = document.querySelector("#userContext")
         let menuitem = document.createXULElement("menuitem");
+        container_list_base.value = 0
         menuitem.value = 0
         menuitem.setAttribute("flex", 1);
         let containerName = document.getElementById("browserBundle").getString("userContextNone.label");
@@ -36,56 +62,70 @@ function onLoad() {
             menuitem = document.createXULElement("menuitem");
             menuitem.value = elem.userContextId
             menuitem.setAttribute("flex", 1);
-            containerName = ContextualIdentityService.getUserContextLabel(elem.userContextId);
-	    if (Services.prefs.getIntPref(`floorp.browser.sidebar2.customurl${num}.usercontext`, -1) == elem.userContextId) container_label = ContextualIdentityService.getUserContextLabel(elem.userContextId)
+              containerName = ContextualIdentityService.getUserContextLabel(elem.userContextId);
+            if (panelUserContext == elem.userContextId){
+	      container_label = ContextualIdentityService.getUserContextLabel(elem.userContextId)
+              container_list_base.value = elem.userContextId
+            }
             menuitem.setAttribute("label", containerName);
             container_list.appendChild(menuitem);
         }
 	if (container_label === -1) container_label = document.getElementById("browserBundle").getString("userContextNone.label")
         container_list.parentElement.setAttribute("label", container_label)
-    }
+    
 }
 
-function onunload() {
-    let box = document.getElementsByClassName("URLBox");
+function encodeObjectURL(text) {
     var remove_whitespace = /^\s+/
     var match_https = /^https?:\/\//
     var match_extension = /^moz-extension?:\/\//
-    for (let i = 0; i < box.length; i++) {
-        var box_value = box[i].value
-        box_value = box_value.replace(remove_whitespace, ""); /* Removing whitespace from the beginning of a line */
+        var box_value = text
+        box_value = box_value.replace(remove_whitespace, ""); / * Removing whitespace from the beginning of a line * /
         if (box_value == "") {
 
         }
-        else if (!box_value.match(match_https)) { /* Checks if url in the sidebar contains https in the beginning of a line */
-            if (!box_value.match(match_extension)) { /* Checks if given URL is an extension */
+        else if (!box_value.match(match_https)) { / * Checks if url in the sidebar contains https in the beginning of a line * /
+            if (!box_value.match(match_extension)) { / * Checks if given URL is an extension * /
                 box_value = `https://${box_value}`;
             }
         }
-        var num = i;
-        Services.prefs.setStringPref(`floorp.browser.sidebar2.customurl${num}`, box_value);
-    }
+return box_value
 }
 
-Preferences.addAll([
-    { id: "floorp.browser.sidebar2.customurl0.usercontext", type : "int"},
-    { id: "floorp.browser.sidebar2.customurl1.usercontext", type : "int"},
-    { id: "floorp.browser.sidebar2.customurl2.usercontext", type : "int"},
-    { id: "floorp.browser.sidebar2.customurl3.usercontext", type : "int"},
-    { id: "floorp.browser.sidebar2.customurl4.usercontext", type : "int"},
-    { id: "floorp.browser.sidebar2.customurl5.usercontext", type : "int"},
-    { id: "floorp.browser.sidebar2.customurl6.usercontext", type : "int"},
-    { id: "floorp.browser.sidebar2.customurl7.usercontext", type : "int"},
-    { id: "floorp.browser.sidebar2.customurl8.usercontext", type : "int"},
-    { id: "floorp.browser.sidebar2.customurl9.usercontext", type : "int"},
-    { id: "floorp.browser.sidebar2.customurl10.usercontext", type : "int"},
-    { id: "floorp.browser.sidebar2.customurl11.usercontext", type : "int"},
-    { id: "floorp.browser.sidebar2.customurl12.usercontext", type : "int"},
-    { id: "floorp.browser.sidebar2.customurl13.usercontext", type : "int"},
-    { id: "floorp.browser.sidebar2.customurl14.usercontext", type : "int"},
-    { id: "floorp.browser.sidebar2.customurl15.usercontext", type : "int"},
-    { id: "floorp.browser.sidebar2.customurl16.usercontext", type : "int"},
-    { id: "floorp.browser.sidebar2.customurl17.usercontext", type : "int"},
-    { id: "floorp.browser.sidebar2.customurl18.usercontext", type : "int"},
-    { id: "floorp.browser.sidebar2.customurl19.usercontext", type : "int"},
-]);
+function setPref(){
+console.log(document.querySelector("#pageSelect").value)
+console.log(document.querySelector(".URLBox").value)
+console.log(document.querySelector("#userContext").value)
+console.log(document.querySelector("#userAgentCheck").checked)
+console.log(document.querySelector("#widthBox").value)
+let page = Number(document.querySelector("#pageSelect").value)
+let url = document.querySelector(".URLBox").value
+let container = Number(document.querySelector("#userContext").value)
+let userAgent = document.querySelector("#userAgentCheck").checked
+let width = Number(document.querySelector("#widthBox").value)
+
+  let dataObject = {}
+  if(page < 6 && page > 0){
+    dataObject.url = urlList[page - 1]
+  }else{
+    dataObject.url = encodeObjectURL(url)
+    if(container != 0) dataObject.usercontext = container
+    if(userAgent != 0) dataObject.userAgent = userAgent
+  }
+  if(width != 0) dataObject.width = width
+
+  bsbObject.data[panelId] = dataObject
+  if(newPanel) bsbObject.index.push(panelId)
+
+  Services.prefs.setStringPref("floorp.browser.sidebar2.data",JSON.stringify(bsbObject))
+}
+
+function setBox(){
+let style = document.querySelector("#pageSelect").value == 0 ? "" : "hidden"
+let elems = document.querySelectorAll(".invisible")
+for(let elem of elems){
+elem.style.visibility = style
+}
+}
+
+function onunload(){}

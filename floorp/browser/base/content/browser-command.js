@@ -91,15 +91,25 @@ async function setTreeStyleTabURL() {
   }, 50);
 }
 
-function setSidebarMode() {
-  if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
-    const webpanel_id = Services.prefs.getStringPref("floorp.browser.sidebar2.page", undefined);
-    const webpanelURL = BROWSER_SIDEBAR_DATA.data[webpanel_id].url
-    const sidebar2elem = document.getElementById("sidebar2");
-    const wibpanel_usercontext = BROWSER_SIDEBAR_DATA.data[webpanel_id].usercontext ?? 0
+function setSidebarWidth(){
+    const webpanel_id = Services.prefs.getStringPref("floorp.browser.sidebar2.page", "");
+  if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false) && webpanel_id != "" && BROWSER_SIDEBAR_DATA.index.indexOf(webpanel_id) != -1) {
+
     const panelWidth = BROWSER_SIDEBAR_DATA.data[webpanel_id].width ?? Services.prefs.getIntPref("floorp.browser.sidebar2.global.webpanel.width", undefined);
 
     document.getElementById("sidebar2-box").setAttribute("width", panelWidth);
+}
+}
+
+function setSidebarMode() {
+    const webpanel_id = Services.prefs.getStringPref("floorp.browser.sidebar2.page", "");
+  if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false) && webpanel_id != "" && BROWSER_SIDEBAR_DATA.index.indexOf(webpanel_id) != -1) {
+
+    const webpanelURL = BROWSER_SIDEBAR_DATA.data[webpanel_id].url
+    const sidebar2elem = document.getElementById("sidebar2");
+    const wibpanel_usercontext = BROWSER_SIDEBAR_DATA.data[webpanel_id].usercontext ?? 0
+
+setSidebarWidth()
 
     switch (webpanelURL) {
       case "floorp//bmt":
@@ -191,7 +201,7 @@ function displayBrowserManagerSidebar() {
 function setCustomURLFavicon(sbar_id) {
     let sData = BROWSER_SIDEBAR_DATA.data[sbar_id.slice(7)]
     var sbar_url = sData.url
-    document.getElementById(`${sbar_id}`).style.listStyleImage = `url(http://www.google.com/s2/favicons?domain=${sbar_url})`;
+    if(sbar_url.slice(0,7) != "floorp//") document.getElementById(`${sbar_id}`).style.listStyleImage = `url(http://www.google.com/s2/favicons?domain=${sbar_url})`;
 
     const wibpanel_usercontext = sData.usercontext ?? 0
     const container_list = ContextualIdentityService.getPublicIdentities()

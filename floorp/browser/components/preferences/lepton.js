@@ -63,6 +63,16 @@ var gLeptonPane = {
   // called when the document is first parsed
   init() {
     this._pane = document.getElementById("paneLepton");
+
+document.getElementById("backtogeneral").addEventListener("command", function(){gotoPref("general");});
+  document.getElementById("lepton-design-mode").addEventListener("click", setLeptonUI, false);
+  document.getElementById("photon-design-mode").addEventListener("click", setPhotonUI, false);
+  let targets = document.getElementsByClassName("photonCheckbox");
+  for(let i = 0; i < targets.length; i++){
+    targets[i].addEventListener("click",() => {
+      Services.obs.notifyObservers({}, "update-photon-pref");
+    }, false);
+  }
   },
 };
 
@@ -93,15 +103,3 @@ function setLeptonUI() {
   Services.prefs.setBoolPref("userChrome.tab.static_separator", false);
   Services.obs.notifyObservers({}, "update-photon-pref");
 }
-
-window.setTimeout(function(){
-  document.getElementById("lepton-design-mode").addEventListener("click", setLeptonUI, false);
-  document.getElementById("photon-design-mode").addEventListener("click", setPhotonUI, false);
-  let targets = document.getElementsByClassName("photonCheckbox");
-  for(let i = 0; i < targets.length; i++){
-    targets[i].addEventListener("click",() => {
-      Services.obs.notifyObservers({}, "update-photon-pref");
-    }, false);
-  }
-  document.getElementById("backtogeneral").addEventListener("command", function(){gotoPref("general");});
-}, 1000);

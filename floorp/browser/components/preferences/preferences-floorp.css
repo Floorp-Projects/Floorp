@@ -568,4 +568,25 @@
     .category[selected]::before {
       border-color: var(--in-content-accent-color) !important;
     }
-  
+
+
+
+BSB-header-links {
+  font-size: 1.25rem;
+  margin-block-end: 15px;
+}
+
+#BSBView {
+  background: transparent;
+  margin-block-end: 8px;
+}
+
+#BSBView richlistitem {
+min-height:60px;
+  padding-block: 4px;
+  border-block-end: 1px solid var(--in-content-border-color);
+}
+
+#BSBView richlistitem > .container-buttons {
+  margin-inline-end: 4px;
+}
