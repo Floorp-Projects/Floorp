@@ -1,0 +1,12 @@
+crossing goto
+./MultiSpaceRectF.inl:70:5: error: call to implicitly-deleted default constructor of 'union (anonymous union at ./MultiSpaceRectF.inl:138:5)'
+
+
+Rust conversion
+---------------
+CEdge is a singly linked list
+
+Future
+------
+When flatening curves if we try to flatten at integer values
+we can avoid the ComplexSpan code path.
