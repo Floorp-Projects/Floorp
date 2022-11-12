@@ -99,6 +99,8 @@ localization-ffi = { path = "../../../../intl/l10n/rust/localization-ffi" }
 processtools = { path = "../../../components/processtools" }
 qcms = { path = "../../../../gfx/qcms", features = ["c_bindings", "neon"], default-features = false }
 
+wpf-gpu-raster = { git = "https://github.com/FirefoxGraphics/wpf-gpu-raster", rev = "11fc561cd9d9c206474efbdda78f73660254b510" }
+
 # Force url to stay at 2.1.0. See bug 1734538.
 url = "=2.1.0"
 

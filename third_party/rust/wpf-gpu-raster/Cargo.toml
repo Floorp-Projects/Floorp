@@ -1,0 +1,21 @@
+[package]
+name = "wpf-gpu-raster"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[profile.release]
+debug = true
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+typed-arena-nomut = "0.1.0"
+
+[dev-dependencies]
+usvg = "0.4"
+euclid = "0.22.6"
+png = "0.17.2"
+
+[features]
+default = ["c_bindings"]
+c_bindings = []
