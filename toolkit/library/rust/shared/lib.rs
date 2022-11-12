@@ -71,6 +71,7 @@ extern crate neqo_glue;
 extern crate wgpu_bindings;
 
 extern crate qcms;
+extern crate wpf_gpu_raster;
 
 extern crate unic_langid;
 extern crate unic_langid_ffi;
