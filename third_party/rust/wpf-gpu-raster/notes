@@ -1,8 +1,0 @@
-bezier flattening
------------------
-if we make sure we flatten beziers to integer y values we can avoid having to hit
-the slow complex coverage path
-
-We can probably do this by using a skia style flattener.
-Normally we compute a series of line segments using partial differencing.
-I think we can adjust the line towards an integer y value by having small partial differences that we can move by.

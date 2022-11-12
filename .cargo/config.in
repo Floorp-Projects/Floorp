@@ -102,11 +102,6 @@ git = "https://github.com/chris-zen/coremidi.git"
 replace-with = "vendored-sources"
 rev = "fc68464b5445caf111e41f643a2e69ccce0b4f83"
 
-[source."https://github.com/FirefoxGraphics/wpf-gpu-raster"]
-git = "https://github.com/FirefoxGraphics/wpf-gpu-raster"
-replace-with = "vendored-sources"
-rev = "11fc561cd9d9c206474efbdda78f73660254b510"
-
 [source.crates-io]
 replace-with = "vendored-sources"
 
