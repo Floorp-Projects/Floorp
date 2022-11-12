@@ -75,8 +75,8 @@ class ServoStyleSet;
 
 /*
  * Base class for block and inline frames.
- * The block frame has an additional child list, kAbsoluteList, which
- * contains the absolutely positioned frames.
+ * The block frame has an additional child list, FrameChildListID::Absolute,
+ * which contains the absolutely positioned frames.
  */
 class nsBlockFrame : public nsContainerFrame {
   using BlockReflowState = mozilla::BlockReflowState;

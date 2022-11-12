@@ -27,7 +27,8 @@ class nsPresContext;
  * its parent.
  *
  * There is no principal child list, just a named child list which contains
- * the absolutely positioned frames (kAbsoluteList or kFixedList).
+ * the absolutely positioned frames (FrameChildListID::Absolute or
+ * FrameChildListID::Fixed).
  *
  * All functions include as the first argument the frame that is delegating
  * the request.
@@ -41,8 +42,8 @@ class nsAbsoluteContainingBlock {
       : mChildListID(aChildListID)
 #endif
   {
-    MOZ_ASSERT(mChildListID == mozilla::kAbsoluteList ||
-                   mChildListID == mozilla::kFixedList,
+    MOZ_ASSERT(mChildListID == mozilla::FrameChildListID::Absolute ||
+                   mChildListID == mozilla::FrameChildListID::Fixed,
                "should either represent position:fixed or absolute content");
   }
 
@@ -170,7 +171,8 @@ class nsAbsoluteContainingBlock {
   nsFrameList mAbsoluteFrames;  // additional named child list
 
 #ifdef DEBUG
-  mozilla::FrameChildListID const mChildListID;  // kFixedList or kAbsoluteList
+  mozilla::FrameChildListID const
+      mChildListID;  // FrameChildListID::Fixed or FrameChildListID::Absolute
 #endif
 };
 
