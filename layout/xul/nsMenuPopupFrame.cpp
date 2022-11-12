@@ -233,16 +233,6 @@ void nsMenuPopupFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     CreateWidgetForView(ourView);
   }
 
-  if (aContent->NodeInfo()->Equals(nsGkAtoms::tooltip, kNameSpaceID_XUL) &&
-      aContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::_default,
-                                         nsGkAtoms::_true, eIgnoreCase)) {
-    nsIPopupContainer* popupContainer =
-        nsIPopupContainer::GetPopupContainer(PresShell());
-    if (popupContainer) {
-      popupContainer->SetDefaultTooltip(aContent->AsElement());
-    }
-  }
-
   AddStateBits(NS_FRAME_IN_POPUP);
 }
 
@@ -2407,13 +2397,8 @@ void nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
   ClearPopupShownDispatcher();
 
-  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (pm) pm->PopupDestroyed(this);
-
-  nsIPopupContainer* popupContainer =
-      nsIPopupContainer::GetPopupContainer(PresShell());
-  if (popupContainer && popupContainer->GetDefaultTooltip() == mContent) {
-    popupContainer->SetDefaultTooltip(nullptr);
+  if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
+    pm->PopupDestroyed(this);
   }
 
   nsBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);

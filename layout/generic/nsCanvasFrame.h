@@ -45,7 +45,6 @@ class nsCanvasFrame final : public nsContainerFrame,
   NS_DECL_FRAMEARENA_HELPERS(nsCanvasFrame)
 
   Element* GetDefaultTooltip() override;
-  void SetDefaultTooltip(Element* aTooltip) override;
 
   void DestroyFrom(nsIFrame* aDestructRoot,
                    PostDestroyData& aPostDestroyData) override;

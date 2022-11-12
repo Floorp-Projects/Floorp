@@ -22,7 +22,6 @@ class nsIPopupContainer {
   NS_DECL_QUERYFRAME_TARGET(nsIPopupContainer)
 
   virtual mozilla::dom::Element* GetDefaultTooltip() = 0;
-  virtual void SetDefaultTooltip(mozilla::dom::Element* aTooltip) = 0;
 
   static nsIPopupContainer* GetPopupContainer(mozilla::PresShell* aShell);
 };

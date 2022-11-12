@@ -295,12 +295,6 @@ nsRect nsCanvasFrame::CanvasArea() const {
 
 Element* nsCanvasFrame::GetDefaultTooltip() { return mTooltipContent; }
 
-void nsCanvasFrame::SetDefaultTooltip(Element* aTooltip) {
-  MOZ_ASSERT(!aTooltip || aTooltip == mTooltipContent,
-             "Default tooltip should be anonymous content tooltip.");
-  mTooltipContent = aTooltip;
-}
-
 void nsDisplayCanvasBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
                                            gfxContext* aCtx) {
   nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
