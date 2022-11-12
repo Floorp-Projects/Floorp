@@ -1176,7 +1176,7 @@ static void SyncViewsAndInvalidateDescendants(nsIFrame* aFrame,
           nsIFrame* outOfFlowFrame =
               nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
           DoApplyRenderingChangeToTree(outOfFlowFrame, aChange);
-        } else if (listID == nsIFrame::kPopupList) {
+        } else if (listID == kPopupList) {
           DoApplyRenderingChangeToTree(child, aChange);
         } else {  // regular frame
           SyncViewsAndInvalidateDescendants(child, aChange);
@@ -2502,7 +2502,7 @@ static void UpdateBackdropIfNeeded(nsIFrame* aFrame, ServoStyleSet& aStyleSet,
   MOZ_ASSERT(display->IsAbsolutelyPositionedStyle());
 
   nsIFrame* backdropPlaceholder =
-      aFrame->GetChildList(nsIFrame::kBackdropList).FirstChild();
+      aFrame->GetChildList(kBackdropList).FirstChild();
   if (!backdropPlaceholder) {
     return;
   }

@@ -1213,7 +1213,7 @@ static void GetScrollableOverflowForPerspective(
     nsPoint aOffset, nsRect& aScrolledFrameOverflowArea) {
   // Iterate over all children except pop-ups.
   for (const auto& [list, listID] : aCurrentFrame->ChildLists()) {
-    if (listID == nsIFrame::kPopupList) {
+    if (listID == kPopupList) {
       continue;
     }
 
@@ -2750,7 +2750,7 @@ static void AdjustViews(nsIFrame* aFrame) {
   // Call AdjustViews recursively for all child frames except the popup list as
   // the views for popups are not scrolled.
   for (const auto& [list, listID] : aFrame->ChildLists()) {
-    if (listID == nsIFrame::kPopupList) {
+    if (listID == kPopupList) {
       continue;
     }
     for (nsIFrame* child : list) {
@@ -5235,7 +5235,7 @@ static nsSize GetScrollPortSizeExcludingHeadersAndFooters(
     const nsRect& aScrollPort) {
   AutoTArray<TopAndBottom, 10> list;
   if (aViewportFrame) {
-    for (nsIFrame* f : aViewportFrame->GetChildList(nsIFrame::kFixedList)) {
+    for (nsIFrame* f : aViewportFrame->GetChildList(kFixedList)) {
       AddToListIfHeaderFooter(f, aViewportFrame, aScrollPort, list);
     }
   }
@@ -6815,7 +6815,7 @@ bool ScrollFrameHelper::ReflowFinished() {
     mMayHaveDirtyFixedChildren = false;
     nsIFrame* parentFrame = mOuter->GetParent();
     for (nsIFrame* fixedChild =
-             parentFrame->GetChildList(nsIFrame::kFixedList).FirstChild();
+             parentFrame->GetChildList(kFixedList).FirstChild();
          fixedChild; fixedChild = fixedChild->GetNextSibling()) {
       // force a reflow of the fixed child
       mOuter->PresShell()->FrameNeedsReflow(fixedChild, IntrinsicDirty::Resize,

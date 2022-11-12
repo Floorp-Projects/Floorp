@@ -150,20 +150,20 @@ void nsPlaceholderFrame::Reflow(nsPresContext* aPresContext,
   aDesiredSize.ClearSize();
 }
 
-static nsIFrame::ChildListID ChildListIDForOutOfFlow(
-    nsFrameState aPlaceholderState, const nsIFrame* aChild) {
+static FrameChildListID ChildListIDForOutOfFlow(nsFrameState aPlaceholderState,
+                                                const nsIFrame* aChild) {
   if (aPlaceholderState & PLACEHOLDER_FOR_FLOAT) {
-    return nsIFrame::kFloatList;
+    return kFloatList;
   }
   if (aPlaceholderState & PLACEHOLDER_FOR_FIXEDPOS) {
-    return nsLayoutUtils::MayBeReallyFixedPos(aChild) ? nsIFrame::kFixedList
-                                                      : nsIFrame::kAbsoluteList;
+    return nsLayoutUtils::MayBeReallyFixedPos(aChild) ? kFixedList
+                                                      : kAbsoluteList;
   }
   if (aPlaceholderState & PLACEHOLDER_FOR_ABSPOS) {
-    return nsIFrame::kAbsoluteList;
+    return kAbsoluteList;
   }
   MOZ_DIAGNOSTIC_ASSERT(false, "unknown list");
-  return nsIFrame::kFloatList;
+  return kFloatList;
 }
 
 void nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot,

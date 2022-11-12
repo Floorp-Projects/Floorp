@@ -115,7 +115,7 @@ static bool BlockHasAnyFloats(nsIFrame* aFrame) {
   if (!block) {
     return false;
   }
-  if (block->GetChildList(nsIFrame::kFloatList).FirstChild()) {
+  if (block->GetChildList(kFloatList).FirstChild()) {
     return true;
   }
 
@@ -8170,8 +8170,7 @@ void nsBlockFrame::VerifyOverflowSituation() {
 
   // A child float next-in-flow's parent must be |this| or a next-in-flow of
   // |this|. Later next-in-flows must have the same or later parents.
-  nsIFrame::ChildListID childLists[] = {nsIFrame::kFloatList,
-                                        nsIFrame::kPushedFloatsList};
+  ChildListID childLists[] = {kFloatList, kPushedFloatsList};
   for (size_t i = 0; i < ArrayLength(childLists); ++i) {
     const nsFrameList& children = GetChildList(childLists[i]);
     for (nsIFrame* f : children) {
