@@ -315,11 +315,6 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
 
   std::unique_ptr<gl::Texture> mIncompleteTexOverride;
 
-  // Reuse, to avoid reallocing data for this, as this is showing up in
-  // profiles.
-  std::unordered_map<uint32_t, const webgl::SamplerUniformInfo*>
-      mReuseable_ScopedResolveTexturesForDraw_samplerByTexUnit;
-
  public:
   class FuncScope;
 

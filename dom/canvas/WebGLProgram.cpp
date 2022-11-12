@@ -490,7 +490,7 @@ RefPtr<const webgl::LinkedProgramInfo> QueryProgramInfo(WebGLProgram* prog,
 
       auto curInfo = std::unique_ptr<webgl::SamplerUniformInfo>(
           new webgl::SamplerUniformInfo{*texList, *baseType, isShadowSampler});
-      curInfo->texUnits.resize(uniform.elemCount);
+      curInfo->texUnits.SetLength(uniform.elemCount);
       samplerInfo = curInfo.get();
       info->samplerUniforms.push_back(std::move(curInfo));
     }
