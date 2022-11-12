@@ -232,7 +232,7 @@ bsb-page = Page to open
 
 bsb-add = Add webpanel on Browser Manager Sidebar
 
-bsb-setting = Browser Manager Sidebar Setting
+bsb-setting = Webpanel Setting
 
 bsb-add-title = 
  .title = { bsb-add }
