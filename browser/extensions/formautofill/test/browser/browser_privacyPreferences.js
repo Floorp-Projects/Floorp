@@ -434,3 +434,37 @@ add_task(async function test_addressAutofillNotAvailableViaRegion() {
 
   await SpecialPowers.popPrefEnv();
 });
+
+// Checkboxes should be disabled based on whether or not they are locked.
+add_task(async function test_aboutPreferencesPrivacy() {
+  Services.prefs.lockPref(ENABLED_AUTOFILL_ADDRESSES_PREF);
+  Services.prefs.lockPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
+  registerCleanupFunction(function() {
+    Services.prefs.unlockPref(ENABLED_AUTOFILL_ADDRESSES_PREF);
+    Services.prefs.unlockPref(ENABLED_AUTOFILL_CREDITCARDS_PREF);
+  });
+  let finalPrefPaneLoaded = TestUtils.topicObserved(
+    "sync-pane-loaded",
+    () => true
+  );
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: PAGE_PRIVACY },
+    async function(browser) {
+      await finalPrefPaneLoaded;
+      await SpecialPowers.spawn(browser, [SELECTORS], selectors => {
+        is(
+          content.document.querySelector(selectors.addressAutofillCheckbox)
+            .disabled,
+          true,
+          "Autofill addresses checkbox should be disabled"
+        );
+        is(
+          content.document.querySelector(selectors.creditCardAutofillCheckbox)
+            .disabled,
+          true,
+          "Autofill credit cards checkbox should be disabled"
+        );
+      });
+    }
+  );
+});

@@ -163,6 +163,9 @@ FormAutofillPreferences.prototype = {
       if (FormAutofill.isAutofillAddressesEnabled) {
         addressAutofillCheckbox.setAttribute("checked", true);
       }
+      if (FormAutofill.isAutofillAddressesLocked) {
+        addressAutofillCheckbox.disabled = true;
+      }
 
       addressAutofillCheckboxGroup.setAttribute("align", "center");
       addressAutofillCheckboxGroup.flex = 1;
@@ -232,6 +235,9 @@ FormAutofillPreferences.prototype = {
       // Manually set the checked state
       if (FormAutofill.isAutofillCreditCardsEnabled) {
         creditCardAutofillCheckbox.setAttribute("checked", true);
+      }
+      if (FormAutofill.isAutofillCreditCardsLocked) {
+        creditCardAutofillCheckbox.disabled = true;
       }
 
       creditCardAutofillCheckboxGroup.setAttribute("align", "center");

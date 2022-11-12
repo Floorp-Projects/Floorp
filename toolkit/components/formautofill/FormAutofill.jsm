@@ -147,6 +147,13 @@ var FormAutofill = {
     );
   },
   /**
+   * Determines if credit card autofill is locked by policy.
+   * @returns {boolean} `true` if credit card autofill is locked
+   */
+  get isAutofillCreditCardsLocked() {
+    return Services.prefs.prefIsLocked(ENABLED_AUTOFILL_CREDITCARDS_PREF);
+  },
+  /**
    * Determines if the user has enabled or disabled address autofill.
    * @returns {boolean} `true` if address autofill is enabled
    */
@@ -155,6 +162,13 @@ var FormAutofill = {
       this.isAutofillAddressesAvailable &&
       FormAutofill._isAutofillAddressesEnabled
     );
+  },
+  /**
+   * Determines if address autofill is locked by policy.
+   * @returns {boolean} `true` if address autofill is locked
+   */
+  get isAutofillAddressesLocked() {
+    return Services.prefs.prefIsLocked(ENABLED_AUTOFILL_ADDRESSES_PREF);
   },
 
   defineLazyLogGetter(scope, logPrefix) {

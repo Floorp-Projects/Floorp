@@ -104,6 +104,13 @@ IPDL_SOURCES += [
     "ServiceWorkerRegistrarTypes.ipdlh",
 ]
 
+LOCAL_INCLUDES += [
+    # For HttpBaseChannel.h dependencies
+    "/netwerk/base",
+    # For HttpBaseChannel.h
+    "/netwerk/protocol/http",
+]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"

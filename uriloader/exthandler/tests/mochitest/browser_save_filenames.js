@@ -13,6 +13,7 @@ requestLongerTimeout(8);
 
 let types = {
   text: "text/plain",
+  html: "text/html",
   png: "image/png",
   jpeg: "image/jpeg",
   webp: "image/webp",
@@ -93,6 +94,10 @@ function handleRequest(aRequest, aResponse) {
     aResponse.write(JPEG_DATA);
   } else if (type == "webp") {
     aResponse.write(WEBP_DATA);
+  } else if (type == "html") {
+    aResponse.write(
+      "<html><head><title>file.inv</title></head><body>File</body></html>"
+    );
   } else {
     aResponse.write("// Some Text");
   }
@@ -202,14 +207,14 @@ function getItems(parentid) {
           elem.localName == "img" && elem.dataset.nodrag != "true";
         let unknown = elem.dataset.unknown;
         let noattach = elem.dataset.noattach;
-        let winexeext = elem.dataset.winexeext;
+        let savepagename = elem.dataset.savepagename;
         elements.push({
           draggable,
           unknown,
           filename,
           url,
           noattach,
-          winexeext,
+          savepagename,
         });
         elem = elem.nextElementSibling;
       }
@@ -510,7 +515,7 @@ add_task(async function saveas_files() {
       // filename index.html.
       let expectedFilename = expectedItems[idx].unknown
         ? DEFAULT_INDEX_FILENAME
-        : expectedItems[idx].filename;
+        : expectedItems[idx].savepagename || expectedItems[idx].filename;
 
       // When saving via contentAreaUtils.js, the content disposition name
       // field is used as an alternate.
@@ -584,16 +589,6 @@ add_task(async function save_links() {
     let filename = PathUtils.filename(download.target.path);
 
     let expectedFilename = expectedItems[idx].filename;
-    if (AppConstants.platform == "win") {
-      // On Windows, an extension is added to executable files when saving as
-      // an attachment to avoid the file looking like an executable. This is
-      // done in validateLeafName in HelperAppDlg.jsm.
-      // XXXndeakin should we do this for all save mechanisms?
-      if (expectedItems[idx].winexeext) {
-        expectedFilename += "." + expectedItems[idx].winexeext;
-      }
-    }
-
     // Use checkShortenedFilename to check long filenames.
     if (expectedItems[idx].filename.length > 240) {
       ok(
@@ -749,6 +744,32 @@ add_task(async function save_download_links() {
       await IOUtils.remove(download.target.path);
     } catch (ex) {}
   }
+});
+
+add_task(async function save_page_with_invalid_extension() {
+  await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://localhost:8000/save_filename.sjs?type=html"
+  );
+
+  let filename = await new Promise(resolve => {
+    MockFilePicker.showCallback = function(fp) {
+      setTimeout(() => {
+        resolve(fp.defaultString);
+      }, 0);
+      return Ci.nsIFilePicker.returnCancel;
+    };
+
+    document.getElementById("Browser:SavePage").doCommand();
+  });
+
+  is(
+    filename,
+    AppConstants.platform == "win" ? "file.inv.htm" : "file.inv.html",
+    "html extension has been added"
+  );
+
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async () => {

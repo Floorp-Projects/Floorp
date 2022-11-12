@@ -3433,8 +3433,9 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
         // If an suitable extension was found, we will append to or replace the
         // existing extension.
         if (!extension.IsEmpty()) {
-          ModifyExtensionType modify =
-              ShouldModifyExtension(mimeInfo, originalExtension);
+          ModifyExtensionType modify = ShouldModifyExtension(
+              mimeInfo, aFlags & VALIDATE_FORCE_APPEND_EXTENSION,
+              originalExtension);
           if (modify == ModifyExtension_Replace) {
             int32_t dotidx = fileName.RFind(".");
             if (dotidx != -1) {
@@ -3685,6 +3686,7 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
 
 nsExternalHelperAppService::ModifyExtensionType
 nsExternalHelperAppService::ShouldModifyExtension(nsIMIMEInfo* aMimeInfo,
+                                                  bool aForceAppend,
                                                   const nsCString& aFileExt) {
   nsAutoCString MIMEType;
   if (!aMimeInfo || NS_FAILED(aMimeInfo->GetMIMEType(MIMEType))) {
@@ -3709,7 +3711,7 @@ nsExternalHelperAppService::ShouldModifyExtension(nsIMIMEInfo* aMimeInfo,
     }
 
     if (!canForce) {
-      return ModifyExtension_Ignore;
+      return aForceAppend ? ModifyExtension_Append : ModifyExtension_Ignore;
     }
   }
 

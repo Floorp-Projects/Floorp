@@ -185,12 +185,31 @@ nsInputStreamPump::Cancel(nsresult status) {
 
   // close input stream
   if (mAsyncStream) {
-    mAsyncStream->CloseWithStatus(status);
-    if (mSuspendCount == 0) EnsureWaiting();
-    // Otherwise, EnsureWaiting will be called by Resume().
+    // If mSuspendCount != 0, EnsureWaiting will be called by Resume().
     // Note that while suspended, OnInputStreamReady will
     // not do anything, and also note that calling asyncWait
     // on a closed stream works and will dispatch an event immediately.
+
+    nsCOMPtr<nsIEventTarget> currentTarget = NS_GetCurrentThread();
+    if (mTargetThread && currentTarget != mTargetThread) {
+      nsresult rv = mTargetThread->Dispatch(NS_NewRunnableFunction(
+          "nsInputStreamPump::Cancel", [self = RefPtr{this}, status] {
+            RecursiveMutexAutoLock lock(self->mMutex);
+            if (!self->mAsyncStream) {
+              return;
+            }
+            self->mAsyncStream->CloseWithStatus(status);
+            if (self->mSuspendCount == 0) {
+              self->EnsureWaiting();
+            }
+          }));
+      NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+      mAsyncStream->CloseWithStatus(status);
+      if (mSuspendCount == 0) {
+        EnsureWaiting();
+      }
+    }
   }
   return NS_OK;
 }

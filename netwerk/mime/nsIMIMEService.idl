@@ -150,6 +150,16 @@ interface nsIMIMEService : nsISupports {
     const long VALIDATE_NO_DEFAULT_FILENAME = 32;
 
     /**
+     * When the filename has an invalid extension, force the the filename to
+     * have a valid extension appended to the end of the filename when that
+     * extension would normally be ignored for the given content type. This
+     * primarily is used when saving pages to ensure that the html extension
+     * is applied over any extension that might have been generated from a
+     * page title.
+     */
+    const long VALIDATE_FORCE_APPEND_EXTENSION = 64;
+
+    /**
      * Generate a valid filename from the channel that can be used to save
      * the content of the channel to the local disk.
      *

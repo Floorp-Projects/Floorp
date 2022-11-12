@@ -751,6 +751,21 @@ void nsSocketTransportService::UpdatePrefs(const char* aPref, void* aSelf) {
   static_cast<nsSocketTransportService*>(aSelf)->UpdatePrefs();
 }
 
+static uint32_t GetThreadStackSize() {
+#ifdef XP_WIN
+  if (!StaticPrefs::network_allow_large_stack_size_for_socket_thread()) {
+    return nsIThreadManager::DEFAULT_STACK_SIZE;
+  }
+
+  const uint32_t kWindowsThreadStackSize = 512 * 1024;
+  // We can remove this custom stack size when DEFAULT_STACK_SIZE is increased.
+  static_assert(kWindowsThreadStackSize > nsIThreadManager::DEFAULT_STACK_SIZE);
+  return kWindowsThreadStackSize;
+#else
+  return nsIThreadManager::DEFAULT_STACK_SIZE;
+#endif
+}
+
 // called from main thread only
 NS_IMETHODIMP
 nsSocketTransportService::Init() {
@@ -768,8 +783,8 @@ nsSocketTransportService::Init() {
   }
 
   nsCOMPtr<nsIThread> thread;
-  nsresult rv =
-      NS_NewNamedThread("Socket Thread", getter_AddRefs(thread), this);
+  nsresult rv = NS_NewNamedThread("Socket Thread", getter_AddRefs(thread), this,
+                                  GetThreadStackSize());
   NS_ENSURE_SUCCESS(rv, rv);
 
   {

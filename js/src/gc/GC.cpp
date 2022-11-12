@@ -2671,6 +2671,10 @@ void GCRuntime::beginMarkPhase(AutoGCSession& session) {
     // the collecting arena lists.
     zone->arenas.mergeArenasFromCollectingLists();
     zone->arenas.moveArenasToCollectingLists();
+
+    for (RealmsInZoneIter realm(zone); !realm.done(); realm.next()) {
+      realm->clearAllocatedDuringGC();
+    }
   }
 
   if (rt->isBeingDestroyed()) {

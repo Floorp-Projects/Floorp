@@ -15,6 +15,9 @@
 #include <thread>
 #include <chrono>
 
+#ifdef ACCESSIBILITY
+#  include "mozilla/a11y/Compatibility.h"
+#endif
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_clipboard.h"
 #include "nsArrayUtils.h"
@@ -123,29 +126,22 @@ UINT nsClipboard::GetFormat(const char* aMimeStr, bool aMapHTMLMime) {
 
 //-------------------------------------------------------------------------
 // static
-nsresult nsClipboard::CreateNativeDataObject(nsITransferable* aTransferable,
-                                             IDataObject** aDataObj,
-                                             nsIURI* uri) {
-  if (nullptr == aTransferable) {
+nsresult nsClipboard::CreateNativeDataObject(
+    nsITransferable* aTransferable, IDataObject** aDataObj, nsIURI* aUri,
+    MightNeedToFlush* aMightNeedToFlush) {
+  MOZ_ASSERT(aTransferable);
+  if (!aTransferable) {
     return NS_ERROR_FAILURE;
   }
 
-  // Create our native DataObject that implements
-  // the OLE IDataObject interface
-  nsDataObj* dataObj = new nsDataObj(uri);
-
-  if (!dataObj) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  dataObj->AddRef();
+  // Create our native DataObject that implements the OLE IDataObject interface
+  RefPtr<nsDataObj> dataObj = new nsDataObj(aUri);
 
   // Now set it up with all the right data flavors & enums
-  nsresult res = SetupNativeDataObject(aTransferable, dataObj);
-  if (NS_OK == res) {
-    *aDataObj = dataObj;
-  } else {
-    dataObj->Release();
+  nsresult res =
+      SetupNativeDataObject(aTransferable, dataObj, aMightNeedToFlush);
+  if (NS_SUCCEEDED(res)) {
+    dataObj.forget(aDataObj);
   }
   return res;
 }
@@ -174,13 +170,19 @@ static nsresult StoreValueInDataObject(nsDataObj* aObj,
 }
 
 //-------------------------------------------------------------------------
-nsresult nsClipboard::SetupNativeDataObject(nsITransferable* aTransferable,
-                                            IDataObject* aDataObj) {
-  if (nullptr == aTransferable || nullptr == aDataObj) {
+nsresult nsClipboard::SetupNativeDataObject(
+    nsITransferable* aTransferable, IDataObject* aDataObj,
+    MightNeedToFlush* aMightNeedToFlush) {
+  MOZ_ASSERT(aTransferable);
+  MOZ_ASSERT(aDataObj);
+  if (!aTransferable || !aDataObj) {
     return NS_ERROR_FAILURE;
   }
 
-  nsDataObj* dObj = static_cast<nsDataObj*>(aDataObj);
+  auto* dObj = static_cast<nsDataObj*>(aDataObj);
+  if (aMightNeedToFlush) {
+    *aMightNeedToFlush = MightNeedToFlush::No;
+  }
 
   // Now give the Transferable to the DataObject
   // for getting the data out of it
@@ -215,6 +217,9 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable* aTransferable,
       FORMATETC textFE;
       SET_FORMATETC(textFE, CF_TEXT, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
       dObj->AddDataFlavor(kTextMime, &textFE);
+      if (aMightNeedToFlush) {
+        *aMightNeedToFlush = MightNeedToFlush::Yes;
+      }
     } else if (flavorStr.EqualsLiteral(kHTMLMime)) {
       // if we find text/html, also advertise win32's html flavor (which we will
       // convert on our own in nsDataObj::GetText().
@@ -461,15 +466,42 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
   mIgnoreEmptyNotification = true;
 
   // make sure we have a good transferable
-  if (nullptr == mTransferable) {
+  if (!mTransferable) {
     return NS_ERROR_FAILURE;
   }
 
-  IDataObject* dataObj;
-  if (NS_SUCCEEDED(CreateNativeDataObject(mTransferable, &dataObj,
-                                          nullptr))) {  // this add refs dataObj
+#ifdef ACCESSIBILITY
+  a11y::Compatibility::SuppressA11yForClipboardCopy();
+#endif
+
+  RefPtr<IDataObject> dataObj;
+  auto mightNeedToFlush = MightNeedToFlush::No;
+  if (NS_SUCCEEDED(CreateNativeDataObject(mTransferable,
+                                          getter_AddRefs(dataObj), nullptr,
+                                          &mightNeedToFlush))) {
     RepeatedlyTryOleSetClipboard(dataObj);
-    dataObj->Release();
+
+    const bool doFlush = [&] {
+      switch (StaticPrefs::widget_windows_sync_clipboard_flush()) {
+        case 0:
+          return false;
+        case 1:
+          return true;
+        default:
+          // Bug 1774285: Windows Suggested Actions (introduced in Windows 11
+          // 22H2) walks the entire a11y tree using UIA if something is placed
+          // on the clipboard using delayed rendering. (The OLE clipboard always
+          // uses delayed rendering.) This a11y tree walk causes an unacceptable
+          // hang, particularly when the a11y cache is disabled. We choose the
+          // lesser of the two performance/memory evils here and force immediate
+          // rendering.
+          return mightNeedToFlush == MightNeedToFlush::Yes &&
+                 NeedsWindows11SuggestedActionsWorkaround();
+      }
+    }();
+    if (doFlush) {
+      RepeatedlyTry(::OleFlushClipboard, [](HRESULT) {});
+    }
   } else {
     // Clear the native clipboard
     RepeatedlyTryOleSetClipboard(nullptr);

@@ -36,9 +36,14 @@ inline bool JS::Realm::hasLiveGlobal() const {
 }
 
 inline bool JS::Realm::marked() const {
-  // Preserve this Realm if it has a live global or if it has been entered (to
-  // ensure we don't destroy the Realm while we're allocating its global).
-  return hasLiveGlobal() || hasBeenEnteredIgnoringJit();
+  // The Realm survives in the following cases:
+  //  - its global is live
+  //  - it has been entered (to ensure we don't destroy the Realm while we're
+  //    allocating its global)
+  //  - it was allocated after the start of an incremental GC (as there may be
+  //    pointers to it from other GC things)
+  return hasLiveGlobal() || hasBeenEnteredIgnoringJit() ||
+         allocatedDuringIncrementalGC_;
 }
 
 /* static */ inline js::ObjectRealm& js::ObjectRealm::get(const JSObject* obj) {
