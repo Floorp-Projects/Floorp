@@ -1355,8 +1355,8 @@ void WebGLContext::UniformData(
     const auto srcBegin = reinterpret_cast<const uint32_t*>(data.begin().get());
     auto destIndex = locInfo->indexIntoUniform;
     for (const auto& val : Range<const uint32_t>(srcBegin, elemCount)) {
-      if (destIndex >= texUnits.size()) break;
-      texUnits[destIndex] = val;
+      if (destIndex >= texUnits.Length()) break;
+      texUnits[destIndex] = AssertedCast<uint8_t>(val);
       destIndex += 1;
     }
   }
