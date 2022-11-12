@@ -56,7 +56,7 @@ case "floorp//bmt":
         elem.setAttribute("data-l10n-id","sidebar2-TST-sidebar");
         break;
       default:
-        elem.textContent = elemUrl
+        elem.textContent = elemUrl;
       }
   },
 
