@@ -227,17 +227,48 @@ custom-URL-option = Set Webpanel URLs
 set-custom-URL-button = 
     .label = Set Custom URLs...
     .accesskey = S
+bsb-header = Browser Manager Sidebar
+bsb-context = Select Container Tabs
+bsb-userAgent-label = 
+  .label = Change User Agent to Mobile version
+bsb-width = Width (If this is 0, use global values)
+bsb-page = Page to open
 
-no-container = 
-    .label = No Container -Default-
-container-1 = 
-    .label = Container 1 -Personal-
-container-2 = 
-    .label = Container 2 -Work-
-container-3 =
-    .label = Container 3 -Bank-
-container-4 =
-    .label = Container 4 -Shopping-
+bsb-add = Add webpanel on Browser Manager Sidebar
+
+bsb-setting = Webpanel Setting
+
+bsb-add-title = 
+ .title = { bsb-add }
+
+bsb-setting-title = 
+ .title = { bsb-setting }
+
+bsb-browser-manager-sidebar =
+  .label = { sidebar2-browser-manager-sidebar }
+
+bsb-bookmark-sidebar =
+  .label = { sidebar2-bookmark-sidebar }
+
+bsb-history-sidebar =
+  .label = { sidebar2-history-sidebar }
+
+bsb-download-sidebar =
+  .label = { sidebar2-download-sidebar }
+
+bsb-TST-sidebar =
+  .label = { sidebar2-TST-sidebar }
+
+bsb-website = 
+  .label = Website
+
+sidebar2-pref-delete =
+ .label = Delete
+
+sidebar2-pref-setting =
+ .label = Setting
+
+sidebar2-global-widht = Global value of webpanel's width
 
 memory-and-performance = Memory Performance Settings
 
@@ -385,20 +416,31 @@ sidebar-reload-button =
 sidebar-muteAndUnmute-button =
   .tooltiptext = Mute/Unmute sidebar
 
+sidebar2-browser-manager-sidebar = Browser Manager
+
 show-browser-manager-sidebar =
-  .tooltiptext = Show Browser Manager Sidebar
+  .tooltiptext = Show { sidebar2-browser-manager-sidebar } Sidebar
+
+sidebar2-bookmark-sidebar = Bookmarks
 
 show-bookmark-sidebar =
-  .tooltiptext = Show Bookmarks Sidebar
+  .tooltiptext = Show { sidebar2-bookmark-sidebar } Sidebar
+
+sidebar2-history-sidebar = History
 
 show-history-sidebar =
-  .tooltiptext = Show History Sidebar
+  .tooltiptext = Show { sidebar2-history-sidebar } Sidebar
+
+sidebar2-download-sidebar = Download
 
 show-download-sidebar =
-  .tooltiptext = Show Download Sidebar
+  .tooltiptext = Show { sidebar2-download-sidebar } Sidebar
+
+sidebar2-TST-sidebar = Tree Style Tab
 
 show-TST-sidebar =
-  .tooltiptext = Show Tree Style Tab Sidebar
+  .tooltiptext = Show { sidebar2-TST-sidebar } Sidebar
+
 
 show-CustomURL-sidebar =
  .label = Show Custom URL Sidebar

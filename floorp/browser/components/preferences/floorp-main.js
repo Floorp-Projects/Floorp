@@ -37,9 +37,9 @@ Preferences.addAll([
     { id: "floorp.navbar.bottom", type : "bool"},
   ]);
 
+function floorpMain(){
 
-
- window.setTimeout(function(){
+if(document.getElementById("translateoption") != null){
     const needreboot = document.getElementsByClassName("needeboot");
         for(let i = 0; i < needreboot.length; i++) {
           needreboot[i].addEventListener("click",
@@ -69,7 +69,7 @@ Preferences.addAll([
     }
     let el = document.getElementById("translateoption");
     el.addEventListener("click", opentranslateroption, false);
-  
+
     async function opentreestyletaboption(){
       const addon = await AddonManager.getAddonByID("treestyletab@piro.sakura.ne.jp");
       await window.open(addon.optionsURL, '_blank');
@@ -77,14 +77,28 @@ Preferences.addAll([
     el = document.getElementById("treestyletaboption");
     el.addEventListener("click", opentreestyletaboption, false);
 
+document.getElementById("GlobalWidth").value = Services.prefs.getIntPref("floorp.browser.sidebar2.global.webpanel.width", undefined);
+document.getElementById("GlobalWidth").addEventListener('change', bsbGlobalWidthSet, false);
+Services.prefs.addObserver("floorp.browser.sidebar2.global.webpanel.width", function(){document.getElementById("GlobalWidth").value = Services.prefs.getIntPref("floorp.browser.sidebar2.global.webpanel.width", undefined);})
+
     document.getElementById("leptonButton").addEventListener("click", function(){
       window.location.href = "about:preferences#lepton";
     }, false);
-  
     document.getElementById("SetCustomURL").addEventListener("click", function(){
-      gSubDialog.open(
-        "chrome://browser/content/preferences/dialogs/customURLs.xhtml",
-        { features: "resizable=true" }
-      );
+      window.location.href = "about:preferences#bSB";
     }, false);
+}else{
+
+ window.setTimeout(function(){
+floorpMain()
   }, 1000);
+
+}
+
+}
+
+floorpMain()
+
+function bsbGlobalWidthSet(){
+Services.prefs.setIntPref("floorp.browser.sidebar2.global.webpanel.width", Number(document.getElementById("GlobalWidth").value));
+}

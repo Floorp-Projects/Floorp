@@ -121,15 +121,15 @@
     list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio-muted-small.svg") !important;
   }
   
-  #select-browser-manager {
+  [data-l10n-id="show-browser-manager-sidebar"] {
     list-style-image: url("chrome://browser/skin/lepton/toolbox.svg");
   }
   
-  #select-bookmark{
+  [data-l10n-id="show-bookmark-sidebar"]{
     list-style-image: url("chrome://browser/skin/bookmark.svg");
   }
   
-  #select-history {
+  [data-l10n-id="show-history-sidebar"] {
     list-style-image: url("chrome://browser/skin/history.svg");
   }
   
@@ -137,11 +137,11 @@
     list-style-image: url("chrome://browser/skin/tab.svg");
   }
   
-  #select-download {
+  [data-l10n-id="show-download-sidebar"] {
     list-style-image: url("chrome://browser/skin/downloads/downloads.svg");
   }
   
-  #select-TST {
+  [data-l10n-id="show-TST-sidebar"] {
     list-style-image: url("chrome://browser/skin/TST-dark.svg");
     padding: 11px 7px 11px 9.5px !important;
   }

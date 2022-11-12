@@ -26,9 +26,7 @@ this.webRequestExt = class extends ExtensionAPI {
             function listener(e) {
               if (typeof e.browserElement !== "undefined" &&
                   e.browserElement.id.startsWith("webpanel")) {
-                const webpanelid = e.browserElement.id;
-                const uaPref = `floorp.enable.useragent.override.${webpanelid}`;
-                if (Services.prefs.getBoolPref(uaPref, false)) {
+                if (e.browserElement.getAttribute("changeuseragent") == "true") {
                   return fire.async(e.requestId);
                 }
               }
