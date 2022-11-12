@@ -332,6 +332,21 @@ static inline bool IsBackedByPixels(const SkCanvas* aCanvas) {
   return true;
 }
 
+/**
+ * Computes appropriate resolution scale to be used with SkPath::getFillPath
+ * based on the scaling of the supplied transform.
+ */
+float ComputeResScaleForStroking(const Matrix& aTransform);
+
+/**
+ * This is a wrapper around SkGeometry's SkConic that can be used to convert
+ * conic sections in an SkPath to a sequence of quadratic curves. The quads
+ * vector is organized such that for the Nth quad, it's control points are
+ * 2*N, 2*N+1, 2*N+2. This function returns the resulting number of quads.
+ */
+int ConvertConicToQuads(const Point& aP0, const Point& aP1, const Point& aP2,
+                        float aWeight, std::vector<Point>& aQuads);
+
 }  // namespace gfx
 }  // namespace mozilla
 

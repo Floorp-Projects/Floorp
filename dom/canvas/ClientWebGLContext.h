@@ -833,7 +833,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
     FuncScope(FuncScope&&) = delete;
   };
 
-
  protected:
   // The scope of the function at the top of the current WebGL function call
   // stack
@@ -1425,8 +1424,11 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void BufferData(GLenum target, const dom::ArrayBufferView& srcData,
                   GLenum usage, GLuint srcElemOffset = 0,
                   GLuint srcElemCountOverride = 0);
+
   void RawBufferData(GLenum target, const uint8_t* srcBytes, size_t srcLen,
                      GLenum usage);
+  void RawBufferSubData(GLenum target, WebGLsizeiptr dstByteOffset,
+                        const uint8_t* srcBytes, size_t srcLen);
 
   void BufferSubData(GLenum target, WebGLsizeiptr dstByteOffset,
                      const dom::ArrayBufferView& src, GLuint srcElemOffset = 0,
