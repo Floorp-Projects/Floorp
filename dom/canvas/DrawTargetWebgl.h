@@ -45,6 +45,7 @@ class SharedTextureHandle;
 class StandaloneTexture;
 class GlyphCache;
 class PathCache;
+struct PathVertexRange;
 
 // DrawTargetWebgl implements a subset of the DrawTarget API suitable for use
 // by CanvasRenderingContext2D. It maps these to a client WebGL context so that
@@ -162,8 +163,12 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     bool mDirtyAA = true;
 
     // WebGL shader resources
-    RefPtr<WebGLBufferJS> mVertexBuffer;
-    RefPtr<WebGLVertexArrayJS> mVertexArray;
+    RefPtr<WebGLBufferJS> mPathVertexBuffer;
+    RefPtr<WebGLVertexArrayJS> mPathVertexArray;
+    // The current insertion offset into the GPU path buffer.
+    uint32_t mPathVertexOffset = 0;
+    // The maximum size of the GPU path buffer.
+    uint32_t mPathVertexCapacity = 0;
     RefPtr<WebGLProgramJS> mSolidProgram;
     RefPtr<WebGLUniformLocationJS> mSolidProgramViewport;
     RefPtr<WebGLUniformLocationJS> mSolidProgramAA;
@@ -234,6 +239,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
     bool Initialize();
     bool CreateShaders();
+    void ResetPathVertexBuffer();
 
     void SetBlendState(CompositionOp aOp,
                        const Maybe<DeviceColor>& aBlendColor = Nothing());
@@ -281,7 +287,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
                        RefPtr<TextureHandle>* aHandle = nullptr,
                        bool aTransformed = true, bool aClipped = true,
                        bool aAccelOnly = false, bool aForceUpdate = false,
-                       const StrokeOptions* aStrokeOptions = nullptr);
+                       const StrokeOptions* aStrokeOptions = nullptr,
+                       const PathVertexRange* aVertexRange = nullptr);
 
     bool DrawPathAccel(const Path* aPath, const Pattern& aPattern,
                        const DrawOptions& aOptions,
@@ -310,6 +317,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     void ClearCachesIfNecessary();
 
     void WaitForShmem(DrawTargetWebgl* aTarget);
+
+    void CachePrefs();
   };
 
   RefPtr<SharedContext> mSharedContext;
@@ -474,6 +483,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
                 bool aTransformed = true, bool aClipped = true,
                 bool aAccelOnly = false, bool aForceUpdate = false,
                 const StrokeOptions* aStrokeOptions = nullptr);
+
+  bool ShouldAccelPath(const DrawOptions& aOptions);
   void DrawPath(const Path* aPath, const Pattern& aPattern,
                 const DrawOptions& aOptions,
                 const StrokeOptions* aStrokeOptions = nullptr);
