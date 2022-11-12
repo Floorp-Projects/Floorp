@@ -252,7 +252,8 @@ void nsHTMLScrollFrame::SetInitialChildList(ChildListID aListID,
 
 void nsHTMLScrollFrame::AppendFrames(ChildListID aListID,
                                      nsFrameList&& aFrameList) {
-  NS_ASSERTION(aListID == kPrincipalList, "Only main list supported");
+  NS_ASSERTION(aListID == FrameChildListID::Principal,
+               "Only main list supported");
   mFrames.AppendFrames(nullptr, std::move(aFrameList));
   mHelper.ReloadChildFrames();
 }
@@ -260,7 +261,8 @@ void nsHTMLScrollFrame::AppendFrames(ChildListID aListID,
 void nsHTMLScrollFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                                      const nsLineList::iterator* aPrevFrameLine,
                                      nsFrameList&& aFrameList) {
-  NS_ASSERTION(aListID == kPrincipalList, "Only main list supported");
+  NS_ASSERTION(aListID == FrameChildListID::Principal,
+               "Only main list supported");
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");
   mFrames.InsertFrames(nullptr, aPrevFrame, std::move(aFrameList));
@@ -268,7 +270,8 @@ void nsHTMLScrollFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
 }
 
 void nsHTMLScrollFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
-  NS_ASSERTION(aListID == kPrincipalList, "Only main list supported");
+  NS_ASSERTION(aListID == FrameChildListID::Principal,
+               "Only main list supported");
   mFrames.DestroyFrame(aOldFrame);
   mHelper.ReloadChildFrames();
 }
@@ -1213,7 +1216,7 @@ static void GetScrollableOverflowForPerspective(
     nsPoint aOffset, nsRect& aScrolledFrameOverflowArea) {
   // Iterate over all children except pop-ups.
   for (const auto& [list, listID] : aCurrentFrame->ChildLists()) {
-    if (listID == kPopupList) {
+    if (listID == FrameChildListID::Popup) {
       continue;
     }
 
@@ -1862,7 +1865,7 @@ void nsXULScrollFrame::DestroyFrom(nsIFrame* aDestructRoot,
 void nsXULScrollFrame::SetInitialChildList(ChildListID aListID,
                                            nsFrameList&& aChildList) {
   nsBoxFrame::SetInitialChildList(aListID, std::move(aChildList));
-  if (aListID == kPrincipalList) {
+  if (aListID == FrameChildListID::Principal) {
     mHelper.ReloadChildFrames();
   }
 }
@@ -2750,7 +2753,7 @@ static void AdjustViews(nsIFrame* aFrame) {
   // Call AdjustViews recursively for all child frames except the popup list as
   // the views for popups are not scrolled.
   for (const auto& [list, listID] : aFrame->ChildLists()) {
-    if (listID == kPopupList) {
+    if (listID == FrameChildListID::Popup) {
       continue;
     }
     for (nsIFrame* child : list) {
@@ -5235,7 +5238,7 @@ static nsSize GetScrollPortSizeExcludingHeadersAndFooters(
     const nsRect& aScrollPort) {
   AutoTArray<TopAndBottom, 10> list;
   if (aViewportFrame) {
-    for (nsIFrame* f : aViewportFrame->GetChildList(kFixedList)) {
+    for (nsIFrame* f : aViewportFrame->GetChildList(FrameChildListID::Fixed)) {
       AddToListIfHeaderFooter(f, aViewportFrame, aScrollPort, list);
     }
   }
@@ -6815,7 +6818,7 @@ bool ScrollFrameHelper::ReflowFinished() {
     mMayHaveDirtyFixedChildren = false;
     nsIFrame* parentFrame = mOuter->GetParent();
     for (nsIFrame* fixedChild =
-             parentFrame->GetChildList(kFixedList).FirstChild();
+             parentFrame->GetChildList(FrameChildListID::Fixed).FirstChild();
          fixedChild; fixedChild = fixedChild->GetNextSibling()) {
       // force a reflow of the fixed child
       mOuter->PresShell()->FrameNeedsReflow(fixedChild, IntrinsicDirty::Resize,

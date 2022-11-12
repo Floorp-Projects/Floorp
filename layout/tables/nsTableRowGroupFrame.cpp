@@ -1452,7 +1452,7 @@ void nsTableRowGroupFrame::DidSetComputedStyle(
 
 void nsTableRowGroupFrame::AppendFrames(ChildListID aListID,
                                         nsFrameList&& aFrameList) {
-  NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
+  NS_ASSERTION(aListID == FrameChildListID::Principal, "unexpected child list");
 
   DrainSelfOverflowList();  // ensure the last frame is in mFrames
   ClearRowCursor();
@@ -1487,7 +1487,7 @@ void nsTableRowGroupFrame::AppendFrames(ChildListID aListID,
 void nsTableRowGroupFrame::InsertFrames(
     ChildListID aListID, nsIFrame* aPrevFrame,
     const nsLineList::iterator* aPrevFrameLine, nsFrameList&& aFrameList) {
-  NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
+  NS_ASSERTION(aListID == FrameChildListID::Principal, "unexpected child list");
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");
 
@@ -1535,7 +1535,7 @@ void nsTableRowGroupFrame::InsertFrames(
 
 void nsTableRowGroupFrame::RemoveFrame(ChildListID aListID,
                                        nsIFrame* aOldFrame) {
-  NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
+  NS_ASSERTION(aListID == FrameChildListID::Principal, "unexpected child list");
 
   ClearRowCursor();
 

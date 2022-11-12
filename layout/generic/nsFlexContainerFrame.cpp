@@ -1250,7 +1250,7 @@ void nsFlexContainerFrame::InsertFrames(
 
 void nsFlexContainerFrame::RemoveFrame(ChildListID aListID,
                                        nsIFrame* aOldFrame) {
-  MOZ_ASSERT(aListID == kPrincipalList, "unexpected child list");
+  MOZ_ASSERT(aListID == FrameChildListID::Principal, "unexpected child list");
 
 #ifdef DEBUG
   SetDidPushItemsBitIfNeeded(aListID, aOldFrame);
@@ -2856,7 +2856,8 @@ void nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   nsDisplayListSet childLists(tempLists, tempLists.BlockBorderBackgrounds());
 
   CSSOrderAwareFrameIterator iter(
-      this, kPrincipalList, CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
+      this, FrameChildListID::Principal,
+      CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
       OrderStateForIter(this), OrderingPropertyForIter(this));
 
   const auto flags = DisplayFlagsForFlexOrGridItem();
@@ -4037,7 +4038,8 @@ void nsFlexContainerFrame::GenerateFlexLines(
   uint32_t itemIdxInContainer = 0;
 
   CSSOrderAwareFrameIterator iter(
-      this, kPrincipalList, CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
+      this, FrameChildListID::Principal,
+      CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
       CSSOrderAwareFrameIterator::OrderState::Unknown,
       OrderingPropertyForIter(this));
 
@@ -4146,7 +4148,7 @@ nsFlexContainerFrame::GenerateFlexLayoutResult() {
   // Construct flex items for this flex container fragment from existing flex
   // items in SharedFlexData.
   CSSOrderAwareFrameIterator iter(
-      this, kPrincipalList,
+      this, FrameChildListID::Principal,
       CSSOrderAwareFrameIterator::ChildFilter::SkipPlaceholders,
       OrderStateForIter(this), OrderingPropertyForIter(this));
 
@@ -4725,7 +4727,8 @@ void nsFlexContainerFrame::UnionChildOverflow(OverflowAreas& aOverflowAreas) {
   UnionInFlowChildOverflow(aOverflowAreas);
   // Union with child frames, skipping the principal list since we already
   // handled those above.
-  nsLayoutUtils::UnionChildOverflow(this, aOverflowAreas, {kPrincipalList});
+  nsLayoutUtils::UnionChildOverflow(this, aOverflowAreas,
+                                    {FrameChildListID::Principal});
 }
 
 void nsFlexContainerFrame::CalculatePackingSpace(

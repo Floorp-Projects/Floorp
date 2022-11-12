@@ -28,25 +28,25 @@ class nsPresContext;
 namespace mozilla {
 class PresShell;
 class FrameChildList;
-enum FrameChildListID {
+enum class FrameChildListID {
   // The individual concrete child lists.
-  kPrincipalList,
-  kPopupList,
-  kCaptionList,
-  kColGroupList,
-  kAbsoluteList,
-  kFixedList,
-  kOverflowList,
-  kOverflowContainersList,
-  kExcessOverflowContainersList,
-  kOverflowOutOfFlowList,
-  kFloatList,
-  kBulletList,
-  kPushedFloatsList,
-  kBackdropList,
-  // A special alias for kPrincipalList that suppress the reflow request that
-  // is normally done when manipulating child lists.
-  kNoReflowPrincipalList,
+  Principal,
+  Popup,
+  Caption,
+  ColGroup,
+  Absolute,
+  Fixed,
+  Overflow,
+  OverflowContainers,
+  ExcessOverflowContainers,
+  OverflowOutOfFlow,
+  Float,
+  Bullet,
+  PushedFloats,
+  Backdrop,
+  // A special alias for FrameChildListID::Principal that suppress the reflow
+  // request that is normally done when manipulating child lists.
+  NoReflowPrincipal,
 };
 
 // A helper class for nsIFrame::Destroy[From].  It's defined here because

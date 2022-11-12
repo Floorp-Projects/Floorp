@@ -1182,7 +1182,8 @@ static void FindContainingBlocks(nsIFrame* aFrame,
     f->SetForceDescendIntoIfVisible(true);
     CRR_LOG("Considering OOFs for %p\n", f);
 
-    AddFramesForContainingBlock(f, f->GetChildList(kFloatList), aExtraFrames);
+    AddFramesForContainingBlock(f, f->GetChildList(FrameChildListID::Float),
+                                aExtraFrames);
     AddFramesForContainingBlock(f, f->GetChildList(f->GetAbsoluteListID()),
                                 aExtraFrames);
   }

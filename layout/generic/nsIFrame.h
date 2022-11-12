@@ -1740,7 +1740,7 @@ class nsIFrame : public nsQueryFrame {
    */
   virtual const nsFrameList& GetChildList(ChildListID aListID) const;
   const nsFrameList& PrincipalChildList() const {
-    return GetChildList(mozilla::kPrincipalList);
+    return GetChildList(mozilla::FrameChildListID::Principal);
   }
 
   /**
@@ -4476,7 +4476,7 @@ class nsIFrame : public nsQueryFrame {
   // Child frame types override this function to select their own child list
   // name
   virtual mozilla::FrameChildListID GetAbsoluteListID() const {
-    return mozilla::kAbsoluteList;
+    return mozilla::FrameChildListID::Absolute;
   }
 
   // Checks if we (or any of our descendants) have NS_FRAME_PAINTED_THEBES set,

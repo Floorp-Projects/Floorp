@@ -123,7 +123,8 @@ enum nsTableColType {
  * stand-alone as the top-level frame.
  *
  * The principal child list contains row group frames. There is also an
- * additional child list, kColGroupList, which contains the col group frames.
+ * additional child list, FrameChildListID::ColGroup, which contains the col
+ * group frames.
  */
 class nsTableFrame : public nsContainerFrame {
   typedef mozilla::image::ImgDrawResult ImgDrawResult;
