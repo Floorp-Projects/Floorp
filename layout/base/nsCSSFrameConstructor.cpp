@@ -131,9 +131,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-// An alias for convenience.
-static const nsIFrame::ChildListID kPrincipalList = nsIFrame::kPrincipalList;
-
 nsIFrame* NS_NewHTMLCanvasFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame* NS_NewHTMLVideoFrame(PresShell* aPresShell, ComputedStyle* aStyle);
@@ -568,7 +565,6 @@ struct AbsoluteFrameList final : public nsFrameList {
 // blocks. The destructor restores the state to its previous state
 class MOZ_STACK_CLASS nsFrameConstructorSaveState {
  public:
-  typedef nsIFrame::ChildListID ChildListID;
   ~nsFrameConstructorSaveState();
 
  private:
@@ -581,7 +577,7 @@ class MOZ_STACK_CLASS nsFrameConstructorSaveState {
   AbsoluteFrameList mSavedList;
 
   // The name of the child list in which our frames would belong.
-  ChildListID mChildListID = kPrincipalList;
+  mozilla::FrameChildListID mChildListID = kPrincipalList;
   nsFrameConstructorState* mState = nullptr;
 
   // Only used when saving an absolute list. See the description of
@@ -595,8 +591,6 @@ class MOZ_STACK_CLASS nsFrameConstructorSaveState {
 // frame construction process
 class MOZ_STACK_CLASS nsFrameConstructorState {
  public:
-  typedef nsIFrame::ChildListID ChildListID;
-
   nsPresContext* mPresContext;
   PresShell* mPresShell;
   nsFrameManager* mFrameManager;
@@ -763,7 +757,7 @@ class MOZ_STACK_CLASS nsFrameConstructorState {
    * kids to the aChildListID child list of |aFrameList.containingBlock|.
    */
   void ProcessFrameInsertions(AbsoluteFrameList& aFrameList,
-                              ChildListID aChildListID);
+                              mozilla::FrameChildListID aChildListID);
 
   /**
    * GetOutOfFlowFrameList selects the out-of-flow frame list the new
@@ -828,11 +822,11 @@ nsFrameConstructorState::~nsFrameConstructorState() {
 }
 
 void nsFrameConstructorState::ProcessFrameInsertionsForAllLists() {
-  ProcessFrameInsertions(mTopLayerFixedList, nsIFrame::kFixedList);
-  ProcessFrameInsertions(mTopLayerAbsoluteList, nsIFrame::kAbsoluteList);
-  ProcessFrameInsertions(mFloatedList, nsIFrame::kFloatList);
-  ProcessFrameInsertions(mAbsoluteList, nsIFrame::kAbsoluteList);
-  ProcessFrameInsertions(mFixedList, nsIFrame::kFixedList);
+  ProcessFrameInsertions(mTopLayerFixedList, kFixedList);
+  ProcessFrameInsertions(mTopLayerAbsoluteList, kAbsoluteList);
+  ProcessFrameInsertions(mFloatedList, kFloatList);
+  ProcessFrameInsertions(mAbsoluteList, kAbsoluteList);
+  ProcessFrameInsertions(mFixedList, kFixedList);
 }
 
 void nsFrameConstructorState::PushAbsoluteContainingBlock(
@@ -841,7 +835,7 @@ void nsFrameConstructorState::PushAbsoluteContainingBlock(
   MOZ_ASSERT(!!aNewAbsoluteContainingBlock == !!aPositionedFrame,
              "We should have both or none");
   aSaveState.mList = &mAbsoluteList;
-  aSaveState.mChildListID = nsIFrame::kAbsoluteList;
+  aSaveState.mChildListID = kAbsoluteList;
   aSaveState.mState = this;
   aSaveState.mSavedFixedPosIsAbsPos = mFixedPosIsAbsPos;
 
@@ -903,7 +897,7 @@ void nsFrameConstructorState::PushFloatContainingBlock(
       "floats as a float containing block!");
   aSaveState.mList = &mFloatedList;
   aSaveState.mSavedList = std::move(mFloatedList);
-  aSaveState.mChildListID = nsIFrame::kFloatList;
+  aSaveState.mChildListID = kFloatList;
   aSaveState.mState = this;
   mFloatedList = AbsoluteFrameList(aNewFloatContainingBlock);
 }
@@ -1089,7 +1083,7 @@ void nsFrameConstructorState::ConstructBackdropFrameFor(nsIContent* aContent,
 
   nsIFrame* placeholder = nsCSSFrameConstructor::CreatePlaceholderFrameFor(
       mPresShell, aContent, backdropFrame, frame, nullptr, placeholderType);
-  frame->SetInitialChildList(nsIFrame::kBackdropList,
+  frame->SetInitialChildList(kBackdropList,
                              nsFrameList(placeholder, placeholder));
 
   frameList->AppendFrame(nullptr, backdropFrame);
@@ -1152,14 +1146,14 @@ void nsFrameConstructorState::AddChild(
 // platforms where stack limits are low, we can't afford to incorporate this
 // function's `AutoTArray`s into its callers' stack frames, so disable inlining.
 MOZ_NEVER_INLINE void nsFrameConstructorState::ProcessFrameInsertions(
-    AbsoluteFrameList& aFrameList, ChildListID aChildListID) {
+    AbsoluteFrameList& aFrameList, FrameChildListID aChildListID) {
 #define NS_NONXUL_LIST_TEST                                                  \
-  (&aFrameList == &mFloatedList && aChildListID == nsIFrame::kFloatList) ||  \
+  (&aFrameList == &mFloatedList && aChildListID == kFloatList) ||            \
       ((&aFrameList == &mAbsoluteList ||                                     \
         &aFrameList == &mTopLayerAbsoluteList) &&                            \
-       aChildListID == nsIFrame::kAbsoluteList) ||                           \
+       aChildListID == kAbsoluteList) ||                                     \
       ((&aFrameList == &mFixedList || &aFrameList == &mTopLayerFixedList) && \
-       aChildListID == nsIFrame::kFixedList)
+       aChildListID == kFixedList)
   MOZ_ASSERT(NS_NONXUL_LIST_TEST,
              "Unexpected aFrameList/aChildListID combination");
 
@@ -1171,7 +1165,7 @@ MOZ_NEVER_INLINE void nsFrameConstructorState::ProcessFrameInsertions(
 
   NS_ASSERTION(containingBlock, "Child list without containing block?");
 
-  if (aChildListID == nsIFrame::kFixedList) {
+  if (aChildListID == kFixedList) {
     // Put this frame on the transformed-frame's abs-pos list instead, if
     // it has abs-pos children instead of fixed-pos children.
     aChildListID = containingBlock->GetAbsoluteListID();
@@ -1191,8 +1185,7 @@ MOZ_NEVER_INLINE void nsFrameConstructorState::ProcessFrameInsertions(
     } else {
       containingBlock->SetInitialChildList(aChildListID, std::move(aFrameList));
     }
-  } else if (aChildListID == nsIFrame::kFixedList ||
-             aChildListID == nsIFrame::kAbsoluteList) {
+  } else if (aChildListID == kFixedList || aChildListID == kAbsoluteList) {
     // The order is not important for abs-pos/fixed-pos frame list, just
     // append the frame items to the list directly.
     mFrameManager->AppendFrames(containingBlock, aChildListID,
@@ -2014,8 +2007,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
   // Set the table wrapper frame's secondary childlist lists
   if (captionList.NotEmpty()) {
     captionList.ApplySetParent(newFrame);
-    newFrame->SetInitialChildList(nsIFrame::kCaptionList,
-                                  std::move(captionList));
+    newFrame->SetInitialChildList(kCaptionList, std::move(captionList));
   }
 
   return newFrame;
@@ -3145,8 +3137,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructFieldSetFrame(
 
   // We use AppendFrames here because the rendered legend will already
   // be present in the principal child list if it exists.
-  fieldsetFrame->AppendFrames(nsIFrame::kNoReflowPrincipalList,
-                              std::move(fieldsetKids));
+  fieldsetFrame->AppendFrames(kNoReflowPrincipalList, std::move(fieldsetKids));
 
   return fieldsetFrame;
 }
@@ -6694,7 +6685,7 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
     NS_ASSERTION(LayoutFrameType::Table == frameType, "how did that happen?");
     nsContainerFrame* outerTable = parentFrame->GetParent();
     captionList.ApplySetParent(outerTable);
-    AppendFrames(outerTable, nsIFrame::kCaptionList, std::move(captionList));
+    AppendFrames(outerTable, kCaptionList, std::move(captionList));
   }
 
   LAYOUT_PHASE_TEMP_EXIT();
@@ -7181,9 +7172,9 @@ void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
 
     captionList.ApplySetParent(outerTable);
     if (captionIsAppend) {
-      AppendFrames(outerTable, nsIFrame::kCaptionList, std::move(captionList));
+      AppendFrames(outerTable, kCaptionList, std::move(captionList));
     } else {
-      InsertFrames(outerTable, nsIFrame::kCaptionList, captionPrevSibling,
+      InsertFrames(outerTable, kCaptionList, captionPrevSibling,
                    std::move(captionList));
     }
   }
@@ -8002,7 +7993,7 @@ nsresult nsCSSFrameConstructor::ReplicateFixedFrames(
 
   nsFrameList fixedPlaceholders;
   nsIFrame* firstFixed =
-      prevPageContentFrame->GetChildList(nsIFrame::kFixedList).FirstChild();
+      prevPageContentFrame->GetChildList(kFixedList).FirstChild();
   if (!firstFixed) {
     return NS_OK;
   }
@@ -8212,12 +8203,10 @@ bool nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(
         // If we're a table-column-group, then the OnlyChild check above is
         // not going to catch cases when we're the first child.
         (inFlowFrame->IsTableColGroupFrame() &&
-         parent->GetChildList(nsIFrame::kColGroupList).FirstChild() ==
-             inFlowFrame) ||
+         parent->GetChildList(kColGroupList).FirstChild() == inFlowFrame) ||
         // Similar if we're a table-caption.
         (inFlowFrame->IsTableCaption() &&
-         parent->GetChildList(nsIFrame::kCaptionList).FirstChild() ==
-             inFlowFrame)) {
+         parent->GetChildList(kCaptionList).FirstChild() == inFlowFrame)) {
       TRACE("Table or ruby pseudo parent");
       RecreateFramesForContent(parent->GetContent(), InsertionKind::Async);
       return true;
@@ -10158,7 +10147,7 @@ void nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
 }
 
 static nsIFrame* FindFirstLetterFrame(nsIFrame* aFrame,
-                                      nsIFrame::ChildListID aListID) {
+                                      FrameChildListID aListID) {
   for (nsIFrame* f : aFrame->GetChildList(aListID)) {
     if (f->IsLetterFrame()) {
       return f;
@@ -10183,11 +10172,9 @@ static void ClearHasFirstLetterChildFrom(nsContainerFrame* aParentFrame) {
 void nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
     PresShell* aPresShell, nsIFrame* aBlockFrame) {
   // Look for the first letter frame on the kFloatList, then kPushedFloatsList.
-  nsIFrame* floatFrame =
-      ::FindFirstLetterFrame(aBlockFrame, nsIFrame::kFloatList);
+  nsIFrame* floatFrame = ::FindFirstLetterFrame(aBlockFrame, kFloatList);
   if (!floatFrame) {
-    floatFrame =
-        ::FindFirstLetterFrame(aBlockFrame, nsIFrame::kPushedFloatsList);
+    floatFrame = ::FindFirstLetterFrame(aBlockFrame, kPushedFloatsList);
     if (!floatFrame) {
       return;
     }

@@ -673,10 +673,8 @@ nsIFrame* ScrollAnchorContainer::FindAnchorIn(nsIFrame* aFrame) const {
     // following placeholders in the in-flow lists so that we visit these
     // frames in DOM order.
     // XXX do we actually need to exclude kOverflowOutOfFlowList too?
-    if (listID == FrameChildListID::kAbsoluteList ||
-        listID == FrameChildListID::kFixedList ||
-        listID == FrameChildListID::kFloatList ||
-        listID == FrameChildListID::kOverflowOutOfFlowList) {
+    if (listID == kAbsoluteList || listID == kFixedList ||
+        listID == kFloatList || listID == kOverflowOutOfFlowList) {
       continue;
     }
 
@@ -694,8 +692,7 @@ nsIFrame* ScrollAnchorContainer::FindAnchorIn(nsIFrame* aFrame) const {
   // implementation, and is needed for a WPT test.
   //
   // [1] https://github.com/w3c/csswg-drafts/issues/3465
-  const nsFrameList& absPosList =
-      aFrame->GetChildList(FrameChildListID::kAbsoluteList);
+  const nsFrameList& absPosList = aFrame->GetChildList(kAbsoluteList);
   if (nsIFrame* anchor = FindAnchorInList(absPosList)) {
     return anchor;
   }

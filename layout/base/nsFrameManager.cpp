@@ -59,7 +59,7 @@ void nsFrameManager::Destroy() {
 
 //----------------------------------------------------------------------
 void nsFrameManager::AppendFrames(nsContainerFrame* aParentFrame,
-                                  ChildListID aListID,
+                                  FrameChildListID aListID,
                                   nsFrameList&& aFrameList) {
   if (aParentFrame->IsAbsoluteContainer() &&
       aListID == aParentFrame->GetAbsoluteListID()) {
@@ -71,7 +71,8 @@ void nsFrameManager::AppendFrames(nsContainerFrame* aParentFrame,
 }
 
 void nsFrameManager::InsertFrames(nsContainerFrame* aParentFrame,
-                                  ChildListID aListID, nsIFrame* aPrevFrame,
+                                  FrameChildListID aListID,
+                                  nsIFrame* aPrevFrame,
                                   nsFrameList&& aFrameList) {
   MOZ_ASSERT(
       !aPrevFrame ||
@@ -91,7 +92,8 @@ void nsFrameManager::InsertFrames(nsContainerFrame* aParentFrame,
   }
 }
 
-void nsFrameManager::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
+void nsFrameManager::RemoveFrame(FrameChildListID aListID,
+                                 nsIFrame* aOldFrame) {
   // In case the reflow doesn't invalidate anything since it just leaves
   // a gap where the old frame was, we invalidate it here.  (This is
   // reasonably likely to happen when removing a last child in a way

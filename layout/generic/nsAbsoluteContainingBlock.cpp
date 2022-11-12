@@ -45,7 +45,7 @@ using namespace mozilla;
 typedef mozilla::CSSAlignUtils::AlignJustifyFlags AlignJustifyFlags;
 
 void nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame* aDelegatingFrame,
-                                                    ChildListID aListID,
+                                                    FrameChildListID aListID,
                                                     nsFrameList&& aChildList) {
   MOZ_ASSERT(mChildListID == aListID, "unexpected child list name");
 #ifdef DEBUG
@@ -58,7 +58,7 @@ void nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame* aDelegatingFrame,
 }
 
 void nsAbsoluteContainingBlock::AppendFrames(nsIFrame* aDelegatingFrame,
-                                             ChildListID aListID,
+                                             FrameChildListID aListID,
                                              nsFrameList&& aFrameList) {
   NS_ASSERTION(mChildListID == aListID, "unexpected child list");
 
@@ -75,7 +75,7 @@ void nsAbsoluteContainingBlock::AppendFrames(nsIFrame* aDelegatingFrame,
 }
 
 void nsAbsoluteContainingBlock::InsertFrames(nsIFrame* aDelegatingFrame,
-                                             ChildListID aListID,
+                                             FrameChildListID aListID,
                                              nsIFrame* aPrevFrame,
                                              nsFrameList&& aFrameList) {
   NS_ASSERTION(mChildListID == aListID, "unexpected child list");
@@ -94,7 +94,7 @@ void nsAbsoluteContainingBlock::InsertFrames(nsIFrame* aDelegatingFrame,
 }
 
 void nsAbsoluteContainingBlock::RemoveFrame(nsIFrame* aDelegatingFrame,
-                                            ChildListID aListID,
+                                            FrameChildListID aListID,
                                             nsIFrame* aOldFrame) {
   NS_ASSERTION(mChildListID == aListID, "unexpected child list");
   nsIFrame* nif = aOldFrame->GetNextInFlow();
@@ -161,7 +161,7 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
   // them contributing to overflow areas because that means we'll create new
   // pages ad infinitum if one of them overflows the page.
   if (aDelegatingFrame->IsPageContentFrame()) {
-    MOZ_ASSERT(mChildListID == nsAtomicContainerFrame::kFixedList);
+    MOZ_ASSERT(mChildListID == kFixedList);
     aOverflowAreas = nullptr;
   }
 
