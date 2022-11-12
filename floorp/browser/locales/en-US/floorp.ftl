@@ -227,7 +227,7 @@ bsb-header = Browser Manager Sidebar
 bsb-context = Select Container Tabs
 bsb-userAgent-label = 
   .label = Change User Agent to Mobile version
-bsb-width = Width (If this is empty, use global values)
+bsb-width = Width (If this is 0, use global values)
 bsb-page = Page to open
 
 bsb-add = Add webpanel on Browser Manager Sidebar
