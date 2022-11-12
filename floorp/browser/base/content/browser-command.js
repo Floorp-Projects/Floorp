@@ -305,6 +305,18 @@ sidebarItemLabel.setAttribute("flex","1")
   let side = BROWSER_SIDEBAR_DATA.index.length
   if(sicon > side){
     for(let i = 0;i < (sicon - side);i++){
+      if(document.getElementById(siconAll[i].id.replace("select-","webpanel")) != null){
+        let sidebarsplit2 = document.getElementById("sidebar-splitter2");
+
+        if(Services.prefs.getStringPref("floorp.browser.sidebar2.page", "") == siconAll[i].id.replace("select-","")){
+          Services.prefs.setStringPref("floorp.browser.sidebar2.page", "");
+          if (sidebarsplit2.getAttribute("hidden") != "true") {
+            changeSidebarVisibility();
+          }
+        }
+        document.getElementById(siconAll[i].id.replace("select-","webpanel")).remove();
+      }
+	      
       siconAll[i].remove()
     }
   }
