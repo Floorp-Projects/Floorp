@@ -1160,8 +1160,7 @@ class ASRouterAdminInner extends (external_React_default()).PureComponent {
       try {
         JSON.parse(value);
       } catch (e) {
-        console.log(`Error parsing value of parameter ${name}`); // eslint-disable-line no-console
-
+        console.error(`Error parsing value of parameter ${name}`);
         targetingParametersError = {
           id: name
         };
@@ -4348,7 +4347,8 @@ function safeURI(url) {
   const isAllowed = ["http:", "https:", "data:", "resource:", "chrome:"].includes(protocol);
 
   if (!isAllowed) {
-    console.warn(`The protocol ${protocol} is not allowed for template URLs.`); // eslint-disable-line no-console
+    // eslint-disable-next-line no-console
+    console.warn(`The protocol ${protocol} is not allowed for template URLs.`);
   }
 
   return isAllowed ? url : "";
@@ -4967,7 +4967,7 @@ class SubmitFormSnippet extends (external_React_default()).PureComponent {
 
       json = await response.json();
     } catch (err) {
-      console.log(err); // eslint-disable-line no-console
+      console.error(err);
     }
 
     if (json && json.status === "ok") {
@@ -4988,7 +4988,6 @@ class SubmitFormSnippet extends (external_React_default()).PureComponent {
         id: "NEWTAB_FOOTER_BAR_CONTENT"
       });
     } else {
-      // eslint-disable-next-line no-console
       console.error("There was a problem submitting the form", json || "[No JSON response]");
       this.setState({
         signupSuccess: false,
@@ -5662,7 +5661,7 @@ class ASRouterUISurface extends (external_React_default()).PureComponent {
 
     if (!fxaEndpoint) {
       const err = "Tried to fetch flow params before fxaEndpoint pref was ready";
-      console.error(err); // eslint-disable-line no-console
+      console.error(err);
     }
 
     try {
@@ -5687,10 +5686,10 @@ class ASRouterUISurface extends (external_React_default()).PureComponent {
           flowBeginTime
         };
       } else {
-        console.error("Non-200 response", response); // eslint-disable-line no-console
+        console.error("Non-200 response", response);
       }
     } catch (error) {
-      console.error(error); // eslint-disable-line no-console
+      console.error(error);
     }
 
     return result;
@@ -13774,8 +13773,7 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
             const value = rule.style[property];
 
             if (!isAllowedCSS(property, value)) {
-              console.error(`Bad CSS declaration ${property}: ${value}`); // eslint-disable-line no-console
-
+              console.error(`Bad CSS declaration ${property}: ${value}`);
               rule.style.removeProperty(property);
             }
           }); // Set the actual desired selectors scoped to the component
@@ -13787,7 +13785,7 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
           selector[0] === ":" ? "" : " ") + selector).join(","); // CSSOM silently ignores bad selectors, so we'll be noisy instead
 
           if (rule.selectorText === DUMMY_CSS_SELECTOR) {
-            console.error(`Bad CSS selector ${selectors}`); // eslint-disable-line no-console
+            console.error(`Bad CSS selector ${selectors}`);
           }
         });
       });
@@ -15098,8 +15096,7 @@ function initStore(reducers, initialState) {
       try {
         store.dispatch(msg.data);
       } catch (ex) {
-        console.error("Content msg:", msg, "Dispatch error: ", ex); // eslint-disable-line no-console
-
+        console.error("Content msg:", msg, "Dispatch error: ", ex);
         dump(`Content msg: ${JSON.stringify(msg)}\nDispatch error: ${ex}\n${ex.stack}`);
       }
     });
