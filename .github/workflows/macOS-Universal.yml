@@ -141,14 +141,16 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: actions/download-artifact@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10' 
+
     - name: Create environment 🌲
       shell: bash
       run: |
         ./mach bootstrap
         echo -e "ac_add_options --enable-bootstrap" >> mozconfig
-        brew update
         brew install gnu-tar
-        brew upgrade
         export PATH=/usr/local/opt/gnu-tar/libexec/gnubin:$PATH
         tar -xf ./obj-x86_64-apple-darwin/obj-x86_64-apple-darwin.tar.xz -C ./
         tar -xf ./obj-aarch64-apple-darwin/obj-aarch64-apple-darwin.tar.xz -C ./
