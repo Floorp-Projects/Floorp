@@ -673,13 +673,15 @@ already_AddRefed<SharedFTFace> Factory::NewSharedFTFace(FT_Library aFTLibrary,
     return nullptr;
   }
 
+  RefPtr<FTUserFontData> data;
+#  ifdef ANDROID
   // If the font has variations, we may later need to "clone" it in
   // UnscaledFontFreeType::CreateScaledFont. To support this, we attach an
   // FTUserFontData that records the filename used to instantiate the face.
-  RefPtr<FTUserFontData> data;
   if (face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
     data = new FTUserFontData(aFilename);
   }
+#  endif
   return MakeAndAddRef<SharedFTFace>(face, data);
 }
 
