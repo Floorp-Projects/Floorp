@@ -107,17 +107,18 @@ class CacheEntryImpl : public CacheEntry, public LinkedListElement<RefPtr<T>> {
 };
 
 // CacheImpl manages a list of CacheEntry.
-template <typename T>
+template <typename T, bool BIG>
 class CacheImpl {
  protected:
   typedef LinkedList<RefPtr<T>> ListType;
 
-  static constexpr size_t kNumChains = 17;
+  // Whether the cache should be small and space-efficient or prioritize speed.
+  static constexpr size_t kNumChains = BIG ? 499 : 17;
 
  public:
   ~CacheImpl() {
-    for (size_t i = 0; i < kNumChains; ++i) {
-      while (RefPtr<T> entry = mChains[i].popLast()) {
+    for (auto& chain : mChains) {
+      while (RefPtr<T> entry = chain.popLast()) {
         entry->Unlink();
       }
     }
@@ -346,7 +347,7 @@ class GlyphCacheEntry : public CacheEntryImpl<GlyphCacheEntry> {
 // Otherwise, the text run will be rendered to a new texture handle and
 // inserted into a new GlyphCacheEntry to represent it.
 class GlyphCache : public LinkedListElement<GlyphCache>,
-                   public CacheImpl<GlyphCacheEntry> {
+                   public CacheImpl<GlyphCacheEntry, false> {
  public:
   explicit GlyphCache(ScaledFont* aFont);
 
@@ -439,7 +440,7 @@ class PathCacheEntry : public CacheEntryImpl<PathCacheEntry> {
   PathVertexRange mVertexRange;
 };
 
-class PathCache : public CacheImpl<PathCacheEntry> {
+class PathCache : public CacheImpl<PathCacheEntry, true> {
  public:
   PathCache() = default;
 
