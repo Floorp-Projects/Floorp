@@ -101,10 +101,6 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Llingüeta privada nueva</string>
 
-    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d sitios</string>
-
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">Atrás</string>
@@ -345,7 +341,7 @@
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recent_bookmarks">Marcadores de recién</string>
     <!-- Title for the customize home screen section with Pocket. -->
-    <string name="customize_toggle_pocket">Pocket</string>
+    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">Fondos de pantalla</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
@@ -524,10 +520,6 @@
     <string name="tab_view_list">En llista</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">En rexáu</string>
-    <!-- Option for search term tab groups -->
-    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Grupos de busca</string>
-    <!-- Summary text for search term tab groups -->
-    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Axunta los sitios rellacionaos</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Zarru de llingüetes</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -675,15 +667,6 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Nun hai nada</string>
 
-
-    <!-- The page title for browsing history coming from other devices. -->
-    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">D\'otros preseos</string>
-    <!-- The synced history sign in dialog message -->
-    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Anicia la sesión pa ver l\'historial sincronizáu de los otros preseos de to.</string>
-    <!-- The synced history sign in dialog button text -->
-    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Aniciar la sesión</string>
-    <!-- The synced history sign in dialog create a new account link -->
-    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>O crea una cuenta de Firefox pa comenzar a sincronizar</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1264,6 +1247,8 @@ en llinia y con nós.</string>
 
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sincronización de cuentes</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Sincronizar les cuentes ente preseos</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Cuentes guardaes</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1339,7 +1324,7 @@ en llinia y con nós.</string>
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Cífrense los datos</string>
 
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
-    <string name="preferences_credit_cards_sync_cards_across_devices">Sincronizar les tarxetes en tolos preseos</string>
+    <string name="preferences_credit_cards_sync_cards_across_devices">Sincronizar les tarxetes ente preseos</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Sincronizar les tarxetes</string>
     <!-- Preference option for adding a credit card -->
@@ -1517,7 +1502,7 @@ en llinia y con nós.</string>
     <string name="privacy_content_close_button_content_description">Zarrar</string>
 
     <!-- Title of an app feature. Smaller than a heading.-->
-    <string name="pocket_stories_feature_title">Cola potencia de Pocket.</string>
+    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">Cola potencia de Pocket.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
     <string name="pocket_stories_feature_caption">Parte de la familia de Firefox. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
