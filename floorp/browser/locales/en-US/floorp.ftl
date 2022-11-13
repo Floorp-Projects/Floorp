@@ -268,7 +268,7 @@ sidebar2-pref-delete =
 sidebar2-pref-setting =
  .label = Setting
 
-sidebar2-global-widht = Global value of webpanel's width
+sidebar2-global-width = Global value of webpanel's width
 
 memory-and-performance = Memory Performance Settings
 
