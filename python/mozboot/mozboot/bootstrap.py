@@ -51,7 +51,7 @@ Your choice: """
 
 APPLICATIONS = OrderedDict(
     [
-        ("Flootrp for Desktop", "browser"),
+        ("Floorp for Desktop", "browser"),
         ("Floorp for Desktop Artifact Mode", "browser_artifact_mode"),
         ("GeckoView/Floorp Android", "mobile_android"),
     ]
