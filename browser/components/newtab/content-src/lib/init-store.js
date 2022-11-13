@@ -161,7 +161,7 @@ export function initStore(reducers, initialState) {
       try {
         store.dispatch(msg.data);
       } catch (ex) {
-        console.error("Content msg:", msg, "Dispatch error: ", ex); // eslint-disable-line no-console
+        console.error("Content msg:", msg, "Dispatch error: ", ex);
         dump(
           `Content msg: ${JSON.stringify(msg)}\nDispatch error: ${ex}\n${
             ex.stack

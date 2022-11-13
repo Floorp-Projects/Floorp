@@ -79,7 +79,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
           [...rule.style].forEach(property => {
             const value = rule.style[property];
             if (!isAllowedCSS(property, value)) {
-              console.error(`Bad CSS declaration ${property}: ${value}`); // eslint-disable-line no-console
+              console.error(`Bad CSS declaration ${property}: ${value}`);
               rule.style.removeProperty(property);
             }
           });
@@ -102,7 +102,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
 
           // CSSOM silently ignores bad selectors, so we'll be noisy instead
           if (rule.selectorText === DUMMY_CSS_SELECTOR) {
-            console.error(`Bad CSS selector ${selectors}`); // eslint-disable-line no-console
+            console.error(`Bad CSS selector ${selectors}`);
           }
         });
       });

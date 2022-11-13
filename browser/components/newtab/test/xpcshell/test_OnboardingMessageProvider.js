@@ -8,7 +8,6 @@ const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 function getOnboardingScreenById(screens, screenId) {
   return screens.find(screen => {
-    console.log(screen?.id);
     return screen?.id === screenId;
   });
 }

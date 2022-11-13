@@ -50,7 +50,7 @@ export class ASRouterUISurface extends React.PureComponent {
     if (!fxaEndpoint) {
       const err =
         "Tried to fetch flow params before fxaEndpoint pref was ready";
-      console.error(err); // eslint-disable-line no-console
+      console.error(err);
     }
 
     try {
@@ -64,10 +64,10 @@ export class ASRouterUISurface extends React.PureComponent {
         const { deviceId, flowId, flowBeginTime } = await response.json();
         result = { deviceId, flowId, flowBeginTime };
       } else {
-        console.error("Non-200 response", response); // eslint-disable-line no-console
+        console.error("Non-200 response", response);
       }
     } catch (error) {
-      console.error(error); // eslint-disable-line no-console
+      console.error(error);
     }
     return result;
   }

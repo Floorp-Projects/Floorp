@@ -669,7 +669,7 @@ export class ASRouterAdminInner extends React.PureComponent {
       try {
         JSON.parse(value);
       } catch (e) {
-        console.log(`Error parsing value of parameter ${name}`); // eslint-disable-line no-console
+        console.error(`Error parsing value of parameter ${name}`);
         targetingParametersError = { id: name };
       }
 

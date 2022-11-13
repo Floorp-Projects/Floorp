@@ -165,7 +165,7 @@ module.exports = {
     "no-bitwise": 0,
     "no-buffer-constructor": 2,
     "no-catch-shadow": 2,
-    "no-console": 1,
+    "no-console": ["error", { allow: ["error"] }],
     "no-continue": 0,
     "no-div-regex": 2,
     "no-duplicate-imports": 2,

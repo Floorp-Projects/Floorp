@@ -44,7 +44,7 @@ export const AboutWelcomeUtils = {
         const { deviceId, flowId, flowBeginTime } = await response.json();
         flowParams = { deviceId, flowId, flowBeginTime };
       } else {
-        console.error("Non-200 response", response); // eslint-disable-line no-console
+        console.error("Non-200 response", response);
       }
     } catch (e) {
       flowParams = null;
