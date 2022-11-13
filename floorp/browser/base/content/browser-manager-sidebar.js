@@ -68,7 +68,9 @@ if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
 
 if(Services.prefs.getStringPref("floorp.browser.sidebar2.page") != "") setSidebarMode();
  })};
-Services.prefs.addObserver("floorp.browser.sidebar2.global.webpanel.width", setSidebarWidth)
+Services.prefs.addObserver("floorp.browser.sidebar2.global.webpanel.width", function(){
+setSidebarWidth(Services.prefs.getStringPref("floorp.browser.sidebar2.page"))
+})
 const DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT = 5 /* Static sidebar modes, that are unchangable by user. Starts from 0 */
 const DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT = 19 /* CustomURL modes, that are editable by user. Starts from 0 */
 const STATIC_SIDEBAR_L10N_LIST = {
