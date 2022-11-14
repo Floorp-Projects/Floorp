@@ -232,7 +232,7 @@ Var ArchToInstall
 !undef URLStubDownloadAMD64
 !undef URLStubDownloadAArch64
 !define URLStubDownloadX86 ""
-!define URLStubDownloadAMD64 "https://github.com/Floorp-Projects/Floorp/releases/latest/download/floorp-${AppVersion}.win64.installer.exe"
+!define URLStubDownloadAMD64 "https://github.com/Floorp-Projects/Floorp/releases/latest/download/floorp-win64.installer.exe"
 !define URLStubDownloadAArch64 ""
 !undef URLManualDownload
 !define URLManualDownload ""
@@ -847,7 +847,9 @@ Function OnDownload
         ; Use a timer so the UI has a chance to update
         ${StartTimer} ${InstallIntervalMS} DisplayDownloadError
       ${Else}
-        Call LaunchFullInstaller
+        CertCheck::CheckPETrustAndInfoAsync "$PLUGINSDIR\download.exe" \
+          "Open Source Developer, Ryosuke Asano" "Certum Code Signing 2021 CA"
+        ${StartTimer} ${DownloadIntervalMS} OnCertCheck
       ${EndIf}
     ${Else}
       StrCpy $DownloadedBytes "$3"
