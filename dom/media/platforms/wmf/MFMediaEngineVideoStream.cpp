@@ -237,6 +237,7 @@ RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineVideoStream::Drain() {
   AssertOnTaskQueue();
   MediaDataDecoder::DecodedData outputs;
   if (!IsDCompImageReady()) {
+    LOGV("Waiting for dcomp image for draining");
     return mPendingDrainPromise.Ensure(__func__);
   }
   return MFMediaEngineStream::Drain();
@@ -307,6 +308,18 @@ void MFMediaEngineVideoStream::UpdateConfig(const VideoInfo& aInfo) {
 void MFMediaEngineVideoStream::ShutdownCleanUpOnTaskQueue() {
   AssertOnTaskQueue();
   mPendingDrainPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+}
+
+bool MFMediaEngineVideoStream::IsEnded() const {
+  AssertOnTaskQueue();
+  // If a video only contains one frame, the media engine won't return a decoded
+  // frame before we tell it the track is already ended. However, due to the
+  // constraint of our media pipeline, the format reader won't notify EOS until
+  // the draining finishes, which causes a deadlock. Therefore, we would
+  // consider having pending drain promise as a sign of EOS as well, in order to
+  // get the decoded frame and revolve the drain promise.
+  return (mReceivedEOS || !mPendingDrainPromise.IsEmpty()) &&
+         mRawDataQueueForFeedingEngine.GetSize() == 0;
 }
 
 #undef LOGV

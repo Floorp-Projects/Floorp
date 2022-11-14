@@ -66,6 +66,8 @@ class MFMediaEngineVideoStream final : public MFMediaEngineStream {
 
   void ShutdownCleanUpOnTaskQueue() override;
 
+  bool IsEnded() const override;
+
   // Task queue only members.
   HANDLE mDCompSurfaceHandle;
   bool mNeedRecreateImage;

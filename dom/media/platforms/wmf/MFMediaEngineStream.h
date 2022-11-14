@@ -118,7 +118,7 @@ class MFMediaEngineStream
 
   void NotifyEndOfStreamInternal();
 
-  bool IsEnded() const;
+  virtual bool IsEnded() const;
 
   // Overwrite this method if inherited class needs to perform clean up on the
   // task queue when the stream gets shutdowned.
