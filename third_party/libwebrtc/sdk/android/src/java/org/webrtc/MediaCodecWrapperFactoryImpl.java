@@ -88,13 +88,13 @@ class MediaCodecWrapperFactoryImpl implements MediaCodecWrapperFactory {
     }
 
     @Override
-    public ByteBuffer[] getInputBuffers() {
-      return mediaCodec.getInputBuffers();
+    public ByteBuffer getInputBuffer(int index) {
+      return mediaCodec.getInputBuffer(index);
     }
 
     @Override
-    public ByteBuffer[] getOutputBuffers() {
-      return mediaCodec.getOutputBuffers();
+    public ByteBuffer getOutputBuffer(int index) {
+      return mediaCodec.getOutputBuffer(index);
     }
 
     @Override

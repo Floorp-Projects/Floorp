@@ -26,6 +26,7 @@
 #include "api/video_codecs/video_decoder_factory.h"
 #include "api/video_codecs/video_encoder_factory.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "system_wrappers/include/clock.h"
 #include "test/pc/e2e/analyzer/video/encoded_image_data_injector.h"
 #include "test/test_video_capturer.h"
 #include "test/testsupport/video_frame_writer.h"
@@ -40,6 +41,7 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
   using VideoConfig = PeerConnectionE2EQualityTestFixture::VideoConfig;
 
   VideoQualityAnalyzerInjectionHelper(
+      Clock* clock,
       std::unique_ptr<VideoQualityAnalyzerInterface> analyzer,
       EncodedImageDataInjector* injector,
       EncodedImageDataExtractor* extractor);
@@ -76,9 +78,14 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
   void Start(std::string test_case_name,
              rtc::ArrayView<const std::string> peer_names,
              int max_threads_count = 1);
+
   // Registers new call participant to the underlying video quality analyzer.
   // The method should be called before the participant is actually added.
   void RegisterParticipantInCall(absl::string_view peer_name);
+
+  // Will be called after test removed existing participant in the middle of the
+  // call.
+  void UnregisterParticipantInCall(absl::string_view peer_name);
 
   // Forwards `stats_reports` for Peer Connection `pc_label` to
   // `analyzer_`.
@@ -133,6 +140,7 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
   std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>>*
   PopulateSinks(const ReceiverStream& receiver_stream);
 
+  Clock* const clock_;
   std::unique_ptr<VideoQualityAnalyzerInterface> analyzer_;
   EncodedImageDataInjector* injector_;
   EncodedImageDataExtractor* extractor_;

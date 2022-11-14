@@ -31,7 +31,6 @@ class DriftingClock : public Clock {
   }
 
   Timestamp CurrentTime() override { return Drift(clock_->CurrentTime()); }
-  NtpTime CurrentNtpTime() override { return Drift(clock_->CurrentNtpTime()); }
   NtpTime ConvertTimestampToNtpTime(Timestamp timestamp) override {
     return Drift(clock_->ConvertTimestampToNtpTime(timestamp));
   }

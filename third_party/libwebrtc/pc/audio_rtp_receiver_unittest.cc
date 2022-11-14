@@ -14,7 +14,6 @@
 
 #include "pc/test/mock_voice_media_channel.h"
 #include "rtc_base/gunit.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/thread.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -50,6 +49,7 @@ class AudioRtpReceiverTest : public ::testing::Test {
     receiver_->SetMediaChannel(nullptr);
   }
 
+  rtc::AutoThread main_thread_;
   rtc::Thread* worker_;
   rtc::scoped_refptr<AudioRtpReceiver> receiver_;
   cricket::MockVoiceMediaChannel media_channel_;

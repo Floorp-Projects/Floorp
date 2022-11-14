@@ -15,7 +15,6 @@
 #include "modules/audio_processing/aec3/aec3_common.h"
 #include "modules/audio_processing/high_pass_filter.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
-#include "rtc_base/atomic_ops.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/logging.h"
 #include "system_wrappers/include/field_trial.h"
@@ -154,10 +153,10 @@ void ProcessCaptureFrameContent(
     BlockFramer* linear_output_framer,
     BlockFramer* output_framer,
     BlockProcessor* block_processor,
-    std::vector<std::vector<std::vector<float>>>* linear_output_block,
+    Block* linear_output_block,
     std::vector<std::vector<rtc::ArrayView<float>>>*
         linear_output_sub_frame_view,
-    std::vector<std::vector<std::vector<float>>>* capture_block,
+    Block* capture_block,
     std::vector<std::vector<rtc::ArrayView<float>>>* capture_sub_frame_view) {
   FillSubFrameView(capture, sub_frame_index, capture_sub_frame_view);
 
@@ -171,10 +170,10 @@ void ProcessCaptureFrameContent(
 
   capture_blocker->InsertSubFrameAndExtractBlock(*capture_sub_frame_view,
                                                  capture_block);
-  block_processor->ProcessCapture(/*echo_path_gain_change=*/level_change ||
-                                      aec_reference_is_downmixed_stereo,
-                                  saturated_microphone_signal,
-                                  linear_output_block, capture_block);
+  block_processor->ProcessCapture(
+      /*echo_path_gain_change=*/level_change ||
+          aec_reference_is_downmixed_stereo,
+      saturated_microphone_signal, linear_output_block, capture_block);
   output_framer->InsertBlockAndExtractSubFrame(*capture_block,
                                                capture_sub_frame_view);
 
@@ -185,16 +184,15 @@ void ProcessCaptureFrameContent(
   }
 }
 
-void ProcessRemainingCaptureFrameContent(
-    bool level_change,
-    bool aec_reference_is_downmixed_stereo,
-    bool saturated_microphone_signal,
-    FrameBlocker* capture_blocker,
-    BlockFramer* linear_output_framer,
-    BlockFramer* output_framer,
-    BlockProcessor* block_processor,
-    std::vector<std::vector<std::vector<float>>>* linear_output_block,
-    std::vector<std::vector<std::vector<float>>>* block) {
+void ProcessRemainingCaptureFrameContent(bool level_change,
+                                         bool aec_reference_is_downmixed_stereo,
+                                         bool saturated_microphone_signal,
+                                         FrameBlocker* capture_blocker,
+                                         BlockFramer* linear_output_framer,
+                                         BlockFramer* output_framer,
+                                         BlockProcessor* block_processor,
+                                         Block* linear_output_block,
+                                         Block* block) {
   if (!capture_blocker->IsBlockAvailable()) {
     return;
   }
@@ -218,7 +216,7 @@ void BufferRenderFrameContent(
     size_t sub_frame_index,
     FrameBlocker* render_blocker,
     BlockProcessor* block_processor,
-    std::vector<std::vector<std::vector<float>>>* block,
+    Block* block,
     std::vector<std::vector<rtc::ArrayView<float>>>* sub_frame_view) {
   FillSubFrameView(proper_downmix_needed, render_frame, sub_frame_index,
                    sub_frame_view);
@@ -226,10 +224,9 @@ void BufferRenderFrameContent(
   block_processor->BufferRender(*block);
 }
 
-void BufferRemainingRenderFrameContent(
-    FrameBlocker* render_blocker,
-    BlockProcessor* block_processor,
-    std::vector<std::vector<std::vector<float>>>* block) {
+void BufferRemainingRenderFrameContent(FrameBlocker* render_blocker,
+                                       BlockProcessor* block_processor,
+                                       Block* block) {
   if (!render_blocker->IsBlockAvailable()) {
     return;
   }
@@ -378,6 +375,14 @@ EchoCanceller3Config AdjustConfig(const EchoCanceller3Config& config) {
           "Aec3RenderDelayEstimationLeftRightPrioritizationKillSwitch")) {
     adjusted_cfg.delay.capture_alignment_mixing.prefer_first_two_channels =
         false;
+  }
+
+  if (field_trial::IsEnabled("WebRTC-Aec3DelayEstimatorDetectPreEcho")) {
+    adjusted_cfg.delay.detect_pre_echo = true;
+  }
+
+  if (field_trial::IsDisabled("WebRTC-Aec3DelayEstimatorDetectPreEcho")) {
+    adjusted_cfg.delay.detect_pre_echo = false;
   }
 
   if (field_trial::IsEnabled("WebRTC-Aec3SensitiveDominantNearendActivation")) {
@@ -709,7 +714,7 @@ void EchoCanceller3::RenderWriter::Insert(const AudioBuffer& input) {
   static_cast<void>(render_transfer_queue_->Insert(&render_queue_input_frame_));
 }
 
-int EchoCanceller3::instance_count_ = 0;
+std::atomic<int> EchoCanceller3::instance_count_(0);
 
 EchoCanceller3::EchoCanceller3(
     const EchoCanceller3Config& config,
@@ -717,8 +722,7 @@ EchoCanceller3::EchoCanceller3(
     int sample_rate_hz,
     size_t num_render_channels,
     size_t num_capture_channels)
-    : data_dumper_(
-          new ApmDataDumper(rtc::AtomicOps::Increment(&instance_count_))),
+    : data_dumper_(new ApmDataDumper(instance_count_.fetch_add(1) + 1)),
       config_(AdjustConfig(config)),
       sample_rate_hz_(sample_rate_hz),
       num_bands_(NumBandsForRate(sample_rate_hz_)),
@@ -753,14 +757,8 @@ EchoCanceller3::EchoCanceller3(
           std::vector<std::vector<float>>(
               num_render_input_channels_,
               std::vector<float>(AudioBuffer::kSplitBandSize, 0.f))),
-      render_block_(
-          num_bands_,
-          std::vector<std::vector<float>>(num_render_input_channels_,
-                                          std::vector<float>(kBlockSize, 0.f))),
-      capture_block_(
-          num_bands_,
-          std::vector<std::vector<float>>(num_capture_channels_,
-                                          std::vector<float>(kBlockSize, 0.f))),
+      render_block_(num_bands_, num_render_input_channels_),
+      capture_block_(num_bands_, num_capture_channels_),
       capture_sub_frame_view_(
           num_bands_,
           std::vector<rtc::ArrayView<float>>(num_capture_channels_)) {
@@ -780,11 +778,10 @@ EchoCanceller3::EchoCanceller3(
   RTC_DCHECK_GE(kMaxNumBands, num_bands_);
 
   if (config_selector_.active_config().filter.export_linear_aec_output) {
-    linear_output_framer_.reset(new BlockFramer(1, num_capture_channels_));
+    linear_output_framer_.reset(
+        new BlockFramer(/*num_bands=*/1, num_capture_channels_));
     linear_output_block_ =
-        std::make_unique<std::vector<std::vector<std::vector<float>>>>(
-            1, std::vector<std::vector<float>>(
-                   num_capture_channels_, std::vector<float>(kBlockSize, 0.f)));
+        std::make_unique<Block>(/*num_bands=*/1, num_capture_channels_),
     linear_output_sub_frame_view_ =
         std::vector<std::vector<rtc::ArrayView<float>>>(
             1, std::vector<rtc::ArrayView<float>>(num_capture_channels_));
@@ -810,12 +807,7 @@ void EchoCanceller3::Initialize() {
   config_selector_.Update(
       multichannel_content_detector_.IsProperMultiChannelContentDetected());
 
-  for (std::vector<std::vector<float>>& block_band : render_block_) {
-    block_band.resize(num_render_channels_to_aec_);
-    for (std::vector<float>& block_channel : block_band) {
-      block_channel.resize(kBlockSize, 0.0f);
-    }
-  }
+  render_block_.SetNumChannels(num_render_channels_to_aec_);
 
   render_blocker_.reset(
       new FrameBlocker(num_bands_, num_render_channels_to_aec_));

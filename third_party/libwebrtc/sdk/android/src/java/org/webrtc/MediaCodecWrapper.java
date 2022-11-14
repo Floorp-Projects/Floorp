@@ -45,9 +45,9 @@ interface MediaCodecWrapper {
 
   MediaFormat getOutputFormat();
 
-  ByteBuffer[] getInputBuffers();
+  ByteBuffer getInputBuffer(int index);
 
-  ByteBuffer[] getOutputBuffers();
+  ByteBuffer getOutputBuffer(int index);
 
   Surface createInputSurface();
 

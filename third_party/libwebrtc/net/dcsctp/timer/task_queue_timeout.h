@@ -13,9 +13,9 @@
 #include <memory>
 #include <utility>
 
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_base.h"
 #include "net/dcsctp/public/timeout.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
 
 namespace dcsctp {
 

@@ -28,15 +28,15 @@ bool Turn::operator==(const Turn& b) const {
 std::vector<Turn> LoadTiming(const std::string& timing_filepath) {
   // Line parser.
   auto parse_line = [](const std::string& line) {
-    std::vector<std::string> fields;
-    rtc::split(line, ' ', &fields);
+    std::vector<absl::string_view> fields = rtc::split(line, ' ');
     RTC_CHECK_GE(fields.size(), 3);
     RTC_CHECK_LE(fields.size(), 4);
     int gain = 0;
     if (fields.size() == 4) {
-      gain = std::atof(fields[3].c_str());
+      gain = rtc::StringToNumber<int>(fields[3]).value_or(0);
     }
-    return Turn(fields[0], fields[1], std::atol(fields[2].c_str()), gain);
+    return Turn(fields[0], fields[1],
+                rtc::StringToNumber<int>(fields[2]).value_or(0), gain);
   };
 
   // Init.

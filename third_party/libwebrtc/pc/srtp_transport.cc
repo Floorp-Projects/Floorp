@@ -28,7 +28,6 @@
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/ssl_stream_adapter.h"
 #include "rtc_base/third_party/base64/base64.h"
-#include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/trace_event.h"
 #include "rtc_base/zero_memory.h"
 

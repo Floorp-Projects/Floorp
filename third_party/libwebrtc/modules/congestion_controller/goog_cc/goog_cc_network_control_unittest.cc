@@ -654,7 +654,7 @@ DataRate AverageBitrateAfterCrossInducedLoss(std::string name) {
   // Querying the video stats from within the expected runtime environment
   // (i.e. the TQ that belongs to the CallClient, not the Scenario TQ that
   // we're currently on).
-  VideoReceiveStream::Stats video_receive_stats;
+  VideoReceiveStreamInterface::Stats video_receive_stats;
   auto* video_stream = video->receive();
   callee->SendTask([&video_stream, &video_receive_stats]() {
     video_receive_stats = video_stream->GetStats();

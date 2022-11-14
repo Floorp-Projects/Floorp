@@ -264,9 +264,9 @@ class AndroidVideoDecoder implements VideoDecoder, VideoSink {
 
     ByteBuffer buffer;
     try {
-      buffer = codec.getInputBuffers()[index];
+      buffer = codec.getInputBuffer(index);
     } catch (IllegalStateException e) {
-      Logging.e(TAG, "getInputBuffers failed", e);
+      Logging.e(TAG, "getInputBuffer with index=" + index + " failed", e);
       return VideoCodecStatus.ERROR;
     }
 
@@ -377,14 +377,14 @@ class AndroidVideoDecoder implements VideoDecoder, VideoSink {
       // exceeded, deliverDecodedFrame() will be called again on the next iteration of the output
       // thread's loop.  Blocking here prevents the output thread from busy-waiting while the codec
       // is idle.
-      int result = codec.dequeueOutputBuffer(info, DEQUEUE_OUTPUT_BUFFER_TIMEOUT_US);
-      if (result == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+      int index = codec.dequeueOutputBuffer(info, DEQUEUE_OUTPUT_BUFFER_TIMEOUT_US);
+      if (index == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
         reformat(codec.getOutputFormat());
         return;
       }
 
-      if (result < 0) {
-        Logging.v(TAG, "dequeueOutputBuffer returned " + result);
+      if (index < 0) {
+        Logging.v(TAG, "dequeueOutputBuffer returned " + index);
         return;
       }
 
@@ -399,9 +399,9 @@ class AndroidVideoDecoder implements VideoDecoder, VideoSink {
       hasDecodedFirstFrame = true;
 
       if (surfaceTextureHelper != null) {
-        deliverTextureFrame(result, info, rotation, decodeTimeMs);
+        deliverTextureFrame(index, info, rotation, decodeTimeMs);
       } else {
-        deliverByteFrame(result, info, rotation, decodeTimeMs);
+        deliverByteFrame(index, info, rotation, decodeTimeMs);
       }
 
     } catch (IllegalStateException e) {
@@ -452,7 +452,7 @@ class AndroidVideoDecoder implements VideoDecoder, VideoSink {
   }
 
   private void deliverByteFrame(
-      int result, MediaCodec.BufferInfo info, int rotation, Integer decodeTimeMs) {
+      int index, MediaCodec.BufferInfo info, int rotation, Integer decodeTimeMs) {
     // Load dimensions from shared memory under the dimension lock.
     int width;
     int height;
@@ -479,7 +479,7 @@ class AndroidVideoDecoder implements VideoDecoder, VideoSink {
       stride = info.size * 2 / (height * 3);
     }
 
-    ByteBuffer buffer = codec.getOutputBuffers()[result];
+    ByteBuffer buffer = codec.getOutputBuffer(index);
     buffer.position(info.offset);
     buffer.limit(info.offset + info.size);
     buffer = buffer.slice();
@@ -491,7 +491,7 @@ class AndroidVideoDecoder implements VideoDecoder, VideoSink {
       // All other supported color formats are NV12.
       frameBuffer = copyNV12ToI420Buffer(buffer, stride, sliceHeight, width, height);
     }
-    codec.releaseOutputBuffer(result, /* render= */ false);
+    codec.releaseOutputBuffer(index, /* render= */ false);
 
     long presentationTimeNs = info.presentationTimeUs * 1000;
     VideoFrame frame = new VideoFrame(frameBuffer, rotation, presentationTimeNs);

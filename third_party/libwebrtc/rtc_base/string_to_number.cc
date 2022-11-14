@@ -24,7 +24,7 @@ absl::optional<signed_type> ParseSigned(absl::string_view str, int base) {
   if (str.empty())
     return absl::nullopt;
 
-  if (isdigit(str[0]) || str[0] == '-') {
+  if (isdigit(static_cast<unsigned char>(str[0])) || str[0] == '-') {
     std::string str_str = std::string(str);
     char* end = nullptr;
     errno = 0;
@@ -42,7 +42,7 @@ absl::optional<unsigned_type> ParseUnsigned(absl::string_view str, int base) {
   if (str.empty())
     return absl::nullopt;
 
-  if (isdigit(str[0]) || str[0] == '-') {
+  if (isdigit(static_cast<unsigned char>(str[0])) || str[0] == '-') {
     std::string str_str = std::string(str);
     // Explicitly discard negative values. std::strtoull parsing causes unsigned
     // wraparound. We cannot just reject values that start with -, though, since

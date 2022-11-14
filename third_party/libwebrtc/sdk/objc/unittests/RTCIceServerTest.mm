@@ -9,6 +9,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <XCTest/XCTest.h>
 
 #include <vector>
 
@@ -18,11 +19,7 @@
 #import "api/peerconnection/RTCIceServer.h"
 #import "helpers/NSString+StdString.h"
 
-@interface RTCIceServerTest : NSObject
-- (void)testOneURLServer;
-- (void)testTwoURLServer;
-- (void)testPasswordCredential;
-- (void)testInitFromNativeServer;
+@interface RTCIceServerTest : XCTestCase
 @end
 
 @implementation RTCIceServerTest
@@ -137,38 +134,3 @@
 }
 
 @end
-
-TEST(RTCIceServerTest, OneURLTest) {
-  @autoreleasepool {
-    RTCIceServerTest *test = [[RTCIceServerTest alloc] init];
-    [test testOneURLServer];
-  }
-}
-
-TEST(RTCIceServerTest, TwoURLTest) {
-  @autoreleasepool {
-    RTCIceServerTest *test = [[RTCIceServerTest alloc] init];
-    [test testTwoURLServer];
-  }
-}
-
-TEST(RTCIceServerTest, PasswordCredentialTest) {
-  @autoreleasepool {
-    RTCIceServerTest *test = [[RTCIceServerTest alloc] init];
-    [test testPasswordCredential];
-  }
-}
-
-TEST(RTCIceServerTest, HostnameTest) {
-  @autoreleasepool {
-    RTCIceServerTest *test = [[RTCIceServerTest alloc] init];
-    [test testHostname];
-  }
-}
-
-TEST(RTCIceServerTest, InitFromNativeServerTest) {
-  @autoreleasepool {
-    RTCIceServerTest *test = [[RTCIceServerTest alloc] init];
-    [test testInitFromNativeServer];
-  }
-}

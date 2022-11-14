@@ -19,15 +19,16 @@
 #include <memory>
 #include <string>
 
+#include "api/task_queue/pending_task_safety_flag.h"
+#include "api/task_queue/task_queue_base.h"
 #include "api/transport/stun.h"
-#include "rtc_base/message_handler.h"
-#include "rtc_base/thread.h"
+#include "api/units/time_delta.h"
 
 namespace cricket {
 
 class StunRequest;
 
-const int kAllRequests = 0;
+const int kAllRequestsForTest = 0;
 
 // Total max timeouts: 39.75 seconds
 // For years, this was 9.5 seconds, but for networks that experience moments of
@@ -39,7 +40,7 @@ const int STUN_TOTAL_TIMEOUT = 39750;  // milliseconds
 class StunRequestManager {
  public:
   StunRequestManager(
-      rtc::Thread* thread,
+      webrtc::TaskQueueBase* thread,
       std::function<void(const void*, size_t, StunRequest*)> send_packet);
   ~StunRequestManager();
 
@@ -47,13 +48,17 @@ class StunRequestManager {
   void Send(StunRequest* request);
   void SendDelayed(StunRequest* request, int delay);
 
-  // If `msg_type` is kAllRequests, sends all pending requests right away.
-  // Otherwise, sends those that have a matching type right away.
-  // Only for testing.
+  // If `msg_type` is kAllRequestsForTest, sends all pending requests right
+  // away. Otherwise, sends those that have a matching type right away. Only for
+  // testing.
+  // TODO(tommi): Remove this method and update tests that use it to simulate
+  // production code.
   void FlushForTest(int msg_type);
 
   // Returns true if at least one request with `msg_type` is scheduled for
   // transmission. For testing only.
+  // TODO(tommi): Remove this method and update tests that use it to simulate
+  // production code.
   bool HasRequestForTest(int msg_type);
 
   // Removes all stun requests that were added previously.
@@ -69,30 +74,26 @@ class StunRequestManager {
 
   bool empty() const;
 
-  // TODO(tommi): Use TaskQueueBase* instead of rtc::Thread.
-  rtc::Thread* network_thread() const { return thread_; }
+  webrtc::TaskQueueBase* network_thread() const { return thread_; }
 
   void SendPacket(const void* data, size_t size, StunRequest* request);
 
  private:
   typedef std::map<std::string, std::unique_ptr<StunRequest>> RequestMap;
 
-  rtc::Thread* const thread_;
+  webrtc::TaskQueueBase* const thread_;
   RequestMap requests_ RTC_GUARDED_BY(thread_);
   const std::function<void(const void*, size_t, StunRequest*)> send_packet_;
 };
 
 // Represents an individual request to be sent.  The STUN message can either be
 // constructed beforehand or built on demand.
-class StunRequest : public rtc::MessageHandler {
+class StunRequest {
  public:
   explicit StunRequest(StunRequestManager& manager);
   StunRequest(StunRequestManager& manager,
               std::unique_ptr<StunMessage> message);
-  ~StunRequest() override;
-
-  // Causes our wrapped StunMessage to be Prepared
-  void Construct();
+  virtual ~StunRequest();
 
   // The manager handling this request (if it has been scheduled for sending).
   StunRequestManager* manager() { return &manager_; }
@@ -117,9 +118,14 @@ class StunRequest : public rtc::MessageHandler {
  protected:
   friend class StunRequestManager;
 
-  // Fills in a request object to be sent.  Note that request's transaction ID
-  // will already be set and cannot be changed.
-  virtual void Prepare(StunMessage* message) {}
+  // Called by StunRequestManager.
+  void Send(webrtc::TimeDelta delay);
+
+  // Called from FlushForTest.
+  // TODO(tommi): Remove when FlushForTest gets removed.
+  void ResetTasksForTest();
+
+  StunMessage* mutable_msg() { return msg_.get(); }
 
   // Called when the message receives a response or times out.
   virtual void OnResponse(StunMessage* response) {}
@@ -127,7 +133,7 @@ class StunRequest : public rtc::MessageHandler {
   virtual void OnTimeout() {}
   // Called when the message is sent.
   virtual void OnSent();
-  // Returns the next delay for resends.
+  // Returns the next delay for resends in milliseconds.
   virtual int resend_delay();
 
   webrtc::TaskQueueBase* network_thread() const {
@@ -137,14 +143,18 @@ class StunRequest : public rtc::MessageHandler {
   void set_timed_out();
 
  private:
-  // Handles messages for sending and timeout.
-  void OnMessage(rtc::Message* pmsg) override;
+  void SendInternal();
+  // Calls `PostDelayedTask` to queue up a call to SendInternal after the
+  // specified timeout.
+  void SendDelayed(webrtc::TimeDelta delay);
 
   StunRequestManager& manager_;
   const std::unique_ptr<StunMessage> msg_;
   int64_t tstamp_ RTC_GUARDED_BY(network_thread());
   int count_ RTC_GUARDED_BY(network_thread());
   bool timeout_ RTC_GUARDED_BY(network_thread());
+  webrtc::ScopedTaskSafety task_safety_{
+      webrtc::PendingTaskSafetyFlag::CreateDetachedInactive()};
 };
 
 }  // namespace cricket

@@ -16,11 +16,12 @@
   ],
   "write_mozbuild_variables": {
     "INCLUDE_TK_CFLAGS_DIRS": [
-      "third_party/libwebrtc/modules/desktop_capture/desktop_capture_generic_gn"
+      "third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn"
     ]
   },
   "non_unified_sources": [
     "third_party/libwebrtc/api/audio_codecs/opus/audio_encoder_opus_config.cc",
+    "third_party/libwebrtc/api/video/i210_buffer.cc",
     "third_party/libwebrtc/api/video/i422_buffer.cc",
     "third_party/libwebrtc/api/video/i444_buffer.cc",
     "third_party/libwebrtc/audio/channel_send_frame_transformer_delegate.cc",
@@ -50,7 +51,9 @@
     "third_party/libwebrtc/modules/audio_processing/rms_level.cc",
     "third_party/libwebrtc/modules/congestion_controller/goog_cc/loss_based_bandwidth_estimation.cc",
     "third_party/libwebrtc/modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.cc",
+    "third_party/libwebrtc/modules/desktop_capture/fallback_desktop_capturer_wrapper.cc",
     "third_party/libwebrtc/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc",
+    "third_party/libwebrtc/modules/desktop_capture/linux/wayland/moz_base_capturer_pipewire.cc",
     "third_party/libwebrtc/modules/desktop_capture/win/screen_capturer_win_gdi.cc",
     "third_party/libwebrtc/modules/pacing/prioritized_packet_queue.cc",
     "third_party/libwebrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_single_stream.cc",

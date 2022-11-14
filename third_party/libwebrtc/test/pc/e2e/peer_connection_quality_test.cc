@@ -33,6 +33,7 @@
 #include "test/field_trial.h"
 #include "test/pc/e2e/analyzer/audio/default_audio_quality_analyzer.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer.h"
+#include "test/pc/e2e/analyzer/video/video_frame_tracking_id_injector.h"
 #include "test/pc/e2e/analyzer/video/video_quality_metrics_reporter.h"
 #include "test/pc/e2e/cross_media_metrics_reporter.h"
 #include "test/pc/e2e/stats_poller.h"
@@ -138,11 +139,16 @@ PeerConnectionE2EQualityTest::PeerConnectionE2EQualityTest(
     video_quality_analyzer = std::make_unique<DefaultVideoQualityAnalyzer>(
         time_controller_.GetClock());
   }
-  encoded_image_data_propagator_ =
-      std::make_unique<SingleProcessEncodedImageDataInjector>();
+  if (field_trial::IsEnabled("WebRTC-VideoFrameTrackingIdAdvertised")) {
+    encoded_image_data_propagator_ =
+        std::make_unique<VideoFrameTrackingIdInjector>();
+  } else {
+    encoded_image_data_propagator_ =
+        std::make_unique<SingleProcessEncodedImageDataInjector>();
+  }
   video_quality_analyzer_injection_helper_ =
       std::make_unique<VideoQualityAnalyzerInjectionHelper>(
-          std::move(video_quality_analyzer),
+          time_controller_.GetClock(), std::move(video_quality_analyzer),
           encoded_image_data_propagator_.get(),
           encoded_image_data_propagator_.get());
 
@@ -329,8 +335,10 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
   for (auto& reporter : quality_metrics_reporters_) {
     observers.push_back(reporter.get());
   }
-  StatsPoller stats_poller(observers, {{*alice_->params().name, alice_.get()},
-                                       {*bob_->params().name, bob_.get()}});
+  StatsPoller stats_poller(observers,
+                           std::map<std::string, StatsProvider*>{
+                               {*alice_->params().name, alice_.get()},
+                               {*bob_->params().name, bob_.get()}});
   executor_->ScheduleActivity(TimeDelta::Zero(), kStatsUpdateInterval,
                               [&stats_poller](TimeDelta) {
                                 stats_poller.PollStatsAndNotifyObservers();

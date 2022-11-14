@@ -75,6 +75,12 @@ void TestPeer::SetVideoSubscription(VideoSubscription subscription) {
   configurable_params_.video_subscription = std::move(subscription);
 }
 
+void TestPeer::GetStats(RTCStatsCollectorCallback* callback) {
+  pc()->signaling_thread()->PostTask(
+      SafeTask(signaling_thread_task_safety_,
+               [this, callback]() { pc()->GetStats(callback); }));
+}
+
 bool TestPeer::SetRemoteDescription(
     std::unique_ptr<SessionDescriptionInterface> desc,
     std::string* error_out) {
@@ -115,6 +121,7 @@ bool TestPeer::AddIceCandidates(
 }
 
 void TestPeer::Close() {
+  signaling_thread_task_safety_->SetNotAlive();
   wrapper_->pc()->Close();
   remote_ice_candidates_.clear();
   audio_processing_ = nullptr;
@@ -139,7 +146,9 @@ TestPeer::TestPeer(
                                                        std::move(pc),
                                                        std::move(observer))),
       video_sources_(std::move(video_sources)),
-      audio_processing_(audio_processing) {}
+      audio_processing_(audio_processing) {
+  signaling_thread_task_safety_ = PendingTaskSafetyFlag::CreateDetached();
+}
 
 }  // namespace webrtc_pc_e2e
 }  // namespace webrtc

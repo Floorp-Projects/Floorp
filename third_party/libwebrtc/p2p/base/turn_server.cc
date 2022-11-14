@@ -16,6 +16,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
+#include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "api/packet_socket_factory.h"
 #include "api/transport/stun.h"
@@ -27,7 +28,6 @@
 #include "rtc_base/message_digest.h"
 #include "rtc_base/socket_adapters.h"
 #include "rtc_base/strings/string_builder.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread.h"
 
 namespace cricket {
@@ -100,27 +100,21 @@ class TurnServerAllocation::Channel : public rtc::MessageHandlerAutoCleanup {
   rtc::SocketAddress peer_;
 };
 
-static bool InitResponse(const StunMessage* req, StunMessage* resp) {
-  int resp_type = (req) ? GetStunSuccessResponseType(req->type()) : -1;
-  if (resp_type == -1)
-    return false;
-  resp->SetType(resp_type);
-  resp->SetTransactionID(req->transaction_id());
-  return true;
+int GetStunSuccessResponseTypeOrZero(const StunMessage& req) {
+  const int resp_type = GetStunSuccessResponseType(req.type());
+  return resp_type == -1 ? 0 : resp_type;
 }
 
-static bool InitErrorResponse(const StunMessage* req,
-                              int code,
-                              const std::string& reason,
+int GetStunErrorResponseTypeOrZero(const StunMessage& req) {
+  const int resp_type = GetStunErrorResponseType(req.type());
+  return resp_type == -1 ? 0 : resp_type;
+}
+
+static void InitErrorResponse(int code,
+                              absl::string_view reason,
                               StunMessage* resp) {
-  int resp_type = (req) ? GetStunErrorResponseType(req->type()) : -1;
-  if (resp_type == -1)
-    return false;
-  resp->SetType(resp_type);
-  resp->SetTransactionID(req->transaction_id());
   resp->AddAttribute(std::make_unique<cricket::StunErrorCodeAttribute>(
-      STUN_ATTR_ERROR_CODE, code, reason));
-  return true;
+      STUN_ATTR_ERROR_CODE, code, std::string(reason)));
 }
 
 TurnServer::TurnServer(rtc::Thread* thread)
@@ -292,7 +286,7 @@ void TurnServer::HandleStunMessage(TurnServerConnection* conn,
     // This is a non-allocate request, or a retransmit of an allocate.
     // Check that the username matches the previous username used.
     if (IsStunRequestType(msg.type()) &&
-        msg.GetByteString(STUN_ATTR_USERNAME)->GetString() !=
+        msg.GetByteString(STUN_ATTR_USERNAME)->string_view() !=
             allocation->username()) {
       SendErrorResponse(conn, &msg, STUN_ERROR_WRONG_CREDENTIALS,
                         STUN_ERROR_REASON_WRONG_CREDENTIALS);
@@ -313,15 +307,16 @@ bool TurnServer::GetKey(const StunMessage* msg, std::string* key) {
     return false;
   }
 
-  std::string username = username_attr->GetString();
-  return (auth_hook_ != NULL && auth_hook_->GetKey(username, realm_, key));
+  return (auth_hook_ != NULL &&
+          auth_hook_->GetKey(std::string(username_attr->string_view()), realm_,
+                             key));
 }
 
 bool TurnServer::CheckAuthorization(TurnServerConnection* conn,
                                     StunMessage* msg,
                                     const char* data,
                                     size_t size,
-                                    const std::string& key) {
+                                    absl::string_view key) {
   // RFC 5389, 10.2.2.
   RTC_DCHECK(IsStunRequestType(msg->type()));
   const StunByteStringAttribute* mi_attr =
@@ -348,14 +343,14 @@ bool TurnServer::CheckAuthorization(TurnServerConnection* conn,
   }
 
   // Fail if bad nonce.
-  if (!ValidateNonce(nonce_attr->GetString())) {
+  if (!ValidateNonce(nonce_attr->string_view())) {
     SendErrorResponseWithRealmAndNonce(conn, msg, STUN_ERROR_STALE_NONCE,
                                        STUN_ERROR_REASON_STALE_NONCE);
     return false;
   }
 
   // Fail if bad MESSAGE_INTEGRITY.
-  if (key.empty() || msg->ValidateMessageIntegrity(key) !=
+  if (key.empty() || msg->ValidateMessageIntegrity(std::string(key)) !=
                          StunMessage::IntegrityStatus::kIntegrityOk) {
     SendErrorResponseWithRealmAndNonce(conn, msg, STUN_ERROR_UNAUTHORIZED,
                                        STUN_ERROR_REASON_UNAUTHORIZED);
@@ -365,14 +360,14 @@ bool TurnServer::CheckAuthorization(TurnServerConnection* conn,
   // Fail if one-time-use nonce feature is enabled.
   TurnServerAllocation* allocation = FindAllocation(conn);
   if (enable_otu_nonce_ && allocation &&
-      allocation->last_nonce() == nonce_attr->GetString()) {
+      allocation->last_nonce() == nonce_attr->string_view()) {
     SendErrorResponseWithRealmAndNonce(conn, msg, STUN_ERROR_STALE_NONCE,
                                        STUN_ERROR_REASON_STALE_NONCE);
     return false;
   }
 
   if (allocation) {
-    allocation->set_last_nonce(nonce_attr->GetString());
+    allocation->set_last_nonce(nonce_attr->string_view());
   }
   // Success.
   return true;
@@ -380,9 +375,8 @@ bool TurnServer::CheckAuthorization(TurnServerConnection* conn,
 
 void TurnServer::HandleBindingRequest(TurnServerConnection* conn,
                                       const StunMessage* req) {
-  StunMessage response;
-  InitResponse(req, &response);
-
+  StunMessage response(GetStunSuccessResponseTypeOrZero(*req),
+                       req->transaction_id());
   // Tell the user the address that we received their request from.
   auto mapped_addr_attr = std::make_unique<StunXorAddressAttribute>(
       STUN_ATTR_XOR_MAPPED_ADDRESS, conn->src());
@@ -393,7 +387,7 @@ void TurnServer::HandleBindingRequest(TurnServerConnection* conn,
 
 void TurnServer::HandleAllocateRequest(TurnServerConnection* conn,
                                        const TurnMessage* msg,
-                                       const std::string& key) {
+                                       absl::string_view key) {
   // Check the parameters in the request.
   const StunUInt32Attribute* transport_attr =
       msg->GetUInt32(STUN_ATTR_REQUESTED_TRANSPORT);
@@ -432,7 +426,7 @@ std::string TurnServer::GenerateNonce(int64_t now) const {
   return nonce;
 }
 
-bool TurnServer::ValidateNonce(const std::string& nonce) const {
+bool TurnServer::ValidateNonce(absl::string_view nonce) const {
   // Check the size.
   if (nonce.size() != kNonceSize) {
     return false;
@@ -465,7 +459,7 @@ TurnServerAllocation* TurnServer::FindAllocation(TurnServerConnection* conn) {
 
 TurnServerAllocation* TurnServer::CreateAllocation(TurnServerConnection* conn,
                                                    int proto,
-                                                   const std::string& key) {
+                                                   absl::string_view key) {
   rtc::AsyncPacketSocket* external_socket =
       (external_socket_factory_)
           ? external_socket_factory_->CreateUdpSocket(external_addr_, 0, 0)
@@ -485,10 +479,11 @@ TurnServerAllocation* TurnServer::CreateAllocation(TurnServerConnection* conn,
 void TurnServer::SendErrorResponse(TurnServerConnection* conn,
                                    const StunMessage* req,
                                    int code,
-                                   const std::string& reason) {
+                                   absl::string_view reason) {
   RTC_DCHECK_RUN_ON(thread_);
-  TurnMessage resp;
-  InitErrorResponse(req, code, reason, &resp);
+  TurnMessage resp(GetStunErrorResponseTypeOrZero(*req), req->transaction_id());
+  InitErrorResponse(code, reason, &resp);
+
   RTC_LOG(LS_INFO) << "Sending error response, type=" << resp.type()
                    << ", code=" << code << ", reason=" << reason;
   SendStun(conn, &resp);
@@ -497,9 +492,9 @@ void TurnServer::SendErrorResponse(TurnServerConnection* conn,
 void TurnServer::SendErrorResponseWithRealmAndNonce(TurnServerConnection* conn,
                                                     const StunMessage* msg,
                                                     int code,
-                                                    const std::string& reason) {
-  TurnMessage resp;
-  InitErrorResponse(msg, code, reason, &resp);
+                                                    absl::string_view reason) {
+  TurnMessage resp(GetStunErrorResponseTypeOrZero(*msg), msg->transaction_id());
+  InitErrorResponse(code, reason, &resp);
 
   int64_t timestamp = rtc::TimeMillis();
   if (ts_for_next_nonce_) {
@@ -517,8 +512,8 @@ void TurnServer::SendErrorResponseWithAlternateServer(
     TurnServerConnection* conn,
     const StunMessage* msg,
     const rtc::SocketAddress& addr) {
-  TurnMessage resp;
-  InitErrorResponse(msg, STUN_ERROR_TRY_ALTERNATE,
+  TurnMessage resp(GetStunErrorResponseTypeOrZero(*msg), msg->transaction_id());
+  InitErrorResponse(STUN_ERROR_TRY_ALTERNATE,
                     STUN_ERROR_REASON_TRY_ALTERNATE_SERVER, &resp);
   resp.AddAttribute(
       std::make_unique<StunAddressAttribute>(STUN_ATTR_ALTERNATE_SERVER, addr));
@@ -575,8 +570,7 @@ void TurnServer::DestroyInternalSocket(rtc::AsyncPacketSocket* socket) {
     // We must destroy the socket async to avoid invalidating the sigslot
     // callback list iterator inside a sigslot callback. (In other words,
     // deleting an object from within a callback from that object).
-    thread_->PostTask(webrtc::ToQueuedTask(
-        [socket_to_delete = std::move(socket_to_delete)] {}));
+    thread_->PostTask([socket_to_delete = std::move(socket_to_delete)] {});
   }
 }
 
@@ -608,7 +602,7 @@ TurnServerAllocation::TurnServerAllocation(TurnServer* server,
                                            rtc::Thread* thread,
                                            const TurnServerConnection& conn,
                                            rtc::AsyncPacketSocket* socket,
-                                           const std::string& key)
+                                           absl::string_view key)
     : server_(server),
       thread_(thread),
       conn_(conn),
@@ -668,10 +662,10 @@ void TurnServerAllocation::HandleAllocateRequest(const TurnMessage* msg) {
   const StunByteStringAttribute* username_attr =
       msg->GetByteString(STUN_ATTR_USERNAME);
   RTC_DCHECK(username_attr != NULL);
-  username_ = username_attr->GetString();
+  username_ = std::string(username_attr->string_view());
 
   // Figure out the lifetime and start the allocation timer.
-  int lifetime_secs = ComputeLifetime(msg);
+  int lifetime_secs = ComputeLifetime(*msg);
   thread_->PostDelayed(RTC_FROM_HERE, lifetime_secs * 1000, this,
                        MSG_ALLOCATION_TIMEOUT);
 
@@ -679,8 +673,8 @@ void TurnServerAllocation::HandleAllocateRequest(const TurnMessage* msg) {
                    << ": Created allocation with lifetime=" << lifetime_secs;
 
   // We've already validated all the important bits; just send a response here.
-  TurnMessage response;
-  InitResponse(msg, &response);
+  TurnMessage response(GetStunSuccessResponseTypeOrZero(*msg),
+                       msg->transaction_id());
 
   auto mapped_addr_attr = std::make_unique<StunXorAddressAttribute>(
       STUN_ATTR_XOR_MAPPED_ADDRESS, conn_.src());
@@ -697,7 +691,7 @@ void TurnServerAllocation::HandleAllocateRequest(const TurnMessage* msg) {
 
 void TurnServerAllocation::HandleRefreshRequest(const TurnMessage* msg) {
   // Figure out the new lifetime.
-  int lifetime_secs = ComputeLifetime(msg);
+  int lifetime_secs = ComputeLifetime(*msg);
 
   // Reset the expiration timer.
   thread_->Clear(this, MSG_ALLOCATION_TIMEOUT);
@@ -708,8 +702,8 @@ void TurnServerAllocation::HandleRefreshRequest(const TurnMessage* msg) {
                    << ": Refreshed allocation, lifetime=" << lifetime_secs;
 
   // Send a success response with a LIFETIME attribute.
-  TurnMessage response;
-  InitResponse(msg, &response);
+  TurnMessage response(GetStunSuccessResponseTypeOrZero(*msg),
+                       msg->transaction_id());
 
   auto lifetime_attr =
       std::make_unique<StunUInt32Attribute>(STUN_ATTR_LIFETIME, lifetime_secs);
@@ -763,8 +757,8 @@ void TurnServerAllocation::HandleCreatePermissionRequest(
                    << peer_attr->GetAddress().ToSensitiveString();
 
   // Send a success response.
-  TurnMessage response;
-  InitResponse(msg, &response);
+  TurnMessage response(GetStunSuccessResponseTypeOrZero(*msg),
+                       msg->transaction_id());
   SendResponse(&response);
 }
 
@@ -812,8 +806,8 @@ void TurnServerAllocation::HandleChannelBindRequest(const TurnMessage* msg) {
                    << ", peer=" << peer_attr->GetAddress().ToSensitiveString();
 
   // Send a success response.
-  TurnMessage response;
-  InitResponse(msg, &response);
+  TurnMessage response(GetStunSuccessResponseTypeOrZero(*msg),
+                       msg->transaction_id());
   SendResponse(&response);
 }
 
@@ -850,9 +844,7 @@ void TurnServerAllocation::OnExternalPacket(
   } else if (!server_->enable_permission_checks_ ||
              HasPermission(addr.ipaddr())) {
     // No channel, but a permission exists. Send as a data indication.
-    TurnMessage msg;
-    msg.SetType(TURN_DATA_INDICATION);
-    msg.SetTransactionID(rtc::CreateRandomString(kStunTransactionIdLength));
+    TurnMessage msg(TURN_DATA_INDICATION);
     msg.AddAttribute(std::make_unique<StunXorAddressAttribute>(
         STUN_ATTR_XOR_PEER_ADDRESS, addr));
     msg.AddAttribute(
@@ -865,10 +857,10 @@ void TurnServerAllocation::OnExternalPacket(
   }
 }
 
-int TurnServerAllocation::ComputeLifetime(const TurnMessage* msg) {
+int TurnServerAllocation::ComputeLifetime(const TurnMessage& msg) {
   // Return the smaller of our default lifetime and the requested lifetime.
   int lifetime = kDefaultAllocationTimeout / 1000;  // convert to seconds
-  const StunUInt32Attribute* lifetime_attr = msg->GetUInt32(STUN_ATTR_LIFETIME);
+  const StunUInt32Attribute* lifetime_attr = msg.GetUInt32(STUN_ATTR_LIFETIME);
   if (lifetime_attr && static_cast<int>(lifetime_attr->value()) < lifetime) {
     lifetime = static_cast<int>(lifetime_attr->value());
   }
@@ -933,7 +925,7 @@ void TurnServerAllocation::SendBadRequestResponse(const TurnMessage* req) {
 
 void TurnServerAllocation::SendErrorResponse(const TurnMessage* req,
                                              int code,
-                                             const std::string& reason) {
+                                             absl::string_view reason) {
   server_->SendErrorResponse(&conn_, req, code, reason);
 }
 

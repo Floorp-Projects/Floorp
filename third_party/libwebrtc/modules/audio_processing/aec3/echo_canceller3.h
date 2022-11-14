@@ -13,6 +13,7 @@
 
 #include <stddef.h>
 
+#include <atomic>
 #include <memory>
 #include <vector>
 
@@ -185,7 +186,7 @@ class EchoCanceller3 : public EchoControl {
       RTC_GUARDED_BY(render_race_checker_);
 
   // State that may be accessed by the capture thread.
-  static int instance_count_;
+  static std::atomic<int> instance_count_;
   std::unique_ptr<ApmDataDumper> data_dumper_;
   const EchoCanceller3Config config_;
   const int sample_rate_hz_;
@@ -210,12 +211,10 @@ class EchoCanceller3 : public EchoControl {
       RTC_GUARDED_BY(capture_race_checker_);
   bool saturated_microphone_signal_ RTC_GUARDED_BY(capture_race_checker_) =
       false;
-  std::vector<std::vector<std::vector<float>>> render_block_
+  Block render_block_ RTC_GUARDED_BY(capture_race_checker_);
+  std::unique_ptr<Block> linear_output_block_
       RTC_GUARDED_BY(capture_race_checker_);
-  std::unique_ptr<std::vector<std::vector<std::vector<float>>>>
-      linear_output_block_ RTC_GUARDED_BY(capture_race_checker_);
-  std::vector<std::vector<std::vector<float>>> capture_block_
-      RTC_GUARDED_BY(capture_race_checker_);
+  Block capture_block_ RTC_GUARDED_BY(capture_race_checker_);
   std::vector<std::vector<rtc::ArrayView<float>>> render_sub_frame_view_
       RTC_GUARDED_BY(capture_race_checker_);
   std::vector<std::vector<rtc::ArrayView<float>>> linear_output_sub_frame_view_

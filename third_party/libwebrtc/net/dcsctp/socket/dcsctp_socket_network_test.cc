@@ -34,7 +34,6 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/strings/string_format.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/time_utils.h"
 #include "test/gmock.h"
 
@@ -157,8 +156,7 @@ class SctpActor : public rtc::MessageHandlerAutoCleanup,
     emulated_socket.SetReceiver([this](rtc::CopyOnWriteBuffer buf) {
       // The receiver will be executed on the NetworkEmulation task queue, but
       // the dcSCTP socket is owned by `thread_` and is not thread-safe.
-      thread_->PostTask(webrtc::ToQueuedTask(
-          [this, buf] { this->sctp_socket_.ReceivePacket(buf); }));
+      thread_->PostTask([this, buf] { this->sctp_socket_.ReceivePacket(buf); });
     });
   }
 

@@ -220,7 +220,7 @@ void Plot::PrintPythonCode() const {
   printf("plt.ylabel(\'%s\')\n", yaxis_label_.c_str());
   printf("plt.title(\'%s\')\n", title_.c_str());
   printf("fig = plt.gcf()\n");
-  printf("fig.canvas.set_window_title(\'%s\')\n", id_.c_str());
+  printf("fig.canvas.manager.set_window_title(\'%s\')\n", id_.c_str());
   if (!yaxis_tick_labels_.empty()) {
     printf("yaxis_tick_labels = [");
     for (const auto& kv : yaxis_tick_labels_) {

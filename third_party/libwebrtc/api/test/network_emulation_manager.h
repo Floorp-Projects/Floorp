@@ -148,6 +148,16 @@ class EmulatedNetworkManagerInterface {
 
 enum class TimeMode { kRealTime, kSimulated };
 
+// Called implicitly when parsing an ABSL_FLAG of type TimeMode.
+// from the command line flag value `text`.
+// Returns `true` and sets `*mode` on success;
+// returns `false` and sets `*error` on failure.
+bool AbslParseFlag(absl::string_view text, TimeMode* mode, std::string* error);
+
+// AbslUnparseFlag returns a textual flag value corresponding to the TimeMode
+// `mode`.
+std::string AbslUnparseFlag(TimeMode mode);
+
 // Provides an API for creating and configuring emulated network layer.
 // All objects returned by this API are owned by NetworkEmulationManager itself
 // and will be deleted when manager will be deleted.

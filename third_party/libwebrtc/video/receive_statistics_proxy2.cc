@@ -18,7 +18,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
@@ -98,15 +97,11 @@ bool IsCurrentTaskQueueOrThread(TaskQueueBase* task_queue) {
 
 }  // namespace
 
-ReceiveStatisticsProxy::ReceiveStatisticsProxy(
-    uint32_t remote_ssrc,
-    Clock* clock,
-    TaskQueueBase* worker_thread,
-    const FieldTrialsView& field_trials)
+ReceiveStatisticsProxy::ReceiveStatisticsProxy(uint32_t remote_ssrc,
+                                               Clock* clock,
+                                               TaskQueueBase* worker_thread)
     : clock_(clock),
       start_ms_(clock->TimeInMilliseconds()),
-      enable_decode_time_histograms_(
-          !field_trials.IsEnabled("WebRTC-DecodeTimeHistogramsKillSwitch")),
       last_sample_time_(clock->TimeInMilliseconds()),
       fps_threshold_(kLowFpsThreshold,
                      kHighFpsThreshold,
@@ -584,63 +579,6 @@ void ReceiveStatisticsProxy::UpdateFramerate(int64_t now_ms) const {
   stats_.network_frame_rate = static_cast<int>(framerate);
 }
 
-void ReceiveStatisticsProxy::UpdateDecodeTimeHistograms(
-    int width,
-    int height,
-    int decode_time_ms) const {
-  RTC_DCHECK_RUN_ON(&main_thread_);
-
-  bool is_4k = (width == 3840 || width == 4096) && height == 2160;
-  bool is_hd = width == 1920 && height == 1080;
-  // Only update histograms for 4k/HD and VP9/H264.
-  if ((is_4k || is_hd) && (last_codec_type_ == kVideoCodecVP9 ||
-                           last_codec_type_ == kVideoCodecH264)) {
-    const std::string kDecodeTimeUmaPrefix =
-        "WebRTC.Video.DecodeTimePerFrameInMs.";
-
-    // Each histogram needs its own line for it to not be reused in the wrong
-    // way when the format changes.
-    if (last_codec_type_ == kVideoCodecVP9) {
-      bool is_sw_decoder =
-          stats_.decoder_implementation_name.compare(0, 6, "libvpx") == 0;
-      if (is_4k) {
-        if (is_sw_decoder)
-          RTC_HISTOGRAM_COUNTS_1000(kDecodeTimeUmaPrefix + "Vp9.4k.Sw",
-                                    decode_time_ms);
-        else
-          RTC_HISTOGRAM_COUNTS_1000(kDecodeTimeUmaPrefix + "Vp9.4k.Hw",
-                                    decode_time_ms);
-      } else {
-        if (is_sw_decoder)
-          RTC_HISTOGRAM_COUNTS_1000(kDecodeTimeUmaPrefix + "Vp9.Hd.Sw",
-                                    decode_time_ms);
-        else
-          RTC_HISTOGRAM_COUNTS_1000(kDecodeTimeUmaPrefix + "Vp9.Hd.Hw",
-                                    decode_time_ms);
-      }
-    } else {
-      bool is_sw_decoder =
-          stats_.decoder_implementation_name.compare(0, 6, "FFmpeg") == 0;
-      if (is_4k) {
-        if (is_sw_decoder)
-          RTC_HISTOGRAM_COUNTS_1000(kDecodeTimeUmaPrefix + "H264.4k.Sw",
-                                    decode_time_ms);
-        else
-          RTC_HISTOGRAM_COUNTS_1000(kDecodeTimeUmaPrefix + "H264.4k.Hw",
-                                    decode_time_ms);
-
-      } else {
-        if (is_sw_decoder)
-          RTC_HISTOGRAM_COUNTS_1000(kDecodeTimeUmaPrefix + "H264.Hd.Sw",
-                                    decode_time_ms);
-        else
-          RTC_HISTOGRAM_COUNTS_1000(kDecodeTimeUmaPrefix + "H264.Hd.Hw",
-                                    decode_time_ms);
-      }
-    }
-  }
-}
-
 absl::optional<int64_t>
 ReceiveStatisticsProxy::GetCurrentEstimatedPlayoutNtpTimestampMs(
     int64_t now_ms) const {
@@ -653,11 +591,11 @@ ReceiveStatisticsProxy::GetCurrentEstimatedPlayoutNtpTimestampMs(
   return *last_estimated_playout_ntp_timestamp_ms_ + elapsed_ms;
 }
 
-VideoReceiveStream::Stats ReceiveStatisticsProxy::GetStats() const {
+VideoReceiveStreamInterface::Stats ReceiveStatisticsProxy::GetStats() const {
   RTC_DCHECK_RUN_ON(&main_thread_);
 
-  // Like VideoReceiveStream::GetStats, called on the worker thread from
-  // StatsCollector::ExtractMediaInfo via worker_thread()->Invoke().
+  // Like VideoReceiveStreamInterface::GetStats, called on the worker thread
+  // from StatsCollector::ExtractMediaInfo via worker_thread()->Invoke().
   // WebRtcVideoChannel::GetStats(), GetVideoReceiverInfo.
 
   // Get current frame rates here, as only updating them on new frames prevents
@@ -704,7 +642,7 @@ VideoReceiveStream::Stats ReceiveStatisticsProxy::GetStats() const {
 
 void ReceiveStatisticsProxy::OnIncomingPayloadType(int payload_type) {
   RTC_DCHECK_RUN_ON(&decode_queue_);
-  worker_thread_->PostTask(ToQueuedTask(task_safety_, [payload_type, this]() {
+  worker_thread_->PostTask(SafeTask(task_safety_.flag(), [payload_type, this] {
     RTC_DCHECK_RUN_ON(&main_thread_);
     stats_.current_payload_type = payload_type;
   }));
@@ -713,8 +651,8 @@ void ReceiveStatisticsProxy::OnIncomingPayloadType(int payload_type) {
 void ReceiveStatisticsProxy::OnDecoderImplementationName(
     const char* implementation_name) {
   RTC_DCHECK_RUN_ON(&decode_queue_);
-  worker_thread_->PostTask(ToQueuedTask(
-      task_safety_, [name = std::string(implementation_name), this]() {
+  worker_thread_->PostTask(SafeTask(
+      task_safety_.flag(), [name = std::string(implementation_name), this]() {
         RTC_DCHECK_RUN_ON(&main_thread_);
         stats_.decoder_implementation_name = name;
       }));
@@ -730,8 +668,8 @@ void ReceiveStatisticsProxy::OnFrameBufferTimingsUpdated(
   // Only called on main_thread_ with FrameBuffer3
   if (!worker_thread_->IsCurrent()) {
     RTC_DCHECK_RUN_ON(&decode_queue_);
-    worker_thread_->PostTask(ToQueuedTask(
-        task_safety_,
+    worker_thread_->PostTask(SafeTask(
+        task_safety_.flag(),
         [max_decode_ms, current_delay_ms, target_delay_ms, jitter_buffer_ms,
          min_playout_delay_ms, render_delay_ms, this]() {
           OnFrameBufferTimingsUpdated(max_decode_ms, current_delay_ms,
@@ -766,8 +704,9 @@ void ReceiveStatisticsProxy::OnTimingFrameInfoUpdated(
   // Only called on main_thread_ with FrameBuffer3
   if (!worker_thread_->IsCurrent()) {
     RTC_DCHECK_RUN_ON(&decode_queue_);
-    worker_thread_->PostTask(ToQueuedTask(
-        task_safety_, [info, this]() { OnTimingFrameInfoUpdated(info); }));
+    worker_thread_->PostTask(SafeTask(task_safety_.flag(), [info, this]() {
+      OnTimingFrameInfoUpdated(info);
+    }));
     return;
   }
   RTC_DCHECK_RUN_ON(&main_thread_);
@@ -807,7 +746,7 @@ void ReceiveStatisticsProxy::RtcpPacketTypesCounterUpdated(
     // runs after the `ReceiveStatisticsProxy` has been deleted. In such a
     // case the packet_counter update won't be recorded.
     worker_thread_->PostTask(
-        ToQueuedTask(task_safety_, [ssrc, packet_counter, this]() {
+        SafeTask(task_safety_.flag(), [ssrc, packet_counter, this]() {
           RtcpPacketTypesCounterUpdated(ssrc, packet_counter);
         }));
     return;
@@ -829,35 +768,44 @@ void ReceiveStatisticsProxy::OnCname(uint32_t ssrc, absl::string_view cname) {
 
 void ReceiveStatisticsProxy::OnDecodedFrame(const VideoFrame& frame,
                                             absl::optional<uint8_t> qp,
-                                            int32_t decode_time_ms,
+                                            TimeDelta decode_time,
                                             VideoContentType content_type) {
   webrtc::TimeDelta processing_delay = webrtc::TimeDelta::Millis(0);
   webrtc::Timestamp current_time = clock_->CurrentTime();
   // TODO(bugs.webrtc.org/13984): some tests do not fill packet_infos().
+  webrtc::TimeDelta assembly_time = webrtc::TimeDelta::Millis(0);
   if (frame.packet_infos().size() > 0) {
-    auto first_packet = std::min_element(
+    const auto [first_packet, last_packet] = std::minmax_element(
         frame.packet_infos().cbegin(), frame.packet_infos().cend(),
         [](const webrtc::RtpPacketInfo& a, const webrtc::RtpPacketInfo& b) {
           return a.receive_time() < b.receive_time();
         });
-    processing_delay = current_time - first_packet->receive_time();
+    if (first_packet->receive_time().IsFinite()) {
+      processing_delay = current_time - first_packet->receive_time();
+      // Extract frame assembly time (i.e. time between earliest and latest
+      // packet arrival). Note: for single-packet frames this will be 0.
+      assembly_time =
+          last_packet->receive_time() - first_packet->receive_time();
+    }
   }
   // See VCMDecodedFrameCallback::Decoded for more info on what thread/queue we
   // may be on. E.g. on iOS this gets called on
   // "com.apple.coremedia.decompressionsession.clientcallback"
   VideoFrameMetaData meta(frame, current_time);
-  worker_thread_->PostTask(ToQueuedTask(task_safety_, [meta, qp, decode_time_ms,
-                                                       processing_delay,
-                                                       content_type, this]() {
-    OnDecodedFrame(meta, qp, decode_time_ms, processing_delay, content_type);
-  }));
+  worker_thread_->PostTask(
+      SafeTask(task_safety_.flag(), [meta, qp, decode_time, processing_delay,
+                                     assembly_time, content_type, this]() {
+        OnDecodedFrame(meta, qp, decode_time, processing_delay, assembly_time,
+                       content_type);
+      }));
 }
 
 void ReceiveStatisticsProxy::OnDecodedFrame(
     const VideoFrameMetaData& frame_meta,
     absl::optional<uint8_t> qp,
-    int32_t decode_time_ms,
+    TimeDelta decode_time,
     webrtc::TimeDelta processing_delay,
+    webrtc::TimeDelta assembly_time,
     VideoContentType content_type) {
   RTC_DCHECK_RUN_ON(&main_thread_);
 
@@ -895,13 +843,13 @@ void ReceiveStatisticsProxy::OnDecodedFrame(
         << "QP sum was already set and no QP was given for a frame.";
     stats_.qp_sum.reset();
   }
-  decode_time_counter_.Add(decode_time_ms);
-  stats_.decode_ms = decode_time_ms;
-  stats_.total_decode_time_ms += decode_time_ms;
+  decode_time_counter_.Add(decode_time.ms());
+  stats_.decode_ms = decode_time.ms();
+  stats_.total_decode_time += decode_time;
   stats_.total_processing_delay += processing_delay;
-  if (enable_decode_time_histograms_) {
-    UpdateDecodeTimeHistograms(frame_meta.width, frame_meta.height,
-                               decode_time_ms);
+  stats_.total_assembly_time += assembly_time;
+  if (!assembly_time.IsZero()) {
+    ++stats_.frames_assembled_from_multiple_packets;
   }
 
   last_content_type_ = content_type;
@@ -1031,10 +979,11 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
   // See FrameBuffer2 for more details.
   TRACE_EVENT2("webrtc", "ReceiveStatisticsProxy::OnDroppedFrames",
                "remote_ssrc", remote_ssrc_, "frames_dropped", frames_dropped);
-  worker_thread_->PostTask(ToQueuedTask(task_safety_, [frames_dropped, this]() {
-    RTC_DCHECK_RUN_ON(&main_thread_);
-    stats_.frames_dropped += frames_dropped;
-  }));
+  worker_thread_->PostTask(
+      SafeTask(task_safety_.flag(), [frames_dropped, this]() {
+        RTC_DCHECK_RUN_ON(&main_thread_);
+        stats_.frames_dropped += frames_dropped;
+      }));
 }
 
 void ReceiveStatisticsProxy::OnDiscardedPackets(uint32_t packets_discarded) {
@@ -1044,7 +993,7 @@ void ReceiveStatisticsProxy::OnDiscardedPackets(uint32_t packets_discarded) {
                "remote_ssrc", remote_ssrc_, "packets_discarded",
                packets_discarded);
   worker_thread_->PostTask(
-      ToQueuedTask(task_safety_, [packets_discarded, this]() {
+      SafeTask(task_safety_.flag(), [packets_discarded, this]() {
         RTC_DCHECK_RUN_ON(&main_thread_);
         stats_.packets_discarded += packets_discarded;
       }));
@@ -1052,14 +1001,15 @@ void ReceiveStatisticsProxy::OnDiscardedPackets(uint32_t packets_discarded) {
 
 void ReceiveStatisticsProxy::OnPreDecode(VideoCodecType codec_type, int qp) {
   RTC_DCHECK_RUN_ON(&decode_queue_);
-  worker_thread_->PostTask(ToQueuedTask(task_safety_, [codec_type, qp, this]() {
-    RTC_DCHECK_RUN_ON(&main_thread_);
-    last_codec_type_ = codec_type;
-    if (last_codec_type_ == kVideoCodecVP8 && qp != -1) {
-      qp_counters_.vp8.Add(qp);
-      qp_sample_.Add(qp);
-    }
-  }));
+  worker_thread_->PostTask(
+      SafeTask(task_safety_.flag(), [codec_type, qp, this]() {
+        RTC_DCHECK_RUN_ON(&main_thread_);
+        last_codec_type_ = codec_type;
+        if (last_codec_type_ == kVideoCodecVP8 && qp != -1) {
+          qp_counters_.vp8.Add(qp);
+          qp_sample_.Add(qp);
+        }
+      }));
 }
 
 void ReceiveStatisticsProxy::OnStreamInactive() {

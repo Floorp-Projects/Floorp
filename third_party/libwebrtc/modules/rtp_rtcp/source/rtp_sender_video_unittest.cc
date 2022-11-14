@@ -38,6 +38,7 @@
 #include "rtc_base/arraysize.h"
 #include "rtc_base/rate_limiter.h"
 #include "rtc_base/task_queue_for_test.h"
+#include "rtc_base/thread.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/mock_frame_transformer.h"
@@ -197,6 +198,7 @@ class RtpSenderVideoTest : public ::testing::TestWithParam<bool> {
       int version);
 
  protected:
+  rtc::AutoThread main_thread_;
   const RtpRtcpInterface::Configuration config_;
   FieldTrials field_trials_;
   SimulatedClock fake_clock_;
@@ -1416,6 +1418,7 @@ class RtpSenderVideoWithFrameTransformerTest : public ::testing::Test {
   }
 
  protected:
+  rtc::AutoThread main_thread_;
   FieldTrialBasedConfig field_trials_;
   SimulatedClock fake_clock_;
   LoopbackTransportTest transport_;

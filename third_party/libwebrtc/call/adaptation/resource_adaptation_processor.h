@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/adaptation/resource.h"
 #include "api/rtp_parameters.h"
@@ -108,7 +109,8 @@ class ResourceAdaptationProcessor : public ResourceAdaptationProcessorInterface,
 
   struct MitigationResultAndLogMessage {
     MitigationResultAndLogMessage();
-    MitigationResultAndLogMessage(MitigationResult result, std::string message);
+    MitigationResultAndLogMessage(MitigationResult result,
+                                  absl::string_view message);
     MitigationResult result;
     std::string message;
   };

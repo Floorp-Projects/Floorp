@@ -51,6 +51,7 @@ constexpr float kMinBytesRequiredToSendFactor = 0.9;
 
 RetransmissionQueue::RetransmissionQueue(
     absl::string_view log_prefix,
+    DcSctpSocketCallbacks* callbacks,
     TSN my_initial_tsn,
     size_t a_rwnd,
     SendQueue& send_queue,
@@ -59,9 +60,9 @@ RetransmissionQueue::RetransmissionQueue(
     Timer& t3_rtx,
     const DcSctpOptions& options,
     bool supports_partial_reliability,
-    bool use_message_interleaving,
-    const DcSctpSocketHandoverState* handover_state)
-    : options_(options),
+    bool use_message_interleaving)
+    : callbacks_(*callbacks),
+      options_(options),
       min_bytes_required_to_send_(options.mtu * kMinBytesRequiredToSendFactor),
       partial_reliability_(supports_partial_reliability),
       log_prefix_(std::string(log_prefix) + "tx: "),
@@ -72,25 +73,19 @@ RetransmissionQueue::RetransmissionQueue(
       on_clear_retransmission_counter_(
           std::move(on_clear_retransmission_counter)),
       t3_rtx_(t3_rtx),
-      cwnd_(handover_state ? handover_state->tx.cwnd
-                           : options_.cwnd_mtus_initial * options_.mtu),
-      rwnd_(handover_state ? handover_state->tx.rwnd : a_rwnd),
+      cwnd_(options_.cwnd_mtus_initial * options_.mtu),
+      rwnd_(a_rwnd),
       // https://tools.ietf.org/html/rfc4960#section-7.2.1
       // "The initial value of ssthresh MAY be arbitrarily high (for
       // example, implementations MAY use the size of the receiver advertised
       // window).""
-      ssthresh_(handover_state ? handover_state->tx.ssthresh : rwnd_),
-      partial_bytes_acked_(
-          handover_state ? handover_state->tx.partial_bytes_acked : 0),
+      ssthresh_(rwnd_),
+      partial_bytes_acked_(0),
       send_queue_(send_queue),
       outstanding_data_(
           data_chunk_header_size_,
-          tsn_unwrapper_.Unwrap(handover_state
-                                    ? TSN(handover_state->tx.next_tsn)
-                                    : my_initial_tsn),
-          tsn_unwrapper_.Unwrap(handover_state
-                                    ? TSN(handover_state->tx.next_tsn - 1)
-                                    : TSN(*my_initial_tsn - 1)),
+          tsn_unwrapper_.Unwrap(my_initial_tsn),
+          tsn_unwrapper_.Unwrap(TSN(*my_initial_tsn - 1)),
           [this](IsUnordered unordered, StreamID stream_id, MID message_id) {
             return send_queue_.Discard(unordered, stream_id, message_id);
           }) {}
@@ -285,6 +280,21 @@ bool RetransmissionQueue::HandleSack(TimeMs now, const SackChunk& sack) {
   OutstandingData::AckInfo ack_info = outstanding_data_.HandleSack(
       cumulative_tsn_ack, sack.gap_ack_blocks(), is_in_fast_recovery());
 
+  // Add lifecycle events for delivered messages.
+  for (LifecycleId lifecycle_id : ack_info.acked_lifecycle_ids) {
+    RTC_DLOG(LS_VERBOSE) << "Triggering OnLifecycleMessageDelivered("
+                         << lifecycle_id.value() << ")";
+    callbacks_.OnLifecycleMessageDelivered(lifecycle_id);
+    callbacks_.OnLifecycleEnd(lifecycle_id);
+  }
+  for (LifecycleId lifecycle_id : ack_info.abandoned_lifecycle_ids) {
+    RTC_DLOG(LS_VERBOSE) << "Triggering OnLifecycleMessageExpired("
+                         << lifecycle_id.value() << ", true)";
+    callbacks_.OnLifecycleMessageExpired(lifecycle_id,
+                                         /*maybe_delivered=*/true);
+    callbacks_.OnLifecycleEnd(lifecycle_id);
+  }
+
   // Update of outstanding_data_ is now done. Congestion control remains.
   UpdateReceiverWindow(sack.a_rwnd());
 
@@ -398,6 +408,17 @@ RetransmissionQueue::GetChunksForFastRetransmit(size_t bytes_in_packet) {
       outstanding_data_.GetChunksToBeFastRetransmitted(bytes_in_packet);
   RTC_DCHECK(!to_be_sent.empty());
 
+  // https://tools.ietf.org/html/rfc4960#section-7.2.4
+  // "4)  Restart the T3-rtx timer only if ... the endpoint is retransmitting
+  // the first outstanding DATA chunk sent to that address."
+  if (to_be_sent[0].first ==
+      outstanding_data_.last_cumulative_tsn_ack().next_value().Wrap()) {
+    RTC_DLOG(LS_VERBOSE)
+        << log_prefix_
+        << "First outstanding DATA to be retransmitted - restarting T3-RTX";
+    t3_rtx_.Stop();
+  }
+
   // https://tools.ietf.org/html/rfc4960#section-6.3.2
   // "Every time a DATA chunk is sent to any address (including a
   // retransmission), if the T3-rtx timer of that address is not running,
@@ -460,14 +481,17 @@ std::vector<std::pair<TSN, Data>> RetransmissionQueue::GetChunksToSend(
     rwnd_ -= chunk_size;
 
     absl::optional<UnwrappedTSN> tsn = outstanding_data_.Insert(
-        chunk_opt->data,
+        chunk_opt->data, now,
         partial_reliability_ ? chunk_opt->max_retransmissions
                              : MaxRetransmits::NoLimit(),
-        now,
-        partial_reliability_ ? chunk_opt->expires_at
-                             : TimeMs::InfiniteFuture());
+        partial_reliability_ ? chunk_opt->expires_at : TimeMs::InfiniteFuture(),
+        chunk_opt->lifecycle_id);
 
     if (tsn.has_value()) {
+      if (chunk_opt->lifecycle_id.IsSet()) {
+        RTC_DCHECK(chunk_opt->data.is_end);
+        callbacks_.OnLifecycleMessageFullySent(chunk_opt->lifecycle_id);
+      }
       to_be_sent.emplace_back(tsn->Wrap(), std::move(chunk_opt->data));
     }
   }
@@ -566,5 +590,22 @@ void RetransmissionQueue::AddHandoverState(DcSctpSocketHandoverState& state) {
   state.tx.cwnd = cwnd_;
   state.tx.ssthresh = ssthresh_;
   state.tx.partial_bytes_acked = partial_bytes_acked_;
+}
+
+void RetransmissionQueue::RestoreFromState(
+    const DcSctpSocketHandoverState& state) {
+  // Validate that the component is in pristine state.
+  RTC_DCHECK(outstanding_data_.empty());
+  RTC_DCHECK(!t3_rtx_.is_running());
+  RTC_DCHECK(partial_bytes_acked_ == 0);
+
+  cwnd_ = state.tx.cwnd;
+  rwnd_ = state.tx.rwnd;
+  ssthresh_ = state.tx.ssthresh;
+  partial_bytes_acked_ = state.tx.partial_bytes_acked;
+
+  outstanding_data_.ResetSequenceNumbers(
+      tsn_unwrapper_.Unwrap(TSN(state.tx.next_tsn)),
+      tsn_unwrapper_.Unwrap(TSN(state.tx.next_tsn - 1)));
 }
 }  // namespace dcsctp

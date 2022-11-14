@@ -36,8 +36,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/divide_round.h"
 #include "rtc_base/task_utils/repeating_task.h"
-#include "rtc_base/task_utils/to_queued_task.h"
-#include "rtc_base/time_utils.h"
+#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 namespace {
@@ -112,6 +111,11 @@ RtcpTransceiverImpl::~RtcpTransceiverImpl() = default;
 void RtcpTransceiverImpl::AddMediaReceiverRtcpObserver(
     uint32_t remote_ssrc,
     MediaReceiverRtcpObserver* observer) {
+  if (config_.receive_statistics == nullptr && remote_senders_.empty()) {
+    RTC_LOG(LS_WARNING) << config_.debug_id
+                        << "receive statistic is not set. RTCP report blocks "
+                           "will not be generated.";
+  }
   auto& stored = remote_senders_[remote_ssrc].observers;
   RTC_DCHECK(!absl::c_linear_search(stored, observer));
   stored.push_back(observer);
@@ -562,13 +566,15 @@ void RtcpTransceiverImpl::ReschedulePeriodicCompoundPackets() {
 }
 
 void RtcpTransceiverImpl::SchedulePeriodicCompoundPackets(TimeDelta delay) {
-  periodic_task_handle_ =
-      RepeatingTaskHandle::DelayedStart(config_.task_queue, delay, [this] {
+  periodic_task_handle_ = RepeatingTaskHandle::DelayedStart(
+      config_.task_queue, delay,
+      [this] {
         RTC_DCHECK(config_.schedule_periodic_compound_packets);
         RTC_DCHECK(ready_to_send_);
         SendPeriodicCompoundPacket();
         return config_.report_period;
-      });
+      },
+      TaskQueueBase::DelayPrecision::kLow, config_.clock);
 }
 
 std::vector<uint32_t> RtcpTransceiverImpl::FillReports(

@@ -25,8 +25,8 @@
 #include "api/video/video_timing.h"
 #include "modules/video_coding/frame_helpers.h"
 #include "modules/video_coding/include/video_coding_defines.h"
-#include "modules/video_coding/jitter_estimator.h"
-#include "modules/video_coding/timing.h"
+#include "modules/video_coding/timing/jitter_estimator.h"
+#include "modules/video_coding/timing/timing.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/experiments/rtt_mult_experiment.h"
 #include "rtc_base/logging.h"
@@ -83,7 +83,7 @@ FrameBuffer::~FrameBuffer() {
 
 void FrameBuffer::NextFrame(int64_t max_wait_time_ms,
                             bool keyframe_required,
-                            rtc::TaskQueue* callback_queue,
+                            TaskQueueBase* callback_queue,
                             NextFrameCallback handler) {
   RTC_DCHECK_RUN_ON(&callback_checker_);
   RTC_DCHECK(callback_queue->IsCurrent());
@@ -107,7 +107,7 @@ void FrameBuffer::StartWaitForNextFrameOnQueue() {
   RTC_DCHECK(!callback_task_.Running());
   int64_t wait_ms = FindNextFrame(clock_->CurrentTime());
   callback_task_ = RepeatingTaskHandle::DelayedStart(
-      callback_queue_->Get(), TimeDelta::Millis(wait_ms),
+      callback_queue_, TimeDelta::Millis(wait_ms),
       [this] {
         RTC_DCHECK_RUN_ON(&callback_checker_);
         // If this task has not been cancelled, we did not get any new frames
@@ -351,12 +351,6 @@ void FrameBuffer::SetProtectionMode(VCMVideoProtection mode) {
   TRACE_EVENT0("webrtc", "FrameBuffer::SetProtectionMode");
   MutexLock lock(&mutex_);
   protection_mode_ = mode;
-}
-
-void FrameBuffer::Start() {
-  TRACE_EVENT0("webrtc", "FrameBuffer::Start");
-  MutexLock lock(&mutex_);
-  stopped_ = false;
 }
 
 void FrameBuffer::Stop() {

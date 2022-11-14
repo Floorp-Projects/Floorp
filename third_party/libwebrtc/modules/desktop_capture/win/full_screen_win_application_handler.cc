@@ -11,7 +11,9 @@
 #include "modules/desktop_capture/win/full_screen_win_application_handler.h"
 
 #include <algorithm>
+#if defined(WEBRTC_MOZILLA_BUILD)
 #include <cwctype>
+#endif
 #include <memory>
 #include <string>
 #include <vector>

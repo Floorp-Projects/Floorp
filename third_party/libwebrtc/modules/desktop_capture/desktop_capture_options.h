@@ -189,6 +189,12 @@ class RTC_EXPORT DesktopCaptureOptions {
       rtc::scoped_refptr<SharedScreenCastStream> stream) {
     screencast_stream_ = stream;
   }
+
+  void set_width(uint32_t width) { width_ = width; }
+  uint32_t get_width() const { return width_; }
+
+  void set_height(uint32_t height) { height_ = height; }
+  uint32_t get_height() const { return height_; }
 #endif
 #endif
 
@@ -228,6 +234,8 @@ class RTC_EXPORT DesktopCaptureOptions {
   bool detect_updated_region_ = false;
 #if defined(WEBRTC_USE_PIPEWIRE)
   bool allow_pipewire_ = true;
+  uint32_t width_ = 0;
+  uint32_t height_ = 0;
 #endif
 };
 

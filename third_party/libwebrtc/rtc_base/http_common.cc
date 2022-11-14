@@ -305,7 +305,7 @@ HttpAuthResult HttpAuthenticate(absl::string_view challenge,
 
     std::string cnonce, ncount;
     char buffer[256];
-    sprintf(buffer, "%d", static_cast<int>(time(0)));
+    snprintf(buffer, sizeof(buffer), "%d", static_cast<int>(time(0)));
     cnonce = MD5(buffer);
     ncount = "00000001";
 

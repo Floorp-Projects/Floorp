@@ -102,8 +102,11 @@ TEST(VideoStreamTest, ReceivesVp8SimulcastFrames) {
       c->source.generator.height = 768;
       c->encoder.implementation = CodecImpl::kSoftware;
       c->encoder.codec = Codec::kVideoCodecVP8;
-      // By enabling multiple spatial layers, simulcast will be enabled for VP8.
-      c->encoder.layers.spatial = 3;
+      // Enable simulcast.
+      c->encoder.simulcast_streams = {webrtc::ScalabilityMode::kL1T1,
+                                      webrtc::ScalabilityMode::kL1T1,
+                                      webrtc::ScalabilityMode::kL1T1};
+
     });
     s.RunFor(kRunTime);
   }
@@ -213,7 +216,7 @@ TEST(VideoStreamTest, ResolutionAdaptsToAvailableBandwidth) {
     c->encoder.implementation = CodecImpl::kSoftware;
     c->encoder.codec = Codec::kVideoCodecVP9;
     // Enable SVC.
-    c->encoder.layers.spatial = 2;
+    c->encoder.simulcast_streams = {webrtc::ScalabilityMode::kL2T1};
   });
 
   // Run for a few seconds, until streams have stabilized,

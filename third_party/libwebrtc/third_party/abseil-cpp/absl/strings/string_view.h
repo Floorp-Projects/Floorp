@@ -55,8 +55,9 @@ ABSL_NAMESPACE_END
 
 #else  // ABSL_USES_STD_STRING_VIEW
 
-#if ABSL_HAVE_BUILTIN(__builtin_memcmp) || \
-    (defined(__GNUC__) && !defined(__clang__))
+#if ABSL_HAVE_BUILTIN(__builtin_memcmp) ||        \
+    (defined(__GNUC__) && !defined(__clang__)) || \
+    (defined(_MSC_VER) && _MSC_VER >= 1928)
 #define ABSL_INTERNAL_STRING_VIEW_MEMCMP __builtin_memcmp
 #else  // ABSL_HAVE_BUILTIN(__builtin_memcmp)
 #define ABSL_INTERNAL_STRING_VIEW_MEMCMP memcmp
@@ -70,6 +71,15 @@ ABSL_NAMESPACE_END
 
 namespace absl {
 ABSL_NAMESPACE_BEGIN
+
+// Mozilla added - quiets misused comma warnings resulting from
+// frequent use of the pattern:
+//     return ABSL_HARDENING_ASSERT(i < size()), ptr_[i];
+// TODO: https://bugzilla.mozilla.org/show_bug.cgi?id=1796623
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcomma"
+#endif
 
 // absl::string_view
 //
@@ -596,7 +606,7 @@ class string_view {
   }
 
  private:
-  // The constructor from std::string delegates to this constuctor.
+  // The constructor from std::string delegates to this constructor.
   // See the comment on that constructor for the rationale.
   struct SkipCheckLengthTag {};
   string_view(const char* data, size_type len, SkipCheckLengthTag) noexcept
@@ -703,6 +713,10 @@ inline string_view ClippedSubstr(string_view s, size_t pos,
 constexpr string_view NullSafeStringView(const char* p) {
   return p ? string_view(p) : string_view();
 }
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 ABSL_NAMESPACE_END
 }  // namespace absl

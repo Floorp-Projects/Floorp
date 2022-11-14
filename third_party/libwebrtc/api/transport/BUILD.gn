@@ -58,7 +58,6 @@ rtc_library("field_trial_based_config") {
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
-# TODO(nisse): Rename?
 rtc_source_set("datagram_transport_interface") {
   visibility = [ "*" ]
   sources = [ "data_channel_transport_interface.h" ]

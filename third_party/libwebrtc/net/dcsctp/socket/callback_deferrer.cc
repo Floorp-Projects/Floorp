@@ -9,6 +9,8 @@
  */
 #include "net/dcsctp/socket/callback_deferrer.h"
 
+#include "api/make_ref_counted.h"
+
 namespace dcsctp {
 namespace {
 // A wrapper around the move-only DcSctpMessage, to let it be captured in a
@@ -157,5 +159,23 @@ void CallbackDeferrer::OnTotalBufferedAmountLow() {
   RTC_DCHECK(prepared_);
   deferred_.emplace_back(
       [](DcSctpSocketCallbacks& cb) { cb.OnTotalBufferedAmountLow(); });
+}
+
+void CallbackDeferrer::OnLifecycleMessageExpired(LifecycleId lifecycle_id,
+                                                 bool maybe_delivered) {
+  // Will not be deferred - call directly.
+  underlying_.OnLifecycleMessageExpired(lifecycle_id, maybe_delivered);
+}
+void CallbackDeferrer::OnLifecycleMessageFullySent(LifecycleId lifecycle_id) {
+  // Will not be deferred - call directly.
+  underlying_.OnLifecycleMessageFullySent(lifecycle_id);
+}
+void CallbackDeferrer::OnLifecycleMessageDelivered(LifecycleId lifecycle_id) {
+  // Will not be deferred - call directly.
+  underlying_.OnLifecycleMessageDelivered(lifecycle_id);
+}
+void CallbackDeferrer::OnLifecycleEnd(LifecycleId lifecycle_id) {
+  // Will not be deferred - call directly.
+  underlying_.OnLifecycleEnd(lifecycle_id);
 }
 }  // namespace dcsctp

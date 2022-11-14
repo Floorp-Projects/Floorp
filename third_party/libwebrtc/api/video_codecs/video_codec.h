@@ -20,6 +20,7 @@
 #include "api/video/video_bitrate_allocation.h"
 #include "api/video/video_codec_type.h"
 #include "api/video_codecs/scalability_mode.h"
+#include "api/video_codecs/simulcast_stream.h"
 #include "api/video_codecs/spatial_layer.h"
 #include "rtc_base/system/rtc_export.h"
 
@@ -43,11 +44,14 @@ struct VideoCodecVP8 {
   bool operator!=(const VideoCodecVP8& other) const {
     return !(*this == other);
   }
-  VideoCodecComplexity complexity;
+  // Temporary utility method for transition deleting numberOfTemporalLayers
+  // setting (replaced by ScalabilityMode).
+  void SetNumberOfTemporalLayers(unsigned char n) {
+    numberOfTemporalLayers = n;
+  }
   unsigned char numberOfTemporalLayers;
   bool denoisingOn;
   bool automaticResizeOn;
-  bool frameDroppingOn;
   int keyFrameInterval;
 };
 
@@ -63,10 +67,13 @@ struct VideoCodecVP9 {
   bool operator!=(const VideoCodecVP9& other) const {
     return !(*this == other);
   }
-  VideoCodecComplexity complexity;
+  // Temporary utility method for transition deleting numberOfTemporalLayers
+  // setting (replaced by ScalabilityMode).
+  void SetNumberOfTemporalLayers(unsigned char n) {
+    numberOfTemporalLayers = n;
+  }
   unsigned char numberOfTemporalLayers;
   bool denoisingOn;
-  bool frameDroppingOn;
   int keyFrameInterval;
   bool adaptiveQpMode;
   bool automaticResizeOn;
@@ -81,7 +88,11 @@ struct VideoCodecH264 {
   bool operator!=(const VideoCodecH264& other) const {
     return !(*this == other);
   }
-  bool frameDroppingOn;
+  // Temporary utility method for transition deleting numberOfTemporalLayers
+  // setting (replaced by ScalabilityMode).
+  void SetNumberOfTemporalLayers(unsigned char n) {
+    numberOfTemporalLayers = n;
+  }
   int keyFrameInterval;
   double scaleDownBy;
   uint8_t numberOfTemporalLayers;
@@ -118,6 +129,9 @@ class RTC_EXPORT VideoCodec {
   VideoCodecComplexity GetVideoEncoderComplexity() const;
   void SetVideoEncoderComplexity(VideoCodecComplexity complexity_setting);
 
+  bool GetFrameDropEnabled() const;
+  void SetFrameDropEnabled(bool enabled);
+
   // Public variables. TODO(hta): Make them private with accessors.
   VideoCodecType codecType;
 
@@ -137,7 +151,7 @@ class RTC_EXPORT VideoCodec {
 
   unsigned int qpMax;
   unsigned char numberOfSimulcastStreams;
-  SpatialLayer simulcastStream[kMaxSimulcastStreams];
+  SimulcastStream simulcastStream[kMaxSimulcastStreams];
   SpatialLayer spatialLayers[kMaxSpatialLayers];
 
   VideoCodecMode mode;
@@ -180,7 +194,8 @@ class RTC_EXPORT VideoCodec {
   absl::optional<ScalabilityMode> scalability_mode_;
   // 'complexity_' indicates the CPU capability of the client. It's used to
   // determine encoder CPU complexity (e.g., cpu_used for VP8, VP9. and AV1).
-  absl::optional<VideoCodecComplexity> complexity_;
+  VideoCodecComplexity complexity_;
+  bool frame_drop_enabled_ = false;
 };
 
 }  // namespace webrtc

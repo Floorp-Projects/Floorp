@@ -80,6 +80,7 @@ class MediaStreamTest : public ::testing::Test {
     EXPECT_FALSE(track->enabled());
   }
 
+  rtc::AutoThread main_thread_;
   scoped_refptr<MediaStreamInterface> stream_;
   scoped_refptr<AudioTrackInterface> audio_track_;
   scoped_refptr<VideoTrackInterface> video_track_;

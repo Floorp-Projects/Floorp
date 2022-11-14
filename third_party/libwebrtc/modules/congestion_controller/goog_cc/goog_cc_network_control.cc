@@ -540,7 +540,6 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
 
   NetworkControlUpdate update;
   bool recovered_from_overuse = false;
-  bool backoff_in_alr = false;
 
   DelayBasedBwe::Result result;
   result = delay_based_bwe_->IncomingPacketFeedbackVector(
@@ -554,23 +553,17 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
     }
     // Since SetSendBitrate now resets the delay-based estimate, we have to
     // call UpdateDelayBasedEstimate after SetSendBitrate.
-    bandwidth_estimation_->UpdateDelayBasedEstimate(
-        report.feedback_time, result.target_bitrate,
-        result.delay_detector_state);
+    bandwidth_estimation_->UpdateDelayBasedEstimate(report.feedback_time,
+                                                    result.target_bitrate);
     // Update the estimate in the ProbeController, in case we want to probe.
     MaybeTriggerOnNetworkChanged(&update, report.feedback_time);
   }
-  bandwidth_estimation_->UpdateLossBasedEstimatorFromFeedbackVector(report);
+  bandwidth_estimation_->UpdateLossBasedEstimator(report,
+                                                  result.delay_detector_state);
   recovered_from_overuse = result.recovered_from_overuse;
-  backoff_in_alr = result.backoff_in_alr;
 
   if (recovered_from_overuse) {
     probe_controller_->SetAlrStartTimeMs(alr_start_time);
-    auto probes = probe_controller_->RequestProbe(report.feedback_time.ms());
-    update.probe_cluster_configs.insert(update.probe_cluster_configs.end(),
-                                        probes.begin(), probes.end());
-  } else if (backoff_in_alr) {
-    // If we just backed off during ALR, request a new probe.
     auto probes = probe_controller_->RequestProbe(report.feedback_time.ms());
     update.probe_cluster_configs.insert(update.probe_cluster_configs.end(),
                                         probes.begin(), probes.end());

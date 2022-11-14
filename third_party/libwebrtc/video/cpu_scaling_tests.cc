@@ -102,7 +102,7 @@ void CpuOveruseTest::RunTestAndCheckForAdaptation(
 
     void ModifyVideoConfigs(
         VideoSendStream::Config* send_config,
-        std::vector<VideoReceiveStream::Config>* receive_configs,
+        std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
         VideoEncoderConfig* encoder_config) override {
       EXPECT_FALSE(encoder_config->simulcast_layers.empty());
       encoder_config->simulcast_layers[0].max_framerate = kFps;

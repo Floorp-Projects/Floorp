@@ -42,33 +42,33 @@ TEST(EncoderSimulcastProxy, ChoosesCorrectImplementation) {
       "SimulcastEncoderAdapter (Fake, Fake, Fake)";
   VideoCodec codec_settings;
   webrtc::test::CodecSettings(kVideoCodecVP8, &codec_settings);
-  codec_settings.simulcastStream[0] = {test::kTestWidth,
-                                       test::kTestHeight,
-                                       test::kTestFrameRate,
-                                       2,
-                                       2000,
-                                       1000,
-                                       1000,
-                                       56,
-                                       true};
-  codec_settings.simulcastStream[1] = {test::kTestWidth,
-                                       test::kTestHeight,
-                                       test::kTestFrameRate,
-                                       2,
-                                       3000,
-                                       1000,
-                                       1000,
-                                       56,
-                                       true};
-  codec_settings.simulcastStream[2] = {test::kTestWidth,
-                                       test::kTestHeight,
-                                       test::kTestFrameRate,
-                                       2,
-                                       5000,
-                                       1000,
-                                       1000,
-                                       56,
-                                       true};
+  codec_settings.simulcastStream[0] = {.width = test::kTestWidth,
+                                       .height = test::kTestHeight,
+                                       .maxFramerate = test::kTestFrameRate,
+                                       .numberOfTemporalLayers = 2,
+                                       .maxBitrate = 2000,
+                                       .targetBitrate = 1000,
+                                       .minBitrate = 1000,
+                                       .qpMax = 56,
+                                       .active = true};
+  codec_settings.simulcastStream[1] = {.width = test::kTestWidth,
+                                       .height = test::kTestHeight,
+                                       .maxFramerate = test::kTestFrameRate,
+                                       .numberOfTemporalLayers = 2,
+                                       .maxBitrate = 3000,
+                                       .targetBitrate = 1000,
+                                       .minBitrate = 1000,
+                                       .qpMax = 56,
+                                       .active = true};
+  codec_settings.simulcastStream[2] = {.width = test::kTestWidth,
+                                       .height = test::kTestHeight,
+                                       .maxFramerate = test::kTestFrameRate,
+                                       .numberOfTemporalLayers = 2,
+                                       .maxBitrate = 5000,
+                                       .targetBitrate = 1000,
+                                       .minBitrate = 1000,
+                                       .qpMax = 56,
+                                       .active = true};
   codec_settings.numberOfSimulcastStreams = 3;
 
   auto mock_encoder = std::make_unique<NiceMock<MockVideoEncoder>>();

@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "api/sequence_checker.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
@@ -30,7 +31,6 @@
 #include "modules/video_coding/video_receiver2.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_queue.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/clock.h"
 #include "video/frame_buffer_proxy.h"
@@ -46,6 +46,9 @@ class RtpStreamReceiverInterface;
 class RtpStreamReceiverControllerInterface;
 class RtxReceiveStream;
 class VCMTiming;
+
+constexpr TimeDelta kMaxWaitForKeyFrame = TimeDelta::Millis(200);
+constexpr TimeDelta kMaxWaitForFrame = TimeDelta::Seconds(3);
 
 namespace internal {
 
@@ -79,9 +82,8 @@ struct VideoFrameMetaData {
 };
 
 class VideoReceiveStream2
-    : public webrtc::VideoReceiveStream,
+    : public webrtc::VideoReceiveStreamInterface,
       public rtc::VideoSinkInterface<VideoFrame>,
-      public NackSender,
       public RtpVideoStreamReceiver2::OnCompleteFrameCallback,
       public Syncable,
       public CallStatsObserver,
@@ -95,7 +97,7 @@ class VideoReceiveStream2
                       Call* call,
                       int num_cpu_cores,
                       PacketRouter* packet_router,
-                      VideoReceiveStream::Config config,
+                      VideoReceiveStreamInterface::Config config,
                       CallStats* call_stats,
                       Clock* clock,
                       std::unique_ptr<VCMTiming> timing,
@@ -131,15 +133,21 @@ class VideoReceiveStream2
 
   void SetSync(Syncable* audio_syncable);
 
-  // Implements webrtc::VideoReceiveStream.
+  // Updates the `rtp_video_stream_receiver_`'s `local_ssrc` when the default
+  // sender has been created, changed or removed.
+  void SetLocalSsrc(uint32_t local_ssrc);
+
+  // Implements webrtc::VideoReceiveStreamInterface.
   void Start() override;
   void Stop() override;
 
   void SetRtpExtensions(std::vector<RtpExtension> extensions) override;
   RtpHeaderExtensionMap GetRtpExtensionMap() const override;
-  bool transport_cc() const override { return config_.rtp.transport_cc; }
+  bool transport_cc() const override;
+  void SetTransportCc(bool transport_cc) override;
+  void SetRtcpMode(RtcpMode mode) override;
 
-  webrtc::VideoReceiveStream::Stats GetStats() const override;
+  webrtc::VideoReceiveStreamInterface::Stats GetStats() const override;
 
   // SetBaseMinimumPlayoutDelayMs and GetBaseMinimumPlayoutDelayMs are called
   // from webrtc/api level and requested by user code. For e.g. blink/js layer
@@ -154,12 +162,6 @@ class VideoReceiveStream2
 
   // Implements rtc::VideoSinkInterface<VideoFrame>.
   void OnFrame(const VideoFrame& video_frame) override;
-
-  // Implements NackSender.
-  // For this particular override of the interface,
-  // only (buffering_allowed == true) is acceptable.
-  void SendNack(const std::vector<uint16_t>& sequence_numbers,
-                bool buffering_allowed) override;
 
   // Implements RtpVideoStreamReceiver2::OnCompleteFrameCallback.
   void OnCompleteFrame(std::unique_ptr<EncodedFrame> frame) override;
@@ -221,7 +223,7 @@ class VideoReceiveStream2
   TaskQueueFactory* const task_queue_factory_;
 
   TransportAdapter transport_adapter_;
-  const VideoReceiveStream::Config config_;
+  const VideoReceiveStreamInterface::Config config_;
   const int num_cpu_cores_;
   Call* const call_;
   Clock* const clock_;

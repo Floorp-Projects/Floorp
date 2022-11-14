@@ -33,7 +33,6 @@
 #include "p2p/base/port_allocator.h"
 #include "p2p/client/basic_port_allocator.h"
 #include "pc/audio_track.h"
-#include "pc/channel_manager.h"
 #include "pc/local_audio_source.h"
 #include "pc/media_stream.h"
 #include "pc/media_stream_proxy.h"
@@ -50,7 +49,6 @@
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/rtc_certificate_generator.h"
 #include "rtc_base/system/file_wrapper.h"
 
@@ -129,17 +127,17 @@ RtpCapabilities PeerConnectionFactory::GetRtpSenderCapabilities(
   switch (kind) {
     case cricket::MEDIA_TYPE_AUDIO: {
       cricket::AudioCodecs cricket_codecs;
-      channel_manager()->GetSupportedAudioSendCodecs(&cricket_codecs);
-      return ToRtpCapabilities(
-          cricket_codecs,
-          channel_manager()->GetDefaultEnabledAudioRtpHeaderExtensions());
+      cricket_codecs = media_engine()->voice().send_codecs();
+      auto extensions =
+          GetDefaultEnabledRtpHeaderExtensions(media_engine()->voice());
+      return ToRtpCapabilities(cricket_codecs, extensions);
     }
     case cricket::MEDIA_TYPE_VIDEO: {
       cricket::VideoCodecs cricket_codecs;
-      channel_manager()->GetSupportedVideoSendCodecs(&cricket_codecs);
-      return ToRtpCapabilities(
-          cricket_codecs,
-          channel_manager()->GetDefaultEnabledVideoRtpHeaderExtensions());
+      cricket_codecs = media_engine()->video().send_codecs();
+      auto extensions =
+          GetDefaultEnabledRtpHeaderExtensions(media_engine()->video());
+      return ToRtpCapabilities(cricket_codecs, extensions);
     }
     case cricket::MEDIA_TYPE_DATA:
       return RtpCapabilities();
@@ -156,17 +154,17 @@ RtpCapabilities PeerConnectionFactory::GetRtpReceiverCapabilities(
   switch (kind) {
     case cricket::MEDIA_TYPE_AUDIO: {
       cricket::AudioCodecs cricket_codecs;
-      channel_manager()->GetSupportedAudioReceiveCodecs(&cricket_codecs);
-      return ToRtpCapabilities(
-          cricket_codecs,
-          channel_manager()->GetDefaultEnabledAudioRtpHeaderExtensions());
+      cricket_codecs = media_engine()->voice().recv_codecs();
+      auto extensions =
+          GetDefaultEnabledRtpHeaderExtensions(media_engine()->voice());
+      return ToRtpCapabilities(cricket_codecs, extensions);
     }
     case cricket::MEDIA_TYPE_VIDEO: {
-      cricket::VideoCodecs cricket_codecs;
-      channel_manager()->GetSupportedVideoReceiveCodecs(&cricket_codecs);
-      return ToRtpCapabilities(
-          cricket_codecs,
-          channel_manager()->GetDefaultEnabledVideoRtpHeaderExtensions());
+      cricket::VideoCodecs cricket_codecs =
+          media_engine()->video().recv_codecs(context_->use_rtx());
+      auto extensions =
+          GetDefaultEnabledRtpHeaderExtensions(media_engine()->video());
+      return ToRtpCapabilities(cricket_codecs, extensions);
     }
     case cricket::MEDIA_TYPE_DATA:
       return RtpCapabilities();
@@ -187,12 +185,18 @@ PeerConnectionFactory::CreateAudioSource(const cricket::AudioOptions& options) {
 
 bool PeerConnectionFactory::StartAecDump(FILE* file, int64_t max_size_bytes) {
   RTC_DCHECK_RUN_ON(worker_thread());
-  return channel_manager()->StartAecDump(FileWrapper(file), max_size_bytes);
+  return media_engine()->voice().StartAecDump(FileWrapper(file),
+                                              max_size_bytes);
 }
 
 void PeerConnectionFactory::StopAecDump() {
   RTC_DCHECK_RUN_ON(worker_thread());
-  channel_manager()->StopAecDump();
+  media_engine()->voice().StopAecDump();
+}
+
+cricket::MediaEngineInterface* PeerConnectionFactory::media_engine() const {
+  RTC_DCHECK(context_);
+  return context_->media_engine();
 }
 
 RTCErrorOr<rtc::scoped_refptr<PeerConnectionInterface>>
@@ -200,9 +204,6 @@ PeerConnectionFactory::CreatePeerConnectionOrError(
     const PeerConnectionInterface::RTCConfiguration& configuration,
     PeerConnectionDependencies dependencies) {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  RTC_DCHECK(!(dependencies.allocator && dependencies.packet_socket_factory))
-      << "You can't set both allocator and packet_socket_factory; "
-         "the former is going away (see bugs.webrtc.org/7447";
 
   // Set internal defaults if optional dependencies are not set.
   if (!dependencies.cert_generator) {
@@ -211,14 +212,8 @@ PeerConnectionFactory::CreatePeerConnectionOrError(
                                                        network_thread());
   }
   if (!dependencies.allocator) {
-    rtc::PacketSocketFactory* packet_socket_factory;
-    if (dependencies.packet_socket_factory)
-      packet_socket_factory = dependencies.packet_socket_factory.get();
-    else
-      packet_socket_factory = context_->default_socket_factory();
-
     dependencies.allocator = std::make_unique<cricket::BasicPortAllocator>(
-        context_->default_network_manager(), packet_socket_factory,
+        context_->default_network_manager(), context_->default_socket_factory(),
         configuration.turn_customizer);
     dependencies.allocator->SetPortRange(
         configuration.port_allocator_config.min_port,
@@ -301,9 +296,8 @@ std::unique_ptr<RtcEventLog> PeerConnectionFactory::CreateRtcEventLog_w() {
   auto encoding_type = RtcEventLog::EncodingType::Legacy;
   if (IsTrialEnabled("WebRTC-RtcEventLogNewFormat"))
     encoding_type = RtcEventLog::EncodingType::NewFormat;
-  return event_log_factory_
-             ? event_log_factory_->CreateRtcEventLog(encoding_type)
-             : std::make_unique<RtcEventLogNull>();
+  return event_log_factory_ ? event_log_factory_->Create(encoding_type)
+                            : std::make_unique<RtcEventLogNull>();
 }
 
 std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
@@ -312,11 +306,10 @@ std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
   RTC_DCHECK_RUN_ON(worker_thread());
 
   webrtc::Call::Config call_config(event_log, network_thread());
-  if (!channel_manager()->media_engine() || !context_->call_factory()) {
+  if (!media_engine() || !context_->call_factory()) {
     return nullptr;
   }
-  call_config.audio_state =
-      channel_manager()->media_engine()->voice().GetAudioState();
+  call_config.audio_state = media_engine()->voice().GetAudioState();
 
   FieldTrialParameter<DataRate> min_bandwidth("min",
                                               DataRate::KilobitsPerSec(30));

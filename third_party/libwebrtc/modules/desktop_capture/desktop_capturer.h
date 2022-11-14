@@ -149,6 +149,8 @@ class RTC_EXPORT DesktopCapturer {
 
 #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
   static bool IsRunningUnderWayland();
+
+  virtual void UpdateResolution(uint32_t width, uint32_t height) {}
 #endif  // defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
 
 #if defined(WEBRTC_USE_GIO)

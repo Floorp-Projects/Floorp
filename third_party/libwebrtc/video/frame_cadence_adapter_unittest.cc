@@ -13,16 +13,16 @@
 #include <utility>
 #include <vector>
 
+#include "absl/functional/any_invocable.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/task_queue/task_queue_factory.h"
+#include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "api/video/nv12_buffer.h"
 #include "api/video/video_frame.h"
 #include "rtc_base/event.h"
 #include "rtc_base/rate_statistics.h"
-#include "rtc_base/ref_counted_object.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/metrics.h"
 #include "system_wrappers/include/ntp_time.h"
@@ -169,7 +169,6 @@ TEST(FrameCadenceAdapterTest,
 
 TEST(FrameCadenceAdapterTest, FrameRateFollowsMaxFpsWhenZeroHertzActivated) {
   ZeroHertzFieldTrialEnabler enabler;
-  MockCallback callback;
   GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
   auto adapter = CreateAdapter(enabler, time_controller.GetClock());
   adapter->Initialize(nullptr);
@@ -186,7 +185,6 @@ TEST(FrameCadenceAdapterTest, FrameRateFollowsMaxFpsWhenZeroHertzActivated) {
 TEST(FrameCadenceAdapterTest,
      FrameRateFollowsRateStatisticsAfterZeroHertzDeactivated) {
   ZeroHertzFieldTrialEnabler enabler;
-  MockCallback callback;
   GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
   auto adapter = CreateAdapter(enabler, time_controller.GetClock());
   adapter->Initialize(nullptr);
@@ -371,9 +369,13 @@ TEST(FrameCadenceAdapterTest, RequestsRefreshFrameOnKeyFrameRequestWhenNew) {
   adapter->Initialize(&callback);
   adapter->SetZeroHertzModeEnabled(
       FrameCadenceAdapterInterface::ZeroHertzModeParams{});
-  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 10});
-  time_controller.AdvanceTime(TimeDelta::Zero());
+  constexpr int kMaxFps = 10;
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, kMaxFps});
   EXPECT_CALL(callback, RequestRefreshFrame);
+  time_controller.AdvanceTime(
+      TimeDelta::Seconds(1) *
+      FrameCadenceAdapterInterface::kOnDiscardedFrameRefreshFramePeriod /
+      kMaxFps);
   adapter->ProcessKeyFrameRequest();
 }
 
@@ -390,6 +392,111 @@ TEST(FrameCadenceAdapterTest, IgnoresKeyFrameRequestShortlyAfterFrame) {
   time_controller.AdvanceTime(TimeDelta::Zero());
   EXPECT_CALL(callback, RequestRefreshFrame).Times(0);
   adapter->ProcessKeyFrameRequest();
+}
+
+TEST(FrameCadenceAdapterTest, RequestsRefreshFramesUntilArrival) {
+  ZeroHertzFieldTrialEnabler enabler;
+  MockCallback callback;
+  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  auto adapter = CreateAdapter(enabler, time_controller.GetClock());
+  adapter->Initialize(&callback);
+  adapter->SetZeroHertzModeEnabled(
+      FrameCadenceAdapterInterface::ZeroHertzModeParams{});
+  constexpr int kMaxFps = 10;
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, kMaxFps});
+
+  // We should see max_fps + 1 -
+  // FrameCadenceAdapterInterface::kOnDiscardedFrameRefreshFramePeriod refresh
+  // frame requests during the one second we wait until we send a single frame,
+  // after which refresh frame requests should cease (we should see no such
+  // requests during a second).
+  EXPECT_CALL(callback, RequestRefreshFrame)
+      .Times(kMaxFps + 1 -
+             FrameCadenceAdapterInterface::kOnDiscardedFrameRefreshFramePeriod);
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
+  Mock::VerifyAndClearExpectations(&callback);
+  adapter->OnFrame(CreateFrame());
+  EXPECT_CALL(callback, RequestRefreshFrame).Times(0);
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
+}
+
+TEST(FrameCadenceAdapterTest, RequestsRefreshAfterFrameDrop) {
+  ZeroHertzFieldTrialEnabler enabler;
+  MockCallback callback;
+  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  auto adapter = CreateAdapter(enabler, time_controller.GetClock());
+  adapter->Initialize(&callback);
+  adapter->SetZeroHertzModeEnabled(
+      FrameCadenceAdapterInterface::ZeroHertzModeParams{});
+  constexpr int kMaxFps = 10;
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, kMaxFps});
+
+  EXPECT_CALL(callback, RequestRefreshFrame).Times(0);
+
+  // Send a frame through to cancel the initial delayed timer waiting for first
+  // frame entry.
+  adapter->OnFrame(CreateFrame());
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
+  Mock::VerifyAndClearExpectations(&callback);
+
+  // Send a dropped frame indication without any following frames received.
+  // After FrameCadenceAdapterInterface::kOnDiscardedFrameRefreshFramePeriod
+  // frame periods, we should receive a first refresh request.
+  adapter->OnDiscardedFrame();
+  EXPECT_CALL(callback, RequestRefreshFrame);
+  time_controller.AdvanceTime(
+      TimeDelta::Seconds(1) *
+      FrameCadenceAdapterInterface::kOnDiscardedFrameRefreshFramePeriod /
+      kMaxFps);
+  Mock::VerifyAndClearExpectations(&callback);
+
+  // We will now receive a refresh frame request for every frame period.
+  EXPECT_CALL(callback, RequestRefreshFrame).Times(kMaxFps);
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
+  Mock::VerifyAndClearExpectations(&callback);
+
+  // After a frame is passed the requests will cease.
+  EXPECT_CALL(callback, RequestRefreshFrame).Times(0);
+  adapter->OnFrame(CreateFrame());
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
+}
+
+TEST(FrameCadenceAdapterTest, OmitsRefreshAfterFrameDropWithTimelyFrameEntry) {
+  ZeroHertzFieldTrialEnabler enabler;
+  MockCallback callback;
+  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  auto adapter = CreateAdapter(enabler, time_controller.GetClock());
+  adapter->Initialize(&callback);
+  adapter->SetZeroHertzModeEnabled(
+      FrameCadenceAdapterInterface::ZeroHertzModeParams{});
+  constexpr int kMaxFps = 10;
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, kMaxFps});
+
+  // Send a frame through to cancel the initial delayed timer waiting for first
+  // frame entry.
+  EXPECT_CALL(callback, RequestRefreshFrame).Times(0);
+  adapter->OnFrame(CreateFrame());
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
+  Mock::VerifyAndClearExpectations(&callback);
+
+  // Send a frame drop indication. No refresh frames should be requested
+  // until FrameCadenceAdapterInterface::kOnDiscardedFrameRefreshFramePeriod
+  // intervals pass. Stop short of this.
+  EXPECT_CALL(callback, RequestRefreshFrame).Times(0);
+  adapter->OnDiscardedFrame();
+  time_controller.AdvanceTime(
+      TimeDelta::Seconds(1) *
+          FrameCadenceAdapterInterface::kOnDiscardedFrameRefreshFramePeriod /
+          kMaxFps -
+      TimeDelta::Micros(1));
+  Mock::VerifyAndClearExpectations(&callback);
+
+  // Send a frame. The timer to request the refresh frame should be cancelled by
+  // the reception, so no refreshes should be requested.
+  EXPECT_CALL(callback, RequestRefreshFrame).Times(0);
+  adapter->OnFrame(CreateFrame());
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
+  Mock::VerifyAndClearExpectations(&callback);
 }
 
 class FrameCadenceAdapterSimulcastLayersParamTest
@@ -537,10 +644,8 @@ class ZeroHertzLayerQualityConvergenceTest : public ::testing::Test {
     }
   }
 
-  void ScheduleDelayed(TimeDelta delay, std::function<void()> function) {
-    TaskQueueBase::Current()->PostDelayedTask(
-        ToQueuedTask([function = std::move(function)] { function(); }),
-        delay.ms());
+  void ScheduleDelayed(TimeDelta delay, absl::AnyInvocable<void() &&> task) {
+    TaskQueueBase::Current()->PostDelayedTask(std::move(task), delay);
   }
 
  protected:
@@ -936,7 +1041,7 @@ TEST(FrameCadenceAdapterRealTimeTest, TimestampsDoNotDrift) {
   int64_t original_ntp_time_ms;
   int64_t original_timestamp_us;
   rtc::Event event;
-  queue->PostTask(ToQueuedTask([&] {
+  queue->PostTask([&] {
     adapter = CreateAdapter(enabler, clock);
     adapter->Initialize(&callback);
     adapter->SetZeroHertzModeEnabled(
@@ -964,13 +1069,13 @@ TEST(FrameCadenceAdapterRealTimeTest, TimestampsDoNotDrift) {
               }
             }));
     adapter->OnFrame(frame);
-  }));
+  });
   event.Wait(rtc::Event::kForever);
   rtc::Event finalized;
-  queue->PostTask(ToQueuedTask([&] {
+  queue->PostTask([&] {
     adapter = nullptr;
     finalized.Set();
-  }));
+  });
   finalized.Wait(rtc::Event::kForever);
 }
 

@@ -96,7 +96,10 @@ if (!build_with_chromium) {
         "strmiids.lib",
         "user32.lib",
       ]
-   }
+    }
+    if (is_fuchsia) {
+      sources = [ "video_capture_factory_null.cc" ]
+    }
 
     if (!build_with_mozilla && is_android) {
       include_dirs = [

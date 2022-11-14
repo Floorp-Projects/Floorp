@@ -29,7 +29,7 @@ class AudioTrack : public MediaStreamTrack<AudioTrackInterface>,
                    public ObserverInterface {
  protected:
   // Protected ctor to force use of factory method.
-  AudioTrack(const std::string& label,
+  AudioTrack(absl::string_view label,
              const rtc::scoped_refptr<AudioSourceInterface>& source);
 
   AudioTrack() = delete;
@@ -40,7 +40,7 @@ class AudioTrack : public MediaStreamTrack<AudioTrackInterface>,
 
  public:
   static rtc::scoped_refptr<AudioTrack> Create(
-      const std::string& id,
+      absl::string_view id,
       const rtc::scoped_refptr<AudioSourceInterface>& source);
 
   // MediaStreamTrack implementation.

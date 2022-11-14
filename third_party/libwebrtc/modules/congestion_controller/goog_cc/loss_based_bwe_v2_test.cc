@@ -179,6 +179,29 @@ TEST_P(LossBasedBweV2Test,
   EXPECT_FALSE(loss_based_bandwidth_estimator.IsEnabled());
 }
 
+TEST_P(LossBasedBweV2Test, ReturnsDelayBasedEstimateWhenDisabled) {
+  ExplicitKeyValueConfig key_value_config(
+      Config(/*enabled=*/false, /*valid=*/true,
+             /*trendline_integration_enabled=*/GetParam()));
+  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
+
+  EXPECT_EQ(loss_based_bandwidth_estimator.GetBandwidthEstimate(
+                /*delay_based_limit=*/DataRate::KilobitsPerSec(100)),
+            DataRate::KilobitsPerSec(100));
+}
+
+TEST_P(LossBasedBweV2Test,
+       ReturnsDelayBasedEstimateWhenWhenGivenNonValidConfigurationValues) {
+  ExplicitKeyValueConfig key_value_config(
+      Config(/*enabled=*/true, /*valid=*/false,
+             /*trendline_integration_enabled=*/GetParam()));
+  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
+
+  EXPECT_EQ(loss_based_bandwidth_estimator.GetBandwidthEstimate(
+                /*delay_based_limit=*/DataRate::KilobitsPerSec(100)),
+            DataRate::KilobitsPerSec(100));
+}
+
 TEST_P(LossBasedBweV2Test,
        BandwidthEstimateGivenInitializationAndThenFeedback) {
   std::vector<PacketResult> enough_feedback =

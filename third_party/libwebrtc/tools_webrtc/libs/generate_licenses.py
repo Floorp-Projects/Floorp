@@ -42,6 +42,7 @@ LIB_TO_LICENSES_DICT = {
     ],
     'boringssl': ['third_party/boringssl/src/LICENSE'],
     'crc32c': ['third_party/crc32c/src/LICENSE'],
+    'dav1d': ['third_party/dav1d/LICENSE'],
     'errorprone': [
         'third_party/android_deps/libs/'
         'com_google_errorprone_error_prone_core/LICENSE'
@@ -53,7 +54,7 @@ LIB_TO_LICENSES_DICT = {
     'libaom': ['third_party/libaom/source/libaom/LICENSE'],
     'libc++': ['buildtools/third_party/libc++/trunk/LICENSE.TXT'],
     'libc++abi': ['buildtools/third_party/libc++abi/trunk/LICENSE.TXT'],
-    'libevent': ['base/third_party/libevent/LICENSE'],
+    'libevent': ['third_party/libevent/LICENSE'],
     'libjpeg_turbo': ['third_party/libjpeg_turbo/LICENSE.md'],
     'libsrtp': ['third_party/libsrtp/LICENSE'],
     'libunwind': ['buildtools/third_party/libunwind/trunk/LICENSE.TXT'],
@@ -82,7 +83,6 @@ LIB_TO_LICENSES_DICT = {
     'androidx': [],
 
     # Compile time dependencies, no license needed:
-    'yasm': [],
     'ow2_asm': [],
     'jdk': [],
 }

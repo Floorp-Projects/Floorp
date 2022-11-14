@@ -541,6 +541,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   bool CachedOpaqueResponseBlockingPref() const {
     return mCachedOpaqueResponseBlockingPref;
   }
+
  protected:
   nsresult GetTopWindowURI(nsIURI* aURIBeingLoaded, nsIURI** aTopWindowURI);
 

@@ -12,6 +12,7 @@
 
 #include "api/peer_connection_interface.h"
 #include "api/scoped_refptr.h"
+#include "rtc_base/thread.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -25,6 +26,9 @@ NS_ASSUME_NONNULL_BEGIN
      */
     @property(nonatomic,
               readonly) rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> nativeFactory;
+
+@property(nonatomic, readonly) rtc::Thread* signalingThread;
+@property(nonatomic, readonly) rtc::Thread* workerThread;
 
 @end
 

@@ -149,13 +149,13 @@ DataRate LossBasedBweV2::GetBandwidthEstimate(
                                "statistics before it can be used.";
       }
     }
-    return DataRate::PlusInfinity();
+    return IsValid(delay_based_limit) ? delay_based_limit
+                                      : DataRate::PlusInfinity();
   }
 
   if (delay_based_limit.IsFinite()) {
     return std::min({current_estimate_.loss_limited_bandwidth,
-                     GetInstantUpperBound(),
-                     delay_based_limit * config_->delay_based_limit_factor});
+                     GetInstantUpperBound(), delay_based_limit});
   } else {
     return std::min(current_estimate_.loss_limited_bandwidth,
                     GetInstantUpperBound());
@@ -221,7 +221,7 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
     last_time_estimate_reduced_ = last_send_time_most_recent_observation_;
   }
 
-  // Bound the estimate increasement if:
+  // Bound the estimate increase if:
   // 1. The estimate is limited due to loss, and
   // 2. The estimate has been increased for less than `delayed_increase_window`
   // ago, and
@@ -299,9 +299,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
       "BwBackoffLowerBoundFactor", 1.0);
   FieldTrialParameter<bool> trendline_integration_enabled(
       "TrendlineIntegrationEnabled", false);
-  FieldTrialParameter<double> delay_based_limit_factor("DelayBasedLimitFactor",
-                                                       1.0);
-  FieldTrialParameter<int> trendline_window_size("TrendlineWindowSize", 20);
+  FieldTrialParameter<int> trendline_observations_window_size(
+      "TrendlineObservationsWindowSize", 20);
   FieldTrialParameter<double> max_increase_factor("MaxIncreaseFactor", 1000.0);
   FieldTrialParameter<TimeDelta> delayed_increase_window(
       "DelayedIncreaseWindow", TimeDelta::Millis(300));
@@ -333,8 +332,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
                      &temporal_weight_factor,
                      &bandwidth_backoff_lower_bound_factor,
                      &trendline_integration_enabled,
-                     &delay_based_limit_factor,
-                     &trendline_window_size,
+                     &trendline_observations_window_size,
                      &max_increase_factor,
                      &delayed_increase_window,
                      &use_acked_bitrate_only_when_overusing},
@@ -381,8 +379,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   config->bandwidth_backoff_lower_bound_factor =
       bandwidth_backoff_lower_bound_factor.Get();
   config->trendline_integration_enabled = trendline_integration_enabled.Get();
-  config->delay_based_limit_factor = delay_based_limit_factor.Get();
-  config->trendline_window_size = trendline_window_size.Get();
+  config->trendline_observations_window_size =
+      trendline_observations_window_size.Get();
   config->max_increase_factor = max_increase_factor.Get();
   config->delayed_increase_window = delayed_increase_window.Get();
   config->use_acked_bitrate_only_when_overusing =
@@ -536,15 +534,9 @@ bool LossBasedBweV2::IsConfigValid() const {
         << config_->bandwidth_backoff_lower_bound_factor;
     valid = false;
   }
-  if (config_->delay_based_limit_factor < 1.0) {
-    RTC_LOG(LS_WARNING)
-        << "The delay based limit factor must not be less than 1: "
-        << config_->delay_based_limit_factor;
-    valid = false;
-  }
-  if (config_->trendline_window_size < 2) {
+  if (config_->trendline_observations_window_size < 2) {
     RTC_LOG(LS_WARNING) << "The trendline window size must be at least 2: "
-                        << config_->trendline_window_size;
+                        << config_->trendline_observations_window_size;
     valid = false;
   }
   if (config_->max_increase_factor <= 0.0) {
@@ -861,7 +853,7 @@ bool LossBasedBweV2::PushBackObservation(
     BandwidthUsage delay_detector_state) {
   delay_detector_states_.push_front(delay_detector_state);
   if (static_cast<int>(delay_detector_states_.size()) >
-      config_->trendline_window_size) {
+      config_->trendline_observations_window_size) {
     delay_detector_states_.pop_back();
   }
 

@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/field_trials_view.h"
 #include "api/frame_transformer_interface.h"
@@ -34,7 +35,6 @@ namespace webrtc {
 // Forward declarations.
 class FrameEncryptorInterface;
 class RateLimiter;
-class RemoteBitrateEstimator;
 class RtcEventLog;
 class RTPSender;
 class Transport;
@@ -88,10 +88,6 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
     // GetLatestReportBlockData().
     RtcpCnameCallback* rtcp_cname_callback = nullptr;
     ReportBlockDataObserver* report_block_data_observer = nullptr;
-
-    // Estimates the bandwidth available for a set of streams from the same
-    // client.
-    RemoteBitrateEstimator* remote_bitrate_estimator = nullptr;
 
     // Spread any bursts of packets into smaller bursts to minimize packet loss.
     RtpPacketSender* paced_sender = nullptr;
@@ -150,6 +146,12 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
     // Estimate RTT as non-sender as described in
     // https://tools.ietf.org/html/rfc3611#section-4.4 and #section-4.5
     bool non_sender_rtt_measurement = false;
+
+    // If non-empty, sets the value for sending in the RID (and Repaired) RTP
+    // header extension. RIDs are used to identify an RTP stream if SSRCs are
+    // not negotiated. If the RID and Repaired RID extensions are not
+    // registered, the RID will not be sent.
+    std::string rid;
   };
 
   // Stats for RTCP sender reports (SR) for a specific SSRC.
@@ -254,16 +256,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
   // Returns SSRC.
   virtual uint32_t SSRC() const = 0;
 
-  // Sets the value for sending in the RID (and Repaired) RTP header extension.
-  // RIDs are used to identify an RTP stream if SSRCs are not negotiated.
-  // If the RID and Repaired RID extensions are not registered, the RID will
-  // not be sent.
-  virtual void SetRid(const std::string& rid) = 0;
-
   // Sets the value for sending in the MID RTP header extension.
   // The MID RTP header extension should be registered for this to do anything.
   // Once set, this value can not be changed or removed.
-  virtual void SetMid(const std::string& mid) = 0;
+  virtual void SetMid(absl::string_view mid) = 0;
 
   // Sets CSRC.
   // `csrcs` - vector of CSRCs
@@ -376,7 +372,7 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
 
   // Sets RTCP CName (i.e unique identifier).
   // Returns -1 on failure else 0.
-  virtual int32_t SetCNAME(const char* cname) = 0;
+  virtual int32_t SetCNAME(absl::string_view cname) = 0;
 
   // Returns remote NTP.
   // Returns -1 on failure else 0.

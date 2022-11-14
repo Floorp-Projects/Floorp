@@ -285,10 +285,12 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
       // Enables the analog gain controller functionality.
       struct AnalogGainController {
         bool enabled = true;
+        // TODO(bugs.webrtc.org/1275566): Describe `startup_min_volume`.
         int startup_min_volume = kAgcStartupMinVolume;
         // Lowest analog microphone level that will be applied in response to
         // clipping.
         int clipped_level_min = kClippedLevelMin;
+        // If true, an adaptive digital gain is applied.
         bool enable_digital_adaptive = true;
         // Amount the microphone level is lowered with every clipping event.
         // Limited to (0, 255].

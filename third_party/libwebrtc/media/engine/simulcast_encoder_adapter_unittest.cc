@@ -521,7 +521,7 @@ class TestSimulcastEncoderAdapterFake : public ::testing::Test,
               target.VP8().numberOfTemporalLayers);
     EXPECT_EQ(ref.VP8().denoisingOn, target.VP8().denoisingOn);
     EXPECT_EQ(ref.VP8().automaticResizeOn, target.VP8().automaticResizeOn);
-    EXPECT_EQ(ref.VP8().frameDroppingOn, target.VP8().frameDroppingOn);
+    EXPECT_EQ(ref.GetFrameDropEnabled(), target.GetFrameDropEnabled());
     EXPECT_EQ(ref.VP8().keyFrameInterval, target.VP8().keyFrameInterval);
     EXPECT_EQ(ref.qpMax, target.qpMax);
     EXPECT_EQ(0, target.numberOfSimulcastStreams);
@@ -986,7 +986,6 @@ TEST_F(TestSimulcastEncoderAdapterFake,
   EXPECT_FALSE(adapter_->GetEncoderInfo().supports_native_handle);
 }
 
-// TODO(nisse): Reuse definition in webrtc/test/fake_texture_handle.h.
 class FakeNativeBufferI420 : public VideoFrameBuffer {
  public:
   FakeNativeBufferI420(int width, int height, bool allow_to_i420)

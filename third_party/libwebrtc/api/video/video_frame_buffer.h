@@ -25,6 +25,7 @@ class I420ABufferInterface;
 class I422BufferInterface;
 class I444BufferInterface;
 class I010BufferInterface;
+class I210BufferInterface;
 class NV12BufferInterface;
 
 // Base class for frame buffers of different types of pixel format and storage.
@@ -56,6 +57,7 @@ class RTC_EXPORT VideoFrameBuffer : public rtc::RefCountInterface {
     kI422,
     kI444,
     kI010,
+    kI210,
     kNV12,
   };
 
@@ -109,6 +111,7 @@ class RTC_EXPORT VideoFrameBuffer : public rtc::RefCountInterface {
   const I422BufferInterface* GetI422() const;
   const I444BufferInterface* GetI444() const;
   const I010BufferInterface* GetI010() const;
+  const I210BufferInterface* GetI210() const;
   const NV12BufferInterface* GetNV12() const;
 
   // From a kNative frame, returns a VideoFrameBuffer with a pixel format in
@@ -218,7 +221,8 @@ class I444BufferInterface : public PlanarYuv8Buffer {
   ~I444BufferInterface() override {}
 };
 
-// This interface represents 8-bit to 16-bit color depth formats: Type::kI010.
+// This interface represents 8-bit to 16-bit color depth formats: Type::kI010 or
+// Type::kI210 .
 class PlanarYuv16BBuffer : public PlanarYuvBuffer {
  public:
   // Returns pointer to the pixel data for a given plane. The memory is owned by
@@ -242,6 +246,19 @@ class I010BufferInterface : public PlanarYuv16BBuffer {
 
  protected:
   ~I010BufferInterface() override {}
+};
+
+// Represents Type::kI210, allocates 16 bits per pixel and fills 10 least
+// significant bits with color information.
+class I210BufferInterface : public PlanarYuv16BBuffer {
+ public:
+  Type type() const override;
+
+  int ChromaWidth() const final;
+  int ChromaHeight() const final;
+
+ protected:
+  ~I210BufferInterface() override {}
 };
 
 class BiplanarYuvBuffer : public VideoFrameBuffer {

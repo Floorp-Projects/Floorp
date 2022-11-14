@@ -110,7 +110,6 @@ static void RtpFragmentize(EncodedImage* encoded_image, SFrameBSInfo* info) {
       required_capacity += layerInfo.pNalLengthInByte[nal];
     }
   }
-  // TODO(nisse): Use a cache or buffer pool to avoid allocation?
   auto buffer = EncodedImageBuffer::Create(required_capacity);
   encoded_image->SetEncodedData(buffer);
 
@@ -239,7 +238,7 @@ int32_t H264EncoderImpl::InitEncode(const VideoCodec* inst,
     configurations_[i].width = codec_.simulcastStream[idx].width;
     configurations_[i].height = codec_.simulcastStream[idx].height;
     configurations_[i].max_frame_rate = static_cast<float>(codec_.maxFramerate);
-    configurations_[i].frame_dropping_on = codec_.H264()->frameDroppingOn;
+    configurations_[i].frame_dropping_on = codec_.GetFrameDropEnabled();
     configurations_[i].key_frame_interval = codec_.H264()->keyFrameInterval;
     configurations_[i].num_temporal_layers =
         std::max(codec_.H264()->numberOfTemporalLayers,
@@ -481,6 +480,7 @@ int32_t H264EncoderImpl::Encode(
     encoded_images_[i]._encodedWidth = configurations_[i].width;
     encoded_images_[i]._encodedHeight = configurations_[i].height;
     encoded_images_[i].SetTimestamp(input_frame.timestamp());
+    encoded_images_[i].SetColorSpace(input_frame.color_space());
     encoded_images_[i]._frameType = ConvertToVideoFrameType(info.eFrameType);
     encoded_images_[i].SetSpatialIndex(configurations_[i].simulcast_idx);
 

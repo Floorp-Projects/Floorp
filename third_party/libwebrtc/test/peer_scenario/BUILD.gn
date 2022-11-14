@@ -26,6 +26,7 @@ if (rtc_include_tests) {
       "..:fileutils",
       "..:test_support",
       "../:video_test_common",
+      "../../api:candidate",
       "../../api:create_time_controller",
       "../../api:libjingle_peerconnection_api",
       "../../api:network_emulation_manager_api",

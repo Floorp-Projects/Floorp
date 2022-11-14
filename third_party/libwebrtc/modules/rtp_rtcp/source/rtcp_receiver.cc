@@ -143,7 +143,6 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
     : clock_(config.clock),
       receiver_only_(config.receiver_only),
       rtp_rtcp_(owner),
-      main_ssrc_(config.local_media_ssrc),
       registered_ssrcs_(false, config),
       rtcp_bandwidth_observer_(config.bandwidth_callback),
       rtcp_event_observer_(config.rtcp_event_observer),
@@ -178,7 +177,6 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
     : clock_(config.clock),
       receiver_only_(config.receiver_only),
       rtp_rtcp_(owner),
-      main_ssrc_(config.local_media_ssrc),
       registered_ssrcs_(true, config),
       rtcp_bandwidth_observer_(config.bandwidth_callback),
       rtcp_event_observer_(config.rtcp_event_observer),
@@ -481,9 +479,6 @@ bool RTCPReceiver::ParseCompoundPacket(rtc::ArrayView<const uint8_t> packet,
       break;
     }
 
-    if (packet_type_counter_.first_packet_time_ms == -1)
-      packet_type_counter_.first_packet_time_ms = clock_->TimeInMilliseconds();
-
     switch (rtcp_block.type()) {
       case rtcp::SenderReport::kPacketType:
         HandleSenderReport(rtcp_block, packet_information);
@@ -565,7 +560,7 @@ bool RTCPReceiver::ParseCompoundPacket(rtc::ArrayView<const uint8_t> packet,
 
   if (packet_type_counter_observer_) {
     packet_type_counter_observer_->RtcpPacketTypesCounterUpdated(
-        main_ssrc_, packet_type_counter_);
+        local_media_ssrc(), packet_type_counter_);
   }
 
   if (num_skipped_packets_ > 0) {
@@ -687,13 +682,6 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
   // If no SR has been received yet, the field is set to zero.
   // Receiver rtp_rtcp module is not expected to calculate rtt using
   // Sender Reports even if it accidentally can.
-
-  // TODO(nisse): Use this way to determine the RTT only when `receiver_only_`
-  // is false. However, that currently breaks the tests of the
-  // googCaptureStartNtpTimeMs stat for audio receive streams. To fix, either
-  // delete all dependencies on RTT measurements for audio receive streams, or
-  // ensure that audio receive streams that need RTT and stats that depend on it
-  // are configured with an associated audio send stream.
   if (send_time_ntp != 0) {
     uint32_t delay_ntp = report_block.delay_since_last_sr();
     // Local NTP time.
@@ -705,7 +693,7 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
     // Convert to 1/1000 seconds (milliseconds).
     TimeDelta rtt = CompactNtpRttToTimeDelta(rtt_ntp);
     report_block_data->AddRoundTripTimeSample(rtt.ms());
-    if (report_block.source_ssrc() == main_ssrc_) {
+    if (report_block.source_ssrc() == local_media_ssrc()) {
       rtts_[remote_ssrc].AddRtt(rtt);
     }
 
@@ -797,7 +785,7 @@ std::vector<rtcp::TmmbItem> RTCPReceiver::BoundingSet(bool* tmmbr_owner) {
   if (!tmmbr_info)
     return std::vector<rtcp::TmmbItem>();
 
-  *tmmbr_owner = TMMBRHelp::IsOwner(tmmbr_info->tmmbn, main_ssrc_);
+  *tmmbr_owner = TMMBRHelp::IsOwner(tmmbr_info->tmmbn, local_media_ssrc());
   return tmmbr_info->tmmbn;
 }
 
@@ -824,7 +812,7 @@ void RTCPReceiver::HandleNack(const CommonHeader& rtcp_block,
     return;
   }
 
-  if (receiver_only_ || main_ssrc_ != nack.media_ssrc())  // Not to us.
+  if (receiver_only_ || local_media_ssrc() != nack.media_ssrc())  // Not to us.
     return;
 
   packet_information->nack_sequence_numbers.insert(
@@ -995,7 +983,7 @@ void RTCPReceiver::HandlePli(const CommonHeader& rtcp_block,
     return;
   }
 
-  if (main_ssrc_ == pli.media_ssrc()) {
+  if (local_media_ssrc() == pli.media_ssrc()) {
     ++packet_type_counter_.pli_packets;
     // Received a signal that we need to send a new key frame.
     packet_information->packet_type_flags |= kRtcpPli;
@@ -1018,7 +1006,7 @@ void RTCPReceiver::HandleTmmbr(const CommonHeader& rtcp_block,
   }
 
   for (const rtcp::TmmbItem& request : tmmbr.requests()) {
-    if (main_ssrc_ != request.ssrc() || request.bitrate_bps() == 0)
+    if (local_media_ssrc() != request.ssrc() || request.bitrate_bps() == 0)
       continue;
 
     TmmbrInformation* tmmbr_info = FindOrCreateTmmbrInfo(tmmbr.sender_ssrc());
@@ -1100,7 +1088,7 @@ void RTCPReceiver::HandleFir(const CommonHeader& rtcp_block,
   const int64_t now_ms = clock_->TimeInMilliseconds();
   for (const rtcp::Fir::Request& fir_request : fir.requests()) {
     // Is it our sender that is requested to generate a new keyframe.
-    if (main_ssrc_ != fir_request.ssrc)
+    if (local_media_ssrc() != fir_request.ssrc)
       continue;
 
     ++packet_type_counter_.fir_packets;
@@ -1192,7 +1180,8 @@ void RTCPReceiver::TriggerCallbacksFromRtcpPacket(
         RTC_LOG(LS_VERBOSE)
             << "Incoming FIR from SSRC " << packet_information.remote_ssrc;
       }
-      rtcp_intra_frame_observer_->OnReceivedIntraFrameRequest(main_ssrc_);
+      rtcp_intra_frame_observer_->OnReceivedIntraFrameRequest(
+          local_media_ssrc());
     }
   }
   if (rtcp_loss_notification_observer_ &&
@@ -1200,7 +1189,7 @@ void RTCPReceiver::TriggerCallbacksFromRtcpPacket(
     rtcp::LossNotification* loss_notification =
         packet_information.loss_notification.get();
     RTC_DCHECK(loss_notification);
-    if (loss_notification->media_ssrc() == main_ssrc_) {
+    if (loss_notification->media_ssrc() == local_media_ssrc()) {
       rtcp_loss_notification_observer_->OnReceivedLossNotification(
           loss_notification->media_ssrc(), loss_notification->last_decoded(),
           loss_notification->last_received(),
@@ -1232,7 +1221,7 @@ void RTCPReceiver::TriggerCallbacksFromRtcpPacket(
       (packet_information.packet_type_flags & kRtcpTransportFeedback)) {
     uint32_t media_source_ssrc =
         packet_information.transport_feedback->media_ssrc();
-    if (media_source_ssrc == main_ssrc_ ||
+    if (media_source_ssrc == local_media_ssrc() ||
         registered_ssrcs_.contains(media_source_ssrc)) {
       transport_feedback_observer_->OnTransportFeedback(
           *packet_information.transport_feedback);

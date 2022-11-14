@@ -208,6 +208,8 @@ class PeerConnectionE2EQualityTestFixture {
     // if it's spec is `Spec::kNone`.
     bool IsRegular() const { return spec_ == Spec::kNone; }
 
+    std::string ToString() const;
+
    private:
     size_t width_ = 0;
     size_t height_ = 0;
@@ -305,6 +307,9 @@ class PeerConnectionE2EQualityTestFixture {
     // video frames to be dumped. Modulo equals X means every Xth frame will be
     // written to the dump file. The value must be greater than 0.
     int output_dump_sampling_modulo = 1;
+    // If set to true uses fixed frame rate while dumping output video to the
+    // file. `fps` will be used as frame rate.
+    bool output_dump_use_fixed_framerate = false;
     // If true will display input and output video on the user's screen.
     bool show_on_screen = false;
     // If specified, determines a sync group to which this video stream belongs.
@@ -377,6 +382,11 @@ class PeerConnectionE2EQualityTestFixture {
     static absl::optional<VideoResolution> GetMaxResolution(
         rtc::ArrayView<const VideoResolution> resolutions);
 
+    bool operator==(const VideoSubscription& other) const;
+    bool operator!=(const VideoSubscription& other) const {
+      return !(*this == other);
+    }
+
     // Subscribes receiver to all streams sent by the specified peer with
     // specified resolution. It will override any resolution that was used in
     // `SubscribeToAll` independently from methods call order.
@@ -422,6 +432,8 @@ class PeerConnectionE2EQualityTestFixture {
       }
       return subscribed_streams;
     }
+
+    std::string ToString() const;
 
    private:
     absl::optional<VideoResolution> default_resolution_ = absl::nullopt;

@@ -10,6 +10,9 @@
 #include "MediaConduitInterface.h"
 #include "TaskQueueWrapper.h"
 
+// libwebrtc includes
+#include "call/rtp_transport_controller_send_factory.h"
+
 namespace mozilla {
 
 /* static */ RefPtr<WebrtcCallWrapper> WebrtcCallWrapper::Create(
@@ -34,9 +37,8 @@ namespace mozilla {
         config.trials = aSharedState->mTrials.get();
         wrapper->SetCall(WrapUnique(webrtc::Call::Create(
             config, &wrapper->mClock,
-            rtc::scoped_refptr<webrtc::SharedModuleThread>(
-                aSharedState->GetModuleThread()),
-            webrtc::ProcessThread::Create("PacerThread"))));
+            webrtc::RtpTransportControllerSendFactory().Create(
+                config.ExtractTransportConfig(), &wrapper->mClock))));
       }));
 
   return wrapper;

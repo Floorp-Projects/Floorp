@@ -30,7 +30,6 @@
 #include "media/base/video_common.h"
 #include "modules/video_coding/include/video_error_codes.h"
 #include "modules/video_coding/utility/simulcast_rate_allocator.h"
-#include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/experiments/rate_control_settings.h"
 #include "rtc_base/logging.h"
@@ -108,14 +107,14 @@ int VerifyCodec(const webrtc::VideoCodec* inst) {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-bool StreamQualityCompare(const webrtc::SpatialLayer& a,
-                          const webrtc::SpatialLayer& b) {
+bool StreamQualityCompare(const webrtc::SimulcastStream& a,
+                          const webrtc::SimulcastStream& b) {
   return std::tie(a.height, a.width, a.maxBitrate, a.maxFramerate) <
          std::tie(b.height, b.width, b.maxBitrate, b.maxFramerate);
 }
 
 void GetLowestAndHighestQualityStreamIndixes(
-    rtc::ArrayView<webrtc::SpatialLayer> streams,
+    rtc::ArrayView<webrtc::SimulcastStream> streams,
     int* lowest_quality_stream_idx,
     int* highest_quality_stream_idx) {
   const auto lowest_highest_quality_streams =
@@ -294,7 +293,7 @@ int SimulcastEncoderAdapter::Release() {
   // It's legal to move the encoder to another queue now.
   encoder_queue_.Detach();
 
-  rtc::AtomicOps::ReleaseStore(&inited_, 0);
+  inited_.store(0);
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -328,8 +327,8 @@ int SimulcastEncoderAdapter::InitEncode(
   int highest_quality_stream_idx = 0;
   if (!is_legacy_singlecast) {
     GetLowestAndHighestQualityStreamIndixes(
-        rtc::ArrayView<SpatialLayer>(codec_.simulcastStream,
-                                     total_streams_count_),
+        rtc::ArrayView<SimulcastStream>(codec_.simulcastStream,
+                                        total_streams_count_),
         &lowest_quality_stream_idx, &highest_quality_stream_idx);
   }
 
@@ -368,7 +367,7 @@ int SimulcastEncoderAdapter::InitEncode(
       bypass_mode_ = true;
 
       DestroyStoredEncoders();
-      rtc::AtomicOps::ReleaseStore(&inited_, 1);
+      inited_.store(1);
       return WEBRTC_VIDEO_CODEC_OK;
     }
 
@@ -424,7 +423,7 @@ int SimulcastEncoderAdapter::InitEncode(
   // To save memory, don't store encoders that we don't use.
   DestroyStoredEncoders();
 
-  rtc::AtomicOps::ReleaseStore(&inited_, 1);
+  inited_.store(1);
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -678,7 +677,7 @@ void SimulcastEncoderAdapter::OnDroppedFrame(size_t stream_idx) {
 }
 
 bool SimulcastEncoderAdapter::Initialized() const {
-  return rtc::AtomicOps::AcquireLoad(&inited_) == 1;
+  return inited_.load() == 1;
 }
 
 void SimulcastEncoderAdapter::DestroyStoredEncoders() {
@@ -762,7 +761,7 @@ webrtc::VideoCodec SimulcastEncoderAdapter::MakeStreamCodec(
     bool is_lowest_quality_stream,
     bool is_highest_quality_stream) {
   webrtc::VideoCodec codec_params = codec;
-  const SpatialLayer& stream_params = codec.simulcastStream[stream_idx];
+  const SimulcastStream& stream_params = codec.simulcastStream[stream_idx];
 
   codec_params.numberOfSimulcastStreams = 0;
   codec_params.width = stream_params.width;

@@ -14,6 +14,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <array>
 #include <atomic>
 #include <memory>
 #include <vector>
@@ -41,13 +42,6 @@ namespace webrtc {
 // externally, via the PacingController::PacketSender interface.
 class PacingController {
  public:
-  // Periodic mode uses the IntervalBudget class for tracking bitrate
-  // budgets, and expected ProcessPackets() to be called a fixed rate,
-  // e.g. every 5ms as implemented by PacedSender.
-  // Dynamic mode allows for arbitrary time delta between calls to
-  // ProcessPackets.
-  enum class ProcessMode { kPeriodic, kDynamic };
-
   class PacketSender {
    public:
     virtual ~PacketSender() = default;
@@ -74,6 +68,11 @@ class PacingController {
     virtual int SizeInPackets() const = 0;
     bool Empty() const { return SizeInPackets() == 0; }
     virtual DataSize SizeInPayloadBytes() const = 0;
+
+    // Total packets in the queue per media type (RtpPacketMediaType values are
+    // used as lookup index).
+    virtual const std::array<int, kNumMediaTypes>&
+    SizeInPacketsPerRtpPacketMediaType() const = 0;
 
     // If the next packet, that would be returned by Pop() if called
     // now, is an audio packet this method returns the enqueue time
@@ -125,8 +124,7 @@ class PacingController {
 
   PacingController(Clock* clock,
                    PacketSender* packet_sender,
-                   const FieldTrialsView& field_trials,
-                   ProcessMode mode);
+                   const FieldTrialsView& field_trials);
 
   ~PacingController();
 
@@ -134,7 +132,10 @@ class PacingController {
   // it's time to send.
   void EnqueuePacket(std::unique_ptr<RtpPacketToSend> packet);
 
+  // ABSL_DEPRECATED("Use CreateProbeClusters instead")
   void CreateProbeCluster(DataRate bitrate, int cluster_id);
+  void CreateProbeClusters(
+      rtc::ArrayView<const ProbeClusterConfig> probe_cluster_configs);
 
   void Pause();   // Temporarily pause all sending.
   void Resume();  // Resume sending packets.
@@ -144,7 +145,7 @@ class PacingController {
 
   // Sets the pacing rates. Must be called once before packets can be sent.
   void SetPacingRates(DataRate pacing_rate, DataRate padding_rate);
-  DataRate pacing_rate() const { return pacing_bitrate_; }
+  DataRate pacing_rate() const { return adjusted_media_rate_; }
 
   // Currently audio traffic is not accounted by pacer and passed through.
   // With the introduction of audio BWE audio traffic will be accounted for
@@ -154,12 +155,20 @@ class PacingController {
   void SetIncludeOverhead();
 
   void SetTransportOverhead(DataSize overhead_per_packet);
+  // The pacer is allowed to send enqued packets in bursts and can build up a
+  // packet "debt" that correspond to approximately the send rate during
+  // 'burst_interval'.
+  void SetSendBurstInterval(TimeDelta burst_interval);
 
   // Returns the time when the oldest packet was queued.
   Timestamp OldestPacketEnqueueTime() const;
 
   // Number of packets in the pacer queue.
   size_t QueueSizePackets() const;
+  // Number of packets in the pacer queue per media type (RtpPacketMediaType
+  // values are used as lookup index).
+  const std::array<int, kNumMediaTypes>& SizeInPacketsPerRtpPacketMediaType()
+      const;
   // Totals size of packets in the pacer queue.
   DataSize QueueSizeData() const;
 
@@ -208,10 +217,10 @@ class PacingController {
   void OnPacketSent(RtpPacketMediaType packet_type,
                     DataSize packet_size,
                     Timestamp send_time);
+  void MaybeUpdateMediaRateDueToLongQueue(Timestamp now);
 
   Timestamp CurrentTime() const;
 
-  const ProcessMode mode_;
   Clock* const clock_;
   PacketSender* const packet_sender_;
   const FieldTrialsView& field_trials_;
@@ -220,41 +229,31 @@ class PacingController {
   const bool send_padding_if_silent_;
   const bool pace_audio_;
   const bool ignore_transport_overhead_;
-  // In dynamic mode, indicates the target size when requesting padding,
-  // expressed as a duration in order to adjust for varying padding rate.
-  const TimeDelta padding_target_duration_;
 
   TimeDelta min_packet_limit_;
-
   DataSize transport_overhead_per_packet_;
+  TimeDelta send_burst_interval_;
 
   // TODO(webrtc:9716): Remove this when we are certain clocks are monotonic.
   // The last millisecond timestamp returned by `clock_`.
   mutable Timestamp last_timestamp_;
   bool paused_;
 
-  // In periodic mode, `media_budget_` and `padding_budget_` will be used to
-  // track when packets can be sent.
-  // In dynamic mode, `media_debt_` and `padding_debt_` will be used together
-  // with the target rates.
-
-  // This is the media budget, keeping track of how many bits of media
-  // we can pace out during the current interval.
-  IntervalBudget media_budget_;
-  // This is the padding budget, keeping track of how many bits of padding we're
-  // allowed to send out during the current interval. This budget will be
-  // utilized when there's no media to send.
-  IntervalBudget padding_budget_;
-
+  // Amount of outstanding data for media and padding.
   DataSize media_debt_;
   DataSize padding_debt_;
-  DataRate media_rate_;
+
+  // The target pacing rate, signaled via SetPacingRates().
+  DataRate pacing_rate_;
+  // The media send rate, which might adjusted from pacing_rate_, e.g. if the
+  // pacing queue is growing too long.
+  DataRate adjusted_media_rate_;
+  // The padding target rate. We aim to fill up to this rate with padding what
+  // is not already used by media.
   DataRate padding_rate_;
 
   BitrateProber prober_;
   bool probing_send_failure_;
-
-  DataRate pacing_bitrate_;
 
   Timestamp last_process_time_;
   Timestamp last_send_time_;

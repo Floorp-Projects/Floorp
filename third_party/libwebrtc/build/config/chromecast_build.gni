@@ -41,6 +41,11 @@ declare_args() {
   # TODO(slan): Remove instances of this when x86 is a fully supported platform.
   is_cast_desktop_build = is_chromecast && target_os == "linux" &&
                           (target_cpu == "x86" || target_cpu == "x64")
+
+  # Mozilla added: Until upstream's build repo is updated to
+  # 56e01bffd1de3e5b27e0da87f8019d44aa55a562, we'll default this to false
+  # to keep the build happy.
+  is_castos = false
 }
 
 declare_args() {

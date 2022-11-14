@@ -15,6 +15,8 @@
 
 namespace webrtc {
 
+inline constexpr ScalabilityMode kVP8SupportedScalabilityModes[] = {
+    ScalabilityMode::kL1T1, ScalabilityMode::kL1T2, ScalabilityMode::kL1T3};
 bool VP8SupportsScalabilityMode(ScalabilityMode scalability_mode);
 
 }  // namespace webrtc

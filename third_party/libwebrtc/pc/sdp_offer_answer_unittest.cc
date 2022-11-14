@@ -95,6 +95,7 @@ class SdpOfferAnswerTest : public ::testing::Test {
   rtc::scoped_refptr<PeerConnectionFactoryInterface> pc_factory_;
 
  private:
+  rtc::AutoThread main_thread_;
 };
 
 TEST_F(SdpOfferAnswerTest, OnTrackReturnsProxiedObject) {

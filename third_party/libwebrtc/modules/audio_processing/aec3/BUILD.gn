@@ -22,6 +22,7 @@ rtc_library("aec3") {
     "alignment_mixer.h",
     "api_call_jitter_metrics.cc",
     "api_call_jitter_metrics.h",
+    "block.h",
     "block_buffer.cc",
     "block_delay_buffer.cc",
     "block_delay_buffer.h",
@@ -143,7 +144,6 @@ rtc_library("aec3") {
     "../../../api/audio:aec3_config",
     "../../../api/audio:echo_control",
     "../../../common_audio:common_audio_c",
-    "../../../rtc_base:atomicops",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
     "../../../rtc_base:macromagic",
@@ -182,6 +182,7 @@ rtc_source_set("aec3_fft") {
 
 rtc_source_set("render_buffer") {
   sources = [
+    "block.h",
     "block_buffer.h",
     "fft_buffer.h",
     "render_buffer.h",
@@ -225,6 +226,7 @@ rtc_source_set("matched_filter") {
     "../../../api:array_view",
     "../../../rtc_base/system:arch",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_source_set("vector_math") {

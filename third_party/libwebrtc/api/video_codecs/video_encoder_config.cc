@@ -52,6 +52,7 @@ VideoEncoderConfig::VideoEncoderConfig()
     : codec_type(kVideoCodecGeneric),
       video_format("Unset"),
       content_type(ContentType::kRealtimeVideo),
+      frame_drop_enabled(false),
       encoder_specific_settings(nullptr),
       min_transmit_bitrate_bps(0),
       max_bitrate_bps(0),
@@ -78,6 +79,7 @@ std::string VideoEncoderConfig::ToString() const {
       ss << "kScreenshare";
       break;
   }
+  ss << ", frame_drop_enabled: " << frame_drop_enabled;
   ss << ", encoder_specific_settings: ";
   ss << (encoder_specific_settings != nullptr ? "(ptr)" : "NULL");
 
@@ -90,9 +92,7 @@ VideoEncoderConfig::VideoEncoderConfig(const VideoEncoderConfig&) = default;
 
 void VideoEncoderConfig::EncoderSpecificSettings::FillEncoderSpecificSettings(
     VideoCodec* codec) const {
-  if (codec->codecType == kVideoCodecH264) {
-    FillVideoCodecH264(codec->H264());
-  } else if (codec->codecType == kVideoCodecVP8) {
+  if (codec->codecType == kVideoCodecVP8) {
     FillVideoCodecVp8(codec->VP8());
   } else if (codec->codecType == kVideoCodecVP9) {
     FillVideoCodecVp9(codec->VP9());
@@ -100,11 +100,6 @@ void VideoEncoderConfig::EncoderSpecificSettings::FillEncoderSpecificSettings(
     RTC_DCHECK_NOTREACHED()
         << "Encoder specifics set/used for unknown codec type.";
   }
-}
-
-void VideoEncoderConfig::EncoderSpecificSettings::FillVideoCodecH264(
-    VideoCodecH264* h264_settings) const {
-  RTC_DCHECK_NOTREACHED();
 }
 
 void VideoEncoderConfig::EncoderSpecificSettings::FillVideoCodecVp8(
@@ -115,15 +110,6 @@ void VideoEncoderConfig::EncoderSpecificSettings::FillVideoCodecVp8(
 void VideoEncoderConfig::EncoderSpecificSettings::FillVideoCodecVp9(
     VideoCodecVP9* vp9_settings) const {
   RTC_DCHECK_NOTREACHED();
-}
-
-VideoEncoderConfig::H264EncoderSpecificSettings::H264EncoderSpecificSettings(
-    const VideoCodecH264& specifics)
-    : specifics_(specifics) {}
-
-void VideoEncoderConfig::H264EncoderSpecificSettings::FillVideoCodecH264(
-    VideoCodecH264* h264_settings) const {
-  *h264_settings = specifics_;
 }
 
 VideoEncoderConfig::Vp8EncoderSpecificSettings::Vp8EncoderSpecificSettings(

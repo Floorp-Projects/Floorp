@@ -89,7 +89,7 @@ void HistogramTest::VerifyHistogramStats(bool use_rtx,
 
     void ModifyVideoConfigs(
         VideoSendStream::Config* send_config,
-        std::vector<VideoReceiveStream::Config>* receive_configs,
+        std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
         VideoEncoderConfig* encoder_config) override {
       // NACK
       send_config->rtp.nack.rtp_history_ms = kNackRtpHistoryMs;

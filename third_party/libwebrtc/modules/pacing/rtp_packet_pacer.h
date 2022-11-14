@@ -13,6 +13,8 @@
 
 #include <stdint.h>
 
+#include <vector>
+
 #include "absl/types/optional.h"
 #include "api/units/data_rate.h"
 #include "api/units/data_size.h"
@@ -26,7 +28,8 @@ class RtpPacketPacer {
  public:
   virtual ~RtpPacketPacer() = default;
 
-  virtual void CreateProbeCluster(DataRate bitrate, int cluster_id) = 0;
+  virtual void CreateProbeClusters(
+      std::vector<ProbeClusterConfig> probe_cluster_configs) = 0;
 
   // Temporarily pause all sending.
   virtual void Pause() = 0;

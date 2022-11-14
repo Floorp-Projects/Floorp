@@ -31,7 +31,9 @@ size_t OutstandingData::GetSerializedChunkSize(const Data& data) const {
 }
 
 void OutstandingData::Item::Ack() {
-  lifecycle_ = Lifecycle::kActive;
+  if (lifecycle_ != Lifecycle::kAbandoned) {
+    lifecycle_ = Lifecycle::kActive;
+  }
   ack_state_ = AckState::kAcked;
 }
 
@@ -145,6 +147,14 @@ void OutstandingData::RemoveAcked(UnwrappedTSN cumulative_tsn_ack,
 
   for (auto iter = outstanding_data_.begin(); iter != first_unacked; ++iter) {
     AckChunk(ack_info, iter);
+    if (iter->second.lifecycle_id().IsSet()) {
+      RTC_DCHECK(iter->second.data().is_end);
+      if (iter->second.is_abandoned()) {
+        ack_info.abandoned_lifecycle_ids.push_back(iter->second.lifecycle_id());
+      } else {
+        ack_info.acked_lifecycle_ids.push_back(iter->second.lifecycle_id());
+      }
+    }
   }
 
   outstanding_data_.erase(outstanding_data_.begin(), first_unacked);
@@ -265,9 +275,11 @@ void OutstandingData::AbandonAllFor(const Item& item) {
                      Data::IsEnd(true), item.data().is_unordered);
     Item& added_item =
         outstanding_data_
-            .emplace(tsn,
-                     Item(std::move(message_end), MaxRetransmits::NoLimit(),
-                          TimeMs(0), TimeMs::InfiniteFuture()))
+            .emplace(std::piecewise_construct, std::forward_as_tuple(tsn),
+                     std::forward_as_tuple(std::move(message_end), TimeMs(0),
+                                           MaxRetransmits::NoLimit(),
+                                           TimeMs::InfiniteFuture(),
+                                           LifecycleId::NotSet()))
             .first->second;
     // The added chunk shouldn't be included in `outstanding_bytes`, so set it
     // as acked.
@@ -381,9 +393,10 @@ UnwrappedTSN OutstandingData::highest_outstanding_tsn() const {
 
 absl::optional<UnwrappedTSN> OutstandingData::Insert(
     const Data& data,
-    MaxRetransmits max_retransmissions,
     TimeMs time_sent,
-    TimeMs expires_at) {
+    MaxRetransmits max_retransmissions,
+    TimeMs expires_at,
+    LifecycleId lifecycle_id) {
   UnwrappedTSN tsn = next_tsn_;
   next_tsn_.Increment();
 
@@ -392,8 +405,10 @@ absl::optional<UnwrappedTSN> OutstandingData::Insert(
   outstanding_bytes_ += chunk_size;
   ++outstanding_items_;
   auto it = outstanding_data_
-                .emplace(tsn, Item(data.Clone(), max_retransmissions, time_sent,
-                                   expires_at))
+                .emplace(std::piecewise_construct, std::forward_as_tuple(tsn),
+                         std::forward_as_tuple(data.Clone(), time_sent,
+                                               max_retransmissions, expires_at,
+                                               lifecycle_id))
                 .first;
 
   if (it->second.has_expired(time_sent)) {
@@ -517,4 +532,12 @@ IForwardTsnChunk OutstandingData::CreateIForwardTsn() const {
                           std::move(skipped_streams));
 }
 
+void OutstandingData::ResetSequenceNumbers(UnwrappedTSN next_tsn,
+                                           UnwrappedTSN last_cumulative_tsn) {
+  RTC_DCHECK(outstanding_data_.empty());
+  RTC_DCHECK(next_tsn_ == last_cumulative_tsn_ack_.next_value());
+  RTC_DCHECK(next_tsn == last_cumulative_tsn.next_value());
+  next_tsn_ = next_tsn;
+  last_cumulative_tsn_ack_ = last_cumulative_tsn;
+}
 }  // namespace dcsctp

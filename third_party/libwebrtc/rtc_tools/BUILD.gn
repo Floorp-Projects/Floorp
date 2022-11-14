@@ -58,6 +58,7 @@ rtc_library("video_file_reader") {
     "video_file_reader.h",
   ]
   deps = [
+    "../api:make_ref_counted",
     "../api:scoped_refptr",
     "../api/video:video_frame",
     "../api/video:video_rtp_headers",
@@ -107,13 +108,13 @@ rtc_library("video_quality_analysis") {
   deps = [
     ":video_file_reader",
     "../api:array_view",
+    "../api:make_ref_counted",
     "../api:scoped_refptr",
     "../api/video:video_frame",
     "../api/video:video_rtp_headers",
     "../common_video",
     "../rtc_base:checks",
     "../rtc_base:logging",
-    "../rtc_base:refcount",
     "../test:perf_test",
     "//third_party/libyuv",
   ]
@@ -135,6 +136,7 @@ rtc_executable("frame_analyzer") {
     ":video_file_reader",
     ":video_file_writer",
     ":video_quality_analysis",
+    "../api:make_ref_counted",
     "../api:scoped_refptr",
     "../rtc_base:stringutils",
     "../test:perf_test",
@@ -260,6 +262,7 @@ if (!is_component_build) {
       "../test:fake_video_codecs",
       "../test:null_transport",
       "../test:rtp_test_utils",
+      "../test:run_loop",
       "../test:run_test",
       "../test:run_test_interface",
       "../test:test_common",
@@ -377,6 +380,8 @@ if (!build_with_chromium) {
         ":chart_proto",
         "../api:function_view",
         "../api:network_state_predictor_api",
+        "../modules/audio_coding:neteq_input_audio_tools",
+        "../modules/audio_coding:neteq_tools_minimal",
         "../rtc_base:ignore_wundef",
         "../rtc_base:logging",
         "../rtc_base:macromagic",
@@ -459,14 +464,12 @@ if (rtc_include_tests) {
 
     if (rtc_enable_protobuf) {
       rtc_executable("event_log_visualizer") {
-        testonly = true
-        sources = [ "rtc_event_log_visualizer/main.cc" ]
-        data = [
-          # If --wav_filename is not provided, event_log_visualizer uses
-          # EN_script2_F_sp2_B1.wav by default. This is a good default to use
-          # for example with flags --plot=all when there is no need to use a
-          # specific .wav file.
-          "../resources/audio_processing/conversational_speech/EN_script2_F_sp2_B1.wav",
+        # TODO(bugs.webrtc.org/14248): Remove once usage of std::tmpnam
+        # is removed (in favor of in memory InputAudioFile.
+        cflags_cc = [ "-Wno-deprecated-declarations" ]
+        sources = [
+          "rtc_event_log_visualizer/conversational_speech_en.h",
+          "rtc_event_log_visualizer/main.cc",
         ]
         deps = [
           ":event_log_visualizer_utils",
@@ -479,9 +482,6 @@ if (rtc_include_tests) {
           "../rtc_base:logging",
           "../rtc_base:protobuf_utils",
           "../system_wrappers:field_trial",
-          "../test:field_trial",
-          "../test:fileutils",
-          "../test:test_support",
           "//third_party/abseil-cpp/absl/algorithm:container",
           "//third_party/abseil-cpp/absl/flags:config",
           "//third_party/abseil-cpp/absl/flags:flag",
@@ -571,7 +571,6 @@ if (rtc_include_tests) {
 
       rtc_executable("unpack_aecdump") {
         visibility = [ "*" ]
-        testonly = true
         sources = [ "unpack_aecdump/unpack.cc" ]
 
         deps = [
@@ -581,11 +580,12 @@ if (rtc_include_tests) {
           "../modules/audio_processing:audioproc_debug_proto",
           "../modules/audio_processing:audioproc_debug_proto",
           "../modules/audio_processing:audioproc_protobuf_utils",
-          "../modules/audio_processing:audioproc_test_utils",
+          "../rtc_base:checks",
           "../rtc_base:ignore_wundef",
           "../rtc_base:macromagic",
           "../rtc_base:protobuf_utils",
           "../rtc_base:stringutils",
+          "../rtc_base/system:arch",
           "//third_party/abseil-cpp/absl/flags:flag",
           "//third_party/abseil-cpp/absl/flags:parse",
         ]

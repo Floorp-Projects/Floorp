@@ -9,6 +9,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <XCTest/XCTest.h>
 
 #include <memory>
 
@@ -18,9 +19,7 @@
 #import "api/peerconnection/RTCIceCandidate.h"
 #import "helpers/NSString+StdString.h"
 
-@interface RTCIceCandidateTest : NSObject
-- (void)testCandidate;
-- (void)testInitFromNativeCandidate;
+@interface RTCIceCandidateTest : XCTestCase
 @end
 
 @implementation RTCIceCandidateTest
@@ -59,17 +58,3 @@
 }
 
 @end
-
-TEST(RTCIceCandidateTest, CandidateTest) {
-  @autoreleasepool {
-    RTCIceCandidateTest *test = [[RTCIceCandidateTest alloc] init];
-    [test testCandidate];
-  }
-}
-
-TEST(RTCIceCandidateTest, InitFromCandidateTest) {
-  @autoreleasepool {
-    RTCIceCandidateTest *test = [[RTCIceCandidateTest alloc] init];
-    [test testInitFromNativeCandidate];
-  }
-}

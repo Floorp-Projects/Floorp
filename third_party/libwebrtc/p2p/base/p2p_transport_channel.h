@@ -32,6 +32,7 @@
 #include <vector>
 
 #include "absl/base/attributes.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/async_dns_resolver.h"
@@ -40,6 +41,7 @@
 #include "api/ice_transport_interface.h"
 #include "api/rtc_error.h"
 #include "api/sequence_checker.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/transport/enums.h"
 #include "api/transport/stun.h"
 #include "logging/rtc_event_log/events/rtc_event_ice_candidate_pair_config.h"
@@ -49,6 +51,7 @@
 #include "p2p/base/connection.h"
 #include "p2p/base/ice_controller_factory_interface.h"
 #include "p2p/base/ice_controller_interface.h"
+#include "p2p/base/ice_switch_reason.h"
 #include "p2p/base/ice_transport_internal.h"
 #include "p2p/base/p2p_constants.h"
 #include "p2p/base/p2p_transport_channel_ice_field_trials.h"
@@ -66,7 +69,6 @@
 #include "rtc_base/socket_address.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/system/rtc_export.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
@@ -83,10 +85,10 @@ enum class IceRestartState { CONNECTING, CONNECTED, DISCONNECTED, MAX_VALUE };
 
 static const int MIN_PINGS_AT_WEAK_PING_INTERVAL = 3;
 
-bool IceCredentialsChanged(const std::string& old_ufrag,
-                           const std::string& old_pwd,
-                           const std::string& new_ufrag,
-                           const std::string& new_pwd);
+bool IceCredentialsChanged(absl::string_view old_ufrag,
+                           absl::string_view old_pwd,
+                           absl::string_view new_ufrag,
+                           absl::string_view new_pwd);
 
 // Adds the port on which the candidate originated.
 class RemoteCandidate : public Candidate {
@@ -105,13 +107,13 @@ class RemoteCandidate : public Candidate {
 class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
  public:
   static std::unique_ptr<P2PTransportChannel> Create(
-      const std::string& transport_name,
+      absl::string_view transport_name,
       int component,
       webrtc::IceTransportInit init);
 
   // For testing only.
   // TODO(zstein): Remove once AsyncDnsResolverFactory is required.
-  P2PTransportChannel(const std::string& transport_name,
+  P2PTransportChannel(absl::string_view transport_name,
                       int component,
                       PortAllocator* allocator,
                       const webrtc::FieldTrialsView* field_trials = nullptr);
@@ -236,7 +238,7 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
 
  private:
   P2PTransportChannel(
-      const std::string& transport_name,
+      absl::string_view transport_name,
       int component,
       PortAllocator* allocator,
       // DNS resolver factory
@@ -254,18 +256,19 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
   }
 
   // Returns true if it's possible to send packets on `connection`.
-  bool ReadyToSend(Connection* connection) const;
+  bool ReadyToSend(const Connection* connection) const;
   bool PresumedWritable(const Connection* conn) const;
   void UpdateConnectionStates();
-  void RequestSortAndStateUpdate(IceControllerEvent reason_to_sort);
+  void RequestSortAndStateUpdate(IceSwitchReason reason_to_sort);
   // Start pinging if we haven't already started, and we now have a connection
   // that's pingable.
   void MaybeStartPinging();
 
-  void SortConnectionsAndUpdateState(IceControllerEvent reason_to_sort);
+  void SortConnectionsAndUpdateState(IceSwitchReason reason_to_sort);
   void SortConnections();
   void SortConnectionsIfNeeded();
-  void SwitchSelectedConnection(Connection* conn, IceControllerEvent reason);
+  rtc::NetworkRoute ConfigureNetworkRoute(const Connection* conn);
+  void SwitchSelectedConnection(Connection* conn, IceSwitchReason reason);
   void UpdateState();
   void HandleAllTimedOut();
   void MaybeStopPortAllocatorSessions();
@@ -340,9 +343,9 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
 
   // Returns true if the new_connection is selected for transmission.
   bool MaybeSwitchSelectedConnection(Connection* new_connection,
-                                     IceControllerEvent reason);
+                                     IceSwitchReason reason);
   bool MaybeSwitchSelectedConnection(
-      IceControllerEvent reason,
+      IceSwitchReason reason,
       IceControllerInterface::SwitchResult result);
   void PruneConnections();
 
@@ -355,7 +358,7 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
   }
   // Returns the remote IceParameters and generation that match `ufrag`
   // if found, and returns nullptr otherwise.
-  const IceParameters* FindRemoteIceFromUfrag(const std::string& ufrag,
+  const IceParameters* FindRemoteIceFromUfrag(absl::string_view ufrag,
                                               uint32_t* generation);
   // Returns the index of the latest remote ICE parameters, or 0 if no remote
   // ICE parameters have been received.

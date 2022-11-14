@@ -20,6 +20,7 @@
 #include "api/data_channel_interface.h"
 #include "api/jsep.h"
 #include "api/media_stream_interface.h"
+#include "api/test/mock_packet_socket_factory.h"
 #include "api/video_codecs/builtin_video_decoder_factory.h"
 #include "api/video_codecs/builtin_video_encoder_factory.h"
 #include "media/base/fake_frame_source.h"
@@ -31,9 +32,13 @@
 #include "p2p/base/port_interface.h"
 #include "pc/test/fake_audio_capture_module.h"
 #include "pc/test/fake_video_track_source.h"
+#include "pc/test/mock_peer_connection_observers.h"
+#include "rtc_base/gunit.h"
+#include "rtc_base/internal/default_socket_server.h"
 #include "rtc_base/rtc_certificate_generator.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/time_utils.h"
+#include "test/gmock.h"
 #include "test/gtest.h"
 
 #ifdef WEBRTC_ANDROID
@@ -50,6 +55,13 @@ using webrtc::PeerConnectionInterface;
 using webrtc::PeerConnectionObserver;
 using webrtc::VideoTrackInterface;
 using webrtc::VideoTrackSourceInterface;
+
+using ::testing::_;
+using ::testing::AtLeast;
+using ::testing::InvokeWithoutArgs;
+using ::testing::NiceMock;
+using ::testing::Return;
+using ::testing::UnorderedElementsAre;
 
 namespace {
 
@@ -93,9 +105,29 @@ class NullPeerConnectionObserver : public PeerConnectionObserver {
   }
 };
 
+class MockNetworkManager : public rtc::NetworkManager {
+ public:
+  MOCK_METHOD(void, StartUpdating, (), (override));
+  MOCK_METHOD(void, StopUpdating, (), (override));
+  MOCK_METHOD(std::vector<const rtc::Network*>,
+              GetNetworks,
+              (),
+              (const override));
+  MOCK_METHOD(std::vector<const rtc::Network*>,
+              GetAnyAddressNetworks,
+              (),
+              (override));
+};
+
 }  // namespace
 
 class PeerConnectionFactoryTest : public ::testing::Test {
+ public:
+  PeerConnectionFactoryTest()
+      : socket_server_(rtc::CreateDefaultSocketServer()),
+        main_thread_(socket_server_.get()) {}
+
+ private:
   void SetUp() {
 #ifdef WEBRTC_ANDROID
     webrtc::InitializeAndroidObjects();
@@ -114,8 +146,10 @@ class PeerConnectionFactoryTest : public ::testing::Test {
         nullptr /* audio_processing */);
 
     ASSERT_TRUE(factory_.get() != NULL);
-    port_allocator_.reset(
-        new cricket::FakePortAllocator(rtc::Thread::Current(), nullptr));
+    packet_socket_factory_.reset(
+        new rtc::BasicPacketSocketFactory(socket_server_.get()));
+    port_allocator_.reset(new cricket::FakePortAllocator(
+        rtc::Thread::Current(), packet_socket_factory_.get()));
     raw_port_allocator_ = port_allocator_.get();
   }
 
@@ -148,14 +182,56 @@ class PeerConnectionFactoryTest : public ::testing::Test {
     EXPECT_GT(codec.num_channels, 0);
   }
 
-  void VerifyVideoCodecCapability(const webrtc::RtpCodecCapability& codec) {
+  void VerifyVideoCodecCapability(const webrtc::RtpCodecCapability& codec,
+                                  bool sender) {
     EXPECT_EQ(codec.kind, cricket::MEDIA_TYPE_VIDEO);
     EXPECT_FALSE(codec.name.empty());
     EXPECT_GT(codec.clock_rate, 0);
+    if (sender) {
+      if (codec.name == "VP8" || codec.name == "H264") {
+        EXPECT_THAT(codec.scalability_modes,
+                    UnorderedElementsAre(webrtc::ScalabilityMode::kL1T1,
+                                         webrtc::ScalabilityMode::kL1T2,
+                                         webrtc::ScalabilityMode::kL1T3))
+            << "Codec: " << codec.name;
+      } else if (codec.name == "VP9" || codec.name == "AV1") {
+        EXPECT_THAT(
+            codec.scalability_modes,
+            UnorderedElementsAre(
+                // clang-format off
+                webrtc::ScalabilityMode::kL1T1,
+                webrtc::ScalabilityMode::kL1T2,
+                webrtc::ScalabilityMode::kL1T3,
+                webrtc::ScalabilityMode::kL2T1,
+                webrtc::ScalabilityMode::kL2T1h,
+                webrtc::ScalabilityMode::kL2T1_KEY,
+                webrtc::ScalabilityMode::kL2T2,
+                webrtc::ScalabilityMode::kL2T2_KEY,
+                webrtc::ScalabilityMode::kL2T2_KEY_SHIFT,
+                webrtc::ScalabilityMode::kL2T3,
+                webrtc::ScalabilityMode::kL2T3_KEY,
+                webrtc::ScalabilityMode::kL3T1,
+                webrtc::ScalabilityMode::kL3T3,
+                webrtc::ScalabilityMode::kL3T3_KEY,
+                webrtc::ScalabilityMode::kS2T1,
+                webrtc::ScalabilityMode::kS2T3,
+                webrtc::ScalabilityMode::kS3T3)
+            // clang-format on
+            )
+            << "Codec: " << codec.name;
+      } else {
+        EXPECT_TRUE(codec.scalability_modes.empty());
+      }
+    } else {
+      EXPECT_TRUE(codec.scalability_modes.empty());
+    }
   }
 
+  std::unique_ptr<rtc::SocketServer> socket_server_;
+  rtc::AutoSocketServerThread main_thread_;
   rtc::scoped_refptr<PeerConnectionFactoryInterface> factory_;
   NullPeerConnectionObserver observer_;
+  std::unique_ptr<rtc::PacketSocketFactory> packet_socket_factory_;
   std::unique_ptr<cricket::FakePortAllocator> port_allocator_;
   // Since the PC owns the port allocator after it's been initialized,
   // this should only be used when known to be safe.
@@ -215,7 +291,7 @@ TEST_F(PeerConnectionFactoryTest, CheckRtpSenderVideoCapabilities) {
       factory_->GetRtpSenderCapabilities(cricket::MEDIA_TYPE_VIDEO);
   EXPECT_FALSE(video_capabilities.codecs.empty());
   for (const auto& codec : video_capabilities.codecs) {
-    VerifyVideoCodecCapability(codec);
+    VerifyVideoCodecCapability(codec, true);
   }
   EXPECT_FALSE(video_capabilities.header_extensions.empty());
   for (const auto& header_extension : video_capabilities.header_extensions) {
@@ -248,7 +324,7 @@ TEST_F(PeerConnectionFactoryTest, CheckRtpReceiverVideoCapabilities) {
       factory_->GetRtpReceiverCapabilities(cricket::MEDIA_TYPE_VIDEO);
   EXPECT_FALSE(video_capabilities.codecs.empty());
   for (const auto& codec : video_capabilities.codecs) {
-    VerifyVideoCodecCapability(codec);
+    VerifyVideoCodecCapability(codec, false);
   }
   EXPECT_FALSE(video_capabilities.header_extensions.empty());
   for (const auto& header_extension : video_capabilities.header_extensions) {
@@ -490,4 +566,64 @@ TEST_F(PeerConnectionFactoryTest, LocalRendering) {
   source->InjectFrame(frame_source.GetFrame());
   EXPECT_EQ(3, local_renderer.num_rendered_frames());
   EXPECT_FALSE(local_renderer.black_frame());
+}
+
+TEST(PeerConnectionFactoryDependenciesTest, UsesNetworkManager) {
+  constexpr int64_t kWaitTimeoutMs = 10000;
+  auto mock_network_manager = std::make_unique<NiceMock<MockNetworkManager>>();
+
+  rtc::Event called;
+  EXPECT_CALL(*mock_network_manager, StartUpdating())
+      .Times(AtLeast(1))
+      .WillRepeatedly(InvokeWithoutArgs([&] { called.Set(); }));
+
+  webrtc::PeerConnectionFactoryDependencies pcf_dependencies;
+  pcf_dependencies.network_manager = std::move(mock_network_manager);
+
+  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> pcf =
+      CreateModularPeerConnectionFactory(std::move(pcf_dependencies));
+
+  PeerConnectionInterface::RTCConfiguration config;
+  config.ice_candidate_pool_size = 2;
+  NullPeerConnectionObserver observer;
+  auto pc = pcf->CreatePeerConnectionOrError(
+      config, webrtc::PeerConnectionDependencies(&observer));
+  ASSERT_TRUE(pc.ok());
+
+  called.Wait(kWaitTimeoutMs);
+}
+
+TEST(PeerConnectionFactoryDependenciesTest, UsesPacketSocketFactory) {
+  constexpr int64_t kWaitTimeoutMs = 10000;
+  auto mock_socket_factory =
+      std::make_unique<NiceMock<rtc::MockPacketSocketFactory>>();
+
+  rtc::Event called;
+  EXPECT_CALL(*mock_socket_factory, CreateUdpSocket(_, _, _))
+      .WillOnce(InvokeWithoutArgs([&] {
+        called.Set();
+        return nullptr;
+      }))
+      .WillRepeatedly(Return(nullptr));
+
+  webrtc::PeerConnectionFactoryDependencies pcf_dependencies;
+  pcf_dependencies.packet_socket_factory = std::move(mock_socket_factory);
+
+  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> pcf =
+      CreateModularPeerConnectionFactory(std::move(pcf_dependencies));
+
+  // By default, localhost addresses are ignored, which makes tests fail if test
+  // machine is offline.
+  PeerConnectionFactoryInterface::Options options;
+  options.network_ignore_mask = 0;
+  pcf->SetOptions(options);
+
+  PeerConnectionInterface::RTCConfiguration config;
+  config.ice_candidate_pool_size = 2;
+  NullPeerConnectionObserver observer;
+  auto pc = pcf->CreatePeerConnectionOrError(
+      config, webrtc::PeerConnectionDependencies(&observer));
+  ASSERT_TRUE(pc.ok());
+
+  called.Wait(kWaitTimeoutMs);
 }

@@ -132,7 +132,7 @@ class FrameBufferProxyFixture
                                                       run_loop_.task_queue(),
                                                       &timing_,
                                                       &stats_callback_,
-                                                      &decode_queue_,
+                                                      decode_queue_.Get(),
                                                       this,
                                                       kMaxWaitForKeyframe,
                                                       kMaxWaitForFrame,

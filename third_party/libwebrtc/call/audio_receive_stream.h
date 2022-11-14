@@ -28,7 +28,7 @@
 namespace webrtc {
 class AudioSinkInterface;
 
-class AudioReceiveStream : public MediaReceiveStream {
+class AudioReceiveStreamInterface : public MediaReceiveStreamInterface {
  public:
   struct Stats {
     Stats();
@@ -60,6 +60,7 @@ class AudioReceiveStream : public MediaReceiveStream {
     double jitter_buffer_delay_seconds = 0.0;
     uint64_t jitter_buffer_emitted_count = 0;
     double jitter_buffer_target_delay_seconds = 0.0;
+    double jitter_buffer_minimum_delay_seconds = 0.0;
     uint64_t inserted_samples_for_deceleration = 0;
     uint64_t removed_samples_for_acceleration = 0;
     // Stats below DO NOT correspond directly to anything in the WebRTC stats
@@ -130,7 +131,6 @@ class AudioReceiveStream : public MediaReceiveStream {
     size_t jitter_buffer_max_packets = 200;
     bool jitter_buffer_fast_accelerate = false;
     int jitter_buffer_min_delay_ms = 0;
-    bool jitter_buffer_enable_rtx_handling = false;
 
     // Identifier for an A/V synchronization group. Empty string to disable.
     // TODO(pbos): Synchronize streams in a sync group, not just one video
@@ -151,22 +151,21 @@ class AudioReceiveStream : public MediaReceiveStream {
     // decrypted in whatever way the caller choses. This is not required by
     // default.
     // TODO(tommi): Remove this member variable from the struct. It's not
-    // a part of the AudioReceiveStream state but rather a pass through
+    // a part of the AudioReceiveStreamInterface state but rather a pass through
     // variable.
     rtc::scoped_refptr<webrtc::FrameDecryptorInterface> frame_decryptor;
 
     // An optional frame transformer used by insertable streams to transform
     // encoded frames.
     // TODO(tommi): Remove this member variable from the struct. It's not
-    // a part of the AudioReceiveStream state but rather a pass through
+    // a part of the AudioReceiveStreamInterface state but rather a pass through
     // variable.
     rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer;
   };
 
   // Methods that support reconfiguring the stream post initialization.
   virtual void SetDecoderMap(std::map<int, SdpAudioFormat> decoder_map) = 0;
-  virtual void SetUseTransportCcAndNackHistory(bool use_transport_cc,
-                                               int history_ms) = 0;
+  virtual void SetNackHistory(int history_ms) = 0;
   virtual void SetNonSenderRttMeasurement(bool enabled) = 0;
 
   // Returns true if the stream has been started.
@@ -209,8 +208,9 @@ class AudioReceiveStream : public MediaReceiveStream {
   virtual const std::vector<RtpExtension>& GetRtpExtensions() const = 0;
 
  protected:
-  virtual ~AudioReceiveStream() {}
+  virtual ~AudioReceiveStreamInterface() {}
 };
+
 }  // namespace webrtc
 
 #endif  // CALL_AUDIO_RECEIVE_STREAM_H_

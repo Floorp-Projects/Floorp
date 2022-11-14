@@ -15,10 +15,10 @@
 #include <utility>
 #include <vector>
 
+#include "api/make_ref_counted.h"
 #include "api/ref_counted_base.h"
 #include "api/rtp_packet_info.h"
 #include "api/scoped_refptr.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {

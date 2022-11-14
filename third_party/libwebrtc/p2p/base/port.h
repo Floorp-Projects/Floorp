@@ -18,6 +18,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/candidate.h"
 #include "api/field_trials_view.h"
@@ -61,7 +62,9 @@ extern const char TCPTYPE_ACTIVE_STR[];
 extern const char TCPTYPE_PASSIVE_STR[];
 extern const char TCPTYPE_SIMOPEN_STR[];
 
-enum IcePriorityValue {
+// The type preference MUST be an integer from 0 to 126 inclusive.
+// https://datatracker.ietf.org/doc/html/rfc5245#section-4.1.2.1
+enum IcePriorityValue : uint8_t {
   ICE_TYPE_PREFERENCE_RELAY_TLS = 0,
   ICE_TYPE_PREFERENCE_RELAY_TCP = 1,
   ICE_TYPE_PREFERENCE_RELAY_UDP = 2,
@@ -125,7 +128,7 @@ class CandidateStats {
 typedef std::vector<CandidateStats> CandidateStatsList;
 
 const char* ProtoToString(ProtocolType proto);
-bool StringToProto(const char* value, ProtocolType* proto);
+absl::optional<ProtocolType> StringToProto(absl::string_view proto_name);
 
 struct ProtocolAddress {
   rtc::SocketAddress address;
@@ -142,11 +145,11 @@ struct ProtocolAddress {
 
 struct IceCandidateErrorEvent {
   IceCandidateErrorEvent() = default;
-  IceCandidateErrorEvent(std::string address,
+  IceCandidateErrorEvent(absl::string_view address,
                          int port,
-                         std::string url,
+                         absl::string_view url,
                          int error_code,
-                         std::string error_text)
+                         absl::string_view error_text)
       : address(std::move(address)),
         port(port),
         url(std::move(url)),
@@ -184,20 +187,20 @@ class Port : public PortInterface,
   // 30 seconds.
   enum class State { INIT, KEEP_ALIVE_UNTIL_PRUNED, PRUNED };
   Port(rtc::Thread* thread,
-       const std::string& type,
+       absl::string_view type,
        rtc::PacketSocketFactory* factory,
        const rtc::Network* network,
-       const std::string& username_fragment,
-       const std::string& password,
+       absl::string_view username_fragment,
+       absl::string_view password,
        const webrtc::FieldTrialsView* field_trials = nullptr);
   Port(rtc::Thread* thread,
-       const std::string& type,
+       absl::string_view type,
        rtc::PacketSocketFactory* factory,
        const rtc::Network* network,
        uint16_t min_port,
        uint16_t max_port,
-       const std::string& username_fragment,
-       const std::string& password,
+       absl::string_view username_fragment,
+       absl::string_view password,
        const webrtc::FieldTrialsView* field_trials = nullptr);
   ~Port() override;
 
@@ -236,8 +239,8 @@ class Port : public PortInterface,
 
   // For debugging purposes.
   const std::string& content_name() const { return content_name_; }
-  void set_content_name(const std::string& content_name) {
-    content_name_ = content_name;
+  void set_content_name(absl::string_view content_name) {
+    content_name_ = std::string(content_name);
   }
 
   int component() const { return component_; }
@@ -261,8 +264,8 @@ class Port : public PortInterface,
   // PortAllocatorSession, and is now being assigned to an ICE transport.
   // Updates the information for candidates as well.
   void SetIceParameters(int component,
-                        const std::string& username_fragment,
-                        const std::string& password);
+                        absl::string_view username_fragment,
+                        absl::string_view password);
 
   // Fired when candidates are discovered by the port. When all candidates
   // are discovered that belong to port SignalAddressReady is fired.
@@ -293,6 +296,19 @@ class Port : public PortInterface,
   // Returns the connection to the given address or NULL if none exists.
   Connection* GetConnection(const rtc::SocketAddress& remote_addr) override;
 
+  // Removes and deletes a connection object. `DestroyConnection` will
+  // delete the connection object directly whereas `DestroyConnectionAsync`
+  // defers the `delete` operation to when the call stack has been unwound.
+  // Async may be needed when deleting a connection object from within a
+  // callback.
+  void DestroyConnection(Connection* conn) {
+    DestroyConnectionInternal(conn, false);
+  }
+
+  void DestroyConnectionAsync(Connection* conn) {
+    DestroyConnectionInternal(conn, true);
+  }
+
   // In a shared socket mode each port which shares the socket will decide
   // to accept the packet based on the `remote_addr`. Currently only UDP
   // port implemented this method.
@@ -312,14 +328,14 @@ class Port : public PortInterface,
   void SendBindingErrorResponse(StunMessage* message,
                                 const rtc::SocketAddress& addr,
                                 int error_code,
-                                const std::string& reason) override;
+                                absl::string_view reason) override;
   void SendUnknownAttributesErrorResponse(
       StunMessage* message,
       const rtc::SocketAddress& addr,
       const std::vector<uint16_t>& unknown_types);
 
-  void set_proxy(const std::string& user_agent, const rtc::ProxyInfo& proxy) {
-    user_agent_ = user_agent;
+  void set_proxy(absl::string_view user_agent, const rtc::ProxyInfo& proxy) {
+    user_agent_ = std::string(user_agent);
     proxy_ = proxy;
   }
   const std::string& user_agent() { return user_agent_; }
@@ -345,12 +361,11 @@ class Port : public PortInterface,
   bool ParseStunUsername(const StunMessage* stun_msg,
                          std::string* local_username,
                          std::string* remote_username) const;
-  void CreateStunUsername(const std::string& remote_username,
-                          std::string* stun_username_attr_str) const;
+  std::string CreateStunUsername(absl::string_view remote_username) const;
 
   bool MaybeIceRoleConflict(const rtc::SocketAddress& addr,
                             IceMessage* stun_msg,
-                            const std::string& remote_ufrag);
+                            absl::string_view remote_ufrag);
 
   // Called when a packet has been sent to the socket.
   // This is made pure virtual to notify subclasses of Port that they MUST
@@ -363,8 +378,7 @@ class Port : public PortInterface,
   void OnReadyToSend();
 
   // Called when the Connection discovers a local peer reflexive candidate.
-  // Returns the index of the new local candidate.
-  size_t AddPrflxCandidate(const Candidate& local);
+  void AddPrflxCandidate(const Candidate& local);
 
   int16_t network_cost() const { return network_cost_; }
 
@@ -376,9 +390,9 @@ class Port : public PortInterface,
   //   then the foundation will be different.  Two candidate pairs with
   //   the same foundation pairs are likely to have similar network
   //   characteristics. Foundations are used in the frozen algorithm.
-  static std::string ComputeFoundation(const std::string& type,
-                                       const std::string& protocol,
-                                       const std::string& relay_protocol,
+  static std::string ComputeFoundation(absl::string_view type,
+                                       absl::string_view protocol,
+                                       absl::string_view relay_protocol,
                                        const rtc::SocketAddress& base_address);
 
  protected:
@@ -386,23 +400,24 @@ class Port : public PortInterface,
 
   virtual void UpdateNetworkCost();
 
-  void set_type(const std::string& type) { type_ = type; }
+  void set_type(absl::string_view type) { type_ = std::string(type); }
 
   rtc::WeakPtr<Port> NewWeakPtr() { return weak_factory_.GetWeakPtr(); }
 
   void AddAddress(const rtc::SocketAddress& address,
                   const rtc::SocketAddress& base_address,
                   const rtc::SocketAddress& related_address,
-                  const std::string& protocol,
-                  const std::string& relay_protocol,
-                  const std::string& tcptype,
-                  const std::string& type,
+                  absl::string_view protocol,
+                  absl::string_view relay_protocol,
+                  absl::string_view tcptype,
+                  absl::string_view type,
                   uint32_t type_preference,
                   uint32_t relay_preference,
-                  const std::string& url,
+                  absl::string_view url,
                   bool is_final);
 
-  void FinishAddingAddress(const Candidate& c, bool is_final);
+  void FinishAddingAddress(const Candidate& c, bool is_final)
+      RTC_RUN_ON(thread_);
 
   virtual void PostAddAddress(bool is_final);
 
@@ -452,8 +467,19 @@ class Port : public PortInterface,
 
  private:
   void Construct();
-  // Called when one of our connections deletes itself.
-  void OnConnectionDestroyed(Connection* conn);
+
+  // Called internally when deleting a connection object.
+  // Returns true if the connection object was removed from the `connections_`
+  // list and the state updated accordingly. If the connection was not found
+  // in the list, the return value is false. Note that this may indicate
+  // incorrect behavior of external code that might be attempting to delete
+  // connection objects from within a 'on destroyed' callback notification
+  // for the connection object itself.
+  bool OnConnectionDestroyed(Connection* conn);
+
+  // Private implementation of DestroyConnection to keep the async usage
+  // distinct.
+  void DestroyConnectionInternal(Connection* conn, bool async);
 
   void OnNetworkTypeChanged(const rtc::Network* network);
 
@@ -477,7 +503,7 @@ class Port : public PortInterface,
   // username_fragment().
   std::string ice_username_fragment_;
   std::string password_;
-  std::vector<Candidate> candidates_;
+  std::vector<Candidate> candidates_ RTC_GUARDED_BY(thread_);
   AddressMap connections_;
   int timeout_delay_;
   bool enable_port_packets_;
@@ -503,8 +529,8 @@ class Port : public PortInterface,
       field_trials_;
 
   bool MaybeObfuscateAddress(Candidate* c,
-                             const std::string& type,
-                             bool is_final);
+                             absl::string_view type,
+                             bool is_final) RTC_RUN_ON(thread_);
 
   friend class Connection;
   webrtc::CallbackList<PortInterface*> port_destroyed_callback_list_;

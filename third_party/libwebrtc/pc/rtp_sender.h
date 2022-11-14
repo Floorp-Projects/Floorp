@@ -37,7 +37,7 @@
 #include "media/base/audio_source.h"
 #include "media/base/media_channel.h"
 #include "pc/dtmf_sender.h"
-#include "pc/stats_collector_interface.h"
+#include "pc/legacy_stats_collector_interface.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
@@ -45,8 +45,6 @@
 #include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
-
-class StatsCollectorInterface;
 
 bool UnimplementedRtpParameterHasValue(const RtpParameters& parameters);
 
@@ -185,6 +183,12 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
   void SetEncoderToPacketizerFrameTransformer(
       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer) override;
 
+  void SetEncoderSelector(
+      std::unique_ptr<VideoEncoderFactory::EncoderSelectorInterface>
+          encoder_selector) override;
+
+  void SetEncoderSelectorOnChannel();
+
   void SetTransceiverAsStopped() override {
     RTC_DCHECK_RUN_ON(signaling_thread_);
     is_transceiver_stopped_ = true;
@@ -197,8 +201,8 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
   RtpSenderBase(rtc::Thread* worker_thread,
                 const std::string& id,
                 SetStreamsObserver* set_streams_observer);
-  // TODO(nisse): Since SSRC == 0 is technically valid, figure out
-  // some other way to test if we have a valid SSRC.
+  // TODO(bugs.webrtc.org/8694): Since SSRC == 0 is technically valid, figure
+  // out some other way to test if we have a valid SSRC.
   bool can_send_track() const { return track_ && ssrc_; }
 
   virtual std::string track_kind() const = 0;
@@ -247,6 +251,8 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
   SetStreamsObserver* set_streams_observer_ = nullptr;
 
   rtc::scoped_refptr<FrameTransformerInterface> frame_transformer_;
+  std::unique_ptr<VideoEncoderFactory::EncoderSelectorInterface>
+      encoder_selector_;
 };
 
 // LocalAudioSinkAdapter receives data callback as a sink to the local
@@ -301,7 +307,7 @@ class AudioRtpSender : public DtmfProviderInterface, public RtpSenderBase {
   static rtc::scoped_refptr<AudioRtpSender> Create(
       rtc::Thread* worker_thread,
       const std::string& id,
-      StatsCollectorInterface* stats,
+      LegacyStatsCollectorInterface* stats,
       SetStreamsObserver* set_streams_observer);
   virtual ~AudioRtpSender();
 
@@ -325,7 +331,7 @@ class AudioRtpSender : public DtmfProviderInterface, public RtpSenderBase {
  protected:
   AudioRtpSender(rtc::Thread* worker_thread,
                  const std::string& id,
-                 StatsCollectorInterface* stats,
+                 LegacyStatsCollectorInterface* legacy_stats,
                  SetStreamsObserver* set_streams_observer);
 
   void SetSend() override;
@@ -347,7 +353,7 @@ class AudioRtpSender : public DtmfProviderInterface, public RtpSenderBase {
   }
   sigslot::signal0<> SignalDestroyed;
 
-  StatsCollectorInterface* stats_ = nullptr;
+  LegacyStatsCollectorInterface* legacy_stats_ = nullptr;
   rtc::scoped_refptr<DtmfSenderInterface> dtmf_sender_proxy_;
   bool cached_track_enabled_ = false;
 

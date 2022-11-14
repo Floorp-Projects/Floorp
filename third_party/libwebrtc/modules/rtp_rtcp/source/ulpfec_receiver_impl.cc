@@ -159,8 +159,7 @@ bool UlpfecReceiverImpl::AddReceivedRedPacket(
   return true;
 }
 
-// TODO(nisse): Drop always-zero return value.
-int32_t UlpfecReceiverImpl::ProcessReceivedFec() {
+void UlpfecReceiverImpl::ProcessReceivedFec() {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
 
   // If we iterate over `received_packets_` and it contains a packet that cause
@@ -219,8 +218,6 @@ int32_t UlpfecReceiverImpl::ProcessReceivedFec() {
     recovered_packet_callback_->OnRecoveredPacket(packet->data.data(),
                                                   packet->data.size());
   }
-
-  return 0;
 }
 
 }  // namespace webrtc

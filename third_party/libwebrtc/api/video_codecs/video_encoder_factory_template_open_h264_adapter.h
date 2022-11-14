@@ -22,7 +22,7 @@ namespace webrtc {
 #if defined(WEBRTC_USE_H264)
 struct OpenH264EncoderTemplateAdapter {
   static std::vector<SdpVideoFormat> SupportedFormats() {
-    return SupportedH264Codecs();
+    return SupportedH264Codecs(/*add_scalability_modes=*/true);
   }
 
   static std::unique_ptr<VideoEncoder> CreateEncoder(

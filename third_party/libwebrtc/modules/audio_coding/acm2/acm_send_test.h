@@ -14,6 +14,7 @@
 #include <memory>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "api/audio/audio_frame.h"
 #include "modules/audio_coding/include/audio_coding_module.h"
 #include "modules/audio_coding/neteq/tools/packet_source.h"
@@ -38,7 +39,7 @@ class AcmSendTestOldApi : public AudioPacketizationCallback,
   AcmSendTestOldApi& operator=(const AcmSendTestOldApi&) = delete;
 
   // Registers the send codec. Returns true on success, false otherwise.
-  bool RegisterCodec(const char* payload_name,
+  bool RegisterCodec(absl::string_view payload_name,
                      int sampling_freq_hz,
                      int channels,
                      int payload_type,

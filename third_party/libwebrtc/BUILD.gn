@@ -67,6 +67,7 @@ if (!build_with_chromium && !build_with_mozilla) {
         "pc:peerconnection_unittests",
         "pc:rtc_pc_unittests",
         "pc:slow_peer_connection_unittests",
+        "pc:svc_tests",
         "rtc_tools:rtp_generator",
         "rtc_tools:video_replay",
         "stats:rtc_stats_unittests",
@@ -363,10 +364,14 @@ config("common_config") {
     }
 
     if (is_clang) {
-      cflags += [
-        "-Wc++11-narrowing",
-        "-Wundef",
-      ]
+      cflags += [ "-Wc++11-narrowing" ]
+
+      if (!is_fuchsia) {
+        # Compiling with the Fuchsia SDK results in Wundef errors
+        # TODO(bugs.fuchsia.dev/100722): Remove from (!is_fuchsia) branch when
+        # Fuchsia build errors are fixed.
+        cflags += [ "-Wundef" ]
+      }
 
       if (!is_nacl) {
         # Flags NaCl (Clang 3.7) do not recognize.
@@ -561,6 +566,8 @@ if (rtc_include_tests && !build_with_chromium) {
       "api/audio/test:audio_api_unittests",
       "api/audio_codecs/test:audio_codecs_api_unittests",
       "api/numerics:numerics_unittests",
+      "api/task_queue:pending_task_safety_flag_unittests",
+      "api/task_queue:to_queued_task_unittests",
       "api/transport:stun_unittest",
       "api/video/test:rtc_api_video_unittests",
       "api/video_codecs/test:video_codecs_api_unittests",
@@ -580,9 +587,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "rtc_base:weak_ptr_unittests",
       "rtc_base/experiments:experiments_unittests",
       "rtc_base/system:file_wrapper_unittests",
-      "rtc_base/task_utils:pending_task_safety_flag_unittests",
       "rtc_base/task_utils:repeating_task_unittests",
-      "rtc_base/task_utils:to_queued_task_unittests",
       "rtc_base/time:timestamp_extrapolator_unittests",
       "rtc_base/units:units_unittests",
       "sdk:sdk_tests",
@@ -605,10 +610,6 @@ if (rtc_include_tests && !build_with_chromium) {
         "//testing/android/native_test:native_test_support",
       ]
       shard_timeout = 900
-    }
-
-    if (is_ios || is_mac) {
-      deps += [ "sdk:rtc_unittests_objc" ]
     }
   }
 
@@ -648,7 +649,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "test:test_common",
       "test:test_main",
       "test:video_test_common",
-      "video:video_legacy_tests",
       "video:video_tests",
       "video/adaptation:video_adaptation_tests",
     ]

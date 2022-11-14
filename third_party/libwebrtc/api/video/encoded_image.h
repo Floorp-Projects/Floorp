@@ -78,9 +78,8 @@ class RTC_EXPORT EncodedImage {
   EncodedImage& operator=(EncodedImage&&);
   EncodedImage& operator=(const EncodedImage&);
 
-  // TODO(nisse): Change style to timestamp(), set_timestamp(), for consistency
-  // with the VideoFrame class.
-  // Set frame timestamp (90kHz).
+  // TODO(bugs.webrtc.org/9378): Change style to timestamp(), set_timestamp(),
+  // for consistency with the VideoFrame class. Set frame timestamp (90kHz).
   void SetTimestamp(uint32_t timestamp) { timestamp_rtp_ = timestamp; }
 
   // Get frame timestamp (90kHz).
@@ -95,6 +94,13 @@ class RTC_EXPORT EncodedImage {
     RTC_DCHECK_GE(spatial_index.value_or(0), 0);
     RTC_DCHECK_LT(spatial_index.value_or(0), kMaxSpatialLayers);
     spatial_index_ = spatial_index;
+  }
+
+  absl::optional<int> TemporalIndex() const { return temporal_index_; }
+  void SetTemporalIndex(absl::optional<int> temporal_index) {
+    RTC_DCHECK_GE(temporal_index_.value_or(0), 0);
+    RTC_DCHECK_LT(temporal_index_.value_or(0), kMaxTemporalStreams);
+    temporal_index_ = temporal_index;
   }
 
   // These methods can be used to set/get size of subframe with spatial index
@@ -199,6 +205,7 @@ class RTC_EXPORT EncodedImage {
   size_t size_ = 0;  // Size of encoded frame data.
   uint32_t timestamp_rtp_ = 0;
   absl::optional<int> spatial_index_;
+  absl::optional<int> temporal_index_;
   std::map<int, size_t> spatial_layer_frame_size_bytes_;
   absl::optional<webrtc::ColorSpace> color_space_;
   // This field is meant for media quality testing purpose only. When enabled it

@@ -16,11 +16,12 @@
 #include <string>
 
 #include "absl/memory/memory.h"
+#include "absl/strings/string_view.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "p2p/base/connection.h"
 #include "p2p/base/port.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/containers/flat_map.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
 
 namespace cricket {
 
@@ -40,8 +41,8 @@ class TCPPort : public Port {
       const rtc::Network* network,
       uint16_t min_port,
       uint16_t max_port,
-      const std::string& username,
-      const std::string& password,
+      absl::string_view username,
+      absl::string_view password,
       bool allow_listen,
       const webrtc::FieldTrialsView* field_trials = nullptr) {
     // Using `new` to access a non-public constructor.
@@ -62,7 +63,7 @@ class TCPPort : public Port {
   int GetOption(rtc::Socket::Option opt, int* value) override;
   int SetOption(rtc::Socket::Option opt, int value) override;
   int GetError() override;
-  bool SupportsProtocol(const std::string& protocol) const override;
+  bool SupportsProtocol(absl::string_view protocol) const override;
   ProtocolType GetProtocol() const override;
 
  protected:
@@ -71,8 +72,8 @@ class TCPPort : public Port {
           const rtc::Network* network,
           uint16_t min_port,
           uint16_t max_port,
-          const std::string& username,
-          const std::string& password,
+          absl::string_view username,
+          absl::string_view password,
           bool allow_listen,
           const webrtc::FieldTrialsView* field_trials);
 
@@ -148,7 +149,7 @@ class TCPConnection : public Connection, public sigslot::has_slots<> {
  protected:
   // Set waiting_for_stun_binding_complete_ to false to allow data packets in
   // addition to what Port::OnConnectionRequestResponse does.
-  void OnConnectionRequestResponse(ConnectionRequest* req,
+  void OnConnectionRequestResponse(StunRequest* req,
                                    StunMessage* response) override;
 
  private:

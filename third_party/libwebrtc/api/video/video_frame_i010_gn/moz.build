@@ -30,6 +30,10 @@ LOCAL_INCLUDES += [
     "/tools/profiler/public"
 ]
 
+SOURCES += [
+    "/third_party/libwebrtc/api/video/i210_buffer.cc"
+]
+
 UNIFIED_SOURCES += [
     "/third_party/libwebrtc/api/video/i010_buffer.cc"
 ]

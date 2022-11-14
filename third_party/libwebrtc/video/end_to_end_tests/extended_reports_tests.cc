@@ -173,7 +173,7 @@ class RtcpXrObserver : public test::EndToEndTest {
 
   void ModifyVideoConfigs(
       VideoSendStream::Config* send_config,
-      std::vector<VideoReceiveStream::Config>* receive_configs,
+      std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
       VideoEncoderConfig* encoder_config) override {
     if (enable_zero_target_bitrate_) {
       // Configure VP8 to be able to use simulcast.

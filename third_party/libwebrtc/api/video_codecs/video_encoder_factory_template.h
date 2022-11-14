@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "api/array_view.h"
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/video_encoder_factory.h"
 #include "modules/video_coding/svc/scalability_mode_util.h"
@@ -45,9 +46,7 @@ template <typename... Ts>
 class VideoEncoderFactoryTemplate : public VideoEncoderFactory {
  public:
   std::vector<SdpVideoFormat> GetSupportedFormats() const override {
-    std::vector<SdpVideoFormat> formats;
-    GetSupportedFormatsInternal<Ts...>(formats);
-    return formats;
+    return GetSupportedFormatsInternal<Ts...>();
   }
 
   std::unique_ptr<VideoEncoder> CreateVideoEncoder(
@@ -62,9 +61,14 @@ class VideoEncoderFactoryTemplate : public VideoEncoderFactory {
   }
 
  private:
-  template <typename V>
-  bool IsFormatSupported(const SdpVideoFormat& format) const {
-    return absl::c_count(V::SupportedFormats(), format) > 0;
+  bool IsFormatInList(
+      const SdpVideoFormat& format,
+      rtc::ArrayView<const SdpVideoFormat> supported_formats) const {
+    return absl::c_any_of(
+        supported_formats, [&](const SdpVideoFormat& supported_format) {
+          return supported_format.name == format.name &&
+                 supported_format.parameters == format.parameters;
+        });
   }
 
   template <typename V>
@@ -80,23 +84,26 @@ class VideoEncoderFactoryTemplate : public VideoEncoderFactory {
   }
 
   template <typename V, typename... Vs>
-  void GetSupportedFormatsInternal(std::vector<SdpVideoFormat>& formats) const {
+  std::vector<SdpVideoFormat> GetSupportedFormatsInternal() const {
     auto supported_formats = V::SupportedFormats();
-    for (const auto& format : supported_formats) {
-      if (absl::c_count(formats, format) == 0) {
-        formats.push_back(format);
+
+    if constexpr (sizeof...(Vs) > 0) {
+      // Supported formats may overlap between implementations, so duplicates
+      // should be filtered out.
+      for (const auto& other_format : GetSupportedFormatsInternal<Vs...>()) {
+        if (!IsFormatInList(other_format, supported_formats)) {
+          supported_formats.push_back(other_format);
+        }
       }
     }
 
-    if constexpr (sizeof...(Vs) > 0) {
-      return GetSupportedFormatsInternal<Vs...>(formats);
-    }
+    return supported_formats;
   }
 
   template <typename V, typename... Vs>
   std::unique_ptr<VideoEncoder> CreateVideoEncoderInternal(
       const SdpVideoFormat& format) {
-    if (IsFormatSupported<V>(format)) {
+    if (IsFormatInList(format, V::SupportedFormats())) {
       return V::CreateEncoder(format);
     }
 
@@ -111,7 +118,7 @@ class VideoEncoderFactoryTemplate : public VideoEncoderFactory {
   CodecSupport QueryCodecSupportInternal(
       const SdpVideoFormat& format,
       const absl::optional<std::string>& scalability_mode) const {
-    if (IsFormatSupported<V>(format)) {
+    if (IsFormatInList(format, V::SupportedFormats())) {
       return {.is_supported = IsScalabilityModeSupported<V>(scalability_mode)};
     }
 

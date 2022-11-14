@@ -73,6 +73,9 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
+#include "absl/strings/string_view.h"
+#include "api/task_queue/pending_task_safety_flag.h"
+#include "api/units/time_delta.h"
 #include "p2p/base/p2p_constants.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/ip_address.h"
@@ -80,18 +83,19 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/net_helper.h"
 #include "rtc_base/rate_tracker.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 
 namespace cricket {
+using ::webrtc::SafeTask;
+using ::webrtc::TimeDelta;
 
 TCPPort::TCPPort(rtc::Thread* thread,
                  rtc::PacketSocketFactory* factory,
                  const rtc::Network* network,
                  uint16_t min_port,
                  uint16_t max_port,
-                 const std::string& username,
-                 const std::string& password,
+                 absl::string_view username,
+                 absl::string_view password,
                  bool allow_listen,
                  const webrtc::FieldTrialsView* field_trials)
     : Port(thread,
@@ -268,7 +272,7 @@ int TCPPort::GetError() {
   return error_;
 }
 
-bool TCPPort::SupportsProtocol(const std::string& protocol) const {
+bool TCPPort::SupportsProtocol(absl::string_view protocol) const {
   return protocol == TCP_PROTOCOL_NAME || protocol == SSLTCP_PROTOCOL_NAME;
 }
 
@@ -278,7 +282,7 @@ ProtocolType TCPPort::GetProtocol() const {
 
 void TCPPort::OnNewConnection(rtc::AsyncListenSocket* socket,
                               rtc::AsyncPacketSocket* new_socket) {
-  RTC_DCHECK(socket == listen_socket_.get());
+  RTC_DCHECK_EQ(socket, listen_socket_.get());
 
   for (const auto& option : socket_options_) {
     new_socket->SetOption(option.first, option.second);
@@ -419,7 +423,7 @@ int TCPConnection::GetError() {
   return error_;
 }
 
-void TCPConnection::OnConnectionRequestResponse(ConnectionRequest* req,
+void TCPConnection::OnConnectionRequestResponse(StunRequest* req,
                                                 StunMessage* response) {
   // Process the STUN response before we inform upper layer ready to send.
   Connection::OnConnectionRequestResponse(req, response);
@@ -435,7 +439,13 @@ void TCPConnection::OnConnectionRequestResponse(ConnectionRequest* req,
 }
 
 void TCPConnection::OnConnect(rtc::AsyncPacketSocket* socket) {
-  RTC_DCHECK(socket == socket_.get());
+  RTC_DCHECK_EQ(socket, socket_.get());
+
+  if (!port_) {
+    RTC_LOG(LS_ERROR) << "TCPConnection: Port has been deleted.";
+    return;
+  }
+
   // Do not use this port if the socket bound to an address not associated with
   // the desired network interface. This is seen in Chrome, where TCP sockets
   // cannot be given a binding address, and the platform is expected to pick
@@ -488,8 +498,13 @@ void TCPConnection::OnConnect(rtc::AsyncPacketSocket* socket) {
 }
 
 void TCPConnection::OnClose(rtc::AsyncPacketSocket* socket, int error) {
-  RTC_DCHECK(socket == socket_.get());
+  RTC_DCHECK_EQ(socket, socket_.get());
   RTC_LOG(LS_INFO) << ToString() << ": Connection closed with error " << error;
+
+  if (!port_) {
+    RTC_LOG(LS_ERROR) << "TCPConnection: Port has been deleted.";
+    return;
+  }
 
   // Guard against the condition where IPC socket will call OnClose for every
   // packet it can't send.
@@ -506,21 +521,21 @@ void TCPConnection::OnClose(rtc::AsyncPacketSocket* socket, int error) {
     // We don't attempt reconnect right here. This is to avoid a case where the
     // shutdown is intentional and reconnect is not necessary. We only reconnect
     // when the connection is used to Send() or Ping().
-    port()->thread()->PostDelayedTask(
-        webrtc::ToQueuedTask(network_safety_,
-                             [this]() {
-                               if (pretending_to_be_writable_) {
-                                 Destroy();
-                               }
-                             }),
-        reconnection_timeout());
+    network_thread()->PostDelayedTask(
+        SafeTask(network_safety_.flag(),
+                 [this]() {
+                   if (pretending_to_be_writable_) {
+                     Destroy();
+                   }
+                 }),
+        TimeDelta::Millis(reconnection_timeout()));
   } else if (!pretending_to_be_writable_) {
     // OnClose could be called when the underneath socket times out during the
     // initial connect() (i.e. `pretending_to_be_writable_` is false) . We have
     // to manually destroy here as this connection, as never connected, will not
     // be scheduled for ping to trigger destroy.
     socket_->UnsubscribeClose(this);
-    Destroy();
+    port()->DestroyConnectionAsync(this);
   }
 }
 
@@ -544,12 +559,12 @@ void TCPConnection::OnReadPacket(rtc::AsyncPacketSocket* socket,
                                  size_t size,
                                  const rtc::SocketAddress& remote_addr,
                                  const int64_t& packet_time_us) {
-  RTC_DCHECK(socket == socket_.get());
+  RTC_DCHECK_EQ(socket, socket_.get());
   Connection::OnReadPacket(data, size, packet_time_us);
 }
 
 void TCPConnection::OnReadyToSend(rtc::AsyncPacketSocket* socket) {
-  RTC_DCHECK(socket == socket_.get());
+  RTC_DCHECK_EQ(socket, socket_.get());
   Connection::OnReadyToSend();
 }
 
@@ -585,8 +600,8 @@ void TCPConnection::CreateOutgoingTcpSocket() {
     // the StunRequests from the request_map_. And if this is in the stack
     // of Connection::Ping(), we are still using the request.
     // Unwind the stack and defer the FailAndPrune.
-    port()->thread()->PostTask(
-        webrtc::ToQueuedTask(network_safety_, [this]() { FailAndPrune(); }));
+    network_thread()->PostTask(
+        SafeTask(network_safety_.flag(), [this]() { FailAndPrune(); }));
   }
 }
 
@@ -596,8 +611,11 @@ void TCPConnection::ConnectSocketSignals(rtc::AsyncPacketSocket* socket) {
   }
   socket->SignalReadPacket.connect(this, &TCPConnection::OnReadPacket);
   socket->SignalReadyToSend.connect(this, &TCPConnection::OnReadyToSend);
-  socket->SubscribeClose(
-      this, [this](rtc::AsyncPacketSocket* s, int err) { OnClose(s, err); });
+  socket->SubscribeClose(this, [this, safety = network_safety_.flag()](
+                                   rtc::AsyncPacketSocket* s, int err) {
+    if (safety->alive())
+      OnClose(s, err);
+  });
 }
 
 }  // namespace cricket

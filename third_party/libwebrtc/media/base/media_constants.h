@@ -134,6 +134,8 @@ extern const char kH264FmtpSpsPpsIdrInKeyframe[];
 extern const char kH264ProfileLevelConstrainedBaseline[];
 extern const char kH264ProfileLevelConstrainedHigh[];
 
+extern const char kVP9ProfileId[];
+
 extern const int kDefaultVideoMaxFramerate;
 
 extern const size_t kConferenceMaxNumSpatialLayers;

@@ -142,7 +142,8 @@ void CallStatsCollector::AddStats(Call::Stats sample) {
   stats_.memory_usage.AddSample(rtc::GetProcessResidentSizeBytes());
 }
 
-void AudioReceiveStatsCollector::AddStats(AudioReceiveStream::Stats sample) {
+void AudioReceiveStatsCollector::AddStats(
+    AudioReceiveStreamInterface::Stats sample) {
   stats_.expand_rate.AddSample(sample.expand_rate);
   stats_.accelerate_rate.AddSample(sample.accelerate_rate);
   stats_.jitter_buffer.AddSampleMs(sample.jitter_buffer_ms);
@@ -174,7 +175,8 @@ void VideoSendStatsCollector::AddStats(VideoSendStream::Stats sample,
   last_update_ = at_time;
 }
 
-void VideoReceiveStatsCollector::AddStats(VideoReceiveStream::Stats sample) {
+void VideoReceiveStatsCollector::AddStats(
+    VideoReceiveStreamInterface::Stats sample) {
   if (sample.decode_ms > 0)
     stats_.decode_time.AddSampleMs(sample.decode_ms);
   if (sample.max_decode_ms > 0)

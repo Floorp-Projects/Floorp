@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <cstdio>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -33,10 +35,9 @@
 #include "rtc_tools/rtc_event_log_visualizer/alerts.h"
 #include "rtc_tools/rtc_event_log_visualizer/analyze_audio.h"
 #include "rtc_tools/rtc_event_log_visualizer/analyzer.h"
+#include "rtc_tools/rtc_event_log_visualizer/conversational_speech_en.h"
 #include "rtc_tools/rtc_event_log_visualizer/plot_base.h"
 #include "system_wrappers/include/field_trial.h"
-#include "test/field_trial.h"
-#include "test/testsupport/file_utils.h"
 
 ABSL_FLAG(std::string,
           plot,
@@ -67,6 +68,12 @@ ABSL_FLAG(bool,
           show_alr_state,
           false,
           "Show the state ALR state on the total bitrate graph");
+
+ABSL_FLAG(bool,
+          show_link_capacity,
+          true,
+          "Show the lower and upper link capacity on the outgoing bitrate "
+          "graph");
 
 ABSL_FLAG(bool,
           parse_unconfigured_header_extensions,
@@ -336,7 +343,8 @@ int main(int argc, char* argv[]) {
   plots.RegisterPlot("outgoing_bitrate", [&](Plot* plot) {
     analyzer.CreateTotalOutgoingBitrateGraph(
         plot, absl::GetFlag(FLAGS_show_detector_state),
-        absl::GetFlag(FLAGS_show_alr_state));
+        absl::GetFlag(FLAGS_show_alr_state),
+        absl::GetFlag(FLAGS_show_link_capacity));
   });
   plots.RegisterPlot("incoming_stream_bitrate", [&](Plot* plot) {
     analyzer.CreateStreamBitrateGraph(webrtc::kIncomingPacket, plot);
@@ -465,11 +473,18 @@ int main(int argc, char* argv[]) {
   });
 
   std::string wav_path;
+  bool has_generated_wav_file = false;
   if (!absl::GetFlag(FLAGS_wav_filename).empty()) {
     wav_path = absl::GetFlag(FLAGS_wav_filename);
   } else {
-    wav_path = webrtc::test::ResourcePath(
-        "audio_processing/conversational_speech/EN_script2_F_sp2_B1", "wav");
+    // TODO(bugs.webrtc.org/14248): Remove the need to generate a file
+    // and read the file directly from memory.
+    wav_path = std::tmpnam(nullptr);
+    std::ofstream out_wav_file(wav_path);
+    out_wav_file.write(
+        reinterpret_cast<char*>(&webrtc::conversational_speech_en_wav[0]),
+        webrtc::conversational_speech_en_wav_len);
+    has_generated_wav_file = true;
   }
   absl::optional<webrtc::NetEqStatsGetterMap> neteq_stats;
 
@@ -623,5 +638,11 @@ int main(int argc, char* argv[]) {
     triage_alerts.Print(stderr);
   }
 
+  // TODO(bugs.webrtc.org/14248): Remove the need to generate a file
+  // and read the file directly from memory.
+  if (has_generated_wav_file) {
+    RTC_CHECK_EQ(std::remove(wav_path.c_str()), 0)
+        << "Failed to remove " << wav_path;
+  }
   return 0;
 }

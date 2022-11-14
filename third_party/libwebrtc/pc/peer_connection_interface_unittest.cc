@@ -72,7 +72,6 @@
 #include "pc/video_track.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/gunit.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/rtc_certificate_generator.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/thread.h"
@@ -438,7 +437,7 @@ static const char kDtlsSdesFallbackSdp[] =
 class RtcEventLogOutputNull final : public RtcEventLogOutput {
  public:
   bool IsActive() const override { return true; }
-  bool Write(const std::string& output) override { return true; }
+  bool Write(const absl::string_view /*output*/) override { return true; }
 };
 
 using ::cricket::StreamParams;
@@ -729,7 +728,9 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
       pc_ = nullptr;
     }
     std::unique_ptr<cricket::FakePortAllocator> port_allocator(
-        new cricket::FakePortAllocator(rtc::Thread::Current(), nullptr));
+        new cricket::FakePortAllocator(
+            rtc::Thread::Current(),
+            std::make_unique<rtc::BasicPacketSocketFactory>(vss_.get())));
     port_allocator_ = port_allocator.get();
 
     // Create certificate generator unless DTLS constraint is explicitly set to
@@ -1251,6 +1252,8 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
     }
   }
 
+  rtc::SocketServer* socket_server() const { return vss_.get(); }
+
   std::unique_ptr<rtc::VirtualSocketServer> vss_;
   rtc::AutoSocketServerThread main_;
   rtc::scoped_refptr<FakeAudioCaptureModule> fake_audio_capture_module_;
@@ -1359,8 +1362,11 @@ TEST_P(PeerConnectionInterfaceTest, CreatePeerConnectionWithPooledCandidates) {
 TEST_P(PeerConnectionInterfaceTest,
        CreatePeerConnectionAppliesNetworkConfigToPortAllocator) {
   // Create fake port allocator.
+  std::unique_ptr<rtc::PacketSocketFactory> packet_socket_factory(
+      new rtc::BasicPacketSocketFactory(socket_server()));
   std::unique_ptr<cricket::FakePortAllocator> port_allocator(
-      new cricket::FakePortAllocator(rtc::Thread::Current(), nullptr));
+      new cricket::FakePortAllocator(rtc::Thread::Current(),
+                                     packet_socket_factory.get()));
   cricket::FakePortAllocator* raw_port_allocator = port_allocator.get();
 
   // Create RTCConfiguration with some network-related fields relevant to
@@ -3641,6 +3647,32 @@ TEST_P(PeerConnectionInterfaceTest, ExtmapAllowMixedIsConfigurable) {
   offer = nullptr;
   ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
   EXPECT_FALSE(offer->description()->extmap_allow_mixed());
+}
+
+TEST_P(PeerConnectionInterfaceTest,
+       RtpSenderSetDegradationPreferenceWithoutEncodings) {
+  CreatePeerConnection();
+  AddVideoTrack("video_label");
+
+  std::vector<rtc::scoped_refptr<RtpSenderInterface>> rtp_senders =
+      pc_->GetSenders();
+  ASSERT_EQ(rtp_senders.size(), 1u);
+  ASSERT_EQ(rtp_senders[0]->media_type(), cricket::MEDIA_TYPE_VIDEO);
+  rtc::scoped_refptr<RtpSenderInterface> video_rtp_sender = rtp_senders[0];
+  RtpParameters parameters = video_rtp_sender->GetParameters();
+  ASSERT_NE(parameters.degradation_preference,
+            DegradationPreference::MAINTAIN_RESOLUTION);
+  parameters.degradation_preference =
+      DegradationPreference::MAINTAIN_RESOLUTION;
+  ASSERT_TRUE(video_rtp_sender->SetParameters(parameters).ok());
+
+  std::unique_ptr<SessionDescriptionInterface> local_offer;
+  ASSERT_TRUE(DoCreateOffer(&local_offer, nullptr));
+  ASSERT_TRUE(DoSetLocalDescription(std::move(local_offer)));
+
+  RtpParameters parameters_new = video_rtp_sender->GetParameters();
+  ASSERT_EQ(parameters_new.degradation_preference,
+            DegradationPreference::MAINTAIN_RESOLUTION);
 }
 
 INSTANTIATE_TEST_SUITE_P(PeerConnectionInterfaceTest,

@@ -40,7 +40,7 @@ namespace webrtc {
 class RtpPacketSinkInterface;
 class VideoDecoderFactory;
 
-class VideoReceiveStream : public MediaReceiveStream {
+class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
  public:
   // Class for handling moving in/out recording state.
   struct RecordingState {
@@ -49,11 +49,11 @@ class VideoReceiveStream : public MediaReceiveStream {
         std::function<void(const RecordableEncodedFrame&)> callback)
         : callback(std::move(callback)) {}
 
-    // Callback stored from the VideoReceiveStream. The VideoReceiveStream
-    // client should not interpret the attribute.
+    // Callback stored from the VideoReceiveStreamInterface. The
+    // VideoReceiveStreamInterface client should not interpret the attribute.
     std::function<void(const RecordableEncodedFrame&)> callback;
-    // Memento of when a keyframe request was last sent. The VideoReceiveStream
-    // client should not interpret the attribute.
+    // Memento of when a keyframe request was last sent. The
+    // VideoReceiveStreamInterface client should not interpret the attribute.
     absl::optional<int64_t> last_keyframe_request_ms;
   };
 
@@ -108,9 +108,12 @@ class VideoReceiveStream : public MediaReceiveStream {
     // https://w3c.github.io/webrtc-stats/#dom-rtcreceivedrtpstreamstats-packetsdiscarded
     uint64_t packets_discarded = 0;
     // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-totaldecodetime
-    uint64_t total_decode_time_ms = 0;
+    webrtc::TimeDelta total_decode_time = webrtc::TimeDelta::Millis(0);
     // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-totalprocessingdelay
     webrtc::TimeDelta total_processing_delay = webrtc::TimeDelta::Millis(0);
+    // TODO(bugs.webrtc.org/13986): standardize
+    webrtc::TimeDelta total_assembly_time = webrtc::TimeDelta::Millis(0);
+    uint32_t frames_assembled_from_multiple_packets = 0;
     // Total inter frame delay in seconds.
     // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-totalinterframedelay
     double total_inter_frame_delay = 0;
@@ -224,7 +227,7 @@ class VideoReceiveStream : public MediaReceiveStream {
       // Set if the stream is protected using FlexFEC.
       bool protected_by_flexfec = false;
 
-      // Optional callback sink to support additional packet handlsers such as
+      // Optional callback sink to support additional packet handlers such as
       // FlexFec.
       RtpPacketSinkInterface* packet_sink_ = nullptr;
 
@@ -259,10 +262,6 @@ class VideoReceiveStream : public MediaReceiveStream {
     // TODO(pbos): Synchronize streams in a sync group, not just video streams
     // to one of the audio streams.
     std::string sync_group;
-
-    // Target delay in milliseconds. A positive value indicates this stream is
-    // used for streaming instead of a real-time call.
-    int target_delay_ms = 0;
 
     // An optional custom frame decryptor that allows the entire frame to be
     // decrypted in whatever way the caller choses. This is not required by
@@ -302,8 +301,10 @@ class VideoReceiveStream : public MediaReceiveStream {
   // Cause eventual generation of a key frame from the sender.
   virtual void GenerateKeyFrame() = 0;
 
+  virtual void SetRtcpMode(RtcpMode mode) = 0;
+
  protected:
-  virtual ~VideoReceiveStream() {}
+  virtual ~VideoReceiveStreamInterface() {}
 };
 
 }  // namespace webrtc

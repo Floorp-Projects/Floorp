@@ -37,6 +37,7 @@ rtc_source_set("audio_mixer_api") {
 
   deps = [
     ":audio_frame_api",
+    "..:make_ref_counted",
     "../../rtc_base:refcount",
   ]
 }
@@ -104,9 +105,9 @@ rtc_source_set("echo_detector_creator") {
     "echo_detector_creator.h",
   ]
   deps = [
+    "..:make_ref_counted",
     "../../api:scoped_refptr",
     "../../modules/audio_processing:api",
     "../../modules/audio_processing:residual_echo_detector",
-    "../../rtc_base:refcount",
   ]
 }

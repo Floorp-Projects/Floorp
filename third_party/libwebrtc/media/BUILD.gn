@@ -7,6 +7,7 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 import("//build/config/linux/pkg_config.gni")
+#import("//third_party/libaom/options.gni")
 import("../webrtc.gni")
 
 group("media") {
@@ -63,6 +64,7 @@ rtc_library("rtc_media_base") {
     "../api/crypto:frame_decryptor_interface",
     "../api/crypto:frame_encryptor_interface",
     "../api/crypto:options",
+    "../api/task_queue:pending_task_safety_flag",
     "../api/transport:datagram_transport_interface",
     #"../api/transport:stun_types",
     "../api/transport/rtp:rtp_source",
@@ -94,13 +96,12 @@ rtc_library("rtc_media_base") {
     "../rtc_base/system:file_wrapper",
     "../rtc_base/system:no_unique_address",
     "../rtc_base/system:rtc_export",
-    "../rtc_base/task_utils:pending_task_safety_flag",
-    "../rtc_base/task_utils:to_queued_task",
     "../rtc_base/third_party/sigslot",
     "../system_wrappers:field_trial",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/container:inlined_vector",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
@@ -158,7 +159,6 @@ rtc_library("rtc_simulcast_encoder_adapter") {
     "../common_video",
     "../modules/video_coding:video_codec_interface",
     "../modules/video_coding:video_coding_utility",
-    "../rtc_base:atomicops",
     "../rtc_base:checks",
     "../rtc_base:logging",
     "../rtc_base/experiments:encoder_info_settings",
@@ -208,24 +208,32 @@ rtc_library("rtc_internal_video_codecs") {
     "../api/video:video_rtp_headers",
     "../api/video_codecs:rtc_software_fallback_wrappers",
     "../api/video_codecs:video_codecs_api",
+    "../api/video_codecs:video_encoder_factory_template",
+    "../api/video_codecs:video_encoder_factory_template_libvpx_vp8_adapter",
+    "../api/video_codecs:video_encoder_factory_template_libvpx_vp9_adapter",
+    "../api/video_codecs:video_encoder_factory_template_open_h264_adapter",
     "../call:call_interfaces",
     "../call:video_stream_api",
     "../modules/video_coding:video_codec_interface",
     "../modules/video_coding:webrtc_h264",
     "../modules/video_coding:webrtc_multiplex",
     "../modules/video_coding:webrtc_vp8",
-    "../modules/video_coding:webrtc_vp8_scalability",
     "../modules/video_coding:webrtc_vp9",
-    "../modules/video_coding/codecs/av1:av1_svc_config",
     "../modules/video_coding/codecs/av1:libaom_av1_decoder",
-    "../modules/video_coding/codecs/av1:libaom_av1_encoder_if_supported",
-    "../modules/video_coding/svc:scalability_mode_util",
     "../rtc_base:checks",
     "../rtc_base:logging",
     "../rtc_base/system:rtc_export",
     "../system_wrappers:field_trial",
     #"../test:fake_video_codecs",
   ]
+
+  if (enable_libaom) {
+    defines += [ "RTC_USE_LIBAOM_AV1_ENCODER" ]
+    deps += [
+      "../api/video_codecs:video_encoder_factory_template_libaom_av1_adapter",
+    ]
+  }
+
   if (rtc_include_dav1d_in_internal_decoder_factory) {
     deps += [ "../modules/video_coding/codecs/av1:dav1d_decoder" ]
   }
@@ -268,6 +276,7 @@ rtc_library("rtc_audio_video") {
     "../api/audio:audio_mixer_api",
     "../api/audio_codecs:audio_codecs_api",
     "../api/task_queue",
+    "../api/task_queue:pending_task_safety_flag",
     "../api/transport:bitrate_settings",
     "../api/transport:field_trial_based_config",
     "../api/transport/rtp:rtp_source",
@@ -294,6 +303,7 @@ rtc_library("rtc_audio_video") {
     "../modules/video_coding",
     "../modules/video_coding:video_codec_interface",
     "../modules/video_coding:video_coding_utility",
+    "../modules/video_coding:webrtc_vp9_helpers",
     "../modules/video_coding/svc:scalability_mode_util",
     "../rtc_base",
     "../rtc_base:audio_format_to_string",
@@ -317,8 +327,6 @@ rtc_library("rtc_audio_video") {
     "../rtc_base/experiments:rate_control_settings",
     "../rtc_base/synchronization:mutex",
     "../rtc_base/system:rtc_export",
-    "../rtc_base/task_utils:pending_task_safety_flag",
-    "../rtc_base/task_utils:to_queued_task",
     "../rtc_base/third_party/base64",
     "../system_wrappers",
     "../system_wrappers:metrics",
@@ -411,6 +419,7 @@ if (rtc_build_dcsctp) {
     deps = [
       ":rtc_data_sctp_transport_internal",
       "../api:array_view",
+      "../api/task_queue:pending_task_safety_flag",
       "../api/task_queue:task_queue",
       "../media:rtc_media_base",
       "../net/dcsctp/public:factory",
@@ -428,8 +437,6 @@ if (rtc_build_dcsctp) {
       "../rtc_base:stringutils",
       "../rtc_base:threading",
       "../rtc_base/containers:flat_map",
-      "../rtc_base/task_utils:pending_task_safety_flag",
-      "../rtc_base/task_utils:to_queued_task",
       "../rtc_base/third_party/sigslot:sigslot",
       "../system_wrappers",
     ]
@@ -580,6 +587,7 @@ if (rtc_include_tests) {
         ":rtc_simulcast_encoder_adapter",
         "../api:create_simulcast_test_fixture_api",
         "../api:libjingle_peerconnection_api",
+        "../api:mock_encoder_selector",
         "../api:mock_video_bitrate_allocator",
         "../api:mock_video_bitrate_allocator_factory",
         "../api:mock_video_codec_factory",
@@ -618,7 +626,6 @@ if (rtc_include_tests) {
         "../modules/video_coding:webrtc_h264",
         "../modules/video_coding:webrtc_vp8",
         "../modules/video_coding/codecs/av1:libaom_av1_decoder",
-        "../modules/video_coding/codecs/av1:libaom_av1_encoder_if_supported",
         "../p2p:p2p_test_utils",
         "../rtc_base",
         "../rtc_base:byte_order",
@@ -647,6 +654,11 @@ if (rtc_include_tests) {
         "../test:video_test_common",
         "../test/time_controller",
       ]
+
+      if (enable_libaom) {
+        defines += [ "RTC_USE_LIBAOM_AV1_ENCODER" ]
+      }
+
       absl_deps = [
         "//third_party/abseil-cpp/absl/algorithm:container",
         "//third_party/abseil-cpp/absl/memory",

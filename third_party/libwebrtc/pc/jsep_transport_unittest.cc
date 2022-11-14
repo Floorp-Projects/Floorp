@@ -31,7 +31,6 @@
 #include "rtc_base/helpers.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/net_helper.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/ssl_identity.h"
@@ -188,6 +187,7 @@ class JsepTransport2Test : public ::testing::Test, public sigslot::has_slots<> {
 
   void OnRtcpMuxActive() { signal_rtcp_mux_active_received_ = true; }
 
+  rtc::AutoThread main_thread_;
   std::unique_ptr<JsepTransport> jsep_transport_;
   bool signal_rtcp_mux_active_received_ = false;
   // The SrtpTransport is owned by `jsep_transport_`. Keep a raw pointer here

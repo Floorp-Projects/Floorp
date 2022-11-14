@@ -21,6 +21,7 @@
 #include "media/engine/webrtc_media_engine.h"
 #include "media/engine/webrtc_media_engine_defaults.h"
 #include "modules/audio_device/include/test_audio_device.h"
+#include "p2p/base/basic_packet_socket_factory.h"
 #include "p2p/client/basic_port_allocator.h"
 #include "pc/peer_connection_wrapper.h"
 #include "pc/test/mock_peer_connection_observers.h"
@@ -78,11 +79,12 @@ rtc::scoped_refptr<PeerConnectionFactoryInterface> CreatePeerConnectionFactory(
 rtc::scoped_refptr<PeerConnectionInterface> CreatePeerConnection(
     const rtc::scoped_refptr<PeerConnectionFactoryInterface>& pcf,
     PeerConnectionObserver* observer,
+    rtc::PacketSocketFactory* packet_socket_factory,
     rtc::NetworkManager* network_manager,
     EmulatedTURNServerInterface* turn_server = nullptr) {
   PeerConnectionDependencies pc_deps(observer);
-  auto port_allocator =
-      std::make_unique<cricket::BasicPortAllocator>(network_manager);
+  auto port_allocator = std::make_unique<cricket::BasicPortAllocator>(
+      network_manager, packet_socket_factory);
 
   // This test does not support TCP
   int flags = cricket::PORTALLOCATOR_DISABLE_TCP;
@@ -148,11 +150,13 @@ TEST(NetworkEmulationManagerPCTest, Run) {
     alice_pcf = CreatePeerConnectionFactory(signaling_thread.get(),
                                             alice_network->network_thread());
     alice_pc = CreatePeerConnection(alice_pcf, alice_observer.get(),
+                                    alice_network->packet_socket_factory(),
                                     alice_network->network_manager());
 
     bob_pcf = CreatePeerConnectionFactory(signaling_thread.get(),
                                           bob_network->network_thread());
     bob_pc = CreatePeerConnection(bob_pcf, bob_observer.get(),
+                                  bob_network->packet_socket_factory(),
                                   bob_network->network_manager());
   });
 
@@ -255,13 +259,14 @@ TEST(NetworkEmulationManagerPCTest, RunTURN) {
   signaling_thread->Invoke<void>(RTC_FROM_HERE, [&]() {
     alice_pcf = CreatePeerConnectionFactory(signaling_thread.get(),
                                             alice_network->network_thread());
-    alice_pc =
-        CreatePeerConnection(alice_pcf, alice_observer.get(),
-                             alice_network->network_manager(), alice_turn);
+    alice_pc = CreatePeerConnection(
+        alice_pcf, alice_observer.get(), alice_network->packet_socket_factory(),
+        alice_network->network_manager(), alice_turn);
 
     bob_pcf = CreatePeerConnectionFactory(signaling_thread.get(),
                                           bob_network->network_thread());
     bob_pc = CreatePeerConnection(bob_pcf, bob_observer.get(),
+                                  bob_network->packet_socket_factory(),
                                   bob_network->network_manager(), bob_turn);
   });
 

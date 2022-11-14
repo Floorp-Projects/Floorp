@@ -15,6 +15,7 @@
 
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "modules/audio_coding/neteq/tools/audio_sink.h"
 
 namespace webrtc {
@@ -24,8 +25,8 @@ class OutputAudioFile : public AudioSink {
  public:
   // Creates an OutputAudioFile, opening a file named `file_name` for writing.
   // The file format is 16-bit signed host-endian PCM.
-  explicit OutputAudioFile(const std::string& file_name) {
-    out_file_ = fopen(file_name.c_str(), "wb");
+  explicit OutputAudioFile(absl::string_view file_name) {
+    out_file_ = fopen(std::string(file_name).c_str(), "wb");
   }
 
   virtual ~OutputAudioFile() {

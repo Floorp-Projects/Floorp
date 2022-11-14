@@ -286,7 +286,7 @@ int main(int argc, char* argv[]) {
 
     /* Packet loss test */
     if (!strcmp("-PL", argv[i])) {
-      if (isdigit(*argv[i + 1])) {
+      if (isdigit(static_cast<unsigned char>(*argv[i + 1]))) {
         packetLossPercent = atoi(argv[i + 1]);
         if ((packetLossPercent < 0) | (packetLossPercent > 100)) {
           printf("\nInvalid packet loss perentage \n");

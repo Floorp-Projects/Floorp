@@ -16,6 +16,8 @@
 #include <string>
 #include <vector>
 
+#include "absl/container/inlined_vector.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/field_trials_view.h"
 #include "api/rtp_parameters.h"
@@ -30,9 +32,9 @@ typedef std::map<std::string, std::string> CodecParameterMap;
 class FeedbackParam {
  public:
   FeedbackParam() = default;
-  FeedbackParam(const std::string& id, const std::string& param)
+  FeedbackParam(absl::string_view id, const std::string& param)
       : id_(id), param_(param) {}
-  explicit FeedbackParam(const std::string& id)
+  explicit FeedbackParam(absl::string_view id)
       : id_(id), param_(kParamValueEmpty) {}
 
   bool operator==(const FeedbackParam& other) const;
@@ -151,6 +153,8 @@ struct AudioCodec : public Codec {
 
 struct RTC_EXPORT VideoCodec : public Codec {
   absl::optional<std::string> packetization;
+  absl::InlinedVector<webrtc::ScalabilityMode, webrtc::kScalabilityModeCount>
+      scalability_modes;
 
   // Creates a codec with the given parameters.
   VideoCodec(int id, const std::string& name);

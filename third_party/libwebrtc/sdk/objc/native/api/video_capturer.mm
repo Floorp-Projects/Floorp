@@ -12,7 +12,6 @@
 
 #include "absl/memory/memory.h"
 #include "api/video_track_source_proxy_factory.h"
-#include "rtc_base/ref_counted_object.h"
 #include "sdk/objc/native/src/objc_video_track_source.h"
 
 namespace webrtc {

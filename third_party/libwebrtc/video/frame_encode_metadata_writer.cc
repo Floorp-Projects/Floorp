@@ -19,7 +19,6 @@
 #include "modules/video_coding/include/video_coding_defines.h"
 #include "modules/video_coding/svc/create_scalability_structure.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/time_utils.h"
 
 namespace webrtc {

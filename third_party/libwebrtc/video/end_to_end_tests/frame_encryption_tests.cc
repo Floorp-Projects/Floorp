@@ -35,7 +35,7 @@ class DecryptedFrameObserver : public test::EndToEndTest,
  private:
   void ModifyVideoConfigs(
       VideoSendStream::Config* send_config,
-      std::vector<VideoReceiveStream::Config>* receive_configs,
+      std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
       VideoEncoderConfig* encoder_config) override {
     // Use VP8 instead of FAKE.
     send_config->encoder_settings.encoder_factory = &encoder_factory_;
@@ -44,7 +44,7 @@ class DecryptedFrameObserver : public test::EndToEndTest,
     send_config->frame_encryptor = new FakeFrameEncryptor();
     send_config->crypto_options.sframe.require_frame_encryption = true;
     encoder_config->codec_type = kVideoCodecVP8;
-    VideoReceiveStream::Decoder decoder =
+    VideoReceiveStreamInterface::Decoder decoder =
         test::CreateMatchingDecoder(*send_config);
     for (auto& recv_config : *receive_configs) {
       recv_config.decoder_factory = &decoder_factory_;

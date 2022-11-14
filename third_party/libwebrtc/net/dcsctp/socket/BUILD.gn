@@ -133,13 +133,13 @@ rtc_library("dcsctp_socket") {
     ":stream_reset_handler",
     ":transmission_control_block",
     "../../../api:array_view",
+    "../../../api:make_ref_counted",
     "../../../api:refcountedbase",
     "../../../api:scoped_refptr",
     "../../../api:sequence_checker",
     "../../../api/task_queue:task_queue",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
-    "../../../rtc_base:refcount",
     "../../../rtc_base:stringutils",
     "../common:internal_types",
     "../packet:bounded_io",
@@ -171,6 +171,7 @@ rtc_library("dcsctp_socket") {
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/functional:bind_front",
+    "//third_party/abseil-cpp/absl/memory",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
@@ -238,7 +239,6 @@ if (rtc_include_tests) {
       "../../../rtc_base:socket_address",
       "../../../rtc_base:stringutils",
       "../../../rtc_base:timeutils",
-      "../../../rtc_base/task_utils:to_queued_task",
       "../../../test:test_support",
       "../common:handover_testing",
       "../common:internal_types",

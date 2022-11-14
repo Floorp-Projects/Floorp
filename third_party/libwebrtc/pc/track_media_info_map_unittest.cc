@@ -29,7 +29,6 @@
 #include "pc/test/mock_rtp_sender_internal.h"
 #include "pc/video_track.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/thread.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -191,6 +190,7 @@ class TrackMediaInfoMapTest : public ::testing::Test {
   }
 
  protected:
+  rtc::AutoThread main_thread_;
   cricket::VoiceMediaInfo* voice_media_info_;
   cricket::VideoMediaInfo* video_media_info_;
   std::vector<rtc::scoped_refptr<RtpSenderInternal>> rtp_senders_;

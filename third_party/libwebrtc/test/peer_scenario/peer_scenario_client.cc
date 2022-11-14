@@ -281,8 +281,8 @@ PeerScenarioClient::PeerScenarioClient(
   pc_factory_->SetOptions(pc_options);
 
   PeerConnectionDependencies pc_deps(observer_.get());
-  pc_deps.allocator =
-      std::make_unique<cricket::BasicPortAllocator>(manager->network_manager());
+  pc_deps.allocator = std::make_unique<cricket::BasicPortAllocator>(
+      manager->network_manager(), manager->packet_socket_factory());
   pc_deps.allocator->set_flags(pc_deps.allocator->flags() |
                                cricket::PORTALLOCATOR_DISABLE_TCP);
   peer_connection_ =

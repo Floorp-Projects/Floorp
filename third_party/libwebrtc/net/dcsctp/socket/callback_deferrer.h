@@ -24,7 +24,6 @@
 #include "api/task_queue/task_queue_base.h"
 #include "net/dcsctp/public/dcsctp_message.h"
 #include "net/dcsctp/public/dcsctp_socket.h"
-#include "rtc_base/ref_counted_object.h"
 
 namespace dcsctp {
 // Defers callbacks until they can be safely triggered.
@@ -81,6 +80,12 @@ class CallbackDeferrer : public DcSctpSocketCallbacks {
       rtc::ArrayView<const StreamID> incoming_streams) override;
   void OnBufferedAmountLow(StreamID stream_id) override;
   void OnTotalBufferedAmountLow() override;
+
+  void OnLifecycleMessageExpired(LifecycleId lifecycle_id,
+                                 bool maybe_delivered) override;
+  void OnLifecycleMessageFullySent(LifecycleId lifecycle_id) override;
+  void OnLifecycleMessageDelivered(LifecycleId lifecycle_id) override;
+  void OnLifecycleEnd(LifecycleId lifecycle_id) override;
 
  private:
   void Prepare();

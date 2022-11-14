@@ -20,6 +20,7 @@
 #include "api/adaptation/resource.h"
 #include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/units/data_rate.h"
 #include "api/video/video_bitrate_allocator.h"
 #include "api/video/video_rotation.h"
@@ -41,7 +42,6 @@
 #include "rtc_base/race_checker.h"
 #include "rtc_base/rate_statistics.h"
 #include "rtc_base/task_queue.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/clock.h"
 #include "video/adaptation/video_stream_encoder_resource_manager.h"
@@ -81,7 +81,9 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
       std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
           encoder_queue,
       BitrateAllocationCallbackType allocation_cb_type,
-      const FieldTrialsView& field_trials);
+      const FieldTrialsView& field_trials,
+      webrtc::VideoEncoderFactory::EncoderSelectorInterface* encoder_selector =
+          nullptr);
   ~VideoStreamEncoder() override;
 
   VideoStreamEncoder(const VideoStreamEncoder&) = delete;
@@ -126,7 +128,7 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
  protected:
   // Used for testing. For example the `ScalingObserverInterface` methods must
   // be called on `encoder_queue_`.
-  rtc::TaskQueue* encoder_queue() { return &encoder_queue_; }
+  TaskQueueBase* encoder_queue() { return encoder_queue_.Get(); }
 
   void OnVideoSourceRestrictionsUpdated(
       VideoSourceRestrictions restrictions,
@@ -262,8 +264,14 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
   const BitrateAllocationCallbackType allocation_cb_type_;
   const RateControlSettings rate_control_settings_;
 
+  webrtc::VideoEncoderFactory::EncoderSelectorInterface* const
+      encoder_selector_from_constructor_;
   std::unique_ptr<VideoEncoderFactory::EncoderSelectorInterface> const
-      encoder_selector_;
+      encoder_selector_from_factory_;
+  // Pointing to either encoder_selector_from_constructor_ or
+  // encoder_selector_from_factory_ but can be nullptr.
+  VideoEncoderFactory::EncoderSelectorInterface* const encoder_selector_;
+
   VideoStreamEncoderObserver* const encoder_stats_observer_;
   // Adapter that avoids public inheritance of the cadence adapter's callback
   // interface.

@@ -108,7 +108,7 @@ std::unique_ptr<ModuleRtpRtcpImpl2> CreateRtpRtcpModule(
 std::unique_ptr<NackRequester> MaybeConstructNackModule(
     TaskQueueBase* current_queue,
     NackPeriodicProcessor* nack_periodic_processor,
-    const VideoReceiveStream::Config& config,
+    const VideoReceiveStreamInterface::Config& config,
     Clock* clock,
     NackSender* nack_sender,
     KeyFrameRequestSender* keyframe_request_sender,
@@ -211,14 +211,12 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
     Transport* transport,
     RtcpRttStats* rtt_stats,
     PacketRouter* packet_router,
-    const VideoReceiveStream::Config* config,
+    const VideoReceiveStreamInterface::Config* config,
     ReceiveStatistics* rtp_receive_statistics,
     RtcpPacketTypeCounterObserver* rtcp_packet_type_counter_observer,
     RtcpCnameCallback* rtcp_cname_callback,
     NackPeriodicProcessor* nack_periodic_processor,
     VCMReceiveStatisticsCallback* vcm_receive_statistics,
-    NackSender* nack_sender,
-    KeyFrameRequestSender* keyframe_request_sender,
     OnCompleteFrameCallback* complete_frame_callback,
     rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
@@ -248,11 +246,10 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
           config_.rtp.local_ssrc,
           config_.rtp.rtcp_event_observer)),
       complete_frame_callback_(complete_frame_callback),
-      keyframe_request_sender_(keyframe_request_sender),
       keyframe_request_method_(config_.rtp.keyframe_method),
       // TODO(bugs.webrtc.org/10336): Let `rtcp_feedback_buffer_` communicate
       // directly with `rtp_rtcp_`.
-      rtcp_feedback_buffer_(this, nack_sender, this),
+      rtcp_feedback_buffer_(this, this, this),
       nack_module_(MaybeConstructNackModule(current_queue,
                                             nack_periodic_processor,
                                             config_,
@@ -281,21 +278,11 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
   rtp_rtcp_->SetRTCPStatus(config_.rtp.rtcp_mode);
   rtp_rtcp_->SetRemoteSSRC(config_.rtp.remote_ssrc);
 
-  static const int kMaxPacketAgeToNack = 450;
-  const int max_reordering_threshold = (config_.rtp.nack.rtp_history_ms > 0)
-                                           ? kMaxPacketAgeToNack
-                                           : kDefaultMaxReorderingThreshold;
-  rtp_receive_statistics_->SetMaxReorderingThreshold(config_.rtp.remote_ssrc,
-                                                     max_reordering_threshold);
-  // TODO(nisse): For historic reasons, we applied the above
-  // max_reordering_threshold also for RTX stats, which makes little sense since
-  // we don't NACK rtx packets. Consider deleting the below block, and rely on
-  // the default threshold.
-  if (config_.rtp.rtx_ssrc) {
-    rtp_receive_statistics_->SetMaxReorderingThreshold(
-        config_.rtp.rtx_ssrc, max_reordering_threshold);
+  if (config_.rtp.nack.rtp_history_ms > 0) {
+    static constexpr int kMaxPacketAgeToNack = 450;
+    rtp_receive_statistics_->SetMaxReorderingThreshold(config_.rtp.remote_ssrc,
+                                                       kMaxPacketAgeToNack);
   }
-
   ParseFieldTrial(
       {&forced_playout_delay_max_ms_, &forced_playout_delay_min_ms_},
       field_trials_.Lookup("WebRTC-ForcePlayoutDelay"));
@@ -531,8 +518,18 @@ void RtpVideoStreamReceiver2::OnReceivedPayloadData(
         rtp_packet, video_header.frame_type == VideoFrameType::kVideoFrameKey);
   }
 
-  if (generic_descriptor_state == kDropPacket)
+  if (generic_descriptor_state == kDropPacket) {
+    Timestamp now = clock_->CurrentTime();
+    if (video_structure_ == nullptr &&
+        next_keyframe_request_for_missing_video_structure_ < now) {
+      // No video structure received yet, most likely part of the initial
+      // keyframe was lost.
+      RequestKeyFrame();
+      next_keyframe_request_for_missing_video_structure_ =
+          now + TimeDelta::Seconds(1);
+    }
     return;
+  }
 
   // Color space should only be transmitted in the last packet of a frame,
   // therefore, neglect it otherwise so that last_color_space_ is not reset by
@@ -643,11 +640,11 @@ void RtpVideoStreamReceiver2::OnRecoveredPacket(const uint8_t* rtp_packet,
 
   packet.IdentifyExtensions(rtp_header_extensions_);
   packet.set_payload_type_frequency(kVideoPayloadTypeFrequency);
-  // TODO(nisse): UlpfecReceiverImpl::ProcessReceivedFec passes both
-  // original (decapsulated) media packets and recovered packets to
-  // this callback. We need a way to distinguish, for setting
-  // packet.recovered() correctly. Ideally, move RED decapsulation out
-  // of the Ulpfec implementation.
+  // TODO(bugs.webrtc.org/7135): UlpfecReceiverImpl::ProcessReceivedFec passes
+  // both original (decapsulated) media packets and recovered packets to this
+  // callback. We need a way to distinguish, for setting packet.recovered()
+  // correctly. Ideally, move RED decapsulation out of the Ulpfec
+  // implementation.
 
   ReceivePacket(packet);
 }
@@ -678,21 +675,24 @@ void RtpVideoStreamReceiver2::RequestKeyFrame() {
   RTC_DCHECK_RUN_ON(&worker_task_checker_);
   TRACE_EVENT2("webrtc", "RtpVideoStreamReceiver2::RequestKeyFrame",
                "remote_ssrc", config_.rtp.remote_ssrc, "method",
-               keyframe_request_sender_ ? "KFRSender"
-               : keyframe_request_method_ == KeyFrameReqMethod::kPliRtcp   ? "PLI"
+               keyframe_request_method_ == KeyFrameReqMethod::kPliRtcp   ? "PLI"
                : keyframe_request_method_ == KeyFrameReqMethod::kFirRtcp ? "FIR"
                : keyframe_request_method_ == KeyFrameReqMethod::kNone ? "None"
                                                                       : "Other");
   // TODO(bugs.webrtc.org/10336): Allow the sender to ignore key frame requests
   // issued by anything other than the LossNotificationController if it (the
   // sender) is relying on LNTF alone.
-  if (keyframe_request_sender_) {
-    keyframe_request_sender_->RequestKeyFrame();
-  } else if (keyframe_request_method_ == KeyFrameReqMethod::kPliRtcp) {
+  if (keyframe_request_method_ == KeyFrameReqMethod::kPliRtcp) {
     rtp_rtcp_->SendPictureLossIndication();
   } else if (keyframe_request_method_ == KeyFrameReqMethod::kFirRtcp) {
     rtp_rtcp_->SendFullIntraRequest();
   }
+}
+
+void RtpVideoStreamReceiver2::SendNack(
+    const std::vector<uint16_t>& sequence_numbers,
+    bool /*buffering_allowed*/) {
+  rtp_rtcp_->SendNack(sequence_numbers);
 }
 
 void RtpVideoStreamReceiver2::SendLossNotification(
@@ -711,12 +711,6 @@ bool RtpVideoStreamReceiver2::IsUlpfecEnabled() const {
 
 bool RtpVideoStreamReceiver2::IsRetransmissionsEnabled() const {
   return config_.rtp.nack.rtp_history_ms > 0;
-}
-
-void RtpVideoStreamReceiver2::RequestPacketRetransmit(
-    const std::vector<uint16_t>& sequence_numbers) {
-  RTC_DCHECK_RUN_ON(&worker_task_checker_);
-  rtp_rtcp_->SendNack(sequence_numbers);
 }
 
 bool RtpVideoStreamReceiver2::IsDecryptable() const {
@@ -933,6 +927,16 @@ void RtpVideoStreamReceiver2::UpdateRtt(int64_t max_rtt_ms) {
   RTC_DCHECK_RUN_ON(&worker_task_checker_);
   if (nack_module_)
     nack_module_->UpdateRtt(max_rtt_ms);
+}
+
+void RtpVideoStreamReceiver2::OnLocalSsrcChange(uint32_t local_ssrc) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  rtp_rtcp_->SetLocalSsrc(local_ssrc);
+}
+
+void RtpVideoStreamReceiver2::SetRtcpMode(RtcpMode mode) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  rtp_rtcp_->SetRTCPStatus(mode);
 }
 
 absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedPacketMs() const {

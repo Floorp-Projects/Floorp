@@ -9,6 +9,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <XCTest/XCTest.h>
 
 #include <vector>
 
@@ -22,8 +23,7 @@
 #import "api/peerconnection/RTCPeerConnectionFactory.h"
 #import "helpers/NSString+StdString.h"
 
-@interface RTCCertificateTest : NSObject
-- (void)testCertificateIsUsedInConfig;
+@interface RTCCertificateTest : XCTestCase
 @end
 
 @implementation RTCCertificateTest
@@ -71,8 +71,3 @@
 }
 
 @end
-
-TEST(CertificateTest, DISABLED_CertificateIsUsedInConfig) {
-  RTCCertificateTest *test = [[RTCCertificateTest alloc] init];
-  [test testCertificateIsUsedInConfig];
-}

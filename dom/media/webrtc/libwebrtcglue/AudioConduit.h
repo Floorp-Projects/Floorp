@@ -172,7 +172,8 @@ class WebrtcAudioConduit : public AudioSessionConduit,
  public:
   void UnsetRemoteSSRC(uint32_t aSsrc) override {}
 
-  Maybe<webrtc::AudioReceiveStream::Stats> GetReceiverStats() const override;
+  Maybe<webrtc::AudioReceiveStreamInterface::Stats> GetReceiverStats()
+      const override;
   Maybe<webrtc::AudioSendStream::Stats> GetSenderStats() const override;
   Maybe<webrtc::CallBasicStats> GetCallStats() const override;
 
@@ -223,11 +224,11 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   WebrtcReceiveTransport mRecvTransport;
 
   // Accessed only on the Call thread.
-  webrtc::AudioReceiveStream::Config mRecvStreamConfig;
+  webrtc::AudioReceiveStreamInterface::Config mRecvStreamConfig;
 
   // Written only on the Call thread. Guarded by mLock, except for reads on the
   // Call thread.
-  webrtc::AudioReceiveStream* mRecvStream;
+  webrtc::AudioReceiveStreamInterface* mRecvStream;
 
   // Accessed only on the Call thread.
   webrtc::AudioSendStream::Config mSendStreamConfig;

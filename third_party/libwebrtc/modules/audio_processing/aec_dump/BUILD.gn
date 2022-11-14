@@ -57,8 +57,6 @@ if (rtc_enable_protobuf) {
       "aec_dump_impl.h",
       "capture_stream_info.cc",
       "capture_stream_info.h",
-      "write_to_file_task.cc",
-      "write_to_file_task.h",
     ]
 
     deps = [

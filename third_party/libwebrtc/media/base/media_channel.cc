@@ -11,15 +11,14 @@
 #include "media/base/media_channel.h"
 
 #include "media/base/rtp_utils.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 
 namespace cricket {
 using webrtc::FrameDecryptorInterface;
 using webrtc::FrameEncryptorInterface;
 using webrtc::FrameTransformerInterface;
 using webrtc::PendingTaskSafetyFlag;
+using webrtc::SafeTask;
 using webrtc::TaskQueueBase;
-using webrtc::ToQueuedTask;
 using webrtc::VideoTrackInterface;
 
 VideoOptions::VideoOptions()
@@ -126,7 +125,7 @@ void MediaChannel::SetPreferredDscp(rtc::DiffServCodePoint new_dscp) {
     // This is currently the common path as the derived channel classes
     // get called on the worker thread. There are still some tests though
     // that call directly on the network thread.
-    network_thread_->PostTask(ToQueuedTask(
+    network_thread_->PostTask(SafeTask(
         network_safety_, [this, new_dscp]() { SetPreferredDscp(new_dscp); }));
     return;
   }
@@ -190,7 +189,7 @@ void MediaChannel::SendRtp(const uint8_t* data,
   if (network_thread_->IsCurrent()) {
     send();
   } else {
-    network_thread_->PostTask(ToQueuedTask(network_safety_, std::move(send)));
+    network_thread_->PostTask(SafeTask(network_safety_, std::move(send)));
   }
 }
 
@@ -207,7 +206,7 @@ void MediaChannel::SendRtcp(const uint8_t* data, size_t len) {
   if (network_thread_->IsCurrent()) {
     send();
   } else {
-    network_thread_->PostTask(ToQueuedTask(network_safety_, std::move(send)));
+    network_thread_->PostTask(SafeTask(network_safety_, std::move(send)));
   }
 }
 

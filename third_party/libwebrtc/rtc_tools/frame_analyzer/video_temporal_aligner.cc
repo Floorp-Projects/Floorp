@@ -18,9 +18,9 @@
 #include <limits>
 #include <vector>
 
+#include "api/make_ref_counted.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/video_frame_buffer.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_tools/frame_analyzer/video_quality_analysis.h"
 
 namespace webrtc {

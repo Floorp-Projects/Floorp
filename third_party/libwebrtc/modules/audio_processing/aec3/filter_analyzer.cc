@@ -19,7 +19,6 @@
 #include "modules/audio_processing/aec3/aec3_common.h"
 #include "modules/audio_processing/aec3/render_buffer.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
-#include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 
 namespace webrtc {
@@ -45,12 +44,11 @@ size_t FindPeakIndex(rtc::ArrayView<const float> filter_time_domain,
 
 }  // namespace
 
-int FilterAnalyzer::instance_count_ = 0;
+std::atomic<int> FilterAnalyzer::instance_count_(0);
 
 FilterAnalyzer::FilterAnalyzer(const EchoCanceller3Config& config,
                                size_t num_capture_channels)
-    : data_dumper_(
-          new ApmDataDumper(rtc::AtomicOps::Increment(&instance_count_))),
+    : data_dumper_(new ApmDataDumper(instance_count_.fetch_add(1) + 1)),
       bounded_erl_(config.ep_strength.bounded_erl),
       default_gain_(config.ep_strength.default_gain),
       h_highpass_(num_capture_channels,
@@ -131,7 +129,7 @@ void FilterAnalyzer::AnalyzeRegion(
 
     st_ch.consistent_estimate = st_ch.consistent_filter_detector.Detect(
         h_highpass_[ch], region_,
-        render_buffer.Block(-filter_delays_blocks_[ch])[0], st_ch.peak_index,
+        render_buffer.GetBlock(-filter_delays_blocks_[ch]), st_ch.peak_index,
         filter_delays_blocks_[ch]);
   }
 }
@@ -224,7 +222,7 @@ void FilterAnalyzer::ConsistentFilterDetector::Reset() {
 bool FilterAnalyzer::ConsistentFilterDetector::Detect(
     rtc::ArrayView<const float> filter_to_analyze,
     const FilterRegion& region,
-    rtc::ArrayView<const std::vector<float>> x_block,
+    const Block& x_block,
     size_t peak_index,
     int delay_blocks) {
   if (region.start_sample_ == 0) {
@@ -265,7 +263,9 @@ bool FilterAnalyzer::ConsistentFilterDetector::Detect(
 
   if (significant_peak_) {
     bool active_render_block = false;
-    for (auto& x_channel : x_block) {
+    for (int ch = 0; ch < x_block.NumChannels(); ++ch) {
+      rtc::ArrayView<const float, kBlockSize> x_channel =
+          x_block.View(/*band=*/0, ch);
       const float x_energy = std::inner_product(
           x_channel.begin(), x_channel.end(), x_channel.begin(), 0.f);
       if (x_energy > active_render_threshold_) {

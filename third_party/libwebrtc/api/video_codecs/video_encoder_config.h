@@ -86,20 +86,10 @@ class VideoEncoderConfig {
 
     virtual void FillVideoCodecVp8(VideoCodecVP8* vp8_settings) const;
     virtual void FillVideoCodecVp9(VideoCodecVP9* vp9_settings) const;
-    virtual void FillVideoCodecH264(VideoCodecH264* h264_settings) const;
 
    private:
     ~EncoderSpecificSettings() override {}
     friend class VideoEncoderConfig;
-  };
-
-  class H264EncoderSpecificSettings : public EncoderSpecificSettings {
-   public:
-    explicit H264EncoderSpecificSettings(const VideoCodecH264& specifics);
-    void FillVideoCodecH264(VideoCodecH264* h264_settings) const override;
-
-   private:
-    VideoCodecH264 specifics_;
   };
 
   class Vp8EncoderSpecificSettings : public EncoderSpecificSettings {
@@ -151,13 +141,14 @@ class VideoEncoderConfig {
   ~VideoEncoderConfig();
   std::string ToString() const;
 
-  // TODO(nisse): Consolidate on one of these.
+  // TODO(bugs.webrtc.org/6883): Consolidate on one of these.
   VideoCodecType codec_type;
   SdpVideoFormat video_format;
 
   rtc::scoped_refptr<VideoStreamFactoryInterface> video_stream_factory;
   std::vector<SpatialLayer> spatial_layers;
   ContentType content_type;
+  bool frame_drop_enabled;
   rtc::scoped_refptr<const EncoderSpecificSettings> encoder_specific_settings;
 
   // Padding will be used up to this bitrate regardless of the bitrate produced

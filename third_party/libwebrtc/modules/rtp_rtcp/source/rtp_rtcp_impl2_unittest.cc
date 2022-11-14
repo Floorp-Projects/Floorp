@@ -165,19 +165,13 @@ class FieldTrialConfig : public FieldTrialsView {
     return trials;
   }
 
-  FieldTrialConfig() : overhead_enabled_(false), max_padding_factor_(1200) {}
+  FieldTrialConfig() : overhead_enabled_(false) {}
   ~FieldTrialConfig() override {}
 
   void SetOverHeadEnabled(bool enabled) { overhead_enabled_ = enabled; }
-  void SetMaxPaddingFactor(double factor) { max_padding_factor_ = factor; }
 
   std::string Lookup(absl::string_view key) const override {
-    if (key == "WebRTC-LimitPaddingSize") {
-      char string_buf[32];
-      rtc::SimpleStringBuilder ssb(string_buf);
-      ssb << "factor:" << max_padding_factor_;
-      return ssb.str();
-    } else if (key == "WebRTC-SendSideBwe-WithOverhead") {
+    if (key == "WebRTC-SendSideBwe-WithOverhead") {
       return overhead_enabled_ ? "Enabled" : "Disabled";
     }
     return "";
@@ -185,7 +179,6 @@ class FieldTrialConfig : public FieldTrialsView {
 
  private:
   bool overhead_enabled_;
-  double max_padding_factor_;
 };
 
 class RtpRtcpModule : public RtcpPacketTypeCounterObserver,
@@ -511,18 +504,15 @@ TEST_P(RtpRtcpImpl2Test, NoSrBeforeMedia) {
   // Verify no SR is sent before media has been sent, RR should still be sent
   // from the receiving module though.
   AdvanceTime(kDefaultReportInterval / 2);
-  int64_t current_time = time_controller_.GetClock()->TimeInMilliseconds();
-  EXPECT_EQ(-1, sender_.RtcpSent().first_packet_time_ms);
-  EXPECT_EQ(receiver_.RtcpSent().first_packet_time_ms, current_time);
+  EXPECT_EQ(sender_.transport_.NumRtcpSent(), 0u);
+  EXPECT_EQ(receiver_.transport_.NumRtcpSent(), 1u);
 
   // RTCP should be triggered by the RTP send.
   EXPECT_TRUE(SendFrame(&sender_, sender_video_.get(), kBaseLayerTid));
-  EXPECT_EQ(sender_.RtcpSent().first_packet_time_ms, current_time);
+  EXPECT_EQ(sender_.transport_.NumRtcpSent(), 1u);
 }
 
 TEST_P(RtpRtcpImpl2Test, RtcpPacketTypeCounter_Nack) {
-  EXPECT_EQ(-1, receiver_.RtcpSent().first_packet_time_ms);
-  EXPECT_EQ(-1, sender_.RtcpReceived().first_packet_time_ms);
   EXPECT_EQ(0U, sender_.RtcpReceived().nack_packets);
   EXPECT_EQ(0U, receiver_.RtcpSent().nack_packets);
 
@@ -532,11 +522,9 @@ TEST_P(RtpRtcpImpl2Test, RtcpPacketTypeCounter_Nack) {
   EXPECT_EQ(0, receiver_.impl_->SendNACK(nack_list, kNackLength));
   AdvanceTime(kOneWayNetworkDelay);
   EXPECT_EQ(1U, receiver_.RtcpSent().nack_packets);
-  EXPECT_GT(receiver_.RtcpSent().first_packet_time_ms, -1);
 
   // Send module receives the NACK.
   EXPECT_EQ(1U, sender_.RtcpReceived().nack_packets);
-  EXPECT_GT(sender_.RtcpReceived().first_packet_time_ms, -1);
 }
 
 TEST_P(RtpRtcpImpl2Test, AddStreamDataCounters) {
@@ -693,17 +681,14 @@ TEST_P(RtpRtcpImpl2Test, ConfigurableRtcpReportInterval) {
   EXPECT_TRUE(SendFrame(&sender_, sender_video_.get(), kBaseLayerTid));
 
   // Initial state
-  EXPECT_EQ(sender_.RtcpSent().first_packet_time_ms, -1);
   EXPECT_EQ(0u, sender_.transport_.NumRtcpSent());
 
   // Move ahead to the last ms before a rtcp is expected, no action.
   AdvanceTime(kVideoReportInterval / 2 - TimeDelta::Millis(1));
-  EXPECT_EQ(sender_.RtcpSent().first_packet_time_ms, -1);
   EXPECT_EQ(sender_.transport_.NumRtcpSent(), 0u);
 
   // Move ahead to the first rtcp. Send RTCP.
   AdvanceTime(TimeDelta::Millis(1));
-  EXPECT_GT(sender_.RtcpSent().first_packet_time_ms, -1);
   EXPECT_EQ(sender_.transport_.NumRtcpSent(), 1u);
 
   EXPECT_TRUE(SendFrame(&sender_, sender_video_.get(), kBaseLayerTid));

@@ -21,6 +21,8 @@ RtpFrameReferenceFinder::ReturnVector RtpVp9RefFinder::ManageFrame(
   const RTPVideoHeaderVP9& codec_header = absl::get<RTPVideoHeaderVP9>(
       frame->GetRtpVideoHeader().video_type_header);
 
+  if (codec_header.temporal_idx != kNoTemporalIdx)
+    frame->SetTemporalIndex(codec_header.temporal_idx);
   frame->SetSpatialIndex(codec_header.spatial_idx);
   frame->SetId(codec_header.picture_id & (kFrameIdLength - 1));
 

@@ -373,8 +373,8 @@ Maybe<Ssrc> WebrtcAudioConduit::GetRemoteSSRC() const {
              : Some(mRecvStreamConfig.rtp.remote_ssrc);
 }
 
-Maybe<webrtc::AudioReceiveStream::Stats> WebrtcAudioConduit::GetReceiverStats()
-    const {
+Maybe<webrtc::AudioReceiveStreamInterface::Stats>
+WebrtcAudioConduit::GetReceiverStats() const {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   if (!mRecvStream) {
     return Nothing();
@@ -470,7 +470,7 @@ MediaConduitErrorCode WebrtcAudioConduit::GetAudioFrame(
   // only way short of interfacing with a layer above (which mixes all streams,
   // which we don't want) or a layer below (which we try to avoid because it is
   // less stable).
-  auto info = static_cast<webrtc::internal::AudioReceiveStream*>(mRecvStream)
+  auto info = static_cast<webrtc::AudioReceiveStreamImpl*>(mRecvStream)
                   ->GetAudioFrameWithInfo(samplingFreqHz, frame);
 
   if (info == webrtc::AudioMixer::Source::AudioFrameInfo::kError) {

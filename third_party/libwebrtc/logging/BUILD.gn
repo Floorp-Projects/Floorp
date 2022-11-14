@@ -71,6 +71,7 @@ rtc_library("rtc_stream_config") {
     "../api:rtp_headers",
     "../api:rtp_parameters",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 rtc_library("rtc_event_pacing") {
@@ -366,6 +367,7 @@ if (rtc_enable_protobuf) {
       "../api:sequence_checker",
       "../api/rtc_event_log",
       "../api/task_queue",
+      "../api/units:time_delta",
       "../rtc_base:checks",
       "../rtc_base:logging",
       "../rtc_base:macromagic",
@@ -376,7 +378,10 @@ if (rtc_enable_protobuf) {
       "../rtc_base:timeutils",
       "../rtc_base/system:no_unique_address",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/strings",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
   }
 }
 
@@ -461,6 +466,7 @@ if (rtc_enable_protobuf) {
     ]
     absl_deps = [
       "//third_party/abseil-cpp/absl/memory",
+      "//third_party/abseil-cpp/absl/strings",
       "//third_party/abseil-cpp/absl/types:optional",
     ]
   }
@@ -505,6 +511,8 @@ if (rtc_enable_protobuf) {
         "../api/rtc_event_log",
         "../api/rtc_event_log:rtc_event_log_factory",
         "../api/task_queue:default_task_queue_factory",
+        "../api/units:time_delta",
+        "../api/units:timestamp",
         "../call",
         "../call:call_interfaces",
         "../modules/audio_coding:audio_network_adaptor",
@@ -523,6 +531,7 @@ if (rtc_enable_protobuf) {
       ]
       absl_deps = [
         "//third_party/abseil-cpp/absl/memory",
+        "//third_party/abseil-cpp/absl/strings",
         "//third_party/abseil-cpp/absl/types:optional",
       ]
     }
@@ -545,6 +554,7 @@ if (rtc_enable_protobuf) {
           "//third_party/abseil-cpp/absl/flags:parse",
           "//third_party/abseil-cpp/absl/flags:usage",
           "//third_party/abseil-cpp/absl/memory",
+          "//third_party/abseil-cpp/absl/strings",
           "//third_party/abseil-cpp/absl/types:optional",
         ]
       }
@@ -569,8 +579,8 @@ rtc_library("ice_log") {
 
   deps = [
     ":rtc_event_field",
+    "../api:dtls_transport_interface",
     "../api:libjingle_logging_api",
-    "../api:libjingle_peerconnection_api",  # For api/dtls_transport_interface.h
     "../api/rtc_event_log",
     "../api/units:timestamp",
   ]

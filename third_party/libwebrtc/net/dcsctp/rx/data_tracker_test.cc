@@ -66,8 +66,9 @@ class DataTrackerTest : public testing::Test {
     DcSctpSocketHandoverState state;
     tracker_->AddHandoverState(state);
     g_handover_state_transformer_for_test(&state);
-    tracker_ = std::make_unique<DataTracker>("log: ", timer_.get(), kInitialTSN,
-                                             &state);
+    tracker_ =
+        std::make_unique<DataTracker>("log: ", timer_.get(), kInitialTSN);
+    tracker_->RestoreFromState(state);
   }
 
   TimeMs now_ = TimeMs(0);
