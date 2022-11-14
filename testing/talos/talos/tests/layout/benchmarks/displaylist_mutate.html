@@ -46,13 +46,18 @@ function runFrame() {
   window.requestAnimationFrame(runFrame);
 }
 
-addEventListener("load", function() {
-  TalosContentProfiler.resume("displaylist_mutate.html loaded", true).then(() => {
-    start = performance.now();
-    window.requestAnimationFrame(runFrame);
-  });
-});
+function startTest() {
+  start = performance.now();
+  window.requestAnimationFrame(runFrame);
+}
 
+addEventListener("load", function() {
+  if (window.TalosContentProfiler) {
+    TalosContentProfiler.resume("displaylist_mutate.html loaded", true).then(startTest);
+  } else {
+    startTest();
+  }
+});
 </script>
 <script type="text/javascript" src="resource://talos-powers/TalosContentProfiler.js"></script>
 </html>
