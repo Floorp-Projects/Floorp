@@ -221,6 +221,16 @@ void MFMediaEngineParent::InitializeVirtualVideoWindow() {
   LOG("Initialized virtual window");
 }
 
+#ifndef ENSURE_EVENT_DISPATCH_DURING_PLAYING
+#  define ENSURE_EVENT_DISPATCH_DURING_PLAYING(event)        \
+    do {                                                     \
+      if (mMediaEngine->IsPaused()) {                        \
+        LOG("Ignore incorrect '%s' during pausing!", event); \
+        return;                                              \
+      }                                                      \
+    } while (false)
+#endif
+
 void MFMediaEngineParent::HandleMediaEngineEvent(
     MFMediaEngineEventWrapper aEvent) {
   AssertOnManagerThread();
@@ -244,10 +254,16 @@ void MFMediaEngineParent::HandleMediaEngineEvent(
     case MF_MEDIA_ENGINE_EVENT_SEEKED:
     case MF_MEDIA_ENGINE_EVENT_BUFFERINGSTARTED:
     case MF_MEDIA_ENGINE_EVENT_BUFFERINGENDED:
+      Unused << SendNotifyEvent(aEvent.mEvent);
+      break;
     case MF_MEDIA_ENGINE_EVENT_PLAYING:
+      ENSURE_EVENT_DISPATCH_DURING_PLAYING(
+          MediaEngineEventToStr(aEvent.mEvent));
       Unused << SendNotifyEvent(aEvent.mEvent);
       break;
     case MF_MEDIA_ENGINE_EVENT_ENDED: {
+      ENSURE_EVENT_DISPATCH_DURING_PLAYING(
+          MediaEngineEventToStr(aEvent.mEvent));
       Unused << SendNotifyEvent(aEvent.mEvent);
       UpdateStatisticsData();
       break;
@@ -582,5 +598,6 @@ void MFMediaEngineParent::UpdateStatisticsData() {
 
 #undef LOG
 #undef RETURN_IF_FAILED
+#undef ENSURE_EVENT_DISPATCH_DURING_PLAYING
 
 }  // namespace mozilla
