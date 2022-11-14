@@ -104,9 +104,8 @@ nsInputStreamTransport::OpenInputStream(uint32_t flags, uint32_t segsize,
   net_ResolveSegmentParams(segsize, segcount);
 
   nsCOMPtr<nsIAsyncOutputStream> pipeOut;
-  rv = NS_NewPipe2(getter_AddRefs(mPipeIn), getter_AddRefs(pipeOut),
-                   nonblocking, true, segsize, segcount);
-  if (NS_FAILED(rv)) return rv;
+  NS_NewPipe2(getter_AddRefs(mPipeIn), getter_AddRefs(pipeOut), nonblocking,
+              true, segsize, segcount);
 
   mInProgress = true;
 

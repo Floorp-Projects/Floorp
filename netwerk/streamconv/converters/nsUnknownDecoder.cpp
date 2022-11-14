@@ -715,18 +715,16 @@ nsresult nsUnknownDecoder::FireListenerNotifications(nsIRequest* request,
     nsCOMPtr<nsIOutputStream> out;
 
     // Create a pipe and fill it with the data from the sniffer buffer.
-    rv = NS_NewPipe(getter_AddRefs(in), getter_AddRefs(out), MAX_BUFFER_SIZE,
-                    MAX_BUFFER_SIZE);
+    NS_NewPipe(getter_AddRefs(in), getter_AddRefs(out), MAX_BUFFER_SIZE,
+               MAX_BUFFER_SIZE);
 
+    rv = out->Write(mBuffer, mBufferLen, &len);
     if (NS_SUCCEEDED(rv)) {
-      rv = out->Write(mBuffer, mBufferLen, &len);
-      if (NS_SUCCEEDED(rv)) {
-        if (len == mBufferLen) {
-          rv = listener->OnDataAvailable(request, in, 0, len);
-        } else {
-          NS_ERROR("Unable to write all the data into the pipe.");
-          rv = NS_ERROR_FAILURE;
-        }
+      if (len == mBufferLen) {
+        rv = listener->OnDataAvailable(request, in, 0, len);
+      } else {
+        NS_ERROR("Unable to write all the data into the pipe.");
+        rv = NS_ERROR_FAILURE;
       }
     }
   }

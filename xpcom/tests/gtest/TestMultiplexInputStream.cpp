@@ -929,8 +929,7 @@ TEST(MultiplexInputStream, ReadWhileWaiting_nsPipe)
 {
   nsCOMPtr<nsIAsyncInputStream> pipeIn;
   nsCOMPtr<nsIAsyncOutputStream> pipeOut;
-  ASSERT_TRUE(NS_SUCCEEDED(NS_NewPipe2(getter_AddRefs(pipeIn),
-                                       getter_AddRefs(pipeOut), true, true)));
+  NS_NewPipe2(getter_AddRefs(pipeIn), getter_AddRefs(pipeOut), true, true);
   TestMultiplexStreamReadWhileWaiting(pipeIn, pipeOut);
 }
 

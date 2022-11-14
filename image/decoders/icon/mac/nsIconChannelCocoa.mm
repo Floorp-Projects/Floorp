@@ -340,15 +340,13 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool aNonBlock
   // Now, create a pipe and stuff our data into it
   nsCOMPtr<nsIInputStream> inStream;
   nsCOMPtr<nsIOutputStream> outStream;
-  rv = NS_NewPipe(getter_AddRefs(inStream), getter_AddRefs(outStream), bufferCapacity,
-                  bufferCapacity, aNonBlocking);
+  NS_NewPipe(getter_AddRefs(inStream), getter_AddRefs(outStream), bufferCapacity, bufferCapacity,
+             aNonBlocking);
 
+  uint32_t written;
+  rv = outStream->Write((char*)fileBuf.get(), bufferCapacity, &written);
   if (NS_SUCCEEDED(rv)) {
-    uint32_t written;
-    rv = outStream->Write((char*)fileBuf.get(), bufferCapacity, &written);
-    if (NS_SUCCEEDED(rv)) {
-      NS_IF_ADDREF(*_retval = inStream);
-    }
+    NS_IF_ADDREF(*_retval = inStream);
   }
 
   // Drop notification callbacks to prevent cycles.

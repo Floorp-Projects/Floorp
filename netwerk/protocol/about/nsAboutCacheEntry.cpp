@@ -140,9 +140,8 @@ nsresult nsAboutCacheEntry::Channel::GetContentStream(nsIURI* uri,
 
   // Init: (block size, maximum length)
   nsCOMPtr<nsIAsyncInputStream> inputStream;
-  rv = NS_NewPipe2(getter_AddRefs(inputStream), getter_AddRefs(mOutputStream),
-                   true, false, 256, UINT32_MAX);
-  if (NS_FAILED(rv)) return rv;
+  NS_NewPipe2(getter_AddRefs(inputStream), getter_AddRefs(mOutputStream), true,
+              false, 256, UINT32_MAX);
 
   constexpr auto buffer =
       "<!DOCTYPE html>\n"

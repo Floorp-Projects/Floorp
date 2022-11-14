@@ -105,7 +105,7 @@ class nsSocketEvent : public Runnable {
 
 //-----------------------------------------------------------------------------
 
-//#define TEST_CONNECT_ERRORS
+// #define TEST_CONNECT_ERRORS
 #ifdef TEST_CONNECT_ERRORS
 #  include <stdlib.h>
 static PRErrorCode RandomizeConnectError(PRErrorCode code) {
@@ -2317,9 +2317,8 @@ nsSocketTransport::OpenInputStream(uint32_t flags, uint32_t segsize,
 
     // create a pipe
     nsCOMPtr<nsIAsyncOutputStream> pipeOut;
-    rv = NS_NewPipe2(getter_AddRefs(pipeIn), getter_AddRefs(pipeOut),
-                     !openBlocking, true, segsize, segcount);
-    if (NS_FAILED(rv)) return rv;
+    NS_NewPipe2(getter_AddRefs(pipeIn), getter_AddRefs(pipeOut), !openBlocking,
+                true, segsize, segcount);
 
     // async copy from socket to pipe
     rv = NS_AsyncCopy(&mInput, pipeOut, mSocketTransportService,
@@ -2364,9 +2363,8 @@ nsSocketTransport::OpenOutputStream(uint32_t flags, uint32_t segsize,
 
     // create a pipe
     nsCOMPtr<nsIAsyncInputStream> pipeIn;
-    rv = NS_NewPipe2(getter_AddRefs(pipeIn), getter_AddRefs(pipeOut), true,
-                     !openBlocking, segsize, segcount);
-    if (NS_FAILED(rv)) return rv;
+    NS_NewPipe2(getter_AddRefs(pipeIn), getter_AddRefs(pipeOut), true,
+                !openBlocking, segsize, segcount);
 
     // async copy from socket to pipe
     rv = NS_AsyncCopy(pipeIn, &mOutput, mSocketTransportService,

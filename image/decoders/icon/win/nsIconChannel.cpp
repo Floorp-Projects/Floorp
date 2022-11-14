@@ -735,10 +735,9 @@ nsIconChannel::Open(nsIInputStream** aStream) {
   // Create the asynchronous pipe with a blocking read end
   nsCOMPtr<nsIAsyncInputStream> inputStream;
   nsCOMPtr<nsIAsyncOutputStream> outputStream;
-  rv = NS_NewPipe2(getter_AddRefs(inputStream), getter_AddRefs(outputStream),
-                   false /*nonBlockingInput*/, false /*nonBlockingOutput*/,
-                   iconBuffer.mLen /*segmentSize*/, 1 /*segmentCount*/);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_NewPipe2(getter_AddRefs(inputStream), getter_AddRefs(outputStream),
+              false /*nonBlockingInput*/, false /*nonBlockingOutput*/,
+              iconBuffer.mLen /*segmentSize*/, 1 /*segmentCount*/);
 
   rv = WriteByteBufToOutputStream(iconBuffer, outputStream);
 
@@ -794,10 +793,9 @@ nsresult nsIconChannel::StartAsyncOpen() {
   // Create the asynchronous pipe with a non-blocking read end
   nsCOMPtr<nsIAsyncInputStream> inputStream;
   nsCOMPtr<nsIAsyncOutputStream> outputStream;
-  rv = NS_NewPipe2(getter_AddRefs(inputStream), getter_AddRefs(outputStream),
-                   true /*nonBlockingInput*/, false /*nonBlockingOutput*/,
-                   0 /*segmentSize*/, UINT32_MAX /*segmentCount*/);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_NewPipe2(getter_AddRefs(inputStream), getter_AddRefs(outputStream),
+              true /*nonBlockingInput*/, false /*nonBlockingOutput*/,
+              0 /*segmentSize*/, UINT32_MAX /*segmentCount*/);
 
   // If we are in content, we asynchronously request the ICO buffer from
   // the parent process because the APIs to load icons don't work with
