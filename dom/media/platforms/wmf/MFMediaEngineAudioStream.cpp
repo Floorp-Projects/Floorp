@@ -75,12 +75,11 @@ bool MFMediaEngineAudioStream::HasEnoughRawData() const {
   return mRawDataQueueForFeedingEngine.Duration() >= AMPLE_AUDIO_USECS;
 }
 
-already_AddRefed<MediaData> MFMediaEngineAudioStream::OutputData() {
+already_AddRefed<MediaData> MFMediaEngineAudioStream::OutputDataInternal() {
+  AssertOnTaskQueue();
   if (mRawDataQueueForGeneratingOutput.GetSize() == 0) {
-    LOGV("Hasn't got raw data for generating output yet");
     return nullptr;
   }
-
   // The media engine doesn't provide a way to allow us to access decoded audio
   // frames, and the audio playback will be handled internally inside the media
   // engine. So we simply return fake audio data.
