@@ -27,6 +27,8 @@ class MFMediaEngineAudioStream final : public MFMediaEngineStream {
     return TrackInfo::TrackType::kAudioTrack;
   }
 
+  already_AddRefed<MediaData> OutputData() override;
+
  private:
   HRESULT CreateMediaType(const TrackInfo& aInfo,
                           IMFMediaType** aMediaType) override;
@@ -35,6 +37,9 @@ class MFMediaEngineAudioStream final : public MFMediaEngineStream {
 
   // For MF_MT_USER_DATA. Currently only used for AAC.
   nsTArray<BYTE> mAACUserData;
+
+  // Set when `CreateMediaType()` is called.
+  AudioInfo mAudioInfo;
 };
 
 }  // namespace mozilla

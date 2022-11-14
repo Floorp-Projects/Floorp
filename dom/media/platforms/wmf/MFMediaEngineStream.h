@@ -94,9 +94,7 @@ class MFMediaEngineStream
 
   // Overwrite this method to support returning decoded data. Called on
   // MediaPDecoder thread (wrapper thread).
-  // TODO : make this function pure virtual and let audio stream to generate its
-  // own fake data as well.
-  virtual already_AddRefed<MediaData> OutputData() { return nullptr; }
+  virtual already_AddRefed<MediaData> OutputData() = 0;
 
   virtual MediaDataDecoder::ConversionRequired NeedsConversion() const {
     return MediaDataDecoder::ConversionRequired::kNeedNone;
@@ -182,12 +180,9 @@ class MFMediaEngineStreamWrapper : public MediaDataDecoder {
   MFMediaEngineStreamWrapper(MFMediaEngineStream* aStream,
                              TaskQueue* aTaskQueue,
                              const CreateDecoderParams& aParams)
-      : mStream(aStream),
-        mTaskQueue(aTaskQueue),
-        mFakeDataCreator(new FakeDecodedDataCreator(aParams)) {
+      : mStream(aStream), mTaskQueue(aTaskQueue) {
     MOZ_ASSERT(mStream);
     MOZ_ASSERT(mTaskQueue);
-    MOZ_ASSERT(mFakeDataCreator);
   }
 
   // Methods for MediaDataDecoder, they are all called on the remote
@@ -202,25 +197,7 @@ class MFMediaEngineStreamWrapper : public MediaDataDecoder {
 
  private:
   Microsoft::WRL::ComPtr<MFMediaEngineStream> mStream;
-  // We use this to generate fake decoded outputs, as the real data is handled
-  // inside the media engine. Audio output is not possible to get, the video
-  // output would be output via DCOMP.
-  class FakeDecodedDataCreator final {
-   public:
-    explicit FakeDecodedDataCreator(const CreateDecoderParams& aParams);
-    RefPtr<MediaDataDecoder::DecodePromise> Decode(MediaRawData* aSample) {
-      return mDummyDecoder->Decode(aSample);
-    }
-    void Flush() { Unused << mDummyDecoder->Flush(); }
-
-    TrackInfo::TrackType Type() const { return mType; }
-
-   private:
-    RefPtr<MediaDataDecoder> mDummyDecoder;
-    TrackInfo::TrackType mType;
-  };
   RefPtr<TaskQueue> mTaskQueue;
-  UniquePtr<FakeDecodedDataCreator> mFakeDataCreator;
 };
 
 }  // namespace mozilla
