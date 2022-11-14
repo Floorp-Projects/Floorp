@@ -1070,25 +1070,14 @@ InterceptedHttpChannel::OnStartRequest(nsIRequest* aRequest) {
     GetCallback(mProgressSink);
   }
 
-  if (mLoadInfo->GetServiceWorkerTaintingSynthesized()) {
-    // It looks like only succeeded synthesized response can
-    // reach to here.
-    // No need to do any further checks
-    mCheckIsOpaqueResponseAllowedAfterSniff = false;
-  } else if (EnsureOpaqueResponseIsAllowed() == OpaqueResponseAllowed::No) {
-    mChannelBlockedByOpaqueResponse = true;
-    return NS_ERROR_FAILURE;
-  }
+  MOZ_ASSERT_IF(!mLoadInfo->GetServiceWorkerTaintingSynthesized(),
+                mLoadInfo->GetLoadingPrincipal());
+  // No need to do ORB checks if these conditions hold.
+  MOZ_DIAGNOSTIC_ASSERT(mLoadInfo->GetServiceWorkerTaintingSynthesized() ||
+                        mLoadInfo->GetLoadingPrincipal()->IsSystemPrincipal());
 
   if (mPump && mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) {
     mPump->PeekStream(CallTypeSniffers, static_cast<nsIChannel*>(this));
-  }
-
-  auto isAllowedOrErr = EnsureOpaqueResponseIsAllowedAfterSniff();
-  if (isAllowedOrErr.isErr() ||
-      isAllowedOrErr.inspect() == OpaqueResponseAllowed::No) {
-    mChannelBlockedByOpaqueResponse = true;
-    return NS_ERROR_FAILURE;
   }
 
   nsresult rv = ProcessCrossOriginEmbedderPolicyHeader();
