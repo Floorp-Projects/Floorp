@@ -130,29 +130,25 @@ bool wasm::CheckRefType(JSContext* cx, RefType targetType, HandleValue v,
                              JSMSG_WASM_BAD_REF_NONNULLABLE_VALUE);
     return false;
   }
+
   switch (targetType.kind()) {
     case RefType::Func:
-      if (!CheckFuncRefValue(cx, v, fnval)) {
-        return false;
-      }
-      break;
+      return CheckFuncRefValue(cx, v, fnval);
     case RefType::Extern:
-      if (!BoxAnyRef(cx, v, refval)) {
-        return false;
-      }
-      break;
+      return BoxAnyRef(cx, v, refval);
     case RefType::Eq:
-      if (!CheckEqRefValue(cx, v, refval)) {
-        return false;
-      }
-      break;
+      return CheckEqRefValue(cx, v, refval);
     case RefType::Any:
     case RefType::Struct:
     case RefType::Array:
     case RefType::TypeRef:
-      MOZ_CRASH("temporarily unsupported Ref type");
+      break;
   }
-  return true;
+
+  MOZ_ASSERT(!ValType(targetType).isExposable());
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           JSMSG_WASM_BAD_VAL_TYPE);
+  return false;
 }
 
 bool wasm::CheckFuncRefValue(JSContext* cx, HandleValue v,
