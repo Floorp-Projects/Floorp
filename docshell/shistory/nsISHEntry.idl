@@ -66,6 +66,11 @@ interface nsISHEntry : nsISupports
     [infallible] attribute nsIURI resultPrincipalURI;
 
     /**
+     * If non-null, the URI as it was before query stripping was performed.
+     */
+    [infallible] attribute nsIURI unstrippedURI;
+
+    /**
      *  This flag remembers whether channel has LOAD_REPLACE set.
      */
     [infallible] attribute boolean loadReplace;
@@ -324,6 +329,7 @@ interface nsISHEntry : nsISupports
                            in boolean dynamicCreation,
                            in nsIURI originalURI,
                            in nsIURI resultPrincipalURI,
+                           in nsIURI unstrippedURI,
                            in bool loadReplace,
                            in nsIReferrerInfo referrerInfo,
                            in AString srcdoc,

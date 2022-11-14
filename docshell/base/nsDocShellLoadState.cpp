@@ -578,7 +578,7 @@ bool nsDocShellLoadState::LoadIsFromSessionHistory() const {
 }
 
 void nsDocShellLoadState::MaybeStripTrackerQueryStrings(
-    BrowsingContext* aContext, nsIURI* aCurrentUnstrippedURI) {
+    BrowsingContext* aContext) {
   MOZ_ASSERT(aContext);
 
   // Return early if the triggering principal doesn't exist. This could happen
@@ -619,17 +619,14 @@ void nsDocShellLoadState::MaybeStripTrackerQueryStrings(
   uint32_t numStripped = URLQueryStringStripper::Strip(
       URI(), aContext->UsePrivateBrowsing(), strippedURI);
   if (numStripped) {
-    mUnstrippedURI = URI();
+    if (!mUnstrippedURI) {
+      mUnstrippedURI = URI();
+    }
     SetURI(strippedURI);
 
     Telemetry::AccumulateCategorical(
         Telemetry::LABELS_QUERY_STRIPPING_COUNT::StripForNavigation);
     Telemetry::Accumulate(Telemetry::QUERY_STRIPPING_PARAM_COUNT, numStripped);
-  } else if (LoadType() & nsIDocShell::LOAD_CMD_RELOAD) {
-    // Preserve the Unstripped URI if it's a reload. By doing this, we can
-    // restore the stripped query parameters once the ETP has been toggled to
-    // off.
-    mUnstrippedURI = aCurrentUnstrippedURI;
   }
 
 #ifdef DEBUG
@@ -1076,3 +1073,7 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
 }
 
 nsIURI* nsDocShellLoadState::GetUnstrippedURI() const { return mUnstrippedURI; }
+
+void nsDocShellLoadState::SetUnstrippedURI(nsIURI* aUnstrippedURI) {
+  mUnstrippedURI = aUnstrippedURI;
+}
