@@ -16,7 +16,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -85,38 +84,16 @@ class CookieBannerChild extends JSWindowActorChild {
     }
   }
 
-  get #isPrivateBrowsing() {
-    return lazy.PrivateBrowsingUtils.isContentWindowPrivate(this.contentWindow);
-  }
-
   /**
    * Whether the feature is enabled based on pref state.
-   * @type {boolean} true if feature is enabled, false otherwise.
+   * @type {boolean}
    */
   get #isEnabled() {
-    if (!lazy.bannerClickingEnabled) {
-      return false;
-    }
-    if (this.#isPrivateBrowsing) {
-      return lazy.serviceModePBM != Ci.nsICookieBannerService.MODE_DISABLED;
-    }
-    return lazy.serviceMode != Ci.nsICookieBannerService.MODE_DISABLED;
-  }
-
-  /**
-   * Whether the feature is enabled in detect-only-mode where cookie banner
-   * detection events are dispatched, but banners aren't handled.
-   * @type {boolean} true if feature mode is enabled, false otherwise.
-   */
-  get #isDetectOnly() {
-    // We can't be in detect-only-mode if fully disabled.
-    if (!this.#isEnabled) {
-      return false;
-    }
-    if (this.#isPrivateBrowsing) {
-      return lazy.serviceModePBM == Ci.nsICookieBannerService.MODE_DETECT_ONLY;
-    }
-    return lazy.serviceMode == Ci.nsICookieBannerService.MODE_DETECT_ONLY;
+    return (
+      lazy.bannerClickingEnabled &&
+      (lazy.serviceMode != Ci.nsICookieBannerService.MODE_DISABLED ||
+        lazy.serviceModePBM != Ci.nsICookieBannerService.MODE_DISABLED)
+    );
   }
 
   /**
@@ -148,7 +125,7 @@ class CookieBannerChild extends JSWindowActorChild {
     try {
       rules = await this.sendQuery("CookieBanner::GetClickRules", {});
     } catch (e) {
-      lazy.logConsole.warn("Failed to get click rule from parent.", e);
+      lazy.logConsole.warn("Failed to get click rule from parent.");
       return;
     }
 
@@ -161,26 +138,7 @@ class CookieBannerChild extends JSWindowActorChild {
 
     this.#clickRules = rules;
 
-    let {
-      bannerHandled,
-      bannerDetected,
-      matchedRule,
-    } = await this.handleCookieBanner();
-
-    if (bannerDetected) {
-      lazy.logConsole.info("Detected cookie banner.", {
-        url: this.document?.location.href,
-      });
-      this.sendAsyncMessage("CookieBanner::DetectedBanner");
-    }
-
-    if (bannerHandled) {
-      lazy.logConsole.info("Handled cookie banner.", {
-        url: this.document?.location.href,
-        rule: matchedRule,
-      });
-      this.sendAsyncMessage("CookieBanner::HandledBanner");
-    }
+    await this.handleCookieBanner();
 
     this.#maybeSendTestMessage();
   }
@@ -234,8 +192,6 @@ class CookieBannerChild extends JSWindowActorChild {
    * The function to perform the core logic of handing the cookie banner. It
    * will detect the banner and click the banner button whenever possible
    * according to the given click rules.
-   * If the service mode pref is set to MODE_DETECT_ONLY we will only attempt to
-   * find the cookie banner element and return early.
    *
    * @returns A promise which resolves when it finishes auto clicking.
    */
@@ -247,12 +203,7 @@ class CookieBannerChild extends JSWindowActorChild {
 
     if (!rules.length) {
       // The banner was never shown.
-      return { bannerHandled: false, bannerDetected: false };
-    }
-
-    // If the cookie banner prefs only enable detection but not handling we're done here.
-    if (this.#isDetectOnly) {
-      return { bannerHandled: false, bannerDetected: true };
+      return;
     }
 
     // Hide the banner.
@@ -268,8 +219,12 @@ class CookieBannerChild extends JSWindowActorChild {
         this.#showBanner(matchedRule);
       }
     }
-
-    return { bannerHandled: successClick, bannerDetected: true, matchedRule };
+    if (successClick) {
+      lazy.logConsole.info("Handled cookie banner.", {
+        url: this.document?.location.href,
+        rule: matchedRule,
+      });
+    }
   }
 
   /**

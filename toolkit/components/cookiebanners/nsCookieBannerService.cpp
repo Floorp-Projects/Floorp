@@ -317,8 +317,7 @@ nsCookieBannerService::GetCookiesForURI(
 
   // We don't need to check the domain preference if the cookie banner handling
   // service is disabled by pref.
-  if (mode != nsICookieBannerService::MODE_DISABLED &&
-      mode != nsICookieBannerService::MODE_DETECT_ONLY) {
+  if (mode != nsICookieBannerService::MODE_DISABLED) {
     // Get the domain preference for the uri, the domain preference takes
     // precedence over the pref setting. Note that the domain preference is
     // supposed to stored only for top level URIs.
@@ -332,10 +331,8 @@ nsCookieBannerService::GetCookiesForURI(
   }
 
   // Service is disabled for current context (normal, private browsing or domain
-  // preference), return empty array. Same for detect-only mode where no cookies
-  // should be injected.
-  if (mode == nsICookieBannerService::MODE_DISABLED ||
-      mode == nsICookieBannerService::MODE_DETECT_ONLY) {
+  // preference), return empty array.
+  if (mode == nsICookieBannerService::MODE_DISABLED) {
     MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
             ("%s. Returning empty array. Got MODE_DISABLED for "
              "aIsPrivateBrowsing: %d.",
