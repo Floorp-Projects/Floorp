@@ -2941,7 +2941,7 @@ nsStyleText::nsStyleText(const Document& aDocument)
       mRubyAlign(StyleRubyAlign::SpaceAround),
       mRubyPosition(StyleRubyPosition::AlternateOver),
       mTextSizeAdjust(StyleTextSizeAdjust::Auto),
-      mTextCombineUpright(NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE),
+      mTextCombineUpright(StyleTextCombineUpright::None),
       mMozControlCharacterVisibility(
           StaticPrefs::layout_css_control_characters_visible()
               ? StyleMozControlCharacterVisibility::Visible
