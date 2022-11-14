@@ -45,6 +45,7 @@ const MOZSEARCH_LOCALNAME = "SearchPlugin";
 /**
  * Ensures an assertion is met before continuing. Should be used to indicate
  * fatal errors.
+ *
  * @param {*} assertion
  *   An assertion that must be met
  * @param {string} message
@@ -91,7 +92,7 @@ export class OpenSearchEngine extends SearchEngine {
    *
    * @param {string|nsIURI} uri
    *   The uri to load the search plugin from.
-   * @param {function} [callback]
+   * @param {Function} [callback]
    *   A callback to receive any details of errors.
    */
   install(uri, callback) {
@@ -137,9 +138,9 @@ export class OpenSearchEngine extends SearchEngine {
    * triggers parsing of the data. The engine is then flushed to disk. Notifies
    * the search service once initialization is complete.
    *
-   * @param {function} callback
+   * @param {Function} callback
    *   A callback to receive success or failure notifications. May be null.
-   * @param {array} bytes
+   * @param {Array} bytes
    *  The loaded search engine data.
    */
   _onLoad(callback, bytes) {
