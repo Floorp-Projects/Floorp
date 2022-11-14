@@ -46,7 +46,7 @@ class Addresses extends AddressesBase {
    *
    * @param  {string} guid
    *         Indicates which address to merge.
-   * @param  {Object} address
+   * @param  {object} address
    *         The new address used to merge into the old one.
    * @param  {boolean} strict
    *         In strict merge mode, we'll treat the subset record with empty field
@@ -178,7 +178,7 @@ class CreditCards extends CreditCardsBase {
    *
    * @param  {string} guid
    *         Indicates which credit card to merge.
-   * @param  {Object} creditCard
+   * @param  {object} creditCard
    *         The new credit card used to merge into the old one.
    * @returns {boolean}
    *          Return true if credit card is merged into target with specific guid or false if not.
@@ -260,6 +260,7 @@ class FormAutofillStorage extends FormAutofillStorageBase {
 
   /**
    * Loads the profile data from file to memory.
+   *
    * @returns {JSONFile}
    *          The JSONFile store.
    */

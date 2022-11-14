@@ -126,7 +126,7 @@ class FormAutofillSection {
   /**
    * Override this method if the profile is needed to apply some transformers.
    *
-   * @param {Object} profile
+   * @param {object} profile
    *        A profile should be converted based on the specific requirement.
    */
   applyTransformers(profile) {}
@@ -135,7 +135,7 @@ class FormAutofillSection {
    * Override this method if the profile is needed to be customized for
    * previewing values.
    *
-   * @param {Object} profile
+   * @param {object} profile
    *        A profile for pre-processing before previewing values.
    */
   preparePreviewProfile(profile) {}
@@ -144,7 +144,7 @@ class FormAutofillSection {
    * Override this method if the profile is needed to be customized for filling
    * values.
    *
-   * @param {Object} profile
+   * @param {object} profile
    *        A profile for pre-processing before filling values.
    * @returns {boolean} Whether the profile should be filled.
    */
@@ -321,7 +321,7 @@ class FormAutofillSection {
    * Processes form fields that can be autofilled, and populates them with the
    * profile provided by backend.
    *
-   * @param {Object} profile
+   * @param {object} profile
    *        A profile to be filled in.
    * @returns {boolean}
    *          True if successful, false if failed
@@ -413,7 +413,7 @@ class FormAutofillSection {
   /**
    * Populates result to the preview layers with given profile.
    *
-   * @param {Object} profile
+   * @param {object} profile
    *        A profile to be previewed with
    */
   previewFormFields(profile) {
@@ -505,7 +505,7 @@ class FormAutofillSection {
   /**
    * Change the state of a field to correspond with different presentations.
    *
-   * @param {Object} fieldDetail
+   * @param {object} fieldDetail
    *        A fieldDetail of which its element is about to update the state.
    * @param {string} nextState
    *        Used to determine the next state
@@ -603,7 +603,7 @@ class FormAutofillSection {
    * Return the record that is converted from `fieldDetails` and only valid
    * form record is included.
    *
-   * @returns {Object|null}
+   * @returns {object | null}
    *          A record object consists of three properties:
    *            - guid: The id of the previously-filled profile or null if omitted.
    *            - record: A valid record converted from details with trimmed result.
@@ -830,7 +830,8 @@ class FormAutofillAddressSection extends FormAutofillSection {
   /**
    * Replace tel with tel-national if tel violates the input element's
    * restriction.
-   * @param {Object} profile
+   *
+   * @param {object} profile
    *        A profile to be converted.
    */
   telTransformer(profile) {
@@ -971,11 +972,11 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
   /**
    * Credit Card Section Constructor
    *
-   * @param {Object} fieldDetails
+   * @param {object} fieldDetails
    *        The fieldDetail objects for the fields in this section
-   * @param {Object} winUtils
+   * @param {object} winUtils
    *        A WindowUtils reference for the Window the section appears in
-   * @param {Object} handler
+   * @param {object} handler
    *        The FormAutofillHandler responsible for this section
    */
   constructor(fieldDetails, winUtils, handler) {
@@ -1345,7 +1346,7 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
   /**
    * Customize for previewing profile
    *
-   * @param {Object} profile
+   * @param {object} profile
    *        A profile for pre-processing before previewing values.
    * @override
    */
@@ -1364,7 +1365,7 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
   /**
    * Customize for filling profile
    *
-   * @param {Object} profile
+   * @param {object} profile
    *        A profile for pre-processing before filling values.
    * @returns {boolean} Whether the profile should be filled.
    * @override
@@ -1432,8 +1433,9 @@ class FormAutofillHandler {
   /**
    * Initialize the form from `FormLike` object to handle the section or form
    * operations.
+   *
    * @param {FormLike} form Form that need to be auto filled
-   * @param {function} onFormSubmitted Function that can be invoked
+   * @param {Function} onFormSubmitted Function that can be invoked
    *                   to simulate form submission. Function is passed
    *                   three arguments: (1) a FormLike for the form being
    *                   submitted, (2) the corresponding Window, and (3) the
@@ -1487,6 +1489,7 @@ class FormAutofillHandler {
   /**
    * Check the form is necessary to be updated. This function should be able to
    * detect any changes including all control elements in the form.
+   *
    * @param {HTMLElement} element The element supposed to be in the form.
    * @returns {boolean} FormAutofillHandler.form is updated or not.
    */
@@ -1530,6 +1533,7 @@ class FormAutofillHandler {
   /**
    * Update the form with a new FormLike, and the related fields should be
    * updated or clear to ensure the data consistency.
+   *
    * @param {FormLike} form a new FormLike to replace the original one.
    */
   _updateForm(form) {
@@ -1608,7 +1612,7 @@ class FormAutofillHandler {
    * Processes form fields that can be autofilled, and populates them with the
    * profile provided by backend.
    *
-   * @param {Object} profile
+   * @param {object} profile
    *        A profile to be filled in.
    */
   async autofillFormFields(profile) {
@@ -1670,7 +1674,7 @@ class FormAutofillHandler {
    * Collect the filled sections within submitted form and convert all the valid
    * field data into multiple records.
    *
-   * @returns {Object} records
+   * @returns {object} records
    *          {Array.<Object>} records.address
    *          {Array.<Object>} records.creditCard
    */

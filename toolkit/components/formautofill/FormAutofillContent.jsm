@@ -122,7 +122,7 @@ AutocompleteFactory.prototype = {
 };
 
 /**
- * @constructor
+ * @class
  *
  * @implements {nsIAutoCompleteSearch}
  */
@@ -146,8 +146,8 @@ AutofillProfileAutoCompleteSearch.prototype = {
    *
    * @param {string} searchString the string to search for
    * @param {string} searchParam
-   * @param {Object} previousResult a previous result to use for faster searchinig
-   * @param {Object} listener the listener to notify when the search is complete
+   * @param {object} previousResult a previous result to use for faster searchinig
+   * @param {object} listener the listener to notify when the search is complete
    */
   startSearch(searchString, searchParam, previousResult, listener) {
     let {
@@ -291,9 +291,9 @@ AutofillProfileAutoCompleteSearch.prototype = {
    * Get the records from parent process for AutoComplete result.
    *
    * @private
-   * @param  {Object} input
+   * @param  {object} input
    *         Input element for autocomplete.
-   * @param  {Object} data
+   * @param  {object} data
    *         Parameters for querying the corresponding result.
    * @param  {string} data.collectionName
    *         The name used to specify which collection to retrieve records.
@@ -460,7 +460,7 @@ var FormAutofillContent = {
   },
 
   /**
-   * @type {Object} The object where to store the active items, e.g. element,
+   * @type {object} The object where to store the active items, e.g. element,
    * handler, section, and field detail.
    */
   _activeItems: {},
@@ -500,8 +500,8 @@ var FormAutofillContent = {
   /**
    * Send the profile to parent for doorhanger and storage saving/updating.
    *
-   * @param {Object} profile Submitted form's address/creditcard guid and record.
-   * @param {Object} domWin Current content window.
+   * @param {object} profile Submitted form's address/creditcard guid and record.
+   * @param {object} domWin Current content window.
    * @param {int} timeStartedFillingMS Time of form filling started.
    */
   _onFormSubmit(profile, domWin, timeStartedFillingMS) {
@@ -521,7 +521,7 @@ var FormAutofillContent = {
    * @param {HTMLElement} formElement Root element which receives submit event.
    * @param {Window} domWin Content window; passed for unit tests and when
    *                 invoked by the FormAutofillSection
-   * @param {Object} handler FormAutofillHander, if known by caller
+   * @param {object} handler FormAutofillHander, if known by caller
    */
   formSubmitted(
     formElement,
@@ -585,7 +585,7 @@ var FormAutofillContent = {
    * Get the form's handler from cache which is created after page identified.
    *
    * @param {HTMLInputElement} element Focused input which triggered profile searching
-   * @returns {Array<Object>|null}
+   * @returns {Array<object> | null}
    *          Return target form's handler from content cache
    *          (or return null if the information is not found in the cache).
    *
@@ -602,7 +602,7 @@ var FormAutofillContent = {
    * Get the active form's information from cache which is created after page
    * identified.
    *
-   * @returns {Array<Object>|null}
+   * @returns {Array<object> | null}
    *          Return target form's information from content cache
    *          (or return null if the information is not found in the cache).
    *
@@ -695,7 +695,7 @@ var FormAutofillContent = {
    * Get the active input's information from cache which is created after page
    * identified.
    *
-   * @returns {Object|null}
+   * @returns {object | null}
    *          Return the active input's information that cloned from content cache
    *          (or return null if the information is not found in the cache).
    */

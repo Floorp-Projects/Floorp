@@ -306,6 +306,7 @@ class FormAutofillParent extends JSWindowActorParent {
   /**
    * Handles the message coming from FormAutofillContent.
    *
+   * @param   {object} message
    * @param   {string} message.name The name of the message.
    * @param   {object} message.data The data of the message.
    */
@@ -414,6 +415,7 @@ class FormAutofillParent extends JSWindowActorParent {
    * This is static as a unit test calls this.
    *
    * @private
+   * @param  {object} data
    * @param  {string} data.collectionName
    *         The name used to specify which collection to retrieve records.
    * @param  {string} data.searchString
