@@ -159,7 +159,13 @@ jobs:
     - name: Integration 🗃 & Package 📦 
       run: |       
         ./mach python ./toolkit/mozapps/installer/unify.py ./obj-x86_64-apple-darwin/dist/${{ github.event.repository.name }}/${{ github.event.repository.name }}.app ./obj-aarch64-apple-darwin/dist/${{ github.event.repository.name }}/${{ github.event.repository.name }}.app
-        ./mach python -m mozbuild.action.make_dmg ./obj-x86_64-apple-darwin/dist/Floorp floorp-macOS-universal.dmg
+        ./mach python -m mozbuild.action.make_dmg ./obj-x86_64-apple-darwin/dist/Floorp floorp-macOS-universal-temp.dmg
+        wget https:/dl.dropboxusercontent.com/s/cnoji5xuq416ltd/base.dmg?dl=0
+        hdiutil attach ./floorp-macOS-universal-temp.dmg
+        hdiutil attach ./base.dmg
+        cp -r /Volumes/Floorp/Floorp.app ./Volumes/Floorp\ Installer/
+        hdiutil detach /Volumes/Floorp\ Installer/
+        hdiutil convert ./base.dmg -format UDZO -imagekey zlib-level=9 -o floorp-macOS-universal.dmg
 
     - name: Publish 🎁
       uses: actions/upload-artifact@v3
