@@ -746,15 +746,11 @@
   <label class="search-header" hidden="true"><html:h2 data-l10n-id="network-settings-title"/></label>
 
   <hbox align="center">
-    <hbox align="center" flex="1">
-      <description id="connectionSettingsDescription" control="connectionSettings"/>
-      <spacer width="5"/>
-      <label id="connectionSettingsLearnMore" class="learnMore" is="text-link"
-        data-l10n-id="network-proxy-connection-learn-more">
-      </label>
-      <separator orient="vertical"/>
-    </hbox>
-
+    <description flex="1" control="connectionSettings">
+      <html:span id="connectionSettingsDescription"/>
+      <label id="connectionSettingsLearnMore" class="learnMore" is="text-link" data-l10n-id="network-proxy-connection-learn-more"/>
+    </description>
+    <separator orient="vertical"/>
     <button id="connectionSettings"
             is="highlightable-button"
             class="accessory-button"
