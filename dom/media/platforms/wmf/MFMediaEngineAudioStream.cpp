@@ -31,6 +31,7 @@ MFMediaEngineAudioStream* MFMediaEngineAudioStream::Create(
 HRESULT MFMediaEngineAudioStream::CreateMediaType(const TrackInfo& aInfo,
                                                   IMFMediaType** aMediaType) {
   const AudioInfo& info = *aInfo.GetAsAudioInfo();
+  mAudioInfo = info;
   GUID subType = AudioMimeTypeToMediaFoundationSubtype(info.mMimeType);
   NS_ENSURE_TRUE(subType != GUID_NULL, MF_E_TOPO_CODEC_NOT_FOUND);
 
@@ -72,6 +73,22 @@ bool MFMediaEngineAudioStream::HasEnoughRawData() const {
   // audio.
   static const int64_t AMPLE_AUDIO_USECS = 2000000;
   return mRawDataQueueForFeedingEngine.Duration() >= AMPLE_AUDIO_USECS;
+}
+
+already_AddRefed<MediaData> MFMediaEngineAudioStream::OutputData() {
+  if (mRawDataQueueForGeneratingOutput.GetSize() == 0) {
+    LOGV("Hasn't got raw data for generating output yet");
+    return nullptr;
+  }
+
+  // The media engine doesn't provide a way to allow us to access decoded audio
+  // frames, and the audio playback will be handled internally inside the media
+  // engine. So we simply return fake audio data.
+  RefPtr<MediaRawData> input = mRawDataQueueForGeneratingOutput.PopFront();
+  RefPtr<MediaData> output =
+      new AudioData(input->mOffset, input->mTime, AlignedAudioBuffer{},
+                    mAudioInfo.mChannels, mAudioInfo.mRate);
+  return output.forget();
 }
 
 #undef LOGV

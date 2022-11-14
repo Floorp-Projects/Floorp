@@ -52,20 +52,10 @@ RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStreamWrapper::Decode(
       "MFMediaEngineStreamWrapper::Decode",
       [sample = RefPtr{aSample}, stream]() { stream->NotifyNewData(sample); }));
 
-  // TODO : Generalize this part by using `OutputData()` for audio as well and
-  // remove `mFakeDataCreator`.
-  if (mStream->TrackType() == TrackInfo::TrackType::kVideoTrack) {
-    if (RefPtr<MediaData> outputData = mStream->OutputData()) {
-      return DecodePromise::CreateAndResolve(DecodedData{std::move(outputData)},
-                                             __func__);
-    } else {
-      return DecodePromise::CreateAndResolve(DecodedData{}, __func__);
-    }
-  }
-  // The stream don't support returning output, all data would be processed
-  // inside the media engine. We return an empty data back instead.
-  MOZ_ASSERT(mFakeDataCreator->Type() == mStream->TrackType());
-  return mFakeDataCreator->Decode(aSample);
+  RefPtr<MediaData> outputData = mStream->OutputData();
+  return outputData ? DecodePromise::CreateAndResolve(
+                          DecodedData{std::move(outputData)}, __func__)
+                    : DecodePromise::CreateAndResolve(DecodedData{}, __func__);
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStreamWrapper::Drain() {
@@ -75,14 +65,12 @@ RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStreamWrapper::Drain() {
         MediaResult(NS_ERROR_FAILURE, "MFMediaEngineStreamWrapper is shutdown"),
         __func__);
   }
-  // TODO :  Generalize this part by using `OutputData()` for audio as well.
+
   DecodedData outputs;
-  if (mStream->TrackType() == TrackInfo::TrackType::kVideoTrack) {
-    RefPtr<MediaData> outputData = mStream->OutputData();
-    while (outputData) {
-      outputs.AppendElement(outputData);
-      outputData = mStream->OutputData();
-    }
+  RefPtr<MediaData> outputData = mStream->OutputData();
+  while (outputData) {
+    outputs.AppendElement(outputData);
+    outputData = mStream->OutputData();
   }
   return DecodePromise::CreateAndResolve(std::move(outputs), __func__);
 }
@@ -94,7 +82,6 @@ RefPtr<MediaDataDecoder::FlushPromise> MFMediaEngineStreamWrapper::Flush() {
         MediaResult(NS_ERROR_FAILURE, "MFMediaEngineStreamWrapper is shutdown"),
         __func__);
   }
-  mFakeDataCreator->Flush();
   return InvokeAsync(mTaskQueue, mStream.Get(), __func__,
                      &MFMediaEngineStream::Flush);
 }
@@ -110,7 +97,6 @@ RefPtr<ShutdownPromise> MFMediaEngineStreamWrapper::Shutdown() {
   }
   mStream = nullptr;
   mTaskQueue = nullptr;
-  mFakeDataCreator = nullptr;
   return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
@@ -122,27 +108,6 @@ MediaDataDecoder::ConversionRequired
 MFMediaEngineStreamWrapper::NeedsConversion() const {
   return mStream ? mStream->NeedsConversion()
                  : MediaDataDecoder::ConversionRequired::kNeedNone;
-}
-
-MFMediaEngineStreamWrapper::FakeDecodedDataCreator::FakeDecodedDataCreator(
-    const CreateDecoderParams& aParams) {
-  if (aParams.mConfig.IsVideo()) {
-    const VideoInfo& config = aParams.VideoConfig();
-    mDummyDecoder = new DummyMediaDataDecoder(
-        MakeUnique<BlankVideoDataCreator>(config.mDisplay.width,
-                                          config.mDisplay.height,
-                                          aParams.mImageContainer),
-        "blank video data decoder for media engine"_ns, aParams);
-    mType = TrackInfo::TrackType::kVideoTrack;
-  } else if (aParams.mConfig.IsAudio()) {
-    const AudioInfo& config = aParams.AudioConfig();
-    mDummyDecoder = new DummyMediaDataDecoder(
-        MakeUnique<BlankAudioDataCreator>(config.mChannels, config.mRate),
-        "blank audio data decoder for media engine"_ns, aParams);
-    mType = TrackInfo::TrackType::kAudioTrack;
-  } else {
-    MOZ_ASSERT_UNREACHABLE("unexpected config type");
-  }
 }
 
 MFMediaEngineStream::MFMediaEngineStream()
