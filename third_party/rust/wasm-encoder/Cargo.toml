@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "wasm-encoder"
-version = "0.17.0"
+version = "0.19.1"
 authors = ["Nick Fitzgerald <fitzgen@gmail.com>"]
 description = """
 A low-level WebAssembly encoder.
@@ -22,13 +22,12 @@ documentation = "https://docs.rs/wasm-encoder"
 readme = "README.md"
 license = "Apache-2.0 WITH LLVM-exception"
 repository = "https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wasm-encoder"
-resolver = "2"
 
 [dependencies.leb128]
 version = "0.2.4"
 
 [dev-dependencies.anyhow]
-version = "1.0.38"
+version = "1.0.58"
 
 [dev-dependencies.tempfile]
 version = "3.2.0"

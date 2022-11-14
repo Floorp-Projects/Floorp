@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "wast"
-version = "47.0.0"
+version = "49.0.0"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 description = """
 Customizable Rust parsers for the WebAssembly Text formats WAT and WAST
@@ -22,14 +22,13 @@ documentation = "https://docs.rs/wast"
 readme = "README.md"
 license = "Apache-2.0 WITH LLVM-exception"
 repository = "https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wast"
-resolver = "2"
 
 [[test]]
 name = "parse-fail"
 harness = false
 
 [dependencies.leb128]
-version = "0.2"
+version = "0.2.4"
 
 [dependencies.memchr]
 version = "2.4.1"
@@ -38,13 +37,13 @@ version = "2.4.1"
 version = "0.1.9"
 
 [dependencies.wasm-encoder]
-version = "0.17.0"
+version = "0.19.1"
 
 [dev-dependencies.anyhow]
-version = "1.0"
+version = "1.0.58"
 
 [dev-dependencies.rayon]
-version = "1.0"
+version = "1.3"
 
 [features]
 default = ["wasm-module"]

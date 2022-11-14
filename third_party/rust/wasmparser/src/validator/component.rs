@@ -87,6 +87,8 @@ impl ComponentState {
         current.core_types.push(TypeId {
             type_size: ty.type_size(),
             index: types.len(),
+            type_index: Some(current.core_types.len()),
+            is_core: true,
         });
         types.push(ty);
 
@@ -113,6 +115,8 @@ impl ComponentState {
         self.core_modules.push(TypeId {
             type_size: ty.type_size(),
             index: types.len(),
+            type_index: None,
+            is_core: true,
         });
 
         types.push(ty);
@@ -182,6 +186,8 @@ impl ComponentState {
         current.types.push(TypeId {
             type_size: ty.type_size(),
             index: types.len(),
+            type_index: Some(current.types.len()),
+            is_core: false,
         });
         types.push(ty);
 
@@ -327,6 +333,8 @@ impl ComponentState {
         self.core_funcs.push(TypeId {
             type_size: lowered_ty.type_size(),
             index: types.len(),
+            type_index: None,
+            is_core: true,
         });
 
         types.push(lowered_ty);
@@ -344,6 +352,8 @@ impl ComponentState {
         self.components.push(TypeId {
             type_size: ty.type_size(),
             index: types.len(),
+            type_index: None,
+            is_core: false,
         });
 
         types.push(ty);
@@ -1009,6 +1019,8 @@ impl ComponentState {
         let id = TypeId {
             type_size: ty.type_size(),
             index: types.len(),
+            type_index: None,
+            is_core: true,
         };
 
         types.push(ty);
@@ -1144,6 +1156,8 @@ impl ComponentState {
         let id = TypeId {
             type_size: ty.type_size(),
             index: types.len(),
+            type_index: None,
+            is_core: false,
         };
 
         types.push(ty);
@@ -1245,6 +1259,8 @@ impl ComponentState {
         let id = TypeId {
             type_size: ty.type_size(),
             index: types.len(),
+            type_index: None,
+            is_core: false,
         };
 
         types.push(ty);
@@ -1331,6 +1347,8 @@ impl ComponentState {
         let id = TypeId {
             type_size: ty.type_size(),
             index: types.len(),
+            type_index: None,
+            is_core: true,
         };
 
         types.push(ty);
@@ -1544,7 +1562,13 @@ impl ComponentState {
         let current = components.last_mut().unwrap();
         check_max(current.type_count(), 1, MAX_WASM_TYPES, "types", offset)?;
 
-        current.core_types.push(ty);
+        current.core_types.push(TypeId {
+            type_size: ty.type_size,
+            index: ty.index,
+            type_index: Some(current.core_types.len()),
+            is_core: true,
+        });
+
         Ok(())
     }
 
@@ -1555,7 +1579,13 @@ impl ComponentState {
         let current = components.last_mut().unwrap();
         check_max(current.type_count(), 1, MAX_WASM_TYPES, "types", offset)?;
 
-        current.types.push(ty);
+        current.types.push(TypeId {
+            type_size: ty.type_size,
+            index: ty.index,
+            type_index: Some(current.types.len()),
+            is_core: false,
+        });
+
         Ok(())
     }
 
@@ -1868,7 +1898,7 @@ impl ComponentState {
         let id = self.type_at(idx, false, offset)?;
         match &types[id] {
             Type::Defined(_) => Ok(id),
-            _ => bail!(offset, "type index {} is not a defined type", id.index),
+            _ => bail!(offset, "type index {} is not a defined type", idx),
         }
     }
 

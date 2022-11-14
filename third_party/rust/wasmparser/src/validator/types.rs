@@ -141,6 +141,14 @@ pub struct TypeId {
     pub(crate) type_size: usize,
     /// The index into the global list of types.
     pub(crate) index: usize,
+    /// The original type index.
+    ///
+    /// This will be `None` for implicitly defined types, e.g. types for
+    /// modules definitions, component definitions, instantiations, and function
+    /// lowerings.
+    pub(crate) type_index: Option<usize>,
+    /// Whether or not the type is a core type.
+    pub(crate) is_core: bool,
 }
 
 /// A unified type definition for validating WebAssembly modules and components.

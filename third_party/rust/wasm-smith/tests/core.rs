@@ -203,13 +203,13 @@ fn smoke_test_no_trapping_mode() {
     let mut buf = vec![0; 2048];
     for _ in 0..1024 {
         rng.fill_bytes(&mut buf);
-        let u = Unstructured::new(&buf);
-        if let Ok(mut module) = Module::arbitrary_take_rest(u) {
-            if module.no_traps().is_ok() {
-                let wasm_bytes = module.to_bytes();
-                let mut validator = Validator::new_with_features(wasm_features());
-                validate(&mut validator, &wasm_bytes);
-            }
+        let mut u = Unstructured::new(&buf);
+        let mut cfg = SwarmConfig::arbitrary(&mut u).unwrap();
+        cfg.disallow_traps = true;
+        if let Ok(module) = Module::new(cfg, &mut u) {
+            let wasm_bytes = module.to_bytes();
+            let mut validator = Validator::new_with_features(wasm_features());
+            validate(&mut validator, &wasm_bytes);
         }
     }
 }
