@@ -58,7 +58,7 @@ pub enum Type {
 pub struct FuncType {
     /// The combined parameters and result types.
     params_results: Box<[ValType]>,
-    /// The number of paramter types.
+    /// The number of parameter types.
     len_params: usize,
 }
 

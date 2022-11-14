@@ -73,6 +73,13 @@ void Val::initFromRootedLocation(ValType type, const void* loc) {
   memcpy(&cell_, loc, type_.size());
 }
 
+void Val::initFromHeapLocation(ValType type, const void* loc) {
+  MOZ_ASSERT(!type_.isValid());
+  type_ = type;
+  memset(&cell_, 0, sizeof(Cell));
+  readFromHeapLocation(loc);
+}
+
 void Val::writeToRootedLocation(void* loc, bool mustWrite64) const {
   memcpy(loc, &cell_, type_.size());
   if (mustWrite64 && type_.size() == 4) {
@@ -80,7 +87,9 @@ void Val::writeToRootedLocation(void* loc, bool mustWrite64) const {
   }
 }
 
-void Val::readFromHeapLocation(void* loc) { memcpy(&cell_, loc, type_.size()); }
+void Val::readFromHeapLocation(const void* loc) {
+  memcpy(&cell_, loc, type_.size());
+}
 
 void Val::writeToHeapLocation(void* loc) const {
   if (type_.isRefRepr()) {
@@ -121,26 +130,25 @@ bool wasm::CheckRefType(JSContext* cx, RefType targetType, HandleValue v,
                              JSMSG_WASM_BAD_REF_NONNULLABLE_VALUE);
     return false;
   }
+
   switch (targetType.kind()) {
     case RefType::Func:
-      if (!CheckFuncRefValue(cx, v, fnval)) {
-        return false;
-      }
-      break;
+      return CheckFuncRefValue(cx, v, fnval);
     case RefType::Extern:
-      if (!BoxAnyRef(cx, v, refval)) {
-        return false;
-      }
-      break;
+      return BoxAnyRef(cx, v, refval);
     case RefType::Eq:
-      if (!CheckEqRefValue(cx, v, refval)) {
-        return false;
-      }
-      break;
+      return CheckEqRefValue(cx, v, refval);
+    case RefType::Any:
+    case RefType::Struct:
+    case RefType::Array:
     case RefType::TypeRef:
-      MOZ_CRASH("temporarily unsupported Ref type");
+      break;
   }
-  return true;
+
+  MOZ_ASSERT(!ValType(targetType).isExposable());
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           JSMSG_WASM_BAD_VAL_TYPE);
+  return false;
 }
 
 bool wasm::CheckFuncRefValue(JSContext* cx, HandleValue v,
@@ -399,6 +407,9 @@ bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, FieldType type,
         case RefType::Eq:
           return ToWebAssemblyValue_eqref<Debug>(cx, val, (void**)loc,
                                                  mustWrite64);
+        case RefType::Any:
+        case RefType::Struct:
+        case RefType::Array:
         case RefType::TypeRef:
           break;
       }
@@ -466,7 +477,13 @@ bool ToJSValue_funcref(JSContext* cx, void* src, MutableHandleValue dst) {
   return true;
 }
 template <typename Debug = NoDebug>
-bool ToJSValue_anyref(JSContext* cx, void* src, MutableHandleValue dst) {
+bool ToJSValue_externref(JSContext* cx, void* src, MutableHandleValue dst) {
+  dst.set(UnboxAnyRef(AnyRef::fromCompiledCode(src)));
+  Debug::print(src);
+  return true;
+}
+template <typename Debug = NoDebug>
+bool ToJSValue_eqref(JSContext* cx, void* src, MutableHandleValue dst) {
   dst.set(UnboxAnyRef(AnyRef::fromCompiledCode(src)));
   Debug::print(src);
   return true;
@@ -520,11 +537,14 @@ bool wasm::ToJSValue(JSContext* cx, const void* src, FieldType type,
           return ToJSValue_funcref<Debug>(
               cx, *reinterpret_cast<void* const*>(src), dst);
         case RefType::Extern:
-          return ToJSValue_anyref<Debug>(
+          return ToJSValue_externref<Debug>(
               cx, *reinterpret_cast<void* const*>(src), dst);
         case RefType::Eq:
-          return ToJSValue_anyref<Debug>(
+          return ToJSValue_eqref<Debug>(
               cx, *reinterpret_cast<void* const*>(src), dst);
+        case RefType::Any:
+        case RefType::Struct:
+        case RefType::Array:
         case RefType::TypeRef:
           break;
       }

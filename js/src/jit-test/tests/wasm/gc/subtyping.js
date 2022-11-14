@@ -33,17 +33,37 @@ assertSubtype('f64', 'f64');
 assertSubtype('eqref', 'eqref');
 assertSubtype('funcref', 'funcref');
 
-// No subtyping relation between funcref, eqref, externref
-assertNotSubtype('funcref', 'eqref');
-assertNotSubtype('eqref', 'funcref');
+// No subtyping relation between funcref, anyref, externref. These are our top
+// types.
+assertNotSubtype('funcref', 'anyref');
+assertNotSubtype('anyref', 'funcref');
 assertNotSubtype('funcref', 'externref');
 assertNotSubtype('externref', 'funcref');
-assertNotSubtype('externref', 'eqref');
-assertNotSubtype('eqref', 'externref');
+assertNotSubtype('externref', 'anyref');
+assertNotSubtype('anyref', 'externref');
 
-// Structs are subtypes of eqref
+// eqref is a subtype of anyref
+assertSubtype('anyref', 'eqref');
+
+// structref is a subtype of eqref and anyref
+assertSubtype('anyref', 'structref');
+assertSubtype('eqref', 'structref');
+
+// arrayref is a subtype of eqref and anyref
+assertSubtype('anyref', 'arrayref');
+assertSubtype('eqref', 'arrayref');
+
+// Structs are subtypes of anyref, eqref, and structref
+assertSubtype(
+ 'anyref',
+ '(ref 0)',
+ simpleTypeSection(['(struct)']));
 assertSubtype(
  'eqref',
+ '(ref 0)',
+ simpleTypeSection(['(struct)']));
+assertSubtype(
+ 'structref',
  '(ref 0)',
  simpleTypeSection(['(struct)']));
 
@@ -149,9 +169,17 @@ assertSubtype(
    (type (struct (field (ref 0))))
    (sub 2 (type (struct (field (ref 1)))))`);
 
-// Arrays are subtypes of eqref
+// Arrays are subtypes of anyref, eqref, and arrayref
+assertSubtype(
+ 'anyref',
+ '(ref 0)',
+ simpleTypeSection(['(array i32)']));
 assertSubtype(
  'eqref',
+ '(ref 0)',
+ simpleTypeSection(['(array i32)']));
+assertSubtype(
+ 'arrayref',
  '(ref 0)',
  simpleTypeSection(['(array i32)']));
 

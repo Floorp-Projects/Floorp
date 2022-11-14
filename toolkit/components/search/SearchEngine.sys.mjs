@@ -68,6 +68,7 @@ var OS_UNSUPPORTED_PARAMS = [
 
 /**
  * Truncates big blobs of (data-)URIs to console-friendly sizes
+ *
  * @param {string} str
  *   String to tone down
  * @param {number} len
@@ -86,13 +87,13 @@ function limitURILength(str, len) {
 /**
  * Tries to rescale an icon to a given size.
  *
- * @param {array} byteArray
+ * @param {Array} byteArray
  *   Byte array containing the icon payload.
  * @param {string} contentType
  *   Mime type of the payload.
  * @param {number} [size]
  *   Desired icon size.
- * @returns {array}
+ * @returns {Array}
  *   An array of two elements - an array of integers and a string for the content
  *   type.
  * @throws if the icon cannot be rescaled or the rescaled icon is too big.
@@ -165,15 +166,14 @@ const ParamPreferenceCache = {
 
 /**
  * Represents a name/value pair for a parameter
- * @see nsISearchEngine::addParam
  */
 class QueryParameter {
   /**
-   * @see nsISearchEngine::addParam
    * @param {string} name
+   *   The parameter's name. Must not be null.
    * @param {string} value
-   *  The value of the parameter. May be an empty string, must not be null or
-   *  undefined.
+   *   The value of the parameter. May be an empty string, must not be null or
+   *   undefined.
    * @param {string} purpose
    *   The search purpose for which matches when this parameter should be
    *   applied, e.g. "searchbar", "contextmenu".
@@ -254,6 +254,7 @@ class QueryPreferenceParameter extends QueryParameter {
 
 /**
  * Perform OpenSearch parameter substitution on aParamValue.
+ *
  * @see http://opensearch.a9.com/spec/1.1/querysyntax/#core
  *
  * @param {string} paramValue
@@ -404,6 +405,7 @@ export class EngineURL {
    * as a special type.
    *
    * @param {object} param
+   *   The parameter to add.
    * @param {string} param.name
    *   The name of the parameter to add to the url.
    * @param {string} [param.condition]
@@ -846,14 +848,14 @@ export class SearchEngine {
    *   The url type.
    * @param {object} params
    *   The URL parameters.
-   * @param {string|array} [params.getParams]
+   * @param {string | Array} [params.getParams]
    *   Any parameters for a GET method. This is either a query string, or
    *   an array of objects which have name/value pairs.
    * @param {string} [params.method]
    *   The type of method, defaults to GET.
    * @param {string} [params.mozParams]
    *   Any special Mozilla Parameters.
-   * @param {string|array} [params.postParams]
+   * @param {string | Array} [params.postParams]
    *   Any parameters for a POST method. This is either a query string, or
    *   an array of objects which have name/value pairs.
    * @param {string} params.template
@@ -905,6 +907,7 @@ export class SearchEngine {
    * Initialize this engine object.
    *
    * @param {object} details
+   *   The details of the engine.
    * @param {string} details.name
    *   The name of the engine.
    * @param {string} details.keyword
@@ -960,6 +963,7 @@ export class SearchEngine {
    * overrideWithExtension / removeExtensionOverride functions as well.
    *
    * @param {object} details
+   *   The details of the engine.
    * @param {string} details.search_url
    *   The search url template for the engine.
    * @param {string} [details.search_url_get_params]
@@ -1148,6 +1152,7 @@ export class SearchEngine {
 
   /**
    * Creates a JavaScript object that represents this engine.
+   *
    * @returns {object}
    *   An object suitable for serialization as JSON.
    */
@@ -1219,6 +1224,7 @@ export class SearchEngine {
    * Set the user-defined alias.
    *
    * @param {string} val
+   *   The new alias.
    */
   set alias(val) {
     var value = val ? val.trim() : "";
@@ -1627,12 +1633,13 @@ export class SearchEngine {
    * (and suggest URI, if different) to reduce request latency
    *
    * @param {object} options
+   *   The options object
    * @param {DOMWindow} options.window
    *   The content window for the window performing the search.
    * @param {object} options.originAttributes
    *   The originAttributes for performing the search
    * @throws NS_ERROR_INVALID_ARG if options is omitted or lacks required
-   *         elemeents
+   *         elements
    */
   speculativeConnect(options) {
     if (!options || !options.window) {

@@ -6861,12 +6861,13 @@ bool BaseCompiler::emitArrayNewFixed() {
   // Generate straight-line initialization code.  We could do better here if
   // there was a version of ::emitGcArraySet that took `index` as a `uint32_t`
   // rather than a general value-in-a-reg.
-  for (uint32_t i = 0; i < numElements; i++) {
+  for (uint32_t forwardIndex = 0; forwardIndex < numElements; forwardIndex++) {
+    uint32_t reverseIndex = numElements - forwardIndex - 1;
     if (avoidPreBarrierReg) {
       needPtr(RegPtr(PreBarrierReg));
     }
     AnyReg value = popAny();
-    pushI32(i);
+    pushI32(reverseIndex);
     RegI32 index = popI32();
     if (avoidPreBarrierReg) {
       freePtr(RegPtr(PreBarrierReg));
@@ -7044,10 +7045,9 @@ bool BaseCompiler::emitArraySet() {
   return true;
 }
 
-bool BaseCompiler::emitArrayLen() {
-  uint32_t typeIndex;
+bool BaseCompiler::emitArrayLen(bool decodeIgnoredTypeIndex) {
   Nothing nothing;
-  if (!iter_.readArrayLen(&typeIndex, &nothing)) {
+  if (!iter_.readArrayLen(decodeIgnoredTypeIndex, &nothing)) {
     return false;
   }
 
@@ -7223,6 +7223,20 @@ bool BaseCompiler::emitBrOnCastCommon(bool onSuccess) {
   freeI32(condition);
 
   return true;
+}
+
+bool BaseCompiler::emitExternInternalize() {
+  // extern.internalize is a no-op because anyref and extern share the same
+  // representation
+  Nothing nothing;
+  return iter_.readRefConversion(RefType::extern_(), RefType::any(), &nothing);
+}
+
+bool BaseCompiler::emitExternExternalize() {
+  // extern.externalize is a no-op because anyref and extern share the same
+  // representation
+  Nothing nothing;
+  return iter_.readRefConversion(RefType::any(), RefType::extern_(), &nothing);
 }
 
 #endif  // ENABLE_WASM_GC
@@ -9360,8 +9374,10 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitArrayGet(FieldExtension::Unsigned));
           case uint32_t(GcOp::ArraySet):
             CHECK_NEXT(emitArraySet());
+          case uint32_t(GcOp::ArrayLenWithTypeIndex):
+            CHECK_NEXT(emitArrayLen(/*decodeIgnoredTypeIndex=*/true));
           case uint32_t(GcOp::ArrayLen):
-            CHECK_NEXT(emitArrayLen());
+            CHECK_NEXT(emitArrayLen(/*decodeIgnoredTypeIndex=*/false));
           case uint32_t(GcOp::ArrayCopy):
             CHECK_NEXT(emitArrayCopy());
           case uint32_t(GcOp::RefTest):
@@ -9372,6 +9388,10 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitBrOnCastCommon(/*onSuccess=*/true));
           case uint32_t(GcOp::BrOnCastFail):
             CHECK_NEXT(emitBrOnCastCommon(/*onSuccess=*/false));
+          case uint16_t(GcOp::ExternInternalize):
+            CHECK_NEXT(emitExternInternalize());
+          case uint16_t(GcOp::ExternExternalize):
+            CHECK_NEXT(emitExternExternalize());
           default:
             break;
         }  // switch (op.b1)

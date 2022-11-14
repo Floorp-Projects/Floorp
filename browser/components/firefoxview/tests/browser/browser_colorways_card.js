@@ -119,21 +119,15 @@ add_setup(async function setup_tests() {
 add_task(async function no_collection_test() {
   gCollectionEnabled = false;
   try {
-    await BrowserTestUtils.withNewTab(
-      {
-        gBrowser,
-        url: "about:firefoxview",
-      },
-      async browser => {
-        const { document } = browser.contentWindow;
-        const { noCollectionNotice, description } = getTestElements(document);
-        ok(
-          BrowserTestUtils.is_visible(noCollectionNotice),
-          "No Active Colorway Collection Notice should be visible"
-        );
-        is(description, null, "Colorway description should be hidden");
-      }
-    );
+    await withFirefoxView({}, async browser => {
+      const { document } = browser.contentWindow;
+      const { noCollectionNotice, description } = getTestElements(document);
+      ok(
+        BrowserTestUtils.is_visible(noCollectionNotice),
+        "No Active Colorway Collection Notice should be visible"
+      );
+      is(description, null, "Colorway description should be hidden");
+    });
   } finally {
     gCollectionEnabled = true;
   }
@@ -144,25 +138,19 @@ add_task(async function colorway_closet_disabled() {
     set: [["browser.theme.colorway-closet", false]],
   });
   try {
-    await BrowserTestUtils.withNewTab(
-      {
-        gBrowser,
-        url: "about:firefoxview",
-      },
-      async browser => {
-        const { document } = browser.contentWindow;
-        const { noCollectionNotice, description } = getTestElements(document);
-        ok(
-          BrowserTestUtils.is_visible(noCollectionNotice),
-          "No Active Colorway Collection Notice should be visible when Colorway Closet is disabled"
-        );
-        is(
-          description,
-          null,
-          "Colorway description should be hidden when Colorway Closet is disabled"
-        );
-      }
-    );
+    await withFirefoxView({}, async browser => {
+      const { document } = browser.contentWindow;
+      const { noCollectionNotice, description } = getTestElements(document);
+      ok(
+        BrowserTestUtils.is_visible(noCollectionNotice),
+        "No Active Colorway Collection Notice should be visible when Colorway Closet is disabled"
+      );
+      is(
+        description,
+        null,
+        "Colorway description should be hidden when Colorway Closet is disabled"
+      );
+    });
   } finally {
     await SpecialPowers.popPrefEnv();
   }
@@ -174,82 +162,76 @@ add_task(async function no_active_colorway_test() {
   await theme.enable();
   try {
     await clearAllParentTelemetryEvents();
-    await BrowserTestUtils.withNewTab(
-      {
-        gBrowser,
-        url: "about:firefoxview",
-      },
-      async browser => {
-        const { document } = browser.contentWindow;
-        const el = getTestElements(document);
-        is(
-          el.noCollectionNotice,
-          null,
-          "No Active Colorway Collection Notice should be hidden"
-        );
-        ok(
-          BrowserTestUtils.is_visible(el.description),
-          "Colorway description should be visible"
-        );
-        is(
-          el.figure.src,
-          TEST_COLLECTION_FIGURE_URL,
-          "Collection figure should be shown"
-        );
-        is(
-          document.l10n.getAttributes(el.title).id,
-          TEST_COLORWAY_COLLECTION.l10nId.title,
-          "Collection title should be shown"
-        );
-        is(
-          document.l10n.getAttributes(el.description).id,
-          TEST_COLORWAY_COLLECTION.l10nId.description,
-          "Collection description should be shown"
-        );
-        ok(!el.expiryPill.hidden, "Expiry pill is shown");
-        const expiryL10nAttributes = document.l10n.getAttributes(el.expiry);
-        is(
-          expiryL10nAttributes.args.expiryDate,
-          TEST_COLORWAY_COLLECTION.expiry.getTime(),
-          "Correct expiry date should be shown"
-        );
-        is(
-          expiryL10nAttributes.id,
-          EXPIRY_DATE_L10N_ID,
-          "Correct expiry date format should be shown"
-        );
+    await withFirefoxView({}, async browser => {
+      const { document } = browser.contentWindow;
+      const el = getTestElements(document);
+      is(
+        el.noCollectionNotice,
+        null,
+        "No Active Colorway Collection Notice should be hidden"
+      );
+      ok(
+        BrowserTestUtils.is_visible(el.description),
+        "Colorway description should be visible"
+      );
+      is(
+        el.figure.src,
+        TEST_COLLECTION_FIGURE_URL,
+        "Collection figure should be shown"
+      );
+      is(
+        document.l10n.getAttributes(el.title).id,
+        TEST_COLORWAY_COLLECTION.l10nId.title,
+        "Collection title should be shown"
+      );
+      is(
+        document.l10n.getAttributes(el.description).id,
+        TEST_COLORWAY_COLLECTION.l10nId.description,
+        "Collection description should be shown"
+      );
+      ok(!el.expiryPill.hidden, "Expiry pill is shown");
+      const expiryL10nAttributes = document.l10n.getAttributes(el.expiry);
+      is(
+        expiryL10nAttributes.args.expiryDate,
+        TEST_COLORWAY_COLLECTION.expiry.getTime(),
+        "Correct expiry date should be shown"
+      );
+      is(
+        expiryL10nAttributes.id,
+        EXPIRY_DATE_L10N_ID,
+        "Correct expiry date format should be shown"
+      );
 
-        document.querySelector("#colorways-button").click();
+      document.querySelector("#colorways-button").click();
 
-        await TestUtils.waitForCondition(
-          () => {
-            let events = Services.telemetry.snapshotEvents(
-              Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-              false
-            ).parent;
-            let colorwayEvents = events.filter(e => e[1] === "colorways_modal");
-            return colorwayEvents && colorwayEvents.length;
-          },
-          "Waiting for try_colorways colorways telemetry event.",
-          200,
-          100
-        );
+      await TestUtils.waitForCondition(
+        () => {
+          let events = Services.telemetry.snapshotEvents(
+            Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+            false
+          ).parent;
+          let colorwayEvents = events.filter(e => e[1] === "colorways_modal");
+          return colorwayEvents && colorwayEvents.length;
+        },
+        "Waiting for try_colorways colorways telemetry event.",
+        200,
+        100
+      );
 
-        let events = Services.telemetry.snapshotEvents(
-          Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-          false
-        ).parent;
-        let colorwayEvents = events.filter(e => e[1] === "colorways_modal");
+      let events = Services.telemetry.snapshotEvents(
+        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+        false
+      ).parent;
+      let colorwayEvents = events.filter(e => e[1] === "colorways_modal");
 
-        info(JSON.stringify(colorwayEvents));
+      info(JSON.stringify(colorwayEvents));
 
-        TelemetryTestUtils.assertEvents(
-          TRY_COLORWAYS_EVENT,
-          { category: "colorways_modal" },
-          { clear: true, process: "parent" }
-        );
-      }
-    );
+      TelemetryTestUtils.assertEvents(
+        TRY_COLORWAYS_EVENT,
+        { category: "colorways_modal" },
+        { clear: true, process: "parent" }
+      );
+    });
   } finally {
     await theme.disable();
   }
@@ -260,76 +242,70 @@ add_task(async function active_colorway_test() {
   await theme.enable();
   try {
     await clearAllParentTelemetryEvents();
-    await BrowserTestUtils.withNewTab(
-      {
-        gBrowser,
-        url: "about:firefoxview",
-      },
-      async browser => {
-        const { document } = browser.contentWindow;
-        const el = getTestElements(document);
-        is(
-          el.noCollectionNotice,
-          null,
-          "No Active Colorway Collection Notice should be hidden"
-        );
-        ok(
-          BrowserTestUtils.is_visible(el.description),
-          "Colorway description should be visible"
-        );
-        is(
-          el.figure.src,
-          TEST_COLORWAY_FIGURE_URL,
-          "Colorway figure should be shown"
-        );
-        is(
-          el.title.textContent,
-          MOCK_THEME_L10N_VALUE,
-          "Colorway title should be shown"
-        );
-        const descriptionL10nAttributes = document.l10n.getAttributes(
-          el.description
-        );
-        is(
-          descriptionL10nAttributes.id,
-          COLORWAY_DESCRIPTION_L10N_ID,
-          "Colorway description should be shown"
-        );
-        is(
-          descriptionL10nAttributes.args.intensity,
-          SOFT_L10N_VALUE,
-          "Colorway intensity should be shown"
-        );
-        is(
-          descriptionL10nAttributes.args.collection,
-          "Independent Voices",
-          "Collection name should be shown"
-        );
-        ok(el.expiryPill.hidden, "Expiry pill is hidden");
+    await withFirefoxView({}, async browser => {
+      const { document } = browser.contentWindow;
+      const el = getTestElements(document);
+      is(
+        el.noCollectionNotice,
+        null,
+        "No Active Colorway Collection Notice should be hidden"
+      );
+      ok(
+        BrowserTestUtils.is_visible(el.description),
+        "Colorway description should be visible"
+      );
+      is(
+        el.figure.src,
+        TEST_COLORWAY_FIGURE_URL,
+        "Colorway figure should be shown"
+      );
+      is(
+        el.title.textContent,
+        MOCK_THEME_L10N_VALUE,
+        "Colorway title should be shown"
+      );
+      const descriptionL10nAttributes = document.l10n.getAttributes(
+        el.description
+      );
+      is(
+        descriptionL10nAttributes.id,
+        COLORWAY_DESCRIPTION_L10N_ID,
+        "Colorway description should be shown"
+      );
+      is(
+        descriptionL10nAttributes.args.intensity,
+        SOFT_L10N_VALUE,
+        "Colorway intensity should be shown"
+      );
+      is(
+        descriptionL10nAttributes.args.collection,
+        "Independent Voices",
+        "Collection name should be shown"
+      );
+      ok(el.expiryPill.hidden, "Expiry pill is hidden");
 
-        document.querySelector("#colorways-button").click();
+      document.querySelector("#colorways-button").click();
 
-        await TestUtils.waitForCondition(
-          () => {
-            let events = Services.telemetry.snapshotEvents(
-              Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-              false
-            ).parent;
-            let colorwayEvents = events.filter(e => e[1] === "colorways_modal");
-            return colorwayEvents && colorwayEvents.length;
-          },
-          "Waiting for change_colorway colorways telemetry event.",
-          200,
-          100
-        );
+      await TestUtils.waitForCondition(
+        () => {
+          let events = Services.telemetry.snapshotEvents(
+            Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+            false
+          ).parent;
+          let colorwayEvents = events.filter(e => e[1] === "colorways_modal");
+          return colorwayEvents && colorwayEvents.length;
+        },
+        "Waiting for change_colorway colorways telemetry event.",
+        200,
+        100
+      );
 
-        TelemetryTestUtils.assertEvents(
-          CHANGE_COLORWAY_EVENT,
-          { category: "colorways_modal" },
-          { clear: true, process: "parent" }
-        );
-      }
-    );
+      TelemetryTestUtils.assertEvents(
+        CHANGE_COLORWAY_EVENT,
+        { category: "colorways_modal" },
+        { clear: true, process: "parent" }
+      );
+    });
   } finally {
     await theme.disable();
   }
@@ -339,41 +315,35 @@ add_task(async function active_colorway_without_intensity_test() {
   const theme = await AddonManager.getAddonByID(NO_INTENSITY_COLORWAY_THEME_ID);
   await theme.enable();
   try {
-    await BrowserTestUtils.withNewTab(
-      {
-        gBrowser,
-        url: "about:firefoxview",
-      },
-      async browser => {
-        const { document } = browser.contentWindow;
-        const el = getTestElements(document);
-        is(
-          el.noCollectionNotice,
-          null,
-          "No Active Colorway Collection Notice should be hidden"
-        );
-        ok(
-          BrowserTestUtils.is_visible(el.description),
-          "Colorway description should be visible"
-        );
-        is(
-          el.figure.src,
-          TEST_COLORWAY_FIGURE_URL,
-          "Colorway figure should be shown"
-        );
-        is(
-          el.title.textContent,
-          MOCK_THEME_L10N_VALUE,
-          "Colorway title should be shown"
-        );
-        is(
-          document.l10n.getAttributes(el.description).id,
-          TEST_COLORWAY_COLLECTION.l10nId.title,
-          "Collection name should be shown as the description"
-        );
-        ok(el.expiryPill.hidden, "Expiry pill is hidden");
-      }
-    );
+    await withFirefoxView({}, async browser => {
+      const { document } = browser.contentWindow;
+      const el = getTestElements(document);
+      is(
+        el.noCollectionNotice,
+        null,
+        "No Active Colorway Collection Notice should be hidden"
+      );
+      ok(
+        BrowserTestUtils.is_visible(el.description),
+        "Colorway description should be visible"
+      );
+      is(
+        el.figure.src,
+        TEST_COLORWAY_FIGURE_URL,
+        "Colorway figure should be shown"
+      );
+      is(
+        el.title.textContent,
+        MOCK_THEME_L10N_VALUE,
+        "Colorway title should be shown"
+      );
+      is(
+        document.l10n.getAttributes(el.description).id,
+        TEST_COLORWAY_COLLECTION.l10nId.title,
+        "Collection name should be shown as the description"
+      );
+      ok(el.expiryPill.hidden, "Expiry pill is hidden");
+    });
   } finally {
     await theme.disable();
   }
@@ -383,52 +353,46 @@ add_task(async function active_colorway_is_outdated_test() {
   const theme = await AddonManager.getAddonByID(OUTDATED_COLORWAY_THEME_ID);
   await theme.enable();
   try {
-    await BrowserTestUtils.withNewTab(
-      {
-        gBrowser,
-        url: "about:firefoxview",
-      },
-      async browser => {
-        const { document } = browser.contentWindow;
-        const el = getTestElements(document);
-        is(
-          el.noCollectionNotice,
-          null,
-          "No Active Colorway Collection Notice should be hidden"
-        );
-        ok(
-          BrowserTestUtils.is_visible(el.description),
-          "Description should be visible"
-        );
-        is(
-          el.figure.src,
-          TEST_COLLECTION_FIGURE_URL,
-          "Collection figure should be shown"
-        );
-        is(
-          document.l10n.getAttributes(el.title).id,
-          TEST_COLORWAY_COLLECTION.l10nId.title,
-          "Collection title should be shown"
-        );
-        is(
-          document.l10n.getAttributes(el.description).id,
-          TEST_COLORWAY_COLLECTION.l10nId.description,
-          "Collection description should be shown"
-        );
-        ok(!el.expiryPill.hidden, "Expiry pill is shown");
-        const expiryL10nAttributes = document.l10n.getAttributes(el.expiry);
-        is(
-          expiryL10nAttributes.args.expiryDate,
-          TEST_COLORWAY_COLLECTION.expiry.getTime(),
-          "Correct expiry date should be shown"
-        );
-        is(
-          expiryL10nAttributes.id,
-          EXPIRY_DATE_L10N_ID,
-          "Correct expiry date format should be shown"
-        );
-      }
-    );
+    await withFirefoxView({}, async browser => {
+      const { document } = browser.contentWindow;
+      const el = getTestElements(document);
+      is(
+        el.noCollectionNotice,
+        null,
+        "No Active Colorway Collection Notice should be hidden"
+      );
+      ok(
+        BrowserTestUtils.is_visible(el.description),
+        "Description should be visible"
+      );
+      is(
+        el.figure.src,
+        TEST_COLLECTION_FIGURE_URL,
+        "Collection figure should be shown"
+      );
+      is(
+        document.l10n.getAttributes(el.title).id,
+        TEST_COLORWAY_COLLECTION.l10nId.title,
+        "Collection title should be shown"
+      );
+      is(
+        document.l10n.getAttributes(el.description).id,
+        TEST_COLORWAY_COLLECTION.l10nId.description,
+        "Collection description should be shown"
+      );
+      ok(!el.expiryPill.hidden, "Expiry pill is shown");
+      const expiryL10nAttributes = document.l10n.getAttributes(el.expiry);
+      is(
+        expiryL10nAttributes.args.expiryDate,
+        TEST_COLORWAY_COLLECTION.expiry.getTime(),
+        "Correct expiry date should be shown"
+      );
+      is(
+        expiryL10nAttributes.id,
+        EXPIRY_DATE_L10N_ID,
+        "Correct expiry date format should be shown"
+      );
+    });
   } finally {
     await theme.disable();
   }
@@ -438,89 +402,83 @@ add_task(async function change_active_colorway_test() {
   let theme = await AddonManager.getAddonByID(NO_INTENSITY_COLORWAY_THEME_ID);
   await theme.enable();
   try {
-    await BrowserTestUtils.withNewTab(
-      {
-        gBrowser,
-        url: "about:firefoxview",
-      },
-      async browser => {
-        info("Start with no intensity theme");
-        const { document } = browser.contentWindow;
-        let el = getTestElements(document);
-        is(
-          el.noCollectionNotice,
-          null,
-          "No Active Colorway Collection Notice should be hidden"
-        );
-        ok(
-          BrowserTestUtils.is_visible(el.description),
-          "Colorway description should be visible"
-        );
-        is(
-          el.figure.src,
-          TEST_COLORWAY_FIGURE_URL,
-          "Colorway figure should be shown"
-        );
-        is(
-          el.title.textContent,
-          MOCK_THEME_L10N_VALUE,
-          "Colorway title should be shown"
-        );
-        info("Revert to default theme");
-        await theme.disable();
-        el = getTestElements(document);
-        is(
-          el.noCollectionNotice,
-          null,
-          "No Active Colorway Collection Notice should be hidden"
-        );
-        ok(
-          BrowserTestUtils.is_visible(el.description),
-          "Colorway description should be visible"
-        );
-        is(
-          el.figure.src,
-          TEST_COLLECTION_FIGURE_URL,
-          "Collection figure should be shown"
-        );
-        is(
-          document.l10n.getAttributes(el.title).id,
-          TEST_COLORWAY_COLLECTION.l10nId.title,
-          "Collection title should be shown"
-        );
-        is(
-          document.l10n.getAttributes(el.description).id,
-          TEST_COLORWAY_COLLECTION.l10nId.description,
-          "Collection description should be shown"
-        );
-        info("Enable a different theme");
-        theme = await AddonManager.getAddonByID(SOFT_COLORWAY_THEME_ID);
-        await theme.enable();
-        is(
-          el.title.textContent,
-          MOCK_THEME_L10N_VALUE,
-          "Colorway title should be shown"
-        );
-        const descriptionL10nAttributes = document.l10n.getAttributes(
-          el.description
-        );
-        is(
-          descriptionL10nAttributes.id,
-          COLORWAY_DESCRIPTION_L10N_ID,
-          "Colorway description should be shown"
-        );
-        is(
-          descriptionL10nAttributes.args.intensity,
-          SOFT_L10N_VALUE,
-          "Colorway intensity should be shown"
-        );
-        is(
-          descriptionL10nAttributes.args.collection,
-          "Independent Voices",
-          "Collection name should be shown"
-        );
-      }
-    );
+    await withFirefoxView({}, async browser => {
+      info("Start with no intensity theme");
+      const { document } = browser.contentWindow;
+      let el = getTestElements(document);
+      is(
+        el.noCollectionNotice,
+        null,
+        "No Active Colorway Collection Notice should be hidden"
+      );
+      ok(
+        BrowserTestUtils.is_visible(el.description),
+        "Colorway description should be visible"
+      );
+      is(
+        el.figure.src,
+        TEST_COLORWAY_FIGURE_URL,
+        "Colorway figure should be shown"
+      );
+      is(
+        el.title.textContent,
+        MOCK_THEME_L10N_VALUE,
+        "Colorway title should be shown"
+      );
+      info("Revert to default theme");
+      await theme.disable();
+      el = getTestElements(document);
+      is(
+        el.noCollectionNotice,
+        null,
+        "No Active Colorway Collection Notice should be hidden"
+      );
+      ok(
+        BrowserTestUtils.is_visible(el.description),
+        "Colorway description should be visible"
+      );
+      is(
+        el.figure.src,
+        TEST_COLLECTION_FIGURE_URL,
+        "Collection figure should be shown"
+      );
+      is(
+        document.l10n.getAttributes(el.title).id,
+        TEST_COLORWAY_COLLECTION.l10nId.title,
+        "Collection title should be shown"
+      );
+      is(
+        document.l10n.getAttributes(el.description).id,
+        TEST_COLORWAY_COLLECTION.l10nId.description,
+        "Collection description should be shown"
+      );
+      info("Enable a different theme");
+      theme = await AddonManager.getAddonByID(SOFT_COLORWAY_THEME_ID);
+      await theme.enable();
+      is(
+        el.title.textContent,
+        MOCK_THEME_L10N_VALUE,
+        "Colorway title should be shown"
+      );
+      const descriptionL10nAttributes = document.l10n.getAttributes(
+        el.description
+      );
+      is(
+        descriptionL10nAttributes.id,
+        COLORWAY_DESCRIPTION_L10N_ID,
+        "Colorway description should be shown"
+      );
+      is(
+        descriptionL10nAttributes.args.intensity,
+        SOFT_L10N_VALUE,
+        "Colorway intensity should be shown"
+      );
+      is(
+        descriptionL10nAttributes.args.collection,
+        "Independent Voices",
+        "Collection name should be shown"
+      );
+    });
   } finally {
     await theme.disable();
   }

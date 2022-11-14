@@ -761,3 +761,19 @@ OperaProfileMigrator.prototype.classID = Components.ID(
 OperaProfileMigrator.prototype.getSourceProfiles = function() {
   return null;
 };
+
+export function VivaldiProfileMigrator() {
+  this._chromeUserDataPathSuffix = "Vivaldi";
+  this._keychainServiceName = "Vivaldi Safe Storage";
+  this._keychainAccountName = "Vivaldi";
+}
+
+VivaldiProfileMigrator.prototype = Object.create(
+  ChromeProfileMigrator.prototype
+);
+VivaldiProfileMigrator.prototype.classDescription = "Vivaldi Migrator";
+VivaldiProfileMigrator.prototype.contractID =
+  "@mozilla.org/profile/migrator;1?app=browser&type=vivaldi";
+VivaldiProfileMigrator.prototype.classID = Components.ID(
+  "{54a6a025-e70d-49dd-ba95-0f7e45d728d3}"
+);

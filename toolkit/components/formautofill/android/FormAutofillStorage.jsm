@@ -88,10 +88,11 @@ class Addresses extends AddressesBase {
    *
    * @param   {string} guid
    *          Indicates which record to retrieve.
+   * @param   {object} options
    * @param   {boolean} [options.rawData = false]
    *          Returns a raw record without modifications and the computed fields
    *          (this includes private fields)
-   * @returns {Promise<Object>}
+   * @returns {Promise<object>}
    *          A clone of the record.
    */
   async get(guid, { rawData = false } = {}) {
@@ -102,11 +103,12 @@ class Addresses extends AddressesBase {
   /**
    * Returns all records.
    *
+   * @param   {object} options
    * @param   {boolean} [options.rawData = false]
    *          Returns raw records without modifications and the computed fields.
    * @param   {boolean} [options.includeDeleted = false]
    *          Also return any tombstone records.
-   * @returns {Promise<Array.<Object>>}
+   * @returns {Promise<Array.<object>>}
    *          An array containing clones of all records.
    */
   async getAll({ rawData = false, includeDeleted = false } = {}) {
@@ -160,10 +162,11 @@ class CreditCards extends CreditCardsBase {
    *
    * @param   {string} guid
    *          Indicates which record to retrieve.
+   * @param   {object} options
    * @param   {boolean} [options.rawData = false]
    *          Returns a raw record without modifications and the computed fields
    *          (this includes private fields)
-   * @returns {Promise<Object>}
+   * @returns {Promise<object>}
    *          A clone of the record.
    */
   async get(guid, { rawData = false } = {}) {
@@ -174,11 +177,12 @@ class CreditCards extends CreditCardsBase {
   /**
    * Returns all records.
    *
+   * @param   {object} options
    * @param   {boolean} [options.rawData = false]
    *          Returns raw records without modifications and the computed fields.
    * @param   {boolean} [options.includeDeleted = false]
    *          Also return any tombstone records.
-   * @returns {Promise<Array.<Object>>}
+   * @returns {Promise<Array.<object>>}
    *          An array containing clones of all records.
    */
   async getAll({ rawData = false, includeDeleted = false } = {}) {
@@ -198,7 +202,8 @@ class CreditCards extends CreditCardsBase {
 
   /**
    * Normalize the given record and return the first matched guid if storage has the same record.
-   * @param {Object} targetCreditCard
+   *
+   * @param {object} targetCreditCard
    *        The credit card for duplication checking.
    * @returns {Promise<string|null>}
    *          Return the first guid if storage has the same credit card and null otherwise.
@@ -259,6 +264,7 @@ class FormAutofillStorage extends FormAutofillStorageBase {
 
   /**
    * Initializes the in-memory async store API.
+   *
    * @returns {JSONFile}
    *          The JSONFile store.
    */

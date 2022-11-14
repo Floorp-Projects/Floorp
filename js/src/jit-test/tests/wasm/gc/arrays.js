@@ -64,7 +64,7 @@ for (let [valtype, def, nondef] of GENERAL_TESTS) {
     (func (export "len") (param eqref) (result i32)
       local.get 0
       ref.cast $a
-      array.len $a
+      array.len
     )
   )`).exports;
 
@@ -227,7 +227,7 @@ assertErrorMessage(() => {
     (type $a (array (mut i32)))
     (func
       ref.null $a
-      array.len $a
+      array.len
       drop
     )
     (start 0)
@@ -393,7 +393,6 @@ assertErrorMessage(() => wasmEvalText(`(module
     let { newFixed } = wasmEvalText(`(module
         (type $a (array i8))
         (func (export "newFixed") (result eqref)
-                (; the spec seems ambiguous about the operand ordering here ;)
                 i32.const 66
                 i32.const 77
                 i32.const 88
@@ -403,10 +402,10 @@ assertErrorMessage(() => wasmEvalText(`(module
         )`).exports;
     let a = newFixed();
     assertEq(a.length, 4);
-    assertEq(a[0], 99);
-    assertEq(a[1], 88);
-    assertEq(a[2], 77);
-    assertEq(a[3], 66);
+    assertEq(a[0], 66);
+    assertEq(a[1], 77);
+    assertEq(a[2], 88);
+    assertEq(a[3], 99);
 }
 
 // run: resulting zero-element array is as expected
@@ -462,7 +461,7 @@ assertErrorMessage(() => wasmEvalText(`(module
     let a = newFixed();
     assertEq(a.length, 30);
     for (i = 0; i < 30; i++) {
-        assertEq(a[i], 30 - i);
+        assertEq(a[i], i + 1);
     }
 }
 
@@ -942,12 +941,12 @@ for (let [elemTy, valueTy, src, exp1, exp2] of ARRAY_COPY_TESTS) {
               (param ${valueTy} ${valueTy} ${valueTy}
                      ${valueTy} ${valueTy} ${valueTy})
               (result eqref)
-          local.get 5
-          local.get 4
-          local.get 3
-          local.get 2
-          local.get 1
           local.get 0
+          local.get 1
+          local.get 2
+          local.get 3
+          local.get 4
+          local.get 5
           array.new_fixed $arrTy 6
         )
         (func (export "arrayCopy")

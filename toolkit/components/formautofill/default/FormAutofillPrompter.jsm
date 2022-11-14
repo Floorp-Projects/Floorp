@@ -218,12 +218,12 @@ let FormAutofillPrompter = {
    * promise resolve.
    *
    * @private
-   * @param  {Object} mainActionParams
+   * @param  {object} mainActionParams
    *         Parameters for main action.
-   * @param  {Array<Object>} secondaryActionParams
+   * @param  {Array<object>} secondaryActionParams
    *         Array of the parameters for secondary actions.
    * @param  {Function} resolve Should be called in action callback.
-   * @returns {Array<Object>}
+   * @returns {Array<object>}
               Return the mainAction and secondary actions in an array for showing doorhanger
    */
   _createActions(mainActionParams, secondaryActionParams, resolve) {
@@ -258,6 +258,7 @@ let FormAutofillPrompter = {
   },
   /**
    * Append the link label element to the popupnotificationcontent.
+   *
    * @param  {XULElement} content
    *         popupnotificationcontent
    * @param  {string} message
@@ -281,6 +282,7 @@ let FormAutofillPrompter = {
 
   /**
    * Append the description section to the popupnotificationcontent.
+   *
    * @param  {XULElement} content
    *         popupnotificationcontent
    * @param  {string} descriptionLabel
@@ -324,9 +326,10 @@ let FormAutofillPrompter = {
 
   /**
    * Create an image element for notification anchor if it doesn't already exist.
+   *
    * @param  {XULElement} browser
    *         Target browser element for showing doorhanger.
-   * @param  {Object} anchor
+   * @param  {object} anchor
    *         Anchor options for setting the anchor element.
    * @param  {string} anchor.id
    *         ID of the anchor element.
@@ -479,6 +482,7 @@ let FormAutofillPrompter = {
 
   /**
    * Show different types of doorhanger by leveraging PopupNotifications.
+   *
    * @param  {XULElement} browser
    *         Target browser element for showing doorhanger.
    * @param  {string} type

@@ -69,8 +69,7 @@ class ClipManager {
 
  private:
   wr::WrSpatialId SpatialIdAfterOverride(const wr::WrSpatialId& aSpatialId);
-
-  Maybe<wr::WrSpatialId> GetScrollLayer(const ActiveScrolledRoot* aASR);
+  wr::WrSpatialId GetScrollLayer(const ActiveScrolledRoot* aASR);
 
   Maybe<wr::WrSpatialId> DefineScrollLayers(const ActiveScrolledRoot* aASR,
                                             nsDisplayItem* aItem);
@@ -93,9 +92,8 @@ class ClipManager {
   // general we need to do this anytime PushOverrideForASR is called, as that is
   // called for the same set of conditions for which we cannot deduplicate
   // clips.
-  typedef std::unordered_map<const DisplayItemClipChain*,
-                             AutoTArray<wr::WrClipId, 4>>
-      ClipIdMap;
+  using ClipIdMap = std::unordered_map<const DisplayItemClipChain*,
+                                       AutoTArray<wr::WrClipId, 4>>;
   std::stack<ClipIdMap> mCacheStack;
 
   // A map that holds the cache overrides created by (a) "out of band" clips,

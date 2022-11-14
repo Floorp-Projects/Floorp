@@ -14,7 +14,9 @@ export class UserSearchEngine extends SearchEngine {
    * Creates a UserSearchEngine.
    *
    * @param {object} options
+   *   The options for this search engine.
    * @param {object} [options.details]
+   *   General information about the search engine.
    * @param {string} [options.details.name]
    *   The search engine name.
    * @param {string} [options.details.url]

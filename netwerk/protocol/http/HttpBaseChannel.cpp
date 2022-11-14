@@ -3008,7 +3008,8 @@ nsresult HttpBaseChannel::ValidateMIMEType() {
   return NS_OK;
 }
 
-OpaqueResponseAllowed HttpBaseChannel::EnsureOpaqueResponseIsAllowed() {
+OpaqueResponseAllowed HttpBaseChannel::EnsureOpaqueResponseIsAllowed(
+    bool& aCompressedMediaAndImageDetectorStarted) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   if (!mCachedOpaqueResponseBlockingPref) {
@@ -3125,6 +3126,19 @@ OpaqueResponseAllowed HttpBaseChannel::EnsureOpaqueResponseIsAllowed() {
 
   mORB = new OpaqueResponseBlocker(mListener, this);
   mListener = mORB;
+
+  nsAutoCString contentEncoding;
+  nsresult rv =
+      mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
+
+  if (NS_FAILED(rv) || contentEncoding.IsEmpty()) {
+    mLoadFlags |= (nsIChannel::LOAD_CALL_CONTENT_SNIFFERS |
+                   nsIChannel::LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE);
+  } else {
+    mListener = new nsCompressedAudioVideoImageDetector(
+        mListener, &HttpBaseChannel::CallTypeSniffers);
+    aCompressedMediaAndImageDetectorStarted = true;
+  }
 
   return OpaqueResponseAllowed::Yes;
 }

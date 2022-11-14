@@ -72,14 +72,23 @@ enum class TypeCode {
   // A reference to any host value.
   ExternRef = 0x6f,  // SLEB128(-0x11)
 
+  // A reference to any wasm gc value.
+  AnyRef = 0x6e,  // SLEB128(-0x12)
+
   // A reference to a struct/array value.
-  EqRef = 0x6d,  // SLEB128(-0x12)
+  EqRef = 0x6d,  // SLEB128(-0x13)
 
   // Type constructor for nullable reference types.
   NullableRef = 0x6c,  // SLEB128(-0x14)
 
   // Type constructor for non-nullable reference types.
   Ref = 0x6b,  // SLEB128(-0x15)
+
+  // A reference to any struct value.
+  StructRef = 0x67,  // SLEB128(-0x19)
+
+  // A reference to any array value.
+  ArrayRef = 0x66,  // SLEB128(-0x1A)
 
   // Type constructor for function types
   Func = 0x60,  // SLEB128(-0x20)
@@ -94,7 +103,10 @@ enum class TypeCode {
   BlockVoid = 0x40,  // SLEB128(-0x40)
 
   // Type constructor for recursion groups - gc proposal
-  RecGroup = 0x45,
+  RecGroup = 0x4f,
+
+  // TODO: update wasm-tools to use the correct prefix
+  RecGroupOld = 0x45,
 
   // Type prefix for parent types - gc proposal
   SubType = 0x50,
@@ -473,14 +485,19 @@ enum class GcOp {
   ArrayGetS = 0x14,
   ArrayGetU = 0x15,
   ArraySet = 0x16,
-  ArrayLen = 0x17,
+  ArrayLenWithTypeIndex = 0x17,
   ArrayCopy = 0x18,
+  ArrayLen = 0x19,
 
   // Ref operations
   RefTest = 0x44,
   RefCast = 0x45,
   BrOnCast = 0x46,
   BrOnCastFail = 0x47,
+
+  // Extern/any coercion operations
+  ExternInternalize = 0x70,
+  ExternExternalize = 0x71,
 
   Limit
 };

@@ -1,7 +1,7 @@
 diff --git a/gfx/cairo/libpixman/src/pixman.h b/gfx/cairo/libpixman/src/pixman.h
 --- a/gfx/cairo/libpixman/src/pixman.h
 +++ b/gfx/cairo/libpixman/src/pixman.h
-@@ -64,16 +64,18 @@ SOFTWARE.
+@@ -64,16 +64,20 @@ SOFTWARE.
   * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
   * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
   * PERFORMANCE OF THIS SOFTWARE.
@@ -10,13 +10,15 @@ diff --git a/gfx/cairo/libpixman/src/pixman.h b/gfx/cairo/libpixman/src/pixman.h
  #ifndef PIXMAN_H__
  #define PIXMAN_H__
  
-+#include "cairo-platform.h"
++#ifdef MOZILLA_VERSION
++#include "cairo/pixman-rename.h"
++#endif
 +
  #include <pixman-version.h>
  
- /*
-  * Standard integers
-  */
- #if defined (_SVR4) || defined (SVR4) || defined (__OpenBSD__) || defined (_sgi) || defined (__sun) || defined (sun) || defined (__digital__)
- #  include <inttypes.h>
- #elif defined (_MSC_VER)
+ #ifdef  __cplusplus
+ #define PIXMAN_BEGIN_DECLS extern "C" {
+ #define PIXMAN_END_DECLS }
+ #else
+ #define PIXMAN_BEGIN_DECLS
+ #define PIXMAN_END_DECLS

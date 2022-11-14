@@ -176,10 +176,10 @@ nsresult nsUrlClassifierPrefixSet::MakePrefixSet(const uint32_t* aPrefixes,
 }
 
 nsresult nsUrlClassifierPrefixSet::GetPrefixesNative(
-    FallibleTArray<uint32_t>& outArray) {
+    FallibleTArray<uint32_t>& aOutArray) {
   MutexAutoLock lock(mLock);
 
-  if (!outArray.SetLength(mTotalPrefixes, fallible)) {
+  if (!aOutArray.SetLength(mTotalPrefixes, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -192,7 +192,7 @@ nsresult nsUrlClassifierPrefixSet::GetPrefixesNative(
     if (prefixCnt >= mTotalPrefixes) {
       return NS_ERROR_FAILURE;
     }
-    outArray[prefixCnt++] = prefix;
+    aOutArray[prefixCnt++] = prefix;
 
     if (mIndexDeltas.IsEmpty()) {
       continue;
@@ -203,11 +203,47 @@ nsresult nsUrlClassifierPrefixSet::GetPrefixesNative(
       if (prefixCnt >= mTotalPrefixes) {
         return NS_ERROR_FAILURE;
       }
-      outArray[prefixCnt++] = prefix;
+      aOutArray[prefixCnt++] = prefix;
     }
   }
 
   NS_ASSERTION(mTotalPrefixes == prefixCnt, "Lengths are inconsistent");
+  return NS_OK;
+}
+
+nsresult nsUrlClassifierPrefixSet::GetPrefixByIndex(
+    uint32_t aIndex, uint32_t* aOutPrefix) const {
+  NS_ENSURE_ARG_POINTER(aOutPrefix);
+
+  MutexAutoLock lock(mLock);
+  MOZ_ASSERT(aIndex < mTotalPrefixes);
+
+  // We can directly get the target index if the delta algorithm didn't apply.
+  if (mIndexDeltas.IsEmpty()) {
+    *aOutPrefix = mIndexPrefixes[aIndex];
+    return NS_OK;
+  }
+
+  // The prefix set was compressed by the delta algorithm, we have to iterate
+  // the delta index to find out the right bucket.
+  for (uint32_t i = 0; i < mIndexDeltas.Length(); i++) {
+    // The target index is in the current delta bucket.
+    if (aIndex <= mIndexDeltas[i].Length()) {
+      MOZ_ASSERT(aIndex <= DELTAS_LIMIT);
+
+      uint32_t prefix = mIndexPrefixes[i];
+
+      for (uint32_t j = 0; j < aIndex; j++) {
+        prefix += mIndexDeltas[i][j];
+      }
+
+      *aOutPrefix = prefix;
+      break;
+    }
+
+    aIndex -= mIndexDeltas[i].Length() + 1;
+  }
+
   return NS_OK;
 }
 
@@ -459,6 +495,12 @@ uint32_t nsUrlClassifierPrefixSet::CalculatePreallocateSize() const {
     fileSize += deltas * sizeof(uint16_t);
   }
   return fileSize;
+}
+
+uint32_t nsUrlClassifierPrefixSet::Length() const {
+  MutexAutoLock lock(mLock);
+
+  return mTotalPrefixes;
 }
 
 nsresult nsUrlClassifierPrefixSet::WritePrefixes(

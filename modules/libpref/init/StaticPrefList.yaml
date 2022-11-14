@@ -2863,6 +2863,13 @@
 #endif
   mirror: always
 
+#ifdef XP_WIN
+- name: dom.ipc.processPriorityManager.backgroundUsesEcoQoS
+  type: bool
+  value: false
+  mirror: always
+#endif
+
 # Is support for HTMLElement.autocapitalize enabled?
 - name: dom.forms.autocapitalize
   type: bool
@@ -2885,6 +2892,11 @@
 - name: dom.forms.inputmode
   type: bool
   value: true
+  mirror: always
+
+- name: dom.forms.always_allow_pointer_events.enabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Is support for HTMLInputElement.showPicker enabled?

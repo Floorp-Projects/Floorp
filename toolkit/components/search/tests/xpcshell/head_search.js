@@ -146,6 +146,7 @@ const kTestEngineName = "Test search engine";
 
 /**
  * Waits for the settings file to be saved.
+ *
  * @returns {Promise} Resolved when the settings file is saved.
  */
 function promiseAfterSettings() {
@@ -203,8 +204,10 @@ async function readJSONFile(file) {
  * on actualObj.
  *
  * @param {object} expectedObj
+ *   The source object that we expect to match
  * @param {object} actualObj
- * @param {function} skipProp
+ *   The object to check against the source
+ * @param {Function} skipProp
  *   A function that is called with the property name and its value, to see if
  *   testing that property should be skipped or not.
  */
@@ -307,6 +310,7 @@ async function setupRemoteSettings() {
 /**
  * Helper function that sets up a server and respnds to region
  * fetch requests.
+ *
  * @param {string} region
  *   The region that the server will respond with.
  * @param {Promise|null} waitToRespond
@@ -332,16 +336,23 @@ function useCustomGeoServer(region, waitToRespond = Promise.resolve()) {
 /**
  * @typedef {object} TelemetryDetails
  * @property {string} engineId
+ *   The telemetry ID for the search engine.
  * @property {string} [displayName]
+ *   The search engine's display name.
  * @property {string} [loadPath]
+ *   The load path for the search engine.
  * @property {string} [submissionUrl]
- * @property {string} [verified].
+ *   The submission URL for the search engine.
+ * @property {string} [verified]
+ *   Whether the search engine is verified.
+ */
 
 /**
  * Asserts that default search engine telemetry has been correctly reported
  * to Glean.
  *
  * @param {object} expected
+ *   An object containing telemetry details for normal and private engines.
  * @param {TelemetryDetails} expected.normal
  *   An object with the expected details for the normal search engine.
  * @param {TelemetryDetails} [expected.private]

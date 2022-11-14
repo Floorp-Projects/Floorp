@@ -27,6 +27,8 @@ avoid-blacklist-and-whitelist:
         - md
         - ftl
         - yml
+        - java
+        - kt
     exclude:
         - browser/app/profile/firefox.js
         - browser/app/winlauncher/LauncherProcessWin.cpp
@@ -206,6 +208,10 @@ avoid-blacklist-and-whitelist:
         - mfbt/Attributes.h
         - mobile/android/app/geckoview-prefs.js
         - mobile/android/app/mobile.js
+        - mobile/android/geckoview/src/main/java/org/mozilla/gecko/util/HardwareCodecCapabilityUtils.java
+        - mobile/android/geckoview/src/main/java/org/mozilla/geckoview/ContentBlocking.java
+        - mobile/android/geckoview/src/main/java/org/mozilla/geckoview/CrashReporter.java
+        - mobile/android/geckoview/src/main/java/org/mozilla/geckoview/WebAuthnTokenManager.java
         - modules/libpref/Preferences.cpp
         - modules/libpref/docs/index.md
         - modules/libpref/init/all.js

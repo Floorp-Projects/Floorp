@@ -17336,16 +17336,11 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
       case wasm::ValType::V128:
         MOZ_CRASH("unexpected argument type when calling from ion to wasm");
       case wasm::ValType::Ref:
-        switch (sig.args()[i].refTypeKind()) {
-          case wasm::RefType::Extern:
-            // AnyRef is boxed on the JS side, so passed as a pointer here.
-            argMir = sig.args()[i].toMIRType();
-            break;
-          case wasm::RefType::Func:
-          case wasm::RefType::Eq:
-          case wasm::RefType::TypeRef:
-            MOZ_CRASH("unexpected argument type when calling from ion to wasm");
-        }
+        // temporarilyUnsupportedReftypeForEntry() restricts args to externref
+        MOZ_RELEASE_ASSERT(sig.args()[i].refType().isExtern());
+        // Argument is boxed on the JS side to an anyref, so passed as a
+        // pointer here.
+        argMir = sig.args()[i].toMIRType();
         break;
     }
 
@@ -17410,19 +17405,11 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
       case wasm::ValType::V128:
         MOZ_CRASH("unexpected return type when calling from ion to wasm");
       case wasm::ValType::Ref:
-        switch (results[0].refTypeKind()) {
-          case wasm::RefType::Func:
-          case wasm::RefType::Extern:
-          case wasm::RefType::Eq:
-            // The wasm stubs layer unboxes anything that needs to be unboxed
-            // and leaves it in a Value.  A FuncRef/EqRef we could in principle
-            // leave it as a raw object pointer but for now it complicates the
-            // API to do so.
-            MOZ_ASSERT(lir->mir()->type() == MIRType::Value);
-            break;
-          case wasm::RefType::TypeRef:
-            MOZ_CRASH("unexpected return type when calling from ion to wasm");
-        }
+        // The wasm stubs layer unboxes anything that needs to be unboxed
+        // and leaves it in a Value.  A FuncRef/EqRef we could in principle
+        // leave it as a raw object pointer but for now it complicates the
+        // API to do so.
+        MOZ_ASSERT(lir->mir()->type() == MIRType::Value);
         break;
     }
   }

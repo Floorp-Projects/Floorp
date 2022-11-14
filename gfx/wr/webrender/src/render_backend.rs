@@ -1600,6 +1600,9 @@ impl RenderBackend {
         for (&id, doc) in &mut self.documents {
             debug!("\tdocument {:?}", id);
             if config.bits.contains(CaptureBits::FRAME) {
+                // Temporarily force invalidation otherwise the render task graph dump is empty.
+                let force_invalidation = std::mem::replace(&mut doc.scene.config.force_invalidation, true);
+
                 let rendered_document = doc.build_frame(
                     &mut self.resource_cache,
                     &mut self.gpu_cache,
@@ -1608,6 +1611,9 @@ impl RenderBackend {
                     None,
                     RenderReasons::empty(),
                 );
+
+                doc.scene.config.force_invalidation = force_invalidation;
+
                 // After we rendered the frames, there are pending updates to both
                 // GPU cache and resources. Instead of serializing them, we are going to make sure
                 // they are applied on the `Renderer` side.

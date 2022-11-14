@@ -76,7 +76,7 @@
 #define PIXREGION_SIZE(reg) ((reg)->data ? (reg)->data->size : 0)
 #define PIXREGION_RECTS(reg) \
     ((reg)->data ? (box_type_t *)((reg)->data + 1) \
-     : &(reg)->extents)
+     : (box_type_t *)&(reg)->extents)
 #define PIXREGION_BOXPTR(reg) ((box_type_t *)((reg)->data + 1))
 #define PIXREGION_BOX(reg, i) (&PIXREGION_BOXPTR (reg)[i])
 #define PIXREGION_TOP(reg) PIXREGION_BOX (reg, (reg)->data->numRects)
@@ -292,7 +292,7 @@ alloc_data (size_t n)
     } while (0)
 
 PIXMAN_EXPORT pixman_bool_t
-PREFIX (_equal) (region_type_t *reg1, region_type_t *reg2)
+PREFIX (_equal) (const region_type_t *reg1, const region_type_t *reg2)
 {
     int i;
     box_type_t *rects1;
@@ -395,7 +395,7 @@ PREFIX (_init_rect) (region_type_t *	region,
 }
 
 PIXMAN_EXPORT void
-PREFIX (_init_with_extents) (region_type_t *region, box_type_t *extents)
+PREFIX (_init_with_extents) (region_type_t *region, const box_type_t *extents)
 {
     if (!GOOD_RECT (extents))
     {
@@ -417,13 +417,13 @@ PREFIX (_fini) (region_type_t *region)
 }
 
 PIXMAN_EXPORT int
-PREFIX (_n_rects) (region_type_t *region)
+PREFIX (_n_rects) (const region_type_t *region)
 {
     return PIXREGION_NUMRECTS (region);
 }
 
 PIXMAN_EXPORT box_type_t *
-PREFIX (_rectangles) (region_type_t *region,
+PREFIX (_rectangles) (const region_type_t *region,
                       int               *n_rects)
 {
     if (n_rects)
@@ -505,7 +505,7 @@ pixman_rect_alloc (region_type_t * region,
 }
 
 PIXMAN_EXPORT pixman_bool_t
-PREFIX (_copy) (region_type_t *dst, region_type_t *src)
+PREFIX (_copy) (region_type_t *dst, const region_type_t *src)
 {
     GOOD (dst);
     GOOD (src);
@@ -746,8 +746,8 @@ typedef pixman_bool_t (*overlap_proc_ptr) (region_type_t *region,
 
 static pixman_bool_t
 pixman_op (region_type_t *  new_reg,               /* Place to store result	    */
-	   region_type_t *  reg1,                  /* First region in operation     */
-	   region_type_t *  reg2,                  /* 2d region in operation        */
+	   const region_type_t *  reg1,                  /* First region in operation     */
+	   const region_type_t *  reg2,                  /* 2d region in operation        */
 	   overlap_proc_ptr overlap_func,          /* Function to call for over-
 						    * lapping bands		    */
 	   int              append_non1,           /* Append non-overlapping bands  
@@ -1155,8 +1155,8 @@ pixman_region_intersect_o (region_type_t *region,
 
 PIXMAN_EXPORT pixman_bool_t
 PREFIX (_intersect) (region_type_t *     new_reg,
-                     region_type_t *        reg1,
-                     region_type_t *        reg2)
+                     const region_type_t *        reg1,
+                     const region_type_t *        reg2)
 {
     GOOD (reg1);
     GOOD (reg2);
@@ -1321,7 +1321,7 @@ pixman_region_union_o (region_type_t *region,
 
 PIXMAN_EXPORT pixman_bool_t
 PREFIX(_intersect_rect) (region_type_t *dest,
-			 region_type_t *source,
+			 const region_type_t *source,
 			 int x, int y,
 			 unsigned int width,
 			 unsigned int height)
@@ -1342,7 +1342,7 @@ PREFIX(_intersect_rect) (region_type_t *dest,
  */
 PIXMAN_EXPORT pixman_bool_t
 PREFIX (_union_rect) (region_type_t *dest,
-                      region_type_t *source,
+                      const region_type_t *source,
                       int            x,
 		      int            y,
                       unsigned int   width,
@@ -1368,9 +1368,9 @@ PREFIX (_union_rect) (region_type_t *dest,
 }
 
 PIXMAN_EXPORT pixman_bool_t
-PREFIX (_union) (region_type_t *new_reg,
-                 region_type_t *reg1,
-                 region_type_t *reg2)
+PREFIX (_union) (region_type_t *      new_reg,
+                 const region_type_t *reg1,
+                 const region_type_t *reg2)
 {
     /* Return TRUE if some overlap
      * between reg1, reg2
@@ -1954,9 +1954,9 @@ pixman_region_subtract_o (region_type_t * region,
  *-----------------------------------------------------------------------
  */
 PIXMAN_EXPORT pixman_bool_t
-PREFIX (_subtract) (region_type_t *reg_d,
-                    region_type_t *reg_m,
-                    region_type_t *reg_s)
+PREFIX (_subtract) (region_type_t *      reg_d,
+                    const region_type_t *reg_m,
+                    const region_type_t *reg_s)
 {
     GOOD (reg_m);
     GOOD (reg_s);
@@ -2019,9 +2019,9 @@ PREFIX (_subtract) (region_type_t *reg_d,
  *-----------------------------------------------------------------------
  */
 PIXMAN_EXPORT pixman_bool_t
-PREFIX (_inverse) (region_type_t *new_reg,  /* Destination region */
-		   region_type_t *reg1,     /* Region to invert */
-		   box_type_t *   inv_rect) /* Bounding box for inversion */
+PREFIX (_inverse) (region_type_t *      new_reg,  /* Destination region */
+		   const region_type_t *reg1,     /* Region to invert */
+		   const box_type_t *   inv_rect) /* Bounding box for inversion */
 {
     region_type_t inv_reg; /* Quick and dirty region made from the
 			    * bounding box */
@@ -2113,8 +2113,8 @@ find_box_for_y (box_type_t *begin, box_type_t *end, int y)
  *   that doesn't overlap the box at all and part_in is false)
  */
 PIXMAN_EXPORT pixman_region_overlap_t
-PREFIX (_contains_rectangle) (region_type_t *  region,
-			      box_type_t *     prect)
+PREFIX (_contains_rectangle) (const region_type_t *  region,
+			      const box_type_t *     prect)
 {
     box_type_t *     pbox;
     box_type_t *     pbox_end;
@@ -2318,7 +2318,7 @@ PREFIX (_translate) (region_type_t *region, int x, int y)
 }
 
 PIXMAN_EXPORT void
-PREFIX (_reset) (region_type_t *region, box_type_t *box)
+PREFIX (_reset) (region_type_t *region, const box_type_t *box)
 {
     GOOD (region);
 
@@ -2343,7 +2343,7 @@ PREFIX (_clear) (region_type_t *region)
 
 /* box is "return" value */
 PIXMAN_EXPORT int
-PREFIX (_contains_point) (region_type_t * region,
+PREFIX (_contains_point) (const region_type_t * region,
                           int x, int y,
                           box_type_t * box)
 {
@@ -2387,7 +2387,7 @@ PREFIX (_contains_point) (region_type_t * region,
 }
 
 PIXMAN_EXPORT int
-PREFIX (_not_empty) (region_type_t * region)
+PREFIX (_not_empty) (const region_type_t * region)
 {
     GOOD (region);
 
@@ -2395,11 +2395,11 @@ PREFIX (_not_empty) (region_type_t * region)
 }
 
 PIXMAN_EXPORT box_type_t *
-PREFIX (_extents) (region_type_t * region)
+PREFIX (_extents) (const region_type_t * region)
 {
     GOOD (region);
 
-    return(&region->extents);
+    return(box_type_t *)(&region->extents);
 }
 
 /*

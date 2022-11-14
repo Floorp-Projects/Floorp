@@ -339,10 +339,10 @@ var Migrators = {
 };
 
 /**
- * @typedef {Object} InsertQueryData
- * @property {Object} updatedChange
+ * @typedef {object} InsertQueryData
+ * @property {object} updatedChange
  *           A change requested by FormHistory.
- * @property {String} query
+ * @property {string} query
  *           The insert query string.
  */
 
@@ -350,7 +350,7 @@ var Migrators = {
  * Prepares a query and some default parameters when inserting an entry
  * to the database.
  *
- * @param {Object} change
+ * @param {object} change
  *        The change requested by FormHistory.
  * @param {number} now
  *        The current timestamp in microseconds.
@@ -453,7 +453,7 @@ function getAddSourceToGuidQueries(source, guid) {
  * Constructs and executes database statements from a pre-processed list of
  * inputted changes.
  *
- * @param {Array.<Object>} aChanges changes to form history
+ * @param {Array.<object>} aChanges changes to form history
  */
 // XXX This should be split up and the complexity reduced.
 // eslint-disable-next-line complexity
@@ -722,6 +722,7 @@ async function createTable(conn, tableName) {
 /**
  * Database creation and access. Used by FormHistory and some of the
  * utility functions, but is not exposed to the outside world.
+ *
  * @class
  */
 var DB = {
@@ -743,12 +744,13 @@ var DB = {
    * connection is closed on when the profile-before-change observer
    * notification is fired.
    *
-   * @returns {Promise}
-   * @resolves An Sqlite.sys.mjs connection to the database.
-   * @rejects  If connecting to the database, or migrating the database
-   *           failed after MAX_ATTEMPTS attempts (where each attempt
-   *           backs up and deletes the old database), this will reject
-   *           with the Sqlite.sys.mjs error.
+   * @returns {Promise<OpenedConnection>}
+   *        A {@link toolkit/modules/Sqlite.sys.mjs} connection to the database.
+   * @throws
+   *        If connecting to the database, or migrating the database
+   *        failed after MAX_ATTEMPTS attempts (where each attempt
+   *        backs up and deletes the old database), this will reject
+   *        with the Sqlite.sys.mjs error.
    */
   get conn() {
     delete this.conn;
@@ -779,10 +781,13 @@ var DB = {
    * @param {number} attemptNum
    *        The optional number of the attempt that is being made to connect
    *        to the database. Defaults to 0.
-   * @returns {Promise}
-   * @resolves An Sqlite.sys.mjs connection to the database.
-   * @rejects  After MAX_ATTEMPTS, this will reject with the Sqlite.mjs
-   *           error.
+   * @returns {Promise<OpenedConnection>}
+   *        A {@link toolkit/modules/Sqlite.sys.mjs} connection to the database.
+   * @throws
+   *        If connecting to the database, or migrating the database
+   *        failed after MAX_ATTEMPTS attempts (where each attempt
+   *        backs up and deletes the old database), this will reject
+   *        with the Sqlite.sys.mjs error.
    */
   async _establishConn(attemptNum = 0) {
     log(`Establishing database connection - attempt # ${attemptNum}`);
@@ -945,8 +950,7 @@ var DB = {
    * @async
    * @param {SqliteConnection | null} conn
    *        The connection to the database that we're testing.
-   * @returns {Promise}
-   * @resolves true if all expected columns are present.
+   * @returns {Promise<boolean>} true if all expected columns are present.
    */
   async _expectedColumnsPresent(conn) {
     for (let name in dbSchema.tables) {
@@ -1111,6 +1115,7 @@ FormHistory = {
 
   /**
    * Gets results for the autocomplete widget.
+   *
    * @param {string} searchString The string to search for.
    * @param {object} params zero or more filter properties:
    *   - fieldname
@@ -1122,13 +1127,12 @@ FormHistory = {
    *   - prefixWeight
    *   - boundaryWeight
    *   - source
-   * @param {function} [callback] if provided, it is invoked for each result.
+   * @param {Function} [callback] if provided, it is invoked for each result.
    *   the first argument is the result with four properties (text,
-   *   textLowerCase, frecency, totalScore), the second argument is a cancel
+   *   textLowerCase, frequency, totalScore), the second argument is a cancel
    *   function that can be invoked to cancel the search.
-   * @returns {Promise} resolved once the search is complete.
-   * @resolves {array} array of results. If the search was canceled it will be
-   *   an empty array.
+   * @returns {Promise<Array>}
+   *   An array of results. If the search was canceled it will be an empty array.
    */
   async getAutoCompleteResults(searchString, params, callback) {
     // only do substring matching when the search string contains more than one character

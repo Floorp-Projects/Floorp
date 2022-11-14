@@ -5,8 +5,8 @@ use crate::{
     ComponentInstanceSectionReader, ComponentStartSectionReader, ComponentTypeSectionReader,
     CustomSectionReader, DataSectionReader, ElementSectionReader, ExportSectionReader,
     FunctionBody, FunctionSectionReader, GlobalSectionReader, ImportSectionReader,
-    InstanceSectionReader, MemorySectionReader, Result, TableSectionReader, TagSectionReader,
-    TypeSectionReader,
+    InstanceSectionReader, MemorySectionReader, Result, SectionReader, TableSectionReader,
+    TagSectionReader, TypeSectionReader,
 };
 use std::convert::TryInto;
 use std::fmt;
@@ -281,6 +281,33 @@ pub enum Payload<'a> {
     End(usize),
 }
 
+const CUSTOM_SECTION: u8 = 0;
+const TYPE_SECTION: u8 = 1;
+const IMPORT_SECTION: u8 = 2;
+const FUNCTION_SECTION: u8 = 3;
+const TABLE_SECTION: u8 = 4;
+const MEMORY_SECTION: u8 = 5;
+const GLOBAL_SECTION: u8 = 6;
+const EXPORT_SECTION: u8 = 7;
+const START_SECTION: u8 = 8;
+const ELEMENT_SECTION: u8 = 9;
+const CODE_SECTION: u8 = 10;
+const DATA_SECTION: u8 = 11;
+const DATA_COUNT_SECTION: u8 = 12;
+const TAG_SECTION: u8 = 13;
+
+const COMPONENT_MODULE_SECTION: u8 = 1;
+const COMPONENT_CORE_INSTANCE_SECTION: u8 = 2;
+const COMPONENT_CORE_TYPE_SECTION: u8 = 3;
+const COMPONENT_SECTION: u8 = 4;
+const COMPONENT_INSTANCE_SECTION: u8 = 5;
+const COMPONENT_ALIAS_SECTION: u8 = 6;
+const COMPONENT_TYPE_SECTION: u8 = 7;
+const COMPONENT_CANONICAL_SECTION: u8 = 8;
+const COMPONENT_START_SECTION: u8 = 9;
+const COMPONENT_IMPORT_SECTION: u8 = 10;
+const COMPONENT_EXPORT_SECTION: u8 = 11;
+
 impl Parser {
     /// Creates a new parser.
     ///
@@ -541,35 +568,35 @@ impl Parser {
                     (_, 0) => section(reader, len, CustomSectionReader::new, CustomSection),
 
                     // Module sections
-                    (Encoding::Module, 1) => {
+                    (Encoding::Module, TYPE_SECTION) => {
                         section(reader, len, TypeSectionReader::new, TypeSection)
                     }
-                    (Encoding::Module, 2) => {
+                    (Encoding::Module, IMPORT_SECTION) => {
                         section(reader, len, ImportSectionReader::new, ImportSection)
                     }
-                    (Encoding::Module, 3) => {
+                    (Encoding::Module, FUNCTION_SECTION) => {
                         section(reader, len, FunctionSectionReader::new, FunctionSection)
                     }
-                    (Encoding::Module, 4) => {
+                    (Encoding::Module, TABLE_SECTION) => {
                         section(reader, len, TableSectionReader::new, TableSection)
                     }
-                    (Encoding::Module, 5) => {
+                    (Encoding::Module, MEMORY_SECTION) => {
                         section(reader, len, MemorySectionReader::new, MemorySection)
                     }
-                    (Encoding::Module, 6) => {
+                    (Encoding::Module, GLOBAL_SECTION) => {
                         section(reader, len, GlobalSectionReader::new, GlobalSection)
                     }
-                    (Encoding::Module, 7) => {
+                    (Encoding::Module, EXPORT_SECTION) => {
                         section(reader, len, ExportSectionReader::new, ExportSection)
                     }
-                    (Encoding::Module, 8) => {
+                    (Encoding::Module, START_SECTION) => {
                         let (func, range) = single_u32(reader, len, "start")?;
                         Ok(StartSection { func, range })
                     }
-                    (Encoding::Module, 9) => {
+                    (Encoding::Module, ELEMENT_SECTION) => {
                         section(reader, len, ElementSectionReader::new, ElementSection)
                     }
-                    (Encoding::Module, 10) => {
+                    (Encoding::Module, CODE_SECTION) => {
                         let start = reader.original_position();
                         let count = delimited(reader, &mut len, |r| r.read_var_u32())?;
                         let range = start..reader.original_position() + len as usize;
@@ -583,20 +610,20 @@ impl Parser {
                             size: len,
                         })
                     }
-                    (Encoding::Module, 11) => {
+                    (Encoding::Module, DATA_SECTION) => {
                         section(reader, len, DataSectionReader::new, DataSection)
                     }
-                    (Encoding::Module, 12) => {
+                    (Encoding::Module, DATA_COUNT_SECTION) => {
                         let (count, range) = single_u32(reader, len, "data count")?;
                         Ok(DataCountSection { count, range })
                     }
-                    (Encoding::Module, 13) => {
+                    (Encoding::Module, TAG_SECTION) => {
                         section(reader, len, TagSectionReader::new, TagSection)
                     }
 
                     // Component sections
-                    (Encoding::Component, 1 /* module */)
-                    | (Encoding::Component, 4 /* component */) => {
+                    (Encoding::Component, COMPONENT_MODULE_SECTION)
+                    | (Encoding::Component, COMPONENT_SECTION) => {
                         if len as usize > MAX_WASM_MODULE_SIZE {
                             bail!(
                                 len_pos,
@@ -618,50 +645,49 @@ impl Parser {
                             _ => unreachable!(),
                         })
                     }
-                    (Encoding::Component, 2) => {
+                    (Encoding::Component, COMPONENT_CORE_INSTANCE_SECTION) => {
                         section(reader, len, InstanceSectionReader::new, InstanceSection)
                     }
-                    (Encoding::Component, 3) => {
+                    (Encoding::Component, COMPONENT_CORE_TYPE_SECTION) => {
                         section(reader, len, CoreTypeSectionReader::new, CoreTypeSection)
                     }
-                    // Section 5 handled above
-                    (Encoding::Component, 5) => section(
+                    (Encoding::Component, COMPONENT_INSTANCE_SECTION) => section(
                         reader,
                         len,
                         ComponentInstanceSectionReader::new,
                         ComponentInstanceSection,
                     ),
-                    (Encoding::Component, 6) => section(
+                    (Encoding::Component, COMPONENT_ALIAS_SECTION) => section(
                         reader,
                         len,
                         ComponentAliasSectionReader::new,
                         ComponentAliasSection,
                     ),
-                    (Encoding::Component, 7) => section(
+                    (Encoding::Component, COMPONENT_TYPE_SECTION) => section(
                         reader,
                         len,
                         ComponentTypeSectionReader::new,
                         ComponentTypeSection,
                     ),
-                    (Encoding::Component, 8) => section(
+                    (Encoding::Component, COMPONENT_CANONICAL_SECTION) => section(
                         reader,
                         len,
                         ComponentCanonicalSectionReader::new,
                         ComponentCanonicalSection,
                     ),
-                    (Encoding::Component, 9) => section(
+                    (Encoding::Component, COMPONENT_START_SECTION) => section(
                         reader,
                         len,
                         ComponentStartSectionReader::new,
                         ComponentStartSection,
                     ),
-                    (Encoding::Component, 10) => section(
+                    (Encoding::Component, COMPONENT_IMPORT_SECTION) => section(
                         reader,
                         len,
                         ComponentImportSectionReader::new,
                         ComponentImportSection,
                     ),
-                    (Encoding::Component, 11) => section(
+                    (Encoding::Component, COMPONENT_EXPORT_SECTION) => section(
                         reader,
                         len,
                         ComponentExportSectionReader::new,
@@ -927,6 +953,62 @@ fn delimited<'a, T>(
 impl Default for Parser {
     fn default() -> Parser {
         Parser::new(0)
+    }
+}
+
+impl Payload<'_> {
+    /// If this `Payload` represents a section in the original wasm module then
+    /// the section's id and range within the original wasm binary are returned.
+    ///
+    /// Not all payloads refer to entire sections, such as the `Version` and
+    /// `CodeSectionEntry` variants. These variants will return `None` from this
+    /// function.
+    ///
+    /// Otherwise this function will return `Some` where the first element is
+    /// the byte identifier for the section and the second element is the range
+    /// of the contents of the section within the original wasm binary.
+    ///
+    /// The purpose of this method is to enable tools to easily iterate over
+    /// entire sections if necessary and handle sections uniformly, for example
+    /// dropping custom sections while preserving all other sections.
+    pub fn as_section(&self) -> Option<(u8, Range<usize>)> {
+        use Payload::*;
+
+        match self {
+            Version { .. } => None,
+            TypeSection(s) => Some((TYPE_SECTION, s.range())),
+            ImportSection(s) => Some((IMPORT_SECTION, s.range())),
+            FunctionSection(s) => Some((FUNCTION_SECTION, s.range())),
+            TableSection(s) => Some((TABLE_SECTION, s.range())),
+            MemorySection(s) => Some((MEMORY_SECTION, s.range())),
+            TagSection(s) => Some((TAG_SECTION, s.range())),
+            GlobalSection(s) => Some((GLOBAL_SECTION, s.range())),
+            ExportSection(s) => Some((EXPORT_SECTION, s.range())),
+            ElementSection(s) => Some((ELEMENT_SECTION, s.range())),
+            DataSection(s) => Some((DATA_SECTION, s.range())),
+            StartSection { range, .. } => Some((START_SECTION, range.clone())),
+            DataCountSection { range, .. } => Some((DATA_COUNT_SECTION, range.clone())),
+            CodeSectionStart { range, .. } => Some((CODE_SECTION, range.clone())),
+            CodeSectionEntry(_) => None,
+
+            ModuleSection { range, .. } => Some((COMPONENT_MODULE_SECTION, range.clone())),
+            InstanceSection(s) => Some((COMPONENT_CORE_INSTANCE_SECTION, s.range())),
+            CoreTypeSection(s) => Some((COMPONENT_CORE_TYPE_SECTION, s.range())),
+            ComponentSection { range, .. } => Some((COMPONENT_SECTION, range.clone())),
+            ComponentInstanceSection(s) => Some((COMPONENT_INSTANCE_SECTION, s.range())),
+            ComponentAliasSection(s) => Some((COMPONENT_ALIAS_SECTION, s.range())),
+            ComponentTypeSection(s) => Some((COMPONENT_TYPE_SECTION, s.range())),
+            ComponentCanonicalSection(s) => Some((COMPONENT_CANONICAL_SECTION, s.range())),
+            ComponentStartSection(s) => Some((COMPONENT_START_SECTION, s.range())),
+            ComponentImportSection(s) => Some((COMPONENT_IMPORT_SECTION, s.range())),
+            ComponentExportSection(s) => Some((COMPONENT_EXPORT_SECTION, s.range())),
+
+            CustomSection(c) => Some((CUSTOM_SECTION, c.range())),
+
+            UnknownSection { id, range, .. } => Some((*id, range.clone())),
+
+            End(_) => None,
+        }
     }
 }
 

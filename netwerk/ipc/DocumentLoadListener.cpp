@@ -246,7 +246,8 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
     // The one exception is nsUnknownDecoder, which works in the parent
     // (and we need to know what the content type is before we can
     // decide if it will be handled in the parent), so we run that here.
-    if (mContentType.LowerCaseEqualsASCII(UNKNOWN_CONTENT_TYPE)) {
+    if (mContentType.LowerCaseEqualsASCII(UNKNOWN_CONTENT_TYPE) ||
+        mContentType.IsEmpty()) {
       return nsDocumentOpenInfo::TryStreamConversion(aChannel);
     }
 

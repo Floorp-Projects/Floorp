@@ -57,6 +57,10 @@ class SourceMapURLService {
     }
 
     this._sourcesLoading = null;
+    this._pendingIDSubscriptions = null;
+    this._pendingURLSubscriptions = null;
+    this._urlToIDMap = null;
+    this._mapsById = null;
   }
 
   /**
@@ -211,6 +215,7 @@ class SourceMapURLService {
     this._pendingIDSubscriptions.clear();
     this._pendingURLSubscriptions.clear();
     this._urlToIDMap.clear();
+    this._mapsById.clear();
   }
 
   _onNewJavascript(source) {
@@ -445,7 +450,7 @@ class SourceMapURLService {
       if (
         resource.resourceType == DOCUMENT_EVENT &&
         resource.name == "will-navigate" &&
-        resource.isTopLevel
+        resource.targetFront.isTopLevel
       ) {
         this._clearAllState();
       } else if (resource.resourceType == STYLESHEET) {

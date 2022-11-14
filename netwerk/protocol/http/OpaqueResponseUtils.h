@@ -10,6 +10,9 @@
 
 #include "nsIContentPolicy.h"
 #include "nsIStreamListener.h"
+#include "nsUnknownDecoder.h"
+#include "nsMimeTypes.h"
+#include "nsIHttpChannel.h"
 
 #include "mozilla/Variant.h"
 #include "mozilla/Logging.h"
@@ -58,6 +61,7 @@ class OpaqueResponseBlocker final : public nsIStreamListener {
 
   void AllowResponse();
   void BlockResponse(HttpBaseChannel* aChannel, nsresult aReason);
+
  private:
   virtual ~OpaqueResponseBlocker() = default;
 
@@ -73,6 +77,52 @@ class OpaqueResponseBlocker final : public nsIStreamListener {
   bool mCheckIsOpaqueResponseAllowedAfterSniff = true;
 };
 
+class nsCompressedAudioVideoImageDetector : public nsUnknownDecoder {
+  const std::function<void(void*, const uint8_t*, uint32_t)> mCallback;
+
+ public:
+  nsCompressedAudioVideoImageDetector(
+      nsIStreamListener* aListener,
+      std::function<void(void*, const uint8_t*, uint32_t)>&& aCallback)
+      : nsUnknownDecoder(aListener), mCallback(aCallback) {}
+
+ protected:
+  virtual void DetermineContentType(nsIRequest* aRequest) override {
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
+    if (!httpChannel) {
+      return;
+    }
+
+    const char* testData = mBuffer;
+    uint32_t testDataLen = mBufferLen;
+    // Check if data are compressed.
+    nsAutoCString decodedData;
+
+    // ConvertEncodedData is always called only on a single thread for each
+    // instance of an object.
+    nsresult rv = ConvertEncodedData(aRequest, mBuffer, mBufferLen);
+    if (NS_SUCCEEDED(rv)) {
+      MutexAutoLock lock(mMutex);
+      decodedData = mDecodedData;
+    }
+    if (!decodedData.IsEmpty()) {
+      testData = decodedData.get();
+      testDataLen = std::min<uint32_t>(decodedData.Length(), 512u);
+    }
+
+    mCallback(httpChannel, (const uint8_t*)testData, testDataLen);
+
+    nsAutoCString contentType;
+    rv = httpChannel->GetContentType(contentType);
+
+    MutexAutoLock lock(mMutex);
+    if (!contentType.IsEmpty()) {
+      mContentType = contentType;
+    } else {
+      mContentType = UNKNOWN_CONTENT_TYPE;
+    }
+  }
+};
 }  // namespace mozilla::net
 
 #endif  // mozilla_net_OpaqueResponseUtils_h

@@ -273,7 +273,9 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request) {
     // Check if this is a PDF which should be opened internally. We also handle
     // octet-streams that look like they might be PDFs based on their extension.
     bool isPDF = mContentType.LowerCaseEqualsASCII(APPLICATION_PDF);
-    if (!isPDF && mContentType.LowerCaseEqualsASCII(APPLICATION_OCTET_STREAM)) {
+    if (!isPDF &&
+        (mContentType.LowerCaseEqualsASCII(APPLICATION_OCTET_STREAM) ||
+         mContentType.IsEmpty())) {
       nsAutoString flname;
       aChannel->GetContentDispositionFilename(flname);
       isPDF = StringEndsWith(flname, u".pdf"_ns);
@@ -475,7 +477,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request) {
     request->SetLoadFlags(loadFlags | nsIChannel::LOAD_RETARGETED_DOCUMENT_URI |
                           nsIChannel::LOAD_TARGETED);
 
-    if (isGuessFromExt) {
+    if (isGuessFromExt || mContentType.IsEmpty()) {
       mContentType = APPLICATION_GUESS_FROM_EXT;
       aChannel->SetContentType(nsLiteralCString(APPLICATION_GUESS_FROM_EXT));
     }
@@ -568,7 +570,15 @@ nsresult nsDocumentOpenInfo::ConvertData(nsIRequest* request,
 
 nsresult nsDocumentOpenInfo::TryStreamConversion(nsIChannel* aChannel) {
   constexpr auto anyType = "*/*"_ns;
-  nsresult rv = ConvertData(aChannel, m_contentListener, mContentType, anyType);
+
+  // A empty content type should be treated like the unknown content type.
+  nsCString srcContentType(mContentType);
+  if (srcContentType.IsEmpty()) {
+    srcContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
+  }
+
+  nsresult rv =
+      ConvertData(aChannel, m_contentListener, srcContentType, anyType);
   if (NS_FAILED(rv)) {
     m_targetStreamListener = nullptr;
   } else if (m_targetStreamListener) {

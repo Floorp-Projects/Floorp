@@ -272,6 +272,7 @@ export var ChromeMigrationUtils = {
         "Edge Beta": ["Microsoft", "Edge Beta"],
         "360 SE": ["360se6"],
         Opera: ["Opera Software", "Opera Stable"],
+        Vivaldi: ["Vivaldi"],
       },
       macosx: {
         Brave: ["BraveSoftware", "Brave-Browser"],
@@ -281,6 +282,7 @@ export var ChromeMigrationUtils = {
         Edge: ["Microsoft Edge"],
         "Edge Beta": ["Microsoft Edge Beta"],
         Opera: ["com.operasoftware.Opera"],
+        Vivaldi: ["Vivaldi"],
       },
       linux: {
         Brave: ["BraveSoftware", "Brave-Browser"],
@@ -291,6 +293,7 @@ export var ChromeMigrationUtils = {
         // Canary is not available on Linux.
         // Edge is not available on Linux.
         Opera: ["Opera"],
+        Vivaldi: ["Vivaldi"],
       },
     };
     let subfolders = SUB_DIRECTORIES[AppConstants.platform][chromeProjectName];

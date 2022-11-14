@@ -31,7 +31,7 @@ const enterprisePolicy = {
 /**
  * Loads the settings file and ensures it has not already been migrated.
  *
- * @param {string} settingsFile
+ * @param {string} settingsFile The settings file to load
  */
 async function loadSettingsFile(settingsFile) {
   let settingsTemplate = await readJSONFile(do_get_file(settingsFile));
@@ -73,7 +73,7 @@ add_task(async function setup() {
 /**
  * Tests that an installed engine matches the expected data.
  *
- * @param {object} expectedData
+ * @param {object} expectedData The expected data for the engine
  */
 async function assertInstalledEngineMatches(expectedData) {
   let engine = await Services.search.getEngineByName(expectedData.name);

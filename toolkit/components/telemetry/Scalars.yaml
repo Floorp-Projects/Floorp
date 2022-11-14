@@ -4283,22 +4283,6 @@ pdf.viewer:
     record_in_processes:
       - 'main'
       - 'content'
-  is_attachment:
-    bug_numbers:
-      - 1736864
-      - 1754659
-    description: >
-      How many times a PDF that sends Content-Disposition: attachment is opened.
-    expires: "109"
-    kind: uint
-    notification_emails:
-      - rtestard@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
-      - 'content'
   fallback_shown:
     bug_numbers:
       - 1566882

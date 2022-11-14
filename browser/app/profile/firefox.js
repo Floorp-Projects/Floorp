@@ -2076,6 +2076,10 @@ pref("extensions.experiments.enabled", false);
   pref("dom.ipc.processPriorityManager.enabled", true);
 #endif
 
+#if defined(XP_WIN)
+  pref("dom.ipc.processPriorityManager.backgroundUsesEcoQoS", true);
+#endif
+
 // Don't limit how many nodes we care about on desktop:
 pref("reader.parse-node-limit", 0);
 
@@ -2131,6 +2135,7 @@ pref("browser.migrate.firefox.enabled", true);
 pref("browser.migrate.ie.enabled", true);
 pref("browser.migrate.safari.enabled", true);
 pref("browser.migrate.opera.enabled", false);
+pref("browser.migrate.vivaldi.enabled", false);
 
 pref("browser.migrate.showBookmarksToolbarAfterMigration", true);
 

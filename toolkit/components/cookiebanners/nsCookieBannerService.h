@@ -62,6 +62,8 @@ class nsCookieBannerService final : public nsIObserver,
                             nsICookieBannerRule** aRule);
 
   nsresult GetRuleForURI(nsIURI* aURI, nsICookieBannerRule** aRule);
+
+  void DailyReportTelemetry();
 };
 
 }  // namespace mozilla

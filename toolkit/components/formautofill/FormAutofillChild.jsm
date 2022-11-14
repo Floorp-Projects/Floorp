@@ -167,6 +167,7 @@ class FormAutofillChild extends JSWindowActorChild {
 
   /**
    * Handle the DOMFormBeforeSubmit event.
+   *
    * @param {Event} evt
    */
   onDOMFormBeforeSubmit(evt) {

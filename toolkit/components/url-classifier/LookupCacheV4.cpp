@@ -155,6 +155,13 @@ nsresult LookupCacheV4::GetFixedLengthPrefixes(
   return mVLPrefixSet->GetFixedLengthPrefixes(&aPrefixes, nullptr);
 }
 
+nsresult LookupCacheV4::GetFixedLengthPrefixByIndex(
+    uint32_t aIndex, uint32_t* aOutPrefix) const {
+  NS_ENSURE_ARG_POINTER(aOutPrefix);
+
+  return mVLPrefixSet->GetFixedLengthPrefixByIndex(aIndex, aOutPrefix);
+}
+
 nsresult LookupCacheV4::ClearLegacyFile() {
   nsCOMPtr<nsIFile> file;
   nsresult rv = mStoreDirectory->Clone(getter_AddRefs(file));

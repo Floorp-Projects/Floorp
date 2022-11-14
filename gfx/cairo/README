@@ -8,7 +8,7 @@ http://www.cairographics.org/.
 VERSIONS:
 
   cairo (12d521df8acc483b2daa844d4f05dc2fe2765ba6)
-  pixman (0.24.2)
+  pixman (0.42.2)
 
 ==== Patches ====
 
@@ -218,29 +218,21 @@ no-pixman-image-reuse-across-threads.patch: bug 1273701, picked from 71e8a4c2301
 
 ==== pixman patches ====
 
-pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
+pixman-clangcl.patch: clang-cl compilation fix
 
-pixman-rename-and-endian.patch: include cairo-platform.h for renaming of external symbols and endian macros
+pixman-export.patch: make sure pixman symbols are not exported in libxul
 
-NOTE: we previously supported ARM assembler on MSVC, this has been removed because of the maintenance burden
+pixman-interp.patch: use lower quality interpolation by default on mobile
 
-pixman-export.patch: use cairo_public for PIXMAN_EXPORT to make sure pixman symbols are not exported in libxul
+pixman-intrin.patch: include intrin.h on Windows to fix bustage
 
-pixman-limits.patch: include limits.h for SIZE_MAX
+pixman-mingw32.patch: include xmmintrin.h on MINGW32 builds to avoid redefinition
 
-pixman-lowres-interp.patch: Use lower quality interpolation for more speed.
-
-pixman-bilinear-fastpath.patch: Bilinear fast paths for non-neon
-
-pixman-16-bit-pipeline.patch: 16 bit pipeline for dithering
-
-pixman-dither.patch: Add dithering of 16 bit gradients
+pixman-rename.patch: include pixman-rename.h for renaming of external symbols
 
 quartz-support-color-emoji-font.patch: support Apple Color Emoji font in cairo-quartz backend
 
 use-show-text-glyphs-if-glyph-path-fails.patch: fall back to show_text_glyphs even at huge sizes if scaled_font_glyph_path didn't work
-
-pixman-enable-altivec-acceleration.patch: enable building the altivec acceleration
 
 win32-d3dsurface9.patch: Create a win32 d3d9 surface to support LockRect
 

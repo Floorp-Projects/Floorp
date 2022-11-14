@@ -9759,8 +9759,9 @@ AttachDecision CallIRGenerator::tryAttachWasmCall(HandleFunction calleeFunc) {
       case wasm::ValType::V128:
         MOZ_CRASH("Function should not have a Wasm JitEntry");
       case wasm::ValType::Ref:
-        // All values can be boxed as AnyRef.
-        MOZ_ASSERT(sig.args()[i].refTypeKind() == wasm::RefType::Extern,
+        // canHaveJitEntry restricts args to externref, where all JS values are
+        // valid and can be boxed.
+        MOZ_ASSERT(sig.args()[i].refType().isExtern(),
                    "Unexpected type for Wasm JitEntry");
         break;
     }

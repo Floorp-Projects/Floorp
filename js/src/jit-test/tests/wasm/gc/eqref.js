@@ -1,7 +1,7 @@
 // |jit-test| skip-if: !wasmGcEnabled()
 
 // Tests of eqref dynamic type checks
-const EqrefCheckError = /can only pass a TypedObject to an eqref/;
+const EqrefCheckError = /can only pass a WebAssembly GC object to an eqref/;
 
 // 1. Exported function params
 

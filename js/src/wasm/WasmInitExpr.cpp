@@ -35,10 +35,12 @@ using namespace js;
 using namespace js::wasm;
 
 static bool ValidateInitExpr(Decoder& d, ModuleEnvironment* env,
-                             ValType expected, Maybe<LitVal>* literal) {
+                             ValType expected,
+                             uint32_t maxInitializedGlobalsIndexPlus1,
+                             Maybe<LitVal>* literal) {
   ValidatingOpIter iter(*env, d, ValidatingOpIter::InitExpr);
 
-  if (!iter.startInitExpr(expected)) {
+  if (!iter.startInitExpr(expected, maxInitializedGlobalsIndexPlus1)) {
     return false;
   }
 
@@ -237,11 +239,9 @@ static bool ValidateInitExpr(Decoder& d, ModuleEnvironment* env,
 class MOZ_STACK_CLASS InitExprInterpreter {
  public:
   explicit InitExprInterpreter(JSContext* cx,
-                               const ValVector& globalImportValues,
                                Handle<WasmInstanceObject*> instanceObj)
       : features(FeatureArgs::build(cx, FeatureOptions())),
         stack(cx),
-        globalImportValues(globalImportValues),
         instanceObj(cx, instanceObj),
         types(instanceObj->instance().metadata().types) {}
 
@@ -255,7 +255,6 @@ class MOZ_STACK_CLASS InitExprInterpreter {
  private:
   FeatureArgs features;
   RootedValVector stack;
-  const ValVector& globalImportValues;
   Rooted<WasmInstanceObject*> instanceObj;
   SharedTypeContext types;
 
@@ -292,8 +291,10 @@ class MOZ_STACK_CLASS InitExprInterpreter {
   }
 #endif
 
-  bool evalGetGlobal(uint32_t index) {
-    return stack.append(globalImportValues[index]);
+  bool evalGlobalGet(JSContext* cx, uint32_t index) {
+    RootedVal val(cx);
+    instance().constantGlobalGet(index, &val);
+    return stack.append(val);
   }
   bool evalI32Const(int32_t c) { return pushI32(c); }
   bool evalI64Const(int64_t c) { return pushI64(c); }
@@ -355,10 +356,11 @@ class MOZ_STACK_CLASS InitExprInterpreter {
     const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
     const StructType& structType = typeDef.structType();
 
-    uint32_t fieldIndex = structType.fields_.length();
-    while (fieldIndex-- > 0) {
+    uint32_t numFields = structType.fields_.length();
+    for (uint32_t forwardIndex = 0; forwardIndex < numFields; forwardIndex++) {
+      uint32_t reverseIndex = numFields - forwardIndex - 1;
       const Val& val = stack.back();
-      structObj->storeVal(val, fieldIndex);
+      structObj->storeVal(val, reverseIndex);
       stack.popBack();
     }
 
@@ -417,9 +419,10 @@ class MOZ_STACK_CLASS InitExprInterpreter {
       return false;
     }
 
-    for (uint32_t i = len; i-- > 0;) {
+    for (uint32_t forwardIndex = 0; forwardIndex < len; forwardIndex++) {
+      uint32_t reverseIndex = len - forwardIndex - 1;
       const Val& val = stack.back();
-      arrayObj->storeVal(val, i);
+      arrayObj->storeVal(val, reverseIndex);
       stack.popBack();
     }
 
@@ -450,7 +453,7 @@ bool InitExprInterpreter::evaluate(JSContext* cx, Decoder& d) {
         if (!d.readGlobalIndex(&index)) {
           return false;
         }
-        CHECK(evalGetGlobal(index));
+        CHECK(evalGlobalGet(cx, index));
       }
       case uint16_t(Op::I32Const): {
         int32_t c;
@@ -600,10 +603,13 @@ bool InitExprInterpreter::evaluate(JSContext* cx, Decoder& d) {
 }
 
 bool InitExpr::decodeAndValidate(Decoder& d, ModuleEnvironment* env,
-                                 ValType expected, InitExpr* expr) {
+                                 ValType expected,
+                                 uint32_t maxInitializedGlobalsIndexPlus1,
+                                 InitExpr* expr) {
   Maybe<LitVal> literal = Nothing();
   const uint8_t* exprStart = d.currentPosition();
-  if (!ValidateInitExpr(d, env, expected, &literal)) {
+  if (!ValidateInitExpr(d, env, expected, maxInitializedGlobalsIndexPlus1,
+                        &literal)) {
     return false;
   }
   const uint8_t* exprEnd = d.currentPosition();
@@ -623,8 +629,7 @@ bool InitExpr::decodeAndValidate(Decoder& d, ModuleEnvironment* env,
          expr->bytecode_.append(exprStart, exprEnd);
 }
 
-bool InitExpr::evaluate(JSContext* cx, const ValVector& globalImportValues,
-                        Handle<WasmInstanceObject*> instanceObj,
+bool InitExpr::evaluate(JSContext* cx, Handle<WasmInstanceObject*> instanceObj,
                         MutableHandleVal result) const {
   MOZ_ASSERT(kind_ != InitExprKind::None);
 
@@ -635,7 +640,7 @@ bool InitExpr::evaluate(JSContext* cx, const ValVector& globalImportValues,
 
   UniqueChars error;
   Decoder d(bytecode_.begin(), bytecode_.end(), 0, &error);
-  InitExprInterpreter interp(cx, globalImportValues, instanceObj);
+  InitExprInterpreter interp(cx, instanceObj);
   if (!interp.evaluate(cx, d)) {
     // This expression should have been validated already. So we should only be
     // able to OOM, which is reported by having no error message.

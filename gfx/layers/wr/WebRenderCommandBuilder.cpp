@@ -1922,15 +1922,18 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
         aBuilder.Dump(mDumpIndent + 1, Some(mBuilderDumpIndex), Nothing());
   }
 
+  FlattenedDisplayListIterator iter(aDisplayListBuilder, aDisplayList);
+  if (!iter.HasNext()) {
+    return;
+  }
+
   mDumpIndent++;
   if (aNewClipList) {
     mClipManager.BeginList(aSc);
   }
 
-  bool apzEnabled = mManager->AsyncPanZoomEnabled();
-
-  FlattenedDisplayListIterator iter(aDisplayListBuilder, aDisplayList);
-  while (iter.HasNext()) {
+  const bool apzEnabled = mManager->AsyncPanZoomEnabled();
+  do {
     nsDisplayItem* item = iter.GetNextItem();
 
     DisplayItemType itemType = item->GetType();
@@ -2148,7 +2151,7 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
         }
       }
     }
-  }
+  } while (iter.HasNext());
 
   mDumpIndent--;
   if (aNewClipList) {

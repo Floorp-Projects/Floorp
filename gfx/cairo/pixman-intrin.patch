@@ -1,0 +1,24 @@
+diff --git a/gfx/cairo/libpixman/src/pixman-x86.c b/gfx/cairo/libpixman/src/pixman-x86.c
+--- a/gfx/cairo/libpixman/src/pixman-x86.c
++++ b/gfx/cairo/libpixman/src/pixman-x86.c
+@@ -104,16 +104,20 @@ have_cpuid (void)
+ 
+     return !!result;
+ 
+ #else
+ #error "Unknown compiler"
+ #endif
+ }
+ 
++#ifdef _MSC_VER
++#include <intrin.h> /* for __cpuid */
++#endif
++
+ static void
+ pixman_cpuid (uint32_t feature,
+ 	      uint32_t *a, uint32_t *b, uint32_t *c, uint32_t *d)
+ {
+ #if defined (__GNUC__)
+ 
+ #if _PIXMAN_X86_64
+     __asm__ volatile (

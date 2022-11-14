@@ -99,6 +99,10 @@ class Table : public ShareableBase<Table> {
   AnyRef getAnyRef(uint32_t index) const;
   void fillAnyRef(uint32_t index, uint32_t fillCount, AnyRef ref);
 
+  // Get the element at index and convert it to a JS value.
+  [[nodiscard]] bool getValue(JSContext* cx, uint32_t index,
+                              MutableHandleValue result) const;
+
   void setNull(uint32_t index);
 
   // Copy entry from |srcTable| at |srcIndex| to this table at |dstIndex|.  Used

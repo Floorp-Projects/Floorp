@@ -37,10 +37,12 @@ class nsUrlClassifierPrefixSet final : public nsIUrlClassifierPrefixSet {
   NS_IMETHOD Contains(uint32_t aPrefix, bool* aFound) override;
   NS_IMETHOD IsEmpty(bool* aEmpty) override;
 
-  nsresult GetPrefixesNative(FallibleTArray<uint32_t>& outArray);
+  nsresult GetPrefixesNative(FallibleTArray<uint32_t>& aOutArray);
+  nsresult GetPrefixByIndex(uint32_t aIndex, uint32_t* aOutPrefix) const;
   nsresult WritePrefixes(nsCOMPtr<nsIOutputStream>& out) const;
   nsresult LoadPrefixes(nsCOMPtr<nsIInputStream>& in);
   uint32_t CalculatePreallocateSize() const;
+  uint32_t Length() const;
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 

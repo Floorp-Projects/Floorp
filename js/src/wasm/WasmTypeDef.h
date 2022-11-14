@@ -216,22 +216,6 @@ class FuncType {
     return false;
   }
 
-#ifdef WASM_PRIVATE_REFTYPES
-  bool exposesTypeIndex() const {
-    for (const ValType& arg : args()) {
-      if (arg.isTypeRef()) {
-        return true;
-      }
-    }
-    for (const ValType& result : results()) {
-      if (result.isTypeRef()) {
-        return true;
-      }
-    }
-    return false;
-  }
-#endif
-
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   WASM_DECLARE_FRIEND_SERIALIZE(FuncType);
 };
@@ -1059,8 +1043,8 @@ inline bool RefType::isSubTypeOf(RefType subType, RefType superType) {
 
   // A subtype must have the same nullability as the supertype or the
   // supertype must be nullable.
-  if (!(subType.isNullable() == superType.isNullable() ||
-        superType.isNullable())) {
+  if (subType.isNullable() != superType.isNullable() &&
+      !superType.isNullable()) {
     return false;
   }
 
@@ -1070,15 +1054,26 @@ inline bool RefType::isSubTypeOf(RefType subType, RefType superType) {
     return true;
   }
 
-  // Structs are subtypes of eqref
-  if (subType.isTypeRef() && subType.typeDef()->isStructType() &&
-      superType.isEq()) {
+  // eqref is a subtype of anyref
+  if (subType.isEq() && superType.isAny()) {
     return true;
   }
 
-  // Arrays are subtypes of eqref
+  // structref/arrayref are subtypes of eqref and anyref
+  if ((subType.isStruct() || subType.isArray()) &&
+      (superType.isAny() || superType.isEq())) {
+    return true;
+  }
+
+  // Structs are subtypes of structref, eqref and anyref
+  if (subType.isTypeRef() && subType.typeDef()->isStructType() &&
+      (superType.isAny() || superType.isEq() || superType.isStruct())) {
+    return true;
+  }
+
+  // Arrays are subtypes of arrayref, eqref and anyref
   if (subType.isTypeRef() && subType.typeDef()->isArrayType() &&
-      superType.isEq()) {
+      (superType.isAny() || superType.isEq() || superType.isArray())) {
     return true;
   }
 

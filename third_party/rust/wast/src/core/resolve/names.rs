@@ -384,54 +384,21 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
     }
 
     fn resolve_block_type(&mut self, bt: &mut BlockType<'a>) -> Result<(), Error> {
-        // Ok things get interesting here. First off when parsing `bt`
-        // *optionally* has an index and a function type listed. If
-        // they're both not present it's equivalent to 0 params and 0
-        // results.
+        // If the index is specified on this block type then that's the source
+        // of resolution and the resolver step here will verify the inline type
+        // matches. Note that indexes may come from the source text itself but
+        // may also come from being injected as part of the type expansion phase
+        // of resolution.
         //
-        // In MVP wasm blocks can have 0 params and 0-1 results. Now
-        // there's also multi-value. We want to prefer MVP wasm wherever
-        // possible (for backcompat) so we want to list this block as
-        // being an "MVP" block if we can. The encoder only has
-        // `BlockType` to work with, so it'll be looking at `params` and
-        // `results` to figure out what to encode. If `params` and
-        // `results` fit within MVP, then it uses MVP encoding
-        //
-        // To put all that together, here we handle:
-        //
-        // * If the `index` was specified, resolve it and use it as the
-        //   source of truth. If this turns out to be an MVP type,
-        //   record it as such.
-        // * Otherwise use `params` and `results` as the source of
-        //   truth. *If* this were a non-MVP compatible block `index`
-        //   would be filled by by `tyexpand.rs`.
-        //
-        // tl;dr; we handle the `index` here if it's set and then fill
-        // out `params` and `results` if we can, otherwise no work
-        // happens.
+        // If no type is present then that means that the inline type is not
+        // present or has 0-1 results. In that case the nested value types are
+        // resolved, if they're there, to get encoded later on.
         if bt.ty.index.is_some() {
-            let (ty, _) = self.resolver.resolve_type_use(&mut bt.ty)?;
-            let n = match ty {
-                Index::Num(n, _) => *n,
-                Index::Id(_) => panic!("expected `Num`"),
-            };
-            let ty = match self.resolver.type_info.get(n as usize) {
-                Some(TypeInfo::Func { params, results }) => (params, results),
-                _ => return Ok(()),
-            };
-            if ty.0.len() == 0 && ty.1.len() <= 1 {
-                let mut inline = FunctionType::default();
-                inline.results = ty.1.clone();
-                bt.ty.inline = Some(inline);
-                bt.ty.index = None;
-            }
-        }
-
-        // If the inline annotation persists to this point then resolve
-        // all of its inline value types.
-        if let Some(inline) = &mut bt.ty.inline {
+            self.resolver.resolve_type_use(&mut bt.ty)?;
+        } else if let Some(inline) = &mut bt.ty.inline {
             inline.resolve(self.resolver)?;
         }
+
         Ok(())
     }
 
@@ -620,8 +587,7 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
             }
 
             RefTest(i) | RefCast(i) | StructNew(i) | StructNewDefault(i) | ArrayNew(i)
-            | ArrayNewDefault(i) | ArrayGet(i) | ArrayGetS(i) | ArrayGetU(i) | ArraySet(i)
-            | ArrayLen(i) => {
+            | ArrayNewDefault(i) | ArrayGet(i) | ArrayGetS(i) | ArrayGetU(i) | ArraySet(i) => {
                 self.resolver.resolve(i, Ns::Type)?;
             }
 
