@@ -535,8 +535,10 @@ enum class StyleMozBoxLayout : uint8_t {
 };
 
 // See nsStyleText
-#define NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE 0
-#define NS_STYLE_TEXT_COMBINE_UPRIGHT_ALL 1
+enum class StyleTextCombineUpright : uint8_t {
+  None,
+  All,
+};
 
 // See nsStyleText
 #define NS_STYLE_UNICODE_BIDI_NORMAL 0x0

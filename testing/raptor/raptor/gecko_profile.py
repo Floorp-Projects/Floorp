@@ -167,7 +167,7 @@ class GeckoProfile(object):
                     )
 
             profile_locations = []
-            if self.raptor_config.get("chimera", False) and not is_extra_profiler_run:
+            if self.raptor_config.get("chimera", False):
                 if results["warm"] is None or results["cold"] is None:
                     raise Exception(
                         "The test ran in chimera mode but we found no cold "
@@ -178,8 +178,8 @@ class GeckoProfile(object):
                 )
             else:
                 # When we don't run in chimera mode, it means that we
-                # either ran a benchmark, scenario test, separate
-                # warm/cold pageload tests or extra profiling run.
+                # either ran a benchmark, scenario test or separate
+                # warm/cold pageload tests.
                 profile_locations.append(
                     (
                         __get_test_type(),
@@ -265,6 +265,7 @@ class GeckoProfile(object):
                 self.cleanup = False
 
         missing_symbols_zip = os.path.join(self.upload_dir, "missingsymbols.zip")
+        test_type = self.test_config.get("type", "pageload")
 
         try:
             mode = zipfile.ZIP_DEFLATED
@@ -285,21 +286,27 @@ class GeckoProfile(object):
 
                 try:
                     # Write the profiles into a set of folders formatted as:
-                    # <TEST-NAME>-<TEST_TYPE>. The file names have a count prefixed
-                    # to them to prevent any naming conflicts. The count is the
-                    # number of files already in the folder.
-                    folder_name = "%s-%s" % (
-                        self.test_config["name"],
-                        profile_info["type"],
+                    # <TEST-NAME>-<TEST-RUN-TYPE>.
+                    # <TEST-RUN-TYPE> can be pageload-{warm,cold} or {test-type}
+                    # only for the tests that are not a pageload test.
+                    # For example, "cnn-pageload-warm".
+                    # The file names are formatted as <ITERATION-TYPE>-<ITERATION>
+                    # to clearly indicate without redundant information.
+                    # For example, "browser-cycle-1".
+                    test_run_type = (
+                        "{0}-{1}".format(test_type, profile_info["type"])
+                        if test_type == "pageload"
+                        else test_type
                     )
-                    profile_name = "-".join(
-                        [
-                            str(
-                                len([f for f in arc.namelist() if folder_name in f]) + 1
-                            ),
-                            os.path.split(profile_path)[-1],
-                        ]
-                    )
+                    folder_name = "%s-%s" % (self.test_config["name"], test_run_type)
+                    iteration = str(os.path.split(profile_path)[-1].split("-")[-1])
+                    if test_type == "pageload" and profile_info["type"] == "cold":
+                        iteration_type = "browser-cycle"
+                    elif profile_info["type"] == "warm":
+                        iteration_type = "page-cycle"
+                    else:
+                        iteration_type = "iteration"
+                    profile_name = "-".join([iteration_type, iteration])
                     path_in_zip = os.path.join(folder_name, profile_name)
 
                     LOG.info(
