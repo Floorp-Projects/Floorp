@@ -1152,10 +1152,8 @@ PdfStreamConverter.prototype = {
 
     aRequest.QueryInterface(Ci.nsIWritablePropertyBag);
 
-    var contentDisposition = aRequest.DISPOSITION_INLINE;
     var contentDispositionFilename;
     try {
-      contentDisposition = aRequest.contentDisposition;
       contentDispositionFilename = aRequest.contentDispositionFilename;
     } catch (e) {}
 
@@ -1181,9 +1179,7 @@ PdfStreamConverter.prototype = {
       aRequest.setResponseHeader("Refresh", "", false);
     }
 
-    lazy.PdfJsTelemetry.onViewerIsUsed(
-      contentDisposition == aRequest.DISPOSITION_ATTACHMENT
-    );
+    lazy.PdfJsTelemetry.onViewerIsUsed();
     lazy.PdfJsTelemetry.onDocumentSize(aRequest.contentLength);
 
     // The document will be loaded via the stream converter as html,
