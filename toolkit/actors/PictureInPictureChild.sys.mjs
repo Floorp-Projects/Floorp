@@ -1606,7 +1606,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
         // Just double-checking that we received the event for the right
         // video element.
         if (video !== event.target) {
-          Cu.reportError(
+          lazy.logConsole.error(
             "PictureInPictureChild received volumechange for " +
               "the wrong video!"
           );
@@ -2351,18 +2351,14 @@ class PictureInPictureChildVideoWrapper {
         let retVal = wrappedMethod.call(this.#siteWrapper, ...args);
 
         if (!validateRetVal) {
-          lazy.logConsole.debug(
-            `Invalid return value validator was found for method ${name}(). Replacing return value ${retVal} with null.`
-          );
-          Cu.reportError(
+          lazy.logConsole.error(
             `No return value validator was provided for method ${name}(). Returning null.`
           );
           return null;
         }
 
         if (!validateRetVal(retVal)) {
-          lazy.logConsole.debug("Invalid return value:", retVal);
-          Cu.reportError(
+          lazy.logConsole.error(
             `Calling method ${name}() returned an unexpected value: ${retVal}. Returning null.`
           );
           return null;
@@ -2371,8 +2367,10 @@ class PictureInPictureChildVideoWrapper {
         return retVal;
       }
     } catch (e) {
-      lazy.logConsole.debug("Error:", e.message);
-      Cu.reportError(`There was an error while calling ${name}(): `, e.message);
+      lazy.logConsole.error(
+        `There was an error while calling ${name}(): `,
+        e.message
+      );
     }
 
     return fallback();
@@ -2408,7 +2406,10 @@ class PictureInPictureChildVideoWrapper {
       Services.scriptloader.loadSubScript(wrapperScriptUrl, sandbox);
     } catch (e) {
       Cu.nukeSandbox(sandbox);
-      Cu.reportError("Error loading wrapper script for Picture-in-Picture" + e);
+      lazy.logConsole.error(
+        "Error loading wrapper script for Picture-in-Picture",
+        e
+      );
       return null;
     }
 
