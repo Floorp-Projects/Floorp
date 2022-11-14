@@ -133,7 +133,7 @@ class MediaMemoryTracker : public nsIMemoryReporter {
     size_t audioSize = 0;
 
     for (auto&& decoder : decoders) {
-      if (decoder->GetOwner()->GetDocument() == aDoc) {
+      if (decoder->GetOwner() && decoder->GetOwner()->GetDocument() == aDoc) {
         videoSize += decoder->SizeOfVideoQueue();
         audioSize += decoder->SizeOfAudioQueue();
         decoder->AddSizeOfResources(resourceSizes);
