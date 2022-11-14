@@ -7224,6 +7224,20 @@ bool BaseCompiler::emitBrOnCastCommon(bool onSuccess) {
   return true;
 }
 
+bool BaseCompiler::emitExternInternalize() {
+  // extern.internalize is a no-op because anyref and extern share the same
+  // representation
+  Nothing nothing;
+  return iter_.readRefConversion(RefType::extern_(), RefType::any(), &nothing);
+}
+
+bool BaseCompiler::emitExternExternalize() {
+  // extern.externalize is a no-op because anyref and extern share the same
+  // representation
+  Nothing nothing;
+  return iter_.readRefConversion(RefType::any(), RefType::extern_(), &nothing);
+}
+
 #endif  // ENABLE_WASM_GC
 
 //////////////////////////////////////////////////////////////////////////////
@@ -9373,6 +9387,10 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitBrOnCastCommon(/*onSuccess=*/true));
           case uint32_t(GcOp::BrOnCastFail):
             CHECK_NEXT(emitBrOnCastCommon(/*onSuccess=*/false));
+          case uint16_t(GcOp::ExternInternalize):
+            CHECK_NEXT(emitExternInternalize());
+          case uint16_t(GcOp::ExternExternalize):
+            CHECK_NEXT(emitExternExternalize());
           default:
             break;
         }  // switch (op.b1)
