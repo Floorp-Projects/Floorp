@@ -167,7 +167,7 @@ class GeckoProfile(object):
                     )
 
             profile_locations = []
-            if self.raptor_config.get("chimera", False) and not is_extra_profiler_run:
+            if self.raptor_config.get("chimera", False):
                 if results["warm"] is None or results["cold"] is None:
                     raise Exception(
                         "The test ran in chimera mode but we found no cold "
@@ -178,8 +178,8 @@ class GeckoProfile(object):
                 )
             else:
                 # When we don't run in chimera mode, it means that we
-                # either ran a benchmark, scenario test, separate
-                # warm/cold pageload tests or extra profiling run.
+                # either ran a benchmark, scenario test or separate
+                # warm/cold pageload tests.
                 profile_locations.append(
                     (
                         __get_test_type(),
