@@ -1540,6 +1540,10 @@ function promiseTransformEnd() {
   return promiseTopic("APZ:TransformEnd");
 }
 
+function promiseScrollend(aTarget = window) {
+  return promiseOneEvent(aTarget, "scrollend");
+}
+
 // Returns a promise that resolves after the indicated number
 // of touchend events have fired on the given target element.
 function promiseTouchEnd(element, count = 1) {
