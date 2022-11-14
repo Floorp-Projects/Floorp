@@ -1191,10 +1191,7 @@ let cookieBannerSection = new (class {
 
     // Only show the section if the feature is enabled for the normal or PBM
     // window.
-    return (
-      mode != Ci.nsICookieBannerService.MODE_DISABLED &&
-      mode != Ci.nsICookieBannerService.MODE_DETECT_ONLY
-    );
+    return mode != Ci.nsICookieBannerService.MODE_DISABLED;
   }
 
   /**

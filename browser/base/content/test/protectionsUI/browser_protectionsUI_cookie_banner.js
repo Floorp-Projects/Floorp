@@ -15,7 +15,6 @@ const {
   MODE_DISABLED,
   MODE_REJECT,
   MODE_REJECT_OR_ACCEPT,
-  MODE_DETECT_ONLY,
   MODE_UNSET,
 } = Ci.nsICookieBannerService;
 
@@ -45,12 +44,8 @@ function cookieBannerSectionIsVisible({
   }
 
   return (
-    (testPBM &&
-      featureModePBM != MODE_DISABLED &&
-      featureModePBM != MODE_DETECT_ONLY) ||
-    (!testPBM &&
-      featureMode != MODE_DISABLED &&
-      featureMode != MODE_DETECT_ONLY)
+    (testPBM && featureModePBM != MODE_DISABLED) ||
+    (!testPBM && featureMode != MODE_DISABLED)
   );
 }
 
@@ -162,13 +157,11 @@ add_task(async function test_section_visibility() {
       MODE_DISABLED,
       MODE_REJECT,
       MODE_REJECT_OR_ACCEPT,
-      MODE_DETECT_ONLY,
     ]) {
       for (let featureModePBM of [
         MODE_DISABLED,
         MODE_REJECT,
         MODE_REJECT_OR_ACCEPT,
-        MODE_DETECT_ONLY,
       ]) {
         await testSectionVisibility({
           win,

@@ -119,8 +119,6 @@ async function verifyBannerState(bc, visible, expected, bannerId = "banner") {
  * @param {boolean} visible - if the banner should be visible.
  * @param {boolean} expected - the expected banner click state.
  * @param {string} [bannerId] - id of the cookie banner element.
- * @param {boolean} [keepTabOpen] - whether to leave the tab open after the test
- * function completed.
  */
 async function openPageAndVerify({
   win = window,
@@ -129,7 +127,6 @@ async function openPageAndVerify({
   visible,
   expected,
   bannerId = "banner",
-  keepTabOpen = false,
 }) {
   info(`Opening ${testURL}`);
 
@@ -141,9 +138,7 @@ async function openPageAndVerify({
 
   await verifyBannerState(tab.linkedBrowser, visible, expected, bannerId);
 
-  if (!keepTabOpen) {
-    BrowserTestUtils.removeTab(tab);
-  }
+  BrowserTestUtils.removeTab(tab);
 }
 
 /**

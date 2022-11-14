@@ -30,49 +30,15 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 class CookieBannerParent extends JSWindowActorParent {
-  /**
-   * Get the browser associated with this window which is the top level embedder
-   * element. Returns null if the top embedder isn't a browser.
-   */
-  get #browserElement() {
+  #isPrivateBrowsing() {
     let topBC = this.browsingContext.top;
 
-    // Not all embedders are browsers.
-    if (topBC.embedderElementType != "browser") {
-      return null;
-    }
-
-    return topBC.embedderElement;
-  }
-
-  #isPrivateBrowsing() {
-    let browser = this.#browserElement;
-    if (!browser) {
+    // Not all embedders are browsers. Skip other elements we can't do an
+    // isBrowserPrivate check on.
+    if (topBC.embedderElementType != "browser" || !topBC.embedderElement) {
       return false;
     }
-    return lazy.PrivateBrowsingUtils.isBrowserPrivate(browser);
-  }
-
-  /**
-   * Dispatches a custom "cookiebannerhandled" event on the chrome window.
-   */
-  #notifyCookieBannerState(eventType) {
-    let chromeWin = this.browsingContext.topChromeWindow;
-    if (!chromeWin) {
-      return;
-    }
-    let windowUtils = chromeWin.windowUtils;
-    if (!windowUtils) {
-      return;
-    }
-    let event = new CustomEvent(eventType, {
-      bubbles: true,
-      cancelable: false,
-      detail: {
-        windowContext: this.manager,
-      },
-    });
-    windowUtils.dispatchEventToChromeOnly(chromeWin, event);
+    return lazy.PrivateBrowsingUtils.isBrowserPrivate(topBC.embedderElement);
   }
 
   async receiveMessage(message) {
@@ -82,18 +48,6 @@ class CookieBannerParent extends JSWindowActorParent {
         "cookie-banner-test-clicking-finish",
         this.manager.documentPrincipal?.baseDomain
       );
-      return undefined;
-    }
-
-    // Forwards cookie banner detected signals to frontend consumers.
-    if (message.name == "CookieBanner::DetectedBanner") {
-      this.#notifyCookieBannerState("cookiebannerdetected");
-      return undefined;
-    }
-
-    // Forwards cookie banner handled signals to frontend consumers.
-    if (message.name == "CookieBanner::HandledBanner") {
-      this.#notifyCookieBannerState("cookiebannerhandled");
       return undefined;
     }
 
