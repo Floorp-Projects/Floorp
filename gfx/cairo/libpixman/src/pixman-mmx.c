@@ -60,7 +60,7 @@ _mm_empty (void)
 #endif
 
 #ifdef USE_X86_MMX
-# if (defined(__SUNPRO_C) || defined(_MSC_VER) || defined(_WIN64))
+# if (defined(__SUNPRO_C) || defined(_MSC_VER) || defined(_WIN64)) || defined(__MINGW32__)
 #  include <xmmintrin.h>
 # else
 /* We have to compile with -msse to use xmmintrin.h, but that causes SSE
@@ -137,13 +137,13 @@ _mm_mulhi_pu16 (__m64 __A, __m64 __B)
  * then define USE_M64_CASTS.
  * If __m64 is a double datatype, then define USE_M64_DOUBLE.
  */
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 # define M64_MEMBER m64_u64
 #elif defined(__ICC)
 # define USE_CVT_INTRINSICS
 #elif defined(USE_LOONGSON_MMI)
 # define USE_M64_DOUBLE
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) || defined(__clang__)
 # define USE_M64_CASTS
 #elif defined(__SUNPRO_C)
 # if (__SUNPRO_C >= 0x5120) && !defined(__NOVECTORSIZE__)

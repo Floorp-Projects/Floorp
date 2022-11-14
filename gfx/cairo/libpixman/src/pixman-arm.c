@@ -246,5 +246,11 @@ _pixman_arm_get_implementations (pixman_implementation_t *imp)
 	imp = _pixman_implementation_create_arm_neon (imp);
 #endif
 
+#ifdef USE_ARM_A64_NEON
+    /* neon is a part of aarch64 */
+    if (!_pixman_disabled ("arm-neon"))
+        imp = _pixman_implementation_create_arm_neon (imp);
+#endif
+
     return imp;
 }
