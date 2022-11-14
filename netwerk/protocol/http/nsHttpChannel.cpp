@@ -1528,7 +1528,9 @@ nsresult nsHttpChannel::CallOnStartRequest() {
   // are the checks for Opaque Response Blocking to ensure that we block as many
   // cross-origin responses with CORS headers as possible that are not either
   // Javascript or media to avoid leaking their contents through side channels.
-  if (EnsureOpaqueResponseIsAllowed() == OpaqueResponseAllowed::No) {
+  bool compressedMediaAndImageDetectorStarted = false;
+  if (EnsureOpaqueResponseIsAllowed(compressedMediaAndImageDetectorStarted) ==
+      OpaqueResponseAllowed::No) {
     mChannelBlockedByOpaqueResponse = true;
     return NS_ERROR_FAILURE;
   }
@@ -1583,7 +1585,7 @@ nsresult nsHttpChannel::CallOnStartRequest() {
 
   // If unknownDecoder is not going to be launched, call
   // EnsureOpaqueResponseIsAllowedAfterSniff immediately.
-  if (!unknownDecoderStarted) {
+  if (!unknownDecoderStarted && !compressedMediaAndImageDetectorStarted) {
     auto isAllowedOrErr = EnsureOpaqueResponseIsAllowedAfterSniff();
     if (isAllowedOrErr.isErr() ||
         isAllowedOrErr.inspect() == OpaqueResponseAllowed::No) {
