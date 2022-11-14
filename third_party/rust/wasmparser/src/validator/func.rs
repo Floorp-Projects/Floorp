@@ -94,7 +94,7 @@ impl<T: WasmModuleResources> FuncValidator<T> {
         self.read_locals(&mut reader)?;
         reader.allow_memarg64(self.validator.features.memory64);
         while !reader.eof() {
-            reader.visit_operator(self)??;
+            reader.visit_operator(&mut self.visitor(reader.original_position()))??;
         }
         self.finish(reader.original_position())
     }
@@ -129,9 +129,33 @@ impl<T: WasmModuleResources> FuncValidator<T> {
     /// the operator itself are passed to this function to provide more useful
     /// error messages.
     pub fn op(&mut self, offset: usize, operator: &Operator<'_>) -> Result<()> {
-        self.validator
-            .with_resources(&self.resources)
-            .visit_operator(offset, operator)
+        self.visitor(offset).visit_operator(operator)
+    }
+
+    /// Get the operator visitor for the next operator in the function.
+    ///
+    /// The returned visitor is intended to visit just one instruction at the `offset`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use wasmparser::{WasmModuleResources, FuncValidator, FunctionBody, Result};
+    /// pub fn validate<R>(validator: &mut FuncValidator<R>, body: &FunctionBody<'_>) -> Result<()>
+    /// where R: WasmModuleResources
+    /// {
+    ///     let mut operator_reader = body.get_binary_reader();
+    ///     while !operator_reader.eof() {
+    ///         let mut visitor = validator.visitor(operator_reader.original_position());
+    ///         operator_reader.visit_operator(&mut visitor)??;
+    ///     }
+    ///     validator.finish(operator_reader.original_position())
+    /// }
+    /// ```
+    pub fn visitor<'this, 'a: 'this>(
+        &'this mut self,
+        offset: usize,
+    ) -> impl VisitOperator<'a, Output = Result<()>> + 'this {
+        self.validator.with_resources(&self.resources, offset)
     }
 
     /// Function that must be called after the last opcode has been processed.
@@ -296,7 +320,7 @@ mod tests {
             .op(
                 1,
                 &Operator::Block {
-                    ty: crate::BlockType::Empty
+                    blockty: crate::BlockType::Empty
                 }
             )
             .is_ok());
@@ -306,25 +330,4 @@ mod tests {
         assert!(v.op(2, &Operator::I32Const { value: 99 }).is_ok());
         assert_eq!(v.operand_stack_height(), 2);
     }
-}
-
-macro_rules! define_visit_operator {
-    ($(@$proposal:ident $op:ident $({ $($arg:ident: $argty:ty),* })? => $visit:ident)*) => {
-        $(
-            fn $visit(&mut self, offset: usize $($(,$arg: $argty)*)?) -> Result<()> {
-                self.validator.with_resources(&self.resources)
-                    .$visit(offset $($(,$arg)*)?)
-            }
-        )*
-    }
-}
-
-#[allow(unused_variables)]
-impl<'a, T> VisitOperator<'a> for FuncValidator<T>
-where
-    T: WasmModuleResources,
-{
-    type Output = Result<()>;
-
-    for_each_operator!(define_visit_operator);
 }

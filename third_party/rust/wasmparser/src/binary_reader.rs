@@ -867,7 +867,7 @@ impl<'a> BinaryReader<'a> {
         Ok((self.buffer[pos], val))
     }
 
-    fn read_memarg(&mut self) -> Result<MemArg> {
+    fn read_memarg(&mut self, max_align: u8) -> Result<MemArg> {
         let flags_pos = self.original_position();
         let mut flags = self.read_var_u32()?;
         let memory = if flags & (1 << 6) != 0 {
@@ -888,6 +888,7 @@ impl<'a> BinaryReader<'a> {
         };
         Ok(MemArg {
             align,
+            max_align,
             offset,
             memory,
         })
@@ -1299,18 +1300,6 @@ impl<'a> BinaryReader<'a> {
         }
     }
 
-    fn read_memarg_of_align(&mut self, max_align: u8) -> Result<MemArg> {
-        let align_pos = self.original_position();
-        let imm = self.read_memarg()?;
-        if imm.align > max_align {
-            return Err(BinaryReaderError::new(
-                "alignment must not be larger than natural",
-                align_pos,
-            ));
-        }
-        Ok(imm)
-    }
-
     #[cold]
     fn invalid_leading_byte<T>(&self, byte: u8, desc: &str) -> Result<T> {
         Err(Self::invalid_leading_byte_error(
@@ -1369,12 +1358,51 @@ impl<'a> BinaryReader<'a> {
         Ok(BlockType::FuncType(idx as u32))
     }
 
-    /// Reads the next available `Operator` and calls the respective visit method.
+    /// Visit the next available operator with the specified [`VisitOperator`] instance.
+    ///
+    /// Note that this does not implicitly propagate any additional information such as instruction
+    /// offsets. In order to do so, consider storing such data within the visitor before visiting.
     ///
     /// # Errors
     ///
-    /// If `BinaryReader` has less bytes remaining than required to parse
-    /// the `Operator`.
+    /// If `BinaryReader` has less bytes remaining than required to parse the `Operator`.
+    ///
+    /// # Examples
+    ///
+    /// Store an offset for use in diagnostics or any other purposes:
+    ///
+    /// ```
+    /// # use wasmparser::{BinaryReader, VisitOperator, Result, for_each_operator};
+    ///
+    /// pub fn dump(mut reader: BinaryReader) -> Result<()> {
+    ///     let mut visitor = Dumper { offset: 0 };
+    ///     while !reader.eof() {
+    ///         visitor.offset = reader.original_position();
+    ///         reader.visit_operator(&mut visitor)?;
+    ///     }
+    ///     Ok(())
+    /// }
+    ///
+    /// struct Dumper {
+    ///     offset: usize
+    /// }
+    ///
+    /// macro_rules! define_visit_operator {
+    ///     ($(@$proposal:ident $op:ident $({ $($arg:ident: $argty:ty),* })? => $visit:ident)*) => {
+    ///         $(
+    ///             fn $visit(&mut self $($(,$arg: $argty)*)?) -> Self::Output {
+    ///                 println!("{}: {}", self.offset, stringify!($visit));
+    ///             }
+    ///         )*
+    ///     }
+    /// }
+    ///
+    /// impl<'a> VisitOperator<'a> for Dumper {
+    ///     type Output = ();
+    ///     for_each_operator!(define_visit_operator);
+    /// }
+    ///
+    /// ```
     pub fn visit_operator<T>(&mut self, visitor: &mut T) -> Result<<T as VisitOperator<'a>>::Output>
     where
         T: VisitOperator<'a>,
@@ -1382,35 +1410,33 @@ impl<'a> BinaryReader<'a> {
         let pos = self.original_position();
         let code = self.read_u8()? as u8;
         Ok(match code {
-            0x00 => visitor.visit_unreachable(pos),
-            0x01 => visitor.visit_nop(pos),
-            0x02 => visitor.visit_block(pos, self.read_block_type()?),
-            0x03 => visitor.visit_loop(pos, self.read_block_type()?),
-            0x04 => visitor.visit_if(pos, self.read_block_type()?),
-            0x05 => visitor.visit_else(pos),
-            0x06 => visitor.visit_try(pos, self.read_block_type()?),
-            0x07 => visitor.visit_catch(pos, self.read_var_u32()?),
-            0x08 => visitor.visit_throw(pos, self.read_var_u32()?),
-            0x09 => visitor.visit_rethrow(pos, self.read_var_u32()?),
-            0x0b => visitor.visit_end(pos),
-            0x0c => visitor.visit_br(pos, self.read_var_u32()?),
-            0x0d => visitor.visit_br_if(pos, self.read_var_u32()?),
-            0x0e => visitor.visit_br_table(pos, self.read_br_table()?),
-            0x0f => visitor.visit_return(pos),
-            0x10 => visitor.visit_call(pos, self.read_var_u32()?),
+            0x00 => visitor.visit_unreachable(),
+            0x01 => visitor.visit_nop(),
+            0x02 => visitor.visit_block(self.read_block_type()?),
+            0x03 => visitor.visit_loop(self.read_block_type()?),
+            0x04 => visitor.visit_if(self.read_block_type()?),
+            0x05 => visitor.visit_else(),
+            0x06 => visitor.visit_try(self.read_block_type()?),
+            0x07 => visitor.visit_catch(self.read_var_u32()?),
+            0x08 => visitor.visit_throw(self.read_var_u32()?),
+            0x09 => visitor.visit_rethrow(self.read_var_u32()?),
+            0x0b => visitor.visit_end(),
+            0x0c => visitor.visit_br(self.read_var_u32()?),
+            0x0d => visitor.visit_br_if(self.read_var_u32()?),
+            0x0e => visitor.visit_br_table(self.read_br_table()?),
+            0x0f => visitor.visit_return(),
+            0x10 => visitor.visit_call(self.read_var_u32()?),
             0x11 => {
                 let index = self.read_var_u32()?;
                 let (table_byte, table_index) = self.read_first_byte_and_var_u32()?;
-                visitor.visit_call_indirect(pos, index, table_index, table_byte)
+                visitor.visit_call_indirect(index, table_index, table_byte)
             }
-            0x12 => visitor.visit_return_call(pos, self.read_var_u32()?),
-            0x13 => {
-                visitor.visit_return_call_indirect(pos, self.read_var_u32()?, self.read_var_u32()?)
-            }
-            0x18 => visitor.visit_delegate(pos, self.read_var_u32()?),
-            0x19 => visitor.visit_catch_all(pos),
-            0x1a => visitor.visit_drop(pos),
-            0x1b => visitor.visit_select(pos),
+            0x12 => visitor.visit_return_call(self.read_var_u32()?),
+            0x13 => visitor.visit_return_call_indirect(self.read_var_u32()?, self.read_var_u32()?),
+            0x18 => visitor.visit_delegate(self.read_var_u32()?),
+            0x19 => visitor.visit_catch_all(),
+            0x1a => visitor.visit_drop(),
+            0x1b => visitor.visit_select(),
             0x1c => {
                 let results = self.read_var_u32()?;
                 if results != 1 {
@@ -1419,187 +1445,187 @@ impl<'a> BinaryReader<'a> {
                         self.position,
                     ));
                 }
-                visitor.visit_typed_select(pos, self.read_val_type()?)
+                visitor.visit_typed_select(self.read_val_type()?)
             }
 
-            0x20 => visitor.visit_local_get(pos, self.read_var_u32()?),
-            0x21 => visitor.visit_local_set(pos, self.read_var_u32()?),
-            0x22 => visitor.visit_local_tee(pos, self.read_var_u32()?),
-            0x23 => visitor.visit_global_get(pos, self.read_var_u32()?),
-            0x24 => visitor.visit_global_set(pos, self.read_var_u32()?),
-            0x25 => visitor.visit_table_get(pos, self.read_var_u32()?),
-            0x26 => visitor.visit_table_set(pos, self.read_var_u32()?),
+            0x20 => visitor.visit_local_get(self.read_var_u32()?),
+            0x21 => visitor.visit_local_set(self.read_var_u32()?),
+            0x22 => visitor.visit_local_tee(self.read_var_u32()?),
+            0x23 => visitor.visit_global_get(self.read_var_u32()?),
+            0x24 => visitor.visit_global_set(self.read_var_u32()?),
+            0x25 => visitor.visit_table_get(self.read_var_u32()?),
+            0x26 => visitor.visit_table_set(self.read_var_u32()?),
 
-            0x28 => visitor.visit_i32_load(pos, self.read_memarg()?),
-            0x29 => visitor.visit_i64_load(pos, self.read_memarg()?),
-            0x2a => visitor.visit_f32_load(pos, self.read_memarg()?),
-            0x2b => visitor.visit_f64_load(pos, self.read_memarg()?),
-            0x2c => visitor.visit_i32_load8_s(pos, self.read_memarg()?),
-            0x2d => visitor.visit_i32_load8_u(pos, self.read_memarg()?),
-            0x2e => visitor.visit_i32_load16_s(pos, self.read_memarg()?),
-            0x2f => visitor.visit_i32_load16_u(pos, self.read_memarg()?),
-            0x30 => visitor.visit_i64_load8_s(pos, self.read_memarg()?),
-            0x31 => visitor.visit_i64_load8_u(pos, self.read_memarg()?),
-            0x32 => visitor.visit_i64_load16_s(pos, self.read_memarg()?),
-            0x33 => visitor.visit_i64_load16_u(pos, self.read_memarg()?),
-            0x34 => visitor.visit_i64_load32_s(pos, self.read_memarg()?),
-            0x35 => visitor.visit_i64_load32_u(pos, self.read_memarg()?),
-            0x36 => visitor.visit_i32_store(pos, self.read_memarg()?),
-            0x37 => visitor.visit_i64_store(pos, self.read_memarg()?),
-            0x38 => visitor.visit_f32_store(pos, self.read_memarg()?),
-            0x39 => visitor.visit_f64_store(pos, self.read_memarg()?),
-            0x3a => visitor.visit_i32_store8(pos, self.read_memarg()?),
-            0x3b => visitor.visit_i32_store16(pos, self.read_memarg()?),
-            0x3c => visitor.visit_i64_store8(pos, self.read_memarg()?),
-            0x3d => visitor.visit_i64_store16(pos, self.read_memarg()?),
-            0x3e => visitor.visit_i64_store32(pos, self.read_memarg()?),
+            0x28 => visitor.visit_i32_load(self.read_memarg(2)?),
+            0x29 => visitor.visit_i64_load(self.read_memarg(3)?),
+            0x2a => visitor.visit_f32_load(self.read_memarg(2)?),
+            0x2b => visitor.visit_f64_load(self.read_memarg(3)?),
+            0x2c => visitor.visit_i32_load8_s(self.read_memarg(0)?),
+            0x2d => visitor.visit_i32_load8_u(self.read_memarg(0)?),
+            0x2e => visitor.visit_i32_load16_s(self.read_memarg(1)?),
+            0x2f => visitor.visit_i32_load16_u(self.read_memarg(1)?),
+            0x30 => visitor.visit_i64_load8_s(self.read_memarg(0)?),
+            0x31 => visitor.visit_i64_load8_u(self.read_memarg(0)?),
+            0x32 => visitor.visit_i64_load16_s(self.read_memarg(1)?),
+            0x33 => visitor.visit_i64_load16_u(self.read_memarg(1)?),
+            0x34 => visitor.visit_i64_load32_s(self.read_memarg(2)?),
+            0x35 => visitor.visit_i64_load32_u(self.read_memarg(2)?),
+            0x36 => visitor.visit_i32_store(self.read_memarg(2)?),
+            0x37 => visitor.visit_i64_store(self.read_memarg(3)?),
+            0x38 => visitor.visit_f32_store(self.read_memarg(2)?),
+            0x39 => visitor.visit_f64_store(self.read_memarg(3)?),
+            0x3a => visitor.visit_i32_store8(self.read_memarg(0)?),
+            0x3b => visitor.visit_i32_store16(self.read_memarg(1)?),
+            0x3c => visitor.visit_i64_store8(self.read_memarg(0)?),
+            0x3d => visitor.visit_i64_store16(self.read_memarg(1)?),
+            0x3e => visitor.visit_i64_store32(self.read_memarg(2)?),
             0x3f => {
                 let (mem_byte, mem) = self.read_first_byte_and_var_u32()?;
-                visitor.visit_memory_size(pos, mem, mem_byte)
+                visitor.visit_memory_size(mem, mem_byte)
             }
             0x40 => {
                 let (mem_byte, mem) = self.read_first_byte_and_var_u32()?;
-                visitor.visit_memory_grow(pos, mem, mem_byte)
+                visitor.visit_memory_grow(mem, mem_byte)
             }
 
-            0x41 => visitor.visit_i32_const(pos, self.read_var_i32()?),
-            0x42 => visitor.visit_i64_const(pos, self.read_var_i64()?),
-            0x43 => visitor.visit_f32_const(pos, self.read_f32()?),
-            0x44 => visitor.visit_f64_const(pos, self.read_f64()?),
+            0x41 => visitor.visit_i32_const(self.read_var_i32()?),
+            0x42 => visitor.visit_i64_const(self.read_var_i64()?),
+            0x43 => visitor.visit_f32_const(self.read_f32()?),
+            0x44 => visitor.visit_f64_const(self.read_f64()?),
 
-            0x45 => visitor.visit_i32_eqz(pos),
-            0x46 => visitor.visit_i32_eq(pos),
-            0x47 => visitor.visit_i32_ne(pos),
-            0x48 => visitor.visit_i32_lt_s(pos),
-            0x49 => visitor.visit_i32_lt_u(pos),
-            0x4a => visitor.visit_i32_gt_s(pos),
-            0x4b => visitor.visit_i32_gt_u(pos),
-            0x4c => visitor.visit_i32_le_s(pos),
-            0x4d => visitor.visit_i32_le_u(pos),
-            0x4e => visitor.visit_i32_ge_s(pos),
-            0x4f => visitor.visit_i32_ge_u(pos),
-            0x50 => visitor.visit_i64_eqz(pos),
-            0x51 => visitor.visit_i64_eq(pos),
-            0x52 => visitor.visit_i64_ne(pos),
-            0x53 => visitor.visit_i64_lt_s(pos),
-            0x54 => visitor.visit_i64_lt_u(pos),
-            0x55 => visitor.visit_i64_gt_s(pos),
-            0x56 => visitor.visit_i64_gt_u(pos),
-            0x57 => visitor.visit_i64_le_s(pos),
-            0x58 => visitor.visit_i64_le_u(pos),
-            0x59 => visitor.visit_i64_ge_s(pos),
-            0x5a => visitor.visit_i64_ge_u(pos),
-            0x5b => visitor.visit_f32_eq(pos),
-            0x5c => visitor.visit_f32_ne(pos),
-            0x5d => visitor.visit_f32_lt(pos),
-            0x5e => visitor.visit_f32_gt(pos),
-            0x5f => visitor.visit_f32_le(pos),
-            0x60 => visitor.visit_f32_ge(pos),
-            0x61 => visitor.visit_f64_eq(pos),
-            0x62 => visitor.visit_f64_ne(pos),
-            0x63 => visitor.visit_f64_lt(pos),
-            0x64 => visitor.visit_f64_gt(pos),
-            0x65 => visitor.visit_f64_le(pos),
-            0x66 => visitor.visit_f64_ge(pos),
-            0x67 => visitor.visit_i32_clz(pos),
-            0x68 => visitor.visit_i32_ctz(pos),
-            0x69 => visitor.visit_i32_popcnt(pos),
-            0x6a => visitor.visit_i32_add(pos),
-            0x6b => visitor.visit_i32_sub(pos),
-            0x6c => visitor.visit_i32_mul(pos),
-            0x6d => visitor.visit_i32_div_s(pos),
-            0x6e => visitor.visit_i32_div_u(pos),
-            0x6f => visitor.visit_i32_rem_s(pos),
-            0x70 => visitor.visit_i32_rem_u(pos),
-            0x71 => visitor.visit_i32_and(pos),
-            0x72 => visitor.visit_i32_or(pos),
-            0x73 => visitor.visit_i32_xor(pos),
-            0x74 => visitor.visit_i32_shl(pos),
-            0x75 => visitor.visit_i32_shr_s(pos),
-            0x76 => visitor.visit_i32_shr_u(pos),
-            0x77 => visitor.visit_i32_rotl(pos),
-            0x78 => visitor.visit_i32_rotr(pos),
-            0x79 => visitor.visit_i64_clz(pos),
-            0x7a => visitor.visit_i64_ctz(pos),
-            0x7b => visitor.visit_i64_popcnt(pos),
-            0x7c => visitor.visit_i64_add(pos),
-            0x7d => visitor.visit_i64_sub(pos),
-            0x7e => visitor.visit_i64_mul(pos),
-            0x7f => visitor.visit_i64_div_s(pos),
-            0x80 => visitor.visit_i64_div_u(pos),
-            0x81 => visitor.visit_i64_rem_s(pos),
-            0x82 => visitor.visit_i64_rem_u(pos),
-            0x83 => visitor.visit_i64_and(pos),
-            0x84 => visitor.visit_i64_or(pos),
-            0x85 => visitor.visit_i64_xor(pos),
-            0x86 => visitor.visit_i64_shl(pos),
-            0x87 => visitor.visit_i64_shr_s(pos),
-            0x88 => visitor.visit_i64_shr_u(pos),
-            0x89 => visitor.visit_i64_rotl(pos),
-            0x8a => visitor.visit_i64_rotr(pos),
-            0x8b => visitor.visit_f32_abs(pos),
-            0x8c => visitor.visit_f32_neg(pos),
-            0x8d => visitor.visit_f32_ceil(pos),
-            0x8e => visitor.visit_f32_floor(pos),
-            0x8f => visitor.visit_f32_trunc(pos),
-            0x90 => visitor.visit_f32_nearest(pos),
-            0x91 => visitor.visit_f32_sqrt(pos),
-            0x92 => visitor.visit_f32_add(pos),
-            0x93 => visitor.visit_f32_sub(pos),
-            0x94 => visitor.visit_f32_mul(pos),
-            0x95 => visitor.visit_f32_div(pos),
-            0x96 => visitor.visit_f32_min(pos),
-            0x97 => visitor.visit_f32_max(pos),
-            0x98 => visitor.visit_f32_copysign(pos),
-            0x99 => visitor.visit_f64_abs(pos),
-            0x9a => visitor.visit_f64_neg(pos),
-            0x9b => visitor.visit_f64_ceil(pos),
-            0x9c => visitor.visit_f64_floor(pos),
-            0x9d => visitor.visit_f64_trunc(pos),
-            0x9e => visitor.visit_f64_nearest(pos),
-            0x9f => visitor.visit_f64_sqrt(pos),
-            0xa0 => visitor.visit_f64_add(pos),
-            0xa1 => visitor.visit_f64_sub(pos),
-            0xa2 => visitor.visit_f64_mul(pos),
-            0xa3 => visitor.visit_f64_div(pos),
-            0xa4 => visitor.visit_f64_min(pos),
-            0xa5 => visitor.visit_f64_max(pos),
-            0xa6 => visitor.visit_f64_copysign(pos),
-            0xa7 => visitor.visit_i32_wrap_i64(pos),
-            0xa8 => visitor.visit_i32_trunc_f32_s(pos),
-            0xa9 => visitor.visit_i32_trunc_f32_u(pos),
-            0xaa => visitor.visit_i32_trunc_f64_s(pos),
-            0xab => visitor.visit_i32_trunc_f64_u(pos),
-            0xac => visitor.visit_i64_extend_i32_s(pos),
-            0xad => visitor.visit_i64_extend_i32_u(pos),
-            0xae => visitor.visit_i64_trunc_f32_s(pos),
-            0xaf => visitor.visit_i64_trunc_f32_u(pos),
-            0xb0 => visitor.visit_i64_trunc_f64_s(pos),
-            0xb1 => visitor.visit_i64_trunc_f64_u(pos),
-            0xb2 => visitor.visit_f32_convert_i32_s(pos),
-            0xb3 => visitor.visit_f32_convert_i32_u(pos),
-            0xb4 => visitor.visit_f32_convert_i64_s(pos),
-            0xb5 => visitor.visit_f32_convert_i64_u(pos),
-            0xb6 => visitor.visit_f32_demote_f64(pos),
-            0xb7 => visitor.visit_f64_convert_i32_s(pos),
-            0xb8 => visitor.visit_f64_convert_i32_u(pos),
-            0xb9 => visitor.visit_f64_convert_i64_s(pos),
-            0xba => visitor.visit_f64_convert_i64_u(pos),
-            0xbb => visitor.visit_f64_promote_f32(pos),
-            0xbc => visitor.visit_i32_reinterpret_f32(pos),
-            0xbd => visitor.visit_i64_reinterpret_f64(pos),
-            0xbe => visitor.visit_f32_reinterpret_i32(pos),
-            0xbf => visitor.visit_f64_reinterpret_i64(pos),
+            0x45 => visitor.visit_i32_eqz(),
+            0x46 => visitor.visit_i32_eq(),
+            0x47 => visitor.visit_i32_ne(),
+            0x48 => visitor.visit_i32_lt_s(),
+            0x49 => visitor.visit_i32_lt_u(),
+            0x4a => visitor.visit_i32_gt_s(),
+            0x4b => visitor.visit_i32_gt_u(),
+            0x4c => visitor.visit_i32_le_s(),
+            0x4d => visitor.visit_i32_le_u(),
+            0x4e => visitor.visit_i32_ge_s(),
+            0x4f => visitor.visit_i32_ge_u(),
+            0x50 => visitor.visit_i64_eqz(),
+            0x51 => visitor.visit_i64_eq(),
+            0x52 => visitor.visit_i64_ne(),
+            0x53 => visitor.visit_i64_lt_s(),
+            0x54 => visitor.visit_i64_lt_u(),
+            0x55 => visitor.visit_i64_gt_s(),
+            0x56 => visitor.visit_i64_gt_u(),
+            0x57 => visitor.visit_i64_le_s(),
+            0x58 => visitor.visit_i64_le_u(),
+            0x59 => visitor.visit_i64_ge_s(),
+            0x5a => visitor.visit_i64_ge_u(),
+            0x5b => visitor.visit_f32_eq(),
+            0x5c => visitor.visit_f32_ne(),
+            0x5d => visitor.visit_f32_lt(),
+            0x5e => visitor.visit_f32_gt(),
+            0x5f => visitor.visit_f32_le(),
+            0x60 => visitor.visit_f32_ge(),
+            0x61 => visitor.visit_f64_eq(),
+            0x62 => visitor.visit_f64_ne(),
+            0x63 => visitor.visit_f64_lt(),
+            0x64 => visitor.visit_f64_gt(),
+            0x65 => visitor.visit_f64_le(),
+            0x66 => visitor.visit_f64_ge(),
+            0x67 => visitor.visit_i32_clz(),
+            0x68 => visitor.visit_i32_ctz(),
+            0x69 => visitor.visit_i32_popcnt(),
+            0x6a => visitor.visit_i32_add(),
+            0x6b => visitor.visit_i32_sub(),
+            0x6c => visitor.visit_i32_mul(),
+            0x6d => visitor.visit_i32_div_s(),
+            0x6e => visitor.visit_i32_div_u(),
+            0x6f => visitor.visit_i32_rem_s(),
+            0x70 => visitor.visit_i32_rem_u(),
+            0x71 => visitor.visit_i32_and(),
+            0x72 => visitor.visit_i32_or(),
+            0x73 => visitor.visit_i32_xor(),
+            0x74 => visitor.visit_i32_shl(),
+            0x75 => visitor.visit_i32_shr_s(),
+            0x76 => visitor.visit_i32_shr_u(),
+            0x77 => visitor.visit_i32_rotl(),
+            0x78 => visitor.visit_i32_rotr(),
+            0x79 => visitor.visit_i64_clz(),
+            0x7a => visitor.visit_i64_ctz(),
+            0x7b => visitor.visit_i64_popcnt(),
+            0x7c => visitor.visit_i64_add(),
+            0x7d => visitor.visit_i64_sub(),
+            0x7e => visitor.visit_i64_mul(),
+            0x7f => visitor.visit_i64_div_s(),
+            0x80 => visitor.visit_i64_div_u(),
+            0x81 => visitor.visit_i64_rem_s(),
+            0x82 => visitor.visit_i64_rem_u(),
+            0x83 => visitor.visit_i64_and(),
+            0x84 => visitor.visit_i64_or(),
+            0x85 => visitor.visit_i64_xor(),
+            0x86 => visitor.visit_i64_shl(),
+            0x87 => visitor.visit_i64_shr_s(),
+            0x88 => visitor.visit_i64_shr_u(),
+            0x89 => visitor.visit_i64_rotl(),
+            0x8a => visitor.visit_i64_rotr(),
+            0x8b => visitor.visit_f32_abs(),
+            0x8c => visitor.visit_f32_neg(),
+            0x8d => visitor.visit_f32_ceil(),
+            0x8e => visitor.visit_f32_floor(),
+            0x8f => visitor.visit_f32_trunc(),
+            0x90 => visitor.visit_f32_nearest(),
+            0x91 => visitor.visit_f32_sqrt(),
+            0x92 => visitor.visit_f32_add(),
+            0x93 => visitor.visit_f32_sub(),
+            0x94 => visitor.visit_f32_mul(),
+            0x95 => visitor.visit_f32_div(),
+            0x96 => visitor.visit_f32_min(),
+            0x97 => visitor.visit_f32_max(),
+            0x98 => visitor.visit_f32_copysign(),
+            0x99 => visitor.visit_f64_abs(),
+            0x9a => visitor.visit_f64_neg(),
+            0x9b => visitor.visit_f64_ceil(),
+            0x9c => visitor.visit_f64_floor(),
+            0x9d => visitor.visit_f64_trunc(),
+            0x9e => visitor.visit_f64_nearest(),
+            0x9f => visitor.visit_f64_sqrt(),
+            0xa0 => visitor.visit_f64_add(),
+            0xa1 => visitor.visit_f64_sub(),
+            0xa2 => visitor.visit_f64_mul(),
+            0xa3 => visitor.visit_f64_div(),
+            0xa4 => visitor.visit_f64_min(),
+            0xa5 => visitor.visit_f64_max(),
+            0xa6 => visitor.visit_f64_copysign(),
+            0xa7 => visitor.visit_i32_wrap_i64(),
+            0xa8 => visitor.visit_i32_trunc_f32_s(),
+            0xa9 => visitor.visit_i32_trunc_f32_u(),
+            0xaa => visitor.visit_i32_trunc_f64_s(),
+            0xab => visitor.visit_i32_trunc_f64_u(),
+            0xac => visitor.visit_i64_extend_i32_s(),
+            0xad => visitor.visit_i64_extend_i32_u(),
+            0xae => visitor.visit_i64_trunc_f32_s(),
+            0xaf => visitor.visit_i64_trunc_f32_u(),
+            0xb0 => visitor.visit_i64_trunc_f64_s(),
+            0xb1 => visitor.visit_i64_trunc_f64_u(),
+            0xb2 => visitor.visit_f32_convert_i32_s(),
+            0xb3 => visitor.visit_f32_convert_i32_u(),
+            0xb4 => visitor.visit_f32_convert_i64_s(),
+            0xb5 => visitor.visit_f32_convert_i64_u(),
+            0xb6 => visitor.visit_f32_demote_f64(),
+            0xb7 => visitor.visit_f64_convert_i32_s(),
+            0xb8 => visitor.visit_f64_convert_i32_u(),
+            0xb9 => visitor.visit_f64_convert_i64_s(),
+            0xba => visitor.visit_f64_convert_i64_u(),
+            0xbb => visitor.visit_f64_promote_f32(),
+            0xbc => visitor.visit_i32_reinterpret_f32(),
+            0xbd => visitor.visit_i64_reinterpret_f64(),
+            0xbe => visitor.visit_f32_reinterpret_i32(),
+            0xbf => visitor.visit_f64_reinterpret_i64(),
 
-            0xc0 => visitor.visit_i32_extend8_s(pos),
-            0xc1 => visitor.visit_i32_extend16_s(pos),
-            0xc2 => visitor.visit_i64_extend8_s(pos),
-            0xc3 => visitor.visit_i64_extend16_s(pos),
-            0xc4 => visitor.visit_i64_extend32_s(pos),
+            0xc0 => visitor.visit_i32_extend8_s(),
+            0xc1 => visitor.visit_i32_extend16_s(),
+            0xc2 => visitor.visit_i64_extend8_s(),
+            0xc3 => visitor.visit_i64_extend16_s(),
+            0xc4 => visitor.visit_i64_extend32_s(),
 
-            0xd0 => visitor.visit_ref_null(pos, self.read_val_type()?),
-            0xd1 => visitor.visit_ref_is_null(pos),
-            0xd2 => visitor.visit_ref_func(pos, self.read_var_u32()?),
+            0xd0 => visitor.visit_ref_null(self.read_val_type()?),
+            0xd1 => visitor.visit_ref_is_null(),
+            0xd2 => visitor.visit_ref_func(self.read_var_u32()?),
 
             0xfc => self.visit_0xfc_operator(pos, visitor)?,
             0xfd => self.visit_0xfd_operator(pos, visitor)?,
@@ -1619,60 +1645,60 @@ impl<'a> BinaryReader<'a> {
     {
         let code = self.read_var_u32()?;
         Ok(match code {
-            0x00 => visitor.visit_i32_trunc_sat_f32_s(pos),
-            0x01 => visitor.visit_i32_trunc_sat_f32_u(pos),
-            0x02 => visitor.visit_i32_trunc_sat_f64_s(pos),
-            0x03 => visitor.visit_i32_trunc_sat_f64_u(pos),
-            0x04 => visitor.visit_i64_trunc_sat_f32_s(pos),
-            0x05 => visitor.visit_i64_trunc_sat_f32_u(pos),
-            0x06 => visitor.visit_i64_trunc_sat_f64_s(pos),
-            0x07 => visitor.visit_i64_trunc_sat_f64_u(pos),
+            0x00 => visitor.visit_i32_trunc_sat_f32_s(),
+            0x01 => visitor.visit_i32_trunc_sat_f32_u(),
+            0x02 => visitor.visit_i32_trunc_sat_f64_s(),
+            0x03 => visitor.visit_i32_trunc_sat_f64_u(),
+            0x04 => visitor.visit_i64_trunc_sat_f32_s(),
+            0x05 => visitor.visit_i64_trunc_sat_f32_u(),
+            0x06 => visitor.visit_i64_trunc_sat_f64_s(),
+            0x07 => visitor.visit_i64_trunc_sat_f64_u(),
 
             0x08 => {
                 let segment = self.read_var_u32()?;
                 let mem = self.read_var_u32()?;
-                visitor.visit_memory_init(pos, segment, mem)
+                visitor.visit_memory_init(segment, mem)
             }
             0x09 => {
                 let segment = self.read_var_u32()?;
-                visitor.visit_data_drop(pos, segment)
+                visitor.visit_data_drop(segment)
             }
             0x0a => {
                 let dst = self.read_var_u32()?;
                 let src = self.read_var_u32()?;
-                visitor.visit_memory_copy(pos, dst, src)
+                visitor.visit_memory_copy(dst, src)
             }
             0x0b => {
                 let mem = self.read_var_u32()?;
-                visitor.visit_memory_fill(pos, mem)
+                visitor.visit_memory_fill(mem)
             }
             0x0c => {
                 let segment = self.read_var_u32()?;
                 let table = self.read_var_u32()?;
-                visitor.visit_table_init(pos, segment, table)
+                visitor.visit_table_init(segment, table)
             }
             0x0d => {
                 let segment = self.read_var_u32()?;
-                visitor.visit_elem_drop(pos, segment)
+                visitor.visit_elem_drop(segment)
             }
             0x0e => {
                 let dst_table = self.read_var_u32()?;
                 let src_table = self.read_var_u32()?;
-                visitor.visit_table_copy(pos, dst_table, src_table)
+                visitor.visit_table_copy(dst_table, src_table)
             }
 
             0x0f => {
                 let table = self.read_var_u32()?;
-                visitor.visit_table_grow(pos, table)
+                visitor.visit_table_grow(table)
             }
             0x10 => {
                 let table = self.read_var_u32()?;
-                visitor.visit_table_size(pos, table)
+                visitor.visit_table_size(table)
             }
 
             0x11 => {
                 let table = self.read_var_u32()?;
-                visitor.visit_table_fill(pos, table)
+                visitor.visit_table_fill(table)
             }
 
             _ => bail!(pos, "unknown 0xfc subopcode: 0x{code:x}"),
@@ -1689,308 +1715,308 @@ impl<'a> BinaryReader<'a> {
     {
         let code = self.read_var_u32()?;
         Ok(match code {
-            0x00 => visitor.visit_v128_load(pos, self.read_memarg()?),
-            0x01 => visitor.visit_v128_load8x8_s(pos, self.read_memarg_of_align(3)?),
-            0x02 => visitor.visit_v128_load8x8_u(pos, self.read_memarg_of_align(3)?),
-            0x03 => visitor.visit_v128_load16x4_s(pos, self.read_memarg_of_align(3)?),
-            0x04 => visitor.visit_v128_load16x4_u(pos, self.read_memarg_of_align(3)?),
-            0x05 => visitor.visit_v128_load32x2_s(pos, self.read_memarg_of_align(3)?),
-            0x06 => visitor.visit_v128_load32x2_u(pos, self.read_memarg_of_align(3)?),
-            0x07 => visitor.visit_v128_load8_splat(pos, self.read_memarg_of_align(0)?),
-            0x08 => visitor.visit_v128_load16_splat(pos, self.read_memarg_of_align(1)?),
-            0x09 => visitor.visit_v128_load32_splat(pos, self.read_memarg_of_align(2)?),
-            0x0a => visitor.visit_v128_load64_splat(pos, self.read_memarg_of_align(3)?),
+            0x00 => visitor.visit_v128_load(self.read_memarg(4)?),
+            0x01 => visitor.visit_v128_load8x8_s(self.read_memarg(3)?),
+            0x02 => visitor.visit_v128_load8x8_u(self.read_memarg(3)?),
+            0x03 => visitor.visit_v128_load16x4_s(self.read_memarg(3)?),
+            0x04 => visitor.visit_v128_load16x4_u(self.read_memarg(3)?),
+            0x05 => visitor.visit_v128_load32x2_s(self.read_memarg(3)?),
+            0x06 => visitor.visit_v128_load32x2_u(self.read_memarg(3)?),
+            0x07 => visitor.visit_v128_load8_splat(self.read_memarg(0)?),
+            0x08 => visitor.visit_v128_load16_splat(self.read_memarg(1)?),
+            0x09 => visitor.visit_v128_load32_splat(self.read_memarg(2)?),
+            0x0a => visitor.visit_v128_load64_splat(self.read_memarg(3)?),
 
-            0x0b => visitor.visit_v128_store(pos, self.read_memarg()?),
-            0x0c => visitor.visit_v128_const(pos, self.read_v128()?),
+            0x0b => visitor.visit_v128_store(self.read_memarg(4)?),
+            0x0c => visitor.visit_v128_const(self.read_v128()?),
             0x0d => {
                 let mut lanes: [u8; 16] = [0; 16];
                 for lane in &mut lanes {
                     *lane = self.read_lane_index(32)?
                 }
-                visitor.visit_i8x16_shuffle(pos, lanes)
+                visitor.visit_i8x16_shuffle(lanes)
             }
 
-            0x0e => visitor.visit_i8x16_swizzle(pos),
-            0x0f => visitor.visit_i8x16_splat(pos),
-            0x10 => visitor.visit_i16x8_splat(pos),
-            0x11 => visitor.visit_i32x4_splat(pos),
-            0x12 => visitor.visit_i64x2_splat(pos),
-            0x13 => visitor.visit_f32x4_splat(pos),
-            0x14 => visitor.visit_f64x2_splat(pos),
+            0x0e => visitor.visit_i8x16_swizzle(),
+            0x0f => visitor.visit_i8x16_splat(),
+            0x10 => visitor.visit_i16x8_splat(),
+            0x11 => visitor.visit_i32x4_splat(),
+            0x12 => visitor.visit_i64x2_splat(),
+            0x13 => visitor.visit_f32x4_splat(),
+            0x14 => visitor.visit_f64x2_splat(),
 
-            0x15 => visitor.visit_i8x16_extract_lane_s(pos, self.read_lane_index(16)?),
-            0x16 => visitor.visit_i8x16_extract_lane_u(pos, self.read_lane_index(16)?),
-            0x17 => visitor.visit_i8x16_replace_lane(pos, self.read_lane_index(16)?),
-            0x18 => visitor.visit_i16x8_extract_lane_s(pos, self.read_lane_index(8)?),
-            0x19 => visitor.visit_i16x8_extract_lane_u(pos, self.read_lane_index(8)?),
-            0x1a => visitor.visit_i16x8_replace_lane(pos, self.read_lane_index(8)?),
-            0x1b => visitor.visit_i32x4_extract_lane(pos, self.read_lane_index(4)?),
+            0x15 => visitor.visit_i8x16_extract_lane_s(self.read_lane_index(16)?),
+            0x16 => visitor.visit_i8x16_extract_lane_u(self.read_lane_index(16)?),
+            0x17 => visitor.visit_i8x16_replace_lane(self.read_lane_index(16)?),
+            0x18 => visitor.visit_i16x8_extract_lane_s(self.read_lane_index(8)?),
+            0x19 => visitor.visit_i16x8_extract_lane_u(self.read_lane_index(8)?),
+            0x1a => visitor.visit_i16x8_replace_lane(self.read_lane_index(8)?),
+            0x1b => visitor.visit_i32x4_extract_lane(self.read_lane_index(4)?),
 
-            0x1c => visitor.visit_i32x4_replace_lane(pos, self.read_lane_index(4)?),
-            0x1d => visitor.visit_i64x2_extract_lane(pos, self.read_lane_index(2)?),
-            0x1e => visitor.visit_i64x2_replace_lane(pos, self.read_lane_index(2)?),
-            0x1f => visitor.visit_f32x4_extract_lane(pos, self.read_lane_index(4)?),
-            0x20 => visitor.visit_f32x4_replace_lane(pos, self.read_lane_index(4)?),
-            0x21 => visitor.visit_f64x2_extract_lane(pos, self.read_lane_index(2)?),
-            0x22 => visitor.visit_f64x2_replace_lane(pos, self.read_lane_index(2)?),
+            0x1c => visitor.visit_i32x4_replace_lane(self.read_lane_index(4)?),
+            0x1d => visitor.visit_i64x2_extract_lane(self.read_lane_index(2)?),
+            0x1e => visitor.visit_i64x2_replace_lane(self.read_lane_index(2)?),
+            0x1f => visitor.visit_f32x4_extract_lane(self.read_lane_index(4)?),
+            0x20 => visitor.visit_f32x4_replace_lane(self.read_lane_index(4)?),
+            0x21 => visitor.visit_f64x2_extract_lane(self.read_lane_index(2)?),
+            0x22 => visitor.visit_f64x2_replace_lane(self.read_lane_index(2)?),
 
-            0x23 => visitor.visit_i8x16_eq(pos),
-            0x24 => visitor.visit_i8x16_ne(pos),
-            0x25 => visitor.visit_i8x16_lt_s(pos),
-            0x26 => visitor.visit_i8x16_lt_u(pos),
-            0x27 => visitor.visit_i8x16_gt_s(pos),
-            0x28 => visitor.visit_i8x16_gt_u(pos),
-            0x29 => visitor.visit_i8x16_le_s(pos),
-            0x2a => visitor.visit_i8x16_le_u(pos),
-            0x2b => visitor.visit_i8x16_ge_s(pos),
-            0x2c => visitor.visit_i8x16_ge_u(pos),
-            0x2d => visitor.visit_i16x8_eq(pos),
-            0x2e => visitor.visit_i16x8_ne(pos),
-            0x2f => visitor.visit_i16x8_lt_s(pos),
-            0x30 => visitor.visit_i16x8_lt_u(pos),
-            0x31 => visitor.visit_i16x8_gt_s(pos),
-            0x32 => visitor.visit_i16x8_gt_u(pos),
-            0x33 => visitor.visit_i16x8_le_s(pos),
-            0x34 => visitor.visit_i16x8_le_u(pos),
-            0x35 => visitor.visit_i16x8_ge_s(pos),
-            0x36 => visitor.visit_i16x8_ge_u(pos),
-            0x37 => visitor.visit_i32x4_eq(pos),
-            0x38 => visitor.visit_i32x4_ne(pos),
-            0x39 => visitor.visit_i32x4_lt_s(pos),
-            0x3a => visitor.visit_i32x4_lt_u(pos),
-            0x3b => visitor.visit_i32x4_gt_s(pos),
-            0x3c => visitor.visit_i32x4_gt_u(pos),
-            0x3d => visitor.visit_i32x4_le_s(pos),
-            0x3e => visitor.visit_i32x4_le_u(pos),
-            0x3f => visitor.visit_i32x4_ge_s(pos),
-            0x40 => visitor.visit_i32x4_ge_u(pos),
-            0x41 => visitor.visit_f32x4_eq(pos),
-            0x42 => visitor.visit_f32x4_ne(pos),
-            0x43 => visitor.visit_f32x4_lt(pos),
-            0x44 => visitor.visit_f32x4_gt(pos),
-            0x45 => visitor.visit_f32x4_le(pos),
-            0x46 => visitor.visit_f32x4_ge(pos),
-            0x47 => visitor.visit_f64x2_eq(pos),
-            0x48 => visitor.visit_f64x2_ne(pos),
-            0x49 => visitor.visit_f64x2_lt(pos),
-            0x4a => visitor.visit_f64x2_gt(pos),
-            0x4b => visitor.visit_f64x2_le(pos),
-            0x4c => visitor.visit_f64x2_ge(pos),
-            0x4d => visitor.visit_v128_not(pos),
-            0x4e => visitor.visit_v128_and(pos),
-            0x4f => visitor.visit_v128_andnot(pos),
-            0x50 => visitor.visit_v128_or(pos),
-            0x51 => visitor.visit_v128_xor(pos),
-            0x52 => visitor.visit_v128_bitselect(pos),
-            0x53 => visitor.visit_v128_any_true(pos),
+            0x23 => visitor.visit_i8x16_eq(),
+            0x24 => visitor.visit_i8x16_ne(),
+            0x25 => visitor.visit_i8x16_lt_s(),
+            0x26 => visitor.visit_i8x16_lt_u(),
+            0x27 => visitor.visit_i8x16_gt_s(),
+            0x28 => visitor.visit_i8x16_gt_u(),
+            0x29 => visitor.visit_i8x16_le_s(),
+            0x2a => visitor.visit_i8x16_le_u(),
+            0x2b => visitor.visit_i8x16_ge_s(),
+            0x2c => visitor.visit_i8x16_ge_u(),
+            0x2d => visitor.visit_i16x8_eq(),
+            0x2e => visitor.visit_i16x8_ne(),
+            0x2f => visitor.visit_i16x8_lt_s(),
+            0x30 => visitor.visit_i16x8_lt_u(),
+            0x31 => visitor.visit_i16x8_gt_s(),
+            0x32 => visitor.visit_i16x8_gt_u(),
+            0x33 => visitor.visit_i16x8_le_s(),
+            0x34 => visitor.visit_i16x8_le_u(),
+            0x35 => visitor.visit_i16x8_ge_s(),
+            0x36 => visitor.visit_i16x8_ge_u(),
+            0x37 => visitor.visit_i32x4_eq(),
+            0x38 => visitor.visit_i32x4_ne(),
+            0x39 => visitor.visit_i32x4_lt_s(),
+            0x3a => visitor.visit_i32x4_lt_u(),
+            0x3b => visitor.visit_i32x4_gt_s(),
+            0x3c => visitor.visit_i32x4_gt_u(),
+            0x3d => visitor.visit_i32x4_le_s(),
+            0x3e => visitor.visit_i32x4_le_u(),
+            0x3f => visitor.visit_i32x4_ge_s(),
+            0x40 => visitor.visit_i32x4_ge_u(),
+            0x41 => visitor.visit_f32x4_eq(),
+            0x42 => visitor.visit_f32x4_ne(),
+            0x43 => visitor.visit_f32x4_lt(),
+            0x44 => visitor.visit_f32x4_gt(),
+            0x45 => visitor.visit_f32x4_le(),
+            0x46 => visitor.visit_f32x4_ge(),
+            0x47 => visitor.visit_f64x2_eq(),
+            0x48 => visitor.visit_f64x2_ne(),
+            0x49 => visitor.visit_f64x2_lt(),
+            0x4a => visitor.visit_f64x2_gt(),
+            0x4b => visitor.visit_f64x2_le(),
+            0x4c => visitor.visit_f64x2_ge(),
+            0x4d => visitor.visit_v128_not(),
+            0x4e => visitor.visit_v128_and(),
+            0x4f => visitor.visit_v128_andnot(),
+            0x50 => visitor.visit_v128_or(),
+            0x51 => visitor.visit_v128_xor(),
+            0x52 => visitor.visit_v128_bitselect(),
+            0x53 => visitor.visit_v128_any_true(),
 
             0x54 => {
-                let memarg = self.read_memarg()?;
+                let memarg = self.read_memarg(0)?;
                 let lane = self.read_lane_index(16)?;
-                visitor.visit_v128_load8_lane(pos, memarg, lane)
+                visitor.visit_v128_load8_lane(memarg, lane)
             }
             0x55 => {
-                let memarg = self.read_memarg()?;
+                let memarg = self.read_memarg(1)?;
                 let lane = self.read_lane_index(8)?;
-                visitor.visit_v128_load16_lane(pos, memarg, lane)
+                visitor.visit_v128_load16_lane(memarg, lane)
             }
             0x56 => {
-                let memarg = self.read_memarg()?;
+                let memarg = self.read_memarg(2)?;
                 let lane = self.read_lane_index(4)?;
-                visitor.visit_v128_load32_lane(pos, memarg, lane)
+                visitor.visit_v128_load32_lane(memarg, lane)
             }
             0x57 => {
-                let memarg = self.read_memarg()?;
+                let memarg = self.read_memarg(3)?;
                 let lane = self.read_lane_index(2)?;
-                visitor.visit_v128_load64_lane(pos, memarg, lane)
+                visitor.visit_v128_load64_lane(memarg, lane)
             }
             0x58 => {
-                let memarg = self.read_memarg()?;
+                let memarg = self.read_memarg(0)?;
                 let lane = self.read_lane_index(16)?;
-                visitor.visit_v128_store8_lane(pos, memarg, lane)
+                visitor.visit_v128_store8_lane(memarg, lane)
             }
             0x59 => {
-                let memarg = self.read_memarg()?;
+                let memarg = self.read_memarg(1)?;
                 let lane = self.read_lane_index(8)?;
-                visitor.visit_v128_store16_lane(pos, memarg, lane)
+                visitor.visit_v128_store16_lane(memarg, lane)
             }
             0x5a => {
-                let memarg = self.read_memarg()?;
+                let memarg = self.read_memarg(2)?;
                 let lane = self.read_lane_index(4)?;
-                visitor.visit_v128_store32_lane(pos, memarg, lane)
+                visitor.visit_v128_store32_lane(memarg, lane)
             }
             0x5b => {
-                let memarg = self.read_memarg()?;
+                let memarg = self.read_memarg(3)?;
                 let lane = self.read_lane_index(2)?;
-                visitor.visit_v128_store64_lane(pos, memarg, lane)
+                visitor.visit_v128_store64_lane(memarg, lane)
             }
 
-            0x5c => visitor.visit_v128_load32_zero(pos, self.read_memarg_of_align(2)?),
-            0x5d => visitor.visit_v128_load64_zero(pos, self.read_memarg_of_align(3)?),
-            0x5e => visitor.visit_f32x4_demote_f64x2_zero(pos),
-            0x5f => visitor.visit_f64x2_promote_low_f32x4(pos),
-            0x60 => visitor.visit_i8x16_abs(pos),
-            0x61 => visitor.visit_i8x16_neg(pos),
-            0x62 => visitor.visit_i8x16_popcnt(pos),
-            0x63 => visitor.visit_i8x16_all_true(pos),
-            0x64 => visitor.visit_i8x16_bitmask(pos),
-            0x65 => visitor.visit_i8x16_narrow_i16x8_s(pos),
-            0x66 => visitor.visit_i8x16_narrow_i16x8_u(pos),
-            0x67 => visitor.visit_f32x4_ceil(pos),
-            0x68 => visitor.visit_f32x4_floor(pos),
-            0x69 => visitor.visit_f32x4_trunc(pos),
-            0x6a => visitor.visit_f32x4_nearest(pos),
-            0x6b => visitor.visit_i8x16_shl(pos),
-            0x6c => visitor.visit_i8x16_shr_s(pos),
-            0x6d => visitor.visit_i8x16_shr_u(pos),
-            0x6e => visitor.visit_i8x16_add(pos),
-            0x6f => visitor.visit_i8x16_add_sat_s(pos),
-            0x70 => visitor.visit_i8x16_add_sat_u(pos),
-            0x71 => visitor.visit_i8x16_sub(pos),
-            0x72 => visitor.visit_i8x16_sub_sat_s(pos),
-            0x73 => visitor.visit_i8x16_sub_sat_u(pos),
-            0x74 => visitor.visit_f64x2_ceil(pos),
-            0x75 => visitor.visit_f64x2_floor(pos),
-            0x76 => visitor.visit_i8x16_min_s(pos),
-            0x77 => visitor.visit_i8x16_min_u(pos),
-            0x78 => visitor.visit_i8x16_max_s(pos),
-            0x79 => visitor.visit_i8x16_max_u(pos),
-            0x7a => visitor.visit_f64x2_trunc(pos),
-            0x7b => visitor.visit_i8x16_avgr_u(pos),
-            0x7c => visitor.visit_i16x8_extadd_pairwise_i8x16_s(pos),
-            0x7d => visitor.visit_i16x8_extadd_pairwise_i8x16_u(pos),
-            0x7e => visitor.visit_i32x4_extadd_pairwise_i16x8_s(pos),
-            0x7f => visitor.visit_i32x4_extadd_pairwise_i16x8_u(pos),
-            0x80 => visitor.visit_i16x8_abs(pos),
-            0x81 => visitor.visit_i16x8_neg(pos),
-            0x82 => visitor.visit_i16x8_q15mulr_sat_s(pos),
-            0x83 => visitor.visit_i16x8_all_true(pos),
-            0x84 => visitor.visit_i16x8_bitmask(pos),
-            0x85 => visitor.visit_i16x8_narrow_i32x4_s(pos),
-            0x86 => visitor.visit_i16x8_narrow_i32x4_u(pos),
-            0x87 => visitor.visit_i16x8_extend_low_i8x16_s(pos),
-            0x88 => visitor.visit_i16x8_extend_high_i8x16_s(pos),
-            0x89 => visitor.visit_i16x8_extend_low_i8x16_u(pos),
-            0x8a => visitor.visit_i16x8_extend_high_i8x16_u(pos),
-            0x8b => visitor.visit_i16x8_shl(pos),
-            0x8c => visitor.visit_i16x8_shr_s(pos),
-            0x8d => visitor.visit_i16x8_shr_u(pos),
-            0x8e => visitor.visit_i16x8_add(pos),
-            0x8f => visitor.visit_i16x8_add_sat_s(pos),
-            0x90 => visitor.visit_i16x8_add_sat_u(pos),
-            0x91 => visitor.visit_i16x8_sub(pos),
-            0x92 => visitor.visit_i16x8_sub_sat_s(pos),
-            0x93 => visitor.visit_i16x8_sub_sat_u(pos),
-            0x94 => visitor.visit_f64x2_nearest(pos),
-            0x95 => visitor.visit_i16x8_mul(pos),
-            0x96 => visitor.visit_i16x8_min_s(pos),
-            0x97 => visitor.visit_i16x8_min_u(pos),
-            0x98 => visitor.visit_i16x8_max_s(pos),
-            0x99 => visitor.visit_i16x8_max_u(pos),
-            0x9b => visitor.visit_i16x8_avgr_u(pos),
-            0x9c => visitor.visit_i16x8_extmul_low_i8x16_s(pos),
-            0x9d => visitor.visit_i16x8_extmul_high_i8x16_s(pos),
-            0x9e => visitor.visit_i16x8_extmul_low_i8x16_u(pos),
-            0x9f => visitor.visit_i16x8_extmul_high_i8x16_u(pos),
-            0xa0 => visitor.visit_i32x4_abs(pos),
-            0xa1 => visitor.visit_i32x4_neg(pos),
-            0xa3 => visitor.visit_i32x4_all_true(pos),
-            0xa4 => visitor.visit_i32x4_bitmask(pos),
-            0xa7 => visitor.visit_i32x4_extend_low_i16x8_s(pos),
-            0xa8 => visitor.visit_i32x4_extend_high_i16x8_s(pos),
-            0xa9 => visitor.visit_i32x4_extend_low_i16x8_u(pos),
-            0xaa => visitor.visit_i32x4_extend_high_i16x8_u(pos),
-            0xab => visitor.visit_i32x4_shl(pos),
-            0xac => visitor.visit_i32x4_shr_s(pos),
-            0xad => visitor.visit_i32x4_shr_u(pos),
-            0xae => visitor.visit_i32x4_add(pos),
-            0xb1 => visitor.visit_i32x4_sub(pos),
-            0xb5 => visitor.visit_i32x4_mul(pos),
-            0xb6 => visitor.visit_i32x4_min_s(pos),
-            0xb7 => visitor.visit_i32x4_min_u(pos),
-            0xb8 => visitor.visit_i32x4_max_s(pos),
-            0xb9 => visitor.visit_i32x4_max_u(pos),
-            0xba => visitor.visit_i32x4_dot_i16x8_s(pos),
-            0xbc => visitor.visit_i32x4_extmul_low_i16x8_s(pos),
-            0xbd => visitor.visit_i32x4_extmul_high_i16x8_s(pos),
-            0xbe => visitor.visit_i32x4_extmul_low_i16x8_u(pos),
-            0xbf => visitor.visit_i32x4_extmul_high_i16x8_u(pos),
-            0xc0 => visitor.visit_i64x2_abs(pos),
-            0xc1 => visitor.visit_i64x2_neg(pos),
-            0xc3 => visitor.visit_i64x2_all_true(pos),
-            0xc4 => visitor.visit_i64x2_bitmask(pos),
-            0xc7 => visitor.visit_i64x2_extend_low_i32x4_s(pos),
-            0xc8 => visitor.visit_i64x2_extend_high_i32x4_s(pos),
-            0xc9 => visitor.visit_i64x2_extend_low_i32x4_u(pos),
-            0xca => visitor.visit_i64x2_extend_high_i32x4_u(pos),
-            0xcb => visitor.visit_i64x2_shl(pos),
-            0xcc => visitor.visit_i64x2_shr_s(pos),
-            0xcd => visitor.visit_i64x2_shr_u(pos),
-            0xce => visitor.visit_i64x2_add(pos),
-            0xd1 => visitor.visit_i64x2_sub(pos),
-            0xd5 => visitor.visit_i64x2_mul(pos),
-            0xd6 => visitor.visit_i64x2_eq(pos),
-            0xd7 => visitor.visit_i64x2_ne(pos),
-            0xd8 => visitor.visit_i64x2_lt_s(pos),
-            0xd9 => visitor.visit_i64x2_gt_s(pos),
-            0xda => visitor.visit_i64x2_le_s(pos),
-            0xdb => visitor.visit_i64x2_ge_s(pos),
-            0xdc => visitor.visit_i64x2_extmul_low_i32x4_s(pos),
-            0xdd => visitor.visit_i64x2_extmul_high_i32x4_s(pos),
-            0xde => visitor.visit_i64x2_extmul_low_i32x4_u(pos),
-            0xdf => visitor.visit_i64x2_extmul_high_i32x4_u(pos),
-            0xe0 => visitor.visit_f32x4_abs(pos),
-            0xe1 => visitor.visit_f32x4_neg(pos),
-            0xe3 => visitor.visit_f32x4_sqrt(pos),
-            0xe4 => visitor.visit_f32x4_add(pos),
-            0xe5 => visitor.visit_f32x4_sub(pos),
-            0xe6 => visitor.visit_f32x4_mul(pos),
-            0xe7 => visitor.visit_f32x4_div(pos),
-            0xe8 => visitor.visit_f32x4_min(pos),
-            0xe9 => visitor.visit_f32x4_max(pos),
-            0xea => visitor.visit_f32x4_pmin(pos),
-            0xeb => visitor.visit_f32x4_pmax(pos),
-            0xec => visitor.visit_f64x2_abs(pos),
-            0xed => visitor.visit_f64x2_neg(pos),
-            0xef => visitor.visit_f64x2_sqrt(pos),
-            0xf0 => visitor.visit_f64x2_add(pos),
-            0xf1 => visitor.visit_f64x2_sub(pos),
-            0xf2 => visitor.visit_f64x2_mul(pos),
-            0xf3 => visitor.visit_f64x2_div(pos),
-            0xf4 => visitor.visit_f64x2_min(pos),
-            0xf5 => visitor.visit_f64x2_max(pos),
-            0xf6 => visitor.visit_f64x2_pmin(pos),
-            0xf7 => visitor.visit_f64x2_pmax(pos),
-            0xf8 => visitor.visit_i32x4_trunc_sat_f32x4_s(pos),
-            0xf9 => visitor.visit_i32x4_trunc_sat_f32x4_u(pos),
-            0xfa => visitor.visit_f32x4_convert_i32x4_s(pos),
-            0xfb => visitor.visit_f32x4_convert_i32x4_u(pos),
-            0xfc => visitor.visit_i32x4_trunc_sat_f64x2_s_zero(pos),
-            0xfd => visitor.visit_i32x4_trunc_sat_f64x2_u_zero(pos),
-            0xfe => visitor.visit_f64x2_convert_low_i32x4_s(pos),
-            0xff => visitor.visit_f64x2_convert_low_i32x4_u(pos),
-            0x100 => visitor.visit_i8x16_relaxed_swizzle(pos),
-            0x101 => visitor.visit_i32x4_relaxed_trunc_sat_f32x4_s(pos),
-            0x102 => visitor.visit_i32x4_relaxed_trunc_sat_f32x4_u(pos),
-            0x103 => visitor.visit_i32x4_relaxed_trunc_sat_f64x2_s_zero(pos),
-            0x104 => visitor.visit_i32x4_relaxed_trunc_sat_f64x2_u_zero(pos),
-            0x105 => visitor.visit_f32x4_relaxed_fma(pos),
-            0x106 => visitor.visit_f32x4_relaxed_fnma(pos),
-            0x107 => visitor.visit_f64x2_relaxed_fma(pos),
-            0x108 => visitor.visit_f64x2_relaxed_fnma(pos),
-            0x109 => visitor.visit_i8x16_relaxed_laneselect(pos),
-            0x10a => visitor.visit_i16x8_relaxed_laneselect(pos),
-            0x10b => visitor.visit_i32x4_relaxed_laneselect(pos),
-            0x10c => visitor.visit_i64x2_relaxed_laneselect(pos),
-            0x10d => visitor.visit_f32x4_relaxed_min(pos),
-            0x10e => visitor.visit_f32x4_relaxed_max(pos),
-            0x10f => visitor.visit_f64x2_relaxed_min(pos),
-            0x110 => visitor.visit_f64x2_relaxed_max(pos),
-            0x111 => visitor.visit_i16x8_relaxed_q15mulr_s(pos),
-            0x112 => visitor.visit_i16x8_dot_i8x16_i7x16_s(pos),
-            0x113 => visitor.visit_i32x4_dot_i8x16_i7x16_add_s(pos),
-            0x114 => visitor.visit_f32x4_relaxed_dot_bf16x8_add_f32x4(pos),
+            0x5c => visitor.visit_v128_load32_zero(self.read_memarg(2)?),
+            0x5d => visitor.visit_v128_load64_zero(self.read_memarg(3)?),
+            0x5e => visitor.visit_f32x4_demote_f64x2_zero(),
+            0x5f => visitor.visit_f64x2_promote_low_f32x4(),
+            0x60 => visitor.visit_i8x16_abs(),
+            0x61 => visitor.visit_i8x16_neg(),
+            0x62 => visitor.visit_i8x16_popcnt(),
+            0x63 => visitor.visit_i8x16_all_true(),
+            0x64 => visitor.visit_i8x16_bitmask(),
+            0x65 => visitor.visit_i8x16_narrow_i16x8_s(),
+            0x66 => visitor.visit_i8x16_narrow_i16x8_u(),
+            0x67 => visitor.visit_f32x4_ceil(),
+            0x68 => visitor.visit_f32x4_floor(),
+            0x69 => visitor.visit_f32x4_trunc(),
+            0x6a => visitor.visit_f32x4_nearest(),
+            0x6b => visitor.visit_i8x16_shl(),
+            0x6c => visitor.visit_i8x16_shr_s(),
+            0x6d => visitor.visit_i8x16_shr_u(),
+            0x6e => visitor.visit_i8x16_add(),
+            0x6f => visitor.visit_i8x16_add_sat_s(),
+            0x70 => visitor.visit_i8x16_add_sat_u(),
+            0x71 => visitor.visit_i8x16_sub(),
+            0x72 => visitor.visit_i8x16_sub_sat_s(),
+            0x73 => visitor.visit_i8x16_sub_sat_u(),
+            0x74 => visitor.visit_f64x2_ceil(),
+            0x75 => visitor.visit_f64x2_floor(),
+            0x76 => visitor.visit_i8x16_min_s(),
+            0x77 => visitor.visit_i8x16_min_u(),
+            0x78 => visitor.visit_i8x16_max_s(),
+            0x79 => visitor.visit_i8x16_max_u(),
+            0x7a => visitor.visit_f64x2_trunc(),
+            0x7b => visitor.visit_i8x16_avgr_u(),
+            0x7c => visitor.visit_i16x8_extadd_pairwise_i8x16_s(),
+            0x7d => visitor.visit_i16x8_extadd_pairwise_i8x16_u(),
+            0x7e => visitor.visit_i32x4_extadd_pairwise_i16x8_s(),
+            0x7f => visitor.visit_i32x4_extadd_pairwise_i16x8_u(),
+            0x80 => visitor.visit_i16x8_abs(),
+            0x81 => visitor.visit_i16x8_neg(),
+            0x82 => visitor.visit_i16x8_q15mulr_sat_s(),
+            0x83 => visitor.visit_i16x8_all_true(),
+            0x84 => visitor.visit_i16x8_bitmask(),
+            0x85 => visitor.visit_i16x8_narrow_i32x4_s(),
+            0x86 => visitor.visit_i16x8_narrow_i32x4_u(),
+            0x87 => visitor.visit_i16x8_extend_low_i8x16_s(),
+            0x88 => visitor.visit_i16x8_extend_high_i8x16_s(),
+            0x89 => visitor.visit_i16x8_extend_low_i8x16_u(),
+            0x8a => visitor.visit_i16x8_extend_high_i8x16_u(),
+            0x8b => visitor.visit_i16x8_shl(),
+            0x8c => visitor.visit_i16x8_shr_s(),
+            0x8d => visitor.visit_i16x8_shr_u(),
+            0x8e => visitor.visit_i16x8_add(),
+            0x8f => visitor.visit_i16x8_add_sat_s(),
+            0x90 => visitor.visit_i16x8_add_sat_u(),
+            0x91 => visitor.visit_i16x8_sub(),
+            0x92 => visitor.visit_i16x8_sub_sat_s(),
+            0x93 => visitor.visit_i16x8_sub_sat_u(),
+            0x94 => visitor.visit_f64x2_nearest(),
+            0x95 => visitor.visit_i16x8_mul(),
+            0x96 => visitor.visit_i16x8_min_s(),
+            0x97 => visitor.visit_i16x8_min_u(),
+            0x98 => visitor.visit_i16x8_max_s(),
+            0x99 => visitor.visit_i16x8_max_u(),
+            0x9b => visitor.visit_i16x8_avgr_u(),
+            0x9c => visitor.visit_i16x8_extmul_low_i8x16_s(),
+            0x9d => visitor.visit_i16x8_extmul_high_i8x16_s(),
+            0x9e => visitor.visit_i16x8_extmul_low_i8x16_u(),
+            0x9f => visitor.visit_i16x8_extmul_high_i8x16_u(),
+            0xa0 => visitor.visit_i32x4_abs(),
+            0xa1 => visitor.visit_i32x4_neg(),
+            0xa3 => visitor.visit_i32x4_all_true(),
+            0xa4 => visitor.visit_i32x4_bitmask(),
+            0xa7 => visitor.visit_i32x4_extend_low_i16x8_s(),
+            0xa8 => visitor.visit_i32x4_extend_high_i16x8_s(),
+            0xa9 => visitor.visit_i32x4_extend_low_i16x8_u(),
+            0xaa => visitor.visit_i32x4_extend_high_i16x8_u(),
+            0xab => visitor.visit_i32x4_shl(),
+            0xac => visitor.visit_i32x4_shr_s(),
+            0xad => visitor.visit_i32x4_shr_u(),
+            0xae => visitor.visit_i32x4_add(),
+            0xb1 => visitor.visit_i32x4_sub(),
+            0xb5 => visitor.visit_i32x4_mul(),
+            0xb6 => visitor.visit_i32x4_min_s(),
+            0xb7 => visitor.visit_i32x4_min_u(),
+            0xb8 => visitor.visit_i32x4_max_s(),
+            0xb9 => visitor.visit_i32x4_max_u(),
+            0xba => visitor.visit_i32x4_dot_i16x8_s(),
+            0xbc => visitor.visit_i32x4_extmul_low_i16x8_s(),
+            0xbd => visitor.visit_i32x4_extmul_high_i16x8_s(),
+            0xbe => visitor.visit_i32x4_extmul_low_i16x8_u(),
+            0xbf => visitor.visit_i32x4_extmul_high_i16x8_u(),
+            0xc0 => visitor.visit_i64x2_abs(),
+            0xc1 => visitor.visit_i64x2_neg(),
+            0xc3 => visitor.visit_i64x2_all_true(),
+            0xc4 => visitor.visit_i64x2_bitmask(),
+            0xc7 => visitor.visit_i64x2_extend_low_i32x4_s(),
+            0xc8 => visitor.visit_i64x2_extend_high_i32x4_s(),
+            0xc9 => visitor.visit_i64x2_extend_low_i32x4_u(),
+            0xca => visitor.visit_i64x2_extend_high_i32x4_u(),
+            0xcb => visitor.visit_i64x2_shl(),
+            0xcc => visitor.visit_i64x2_shr_s(),
+            0xcd => visitor.visit_i64x2_shr_u(),
+            0xce => visitor.visit_i64x2_add(),
+            0xd1 => visitor.visit_i64x2_sub(),
+            0xd5 => visitor.visit_i64x2_mul(),
+            0xd6 => visitor.visit_i64x2_eq(),
+            0xd7 => visitor.visit_i64x2_ne(),
+            0xd8 => visitor.visit_i64x2_lt_s(),
+            0xd9 => visitor.visit_i64x2_gt_s(),
+            0xda => visitor.visit_i64x2_le_s(),
+            0xdb => visitor.visit_i64x2_ge_s(),
+            0xdc => visitor.visit_i64x2_extmul_low_i32x4_s(),
+            0xdd => visitor.visit_i64x2_extmul_high_i32x4_s(),
+            0xde => visitor.visit_i64x2_extmul_low_i32x4_u(),
+            0xdf => visitor.visit_i64x2_extmul_high_i32x4_u(),
+            0xe0 => visitor.visit_f32x4_abs(),
+            0xe1 => visitor.visit_f32x4_neg(),
+            0xe3 => visitor.visit_f32x4_sqrt(),
+            0xe4 => visitor.visit_f32x4_add(),
+            0xe5 => visitor.visit_f32x4_sub(),
+            0xe6 => visitor.visit_f32x4_mul(),
+            0xe7 => visitor.visit_f32x4_div(),
+            0xe8 => visitor.visit_f32x4_min(),
+            0xe9 => visitor.visit_f32x4_max(),
+            0xea => visitor.visit_f32x4_pmin(),
+            0xeb => visitor.visit_f32x4_pmax(),
+            0xec => visitor.visit_f64x2_abs(),
+            0xed => visitor.visit_f64x2_neg(),
+            0xef => visitor.visit_f64x2_sqrt(),
+            0xf0 => visitor.visit_f64x2_add(),
+            0xf1 => visitor.visit_f64x2_sub(),
+            0xf2 => visitor.visit_f64x2_mul(),
+            0xf3 => visitor.visit_f64x2_div(),
+            0xf4 => visitor.visit_f64x2_min(),
+            0xf5 => visitor.visit_f64x2_max(),
+            0xf6 => visitor.visit_f64x2_pmin(),
+            0xf7 => visitor.visit_f64x2_pmax(),
+            0xf8 => visitor.visit_i32x4_trunc_sat_f32x4_s(),
+            0xf9 => visitor.visit_i32x4_trunc_sat_f32x4_u(),
+            0xfa => visitor.visit_f32x4_convert_i32x4_s(),
+            0xfb => visitor.visit_f32x4_convert_i32x4_u(),
+            0xfc => visitor.visit_i32x4_trunc_sat_f64x2_s_zero(),
+            0xfd => visitor.visit_i32x4_trunc_sat_f64x2_u_zero(),
+            0xfe => visitor.visit_f64x2_convert_low_i32x4_s(),
+            0xff => visitor.visit_f64x2_convert_low_i32x4_u(),
+            0x100 => visitor.visit_i8x16_relaxed_swizzle(),
+            0x101 => visitor.visit_i32x4_relaxed_trunc_sat_f32x4_s(),
+            0x102 => visitor.visit_i32x4_relaxed_trunc_sat_f32x4_u(),
+            0x103 => visitor.visit_i32x4_relaxed_trunc_sat_f64x2_s_zero(),
+            0x104 => visitor.visit_i32x4_relaxed_trunc_sat_f64x2_u_zero(),
+            0x105 => visitor.visit_f32x4_relaxed_fma(),
+            0x106 => visitor.visit_f32x4_relaxed_fnma(),
+            0x107 => visitor.visit_f64x2_relaxed_fma(),
+            0x108 => visitor.visit_f64x2_relaxed_fnma(),
+            0x109 => visitor.visit_i8x16_relaxed_laneselect(),
+            0x10a => visitor.visit_i16x8_relaxed_laneselect(),
+            0x10b => visitor.visit_i32x4_relaxed_laneselect(),
+            0x10c => visitor.visit_i64x2_relaxed_laneselect(),
+            0x10d => visitor.visit_f32x4_relaxed_min(),
+            0x10e => visitor.visit_f32x4_relaxed_max(),
+            0x10f => visitor.visit_f64x2_relaxed_min(),
+            0x110 => visitor.visit_f64x2_relaxed_max(),
+            0x111 => visitor.visit_i16x8_relaxed_q15mulr_s(),
+            0x112 => visitor.visit_i16x8_dot_i8x16_i7x16_s(),
+            0x113 => visitor.visit_i32x4_dot_i8x16_i7x16_add_s(),
+            0x114 => visitor.visit_f32x4_relaxed_dot_bf16x8_add_f32x4(),
 
             _ => bail!(pos, "unknown 0xfd subopcode: 0x{code:x}"),
         })
@@ -2006,73 +2032,78 @@ impl<'a> BinaryReader<'a> {
     {
         let code = self.read_var_u32()?;
         Ok(match code {
-            0x00 => visitor.visit_memory_atomic_notify(pos, self.read_memarg_of_align(2)?),
-            0x01 => visitor.visit_memory_atomic_wait32(pos, self.read_memarg_of_align(2)?),
-            0x02 => visitor.visit_memory_atomic_wait64(pos, self.read_memarg_of_align(3)?),
-            0x03 => visitor.visit_atomic_fence(pos, self.read_u8()? as u8),
-            0x10 => visitor.visit_i32_atomic_load(pos, self.read_memarg_of_align(2)?),
-            0x11 => visitor.visit_i64_atomic_load(pos, self.read_memarg_of_align(3)?),
-            0x12 => visitor.visit_i32_atomic_load8_u(pos, self.read_memarg_of_align(0)?),
-            0x13 => visitor.visit_i32_atomic_load16_u(pos, self.read_memarg_of_align(1)?),
-            0x14 => visitor.visit_i64_atomic_load8_u(pos, self.read_memarg_of_align(0)?),
-            0x15 => visitor.visit_i64_atomic_load16_u(pos, self.read_memarg_of_align(1)?),
-            0x16 => visitor.visit_i64_atomic_load32_u(pos, self.read_memarg_of_align(2)?),
-            0x17 => visitor.visit_i32_atomic_store(pos, self.read_memarg_of_align(2)?),
-            0x18 => visitor.visit_i64_atomic_store(pos, self.read_memarg_of_align(3)?),
-            0x19 => visitor.visit_i32_atomic_store8(pos, self.read_memarg_of_align(0)?),
-            0x1a => visitor.visit_i32_atomic_store16(pos, self.read_memarg_of_align(1)?),
-            0x1b => visitor.visit_i64_atomic_store8(pos, self.read_memarg_of_align(0)?),
-            0x1c => visitor.visit_i64_atomic_store16(pos, self.read_memarg_of_align(1)?),
-            0x1d => visitor.visit_i64_atomic_store32(pos, self.read_memarg_of_align(2)?),
-            0x1e => visitor.visit_i32_atomic_rmw_add(pos, self.read_memarg_of_align(2)?),
-            0x1f => visitor.visit_i64_atomic_rmw_add(pos, self.read_memarg_of_align(3)?),
-            0x20 => visitor.visit_i32_atomic_rmw8_add_u(pos, self.read_memarg_of_align(0)?),
-            0x21 => visitor.visit_i32_atomic_rmw16_add_u(pos, self.read_memarg_of_align(1)?),
-            0x22 => visitor.visit_i64_atomic_rmw8_add_u(pos, self.read_memarg_of_align(0)?),
-            0x23 => visitor.visit_i64_atomic_rmw16_add_u(pos, self.read_memarg_of_align(1)?),
-            0x24 => visitor.visit_i64_atomic_rmw32_add_u(pos, self.read_memarg_of_align(2)?),
-            0x25 => visitor.visit_i32_atomic_rmw_sub(pos, self.read_memarg_of_align(2)?),
-            0x26 => visitor.visit_i64_atomic_rmw_sub(pos, self.read_memarg_of_align(3)?),
-            0x27 => visitor.visit_i32_atomic_rmw8_sub_u(pos, self.read_memarg_of_align(0)?),
-            0x28 => visitor.visit_i32_atomic_rmw16_sub_u(pos, self.read_memarg_of_align(1)?),
-            0x29 => visitor.visit_i64_atomic_rmw8_sub_u(pos, self.read_memarg_of_align(0)?),
-            0x2a => visitor.visit_i64_atomic_rmw16_sub_u(pos, self.read_memarg_of_align(1)?),
-            0x2b => visitor.visit_i64_atomic_rmw32_sub_u(pos, self.read_memarg_of_align(2)?),
-            0x2c => visitor.visit_i32_atomic_rmw_and(pos, self.read_memarg_of_align(2)?),
-            0x2d => visitor.visit_i64_atomic_rmw_and(pos, self.read_memarg_of_align(3)?),
-            0x2e => visitor.visit_i32_atomic_rmw8_and_u(pos, self.read_memarg_of_align(0)?),
-            0x2f => visitor.visit_i32_atomic_rmw16_and_u(pos, self.read_memarg_of_align(1)?),
-            0x30 => visitor.visit_i64_atomic_rmw8_and_u(pos, self.read_memarg_of_align(0)?),
-            0x31 => visitor.visit_i64_atomic_rmw16_and_u(pos, self.read_memarg_of_align(1)?),
-            0x32 => visitor.visit_i64_atomic_rmw32_and_u(pos, self.read_memarg_of_align(2)?),
-            0x33 => visitor.visit_i32_atomic_rmw_or(pos, self.read_memarg_of_align(2)?),
-            0x34 => visitor.visit_i64_atomic_rmw_or(pos, self.read_memarg_of_align(3)?),
-            0x35 => visitor.visit_i32_atomic_rmw8_or_u(pos, self.read_memarg_of_align(0)?),
-            0x36 => visitor.visit_i32_atomic_rmw16_or_u(pos, self.read_memarg_of_align(1)?),
-            0x37 => visitor.visit_i64_atomic_rmw8_or_u(pos, self.read_memarg_of_align(0)?),
-            0x38 => visitor.visit_i64_atomic_rmw16_or_u(pos, self.read_memarg_of_align(1)?),
-            0x39 => visitor.visit_i64_atomic_rmw32_or_u(pos, self.read_memarg_of_align(2)?),
-            0x3a => visitor.visit_i32_atomic_rmw_xor(pos, self.read_memarg_of_align(2)?),
-            0x3b => visitor.visit_i64_atomic_rmw_xor(pos, self.read_memarg_of_align(3)?),
-            0x3c => visitor.visit_i32_atomic_rmw8_xor_u(pos, self.read_memarg_of_align(0)?),
-            0x3d => visitor.visit_i32_atomic_rmw16_xor_u(pos, self.read_memarg_of_align(1)?),
-            0x3e => visitor.visit_i64_atomic_rmw8_xor_u(pos, self.read_memarg_of_align(0)?),
-            0x3f => visitor.visit_i64_atomic_rmw16_xor_u(pos, self.read_memarg_of_align(1)?),
-            0x40 => visitor.visit_i64_atomic_rmw32_xor_u(pos, self.read_memarg_of_align(2)?),
-            0x41 => visitor.visit_i32_atomic_rmw_xchg(pos, self.read_memarg_of_align(2)?),
-            0x42 => visitor.visit_i64_atomic_rmw_xchg(pos, self.read_memarg_of_align(3)?),
-            0x43 => visitor.visit_i32_atomic_rmw8_xchg_u(pos, self.read_memarg_of_align(0)?),
-            0x44 => visitor.visit_i32_atomic_rmw16_xchg_u(pos, self.read_memarg_of_align(1)?),
-            0x45 => visitor.visit_i64_atomic_rmw8_xchg_u(pos, self.read_memarg_of_align(0)?),
-            0x46 => visitor.visit_i64_atomic_rmw16_xchg_u(pos, self.read_memarg_of_align(1)?),
-            0x47 => visitor.visit_i64_atomic_rmw32_xchg_u(pos, self.read_memarg_of_align(2)?),
-            0x48 => visitor.visit_i32_atomic_rmw_cmpxchg(pos, self.read_memarg_of_align(2)?),
-            0x49 => visitor.visit_i64_atomic_rmw_cmpxchg(pos, self.read_memarg_of_align(3)?),
-            0x4a => visitor.visit_i32_atomic_rmw8_cmpxchg_u(pos, self.read_memarg_of_align(0)?),
-            0x4b => visitor.visit_i32_atomic_rmw16_cmpxchg_u(pos, self.read_memarg_of_align(1)?),
-            0x4c => visitor.visit_i64_atomic_rmw8_cmpxchg_u(pos, self.read_memarg_of_align(0)?),
-            0x4d => visitor.visit_i64_atomic_rmw16_cmpxchg_u(pos, self.read_memarg_of_align(1)?),
-            0x4e => visitor.visit_i64_atomic_rmw32_cmpxchg_u(pos, self.read_memarg_of_align(2)?),
+            0x00 => visitor.visit_memory_atomic_notify(self.read_memarg(2)?),
+            0x01 => visitor.visit_memory_atomic_wait32(self.read_memarg(2)?),
+            0x02 => visitor.visit_memory_atomic_wait64(self.read_memarg(3)?),
+            0x03 => {
+                if self.read_u8()? != 0 {
+                    bail!(pos, "nonzero byte after `atomic.fence`");
+                }
+                visitor.visit_atomic_fence()
+            }
+            0x10 => visitor.visit_i32_atomic_load(self.read_memarg(2)?),
+            0x11 => visitor.visit_i64_atomic_load(self.read_memarg(3)?),
+            0x12 => visitor.visit_i32_atomic_load8_u(self.read_memarg(0)?),
+            0x13 => visitor.visit_i32_atomic_load16_u(self.read_memarg(1)?),
+            0x14 => visitor.visit_i64_atomic_load8_u(self.read_memarg(0)?),
+            0x15 => visitor.visit_i64_atomic_load16_u(self.read_memarg(1)?),
+            0x16 => visitor.visit_i64_atomic_load32_u(self.read_memarg(2)?),
+            0x17 => visitor.visit_i32_atomic_store(self.read_memarg(2)?),
+            0x18 => visitor.visit_i64_atomic_store(self.read_memarg(3)?),
+            0x19 => visitor.visit_i32_atomic_store8(self.read_memarg(0)?),
+            0x1a => visitor.visit_i32_atomic_store16(self.read_memarg(1)?),
+            0x1b => visitor.visit_i64_atomic_store8(self.read_memarg(0)?),
+            0x1c => visitor.visit_i64_atomic_store16(self.read_memarg(1)?),
+            0x1d => visitor.visit_i64_atomic_store32(self.read_memarg(2)?),
+            0x1e => visitor.visit_i32_atomic_rmw_add(self.read_memarg(2)?),
+            0x1f => visitor.visit_i64_atomic_rmw_add(self.read_memarg(3)?),
+            0x20 => visitor.visit_i32_atomic_rmw8_add_u(self.read_memarg(0)?),
+            0x21 => visitor.visit_i32_atomic_rmw16_add_u(self.read_memarg(1)?),
+            0x22 => visitor.visit_i64_atomic_rmw8_add_u(self.read_memarg(0)?),
+            0x23 => visitor.visit_i64_atomic_rmw16_add_u(self.read_memarg(1)?),
+            0x24 => visitor.visit_i64_atomic_rmw32_add_u(self.read_memarg(2)?),
+            0x25 => visitor.visit_i32_atomic_rmw_sub(self.read_memarg(2)?),
+            0x26 => visitor.visit_i64_atomic_rmw_sub(self.read_memarg(3)?),
+            0x27 => visitor.visit_i32_atomic_rmw8_sub_u(self.read_memarg(0)?),
+            0x28 => visitor.visit_i32_atomic_rmw16_sub_u(self.read_memarg(1)?),
+            0x29 => visitor.visit_i64_atomic_rmw8_sub_u(self.read_memarg(0)?),
+            0x2a => visitor.visit_i64_atomic_rmw16_sub_u(self.read_memarg(1)?),
+            0x2b => visitor.visit_i64_atomic_rmw32_sub_u(self.read_memarg(2)?),
+            0x2c => visitor.visit_i32_atomic_rmw_and(self.read_memarg(2)?),
+            0x2d => visitor.visit_i64_atomic_rmw_and(self.read_memarg(3)?),
+            0x2e => visitor.visit_i32_atomic_rmw8_and_u(self.read_memarg(0)?),
+            0x2f => visitor.visit_i32_atomic_rmw16_and_u(self.read_memarg(1)?),
+            0x30 => visitor.visit_i64_atomic_rmw8_and_u(self.read_memarg(0)?),
+            0x31 => visitor.visit_i64_atomic_rmw16_and_u(self.read_memarg(1)?),
+            0x32 => visitor.visit_i64_atomic_rmw32_and_u(self.read_memarg(2)?),
+            0x33 => visitor.visit_i32_atomic_rmw_or(self.read_memarg(2)?),
+            0x34 => visitor.visit_i64_atomic_rmw_or(self.read_memarg(3)?),
+            0x35 => visitor.visit_i32_atomic_rmw8_or_u(self.read_memarg(0)?),
+            0x36 => visitor.visit_i32_atomic_rmw16_or_u(self.read_memarg(1)?),
+            0x37 => visitor.visit_i64_atomic_rmw8_or_u(self.read_memarg(0)?),
+            0x38 => visitor.visit_i64_atomic_rmw16_or_u(self.read_memarg(1)?),
+            0x39 => visitor.visit_i64_atomic_rmw32_or_u(self.read_memarg(2)?),
+            0x3a => visitor.visit_i32_atomic_rmw_xor(self.read_memarg(2)?),
+            0x3b => visitor.visit_i64_atomic_rmw_xor(self.read_memarg(3)?),
+            0x3c => visitor.visit_i32_atomic_rmw8_xor_u(self.read_memarg(0)?),
+            0x3d => visitor.visit_i32_atomic_rmw16_xor_u(self.read_memarg(1)?),
+            0x3e => visitor.visit_i64_atomic_rmw8_xor_u(self.read_memarg(0)?),
+            0x3f => visitor.visit_i64_atomic_rmw16_xor_u(self.read_memarg(1)?),
+            0x40 => visitor.visit_i64_atomic_rmw32_xor_u(self.read_memarg(2)?),
+            0x41 => visitor.visit_i32_atomic_rmw_xchg(self.read_memarg(2)?),
+            0x42 => visitor.visit_i64_atomic_rmw_xchg(self.read_memarg(3)?),
+            0x43 => visitor.visit_i32_atomic_rmw8_xchg_u(self.read_memarg(0)?),
+            0x44 => visitor.visit_i32_atomic_rmw16_xchg_u(self.read_memarg(1)?),
+            0x45 => visitor.visit_i64_atomic_rmw8_xchg_u(self.read_memarg(0)?),
+            0x46 => visitor.visit_i64_atomic_rmw16_xchg_u(self.read_memarg(1)?),
+            0x47 => visitor.visit_i64_atomic_rmw32_xchg_u(self.read_memarg(2)?),
+            0x48 => visitor.visit_i32_atomic_rmw_cmpxchg(self.read_memarg(2)?),
+            0x49 => visitor.visit_i64_atomic_rmw_cmpxchg(self.read_memarg(3)?),
+            0x4a => visitor.visit_i32_atomic_rmw8_cmpxchg_u(self.read_memarg(0)?),
+            0x4b => visitor.visit_i32_atomic_rmw16_cmpxchg_u(self.read_memarg(1)?),
+            0x4c => visitor.visit_i64_atomic_rmw8_cmpxchg_u(self.read_memarg(0)?),
+            0x4d => visitor.visit_i64_atomic_rmw16_cmpxchg_u(self.read_memarg(1)?),
+            0x4e => visitor.visit_i64_atomic_rmw32_cmpxchg_u(self.read_memarg(2)?),
 
             _ => bail!(pos, "unknown 0xfe subopcode: 0x{code:x}"),
         })
@@ -2114,23 +2145,6 @@ impl<'a> BinaryReader<'a> {
             ));
         }
         self.read_u32()
-    }
-
-    pub(crate) fn read_name_type(&mut self) -> Result<NameType> {
-        let code = self.read_u7()?;
-        match code {
-            0 => Ok(NameType::Module),
-            1 => Ok(NameType::Function),
-            2 => Ok(NameType::Local),
-            3 => Ok(NameType::Label),
-            4 => Ok(NameType::Type),
-            5 => Ok(NameType::Table),
-            6 => Ok(NameType::Memory),
-            7 => Ok(NameType::Global),
-            8 => Ok(NameType::Element),
-            9 => Ok(NameType::Data),
-            _ => Ok(NameType::Unknown(code)),
-        }
     }
 
     pub(crate) fn read_linking_type(&mut self) -> Result<LinkingType> {
@@ -2211,8 +2225,8 @@ impl<'a> BrTable<'a> {
     /// let buf = [0x0e, 0x02, 0x01, 0x02, 0x00];
     /// let mut reader = wasmparser::BinaryReader::new(&buf);
     /// let op = reader.read_operator().unwrap();
-    /// if let wasmparser::Operator::BrTable { table } = op {
-    ///     let targets = table.targets().collect::<Result<Vec<_>, _>>().unwrap();
+    /// if let wasmparser::Operator::BrTable { targets } = op {
+    ///     let targets = targets.targets().collect::<Result<Vec<_>, _>>().unwrap();
     ///     assert_eq!(targets, [1, 2]);
     /// }
     /// ```
@@ -2295,7 +2309,7 @@ impl<'a> OperatorFactory<'a> {
 macro_rules! define_visit_operator {
     ($(@$proposal:ident $op:ident $({ $($arg:ident: $argty:ty),* })? => $visit:ident)*) => {
         $(
-            fn $visit(&mut self, _offset: usize $($(,$arg: $argty)*)?) -> Operator<'a> {
+            fn $visit(&mut self $($(,$arg: $argty)*)?) -> Operator<'a> {
                 Operator::$op $({ $($arg),* })?
             }
         )*

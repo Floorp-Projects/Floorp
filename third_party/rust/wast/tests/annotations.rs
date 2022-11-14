@@ -9,13 +9,13 @@ fn name_annotations() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn assert_module_name(name: &str, wat: &str) -> anyhow::Result<()> {
+fn assert_module_name(expected_name: &str, wat: &str) -> anyhow::Result<()> {
     let wasm = wat::parse_str(wat)?;
     let mut found = false;
     for s in get_name_section(&wasm)? {
         match s? {
-            Name::Module(n) => {
-                assert_eq!(n.get_name()?, name);
+            Name::Module { name, .. } => {
+                assert_eq!(name, expected_name);
                 found = true;
             }
             _ => {}
@@ -40,8 +40,7 @@ fn assert_func_name(name: &str, wat: &str) -> anyhow::Result<()> {
     for s in get_name_section(&wasm)? {
         match s? {
             Name::Function(n) => {
-                let mut map = n.get_map()?;
-                let naming = map.read()?;
+                let naming = n.into_iter().next().unwrap()?;
                 assert_eq!(naming.index, 0);
                 assert_eq!(naming.name, name);
                 found = true;
@@ -78,10 +77,14 @@ fn assert_local_name(name: &str, wat: &str) -> anyhow::Result<()> {
     for s in get_name_section(&wasm)? {
         match s? {
             Name::Local(n) => {
-                let mut reader = n.get_indirect_map()?;
-                let section = reader.read()?;
-                let mut map = section.get_map()?;
-                let naming = map.read()?;
+                let naming = n
+                    .into_iter()
+                    .next()
+                    .unwrap()?
+                    .names
+                    .into_iter()
+                    .next()
+                    .unwrap()?;
                 assert_eq!(naming.index, 0);
                 assert_eq!(naming.name, name);
                 found = true;
