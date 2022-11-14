@@ -497,11 +497,14 @@ nsresult IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
 
   // If new aPresShell has been destroyed, this should handle the focus change
   // as nobody is getting focus.
-  if (NS_WARN_IF(!CanHandleWith(aPresContext))) {
+  MOZ_ASSERT_IF(!aPresContext, !aElement);
+  if (NS_WARN_IF(aPresContext && !CanHandleWith(aPresContext))) {
     MOZ_LOG(sISMLog, LogLevel::Warning,
             ("  OnChangeFocusInternal(), called with destroyed PresShell, "
              "handling this call as nobody getting focus"));
     aPresContext = nullptr;
+    aElement = nullptr;
+  } else if (!aPresContext) {
     aElement = nullptr;
   }
 
