@@ -623,7 +623,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   nsresult ValidateMIMEType();
 
-  OpaqueResponseAllowed EnsureOpaqueResponseIsAllowed();
+  OpaqueResponseAllowed EnsureOpaqueResponseIsAllowed(
+      bool& aCompressedMediaAndImageDetectorStarted);
 
   Result<OpaqueResponseAllowed, nsresult>
   EnsureOpaqueResponseIsAllowedAfterSniff();
