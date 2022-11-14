@@ -131,8 +131,7 @@ class Module : public JS::WasmModule {
   bool instantiateGlobals(JSContext* cx, const ValVector& globalImportValues,
                           WasmGlobalObjectVector& globalObjs) const;
   bool initSegments(JSContext* cx, Handle<WasmInstanceObject*> instance,
-                    Handle<WasmMemoryObject*> memory,
-                    const ValVector& globalImportValues) const;
+                    Handle<WasmMemoryObject*> memory) const;
 
   class Tier2GeneratorTaskImpl;
 

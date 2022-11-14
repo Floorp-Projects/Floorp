@@ -73,6 +73,13 @@ void Val::initFromRootedLocation(ValType type, const void* loc) {
   memcpy(&cell_, loc, type_.size());
 }
 
+void Val::initFromHeapLocation(ValType type, const void* loc) {
+  MOZ_ASSERT(!type_.isValid());
+  type_ = type;
+  memset(&cell_, 0, sizeof(Cell));
+  readFromHeapLocation(loc);
+}
+
 void Val::writeToRootedLocation(void* loc, bool mustWrite64) const {
   memcpy(loc, &cell_, type_.size());
   if (mustWrite64 && type_.size() == 4) {
@@ -80,7 +87,9 @@ void Val::writeToRootedLocation(void* loc, bool mustWrite64) const {
   }
 }
 
-void Val::readFromHeapLocation(void* loc) { memcpy(&cell_, loc, type_.size()); }
+void Val::readFromHeapLocation(const void* loc) {
+  memcpy(&cell_, loc, type_.size());
+}
 
 void Val::writeToHeapLocation(void* loc) const {
   if (type_.isRefRepr()) {

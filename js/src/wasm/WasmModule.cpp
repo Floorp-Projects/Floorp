@@ -447,8 +447,7 @@ static bool AllSegmentsArePassive(const DataSegmentVector& vec) {
 
 bool Module::initSegments(JSContext* cx,
                           Handle<WasmInstanceObject*> instanceObj,
-                          Handle<WasmMemoryObject*> memoryObj,
-                          const ValVector& globalImportValues) const {
+                          Handle<WasmMemoryObject*> memoryObj) const {
   MOZ_ASSERT_IF(!memoryObj, AllSegmentsArePassive(dataSegments_));
 
   Instance& instance = instanceObj->instance();
@@ -459,8 +458,7 @@ bool Module::initSegments(JSContext* cx,
   for (const ElemSegment* seg : elemSegments_) {
     if (seg->active()) {
       RootedVal offsetVal(cx);
-      if (!seg->offset().evaluate(cx, globalImportValues, instanceObj,
-                                  &offsetVal)) {
+      if (!seg->offset().evaluate(cx, instanceObj, &offsetVal)) {
         return false;  // OOM
       }
       uint32_t offset = offsetVal.get().i32();
@@ -490,8 +488,7 @@ bool Module::initSegments(JSContext* cx,
       }
 
       RootedVal offsetVal(cx);
-      if (!seg->offset().evaluate(cx, globalImportValues, instanceObj,
-                                  &offsetVal)) {
+      if (!seg->offset().evaluate(cx, instanceObj, &offsetVal)) {
         return false;  // OOM
       }
       uint64_t offset = memoryObj->indexType() == IndexType::I32
@@ -929,7 +926,7 @@ static bool GetGlobalExport(JSContext* cx,
   RootedVal globalVal(cx);
   MOZ_RELEASE_ASSERT(!global.isImport());
   const InitExpr& init = global.initExpr();
-  if (!init.evaluate(cx, globalImportValues, instanceObj, &globalVal)) {
+  if (!init.evaluate(cx, instanceObj, &globalVal)) {
     return false;
   }
   globalObj->val() = globalVal;
@@ -1102,7 +1099,7 @@ bool Module::instantiate(JSContext* cx, ImportValues& imports,
   // constructed since this can make the instance live to content (even if the
   // start function fails).
 
-  if (!initSegments(cx, instance, memory, imports.globalValues)) {
+  if (!initSegments(cx, instance, memory)) {
     return false;
   }
 
