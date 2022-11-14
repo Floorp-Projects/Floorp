@@ -64,12 +64,8 @@ nsresult FetchStreamReader::Create(JSContext* aCx, nsIGlobalObject* aGlobal,
 
   nsCOMPtr<nsIAsyncInputStream> pipeIn;
 
-  nsresult rv =
-      NS_NewPipe2(getter_AddRefs(pipeIn),
-                  getter_AddRefs(streamReader->mPipeOut), true, true, 0, 0);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  NS_NewPipe2(getter_AddRefs(pipeIn), getter_AddRefs(streamReader->mPipeOut),
+              true, true, 0, 0);
 
   if (!NS_IsMainThread()) {
     WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);

@@ -137,12 +137,9 @@ NS_IMETHODIMP Http3WebTransportStream::OnInputStreamReady(
 nsresult Http3WebTransportStream::InitOutputPipe() {
   nsCOMPtr<nsIAsyncOutputStream> out;
   nsCOMPtr<nsIAsyncInputStream> in;
-  nsresult rv = NS_NewPipe2(getter_AddRefs(in), getter_AddRefs(out), true, true,
-                            nsIOService::gDefaultSegmentSize,
-                            nsIOService::gDefaultSegmentCount);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  NS_NewPipe2(getter_AddRefs(in), getter_AddRefs(out), true, true,
+              nsIOService::gDefaultSegmentSize,
+              nsIOService::gDefaultSegmentCount);
 
   {
     MutexAutoLock lock(mMutex);

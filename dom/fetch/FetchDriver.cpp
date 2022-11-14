@@ -223,17 +223,11 @@ AlternativeDataStreamListener::OnStartRequest(nsIRequest* aRequest) {
       NS_SUCCEEDED(cic->GetCacheEntryId(&mAlternativeDataCacheEntryId))) {
     MOZ_DIAGNOSTIC_ASSERT(!mPipeAlternativeInputStream);
     MOZ_DIAGNOSTIC_ASSERT(!mPipeAlternativeOutputStream);
-    nsresult rv =
-        NS_NewPipe(getter_AddRefs(mPipeAlternativeInputStream),
-                   getter_AddRefs(mPipeAlternativeOutputStream),
-                   0 /* default segment size */, UINT32_MAX /* infinite pipe */,
-                   true /* non-blocking input, otherwise you deadlock */,
-                   false /* blocking output, since the pipe is 'in'finite */);
-
-    if (NS_FAILED(rv)) {
-      mFetchDriver->FailWithNetworkError(rv);
-      return rv;
-    }
+    NS_NewPipe(getter_AddRefs(mPipeAlternativeInputStream),
+               getter_AddRefs(mPipeAlternativeOutputStream),
+               0 /* default segment size */, UINT32_MAX /* infinite pipe */,
+               true /* non-blocking input, otherwise you deadlock */,
+               false /* blocking output, since the pipe is 'in'finite */);
 
     MOZ_DIAGNOSTIC_ASSERT(!mCacheInfoChannel);
     mCacheInfoChannel = cic;
@@ -1144,17 +1138,11 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
   // to suspend the channel and then resume when there is space available, but
   // for now use an infinite pipe to avoid blocking.
   nsCOMPtr<nsIInputStream> pipeInputStream;
-  rv = NS_NewPipe(getter_AddRefs(pipeInputStream),
-                  getter_AddRefs(mPipeOutputStream),
-                  0, /* default segment size */
-                  UINT32_MAX /* infinite pipe */,
-                  true /* non-blocking input, otherwise you deadlock */,
-                  false /* blocking output, since the pipe is 'in'finite */);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    FailWithNetworkError(rv);
-    // Cancel request.
-    return rv;
-  }
+  NS_NewPipe(getter_AddRefs(pipeInputStream), getter_AddRefs(mPipeOutputStream),
+             0, /* default segment size */
+             UINT32_MAX /* infinite pipe */,
+             true /* non-blocking input, otherwise you deadlock */,
+             false /* blocking output, since the pipe is 'in'finite */);
   response->SetBody(pipeInputStream, contentLength);
 
   // If the request is a file channel, then remember the local path to

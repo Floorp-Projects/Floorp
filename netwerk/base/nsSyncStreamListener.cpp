@@ -12,10 +12,11 @@
 using namespace mozilla::net;
 
 nsresult nsSyncStreamListener::Init() {
-  return NS_NewPipe(getter_AddRefs(mPipeIn), getter_AddRefs(mPipeOut),
-                    mozilla::net::nsIOService::gDefaultSegmentSize,
-                    UINT32_MAX,  // no size limit
-                    false, false);
+  NS_NewPipe(getter_AddRefs(mPipeIn), getter_AddRefs(mPipeOut),
+             mozilla::net::nsIOService::gDefaultSegmentSize,
+             UINT32_MAX,  // no size limit
+             false, false);
+  return NS_OK;
 }
 
 // static

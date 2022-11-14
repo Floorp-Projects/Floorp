@@ -432,16 +432,12 @@ void nsUDPSocket::OnSocketReady(PRFileDesc* fd, int16_t outFlags) {
   uint32_t segsize = UDP_PACKET_CHUNK_SIZE;
   uint32_t segcount = 0;
   net_ResolveSegmentParams(segsize, segcount);
-  nsresult rv = NS_NewPipe2(getter_AddRefs(pipeIn), getter_AddRefs(pipeOut),
-                            true, true, segsize, segcount);
-
-  if (NS_FAILED(rv)) {
-    return;
-  }
+  NS_NewPipe2(getter_AddRefs(pipeIn), getter_AddRefs(pipeOut), true, true,
+              segsize, segcount);
 
   RefPtr<nsUDPOutputStream> os = new nsUDPOutputStream(this, mFD, prClientAddr);
-  rv = NS_AsyncCopy(pipeIn, os, mSts, NS_ASYNCCOPY_VIA_READSEGMENTS,
-                    UDP_PACKET_CHUNK_SIZE);
+  nsresult rv = NS_AsyncCopy(pipeIn, os, mSts, NS_ASYNCCOPY_VIA_READSEGMENTS,
+                             UDP_PACKET_CHUNK_SIZE);
 
   if (NS_FAILED(rv)) {
     return;

@@ -43,12 +43,10 @@ static already_AddRefed<nsICloneableInputStream> EnsureCloneableStream(
   // source stream locally without waiting for the blob to be consumed.
   nsCOMPtr<nsIAsyncInputStream> reader;
   nsCOMPtr<nsIAsyncOutputStream> writer;
-  nsresult rv = NS_NewPipe2(getter_AddRefs(reader), getter_AddRefs(writer),
-                            true, true, segmentSize, UINT32_MAX);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
+  NS_NewPipe2(getter_AddRefs(reader), getter_AddRefs(writer), true, true,
+              segmentSize, UINT32_MAX);
 
+  nsresult rv;
   nsCOMPtr<nsIEventTarget> target =
       do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {

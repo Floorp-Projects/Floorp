@@ -386,10 +386,9 @@ nsresult PageIconProtocolHandler::GetStreams(nsIAsyncInputStream** inStream,
   static constexpr size_t kSegmentSize = 4096;
   nsCOMPtr<nsIAsyncInputStream> pipeIn;
   nsCOMPtr<nsIAsyncOutputStream> pipeOut;
-  nsresult rv = NS_NewPipe2(
-      getter_AddRefs(pipeIn), getter_AddRefs(pipeOut), true, true, kSegmentSize,
-      nsIFaviconService::MAX_FAVICON_BUFFER_SIZE / kSegmentSize);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_NewPipe2(getter_AddRefs(pipeIn), getter_AddRefs(pipeOut), true, true,
+              kSegmentSize,
+              nsIFaviconService::MAX_FAVICON_BUFFER_SIZE / kSegmentSize);
 
   pipeIn.forget(inStream);
   pipeOut.forget(outStream);

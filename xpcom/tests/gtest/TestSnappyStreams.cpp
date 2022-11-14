@@ -24,11 +24,7 @@ using mozilla::SnappyUncompressInputStream;
 static already_AddRefed<nsIOutputStream> CompressPipe(
     nsIInputStream** aReaderOut) {
   nsCOMPtr<nsIOutputStream> pipeWriter;
-
-  nsresult rv = NS_NewPipe(aReaderOut, getter_AddRefs(pipeWriter));
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
+  NS_NewPipe(aReaderOut, getter_AddRefs(pipeWriter));
 
   nsCOMPtr<nsIOutputStream> compress =
       new SnappyCompressOutputStream(pipeWriter);

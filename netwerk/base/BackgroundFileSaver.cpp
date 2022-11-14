@@ -95,18 +95,15 @@ BackgroundFileSaver::~BackgroundFileSaver() {
 nsresult BackgroundFileSaver::Init() {
   MOZ_ASSERT(NS_IsMainThread(), "This should be called on the main thread");
 
-  nsresult rv;
-
-  rv = NS_NewPipe2(getter_AddRefs(mPipeInputStream),
-                   getter_AddRefs(mPipeOutputStream), true, true, 0,
-                   HasInfiniteBuffer() ? UINT32_MAX : 0);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_NewPipe2(getter_AddRefs(mPipeInputStream),
+              getter_AddRefs(mPipeOutputStream), true, true, 0,
+              HasInfiniteBuffer() ? UINT32_MAX : 0);
 
   mControlEventTarget = GetCurrentEventTarget();
   NS_ENSURE_TRUE(mControlEventTarget, NS_ERROR_NOT_INITIALIZED);
 
-  rv = NS_CreateBackgroundTaskQueue("BgFileSaver",
-                                    getter_AddRefs(mBackgroundET));
+  nsresult rv = NS_CreateBackgroundTaskQueue("BgFileSaver",
+                                             getter_AddRefs(mBackgroundET));
   NS_ENSURE_SUCCESS(rv, rv);
 
   sThreadCount++;

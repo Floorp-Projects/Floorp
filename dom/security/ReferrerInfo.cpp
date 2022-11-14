@@ -1474,17 +1474,14 @@ nsresult ReferrerInfo::ReadTailDataBeforeGecko100(
   // We need to create a new pipe in order to read the aData and the rest of
   // the input stream together in the old format. This would also help us with
   // handling big endian correctly.
-  nsresult rv = NS_NewPipe(getter_AddRefs(reader), getter_AddRefs(writer));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  NS_NewPipe(getter_AddRefs(reader), getter_AddRefs(writer));
 
   nsCOMPtr<nsIBinaryOutputStream> binaryPipeWriter =
       NS_NewObjectOutputStream(writer);
 
   // Write back the aData so that we can read bytes from it and handle big
   // endian correctly.
-  rv = binaryPipeWriter->Write32(aData);
+  nsresult rv = binaryPipeWriter->Write32(aData);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

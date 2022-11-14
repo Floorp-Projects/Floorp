@@ -467,10 +467,9 @@ TEST(TestSlicedInputStream, AsyncInputStream)
   const uint32_t segmentSize = 1024;
   const uint32_t numSegments = 1;
 
-  nsresult rv = NS_NewPipe2(getter_AddRefs(reader), getter_AddRefs(writer),
-                            true, true,  // non-blocking - reader, writer
-                            segmentSize, numSegments);
-  ASSERT_NS_SUCCEEDED(rv);
+  NS_NewPipe2(getter_AddRefs(reader), getter_AddRefs(writer), true,
+              true,  // non-blocking - reader, writer
+              segmentSize, numSegments);
 
   nsTArray<char> inputData;
   testing::CreateData(segmentSize, inputData);
@@ -490,7 +489,7 @@ TEST(TestSlicedInputStream, AsyncInputStream)
 
   RefPtr<testing::InputStreamCallback> cb = new testing::InputStreamCallback();
 
-  rv = async->AsyncWait(cb, 0, 0, nullptr);
+  nsresult rv = async->AsyncWait(cb, 0, 0, nullptr);
   ASSERT_NS_SUCCEEDED(rv);
 
   ASSERT_FALSE(cb->Called());
