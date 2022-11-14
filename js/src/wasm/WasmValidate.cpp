@@ -617,9 +617,12 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(
                 iter.readArraySet(&unusedUint1, &nothing, &nothing, &nothing));
           }
+          case uint32_t(GcOp::ArrayLenWithTypeIndex): {
+            CHECK(iter.readArrayLen(/*decodeIgnoredTypeIndex=*/true, &nothing));
+          }
           case uint32_t(GcOp::ArrayLen): {
-            uint32_t unusedUint1;
-            CHECK(iter.readArrayLen(&unusedUint1, &nothing));
+            CHECK(
+                iter.readArrayLen(/*decodeIgnoredTypeIndex=*/false, &nothing));
           }
           case uint32_t(GcOp::ArrayCopy): {
             int32_t unusedInt;
@@ -646,6 +649,14 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             uint32_t typeIndex;
             CHECK(iter.readBrOnCastFail(&unusedRelativeDepth, &typeIndex,
                                         &unusedType, &nothings));
+          }
+          case uint16_t(GcOp::ExternInternalize): {
+            CHECK(iter.readRefConversion(RefType::extern_(), RefType::any(),
+                                         &nothing));
+          }
+          case uint16_t(GcOp::ExternExternalize): {
+            CHECK(iter.readRefConversion(RefType::any(), RefType::extern_(),
+                                         &nothing));
           }
           default:
             return iter.unrecognizedOpcode(&op);
@@ -1467,15 +1478,6 @@ static bool DecodePreamble(Decoder& d) {
   return true;
 }
 
-#ifdef WASM_PRIVATE_REFTYPES
-static bool FuncTypeIsJSCompatible(Decoder& d, const FuncType& ft) {
-  if (ft.exposesTypeIndex()) {
-    return d.fail("cannot expose indexed reference type");
-  }
-  return true;
-}
-#endif
-
 static bool DecodeValTypeVector(Decoder& d, ModuleEnvironment* env,
                                 uint32_t count, ValTypeVector* valTypes) {
   if (!valTypes->resize(count)) {
@@ -1620,7 +1622,8 @@ static bool DecodeTypeSection(Decoder& d, ModuleEnvironment* env) {
         return d.fail("expected type form");
       }
 
-      if (firstTypeCode == (uint8_t)TypeCode::RecGroup) {
+      if (firstTypeCode == (uint8_t)TypeCode::RecGroup ||
+          firstTypeCode == (uint8_t)TypeCode::RecGroupOld) {
         // Skip over the prefix byte that was peeked.
         d.uncheckedReadFixedU8();
 
@@ -1892,46 +1895,11 @@ static bool DecodeTableTypeAndLimits(Decoder& d, const FeatureArgs& features,
                              /* isAsmJS */ false);
 }
 
-static bool GlobalIsJSCompatible(Decoder& d, ValType type) {
-  switch (type.kind()) {
-    case ValType::I32:
-    case ValType::F32:
-    case ValType::F64:
-    case ValType::I64:
-    case ValType::V128:
-      break;
-    case ValType::Ref:
-      switch (type.refTypeKind()) {
-        case RefType::Func:
-        case RefType::Extern:
-        case RefType::Eq:
-          break;
-        case RefType::TypeRef:
-#ifdef WASM_PRIVATE_REFTYPES
-          return d.fail("cannot expose indexed reference type");
-#else
-          break;
-#endif
-        default:
-          return d.fail("unexpected variable type in global import/export");
-      }
-      break;
-    default:
-      return d.fail("unexpected variable type in global import/export");
-  }
-
-  return true;
-}
-
 static bool DecodeGlobalType(Decoder& d, const SharedTypeContext& types,
                              const FeatureArgs& features, ValType* type,
                              bool* isMutable) {
   if (!d.readValType(*types, features, type)) {
     return d.fail("expected global type");
-  }
-
-  if (type->isRefType() && !type->isNullable()) {
-    return d.fail("non-nullable references not supported in globals");
   }
 
   uint8_t flags;
@@ -1979,18 +1947,6 @@ static bool DecodeMemoryTypeAndLimits(Decoder& d, ModuleEnvironment* env) {
   env->memory = Some(MemoryDesc(limits));
   return true;
 }
-
-#ifdef WASM_PRIVATE_REFTYPES
-static bool TagIsJSCompatible(Decoder& d, const ValTypeVector& type) {
-  for (auto t : type) {
-    if (t.isTypeRef()) {
-      return d.fail("cannot expose indexed reference type");
-    }
-  }
-
-  return true;
-}
-#endif  // WASM_PRIVATE_REFTYPES
 
 static bool DecodeTag(Decoder& d, ModuleEnvironment* env, TagKind* tagKind,
                       uint32_t* funcTypeIndex) {
@@ -2043,12 +1999,6 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       if (!DecodeFuncTypeIndex(d, env->types, &funcTypeIndex)) {
         return false;
       }
-#ifdef WASM_PRIVATE_REFTYPES
-      if (!FuncTypeIsJSCompatible(d,
-                                  env->types->type(funcTypeIndex).funcType())) {
-        return false;
-      }
-#endif
       if (!env->funcs.append(FuncDesc(
               &env->types->type(funcTypeIndex).funcType(), funcTypeIndex))) {
         return false;
@@ -2078,9 +2028,6 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       if (!DecodeGlobalType(d, env->types, env->features, &type, &isMutable)) {
         return false;
       }
-      if (!GlobalIsJSCompatible(d, type)) {
-        return false;
-      }
       if (!env->globals.append(
               GlobalDesc(type, isMutable, env->globals.length()))) {
         return false;
@@ -2100,11 +2047,6 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       if (!args.appendAll((*env->types)[funcTypeIndex].funcType().args())) {
         return false;
       }
-#ifdef WASM_PRIVATE_REFTYPES
-      if (!TagIsJSCompatible(d, args)) {
-        return false;
-      }
-#endif
       MutableTagType tagType = js_new<TagType>();
       if (!tagType || !tagType->initialize(std::move(args))) {
         return false;
@@ -2275,7 +2217,7 @@ static bool DecodeGlobalSection(Decoder& d, ModuleEnvironment* env) {
     }
 
     InitExpr initializer;
-    if (!InitExpr::decodeAndValidate(d, env, type, &initializer)) {
+    if (!InitExpr::decodeAndValidate(d, env, type, i, &initializer)) {
       return false;
     }
 
@@ -2373,11 +2315,6 @@ static bool DecodeExport(Decoder& d, ModuleEnvironment* env, NameSet* dupSet) {
       if (funcIndex >= env->numFuncs()) {
         return d.fail("exported function index out of bounds");
       }
-#ifdef WASM_PRIVATE_REFTYPES
-      if (!FuncTypeIsJSCompatible(d, *env->funcs[funcIndex].type)) {
-        return false;
-      }
-#endif
 
       env->declareFuncExported(funcIndex, /* eager */ true,
                                /* canRefFunc */ true);
@@ -2422,9 +2359,6 @@ static bool DecodeExport(Decoder& d, ModuleEnvironment* env, NameSet* dupSet) {
 
       GlobalDesc* global = &env->globals[globalIndex];
       global->setIsExport();
-      if (!GlobalIsJSCompatible(d, global->type())) {
-        return false;
-      }
 
       return env->exports.emplaceBack(std::move(fieldName), globalIndex,
                                       DefinitionKind::Global);
@@ -2437,12 +2371,6 @@ static bool DecodeExport(Decoder& d, ModuleEnvironment* env, NameSet* dupSet) {
       if (tagIndex >= env->tags.length()) {
         return d.fail("exported tag index out of bounds");
       }
-
-#ifdef WASM_PRIVATE_REFTYPES
-      if (!TagIsJSCompatible(d, env->tags[tagIndex].type->argTypes_)) {
-        return false;
-      }
-#endif
 
       env->tags[tagIndex].isExport = true;
       return env->exports.emplaceBack(std::move(fieldName), tagIndex,
@@ -2592,7 +2520,8 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
       seg->tableIndex = tableIndex;
 
       InitExpr offset;
-      if (!InitExpr::decodeAndValidate(d, env, ValType::I32, &offset)) {
+      if (!InitExpr::decodeAndValidate(d, env, ValType::I32,
+                                       env->globals.length(), &offset)) {
         return false;
       }
       seg->offsetIfActive.emplace(std::move(offset));
@@ -2671,15 +2600,6 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
       return false;
     }
 
-#ifdef WASM_PRIVATE_REFTYPES
-    // We assume that passive or declared segments may be applied to external
-    // tables. We can do slightly better: if there are no external tables in
-    // the module then we don't need to worry about passive or declared
-    // segments either. But this is a temporary restriction.
-    bool exportedTable = kind == ElemSegmentKind::Passive ||
-                         kind == ElemSegmentKind::Declared ||
-                         env->tables[seg->tableIndex].isImportedOrExported;
-#endif
     bool isAsmJS = seg->active() && env->tables[seg->tableIndex].isAsmJS;
 
     // For passive segments we should use InitExpr but we don't really want to
@@ -2724,12 +2644,6 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
         if (funcIndex >= env->numFuncs()) {
           return d.fail("table element out of range");
         }
-#ifdef WASM_PRIVATE_REFTYPES
-        if (exportedTable &&
-            !FuncTypeIsJSCompatible(d, *env->funcs[funcIndex].type)) {
-          return false;
-        }
-#endif
       }
 
       if (payload == ElemSegmentPayload::ElemExpression) {
@@ -2966,7 +2880,8 @@ static bool DecodeDataSection(Decoder& d, ModuleEnvironment* env) {
         initializerKind == DataSegmentKind::ActiveWithMemoryIndex) {
       InitExpr segOffset;
       ValType exprType = ToValType(env->memory->indexType());
-      if (!InitExpr::decodeAndValidate(d, env, exprType, &segOffset)) {
+      if (!InitExpr::decodeAndValidate(d, env, exprType, env->globals.length(),
+                                       &segOffset)) {
         return false;
       }
       seg.offsetIfActive.emplace(std::move(segOffset));

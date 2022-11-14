@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/ChromeTask.js"></script>
+    <script>
+    function test() {
+      location.hash = "foobar"
+      if (!document.documentURI.includes("#foobar")) {
+        opener.postMessage("Wrong documentURI", "*");
+        window.close();
+      } else {
+        ChromeTask.spawn(null, () => {
+          return {
+            documentURI: actorParent.documentURI.spec,
+            principalURI: actorParent.documentPrincipal.URI.spec
+          };
+        }).then((uriAndPrincipal) => {
+          if (!uriAndPrincipal.documentURI.includes("#foobar")) {
+            opener.postMessage("Wrong documentURI in the parent process", "*");
+          } else if (!uriAndPrincipal.principalURI.includes("moz-nullprincipal")) {
+            opener.postMessage("Wrong document principal in the parent process", "*");
+          } else {
+            opener.postMessage("done", "*");
+          }
+          window.close();
+        });
+      }
+    }
+    </script>
+  </head>
+  <body onload="setTimeout(test)">
+  </body>
+</html>

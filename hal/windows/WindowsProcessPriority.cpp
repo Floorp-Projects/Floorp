@@ -11,6 +11,7 @@
 #include "Hal.h"
 #include "HalLog.h"
 #include "nsWindowsHelpers.h"  // for nsAutoHandle and nsModuleHandle
+#include "mozilla/StaticPrefs_dom.h"
 
 #include <windows.h>
 
@@ -42,6 +43,11 @@ void SetProcessPriority(int aPid, ProcessPriority aPriority) {
     static bool alreadyInitialized = false;
     static decltype(::SetProcessInformation)* setProcessInformation = nullptr;
     if (!alreadyInitialized) {
+      if (aPriority == PROCESS_PRIORITY_PARENT_PROCESS ||
+          !StaticPrefs::dom_ipc_processPriorityManager_backgroundUsesEcoQoS()) {
+        return;
+      }
+
       alreadyInitialized = true;
       // SetProcessInformation only exists on Windows 8 and later.
       nsModuleHandle module(LoadLibrary(L"Kernel32.dll"));
@@ -59,9 +65,12 @@ void SetProcessPriority(int aPid, ProcessPriority aPriority) {
     RtlZeroMemory(&PowerThrottling, sizeof(PowerThrottling));
     PowerThrottling.Version = PROCESS_POWER_THROTTLING_CURRENT_VERSION;
     PowerThrottling.ControlMask = PROCESS_POWER_THROTTLING_EXECUTION_SPEED;
-    PowerThrottling.StateMask = aPriority == PROCESS_PRIORITY_BACKGROUND
-                                    ? PROCESS_POWER_THROTTLING_EXECUTION_SPEED
-                                    : 0;
+    PowerThrottling.StateMask =
+        (aPriority == PROCESS_PRIORITY_BACKGROUND) &&
+                StaticPrefs::
+                    dom_ipc_processPriorityManager_backgroundUsesEcoQoS()
+            ? PROCESS_POWER_THROTTLING_EXECUTION_SPEED
+            : 0;
     if (setProcessInformation(processHandle, ProcessPowerThrottling,
                               &PowerThrottling, sizeof(PowerThrottling))) {
       HAL_LOG("SetProcessInformation(%d, %s)\n", aPid,

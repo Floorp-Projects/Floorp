@@ -1,16 +1,10 @@
-#[macro_use]
-extern crate criterion;
-
 use anyhow::Result;
-use criterion::Criterion;
+use criterion::{criterion_group, criterion_main, Criterion};
 use once_cell::unsync::Lazy;
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
-use wasmparser::{
-    BlockType, BrTable, DataKind, ElementKind, Ieee32, Ieee64, MemArg, Parser, Payload, ValType,
-    Validator, VisitOperator, WasmFeatures, V128,
-};
+use wasmparser::{DataKind, ElementKind, Parser, Payload, Validator, VisitOperator, WasmFeatures};
 
 /// A benchmark input.
 pub struct BenchmarkInput {
@@ -320,7 +314,7 @@ struct NopVisit;
 macro_rules! define_visit_operator {
     ($(@$proposal:ident $op:ident $({ $($arg:ident: $argty:ty),* })? => $visit:ident)*) => {
         $(
-            fn $visit(&mut self, _offset: usize $($(,$arg: $argty)*)?) {
+            fn $visit(&mut self $($(,$arg: $argty)*)?) {
                 define_visit_operator!(@visit $op $( $($arg)* )?);
             }
         )*

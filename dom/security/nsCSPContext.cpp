@@ -998,9 +998,9 @@ void StripURIForReporting(nsIURI* aURI, nsACString& outStrippedURI) {
 
 nsresult nsCSPContext::GatherSecurityPolicyViolationEventData(
     nsIURI* aBlockedURI, const nsACString& aBlockedString, nsIURI* aOriginalURI,
-    nsAString& aEffectiveDirective, uint32_t aViolatedPolicyIndex,
-    nsAString& aSourceFile, nsAString& aScriptSample, uint32_t aLineNum,
-    uint32_t aColumnNum,
+    const nsAString& aEffectiveDirective, uint32_t aViolatedPolicyIndex,
+    const nsAString& aSourceFile, const nsAString& aScriptSample,
+    uint32_t aLineNum, uint32_t aColumnNum,
     mozilla::dom::SecurityPolicyViolationEventInit& aViolationEventInit) {
   EnsureIPCPoliciesRead();
   NS_ENSURE_ARG_MAX(aViolatedPolicyIndex, mPolicies.Length() - 1);
@@ -1051,9 +1051,10 @@ nsresult nsCSPContext::GatherSecurityPolicyViolationEventData(
     if (sourceURI) {
       nsAutoCString spec;
       StripURIForReporting(sourceURI, spec);
-      CopyUTF8toUTF16(spec, aSourceFile);
+      CopyUTF8toUTF16(spec, aViolationEventInit.mSourceFile);
+    } else {
+      aViolationEventInit.mSourceFile = aSourceFile;
     }
-    aViolationEventInit.mSourceFile = aSourceFile;
   }
 
   // sample, max 40 chars.

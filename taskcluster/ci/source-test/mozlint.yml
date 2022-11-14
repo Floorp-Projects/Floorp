@@ -83,6 +83,8 @@ rejected-words:
             - '**/*.properties'
             - '**/*.rst'
             - '**/*.ftl'
+            - '**/*.java'
+            - '**/*.kt'
             - 'tools/lint/rejected-words.yml'
 
 eslint:

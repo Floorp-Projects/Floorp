@@ -43,8 +43,6 @@ export var SearchTestUtils = {
    * the engine at the end of the test.
    *
    * @param {string}   url                     The URL of the engine to add.
-   * @param {Function} registerCleanupFunction Pass the registerCleanupFunction
-   *                                           from the test's scope.
    * @returns {Promise} Returns a promise that is resolved with the new engine
    *                    or rejected if it fails.
    */
@@ -96,7 +94,7 @@ export var SearchTestUtils = {
    *   The folder name to use.
    * @param {string} [subFolder]
    *   The subfolder to use, if any.
-   * @param {array} [config]
+   * @param {Array} [config]
    *   An array which contains the configuration to set.
    * @returns {object}
    *   An object that is a sinon stub for the configuration getter.
@@ -141,7 +139,8 @@ export var SearchTestUtils = {
    * Convert a list of engine configurations into engine objects.
    *
    * @param {Array} engineConfigurations
-   **/
+   *   An array of engine configurations.
+   */
   async searchConfigToEngines(engineConfigurations) {
     let engines = [];
     for (let config of engineConfigurations) {
@@ -189,7 +188,7 @@ export var SearchTestUtils = {
    * may be skipped with the skipUnload argument.
    *
    * @param {object} [options]
-   *   @see createEngineManifest
+   *   See {@link createEngineManifest}
    * @param {boolean} [skipUnload]
    *   If true, this will skip the automatic unloading of the extension.
    * @returns {object}
@@ -235,7 +234,7 @@ export var SearchTestUtils = {
    * Normandy updates. For xpcshell-tests only.
    *
    * @param {object} [options]
-   *   @see createEngineManifest
+   *   See {@link createEngineManifest}
    */
   async installSystemSearchExtension(options = {}) {
     options.id = (options.id ?? "example") + "@search.mozilla.org";
@@ -267,6 +266,7 @@ export var SearchTestUtils = {
    * Create a search engine extension manifest.
    *
    * @param {object} [options]
+   *   The options for the manifest.
    * @param {string} [options.id]
    *   The id to use for the WebExtension.
    * @param {string} [options.name]
@@ -291,8 +291,6 @@ export var SearchTestUtils = {
    *   The suggestion URL parameters to use for the search engine.
    * @param {string} [options.search_form]
    *   The search form to use for the search engine.
-   * @param {string} [options.favicon_url]
-   *   The favicon URL to use for the search engine.
    * @returns {object}
    *   The generated manifest.
    */
@@ -388,8 +386,6 @@ export var SearchTestUtils = {
 
   /**
    * Register the mock idleSerice.
-   *
-   * @param {Fun} registerCleanupFunction
    */
   useMockIdleService() {
     let fakeIdleService = MockRegistrar.register(

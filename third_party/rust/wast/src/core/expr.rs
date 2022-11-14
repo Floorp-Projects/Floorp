@@ -606,8 +606,8 @@ instructions! {
         ArrayGetS(Index<'a>) : [0xfb, 0x14] : "array.get_s",
         ArrayGetU(Index<'a>) : [0xfb, 0x15] : "array.get_u",
         ArraySet(Index<'a>) : [0xfb, 0x16] : "array.set",
-        ArrayLen(Index<'a>) : [0xfb, 0x17] : "array.len",
         ArrayCopy(ArrayCopy<'a>) : [0xfb, 0x18] : "array.copy",
+        ArrayLen : [0xfb, 0x19] : "array.len",
 
         // gc proposal, i31
         I31New : [0xfb, 0x20] : "i31.new",
@@ -640,6 +640,10 @@ instructions! {
         BrOnNonData(Index<'a>) : [0xfb, 0x64] : "br_on_non_data",
         BrOnNonI31(Index<'a>) : [0xfb, 0x65] : "br_on_non_i31",
         BrOnNonArray(Index<'a>) : [0xfb, 0x67] : "br_on_non_array",
+
+        // gc proposal extern/any coercion operations
+        ExternInternalize : [0xfb, 0x70] : "extern.internalize",
+        ExternExternalize : [0xfb, 0x71] : "extern.externalize",
 
         I32Const(i32) : [0x41] : "i32.const",
         I64Const(i64) : [0x42] : "i64.const",
@@ -1140,10 +1144,10 @@ instructions! {
 
         // Relaxed SIMD proposal
         I8x16RelaxedSwizzle : [0xfd, 0x100]: "i8x16.relaxed_swizzle",
-        I32x4RelaxedTruncF32x4S : [0xfd, 0x101]: "i32x4.relaxed_trunc_f32x4_s",
-        I32x4RelaxedTruncF32x4U : [0xfd, 0x102]: "i32x4.relaxed_trunc_f32x4_u",
-        I32x4RelaxedTruncF64x2SZero : [0xfd, 0x103]: "i32x4.relaxed_trunc_f64x2_s_zero",
-        I32x4RelaxedTruncF64x2UZero : [0xfd, 0x104]: "i32x4.relaxed_trunc_f64x2_u_zero",
+        I32x4RelaxedTruncSatF32x4S : [0xfd, 0x101]: "i32x4.relaxed_trunc_sat_f32x4_s" | "i32x4.relaxed_trunc_f32x4_s",
+        I32x4RelaxedTruncSatF32x4U : [0xfd, 0x102]: "i32x4.relaxed_trunc_sat_f32x4_u" | "i32x4.relaxed_trunc_f32x4_u",
+        I32x4RelaxedTruncSatF64x2SZero : [0xfd, 0x103]: "i32x4.relaxed_trunc_sat_f64x2_s_zero" | "i32x4.relaxed_trunc_f64x2_s_zero",
+        I32x4RelaxedTruncSatF64x2UZero : [0xfd, 0x104]: "i32x4.relaxed_trunc_sat_f64x2_u_zero" | "i32x4.relaxed_trunc_f64x2_u_zero",
         F32x4RelaxedFma : [0xfd, 0x105]: "f32x4.relaxed_fma",
         F32x4RelaxedFnma : [0xfd, 0x106]: "f32x4.relaxed_fnma",
         F64x2RelaxedFma : [0xfd, 0x107]: "f64x2.relaxed_fma",

@@ -29,7 +29,7 @@ types to parse anything that looks like a WebAssembly s-expression.
 * Need to parse a `*.wat` file?
 * Need to parse a `*.wast` file?
 * Need to run test suite assertions from the official wasm test suite?
-* Want to write an extension do the WebAssembly text format?
+* Want to write an extension to the WebAssembly text format?
 
 If you'd like to do any of the above this crate might be right for you! You may
 also want to check out the `wat` crate which provides a much more stable

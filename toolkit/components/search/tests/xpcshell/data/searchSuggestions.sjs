@@ -37,7 +37,7 @@ function handleRequest(request, response) {
    * suggestions, which do not conform to the object shape sent by
    * writeSuggestions.
    *
-   * @param {array} data
+   * @param {Array} data The data to send as suggestions.
    */
   function writeSuggestionsDirectly(data) {
     let jsonString = JSON.stringify(data);

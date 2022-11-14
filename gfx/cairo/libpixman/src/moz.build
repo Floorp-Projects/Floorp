@@ -9,26 +9,6 @@ EXPORTS += [
     'pixman.h',
 ]
 
-# Apple's arm assembler doesn't support the same syntax as
-# the standard GNU assembler, so use the C fallback paths for now.
-# This may be fixable if clang's ARM/iOS assembler improves into a
-# viable solution in the future.
-if CONFIG['OS_ARCH'] != 'Darwin' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    if CONFIG['HAVE_ARM_NEON']:
-        SOURCES += [
-            'pixman-arm-neon-asm-bilinear.S',
-            'pixman-arm-neon-asm.S',
-        ]
-    if CONFIG['HAVE_ARM_SIMD']:
-        SOURCES += [
-            'pixman-arm-simd-asm-scaled.S',
-            'pixman-arm-simd-asm.S',
-        ]
-    if CONFIG['CC_TYPE'] == 'clang':
-        ASFLAGS += [
-            '-no-integrated-as',
-        ]
-
 SOURCES += [
     'pixman-access-accessors.c',
     'pixman-access.c',
@@ -82,81 +62,58 @@ DEFINES['PACKAGE'] = 'mozpixman'
 
 DEFINES['_USE_MATH_DEFINES'] = True
 
-use_mmx = False
-use_sse2 = False
-use_vmx = False
-use_arm_simd_gcc = False
-use_arm_neon_gcc = False
 if CONFIG['INTEL_ARCHITECTURE']:
-    use_sse2 = True
-    if CONFIG['CPU_ARCH'] == 'x86':
-        if CONFIG['CC_TYPE'] == 'clang-cl':
-            use_mmx = True
-    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-        use_mmx = True
+    DEFINES['USE_X86_MMX'] = True
+    DEFINES['USE_SSE2'] = True
+    DEFINES['USE_SSSE3'] = True
+    SOURCES += [
+        'pixman-mmx.c',
+        'pixman-sse2.c',
+        'pixman-ssse3.c',
+    ]
+    SOURCES['pixman-mmx.c'].flags += CONFIG['MMX_FLAGS']
+    SOURCES['pixman-sse2.c'].flags += CONFIG['SSE_FLAGS'] + CONFIG['SSE2_FLAGS']
+    SOURCES['pixman-ssse3.c'].flags += CONFIG['SSSE3_FLAGS']
+# AArch64 NEON optimizations don't build on Windows and Mac out of the box.
+elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['OS_TARGET'] in ('Android', 'Linux'):
+    DEFINES['USE_ARM_A64_NEON'] = True
+    SOURCES += [
+        'pixman-arm-neon.c',
+        'pixman-arma64-neon-asm-bilinear.S',
+        'pixman-arma64-neon-asm.S',
+    ]
+    SOURCES['pixman-arm-neon.c'].flags += ['-march=armv8-a']
+elif CONFIG['CPU_ARCH'] == 'arm':
+    if CONFIG['HAVE_ARM_NEON']:
+        DEFINES['USE_ARM_NEON'] = True
+        SOURCES += [
+            'pixman-arm-neon-asm-bilinear.S',
+            'pixman-arm-neon-asm.S',
+            'pixman-arm-neon.c',
+        ]
+        SOURCES['pixman-arm-neon.c'].flags += CONFIG['NEON_FLAGS']
+    if CONFIG['HAVE_ARM_SIMD']:
+        DEFINES['USE_ARM_SIMD'] = True
+        SOURCES += [
+            'pixman-arm-simd-asm-scaled.S',
+            'pixman-arm-simd-asm.S',
+            'pixman-arm-simd.c',
+        ]
 elif CONFIG['CPU_ARCH'] in ('ppc', 'ppc64'):
     if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-        use_vmx = True
-# Apple's arm assembler doesn't support the same syntax as
-# the standard GNU assembler, so use the C fallback paths for now.
-# This may be fixable if clang's ARM/iOS assembler improves into a
-# viable solution in the future.
-elif CONFIG['CPU_ARCH'] == 'arm':
-    if CONFIG['OS_ARCH'] != 'Darwin':
-        if CONFIG['HAVE_ARM_SIMD']:
-            use_arm_simd_gcc = True
-        if CONFIG['HAVE_ARM_NEON']:
-            use_arm_neon_gcc = True
+        DEFINES['USE_VMX'] = True
+        SOURCES += ['pixman-vmx.c']
+        SOURCES['pixman-vmx.c'].flags += ['-maltivec']
 
-if use_mmx:
-    DEFINES['USE_MMX'] = True
-    SOURCES += ['pixman-mmx.c']
-    SOURCES['pixman-mmx.c'].flags += CONFIG['MMX_FLAGS']
-    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-        SOURCES['pixman-mmx.c'].flags += [
-            '-Winline',
-            '--param', 'inline-unit-growth=10000',
-            '--param', 'large-function-growth=10000',
-        ]
-
-if use_sse2:
-    DEFINES['USE_SSE'] = True
-    DEFINES['USE_SSE2'] = True
-    SOURCES += ['pixman-sse2.c']
-    SOURCES['pixman-sse2.c'].flags += CONFIG['SSE_FLAGS'] + CONFIG['SSE2_FLAGS']
-    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-        SOURCES['pixman-sse2.c'].flags += ['-Winline']
-
-if use_vmx:
-    DEFINES['USE_VMX'] = True
-    SOURCES += ['pixman-vmx.c']
-    SOURCES['pixman-vmx.c'].flags += ['-maltivec']
-
-if use_arm_simd_gcc:
-    DEFINES['USE_ARM_SIMD'] = True
-    SOURCES += ['pixman-arm-simd.c']
-
-if use_arm_neon_gcc:
-    DEFINES['USE_ARM_NEON'] = True
-    SOURCES += ['pixman-arm-neon.c']
-    SOURCES['pixman-arm-neon.c'].flags += CONFIG['NEON_FLAGS']
-
-if CONFIG['OS_TARGET'] == 'Android' and (use_arm_neon_gcc or use_arm_simd_gcc):
-    # The assembly files in this directory are built with gas (because of
-    # -no-integrated-as), and they contain `.object_arch armv4`, which
-    # makes gas emit ARM_V4BX relocations that lld doesn't support.
-    # The code being third party and this setup being actually desirable to
-    # keep, until lld supports those relocations[1], hack around it by using
-    # the preprocessor to change it to armv7a, which is the target we use
-    # on arm android (with -march).
-    # 1. https://bugs.llvm.org/show_bug.cgi?id=38303
+if CONFIG['CC_TYPE'] == 'clang':
     ASFLAGS += [
-        '-Darmv4=armv7a'
-    ]
+        '-no-integrated-as',
+    ]    
 
 # Suppress warnings in third-party code.
 CFLAGS += [
     '-Wno-address',
+    '-Wno-braced-scalar-init',
     '-Wno-missing-field-initializers',
     '-Wno-sign-compare',
     '-Wno-incompatible-pointer-types',

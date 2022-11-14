@@ -624,45 +624,40 @@ add_task(async function test_keyboard_focus_after_tab_pickup_opened() {
     syncEnabled: false,
   });
 
-  await BrowserTestUtils.withNewTab(
-    {
-      gBrowser,
-      url: "about:firefoxview",
-    },
-    async browser => {
-      const { document } = browser.contentWindow;
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
 
-      is(
-        document.activeElement.localName,
-        "body",
-        "document body element is initially focused"
-      );
+    is(
+      document.activeElement.localName,
+      "body",
+      "document body element is initially focused"
+    );
 
-      const tab = () => {
-        info("Tab keypress synthesized");
-        EventUtils.synthesizeKey("KEY_Tab");
-      };
+    const tab = () => {
+      info("Tab keypress synthesized");
+      const win = browser.ownerGlobal;
+      EventUtils.synthesizeKey("KEY_Tab", {}, win);
+    };
 
-      tab();
+    tab();
 
-      let tabPickupContainer = document.querySelector(
-        "#tab-pickup-container summary.page-section-header"
-      );
-      is(
-        document.activeElement,
-        tabPickupContainer,
-        "tab pickup container header has focus"
-      );
+    let tabPickupContainer = document.querySelector(
+      "#tab-pickup-container summary.page-section-header"
+    );
+    is(
+      document.activeElement,
+      tabPickupContainer,
+      "tab pickup container header has focus"
+    );
 
-      tab();
+    tab();
 
-      is(
-        document.activeElement.id,
-        "firefoxview-tabpickup-step-signin-primarybutton",
-        "tab pickup primary button has focus"
-      );
-    }
-  );
+    is(
+      document.activeElement.id,
+      "firefoxview-tabpickup-step-signin-primarybutton",
+      "tab pickup primary button has focus"
+    );
+  });
 
   // cleanup time
   await tearDown(sandbox);

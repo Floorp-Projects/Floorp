@@ -217,7 +217,7 @@ class SearchConfigTest {
   }
 
   /**
-   * @returns {array} the list of locales for the tests to run with.
+   * @returns {Array} the list of locales for the tests to run with.
    */
   async _getLocales() {
     if (TEST_DEBUG) {
@@ -242,9 +242,10 @@ class SearchConfigTest {
    * Determines if a locale matches with a locales section in the configuration.
    *
    * @param {object} locales
-   * @param {array} [locales.matches]
+   *   The config locales config, containing the locals to match against.
+   * @param {Array} [locales.matches]
    *   Array of locale names to match exactly.
-   * @param {array} [locales.startsWith]
+   * @param {Array} [locales.startsWith]
    *   Array of locale names to match the start.
    * @param {string} locale
    *   The two-letter locale code.
@@ -400,7 +401,7 @@ class SearchConfigTest {
    *   The two-letter region code.
    * @param {string} locale
    *   The two-letter locale code.
-   * @param {array} engines
+   * @param {Array} engines
    *   The current visible engines.
    * @returns {boolean}
    *   Returns true if the engine is expected to be present, false otherwise.
@@ -416,7 +417,7 @@ class SearchConfigTest {
    *   The two-letter region code.
    * @param {string} locale
    *   The two-letter locale code.
-   * @param {array} engines
+   * @param {Array} engines
    *   The current visible engines.
    */
   _assertEngineDetails(region, locale, engines) {

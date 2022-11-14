@@ -466,6 +466,11 @@ void GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost) {
 
   mGPUChild = mProcess->GetActor();
   mProcessToken = mProcess->GetProcessToken();
+#if defined(XP_WIN)
+  if (mAppInForeground) {
+    SetProcessIsForeground();
+  }
+#endif
 
   ipc::Endpoint<PVsyncBridgeParent> vsyncParent;
   ipc::Endpoint<PVsyncBridgeChild> vsyncChild;
@@ -824,7 +829,11 @@ void GPUProcessManager::HandleProcessLost() {
   // Except on Android if the app is in the background, where we want to wait
   // until the app is in the foreground again.
   if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
+#ifdef MOZ_WIDGET_ANDROID
     if (mAppInForeground) {
+#else
+    {
+#endif
       Unused << LaunchGPUProcess();
     }
   } else {
@@ -1392,6 +1401,57 @@ RefPtr<MemoryReportingProcess> GPUProcessManager::GetProcessMemoryReporter() {
   }
   return new GPUMemoryReporter();
 }
+
+void GPUProcessManager::SetAppInForeground(bool aInForeground) {
+  if (mAppInForeground == aInForeground) {
+    return;
+  }
+
+  mAppInForeground = aInForeground;
+#if defined(XP_WIN)
+  SetProcessIsForeground();
+#endif
+}
+
+#if defined(XP_WIN)
+void GPUProcessManager::SetProcessIsForeground() {
+  NTSTATUS WINAPI NtSetInformationProcess(
+      IN HANDLE process_handle, IN ULONG info_class,
+      IN PVOID process_information, IN ULONG information_length);
+  constexpr unsigned int NtProcessInformationForeground = 25;
+
+  static bool alreadyInitialized = false;
+  static decltype(NtSetInformationProcess)* setInformationProcess = nullptr;
+  if (!alreadyInitialized) {
+    alreadyInitialized = true;
+    nsModuleHandle module(LoadLibrary(L"ntdll.dll"));
+    if (module) {
+      setInformationProcess =
+          (decltype(NtSetInformationProcess)*)GetProcAddress(
+              module, "NtSetInformationProcess");
+    }
+  }
+  if (MOZ_UNLIKELY(!setInformationProcess)) {
+    return;
+  }
+
+  unsigned pid = GPUProcessPid();
+  if (pid <= 0) {
+    return;
+  }
+  // Using the handle from mProcess->GetChildProcessHandle() fails;
+  // the PROCESS_SET_INFORMATION permission is probably missing.
+  nsAutoHandle processHandle(
+      ::OpenProcess(PROCESS_SET_INFORMATION, FALSE, pid));
+  if (!processHandle) {
+    return;
+  }
+
+  BOOLEAN foreground = mAppInForeground;
+  setInformationProcess(processHandle, NtProcessInformationForeground,
+                        (PVOID)&foreground, sizeof(foreground));
+}
+#endif
 
 RefPtr<PGPUChild::TestTriggerMetricsPromise>
 GPUProcessManager::TestTriggerMetrics() {

@@ -669,33 +669,6 @@ set_config("ENABLE_WASM_GC", wasm_gc)
 set_define("ENABLE_WASM_GC", wasm_gc)
 
 
-# Support for WebAssembly private ref types.
-# Prevent (ref T) types from being exposed to JS content so that wasm need do
-# no typechecking at the JS/wasm boundary
-# ===========================================================================
-
-
-@depends(milestone.is_nightly, "--enable-wasm-gc")
-def default_wasm_private_reftypes(is_nightly, gc):
-    if gc and is_nightly:
-        return True
-
-
-option(
-    "--enable-wasm-private-reftypes",
-    default=default_wasm_private_reftypes,
-    help="{Enable|Disable} WebAssembly private reference types",
-)
-
-set_config(
-    "WASM_PRIVATE_REFTYPES",
-    depends_if("--enable-wasm-private-reftypes")(lambda x: True),
-)
-set_define(
-    "WASM_PRIVATE_REFTYPES",
-    depends_if("--enable-wasm-private-reftypes")(lambda x: True),
-)
-
 # Support for WebAssembly shared memory and atomics.
 #
 # This affects the JS shell only.

@@ -75,8 +75,16 @@ bool wasm::ToRefType(JSContext* cx, JSLinearString* typeLinearStr,
   } else if (StringEqualsLiteral(typeLinearStr, "externref")) {
     *out = RefType::extern_();
 #ifdef ENABLE_WASM_GC
+  } else if (GcAvailable(cx) && StringEqualsLiteral(typeLinearStr, "anyref")) {
+    *out = RefType::any();
   } else if (GcAvailable(cx) && StringEqualsLiteral(typeLinearStr, "eqref")) {
     *out = RefType::eq();
+  } else if (GcAvailable(cx) &&
+             StringEqualsLiteral(typeLinearStr, "structref")) {
+    *out = RefType::struct_();
+  } else if (GcAvailable(cx) &&
+             StringEqualsLiteral(typeLinearStr, "arrayref")) {
+    *out = RefType::array();
 #endif
   } else {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -98,8 +106,17 @@ UniqueChars wasm::ToString(RefType type, const TypeContext* types) {
       case RefType::Extern:
         literal = "externref";
         break;
+      case RefType::Any:
+        literal = "anyref";
+        break;
       case RefType::Eq:
         literal = "eqref";
+        break;
+      case RefType::Struct:
+        literal = "structref";
+        break;
+      case RefType::Array:
+        literal = "arrayref";
         break;
       case RefType::TypeRef: {
         uint32_t typeIndex = types->indexOf(*type.typeDef());
@@ -119,8 +136,17 @@ UniqueChars wasm::ToString(RefType type, const TypeContext* types) {
     case RefType::Extern:
       heapType = "extern";
       break;
+    case RefType::Any:
+      heapType = "any";
+      break;
     case RefType::Eq:
       heapType = "eq";
+      break;
+    case RefType::Struct:
+      heapType = "struct";
+      break;
+    case RefType::Array:
+      heapType = "array";
       break;
     case RefType::TypeRef: {
       uint32_t typeIndex = types->indexOf(*type.typeDef());

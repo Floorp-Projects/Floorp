@@ -570,8 +570,11 @@ export class SearchService {
    * Adds a search engine that is specified by the user.
    *
    * @param {string} name
+   *   The name of the search engine
    * @param {string} url
+   *   The url that the search engine uses for searches
    * @param {string} alias
+   *   An alias for the search engine
    */
   async addUserEngine(name, url, alias) {
     await this.init();
@@ -1052,7 +1055,7 @@ export class SearchService {
    * Various search engines may be ignored if their submission urls contain a
    * string that is in the list. The list is controlled via remote settings.
    *
-   * @type {array}
+   * @type {Array}
    */
   #submissionURLIgnoreList = [];
 
@@ -1060,7 +1063,7 @@ export class SearchService {
    * Various search engines may be ignored if their load path is contained
    * in this list. The list is controlled via remote settings.
    *
-   * @type {array}
+   * @type {Array}
    */
   #loadPathIgnoreList = [];
 
@@ -1074,7 +1077,7 @@ export class SearchService {
   /**
    * An array of engine short names sorted into display order.
    *
-   * @type {array}
+   * @type {Array}
    */
   _cachedSortedEngines = null;
 
@@ -1188,6 +1191,7 @@ export class SearchService {
    * Returns the engine associated with the WebExtension details.
    *
    * @param {object} details
+   *   Details of the WebExtension.
    * @param {string} details.id
    *   The WebExtension ID
    * @param {string} details.locale
@@ -1695,9 +1699,9 @@ export class SearchService {
    * Loads engines as specified by the configuration. We only expect
    * configured engines here, user engines should not be listed.
    *
-   * @param {array} engineConfigs
+   * @param {Array} engineConfigs
    *   An array of engines configurations based on the schema.
-   * @returns {array.<nsISearchEngine>}
+   * @returns {Array.<nsISearchEngine>}
    *   Returns an array of the loaded search engines. This may be
    *   smaller than the original list if not all engines can be loaded.
    */
@@ -2454,6 +2458,7 @@ export class SearchService {
 
   /**
    * Get a sorted array of the visible engines.
+   *
    * @returns {Array<SearchEngine>}
    */
 
@@ -2638,6 +2643,7 @@ export class SearchService {
    * Note: this is currently used for enterprise policy engines as well.
    *
    * @param {object} options
+   *   Options for the engine.
    * @param {string} options.extensionID
    *   The extension ID being added for the engine.
    * @param {nsIURI} [options.extensionBaseURI]
@@ -3602,6 +3608,7 @@ export class SearchService {
 
   /**
    * @param {object} metaData
+   *    The metadata object that defines the details of the engine.
    * @returns {boolean}
    *    Returns true if metaData has different property values than
    *    the cached _metaData.
@@ -3739,7 +3746,7 @@ XPCOMUtils.defineLazyServiceGetter(
  */
 class SearchDefaultOverrideAllowlistHandler {
   /**
-   * @param {function} listener
+   * @param {Function} listener
    *   A listener for configuration update changes.
    */
   constructor(listener) {
@@ -3795,7 +3802,7 @@ class SearchDefaultOverrideAllowlistHandler {
    * Note that this may cause a network check of the certificate, but that
    * should generally be quick.
    *
-   * @returns {array}
+   * @returns {Array}
    *   An array of objects in the database, or an empty array if none
    *   could be obtained.
    */

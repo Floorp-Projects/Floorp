@@ -302,7 +302,7 @@ class AutofillRecords {
   /**
    * Gets the data of this collection.
    *
-   * @returns {array}
+   * @returns {Array}
    *          The data object.
    */
   get _data() {
@@ -326,6 +326,7 @@ class AutofillRecords {
 
   /**
    * Initialize the records in the collection, resolves when the migration completes.
+   *
    * @returns {Promise}
    */
   initialize() {
@@ -335,8 +336,9 @@ class AutofillRecords {
   /**
    * Adds a new record.
    *
-   * @param {Object} record
+   * @param {object} record
    *        The new record for saving.
+   * @param {object} options
    * @param {boolean} [options.sourceSync = false]
    *        Did sync generate this addition?
    * @returns {Promise<string>}
@@ -443,7 +445,7 @@ class AutofillRecords {
    *
    * @param  {string} guid
    *         Indicates which record to update.
-   * @param  {Object} record
+   * @param  {object} record
    *         The new record used to overwrite the old one.
    * @param  {Promise<boolean>} [preserveOldProperties = false]
    *         Preserve old record's properties if they don't exist in new record.
@@ -558,6 +560,7 @@ class AutofillRecords {
    *
    * @param  {string} guid
    *         Indicates which record to remove.
+   * @param  {object} options
    * @param  {boolean} [options.sourceSync = false]
    *         Did Sync generate this removal?
    */
@@ -615,10 +618,11 @@ class AutofillRecords {
    *
    * @param   {string} guid
    *          Indicates which record to retrieve.
+   * @param   {object} options
    * @param   {boolean} [options.rawData = false]
    *          Returns a raw record without modifications and the computed fields
    *          (this includes private fields)
-   * @returns {Promise<Object>}
+   * @returns {Promise<object>}
    *          A clone of the record.
    */
   async get(guid, { rawData = false } = {}) {
@@ -642,11 +646,12 @@ class AutofillRecords {
   /**
    * Returns all records.
    *
+   * @param   {object} options
    * @param   {boolean} [options.rawData = false]
    *          Returns raw records without modifications and the computed fields.
    * @param   {boolean} [options.includeDeleted = false]
    *          Also return any tombstone records.
-   * @returns {Promise<Array.<Object>>}
+   * @returns {Promise<Array.<object>>}
    *          An array containing clones of all records.
    */
   async getAll({ rawData = false, includeDeleted = false } = {}) {
@@ -716,7 +721,7 @@ class AutofillRecords {
    * records that haven't been uploaded yet, and for fields which have already
    * been changed since the last sync.
    *
-   * @param   {Object} record
+   * @param   {object} record
    *          The updated local record.
    * @param   {string} field
    *          The field name.
@@ -746,12 +751,12 @@ class AutofillRecords {
    * remote record, and the shared parent that we synthesize from the last
    * synced fields - see _maybeStoreLastSyncedField.
    *
-   * @param   {Object} strippedLocalRecord
+   * @param   {object} strippedLocalRecord
    *          The changed local record, currently in storage. Computed fields
    *          are stripped.
-   * @param   {Object} remoteRecord
+   * @param   {object} remoteRecord
    *          The remote record.
-   * @returns {Object|null}
+   * @returns {object | null}
    *          The merged record, or `null` if there are conflicts and the
    *          records can't be merged.
    */
@@ -818,7 +823,8 @@ class AutofillRecords {
    * fields and Sync metadata.
    *
    * @param   {number} index
-   * @param   {Object} remoteRecord
+   * @param   {object} remoteRecord
+   * @param   {object} options
    * @param   {Promise<boolean>} [options.keepSyncMetadata = false]
    *          Should we copy Sync metadata? This is true if `remoteRecord` is a
    *          merged record with local changes that we need to upload. Passing
@@ -880,7 +886,7 @@ class AutofillRecords {
    * Clones a local record, giving the clone a new GUID and Sync metadata. The
    * original record remains unchanged in storage.
    *
-   * @param   {Object} strippedLocalRecord
+   * @param   {object} strippedLocalRecord
    *          The local record. Computed fields are stripped.
    * @returns {string}
    *          A clone of the local record with a new GUID.
@@ -905,12 +911,12 @@ class AutofillRecords {
    * Reconciles an incoming remote record into the matching local record. This
    * method is only used by Sync; other callers should use `merge`.
    *
-   * @param   {Object} remoteRecord
+   * @param   {object} remoteRecord
    *          The incoming record. `remoteRecord` must not be a tombstone, and
    *          must have a matching local record with the same GUID. Use
    *          `add` to insert remote records that don't exist locally, and
    *          `remove` to apply remote tombstones.
-   * @returns {Promise<Object>}
+   * @returns {Promise<object>}
    *          A `{forkedGUID}` tuple. `forkedGUID` is `null` if the merge
    *          succeeded without conflicts, or a new GUID referencing the
    *          existing locally modified record if the conflicts could not be
@@ -1161,7 +1167,7 @@ class AutofillRecords {
    * fields that match incoming remote records. This avoids creating
    * duplicate profiles with the same information.
    *
-   * @param   {Object} remoteRecord
+   * @param   {object} remoteRecord
    *          The remote record.
    * @returns {Promise<string|null>}
    *          The GUID of the matching local record, or `null` if no records
@@ -1322,7 +1328,8 @@ class AutofillRecords {
 
   /**
    * Merge the record if storage has multiple mergeable records.
-   * @param {Object} targetRecord
+   *
+   * @param {object} targetRecord
    *        The record for merge.
    * @param {boolean} [strict = false]
    *        In strict merge mode, we'll treat the subset record with empty field
@@ -1367,8 +1374,9 @@ class AutofillRecords {
 
   /**
    * Strip the computed fields based on the record version.
-   * @param   {Object} record      The record to migrate
-   * @returns {Object}             Migrated record.
+   *
+   * @param   {object} record      The record to migrate
+   * @returns {object}             Migrated record.
    *                               Record is always cloned, with version updated,
    *                               with computed fields stripped.
    *                               Could be a tombstone record, if the record
@@ -1641,7 +1649,7 @@ class AddressesBase extends AutofillRecords {
    *
    * @param  {string} guid
    *         Indicates which address to merge.
-   * @param  {Object} address
+   * @param  {object} address
    *         The new address used to merge into the old one.
    * @param  {boolean} strict
    *         In strict merge mode, we'll treat the subset record with empty field
@@ -1896,7 +1904,8 @@ class CreditCardsBase extends AutofillRecords {
 
   /**
    * Normalize the given record and return the first matched guid if storage has the same record.
-   * @param {Object} targetCreditCard
+   *
+   * @param {object} targetCreditCard
    *        The credit card for duplication checking.
    * @returns {Promise<string|null>}
    *          Return the first guid if storage has the same credit card and null otherwise.
@@ -1931,7 +1940,7 @@ class CreditCardsBase extends AutofillRecords {
    *
    * @param  {string} guid
    *         Indicates which credit card to merge.
-   * @param  {Object} creditCard
+   * @param  {object} creditCard
    *         The new credit card used to merge into the old one.
    * @returns {boolean}
    *          Return true if credit card is merged into target with specific guid or false if not.
@@ -1982,9 +1991,8 @@ class FormAutofillStorageBase {
   /**
    * Initialize storage to memory.
    *
-   * @returns {Promise}
-   * @resolves When the operation finished successfully.
-   * @rejects  JavaScript exception.
+   * @returns {Promise} When the operation finished successfully.
+   * @throws  JavaScript exception.
    */
   initialize() {
     if (!this._initializePromise) {

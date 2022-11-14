@@ -541,6 +541,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   bool CachedOpaqueResponseBlockingPref() const {
     return mCachedOpaqueResponseBlockingPref;
   }
+
  protected:
   nsresult GetTopWindowURI(nsIURI* aURIBeingLoaded, nsIURI** aTopWindowURI);
 
@@ -623,7 +624,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   nsresult ValidateMIMEType();
 
-  OpaqueResponseAllowed EnsureOpaqueResponseIsAllowed();
+  OpaqueResponseAllowed EnsureOpaqueResponseIsAllowed(
+      bool& aCompressedMediaAndImageDetectorStarted);
 
   Result<OpaqueResponseAllowed, nsresult>
   EnsureOpaqueResponseIsAllowedAfterSniff();

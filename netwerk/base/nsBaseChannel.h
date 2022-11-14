@@ -292,8 +292,6 @@ class nsBaseChannel
   nsCOMPtr<nsISupports> mOwner;
   nsCOMPtr<nsITransportSecurityInfo> mSecurityInfo;
   nsCOMPtr<nsIChannel> mRedirectChannel;
-  nsCString mContentType;
-  nsCString mContentCharset;
   uint32_t mLoadFlags{LOAD_NORMAL};
   bool mQueriedProgressSink{true};
   bool mSynthProgressEvents{false};
@@ -303,6 +301,8 @@ class nsBaseChannel
   uint32_t mRedirectFlags{0};
 
  protected:
+  nsCString mContentType;
+  nsCString mContentCharset;
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
   nsCOMPtr<nsILoadInfo> mLoadInfo;

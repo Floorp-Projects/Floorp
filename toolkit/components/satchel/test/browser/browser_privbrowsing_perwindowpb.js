@@ -6,7 +6,7 @@ var { FormHistory } = ChromeUtils.import(
   "resource://gre/modules/FormHistory.jsm"
 );
 
-/** Test for Bug 472396 **/
+/** Test for Bug 472396 */
 add_task(async function test() {
   // initialization
   let windowsToClose = [];

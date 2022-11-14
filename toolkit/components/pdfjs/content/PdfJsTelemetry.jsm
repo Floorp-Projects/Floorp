@@ -19,11 +19,8 @@
 var EXPORTED_SYMBOLS = ["PdfJsTelemetry"];
 
 var PdfJsTelemetry = {
-  onViewerIsUsed(isAttachment) {
+  onViewerIsUsed() {
     Services.telemetry.scalarAdd("pdf.viewer.used", 1);
-    if (isAttachment) {
-      Services.telemetry.scalarAdd("pdf.viewer.is_attachment", 1);
-    }
   },
   onFallbackError(featureId) {
     let histogram = Services.telemetry.getHistogramById(

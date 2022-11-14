@@ -604,7 +604,7 @@ void WasmArrayObject::fillVal(const Val& val, uint32_t itemIndex,
                               uint32_t len) {
   const ArrayType& arrayType = rttValue_->typeDef().arrayType();
   size_t elementSize = arrayType.elementType_.size();
-  uint8_t* data = data_;
+  uint8_t* data = data_ + elementSize * itemIndex;
   MOZ_ASSERT(itemIndex <= numElements_ && len <= numElements_ - itemIndex);
   for (uint32_t i = 0; i < len; i++) {
     WriteValTo(val, arrayType.elementType_, data);

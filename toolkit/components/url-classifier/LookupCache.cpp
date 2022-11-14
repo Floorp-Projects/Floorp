@@ -923,6 +923,13 @@ nsresult LookupCacheV2::GetPrefixes(FallibleTArray<uint32_t>& aAddPrefixes,
   return mVLPrefixSet->GetFixedLengthPrefixes(&aAddPrefixes, &aAddCompletes);
 }
 
+nsresult LookupCacheV2::GetPrefixByIndex(uint32_t aIndex,
+                                         uint32_t* aOutPrefix) const {
+  NS_ENSURE_ARG_POINTER(aOutPrefix);
+
+  return mVLPrefixSet->GetFixedLengthPrefixByIndex(aIndex, aOutPrefix);
+}
+
 void LookupCacheV2::AddGethashResultToCache(
     const AddCompleteArray& aAddCompletes, const MissPrefixArray& aMissPrefixes,
     int64_t aExpirySec) {

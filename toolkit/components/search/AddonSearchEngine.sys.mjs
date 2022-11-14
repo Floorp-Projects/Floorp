@@ -29,6 +29,7 @@ export class AddonSearchEngine extends SearchEngine {
    * Creates a AddonSearchEngine.
    *
    * @param {object} options
+   *   The options object
    * @param {boolean} options.isAppProvided
    *   Indicates whether the engine is provided by Firefox, either
    *   shipped in omni.ja or via Normandy. If it is, it will

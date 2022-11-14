@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 /**
  * Provides a js-friendly promise-based API around FormHistory, and utils.
  *
- * @note This is not a 100% complete implementation, it is intended for quick
+ * Note: This is not a 100% complete implementation, it is intended for quick
  * additions and check, thus further changes may be necessary for different
  * use-cases.
  */
@@ -27,7 +27,7 @@ var FormHistoryTestUtils = {
    * Adds values to form history.
    *
    * @param {string} fieldname The field name.
-   * @param {array} additions Array of entries describing the values to add.
+   * @param {Array} additions Array of entries describing the values to add.
    *   Each entry can either be a string, or an object with the shape
    *   { value, source}.
    * @returns {Promise} Resolved once the operation is complete.
@@ -47,7 +47,7 @@ var FormHistoryTestUtils = {
    * Counts values from form history.
    *
    * @param {string} fieldname The field name.
-   * @param {array} filters Objects describing the search properties.
+   * @param {Array} filters Objects describing the search properties.
    * @returns {number} The number of entries found.
    */
   async count(fieldname, filters = {}) {
@@ -59,11 +59,10 @@ var FormHistoryTestUtils = {
    * If you want to remove all history, use clear() instead.
    *
    * @param {string} fieldname The field name.
-   * @param {array} removals Array of entries describing the values to add.
+   * @param {Array} removals Array of entries describing the values to add.
    *   Each entry can either be a string, or an object with the shape
    *   { value, source}. If source is specified, only the source relation will
    *   be removed, while the global form history value persists.
-   * @param {object} window The window containing the urlbar.
    * @returns {Promise} Resolved once the operation is complete.
    */
   remove(fieldname, removals) {
@@ -91,9 +90,8 @@ var FormHistoryTestUtils = {
    * Searches form history.
    *
    * @param {string} fieldname The field name.
-   * @param {array} filters Objects describing the search properties.
-   * @returns {Promise} Resolved once the operation is complete.
-   * @resolves {Array} Array of found form history entries.
+   * @param {Array} filters Objects describing the search properties.
+   * @returns {Promise<Array>} Resolves an array of found form history entries.
    */
   search(fieldname, filters = {}) {
     return lazy.FormHistory.search(null, Object.assign({ fieldname }, filters));
@@ -104,9 +102,8 @@ var FormHistoryTestUtils = {
    *
    * @param {string} searchString The search string.
    * @param {string} fieldname The field name.
-   * @param {array} filters Objects describing the search properties.
-   * @returns {Promise} Resolved once the operation is complete.
-   * @resolves {Array} Array of found form history entries.
+   * @param {Array} filters Objects describing the search properties.
+   * @returns {Promise<Array>} Resolves an array of found form history entries.
    */
   autocomplete(searchString, fieldname, filters = {}) {
     return lazy.FormHistory.getAutoCompleteResults(

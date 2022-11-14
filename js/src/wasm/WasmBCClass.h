@@ -1623,11 +1623,13 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitArrayNewElem();
   [[nodiscard]] bool emitArrayGet(FieldExtension extension);
   [[nodiscard]] bool emitArraySet();
-  [[nodiscard]] bool emitArrayLen();
+  [[nodiscard]] bool emitArrayLen(bool decodeIgnoredTypeIndex);
   [[nodiscard]] bool emitArrayCopy();
   [[nodiscard]] bool emitRefTest();
   [[nodiscard]] bool emitRefCast();
   [[nodiscard]] bool emitBrOnCastCommon(bool onSuccess);
+  [[nodiscard]] bool emitExternInternalize();
+  [[nodiscard]] bool emitExternExternalize();
 
   void emitGcCanon(uint32_t typeIndex);
   void emitGcNullCheck(RegRef rp);

@@ -833,23 +833,16 @@ static int32_t CoerceInPlace_JitEntry(int funcExportIndex, Instance* instance,
         break;
       }
       case ValType::Ref: {
-        switch (funcType.args()[i].refTypeKind()) {
-          case RefType::Extern:
-            // Leave Object and Null alone, we will unbox inline.  All we need
-            // to do is convert other values to an Object representation.
-            if (!arg.isObjectOrNull()) {
-              RootedAnyRef result(cx, AnyRef::null());
-              if (!BoxAnyRef(cx, arg, &result)) {
-                return false;
-              }
-              argv[i].setObject(*result.get().asJSObject());
-            }
-            break;
-          case RefType::Func:
-          case RefType::Eq:
-          case RefType::TypeRef:
-            // Guarded against by temporarilyUnsupportedReftypeForEntry()
-            MOZ_CRASH("unexpected input argument in CoerceInPlace_JitEntry");
+        // Guarded against by temporarilyUnsupportedReftypeForEntry()
+        MOZ_RELEASE_ASSERT(funcType.args()[i].refType().isExtern());
+        // Leave Object and Null alone, we will unbox inline.  All we need
+        // to do is convert other values to an Object representation.
+        if (!arg.isObjectOrNull()) {
+          RootedAnyRef result(cx, AnyRef::null());
+          if (!BoxAnyRef(cx, arg, &result)) {
+            return false;
+          }
+          argv[i].setObject(*result.get().asJSObject());
         }
         break;
       }

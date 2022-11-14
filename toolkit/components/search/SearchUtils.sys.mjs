@@ -42,7 +42,7 @@ class LoadListener {
    *   The initial channel to load from.
    * @param {RegExp} expectedContentType
    *   A regular expression to match the expected content type to.
-   * @param {function} callback
+   * @param {Function} callback
    *   A callback to receive the loaded data. The callback is passed the bytes
    *   (array) and the content type received. The bytes argument may be null if
    *   no data could be loaded.
@@ -217,6 +217,7 @@ export var SearchUtils = {
 
   /**
    * Wrapper function for nsIIOService::newURI.
+   *
    * @param {string} urlSpec
    *        The URL string from which to create an nsIURI.
    * @returns {nsIURI} an nsIURI object, or null if the creation of the URI failed.

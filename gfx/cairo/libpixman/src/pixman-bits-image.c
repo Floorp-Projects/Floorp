@@ -482,6 +482,7 @@ __bits_image_fetch_affine_no_alpha (pixman_iter_t *  iter,
     int             width  = iter->width;
     uint32_t *      buffer = iter->buffer;
 
+    const uint32_t wide_zero[4] = {0};
     pixman_fixed_t x, y;
     pixman_fixed_t ux, uy;
     pixman_vector_t v;
@@ -513,7 +514,8 @@ __bits_image_fetch_affine_no_alpha (pixman_iter_t *  iter,
 
     for (i = 0; i < width; ++i)
     {
-	if (!mask || mask[i])
+	if (!mask || (!wide && mask[i]) ||
+	    (wide && memcmp(&mask[4 * i], wide_zero, 16) != 0))
 	{
 	    bits_image_fetch_pixel_filtered (
 		&image->bits, wide, x, y, get_pixel, buffer);
@@ -636,6 +638,7 @@ __bits_image_fetch_general (pixman_iter_t  *iter,
     get_pixel_t     get_pixel =
 	wide ? fetch_pixel_general_float : fetch_pixel_general_32;
 
+    const uint32_t wide_zero[4] = {0};
     pixman_fixed_t x, y, w;
     pixman_fixed_t ux, uy, uw;
     pixman_vector_t v;
@@ -670,7 +673,8 @@ __bits_image_fetch_general (pixman_iter_t  *iter,
     {
 	pixman_fixed_t x0, y0;
 
-	if (!mask || mask[i])
+	if (!mask || (!wide && mask[i]) ||
+	    (wide && memcmp(&mask[4 * i], wide_zero, 16) != 0))
 	{
 	    if (w != 0)
 	    {
@@ -1051,14 +1055,14 @@ dest_write_back_narrow (pixman_iter_t *iter)
     iter->y++;
 }
 
-static const float
+static float
 dither_factor_blue_noise_64 (int x, int y)
 {
     float m = dither_blue_noise_64x64[((y & 0x3f) << 6) | (x & 0x3f)];
     return m * (1. / 4096.f) + (1. / 8192.f);
 }
 
-static const float
+static float
 dither_factor_bayer_8 (int x, int y)
 {
     uint32_t m;

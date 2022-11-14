@@ -324,6 +324,7 @@ OpKind wasm::Classify(OpBytes op) {
           WASM_GC_OP(OpKind::ArrayGet);
         case GcOp::ArraySet:
           WASM_GC_OP(OpKind::ArraySet);
+        case GcOp::ArrayLenWithTypeIndex:
         case GcOp::ArrayLen:
           WASM_GC_OP(OpKind::ArrayLen);
         case GcOp::ArrayCopy:
@@ -335,6 +336,10 @@ OpKind wasm::Classify(OpBytes op) {
         case GcOp::BrOnCast:
         case GcOp::BrOnCastFail:
           WASM_GC_OP(OpKind::BrOnCast);
+        case GcOp::ExternInternalize:
+          WASM_GC_OP(OpKind::RefConversion);
+        case GcOp::ExternExternalize:
+          WASM_GC_OP(OpKind::RefConversion);
       }
       break;
     }

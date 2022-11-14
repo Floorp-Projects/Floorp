@@ -88,6 +88,7 @@ let AddressDataLoader = {
 
   /**
    * Load address data and extension script into a sandbox from different paths.
+   *
    * @param   {string} path
    *          The path for address data and extension script. It could be root of the address
    *          metadata folder(addressmetadata/) or under specific country(addressmetadata/TW/).
@@ -125,6 +126,7 @@ let AddressDataLoader = {
   /**
    * Convert certain properties' string value into array. We should make sure
    * the cached data is parsed.
+   *
    * @param   {object} data Original metadata from addressReferences.
    * @returns {object} parsed metadata with property value that converts to array.
    */
@@ -164,6 +166,7 @@ let AddressDataLoader = {
    *               "data/TW": {} // Other supported country metadata
    *               "data/TW/台北市": {} // Other supported country level 1 metadata
    *              }
+   *
    * @param   {string} country
    * @param   {string?} level1
    * @returns {object} Default locale metadata
@@ -191,6 +194,7 @@ let AddressDataLoader = {
 
   /**
    * Return the region metadata with default locale and other locales (if exists).
+   *
    * @param   {string} country
    * @param   {string?} level1
    * @returns {object} Return default locale and other locales metadata.
@@ -369,6 +373,7 @@ FormAutofillUtils = {
   /**
    * Internal method to split an address to multiple parts per the provided delimiter,
    * removing blank parts.
+   *
    * @param {string} address The address the split
    * @param {string} [delimiter] The separator that is used between lines in the address
    * @returns {string[]}
@@ -384,6 +389,7 @@ FormAutofillUtils = {
 
   /**
    * Converts a street address to a single line, removing linebreaks marked by the delimiter
+   *
    * @param {string} address The address the convert
    * @param {string} [delimiter] The separator that is used between lines in the address
    * @returns {string}
@@ -395,9 +401,10 @@ FormAutofillUtils = {
 
   /**
    * Compares two addresses, removing internal whitespace
+   *
    * @param {string} a The first address to compare
    * @param {string} b The second address to compare
-   * @param {array} collators Search collators that will be used for comparison
+   * @param {Array} collators Search collators that will be used for comparison
    * @param {string} [delimiter="\n"] The separator that is used between lines in the address
    * @returns {boolean} True if the addresses are equal, false otherwise
    */
@@ -414,6 +421,7 @@ FormAutofillUtils = {
   /**
    * In-place concatenate tel-related components into a single "tel" field and
    * delete unnecessary fields.
+   *
    * @param {object} address An address record.
    */
   compressTel(address) {
@@ -461,6 +469,7 @@ FormAutofillUtils = {
    * NOTE: this does not encompass every possible way of hiding an element.
    * Instead, we check some of the more common methods of hiding for performance reasons.
    * See Bug 1727832 for follow up.
+   *
    * @param {HTMLElement} element
    * @returns {boolean} true if the element is visible
    */
@@ -508,6 +517,7 @@ FormAutofillUtils = {
   /**
    * Get country address data and fallback to US if not found.
    * See AddressDataLoader._loadData for more details of addressData structure.
+   *
    * @param {string} [country=FormAutofill.DEFAULT_REGION]
    *        The country code for requesting specific country's metadata. It'll be
    *        default region if parameter is not set.
@@ -543,6 +553,7 @@ FormAutofillUtils = {
 
   /**
    * Get country address data with default locale.
+   *
    * @param {string} country
    * @param {string} level1
    * @returns {object|null} Return metadata of specific region with default locale.
@@ -557,9 +568,10 @@ FormAutofillUtils = {
 
   /**
    * Get country address data with all locales.
+   *
    * @param {string} country
    * @param {string} level1
-   * @returns {array<object>|null}
+   * @returns {Array<object> | null}
    *          Return metadata of specific region with all the locales.
    *          NOTE: The returned data may be for a default region if the
    *          specified one cannot be found. Callers who only want the specific
@@ -572,8 +584,9 @@ FormAutofillUtils = {
 
   /**
    * Get the collators based on the specified country.
+   *
    * @param   {string} country The specified country.
-   * @returns {array} An array containing several collator objects.
+   * @returns {Array} An array containing several collator objects.
    */
   getSearchCollators(country) {
     // TODO: Only one language should be used at a time per country. The locale
@@ -620,7 +633,7 @@ FormAutofillUtils = {
    * ]
    *
    * @param   {string} fmt Country address format string
-   * @returns {array<object>} List of fields
+   * @returns {Array<object>} List of fields
    */
   parseAddressFormat(fmt) {
     if (!fmt) {
@@ -690,7 +703,7 @@ FormAutofillUtils = {
    * ["street-address", "address-level2", "address-level1"]
    *
    * @param   {string} requireString Country address require string
-   * @returns {array<string>} List of fields
+   * @returns {Array<string>} List of fields
    */
   parseRequireString(requireString) {
     if (!requireString) {
@@ -703,6 +716,7 @@ FormAutofillUtils = {
   /**
    * Use alternative country name list to identify a country code from a
    * specified country name.
+   *
    * @param   {string} countryName A country name to be identified
    * @param   {string} [countrySpecified] A country code indicating that we only
    *                                      search its alternative names if specified.
@@ -769,6 +783,7 @@ FormAutofillUtils = {
 
   /**
    * Try to find the abbreviation of the given sub-region name
+   *
    * @param   {string[]} subregionValues A list of inferable sub-region values.
    * @param   {string} [country] A country name to be identified.
    * @returns {string} The matching sub-region abbreviation.
@@ -831,6 +846,7 @@ FormAutofillUtils = {
    * 2. First pass try to find exact match.
    * 3. Second pass try to identify values from address value and options,
    *    and look for a match.
+   *
    * @param   {DOMElement} selectEl
    * @param   {object} address
    * @param   {string} fieldName
@@ -1020,10 +1036,11 @@ FormAutofillUtils = {
 
   /**
    * Try to match value with keys and names, but always return the key.
-   * @param   {array<string>} keys
-   * @param   {array<string>} names
+   *
+   * @param   {Array<string>} keys
+   * @param   {Array<string>} names
    * @param   {string} value
-   * @param   {array} collators
+   * @param   {Array} collators
    * @returns {string}
    */
   identifyValue(keys, names, value, collators) {
@@ -1044,9 +1061,10 @@ FormAutofillUtils = {
 
   /**
    * Compare if two strings are the same.
+   *
    * @param   {string} a
    * @param   {string} b
-   * @param   {array} collators
+   * @param   {Array} collators
    * @returns {boolean}
    */
   strCompare(a = "", b = "", collators) {
@@ -1056,6 +1074,7 @@ FormAutofillUtils = {
   /**
    * Escaping user input to be treated as a literal string within a regular
    * expression.
+   *
    * @param   {string} string
    * @returns {string}
    */
@@ -1065,6 +1084,7 @@ FormAutofillUtils = {
 
   /**
    * Get formatting information of a given country
+   *
    * @param   {string} country
    * @returns {object}
    *         {
@@ -1133,6 +1153,7 @@ FormAutofillUtils = {
   /**
    * Transform the key in FormAutofillConfidences (defined in ChromeUtils.webidl)
    * to fathom recognized field type.
+   *
    * @param {string} key key from FormAutofillConfidences dictionary
    * @returns {string} fathom field type
    */
@@ -1174,7 +1195,7 @@ const LabelUtils = {
    * "element.textContent" is a string which is merged of all children nodes,
    * and this function provides an array of the strings contains in an element.
    *
-   * @param  {Object} element
+   * @param  {object} element
    *         A DOM element to be extracted.
    * @returns {Array}
    *          All strings in an element.

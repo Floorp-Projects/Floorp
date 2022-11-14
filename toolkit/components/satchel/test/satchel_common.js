@@ -215,6 +215,7 @@ async function promiseNoUnexpectedPopupShown() {
 
 /**
  * Resolve at the next popupshown event for the autocomplete popup
+ *
  * @returns {Promise} with the results
  */
 function promiseACShown() {
@@ -229,6 +230,7 @@ function promiseACShown() {
 
 /**
  * Open autocomplete popup on a field (if it exists) and wait for it to be shown
+ *
  * @param {HTMLInputElement} input - input field to open autocomplete popup on
  * @returns {Promise} of autocomplete items shown
  */

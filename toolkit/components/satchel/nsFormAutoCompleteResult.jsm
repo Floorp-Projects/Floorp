@@ -89,6 +89,7 @@ FormAutoCompleteResult.prototype = {
 
   /**
    * Retrieves a result
+   *
    * @param   {number} index   the index of the result requested
    * @returns {string}         the result at the specified index
    */
@@ -104,8 +105,9 @@ FormAutoCompleteResult.prototype = {
 
   /**
    * Retrieves a comment (metadata instance)
+   *
    * @param {number} index    the index of the comment requested
-   * @returns {Object}        the comment at the specified index
+   * @returns {object}        the comment at the specified index
    */
   getCommentAt(index) {
     this._checkIndexBounds(index);
@@ -114,6 +116,7 @@ FormAutoCompleteResult.prototype = {
 
   /**
    * Retrieves a style hint specific to a particular index.
+   *
    * @param   {number} index   the index of the style hint requested
    * @returns {string|null}    the style hint at the specified index
    */
@@ -137,6 +140,7 @@ FormAutoCompleteResult.prototype = {
 
   /**
    * Retrieves an image url.
+   *
    * @param   {number} index  the index of the image url requested
    * @returns {string}        the image url at the specified index
    */
@@ -147,6 +151,7 @@ FormAutoCompleteResult.prototype = {
 
   /**
    * Retrieves a result
+   *
    * @param   {number} index   the index of the result requested
    * @returns {string}         the result at the specified index
    */
@@ -156,6 +161,7 @@ FormAutoCompleteResult.prototype = {
 
   /**
    * Returns true if the value at the given index is removable
+   *
    * @param   {number}  index  the index of the result to remove
    * @returns {boolean}        True if the value is removable
    */
@@ -166,6 +172,7 @@ FormAutoCompleteResult.prototype = {
 
   /**
    * Removes a result from the resultset
+   *
    * @param {number}  index    the index of the result to remove
    */
   removeValueAt(index) {
