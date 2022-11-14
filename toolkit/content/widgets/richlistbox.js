@@ -758,7 +758,7 @@
       );
     }
 
-    moveByOffset(aOffset, aIsSelecting, aIsSelectingRange) {
+    moveByOffset(aOffset, aIsSelecting, aIsSelectingRange, aEvent) {
       if ((aIsSelectingRange || !aIsSelecting) && this.selType != "multiple") {
         return;
       }
@@ -782,11 +782,24 @@
             : this.getPreviousItem(newItem, 1) || this.getNextItem(newItem, 1);
       }
       if (newItem) {
+        let hadFocus = this.currentItem.contains(document.activeElement);
         this.ensureIndexIsVisible(this.getIndexOfItem(newItem));
         if (aIsSelectingRange) {
           this.selectItemRange(null, newItem);
         } else if (aIsSelecting) {
           this.selectItem(newItem);
+        }
+        if (hadFocus) {
+          let flags =
+            Services.focus[
+              aEvent.type.startsWith("key") ? "FLAG_BYKEY" : "FLAG_BYJS"
+            ];
+          Services.focus.moveFocus(
+            window,
+            newItem,
+            Services.focus.MOVEFOCUS_FIRST,
+            flags
+          );
         }
 
         this.currentItem = newItem;
@@ -796,7 +809,7 @@
     _moveByOffsetFromUserEvent(aOffset, aEvent) {
       if (!aEvent.defaultPrevented) {
         this._userSelecting = true;
-        this.moveByOffset(aOffset, !aEvent.ctrlKey, aEvent.shiftKey);
+        this.moveByOffset(aOffset, !aEvent.ctrlKey, aEvent.shiftKey, aEvent);
         this._userSelecting = false;
         aEvent.preventDefault();
       }
@@ -927,6 +940,10 @@
       });
     }
 
+    connectedCallback() {
+      this._updateInnerControlsForSelection(this.selected);
+    }
+
     /**
      * nsIDOMXULSelectControlItemElement
      */
@@ -974,6 +991,7 @@
       } else {
         this.removeAttribute("selected");
       }
+      this._updateInnerControlsForSelection(val);
     }
 
     get selected() {
@@ -1003,6 +1021,16 @@
 
     get current() {
       return this.getAttribute("current") == "true";
+    }
+
+    _updateInnerControlsForSelection(selected) {
+      for (let control of this.querySelectorAll("button,menulist")) {
+        if (!selected && control.tabIndex == 0) {
+          control.tabIndex = -1;
+        } else if (selected && control.tabIndex == -1) {
+          control.tabIndex = 0;
+        }
+      }
     }
   };
 
