@@ -28,8 +28,12 @@ function handleLoad() {
     });
   } else {
     childWin.waitForAllPaintsFlushed(function() {
-      // Verify that the scroll position was retained
-      is(childWin.scrollY, childWin.scrollMaxY);
+      // Verify that the scroll position was retained.
+      // NOTE: Window.scrollMaY is a long value, so we need to round
+      // Window.scrollY which is double.
+      // NOTE: Window.scrollMaxY is non-standard, so difference < 1.0 would not
+      // be a big problem.
+      is(Math.round(childWin.scrollY), childWin.scrollMaxY);
       childWin.close();
       SimpleTest.finish();
     });
