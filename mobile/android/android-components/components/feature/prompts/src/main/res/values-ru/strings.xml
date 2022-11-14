@@ -84,13 +84,13 @@
     <!-- Title of the time picker dialog. -->
     <string name="mozac_feature_prompts_set_time">Установка времени</string>
     <!-- Option in expanded select login prompt that links to login settings -->
-    <string name="mozac_feature_prompts_manage_logins">Управление логинами</string>
+    <string name="mozac_feature_prompts_manage_logins">Управление паролями</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description">Развернуть предлагаемые логины</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description">Развернуть предлагаемые пароли</string>
     <!-- Content description for collapsing the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description">Свернуть предлагаемые логины</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description">Свернуть предлагаемые пароли</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
-    <string name="mozac_feature_prompts_saved_logins">Предлагаемые логины</string>
+    <string name="mozac_feature_prompts_saved_logins">Предлагаемые пароли</string>
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Отправить данные на этот сайт снова?</string>

@@ -26,7 +26,7 @@
     access to this permission-->
     <string name="mozac_feature_sitepermissions_not_allow">Не разрешать</string>
     <!-- Text for a checkbox in a permission request dialog, this will allow to not show again the prompt-->
-    <string name="mozac_feature_sitepermissions_do_not_ask_again_on_this_site2">Запомнить для этого веб-сайта</string>
+    <string name="mozac_feature_sitepermissions_do_not_ask_again_on_this_site2">Запомнить для этого сайта</string>
     <!-- Text for a positive button in a permission request dialog. This will always allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
     <string name="mozac_feature_sitepermissions_always_allow">Всегда</string>
     <!-- Text for a negative button in a permission request dialog. This will never allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
@@ -34,7 +34,7 @@
     <!-- Title of a dialog to require to save data in persistent storage. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_persistent_storage_title">Разрешить %1$s хранить данные в постоянном хранилище?</string>
     <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
-    <string name="mozac_feature_sitepermissions_media_key_system_access_title">Разрешить %1$s воспроизводить защищённое DRM содержимое?</string>
+    <string name="mozac_feature_sitepermissions_media_key_system_access_title">Разрешить %1$s воспроизводить защищённое авторским правом содержимое?</string>
     <!-- Title of a dialog to use cross origin storage permission. %1$s is the name of the site URL (www.site1.example) trying to track the user's activity.
      %2$s is the name of the site URL (www.site2.example) that the user is visiting.  This is the same domain name displayed in the address bar -->
     <string name="mozac_feature_sitepermissions_storage_access_title">Разрешить %1$s использовать собственные куки на %2$s?</string>

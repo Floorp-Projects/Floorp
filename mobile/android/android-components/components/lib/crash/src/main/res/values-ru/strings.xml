@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Title of the crash reporter dialog. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
-    <string name="mozac_lib_crash_dialog_title">Извините. %1$s столкнулся с проблемой и аварийно завершил работу.</string>
+    <string name="mozac_lib_crash_dialog_title">Извините. В %1$s возникла проблема и произошёл сбой.</string>
 
     <!-- Label of the checkbox for sending crash reports in the crash reporter dialog. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
     <string name="mozac_lib_crash_dialog_checkbox">Отправлять сообщения о падениях в %1$s</string>

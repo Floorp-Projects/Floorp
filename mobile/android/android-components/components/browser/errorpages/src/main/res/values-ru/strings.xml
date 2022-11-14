@@ -8,7 +8,7 @@
     <string name="mozac_browser_errorpages_generic_title">Не удалось выполнить запрос</string>
     <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_message"><![CDATA[
-      <p>Дополнительная информация об этой проблеме или ошибке сейчас недоступна.</p>
+      <p>Дополнительные сведения об этой проблеме или ошибке сейчас недоступны.</p>
     ]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
@@ -16,7 +16,7 @@
     <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
         <li>Страница, которую вы пытаетесь просмотреть, не может быть отображена, так как достоверность полученных данных не может быть проверена.</li>
-        <li>Пожалуйста, свяжитесь с владельцами веб-сайта и сообщите им об этой проблеме.</li>
+        <li>Пожалуйста, свяжитесь с владельцами сайта и сообщите им об этой проблеме.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->

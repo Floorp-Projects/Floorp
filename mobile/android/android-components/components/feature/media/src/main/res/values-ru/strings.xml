@@ -17,5 +17,5 @@
     <string name="mozac_feature_media_notification_action_pause">Приостановить</string>
 
     <!-- Neutral title of the media notification for when a website that is open in private mode. -->
-    <string name="mozac_feature_media_notification_private_mode">Сайт воспроизводит медиа</string>
+    <string name="mozac_feature_media_notification_private_mode">Сайт воспроизводит звук и/или видео</string>
 </resources>

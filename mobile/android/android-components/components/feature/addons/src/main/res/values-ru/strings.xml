@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Description for privacy add-on permission. -->
-    <string name="mozac_feature_addons_permissions_privacy_description">Чтение и изменение параметров приватности</string>
+    <string name="mozac_feature_addons_permissions_privacy_description">Чтение и изменение настроек приватности</string>
     <!-- Description for all_urls add-on permission. -->
-    <string name="mozac_feature_addons_permissions_all_urls_description">Доступ к вашим данным для всех веб-сайтов</string>
+    <string name="mozac_feature_addons_permissions_all_urls_description">Доступ к вашим данным для всех сайтов</string>
     <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
     <string name="mozac_feature_addons_permissions_one_site_description">Доступ к вашим данным на %1$s</string>
     <!-- Description for giving an add-on access to users's data in multiple sites in the domain %1$s. %1$s will be replaced by the DNS domain for which a web extension is requesting access (e.g., mozilla.org). -->
@@ -51,7 +51,7 @@
     <!-- Description for history permission. -->
     <string name="mozac_feature_addons_permissions_history_description">Доступ к истории браузера</string>
     <!-- Description for management permission. -->
-    <string name="mozac_feature_addons_permissions_management_description">Мониторинг использования расширений и управление темами</string>
+    <string name="mozac_feature_addons_permissions_management_description">Отслеживание использования расширений и управление темами</string>
     <!-- Description for native_messaging permission. -->
     <string name="mozac_feature_addons_permissions_native_messaging_description">Обмен сообщениями с приложениями, помимо этого</string>
     <!-- Description for notifications permission. -->
@@ -79,7 +79,7 @@
     <!-- A link where users can find more information about add-ons permissions. -->
     <string name="mozac_feature_addons_learn_more">Узнайте больше о разрешениях</string>
     <!-- The rating of the add-on. -->
-    <string name="mozac_feature_addons_rating">Рейтинг</string>
+    <string name="mozac_feature_addons_rating">Оценка</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Настройки</string>
     <!-- Indicates the add-on is enabled. -->
@@ -157,7 +157,7 @@
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Технология дополнений Firefox модернизируется. Эти дополнения используют компоненты, которые не совместимы с Firefox 75 и выше.</string>
     <!-- This is the caption for not yet supported screen caption -->
-    <string name="mozac_feature_addons_not_yet_supported_caption2">В данный момент мы подготавливаем первоначальную систему выбора рекомендуемых расширений.</string>
+    <string name="mozac_feature_addons_not_yet_supported_caption2">В данное время мы подготавливаем первоначальную систему выбора предлагаемых расширений.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Загрузка и проверка дополнения…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
@@ -177,9 +177,9 @@
     <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_disable">Ошибка при отключении %1$s</string>
     <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_successfully_uninstalled">%1$s успешно деинсталлировано</string>
+    <string name="mozac_feature_addons_successfully_uninstalled">%1$s успешно удалено</string>
     <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_failed_to_uninstall">Ошибка при деинсталляции %1$s</string>
+    <string name="mozac_feature_addons_failed_to_uninstall">Ошибка при удалении: %1$s</string>
     <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s успешно удалено</string>
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
@@ -199,11 +199,11 @@
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
     <string name="mozac_feature_addons_updater_status_error">Ошибка</string>
     <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
-    <string name="mozac_feature_addons_updater_dialog_title">Информация об обновлении</string>
+    <string name="mozac_feature_addons_updater_dialog_title">Сведения об обновлении</string>
     <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
     <string name="mozac_feature_addons_updater_dialog_last_attempt">Последняя попытка:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
-    <string name="mozac_feature_addons_updater_dialog_status">Статус:</string>
+    <string name="mozac_feature_addons_updater_dialog_status">Состояние:</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
     <string name="mozac_feature_addons_installed_dialog_title">%1$s было добавлено в %2$s</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
