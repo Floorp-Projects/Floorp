@@ -216,22 +216,6 @@ class FuncType {
     return false;
   }
 
-#ifdef WASM_PRIVATE_REFTYPES
-  bool exposesTypeIndex() const {
-    for (const ValType& arg : args()) {
-      if (arg.isTypeRef()) {
-        return true;
-      }
-    }
-    for (const ValType& result : results()) {
-      if (result.isTypeRef()) {
-        return true;
-      }
-    }
-    return false;
-  }
-#endif
-
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   WASM_DECLARE_FRIEND_SERIALIZE(FuncType);
 };

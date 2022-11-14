@@ -2443,13 +2443,6 @@ inline bool OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex,
   }
   const FuncType& funcType = typeDef.funcType();
 
-#ifdef WASM_PRIVATE_REFTYPES
-  if (env_.tables[*tableIndex].isImportedOrExported &&
-      funcType.exposesTypeIndex()) {
-    return fail("cannot expose indexed reference type");
-  }
-#endif
-
   if (!popCallArgs(funcType.args(), argValues)) {
     return false;
   }

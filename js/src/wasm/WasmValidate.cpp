@@ -1478,15 +1478,6 @@ static bool DecodePreamble(Decoder& d) {
   return true;
 }
 
-#ifdef WASM_PRIVATE_REFTYPES
-static bool FuncTypeIsJSCompatible(Decoder& d, const FuncType& ft) {
-  if (ft.exposesTypeIndex()) {
-    return d.fail("cannot expose indexed reference type");
-  }
-  return true;
-}
-#endif
-
 static bool DecodeValTypeVector(Decoder& d, ModuleEnvironment* env,
                                 uint32_t count, ValTypeVector* valTypes) {
   if (!valTypes->resize(count)) {
@@ -1904,35 +1895,11 @@ static bool DecodeTableTypeAndLimits(Decoder& d, const FeatureArgs& features,
                              /* isAsmJS */ false);
 }
 
-static bool GlobalIsJSCompatible(Decoder& d, ValType type) {
-  switch (type.kind()) {
-    case ValType::I32:
-    case ValType::F32:
-    case ValType::F64:
-    case ValType::I64:
-    case ValType::V128:
-      break;
-    case ValType::Ref:
-      if (type.refType().isTypeRef()) {
-        return d.fail("cannot expose indexed reference type");
-      }
-      break;
-    default:
-      return d.fail("unexpected variable type in global import/export");
-  }
-
-  return true;
-}
-
 static bool DecodeGlobalType(Decoder& d, const SharedTypeContext& types,
                              const FeatureArgs& features, ValType* type,
                              bool* isMutable) {
   if (!d.readValType(*types, features, type)) {
     return d.fail("expected global type");
-  }
-
-  if (type->isRefType() && !type->isNullable()) {
-    return d.fail("non-nullable references not supported in globals");
   }
 
   uint8_t flags;
@@ -1980,18 +1947,6 @@ static bool DecodeMemoryTypeAndLimits(Decoder& d, ModuleEnvironment* env) {
   env->memory = Some(MemoryDesc(limits));
   return true;
 }
-
-#ifdef WASM_PRIVATE_REFTYPES
-static bool TagIsJSCompatible(Decoder& d, const ValTypeVector& type) {
-  for (auto t : type) {
-    if (t.isTypeRef()) {
-      return d.fail("cannot expose indexed reference type");
-    }
-  }
-
-  return true;
-}
-#endif  // WASM_PRIVATE_REFTYPES
 
 static bool DecodeTag(Decoder& d, ModuleEnvironment* env, TagKind* tagKind,
                       uint32_t* funcTypeIndex) {
@@ -2044,12 +1999,6 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       if (!DecodeFuncTypeIndex(d, env->types, &funcTypeIndex)) {
         return false;
       }
-#ifdef WASM_PRIVATE_REFTYPES
-      if (!FuncTypeIsJSCompatible(d,
-                                  env->types->type(funcTypeIndex).funcType())) {
-        return false;
-      }
-#endif
       if (!env->funcs.append(FuncDesc(
               &env->types->type(funcTypeIndex).funcType(), funcTypeIndex))) {
         return false;
@@ -2079,9 +2028,6 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       if (!DecodeGlobalType(d, env->types, env->features, &type, &isMutable)) {
         return false;
       }
-      if (!GlobalIsJSCompatible(d, type)) {
-        return false;
-      }
       if (!env->globals.append(
               GlobalDesc(type, isMutable, env->globals.length()))) {
         return false;
@@ -2101,11 +2047,6 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       if (!args.appendAll((*env->types)[funcTypeIndex].funcType().args())) {
         return false;
       }
-#ifdef WASM_PRIVATE_REFTYPES
-      if (!TagIsJSCompatible(d, args)) {
-        return false;
-      }
-#endif
       MutableTagType tagType = js_new<TagType>();
       if (!tagType || !tagType->initialize(std::move(args))) {
         return false;
@@ -2374,11 +2315,6 @@ static bool DecodeExport(Decoder& d, ModuleEnvironment* env, NameSet* dupSet) {
       if (funcIndex >= env->numFuncs()) {
         return d.fail("exported function index out of bounds");
       }
-#ifdef WASM_PRIVATE_REFTYPES
-      if (!FuncTypeIsJSCompatible(d, *env->funcs[funcIndex].type)) {
-        return false;
-      }
-#endif
 
       env->declareFuncExported(funcIndex, /* eager */ true,
                                /* canRefFunc */ true);
@@ -2423,9 +2359,6 @@ static bool DecodeExport(Decoder& d, ModuleEnvironment* env, NameSet* dupSet) {
 
       GlobalDesc* global = &env->globals[globalIndex];
       global->setIsExport();
-      if (!GlobalIsJSCompatible(d, global->type())) {
-        return false;
-      }
 
       return env->exports.emplaceBack(std::move(fieldName), globalIndex,
                                       DefinitionKind::Global);
@@ -2438,12 +2371,6 @@ static bool DecodeExport(Decoder& d, ModuleEnvironment* env, NameSet* dupSet) {
       if (tagIndex >= env->tags.length()) {
         return d.fail("exported tag index out of bounds");
       }
-
-#ifdef WASM_PRIVATE_REFTYPES
-      if (!TagIsJSCompatible(d, env->tags[tagIndex].type->argTypes_)) {
-        return false;
-      }
-#endif
 
       env->tags[tagIndex].isExport = true;
       return env->exports.emplaceBack(std::move(fieldName), tagIndex,
@@ -2673,15 +2600,6 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
       return false;
     }
 
-#ifdef WASM_PRIVATE_REFTYPES
-    // We assume that passive or declared segments may be applied to external
-    // tables. We can do slightly better: if there are no external tables in
-    // the module then we don't need to worry about passive or declared
-    // segments either. But this is a temporary restriction.
-    bool exportedTable = kind == ElemSegmentKind::Passive ||
-                         kind == ElemSegmentKind::Declared ||
-                         env->tables[seg->tableIndex].isImportedOrExported;
-#endif
     bool isAsmJS = seg->active() && env->tables[seg->tableIndex].isAsmJS;
 
     // For passive segments we should use InitExpr but we don't really want to
@@ -2726,12 +2644,6 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
         if (funcIndex >= env->numFuncs()) {
           return d.fail("table element out of range");
         }
-#ifdef WASM_PRIVATE_REFTYPES
-        if (exportedTable &&
-            !FuncTypeIsJSCompatible(d, *env->funcs[funcIndex].type)) {
-          return false;
-        }
-#endif
       }
 
       if (payload == ElemSegmentPayload::ElemExpression) {

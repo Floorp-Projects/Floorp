@@ -387,9 +387,8 @@ class RefType {
       case RefType::Eq:
       case RefType::Struct:
       case RefType::Array:
-        return TableRepr::Ref;
       case RefType::TypeRef:
-        MOZ_CRASH("NYI");
+        return TableRepr::Ref;
     }
     MOZ_CRASH("switch is exhaustive");
   }

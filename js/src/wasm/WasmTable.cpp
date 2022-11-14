@@ -235,6 +235,31 @@ void Table::fillAnyRef(uint32_t index, uint32_t fillCount, AnyRef ref) {
   }
 }
 
+bool Table::getValue(JSContext* cx, uint32_t index,
+                     MutableHandleValue result) const {
+  switch (repr()) {
+    case TableRepr::Func: {
+      MOZ_RELEASE_ASSERT(!isAsmJS());
+      RootedFunction fun(cx);
+      if (!getFuncRef(cx, index, &fun)) {
+        return false;
+      }
+      result.setObjectOrNull(fun);
+      return true;
+    }
+    case TableRepr::Ref: {
+      if (!ValType(elemType_).isExposable()) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                 JSMSG_WASM_BAD_VAL_TYPE);
+        return false;
+      }
+      return ToJSValue(cx, &objects_[index], ValType(elemType_), result);
+    }
+    default:
+      MOZ_CRASH();
+  }
+}
+
 void Table::setNull(uint32_t index) {
   switch (repr()) {
     case TableRepr::Func: {
@@ -304,6 +329,8 @@ bool Table::copy(JSContext* cx, const Table& srcTable, uint32_t dstIndex,
 }
 
 uint32_t Table::grow(uint32_t delta) {
+  MOZ_RELEASE_ASSERT(elemType_.isNullable());
+
   // This isn't just an optimization: movingGrowable() assumes that
   // onMovingGrowTable does not fire when length == maximum.
   if (!delta) {
