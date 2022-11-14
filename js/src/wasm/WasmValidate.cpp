@@ -1631,7 +1631,8 @@ static bool DecodeTypeSection(Decoder& d, ModuleEnvironment* env) {
         return d.fail("expected type form");
       }
 
-      if (firstTypeCode == (uint8_t)TypeCode::RecGroup) {
+      if (firstTypeCode == (uint8_t)TypeCode::RecGroup ||
+          firstTypeCode == (uint8_t)TypeCode::RecGroupOld) {
         // Skip over the prefix byte that was peeked.
         d.uncheckedReadFixedU8();
 
