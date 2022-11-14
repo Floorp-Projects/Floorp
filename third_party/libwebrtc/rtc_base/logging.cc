@@ -191,17 +191,6 @@ LogMessage::LogMessage(const char* file,
 }
 #endif
 
-// DEPRECATED. Currently only used by downstream projects that use
-// implementation details of logging.h. Work is ongoing to remove those
-// dependencies.
-LogMessage::LogMessage(const char* file,
-                       int line,
-                       LoggingSeverity sev,
-                       absl::string_view tag)
-    : LogMessage(file, line, sev) {
-  print_stream_ << tag << ": ";
-}
-
 LogMessage::~LogMessage() {
   FinishPrintStream();
 

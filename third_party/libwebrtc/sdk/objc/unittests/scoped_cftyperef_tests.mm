@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#import <XCTest/XCTest.h>
+
 #include "sdk/objc/helpers/scoped_cftyperef.h"
 
 #include "test/gtest.h"
@@ -40,19 +42,24 @@ using ScopedTestType = rtc::internal::ScopedTypeRef<TestTypeRef, TestTypeTraits>
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-variable"
 
-TEST(ScopedTypeRefTest, ShouldNotRetainByDefault) {
+@interface ScopedTypeRefTests : XCTestCase
+@end
+
+@implementation ScopedTypeRefTests
+
+- (void)testShouldNotRetainByDefault {
   TestType a;
   ScopedTestType ref(&a);
   EXPECT_EQ(0, a.retain_count);
 }
 
-TEST(ScopedTypeRefTest, ShouldRetainWithPolicy) {
+- (void)testShouldRetainWithPolicy {
   TestType a;
   ScopedTestType ref(&a, rtc::RetainPolicy::RETAIN);
   EXPECT_EQ(1, a.retain_count);
 }
 
-TEST(ScopedTypeRefTest, ShouldReleaseWhenLeavingScope) {
+- (void)testShouldReleaseWhenLeavingScope {
   TestType a;
   EXPECT_EQ(0, a.retain_count);
   {
@@ -62,7 +69,7 @@ TEST(ScopedTypeRefTest, ShouldReleaseWhenLeavingScope) {
   EXPECT_EQ(0, a.retain_count);
 }
 
-TEST(ScopedTypeRefTest, ShouldBeCopyable) {
+- (void)testShouldBeCopyable {
   TestType a;
   EXPECT_EQ(0, a.retain_count);
   {
@@ -74,7 +81,7 @@ TEST(ScopedTypeRefTest, ShouldBeCopyable) {
   EXPECT_EQ(0, a.retain_count);
 }
 
-TEST(ScopedTypeRefTest, CanReleaseOwnership) {
+- (void)testCanReleaseOwnership {
   TestType a;
   EXPECT_EQ(0, a.retain_count);
   {
@@ -85,7 +92,7 @@ TEST(ScopedTypeRefTest, CanReleaseOwnership) {
   EXPECT_EQ(1, a.retain_count);
 }
 
-TEST(ScopedTypeRefTest, ShouldBeTestableForTruthiness) {
+- (void)testShouldBeTestableForTruthiness {
   ScopedTestType ref;
   EXPECT_FALSE(ref);
   TestType a;
@@ -95,10 +102,12 @@ TEST(ScopedTypeRefTest, ShouldBeTestableForTruthiness) {
   EXPECT_FALSE(ref);
 }
 
-TEST(ScopedTypeRefTest, ShouldProvideAccessToWrappedType) {
+- (void)testShouldProvideAccessToWrappedType {
   TestType a;
   ScopedTestType ref(&a);
   EXPECT_EQ(&(a.retain_count), &(ref->retain_count));
 }
+
+@end
 
 #pragma clang diagnostic pop

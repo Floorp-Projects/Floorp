@@ -13,6 +13,7 @@
 #include <memory>
 #include <string>
 
+#include "api/make_ref_counted.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/ref_count.h"
 #include "test/gmock.h"

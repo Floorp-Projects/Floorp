@@ -17,6 +17,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/strings/match.h"
+#include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/video_codecs/video_codec.h"
@@ -55,9 +56,10 @@ static const size_t kPathMTU = 1500;
 
 using webrtc_internal_rtp_video_sender::RtpStreamSender;
 
-bool PayloadTypeSupportsSkippingFecPackets(const std::string& payload_name,
+bool PayloadTypeSupportsSkippingFecPackets(absl::string_view payload_name,
                                            const FieldTrialsView& trials) {
-  const VideoCodecType codecType = PayloadStringToCodecType(payload_name);
+  const VideoCodecType codecType =
+      PayloadStringToCodecType(std::string(payload_name));
   if (codecType == kVideoCodecVP8 || codecType == kVideoCodecVP9) {
     return true;
   }
@@ -236,6 +238,12 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
 
   RTC_DCHECK(rtp_config.rtx.ssrcs.empty() ||
              rtp_config.rtx.ssrcs.size() == rtp_config.ssrcs.size());
+
+  // Some streams could have been disabled, but the rids are still there.
+  // This will occur when simulcast has been disabled for a codec (e.g. VP9)
+  RTC_DCHECK(rtp_config.rids.empty() ||
+             rtp_config.rids.size() >= rtp_config.ssrcs.size());
+
   for (size_t i = 0; i < rtp_config.ssrcs.size(); ++i) {
     RTPSenderVideo::Config video_config;
     configuration.local_media_ssrc = rtp_config.ssrcs[i];
@@ -248,6 +256,8 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
         rtp_config.GetRtxSsrcAssociatedWithMediaSsrc(rtp_config.ssrcs[i]);
     RTC_DCHECK_EQ(configuration.rtx_send_ssrc.has_value(),
                   !rtp_config.rtx.ssrcs.empty());
+
+    configuration.rid = (i < rtp_config.rids.size()) ? rtp_config.rids[i] : "";
 
     configuration.need_rtp_packet_infos = rtp_config.lntf.enabled;
 
@@ -368,9 +378,6 @@ RtpVideoSender::RtpVideoSender(
           field_trials_.Lookup("WebRTC-Video-UseFrameRateForOverhead"),
           "Enabled")),
       has_packet_feedback_(TransportSeqNumExtensionConfigured(rtp_config)),
-      simulate_generic_structure_(absl::StartsWith(
-          field_trials_.Lookup("WebRTC-GenericCodecDependencyDescriptor"),
-          "Enabled")),
       active_(false),
       fec_controller_(std::move(fec_controller)),
       fec_allowed_(true),
@@ -423,7 +430,6 @@ RtpVideoSender::RtpVideoSender(
   }
 
   ConfigureSsrcs(suspended_ssrcs);
-  ConfigureRids();
 
   if (!rtp_config_.mid.empty()) {
     for (const RtpStreamSender& stream : rtp_streams_) {
@@ -594,32 +600,10 @@ EncodedImageCallback::Result RtpVideoSender::OnEncodedImage(
     RTPSenderVideo& sender_video = *rtp_streams_[stream_index].sender_video;
     if (codec_specific_info && codec_specific_info->template_structure) {
       sender_video.SetVideoStructure(&*codec_specific_info->template_structure);
-    } else if (codec_specific_info &&
-               codec_specific_info->codecType == kVideoCodecVP8) {
-      FrameDependencyStructure structure =
-          RtpPayloadParams::MinimalisticStructure(/*num_spatial_layers=*/1,
-                                                  kMaxTemporalStreams);
-      sender_video.SetVideoStructure(&structure);
-    } else if (codec_specific_info &&
-               codec_specific_info->codecType == kVideoCodecVP9) {
-      const CodecSpecificInfoVP9& vp9 = codec_specific_info->codecSpecific.VP9;
-
-      FrameDependencyStructure structure =
-          RtpPayloadParams::MinimalisticStructure(vp9.num_spatial_layers,
-                                                  kMaxTemporalStreams);
-      if (vp9.ss_data_available && vp9.spatial_layer_resolution_present) {
-        for (size_t i = 0; i < vp9.num_spatial_layers; ++i) {
-          structure.resolutions.emplace_back(vp9.width[i], vp9.height[i]);
-        }
-      }
-      sender_video.SetVideoStructure(&structure);
-    } else if (simulate_generic_structure_ && codec_specific_info &&
-               codec_specific_info->codecType == kVideoCodecGeneric) {
-      FrameDependencyStructure structure =
-          RtpPayloadParams::MinimalisticStructure(
-              /*num_spatial_layers=*/1,
-              /*num_temporal_layers=*/1);
-      sender_video.SetVideoStructure(&structure);
+    } else if (absl::optional<FrameDependencyStructure> structure =
+                   params_[stream_index].GenericStructure(
+                       codec_specific_info)) {
+      sender_video.SetVideoStructure(&*structure);
     } else {
       sender_video.SetVideoStructure(nullptr);
     }
@@ -755,18 +739,6 @@ void RtpVideoSender::ConfigureSsrcs(
           rtp_config_.ulpfec.red_rtx_payload_type,
           rtp_config_.ulpfec.red_payload_type);
     }
-  }
-}
-
-void RtpVideoSender::ConfigureRids() {
-  if (rtp_config_.rids.empty())
-    return;
-
-  // Some streams could have been disabled, but the rids are still there.
-  // This will occur when simulcast has been disabled for a codec (e.g. VP9)
-  RTC_DCHECK(rtp_config_.rids.size() >= rtp_streams_.size());
-  for (size_t i = 0; i < rtp_streams_.size(); ++i) {
-    rtp_streams_[i].rtp_rtcp->SetRid(rtp_config_.rids[i]);
   }
 }
 

@@ -46,7 +46,6 @@
 #include "rtc_base/gunit.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/location.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/socket_factory.h"
 #include "rtc_base/ssl_certificate.h"
@@ -184,7 +183,10 @@ class PeerConnectionRampUpTest : public ::testing::Test {
     auto observer = std::make_unique<MockPeerConnectionObserver>();
     webrtc::PeerConnectionDependencies dependencies(observer.get());
     cricket::BasicPortAllocator* port_allocator =
-        new cricket::BasicPortAllocator(fake_network_manager);
+        new cricket::BasicPortAllocator(
+            fake_network_manager,
+            std::make_unique<rtc::BasicPacketSocketFactory>(
+                firewall_socket_server_.get()));
     port_allocator->set_step_delay(cricket::kDefaultStepDelay);
     dependencies.allocator =
         std::unique_ptr<cricket::BasicPortAllocator>(port_allocator);

@@ -99,7 +99,8 @@ class CallTest : public ::testing::Test, public RtpPacketSinkInterface {
 
   void SetSendFecConfig(std::vector<uint32_t> video_send_ssrcs);
   void SetSendUlpFecConfig(VideoSendStream::Config* send_config);
-  void SetReceiveUlpFecConfig(VideoReceiveStream::Config* receive_config);
+  void SetReceiveUlpFecConfig(
+      VideoReceiveStreamInterface::Config* receive_config);
   void CreateSendConfig(size_t num_video_streams,
                         size_t num_audio_streams,
                         size_t num_flexfec_streams,
@@ -117,7 +118,7 @@ class CallTest : public ::testing::Test, public RtpPacketSinkInterface {
       bool receiver_reference_time_report,
       int rtp_history_ms);
   void AddMatchingVideoReceiveConfigs(
-      std::vector<VideoReceiveStream::Config>* receive_configs,
+      std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
       const VideoSendStream::Config& video_send_config,
       Transport* rtcp_send_transport,
       bool send_side_bwe,
@@ -128,7 +129,7 @@ class CallTest : public ::testing::Test, public RtpPacketSinkInterface {
 
   void CreateMatchingAudioAndFecConfigs(Transport* rtcp_send_transport);
   void CreateMatchingAudioConfigs(Transport* transport, std::string sync_group);
-  static AudioReceiveStream::Config CreateMatchingAudioConfig(
+  static AudioReceiveStreamInterface::Config CreateMatchingAudioConfig(
       const AudioSendStream::Config& send_config,
       rtc::scoped_refptr<AudioDecoderFactory> audio_decoder_factory,
       Transport* transport,
@@ -195,10 +196,10 @@ class CallTest : public ::testing::Test, public RtpPacketSinkInterface {
 
   std::unique_ptr<Call> receiver_call_;
   std::unique_ptr<PacketTransport> receive_transport_;
-  std::vector<VideoReceiveStream::Config> video_receive_configs_;
-  std::vector<VideoReceiveStream*> video_receive_streams_;
-  std::vector<AudioReceiveStream::Config> audio_receive_configs_;
-  std::vector<AudioReceiveStream*> audio_receive_streams_;
+  std::vector<VideoReceiveStreamInterface::Config> video_receive_configs_;
+  std::vector<VideoReceiveStreamInterface*> video_receive_streams_;
+  std::vector<AudioReceiveStreamInterface::Config> audio_receive_configs_;
+  std::vector<AudioReceiveStreamInterface*> audio_receive_streams_;
   std::vector<FlexfecReceiveStream::Config> flexfec_receive_configs_;
   std::vector<FlexfecReceiveStream*> flexfec_receive_streams_;
 
@@ -274,7 +275,7 @@ class BaseTest : public RtpRtcpObserver {
 
   virtual void ModifyVideoConfigs(
       VideoSendStream::Config* send_config,
-      std::vector<VideoReceiveStream::Config>* receive_configs,
+      std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
       VideoEncoderConfig* encoder_config);
   virtual void ModifyVideoCaptureStartResolution(int* width,
                                                  int* heigt,
@@ -284,14 +285,14 @@ class BaseTest : public RtpRtcpObserver {
 
   virtual void OnVideoStreamsCreated(
       VideoSendStream* send_stream,
-      const std::vector<VideoReceiveStream*>& receive_streams);
+      const std::vector<VideoReceiveStreamInterface*>& receive_streams);
 
   virtual void ModifyAudioConfigs(
       AudioSendStream::Config* send_config,
-      std::vector<AudioReceiveStream::Config>* receive_configs);
+      std::vector<AudioReceiveStreamInterface::Config>* receive_configs);
   virtual void OnAudioStreamsCreated(
       AudioSendStream* send_stream,
-      const std::vector<AudioReceiveStream*>& receive_streams);
+      const std::vector<AudioReceiveStreamInterface*>& receive_streams);
 
   virtual void ModifyFlexfecConfigs(
       std::vector<FlexfecReceiveStream::Config>* receive_configs);

@@ -20,6 +20,7 @@
 #include "api/field_trials_view.h"
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/transport/rtp/rtp_source.h"
 #include "call/audio_state.h"
@@ -30,7 +31,6 @@
 #include "rtc_base/buffer.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/task_queue.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
 
 namespace webrtc {
 class AudioFrameProcessor;
@@ -128,7 +128,6 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
   size_t audio_jitter_buffer_max_packets_ = 200;
   bool audio_jitter_buffer_fast_accelerate_ = false;
   int audio_jitter_buffer_min_delay_ms_ = 0;
-  bool audio_jitter_buffer_enable_rtx_handling_ = false;
 
   const bool minimized_remsampling_on_mobile_trial_enabled_;
 };

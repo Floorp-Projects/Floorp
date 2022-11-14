@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/memory/memory.h"
 #include "absl/types/optional.h"
 #include "api/test/simulated_network.h"
 #include "api/units/time_delta.h"
@@ -155,38 +156,21 @@ Call* CallFactory::CreateCall(const Call::Config& config) {
 
   RtpTransportConfig transportConfig = config.ExtractTransportConfig();
 
-  if (!send_degradation_configs.empty() ||
-      !receive_degradation_configs.empty()) {
-    RTC_CHECK(false);
-    return nullptr;
-    /* Mozilla: Avoid this since it could use GetRealTimeClock().
-    return new DegradedCall(
-        std::unique_ptr<Call>(Call::Create(
-            config, Clock::GetRealTimeClock(),
-            SharedModuleThread::Create(
-                ProcessThread::Create("ModuleProcessThread"), nullptr),
-            config.rtp_transport_controller_send_factory->Create(
-                transportConfig, Clock::GetRealTimeClock(),
-                ProcessThread::Create("PacerThread")))),
-        send_degradation_configs, receive_degradation_configs);
-     */
-  }
-
-  if (!module_thread_) {
-    module_thread_ = SharedModuleThread::Create(
-        ProcessThread::Create("SharedModThread"), [this]() {
-          RTC_DCHECK_RUN_ON(&call_thread_);
-          module_thread_ = nullptr;
-        });
-  }
-
   RTC_CHECK(false);
   return nullptr;
   /* Mozilla: Avoid this since it could use GetRealTimeClock().
-  return Call::Create(config, Clock::GetRealTimeClock(), module_thread_,
-                      config.rtp_transport_controller_send_factory->Create(
-                          transportConfig, Clock::GetRealTimeClock(),
-                          ProcessThread::Create("PacerThread")));
+  Call* call =
+      Call::Create(config, Clock::GetRealTimeClock(),
+                   config.rtp_transport_controller_send_factory->Create(
+                       transportConfig, Clock::GetRealTimeClock()));
+
+  if (!send_degradation_configs.empty() ||
+      !receive_degradation_configs.empty()) {
+    return new DegradedCall(absl::WrapUnique(call), send_degradation_configs,
+                            receive_degradation_configs);
+  }
+
+  return call;
    */
 }
 

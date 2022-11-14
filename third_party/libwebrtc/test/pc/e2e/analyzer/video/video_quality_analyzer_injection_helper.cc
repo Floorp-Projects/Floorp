@@ -17,9 +17,11 @@
 #include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "rtc_base/strings/string_builder.h"
+#include "system_wrappers/include/clock.h"
 #include "test/pc/e2e/analyzer/video/quality_analyzing_video_decoder.h"
 #include "test/pc/e2e/analyzer/video/quality_analyzing_video_encoder.h"
 #include "test/pc/e2e/analyzer/video/simulcast_dummy_buffer_helper.h"
+#include "test/testsupport/fixed_fps_video_frame_writer_adapter.h"
 #include "test/video_renderer.h"
 
 namespace webrtc {
@@ -86,12 +88,15 @@ class AnalyzingFramePreprocessor
 }  // namespace
 
 VideoQualityAnalyzerInjectionHelper::VideoQualityAnalyzerInjectionHelper(
+    Clock* clock,
     std::unique_ptr<VideoQualityAnalyzerInterface> analyzer,
     EncodedImageDataInjector* injector,
     EncodedImageDataExtractor* extractor)
-    : analyzer_(std::move(analyzer)),
+    : clock_(clock),
+      analyzer_(std::move(analyzer)),
       injector_(injector),
       extractor_(extractor) {
+  RTC_DCHECK(clock_);
   RTC_DCHECK(injector_);
   RTC_DCHECK(extractor_);
 }
@@ -167,6 +172,14 @@ void VideoQualityAnalyzerInjectionHelper::RegisterParticipantInCall(
   peers_count_++;
 }
 
+void VideoQualityAnalyzerInjectionHelper::UnregisterParticipantInCall(
+    absl::string_view peer_name) {
+  analyzer_->UnregisterParticipantInCall(peer_name);
+  extractor_->RemoveParticipantInCall();
+  MutexLock lock(&mutex_);
+  peers_count_--;
+}
+
 void VideoQualityAnalyzerInjectionHelper::OnStatsReports(
     absl::string_view pc_label,
     const rtc::scoped_refptr<const RTCStatsReport>& report) {
@@ -191,8 +204,13 @@ VideoQualityAnalyzerInjectionHelper::MaybeCreateVideoWriter(
   // TODO(titovartem) create only one file writer for simulcast video track.
   // For now this code will be invoked for each simulcast stream separately, but
   // only one file will be used.
-  auto video_writer = std::make_unique<test::Y4mVideoFrameWriterImpl>(
-      file_name.value(), config.width, config.height, config.fps);
+  std::unique_ptr<test::VideoFrameWriter> video_writer =
+      std::make_unique<test::Y4mVideoFrameWriterImpl>(
+          file_name.value(), config.width, config.height, config.fps);
+  if (config.output_dump_use_fixed_framerate) {
+    video_writer = std::make_unique<test::FixedFpsVideoFrameWriterAdapter>(
+        config.fps, clock_, std::move(video_writer));
+  }
   test::VideoFrameWriter* out = video_writer.get();
   video_writers_.push_back(std::move(video_writer));
   return out;
@@ -212,14 +230,16 @@ void VideoQualityAnalyzerInjectionHelper::OnFrame(absl::string_view peer_name,
   frame_copy.set_video_frame_buffer(I420Buffer::Copy(*i420_buffer));
   analyzer_->OnFrameRendered(peer_name, frame_copy);
 
-  std::string stream_label = analyzer_->GetStreamLabel(frame.id());
-  std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>>* sinks =
-      PopulateSinks(ReceiverStream(peer_name, stream_label));
-  if (sinks == nullptr) {
-    return;
-  }
-  for (auto& sink : *sinks) {
-    sink->OnFrame(frame);
+  if (frame.id() != VideoFrame::kNotSetId) {
+    std::string stream_label = analyzer_->GetStreamLabel(frame.id());
+    std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>>* sinks =
+        PopulateSinks(ReceiverStream(peer_name, stream_label));
+    if (sinks == nullptr) {
+      return;
+    }
+    for (auto& sink : *sinks) {
+      sink->OnFrame(frame);
+    }
   }
 }
 
@@ -240,6 +260,7 @@ VideoQualityAnalyzerInjectionHelper::PopulateSinks(
   absl::optional<std::string> output_dump_file_name =
       config.output_dump_file_name;
   if (output_dump_file_name.has_value() && peers_count_ > 2) {
+    // TODO(titovartem): make this default behavior for any amount of peers.
     rtc::StringBuilder builder(*output_dump_file_name);
     builder << "." << receiver_stream.peer_name;
     output_dump_file_name = builder.str();

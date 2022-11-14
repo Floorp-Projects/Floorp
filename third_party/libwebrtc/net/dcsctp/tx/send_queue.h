@@ -34,6 +34,10 @@ class SendQueue {
     // Partial reliability - RFC3758
     MaxRetransmits max_retransmissions = MaxRetransmits::NoLimit();
     TimeMs expires_at = TimeMs::InfiniteFuture();
+
+    // Lifecycle - set for the last fragment, and `LifecycleId::NotSet()` for
+    // all other fragments.
+    LifecycleId lifecycle_id = LifecycleId::NotSet();
   };
 
   virtual ~SendQueue() = default;
@@ -126,6 +130,12 @@ class SendQueue {
   // Sets a limit for the `OnBufferedAmountLow` event.
   virtual void SetBufferedAmountLowThreshold(StreamID stream_id,
                                              size_t bytes) = 0;
+
+  // Configures the send queue to support interleaved message sending as
+  // described in RFC8260. Every send queue starts with this value set as
+  // disabled, but can later change it when the capabilities of the connection
+  // have been negotiated. This affects the behavior of the `Produce` method.
+  virtual void EnableMessageInterleaving(bool enabled) = 0;
 };
 }  // namespace dcsctp
 

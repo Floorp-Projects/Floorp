@@ -12,34 +12,22 @@
 
 #include <memory>
 
+#include "absl/container/inlined_vector.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/video_codecs/scalability_mode.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/vp9_profile.h"
 #include "modules/video_coding/codecs/vp9/libvpx_vp9_decoder.h"
 #include "modules/video_coding/codecs/vp9/libvpx_vp9_encoder.h"
+#include "modules/video_coding/svc/create_scalability_structure.h"
 #include "rtc_base/checks.h"
 #include "vpx/vp8cx.h"
 #include "vpx/vp8dx.h"
 #include "vpx/vpx_codec.h"
 
 namespace webrtc {
-namespace {
-constexpr ScalabilityMode kSupportedScalabilityModes[] = {
-    ScalabilityMode::kL1T2,     ScalabilityMode::kL1T3,
-    ScalabilityMode::kL2T1,     ScalabilityMode::kL2T2,
-    ScalabilityMode::kL2T3,     ScalabilityMode::kL3T1,
-    ScalabilityMode::kL3T2,     ScalabilityMode::kL3T3,
-    ScalabilityMode::kL1T2h,    ScalabilityMode::kL1T3h,
-    ScalabilityMode::kL2T1h,    ScalabilityMode::kL2T2h,
-    ScalabilityMode::kL2T3h,    ScalabilityMode::kL3T1h,
-    ScalabilityMode::kL3T2h,    ScalabilityMode::kL3T3h,
-    ScalabilityMode::kL2T2_KEY, ScalabilityMode::kL2T3_KEY,
-    ScalabilityMode::kL3T1_KEY, ScalabilityMode::kL3T2_KEY,
-    ScalabilityMode::kL3T3_KEY};
-}  // namespace
 
-std::vector<SdpVideoFormat> SupportedVP9Codecs() {
+std::vector<SdpVideoFormat> SupportedVP9Codecs(bool add_scalability_modes) {
 #ifdef RTC_ENABLE_VP9
   // Profile 2 might not be available on some platforms until
   // https://bugs.chromium.org/p/webm/issues/detail?id=1544 is solved.
@@ -49,13 +37,23 @@ std::vector<SdpVideoFormat> SupportedVP9Codecs() {
       (vpx_codec_get_caps(vpx_codec_vp9_dx()) & VPX_CODEC_CAP_HIGHBITDEPTH) !=
           0;
 
+  absl::InlinedVector<ScalabilityMode, kScalabilityModeCount> scalability_modes;
+  if (add_scalability_modes) {
+    for (const auto scalability_mode : kAllScalabilityModes) {
+      if (ScalabilityStructureConfig(scalability_mode).has_value()) {
+        scalability_modes.push_back(scalability_mode);
+      }
+    }
+  }
   std::vector<SdpVideoFormat> supported_formats{SdpVideoFormat(
       cricket::kVp9CodecName,
-      {{kVP9FmtpProfileId, VP9ProfileToString(VP9Profile::kProfile0)}})};
+      {{kVP9FmtpProfileId, VP9ProfileToString(VP9Profile::kProfile0)}},
+      scalability_modes)};
   if (vpx_supports_high_bit_depth) {
     supported_formats.push_back(SdpVideoFormat(
         cricket::kVp9CodecName,
-        {{kVP9FmtpProfileId, VP9ProfileToString(VP9Profile::kProfile2)}}));
+        {{kVP9FmtpProfileId, VP9ProfileToString(VP9Profile::kProfile2)}},
+        scalability_modes));
   }
 
   return supported_formats;
@@ -67,12 +65,15 @@ std::vector<SdpVideoFormat> SupportedVP9Codecs() {
 std::vector<SdpVideoFormat> SupportedVP9DecoderCodecs() {
 #ifdef RTC_ENABLE_VP9
   std::vector<SdpVideoFormat> supported_formats = SupportedVP9Codecs();
-  // The WebRTC internal decoder supports VP9 profile 1. However, there's
-  // currently no way of sending VP9 profile 1 using the internal encoder.
+  // The WebRTC internal decoder supports VP9 profile 1 and 3. However, there's
+  // currently no way of sending VP9 profile 1 or 3 using the internal encoder.
   // It would require extended support for I444, I422, and I440 buffers.
   supported_formats.push_back(SdpVideoFormat(
       cricket::kVp9CodecName,
       {{kVP9FmtpProfileId, VP9ProfileToString(VP9Profile::kProfile1)}}));
+  supported_formats.push_back(SdpVideoFormat(
+      cricket::kVp9CodecName,
+      {{kVP9FmtpProfileId, VP9ProfileToString(VP9Profile::kProfile3)}}));
   return supported_formats;
 #else
   return std::vector<SdpVideoFormat>();
@@ -102,12 +103,7 @@ std::unique_ptr<VP9Encoder> VP9Encoder::Create(
 }
 
 bool VP9Encoder::SupportsScalabilityMode(ScalabilityMode scalability_mode) {
-  for (const auto& entry : kSupportedScalabilityModes) {
-    if (entry == scalability_mode) {
-      return true;
-    }
-  }
-  return false;
+  return ScalabilityStructureConfig(scalability_mode).has_value();
 }
 
 std::unique_ptr<VP9Decoder> VP9Decoder::Create() {

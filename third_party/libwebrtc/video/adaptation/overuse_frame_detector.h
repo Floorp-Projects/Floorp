@@ -15,6 +15,7 @@
 #include <memory>
 
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/video/video_stream_encoder_observer.h"
@@ -29,7 +30,7 @@ namespace webrtc {
 class VideoFrame;
 
 struct CpuOveruseOptions {
-  CpuOveruseOptions();
+  explicit CpuOveruseOptions(const FieldTrialsView& field_trials);
 
   int low_encode_usage_threshold_percent;  // Threshold for triggering underuse.
   int high_encode_usage_threshold_percent;  // Threshold for triggering overuse.
@@ -64,7 +65,8 @@ class OveruseFrameDetectorObserverInterface {
 // check for overuse.
 class OveruseFrameDetector {
  public:
-  explicit OveruseFrameDetector(CpuOveruseMetricsObserver* metrics_observer);
+  explicit OveruseFrameDetector(CpuOveruseMetricsObserver* metrics_observer,
+                                const FieldTrialsView& field_trials);
   virtual ~OveruseFrameDetector();
 
   OveruseFrameDetector(const OveruseFrameDetector&) = delete;

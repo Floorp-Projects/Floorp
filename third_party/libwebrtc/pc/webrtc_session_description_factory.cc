@@ -30,7 +30,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/ssl_identity.h"
 #include "rtc_base/ssl_stream_adapter.h"
 #include "rtc_base/string_encode.h"
@@ -139,7 +138,9 @@ WebRtcSessionDescriptionFactory::WebRtcSessionDescriptionFactory(
     const FieldTrialsView& field_trials)
     : signaling_thread_(context->signaling_thread()),
       transport_desc_factory_(field_trials),
-      session_desc_factory_(context->channel_manager(),
+      session_desc_factory_(context->media_engine(),
+                            context->use_rtx(),
+                            context->ssrc_generator(),
                             &transport_desc_factory_),
       // RFC 4566 suggested a Network Time Protocol (NTP) format timestamp
       // as the session id and session version. To simplify, it should be fine

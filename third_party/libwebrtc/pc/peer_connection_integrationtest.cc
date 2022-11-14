@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/async_resolver_factory.h"
@@ -49,6 +50,7 @@
 #include "api/stats/rtc_stats.h"
 #include "api/stats/rtc_stats_report.h"
 #include "api/stats/rtcstats_objects.h"
+#include "api/test/mock_encoder_selector.h"
 #include "api/transport/rtp/rtp_source.h"
 #include "api/uma_metrics.h"
 #include "api/units/time_delta.h"
@@ -82,7 +84,6 @@
 #include "rtc_base/helpers.h"
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/ssl_fingerprint.h"
@@ -1787,25 +1788,14 @@ TEST_P(PeerConnectionIntegrationTest, IceStatesReachCompletion) {
                  callee()->ice_connection_state(), kDefaultTimeout);
 }
 
-#if !defined(THREAD_SANITIZER)
-// This test provokes TSAN errors. See bugs.webrtc.org/3608
-
 constexpr int kOnlyLocalPorts = cricket::PORTALLOCATOR_DISABLE_STUN |
                                 cricket::PORTALLOCATOR_DISABLE_RELAY |
                                 cricket::PORTALLOCATOR_DISABLE_TCP;
 
 // Use a mock resolver to resolve the hostname back to the original IP on both
 // sides and check that the ICE connection connects.
-// TODO(bugs.webrtc.org/12590): Flaky on Windows and on Linux MSAN.
-#if defined(WEBRTC_WIN) || defined(WEBRTC_LINUX)
-#define MAYBE_IceStatesReachCompletionWithRemoteHostname \
-  DISABLED_IceStatesReachCompletionWithRemoteHostname
-#else
-#define MAYBE_IceStatesReachCompletionWithRemoteHostname \
-  IceStatesReachCompletionWithRemoteHostname
-#endif
 TEST_P(PeerConnectionIntegrationTest,
-       MAYBE_IceStatesReachCompletionWithRemoteHostname) {
+       IceStatesReachCompletionWithRemoteHostname) {
   auto caller_resolver_factory =
       std::make_unique<NiceMock<webrtc::MockAsyncResolverFactory>>();
   auto callee_resolver_factory =
@@ -1856,9 +1846,8 @@ TEST_P(PeerConnectionIntegrationTest,
   EXPECT_METRIC_EQ(1, webrtc::metrics::NumEvents(
                           "WebRTC.PeerConnection.CandidatePairType_UDP",
                           webrtc::kIceCandidatePairHostNameHostName));
+  DestroyPeerConnections();
 }
-
-#endif  // !defined(THREAD_SANITIZER)
 
 // Test that firewalling the ICE connection causes the clients to identify the
 // disconnected state and then removing the firewall causes them to reconnect.
@@ -2430,6 +2419,80 @@ TEST_P(PeerConnectionIntegrationTestWithFakeClock,
   ClosePeerConnections();
 }
 
+TEST_P(PeerConnectionIntegrationTestWithFakeClock,
+       OnIceCandidateFlushesGetStatsCache) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ConnectFakeSignaling();
+  caller()->AddAudioTrack();
+
+  // Call getStats, assert there are no candidates.
+  rtc::scoped_refptr<const webrtc::RTCStatsReport> first_report =
+      caller()->NewGetStats();
+  ASSERT_TRUE(first_report);
+  auto first_candidate_stats =
+      first_report->GetStatsOfType<webrtc::RTCLocalIceCandidateStats>();
+  ASSERT_EQ(first_candidate_stats.size(), 0u);
+
+  // Create an offer at the caller and set it as remote description on the
+  // callee.
+  caller()->CreateAndSetAndSignalOffer();
+  // Call getStats again, assert there are candidates now.
+  rtc::scoped_refptr<const webrtc::RTCStatsReport> second_report =
+      caller()->NewGetStats();
+  ASSERT_TRUE(second_report);
+  auto second_candidate_stats =
+      second_report->GetStatsOfType<webrtc::RTCLocalIceCandidateStats>();
+  ASSERT_NE(second_candidate_stats.size(), 0u);
+
+  // The fake clock ensures that no time has passed so the cache must have been
+  // explicitly invalidated.
+  EXPECT_EQ(first_report->timestamp_us(), second_report->timestamp_us());
+}
+
+TEST_P(PeerConnectionIntegrationTestWithFakeClock,
+       AddIceCandidateFlushesGetStatsCache) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ConnectFakeSignalingForSdpOnly();
+  caller()->AddAudioTrack();
+
+  // Start candidate gathering and wait for it to complete. Candidates are not
+  // signalled.
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_SIMULATED_WAIT(caller()->IceGatheringStateComplete(),
+                             kDefaultTimeout, FakeClock());
+
+  // Call getStats, assert there are no candidates.
+  rtc::scoped_refptr<const webrtc::RTCStatsReport> first_report =
+      caller()->NewGetStats();
+  ASSERT_TRUE(first_report);
+  auto first_candidate_stats =
+      first_report->GetStatsOfType<webrtc::RTCRemoteIceCandidateStats>();
+  ASSERT_EQ(first_candidate_stats.size(), 0u);
+
+  // Add a "fake" candidate.
+  absl::optional<RTCError> result;
+  caller()->pc()->AddIceCandidate(
+      absl::WrapUnique(webrtc::CreateIceCandidate(
+          "", 0,
+          "candidate:2214029314 1 udp 2122260223 127.0.0.1 49152 typ host",
+          nullptr)),
+      [&result](RTCError r) { result = r; });
+  ASSERT_TRUE_WAIT(result.has_value(), kDefaultTimeout);
+  ASSERT_TRUE(result.value().ok());
+
+  // Call getStats again, assert there is a remote candidate now.
+  rtc::scoped_refptr<const webrtc::RTCStatsReport> second_report =
+      caller()->NewGetStats();
+  ASSERT_TRUE(second_report);
+  auto second_candidate_stats =
+      second_report->GetStatsOfType<webrtc::RTCRemoteIceCandidateStats>();
+  ASSERT_EQ(second_candidate_stats.size(), 1u);
+
+  // The fake clock ensures that no time has passed so the cache must have been
+  // explicitly invalidated.
+  EXPECT_EQ(first_report->timestamp_us(), second_report->timestamp_us());
+}
+
 #endif  // !defined(THREAD_SANITIZER)
 
 // Verify that a TurnCustomizer passed in through RTCConfiguration
@@ -2747,8 +2810,10 @@ TEST_P(PeerConnectionIntegrationTest, RtcEventLogOutputWriteCalled) {
 
   auto output = std::make_unique<testing::NiceMock<MockRtcEventLogOutput>>();
   ON_CALL(*output, IsActive()).WillByDefault(::testing::Return(true));
-  ON_CALL(*output, Write(::testing::_)).WillByDefault(::testing::Return(true));
-  EXPECT_CALL(*output, Write(::testing::_)).Times(::testing::AtLeast(1));
+  ON_CALL(*output, Write(::testing::A<absl::string_view>()))
+      .WillByDefault(::testing::Return(true));
+  EXPECT_CALL(*output, Write(::testing::A<absl::string_view>()))
+      .Times(::testing::AtLeast(1));
   EXPECT_TRUE(caller()->pc()->StartRtcEventLog(
       std::move(output), webrtc::RtcEventLog::kImmediateOutput));
 
@@ -3603,6 +3668,35 @@ TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
   ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
   EXPECT_EQ(MediaStreamTrackInterface::TrackState::kEnded,
             callee_track->state());
+}
+
+TEST_P(PeerConnectionIntegrationTest, EndToEndRtpSenderVideoEncoderSelector) {
+  ASSERT_TRUE(
+      CreateOneDirectionalPeerConnectionWrappers(/*caller_to_callee=*/true));
+  ConnectFakeSignaling();
+  // Add one-directional video, from caller to callee.
+  rtc::scoped_refptr<webrtc::VideoTrackInterface> caller_track =
+      caller()->CreateLocalVideoTrack();
+  auto sender = caller()->AddTrack(caller_track);
+  PeerConnectionInterface::RTCOfferAnswerOptions options;
+  options.offer_to_receive_video = 0;
+  caller()->SetOfferAnswerOptions(options);
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+  ASSERT_EQ(callee()->pc()->GetReceivers().size(), 1u);
+
+  std::unique_ptr<MockEncoderSelector> encoder_selector =
+      std::make_unique<MockEncoderSelector>();
+  EXPECT_CALL(*encoder_selector, OnCurrentEncoder);
+
+  sender->SetEncoderSelector(std::move(encoder_selector));
+
+  // Expect video to be received in one direction.
+  MediaExpectations media_expectations;
+  media_expectations.CallerExpectsNoVideo();
+  media_expectations.CalleeExpectsSomeVideo();
+
+  EXPECT_TRUE(ExpectNewFrames(media_expectations));
 }
 
 }  // namespace

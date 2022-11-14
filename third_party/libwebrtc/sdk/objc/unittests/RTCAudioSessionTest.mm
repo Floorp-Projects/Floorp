@@ -10,6 +10,7 @@
 
 #import <Foundation/Foundation.h>
 #import <OCMock/OCMock.h>
+#import <XCTest/XCTest.h>
 
 #include <vector>
 
@@ -111,8 +112,7 @@
 
 @end
 
-
-@interface RTCAudioSessionTest : NSObject
+@interface RTCAudioSessionTest : XCTestCase
 
 @end
 
@@ -322,57 +322,3 @@ OCMLocation *OCMMakeLocation(id testCase, const char *fileCString, int line){
 }
 
 @end
-
-namespace webrtc {
-
-class AudioSessionTest : public ::testing::Test {
- protected:
-  void TearDown() override {
-    RTC_OBJC_TYPE(RTCAudioSession) *session = [RTC_OBJC_TYPE(RTCAudioSession) sharedInstance];
-    for (id<RTC_OBJC_TYPE(RTCAudioSessionDelegate)> delegate : session.delegates) {
-      [session removeDelegate:delegate];
-    }
-  }
-};
-
-TEST_F(AudioSessionTest, AddAndRemoveDelegates) {
-  RTCAudioSessionTest *test = [[RTCAudioSessionTest alloc] init];
-  [test testAddAndRemoveDelegates];
-}
-
-TEST_F(AudioSessionTest, PushDelegate) {
-  RTCAudioSessionTest *test = [[RTCAudioSessionTest alloc] init];
-  [test testPushDelegate];
-}
-
-TEST_F(AudioSessionTest, ZeroingWeakDelegate) {
-  RTCAudioSessionTest *test = [[RTCAudioSessionTest alloc] init];
-  [test testZeroingWeakDelegate];
-}
-
-TEST_F(AudioSessionTest, RemoveDelegateOnDealloc) {
-  RTCAudioSessionTest *test = [[RTCAudioSessionTest alloc] init];
-  [test testRemoveDelegateOnDealloc];
-}
-
-TEST_F(AudioSessionTest, AudioSessionActivation) {
-  RTCAudioSessionTest *test = [[RTCAudioSessionTest alloc] init];
-  [test testAudioSessionActivation];
-}
-
-TEST_F(AudioSessionTest, ConfigureWebRTCSession) {
-  RTCAudioSessionTest *test = [[RTCAudioSessionTest alloc] init];
-  [test testConfigureWebRTCSession];
-}
-
-TEST_F(AudioSessionTest, ConfigureWebRTCSessionWithoutLocking) {
-  RTCAudioSessionTest *test = [[RTCAudioSessionTest alloc] init];
-  [test testConfigureWebRTCSessionWithoutLocking];
-}
-
-TEST_F(AudioSessionTest, AudioVolumeDidNotify) {
-  RTCAudioSessionTest *test = [[RTCAudioSessionTest alloc] init];
-  [test testAudioVolumeDidNotify];
-}
-
-}  // namespace webrtc

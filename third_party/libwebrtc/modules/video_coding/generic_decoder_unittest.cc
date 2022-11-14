@@ -17,7 +17,7 @@
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/video_codecs/video_decoder.h"
 #include "common_video/test/utilities.h"
-#include "modules/video_coding/timing.h"
+#include "modules/video_coding/timing/timing.h"
 #include "rtc_base/event.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "system_wrappers/include/clock.h"
@@ -33,7 +33,7 @@ class ReceiveCallback : public VCMReceiveCallback {
  public:
   int32_t FrameToRender(VideoFrame& videoFrame,  // NOLINT
                         absl::optional<uint8_t> qp,
-                        int32_t decode_time_ms,
+                        TimeDelta decode_time,
                         VideoContentType content_type) override {
     {
       MutexLock lock(&lock_);
@@ -124,23 +124,43 @@ TEST_F(GenericDecoderTest, MaxCompositionDelayNotSetByDefault) {
   generic_decoder_.Decode(encoded_frame, clock_.CurrentTime());
   absl::optional<VideoFrame> decoded_frame = user_callback_.WaitForFrame(10);
   ASSERT_TRUE(decoded_frame.has_value());
-  EXPECT_FALSE(decoded_frame->max_composition_delay_in_frames());
+  EXPECT_THAT(
+      decoded_frame->render_parameters().max_composition_delay_in_frames,
+      testing::Eq(absl::nullopt));
 }
 
 TEST_F(GenericDecoderTest, MaxCompositionDelayActivatedByPlayoutDelay) {
   VCMEncodedFrame encoded_frame;
   // VideoReceiveStream2 would set MaxCompositionDelayInFrames if playout delay
   // is specified as X,Y, where X=0, Y>0.
-  const VideoPlayoutDelay kPlayoutDelay = {0, 50};
   constexpr int kMaxCompositionDelayInFrames = 3;  // ~50 ms at 60 fps.
-  encoded_frame.SetPlayoutDelay(kPlayoutDelay);
   timing_.SetMaxCompositionDelayInFrames(
       absl::make_optional(kMaxCompositionDelayInFrames));
   generic_decoder_.Decode(encoded_frame, clock_.CurrentTime());
   absl::optional<VideoFrame> decoded_frame = user_callback_.WaitForFrame(10);
   ASSERT_TRUE(decoded_frame.has_value());
-  EXPECT_EQ(kMaxCompositionDelayInFrames,
-            decoded_frame->max_composition_delay_in_frames());
+  EXPECT_THAT(
+      decoded_frame->render_parameters().max_composition_delay_in_frames,
+      testing::Optional(kMaxCompositionDelayInFrames));
+}
+
+TEST_F(GenericDecoderTest, IsLowLatencyStreamFalseByDefault) {
+  VCMEncodedFrame encoded_frame;
+  generic_decoder_.Decode(encoded_frame, clock_.CurrentTime());
+  absl::optional<VideoFrame> decoded_frame = user_callback_.WaitForFrame(10);
+  ASSERT_TRUE(decoded_frame.has_value());
+  EXPECT_FALSE(decoded_frame->render_parameters().use_low_latency_rendering);
+}
+
+TEST_F(GenericDecoderTest, IsLowLatencyStreamActivatedByPlayoutDelay) {
+  VCMEncodedFrame encoded_frame;
+  const VideoPlayoutDelay kPlayoutDelay = {0, 50};
+  timing_.set_min_playout_delay(TimeDelta::Millis(kPlayoutDelay.min_ms));
+  timing_.set_max_playout_delay(TimeDelta::Millis(kPlayoutDelay.max_ms));
+  generic_decoder_.Decode(encoded_frame, clock_.CurrentTime());
+  absl::optional<VideoFrame> decoded_frame = user_callback_.WaitForFrame(10);
+  ASSERT_TRUE(decoded_frame.has_value());
+  EXPECT_TRUE(decoded_frame->render_parameters().use_low_latency_rendering);
 }
 
 }  // namespace video_coding

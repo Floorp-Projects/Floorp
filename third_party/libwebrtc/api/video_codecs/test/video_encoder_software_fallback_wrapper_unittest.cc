@@ -508,7 +508,7 @@ class ForcedFallbackTest : public VideoEncoderSoftwareFallbackWrapperTestBase {
     codec_.height = kHeight;
     codec_.VP8()->numberOfTemporalLayers = 1;
     codec_.VP8()->automaticResizeOn = true;
-    codec_.VP8()->frameDroppingOn = true;
+    codec_.SetFrameDropEnabled(true);
     rate_allocator_.reset(new SimulcastRateAllocator(codec_));
   }
 

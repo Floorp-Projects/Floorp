@@ -194,8 +194,6 @@ class NetEqImpl : public webrtc::NetEq {
 
   std::vector<uint16_t> GetNackList(int64_t round_trip_time_ms) const override;
 
-  std::vector<uint32_t> LastDecodedTimestamps() const override;
-
   int SyncBufferSizeMs() const override;
 
   // This accessor method is only intended for testing purposes.
@@ -395,7 +393,6 @@ class NetEqImpl : public webrtc::NetEq {
       AudioFrame::kVadPassive;
   std::unique_ptr<TickTimer::Stopwatch> generated_noise_stopwatch_
       RTC_GUARDED_BY(mutex_);
-  std::vector<uint32_t> last_decoded_timestamps_ RTC_GUARDED_BY(mutex_);
   std::vector<RtpPacketInfo> last_decoded_packet_infos_ RTC_GUARDED_BY(mutex_);
   ExpandUmaLogger expand_uma_logger_ RTC_GUARDED_BY(mutex_);
   ExpandUmaLogger speech_expand_uma_logger_ RTC_GUARDED_BY(mutex_);

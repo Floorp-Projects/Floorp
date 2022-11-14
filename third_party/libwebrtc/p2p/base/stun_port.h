@@ -17,10 +17,11 @@
 #include <string>
 
 #include "absl/memory/memory.h"
+#include "absl/strings/string_view.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "p2p/base/port.h"
 #include "p2p/base/stun_request.h"
 #include "rtc_base/async_packet_socket.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
 
 namespace cricket {
 
@@ -37,8 +38,8 @@ class UDPPort : public Port {
       rtc::PacketSocketFactory* factory,
       const rtc::Network* network,
       rtc::AsyncPacketSocket* socket,
-      const std::string& username,
-      const std::string& password,
+      absl::string_view username,
+      absl::string_view password,
       bool emit_local_for_anyaddress,
       absl::optional<int> stun_keepalive_interval,
       const webrtc::FieldTrialsView* field_trials = nullptr) {
@@ -59,8 +60,8 @@ class UDPPort : public Port {
       const rtc::Network* network,
       uint16_t min_port,
       uint16_t max_port,
-      const std::string& username,
-      const std::string& password,
+      absl::string_view username,
+      absl::string_view password,
       bool emit_local_for_anyaddress,
       absl::optional<int> stun_keepalive_interval,
       const webrtc::FieldTrialsView* field_trials = nullptr) {
@@ -100,7 +101,7 @@ class UDPPort : public Port {
                             const rtc::SocketAddress& remote_addr,
                             int64_t packet_time_us) override;
 
-  bool SupportsProtocol(const std::string& protocol) const override;
+  bool SupportsProtocol(absl::string_view protocol) const override;
   ProtocolType GetProtocol() const override;
 
   void GetStunStats(absl::optional<StunStats>* stats) override;
@@ -113,10 +114,6 @@ class UDPPort : public Port {
   void set_stun_keepalive_lifetime(int lifetime) {
     stun_keepalive_lifetime_ = lifetime;
   }
-  // Returns true if there is a pending request with type `msg_type`.
-  bool HasPendingRequestForTest(int msg_type) {
-    return request_manager_.HasRequestForTest(msg_type);
-  }
 
   StunRequestManager& request_manager() { return request_manager_; }
 
@@ -126,8 +123,8 @@ class UDPPort : public Port {
           const rtc::Network* network,
           uint16_t min_port,
           uint16_t max_port,
-          const std::string& username,
-          const std::string& password,
+          absl::string_view username,
+          absl::string_view password,
           bool emit_local_for_anyaddress,
           const webrtc::FieldTrialsView* field_trials);
 
@@ -135,8 +132,8 @@ class UDPPort : public Port {
           rtc::PacketSocketFactory* factory,
           const rtc::Network* network,
           rtc::AsyncPacketSocket* socket,
-          const std::string& username,
-          const std::string& password,
+          absl::string_view username,
+          absl::string_view password,
           bool emit_local_for_anyaddress,
           const webrtc::FieldTrialsView* field_trials);
 
@@ -223,7 +220,7 @@ class UDPPort : public Port {
   void OnStunBindingOrResolveRequestFailed(
       const rtc::SocketAddress& stun_server_addr,
       int error_code,
-      const std::string& reason);
+      absl::string_view reason);
 
   // Sends STUN requests to the server.
   void OnSendPacket(const void* data, size_t size, StunRequest* req);
@@ -273,8 +270,8 @@ class StunPort : public UDPPort {
       const rtc::Network* network,
       uint16_t min_port,
       uint16_t max_port,
-      const std::string& username,
-      const std::string& password,
+      absl::string_view username,
+      absl::string_view password,
       const ServerAddresses& servers,
       absl::optional<int> stun_keepalive_interval,
       const webrtc::FieldTrialsView* field_trials);
@@ -287,8 +284,8 @@ class StunPort : public UDPPort {
            const rtc::Network* network,
            uint16_t min_port,
            uint16_t max_port,
-           const std::string& username,
-           const std::string& password,
+           absl::string_view username,
+           absl::string_view password,
            const ServerAddresses& servers,
            const webrtc::FieldTrialsView* field_trials);
 };

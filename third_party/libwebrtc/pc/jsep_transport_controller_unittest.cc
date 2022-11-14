@@ -27,7 +27,6 @@
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/net_helper.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/ssl_fingerprint.h"
 #include "rtc_base/ssl_identity.h"
@@ -346,6 +345,7 @@ class JsepTransportControllerTest : public JsepTransportController::Observer,
     return true;
   }
 
+  rtc::AutoThread main_thread_;
   // Information received from signals from transport controller.
   cricket::IceConnectionState connection_state_ =
       cricket::kIceConnectionConnecting;

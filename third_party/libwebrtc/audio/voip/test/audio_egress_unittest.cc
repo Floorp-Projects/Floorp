@@ -9,6 +9,7 @@
  */
 
 #include "audio/voip/audio_egress.h"
+
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
 #include "api/call/transport.h"
 #include "api/task_queue/default_task_queue_factory.h"
@@ -20,6 +21,7 @@
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/mock_transport.h"
+#include "test/run_loop.h"
 
 namespace webrtc {
 namespace {
@@ -98,6 +100,7 @@ class AudioEgressTest : public ::testing::Test {
     return frame;
   }
 
+  test::RunLoop run_loop_;
   // SimulatedClock doesn't directly affect this testcase as the the
   // AudioFrame's timestamp is driven by GetAudioFrame.
   SimulatedClock fake_clock_;

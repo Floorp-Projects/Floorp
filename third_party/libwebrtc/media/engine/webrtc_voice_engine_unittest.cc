@@ -294,7 +294,8 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
     return GetSendStream(ssrc).GetConfig();
   }
 
-  const webrtc::AudioReceiveStream::Config& GetRecvStreamConfig(uint32_t ssrc) {
+  const webrtc::AudioReceiveStreamInterface::Config& GetRecvStreamConfig(
+      uint32_t ssrc) {
     return GetRecvStream(ssrc).GetConfig();
   }
 
@@ -656,8 +657,9 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
               stats.ana_statistics.uplink_packet_loss_fraction);
   }
 
-  webrtc::AudioReceiveStream::Stats GetAudioReceiveStreamStats() const {
-    webrtc::AudioReceiveStream::Stats stats;
+  webrtc::AudioReceiveStreamInterface::Stats GetAudioReceiveStreamStats()
+      const {
+    webrtc::AudioReceiveStreamInterface::Stats stats;
     stats.remote_ssrc = 123;
     stats.payload_bytes_rcvd = 456;
     stats.header_and_padding_bytes_rcvd = 67;
@@ -783,6 +785,7 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
   }
 
  protected:
+  rtc::AutoThread main_thread_;
   const bool use_null_apm_;
   webrtc::test::ScopedKeyValueConfig field_trials_;
   std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory_;
@@ -823,7 +826,7 @@ TEST_P(WebRtcVoiceEngineTestFake, CreateSendStream) {
 TEST_P(WebRtcVoiceEngineTestFake, CreateRecvStream) {
   EXPECT_TRUE(SetupChannel());
   EXPECT_TRUE(AddRecvStream(kSsrcX));
-  const webrtc::AudioReceiveStream::Config& config =
+  const webrtc::AudioReceiveStreamInterface::Config& config =
       GetRecvStreamConfig(kSsrcX);
   EXPECT_EQ(kSsrcX, config.rtp.remote_ssrc);
   EXPECT_EQ(0xFA17FA17, config.rtp.local_ssrc);
@@ -1862,14 +1865,12 @@ TEST_P(WebRtcVoiceEngineTestFake, TransportCcCanBeEnabledAndDisabled) {
   EXPECT_TRUE(channel_->SetRecvParameters(recv_parameters));
   EXPECT_TRUE(AddRecvStream(kSsrcX));
   ASSERT_TRUE(call_.GetAudioReceiveStream(kSsrcX) != nullptr);
-  EXPECT_FALSE(
-      call_.GetAudioReceiveStream(kSsrcX)->GetConfig().rtp.transport_cc);
+  EXPECT_FALSE(call_.GetAudioReceiveStream(kSsrcX)->transport_cc());
 
   send_parameters.codecs = engine_->send_codecs();
   SetSendParameters(send_parameters);
   ASSERT_TRUE(call_.GetAudioReceiveStream(kSsrcX) != nullptr);
-  EXPECT_TRUE(
-      call_.GetAudioReceiveStream(kSsrcX)->GetConfig().rtp.transport_cc);
+  EXPECT_TRUE(call_.GetAudioReceiveStream(kSsrcX)->transport_cc());
 }
 
 // Test that we can switch back and forth between Opus and ISAC with CN.
@@ -3577,7 +3578,8 @@ TEST_P(WebRtcVoiceEngineTestFake, PreservePlayoutWhenRecreateRecvStream) {
   channel_->SetPlayout(true);
   EXPECT_TRUE(GetRecvStream(kSsrcX).started());
 
-  // Changing RTP header extensions will recreate the AudioReceiveStream.
+  // Changing RTP header extensions will recreate the
+  // AudioReceiveStreamInterface.
   cricket::AudioRecvParameters parameters;
   parameters.extensions.push_back(
       webrtc::RtpExtension(webrtc::RtpExtension::kAudioLevelUri, 12));
@@ -3600,6 +3602,7 @@ TEST_P(WebRtcVoiceEngineTestFake, GetSourcesWithNonExistingSsrc) {
 
 // Tests that the library initializes and shuts down properly.
 TEST(WebRtcVoiceEngineTest, StartupShutdown) {
+  rtc::AutoThread main_thread;
   for (bool use_null_apm : {false, true}) {
     // If the VoiceEngine wants to gather available codecs early, that's fine
     // but we never want it to create a decoder at this stage.
@@ -3631,6 +3634,7 @@ TEST(WebRtcVoiceEngineTest, StartupShutdown) {
 
 // Tests that reference counting on the external ADM is correct.
 TEST(WebRtcVoiceEngineTest, StartupShutdownWithExternalADM) {
+  rtc::AutoThread main_thread;
   for (bool use_null_apm : {false, true}) {
     std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory =
         webrtc::CreateDefaultTaskQueueFactory();
@@ -3720,6 +3724,7 @@ TEST(WebRtcVoiceEngineTest, HasCorrectPayloadTypeMapping) {
 
 // Tests that VoE supports at least 32 channels
 TEST(WebRtcVoiceEngineTest, Has32Channels) {
+  rtc::AutoThread main_thread;
   for (bool use_null_apm : {false, true}) {
     std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory =
         webrtc::CreateDefaultTaskQueueFactory();
@@ -3762,6 +3767,7 @@ TEST(WebRtcVoiceEngineTest, Has32Channels) {
 
 // Test that we set our preferred codecs properly.
 TEST(WebRtcVoiceEngineTest, SetRecvCodecs) {
+  rtc::AutoThread main_thread;
   for (bool use_null_apm : {false, true}) {
     std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory =
         webrtc::CreateDefaultTaskQueueFactory();

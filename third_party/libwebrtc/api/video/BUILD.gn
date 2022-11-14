@@ -65,6 +65,7 @@ rtc_library("video_frame") {
   deps = [
     ":video_rtp_headers",
     "..:array_view",
+    "..:make_ref_counted",
     "..:rtp_packet_info",
     "..:scoped_refptr",
     "..:video_track_source_constraints",
@@ -93,10 +94,13 @@ rtc_library("video_frame_i010") {
   sources = [
     "i010_buffer.cc",
     "i010_buffer.h",
+    "i210_buffer.cc",
+    "i210_buffer.h",
   ]
   deps = [
     ":video_frame",
     ":video_rtp_headers",
+    "..:make_ref_counted",
     "..:scoped_refptr",
     "../../rtc_base",
     "../../rtc_base:checks",
@@ -119,8 +123,8 @@ rtc_source_set("recordable_encoded_frame") {
     ":video_frame",
     ":video_rtp_headers",
     "..:array_view",
+    "..:make_ref_counted",
     "..:scoped_refptr",
-    "../../rtc_base:refcount",
     "../units:timestamp",
   ]
 }

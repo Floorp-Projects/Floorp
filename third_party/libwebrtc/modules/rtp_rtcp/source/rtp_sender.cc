@@ -17,6 +17,7 @@
 #include <utility>
 
 #include "absl/strings/match.h"
+#include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "logging/rtc_event_log/events/rtc_event_rtp_packet_outgoing.h"
@@ -44,6 +45,10 @@ constexpr size_t kRtpHeaderLength = 12;
 
 // Min size needed to get payload padding from packet history.
 constexpr int kMinPayloadPaddingBytes = 50;
+
+// Determines how much larger a payload padding packet may be, compared to the
+// requested padding size.
+constexpr double kMaxPaddingSizeFactor = 3.0;
 
 template <typename Extension>
 constexpr RtpExtensionSize CreateExtensionSize() {
@@ -146,21 +151,6 @@ bool HasBweExtension(const RtpHeaderExtensionMap& extensions_map) {
          extensions_map.IsRegistered(kRtpExtensionTransmissionTimeOffset);
 }
 
-double GetMaxPaddingSizeFactor(const FieldTrialsView* field_trials) {
-  // Too low factor means RTX payload padding is rarely used and ineffective.
-  // Too high means we risk interrupting regular media packets.
-  // In practice, 3x seems to yield reasonable results.
-  constexpr double kDefaultFactor = 3.0;
-  if (!field_trials) {
-    return kDefaultFactor;
-  }
-
-  FieldTrialOptional<double> factor("factor", kDefaultFactor);
-  ParseFieldTrial({&factor}, field_trials->Lookup("WebRTC-LimitPaddingSize"));
-  RTC_CHECK_GE(factor.Value(), 0.0);
-  return factor.Value();
-}
-
 }  // namespace
 
 RTPSender::RTPSender(const RtpRtcpInterface::Configuration& config,
@@ -173,13 +163,13 @@ RTPSender::RTPSender(const RtpRtcpInterface::Configuration& config,
       rtx_ssrc_(config.rtx_send_ssrc),
       flexfec_ssrc_(config.fec_generator ? config.fec_generator->FecSsrc()
                                          : absl::nullopt),
-      max_padding_size_factor_(GetMaxPaddingSizeFactor(config.field_trials)),
       packet_history_(packet_history),
       paced_sender_(packet_sender),
       sending_media_(true),                   // Default to sending media.
       max_packet_size_(IP_PACKET_SIZE - 28),  // Default is IP-v4/UDP.
       rtp_header_extension_map_(config.extmap_allow_mixed),
       // RTP variables
+      rid_(config.rid),
       always_send_mid_and_rid_(config.always_send_mid_and_rid),
       ssrc_has_acked_(false),
       rtx_ssrc_has_acked_(false),
@@ -187,12 +177,14 @@ RTPSender::RTPSender(const RtpRtcpInterface::Configuration& config,
       rtx_(kRtxOff),
       supports_bwe_extension_(false),
       retransmission_rate_limiter_(config.retransmission_rate_limiter) {
-  UpdateHeaderSizes();
   // This random initialization is not intended to be cryptographic strong.
   timestamp_offset_ = random_.Rand<uint32_t>();
 
   RTC_DCHECK(paced_sender_);
   RTC_DCHECK(packet_history_);
+  RTC_DCHECK_LE(rid_.size(), RtpStreamId::kMaxValueSizeBytes);
+
+  UpdateHeaderSizes();
 }
 
 RTPSender::~RTPSender() {
@@ -396,11 +388,10 @@ std::vector<std::unique_ptr<RtpPacketToSend>> RTPSender::GeneratePadding(
           packet_history_->GetPayloadPaddingPacket(
               [&](const RtpPacketToSend& packet)
                   -> std::unique_ptr<RtpPacketToSend> {
-                // Limit overshoot, generate <= `max_padding_size_factor_` *
-                // target_size_bytes.
+                // Limit overshoot, generate <= `kMaxPaddingSizeFactor` *
+                // `target_size_bytes`.
                 const size_t max_overshoot_bytes = static_cast<size_t>(
-                    ((max_padding_size_factor_ - 1.0) * target_size_bytes) +
-                    0.5);
+                    ((kMaxPaddingSizeFactor - 1.0) * target_size_bytes) + 0.5);
                 if (packet.payload_size() + kRtxHeaderSize >
                     max_overshoot_bytes + bytes_left) {
                   return nullptr;
@@ -591,19 +582,11 @@ uint32_t RTPSender::TimestampOffset() const {
   return timestamp_offset_;
 }
 
-void RTPSender::SetRid(const std::string& rid) {
-  // RID is used in simulcast scenario when multiple layers share the same mid.
-  MutexLock lock(&send_mutex_);
-  RTC_DCHECK_LE(rid.length(), RtpStreamId::kMaxValueSizeBytes);
-  rid_ = rid;
-  UpdateHeaderSizes();
-}
-
-void RTPSender::SetMid(const std::string& mid) {
+void RTPSender::SetMid(absl::string_view mid) {
   // This is configured via the API.
   MutexLock lock(&send_mutex_);
   RTC_DCHECK_LE(mid.length(), RtpMid::kMaxValueSizeBytes);
-  mid_ = mid;
+  mid_ = std::string(mid);
   UpdateHeaderSizes();
 }
 

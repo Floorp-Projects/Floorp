@@ -20,8 +20,6 @@
 #include "api/sequence_checker.h"
 #include "api/test/time_controller.h"
 #include "api/units/timestamp.h"
-#include "modules/include/module.h"
-#include "modules/utility/include/process_thread.h"
 #include "rtc_base/fake_clock.h"
 #include "rtc_base/platform_thread_types.h"
 #include "rtc_base/synchronization/mutex.h"
@@ -58,9 +56,7 @@ class SimulatedTimeControllerImpl : public TaskQueueFactory,
   // except that if this method is called from a task, the task queue running
   // that task is skipped.
   void YieldExecution() RTC_LOCKS_EXCLUDED(time_lock_, lock_) override;
-  // Create process thread with the name `thread_name`.
-  std::unique_ptr<ProcessThread> CreateProcessThread(const char* thread_name)
-      RTC_LOCKS_EXCLUDED(time_lock_, lock_);
+
   // Create thread using provided `socket_server`.
   std::unique_ptr<rtc::Thread> CreateThread(
       const std::string& name,
@@ -110,11 +106,15 @@ class TokenTaskQueue : public TaskQueueBase {
   using CurrentTaskQueueSetter = TaskQueueBase::CurrentTaskQueueSetter;
 
   void Delete() override { RTC_DCHECK_NOTREACHED(); }
-  void PostTask(std::unique_ptr<QueuedTask> /*task*/) override {
+  void PostTask(absl::AnyInvocable<void() &&> /*task*/) override {
     RTC_DCHECK_NOTREACHED();
   }
-  void PostDelayedTask(std::unique_ptr<QueuedTask> /*task*/,
-                       uint32_t /*milliseconds*/) override {
+  void PostDelayedTask(absl::AnyInvocable<void() &&> /*task*/,
+                       TimeDelta /*delay*/) override {
+    RTC_DCHECK_NOTREACHED();
+  }
+  void PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> /*task*/,
+                                    TimeDelta /*delay*/) override {
     RTC_DCHECK_NOTREACHED();
   }
 };
@@ -131,8 +131,6 @@ class GlobalSimulatedTimeController : public TimeController {
 
   Clock* GetClock() override;
   TaskQueueFactory* GetTaskQueueFactory() override;
-  std::unique_ptr<ProcessThread> CreateProcessThread(
-      const char* thread_name) override;
   std::unique_ptr<rtc::Thread> CreateThread(
       const std::string& name,
       std::unique_ptr<rtc::SocketServer> socket_server) override;

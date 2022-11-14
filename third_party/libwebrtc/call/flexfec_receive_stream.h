@@ -25,16 +25,9 @@
 namespace webrtc {
 
 class FlexfecReceiveStream : public RtpPacketSinkInterface,
-                             public ReceiveStream {
+                             public ReceiveStreamInterface {
  public:
   ~FlexfecReceiveStream() override = default;
-
-  struct Stats {
-    std::string ToString(int64_t time_ms) const;
-
-    // TODO(brandtr): Add appropriate stats here.
-    int flexfec_bitrate_bps;
-  };
 
   struct Config {
     explicit Config(Transport* rtcp_send_transport);
@@ -67,7 +60,11 @@ class FlexfecReceiveStream : public RtpPacketSinkInterface,
     Transport* rtcp_send_transport = nullptr;
   };
 
-  virtual Stats GetStats() const = 0;
+  // TODO(tommi): FlexfecReceiveStream inherits from ReceiveStreamInterface,
+  // not VideoReceiveStreamInterface where there's also a SetRtcpMode method.
+  // Perhaps this should be in ReceiveStreamInterface and apply to audio streams
+  // as well (although there's no logic that would use it at present).
+  virtual void SetRtcpMode(RtcpMode mode) = 0;
 };
 
 }  // namespace webrtc

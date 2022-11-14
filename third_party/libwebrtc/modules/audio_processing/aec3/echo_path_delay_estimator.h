@@ -16,6 +16,7 @@
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "modules/audio_processing/aec3/alignment_mixer.h"
+#include "modules/audio_processing/aec3/block.h"
 #include "modules/audio_processing/aec3/clockdrift_detector.h"
 #include "modules/audio_processing/aec3/decimator.h"
 #include "modules/audio_processing/aec3/delay_estimate.h"
@@ -46,7 +47,7 @@ class EchoPathDelayEstimator {
   // Produce a delay estimate if such is avaliable.
   absl::optional<DelayEstimate> EstimateDelay(
       const DownsampledRenderBuffer& render_buffer,
-      const std::vector<std::vector<float>>& capture);
+      const Block& capture);
 
   // Log delay estimator properties.
   void LogDelayEstimationProperties(int sample_rate_hz, size_t shift) const {

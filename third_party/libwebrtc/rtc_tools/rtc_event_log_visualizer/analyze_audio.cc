@@ -21,7 +21,6 @@
 #include "modules/audio_coding/neteq/tools/neteq_replacement_input.h"
 #include "modules/audio_coding/neteq/tools/neteq_test.h"
 #include "modules/audio_coding/neteq/tools/resample_input_audio_file.h"
-#include "rtc_base/ref_counted_object.h"
 
 namespace webrtc {
 

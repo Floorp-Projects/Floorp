@@ -17,27 +17,32 @@
 #include <utility>
 
 #include "absl/algorithm/container.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/ice_transport_interface.h"
+#include "api/task_queue/pending_task_safety_flag.h"
+#include "api/units/time_delta.h"
 #include "p2p/base/ice_transport_internal.h"
 #include "rtc_base/copy_on_write_buffer.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 
 namespace cricket {
+using ::webrtc::SafeTask;
+using ::webrtc::TimeDelta;
 
 // All methods must be called on the network thread (which is either the thread
 // calling the constructor, or the separate thread explicitly passed to the
 // constructor).
 class FakeIceTransport : public IceTransportInternal {
  public:
-  explicit FakeIceTransport(const std::string& name,
+  explicit FakeIceTransport(absl::string_view name,
                             int component,
                             rtc::Thread* network_thread = nullptr)
       : name_(name),
         component_(component),
         network_thread_(network_thread ? network_thread
-                                       : rtc::Thread::Current()) {}
+                                       : rtc::Thread::Current()) {
+    RTC_DCHECK(network_thread_);
+  }
   // Must be called either on the network thread, or after the network thread
   // has been shut down.
   ~FakeIceTransport() override {
@@ -307,12 +312,12 @@ class FakeIceTransport : public IceTransportInternal {
       rtc::CopyOnWriteBuffer packet(std::move(send_packet_));
       if (async_) {
         network_thread_->PostDelayedTask(
-            ToQueuedTask(task_safety_.flag(),
-                         [this, packet] {
-                           RTC_DCHECK_RUN_ON(network_thread_);
-                           FakeIceTransport::SendPacketInternal(packet);
-                         }),
-            async_delay_ms_);
+            SafeTask(task_safety_.flag(),
+                     [this, packet] {
+                       RTC_DCHECK_RUN_ON(network_thread_);
+                       FakeIceTransport::SendPacketInternal(packet);
+                     }),
+            TimeDelta::Millis(async_delay_ms_));
       } else {
         SendPacketInternal(packet);
       }

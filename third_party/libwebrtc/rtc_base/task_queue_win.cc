@@ -8,72 +8,80 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "rtc_base/task_queue.h"
+// Mozilla - this file should not be included in Mozilla builds until
+// win32k API usage is removed.  This was once done in Bug 1395259, but
+// the upstreaming attempt stalled.  Until win32k usage is officially
+// removed upstream, we have reverted to upstream's version of the file
+// (to reduce or elminate merge conflicts), and a static assert is
+// placed here to ensure this file isn't accidentally included in the
+// Mozilla build.
+static_assert(false, "This file should not be built, see Bug 1797161.");
 
-#include <mmsystem.h>
+#include "rtc_base/task_queue_win.h"
+
+// clang-format off
+// clang formating would change include order.
+
+// Include winsock2.h before including <windows.h> to maintain consistency with
+// win32.h. To include win32.h directly, it must be broken out into its own
+// build target.
+#include <winsock2.h>
+#include <windows.h>
+#include <sal.h>       // Must come after windows headers.
+#include <mmsystem.h>  // Must come after windows headers.
+// clang-format on
 #include <string.h>
 
 #include <algorithm>
+#include <functional>
+#include <memory>
 #include <queue>
 #include <utility>
 
+#include "absl/functional/any_invocable.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "api/task_queue/task_queue_base.h"
+#include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/platform_thread.h"
-#include "rtc_base/refcount.h"
-#include "rtc_base/refcountedobject.h"
-#include "rtc_base/timeutils.h"
+#include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/time_utils.h"
 
-namespace rtc {
+namespace webrtc {
 namespace {
-using Priority = TaskQueue::Priority;
-
-DWORD g_queue_ptr_tls = 0;
-
-BOOL CALLBACK InitializeTls(PINIT_ONCE init_once, void* param, void** context) {
-  g_queue_ptr_tls = TlsAlloc();
-  return TRUE;
-}
-
-DWORD GetQueuePtrTls() {
-  static INIT_ONCE init_once = INIT_ONCE_STATIC_INIT;
-  ::InitOnceExecuteOnce(&init_once, InitializeTls, nullptr, nullptr);
-  return g_queue_ptr_tls;
-}
-
-struct ThreadStartupData {
-  Event* started;
-  void* thread_context;
-};
+#define WM_QUEUE_DELAYED_TASK WM_USER + 2
 
 void CALLBACK InitializeQueueThread(ULONG_PTR param) {
-  ThreadStartupData* data = reinterpret_cast<ThreadStartupData*>(param);
-  ::TlsSetValue(GetQueuePtrTls(), data->thread_context);
-  data->started->Set();
+  MSG msg;
+  ::PeekMessage(&msg, nullptr, WM_USER, WM_USER, PM_NOREMOVE);
+  rtc::Event* data = reinterpret_cast<rtc::Event*>(param);
+  data->Set();
 }
 
-ThreadPriority TaskQueuePriorityToThreadPriority(Priority priority) {
+rtc::ThreadPriority TaskQueuePriorityToThreadPriority(
+    TaskQueueFactory::Priority priority) {
   switch (priority) {
-    case Priority::HIGH:
+    case TaskQueueFactory::Priority::HIGH:
       return rtc::ThreadPriority::kRealtime;
-    case Priority::LOW:
+    case TaskQueueFactory::Priority::LOW:
       return rtc::ThreadPriority::kLow;
-    case Priority::NORMAL:
+    case TaskQueueFactory::Priority::NORMAL:
       return rtc::ThreadPriority::kNormal;
   }
 }
 
-int64_t GetTick() {
+Timestamp CurrentTime() {
   static const UINT kPeriod = 1;
   bool high_res = (timeBeginPeriod(kPeriod) == TIMERR_NOERROR);
-  int64_t ret = TimeMillis();
-  if (high_res) {
+  Timestamp ret = Timestamp::Micros(rtc::TimeMicros());
+  if (high_res)
     timeEndPeriod(kPeriod);
-  }
   return ret;
 }
 
@@ -81,8 +89,8 @@ class DelayedTaskInfo {
  public:
   // Default ctor needed to support priority_queue::pop().
   DelayedTaskInfo() {}
-  DelayedTaskInfo(uint32_t milliseconds, std::unique_ptr<QueuedTask> task)
-      : due_time_(GetTick() + milliseconds), task_(std::move(task)) {}
+  DelayedTaskInfo(TimeDelta delay, absl::AnyInvocable<void() &&> task)
+      : due_time_(CurrentTime() + delay), task_(std::move(task)) {}
   DelayedTaskInfo(DelayedTaskInfo&&) = default;
 
   // Implement for priority_queue.
@@ -94,12 +102,15 @@ class DelayedTaskInfo {
   DelayedTaskInfo& operator=(DelayedTaskInfo&& other) = default;
 
   // See below for why this method is const.
-  std::unique_ptr<QueuedTask> take() const { return std::move(task_); }
+  void Run() const {
+    RTC_DCHECK(task_);
+    std::move(task_)();
+  }
 
-  int64_t due_time() const { return due_time_; }
+  Timestamp due_time() const { return due_time_; }
 
  private:
-  int64_t due_time_ = 0;  // Absolute timestamp in milliseconds.
+  Timestamp due_time_ = Timestamp::Zero();
 
   // `task` needs to be mutable because std::priority_queue::top() returns
   // a const reference and a key in an ordered queue must not be changed.
@@ -107,339 +118,283 @@ class DelayedTaskInfo {
   // make the key (`due_time`), non-const and the other is to make the non-key
   // (`task`), mutable.
   // Because of this, the `task` variable is made private and can only be
-  // mutated by calling the `take()` method.
-  mutable std::unique_ptr<QueuedTask> task_;
+  // mutated by calling the `Run()` method.
+  mutable absl::AnyInvocable<void() &&> task_;
 };
 
-}  // namespace
-
-class TaskQueue::Impl : public RefCountInterface {
+class MultimediaTimer {
  public:
-  // Every task queue has a shared_ptr<ReplyHandler>, and shared references
-  // are handed out to other queues that name this queue as the "reply queue"
-  // of a PostTaskAndReply() call.
-  //
-  // The impl_ member of this will be valid the entire period that this
-  // queue is able to safely handle messages. If the queue is destroyed,
-  // impl_ will be set to nullptr. Once this happens, any pending reply
-  // messages from other queues will be dropped
-  class ReplyHandler {
-   public:
-    ReplyHandler() : impl_(nullptr) {}
+  // Note: We create an event that requires manual reset.
+  MultimediaTimer() : event_(::CreateEvent(nullptr, true, false, nullptr)) {}
 
-    void SetImpl(Impl* impl) {
-      rtc::CritScope lock(&lock_);
-      impl_ = impl;
-    }
-
-    void PostReplyTask(QueuedTask* reply_task) {
-      rtc::CritScope lock(&lock_);
-
-      if (!impl_) {
-        delete reply_task;
-        return;
-      }
-
-      impl_->PostTask([reply_task] {
-        if (reply_task->Run()) {
-          delete reply_task;
-        }
-      });
-    }
-
-    ReplyHandler(const ReplyHandler&) = delete;
-    ReplyHandler& operator=(const ReplyHandler&) = delete;
-
-   private:
-    Impl* impl_;
-    rtc::CriticalSection lock_;
-  };
-
-  Impl(const char* queue_name, TaskQueue* queue, Priority priority);
-  ~Impl() override;
-
-  static TaskQueue::Impl* Current();
-  static TaskQueue* CurrentQueue();
-
-  // Used for DCHECKing the current queue.
-  bool IsCurrent() const;
-
-  template <class Closure,
-            typename std::enable_if<!std::is_convertible<
-                Closure, std::unique_ptr<QueuedTask>>::value>::type* = nullptr>
-  void PostTask(Closure&& closure) {
-    PostTask(NewClosure(std::forward<Closure>(closure)));
+  ~MultimediaTimer() {
+    Cancel();
+    ::CloseHandle(event_);
   }
 
-  void PostTask(std::unique_ptr<QueuedTask> task);
-  void PostTaskAndReply(std::unique_ptr<QueuedTask> task,
-                        std::unique_ptr<QueuedTask> reply,
-                        TaskQueue::Impl* reply_queue);
+  MultimediaTimer(const MultimediaTimer&) = delete;
+  MultimediaTimer& operator=(const MultimediaTimer&) = delete;
 
-  void PostDelayedTask(std::unique_ptr<QueuedTask> task, uint32_t milliseconds);
+  bool StartOneShotTimer(UINT delay_ms) {
+    RTC_DCHECK_EQ(0, timer_id_);
+    RTC_DCHECK(event_ != nullptr);
+    timer_id_ =
+        ::timeSetEvent(delay_ms, 0, reinterpret_cast<LPTIMECALLBACK>(event_), 0,
+                       TIME_ONESHOT | TIME_CALLBACK_EVENT_SET);
+    return timer_id_ != 0;
+  }
 
+  void Cancel() {
+    if (timer_id_) {
+      ::timeKillEvent(timer_id_);
+      timer_id_ = 0;
+    }
+    // Now that timer is killed and not able to set the event, reset the event.
+    // Doing it in opposite order is racy because event may be set between
+    // event was reset and timer is killed leaving MultimediaTimer in surprising
+    // state where both event is set and timer is canceled.
+    ::ResetEvent(event_);
+  }
+
+  HANDLE* event_for_wait() { return &event_; }
+
+ private:
+  HANDLE event_ = nullptr;
+  MMRESULT timer_id_ = 0;
+};
+
+class TaskQueueWin : public TaskQueueBase {
+ public:
+  TaskQueueWin(absl::string_view queue_name, rtc::ThreadPriority priority);
+  ~TaskQueueWin() override = default;
+
+  void Delete() override;
+  void PostTask(absl::AnyInvocable<void() &&> task) override;
+  void PostDelayedTask(absl::AnyInvocable<void() &&> task,
+                       TimeDelta delay) override;
+  void PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
+                                    TimeDelta delay) override;
   void RunPendingTasks();
 
  private:
   void RunThreadMain();
+  bool ProcessQueuedMessages();
   void RunDueTasks();
   void ScheduleNextTimer();
+  void CancelTimers();
 
+  MultimediaTimer timer_;
   // Since priority_queue<> by defult orders items in terms of
   // largest->smallest, using std::less<>, and we want smallest->largest,
-  // we would like to use std::greater<> here. Alas it's only available in
-  // C++14 and later, so we roll our own compare template that that relies on
-  // operator<().
-  template <typename T>
-  struct greater {
-    bool operator()(const T& l, const T& r) { return l > r; }
-  };
-
-  rtc::CriticalSection timer_lock_;
-  std::priority_queue<DelayedTaskInfo, std::vector<DelayedTaskInfo>,
-                      greater<DelayedTaskInfo>>
-      timer_tasks_ RTC_GUARDED_BY(timer_lock_);
-
-  TaskQueue* const queue_;
+  // we would like to use std::greater<> here.
+  std::priority_queue<DelayedTaskInfo,
+                      std::vector<DelayedTaskInfo>,
+                      std::greater<DelayedTaskInfo>>
+      timer_tasks_;
+  UINT_PTR timer_id_ = 0;
   rtc::PlatformThread thread_;
-  rtc::CriticalSection pending_lock_;
-  std::queue<std::unique_ptr<QueuedTask>> pending_
+  Mutex pending_lock_;
+  std::queue<absl::AnyInvocable<void() &&>> pending_
       RTC_GUARDED_BY(pending_lock_);
-  // event handle for currently queued tasks
   HANDLE in_queue_;
-  // event handle to stop execution
-  HANDLE stop_queue_;
-  // event handle for waitable timer events
-  HANDLE task_timer_;
-
-  std::shared_ptr<ReplyHandler> reply_handler_;
 };
 
-TaskQueue::Impl::Impl(const char* queue_name, TaskQueue* queue,
-                      Priority priority)
-    : queue_(queue),
-      in_queue_(::CreateEvent(nullptr, true, false, nullptr)),
-      stop_queue_(::CreateEvent(nullptr, TRUE, FALSE, nullptr)),
-      task_timer_(::CreateWaitableTimer(nullptr, FALSE, nullptr)),
-      reply_handler_(std::make_shared<ReplyHandler>()) {
-  RTC_DCHECK(queue_name);
+TaskQueueWin::TaskQueueWin(absl::string_view queue_name,
+                           rtc::ThreadPriority priority)
+    : in_queue_(::CreateEvent(nullptr, true, false, nullptr)) {
   RTC_DCHECK(in_queue_);
-  RTC_DCHECK(stop_queue_);
-  RTC_DCHECK(task_timer_);
   thread_ = rtc::PlatformThread::SpawnJoinable(
       [this] { RunThreadMain(); }, queue_name,
       rtc::ThreadAttributes().SetPriority(priority));
 
-  Event event(false, false);
-  ThreadStartupData startup = {&event, this};
+  rtc::Event event(false, false);
   RTC_CHECK(thread_.QueueAPC(&InitializeQueueThread,
-                             reinterpret_cast<ULONG_PTR>(&startup)));
-  event.Wait(Event::kForever);
-
-  // Once this is set, we can receive reply messages from other queues
-  reply_handler_->SetImpl(this);
+                             reinterpret_cast<ULONG_PTR>(&event)));
+  event.Wait(rtc::Event::kForever);
 }
 
-TaskQueue::Impl::~Impl() {
+void TaskQueueWin::Delete() {
   RTC_DCHECK(!IsCurrent());
-
-  // Once this is cleared, we will no longer be sent reply messages from
-  // other queues
-  reply_handler_->SetImpl(nullptr);
-
-  ::SetEvent(stop_queue_);
-  thread_.Stop();
-
-  ::CloseHandle(stop_queue_);
-  ::CloseHandle(task_timer_);
+  RTC_CHECK(thread_.GetHandle() != absl::nullopt);
+  while (
+      !::PostThreadMessage(GetThreadId(*thread_.GetHandle()), WM_QUIT, 0, 0)) {
+    RTC_CHECK_EQ(ERROR_NOT_ENOUGH_QUOTA, ::GetLastError());
+    Sleep(1);
+  }
+  thread_.Finalize();
   ::CloseHandle(in_queue_);
+  delete this;
 }
 
-// static
-TaskQueue::Impl* TaskQueue::Impl::Current() {
-  return static_cast<TaskQueue::Impl*>(::TlsGetValue(GetQueuePtrTls()));
-}
-
-// static
-TaskQueue* TaskQueue::Impl::CurrentQueue() {
-  TaskQueue::Impl* current = Current();
-  return current ? current->queue_ : nullptr;
-}
-
-bool TaskQueue::Impl::IsCurrent() const {
-  return IsThreadRefEqual(thread_.GetThreadRef(), CurrentThreadRef());
-}
-
-void TaskQueue::Impl::PostTask(std::unique_ptr<QueuedTask> task) {
-  rtc::CritScope lock(&pending_lock_);
+void TaskQueueWin::PostTask(absl::AnyInvocable<void() &&> task) {
+  MutexLock lock(&pending_lock_);
   pending_.push(std::move(task));
   ::SetEvent(in_queue_);
 }
 
-void TaskQueue::Impl::PostDelayedTask(std::unique_ptr<QueuedTask> task,
-                                      uint32_t milliseconds) {
-  if (!milliseconds) {
+void TaskQueueWin::PostDelayedTask(absl::AnyInvocable<void() &&> task,
+                                   TimeDelta delay) {
+  if (delay <= TimeDelta::Zero()) {
     PostTask(std::move(task));
     return;
   }
 
-  {
-    rtc::CritScope lock(&timer_lock_);
-    // Record if we need to schedule our timer based on if either there are no
-    // tasks currently being timed or the current task being timed would end
-    // later than the task we're placing into the priority queue
-    bool need_to_schedule_timer =
-        timer_tasks_.empty() ||
-        timer_tasks_.top().due_time() > GetTick() + milliseconds;
-
-    timer_tasks_.emplace(milliseconds, std::move(task));
-
-    if (need_to_schedule_timer) {
-      ScheduleNextTimer();
-    }
+  auto* task_info = new DelayedTaskInfo(delay, std::move(task));
+  RTC_CHECK(thread_.GetHandle() != absl::nullopt);
+  if (!::PostThreadMessage(GetThreadId(*thread_.GetHandle()),
+                           WM_QUEUE_DELAYED_TASK, 0,
+                           reinterpret_cast<LPARAM>(task_info))) {
+    delete task_info;
   }
 }
 
-void TaskQueue::Impl::PostTaskAndReply(std::unique_ptr<QueuedTask> task,
-                                       std::unique_ptr<QueuedTask> reply,
-                                       TaskQueue::Impl* reply_queue) {
-  QueuedTask* task_ptr = task.release();
-  QueuedTask* reply_task_ptr = reply.release();
-
-  std::shared_ptr<ReplyHandler> reply_handler = reply_queue->reply_handler_;
-
-  PostTask([task_ptr, reply_task_ptr, reply_handler] {
-    if (task_ptr->Run()) {
-      delete task_ptr;
-    }
-
-    reply_handler->PostReplyTask(reply_task_ptr);
-  });
+void TaskQueueWin::PostDelayedHighPrecisionTask(
+    absl::AnyInvocable<void() &&> task,
+    TimeDelta delay) {
+  PostDelayedTask(std::move(task), delay);
 }
 
-void TaskQueue::Impl::RunPendingTasks() {
+void TaskQueueWin::RunPendingTasks() {
   while (true) {
-    std::unique_ptr<QueuedTask> task;
+    absl::AnyInvocable<void() &&> task;
     {
-      rtc::CritScope lock(&pending_lock_);
-      if (pending_.empty()) {
+      MutexLock lock(&pending_lock_);
+      if (pending_.empty())
         break;
-      }
       task = std::move(pending_.front());
       pending_.pop();
     }
 
-    if (!task->Run()) {
-      task.release();
-    }
+    std::move(task)();
   }
 }
 
-// mjf - this was removed upstream, so may need to be removed here.
-// static
-void TaskQueue::Impl::ThreadMain(void* context) {
-  static_cast<TaskQueue::Impl*>(context)->RunThreadMain();
-}
-
-void TaskQueue::Impl::RunThreadMain() {
-  // These handles correspond to the WAIT_OBJECT_0 + n expressions below where n
-  // is the position in handles that WaitForMultipleObjectsEx() was alerted on.
-  HANDLE handles[3] = {stop_queue_, task_timer_, in_queue_};
+void TaskQueueWin::RunThreadMain() {
+  CurrentTaskQueueSetter set_current(this);
+  HANDLE handles[2] = {*timer_.event_for_wait(), in_queue_};
   while (true) {
-    // Make sure we do an alertable wait as that's required to allow APCs to
-    // run (e.g. required for InitializeQueueThread and stopping the thread in
+    // Make sure we do an alertable wait as that's required to allow APCs to run
+    // (e.g. required for InitializeQueueThread and stopping the thread in
     // PlatformThread).
-    DWORD result = ::WaitForMultipleObjectsEx(arraysize(handles), handles,
-                                              FALSE, INFINITE, TRUE);
+    DWORD result = ::MsgWaitForMultipleObjectsEx(
+        arraysize(handles), handles, INFINITE, QS_ALLEVENTS, MWMO_ALERTABLE);
     RTC_CHECK_NE(WAIT_FAILED, result);
-
-    // run waitable timer tasks
-    {
-      rtc::CritScope lock(&timer_lock_);
-      if (result == WAIT_OBJECT_0 + 1 ||
-          (!timer_tasks_.empty() &&
-           ::WaitForSingleObject(task_timer_, 0) == WAIT_OBJECT_0)) {
-        RunDueTasks();
-        ScheduleNextTimer();
-      }
-    }
-
-    // reset in_queue_ event and run leftover tasks
     if (result == (WAIT_OBJECT_0 + 2)) {
-      ::ResetEvent(in_queue_);
-      TaskQueue::Impl::Current()->RunPendingTasks();
+      // There are messages in the message queue that need to be handled.
+      if (!ProcessQueuedMessages())
+        break;
     }
 
-    // empty queue and shut down thread
-    if (result == (WAIT_OBJECT_0)) {
-      break;
+    if (result == WAIT_OBJECT_0 ||
+        (!timer_tasks_.empty() &&
+         ::WaitForSingleObject(*timer_.event_for_wait(), 0) == WAIT_OBJECT_0)) {
+      // The multimedia timer was signaled.
+      timer_.Cancel();
+      RunDueTasks();
+      ScheduleNextTimer();
+    }
+
+    if (result == (WAIT_OBJECT_0 + 1)) {
+      ::ResetEvent(in_queue_);
+      RunPendingTasks();
     }
   }
 }
 
-void TaskQueue::Impl::RunDueTasks() {
-  RTC_DCHECK(!timer_tasks_.empty());
-  auto now = GetTick();
-  do {
-    if (timer_tasks_.top().due_time() > now) {
+bool TaskQueueWin::ProcessQueuedMessages() {
+  MSG msg = {};
+  // To protect against overly busy message queues, we limit the time
+  // we process tasks to a few milliseconds. If we don't do that, there's
+  // a chance that timer tasks won't ever run.
+  static constexpr TimeDelta kMaxTaskProcessingTime = TimeDelta::Millis(500);
+  Timestamp start = CurrentTime();
+  while (::PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) &&
+         msg.message != WM_QUIT) {
+    if (!msg.hwnd) {
+      switch (msg.message) {
+        case WM_QUEUE_DELAYED_TASK: {
+          std::unique_ptr<DelayedTaskInfo> info(
+              reinterpret_cast<DelayedTaskInfo*>(msg.lParam));
+          bool need_to_schedule_timers =
+              timer_tasks_.empty() ||
+              timer_tasks_.top().due_time() > info->due_time();
+          timer_tasks_.push(std::move(*info));
+          if (need_to_schedule_timers) {
+            CancelTimers();
+            ScheduleNextTimer();
+          }
+          break;
+        }
+        case WM_TIMER: {
+          RTC_DCHECK_EQ(timer_id_, msg.wParam);
+          ::KillTimer(nullptr, msg.wParam);
+          timer_id_ = 0;
+          RunDueTasks();
+          ScheduleNextTimer();
+          break;
+        }
+        default:
+          RTC_DCHECK_NOTREACHED();
+          break;
+      }
+    } else {
+      ::TranslateMessage(&msg);
+      ::DispatchMessage(&msg);
+    }
+
+    if (CurrentTime() > start + kMaxTaskProcessingTime)
       break;
-    }
-    std::unique_ptr<QueuedTask> task = timer_tasks_.top().take();
+  }
+  return msg.message != WM_QUIT;
+}
+
+void TaskQueueWin::RunDueTasks() {
+  RTC_DCHECK(!timer_tasks_.empty());
+  Timestamp now = CurrentTime();
+  do {
+    const auto& top = timer_tasks_.top();
+    if (top.due_time() > now)
+      break;
+    top.Run();
     timer_tasks_.pop();
-    if(!task->Run()) {
-      task.release();
-    }
   } while (!timer_tasks_.empty());
 }
 
-void TaskQueue::Impl::ScheduleNextTimer() {
-  RTC_DCHECK_NE(task_timer_, INVALID_HANDLE_VALUE);
-  if (timer_tasks_.empty()) {
+void TaskQueueWin::ScheduleNextTimer() {
+  RTC_DCHECK_EQ(timer_id_, 0);
+  if (timer_tasks_.empty())
     return;
+
+  const auto& next_task = timer_tasks_.top();
+  TimeDelta delay =
+      std::max(TimeDelta::Zero(), next_task.due_time() - CurrentTime());
+  uint32_t milliseconds = delay.RoundUpTo(TimeDelta::Millis(1)).ms<uint32_t>();
+  if (!timer_.StartOneShotTimer(milliseconds))
+    timer_id_ = ::SetTimer(nullptr, 0, milliseconds, nullptr);
+}
+
+void TaskQueueWin::CancelTimers() {
+  timer_.Cancel();
+  if (timer_id_) {
+    ::KillTimer(nullptr, timer_id_);
+    timer_id_ = 0;
   }
-
-  LARGE_INTEGER due_time;
-  // We have to convert DelayedTaskInfo's due_time_ from milliseconds to
-  // nanoseconds and make it a relative time instead of an absolute time so we
-  // multiply it by -10,000 here
-  due_time.QuadPart =
-      -10000 * std::max(0ll, timer_tasks_.top().due_time() - GetTick());
-  ::SetWaitableTimer(task_timer_, &due_time, 0, nullptr, nullptr, FALSE);
 }
 
-// Boilerplate for the PIMPL pattern.
-TaskQueue::TaskQueue(const char* queue_name, Priority priority)
-    : impl_(new RefCountedObject<TaskQueue::Impl>(queue_name, this, priority)) {
+class TaskQueueWinFactory : public TaskQueueFactory {
+ public:
+  std::unique_ptr<TaskQueueBase, TaskQueueDeleter> CreateTaskQueue(
+      absl::string_view name,
+      Priority priority) const override {
+    return std::unique_ptr<TaskQueueBase, TaskQueueDeleter>(
+        new TaskQueueWin(name, TaskQueuePriorityToThreadPriority(priority)));
+  }
+};
+
+}  // namespace
+
+std::unique_ptr<TaskQueueFactory> CreateTaskQueueWinFactory() {
+  return std::make_unique<TaskQueueWinFactory>();
 }
 
-TaskQueue::~TaskQueue() {}
-
-// static
-TaskQueue* TaskQueue::Current() { return TaskQueue::Impl::CurrentQueue(); }
-
-// Used for DCHECKing the current queue.
-bool TaskQueue::IsCurrent() const { return impl_->IsCurrent(); }
-
-void TaskQueue::PostTask(std::unique_ptr<QueuedTask> task) {
-  return TaskQueue::impl_->PostTask(std::move(task));
-}
-
-void TaskQueue::PostTaskAndReply(std::unique_ptr<QueuedTask> task,
-                                 std::unique_ptr<QueuedTask> reply,
-                                 TaskQueue* reply_queue) {
-  return TaskQueue::impl_->PostTaskAndReply(std::move(task), std::move(reply),
-                                            reply_queue->impl_.get());
-}
-
-void TaskQueue::PostTaskAndReply(std::unique_ptr<QueuedTask> task,
-                                 std::unique_ptr<QueuedTask> reply) {
-  return TaskQueue::impl_->PostTaskAndReply(std::move(task), std::move(reply),
-                                            impl_.get());
-}
-
-void TaskQueue::PostDelayedTask(std::unique_ptr<QueuedTask> task,
-                                uint32_t milliseconds) {
-  return TaskQueue::impl_->PostDelayedTask(std::move(task), milliseconds);
-}
-
-}  // namespace rtc
+}  // namespace webrtc

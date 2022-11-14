@@ -9,6 +9,9 @@
  */
 
 #include "modules/desktop_capture/desktop_capture_options.h"
+
+#include "api/make_ref_counted.h"
+
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
 #include "modules/desktop_capture/mac/full_screen_mac_application_handler.h"
 #elif defined(WEBRTC_WIN)
@@ -17,8 +20,6 @@
 #if defined(WEBRTC_USE_PIPEWIRE) && !defined(WEBRTC_MOZILLA_BUILD)
 #include "modules/desktop_capture/linux/wayland/shared_screencast_stream.h"
 #endif
-
-#include "rtc_base/ref_counted_object.h"
 
 namespace webrtc {
 

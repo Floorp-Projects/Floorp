@@ -9,6 +9,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <XCTest/XCTest.h>
 
 #include "rtc_base/gunit.h"
 
@@ -16,12 +17,10 @@
 #import "api/peerconnection/RTCSessionDescription.h"
 #import "helpers/NSString+StdString.h"
 
-@interface RTCSessionDescriptionTest : NSObject
-- (void)testSessionDescriptionConversion;
-- (void)testInitFromNativeSessionDescription;
+@interface RTCSessionDescriptionTests : XCTestCase
 @end
 
-@implementation RTCSessionDescriptionTest
+@implementation RTCSessionDescriptionTests
 
 /**
  * Test conversion of an Objective-C RTC_OBJC_TYPE(RTCSessionDescription) to a native
@@ -121,17 +120,3 @@
 }
 
 @end
-
-TEST(RTCSessionDescriptionTest, SessionDescriptionConversionTest) {
-  @autoreleasepool {
-    RTCSessionDescriptionTest *test = [[RTCSessionDescriptionTest alloc] init];
-    [test testSessionDescriptionConversion];
-  }
-}
-
-TEST(RTCSessionDescriptionTest, InitFromSessionDescriptionTest) {
-  @autoreleasepool {
-    RTCSessionDescriptionTest *test = [[RTCSessionDescriptionTest alloc] init];
-    [test testInitFromNativeSessionDescription];
-  }
-}

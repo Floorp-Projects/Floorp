@@ -190,6 +190,11 @@ class VideoSendStream {
     // default.
     rtc::scoped_refptr<webrtc::FrameEncryptorInterface> frame_encryptor;
 
+    // An optional encoder selector provided by the user.
+    // Overrides VideoEncoderFactory::GetEncoderSelector().
+    // Owned by RtpSenderBase.
+    VideoEncoderFactory::EncoderSelectorInterface* encoder_selector = nullptr;
+
     // Per PeerConnection cryptography options.
     CryptoOptions crypto_options;
 

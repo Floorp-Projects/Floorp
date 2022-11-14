@@ -11,6 +11,8 @@ import sys
 import tarfile
 
 
+# If changing the list of unused files, please also update the egrep line
+# of the GIT_CHANGED variable in loop-ff.sh.
 LIBWEBRTC_UNUSED_IN_FIREFOX = [
     ".clang-format",
     ".git-blame-ignore-revs",
@@ -34,6 +36,7 @@ LIBWEBRTC_UNUSED_IN_FIREFOX = [
 
 THIRDPARTY_USED_IN_FIREFOX = [
     "abseil-cpp",
+    "google_benchmark",
     "pffft",
     "rnnoise",
 ]

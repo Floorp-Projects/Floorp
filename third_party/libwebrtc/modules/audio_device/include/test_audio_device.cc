@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "api/array_view.h"
+#include "api/make_ref_counted.h"
 #include "common_audio/wav_file.h"
 #include "modules/audio_device/include/audio_device_default.h"
 #include "rtc_base/buffer.h"
@@ -28,7 +29,6 @@
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/random.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/task_utils/repeating_task.h"

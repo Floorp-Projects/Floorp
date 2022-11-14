@@ -117,14 +117,12 @@ class CaptureTransportVerificationProcessor : public BlockProcessor {
 
   ~CaptureTransportVerificationProcessor() override = default;
 
-  void ProcessCapture(
-      bool level_change,
-      bool saturated_microphone_signal,
-      std::vector<std::vector<std::vector<float>>>* linear_output,
-      std::vector<std::vector<std::vector<float>>>* capture_block) override {}
+  void ProcessCapture(bool level_change,
+                      bool saturated_microphone_signal,
+                      Block* linear_output,
+                      Block* capture_block) override {}
 
-  void BufferRender(
-      const std::vector<std::vector<std::vector<float>>>& block) override {}
+  void BufferRender(const Block& block) override {}
 
   void UpdateEchoLeakageStatus(bool leakage_detected) override {}
 
@@ -149,19 +147,16 @@ class RenderTransportVerificationProcessor : public BlockProcessor {
 
   ~RenderTransportVerificationProcessor() override = default;
 
-  void ProcessCapture(
-      bool level_change,
-      bool saturated_microphone_signal,
-      std::vector<std::vector<std::vector<float>>>* linear_output,
-      std::vector<std::vector<std::vector<float>>>* capture_block) override {
-    std::vector<std::vector<std::vector<float>>> render_block =
-        received_render_blocks_.front();
+  void ProcessCapture(bool level_change,
+                      bool saturated_microphone_signal,
+                      Block* linear_output,
+                      Block* capture_block) override {
+    Block render_block = received_render_blocks_.front();
     received_render_blocks_.pop_front();
-    capture_block->swap(render_block);
+    capture_block->Swap(render_block);
   }
 
-  void BufferRender(
-      const std::vector<std::vector<std::vector<float>>>& block) override {
+  void BufferRender(const Block& block) override {
     received_render_blocks_.push_back(block);
   }
 
@@ -174,8 +169,7 @@ class RenderTransportVerificationProcessor : public BlockProcessor {
   void SetCaptureOutputUsage(bool capture_output_used) {}
 
  private:
-  std::deque<std::vector<std::vector<std::vector<float>>>>
-      received_render_blocks_;
+  std::deque<Block> received_render_blocks_;
 };
 
 std::string ProduceDebugText(int sample_rate_hz) {

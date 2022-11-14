@@ -28,6 +28,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/audio_options.h"
 #include "api/call/call_factory_interface.h"
@@ -52,9 +53,11 @@
 #include "api/stats/rtc_stats_report.h"
 #include "api/stats/rtcstats_objects.h"
 #include "api/task_queue/default_task_queue_factory.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/uma_metrics.h"
+#include "api/units/time_delta.h"
 #include "api/video/video_rotation.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_decoder_factory.h"
@@ -108,13 +111,10 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/mdns_responder_interface.h"
 #include "rtc_base/numerics/safe_conversions.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/rtc_certificate_generator.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/ssl_stream_adapter.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/task_utils/repeating_task.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/test_certificate_verifier.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
@@ -373,9 +373,17 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
   rtc::scoped_refptr<RtpSenderInterface> AddTrack(
       rtc::scoped_refptr<MediaStreamTrackInterface> track,
       const std::vector<std::string>& stream_ids = {}) {
+    EXPECT_TRUE(track);
+    if (!track) {
+      return nullptr;
+    }
     auto result = pc()->AddTrack(track, stream_ids);
     EXPECT_EQ(RTCErrorType::NONE, result.error().type());
-    return result.MoveValue();
+    if (result.ok()) {
+      return result.MoveValue();
+    } else {
+      return nullptr;
+    }
   }
 
   std::vector<rtc::scoped_refptr<RtpReceiverInterface>> GetReceiversOfType(
@@ -401,6 +409,11 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
 
   bool SignalingStateStable() {
     return pc()->signaling_state() == webrtc::PeerConnectionInterface::kStable;
+  }
+
+  bool IceGatheringStateComplete() {
+    return pc()->ice_gathering_state() ==
+           webrtc::PeerConnectionInterface::kIceGatheringComplete;
   }
 
   void CreateDataChannel() { CreateDataChannel(nullptr); }
@@ -736,6 +749,7 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
   bool Init(const PeerConnectionFactory::Options* options,
             const PeerConnectionInterface::RTCConfiguration* config,
             webrtc::PeerConnectionDependencies dependencies,
+            rtc::SocketServer* socket_server,
             rtc::Thread* network_thread,
             rtc::Thread* worker_thread,
             std::unique_ptr<webrtc::FakeRtcEventLogFactory> event_log_factory,
@@ -750,7 +764,9 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
     fake_network_manager_->AddInterface(kDefaultLocalAddress);
 
     std::unique_ptr<cricket::PortAllocator> port_allocator(
-        new cricket::BasicPortAllocator(fake_network_manager_.get()));
+        new cricket::BasicPortAllocator(
+            fake_network_manager_.get(),
+            std::make_unique<rtc::BasicPacketSocketFactory>(socket_server)));
     port_allocator_ = port_allocator.get();
     fake_audio_capture_module_ = FakeAudioCaptureModule::Create();
     if (!fake_audio_capture_module_) {
@@ -992,11 +1008,11 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
       RelaySdpMessageIfReceiverExists(type, msg);
     } else {
       rtc::Thread::Current()->PostDelayedTask(
-          ToQueuedTask(task_safety_.flag(),
-                       [this, type, msg] {
-                         RelaySdpMessageIfReceiverExists(type, msg);
-                       }),
-          signaling_delay_ms_);
+          SafeTask(task_safety_.flag(),
+                   [this, type, msg] {
+                     RelaySdpMessageIfReceiverExists(type, msg);
+                   }),
+          TimeDelta::Millis(signaling_delay_ms_));
     }
   }
 
@@ -1015,12 +1031,12 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
       RelayIceMessageIfReceiverExists(sdp_mid, sdp_mline_index, msg);
     } else {
       rtc::Thread::Current()->PostDelayedTask(
-          ToQueuedTask(task_safety_.flag(),
-                       [this, sdp_mid, sdp_mline_index, msg] {
-                         RelayIceMessageIfReceiverExists(sdp_mid,
-                                                         sdp_mline_index, msg);
-                       }),
-          signaling_delay_ms_);
+          SafeTask(task_safety_.flag(),
+                   [this, sdp_mid, sdp_mline_index, msg] {
+                     RelayIceMessageIfReceiverExists(sdp_mid, sdp_mline_index,
+                                                     msg);
+                   }),
+          TimeDelta::Millis(signaling_delay_ms_));
     }
   }
 
@@ -1235,7 +1251,7 @@ class MockRtcEventLogOutput : public webrtc::RtcEventLogOutput {
  public:
   virtual ~MockRtcEventLogOutput() = default;
   MOCK_METHOD(bool, IsActive, (), (const, override));
-  MOCK_METHOD(bool, Write, (const std::string&), (override));
+  MOCK_METHOD(bool, Write, (absl::string_view), (override));
 };
 
 // This helper object is used for both specifying how many audio/video frames
@@ -1461,7 +1477,7 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
         new PeerConnectionIntegrationWrapper(debug_name));
 
     if (!client->Init(options, &modified_config, std::move(dependencies),
-                      network_thread_.get(), worker_thread_.get(),
+                      fss_.get(), network_thread_.get(), worker_thread_.get(),
                       std::move(event_log_factory), reset_encoder_factory,
                       reset_decoder_factory, create_media_engine)) {
       return nullptr;
@@ -1707,6 +1723,20 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
 
   PeerConnectionIntegrationWrapper* caller() { return caller_.get(); }
 
+  // Destroy peerconnections.
+  // This can be used to ensure that all pointers to on-stack mocks
+  // get dropped before exit.
+  void DestroyPeerConnections() {
+    if (caller_) {
+      caller_->pc()->Close();
+    }
+    if (callee_) {
+      callee_->pc()->Close();
+    }
+    caller_.reset();
+    callee_.reset();
+  }
+
   // Set the `caller_` to the `wrapper` passed in and return the
   // original `caller_`.
   PeerConnectionIntegrationWrapper* SetCallerPcWrapperAndReturnCurrent(
@@ -1896,6 +1926,7 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
   SdpSemantics sdp_semantics_;
 
  private:
+  rtc::AutoThread main_thread_;  // Used as the signal thread by most tests.
   // `ss_` is used by `network_thread_` so it must be destroyed later.
   std::unique_ptr<rtc::VirtualSocketServer> ss_;
   std::unique_ptr<rtc::FirewallSocketServer> fss_;

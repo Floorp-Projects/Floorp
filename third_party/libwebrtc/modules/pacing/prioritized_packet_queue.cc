@@ -95,6 +95,7 @@ PrioritizedPacketQueue::PrioritizedPacketQueue(Timestamp creation_time)
     : queue_time_sum_(TimeDelta::Zero()),
       pause_time_sum_(TimeDelta::Zero()),
       size_packets_(0),
+      size_packets_per_media_type_({}),
       size_payload_(DataSize::Zero()),
       last_update_time_(creation_time),
       paused_(false),
@@ -112,7 +113,9 @@ void PrioritizedPacketQueue::Push(Timestamp enqueue_time,
 
   auto enqueue_time_iterator =
       enqueue_times_.insert(enqueue_times_.end(), enqueue_time);
-  int prio_level = GetPriorityForType(*packet->packet_type());
+  RTC_DCHECK(packet->packet_type().has_value());
+  RtpPacketMediaType packet_type = packet->packet_type().value();
+  int prio_level = GetPriorityForType(packet_type);
   RTC_DCHECK_GE(prio_level, 0);
   RTC_DCHECK_LT(prio_level, kNumPriorityLevels);
   QueuedPacket queued_packed = {.packet = std::move(packet),
@@ -127,6 +130,7 @@ void PrioritizedPacketQueue::Push(Timestamp enqueue_time,
   UpdateAverageQueueTime(enqueue_time);
   queued_packed.enqueue_time -= pause_time_sum_;
   ++size_packets_;
+  ++size_packets_per_media_type_[static_cast<size_t>(packet_type)];
   size_payload_ += queued_packed.PacketSize();
 
   if (stream_queue->EnqueuePacket(std::move(queued_packed), prio_level)) {
@@ -160,6 +164,11 @@ std::unique_ptr<RtpPacketToSend> PrioritizedPacketQueue::Pop() {
   StreamQueue& stream_queue = *streams_by_prio_[top_active_prio_level_].front();
   QueuedPacket packet = stream_queue.DequePacket(top_active_prio_level_);
   --size_packets_;
+  RTC_DCHECK(packet.packet->packet_type().has_value());
+  RtpPacketMediaType packet_type = packet.packet->packet_type().value();
+  --size_packets_per_media_type_[static_cast<size_t>(packet_type)];
+  RTC_DCHECK_GE(size_packets_per_media_type_[static_cast<size_t>(packet_type)],
+                0);
   size_payload_ -= packet.PacketSize();
 
   // Calculate the total amount of time spent by this packet in the queue
@@ -205,6 +214,11 @@ int PrioritizedPacketQueue::SizeInPackets() const {
 
 DataSize PrioritizedPacketQueue::SizeInPayloadBytes() const {
   return size_payload_;
+}
+
+const std::array<int, kNumMediaTypes>&
+PrioritizedPacketQueue::SizeInPacketsPerRtpPacketMediaType() const {
+  return size_packets_per_media_type_;
 }
 
 Timestamp PrioritizedPacketQueue::LeadingAudioPacketEnqueueTime() const {

@@ -30,10 +30,12 @@
 #include "api/rtp_transceiver_direction.h"
 #include "api/rtp_transceiver_interface.h"
 #include "api/scoped_refptr.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/video/video_bitrate_allocator_factory.h"
 #include "media/base/media_channel.h"
 #include "pc/channel_interface.h"
+#include "pc/connection_context.h"
 #include "pc/proxy.h"
 #include "pc/rtp_receiver.h"
 #include "pc/rtp_receiver_proxy.h"
@@ -41,12 +43,12 @@
 #include "pc/rtp_sender_proxy.h"
 #include "pc/rtp_transport_internal.h"
 #include "pc/session_description.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread_annotations.h"
 
 namespace cricket {
 class ChannelManager;
+class MediaEngineInterface;
 }
 
 namespace webrtc {
@@ -88,8 +90,7 @@ class RtpTransceiver : public RtpTransceiverInterface,
   // channel set.
   // `media_type` specifies the type of RtpTransceiver (and, by transitivity,
   // the type of senders, receivers, and channel). Can either by audio or video.
-  RtpTransceiver(cricket::MediaType media_type,
-                 cricket::ChannelManager* channel_manager);
+  RtpTransceiver(cricket::MediaType media_type, ConnectionContext* context);
   // Construct a Unified Plan-style RtpTransceiver with the given sender and
   // receiver. The media type will be derived from the media types of the sender
   // and receiver. The sender and receiver should have the same media type.
@@ -99,10 +100,16 @@ class RtpTransceiver : public RtpTransceiverInterface,
       rtc::scoped_refptr<RtpSenderProxyWithInternal<RtpSenderInternal>> sender,
       rtc::scoped_refptr<RtpReceiverProxyWithInternal<RtpReceiverInternal>>
           receiver,
-      cricket::ChannelManager* channel_manager,
+      ConnectionContext* context,
       std::vector<RtpHeaderExtensionCapability> HeaderExtensionsToOffer,
       std::function<void()> on_negotiation_needed);
   ~RtpTransceiver() override;
+
+  // Not copyable or movable.
+  RtpTransceiver(const RtpTransceiver&) = delete;
+  RtpTransceiver& operator=(const RtpTransceiver&) = delete;
+  RtpTransceiver(RtpTransceiver&&) = delete;
+  RtpTransceiver& operator=(RtpTransceiver&&) = delete;
 
   // Returns the Voice/VideoChannel set for this transceiver. May be null if
   // the transceiver is not in the currently set local/remote description.
@@ -293,6 +300,10 @@ class RtpTransceiver : public RtpTransceiverInterface,
                            const cricket::MediaContentDescription* content);
 
  private:
+  cricket::MediaEngineInterface* media_engine() const {
+    return context_->media_engine();
+  }
+  ConnectionContext* context() const { return context_; }
   void OnFirstPacketReceived();
   void StopSendingAndReceiving();
   // Delete a channel, and ensure that references to its media channel
@@ -327,7 +338,7 @@ class RtpTransceiver : public RtpTransceiverInterface,
   // because all access on the network thread is within an invoke()
   // from thread_.
   std::unique_ptr<cricket::ChannelInterface> channel_ = nullptr;
-  cricket::ChannelManager* channel_manager_ = nullptr;
+  ConnectionContext* const context_;
   std::vector<RtpCodecCapability> codec_preferences_;
   std::vector<RtpHeaderExtensionCapability> header_extensions_to_offer_;
 

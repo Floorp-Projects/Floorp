@@ -9,6 +9,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <XCTest/XCTest.h>
 
 #include <vector>
 
@@ -19,9 +20,7 @@
 #import "api/peerconnection/RTCIceServer.h"
 #import "helpers/NSString+StdString.h"
 
-@interface RTCConfigurationTest : NSObject
-- (void)testConversionToNativeConfiguration;
-- (void)testNativeConversionToConfiguration;
+@interface RTCConfigurationTest : XCTestCase
 @end
 
 @implementation RTCConfigurationTest
@@ -161,12 +160,3 @@
 }
 
 @end
-
-TEST(RTCConfigurationTest, NativeConfigurationConversionTest) {
-  @autoreleasepool {
-    RTCConfigurationTest *test = [[RTCConfigurationTest alloc] init];
-    [test testConversionToNativeConfiguration];
-    [test testNativeConversionToConfiguration];
-    [test testDefaultValues];
-  }
-}

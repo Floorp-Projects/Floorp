@@ -395,7 +395,8 @@ class VideoSessionConduit : public MediaSessionConduit {
 
   bool UsingFEC() const { return mUsingFEC; }
 
-  virtual Maybe<webrtc::VideoReceiveStream::Stats> GetReceiverStats() const = 0;
+  virtual Maybe<webrtc::VideoReceiveStreamInterface::Stats> GetReceiverStats()
+      const = 0;
   virtual Maybe<webrtc::VideoSendStream::Stats> GetSenderStats() const = 0;
 
   virtual void CollectTelemetryData() = 0;
@@ -483,7 +484,8 @@ class AudioSessionConduit : public MediaSessionConduit {
    */
   virtual bool IsSamplingFreqSupported(int freq) const = 0;
 
-  virtual Maybe<webrtc::AudioReceiveStream::Stats> GetReceiverStats() const = 0;
+  virtual Maybe<webrtc::AudioReceiveStreamInterface::Stats> GetReceiverStats()
+      const = 0;
   virtual Maybe<webrtc::AudioSendStream::Stats> GetSenderStats() const = 0;
 };
 }  // namespace mozilla

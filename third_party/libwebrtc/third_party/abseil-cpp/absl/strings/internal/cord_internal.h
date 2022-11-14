@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <type_traits>
 
+#include "absl/base/attributes.h"
 #include "absl/base/config.h"
 #include "absl/base/internal/endian.h"
 #include "absl/base/internal/invoke.h"
@@ -33,16 +34,27 @@ namespace absl {
 ABSL_NAMESPACE_BEGIN
 namespace cord_internal {
 
+// The overhead of a vtable is too much for Cord, so we roll our own subclasses
+// using only a single byte to differentiate classes from each other - the "tag"
+// byte.  Define the subclasses first so we can provide downcasting helper
+// functions in the base class.
+struct CordRep;
+struct CordRepConcat;
+struct CordRepExternal;
+struct CordRepFlat;
+struct CordRepSubstring;
+struct CordRepCrc;
+class CordRepRing;
+class CordRepBtree;
+
 class CordzInfo;
 
 // Default feature enable states for cord ring buffers
 enum CordFeatureDefaults {
-  kCordEnableBtreeDefault = false,
   kCordEnableRingBufferDefault = false,
   kCordShallowSubcordsDefault = false
 };
 
-extern std::atomic<bool> cord_btree_enabled;
 extern std::atomic<bool> cord_ring_buffer_enabled;
 extern std::atomic<bool> shallow_subcords_enabled;
 
@@ -51,10 +63,6 @@ extern std::atomic<bool> shallow_subcords_enabled;
 // assertions should be relatively cheap and AssertValid() can easily lead to
 // O(n^2) complexity as recursive / full tree validation is O(n).
 extern std::atomic<bool> cord_btree_exhaustive_validation;
-
-inline void enable_cord_btree(bool enable) {
-  cord_btree_enabled.store(enable, std::memory_order_relaxed);
-}
 
 inline void enable_cord_ring_buffer(bool enable) {
   cord_ring_buffer_enabled.store(enable, std::memory_order_relaxed);
@@ -80,12 +88,16 @@ enum Constants {
   kMaxBytesToCopy = 511
 };
 
-// Wraps std::atomic for reference counting.
-class Refcount {
+// Emits a fatal error "Unexpected node type: xyz" and aborts the program.
+ABSL_ATTRIBUTE_NORETURN void LogFatalNodeType(CordRep* rep);
+
+// Compact class for tracking the reference count and state flags for CordRep
+// instances.  Data is stored in an atomic int32_t for compactness and speed.
+class RefcountAndFlags {
  public:
-  constexpr Refcount() : count_{kRefIncrement} {}
+  constexpr RefcountAndFlags() : count_{kRefIncrement} {}
   struct Immortal {};
-  explicit constexpr Refcount(Immortal) : count_(kImmortalTag) {}
+  explicit constexpr RefcountAndFlags(Immortal) : count_(kImmortalFlag) {}
 
   // Increments the reference count. Imposes no memory ordering.
   inline void Increment() {
@@ -98,26 +110,27 @@ class Refcount {
   // Returns false if there are no references outstanding; true otherwise.
   // Inserts barriers to ensure that state written before this method returns
   // false will be visible to a thread that just observed this method returning
-  // false.
+  // false.  Always returns false when the immortal bit is set.
   inline bool Decrement() {
-    int32_t refcount = count_.load(std::memory_order_acquire);
-    assert(refcount > 0 || refcount & kImmortalTag);
+    int32_t refcount = count_.load(std::memory_order_acquire) & kRefcountMask;
+    assert(refcount > 0 || refcount & kImmortalFlag);
     return refcount != kRefIncrement &&
-           count_.fetch_sub(kRefIncrement, std::memory_order_acq_rel) !=
-               kRefIncrement;
+           (count_.fetch_sub(kRefIncrement, std::memory_order_acq_rel) &
+            kRefcountMask) != kRefIncrement;
   }
 
   // Same as Decrement but expect that refcount is greater than 1.
   inline bool DecrementExpectHighRefcount() {
     int32_t refcount =
-        count_.fetch_sub(kRefIncrement, std::memory_order_acq_rel);
-    assert(refcount > 0 || refcount & kImmortalTag);
+        count_.fetch_sub(kRefIncrement, std::memory_order_acq_rel) &
+        kRefcountMask;
+    assert(refcount > 0 || refcount & kImmortalFlag);
     return refcount != kRefIncrement;
   }
 
   // Returns the current reference count using acquire semantics.
   inline int32_t Get() const {
-    return count_.load(std::memory_order_acquire) >> kImmortalShift;
+    return count_.load(std::memory_order_acquire) >> kNumFlags;
   }
 
   // Returns whether the atomic integer is 1.
@@ -127,59 +140,59 @@ class Refcount {
   // This call performs the test for a reference count of one, and
   // performs the memory barrier needed for the owning thread
   // to act on the object, knowing that it has exclusive access to the
-  // object.
+  // object.  Always returns false when the immortal bit is set.
   inline bool IsOne() {
-    return count_.load(std::memory_order_acquire) == kRefIncrement;
+    return (count_.load(std::memory_order_acquire) & kRefcountMask) ==
+           kRefIncrement;
   }
 
   bool IsImmortal() const {
-    return (count_.load(std::memory_order_relaxed) & kImmortalTag) != 0;
+    return (count_.load(std::memory_order_relaxed) & kImmortalFlag) != 0;
   }
 
  private:
-  // We reserve the bottom bit to tag a reference count as immortal.
-  // By making it `1` we ensure that we never reach `0` when adding/subtracting
-  // `2`, thus it never looks as if it should be destroyed.
-  // These are used for the StringConstant constructor where we do not increase
-  // the refcount at construction time (due to constinit requirements) but we
-  // will still decrease it at destruction time to avoid branching on Unref.
-  enum {
-    kImmortalShift = 1,
-    kRefIncrement = 1 << kImmortalShift,
-    kImmortalTag = kRefIncrement - 1
+  // We reserve the bottom bits for flags.
+  // kImmortalBit indicates that this entity should never be collected; it is
+  // used for the StringConstant constructor to avoid collecting immutable
+  // constant cords.
+  // kReservedFlag is reserved for future use.
+  enum Flags {
+    kNumFlags = 2,
+
+    kImmortalFlag = 0x1,
+    kReservedFlag = 0x2,
+    kRefIncrement = (1 << kNumFlags),
+
+    // Bitmask to use when checking refcount by equality.  This masks out
+    // all flags except kImmortalFlag, which is part of the refcount for
+    // purposes of equality.  (A refcount of 0 or 1 does not count as 0 or 1
+    // if the immortal bit is set.)
+    kRefcountMask = ~kReservedFlag,
   };
 
   std::atomic<int32_t> count_;
 };
 
-// The overhead of a vtable is too much for Cord, so we roll our own subclasses
-// using only a single byte to differentiate classes from each other - the "tag"
-// byte.  Define the subclasses first so we can provide downcasting helper
-// functions in the base class.
-
-struct CordRepConcat;
-struct CordRepExternal;
-struct CordRepFlat;
-struct CordRepSubstring;
-class CordRepRing;
-class CordRepBtree;
-
 // Various representations that we allow
 enum CordRepKind {
-  CONCAT = 0,
+  UNUSED_0 = 0,
   SUBSTRING = 1,
-  BTREE = 2,
-  RING = 3,
-  EXTERNAL = 4,
+  CRC = 2,
+  BTREE = 3,
+  RING = 4,
+  EXTERNAL = 5,
 
   // We have different tags for different sized flat arrays,
-  // starting with FLAT, and limited to MAX_FLAT_TAG. The 225 value is based on
-  // the current 'size to tag' encoding of 8 / 32 bytes. If a new tag is needed
-  // in the future, then 'FLAT' and 'MAX_FLAT_TAG' should be adjusted as well
-  // as the Tag <---> Size logic so that FLAT stil represents the minimum flat
-  // allocation size. (32 bytes as of now).
-  FLAT = 5,
-  MAX_FLAT_TAG = 225
+  // starting with FLAT, and limited to MAX_FLAT_TAG. The below values map to an
+  // allocated range of 32 bytes to 256 KB. The current granularity is:
+  // - 8 byte granularity for flat sizes in [32 - 512]
+  // - 64 byte granularity for flat sizes in (512 - 8KiB]
+  // - 4KiB byte granularity for flat sizes in (8KiB, 256 KiB]
+  // If a new tag is needed in the future, then 'FLAT' and 'MAX_FLAT_TAG' should
+  // be adjusted as well as the Tag <---> Size mapping logic so that FLAT still
+  // represents the minimum flat allocation size. (32 bytes as of now).
+  FLAT = 6,
+  MAX_FLAT_TAG = 248
 };
 
 // There are various locations where we want to check if some rep is a 'plain'
@@ -194,14 +207,26 @@ static_assert(EXTERNAL == RING + 1, "BTREE and EXTERNAL not consecutive");
 static_assert(FLAT == EXTERNAL + 1, "EXTERNAL and FLAT not consecutive");
 
 struct CordRep {
+  // Result from an `extract edge` operation. Contains the (possibly changed)
+  // tree node as well as the extracted edge, or {tree, nullptr} if no edge
+  // could be extracted.
+  // On success, the returned `tree` value is null if `extracted` was the only
+  // data edge inside the tree, a data edge if there were only two data edges in
+  // the tree, or the (possibly new / smaller) remaining tree with the extracted
+  // data edge removed.
+  struct ExtractResult {
+    CordRep* tree;
+    CordRep* extracted;
+  };
+
   CordRep() = default;
-  constexpr CordRep(Refcount::Immortal immortal, size_t l)
+  constexpr CordRep(RefcountAndFlags::Immortal immortal, size_t l)
       : length(l), refcount(immortal), tag(EXTERNAL), storage{} {}
 
   // The following three fields have to be less than 32 bytes since
   // that is the smallest supported flat node size.
   size_t length;
-  Refcount refcount;
+  RefcountAndFlags refcount;
   // If tag < FLAT, it represents CordRepKind and indicates the type of node.
   // Otherwise, the node type is CordRepFlat and the tag is the encoded size.
   uint8_t tag;
@@ -218,18 +243,18 @@ struct CordRep {
 
   // Returns true if this instance's tag matches the requested type.
   constexpr bool IsRing() const { return tag == RING; }
-  constexpr bool IsConcat() const { return tag == CONCAT; }
   constexpr bool IsSubstring() const { return tag == SUBSTRING; }
+  constexpr bool IsCrc() const { return tag == CRC; }
   constexpr bool IsExternal() const { return tag == EXTERNAL; }
   constexpr bool IsFlat() const { return tag >= FLAT; }
   constexpr bool IsBtree() const { return tag == BTREE; }
 
   inline CordRepRing* ring();
   inline const CordRepRing* ring() const;
-  inline CordRepConcat* concat();
-  inline const CordRepConcat* concat() const;
   inline CordRepSubstring* substring();
   inline const CordRepSubstring* substring() const;
+  inline CordRepCrc* crc();
+  inline const CordRepCrc* crc() const;
   inline CordRepExternal* external();
   inline const CordRepExternal* external() const;
   inline CordRepFlat* flat();
@@ -252,17 +277,23 @@ struct CordRep {
   static inline void Unref(CordRep* rep);
 };
 
-struct CordRepConcat : public CordRep {
-  CordRep* left;
-  CordRep* right;
-
-  uint8_t depth() const { return storage[0]; }
-  void set_depth(uint8_t depth) { storage[0] = depth; }
-};
-
 struct CordRepSubstring : public CordRep {
   size_t start;  // Starting offset of substring in child
   CordRep* child;
+
+  // Creates a substring on `child`, adopting a reference on `child`.
+  // Requires `child` to be either a flat or external node, and `pos` and `n` to
+  // form a non-empty partial sub range of `'child`, i.e.:
+  // `n > 0 && n < length && n + pos <= length`
+  static inline CordRepSubstring* Create(CordRep* child, size_t pos, size_t n);
+
+  // Creates a substring of `rep`. Does not adopt a reference on `rep`.
+  // Requires `IsDataEdge(rep) && n > 0 && pos + n <= rep->length`.
+  // If `n == rep->length` then this method returns `CordRep::Ref(rep)`
+  // If `rep` is a substring of a flat or external node, then this method will
+  // return a new substring of that flat or external node with `pos` adjusted
+  // with the original `start` position.
+  static inline CordRep* Substring(CordRep* rep, size_t pos, size_t n);
 };
 
 // Type for function pointer that will invoke the releaser function and also
@@ -275,7 +306,7 @@ using ExternalReleaserInvoker = void (*)(CordRepExternal*);
 struct CordRepExternal : public CordRep {
   CordRepExternal() = default;
   explicit constexpr CordRepExternal(absl::string_view str)
-      : CordRep(Refcount::Immortal{}, str.size()),
+      : CordRep(RefcountAndFlags::Immortal{}, str.size()),
         base(str.data()),
         releaser_invoker(nullptr) {}
 
@@ -326,6 +357,47 @@ struct CordRepExternalImpl
   }
 };
 
+inline CordRepSubstring* CordRepSubstring::Create(CordRep* child, size_t pos,
+                                                  size_t n) {
+  assert(child != nullptr);
+  assert(n > 0);
+  assert(n < child->length);
+  assert(pos < child->length);
+  assert(n <= child->length - pos);
+
+  // TODO(b/217376272): Harden internal logic.
+  // Move to strategical places inside the Cord logic and make this an assert.
+  if (ABSL_PREDICT_FALSE(!(child->IsExternal() || child->IsFlat()))) {
+    LogFatalNodeType(child);
+  }
+
+  CordRepSubstring* rep = new CordRepSubstring();
+  rep->length = n;
+  rep->tag = SUBSTRING;
+  rep->start = pos;
+  rep->child = child;
+  return rep;
+}
+
+inline CordRep* CordRepSubstring::Substring(CordRep* rep, size_t pos,
+                                            size_t n) {
+  assert(rep != nullptr);
+  assert(n != 0);
+  assert(pos < rep->length);
+  assert(n <= rep->length - pos);
+  if (n == rep->length) return CordRep::Ref(rep);
+  if (rep->IsSubstring()) {
+    pos += rep->substring()->start;
+    rep = rep->substring()->child;
+  }
+  CordRepSubstring* substr = new CordRepSubstring();
+  substr->length = n;
+  substr->tag = SUBSTRING;
+  substr->start = pos;
+  substr->child = CordRep::Ref(rep);
+  return substr;
+}
+
 inline void CordRepExternal::Delete(CordRep* rep) {
   assert(rep != nullptr && rep->IsExternal());
   auto* rep_external = static_cast<CordRepExternal*>(rep);
@@ -339,7 +411,8 @@ struct ConstInitExternalStorage {
 };
 
 template <typename Str>
-CordRepExternal ConstInitExternalStorage<Str>::value(Str::value);
+ABSL_CONST_INIT CordRepExternal
+    ConstInitExternalStorage<Str>::value(Str::value);
 
 enum {
   kMaxInline = 15,
@@ -425,8 +498,8 @@ class InlineData {
   // Requires the current instance to hold a tree value.
   CordzInfo* cordz_info() const {
     assert(is_tree());
-    intptr_t info =
-        static_cast<intptr_t>(absl::big_endian::ToHost64(as_tree_.cordz_info));
+    intptr_t info = static_cast<intptr_t>(
+        absl::big_endian::ToHost64(static_cast<uint64_t>(as_tree_.cordz_info)));
     assert(info & 1);
     return reinterpret_cast<CordzInfo*>(info - 1);
   }
@@ -436,8 +509,9 @@ class InlineData {
   // Requires the current instance to hold a tree value.
   void set_cordz_info(CordzInfo* cordz_info) {
     assert(is_tree());
-    intptr_t info = reinterpret_cast<intptr_t>(cordz_info) | 1;
-    as_tree_.cordz_info = absl::big_endian::FromHost64(info);
+    uintptr_t info = reinterpret_cast<uintptr_t>(cordz_info) | 1;
+    as_tree_.cordz_info =
+        static_cast<cordz_info_t>(absl::big_endian::FromHost64(info));
   }
 
   // Resets the current cordz_info to null / empty.
@@ -529,23 +603,13 @@ class InlineData {
   // store the size in the last char of `as_chars_` shifted left + 1.
   // Else we store it in a tree and store a pointer to that tree in
   // `as_tree_.rep` and store a tag in `tagged_size`.
-  union  {
+  union {
     char as_chars_[kMaxInline + 1];
     AsTree as_tree_;
   };
 };
 
 static_assert(sizeof(InlineData) == kMaxInline + 1, "");
-
-inline CordRepConcat* CordRep::concat() {
-  assert(IsConcat());
-  return static_cast<CordRepConcat*>(this);
-}
-
-inline const CordRepConcat* CordRep::concat() const {
-  assert(IsConcat());
-  return static_cast<const CordRepConcat*>(this);
-}
 
 inline CordRepSubstring* CordRep::substring() {
   assert(IsSubstring());
@@ -568,7 +632,9 @@ inline const CordRepExternal* CordRep::external() const {
 }
 
 inline CordRep* CordRep::Ref(CordRep* rep) {
-  assert(rep != nullptr);
+  // ABSL_ASSUME is a workaround for
+  // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105585
+  ABSL_ASSUME(rep != nullptr);
   rep->refcount.Increment();
   return rep;
 }

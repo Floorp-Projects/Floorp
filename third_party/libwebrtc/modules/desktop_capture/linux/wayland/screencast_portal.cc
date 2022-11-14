@@ -198,17 +198,34 @@ void ScreenCastPortal::SourcesRequest() {
   g_variant_builder_add(&builder, "{sv}", "multiple",
                         g_variant_new_boolean(false));
 
-  Scoped<GVariant> variant(
+  Scoped<GVariant> cursorModesVariant(
       g_dbus_proxy_get_cached_property(proxy_, "AvailableCursorModes"));
-  if (variant.get()) {
+  if (cursorModesVariant.get()) {
     uint32_t modes = 0;
-    g_variant_get(variant.get(), "u", &modes);
+    g_variant_get(cursorModesVariant.get(), "u", &modes);
     // Make request only if this mode is advertised by the portal
     // implementation.
     if (modes & static_cast<uint32_t>(cursor_mode_)) {
       g_variant_builder_add(
           &builder, "{sv}", "cursor_mode",
           g_variant_new_uint32(static_cast<uint32_t>(cursor_mode_)));
+    }
+  }
+
+  Scoped<GVariant> versionVariant(
+      g_dbus_proxy_get_cached_property(proxy_, "version"));
+  if (versionVariant.get()) {
+    uint32_t version = 0;
+    g_variant_get(versionVariant.get(), "u", &version);
+    // Make request only if xdg-desktop-portal has required API version
+    if (version >= 4) {
+      g_variant_builder_add(
+          &builder, "{sv}", "persist_mode",
+          g_variant_new_uint32(static_cast<uint32_t>(persist_mode_)));
+      if (!restore_token_.empty()) {
+        g_variant_builder_add(&builder, "{sv}", "restore_token",
+                              g_variant_new_string(restore_token_.c_str()));
+      }
     }
   }
 
@@ -320,6 +337,7 @@ void ScreenCastPortal::OnStartRequestResponseSignal(GDBusConnection* connection,
   uint32_t portal_response;
   Scoped<GVariant> response_data;
   Scoped<GVariantIter> iter;
+  Scoped<char> restore_token;
   g_variant_get(parameters, "(u@a{sv})", &portal_response,
                 response_data.receive());
   if (portal_response || !response_data) {
@@ -354,11 +372,28 @@ void ScreenCastPortal::OnStartRequestResponseSignal(GDBusConnection* connection,
     }
   }
 
+  if (g_variant_lookup(response_data.get(), "restore_token", "s",
+                       restore_token.receive())) {
+    that->restore_token_ = restore_token.get();
+  }
+
   that->OpenPipeWireRemote();
 }
 
 uint32_t ScreenCastPortal::pipewire_stream_node_id() {
   return pw_stream_node_id_;
+}
+
+void ScreenCastPortal::SetPersistMode(ScreenCastPortal::PersistMode mode) {
+  persist_mode_ = mode;
+}
+
+void ScreenCastPortal::SetRestoreToken(const std::string& token) {
+  restore_token_ = token;
+}
+
+std::string ScreenCastPortal::RestoreToken() const {
+  return restore_token_;
 }
 
 void ScreenCastPortal::OpenPipeWireRemote() {

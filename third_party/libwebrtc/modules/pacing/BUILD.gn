@@ -17,8 +17,6 @@ rtc_library("pacing") {
   sources = [
     "bitrate_prober.cc",
     "bitrate_prober.h",
-    "paced_sender.cc",
-    "paced_sender.h",
     "pacing_controller.cc",
     "pacing_controller.h",
     "packet_router.cc",
@@ -34,7 +32,6 @@ rtc_library("pacing") {
 
   deps = [
     ":interval_budget",
-    "..:module_api",
     "../../api:field_trials_view",
     "../../api:field_trials_view",
     "../../api:function_view",
@@ -59,12 +56,11 @@ rtc_library("pacing") {
     "../../rtc_base:timeutils",
     "../../rtc_base/experiments:field_trial_parser",
     "../../rtc_base/synchronization:mutex",
-    "../../rtc_base/task_utils:to_queued_task",
+    "../../rtc_base/system:unused",
     "../../system_wrappers",
     "../../system_wrappers:metrics",
     "../rtp_rtcp",
     "../rtp_rtcp:rtp_rtcp_format",
-    "../utility",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/memory",
@@ -92,10 +88,10 @@ if (rtc_include_tests) {
     sources = [
       "bitrate_prober_unittest.cc",
       "interval_budget_unittest.cc",
-      "paced_sender_unittest.cc",
       "pacing_controller_unittest.cc",
       "packet_router_unittest.cc",
       "prioritized_packet_queue_unittest.cc",
+      "round_robin_packet_queue_unittest.cc",
       "task_queue_paced_sender_unittest.cc",
     ]
     deps = [
@@ -105,11 +101,10 @@ if (rtc_include_tests) {
       "../../api/transport:network_control",
       "../../api/units:data_rate",
       "../../api/units:time_delta",
-      "../../modules/utility:mock_process_thread",
+      "../../api/units:timestamp",
       "../../rtc_base:checks",
       "../../rtc_base:rtc_base_tests_utils",
       "../../rtc_base/experiments:alr_experiment",
-      "../../rtc_base/task_utils:to_queued_task",
       "../../system_wrappers",
       "../../test:explicit_key_value_config",
       "../../test:scoped_key_value_config",
@@ -119,5 +114,6 @@ if (rtc_include_tests) {
       "../rtp_rtcp:mock_rtp_rtcp",
       "../rtp_rtcp:rtp_rtcp_format",
     ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/functional:any_invocable" ]
   }
 }

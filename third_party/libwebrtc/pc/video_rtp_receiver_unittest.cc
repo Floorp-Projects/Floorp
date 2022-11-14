@@ -18,7 +18,6 @@
 #include "api/video/test/mock_recordable_encoded_frame.h"
 #include "media/base/fake_media_engine.h"
 #include "rtc_base/location.h"
-#include "rtc_base/ref_counted_object.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -86,6 +85,7 @@ class VideoRtpReceiverTest : public testing::Test {
     return receiver_->streams()[0]->FindVideoTrack("receiver")->GetSource();
   }
 
+  rtc::AutoThread main_thread_;
   std::unique_ptr<rtc::Thread> worker_thread_;
   NiceMock<MockVideoMediaChannel> channel_;
   rtc::scoped_refptr<VideoRtpReceiver> receiver_;

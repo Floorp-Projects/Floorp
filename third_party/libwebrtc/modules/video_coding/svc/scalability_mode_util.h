@@ -14,13 +14,19 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/video_codecs/scalability_mode.h"
+#include "api/video_codecs/video_codec.h"
 
 namespace webrtc {
 
 absl::optional<ScalabilityMode> ScalabilityModeFromString(
     absl::string_view scalability_mode_string);
 
-absl::string_view ScalabilityModeToString(ScalabilityMode scalability_mode);
+InterLayerPredMode ScalabilityModeToInterLayerPredMode(
+    ScalabilityMode scalability_mode);
+
+int ScalabilityModeToNumSpatialLayers(ScalabilityMode scalability_mode);
+
+int ScalabilityModeToNumTemporalLayers(ScalabilityMode scalability_mode);
 
 }  // namespace webrtc
 

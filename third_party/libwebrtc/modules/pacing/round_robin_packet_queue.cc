@@ -137,6 +137,7 @@ RoundRobinPacketQueue::RoundRobinPacketQueue(Timestamp start_time)
       enqueue_count_(0),
       paused_(false),
       size_packets_(0),
+      size_packets_per_media_type_({}),
       size_(DataSize::Zero()),
       max_size_(kMaxLeadingSize),
       queue_time_sum_(TimeDelta::Zero()),
@@ -152,8 +153,9 @@ RoundRobinPacketQueue::~RoundRobinPacketQueue() {
 
 void RoundRobinPacketQueue::Push(Timestamp enqueue_time,
                                  std::unique_ptr<RtpPacketToSend> packet) {
-  RTC_DCHECK(packet->packet_type().has_value());
-  int priority = GetPriorityForType(*packet->packet_type());
+  RTC_CHECK(packet->packet_type().has_value());
+  RtpPacketMediaType packet_type = packet->packet_type().value();
+  int priority = GetPriorityForType(packet_type);
   if (size_packets_ == 0) {
     // Single packet fast-path.
     single_packet_queue_.emplace(
@@ -162,6 +164,7 @@ void RoundRobinPacketQueue::Push(Timestamp enqueue_time,
     UpdateAverageQueueTime(enqueue_time);
     single_packet_queue_->SubtractPauseTime(pause_time_sum_);
     size_packets_ = 1;
+    ++size_packets_per_media_type_[static_cast<size_t>(packet_type)];
     size_ += PacketSize(*single_packet_queue_);
   } else {
     MaybePromoteSinglePacketToNormalQueue();
@@ -178,6 +181,11 @@ std::unique_ptr<RtpPacketToSend> RoundRobinPacketQueue::Pop() {
     single_packet_queue_.reset();
     queue_time_sum_ = TimeDelta::Zero();
     size_packets_ = 0;
+    RTC_CHECK(rtp_packet->packet_type().has_value());
+    RtpPacketMediaType packet_type = rtp_packet->packet_type().value();
+    size_packets_per_media_type_[static_cast<size_t>(packet_type)] -= 1;
+    RTC_CHECK_GE(size_packets_per_media_type_[static_cast<size_t>(packet_type)],
+                 0);
     size_ = DataSize::Zero();
     return rtp_packet;
   }
@@ -213,7 +221,11 @@ std::unique_ptr<RtpPacketToSend> RoundRobinPacketQueue::Pop() {
 
   size_ -= packet_size;
   size_packets_ -= 1;
+  size_packets_per_media_type_[static_cast<size_t>(queued_packet.Type())] -= 1;
   RTC_CHECK(size_packets_ > 0 || queue_time_sum_ == TimeDelta::Zero());
+  RTC_CHECK_GE(
+      size_packets_per_media_type_[static_cast<size_t>(queued_packet.Type())],
+      0);
 
   std::unique_ptr<RtpPacketToSend> rtp_packet(queued_packet.RtpPacket());
   stream->packet_queue.pop();
@@ -237,6 +249,11 @@ int RoundRobinPacketQueue::SizeInPackets() const {
 
 DataSize RoundRobinPacketQueue::SizeInPayloadBytes() const {
   return size_;
+}
+
+const std::array<int, kNumMediaTypes>&
+RoundRobinPacketQueue::SizeInPacketsPerRtpPacketMediaType() const {
+  return size_packets_per_media_type_;
 }
 
 Timestamp RoundRobinPacketQueue::LeadingAudioPacketEnqueueTime() const {
@@ -339,6 +356,7 @@ void RoundRobinPacketQueue::Push(QueuedPacket packet) {
     packet.SubtractPauseTime(pause_time_sum_);
 
     size_packets_ += 1;
+    size_packets_per_media_type_[static_cast<size_t>(packet.Type())] += 1;
     size_ += PacketSize(packet);
   }
 

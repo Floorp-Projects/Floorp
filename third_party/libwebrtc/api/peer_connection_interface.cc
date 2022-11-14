@@ -41,11 +41,6 @@ PeerConnectionInterface::RTCConfiguration::RTCConfiguration(
 
 PeerConnectionInterface::RTCConfiguration::~RTCConfiguration() = default;
 
-RTCError PeerConnectionInterface::SetConfiguration(
-    const PeerConnectionInterface::RTCConfiguration& config) {
-  return RTCError();
-}
-
 PeerConnectionDependencies::PeerConnectionDependencies(
     PeerConnectionObserver* observer_in)
     : observer(observer_in) {}

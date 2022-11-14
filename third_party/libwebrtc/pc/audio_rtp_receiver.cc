@@ -21,8 +21,6 @@
 #include "pc/media_stream_track_proxy.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/location.h"
-#include "rtc_base/ref_counted_object.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 
 namespace webrtc {
 
@@ -79,11 +77,10 @@ void AudioRtpReceiver::OnChanged() {
   if (cached_track_enabled_ == enabled)
     return;
   cached_track_enabled_ = enabled;
-  worker_thread_->PostTask(
-      ToQueuedTask(worker_thread_safety_, [this, enabled]() {
-        RTC_DCHECK_RUN_ON(worker_thread_);
-        Reconfigure(enabled);
-      }));
+  worker_thread_->PostTask(SafeTask(worker_thread_safety_, [this, enabled]() {
+    RTC_DCHECK_RUN_ON(worker_thread_);
+    Reconfigure(enabled);
+  }));
 }
 
 // RTC_RUN_ON(worker_thread_)

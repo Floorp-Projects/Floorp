@@ -28,10 +28,8 @@
 #include "modules/audio_processing/include/audio_frame_view.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "modules/audio_processing/optionally_built_submodule_creators.h"
-#include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/denormal_disabler.h"
@@ -163,6 +161,7 @@ bool AudioProcessingImpl::SubmoduleStates::Update(
     bool noise_suppressor_enabled,
     bool adaptive_gain_controller_enabled,
     bool gain_controller2_enabled,
+    bool voice_activity_detector_enabled,
     bool gain_adjustment_enabled,
     bool echo_controller_enabled,
     bool transient_suppressor_enabled) {
@@ -174,6 +173,8 @@ bool AudioProcessingImpl::SubmoduleStates::Update(
   changed |=
       (adaptive_gain_controller_enabled != adaptive_gain_controller_enabled_);
   changed |= (gain_controller2_enabled != gain_controller2_enabled_);
+  changed |=
+      (voice_activity_detector_enabled != voice_activity_detector_enabled_);
   changed |= (gain_adjustment_enabled != gain_adjustment_enabled_);
   changed |= (echo_controller_enabled != echo_controller_enabled_);
   changed |= (transient_suppressor_enabled != transient_suppressor_enabled_);
@@ -183,6 +184,7 @@ bool AudioProcessingImpl::SubmoduleStates::Update(
     noise_suppressor_enabled_ = noise_suppressor_enabled;
     adaptive_gain_controller_enabled_ = adaptive_gain_controller_enabled;
     gain_controller2_enabled_ = gain_controller2_enabled;
+    voice_activity_detector_enabled_ = voice_activity_detector_enabled;
     gain_adjustment_enabled_ = gain_adjustment_enabled;
     echo_controller_enabled_ = echo_controller_enabled;
     transient_suppressor_enabled_ = transient_suppressor_enabled;
@@ -250,7 +252,7 @@ AudioProcessingImpl::AudioProcessingImpl()
                           /*echo_detector=*/nullptr,
                           /*capture_analyzer=*/nullptr) {}
 
-int AudioProcessingImpl::instance_count_ = 0;
+std::atomic<int> AudioProcessingImpl::instance_count_(0);
 
 AudioProcessingImpl::AudioProcessingImpl(
     const AudioProcessing::Config& config,
@@ -259,8 +261,7 @@ AudioProcessingImpl::AudioProcessingImpl(
     std::unique_ptr<EchoControlFactory> echo_control_factory,
     rtc::scoped_refptr<EchoDetector> echo_detector,
     std::unique_ptr<CustomAudioAnalyzer> capture_analyzer)
-    : data_dumper_(
-          new ApmDataDumper(rtc::AtomicOps::Increment(&instance_count_))),
+    : data_dumper_(new ApmDataDumper(instance_count_.fetch_add(1) + 1)),
       use_setup_specific_default_aec3_config_(
           UseSetupSpecificDefaultAec3Congfig()),
       use_denormal_disabler_(
@@ -396,6 +397,7 @@ void AudioProcessingImpl::InitializeLocked() {
   InitializeResidualEchoDetector();
   InitializeEchoController();
   InitializeGainController2(/*config_has_changed=*/true);
+  InitializeVoiceActivityDetector(/*config_has_changed=*/true);
   InitializeNoiseSuppressor();
   InitializeAnalyzer();
   InitializePostProcessor();
@@ -570,6 +572,7 @@ void AudioProcessingImpl::ApplyConfig(const AudioProcessing::Config& config) {
   }
 
   InitializeGainController2(agc2_config_changed);
+  InitializeVoiceActivityDetector(agc2_config_changed);
 
   if (pre_amplifier_config_changed || gain_adjustment_config_changed) {
     InitializeCaptureLevelsAdjuster();
@@ -1269,28 +1272,42 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
                                       capture_buffer->num_frames()));
     }
 
+    absl::optional<float> voice_probability;
+    if (!!submodules_.voice_activity_detector) {
+      voice_probability = submodules_.voice_activity_detector->Analyze(
+          AudioFrameView<const float>(capture_buffer->channels(),
+                                      capture_buffer->num_channels(),
+                                      capture_buffer->num_frames()));
+    }
+
     if (submodules_.transient_suppressor) {
-      float voice_probability = 1.0f;
+      float transient_suppressor_voice_probability = 1.0f;
       switch (transient_suppressor_vad_mode_) {
         case TransientSuppressor::VadMode::kDefault:
           if (submodules_.agc_manager) {
-            voice_probability = submodules_.agc_manager->voice_probability();
+            transient_suppressor_voice_probability =
+                submodules_.agc_manager->voice_probability();
           }
           break;
         case TransientSuppressor::VadMode::kRnnVad:
-          // TODO(bugs.webrtc.org/13663): Use RNN VAD.
+          RTC_DCHECK(voice_probability.has_value());
+          transient_suppressor_voice_probability = *voice_probability;
           break;
         case TransientSuppressor::VadMode::kNoVad:
           // The transient suppressor will ignore `voice_probability`.
           break;
       }
-      submodules_.transient_suppressor->Suppress(
-          capture_buffer->channels()[0], capture_buffer->num_frames(),
-          capture_buffer->num_channels(),
-          capture_buffer->split_bands_const(0)[kBand0To8kHz],
-          capture_buffer->num_frames_per_band(),
-          /*reference_data=*/nullptr, /*reference_length=*/0, voice_probability,
-          capture_.key_pressed);
+      float delayed_voice_probability =
+          submodules_.transient_suppressor->Suppress(
+              capture_buffer->channels()[0], capture_buffer->num_frames(),
+              capture_buffer->num_channels(),
+              capture_buffer->split_bands_const(0)[kBand0To8kHz],
+              capture_buffer->num_frames_per_band(),
+              /*reference_data=*/nullptr, /*reference_length=*/0,
+              transient_suppressor_voice_probability, capture_.key_pressed);
+      if (voice_probability.has_value()) {
+        *voice_probability = delayed_voice_probability;
+      }
     }
 
     // Experimental APM sub-module that analyzes `capture_buffer`.
@@ -1301,7 +1318,7 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
     if (submodules_.gain_controller2) {
       submodules_.gain_controller2->NotifyAnalogLevel(
           recommended_stream_analog_level_locked());
-      submodules_.gain_controller2->Process(capture_buffer);
+      submodules_.gain_controller2->Process(voice_probability, capture_buffer);
     }
 
     if (submodules_.capture_post_processor) {
@@ -1693,7 +1710,7 @@ bool AudioProcessingImpl::UpdateActiveSubmoduleStates() {
   return submodule_states_.Update(
       config_.high_pass_filter.enabled, !!submodules_.echo_control_mobile,
       !!submodules_.noise_suppressor, !!submodules_.gain_control,
-      !!submodules_.gain_controller2,
+      !!submodules_.gain_controller2, !!submodules_.voice_activity_detector,
       config_.pre_amplifier.enabled || config_.capture_level_adjustment.enabled,
       capture_nonlocked_.echo_controller_enabled,
       !!submodules_.transient_suppressor);
@@ -1872,22 +1889,13 @@ void AudioProcessingImpl::InitializeGainController1() {
       stream_analog_level = submodules_.agc_manager->stream_analog_level();
     }
     submodules_.agc_manager.reset(new AgcManagerDirect(
-        num_proc_channels(),
-        config_.gain_controller1.analog_gain_controller.startup_min_volume,
-        config_.gain_controller1.analog_gain_controller.clipped_level_min,
-        !config_.gain_controller1.analog_gain_controller
-             .enable_digital_adaptive,
-        config_.gain_controller1.analog_gain_controller.clipped_level_step,
-        config_.gain_controller1.analog_gain_controller.clipped_ratio_threshold,
-        config_.gain_controller1.analog_gain_controller.clipped_wait_frames,
-        config_.gain_controller1.analog_gain_controller.clipping_predictor));
+        num_proc_channels(), config_.gain_controller1.analog_gain_controller));
     if (re_creation) {
       submodules_.agc_manager->set_stream_analog_level(stream_analog_level);
     }
   }
   submodules_.agc_manager->Initialize();
-  submodules_.agc_manager->SetupDigitalGainControl(
-      submodules_.gain_control.get());
+  submodules_.agc_manager->SetupDigitalGainControl(*submodules_.gain_control);
   submodules_.agc_manager->HandleCaptureOutputUsedChange(
       capture_.capture_output_used);
 }
@@ -1901,9 +1909,35 @@ void AudioProcessingImpl::InitializeGainController2(bool config_has_changed) {
     return;
   }
   if (!submodules_.gain_controller2 || config_has_changed) {
+    const bool use_internal_vad =
+        transient_suppressor_vad_mode_ != TransientSuppressor::VadMode::kRnnVad;
     submodules_.gain_controller2 = std::make_unique<GainController2>(
         config_.gain_controller2, proc_fullband_sample_rate_hz(),
-        num_input_channels());
+        num_input_channels(), use_internal_vad);
+  }
+}
+
+void AudioProcessingImpl::InitializeVoiceActivityDetector(
+    bool config_has_changed) {
+  if (!config_has_changed) {
+    return;
+  }
+  const bool use_vad =
+      transient_suppressor_vad_mode_ == TransientSuppressor::VadMode::kRnnVad &&
+      config_.gain_controller2.enabled &&
+      config_.gain_controller2.adaptive_digital.enabled;
+  if (!use_vad) {
+    submodules_.voice_activity_detector.reset();
+    return;
+  }
+  if (!submodules_.voice_activity_detector || config_has_changed) {
+    RTC_DCHECK(!!submodules_.gain_controller2);
+    // TODO(bugs.webrtc.org/13663): Cache CPU features in APM and use here.
+    submodules_.voice_activity_detector =
+        std::make_unique<VoiceActivityDetectorWrapper>(
+            config_.gain_controller2.adaptive_digital.vad_reset_period_ms,
+            submodules_.gain_controller2->GetCpuFeatures(),
+            proc_fullband_sample_rate_hz());
   }
 }
 

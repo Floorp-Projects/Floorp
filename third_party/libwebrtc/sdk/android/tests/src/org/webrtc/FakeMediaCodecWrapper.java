@@ -292,13 +292,13 @@ public class FakeMediaCodecWrapper implements MediaCodecWrapper {
   }
 
   @Override
-  public ByteBuffer[] getInputBuffers() {
-    return inputBuffers;
+  public ByteBuffer getInputBuffer(int index) {
+    return inputBuffers[index];
   }
 
   @Override
-  public ByteBuffer[] getOutputBuffers() {
-    return outputBuffers;
+  public ByteBuffer getOutputBuffer(int index) {
+    return outputBuffers[index];
   }
 
   @Override

@@ -73,6 +73,12 @@ rtc_source_set("no_unique_address") {
   sources = [ "no_unique_address.h" ]
 }
 
+rtc_source_set("no_cfi_icall") {
+  sources = [ "no_cfi_icall.h" ]
+
+  deps = [ "..:sanitizer" ]
+}
+
 if (is_mac || is_ios) {
   rtc_library("cocoa_threading") {
     sources = [

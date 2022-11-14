@@ -1,7 +1,15 @@
 #!/bin/bash
 
+function show_error_msg()
+{
+  echo "*** ERROR *** $? line $1 $0 did not complete successfully!"
+  echo "$ERROR_HELP"
+}
+
 # Print an Error message if `set -eE` causes the script to exit due to a failed command
-trap 'echo "*** ERROR *** $? $LINENO fast-forward-libwebrtc did not complete successfully!"' ERR 
+trap 'show_error_msg $LINENO' ERR
+
+source dom/media/webrtc/third_party_build/use_config_env.sh
 
 # If DEBUG_GEN is set all commands should be printed as they are executed
 if [ ! "x$DEBUG_GEN" = "x" ]; then
@@ -25,7 +33,11 @@ if [ "x$MOZ_LIBWEBRTC_COMMIT" = "x" ]; then
   exit
 fi
 
+if [ "x$HANDLE_NOOP_COMMIT" = "x" ]; then
+  HANDLE_NOOP_COMMIT=""
+fi
 
+ERROR_HELP=""
 RESUME=""
 if [ -f log_resume.txt ]; then
   RESUME=`tail -1 log_resume.txt`
@@ -55,19 +67,28 @@ fi
 MOZ_LIBWEBRTC_BASE=`tail -1 third_party/libwebrtc/README.moz-ff-commit`
 # calculate the next commit above our current base commit
 MOZ_LIBWEBRTC_NEXT_BASE=`cd $MOZ_LIBWEBRTC_SRC ; \
-git log --oneline --reverse --ancestry-path $MOZ_LIBWEBRTC_BASE^..main \
+git log --oneline --reverse --ancestry-path $MOZ_LIBWEBRTC_BASE^..$MOZ_GIT_RELEASE_BRANCH \
  | head -2 | tail -1 | awk '{print$1;}'`
+
+echo "looking for ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg"
+if [ -f ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg ]; then
+  echo "***"
+  echo "*** detected special commit msg, setting HANDLE_NOOP_COMMIT"
+  echo "***"
+  HANDLE_NOOP_COMMIT="1"
+fi
 
 UPSTREAM_ADDED_FILES=""
 
 # After this point:
-# * eE: All commands should succede.
+# * eE: All commands should succeed.
 # * u: All variables should be defined before use.
-# * o pipefail: All stages of all pipes should succede.
+# * o pipefail: All stages of all pipes should succeed.
 set -eEuo pipefail
 
 echo "     MOZ_LIBWEBRTC_BASE: $MOZ_LIBWEBRTC_BASE"
 echo "MOZ_LIBWEBRTC_NEXT_BASE: $MOZ_LIBWEBRTC_NEXT_BASE"
+echo "HANDLE_NOOP_COMMIT: $HANDLE_NOOP_COMMIT"
 echo " RESUME: $RESUME"
 echo "SKIP_TO: $SKIP_TO"
 
@@ -83,16 +104,23 @@ echo "-------"
 echo "# base of lastest vendoring" >> third_party/libwebrtc/README.moz-ff-commit
 echo "$MOZ_LIBWEBRTC_NEXT_BASE" >> third_party/libwebrtc/README.moz-ff-commit
 
-
+REBASE_HELP=$"
+The rebase operation onto $MOZ_LIBWEBRTC_NEXT_BASE has failed.  Please
+resolve all the rebase conflicts.  When the github rebase is complete,
+re-run the previous command to resume the fast-forward process.
+"
+#"rebase_mozlibwebrtc_stack help for rebase failure"
 function rebase_mozlibwebrtc_stack {
   echo "-------"
   echo "------- Rebase $MOZ_LIBWEBRTC_COMMIT to $MOZ_LIBWEBRTC_NEXT_BASE"
   echo "-------"
+  ERROR_HELP=$REBASE_HELP
   ( cd $MOZ_LIBWEBRTC_SRC && \
     git checkout -q $MOZ_LIBWEBRTC_COMMIT && \
     git rebase $MOZ_LIBWEBRTC_NEXT_BASE \
     &> log-rebase-moz-libwebrtc.txt \
   )
+  ERROR_HELP=""
 }
 
 function vendor_off_next_commit {
@@ -121,6 +149,9 @@ function regen_mozbuild_files {
 }
 
 function add_new_upstream_files {
+  if [ "x$HANDLE_NOOP_COMMIT" == "x1" ]; then
+    return
+  fi
   UPSTREAM_ADDED_FILES=`cd $MOZ_LIBWEBRTC_SRC && \
     git diff -r $MOZ_LIBWEBRTC_BASE -r $MOZ_LIBWEBRTC_NEXT_BASE \
         --name-status --diff-filter=A \
@@ -135,6 +166,9 @@ function add_new_upstream_files {
 }
 
 function remove_deleted_upstream_files {
+  if [ "x$HANDLE_NOOP_COMMIT" == "x1" ]; then
+    return
+  fi
   UPSTREAM_DELETED_FILES=`cd $MOZ_LIBWEBRTC_SRC && \
     git diff -r $MOZ_LIBWEBRTC_BASE -r $MOZ_LIBWEBRTC_NEXT_BASE \
         --name-status --diff-filter=D \
@@ -149,6 +183,9 @@ function remove_deleted_upstream_files {
 }
 
 function handle_renamed_upstream_files {
+  if [ "x$HANDLE_NOOP_COMMIT" == "x1" ]; then
+    return
+  fi
   UPSTREAM_RENAMED_FILES=`cd $MOZ_LIBWEBRTC_SRC && \
     git diff -r $MOZ_LIBWEBRTC_BASE -r $MOZ_LIBWEBRTC_NEXT_BASE \
         --name-status --diff-filter=R \
@@ -193,11 +230,27 @@ fi
 
 if [ $SKIP_TO = "resume6" ]; then SKIP_TO="run"; fi
 if [ $SKIP_TO = "run" ]; then
-  echo "" > log_resume.txt
+  echo "resume7" > log_resume.txt
   handle_renamed_upstream_files;
 fi
 
+echo "" > log_resume.txt
 echo "-------"
 echo "------- Commit vendored changes from $MOZ_LIBWEBRTC_NEXT_BASE"
 echo "-------"
-hg commit -m "Bug 1766646 - Vendor libwebrtc from $MOZ_LIBWEBRTC_NEXT_BASE"
+UPSTREAM_SHA=`cd $MOZ_LIBWEBRTC_SRC && \
+    git show --name-only $MOZ_LIBWEBRTC_NEXT_BASE \
+    | grep "^commit " | awk '{ print $NF }'`
+echo "Bug $MOZ_FASTFORWARD_BUG - Vendor libwebrtc from $MOZ_LIBWEBRTC_NEXT_BASE" \
+    > commit_msg.txt
+echo "" >> commit_msg.txt
+if [ -f ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg ]; then
+  cat ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg >> commit_msg.txt
+  echo "" >> commit_msg.txt
+  rm ~/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg
+fi
+echo "Upstream commit: https://webrtc.googlesource.com/src/+/$UPSTREAM_SHA" >> commit_msg.txt
+(cd $MOZ_LIBWEBRTC_SRC && \
+git show --name-only $MOZ_LIBWEBRTC_NEXT_BASE | grep "^ ") >> commit_msg.txt
+
+hg commit -l commit_msg.txt third_party/libwebrtc

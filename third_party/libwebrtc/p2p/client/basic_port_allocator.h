@@ -15,15 +15,17 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "api/field_trials_view.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/turn_customizer.h"
 #include "p2p/base/port_allocator.h"
 #include "p2p/client/relay_port_factory_interface.h"
 #include "p2p/client/turn_port_factory.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/memory/always_valid_pointer.h"
 #include "rtc_base/network.h"
 #include "rtc_base/system/rtc_export.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 
@@ -32,18 +34,19 @@ namespace cricket {
 class RTC_EXPORT BasicPortAllocator : public PortAllocator {
  public:
   // The NetworkManager is a mandatory argument. The other arguments are
-  // optional. All these objects are owned by caller and must have a life time
+  // optional. All pointers are owned by caller and must have a life time
   // that exceeds that of BasicPortAllocator.
-  // TODO(bugs.webrtc.org/13145): The SocketFactory should be mandatory, but
-  // currenly isn't. When not specified, one is created internally, based on the
-  // socket server associated with the thread calling CreateSession.
   BasicPortAllocator(rtc::NetworkManager* network_manager,
                      rtc::PacketSocketFactory* socket_factory,
                      webrtc::TurnCustomizer* customizer = nullptr,
                      RelayPortFactoryInterface* relay_port_factory = nullptr);
-  explicit BasicPortAllocator(rtc::NetworkManager* network_manager);
-  BasicPortAllocator(rtc::NetworkManager* network_manager,
-                     const ServerAddresses& stun_servers);
+  BasicPortAllocator(
+      rtc::NetworkManager* network_manager,
+      std::unique_ptr<rtc::PacketSocketFactory> owned_socket_factory);
+  BasicPortAllocator(
+      rtc::NetworkManager* network_manager,
+      std::unique_ptr<rtc::PacketSocketFactory> owned_socket_factory,
+      const ServerAddresses& stun_servers);
   BasicPortAllocator(rtc::NetworkManager* network_manager,
                      rtc::PacketSocketFactory* socket_factory,
                      const ServerAddresses& stun_servers);
@@ -62,14 +65,14 @@ class RTC_EXPORT BasicPortAllocator : public PortAllocator {
   // creates its own socket factory.
   rtc::PacketSocketFactory* socket_factory() {
     CheckRunOnValidThreadIfInitialized();
-    return socket_factory_;
+    return socket_factory_.get();
   }
 
   PortAllocatorSession* CreateSessionInternal(
-      const std::string& content_name,
+      absl::string_view content_name,
       int component,
-      const std::string& ice_ufrag,
-      const std::string& ice_pwd) override;
+      absl::string_view ice_ufrag,
+      absl::string_view ice_pwd) override;
 
   // Convenience method that adds a TURN server to the configuration.
   void AddTurnServer(const RelayServerConfig& turn_server);
@@ -97,7 +100,8 @@ class RTC_EXPORT BasicPortAllocator : public PortAllocator {
   const webrtc::FieldTrialsView* field_trials_;
   std::unique_ptr<webrtc::FieldTrialsView> owned_field_trials_;
   rtc::NetworkManager* network_manager_;
-  rtc::PacketSocketFactory* socket_factory_;
+  const webrtc::AlwaysValidPointerNoDefault<rtc::PacketSocketFactory>
+      socket_factory_;
   int network_ignore_mask_ = rtc::kDefaultNetworkIgnoreMask;
 
   // This is the factory being used.
@@ -123,10 +127,10 @@ enum class SessionState {
 class RTC_EXPORT BasicPortAllocatorSession : public PortAllocatorSession {
  public:
   BasicPortAllocatorSession(BasicPortAllocator* allocator,
-                            const std::string& content_name,
+                            absl::string_view content_name,
                             int component,
-                            const std::string& ice_ufrag,
-                            const std::string& ice_pwd);
+                            absl::string_view ice_ufrag,
+                            absl::string_view ice_pwd);
   ~BasicPortAllocatorSession() override;
 
   virtual BasicPortAllocator* allocator();
@@ -266,14 +270,13 @@ class RTC_EXPORT BasicPortAllocatorSession : public PortAllocatorSession {
   // append to `candidates`.
   void GetCandidatesFromPort(const PortData& data,
                              std::vector<Candidate>* candidates) const;
-  Port* GetBestTurnPortForNetwork(const std::string& network_name) const;
+  Port* GetBestTurnPortForNetwork(absl::string_view network_name) const;
   // Returns true if at least one TURN port is pruned.
   bool PruneTurnPorts(Port* newly_pairable_turn_port);
   bool PruneNewlyPairableTurnPort(PortData* newly_pairable_turn_port);
 
   BasicPortAllocator* allocator_;
   rtc::Thread* network_thread_;
-  std::unique_ptr<rtc::PacketSocketFactory> owned_socket_factory_;
   rtc::PacketSocketFactory* socket_factory_;
   bool allocation_started_;
   bool network_manager_started_;
@@ -306,8 +309,8 @@ struct RTC_EXPORT PortConfiguration {
   RelayList relays;
 
   PortConfiguration(const ServerAddresses& stun_servers,
-                    const std::string& username,
-                    const std::string& password,
+                    absl::string_view username,
+                    absl::string_view password,
                     const webrtc::FieldTrialsView* field_trials = nullptr);
 
   // Returns addresses of both the explicitly configured STUN servers,

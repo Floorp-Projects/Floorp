@@ -37,6 +37,47 @@ This may contain a SocketServer for processing I/O, and is used for policing
 certain calling pattern between a few core threads (the NetworkThread cannot
 do Invoke on the Worker thread, for instance).
 
+## Reserved class suffixes
+
+C++ classes with names ending in the suffixes "Factory", "Builder" and "Manager" are supposed to behave
+in certain well known ways.
+
+For a particular class name Foo, the following classes, if they exist, should
+behave as follows:
+
+* FooFactory: Has a Create function that creates a Foo object and returns the
+  object or an owning reference to it (for instance std::unique_ptr or
+  rtc::scoped_refptr<Foo>). The Create function should NOT alter the factory
+  state; ideally, it is marked const. Ownership of the returned object is only
+  with the caller.
+
+* FooBuilder: Has a Build function that returns ownership of a Foo object (as
+  above). The Builder can only be used once, and resources given to the Builder
+  before the Build function is called are either released or owned by the Foo
+  object. The Create function may be reference-qualified (declared as ```Foo
+  Build() &&```), which means it is invoked as ```std::move(builder).Build()```,
+  and C++ will ensure that it is not used again.
+
+* FooManager: Has a Create function that returns an rtc::scoped_refptr<Foo> (if
+  shared ownership) or a Foo* (if the Manager retains sole ownership). If
+  Create() cannot fail, consider returning a Foo&. The Manager is responsible
+  for keeping track of the object; if the Create function returns a Foo*, the
+  Foo object is guaranteed to be destroyed when the FooManager is destroyed.
+
+If a Manager class manages multiple classes of objects, the Create functions
+should be appropriately named (the FooAndBarManager would have CreateFoo() and
+CreateBar() functions), and the class will have a suitable name for the group of
+objects it is managing.
+
+FooFactory is mainly useful for the case where preparation for producing Foo
+objects is complex. If Foo can be created with just an argument list, consider
+exposing its constructor instead; if Foo creation can fail, consider having
+a free function called CreateFoo instead of a factory.
+
+Note that classes with these names exist that do not follow these conventions.
+When they are detected, they need to be marked with TODO statements and bugs
+filed on them to get them into a conformant state.
+
 ## Synchronization primitives
 
 ### PostTask and thread-guarded variables

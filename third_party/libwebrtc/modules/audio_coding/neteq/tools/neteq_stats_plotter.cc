@@ -15,13 +15,15 @@
 
 #include <utility>
 
+#include "absl/strings/string_view.h"
+
 namespace webrtc {
 namespace test {
 
 NetEqStatsPlotter::NetEqStatsPlotter(bool make_matlab_plot,
                                      bool make_python_plot,
                                      bool show_concealment_events,
-                                     std::string base_file_name)
+                                     absl::string_view base_file_name)
     : make_matlab_plot_(make_matlab_plot),
       make_python_plot_(make_python_plot),
       show_concealment_events_(show_concealment_events),
@@ -100,6 +102,8 @@ void NetEqStatsPlotter::SimulationEnded(int64_t simulation_time_ms) {
            lifetime_stats.inserted_samples_for_deceleration);
     printf("  generated_noise_samples: %" PRIu64 "\n",
            lifetime_stats.generated_noise_samples);
+    printf("  packets_discarded: %" PRIu64 "\n",
+           lifetime_stats.packets_discarded);
   }
 }
 

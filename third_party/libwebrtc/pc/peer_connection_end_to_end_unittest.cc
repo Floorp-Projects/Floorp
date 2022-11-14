@@ -43,7 +43,6 @@
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/physical_socket_server.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 #include "test/gmock.h"
@@ -87,9 +86,9 @@ class PeerConnectionEndToEndBaseTest : public sigslot::has_slots<>,
     RTC_CHECK(network_thread_->Start());
     RTC_CHECK(worker_thread_->Start());
     caller_ = rtc::make_ref_counted<PeerConnectionTestWrapper>(
-        "caller", network_thread_.get(), worker_thread_.get());
+        "caller", &pss_, network_thread_.get(), worker_thread_.get());
     callee_ = rtc::make_ref_counted<PeerConnectionTestWrapper>(
-        "callee", network_thread_.get(), worker_thread_.get());
+        "callee", &pss_, network_thread_.get(), worker_thread_.get());
     webrtc::PeerConnectionInterface::IceServer ice_server;
     ice_server.uri = "stun:stun.l.google.com:19302";
     config_.servers.push_back(ice_server);
@@ -220,6 +219,7 @@ class PeerConnectionEndToEndBaseTest : public sigslot::has_slots<>,
   }
 
  protected:
+  rtc::AutoThread main_thread_;
   rtc::PhysicalSocketServer pss_;
   std::unique_ptr<rtc::Thread> network_thread_;
   std::unique_ptr<rtc::Thread> worker_thread_;

@@ -23,8 +23,8 @@ if [ "x$MOZ_BUILD_CHANGE_CNT" != "x0" ]; then
   mv CLOBBER.new CLOBBER
   echo "Modified build files in third_party/libwebrtc - $COMMIT_DESC" >> CLOBBER
 
-  ADD_CNT=`hg status -nu third_party/libwebrtc | wc -l`
-  DEL_CNT=`hg status -nd third_party/libwebrtc | wc -l`
+  ADD_CNT=`hg status -nu third_party/libwebrtc | wc -l | tr -d " "`
+  DEL_CNT=`hg status -nd third_party/libwebrtc | wc -l | tr -d " "`
   if [ "x$ADD_CNT" != "x0" ]; then
     hg status -nu third_party/libwebrtc | xargs hg add
   fi

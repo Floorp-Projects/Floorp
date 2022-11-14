@@ -251,6 +251,7 @@ class DtlsSrtpTransportTest : public ::testing::Test,
     SendRecvRtcpPackets();
   }
 
+  rtc::AutoThread main_thread_;
   std::unique_ptr<DtlsSrtpTransport> dtls_srtp_transport1_;
   std::unique_ptr<DtlsSrtpTransport> dtls_srtp_transport2_;
   webrtc::TransportObserver transport_observer1_;

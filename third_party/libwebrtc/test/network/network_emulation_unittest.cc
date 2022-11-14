@@ -651,8 +651,7 @@ TEST(NetworkEmulationManagerTURNTest, ClientTraffic) {
   int port = ep->BindReceiver(0, &recv).value();
 
   // Construct a STUN BINDING.
-  cricket::StunMessage ping;
-  ping.SetType(cricket::STUN_BINDING_REQUEST);
+  cricket::StunMessage ping(cricket::STUN_BINDING_REQUEST);
   rtc::ByteBufferWriter buf;
   ping.Write(&buf);
   rtc::CopyOnWriteBuffer packet(buf.Data(), buf.Length());

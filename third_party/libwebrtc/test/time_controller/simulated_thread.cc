@@ -12,8 +12,6 @@
 #include <algorithm>
 #include <utility>
 
-#include "rtc_base/task_utils/to_queued_task.h"
-
 namespace webrtc {
 namespace {
 

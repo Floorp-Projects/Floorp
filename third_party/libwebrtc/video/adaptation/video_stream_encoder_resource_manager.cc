@@ -26,10 +26,10 @@
 #include "api/video/video_adaptation_reason.h"
 #include "api/video/video_source_interface.h"
 #include "call/adaptation/video_source_restrictions.h"
+#include "modules/video_coding/svc/scalability_mode_util.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
@@ -308,14 +308,13 @@ VideoStreamEncoderResourceManager::~VideoStreamEncoderResourceManager() =
     default;
 
 void VideoStreamEncoderResourceManager::Initialize(
-    rtc::TaskQueue* encoder_queue) {
+    TaskQueueBase* encoder_queue) {
   RTC_DCHECK(!encoder_queue_);
   RTC_DCHECK(encoder_queue);
   encoder_queue_ = encoder_queue;
-  encode_usage_resource_->RegisterEncoderTaskQueue(encoder_queue_->Get());
-  quality_scaler_resource_->RegisterEncoderTaskQueue(encoder_queue_->Get());
-  bandwidth_quality_scaler_resource_->RegisterEncoderTaskQueue(
-      encoder_queue_->Get());
+  encode_usage_resource_->RegisterEncoderTaskQueue(encoder_queue_);
+  quality_scaler_resource_->RegisterEncoderTaskQueue(encoder_queue_);
+  bandwidth_quality_scaler_resource_->RegisterEncoderTaskQueue(encoder_queue_);
 }
 
 void VideoStreamEncoderResourceManager::SetAdaptationProcessor(
@@ -374,7 +373,7 @@ void VideoStreamEncoderResourceManager::MaybeInitializePixelLimitResource() {
   // resource is active for the lifetme of the stream (until
   // StopManagedResources() is called).
   pixel_limit_resource_ =
-      PixelLimitResource::Create(encoder_queue_->Get(), input_state_provider_);
+      PixelLimitResource::Create(encoder_queue_, input_state_provider_);
   pixel_limit_resource_->SetMaxPixels(max_pixels);
   AddResource(pixel_limit_resource_, VideoAdaptationReason::kCpu);
 }
@@ -673,7 +672,7 @@ CpuOveruseOptions VideoStreamEncoderResourceManager::GetCpuOveruseOptions()
   // This is already ensured by the only caller of this method:
   // StartResourceAdaptation().
   RTC_DCHECK(encoder_settings_.has_value());
-  CpuOveruseOptions options;
+  CpuOveruseOptions options(field_trials_);
   // Hardware accelerated encoders are assumed to be pipelined; give them
   // additional overuse time.
   if (encoder_settings_->encoder_info().is_hardware_accelerated) {
@@ -815,15 +814,29 @@ void VideoStreamEncoderResourceManager::OnQualityRampUp() {
   quality_rampup_experiment_.reset();
 }
 
-bool VideoStreamEncoderResourceManager::IsSimulcast(
+bool VideoStreamEncoderResourceManager::IsSimulcastOrMultipleSpatialLayers(
     const VideoEncoderConfig& encoder_config) {
   const std::vector<VideoStream>& simulcast_layers =
       encoder_config.simulcast_layers;
-  if (simulcast_layers.size() <= 1) {
+  if (simulcast_layers.empty()) {
     return false;
   }
 
-  if (simulcast_layers[0].active) {
+  absl::optional<int> num_spatial_layers;
+  if (simulcast_layers[0].scalability_mode.has_value() &&
+      encoder_config.number_of_streams == 1) {
+    num_spatial_layers = ScalabilityModeToNumSpatialLayers(
+        *simulcast_layers[0].scalability_mode);
+  }
+
+  if (simulcast_layers.size() == 1) {
+    // Check if multiple spatial layers are used.
+    return num_spatial_layers && *num_spatial_layers > 1;
+  }
+
+  bool svc_with_one_spatial_layer =
+      num_spatial_layers && *num_spatial_layers == 1;
+  if (simulcast_layers[0].active && !svc_with_one_spatial_layer) {
     // We can't distinguish between simulcast and singlecast when only the
     // lowest spatial layer is active. Treat this case as simulcast.
     return true;

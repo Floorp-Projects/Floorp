@@ -18,7 +18,7 @@
 #include "api/transport/field_trial_based_config.h"
 #include "api/video/encoded_image.h"
 #include "modules/video_coding/include/video_codec_interface.h"
-#include "modules/video_coding/timing.h"
+#include "modules/video_coding/timing/timing.h"
 #include "rtc_base/memory/always_valid_pointer.h"
 #include "system_wrappers/include/clock.h"
 
@@ -51,13 +51,7 @@ class VideoCodingModuleImpl : public VideoCodingModule {
         timing_(new VCMTiming(clock, *field_trials_)),
         receiver_(clock, timing_.get(), *field_trials_) {}
 
-  ~VideoCodingModuleImpl() override {}
-
-  int64_t TimeUntilNextProcess() override {
-    int64_t receiver_time = receiver_.TimeUntilNextProcess();
-    RTC_DCHECK_GE(receiver_time, 0);
-    return receiver_time;
-  }
+  ~VideoCodingModuleImpl() override = default;
 
   void Process() override { receiver_.Process(); }
 

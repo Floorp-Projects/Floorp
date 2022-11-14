@@ -19,12 +19,12 @@
 namespace webrtc {
 struct LibvpxVp9EncoderTemplateAdapter {
   static std::vector<SdpVideoFormat> SupportedFormats() {
-    return SupportedVP9Codecs();
+    return SupportedVP9Codecs(/*add_scalability_modes=*/true);
   }
 
   static std::unique_ptr<VideoEncoder> CreateEncoder(
       const SdpVideoFormat& format) {
-    return VP9Encoder::Create();
+    return VP9Encoder::Create(cricket::VideoCodec(format));
   }
 
   static bool IsScalabilityModeSupported(ScalabilityMode scalability_mode) {

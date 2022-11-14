@@ -120,6 +120,8 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
     return context_->field_trials();
   }
 
+  cricket::MediaEngineInterface* media_engine() const;
+
  protected:
   // Constructor used by the static Create() method. Modifies the dependencies.
   PeerConnectionFactory(rtc::scoped_refptr<ConnectionContext> context,
@@ -136,13 +138,6 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
   rtc::Thread* network_thread() const { return context_->network_thread(); }
 
   bool IsTrialEnabled(absl::string_view key) const;
-
-  cricket::ChannelManager* channel_manager() {
-    return context_->channel_manager();
-  }
-  const cricket::ChannelManager* channel_manager() const {
-    return context_->channel_manager();
-  }
 
   std::unique_ptr<RtcEventLog> CreateRtcEventLog_w();
   std::unique_ptr<Call> CreateCall_w(RtcEventLog* event_log,

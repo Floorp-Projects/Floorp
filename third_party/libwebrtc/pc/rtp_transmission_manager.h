@@ -27,12 +27,12 @@
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
 #include "media/base/media_channel.h"
+#include "pc/legacy_stats_collector_interface.h"
 #include "pc/rtp_receiver.h"
 #include "pc/rtp_receiver_proxy.h"
 #include "pc/rtp_sender.h"
 #include "pc/rtp_sender_proxy.h"
 #include "pc/rtp_transceiver.h"
-#include "pc/stats_collector_interface.h"
 #include "pc/transceiver_list.h"
 #include "pc/usage_pattern.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
@@ -76,12 +76,10 @@ struct RtpSenderInfo {
 class RtpTransmissionManager : public RtpSenderBase::SetStreamsObserver {
  public:
   RtpTransmissionManager(bool is_unified_plan,
-                         rtc::Thread* signaling_thread,
-                         rtc::Thread* worker_thread,
-                         cricket::ChannelManager* channel_manager,
+                         ConnectionContext* context,
                          UsagePattern* usage_pattern,
                          PeerConnectionObserver* observer,
-                         StatsCollectorInterface* stats_,
+                         LegacyStatsCollectorInterface* legacy_stats,
                          std::function<void()> on_negotiation_needed);
 
   // No move or copy permitted.
@@ -212,9 +210,8 @@ class RtpTransmissionManager : public RtpSenderBase::SetStreamsObserver {
   cricket::VideoMediaChannel* video_media_channel() const;
 
  private:
-  rtc::Thread* signaling_thread() const { return signaling_thread_; }
-  rtc::Thread* worker_thread() const { return worker_thread_; }
-  cricket::ChannelManager* channel_manager() const { return channel_manager_; }
+  rtc::Thread* signaling_thread() const { return context_->signaling_thread(); }
+  rtc::Thread* worker_thread() const { return context_->worker_thread(); }
   bool IsUnifiedPlan() const { return is_unified_plan_; }
   void NoteUsageEvent(UsageEvent event) {
     usage_pattern_->NoteUsageEvent(event);
@@ -244,6 +241,12 @@ class RtpTransmissionManager : public RtpSenderBase::SetStreamsObserver {
   PeerConnectionObserver* Observer() const;
   void OnNegotiationNeeded();
 
+  cricket::MediaEngineInterface* media_engine() const;
+
+  rtc::UniqueRandomIdGenerator* ssrc_generator() const {
+    return context_->ssrc_generator();
+  }
+
   TransceiverList transceivers_;
 
   // These lists store sender info seen in local/remote descriptions.
@@ -258,12 +261,10 @@ class RtpTransmissionManager : public RtpSenderBase::SetStreamsObserver {
 
   bool closed_ = false;
   bool const is_unified_plan_;
-  rtc::Thread* const signaling_thread_;
-  rtc::Thread* const worker_thread_;
-  cricket::ChannelManager* const channel_manager_;
+  ConnectionContext* context_;
   UsagePattern* usage_pattern_;
   PeerConnectionObserver* observer_;
-  StatsCollectorInterface* const stats_;
+  LegacyStatsCollectorInterface* const legacy_stats_;
   std::function<void()> on_negotiation_needed_;
   rtc::WeakPtrFactory<RtpTransmissionManager> weak_ptr_factory_
       RTC_GUARDED_BY(signaling_thread());

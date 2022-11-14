@@ -15,7 +15,6 @@
 
 #include "absl/types/optional.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
-#include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "system_wrappers/include/metrics.h"
@@ -41,11 +40,10 @@ constexpr size_t kAggregationBufferSize = 10 * 100;
 
 namespace webrtc {
 
-int ResidualEchoDetector::instance_count_ = 0;
+std::atomic<int> ResidualEchoDetector::instance_count_(0);
 
 ResidualEchoDetector::ResidualEchoDetector()
-    : data_dumper_(
-          new ApmDataDumper(rtc::AtomicOps::Increment(&instance_count_))),
+    : data_dumper_(new ApmDataDumper(instance_count_.fetch_add(1) + 1)),
       render_buffer_(kRenderBufferSize),
       render_power_(kLookbackFrames),
       render_power_mean_(kLookbackFrames),

@@ -13,7 +13,7 @@
 #ifdef WIN32
 #include <winsock2.h>
 #endif
-#ifdef WEBRTC_LINUX
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_FUCHSIA)
 #include <netinet/in.h>
 #endif
 

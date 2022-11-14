@@ -35,7 +35,6 @@
 #include "pc/test/mock_peer_connection_observers.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/rtc_certificate_generator.h"
 #include "rtc_base/string_encode.h"
 #include "rtc_base/time_utils.h"
@@ -76,9 +75,11 @@ void PeerConnectionTestWrapper::Connect(PeerConnectionTestWrapper* caller,
 
 PeerConnectionTestWrapper::PeerConnectionTestWrapper(
     const std::string& name,
+    rtc::SocketServer* socket_server,
     rtc::Thread* network_thread,
     rtc::Thread* worker_thread)
     : name_(name),
+      socket_server_(socket_server),
       network_thread_(network_thread),
       worker_thread_(worker_thread),
       pending_negotiation_(false) {
@@ -101,7 +102,9 @@ bool PeerConnectionTestWrapper::CreatePc(
     rtc::scoped_refptr<webrtc::AudioEncoderFactory> audio_encoder_factory,
     rtc::scoped_refptr<webrtc::AudioDecoderFactory> audio_decoder_factory) {
   std::unique_ptr<cricket::PortAllocator> port_allocator(
-      new cricket::FakePortAllocator(network_thread_, nullptr));
+      new cricket::FakePortAllocator(
+          network_thread_,
+          std::make_unique<rtc::BasicPacketSocketFactory>(socket_server_)));
 
   RTC_DCHECK_RUN_ON(&pc_thread_checker_);
 
@@ -176,8 +179,6 @@ void PeerConnectionTestWrapper::OnIceCandidate(
     const IceCandidateInterface* candidate) {
   std::string sdp;
   EXPECT_TRUE(candidate->ToString(&sdp));
-  // Give the user a chance to modify sdp for testing.
-  SignalOnIceCandidateCreated(&sdp);
   SignalOnIceCandidateReady(candidate->sdp_mid(), candidate->sdp_mline_index(),
                             sdp);
 }
@@ -196,9 +197,6 @@ void PeerConnectionTestWrapper::OnSuccess(SessionDescriptionInterface* desc) {
   RTC_LOG(LS_INFO) << "PeerConnectionTestWrapper " << name_ << ": "
                    << webrtc::SdpTypeToString(desc->GetType())
                    << " sdp created: " << sdp;
-
-  // Give the user a chance to modify sdp for testing.
-  SignalOnSdpCreated(&sdp);
 
   SetLocalDescription(desc->GetType(), sdp);
 

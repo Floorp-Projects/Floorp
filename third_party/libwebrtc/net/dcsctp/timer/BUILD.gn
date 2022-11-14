@@ -25,6 +25,7 @@ rtc_library("timer") {
     "timer.h",
   ]
   absl_deps = [
+    "//third_party/abseil-cpp/absl/memory",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
@@ -33,11 +34,11 @@ rtc_library("timer") {
 rtc_library("task_queue_timeout") {
   deps = [
     "../../../api:array_view",
+    "../../../api/task_queue:pending_task_safety_flag",
     "../../../api/task_queue:task_queue",
+    "../../../api/units:time_delta",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
-    "../../../rtc_base/task_utils:pending_task_safety_flag",
-    "../../../rtc_base/task_utils:to_queued_task",
     "../public:socket",
     "../public:types",
   ]

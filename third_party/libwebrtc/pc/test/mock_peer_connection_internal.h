@@ -226,7 +226,7 @@ class MockPeerConnectionInternal : public PeerConnectionInternal {
   MOCK_METHOD(JsepTransportController*, transport_controller_n, (), (override));
   MOCK_METHOD(DataChannelController*, data_channel_controller, (), (override));
   MOCK_METHOD(cricket::PortAllocator*, port_allocator, (), (override));
-  MOCK_METHOD(StatsCollector*, stats, (), (override));
+  MOCK_METHOD(LegacyStatsCollector*, legacy_stats, (), (override));
   MOCK_METHOD(PeerConnectionObserver*, Observer, (), (const, override));
   MOCK_METHOD(bool, GetSctpSslRole, (rtc::SSLRole*), (override));
   MOCK_METHOD(PeerConnectionInterface::IceConnectionState,

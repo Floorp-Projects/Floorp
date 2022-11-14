@@ -69,7 +69,7 @@ bool FieldTrialsStringIsValidInternal(const absl::string_view trials) {
 }
 }  // namespace
 
-bool FieldTrialsStringIsValid(const char* trials_string) {
+bool FieldTrialsStringIsValid(absl::string_view trials_string) {
   return FieldTrialsStringIsValidInternal(trials_string);
 }
 
@@ -77,18 +77,19 @@ void InsertOrReplaceFieldTrialStringsInMap(
     std::map<std::string, std::string>* fieldtrial_map,
     const absl::string_view trials_string) {
   if (FieldTrialsStringIsValidInternal(trials_string)) {
-    std::vector<std::string> tokens;
-    rtc::split(std::string(trials_string), '/', &tokens);
+    std::vector<absl::string_view> tokens = rtc::split(trials_string, '/');
     // Skip last token which is empty due to trailing '/'.
     for (size_t idx = 0; idx < tokens.size() - 1; idx += 2) {
-      (*fieldtrial_map)[tokens[idx]] = tokens[idx + 1];
+      (*fieldtrial_map)[std::string(tokens[idx])] =
+          std::string(tokens[idx + 1]);
     }
   } else {
     RTC_DCHECK_NOTREACHED() << "Invalid field trials string:" << trials_string;
   }
 }
 
-std::string MergeFieldTrialsStrings(const char* first, const char* second) {
+std::string MergeFieldTrialsStrings(absl::string_view first,
+                                    absl::string_view second) {
   std::map<std::string, std::string> fieldtrial_map;
   InsertOrReplaceFieldTrialStringsInMap(&fieldtrial_map, first);
   InsertOrReplaceFieldTrialStringsInMap(&fieldtrial_map, second);

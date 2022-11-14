@@ -686,7 +686,7 @@ class PackedType : public T {
   bool isExposable() const {
 #if defined(ENABLE_WASM_SIMD) || defined(ENABLE_WASM_GC)
     return kind() != Kind::V128 && !isAnyRef() && !isStructRef() &&
-             !isArrayRef() && !isTypeRef();
+           !isArrayRef() && !isTypeRef();
 #else
     return true;
 #endif

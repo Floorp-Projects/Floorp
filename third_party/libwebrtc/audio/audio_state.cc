@@ -20,7 +20,6 @@
 #include "modules/audio_device/include/audio_device.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/thread.h"
 
 namespace webrtc {
@@ -50,12 +49,13 @@ AudioTransport* AudioState::audio_transport() {
   return &audio_transport_;
 }
 
-void AudioState::AddReceivingStream(webrtc::AudioReceiveStream* stream) {
+void AudioState::AddReceivingStream(
+    webrtc::AudioReceiveStreamInterface* stream) {
   RTC_DCHECK(thread_checker_.IsCurrent());
   RTC_DCHECK_EQ(0, receiving_streams_.count(stream));
   receiving_streams_.insert(stream);
   if (!config_.audio_mixer->AddSource(
-          static_cast<internal::AudioReceiveStream*>(stream))) {
+          static_cast<AudioReceiveStreamImpl*>(stream))) {
     RTC_DLOG(LS_ERROR) << "Failed to add source to mixer.";
   }
 
@@ -73,12 +73,13 @@ void AudioState::AddReceivingStream(webrtc::AudioReceiveStream* stream) {
   }
 }
 
-void AudioState::RemoveReceivingStream(webrtc::AudioReceiveStream* stream) {
+void AudioState::RemoveReceivingStream(
+    webrtc::AudioReceiveStreamInterface* stream) {
   RTC_DCHECK(thread_checker_.IsCurrent());
   auto count = receiving_streams_.erase(stream);
   RTC_DCHECK_EQ(1, count);
   config_.audio_mixer->RemoveSource(
-      static_cast<internal::AudioReceiveStream*>(stream));
+      static_cast<AudioReceiveStreamImpl*>(stream));
   UpdateNullAudioPollerState();
   if (receiving_streams_.empty()) {
     config_.audio_device_module->StopPlayout();

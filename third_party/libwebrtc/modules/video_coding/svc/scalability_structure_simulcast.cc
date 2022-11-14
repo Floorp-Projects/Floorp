@@ -242,6 +242,26 @@ FrameDependencyStructure ScalabilityStructureS2T1::DependencyStructure() const {
   return structure;
 }
 
+FrameDependencyStructure ScalabilityStructureS2T3::DependencyStructure() const {
+  FrameDependencyStructure structure;
+  structure.num_decode_targets = 6;
+  structure.num_chains = 2;
+  structure.decode_target_protected_by_chain = {0, 0, 0, 1, 1, 1};
+  auto& t = structure.templates;
+  t.resize(10);
+  t[1].S(0).T(0).Dtis("SSS---").ChainDiffs({0, 0});
+  t[6].S(1).T(0).Dtis("---SSS").ChainDiffs({1, 0});
+  t[3].S(0).T(2).Dtis("--D---").ChainDiffs({2, 1}).FrameDiffs({2});
+  t[8].S(1).T(2).Dtis("-----D").ChainDiffs({3, 2}).FrameDiffs({2});
+  t[2].S(0).T(1).Dtis("-DS---").ChainDiffs({4, 3}).FrameDiffs({4});
+  t[7].S(1).T(1).Dtis("----DS").ChainDiffs({5, 4}).FrameDiffs({4});
+  t[4].S(0).T(2).Dtis("--D---").ChainDiffs({6, 5}).FrameDiffs({2});
+  t[9].S(1).T(2).Dtis("-----D").ChainDiffs({7, 6}).FrameDiffs({2});
+  t[0].S(0).T(0).Dtis("SSS---").ChainDiffs({8, 7}).FrameDiffs({8});
+  t[5].S(1).T(0).Dtis("---SSS").ChainDiffs({1, 8}).FrameDiffs({8});
+  return structure;
+}
+
 FrameDependencyStructure ScalabilityStructureS3T3::DependencyStructure() const {
   FrameDependencyStructure structure;
   structure.num_decode_targets = 9;

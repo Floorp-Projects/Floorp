@@ -55,17 +55,29 @@ class FlexfecReceiveStreamImpl : public FlexfecReceiveStream {
 
   // RtpPacketSinkInterface.
   void OnRtpPacket(const RtpPacketReceived& packet) override;
-
-  Stats GetStats() const override;
-
-  // ReceiveStream impl.
+  // ReceiveStreamInterface impl.
   void SetRtpExtensions(std::vector<RtpExtension> extensions) override;
   RtpHeaderExtensionMap GetRtpExtensionMap() const override;
 
-  uint32_t remote_ssrc() const { return config_.rtp.remote_ssrc; }
+  // Updates the `rtp_video_stream_receiver_`'s `local_ssrc` when the default
+  // sender has been created, changed or removed.
+  void SetLocalSsrc(uint32_t local_ssrc);
+
+  uint32_t remote_ssrc() const { return remote_ssrc_; }
+
   bool transport_cc() const override {
     RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-    return config_.rtp.transport_cc;
+    return transport_cc_;
+  }
+
+  void SetTransportCc(bool transport_cc) override {
+    RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+    transport_cc_ = transport_cc;
+  }
+
+  void SetRtcpMode(RtcpMode mode) override {
+    RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+    rtp_rtcp_->SetRTCPStatus(mode);
   }
 
  private:
@@ -73,10 +85,8 @@ class FlexfecReceiveStreamImpl : public FlexfecReceiveStream {
 
   RtpHeaderExtensionMap extension_map_;
 
-  // Config. Mostly const, header extensions may change, which is an exception
-  // case that's specifically handled in `SetRtpExtensions`, which must be
-  // called on the `packet_sequence_checker` thread.
-  const Config config_;
+  const uint32_t remote_ssrc_;
+  bool transport_cc_ RTC_GUARDED_BY(packet_sequence_checker_);
 
   // Erasure code interfacing.
   const std::unique_ptr<FlexfecReceiver> receiver_;

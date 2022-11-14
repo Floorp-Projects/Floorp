@@ -220,6 +220,7 @@ void Aec3ConfigFromJsonString(absl::string_view json_string,
               &cfg.delay.render_alignment_mixing);
     ReadParam(section, "capture_alignment_mixing",
               &cfg.delay.capture_alignment_mixing);
+    ReadParam(section, "detect_pre_echo", &cfg.delay.detect_pre_echo);
   }
 
   if (rtc::GetValueFromJsonObject(aec3_root, "filter", &section)) {
@@ -505,7 +506,9 @@ std::string Aec3ConfigToJsonString(const EchoCanceller3Config& config) {
       << (config.delay.capture_alignment_mixing.prefer_first_two_channels
               ? "true"
               : "false");
-  ost << "}";
+  ost << "},";
+  ost << "\"detect_pre_echo\": "
+      << (config.delay.detect_pre_echo ? "true" : "false");
   ost << "},";
 
   ost << "\"filter\": {";

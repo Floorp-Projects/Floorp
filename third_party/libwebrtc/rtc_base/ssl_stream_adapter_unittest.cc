@@ -17,6 +17,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "rtc_base/buffer_queue.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/gunit.h"
@@ -28,14 +29,13 @@
 #include "rtc_base/ssl_adapter.h"
 #include "rtc_base/ssl_identity.h"
 #include "rtc_base/stream.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "test/field_trial.h"
 
 using ::testing::Combine;
 using ::testing::tuple;
 using ::testing::Values;
 using ::testing::WithParamInterface;
+using ::webrtc::SafeTask;
 
 static const int kBlockSize = 4096;
 static const char kExporterLabel[] = "label";
@@ -220,7 +220,7 @@ class SSLDummyStreamBase : public rtc::StreamInterface,
 
  private:
   void PostEvent(int events, int err) {
-    thread_->PostTask(webrtc::ToQueuedTask(task_safety_, [this, events, err]() {
+    thread_->PostTask(SafeTask(task_safety_.flag(), [this, events, err]() {
       SignalEvent(this, events, err);
     }));
   }
@@ -292,7 +292,7 @@ class BufferQueueStream : public rtc::StreamInterface {
 
  private:
   void PostEvent(int events, int err) {
-    thread_->PostTask(webrtc::ToQueuedTask(task_safety_, [this, events, err]() {
+    thread_->PostTask(SafeTask(task_safety_.flag(), [this, events, err]() {
       SignalEvent(this, events, err);
     }));
   }
@@ -762,6 +762,7 @@ class SSLStreamAdapterTestBase : public ::testing::Test,
     return server_ssl_->GetIdentityForTesting();
   }
 
+  rtc::AutoThread main_thread_;
   std::string client_cert_pem_;
   std::string client_private_key_pem_;
   rtc::KeyParams client_key_type_;

@@ -24,7 +24,7 @@
 namespace webrtc {
 
 class AudioSendStream;
-class AudioReceiveStream;
+class AudioReceiveStreamInterface;
 
 namespace internal {
 
@@ -51,8 +51,8 @@ class AudioState : public webrtc::AudioState {
     return config_.audio_device_module.get();
   }
 
-  void AddReceivingStream(webrtc::AudioReceiveStream* stream);
-  void RemoveReceivingStream(webrtc::AudioReceiveStream* stream);
+  void AddReceivingStream(webrtc::AudioReceiveStreamInterface* stream);
+  void RemoveReceivingStream(webrtc::AudioReceiveStreamInterface* stream);
 
   void AddSendingStream(webrtc::AudioSendStream* stream,
                         int sample_rate_hz,
@@ -78,7 +78,7 @@ class AudioState : public webrtc::AudioState {
   // stats are still updated.
   std::unique_ptr<NullAudioPoller> null_audio_poller_;
 
-  webrtc::flat_set<webrtc::AudioReceiveStream*> receiving_streams_;
+  webrtc::flat_set<webrtc::AudioReceiveStreamInterface*> receiving_streams_;
   struct StreamProperties {
     int sample_rate_hz = 0;
     size_t num_channels = 0;

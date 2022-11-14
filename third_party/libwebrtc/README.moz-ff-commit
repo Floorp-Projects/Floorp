@@ -14145,3 +14145,2160 @@ b5671da00d
 # MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/trial-webrtc-builds/moz-libwebrtc-checkout/src MOZ_LIBWEBRTC_COMMIT=mjfdev bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
 # base of lastest vendoring
 1389c76d9c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f279c01b1c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+391dec8225
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5ef44ac686
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fbe667298a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+81d65fcf7d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e5fb8512b0
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d97af7b1b9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+16a8b25d80
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+cbb8fb8337
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c8a6fb2bb8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9437529d4b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+181ea6e414
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8f44ae4fa5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+807328fec7
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fb9ae767aa
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+059548919b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+63ee39d0be
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+76d84f122e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d14e8894fc
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f7fc71da44
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6a979149e4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f3f3a61167
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9d80fb7d3e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c92ee5f3c3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0e2221eb2f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d3dc80a31e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6928f4ccc6
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+dab50c6fe8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2698353d43
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+35f4b4c755
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c782cf883c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6aa5cea4d3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+43feb9e5a2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b3fb240785
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2e521f5a25
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+969c1356af
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8814dfd124
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f47e941dbd
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1331c1821c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+39bc030e0b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d01e692e01
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+641a1b11b6
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+88af20356f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4da317f0bb
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a9f10c8189
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c5aa5bea49
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+79dc0a223e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f92a0846c3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0601db9a48
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+15a73be295
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+cde992ddad
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2f3168ff38
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+94c09169a2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0359ba2225
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0ac50b9dfd
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+304b78d3d9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+34fc3f406b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+cf2c8915f4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+42cf83cc61
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d68a06aedf
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b1ba85385e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6c81a42eb1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8139cda2ec
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+65b2d8ad21
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ab8c1e50a3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d4ad96e578
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f4fcdf1ee1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0a7f045934
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f2c710852e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fa6ec69232
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5b8dc1dbad
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+256733c78a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ae2f39ca3b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f8c81ca469
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+afe1680609
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9e6ebfe59c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1c633c8b87
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c0a9f35248
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6fb674ea5a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2ee3e4db22
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+be2fb41b32
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+83830f316e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+213d389d56
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fc412ed853
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3f6c634394
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e508ebc645
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1def899931
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+910446f945
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d91996dd00
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f6f4543304
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+dddbbebe2b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2cc7bbb0cd
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f8acaabe8b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+dbfa78114b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c3fa7c38b2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4d6dd17153
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3176ef79e9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8712d0b150
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+742714870a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d3ead1a942
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+353d5b243a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+485457f050
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c80a182e55
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fbfe6f08a4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fbf66ddddf
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+60c67c6377
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2377226851
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8101e7b79b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+eabaf8d7fe
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+dd65bfc681
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f71315c480
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1e1e230dc1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+794c54faf0
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1e8bb67295
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8e87a248de
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+82cbae4c0d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2a2f3ece15
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+11cf37c3ba
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5ca01b5a5b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+cc52f07087
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+37f7d6c4e1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+55220c6fa7
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7df247af56
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+47efd3310c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ff0c0339a2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0921d1e5c1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+02d65d7ec5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+cfc79174f2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+dd410e6797
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f7f0b2108f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4662f53285
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+10944e61ac
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f5c06f3a42
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7fd0cb266c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c1fb359b2a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+01ab7d501b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a313ff5bde
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+65e46b93b5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d2b5f85451
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+37623110de
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2d4207e85a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+45a22ffbb7
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+488dd9ad15
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+258b8a86b2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1043fcd433
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+449f5229d6
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+94ad387f77
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8cd7b0a7ba
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+bfd30652b5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2d133637d1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+68e99513a7
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a93260b2f4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e97bb99925
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e0ad779aaa
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+96e60852fa
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e4374a6020
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+aba10f3183
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+34fb92f09a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fc2c24ef44
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ad6807805d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+39b6cb651e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e9c3f0158c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+60de8aab46
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5ac19dfefc
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+09a2848351
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+17a02a31d7
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c397fc62d8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c85e473740
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e66b83f8ad
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a136ed4085
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+51e5bacb8b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4a7883f442
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2118029fd6
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+bc07d40eeb
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8e4197b020
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f51437eb63
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+30cc7d6199
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1533f09229
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ad924e5578
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7d4634cef7
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+62fabd001b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9406c22769
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+794e68cf3d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b6de7c6485
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6b9e040ab2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+865d9c519f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6fb8d1a2d7
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+61dbcd115a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f096e74157
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a92051a5f1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9453e5f4b3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+af785d9759
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c4d253c1ed
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c4b5f4da97
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1a5a81340d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+874517b5f5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6ef0a3816e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+32c60b84c3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ee6ad1403a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+185e9031f3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+381d5e7ecd
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+563dfd1948
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+83e34eed87
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9b9d533d48
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2f9d60b18d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4eab9f47a5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fd8ed05cee
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2a30693718
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+cff66f537c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+80a860532e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+408143d5af
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8c0f54b92c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7e897aeb92
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+bccb452eb6
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f2c49491b3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c4ca83c2bd
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+709ab8b536
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d5ddad4cdb
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7c3219265e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a8be79ce27
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+25361a89dd
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b22cabcf76
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f73dc86cf5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+917ebd40c9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3eedc90052
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3382c1c06e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+028697365d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4f7486ab3b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5a3732cc8c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8d847f077c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3013d383c4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+68e9eb770f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+cab538338c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+18b82e22ee
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+33e5873712
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+35fc144e01
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+781c12e7fb
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+665fb42d95
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+05225514e6
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7726b7d067
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f1788bb7a9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3656581ade
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2a1accd5e6
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+55a5588f77
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+099ff62d94
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+306eee3d17
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+71ff71b0f8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8263020407
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6d122623ef
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9a91286898
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ccb05f17b1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+60ba6e2703
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0ba10283fb
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e83500e17b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+37944a2c7e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+542ab0ca15
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1062c15c2d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+159f313649
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5f5bdf1880
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2a9bed3ee3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5b83ca61f7
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d589fbdaca
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fe91129f6b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fa2cd2c23b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+70eab560a1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d6de9777a6
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+eef9d5d6e1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+45d66a59d6
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b5af6ee6df
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d197e0b876
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ef241167a5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fbc6a2db5d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0e230fd022
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c949016e13
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6383a47b67
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+83ff95add9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c9a6835af8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1622d35b30
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+67f0d6d677
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+bc6101459f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+86c452ac5a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6545516a14
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5b298ab9dd
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+640b51eeae
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+664e30ff57
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ca6726d5c4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d98765386a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+da0ea97236
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d70186367c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f4a6928117
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+774b4725a2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f1d822b03b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6b0bedb05a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1abcb1106c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8f722cae35
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f65d735e7d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fd0f6b9bf5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+08bb6295ea
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4cd3a0d082
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a976a87115
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5f308fdd89
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d729d12454
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6fd77f3d3f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5df960d307
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+10da2b5357
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4ec3e9c988
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+856eb25183
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6cbb8f6907
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+da12e10aba
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+df9e51a190
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f6934c3f7d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7dbfad613c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0f0978d36e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+87bcc1cab9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+768de78d10
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fd3f1e8f53
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+610f4cf502
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9a665402d7
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+71f406e52b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6e57ca2cb5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+72b5dbc44b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c62e1b8d10
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+42d09cb1ba
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1220855430
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c8e8e767e2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+737b482a63
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a6ed749b12
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1709341fd9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+69a32cc2d3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e45cfb45b1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3fa9a66f22
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7c8c4db8ea
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+dcb9c5d43f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1bf9c5e1ed
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c89475e318
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6daffe90e2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+626f87d905
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+378b1c6826
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3de806535a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b137fb93e8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f8ebeb925e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+bed8507b95
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ea5a944921
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+932d079937
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6be0f65e1f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fc3e7249b1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2843bbc96d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e9393b8f05
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+67d2d35443
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7ef4f514c5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+105711e9ad
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9c55fa5a0e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+eb0b93608e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+66fcd16a41
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9bda4905d2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ca0c54dd96
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+bbf639e930
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5abfc920b5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1b984214bb
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+27a6842b71
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+88b8c5280e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+cf7802d3f4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e30015acd9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+50674f7f69
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d609473b9c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+091e073b63
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+413ca2b95d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6e4d7e606c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a1d3ada96b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f5a507955a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f88d42f187
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ef3137a928
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7517fb639b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+38a28603fd
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+611f2c8d16
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+201c0dc2fd
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b670774435
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a6c7d5c8ce
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1ab61886a9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c374d11fac
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d970b0901b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ef9bcd17a5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+142104183d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8545ebae28
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+de0d063767
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9f24225d43
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1fe14f2752
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ef159280b1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+93f9db7e8a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a116da5d03
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a3cb977679
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f87cb81820
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+01ed32589e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+74fca5ae3a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+73aebdb6e9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2925e46bb9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+130f2fd5c3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f81fd2f211
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6009ed95ec
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+117e692a7d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+03b38c18d5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+905c3a6c73
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3e60272da6
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4a5a3da00a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3627d57849
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ff45105b42
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0c1ad2992b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+dc26188d1b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0413fc969c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c6014bcbb1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+675dfb4a1f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+76bf19314f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+86ebbdba50
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4d1ef54653
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2b46a5870b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+dcb5a5814e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ae271ff05a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+bfd973f212
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+80b7c6befd
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c1be89f696
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d6849d06c2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+573b145ab5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ac29b9c37f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7edbf23700
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e3342ef27f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ac38249bf5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+dcc3d046e2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d90b552712
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a09b921dd4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+43455f2814
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3bd0f865f3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e130f29aaa
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b32ff729c9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d151cc6fa3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+90b74389a2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1d848e1c2e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0ed3a2b6cb
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+179f40e81a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1776f6e019
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+bf0cbcb8fe
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c4a35898d9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4d3ba77975
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+24b0543ee0
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+915d419eb9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1ade717311
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6189207e1a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+523b67d69b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+da843fee1a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+386100b91f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5dc460fca5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e72e9ef59e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+752436f821
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a5ec3c00b9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2fdf222da3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+22ca4fb44a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+bb7aaf98fd
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+97bfd3fe5d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+446c407bba
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e892565ac2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0b4eff032f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b5e51ed415
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e39f1b5907
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6d4cf63a3c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f32134348d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+70de463cfa
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fb698490bf
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+73ee252245
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ad52e04d49
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+bf0da440ea
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e6ac4b263e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fe053426e2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d58f526384
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b049e6ed80
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6e03c98873
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c61d53584b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+450da27933
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+754f26f7b7
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e6777e0979
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3e8a797b2e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7a66900683
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+58ecd42deb
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e58f1991dc
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ce80886bf2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+91c05abd9b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7769dc87d7
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+08c7e75892
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a2476e3783
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+db30009304
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3f659b1b3c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ba121e044b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7534ebd2bf
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8783c678a5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6769e95bbc
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b97ddd9fb1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+cc7bd85748
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+90af4c1b70
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9c35310d83
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1ec962e217
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3a08d2a42d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7c2e06a2aa
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ba90d025a1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3afb8e2431
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c33f1a828c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+eefae3b7b7
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3db07436bb
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fa1a81cba8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d69a726989
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9ea1ef649f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+42b163f236
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fb60796b64
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+978cb6762f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4b97928b30
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+de2ac5a6f3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ed665521e4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+45a933c27f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2cffde72b8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b4c63cb02a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0b655cbef7
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+11174e7058
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5b2556e9cd
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3c24c096ef
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+de7fcffe0c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3fe8b0d9a9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1c951ecb32
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2bc41bc980
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3b4134fcf6
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3e4e05d28b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5e21262a44
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+74680c0234
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8967672f6d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+68fef2f3e9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+609aef3149
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+00c614272a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c50e423d3b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b5754b00a6
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+93bb305149
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2cbf35ffc4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+48cc54e4ce
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a05e955d17
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+dd32562f24
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0a28a143e8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c3f511301b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c931f70896
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+aa21f1ee03
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+47a4584a7c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+67d23043f3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a5f267d5ac
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0fd2ed516b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1c5808145e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d44badf409
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4f15246683
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+591b63d78d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f82e8fa911
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3719a0c4e8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0a72a28df8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5023ffbb38
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+58fbd1bafe
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f785989170
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d07186c31e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9927cb752f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+56257afe10
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+865e45d14e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+27b35a7882
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b5b159d98c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+22a6253d43
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fb9fbdf395
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c8152fe4a8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6939f63ca1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2ad75b3956
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4f1af1156f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8feb6fd1e9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+63299a3124
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+11fdb08282
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+39b1b42487
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e1c707c40f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a1a7c638ec
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+79924579f3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b6ff84b516
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+72b12d42a6
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4a93da315b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a7e15a2b7e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e9e4e342e6
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f25a3ee512
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ea8eff3737
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6183a0fe9a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+cb99ccd244
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c8680c5dc6
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ed66b77e58
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+25e268ae0f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ecf88f4ade
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c9cad23274
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e76daab8b3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+dde7fe4fc5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0018def520
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+92159dc3ad
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f9f9d544a5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+95eeaa7aca
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f7b30e046e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0be8eba07e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a17651f7d8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+298450eb73
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+81797744fd
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b22b095108
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3f207658da
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+791294a647
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4bcf809df7
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+62c20f305e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3b526d4501
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b7128ed172
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a30439bbe6
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b858d3f53e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c52e627c83
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+677c1ddde5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7b19036b80
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+26910ffe22
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+eb91fe48fe
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+28bc2ca92c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+cbfdcc535e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9b29b87470
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+401158ba9a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c8602cd8ad
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+dd4884dfb2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9f1104731e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9799fe036a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fcfa80fe91
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2295ddbff9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6dcd43f1e4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b981394841
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9c125c6603
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+52747f1744
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b025b14b5f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4058b33eaf
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c501f30333
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+eacb43942d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5525e6310b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+cb56277a17
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9e9bc644f8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+078bbf1721
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c8f9c56bc8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b7821cea6b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+046e6d14c2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+02bfcf5132
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2b1f509f3a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+edd8c257f4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b5d77a0c84
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+94d259c7af
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d0a6fd239c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+09196e44af
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+84ef31f908
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+70d6f2ed63
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ffd2241eda
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9dcbfd8614
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f3c86154d4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6f22eb55b3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f0232f31fb
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+98c78cdd20
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f6221058d3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+aeb4412e09
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b4c0e30942
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e997a248b1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+591ea38cdc
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+08480a599d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+91b4e21422
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+90133b3d3f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+277766f55e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5137ceffa7
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8faaa584f8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+62ec04dccc
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5262fd80f0
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+557c89cdd8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e40b1cbef7
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ae65b0e0d9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e740b34c06
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3e378d7efa
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e4bda7d008
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d78789eee2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f2d090a0de
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+bfe9f5c5b1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+208129fb53
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ee3ad9f2ce
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+03f8b8a241
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+253f36f88e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+07e8336c7e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+049dde6c8e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5286dcfab6
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5ed127e9af
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+99465b1395
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7d4116855a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+38b3cf0223
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9095e0e469
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e947f5bb83
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c1611082e3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+22d10fc605
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ed7526c3f1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+30c2a31309
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+489f648ea3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c05a1be5b4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e7696f771d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1a84b565ac
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ba5700171f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+866caeb62c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+07d80675e2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3c06cfc96a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+761072f68e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+714e3cbb48
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+10a7d23be5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+daddfee8c5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fb6cbd9201
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d9f1208de7
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+983cc2d992
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+094856f22c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5892265e5b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+507e3bc406
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+054ea47379
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+be5258e61d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5afcc9afae
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e044ec572a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+dc5cf31cad
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+42be4ae879

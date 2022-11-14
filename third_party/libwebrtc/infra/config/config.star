@@ -259,10 +259,6 @@ luci.bucket(
         acl.entry(acl.BUILDBUCKET_TRIGGERER, groups = [
             "project-webrtc-ci-schedulers",
         ]),
-        acl.entry(acl.BUILDBUCKET_TRIGGERER, groups = [
-            # Allow Pinpoint to trigger builds for bisection
-            "service-account-chromeperf",
-        ]),
     ],
 )
 
@@ -271,6 +267,10 @@ luci.bucket(
     acls = [
         acl.entry(acl.BUILDBUCKET_TRIGGERER, users = [
             "webrtc-ci-builder@chops-service-accounts.iam.gserviceaccount.com",
+        ]),
+        acl.entry(acl.BUILDBUCKET_TRIGGERER, groups = [
+            # Allow Pinpoint to trigger builds for bisection
+            "service-account-chromeperf",
         ]),
     ],
 )
@@ -702,7 +702,7 @@ ios_builder("iOS64 Debug", "iOS|arm64|dbg")
 ios_try_job("ios_compile_arm64_dbg")
 ios_builder("iOS64 Release", "iOS|arm64|rel")
 ios_try_job("ios_compile_arm64_rel")
-ios_builder("iOS64 Sim Debug (iOS 14.0)", "iOS|x64|14")
+ios_builder("iOS64 Sim Debug (iOS 14)", "iOS|x64|14")
 ios_try_job("ios_sim_x64_dbg_ios14")
 ios_builder("iOS64 Sim Debug (iOS 13)", "iOS|x64|13")
 ios_try_job("ios_sim_x64_dbg_ios13")
@@ -763,8 +763,8 @@ mac_builder("Mac Asan", "Mac|x64|asan")
 mac_try_job("mac_asan")
 mac_try_job("mac_chromium_compile", recipe = "chromium_trybot", branch_cq = False)
 mac_builder("MacARM64 M1 Release", "Mac|arm64M1|rel", cpu = "arm64-64-Apple_M1")
-mac_try_job("mac_rel_m1", try_cat = None, cq = None)
-mac_try_job("mac_dbg_m1", try_cat = None, cq = None)
+mac_try_job("mac_rel_m1")
+mac_try_job("mac_dbg_m1")
 
 win_builder("Win32 Debug (Clang)", "Win Clang|x86|dbg")
 win_try_job("win_x86_clang_dbg", cq = None)

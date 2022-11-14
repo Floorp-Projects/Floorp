@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/candidate.h"
 #include "api/packet_socket_factory.h"
@@ -135,13 +136,13 @@ bool WriteStunMessage(const StunMessage& msg, ByteBufferWriter* buf) {
 class TestPort : public Port {
  public:
   TestPort(rtc::Thread* thread,
-           const std::string& type,
+           absl::string_view type,
            rtc::PacketSocketFactory* factory,
            const rtc::Network* network,
            uint16_t min_port,
            uint16_t max_port,
-           const std::string& username_fragment,
-           const std::string& password)
+           absl::string_view username_fragment,
+           absl::string_view password)
       : Port(thread,
              type,
              factory,
@@ -178,7 +179,7 @@ class TestPort : public Port {
                ICE_TYPE_PREFERENCE_HOST, 0, "", true);
   }
 
-  virtual bool SupportsProtocol(const std::string& protocol) const {
+  virtual bool SupportsProtocol(absl::string_view protocol) const {
     return true;
   }
 
@@ -191,7 +192,7 @@ class TestPort : public Port {
   }
   void AddCandidateAddress(const rtc::SocketAddress& addr,
                            const rtc::SocketAddress& base_address,
-                           const std::string& type,
+                           absl::string_view type,
                            int type_preference,
                            bool final) {
     AddAddress(addr, base_address, rtc::SocketAddress(), "udp", "", "", type,
@@ -274,11 +275,7 @@ class TestChannel : public sigslot::has_slots<> {
         [this](PortInterface* port) { OnSrcPortDestroyed(port); });
   }
 
-  ~TestChannel() {
-    if (conn_) {
-      conn_->SignalDestroyed.disconnect(this);
-    }
-  }
+  ~TestChannel() { Stop(); }
 
   int complete_count() { return complete_count_; }
   Connection* conn() { return conn_; }
@@ -287,6 +284,7 @@ class TestChannel : public sigslot::has_slots<> {
 
   void Start() { port_->PrepareAddress(); }
   void CreateConnection(const Candidate& remote_candidate) {
+    RTC_DCHECK(!conn_);
     conn_ = port_->CreateConnection(remote_candidate, Port::ORIGIN_MESSAGE);
     IceMode remote_ice_mode =
         (ice_mode_ == ICEMODE_FULL) ? ICEMODE_LITE : ICEMODE_FULL;
@@ -298,6 +296,7 @@ class TestChannel : public sigslot::has_slots<> {
                                      &TestChannel::OnConnectionReadyToSend);
     connection_ready_to_send_ = false;
   }
+
   void OnConnectionStateChange(Connection* conn) {
     if (conn->write_state() == Connection::STATE_WRITABLE) {
       conn->set_use_candidate_attr(true);
@@ -305,6 +304,10 @@ class TestChannel : public sigslot::has_slots<> {
     }
   }
   void AcceptConnection(const Candidate& remote_candidate) {
+    if (conn_) {
+      conn_->SignalDestroyed.disconnect(this);
+      conn_ = nullptr;
+    }
     ASSERT_TRUE(remote_request_.get() != NULL);
     Candidate c = remote_candidate;
     c.set_address(remote_address_);
@@ -317,8 +320,7 @@ class TestChannel : public sigslot::has_slots<> {
   void Ping(int64_t now) { conn_->Ping(now); }
   void Stop() {
     if (conn_) {
-      conn_->SignalDestroyed.disconnect(this);
-      conn_->Destroy();
+      port_->DestroyConnection(conn_);
       conn_ = nullptr;
     }
   }
@@ -358,7 +360,7 @@ class TestChannel : public sigslot::has_slots<> {
   void OnDestroyed(Connection* conn) {
     ASSERT_EQ(conn_, conn);
     RTC_LOG(LS_INFO) << "OnDestroy connection " << conn << " deleted";
-    conn_ = NULL;
+    conn_ = nullptr;
     // When the connection is destroyed, also clear these fields so future
     // connections are possible.
     remote_request_.reset();
@@ -614,9 +616,9 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
   void ExpectPortsCanConnect(bool can_connect, Port* p1, Port* p2);
 
   // This does all the work and then deletes `port1` and `port2`.
-  void TestConnectivity(const char* name1,
+  void TestConnectivity(absl::string_view name1,
                         std::unique_ptr<Port> port1,
-                        const char* name2,
+                        absl::string_view name2,
                         std::unique_ptr<Port> port2,
                         bool accept,
                         bool same_addr1,
@@ -677,7 +679,7 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
 
     // Speed up destroying ch2's connection such that the test is ready to
     // accept a new connection from ch1 before ch1's connection destroys itself.
-    ch2->conn()->Destroy();
+    ch2->Stop();
     EXPECT_TRUE_WAIT(ch2->conn() == NULL, kDefaultTimeout);
   }
 
@@ -756,23 +758,21 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
     EXPECT_TRUE_WAIT(ch2.conn() == NULL, kDefaultTimeout);
   }
 
-  std::unique_ptr<IceMessage> CreateStunMessage(int type) {
-    auto msg = std::make_unique<IceMessage>();
-    msg->SetType(type);
-    msg->SetTransactionID("TESTTESTTEST");
+  std::unique_ptr<IceMessage> CreateStunMessage(StunMessageType type) {
+    auto msg = std::make_unique<IceMessage>(type, "TESTTESTTEST");
     return msg;
   }
   std::unique_ptr<IceMessage> CreateStunMessageWithUsername(
-      int type,
-      const std::string& username) {
+      StunMessageType type,
+      absl::string_view username) {
     std::unique_ptr<IceMessage> msg = CreateStunMessage(type);
     msg->AddAttribute(std::make_unique<StunByteStringAttribute>(
-        STUN_ATTR_USERNAME, username));
+        STUN_ATTR_USERNAME, std::string(username)));
     return msg;
   }
   std::unique_ptr<TestPort> CreateTestPort(const rtc::SocketAddress& addr,
-                                           const std::string& username,
-                                           const std::string& password) {
+                                           absl::string_view username,
+                                           absl::string_view password) {
     auto port =
         std::make_unique<TestPort>(&main_, "test", &socket_factory_,
                                    MakeNetwork(addr), 0, 0, username, password);
@@ -780,8 +780,8 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
     return port;
   }
   std::unique_ptr<TestPort> CreateTestPort(const rtc::SocketAddress& addr,
-                                           const std::string& username,
-                                           const std::string& password,
+                                           absl::string_view username,
+                                           absl::string_view password,
                                            cricket::IceRole role,
                                            int tiebreaker) {
     auto port = CreateTestPort(addr, username, password);
@@ -791,8 +791,8 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
   }
   // Overload to create a test port given an rtc::Network directly.
   std::unique_ptr<TestPort> CreateTestPort(const rtc::Network* network,
-                                           const std::string& username,
-                                           const std::string& password) {
+                                           absl::string_view username,
+                                           absl::string_view password) {
     auto port = std::make_unique<TestPort>(&main_, "test", &socket_factory_,
                                            network, 0, 0, username, password);
     port->SignalRoleConflict.connect(this, &PortTest::OnRoleConflict);
@@ -839,9 +839,9 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
   webrtc::test::ScopedKeyValueConfig field_trials_;
 };
 
-void PortTest::TestConnectivity(const char* name1,
+void PortTest::TestConnectivity(absl::string_view name1,
                                 std::unique_ptr<Port> port1,
-                                const char* name2,
+                                absl::string_view name2,
                                 std::unique_ptr<Port> port2,
                                 bool accept,
                                 bool same_addr1,
@@ -1474,7 +1474,7 @@ TEST_F(PortTest, TestLoopbackCall) {
   const StunByteStringAttribute* username_attr =
       msg->GetByteString(STUN_ATTR_USERNAME);
   modified_req->AddAttribute(std::make_unique<StunByteStringAttribute>(
-      STUN_ATTR_USERNAME, username_attr->GetString()));
+      STUN_ATTR_USERNAME, username_attr->string_view()));
   // To make sure we receive error response, adding tiebreaker less than
   // what's present in request.
   modified_req->AddAttribute(std::make_unique<StunUInt64Attribute>(
@@ -1794,7 +1794,7 @@ TEST_F(PortTest, TestSendStunMessage) {
   const StunUInt32Attribute* priority_attr = msg->GetUInt32(STUN_ATTR_PRIORITY);
   ASSERT_TRUE(priority_attr != NULL);
   EXPECT_EQ(kDefaultPrflxPriority, priority_attr->value());
-  EXPECT_EQ("rfrag:lfrag", username_attr->GetString());
+  EXPECT_EQ("rfrag:lfrag", username_attr->string_view());
   EXPECT_TRUE(msg->GetByteString(STUN_ATTR_MESSAGE_INTEGRITY) != NULL);
   EXPECT_EQ(StunMessage::IntegrityStatus::kIntegrityOk,
             msg->ValidateMessageIntegrity("rpass"));
@@ -2319,7 +2319,7 @@ TEST_F(PortTest, TestHandleStunMessageBadFingerprint) {
 
   // Now, add a fingerprint, but munge the message so it's not valid.
   in_msg->AddFingerprint();
-  in_msg->SetTransactionID("TESTTESTBADD");
+  in_msg->SetTransactionIdForTesting("TESTTESTBADD");
   WriteStunMessage(*in_msg, buf.get());
   EXPECT_FALSE(port->GetStunMessage(buf->Data(), buf->Length(), addr, &out_msg,
                                     &username));
@@ -2337,7 +2337,7 @@ TEST_F(PortTest, TestHandleStunMessageBadFingerprint) {
 
   // Now, add a fingerprint, but munge the message so it's not valid.
   in_msg->AddFingerprint();
-  in_msg->SetTransactionID("TESTTESTBADD");
+  in_msg->SetTransactionIdForTesting("TESTTESTBADD");
   WriteStunMessage(*in_msg, buf.get());
   EXPECT_FALSE(port->GetStunMessage(buf->Data(), buf->Length(), addr, &out_msg,
                                     &username));
@@ -2356,7 +2356,7 @@ TEST_F(PortTest, TestHandleStunMessageBadFingerprint) {
 
   // Now, add a fingerprint, but munge the message so it's not valid.
   in_msg->AddFingerprint();
-  in_msg->SetTransactionID("TESTTESTBADD");
+  in_msg->SetTransactionIdForTesting("TESTTESTBADD");
   WriteStunMessage(*in_msg, buf.get());
   EXPECT_FALSE(port->GetStunMessage(buf->Data(), buf->Length(), addr, &out_msg,
                                     &username));
@@ -3411,9 +3411,8 @@ TEST_F(PortTest, TestErrorResponseMakesGoogPingFallBackToStunBinding) {
   ASSERT_EQ(response2->type(), GOOG_PING_RESPONSE);
 
   // But rather than the RESPONSE...feedback an error.
-  StunMessage error_response;
-  error_response.SetType(GOOG_PING_ERROR_RESPONSE);
-  error_response.SetTransactionID(response2->transaction_id());
+  StunMessage error_response(GOOG_PING_ERROR_RESPONSE);
+  error_response.SetTransactionIdForTesting(response2->transaction_id());
   error_response.AddMessageIntegrity32("rpass");
   rtc::ByteBufferWriter buf;
   error_response.Write(&buf);

@@ -58,9 +58,7 @@ class RTPSender {
   uint32_t TimestampOffset() const RTC_LOCKS_EXCLUDED(send_mutex_);
   void SetTimestampOffset(uint32_t timestamp) RTC_LOCKS_EXCLUDED(send_mutex_);
 
-  void SetRid(const std::string& rid) RTC_LOCKS_EXCLUDED(send_mutex_);
-
-  void SetMid(const std::string& mid) RTC_LOCKS_EXCLUDED(send_mutex_);
+  void SetMid(absl::string_view mid) RTC_LOCKS_EXCLUDED(send_mutex_);
 
   uint16_t SequenceNumber() const RTC_LOCKS_EXCLUDED(send_mutex_);
   void SetSequenceNumber(uint16_t seq) RTC_LOCKS_EXCLUDED(send_mutex_);
@@ -180,9 +178,6 @@ class RTPSender {
   const uint32_t ssrc_;
   const absl::optional<uint32_t> rtx_ssrc_;
   const absl::optional<uint32_t> flexfec_ssrc_;
-  // Limits GeneratePadding() outcome to <=
-  //  `max_padding_size_factor_` * `target_size_bytes`
-  const double max_padding_size_factor_;
 
   RtpPacketHistory* const packet_history_;
   RtpPacketSender* const paced_sender_;
@@ -199,7 +194,7 @@ class RTPSender {
   // RTP variables
   uint32_t timestamp_offset_ RTC_GUARDED_BY(send_mutex_);
   // RID value to send in the RID or RepairedRID header extension.
-  std::string rid_ RTC_GUARDED_BY(send_mutex_);
+  const std::string rid_;
   // MID value to send in the MID header extension.
   std::string mid_ RTC_GUARDED_BY(send_mutex_);
   // Should we send MID/RID even when ACKed? (see below).

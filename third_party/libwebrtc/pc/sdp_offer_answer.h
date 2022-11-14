@@ -58,7 +58,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/operations_chain.h"
 #include "rtc_base/ssl_stream_adapter.h"
-#include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/unique_id_generator.h"
@@ -77,8 +76,7 @@ namespace webrtc {
 // - Parsing and interpreting SDP.
 // - Generating offers and answers based on the current state.
 // This class lives on the signaling thread.
-class SdpOfferAnswerHandler : public SdpStateProvider,
-                              public sigslot::has_slots<> {
+class SdpOfferAnswerHandler : public SdpStateProvider {
  public:
   ~SdpOfferAnswerHandler();
 
@@ -478,7 +476,7 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   // This enables media to flow on all configured audio/video channels.
   void EnableSending();
   // Push the media parts of the local or remote session description
-  // down to all of the channels.
+  // down to all of the channels, and start SCTP if needed.
   RTCError PushdownMediaDescription(
       SdpType type,
       cricket::ContentSource source,
@@ -576,6 +574,7 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   // ==================================================================
   // Access to pc_ variables
   cricket::ChannelManager* channel_manager() const;
+  cricket::MediaEngineInterface* media_engine() const;
   TransceiverList* transceivers();
   const TransceiverList* transceivers() const;
   DataChannelController* data_channel_controller();
@@ -595,6 +594,7 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   // ===================================================================
   const cricket::AudioOptions& audio_options() { return audio_options_; }
   const cricket::VideoOptions& video_options() { return video_options_; }
+  bool ConfiguredForMedia() const;
 
   PeerConnectionSdpMethods* const pc_;
   ConnectionContext* const context_;

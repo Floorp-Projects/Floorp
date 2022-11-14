@@ -17,7 +17,7 @@
 #include "modules/video_coding/decoder_database.h"
 #include "modules/video_coding/encoded_frame.h"
 #include "modules/video_coding/generic_decoder.h"
-#include "modules/video_coding/timing.h"
+#include "modules/video_coding/timing/timing.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {
@@ -45,7 +45,7 @@ class VideoReceiver2 {
   int32_t Decode(const webrtc::VCMEncodedFrame* frame);
 
   // Notification methods that are used to check our internal state and validate
-  // threading assumptions. These are called by VideoReceiveStream.
+  // threading assumptions. These are called by VideoReceiveStreamInterface.
   // See `IsDecoderThreadRunning()` for more details.
   void DecoderThreadStarting();
   void DecoderThreadStopped();

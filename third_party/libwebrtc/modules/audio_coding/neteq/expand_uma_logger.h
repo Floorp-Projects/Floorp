@@ -15,6 +15,7 @@
 #include <memory>
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/neteq/tick_timer.h"
 
@@ -29,7 +30,7 @@ namespace webrtc {
 // object that outlives the one constructed.
 class ExpandUmaLogger {
  public:
-  ExpandUmaLogger(std::string uma_name,
+  ExpandUmaLogger(absl::string_view uma_name,
                   int logging_period_s,
                   const TickTimer* tick_timer);
 

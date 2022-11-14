@@ -19,11 +19,13 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/call/transport.h"
 #include "api/fec_controller.h"
 #include "api/media_types.h"
 #include "api/rtp_headers.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/test/simulated_network.h"
 #include "api/video_codecs/video_encoder_config.h"
 #include "call/audio_receive_stream.h"
@@ -39,7 +41,6 @@
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/network/sent_packet.h"
 #include "rtc_base/task_queue.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {
@@ -60,9 +61,10 @@ class DegradedCall : public Call, private PacketReceiver {
       const AudioSendStream::Config& config) override;
   void DestroyAudioSendStream(AudioSendStream* send_stream) override;
 
-  AudioReceiveStream* CreateAudioReceiveStream(
-      const AudioReceiveStream::Config& config) override;
-  void DestroyAudioReceiveStream(AudioReceiveStream* receive_stream) override;
+  AudioReceiveStreamInterface* CreateAudioReceiveStream(
+      const AudioReceiveStreamInterface::Config& config) override;
+  void DestroyAudioReceiveStream(
+      AudioReceiveStreamInterface* receive_stream) override;
 
   VideoSendStream* CreateVideoSendStream(
       VideoSendStream::Config config,
@@ -73,9 +75,10 @@ class DegradedCall : public Call, private PacketReceiver {
       std::unique_ptr<FecController> fec_controller) override;
   void DestroyVideoSendStream(VideoSendStream* send_stream) override;
 
-  VideoReceiveStream* CreateVideoReceiveStream(
-      VideoReceiveStream::Config configuration) override;
-  void DestroyVideoReceiveStream(VideoReceiveStream* receive_stream) override;
+  VideoReceiveStreamInterface* CreateVideoReceiveStream(
+      VideoReceiveStreamInterface::Config configuration) override;
+  void DestroyVideoReceiveStream(
+      VideoReceiveStreamInterface* receive_stream) override;
 
   FlexfecReceiveStream* CreateFlexfecReceiveStream(
       const FlexfecReceiveStream::Config config) override;
@@ -98,10 +101,14 @@ class DegradedCall : public Call, private PacketReceiver {
   void SignalChannelNetworkState(MediaType media, NetworkState state) override;
   void OnAudioTransportOverheadChanged(
       int transport_overhead_per_packet) override;
-  void OnLocalSsrcUpdated(AudioReceiveStream& stream,
+  void OnLocalSsrcUpdated(AudioReceiveStreamInterface& stream,
                           uint32_t local_ssrc) override;
-  void OnUpdateSyncGroup(AudioReceiveStream& stream,
-                         const std::string& sync_group) override;
+  void OnLocalSsrcUpdated(VideoReceiveStreamInterface& stream,
+                          uint32_t local_ssrc) override;
+  void OnLocalSsrcUpdated(FlexfecReceiveStream& stream,
+                          uint32_t local_ssrc) override;
+  void OnUpdateSyncGroup(AudioReceiveStreamInterface& stream,
+                         absl::string_view sync_group) override;
   void OnSentPacket(const rtc::SentPacket& sent_packet) override;
 
  protected:

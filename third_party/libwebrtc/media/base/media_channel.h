@@ -26,6 +26,7 @@
 #include "api/media_stream_interface.h"
 #include "api/rtc_error.h"
 #include "api/rtp_parameters.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/transport/data_channel_transport_interface.h"
 #include "api/transport/rtp/rtp_source.h"
 #include "api/units/time_delta.h"
@@ -34,6 +35,7 @@
 #include "api/video/video_source_interface.h"
 #include "api/video/video_timing.h"
 #include "api/video_codecs/video_encoder_config.h"
+#include "api/video_codecs/video_encoder_factory.h"
 #include "call/video_receive_stream.h"
 #include "common_video/include/quality_limitation_reason.h"
 #include "media/base/codec.h"
@@ -51,7 +53,6 @@
 #include "rtc_base/socket.h"
 #include "rtc_base/string_encode.h"
 #include "rtc_base/strings/string_builder.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
 
 namespace rtc {
 class Timing;
@@ -243,6 +244,13 @@ class MediaChannel {
 
   // Enable network condition based codec switching.
   virtual void SetVideoCodecSwitchingEnabled(bool enabled);
+
+  // note: The encoder_selector object must remain valid for the lifetime of the
+  // MediaChannel, unless replaced.
+  virtual void SetEncoderSelector(
+      uint32_t ssrc,
+      webrtc::VideoEncoderFactory::EncoderSelectorInterface* encoder_selector) {
+  }
 
   // Base method to send packet using NetworkInterface.
   bool SendPacket(rtc::CopyOnWriteBuffer* packet,
@@ -442,6 +450,16 @@ struct MediaReceiverInfo {
   // Jitter (network-related) latency (cumulative).
   // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-jitterbufferdelay
   double jitter_buffer_delay_seconds = 0.0;
+  // Target delay for the jitter buffer (cumulative).
+  // TODO(crbug.com/webrtc/14244): This metric is only implemented for
+  // audio, it should be implemented for video as well.
+  // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-jitterbuffertargetdelay
+  absl::optional<double> jitter_buffer_target_delay_seconds;
+  // Minimum obtainable delay for the jitter buffer (cumulative).
+  // TODO(crbug.com/webrtc/14244): This metric is only implemented for
+  // audio, it should be implemented for video as well.
+  // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-jitterbufferminimumdelay
+  absl::optional<double> jitter_buffer_minimum_delay_seconds;
   // Number of observations for cumulative jitter latency.
   // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-jitterbufferemittedcount
   uint64_t jitter_buffer_emitted_count = 0;
@@ -487,7 +505,6 @@ struct VoiceReceiverInfo : public MediaReceiverInfo {
   uint64_t concealed_samples = 0;
   uint64_t silent_concealed_samples = 0;
   uint64_t concealment_events = 0;
-  double jitter_buffer_target_delay_seconds = 0.0;
   uint64_t inserted_samples_for_deceleration = 0;
   uint64_t removed_samples_for_acceleration = 0;
   uint64_t fec_packets_received = 0;
@@ -612,9 +629,11 @@ struct VideoReceiverInfo : public MediaReceiverInfo {
   uint32_t frames_rendered = 0;
   absl::optional<uint64_t> qp_sum;
   // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-totaldecodetime
-  uint64_t total_decode_time_ms = 0;
+  webrtc::TimeDelta total_decode_time = webrtc::TimeDelta::Millis(0);
   // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-totalprocessingdelay
   webrtc::TimeDelta total_processing_delay = webrtc::TimeDelta::Millis(0);
+  webrtc::TimeDelta total_assembly_time = webrtc::TimeDelta::Millis(0);
+  uint32_t frames_assembled_from_multiple_packets = 0;
   double total_inter_frame_delay = 0;
   double total_squared_inter_frame_delay = 0;
   int64_t interframe_delay_max_ms = -1;

@@ -9,6 +9,8 @@
  */
 #if defined(WEBRTC_POSIX)
 #include <dirent.h>
+
+#include "absl/strings/string_view.h"
 #endif
 
 #include <list>
@@ -263,23 +265,23 @@ class TurnPortTest : public ::testing::Test,
     return &networks_.back();
   }
 
-  bool CreateTurnPort(const std::string& username,
-                      const std::string& password,
+  bool CreateTurnPort(absl::string_view username,
+                      absl::string_view password,
                       const ProtocolAddress& server_address) {
     return CreateTurnPortWithAllParams(MakeNetwork(kLocalAddr1), username,
                                        password, server_address);
   }
   bool CreateTurnPort(const rtc::SocketAddress& local_address,
-                      const std::string& username,
-                      const std::string& password,
+                      absl::string_view username,
+                      absl::string_view password,
                       const ProtocolAddress& server_address) {
     return CreateTurnPortWithAllParams(MakeNetwork(local_address), username,
                                        password, server_address);
   }
 
   bool CreateTurnPortWithNetwork(const rtc::Network* network,
-                                 const std::string& username,
-                                 const std::string& password,
+                                 absl::string_view username,
+                                 absl::string_view password,
                                  const ProtocolAddress& server_address) {
     return CreateTurnPortWithAllParams(network, username, password,
                                        server_address);
@@ -289,8 +291,8 @@ class TurnPortTest : public ::testing::Test,
   // helper methods call this, such that "SetIceRole" and "ConnectSignals" (and
   // possibly other things in the future) only happen in one place.
   bool CreateTurnPortWithAllParams(const rtc::Network* network,
-                                   const std::string& username,
-                                   const std::string& password,
+                                   absl::string_view username,
+                                   absl::string_view password,
                                    const ProtocolAddress& server_address) {
     RelayServerConfig config;
     config.credentials = RelayCredentials(username, password);
@@ -323,8 +325,8 @@ class TurnPortTest : public ::testing::Test,
     return true;
   }
 
-  void CreateSharedTurnPort(const std::string& username,
-                            const std::string& password,
+  void CreateSharedTurnPort(absl::string_view username,
+                            absl::string_view password,
                             const ProtocolAddress& server_address) {
     RTC_CHECK(server_address.proto == PROTO_UDP);
 
@@ -455,7 +457,7 @@ class TurnPortTest : public ::testing::Test,
   }
 
   void TestReconstructedServerUrl(ProtocolType protocol_type,
-                                  const char* expected_url) {
+                                  absl::string_view expected_url) {
     turn_port_->PrepareAddress();
     ASSERT_TRUE_SIMULATED_WAIT(
         turn_ready_, TimeToGetTurnCandidate(protocol_type), fake_clock_);
@@ -664,7 +666,8 @@ class TurnPortTest : public ::testing::Test,
 
     // Destroy the connection on the TURN port. The TurnEntry still exists, so
     // the TURN port should still process a ping from an unknown address.
-    conn2->Destroy();
+    turn_port_->DestroyConnection(conn2);
+
     conn1->Ping(0);
     EXPECT_TRUE_SIMULATED_WAIT(turn_unknown_address_, kSimulatedRtt,
                                fake_clock_);
@@ -876,7 +879,7 @@ class TurnLoggingIdValidator : public StunMessageObserver {
           msg->GetByteString(cricket::STUN_ATTR_TURN_LOGGING_ID);
       if (expect_val_) {
         ASSERT_NE(nullptr, attr);
-        ASSERT_EQ(expect_val_, attr->GetString());
+        ASSERT_EQ(expect_val_, attr->string_view());
       } else {
         EXPECT_EQ(nullptr, attr);
       }
@@ -1241,10 +1244,10 @@ TEST_F(TurnPortTest, TestRefreshRequestGetsErrorResponse) {
   // This sends out the first RefreshRequest with correct credentials.
   // When this succeeds, it will schedule a new RefreshRequest with the bad
   // credential.
-  turn_port_->FlushRequestsForTest(TURN_REFRESH_REQUEST);
+  turn_port_->request_manager().FlushForTest(TURN_REFRESH_REQUEST);
   EXPECT_TRUE_SIMULATED_WAIT(turn_refresh_success_, kSimulatedRtt, fake_clock_);
   // Flush it again, it will receive a bad response.
-  turn_port_->FlushRequestsForTest(TURN_REFRESH_REQUEST);
+  turn_port_->request_manager().FlushForTest(TURN_REFRESH_REQUEST);
   EXPECT_TRUE_SIMULATED_WAIT(!turn_refresh_success_, kSimulatedRtt,
                              fake_clock_);
   EXPECT_FALSE(turn_port_->connected());
@@ -1268,7 +1271,7 @@ TEST_F(TurnPortTest, TestStopProcessingPacketsAfterClosed) {
   EXPECT_EQ_SIMULATED_WAIT(Connection::STATE_WRITABLE, conn2->write_state(),
                            kSimulatedRtt * 2, fake_clock_);
 
-  turn_port_->Close();
+  turn_port_->CloseForTest();
   SIMULATED_WAIT(false, kSimulatedRtt, fake_clock_);
   turn_unknown_address_ = false;
   conn2->Ping(0);
@@ -1458,11 +1461,11 @@ TEST_F(TurnPortTest, TestRefreshCreatePermissionRequest) {
   // another request with bad_ufrag and bad_pwd.
   RelayCredentials bad_credentials("bad_user", "bad_pwd");
   turn_port_->set_credentials(bad_credentials);
-  turn_port_->FlushRequestsForTest(kAllRequests);
+  turn_port_->request_manager().FlushForTest(kAllRequestsForTest);
   EXPECT_TRUE_SIMULATED_WAIT(turn_create_permission_success_, kSimulatedRtt,
                              fake_clock_);
   // Flush the requests again; the create-permission-request will fail.
-  turn_port_->FlushRequestsForTest(kAllRequests);
+  turn_port_->request_manager().FlushForTest(kAllRequestsForTest);
   EXPECT_TRUE_SIMULATED_WAIT(!turn_create_permission_success_, kSimulatedRtt,
                              fake_clock_);
   EXPECT_TRUE(CheckConnectionFailedAndPruned(conn));

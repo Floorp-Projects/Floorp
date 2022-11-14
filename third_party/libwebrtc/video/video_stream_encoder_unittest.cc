@@ -17,6 +17,7 @@
 #include <utility>
 
 #include "absl/memory/memory.h"
+#include "api/field_trials_view.h"
 #include "api/rtp_parameters.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/task_queue/task_queue_base.h"
@@ -25,6 +26,7 @@
 #include "api/test/mock_video_encoder.h"
 #include "api/test/mock_video_encoder_factory.h"
 #include "api/units/data_rate.h"
+#include "api/units/time_delta.h"
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/nv12_buffer.h"
@@ -41,7 +43,7 @@
 #include "common_video/include/video_frame_buffer.h"
 #include "media/base/video_adapter.h"
 #include "media/engine/webrtc_video_engine.h"
-#include "modules/video_coding/codecs/av1/libaom_av1_encoder_supported.h"
+#include "modules/video_coding/codecs/av1/libaom_av1_encoder.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
 #include "modules/video_coding/codecs/multiplex/include/multiplex_encoder_adapter.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
@@ -131,11 +133,10 @@ void PassAFrame(
     TaskQueueBase* encoder_queue,
     FrameCadenceAdapterInterface::Callback* video_stream_encoder_callback,
     int64_t ntp_time_ms) {
-  encoder_queue->PostTask(
-      ToQueuedTask([video_stream_encoder_callback, ntp_time_ms] {
-        video_stream_encoder_callback->OnFrame(Timestamp::Millis(ntp_time_ms),
-                                               1, CreateSimpleNV12Frame());
-      }));
+  encoder_queue->PostTask([video_stream_encoder_callback, ntp_time_ms] {
+    video_stream_encoder_callback->OnFrame(Timestamp::Millis(ntp_time_ms), 1,
+                                           CreateSimpleNV12Frame());
+  });
 }
 
 class TestBuffer : public webrtc::I420Buffer {
@@ -219,8 +220,9 @@ class FakeNV12NativeBuffer : public webrtc::VideoFrameBuffer {
 
 class CpuOveruseDetectorProxy : public OveruseFrameDetector {
  public:
-  explicit CpuOveruseDetectorProxy(CpuOveruseMetricsObserver* metrics_observer)
-      : OveruseFrameDetector(metrics_observer),
+  CpuOveruseDetectorProxy(CpuOveruseMetricsObserver* metrics_observer,
+                          const FieldTrialsView& field_trials)
+      : OveruseFrameDetector(metrics_observer, field_trials),
         last_target_framerate_fps_(-1),
         framerate_updated_event_(true /* manual_reset */,
                                  false /* initially_signaled */) {}
@@ -379,17 +381,18 @@ class VideoStreamEncoderUnderTest : public VideoStreamEncoder {
           allocation_callback_type,
       const FieldTrialsView& field_trials,
       int num_cores)
-      : VideoStreamEncoder(time_controller->GetClock(),
-                           num_cores,
-                           stats_proxy,
-                           settings,
-                           std::unique_ptr<OveruseFrameDetector>(
-                               overuse_detector_proxy_ =
-                                   new CpuOveruseDetectorProxy(stats_proxy)),
-                           std::move(cadence_adapter),
-                           std::move(encoder_queue),
-                           allocation_callback_type,
-                           field_trials),
+      : VideoStreamEncoder(
+            time_controller->GetClock(),
+            num_cores,
+            stats_proxy,
+            settings,
+            std::unique_ptr<OveruseFrameDetector>(
+                overuse_detector_proxy_ =
+                    new CpuOveruseDetectorProxy(stats_proxy, field_trials)),
+            std::move(cadence_adapter),
+            std::move(encoder_queue),
+            allocation_callback_type,
+            field_trials),
         time_controller_(time_controller),
         fake_cpu_resource_(FakeResource::Create("FakeResource[CPU]")),
         fake_quality_resource_(FakeResource::Create("FakeResource[QP]")),
@@ -689,7 +692,9 @@ class SimpleVideoStreamEncoderFactory {
         time_controller_.GetClock(),
         /*number_of_cores=*/1,
         /*stats_proxy=*/stats_proxy_.get(), encoder_settings_,
-        std::make_unique<CpuOveruseDetectorProxy>(/*stats_proxy=*/nullptr),
+        std::make_unique<CpuOveruseDetectorProxy>(
+            /*stats_proxy=*/nullptr,
+            field_trials ? *field_trials : field_trials_),
         std::move(zero_hertz_adapter), std::move(encoder_queue),
         VideoStreamEncoder::BitrateAllocationCallbackType::
             kVideoBitrateAllocation,
@@ -7043,7 +7048,8 @@ TEST_F(VideoStreamEncoderTest,
        DefaultCpuAdaptationThresholdsForSoftwareEncoder) {
   const int kFrameWidth = 1280;
   const int kFrameHeight = 720;
-  const CpuOveruseOptions default_options;
+  const test::ScopedKeyValueConfig kFieldTrials;
+  const CpuOveruseOptions default_options(kFieldTrials);
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
       kTargetBitrate, kTargetBitrate, kTargetBitrate, 0, 0, 0);
   video_source_.IncomingCapturedFrame(
@@ -7062,7 +7068,8 @@ TEST_F(VideoStreamEncoderTest,
        HigherCpuAdaptationThresholdsForHardwareEncoder) {
   const int kFrameWidth = 1280;
   const int kFrameHeight = 720;
-  CpuOveruseOptions hardware_options;
+  const test::ScopedKeyValueConfig kFieldTrials;
+  CpuOveruseOptions hardware_options(kFieldTrials);
   hardware_options.low_encode_usage_threshold_percent = 150;
   hardware_options.high_encode_usage_threshold_percent = 200;
   fake_encoder_.SetIsHardwareAccelerated(true);
@@ -7086,7 +7093,8 @@ TEST_F(VideoStreamEncoderTest,
   const int kFrameWidth = 1280;
   const int kFrameHeight = 720;
 
-  const CpuOveruseOptions default_options;
+  const test::ScopedKeyValueConfig kFieldTrials;
+  const CpuOveruseOptions default_options(kFieldTrials);
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
       kTargetBitrate, kTargetBitrate, kTargetBitrate, 0, 0, 0);
   video_source_.IncomingCapturedFrame(
@@ -7099,7 +7107,7 @@ TEST_F(VideoStreamEncoderTest,
                 .high_encode_usage_threshold_percent,
             default_options.high_encode_usage_threshold_percent);
 
-  CpuOveruseOptions hardware_options;
+  CpuOveruseOptions hardware_options(kFieldTrials);
   hardware_options.low_encode_usage_threshold_percent = 150;
   hardware_options.high_encode_usage_threshold_percent = 200;
   fake_encoder_.SetIsHardwareAccelerated(true);
@@ -8625,7 +8633,7 @@ class VideoStreamEncoderWithRealEncoderTest
         encoder = VP9Encoder::Create();
         break;
       case kVideoCodecAV1:
-        encoder = CreateLibaomAv1EncoderIfSupported();
+        encoder = CreateLibaomAv1Encoder();
         break;
       case kVideoCodecH264:
         encoder =
@@ -8772,10 +8780,7 @@ TEST_P(VideoStreamEncoderWithRealEncoderTest, HandlesLayerToggling) {
     }
     if (codec_type_ == VideoCodecType::kVideoCodecH264) {
       // Turn off frame dropping to prevent flakiness.
-      VideoCodecH264 h264_settings = VideoEncoder::GetDefaultH264Settings();
-      h264_settings.frameDroppingOn = false;
-      config.encoder_specific_settings = rtc::make_ref_counted<
-          VideoEncoderConfig::H264EncoderSpecificSettings>(h264_settings);
+      config.frame_drop_enabled = false;
     }
   }
 
@@ -9044,7 +9049,17 @@ TEST_F(ReconfigureEncoderTest, ReconfiguredIfNumTemporalLayerChanges) {
 TEST_F(ReconfigureEncoderTest, ReconfiguredIfScalabilityModeChanges) {
   VideoStream config1 = DefaultConfig();
   VideoStream config2 = config1;
+  config2.scalability_mode = ScalabilityMode::kL2T1;
+
+  RunTest({config1, config2}, /*expected_num_init_encode=*/2);
+}
+
+TEST_F(ReconfigureEncoderTest,
+       UpdatesNumTemporalLayersFromScalabilityModeChanges) {
+  VideoStream config1 = DefaultConfig();
+  VideoStream config2 = config1;
   config2.scalability_mode = ScalabilityMode::kL1T2;
+  config2.num_temporal_layers = 2;
 
   RunTest({config1, config2}, /*expected_num_init_encode=*/2);
 }
@@ -9060,12 +9075,16 @@ TEST(VideoStreamEncoderSimpleTest, CreateDestroy) {
 
    private:
     void Delete() override { delete this; }
-    void PostTask(std::unique_ptr<QueuedTask> task) override {
+    void PostTask(absl::AnyInvocable<void() &&> task) override {
       // meh.
     }
-    void PostDelayedTask(std::unique_ptr<QueuedTask> task,
-                         uint32_t milliseconds) override {
+    void PostDelayedTask(absl::AnyInvocable<void() &&> task,
+                         TimeDelta delay) override {
       ASSERT_TRUE(false);
+    }
+    void PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
+                                      TimeDelta delay) override {
+      ADD_FAILURE();
     }
   };
 
@@ -9096,11 +9115,17 @@ TEST(VideoStreamEncoderSimpleTest, CreateDestroy) {
   // the posted init task will simply be deleted.
   auto encoder = std::make_unique<VideoStreamEncoder>(
       time_controller.GetClock(), 1, stats_proxy.get(), encoder_settings,
-      std::make_unique<CpuOveruseDetectorProxy>(stats_proxy.get()),
+      std::make_unique<CpuOveruseDetectorProxy>(stats_proxy.get(),
+                                                field_trials),
       std::move(adapter), std::move(encoder_queue),
       VideoStreamEncoder::BitrateAllocationCallbackType::
           kVideoBitrateAllocation,
       field_trials);
+
+  // Stop the encoder explicitly. This additional step tests if we could
+  // hang when calling stop and the TQ has been stopped and/or isn't accepting
+  // any more tasks.
+  encoder->Stop();
 }
 
 TEST(VideoStreamEncoderFrameCadenceTest, ActivatesFrameCadenceOnContentType) {
@@ -9389,8 +9414,12 @@ TEST(VideoStreamEncoderFrameCadenceTest,
   // synchronized.
   EXPECT_CALL(mock_source, RequestRefreshFrame);
   video_stream_encoder->SendKeyFrame();
-  adapter_ptr->OnConstraintsChanged(VideoTrackSourceConstraints{0, 30});
-  factory.DepleteTaskQueues();
+  constexpr int kMaxFps = 30;
+  adapter_ptr->OnConstraintsChanged(VideoTrackSourceConstraints{0, kMaxFps});
+  factory.GetTimeController()->AdvanceTime(
+      TimeDelta::Seconds(1) *
+      FrameCadenceAdapterInterface::kOnDiscardedFrameRefreshFramePeriod /
+      kMaxFps);
 }
 
 }  // namespace webrtc

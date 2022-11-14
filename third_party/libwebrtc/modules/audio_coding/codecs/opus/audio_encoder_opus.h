@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/audio_codecs/audio_encoder.h"
 #include "api/audio_codecs/audio_format.h"
@@ -45,7 +46,7 @@ class AudioEncoderOpusImpl final : public AudioEncoder {
       OpusEncInst* inst);
 
   using AudioNetworkAdaptorCreator =
-      std::function<std::unique_ptr<AudioNetworkAdaptor>(const std::string&,
+      std::function<std::unique_ptr<AudioNetworkAdaptor>(absl::string_view,
                                                          RtcEventLog*)>;
 
   AudioEncoderOpusImpl(const AudioEncoderOpusConfig& config, int payload_type);
@@ -146,7 +147,7 @@ class AudioEncoderOpusImpl final : public AudioEncoder {
 
   void ApplyAudioNetworkAdaptor();
   std::unique_ptr<AudioNetworkAdaptor> DefaultAudioNetworkAdaptorCreator(
-      const std::string& config_string,
+      absl::string_view config_string,
       RtcEventLog* event_log) const;
 
   void MaybeUpdateUplinkBandwidth();

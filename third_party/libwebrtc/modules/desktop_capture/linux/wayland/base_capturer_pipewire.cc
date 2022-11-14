@@ -12,9 +12,12 @@
 
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
+#include "modules/desktop_capture/linux/wayland/restore_token_manager.h"
 #include "modules/desktop_capture/linux/wayland/xdg_desktop_portal_utils.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/random.h"
+#include "rtc_base/time_utils.h"
 
 namespace webrtc {
 
@@ -31,12 +34,19 @@ BaseCapturerPipeWire::BaseCapturerPipeWire(const DesktopCaptureOptions& options)
           options,
           std::make_unique<ScreenCastPortal>(
               ScreenCastPortal::CaptureSourceType::kAnyScreenContent,
-              this)) {}
+              this)) {
+  is_screencast_portal_ = true;
+}
 
 BaseCapturerPipeWire::BaseCapturerPipeWire(
     const DesktopCaptureOptions& options,
     std::unique_ptr<ScreenCapturePortalInterface> portal)
-    : options_(options), portal_(std::move(portal)) {}
+    : options_(options),
+      is_screencast_portal_(false),
+      portal_(std::move(portal)) {
+  Random random(rtc::TimeMicros());
+  source_id_ = static_cast<SourceId>(random.Rand(1, INT_MAX));
+}
 
 BaseCapturerPipeWire::~BaseCapturerPipeWire() {}
 
@@ -44,11 +54,16 @@ void BaseCapturerPipeWire::OnScreenCastRequestResult(RequestResponse result,
                                                      uint32_t stream_node_id,
                                                      int fd) {
   if (result != RequestResponse::kSuccess ||
-      !options_.screencast_stream()->StartScreenCastStream(stream_node_id,
-                                                           fd)) {
+      !options_.screencast_stream()->StartScreenCastStream(
+          stream_node_id, fd, options_.get_width(), options_.get_height())) {
     capturer_failed_ = true;
     RTC_LOG(LS_ERROR) << "ScreenCastPortal failed: "
                       << static_cast<uint>(result);
+  } else if (ScreenCastPortal* screencast_portal = GetScreenCastPortal()) {
+    if (!screencast_portal->RestoreToken().empty()) {
+      RestoreTokenManager::GetInstance().AddToken(
+          source_id_, screencast_portal->RestoreToken());
+    }
   }
 }
 
@@ -58,11 +73,27 @@ void BaseCapturerPipeWire::OnScreenCastSessionClosed() {
   }
 }
 
+void BaseCapturerPipeWire::UpdateResolution(uint32_t width, uint32_t height) {
+  if (!capturer_failed_) {
+    options_.screencast_stream()->UpdateScreenCastStreamResolution(width,
+                                                                   height);
+  }
+}
+
 void BaseCapturerPipeWire::Start(Callback* callback) {
   RTC_DCHECK(!callback_);
   RTC_DCHECK(callback);
 
   callback_ = callback;
+
+  if (ScreenCastPortal* screencast_portal = GetScreenCastPortal()) {
+    screencast_portal->SetPersistMode(
+        ScreenCastPortal::PersistMode::kTransient);
+    if (selected_source_id_) {
+      screencast_portal->SetRestoreToken(
+          RestoreTokenManager::GetInstance().TakeToken(selected_source_id_));
+    }
+  }
 
   portal_->Start();
 }
@@ -105,17 +136,23 @@ bool BaseCapturerPipeWire::GetSourceList(SourceList* sources) {
   // is often treated as a null/placeholder id, so we shouldn't use that.
   // TODO(https://crbug.com/1297671): Reconsider type of ID when plumbing
   // token that will enable stream re-use.
-  sources->push_back({1});
+  sources->push_back({source_id_});
   return true;
 }
 
 bool BaseCapturerPipeWire::SelectSource(SourceId id) {
   // Screen selection is handled by the xdg-desktop-portal.
+  selected_source_id_ = id;
   return id == PIPEWIRE_ID;
 }
 
 SessionDetails BaseCapturerPipeWire::GetSessionDetails() {
   return portal_->GetSessionDetails();
+}
+
+ScreenCastPortal* BaseCapturerPipeWire::GetScreenCastPortal() {
+  return is_screencast_portal_ ? static_cast<ScreenCastPortal*>(portal_.get())
+                               : nullptr;
 }
 
 }  // namespace webrtc

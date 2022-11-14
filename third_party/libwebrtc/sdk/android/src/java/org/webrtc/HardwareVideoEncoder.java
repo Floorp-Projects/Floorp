@@ -56,7 +56,7 @@ class HardwareVideoEncoder implements VideoEncoder {
   /**
    * Keeps track of the number of output buffers that have been passed down the pipeline and not yet
    * released. We need to wait for this to go down to zero before operations invalidating the output
-   * buffers, i.e., stop() and getOutputBuffers().
+   * buffers, i.e., stop() and getOutputBuffer().
    */
   private static class BusyCount {
     private final Object countLock = new Object();
@@ -132,7 +132,6 @@ class HardwareVideoEncoder implements VideoEncoder {
 
   // --- Valid and immutable while an encoding session is running.
   @Nullable private MediaCodecWrapper codec;
-  @Nullable private ByteBuffer[] outputBuffers;
   // Thread that delivers encoded frames to the user callback.
   @Nullable private Thread outputThread;
 
@@ -285,7 +284,6 @@ class HardwareVideoEncoder implements VideoEncoder {
       sliceHeight = getSliceHeight(inputFormat, height);
 
       codec.start();
-      outputBuffers = codec.getOutputBuffers();
     } catch (IllegalStateException e) {
       Logging.e(TAG, "initEncodeInternal failed", e);
       release();
@@ -335,7 +333,6 @@ class HardwareVideoEncoder implements VideoEncoder {
     outputBuilders.clear();
 
     codec = null;
-    outputBuffers = null;
     outputThread = null;
 
     // Allow changing thread after release.
@@ -454,9 +451,9 @@ class HardwareVideoEncoder implements VideoEncoder {
 
     ByteBuffer buffer;
     try {
-      buffer = codec.getInputBuffers()[index];
+      buffer = codec.getInputBuffer(index);
     } catch (IllegalStateException e) {
-      Logging.e(TAG, "getInputBuffers failed", e);
+      Logging.e(TAG, "getInputBuffer with index=" + index + " failed", e);
       return VideoCodecStatus.ERROR;
     }
     fillInputBuffer(buffer, videoFrameBuffer);
@@ -582,12 +579,11 @@ class HardwareVideoEncoder implements VideoEncoder {
       if (index < 0) {
         if (index == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
           outputBuffersBusyCount.waitForZero();
-          outputBuffers = codec.getOutputBuffers();
         }
         return;
       }
 
-      ByteBuffer codecOutputBuffer = outputBuffers[index];
+      ByteBuffer codecOutputBuffer = codec.getOutputBuffer(index);
       codecOutputBuffer.position(info.offset);
       codecOutputBuffer.limit(info.offset + info.size);
 

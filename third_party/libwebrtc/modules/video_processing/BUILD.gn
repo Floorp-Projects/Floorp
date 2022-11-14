@@ -31,7 +31,6 @@ rtc_library("video_processing") {
     "../../api/video:video_rtp_headers",
     "../../common_audio",
     "../../common_video",
-    "../../modules/utility",
     "../../rtc_base:checks",
     "../../rtc_base/system:arch",
     "../../system_wrappers",

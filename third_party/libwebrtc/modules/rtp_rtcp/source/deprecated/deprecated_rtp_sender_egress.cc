@@ -16,6 +16,7 @@
 
 #include "absl/strings/match.h"
 #include "api/transport/field_trial_based_config.h"
+#include "api/units/timestamp.h"
 #include "logging/rtc_event_log/events/rtc_event_rtp_packet_outgoing.h"
 #include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"
 #include "rtc_base/logging.h"
@@ -105,7 +106,8 @@ void DEPRECATED_RtpSenderEgress::SendPacket(
   const uint32_t packet_ssrc = packet->Ssrc();
   RTC_DCHECK(packet->packet_type().has_value());
   RTC_DCHECK(HasCorrectSsrc(*packet));
-  int64_t now_ms = clock_->TimeInMilliseconds();
+  Timestamp now = clock_->CurrentTime();
+  int64_t now_ms = now.ms();
 
   if (is_audio_) {
 #if BWE_TEST_LOGGING_COMPILE_TIME_ENABLE
@@ -160,15 +162,14 @@ void DEPRECATED_RtpSenderEgress::SendPacket(
     packet->SetExtension<TransmissionOffset>(kTimestampTicksPerMs * diff_ms);
   }
   if (packet->HasExtension<AbsoluteSendTime>()) {
-    packet->SetExtension<AbsoluteSendTime>(
-        AbsoluteSendTime::MsTo24Bits(now_ms));
+    packet->SetExtension<AbsoluteSendTime>(AbsoluteSendTime::To24Bits(now));
   }
 
   if (packet->HasExtension<VideoTimingExtension>()) {
     if (populate_network2_timestamp_) {
-      packet->set_network2_time(Timestamp::Millis(now_ms));
+      packet->set_network2_time(now);
     } else {
-      packet->set_pacer_exit_time(Timestamp::Millis(now_ms));
+      packet->set_pacer_exit_time(now);
     }
   }
 
@@ -200,7 +201,7 @@ void DEPRECATED_RtpSenderEgress::SendPacket(
   // actual sending fails.
   if (is_media && packet->allow_retransmission()) {
     packet_history_->PutRtpPacket(std::make_unique<RtpPacketToSend>(*packet),
-                                  Timestamp::Millis(now_ms));
+                                  now);
   } else if (packet->retransmitted_sequence_number()) {
     packet_history_->MarkPacketAsSent(*packet->retransmitted_sequence_number());
   }

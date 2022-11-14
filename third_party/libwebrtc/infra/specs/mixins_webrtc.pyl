@@ -89,19 +89,19 @@
       },
     }
   },
-  'ios-simulator-14.0': {
+  'ios-simulator-14.5': {
     '$mixin_append': {
       'args': [
         '--platform',
         'iPhone X',
         '--version',
-        '14.0',
+        '14.5',
       ],
       'swarming': {
         'named_caches': [
           {
-            'name': 'runtime_ios_14_0',
-            'path': 'Runtime-ios-14.0',
+            'name': 'runtime_ios_14_5',
+            'path': 'Runtime-ios-14.5',
           },
         ],
       },
@@ -154,6 +154,13 @@
       }
     }
   },
+  'mac11_or_mac12': {
+    'swarming': {
+      'dimensions': {
+        'os': 'Mac-11|Mac-12'
+      }
+    }
+  },
   'perf-low-bandwidth-audio-perf-test': {
     'merge': {
       'script': '//tools_webrtc/perf/process_perf_results_py2.py',
@@ -203,6 +210,21 @@
       'result_format': 'json'
     }
   },
+  'shards-2': {
+    'swarming': {
+      'shards': 2,
+    },
+  },
+  'shards-4': {
+    'swarming': {
+      'shards': 4,
+    },
+  },
+  'shards-6': {
+    'swarming': {
+      'shards': 6,
+    },
+  },
   'shamu': {
     'swarming': {
       'dimensions': {
@@ -237,25 +259,5 @@
         'os': 'Windows'
       }
     }
-  },
-  'win10-1703': {
-    'swarming': {
-      'dimensions': {
-        'os': 'Windows-10-15063',
-      },
-    },
-  },
-  'xcode_12a7209': {
-    '$mixin_append': {
-      'args': ['--xcode-build-version', '12a7209'],
-      'swarming': {
-        'named_caches': [
-          {
-            'name': 'xcode_ios_12a7209',
-            'path': 'Xcode.app',
-          },
-        ],
-      },
-    },
-  },
+  }
 }

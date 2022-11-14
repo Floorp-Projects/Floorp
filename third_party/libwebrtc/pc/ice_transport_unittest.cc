@@ -14,15 +14,27 @@
 #include <utility>
 
 #include "api/ice_transport_factory.h"
+#include "api/make_ref_counted.h"
 #include "api/scoped_refptr.h"
 #include "p2p/base/fake_ice_transport.h"
 #include "p2p/base/fake_port_allocator.h"
-#include "rtc_base/ref_counted_object.h"
+#include "rtc_base/internal/default_socket_server.h"
 #include "test/gtest.h"
 
 namespace webrtc {
 
-class IceTransportTest : public ::testing::Test {};
+class IceTransportTest : public ::testing::Test {
+ protected:
+  IceTransportTest()
+      : socket_server_(rtc::CreateDefaultSocketServer()),
+        main_thread_(socket_server_.get()) {}
+
+  rtc::SocketServer* socket_server() const { return socket_server_.get(); }
+
+ private:
+  std::unique_ptr<rtc::SocketServer> socket_server_;
+  rtc::AutoSocketServerThread main_thread_;
+};
 
 TEST_F(IceTransportTest, CreateNonSelfDeletingTransport) {
   auto cricket_transport =
@@ -36,7 +48,9 @@ TEST_F(IceTransportTest, CreateNonSelfDeletingTransport) {
 
 TEST_F(IceTransportTest, CreateSelfDeletingTransport) {
   std::unique_ptr<cricket::FakePortAllocator> port_allocator(
-      std::make_unique<cricket::FakePortAllocator>(nullptr, nullptr));
+      std::make_unique<cricket::FakePortAllocator>(
+          nullptr,
+          std::make_unique<rtc::BasicPacketSocketFactory>(socket_server())));
   IceTransportInit init;
   init.set_port_allocator(port_allocator.get());
   auto ice_transport = CreateIceTransport(std::move(init));

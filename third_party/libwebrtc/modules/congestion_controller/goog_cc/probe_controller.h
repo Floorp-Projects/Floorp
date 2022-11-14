@@ -51,6 +51,11 @@ struct ProbeControllerConfig {
   FieldTrialOptional<double> second_allocation_probe_scale;
   FieldTrialFlag allocation_allow_further_probing;
   FieldTrialParameter<DataRate> allocation_probe_max;
+
+  // The minimum number probing packets used.
+  FieldTrialParameter<int> min_probe_packets_sent;
+  // The minimum probing duration.
+  FieldTrialParameter<TimeDelta> min_probe_duration;
 };
 
 // This class controls initiation of probing to estimate initial channel
@@ -135,7 +140,6 @@ class ProbeController {
   int64_t max_total_allocated_bitrate_;
 
   const bool in_rapid_recovery_experiment_;
-  const bool limit_probes_with_allocateable_rate_;
   // For WebRTC.BWE.MidCallProbing.* metric.
   bool mid_call_probing_waiting_for_result_;
   int64_t mid_call_probing_bitrate_bps_;

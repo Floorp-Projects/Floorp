@@ -91,7 +91,7 @@ void RtpRtcpEndToEndTest::RespectsRtcpMode(RtcpMode rtcp_mode) {
 
     void ModifyVideoConfigs(
         VideoSendStream::Config* send_config,
-        std::vector<VideoReceiveStream::Config>* receive_configs,
+        std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
         VideoEncoderConfig* encoder_config) override {
       send_config->rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
       (*receive_configs)[0].rtp.nack.rtp_history_ms = kNackRtpHistoryMs;

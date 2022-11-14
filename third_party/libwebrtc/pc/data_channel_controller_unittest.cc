@@ -33,6 +33,7 @@ class DataChannelControllerTest : public ::testing::Test {
         .WillByDefault(Return(rtc::Thread::Current()));
   }
 
+  rtc::AutoThread main_thread_;
   rtc::scoped_refptr<NiceMock<MockPeerConnectionInternal>> pc_;
 };
 

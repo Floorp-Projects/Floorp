@@ -18,7 +18,15 @@ namespace {
 
 constexpr int kFramesIn60Seconds = 6000;
 
-TEST(AnalogGainStatsReporterTest, CheckLogLevelUpdateStatsEmpty) {
+class AnalogGainStatsReporterTest : public ::testing::Test {
+ public:
+  AnalogGainStatsReporterTest() {}
+
+ protected:
+  void SetUp() override { metrics::Reset(); }
+};
+
+TEST_F(AnalogGainStatsReporterTest, CheckLogLevelUpdateStatsEmpty) {
   AnalogGainStatsReporter stats_reporter;
   constexpr int kMicLevel = 10;
   stats_reporter.UpdateStatistics(kMicLevel);
@@ -44,7 +52,7 @@ TEST(AnalogGainStatsReporterTest, CheckLogLevelUpdateStatsEmpty) {
       ::testing::ElementsAre());
 }
 
-TEST(AnalogGainStatsReporterTest, CheckLogLevelUpdateStatsNotEmpty) {
+TEST_F(AnalogGainStatsReporterTest, CheckLogLevelUpdateStatsNotEmpty) {
   AnalogGainStatsReporter stats_reporter;
   constexpr int kMicLevel = 10;
   stats_reporter.UpdateStatistics(kMicLevel);
@@ -81,7 +89,7 @@ TEST(AnalogGainStatsReporterTest, CheckLogLevelUpdateStatsNotEmpty) {
 }
 }  // namespace
 
-TEST(AnalogGainStatsReporterTest, CheckLevelUpdateStatsForEmptyStats) {
+TEST_F(AnalogGainStatsReporterTest, CheckLevelUpdateStatsForEmptyStats) {
   AnalogGainStatsReporter stats_reporter;
   const auto& update_stats = stats_reporter.level_update_stats();
   EXPECT_EQ(update_stats.num_decreases, 0);
@@ -90,7 +98,7 @@ TEST(AnalogGainStatsReporterTest, CheckLevelUpdateStatsForEmptyStats) {
   EXPECT_EQ(update_stats.sum_increases, 0);
 }
 
-TEST(AnalogGainStatsReporterTest, CheckLevelUpdateStatsAfterNoGainChange) {
+TEST_F(AnalogGainStatsReporterTest, CheckLevelUpdateStatsAfterNoGainChange) {
   constexpr int kMicLevel = 10;
   AnalogGainStatsReporter stats_reporter;
   stats_reporter.UpdateStatistics(kMicLevel);
@@ -103,7 +111,7 @@ TEST(AnalogGainStatsReporterTest, CheckLevelUpdateStatsAfterNoGainChange) {
   EXPECT_EQ(update_stats.sum_increases, 0);
 }
 
-TEST(AnalogGainStatsReporterTest, CheckLevelUpdateStatsAfterGainIncrease) {
+TEST_F(AnalogGainStatsReporterTest, CheckLevelUpdateStatsAfterGainIncrease) {
   constexpr int kMicLevel = 10;
   AnalogGainStatsReporter stats_reporter;
   stats_reporter.UpdateStatistics(kMicLevel);
@@ -116,7 +124,7 @@ TEST(AnalogGainStatsReporterTest, CheckLevelUpdateStatsAfterGainIncrease) {
   EXPECT_EQ(update_stats.sum_increases, 5);
 }
 
-TEST(AnalogGainStatsReporterTest, CheckLevelUpdateStatsAfterGainDecrease) {
+TEST_F(AnalogGainStatsReporterTest, CheckLevelUpdateStatsAfterGainDecrease) {
   constexpr int kMicLevel = 10;
   AnalogGainStatsReporter stats_reporter;
   stats_reporter.UpdateStatistics(kMicLevel);
@@ -129,7 +137,7 @@ TEST(AnalogGainStatsReporterTest, CheckLevelUpdateStatsAfterGainDecrease) {
   EXPECT_EQ(stats_update.sum_increases, 0);
 }
 
-TEST(AnalogGainStatsReporterTest, CheckLevelUpdateStatsAfterReset) {
+TEST_F(AnalogGainStatsReporterTest, CheckLevelUpdateStatsAfterReset) {
   AnalogGainStatsReporter stats_reporter;
   constexpr int kMicLevel = 10;
   stats_reporter.UpdateStatistics(kMicLevel);

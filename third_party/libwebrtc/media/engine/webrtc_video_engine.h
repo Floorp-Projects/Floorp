@@ -20,6 +20,7 @@
 #include "absl/types/optional.h"
 #include "api/call/transport.h"
 #include "api/sequence_checker.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/video/video_bitrate_allocator_factory.h"
 #include "api/video/video_frame.h"
@@ -34,7 +35,6 @@
 #include "media/engine/unhandled_packets_buffer.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
@@ -106,8 +106,14 @@ class WebRtcVideoEngine : public VideoEngineInterface {
       webrtc::VideoBitrateAllocatorFactory* video_bitrate_allocator_factory)
       override;
 
-  std::vector<VideoCodec> send_codecs() const override;
-  std::vector<VideoCodec> recv_codecs() const override;
+  std::vector<VideoCodec> send_codecs() const override {
+    return send_codecs(true);
+  }
+  std::vector<VideoCodec> recv_codecs() const override {
+    return recv_codecs(true);
+  }
+  std::vector<VideoCodec> send_codecs(bool include_rtx) const override;
+  std::vector<VideoCodec> recv_codecs(bool include_rtx) const override;
   std::vector<webrtc::RtpHeaderExtensionCapability> GetRtpHeaderExtensions()
       const override;
 
@@ -185,6 +191,12 @@ class WebRtcVideoChannel : public VideoMediaChannel,
                          rtc::scoped_refptr<webrtc::FrameEncryptorInterface>
                              frame_encryptor) override;
 
+  // note: The encoder_selector object must remain valid for the lifetime of the
+  // MediaChannel, unless replaced.
+  void SetEncoderSelector(uint32_t ssrc,
+                          webrtc::VideoEncoderFactory::EncoderSelectorInterface*
+                              encoder_selector) override;
+
   void SetVideoCodecSwitchingEnabled(bool enabled) override;
 
   bool SetBaseMinimumPlayoutDelayMs(uint32_t ssrc, int delay_ms) override;
@@ -246,8 +258,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
  private:
   class WebRtcVideoReceiveStream;
 
-  // Finds VideoReceiveStream corresponding to ssrc. Aware of unsignalled ssrc
-  // handling.
+  // Finds VideoReceiveStreamInterface corresponding to ssrc. Aware of
+  // unsignalled ssrc handling.
   WebRtcVideoReceiveStream* FindReceiveStream(uint32_t ssrc)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
 
@@ -289,7 +301,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     absl::optional<std::vector<webrtc::RtpExtension>> rtp_header_extensions;
     // Keep track of the FlexFEC payload type separately from `codec_settings`.
     // This allows us to recreate the FlexfecReceiveStream separately from the
-    // VideoReceiveStream when the FlexFEC payload type is changed.
+    // VideoReceiveStreamInterface when the FlexFEC payload type is changed.
     absl::optional<int> flexfec_payload_type;
   };
 
@@ -302,7 +314,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
 
   void ConfigureReceiverRtp(
-      webrtc::VideoReceiveStream::Config* config,
+      webrtc::VideoReceiveStreamInterface::Config* config,
       webrtc::FlexfecReceiveStream::Config* flexfec_config,
       const StreamParams& sp) const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
@@ -315,6 +327,10 @@ class WebRtcVideoChannel : public VideoMediaChannel,
 
   static std::string CodecSettingsVectorToString(
       const std::vector<VideoCodecSettings>& codecs);
+
+  // Called when the local ssrc changes. Sets `rtcp_receiver_report_ssrc_` and
+  // updates the receive streams.
+  void SetReceiverReportSsrc(uint32_t ssrc) RTC_RUN_ON(&thread_checker_);
 
   // Wrapper for the sender part.
   class WebRtcVideoSendStream {
@@ -340,6 +356,12 @@ class WebRtcVideoChannel : public VideoMediaChannel,
 
     bool SetVideoSend(const VideoOptions* options,
                       rtc::VideoSourceInterface<webrtc::VideoFrame>* source);
+
+    // note: The encoder_selector object must remain valid for the lifetime of
+    // the MediaChannel, unless replaced.
+    void SetEncoderSelector(
+        webrtc::VideoEncoderFactory::EncoderSelectorInterface*
+            encoder_selector);
 
     void SetSend(bool send);
 
@@ -424,7 +446,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   };
 
   // Wrapper for the receiver part, contains configs etc. that are needed to
-  // reconstruct the underlying VideoReceiveStream.
+  // reconstruct the underlying VideoReceiveStreamInterface.
   class WebRtcVideoReceiveStream
       : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
    public:
@@ -432,11 +454,15 @@ class WebRtcVideoChannel : public VideoMediaChannel,
         WebRtcVideoChannel* channel,
         webrtc::Call* call,
         const StreamParams& sp,
-        webrtc::VideoReceiveStream::Config config,
+        webrtc::VideoReceiveStreamInterface::Config config,
         bool default_stream,
         const std::vector<VideoCodecSettings>& recv_codecs,
         const webrtc::FlexfecReceiveStream::Config& flexfec_config);
     ~WebRtcVideoReceiveStream();
+
+    webrtc::VideoReceiveStreamInterface& stream();
+    // Return value may be nullptr.
+    webrtc::FlexfecReceiveStream* flexfec_stream();
 
     const std::vector<uint32_t>& GetSsrcs() const;
 
@@ -445,7 +471,6 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     // Does not return codecs, they are filled by the owning WebRtcVideoChannel.
     webrtc::RtpParameters GetRtpParameters() const;
 
-    void SetLocalSsrc(uint32_t local_ssrc);
     // TODO(deadbeef): Move these feedback parameters into the recv parameters.
     void SetFeedbackParameters(bool lntf_enabled,
                                bool nack_enabled,
@@ -477,8 +502,10 @@ class WebRtcVideoChannel : public VideoMediaChannel,
         rtc::scoped_refptr<webrtc::FrameTransformerInterface>
             frame_transformer);
 
+    void SetLocalSsrc(uint32_t local_ssrc);
+
    private:
-    void RecreateWebRtcVideoStream();
+    void RecreateReceiveStream();
 
     // Applies a new receive codecs configration to `config_`. Returns true
     // if the internal stream needs to be reconstructed, or false if no changes
@@ -494,9 +521,9 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     // Both `stream_` and `flexfec_stream_` are managed by `this`. They are
     // destroyed by calling call_->DestroyVideoReceiveStream and
     // call_->DestroyFlexfecReceiveStream, respectively.
-    webrtc::VideoReceiveStream* stream_;
+    webrtc::VideoReceiveStreamInterface* stream_;
     const bool default_stream_;
-    webrtc::VideoReceiveStream::Config config_;
+    webrtc::VideoReceiveStreamInterface::Config config_;
     webrtc::FlexfecReceiveStream::Config flexfec_config_;
     webrtc::FlexfecReceiveStream* flexfec_stream_;
 

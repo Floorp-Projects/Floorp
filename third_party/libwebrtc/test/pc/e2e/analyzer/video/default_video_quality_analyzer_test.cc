@@ -110,6 +110,31 @@ void FakeCPULoad() {
   ASSERT_TRUE(std::is_sorted(temp.begin(), temp.end()));
 }
 
+void PassFramesThroughAnalyzer(DefaultVideoQualityAnalyzer& analyzer,
+                               absl::string_view sender,
+                               absl::string_view stream_label,
+                               std::vector<absl::string_view> receivers,
+                               int frames_count,
+                               test::FrameGeneratorInterface& frame_generator) {
+  for (int i = 0; i < frames_count; ++i) {
+    VideoFrame frame = NextFrame(&frame_generator, /*timestamp_us=*/1);
+    uint16_t frame_id =
+        analyzer.OnFrameCaptured(sender, std::string(stream_label), frame);
+    frame.set_id(frame_id);
+    analyzer.OnFramePreEncode(sender, frame);
+    analyzer.OnFrameEncoded(sender, frame.id(), FakeEncode(frame),
+                            VideoQualityAnalyzerInterface::EncoderStats());
+    for (absl::string_view receiver : receivers) {
+      VideoFrame received_frame = DeepCopy(frame);
+      analyzer.OnFramePreDecode(receiver, received_frame.id(),
+                                FakeEncode(received_frame));
+      analyzer.OnFrameDecoded(receiver, received_frame,
+                              VideoQualityAnalyzerInterface::DecoderStats());
+      analyzer.OnFrameRendered(receiver, received_frame);
+    }
+  }
+}
+
 TEST(DefaultVideoQualityAnalyzerTest,
      MemoryOverloadedAndThenAllFramesReceived) {
   std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
@@ -1479,6 +1504,476 @@ TEST(DefaultVideoQualityAnalyzerTest, GetStreamFrames) {
   analyzer.Stop();
 
   EXPECT_EQ(analyzer.GetStreamFrames(), stream_to_frame_ids);
+}
+
+TEST(DefaultVideoQualityAnalyzerTest, ReceiverReceivedFramesWhenSenderRemoved) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
+                 kAnalyzerMaxThreadsCount);
+
+  VideoFrame frame = NextFrame(frame_generator.get(), /*timestamp_us=*/1);
+  uint16_t frame_id = analyzer.OnFrameCaptured("alice", "alice_video", frame);
+  frame.set_id(frame_id);
+  analyzer.OnFramePreEncode("alice", frame);
+  analyzer.OnFrameEncoded("alice", frame.id(), FakeEncode(frame),
+                          VideoQualityAnalyzerInterface::EncoderStats());
+
+  analyzer.UnregisterParticipantInCall("alice");
+
+  analyzer.OnFramePreDecode("bob", frame.id(), FakeEncode(frame));
+  analyzer.OnFrameDecoded("bob", DeepCopy(frame),
+                          VideoQualityAnalyzerInterface::DecoderStats());
+  analyzer.OnFrameRendered("bob", DeepCopy(frame));
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(100);
+  analyzer.Stop();
+
+  FrameCounters stream_conters =
+      analyzer.GetPerStreamCounters().at(StatsKey("alice_video", "bob"));
+  EXPECT_EQ(stream_conters.captured, 1);
+  EXPECT_EQ(stream_conters.pre_encoded, 1);
+  EXPECT_EQ(stream_conters.encoded, 1);
+  EXPECT_EQ(stream_conters.received, 1);
+  EXPECT_EQ(stream_conters.decoded, 1);
+  EXPECT_EQ(stream_conters.rendered, 1);
+}
+
+TEST(DefaultVideoQualityAnalyzerTest,
+     ReceiverReceivedFramesWhenSenderRemovedWithSelfview) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
+  options.enable_receive_own_stream = true;
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
+                 kAnalyzerMaxThreadsCount);
+
+  VideoFrame frame = NextFrame(frame_generator.get(), /*timestamp_us=*/1);
+  uint16_t frame_id = analyzer.OnFrameCaptured("alice", "alice_video", frame);
+  frame.set_id(frame_id);
+  analyzer.OnFramePreEncode("alice", frame);
+  analyzer.OnFrameEncoded("alice", frame.id(), FakeEncode(frame),
+                          VideoQualityAnalyzerInterface::EncoderStats());
+
+  analyzer.UnregisterParticipantInCall("alice");
+
+  analyzer.OnFramePreDecode("bob", frame.id(), FakeEncode(frame));
+  analyzer.OnFrameDecoded("bob", DeepCopy(frame),
+                          VideoQualityAnalyzerInterface::DecoderStats());
+  analyzer.OnFrameRendered("bob", DeepCopy(frame));
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(100);
+  analyzer.Stop();
+
+  FrameCounters stream_conters =
+      analyzer.GetPerStreamCounters().at(StatsKey("alice_video", "bob"));
+  EXPECT_EQ(stream_conters.captured, 1);
+  EXPECT_EQ(stream_conters.pre_encoded, 1);
+  EXPECT_EQ(stream_conters.encoded, 1);
+  EXPECT_EQ(stream_conters.received, 1);
+  EXPECT_EQ(stream_conters.decoded, 1);
+  EXPECT_EQ(stream_conters.rendered, 1);
+}
+
+TEST(DefaultVideoQualityAnalyzerTest,
+     SenderReceivedFramesWhenReceiverRemovedWithSelfview) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
+  options.enable_receive_own_stream = true;
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
+                 kAnalyzerMaxThreadsCount);
+
+  VideoFrame frame = NextFrame(frame_generator.get(), /*timestamp_us=*/1);
+  uint16_t frame_id = analyzer.OnFrameCaptured("alice", "alice_video", frame);
+  frame.set_id(frame_id);
+  analyzer.OnFramePreEncode("alice", frame);
+  analyzer.OnFrameEncoded("alice", frame.id(), FakeEncode(frame),
+                          VideoQualityAnalyzerInterface::EncoderStats());
+
+  analyzer.UnregisterParticipantInCall("bob");
+
+  analyzer.OnFramePreDecode("alice", frame.id(), FakeEncode(frame));
+  analyzer.OnFrameDecoded("alice", DeepCopy(frame),
+                          VideoQualityAnalyzerInterface::DecoderStats());
+  analyzer.OnFrameRendered("alice", DeepCopy(frame));
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(100);
+  analyzer.Stop();
+
+  FrameCounters stream_conters =
+      analyzer.GetPerStreamCounters().at(StatsKey("alice_video", "alice"));
+  EXPECT_EQ(stream_conters.captured, 1);
+  EXPECT_EQ(stream_conters.pre_encoded, 1);
+  EXPECT_EQ(stream_conters.encoded, 1);
+  EXPECT_EQ(stream_conters.received, 1);
+  EXPECT_EQ(stream_conters.decoded, 1);
+  EXPECT_EQ(stream_conters.rendered, 1);
+}
+
+TEST(DefaultVideoQualityAnalyzerTest,
+     SenderAndReceiverReceivedFramesWhenReceiverRemovedWithSelfview) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
+  options.enable_receive_own_stream = true;
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
+                 kAnalyzerMaxThreadsCount);
+
+  VideoFrame frame = NextFrame(frame_generator.get(), /*timestamp_us=*/1);
+  uint16_t frame_id = analyzer.OnFrameCaptured("alice", "alice_video", frame);
+  frame.set_id(frame_id);
+  analyzer.OnFramePreEncode("alice", frame);
+  analyzer.OnFrameEncoded("alice", frame.id(), FakeEncode(frame),
+                          VideoQualityAnalyzerInterface::EncoderStats());
+
+  analyzer.OnFramePreDecode("bob", frame.id(), FakeEncode(frame));
+  analyzer.OnFrameDecoded("bob", DeepCopy(frame),
+                          VideoQualityAnalyzerInterface::DecoderStats());
+  analyzer.OnFrameRendered("bob", DeepCopy(frame));
+
+  analyzer.UnregisterParticipantInCall("bob");
+
+  analyzer.OnFramePreDecode("alice", frame.id(), FakeEncode(frame));
+  analyzer.OnFrameDecoded("alice", DeepCopy(frame),
+                          VideoQualityAnalyzerInterface::DecoderStats());
+  analyzer.OnFrameRendered("alice", DeepCopy(frame));
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(100);
+  analyzer.Stop();
+
+  FrameCounters alice_alice_stream_conters =
+      analyzer.GetPerStreamCounters().at(StatsKey("alice_video", "alice"));
+  EXPECT_EQ(alice_alice_stream_conters.captured, 1);
+  EXPECT_EQ(alice_alice_stream_conters.pre_encoded, 1);
+  EXPECT_EQ(alice_alice_stream_conters.encoded, 1);
+  EXPECT_EQ(alice_alice_stream_conters.received, 1);
+  EXPECT_EQ(alice_alice_stream_conters.decoded, 1);
+  EXPECT_EQ(alice_alice_stream_conters.rendered, 1);
+
+  FrameCounters alice_bob_stream_conters =
+      analyzer.GetPerStreamCounters().at(StatsKey("alice_video", "bob"));
+  EXPECT_EQ(alice_bob_stream_conters.captured, 1);
+  EXPECT_EQ(alice_bob_stream_conters.pre_encoded, 1);
+  EXPECT_EQ(alice_bob_stream_conters.encoded, 1);
+  EXPECT_EQ(alice_bob_stream_conters.received, 1);
+  EXPECT_EQ(alice_bob_stream_conters.decoded, 1);
+  EXPECT_EQ(alice_bob_stream_conters.rendered, 1);
+}
+
+TEST(DefaultVideoQualityAnalyzerTest, ReceiverRemovedBeforeCapturing2ndFrame) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
+                 kAnalyzerMaxThreadsCount);
+
+  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video", {"bob"},
+                            /*frames_count=*/1, *frame_generator);
+  analyzer.UnregisterParticipantInCall("bob");
+  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video", {},
+                            /*frames_count=*/1, *frame_generator);
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(100);
+  analyzer.Stop();
+
+  FrameCounters global_stream_conters = analyzer.GetGlobalCounters();
+  EXPECT_EQ(global_stream_conters.captured, 2);
+  EXPECT_EQ(global_stream_conters.pre_encoded, 2);
+  EXPECT_EQ(global_stream_conters.encoded, 2);
+  EXPECT_EQ(global_stream_conters.received, 1);
+  EXPECT_EQ(global_stream_conters.decoded, 1);
+  EXPECT_EQ(global_stream_conters.rendered, 1);
+  FrameCounters stream_conters =
+      analyzer.GetPerStreamCounters().at(StatsKey("alice_video", "bob"));
+  EXPECT_EQ(stream_conters.captured, 2);
+  EXPECT_EQ(stream_conters.pre_encoded, 2);
+  EXPECT_EQ(stream_conters.encoded, 2);
+  EXPECT_EQ(stream_conters.received, 1);
+  EXPECT_EQ(stream_conters.decoded, 1);
+  EXPECT_EQ(stream_conters.rendered, 1);
+}
+
+TEST(DefaultVideoQualityAnalyzerTest, ReceiverRemovedBeforePreEncoded) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
+                 kAnalyzerMaxThreadsCount);
+
+  VideoFrame frame = NextFrame(frame_generator.get(), /*timestamp_us=*/1);
+  uint16_t frame_id = analyzer.OnFrameCaptured("alice", "alice_video", frame);
+  frame.set_id(frame_id);
+  analyzer.UnregisterParticipantInCall("bob");
+  analyzer.OnFramePreEncode("alice", frame);
+  analyzer.OnFrameEncoded("alice", frame.id(), FakeEncode(frame),
+                          VideoQualityAnalyzerInterface::EncoderStats());
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(100);
+  analyzer.Stop();
+
+  FrameCounters global_stream_conters = analyzer.GetGlobalCounters();
+  EXPECT_EQ(global_stream_conters.captured, 1);
+  EXPECT_EQ(global_stream_conters.pre_encoded, 1);
+  EXPECT_EQ(global_stream_conters.encoded, 1);
+  EXPECT_EQ(global_stream_conters.received, 0);
+  EXPECT_EQ(global_stream_conters.decoded, 0);
+  EXPECT_EQ(global_stream_conters.rendered, 0);
+  FrameCounters stream_conters =
+      analyzer.GetPerStreamCounters().at(StatsKey("alice_video", "bob"));
+  EXPECT_EQ(stream_conters.captured, 1);
+  EXPECT_EQ(stream_conters.pre_encoded, 1);
+  EXPECT_EQ(stream_conters.encoded, 1);
+  EXPECT_EQ(stream_conters.received, 0);
+  EXPECT_EQ(stream_conters.decoded, 0);
+  EXPECT_EQ(stream_conters.rendered, 0);
+}
+
+TEST(DefaultVideoQualityAnalyzerTest, ReceiverRemovedBeforeEncoded) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
+                 kAnalyzerMaxThreadsCount);
+
+  VideoFrame frame = NextFrame(frame_generator.get(), /*timestamp_us=*/1);
+  uint16_t frame_id = analyzer.OnFrameCaptured("alice", "alice_video", frame);
+  frame.set_id(frame_id);
+  analyzer.OnFramePreEncode("alice", frame);
+  analyzer.UnregisterParticipantInCall("bob");
+  analyzer.OnFrameEncoded("alice", frame.id(), FakeEncode(frame),
+                          VideoQualityAnalyzerInterface::EncoderStats());
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(100);
+  analyzer.Stop();
+
+  FrameCounters global_stream_conters = analyzer.GetGlobalCounters();
+  EXPECT_EQ(global_stream_conters.captured, 1);
+  EXPECT_EQ(global_stream_conters.pre_encoded, 1);
+  EXPECT_EQ(global_stream_conters.encoded, 1);
+  EXPECT_EQ(global_stream_conters.received, 0);
+  EXPECT_EQ(global_stream_conters.decoded, 0);
+  EXPECT_EQ(global_stream_conters.rendered, 0);
+  FrameCounters stream_conters =
+      analyzer.GetPerStreamCounters().at(StatsKey("alice_video", "bob"));
+  EXPECT_EQ(stream_conters.captured, 1);
+  EXPECT_EQ(stream_conters.pre_encoded, 1);
+  EXPECT_EQ(stream_conters.encoded, 1);
+  EXPECT_EQ(stream_conters.received, 0);
+  EXPECT_EQ(stream_conters.decoded, 0);
+  EXPECT_EQ(stream_conters.rendered, 0);
+}
+
+TEST(DefaultVideoQualityAnalyzerTest,
+     ReceiverRemovedBetweenSimulcastLayersEncoded) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
+                 kAnalyzerMaxThreadsCount);
+
+  VideoFrame frame = NextFrame(frame_generator.get(), /*timestamp_us=*/1);
+  uint16_t frame_id = analyzer.OnFrameCaptured("alice", "alice_video", frame);
+  frame.set_id(frame_id);
+  analyzer.OnFramePreEncode("alice", frame);
+  // 1st simulcast layer encoded
+  analyzer.OnFrameEncoded("alice", frame.id(), FakeEncode(frame),
+                          VideoQualityAnalyzerInterface::EncoderStats());
+  analyzer.UnregisterParticipantInCall("bob");
+  // 2nd simulcast layer encoded
+  analyzer.OnFrameEncoded("alice", frame.id(), FakeEncode(frame),
+                          VideoQualityAnalyzerInterface::EncoderStats());
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(100);
+  analyzer.Stop();
+
+  FrameCounters global_stream_conters = analyzer.GetGlobalCounters();
+  EXPECT_EQ(global_stream_conters.captured, 1);
+  EXPECT_EQ(global_stream_conters.pre_encoded, 1);
+  EXPECT_EQ(global_stream_conters.encoded, 1);
+  EXPECT_EQ(global_stream_conters.received, 0);
+  EXPECT_EQ(global_stream_conters.decoded, 0);
+  EXPECT_EQ(global_stream_conters.rendered, 0);
+  FrameCounters stream_conters =
+      analyzer.GetPerStreamCounters().at(StatsKey("alice_video", "bob"));
+  EXPECT_EQ(stream_conters.captured, 1);
+  EXPECT_EQ(stream_conters.pre_encoded, 1);
+  EXPECT_EQ(stream_conters.encoded, 1);
+  EXPECT_EQ(stream_conters.received, 0);
+  EXPECT_EQ(stream_conters.decoded, 0);
+  EXPECT_EQ(stream_conters.rendered, 0);
+}
+
+TEST(DefaultVideoQualityAnalyzerTest, UnregisterOneAndRegisterAnother) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  analyzer.Start("test_case",
+                 std::vector<std::string>{"alice", "bob", "charlie"},
+                 kAnalyzerMaxThreadsCount);
+
+  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video",
+                            {"bob", "charlie"},
+                            /*frames_count=*/2, *frame_generator);
+  analyzer.UnregisterParticipantInCall("bob");
+  analyzer.RegisterParticipantInCall("david");
+  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video",
+                            {"charlie", "david"},
+                            /*frames_count=*/4, *frame_generator);
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(100);
+  analyzer.Stop();
+
+  FrameCounters global_stream_conters = analyzer.GetGlobalCounters();
+  EXPECT_EQ(global_stream_conters.captured, 6);
+  EXPECT_EQ(global_stream_conters.pre_encoded, 6);
+  EXPECT_EQ(global_stream_conters.encoded, 6);
+  EXPECT_EQ(global_stream_conters.received, 12);
+  EXPECT_EQ(global_stream_conters.decoded, 12);
+  EXPECT_EQ(global_stream_conters.rendered, 12);
+  FrameCounters alice_bob_stream_conters =
+      analyzer.GetPerStreamCounters().at(StatsKey("alice_video", "bob"));
+  EXPECT_EQ(alice_bob_stream_conters.captured, 6);
+  EXPECT_EQ(alice_bob_stream_conters.pre_encoded, 6);
+  EXPECT_EQ(alice_bob_stream_conters.encoded, 6);
+  EXPECT_EQ(alice_bob_stream_conters.received, 2);
+  EXPECT_EQ(alice_bob_stream_conters.decoded, 2);
+  EXPECT_EQ(alice_bob_stream_conters.rendered, 2);
+  FrameCounters alice_charlie_stream_conters =
+      analyzer.GetPerStreamCounters().at(StatsKey("alice_video", "charlie"));
+  EXPECT_EQ(alice_charlie_stream_conters.captured, 6);
+  EXPECT_EQ(alice_charlie_stream_conters.pre_encoded, 6);
+  EXPECT_EQ(alice_charlie_stream_conters.encoded, 6);
+  EXPECT_EQ(alice_charlie_stream_conters.received, 6);
+  EXPECT_EQ(alice_charlie_stream_conters.decoded, 6);
+  EXPECT_EQ(alice_charlie_stream_conters.rendered, 6);
+  FrameCounters alice_david_stream_conters =
+      analyzer.GetPerStreamCounters().at(StatsKey("alice_video", "david"));
+  EXPECT_EQ(alice_david_stream_conters.captured, 6);
+  EXPECT_EQ(alice_david_stream_conters.pre_encoded, 6);
+  EXPECT_EQ(alice_david_stream_conters.encoded, 6);
+  EXPECT_EQ(alice_david_stream_conters.received, 4);
+  EXPECT_EQ(alice_david_stream_conters.decoded, 4);
+  EXPECT_EQ(alice_david_stream_conters.rendered, 4);
+}
+
+TEST(DefaultVideoQualityAnalyzerTest,
+     UnregisterOneAndRegisterAnotherRegisterBack) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(), options);
+  analyzer.Start("test_case",
+                 std::vector<std::string>{"alice", "bob", "charlie"},
+                 kAnalyzerMaxThreadsCount);
+
+  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video",
+                            {"bob", "charlie"},
+                            /*frames_count=*/2, *frame_generator);
+  analyzer.UnregisterParticipantInCall("bob");
+  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video", {"charlie"},
+                            /*frames_count=*/4, *frame_generator);
+  analyzer.RegisterParticipantInCall("bob");
+  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video",
+                            {"bob", "charlie"},
+                            /*frames_count=*/6, *frame_generator);
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(100);
+  analyzer.Stop();
+
+  FrameCounters global_stream_conters = analyzer.GetGlobalCounters();
+  EXPECT_EQ(global_stream_conters.captured, 12);
+  EXPECT_EQ(global_stream_conters.pre_encoded, 12);
+  EXPECT_EQ(global_stream_conters.encoded, 12);
+  EXPECT_EQ(global_stream_conters.received, 20);
+  EXPECT_EQ(global_stream_conters.decoded, 20);
+  EXPECT_EQ(global_stream_conters.rendered, 20);
+  FrameCounters alice_bob_stream_conters =
+      analyzer.GetPerStreamCounters().at(StatsKey("alice_video", "bob"));
+  EXPECT_EQ(alice_bob_stream_conters.captured, 12);
+  EXPECT_EQ(alice_bob_stream_conters.pre_encoded, 12);
+  EXPECT_EQ(alice_bob_stream_conters.encoded, 12);
+  EXPECT_EQ(alice_bob_stream_conters.received, 8);
+  EXPECT_EQ(alice_bob_stream_conters.decoded, 8);
+  EXPECT_EQ(alice_bob_stream_conters.rendered, 8);
+  FrameCounters alice_charlie_stream_conters =
+      analyzer.GetPerStreamCounters().at(StatsKey("alice_video", "charlie"));
+  EXPECT_EQ(alice_charlie_stream_conters.captured, 12);
+  EXPECT_EQ(alice_charlie_stream_conters.pre_encoded, 12);
+  EXPECT_EQ(alice_charlie_stream_conters.encoded, 12);
+  EXPECT_EQ(alice_charlie_stream_conters.received, 12);
+  EXPECT_EQ(alice_charlie_stream_conters.decoded, 12);
+  EXPECT_EQ(alice_charlie_stream_conters.rendered, 12);
 }
 
 }  // namespace

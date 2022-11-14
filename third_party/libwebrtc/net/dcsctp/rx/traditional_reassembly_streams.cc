@@ -80,27 +80,9 @@ absl::optional<std::map<UnwrappedTSN, Data>::iterator> FindEnd(
 
 TraditionalReassemblyStreams::TraditionalReassemblyStreams(
     absl::string_view log_prefix,
-    OnAssembledMessage on_assembled_message,
-    const DcSctpSocketHandoverState* handover_state)
+    OnAssembledMessage on_assembled_message)
     : log_prefix_(log_prefix),
-      on_assembled_message_(std::move(on_assembled_message)) {
-  if (handover_state) {
-    for (const DcSctpSocketHandoverState::OrderedStream& state_stream :
-         handover_state->rx.ordered_streams) {
-      ordered_streams_.emplace(
-          std::piecewise_construct,
-          std::forward_as_tuple(StreamID(state_stream.id)),
-          std::forward_as_tuple(this, SSN(state_stream.next_ssn)));
-    }
-    for (const DcSctpSocketHandoverState::UnorderedStream& state_stream :
-         handover_state->rx.unordered_streams) {
-      unordered_streams_.emplace(
-          std::piecewise_construct,
-          std::forward_as_tuple(StreamID(state_stream.id)),
-          std::forward_as_tuple(this));
-    }
-  }
-}
+      on_assembled_message_(std::move(on_assembled_message)) {}
 
 int TraditionalReassemblyStreams::UnorderedStream::Add(UnwrappedTSN tsn,
                                                        Data data) {
@@ -339,6 +321,27 @@ void TraditionalReassemblyStreams::AddHandoverState(
     DcSctpSocketHandoverState::UnorderedStream state_stream;
     state_stream.id = stream_id.value();
     state.rx.unordered_streams.push_back(std::move(state_stream));
+  }
+}
+
+void TraditionalReassemblyStreams::RestoreFromState(
+    const DcSctpSocketHandoverState& state) {
+  // Validate that the component is in pristine state.
+  RTC_DCHECK(ordered_streams_.empty());
+  RTC_DCHECK(unordered_streams_.empty());
+
+  for (const DcSctpSocketHandoverState::OrderedStream& state_stream :
+       state.rx.ordered_streams) {
+    ordered_streams_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(StreamID(state_stream.id)),
+        std::forward_as_tuple(this, SSN(state_stream.next_ssn)));
+  }
+  for (const DcSctpSocketHandoverState::UnorderedStream& state_stream :
+       state.rx.unordered_streams) {
+    unordered_streams_.emplace(std::piecewise_construct,
+                               std::forward_as_tuple(StreamID(state_stream.id)),
+                               std::forward_as_tuple(this));
   }
 }
 

@@ -142,6 +142,9 @@ class VideoQualityAnalyzerInterface
 
   // Will be called before test adds new participant in the middle of a call.
   virtual void RegisterParticipantInCall(absl::string_view peer_name) {}
+  // Will be called after test removed existing participant in the middle of the
+  // call.
+  virtual void UnregisterParticipantInCall(absl::string_view peer_name) {}
 
   // Tells analyzer that analysis complete and it should calculate final
   // statistics.
@@ -153,12 +156,6 @@ class VideoQualityAnalyzerInterface
   virtual std::string GetStreamLabel(uint16_t frame_id) = 0;
 };
 
-namespace webrtc_pc_e2e {
-
-// Temporary alias to make downstream projects able to migrate.
-using VideoQualityAnalyzerInterface = ::webrtc::VideoQualityAnalyzerInterface;
-
-}  // namespace webrtc_pc_e2e
 }  // namespace webrtc
 
 #endif  // API_TEST_VIDEO_QUALITY_ANALYZER_INTERFACE_H_

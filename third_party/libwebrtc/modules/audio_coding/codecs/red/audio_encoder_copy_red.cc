@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/byte_order.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"

@@ -24,6 +24,7 @@
 #include "api/array_view.h"
 #include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/transport/field_trial_based_config.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/mdns_responder_interface.h"
@@ -32,7 +33,6 @@
 #include "rtc_base/network_monitor_factory.h"
 #include "rtc_base/socket_factory.h"
 #include "rtc_base/system/rtc_export.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread_annotations.h"
 
@@ -262,16 +262,6 @@ class RTC_EXPORT BasicNetworkManager : public NetworkManagerBase,
                                        public NetworkBinderInterface,
                                        public sigslot::has_slots<> {
  public:
-  // This version is used by chromium.
-  ABSL_DEPRECATED(
-      "Use the version with socket_factory, see bugs.webrtc.org/13145")
-  explicit BasicNetworkManager(
-      const webrtc::FieldTrialsView* field_trials = nullptr)
-      : BasicNetworkManager(
-            /* network_monitor_factory= */ nullptr,
-            /* socket_factory= */ nullptr,
-            field_trials) {}
-
   // This is used by lots of downstream code.
   BasicNetworkManager(SocketFactory* socket_factory,
                       const webrtc::FieldTrialsView* field_trials = nullptr)
@@ -322,6 +312,8 @@ class RTC_EXPORT BasicNetworkManager : public NetworkManagerBase,
                       bool include_ignored,
                       std::vector<std::unique_ptr<Network>>* networks) const
       RTC_RUN_ON(thread_);
+  NetworkMonitorInterface::InterfaceInfo GetInterfaceInfo(
+      struct ifaddrs* cursor) const RTC_RUN_ON(thread_);
 #endif  // defined(WEBRTC_POSIX)
 
   // Creates a network object for each network available on the machine.

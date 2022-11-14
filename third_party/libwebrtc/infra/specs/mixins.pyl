@@ -113,13 +113,13 @@
       }
     }
   },
-  'ios-simulator-14.0': {
+  'ios-simulator-14.5': {
     '$mixin_append': {
-      'args': ['--platform', 'iPhone X', '--version', '14.0'],
+      'args': ['--platform', 'iPhone X', '--version', '14.5'],
       'swarming': {
         'named_caches': [{
-          'name': 'runtime_ios_14_0',
-          'path': 'Runtime-ios-14.0'
+          'name': 'runtime_ios_14_5',
+          'path': 'Runtime-ios-14.5'
         }]
       }
     }
@@ -168,6 +168,13 @@
     'swarming': {
       'dimensions': {
         'os': 'Mac-11'
+      }
+    }
+  },
+  'mac11_or_mac12': {
+    'swarming': {
+      'dimensions': {
+        'os': 'Mac-11|Mac-12'
       }
     }
   },
@@ -268,6 +275,21 @@
       }
     }
   },
+  'shards-2': {
+    'swarming': {
+      'shards': 2
+    }
+  },
+  'shards-4': {
+    'swarming': {
+      'shards': 4
+    }
+  },
+  'shards-6': {
+    'swarming': {
+      'shards': 6
+    }
+  },
   'timeout-2h': {
     'swarming': {
       'hard_timeout': 7200,
@@ -300,17 +322,10 @@
       }
     }
   },
-  'win10-1703': {
+  'win10': {
     'swarming': {
       'dimensions': {
-        'os': 'Windows-10-15063'
-      }
-    }
-  },
-  'win7': {
-    'swarming': {
-      'dimensions': {
-        'os': 'Windows-7-SP1'
+        'os': 'Windows-10-19042'
       }
     }
   },
@@ -318,17 +333,6 @@
     'swarming': {
       'dimensions': {
         'cpu': 'x86-64'
-      }
-    }
-  },
-  'xcode_12a7209': {
-    '$mixin_append': {
-      'args': ['--xcode-build-version', '12a7209'],
-      'swarming': {
-        'named_caches': [{
-          'name': 'xcode_ios_12a7209',
-          'path': 'Xcode.app'
-        }]
       }
     }
   },

@@ -9,6 +9,7 @@
  */
 
 #import <OCMock/OCMock.h>
+#import <XCTest/XCTest.h>
 
 #if TARGET_OS_IPHONE
 #import <UIKit/UIKit.h>
@@ -67,7 +68,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
     : (AVCaptureSession *)captureSession;
 @end
 
-@interface RTCCameraVideoCapturerTests : NSObject
+@interface RTCCameraVideoCapturerTests : XCTestCase
 @property(nonatomic, strong) id delegateMock;
 @property(nonatomic, strong) id deviceMock;
 @property(nonatomic, strong) id captureConnectionMock;
@@ -455,112 +456,3 @@ CMSampleBufferRef createTestSampleBufferRef() {
 }
 
 @end
-
-TEST(RTCCameraVideoCapturerTests, SetupSession) {
-  RTCCameraVideoCapturerTests *test = [[RTCCameraVideoCapturerTests alloc] init];
-  [test setup];
-  [test testSetupSession];
-  [test tearDown];
-}
-
-TEST(RTCCameraVideoCapturerTests, SetupSessionOutput) {
-  RTCCameraVideoCapturerTests *test = [[RTCCameraVideoCapturerTests alloc] init];
-  [test setup];
-  [test testSetupSessionOutput];
-  [test tearDown];
-}
-
-TEST(RTCCameraVideoCapturerTests, SupportedFormatsForDevice) {
-  RTCCameraVideoCapturerTests *test = [[RTCCameraVideoCapturerTests alloc] init];
-  [test setup];
-  [test testSupportedFormatsForDevice];
-  [test tearDown];
-}
-
-TEST(RTCCameraVideoCapturerTests, DelegateCallbackNotCalledWhenInvalidBuffer) {
-  RTCCameraVideoCapturerTests *test = [[RTCCameraVideoCapturerTests alloc] init];
-  [test setup];
-  [test testDelegateCallbackNotCalledWhenInvalidBuffer];
-  [test tearDown];
-}
-
-TEST(RTCCameraVideoCapturerTests, DelegateCallbackWithValidBufferAndOrientationUpdate) {
-  RTCCameraVideoCapturerTests *test = [[RTCCameraVideoCapturerTests alloc] init];
-  [test setup];
-  [test testDelegateCallbackWithValidBufferAndOrientationUpdate];
-  [test tearDown];
-}
-
-TEST(RTCCameraVideoCapturerTests, RotationCameraBackLandscapeLeft) {
-  RTCCameraVideoCapturerTests *test = [[RTCCameraVideoCapturerTests alloc] init];
-  [test setup];
-  [test testRotationCamera:AVCaptureDevicePositionBack
-           withOrientation:UIDeviceOrientationLandscapeLeft];
-  [test tearDown];
-}
-
-TEST(RTCCameraVideoCapturerTests, RotationCameraFrontLandscapeLeft) {
-  RTCCameraVideoCapturerTests *test = [[RTCCameraVideoCapturerTests alloc] init];
-  [test setup];
-  [test testRotationCamera:AVCaptureDevicePositionFront
-           withOrientation:UIDeviceOrientationLandscapeLeft];
-  [test tearDown];
-}
-
-TEST(RTCCameraVideoCapturerTests, RotationCameraBackLandscapeRight) {
-  RTCCameraVideoCapturerTests *test = [[RTCCameraVideoCapturerTests alloc] init];
-  [test setup];
-  [test testRotationCamera:AVCaptureDevicePositionBack
-           withOrientation:UIDeviceOrientationLandscapeRight];
-  [test tearDown];
-}
-
-TEST(RTCCameraVideoCapturerTests, RotationCameraFrontLandscapeRight) {
-  RTCCameraVideoCapturerTests *test = [[RTCCameraVideoCapturerTests alloc] init];
-  [test setup];
-  [test testRotationCamera:AVCaptureDevicePositionFront
-           withOrientation:UIDeviceOrientationLandscapeRight];
-  [test tearDown];
-}
-
-TEST(RTCCameraVideoCapturerTests, RotationCameraFrame) {
-  RTCCameraVideoCapturerTests *test = [[RTCCameraVideoCapturerTests alloc] init];
-  [test setup];
-  [test testRotationFrame];
-  [test tearDown];
-}
-
-TEST(RTCCameraVideoCapturerTests, ImageExif) {
-  RTCCameraVideoCapturerTests *test = [[RTCCameraVideoCapturerTests alloc] init];
-  [test setup];
-  [test testImageExif];
-  [test tearDown];
-}
-
-TEST(RTCCameraVideoCapturerTests, StartAndStopCapture) {
-  RTCCameraVideoCapturerTests *test = [[RTCCameraVideoCapturerTests alloc] init];
-  [test setupWithMockedCaptureSession];
-  [test testStartingAndStoppingCapture];
-  [test tearDown];
-}
-
-TEST(RTCCameraVideoCapturerTests, StartCaptureFailingToLockForConfiguration) {
-  RTCCameraVideoCapturerTests *test = [[RTCCameraVideoCapturerTests alloc] init];
-  [test setupWithMockedCaptureSession];
-  [test testStartCaptureFailingToLockForConfiguration];
-  [test tearDown];
-}
-
-TEST(RTCCameraVideoCapturerTests, StartAndStopCaptureWithCallbacks) {
-  RTCCameraVideoCapturerTests *test = [[RTCCameraVideoCapturerTests alloc] init];
-  [test setupWithMockedCaptureSession];
-  [test testStartingAndStoppingCaptureWithCallbacks];
-  [test tearDown];
-}
-
-TEST(RTCCameraVideoCapturerTests, StartCaptureFailingToLockForConfigurationWithCallback) {
-  RTCCameraVideoCapturerTests *test = [[RTCCameraVideoCapturerTests alloc] init];
-  [test setupWithMockedCaptureSession];
-  [test testStartCaptureFailingToLockForConfigurationWithCallback];
-  [test tearDown];
-}

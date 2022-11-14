@@ -16,7 +16,6 @@
 #include "absl/memory/memory.h"
 #include "modules/rtp_rtcp/source/rtp_descriptor_authentication.h"
 #include "modules/rtp_rtcp/source/rtp_sender_video.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 
 namespace webrtc {
 namespace {
@@ -140,10 +139,10 @@ void RTPSenderVideoFrameTransformerDelegate::OnTransformedFrame(
   if (!sender_ || !encoder_queue_)
     return;
   rtc::scoped_refptr<RTPSenderVideoFrameTransformerDelegate> delegate(this);
-  encoder_queue_->PostTask(ToQueuedTask(
+  encoder_queue_->PostTask(
       [delegate = std::move(delegate), frame = std::move(frame)]() mutable {
         delegate->SendVideo(std::move(frame));
-      }));
+      });
 }
 
 void RTPSenderVideoFrameTransformerDelegate::SendVideo(

@@ -25,6 +25,7 @@ will generate a shared library.
 
 ## **Allowed**
 
+* `absl::AnyInvocable`
 * `absl::bind_front`
 * `absl::Cleanup`
 * `absl::InlinedVector`

@@ -171,7 +171,8 @@ class WebrtcVideoConduit
   // will generate one if needed.
   void EnsureRemoteSSRC();
 
-  Maybe<webrtc::VideoReceiveStream::Stats> GetReceiverStats() const override;
+  Maybe<webrtc::VideoReceiveStreamInterface::Stats> GetReceiverStats()
+      const override;
   Maybe<webrtc::VideoSendStream::Stats> GetSenderStats() const override;
   Maybe<webrtc::CallBasicStats> GetCallStats() const override;
 
@@ -369,7 +370,7 @@ class WebrtcVideoConduit
   // Must call webrtc::Call::DestroyVideoReceive/SendStream to delete this.
   // Written only on the Call thread. Guarded by mMutex, except for reads on the
   // Call thread.
-  webrtc::VideoReceiveStream* mRecvStream = nullptr;
+  webrtc::VideoReceiveStreamInterface* mRecvStream = nullptr;
 
   // Must call webrtc::Call::DestroyVideoReceive/SendStream to delete this.
   webrtc::VideoSendStream* mSendStream = nullptr;
@@ -444,7 +445,7 @@ class WebrtcVideoConduit
       mVideoStreamFactory;
 
   // Call thread only.
-  webrtc::VideoReceiveStream::Config mRecvStreamConfig;
+  webrtc::VideoReceiveStreamInterface::Config mRecvStreamConfig;
 
   // Are SSRC changes without signaling allowed or not.
   // Call thread only.

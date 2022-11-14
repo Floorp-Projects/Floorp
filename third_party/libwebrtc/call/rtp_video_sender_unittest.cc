@@ -15,6 +15,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/functional/any_invocable.h"
 #include "call/rtp_transport_controller_send.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/byte_io.h"
@@ -128,15 +129,13 @@ class RtpVideoSenderTestFixture {
                                             payload_type)),
         send_delay_stats_(time_controller_.GetClock()),
         bitrate_config_(GetBitrateConfig()),
-        transport_controller_(
-            time_controller_.GetClock(),
-            &event_log_,
-            nullptr,
-            nullptr,
-            bitrate_config_,
-            time_controller_.CreateProcessThread("PacerThread"),
-            time_controller_.GetTaskQueueFactory(),
-            field_trials ? *field_trials : field_trials_),
+        transport_controller_(time_controller_.GetClock(),
+                              &event_log_,
+                              nullptr,
+                              nullptr,
+                              bitrate_config_,
+                              time_controller_.GetTaskQueueFactory(),
+                              field_trials ? *field_trials : field_trials_),
         stats_proxy_(time_controller_.GetClock(),
                      config_,
                      VideoEncoderConfig::ContentType::kRealtimeVideo,
@@ -205,10 +204,9 @@ class RtpVideoSenderTestFixture {
   // default thread as the transport queue, explicit checks for the transport
   // queue (not just using a SequenceChecker) aren't possible unless such a
   // queue is actually active. So RunOnTransportQueue is a convenience function
-  // that allow for running a closure on the transport queue, similar to
+  // that allow for running a `task` on the transport queue, similar to
   // SendTask().
-  template <typename Closure>
-  void RunOnTransportQueue(Closure&& task) {
+  void RunOnTransportQueue(absl::AnyInvocable<void() &&> task) {
     transport_controller_.GetWorkerQueue()->PostTask(std::move(task));
     AdvanceTime(TimeDelta::Millis(0));
   }

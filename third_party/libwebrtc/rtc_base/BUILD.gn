@@ -194,7 +194,6 @@ rtc_library("event_tracer") {
     "trace_event.h",
   ]
   deps = [
-    ":atomicops",
     ":checks",
     ":logging",
     ":macromagic",
@@ -346,7 +345,6 @@ rtc_library("criticalsection") {
     "deprecated/recursive_critical_section.h",
   ]
   deps = [
-    ":atomicops",
     ":checks",
     ":macromagic",
     ":platform_thread_types",
@@ -361,7 +359,6 @@ rtc_library("platform_thread") {
     "platform_thread.h",
   ]
   deps = [
-    ":atomicops",
     ":checks",
     ":macromagic",
     ":platform_thread_types",
@@ -451,10 +448,6 @@ rtc_library("logging") {
       libs += [ "log" ]
     }
   }
-}
-
-rtc_source_set("atomicops") {
-  sources = [ "atomic_ops.h" ]
 }
 
 rtc_library("checks") {
@@ -609,9 +602,11 @@ rtc_library("rtc_task_queue") {
     ":macromagic",
     "../api/task_queue",
     "system:rtc_export",
-    "task_utils:to_queued_task",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
+    "//third_party/abseil-cpp/absl/memory",
+  ]
 }
 
 rtc_source_set("rtc_operations_chain") {
@@ -624,6 +619,7 @@ rtc_source_set("rtc_operations_chain") {
     ":checks",
     ":macromagic",
     ":refcount",
+    "../api:make_ref_counted",
     "../api:refcountedbase",
     "../api:scoped_refptr",
     "../api:sequence_checker",
@@ -648,14 +644,16 @@ if (rtc_enable_libevent) {
       ":safe_conversions",
       ":timeutils",
       "../api/task_queue",
+      "../api/units:time_delta",
       "synchronization:mutex",
     ]
     absl_deps = [
       "//third_party/abseil-cpp/absl/container:inlined_vector",
+      "//third_party/abseil-cpp/absl/functional:any_invocable",
       "//third_party/abseil-cpp/absl/strings",
     ]
     if (rtc_build_libevent) {
-      deps += [ "//base/third_party/libevent" ]
+      deps += [ "//third_party/libevent" ]
     }
   }
 }
@@ -671,20 +669,28 @@ if (is_mac || is_ios) {
       ":checks",
       ":logging",
       "../api/task_queue",
+      "../api/units:time_delta",
       "synchronization:mutex",
       "system:gcd_helpers",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/functional:any_invocable",
+      "//third_party/abseil-cpp/absl/strings",
+    ]
   }
 }
 
 if (is_win) {
   rtc_library("rtc_task_queue_win") {
     visibility = [ "../api/task_queue:default_task_queue_factory" ]
+# See Bug 1797161 for more info.  Remove from build until win32k
+# usage is removed.
+if (!build_with_mozilla) {
     sources = [
       "task_queue_win.cc",
       "task_queue_win.h",
     ]
+}
     deps = [
       ":checks",
       ":logging",
@@ -694,9 +700,12 @@ if (is_win) {
       ":safe_conversions",
       ":timeutils",
       "../api/task_queue",
+      "../api/units:time_delta",
+      "../api/units:timestamp",
       "synchronization:mutex",
     ]
     absl_deps = [
+      "//third_party/abseil-cpp/absl/functional:any_invocable",
       "//third_party/abseil-cpp/absl/strings",
       "//third_party/abseil-cpp/absl/types:optional",
     ]
@@ -710,6 +719,7 @@ rtc_library("rtc_task_queue_stdlib") {
   ]
   deps = [
     ":checks",
+    ":divide_round",
     ":logging",
     ":macromagic",
     ":platform_thread",
@@ -717,9 +727,13 @@ rtc_library("rtc_task_queue_stdlib") {
     ":safe_conversions",
     ":timeutils",
     "../api/task_queue",
+    "../api/units:time_delta",
     "synchronization:mutex",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
+    "//third_party/abseil-cpp/absl/strings",
+  ]
 }
 
 rtc_library("weak_ptr") {
@@ -919,11 +933,12 @@ rtc_library("threading") {
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/cleanup",
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
     "//third_party/abseil-cpp/absl/strings",
   ]
   deps = [
     ":async_resolver_interface",
-    ":atomicops",
     ":byte_order",
     ":checks",
     ":criticalsection",
@@ -947,11 +962,11 @@ rtc_library("threading") {
     "../api:scoped_refptr",
     "../api:sequence_checker",
     "../api/task_queue",
+    "../api/task_queue:pending_task_safety_flag",
+    "../api/units:time_delta",
     "synchronization:mutex",
     "system:no_unique_address",
     "system:rtc_export",
-    "task_utils:pending_task_safety_flag",
-    "task_utils:to_queued_task",
     "third_party/sigslot",
   ]
   if (is_android) {
@@ -1084,12 +1099,15 @@ rtc_library("rtc_base") {
     "../api:array_view",
     "../api:field_trials_view",
     "../api:function_view",
+    "../api:make_ref_counted",
     "../api:refcountedbase",
     "../api:scoped_refptr",
     "../api:sequence_checker",
     "../api/numerics",
     "../api/task_queue",
+    "../api/task_queue:pending_task_safety_flag",
     "../api/transport:field_trial_based_config",
+    "../api/units:time_delta",
     "../system_wrappers:field_trial",
     "memory:always_valid_pointer",
     "network:sent_packet",
@@ -1098,9 +1116,7 @@ rtc_library("rtc_base") {
     "system:inline",
     "system:no_unique_address",
     "system:rtc_export",
-    "task_utils:pending_task_safety_flag",
     "task_utils:repeating_task",
-    "task_utils:to_queued_task",
     "third_party/base64",
     "third_party/sigslot",
   ]
@@ -1383,7 +1399,6 @@ rtc_library("rtc_base_tests_utils") {
     "memory:always_valid_pointer",
     "memory:fifo_buffer",
     "synchronization:mutex",
-    "task_utils:to_queued_task",
     "third_party/sigslot",
   ]
   absl_deps = [
@@ -1406,11 +1421,14 @@ rtc_library("task_queue_for_test") {
     ":macromagic",
     ":rtc_event",
     ":rtc_task_queue",
+    "../api:function_view",
     "../api/task_queue",
     "../api/task_queue:default_task_queue_factory",
-    "task_utils:to_queued_task",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/cleanup",
+    "//third_party/abseil-cpp/absl/strings",
+  ]
 }
 }
 
@@ -1499,7 +1517,6 @@ if (rtc_include_tests) {
     rtc_library("rtc_base_approved_unittests") {
       testonly = true
       sources = [
-        "atomic_ops_unittest.cc",
         "base64_unittest.cc",
         "bit_buffer_unittest.cc",
         "bitstream_reader_unittest.cc",
@@ -1543,7 +1560,6 @@ if (rtc_include_tests) {
         "zero_memory_unittest.cc",
       ]
       deps = [
-        ":atomicops",
         ":bit_buffer",
         ":bitstream_reader",
         ":bounded_inline_vector",
@@ -1593,6 +1609,7 @@ if (rtc_include_tests) {
         ":timeutils",
         ":zero_memory",
         "../api:array_view",
+        "../api:make_ref_counted",
         "../api:scoped_refptr",
         "../api/numerics",
         "../api/units:time_delta",
@@ -1604,7 +1621,6 @@ if (rtc_include_tests) {
         "containers:unittests",
         "memory:unittests",
         "synchronization:mutex",
-        "task_utils:to_queued_task",
         "third_party/base64",
         "third_party/sigslot",
       ]
@@ -1632,6 +1648,7 @@ if (rtc_include_tests) {
         ":rtc_task_queue",
         ":task_queue_for_test",
         ":timeutils",
+        "../api/units:time_delta",
         "../test:test_main",
         "../test:test_support",
       ]
@@ -1711,7 +1728,6 @@ if (rtc_include_tests) {
         "unique_id_generator_unittest.cc",
       ]
       deps = [
-        ":atomicops",
         ":buffer",
         ":buffer_queue",
         ":checks",
@@ -1721,7 +1737,6 @@ if (rtc_include_tests) {
         ":macromagic",
         ":net_helpers",
         ":null_socket_server",
-        ":refcount",
         ":rtc_base",
         ":rtc_base_tests_utils",
         ":rtc_event",
@@ -1735,8 +1750,11 @@ if (rtc_include_tests) {
         ":threading",
         ":timeutils",
         "../api:array_view",
+        "../api:make_ref_counted",
         "../api/task_queue",
+        "../api/task_queue:pending_task_safety_flag",
         "../api/task_queue:task_queue_test",
+        "../api/units:time_delta",
         "../test:field_trial",
         "../test:fileutils",
         "../test:rtc_expect_death",
@@ -1745,8 +1763,6 @@ if (rtc_include_tests) {
         "../test:test_support",
         "memory:fifo_buffer",
         "synchronization:mutex",
-        "task_utils:pending_task_safety_flag",
-        "task_utils:to_queued_task",
         "third_party/sigslot",
       ]
       if (enable_google_benchmarks) {
@@ -1771,6 +1787,7 @@ if (rtc_include_tests) {
       }
       absl_deps = [
         "//third_party/abseil-cpp/absl/algorithm:container",
+        "//third_party/abseil-cpp/absl/functional:any_invocable",
         "//third_party/abseil-cpp/absl/memory",
         "//third_party/abseil-cpp/absl/strings",
         "//third_party/abseil-cpp/absl/types:optional",

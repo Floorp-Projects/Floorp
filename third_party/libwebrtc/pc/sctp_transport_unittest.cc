@@ -24,7 +24,6 @@
 #include "pc/dtls_transport.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/gunit.h"
-#include "rtc_base/ref_counted_object.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -147,12 +146,14 @@ class SctpTransportTest : public ::testing::Test {
     return static_cast<FakeCricketSctpTransport*>(transport_->internal());
   }
 
+  rtc::AutoThread main_thread_;
   rtc::scoped_refptr<SctpTransport> transport_;
   rtc::scoped_refptr<DtlsTransport> dtls_transport_;
   TestSctpTransportObserver observer_;
 };
 
 TEST(SctpTransportSimpleTest, CreateClearDelete) {
+  rtc::AutoThread main_thread;
   std::unique_ptr<cricket::SctpTransportInternal> fake_cricket_sctp_transport =
       absl::WrapUnique(new FakeCricketSctpTransport());
   rtc::scoped_refptr<SctpTransport> sctp_transport =

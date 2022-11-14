@@ -14,8 +14,9 @@
 #include <string>
 #include <utility>
 
+#include "absl/strings/string_view.h"
+#include "api/make_ref_counted.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/synchronization/mutex.h"
 
 namespace webrtc {
@@ -24,7 +25,7 @@ namespace webrtc {
 // a single ResourceListener.
 class BroadcastResourceListener::AdapterResource : public Resource {
  public:
-  explicit AdapterResource(std::string name) : name_(std::move(name)) {}
+  explicit AdapterResource(absl::string_view name) : name_(std::move(name)) {}
   ~AdapterResource() override { RTC_DCHECK(!listener_); }
 
   // The parent is letting us know we have a usage neasurement.

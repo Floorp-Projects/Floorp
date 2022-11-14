@@ -16,6 +16,7 @@
 
 #include "absl/types/optional.h"
 #include "api/rtc_event_log/rtc_event_log.h"
+#include "api/units/time_delta.h"
 #include "call/rtp_video_sender.h"
 #include "call/test/mock_bitrate_allocator.h"
 #include "call/test/mock_rtp_transport_controller_send.h"
@@ -149,7 +150,7 @@ class VideoSendStreamImplTest : public ::testing::Test {
     std::map<uint32_t, RtpState> suspended_ssrcs;
     std::map<uint32_t, RtpPayloadState> suspended_payload_states;
     auto ret = std::make_unique<VideoSendStreamImpl>(
-        &clock_, &stats_proxy_, &test_queue_, &transport_controller_,
+        &clock_, &stats_proxy_, test_queue_.Get(), &transport_controller_,
         &bitrate_allocator_, &video_stream_encoder_, &config_,
         initial_encoder_max_bitrate, initial_encoder_bitrate_priority,
         content_type, &rtp_video_sender_, field_trials_);
@@ -866,7 +867,7 @@ TEST_F(VideoSendStreamImplTest, DisablesPaddingOnPausedEncoder) {
       RTC_FROM_HERE);
 
   rtc::Event done;
-  test_queue_.PostDelayedTask(
+  test_queue_.Get()->PostDelayedTask(
       [&] {
         // No padding supposed to be sent for paused observer
         EXPECT_EQ(0, padding_bitrate);
@@ -874,7 +875,7 @@ TEST_F(VideoSendStreamImplTest, DisablesPaddingOnPausedEncoder) {
         vss_impl->Stop();
         done.Set();
       },
-      5000);
+      TimeDelta::Seconds(5));
 
   // Pause the test suite so that the last delayed task executes.
   ASSERT_TRUE(done.Wait(10000));
@@ -904,13 +905,13 @@ TEST_F(VideoSendStreamImplTest, KeepAliveOnDroppedFrame) {
       RTC_FROM_HERE);
 
   rtc::Event done;
-  test_queue_.PostDelayedTask(
+  test_queue_.Get()->PostDelayedTask(
       [&] {
         testing::Mock::VerifyAndClearExpectations(&bitrate_allocator_);
         vss_impl->Stop();
         done.Set();
       },
-      2000);
+      TimeDelta::Seconds(2));
   ASSERT_TRUE(done.Wait(5000));
 }
 

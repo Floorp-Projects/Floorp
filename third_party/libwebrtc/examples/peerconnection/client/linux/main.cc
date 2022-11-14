@@ -19,7 +19,6 @@
 #include "examples/peerconnection/client/linux/main_wnd.h"
 #include "examples/peerconnection/client/peer_connection_client.h"
 #include "rtc_base/physical_socket_server.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/ssl_adapter.h"
 #include "rtc_base/thread.h"
 #include "system_wrappers/include/field_trial.h"

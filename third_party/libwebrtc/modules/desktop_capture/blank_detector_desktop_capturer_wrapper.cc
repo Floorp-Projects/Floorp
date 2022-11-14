@@ -86,7 +86,13 @@ void BlankDetectorDesktopCapturerWrapper::OnCaptureResult(
     return;
   }
 
-  RTC_DCHECK(frame);
+  if (!frame) {
+    // Capturer can call the blank detector with empty frame. Blank
+    // detector regards it as a blank frame.
+    callback_->OnCaptureResult(Result::ERROR_TEMPORARY,
+                               std::unique_ptr<DesktopFrame>());
+    return;
+  }
 
   // If nothing has been changed in current frame, we do not need to check it
   // again.

@@ -16,9 +16,11 @@
 #include <string>
 #include <type_traits>
 
+#include "absl/functional/any_invocable.h"
 #include "api/array_view.h"
 #include "api/audio_options.h"
 #include "api/rtp_parameters.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "media/base/codec.h"
 #include "media/base/fake_media_engine.h"
 #include "media/base/fake_rtp.h"
@@ -42,8 +44,6 @@
 #include "rtc_base/location.h"
 #include "rtc_base/rtc_certificate.h"
 #include "rtc_base/ssl_identity.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
-#include "rtc_base/task_utils/to_queued_task.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/scoped_key_value_config.h"
@@ -419,7 +419,7 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
   }
 
   void SendRtp(typename T::MediaChannel* media_channel, rtc::Buffer data) {
-    network_thread_->PostTask(webrtc::ToQueuedTask(
+    network_thread_->PostTask(webrtc::SafeTask(
         network_thread_safety_, [media_channel, data = std::move(data)]() {
           media_channel->SendRtp(data.data(), data.size(),
                                  rtc::PacketOptions());
@@ -503,11 +503,10 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
   // destroyed before this object goes out of scope.
   class ScopedCallThread {
    public:
-    template <class FunctorT>
-    explicit ScopedCallThread(FunctorT&& functor)
+    explicit ScopedCallThread(absl::AnyInvocable<void() &&> functor)
         : thread_(rtc::Thread::Create()) {
       thread_->Start();
-      thread_->PostTask(std::forward<FunctorT>(functor));
+      thread_->PostTask(std::move(functor));
     }
 
     ~ScopedCallThread() { thread_->Stop(); }
@@ -1412,6 +1411,7 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     return static_cast<typename T::MediaChannel*>(channel2_->media_channel());
   }
 
+  rtc::AutoThread main_thread_;
   // TODO(pbos): Remove playout from all media channels and let renderers mute
   // themselves.
   const bool verify_playout_;

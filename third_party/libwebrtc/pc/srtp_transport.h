@@ -41,7 +41,6 @@ class SrtpTransport : public RtpTransport {
 
   virtual ~SrtpTransport() = default;
 
-  // SrtpTransportInterface specific implementation.
   virtual RTCError SetSrtpSendKey(const cricket::CryptoParams& params);
   virtual RTCError SetSrtpReceiveKey(const cricket::CryptoParams& params);
 

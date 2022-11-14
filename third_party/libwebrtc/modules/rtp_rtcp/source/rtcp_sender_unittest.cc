@@ -21,6 +21,7 @@
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_impl2.h"
 #include "rtc_base/rate_limiter.h"
+#include "rtc_base/thread.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/mock_transport.h"
@@ -131,6 +132,7 @@ class RtcpSenderTest : public ::testing::Test {
     return rtp_rtcp_impl_->GetFeedbackState();
   }
 
+  rtc::AutoThread main_thread_;
   SimulatedClock clock_;
   TestTransport test_transport_;
   std::unique_ptr<ReceiveStatistics> receive_statistics_;
@@ -601,8 +603,6 @@ TEST_F(RtcpSenderTest, TestRegisterRtcpPacketTypeObserver) {
   EXPECT_EQ(1, parser()->pli()->num_packets());
   EXPECT_EQ(kRemoteSsrc, observer.ssrc_);
   EXPECT_EQ(1U, observer.counter_.pli_packets);
-  EXPECT_EQ(clock_.TimeInMilliseconds(),
-            observer.counter_.first_packet_time_ms);
 }
 
 TEST_F(RtcpSenderTest, SendTmmbr) {
@@ -829,7 +829,7 @@ TEST_F(RtcpSenderTest, SendsCombinedRtcpPacket) {
 
   std::vector<std::unique_ptr<rtcp::RtcpPacket>> packets;
   auto transport_feedback = std::make_unique<rtcp::TransportFeedback>();
-  transport_feedback->AddReceivedPacket(321, 10000);
+  transport_feedback->AddReceivedPacket(321, Timestamp::Millis(10));
   packets.push_back(std::move(transport_feedback));
   auto remote_estimate = std::make_unique<rtcp::RemoteEstimate>();
   packets.push_back(std::move(remote_estimate));

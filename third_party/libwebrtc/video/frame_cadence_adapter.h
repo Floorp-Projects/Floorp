@@ -41,6 +41,9 @@ class FrameCadenceAdapterInterface
   // and some worst case RTT.
   static constexpr TimeDelta kZeroHertzIdleRepeatRatePeriod =
       TimeDelta::Millis(1000);
+  // The number of frame periods to wait for new frames until starting to
+  // request refresh frames.
+  static constexpr int kOnDiscardedFrameRefreshFramePeriod = 3;
 
   struct ZeroHertzModeParams {
     // The number of simulcast layers used in this configuration.

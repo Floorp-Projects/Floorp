@@ -135,6 +135,7 @@ class ResourceAdaptationProcessorTest : public ::testing::Test {
   }
 
  protected:
+  rtc::AutoThread main_thread_;
   webrtc::test::ScopedKeyValueConfig field_trials_;
   FakeFrameRateProvider frame_rate_provider_;
   VideoStreamInputStateProvider input_state_provider_;
@@ -429,8 +430,8 @@ TEST_F(ResourceAdaptationProcessorTest,
   SetInputStates(true, kDefaultFrameRate, kDefaultFrameSize);
 
   TaskQueueForTest resource_task_queue("ResourceTaskQueue");
-  resource_task_queue.PostTask(ToQueuedTask(
-      [&]() { resource_->SetUsageState(ResourceUsageState::kOveruse); }));
+  resource_task_queue.PostTask(
+      [&]() { resource_->SetUsageState(ResourceUsageState::kOveruse); });
 
   EXPECT_EQ_WAIT(1u, restrictions_listener_.restrictions_updated_count(),
                  kDefaultTimeoutMs);
@@ -446,10 +447,10 @@ TEST_F(ResourceAdaptationProcessorTest,
   // has passed it on to the processor's task queue.
   rtc::Event resource_event;
   TaskQueueForTest resource_task_queue("ResourceTaskQueue");
-  resource_task_queue.PostTask(ToQueuedTask([&]() {
+  resource_task_queue.PostTask([&]() {
     resource_->SetUsageState(ResourceUsageState::kOveruse);
     resource_event.Set();
-  }));
+  });
 
   EXPECT_TRUE(resource_event.Wait(kDefaultTimeoutMs));
   // Now destroy the processor while handling the overuse is in flight.
@@ -469,10 +470,10 @@ TEST_F(ResourceAdaptationProcessorTest,
   rtc::Event overuse_event;
   TaskQueueForTest resource_task_queue("ResourceTaskQueue");
   // Queues task for `resource_` overuse while `processor_` is still listening.
-  resource_task_queue.PostTask(ToQueuedTask([&]() {
+  resource_task_queue.PostTask([&]() {
     resource_->SetUsageState(ResourceUsageState::kOveruse);
     overuse_event.Set();
-  }));
+  });
   EXPECT_TRUE(overuse_event.Wait(kDefaultTimeoutMs));
   // Once we know the overuse task is queued, remove `resource_` so that
   // `processor_` is not listening to it.
