@@ -356,10 +356,11 @@ class MOZ_STACK_CLASS InitExprInterpreter {
     const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
     const StructType& structType = typeDef.structType();
 
-    uint32_t fieldIndex = structType.fields_.length();
-    while (fieldIndex-- > 0) {
+    uint32_t numFields = structType.fields_.length();
+    for (uint32_t forwardIndex = 0; forwardIndex < numFields; forwardIndex++) {
+      uint32_t reverseIndex = numFields - forwardIndex - 1;
       const Val& val = stack.back();
-      structObj->storeVal(val, fieldIndex);
+      structObj->storeVal(val, reverseIndex);
       stack.popBack();
     }
 
@@ -418,9 +419,10 @@ class MOZ_STACK_CLASS InitExprInterpreter {
       return false;
     }
 
-    for (uint32_t i = len; i-- > 0;) {
+    for (uint32_t forwardIndex = 0; forwardIndex < len; forwardIndex++) {
+      uint32_t reverseIndex = len - forwardIndex - 1;
       const Val& val = stack.back();
-      arrayObj->storeVal(val, i);
+      arrayObj->storeVal(val, reverseIndex);
       stack.popBack();
     }
 

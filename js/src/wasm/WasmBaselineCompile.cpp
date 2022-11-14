@@ -6861,12 +6861,13 @@ bool BaseCompiler::emitArrayNewFixed() {
   // Generate straight-line initialization code.  We could do better here if
   // there was a version of ::emitGcArraySet that took `index` as a `uint32_t`
   // rather than a general value-in-a-reg.
-  for (uint32_t i = 0; i < numElements; i++) {
+  for (uint32_t forwardIndex = 0; forwardIndex < numElements; forwardIndex++) {
+    uint32_t reverseIndex = numElements - forwardIndex - 1;
     if (avoidPreBarrierReg) {
       needPtr(RegPtr(PreBarrierReg));
     }
     AnyReg value = popAny();
-    pushI32(i);
+    pushI32(reverseIndex);
     RegI32 index = popI32();
     if (avoidPreBarrierReg) {
       freePtr(RegPtr(PreBarrierReg));
