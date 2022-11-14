@@ -36,7 +36,9 @@ async function runTest() {
   await p;
 
   is(win.location.hash, "#anchor", "We set the location's hash to 'anchor'");
-  is(win.scrollY, 500, "Reloading keeps scroll position");
+  // Allow a half pixel difference because the scroll position is aligned with
+  // screen pixels instead of CSS pixels (bug 1774315).
+  isfuzzy(win.scrollY, 500, 0.5, "Reloading keeps scroll position");
 
   var link = win.document.getElementsByTagName('a')[0];
   var anchor = win.document.getElementsByTagName('a')[1];
