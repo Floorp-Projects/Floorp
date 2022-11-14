@@ -25,7 +25,7 @@ function isAutocompleteDisabled(aField) {
  * However, nsFormAutoComplete might call remove() any number of
  * times with the same instance of the client.
  *
- * @param {Object} clientInfo
+ * @param {object} clientInfo
  *        Info required to build the FormHistoryClient
  * @param {Node} clientInfo.formField
  *        A DOM node that we're requesting form history for.
@@ -71,10 +71,10 @@ FormHistoryClient.prototype = {
    * @param {string} searchString
    *        The string to search FormHistory for. See
    *        FormHistory.getAutoCompleteResults.
-   * @param {Object} params
+   * @param {object} params
    *        An Object with search properties. See
    *        FormHistory.getAutoCompleteResults.
-   * @param {function} callback
+   * @param {Function} callback
    *        A callback function that will take a single
    *        argument (the found entries).
    */

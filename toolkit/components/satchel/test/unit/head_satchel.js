@@ -167,7 +167,8 @@ function do_log_info(aMessage) {
  *        The name of the file to copy.
  * @param {string} aDestFilename
  *        The name of the file to copy.
- * @param {Object} [options.overwriteExisting]
+ * @param {object} [options]
+ * @param {object} [options.overwriteExisting]
  *        Whether to overwrite an existing file.
  * @returns {string} path to the copied file.
  */
