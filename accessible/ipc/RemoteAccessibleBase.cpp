@@ -1234,6 +1234,12 @@ already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
     }
 
     nsAccUtils::SetLiveContainerAttributes(attributes, this);
+
+    nsString id;
+    DOMNodeID(id);
+    if (!id.IsEmpty()) {
+      attributes->SetAttribute(nsGkAtoms::id, std::move(id));
+    }
   }
 
   nsAutoString name;

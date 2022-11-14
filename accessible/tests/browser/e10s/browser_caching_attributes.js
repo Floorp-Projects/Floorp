@@ -486,3 +486,20 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
 );
+
+/**
+ * Test the id attribute.
+ */
+addAccessibleTask(
+  `
+<p id="withId">withId</p>
+<div id="noIdParent"><p>noId</p></div>
+  `,
+  async function(browser, docAcc) {
+    const withId = findAccessibleChildByID(docAcc, "withId");
+    testAttrs(withId, { id: "withId" }, true);
+    const noId = findAccessibleChildByID(docAcc, "noIdParent").firstChild;
+    testAbsentAttrs(noId, { id: "" });
+  },
+  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);
