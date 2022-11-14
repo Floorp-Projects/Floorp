@@ -29,6 +29,10 @@ class nsCookieInjector final : public nsIObserver {
   // Whether the component is enabled and ready to inject cookies.
   bool mIsInitialized = false;
 
+  // Check the current pref state to determine whether the component should be
+  // enabled.
+  static bool IsEnabledForCurrentPrefState();
+
   // Enables or disables the component when the relevant prefs change.
   static void OnPrefChange(const char* aPref, void* aData);
 
