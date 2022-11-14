@@ -492,6 +492,10 @@ enum class GcOp {
   BrOnCast = 0x46,
   BrOnCastFail = 0x47,
 
+  // Extern/any coercion operations
+  ExternInternalize = 0x70,
+  ExternExternalize = 0x71,
+
   Limit
 };
 

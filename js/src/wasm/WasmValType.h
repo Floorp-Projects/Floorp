@@ -148,10 +148,10 @@ union PackedTypeCode {
     return bool(nullable_);
   }
 
-  PackedTypeCode asNonNullable() const {
+  PackedTypeCode withIsNullable(bool nullable) const {
     MOZ_ASSERT(isRefType());
     PackedTypeCode mutated = *this;
-    mutated.nullable_ = 0;
+    mutated.nullable_ = (PackedRepr)nullable;
     return mutated;
   }
 
@@ -373,7 +373,10 @@ class RefType {
   bool isTypeRef() const { return kind() == RefType::TypeRef; }
 
   bool isNullable() const { return bool(ptc_.isNullable()); }
-  RefType asNonNullable() const { return RefType(ptc_.asNonNullable()); }
+  RefType asNonNullable() const { return withIsNullable(false); }
+  RefType withIsNullable(bool nullable) const {
+    return RefType(ptc_.withIsNullable(nullable));
+  }
 
   TableRepr tableRepr() const {
     switch (kind()) {

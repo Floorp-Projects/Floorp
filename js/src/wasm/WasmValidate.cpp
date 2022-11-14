@@ -650,6 +650,14 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(iter.readBrOnCastFail(&unusedRelativeDepth, &typeIndex,
                                         &unusedType, &nothings));
           }
+          case uint16_t(GcOp::ExternInternalize): {
+            CHECK(iter.readRefConversion(RefType::extern_(), RefType::any(),
+                                         &nothing));
+          }
+          case uint16_t(GcOp::ExternExternalize): {
+            CHECK(iter.readRefConversion(RefType::any(), RefType::extern_(),
+                                         &nothing));
+          }
           default:
             return iter.unrecognizedOpcode(&op);
         }

@@ -69,6 +69,14 @@ class StackType {
     return tc_.typeCode() == TypeCode::Limit;
   }
 
+  // Returns whether this input is nullable when interpreted as an operand.
+  // When the type is bottom for unreachable code, this returns false as that
+  // is the most permissive option.
+  bool isNullableAsOperand() const {
+    MOZ_ASSERT(tc_.isValid());
+    return isBottom() ? false : tc_.isNullable();
+  }
+
   ValType valType() const {
     MOZ_ASSERT(tc_.isValid());
     MOZ_ASSERT(!isBottom());
@@ -78,7 +86,7 @@ class StackType {
   ValType asNonNullable() const {
     MOZ_ASSERT(tc_.isValid());
     MOZ_ASSERT(!isBottom());
-    return ValType(tc_.asNonNullable());
+    return ValType(tc_.withIsNullable(false));
   }
 
   bool isValidForUntypedSelect() const {
@@ -191,6 +199,7 @@ enum class OpKind {
   RefTest,
   RefCast,
   BrOnCast,
+  RefConversion,
 #  ifdef ENABLE_WASM_SIMD
   ExtractLane,
   ReplaceLane,
@@ -435,6 +444,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
 
   [[nodiscard]] bool failEmptyStack();
   [[nodiscard]] bool popStackType(StackType* type, Value* value);
+  [[nodiscard]] bool popWithType(ValType expected, Value* value,
+                                 StackType* stackType);
   [[nodiscard]] bool popWithType(ValType expected, Value* value);
   [[nodiscard]] bool popWithType(ResultType expected, ValueVector* values);
   template <typename ValTypeSpanT>
@@ -738,6 +749,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                       uint32_t* castTypeIndex,
                                       ResultType* labelType,
                                       ValueVector* values);
+  [[nodiscard]] bool readRefConversion(RefType operandType, RefType resultType,
+                                       Value* operandValue);
 #endif
 
 #ifdef ENABLE_WASM_SIMD
@@ -949,16 +962,24 @@ inline bool OpIter<Policy>::popStackType(StackType* type, Value* value) {
 }
 
 // This function pops exactly one value from the stack, checking that it has the
-// expected type which can either be a specific value type or a type variable.
+// expected type which can either be a specific value type or the bottom type.
 template <typename Policy>
-inline bool OpIter<Policy>::popWithType(ValType expectedType, Value* value) {
-  StackType stackType;
-  if (!popStackType(&stackType, value)) {
+inline bool OpIter<Policy>::popWithType(ValType expectedType, Value* value,
+                                        StackType* stackType) {
+  if (!popStackType(stackType, value)) {
     return false;
   }
 
-  return stackType.isBottom() ||
-         checkIsSubtypeOf(stackType.valType(), expectedType);
+  return stackType->isBottom() ||
+         checkIsSubtypeOf(stackType->valType(), expectedType);
+}
+
+// This function pops exactly one value from the stack, checking that it has the
+// expected type which can either be a specific value type or the bottom type.
+template <typename Policy>
+inline bool OpIter<Policy>::popWithType(ValType expectedType, Value* value) {
+  StackType stackType;
+  return popWithType(expectedType, value, &stackType);
 }
 
 template <typename Policy>
@@ -3433,7 +3454,7 @@ inline bool OpIter<Policy>::readRefTest(uint32_t* typeIndex, Value* ref) {
     return false;
   }
 
-  if (!popWithType(RefType::eq(), ref)) {
+  if (!popWithType(RefType::any(), ref)) {
     return false;
   }
 
@@ -3448,7 +3469,7 @@ inline bool OpIter<Policy>::readRefCast(uint32_t* typeIndex, Value* ref) {
     return false;
   }
 
-  if (!popWithType(RefType::eq(), ref)) {
+  if (!popWithType(RefType::any(), ref)) {
     return false;
   }
 
@@ -3613,6 +3634,23 @@ inline bool OpIter<Policy>::readBrOnCastFail(uint32_t* labelRelativeDepth,
 
   // The top result in the fallthrough case is the casted to type.
   infalliblePush(castType);
+  return true;
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readRefConversion(RefType operandType,
+                                              RefType resultType,
+                                              Value* operandValue) {
+  MOZ_ASSERT(Classify(op_) == OpKind::RefConversion);
+
+  StackType actualOperandType;
+  if (!popWithType(ValType(operandType), operandValue, &actualOperandType)) {
+    return false;
+  }
+
+  // The result nullability is the same as the operand nullability
+  bool outputNullable = actualOperandType.isNullableAsOperand();
+  infalliblePush(ValType(resultType.withIsNullable(outputNullable)));
   return true;
 }
 
