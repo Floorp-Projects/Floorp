@@ -2863,6 +2863,13 @@
 #endif
   mirror: always
 
+#ifdef XP_WIN
+- name: dom.ipc.processPriorityManager.backgroundUsesEcoQoS
+  type: bool
+  value: false
+  mirror: always
+#endif
+
 # Is support for HTMLElement.autocapitalize enabled?
 - name: dom.forms.autocapitalize
   type: bool
