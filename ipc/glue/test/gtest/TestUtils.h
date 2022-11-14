@@ -9,8 +9,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsICrashReporter.h"
 
-#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED) && !defined(ANDROID) && \
-    !(defined(XP_DARWIN) && !defined(MOZ_DEBUG))
+#if (defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED) || defined(XP_WIN)) && \
+    !defined(ANDROID) && !(defined(XP_DARWIN) && !defined(MOZ_DEBUG))
 static void DisableCrashReporter() {
   nsCOMPtr<nsICrashReporter> crashreporter =
       do_GetService("@mozilla.org/toolkit/crash-reporter;1");
