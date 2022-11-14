@@ -234,7 +234,7 @@ int32_t Accessible::GetLevel(bool aFast) const {
 
     if (!aFast) {
       const Accessible* parent = this;
-      while ((parent = parent->Parent())) {
+      while ((parent = parent->Parent()) && !parent->IsDoc()) {
         roles::Role parentRole = parent->Role();
 
         if (parentRole == roles::OUTLINE) break;
@@ -251,7 +251,7 @@ int32_t Accessible::GetLevel(bool aFast) const {
     // Calculate 'level' attribute based on number of parent listitems.
     level = 0;
     const Accessible* parent = this;
-    while ((parent = parent->Parent())) {
+    while ((parent = parent->Parent()) && !parent->IsDoc()) {
       roles::Role parentRole = parent->Role();
 
       if (parentRole == roles::LISTITEM) {
@@ -333,7 +333,7 @@ int32_t Accessible::GetLevel(bool aFast) const {
 
     if (!aFast) {
       const Accessible* parent = this;
-      while ((parent = parent->Parent())) {
+      while ((parent = parent->Parent()) && !parent->IsDoc()) {
         roles::Role parentRole = parent->Role();
         if (parentRole == roles::COMMENT) {
           ++level;
