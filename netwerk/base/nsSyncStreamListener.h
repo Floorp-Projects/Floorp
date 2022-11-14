@@ -25,7 +25,7 @@ class nsSyncStreamListener final : public nsISyncStreamListener,
   static already_AddRefed<nsISyncStreamListener> Create();
 
  private:
-  nsSyncStreamListener() = default;
+  nsSyncStreamListener();
   ~nsSyncStreamListener() = default;
 
   nsresult Init();
