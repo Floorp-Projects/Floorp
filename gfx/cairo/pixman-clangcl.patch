@@ -1,0 +1,31 @@
+https://gitlab.freedesktop.org/pixman/pixman/-/issues/41
+
+diff --git a/gfx/cairo/libpixman/src/pixman-mmx.c b/gfx/cairo/libpixman/src/pixman-mmx.c
+--- a/gfx/cairo/libpixman/src/pixman-mmx.c
++++ b/gfx/cairo/libpixman/src/pixman-mmx.c
+@@ -132,23 +132,23 @@ extern __inline __m64 __attribute__((__g
+ /* If __m64 is defined as a struct or union, then define M64_MEMBER to be
+  * the name of the member used to access the data.
+  * If __m64 requires using mm_cvt* intrinsics functions to convert between
+  * uint64_t and __m64 values, then define USE_CVT_INTRINSICS.
+  * If __m64 and uint64_t values can just be cast to each other directly,
+  * then define USE_M64_CASTS.
+  * If __m64 is a double datatype, then define USE_M64_DOUBLE.
+  */
+-#ifdef _MSC_VER
++#if defined(_MSC_VER) && !defined(__clang__)
+ # define M64_MEMBER m64_u64
+ #elif defined(__ICC)
+ # define USE_CVT_INTRINSICS
+ #elif defined(USE_LOONGSON_MMI)
+ # define USE_M64_DOUBLE
+-#elif defined(__GNUC__)
++#elif defined(__GNUC__) || defined(__clang__)
+ # define USE_M64_CASTS
+ #elif defined(__SUNPRO_C)
+ # if (__SUNPRO_C >= 0x5120) && !defined(__NOVECTORSIZE__)
+ /* Solaris Studio 12.3 (Sun C 5.12) introduces __attribute__(__vector_size__)
+  * support, and defaults to using it to define __m64, unless __NOVECTORSIZE__
+  * is defined.   If it is used, then the mm_cvt* intrinsics must be used.
+  */
+ #  define USE_CVT_INTRINSICS
