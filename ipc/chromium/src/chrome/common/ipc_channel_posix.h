@@ -44,6 +44,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   void Close() MOZ_EXCLUDES(SendMutex());
   Listener* set_listener(Listener* listener) {
     IOThread().AssertOnCurrentThread();
+    chan_cap_.NoteOnIOThread();
     Listener* old = listener_;
     listener_ = listener;
     return old;
@@ -54,9 +55,9 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
 
   void CloseClientFileDescriptor();
 
-  int32_t OtherPid() MOZ_EXCLUDES(SendMutex()) {
+  int32_t OtherPid() {
     IOThread().AssertOnCurrentThread();
-    mozilla::MutexAutoLock lock(SendMutex());
+    chan_cap_.NoteOnIOThread();
     return other_pid_;
   }
 
@@ -64,6 +65,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   // NOTE: `IsClosed` may be called on threads other than the I/O thread.
   bool IsClosed() MOZ_EXCLUDES(SendMutex()) {
     mozilla::MutexAutoLock lock(SendMutex());
+    chan_cap_.NoteSendMutex();
     return pipe_ == -1;
   }
 
@@ -80,12 +82,19 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
       MOZ_REQUIRES(SendMutex(), IOThread());
   bool CreatePipe(Mode mode) MOZ_REQUIRES(SendMutex(), IOThread());
   void SetPipe(int fd) MOZ_REQUIRES(SendMutex(), IOThread());
-  bool PipeBufHasSpaceAfter(size_t already_written) MOZ_REQUIRES(SendMutex());
+  void SetOtherPid(int other_pid) MOZ_REQUIRES(IOThread())
+      MOZ_EXCLUDES(SendMutex()) {
+    mozilla::MutexAutoLock lock(SendMutex());
+    chan_cap_.NoteExclusiveAccess();
+    other_pid_ = other_pid;
+  }
+  bool PipeBufHasSpaceAfter(size_t already_written)
+      MOZ_REQUIRES_SHARED(chan_cap_);
   bool EnqueueHelloMessage() MOZ_REQUIRES(SendMutex(), IOThread());
   bool ConnectLocked() MOZ_REQUIRES(SendMutex(), IOThread());
   void CloseLocked() MOZ_REQUIRES(SendMutex(), IOThread());
 
-  bool ProcessIncomingMessages() MOZ_REQUIRES(SendMutex(), IOThread());
+  bool ProcessIncomingMessages() MOZ_REQUIRES(IOThread());
   bool ProcessOutgoingMessages() MOZ_REQUIRES(SendMutex());
 
   // MessageLoopForIO::Watcher implementation.
@@ -93,13 +102,13 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   virtual void OnFileCanWriteWithoutBlocking(int fd) override;
 
 #if defined(OS_MACOSX)
-  void CloseDescriptors(uint32_t pending_fd_id)
-      MOZ_REQUIRES(SendMutex(), IOThread());
+  void CloseDescriptors(uint32_t pending_fd_id) MOZ_REQUIRES(IOThread())
+      MOZ_EXCLUDES(SendMutex());
 
   // Called on a Message immediately before it is sent/recieved to transfer
   // handles to the remote process, or accept handles from the remote process.
-  bool AcceptMachPorts(Message& msg) MOZ_REQUIRES(SendMutex(), IOThread());
-  bool TransferMachPorts(Message& msg) MOZ_REQUIRES(SendMutex());
+  bool AcceptMachPorts(Message& msg) MOZ_REQUIRES(IOThread());
+  bool TransferMachPorts(Message& msg) MOZ_REQUIRES_SHARED(chan_cap_);
 #endif
 
   void OutputQueuePush(mozilla::UniquePtr<Message> msg)
@@ -129,7 +138,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
       MOZ_GUARDED_BY(IOThread());
 
   // Indicates whether we're currently blocked waiting for a write to complete.
-  bool is_blocked_on_write_ MOZ_GUARDED_BY(SendMutex());
+  bool is_blocked_on_write_ MOZ_GUARDED_BY(SendMutex()) = false;
 
   // If sending a message blocks then we use this iterator to keep track of
   // where in the message we are. It gets reset when the message is finished
@@ -140,11 +149,11 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   };
   mozilla::Maybe<PartialWrite> partial_write_ MOZ_GUARDED_BY(SendMutex());
 
-  int pipe_ MOZ_GUARDED_BY(SendMutex());
+  int pipe_ MOZ_GUARDED_BY(chan_cap_);
   // The client end of our socketpair().
   int client_pipe_ MOZ_GUARDED_BY(IOThread());
   // The SO_SNDBUF value of pipe_, or 0 if unknown.
-  unsigned pipe_buf_len_ MOZ_GUARDED_BY(SendMutex());
+  unsigned pipe_buf_len_ MOZ_GUARDED_BY(chan_cap_);
 
   Listener* listener_ MOZ_GUARDED_BY(IOThread());
 
@@ -183,11 +192,11 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   // is ready. For privileged connections on macOS, this will not be cleared
   // until the peer mach port has been provided to allow transferring mach
   // ports.
-  bool waiting_connect_ MOZ_GUARDED_BY(SendMutex()) = true;
+  bool waiting_connect_ MOZ_GUARDED_BY(chan_cap_) = true;
 
   // We keep track of the PID of the other side of this channel so that we can
   // record this when generating logs of IPC messages.
-  int32_t other_pid_ MOZ_GUARDED_BY(SendMutex()) = -1;
+  int32_t other_pid_ MOZ_GUARDED_BY(chan_cap_) = -1;
 
 #if defined(OS_MACOSX)
   struct PendingDescriptors {
@@ -198,16 +207,16 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   std::list<PendingDescriptors> pending_fds_ MOZ_GUARDED_BY(SendMutex());
 
   // A generation ID for RECEIVED_FD messages.
-  uint32_t last_pending_fd_id_ MOZ_GUARDED_BY(SendMutex());
+  uint32_t last_pending_fd_id_ MOZ_GUARDED_BY(SendMutex()) = 0;
 
   // Whether or not to accept mach ports from a remote process, and whether this
   // process is the privileged side of a IPC::Channel which can transfer mach
   // ports.
-  bool accept_mach_ports_ MOZ_GUARDED_BY(SendMutex()) = false;
-  bool privileged_ MOZ_GUARDED_BY(SendMutex()) = false;
+  bool accept_mach_ports_ MOZ_GUARDED_BY(chan_cap_) = false;
+  bool privileged_ MOZ_GUARDED_BY(chan_cap_) = false;
 
   // If available, the task port for the remote process.
-  mozilla::UniqueMachSendRight other_task_ MOZ_GUARDED_BY(SendMutex());
+  mozilla::UniqueMachSendRight other_task_ MOZ_GUARDED_BY(chan_cap_);
 #endif
 
   DISALLOW_COPY_AND_ASSIGN(ChannelImpl);
