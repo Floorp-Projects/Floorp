@@ -56,7 +56,7 @@ class CookieBannerParent extends JSWindowActorParent {
   /**
    * Dispatches a custom "cookiebannerhandled" event on the chrome window.
    */
-  #notifyCookieBannerHandled() {
+  #notifyCookieBannerState(eventType) {
     let chromeWin = this.browsingContext.topChromeWindow;
     if (!chromeWin) {
       return;
@@ -65,7 +65,7 @@ class CookieBannerParent extends JSWindowActorParent {
     if (!windowUtils) {
       return;
     }
-    let event = new CustomEvent("cookiebannerhandled", {
+    let event = new CustomEvent(eventType, {
       bubbles: true,
       cancelable: false,
       detail: {
@@ -85,9 +85,15 @@ class CookieBannerParent extends JSWindowActorParent {
       return undefined;
     }
 
+    // Forwards cookie banner detected signals to frontend consumers.
+    if (message.name == "CookieBanner::DetectedBanner") {
+      this.#notifyCookieBannerState("cookiebannerdetected");
+      return undefined;
+    }
+
     // Forwards cookie banner handled signals to frontend consumers.
     if (message.name == "CookieBanner::HandledBanner") {
-      this.#notifyCookieBannerHandled();
+      this.#notifyCookieBannerState("cookiebannerhandled");
       return undefined;
     }
 
