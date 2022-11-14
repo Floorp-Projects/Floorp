@@ -176,7 +176,7 @@ export class AboutProtectionsParent extends JSWindowActorParent {
         await lazy.fxAccounts.device.refreshDeviceList();
       }
     } catch (e) {
-      Cu.reportError("There was an error fetching login data: ", e.message);
+      console.error("There was an error fetching login data: ", e.message);
     }
 
     const userFacingLogins =
@@ -250,7 +250,7 @@ export class AboutProtectionsParent extends JSWindowActorParent {
         };
       }
     } catch (e) {
-      Cu.reportError(e.message);
+      console.error(e.message);
       monitorData.errorMessage = e.message;
 
       // If the user's OAuth token is invalid, we clear the cached token and refetch
@@ -263,7 +263,7 @@ export class AboutProtectionsParent extends JSWindowActorParent {
         try {
           monitorData = await this.fetchUserBreachStats(token);
         } catch (_) {
-          Cu.reportError(e.message);
+          console.error(e.message);
         }
       } else if (e.message === USER_UNSUBSCRIBED_TO_MONITOR) {
         // Send back user's email so the protections report can direct them to the proper
@@ -288,7 +288,7 @@ export class AboutProtectionsParent extends JSWindowActorParent {
     try {
       token = await lazy.fxAccounts.getOAuthToken({ scope: SCOPE_MONITOR });
     } catch (e) {
-      Cu.reportError(
+      console.error(
         "There was an error fetching the user's token: ",
         e.message
       );
@@ -328,7 +328,7 @@ export class AboutProtectionsParent extends JSWindowActorParent {
     try {
       vpnToken = await lazy.fxAccounts.getOAuthToken({ scope: SCOPE_VPN });
     } catch (e) {
-      Cu.reportError(
+      console.error(
         "There was an error fetching the user's token: ",
         e.message
       );
