@@ -1901,19 +1901,8 @@ static bool GlobalIsJSCompatible(Decoder& d, ValType type) {
     case ValType::V128:
       break;
     case ValType::Ref:
-      switch (type.refTypeKind()) {
-        case RefType::Func:
-        case RefType::Extern:
-        case RefType::Eq:
-          break;
-        case RefType::TypeRef:
-#ifdef WASM_PRIVATE_REFTYPES
-          return d.fail("cannot expose indexed reference type");
-#else
-          break;
-#endif
-        default:
-          return d.fail("unexpected variable type in global import/export");
+      if (type.refType().isTypeRef()) {
+        return d.fail("cannot expose indexed reference type");
       }
       break;
     default:
