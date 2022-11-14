@@ -78,19 +78,30 @@ already_AddRefed<nsCookieInjector> nsCookieInjector::GetSingleton() {
 }
 
 // static
+bool nsCookieInjector::IsEnabledForCurrentPrefState() {
+  if (!StaticPrefs::cookiebanners_cookieInjector_enabled()) {
+    return false;
+  }
+
+  auto shouldInitForMode = [](uint32_t mode) {
+    return mode != nsICookieBannerService::MODE_DISABLED &&
+           mode != nsICookieBannerService::MODE_DETECT_ONLY;
+  };
+
+  // The cookie injector is initialized if enabled by pref and the main service
+  // is enabled (either in private browsing or normal browsing). For
+  // MODE_DETECT_ONLY the component should be disabled because it does not have
+  // banner detection capabilities.
+  return shouldInitForMode(StaticPrefs::cookiebanners_service_mode()) ||
+         shouldInitForMode(
+             StaticPrefs::cookiebanners_service_mode_privateBrowsing());
+}
+
+// static
 void nsCookieInjector::OnPrefChange(const char* aPref, void* aData) {
   RefPtr<nsCookieInjector> injector = nsCookieInjector::GetSingleton();
 
-  // The cookie injector is initialized if enabled by pref and the main service
-  // is enabled (either in private browsing or normal browsing).
-  bool shouldInit =
-      (StaticPrefs::cookiebanners_service_mode() !=
-           nsICookieBannerService::MODE_DISABLED ||
-       StaticPrefs::cookiebanners_service_mode_privateBrowsing() !=
-           nsICookieBannerService::MODE_DISABLED) &&
-      StaticPrefs::cookiebanners_cookieInjector_enabled();
-
-  if (shouldInit) {
+  if (IsEnabledForCurrentPrefState()) {
     MOZ_LOG(gCookieInjectorLog, LogLevel::Info,
             ("Initializing cookie injector after pref change. %s", aPref));
 
