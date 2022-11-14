@@ -199,6 +199,10 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   // Returns the process host
   GPUProcessHost* Process() { return mProcess; }
 
+  // Sets the value of mAppInForeground, and (on Windows) adjusts the priority
+  // of the GPU process accordingly.
+  void SetAppInForeground(bool aInForeground);
+
   /*
    * ** Test-only Method **
    *
@@ -284,6 +288,10 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   void EnsureCompositorManagerChild();
   void EnsureImageBridgeChild();
   void EnsureVRManager();
+
+#if defined(XP_WIN)
+  void SetProcessIsForeground();
+#endif
 
 #if defined(MOZ_WIDGET_ANDROID)
   already_AddRefed<UiCompositorControllerChild> CreateUiCompositorController(

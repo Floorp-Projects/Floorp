@@ -6194,6 +6194,10 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
       }
     } break;
 
+    case WM_ACTIVATEAPP: {
+      GPUProcessManager::Get()->SetAppInForeground(wParam);
+    } break;
+
     case WM_MOUSEACTIVATE:
       // A popup with a parent owner should not be activated when clicked but
       // should still allow the mouse event to be fired, so the return value
