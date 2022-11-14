@@ -35,16 +35,11 @@ class nsNodeInfoManager final {
   ~nsNodeInfoManager();
 
  public:
-  nsNodeInfoManager();
+  explicit nsNodeInfoManager(mozilla::dom::Document* aDocument);
 
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_NATIVE_CLASS(nsNodeInfoManager)
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsNodeInfoManager)
-
-  /**
-   * Initialize the nodeinfo manager with a document.
-   */
-  nsresult Init(mozilla::dom::Document*);
 
   /**
    * Release the reference to the document, this will be called when
@@ -161,8 +156,13 @@ class nsNodeInfoManager final {
   nsTHashMap<NodeInfoInnerKey, mozilla::dom::NodeInfo*> mNodeInfoHash;
   mozilla::dom::Document* MOZ_NON_OWNING_REF mDocument;  // WEAK
   uint32_t mNonDocumentNodeInfos;
-  nsCOMPtr<nsIPrincipal> mPrincipal;  // Never null after Init() succeeds.
-  nsCOMPtr<nsIPrincipal> mDefaultPrincipal;  // Never null after Init() succeeds
+
+  // Note: it's important that mPrincipal is declared before mDefaultPrincipal,
+  // since the latter is initialized to the value of the former in the
+  // constructor's init list:
+  nsCOMPtr<nsIPrincipal> mPrincipal;         // Never null
+  nsCOMPtr<nsIPrincipal> mDefaultPrincipal;  // Never null
+
   mozilla::dom::NodeInfo* MOZ_NON_OWNING_REF
       mTextNodeInfo;  // WEAK to avoid circular ownership
   mozilla::dom::NodeInfo* MOZ_NON_OWNING_REF

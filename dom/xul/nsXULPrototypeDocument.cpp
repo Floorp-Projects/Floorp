@@ -47,8 +47,8 @@ nsXULPrototypeDocument::nsXULPrototypeDocument()
 }
 
 nsresult nsXULPrototypeDocument::Init() {
-  mNodeInfoManager = new nsNodeInfoManager();
-  return mNodeInfoManager->Init(nullptr);
+  mNodeInfoManager = new nsNodeInfoManager(nullptr);
+  return NS_OK;
 }
 
 nsXULPrototypeDocument::~nsXULPrototypeDocument() {
