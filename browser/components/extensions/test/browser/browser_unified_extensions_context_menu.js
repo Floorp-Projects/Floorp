@@ -670,7 +670,7 @@ add_task(async function test_browser_action_context_menu() {
 
   info("extension with browser action and a menu");
   // The context menu for the extension that declares a browser action menu
-  // should have the memu item created by the extension, a menu separator and
+  // should have the menu item created by the extension, a menu separator and
   // the 3 default menu items.
   let contextMenu = await openUnifiedExtensionsContextMenu(
     win,
