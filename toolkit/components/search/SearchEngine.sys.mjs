@@ -68,6 +68,7 @@ var OS_UNSUPPORTED_PARAMS = [
 
 /**
  * Truncates big blobs of (data-)URIs to console-friendly sizes
+ *
  * @param {string} str
  *   String to tone down
  * @param {number} len
@@ -86,13 +87,13 @@ function limitURILength(str, len) {
 /**
  * Tries to rescale an icon to a given size.
  *
- * @param {array} byteArray
+ * @param {Array} byteArray
  *   Byte array containing the icon payload.
  * @param {string} contentType
  *   Mime type of the payload.
  * @param {number} [size]
  *   Desired icon size.
- * @returns {array}
+ * @returns {Array}
  *   An array of two elements - an array of integers and a string for the content
  *   type.
  * @throws if the icon cannot be rescaled or the rescaled icon is too big.
@@ -165,6 +166,7 @@ const ParamPreferenceCache = {
 
 /**
  * Represents a name/value pair for a parameter
+ *
  * @see nsISearchEngine::addParam
  */
 class QueryParameter {
@@ -254,6 +256,7 @@ class QueryPreferenceParameter extends QueryParameter {
 
 /**
  * Perform OpenSearch parameter substitution on aParamValue.
+ *
  * @see http://opensearch.a9.com/spec/1.1/querysyntax/#core
  *
  * @param {string} paramValue
@@ -846,14 +849,14 @@ export class SearchEngine {
    *   The url type.
    * @param {object} params
    *   The URL parameters.
-   * @param {string|array} [params.getParams]
+   * @param {string | Array} [params.getParams]
    *   Any parameters for a GET method. This is either a query string, or
    *   an array of objects which have name/value pairs.
    * @param {string} [params.method]
    *   The type of method, defaults to GET.
    * @param {string} [params.mozParams]
    *   Any special Mozilla Parameters.
-   * @param {string|array} [params.postParams]
+   * @param {string | Array} [params.postParams]
    *   Any parameters for a POST method. This is either a query string, or
    *   an array of objects which have name/value pairs.
    * @param {string} params.template
@@ -1148,6 +1151,7 @@ export class SearchEngine {
 
   /**
    * Creates a JavaScript object that represents this engine.
+   *
    * @returns {object}
    *   An object suitable for serialization as JSON.
    */

@@ -146,6 +146,7 @@ const kTestEngineName = "Test search engine";
 
 /**
  * Waits for the settings file to be saved.
+ *
  * @returns {Promise} Resolved when the settings file is saved.
  */
 function promiseAfterSettings() {
@@ -204,7 +205,7 @@ async function readJSONFile(file) {
  *
  * @param {object} expectedObj
  * @param {object} actualObj
- * @param {function} skipProp
+ * @param {Function} skipProp
  *   A function that is called with the property name and its value, to see if
  *   testing that property should be skipped or not.
  */
@@ -307,6 +308,7 @@ async function setupRemoteSettings() {
 /**
  * Helper function that sets up a server and respnds to region
  * fetch requests.
+ *
  * @param {string} region
  *   The region that the server will respond with.
  * @param {Promise|null} waitToRespond
@@ -335,7 +337,8 @@ function useCustomGeoServer(region, waitToRespond = Promise.resolve()) {
  * @property {string} [displayName]
  * @property {string} [loadPath]
  * @property {string} [submissionUrl]
- * @property {string} [verified].
+ * @property {string} [verified]
+ */
 
 /**
  * Asserts that default search engine telemetry has been correctly reported

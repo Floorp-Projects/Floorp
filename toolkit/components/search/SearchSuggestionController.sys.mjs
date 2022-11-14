@@ -43,15 +43,18 @@ function uuid() {
 class SearchSuggestionEntry {
   /**
    * Creates an entry.
+   *
    * @param {string} value
    *   The suggestion as a full-text string. Suitable for display directly to
    *   the user.
-   * @param {string} [matchPrefix]
+   * @param {object} options
+   *   An object with the following properties:
+   * @param {string} [options.matchPrefix]
    *   Represents the part of a tail suggestion that is already typed. For
    *   example, Google returns "…" as the match prefix to replace
    *   "what time is it in" in a tail suggestion for the query
    *   "what time is it in t".
-   * @param {string} [tail]
+   * @param {string} [options.tail]
    *   Represents the suggested part of a tail suggestion. For example, Google
    *   might return "toronto" as the tail for the query "what time is it in t".
    */
@@ -97,6 +100,7 @@ class SearchSuggestionEntry {
   /**
    * Returns true if `otherEntry` is equivalent to this instance of
    * SearchSuggestionEntry.
+   *
    * @param {SearchSuggestionEntry} otherEntry
    * @returns {boolean}
    */
@@ -130,12 +134,14 @@ var gFirstPartyDomains = new Map();
 export class SearchSuggestionController {
   /**
    * The maximum length of a value to be stored in search history.
+   *
    *  @type {number}
    */
   static SEARCH_HISTORY_MAX_VALUE_LENGTH = 255;
 
   /**
    * Maximum time (ms) to wait before giving up on remote suggestions
+   *
    *  @type {number}
    */
   static REMOTE_TIMEOUT_DEFAULT = REMOTE_TIMEOUT_DEFAULT;
@@ -152,7 +158,8 @@ export class SearchSuggestionController {
 
   /**
    * Creates a Search Suggestion Controller.
-   * @param {function} [callback] - Callback for search suggestion results. You
+   *
+   * @param {Function} [callback] - Callback for search suggestion results. You
    *                                can use the promise returned by the fetch
    *                                method instead if you prefer.
    */
@@ -195,6 +202,7 @@ export class SearchSuggestionController {
 
   /**
    * Gets the firstPartyDomains Map, useful for tests.
+   *
    * @returns {Map} firstPartyDomains mapped by engine names.
    */
   get firstPartyDomains() {
@@ -216,9 +224,9 @@ export class SearchSuggestionController {
    *   suggestions that dupe local suggestions
    *
    * @returns {Promise} resolving to an object with the following contents:
-   * @returns {array<SearchSuggestionEntry>} results.local
+   * @returns {Array<SearchSuggestionEntry>} results.local
    *   Contains local search suggestions.
-   * @returns {array<SearchSuggestionEntry>} results.remote
+   * @returns {Array<SearchSuggestionEntry>} results.remote
    *   Contains remote search suggestions.
    */
   fetch(
@@ -408,8 +416,14 @@ export class SearchSuggestionController {
    *
    * @param {object} context
    *   The search context.
-   * @param {boolean} privateMode set to true if this is coming from a private
-   * browsing mode request.
+   * @param {boolean} context.abort
+   *   If the request should be aborted.
+   * @param {string} context.engineId
+   *   The search engine identifier.
+   * @param {object} context.request
+   *   Request information
+   * @param {boolean} context.privateMode
+   *   Set to true if this is coming from a private browsing mode request.
    */
   #reportBandwidthForEngine(context) {
     if (context.abort || !context.request.channel) {
@@ -692,9 +706,10 @@ export class SearchSuggestionController {
 
   /**
    * Returns rich suggestion data from a remote fetch, if available.
-   * @param {array} remoteResultData
+   *
+   * @param {Array} remoteResultData
    *  The results.remote array returned by SearchSuggestionsController.fetch.
-   * @returns {array}
+   * @returns {Array}
    *  An array of additional rich suggestion data. Each element should
    *  correspond to the array of text suggestions.
    */
@@ -723,6 +738,7 @@ export class SearchSuggestionController {
   /**
    * Given a text suggestion and rich suggestion data, returns a
    * SearchSuggestionEntry.
+   *
    * @param {string} suggestion
    *   A suggestion string.
    * @param {object} richSuggestionData

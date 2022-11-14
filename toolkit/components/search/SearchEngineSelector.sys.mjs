@@ -72,7 +72,7 @@ function aboveMaxVersion(config, version) {
  */
 export class SearchEngineSelector {
   /**
-   * @param {function} listener
+   * @param {Function} listener
    *   A listener for configuration update changes.
    */
   constructor(listener) {
@@ -121,7 +121,7 @@ export class SearchEngineSelector {
    *
    * @param {boolean} [firstTime]
    *   Internal boolean to indicate if this is the first time check or not.
-   * @returns {array}
+   * @returns {Array}
    *   An array of objects in the database, or an empty array if none
    *   could be obtained.
    */
@@ -349,6 +349,7 @@ export class SearchEngineSelector {
   /**
    * Create an index order to ensure default (and backup default)
    * engines are ordered correctly.
+   *
    * @param {object} obj
    *   Object representing the engine configation.
    * @param {object} defaultEngine
@@ -370,6 +371,7 @@ export class SearchEngineSelector {
 
   /**
    * Is the engine marked to be the default search engine.
+   *
    * @param {object} obj - Object representing the engine configation.
    * @returns {boolean} - Whether the engine should be default.
    */
@@ -379,6 +381,7 @@ export class SearchEngineSelector {
 
   /**
    * Object.assign but ignore some keys
+   *
    * @param {object} target - Object to copy to.
    * @param {object} source - Object top copy from.
    * @returns {object} - The source object.
@@ -404,6 +407,7 @@ export class SearchEngineSelector {
   /**
    * Determines wether the section of the config applies to a user
    * given what region + locale they are using.
+   *
    * @param {string} region - The region the user is in.
    * @param {string} locale - The language the user has configured.
    * @param {object} config - Section of configuration.

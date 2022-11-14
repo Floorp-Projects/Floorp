@@ -43,8 +43,6 @@ export var SearchTestUtils = {
    * the engine at the end of the test.
    *
    * @param {string}   url                     The URL of the engine to add.
-   * @param {Function} registerCleanupFunction Pass the registerCleanupFunction
-   *                                           from the test's scope.
    * @returns {Promise} Returns a promise that is resolved with the new engine
    *                    or rejected if it fails.
    */
@@ -96,7 +94,7 @@ export var SearchTestUtils = {
    *   The folder name to use.
    * @param {string} [subFolder]
    *   The subfolder to use, if any.
-   * @param {array} [config]
+   * @param {Array} [config]
    *   An array which contains the configuration to set.
    * @returns {object}
    *   An object that is a sinon stub for the configuration getter.
@@ -141,7 +139,7 @@ export var SearchTestUtils = {
    * Convert a list of engine configurations into engine objects.
    *
    * @param {Array} engineConfigurations
-   **/
+   */
   async searchConfigToEngines(engineConfigurations) {
     let engines = [];
     for (let config of engineConfigurations) {
@@ -291,8 +289,6 @@ export var SearchTestUtils = {
    *   The suggestion URL parameters to use for the search engine.
    * @param {string} [options.search_form]
    *   The search form to use for the search engine.
-   * @param {string} [options.favicon_url]
-   *   The favicon URL to use for the search engine.
    * @returns {object}
    *   The generated manifest.
    */
@@ -388,8 +384,6 @@ export var SearchTestUtils = {
 
   /**
    * Register the mock idleSerice.
-   *
-   * @param {Fun} registerCleanupFunction
    */
   useMockIdleService() {
     let fakeIdleService = MockRegistrar.register(
