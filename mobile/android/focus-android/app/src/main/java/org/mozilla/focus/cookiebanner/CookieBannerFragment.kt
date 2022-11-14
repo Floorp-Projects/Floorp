@@ -5,6 +5,7 @@ package org.mozilla.focus.cookiebanner
 
 import android.os.Bundle
 import androidx.preference.CheckBoxPreference
+import org.mozilla.focus.GleanMetrics.CookieBanner
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.requirePreference
@@ -82,6 +83,7 @@ class CookieBannerFragment : BaseSettingsFragment() {
     }
 
     private fun handleCookieBannerChange(cookieBannerOption: CookieBannerOption) {
+        CookieBanner.settingChanged.record(CookieBanner.SettingChangedExtra(cookieBannerOption.metricTag))
         requireContext().settings.saveCurrentCookieBannerOptionInSharePref(cookieBannerOption)
         requireContext().components.engine.settings.cookieBannerHandlingModePrivateBrowsing = cookieBannerOption.mode
         requireContext().components.sessionUseCases.reload()

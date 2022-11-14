@@ -31,6 +31,18 @@ features:
           "is-cfr-enabled": true,
           "is-promote-search-widget-dialog-enabled": true,
         }
+  cookie-banner:
+    description: Nimbus feature name intended to control the cookie banner handling  in the app.
+    variables:
+      is-cookie-handling-enabled:
+        description: If 'true' , the app will show the settings part for cookie banner handling
+        type: Boolean
+        default: false
+    defaults:
+      - channel: debug
+        value: {
+          "is-cookie-handling-enabled": true
+        }
 types:
   objects: { }
   enums: { }

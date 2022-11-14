@@ -2230,3 +2230,41 @@ search_widget:
     metadata:
       tags:
         - Search
+cookie_banner:
+  visited_setting:
+    type: event
+    description: A user visited the cookie banner handling screen
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/7965
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/8008#issuecomment-1322266028
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Privacy&Security
+  setting_changed:
+    type: event
+    description: |
+      A user changed their setting.
+    extra_keys:
+      cookie_banner_setting:
+        description: |
+          The new setting for cookie banner handling: disabled,reject_all,
+          or reject_or_accept_all.
+        type: string
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/7965
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/8008#issuecomment-1322266028
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Privacy&Security
