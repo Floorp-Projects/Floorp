@@ -332,7 +332,7 @@ class UnsetLocalsState {
   inline void set(uint32_t id, uint32_t depth) {
     MOZ_ASSERT(isUnset(id));
     MOZ_ASSERT(id >= firstNonDefaultLocal_ &&
-               (id - firstNonDefaultLocal_) / WordSize < unsetLocals_.length());
+               (id - firstNonDefaultLocal_) / WordBits < unsetLocals_.length());
     uint32_t localUnsetIndex = id - firstNonDefaultLocal_;
     unsetLocals_[localUnsetIndex / WordBits] ^= 1
                                                 << (localUnsetIndex % WordBits);
