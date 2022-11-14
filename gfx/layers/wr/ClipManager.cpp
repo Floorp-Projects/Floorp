@@ -469,9 +469,16 @@ void ClipManager::ItemClips::UpdateSeparateLeaf(
 }
 
 bool ClipManager::ItemClips::HasSameInputs(const ItemClips& aOther) {
-  return mASR == aOther.mASR && mChain == aOther.mChain &&
-         mAppUnitsPerDevPixel == aOther.mAppUnitsPerDevPixel &&
-         mSeparateLeaf == aOther.mSeparateLeaf;
+  if (mASR != aOther.mASR || mChain != aOther.mChain ||
+      mSeparateLeaf != aOther.mSeparateLeaf) {
+    return false;
+  }
+  // AUPDP only matters if we have a clip chain, since it's only used to compute
+  // the device space clip rect.
+  if (mChain && mAppUnitsPerDevPixel != aOther.mAppUnitsPerDevPixel) {
+    return false;
+  }
+  return true;
 }
 
 wr::WrSpaceAndClipChain ClipManager::ItemClips::GetSpaceAndClipChain() const {
