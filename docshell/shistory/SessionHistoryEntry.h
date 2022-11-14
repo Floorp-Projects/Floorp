@@ -67,6 +67,11 @@ class SessionHistoryInfo {
 
   void SetOriginalURI(nsIURI* aOriginalURI) { mOriginalURI = aOriginalURI; }
 
+  nsIURI* GetUnstrippedURI() const { return mUnstrippedURI; }
+  void SetUnstrippedURI(nsIURI* aUnstrippedURI) {
+    mUnstrippedURI = aUnstrippedURI;
+  }
+
   void SetResultPrincipalURI(nsIURI* aResultPrincipalURI) {
     mResultPrincipalURI = aResultPrincipalURI;
   }
@@ -160,6 +165,7 @@ class SessionHistoryInfo {
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIURI> mOriginalURI;
   nsCOMPtr<nsIURI> mResultPrincipalURI;
+  nsCOMPtr<nsIURI> mUnstrippedURI;
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
   nsString mTitle;
   nsString mName;
