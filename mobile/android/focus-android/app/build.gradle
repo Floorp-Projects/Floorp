@@ -250,62 +250,62 @@ dependencies {
 
     implementation FocusDependencies.sentry
 
-    implementation "org.mozilla.components:browser-engine-gecko:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:browser-domains:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:browser-errorpages:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:browser-icons:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:browser-menu:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:browser-state:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:browser-toolbar:${AndroidComponents.VERSION}"
+    implementation project(':browser-engine-gecko')
+    implementation project(':browser-domains')
+    implementation project(':browser-errorpages')
+    implementation project(':browser-icons')
+    implementation project(':browser-menu')
+    implementation project(':browser-state')
+    implementation project(':browser-toolbar')
 
-    implementation "org.mozilla.components:concept-awesomebar:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:concept-engine:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:concept-fetch:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:concept-menu:${AndroidComponents.VERSION}"
+    implementation project(':concept-awesomebar')
+    implementation project(':concept-engine')
+    implementation project(':concept-fetch')
+    implementation project(':concept-menu')
 
-    implementation "org.mozilla.components:compose-awesomebar:${AndroidComponents.VERSION}"
+    implementation project(':compose-awesomebar')
 
-    implementation "org.mozilla.components:feature-awesomebar:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:feature-app-links:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:feature-customtabs:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:feature-contextmenu:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:feature-downloads:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:feature-findinpage:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:feature-intent:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:feature-prompts:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:feature-session:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:feature-search:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:feature-tabs:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:feature-toolbar:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:feature-top-sites:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:feature-sitepermissions:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:lib-crash:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:lib-crash-sentry:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:lib-state:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:feature-media:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:lib-auth:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:lib-publicsuffixlist:${AndroidComponents.VERSION}"
+    implementation project(':feature-awesomebar')
+    implementation project(':feature-app-links')
+    implementation project(':feature-customtabs')
+    implementation project(':feature-contextmenu')
+    implementation project(':feature-downloads')
+    implementation project(':feature-findinpage')
+    implementation project(':feature-intent')
+    implementation project(':feature-prompts')
+    implementation project(':feature-session')
+    implementation project(':feature-search')
+    implementation project(':feature-tabs')
+    implementation project(':feature-toolbar')
+    implementation project(':feature-top-sites')
+    implementation project(':feature-sitepermissions')
+    implementation project(':lib-crash')
+    implementation project(':lib-crash-sentry')
+    implementation project(':lib-state')
+    implementation project(':feature-media')
+    implementation project(':lib-auth')
+    implementation project(':lib-publicsuffixlist')
 
-    implementation "org.mozilla.components:service-glean:${AndroidComponents.VERSION}", {
+    implementation project(':service-glean'), {
         exclude group: 'org.mozilla.telemetry', module: 'glean-native'
     }
-    implementation "org.mozilla.components:service-location:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:service-nimbus:${AndroidComponents.VERSION}"
+    implementation project(':service-location')
+    implementation project(':service-nimbus')
 
-    implementation "org.mozilla.components:support-ktx:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:support-utils:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:support-rusthttp:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:support-rustlog:${AndroidComponents.VERSION}"
+    implementation project(':support-ktx')
+    implementation project(':support-utils')
+    implementation project(':support-rusthttp')
+    implementation project(':support-rustlog')
 
-    implementation "org.mozilla.components:ui-autocomplete:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:ui-colors:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:ui-icons:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:ui-tabcounter:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:feature-webcompat:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:feature-webcompat-reporter:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:support-webextensions:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:support-locale:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:compose-cfr:${AndroidComponents.VERSION}"
+    implementation project(':ui-autocomplete')
+    implementation project(':ui-colors')
+    implementation project(':ui-icons')
+    implementation project(':ui-tabcounter')
+    implementation project(':feature-webcompat')
+    implementation project(':feature-webcompat-reporter')
+    implementation project(':support-webextensions')
+    implementation project(':support-locale')
+    implementation project(':compose-cfr')
 
     implementation project(':service-telemetry')
 
@@ -327,8 +327,8 @@ dependencies {
     testImplementation FocusDependencies.testing_coroutines
     testImplementation FocusDependencies.androidx_work_testing
     testImplementation FocusDependencies.androidx_arch_core_testing
-    testImplementation "org.mozilla.components:support-test:${AndroidComponents.VERSION}"
-    testImplementation "org.mozilla.components:support-test-libstate:${AndroidComponents.VERSION}"
+    testImplementation project(':support-test')
+    testImplementation project(':support-test-libstate')
     androidTestImplementation FocusDependencies.espresso_core, {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
@@ -340,7 +340,7 @@ dependencies {
 
     androidTestImplementation FocusDependencies.testing_mockwebserver
     testImplementation FocusDependencies.testing_mockwebserver
-    testImplementation "org.mozilla.components:lib-fetch-okhttp:${AndroidComponents.VERSION}"
+    testImplementation project(':lib-fetch-okhttp')
 
     androidTestImplementation FocusDependencies.fastlane
     implementation FocusDependencies.falcon // Required by fastlane

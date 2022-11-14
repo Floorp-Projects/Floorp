@@ -29,8 +29,8 @@ android {
 }
 
 dependencies {
-    implementation "org.mozilla.components:support-base:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:concept-fetch:${AndroidComponents.VERSION}"
+    implementation project(':support-base')
+    implementation project(':concept-fetch')
 
     implementation FocusDependencies.androidx_annotation
 }
