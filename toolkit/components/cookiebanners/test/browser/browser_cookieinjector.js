@@ -153,20 +153,25 @@ add_task(async function test_cookie_injector_disabled() {
 
 /**
  * Tests that no cookies are set if the cookie injection component is enabled
- * by pref, but the cookie banner service is disabled.
+ * by pref, but the cookie banner service is disabled or in detect-only mode.
  */
 add_task(async function test_cookie_banner_service_disabled() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["cookiebanners.service.mode", Ci.nsICookieBannerService.MODE_DISABLED],
-      ["cookiebanners.cookieInjector.enabled", true],
-    ],
-  });
+  for (let mode of [
+    Ci.nsICookieBannerService.MODE_DISABLED,
+    Ci.nsICookieBannerService.MODE_DETECT_ONLY,
+  ]) {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["cookiebanners.service.mode", mode],
+        ["cookiebanners.cookieInjector.enabled", true],
+      ],
+    });
 
-  await visitTestSites();
-  assertNoCookies();
+    await visitTestSites();
+    assertNoCookies();
 
-  await SiteDataTestUtils.clear();
+    await SiteDataTestUtils.clear();
+  }
 });
 
 /**
