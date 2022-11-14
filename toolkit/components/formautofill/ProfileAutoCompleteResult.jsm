@@ -101,8 +101,9 @@ class ProfileAutoCompleteResult {
   /**
    * Get the secondary label based on the focused field name and related field names
    * in the same form.
+   *
    * @param   {string} focusedFieldName The field name of the focused input
-   * @param   {Array<Object>} allFieldNames The field names in the same section
+   * @param   {Array<object>} allFieldNames The field names in the same section
    * @param   {object} profile The profile providing the labels to show.
    * @returns {string} The secondary label
    */
@@ -139,6 +140,7 @@ class ProfileAutoCompleteResult {
 
   /**
    * Retrieves a comment (metadata instance)
+   *
    * @param   {number} index The index of the comment requested
    * @returns {string} The comment at the specified index
    */
@@ -149,6 +151,7 @@ class ProfileAutoCompleteResult {
 
   /**
    * Retrieves a style hint specific to a particular index.
+   *
    * @param   {number} index The index of the style hint requested
    * @returns {string} The style hint at the specified index
    */
@@ -166,6 +169,7 @@ class ProfileAutoCompleteResult {
 
   /**
    * Retrieves an image url.
+   *
    * @param   {number} index The index of the image url requested
    * @returns {string} The image url at the specified index
    */
@@ -176,6 +180,7 @@ class ProfileAutoCompleteResult {
 
   /**
    * Retrieves a result
+   *
    * @param   {number} index The index of the result requested
    * @returns {string} The result at the specified index
    */
@@ -185,6 +190,7 @@ class ProfileAutoCompleteResult {
 
   /**
    * Returns true if the value at the given index is removable
+   *
    * @param   {number}  index The index of the result to remove
    * @returns {boolean} True if the value is removable
    */
@@ -194,6 +200,7 @@ class ProfileAutoCompleteResult {
 
   /**
    * Removes a result from the resultset
+   *
    * @param {number} index The index of the result to remove
    */
   removeValueAt(index) {

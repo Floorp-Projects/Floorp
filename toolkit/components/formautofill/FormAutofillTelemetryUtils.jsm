@@ -29,7 +29,7 @@ const CreditCardTelemetry = {
    * with a default value that applies to all keys.
    *
    * @param {string} value The default value
-   * @returns {Object} The extra object
+   * @returns {object} The extra object
    */
   _ccFormV2InitExtra(value) {
     let extra = {};
@@ -43,7 +43,7 @@ const CreditCardTelemetry = {
    * Utility function to set the value of the specified fieldName of `cc_form_v2`
    * extra object.
    *
-   * @param {Object} extra The `extra` object to be set
+   * @param {object} extra The `extra` object to be set
    * @param {string} key Field name, all supported field names are listed in
    *                     `CC_FORM_V2_SUPPORTED_FIELDS`
    * @param {string} value
@@ -57,8 +57,8 @@ const CreditCardTelemetry = {
    *
    * @param {string} method The method name.
    * @param {string} flowId Flow id.
-   * @param {Object} ccFormExtra  The extra object passed to `cc_form` telemetry
-   * @param {Object} ccFormV2Extra The extra object passed to `cc_form_v2` telemetry
+   * @param {object} ccFormExtra  The extra object passed to `cc_form` telemetry
+   * @param {object} ccFormV2Extra The extra object passed to `cc_form_v2` telemetry
    */
   _recordCCFormEvent(method, flowId, ccFormExtra, ccFormV2Extra) {
     Services.telemetry.recordEvent(
@@ -82,7 +82,7 @@ const CreditCardTelemetry = {
    * Called when a form is recognized as a credit card form.
    *
    * @param {string} flowId Flow id.
-   * @param {Array<Object>} fieldDetails List of current field details
+   * @param {Array<object>} fieldDetails List of current field details
    */
   recordFormDetected(flowId, fieldDetails) {
     // Record which fields could be identified
@@ -143,8 +143,8 @@ const CreditCardTelemetry = {
    * Called when a credit card form is autofilled.
    *
    * @param {string} flowId Flow id.
-   * @param {Array<Object>} fieldDetails List of current field details
-   * @param {Object} profile The profile to be autofilled
+   * @param {Array<object>} fieldDetails List of current field details
+   * @param {object} profile The profile to be autofilled
    */
   recordFormFilled(flowId, fieldDetails, profile) {
     // Calculate values for telemetry
