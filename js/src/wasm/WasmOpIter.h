@@ -3488,8 +3488,8 @@ inline bool OpIter<Policy>::readBrOnCast(uint32_t* labelRelativeDepth,
     return false;
   }
 
-  // The casted from type is any subtype of eqref.
-  ValType eqrefType(RefType::eq());
+  // The casted from type is any subtype of anyref.
+  ValType anyrefType(RefType::any());
 
   // The casted to type is a non-nullable reference to the type index
   // specified as an immediate.
@@ -3522,7 +3522,7 @@ inline bool OpIter<Policy>::readBrOnCast(uint32_t* labelRelativeDepth,
   }
 
   // Create a copy of the branch target type, with the relevant value slot
-  // replaced by eqrefType.  Use this to check that the stack has the proper
+  // replaced by anyrefType.  Use this to check that the stack has the proper
   // types to branch to the target type.
   //
   // TODO: We could avoid a potential allocation here by handwriting a custom
@@ -3531,7 +3531,7 @@ inline bool OpIter<Policy>::readBrOnCast(uint32_t* labelRelativeDepth,
   if (!labelType->cloneToVector(&fallthroughType)) {
     return false;
   }
-  fallthroughType[labelTypeNumValues - 1] = eqrefType;
+  fallthroughType[labelTypeNumValues - 1] = anyrefType;
 
   // Validates the first half of (3), if we pretend that topType is eqref,
   // which it isn't really.
@@ -3573,7 +3573,7 @@ inline bool OpIter<Policy>::readBrOnCastFail(uint32_t* labelRelativeDepth,
   }
 
   // The casted from type is any subtype of eqref.
-  ValType eqrefType(RefType::eq());
+  ValType anyrefType(RefType::any());
 
   // The casted to type is a non-nullable reference to the type index
   // specified as an immediate.
@@ -3605,7 +3605,7 @@ inline bool OpIter<Policy>::readBrOnCastFail(uint32_t* labelRelativeDepth,
   // Validates the first half of (3), if we pretend that topType is eqref,
   // which it isn't really.
   Value ignored;
-  if (!popWithType(eqrefType, &ignored)) {
+  if (!popWithType(anyrefType, &ignored)) {
     return false;
   }
 

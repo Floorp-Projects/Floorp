@@ -1059,8 +1059,8 @@ inline bool RefType::isSubTypeOf(RefType subType, RefType superType) {
 
   // A subtype must have the same nullability as the supertype or the
   // supertype must be nullable.
-  if (!(subType.isNullable() == superType.isNullable() ||
-        superType.isNullable())) {
+  if (subType.isNullable() != superType.isNullable() &&
+      !superType.isNullable()) {
     return false;
   }
 
@@ -1070,15 +1070,20 @@ inline bool RefType::isSubTypeOf(RefType subType, RefType superType) {
     return true;
   }
 
-  // Structs are subtypes of eqref
-  if (subType.isTypeRef() && subType.typeDef()->isStructType() &&
-      superType.isEq()) {
+  // eqref is a subtype of anyref
+  if (subType.isEq() && superType.isAny()) {
     return true;
   }
 
-  // Arrays are subtypes of eqref
+  // Structs are subtypes of eqref and anyref
+  if (subType.isTypeRef() && subType.typeDef()->isStructType() &&
+      (superType.isAny() || superType.isEq())) {
+    return true;
+  }
+
+  // Arrays are subtypes of eqref and anyref
   if (subType.isTypeRef() && subType.typeDef()->isArrayType() &&
-      superType.isEq()) {
+      (superType.isAny() || superType.isEq())) {
     return true;
   }
 

@@ -75,6 +75,8 @@ bool wasm::ToRefType(JSContext* cx, JSLinearString* typeLinearStr,
   } else if (StringEqualsLiteral(typeLinearStr, "externref")) {
     *out = RefType::extern_();
 #ifdef ENABLE_WASM_GC
+  } else if (GcAvailable(cx) && StringEqualsLiteral(typeLinearStr, "anyref")) {
+    *out = RefType::any();
   } else if (GcAvailable(cx) && StringEqualsLiteral(typeLinearStr, "eqref")) {
     *out = RefType::eq();
 #endif
@@ -98,6 +100,9 @@ UniqueChars wasm::ToString(RefType type, const TypeContext* types) {
       case RefType::Extern:
         literal = "externref";
         break;
+      case RefType::Any:
+        literal = "anyref";
+        break;
       case RefType::Eq:
         literal = "eqref";
         break;
@@ -118,6 +123,9 @@ UniqueChars wasm::ToString(RefType type, const TypeContext* types) {
       break;
     case RefType::Extern:
       heapType = "extern";
+      break;
+    case RefType::Any:
+      heapType = "any";
       break;
     case RefType::Eq:
       heapType = "eq";

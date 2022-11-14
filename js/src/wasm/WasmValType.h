@@ -298,6 +298,7 @@ class RefType {
   enum Kind {
     Func = uint8_t(TypeCode::FuncRef),
     Extern = uint8_t(TypeCode::ExternRef),
+    Any = uint8_t(TypeCode::AnyRef),
     Eq = uint8_t(TypeCode::EqRef),
     TypeRef = uint8_t(AbstractTypeRefCode)
   };
@@ -307,14 +308,14 @@ class RefType {
 
 #ifdef DEBUG
   bool isValid() const {
+    MOZ_ASSERT((ptc_.typeCode() == AbstractTypeRefCode) ==
+               (ptc_.typeDef() != nullptr));
     switch (ptc_.typeCode()) {
       case TypeCode::FuncRef:
       case TypeCode::ExternRef:
+      case TypeCode::AnyRef:
       case TypeCode::EqRef:
-        MOZ_ASSERT(ptc_.typeDef() == nullptr);
-        return true;
       case AbstractTypeRefCode:
-        MOZ_ASSERT(ptc_.typeDef() != nullptr);
         return true;
       default:
         return false;
@@ -354,10 +355,12 @@ class RefType {
 
   static RefType func() { return RefType(Func, true); }
   static RefType extern_() { return RefType(Extern, true); }
+  static RefType any() { return RefType(Any, true); }
   static RefType eq() { return RefType(Eq, true); }
 
   bool isFunc() const { return kind() == RefType::Func; }
   bool isExtern() const { return kind() == RefType::Extern; }
+  bool isAny() const { return kind() == RefType::Any; }
   bool isEq() const { return kind() == RefType::Eq; }
   bool isTypeRef() const { return kind() == RefType::TypeRef; }
 
@@ -369,6 +372,7 @@ class RefType {
       case RefType::Func:
         return TableRepr::Func;
       case RefType::Extern:
+      case RefType::Any:
       case RefType::Eq:
         return TableRepr::Ref;
       case RefType::TypeRef:
@@ -413,6 +417,7 @@ class FieldTypeTraits {
       case TypeCode::FuncRef:
       case TypeCode::ExternRef:
 #ifdef ENABLE_WASM_GC
+      case TypeCode::AnyRef:
       case TypeCode::EqRef:
 #endif
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
@@ -483,6 +488,7 @@ class ValTypeTraits {
       case TypeCode::FuncRef:
       case TypeCode::ExternRef:
 #ifdef ENABLE_WASM_GC
+      case TypeCode::AnyRef:
       case TypeCode::EqRef:
 #endif
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
@@ -645,6 +651,8 @@ class PackedType : public T {
 
   bool isExternRef() const { return tc_.typeCode() == TypeCode::ExternRef; }
 
+  bool isAnyRef() const { return tc_.typeCode() == TypeCode::AnyRef; }
+
   bool isEqRef() const { return tc_.typeCode() == TypeCode::EqRef; }
 
   bool isTypeRef() const { return tc_.typeCode() == AbstractTypeRefCode; }
@@ -657,7 +665,7 @@ class PackedType : public T {
   // Returns whether the type has a representation in JS.
   bool isExposable() const {
 #if defined(ENABLE_WASM_SIMD) || defined(ENABLE_WASM_GC)
-    return !(kind() == Kind::V128 || isTypeRef());
+    return !(kind() == Kind::V128 || isAnyRef() || isTypeRef());
 #else
     return true;
 #endif
@@ -683,16 +691,7 @@ class PackedType : public T {
   // as parameters to imports or returned from exports).  For ExternRef the
   // Value encoding is pretty much a requirement.  For other types it's a choice
   // that may (temporarily) simplify some code.
-  bool isEncodedAsJSValueOnEscape() const {
-    switch (typeCode()) {
-      case TypeCode::FuncRef:
-      case TypeCode::ExternRef:
-      case TypeCode::EqRef:
-        return true;
-      default:
-        return false;
-    }
-  }
+  bool isEncodedAsJSValueOnEscape() const { return isRefType(); }
 
   uint32_t size() const {
     switch (tc_.typeCodeAbstracted()) {

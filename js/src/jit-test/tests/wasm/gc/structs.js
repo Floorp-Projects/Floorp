@@ -423,7 +423,7 @@ assertErrorMessage(() => ins.pop(),
            (ref.cast $Node (local.get $n))))`).exports;
     var n = ins.mk();
     assertEq(ins.f(n), n);
-    assertErrorMessage(() => ins.f(wrapWithProto(n, {})), TypeError, /can only pass a TypedObject/);
+    assertErrorMessage(() => ins.f(wrapWithProto(n, {})), TypeError, /can only pass a WebAssembly GC object/);
 }
 
 // Field names.
