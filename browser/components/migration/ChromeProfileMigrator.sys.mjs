@@ -267,10 +267,10 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
           lazy.PlacesUIUtils.maybeToggleBookmarkToolbarVisibilityAfterMigration();
         }
 
-        // Importing bookmark menu items
+        // Importing Other Bookmarks items
         if (roots.other.children && roots.other.children.length) {
-          // Bookmark menu
-          let parentGuid = lazy.PlacesUtils.bookmarks.menuGuid;
+          // Other Bookmarks
+          let parentGuid = lazy.PlacesUtils.bookmarks.unfiledGuid;
           let bookmarks = convertBookmarks(roots.other.children, errorGatherer);
           await MigrationUtils.insertManyBookmarksWrapper(
             bookmarks,
