@@ -3,12 +3,17 @@ layout: page
 title: Changelog
 permalink: /changelog/
 ---
-# 108.0.0 (In Development)
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v107.0.0...main)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/155?closed=1)
-* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Dependencies.kt)
-* [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
-* [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
+# 109.0.0 (In Development)
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v108.0.0...main)
+* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
+
+# 108.0.0
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v107.0.0...v108.0.0)
+* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/v108.0.0/android-components/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/v108.0.0/android-components/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/v108.0.0/android-components/.config.yml)
 
 * **ui-autocomplete**
   * 🚒 Bug fixed [bug #1794933](https://bugzilla.mozilla.org/show_bug.cgi?id=1794933) Immediately remove autocomplete when not applicable anymore.
