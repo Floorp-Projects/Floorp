@@ -1,3 +1,4 @@
+import json
 import os
 import socket
 import time
@@ -116,6 +117,7 @@ class Browser:
         self.extra_prefs = extra_prefs
 
         self.debugger_address = None
+        self.remote_agent_host = None
         self.remote_agent_port = None
 
         # Prepare temporary profile
@@ -131,11 +133,11 @@ class Browser:
             with suppress(FileNotFoundError):
                 os.remove(self.cdp_port_file)
         if use_bidi:
-            self.bidi_port_file = os.path.join(
-                self.profile.profile, "WebDriverBiDiActivePort"
+            self.webdriver_bidi_file = os.path.join(
+                self.profile.profile, "WebDriverBiDiServer.json"
             )
             with suppress(FileNotFoundError):
-                os.remove(self.bidi_port_file)
+                os.remove(self.webdriver_bidi_file)
 
         # Prepare Firefox runner
         binary = firefox_options["binary"]
@@ -158,12 +160,14 @@ class Browser:
         self.runner.start()
 
         if self.use_bidi:
-            # Wait until the WebDriverBiDiActivePort file is ready
-            while not os.path.exists(self.bidi_port_file):
+            # Wait until the WebDriverBiDiServer.json file is ready
+            while not os.path.exists(self.webdriver_bidi_file):
                 time.sleep(0.1)
 
-            # Read the port from the WebDriverBiDiActivePort file
-            self.remote_agent_port = int(open(self.bidi_port_file).read())
+            # Read the connection details from file
+            data = json.loads(open(self.webdriver_bidi_file).read())
+            self.remote_agent_host = data["ws_host"]
+            self.remote_agent_port = int(data["ws_port"])
 
         if self.use_cdp:
             # Wait until the DevToolsActivePort file is ready
