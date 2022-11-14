@@ -125,7 +125,7 @@ class CookieBannerChild extends JSWindowActorChild {
     try {
       rules = await this.sendQuery("CookieBanner::GetClickRules", {});
     } catch (e) {
-      lazy.logConsole.warn("Failed to get click rule from parent.");
+      lazy.logConsole.warn("Failed to get click rule from parent.", e);
       return;
     }
 
@@ -138,7 +138,14 @@ class CookieBannerChild extends JSWindowActorChild {
 
     this.#clickRules = rules;
 
-    await this.handleCookieBanner();
+    let { bannerHandled, matchedRule } = await this.handleCookieBanner();
+    if (bannerHandled) {
+      lazy.logConsole.info("Handled cookie banner.", {
+        url: this.document?.location.href,
+        rule: matchedRule,
+      });
+      this.sendAsyncMessage("CookieBanner::HandledBanner");
+    }
 
     this.#maybeSendTestMessage();
   }
@@ -203,7 +210,7 @@ class CookieBannerChild extends JSWindowActorChild {
 
     if (!rules.length) {
       // The banner was never shown.
-      return;
+      return { bannerHandled: false };
     }
 
     // Hide the banner.
@@ -219,12 +226,8 @@ class CookieBannerChild extends JSWindowActorChild {
         this.#showBanner(matchedRule);
       }
     }
-    if (successClick) {
-      lazy.logConsole.info("Handled cookie banner.", {
-        url: this.document?.location.href,
-        rule: matchedRule,
-      });
-    }
+
+    return { bannerHandled: successClick, matchedRule };
   }
 
   /**
