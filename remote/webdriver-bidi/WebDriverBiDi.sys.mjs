@@ -185,18 +185,26 @@ export class WebDriverBiDi {
 
     Cu.printStderr(`WebDriver BiDi listening on ${this.address}\n`);
 
-    // Write WebSocket port to WebDriverBiDiActivePort file within the profile.
-    this._activePortPath = PathUtils.join(
+    // Write WebSocket connection details to the WebDriverBiDiServer.json file
+    // located within the application's profile.
+    this._bidiServerPath = PathUtils.join(
       PathUtils.profileDir,
-      "WebDriverBiDiActivePort"
+      "WebDriverBiDiServer.json"
     );
 
-    const data = `${this.agent.port}`;
+    const data = {
+      ws_host: this.agent.host,
+      ws_port: this.agent.port,
+    };
+
     try {
-      await IOUtils.write(this._activePortPath, lazy.textEncoder.encode(data));
+      await IOUtils.write(
+        this._bidiServerPath,
+        lazy.textEncoder.encode(JSON.stringify(data, undefined, "  "))
+      );
     } catch (e) {
       lazy.logger.warn(
-        `Failed to create ${this._activePortPath} (${e.message})`
+        `Failed to create ${this._bidiServerPath} (${e.message})`
       );
     }
   }
@@ -211,10 +219,10 @@ export class WebDriverBiDi {
 
     try {
       try {
-        await IOUtils.remove(this._activePortPath);
+        await IOUtils.remove(this._bidiServerPath);
       } catch (e) {
         lazy.logger.warn(
-          `Failed to remove ${this._activePortPath} (${e.message})`
+          `Failed to remove ${this._bidiServerPath} (${e.message})`
         );
       }
 
