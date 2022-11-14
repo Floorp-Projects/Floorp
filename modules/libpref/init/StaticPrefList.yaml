@@ -225,7 +225,7 @@
 #ifdef ANDROID
   value: true
 #else
-  value: @IS_NOT_RELEASE_OR_BETA@
+  value: false
 #endif
   mirror: once
 
