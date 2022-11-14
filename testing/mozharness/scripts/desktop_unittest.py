@@ -12,6 +12,7 @@ author: Jordan Lund
 
 from __future__ import absolute_import
 import json
+import multiprocessing
 import os
 import re
 import sys
@@ -513,6 +514,10 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
             self.register_virtualenv_module(
                 requirements=[requirements_file], two_pass=True
             )
+
+        _python_interp = self.query_exe("python")
+        if "win" in self.platform_name() and os.path.exists(_python_interp):
+            multiprocessing.set_executable(_python_interp)
 
     def _query_symbols_url(self):
         """query the full symbols URL based upon binary URL"""
