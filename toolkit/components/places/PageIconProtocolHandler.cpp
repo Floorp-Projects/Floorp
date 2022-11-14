@@ -235,8 +235,7 @@ nsresult PageIconProtocolHandler::NewChannelInternal(nsIURI* aURI,
   // we got all the favicon data.
   nsCOMPtr<nsIAsyncInputStream> pipeIn;
   nsCOMPtr<nsIAsyncOutputStream> pipeOut;
-  nsresult rv = GetStreams(getter_AddRefs(pipeIn), getter_AddRefs(pipeOut));
-  NS_ENSURE_SUCCESS(rv, rv);
+  GetStreams(getter_AddRefs(pipeIn), getter_AddRefs(pipeOut));
 
   // Create our channel.
   nsCOMPtr<nsIChannel> channel;
@@ -245,14 +244,14 @@ nsresult PageIconProtocolHandler::NewChannelInternal(nsIURI* aURI,
     // principal here is alright.
     nsCOMPtr<nsIPrincipal> loadingPrincipal =
         NullPrincipal::CreateWithoutOriginAttributes();
-    rv = NS_NewInputStreamChannel(
+    nsresult rv = NS_NewInputStreamChannel(
         getter_AddRefs(channel), aURI, pipeIn.forget(), loadingPrincipal,
         nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
         nsIContentPolicy::TYPE_INTERNAL_IMAGE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = channel->SetLoadInfo(aLoadInfo);
+  nsresult rv = channel->SetLoadInfo(aLoadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   GetFaviconData(aURI, aLoadInfo)
@@ -366,12 +365,7 @@ RefPtr<RemoteStreamPromise> PageIconProtocolHandler::NewStream(
           [self, uri, loadInfo, outerPromise](nsresult aRv) {
             nsCOMPtr<nsIAsyncInputStream> pipeIn;
             nsCOMPtr<nsIAsyncOutputStream> pipeOut;
-            nsresult rv = self->GetStreams(getter_AddRefs(pipeIn),
-                                           getter_AddRefs(pipeOut));
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              outerPromise->Reject(rv, __func__);
-              return;
-            }
+            self->GetStreams(getter_AddRefs(pipeIn), getter_AddRefs(pipeOut));
 
             RemoteStreamInfo info(
                 pipeIn, nsLiteralCString(FAVICON_DEFAULT_MIMETYPE), -1);
@@ -381,8 +375,8 @@ RefPtr<RemoteStreamPromise> PageIconProtocolHandler::NewStream(
   return outerPromise;
 }
 
-nsresult PageIconProtocolHandler::GetStreams(nsIAsyncInputStream** inStream,
-                                             nsIAsyncOutputStream** outStream) {
+void PageIconProtocolHandler::GetStreams(nsIAsyncInputStream** inStream,
+                                         nsIAsyncOutputStream** outStream) {
   static constexpr size_t kSegmentSize = 4096;
   nsCOMPtr<nsIAsyncInputStream> pipeIn;
   nsCOMPtr<nsIAsyncOutputStream> pipeOut;
@@ -392,7 +386,6 @@ nsresult PageIconProtocolHandler::GetStreams(nsIAsyncInputStream** inStream,
 
   pipeIn.forget(inStream);
   pipeOut.forget(outStream);
-  return NS_OK;
 }
 
 // static
