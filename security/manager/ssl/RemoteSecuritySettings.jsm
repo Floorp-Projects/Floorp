@@ -221,7 +221,7 @@ const updateCertBlocklist = async function({
     );
     await setRevocations(certList, items);
   } catch (e) {
-    Cu.reportError(e);
+    lazy.log.error(e);
   }
 };
 
@@ -380,7 +380,7 @@ class IntermediatePreloads {
       certStorage.addCerts(certInfos, resolve);
     }).catch(err => err);
     if (result != Cr.NS_OK) {
-      Cu.reportError(`certStorage.addCerts failed: ${result}`);
+      lazy.log.error(`certStorage.addCerts failed: ${result}`);
       return;
     }
     try {
@@ -427,7 +427,7 @@ class IntermediatePreloads {
   /**
    * Attempts to download the attachment, assuming it's not been processed
    * already. Does not retry, and always resolves (e.g., does not reject upon
-   * failure.) Errors are reported via Cu.reportError.
+   * failure.) Errors are reported via console.error.
    *
    * @param  {AttachmentRecord} record defines which data to obtain
    * @returns {Promise}          a Promise that will resolve to an object with the properties
@@ -450,7 +450,7 @@ class IntermediatePreloads {
       if (err.name == "BadContentError") {
         lazy.log.debug(`Bad attachment content.`);
       } else {
-        Cu.reportError(`Failed to download attachment: ${err}`);
+        lazy.log.error(`Failed to download attachment: ${err}`);
       }
       return result;
     }
@@ -470,7 +470,7 @@ class IntermediatePreloads {
         bytesToString(cert.tbsCertificate.subject._der._bytes)
       );
     } catch (err) {
-      Cu.reportError(`Failed to decode cert: ${err}`);
+      lazy.log.error(`Failed to decode cert: ${err}`);
       return result;
     }
     result.cert = certBase64;
@@ -491,7 +491,7 @@ class IntermediatePreloads {
       certStorage.removeCertsByHashes(hashes, resolve);
     }).catch(err => err);
     if (result != Cr.NS_OK) {
-      Cu.reportError(`Failed to remove some intermediate certificates`);
+      lazy.log.error(`Failed to remove some intermediate certificates`);
     }
   }
 }
@@ -544,8 +544,7 @@ class CRLiteFilters {
         }
       }
     } catch (e) {
-      lazy.log.debug(e);
-      Cu.reportError("Could not clean cert-revocations attachment cache", e);
+      lazy.log.error("Could not clean cert-revocations attachment cache", e);
     }
   }
 
@@ -643,8 +642,7 @@ class CRLiteFilters {
         filter.bytes = bytes;
         filtersDownloaded.push(filter);
       } catch (e) {
-        lazy.log.debug(e);
-        Cu.reportError("failed to download CRLite filter", e);
+        lazy.log.error("failed to download CRLite filter", e);
       }
     }
     let fullFiltersDownloaded = filtersDownloaded.filter(
