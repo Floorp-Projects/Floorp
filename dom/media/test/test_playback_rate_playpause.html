@@ -15,12 +15,12 @@ let manager = new MediaTestManager;
 function ontimeupdate(e) {
   var t = e.target;
   if (t.currentTime != 0.0) {
-    dump(t.token + " t.currentTime != 0.0.\n");
+    info(t.token + " t.currentTime=" + t.currentTime +"\n");
     t.removeEventListener("timeupdate", ontimeupdate);
     t.pause();
     is(t.playbackRate, 0.5, "PlaybackRate should not have changed after pause.");
   } else {
-    dump(t.token + " t.currentTime == 0.0.\n");
+    info(t.token + " t.currentTime == 0.0.\n");
   }
 }
 
