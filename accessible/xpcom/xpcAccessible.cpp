@@ -376,19 +376,18 @@ xpcAccessible::GetCache(nsIPersistentProperties** aCachedFields) {
   }
 
   RefPtr<nsPersistentProperties> props = new nsPersistentProperties();
-  if (IntlGeneric()->IsRemote()) {
-    RefPtr<AccAttributes> cachedFields =
-        IntlGeneric()->AsRemote()->mCachedFields;
+  if (RemoteAccessible* remoteAcc = IntlGeneric()->AsRemote()) {
+    if (RefPtr<AccAttributes> cachedFields = remoteAcc->mCachedFields) {
+      nsAutoString unused;
+      for (auto iter : *cachedFields) {
+        nsAutoString name;
+        iter.NameAsString(name);
 
-    nsAutoString unused;
-    for (auto iter : *cachedFields) {
-      nsAutoString name;
-      iter.NameAsString(name);
+        nsAutoString value;
+        iter.ValueAsString(value);
 
-      nsAutoString value;
-      iter.ValueAsString(value);
-
-      props->SetStringProperty(NS_ConvertUTF16toUTF8(name), value, unused);
+        props->SetStringProperty(NS_ConvertUTF16toUTF8(name), value, unused);
+      }
     }
   }
 
