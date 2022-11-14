@@ -169,12 +169,12 @@ bool MFMediaEngineVideoStream::HasEnoughRawData() const {
   // If more than this much raw video is queued, we'll hold off request more
   // video.
   static const int64_t VIDEO_VIDEO_USECS = 500000;
-  return mRawDataQueue.Duration() >= VIDEO_VIDEO_USECS;
+  return mRawDataQueueForFeedingEngine.Duration() >= VIDEO_VIDEO_USECS;
 }
 
-already_AddRefed<MediaData> MFMediaEngineVideoStream::OutputData(
-    MediaRawData* aSample) {
+already_AddRefed<MediaData> MFMediaEngineVideoStream::OutputData() {
   MutexAutoLock lock(mMutex);
+
   if (!mDCompSurfaceHandle || mDCompSurfaceHandle == INVALID_HANDLE_VALUE) {
     LOGV("Can't create image without a valid dcomp surface handle");
     return nullptr;
@@ -182,6 +182,11 @@ already_AddRefed<MediaData> MFMediaEngineVideoStream::OutputData(
 
   if (!mKnowsCompositor) {
     LOGV("Can't create image without the knows compositor");
+    return nullptr;
+  }
+
+  if (mRawDataQueueForGeneratingOutput.GetSize() == 0) {
+    LOGV("Hasn't got raw data for generating output yet");
     return nullptr;
   }
 
@@ -197,9 +202,10 @@ already_AddRefed<MediaData> MFMediaEngineVideoStream::OutputData(
          mDCompSurfaceHandle, mDisplay.Width(), mDisplay.Height());
   }
 
-  return VideoData::CreateFromImage(mDisplay, aSample->mOffset, aSample->mTime,
-                                    aSample->mDuration, mDcompSurfaceImage,
-                                    aSample->mKeyframe, aSample->mTimecode);
+  RefPtr<MediaRawData> sample = mRawDataQueueForGeneratingOutput.PopFront();
+  return VideoData::CreateFromImage(mDisplay, sample->mOffset, sample->mTime,
+                                    sample->mDuration, mDcompSurfaceImage,
+                                    sample->mKeyframe, sample->mTimecode);
 }
 
 MediaDataDecoder::ConversionRequired MFMediaEngineVideoStream::NeedsConversion()

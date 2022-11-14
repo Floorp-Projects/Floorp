@@ -71,7 +71,7 @@ bool MFMediaEngineAudioStream::HasEnoughRawData() const {
   // If more than this much raw audio is queued, we'll hold off request more
   // audio.
   static const int64_t AMPLE_AUDIO_USECS = 2000000;
-  return mRawDataQueue.Duration() >= AMPLE_AUDIO_USECS;
+  return mRawDataQueueForFeedingEngine.Duration() >= AMPLE_AUDIO_USECS;
 }
 
 #undef LOGV

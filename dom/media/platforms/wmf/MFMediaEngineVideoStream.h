@@ -48,7 +48,7 @@ class MFMediaEngineVideoStream final : public MFMediaEngineStream {
 
   MFMediaEngineVideoStream* AsVideoStream() override { return this; }
 
-  already_AddRefed<MediaData> OutputData(MediaRawData* aSample) override;
+  already_AddRefed<MediaData> OutputData() override;
 
   MediaDataDecoder::ConversionRequired NeedsConversion() const override;
 
