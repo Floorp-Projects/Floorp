@@ -51,11 +51,16 @@ RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStreamWrapper::Decode(
   Unused << mTaskQueue->Dispatch(NS_NewRunnableFunction(
       "MFMediaEngineStreamWrapper::Decode",
       [sample = RefPtr{aSample}, stream]() { stream->NotifyNewData(sample); }));
-  // TODO : for video, we should only resolve the promise when we get the dcomp
-  // handle.
-  RefPtr<MediaData> outputData = mStream->OutputData(aSample);
-  if (outputData) {
-    return DecodePromise::CreateAndResolve(DecodedData{outputData}, __func__);
+
+  // TODO : Generalize this part by using `OutputData()` for audio as well and
+  // remove `mFakeDataCreator`.
+  if (mStream->TrackType() == TrackInfo::TrackType::kVideoTrack) {
+    if (RefPtr<MediaData> outputData = mStream->OutputData()) {
+      return DecodePromise::CreateAndResolve(DecodedData{std::move(outputData)},
+                                             __func__);
+    } else {
+      return DecodePromise::CreateAndResolve(DecodedData{}, __func__);
+    }
   }
   // The stream don't support returning output, all data would be processed
   // inside the media engine. We return an empty data back instead.
@@ -64,14 +69,22 @@ RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStreamWrapper::Decode(
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStreamWrapper::Drain() {
-  // Nothing to drain, because we're not able to control real outputs.
   WLOGV("Drain");
   if (!mStream || mStream->IsShutdown()) {
     return DecodePromise::CreateAndReject(
         MediaResult(NS_ERROR_FAILURE, "MFMediaEngineStreamWrapper is shutdown"),
         __func__);
   }
-  return DecodePromise::CreateAndResolve(DecodedData(), __func__);
+  // TODO :  Generalize this part by using `OutputData()` for audio as well.
+  DecodedData outputs;
+  if (mStream->TrackType() == TrackInfo::TrackType::kVideoTrack) {
+    RefPtr<MediaData> outputData = mStream->OutputData();
+    while (outputData) {
+      outputs.AppendElement(outputData);
+      outputData = mStream->OutputData();
+    }
+  }
+  return DecodePromise::CreateAndResolve(std::move(outputs), __func__);
 }
 
 RefPtr<MediaDataDecoder::FlushPromise> MFMediaEngineStreamWrapper::Flush() {
@@ -240,7 +253,8 @@ void MFMediaEngineStream::Shutdown() {
   Unused << mTaskQueue->Dispatch(
       NS_NewRunnableFunction("MFMediaEngineStream::Shutdown", [self]() {
         self->mParentSource = nullptr;
-        self->mRawDataQueue.Reset();
+        self->mRawDataQueueForFeedingEngine.Reset();
+        self->mRawDataQueueForGeneratingOutput.Reset();
       }));
 }
 
@@ -287,7 +301,7 @@ IFACEMETHODIMP MFMediaEngineStream::RequestSample(IUnknown* aToken) {
         ReplySampleRequestIfPossible();
         if (!HasEnoughRawData() && mParentSource && !IsEnded()) {
           SLOGV("Dispatch a sample request, queue duration=%" PRId64,
-                mRawDataQueue.Duration());
+                mRawDataQueueForFeedingEngine.Duration());
           mParentSource->mRequestSampleEvent.Notify(
               SampleRequest{TrackType(), false /* isEnough */});
         }
@@ -304,7 +318,7 @@ void MFMediaEngineStream::ReplySampleRequestIfPossible() {
     }
 
     SLOG("Notify end events");
-    MOZ_ASSERT(mRawDataQueue.GetSize() == 0);
+    MOZ_ASSERT(mRawDataQueueForFeedingEngine.GetSize() == 0);
     MOZ_ASSERT(mSampleRequestTokens.empty());
     RETURN_VOID_IF_FAILED(mMediaEventQueue->QueueEventParamUnk(
         MEEndOfStream, GUID_NULL, S_OK, nullptr));
@@ -312,7 +326,8 @@ void MFMediaEngineStream::ReplySampleRequestIfPossible() {
     return;
   }
 
-  if (mSampleRequestTokens.empty() || mRawDataQueue.GetSize() == 0) {
+  if (mSampleRequestTokens.empty() ||
+      mRawDataQueueForFeedingEngine.GetSize() == 0) {
     return;
   }
 
@@ -346,13 +361,13 @@ HRESULT MFMediaEngineStream::CreateInputSample(IMFSample** aSample) {
   ComPtr<IMFSample> sample;
   RETURN_IF_FAILED(wmf::MFCreateSample(&sample));
 
-  MOZ_ASSERT(mRawDataQueue.GetSize() != 0);
-  RefPtr<MediaRawData> data = mRawDataQueue.PopFront();
+  MOZ_ASSERT(mRawDataQueueForFeedingEngine.GetSize() != 0);
+  RefPtr<MediaRawData> data = mRawDataQueueForFeedingEngine.PopFront();
   SLOGV("CreateInputSample, pop data [%" PRId64 ", %" PRId64
         "] (duration=%" PRId64 ", kf=%d), queue size=%zu",
         data->mTime.ToMicroseconds(), data->GetEndTime().ToMicroseconds(),
         data->mDuration.ToMicroseconds(), data->mKeyframe,
-        mRawDataQueue.GetSize());
+        mRawDataQueueForFeedingEngine.GetSize());
 
   // Copy data into IMFMediaBuffer
   ComPtr<IMFMediaBuffer> buffer;
@@ -431,11 +446,13 @@ void MFMediaEngineStream::NotifyNewData(MediaRawData* aSample) {
     return;
   }
   bool wasEnough = HasEnoughRawData();
-  mRawDataQueue.Push(aSample);
+  mRawDataQueueForFeedingEngine.Push(aSample);
+  mRawDataQueueForGeneratingOutput.Push(aSample);
   SLOGV("NotifyNewData, push data [%" PRId64 ", %" PRId64
         "], queue size=%zu, queue duration=%" PRId64,
         aSample->mTime.ToMicroseconds(), aSample->GetEndTime().ToMicroseconds(),
-        mRawDataQueue.GetSize(), mRawDataQueue.Duration());
+        mRawDataQueueForFeedingEngine.GetSize(),
+        mRawDataQueueForFeedingEngine.Duration());
   if (mReceivedEOS) {
     SLOG("Receive a new data, cancel old EOS flag");
     mReceivedEOS = false;
@@ -460,7 +477,7 @@ void MFMediaEngineStream::NotifyEndOfStreamInternal() {
 
 bool MFMediaEngineStream::IsEnded() const {
   AssertOnTaskQueue();
-  return mReceivedEOS && mRawDataQueue.GetSize() == 0;
+  return mReceivedEOS && mRawDataQueueForFeedingEngine.GetSize() == 0;
 }
 
 RefPtr<MediaDataDecoder::FlushPromise> MFMediaEngineStream::Flush() {
@@ -472,7 +489,8 @@ RefPtr<MediaDataDecoder::FlushPromise> MFMediaEngineStream::Flush() {
         __func__);
   }
   SLOG("Flush");
-  mRawDataQueue.Reset();
+  mRawDataQueueForFeedingEngine.Reset();
+  mRawDataQueueForGeneratingOutput.Reset();
   mReceivedEOS = false;
   return MediaDataDecoder::FlushPromise::CreateAndResolve(true, __func__);
 }

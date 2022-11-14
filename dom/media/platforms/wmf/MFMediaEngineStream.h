@@ -92,10 +92,11 @@ class MFMediaEngineStream
 
   virtual MFMediaEngineVideoStream* AsVideoStream() { return nullptr; }
 
-  // Overwrite this method to support returning decoded data.
-  virtual already_AddRefed<MediaData> OutputData(MediaRawData* aSample) {
-    return nullptr;
-  }
+  // Overwrite this method to support returning decoded data. Called on
+  // MediaPDecoder thread (wrapper thread).
+  // TODO : make this function pure virtual and let audio stream to generate its
+  // own fake data as well.
+  virtual already_AddRefed<MediaData> OutputData() { return nullptr; }
 
   virtual MediaDataDecoder::ConversionRequired NeedsConversion() const {
     return MediaDataDecoder::ConversionRequired::kNeedNone;
@@ -138,9 +139,9 @@ class MFMediaEngineStream
 
   RefPtr<TaskQueue> mTaskQueue;
 
-  // This class would be run on two threads, MF thread pool and the source's
-  // task queue. Following members would be used across both threads so they
-  // need to be thread-safe.
+  // This class would be run on three threads, MF thread pool, the source's
+  // task queue and MediaPDecoder (wrapper thread). Following members would be
+  // used across both threads so they need to be thread-safe.
 
   // Modify on the MF thread pool, access from any threads.
   Atomic<bool> mIsShutdown;
@@ -149,8 +150,13 @@ class MFMediaEngineStream
   // Modify on MF thread pool, access from any threads.
   Atomic<bool> mIsSelected;
 
-  // A thread-safe queue storing input sample.
-  MediaQueue<MediaRawData> mRawDataQueue;
+  // A thread-safe queue storing input samples, which provides samples to the
+  // media engine.
+  MediaQueue<MediaRawData> mRawDataQueueForFeedingEngine;
+
+  // A thread-safe queue storing input samples, which would be used to generate
+  // decoded data.
+  MediaQueue<MediaRawData> mRawDataQueueForGeneratingOutput;
 
   // Thread-safe members END
 
