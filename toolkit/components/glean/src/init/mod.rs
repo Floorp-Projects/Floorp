@@ -11,8 +11,6 @@ use std::path::PathBuf;
 use nserror::NS_ERROR_NOT_IMPLEMENTED;
 use nserror::{nsresult, NS_ERROR_FAILURE};
 use nsstring::{nsACString, nsCString, nsString};
-#[cfg(not(target_os = "android"))]
-use xpcom::interfaces::mozIViaduct;
 use xpcom::interfaces::{nsIFile, nsIPrefService, nsIProperties, nsIXULAppInfo, nsIXULRuntime};
 use xpcom::{RefPtr, XpCom};
 
@@ -98,8 +96,6 @@ fn fog_init_internal(
 
     conf.upload_enabled = upload_enabled;
     conf.uploader = uploader;
-
-    setup_viaduct();
 
     // If we're operating in automation without any specific source tags to set,
     // set the tag "automation" so any pings that escape don't clutter the tables.
@@ -199,36 +195,6 @@ fn setup_observers() -> Result<(), nsresult> {
 fn setup_observers() -> Result<(), nsresult> {
     // No observers are set up on Android.
     Ok(())
-}
-
-/// Ensure Viaduct is initialized for networking unconditionally so we don't
-/// need to check again if upload is later enabled.
-///
-/// Failing to initialize viaduct will log an error.
-#[cfg(not(target_os = "android"))]
-fn setup_viaduct() {
-    // SAFETY: Everything here is self-contained.
-    //
-    // * We try to create an instance of an xpcom interface
-    // * We bail out if that fails.
-    // * We call a method on it without additional inputs.
-    unsafe {
-        if let Some(viaduct) =
-            xpcom::create_instance::<mozIViaduct>(cstr!("@mozilla.org/toolkit/viaduct;1"))
-        {
-            let result = viaduct.EnsureInitialized();
-            if result.failed() {
-                log::error!("Failed to ensure viaduct was initialized due to {}. Ping upload may not be available.", result.error_name());
-            }
-        } else {
-            log::error!("Failed to create Viaduct via XPCOM. Ping upload may not be available.");
-        }
-    }
-}
-
-#[cfg(target_os = "android")]
-fn setup_viaduct() {
-    // No viaduct is setup on Android.
 }
 
 /// Construct and return the data_path from the profile dir, or return an error.
