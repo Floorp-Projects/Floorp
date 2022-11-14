@@ -471,6 +471,8 @@
     <!-- Title for the customize home screen section with Pocket. -->
     <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket_2">Άρθρα που σας βάζουν σε σκέψεις</string>
     <!-- Title for the customize home screen section with sponsored Pocket stories. -->
     <string name="customize_toggle_pocket_sponsored">Χορηγούμενα άρθρα</string>
     <!-- Title for the opening wallpaper settings screen -->
