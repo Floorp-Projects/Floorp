@@ -204,7 +204,9 @@ async function readJSONFile(file) {
  * on actualObj.
  *
  * @param {object} expectedObj
+ *   The source object that we expect to match
  * @param {object} actualObj
+ *   The object to check against the source
  * @param {Function} skipProp
  *   A function that is called with the property name and its value, to see if
  *   testing that property should be skipped or not.
@@ -334,10 +336,15 @@ function useCustomGeoServer(region, waitToRespond = Promise.resolve()) {
 /**
  * @typedef {object} TelemetryDetails
  * @property {string} engineId
+ *   The telemetry ID for the search engine.
  * @property {string} [displayName]
+ *   The search engine's display name.
  * @property {string} [loadPath]
+ *   The load path for the search engine.
  * @property {string} [submissionUrl]
+ *   The submission URL for the search engine.
  * @property {string} [verified]
+ *   Whether the search engine is verified.
  */
 
 /**
@@ -345,6 +352,7 @@ function useCustomGeoServer(region, waitToRespond = Promise.resolve()) {
  * to Glean.
  *
  * @param {object} expected
+ *   An object containing telemetry details for normal and private engines.
  * @param {TelemetryDetails} expected.normal
  *   An object with the expected details for the normal search engine.
  * @param {TelemetryDetails} [expected.private]

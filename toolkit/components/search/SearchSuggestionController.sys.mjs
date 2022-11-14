@@ -101,7 +101,7 @@ class SearchSuggestionEntry {
    * Returns true if `otherEntry` is equivalent to this instance of
    * SearchSuggestionEntry.
    *
-   * @param {SearchSuggestionEntry} otherEntry
+   * @param {SearchSuggestionEntry} otherEntry The entry to compare to.
    * @returns {boolean}
    */
   equals(otherEntry) {
@@ -210,6 +210,14 @@ export class SearchSuggestionController {
   }
 
   /**
+   * @typedef {object} FetchResult
+   * @property {Array<SearchSuggestionEntry>} local
+   *   Contains local search suggestions.
+   * @property {Array<SearchSuggestionEntry>} remote
+   *   Contains remote search suggestions.
+   */
+
+  /**
    * Fetch search suggestions from all of the providers. Fetches in progress
    * will be stopped and results from them will not be provided.
    *
@@ -223,11 +231,7 @@ export class SearchSuggestionController {
    * @param {boolean} dedupeRemoteAndLocal - whether to remove remote
    *   suggestions that dupe local suggestions
    *
-   * @returns {Promise} resolving to an object with the following contents:
-   * @returns {Array<SearchSuggestionEntry>} results.local
-   *   Contains local search suggestions.
-   * @returns {Array<SearchSuggestionEntry>} results.remote
-   *   Contains remote search suggestions.
+   * @returns {Promise<FetchResult>}
    */
   fetch(
     searchTerm,

@@ -166,16 +166,14 @@ const ParamPreferenceCache = {
 
 /**
  * Represents a name/value pair for a parameter
- *
- * @see nsISearchEngine::addParam
  */
 class QueryParameter {
   /**
-   * @see nsISearchEngine::addParam
    * @param {string} name
+   *   The parameter's name. Must not be null.
    * @param {string} value
-   *  The value of the parameter. May be an empty string, must not be null or
-   *  undefined.
+   *   The value of the parameter. May be an empty string, must not be null or
+   *   undefined.
    * @param {string} purpose
    *   The search purpose for which matches when this parameter should be
    *   applied, e.g. "searchbar", "contextmenu".
@@ -407,6 +405,7 @@ export class EngineURL {
    * as a special type.
    *
    * @param {object} param
+   *   The parameter to add.
    * @param {string} param.name
    *   The name of the parameter to add to the url.
    * @param {string} [param.condition]
@@ -908,6 +907,7 @@ export class SearchEngine {
    * Initialize this engine object.
    *
    * @param {object} details
+   *   The details of the engine.
    * @param {string} details.name
    *   The name of the engine.
    * @param {string} details.keyword
@@ -963,6 +963,7 @@ export class SearchEngine {
    * overrideWithExtension / removeExtensionOverride functions as well.
    *
    * @param {object} details
+   *   The details of the engine.
    * @param {string} details.search_url
    *   The search url template for the engine.
    * @param {string} [details.search_url_get_params]
@@ -1223,6 +1224,7 @@ export class SearchEngine {
    * Set the user-defined alias.
    *
    * @param {string} val
+   *   The new alias.
    */
   set alias(val) {
     var value = val ? val.trim() : "";
@@ -1631,12 +1633,13 @@ export class SearchEngine {
    * (and suggest URI, if different) to reduce request latency
    *
    * @param {object} options
+   *   The options object
    * @param {DOMWindow} options.window
    *   The content window for the window performing the search.
    * @param {object} options.originAttributes
    *   The originAttributes for performing the search
    * @throws NS_ERROR_INVALID_ARG if options is omitted or lacks required
-   *         elemeents
+   *         elements
    */
   speculativeConnect(options) {
     if (!options || !options.window) {

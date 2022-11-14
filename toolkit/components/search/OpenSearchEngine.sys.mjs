@@ -72,6 +72,7 @@ export class OpenSearchEngine extends SearchEngine {
    * Creates a OpenSearchEngine.
    *
    * @param {object} [options]
+   *   The options object
    * @param {object} [options.json]
    *   An object that represents the saved JSON settings for the engine.
    */
@@ -412,6 +413,8 @@ export class OpenSearchEngine extends SearchEngine {
 
   /**
    * Returns the engine's updateURI if it exists and returns null otherwise
+   *
+   * @returns {string?}
    */
   get _updateURI() {
     let updateURL = this._getURLOfType(lazy.SearchUtils.URL_TYPE.OPENSEARCH);

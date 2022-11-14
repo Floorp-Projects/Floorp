@@ -570,8 +570,11 @@ export class SearchService {
    * Adds a search engine that is specified by the user.
    *
    * @param {string} name
+   *   The name of the search engine
    * @param {string} url
+   *   The url that the search engine uses for searches
    * @param {string} alias
+   *   An alias for the search engine
    */
   async addUserEngine(name, url, alias) {
     await this.init();
@@ -1188,6 +1191,7 @@ export class SearchService {
    * Returns the engine associated with the WebExtension details.
    *
    * @param {object} details
+   *   Details of the WebExtension.
    * @param {string} details.id
    *   The WebExtension ID
    * @param {string} details.locale
@@ -2639,6 +2643,7 @@ export class SearchService {
    * Note: this is currently used for enterprise policy engines as well.
    *
    * @param {object} options
+   *   Options for the engine.
    * @param {string} options.extensionID
    *   The extension ID being added for the engine.
    * @param {nsIURI} [options.extensionBaseURI]
@@ -3603,6 +3608,7 @@ export class SearchService {
 
   /**
    * @param {object} metaData
+   *    The metadata object that defines the details of the engine.
    * @returns {boolean}
    *    Returns true if metaData has different property values than
    *    the cached _metaData.
