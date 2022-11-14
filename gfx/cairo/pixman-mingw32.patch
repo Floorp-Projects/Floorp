@@ -1,0 +1,26 @@
+# HG changeset patch
+# User Ryan VanderMeulen <ryanvm@gmail.com>
+# Parent  6d9741f4bafc0e3ff3fc50009960966f03386af5
+
+diff --git a/gfx/cairo/libpixman/src/pixman-mmx.c b/gfx/cairo/libpixman/src/pixman-mmx.c
+--- a/gfx/cairo/libpixman/src/pixman-mmx.c
++++ b/gfx/cairo/libpixman/src/pixman-mmx.c
+@@ -55,17 +55,17 @@
+ extern __inline void __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+ _mm_empty (void)
+ {
+ 
+ }
+ #endif
+ 
+ #ifdef USE_X86_MMX
+-# if (defined(__SUNPRO_C) || defined(_MSC_VER) || defined(_WIN64))
++# if (defined(__SUNPRO_C) || defined(_MSC_VER) || defined(_WIN64)) || defined(__MINGW32__)
+ #  include <xmmintrin.h>
+ # else
+ /* We have to compile with -msse to use xmmintrin.h, but that causes SSE
+  * instructions to be generated that we don't want. Just duplicate the
+  * functions we want to use.  */
+ extern __inline int __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+ _mm_movemask_pi8 (__m64 __A)
+ {
