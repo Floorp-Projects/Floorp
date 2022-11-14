@@ -52,13 +52,13 @@ class DebugFrame {
    private:
     int32_t i32_;
     int64_t i64_;
-    intptr_t ref_;
-    AnyRef anyref_;
     float f32_;
     double f64_;
 #ifdef ENABLE_WASM_SIMD
     V128 v128_;
 #endif
+    AnyRef anyref_;
+
 #ifdef DEBUG
     // Should we add a new value representation, this will remind us to update
     // SpilledRegisterResult.
@@ -69,15 +69,8 @@ class DebugFrame {
         case ValType::F32:
         case ValType::F64:
         case ValType::V128:
-          return;
         case ValType::Ref:
-          switch (type.refTypeKind()) {
-            case RefType::Func:
-            case RefType::Extern:
-            case RefType::Eq:
-            case RefType::TypeRef:
-              return;
-          }
+          return;
       }
     }
 #endif

@@ -4013,16 +4013,8 @@ static bool EmitGetGlobal(FunctionCompiler& f) {
       return f.iter().fail("Ion has no SIMD support yet");
 #endif
     case ValType::Ref:
-      switch (value.type().refTypeKind()) {
-        case RefType::Func:
-        case RefType::Extern:
-        case RefType::Eq:
-          MOZ_ASSERT(value.ref().isNull());
-          result = f.nullRefConstant();
-          break;
-        case RefType::TypeRef:
-          MOZ_CRASH("unexpected reference type in EmitGetGlobal");
-      }
+      MOZ_ASSERT(value.ref().isNull());
+      result = f.nullRefConstant();
       break;
     default:
       MOZ_CRASH("unexpected type in EmitGetGlobal");
