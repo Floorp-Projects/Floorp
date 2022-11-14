@@ -69,8 +69,7 @@ class ClipManager {
 
  private:
   wr::WrSpatialId SpatialIdAfterOverride(const wr::WrSpatialId& aSpatialId);
-
-  Maybe<wr::WrSpatialId> GetScrollLayer(const ActiveScrolledRoot* aASR);
+  wr::WrSpatialId GetScrollLayer(const ActiveScrolledRoot* aASR);
 
   Maybe<wr::WrSpatialId> DefineScrollLayers(const ActiveScrolledRoot* aASR,
                                             nsDisplayItem* aItem);
