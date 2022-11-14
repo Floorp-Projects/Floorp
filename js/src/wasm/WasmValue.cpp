@@ -146,6 +146,7 @@ bool wasm::CheckRefType(JSContext* cx, RefType targetType, HandleValue v,
         return false;
       }
       break;
+    case RefType::Any:
     case RefType::TypeRef:
       MOZ_CRASH("temporarily unsupported Ref type");
   }
@@ -408,6 +409,7 @@ bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, FieldType type,
         case RefType::Eq:
           return ToWebAssemblyValue_eqref<Debug>(cx, val, (void**)loc,
                                                  mustWrite64);
+        case RefType::Any:
         case RefType::TypeRef:
           break;
       }
@@ -475,7 +477,13 @@ bool ToJSValue_funcref(JSContext* cx, void* src, MutableHandleValue dst) {
   return true;
 }
 template <typename Debug = NoDebug>
-bool ToJSValue_anyref(JSContext* cx, void* src, MutableHandleValue dst) {
+bool ToJSValue_externref(JSContext* cx, void* src, MutableHandleValue dst) {
+  dst.set(UnboxAnyRef(AnyRef::fromCompiledCode(src)));
+  Debug::print(src);
+  return true;
+}
+template <typename Debug = NoDebug>
+bool ToJSValue_eqref(JSContext* cx, void* src, MutableHandleValue dst) {
   dst.set(UnboxAnyRef(AnyRef::fromCompiledCode(src)));
   Debug::print(src);
   return true;
@@ -529,11 +537,12 @@ bool wasm::ToJSValue(JSContext* cx, const void* src, FieldType type,
           return ToJSValue_funcref<Debug>(
               cx, *reinterpret_cast<void* const*>(src), dst);
         case RefType::Extern:
-          return ToJSValue_anyref<Debug>(
+          return ToJSValue_externref<Debug>(
               cx, *reinterpret_cast<void* const*>(src), dst);
         case RefType::Eq:
-          return ToJSValue_anyref<Debug>(
+          return ToJSValue_eqref<Debug>(
               cx, *reinterpret_cast<void* const*>(src), dst);
+        case RefType::Any:
         case RefType::TypeRef:
           break;
       }

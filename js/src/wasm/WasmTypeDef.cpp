@@ -103,7 +103,7 @@ static bool IsImmediateValType(ValType vt) {
       switch (vt.refType().kind()) {
         case RefType::Func:
         case RefType::Extern:
-        case RefType::Eq:
+        case RefType::Any:
           return true;
         default:
           return false;
@@ -136,7 +136,7 @@ static unsigned EncodeImmediateValType(ValType vt) {
           return 5;
         case RefType::Extern:
           return 6;
-        case RefType::Eq:
+        case RefType::Any:
           return 7;
         default:
           MOZ_CRASH("bad RefType");
