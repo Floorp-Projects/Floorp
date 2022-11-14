@@ -66,7 +66,7 @@ const getUnifiedExtensionsItem = (win, extensionId) => {
   // First try to find a CUI widget, otherwise a custom element when the
   // extension does not have a browser action.
   return (
-    view.querySelector(`[data-extensionid="${extensionId}"]`) ||
+    view.querySelector(`toolbaritem[data-extensionid="${extensionId}"]`) ||
     view.querySelector(`unified-extensions-item[extension-id="${extensionId}"]`)
   );
 };

@@ -52,6 +52,19 @@ function getChildrenIDs(parent) {
 }
 
 /**
+ * Returns a NodeList of all non-hidden menu, menuitem and menuseparators
+ * that are direct descendants of popup.
+ *
+ * @param {Element} popup
+ * @returns {NodeList} the visible items.
+ */
+function getVisibleMenuItems(popup) {
+  return popup.querySelectorAll(
+    ":scope > :is(menu, menuitem, menuseparator):not([hidden])"
+  );
+}
+
+/**
  * This helper function does most of the heavy lifting for these tests.
  * It does the following in order:
  *
@@ -94,6 +107,11 @@ async function withWindowOverflowed(win, taskFn) {
 
   const extWithMenuBrowserAction = ExtensionTestUtils.loadExtension({
     manifest: {
+      browser_specific_settings: {
+        gecko: {
+          id: "overflowable-toolbar-addon-with-context-menu@mozilla.org",
+        },
+      },
       name: "Extension #0",
       browser_action: {},
       // We pass `activeTab` to have a different permission message when
@@ -614,15 +632,19 @@ add_task(async function test_context_menu() {
         firstExtensionWidget.dataset.extensionid
       );
       Assert.ok(contextMenu, "expected a context menu");
+      let visibleItems = getVisibleMenuItems(contextMenu);
+
       // The context menu for the extension that declares a browser action menu
-      // should have the menu item created by the extension, a menu separator
-      // and the 3 default menu items.
+      // should have the menu item created by the extension, a menu separator, the control
+      // for pinning the browser action to the toolbar, a menu separator and the 3 default menu items.
       is(
-        contextMenu.childElementCount,
-        5,
-        "expected a custom context menu item and a menu separator in addition to the 3 default menu items"
+        visibleItems.length,
+        7,
+        "expected a custom context menu item, a menu separator, the pin to " +
+          "toolbar menu item, a menu separator, and the 3 default menu items"
       );
-      const [item, separator] = contextMenu.children;
+
+      const [item, separator] = visibleItems;
       is(
         item.getAttribute("label"),
         "Click me!",
@@ -633,6 +655,7 @@ add_task(async function test_context_menu() {
         "menuseparator",
         "expected separator after last menu item created by the extension"
       );
+
       await closeChromeContextMenu(contextMenu.id, null, win);
 
       info("extension with browser action and a menu with submenu");
@@ -642,8 +665,9 @@ add_task(async function test_context_menu() {
         win,
         secondExtensionWidget.dataset.extensionid
       );
-      is(contextMenu.childElementCount, 5, "expected 5 menu items");
-      const popup = await openSubmenu(contextMenu.children[0]);
+      visibleItems = getVisibleMenuItems(contextMenu);
+      is(visibleItems.length, 7, "expected 7 menu items");
+      const popup = await openSubmenu(visibleItems[0]);
       is(popup.children.length, 1, "expected 1 submenu item");
       is(
         popup.children[0].getAttribute("label"),
@@ -651,7 +675,8 @@ add_task(async function test_context_menu() {
         "expected menu item"
       );
       // The number of items in the (main) context menu should remain the same.
-      is(contextMenu.childElementCount, 5, "expected 5 menu items");
+      visibleItems = getVisibleMenuItems(contextMenu);
+      is(visibleItems.length, 7, "expected 7 menu items");
       await closeChromeContextMenu(contextMenu.id, null, win);
 
       info("extension with no browser action and no menu");
@@ -665,7 +690,9 @@ add_task(async function test_context_menu() {
         thirdExtensionWidget.dataset.extensionid
       );
       Assert.ok(contextMenu, "expected a context menu");
-      is(contextMenu.childElementCount, 3, "expected 3 menu items");
+      visibleItems = getVisibleMenuItems(contextMenu);
+      is(visibleItems.length, 5, "expected 5 menu items");
+
       await closeChromeContextMenu(contextMenu.id, null, win);
 
       // We can close the unified extensions panel now.
