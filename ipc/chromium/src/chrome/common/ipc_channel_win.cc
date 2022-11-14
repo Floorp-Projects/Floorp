@@ -48,7 +48,8 @@ Channel::ChannelImpl::State::~State() {
 
 Channel::ChannelImpl::ChannelImpl(const ChannelId& channel_id, Mode mode,
                                   Listener* listener)
-    : io_thread_(MessageLoopForIO::current()->SerialEventTarget()),
+    : chan_cap_("ChannelImpl::SendMutex",
+                MessageLoopForIO::current()->SerialEventTarget()),
       ALLOW_THIS_IN_INITIALIZER_LIST(input_state_(this)),
       ALLOW_THIS_IN_INITIALIZER_LIST(output_state_(this)) {
   Init(mode, listener);
@@ -63,7 +64,8 @@ Channel::ChannelImpl::ChannelImpl(const ChannelId& channel_id, Mode mode,
 
 Channel::ChannelImpl::ChannelImpl(ChannelHandle pipe, Mode mode,
                                   Listener* listener)
-    : io_thread_(MessageLoopForIO::current()->SerialEventTarget()),
+    : chan_cap_("ChannelImpl::SendMutex",
+                MessageLoopForIO::current()->SerialEventTarget()),
       ALLOW_THIS_IN_INITIALIZER_LIST(input_state_(this)),
       ALLOW_THIS_IN_INITIALIZER_LIST(output_state_(this)) {
   Init(mode, listener);
@@ -105,8 +107,8 @@ void Channel::ChannelImpl::OutputQueuePop() {
 }
 
 void Channel::ChannelImpl::Close() {
-  io_thread_.AssertOnCurrentThread();
-  mozilla::MutexAutoLock lock(mutex_);
+  IOThread().AssertOnCurrentThread();
+  mozilla::MutexAutoLock lock(SendMutex());
   CloseLocked();
 }
 
@@ -138,7 +140,7 @@ void Channel::ChannelImpl::CloseLocked() {
   // It's OK to unlock here, as calls to `Send` from other threads will be
   // rejected, due to `pipe_` having been cleared.
   while (input_state_.is_pending || output_state_.is_pending) {
-    mozilla::MutexAutoUnlock unlock(mutex_);
+    mozilla::MutexAutoUnlock unlock(SendMutex());
     MessageLoopForIO::current()->WaitForIOCompletion(INFINITE, this);
   }
 
@@ -148,7 +150,7 @@ void Channel::ChannelImpl::CloseLocked() {
 }
 
 bool Channel::ChannelImpl::Send(mozilla::UniquePtr<Message> message) {
-  mozilla::MutexAutoLock lock(mutex_);
+  mozilla::MutexAutoLock lock(SendMutex());
 
 #ifdef IPC_MESSAGE_DEBUG_EXTRA
   DLOG(INFO) << "sending message @" << message.get() << " on channel @" << this
@@ -255,8 +257,8 @@ bool Channel::ChannelImpl::EnqueueHelloMessage() {
 }
 
 bool Channel::ChannelImpl::Connect() {
-  io_thread_.AssertOnCurrentThread();
-  mozilla::MutexAutoLock lock(mutex_);
+  IOThread().AssertOnCurrentThread();
+  mozilla::MutexAutoLock lock(SendMutex());
 
   if (pipe_ == INVALID_HANDLE_VALUE) return false;
 
@@ -277,7 +279,7 @@ bool Channel::ChannelImpl::Connect() {
     // to `this`, we indicate to OnIOCompleted that this is the special
     // initialization signal, while keeping a reference through the
     // `RunnableMethod`.
-    io_thread_.Dispatch(
+    IOThread().Dispatch(
         mozilla::NewRunnableMethod<MessageLoopForIO::IOContext*, DWORD, DWORD>(
             "ContinueConnect", this, &ChannelImpl::OnIOCompleted,
             &input_state_.context, 0, 0));
@@ -465,14 +467,14 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
         }
 
         int32_t other_pid = other_pid_;
-        mozilla::MutexAutoUnlock unlock(mutex_);
+        mozilla::MutexAutoUnlock unlock(SendMutex());
         listener_->OnChannelConnected(other_pid);
       } else {
         mozilla::LogIPCMessage::Run run(&m);
         if (!AcceptHandles(m)) {
           return false;
         }
-        mozilla::MutexAutoUnlock unlock(mutex_);
+        mozilla::MutexAutoUnlock unlock(SendMutex());
         listener_->OnMessageReceived(std::move(incoming_message_));
       }
 
@@ -576,8 +578,8 @@ void Channel::ChannelImpl::OnIOCompleted(MessageLoopForIO::IOContext* context,
   // outside of the lock.
   RefPtr<ChannelImpl> was_pending;
 
-  io_thread_.AssertOnCurrentThread();
-  mozilla::ReleasableMutexAutoLock lock(mutex_);
+  IOThread().AssertOnCurrentThread();
+  mozilla::ReleasableMutexAutoLock lock(SendMutex());
   bool ok;
   if (context == &input_state_.context) {
     was_pending = input_state_.is_pending.forget();
@@ -615,8 +617,8 @@ void Channel::ChannelImpl::OnIOCompleted(MessageLoopForIO::IOContext* context,
 }
 
 void Channel::ChannelImpl::StartAcceptingHandles(Mode mode) {
-  io_thread_.AssertOnCurrentThread();
-  mozilla::MutexAutoLock lock(mutex_);
+  IOThread().AssertOnCurrentThread();
+  mozilla::MutexAutoLock lock(SendMutex());
 
   if (accept_handles_) {
     MOZ_ASSERT(privileged_ == (mode == MODE_SERVER));
