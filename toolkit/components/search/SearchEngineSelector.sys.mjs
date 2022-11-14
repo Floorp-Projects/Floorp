@@ -152,6 +152,13 @@ export class SearchEngineSelector {
   /**
    * Handles updating of the configuration. Note that the search service is
    * only updated after a period where the user is observed to be idle.
+   *
+   * @param {object} options
+   *   The options object
+   * @param {object} options.data
+   *   The data to update
+   * @param {Array} options.data.current
+   *   The new configuration object
    */
   _onConfigurationUpdated({ data: { current } }) {
     this._configuration = current;
@@ -163,6 +170,7 @@ export class SearchEngineSelector {
 
   /**
    * @param {object} options
+   *   The options object
    * @param {string} options.locale
    *   Users locale.
    * @param {string} options.region

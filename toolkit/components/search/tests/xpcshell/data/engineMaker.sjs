@@ -4,7 +4,7 @@
 /**
  * Dynamically create a search engine offering search suggestions via searchSuggestions.sjs.
  *
- * The engine is constructed by passing a JSON object with engine datails as the query string.
+ * The engine is constructed by passing a JSON object with engine details as the query string.
  */
 
 function handleRequest(request, response) {
@@ -28,7 +28,9 @@ function handleRequest(request, response) {
  * Create an OpenSearch engine for the given base URL.
  *
  * @param {Response} response
+ *   The response object to write the engine to.
  * @param {object} engineData
+ *   Information about the search engine to write to the response.
  */
 function createOpenSearchEngine(response, engineData) {
   let params = "",

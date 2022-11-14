@@ -242,6 +242,7 @@ class SearchConfigTest {
    * Determines if a locale matches with a locales section in the configuration.
    *
    * @param {object} locales
+   *   The config locales config, containing the locals to match against.
    * @param {Array} [locales.matches]
    *   Array of locale names to match exactly.
    * @param {Array} [locales.startsWith]

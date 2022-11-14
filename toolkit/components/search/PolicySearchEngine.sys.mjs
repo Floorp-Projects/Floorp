@@ -21,6 +21,7 @@ export class PolicySearchEngine extends SearchEngine {
    * Creates a PolicySearchEngine.
    *
    * @param {object} options
+   *   The options for this search engine.
    * @param {object} [options.details]
    *   An object with the details for this search engine. See
    *   nsISearchService.addPolicyEngine for more details.
