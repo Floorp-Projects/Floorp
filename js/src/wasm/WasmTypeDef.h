@@ -1075,15 +1075,21 @@ inline bool RefType::isSubTypeOf(RefType subType, RefType superType) {
     return true;
   }
 
-  // Structs are subtypes of eqref and anyref
-  if (subType.isTypeRef() && subType.typeDef()->isStructType() &&
+  // structref/arrayref are subtypes of eqref and anyref
+  if ((subType.isStruct() || subType.isArray()) &&
       (superType.isAny() || superType.isEq())) {
     return true;
   }
 
-  // Arrays are subtypes of eqref and anyref
+  // Structs are subtypes of structref, eqref and anyref
+  if (subType.isTypeRef() && subType.typeDef()->isStructType() &&
+      (superType.isAny() || superType.isEq() || superType.isStruct())) {
+    return true;
+  }
+
+  // Arrays are subtypes of arrayref, eqref and anyref
   if (subType.isTypeRef() && subType.typeDef()->isArrayType() &&
-      (superType.isAny() || superType.isEq())) {
+      (superType.isAny() || superType.isEq() || superType.isArray())) {
     return true;
   }
 

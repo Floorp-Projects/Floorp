@@ -701,7 +701,9 @@ inline bool Decoder::readPackedType(const TypeContext& types,
 #endif
     }
     case uint8_t(TypeCode::AnyRef):
-    case uint8_t(TypeCode::EqRef): {
+    case uint8_t(TypeCode::EqRef):
+    case uint8_t(TypeCode::StructRef):
+    case uint8_t(TypeCode::ArrayRef): {
 #ifdef ENABLE_WASM_GC
       if (!features.gc) {
         return fail("gc types not enabled");
@@ -756,6 +758,8 @@ inline bool Decoder::readHeapType(const TypeContext& types,
 #ifdef ENABLE_WASM_GC
       case uint8_t(TypeCode::AnyRef):
       case uint8_t(TypeCode::EqRef):
+      case uint8_t(TypeCode::StructRef):
+      case uint8_t(TypeCode::ArrayRef):
         if (!features.gc) {
           return fail("gc types not enabled");
         }

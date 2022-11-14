@@ -1623,7 +1623,7 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitArrayNewElem();
   [[nodiscard]] bool emitArrayGet(FieldExtension extension);
   [[nodiscard]] bool emitArraySet();
-  [[nodiscard]] bool emitArrayLen();
+  [[nodiscard]] bool emitArrayLen(bool decodeIgnoredTypeIndex);
   [[nodiscard]] bool emitArrayCopy();
   [[nodiscard]] bool emitRefTest();
   [[nodiscard]] bool emitRefCast();

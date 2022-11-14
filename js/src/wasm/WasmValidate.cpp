@@ -617,9 +617,12 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(
                 iter.readArraySet(&unusedUint1, &nothing, &nothing, &nothing));
           }
+          case uint32_t(GcOp::ArrayLenWithTypeIndex): {
+            CHECK(iter.readArrayLen(/*decodeIgnoredTypeIndex=*/true, &nothing));
+          }
           case uint32_t(GcOp::ArrayLen): {
-            uint32_t unusedUint1;
-            CHECK(iter.readArrayLen(&unusedUint1, &nothing));
+            CHECK(
+                iter.readArrayLen(/*decodeIgnoredTypeIndex=*/false, &nothing));
           }
           case uint32_t(GcOp::ArrayCopy): {
             int32_t unusedInt;

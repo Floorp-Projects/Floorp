@@ -300,6 +300,8 @@ class RefType {
     Extern = uint8_t(TypeCode::ExternRef),
     Any = uint8_t(TypeCode::AnyRef),
     Eq = uint8_t(TypeCode::EqRef),
+    Struct = uint8_t(TypeCode::StructRef),
+    Array = uint8_t(TypeCode::ArrayRef),
     TypeRef = uint8_t(AbstractTypeRefCode)
   };
 
@@ -315,6 +317,8 @@ class RefType {
       case TypeCode::ExternRef:
       case TypeCode::AnyRef:
       case TypeCode::EqRef:
+      case TypeCode::StructRef:
+      case TypeCode::ArrayRef:
       case AbstractTypeRefCode:
         return true;
       default:
@@ -357,11 +361,15 @@ class RefType {
   static RefType extern_() { return RefType(Extern, true); }
   static RefType any() { return RefType(Any, true); }
   static RefType eq() { return RefType(Eq, true); }
+  static RefType struct_() { return RefType(Struct, true); }
+  static RefType array() { return RefType(Array, true); }
 
   bool isFunc() const { return kind() == RefType::Func; }
   bool isExtern() const { return kind() == RefType::Extern; }
   bool isAny() const { return kind() == RefType::Any; }
   bool isEq() const { return kind() == RefType::Eq; }
+  bool isStruct() const { return kind() == RefType::Struct; }
+  bool isArray() const { return kind() == RefType::Array; }
   bool isTypeRef() const { return kind() == RefType::TypeRef; }
 
   bool isNullable() const { return bool(ptc_.isNullable()); }
@@ -374,6 +382,8 @@ class RefType {
       case RefType::Extern:
       case RefType::Any:
       case RefType::Eq:
+      case RefType::Struct:
+      case RefType::Array:
         return TableRepr::Ref;
       case RefType::TypeRef:
         MOZ_CRASH("NYI");
@@ -419,6 +429,8 @@ class FieldTypeTraits {
 #ifdef ENABLE_WASM_GC
       case TypeCode::AnyRef:
       case TypeCode::EqRef:
+      case TypeCode::StructRef:
+      case TypeCode::ArrayRef:
 #endif
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
       case AbstractTypeRefCode:
@@ -490,6 +502,8 @@ class ValTypeTraits {
 #ifdef ENABLE_WASM_GC
       case TypeCode::AnyRef:
       case TypeCode::EqRef:
+      case TypeCode::StructRef:
+      case TypeCode::ArrayRef:
 #endif
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
       case AbstractTypeRefCode:
@@ -655,6 +669,10 @@ class PackedType : public T {
 
   bool isEqRef() const { return tc_.typeCode() == TypeCode::EqRef; }
 
+  bool isStructRef() const { return tc_.typeCode() == TypeCode::StructRef; }
+
+  bool isArrayRef() const { return tc_.typeCode() == TypeCode::ArrayRef; }
+
   bool isTypeRef() const { return tc_.typeCode() == AbstractTypeRefCode; }
 
   bool isRefRepr() const { return tc_.isRefRepr(); }
@@ -665,7 +683,8 @@ class PackedType : public T {
   // Returns whether the type has a representation in JS.
   bool isExposable() const {
 #if defined(ENABLE_WASM_SIMD) || defined(ENABLE_WASM_GC)
-    return !(kind() == Kind::V128 || isAnyRef() || isTypeRef());
+    return kind() != Kind::V128 && !isAnyRef() && !isStructRef() &&
+             !isArrayRef() && !isTypeRef();
 #else
     return true;
 #endif
