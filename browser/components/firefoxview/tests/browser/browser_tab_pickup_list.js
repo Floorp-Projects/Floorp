@@ -464,112 +464,107 @@ add_task(async function test_tabs_sync_on_user_page_reload() {
     // Setting this pref allows the test to run as expected on MacOS
     await SpecialPowers.pushPrefEnv({ set: [["accessibility.tabfocus", 7]] });
     TabsSetupFlowManager.resetInternalState();
-    await BrowserTestUtils.withNewTab(
-      {
-        gBrowser,
-        url: "about:firefoxview",
-      },
-      async browser => {
-        const { document } = browser.contentWindow;
-        const sandbox = setupRecentDeviceListMocks();
-        const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
-        let mockTabs1 = getMockTabData(syncedTabsData1);
-        syncedTabsMock.returns(mockTabs1);
+    await withFirefoxView({}, async browser => {
+      const { document } = browser.contentWindow;
+      let win = browser.ownerGlobal;
+      const sandbox = setupRecentDeviceListMocks();
+      const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
+      let mockTabs1 = getMockTabData(syncedTabsData1);
+      syncedTabsMock.returns(mockTabs1);
 
-        await setupListState(browser);
-        const tab = (shiftKey = false) => {
-          info(`${shiftKey ? "Shift + Tab" : "Tab"}`);
-          EventUtils.synthesizeKey("KEY_Tab", { shiftKey });
-        };
-        const arrowDown = () => {
-          info("Arrow Down");
-          EventUtils.synthesizeKey("KEY_ArrowDown");
-        };
-        const arrowUp = () => {
-          info("Arrow Up");
-          EventUtils.synthesizeKey("KEY_ArrowUp");
-        };
-        const arrowLeft = () => {
-          info("Arrow Left");
-          EventUtils.synthesizeKey("KEY_ArrowLeft");
-        };
-        const arrowRight = () => {
-          info("Arrow Right");
-          EventUtils.synthesizeKey("KEY_ArrowRight");
-        };
+      await setupListState(browser);
+      const tab = (shiftKey = false) => {
+        info(`${shiftKey ? "Shift + Tab" : "Tab"}`);
+        EventUtils.synthesizeKey("KEY_Tab", { shiftKey }, win);
+      };
+      const arrowDown = () => {
+        info("Arrow Down");
+        EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+      };
+      const arrowUp = () => {
+        info("Arrow Up");
+        EventUtils.synthesizeKey("KEY_ArrowUp", {}, win);
+      };
+      const arrowLeft = () => {
+        info("Arrow Left");
+        EventUtils.synthesizeKey("KEY_ArrowLeft", {}, win);
+      };
+      const arrowRight = () => {
+        info("Arrow Right");
+        EventUtils.synthesizeKey("KEY_ArrowRight", {}, win);
+      };
 
-        let syncedTabsLinks = document
-          .querySelector("ol.synced-tabs-list")
-          .querySelectorAll("a");
-        let summary = document
-          .getElementById("tab-pickup-container")
-          .querySelector("summary");
-        summary.focus();
-        tab();
-        is(
-          syncedTabsLinks[0],
-          document.activeElement,
-          "First synced tab should be focused"
-        );
-        arrowDown();
-        is(
-          syncedTabsLinks[1],
-          document.activeElement,
-          "Second synced tab should be focused"
-        );
-        arrowDown();
-        is(
-          syncedTabsLinks[2],
-          document.activeElement,
-          "Third synced tab should be focused"
-        );
-        arrowDown();
-        is(
-          syncedTabsLinks[2],
-          document.activeElement,
-          "Third synced tab should still be focused"
-        );
-        arrowUp();
-        is(
-          syncedTabsLinks[1],
-          document.activeElement,
-          "Second synced tab should be focused"
-        );
-        arrowLeft();
-        is(
-          syncedTabsLinks[0],
-          document.activeElement,
-          "First synced tab should be focused"
-        );
-        arrowRight();
-        is(
-          syncedTabsLinks[1],
-          document.activeElement,
-          "Second synced tab should be focused"
-        );
-        arrowDown();
-        is(
-          syncedTabsLinks[2],
-          document.activeElement,
-          "Third synced tab should be focused"
-        );
-        arrowLeft();
-        is(
-          syncedTabsLinks[0],
-          document.activeElement,
-          "First synced tab should be focused"
-        );
+      let syncedTabsLinks = document
+        .querySelector("ol.synced-tabs-list")
+        .querySelectorAll("a");
+      let summary = document
+        .getElementById("tab-pickup-container")
+        .querySelector("summary");
+      summary.focus();
+      tab();
+      is(
+        syncedTabsLinks[0],
+        document.activeElement,
+        "First synced tab should be focused"
+      );
+      arrowDown();
+      is(
+        syncedTabsLinks[1],
+        document.activeElement,
+        "Second synced tab should be focused"
+      );
+      arrowDown();
+      is(
+        syncedTabsLinks[2],
+        document.activeElement,
+        "Third synced tab should be focused"
+      );
+      arrowDown();
+      is(
+        syncedTabsLinks[2],
+        document.activeElement,
+        "Third synced tab should still be focused"
+      );
+      arrowUp();
+      is(
+        syncedTabsLinks[1],
+        document.activeElement,
+        "Second synced tab should be focused"
+      );
+      arrowLeft();
+      is(
+        syncedTabsLinks[0],
+        document.activeElement,
+        "First synced tab should be focused"
+      );
+      arrowRight();
+      is(
+        syncedTabsLinks[1],
+        document.activeElement,
+        "Second synced tab should be focused"
+      );
+      arrowDown();
+      is(
+        syncedTabsLinks[2],
+        document.activeElement,
+        "Third synced tab should be focused"
+      );
+      arrowLeft();
+      is(
+        syncedTabsLinks[0],
+        document.activeElement,
+        "First synced tab should be focused"
+      );
 
-        tab(true);
-        is(
-          summary,
-          document.activeElement,
-          "Summary element should be focused when shift tabbing away from list"
-        );
+      tab(true);
+      is(
+        summary,
+        document.activeElement,
+        "Summary element should be focused when shift tabbing away from list"
+      );
 
-        sandbox.restore();
-        cleanup_tab_pickup();
-      }
-    );
+      sandbox.restore();
+      cleanup_tab_pickup();
+    });
   });
 });

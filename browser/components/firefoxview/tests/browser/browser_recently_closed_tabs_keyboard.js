@@ -61,40 +61,34 @@ add_task(async function test_keyboard_navigation() {
 
   await open_then_close(URLs[0]);
 
-  await BrowserTestUtils.withNewTab(
-    {
-      gBrowser,
-      url: "about:firefoxview",
-    },
-    async browser => {
-      const { document } = browser.contentWindow;
-      const list = document.querySelectorAll(".closed-tab-li");
-      let summary = document.getElementById(
-        "recently-closed-tabs-header-section"
-      );
+  await withFirefoxView({ win: window }, async browser => {
+    const { document } = browser.contentWindow;
+    const list = document.querySelectorAll(".closed-tab-li");
+    let summary = document.getElementById(
+      "recently-closed-tabs-header-section"
+    );
 
-      assertPreconditions(document, summary);
-      tab();
+    assertPreconditions(document, summary);
+    tab();
 
-      ok(list[0].matches(":focus"), "The first link is focused");
-      arrowDown();
-      ok(
-        list[0].matches(":focus"),
-        "The first link is still focused after pressing the down arrow key"
-      );
-      arrowUp();
-      ok(
-        list[0].matches(":focus"),
-        "The first link is still focused after pressing the up arrow key"
-      );
+    ok(list[0].matches(":focus"), "The first link is focused");
+    arrowDown();
+    ok(
+      list[0].matches(":focus"),
+      "The first link is still focused after pressing the down arrow key"
+    );
+    arrowUp();
+    ok(
+      list[0].matches(":focus"),
+      "The first link is still focused after pressing the up arrow key"
+    );
 
-      tab(true);
-      ok(
-        summary.matches(":focus"),
-        "The container is focused when using shift+tab in the list"
-      );
-    }
-  );
+    tab(true);
+    ok(
+      summary.matches(":focus"),
+      "The container is focused when using shift+tab in the list"
+    );
+  });
   // clean up extra tabs
   while (gBrowser.tabs.length > 1) {
     BrowserTestUtils.removeTab(gBrowser.tabs.at(-1));
@@ -105,34 +99,28 @@ add_task(async function test_keyboard_navigation() {
   await open_then_close(URLs[0]);
   await open_then_close(URLs[1]);
 
-  await BrowserTestUtils.withNewTab(
-    {
-      gBrowser,
-      url: "about:firefoxview",
-    },
-    async browser => {
-      const { document } = browser.contentWindow;
-      const list = document.querySelectorAll(".closed-tab-li");
-      let summary = document.getElementById(
-        "recently-closed-tabs-header-section"
-      );
-      assertPreconditions(document, summary);
+  await withFirefoxView({ win: window }, async browser => {
+    const { document } = browser.contentWindow;
+    const list = document.querySelectorAll(".closed-tab-li");
+    let summary = document.getElementById(
+      "recently-closed-tabs-header-section"
+    );
+    assertPreconditions(document, summary);
 
-      tab();
+    tab();
 
-      ok(list[0].matches(":focus"), "The first link is focused");
-      arrowDown();
-      ok(list[1].matches(":focus"), "The second link is focused");
-      arrowUp();
-      ok(list[0].matches(":focus"), "The first link is focused again");
+    ok(list[0].matches(":focus"), "The first link is focused");
+    arrowDown();
+    ok(list[1].matches(":focus"), "The second link is focused");
+    arrowUp();
+    ok(list[0].matches(":focus"), "The first link is focused again");
 
-      tab(true);
-      ok(
-        summary.matches(":focus"),
-        "The container is focused when using shift+tab in the list"
-      );
-    }
-  );
+    tab(true);
+    ok(
+      summary.matches(":focus"),
+      "The container is focused when using shift+tab in the list"
+    );
+  });
 
   // clean up extra tabs
   while (gBrowser.tabs.length > 1) {
@@ -145,46 +133,40 @@ add_task(async function test_keyboard_navigation() {
   await open_then_close(URLs[1]);
   await open_then_close(URLs[2]);
 
-  await BrowserTestUtils.withNewTab(
-    {
-      gBrowser,
-      url: "about:firefoxview",
-    },
-    async browser => {
-      const { document } = browser.contentWindow;
-      const list = document.querySelectorAll(".closed-tab-li");
-      let summary = document.getElementById(
-        "recently-closed-tabs-header-section"
-      );
-      assertPreconditions(document, summary);
+  await withFirefoxView({ win: window }, async browser => {
+    const { document } = browser.contentWindow;
+    const list = document.querySelectorAll(".closed-tab-li");
+    let summary = document.getElementById(
+      "recently-closed-tabs-header-section"
+    );
+    assertPreconditions(document, summary);
 
-      tab();
+    tab();
 
-      ok(list[0].matches(":focus"), "The first link is focused");
-      arrowDown();
-      ok(list[1].matches(":focus"), "The second link is focused");
-      arrowDown();
-      ok(list[2].matches(":focus"), "The third link is focused");
-      arrowDown();
-      ok(list[2].matches(":focus"), "The third link is still focused");
-      arrowUp();
-      ok(list[1].matches(":focus"), "The second link is focused");
-      arrowUp();
-      ok(list[0].matches(":focus"), "The first link is focused");
-      arrowUp();
-      ok(list[0].matches(":focus"), "The first link is still focused");
+    ok(list[0].matches(":focus"), "The first link is focused");
+    arrowDown();
+    ok(list[1].matches(":focus"), "The second link is focused");
+    arrowDown();
+    ok(list[2].matches(":focus"), "The third link is focused");
+    arrowDown();
+    ok(list[2].matches(":focus"), "The third link is still focused");
+    arrowUp();
+    ok(list[1].matches(":focus"), "The second link is focused");
+    arrowUp();
+    ok(list[0].matches(":focus"), "The first link is focused");
+    arrowUp();
+    ok(list[0].matches(":focus"), "The first link is still focused");
 
-      // Move to an element that is not the first one and ensure
-      // focus is moved back to the summary element correctly
-      // when using shift+tab
-      arrowDown();
-      arrowDown();
-      arrowDown();
-      tab(true);
-      ok(
-        summary.matches(":focus"),
-        "The container is focused when using shift+tab in the list"
-      );
-    }
-  );
+    // Move to an element that is not the first one and ensure
+    // focus is moved back to the summary element correctly
+    // when using shift+tab
+    arrowDown();
+    arrowDown();
+    arrowDown();
+    tab(true);
+    ok(
+      summary.matches(":focus"),
+      "The container is focused when using shift+tab in the list"
+    );
+  });
 });
