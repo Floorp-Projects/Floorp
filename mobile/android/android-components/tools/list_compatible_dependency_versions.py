@@ -50,7 +50,7 @@ VERSION_MIN_GV_NIGHTLY_MAJOR='71' # it may actually be some intermediate v70 tha
 
 PATH_AC_ROOT=os.path.join(SCRIPT_DIR, '..')
 PATH_AC_VERSION=os.path.join('buildSrc', 'src', 'main', 'java', 'AndroidComponents.kt')
-PATH_GV_VERSION=os.path.join('buildSrc', 'src', 'main', 'java', 'Gecko.kt')
+PATH_GV_VERSION=os.path.join('plugins', 'dependencies', 'src', 'main', 'java', 'Gecko.kt')
 
 ### SECTION: USAGE AND ARGS ###
 def print_usage(exit=False):

@@ -5,8 +5,8 @@ permalink: /changelog/
 ---
 # 109.0.0 (In Development)
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v108.0.0...main)
-* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/buildSrc/src/main/java/Dependencies.kt)
-* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/buildSrc/src/main/java/Gecko.kt)
+* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
+* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
 * **All components**

@@ -34,7 +34,7 @@ buildscript {
 }
 
 plugins {
-    id("io.gitlab.arturbosch.detekt").version("1.19.0")  // Check version number in `Versions.detekt` (Dependencies.kt)
+    id("io.gitlab.arturbosch.detekt").version("1.19.0")  // Check version number in `Versions.detekt` (DependenciesPlugin.kt)
 }
 
 allprojects {

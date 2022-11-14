@@ -32,7 +32,7 @@ tasks:
             command: 'curl --fail --verbose -X POST -d "{}" -H "Content-Type: application/json" ${TASKCLUSTER_PROXY_URL}/api/hooks/v1/hooks/project-releng/cron-task-${HOOK_PROJECT}%2fnightly/trigger'
         when:
             files-changed:
-                - 'android-components/buildSrc/src/main/java/Gecko.kt'
+                - 'android-components/plugins/dependencies/src/main/java/Gecko.kt'
         scopes:
             by-level:
                 '3':

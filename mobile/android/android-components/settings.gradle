@@ -4,7 +4,10 @@
 
 import org.yaml.snakeyaml.Yaml
 
-includeBuild("plugins/publicsuffixlist")
+pluginManagement {
+    includeBuild("plugins/dependencies")
+    includeBuild("plugins/publicsuffixlist")
+}
 
 buildscript {
     repositories {
@@ -21,6 +24,10 @@ buildscript {
     dependencies {
         classpath 'org.yaml:snakeyaml:1.33'
     }
+}
+
+plugins {
+    id 'mozac.DependenciesPlugin'
 }
 
 buildCache {
