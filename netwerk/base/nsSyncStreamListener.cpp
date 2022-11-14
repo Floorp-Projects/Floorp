@@ -12,19 +12,11 @@
 using namespace mozilla::net;
 
 nsSyncStreamListener::nsSyncStreamListener() {
+  MOZ_ASSERT(NS_IsMainThread());
   NS_NewPipe(getter_AddRefs(mPipeIn), getter_AddRefs(mPipeOut),
              mozilla::net::nsIOService::gDefaultSegmentSize,
              UINT32_MAX,  // no size limit
              false, false);
-}
-
-// NOTE: Next patch in this series will remove this.
-// static
-already_AddRefed<nsISyncStreamListener> nsSyncStreamListener::Create() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  RefPtr<nsSyncStreamListener> inst = new nsSyncStreamListener();
-  return inst.forget();
 }
 
 nsresult nsSyncStreamListener::WaitForData() {

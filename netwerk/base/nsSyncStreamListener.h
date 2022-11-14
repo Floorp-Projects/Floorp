@@ -22,9 +22,10 @@ class nsSyncStreamListener final : public nsISyncStreamListener,
   NS_DECL_NSISYNCSTREAMLISTENER
   NS_DECL_NSIINPUTSTREAM
 
-  static already_AddRefed<nsISyncStreamListener> Create();
-
  private:
+  // Factory method:
+  friend nsresult NS_NewSyncStreamListener(nsIStreamListener** result,
+                                           nsIInputStream** stream);
   nsSyncStreamListener();
   ~nsSyncStreamListener() = default;
 
