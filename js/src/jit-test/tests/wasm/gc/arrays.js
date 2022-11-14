@@ -64,7 +64,7 @@ for (let [valtype, def, nondef] of GENERAL_TESTS) {
     (func (export "len") (param eqref) (result i32)
       local.get 0
       ref.cast $a
-      array.len $a
+      array.len
     )
   )`).exports;
 
@@ -227,7 +227,7 @@ assertErrorMessage(() => {
     (type $a (array (mut i32)))
     (func
       ref.null $a
-      array.len $a
+      array.len
       drop
     )
     (start 0)

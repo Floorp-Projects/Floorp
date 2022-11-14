@@ -84,6 +84,12 @@ enum class TypeCode {
   // Type constructor for non-nullable reference types.
   Ref = 0x6b,  // SLEB128(-0x15)
 
+  // A reference to any struct value.
+  StructRef = 0x67,  // SLEB128(-0x19)
+
+  // A reference to any array value.
+  ArrayRef = 0x66,  // SLEB128(-0x1A)
+
   // Type constructor for function types
   Func = 0x60,  // SLEB128(-0x20)
 
@@ -476,8 +482,9 @@ enum class GcOp {
   ArrayGetS = 0x14,
   ArrayGetU = 0x15,
   ArraySet = 0x16,
-  ArrayLen = 0x17,
+  ArrayLenWithTypeIndex = 0x17,
   ArrayCopy = 0x18,
+  ArrayLen = 0x19,
 
   // Ref operations
   RefTest = 0x44,

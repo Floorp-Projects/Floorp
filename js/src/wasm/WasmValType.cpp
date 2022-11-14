@@ -79,6 +79,12 @@ bool wasm::ToRefType(JSContext* cx, JSLinearString* typeLinearStr,
     *out = RefType::any();
   } else if (GcAvailable(cx) && StringEqualsLiteral(typeLinearStr, "eqref")) {
     *out = RefType::eq();
+  } else if (GcAvailable(cx) &&
+             StringEqualsLiteral(typeLinearStr, "structref")) {
+    *out = RefType::struct_();
+  } else if (GcAvailable(cx) &&
+             StringEqualsLiteral(typeLinearStr, "arrayref")) {
+    *out = RefType::array();
 #endif
   } else {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -106,6 +112,12 @@ UniqueChars wasm::ToString(RefType type, const TypeContext* types) {
       case RefType::Eq:
         literal = "eqref";
         break;
+      case RefType::Struct:
+        literal = "structref";
+        break;
+      case RefType::Array:
+        literal = "arrayref";
+        break;
       case RefType::TypeRef: {
         uint32_t typeIndex = types->indexOf(*type.typeDef());
         return JS_smprintf("(ref %s%d)", type.isNullable() ? "null " : "",
@@ -129,6 +141,12 @@ UniqueChars wasm::ToString(RefType type, const TypeContext* types) {
       break;
     case RefType::Eq:
       heapType = "eq";
+      break;
+    case RefType::Struct:
+      heapType = "struct";
+      break;
+    case RefType::Array:
+      heapType = "array";
       break;
     case RefType::TypeRef: {
       uint32_t typeIndex = types->indexOf(*type.typeDef());

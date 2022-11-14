@@ -7044,10 +7044,9 @@ bool BaseCompiler::emitArraySet() {
   return true;
 }
 
-bool BaseCompiler::emitArrayLen() {
-  uint32_t typeIndex;
+bool BaseCompiler::emitArrayLen(bool decodeIgnoredTypeIndex) {
   Nothing nothing;
-  if (!iter_.readArrayLen(&typeIndex, &nothing)) {
+  if (!iter_.readArrayLen(decodeIgnoredTypeIndex, &nothing)) {
     return false;
   }
 
@@ -9360,8 +9359,10 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitArrayGet(FieldExtension::Unsigned));
           case uint32_t(GcOp::ArraySet):
             CHECK_NEXT(emitArraySet());
+          case uint32_t(GcOp::ArrayLenWithTypeIndex):
+            CHECK_NEXT(emitArrayLen(/*decodeIgnoredTypeIndex=*/true));
           case uint32_t(GcOp::ArrayLen):
-            CHECK_NEXT(emitArrayLen());
+            CHECK_NEXT(emitArrayLen(/*decodeIgnoredTypeIndex=*/false));
           case uint32_t(GcOp::ArrayCopy):
             CHECK_NEXT(emitArrayCopy());
           case uint32_t(GcOp::RefTest):

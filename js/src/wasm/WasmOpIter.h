@@ -724,7 +724,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                   Value* index, Value* ptr);
   [[nodiscard]] bool readArraySet(uint32_t* typeIndex, Value* val, Value* index,
                                   Value* ptr);
-  [[nodiscard]] bool readArrayLen(uint32_t* typeIndex, Value* ptr);
+  [[nodiscard]] bool readArrayLen(bool decodeIgnoredTypeIndex, Value* ptr);
   [[nodiscard]] bool readArrayCopy(int32_t* elemSize, bool* elemsAreRefTyped,
                                    Value* dstArray, Value* dstIndex,
                                    Value* srcArray, Value* srcIndex,
@@ -3346,15 +3346,17 @@ inline bool OpIter<Policy>::readArraySet(uint32_t* typeIndex, Value* val,
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readArrayLen(uint32_t* typeIndex, Value* ptr) {
+inline bool OpIter<Policy>::readArrayLen(bool decodeIgnoredTypeIndex,
+                                         Value* ptr) {
   MOZ_ASSERT(Classify(op_) == OpKind::ArrayLen);
 
-  if (!readArrayTypeIndex(typeIndex)) {
+  // TODO: remove once V8 removes array.len with type index from their snapshot
+  uint32_t unused;
+  if (decodeIgnoredTypeIndex && !readVarU32(&unused)) {
     return false;
   }
 
-  const TypeDef& typeDef = env_.types->type(*typeIndex);
-  if (!popWithType(RefType::fromTypeDef(&typeDef, true), ptr)) {
+  if (!popWithType(RefType::array(), ptr)) {
     return false;
   }
 
