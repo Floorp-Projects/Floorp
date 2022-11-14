@@ -154,7 +154,6 @@ mochitest-a11y:
         - socketprocess_networking+1proc
         - wayland+1proc
         - webrender-sw+1proc
-        - a11y-no-cache+1proc
     run-on-projects:
         by-variant:
             socketprocess_networking+1proc:
@@ -170,7 +169,6 @@ mochitest-a11y:
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux.*64-qr/debug: built-projects
                     default: []
-            a11y-no-cache+1proc: ['trunk']
             1proc:
                 by-test-platform:
                     .*-tsan-qr/opt: ['trunk']
@@ -258,18 +256,10 @@ mochitest-browser-a11y:
     treeherder-symbol: M(ba)
     schedules-component: mochitest-browser-a11y
     loopback-video: true
-    variants:
-        - a11y-no-cache
     run-on-projects:
-        by-variant:
-            a11y-no-cache:
-                by-test-platform:
-                    android.*: []
-                    default: ["trunk"]
-            default:
-                by-test-platform:
-                    android.*: []
-                    default: built-projects
+        by-test-platform:
+            android.*: []
+            default: built-projects
     tier: default
     max-run-time: 1800
     mozharness:
