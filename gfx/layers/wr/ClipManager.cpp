@@ -394,22 +394,25 @@ Maybe<wr::WrSpatialId> ClipManager::DefineScrollLayers(
 
 Maybe<wr::WrClipChainId> ClipManager::DefineClipChain(
     const DisplayItemClipChain* aChain, int32_t aAppUnitsPerDevPixel) {
+  MOZ_ASSERT(!mCacheStack.empty());
   AutoTArray<wr::WrClipId, 6> allClipIds;
+  ClipIdMap& cache = mCacheStack.top();
   // Iterate through the clips in the current item's clip chain, define them
   // in WR, and put their IDs into |clipIds|.
   for (const DisplayItemClipChain* chain = aChain; chain;
        chain = chain->mParent) {
-    ClipIdMap& cache = mCacheStack.top();
-    auto it = cache.find(chain);
-    if (it != cache.end()) {
+    if (!chain->mClip.HasClip()) {
+      // This item in the chain is a no-op, skip over it
+      continue;
+    }
+
+    auto emplaceResult = cache.try_emplace(chain);
+    auto& chainClipIds = emplaceResult.first->second;
+    if (!emplaceResult.second) {
       // Found it in the currently-active cache, so just use the id we have for
       // it.
       CLIP_LOG("cache[%p] => hit\n", chain);
-      allClipIds.AppendElements(it->second);
-      continue;
-    }
-    if (!chain->mClip.HasClip()) {
-      // This item in the chain is a no-op, skip over it
+      allClipIds.AppendElements(chainClipIds);
       continue;
     }
 
@@ -426,8 +429,6 @@ Maybe<wr::WrClipChainId> ClipManager::DefineClipChain(
     // Define the clip
     *space = SpatialIdAfterOverride(*space);
 
-    AutoTArray<wr::WrClipId, 4> chainClipIds;
-
     auto rectClipId = mBuilder->DefineRectClip(space, wr::ToLayoutRect(clip));
     CLIP_LOG("cache[%p] <= %zu\n", chain, rectClipId.id);
     chainClipIds.AppendElement(rectClipId);
@@ -438,7 +439,6 @@ Maybe<wr::WrClipChainId> ClipManager::DefineClipChain(
       chainClipIds.AppendElement(complexClipId);
     }
 
-    cache[chain] = chainClipIds.Clone();
     allClipIds.AppendElements(chainClipIds);
   }
 
