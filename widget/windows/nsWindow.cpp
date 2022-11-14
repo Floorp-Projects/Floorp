@@ -9390,8 +9390,8 @@ void nsWindow::FrameState::EnsureSizeMode(nsSizeMode aMode) {
 
   if (aMode == nsSizeMode_Fullscreen) {
     EnsureFullscreenMode(true);
-  } else if ((mSizeMode == nsSizeMode_Fullscreen) &&
-             (aMode == nsSizeMode_Normal)) {
+    MOZ_ASSERT(mSizeMode == nsSizeMode_Fullscreen);
+  } else if (mSizeMode == nsSizeMode_Fullscreen && aMode == nsSizeMode_Normal) {
     // If we are in fullscreen mode, minimize should work like normal and
     // return us to fullscreen mode when unminimized. Maximize isn't really
     // available and won't do anything. "Restore" should do the same thing as
@@ -9404,19 +9404,22 @@ void nsWindow::FrameState::EnsureSizeMode(nsSizeMode aMode) {
 
 void nsWindow::FrameState::EnsureFullscreenMode(bool aFullScreen) {
   if (mFullscreenMode == aFullScreen) {
+    if (aFullScreen) {
+      // NOTE(emilio): When minimizing a fullscreen window we remain with
+      // mFullscreenMode = true, but mSizeMode = nsSizeMode_Minimized. Make
+      // sure we actually end up with a fullscreen sizemode when restoring a
+      // window from that state.
+      SetSizeModeInternal(nsSizeMode_Fullscreen);
+    }
     return;
   }
 
   mWindow->OnFullscreenWillChange(aFullScreen);
-
   mFullscreenMode = aFullScreen;
   if (aFullScreen) {
     mOldSizeMode = mSizeMode;
-    SetSizeModeInternal(nsSizeMode_Fullscreen);
-  } else {
-    SetSizeModeInternal(mOldSizeMode);
   }
-
+  SetSizeModeInternal(aFullScreen ? nsSizeMode_Fullscreen : mOldSizeMode);
   mWindow->OnFullscreenChanged(aFullScreen);
 }
 
