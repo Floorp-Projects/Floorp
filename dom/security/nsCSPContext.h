@@ -95,9 +95,9 @@ class nsCSPContext : public nsIContentSecurityPolicy {
    */
   nsresult GatherSecurityPolicyViolationEventData(
       nsIURI* aBlockedURI, const nsACString& aBlockedString,
-      nsIURI* aOriginalURI, nsAString& aViolatedDirective,
-      uint32_t aViolatedPolicyIndex, nsAString& aSourceFile,
-      nsAString& aScriptSample, uint32_t aLineNum, uint32_t aColumnNum,
+      nsIURI* aOriginalURI, const nsAString& aViolatedDirective,
+      uint32_t aViolatedPolicyIndex, const nsAString& aSourceFile,
+      const nsAString& aScriptSample, uint32_t aLineNum, uint32_t aColumnNum,
       mozilla::dom::SecurityPolicyViolationEventInit& aViolationEventInit);
 
   nsresult SendReports(
