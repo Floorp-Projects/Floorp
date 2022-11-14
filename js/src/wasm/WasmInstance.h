@@ -43,12 +43,12 @@ namespace wasm {
 using mozilla::Atomic;
 
 class FuncImport;
-class WasmFrameIter;
-
 struct FuncImportInstanceData;
-struct TableInstanceData;
+class GlobalDesc;
 struct TableDesc;
+struct TableInstanceData;
 struct TagDesc;
+class WasmFrameIter;
 
 // Instance represents a wasm instance and provides all the support for runtime
 // execution of code in the instance. Instances share various immutable data
@@ -172,6 +172,9 @@ class alignas(16) Instance {
   // worthwhile.
   uint32_t* debugFilter_;
 
+  // The exclusive maximum index of a global that has been initialized so far.
+  uint32_t maxInitializedGlobalsIndexPlus1_;
+
 #ifdef ENABLE_WASM_GC
   // A flag to control whether a pass to trace types in global data is
   // necessary or not. Purely an optimization
@@ -187,7 +190,8 @@ class alignas(16) Instance {
   MOZ_ALIGNED_DECL(16, char globalArea_);
 
   // Internal helpers:
-  const void** addressOfTypeId(const uint32_t typeIndex) const;
+  const void** addressOfTypeId(uint32_t typeIndex) const;
+  const void* addressOfGlobalCell(const GlobalDesc& globalDesc) const;
   FuncImportInstanceData& funcImportInstanceData(const FuncImport& fi);
   TableInstanceData& tableInstanceData(const TableDesc& td) const;
   GCPtr<WasmTagObject*>& tagInstanceData(const TagDesc& td) const;
@@ -338,6 +342,7 @@ class alignas(16) Instance {
 
   // Constant expression support
 
+  void constantGlobalGet(uint32_t globalIndex, MutableHandleVal result);
   [[nodiscard]] bool constantRefFunc(uint32_t funcIndex,
                                      MutableHandleFuncRef result);
 

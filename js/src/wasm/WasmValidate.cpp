@@ -2275,7 +2275,7 @@ static bool DecodeGlobalSection(Decoder& d, ModuleEnvironment* env) {
     }
 
     InitExpr initializer;
-    if (!InitExpr::decodeAndValidate(d, env, type, &initializer)) {
+    if (!InitExpr::decodeAndValidate(d, env, type, i, &initializer)) {
       return false;
     }
 
@@ -2592,7 +2592,8 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
       seg->tableIndex = tableIndex;
 
       InitExpr offset;
-      if (!InitExpr::decodeAndValidate(d, env, ValType::I32, &offset)) {
+      if (!InitExpr::decodeAndValidate(d, env, ValType::I32,
+                                       env->globals.length(), &offset)) {
         return false;
       }
       seg->offsetIfActive.emplace(std::move(offset));
@@ -2966,7 +2967,8 @@ static bool DecodeDataSection(Decoder& d, ModuleEnvironment* env) {
         initializerKind == DataSegmentKind::ActiveWithMemoryIndex) {
       InitExpr segOffset;
       ValType exprType = ToValType(env->memory->indexType());
-      if (!InitExpr::decodeAndValidate(d, env, exprType, &segOffset)) {
+      if (!InitExpr::decodeAndValidate(d, env, exprType, env->globals.length(),
+                                       &segOffset)) {
         return false;
       }
       seg.offsetIfActive.emplace(std::move(segOffset));
