@@ -795,27 +795,34 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 raise
 
             # Split the chimera videos here for local testing
-            cold_path = None
-            warm_path = None
-            if self.chimera:
+            def split_browsertime_results(result_json_path, raw_btresults):
                 # First result is cold, second is warm
                 cold_data = raw_btresults[0]
                 warm_data = raw_btresults[1]
 
-                dirpath = os.path.dirname(os.path.abspath(bt_res_json))
-                cold_path = os.path.join(dirpath, "cold-browsertime.json")
-                warm_path = os.path.join(dirpath, "warm-browsertime.json")
+                dirpath = os.path.dirname(os.path.abspath(result_json_path))
+                _cold_path = os.path.join(dirpath, "cold-browsertime.json")
+                _warm_path = os.path.join(dirpath, "warm-browsertime.json")
 
                 self._label_video_folder(cold_data, dirpath, "cold")
                 self._label_video_folder(warm_data, dirpath, "warm")
 
-                with open(cold_path, "w") as f:
+                with open(_cold_path, "w") as f:
                     json.dump([cold_data], f)
-                with open(warm_path, "w") as f:
+                with open(_warm_path, "w") as f:
                     json.dump([warm_data], f)
 
                 raw_btresults[0] = cold_data
                 raw_btresults[1] = warm_data
+
+                return _cold_path, _warm_path
+
+            cold_path = None
+            warm_path = None
+            if self.chimera:
+                cold_path, warm_path = split_browsertime_results(
+                    bt_res_json, raw_btresults
+                )
 
                 # Overwrite the contents of the browsertime.json file
                 # to update it with the new file paths
@@ -827,6 +834,27 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     # XXX this should be replaced by a traceback call
                     LOG.error("Exception: %s %s" % (type(e).__name__, str(e)))
                     raise
+
+                # If extra profiler run is enabled, split its browsertime.json
+                # file to cold and warm json files as well.
+                bt_profiling_res_json = os.path.join(
+                    self.result_dir_for_test_profiling(test), "browsertime.json"
+                )
+                has_extra_profiler_run = test_config.get(
+                    "extra_profiler_run", False
+                ) and os.path.exists(bt_profiling_res_json)
+                if has_extra_profiler_run:
+                    try:
+                        with open(bt_profiling_res_json, "r", encoding="utf8") as f:
+                            raw_profiling_btresults = json.load(f)
+                            split_browsertime_results(
+                                bt_profiling_res_json, raw_profiling_btresults
+                            )
+                    except Exception as e:
+                        LOG.info(
+                            "Exception reading and writing %s" % bt_profiling_res_json
+                        )
+                        LOG.info("Exception: %s %s" % (type(e).__name__, str(e)))
 
             if not run_local:
                 extra_options = self.build_extra_options()

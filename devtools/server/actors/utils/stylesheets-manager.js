@@ -160,6 +160,7 @@ class StyleSheetsManager extends EventEmitter {
       "style"
     );
     style.setAttribute("type", "text/css");
+    style.setDevtoolsAsTriggeringPrincipal();
 
     if (text) {
       style.appendChild(document.createTextNode(text));
