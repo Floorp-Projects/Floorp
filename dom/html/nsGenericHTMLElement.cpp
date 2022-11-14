@@ -1968,6 +1968,12 @@ bool nsGenericHTMLFormElement::IsElementDisabledForEvents(WidgetEvent* aEvent,
     case eLegacyMouseLineOrPageScroll:
     case eLegacyMousePixelScroll:
       return false;
+    case ePointerDown:
+    case ePointerUp:
+    case ePointerCancel:
+    case ePointerGotCapture:
+    case ePointerLostCapture:
+      return !StaticPrefs::dom_forms_always_allow_pointer_events_enabled();
     default:
       break;
   }
