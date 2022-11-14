@@ -92,9 +92,9 @@ class MFMediaEngineStream
 
   virtual MFMediaEngineVideoStream* AsVideoStream() { return nullptr; }
 
-  // Overwrite this method to support returning decoded data. Called on
-  // MediaPDecoder thread (wrapper thread).
-  virtual already_AddRefed<MediaData> OutputData() = 0;
+  RefPtr<MediaDataDecoder::DecodePromise> OutputData();
+
+  virtual RefPtr<MediaDataDecoder::DecodePromise> Drain();
 
   virtual MediaDataDecoder::ConversionRequired NeedsConversion() const {
     return MediaDataDecoder::ConversionRequired::kNeedNone;
@@ -119,6 +119,16 @@ class MFMediaEngineStream
   void NotifyEndOfStreamInternal();
 
   bool IsEnded() const;
+
+  // Overwrite this method if inherited class needs to perform clean up on the
+  // task queue when the stream gets shutdowned.
+  virtual void ShutdownCleanUpOnTaskQueue(){};
+
+  // Inherited class must implement this method to return decoded data. it
+  // should uses `mRawDataQueueForGeneratingOutput` to generate output.
+  virtual already_AddRefed<MediaData> OutputDataInternal() = 0;
+
+  void SendRequestSampleEvent(bool aIsEnough);
 
   void AssertOnTaskQueue() const;
   void AssertOnMFThreadPool() const;

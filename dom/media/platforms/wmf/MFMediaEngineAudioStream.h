@@ -27,13 +27,13 @@ class MFMediaEngineAudioStream final : public MFMediaEngineStream {
     return TrackInfo::TrackType::kAudioTrack;
   }
 
-  already_AddRefed<MediaData> OutputData() override;
-
  private:
   HRESULT CreateMediaType(const TrackInfo& aInfo,
                           IMFMediaType** aMediaType) override;
 
   bool HasEnoughRawData() const override;
+
+  already_AddRefed<MediaData> OutputDataInternal() override;
 
   // For MF_MT_USER_DATA. Currently only used for AAC.
   nsTArray<BYTE> mAACUserData;

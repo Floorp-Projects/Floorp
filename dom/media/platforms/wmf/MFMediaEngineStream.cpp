@@ -51,11 +51,8 @@ RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStreamWrapper::Decode(
   Unused << mTaskQueue->Dispatch(NS_NewRunnableFunction(
       "MFMediaEngineStreamWrapper::Decode",
       [sample = RefPtr{aSample}, stream]() { stream->NotifyNewData(sample); }));
-
-  RefPtr<MediaData> outputData = mStream->OutputData();
-  return outputData ? DecodePromise::CreateAndResolve(
-                          DecodedData{std::move(outputData)}, __func__)
-                    : DecodePromise::CreateAndResolve(DecodedData{}, __func__);
+  return InvokeAsync(mTaskQueue, mStream.Get(), __func__,
+                     &MFMediaEngineStream::OutputData);
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStreamWrapper::Drain() {
@@ -65,14 +62,8 @@ RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStreamWrapper::Drain() {
         MediaResult(NS_ERROR_FAILURE, "MFMediaEngineStreamWrapper is shutdown"),
         __func__);
   }
-
-  DecodedData outputs;
-  RefPtr<MediaData> outputData = mStream->OutputData();
-  while (outputData) {
-    outputs.AppendElement(outputData);
-    outputData = mStream->OutputData();
-  }
-  return DecodePromise::CreateAndResolve(std::move(outputs), __func__);
+  return InvokeAsync(mTaskQueue, mStream.Get(), __func__,
+                     &MFMediaEngineStream::Drain);
 }
 
 RefPtr<MediaDataDecoder::FlushPromise> MFMediaEngineStreamWrapper::Flush() {
@@ -220,6 +211,7 @@ void MFMediaEngineStream::Shutdown() {
         self->mParentSource = nullptr;
         self->mRawDataQueueForFeedingEngine.Reset();
         self->mRawDataQueueForGeneratingOutput.Reset();
+        self->ShutdownCleanUpOnTaskQueue();
       }));
 }
 
@@ -265,10 +257,7 @@ IFACEMETHODIMP MFMediaEngineStream::RequestSample(IUnknown* aToken) {
         SLOGV("RequestSample, token amount=%zu", mSampleRequestTokens.size());
         ReplySampleRequestIfPossible();
         if (!HasEnoughRawData() && mParentSource && !IsEnded()) {
-          SLOGV("Dispatch a sample request, queue duration=%" PRId64,
-                mRawDataQueueForFeedingEngine.Duration());
-          mParentSource->mRequestSampleEvent.Notify(
-              SampleRequest{TrackType(), false /* isEnough */});
+          SendRequestSampleEvent(false /* isEnough */);
         }
       }));
   return S_OK;
@@ -410,7 +399,7 @@ void MFMediaEngineStream::NotifyNewData(MediaRawData* aSample) {
   if (IsShutdown()) {
     return;
   }
-  bool wasEnough = HasEnoughRawData();
+  const bool wasEnough = HasEnoughRawData();
   mRawDataQueueForFeedingEngine.Push(aSample);
   mRawDataQueueForGeneratingOutput.Push(aSample);
   SLOGV("NotifyNewData, push data [%" PRId64 ", %" PRId64
@@ -424,10 +413,17 @@ void MFMediaEngineStream::NotifyNewData(MediaRawData* aSample) {
   }
   ReplySampleRequestIfPossible();
   if (!wasEnough && HasEnoughRawData()) {
-    SLOGV("data is enough");
-    mParentSource->mRequestSampleEvent.Notify(
-        SampleRequest{TrackType(), true /* isEnough */});
+    SendRequestSampleEvent(true /* isEnough */);
   }
+}
+
+void MFMediaEngineStream::SendRequestSampleEvent(bool aIsEnough) {
+  AssertOnTaskQueue();
+  SLOGV("data is %s, queue duration=%" PRId64,
+        aIsEnough ? "enough" : "not enough",
+        mRawDataQueueForFeedingEngine.Duration());
+  mParentSource->mRequestSampleEvent.Notify(
+      SampleRequest{TrackType(), aIsEnough});
 }
 
 void MFMediaEngineStream::NotifyEndOfStreamInternal() {
@@ -458,6 +454,32 @@ RefPtr<MediaDataDecoder::FlushPromise> MFMediaEngineStream::Flush() {
   mRawDataQueueForGeneratingOutput.Reset();
   mReceivedEOS = false;
   return MediaDataDecoder::FlushPromise::CreateAndResolve(true, __func__);
+}
+
+RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStream::OutputData() {
+  AssertOnTaskQueue();
+  MediaDataDecoder::DecodedData outputs;
+  if (RefPtr<MediaData> outputData = OutputDataInternal()) {
+    outputs.AppendElement(outputData);
+    SLOGV("Output data [%" PRId64 ",%" PRId64 "]",
+          outputData->mTime.ToMicroseconds(),
+          outputData->GetEndTime().ToMicroseconds());
+  }
+  return MediaDataDecoder::DecodePromise::CreateAndResolve(std::move(outputs),
+                                                           __func__);
+};
+
+RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStream::Drain() {
+  AssertOnTaskQueue();
+  MediaDataDecoder::DecodedData outputs;
+  while (RefPtr<MediaData> outputData = OutputDataInternal()) {
+    outputs.AppendElement(outputData);
+    SLOGV("Output data [%" PRId64 ",%" PRId64 "]",
+          outputData->mTime.ToMicroseconds(),
+          outputData->GetEndTime().ToMicroseconds());
+  }
+  return MediaDataDecoder::DecodePromise::CreateAndResolve(std::move(outputs),
+                                                           __func__);
 }
 
 void MFMediaEngineStream::AssertOnTaskQueue() const {
