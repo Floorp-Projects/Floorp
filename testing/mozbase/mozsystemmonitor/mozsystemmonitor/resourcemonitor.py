@@ -123,66 +123,74 @@ def _collect(pipe, poll_interval):
 
     data = []
 
-    # Establish initial values.
+    try:
 
-    # We should ideally use a monotonic clock. However, Python 2.7 doesn't
-    # make a monotonic clock available on all platforms. Python 3.3 does!
-    last_time = time.time()
-    io_last = get_disk_io_counters()
-    cpu_last = psutil.cpu_times(True)
-    swap_last = psutil.swap_memory()
-    psutil.cpu_percent(None, True)
+        # Establish initial values.
 
-    sin_index = swap_last._fields.index("sin")
-    sout_index = swap_last._fields.index("sout")
+        # We should ideally use a monotonic clock. However, Python 2.7 doesn't
+        # make a monotonic clock available on all platforms. Python 3.3 does!
+        last_time = time.time()
+        io_last = get_disk_io_counters()
+        cpu_last = psutil.cpu_times(True)
+        swap_last = psutil.swap_memory()
+        psutil.cpu_percent(None, True)
 
-    sleep_interval = poll_interval
+        sin_index = swap_last._fields.index("sin")
+        sout_index = swap_last._fields.index("sout")
 
-    while not _poll(pipe, poll_interval=sleep_interval):
-        io = get_disk_io_counters()
-        cpu_times = psutil.cpu_times(True)
-        cpu_percent = psutil.cpu_percent(None, True)
-        virt_mem = psutil.virtual_memory()
-        swap_mem = psutil.swap_memory()
-        measured_end_time = time.time()
+        sleep_interval = poll_interval
 
-        # TODO Does this wrap? At 32 bits? At 64 bits?
-        # TODO Consider patching "delta" API to upstream.
-        io_diff = [v - io_last[i] for i, v in enumerate(io)]
-        io_last = io
+        while not _poll(pipe, poll_interval=sleep_interval):
+            io = get_disk_io_counters()
+            cpu_times = psutil.cpu_times(True)
+            cpu_percent = psutil.cpu_percent(None, True)
+            virt_mem = psutil.virtual_memory()
+            swap_mem = psutil.swap_memory()
+            measured_end_time = time.time()
 
-        cpu_diff = []
-        for core, values in enumerate(cpu_times):
-            cpu_diff.append([v - cpu_last[core][i] for i, v in enumerate(values)])
+            # TODO Does this wrap? At 32 bits? At 64 bits?
+            # TODO Consider patching "delta" API to upstream.
+            io_diff = [v - io_last[i] for i, v in enumerate(io)]
+            io_last = io
 
-        cpu_last = cpu_times
+            cpu_diff = []
+            for core, values in enumerate(cpu_times):
+                cpu_diff.append([v - cpu_last[core][i] for i, v in enumerate(values)])
 
-        swap_entry = list(swap_mem)
-        swap_entry[sin_index] = swap_mem.sin - swap_last.sin
-        swap_entry[sout_index] = swap_mem.sout - swap_last.sout
-        swap_last = swap_mem
+            cpu_last = cpu_times
 
-        data.append(
-            (
-                last_time,
-                measured_end_time,
-                io_diff,
-                cpu_diff,
-                cpu_percent,
-                list(virt_mem),
-                swap_entry,
+            swap_entry = list(swap_mem)
+            swap_entry[sin_index] = swap_mem.sin - swap_last.sin
+            swap_entry[sout_index] = swap_mem.sout - swap_last.sout
+            swap_last = swap_mem
+
+            data.append(
+                (
+                    last_time,
+                    measured_end_time,
+                    io_diff,
+                    cpu_diff,
+                    cpu_percent,
+                    list(virt_mem),
+                    swap_entry,
+                )
             )
-        )
 
-        collection_overhead = time.time() - last_time - poll_interval
-        last_time = measured_end_time
-        sleep_interval = max(0, poll_interval - collection_overhead)
+            collection_overhead = time.time() - last_time - poll_interval
+            last_time = measured_end_time
+            sleep_interval = max(0, poll_interval - collection_overhead)
 
-    for entry in data:
-        pipe.send(entry)
+    except Exception as e:
+        warnings.warn("_collect failed: %s" % e)
 
-    pipe.send(("done", None, None, None, None, None, None))
-    pipe.close()
+    finally:
+
+        for entry in data:
+            pipe.send(entry)
+
+        pipe.send(("done", None, None, None, None, None, None))
+        pipe.close()
+
     sys.exit(0)
 
 
@@ -326,8 +334,8 @@ class SystemResourceMonitor(object):
         if not self._process:
             return
 
-        self._running = True
         self._process.start()
+        self._running = True
 
     def stop(self):
         """Stop measuring system-wide CPU resource utilization.
@@ -341,14 +349,12 @@ class SystemResourceMonitor(object):
             self._stopped = True
             return
 
-        assert self._running
         assert not self._stopped
 
         try:
             self._pipe.send(("terminate",))
         except Exception:
             pass
-        self._running = False
         self._stopped = True
 
         self.measurements = []
@@ -391,10 +397,13 @@ class SystemResourceMonitor(object):
 
         # We establish a timeout so we don't hang forever if the child
         # process has crashed.
-        self._process.join(10)
-        if self._process.is_alive():
-            self._process.terminate()
+        if self._running:
             self._process.join(10)
+            if self._process.is_alive():
+                self._process.terminate()
+                self._process.join(10)
+
+        self._running = False
 
         if len(self.measurements):
             self.start_time = self.measurements[0].start

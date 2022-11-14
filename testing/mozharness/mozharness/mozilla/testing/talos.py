@@ -11,6 +11,7 @@ run talos tests in a virtualenv
 from __future__ import absolute_import
 import six
 import io
+import multiprocessing
 import os
 import sys
 import pprint
@@ -706,9 +707,12 @@ class Talos(
         # in path so can import jsonschema later when validating output for perfherder
         _virtualenv_path = self.config.get("virtualenv_path")
 
+        _python_interp = self.query_exe("python")
+        if "win" in self.platform_name() and os.path.exists(_python_interp):
+            multiprocessing.set_executable(_python_interp)
+
         if self.run_local and os.path.exists(_virtualenv_path):
             self.info("Virtualenv already exists, skipping creation")
-            _python_interp = self.config.get("exes")["python"]
 
             if "win" in self.platform_name():
                 _path = os.path.join(_virtualenv_path, "Lib", "site-packages")
