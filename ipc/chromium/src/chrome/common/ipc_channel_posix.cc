@@ -169,7 +169,7 @@ Channel::ChannelImpl::ChannelImpl(ChannelHandle pipe, Mode mode,
 }
 
 void Channel::ChannelImpl::SetPipe(int fd) {
-  IOThread().AssertOnCurrentThread();
+  chan_cap_.NoteExclusiveAccess();
 
   pipe_ = fd;
   pipe_buf_len_ = 0;
@@ -202,6 +202,8 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
   MOZ_RELEASE_ASSERT(kControlBufferSize >=
                      CMSG_SPACE(sizeof(int) * kControlBufferMaxFds));
 
+  chan_cap_.NoteExclusiveAccess();
+
   mode_ = mode;
   is_blocked_on_write_ = false;
   partial_write_.reset();
@@ -219,6 +221,8 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
 }
 
 bool Channel::ChannelImpl::CreatePipe(Mode mode) {
+  chan_cap_.NoteExclusiveAccess();
+
   DCHECK(pipe_ == -1);
 
   if (mode == MODE_SERVER) {
@@ -258,6 +262,8 @@ bool Channel::ChannelImpl::Connect() {
 }
 
 bool Channel::ChannelImpl::ConnectLocked() {
+  chan_cap_.NoteExclusiveAccess();
+
   if (pipe_ == -1) {
     return false;
   }
@@ -279,6 +285,8 @@ bool Channel::ChannelImpl::ConnectLocked() {
 }
 
 bool Channel::ChannelImpl::ProcessIncomingMessages() {
+  chan_cap_.NoteOnIOThread();
+
   struct msghdr msg = {0};
   struct iovec iov;
 
@@ -313,7 +321,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
       }
     } else if (bytes_read == 0) {
       // The pipe has closed...
-      CloseLocked();
+      Close();
       return false;
     }
     DCHECK(bytes_read);
@@ -501,7 +509,10 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
                                                   RECEIVED_FDS_MESSAGE_TYPE);
         DCHECK(m.fd_cookie() != 0);
         fdAck->set_fd_cookie(m.fd_cookie());
-        OutputQueuePush(std::move(fdAck));
+        {
+          mozilla::MutexAutoLock lock(SendMutex());
+          OutputQueuePush(std::move(fdAck));
+        }
 #endif
 
         nsTArray<mozilla::UniqueFileHandle> handles(m.header()->num_handles);
@@ -526,9 +537,8 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
       if (m.routing_id() == MSG_ROUTING_NONE &&
           m.type() == HELLO_MESSAGE_TYPE) {
         // The Hello message contains only the process id.
-        other_pid_ = MessageIterator(m).NextInt();
-        int32_t other_pid = other_pid_;
-        mozilla::MutexAutoUnlock unlock(SendMutex());
+        int32_t other_pid = MessageIterator(m).NextInt();
+        SetOtherPid(other_pid);
         listener_->OnChannelConnected(other_pid);
 #if defined(OS_MACOSX)
       } else if (m.routing_id() == MSG_ROUTING_NONE &&
@@ -543,7 +553,6 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
           return false;
         }
 #endif
-        mozilla::MutexAutoUnlock unlock(SendMutex());
         listener_->OnMessageReceived(std::move(incoming_message_));
       }
 
@@ -565,6 +574,8 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
 
 bool Channel::ChannelImpl::ProcessOutgoingMessages() {
   // NOTE: This method may be called on threads other than `IOThread()`.
+  chan_cap_.NoteSendMutex();
+
   DCHECK(!waiting_connect_);  // Why are we trying to send messages if there's
                               // no connection?
   is_blocked_on_write_ = false;
@@ -790,6 +801,7 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
 bool Channel::ChannelImpl::Send(mozilla::UniquePtr<Message> message) {
   // NOTE: This method may be called on threads other than `IOThread()`.
   mozilla::MutexAutoLock lock(SendMutex());
+  chan_cap_.NoteSendMutex();
 
 #ifdef IPC_MESSAGE_DEBUG_EXTRA
   DLOG(INFO) << "sending message @" << message.get() << " on channel @" << this
@@ -844,12 +856,11 @@ void Channel::ChannelImpl::CloseClientFileDescriptor() {
 // Called by libevent when we can read from th pipe without blocking.
 void Channel::ChannelImpl::OnFileCanReadWithoutBlocking(int fd) {
   IOThread().AssertOnCurrentThread();
-  mozilla::ReleasableMutexAutoLock lock(SendMutex());
+  chan_cap_.NoteOnIOThread();
 
   if (!waiting_connect_ && fd == pipe_ && pipe_ != -1) {
     if (!ProcessIncomingMessages()) {
-      CloseLocked();
-      lock.Unlock();
+      Close();
       listener_->OnChannelError();
       // The OnChannelError() call may delete this, so we need to exit now.
       return;
@@ -859,6 +870,9 @@ void Channel::ChannelImpl::OnFileCanReadWithoutBlocking(int fd) {
 
 #if defined(OS_MACOSX)
 void Channel::ChannelImpl::CloseDescriptors(uint32_t pending_fd_id) {
+  mozilla::MutexAutoLock lock(SendMutex());
+  chan_cap_.NoteExclusiveAccess();
+
   DCHECK(pending_fd_id != 0);
   for (std::list<PendingDescriptors>::iterator i = pending_fds_.begin();
        i != pending_fds_.end(); i++) {
@@ -872,6 +886,8 @@ void Channel::ChannelImpl::CloseDescriptors(uint32_t pending_fd_id) {
 #endif
 
 void Channel::ChannelImpl::OutputQueuePush(mozilla::UniquePtr<Message> msg) {
+  chan_cap_.NoteSendMutex();
+
   mozilla::LogIPCMessage::LogDispatchWithPid(msg.get(), other_pid_);
 
   MOZ_DIAGNOSTIC_ASSERT(pipe_ != -1);
@@ -891,6 +907,7 @@ void Channel::ChannelImpl::OnFileCanWriteWithoutBlocking(int fd) {
   RefPtr<ChannelImpl> grip(this);
   IOThread().AssertOnCurrentThread();
   mozilla::ReleasableMutexAutoLock lock(SendMutex());
+  chan_cap_.NoteExclusiveAccess();
   if (pipe_ != -1 && !ProcessOutgoingMessages()) {
     CloseLocked();
     lock.Unlock();
@@ -905,6 +922,8 @@ void Channel::ChannelImpl::Close() {
 }
 
 void Channel::ChannelImpl::CloseLocked() {
+  chan_cap_.NoteExclusiveAccess();
+
   // Close can be called multiple times, so we need to make sure we're
   // idempotent.
 
@@ -942,6 +961,7 @@ void Channel::ChannelImpl::CloseLocked() {
 void Channel::ChannelImpl::SetOtherMachTask(task_t task) {
   IOThread().AssertOnCurrentThread();
   mozilla::MutexAutoLock lock(SendMutex());
+  chan_cap_.NoteExclusiveAccess();
 
   if (NS_WARN_IF(pipe_ == -1)) {
     return;
@@ -956,6 +976,7 @@ void Channel::ChannelImpl::SetOtherMachTask(task_t task) {
 void Channel::ChannelImpl::StartAcceptingMachPorts(Mode mode) {
   IOThread().AssertOnCurrentThread();
   mozilla::MutexAutoLock lock(SendMutex());
+  chan_cap_.NoteExclusiveAccess();
 
   if (accept_mach_ports_) {
     MOZ_ASSERT(privileged_ == (MODE_SERVER == mode));
@@ -1105,6 +1126,8 @@ static mozilla::Maybe<mach_port_name_t> BrokerTransferSendRight(
 // Process footer information attached to the message, and acquire owning
 // references to any transferred mach ports. See comment above for details.
 bool Channel::ChannelImpl::AcceptMachPorts(Message& msg) {
+  chan_cap_.NoteOnIOThread();
+
   uint32_t num_send_rights = msg.header()->num_send_rights;
   if (num_send_rights == 0) {
     return true;
