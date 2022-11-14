@@ -739,6 +739,10 @@ void ExternalEngineStateMachine::OnRequestVideo() {
                 "ExternalEngineStateMachine::OnRequestVideo:Resolved",
                 MEDIA_PLAYBACK);
             MOZ_ASSERT(aVideo);
+            if (!mHasReceivedFirstDecodedVideoFrame) {
+              mHasReceivedFirstDecodedVideoFrame = true;
+              OnLoadedFirstFrame();
+            }
             RunningEngineUpdate(MediaData::Type::VIDEO_DATA);
             mVideoFrameContainer->SetCurrentFrame(
                 mInfo->mVideo.mDisplay, aVideo->mImage, TimeStamp::Now());
@@ -770,12 +774,19 @@ void ExternalEngineStateMachine::OnRequestVideo() {
 
 void ExternalEngineStateMachine::OnLoadedFirstFrame() {
   AssertOnTaskQueue();
+  // We will wait until receive the first video frame.
+  if (mInfo->HasVideo() && !mHasReceivedFirstDecodedVideoFrame) {
+    LOGV("Hasn't received first decoded video frame");
+    return;
+  }
+  LOGV("OnLoadedFirstFrame");
   MediaDecoderEventVisibility visibility =
       mSentFirstFrameLoadedEvent ? MediaDecoderEventVisibility::Suppressed
                                  : MediaDecoderEventVisibility::Observable;
   mSentFirstFrameLoadedEvent = true;
   mFirstFrameLoadedEvent.Notify(UniquePtr<MediaInfo>(new MediaInfo(Info())),
                                 visibility);
+  mOnNextFrameStatus.Notify(MediaDecoderOwner::NEXT_FRAME_AVAILABLE);
 }
 
 void ExternalEngineStateMachine::OnLoadedData() {

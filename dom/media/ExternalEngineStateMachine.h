@@ -265,6 +265,7 @@ class ExternalEngineStateMachine final
   bool mHasEnoughAudio = false;
   bool mHasEnoughVideo = false;
   bool mSentPlaybackEndedEvent = false;
+  bool mHasReceivedFirstDecodedVideoFrame = false;
 
   const RefPtr<VideoFrameContainer> mVideoFrameContainer;
 };
