@@ -3,18 +3,7 @@ queue_rules:
     conditions:
       - or:
         - status-success=complete-pr
-        - and:
-          # For more context, see "Auto Merge" rules down below
-          - status-success=complete-push
-          - or:
-            - and:
-              - base~=^releases[_/].*
-              - or:
-                - head~=^automation/sync-strings-\d+
-                - head~=^relbot/fenix-\d+
-            - and:
-              - base=main
-              - head~=^relbot/AC-Nightly-.+
+        - status-success=complete-push
 pull_request_rules:
   - name: Resolve conflict
     conditions:
