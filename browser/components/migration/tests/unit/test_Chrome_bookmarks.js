@@ -141,11 +141,46 @@ async function testBookmarks(migratorKey, subDirs) {
     );
     observerNotified = true;
   }, "browser-set-toolbar-visibility");
+  const initialToolbarCount = await getFolderItemCount(
+    PlacesUtils.bookmarks.toolbarGuid
+  );
+  const initialUnfiledCount = await getFolderItemCount(
+    PlacesUtils.bookmarks.unfiledGuid
+  );
+  const initialmenuCount = await getFolderItemCount(
+    PlacesUtils.bookmarks.menuGuid
+  );
+
   await promiseMigration(
     migrator,
     MigrationUtils.resourceTypes.BOOKMARKS,
     PROFILE
   );
+  const postToolbarCount = await getFolderItemCount(
+    PlacesUtils.bookmarks.toolbarGuid
+  );
+  const postUnfiledCount = await getFolderItemCount(
+    PlacesUtils.bookmarks.unfiledGuid
+  );
+  const postmenuCount = await getFolderItemCount(
+    PlacesUtils.bookmarks.menuGuid
+  );
+  Assert.equal(
+    postUnfiledCount - initialUnfiledCount,
+    105,
+    "Should have seen 105 items in unsorted bookmarks"
+  );
+  Assert.equal(
+    postToolbarCount - initialToolbarCount,
+    105,
+    "Should have seen 105 items in toolbar"
+  );
+  Assert.equal(
+    postmenuCount - initialmenuCount,
+    0,
+    "Should have seen 0 items in menu toolbar"
+  );
+
   PlacesUtils.observers.removeListener(["bookmark-added"], listener);
 
   Assert.equal(itemsSeen.bookmarks, 200, "Should have seen 200 bookmarks.");
@@ -175,3 +210,9 @@ add_task(async function test_ChromiumEdge() {
       : ["Microsoft", "Edge"];
   await testBookmarks("chromium-edge", subDirs);
 });
+
+async function getFolderItemCount(guid) {
+  let results = await PlacesUtils.promiseBookmarksTree(guid);
+
+  return results.itemsCount;
+}
