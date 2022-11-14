@@ -497,6 +497,12 @@ uint32_t nsUrlClassifierPrefixSet::CalculatePreallocateSize() const {
   return fileSize;
 }
 
+uint32_t nsUrlClassifierPrefixSet::Length() const {
+  MutexAutoLock lock(mLock);
+
+  return mTotalPrefixes;
+}
+
 nsresult nsUrlClassifierPrefixSet::WritePrefixes(
     nsCOMPtr<nsIOutputStream>& out) const {
   MutexAutoLock lock(mLock);
