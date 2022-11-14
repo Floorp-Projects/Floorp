@@ -16,11 +16,7 @@ nsresult nsSegmentedBuffer::Init(uint32_t aSegmentSize, uint32_t aMaxSize) {
   }
   mSegmentSize = aSegmentSize;
   mMaxSize = aMaxSize;
-#if 0  // testing...
-  mSegmentArrayCount = 2;
-#else
   mSegmentArrayCount = NS_SEGMENTARRAY_INITIAL_COUNT;
-#endif
   return NS_OK;
 }
 
