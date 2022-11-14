@@ -2836,7 +2836,11 @@ bits_image_fetch_separable_convolution_affine (pixman_image_t * image,
 	sgtot = CLIP (sgtot, 0, 0xff);
 	sbtot = CLIP (sbtot, 0, 0xff);
 
+#ifdef WORDS_BIGENDIAN
+	buffer[k] = (satot << 0) | (srtot << 8) | (sgtot << 16) | (sbtot << 24);
+#else
 	buffer[k] = (satot << 24) | (srtot << 16) | (sgtot << 8) | (sbtot << 0);
+#endif
 
     next:
 	vx += ux;
