@@ -38,7 +38,7 @@
           if (this.open) {
             return;
           }
-        } else {
+        } else if (!this.inRichListItem) {
           if (
             event.keyCode == KeyEvent.DOM_VK_UP ||
             (event.keyCode == KeyEvent.DOM_VK_LEFT &&
@@ -304,6 +304,7 @@
 
       this.appendChild(fragment.cloneNode(true));
       this.initializeAttributeInheritance();
+      this.inRichListItem = !!this.closest("richlistitem");
     }
   }
 
