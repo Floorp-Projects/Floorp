@@ -610,9 +610,13 @@ bool GPUProcessManager::DisableWebRenderConfig(wr::WebRenderError aError,
   gfx::gfxVars::SetUseWebRenderDCompVideoOverlayWin(false);
 
   // If we still have the GPU process, and we fallback to a new configuration
-  // that prefers to have the GPU process, reset the counter.
-  if (wantRestart && mProcess) {
+  // that prefers to have the GPU process, reset the counter. Because we
+  // updated the gfxVars, we want to flag the GPUChild to wait for the update
+  // to be processed before creating new compositor sessions, otherwise we risk
+  // them being out of sync with the content/parent processes.
+  if (wantRestart && mProcess && mGPUChild) {
     mUnstableProcessAttempts = 1;
+    mGPUChild->MarkWaitForVarUpdate();
   }
 
   return true;
