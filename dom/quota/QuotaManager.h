@@ -193,7 +193,7 @@ class QuotaManager final : public BackgroundThreadObject {
   void RemoveQuotaForOrigin(PersistenceType aPersistenceType,
                             const OriginMetadata& aOriginMetadata) {
     MutexAutoLock lock(mQuotaMutex);
-    LockedRemoveQuotaForOrigin(aPersistenceType, aOriginMetadata);
+    LockedRemoveQuotaForOrigin(aOriginMetadata);
   }
 
   nsresult LoadQuota();
@@ -455,8 +455,7 @@ class QuotaManager final : public BackgroundThreadObject {
       uint64_t aMinSizeToBeFreed,
       nsTArray<RefPtr<OriginDirectoryLock>>& aLocks);
 
-  void LockedRemoveQuotaForOrigin(PersistenceType aPersistenceType,
-                                  const OriginMetadata& aOriginMetadata);
+  void LockedRemoveQuotaForOrigin(const OriginMetadata& aOriginMetadata);
 
   already_AddRefed<GroupInfo> LockedGetOrCreateGroupInfo(
       PersistenceType aPersistenceType, const nsACString& aSuffix,
