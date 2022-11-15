@@ -97,7 +97,10 @@ addAccessibleTask(
   },
   {
     chrome: true,
-    iframe: true,
-    remoteIframe: true,
+    // IA2 doesn't have a LINKS_TO relation and Windows non-cached
+    // RemoteAccessible uses IA2, so we can't run these tests in this case.
+    topLevel: !isWinNoCache,
+    iframe: !isWinNoCache,
+    remoteIframe: !isWinNoCache,
   }
 );
