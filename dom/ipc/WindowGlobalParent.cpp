@@ -80,6 +80,7 @@ WindowGlobalParent::WindowGlobalParent(
     uint64_t aOuterWindowId, FieldValues&& aInit)
     : WindowContext(aBrowsingContext, aInnerWindowId, aOuterWindowId,
                     std::move(aInit)),
+      mIsInitialDocument(false),
       mSandboxFlags(0),
       mDocumentHasLoaded(false),
       mDocumentHasUserInteracted(false),
@@ -106,7 +107,7 @@ already_AddRefed<WindowGlobalParent> WindowGlobalParent::CreateDisconnected(
                              aInit.context().mOuterWindowId, std::move(fields));
   wgp->mDocumentPrincipal = aInit.principal();
   wgp->mDocumentURI = aInit.documentURI();
-  wgp->mIsInitialDocument = Some(aInit.isInitialDocument());
+  wgp->mIsInitialDocument = aInit.isInitialDocument();
   wgp->mBlockAllMixedContent = aInit.blockAllMixedContent();
   wgp->mUpgradeInsecureRequests = aInit.upgradeInsecureRequests();
   wgp->mSandboxFlags = aInit.sandboxFlags();
@@ -368,21 +369,8 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvInternalLoad(
 }
 
 IPCResult WindowGlobalParent::RecvUpdateDocumentURI(nsIURI* aURI) {
-  nsCOMPtr<nsIPrincipal> principal;
-
-  if (mDocumentPrincipal->GetIsNullPrincipal()) {
-    principal = mDocumentPrincipal->GetPrecursorPrincipal();
-  } else {
-    principal = mDocumentPrincipal;
-  }
-
-  if (!aURI->SchemeIs("about") && principal &&
-      principal->GetIsContentPrincipal() && !principal->IsSameOrigin(aURI)) {
-    return IPC_FAIL(this,
-                    "Setting DocumentURI with a different Origin than the "
-                    "existing mDocumentURI");
-  }
-
+  // XXX(nika): Assert that the URI change was one which makes sense (either
+  // about:blank -> a real URI, or a legal push/popstate URI change?)
   mDocumentURI = aURI;
   return IPC_OK();
 }
