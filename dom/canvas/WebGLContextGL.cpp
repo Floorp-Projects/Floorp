@@ -1353,10 +1353,13 @@ void WebGLContext::UniformData(
 
     const auto srcBegin = reinterpret_cast<const uint32_t*>(data.begin().get());
     auto destIndex = locInfo->indexIntoUniform;
-    for (const auto& val : Range<const uint32_t>(srcBegin, elemCount)) {
-      if (destIndex >= texUnits.size()) break;
-      texUnits.at(destIndex) = AssertedCast<uint8_t>(val);
-      destIndex += 1;
+    if (destIndex < texUnits.length()) {
+      // Only sample as many indexes as available tex units allow.
+      const auto destCount = std::min(elemCount, texUnits.length() - destIndex);
+      for (const auto& val : Range<const uint32_t>(srcBegin, destCount)) {
+        texUnits[destIndex] = AssertedCast<uint8_t>(val);
+        destIndex += 1;
+      }
     }
   }
 }
