@@ -416,7 +416,7 @@ pub extern "C" fn qcms_profile_is_bogus(profile: &mut Profile) -> bool {
         }
         i += 1
     }
-    if !cfg!(target_os = "macos") {
+    if false {
         negative = (rX < 0.)
             || (rY < 0.)
             || (rZ < 0.)
@@ -432,8 +432,7 @@ pub extern "C" fn qcms_profile_is_bogus(profile: &mut Profile) -> bool {
         // See https://bugzilla.mozilla.org/show_bug.cgi?id=498245#c18 onwards
         // for discussion about whether profile XYZ can or cannot be negative,
         // per the spec. Also the https://bugzil.la/450923 user report.
-
-        // FIXME: allow this relaxation on all ports?
+        // Also: https://bugzil.la/1799391 and https://bugzil.la/1792469
         negative = false; // bogus
     }
     if negative {
