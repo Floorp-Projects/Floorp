@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Seamless looping current time after seek</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script type="text/javascript" src="manifest.js"></script>
+</head>
+<script type="application/javascript">
+
+/**
+ * This test is used to ensure that the playback position won't be reset to ZERO
+ * incorrectly when performing seek on a looping media.
+ */
+add_task(async function testSeekVideoOnlyPlayback() {
+  info(`create and play a media which contains only video track`);
+  let video = createLoopingMedia("video", "gizmo-noaudio.webm");
+  await video.play();
+  await assertSeekingForwardShouldIncreaseCurrentTime(video);
+  removeNodeAndSource(video);
+});
+
+add_task(async function testSeekAudioOnlyPlayback() {
+  info(`create and play a media which contains only audio track`);
+  let audio = createLoopingMedia("audio", "flac-s24.flac");
+  await audio.play();
+  await assertSeekingForwardShouldIncreaseCurrentTime(audio);
+  removeNodeAndSource(audio);
+});
+
+add_task(async function testSeekBothTracksPlayback() {
+  info(`create and play a media which contains both tracks`);
+  let video = createLoopingMedia("video", "gizmo.mp4");
+  await video.play();
+  await assertSeekingForwardShouldIncreaseCurrentTime(video);
+  removeNodeAndSource(video);
+});
+
+// Following are helper functions
+function createLoopingMedia(type, src) {
+  let media = document.createElement(type);
+  media.loop = true;
+  media.src = src;
+  document.body.appendChild(media);
+  return media;
+}
+
+async function assertSeekingForwardShouldIncreaseCurrentTime(media) {
+  const currentTimeBeforeSeek = media.currentTime;
+  const target =  media.duration / 2;
+  media.currentTime = target;
+  await once(media, "seeked");
+  const currentTimeAfterSeek = media.currentTime;
+  ok(currentTimeAfterSeek > currentTimeBeforeSeek,
+    `media current time should keep going forward (target=${target}, ` +
+    `currentTime=${currentTimeBeforeSeek} -> ${currentTimeAfterSeek})`);
+}
+
+</script>
+<body>
+</body>
+</html>
