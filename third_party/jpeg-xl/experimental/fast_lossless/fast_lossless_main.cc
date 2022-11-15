@@ -51,8 +51,8 @@ int main(int argc, char** argv) {
   auto start = std::chrono::high_resolution_clock::now();
   for (size_t _ = 0; _ < num_reps; _++) {
     free(encoded);
-    encoded_size = FastLosslessEncode(png, width, stride, height, nb_chans,
-                                      bitdepth, effort, &encoded);
+    encoded_size = JxlFastLosslessEncode(png, width, stride, height, nb_chans,
+                                         bitdepth, effort, &encoded);
   }
   auto stop = std::chrono::high_resolution_clock::now();
   if (num_reps > 1) {

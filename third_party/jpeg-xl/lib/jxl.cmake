@@ -46,8 +46,6 @@ set(JPEGXL_INTERNAL_SOURCES_DEC
   jxl/base/thread_pool_internal.h
   jxl/blending.cc
   jxl/blending.h
-  jxl/box_content_decoder.cc
-  jxl/box_content_decoder.h
   jxl/chroma_from_luma.cc
   jxl/chroma_from_luma.h
   jxl/codec_in_out.h
@@ -102,8 +100,6 @@ set(JPEGXL_INTERNAL_SOURCES_DEC
   jxl/dec_xyb.cc
   jxl/dec_xyb.h
   jxl/decode.cc
-  jxl/decode_to_jpeg.cc
-  jxl/decode_to_jpeg.h
   jxl/enc_bit_writer.cc
   jxl/enc_bit_writer.h
   jxl/entropy_coder.cc
@@ -143,14 +139,6 @@ set(JPEGXL_INTERNAL_SOURCES_DEC
   jxl/image_metadata.cc
   jxl/image_metadata.h
   jxl/image_ops.h
-  jxl/jpeg/dec_jpeg_data.cc
-  jxl/jpeg/dec_jpeg_data.h
-  jxl/jpeg/dec_jpeg_data_writer.cc
-  jxl/jpeg/dec_jpeg_data_writer.h
-  jxl/jpeg/dec_jpeg_output_chunk.h
-  jxl/jpeg/dec_jpeg_serialization_state.h
-  jxl/jpeg/jpeg_data.cc
-  jxl/jpeg/jpeg_data.h
   jxl/jxl_inspection.h
   jxl/lehmer_code.h
   jxl/linalg.h
@@ -237,6 +225,30 @@ set(JPEGXL_INTERNAL_SOURCES_DEC
   jxl/transpose-inl.h
   jxl/xorshift128plus-inl.h
 )
+
+if (JPEGXL_ENABLE_TRANSCODE_JPEG OR JPEGXL_ENABLE_TOOLS OR JPEGXL_ENABLE_DEVTOOLS OR JPEGXL_ENABLE_BOXES)
+list(APPEND JPEGXL_INTERNAL_SOURCES_DEC
+  jxl/decode_to_jpeg.cc
+  jxl/decode_to_jpeg.h
+  jxl/box_content_decoder.cc
+  jxl/box_content_decoder.h
+)
+endif()
+
+if (JPEGXL_ENABLE_TRANSCODE_JPEG OR JPEGXL_ENABLE_TOOLS OR JPEGXL_ENABLE_DEVTOOLS)
+list(APPEND JPEGXL_INTERNAL_SOURCES_DEC
+  jxl/decode_to_jpeg.cc
+  jxl/decode_to_jpeg.h
+  jxl/jpeg/dec_jpeg_data.cc
+  jxl/jpeg/dec_jpeg_data.h
+  jxl/jpeg/dec_jpeg_data_writer.cc
+  jxl/jpeg/dec_jpeg_data_writer.h
+  jxl/jpeg/dec_jpeg_output_chunk.h
+  jxl/jpeg/dec_jpeg_serialization_state.h
+  jxl/jpeg/jpeg_data.cc
+  jxl/jpeg/jpeg_data.h
+)
+endif()
 
 # List of source files only needed by the encoder or by tools (including
 # decoding tools), but not by the decoder library.
@@ -349,12 +361,14 @@ set(JPEGXL_INTERNAL_SOURCES_ENC
 )
 
 set(JPEGXL_DEC_INTERNAL_LIBS
-  brotlidec-static
-  brotlicommon-static
   hwy
   Threads::Threads
   ${ATOMICS_LIBRARIES}
 )
+
+if (JPEGXL_ENABLE_TRANSCODE_JPEG OR JPEGXL_ENABLE_BOXES)
+list(APPEND JPEGXL_DEC_INTERNAL_LIBS brotlidec-static brotlicommon-static)
+endif()
 
 if(JPEGXL_ENABLE_PROFILER)
 list(APPEND JPEGXL_DEC_INTERNAL_LIBS jxl_profiler)
@@ -386,8 +400,16 @@ else ()
   list(APPEND JPEGXL_INTERNAL_LIBS lcms2)
 endif ()
 
-if (NOT JPEGXL_ENABLE_TRANSCODE_JPEG)
+if (JPEGXL_ENABLE_TRANSCODE_JPEG)
+  list(APPEND JPEGXL_INTERNAL_FLAGS -DJPEGXL_ENABLE_TRANSCODE_JPEG=1)
+else()
   list(APPEND JPEGXL_INTERNAL_FLAGS -DJPEGXL_ENABLE_TRANSCODE_JPEG=0)
+endif ()
+
+if (JPEGXL_ENABLE_BOXES)
+  list(APPEND JPEGXL_INTERNAL_FLAGS -DJPEGXL_ENABLE_BOXES=1)
+else()
+  list(APPEND JPEGXL_INTERNAL_FLAGS -DJPEGXL_ENABLE_BOXES=0)
 endif ()
 
 set(OBJ_COMPILE_DEFINITIONS

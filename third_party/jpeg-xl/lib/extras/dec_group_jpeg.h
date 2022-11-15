@@ -12,17 +12,16 @@
 #include <vector>
 
 #include "lib/extras/packed_image.h"
-#include "lib/jxl/base/status.h"
-#include "lib/jxl/image.h"
+#include "lib/jxl/base/compiler_specific.h"
 
 namespace jxl {
 namespace extras {
 
-void GatherBlockStats(const int16_t* coeffs, const size_t coeffs_size,
-                      int32_t* JXL_RESTRICT nonzeros,
+void GatherBlockStats(const int16_t* JXL_RESTRICT coeffs,
+                      const size_t coeffs_size, int32_t* JXL_RESTRICT nonzeros,
                       int32_t* JXL_RESTRICT sumabs);
 
-void DecodeJpegBlock(const int16_t* qblock,
+void DecodeJpegBlock(const int16_t* JXL_RESTRICT qblock,
                      const float* JXL_RESTRICT dequant_matrices,
                      const float* JXL_RESTRICT biases,
                      float* JXL_RESTRICT scratch_space,

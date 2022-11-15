@@ -7,8 +7,17 @@
 #define FAST_LOSSLESS_H
 #include <stdlib.h>
 
-size_t FastLosslessEncode(const unsigned char* rgba, size_t width,
-                          size_t row_stride, size_t height, size_t nb_chans,
-                          size_t bitdepth, int effort, unsigned char** output);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+size_t JxlFastLosslessEncode(const unsigned char* rgba, size_t width,
+                             size_t row_stride, size_t height, size_t nb_chans,
+                             size_t bitdepth, int effort,
+                             unsigned char** output);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif

@@ -42,6 +42,8 @@
 namespace jxl {
 
 namespace {
+constexpr bool kPrintTree = false;
+
 // Squeeze default quantization factors
 // these quantization factors are for -Q 50  (other qualities simply scale the
 // factors; things are rounded down and obviously cannot get below 1)
@@ -1090,7 +1092,7 @@ Status ModularFrameEncoder::PrepareEncoding(const FrameHeader& frame_header,
   JXL_ASSERT(tree_.size() == decoded_tree.size());
   tree_ = std::move(decoded_tree);
 
-  if (WantDebugOutput(aux_out)) {
+  if (kPrintTree && WantDebugOutput(aux_out)) {
     if (frame_header.dc_level > 0) {
       PrintTree(tree_, aux_out->debug_prefix + "/dc_frame_level" +
                            std::to_string(frame_header.dc_level) + "_tree");

@@ -840,6 +840,35 @@ Status ApplyHlgOotf(JxlCms* t, float* JXL_RESTRICT buf, size_t xsize,
   return true;
 }
 
+bool ApplyCICP(const uint8_t color_primaries,
+               const uint8_t transfer_characteristics,
+               const uint8_t matrix_coefficients, const uint8_t full_range,
+               ColorEncoding* JXL_RESTRICT c) {
+  if (matrix_coefficients != 0) return false;
+  if (full_range != 1) return false;
+
+  const auto primaries = static_cast<Primaries>(color_primaries);
+  const auto tf = static_cast<TransferFunction>(transfer_characteristics);
+  if (!EnumValid(tf) || tf == TransferFunction::kUnknown) return false;
+  if (!(EnumValid(primaries) || color_primaries == 12) ||
+      primaries == Primaries::kCustom) {
+    return false;
+  }
+  c->SetColorSpace(ColorSpace::kRGB);
+  c->tf.SetTransferFunction(tf);
+  if (primaries == Primaries::kP3) {
+    c->white_point = WhitePoint::kDCI;
+    c->primaries = Primaries::kP3;
+  } else if (color_primaries == 12) {
+    c->white_point = WhitePoint::kD65;
+    c->primaries = Primaries::kP3;
+  } else {
+    c->white_point = WhitePoint::kD65;
+    c->primaries = primaries;
+  }
+  return true;
+}
+
 }  // namespace
 
 Status ColorEncoding::SetFieldsFromICC() {
@@ -864,6 +893,15 @@ Status ColorEncoding::SetFieldsFromICC() {
       icc_[66] != 0) {
     return JXL_FAILURE("Invalid rendering intent %u\n", rendering_intent32);
   }
+  // ICC and RenderingIntent have the same values (0..3).
+  rendering_intent = static_cast<RenderingIntent>(rendering_intent32);
+
+  if (profile.has_CICP && ApplyCICP(profile.CICP.color_primaries,
+                                    profile.CICP.transfer_characteristics,
+                                    profile.CICP.matrix_coefficients,
+                                    profile.CICP.video_full_range_flag, this)) {
+    return true;
+  }
 
   SetColorSpace(ColorSpaceFromProfile(profile));
   cmyk_ = (profile.data_color_space == skcms_Signature_CMYK);
@@ -877,14 +915,23 @@ Status ColorEncoding::SetFieldsFromICC() {
 
   // Relies on color_space/white point/primaries being set already.
   DetectTransferFunction(profile, this);
-  // ICC and RenderingIntent have the same values (0..3).
-  rendering_intent = static_cast<RenderingIntent>(rendering_intent32);
 #else  // JPEGXL_ENABLE_SKCMS
 
   const cmsContext context = GetContext();
 
   Profile profile;
   JXL_RETURN_IF_ERROR(DecodeProfile(context, icc_, &profile));
+
+  static constexpr size_t kCICPSize = 12;
+  static constexpr auto kCICPSignature =
+      static_cast<cmsTagSignature>(0x63696370);
+  uint8_t cicp_buffer[kCICPSize];
+  if (cmsReadRawTag(profile.get(), kCICPSignature, cicp_buffer, kCICPSize) ==
+          kCICPSize &&
+      ApplyCICP(cicp_buffer[8], cicp_buffer[9], cicp_buffer[10],
+                cicp_buffer[11], this)) {
+    return true;
+  }
 
   const cmsUInt32Number rendering_intent32 =
       cmsGetHeaderRenderingIntent(profile.get());
@@ -916,23 +963,18 @@ Status ColorEncoding::SetFieldsFromICC() {
 
 void ColorEncoding::DecideIfWantICC() {
   PaddedBytes icc_new;
-  bool equivalent;
 #if JPEGXL_ENABLE_SKCMS
   skcms_ICCProfile profile;
   if (!DecodeProfile(ICC().data(), ICC().size(), &profile)) return;
   if (!MaybeCreateProfile(*this, &icc_new)) return;
-  equivalent = ProfileEquivalentToICC(profile, icc_new);
 #else   // JPEGXL_ENABLE_SKCMS
   const cmsContext context = GetContext();
   Profile profile;
   if (!DecodeProfile(context, ICC(), &profile)) return;
   if (cmsGetColorSpace(profile.get()) == cmsSigCmykData) return;
   if (!MaybeCreateProfile(*this, &icc_new)) return;
-  equivalent = ProfileEquivalentToICC(context, profile, icc_new, *this);
 #endif  // JPEGXL_ENABLE_SKCMS
 
-  // Successfully created a profile => reconstruction should be equivalent.
-  JXL_ASSERT(equivalent);
   want_icc_ = false;
 }
 

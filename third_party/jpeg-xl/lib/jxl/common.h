@@ -28,6 +28,11 @@
 #define JPEGXL_ENABLE_TRANSCODE_JPEG 1
 #endif  // JPEGXL_ENABLE_TRANSCODE_JPEG
 
+// Macro that defines whether support for decoding boxes is enabled.
+#ifndef JPEGXL_ENABLE_BOXES
+#define JPEGXL_ENABLE_BOXES 1
+#endif  // JPEGXL_ENABLE_BOXES
+
 namespace jxl {
 // Some enums and typedefs used by more than one header file.
 

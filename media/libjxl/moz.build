@@ -20,7 +20,6 @@ SOURCES += [
     "/third_party/jpeg-xl/lib/jxl/base/padded_bytes.cc",
     "/third_party/jpeg-xl/lib/jxl/base/random.cc",
     "/third_party/jpeg-xl/lib/jxl/blending.cc",
-    "/third_party/jpeg-xl/lib/jxl/box_content_decoder.cc",
     "/third_party/jpeg-xl/lib/jxl/chroma_from_luma.cc",
     "/third_party/jpeg-xl/lib/jxl/coeff_order.cc",
     "/third_party/jpeg-xl/lib/jxl/color_encoding_internal.cc",
@@ -45,7 +44,6 @@ SOURCES += [
     "/third_party/jpeg-xl/lib/jxl/dec_patch_dictionary.cc",
     "/third_party/jpeg-xl/lib/jxl/dec_xyb.cc",
     "/third_party/jpeg-xl/lib/jxl/decode.cc",
-    "/third_party/jpeg-xl/lib/jxl/decode_to_jpeg.cc",
     "/third_party/jpeg-xl/lib/jxl/enc_bit_writer.cc",
     "/third_party/jpeg-xl/lib/jxl/entropy_coder.cc",
     "/third_party/jpeg-xl/lib/jxl/epf.cc",
@@ -60,9 +58,6 @@ SOURCES += [
     "/third_party/jpeg-xl/lib/jxl/image.cc",
     "/third_party/jpeg-xl/lib/jxl/image_bundle.cc",
     "/third_party/jpeg-xl/lib/jxl/image_metadata.cc",
-    "/third_party/jpeg-xl/lib/jxl/jpeg/dec_jpeg_data.cc",
-    "/third_party/jpeg-xl/lib/jxl/jpeg/dec_jpeg_data_writer.cc",
-    "/third_party/jpeg-xl/lib/jxl/jpeg/jpeg_data.cc",
     "/third_party/jpeg-xl/lib/jxl/loop_filter.cc",
     "/third_party/jpeg-xl/lib/jxl/luminance.cc",
     "/third_party/jpeg-xl/lib/jxl/memory_manager_internal.cc",
@@ -122,6 +117,9 @@ EXPORTS.jxl += [
     "/third_party/jpeg-xl/lib/include/jxl/thread_parallel_runner_cxx.h",
     "/third_party/jpeg-xl/lib/include/jxl/types.h",
 ]
+
+DEFINES["JPEGXL_ENABLE_BOXES"] = "0"
+DEFINES["JPEGXL_ENABLE_TRANSCODE_JPEG"] = "0"
 
 FINAL_LIBRARY = "gkmedias"
 

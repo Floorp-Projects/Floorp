@@ -15,7 +15,6 @@
 #include "lib/jxl/enc_adaptive_quantization.h"
 #include "lib/jxl/enc_cluster.h"
 #include "lib/jxl/enc_color_management.h"
-#include "lib/jxl/enc_quant_weights.h"
 #include "lib/jxl/enc_transforms.h"
 #include "lib/jxl/enc_xyb.h"
 #include "lib/jxl/huffman_tree.h"
@@ -117,36 +116,218 @@ std::vector<uint8_t> CreateXybICCAppMarker() {
   return icc_marker;
 }
 
+static constexpr float kBaseQuantMatrix[] = {
+    // c = 0
+    0.010745695802f,
+    0.014724285860f,
+    0.016765073259f,
+    0.015352546818f,
+    0.016849715608f,
+    0.017505664513f,
+    0.019171796023f,
+    0.026983627671f,
+    0.014724285860f,
+    0.016005879113f,
+    0.014807802023f,
+    0.015257294568f,
+    0.016239266522f,
+    0.017754112611f,
+    0.021007430943f,
+    0.024258001854f,
+    0.016765073259f,
+    0.014807802023f,
+    0.016266879484f,
+    0.014202573480f,
+    0.016155362246f,
+    0.018324768181f,
+    0.018883664957f,
+    0.024261275157f,
+    0.015352546818f,
+    0.015257294568f,
+    0.014202573480f,
+    0.014974020066f,
+    0.018844302744f,
+    0.019286162437f,
+    0.023009874591f,
+    0.023277331489f,
+    0.016849715608f,
+    0.016239266522f,
+    0.016155362246f,
+    0.018844302744f,
+    0.019491371738f,
+    0.030153905190f,
+    0.032131952026f,
+    0.047015070993f,
+    0.017505664513f,
+    0.017754112611f,
+    0.018324768181f,
+    0.019286162437f,
+    0.030153905190f,
+    0.035875428738f,
+    0.025324149774f,
+    0.046037739693f,
+    0.019171796023f,
+    0.021007430943f,
+    0.018883664957f,
+    0.023009874591f,
+    0.032131952026f,
+    0.025324149774f,
+    0.025619236945f,
+    0.049740249957f,
+    0.026983627671f,
+    0.024258001854f,
+    0.024261275157f,
+    0.023277331489f,
+    0.047015070993f,
+    0.046037739693f,
+    0.049740249957f,
+    0.029683058303f,
+    // c = 1
+    0.002310547025f,
+    0.002391506241f,
+    0.002592377991f,
+    0.002907631930f,
+    0.003590107614f,
+    0.003647418579f,
+    0.003946607583f,
+    0.004580867024f,
+    0.002391506241f,
+    0.002565945978f,
+    0.002676532241f,
+    0.003167916799f,
+    0.003592423110f,
+    0.003581864537f,
+    0.004168190188f,
+    0.004711190832f,
+    0.002592377991f,
+    0.002676532241f,
+    0.002899922325f,
+    0.003221508920f,
+    0.003597377805f,
+    0.004015001363f,
+    0.004164168214f,
+    0.004536180462f,
+    0.002907631930f,
+    0.003167916799f,
+    0.003221508920f,
+    0.003421333194f,
+    0.003843692347f,
+    0.004011729362f,
+    0.004486022354f,
+    0.005037524314f,
+    0.003590107614f,
+    0.003592423110f,
+    0.003597377805f,
+    0.003843692347f,
+    0.003991982168f,
+    0.004561113887f,
+    0.005683994831f,
+    0.005587879717f,
+    0.003647418579f,
+    0.003581864537f,
+    0.004015001363f,
+    0.004011729362f,
+    0.004561113887f,
+    0.004711190832f,
+    0.005279489671f,
+    0.005645298559f,
+    0.003946607583f,
+    0.004168190188f,
+    0.004164168214f,
+    0.004486022354f,
+    0.005683994831f,
+    0.005279489671f,
+    0.005269099460f,
+    0.005234577959f,
+    0.004580867024f,
+    0.004711190832f,
+    0.004536180462f,
+    0.005037524314f,
+    0.005587879717f,
+    0.005645298559f,
+    0.005234577959f,
+    0.005138602544f,
+    // c = 2
+    0.004694191704f,
+    0.007478405841f,
+    0.009119519544f,
+    0.010846788859f,
+    0.012040055008f,
+    0.014283609506f,
+    0.020805819128f,
+    0.041346026531f,
+    0.007478405841f,
+    0.008473337032f,
+    0.008457467755f,
+    0.011507290737f,
+    0.012282006381f,
+    0.011077942494f,
+    0.019589180487f,
+    0.030348661601f,
+    0.009119519544f,
+    0.008457467755f,
+    0.012692131754f,
+    0.010360988009f,
+    0.011883779193f,
+    0.021216622915f,
+    0.019468523508f,
+    0.022375231013f,
+    0.010846788859f,
+    0.011507290737f,
+    0.010360988009f,
+    0.015688875916f,
+    0.019428087454f,
+    0.018982414995f,
+    0.030218311113f,
+    0.025108166811f,
+    0.012040055008f,
+    0.012282006381f,
+    0.011883779193f,
+    0.019428087454f,
+    0.019908111501f,
+    0.019428676375f,
+    0.026540699320f,
+    0.032446303017f,
+    0.014283609506f,
+    0.011077942494f,
+    0.021216622915f,
+    0.018982414995f,
+    0.019428676375f,
+    0.025654942665f,
+    0.030689090332f,
+    0.036234971093f,
+    0.020805819128f,
+    0.019589180487f,
+    0.019468523508f,
+    0.030218311113f,
+    0.026540699320f,
+    0.030689090332f,
+    0.035378000966f,
+    0.041109510150f,
+    0.041346026531f,
+    0.030348661601f,
+    0.022375231013f,
+    0.025108166811f,
+    0.032446303017f,
+    0.036234971093f,
+    0.041109510150f,
+    0.047241950370f,
+};
+
 void AddJpegQuantMatrices(const ImageF& qf, float dc_quant, float global_scale,
                           std::vector<jpeg::JPEGQuantTable>* quant_tables,
                           float* qm) {
-  // Create a custom JPEG XL dequant matrix. The quantization weight parameters
-  // were determined with manual tweaking.
-  DequantMatrices dequant;
-  std::vector<QuantEncoding> encodings(DequantMatrices::kNum,
-                                       QuantEncoding::Library(0));
-  encodings[0] = QuantEncoding::DCT(
-      DctQuantWeightParams({{{{2000.0, -0.5, -0.5, -0.5, -0.5, -0.5}},
-                             {{500.0, -0.1, -0.1, -0.2, -0.2, -0.2}},
-                             {{200.0, -1.0, -0.5, -0.5, -0.5, -0.5}}}},
-                           6));
-  dequant.SetEncodings(encodings);
-  JXL_CHECK(dequant.EnsureComputed(1));
-  memcpy(qm, dequant.Matrix(0, 0), 3 * kDCTBlockSize * sizeof(qm[0]));
-  // Set custom DC quant weights.
-  const float inv_dc_quant[3] = {3200.0f, 512.0f, 320.0f};
-  for (size_t c = 0; c < 3; c++) {
-    qm[c * kDCTBlockSize] = 1.0f / (inv_dc_quant[c] * dc_quant);
-  }
-
-  // Scale the quant matrix based on the scaled XYB scales and the quant field.
+  // Scale the base quant matrix based on the scaled XYB scales and the quant
+  // field.
   float qfmin, qfmax;
   ImageMinMax(qf, &qfmin, &qfmax);
-  for (size_t c = 0; c < 3; c++) {
-    const float scale = kScaledXYBScale[c] * global_scale;
-    qm[c * kDCTBlockSize] *= scale;
-    for (size_t j = 1; j < kDCTBlockSize; j++) {
-      qm[c * kDCTBlockSize + j] *= scale / qfmax;
+  const float dc_scale = global_scale / dc_quant;
+  const float ac_scale = global_scale / qfmax;
+  for (size_t c = 0, ix = 0; c < 3; c++) {
+    qm[ix] = dc_scale * kBaseQuantMatrix[ix];
+    ix++;
+    for (size_t j = 1; j < kDCTBlockSize; j++, ix++) {
+      qm[ix] = ac_scale * kBaseQuantMatrix[ix];
     }
   }
 
@@ -193,9 +374,34 @@ void AddJpegScanInfos(const std::vector<ProgressiveScan>& scans,
   }
 }
 
+float HistogramCost(const Histogram& histo) {
+  std::vector<uint32_t> counts(jpeg::kJpegHuffmanAlphabetSize + 1);
+  std::vector<uint8_t> depths(jpeg::kJpegHuffmanAlphabetSize + 1);
+  for (size_t i = 0; i < jpeg::kJpegHuffmanAlphabetSize; ++i) {
+    counts[i] = histo.data_[i];
+  }
+  counts[jpeg::kJpegHuffmanAlphabetSize] = 1;
+  CreateHuffmanTree(counts.data(), counts.size(),
+                    jpeg::kJpegHuffmanMaxBitLength, &depths[0]);
+  size_t header_bits = (1 + jpeg::kJpegHuffmanMaxBitLength) * 8;
+  size_t data_bits = 0;
+  for (size_t i = 0; i < jpeg::kJpegHuffmanAlphabetSize; ++i) {
+    if (depths[i] > 0) {
+      header_bits += 8;
+      data_bits += counts[i] * depths[i];
+    }
+  }
+  return header_bits + data_bits;
+}
+
+struct JpegClusteredHistograms {
+  std::vector<Histogram> histograms;
+  std::vector<uint32_t> histogram_indexes;
+  std::vector<uint32_t> slot_ids;
+};
+
 void ClusterJpegHistograms(const std::vector<jpeg::HuffmanCodeTable>& jpeg_in,
-                           size_t max_histograms, std::vector<Histogram>* out,
-                           std::vector<uint32_t>* histogram_indexes) {
+                           JpegClusteredHistograms* clusters) {
   std::vector<Histogram> histograms;
   for (const auto& t : jpeg_in) {
     Histogram histo;
@@ -206,17 +412,70 @@ void ClusterJpegHistograms(const std::vector<jpeg::HuffmanCodeTable>& jpeg_in,
     }
     histograms.push_back(histo);
   }
-  // TODO(szabadka): Use a JPEG-specific version of the clustering algorithm.
-  HistogramParams params;
-  ClusterHistograms(params, histograms, max_histograms, out, histogram_indexes);
+  clusters->histogram_indexes.resize(histograms.size());
+  std::vector<uint32_t> slot_histograms;
+  std::vector<float> slot_costs;
+  for (size_t i = 0; i < histograms.size(); ++i) {
+    const Histogram& cur = histograms[i];
+    if (cur.total_count_ == 0) {
+      continue;
+    }
+    float best_cost = HistogramCost(cur);
+    size_t best_slot = slot_histograms.size();
+    for (size_t j = 0; j < slot_histograms.size(); ++j) {
+      size_t prev_idx = slot_histograms[j];
+      const Histogram& prev = clusters->histograms[prev_idx];
+      Histogram combined;
+      combined.AddHistogram(prev);
+      combined.AddHistogram(cur);
+      float combined_cost = HistogramCost(combined);
+      float cost = combined_cost - slot_costs[j];
+      if (cost < best_cost) {
+        best_cost = cost;
+        best_slot = j;
+      }
+    }
+    if (best_slot == slot_histograms.size()) {
+      // Create new histogram.
+      size_t histogram_index = clusters->histograms.size();
+      clusters->histograms.push_back(cur);
+      clusters->histogram_indexes[i] = histogram_index;
+      if (best_slot < 4) {
+        // We have a free slot, so we put the new histogram there.
+        slot_histograms.push_back(histogram_index);
+        slot_costs.push_back(best_cost);
+      } else {
+        // TODO(szabadka) Find the best histogram to replce.
+        best_slot = (clusters->slot_ids.back() + 1) % 4;
+      }
+      slot_histograms[best_slot] = histogram_index;
+      slot_costs[best_slot] = best_cost;
+      clusters->slot_ids.push_back(best_slot);
+    } else {
+      // Merge this histogram with a previous one.
+      size_t histogram_index = slot_histograms[best_slot];
+      clusters->histograms[histogram_index].AddHistogram(cur);
+      clusters->histogram_indexes[i] = histogram_index;
+      JXL_ASSERT(clusters->slot_ids[histogram_index] == best_slot);
+      slot_costs[best_slot] += best_cost;
+    }
+  }
 }
 
-void BuildJpegHuffmanCode(const uint8_t* depth, jpeg::JPEGHuffmanCode* huff) {
+void BuildJpegHuffmanCode(const Histogram& histo, jpeg::JPEGHuffmanCode* huff) {
+  std::vector<uint32_t> counts(jpeg::kJpegHuffmanAlphabetSize + 1);
+  std::vector<uint8_t> depths(jpeg::kJpegHuffmanAlphabetSize + 1);
+  for (size_t j = 0; j < jpeg::kJpegHuffmanAlphabetSize; ++j) {
+    counts[j] = histo.data_[j];
+  }
+  counts[jpeg::kJpegHuffmanAlphabetSize] = 1;
+  CreateHuffmanTree(counts.data(), counts.size(),
+                    jpeg::kJpegHuffmanMaxBitLength, &depths[0]);
   std::fill(std::begin(huff->counts), std::end(huff->counts), 0);
   std::fill(std::begin(huff->values), std::end(huff->values), 0);
   for (size_t i = 0; i <= jpeg::kJpegHuffmanAlphabetSize; ++i) {
-    if (depth[i] > 0) {
-      ++huff->counts[depth[i]];
+    if (depths[i] > 0) {
+      ++huff->counts[depths[i]];
     }
   }
   int offset[jpeg::kJpegHuffmanMaxBitLength + 1] = {0};
@@ -224,29 +483,33 @@ void BuildJpegHuffmanCode(const uint8_t* depth, jpeg::JPEGHuffmanCode* huff) {
     offset[i] = offset[i - 1] + huff->counts[i - 1];
   }
   for (size_t i = 0; i <= jpeg::kJpegHuffmanAlphabetSize; ++i) {
-    if (depth[i] > 0) {
-      huff->values[offset[depth[i]]++] = i;
+    if (depths[i] > 0) {
+      huff->values[offset[depths[i]]++] = i;
     }
   }
   huff->is_last = false;
 }
 
-void AddJpegHuffmanCodes(std::vector<Histogram>& histograms,
-                         size_t slot_id_offset,
-                         std::vector<jpeg::JPEGHuffmanCode>* huff_codes) {
-  for (size_t i = 0; i < histograms.size(); ++i) {
-    jpeg::JPEGHuffmanCode huff_code;
-    huff_code.slot_id = slot_id_offset + i;
-    std::vector<uint32_t> counts(jpeg::kJpegHuffmanAlphabetSize + 1);
-    std::vector<uint8_t> depths(jpeg::kJpegHuffmanAlphabetSize + 1);
-    for (size_t j = 0; j < jpeg::kJpegHuffmanAlphabetSize; ++j) {
-      counts[j] = histograms[i].data_[j];
-    }
-    counts[jpeg::kJpegHuffmanAlphabetSize] = 1;
-    CreateHuffmanTree(counts.data(), counts.size(),
-                      jpeg::kJpegHuffmanMaxBitLength, &depths[0]);
-    BuildJpegHuffmanCode(&depths[0], &huff_code);
-    huff_codes->emplace_back(std::move(huff_code));
+void AddJpegHuffmanCode(const Histogram& histogram, size_t slot_id,
+                        std::vector<jpeg::JPEGHuffmanCode>* huff_codes) {
+  jpeg::JPEGHuffmanCode huff_code;
+  huff_code.slot_id = slot_id;
+  BuildJpegHuffmanCode(histogram, &huff_code);
+  huff_codes->emplace_back(std::move(huff_code));
+}
+
+void SetJpegHuffmanCode(const JpegClusteredHistograms& clusters,
+                        size_t histogram_id, size_t slot_id_offset,
+                        std::vector<uint32_t>& slot_histograms,
+                        uint32_t* slot_id,
+                        std::vector<jpeg::JPEGHuffmanCode>* huff_codes) {
+  JXL_ASSERT(histogram_id < clusters.histogram_indexes.size());
+  uint32_t histogram_index = clusters.histogram_indexes[histogram_id];
+  *slot_id = clusters.slot_ids[histogram_index];
+  if (slot_histograms[*slot_id] != histogram_index) {
+    AddJpegHuffmanCode(clusters.histograms[histogram_index],
+                       slot_id_offset + *slot_id, huff_codes);
+    slot_histograms[*slot_id] = histogram_index;
   }
 }
 
@@ -291,11 +554,8 @@ void FillJPEGData(const Image3F& opsin, const ImageF& qf, float dc_quant,
   // SOS
   std::vector<ProgressiveScan> progressive_mode = {
       // DC
-      {0, 0, 0, 0, !subsample_blue},
-      // AC 1 - highest bits
-      {1, 63, 0, 1, false},
-      // AC 2 - lowest bit
-      {1, 63, 1, 0, false},
+      {0, 0, 0, 0, !subsample_blue}, {1, 2, 0, 0, false},  {3, 63, 0, 2, false},
+      {3, 63, 2, 1, false},          {3, 63, 1, 0, false},
   };
   AddJpegScanInfos(progressive_mode, &out->scan_info);
   for (size_t i = 0; i < out->scan_info.size(); i++) {
@@ -309,30 +569,58 @@ void FillJPEGData(const Image3F& opsin, const ImageF& qf, float dc_quant,
   jpeg::SerializationState ss;
   JXL_CHECK(jpeg::ProcessJpeg(*out, &ss));
 
-  // Build DC Huffman codes and add them to DHT segment.
-  std::vector<Histogram> dc_histo;
-  std::vector<uint32_t> dc_tbl_indexes;
-  ClusterJpegHistograms(ss.dc_huff_table, 4, &dc_histo, &dc_tbl_indexes);
-  AddJpegHuffmanCodes(dc_histo, 0, &out->huffman_code);
+  // Cluster DC histograms.
+  JpegClusteredHistograms dc_clusters;
+  ClusterJpegHistograms(ss.dc_huff_table, &dc_clusters);
 
-  // Build AC Huffman codes and add them to DHT segment.
-  std::vector<Histogram> ac_histo;
-  std::vector<uint32_t> ac_tbl_indexes;
-  ClusterJpegHistograms(ss.ac_huff_table, 4, &ac_histo, &ac_tbl_indexes);
-  AddJpegHuffmanCodes(ac_histo, 0x10, &out->huffman_code);
+  // Cluster AC histograms.
+  JpegClusteredHistograms ac_clusters;
+  ClusterJpegHistograms(ss.ac_huff_table, &ac_clusters);
+
+  // Rebuild marker_order because we may want to emit Huffman codes in between
+  // scans.
+  out->marker_order.resize(out->marker_order.size() - 2 -
+                           out->scan_info.size());
+
+  // Add the first 4 DC and AC histograms in the first DHT segment.
+  out->marker_order.emplace_back(0xc4);  // DHT
+  std::vector<uint32_t> dc_slot_histograms;
+  std::vector<uint32_t> ac_slot_histograms;
+  for (size_t i = 0; i < dc_clusters.histograms.size(); ++i) {
+    if (i >= 4) break;
+    JXL_ASSERT(dc_clusters.slot_ids[i] == i);
+    AddJpegHuffmanCode(dc_clusters.histograms[i], i, &out->huffman_code);
+    dc_slot_histograms.push_back(i);
+  }
+  for (size_t i = 0; i < ac_clusters.histograms.size(); ++i) {
+    if (i >= 4) break;
+    JXL_ASSERT(ac_clusters.slot_ids[i] == i);
+    AddJpegHuffmanCode(ac_clusters.histograms[i], 0x10 + i, &out->huffman_code);
+    ac_slot_histograms.push_back(i);
+  }
   out->huffman_code.back().is_last = true;
 
-  // Set the Huffman table indexes in the scan_infos.
-  size_t histo_idx = 0;
+  // Set the Huffman table indexes in the scan_infos and emit additional DHT
+  // segments if necessary.
+  size_t histogram_id = 0;
   for (auto& si : out->scan_info) {
+    size_t num_huff_codes = out->huffman_code.size();
     for (size_t c = 0; c < si.num_components; ++c) {
-      JXL_ASSERT(histo_idx < dc_tbl_indexes.size());
-      JXL_ASSERT(histo_idx < ac_tbl_indexes.size());
-      si.components[c].dc_tbl_idx = dc_tbl_indexes[histo_idx];
-      si.components[c].ac_tbl_idx = ac_tbl_indexes[histo_idx];
-      ++histo_idx;
+      SetJpegHuffmanCode(dc_clusters, histogram_id, 0, dc_slot_histograms,
+                         &si.components[c].dc_tbl_idx, &out->huffman_code);
+      SetJpegHuffmanCode(ac_clusters, histogram_id, 0x10, ac_slot_histograms,
+                         &si.components[c].ac_tbl_idx, &out->huffman_code);
+      ++histogram_id;
     }
+    // If we updated a slot histogram in this scan, create an additional DHT
+    // segment.
+    if (out->huffman_code.size() > num_huff_codes) {
+      out->marker_order.emplace_back(0xc4);  // DHT
+      out->huffman_code.back().is_last = true;
+    }
+    out->marker_order.emplace_back(0xda);  // SOS
   }
+  out->marker_order.emplace_back(0xd9);  // EOI
 }
 
 size_t JpegSize(const jpeg::JPEGData& jpeg_data) {

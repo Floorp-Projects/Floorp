@@ -68,6 +68,16 @@ jobs:
               -DJPEGXL_ENABLE_TRANSCODE_JPEG=OFF
               -DJPEGXL_ENABLE_PLUGINS=OFF
               -DJPEGXL_ENABLE_VIEWERS=OFF
+          # Build optimized for binary size, all features not needed for
+          # reconstructing pixels is disabled.
+          - name: release:minimal
+            mode: release
+            cxxflags: -DJXL_DEBUG_ON_ABORT=0
+            cmake_args: >-
+              -DJPEGXL_ENABLE_TRANSCODE_JPEG=OFF
+              -DJPEGXL_ENABLE_BOXES=OFF
+              -DJPEGXL_ENABLE_PLUGINS=OFF
+              -DJPEGXL_ENABLE_VIEWERS=OFF
           # Builds with gcc in release mode
           - name: release:gcc8
             mode: release
@@ -394,7 +404,7 @@ jobs:
 
     - name: Set EMSDK node version
       run: |
-        echo "NODE_JS='$(cat $HOME/.base_node_path)'" >> $EM_CONFIG
+        echo "NODE_JS='$(cat $HOME/.base_node_path)'" >> $EMSDK/.emscripten
         emsdk construct_env
 
     # TODO(deymo): Build and install other dependencies like libpng, libjpeg,

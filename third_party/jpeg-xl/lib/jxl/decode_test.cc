@@ -4967,7 +4967,7 @@ TEST(DecodeTest, ExtentedBoxSizeTest) {
   JxlDecoderDestroy(dec);
 }
 
-TEST(DecodeTest, BoxTest) {
+TEST(DecodeTest, JXL_BOXES_TEST(BoxTest)) {
   size_t xsize = 1, ysize = 1;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 4, 0);
   jxl::TestCodestreamParams params;
@@ -5040,7 +5040,7 @@ TEST(DecodeTest, BoxTest) {
   JxlDecoderDestroy(dec);
 }
 
-TEST(DecodeTest, ExifBrobBoxTest) {
+TEST(DecodeTest, JXL_BOXES_TEST(ExifBrobBoxTest)) {
   size_t xsize = 1, ysize = 1;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 4, 0);
   jxl::TestCodestreamParams params;
@@ -5222,7 +5222,7 @@ TEST(DecodeTest, ExifBrobBoxTest) {
   }
 }
 
-TEST(DecodeTest, PartialCodestreamBoxTest) {
+TEST(DecodeTest, JXL_BOXES_TEST(PartialCodestreamBoxTest)) {
   size_t xsize = 23, ysize = 81;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 4, 0);
   JxlPixelFormat format_orig = {4, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
