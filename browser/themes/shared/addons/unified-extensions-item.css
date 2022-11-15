@@ -63,7 +63,7 @@ unified-extensions-item[secondary-button-hovered="true"] .unified-extensions-ite
 .unified-extensions-item-icon,
 /* When the unified extensions pref is enabled, we also want to increase the
  * size of the icons in the extension CUI widgets. */
-#unified-extensions-panel .unified-extensions-item[unified-extensions="true"] .webextension-browser-action > .toolbarbutton-badge-stack > .toolbarbutton-icon {
+panel .unified-extensions-item[unified-extensions="true"] .webextension-browser-action > .toolbarbutton-badge-stack > .toolbarbutton-icon {
   height: var(--icon-size);
   width: var(--icon-size);
   margin-inline-end: 6px;
@@ -114,14 +114,17 @@ toolbaritem.unified-extensions-item:not([cui-areatype="panel"], [overflowedItem=
   display: none;
 }
 
-/* Hide subviewbutton label by default, it should only be shown in the overflow
- * panel and the palette. */
-toolbaritem.unified-extensions-item[cui-areatype="toolbar"] .toolbarbutton-text {
+/* Hide subviewbutton label by default, it should only be shown in the old
+ * overflow panel and the palette. */
+toolbaritem.unified-extensions-item[cui-areatype="toolbar"] .toolbarbutton-text,
+#unified-extensions-area > toolbaritem.unified-extensions-item .toolbarbutton-text {
   display: none;
 }
 
-/* Hide unified extensions content by default */
-toolbaritem.unified-extensions-item:not([overflowedItem="true"]) .unified-extensions-item-contents {
+/* Hide unified extensions content by default, unless the item is overflowed or in
+ * a panel. Also hide this content if the item is visible in customize mode. */
+toolbaritem.unified-extensions-item:not([overflowedItem="true"], [cui-areatype="panel"]) .unified-extensions-item-contents,
+toolbarpaletteitem > toolbaritem.unified-extensions-item .unified-extensions-item-contents {
   display: none;
 }
 
@@ -129,6 +132,13 @@ toolbaritem.unified-extensions-item .unified-extensions-item-open-menu.subviewbu
   -moz-box-flex: 0;
   margin-inline-start: var(--arrowpanel-menuitem-margin-inline);
   padding: var(--arrowpanel-menuitem-padding);
+}
+
+/* When the unified extensions pref is set, we want to always have a "large"
+ * menu button, even on compact mode since each extension has two lines of text
+ * anyway (extension name and message). */
+toolbaritem.unified-extensions-item[unified-extensions="true"] .unified-extensions-item-open-menu.subviewbutton {
+  padding: 8px;
 }
 
 /* --- browser action CUI widget styles in the overflow/unified extensions panel --- */
@@ -145,23 +155,20 @@ toolbaritem.unified-extensions-item .unified-extensions-item-open-menu.subviewbu
   display: block;
 }
 
-/* This will be removed as part of 1777484 */
-panel toolbaritem.unified-extensions-item .unified-extensions-item-message {
-  display: none;
-}
-
-.widget-overflow-list .unified-extensions-item[attention] {
-  background-position: left 12px bottom;
-}
-
-.widget-overflow-list .unified-extensions-item[attention]:-moz-locale-dir(rtl) {
-  background-position-x: right 12px;
-}
-
+.widget-overflow-list .unified-extensions-item[attention],
 #unified-extensions-panel .unified-extensions-item[attention] {
   background-position: left calc(12px + var(--arrowpanel-menuitem-margin-inline)) bottom;
 }
 
+.widget-overflow-list .unified-extensions-item[attention]:-moz-locale-dir(rtl),
 #unified-extensions-panel .unified-extensions-item[attention]:-moz-locale-dir(rtl) {
   background-position-x: right calc(12px + var(--arrowpanel-menuitem-margin-inline));
+}
+
+.widget-overflow-list .unified-extensions-item[attention][unified-extensions="false"] {
+  background-position-x: left 12px;
+}
+
+.widget-overflow-list .unified-extensions-item[attention][unified-extensions="false"]:-moz-locale-dir(rtl) {
+  background-position-x: right 12px;
 }
