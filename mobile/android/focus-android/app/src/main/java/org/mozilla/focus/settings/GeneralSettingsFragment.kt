@@ -96,7 +96,7 @@ class GeneralSettingsFragment :
     }
 
     private fun getLocaleSummary(): CharSequence? {
-        val sharedConfig: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+        val sharedConfig: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
         val value: String? =
             sharedConfig.getString(
                 resources.getString(R.string.pref_key_locale),

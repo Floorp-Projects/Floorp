@@ -111,7 +111,7 @@ class AddToHomescreenDialogFragment : DialogFragment() {
 
             TelemetryWrapper.addToHomescreenShortcutEvent()
 
-            PreferenceManager.getDefaultSharedPreferences(context).edit()
+            PreferenceManager.getDefaultSharedPreferences(requireContext()).edit()
                 .putBoolean(
                     requireContext().getString(R.string.has_added_to_home_screen),
                     true,
