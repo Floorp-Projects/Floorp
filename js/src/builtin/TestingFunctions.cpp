@@ -1281,12 +1281,12 @@ static bool WasmGlobalsEqual(JSContext* cx, unsigned argc, Value* vp) {
     }
     case wasm::ValType::F32: {
       result = mozilla::BitwiseCast<uint32_t>(aVal.f32()) ==
-               mozilla::BitwiseCast<uint32_t>(aVal.f32());
+               mozilla::BitwiseCast<uint32_t>(bVal.f32());
       break;
     }
     case wasm::ValType::F64: {
       result = mozilla::BitwiseCast<uint64_t>(aVal.f64()) ==
-               mozilla::BitwiseCast<uint64_t>(aVal.f64());
+               mozilla::BitwiseCast<uint64_t>(bVal.f64());
       break;
     }
     case wasm::ValType::V128: {

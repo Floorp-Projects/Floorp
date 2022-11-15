@@ -513,11 +513,9 @@ static void StoreRegisterResult(MacroAssembler& masm, const FuncExport& fe,
           MOZ_CRASH("V128 not supported in StoreABIReturn");
 #endif
         case ValType::F32:
-          masm.canonicalizeFloat(result.fpr());
           masm.storeFloat32(result.fpr(), Address(loc, 0));
           break;
         case ValType::F64:
-          masm.canonicalizeDouble(result.fpr());
           masm.storeDouble(result.fpr(), Address(loc, 0));
           break;
         case ValType::Ref:
