@@ -85,6 +85,41 @@ struct ContentBuildMarker {
   }
 };
 
+struct MediaEngineMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("MediaEngine");
+  }
+  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
+                                   uint64_t aMediaEngineId) {
+    aWriter.IntProperty("id", aMediaEngineId);
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
+    schema.AddKeyLabelFormat("id", "Id", MS::Format::Integer);
+    return schema;
+  }
+};
+
+struct MediaEngineTextMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("MediaEngineText");
+  }
+  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
+                                   uint64_t aMediaEngineId,
+                                   const ProfilerString8View& aText) {
+    aWriter.IntProperty("id", aMediaEngineId);
+    aWriter.StringProperty("text", aText);
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
+    schema.AddKeyLabelFormat("id", "Id", MS::Format::Integer);
+    schema.AddKeyLabelFormat("text", "Details", MS::Format::String);
+    return schema;
+  }
+};
+
 }  // namespace mozilla::baseprofiler::markers
 
 #endif  // BaseProfilerMarkerTypes_h
