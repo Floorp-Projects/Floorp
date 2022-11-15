@@ -6,18 +6,19 @@
 
 #include "NSSSocketControl.h"
 
-#include "nsISocketProvider.h"
 #include "ssl.h"
 #include "sslexp.h"
 
-NSSSocketControl::NSSSocketControl(SharedSSLState& aState,
+NSSSocketControl::NSSSocketControl(const nsCString& aHostName, int32_t aPort,
+                                   SharedSSLState& aState,
                                    uint32_t providerFlags,
                                    uint32_t providerTlsFlags)
-    : CommonSocketControl(providerFlags),
+    : CommonSocketControl(aHostName, aPort, providerFlags),
       mFd(nullptr),
       mCertVerificationState(before_cert_verification),
       mSharedState(aState),
       mForSTARTTLS(false),
+      mTLSVersionRange{0, 0},
       mHandshakePending(true),
       mPreliminaryHandshakeDone(false),
       mEarlyDataAccepted(false),
@@ -35,50 +36,41 @@ NSSSocketControl::NSSSocketControl(SharedSSLState& aState,
       mMACAlgorithmUsed(nsITLSSocketControl::SSL_MAC_UNKNOWN),
       mProviderTlsFlags(providerTlsFlags),
       mSocketCreationTimestamp(TimeStamp::Now()),
-      mPlaintextBytesRead(0) {
-  mTLSVersionRange.min = 0;
-  mTLSVersionRange.max = 0;
-}
-
-NSSSocketControl::~NSSSocketControl() = default;
-
-NS_IMPL_ISUPPORTS_INHERITED(NSSSocketControl, TransportSecurityInfo,
-                            nsITLSSocketControl)
-
-NS_IMETHODIMP
-NSSSocketControl::GetProviderTlsFlags(uint32_t* aProviderTlsFlags) {
-  *aProviderTlsFlags = mProviderTlsFlags;
-  return NS_OK;
-}
+      mPlaintextBytesRead(0) {}
 
 NS_IMETHODIMP
 NSSSocketControl::GetKEAUsed(int16_t* aKea) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   *aKea = mKEAUsed;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 NSSSocketControl::GetKEAKeyBits(uint32_t* aKeyBits) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   *aKeyBits = mKEAKeyBits;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 NSSSocketControl::GetSSLVersionOffered(int16_t* aSSLVersionOffered) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   *aSSLVersionOffered = mTLSVersionRange.max;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 NSSSocketControl::GetMACAlgorithmUsed(int16_t* aMac) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   *aMac = mMACAlgorithmUsed;
   return NS_OK;
 }
 
 void NSSSocketControl::NoteTimeUntilReady() {
-  MutexAutoLock lock(mMutex);
-  if (mNotedTimeUntilReady) return;
-
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+  if (mNotedTimeUntilReady) {
+    return;
+  }
   mNotedTimeUntilReady = true;
 
   auto timestampNow = TimeStamp::Now();
@@ -113,6 +105,7 @@ void NSSSocketControl::NoteTimeUntilReady() {
 }
 
 void NSSSocketControl::SetHandshakeCompleted() {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   if (!mHandshakeCompleted) {
     enum HandshakeType {
       Resumption = 1,
@@ -126,11 +119,12 @@ void NSSSocketControl::SetHandshakeCompleted() {
                                   : mFalseStartCallbackCalled
                                       ? ChoseNotToFalseStart
                                       : NotAllowedToFalseStart;
-    MutexAutoLock lock(mMutex);
     // This will include TCP and proxy tunnel wait time
-    Telemetry::AccumulateTimeDelta(
-        Telemetry::SSL_TIME_UNTIL_HANDSHAKE_FINISHED_KEYED_BY_KA, mKeaGroup,
-        mSocketCreationTimestamp, TimeStamp::Now());
+    if (mKeaGroupName.isSome()) {
+      Telemetry::AccumulateTimeDelta(
+          Telemetry::SSL_TIME_UNTIL_HANDSHAKE_FINISHED_KEYED_BY_KA,
+          *mKeaGroupName, mSocketCreationTimestamp, TimeStamp::Now());
+    }
 
     // If the handshake is completed for the first time from just 1 callback
     // that means that TLS session resumption must have been used.
@@ -167,7 +161,7 @@ void NSSSocketControl::SetHandshakeCompleted() {
 }
 
 void NSSSocketControl::SetNegotiatedNPN(const char* value, uint32_t length) {
-  MutexAutoLock lock(mMutex);
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   if (!value) {
     mNegotiatedNPN.Truncate();
   } else {
@@ -180,6 +174,7 @@ void NSSSocketControl::SetNegotiatedNPN(const char* value, uint32_t length) {
 
 NS_IMETHODIMP
 NSSSocketControl::GetAlpnEarlySelection(nsACString& aAlpnSelected) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   aAlpnSelected.Truncate();
 
   SSLPreliminaryChannelInfo info;
@@ -208,22 +203,29 @@ NSSSocketControl::GetAlpnEarlySelection(nsACString& aAlpnSelected) {
 
 NS_IMETHODIMP
 NSSSocketControl::GetEarlyDataAccepted(bool* aAccepted) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   *aAccepted = mEarlyDataAccepted;
   return NS_OK;
 }
 
 void NSSSocketControl::SetEarlyDataAccepted(bool aAccepted) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   mEarlyDataAccepted = aAccepted;
 }
 
-bool NSSSocketControl::GetDenyClientCert() { return mDenyClientCert; }
+bool NSSSocketControl::GetDenyClientCert() {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+  return mDenyClientCert;
+}
 
 void NSSSocketControl::SetDenyClientCert(bool aDenyClientCert) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   mDenyClientCert = aDenyClientCert;
 }
 
 NS_IMETHODIMP
 NSSSocketControl::DriveHandshake() {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   if (!mFd) {
     return NS_ERROR_FAILURE;
   }
@@ -254,20 +256,31 @@ NSSSocketControl::DriveHandshake() {
   return NS_OK;
 }
 
-bool NSSSocketControl::GetForSTARTTLS() { return mForSTARTTLS; }
+bool NSSSocketControl::GetForSTARTTLS() {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+  return mForSTARTTLS;
+}
 
 void NSSSocketControl::SetForSTARTTLS(bool aForSTARTTLS) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   mForSTARTTLS = aForSTARTTLS;
 }
 
 NS_IMETHODIMP
-NSSSocketControl::ProxyStartSSL() { return ActivateSSL(); }
+NSSSocketControl::ProxyStartSSL() {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+  return ActivateSSL();
+}
 
 NS_IMETHODIMP
-NSSSocketControl::StartTLS() { return ActivateSSL(); }
+NSSSocketControl::StartTLS() {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+  return ActivateSSL();
+}
 
 NS_IMETHODIMP
 NSSSocketControl::SetNPNList(nsTArray<nsCString>& protocolArray) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   if (!mFd) return NS_ERROR_FAILURE;
 
   // the npn list is a concatenated list of 8 bit byte strings.
@@ -290,6 +303,7 @@ NSSSocketControl::SetNPNList(nsTArray<nsCString>& protocolArray) {
 }
 
 nsresult NSSSocketControl::ActivateSSL() {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   if (SECSuccess != SSL_OptionSet(mFd, SSL_SECURITY, true))
     return NS_ERROR_FAILURE;
   if (SECSuccess != SSL_ResetHandshake(mFd, false)) return NS_ERROR_FAILURE;
@@ -300,16 +314,19 @@ nsresult NSSSocketControl::ActivateSSL() {
 }
 
 nsresult NSSSocketControl::GetFileDescPtr(PRFileDesc** aFilePtr) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   *aFilePtr = mFd;
   return NS_OK;
 }
 
 nsresult NSSSocketControl::SetFileDescPtr(PRFileDesc* aFilePtr) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   mFd = aFilePtr;
   return NS_OK;
 }
 
 void NSSSocketControl::SetCertVerificationWaiting() {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   // mCertVerificationState may be before_cert_verification for the first
   // handshake on the connection, or after_cert_verification for subsequent
   // renegotiation handshakes.
@@ -323,6 +340,7 @@ void NSSSocketControl::SetCertVerificationWaiting() {
 // attempt to acquire locks that are already held by libssl when it calls
 // callbacks.
 void NSSSocketControl::SetCertVerificationResult(PRErrorCode errorCode) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   SetUsedPrivateDNS(GetProviderFlags() & nsISocketProvider::USED_PRIVATE_DNS);
   MOZ_ASSERT(mCertVerificationState == waiting_for_cert_verification,
              "Invalid state transition to cert_verification_finished");
@@ -358,6 +376,7 @@ void NSSSocketControl::SetCertVerificationResult(PRErrorCode errorCode) {
 
 void NSSSocketControl::ClientAuthCertificateSelected(
     nsTArray<uint8_t>& certBytes, nsTArray<nsTArray<uint8_t>>& certChainBytes) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   // If mFd is nullptr, the connection has been closed already, so we don't
   // need to do anything here.
   if (!mFd) {
@@ -406,14 +425,19 @@ void NSSSocketControl::ClientAuthCertificateSelected(
       sendingClientAuthCert ? cert.release() : nullptr);
 }
 
-SharedSSLState& NSSSocketControl::SharedState() { return mSharedState; }
+SharedSSLState& NSSSocketControl::SharedState() {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+  return mSharedState;
+}
 
 void NSSSocketControl::SetSharedOwningReference(SharedSSLState* aRef) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   mOwningSharedRef = aRef;
 }
 
 NS_IMETHODIMP
 NSSSocketControl::DisableEarlyData() {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   if (!mFd) {
     return NS_OK;
   }
@@ -430,11 +454,13 @@ NSSSocketControl::DisableEarlyData() {
 NS_IMETHODIMP
 NSSSocketControl::SetHandshakeCallbackListener(
     nsITlsHandshakeCallbackListener* callback) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   mTlsHandshakeCallback = callback;
   return NS_OK;
 }
 
 PRStatus NSSSocketControl::CloseSocketAndDestroy() {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   PRFileDesc* popped = PR_PopIOLayer(mFd, PR_TOP_IO_LAYER);
   MOZ_ASSERT(
       popped && popped->identity == nsSSLIOLayerHelpers::nsSSLIOLayerIdentity,
@@ -476,12 +502,14 @@ PRStatus NSSSocketControl::CloseSocketAndDestroy() {
 
 NS_IMETHODIMP
 NSSSocketControl::GetEsniTxt(nsACString& aEsniTxt) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   aEsniTxt = mEsniTxt;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 NSSSocketControl::SetEsniTxt(const nsACString& aEsniTxt) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   mEsniTxt = aEsniTxt;
 
   if (mEsniTxt.Length()) {
@@ -508,12 +536,14 @@ NSSSocketControl::SetEsniTxt(const nsACString& aEsniTxt) {
 
 NS_IMETHODIMP
 NSSSocketControl::GetEchConfig(nsACString& aEchConfig) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   aEchConfig = mEchConfig;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 NSSSocketControl::SetEchConfig(const nsACString& aEchConfig) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   mEchConfig = aEchConfig;
 
   if (mEchConfig.Length()) {
@@ -533,6 +563,7 @@ NSSSocketControl::SetEchConfig(const nsACString& aEchConfig) {
 
 NS_IMETHODIMP
 NSSSocketControl::GetRetryEchConfig(nsACString& aEchConfig) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   if (!mFd) {
     return NS_ERROR_FAILURE;
   }
@@ -549,7 +580,7 @@ NSSSocketControl::GetRetryEchConfig(nsACString& aEchConfig) {
 
 NS_IMETHODIMP
 NSSSocketControl::GetPeerId(nsACString& aResult) {
-  MutexAutoLock lock(mMutex);
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   if (!mPeerId.IsEmpty()) {
     aResult.Assign(mPeerId);
     return NS_OK;
@@ -580,6 +611,7 @@ NSSSocketControl::GetPeerId(nsACString& aResult) {
 }
 
 nsresult NSSSocketControl::SetResumptionTokenFromExternalCache() {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   if (!mFd) {
     return NS_ERROR_FAILURE;
   }
@@ -633,4 +665,16 @@ nsresult NSSSocketControl::SetResumptionTokenFromExternalCache() {
   SetSessionCacheInfo(std::move(info));
 
   return NS_OK;
+}
+
+void NSSSocketControl::SetPreliminaryHandshakeInfo(
+    const SSLChannelInfo& channelInfo, const SSLCipherSuiteInfo& cipherInfo) {
+  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+  mResumed = channelInfo.resumed;
+  mCipherSuite.emplace(channelInfo.cipherSuite);
+  mProtocolVersion.emplace(channelInfo.protocolVersion & 0xFF);
+  mKeaGroupName.emplace(getKeaGroupName(channelInfo.keaGroup));
+  mSignatureSchemeName.emplace(getSignatureName(channelInfo.signatureScheme));
+  mIsDelegatedCredential.emplace(channelInfo.peerDelegCred);
+  mIsAcceptedEch.emplace(channelInfo.echAccepted);
 }

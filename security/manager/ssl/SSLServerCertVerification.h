@@ -7,6 +7,7 @@
 #define _SSLSERVERCERTVERIFICATION_H
 
 #include "CertVerifier.h"
+#include "CommonSocketControl.h"
 #include "ScopedNSSTypes.h"
 #include "mozilla/Maybe.h"
 #include "mozpkix/pkix.h"
@@ -24,7 +25,6 @@ using namespace mozilla::pkix;
 namespace mozilla {
 namespace psm {
 
-class TransportSecurityInfo;
 enum class EVStatus : uint8_t;
 
 SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig,
@@ -34,7 +34,7 @@ SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig,
 // asynchronous and the info object will be notified when the verification has
 // completed via SetCertVerificationResult.
 SECStatus AuthCertificateHookWithInfo(
-    TransportSecurityInfo* infoObject, const nsACString& aHostName,
+    CommonSocketControl* socketControl, const nsACString& aHostName,
     const void* aPtrForLogging, nsTArray<nsTArray<uint8_t>>&& peerCertChain,
     Maybe<nsTArray<nsTArray<uint8_t>>>& stapledOCSPResponses,
     Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension, uint32_t providerFlags);
@@ -68,7 +68,7 @@ class SSLServerCertVerificationResult final
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIRUNNABLE
 
-  explicit SSLServerCertVerificationResult(TransportSecurityInfo* infoObject);
+  explicit SSLServerCertVerificationResult(CommonSocketControl* socketControl);
 
   void Dispatch(nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
                 nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
@@ -82,7 +82,7 @@ class SSLServerCertVerificationResult final
  private:
   ~SSLServerCertVerificationResult() = default;
 
-  const RefPtr<TransportSecurityInfo> mInfoObject;
+  const RefPtr<CommonSocketControl> mSocketControl;
   nsTArray<nsTArray<uint8_t>> mBuiltChain;
   nsTArray<nsTArray<uint8_t>> mPeerCertChain;
   uint16_t mCertificateTransparencyStatus;

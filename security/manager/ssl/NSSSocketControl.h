@@ -12,10 +12,11 @@
 
 class NSSSocketControl final : public CommonSocketControl {
  public:
-  NSSSocketControl(mozilla::psm::SharedSSLState& aState, uint32_t providerFlags,
+  NSSSocketControl(const nsCString& aHostName, int32_t aPort,
+                   mozilla::psm::SharedSSLState& aState, uint32_t providerFlags,
                    uint32_t providerTlsFlags);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(NSSSocketControl, CommonSocketControl);
 
   void SetForSTARTTLS(bool aForSTARTTLS);
   bool GetForSTARTTLS();
@@ -23,11 +24,23 @@ class NSSSocketControl final : public CommonSocketControl {
   nsresult GetFileDescPtr(PRFileDesc** aFilePtr);
   nsresult SetFileDescPtr(PRFileDesc* aFilePtr);
 
-  bool IsHandshakePending() const { return mHandshakePending; }
-  void SetHandshakeNotPending() { mHandshakePending = false; }
+  bool IsHandshakePending() const {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+    return mHandshakePending;
+  }
+  void SetHandshakeNotPending() {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+    mHandshakePending = false;
+  }
 
-  void SetTLSVersionRange(SSLVersionRange range) { mTLSVersionRange = range; }
-  SSLVersionRange GetTLSVersionRange() const { return mTLSVersionRange; };
+  void SetTLSVersionRange(SSLVersionRange range) {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+    mTLSVersionRange = range;
+  }
+  SSLVersionRange GetTLSVersionRange() const {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+    return mTLSVersionRange;
+  };
 
   // From nsITLSSocketControl.
   NS_IMETHOD ProxyStartSSL(void) override;
@@ -36,10 +49,8 @@ class NSSSocketControl final : public CommonSocketControl {
   NS_IMETHOD GetAlpnEarlySelection(nsACString& _retval) override;
   NS_IMETHOD GetEarlyDataAccepted(bool* aEarlyDataAccepted) override;
   NS_IMETHOD DriveHandshake(void) override;
-  using nsITLSSocketControl::GetKEAUsed;
   NS_IMETHOD GetKEAUsed(int16_t* aKEAUsed) override;
   NS_IMETHOD GetKEAKeyBits(uint32_t* aKEAKeyBits) override;
-  NS_IMETHOD GetProviderTlsFlags(uint32_t* aProviderTlsFlags) override;
   NS_IMETHOD GetSSLVersionOffered(int16_t* aSSLVersionOffered) override;
   NS_IMETHOD GetMACAlgorithmUsed(int16_t* aMACAlgorithmUsed) override;
   bool GetDenyClientCert() override;
@@ -60,27 +71,50 @@ class NSSSocketControl final : public CommonSocketControl {
   void SetEarlyDataAccepted(bool aAccepted);
 
   void SetHandshakeCompleted();
-  bool IsHandshakeCompleted() const { return mHandshakeCompleted; }
+  bool IsHandshakeCompleted() const {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+    return mHandshakeCompleted;
+  }
   void NoteTimeUntilReady();
 
-  void SetFalseStartCallbackCalled() { mFalseStartCallbackCalled = true; }
-  void SetFalseStarted() { mFalseStarted = true; }
+  void SetFalseStartCallbackCalled() {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+    mFalseStartCallbackCalled = true;
+  }
+  void SetFalseStarted() {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+    mFalseStarted = true;
+  }
 
   // Note that this is only valid *during* a handshake; at the end of the
   // handshake, it gets reset back to false.
-  void SetFullHandshake() { mIsFullHandshake = true; }
-  bool IsFullHandshake() const { return mIsFullHandshake; }
+  void SetFullHandshake() {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+    mIsFullHandshake = true;
+  }
+  bool IsFullHandshake() const {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+    return mIsFullHandshake;
+  }
 
   void UpdateEchExtensionStatus(EchExtensionStatus aEchExtensionStatus) {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
     mEchExtensionStatus = std::max(aEchExtensionStatus, mEchExtensionStatus);
   }
   EchExtensionStatus GetEchExtensionStatus() const {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
     return mEchExtensionStatus;
   }
 
-  bool GetJoined() { return mJoined; }
+  bool GetJoined() {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+    return mJoined;
+  }
 
-  uint32_t GetProviderTlsFlags() const { return mProviderTlsFlags; }
+  uint32_t GetProviderTlsFlags() const {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+    return mProviderTlsFlags;
+  }
 
   mozilla::psm::SharedSSLState& SharedState();
 
@@ -100,32 +134,57 @@ class NSSSocketControl final : public CommonSocketControl {
 
   // for logging only
   PRBool IsWaitingForCertVerification() const {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
     return mCertVerificationState == waiting_for_cert_verification;
   }
-  void AddPlaintextBytesRead(uint64_t val) { mPlaintextBytesRead += val; }
+  void AddPlaintextBytesRead(uint64_t val) {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+    mPlaintextBytesRead += val;
+  }
 
-  bool IsPreliminaryHandshakeDone() const { return mPreliminaryHandshakeDone; }
-  void SetPreliminaryHandshakeDone() { mPreliminaryHandshakeDone = true; }
+  bool IsPreliminaryHandshakeDone() const {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+    return mPreliminaryHandshakeDone;
+  }
+  void SetPreliminaryHandshakeDone() {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+    mPreliminaryHandshakeDone = true;
+  }
 
-  void SetKEAUsed(uint16_t kea) { mKEAUsed = kea; }
+  void SetKEAUsed(int16_t kea) {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+    mKEAUsed = kea;
+  }
 
-  void SetKEAKeyBits(uint32_t keaBits) { mKEAKeyBits = keaBits; }
+  void SetKEAKeyBits(uint32_t keaBits) {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+    mKEAKeyBits = keaBits;
+  }
 
-  void SetMACAlgorithmUsed(int16_t mac) { mMACAlgorithmUsed = mac; }
+  void SetMACAlgorithmUsed(int16_t mac) {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+    mMACAlgorithmUsed = mac;
+  }
 
   void SetShortWritePending(int32_t amount, unsigned char data) {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
     mIsShortWritePending = true;
     mShortWriteOriginalAmount = amount;
     mShortWritePendingByte = data;
   }
 
-  bool IsShortWritePending() { return mIsShortWritePending; }
+  bool IsShortWritePending() {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
+    return mIsShortWritePending;
+  }
 
   unsigned char const* GetShortWritePendingByteRef() {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
     return &mShortWritePendingByte;
   }
 
   int32_t ResetShortWritePending() {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
     mIsShortWritePending = false;
     return mShortWriteOriginalAmount;
   }
@@ -135,11 +194,13 @@ class NSSSocketControl final : public CommonSocketControl {
   // as it was previously when we hit the short-write.  This is a measure
   // to make sure we communicate correctly to the consumer.
   void RememberShortWrittenBuffer(const unsigned char* data) {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
     mShortWriteBufferCheck =
         mozilla::MakeUnique<char[]>(mShortWriteOriginalAmount);
     memcpy(mShortWriteBufferCheck.get(), data, mShortWriteOriginalAmount);
   }
   void CheckShortWrittenBuffer(const unsigned char* data, int32_t amount) {
+    COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
     if (!mShortWriteBufferCheck) return;
     MOZ_ASSERT(amount >= mShortWriteOriginalAmount,
                "unexpected amount length after short write");
@@ -154,10 +215,11 @@ class NSSSocketControl final : public CommonSocketControl {
 
   nsresult SetResumptionTokenFromExternalCache();
 
- protected:
-  virtual ~NSSSocketControl();
+  void SetPreliminaryHandshakeInfo(const SSLChannelInfo& channelInfo,
+                                   const SSLCipherSuiteInfo& cipherInfo);
 
  private:
+  ~NSSSocketControl() = default;
   PRFileDesc* mFd;
 
   CertVerificationState mCertVerificationState;
