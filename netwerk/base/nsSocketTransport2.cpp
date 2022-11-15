@@ -4,50 +4,50 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <algorithm>
-
 #include "nsSocketTransport2.h"
 
-#include "IOActivityMonitor.h"
-#include "NSSErrorsService.h"
-#include "NetworkDataCountLayer.h"
-#include "QuicSocketControl.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/dom/ToJSValue.h"
-#include "mozilla/net/NeckoChild.h"
-#include "mozilla/net/SSLTokensCache.h"
-#include "nsCOMPtr.h"
-#include "nsICancelable.h"
-#include "nsIClassInfoImpl.h"
-#include "nsIDNSByTypeRecord.h"
-#include "nsIDNSRecord.h"
-#include "nsIDNSService.h"
 #include "nsIOService.h"
-#include "nsIPipe.h"
-#include "nsISocketProvider.h"
-#include "nsITLSSocketControl.h"
-#include "nsNetAddr.h"
-#include "nsNetCID.h"
-#include "nsNetSegmentUtils.h"
-#include "nsNetUtil.h"
-#include "nsPrintfCString.h"
-#include "nsProxyInfo.h"
-#include "nsSocketProviderService.h"
 #include "nsStreamUtils.h"
-#include "nsThreadUtils.h"
+#include "nsNetSegmentUtils.h"
+#include "nsNetAddr.h"
 #include "nsTransportUtils.h"
-#include "nsURLHelper.h"
+#include "nsProxyInfo.h"
+#include "nsNetCID.h"
+#include "nsNetUtil.h"
+#include "nsCOMPtr.h"
 #include "plstr.h"
 #include "prerr.h"
+#include "IOActivityMonitor.h"
+#include "NSSErrorsService.h"
+#include "mozilla/dom/ToJSValue.h"
+#include "mozilla/net/NeckoChild.h"
+#include "nsThreadUtils.h"
+#include "nsSocketProviderService.h"
+#include "nsISocketProvider.h"
+#include "nsISSLSocketControl.h"
+#include "nsIPipe.h"
+#include "nsIClassInfoImpl.h"
+#include "nsURLHelper.h"
+#include "nsIDNSService.h"
+#include "nsIDNSRecord.h"
+#include "nsIDNSByTypeRecord.h"
+#include "nsICancelable.h"
+#include "NetworkDataCountLayer.h"
+#include "QuicSocketControl.h"
+#include <algorithm>
 #include "sslexp.h"
+#include "mozilla/net/SSLTokensCache.h"
+#include "mozilla/StaticPrefs_network.h"
+
+#include "nsPrintfCString.h"
 #include "xpcpublic.h"
 
 #if defined(FUZZING)
 #  include "FuzzyLayer.h"
-#  include "FuzzySocketControl.h"
+#  include "FuzzySecurityInfo.h"
 #  include "mozilla/StaticPrefs_fuzzing.h"
 #endif
 
@@ -1118,7 +1118,7 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
     rv = spserv->GetSocketProvider(mTypes[i].get(), getter_AddRefs(provider));
     if (NS_FAILED(rv)) break;
 
-    nsCOMPtr<nsITLSSocketControl> tlsSocketControl;
+    nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
     if (i == 0) {
       // if this is the first type, we'll want the
       // service to allocate a new socket
@@ -1173,12 +1173,18 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
     // info
     bool isSSL = mTypes[i].EqualsLiteral("ssl");
     if (isSSL || mTypes[i].EqualsLiteral("starttls")) {
-      // remember security info
+      // remember security info and give notification callbacks to PSM...
+      nsCOMPtr<nsIInterfaceRequestor> callbacks;
       {
         MutexAutoLock lock(mLock);
         mTLSSocketControl = tlsSocketControl;
+        callbacks = mCallbacks;
         SOCKET_LOG(("  [tlsSocketControl=%p callbacks=%p]\n",
                     mTLSSocketControl.get(), mCallbacks.get()));
+      }
+      // don't call into PSM while holding mLock!!
+      if (tlsSocketControl) {
+        tlsSocketControl->SetNotificationCallbacks(callbacks);
       }
       // remember if socket type is SSL so we can ProxyStartSSL if need be.
       usingSSL = isSSL;
@@ -1329,7 +1335,7 @@ nsresult nsSocketTransport::InitiateSocket() {
     SOCKET_LOG(("Successfully attached fuzzing IOLayer.\n"));
 
     if (usingSSL) {
-      mTLSSocketControl = new FuzzySocketControl();
+      mTLSSocketControl = new FuzzySecurityInfo();
     }
   }
 #endif
@@ -2227,6 +2233,13 @@ void nsSocketTransport::OnSocketDetached(PRFileDesc* fd) {
     mDNSRecord->ReportUnusable(SocketPort());
   }
 
+  // break any potential reference cycle between the security info object
+  // and ourselves by resetting its notification callbacks object.  see
+  // bug 285991 for details.
+  if (mTLSSocketControl) {
+    mTLSSocketControl->SetNotificationCallbacks(nullptr);
+  }
+
   // finally, release our reference to the socket (must do this within
   // the transport lock) possibly closing the socket. Also release our
   // listeners to break potential refcount cycles.
@@ -2388,7 +2401,7 @@ nsSocketTransport::Close(nsresult reason) {
 }
 
 NS_IMETHODIMP
-nsSocketTransport::GetTlsSocketControl(nsITLSSocketControl** tlsSocketControl) {
+nsSocketTransport::GetTlsSocketControl(nsISSLSocketControl** tlsSocketControl) {
   MutexAutoLock lock(mLock);
   *tlsSocketControl = do_AddRef(mTLSSocketControl).take();
   return NS_OK;
@@ -2407,10 +2420,22 @@ nsSocketTransport::SetSecurityCallbacks(nsIInterfaceRequestor* callbacks) {
   NS_NewNotificationCallbacksAggregation(callbacks, nullptr,
                                          GetCurrentEventTarget(),
                                          getter_AddRefs(threadsafeCallbacks));
-  MutexAutoLock lock(mLock);
-  mCallbacks = threadsafeCallbacks;
-  SOCKET_LOG(("Reset callbacks for tlsSocketInfo=%p callbacks=%p\n",
-              mTLSSocketControl.get(), mCallbacks.get()));
+
+  nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
+  {
+    MutexAutoLock lock(mLock);
+    mCallbacks = threadsafeCallbacks;
+    SOCKET_LOG(("Reset callbacks for tlsSocketInfo=%p callbacks=%p\n",
+                mTLSSocketControl.get(), mCallbacks.get()));
+
+    tlsSocketControl = mTLSSocketControl;
+  }
+
+  // don't call into PSM while holding mLock!!
+  if (tlsSocketControl) {
+    tlsSocketControl->SetNotificationCallbacks(threadsafeCallbacks);
+  }
+
   return NS_OK;
 }
 

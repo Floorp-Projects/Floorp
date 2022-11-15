@@ -3,14 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SSLTokensCache.h"
-
-#include "CertVerifier.h"
-#include "CommonSocketControl.h"
-#include "TransportSecurityInfo.h"
 #include "mozilla/ArrayAlgorithm.h"
-#include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Logging.h"
 #include "nsIOService.h"
+#include "nsNSSIOLayer.h"
+#include "TransportSecurityInfo.h"
+#include "CertVerifier.h"
 #include "ssl.h"
 #include "sslexp.h"
 
@@ -193,7 +192,7 @@ SSLTokensCache::~SSLTokensCache() { LOG(("SSLTokensCache::~SSLTokensCache")); }
 // static
 nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
                              uint32_t aTokenLen,
-                             CommonSocketControl* aSocketControl) {
+                             nsITransportSecurityInfo* aSecInfo) {
   PRUint32 expirationTime;
   SSLResumptionTokenInfo tokenInfo;
   if (SSL_GetResumptionTokenInfo(aToken, aTokenLen, &tokenInfo,
@@ -206,13 +205,13 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
   expirationTime = tokenInfo.expirationTime;
   SSL_DestroyResumptionTokenInfo(&tokenInfo);
 
-  return Put(aKey, aToken, aTokenLen, aSocketControl, expirationTime);
+  return Put(aKey, aToken, aTokenLen, aSecInfo, expirationTime);
 }
 
 // static
 nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
                              uint32_t aTokenLen,
-                             CommonSocketControl* aSocketControl,
+                             nsITransportSecurityInfo* aSecInfo,
                              PRUint32 aExpirationTime) {
   StaticMutexAutoLock lock(sLock);
 
@@ -224,30 +223,25 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (!aSocketControl) {
+  if (!aSecInfo) {
     return NS_ERROR_FAILURE;
-  }
-  nsCOMPtr<nsITransportSecurityInfo> securityInfo;
-  nsresult rv = aSocketControl->GetSecurityInfo(getter_AddRefs(securityInfo));
-  if (NS_FAILED(rv)) {
-    return rv;
   }
 
   nsCOMPtr<nsIX509Cert> cert;
-  securityInfo->GetServerCert(getter_AddRefs(cert));
+  aSecInfo->GetServerCert(getter_AddRefs(cert));
   if (!cert) {
     return NS_ERROR_FAILURE;
   }
 
   nsTArray<uint8_t> certBytes;
-  rv = cert->GetRawDER(certBytes);
+  nsresult rv = cert->GetRawDER(certBytes);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   Maybe<nsTArray<nsTArray<uint8_t>>> succeededCertChainBytes;
   nsTArray<RefPtr<nsIX509Cert>> succeededCertArray;
-  rv = securityInfo->GetSucceededCertChain(succeededCertArray);
+  rv = aSecInfo->GetSucceededCertChain(succeededCertArray);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -265,7 +259,7 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
     }
 
     bool builtInRoot = false;
-    rv = securityInfo->GetIsBuiltCertChainRootBuiltInRoot(&builtInRoot);
+    rv = aSecInfo->GetIsBuiltCertChainRootBuiltInRoot(&builtInRoot);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -273,27 +267,27 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
   }
 
   bool isEV;
-  rv = securityInfo->GetIsExtendedValidation(&isEV);
+  rv = aSecInfo->GetIsExtendedValidation(&isEV);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   uint16_t certificateTransparencyStatus;
-  rv = securityInfo->GetCertificateTransparencyStatus(
+  rv = aSecInfo->GetCertificateTransparencyStatus(
       &certificateTransparencyStatus);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   nsITransportSecurityInfo::OverridableErrorCategory overridableErrorCategory;
-  rv = securityInfo->GetOverridableErrorCategory(&overridableErrorCategory);
+  rv = aSecInfo->GetOverridableErrorCategory(&overridableErrorCategory);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   Maybe<nsTArray<nsTArray<uint8_t>>> failedCertChainBytes;
   nsTArray<RefPtr<nsIX509Cert>> failedCertArray;
-  rv = securityInfo->GetFailedCertChain(failedCertArray);
+  rv = aSecInfo->GetFailedCertChain(failedCertArray);
   if (NS_FAILED(rv)) {
     return rv;
   }

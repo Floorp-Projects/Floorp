@@ -23,7 +23,7 @@ nsTLSSocketProvider::NewSocket(int32_t family, const char* host, int32_t port,
                                const OriginAttributes& originAttributes,
                                uint32_t flags, uint32_t tlsFlags,
                                PRFileDesc** _result,
-                               nsITLSSocketControl** tlsSocketControl) {
+                               nsISSLSocketControl** tlsSocketControl) {
   nsresult rv =
       nsSSLIOLayerNewSocket(family, host, port, proxy, originAttributes,
                             _result, tlsSocketControl, true, flags, tlsFlags);
@@ -38,7 +38,7 @@ nsTLSSocketProvider::AddToSocket(int32_t family, const char* host, int32_t port,
                                  const OriginAttributes& originAttributes,
                                  uint32_t flags, uint32_t tlsFlags,
                                  PRFileDesc* aSocket,
-                                 nsITLSSocketControl** tlsSocketControl) {
+                                 nsISSLSocketControl** tlsSocketControl) {
   nsresult rv =
       nsSSLIOLayerAddToSocket(family, host, port, proxy, originAttributes,
                               aSocket, tlsSocketControl, true, flags, tlsFlags);

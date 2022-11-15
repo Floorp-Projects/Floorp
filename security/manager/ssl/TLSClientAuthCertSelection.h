@@ -7,10 +7,9 @@
 #ifndef SECURITY_MANAGER_SSL_TLSCLIENTAUTHCERTSELECTION_H_
 #define SECURITY_MANAGER_SSL_TLSCLIENTAUTHCERTSELECTION_H_
 
-#include "NSSSocketControl.h"
 #include "nsIX509Cert.h"
-#include "nsNSSIOLayer.h"
 #include "ssl.h"
+#include "nsNSSIOLayer.h"
 
 // NSS callback to select a client authentication certificate. See documentation
 // at the top of TLSClientAuthCertSelection.cpp.
@@ -36,19 +35,19 @@ class ClientAuthCertificateSelectedBase : public mozilla::Runnable {
   nsTArray<uint8_t> mSelectedCertBytes;
   // The bytes of the certificates that form a chain from the selected
   // certificate to a root. Necessary so NSS can include them in the TLS
-  // handshake (see note about mClientCertChain in NSSSocketControl).
+  // handshake (see note about mClientCertChain in nsNSSSocketInfo).
   nsTArray<nsTArray<uint8_t>> mSelectedCertChainBytes;
 };
 
 class ClientAuthCertificateSelected : public ClientAuthCertificateSelectedBase {
  public:
-  explicit ClientAuthCertificateSelected(NSSSocketControl* socketInfo)
+  explicit ClientAuthCertificateSelected(nsNSSSocketInfo* socketInfo)
       : mSocketInfo(socketInfo) {}
 
   NS_IMETHOD Run() override;
 
  private:
-  RefPtr<NSSSocketControl> mSocketInfo;
+  RefPtr<nsNSSSocketInfo> mSocketInfo;
 };
 
 #endif  // SECURITY_MANAGER_SSL_TLSCLIENTAUTHCERTSELECTION_H_

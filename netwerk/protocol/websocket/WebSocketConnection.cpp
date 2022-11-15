@@ -10,7 +10,7 @@
 #include "WebSocketLog.h"
 #include "mozilla/net/WebSocketConnectionListener.h"
 #include "nsIOService.h"
-#include "nsITLSSocketControl.h"
+#include "nsISSLSocketControl.h"
 #include "nsISocketTransport.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsSocketTransportService2.h"
@@ -149,7 +149,7 @@ nsresult WebSocketConnection::GetSecurityInfo(
   *aSecurityInfo = nullptr;
 
   if (mTransport) {
-    nsCOMPtr<nsITLSSocketControl> tlsSocketControl;
+    nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
     nsresult rv =
         mTransport->GetTlsSocketControl(getter_AddRefs(tlsSocketControl));
     if (NS_FAILED(rv)) {

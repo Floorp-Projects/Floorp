@@ -4,29 +4,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ASpdySession.h"  // because of SoftStreamError()
+#include "HttpLog.h"
 #include "Http3Session.h"
 #include "Http3Stream.h"
 #include "Http3StreamBase.h"
 #include "Http3WebTransportSession.h"
 #include "Http3WebTransportStream.h"
-#include "HttpConnectionUDP.h"
-#include "HttpLog.h"
-#include "QuicSocketControl.h"
-#include "SSLServerCertVerification.h"
-#include "SSLTokensCache.h"
-#include "ScopedNSSTypes.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/net/DNS.h"
 #include "nsHttpHandler.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/Telemetry.h"
+#include "ASpdySession.h"  // because of SoftStreamError()
 #include "nsIHttpActivityObserver.h"
 #include "nsIOService.h"
-#include "nsITLSSocketControl.h"
+#include "nsISSLSocketControl.h"
+#include "ScopedNSSTypes.h"
 #include "nsNetAddr.h"
 #include "nsQueryObject.h"
 #include "nsSocketTransportService2.h"
 #include "nsThreadUtils.h"
+#include "QuicSocketControl.h"
+#include "SSLServerCertVerification.h"
+#include "SSLTokensCache.h"
+#include "HttpConnectionUDP.h"
 #include "sslerr.h"
 
 namespace mozilla::net {
@@ -96,10 +96,14 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
       aConnInfo->ProxyInfo() ? aConnInfo->ProxyInfo()->IsHTTPS() : false;
 
   // Create security control and info object for quic.
-  mSocketControl = new QuicSocketControl(
-      httpsProxy ? aConnInfo->ProxyInfo()->Host() : aConnInfo->GetOrigin(),
-      httpsProxy ? aConnInfo->ProxyInfo()->Port() : aConnInfo->OriginPort(),
-      controlFlags, this);
+  mSocketControl = new QuicSocketControl(controlFlags, this);
+  mSocketControl->SetHostName(httpsProxy ? aConnInfo->ProxyInfo()->Host().get()
+                                         : aConnInfo->GetOrigin().get());
+  mSocketControl->SetPort(httpsProxy ? aConnInfo->ProxyInfo()->Port()
+                                     : aConnInfo->OriginPort());
+
+  // don't call into PSM while holding mLock!!
+  mSocketControl->SetNotificationCallbacks(callbacks);
 
   NetAddr selfAddr;
   MOZ_ALWAYS_SUCCEEDS(aSelfAddr->GetNetAddr(&selfAddr));
@@ -1833,7 +1837,7 @@ bool Http3Session::RealJoinConnection(const nsACString& hostname, int32_t port,
   nsresult rv;
   bool isJoined = false;
 
-  nsCOMPtr<nsITLSSocketControl> sslSocketControl;
+  nsCOMPtr<nsISSLSocketControl> sslSocketControl;
   mConnection->GetTLSSocketControl(getter_AddRefs(sslSocketControl));
   if (!sslSocketControl) {
     return false;
@@ -1900,7 +1904,7 @@ void Http3Session::CallCertVerification(Maybe<nsCString> aEchPublicName) {
   const nsACString& hostname =
       verifyToEchPublicName ? *aEchPublicName : mSocketControl->GetHostName();
 
-  SECStatus rv = psm::AuthCertificateHookWithInfo(
+  SECStatus rv = AuthCertificateHookWithInfo(
       mSocketControl, hostname, static_cast<const void*>(this),
       std::move(certInfo.certs), stapledOCSPResponse, sctsFromTLSExtension,
       providerFlags);
@@ -2176,7 +2180,7 @@ void Http3Session::ZeroRttTelemetry(ZeroRttOutcome aOutcome) {
 }
 
 nsresult Http3Session::GetTransactionTLSSocketControl(
-    nsITLSSocketControl** tlsSocketControl) {
+    nsISSLSocketControl** tlsSocketControl) {
   NS_IF_ADDREF(*tlsSocketControl = mSocketControl);
   return NS_OK;
 }

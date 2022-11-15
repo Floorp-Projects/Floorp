@@ -62,6 +62,4 @@ LOCAL_INCLUDES += [
     "/netwerk/cache",
 ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
-
 FINAL_LIBRARY = "xul"
