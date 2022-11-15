@@ -6,17 +6,16 @@
 
 #include "nsIGlobalObject.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/Result.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/FunctionBinding.h"
-#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/dom/Report.h"
 #include "mozilla/dom/ReportingObserver.h"
 #include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerRegistration.h"
-#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsContentUtils.h"
-#include "nsJSPrincipals.h"
 #include "nsThreadUtils.h"
 #include "nsGlobalWindowInner.h"
 
@@ -387,13 +386,13 @@ nsIGlobalObject::GetStorageKey() {
 }
 
 bool nsIGlobalObject::IsEqualStorageKey(
-    mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
   auto result = GetStorageKey();
-  mozilla::ipc::PrincipalInfo storagePrincipalInfo;
   if (result.isErr()) {
     return false;
   }
-  storagePrincipalInfo = result.unwrap();
+
+  const auto& storagePrincipalInfo = result.inspect();
 
   return mozilla::ipc::NonExpandedPrincipalInfoEquals(aPrincipalInfo,
                                                       storagePrincipalInfo);

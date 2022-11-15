@@ -12,12 +12,8 @@
 #include "mozilla/dom/FileSystemManagerChild.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/StorageManager.h"
-#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
-#include "mozilla/ipc/BackgroundUtils.h"
-#include "mozilla/ipc/PBackgroundSharedTypes.h"
-#include "nsIScriptObjectPrincipal.h"
 
 namespace mozilla::dom {
 
@@ -67,9 +63,8 @@ void FileSystemManager::BeginRequest(
 
   MOZ_ASSERT(mGlobal);
 
-  QM_TRY_UNWRAP(mozilla::ipc::PrincipalInfo principalInfo,
-                mGlobal->GetStorageKey(), QM_VOID,
-                [aFailure](nsresult rv) { aFailure(rv); });
+  QM_TRY_INSPECT(const auto& principalInfo, mGlobal->GetStorageKey(), QM_VOID,
+                 [&aFailure](nsresult rv) { aFailure(rv); });
 
   mBackgroundRequestHandler->CreateFileSystemManagerChild(principalInfo)
       ->Then(
