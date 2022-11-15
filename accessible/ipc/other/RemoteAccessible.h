@@ -19,6 +19,10 @@
 namespace mozilla {
 namespace a11y {
 
+/**
+ * Functionality common across Linux and macOS for an accessibility tree node
+ * that originated in the parent process.
+ */
 class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
  public:
   RemoteAccessible(uint64_t aID, RemoteAccessible* aParent,

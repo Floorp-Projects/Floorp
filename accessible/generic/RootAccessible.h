@@ -17,6 +17,13 @@ class PresShell;
 
 namespace a11y {
 
+/**
+ * The node at a root of the accessibility tree. This node originated in the
+ * current process. If this is the parent process, RootAccessible is the
+ * Accessible for the top-level window. If this is a content process,
+ * RootAccessible is a top-level content document in this process, which is
+ * either a tab document or an out-of-process iframe.
+ */
 class RootAccessible : public DocAccessibleWrap, public nsIDOMEventListener {
   NS_DECL_ISUPPORTS_INHERITED
 

@@ -19,6 +19,10 @@
 namespace mozilla {
 namespace a11y {
 
+/**
+ * Windows specific functionality for an accessibility tree node that originated
+ * in the parent process.
+ */
 class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
  public:
   RemoteAccessible(uint64_t aID, RemoteAccessible* aParent,

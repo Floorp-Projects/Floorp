@@ -41,6 +41,11 @@ class RelatedAccIterator;
 template <class Class, class... Args>
 class TNotification;
 
+/**
+ * An accessibility tree node that originated in a content process and
+ * represents a document. Tabs, in-process iframes, and out-of-process iframes
+ * all use this class to represent the doc they contain.
+ */
 class DocAccessible : public HyperTextAccessibleWrap,
                       public nsIDocumentObserver,
                       public nsSupportsWeakReference,

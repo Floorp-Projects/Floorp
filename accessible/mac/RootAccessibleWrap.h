@@ -18,6 +18,10 @@ class PresShell;
 
 namespace a11y {
 
+/**
+ * Mac specific functionality for the node at a root of the accessibility
+ * tree: see the RootAccessible superclass for further details.
+ */
 class RootAccessibleWrap : public RootAccessible {
  public:
   RootAccessibleWrap(dom::Document* aDocument, PresShell* aPresShell);

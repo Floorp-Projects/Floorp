@@ -81,6 +81,9 @@ typedef nsRefPtrHashtable<nsPtrHashKey<const void>, LocalAccessible>
     }                                                \
   }
 
+/**
+ * An accessibility tree node that originated in mDoc's content process.
+ */
 class LocalAccessible : public nsISupports, public Accessible {
  public:
   LocalAccessible(nsIContent* aContent, DocAccessible* aDoc);
