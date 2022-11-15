@@ -304,8 +304,14 @@ void SVGRenderingObserver::ContentRemoved(nsIContent* aChild,
  */
 class SVGIDRenderingObserver : public SVGRenderingObserver {
  public:
-  SVGIDRenderingObserver(URLAndReferrerInfo* aURI,
-                         nsIContent* aObservingContent, bool aReferenceImage);
+  // Callback for checking if the element being observed is valid for this
+  // observer. Note that this may be called during construction, before the
+  // deriving class is fully constructed.
+  using TargetIsValidCallback = bool (*)(const Element&);
+  SVGIDRenderingObserver(
+      URLAndReferrerInfo* aURI, nsIContent* aObservingContent,
+      bool aReferenceImage,
+      TargetIsValidCallback aTargetIsValidCallback = nullptr);
 
  protected:
   virtual ~SVGIDRenderingObserver() {
@@ -329,6 +335,9 @@ class SVGIDRenderingObserver : public SVGRenderingObserver {
           nsContentUtils::ContentIsHostIncludingDescendantOf(mObservingContent,
                                                              observed)) {
         return false;
+      }
+      if (mTargetIsValidCallback) {
+        return mTargetIsValidCallback(*observed);
       }
       return true;
     }());
@@ -375,6 +384,7 @@ class SVGIDRenderingObserver : public SVGRenderingObserver {
   ElementTracker mObservedElementTracker;
   RefPtr<Element> mObservingContent;
   bool mTargetIsValid = false;
+  TargetIsValidCallback mTargetIsValidCallback;
 };
 
 /**
@@ -393,11 +403,12 @@ class SVGIDRenderingObserver : public SVGRenderingObserver {
  * XXX: it would be nice to have a clear and concise executive summary of the
  * benefits/necessity of maintaining a second observer list.
  */
-SVGIDRenderingObserver::SVGIDRenderingObserver(URLAndReferrerInfo* aURI,
-                                               nsIContent* aObservingContent,
-                                               bool aReferenceImage)
+SVGIDRenderingObserver::SVGIDRenderingObserver(
+    URLAndReferrerInfo* aURI, nsIContent* aObservingContent,
+    bool aReferenceImage, TargetIsValidCallback aTargetIsValidCallback)
     : mObservedElementTracker(this),
-      mObservingContent(aObservingContent->AsElement()) {
+      mObservingContent(aObservingContent->AsElement()),
+      mTargetIsValidCallback(aTargetIsValidCallback) {
   // Start watching the target element
   nsIURI* uri = nullptr;
   nsIReferrerInfo* referrerInfo = nullptr;
@@ -572,6 +583,8 @@ void SVGPaintingProperty::OnRenderingChange() {
   }
 }
 
+// Observer for -moz-element(#element). Note that the observed element does not
+// have to be an SVG element.
 class SVGMozElementObserver final : public SVGPaintingProperty {
  public:
   SVGMozElementObserver(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
@@ -637,6 +650,10 @@ void BackgroundClipRenderingObserver::OnRenderingChange() {
   }
 }
 
+static bool IsSVGFilterElement(const Element& aObserved) {
+  return aObserved.IsSVGElement(nsGkAtoms::filter);
+}
+
 /**
  * In a filter chain, there can be multiple SVG reference filters.
  * e.g. filter: url(#svg-filter-1) blur(10px) url(#svg-filter-2);
@@ -653,7 +670,8 @@ class SVGFilterObserver final : public SVGIDRenderingObserver {
  public:
   SVGFilterObserver(URLAndReferrerInfo* aURI, nsIContent* aObservingContent,
                     SVGFilterObserverList* aFilterChainObserver)
-      : SVGIDRenderingObserver(aURI, aObservingContent, false),
+      : SVGIDRenderingObserver(aURI, aObservingContent, false,
+                               IsSVGFilterElement),
         mFilterObserverList(aFilterChainObserver) {}
 
   void DetachFromChainObserver() { mFilterObserverList = nullptr; }
