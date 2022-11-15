@@ -166,35 +166,27 @@ Result<nsCOMPtr<nsIPrincipal>, nsresult> PrincipalInfoToPrincipal(
   }
 }
 
-bool NonExpandedPrincipalInfoEquals(const PrincipalInfo& aLeft,
-                                    const PrincipalInfo& aRight) {
+bool StorageKeysEqual(const PrincipalInfo& aLeft, const PrincipalInfo& aRight) {
+  MOZ_RELEASE_ASSERT(aLeft.type() == PrincipalInfo::TContentPrincipalInfo ||
+                     aLeft.type() == PrincipalInfo::TSystemPrincipalInfo);
+  MOZ_RELEASE_ASSERT(aRight.type() == PrincipalInfo::TContentPrincipalInfo ||
+                     aRight.type() == PrincipalInfo::TSystemPrincipalInfo);
+
   if (aLeft.type() != aRight.type()) {
     return false;
   }
 
-  const ContentPrincipalInfo& leftContent = aLeft.get_ContentPrincipalInfo();
-  const ContentPrincipalInfo& rightContent = aRight.get_ContentPrincipalInfo();
+  if (aLeft.type() == PrincipalInfo::TContentPrincipalInfo) {
+    const ContentPrincipalInfo& leftContent = aLeft.get_ContentPrincipalInfo();
+    const ContentPrincipalInfo& rightContent =
+        aRight.get_ContentPrincipalInfo();
 
-  switch (aLeft.type()) {
-    case PrincipalInfo::TContentPrincipalInfo:
-      return leftContent.attrs() == rightContent.attrs() &&
-             leftContent.originNoSuffix() == rightContent.originNoSuffix();
-
-    case PrincipalInfo::TSystemPrincipalInfo:
-      // system principal always matches
-      return true;
-
-    case PrincipalInfo::TNullPrincipalInfo:
-      return leftContent.attrs() == rightContent.attrs() &&
-             leftContent.spec() == rightContent.spec();
-
-    default:
-      break;
+    return leftContent.attrs() == rightContent.attrs() &&
+           leftContent.originNoSuffix() == rightContent.originNoSuffix();
   }
 
-  // Clients (windows/workers) should never have an expanded principal type.
-  MOZ_DIAGNOSTIC_ASSERT(false, "unexpected principal type!");
-  return false;
+  // Storage keys for the System principal always equal.
+  return true;
 }
 
 already_AddRefed<nsIContentSecurityPolicy> CSPInfoToCSP(

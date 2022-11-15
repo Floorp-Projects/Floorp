@@ -262,7 +262,8 @@ class nsIGlobalObject : public nsISupports,
 
   virtual mozilla::Result<mozilla::ipc::PrincipalInfo, nsresult>
   GetStorageKey();
-  bool IsEqualStorageKey(const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
+  mozilla::Result<bool, nsresult> HasEqualStorageKey(
+      const mozilla::ipc::PrincipalInfo& aStorageKey);
 
  protected:
   virtual ~nsIGlobalObject();

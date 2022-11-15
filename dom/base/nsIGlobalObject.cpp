@@ -385,15 +385,14 @@ nsIGlobalObject::GetStorageKey() {
   return mozilla::Err(NS_ERROR_NOT_AVAILABLE);
 }
 
-bool nsIGlobalObject::IsEqualStorageKey(
-    const mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
+mozilla::Result<bool, nsresult> nsIGlobalObject::HasEqualStorageKey(
+    const mozilla::ipc::PrincipalInfo& aStorageKey) {
   auto result = GetStorageKey();
   if (result.isErr()) {
-    return false;
+    return result.propagateErr();
   }
 
-  const auto& storagePrincipalInfo = result.inspect();
+  const auto& storageKey = result.inspect();
 
-  return mozilla::ipc::NonExpandedPrincipalInfoEquals(aPrincipalInfo,
-                                                      storagePrincipalInfo);
+  return mozilla::ipc::StorageKeysEqual(storageKey, aStorageKey);
 }
