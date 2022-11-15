@@ -1294,10 +1294,23 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">Sahifalar tezroq yuklanishi uchun koʻproq kuzatuvchilarni bloklaydi, lekin baʼzi sahifalar toʻgʻri ishlamasligi mumkin.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Asboblar paneli joylashuvini tanlang</string>
+    <!-- text for the toolbar position card description -->
+    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Asboblar paneliga oson kirishni taʼminlang. Uni pastki qismda qoldiring yoki yuqoriga koʻchiring.</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">Uni pastki qismida qoldiring yoki yuqoriga koʻchiring.</string>
     <!-- text for the privacy notice onboarding card header -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Sizning maxfiyligingiz</string>
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">Maʼlumotlaringizni oʻzingiz boshqaring</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
+    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Maʼlumotlaringizni onlayn va biz bilan ulashishingizni nazorat qilish uchun  %sni yaratdik.</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">Firefox sizga nimalarni onlayn va nimalarni bizga ulashishingiz uchun nazoratni sizga taqdim etadi.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Maxfiylik toʻgʻrisidagi bildirishnomamizni oʻqing</string>
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">Qiziqarli internetni kashf etish uchun tayyormisiz?</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Koʻrishni boshlash</string>
 
@@ -1305,6 +1318,8 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Mavzungizni tanlang</string>
 
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">Qorongʻi mavzu bilan batareya quvvati va koʻrish qobiliyatingizni asrang.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Avtomatik</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1332,6 +1347,57 @@
     <string name="sign_in_with_camera">Kamera bilan tizimga kiring</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Buning oʻrniga e-pochtadan foydalaning</string>
+
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Hisobingiz yoʻqmi? <u>Unda yangisini yarating</u> va Firefoxni qurilmalararo sinxronlang.]]></string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s hisobingiz bilan sinxronlashni toʻxtatadi, ammo qurilmangizdagi brauzer tarixini oʻchirmaydi.</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">Aloqani uzish</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">Bekor qilish</string>
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Standart jildlarni tahrirlash mumkin emas</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Himoya sozlamalari</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Takomillashtirilgan kuzatuvdan himoya</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Internetda iz qoldirmay kezing</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Maʼlumotlaringizni oʻzingiz uchun saqlang. Internetda sizni taqib qiladigan koʻplab kuzatuvchilardan %s himoya qiladi. </string>
+
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Batafsil</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Standart</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Maxfiylik va samaradorlikning eng yaxshi muvozanatini taʼminlaydi. Sahifalar normal yuklanadi.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Standart kuzatuv muhofazasi orqali nimalar  bloklangan?</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Qatʼiy</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Sahifalar tezroq yuklanishi uchun koʻproq kuzatuvchilarni bloklaydi, lekin baʼzi sahifalar toʻgʻri ishlamasligi mumkin.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Qatʼiy kuzatuvdan himoya bilan nima bloklangan</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Boshqa</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Qaysi kuzatuvchilar va skriptlarni bloklashni tanlang.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Maxsus kuzatuv vositasi bilan nimalar bloklangan</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Cookie fayllar</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Saytlararo va ijtimoiy tarmoqlarning kuzatuvchilari</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Tashrif buyurilmagan saytlardan olingan cookie fayllar</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Barcha uchinchi tomon cookie fayllar (saytlarning buzilishiga olib kelishi mumkin)</string>
 
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">Barcha veb-saytlarni kattalashtirish</string>

@@ -658,6 +658,9 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Mboty</string>
 
+    <!-- Title to show in alert when a lot of tabs are to be opened
+    %d is a placeholder for the number of tabs that will be opened -->
+    <string name="open_all_warning_title">¿Embojuruja %d tendayke?</string>
     <!-- Dialog button text for confirming open all tabs -->
     <string name="open_all_warning_confirm">Embojuruja tendayke</string>
     <!-- Dialog button text for canceling open all tabs -->
@@ -1278,6 +1281,8 @@
     <string name="onboarding_account_sign_in_header">Eku’ejey eheja haguégui</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Egueru techaukaha, tembiasakue ha ñe’ẽñemi %1$s-pe ko mba’e’okápe.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">Embojuehe tendayke ha ñe’ẽñemi mba’e’oka pa’ũme emoambue hag̃ua mba’erechaha oso’ỹre.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Eñemboheraguapy</string>
     <!-- Text for the button to manually sign into Firefox account. -->
@@ -1304,6 +1309,8 @@
     <string name="onboarding_toolbar_placement_header_1">Eiporavo tembipuru renda oĩha</string>
     <!-- text for the toolbar position card description -->
     <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Emoĩ tembipuru renda nde ykére. Eguereko yvy gotyo, térã emongu’e yvate gotyo.</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">Ereko yvy gotyo térã emogu’e yvate gotyo.</string>
     <!-- text for the privacy notice onboarding card header -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Ne ñemigua</string>
 
@@ -1312,9 +1319,13 @@
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Rojapo %s eñangareko hag̃ua emoherakuãva ñandutípe rehe ha emoherakuãva orendive avei.</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">Firefox ome’ẽ ndéve pokatu emoherakuãva ñandutípe rehe ha emoherakuãva orendive avei.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Emoñe’ẽ ore marandu’i ñemigua</string>
 
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">¿Embojurujakuaáma ñanduti oikoitéva?</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Eñepyrũ eikundaha</string>
 
