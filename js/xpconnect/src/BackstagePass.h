@@ -55,6 +55,9 @@ class BackstagePass final : public nsIGlobalObject,
     return mozilla::StorageAccess::eAllow;
   }
 
+  mozilla::Result<mozilla::ipc::PrincipalInfo, nsresult> GetStorageKey()
+      override;
+
   void ForgetGlobalObject() { mWrapper = nullptr; }
 
   void SetGlobalObject(JSObject* global);

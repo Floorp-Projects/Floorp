@@ -12,6 +12,8 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
+#include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 
 using namespace mozilla::dom;
 
@@ -193,4 +195,20 @@ BackstagePass::PreCreate(nsISupports* nativeObj, JSContext* cx,
     *parentObj = jsglobal;
   }
   return NS_OK;
+}
+
+mozilla::Result<mozilla::ipc::PrincipalInfo, nsresult>
+BackstagePass::GetStorageKey() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mozilla::ipc::PrincipalInfo principalInfo;
+  nsresult rv = PrincipalToPrincipalInfo(mPrincipal, &principalInfo);
+  if (NS_FAILED(rv)) {
+    return mozilla::Err(rv);
+  }
+
+  MOZ_ASSERT(principalInfo.type() ==
+             mozilla::ipc::PrincipalInfo::TSystemPrincipalInfo);
+
+  return std::move(principalInfo);
 }
