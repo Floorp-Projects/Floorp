@@ -18,16 +18,16 @@ abstract class LearnMoreSwitchPreference(context: Context?, attrs: AttributeSet?
         layoutResource = R.layout.preference_switch_learn_more
     }
 
-    override fun onBindViewHolder(holder: PreferenceViewHolder?) {
+    override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
 
         getDescription()?.let {
-            val summaryView = holder!!.findViewById(android.R.id.summary) as TextView
+            val summaryView = holder.findViewById(android.R.id.summary) as TextView
             summaryView.text = it
             summaryView.isVisible = true
         }
 
-        val learnMoreLink = holder!!.findViewById(R.id.link) as TextView
+        val learnMoreLink = holder.findViewById(R.id.link) as TextView
         learnMoreLink.setOnClickListener {
             val tabId = context.components.tabsUseCases.addTab(
                 getLearnMoreUrl(),

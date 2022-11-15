@@ -18,7 +18,7 @@ import org.mozilla.focus.ext.settings
  */
 class CookiesPreference(context: Context?, attrs: AttributeSet?) : ListPreference(context, attrs) {
 
-    override fun onBindViewHolder(holder: PreferenceViewHolder?) {
+    override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
         updateSummary()
         showIcon(holder)

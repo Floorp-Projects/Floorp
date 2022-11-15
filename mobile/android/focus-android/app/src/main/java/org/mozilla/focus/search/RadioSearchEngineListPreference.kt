@@ -29,7 +29,7 @@ class RadioSearchEngineListPreference : SearchEngineListPreference, RadioGroup.O
     @Suppress("unused")
     constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
-    override fun onBindViewHolder(holder: PreferenceViewHolder?) {
+    override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
         searchEngineGroup!!.setOnCheckedChangeListener(this)
     }

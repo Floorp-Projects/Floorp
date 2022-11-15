@@ -35,11 +35,11 @@ class ManualAddSearchEnginePreference(context: Context, attrs: AttributeSet) :
     private var savedSearchEngineName: String? = null
     private var savedSearchQuery: String? = null
 
-    override fun onBindViewHolder(holder: PreferenceViewHolder?) {
+    override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
 
         engineNameErrorLayout =
-            holder!!.findViewById(R.id.edit_engine_name_layout) as TextInputLayout
+            holder.findViewById(R.id.edit_engine_name_layout) as TextInputLayout
         searchQueryErrorLayout =
             holder.findViewById(R.id.edit_search_string_layout) as TextInputLayout
 

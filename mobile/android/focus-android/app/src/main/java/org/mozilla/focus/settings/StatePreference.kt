@@ -18,11 +18,10 @@ import org.mozilla.focus.ext.settings
 class StatePreference(context: Context?, attrs: AttributeSet?) : Preference(context, attrs) {
     private var summaryView: TextView? = null
 
-    override fun onBindViewHolder(holder: PreferenceViewHolder?) {
+    override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
 
-        summaryView =
-            holder?.let { parentView -> parentView.findViewById(android.R.id.summary) as TextView }
+        summaryView = holder.findViewById(android.R.id.summary) as TextView
         setValueByKey(key)
     }
 

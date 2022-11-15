@@ -43,9 +43,9 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
         layoutResource = R.layout.preference_search_engine_chooser
     }
 
-    override fun onBindViewHolder(holder: PreferenceViewHolder?) {
+    override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
-        searchEngineGroup = holder!!.itemView.findViewById(R.id.search_engine_group)
+        searchEngineGroup = holder.itemView.findViewById(R.id.search_engine_group)
         val context = searchEngineGroup!!.context
 
         searchEngines = context.components.store.state.search.searchEngines

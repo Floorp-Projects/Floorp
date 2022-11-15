@@ -30,7 +30,7 @@ class MultiselectSearchEngineListPreference(context: Context, attrs: AttributeSe
             return engineIdSet
         }
 
-    override fun onBindViewHolder(holder: PreferenceViewHolder?) {
+    override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
         bindEngineCheckboxesToMenu()
     }
