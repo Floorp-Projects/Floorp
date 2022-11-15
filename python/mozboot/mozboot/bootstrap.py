@@ -10,6 +10,7 @@ import os
 import platform
 import re
 import shutil
+import stat
 import sys
 import subprocess
 import time
@@ -639,7 +640,17 @@ def update_git_tools(git: Optional[Path], root_state_dir: Path):
     # repository. It now only downloads prebuilt binaries, so if we are
     # updating from an old setup, remove the repository and start over.
     if (cinnabar_dir / ".git").exists():
-        shutil.rmtree(str(cinnabar_dir))
+        # git sets pack files read-only, which causes problems removing
+        # them on Windows. To work around that, we use an error handler
+        # on rmtree that retries to remove the file after chmod'ing it.
+        def onerror(func, path, exc):
+            if func == os.unlink:
+                os.chmod(path, stat.S_IRWXU)
+                func(path)
+            else:
+                raise
+
+        shutil.rmtree(str(cinnabar_dir), onerror=onerror)
 
     # If we already have an executable, ask it to update itself.
     exists = cinnabar_exe.exists()
