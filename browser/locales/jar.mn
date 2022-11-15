@@ -28,7 +28,6 @@
     locale/browser/shellservice.properties         (%chrome/browser/shellservice.properties)
     locale/browser/tabbrowser.properties           (%chrome/browser/tabbrowser.properties)
     locale/browser/taskbar.properties              (%chrome/browser/taskbar.properties)
-    locale/browser/translation.dtd                 (%chrome/browser/translation.dtd)
     locale/browser/downloads/downloads.properties  (%chrome/browser/downloads/downloads.properties)
     locale/browser/places/places.properties        (%chrome/browser/places/places.properties)
     locale/browser/places/bookmarkProperties.properties (%chrome/browser/places/bookmarkProperties.properties)
