@@ -5,9 +5,6 @@
 #ifndef mozilla_Viaduct_h
 #define mozilla_Viaduct_h
 
-#include "mozIViaduct.h"
-#include "mozilla/Atomics.h"
-
 /**
  * Viaduct is a way for Application Services Rust components
  * (https://github.com/mozilla/application-services) to make network requests
@@ -15,11 +12,11 @@
  *
  * The way it works is roughly as follows:
  * - First we register a callback using `viaduct_initialize`
- * (Viaduct::Initialize). This callback is stored on the Rust side
- * in a static variable, therefore Initialize() must be called only once.
+ * (InitializeViaduct). This callback is stored on the Rust side
+ * in a static variable, therefore InitializeViaduct() must be called only once.
  *
  * - When the Rust code needs to make a network request, our callback
- * (Viaduct::ViaductCallback) will be called with a protocol buffer describing
+ * (ViaductCallback) will be called with a protocol buffer describing
  * the request to make on their behalf. Note 1: The callback MUST be called from
  * a background thread as it is blocking. Note 2: It is our side responsibility
  * to call `viaduct_destroy_bytebuffer` on the buffer.
@@ -32,7 +29,7 @@
  * (ViaductRequest::OnStopRequest)
  *
  * - The background thread is unlocked, and the callback returns the response to
- * the Rust caller. (Viaduct::ViaductCallback)
+ * the Rust caller. (ViaductCallback)
  *
  * - The Rust caller will free the response buffer we allocated earlier.
  *
@@ -42,31 +39,9 @@
 
 namespace mozilla {
 
-namespace {
+// Should only be called once during startup to initialize the Viaduct callback.
+void InitializeViaduct();
 
-// A mapping of the ByteBuffer repr(C) Rust struct.
-typedef struct ViaductByteBuffer {
-  int64_t len;
-  uint8_t* data;
-} ViaductByteBuffer;
-
-}  // namespace
-
-class Viaduct final : public mozIViaduct {
- public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_MOZIVIADUCT
-
-  Viaduct() : mInitialized(false) {}
-  static already_AddRefed<Viaduct> GetSingleton();
-
- private:
-  static ViaductByteBuffer ViaductCallback(ViaductByteBuffer buffer);
-  Atomic<bool> mInitialized;
-
-  ~Viaduct() = default;
-};
-
-};  // namespace mozilla
+}  // namespace mozilla
 
 #endif  // mozilla_Viaduct_h
