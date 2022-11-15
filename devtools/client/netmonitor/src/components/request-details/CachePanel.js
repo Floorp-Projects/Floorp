@@ -112,7 +112,8 @@ class CachePanel extends Component {
       cache.lastFetched ||
       cache.fetchCount ||
       cache.storageDataSize ||
-      cache.lastModified | cache.expirationTime ||
+      cache.lastModified ||
+      cache.expirationTime ||
       cache.deviceID ||
       // @backward-compat { version 108 } Once version 108 hits release, the
       // server will no longer return `dataSize`, `expires` and `device`.
