@@ -128,7 +128,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ): View? {
+    ): View {
         scope = CoroutineScope(Dispatchers.IO)
         return super.onCreateView(inflater, container, savedInstanceState)
     }
