@@ -19,6 +19,7 @@
 
   /* Toolbar size (excluding borders) */
   --theme-toolbar-height: 24px;
+  --theme-toolbar-tall-height: 28px;
 
   /* For accessibility purposes we want to enhance the focus styling. This
    * should improve keyboard navigation usability. */

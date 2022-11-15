@@ -69,6 +69,7 @@ define(function(require, exports, module) {
         {
           activeTab: this.state.activeTab,
           onAfterChange: this.onTabChanged,
+          tall: true,
         },
         TabPanel(
           {
