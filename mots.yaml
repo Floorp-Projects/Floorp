@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-10-28T09:16:02.176101'
+updated_at: '2022-11-14T14:41:28.696165'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -225,6 +225,10 @@ people:
     bmo_id: 278074
     name: Daniel Holbert
     nick: dholbert
+  - &dimi
+    bmo_id: 468232
+    name: Dimi Lee
+    nick: dimi
   - &djackson
     bmo_id: 644159
     name: Dennis Jackson
@@ -233,10 +237,6 @@ people:
     bmo_id: 436087
     name: Kannan Vijayan
     nick: djvj
-  - &dlee
-    bmo_id: 468232
-    name: Dimi Lee
-    nick: dlee
   - &dlrobertson
     bmo_id: 705145
     name: Dan Robertson
@@ -592,10 +592,6 @@ people:
     bmo_id: 607045
     name: Matthew Gaudet
     nick: mgaudet
-  - &mhentges
-    bmo_id: 627727
-    name: Mitchell Hentges
-    nick: mhentges
   - &mhowell
     bmo_id: 550257
     name: Molly Howell
@@ -874,8 +870,7 @@ people:
     bmo_id: 382167
     name: Yury Delendik
     nick: yury
-  - &yzen
-    bmo_id: 458165
+  - bmo_id: 458165
     name: Yura Zenevich
     nick: yzen
   - &zbraniecki
@@ -996,7 +991,7 @@ modules:
       - *timhuang
     peers:
       - *baku
-      - *dlee
+      - *dimi
       - *pbz
       - *johannh
     machine_name: core_antitracking
@@ -1078,6 +1073,7 @@ modules:
         - Nathan Froyd
         - Ricky Stewart
         - David Major
+        - Mitchell Hentges
       group: dev-builds
       url: :ref:`Build System`
       components:
@@ -1085,7 +1081,6 @@ modules:
     owners:
       - *glandium
     peers:
-      - *mhentges
       - *andi
     submodules:
 
@@ -1341,7 +1336,7 @@ modules:
     machine_name: core_document_object_model
 
   - name: 'Core: DOM File'
-    description: 'DOM Blob, File and FileSystem APIs'
+    description: DOM Blob, File and FileSystem APIs
     includes:
       - dom/file/**/*
       - dom/filesystem/**/*
@@ -1391,7 +1386,7 @@ modules:
     machine_name: core_editor
 
   - name: 'Core: Event Handling'
-    description: 'DOM Events and Event Handling'
+    description: DOM Events and Event Handling
     includes:
       - dom/events/**/*
       # TODO "and event handling related code elsewhere"
@@ -1478,8 +1473,8 @@ modules:
     machine_name: core_geckoview
 
   - name: 'Core: Global Key Bindings'
-    description: Global hot keys for Firefox. Does not include underlined
-      menu accelerators and the like, as those are part of i18n.
+    description: Global hot keys for Firefox. Does not include underlined menu accelerators
+      and the like, as those are part of i18n.
     includes:
       - dom/events/**/*
       # TODO "and platform specific directories under it"
@@ -2252,7 +2247,7 @@ modules:
       - security/sandbox/linux/**/*
     meta:
       group: dev-platform
-      url: 'https://wiki.mozilla.org/Security/Sandbox'
+      url: https://wiki.mozilla.org/Security/Sandbox
       components:
         - 'Core::Security: Process Sandboxing'
     owners:
@@ -2262,12 +2257,12 @@ modules:
     machine_name: core_sandboxing_linux
 
   - name: 'Core: Sandboxing (OSX)'
-    description: 'Sandboxing for the OSX platform'
+    description: Sandboxing for the OSX platform
     includes:
       - security/sandbox/mac/**/*
     meta:
       group: dev-platform
-      url: 'https://wiki.mozilla.org/Security/Sandbox'
+      url: https://wiki.mozilla.org/Security/Sandbox
       components:
         - 'Core::Security: Process Sandboxing'
     owners:
@@ -2276,7 +2271,7 @@ modules:
     machine_name: core_sandboxing_osx
 
   - name: 'Core: Sandboxing (Windows)'
-    description: 'Sandboxing for the Windows platform'
+    description: Sandboxing for the Windows platform
     includes:
       - security/sandbox/win/**/*
     meta:
@@ -2288,7 +2283,7 @@ modules:
         - *jimm
         - *toshi
       group: dev-platform
-      url: 'https://wiki.mozilla.org/Security/Sandbox'
+      url: https://wiki.mozilla.org/Security/Sandbox
       components:
         - 'Core::Security: Process Sandboxing'
     owners:
@@ -3104,7 +3099,7 @@ modules:
           - *serg
         peers:
           - *tgiles
-          - *dlee
+          - *dimi
         machine_name: form_autofill
 
       - name: In-product Messaging
@@ -3148,7 +3143,6 @@ modules:
         peers:
           - *mathjazz
           - *eemeli
-        meta:
       - name: New Tab Page
         description: The new tab/home page.
         includes:
@@ -3199,7 +3193,7 @@ modules:
         peers:
           - *jaws
           - *tgiles
-          - *dlee
+          - *dimi
           - *sfoster
         machine_name: password_manager
 
@@ -3626,5 +3620,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 20bf74c6395f41505f814c9cb6f1d23d03b1d7ae
-  export: f8100ab782235179d9bc6382e950d0d9d9d046f1
+  config: 2a6eec1e13c5e3fea8c1e4066096fd19359a88d1
+  export: e2ae3f8eab7db7398c1967c389352ea3dfcc5996
