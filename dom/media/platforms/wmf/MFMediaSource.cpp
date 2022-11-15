@@ -330,6 +330,8 @@ IFACEMETHODIMP MFMediaSource::QueueEvent(MediaEventType aType,
   RETURN_IF_FAILED(mMediaEventQueue->QueueEventParamVar(aType, aExtendedType,
                                                         aStatus, aValue));
   LOG("Queued event %s", MediaEventTypeToStr(aType));
+  PROFILER_MARKER_TEXT("MFMediaSource::QueueEvent", MEDIA_PLAYBACK, {},
+                       nsPrintfCString("%s", MediaEventTypeToStr(aType)));
   return S_OK;
 }
 
@@ -377,6 +379,10 @@ void MFMediaSource::HandleStreamEnded(TrackInfo::TrackType aType) {
   mPresentationEnded = mIsAudioEnded && mIsVideoEnded;
   LOG("PresentationEnded=%d, audioEnded=%d, videoEnded=%d",
       !!mPresentationEnded, mIsAudioEnded, mIsVideoEnded);
+  PROFILER_MARKER_TEXT(
+      " MFMediaSource::HandleStreamEnded", MEDIA_PLAYBACK, {},
+      nsPrintfCString("PresentationEnded=%d, audioEnded=%d, videoEnded=%d",
+                      !!mPresentationEnded, mIsAudioEnded, mIsVideoEnded));
   if (mPresentationEnded) {
     RETURN_VOID_IF_FAILED(
         QueueEvent(MEEndOfPresentation, GUID_NULL, S_OK, nullptr));

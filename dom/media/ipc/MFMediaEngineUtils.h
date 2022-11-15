@@ -8,6 +8,7 @@
 #include "MFMediaEngineExtra.h"
 #include "ipc/EnumSerializer.h"
 #include "mozilla/Logging.h"
+#include "mozilla/ProfilerMarkerTypes.h"
 
 namespace mozilla {
 
@@ -47,6 +48,13 @@ using MFMediaEngineError = MF_MEDIA_ENGINE_ERR;
       }                                                 \
     } while (false)
 #endif
+
+#define ENGINE_MARKER(markerName) \
+  PROFILER_MARKER(markerName, MEDIA_PLAYBACK, {}, MediaEngineMarker, Id())
+
+#define ENGINE_MARKER_TEXT(markerName, text)                                   \
+  PROFILER_MARKER(markerName, MEDIA_PLAYBACK, {}, MediaEngineTextMarker, Id(), \
+                  text)
 
 const char* MediaEventTypeToStr(MediaEventType aType);
 const char* MediaEngineEventToStr(MF_MEDIA_ENGINE_EVENT aEvent);
