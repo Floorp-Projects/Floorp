@@ -1610,25 +1610,16 @@ nsresult Classifier::ReadNoiseEntries(const Prefix& aPrefix,
                                       const nsACString& aTableName,
                                       uint32_t aCount,
                                       PrefixArray& aNoiseEntries) {
-  FallibleTArray<uint32_t> prefixes;
-  nsresult rv;
-
   RefPtr<LookupCache> cache = GetLookupCache(aTableName);
   if (!cache) {
     return NS_ERROR_FAILURE;
   }
 
   RefPtr<LookupCacheV2> cacheV2 = LookupCache::Cast<LookupCacheV2>(cache);
-  if (cacheV2) {
-    rv = cacheV2->GetPrefixes(prefixes);
-  } else {
-    rv = LookupCache::Cast<LookupCacheV4>(cache)->GetFixedLengthPrefixes(
-        prefixes);
-  }
+  RefPtr<LookupCacheV4> cacheV4 = LookupCache::Cast<LookupCacheV4>(cache);
+  MOZ_ASSERT_IF(cacheV2, !cacheV4);
 
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (prefixes.Length() == 0) {
+  if (cache->PrefixLength() == 0) {
     NS_WARNING("Could not find prefix in PrefixSet during noise lookup");
     return NS_ERROR_FAILURE;
   }
@@ -1644,20 +1635,36 @@ nsresult Classifier::ReadNoiseEntries(const Prefix& aPrefix,
   // for.
   // http://en.wikipedia.org/wiki/Linear_congruential_generator
 
-  uint32_t m = prefixes.Length();
+  uint32_t m = cache->PrefixLength();
   uint32_t a = aCount % m;
   uint32_t idx = aPrefix.ToUint32() % m;
 
   for (size_t i = 0; i < aCount; i++) {
     idx = (a * idx + a) % m;
 
+    uint32_t hash;
+
+    nsresult rv;
+    if (cacheV2) {
+      rv = cacheV2->GetPrefixByIndex(idx, &hash);
+    } else {
+      // We don't add noises for variable length prefix because of simplicity,
+      // so we will only get fixed length prefix (4 bytes).
+      rv = cacheV4->GetFixedLengthPrefixByIndex(idx, &hash);
+    }
+
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "Could not find the target prefix in PrefixSet during noise lookup");
+      return NS_ERROR_FAILURE;
+    }
+
     Prefix newPrefix;
-    uint32_t hash = prefixes[idx];
     // In the case V4 little endian, we did swapping endian when converting from
     // char* to int, should revert endian to make sure we will send hex string
     // correctly See https://bugzilla.mozilla.org/show_bug.cgi?id=1283007#c23
     if (!cacheV2 && !bool(MOZ_BIG_ENDIAN())) {
-      hash = NativeEndian::swapFromBigEndian(prefixes[idx]);
+      hash = NativeEndian::swapFromBigEndian(hash);
     }
 
     newPrefix.FromUint32(hash);
