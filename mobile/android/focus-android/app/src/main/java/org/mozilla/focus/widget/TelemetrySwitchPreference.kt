@@ -17,13 +17,11 @@ import org.mozilla.telemetry.TelemetryHolder
 /**
  * Switch preference for enabling/disabling telemetry
  */
-internal class TelemetrySwitchPreference(context: Context?, attrs: AttributeSet?) :
+internal class TelemetrySwitchPreference(context: Context, attrs: AttributeSet?) :
     LearnMoreSwitchPreference(context, attrs) {
 
     init {
-        if (context != null) {
-            isChecked = TelemetryWrapper.isTelemetryEnabled(context)
-        }
+        isChecked = TelemetryWrapper.isTelemetryEnabled(context)
     }
 
     override fun onClick() {

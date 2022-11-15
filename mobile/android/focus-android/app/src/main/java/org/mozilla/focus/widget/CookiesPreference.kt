@@ -16,7 +16,7 @@ import org.mozilla.focus.ext.settings
 /**
  * Autocomplete preference that will show a sub screen to configure the autocomplete behavior.
  */
-class CookiesPreference(context: Context?, attrs: AttributeSet?) : ListPreference(context, attrs) {
+class CookiesPreference(context: Context, attrs: AttributeSet?) : ListPreference(context, attrs) {
 
     override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)

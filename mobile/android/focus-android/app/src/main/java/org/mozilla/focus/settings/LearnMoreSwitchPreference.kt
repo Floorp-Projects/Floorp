@@ -11,7 +11,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.state.AppAction
 
-abstract class LearnMoreSwitchPreference(context: Context?, attrs: AttributeSet?) :
+abstract class LearnMoreSwitchPreference(context: Context, attrs: AttributeSet?) :
     SwitchPreferenceCompat(context, attrs) {
 
     init {

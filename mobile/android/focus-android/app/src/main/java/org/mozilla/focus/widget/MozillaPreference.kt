@@ -9,7 +9,7 @@ import androidx.preference.Preference
 import org.mozilla.focus.R
 
 class MozillaPreference @JvmOverloads constructor(
-    context: Context?,
+    context: Context,
     attrs: AttributeSet?,
     defStyleAttr: Int = 0,
 ) : Preference(context, attrs, defStyleAttr) {

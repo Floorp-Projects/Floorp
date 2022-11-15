@@ -13,7 +13,7 @@ import org.mozilla.focus.utils.SupportUtils
  * Switch preference for enabling/disabling autocompletion for custom domains entered by the user.
  */
 class AutocompleteCustomDomainsPreference(
-    context: Context?,
+    context: Context,
     attrs: AttributeSet?,
 ) : LearnMoreSwitchPreference(context, attrs) {
     override fun getLearnMoreUrl() = SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.AUTOCOMPLETE)

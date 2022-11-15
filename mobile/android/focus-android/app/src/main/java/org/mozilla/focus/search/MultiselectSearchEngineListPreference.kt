@@ -49,7 +49,7 @@ class MultiselectSearchEngineListPreference(context: Context, attrs: AttributeSe
             val engineButton = searchEngineGroup!!.getChildAt(i) as CompoundButton
             engineButton.setOnCheckedChangeListener { _, _ ->
                 val context = context
-                context?.tryAsActivity()?.invalidateOptionsMenu()
+                context.tryAsActivity()?.invalidateOptionsMenu()
             }
         }
     }
