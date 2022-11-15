@@ -322,6 +322,14 @@ WorkerGlobalScopeBase::GetStorageKey() {
   const PrincipalInfo& principalInfo =
       mWorkerPrivate->GetEffectiveStoragePrincipalInfo();
 
+  // Block expanded and null principals, let content and system through.
+  if (principalInfo.type() !=
+          mozilla::ipc::PrincipalInfo::TContentPrincipalInfo &&
+      principalInfo.type() !=
+          mozilla::ipc::PrincipalInfo::TSystemPrincipalInfo) {
+    return Err(NS_ERROR_DOM_SECURITY_ERR);
+  }
+
   return principalInfo;
 }
 

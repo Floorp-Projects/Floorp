@@ -263,6 +263,9 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // non-virtual.
   bool HasJSGlobal() const { return GetGlobalJSObjectPreserveColor(); }
 
+  mozilla::Result<mozilla::ipc::PrincipalInfo, nsresult> GetStorageKey()
+      override;
+
   void TraceGlobalJSObject(JSTracer* aTrc);
 
   virtual nsresult EnsureScriptEnvironment() override;

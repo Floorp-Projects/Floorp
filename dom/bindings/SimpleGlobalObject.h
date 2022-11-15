@@ -19,7 +19,6 @@
 #include "js/Value.h"
 #include "nsISupportsImpl.h"
 #include "nsCycleCollectionParticipant.h"
-#include "mozilla/ipc/PBackgroundSharedTypes.h"
 
 namespace mozilla::dom {
 
@@ -71,10 +70,6 @@ class SimpleGlobalObject : public nsIGlobalObject, public nsWrapperCache {
   JSObject* WrapObject(JSContext* cx,
                        JS::Handle<JSObject*> aGivenProto) override {
     MOZ_CRASH("SimpleGlobalObject doesn't use DOM bindings!");
-  }
-
-  Result<mozilla::ipc::PrincipalInfo, nsresult> GetStorageKey() override {
-    return Err(NS_ERROR_NOT_AVAILABLE);
   }
 
  private:

@@ -193,6 +193,8 @@
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/intl/LocaleService.h"
+#include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "nsAtom.h"
 #include "nsBaseHashtable.h"
@@ -1646,6 +1648,32 @@ uint32_t nsGlobalWindowInner::GetPrincipalHashValue() const {
     return mDoc->NodePrincipal()->GetHashValue();
   }
   return 0;
+}
+
+mozilla::Result<mozilla::ipc::PrincipalInfo, nsresult>
+nsGlobalWindowInner::GetStorageKey() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsIPrincipal* principal = GetEffectiveStoragePrincipal();
+  if (!principal) {
+    return mozilla::Err(NS_ERROR_FAILURE);
+  }
+
+  mozilla::ipc::PrincipalInfo principalInfo;
+  nsresult rv = PrincipalToPrincipalInfo(principal, &principalInfo);
+  if (NS_FAILED(rv)) {
+    return mozilla::Err(rv);
+  }
+
+  // Block expanded and null principals, let content and system through.
+  if (principalInfo.type() !=
+          mozilla::ipc::PrincipalInfo::TContentPrincipalInfo &&
+      principalInfo.type() !=
+          mozilla::ipc::PrincipalInfo::TSystemPrincipalInfo) {
+    return Err(NS_ERROR_DOM_SECURITY_ERR);
+  }
+
+  return std::move(principalInfo);
 }
 
 nsresult nsGlobalWindowInner::EnsureScriptEnvironment() {

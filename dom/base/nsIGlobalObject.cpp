@@ -381,30 +381,9 @@ bool nsIGlobalObject::ShouldResistFingerprinting() const {
   return nsContentUtils::ShouldResistFingerprinting();
 }
 
-// This will be overridden by subclasses to handle things like
-// Workers (off-main-thread)
 mozilla::Result<mozilla::ipc::PrincipalInfo, nsresult>
 nsIGlobalObject::GetStorageKey() {
-  using mozilla::ipc::PrincipalInfo;
-
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(this);
-  if (!sop) {
-    return mozilla::Err(NS_ERROR_FAILURE);
-  }
-
-  nsIPrincipal* principal = sop->GetEffectiveStoragePrincipal();
-  if (!principal) {
-    return mozilla::Err(NS_ERROR_FAILURE);
-  }
-
-  PrincipalInfo principalInfo;
-  nsresult rv = PrincipalToPrincipalInfo(principal, &principalInfo);
-  if (NS_FAILED(rv)) {
-    return mozilla::Err(NS_ERROR_FAILURE);
-  }
-
-  return std::move(principalInfo);
+  return mozilla::Err(NS_ERROR_NOT_AVAILABLE);
 }
 
 bool nsIGlobalObject::IsEqualStorageKey(
