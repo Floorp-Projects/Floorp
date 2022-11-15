@@ -150,7 +150,7 @@ TransportSecurityInfo::GetErrorCodeString(nsAString& aErrorString) {
 NS_IMETHODIMP
 TransportSecurityInfo::GetInterface(const nsIID& uuid, void** result) {
   if (!NS_IsMainThread()) {
-    NS_ERROR("nsNSSSocketInfo::GetInterface called off the main thread");
+    NS_ERROR("TransportSecurityInfo::GetInterface called off the main thread");
     return NS_ERROR_NOT_SAME_THREAD;
   }
   MutexAutoLock lock(mMutex);
