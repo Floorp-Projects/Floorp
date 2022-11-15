@@ -30,6 +30,8 @@ class VariableLengthPrefixSet final : public nsIMemoryReporter {
   nsresult GetPrefixes(mozilla::safebrowsing::PrefixStringMap& aPrefixMap);
   nsresult GetFixedLengthPrefixes(FallibleTArray<uint32_t>* aPrefixes,
                                   FallibleTArray<nsCString>* aCompletes);
+  nsresult GetFixedLengthPrefixByIndex(uint32_t aIndex,
+                                       uint32_t* aOutPrefix) const;
   nsresult Matches(uint32_t aPrefix, const nsACString& aFullHash,
                    uint32_t* aLength) const;
   nsresult IsEmpty(bool* aEmpty) const;
@@ -37,6 +39,7 @@ class VariableLengthPrefixSet final : public nsIMemoryReporter {
   nsresult WritePrefixes(nsCOMPtr<nsIOutputStream>& out) const;
   nsresult LoadPrefixes(nsCOMPtr<nsIInputStream>& in);
   uint32_t CalculatePreallocateSize() const;
+  uint32_t FixedLengthPrefixLength() const;
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 

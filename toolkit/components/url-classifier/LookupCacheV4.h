@@ -28,6 +28,8 @@ class LookupCacheV4 final : public LookupCache {
 
   nsresult GetPrefixes(PrefixStringMap& aPrefixMap);
   nsresult GetFixedLengthPrefixes(FallibleTArray<uint32_t>& aPrefixes);
+  nsresult GetFixedLengthPrefixByIndex(uint32_t aIndex,
+                                       uint32_t* aOutPrefix) const;
 
   // ApplyUpdate will merge data stored in aTableUpdate with prefixes in
   // aInputMap.

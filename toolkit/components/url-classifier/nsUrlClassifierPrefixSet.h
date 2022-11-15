@@ -42,6 +42,7 @@ class nsUrlClassifierPrefixSet final : public nsIUrlClassifierPrefixSet {
   nsresult WritePrefixes(nsCOMPtr<nsIOutputStream>& out) const;
   nsresult LoadPrefixes(nsCOMPtr<nsIInputStream>& in);
   uint32_t CalculatePreallocateSize() const;
+  uint32_t Length() const;
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
