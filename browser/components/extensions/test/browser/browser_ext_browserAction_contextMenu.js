@@ -69,6 +69,9 @@ if (AppConstants.platform == "macosx") {
 
 const type = "extension";
 
+const TOOLBAR_CONTEXT_MENU = "toolbar-context-menu";
+const UNIFIED_CONTEXT_MENU = "unified-extensions-context-menu";
+
 async function assertTelemetryMatches(events) {
   events = events.map(([method, object, value, extra]) => {
     return { method, object, value, extra };
@@ -307,13 +310,13 @@ async function browseraction_contextmenu_manage_extension_helper(win) {
 
     info("Test toolbar context menu in browserAction");
     let toolbarCtxMenu = await testContextMenu(
-      "toolbar-context-menu",
+      TOOLBAR_CONTEXT_MENU,
       customizing
     );
 
     info("Check toolbar context menu in another button");
     let otherButtonId = "home-button";
-    await openContextMenu(toolbarCtxMenu.id, otherButtonId, win);
+    await openContextMenu(TOOLBAR_CONTEXT_MENU, otherButtonId, win);
     checkVisibility(toolbarCtxMenu, false);
     toolbarCtxMenu.hidePopup();
 
@@ -448,7 +451,7 @@ async function runTestContextMenu({ id, customizing, testContextMenu, win }) {
   }
 
   info("Test toolbar context menu in browserAction");
-  await testContextMenu("toolbar-context-menu", customizing);
+  await testContextMenu(TOOLBAR_CONTEXT_MENU, customizing);
 
   if (win.gUnifiedExtensions.isEnabled) {
     info("Pin the browserAction to the addons panel");
@@ -669,7 +672,7 @@ async function browseraction_contextmenu_remove_extension_helper(win) {
       },
     });
   });
-  await testContextMenu("toolbar-context-menu", false);
+  await testContextMenu(TOOLBAR_CONTEXT_MENU, false);
   await uninstalled;
 
   await assertTelemetryMatches([
@@ -846,6 +849,30 @@ async function browseraction_contextmenu_report_extension_helper(win) {
   await extension.unload();
 }
 
+/**
+ * Tests that built-in buttons see the Pin to Overflow and Remove items in
+ * the toolbar context menu and don't see the Pin to Toolbar item, since
+ * that's reserved for extension widgets.
+ *
+ * @param {DOMWindow} win A browser window that may or may not have the
+ *   Unified Extensions UI enabled.
+ * @returns {Promise}
+ */
+async function test_no_toolbar_pinning_on_builtin_helper(win) {
+  let menu = await openContextMenu(TOOLBAR_CONTEXT_MENU, "home-button", win);
+  info(`Pin to Overflow and Remove from Toolbar should be visible.`);
+  let pinToOverflow = menu.querySelector(".customize-context-moveToPanel");
+  let removeFromToolbar = menu.querySelector(
+    ".customize-context-removeFromToolbar"
+  );
+  Assert.ok(!pinToOverflow.hidden, "Pin to Overflow is visible.");
+  Assert.ok(!removeFromToolbar.hidden, "Remove from Toolbar is visible.");
+  info(`This button should have "Pin to Toolbar" hidden`);
+  let pinToToolbar = menu.querySelector(".customize-context-pinToToolbar");
+  Assert.ok(pinToToolbar.hidden, "Pin to Overflow is hidden.");
+  menu.hidePopup();
+}
+
 add_task(async function test_unified_extensions_ui() {
   Services.telemetry.clearEvents();
   let win = await promiseEnableUnifiedExtensions();
@@ -856,7 +883,140 @@ add_task(async function test_unified_extensions_ui() {
   await browseraction_contextmenu_manage_extension_helper(win);
   await browseraction_contextmenu_remove_extension_helper(win);
   await browseraction_contextmenu_report_extension_helper(win);
+  await test_no_toolbar_pinning_on_builtin_helper(win);
 
+  await BrowserTestUtils.closeWindow(win);
+});
+
+/**
+ * Tests that if Unified Extensions is enabled, that browser actions can
+ * be unpinned from the toolbar to the addons panel and back again, via
+ * a context menu item.
+ */
+add_task(async function test_unified_extensions_toolbar_pinning() {
+  let win = await promiseEnableUnifiedExtensions();
+  let id = "addon_id@example.com";
+  let nodeId = `${makeWidgetId(id)}-browser-action`;
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      browser_specific_settings: {
+        gecko: { id },
+      },
+      browser_action: {},
+    },
+    useAddonManager: "temporary",
+  });
+  await extension.startup();
+
+  Assert.equal(
+    CustomizableUI.getPlacementOfWidget(nodeId).area,
+    CustomizableUI.AREA_NAVBAR,
+    "Should start placed in the nav-bar."
+  );
+
+  let menu = await openContextMenu(TOOLBAR_CONTEXT_MENU, nodeId, win);
+
+  info(`Pin to Overflow and Remove from Toolbar should be hidden.`);
+  let pinToOverflow = menu.querySelector(".customize-context-moveToPanel");
+  let removeFromToolbar = menu.querySelector(
+    ".customize-context-removeFromToolbar"
+  );
+  Assert.ok(pinToOverflow.hidden, "Pin to Overflow is hidden.");
+  Assert.ok(removeFromToolbar.hidden, "Remove from Toolbar is hidden.");
+
+  info(
+    `This button should have "Pin to Toolbar" visible and checked by default.`
+  );
+  let pinToToolbar = menu.querySelector(".customize-context-pinToToolbar");
+  Assert.ok(!pinToToolbar.hidden, "Pin to Toolbar is visible.");
+  Assert.equal(
+    pinToToolbar.getAttribute("checked"),
+    "true",
+    "Pin to Toolbar is checked."
+  );
+
+  info("Pinning addon to the addons panel.");
+  await closeChromeContextMenu(TOOLBAR_CONTEXT_MENU, pinToToolbar, win);
+
+  Assert.equal(
+    CustomizableUI.getPlacementOfWidget(nodeId).area,
+    CustomizableUI.AREA_ADDONS,
+    "Should have moved the button to the addons panel."
+  );
+
+  info("Opening addons panel");
+  win.gUnifiedExtensions.togglePanel();
+  await BrowserTestUtils.waitForEvent(
+    win.gUnifiedExtensions.panel,
+    "popupshown"
+  );
+  info("Testing unpinning in the addons panel");
+
+  menu = await openContextMenu(UNIFIED_CONTEXT_MENU, nodeId, win);
+
+  // The UNIFIED_CONTEXT_MENU has a different node for pinToToolbar, so
+  // we have to requery for it.
+  pinToToolbar = menu.querySelector(
+    ".unified-extensions-context-menu-pin-to-toolbar"
+  );
+
+  Assert.ok(!pinToToolbar.hidden, "Pin to Toolbar is visible.");
+  Assert.equal(
+    pinToToolbar.getAttribute("checked"),
+    "false",
+    "Pin to Toolbar is not checked."
+  );
+  await closeChromeContextMenu(UNIFIED_CONTEXT_MENU, pinToToolbar, win);
+
+  Assert.equal(
+    CustomizableUI.getPlacementOfWidget(nodeId).area,
+    CustomizableUI.AREA_NAVBAR,
+    "Should have moved the button back to the nav-bar."
+  );
+
+  await extension.unload();
+  await BrowserTestUtils.closeWindow(win);
+});
+
+/**
+ * Tests that there's no Pin to Toolbar option for unified-extensions-item's
+ * in the add-ons panel, since these do not represent browser action buttons.
+ */
+add_task(async function test_unified_extensions_item_no_pinning() {
+  let win = await promiseEnableUnifiedExtensions();
+  let id = "addon_id@example.com";
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      browser_specific_settings: {
+        gecko: { id },
+      },
+    },
+    useAddonManager: "temporary",
+  });
+  await extension.startup();
+
+  info("Opening addons panel");
+  let panel = win.gUnifiedExtensions.panel;
+  await openExtensionsPanel(win);
+
+  let items = panel.querySelectorAll("unified-extensions-item");
+  Assert.ok(
+    !!items.length,
+    "There should be at least one unified-extensions-item."
+  );
+
+  let menu = await openChromeContextMenu(
+    UNIFIED_CONTEXT_MENU,
+    `unified-extensions-item[extension-id='${id}']`,
+    win
+  );
+  let pinToToolbar = menu.querySelector(
+    ".unified-extensions-context-menu-pin-to-toolbar"
+  );
+  Assert.ok(pinToToolbar.hidden, "Pin to Toolbar is hidden.");
+  menu.hidePopup();
+
+  await extension.unload();
   await BrowserTestUtils.closeWindow(win);
 });
 
@@ -870,6 +1030,7 @@ add_task(async function test_non_unified_extensions_ui() {
   await browseraction_contextmenu_manage_extension_helper(win);
   await browseraction_contextmenu_remove_extension_helper(win);
   await browseraction_contextmenu_report_extension_helper(win);
+  await test_no_toolbar_pinning_on_builtin_helper(win);
 
   await BrowserTestUtils.closeWindow(win);
 });
