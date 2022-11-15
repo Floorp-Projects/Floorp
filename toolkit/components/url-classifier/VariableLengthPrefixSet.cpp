@@ -247,13 +247,6 @@ nsresult VariableLengthPrefixSet::GetFixedLengthPrefixes(
   return NS_OK;
 }
 
-nsresult VariableLengthPrefixSet::GetFixedLengthPrefixByIndex(
-    uint32_t aIndex, uint32_t* aOutPrefix) const {
-  NS_ENSURE_ARG_POINTER(aOutPrefix);
-
-  return mFixedPrefixSet->GetPrefixByIndex(aIndex, aOutPrefix);
-}
-
 // It should never be the case that more than one hash prefixes match a given
 // full hash. However, if that happens, this method returns any one of them.
 // It does not guarantee which one of those will be returned.
@@ -386,10 +379,6 @@ uint32_t VariableLengthPrefixSet::CalculatePreallocateSize() const {
     fileSize += data->Length();
   }
   return fileSize;
-}
-
-uint32_t VariableLengthPrefixSet::Length() const {
-  return mFixedPrefixSet->Length();
 }
 
 nsresult VariableLengthPrefixSet::WritePrefixes(
