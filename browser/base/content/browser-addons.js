@@ -1360,10 +1360,6 @@ customElements.define(
 
       this.setAttribute("extension-id", this.addon.id);
 
-      // Note that the data-extensionid attribute is used by context menu handlers
-      // to identify the extension being manipulated by the context menu.
-      this._actionButton.dataset.extensionid = this.addon.id;
-
       let policy = WebExtensionPolicy.getByID(this.addon.id);
       this.toggleAttribute(
         "attention",
@@ -1384,9 +1380,7 @@ customElements.define(
 
       this._actionButton.disabled = !this._hasAction();
 
-      // Note that the data-extensionid attribute is used by context menu handlers
-      // to identify the extension being manipulated by the context menu.
-      this._openMenuButton.dataset.extensionid = this.addon.id;
+      this._openMenuButton.dataset.extensionId = this.addon.id;
       this._openMenuButton.setAttribute(
         "data-l10n-args",
         JSON.stringify({ extensionName: this.addon.name })
@@ -1411,16 +1405,6 @@ var gUnifiedExtensions = {
       this._button = document.getElementById("unified-extensions-button");
       // TODO: Bug 1778684 - Auto-hide button when there is no active extension.
       this._button.hidden = false;
-
-      // Lazy-load the l10n strings. Those strings are used for the CUI and
-      // non-CUI extensions in the unified extensions panel.
-      document
-        .getElementById("unified-extensions-context-menu")
-        .querySelectorAll("[data-lazy-l10n-id]")
-        .forEach(el => {
-          el.setAttribute("data-l10n-id", el.getAttribute("data-lazy-l10n-id"));
-          el.removeAttribute("data-lazy-l10n-id");
-        });
 
       document
         .getElementById("nav-bar")
@@ -1595,6 +1579,18 @@ var gUnifiedExtensions = {
         );
         this._listView.addEventListener("ViewShowing", this);
         this._listView.addEventListener("ViewHiding", this);
+
+        // Lazy-load the l10n strings.
+        document
+          .getElementById("unified-extensions-context-menu")
+          .querySelectorAll("[data-lazy-l10n-id]")
+          .forEach(el => {
+            el.setAttribute(
+              "data-l10n-id",
+              el.getAttribute("data-lazy-l10n-id")
+            );
+            el.removeAttribute("data-lazy-l10n-id");
+          });
       }
 
       if (this._button.open) {
@@ -1622,30 +1618,13 @@ var gUnifiedExtensions = {
 
     const id = this._getExtensionId(menu);
     const addon = await AddonManager.getAddonByID(id);
-    const widgetId = this._getWidgetId(menu);
-    const forBrowserAction = !!widgetId;
 
-    const pinButton = menu.querySelector(
-      ".unified-extensions-context-menu-pin-to-toolbar"
-    );
     const removeButton = menu.querySelector(
       ".unified-extensions-context-menu-remove-extension"
     );
     const reportButton = menu.querySelector(
       ".unified-extensions-context-menu-report-extension"
     );
-    const menuSeparator = menu.querySelector(
-      ".unified-extensions-context-menu-management-separator"
-    );
-
-    menuSeparator.hidden = !forBrowserAction;
-    pinButton.hidden = !forBrowserAction;
-
-    if (forBrowserAction) {
-      let area = CustomizableUI.getPlacementOfWidget(widgetId).area;
-      let inToolbar = area != CustomizableUI.AREA_ADDONS;
-      pinButton.setAttribute("checked", inToolbar);
-    }
 
     reportButton.hidden = !gAddonAbuseReportEnabled;
     removeButton.disabled = !(
@@ -1691,36 +1670,6 @@ var gUnifiedExtensions = {
 
   _getExtensionId(menu) {
     const { triggerNode } = menu;
-    return triggerNode.dataset.extensionid;
-  },
-
-  _getWidgetId(menu) {
-    const { triggerNode } = menu;
-    return triggerNode.closest(".unified-extensions-item")?.id;
-  },
-
-  onPinToToolbarChange(menu, event) {
-    let shouldPinToToolbar = event.target.getAttribute("checked") == "true";
-    // Revert the checkbox back to its original state. This is because the
-    // addon context menu handlers are asynchronous, and there seems to be
-    // a race where the checkbox state won't get set in time to show the
-    // right state. So we err on the side of caution, and presume that future
-    // attempts to open this context menu on an extension button will show
-    // the same checked state that we started in.
-    event.target.setAttribute("checked", !shouldPinToToolbar);
-
-    let widgetId = this._getWidgetId(menu);
-    if (!widgetId) {
-      return;
-    }
-    this.pinToToolbar(widgetId, shouldPinToToolbar);
-  },
-
-  pinToToolbar(widgetId, shouldPinToToolbar) {
-    let newArea = shouldPinToToolbar
-      ? CustomizableUI.AREA_NAVBAR
-      : CustomizableUI.AREA_ADDONS;
-    let newPosition = shouldPinToToolbar ? undefined : 0;
-    CustomizableUI.addWidgetToArea(widgetId, newArea, newPosition);
+    return triggerNode.dataset.extensionId;
   },
 };
