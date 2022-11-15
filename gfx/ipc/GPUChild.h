@@ -33,6 +33,8 @@ class GPUChild final : public ipc::CrashReporterHelper<GeckoProcessType_GPU>,
   void Init();
 
   bool EnsureGPUReady();
+  void MarkWaitForVarUpdate() { mWaitForVarUpdate = true; }
+
   base::ProcessHandle GetChildProcessHandle();
 
   // Notifies that an unexpected GPU process shutdown has been noticed by a
@@ -94,6 +96,7 @@ class GPUChild final : public ipc::CrashReporterHelper<GeckoProcessType_GPU>,
   GPUProcessHost* mHost;
   UniquePtr<MemoryReportRequestHost> mMemoryReportRequest;
   bool mGPUReady;
+  bool mWaitForVarUpdate = false;
   bool mUnexpectedShutdown = false;
 };
 
