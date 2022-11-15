@@ -45,13 +45,13 @@ class AutocompleteSettingsFragment : BaseSettingsFragment(), SharedPreferences.O
 
         showToolbar(getString(R.string.preference_subitem_autocomplete))
 
-        preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
+        preferenceManager.sharedPreferences?.registerOnSharedPreferenceChangeListener(this)
     }
 
     override fun onPause() {
         super.onPause()
 
-        preferenceManager.sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
+        preferenceManager.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(this)
     }
 
     override fun onPreferenceTreeClick(preference: androidx.preference.Preference?): Boolean {

@@ -34,13 +34,13 @@ class AdvancedSettingsFragment :
     override fun onResume() {
         super.onResume()
 
-        preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
+        preferenceManager.sharedPreferences?.registerOnSharedPreferenceChangeListener(this)
 
         showToolbar(getString(R.string.preference_category_advanced))
     }
 
     override fun onPause() {
-        preferenceManager.sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
+        preferenceManager.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(this)
         super.onPause()
     }
 

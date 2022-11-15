@@ -29,12 +29,12 @@ class SearchEnginePreference : Preference, SharedPreferences.OnSharedPreferenceC
 
     override fun onAttached() {
         summary = defaultSearchEngineName
-        preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
+        preferenceManager.sharedPreferences?.registerOnSharedPreferenceChangeListener(this)
         super.onAttached()
     }
 
     override fun onPrepareForRemoval() {
-        preferenceManager.sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
+        preferenceManager.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(this)
         super.onPrepareForRemoval()
     }
 

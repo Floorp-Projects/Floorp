@@ -21,7 +21,7 @@ class SecretSettingsFragment :
     override fun onStart() {
         super.onStart()
         showToolbar(getString(R.string.preference_secret_settings))
-        preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
+        preferenceManager.sharedPreferences?.registerOnSharedPreferenceChangeListener(this)
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
