@@ -585,6 +585,63 @@ add_task(async function remove_bookmark_tag_notification() {
   ]);
 });
 
+add_task(async function rename_bookmark_tag_notification() {
+  let bm = await PlacesUtils.bookmarks.insert({
+    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: new URL("http://renametag.example.com/"),
+  });
+  let itemId = await PlacesUtils.promiseItemId(bm.guid);
+
+  let tagFolder = await PlacesUtils.bookmarks.insert({
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    parentGuid: PlacesUtils.bookmarks.tagsGuid,
+    title: "tag",
+  });
+  let tag = await PlacesUtils.bookmarks.insert({
+    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    parentGuid: tagFolder.guid,
+    url: new URL("http://renametag.example.com/"),
+  });
+  let tagParentId = await PlacesUtils.promiseItemId(tag.parentGuid);
+
+  const observer = expectPlacesObserverNotifications([
+    "bookmark-title-changed",
+    "bookmark-tags-changed",
+  ]);
+  tagFolder = await PlacesUtils.bookmarks.update({
+    guid: tagFolder.guid,
+    title: "renamed",
+  });
+
+  observer.check([
+    {
+      type: "bookmark-title-changed",
+      id: tagParentId,
+      title: "renamed",
+      guid: tagFolder.guid,
+      url: "",
+      lastModified: tagFolder.lastModified,
+      parentGuid: tagFolder.parentGuid,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      itemType: PlacesUtils.bookmarks.TYPE_FOLDER,
+      isTagging: true,
+    },
+    {
+      type: "bookmark-tags-changed",
+      id: itemId,
+      itemType: bm.type,
+      url: bm.url,
+      guid: bm.guid,
+      parentGuid: bm.parentGuid,
+      tags: ["renamed"],
+      lastModified: bm.lastModified,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
+    },
+  ]);
+});
+
 add_task(async function remove_folder_notification() {
   let folder1 = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
