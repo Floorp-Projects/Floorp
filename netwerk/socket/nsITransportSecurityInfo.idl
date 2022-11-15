@@ -128,7 +128,7 @@ interface nsITransportSecurityInfo : nsISupports {
     /**
      * True iff the succeededCertChain is built in root.
      */
-    readonly attribute boolean isBuiltCertChainRootBuiltInRoot;
+    attribute boolean isBuiltCertChainRootBuiltInRoot;
 
     /**
      * The id used to uniquely identify the connection to the peer.

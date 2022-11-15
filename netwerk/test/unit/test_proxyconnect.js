@@ -255,9 +255,7 @@ function socketAccepted(socket, transport) {
     streamIn = transport
       .openInputStream(0, SEGMENT_SIZE, SEGMENT_COUNT)
       .QueryInterface(Ci.nsIAsyncInputStream);
-    streamOut = transport
-      .openOutputStream(0, 0, 0)
-      .QueryInterface(Ci.nsIAsyncOutputStream);
+    streamOut = transport.openOutputStream(0, 0, 0);
 
     streamIn.asyncWait(connectHandler, 0, 0, threadManager.mainThread);
   } catch (e) {

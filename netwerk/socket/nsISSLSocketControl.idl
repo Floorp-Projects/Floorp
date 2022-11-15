@@ -7,9 +7,8 @@
 #include "nsISupports.idl"
 
 interface nsIInterfaceRequestor;
-interface nsITlsHandshakeCallbackListener;
-interface nsITransportSecurityInfo;
 interface nsIX509Cert;
+interface nsITlsHandshakeCallbackListener;
 
 %{C++
 #include "nsStringFwd.h"
@@ -17,12 +16,10 @@ interface nsIX509Cert;
 %}
 [ref] native nsCStringTArrayRef(nsTArray<nsCString>);
 
-// An interface describing an object that controls and holds information about
-// a TLS handshake.
-// NB: The implementations of this interface may only be used on the socket
-// thread (except for asyncGetSecurityInfo);
 [scriptable, builtinclass, uuid(418265c8-654e-4fbb-ba62-4eed27de1f03)]
-interface nsITLSSocketControl : nsISupports {
+interface nsISSLSocketControl : nsISupports {
+    attribute nsIInterfaceRequestor     notificationCallbacks;
+
     void proxyStartSSL();
     void StartTLS();
 
@@ -95,6 +92,11 @@ interface nsITLSSocketControl : nsISupports {
      */
     readonly attribute uint32_t providerFlags;
 
+    /*
+     * The original TLS flags from the socket provider.
+     */
+    readonly attribute uint32_t providerTlsFlags;
+
     /* These values are defined by TLS. */
     const short SSL_VERSION_3   = 0x0300;
     const short TLS_VERSION_1   = 0x0301;
@@ -160,23 +162,4 @@ interface nsITLSSocketControl : nsISupports {
     [noscript] void disableEarlyData();
 
     [noscript] void setHandshakeCallbackListener(in nsITlsHandshakeCallbackListener callback);
-
-    /**
-     * The id used to uniquely identify the connection to the peer.
-     */
-    readonly attribute ACString peerId;
-
-    /**
-     * The securityInfo of the TLS handshake.
-     */
-    readonly attribute nsITransportSecurityInfo securityInfo;
-
-    /**
-     * Asynchronously obtain the securityInfo of the TLS handshake. Resolves
-     * with an nsITransportSecurityInfo. This should probably only be used in
-     * tests, where JS running on the main thread cannot access any of the
-     * other fields of nsITLSSocketControl.
-     */
-    [implicit_jscontext, must_use]
-    Promise asyncGetSecurityInfo();
 };

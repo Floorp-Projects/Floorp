@@ -7,16 +7,16 @@
 #include "WebSocketLog.h"
 #include "WebSocketConnectionChild.h"
 
-#include "WebSocketConnection.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "nsISerializable.h"
-#include "nsITLSSocketControl.h"
+#include "nsISSLSocketControl.h"
 #include "nsITransportSecurityInfo.h"
-#include "nsNetCID.h"
 #include "nsSerializationHelper.h"
-#include "nsSocketTransportService2.h"
 #include "nsThreadUtils.h"
+#include "WebSocketConnection.h"
+#include "nsNetCID.h"
+#include "nsSocketTransportService2.h"
 
 namespace mozilla {
 namespace net {
@@ -82,7 +82,7 @@ WebSocketConnectionChild::OnTransportAvailable(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsCOMPtr<nsITLSSocketControl> tlsSocketControl;
+  nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
   aTransport->GetTlsSocketControl(getter_AddRefs(tlsSocketControl));
   nsCOMPtr<nsITransportSecurityInfo> securityInfo(
       do_QueryInterface(tlsSocketControl));

@@ -13,6 +13,8 @@
 #include "ScopedNSSTypes.h"
 #include "SharedCertVerifier.h"
 
+class nsNSSSocketInfo;
+
 namespace mozilla {
 namespace psm {
 
