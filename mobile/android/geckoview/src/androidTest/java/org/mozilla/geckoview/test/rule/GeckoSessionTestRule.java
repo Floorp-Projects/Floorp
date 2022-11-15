@@ -46,6 +46,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -2075,83 +2078,6 @@ public class GeckoSessionTestRule implements TestRule {
   }
 
   /**
-   * Adds a mock location provider that can have locations manually set. NB: Likely also need to set
-   * geo.provider.testing to false to prevent network geolocation from interfering.
-   *
-   * @param locationManager location manager to accept the locations
-   * @param mockproviderName unique name of the location provider
-   */
-  public void addMockLocationProvider(LocationManager locationManager, String mockproviderName) {
-    // Ensures that only one location provider with this name exists
-    removeMockLocationProvider(locationManager, mockproviderName);
-    locationManager.addTestProvider(
-        mockproviderName,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        Criteria.POWER_LOW,
-        Criteria.ACCURACY_FINE);
-    locationManager.setTestProviderEnabled(mockproviderName, true);
-  }
-
-  /**
-   * Removes the location provider.
-   *
-   * @param locationManager location manager to accept the locations
-   * @param mockproviderName unique name of the location provider to remove
-   */
-  public void removeMockLocationProvider(LocationManager locationManager, String mockproviderName) {
-    try {
-      locationManager.removeTestProvider(mockproviderName);
-    } catch (Exception e) {
-      // Throws an exception if there is no provider with that name
-    }
-  }
-
-  /**
-   * Sets the mock location on a given location provider. NB: The system may still prioritize other
-   * location providers, accuracy determines preference.
-   *
-   * @param locationManager location manager to accept the locations
-   * @param mockProviderName location provider that will use this location
-   * @param latitude latitude in degrees to mock
-   * @param longitude longitude in degrees to mock
-   */
-  public void setMockLocation(
-      LocationManager locationManager, String mockProviderName, double latitude, double longitude) {
-    // Closer accuracy helps ensure the mock location provider is prioritized
-    setMockLocation(locationManager, mockProviderName, latitude, longitude, .000001f);
-  }
-
-  /**
-   * Sets the mock location on a given location provider. Use when accuracy needs to be specified.
-   * NB: The system may still prioritize other location providers, accuracy determines preference.
-   *
-   * @param locationManager location manager to accept the locations
-   * @param mockProviderName location provider that will use this location
-   * @param latitude latitude in degrees to mock
-   * @param longitude longitude in degrees to mock
-   * @param accuracy horizontal accuracy in meters to mock
-   */
-  public void setMockLocation(
-      LocationManager locationManager,
-      String mockProviderName,
-      double latitude,
-      double longitude,
-      float accuracy) {
-    Location location = new Location(mockProviderName);
-    location.setAccuracy(accuracy);
-    location.setLatitude(latitude);
-    location.setLongitude(longitude);
-    location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
-    location.setTime(System.currentTimeMillis());
-    locationManager.setTestProviderLocation(mockProviderName, location);
-  }
-  /**
    * Simulates a press to the Home button, causing the application to go to onPause. NB: Some time
    * must elapse for the event to fully occur.
    *
@@ -2177,6 +2103,189 @@ public class GeckoSessionTestRule implements TestRule {
     notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
     notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     context.startActivity(notificationIntent);
+  }
+
+  /**
+   * Mock Location Provider can be used in testing for creating mock locations. NB: Likely also need
+   * to set test setting geo.provider.testing to false to prevent network geolocation from
+   * interfering when using.
+   */
+  public class MockLocationProvider {
+
+    private final LocationManager locationManager;
+    private final String mockProviderName;
+    private boolean isActiveTestProvider = false;
+    private double mockLatitude;
+    private double mockLongitude;
+    private float mockAccuracy = .000001f;
+    private boolean doContinuallyPost;
+
+    @Nullable private ScheduledExecutorService executor;
+
+    /**
+     * Mock Location Provider adds a test provider to the location manager and controls sending mock
+     * locations. Use @{@link #postLocation()} to post the location to the location manager.
+     * Use @{@link #removeMockLocationProvider()} to remove the location provider to clean-up the
+     * test harness. Default accuracy is .000001f.
+     *
+     * @param locationManager location manager to accept the locations
+     * @param mockProviderName location provider that will use this location
+     * @param mockLatitude initial latitude in degrees that @{@link #postLocation()} will use
+     * @param mockLongitude initial longitude in degrees that @{@link #postLocation()} will use
+     * @param doContinuallyPost when posting a location, continue to post every 3s to keep location
+     *     current
+     */
+    public MockLocationProvider(
+        LocationManager locationManager,
+        String mockProviderName,
+        double mockLatitude,
+        double mockLongitude,
+        boolean doContinuallyPost) {
+      this.locationManager = locationManager;
+      this.mockProviderName = mockProviderName;
+      this.mockLatitude = mockLatitude;
+      this.mockLongitude = mockLongitude;
+      this.doContinuallyPost = doContinuallyPost;
+      addMockLocationProvider();
+    }
+
+    /** Adds a mock location provider that can have locations manually set. */
+    private void addMockLocationProvider() {
+      // Ensures that only one location provider with this name exists
+      removeMockLocationProvider();
+      locationManager.addTestProvider(
+          mockProviderName,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          Criteria.POWER_LOW,
+          Criteria.ACCURACY_FINE);
+      locationManager.setTestProviderEnabled(mockProviderName, true);
+      isActiveTestProvider = true;
+    }
+
+    /**
+     * Removes the location provider. Recommend calling when ending test to prevent the mock
+     * provider remaining as a test provider.
+     */
+    public void removeMockLocationProvider() {
+      stopPostingLocation();
+      try {
+        locationManager.removeTestProvider(mockProviderName);
+      } catch (Exception e) {
+        // Throws an exception if there is no provider with that name
+      }
+      isActiveTestProvider = false;
+    }
+
+    /**
+     * Sets the mock location on MockLocationProvider, that will be used by @{@link #postLocation()}
+     *
+     * @param latitude latitude in degrees to mock
+     * @param longitude longitude in degrees to mock
+     */
+    public void setMockLocation(double latitude, double longitude) {
+      mockLatitude = latitude;
+      mockLongitude = longitude;
+    }
+
+    /**
+     * Sets the mock location on a MockLocationProvider, that will be used by @{@link
+     * #postLocation()} . Note, changing the accuracy can affect the importance of the mock provider
+     * compared to other location providers.
+     *
+     * @param latitude latitude in degrees to mock
+     * @param longitude longitude in degrees to mock
+     * @param accuracy horizontal accuracy in meters to mock
+     */
+    public void setMockLocation(double latitude, double longitude, float accuracy) {
+      mockLatitude = latitude;
+      mockLongitude = longitude;
+      mockAccuracy = accuracy;
+    }
+
+    /**
+     * When doContinuallyPost is set to true, @{@link #postLocation()} will post the location to the
+     * location manager every 3s. When set to false, @{@link #postLocation()} will only post the
+     * location once. Purpose is to prevent the location from becoming stale.
+     *
+     * @param doContinuallyPost setting for continually posting the location after calling @{@link
+     *     #postLocation()}
+     */
+    public void setDoContinuallyPost(boolean doContinuallyPost) {
+      this.doContinuallyPost = doContinuallyPost;
+    }
+
+    /**
+     * Shutsdown and removes the executor created by @{@link #postLocation()} when @{@link
+     * #doContinuallyPost is true} to stop posting the location.
+     */
+    public void stopPostingLocation() {
+      if (executor != null) {
+        executor.shutdown();
+        executor = null;
+      }
+    }
+
+    /**
+     * Posts the set location to the system location manager. If @{@link #doContinuallyPost} is
+     * true, the location will be posted every 3s by an executor, otherwise will post once.
+     */
+    public void postLocation() {
+      if (!isActiveTestProvider) {
+        throw new IllegalStateException("The mock test provider is not active.");
+      }
+
+      // Ensure the thread that was posting a location (if applicable) is stopped.
+      stopPostingLocation();
+
+      // Set Location
+      Location location = new Location(mockProviderName);
+      location.setAccuracy(mockAccuracy);
+      location.setLatitude(mockLatitude);
+      location.setLongitude(mockLongitude);
+      location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+      location.setTime(System.currentTimeMillis());
+      locationManager.setTestProviderLocation(mockProviderName, location);
+      Log.i(
+          LOGTAG,
+          mockProviderName
+              + " is posting location, lat: "
+              + mockLatitude
+              + " lon: "
+              + mockLongitude
+              + " acc: "
+              + mockAccuracy);
+      // Continually post location
+      if (doContinuallyPost) {
+        executor = Executors.newScheduledThreadPool(1);
+        executor.scheduleAtFixedRate(
+            new Runnable() {
+              @Override
+              public void run() {
+                location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+                location.setTime(System.currentTimeMillis());
+                locationManager.setTestProviderLocation(mockProviderName, location);
+                Log.i(
+                    LOGTAG,
+                    mockProviderName
+                        + " is posting location, lat: "
+                        + mockLatitude
+                        + " lon: "
+                        + mockLongitude
+                        + " acc: "
+                        + mockAccuracy);
+              }
+            },
+            0,
+            3,
+            TimeUnit.SECONDS);
+      }
+    }
   }
 
   Map<GeckoSession, WebExtension.Port> mPorts = new HashMap<>();
