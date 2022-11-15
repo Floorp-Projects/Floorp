@@ -24,9 +24,15 @@ async function testInArea(area) {
   await extension.startup();
   let widget = getBrowserActionWidget(extension);
   let placement = CustomizableUI.getPlacementOfWidget(widget.id);
+  let fallbackDefaultArea = Services.prefs.getBoolPref(
+    "extensions.unifiedExtensions.enabled",
+    false
+  )
+    ? CustomizableUI.AREA_ADDONS
+    : CustomizableUI.AREA_NAVBAR;
   is(
     placement && placement.area,
-    browserAreas[area || "navbar"],
+    browserAreas[area] || fallbackDefaultArea,
     `widget located in correct area`
   );
   await extension.unload();
