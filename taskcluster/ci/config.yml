@@ -60,6 +60,8 @@ treeherder:
         'M-1proc': 'Mochitests without e10s or fission'
         'M-a11y-checks': 'Mochitests with accessibility checks enabled'
         'M-a11y-checks-nofis': 'Mochitests with accessibility checks enabled and without fission enabled'
+        'M-a11y-no-cache': 'Mochitests with accessibility cache disabled'
+        'M-a11y-no-cache-1proc': 'Mochitests with accessibility cache, e10s, and fission disabled'
         'M-xorig': 'Mochitests with cross-origin and fission enabled'
         'M-gli': 'Mochitests with WebGL over IPC'
         'M-gli-nofis': 'Mochitests with WebGL over IPC without fission enabled'
