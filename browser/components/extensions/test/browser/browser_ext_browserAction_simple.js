@@ -9,7 +9,6 @@ async function testAction(manifest_version) {
       manifest_version,
       [action]: {
         default_popup: "popup.html",
-        default_area: "navbar",
         unrecognized_property: "with-a-random-value",
       },
       icons: { 32: "icon.png" },

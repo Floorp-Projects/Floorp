@@ -326,7 +326,6 @@ add_task(async function webextension() {
         browser_action: {
           default_icon: "default.png",
           default_title: "Hello",
-          default_area: "navbar",
         },
         page_action: {
           default_icon: "default.png",
@@ -417,7 +416,6 @@ add_task(async function webextension() {
         browser_action: {
           default_icon: "default.png",
           default_title: "Hello",
-          default_area: "navbar",
         },
         page_action: {
           default_icon: "default.png",

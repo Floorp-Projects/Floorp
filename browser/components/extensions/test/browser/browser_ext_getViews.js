@@ -127,7 +127,6 @@ add_task(async function() {
 
       browser_action: {
         default_popup: "page.html?popup",
-        default_area: "navbar",
       },
 
       sidebar_action: {
@@ -303,7 +302,6 @@ add_task(async function test_getViews_excludes_blocked_parsing_documents() {
     manifest: {
       browser_action: {
         default_popup: "popup.html",
-        default_area: "navbar",
       },
     },
     files: {

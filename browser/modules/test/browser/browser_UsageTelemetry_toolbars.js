@@ -415,7 +415,6 @@ add_task(async function extensions() {
         browser_action: {
           default_icon: "default.png",
           default_title: "Hello",
-          default_area: "navbar",
         },
         page_action: {
           default_icon: "default.png",

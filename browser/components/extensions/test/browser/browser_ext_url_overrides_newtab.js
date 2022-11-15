@@ -142,10 +142,7 @@ add_task(async function test_new_tab_ignore_settings() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       browser_specific_settings: { gecko: { id: extensionId } },
-      browser_action: {
-        default_popup: "ignore.html",
-        default_area: "navbar",
-      },
+      browser_action: { default_popup: "ignore.html" },
       chrome_url_overrides: { newtab: "ignore.html" },
     },
     files: { "ignore.html": '<h1 id="extension-new-tab">New Tab!</h1>' },

@@ -10,9 +10,7 @@ function getExtension(background, useAddonManager) {
   return ExtensionTestUtils.loadExtension({
     useAddonManager,
     manifest: {
-      browser_action: {
-        default_area: "navbar",
-      },
+      browser_action: {},
       permissions: ["menus"],
       background: { persistent: false },
     },
@@ -171,7 +169,6 @@ add_task(async function test_actions_context_menu() {
       browser_action: {
         default_title: "Test BrowserAction",
         default_popup: "test.html",
-        default_area: "navbar",
         browser_style: true,
       },
       background: { persistent: false },
