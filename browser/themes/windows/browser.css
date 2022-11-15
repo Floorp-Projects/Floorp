@@ -196,11 +196,11 @@
    * it's children visible in order to hide the background but keep the margin and
    * padding that comes from those -moz-window-titlebar rules.
    */
-  :root:not([inDOMFullscreen]) #titlebar:-moz-lwtheme {
+  :root:not([inFullscreen]) #titlebar:-moz-lwtheme {
     visibility: hidden;
   }
-  :root:not([inDOMFullscreen], [chromehidden~="menubar"]) #toolbar-menubar:-moz-lwtheme,
-  :root:not([inDOMFullscreen], [chromehidden~="toolbar"]) #TabsToolbar:-moz-lwtheme {
+  :root:not([inFullscreen], [chromehidden~="menubar"]) #toolbar-menubar:-moz-lwtheme,
+  :root:not([inFullscreen], [chromehidden~="toolbar"]) #TabsToolbar:-moz-lwtheme {
     visibility: visible;
   }
 }
