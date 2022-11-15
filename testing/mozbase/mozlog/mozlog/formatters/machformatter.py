@@ -30,7 +30,7 @@ color_dict = {
     "bold": "bold",
     "grey": "grey",
     "normal": "normal",
-    "dim": "dim",
+    "bright_black": "bright_black",
 }
 
 
@@ -183,7 +183,7 @@ class MachFormatter(base.BaseFormatter):
         return rv
 
     def _format_stack(self, stack):
-        return "\n%s\n" % self.color_formatter.dim(stack.strip("\n"))
+        return "\n%s\n" % self.color_formatter.bright_black(stack.strip("\n"))
 
     def _format_suite_summary(self, suite, summary):
         count = summary["counts"]
