@@ -6,7 +6,7 @@
 #include "nsISupports.idl"
 
 interface nsIProxyInfo;
-interface nsISSLSocketControl;
+interface nsITLSSocketControl;
 [ptr] native PRFileDescStar(struct PRFileDesc);
 native OriginAttributes(mozilla::OriginAttributes);
 [ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
@@ -55,7 +55,7 @@ interface nsISocketProvider : nsISupports
                    in unsigned long             aFlags,
                    in unsigned long             aTlsFlags,
                    out PRFileDescStar           aFileDesc,
-                   out nsISSLSocketControl      aTLSSocketControl);
+                   out nsITLSSocketControl      aTLSSocketControl);
 
     /**
      * addToSocket
@@ -76,7 +76,7 @@ interface nsISocketProvider : nsISupports
                      in unsigned long             aFlags,
                      in unsigned long             aTlsFlags,
                      in PRFileDescStar            aFileDesc,
-                     out nsISSLSocketControl      aTLSSocketControl);
+                     out nsITLSSocketControl      aTLSSocketControl);
 
     /**
      * PROXY_RESOLVES_HOST

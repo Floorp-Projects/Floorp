@@ -89,7 +89,7 @@ class ASpdySession : public nsAHttpTransaction {
       PRIntervalTime aRtt) = 0;
 };
 
-using ALPNCallback = bool (*)(nsISSLSocketControl*);
+using ALPNCallback = bool (*)(nsITLSSocketControl*);
 
 // this is essentially a single instantiation as a member of nsHttpHandler.
 // It could be all static except using static ctors of XPCOM objects is a
