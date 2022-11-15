@@ -21,7 +21,7 @@ object FocusVersions {
         const val fragment = "1.5.4"
         const val lifecycle = "2.5.1"
         const val palette = "1.0.0"
-        const val preference = "1.1.1"
+        const val preference = "1.2.0"
         const val recyclerview = "1.2.1"
         const val savedstate = "1.2.0"
         const val splashscreen = "1.0.0"
