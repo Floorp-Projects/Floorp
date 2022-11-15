@@ -43,7 +43,7 @@ linux64-android-gradle-dependencies:
         resources:
             - taskcluster/scripts/toolchain/android-gradle-dependencies.sh
             - taskcluster/scripts/toolchain/android-gradle-dependencies/**
-            - buildSrc/src/main/java/Dependencies.kt
+            - buildSrc/src/main/java/FocusDependencies.kt
             - buildSrc/src/main/java/AndroidComponents.kt
         toolchain-artifact: public/build/android-gradle-dependencies.tar.xz
         toolchain-alias: android-gradle-dependencies

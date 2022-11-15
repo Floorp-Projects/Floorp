@@ -93,7 +93,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = Versions.google_compose_compiler
+        kotlinCompilerExtensionVersion = FocusVersions.google_compose_compiler
     }
 
     flavorDimensions "product"
