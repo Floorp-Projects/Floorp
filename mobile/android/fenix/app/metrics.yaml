@@ -1105,6 +1105,7 @@ metrics:
       to identify installs from Mozilla Online.
     send_in_pings:
       - metrics
+      - baseline
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/16075
     data_reviews:
@@ -1116,6 +1117,8 @@ metrics:
       - android-probes@mozilla.com
       - kbrosnan@mozilla.com
     expires: never
+    no_lint:
+      - BASELINE_PING
     metadata:
       tags:
         - China
