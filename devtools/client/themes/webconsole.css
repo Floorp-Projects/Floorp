@@ -275,7 +275,9 @@
 
 .message > .icon.logpoint {
   background-image: url(chrome://devtools/content/debugger/images/webconsole-logpoint.svg);
-  color: var(--theme-graphs-purple);
+  -moz-context-properties: fill, stroke;
+  fill: var(--theme-graphs-purple);
+  stroke: var(--theme-graphs-purple);
 }
 
 .message.network-message-blocked > .icon {

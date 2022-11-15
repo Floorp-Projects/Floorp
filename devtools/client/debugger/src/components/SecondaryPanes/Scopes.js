@@ -189,7 +189,7 @@ class Scopes extends PureComponent {
     const { watchpoint } = item.contents;
     return (
       <button
-        className={`remove-${watchpoint}-watchpoint`}
+        className={`remove-watchpoint-${watchpoint}`}
         title={L10N.getStr("watchpoints.removeWatchpointTooltip")}
         onClick={e => {
           e.stopPropagation();

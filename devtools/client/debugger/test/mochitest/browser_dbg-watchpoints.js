@@ -47,9 +47,9 @@ add_task(async function() {
 
   info("Remove the get watchpoint on b");
   const removedWatchpoint1 = waitForDispatch(dbg.store, "REMOVE_WATCHPOINT");
-  const el1 = await waitForElementWithSelector(dbg, ".remove-get-watchpoint");
+  const el1 = await waitForElementWithSelector(dbg, ".remove-watchpoint-get");
   el1.scrollIntoView();
-  clickElementWithSelector(dbg, ".remove-get-watchpoint");
+  clickElementWithSelector(dbg, ".remove-watchpoint-get");
   await removedWatchpoint1;
 
   info(
@@ -89,9 +89,10 @@ add_task(async function() {
   info("Remove the get watchpoint on b");
   const removedWatchpoint2 = waitForDispatch(dbg.store, "REMOVE_WATCHPOINT");
   await toggleScopeNode(dbg, 3);
-  const el2 = await waitForElementWithSelector(dbg, ".remove-get-watchpoint");
+
+  const el2 = await waitForElementWithSelector(dbg, ".remove-watchpoint-get");
   el2.scrollIntoView();
-  clickElementWithSelector(dbg, ".remove-get-watchpoint");
+  clickElementWithSelector(dbg, ".remove-watchpoint-get");
   await removedWatchpoint2;
 
   info("Add back the get watchpoint on b");
