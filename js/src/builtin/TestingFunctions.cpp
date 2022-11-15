@@ -1201,18 +1201,30 @@ static bool WasmGlobalExtractLane(JSContext* cx, unsigned argc, Value* vp) {
 
   wasm::RootedVal val(cx);
   switch (interp) {
-    case LaneInterp::I32x4:
-      val.set(wasm::Val(v128.extractLane<uint32_t>(lane)));
+    case LaneInterp::I32x4: {
+      uint32_t i;
+      v128.extractLane<uint32_t>(lane, &i);
+      val.set(wasm::Val(i));
       break;
-    case LaneInterp::I64x2:
-      val.set(wasm::Val(v128.extractLane<uint64_t>(lane)));
+    }
+    case LaneInterp::I64x2: {
+      uint64_t i;
+      v128.extractLane<uint64_t>(lane, &i);
+      val.set(wasm::Val(i));
       break;
-    case LaneInterp::F32x4:
-      val.set(wasm::Val(v128.extractLane<float>(lane)));
+    }
+    case LaneInterp::F32x4: {
+      float f;
+      v128.extractLane<float>(lane, &f);
+      val.set(wasm::Val(f));
       break;
-    case LaneInterp::F64x2:
-      val.set(wasm::Val(v128.extractLane<double>(lane)));
+    }
+    case LaneInterp::F64x2: {
+      double d;
+      v128.extractLane<double>(lane, &d);
+      val.set(wasm::Val(d));
       break;
+    }
     default:
       MOZ_ASSERT_UNREACHABLE();
   }
