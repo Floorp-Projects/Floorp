@@ -818,7 +818,7 @@ nsPrintSettingsService::InitPrintSettingsFromPrinter(
     const nsAString& aPrinterName, nsIPrintSettings* aPrintSettings) {
   // Don't get print settings from the printer in the child when printing via
   // parent, these will be retrieved in the parent later in the print process.
-  if (XRE_IsContentProcess() && StaticPrefs::print_print_via_parent()) {
+  if (XRE_IsContentProcess()) {
     return NS_OK;
   }
 

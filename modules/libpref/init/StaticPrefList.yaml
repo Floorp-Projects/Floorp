@@ -12132,12 +12132,6 @@
   value: true
   mirror: always
 
-# Print via the parent process. This is only used when e10s is enabled.
-- name: print.print_via_parent
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Whether we attempt to generate links in Save As PDF output.
 - name: print.save_as_pdf.links.enabled
   type: RelaxedAtomicBool
