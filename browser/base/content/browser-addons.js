@@ -640,8 +640,19 @@ var gXPInstallObserver = {
           progressNotification.remove();
         }
 
+        // The informational content differs somewhat for site permission
+        // add-ons. AOM no longer supports installing multiple addons,
+        // so the array handling here is vestigial.
+        let isSitePermissionAddon = installInfo.installs.every(
+          ({ addon }) => addon?.type === lazy.SITEPERMS_ADDON_TYPE
+        );
         let hasHost = !!options.displayURI;
-        if (hasHost) {
+
+        if (isSitePermissionAddon) {
+          messageString = gNavigatorBundle.getString(
+            "sitePermissionInstallFirstPrompt.header"
+          );
+        } else if (hasHost) {
           messageString = gNavigatorBundle.getFormattedString(
             "xpinstallPromptMessage.header",
             ["<>"]
@@ -667,17 +678,9 @@ var gXPInstallObserver = {
             message.firstChild.remove();
           }
 
-          // The informational content differs somewhat for site permission
-          // add-ons. AOM no longer supports installing multiple addons,
-          // so the array handling here is vestigial.
-          let isSitePermissionAddon = installInfo.installs.every(
-            ({ addon }) => addon?.type === lazy.SITEPERMS_ADDON_TYPE
-          );
-
           if (isSitePermissionAddon) {
-            message.textContent = gNavigatorBundle.getFormattedString(
-              "sitePermissionsInstallPromptMessage.message",
-              [options.name]
+            message.textContent = gNavigatorBundle.getString(
+              "sitePermissionInstallFirstPrompt.message"
             );
           } else if (hasHost) {
             let text = gNavigatorBundle.getString(

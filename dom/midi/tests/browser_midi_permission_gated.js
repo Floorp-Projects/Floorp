@@ -77,17 +77,12 @@ add_task(async function testRequestMIDIAccess() {
   );
   is(
     installPopupHeader.textContent,
-    gNavigatorBundle.getFormattedString("xpinstallPromptMessage.header", [
-      testPageHost,
-    ]),
+    gNavigatorBundle.getString("sitePermissionInstallFirstPrompt.header"),
     "First popup has expected header text"
   );
   is(
     installPopupMessage.textContent,
-    gNavigatorBundle.getFormattedString(
-      "sitePermissionsInstallPromptMessage.message",
-      [testPageHost]
-    ),
+    gNavigatorBundle.getString("sitePermissionInstallFirstPrompt.message"),
     "First popup has expected message"
   );
 
