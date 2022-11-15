@@ -1088,6 +1088,13 @@ uint64_t RemoteAccessibleBase<Derived>::State() {
       }
     }
 
+    auto* browser = static_cast<dom::BrowserParent*>(Document()->Manager());
+    if (browser == dom::BrowserParent::GetFocused()) {
+      if (this == Document()->GetFocusedAcc()) {
+        state |= states::FOCUSED;
+      }
+    }
+
     ApplyImplicitState(state);
 
     auto* cbc = mDoc->GetBrowsingContext();
