@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class="filtered">
+<style>
+  .filtered {
+    filter: url(#notsvg);
+  }
+  #notsvg {
+    float: left;
+    overflow: auto;
+  }
+</style>
+<script>
+function go() {
+  const div = document.createElement('div')
+  div.setAttribute('id', 'notsvg')
+  document.documentElement.appendChild(div)
+}
+</script>
+<body onload="go();" class="filtered">

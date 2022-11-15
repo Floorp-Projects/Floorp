@@ -1,0 +1,21 @@
+<!-- MUST BE QUIRKS MODE -->
+<style>
+span { top: 0%; }
+</style>
+<script>
+function jsfuzzer() {
+  try { text.setAttribute("font-size", "10px"); } catch(e) { }
+}
+</script>
+<body onload=jsfuzzer()>
+  <div style="overflow: scroll">
+    <span></span>
+  </div>
+  <svg>
+    <tref id="marker">
+      <text id="text"/>
+    </tref>
+    <polyline marker-end="url(#marker)">
+    </polyline>
+  </svg>
+</body>
