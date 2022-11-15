@@ -335,7 +335,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
     // Per spec, we count impressions only when the user picks a result, i.e.,
     // when `state` is "engagement".
-    if (result && state == "engagement") {
+    if (result?.isVisible && state == "engagement") {
       this._recordEngagementTelemetry(
         result,
         isPrivate,

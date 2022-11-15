@@ -8,6 +8,10 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  UrlbarView: "resource:///modules/UrlbarView.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   CONTEXTUAL_SERVICES_PING_TYPES:
     "resource:///modules/PartnerLinkAttribution.jsm",
@@ -1157,6 +1161,208 @@ add_task(async function telemetryEnvironmentOnStartup() {
 
   await TelemetryEnvironment.testCleanRestart().onInitialized();
 });
+
+// When a quick suggest result is added but not visible in the view, impression
+// telemetry should not be recorded for it.
+add_task(async function hiddenRowImpression() {
+  Services.telemetry.clearEvents();
+
+  // Increase the timeout of the remove-stale-rows timer so that it doesn't
+  // interfere with this task.
+  let originalRemoveStaleRowsTimeout = UrlbarView.removeStaleRowsTimeout;
+  UrlbarView.removeStaleRowsTimeout = 30000;
+  registerCleanupFunction(() => {
+    UrlbarView.removeStaleRowsTimeout = originalRemoveStaleRowsTimeout;
+  });
+
+  // Set up a test provider that doesn't add any results until we resolve its
+  // `finishQueryPromise`. For the first search below, it will add many search
+  // suggestions.
+  let maxCount = UrlbarPrefs.get("maxRichResults");
+  let results = [];
+  for (let i = 0; i < maxCount; i++) {
+    results.push(
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.SEARCH,
+        UrlbarUtils.RESULT_SOURCE.SEARCH,
+        {
+          engine: "Example",
+          suggestion: "suggestion " + i,
+          lowerCaseSuggestion: "suggestion " + i,
+          query: "test",
+        }
+      )
+    );
+  }
+  let provider = new DelayingTestProvider({ results });
+  UrlbarProvidersManager.registerProvider(provider);
+
+  // Open a new tab since we'll load a page below.
+  let tab = await BrowserTestUtils.openNewForegroundTab({ gBrowser });
+
+  // Do a normal search and allow the test provider to finish.
+  provider.finishQueryPromise = Promise.resolve();
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "test",
+    fireInputEvent: true,
+  });
+
+  // Sanity check the rows. After the heuristic, the remaining rows should be
+  // the search results added by the test provider.
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(window),
+    maxCount,
+    "Row count after first search"
+  );
+  for (let i = 1; i < maxCount; i++) {
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+    Assert.equal(
+      result.type,
+      UrlbarUtils.RESULT_TYPE.SEARCH,
+      "Expected result type at index " + i
+    );
+    Assert.equal(
+      result.source,
+      UrlbarUtils.RESULT_SOURCE.SEARCH,
+      "Expected result source at index " + i
+    );
+  }
+
+  // Set up a second search. It will trigger a quick suggest result, and this
+  // time the test provider will return many URL results. URL rows can't replace
+  // search suggestions in the view, so they'll be hidden until the search
+  // completes or the remove-stale-rows timer fires. The quick suggest row
+  // should be last due to its `suggestedIndex` and it should also be hidden.
+  results = [];
+  for (let i = 0; i < maxCount; i++) {
+    results.push(
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.URL,
+        UrlbarUtils.RESULT_SOURCE.HISTORY,
+        {
+          url: "http://example.com/" + i,
+        }
+      )
+    );
+  }
+  provider._results = results;
+
+  // Don't allow the search to finish until we check the updated rows. We'll
+  // accomplish that by adding a mutation observer to observe completion of the
+  // view update and delaying resolving the provider's `finishQueryPromise`.
+  let mutationPromise = new Promise(resolve => {
+    let observer = new MutationObserver(mutations => {
+      observer.disconnect();
+      resolve();
+    });
+    observer.observe(UrlbarTestUtils.getResultsContainer(window), {
+      childList: true,
+    });
+  });
+
+  // Now do the second search but don't wait for it to finish.
+  let resolveQuery;
+  provider.finishQueryPromise = new Promise(
+    resolve => (resolveQuery = resolve)
+  );
+  gURLBar.focus();
+  let queryPromise = UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: SUGGESTIONS[0].keywords[0],
+    fireInputEvent: true,
+  });
+
+  // Wait for the view update to happen.
+  await mutationPromise;
+
+  // Now check the rows. At this point, the view has updated but since the
+  // search hasn't finished and the remove-stale-rows timer hasn't fired, the
+  // URL and quick suggest rows should all be hidden. We can't use
+  // `UrlbarTestUtils.getDetailsOfResultAt()` here because it waits for the
+  // search to finish.
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(window),
+    2 * maxCount - 1,
+    "Row count before search finishes"
+  );
+
+  let rows = UrlbarTestUtils.getResultsContainer(window).children;
+  for (let i = 1; i < rows.length; i++) {
+    let row = rows[i];
+    if (i < maxCount) {
+      Assert.equal(
+        row.result.type,
+        UrlbarUtils.RESULT_TYPE.SEARCH,
+        "Row is a search result at index " + i
+      );
+      Assert.equal(
+        row.getAttribute("stale"),
+        "true",
+        "Row is stale at index " + i
+      );
+      Assert.ok(
+        BrowserTestUtils.is_visible(row),
+        "Row is visible at index " + i
+      );
+    } else {
+      Assert.equal(
+        row.result.type,
+        UrlbarUtils.RESULT_TYPE.URL,
+        "Row is a URL result at index " + i
+      );
+      Assert.ok(!row.hasAttribute("stale"), "Row is not stale at index " + i);
+      Assert.ok(BrowserTestUtils.is_hidden(row), "Row is hidden at index " + i);
+    }
+  }
+
+  let lastRow = rows[rows.length - 1];
+  Assert.equal(
+    lastRow.result.providerName,
+    "UrlbarProviderQuickSuggest",
+    "Last row is the quick suggest result"
+  );
+  Assert.ok(
+    BrowserTestUtils.is_hidden(lastRow),
+    "Double check: Last row is hidden"
+  );
+
+  // Hit enter to pick the heuristic search result. This will cancel the search
+  // and notify the quick suggest provider that an engagement occurred.
+  let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  await UrlbarTestUtils.promisePopupClose(window, () => {
+    EventUtils.synthesizeKey("KEY_Enter");
+  });
+  await loadPromise;
+
+  // Resolve the test provider's promise finally.
+  resolveQuery();
+  await queryPromise;
+
+  // The quick suggest provider added a result but it wasn't visible in the
+  // view. No impression telemetry should be recorded for it.
+  QuickSuggestTestUtils.assertScalars({});
+  QuickSuggestTestUtils.assertEvents([]);
+  QuickSuggestTestUtils.assertPings(spy, []);
+
+  BrowserTestUtils.removeTab(tab);
+  UrlbarProvidersManager.unregisterProvider(provider);
+  UrlbarView.removeStaleRowsTimeout = originalRemoveStaleRowsTimeout;
+});
+
+/**
+ * A test provider that doesn't finish `startQuery()` until `finishQueryPromise`
+ * is resolved.
+ */
+class DelayingTestProvider extends UrlbarTestUtils.TestProvider {
+  finishQueryPromise = null;
+  async startQuery(context, addCallback) {
+    for (let result of this._results) {
+      addCallback(this, result);
+    }
+    await this.finishQueryPromise;
+  }
+}
 
 /**
  * Adds a search engine that provides suggestions, calls your callback, and then
