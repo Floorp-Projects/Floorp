@@ -1257,11 +1257,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         ).contains(langTag)
     }
 
-    private var isHistoryMetadataEnabled by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_history_metadata_feature),
-        default = false,
-    )
-
     private val mr2022Sections: Map<Mr2022Section, Boolean>
         get() =
             FxNimbus.features.mr2022.value().sectionsEnabled
@@ -1277,7 +1272,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var historyMetadataUIFeature by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_history_metadata_feature),
         default = { homescreenSections[HomeScreenSection.RECENT_EXPLORATIONS] == true },
-        featureFlag = FeatureFlags.historyMetadataUIFeature || isHistoryMetadataEnabled,
+        featureFlag = true,
     )
 
     /**

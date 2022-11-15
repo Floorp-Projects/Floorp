@@ -25,8 +25,7 @@
 
     <androidx.preference.SwitchPreference
         android:key="@string/pref_key_history_metadata_feature"
-        android:title="@string/customize_toggle_recently_visited"
-        app:isPreferenceVisible="false" />
+        android:title="@string/customize_toggle_recently_visited" />
 
     <androidx.preference.SwitchPreference
         android:key="@string/pref_key_pocket_homescreen_recommendations"

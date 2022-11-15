@@ -32,11 +32,6 @@ object FeatureFlags {
     const val syncAddressesFeature = false
 
     /**
-     * Enables UI features based on history metadata.
-     */
-    const val historyMetadataUIFeature = true
-
-    /**
      * Show Pocket recommended stories on home.
      */
     fun isPocketRecommendationsFeatureEnabled(context: Context): Boolean {
