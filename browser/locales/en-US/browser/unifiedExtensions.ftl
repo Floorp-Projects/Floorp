@@ -23,6 +23,9 @@ unified-extensions-item-message-manage = Manage extension
 
 ## Extension's context menu
 
+unified-extensions-context-menu-pin-to-toolbar =
+    .label = Pin to Toolbar
+
 unified-extensions-context-menu-manage-extension =
     .label = Manage Extension
 
