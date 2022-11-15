@@ -130,6 +130,9 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
 
   virtual void Control(const ServiceWorkerDescriptor& aServiceWorker);
 
+  virtual mozilla::Result<mozilla::ipc::PrincipalInfo, nsresult> GetStorageKey()
+      override;
+
   // DispatcherTrait implementation
   nsresult Dispatch(TaskCategory aCategory,
                     already_AddRefed<nsIRunnable>&& aRunnable) final;

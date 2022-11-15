@@ -209,7 +209,8 @@ static bool ReadPrincipalInfo(JSStructuredCloneReader* aReader, uint32_t aTag,
     nsAutoCString spec;
     nsAutoCString originNoSuffix;
     nsAutoCString baseDomain;
-    if (!ReadPrincipalInfo(aReader, attrs, spec, originNoSuffix, baseDomain)) {
+    if (!::ReadPrincipalInfo(aReader, attrs, spec, originNoSuffix,
+                             baseDomain)) {
       return false;
     }
     aInfo = NullPrincipalInfo(attrs, spec);
@@ -240,7 +241,8 @@ static bool ReadPrincipalInfo(JSStructuredCloneReader* aReader, uint32_t aTag,
     nsAutoCString spec;
     nsAutoCString originNoSuffix;
     nsAutoCString baseDomain;
-    if (!ReadPrincipalInfo(aReader, attrs, spec, originNoSuffix, baseDomain)) {
+    if (!::ReadPrincipalInfo(aReader, attrs, spec, originNoSuffix,
+                             baseDomain)) {
       return false;
     }
 
@@ -264,6 +266,16 @@ static bool ReadPrincipalInfo(JSStructuredCloneReader* aReader, uint32_t aTag,
   }
 
   return true;
+}
+
+/* static */
+bool nsJSPrincipals::ReadPrincipalInfo(JSStructuredCloneReader* aReader,
+                                       PrincipalInfo& aInfo) {
+  uint32_t tag, unused;
+  if (!JS_ReadUint32Pair(aReader, &tag, &unused)) {
+    return false;
+  }
+  return ::ReadPrincipalInfo(aReader, tag, aInfo);
 }
 
 static StaticRefPtr<nsIPrincipal> sActiveWorkerPrincipal;
@@ -308,7 +320,7 @@ bool nsJSPrincipals::ReadKnownPrincipalType(JSContext* aCx,
   }
 
   PrincipalInfo info;
-  if (!ReadPrincipalInfo(aReader, aTag, info)) {
+  if (!::ReadPrincipalInfo(aReader, aTag, info)) {
     return false;
   }
 

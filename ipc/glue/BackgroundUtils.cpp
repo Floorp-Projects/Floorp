@@ -166,6 +166,37 @@ Result<nsCOMPtr<nsIPrincipal>, nsresult> PrincipalInfoToPrincipal(
   }
 }
 
+bool NonExpandedPrincipalInfoEquals(const PrincipalInfo& aLeft,
+                                    const PrincipalInfo& aRight) {
+  if (aLeft.type() != aRight.type()) {
+    return false;
+  }
+
+  const ContentPrincipalInfo& leftContent = aLeft.get_ContentPrincipalInfo();
+  const ContentPrincipalInfo& rightContent = aRight.get_ContentPrincipalInfo();
+  switch (aLeft.type()) {
+    case PrincipalInfo::TContentPrincipalInfo: {
+      return leftContent.attrs() == rightContent.attrs() &&
+             leftContent.originNoSuffix() == rightContent.originNoSuffix();
+    }
+    case PrincipalInfo::TSystemPrincipalInfo: {
+      // system principal always matches
+      return true;
+    }
+    case PrincipalInfo::TNullPrincipalInfo: {
+      return leftContent.attrs() == rightContent.attrs() &&
+             leftContent.spec() == rightContent.spec();
+    }
+    default: {
+      break;
+    }
+  }
+
+  // Clients (windows/workers) should never have an expanded principal type.
+  MOZ_DIAGNOSTIC_ASSERT(false, "unexpected principal type!");
+  return false;
+}
+
 already_AddRefed<nsIContentSecurityPolicy> CSPInfoToCSP(
     const CSPInfo& aCSPInfo, Document* aRequestingDoc,
     nsresult* aOptionalResult) {

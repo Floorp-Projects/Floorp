@@ -9,6 +9,7 @@
 
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Result.h"
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/DispatcherTrait.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
@@ -254,6 +255,10 @@ class nsIGlobalObject : public nsISupports,
   }
 
   virtual mozilla::dom::FontFaceSet* Fonts() { return nullptr; }
+
+  virtual mozilla::Result<mozilla::ipc::PrincipalInfo, nsresult>
+  GetStorageKey();
+  virtual bool IsEqualStorageKey(mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
  protected:
   virtual ~nsIGlobalObject();

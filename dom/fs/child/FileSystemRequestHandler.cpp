@@ -334,6 +334,22 @@ mozilla::ipc::RejectCallback GetRejectCallback(
       std::bind(RejectCallback, aPromise, std::placeholders::_1));
 }
 
+struct BeginRequestFailureCallback {
+  BeginRequestFailureCallback(RefPtr<Promise> aPromise)
+      : mPromise(std::move(aPromise)) {}
+
+  void operator()(nsresult aRv) const {
+    if (aRv == NS_ERROR_DOM_SECURITY_ERR) {
+      mPromise->MaybeRejectWithSecurityError(
+          "Security error when calling GetDirectory");
+      return;
+    }
+    mPromise->MaybeRejectWithUnknownError("Could not create actor");
+  }
+
+  RefPtr<Promise> mPromise;
+};
+
 }  // namespace
 
 void FileSystemRequestHandler::GetRootHandle(
@@ -356,9 +372,7 @@ void FileSystemRequestHandler::GetRootHandle(
        onReject = GetRejectCallback(aPromise)](const auto& actor) mutable {
         actor->SendGetRootHandle(std::move(onResolve), std::move(onReject));
       },
-      [promise = aPromise](const auto&) {
-        promise->MaybeRejectWithUnknownError("Could not create actor");
-      });
+      BeginRequestFailureCallback(aPromise));
 }
 
 void FileSystemRequestHandler::GetDirectoryHandle(
@@ -390,9 +404,7 @@ void FileSystemRequestHandler::GetDirectoryHandle(
         actor->SendGetDirectoryHandle(request, std::move(onResolve),
                                       std::move(onReject));
       },
-      [promise = aPromise](const auto&) {
-        promise->MaybeRejectWithUnknownError("Could not create actor");
-      });
+      BeginRequestFailureCallback(aPromise));
 }
 
 void FileSystemRequestHandler::GetFileHandle(
@@ -424,9 +436,7 @@ void FileSystemRequestHandler::GetFileHandle(
         actor->SendGetFileHandle(request, std::move(onResolve),
                                  std::move(onReject));
       },
-      [promise = aPromise](const auto&) {
-        promise->MaybeRejectWithUnknownError("Could not create actor");
-      });
+      BeginRequestFailureCallback(aPromise));
 }
 
 void FileSystemRequestHandler::GetAccessHandle(
@@ -450,9 +460,7 @@ void FileSystemRequestHandler::GetAccessHandle(
         actor->SendGetAccessHandle(request, std::move(onResolve),
                                    std::move(onReject));
       },
-      [promise = aPromise](const auto&) {
-        promise->MaybeRejectWithUnknownError("Could not create actor");
-      });
+      BeginRequestFailureCallback(aPromise));
 }
 
 void FileSystemRequestHandler::GetWritable(RefPtr<FileSystemManager>& aManager,
@@ -514,9 +522,7 @@ void FileSystemRequestHandler::GetFile(
        onReject = GetRejectCallback(aPromise)](const auto& actor) mutable {
         actor->SendGetFile(request, std::move(onResolve), std::move(onReject));
       },
-      [promise = aPromise](const auto&) {
-        promise->MaybeRejectWithUnknownError("Could not create actor");
-      });
+      BeginRequestFailureCallback(aPromise));
 }
 
 void FileSystemRequestHandler::GetEntries(
@@ -542,9 +548,7 @@ void FileSystemRequestHandler::GetEntries(
         actor->SendGetEntries(request, std::move(onResolve),
                               std::move(onReject));
       },
-      [promise = aPromise](const auto&) {
-        promise->MaybeRejectWithUnknownError("Could not create actor");
-      });
+      BeginRequestFailureCallback(aPromise));
 }
 
 void FileSystemRequestHandler::RemoveEntry(
@@ -575,9 +579,7 @@ void FileSystemRequestHandler::RemoveEntry(
         actor->SendRemoveEntry(request, std::move(onResolve),
                                std::move(onReject));
       },
-      [promise = aPromise](const auto&) {
-        promise->MaybeRejectWithUnknownError("Could not create actor");
-      });
+      BeginRequestFailureCallback(aPromise));
 }
 
 void FileSystemRequestHandler::MoveEntry(
@@ -608,9 +610,7 @@ void FileSystemRequestHandler::MoveEntry(
         actor->SendMoveEntry(request, std::move(onResolve),
                              std::move(onReject));
       },
-      [promise = aPromise](const auto&) {
-        promise->MaybeRejectWithUnknownError("Could not create actor");
-      });
+      BeginRequestFailureCallback(aPromise));
 }
 
 void FileSystemRequestHandler::RenameEntry(
@@ -641,9 +641,7 @@ void FileSystemRequestHandler::RenameEntry(
         actor->SendRenameEntry(request, std::move(onResolve),
                                std::move(onReject));
       },
-      [promise = aPromise](const auto&) {
-        promise->MaybeRejectWithUnknownError("Could not create actor");
-      });
+      BeginRequestFailureCallback(aPromise));
 }
 
 void FileSystemRequestHandler::Resolve(
@@ -669,9 +667,7 @@ void FileSystemRequestHandler::Resolve(
        onReject = GetRejectCallback(aPromise)](const auto& actor) mutable {
         actor->SendResolve(request, std::move(onResolve), std::move(onReject));
       },
-      [promise = aPromise](const auto&) {
-        promise->MaybeRejectWithUnknownError("Could not create actor");
-      });
+      BeginRequestFailureCallback(aPromise));
 }
 
 }  // namespace mozilla::dom::fs

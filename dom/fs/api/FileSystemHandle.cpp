@@ -17,6 +17,10 @@
 #include "mozilla/dom/Promise-inl.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/StorageManager.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "nsJSPrincipals.h"
+#include "nsString.h"
 #include "prio.h"
 #include "private/pprio.h"
 #include "xpcpublic.h"
@@ -26,8 +30,9 @@ namespace mozilla::dom {
 namespace {
 
 bool ConstructHandleMetadata(JSContext* aCx, JSStructuredCloneReader* aReader,
-                             const bool aDirectory,
-                             fs::FileSystemEntryMetadata& aMetadata) {
+                             const bool aDirectory, nsIGlobalObject* aGlobal,
+                             fs::FileSystemEntryMetadata& aMetadata,
+                             mozilla::ipc::PrincipalInfo& info) {
   using namespace mozilla::dom::fs;
 
   EntryId entryId;
@@ -50,6 +55,18 @@ bool ConstructHandleMetadata(JSContext* aCx, JSStructuredCloneReader* aReader,
   }
 
   aMetadata = fs::FileSystemEntryMetadata(entryId, name, aDirectory);
+
+  if (!nsJSPrincipals::ReadPrincipalInfo(aReader, info)) {
+    return false;
+  }
+  if (!aGlobal->IsEqualStorageKey(info)) {
+    LOG(("Blocking deserialization of %s due to cross-origin",
+         NS_ConvertUTF16toUTF8(aMetadata.entryName()).get()));
+    return false;
+  }
+  LOG_VERBOSE(
+      ("Deserializing %s", NS_ConvertUTF16toUTF8(aMetadata.entryName()).get()));
+
   return true;
 }
 
@@ -234,7 +251,16 @@ bool FileSystemHandle::WriteStructuredClone(
   }
   JS::Rooted<JSString*> name(aCx, nameValue.toString());
 
-  return JS_WriteString(aWriter, name);
+  if (!JS_WriteString(aWriter, name)) {
+    return false;
+  }
+
+  // Needed to make sure the destination nsIGlobalObject is from the same
+  // origin/principal
+  QM_TRY_UNWRAP(mozilla::ipc::PrincipalInfo principalInfo,
+                mGlobal->GetStorageKey(), false);
+
+  return nsJSPrincipals::WritePrincipalInfo(aWriter, principalInfo);
 }
 
 // static
@@ -243,13 +269,14 @@ already_AddRefed<FileSystemFileHandle> FileSystemHandle::ConstructFileHandle(
     JSStructuredCloneReader* aReader) {
   using namespace mozilla::dom::fs;
 
+  mozilla::ipc::PrincipalInfo info;
   FileSystemEntryMetadata metadata;
-  if (!ConstructHandleMetadata(aCx, aReader, /* aDirectory */ false,
-                               metadata)) {
+  if (!ConstructHandleMetadata(aCx, aReader, /* aDirectory */ false, aGlobal,
+                               metadata, info)) {
     return nullptr;
   }
 
-  // XXX Get the manager from Navigator!
+  // Note that the actor may not be connected yet
   auto fileSystemManager = MakeRefPtr<FileSystemManager>(aGlobal, nullptr);
 
   RefPtr<FileSystemFileHandle> fsHandle =
@@ -265,11 +292,13 @@ FileSystemHandle::ConstructDirectoryHandle(JSContext* aCx,
                                            JSStructuredCloneReader* aReader) {
   using namespace mozilla::dom::fs;
 
+  mozilla::ipc::PrincipalInfo info;
   FileSystemEntryMetadata metadata;
-  if (!ConstructHandleMetadata(aCx, aReader, /* aDirectory */ true, metadata)) {
+  if (!ConstructHandleMetadata(aCx, aReader, /* aDirectory */ true, aGlobal,
+                               metadata, info)) {
     return nullptr;
   }
-
+  // Note that the actor may not be connected yet
   // XXX Get the manager from Navigator!
   auto fileSystemManager = MakeRefPtr<FileSystemManager>(aGlobal, nullptr);
 
