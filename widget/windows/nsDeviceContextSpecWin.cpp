@@ -177,9 +177,9 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIPrintSettings* aPrintSettings,
     }
 #endif
 
-    // If we're in the child and printing via the parent or we're printing to
-    // PDF we only need information from the print settings.
-    if ((XRE_IsContentProcess() && StaticPrefs::print_print_via_parent()) ||
+    // If we're in the child or we're printing to PDF we only need information
+    // from the print settings.
+    if (XRE_IsContentProcess() ||
         mOutputFormat == nsIPrintSettings::kOutputFormatPDF) {
       return NS_OK;
     }

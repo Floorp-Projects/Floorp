@@ -414,10 +414,8 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
   mPrintSettings->GetShrinkToFit(&mShrinkToFit);
 
-  bool printingViaParent =
-      XRE_IsContentProcess() && StaticPrefs::print_print_via_parent();
   nsCOMPtr<nsIDeviceContextSpec> devspec;
-  if (printingViaParent) {
+  if (XRE_IsContentProcess()) {
     devspec = new nsDeviceContextSpecProxy(mRemotePrintJob);
   } else {
     devspec = do_CreateInstance("@mozilla.org/gfx/devicecontextspec;1", &rv);
