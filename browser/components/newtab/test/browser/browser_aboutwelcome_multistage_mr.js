@@ -290,32 +290,6 @@ add_task(async function test_aboutwelcome_show_firefox_view() {
   await cleanup();
 });
 
-add_task(async function test_aboutwelcome_video_content() {
-  const TEST_CONTENT = [
-    {
-      id: "VIDEO_ONBOARDING",
-      content: {
-        position: "center",
-        logo: {},
-        title: "Video onboarding",
-        secondary_button: {
-          label: "Skip video",
-          action: {
-            navigate: true,
-          },
-        },
-        has_video: true,
-      },
-    },
-  ];
-  await setAboutWelcomeMultiStage(JSON.stringify(TEST_CONTENT));
-  let { cleanup, browser } = await openMRAboutWelcome();
-
-  await test_screen_content(browser, ["main.with-video"], []);
-  await SpecialPowers.popPrefEnv();
-  await cleanup();
-});
-
 add_task(async function test_mr2022_templateMR() {
   const message = await OnboardingMessageProvider.getMessages().then(msgs =>
     msgs.find(m => m.id === "FX_MR_106_UPGRADE")

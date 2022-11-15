@@ -252,6 +252,26 @@ export const SecondaryCTA = props => {
   );
 };
 
+export const OnboardingVideo = props => {
+  const vidUrl = props.content?.video_url;
+  const autoplay = props.content?.autoPlay;
+  return (
+    <div>
+      <video // eslint-disable-line jsx-a11y/media-has-caption
+        controls={true}
+        autoPlay={autoplay}
+        src={vidUrl}
+        width="604px"
+        height="340px"
+        value="video_container"
+        onEnded={props.handleAction}
+      >
+        <source src={vidUrl}></source>
+      </video>
+    </div>
+  );
+};
+
 export const StepsIndicator = props => {
   let steps = [];
   for (let i = 0; i < props.totalNumberOfScreens; i++) {
