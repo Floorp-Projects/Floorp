@@ -7416,11 +7416,6 @@ var ToolbarContextMenu = {
     return node && node.getAttribute("data-extensionid");
   },
 
-  _getWidgetId(popup) {
-    let node = this._getUnwrappedTriggerNode(popup);
-    return node?.closest(".unified-extensions-item")?.id;
-  },
-
   async updateExtension(popup) {
     let removeExtension = popup.querySelector(
       ".customize-context-removeExtension"
@@ -7431,7 +7426,6 @@ var ToolbarContextMenu = {
     let reportExtension = popup.querySelector(
       ".customize-context-reportExtension"
     );
-    let pinToToolbar = popup.querySelector(".customize-context-pinToToolbar");
     let separator = reportExtension.nextElementSibling;
     let id = this._getExtensionId(popup);
     let addon = id && (await AddonManager.getAddonByID(id));
@@ -7440,32 +7434,9 @@ var ToolbarContextMenu = {
       element.hidden = !addon;
     }
 
-    // The pinToToolbar item is only available in the toolbar context menu popup,
-    // and not in the overflow panel context menu, and should only be made visible
-    // for addons when the Unified Extensions UI is enabled.
-    if (pinToToolbar) {
-      pinToToolbar.hidden = !addon || !gUnifiedExtensions.isEnabled;
-    }
-
     reportExtension.hidden = !addon || !gAddonAbuseReportEnabled;
 
     if (addon) {
-      if (gUnifiedExtensions.isEnabled) {
-        popup.querySelector(".customize-context-moveToPanel").hidden = true;
-        popup.querySelector(
-          ".customize-context-removeFromToolbar"
-        ).hidden = true;
-
-        if (pinToToolbar) {
-          let widgetId = this._getWidgetId(popup);
-          if (widgetId) {
-            let area = CustomizableUI.getPlacementOfWidget(widgetId).area;
-            let inToolbar = area != CustomizableUI.AREA_ADDONS;
-            pinToToolbar.setAttribute("checked", inToolbar);
-          }
-        }
-      }
-
       removeExtension.disabled = !(
         addon.permissions & AddonManager.PERM_CAN_UNINSTALL
       );

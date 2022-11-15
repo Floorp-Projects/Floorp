@@ -1234,21 +1234,10 @@ var CustomizableUIInternal = {
 
     let currentContextMenu =
       aNode.getAttribute("context") || aNode.getAttribute("contextmenu");
-    let contextMenuForPlace;
-
-    if (
-      lazy.gUnifiedExtensionsEnabled &&
-      CustomizableUI.isWebExtensionWidget(aNode.id) &&
-      (aAreaNode?.id == CustomizableUI.AREA_ADDONS ||
-        aNode.getAttribute("overflowedItem") == "true")
-    ) {
-      contextMenuForPlace = null;
-    } else {
-      contextMenuForPlace =
-        forcePanel || "panel" == CustomizableUI.getPlaceForItem(aAreaNode)
-          ? kPanelItemContextMenu
-          : null;
-    }
+    let contextMenuForPlace =
+      forcePanel || "panel" == CustomizableUI.getPlaceForItem(aAreaNode)
+        ? kPanelItemContextMenu
+        : null;
     if (contextMenuForPlace && !currentContextMenu) {
       aNode.setAttribute("context", contextMenuForPlace);
     } else if (
