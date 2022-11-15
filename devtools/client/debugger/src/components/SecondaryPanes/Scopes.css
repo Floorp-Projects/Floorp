@@ -91,6 +91,7 @@ html[dir="rtl"] .object-node {
 
 .scopes-list .tree.object-inspector .node.object-node {
   display: flex;
+  align-items: center;
 }
 
 .scopes-list .tree.object-inspector .tree-node button.arrow,

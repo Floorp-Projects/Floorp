@@ -56,58 +56,41 @@
   background-color: currentColor;
 }
 
-button.remove-set-watchpoint {
-  mask: url("chrome://devtools/content/debugger/images/webconsole-logpoint.svg")
+button[class*="remove-watchpoint-"] {
+  background: url("chrome://devtools/content/debugger/images/webconsole-logpoint.svg")
     no-repeat;
   display: inline-block;
   vertical-align: top;
   height: 13px;
   width: 15px;
-  margin: 0 4px 0px 20px;
+  margin: 1px 4px 0px 20px;
   padding: 0;
   border: none;
-  background-color: var(--breakpoint-fill);
+  -moz-context-properties: fill, stroke;
   cursor: pointer;
 }
 
-button.remove-get-watchpoint {
-  mask: url("chrome://devtools/content/debugger/images/webconsole-logpoint.svg")
-    no-repeat;
-  display: inline-block;
-  vertical-align: top;
-  height: 13px;
-  width: 15px;
-  margin: 0 4px 0px 20px;
-  padding: 0;
-  border: none;
-  background-color: var(--purple-60);
-  cursor: pointer;
+button.remove-watchpoint-set {
+  fill: var(--breakpoint-fill);
+  stroke: var(--breakpoint-fill);
 }
 
-button.remove-getorset-watchpoint {
-  mask: url("chrome://devtools/content/debugger/images/webconsole-logpoint.svg")
-    no-repeat;
-  display: inline-block;
-  vertical-align: top;
-  height: 13px;
-  width: 15px;
-  margin: 0 4px 0px 20px;
-  padding: 0;
-  border: none;
-  background-color: var(--yellow-60);
-  cursor: pointer;
+button.remove-watchpoint-get {
+  fill: var(--purple-60);
+  stroke: var(--purple-60);
 }
 
-.theme-dark button.remove-set-watchpoint:hover,
-.theme-light button.remove-set-watchpoint:hover {
-  background-color: var(--breakpoint-fill);
-}
-.theme-dark button.remove-get-watchpoint:hover,
-.theme-light button.remove-get-watchpoint:hover {
-  background-color: var(--purple-60);
+button.remove-watchpoint-getorset {
+  fill: var(--yellow-60);
+  stroke: var(--yellow-60);
 }
 
-.theme-dark button.remove-getorset-watchpoint:hover,
-.theme-light button.remove-getorset-watchpoint:hover {
-  background-color: var(--yellow-60);
+.tree-node.focused button[class*="remove-watchpoint-"] {
+  stroke: white;
+}
+
+/* Don't display the light grey background we have on button hover */
+.theme-dark button[class*="remove-watchpoint-"]:hover,
+.theme-light button[class*="remove-watchpoint-"]:hover {
+  background-color: transparent;
 }
