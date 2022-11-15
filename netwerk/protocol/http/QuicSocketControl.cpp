@@ -21,7 +21,7 @@ namespace mozilla {
 namespace net {
 
 NS_IMPL_ISUPPORTS_INHERITED(QuicSocketControl, TransportSecurityInfo,
-                            nsISSLSocketControl, QuicSocketControl)
+                            nsITLSSocketControl, QuicSocketControl)
 
 QuicSocketControl::QuicSocketControl(uint32_t aProviderFlags,
                                      Http3Session* aHttp3Session)
@@ -57,7 +57,7 @@ QuicSocketControl::~QuicSocketControl() {
 
 NS_IMETHODIMP
 QuicSocketControl::GetSSLVersionOffered(int16_t* aSSLVersionOffered) {
-  *aSSLVersionOffered = nsISSLSocketControl::TLS_VERSION_1_3;
+  *aSSLVersionOffered = nsITLSSocketControl::TLS_VERSION_1_3;
   return NS_OK;
 }
 
