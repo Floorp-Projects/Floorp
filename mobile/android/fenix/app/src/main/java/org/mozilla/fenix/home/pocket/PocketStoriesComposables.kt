@@ -485,11 +485,11 @@ data class PocketStoriesCategoryColors(
             selectedTextColor: Color = FirefoxTheme.colors.actionPrimary,
             unselectedTextColor: Color = FirefoxTheme.colors.actionTertiary,
         ) = PocketStoriesCategoryColors(
-                selectedTextColor = selectedTextColor,
-                unselectedTextColor = unselectedTextColor,
-                selectedBackgroundColor = selectedBackgroundColor,
-                unselectedBackgroundColor = unselectedBackgroundColor,
-            )
+            selectedBackgroundColor = selectedBackgroundColor,
+            unselectedBackgroundColor = unselectedBackgroundColor,
+            selectedTextColor = selectedTextColor,
+            unselectedTextColor = unselectedTextColor,
+        )
     }
 }
 
