@@ -6871,19 +6871,14 @@ bool nsTextFrame::MeasureCharClippedText(nscoord aVisIStartEdge,
 }
 
 static uint32_t GetClusterLength(const gfxTextRun* aTextRun,
-                                 uint32_t aStartOffset, uint32_t aMaxLength,
-                                 bool aIsRTL) {
-  uint32_t clusterLength = aIsRTL ? 0 : 1;
-  while (clusterLength < aMaxLength) {
+                                 uint32_t aStartOffset, uint32_t aMaxLength) {
+  uint32_t clusterLength = 0;
+  while (++clusterLength < aMaxLength) {
     if (aTextRun->IsClusterStart(aStartOffset + clusterLength)) {
-      if (aIsRTL) {
-        ++clusterLength;
-      }
-      break;
+      return clusterLength;
     }
-    ++clusterLength;
   }
-  return clusterLength;
+  return aMaxLength;
 }
 
 bool nsTextFrame::MeasureCharClippedText(
@@ -6905,8 +6900,7 @@ bool nsTextFrame::MeasureCharClippedText(
   if (startEdge > 0) {
     const gfxFloat maxAdvance = gfxFloat(startEdge);
     while (maxLength > 0) {
-      uint32_t clusterLength =
-          GetClusterLength(mTextRun, offset, maxLength, rtl);
+      uint32_t clusterLength = GetClusterLength(mTextRun, offset, maxLength);
       advanceWidth += mTextRun->GetAdvanceWidth(
           Range(offset, offset + clusterLength), &aProvider);
       maxLength -= clusterLength;
@@ -6924,8 +6918,7 @@ bool nsTextFrame::MeasureCharClippedText(
   if (endEdge > 0) {
     const gfxFloat maxAdvance = gfxFloat(frameISize - endEdge);
     while (maxLength > 0) {
-      uint32_t clusterLength =
-          GetClusterLength(mTextRun, offset, maxLength, rtl);
+      uint32_t clusterLength = GetClusterLength(mTextRun, offset, maxLength);
       gfxFloat nextAdvance =
           advanceWidth + mTextRun->GetAdvanceWidth(
                              Range(offset, offset + clusterLength), &aProvider);
