@@ -18,8 +18,8 @@ class EngineSharedPreferencesListener(
     private val context: Context,
 ) : Preference.OnPreferenceChangeListener {
 
-    override fun onPreferenceChange(preference: Preference?, newValue: Any?): Boolean {
-        when (preference?.key) {
+    override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+        when (preference.key) {
             context.getString(R.string.pref_key_performance_enable_cookies) ->
                 updateTrackingProtectionPolicy(shouldBlockCookiesValue = newValue as String)
 
