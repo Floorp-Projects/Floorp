@@ -74,9 +74,9 @@ class GeckoSitePermissionsStorageTest {
 
         doReturn(Unit).`when`(geckoStorage).clearGeckoCacheFor(sitePermissions.origin)
 
-        geckoStorage.save(sitePermissions, geckoRequest)
+        geckoStorage.save(sitePermissions, geckoRequest, false)
 
-        verify(onDiskStorage).save(permissionsCaptor.capture(), any())
+        verify(onDiskStorage).save(permissionsCaptor.capture(), any(), anyBoolean())
 
         assertEquals(NO_DECISION, permissionsCaptor.value.location)
         verify(storageController).setPermission(geckoPermissions, VALUE_ALLOW)
@@ -91,9 +91,9 @@ class GeckoSitePermissionsStorageTest {
 
         doReturn(Unit).`when`(geckoStorage).clearGeckoCacheFor(sitePermissions.origin)
 
-        geckoStorage.save(sitePermissions, geckoRequest)
+        geckoStorage.save(sitePermissions, geckoRequest, false)
 
-        verify(onDiskStorage).save(permissionsCaptor.capture(), any())
+        verify(onDiskStorage).save(permissionsCaptor.capture(), any(), anyBoolean())
 
         assertEquals(NO_DECISION, permissionsCaptor.value.notification)
         verify(storageController).setPermission(geckoPermissions, VALUE_DENY)
@@ -108,9 +108,9 @@ class GeckoSitePermissionsStorageTest {
 
         doReturn(Unit).`when`(geckoStorage).clearGeckoCacheFor(sitePermissions.origin)
 
-        geckoStorage.save(sitePermissions, geckoRequest)
+        geckoStorage.save(sitePermissions, geckoRequest, false)
 
-        verify(onDiskStorage).save(permissionsCaptor.capture(), any())
+        verify(onDiskStorage).save(permissionsCaptor.capture(), any(), anyBoolean())
 
         assertEquals(NO_DECISION, permissionsCaptor.value.localStorage)
         verify(storageController).setPermission(geckoPermissions, VALUE_DENY)
@@ -125,9 +125,9 @@ class GeckoSitePermissionsStorageTest {
 
         doReturn(Unit).`when`(geckoStorage).clearGeckoCacheFor(sitePermissions.origin)
 
-        geckoStorage.save(sitePermissions, geckoRequest)
+        geckoStorage.save(sitePermissions, geckoRequest, false)
 
-        verify(onDiskStorage).save(permissionsCaptor.capture(), any())
+        verify(onDiskStorage).save(permissionsCaptor.capture(), any(), anyBoolean())
 
         assertEquals(NO_DECISION, permissionsCaptor.value.crossOriginStorageAccess)
         verify(storageController).setPermission(geckoPermissions, VALUE_DENY)
@@ -142,9 +142,9 @@ class GeckoSitePermissionsStorageTest {
 
         doReturn(Unit).`when`(geckoStorage).clearGeckoCacheFor(sitePermissions.origin)
 
-        geckoStorage.save(sitePermissions, geckoRequest)
+        geckoStorage.save(sitePermissions, geckoRequest, false)
 
-        verify(onDiskStorage).save(permissionsCaptor.capture(), any())
+        verify(onDiskStorage).save(permissionsCaptor.capture(), any(), anyBoolean())
 
         assertEquals(NO_DECISION, permissionsCaptor.value.mediaKeySystemAccess)
         verify(storageController).setPermission(geckoPermissions, VALUE_ALLOW)
@@ -159,9 +159,9 @@ class GeckoSitePermissionsStorageTest {
 
         doReturn(Unit).`when`(geckoStorage).clearGeckoCacheFor(sitePermissions.origin)
 
-        geckoStorage.save(sitePermissions, geckoRequest)
+        geckoStorage.save(sitePermissions, geckoRequest, false)
 
-        verify(onDiskStorage).save(permissionsCaptor.capture(), any())
+        verify(onDiskStorage).save(permissionsCaptor.capture(), any(), anyBoolean())
 
         assertEquals(AutoplayStatus.BLOCKED, permissionsCaptor.value.autoplayInaudible)
         verify(storageController).setPermission(geckoPermissions, VALUE_ALLOW)
@@ -176,9 +176,9 @@ class GeckoSitePermissionsStorageTest {
 
         doReturn(Unit).`when`(geckoStorage).clearGeckoCacheFor(sitePermissions.origin)
 
-        geckoStorage.save(sitePermissions, geckoRequest)
+        geckoStorage.save(sitePermissions, geckoRequest, false)
 
-        verify(onDiskStorage).save(permissionsCaptor.capture(), any())
+        verify(onDiskStorage).save(permissionsCaptor.capture(), any(), anyBoolean())
 
         assertEquals(AutoplayStatus.BLOCKED, permissionsCaptor.value.autoplayAudible)
         verify(storageController).setPermission(geckoPermissions, VALUE_ALLOW)
@@ -192,9 +192,13 @@ class GeckoSitePermissionsStorageTest {
 
         doReturn(Unit).`when`(geckoStorage).clearGeckoCacheFor(sitePermissions.origin)
 
-        geckoStorage.save(sitePermissions, geckoRequest)
+        geckoStorage.save(sitePermissions, geckoRequest, false)
 
-        verify(onDiskStorage).save(sitePermissions.copy(autoplayAudible = AutoplayStatus.BLOCKED), geckoRequest)
+        verify(onDiskStorage).save(
+            sitePermissions.copy(autoplayAudible = AutoplayStatus.BLOCKED),
+            geckoRequest,
+            false,
+        )
         verify(storageController).setPermission(geckoPermissions, VALUE_ALLOW)
     }
 
@@ -257,7 +261,11 @@ class GeckoSitePermissionsStorageTest {
 
         doReturn(Unit).`when`(geckoStorage).clearGeckoCacheFor(sitePermissions.origin)
 
-        val permission = geckoStorage.updateGeckoPermissionIfNeeded(sitePermissions, geckoRequest)
+        val permission = geckoStorage.updateGeckoPermissionIfNeeded(
+            sitePermissions,
+            geckoRequest,
+            private = false,
+        )
 
         assertEquals(NO_DECISION, permission.location)
         verify(storageController).setPermission(geckoPermissions, VALUE_ALLOW)
@@ -267,12 +275,13 @@ class GeckoSitePermissionsStorageTest {
     fun `WHEN updating a permission THEN the permission is updated in the gecko storage and on the disk storage`() = runTest {
         val sitePermissions = createNewSitePermission().copy(location = ALLOWED)
 
-        doReturn(sitePermissions).`when`(geckoStorage).updateGeckoPermissionIfNeeded(sitePermissions)
+        doReturn(sitePermissions).`when`(geckoStorage)
+            .updateGeckoPermissionIfNeeded(sitePermissions, private = true)
 
-        geckoStorage.update(sitePermissions)
+        geckoStorage.update(sitePermissions, true)
 
-        verify(geckoStorage).updateGeckoPermissionIfNeeded(sitePermissions)
-        verify(onDiskStorage).update(sitePermissions)
+        verify(geckoStorage).updateGeckoPermissionIfNeeded(sitePermissions, private = true)
+        verify(onDiskStorage).update(sitePermissions, private = true)
     }
 
     @Test
@@ -301,10 +310,11 @@ class GeckoSitePermissionsStorageTest {
             geckoContentPermission(type = PERMISSION_STORAGE_ACCESS),
         )
 
-        doReturn(geckoPermissions).`when`(geckoStorage).findGeckoContentPermissionBy(anyString(), anyBoolean())
+        doReturn(geckoPermissions).`when`(geckoStorage)
+            .findGeckoContentPermissionBy(anyString(), anyBoolean(), anyBoolean())
         doReturn(Unit).`when`(geckoStorage).clearGeckoCacheFor(sitePermissions.origin)
 
-        val permission = geckoStorage.updateGeckoPermissionIfNeeded(sitePermissions, null)
+        val permission = geckoStorage.updateGeckoPermissionIfNeeded(sitePermissions, null, false)
 
         geckoPermissions.forEach {
             verify(geckoStorage).removeTemporaryPermissionIfAny(it)
@@ -348,10 +358,24 @@ class GeckoSitePermissionsStorageTest {
             geckoContentPermission(type = PERMISSION_AUTOPLAY_INAUDIBLE, value = VALUE_ALLOW),
         )
 
-        doReturn(sitePermissions).`when`(onDiskStorage).findSitePermissionsBy("mozilla.dev", false)
-        doReturn(geckoPermissions).`when`(geckoStorage).findGeckoContentPermissionBy("mozilla.dev", false)
+        doReturn(sitePermissions).`when`(onDiskStorage)
+            .findSitePermissionsBy(
+                origin = "mozilla.dev",
+                includeTemporary = false,
+                private = false,
+            )
+        doReturn(geckoPermissions).`when`(geckoStorage)
+            .findGeckoContentPermissionBy(
+                origin = "mozilla.dev",
+                includeTemporary = false,
+                private = false,
+            )
 
-        val foundPermissions = geckoStorage.findSitePermissionsBy("mozilla.dev", false)!!
+        val foundPermissions = geckoStorage.findSitePermissionsBy(
+            origin = "mozilla.dev",
+            includeTemporary = false,
+            private = false,
+        )!!
 
         assertEquals(ALLOWED, foundPermissions.location)
         assertEquals(ALLOWED, foundPermissions.notification)
@@ -480,12 +504,18 @@ class GeckoSitePermissionsStorageTest {
     fun `WHEN removing a site permissions THEN permissions should be removed from the on disk and gecko storage`() = runTest {
         val onDiskPermissions = createNewSitePermission()
 
-        doReturn(Unit).`when`(geckoStorage).removeGeckoContentPermissionBy(onDiskPermissions.origin)
+        doReturn(Unit).`when`(geckoStorage).removeGeckoContentPermissionBy(
+            origin = onDiskPermissions.origin,
+            private = false,
+        )
 
-        geckoStorage.remove(onDiskPermissions)
+        geckoStorage.remove(sitePermissions = onDiskPermissions, private = false)
 
-        verify(onDiskStorage).remove(onDiskPermissions)
-        verify(geckoStorage).removeGeckoContentPermissionBy(onDiskPermissions.origin)
+        verify(onDiskStorage).remove(sitePermissions = onDiskPermissions, private = false)
+        verify(geckoStorage).removeGeckoContentPermissionBy(
+            origin = onDiskPermissions.origin,
+            private = false,
+        )
     }
 
     @Test
@@ -501,9 +531,10 @@ class GeckoSitePermissionsStorageTest {
             geckoContentPermission(type = PERMISSION_TRACKING),
         )
 
-        doReturn(geckoPermissions).`when`(geckoStorage).findGeckoContentPermissionBy(anyString(), anyBoolean())
+        doReturn(geckoPermissions).`when`(geckoStorage)
+            .findGeckoContentPermissionBy(anyString(), anyBoolean(), anyBoolean())
 
-        geckoStorage.removeGeckoContentPermissionBy("mozilla.dev")
+        geckoStorage.removeGeckoContentPermissionBy(origin = "mozilla.dev", private = false)
 
         geckoPermissions.forEach {
             val value = if (it.permission != PERMISSION_TRACKING) {
@@ -642,13 +673,15 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `WHEN compering two gecko ContentPermissions THEN they are the same when host and permissions are the same`() = runTest {
+    fun `WHEN compering two gecko ContentPermissions THEN they are the same when host, mode and permissions are the same`() = runTest {
         val location1 = geckoContentPermission(uri = "mozilla.dev", type = PERMISSION_GEOLOCATION)
         val location2 = geckoContentPermission(uri = "mozilla.dev", type = PERMISSION_GEOLOCATION)
         val notification = geckoContentPermission(uri = "mozilla.dev", type = PERMISSION_DESKTOP_NOTIFICATION)
+        val privateNotification = geckoContentPermission(uri = "mozilla.dev", type = PERMISSION_DESKTOP_NOTIFICATION, privateMode = true)
 
         assertTrue(location1.areSame(location2))
         assertFalse(notification.areSame(location1))
+        assertFalse(notification.areSame(privateNotification))
     }
 
     @Test
@@ -678,6 +711,47 @@ class GeckoSitePermissionsStorageTest {
         assertEquals(VALUE_ALLOW, AutoplayStatus.ALLOWED.toGeckoStatus())
     }
 
+    @Test
+    fun `GIVEN a private site WHEN findSitePermissionsBy THEN all no gecko permissions should be reset`() =
+        runTest {
+            val sitePermissions = SitePermissions(
+                origin = "mozilla.dev",
+                localStorage = ALLOWED,
+                crossOriginStorageAccess = ALLOWED,
+                location = ALLOWED,
+                notification = ALLOWED,
+                microphone = ALLOWED,
+                camera = ALLOWED,
+                bluetooth = ALLOWED,
+                mediaKeySystemAccess = ALLOWED,
+                autoplayAudible = AutoplayStatus.ALLOWED,
+                autoplayInaudible = AutoplayStatus.ALLOWED,
+                savedAt = 0,
+            )
+
+            doReturn(sitePermissions).`when`(onDiskStorage)
+                .findSitePermissionsBy(
+                    origin = "mozilla.dev",
+                    includeTemporary = false,
+                    private = true,
+                )
+            doReturn(null).`when`(geckoStorage)
+                .findGeckoContentPermissionBy(
+                    origin = "mozilla.dev",
+                    includeTemporary = false,
+                    private = true,
+                )
+
+            val foundPermissions = geckoStorage.findSitePermissionsBy(
+                origin = "mozilla.dev",
+                private = true,
+            )!!
+
+            assertEquals(NO_DECISION, foundPermissions.microphone)
+            assertEquals(NO_DECISION, foundPermissions.bluetooth)
+            assertEquals(NO_DECISION, foundPermissions.camera)
+        }
+
     private fun createNewSitePermission(): SitePermissions {
         return SitePermissions(
             origin = "mozilla.dev",
@@ -698,11 +772,13 @@ internal fun geckoContentPermission(
     type: Int,
     value: Int = VALUE_PROMPT,
     thirdPartyOrigin: String = "mozilla.dev",
+    privateMode: Boolean = false,
 ): ContentPermission {
-    val prompt: ContentPermission = mock()
-    ReflectionUtils.setField(prompt, "uri", uri)
-    ReflectionUtils.setField(prompt, "thirdPartyOrigin", thirdPartyOrigin)
-    ReflectionUtils.setField(prompt, "permission", type)
-    ReflectionUtils.setField(prompt, "value", value)
-    return prompt
+    val permission: ContentPermission = mock()
+    ReflectionUtils.setField(permission, "uri", uri)
+    ReflectionUtils.setField(permission, "thirdPartyOrigin", thirdPartyOrigin)
+    ReflectionUtils.setField(permission, "permission", type)
+    ReflectionUtils.setField(permission, "value", value)
+    ReflectionUtils.setField(permission, "privateMode", privateMode)
+    return permission
 }

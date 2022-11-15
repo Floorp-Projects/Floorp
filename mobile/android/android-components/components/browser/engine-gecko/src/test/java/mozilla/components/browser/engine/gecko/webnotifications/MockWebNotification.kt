@@ -19,6 +19,7 @@ fun mockWebNotification(
     lang: String? = null,
     source: String? = null,
     silent: Boolean = false,
+    privateBrowsing: Boolean = false,
 ): WebNotification {
     val webNotification: WebNotification = mock()
     ReflectionUtils.setField(webNotification, "title", title)
@@ -31,5 +32,6 @@ fun mockWebNotification(
     ReflectionUtils.setField(webNotification, "source", source)
     ReflectionUtils.setField(webNotification, "silent", silent)
     ReflectionUtils.setField(webNotification, "vibrate", vibrate)
+    ReflectionUtils.setField(webNotification, "privateBrowsing", privateBrowsing)
     return webNotification
 }

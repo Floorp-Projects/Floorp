@@ -230,6 +230,7 @@ class SitePermissionsFeature(
         sitePermissionScope?.cancel()
         appPermissionScope?.cancel()
         loadingScope?.cancel()
+        storage.clearTemporaryPermissions()
     }
 
     /**
@@ -380,7 +381,7 @@ class SitePermissionsFeature(
         coroutineScope.launch {
             request.uri?.getOrigin()?.let { origin ->
                 var sitePermissions =
-                    storage.findSitePermissionsBy(origin)
+                    storage.findSitePermissionsBy(origin, private = false)
 
                 if (sitePermissions == null) {
                     sitePermissions =
@@ -389,10 +390,10 @@ class SitePermissionsFeature(
                             status = status,
                             permissions = request.permissions,
                         )
-                    storage.save(sitePermissions, request)
+                    storage.save(sitePermissions, request, private = false)
                 } else {
                     sitePermissions = request.toSitePermissions(origin, status, sitePermissions)
-                    storage.update(sitePermissions)
+                    storage.update(sitePermissions = sitePermissions, private = false)
                 }
             }
         }
@@ -425,8 +426,11 @@ class SitePermissionsFeature(
             return null
         }
 
+        val private: Boolean = store.state.findTabOrCustomTabOrSelectedTab(sessionId)?.content?.private
+            ?: throw IllegalStateException("Unable to find session for $sessionId or selected session")
+
         val permissionFromStorage = withContext(coroutineScope.coroutineContext) {
-            storage.findSitePermissionsBy(origin)
+            storage.findSitePermissionsBy(origin, private = private)
         }
 
         val prompt = if (shouldApplyRules(permissionFromStorage)) {

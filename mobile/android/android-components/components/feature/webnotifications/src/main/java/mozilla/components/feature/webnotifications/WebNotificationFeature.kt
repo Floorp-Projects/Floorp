@@ -77,7 +77,10 @@ class WebNotificationFeature(
             // upon installation.
             if (!webNotification.triggeredByWebExtension) {
                 val origin = webNotification.sourceUrl?.getOrigin() ?: return@launch
-                val permissions = sitePermissionsStorage.findSitePermissionsBy(origin)
+                val permissions = sitePermissionsStorage.findSitePermissionsBy(
+                    origin,
+                    private = webNotification.privateBrowsing,
+                )
                     ?: return@launch
 
                 if (!permissions.notification.isAllowed()) {

@@ -32,6 +32,7 @@ class GeckoWebNotificationDelegateTest {
             lang = "lang",
             requireInteraction = true,
             source = "source",
+            privateBrowsing = true,
         )
         val geckoWebNotificationDelegate = GeckoWebNotificationDelegate(webNotificationDelegate)
 
@@ -49,6 +50,7 @@ class GeckoWebNotificationDelegateTest {
         assertEquals(notification.lang, geckoViewWebNotification.lang)
         assertEquals(notification.requireInteraction, geckoViewWebNotification.requireInteraction)
         assertFalse(notification.triggeredByWebExtension)
+        assertTrue(notification.privateBrowsing)
     }
 
     @Test
@@ -63,6 +65,7 @@ class GeckoWebNotificationDelegateTest {
             lang = "lang",
             requireInteraction = true,
             source = "source",
+            privateBrowsing = false,
         )
         val geckoWebNotificationDelegate = GeckoWebNotificationDelegate(webNotificationDelegate)
 
@@ -79,6 +82,7 @@ class GeckoWebNotificationDelegateTest {
         assertEquals(notification.direction, geckoViewWebNotification.textDirection)
         assertEquals(notification.lang, geckoViewWebNotification.lang)
         assertEquals(notification.requireInteraction, geckoViewWebNotification.requireInteraction)
+        assertEquals(notification.privateBrowsing, geckoViewWebNotification.privateBrowsing)
     }
 
     @Test
@@ -93,6 +97,7 @@ class GeckoWebNotificationDelegateTest {
             lang = "lang",
             requireInteraction = true,
             source = null,
+            privateBrowsing = true,
         )
         val geckoWebNotificationDelegate = GeckoWebNotificationDelegate(webNotificationDelegate)
 
@@ -110,5 +115,6 @@ class GeckoWebNotificationDelegateTest {
         assertEquals(notification.lang, geckoViewWebNotification.lang)
         assertEquals(notification.requireInteraction, geckoViewWebNotification.requireInteraction)
         assertTrue(notification.triggeredByWebExtension)
+        assertTrue(notification.privateBrowsing)
     }
 }

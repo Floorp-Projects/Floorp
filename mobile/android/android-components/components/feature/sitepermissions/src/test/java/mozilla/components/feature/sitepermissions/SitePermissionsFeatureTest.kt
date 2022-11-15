@@ -163,6 +163,8 @@ class SitePermissionsFeatureTest {
         // when
         mockStore.dispatch(ContentAction.UpdateLoadingStateAction(SESSION_ID, true)).joinBlocking()
 
+        verify(mockStorage).clearTemporaryPermissions()
+
         // then
         verify(mockStore, never()).dispatch(
             UpdatePermissionHighlightsStateAction.Reset(SESSION_ID),
@@ -456,7 +458,8 @@ class SitePermissionsFeatureTest {
     fun `GIVEN a new permissionRequest WHEN storeSitePermissions() THEN save(permissionRequest) is called`() = runTestOnMain {
         // given
         val sitePermissions = SitePermissions(origin = "origin", savedAt = 0)
-        doReturn(null).`when`(mockStorage).findSitePermissionsBy(ArgumentMatchers.anyString(), anyBoolean())
+        doReturn(null).`when`(mockStorage)
+            .findSitePermissionsBy(ArgumentMatchers.anyString(), anyBoolean(), anyBoolean())
         doNothing().`when`(sitePermissionFeature).updatePermissionToolbarIndicator(
             any(),
             any(),
@@ -478,7 +481,7 @@ class SitePermissionsFeatureTest {
         )
 
         // then
-        verify(mockStorage).save(sitePermissions, mockPermissionRequest)
+        verify(mockStorage).save(sitePermissions, mockPermissionRequest, private = selectedTab.content.private)
         verify(sitePermissionFeature).updatePermissionToolbarIndicator(
             mockPermissionRequest,
             ALLOWED,
@@ -491,7 +494,7 @@ class SitePermissionsFeatureTest {
         // given
         val sitePermissions = SitePermissions(origin = "origin", savedAt = 0)
         doReturn(sitePermissions).`when`(mockStorage)
-            .findSitePermissionsBy(ArgumentMatchers.anyString(), anyBoolean())
+            .findSitePermissionsBy(ArgumentMatchers.anyString(), anyBoolean(), anyBoolean())
         val mockPermissionRequest: PermissionRequest = mock {
             whenever(uri).thenReturn(URL)
             whenever(permissions).thenReturn(listOf(AppAudio(id = "permission")))
@@ -508,7 +511,7 @@ class SitePermissionsFeatureTest {
         )
 
         // then
-        verify(mockStorage).update(eq(sitePermissions))
+        verify(mockStorage).update(eq(sitePermissions), anyBoolean())
     }
 
     @Test
@@ -522,8 +525,8 @@ class SitePermissionsFeatureTest {
         )
 
         // when
-        verify(mockStorage, never()).save(any(), any())
-        verify(mockStorage, never()).update(any())
+        verify(mockStorage, never()).save(any(), any(), anyBoolean())
+        verify(mockStorage, never()).update(any(), anyBoolean())
     }
 
     @Test
@@ -604,7 +607,7 @@ class SitePermissionsFeatureTest {
         }
         val sitePermissions = SitePermissions(origin = "origin", savedAt = 0)
         val mockedSitePermissionsDialogFragment = SitePermissionsDialogFragment()
-        doReturn(sitePermissions).`when`(mockStorage).findSitePermissionsBy(URL)
+        doReturn(sitePermissions).`when`(mockStorage).findSitePermissionsBy(URL, private = selectedTab.content.private)
         doReturn(true).`when`(sitePermissionFeature).shouldApplyRules(any())
         doReturn(mockedSitePermissionsDialogFragment).`when`(sitePermissionFeature)
             .handleRuledFlow(mockPermissionRequest, URL)
@@ -619,7 +622,7 @@ class SitePermissionsFeatureTest {
         }
 
         // then
-        verify(mockStorage).findSitePermissionsBy(URL)
+        verify(mockStorage).findSitePermissionsBy(URL, private = selectedTab.content.private)
         verify(sitePermissionFeature).handleRuledFlow(mockPermissionRequest, URL)
     }
 
@@ -631,7 +634,8 @@ class SitePermissionsFeatureTest {
         }
         val sitePermissions = SitePermissions(origin = "origin", savedAt = 0)
         val sitePermissionsDialogFragment = SitePermissionsDialogFragment()
-        doReturn(sitePermissions).`when`(mockStorage).findSitePermissionsBy(URL)
+        doReturn(sitePermissions).`when`(mockStorage)
+            .findSitePermissionsBy(URL, private = selectedTab.content.private)
         doReturn(false).`when`(sitePermissionFeature).shouldApplyRules(any())
         doReturn(sitePermissionsDialogFragment).`when`(sitePermissionFeature)
             .handleNoRuledFlow(sitePermissions, mockPermissionRequest, URL)
@@ -646,7 +650,7 @@ class SitePermissionsFeatureTest {
         }
 
         // then
-        verify(mockStorage).findSitePermissionsBy(URL)
+        verify(mockStorage).findSitePermissionsBy(URL, private = selectedTab.content.private)
         verify(sitePermissionFeature).handleNoRuledFlow(sitePermissions, mockPermissionRequest, URL)
     }
 
@@ -659,7 +663,7 @@ class SitePermissionsFeatureTest {
         val sitePermissions = SitePermissions(origin = "origin", savedAt = 0)
         val sitePermissionsDialogFragment = SitePermissionsDialogFragment()
 
-        doReturn(sitePermissions).`when`(mockStorage).findSitePermissionsBy(URL)
+        doReturn(sitePermissions).`when`(mockStorage).findSitePermissionsBy(URL, private = selectedTab.content.private)
         doReturn(false).`when`(sitePermissionFeature).shouldApplyRules(any())
         doReturn(sitePermissionsDialogFragment).`when`(sitePermissionFeature)
             .handleNoRuledFlow(sitePermissions, mockPermissionRequest, URL)
@@ -674,7 +678,7 @@ class SitePermissionsFeatureTest {
         }
 
         // then
-        verify(mockStorage).findSitePermissionsBy(URL)
+        verify(mockStorage).findSitePermissionsBy(URL, private = selectedTab.content.private)
         verify(sitePermissionFeature).handleNoRuledFlow(sitePermissions, mockPermissionRequest, URL)
     }
 
@@ -1241,7 +1245,8 @@ class SitePermissionsFeatureTest {
             val sitePermissionFromStorage: SitePermissions = mock()
 
             doReturn(listOf(permission)).`when`(request).permissions
-            doReturn(sitePermissionFromStorage).`when`(mockStorage).findSitePermissionsBy(anyString(), anyBoolean())
+            doReturn(sitePermissionFromStorage).`when`(mockStorage)
+                .findSitePermissionsBy(anyString(), anyBoolean(), anyBoolean())
             doReturn(ALLOWED).`when`(sitePermissionFromStorage).location
             doReturn(ALLOWED).`when`(sitePermissionFromStorage).notification
             doReturn(ALLOWED).`when`(sitePermissionFromStorage).camera
@@ -1276,7 +1281,8 @@ class SitePermissionsFeatureTest {
             val sitePermissionFromStorage: SitePermissions = mock()
 
             doReturn(listOf(permission)).`when`(request).permissions
-            doReturn(sitePermissionFromStorage).`when`(mockStorage).findSitePermissionsBy(anyString(), anyBoolean())
+            doReturn(sitePermissionFromStorage).`when`(mockStorage)
+                .findSitePermissionsBy(anyString(), anyBoolean(), anyBoolean())
             doReturn(BLOCKED).`when`(sitePermissionFromStorage).location
             doReturn(BLOCKED).`when`(sitePermissionFromStorage).notification
             doReturn(BLOCKED).`when`(sitePermissionFromStorage).camera

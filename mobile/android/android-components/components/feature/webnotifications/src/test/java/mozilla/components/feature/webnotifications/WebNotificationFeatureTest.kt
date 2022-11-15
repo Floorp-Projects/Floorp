@@ -57,6 +57,7 @@ class WebNotificationFeatureTest {
         "en",
         false,
         mock(),
+        privateBrowsing = false,
     )
 
     @Before
@@ -103,7 +104,13 @@ class WebNotificationFeatureTest {
         )
         val permission = SitePermissions(origin = "https://mozilla.org:443", notification = Status.ALLOWED, savedAt = 0)
 
-        `when`(permissionsStorage.findSitePermissionsBy(any(), anyBoolean())).thenReturn(permission)
+        `when`(
+            permissionsStorage.findSitePermissionsBy(
+                any(),
+                anyBoolean(),
+                anyBoolean(),
+            ),
+        ).thenReturn(permission)
 
         feature.onShowNotification(notification)
 
@@ -132,7 +139,13 @@ class WebNotificationFeatureTest {
         // When explicitly denied.
 
         val permission = SitePermissions(origin = "https://mozilla.org:443", notification = Status.BLOCKED, savedAt = 0)
-        `when`(permissionsStorage.findSitePermissionsBy(any(), anyBoolean())).thenReturn(permission)
+        `when`(
+            permissionsStorage.findSitePermissionsBy(
+                any(),
+                anyBoolean(),
+                anyBoolean(),
+            ),
+        ).thenReturn(permission)
 
         feature.onShowNotification(testNotification)
 
@@ -152,6 +165,7 @@ class WebNotificationFeatureTest {
             false,
             mock(),
             triggeredByWebExtension = true,
+            privateBrowsing = true,
         )
 
         val feature = WebNotificationFeature(

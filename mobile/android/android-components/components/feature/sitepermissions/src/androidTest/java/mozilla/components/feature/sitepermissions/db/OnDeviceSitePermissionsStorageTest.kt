@@ -63,8 +63,8 @@ class OnDeviceSitePermissionsStorageTest {
             camera = Status.BLOCKED,
             savedAt = System.currentTimeMillis(),
         )
-        storage.save(sitePermissions)
-        val sitePermissionsFromStorage = storage.findSitePermissionsBy(origin)!!
+        storage.save(sitePermissions, private = false)
+        val sitePermissionsFromStorage = storage.findSitePermissionsBy(origin, private = false)!!
 
         assertEquals(origin, sitePermissionsFromStorage.origin)
         assertEquals(Status.BLOCKED, sitePermissionsFromStorage.camera)

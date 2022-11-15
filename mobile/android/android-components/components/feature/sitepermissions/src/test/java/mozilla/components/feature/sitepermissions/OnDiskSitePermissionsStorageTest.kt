@@ -38,6 +38,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.Shadows.shadowOf
 
@@ -63,16 +64,25 @@ class OnDiskSitePermissionsStorageTest {
     fun `save a new SitePermission`() = runTest {
         val sitePermissions = createNewSitePermission()
 
-        storage.save(sitePermissions)
+        storage.save(sitePermissions, private = false)
 
         verify(mockDAO).insert(any())
+    }
+
+    @Test
+    fun `GIVEN a private permission WHEN save THEN the SitePermission is not store`() = runTest {
+        val sitePermissions = createNewSitePermission()
+
+        storage.save(sitePermissions, private = true)
+
+        verify(mockDAO, times(0)).insert(any())
     }
 
     @Test
     fun `update a SitePermission`() = runTest {
         val sitePermissions = createNewSitePermission()
 
-        storage.update(sitePermissions)
+        storage.update(sitePermissions, private = false)
         shadowOf(getMainLooper()).idle()
 
         verify(mockDAO).update(any())
@@ -80,11 +90,62 @@ class OnDiskSitePermissionsStorageTest {
     }
 
     @Test
+    fun `GIVEN a private permission WHEN update THEN the SitePermission is not store`() = runTest {
+        val sitePermissions = createNewSitePermission()
+
+        storage.update(sitePermissions, private = true)
+        shadowOf(getMainLooper()).idle()
+
+        verify(mockDAO, times(0)).update(any())
+        verify(mockDataCleanable, times(0)).clearData(
+            BrowsingData.select(BrowsingData.PERMISSIONS),
+            sitePermissions.origin,
+        )
+    }
+
+    @Test
     fun `find a SitePermissions by origin`() = runTest {
-        storage.findSitePermissionsBy("mozilla.org")
+        storage.findSitePermissionsBy("mozilla.org", private = false)
 
         verify(mockDAO).getSitePermissionsBy("mozilla.org")
     }
+
+    @Test
+    fun `GIVEN private sitePermissions WHEN findSitePermissionsBy THEN reset SitePermissions`() =
+        runTest {
+            val dbPermission = SitePermissionsEntity(
+                origin = "mozilla.dev",
+                localStorage = ALLOWED,
+                crossOriginStorageAccess = ALLOWED,
+                location = BLOCKED,
+                notification = NO_DECISION,
+                microphone = ALLOWED,
+                camera = BLOCKED,
+                bluetooth = ALLOWED,
+                autoplayAudible = AutoplayStatus.BLOCKED,
+                autoplayInaudible = AutoplayStatus.BLOCKED,
+                mediaKeySystemAccess = NO_DECISION,
+                savedAt = 0,
+            )
+
+            doReturn(dbPermission).`when`(mockDAO)
+                .getSitePermissionsBy(origin = dbPermission.origin)
+
+            val foundPermissions =
+                storage.findSitePermissionsBy(dbPermission.origin, private = true)!!
+
+            assertEquals(dbPermission.origin, foundPermissions.origin)
+            assertEquals(NO_DECISION, foundPermissions.location)
+            assertEquals(NO_DECISION, foundPermissions.notification)
+            assertEquals(NO_DECISION, foundPermissions.microphone)
+            assertEquals(NO_DECISION, foundPermissions.bluetooth)
+            assertEquals(NO_DECISION, foundPermissions.localStorage)
+            assertEquals(AutoplayStatus.BLOCKED, foundPermissions.autoplayAudible)
+            assertEquals(AutoplayStatus.ALLOWED, foundPermissions.autoplayInaudible)
+            assertEquals(NO_DECISION, foundPermissions.mediaKeySystemAccess)
+            assertEquals(NO_DECISION, foundPermissions.crossOriginStorageAccess)
+            assertEquals(dbPermission.savedAt, foundPermissions.savedAt)
+        }
 
     @Test
     fun `find all sitePermissions grouped by permission`() = runTest {
@@ -109,7 +170,7 @@ class OnDiskSitePermissionsStorageTest {
     fun `remove a SitePermissions`() = runTest {
         val sitePermissions = createNewSitePermission()
 
-        storage.remove(sitePermissions)
+        storage.remove(sitePermissions, private = false)
 
         shadowOf(getMainLooper()).idle()
 

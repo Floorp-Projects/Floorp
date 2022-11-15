@@ -50,8 +50,14 @@ class OnDiskSitePermissionsStorage(
     /**
      * Persists the [sitePermissions] provided as a parameter.
      * @param sitePermissions the [sitePermissions] to be stored.
+     * @param private indicates if the [SitePermissions] belongs to a private session.
      */
-    override suspend fun save(sitePermissions: SitePermissions, request: PermissionRequest?) {
+    override suspend fun save(
+        sitePermissions: SitePermissions,
+        request: PermissionRequest?,
+        private: Boolean,
+    ) {
+        if (private) return // never save private browsing site permissions
         database
             .sitePermissionsDao()
             .insert(
@@ -62,8 +68,10 @@ class OnDiskSitePermissionsStorage(
     /**
      * Replaces an existing SitePermissions with the values of [sitePermissions] provided as a parameter.
      * @param sitePermissions the sitePermissions to be updated.
+     * @param private indicates if the [SitePermissions] belongs to a private session.
      */
-    override suspend fun update(sitePermissions: SitePermissions) {
+    override suspend fun update(sitePermissions: SitePermissions, private: Boolean) {
+        if (private) return
         coroutineScope.launch {
             dataCleanable?.clearData(Engine.BrowsingData.select(PERMISSIONS), sitePermissions.origin)
         }
@@ -74,8 +82,14 @@ class OnDiskSitePermissionsStorage(
     /**
      * Finds all SitePermissions that match the [origin].
      * @param origin the site to be used as filter in the search.
+     * @param private indicates if the [SitePermissions] belongs to a private session.
      */
-    override suspend fun findSitePermissionsBy(origin: String, includeTemporary: Boolean): SitePermissions? {
+    override suspend fun findSitePermissionsBy(
+        origin: String,
+        includeTemporary: Boolean,
+        private: Boolean,
+    ): SitePermissions? {
+        if (private) return SitePermissions(origin, savedAt = 0)
         return database
             .sitePermissionsDao()
             .getSitePermissionsBy(origin)
@@ -129,7 +143,7 @@ class OnDiskSitePermissionsStorage(
      * Deletes all sitePermissions that match the sitePermissions provided as a parameter.
      * @param sitePermissions the sitePermissions to be deleted from the storage.
      */
-    override suspend fun remove(sitePermissions: SitePermissions) {
+    override suspend fun remove(sitePermissions: SitePermissions, private: Boolean) {
         coroutineScope.launch {
             dataCleanable?.clearData(Engine.BrowsingData.select(PERMISSIONS), sitePermissions.origin)
         }

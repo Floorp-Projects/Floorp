@@ -14,8 +14,9 @@ interface SitePermissionsStorage {
      * Persists the [sitePermissions] provided as a parameter.
      * @param sitePermissions the [sitePermissions] to be stored.
      * @param request the [PermissionRequest] to be stored, default to null.
+     * @param private indicates if the [SitePermissions] belongs to a private session.
      */
-    suspend fun save(sitePermissions: SitePermissions, request: PermissionRequest? = null)
+    suspend fun save(sitePermissions: SitePermissions, request: PermissionRequest? = null, private: Boolean)
 
     /**
      * Saves the permission temporarily until the user navigates away.
@@ -31,20 +32,27 @@ interface SitePermissionsStorage {
     /**
      * Replaces an existing SitePermissions with the values of [sitePermissions] provided as a parameter.
      * @param sitePermissions the sitePermissions to be updated.
+     * @param private indicates if the [SitePermissions] belongs to a private session.
      */
-    suspend fun update(sitePermissions: SitePermissions)
+    suspend fun update(sitePermissions: SitePermissions, private: Boolean)
 
     /**
      * Finds all SitePermissions that match the [origin].
      * @param origin the site to be used as filter in the search.
+     * @param private indicates if the [origin] belongs to a private session.
      */
-    suspend fun findSitePermissionsBy(origin: String, includeTemporary: Boolean = false): SitePermissions?
+    suspend fun findSitePermissionsBy(
+        origin: String,
+        includeTemporary: Boolean = false,
+        private: Boolean,
+    ): SitePermissions?
 
     /**
      * Deletes all sitePermissions that match the sitePermissions provided as a parameter.
      * @param sitePermissions the sitePermissions to be deleted from the storage.
+     * @param private indicates if the [SitePermissions] belongs to a private session.
      */
-    suspend fun remove(sitePermissions: SitePermissions)
+    suspend fun remove(sitePermissions: SitePermissions, private: Boolean)
 
     /**
      * Deletes all sitePermissions sitePermissions.

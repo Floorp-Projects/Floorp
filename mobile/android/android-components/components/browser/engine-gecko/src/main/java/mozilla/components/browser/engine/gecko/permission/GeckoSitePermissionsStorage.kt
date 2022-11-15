@@ -59,9 +59,9 @@ class GeckoSitePermissionsStorage(
     @VisibleForTesting
     internal val geckoTemporaryPermissions = mutableListOf<ContentPermission>()
 
-    override suspend fun save(sitePermissions: SitePermissions, request: PermissionRequest?) {
-        val geckoSavedPermissions = updateGeckoPermissionIfNeeded(sitePermissions, request)
-        onDiskStorage.save(geckoSavedPermissions, request)
+    override suspend fun save(sitePermissions: SitePermissions, request: PermissionRequest?, private: Boolean) {
+        val geckoSavedPermissions = updateGeckoPermissionIfNeeded(sitePermissions, request, private)
+        onDiskStorage.save(geckoSavedPermissions, request, private)
     }
 
     override fun saveTemporary(request: PermissionRequest?) {
@@ -77,22 +77,46 @@ class GeckoSitePermissionsStorage(
         geckoTemporaryPermissions.clear()
     }
 
-    override suspend fun update(sitePermissions: SitePermissions) {
-        val updatedPermission = updateGeckoPermissionIfNeeded(sitePermissions)
-        onDiskStorage.update(updatedPermission)
+    override suspend fun update(sitePermissions: SitePermissions, private: Boolean) {
+        val updatedPermission = updateGeckoPermissionIfNeeded(sitePermissions, private = private)
+        onDiskStorage.update(updatedPermission, private)
     }
 
-    override suspend fun findSitePermissionsBy(origin: String, includeTemporary: Boolean): SitePermissions? {
+    override suspend fun findSitePermissionsBy(
+        origin: String,
+        includeTemporary: Boolean,
+        private: Boolean,
+    ): SitePermissions? {
         /**
          * GeckoView ony persists [GeckoPermissionRequest.Content] other permissions like
          * [GeckoPermissionRequest.Media], we have to store them ourselves.
          * For this reason, we query both storage ([geckoStorage] and [onDiskStorage]) and
          * merge both results into one [SitePermissions] object.
          */
-        val onDiskPermission: SitePermissions? = onDiskStorage.findSitePermissionsBy(origin)
-        val geckoPermissions = findGeckoContentPermissionBy(origin, includeTemporary).groupByType()
+        val onDiskPermission: SitePermissions? =
+            onDiskStorage.findSitePermissionsBy(origin, private = private)
+        val geckoPermissions = findGeckoContentPermissionBy(origin, includeTemporary, private).groupByType()
 
-        return mergePermissions(onDiskPermission, geckoPermissions)
+        return mergePermissions(onDiskPermission, geckoPermissions)?.resetNoGeckoPermissionIfNeeded(
+            private,
+        )
+    }
+
+    @VisibleForTesting
+    internal fun SitePermissions?.resetNoGeckoPermissionIfNeeded(private: Boolean): SitePermissions? {
+        return if (private) {
+            /**
+             * As part of the GeckoView/AC site permissions migration,
+             * we ended up with a fragmented permissions storage in AC.
+             * Where some permissions are store directly by gecko and others
+             * store locally in AC as GeckoView doesn't offer storage support for them.
+             * The permissions below are stored and manged by AC.
+             * For more references see https://bugzilla.mozilla.org/show_bug.cgi?id=1796614
+             */
+            this?.copy(camera = NO_DECISION, microphone = NO_DECISION, bluetooth = NO_DECISION)
+        } else {
+            this
+        }
     }
 
     override suspend fun getSitePermissionsPaged(): DataSource.Factory<Int, SitePermissions> {
@@ -104,9 +128,9 @@ class GeckoSitePermissionsStorage(
         }
     }
 
-    override suspend fun remove(sitePermissions: SitePermissions) {
-        onDiskStorage.remove(sitePermissions)
-        removeGeckoContentPermissionBy(sitePermissions.origin)
+    override suspend fun remove(sitePermissions: SitePermissions, private: Boolean) {
+        onDiskStorage.remove(sitePermissions, private)
+        removeGeckoContentPermissionBy(sitePermissions.origin, private)
     }
 
     override suspend fun removeAll() {
@@ -146,10 +170,11 @@ class GeckoSitePermissionsStorage(
     internal suspend fun updateGeckoPermissionIfNeeded(
         userSitePermissions: SitePermissions,
         permissionRequest: PermissionRequest? = null,
+        private: Boolean,
     ): SitePermissions {
         var updatedPermission = userSitePermissions
         val geckoPermissionsByType =
-            permissionRequest.extractGeckoPermissionsOrQueryTheStore(userSitePermissions.origin)
+            permissionRequest.extractGeckoPermissionsOrQueryTheStore(userSitePermissions.origin, private)
 
         if (geckoPermissionsByType.isNotEmpty()) {
             val geckoNotification = geckoPermissionsByType[PERMISSION_DESKTOP_NOTIFICATION]?.firstOrNull()
@@ -319,10 +344,10 @@ class GeckoSitePermissionsStorage(
     internal suspend fun findGeckoContentPermissionBy(
         origin: String,
         includeTemporary: Boolean = false,
+        private: Boolean,
     ): List<ContentPermission>? {
         return withContext(mainScope.coroutineContext) {
-            val geckoPermissions = geckoStorage.getPermissions(origin).await()
-
+            val geckoPermissions = geckoStorage.getPermissions(origin, private).await()
             if (includeTemporary) {
                 geckoPermissions
             } else {
@@ -351,8 +376,11 @@ class GeckoSitePermissionsStorage(
     }
 
     @VisibleForTesting
-    internal suspend fun removeGeckoContentPermissionBy(origin: String) {
-        findGeckoContentPermissionBy(origin)?.forEach { geckoPermissions ->
+    internal suspend fun removeGeckoContentPermissionBy(origin: String, private: Boolean) {
+        findGeckoContentPermissionBy(
+            origin = origin,
+            private = private,
+        )?.forEach { geckoPermissions ->
             removeGeckoContentPermission(geckoPermissions)
         }
     }
@@ -378,11 +406,12 @@ class GeckoSitePermissionsStorage(
 
     private suspend fun PermissionRequest?.extractGeckoPermissionsOrQueryTheStore(
         origin: String,
+        private: Boolean,
     ): Map<Int, List<ContentPermission>> {
         return if (this is GeckoPermissionRequest.Content) {
             mapOf(geckoPermission.permission to listOf(geckoPermission))
         } else {
-            findGeckoContentPermissionBy(origin, includeTemporary = true).groupByType()
+            findGeckoContentPermissionBy(origin, includeTemporary = true, private).groupByType()
         }
     }
 }
@@ -411,7 +440,7 @@ internal fun List<ContentPermission>?.filterNotTemporaryPermissions(
 @VisibleForTesting
 internal fun ContentPermission.areSame(other: ContentPermission) =
     other.uri.tryGetHostFromUrl() == this.uri.tryGetHostFromUrl() &&
-        other.permission == this.permission
+        other.permission == this.permission && other.privateMode == this.privateMode
 
 @VisibleForTesting
 internal fun Int.toStatus(): Status {
