@@ -20,7 +20,6 @@ UNIFIED_SOURCES += [
     "TestFindFullHash.cpp",
     "TestLookupCacheV4.cpp",
     "TestPerProviderDirectory.cpp",
-    "TestPrefixSet.cpp",
     "TestProtocolParser.cpp",
     "TestRiceDeltaDecoder.cpp",
     "TestSafebrowsingHash.cpp",

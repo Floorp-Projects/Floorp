@@ -214,8 +214,6 @@ class LookupCache {
   // Currently this is only used by testcase.
   bool IsInCache(uint32_t key) const { return mFullHashCache.Get(key); };
 
-  uint32_t PrefixLength() const { return mVLPrefixSet->Length(); }
-
 #if DEBUG
   void DumpCache() const;
 #endif
@@ -314,7 +312,6 @@ class LookupCacheV2 final : public LookupCache {
   nsresult GetPrefixes(FallibleTArray<uint32_t>& aAddPrefixes);
   nsresult GetPrefixes(FallibleTArray<uint32_t>& aAddPrefixes,
                        FallibleTArray<nsCString>& aAddCompletes);
-  nsresult GetPrefixByIndex(uint32_t aIndex, uint32_t* aOutPrefix) const;
 
   // This will Clear() the passed arrays when done.
   // 'aExpirySec' is used by testcase to config an expired time.
