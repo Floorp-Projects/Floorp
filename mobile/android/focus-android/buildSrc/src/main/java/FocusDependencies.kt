@@ -32,7 +32,7 @@ object FocusVersions {
     object Google {
         const val accompanist = "0.16.1"
         const val compose_compiler = "1.3.2"
-        const val material = "1.2.1"
+        const val material = "1.7.0"
         const val play = "1.10.3"
     }
 
