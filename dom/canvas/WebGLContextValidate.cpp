@@ -202,6 +202,8 @@ static webgl::Limits MakeLimits(const WebGLContext& webgl) {
   // GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS value is the accurate value.
   gl.GetUIntegerv(LOCAL_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS,
                   &limits.maxTexUnits);
+  limits.maxTexUnits = std::min(
+      limits.maxTexUnits, uint32_t{UINT8_MAX});  // We want to use uint8_t.
 
   gl.GetUIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &limits.maxTex2dSize);
   gl.GetUIntegerv(LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE, &limits.maxTexCubeSize);
