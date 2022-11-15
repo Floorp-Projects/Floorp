@@ -279,32 +279,43 @@ fun PocketStories(
         itemsIndexed(storiesToShow) { columnIndex, columnItems ->
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 columnItems.forEachIndexed { rowIndex, story ->
-                    if (story == placeholderStory) {
-                        ListItemTabLargePlaceholder(stringResource(R.string.pocket_stories_placeholder_text)) {
-                            onDiscoverMoreClicked("https://getpocket.com/explore?$POCKET_FEATURE_UTM_KEY_VALUE")
-                        }
-                    } else if (story is PocketRecommendedStory) {
-                        PocketStory(
-                            story = story,
-                            backgroundColor = backgroundColor,
-                        ) {
-                            val uri = Uri.parse(story.url)
-                                .buildUpon()
-                                .appendQueryParameter(URI_PARAM_UTM_KEY, POCKET_STORIES_UTM_VALUE)
-                                .build().toString()
-                            onStoryClicked(it.copy(url = uri), rowIndex to columnIndex)
-                        }
-                    } else if (story is PocketSponsoredStory) {
-                        Box(
-                            modifier = Modifier.onShown(0.5f) {
-                                onStoryShown(story, rowIndex to columnIndex)
-                            },
-                        ) {
-                            PocketSponsoredStory(
+                    Box(
+                        modifier = Modifier.semantics {
+                            testTagsAsResourceId = true
+                            testTag = when (story) {
+                                placeholderStory -> "pocket.discover.more.story"
+                                is PocketRecommendedStory -> "pocket.recommended.story"
+                                else -> "pocket.sponsored.story"
+                            }
+                        },
+                    ) {
+                        if (story == placeholderStory) {
+                            ListItemTabLargePlaceholder(stringResource(R.string.pocket_stories_placeholder_text)) {
+                                onDiscoverMoreClicked("https://getpocket.com/explore?$POCKET_FEATURE_UTM_KEY_VALUE")
+                            }
+                        } else if (story is PocketRecommendedStory) {
+                            PocketStory(
                                 story = story,
                                 backgroundColor = backgroundColor,
                             ) {
-                                onStoryClicked(story, rowIndex to columnIndex)
+                                val uri = Uri.parse(story.url)
+                                    .buildUpon()
+                                    .appendQueryParameter(URI_PARAM_UTM_KEY, POCKET_STORIES_UTM_VALUE)
+                                    .build().toString()
+                                onStoryClicked(it.copy(url = uri), rowIndex to columnIndex)
+                            }
+                        } else if (story is PocketSponsoredStory) {
+                            Box(
+                                modifier = Modifier.onShown(0.5f) {
+                                    onStoryShown(story, rowIndex to columnIndex)
+                                },
+                            ) {
+                                PocketSponsoredStory(
+                                    story = story,
+                                    backgroundColor = backgroundColor,
+                                ) {
+                                    onStoryClicked(story, rowIndex to columnIndex)
+                                }
                             }
                         }
                     }
