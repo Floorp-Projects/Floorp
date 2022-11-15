@@ -130,7 +130,14 @@ class ErrorSummaryFormatter(BaseFormatter):
 
         if item.get("test"):
             data["group"] = self.test_to_group.get(item["test"], "")
-            self.groups[data["group"]]["status"] = "ERROR"
+            if (
+                "expected" not in item
+                or item["status"] == item["expected"]
+                or item["status"] in item.get("known_intermittent", [])
+            ):
+                self.groups[data["group"]]["status"] = "OK"
+            else:
+                self.groups[data["group"]]["status"] = "ERROR"
 
         return self._output("crash", data)
 
