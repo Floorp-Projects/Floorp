@@ -1525,18 +1525,6 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   -moz-user-focus: normal;
 }
 
-/* Frame used for rendering the DevTools inspector highlighters */
-:root > iframe.devtools-highlighter-renderer {
-  border: none;
-  pointer-events: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 2;
-}
-
 /**
  * Dialogs
  */
