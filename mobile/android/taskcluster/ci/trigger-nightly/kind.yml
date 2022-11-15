@@ -32,16 +32,16 @@ tasks:
             command: 'curl --fail --verbose -X POST -d "{}" -H "Content-Type: application/json" ${TASKCLUSTER_PROXY_URL}/api/hooks/v1/hooks/project-releng/cron-task-${HOOK_PROJECT}%2fnightly/trigger'
         when:
             files-changed:
-                - 'buildSrc/src/main/java/Gecko.kt'
+                - 'android-components/buildSrc/src/main/java/Gecko.kt'
         scopes:
             by-level:
                 '3':
-                    - 'hooks:trigger-hook:project-releng/cron-task-mozilla-mobile-android-components/nightly'
+                    - 'hooks:trigger-hook:project-releng/cron-task-mozilla-mobile-firefox-android/nightly'
                 default:
-                    - 'hooks:trigger-hook:project-releng/cron-task-mozilla-releng-staging-android-components/nightly'
+                    - 'hooks:trigger-hook:project-releng/cron-task-mozilla-releng-staging-firefox-android/nightly'
         worker:
             env:
                 HOOK_PROJECT:
                     by-level:
-                        '3': 'mozilla-mobile-android-components'
-                        default: 'mozilla-releng-staging-android-components'
+                        '3': 'mozilla-mobile-firefox-android'
+                        default: 'mozilla-releng-staging-firefox-android'
