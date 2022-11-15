@@ -121,11 +121,6 @@
          %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="shortcut_erase_and_open_long_label">Erase and open %1$s</string>
 
-
-    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action" moz:removedIn="106">Search Privately</string>
-
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
          Clicking this action will launch Focus and perform a search in the default search engine.
          The argument is the app name (Firefox Focus/Firefox Klar/etc).It can be changed from this file. -->
@@ -469,10 +464,6 @@
 
     <string name="error_hostLookup_title">Server not found</string>
 
-    <!-- Onboarding: Title -->
-    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title" moz:removedIn="106">Welcome to %1$s!</string>
-
     <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
     <string name="onboarding_close_button_content_description">Close</string>
 
@@ -502,32 +493,6 @@
 
     <!-- New Onboarding flow second screen skip onboarding button label-->
     <string name="onboarding_second_screen_skip_button_text">Skip</string>
-
-
-    <!-- Onboarding: Description -->
-    <string name="onboarding_description" moz:removedIn="106">Next-level private browsing when you want it</string>
-
-    <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title" moz:removedIn="106">Where incognito meets invisible</string>
-
-    <!-- Onboarding: Incognito Description -->
-    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description" moz:removedIn="106">%s is a privacy-first browser with extra-strong tracking and cookie protection built in.</string>
-
-    <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title" moz:removedIn="106">Browse like it never happened</string>
-
-    <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2" moz:removedIn="106">One tap erases your browsing history and cookies — and stops ads from following you around.</string>
-
-    <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title" moz:removedIn="106">Privacy that fits any situation</string>
-
-    <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description" moz:removedIn="106">If your browsing needs change, it’s easy to scale your privacy settings up or down.</string>
-
-    <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing" moz:removedIn="106">Start browsing</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Power up your privacy</string>
