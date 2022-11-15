@@ -53,9 +53,12 @@ const POPUP_PRELOAD_TIMEOUT_MS = 200;
 const browserActionMap = new WeakMap();
 
 XPCOMUtils.defineLazyGetter(this, "browserAreas", () => {
+  let panelArea = gUnifiedExtensionsEnabled
+    ? CustomizableUI.AREA_ADDONS
+    : CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
   return {
     navbar: CustomizableUI.AREA_NAVBAR,
-    menupanel: CustomizableUI.AREA_FIXED_OVERFLOW_PANEL,
+    menupanel: panelArea,
     tabstrip: CustomizableUI.AREA_TABSTRIP,
     personaltoolbar: CustomizableUI.AREA_BOOKMARKS,
   };
