@@ -15,6 +15,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   ResponsivenessMonitor: "resource://gre/modules/ResponsivenessMonitor.sys.mjs",
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
@@ -1090,6 +1091,11 @@ export var MigrationUtils = Object.seal({
             let { parentGuid, guid, lastModified, type } = bm;
             bmData.push({ parentGuid, guid, lastModified, type });
           }
+        }
+        if (parent == lazy.PlacesUtils.bookmarks.toolbarGuid) {
+          lazy.PlacesUIUtils.maybeToggleBookmarkToolbarVisibility(
+            true /* aForceVisible */
+          );
         }
       },
       ex => Cu.reportError(ex)

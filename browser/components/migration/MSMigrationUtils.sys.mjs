@@ -9,7 +9,6 @@ import { MigrationUtils } from "resource:///modules/MigrationUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
 });
@@ -449,7 +448,6 @@ Bookmarks.prototype = {
             // Import to the bookmarks toolbar.
             let folderGuid = lazy.PlacesUtils.bookmarks.toolbarGuid;
             await this._migrateFolder(entry, folderGuid);
-            lazy.PlacesUIUtils.maybeToggleBookmarkToolbarVisibilityAfterMigration();
           } else if (entry.isReadable()) {
             let {
               bookmarks: childBookmarks,
