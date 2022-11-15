@@ -35,7 +35,7 @@ class SearchSelectorMenuTest {
         lastItem.onClick()
 
         assertEquals(
-            testContext.getString(R.string.search_header_menu_item),
+            testContext.getString(R.string.search_header_menu_item_2),
             (items.first() as DecorativeTextMenuCandidate).text,
         )
         assertEquals(

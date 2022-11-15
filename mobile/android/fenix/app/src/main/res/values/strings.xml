@@ -244,7 +244,9 @@
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">Search settings</string>
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">This time search:</string>
+    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">This time search:</string>
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">This time search in:</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
