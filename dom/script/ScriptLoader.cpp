@@ -1186,13 +1186,6 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
       }
     }
 
-    {
-      // We must perform a microtask checkpoint when inserting script elements
-      // as specified by: https://html.spec.whatwg.org/#parsing-main-incdata
-      // For the non-inline module cases this happens in ProcessRequest.
-      mozilla::nsAutoMicroTask mt;
-    }
-
     // This calls OnFetchComplete directly since there's no need to start
     // fetching an inline script.
     nsresult rv = modReq->OnFetchComplete(NS_OK);

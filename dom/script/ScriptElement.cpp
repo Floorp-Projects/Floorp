@@ -99,14 +99,12 @@ bool ScriptElement::MaybeProcessScript() {
     return false;
   }
 
+  nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+      "ScriptElement::MaybeProcessScript", []() { nsAutoMicroTask mt; }));
   if (!HasScriptContent()) {
-    // In the case of an empty, non-external classic script, there is nothing
-    // to process. However, we must perform a microtask checkpoint afterwards,
+    // In the case of an empty, non-external classic script, we return early;
+    // however, we must do so after performing a microtask checkpoint,
     // as per https://html.spec.whatwg.org/#clean-up-after-running-script
-    if (mKind == JS::loader::ScriptKind::eClassic && !mExternal) {
-      nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
-          "ScriptElement::MaybeProcessScript", []() { nsAutoMicroTask mt; }));
-    }
     return false;
   }
 
