@@ -1378,7 +1378,7 @@
           return;
         }
 
-        if (!window.fullScreen || newTab.isEmpty) {
+        function selectURL() {
           if (this._asyncTabSwitching) {
             // Set _awaitingSetURI flag to suppress popup notification
             // explicitly while tab switching asynchronously.
@@ -1404,6 +1404,20 @@
           } else {
             gURLBar.select();
           }
+        }
+
+        if (!window.fullScreen) {
+          selectURL();
+          return;
+        }
+
+        if (newTab.isEmpty) {
+          // Wait until fullscreen has exited since it will
+          // change the selection.
+          window.addEventListener("MozDOMFullscreen:Exited", selectURL, {
+            once: true,
+            wantsUntrusted: false,
+          });
           return;
         }
       }
