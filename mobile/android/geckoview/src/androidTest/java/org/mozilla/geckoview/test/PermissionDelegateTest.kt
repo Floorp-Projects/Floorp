@@ -174,9 +174,9 @@ class PermissionDelegateTest : BaseSessionTest() {
         sessionRule.setPrefsUntilTestEnd(mapOf("geo.provider.testing" to false))
         var context = InstrumentationRegistry.getInstrumentation().targetContext
         var locManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        var locProvider = "permissionsLocationProvider";
-        sessionRule.addMockLocationProvider(locManager, locProvider)
-        sessionRule.setMockLocation(locManager, locProvider, 1.1111, 2.2222)
+        var locProvider = sessionRule.MockLocationProvider(locManager, "permissionsLocationProvider",
+                1.1111, 2.2222, false)
+        locProvider.postLocation()
 
         mainSession.delegateDuringNextWait(object : PermissionDelegate {
             // Ensure the content permission is asked first, before the Android permission.
@@ -242,7 +242,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         })
         mainSession.reload()
         mainSession.waitForPageStop()
-        sessionRule.removeMockLocationProvider(locManager, locProvider)
+        locProvider.removeMockLocationProvider()
     }
 
     @Test fun geolocation_reject() {
