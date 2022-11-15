@@ -292,11 +292,6 @@ var whitelist = [
   // References to esm generated from jsm programatically
   { file: "resource://gre/modules/LangPackMatcher.sys.mjs" },
   { file: "resource://gre/modules/PluralForm.sys.mjs" },
-
-  // Bug 1788595 - used by Firefox Translations extension
-  // see also https://github.com/mozilla/firefox-translations/issues/496
-  { file: "chrome://browser/locale/translation.dtd" },
-  { file: "chrome://global/locale/notification.dtd" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {
