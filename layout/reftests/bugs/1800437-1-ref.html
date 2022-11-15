@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<style>
+.test {
+  width: 10em;  /* Script below will adjust this. */
+}
+#measure {
+  color: transparent;
+  border: 1px solid transparent;
+  display: inline-block;
+}
+p {
+  border: 1px solid gray;
+  margin: 10px;
+  font: 100px/1.5 serif;
+  white-space: nowrap;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  direction: rtl;
+}
+</style>
+<div>
+<p class=test>&#x1f310;&#x1f310;&#x1f310;&#x1f310;</p>
+<p class=test>&#x1f310;&#x1f310;&#x1f310;&#x2026;</p>
+<p class=test>&#x1f310;&#x1f310;&#x1f310;&#x2026;</p>
+<p class=test>&#x1f310;&#x1f310;&#x1f310;&#x2026;</p>
+<p class=test>&#x1f310;&#x1f310;&#x1f310;&#x2026;</p>
+<p id=measure>&#x1f310;</p>
+</div>
+<script>
+/* Set width of the "test" elements to ensure it can fit 4 globe glyphs,
+   plus half a glyph of extra space. */
+measure = document.getElementById("measure");
+globeWidth = window.getComputedStyle(measure).width.replace("px", "");
+document.styleSheets[0].cssRules[0].style.width = 4.5 * globeWidth + "px";
+</script>
