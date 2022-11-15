@@ -52,6 +52,8 @@ EXTRA_JS_MODULES += [
     "txEXSLTRegExFunctions.jsm",
 ]
 
+include("/ipc/chromium/chromium-config.mozbuild")
+
 LOCAL_INCLUDES += [
     "../base",
     "../xml",

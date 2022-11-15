@@ -9,11 +9,14 @@
 #include "mozilla/StorageAccess.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/FunctionBinding.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/dom/Report.h"
 #include "mozilla/dom/ReportingObserver.h"
 #include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerRegistration.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "nsContentUtils.h"
+#include "nsJSPrincipals.h"
 #include "nsThreadUtils.h"
 #include "nsGlobalWindowInner.h"
 
@@ -376,4 +379,43 @@ void nsIGlobalObject::SetByteLengthQueuingStrategySizeFunction(
 
 bool nsIGlobalObject::ShouldResistFingerprinting() const {
   return nsContentUtils::ShouldResistFingerprinting();
+}
+
+// This will be overridden by subclasses to handle things like
+// Workers (off-main-thread)
+mozilla::Result<mozilla::ipc::PrincipalInfo, nsresult>
+nsIGlobalObject::GetStorageKey() {
+  using mozilla::ipc::PrincipalInfo;
+
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(this);
+  if (!sop) {
+    return mozilla::Err(NS_ERROR_FAILURE);
+  }
+
+  nsIPrincipal* principal = sop->GetEffectiveStoragePrincipal();
+  if (!principal) {
+    return mozilla::Err(NS_ERROR_FAILURE);
+  }
+
+  PrincipalInfo principalInfo;
+  nsresult rv = PrincipalToPrincipalInfo(principal, &principalInfo);
+  if (NS_FAILED(rv)) {
+    return mozilla::Err(NS_ERROR_FAILURE);
+  }
+
+  return std::move(principalInfo);
+}
+
+bool nsIGlobalObject::IsEqualStorageKey(
+    mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
+  auto result = GetStorageKey();
+  mozilla::ipc::PrincipalInfo storagePrincipalInfo;
+  if (result.isErr()) {
+    return false;
+  }
+  storagePrincipalInfo = result.unwrap();
+
+  return mozilla::ipc::NonExpandedPrincipalInfoEquals(aPrincipalInfo,
+                                                      storagePrincipalInfo);
 }

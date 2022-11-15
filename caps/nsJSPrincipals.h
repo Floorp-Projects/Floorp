@@ -38,6 +38,9 @@ class nsJSPrincipals : public nsIPrincipal, public JSPrincipals {
   /* For write() implementations of off-main-thread JSPrincipals. */
   static bool WritePrincipalInfo(JSStructuredCloneWriter* aWriter,
                                  const mozilla::ipc::PrincipalInfo& aInfo);
+  static bool ReadPrincipalInfo(JSStructuredCloneReader* aReader,
+                                mozilla::ipc::PrincipalInfo& aInfo);
+
   // This class is used on the main thread to specify which principal to use
   // when reading principals data that was set on a DOM worker thread.
   // DOM workers do not use principals from Gecko's point of view, and any

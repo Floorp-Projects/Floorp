@@ -21,36 +21,6 @@
 
 namespace mozilla::dom {
 
-namespace {
-
-Result<mozilla::ipc::PrincipalInfo, nsresult> GetPrincipalInfo(
-    nsIGlobalObject* aGlobal) {
-  using mozilla::ipc::PrincipalInfo;
-
-  if (NS_IsMainThread()) {
-    nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(aGlobal);
-    QM_TRY(MOZ_TO_RESULT(sop));
-
-    nsCOMPtr<nsIPrincipal> principal = sop->GetEffectiveStoragePrincipal();
-    QM_TRY(MOZ_TO_RESULT(principal));
-
-    PrincipalInfo principalInfo;
-    QM_TRY(MOZ_TO_RESULT(PrincipalToPrincipalInfo(principal, &principalInfo)));
-
-    return std::move(principalInfo);
-  }
-
-  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-  QM_TRY(MOZ_TO_RESULT(workerPrivate));
-
-  const PrincipalInfo& principalInfo =
-      workerPrivate->GetEffectiveStoragePrincipalInfo();
-
-  return principalInfo;
-}
-
-}  // namespace
-
 FileSystemManager::FileSystemManager(
     nsIGlobalObject* aGlobal, RefPtr<StorageManager> aStorageManager,
     RefPtr<FileSystemBackgroundRequestHandler> aBackgroundRequestHandler)
@@ -97,8 +67,9 @@ void FileSystemManager::BeginRequest(
 
   MOZ_ASSERT(mGlobal);
 
-  QM_TRY_INSPECT(const auto& principalInfo, GetPrincipalInfo(mGlobal), QM_VOID,
-                 [&aFailure](nsresult rv) { aFailure(rv); });
+  QM_TRY_UNWRAP(mozilla::ipc::PrincipalInfo principalInfo,
+                mGlobal->GetStorageKey(), QM_VOID,
+                [aFailure](nsresult rv) { aFailure(rv); });
 
   mBackgroundRequestHandler->CreateFileSystemManagerChild(principalInfo)
       ->Then(

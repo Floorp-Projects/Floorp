@@ -83,6 +83,12 @@ nsresult PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
                                   bool aSkipBaseDomain = false);
 
 /**
+ * Compare non-expanded PrincipalInfo's for equivalence.
+ */
+bool NonExpandedPrincipalInfoEquals(const PrincipalInfo& aLeft,
+                                    const PrincipalInfo& aRight);
+
+/**
  * Convert a CSPInfo to an nsIContentSecurityPolicy.
  *
  * MUST be called on the main thread only.

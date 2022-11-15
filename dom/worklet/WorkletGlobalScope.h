@@ -11,6 +11,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIGlobalObject.h"
 #include "nsWrapperCache.h"
@@ -51,6 +52,11 @@ class WorkletGlobalScope : public nsIGlobalObject, public nsWrapperCache {
   JSObject* GetGlobalJSObject() override { return GetWrapper(); }
   JSObject* GetGlobalJSObjectPreserveColor() const override {
     return GetWrapperPreserveColor();
+  }
+
+  mozilla::Result<mozilla::ipc::PrincipalInfo, nsresult> GetStorageKey()
+      override {
+    return Err(NS_ERROR_NOT_AVAILABLE);
   }
 
   already_AddRefed<Console> GetConsole(JSContext* aCx, ErrorResult& aRv);

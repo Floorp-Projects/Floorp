@@ -313,6 +313,18 @@ void WorkerGlobalScopeBase::Control(
   }
 }
 
+mozilla::Result<mozilla::ipc::PrincipalInfo, nsresult>
+WorkerGlobalScopeBase::GetStorageKey() {
+  using mozilla::ipc::PrincipalInfo;
+
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  const PrincipalInfo& principalInfo =
+      mWorkerPrivate->GetEffectiveStoragePrincipalInfo();
+
+  return principalInfo;
+}
+
 nsresult WorkerGlobalScopeBase::Dispatch(
     TaskCategory aCategory, already_AddRefed<nsIRunnable>&& aRunnable) {
   return EventTargetFor(aCategory)->Dispatch(std::move(aRunnable),

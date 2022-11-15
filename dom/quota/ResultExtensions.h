@@ -134,11 +134,12 @@ Result<R, nsresult> ToResultGet(const Func& aFunc, Args&&... aArgs) {
 }  // namespace mozilla
 
 // TODO: Maybe move this to mfbt/ResultExtensions.h
-#define MOZ_TO_RESULT(expr) ToResult(expr)
+#define MOZ_TO_RESULT(expr) ::mozilla::ToResult(expr)
 
-#define QM_TO_RESULT(expr) ToResult<QMResult>(expr)
+#define QM_TO_RESULT(expr) ::mozilla::ToResult<QMResult>(expr)
 
-#define QM_TO_RESULT_TRANSFORM(value) ToResultTransform<QMResult>(value)
+#define QM_TO_RESULT_TRANSFORM(value) \
+  ::mozilla::ToResultTransform<QMResult>(value)
 
 #define MOZ_TO_RESULT_GET_TYPED(resultType, ...) \
   ::mozilla::ToResultGet<MOZ_REMOVE_PAREN(resultType)>(__VA_ARGS__)

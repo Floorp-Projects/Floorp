@@ -12,6 +12,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/OriginTrials.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsIGlobalObject.h"
 #include "nsWrapperCache.h"
 
@@ -53,6 +54,11 @@ class ShadowRealmGlobalScope : public nsIGlobalObject, public nsWrapperCache {
   }
 
   JS::loader::ModuleLoaderBase* GetModuleLoader(JSContext* aCx) override;
+
+  mozilla::Result<mozilla::ipc::PrincipalInfo, nsresult> GetStorageKey()
+      override {
+    return Err(NS_ERROR_NOT_AVAILABLE);
+  }
 
  private:
   virtual ~ShadowRealmGlobalScope() = default;

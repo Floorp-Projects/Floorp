@@ -10,6 +10,8 @@
 #include "mozilla/WeakPtr.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StorageAccess.h"
+#include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "nsIGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -59,6 +61,24 @@ class SandboxPrivate : public nsIGlobalObject,
   nsIPrincipal* GetEffectiveCookiePrincipal() override { return mPrincipal; }
 
   nsIPrincipal* GetEffectiveStoragePrincipal() override { return mPrincipal; }
+
+  mozilla::Result<mozilla::ipc::PrincipalInfo, nsresult> GetStorageKey()
+      override {
+    mozilla::ipc::PrincipalInfo principalInfo;
+    nsresult rv = PrincipalToPrincipalInfo(mPrincipal, &principalInfo);
+    // Block expanded and null principals, let content and system through
+    // (system is for xpcshell tests)
+    if (principalInfo.type() !=
+            mozilla::ipc::PrincipalInfo::TContentPrincipalInfo &&
+        principalInfo.type() !=
+            mozilla::ipc::PrincipalInfo::TSystemPrincipalInfo) {
+      rv = NS_ERROR_DOM_SECURITY_ERR;
+    }
+    if (NS_FAILED(rv)) {
+      return mozilla::Err(rv);
+    }
+    return std::move(principalInfo);
+  }
 
   nsIPrincipal* PartitionedPrincipal() override { return mPrincipal; }
 
