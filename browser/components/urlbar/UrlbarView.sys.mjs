@@ -1903,6 +1903,7 @@ export class UrlbarView {
   }
 
   #setRowVisibility(row, visible) {
+    row.result.isVisible = visible;
     row.style.display = visible ? "" : "none";
     if (
       !visible &&
