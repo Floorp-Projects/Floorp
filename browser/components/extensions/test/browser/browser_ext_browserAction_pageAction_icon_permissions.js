@@ -8,7 +8,9 @@ PromiseTestUtils.allowMatchingRejectionsGlobally(/packaging errors/);
 add_task(async function testInvalidIconSizes() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      browser_action: {},
+      browser_action: {
+        default_area: "navbar",
+      },
       page_action: {},
     },
 
@@ -91,7 +93,7 @@ add_task(async function testDefaultDetails() {
   for (let icon of icons) {
     let extension = ExtensionTestUtils.loadExtension({
       manifest: {
-        browser_action: { default_icon: icon },
+        browser_action: { default_icon: icon, default_area: "navbar" },
         page_action: { default_icon: icon },
       },
 
@@ -151,7 +153,7 @@ add_task(async function testSecureURLsDenied() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      browser_action: {},
+      browser_action: { default_area: "navbar" },
       page_action: {},
     },
 
@@ -219,6 +221,7 @@ add_task(async function testSecureManifestURLsDenied() {
         manifest: {
           [api]: {
             default_icon: url,
+            default_area: "navbar",
           },
         },
       });

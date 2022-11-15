@@ -111,7 +111,9 @@ async function withWindowOverflowed(win, taskFn) {
       browser_specific_settings: {
         gecko: { id: "unified-extensions-overflowable-toolbar@ext-0" },
       },
-      browser_action: {},
+      browser_action: {
+        default_area: "navbar",
+      },
       // We pass `activeTab` to have a different permission message when
       // hovering the primary/action button.
       permissions: ["activeTab", "contextMenus"],
@@ -135,7 +137,9 @@ async function withWindowOverflowed(win, taskFn) {
       browser_specific_settings: {
         gecko: { id: "unified-extensions-overflowable-toolbar@ext-1" },
       },
-      browser_action: {},
+      browser_action: {
+        default_area: "navbar",
+      },
       permissions: ["contextMenus"],
     },
     background() {
@@ -161,7 +165,9 @@ async function withWindowOverflowed(win, taskFn) {
   for (let i = 2; i < NUM_EXTENSIONS; ++i) {
     manifests.push({
       name: `Extension #${i}`,
-      browser_action: {},
+      browser_action: {
+        default_area: "navbar",
+      },
     });
   }
 

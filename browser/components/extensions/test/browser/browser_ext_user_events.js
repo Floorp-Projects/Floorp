@@ -122,7 +122,10 @@ add_task(async function testSources() {
     },
 
     manifest: {
-      browser_action: { default_title: "test" },
+      browser_action: {
+        default_title: "test",
+        default_area: "navbar",
+      },
       page_action: { default_title: "test" },
       permissions: ["contextMenus"],
       optional_permissions: [

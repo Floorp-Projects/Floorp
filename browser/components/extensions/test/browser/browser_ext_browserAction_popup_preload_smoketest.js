@@ -18,6 +18,7 @@ async function installTestAddon(addonId, unpacked = false) {
       browser_specific_settings: { gecko: { id: addonId } },
       browser_action: {
         default_popup: "popup.html",
+        default_area: "navbar",
       },
     },
     files: {

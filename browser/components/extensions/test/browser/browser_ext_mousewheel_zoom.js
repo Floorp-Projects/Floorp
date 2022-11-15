@@ -75,6 +75,7 @@ async function test_mousewheel_zoom(test) {
     manifest = {
       browser_action: {
         default_popup: "panel.html",
+        default_area: "navbar",
       },
     };
   } else if (test == TESTS.PAGE_ACTION) {
