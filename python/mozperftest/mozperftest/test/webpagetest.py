@@ -29,6 +29,7 @@ ACCEPTED_CONNECTIONS = [
 
 ACCEPTED_STATISTICS = ["average", "median", "standardDeviation"]
 WPT_KEY_FILE = "WPT_key.txt"
+WPT_API_EXPIRED_MESSAGE = "API key expired"
 
 
 class WPTTimeOutError(Exception):
@@ -107,6 +108,14 @@ class WPTInvalidStatisticsError(Exception):
     is not in-line with what is returned. For instance if you request 3 runs with first
     and repeat view and results show 3 first view and 2 repeat view tests this exception
     is raised.
+    """
+
+    pass
+
+
+class WPTExpiredAPIKeyError(Exception):
+    """
+    This error is raised if we get a notification from WPT that our API key has expired
     """
 
     pass
@@ -244,6 +253,8 @@ class WebPageTest(Layer):
         requested_results = requests.get(url)
         results_of_request = json.loads(requested_results.text)
         start = time.time()
+        if results_of_request["statusText"] == WPT_API_EXPIRED_MESSAGE:
+            raise WPTExpiredAPIKeyError("The API key has expired")
         while (
             requested_results.status_code == 200
             and time.time() - start < self.timeout_limit
