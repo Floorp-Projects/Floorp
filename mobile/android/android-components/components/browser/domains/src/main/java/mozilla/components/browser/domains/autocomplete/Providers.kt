@@ -13,6 +13,8 @@ import mozilla.components.browser.domains.CustomDomains
 import mozilla.components.browser.domains.Domain
 import mozilla.components.browser.domains.Domains
 import mozilla.components.browser.domains.into
+import mozilla.components.concept.toolbar.AutocompleteProvider
+import mozilla.components.concept.toolbar.AutocompleteResult
 import java.util.Locale
 
 enum class DomainList(val listName: String) {
@@ -23,16 +25,14 @@ enum class DomainList(val listName: String) {
 /**
  * Provides autocomplete functionality for domains based on provided list of assets (see [Domains]).
  */
-class ShippedDomainsProvider : BaseDomainAutocompleteProvider(DomainList.DEFAULT, Domains.asLoader())
+class ShippedDomainsProvider(override val autocompletePriority: Int = 0) :
+    BaseDomainAutocompleteProvider(DomainList.DEFAULT, Domains.asLoader())
 
 /**
  * Provides autocomplete functionality for domains based on a list managed by [CustomDomains].
  */
-class CustomDomainsProvider : BaseDomainAutocompleteProvider(DomainList.CUSTOM, CustomDomains.asLoader())
-
-interface DomainAutocompleteProvider {
-    fun getAutocompleteSuggestion(query: String): DomainAutocompleteResult?
-}
+class CustomDomainsProvider(override val autocompletePriority: Int = 0) :
+    BaseDomainAutocompleteProvider(DomainList.CUSTOM, CustomDomains.asLoader())
 
 typealias DomainsLoader = (Context) -> List<Domain>
 
@@ -48,7 +48,8 @@ private fun CustomDomains.asLoader(): DomainsLoader = { context: Context -> load
 open class BaseDomainAutocompleteProvider(
     private val list: DomainList,
     private val domainsLoader: DomainsLoader,
-) : DomainAutocompleteProvider, CoroutineScope by CoroutineScope(Dispatchers.IO) {
+    override val autocompletePriority: Int = 0,
+) : AutocompleteProvider, CoroutineScope by CoroutineScope(Dispatchers.IO) {
 
     // We compute 'domains' on the worker thread; make sure it's immediately visible on the UI thread.
     @Volatile
@@ -67,14 +68,14 @@ open class BaseDomainAutocompleteProvider(
      * @param query text to be auto completed
      * @return the result of auto-completion, or null if no match is found.
      */
-    override fun getAutocompleteSuggestion(query: String): DomainAutocompleteResult? {
+    override suspend fun getAutocompleteSuggestion(query: String): AutocompleteResult? {
         // Search terms are all lowercase already, we just need to lowercase the search text
         val searchText = query.lowercase(Locale.US)
 
         domains.forEach {
             val wwwDomain = "www.${it.host}"
             if (wwwDomain.startsWith(searchText)) {
-                return DomainAutocompleteResult(
+                return AutocompleteResult(
                     input = searchText,
                     text = getResultText(query, wwwDomain),
                     url = it.url,
@@ -84,7 +85,7 @@ open class BaseDomainAutocompleteProvider(
             }
 
             if (it.host.startsWith(searchText)) {
-                return DomainAutocompleteResult(
+                return AutocompleteResult(
                     input = searchText,
                     text = getResultText(query, it.host),
                     url = it.url,
@@ -107,19 +108,3 @@ open class BaseDomainAutocompleteProvider(
     private fun getResultText(rawSearchText: String, autocomplete: String) =
         rawSearchText + autocomplete.substring(rawSearchText.length)
 }
-
-/**
- * Describes an autocompletion result against a list of domains.
- * @property input Input for which this result is being provided.
- * @property text Result of autocompletion, text to be displayed.
- * @property url Result of autocompletion, full matching url.
- * @property source Name of the autocompletion source.
- * @property totalItems A total number of results also available.
- */
-class DomainAutocompleteResult(
-    val input: String,
-    val text: String,
-    val url: String,
-    val source: String,
-    val totalItems: Int,
-)

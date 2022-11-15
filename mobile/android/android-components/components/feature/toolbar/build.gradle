@@ -28,11 +28,11 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
 }
 
 dependencies {
+    api project(':concept-toolbar')
     implementation project(':feature-session')
     implementation project(':browser-state')
     implementation project(':browser-domains')
     implementation project(':concept-engine')
-    implementation project(':concept-toolbar')
     implementation project(':concept-storage')
     implementation project(':lib-publicsuffixlist')
     implementation project(':support-utils')

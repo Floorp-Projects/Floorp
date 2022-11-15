@@ -8,10 +8,12 @@ import android.content.Context
 import android.os.Looper.getMainLooper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.domains.autocomplete.BaseDomainAutocompleteProvider
-import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
 import mozilla.components.browser.domains.autocomplete.DomainList
 import mozilla.components.browser.domains.autocomplete.DomainsLoader
+import mozilla.components.concept.toolbar.AutocompleteProvider
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -104,15 +106,16 @@ class BaseDomainAutocompleteProviderTest {
     }
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 private fun assertCompletion(
-    provider: DomainAutocompleteProvider,
+    provider: AutocompleteProvider,
     domainSource: DomainList,
     sourceSize: Int,
     input: String,
     expectedInput: String,
     completion: String,
     expectedUrl: String,
-) {
+) = runTest {
     val result = provider.getAutocompleteSuggestion(input)!!
 
     assertTrue("Autocompletion shouldn't be empty", result.text.isNotEmpty())
@@ -124,13 +127,14 @@ private fun assertCompletion(
     assertEquals("Autocompletion source list size", sourceSize, result.totalItems)
 }
 
-private fun assertNoCompletion(provider: DomainAutocompleteProvider, input: String) {
+@OptIn(ExperimentalCoroutinesApi::class)
+private fun assertNoCompletion(provider: AutocompleteProvider, input: String) = runTest {
     val result = provider.getAutocompleteSuggestion(input)
 
     assertNull("Result should be null", result)
 }
 
-private fun createAndInitProvider(context: Context, list: DomainList, loader: DomainsLoader): DomainAutocompleteProvider =
+private fun createAndInitProvider(context: Context, list: DomainList, loader: DomainsLoader): AutocompleteProvider =
     object : BaseDomainAutocompleteProvider(list, loader) {
         override val coroutineContext = super.coroutineContext + Dispatchers.Main
     }.apply { initialize(context) }

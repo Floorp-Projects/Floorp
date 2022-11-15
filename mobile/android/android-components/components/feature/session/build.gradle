@@ -30,6 +30,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
 dependencies {
     implementation project(':browser-state')
     implementation project(':concept-storage')
+    implementation project(':concept-toolbar')
     implementation project(':concept-engine')
     implementation project(':support-utils')
     implementation project(':support-ktx')

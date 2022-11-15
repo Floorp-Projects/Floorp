@@ -45,6 +45,7 @@ android {
 
 dependencies {
     implementation project(':browser-storage-sync')
+    implementation project(':concept-toolbar')
     implementation project(':support-ktx')
     implementation project(':support-base')
     implementation project(':support-utils')

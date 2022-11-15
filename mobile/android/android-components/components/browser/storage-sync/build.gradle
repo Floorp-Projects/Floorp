@@ -35,6 +35,7 @@ dependencies {
     api project(':concept-storage')
     api project(':concept-sync')
 
+    implementation project(':concept-toolbar')
     implementation project(':support-utils')
     implementation project(':support-sync-telemetry')
 

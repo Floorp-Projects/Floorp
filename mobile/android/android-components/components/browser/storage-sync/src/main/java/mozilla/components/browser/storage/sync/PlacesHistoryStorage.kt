@@ -16,7 +16,6 @@ import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.uniffi.VisitObservation
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.storage.FrecencyThresholdOption
-import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryHighlight
 import mozilla.components.concept.storage.HistoryHighlightWeights
 import mozilla.components.concept.storage.HistoryMetadata
@@ -34,10 +33,12 @@ import mozilla.components.concept.storage.VisitType
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
+import mozilla.components.concept.toolbar.AutocompleteProvider
+import mozilla.components.concept.toolbar.AutocompleteResult
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.segmentAwareDomainMatch
 
-const val AUTOCOMPLETE_SOURCE_NAME = "placesHistory"
+private const val AUTOCOMPLETE_SOURCE_NAME = "placesHistory"
 
 /**
  * Implementation of the [HistoryStorage] which is backed by a Rust Places lib via [PlacesApi].
@@ -46,7 +47,12 @@ const val AUTOCOMPLETE_SOURCE_NAME = "placesHistory"
 open class PlacesHistoryStorage(
     private val context: Context,
     crashReporter: CrashReporting? = null,
-) : PlacesStorage(context, crashReporter), HistoryStorage, HistoryMetadataStorage, SyncableStore {
+    override val autocompletePriority: Int = 0,
+) : PlacesStorage(context, crashReporter),
+    HistoryStorage,
+    HistoryMetadataStorage,
+    SyncableStore,
+    AutocompleteProvider {
     /**
      * Separate reader used only for autocomplete suggestions allowing to decouple this functionality
      * from the history suggestions feature and independent reader management.
@@ -158,7 +164,7 @@ open class PlacesHistoryStorage(
         }
     }
 
-    override fun getAutocompleteSuggestion(query: String): HistoryAutocompleteResult? {
+    override suspend fun getAutocompleteSuggestion(query: String): AutocompleteResult? {
         val url = handlePlacesExceptions("getAutoCompleteSuggestions", default = null) {
             autocompleteReader.interrupt()
             autocompleteReader.matchUrl(query)
@@ -166,7 +172,7 @@ open class PlacesHistoryStorage(
 
         val resultText = segmentAwareDomainMatch(query, arrayListOf(url))
         return resultText?.let {
-            HistoryAutocompleteResult(
+            AutocompleteResult(
                 input = query,
                 text = it.matchedSegment,
                 url = it.url,

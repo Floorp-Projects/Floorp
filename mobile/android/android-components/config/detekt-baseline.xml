@@ -266,7 +266,6 @@
     <ID>UndocumentedPublicFunction:PermissionRequest.kt$PermissionRequest$fun containsVideoAndAudioSources()</ID>
     <ID>UndocumentedPublicFunction:PictureInPictureFeature.kt$PictureInPictureFeature$fun onHomePressed(): Boolean</ID>
     <ID>UndocumentedPublicFunction:Providers.kt$BaseDomainAutocompleteProvider$fun initialize(context: Context)</ID>
-    <ID>UndocumentedPublicFunction:Providers.kt$DomainAutocompleteProvider$fun getAutocompleteSuggestion(query: String): DomainAutocompleteResult?</ID>
     <ID>UndocumentedPublicFunction:ReaderViewControlsView.kt$ReaderViewControlsView.Listener$fun onColorSchemeChanged(scheme: ColorScheme)</ID>
     <ID>UndocumentedPublicFunction:ReaderViewControlsView.kt$ReaderViewControlsView.Listener$fun onFontChanged(font: FontType)</ID>
     <ID>UndocumentedPublicFunction:ReaderViewControlsView.kt$ReaderViewControlsView.Listener$fun onFontSizeDecreased(): Int</ID>
@@ -319,8 +318,6 @@
     <ID>UndocumentedPublicFunction:ThreadUtils.kt$ThreadUtils$fun setHandlerForTest(handler: Handler)</ID>
     <ID>UndocumentedPublicFunction:Toolbar.kt$Toolbar.Action$fun bind(view: View)</ID>
     <ID>UndocumentedPublicFunction:Toolbar.kt$Toolbar.Action$fun createView(parent: ViewGroup): View</ID>
-    <ID>UndocumentedPublicFunction:ToolbarAutocompleteFeature.kt$ToolbarAutocompleteFeature$fun addDomainProvider(provider: DomainAutocompleteProvider)</ID>
-    <ID>UndocumentedPublicFunction:ToolbarAutocompleteFeature.kt$ToolbarAutocompleteFeature$fun addHistoryStorageProvider(provider: HistoryStorage)</ID>
     <ID>UndocumentedPublicFunction:ToolbarPresenter.kt$ToolbarPresenter$fun stop()</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun AccessTokenInfo.into(): mozilla.components.concept.sync.AccessTokenInfo</ID>
     <ID>UndocumentedPublicFunction:Types.kt$fun AccountEvent.into(): mozilla.components.concept.sync.AccountEvent</ID>

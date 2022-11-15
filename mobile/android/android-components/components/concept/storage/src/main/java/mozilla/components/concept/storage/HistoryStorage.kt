@@ -94,13 +94,6 @@ interface HistoryStorage : Storage {
     fun getSuggestions(query: String, limit: Int): List<SearchResult>
 
     /**
-     * Retrieves domain suggestions which best match the [query].
-     * @param query A query by which to search the underlying store.
-     * @return An optional domain URL which best matches the query.
-     */
-    fun getAutocompleteSuggestion(query: String): HistoryAutocompleteResult?
-
-    /**
      * Remove all locally stored data.
      */
     suspend fun deleteEverything()
@@ -248,20 +241,4 @@ data class SearchResult(
     val url: String,
     val score: Int,
     val title: String? = null,
-)
-
-/**
- * Describes an autocompletion result against history storage.
- * @property input Input for which this result is being provided.
- * @property text Result of autocompletion, text to be displayed.
- * @property url Result of autocompletion, full matching url.
- * @property source Name of the autocompletion source.
- * @property totalItems A total number of results also available.
- */
-data class HistoryAutocompleteResult(
-    val input: String,
-    val text: String,
-    val url: String,
-    val source: String,
-    val totalItems: Int,
 )

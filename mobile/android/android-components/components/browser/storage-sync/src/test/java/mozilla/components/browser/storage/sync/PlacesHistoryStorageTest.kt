@@ -12,6 +12,7 @@ import androidx.work.WorkManager
 import androidx.work.testing.WorkManagerTestInitHelper
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
 import mozilla.appservices.places.uniffi.PlacesApiException
@@ -466,7 +467,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `store uses a different reader for autocomplete suggestions`() {
+    fun `store uses a different reader for autocomplete suggestions`() = runTest {
         val connection: RustPlacesConnection = mock()
         doReturn(mock<PlacesReaderConnection>()).`when`(connection).reader()
         doReturn(mock<PlacesReaderConnection>()).`when`(connection).newReader()

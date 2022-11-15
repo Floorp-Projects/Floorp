@@ -24,6 +24,7 @@ android {
 }
 
 dependencies {
+    implementation project(':concept-toolbar')
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
 
