@@ -5,10 +5,15 @@
 /* Tabs General Styles */
 
 .tabs {
+  --tab-height: var(--theme-toolbar-height);
   height: 100%;
   background: var(--theme-sidebar-background);
   display: flex;
   flex-direction: column;
+}
+
+.tabs.tabs-tall {
+  --tab-height: var(--theme-toolbar-tall-height);
 }
 
 /* Hides the tab strip in the TabBar */
@@ -20,7 +25,7 @@ div[hidetabs=true] .tabs .tabs-navigation {
   box-sizing: border-box;
   display: flex;
   /* Reserve 1px for the border */
-  height: calc(var(--theme-toolbar-height) + 1px);
+  height: calc(var(--tab-height) + 1px);
   position: relative;
   border-bottom: 1px solid var(--theme-splitter-color);
   background: var(--theme-tab-toolbar-background);
@@ -63,12 +68,16 @@ div[hidetabs=true] .tabs .tabs-navigation {
 }
 
 .tabs .tabs-menu-item a {
+  --text-height: 16px;
+  --devtools-tab-border-width: 1px;
   display: flex;
   justify-content: center;
-  padding: 3px 10px;
-  border: 1px solid transparent;
+  /* Vertically center text, calculate space remaining by taking the full height and removing
+  the block borders and text. Divide by 2 to distribute above and below.  */
+  padding: calc((var(--tab-height) - var(--text-height) - (var(--devtools-tab-border-width) * 2)) / 2) 10px;
+  border: var(--devtools-tab-border-width) solid transparent;
   font-size: 12px;
-  line-height: 16px;
+  line-height: var(--text-height);
   text-decoration: none;
   white-space: nowrap;
   cursor: default;
