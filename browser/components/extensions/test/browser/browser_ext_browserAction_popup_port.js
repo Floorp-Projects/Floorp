@@ -12,6 +12,7 @@ add_task(async function test_browserActionPort() {
     manifest: {
       browser_action: {
         default_popup: "popup.html",
+        default_area: "navbar",
         browser_style: true,
       },
     },

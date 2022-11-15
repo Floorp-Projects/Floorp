@@ -11,7 +11,9 @@ add_task(async function test_middle_click_with_activeTab() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      browser_action: {},
+      browser_action: {
+        default_area: "navbar",
+      },
       permissions: ["activeTab"],
     },
 
@@ -68,6 +70,7 @@ add_task(async function test_middle_click_with_activeTab_and_popup() {
       browser_action: {
         default_popup: "popup.html",
         browser_style: true,
+        default_area: "navbar",
       },
       permissions: ["activeTab"],
     },
@@ -158,7 +161,9 @@ add_task(async function test_middle_click_without_activeTab() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      browser_action: {},
+      browser_action: {
+        default_area: "navbar",
+      },
     },
 
     background() {

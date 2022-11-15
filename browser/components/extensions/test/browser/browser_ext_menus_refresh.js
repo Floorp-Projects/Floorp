@@ -40,7 +40,9 @@ function loadExtensionWithMenusApi() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
-      browser_action: {},
+      browser_action: {
+        default_area: "navbar",
+      },
       permissions: ["menus"],
     },
   });

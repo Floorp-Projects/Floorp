@@ -20,6 +20,7 @@ add_task(async function process_switch_in_sidebars_popups() {
       },
       browser_action: {
         default_popup: "page.html?popup",
+        default_area: "navbar",
       },
       web_accessible_resources: ["page.html"],
     },
@@ -90,6 +91,7 @@ add_task(
       manifest: {
         browser_action: {
           default_popup: "popup-1.html",
+          default_area: "navbar",
         },
       },
       files: {
