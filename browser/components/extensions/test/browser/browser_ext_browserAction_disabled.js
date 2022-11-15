@@ -5,9 +5,7 @@
 add_task(async function testDisabled() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      browser_action: {
-        default_area: "navbar",
-      },
+      browser_action: {},
     },
 
     background: function() {

@@ -45,13 +45,9 @@ async function makeExtension({
   };
 
   if (manifest_version === 3) {
-    manifest.action = {
-      default_area: "navbar",
-    };
+    manifest.action = {};
   } else {
-    manifest.browser_action = {
-      default_area: "navbar",
-    };
+    manifest.browser_action = {};
   }
 
   let ext = ExtensionTestUtils.loadExtension({

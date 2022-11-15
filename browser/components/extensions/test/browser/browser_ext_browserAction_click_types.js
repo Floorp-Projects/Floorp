@@ -127,9 +127,7 @@ async function test_clickData_reset({ manifest_version }) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       manifest_version,
-      [action]: {
-        default_area: "navbar",
-      },
+      [action]: {},
       page_action: {},
       commands: {
         [browser_action_command]: {

@@ -24,7 +24,6 @@ let extData = {
     permissions: ["contextMenus"],
     browser_action: {
       default_popup: "popup.html",
-      default_area: "navbar",
     },
   },
   useAddonManager: "temporary",
@@ -204,9 +203,7 @@ async function browseraction_contextmenu_manage_extension_helper(win) {
       browser_specific_settings: {
         gecko: { id },
       },
-      browser_action: {
-        default_area: "navbar",
-      },
+      browser_action: {},
       options_ui: {
         page: "options.html",
       },
@@ -530,9 +527,7 @@ async function browseraction_contextmenu_remove_extension_helper(win) {
       browser_specific_settings: {
         gecko: { id },
       },
-      browser_action: {
-        default_area: "navbar",
-      },
+      browser_action: {},
     },
     useAddonManager: "temporary",
   });
@@ -729,9 +724,7 @@ async function browseraction_contextmenu_report_extension_helper(win) {
       browser_specific_settings: {
         gecko: { id },
       },
-      browser_action: {
-        default_area: "navbar",
-      },
+      browser_action: {},
     },
     useAddonManager: "temporary",
   });
@@ -909,9 +902,7 @@ add_task(async function test_unified_extensions_toolbar_pinning() {
       browser_specific_settings: {
         gecko: { id },
       },
-      browser_action: {
-        default_area: "navbar",
-      },
+      browser_action: {},
     },
     useAddonManager: "temporary",
   });

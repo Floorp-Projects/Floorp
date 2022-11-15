@@ -134,9 +134,7 @@ add_task(async function test_browseraction_with_experiment() {
     isPrivileged: true,
 
     manifest: {
-      browser_action: {
-        default_area: "navbar",
-      },
+      browser_action: {},
 
       experiment_apis: fooExperimentAPIs,
     },

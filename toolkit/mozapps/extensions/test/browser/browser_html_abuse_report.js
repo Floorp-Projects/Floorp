@@ -683,9 +683,7 @@ add_task(async function test_abusereport_from_browserAction_remove() {
   const xpiFile = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       ...BASE_TEST_MANIFEST,
-      browser_action: {
-        default_area: "navbar",
-      },
+      browser_action: {},
       browser_specific_settings: { gecko: { id: EXT_ID } },
     },
   });

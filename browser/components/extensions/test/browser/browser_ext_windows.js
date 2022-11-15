@@ -307,9 +307,7 @@ add_task(async function testWindowTitlePermissions() {
     },
     manifest: {
       permissions: ["activeTab"],
-      browser_action: {
-        default_area: "navbar",
-      },
+      browser_action: {},
     },
   });
 

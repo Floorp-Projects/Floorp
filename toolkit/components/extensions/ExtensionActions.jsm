@@ -29,13 +29,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "gUnifiedExtensionsEnabled",
-  "extensions.unifiedExtensions.enabled",
-  false
-);
-
 function parseColor(color, kind) {
   if (typeof color == "string") {
     let rgba = InspectorUtils.colorToRGBA(color);
@@ -517,16 +510,13 @@ class BrowserActionBase extends PanelActionBase {
       extension.manifest.browser_action || extension.manifest.action;
     super(options, tabContext, extension);
 
-    let fallbackArea = lazy.gUnifiedExtensionsEnabled ? "menupanel" : "navbar";
-    let default_area = options.default_area || fallbackArea;
-
     this.defaults = {
       ...this.defaults,
       badgeText: "",
       badgeBackgroundColor: [0xd9, 0, 0, 255],
       badgeDefaultColor: [255, 255, 255, 255],
       badgeTextColor: null,
-      default_area,
+      default_area: options.default_area || "navbar",
     };
     this.globals = Object.create(this.defaults);
   }

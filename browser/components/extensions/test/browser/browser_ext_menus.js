@@ -65,9 +65,7 @@ add_task(async function test_permissions() {
 add_task(async function test_actionContextMenus() {
   const manifest = {
     page_action: {},
-    browser_action: {
-      default_area: "navbar",
-    },
+    browser_action: {},
     permissions: ["menus"],
   };
 

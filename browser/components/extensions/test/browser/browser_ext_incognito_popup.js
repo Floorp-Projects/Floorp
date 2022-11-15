@@ -9,7 +9,6 @@ add_task(async function testIncognitoPopup() {
       permissions: ["tabs"],
       browser_action: {
         default_popup: "popup.html",
-        default_area: "navbar",
       },
       page_action: {
         default_popup: "popup.html",

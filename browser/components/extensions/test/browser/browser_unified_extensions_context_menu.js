@@ -590,9 +590,7 @@ add_task(async function test_context_menu_without_browserActionFor_global() {
 add_task(async function test_browser_action_context_menu() {
   const extWithMenuBrowserAction = ExtensionTestUtils.loadExtension({
     manifest: {
-      browser_action: {
-        default_area: "navbar",
-      },
+      browser_action: {},
       permissions: ["contextMenus"],
     },
     background() {
@@ -609,9 +607,7 @@ add_task(async function test_browser_action_context_menu() {
   });
   const extWithSubMenuBrowserAction = ExtensionTestUtils.loadExtension({
     manifest: {
-      browser_action: {
-        default_area: "navbar",
-      },
+      browser_action: {},
       permissions: ["contextMenus"],
     },
     background() {
@@ -657,9 +653,7 @@ add_task(async function test_browser_action_context_menu() {
   });
   const extWithoutMenu2 = ExtensionTestUtils.loadExtension({
     manifest: {
-      browser_action: {
-        default_area: "navbar",
-      },
+      browser_action: {},
       name: "extension with a browser action but no menu",
     },
     useAddonManager: "temporary",
