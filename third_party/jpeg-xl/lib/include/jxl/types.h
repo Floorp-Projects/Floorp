@@ -81,7 +81,6 @@ typedef enum {
  * for pixels. This is not necessarily the same as the data type encoded in the
  * codestream. The channels are interleaved per pixel. The pixels are
  * organized row by row, left to right, top to bottom.
- * TODO(lode): implement padding / alignment (row stride)
  * TODO(lode): support different channel orders if needed (RGB, BGR, ...)
  */
 typedef struct {

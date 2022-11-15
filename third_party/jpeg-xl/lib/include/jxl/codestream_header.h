@@ -71,15 +71,6 @@ typedef struct {
   uint32_t ysize;
 } JxlPreviewHeader;
 
-/** The intrinsic size header */
-typedef struct {
-  /** Intrinsic width in pixels */
-  uint32_t xsize;
-
-  /** Intrinsic height in pixels */
-  uint32_t ysize;
-} JxlIntrinsicSizeHeader;
-
 /** The codestream animation header, optionally present in the beginning of
  * the codestream, and if it is it applies to all animation frames, unlike
  * JxlFrameHeader which applies to an individual frame.

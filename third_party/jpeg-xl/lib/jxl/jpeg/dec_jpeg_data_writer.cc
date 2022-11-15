@@ -1022,6 +1022,9 @@ Status WriteJpegInternal(const JPEGData& jpg, const JPEGOutput& out,
 
       case SerializationState::DONE:
         JXL_ASSERT(ss->output_queue.empty());
+        if (ss->pad_bits != nullptr && ss->pad_bits != ss->pad_bits_end) {
+          return JXL_FAILURE("Invalid number of padding bits.");
+        }
         return true;
 
       case SerializationState::ERROR:

@@ -10,6 +10,8 @@
 #define LIB_JXL_FAST_DCT_INL_H_
 #endif
 
+#include <cmath>
+
 #include <hwy/aligned_allocator.h>
 #include <hwy/highway.h>
 

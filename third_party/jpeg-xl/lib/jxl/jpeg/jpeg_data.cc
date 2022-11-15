@@ -288,8 +288,6 @@ Status JPEGData::VisitFields(Visitor* visitor) {
     JXL_RETURN_IF_ERROR(visitor->Bits(16, 0, &restart_interval));
   }
 
-  uint64_t padding_spot_limit = scan_info.size();
-
   for (auto& scan : scan_info) {
     uint32_t num_reset_points = scan.reset_points.size();
     JXL_RETURN_IF_ERROR(visitor->U32(Val(0), BitsOffset(2, 1), BitsOffset(4, 4),
@@ -349,13 +347,6 @@ Status JPEGData::VisitFields(Visitor* visitor) {
       }
       last_block_idx = block_idx;
     }
-
-    if (restart_interval > 0) {
-      int MCUs_per_row = 0;
-      int MCU_rows = 0;
-      CalculateMcuSize(scan, &MCUs_per_row, &MCU_rows);
-      padding_spot_limit += DivCeil(MCU_rows * MCUs_per_row, restart_interval);
-    }
   }
   std::vector<uint32_t> inter_marker_data_sizes;
   inter_marker_data_sizes.reserve(info.num_intermarker);
@@ -377,18 +368,19 @@ Status JPEGData::VisitFields(Visitor* visitor) {
   if (has_zero_padding_bit) {
     uint32_t nbit = padding_bits.size();
     JXL_RETURN_IF_ERROR(visitor->Bits(24, 0, &nbit));
-    if (nbit > 7 * padding_spot_limit) {
-      return JXL_FAILURE("Number of padding bits does not correspond to image");
-    }
-    // TODO(eustas): check that that much bits of input are available.
     if (visitor->IsReading()) {
-      padding_bits.resize(nbit);
-    }
-    // TODO(eustas): read in (8-64?) bit groups to reduce overhead.
-    for (uint8_t& bit : padding_bits) {
-      bool bbit = bit;
-      JXL_RETURN_IF_ERROR(visitor->Bool(false, &bbit));
-      bit = bbit;
+      padding_bits.reserve(std::min<uint32_t>(1024u, nbit));
+      for (uint32_t i = 0; i < nbit; i++) {
+        bool bbit = false;
+        JXL_RETURN_IF_ERROR(visitor->Bool(false, &bbit));
+        padding_bits.push_back(bbit);
+      }
+    } else {
+      for (uint8_t& bit : padding_bits) {
+        bool bbit = bit;
+        JXL_RETURN_IF_ERROR(visitor->Bool(false, &bbit));
+        bit = bbit;
+      }
     }
   }
 

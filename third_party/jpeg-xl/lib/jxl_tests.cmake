@@ -5,6 +5,7 @@ set(TEST_FILES
   extras/codec_test.cc
   extras/dec/color_description_test.cc
   extras/dec/pgx_test.cc
+  extras/decode_jpeg_test.cc
   jxl/ac_strategy_test.cc
   jxl/alpha_test.cc
   jxl/ans_common_test.cc
