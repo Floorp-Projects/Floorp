@@ -26,6 +26,10 @@ class DocAccessibleParent;
 class RemoteAccessible;
 enum class RelationType;
 
+/**
+ * The base type for an accessibility tree node that originated in the parent
+ * process.
+ */
 template <class Derived>
 class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
  public:

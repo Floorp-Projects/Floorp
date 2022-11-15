@@ -42,6 +42,9 @@ namespace a11y {
 class MaiHyperlink;
 
 /**
+ * Atk specific functionality for an accessibility tree node that originated in
+ * mDoc's content process.
+ *
  * AccessibleWrap, and its descendents in atk directory provide the
  * implementation of AtkObject.
  */
