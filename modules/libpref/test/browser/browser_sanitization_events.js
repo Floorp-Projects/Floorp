@@ -3,12 +3,6 @@
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
-);
-const { BrowserTestUtils } = ChromeUtils.import(
-  "resource://testing-common/BrowserTestUtils.jsm"
-);
 
 // eslint-disable-next-line
 const ROOT = getRootDirectory(gTestPath).replace(
@@ -23,6 +17,7 @@ async function waitForEventCount(
   category = "security",
   method = "prefUsage"
 ) {
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, 100));
   let returned_events = await TestUtils.waitForCondition(() => {
     let events = Services.telemetry.snapshotEvents(
