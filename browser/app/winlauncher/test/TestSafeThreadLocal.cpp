@@ -64,10 +64,14 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
   for (auto& handle : handles) {
     ::WaitForSingleObject(handle, INFINITE);
 
+#if !defined(MOZ_ASAN)
+    // ASAN builds under Windows 11 can have unexpected thread exit codes.
+    // See bug 1798796
     DWORD exitCode;
     if (!::GetExitCodeThread(handle, &exitCode) || exitCode) {
       return 1;
     }
+#endif  // !defined(MOZ_ASAN)
   }
 
   return 0;
