@@ -1071,7 +1071,7 @@ void Statistics::sendGCTelemetry() {
     }
   }
 
-  if (!lastSlice.wasReset()) {
+  if (!lastSlice.wasReset() && preCollectedHeapBytes != 0) {
     size_t bytesSurvived = 0;
     for (ZonesIter zone(runtime, WithAtoms); !zone.done(); zone.next()) {
       if (zone->wasCollected()) {
@@ -1080,9 +1080,9 @@ void Statistics::sendGCTelemetry() {
     }
 
     MOZ_ASSERT(preCollectedHeapBytes >= bytesSurvived);
-    double survialRate =
+    double survivalRate =
         100.0 * double(bytesSurvived) / double(preCollectedHeapBytes);
-    runtime->metrics().GC_TENURED_SURVIVAL_RATE(uint32_t(survialRate));
+    runtime->metrics().GC_TENURED_SURVIVAL_RATE(uint32_t(survivalRate));
 
     // Calculate 'effectiveness' in MB / second, on main thread only for now.
     if (!runtime->parentRuntime) {
