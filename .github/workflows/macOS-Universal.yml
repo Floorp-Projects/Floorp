@@ -163,7 +163,7 @@ jobs:
         curl -OL https://www.dropbox.com/s/cnoji5xuq416ltd/base.dmg?dl=1
         hdiutil attach ./floorp-macOS-universal-temp.dmg
         hdiutil attach ./base.dmg
-        cp -r /Volumes/Floorp/Floorp.app ./Volumes/Floorp\ Installer/
+        cp -r /Volumes/Floorp/Floorp.app /Volumes/Floorp\ Installer/
         hdiutil detach /Volumes/Floorp\ Installer/
         hdiutil convert ./base.dmg -format UDZO -imagekey zlib-level=9 -o floorp-macOS-universal.dmg
 
