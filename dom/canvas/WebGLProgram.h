@@ -78,7 +78,7 @@ struct SamplerUniformInfo final {
   const decltype(WebGLContext::mBound2DTextures)& texListForType;
   const webgl::TextureBaseType texBaseType;
   const bool isShadowSampler;
-  std::vector<uint32_t> texUnits;
+  inlining_vector<uint8_t, 8> texUnits;
 };
 
 struct LocationInfo final {

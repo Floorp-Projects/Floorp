@@ -15,7 +15,6 @@
 #include "WebGLQuery.h"
 #include "WebGLRenderbuffer.h"
 #include "WebGLTexture.h"
-#include "WebGLExtensions.h"
 #include "WebGLVertexArray.h"
 
 #include "nsDebug.h"
@@ -1356,7 +1355,7 @@ void WebGLContext::UniformData(
     auto destIndex = locInfo->indexIntoUniform;
     for (const auto& val : Range<const uint32_t>(srcBegin, elemCount)) {
       if (destIndex >= texUnits.size()) break;
-      texUnits[destIndex] = val;
+      texUnits.at(destIndex) = AssertedCast<uint8_t>(val);
       destIndex += 1;
     }
   }

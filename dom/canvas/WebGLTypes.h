@@ -6,6 +6,7 @@
 #ifndef WEBGLTYPES_H_
 #define WEBGLTYPES_H_
 
+#include <array>
 #include <limits>
 #include <string>
 #include <tuple>
@@ -1199,6 +1200,45 @@ union UniformDataVal {
 };
 
 }  // namespace webgl
+
+// -
+
+template <class T, size_t InlineCapacity>
+struct InliningAllocator {
+  using value_type = T;
+
+  template <class U>
+  struct rebind {
+    typedef InliningAllocator<U, InlineCapacity> other;
+  };
+
+ private:
+  std::array<T, InlineCapacity> mInlined = {};
+
+ public:
+  InliningAllocator() = default;
+  InliningAllocator(const InliningAllocator&) = delete;
+  InliningAllocator(InliningAllocator&&) = delete;
+  InliningAllocator& operator=(const InliningAllocator&) = delete;
+  InliningAllocator& operator=(InliningAllocator&&) = delete;
+
+  T* allocate(const size_t n) {
+    T* p = nullptr;
+    if (n <= mInlined.size()) {
+      p = mInlined.data();  // You better be using memmove not memcpy!
+    } else {
+      p = new T[n];
+    }
+    return p;
+  }
+  void deallocate(T* const p, size_t) {
+    if (p != mInlined.data()) {
+      delete[] p;
+    }
+  }
+};
+template <class T, size_t N>
+using inlining_vector = std::vector<T, InliningAllocator<T, N>>;
 
 }  // namespace mozilla
 
