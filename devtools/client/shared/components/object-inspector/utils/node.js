@@ -287,11 +287,8 @@ function nodeHasEntries(item) {
     className === "Storage" ||
     className === "URLSearchParams" ||
     className === "Headers" ||
-    // @backward-compat { version 106 } Support for enumerate FormData entries was
-    // added in 106. When connecting to older server, we don't want to show the <entries>
-    // node for them. The extra check can be removed once 106 hits release.
-    (className === "FormData" && Array.isArray(value.preview?.entries)) ||
-    // @backward-compat { version 106 } Support for enumerate MIDI(Input|Output) entries was
+    className === "FormData" ||
+    // @backward-compat { version 108 } Support for enumerate MIDI(Input|Output) entries was
     // added in 108. When connecting to older server, we don't want to show the <entries>
     // node for them. The extra check can be removed once 108 hits release.
     (className === "MIDIInputMap" && Array.isArray(value.preview?.entries)) ||
