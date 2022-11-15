@@ -9,6 +9,7 @@
 
 #include "nsContentUtils.h"
 #include "BackstagePass.h"
+#include "mozilla/Result.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"

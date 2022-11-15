@@ -29,10 +29,10 @@ namespace mozilla::dom {
 
 namespace {
 
-bool ConstructHandleMetadata(JSContext* aCx, JSStructuredCloneReader* aReader,
-                             const bool aDirectory, nsIGlobalObject* aGlobal,
-                             fs::FileSystemEntryMetadata& aMetadata,
-                             mozilla::ipc::PrincipalInfo& info) {
+bool ConstructHandleMetadata(JSContext* aCx, nsIGlobalObject* aGlobal,
+                             JSStructuredCloneReader* aReader,
+                             const bool aDirectory,
+                             fs::FileSystemEntryMetadata& aMetadata) {
   using namespace mozilla::dom::fs;
 
   EntryId entryId;
@@ -54,19 +54,20 @@ bool ConstructHandleMetadata(JSContext* aCx, JSStructuredCloneReader* aReader,
     return false;
   }
 
-  aMetadata = fs::FileSystemEntryMetadata(entryId, name, aDirectory);
-
-  if (!nsJSPrincipals::ReadPrincipalInfo(aReader, info)) {
+  mozilla::ipc::PrincipalInfo principalInfo;
+  if (!nsJSPrincipals::ReadPrincipalInfo(aReader, principalInfo)) {
     return false;
   }
-  if (!aGlobal->IsEqualStorageKey(info)) {
+
+  if (!aGlobal->IsEqualStorageKey(principalInfo)) {
     LOG(("Blocking deserialization of %s due to cross-origin",
-         NS_ConvertUTF16toUTF8(aMetadata.entryName()).get()));
+         NS_ConvertUTF16toUTF8(name).get()));
     return false;
   }
-  LOG_VERBOSE(
-      ("Deserializing %s", NS_ConvertUTF16toUTF8(aMetadata.entryName()).get()));
 
+  LOG_VERBOSE(("Deserializing %s", NS_ConvertUTF16toUTF8(name).get()));
+
+  aMetadata = fs::FileSystemEntryMetadata(entryId, name, aDirectory);
   return true;
 }
 
@@ -257,8 +258,7 @@ bool FileSystemHandle::WriteStructuredClone(
 
   // Needed to make sure the destination nsIGlobalObject is from the same
   // origin/principal
-  QM_TRY_UNWRAP(mozilla::ipc::PrincipalInfo principalInfo,
-                mGlobal->GetStorageKey(), false);
+  QM_TRY_INSPECT(const auto& principalInfo, mGlobal->GetStorageKey(), false);
 
   return nsJSPrincipals::WritePrincipalInfo(aWriter, principalInfo);
 }
@@ -269,14 +269,14 @@ already_AddRefed<FileSystemFileHandle> FileSystemHandle::ConstructFileHandle(
     JSStructuredCloneReader* aReader) {
   using namespace mozilla::dom::fs;
 
-  mozilla::ipc::PrincipalInfo info;
   FileSystemEntryMetadata metadata;
-  if (!ConstructHandleMetadata(aCx, aReader, /* aDirectory */ false, aGlobal,
-                               metadata, info)) {
+  if (!ConstructHandleMetadata(aCx, aGlobal, aReader, /* aDirectory */ false,
+                               metadata)) {
     return nullptr;
   }
 
-  // Note that the actor may not be connected yet
+  // XXX Get the manager from Navigator!
+  // Note that the actor may not exist or may not be connected yet.
   auto fileSystemManager = MakeRefPtr<FileSystemManager>(aGlobal, nullptr);
 
   RefPtr<FileSystemFileHandle> fsHandle =
@@ -292,14 +292,14 @@ FileSystemHandle::ConstructDirectoryHandle(JSContext* aCx,
                                            JSStructuredCloneReader* aReader) {
   using namespace mozilla::dom::fs;
 
-  mozilla::ipc::PrincipalInfo info;
   FileSystemEntryMetadata metadata;
-  if (!ConstructHandleMetadata(aCx, aReader, /* aDirectory */ true, aGlobal,
-                               metadata, info)) {
+  if (!ConstructHandleMetadata(aCx, aGlobal, aReader, /* aDirectory */ true,
+                               metadata)) {
     return nullptr;
   }
-  // Note that the actor may not be connected yet
+
   // XXX Get the manager from Navigator!
+  // Note that the actor may not exist or may not be connected yet.
   auto fileSystemManager = MakeRefPtr<FileSystemManager>(aGlobal, nullptr);
 
   RefPtr<FileSystemDirectoryHandle> fsHandle =

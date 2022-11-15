@@ -335,7 +335,7 @@ mozilla::ipc::RejectCallback GetRejectCallback(
 }
 
 struct BeginRequestFailureCallback {
-  BeginRequestFailureCallback(RefPtr<Promise> aPromise)
+  explicit BeginRequestFailureCallback(RefPtr<Promise> aPromise)
       : mPromise(std::move(aPromise)) {}
 
   void operator()(nsresult aRv) const {

@@ -16,8 +16,6 @@ if CONFIG["OS_TARGET"] != "Android":
         "TestUnexpectedPrivilegedLoads.cpp",
     ]
 
-include("/ipc/chromium/chromium-config.mozbuild")
-
 FINAL_LIBRARY = "xul-gtest"
 
 LOCAL_INCLUDES += [

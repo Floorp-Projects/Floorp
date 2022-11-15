@@ -174,22 +174,22 @@ bool NonExpandedPrincipalInfoEquals(const PrincipalInfo& aLeft,
 
   const ContentPrincipalInfo& leftContent = aLeft.get_ContentPrincipalInfo();
   const ContentPrincipalInfo& rightContent = aRight.get_ContentPrincipalInfo();
+
   switch (aLeft.type()) {
-    case PrincipalInfo::TContentPrincipalInfo: {
+    case PrincipalInfo::TContentPrincipalInfo:
       return leftContent.attrs() == rightContent.attrs() &&
              leftContent.originNoSuffix() == rightContent.originNoSuffix();
-    }
-    case PrincipalInfo::TSystemPrincipalInfo: {
+
+    case PrincipalInfo::TSystemPrincipalInfo:
       // system principal always matches
       return true;
-    }
-    case PrincipalInfo::TNullPrincipalInfo: {
+
+    case PrincipalInfo::TNullPrincipalInfo:
       return leftContent.attrs() == rightContent.attrs() &&
              leftContent.spec() == rightContent.spec();
-    }
-    default: {
+
+    default:
       break;
-    }
   }
 
   // Clients (windows/workers) should never have an expanded principal type.
