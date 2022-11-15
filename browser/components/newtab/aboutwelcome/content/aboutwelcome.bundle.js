@@ -168,6 +168,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "MultiStageAboutWelcome": () => (/* binding */ MultiStageAboutWelcome),
 /* harmony export */   "SecondaryCTA": () => (/* binding */ SecondaryCTA),
+/* harmony export */   "OnboardingVideo": () => (/* binding */ OnboardingVideo),
 /* harmony export */   "StepsIndicator": () => (/* binding */ StepsIndicator),
 /* harmony export */   "WelcomeScreen": () => (/* binding */ WelcomeScreen)
 /* harmony export */ });
@@ -384,6 +385,24 @@ const SecondaryCTA = props => {
     onClick: props.handleAction
   })));
 };
+const OnboardingVideo = props => {
+  var _props$content, _props$content2;
+
+  const vidUrl = (_props$content = props.content) === null || _props$content === void 0 ? void 0 : _props$content.video_url;
+  const autoplay = (_props$content2 = props.content) === null || _props$content2 === void 0 ? void 0 : _props$content2.autoPlay;
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("video", {
+    // eslint-disable-line jsx-a11y/media-has-caption
+    controls: true,
+    autoPlay: autoplay,
+    src: vidUrl,
+    width: "604px",
+    height: "340px",
+    value: "video_container",
+    onEnded: props.handleAction
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("source", {
+    src: vidUrl
+  })));
+};
 const StepsIndicator = props => {
   let steps = [];
 
@@ -466,9 +485,9 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       // Populate MULTI_ACTION data actions property with selected checkbox actions from tiles data
       action.data = {
         actions: this.props.activeMultiSelect.map(id => {
-          var _props$content, _props$content$tiles, _props$content$tiles$;
+          var _props$content3, _props$content3$tiles, _props$content3$tiles2;
 
-          return (_props$content = props.content) === null || _props$content === void 0 ? void 0 : (_props$content$tiles = _props$content.tiles) === null || _props$content$tiles === void 0 ? void 0 : (_props$content$tiles$ = _props$content$tiles.data.find(ckbx => ckbx.id === id)) === null || _props$content$tiles$ === void 0 ? void 0 : _props$content$tiles$.action;
+          return (_props$content3 = props.content) === null || _props$content3 === void 0 ? void 0 : (_props$content3$tiles = _props$content3.tiles) === null || _props$content3$tiles === void 0 ? void 0 : (_props$content3$tiles2 = _props$content3$tiles.data.find(ckbx => ckbx.id === id)) === null || _props$content3$tiles2 === void 0 ? void 0 : _props$content3$tiles2.action;
         })
       };
     }
@@ -885,11 +904,11 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     const includeNoodles = content.has_noodles; // The default screen position is "center"
 
     const isCenterPosition = content.position === "center" || !content.position;
-    const hideStepsIndicator = autoAdvance || (content === null || content === void 0 ? void 0 : content.has_video) || isFirstCenteredScreen && isLastCenteredScreen;
+    const hideStepsIndicator = autoAdvance || (content === null || content === void 0 ? void 0 : content.video_container) || isFirstCenteredScreen && isLastCenteredScreen;
     const textColorClass = content.text_color ? `${content.text_color}-text` : ""; // Assign proton screen style 'screen-1' or 'screen-2' to centered screens
     // by checking if screen order is even or odd.
 
-    const screenClassName = isCenterPosition ? this.getScreenClassName(isFirstCenteredScreen, isLastCenteredScreen, includeNoodles, content === null || content === void 0 ? void 0 : content.has_video) : "";
+    const screenClassName = isCenterPosition ? this.getScreenClassName(isFirstCenteredScreen, isLastCenteredScreen, includeNoodles, content === null || content === void 0 ? void 0 : content.video_container) : "";
     const currentStep = this.props.order + 1;
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("main", {
       className: `screen ${this.props.id || ""} ${screenClassName} ${textColorClass}`,
@@ -936,7 +955,10 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     })), content.cta_paragraph ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_CTAParagraph__WEBPACK_IMPORTED_MODULE_8__.CTAParagraph, {
       content: content.cta_paragraph,
       handleAction: this.props.handleAction
-    }) : null), this.renderContentTiles(), this.renderLanguageSwitcher(), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(ProtonScreenActionButtons, {
+    }) : null), content.video_container ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_6__.OnboardingVideo, {
+      content: content.video_container,
+      handleAction: this.props.handleAction
+    }) : null, this.renderContentTiles(), this.renderLanguageSwitcher(), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(ProtonScreenActionButtons, {
       content: content,
       handleAction: this.props.handleAction
     })), hideStepsIndicator ? null : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
