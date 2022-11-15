@@ -7,13 +7,13 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
-#include "TLSTransportLayer.h"
-#include "nsISSLSocketControl.h"
-#include "nsISocketProvider.h"
 #include "Http2StreamTunnel.h"
+#include "TLSTransportLayer.h"
+#include "nsISocketProvider.h"
+#include "nsITLSSocketControl.h"
 #include "nsQueryObject.h"
-#include "nsSocketTransport2.h"
 #include "nsSocketProviderService.h"
+#include "nsSocketTransport2.h"
 
 namespace mozilla::net {
 
@@ -557,7 +557,7 @@ FWD_TS(SetRecvBufferSize, uint32_t);
 FWD_TS_PTR(GetResetIPFamilyPreference, bool);
 
 nsresult TLSTransportLayer::GetTlsSocketControl(
-    nsISSLSocketControl** tlsSocketControl) {
+    nsITLSSocketControl** tlsSocketControl) {
   if (!mTLSSocketControl) {
     return NS_ERROR_ABORT;
   }

@@ -350,7 +350,7 @@ nsresult HttpConnectionUDP::TakeTransport(
   return NS_ERROR_FAILURE;
 }
 
-void HttpConnectionUDP::GetTLSSocketControl(nsISSLSocketControl** secinfo) {
+void HttpConnectionUDP::GetTLSSocketControl(nsITLSSocketControl** secinfo) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("HttpConnectionUDP::GetTLSSocketControl http3Session=%p\n",
        mHttp3Session.get()));
