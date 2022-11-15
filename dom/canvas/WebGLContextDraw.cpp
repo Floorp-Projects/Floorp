@@ -83,7 +83,7 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(
     uint8_t texUnit;
     const webgl::SamplerUniformInfo* sampler;
   };
-  inlining_vector<SamplerByTexUnit, 8> samplerByTexUnit;
+  Vector<SamplerByTexUnit, 8> samplerByTexUnit;
 
   MOZ_ASSERT(mWebGL->mActiveProgramLinkInfo);
   const auto& samplerUniforms = mWebGL->mActiveProgramLinkInfo->samplerUniforms;
@@ -104,8 +104,8 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(
         }
         if (!prevSamplerForTexUnit) {
           prevSamplerForTexUnit = &uniform;
-          samplerByTexUnit.push_back(
-              SamplerByTexUnit{texUnit, prevSamplerForTexUnit});
+          MOZ_RELEASE_ASSERT(samplerByTexUnit.append(
+              SamplerByTexUnit{texUnit, prevSamplerForTexUnit}));
         }
 
         if (MOZ_UNLIKELY(&uniform.texListForType !=
