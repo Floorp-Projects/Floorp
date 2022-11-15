@@ -2132,3 +2132,4 @@ pref(layout.css.prefers-color-scheme.content-override,2) == 1787127.html 1787127
 == 1792643-1.html 1792643-1-ref.html
 skip-if(!/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == 1798297-1.html 1798297-1-ref.html
 skip-if(!/^Windows\x20NT\x2010\.0/.test(http.oscpu)) != 1798297-1.html 1798297-1-notref.html
+== 1799425-1.html 1799425-1-ref.html
