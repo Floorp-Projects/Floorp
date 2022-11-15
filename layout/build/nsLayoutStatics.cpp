@@ -90,6 +90,9 @@
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/IMEStateManager.h"
+#ifndef MOZ_WIDGET_ANDROID
+#  include "mozilla/Viaduct.h"
+#endif
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "ThirdPartyUtil.h"
 #include "TouchManager.h"
@@ -289,6 +292,12 @@ nsresult nsLayoutStatics::Initialize() {
   RLBoxExpatSandboxPool::Initialize();
 
   RLBoxWOFF2SandboxPool::Initalize();
+
+#ifndef MOZ_WIDGET_ANDROID
+  if (XRE_IsParentProcess()) {
+    InitializeViaduct();
+  }
+#endif
 
   return NS_OK;
 }
