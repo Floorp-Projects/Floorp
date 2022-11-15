@@ -11,6 +11,8 @@ DIRS += [
 XPIDL_SOURCES += [
     "nsISocketProvider.idl",
     "nsISocketProviderService.idl",
+    "nsISSLSocketControl.idl",
+    "nsITransportSecurityInfo.idl",
 ]
 
 XPIDL_MODULE = "necko_socket"

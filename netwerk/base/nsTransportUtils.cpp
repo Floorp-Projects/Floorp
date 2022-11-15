@@ -3,12 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Mutex.h"
-#include "nsCOMPtr.h"
+#include "nsTransportUtils.h"
 #include "nsITransport.h"
 #include "nsProxyRelease.h"
-#include "nsSocketTransportService2.h"
 #include "nsThreadUtils.h"
-#include "nsTransportUtils.h"
+#include "nsCOMPtr.h"
 
 using namespace mozilla;
 
@@ -56,17 +55,7 @@ class nsTransportStatusEvent : public Runnable {
         mProgress(progress),
         mProgressMax(progressMax) {}
 
-  ~nsTransportStatusEvent() {
-    auto ReleaseTransport = [transport(std::move(mTransport))]() mutable {
-      transport = nullptr;
-    };
-    if (OnSocketThread()) {
-      ReleaseTransport();
-    } else {
-      gSocketTransportService->Dispatch(NS_NewRunnableFunction(
-          "nsHttpConnection::~nsHttpConnection", ReleaseTransport));
-    }
-  }
+  ~nsTransportStatusEvent() = default;
 
   NS_IMETHOD Run() override {
     // since this event is being handled, we need to clear the proxy's ref.

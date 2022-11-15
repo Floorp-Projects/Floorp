@@ -7,30 +7,30 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
-#include "Http2ConnectTransaction.h"
 #include "Http2Session.h"
-#include "mozilla/AutoRestore.h"
-#include "mozilla/Mutex.h"
-#include "nsComponentManagerUtils.h"
 #include "nsHttp.h"
 #include "nsHttpHandler.h"
 #include "nsHttpRequestHead.h"
 #include "nsISocketProvider.h"
+#include "nsSocketProviderService.h"
+#include "nsISSLSocketControl.h"
 #include "nsISocketTransport.h"
 #include "nsISupportsPriority.h"
-#include "nsITLSSocketControl.h"
-#include "nsIWeakReferenceUtils.h"
 #include "nsNetAddr.h"
-#include "nsNetCID.h"
-#include "nsServiceManagerUtils.h"
-#include "nsSocketProviderService.h"
-#include "nsSocketTransport2.h"
-#include "nsSocketTransportService2.h"
 #include "prerror.h"
 #include "prio.h"
+#include "Http2ConnectTransaction.h"
+#include "nsNetCID.h"
+#include "nsServiceManagerUtils.h"
+#include "nsComponentManagerUtils.h"
+#include "nsSocketTransport2.h"
+#include "nsSocketTransportService2.h"
+#include "mozilla/AutoRestore.h"
+#include "mozilla/Mutex.h"
+#include "nsIWeakReferenceUtils.h"
 
 #if defined(FUZZING)
-#  include "FuzzySocketControl.h"
+#  include "FuzzySecurityInfo.h"
 #  include "mozilla/StaticPrefs_fuzzing.h"
 #endif
 
@@ -666,7 +666,7 @@ OutputStreamShim::AsyncWait(nsIOutputStreamCallback* callback,
     // target is on the socket thread. That's all we really care about.
     nsCOMPtr<nsIEventTarget> sts =
         do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID);
-    MOZ_ASSERT(!target || (target == sts));
+    MOZ_ASSERT((!target && !callback) || (target == sts));
     if (target && (target != sts)) {
       return NS_ERROR_FAILURE;
     }
@@ -891,7 +891,7 @@ InputStreamShim::AsyncWait(nsIInputStreamCallback* callback, unsigned int flags,
     // target is on the socket thread. That's all we really care about.
     nsCOMPtr<nsIEventTarget> sts =
         do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID);
-    MOZ_ASSERT(!target || (target == sts));
+    MOZ_ASSERT((!target && !callback) || (target == sts));
     if (target && (target != sts)) {
       return NS_ERROR_FAILURE;
     }
@@ -1181,7 +1181,7 @@ FWD_TS_PTR(GetPeerAddr, mozilla::net::NetAddr);
 FWD_TS_PTR(GetSelfAddr, mozilla::net::NetAddr);
 FWD_TS_ADDREF(GetScriptablePeerAddr, nsINetAddr);
 FWD_TS_ADDREF(GetScriptableSelfAddr, nsINetAddr);
-FWD_TS_ADDREF(GetTlsSocketControl, nsITLSSocketControl);
+FWD_TS_ADDREF(GetTlsSocketControl, nsISSLSocketControl);
 FWD_TS_PTR(IsAlive, bool);
 FWD_TS_PTR(GetConnectionFlags, uint32_t);
 FWD_TS(SetConnectionFlags, uint32_t);

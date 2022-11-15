@@ -1,45 +1,40 @@
-#include <numeric>
-
-#include "CertVerifier.h"
-#include "CommonSocketControl.h"
-#include "SSLTokensCache.h"
-#include "TransportSecurityInfo.h"
 #include "gtest/gtest.h"
+
+#include <numeric>
 #include "mozilla/Preferences.h"
 #include "nsITransportSecurityInfo.h"
-#include "nsIWebProgressListener.h"
-#include "nsIX509Cert.h"
-#include "nsIX509CertDB.h"
-#include "nsServiceManagerUtils.h"
-#include "sslproto.h"
+#include "SSLTokensCache.h"
 
-static already_AddRefed<CommonSocketControl> createDummySocketControl() {
-  nsCOMPtr<nsIX509CertDB> certDB(do_GetService(NS_X509CERTDB_CONTRACTID));
-  EXPECT_TRUE(certDB);
-  nsLiteralCString base64(
-      "MIIBbjCCARWgAwIBAgIUOyCxVVqw03yUxKSfSojsMF8K/"
-      "ikwCgYIKoZIzj0EAwIwHTEbMBkGA1UEAwwScm9vdF9zZWNwMjU2azFfMjU2MCIYDzIwMjAxM"
-      "TI3MDAwMDAwWhgPMjAyMzAyMDUwMDAwMDBaMC8xLTArBgNVBAMMJGludF9zZWNwMjU2cjFfM"
-      "jU2LXJvb3Rfc2VjcDI1NmsxXzI1NjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABE+/"
-      "u7th4Pj5saYKWayHBOLsBQtCPjz3LpI/"
-      "LE95S0VcKmnSM0VsNsQRnQcG4A7tyNGTkNeZG3stB6ME6qBKpsCjHTAbMAwGA1UdEwQFMAMB"
-      "Af8wCwYDVR0PBAQDAgEGMAoGCCqGSM49BAMCA0cAMEQCIFuwodUwyOUnIR4KN5ZCSrU7y4iz"
-      "4/1EWRdHm5kWKi8dAiB6Ixn9sw3uBVbyxnQKYqGnOwM+qLOkJK0W8XkIE3n5sg==");
-  nsCOMPtr<nsIX509Cert> cert;
-  EXPECT_TRUE(NS_SUCCEEDED(
-      certDB->ConstructX509FromBase64(base64, getter_AddRefs(cert))));
-  EXPECT_TRUE(cert);
-  nsTArray<nsTArray<uint8_t>> succeededCertChain;
-  for (size_t i = 0; i < 3; i++) {
-    nsTArray<uint8_t> certDER;
-    EXPECT_TRUE(NS_SUCCEEDED(cert->GetRawDER(certDER)));
-    succeededCertChain.AppendElement(std::move(certDER));
-  }
-  RefPtr<CommonSocketControl> socketControl(
-      new CommonSocketControl(nsLiteralCString("example.com"), 433, 0));
-  socketControl->SetServerCert(cert, mozilla::psm::EVStatus::NotEV);
-  socketControl->SetSucceededCertChain(std::move(succeededCertChain));
-  return socketControl.forget();
+static already_AddRefed<nsITransportSecurityInfo> createDummySecInfo() {
+  // clang-format off
+  nsCString base64Serialization(
+  "FnhllAKWRHGAlo+ESXykKAAAAAAAAAAAwAAAAAAAAEaphjojH6pBabDSgSnsfLHeAAQAAgAAAAAAAAAAAAAAAAAAAAA"
+  "B4vFIJp5wRkeyPxAQ9RJGKPqbqVvKO0mKuIl8ec8o/uhmCjImkVxP+7sgiYWmMt8F+O2DZM7ZTG6GukivU8OT5gAAAAIAAAWpMII"
+  "FpTCCBI2gAwIBAgIQD4svsaKEC+QtqtsU2TF8ITANBgkqhkiG9w0BAQsFADBwMQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUN"
+  "lcnQgSW5jMRkwFwYDVQQLExB3d3cuZGlnaWNlcnQuY29tMS8wLQYDVQQDEyZEaWdpQ2VydCBTSEEyIEhpZ2ggQXNzdXJhbmNlIFN"
+  "lcnZlciBDQTAeFw0xNTAyMjMwMDAwMDBaFw0xNjAzMDIxMjAwMDBaMGoxCzAJBgNVBAYTAlVTMRYwFAYDVQQHEw1TYW4gRnJhbmN"
+  "pc2NvMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRUwEwYDVQQKEwxGYXN0bHksIEluYy4xFzAVBgNVBAMTDnd3dy5naXRodWIuY29tMII"
+  "BIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA+9WUCgrgUNwP/JC3cUefLAXeDpq8Ko/U8p8IRvny0Ri0I6Uq0t+RP/nF0LJ"
+  "Avda8QHYujdgeDTePepBX7+OiwBFhA0YO+rM3C2Z8IRaN/i9eLln+Yyc68+1z+E10s1EXdZrtDGvN6MHqygGsdfkXKfBLUJ1BZEh"
+  "s9sBnfcjq3kh5gZdBArdG9l5NpdmQhtceaFGsPiWuJxGxRzS4i95veUHWkhMpEYDEEBdcDGxqArvQCvzSlngdttQCfx8OUkBTb3B"
+  "A2okpTwwJfqPsxVetA6qR7UNc+fVb6KHwvm0bzi2rQ3xw3D/syRHwdMkpoVDQPCk43H9WufgfBKRen87dFwIDAQABo4ICPzCCAjs"
+  "wHwYDVR0jBBgwFoAUUWj/kK8CB3U8zNllZGKiErhZcjswHQYDVR0OBBYEFGS/RLNGCZvPWh1xSaIEcouINIQjMHsGA1UdEQR0MHK"
+  "CDnd3dy5naXRodWIuY29tggpnaXRodWIuY29tggwqLmdpdGh1Yi5jb22CCyouZ2l0aHViLmlvgglnaXRodWIuaW+CFyouZ2l0aHV"
+  "idXNlcmNvbnRlbnQuY29tghVnaXRodWJ1c2VyY29udGVudC5jb20wDgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQWMBQGCCsGAQUFBwM"
+  "BBggrBgEFBQcDAjB1BgNVHR8EbjBsMDSgMqAwhi5odHRwOi8vY3JsMy5kaWdpY2VydC5jb20vc2hhMi1oYS1zZXJ2ZXItZzMuY3J"
+  "sMDSgMqAwhi5odHRwOi8vY3JsNC5kaWdpY2VydC5jb20vc2hhMi1oYS1zZXJ2ZXItZzMuY3JsMEIGA1UdIAQ7MDkwNwYJYIZIAYb"
+  "9bAEBMCowKAYIKwYBBQUHAgEWHGh0dHBzOi8vd3d3LmRpZ2ljZXJ0LmNvbS9DUFMwgYMGCCsGAQUFBwEBBHcwdTAkBggrBgEFBQc"
+  "wAYYYaHR0cDovL29jc3AuZGlnaWNlcnQuY29tME0GCCsGAQUFBzAChkFodHRwOi8vY2FjZXJ0cy5kaWdpY2VydC5jb20vRGlnaUN"
+  "lcnRTSEEySGlnaEFzc3VyYW5jZVNlcnZlckNBLmNydDAMBgNVHRMBAf8EAjAAMA0GCSqGSIb3DQEBCwUAA4IBAQAc4dbVmuKvyI7"
+  "KZ4Txk+ZqcAYToJGKUIVaPL94e5SZGweUisjaCbplAOihnf6Mxt8n6vnuH2IsCaz2NRHqhdcosjT3CwAiJpJNkXPKWVL/txgdSTV"
+  "2cqB1GG4esFOalvI52dzn+J4fTIYZvNF+AtGyHSLm2XRXYZCw455laUKf6Sk9RDShDgUvzhOKL4GXfTwKXv12MyMknJybH8UCpjC"
+  "HZmFBVHMcUN/87HsQo20PdOekeEvkjrrMIxW+gxw22Yb67yF/qKgwrWr+43bLN709iyw+LWiU7sQcHL2xk9SYiWQDj2tYz2soObV"
+  "QYTJm0VUZMEVFhtALq46cx92Zu4vFwC8AAwAAAAABAQAA");
+  // clang-format on
+  nsCOMPtr<nsITransportSecurityInfo> securityInfo;
+  EXPECT_TRUE(NS_SUCCEEDED(mozilla::psm::TransportSecurityInfo::Read(
+      base64Serialization, getter_AddRefs(securityInfo))));
+  return securityInfo.forget();
 }
 
 static auto MakeTestData(const size_t aDataSize) {
@@ -50,10 +45,10 @@ static auto MakeTestData(const size_t aDataSize) {
 }
 
 static void putToken(const nsACString& aKey, uint32_t aSize) {
-  RefPtr<CommonSocketControl> socketControl = createDummySocketControl();
+  nsCOMPtr<nsITransportSecurityInfo> secInfo = createDummySecInfo();
   nsTArray<uint8_t> token = MakeTestData(aSize);
   nsresult rv = mozilla::net::SSLTokensCache::Put(aKey, token.Elements(), aSize,
-                                                  socketControl, aSize);
+                                                  secInfo, aSize);
   ASSERT_EQ(rv, NS_OK);
 }
 

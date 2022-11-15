@@ -151,7 +151,7 @@ class TLSTransportLayer final : public nsISocketTransport,
   nsCOMPtr<nsISocketTransport> mSocketTransport;
   InputStreamWrapper mSocketInWrapper;
   OutputStreamWrapper mSocketOutWrapper;
-  nsCOMPtr<nsITLSSocketControl> mTLSSocketControl;
+  nsCOMPtr<nsISSLSocketControl> mTLSSocketControl;
   nsCOMPtr<nsIInputStreamCallback> mInputCallback;
   nsCOMPtr<nsIOutputStreamCallback> mOutputCallback;
   PRFileDesc* mFD{nullptr};

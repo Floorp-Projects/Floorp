@@ -6,7 +6,6 @@
 
 #include "nsNSSCallbacks.h"
 
-#include "NSSSocketControl.h"
 #include "PSMRunnable.h"
 #include "ScopedNSSTypes.h"
 #include "SharedCertVerifier.h"
@@ -699,15 +698,12 @@ nsCString getSignatureName(uint32_t aSignatureScheme) {
   return signatureName;
 }
 
+// call with shutdown prevention lock held
 static void PreliminaryHandshakeDone(PRFileDesc* fd) {
-  NSSSocketControl* socketControl = (NSSSocketControl*)fd->higher->secret;
-  if (!socketControl) {
+  nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*)fd->higher->secret;
+  if (!infoObject) {
     return;
   }
-  if (socketControl->IsPreliminaryHandshakeDone()) {
-    return;
-  }
-
   SSLChannelInfo channelInfo;
   if (SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo)) != SECSuccess) {
     return;
@@ -717,12 +713,17 @@ static void PreliminaryHandshakeDone(PRFileDesc* fd) {
                              sizeof(cipherInfo)) != SECSuccess) {
     return;
   }
-  socketControl->SetPreliminaryHandshakeInfo(channelInfo, cipherInfo);
-  socketControl->SetSSLVersionUsed(channelInfo.protocolVersion);
-  socketControl->SetEarlyDataAccepted(channelInfo.earlyDataAccepted);
-  socketControl->SetKEAUsed(channelInfo.keaType);
-  socketControl->SetKEAKeyBits(channelInfo.keaKeyBits);
-  socketControl->SetMACAlgorithmUsed(cipherInfo.macAlgorithm);
+  infoObject->SetPreliminaryHandshakeInfo(channelInfo, cipherInfo);
+  infoObject->SetSSLVersionUsed(channelInfo.protocolVersion);
+  infoObject->SetEarlyDataAccepted(channelInfo.earlyDataAccepted);
+  infoObject->SetKEAUsed(channelInfo.keaType);
+  infoObject->SetKEAKeyBits(channelInfo.keaKeyBits);
+  infoObject->SetMACAlgorithmUsed(cipherInfo.macAlgorithm);
+
+  // Don't update NPN details on renegotiation.
+  if (infoObject->IsPreliminaryHandshakeDone()) {
+    return;
+  }
 
   // Get the NPN value.
   SSLNextProtoState state;
@@ -734,24 +735,24 @@ static void PreliminaryHandshakeDone(PRFileDesc* fd) {
       SECSuccess) {
     if (state == SSL_NEXT_PROTO_NEGOTIATED ||
         state == SSL_NEXT_PROTO_SELECTED) {
-      socketControl->SetNegotiatedNPN(
-          BitwiseCast<char*, unsigned char*>(npnbuf), npnlen);
+      infoObject->SetNegotiatedNPN(BitwiseCast<char*, unsigned char*>(npnbuf),
+                                   npnlen);
     } else {
-      socketControl->SetNegotiatedNPN(nullptr, 0);
+      infoObject->SetNegotiatedNPN(nullptr, 0);
     }
     mozilla::Telemetry::Accumulate(Telemetry::SSL_NPN_TYPE, state);
   } else {
-    socketControl->SetNegotiatedNPN(nullptr, 0);
+    infoObject->SetNegotiatedNPN(nullptr, 0);
   }
 
-  socketControl->SetPreliminaryHandshakeDone();
+  infoObject->SetPreliminaryHandshakeDone();
 }
 
 SECStatus CanFalseStartCallback(PRFileDesc* fd, void* client_data,
                                 PRBool* canFalseStart) {
   *canFalseStart = false;
 
-  NSSSocketControl* infoObject = (NSSSocketControl*)fd->higher->secret;
+  nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*)fd->higher->secret;
   if (!infoObject) {
     PR_SetError(PR_INVALID_STATE_ERROR, 0);
     return SECFailure;
@@ -1010,7 +1011,7 @@ static void AccumulateCipherSuite(Telemetry::HistogramID probe,
 void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   SECStatus rv;
 
-  NSSSocketControl* infoObject = (NSSSocketControl*)fd->higher->secret;
+  nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*)fd->higher->secret;
 
   // Do the bookkeeping that needs to be done after the
   // server's ServerHello...ServerHelloDone have been processed, but that
@@ -1056,6 +1057,8 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
                                 ? Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_FULL
                                 : Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_RESUMED,
                             channelInfo.keaType);
+
+      MOZ_ASSERT(infoObject->GetKEAUsed() == channelInfo.keaType);
 
       if (infoObject->IsFullHandshake()) {
         switch (channelInfo.keaType) {
@@ -1144,8 +1147,13 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
     infoObject->RebuildCertificateInfoFromSSLTokenCache();
   }
 
-  // Check if the user has added an override for a certificate error.
-  if (infoObject->HasUserOverriddenCertificateError()) {
+  nsITransportSecurityInfo::OverridableErrorCategory overridableErrorCategory;
+  // This returns NS_OK, so don't even bother checking the return value.
+  Unused << infoObject->GetOverridableErrorCategory(&overridableErrorCategory);
+  // If we're here, the TLS handshake has succeeded. Thus if any of these
+  // booleans are true, the user has added an override for a certificate error.
+  if (overridableErrorCategory !=
+      nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET) {
     state |= nsIWebProgressListener::STATE_CERT_USER_OVERRIDDEN;
   }
 

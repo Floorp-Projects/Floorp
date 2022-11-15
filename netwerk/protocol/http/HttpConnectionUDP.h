@@ -25,9 +25,9 @@
 #include "nsITimer.h"
 #include "Http3Session.h"
 
-class nsIDNSRecord;
 class nsISocketTransport;
-class nsITLSSocketControl;
+class nsISSLSocketControl;
+class nsIDNSRecord;
 
 namespace mozilla {
 namespace net {

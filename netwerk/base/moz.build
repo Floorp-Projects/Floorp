@@ -247,7 +247,7 @@ UNIFIED_SOURCES += [
 if CONFIG["FUZZING"]:
     SOURCES += [
         "FuzzyLayer.cpp",
-        "FuzzySocketControl.cpp",
+        "FuzzySecurityInfo.cpp",
     ]
 
 if CONFIG["FUZZING_INTERFACES"] and CONFIG["LIBFUZZER"]:
