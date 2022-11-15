@@ -6,6 +6,7 @@ package org.mozilla.focus.autocomplete
 
 import android.content.SharedPreferences
 import android.os.Bundle
+import androidx.preference.Preference
 import org.mozilla.focus.GleanMetrics.Autocomplete
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
@@ -54,14 +55,13 @@ class AutocompleteSettingsFragment : BaseSettingsFragment(), SharedPreferences.O
         preferenceManager.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(this)
     }
 
-    override fun onPreferenceTreeClick(preference: androidx.preference.Preference?): Boolean {
-        preference?.let {
-            if (it.key == getString(R.string.pref_key_screen_custom_domains)) {
-                requireComponents.appStore.dispatch(
-                    AppAction.OpenSettings(page = Screen.Settings.Page.SearchAutocompleteList),
-                )
-            }
+    override fun onPreferenceTreeClick(preference: Preference): Boolean {
+        if (preference.key == getString(R.string.pref_key_screen_custom_domains)) {
+            requireComponents.appStore.dispatch(
+                AppAction.OpenSettings(page = Screen.Settings.Page.SearchAutocompleteList),
+            )
         }
+
         return super.onPreferenceTreeClick(preference)
     }
 
