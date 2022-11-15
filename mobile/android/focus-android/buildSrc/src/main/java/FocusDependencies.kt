@@ -74,7 +74,7 @@ object Versions {
     const val ktlint_version = Versions.Testing.ktlint
 }
 
-object Dependencies {
+object FocusDependencies {
     const val androidx_annotation = "androidx.annotation:annotation:${Versions.AndroidX.annotation}"
     const val androidx_arch_core_testing = "androidx.arch.core:core-testing:${Versions.AndroidX.arch}"
     const val androidx_appcompat = "androidx.appcompat:appcompat:${Versions.AndroidX.appcompat}"
