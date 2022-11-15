@@ -8,7 +8,6 @@
 
 #include "nsGfxScrollFrame.h"
 
-#include "mozilla/layers/LayersTypes.h"
 #include "nsIXULRuntime.h"
 #include "base/compiler_specific.h"
 #include "DisplayItemClip.h"
@@ -2691,9 +2690,7 @@ void ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
         mAsyncScroll = nullptr;
       }
 
-      if (nsLayoutUtils::AsyncPanZoomEnabled(mOuter) && WantAsyncScroll() &&
-          CanApzScrollInTheseDirections(
-              DirectionsInDelta(mDestination - GetScrollPosition()))) {
+      if (nsLayoutUtils::AsyncPanZoomEnabled(mOuter) && WantAsyncScroll()) {
         ApzSmoothScrollTo(mDestination, aParams.mOrigin,
                           aParams.mTriggeredByScript, std::move(snapTargetIds));
         return;
@@ -4940,8 +4937,7 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit,
       gfxPlatform::UseDesktopZoomingScrollbars() &&
       nsLayoutUtils::AsyncPanZoomEnabled(mOuter) &&
       !nsLayoutUtils::ShouldDisableApzForElement(mOuter->GetContent()) &&
-      (WantAsyncScroll() || mZoomableByAPZ) &&
-      CanApzScrollInTheseDirections(DirectionsInDelta(aDelta))) {
+      (WantAsyncScroll() || mZoomableByAPZ)) {
     askApzToDoTheScroll = true;
   }
 
@@ -8322,18 +8318,6 @@ void ScrollFrameHelper::ApzSmoothScrollTo(
   // Schedule a paint to ensure that the frame metrics get updated on
   // the compositor thread.
   mOuter->SchedulePaint();
-}
-
-bool ScrollFrameHelper::CanApzScrollInTheseDirections(
-    ScrollDirections aDirections) {
-  ScrollStyles styles = GetScrollStylesFromFrame();
-  if (aDirections.contains(ScrollDirection::eHorizontal) &&
-      styles.mHorizontal == StyleOverflow::Hidden)
-    return false;
-  if (aDirections.contains(ScrollDirection::eVertical) &&
-      styles.mVertical == StyleOverflow::Hidden)
-    return false;
-  return true;
 }
 
 bool ScrollFrameHelper::SmoothScrollVisual(
