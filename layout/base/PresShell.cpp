@@ -5428,7 +5428,8 @@ void PresShell::AddCanvasBackgroundColorItem(
   if (!addedScrollingBackgroundColor || forceUnscrolledItem) {
     nsDisplaySolidColor* item = MakeDisplayItem<nsDisplaySolidColor>(
         aBuilder, aFrame, aBounds, bgcolor);
-    if (addedScrollingBackgroundColor) {
+    if (addedScrollingBackgroundColor &&
+        mPresContext->IsRootContentDocumentCrossProcess()) {
       item->SetIsCheckerboardBackground();
     }
     AddDisplayItemToBottom(aBuilder, aList, item);
