@@ -21,7 +21,6 @@ import java.util.zip.ZipFile;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
-import org.mozilla.gecko.util.HardwareUtils;
 
 public final class GeckoLoader {
   private static final String LOGTAG = "GeckoLoader";
@@ -348,55 +347,6 @@ public final class GeckoLoader {
       Log.e(LOGTAG, "Failed to extract lib from APK.", e);
       return false;
     }
-  }
-
-  private static String getLoadDiagnostics(final Context context, final String lib) {
-    final String androidPackageName = context.getPackageName();
-
-    final StringBuilder message = new StringBuilder("LOAD ");
-    message.append(lib);
-
-    final String packageDataDir = context.getApplicationInfo().dataDir;
-
-    // These might differ. If so, we know why the library won't load!
-    HardwareUtils.init(context);
-    message.append(": ABI: " + HardwareUtils.getLibrariesABI() + ", " + getCPUABI());
-    message.append(": Data: " + packageDataDir);
-
-    try {
-      final boolean appLibExists =
-          new File("/data/app-lib/" + androidPackageName + "/lib" + lib + ".so").exists();
-      final boolean dataDataExists = new File(packageDataDir + "/lib/lib" + lib + ".so").exists();
-      message.append(", ax=" + appLibExists);
-      message.append(", ddx=" + dataDataExists);
-    } catch (final Throwable e) {
-      message.append(": ax/ddx fail, ");
-    }
-
-    try {
-      final String dashOne = packageDataDir + "-1";
-      final String dashTwo = packageDataDir + "-2";
-      final boolean dashOneExists = new File(dashOne).exists();
-      final boolean dashTwoExists = new File(dashTwo).exists();
-      message.append(", -1x=" + dashOneExists);
-      message.append(", -2x=" + dashTwoExists);
-    } catch (final Throwable e) {
-      message.append(", dash fail, ");
-    }
-
-    try {
-      final String nativeLibPath = context.getApplicationInfo().nativeLibraryDir;
-      final boolean nativeLibDirExists = new File(nativeLibPath).exists();
-      final boolean nativeLibLibExists = new File(nativeLibPath + "/lib" + lib + ".so").exists();
-
-      message.append(", nativeLib: " + nativeLibPath);
-      message.append(", dirx=" + nativeLibDirExists);
-      message.append(", libx=" + nativeLibLibExists);
-    } catch (final Throwable e) {
-      message.append(", nativeLib fail.");
-    }
-
-    return message.toString();
   }
 
   private static boolean attemptLoad(final String path) {

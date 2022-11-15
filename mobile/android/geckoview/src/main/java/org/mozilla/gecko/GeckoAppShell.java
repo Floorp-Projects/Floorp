@@ -1213,7 +1213,7 @@ public class GeckoAppShell {
   @WrapForJNI(calledFrom = "gecko")
   @RobocopTarget
   public static boolean isTablet() {
-    return HardwareUtils.isTablet();
+    return HardwareUtils.isTablet(getApplicationContext());
   }
 
   @WrapForJNI(calledFrom = "gecko")
