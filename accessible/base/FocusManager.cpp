@@ -77,6 +77,28 @@ Accessible* FocusManager::FocusedAccessible() const {
   return focusedDoc ? focusedDoc->GetFocusedAcc() : nullptr;
 }
 
+bool FocusManager::IsFocused(const LocalAccessible* aAccessible) const {
+  if (mActiveItem) return mActiveItem == aAccessible;
+
+  nsINode* focusedNode = FocusedDOMNode();
+  if (focusedNode) {
+    // XXX: Before getting an accessible for node having a DOM focus make sure
+    // they belong to the same document because it can trigger unwanted document
+    // accessible creation for temporary about:blank document. Without this
+    // peculiarity we would end up with plain implementation based on
+    // FocusedLocalAccessible() method call. Make sure this issue is fixed in
+    // bug 638465.
+    if (focusedNode->OwnerDoc() == aAccessible->GetNode()->OwnerDoc()) {
+      DocAccessible* doc =
+          GetAccService()->GetDocAccessible(focusedNode->OwnerDoc());
+      return aAccessible ==
+             (doc ? doc->GetAccessibleEvenIfNotInMapOrContainer(focusedNode)
+                  : nullptr);
+    }
+  }
+  return false;
+}
+
 bool FocusManager::IsFocusWithin(const Accessible* aContainer) const {
   Accessible* child = FocusedAccessible();
   while (child) {
