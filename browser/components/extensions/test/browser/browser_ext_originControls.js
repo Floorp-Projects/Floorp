@@ -102,31 +102,24 @@ async function testOriginControls(
   }
 
   let doc = menu.ownerDocument;
-  let visibleItems = menu.querySelectorAll(
-    ":is(menuitem, menuseparator):not([hidden])"
-  );
 
   info("Check expected menu items.");
   for (let i = 0; i < items.length; i++) {
-    let l10n = doc.l10n.getAttributes(visibleItems[i]);
-    Assert.deepEqual(
-      l10n,
-      items[i],
-      `Visible menu item ${i} has correct l10n attrs.`
-    );
+    let l10n = doc.l10n.getAttributes(menu.children[i]);
+    Assert.deepEqual(l10n, items[i], `Menu item ${i} has correct l10n attrs.`);
 
-    let checked = visibleItems[i].getAttribute("checked") === "true";
+    let checked = menu.children[i].getAttribute("checked") === "true";
     is(i === selected, checked, `Expected checked value for item ${i}.`);
   }
 
   if (items.length) {
     is(
-      visibleItems[items.length].nodeName,
+      menu.children[items.length].nodeName,
       "menuseparator",
       "Found separator."
     );
     is(
-      visibleItems[items.length + 1].className,
+      menu.children[items.length + 1].className,
       manageExtensionClassName,
       "All items accounted for."
     );
@@ -140,7 +133,7 @@ async function testOriginControls(
 
   let itemToClick;
   if (click) {
-    itemToClick = visibleItems[click];
+    itemToClick = menu.children[click];
   }
   await closeChromeContextMenu(contextMenuId, itemToClick, win);
 

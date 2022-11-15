@@ -57,13 +57,6 @@ function waitClosedWindow(win) {
   });
 }
 
-function assertVisibleContextMenuItems(contextMenu, expected) {
-  let visibleItems = contextMenu.querySelectorAll(
-    ":is(menuitem, menuseparator):not([hidden])"
-  );
-  is(visibleItems.length, expected, `expected ${expected} visible menu items`);
-}
-
 let win;
 
 add_setup(async function() {
@@ -577,7 +570,7 @@ add_task(async function test_context_menu_without_browserActionFor_global() {
   // This promise rejects with an error if the implementation does not handle
   // the case where `global.browserActionFor()` is undefined.
   const contextMenu = await openUnifiedExtensionsContextMenu(win, extension.id);
-  assertVisibleContextMenuItems(contextMenu, 3);
+  is(contextMenu.childElementCount, 3, "expected 3 menu items");
 
   await closeChromeContextMenu(contextMenu.id, null, win);
   await closeExtensionsPanel(win);
@@ -683,8 +676,7 @@ add_task(async function test_browser_action_context_menu() {
     win,
     extWithMenuBrowserAction.id
   );
-  assertVisibleContextMenuItems(contextMenu, 5);
-
+  is(contextMenu.childElementCount, 5, "expected 5 menu items");
   const [item, separator] = contextMenu.children;
   is(
     item.getAttribute("label"),
@@ -705,21 +697,21 @@ add_task(async function test_browser_action_context_menu() {
     win,
     extWithMenuPageAction.id
   );
-  assertVisibleContextMenuItems(contextMenu, 3);
+  is(contextMenu.childElementCount, 3, "expected 3 menu items");
   await closeChromeContextMenu(contextMenu.id, null, win);
 
   info("extension with no browser action and no menu");
   // There is no context menu created by this extension, so there should only
   // be 3 menu items corresponding to the default manage/remove/report items.
   contextMenu = await openUnifiedExtensionsContextMenu(win, extWithoutMenu1.id);
-  assertVisibleContextMenuItems(contextMenu, 3);
+  is(contextMenu.childElementCount, 3, "expected 3 menu items");
   await closeChromeContextMenu(contextMenu.id, null, win);
 
   info("extension with browser action and no menu");
   // There is no context menu created by this extension, so there should only
   // be 3 menu items corresponding to the default manage/remove/report items.
   contextMenu = await openUnifiedExtensionsContextMenu(win, extWithoutMenu2.id);
-  assertVisibleContextMenuItems(contextMenu, 3);
+  is(contextMenu.childElementCount, 3, "expected 3 menu items");
   await closeChromeContextMenu(contextMenu.id, null, win);
 
   info("extension with browser action and menu + sub-menu");
@@ -729,7 +721,7 @@ add_task(async function test_browser_action_context_menu() {
     win,
     extWithSubMenuBrowserAction.id
   );
-  assertVisibleContextMenuItems(contextMenu, 5);
+  is(contextMenu.childElementCount, 5, "expected 5 menu items");
   const popup = await openSubmenu(contextMenu.children[0]);
   is(popup.children.length, 1, "expected 1 submenu item");
   is(
@@ -738,7 +730,7 @@ add_task(async function test_browser_action_context_menu() {
     "expected menu item"
   );
   // The number of items in the (main) context menu should remain the same.
-  assertVisibleContextMenuItems(contextMenu, 5);
+  is(contextMenu.childElementCount, 5, "expected 5 menu items");
   await closeChromeContextMenu(contextMenu.id, null, win);
 
   await closeExtensionsPanel(win);

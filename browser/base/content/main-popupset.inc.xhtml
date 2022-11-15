@@ -346,11 +346,6 @@
               data-lazy-l10n-id="toolbar-context-menu-remove-from-toolbar"
               contexttype="toolbaritem"
               class="customize-context-removeFromToolbar"/>
-    <menuitem oncommand="gUnifiedExtensions.onPinToToolbarChange(this.parentElement, event);"
-              data-lazy-l10n-id="toolbar-context-menu-pin-to-toolbar"
-              type="checkbox"
-              contexttype="toolbaritem"
-              class="customize-context-pinToToolbar"/>
     <menuseparator id="toolbarDownloadsAnchorMenuSeparator"/>
     <menuitem id="toolbar-context-always-open-downloads-panel"
               oncommand="ToolbarContextMenu.onDownloadsAlwaysOpenPanelChange(event);"
@@ -638,11 +633,6 @@
 
   <menupopup id="unified-extensions-context-menu"
              onpopupshowing="gUnifiedExtensions.updateContextMenu(this, event)">
-    <menuitem oncommand="gUnifiedExtensions.onPinToToolbarChange(this.parentElement, event);"
-              data-lazy-l10n-id="unified-extensions-context-menu-pin-to-toolbar"
-              type="checkbox"
-              class="unified-extensions-context-menu-pin-to-toolbar"/>
-    <menuseparator class="unified-extensions-context-menu-management-separator"/>
     <menuitem data-lazy-l10n-id="unified-extensions-context-menu-manage-extension"
               class="unified-extensions-context-menu-manage-extension"
               oncommand="gUnifiedExtensions.manageExtension(this.parentElement)" />
