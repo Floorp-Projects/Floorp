@@ -1223,20 +1223,20 @@ Core: Media Playback
 ~~~~~~~~~~~~~~~~~~~~
 HTML Media APIs, including Media Source Extensions and non-MSE video/audio element playback, and Encrypted Media Extensions. (WebRTC and WebAudio not included).
 
+.. warning::
+    This module does not have any owners specified.
 
 .. list-table::
     :stub-columns: 1
     :widths: 30 70
 
-    * - Owner(s)
-      -
-        | `Jean-Yves Avenard (jya) <https://people.mozilla.org/s?query=jya>`__
     * - Peer(s)
       -
         | `Matthew Gregan (kinetik) <https://people.mozilla.org/s?query=kinetik>`__
-        | `Bryce Seager van Dyk (bryce) <https://people.mozilla.org/s?query=bryce>`__
         | `John Lin (jhlin) <https://people.mozilla.org/s?query=jhlin>`__
         | `Alastor Wu (alwu) <https://people.mozilla.org/s?query=alwu>`__
+        | `Paul Adenot (padenot) <https://people.mozilla.org/s?query=padenot>`__
+        | `C (chunmin) <https://people.mozilla.org/s?query=chunmin>`__
     * - Owner(s) Emeritus
       - Robert O'Callahan, Chris Pearce, Jean-Yves Avenard
     * - Includes

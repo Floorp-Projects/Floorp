@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-11-14T14:41:28.696165'
+updated_at: '2022-11-15T11:44:13.774494'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -137,8 +137,7 @@ people:
     bmo_id: 474533
     name: Botond Ballo
     nick: botond
-  - &bryce
-    bmo_id: 560379
+  - bmo_id: 560379
     name: Bryce Seager van Dyk
     nick: bryce
   - &bstack
@@ -177,6 +176,10 @@ people:
     bmo_id: 644229
     name: Caroline Cullen
     nick: caroline
+  - &chunmin
+    bmo_id: 521646
+    name: C
+    nick: chunmin
   - &chutten
     bmo_id: 553004
     name: Chris H-C
@@ -476,8 +479,7 @@ people:
     bmo_id: 32767
     name: Jonathan Watt
     nick: jwatt
-  - &jya
-    bmo_id: 512198
+  - bmo_id: 512198
     name: Jean-Yves Avenard
     nick: jya
   - &k88hudson
@@ -1889,13 +1891,12 @@ modules:
       group: dev-media
       components:
         - Core::Audio/Video
-    owners:
-      - *jya
     peers:
       - *kinetik
-      - *bryce
       - *jhlin
       - *alwu
+      - *padenot
+      - *chunmin
     machine_name: core_media_playback
 
   - name: 'Core: Media Transport'
@@ -3620,5 +3621,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 2a6eec1e13c5e3fea8c1e4066096fd19359a88d1
-  export: e2ae3f8eab7db7398c1967c389352ea3dfcc5996
+  config: f86aab2956ebb04f7f2f579f745069dab34aee15
+  export: 1ea593ebc0fa9aee25618639a12fb73758f50d00
