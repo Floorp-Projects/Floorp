@@ -23,6 +23,7 @@ import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.Wallpapers
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
@@ -112,6 +113,7 @@ class WallpaperSettingsFragment : Fragment() {
                 )
                     .setText(view.context.getString(R.string.wallpaper_updated_snackbar_message))
                     .setAction(requireContext().getString(R.string.wallpaper_updated_snackbar_action)) {
+                        (activity as HomeActivity).browsingModeManager.mode = BrowsingMode.Normal
                         findNavController().navigate(R.id.homeFragment)
                     }
                     .show()
