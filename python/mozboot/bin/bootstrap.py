@@ -55,7 +55,7 @@ def which(name):
     search_dirs = os.environ["PATH"].split(os.pathsep)
     potential_names = [name]
     if WINDOWS:
-        potential_names.append(name + ".exe")
+        potential_names.insert(0, name + ".exe")
 
     for path in search_dirs:
         for executable_name in potential_names:
