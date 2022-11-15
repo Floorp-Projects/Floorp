@@ -304,3 +304,83 @@ TEST(TestAudioInputProcessing, ProcessDataWithDifferentPrincipals)
   aip->Stop(graph);
   graph->Destroy();
 }
+
+TEST(TestAudioInputProcessing, Downmixing)
+{
+  const TrackRate rate = 44100;
+  const uint32_t channels = 4;
+  auto graph = MakeRefPtr<NiceMock<MockGraph>>(rate, channels);
+  auto aip = MakeRefPtr<AudioInputProcessing>(channels);
+
+  const size_t frames = 44100;
+
+  AudioGenerator<AudioDataValue> generator(channels, rate);
+  GraphTime processedTime;
+  GraphTime nextTime;
+
+  aip->SetPassThrough(graph, false);
+  aip->Start(graph);
+
+  processedTime = 0;
+  nextTime = MediaTrackGraphImpl::RoundUpToEndOfAudioBlock(frames);
+
+  {
+    AudioSegment input;
+    AudioSegment output;
+    generator.Generate(input, nextTime - processedTime);
+
+    // Intentionally reduce the amplitude of the generated sine wave so there's
+    // no chance the max amplitude reaches 1.0, but not enough so that 4
+    // channels summed together won't clip.
+    input.ApplyVolume(0.9);
+
+    // Process is going to see that it has 4 channels of input, and is going to
+    // downmix to mono, scaling the input by 1/4 in the process.
+    // We can't compare the input and output signal because the sine is going to
+    // be mangledui
+    aip->Process(graph, processedTime, nextTime, &input, &output);
+    EXPECT_EQ(input.GetDuration(), nextTime - processedTime);
+    EXPECT_EQ(output.GetDuration(), nextTime);
+    EXPECT_EQ(output.MaxChannelCount(), 1u);
+
+    // Verify that it doesn't clip: the input signal has likely been mangled by
+    // the various processing passes, but at least it shouldn't clip. We know we
+    // always have floating point audio here, regardless of the sample-type used
+    // by Gecko.
+    for (AudioSegment::ChunkIterator iterOutput(output); !iterOutput.IsEnded();
+         iterOutput.Next()) {
+      const float* const output = iterOutput->ChannelData<float>()[0];
+      for (uint32_t i = 0; i < iterOutput->GetDuration(); i++) {
+        // Very conservative here, it's likely that the AGC lowers the volume a
+        // lot.
+        EXPECT_LE(std::abs(output[i]), 0.95);
+      }
+    }
+  }
+
+  // Now, repeat the test, checking we get the unmodified 4 channels.
+  aip->SetPassThrough(graph, true);
+
+  AudioSegment input, output;
+  processedTime = nextTime;
+  nextTime += MediaTrackGraphImpl::RoundUpToEndOfAudioBlock(frames);
+  generator.Generate(input, nextTime - processedTime);
+
+  aip->Process(graph, processedTime, nextTime, &input, &output);
+  EXPECT_EQ(input.GetDuration(), nextTime - processedTime);
+  EXPECT_EQ(output.GetDuration(), nextTime - processedTime);
+  // This time, no downmix: 4 channels of input, 4 channels of output
+  EXPECT_EQ(output.MaxChannelCount(), 4u);
+
+  nsTArray<AudioDataValue> inputLinearized, outputLinearized;
+  input.WriteToInterleavedBuffer(inputLinearized, input.MaxChannelCount());
+  output.WriteToInterleavedBuffer(outputLinearized, output.MaxChannelCount());
+
+  // The data should be passed through, and exactly equal.
+  for (uint32_t i = 0; i < frames * channels; i++) {
+    EXPECT_EQ(inputLinearized[i], outputLinearized[i]);
+  }
+
+  aip->Stop(graph);
+  graph->Destroy();
+}
