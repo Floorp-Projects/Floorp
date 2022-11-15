@@ -380,12 +380,16 @@ Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
             MOZ_ASSERT(innerDoc->IsDoc());
             // Search the embedded document's viewport cache so we return the
             // deepest descendant in that embedded document.
-            return innerDoc->ChildAtPoint(aX, aY,
-                                          EWhichChildAtPoint::DeepestChild);
+            Accessible* deepestAcc = innerDoc->ChildAtPoint(
+                aX, aY, EWhichChildAtPoint::DeepestChild);
+            MOZ_ASSERT(!deepestAcc || deepestAcc->IsRemote());
+            lastMatch = deepestAcc ? deepestAcc->AsRemote() : nullptr;
+            break;
           }
           // If there is no embedded document, the iframe itself is the deepest
           // descendant.
-          return acc;
+          lastMatch = acc;
+          break;
         }
 
         if (acc == this) {
@@ -416,6 +420,12 @@ Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
 
   if (!lastMatch && Bounds().Contains(aX, aY)) {
     return this;
+  }
+  // If we end up with a match that is not in the ancestor chain
+  // of the accessible this call originated on, we should ignore it.
+  // This can happen when the aX, aY given are outside `this`.
+  if (lastMatch && !IsDoc() && !IsAncestorOf(lastMatch)) {
+    return nullptr;
   }
 
   return lastMatch;

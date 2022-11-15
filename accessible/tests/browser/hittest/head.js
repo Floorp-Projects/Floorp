@@ -37,7 +37,7 @@ function getChildAtPoint(container, x, y, findDeepestChild) {
   } catch (e) {
     // Failed to get child at point.
   }
-
+  info("could not get child at point");
   return null;
 }
 
@@ -45,19 +45,31 @@ async function testChildAtPoint(dpr, x, y, container, child, grandChild) {
   const [containerX, containerY] = Layout.getBounds(container, dpr);
   x += containerX;
   y += containerY;
+  let actual = null;
   await untilCacheIs(
-    () => getChildAtPoint(container, x, y, false),
+    () => {
+      actual = getChildAtPoint(container, x, y, false);
+      return actual;
+    },
     child,
     `Wrong direct child accessible at the point (${x}, ${y}) of ${CommonUtils.prettyName(
       container
-    )}, sought ${child ? roleToString(child.role) : "unknown"}`
+    )}, sought ${CommonUtils.prettyName(
+      child
+    )} and got ${CommonUtils.prettyName(actual)}`
   );
+  actual = null;
   await untilCacheIs(
-    () => getChildAtPoint(container, x, y, true),
+    () => {
+      actual = getChildAtPoint(container, x, y, true);
+      return actual;
+    },
     grandChild,
     `Wrong deepest child accessible at the point (${x}, ${y}) of ${CommonUtils.prettyName(
       container
-    )}, sought ${grandChild ? roleToString(grandChild.role) : "unknown"}`
+    )}, sought ${CommonUtils.prettyName(
+      grandChild
+    )} and got ${CommonUtils.prettyName(actual)}`
   );
 }
 
@@ -78,14 +90,14 @@ async function hitTest(browser, container, child, grandChild) {
     child,
     `Wrong direct child accessible at the point (${x}, ${y}) of ${CommonUtils.prettyName(
       container
-    )}, sought ${child ? roleToString(child.role) : "unknown"}`
+    )}, sought ${CommonUtils.prettyName(child)}`
   );
   await untilCacheIs(
     () => getChildAtPoint(container, x, y, true),
     grandChild,
     `Wrong deepest child accessible at the point (${x}, ${y}) of ${CommonUtils.prettyName(
       container
-    )}, sought ${grandChild ? roleToString(grandChild.role) : "unknown"}`
+    )}, sought ${CommonUtils.prettyName(grandChild)}`
   );
 }
 

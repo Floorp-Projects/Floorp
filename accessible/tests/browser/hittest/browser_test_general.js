@@ -129,3 +129,76 @@ addAccessibleTask(
     iframeAttrs: { style: "width: 600px; height: 600px; padding: 10px;" },
   }
 );
+
+addAccessibleTask(
+  `
+  <div id="container">
+    <h1 id="a">A</h1><h1 id="b">B</h1>
+  </div>
+  `,
+  async function(browser, accDoc) {
+    const a = findAccessibleChildByID(accDoc, "a");
+    const b = findAccessibleChildByID(accDoc, "b");
+    const dpr = await getContentDPR(browser);
+    // eslint-disable-next-line no-unused-vars
+    const [x, y, w, h] = Layout.getBounds(a, dpr);
+    // The point passed below will be made relative to `b`, but
+    // we'd like to test a point within `a`. Pass `a`s negative
+    // width for an x offset. Pass zero as a y offset,
+    // assuming the headings are on the same line.
+    await testChildAtPoint(dpr, -w, 0, b, null, null);
+  },
+  {
+    iframe: true,
+    remoteIframe: true,
+    // Ensure that all hittest elements are in view.
+    iframeAttrs: { style: "width: 600px; height: 600px; padding: 10px;" },
+  }
+);
+
+addAccessibleTask(
+  `
+  <style>
+    div {
+      width: 50px;
+      height: 50px;
+      position: relative;
+    }
+
+    div > div {
+      width: 30px;
+      height: 30px;
+      position: absolute;
+      opacity: 0.9;
+    }
+  </style>
+  <div id="a" style="background-color: orange;">
+    <div id="aa" style="background-color: purple;"></div>
+  </div>
+  <div id="b" style="background-color: yellowgreen;">
+    <div id="bb" style="top: -30px; background-color: turquoise"></div>
+  </div>`,
+  async function(browser, accDoc) {
+    const a = findAccessibleChildByID(accDoc, "a");
+    const aa = findAccessibleChildByID(accDoc, "aa");
+    const dpr = await getContentDPR(browser);
+    // eslint-disable-next-line no-unused-vars
+    const [_, y, w] = Layout.getBounds(a, dpr);
+    // test upper left of `a`
+    await testChildAtPoint(dpr, 1, 1, a, aa, aa);
+    // test upper right of `a`
+    await testChildAtPoint(dpr, w - 1, 1, a, a, a);
+    // test just outside upper left of `a`
+    await testChildAtPoint(dpr, 1, y - 1, a, null, null);
+    if (isCacheEnabled) {
+      // test halfway down/left of `a`
+      await testChildAtPoint(dpr, 1, Math.round(y / 2), a, null, null);
+    }
+  },
+  {
+    iframe: false,
+    remoteIframe: false,
+    // Ensure that all hittest elements are in view.
+    iframeAttrs: { style: "width: 600px; height: 600px; padding: 10px;" },
+  }
+);
