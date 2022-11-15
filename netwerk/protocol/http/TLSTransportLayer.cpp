@@ -7,13 +7,13 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
-#include "Http2StreamTunnel.h"
 #include "TLSTransportLayer.h"
+#include "nsISSLSocketControl.h"
 #include "nsISocketProvider.h"
-#include "nsITLSSocketControl.h"
+#include "Http2StreamTunnel.h"
 #include "nsQueryObject.h"
-#include "nsSocketProviderService.h"
 #include "nsSocketTransport2.h"
+#include "nsSocketProviderService.h"
 
 namespace mozilla::net {
 
@@ -139,18 +139,8 @@ TLSTransportLayer::InputStreamWrapper::AsyncWait(
   PRPollDesc pd;
   pd.fd = mTransport->mFD;
   pd.in_flags = PR_POLL_READ | PR_POLL_EXCEPT;
-  // Only run PR_Poll on the socket thread. Also, make sure this lives at least
-  // as long as that operation.
-  auto DoPoll = [self = RefPtr{this}, pd(pd)]() mutable {
-    int32_t rv = PR_Poll(&pd, 1, PR_INTERVAL_NO_TIMEOUT);
-    LOG(("TLSTransportLayer::InputStreamWrapper::AsyncWait rv=%d", rv));
-  };
-  if (OnSocketThread()) {
-    DoPoll();
-  } else {
-    gSocketTransportService->Dispatch(NS_NewRunnableFunction(
-        "TLSTransportLayer::InputStreamWrapper::AsyncWait", DoPoll));
-  }
+  int32_t rv = PR_Poll(&pd, 1, PR_INTERVAL_NO_TIMEOUT);
+  LOG(("TLSTransportLayer::InputStreamWrapper::AsyncWait rv=%d", rv));
   return NS_OK;
 }
 
@@ -323,7 +313,6 @@ TLSTransportLayer::TLSTransportLayer(nsISocketTransport* aTransport,
 }
 
 TLSTransportLayer::~TLSTransportLayer() {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("TLSTransportLayer dtor this=[%p]", this));
   if (mFD) {
     PR_Close(mFD);
@@ -568,7 +557,7 @@ FWD_TS(SetRecvBufferSize, uint32_t);
 FWD_TS_PTR(GetResetIPFamilyPreference, bool);
 
 nsresult TLSTransportLayer::GetTlsSocketControl(
-    nsITLSSocketControl** tlsSocketControl) {
+    nsISSLSocketControl** tlsSocketControl) {
   if (!mTLSSocketControl) {
     return NS_ERROR_ABORT;
   }

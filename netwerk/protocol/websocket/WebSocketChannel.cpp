@@ -4,69 +4,72 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <algorithm>
-
-#include "WebSocketChannel.h"
-
-#include "WebSocketConnectionBase.h"
 #include "WebSocketFrame.h"
 #include "WebSocketLog.h"
+#include "WebSocketChannel.h"
+
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Base64.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/ScopeExit.h"
-#include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_privacy.h"
-#include "mozilla/Telemetry.h"
-#include "mozilla/TimeStamp.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/net/WebSocketEventService.h"
-#include "nsAlgorithm.h"
-#include "nsCRT.h"
-#include "nsCharSeparatedTokenizer.h"
-#include "nsComponentManagerUtils.h"
-#include "nsError.h"
-#include "nsIAsyncVerifyRedirectCallback.h"
-#include "nsICancelable.h"
+
+#include "nsIURI.h"
 #include "nsIChannel.h"
-#include "nsIClassOfService.h"
 #include "nsICryptoHash.h"
+#include "nsIRunnable.h"
+#include "nsIPrefBranch.h"
+#include "nsICancelable.h"
+#include "nsIClassOfService.h"
 #include "nsIDNSRecord.h"
 #include "nsIDNSService.h"
+#include "nsIIOService.h"
+#include "nsIProtocolProxyService.h"
+#include "nsIProxyInfo.h"
+#include "nsIProxiedChannel.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIDashboardEventNotifier.h"
 #include "nsIEventTarget.h"
 #include "nsIHttpChannel.h"
-#include "nsIIOService.h"
-#include "nsINSSErrorsService.h"
-#include "nsINetworkLinkService.h"
-#include "nsINode.h"
-#include "nsIObserverService.h"
-#include "nsIPrefBranch.h"
 #include "nsIProtocolHandler.h"
-#include "nsIProtocolProxyService.h"
-#include "nsIProxiedChannel.h"
-#include "nsIProxyInfo.h"
 #include "nsIRandomGenerator.h"
-#include "nsIRunnable.h"
 #include "nsISocketTransport.h"
-#include "nsITLSSocketControl.h"
-#include "nsITransportProvider.h"
-#include "nsITransportSecurityInfo.h"
-#include "nsIURI.h"
-#include "nsIURIMutator.h"
-#include "nsNetCID.h"
-#include "nsNetUtil.h"
-#include "nsProxyRelease.h"
-#include "nsServiceManagerUtils.h"
-#include "nsSocketTransportService2.h"
-#include "nsStringStream.h"
+#include "nsISSLSocketControl.h"
 #include "nsThreadUtils.h"
+#include "nsITransportSecurityInfo.h"
+#include "nsINetworkLinkService.h"
+#include "nsIObserverService.h"
+#include "nsCharSeparatedTokenizer.h"
+
+#include "nsComponentManagerUtils.h"
+#include "nsNetCID.h"
+#include "nsServiceManagerUtils.h"
+#include "nsCRT.h"
+#include "nsThreadUtils.h"
+#include "nsError.h"
+#include "mozilla/Base64.h"
+#include "nsStringStream.h"
+#include "nsAlgorithm.h"
+#include "nsProxyRelease.h"
+#include "nsNetUtil.h"
+#include "nsINode.h"
+#include "mozilla/ScopeExit.h"
+#include "mozilla/StaticMutex.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TimeStamp.h"
+#include "nsSocketTransportService2.h"
+#include "nsINSSErrorsService.h"
+#include "WebSocketConnectionBase.h"
+#include "nsIURIMutator.h"
+#include "nsITransportProvider.h"
+
 #include "plbase64.h"
 #include "prmem.h"
 #include "prnetdb.h"
 #include "zlib.h"
+#include <algorithm>
 
 // rather than slurp up all of nsIWebSocket.idl, which lives outside necko, just
 // dupe one constant we need from it
@@ -3338,7 +3341,7 @@ WebSocketChannel::GetSecurityInfo(nsITransportSecurityInfo** aSecurityInfo) {
   }
 
   if (mTransport) {
-    nsCOMPtr<nsITLSSocketControl> tlsSocketControl;
+    nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
     nsresult rv =
         mTransport->GetTlsSocketControl(getter_AddRefs(tlsSocketControl));
     if (NS_FAILED(rv)) {

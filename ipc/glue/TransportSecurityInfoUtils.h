@@ -5,7 +5,6 @@
 #ifndef mozilla_ipc_TransportSecurityInfoUtils_h
 #define mozilla_ipc_TransportSecurityInfoUtils_h
 
-#include "ipc/EnumSerializer.h"
 #include "mozilla/RefPtr.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsIX509Cert.h"
@@ -30,13 +29,6 @@ struct ParamTraits<nsIX509Cert*> {
   static void Write(MessageWriter* aWriter, nsIX509Cert* aCert);
   static bool Read(MessageReader* aReader, RefPtr<nsIX509Cert>* aResult);
 };
-
-template <>
-struct ParamTraits<nsITransportSecurityInfo::OverridableErrorCategory>
-    : public ContiguousEnumSerializerInclusive<
-          nsITransportSecurityInfo::OverridableErrorCategory,
-          nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET,
-          nsITransportSecurityInfo::OverridableErrorCategory::ERROR_TIME> {};
 
 }  // namespace IPC
 

@@ -8,7 +8,7 @@
 
 interface nsIInterfaceRequestor;
 interface nsINetAddr;
-interface nsITLSSocketControl;
+interface nsISSLSocketControl;
 
 %{ C++
 #include "mozilla/BasePrincipal.h"
@@ -96,13 +96,14 @@ interface nsISocketTransport : nsITransport
 
     /**
      * TLS socket control object. This attribute is only available once the
-     * socket is connected.
+     * socket is connected. The name `nsISSLSocketControl` is a holdover from
+     * when TLS was called SSL.
      */
-    readonly attribute nsITLSSocketControl tlsSocketControl;
+    readonly attribute nsISSLSocketControl tlsSocketControl;
 
     /**
      * Security notification callbacks passed to the secure socket provider
-     * via nsITLSSocketControl at socket creation time.
+     * via nsISSLSocketControl at socket creation time.
      *
      * NOTE: this attribute cannot be changed once a stream has been opened.
      */

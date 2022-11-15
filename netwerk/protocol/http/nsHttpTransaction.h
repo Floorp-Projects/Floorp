@@ -22,7 +22,7 @@
 #include "nsIClassOfService.h"
 #include "nsIEarlyHintObserver.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsITLSSocketControl.h"
+#include "nsISSLSocketControl.h"
 #include "nsITimer.h"
 #include "nsIWebTransport.h"
 #include "nsTHashMap.h"
@@ -314,7 +314,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsITransportEventSink> mTransportSink;
   nsCOMPtr<nsIEventTarget> mConsumerTarget;
-  nsCOMPtr<nsITransportSecurityInfo> mSecurityInfo;
+  nsCOMPtr<nsISSLSocketControl> mTLSSocketControl;
   nsCOMPtr<nsIAsyncInputStream> mPipeIn;
   nsCOMPtr<nsIAsyncOutputStream> mPipeOut;
   nsCOMPtr<nsIRequestContext> mRequestContext;
