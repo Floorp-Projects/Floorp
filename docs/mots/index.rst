@@ -148,7 +148,7 @@ Tracking detection and content-blocking.
     * - Peer(s)
       -
         | `Andrea Marchesini (baku) <https://people.mozilla.org/s?query=baku>`__
-        | `Dimi Lee (dlee) <https://people.mozilla.org/s?query=dlee>`__
+        | `Dimi Lee (dimi) <https://people.mozilla.org/s?query=dimi>`__
         | `Paul Zühlcke (pbz) <https://people.mozilla.org/s?query=pbz>`__
         | `Johann Hofmann (johannh) <https://people.mozilla.org/s?query=johannh>`__
     * - Peer(s) Emeritus
@@ -254,12 +254,11 @@ The build system for Gecko and several mozilla.org hosted Gecko-based applicatio
         | `Mike Hommey (glandium) <https://people.mozilla.org/s?query=glandium>`__
     * - Peer(s)
       -
-        | `Mitchell Hentges (mhentges) <https://people.mozilla.org/s?query=mhentges>`__
         | `Andi (andi) <https://people.mozilla.org/s?query=andi>`__
     * - Owner(s) Emeritus
       - Chris Manchester, Gregory Szorc, Ted Mielczarek, Benjamin Smedberg
     * - Peer(s) Emeritus
-      - Ted Mielczarek, Ralph Giles, Gregory Szorc, Chris Manchester, Mike Shal, Nathan Froyd, Ricky Stewart, David Major
+      - Ted Mielczarek, Ralph Giles, Gregory Szorc, Chris Manchester, Mike Shal, Nathan Froyd, Ricky Stewart, David Major, Mitchell Hentges
     * - Includes
       -
         | `build/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=build/\*\*/\*>`__
@@ -287,7 +286,6 @@ Submodule of the build config covering Fennec's build system in mobile/android.
         | `Nick Alexander (nalexander) <https://people.mozilla.org/s?query=nalexander>`__
     * - Peer(s)
       -
-        | `Mitchell Hentges (mhentges) <https://people.mozilla.org/s?query=mhentges>`__
         | `Andi (andi) <https://people.mozilla.org/s?query=andi>`__
     * - Includes
       -
@@ -2863,7 +2861,7 @@ Form detection and autocomplete.
     * - Peer(s)
       -
         | `Tim Giles (tgiles) <https://people.mozilla.org/s?query=tgiles>`__
-        | `Dimi Lee (dlee) <https://people.mozilla.org/s?query=dlee>`__
+        | `Dimi Lee (dimi) <https://people.mozilla.org/s?query=dimi>`__
     * - Owner(s) Emeritus
       - Matthew Noorenberghe
     * - Includes
@@ -3004,7 +3002,7 @@ Managing, saving and filling logins.
       -
         | `jaws <https://people.mozilla.org/s?query=jaws>`__
         | `Tim Giles (tgiles) <https://people.mozilla.org/s?query=tgiles>`__
-        | `Dimi Lee (dlee) <https://people.mozilla.org/s?query=dlee>`__
+        | `Dimi Lee (dimi) <https://people.mozilla.org/s?query=dimi>`__
         | `Sam Foster (sfoster) <https://people.mozilla.org/s?query=sfoster>`__
     * - Owner(s) Emeritus
       - Matthew Noorenberghe
