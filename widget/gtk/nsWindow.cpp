@@ -3081,9 +3081,8 @@ guint32 nsWindow::GetLastUserInputTime() {
 #ifdef MOZ_WAYLAND
 void nsWindow::FocusWaylandWindow(const char* aTokenID) {
   MOZ_DIAGNOSTIC_ASSERT(aTokenID);
-  auto releaseToken = MakeScopeExit([&] {
-    MozClearPointer(mXdgToken, xdg_activation_token_v1_destroy);
-  });
+  auto releaseToken = MakeScopeExit(
+      [&] { MozClearPointer(mXdgToken, xdg_activation_token_v1_destroy); });
 
   LOG("nsWindow::FocusWaylandWindow(%s)", aTokenID);
   if (IsDestroyed()) {
@@ -9914,7 +9913,8 @@ void nsWindow::NotifyOcclusionState(mozilla::widget::OcclusionState aState) {
 
 void nsWindow::SetDragSource(GdkDragContext* aSourceDragContext) {
   mSourceDragContext = aSourceDragContext;
-  if (IsWaylandPopup()) {
+  if (IsPopup() &&
+      (widget::GdkIsWaylandDisplay() || widget::IsXWaylandProtocol())) {
     if (auto* menuPopupFrame = GetMenuPopupFrame(GetFrame())) {
       menuPopupFrame->SetIsDragSource(!!aSourceDragContext);
     }

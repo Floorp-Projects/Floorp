@@ -287,7 +287,7 @@ bool XULPopupElement::IsWaylandDragSource() const {
 
 bool XULPopupElement::IsWaylandPopup() const {
 #ifdef MOZ_WAYLAND
-  return widget::GdkIsWaylandDisplay();
+  return widget::GdkIsWaylandDisplay() || widget::IsXWaylandProtocol();
 #else
   return false;
 #endif
