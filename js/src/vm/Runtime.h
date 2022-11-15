@@ -263,7 +263,7 @@ class Metrics {
   struct Enumeration {
     using SourceType = int;
     static uint32_t convert(SourceType sample) {
-      MOZ_ASSERT(sample <= 100);
+      MOZ_ASSERT(sample >= 0 && sample <= 100);
       return static_cast<uint32_t>(sample);
     }
   };
@@ -274,7 +274,7 @@ class Metrics {
   struct Percentage {
     using SourceType = int;
     static uint32_t convert(SourceType sample) {
-      MOZ_ASSERT(sample <= 100);
+      MOZ_ASSERT(sample >= 0 && sample <= 100);
       return static_cast<uint32_t>(sample);
     }
   };
