@@ -1406,6 +1406,16 @@ var gUnifiedExtensions = {
       // TODO: Bug 1778684 - Auto-hide button when there is no active extension.
       this._button.hidden = false;
 
+      // Lazy-load the l10n strings. Those strings are used for the CUI and
+      // non-CUI extensions in the unified extensions panel.
+      document
+        .getElementById("unified-extensions-context-menu")
+        .querySelectorAll("[data-lazy-l10n-id]")
+        .forEach(el => {
+          el.setAttribute("data-l10n-id", el.getAttribute("data-lazy-l10n-id"));
+          el.removeAttribute("data-lazy-l10n-id");
+        });
+
       document
         .getElementById("nav-bar")
         .setAttribute("unifiedextensionsbuttonshown", true);
@@ -1579,18 +1589,6 @@ var gUnifiedExtensions = {
         );
         this._listView.addEventListener("ViewShowing", this);
         this._listView.addEventListener("ViewHiding", this);
-
-        // Lazy-load the l10n strings.
-        document
-          .getElementById("unified-extensions-context-menu")
-          .querySelectorAll("[data-lazy-l10n-id]")
-          .forEach(el => {
-            el.setAttribute(
-              "data-l10n-id",
-              el.getAttribute("data-lazy-l10n-id")
-            );
-            el.removeAttribute("data-lazy-l10n-id");
-          });
       }
 
       if (this._button.open) {
