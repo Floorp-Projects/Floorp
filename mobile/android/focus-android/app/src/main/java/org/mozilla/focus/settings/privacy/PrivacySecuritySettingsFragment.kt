@@ -40,12 +40,14 @@ class PrivacySecuritySettingsFragment :
         // Remove the biometric toggle if the software or hardware do not support it
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || !requireContext().canUseBiometricFeature()
         ) {
-            preferenceScreen.removePreference(biometricPreference)
+            biometricPreference?.let { preferenceScreen.removePreference(it) }
         }
         if (!FocusNimbus.features.onboarding.value().isCfrEnabled ||
             !requireContext().settings.shouldShowPrivacySecuritySettingsToolTip
         ) {
-            preferenceScreen.removePreference(findPreference(getString(R.string.pref_key_tool_tip)))
+            val privacySecuritySettingsToolTip: PreferenceToolTipCompose? =
+                findPreference(getString(R.string.pref_key_tool_tip))
+            privacySecuritySettingsToolTip?.let { preferenceScreen.removePreference(it) }
         }
 
         val preferencesListener = EngineSharedPreferencesListener(requireContext())
