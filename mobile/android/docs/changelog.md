@@ -11,6 +11,8 @@ permalink: /changelog/
 
 * **All components**
   * ⚠️Increased `compileSdkVersion` to 33 (Android 13)
+* **feature-awesomebar**
+  * `SearchSuggestionProvider` and `SearchActionProvider` now have a new parameter `suggestionsHeader`, to add title to suggestions.
 
 # 108.0.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v107.0.0...v108.0.0)

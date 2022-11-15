@@ -37,11 +37,10 @@ internal fun Suggestions(
         modifier = Modifier.testTag("mozac.awesomebar.suggestions"),
     ) {
         suggestions.forEach { (group, suggestions) ->
-            if (suggestions.isNotEmpty()) {
-                group.title?.let { title ->
-                    item(group.id) {
-                        SuggestionGroup(title, colors)
-                    }
+            val title = group.title
+            if (suggestions.isNotEmpty() && !title.isNullOrEmpty()) {
+                item(group.id) {
+                    SuggestionGroup(title, colors)
                 }
             }
 

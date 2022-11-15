@@ -37,6 +37,7 @@ class SearchSuggestionProvider private constructor(
     private val icon: Bitmap? = null,
     private val showDescription: Boolean = true,
     private val filterExactMatch: Boolean = false,
+    private val suggestionsHeader: String? = null,
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
@@ -99,6 +100,7 @@ class SearchSuggestionProvider private constructor(
      * @param filterExactMatch If true filters out suggestions that exactly match the entered text.
      * @param private When set to `true` then all requests to search engines will be made in private
      * mode.
+     * @param suggestionsHeader Optional suggestions header to display.
      */
     constructor(
         context: Context,
@@ -112,6 +114,7 @@ class SearchSuggestionProvider private constructor(
         showDescription: Boolean = true,
         filterExactMatch: Boolean = false,
         private: Boolean = false,
+        suggestionsHeader: String? = null,
     ) : this (
         SearchSuggestionClient(context, store) { url -> fetch(fetchClient, url, private) },
         searchUseCase,
@@ -121,7 +124,12 @@ class SearchSuggestionProvider private constructor(
         icon,
         showDescription,
         filterExactMatch,
+        suggestionsHeader,
     )
+
+    override fun groupTitle(): String? {
+        return suggestionsHeader
+    }
 
     @Suppress("ReturnCount")
     override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {

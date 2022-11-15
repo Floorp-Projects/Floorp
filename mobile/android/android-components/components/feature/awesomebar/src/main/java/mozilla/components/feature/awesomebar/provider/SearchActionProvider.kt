@@ -24,8 +24,13 @@ class SearchActionProvider(
     private val icon: Bitmap? = null,
     private val showDescription: Boolean = true,
     private val searchEngine: SearchEngine? = null,
+    private val suggestionsHeader: String? = null,
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = java.util.UUID.randomUUID().toString()
+
+    override fun groupTitle(): String? {
+        return suggestionsHeader
+    }
 
     override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
         if (text.isBlank()) {
