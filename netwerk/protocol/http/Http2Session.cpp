@@ -2398,12 +2398,11 @@ nsresult Http2Session::RecvContinuation(Http2Session* self) {
 class UpdateAltSvcEvent : public Runnable {
  public:
   UpdateAltSvcEvent(const nsCString& header, const nsCString& aOrigin,
-                    nsHttpConnectionInfo* aCI, nsIInterfaceRequestor* callbacks)
+                    nsHttpConnectionInfo* aCI)
       : Runnable("net::UpdateAltSvcEvent"),
         mHeader(header),
         mOrigin(aOrigin),
-        mCI(aCI),
-        mCallbacks(callbacks) {}
+        mCI(aCI) {}
 
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
@@ -2424,7 +2423,7 @@ class UpdateAltSvcEvent : public Runnable {
     if (XRE_IsSocketProcess()) {
       AltServiceChild::ProcessHeader(
           mHeader, originScheme, originHost, originPort, mCI->GetUsername(),
-          mCI->GetPrivate(), mCallbacks, mCI->ProxyInfo(), 0,
+          mCI->GetPrivate(), nullptr, mCI->ProxyInfo(), 0,
           mCI->GetOriginAttributes());
       return NS_OK;
     }
@@ -2593,15 +2592,8 @@ nsresult Http2Session::RecvAltSvc(Http2Session* self) {
     }
   }
 
-  nsCOMPtr<nsITLSSocketControl> tlsSocketControl;
-  self->mConnection->GetTLSSocketControl(getter_AddRefs(tlsSocketControl));
-  nsCOMPtr<nsIInterfaceRequestor> callbacks;
-  if (tlsSocketControl) {
-    tlsSocketControl->GetNotificationCallbacks(getter_AddRefs(callbacks));
-  }
-
   RefPtr<UpdateAltSvcEvent> event =
-      new UpdateAltSvcEvent(altSvcFieldValue, origin, ci, callbacks);
+      new UpdateAltSvcEvent(altSvcFieldValue, origin, ci);
   NS_DispatchToMainThread(event);
   self->ResetDownstreamState();
   return NS_OK;

@@ -617,7 +617,7 @@ async function asyncConnectTo(
     return connection.go();
   }
 
-  return connectTo(aHost).then(function(conn) {
+  return connectTo(aHost).then(async function(conn) {
     info("handling " + aHost);
     let expectedNSResult =
       aExpectedResult == PRErrorCodeSuccess
@@ -630,9 +630,7 @@ async function asyncConnectTo(
     );
     if (aWithSecurityInfo) {
       aWithSecurityInfo(
-        conn.transport.tlsSocketControl.QueryInterface(
-          Ci.nsITransportSecurityInfo
-        )
+        await conn.transport.tlsSocketControl.asyncGetSecurityInfo()
       );
     }
   });
