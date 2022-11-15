@@ -9,7 +9,6 @@ const {
   getWindowDimensions,
   getViewportDimensions,
   loadSheet,
-  removeSheet,
 } = require("resource://devtools/shared/layout/utils.js");
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const InspectorUtils = require("InspectorUtils");
@@ -47,25 +46,7 @@ exports.removePseudoClassLock = (...args) =>
 const SVG_NS = "http://www.w3.org/2000/svg";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-// Highlighter in parent process will create an iframe relative to its target
-// window. We need to make sure that the iframe is styled correctly. Note:
-// this styles are taken from browser/base/content/browser.css
-// iframe.devtools-highlighter-renderer rules.
-const XUL_HIGHLIGHTER_STYLES_SHEET = `data:text/css;charset=utf-8,
-:root > iframe.devtools-highlighter-renderer {
-  border: none;
-  pointer-events: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 2;
-  color-scheme: light;
-}`;
-
-const STYLESHEET_URI =
-  "resource://devtools/server/actors/" + "highlighters.css";
+const STYLESHEET_URI = "resource://devtools/server/actors/highlighters.css";
 
 const _tokens = Symbol("classList/tokens");
 
@@ -233,20 +214,6 @@ CanvasFrameAnonymousContentHelper.prototype = {
 
   destroy() {
     this._remove();
-    if (this._iframe) {
-      // If iframe is used, remove one ref count from its numberOfHighlighters
-      // data attribute.
-      const numberOfHighlighters =
-        parseInt(this._iframe.dataset.numberOfHighlighters, 10) - 1;
-      this._iframe.dataset.numberOfHighlighters = numberOfHighlighters;
-      // If we reached 0, we can now remove the iframe and its styling from
-      // target window.
-      if (numberOfHighlighters === 0) {
-        this._iframe.remove();
-        removeSheet(this.highlighterEnv.window, XUL_HIGHLIGHTER_STYLES_SHEET);
-      }
-      this._iframe = null;
-    }
 
     this.highlighterEnv.off("window-ready", this._onWindowReady);
     this.highlighterEnv = this.nodeBuilder = this._content = null;
@@ -267,67 +234,11 @@ CanvasFrameAnonymousContentHelper.prototype = {
       return;
     }
 
-    const window = this.highlighterEnv.window;
-    const isXULWindow = isXUL(window);
-    const isChromeWindow = window.isChromeWindow;
-
-    if (isXULWindow || isChromeWindow) {
-      // In order to use anonymous content, we need to create and use an IFRAME
-      // inside a XUL document first and use its window/document the same way we
-      // would normally use highlighter environment's window/document.
-      // See Bug 1594587 for more details.
-      // For Chrome Windows, we also need to do it as the first call to insertAnonymousContent
-      // closes XUL popups even if ui.popup.disable_autohide is true (See Bug 1768896).
-
-      const { documentElement } = window.document;
-      if (!this._iframe) {
-        this._iframe = documentElement.querySelector(
-          ":scope > .devtools-highlighter-renderer"
-        );
-        if (this._iframe) {
-          // If iframe is used and already exists, add one ref count to its
-          // numberOfHighlighters data attribute.
-          const numberOfHighlighters =
-            parseInt(this._iframe.dataset.numberOfHighlighters, 10) + 1;
-          this._iframe.dataset.numberOfHighlighters = numberOfHighlighters;
-        }
-      }
-
-      if (!this._iframe) {
-        this._iframe = window.document.createElement("iframe");
-        // We need the color-scheme shenanigans to ensure that the iframe is
-        // transparent, see bug 1773155, bug 1738380, and
-        // https://github.com/mozilla/wg-decisions/issues/774.
-        this._iframe.srcdoc =
-          "<!doctype html><meta name=color-scheme content=light>";
-        this._iframe.classList.add("devtools-highlighter-renderer");
-        // If iframe is used for the first time, add ref count of one to its
-        // numberOfHighlighters data attribute.
-        this._iframe.dataset.numberOfHighlighters = 1;
-        documentElement.append(this._iframe);
-        loadSheet(window, XUL_HIGHLIGHTER_STYLES_SHEET);
-      }
-
-      if (this.waitForDocumentToLoad) {
-        await waitForContentLoaded(this._iframe);
-      }
-      if (!this.highlighterEnv) {
-        // CanvasFrameAnonymousContentHelper was already destroyed.
-        return;
-      }
-
-      // If it's a XUL window anonymous content will be inserted inside a newly
-      // created IFRAME in the chrome window.
-      this.anonymousContentDocument = this._iframe.contentDocument;
-      this.anonymousContentWindow = this._iframe.contentWindow;
-      this.pageListenerTarget = this._iframe.contentWindow;
-    } else {
-      // Regular highlighters are drawn inside the anonymous content of the
-      // highlighter environment document.
-      this.anonymousContentDocument = this.highlighterEnv.document;
-      this.anonymousContentWindow = this.highlighterEnv.window;
-      this.pageListenerTarget = this.highlighterEnv.pageListenerTarget;
-    }
+    // Highlighters are drawn inside the anonymous content of the
+    // highlighter environment document.
+    this.anonymousContentDocument = this.highlighterEnv.document;
+    this.anonymousContentWindow = this.highlighterEnv.window;
+    this.pageListenerTarget = this.highlighterEnv.pageListenerTarget;
 
     // For now highlighters.css is injected in content as a ua sheet because
     // we no longer support scoped style sheets (see bug 1345702).
@@ -399,15 +310,6 @@ CanvasFrameAnonymousContentHelper.prototype = {
     if (isTopLevel) {
       this._removeAllListeners();
       this.elements.clear();
-      if (this._iframe) {
-        // When we are switching top level targets, we can remove the iframe and
-        // its styling as well, since it will be re-created for the new top
-        // level target document.
-        this._iframe.remove();
-        removeSheet(this.highlighterEnv.window, XUL_HIGHLIGHTER_STYLES_SHEET);
-        this._iframe = null;
-      }
-
       this._insert();
     }
   },
