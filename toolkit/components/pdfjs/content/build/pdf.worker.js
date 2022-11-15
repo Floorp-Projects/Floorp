@@ -101,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.1.43';
+    const workerVersion = '3.1.49';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -4591,6 +4591,7 @@ class Annotation {
       this.data.fieldName = this._constructFieldName(dict);
       this.data.pageIndex = params.pageIndex;
     }
+    this._isOffscreenCanvasSupported = params.isOffscreenCanvasSupported;
     this._fallbackFontDict = null;
     this._needAppearances = false;
   }
@@ -5197,7 +5198,6 @@ class WidgetAnnotation extends Annotation {
     const data = this.data;
     this.ref = params.ref;
     this._needAppearances = params.needAppearances;
-    this._isOffscreenCanvasSupported = params.isOffscreenCanvasSupported;
     data.annotationType = _util.AnnotationType.WIDGET;
     if (data.fieldName === undefined) {
       data.fieldName = this._constructFieldName(dict);
@@ -52455,8 +52455,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.1.43';
-const pdfjsBuild = '3078e2c1d';
+const pdfjsVersion = '3.1.49';
+const pdfjsBuild = 'c7d6ab2f7';
 })();
 
 /******/ 	return __webpack_exports__;

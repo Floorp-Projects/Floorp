@@ -1141,7 +1141,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '3.1.43',
+    apiVersion: '3.1.49',
     data: source.data,
     password: source.password,
     disableAutoFetch: source.disableAutoFetch,
@@ -2760,9 +2760,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.1.43';
+const version = '3.1.49';
 exports.version = version;
-const build = '3078e2c1d';
+const build = 'c7d6ab2f7';
 exports.build = build;
 
 /***/ }),
@@ -12924,8 +12924,8 @@ var _is_node = __w_pdfjs_require__(12);
 var _text_layer = __w_pdfjs_require__(28);
 var _svg = __w_pdfjs_require__(29);
 var _xfa_layer = __w_pdfjs_require__(27);
-const pdfjsVersion = '3.1.43';
-const pdfjsBuild = '3078e2c1d';
+const pdfjsVersion = '3.1.49';
+const pdfjsBuild = 'c7d6ab2f7';
 ;
 })();
 
