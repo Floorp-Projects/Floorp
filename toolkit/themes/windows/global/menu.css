@@ -107,7 +107,7 @@ menubar > menu:-moz-window-inactive {
 }
 
 .menu-iconic-left {
-  min-width: 1.45em;
+  width: 1.45em;
 }
 
 .menu-iconic-icon {
@@ -136,7 +136,7 @@ menubar > menu:-moz-window-inactive {
   -moz-default-appearance: menuarrow;
   margin-inline-end: -2px;
   list-style-image: none;
-  min-width: 1.28em;
+  width: 1.28em;
   padding-top: 1px;
 }
 
@@ -329,7 +329,7 @@ menuitem:is([type="checkbox"], [checked="true"], [type="radio"]) > .menu-iconic-
   menuitem[type="checkbox"],
   menuitem[type="radio"] {
     appearance: none !important; /* to override more specific selectors above. */
-    min-width: unset;
+    width: unset;
   }
 
   .menu-iconic > .menu-iconic-left,
