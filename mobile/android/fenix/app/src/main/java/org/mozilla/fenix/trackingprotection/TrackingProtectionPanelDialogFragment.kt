@@ -163,6 +163,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return if (args.gravity == Gravity.BOTTOM) {
             object : BottomSheetDialog(requireContext(), this.theme) {
+                @Deprecated("Deprecated in Java")
                 override fun onBackPressed() {
                     this@TrackingProtectionPanelDialogFragment.onBackPressed()
                 }
@@ -176,6 +177,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
             }
         } else {
             object : Dialog(requireContext()) {
+                @Deprecated("Deprecated in Java")
                 override fun onBackPressed() {
                     this@TrackingProtectionPanelDialogFragment.onBackPressed()
                 }

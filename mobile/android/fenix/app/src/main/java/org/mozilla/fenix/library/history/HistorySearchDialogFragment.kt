@@ -70,6 +70,7 @@ class HistorySearchDialogFragment : AppCompatDialogFragment(), UserInteractionHa
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return object : Dialog(requireContext(), this.theme) {
+            @Deprecated("Deprecated in Java")
             override fun onBackPressed() {
                 this@HistorySearchDialogFragment.onBackPressed()
             }

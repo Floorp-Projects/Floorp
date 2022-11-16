@@ -16,6 +16,7 @@ class TabsTrayDialog(
     theme: Int,
     private val interactor: () -> BrowserTrayInteractor,
 ) : Dialog(context, theme) {
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         if (interactor.invoke().onBackPressed()) {
             return
