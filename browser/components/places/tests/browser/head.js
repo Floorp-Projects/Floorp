@@ -204,21 +204,11 @@ function isToolbarVisible(aToolbar) {
  * @param {Function} closeFn
  *        A function to be used to wait for pending work when the dialog is
  *        closing. It is passed the dialog window handle and should return a promise.
- * @param {string} [dialogUrl]
- *        The URL of the dialog.
- * @param {boolean} [skipOverlayWait]
- *        Avoid waiting for the overlay.
  * @returns {string} guid
  *          Bookmark guid
  */
-var withBookmarksDialog = async function(
-  autoCancel,
-  openFn,
-  taskFn,
-  closeFn,
-  dialogUrl = "chrome://browser/content/places/bookmarkProperties",
-  skipOverlayWait = false
-) {
+var withBookmarksDialog = async function(autoCancel, openFn, taskFn, closeFn) {
+  let dialogUrl = "chrome://browser/content/places/bookmarkProperties.xhtml";
   let closed = false;
   // We can't show the in-window prompt for windows which don't have
   // gDialogBox, like the library (Places:Organizer) window.
@@ -265,13 +255,8 @@ var withBookmarksDialog = async function(
   let dialogWin = await dialogPromise;
 
   // Ensure overlay is loaded
-  if (!skipOverlayWait) {
-    info("waiting for the overlay to be loaded");
-    await TestUtils.waitForCondition(
-      () => dialogWin.gEditItemOverlay.initialized,
-      "EditItemOverlay should be initialized"
-    );
-  }
+  info("waiting for the overlay to be loaded");
+  await dialogWin.document.mozSubdialogReady;
 
   // Check the first input is focused.
   let doc = dialogWin.document;

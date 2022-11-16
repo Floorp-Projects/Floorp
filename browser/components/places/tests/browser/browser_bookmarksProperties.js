@@ -472,11 +472,7 @@ async function promise_properties_window(dialogUrl = DIALOG_URL) {
     isSubDialog: true,
   });
   await SimpleTest.promiseFocus(win);
-  await TestUtils.waitForCondition(
-    () => win.gEditItemOverlay.initialized,
-    "EditItemOverlay is initialized"
-  );
-  await new Promise(executeSoon);
+  await win.document.mozSubdialogReady;
   return win;
 }
 
