@@ -22,14 +22,18 @@
     async function doTest() {
       let tooltip = document.getElementById("tooltip");
 
-      testAccessibleTree("tooltip-container", { GROUPING: [] });
+      testAccessibleTree("tooltip-container", { GROUPING: [
+      ] });
 
       let shown = waitForEvent(EVENT_SHOW, tooltip);
       tooltip.openPopup();
       await shown;
 
       testAccessibleTree("tooltip-container",
-        { GROUPING: [ { TOOLTIP: [] }] });
+        { GROUPING: [
+          { TOOLTIP: [] },
+          { STATICTEXT: [] },
+        ] });
 
       let hidden = waitForEvent(EVENT_HIDE, tooltip);
       tooltip.hidePopup();

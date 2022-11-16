@@ -267,8 +267,7 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent, nsINode* aTarget) {
   }
 
   if (eventType.EqualsLiteral("popupshown") &&
-      (aTarget->IsXULElement(nsGkAtoms::tooltip) ||
-       aTarget->IsXULElement(nsGkAtoms::panel))) {
+      aTarget->IsAnyOfXULElements(nsGkAtoms::tooltip, nsGkAtoms::panel)) {
     targetDocument->ContentInserted(aTarget->AsContent(),
                                     aTarget->GetNextSibling());
     return;
@@ -549,8 +548,7 @@ void RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode) {
   DocAccessible* document = nsAccUtils::GetDocAccessibleFor(aPopupNode);
   if (!document) return;
 
-  if (aPopupNode->IsXULElement(nsGkAtoms::tooltip) ||
-      aPopupNode->IsXULElement(nsGkAtoms::panel)) {
+  if (aPopupNode->IsAnyOfXULElements(nsGkAtoms::tooltip, nsGkAtoms::panel)) {
     document->ContentRemoved(aPopupNode->AsContent());
     return;
   }

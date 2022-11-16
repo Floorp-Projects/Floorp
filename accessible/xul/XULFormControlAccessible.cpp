@@ -132,10 +132,10 @@ bool XULButtonAccessible::IsAcceptableChild(nsIContent* aEl) const {
       //   columnpicker).
       aEl->IsXULElement(nsGkAtoms::menupopup) ||
       aEl->IsXULElement(nsGkAtoms::popup) ||
-      // A XUL button can be labelled by a child text node, so we need to allow
-      // that as a child so it will be picked up when computing name from
+      // A XUL button can be labelled by a direct child text node, so we need to
+      // allow that as a child so it will be picked up when computing name from
       // subtree.
-      aEl->IsText();
+      (aEl->IsText() && aEl->GetParent() == mContent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

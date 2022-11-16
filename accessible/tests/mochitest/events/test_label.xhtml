@@ -66,9 +66,10 @@
       this.finalCheck = function setValue_finalCheck()
       {
         var tree =
-          { LABEL: [
-            { TEXT_LEAF: [ ] }
-          ] };
+          { LABEL: [] };
+        if (aValue != kNoValue) {
+          tree.LABEL.push({ STATICTEXT: [ ] });
+        }
         testAccessibleTree(aID, tree);
       }
 
@@ -88,8 +89,8 @@
       this.charWidth = this.width / this.labelNode.value.length;
 
       this.eventSeq = [
-        new textChangeChecker(this.labelNode, 0, -1, aRemovedText, false),
-        new textChangeChecker(this.labelNode, 0, -1, aInsertedText, true)
+        new invokerChecker(EVENT_HIDE, this.labelNode),
+        new invokerChecker(EVENT_SHOW, this.labelNode),
       ];
 
       this.invoke = function setCrop_invoke()
@@ -126,17 +127,7 @@
       gQueue.push(new setValue("descr", "", kTextRemoved, "si_ya"));
       gQueue.push(new setValue("descr", kNoValue, kRecreated));
 
-      if (MAC) {
-        // "valuetocro" -> "…etocro"
-        gQueue.push(new setCrop("croplabel", "left", "valuetocro", "…etocro"));
-        // "…etocro", "val…cro"
-        gQueue.push(new setCrop("croplabel", "center", "…etocro", "val…cro"));
-      } else {
-        // "valuetocro" -> "…uetocro"
-        gQueue.push(new setCrop("croplabel", "left", "valuetocro", "…uetocro"));
-        // "…uetocro" -> "valu…cro"
-        gQueue.push(new setCrop("croplabel", "center", "…uetocro", "valu…cro"));
-      }
+      gQueue.push(new setCrop("croplabel", "center"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -162,8 +153,8 @@
     </body>
 
     <vbox flex="1">
-      <label id="label">hello</label>
-      <description id="descr">hello</description>
+      <label id="label"/>
+      <description id="descr"/>
 
       <hbox>
       <label id="croplabel" value="valuetocro"

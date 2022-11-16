@@ -21,19 +21,20 @@ class XULComboboxAccessible : public AccessibleWrap {
   XULComboboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // LocalAccessible
-  virtual void Description(nsString& aDescription) const override;
-  virtual void Value(nsString& aValue) const override;
-  virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() const override;
+  void Description(nsString& aDescription) const override;
+  void Value(nsString& aValue) const override;
+  a11y::role NativeRole() const override;
+  uint64_t NativeState() const override;
+  bool IsAcceptableChild(nsIContent*) const override;
 
   // ActionAccessible
-  virtual bool HasPrimaryAction() const override;
-  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
-  virtual bool DoAction(uint8_t aIndex) const override;
+  bool HasPrimaryAction() const override;
+  void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
+  bool DoAction(uint8_t aIndex) const override;
 
   // Widgets
-  virtual bool IsActiveWidget() const override;
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual bool AreItemsOperable() const override;
+  bool IsActiveWidget() const override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool AreItemsOperable() const override;
 };
 
 }  // namespace a11y
