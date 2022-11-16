@@ -1196,6 +1196,10 @@ RefPtr<StyleSheetParsePromise> StyleSheet::ParseSheet(
     css::SheetLoadData& aLoadData) {
   MOZ_ASSERT(mParsePromise.IsEmpty());
   RefPtr<StyleSheetParsePromise> p = mParsePromise.Ensure(__func__);
+  if (!aLoadData.ShouldDefer()) {
+    mParsePromise.SetTaskPriority(nsIRunnablePriority::PRIORITY_RENDER_BLOCKING,
+                                  __func__);
+  }
   SetURLExtraData();
 
   // @import rules are disallowed due to this decision:
