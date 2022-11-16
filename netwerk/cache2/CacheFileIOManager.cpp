@@ -1382,11 +1382,9 @@ nsresult CacheFileIOManager::OnDelayedStartupFinished() {
 
   return target->Dispatch(
       NS_NewRunnableFunction("CacheFileIOManager::OnDelayedStartupFinished",
-                             [ioMan = RefPtr{ioMan}] {
-                               // TODO: Check if there are any old cache dirs.
-                               // Report telemetry.
-                               gInstance->DispatchPurgeTask(""_ns, "0"_ns,
-                                                            kPurgeExtension);
+                             [ioMan = std::move(ioMan)] {
+                               ioMan->DispatchPurgeTask(""_ns, "0"_ns,
+                                                        kPurgeExtension);
                              }),
       nsIEventTarget::DISPATCH_NORMAL);
 }
