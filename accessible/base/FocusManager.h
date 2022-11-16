@@ -43,7 +43,9 @@ class FocusManager {
   /**
    * Return true if given accessible is focused.
    */
-  bool IsFocused(const LocalAccessible* aAccessible) const;
+  bool IsFocused(const Accessible* aAccessible) const {
+    return FocusedAccessible() == aAccessible;
+  }
 
   /**
    * Return true if the given accessible is an active item, i.e. an item that
