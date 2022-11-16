@@ -1402,9 +1402,10 @@ size_t DocAccessibleParent::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) {
 
   size += mChildDocs.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
-  // We don't recurse into mAccessibles because this is already done when
-  // RemoteAccessibleBase checked mChildren.
   size += mAccessibles.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  for (auto i = mAccessibles.Iter(); !i.Done(); i.Next()) {
+    size += i.Get()->mProxy->SizeOfIncludingThis(aMallocSizeOf);
+  }
 
   size += mPendingOOPChildDocs.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
