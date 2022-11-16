@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<title>DPI of background page</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+<script src="head.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script>
+"use strict";
+
+async function testDPIMatches(description) {
+  let extension = ExtensionTestUtils.loadExtension({
+    background: function() {
+      browser.test.sendMessage("dpi", window.devicePixelRatio);
+    },
+  });
+  await extension.startup();
+  let dpi = await extension.awaitMessage("dpi");
+  await extension.unload();
+
+  // This assumes that the window is loaded in a device DPI.
+  is(
+    dpi,
+    window.devicePixelRatio,
+    `DPI in a background page should match DPI in primary chrome page ${description}`
+  );
+}
+
+add_task(async function test_dpi_simple() {
+  await testDPIMatches("by default");
+});
+
+add_task(async function test_dpi_devPixelsPerPx() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["layout.css.devPixelsPerPx", 1.5]],
+  });
+  await testDPIMatches("with devPixelsPerPx");
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_dpi_os_zoom() {
+  await SpecialPowers.pushPrefEnv({ set: [["ui.textScaleFactor", 200]] });
+  await testDPIMatches("with OS zoom");
+  await SpecialPowers.popPrefEnv();
+});
+</script>

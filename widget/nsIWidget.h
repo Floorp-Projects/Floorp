@@ -595,6 +595,11 @@ class nsIWidget : public nsISupports {
   virtual float GetDPI() = 0;
 
   /**
+   * Fallback DPI for when there's no widget available.
+   */
+  static float GetFallbackDPI();
+
+  /**
    * Return the scaling factor between device pixels and the platform-
    * dependent "desktop pixels" used to manage window positions on a
    * potentially multi-screen, mixed-resolution desktop.
@@ -617,6 +622,11 @@ class nsIWidget : public nsISupports {
    * overriding the system setting.
    */
   mozilla::CSSToLayoutDeviceScale GetDefaultScale();
+
+  /**
+   * Fallback default scale for when there's no widget available.
+   */
+  static mozilla::CSSToLayoutDeviceScale GetFallbackDefaultScale();
 
   /**
    * Return the first child of this widget.  Will return null if
