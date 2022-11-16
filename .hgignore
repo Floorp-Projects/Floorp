@@ -3,7 +3,8 @@
 # Filenames that should be ignored wherever they appear
 ~$
 \.py(c|o)$
-(?i)(^|/)TAGS$
+(^|/)TAGS$
+(^|/)tags$
 (^|/)ID$
 (^|/)\.DS_Store$
 \.pdb
