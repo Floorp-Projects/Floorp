@@ -19,7 +19,6 @@
 #include "mozilla/dom/IOUtilsBinding.h"
 #include "mozilla/dom/TypedArray.h"
 #include "nsIAsyncShutdown.h"
-#include "nsIFile.h"
 #include "nsISerialEventTarget.h"
 #include "nsPrintfCString.h"
 #include "nsProxyRelease.h"
@@ -130,27 +129,10 @@ class IOUtils final {
                                         const CopyOptions& aOptions,
                                         ErrorResult& aError);
 
-  static already_AddRefed<Promise> SetAccessTime(
-      GlobalObject& aGlobal, const nsAString& aPath,
-      const Optional<int64_t>& aAccess, ErrorResult& aError);
-
   static already_AddRefed<Promise> SetModificationTime(
       GlobalObject& aGlobal, const nsAString& aPath,
       const Optional<int64_t>& aModification, ErrorResult& aError);
 
- private:
-  using SetTimeFn = decltype(&nsIFile::SetLastAccessedTime);
-
-  static_assert(
-      std::is_same_v<SetTimeFn, decltype(&nsIFile::SetLastModifiedTime)>);
-
-  static already_AddRefed<Promise> SetTime(GlobalObject& aGlobal,
-                                           const nsAString& aPath,
-                                           const Optional<int64_t>& aNewTime,
-                                           SetTimeFn aSetTimeFn,
-                                           ErrorResult& aError);
-
- public:
   static already_AddRefed<Promise> GetChildren(
       GlobalObject& aGlobal, const nsAString& aPath,
       const GetChildrenOptions& aOptions, ErrorResult& aError);
@@ -443,20 +425,16 @@ class IOUtils final {
   static Result<IOUtils::InternalFileInfo, IOError> StatSync(nsIFile* aFile);
 
   /**
-   * Attempts to update the last access or modification time of the file at
-   * |aFile|.
+   * Attempts to update the last modification time of the file at |aFile|.
    *
-   * @param aFile     The location of the file.
-   * @param SetTimeFn A member function pointer to either
-   *                  nsIFile::SetLastAccessedTime or
-   *                  nsIFile::SetLastModifiedTime.
-   * @param aNewTime  Some value in milliseconds since Epoch.
+   * @param aFile       The location of the file.
+   * @param aNewModTime Some value in milliseconds since Epoch. For the current
+   *                    system time, use |Nothing|.
    *
    * @return Timestamp of the file if the operation was successful, or an error.
    */
-  static Result<int64_t, IOError> SetTimeSync(nsIFile* aFile,
-                                              SetTimeFn aSetTimeFn,
-                                              int64_t aNewTime);
+  static Result<int64_t, IOError> SetModificationTimeSync(
+      nsIFile* aFile, const Maybe<int64_t>& aNewModTime);
 
   /**
    * Returns the immediate children of the directory at |aFile|, if any.
@@ -695,9 +673,8 @@ struct IOUtils::InternalFileInfo {
   nsString mPath;
   FileType mType = FileType::Other;
   uint64_t mSize = 0;
-  Maybe<PRTime> mCreationTime;  // In ms since epoch.
-  PRTime mLastAccessed = 0;     // In ms since epoch.
-  PRTime mLastModified = 0;     // In ms since epoch.
+  uint64_t mLastModified = 0;
+  Maybe<uint64_t> mCreationTime;
   uint32_t mPermissions = 0;
 };
 

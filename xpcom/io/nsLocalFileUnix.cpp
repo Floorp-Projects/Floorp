@@ -1155,11 +1155,10 @@ nsLocalFile::Remove(bool aRecursive) {
   return NSRESULT_FOR_RETURN(rmdir(mPath.get()));
 }
 
-nsresult nsLocalFile::GetTimeImpl(PRTime* aTime,
-                                  nsLocalFile::TimeField aTimeField,
-                                  bool aFollowLinks) {
+nsresult nsLocalFile::GetLastModifiedTimeImpl(PRTime* aLastModTime,
+                                              bool aFollowLinks) {
   CHECK_mPath();
-  if (NS_WARN_IF(!aTime)) {
+  if (NS_WARN_IF(!aLastModTime)) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -1171,36 +1170,17 @@ nsresult nsLocalFile::GetTimeImpl(PRTime* aTime,
     return NSRESULT_FOR_ERRNO();
   }
 
-  struct timespec* timespec;
-  switch (aTimeField) {
-    case TimeField::AccessedTime:
 #if (defined(__APPLE__) && defined(__MACH__))
-      timespec = &fileStats.st_atimespec;
+  *aLastModTime = TimespecToMillis(fileStats.st_mtimespec);
 #else
-      timespec = &fileStats.st_atim;
+  *aLastModTime = TimespecToMillis(fileStats.st_mtim);
 #endif
-      break;
-
-    case TimeField::ModifiedTime:
-#if (defined(__APPLE__) && defined(__MACH__))
-      timespec = &fileStats.st_mtimespec;
-#else
-      timespec = &fileStats.st_mtim;
-#endif
-      break;
-
-    default:
-      MOZ_CRASH("Unknown TimeField");
-  }
-
-  *aTime = TimespecToMillis(*timespec);
 
   return NS_OK;
 }
 
-nsresult nsLocalFile::SetTimeImpl(PRTime aTime,
-                                  nsLocalFile::TimeField aTimeField,
-                                  bool aFollowLinks) {
+nsresult nsLocalFile::SetLastModifiedTimeImpl(PRTime aLastModTime,
+                                              bool aFollowLinks) {
   CHECK_mPath();
 
   using UtimesFn = int (*)(const char*, const timeval*);
@@ -1212,82 +1192,49 @@ nsresult nsLocalFile::SetTimeImpl(PRTime aTime,
   }
 #endif
 
-  ENSURE_STAT_CACHE();
-
-  if (aTime == 0) {
-    aTime = PR_Now();
-  }
-
-  timeval times[2];
-
-  const size_t writeIndex = aTimeField == TimeField::AccessedTime ? 0 : 1;
-  const size_t copyIndex = aTimeField == TimeField::AccessedTime ? 1 : 0;
-
+  int result;
+  if (aLastModTime != 0) {
+    ENSURE_STAT_CACHE();
+    timeval access{};
 #if (defined(__APPLE__) && defined(__MACH__))
-  auto* copyFrom = aTimeField == TimeField::AccessedTime
-                       ? &mCachedStat.st_atimespec
-                       : &mCachedStat.st_mtimespec;
+    access.tv_sec = mCachedStat.st_atimespec.tv_sec;
+    access.tv_usec = mCachedStat.st_atimespec.tv_nsec / 1000;
 #else
-  auto* copyFrom = aTimeField == TimeField::AccessedTime ? &mCachedStat.st_atim
-                                                         : &mCachedStat.st_mtim;
+    access.tv_sec = mCachedStat.st_atim.tv_sec;
+    access.tv_usec = mCachedStat.st_atim.tv_nsec / 1000;
 #endif
+    timeval modification{};
+    modification.tv_sec = aLastModTime / PR_MSEC_PER_SEC;
+    modification.tv_usec = (aLastModTime % PR_MSEC_PER_SEC) * PR_USEC_PER_MSEC;
 
-  times[copyIndex].tv_sec = copyFrom->tv_sec;
-  times[copyIndex].tv_usec = copyFrom->tv_nsec / 1000;
-
-  times[writeIndex].tv_sec = aTime / PR_MSEC_PER_SEC;
-  times[writeIndex].tv_usec = (aTime % PR_MSEC_PER_SEC) * PR_USEC_PER_MSEC;
-
-  int result = utimesFn(mPath.get(), times);
+    timeval times[2];
+    times[0] = access;
+    times[1] = modification;
+    result = utimesFn(mPath.get(), times);
+  } else {
+    result = utimesFn(mPath.get(), nullptr);
+  }
   return NSRESULT_FOR_RETURN(result);
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetLastAccessedTime(PRTime* aLastAccessedTime) {
-  return GetTimeImpl(aLastAccessedTime, TimeField::AccessedTime,
-                     /* follow links? */ true);
-}
-
-NS_IMETHODIMP
-nsLocalFile::SetLastAccessedTime(PRTime aLastAccessedTime) {
-  return SetTimeImpl(aLastAccessedTime, TimeField::AccessedTime,
-                     /* follow links? */ true);
-}
-
-NS_IMETHODIMP
-nsLocalFile::GetLastAccessedTimeOfLink(PRTime* aLastAccessedTime) {
-  return GetTimeImpl(aLastAccessedTime, TimeField::AccessedTime,
-                     /* follow links? */ false);
-}
-
-NS_IMETHODIMP
-nsLocalFile::SetLastAccessedTimeOfLink(PRTime aLastAccessedTime) {
-  return SetTimeImpl(aLastAccessedTime, TimeField::AccessedTime,
-                     /* follow links? */ false);
-}
-
-NS_IMETHODIMP
 nsLocalFile::GetLastModifiedTime(PRTime* aLastModTime) {
-  return GetTimeImpl(aLastModTime, TimeField::ModifiedTime,
-                     /* follow links? */ true);
+  return GetLastModifiedTimeImpl(aLastModTime, /* follow links? */ true);
 }
 
 NS_IMETHODIMP
 nsLocalFile::SetLastModifiedTime(PRTime aLastModTime) {
-  return SetTimeImpl(aLastModTime, TimeField::ModifiedTime,
-                     /* follow links ? */ true);
+  return SetLastModifiedTimeImpl(aLastModTime, /* follow links ? */ true);
 }
 
 NS_IMETHODIMP
 nsLocalFile::GetLastModifiedTimeOfLink(PRTime* aLastModTimeOfLink) {
-  return GetTimeImpl(aLastModTimeOfLink, TimeField::ModifiedTime,
-                     /* follow link? */ false);
+  return GetLastModifiedTimeImpl(aLastModTimeOfLink, /* follow link? */ false);
 }
 
 NS_IMETHODIMP
 nsLocalFile::SetLastModifiedTimeOfLink(PRTime aLastModTimeOfLink) {
-  return SetTimeImpl(aLastModTimeOfLink, TimeField::ModifiedTime,
-                     /* follow links? */ false);
+  return SetLastModifiedTimeImpl(aLastModTimeOfLink, /* follow links? */ false);
 }
 
 NS_IMETHODIMP
