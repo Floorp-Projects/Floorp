@@ -352,14 +352,14 @@ bool HTMLEditUtils::IsImage(nsINode* aNode) {
   return aNode && aNode->IsHTMLElement(nsGkAtoms::img);
 }
 
-bool HTMLEditUtils::IsLink(nsINode* aNode) {
+bool HTMLEditUtils::IsLink(const nsINode* aNode) {
   MOZ_ASSERT(aNode);
 
   if (!aNode->IsContent()) {
     return false;
   }
 
-  RefPtr<dom::HTMLAnchorElement> anchor =
+  RefPtr<const dom::HTMLAnchorElement> anchor =
       dom::HTMLAnchorElement::FromNodeOrNull(aNode->AsContent());
   if (!anchor) {
     return false;

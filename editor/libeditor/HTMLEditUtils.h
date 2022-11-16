@@ -203,7 +203,7 @@ class HTMLEditUtils final {
   static bool IsAnyListElement(const nsINode* aNode);
   static bool IsPre(const nsINode* aNode);
   static bool IsImage(nsINode* aNode);
-  static bool IsLink(nsINode* aNode);
+  static bool IsLink(const nsINode* aNode);
   static bool IsNamedAnchor(const nsINode* aNode);
   static bool IsMozDiv(nsINode* aNode);
   static bool IsMailCite(const Element& aElement);
