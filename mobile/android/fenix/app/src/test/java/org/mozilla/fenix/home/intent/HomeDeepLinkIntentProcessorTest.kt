@@ -5,12 +5,15 @@
 package org.mozilla.fenix.home.intent
 
 import android.content.Intent
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
 import android.os.Build.VERSION_CODES.M
 import android.os.Build.VERSION_CODES.N
 import android.os.Build.VERSION_CODES.P
 import androidx.core.net.toUri
 import androidx.navigation.NavController
 import io.mockk.Called
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.appservices.places.BookmarkRoot
@@ -248,19 +251,31 @@ class HomeDeepLinkIntentProcessorTest {
     @Test
     @Config(maxSdk = M)
     fun `process make_default_browser deep link for API 23 and below`() {
+        val packageManager: PackageManager = mockk()
+        val packageInfo = PackageInfo()
+
+        every { activity.packageName } returns "org.mozilla.fenix"
+        every { activity.packageManager } returns packageManager
+        @Suppress("DEPRECATION")
+        every { packageManager.getPackageInfo("org.mozilla.fenix", 0) } returns packageInfo
+        packageInfo.versionName = "versionName"
+
         assertTrue(processorHome.process(testIntent("make_default_browser"), navController, out))
+
+        val searchTermOrURL = SupportUtils.getSumoURLForTopic(
+            activity,
+            SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER,
+        )
 
         verify {
             activity.openToBrowserAndLoad(
-                searchTermOrURL = SupportUtils.getSumoURLForTopic(
-                    activity,
-                    SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER,
-                ),
+                searchTermOrURL = searchTermOrURL,
                 newTab = true,
                 from = BrowserDirection.FromGlobal,
                 flags = EngineSession.LoadUrlFlags.external(),
             )
         }
+
         verify { navController wasNot Called }
         verify { out wasNot Called }
     }
