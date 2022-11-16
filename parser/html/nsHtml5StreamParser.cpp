@@ -1778,7 +1778,8 @@ void nsHtml5StreamParser::PostLoadFlusher() {
   // that need flushing may have been flushed earlier even if the
   // flush right above here did nothing. (Is this still true?)
   nsCOMPtr<nsIRunnable> runnable(mLoadFlusher);
-  if (NS_FAILED(DispatchToMain(runnable.forget()))) {
+  if (NS_FAILED(
+          DispatchToMain(CreateRenderBlockingRunnable(runnable.forget())))) {
     NS_WARNING("failed to dispatch load flush event");
   }
 
