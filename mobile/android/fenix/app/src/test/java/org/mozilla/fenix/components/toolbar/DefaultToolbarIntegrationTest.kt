@@ -38,7 +38,7 @@ class DefaultToolbarIntegrationTest {
             context = testContext,
             toolbar = mockk(relaxed = true),
             toolbarMenu = mockk(relaxed = true),
-            domainAutocompleteProvider = mockk(),
+            domainAutocompleteProvider = mockk(relaxed = true),
             historyStorage = mockk(),
             lifecycleOwner = mockk(),
             sessionId = null,

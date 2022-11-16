@@ -8,13 +8,13 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
-import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
+import mozilla.components.browser.domains.autocomplete.BaseDomainAutocompleteProvider
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.storage.HistoryStorage
+import mozilla.components.concept.toolbar.AutocompleteProvider
 import mozilla.components.feature.tabs.toolbar.TabCounterToolbarButton
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarBehaviorController
@@ -77,12 +77,13 @@ abstract class ToolbarIntegration(
     }
 }
 
+@Suppress("LongParameterList")
 class DefaultToolbarIntegration(
     context: Context,
     toolbar: BrowserToolbar,
     toolbarMenu: ToolbarMenu,
-    domainAutocompleteProvider: DomainAutocompleteProvider,
-    historyStorage: HistoryStorage,
+    domainAutocompleteProvider: BaseDomainAutocompleteProvider,
+    historyStorage: AutocompleteProvider,
     lifecycleOwner: LifecycleOwner,
     sessionId: String? = null,
     isPrivate: Boolean,
@@ -155,10 +156,15 @@ class DefaultToolbarIntegration(
             toolbar,
             engineForSpeculativeConnects,
         ).apply {
-            addDomainProvider(domainAutocompleteProvider)
-            if (context.settings().shouldShowHistorySuggestions) {
-                addHistoryStorageProvider(historyStorage)
-            }
+            updateAutocompleteProviders(
+                listOfNotNull(
+                    when (context.settings().shouldShowHistorySuggestions) {
+                        true -> historyStorage
+                        false -> null
+                    },
+                    domainAutocompleteProvider,
+                ),
+            )
         }
     }
 
