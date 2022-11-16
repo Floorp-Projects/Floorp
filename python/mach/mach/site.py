@@ -18,10 +18,10 @@ import site
 import subprocess
 import sys
 import sysconfig
-from pathlib import Path
 import tempfile
 from contextlib import contextmanager
-from typing import Optional, Callable
+from pathlib import Path
+from typing import Callable, Optional
 
 from mach.requirements import (
     MachEnvRequirements,
@@ -763,7 +763,7 @@ class PythonVirtualenv:
         else:
             self.bin_path = os.path.join(prefix, "bin")
             self.python_path = os.path.join(self.bin_path, "python")
-        self.prefix = prefix
+        self.prefix = os.path.realpath(prefix)
 
     @functools.lru_cache(maxsize=None)
     def resolve_sysconfig_packages_path(self, sysconfig_path):
@@ -783,16 +783,12 @@ class PythonVirtualenv:
         relative_path = path.relative_to(data_path)
 
         # Path to virtualenv's "site-packages" directory for provided sysconfig path
-        return os.path.normpath(
-            os.path.normcase(os.path.realpath(Path(self.prefix) / relative_path))
-        )
+        return os.path.normpath(os.path.normcase(Path(self.prefix) / relative_path))
 
     def site_packages_dirs(self):
         dirs = []
         if sys.platform.startswith("win"):
-            dirs.append(
-                os.path.normpath(os.path.normcase(os.path.realpath(self.prefix)))
-            )
+            dirs.append(os.path.normpath(os.path.normcase(self.prefix)))
         purelib = self.resolve_sysconfig_packages_path("purelib")
         platlib = self.resolve_sysconfig_packages_path("platlib")
 
