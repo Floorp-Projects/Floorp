@@ -51,6 +51,9 @@ class Screen final : public nsIScreen {
     return mContentsScale;
   }
 
+  enum class IncludeOSZoom : bool { No, Yes };
+  CSSToLayoutDeviceScale GetCSSToLayoutDeviceScale(IncludeOSZoom) const;
+
  private:
   virtual ~Screen() = default;
 

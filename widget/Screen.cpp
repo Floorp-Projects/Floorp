@@ -129,15 +129,21 @@ Screen::GetContentsScaleFactor(double* aOutScale) {
   return NS_OK;
 }
 
+CSSToLayoutDeviceScale Screen::GetCSSToLayoutDeviceScale(
+    IncludeOSZoom aIncludeOSZoom) const {
+  auto scale = CSSToLayoutDeviceScale(StaticPrefs::layout_css_devPixelsPerPx());
+  if (scale.scale <= 0.0) {
+    scale = mDefaultCssScale;
+  }
+  if (bool(aIncludeOSZoom)) {
+    scale.scale *= LookAndFeel::SystemZoomSettings().mFullZoom;
+  }
+  return scale;
+}
+
 NS_IMETHODIMP
 Screen::GetDefaultCSSScaleFactor(double* aOutScale) {
-  double scale = StaticPrefs::layout_css_devPixelsPerPx();
-  if (scale > 0.0) {
-    *aOutScale = scale;
-  } else {
-    *aOutScale = mDefaultCssScale.scale;
-  }
-  *aOutScale *= LookAndFeel::SystemZoomSettings().mFullZoom;
+  *aOutScale = GetCSSToLayoutDeviceScale(IncludeOSZoom::Yes).scale;
   return NS_OK;
 }
 

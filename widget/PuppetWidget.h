@@ -382,9 +382,9 @@ class PuppetWidget : public nsBaseWidget,
   ContentCacheInChild mContentCache;
 
   // The DPI of the parent widget containing this widget.
-  float mDPI = 96;
+  float mDPI = GetFallbackDPI();
   int32_t mRounding = 1;
-  double mDefaultScale = 1.0f;
+  double mDefaultScale = GetFallbackDefaultScale().scale;
 
   ScreenIntMargin mSafeAreaInsets;
 
