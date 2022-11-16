@@ -122,6 +122,7 @@ class VoiceSearchActivityTest {
         controller.create(savedInstanceState)
         controller.saveInstanceState(outState)
 
+        @Suppress("DEPRECATION")
         assertEquals(previousIntent, outState.getParcelable<Intent>(PREVIOUS_INTENT))
     }
 

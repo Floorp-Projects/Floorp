@@ -62,6 +62,7 @@ class SupportUtilsTest {
 
         every { context.packageName } returns "org.mozilla.fenix"
         every { context.packageManager } returns packageManager
+        @Suppress("DEPRECATION")
         every { packageManager.getPackageInfo("org.mozilla.fenix", 0) } returns packageInfo
         packageInfo.versionName = versionName
 

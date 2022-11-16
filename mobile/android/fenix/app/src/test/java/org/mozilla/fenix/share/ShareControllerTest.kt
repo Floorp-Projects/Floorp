@@ -111,7 +111,9 @@ class ShareControllerTest {
         // Check that the Intent used for querying apps has the expected structure
         assertTrue(shareIntent.isCaptured)
         assertEquals(Intent.ACTION_SEND, shareIntent.captured.action)
+        @Suppress("DEPRECATION")
         assertEquals(shareSubject, shareIntent.captured.extras!![Intent.EXTRA_SUBJECT])
+        @Suppress("DEPRECATION")
         assertEquals(textToShare, shareIntent.captured.extras!![Intent.EXTRA_TEXT])
         assertEquals("text/plain", shareIntent.captured.type)
         assertEquals(Intent.FLAG_ACTIVITY_NEW_DOCUMENT + Intent.FLAG_ACTIVITY_MULTIPLE_TASK, shareIntent.captured.flags)

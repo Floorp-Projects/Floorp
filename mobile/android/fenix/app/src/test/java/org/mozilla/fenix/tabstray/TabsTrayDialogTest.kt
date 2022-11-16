@@ -17,6 +17,7 @@ class TabsTrayDialogTest {
         val interactor = mockk<BrowserTrayInteractor>(relaxed = true)
         val dialog = TabsTrayDialog(context, 0) { interactor }
 
+        @Suppress("DEPRECATION")
         dialog.onBackPressed()
 
         verify { interactor.onBackPressed() }

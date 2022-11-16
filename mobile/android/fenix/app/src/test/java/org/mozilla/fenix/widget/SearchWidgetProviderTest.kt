@@ -160,6 +160,7 @@ class SearchWidgetProviderTest {
             assertEquals(SearchWidgetProvider::class.java.name, componentNameCaptor.captured.className)
             assertEquals(SearchWidgetProvider::class.java.name, intentCaptor.captured.component!!.className)
             assertEquals(AppWidgetManager.ACTION_APPWIDGET_UPDATE, intentCaptor.captured.action)
+            @Suppress("DEPRECATION")
             assertEquals(widgetsToUpdate, intentCaptor.captured.extras!!.get(AppWidgetManager.EXTRA_APPWIDGET_IDS))
         } finally {
             unmockkStatic(AppWidgetManager::class)
