@@ -731,7 +731,7 @@ Example:
 
 At this stage in a running Firefox instance:
 
--  Go to the three-bar menu, then select ``Web Developer`` ->
+-  Go to the three-bar menu, then select ``More tools`` ->
    ``Remote Debugging``
 -  A new tab is opened. In the Network Location box, enter
    ``localhost:6000`` and select ``Connect``
