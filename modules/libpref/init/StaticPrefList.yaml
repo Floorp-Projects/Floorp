@@ -12569,13 +12569,13 @@
 # Always partition web storage APIs except cookies.
 - name: privacy.partition.always_partition_third_party_non_cookie_storage
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
-# Always partition web storage APIs except cookies.
+# Exclude session storage from the above preference.
 - name: privacy.partition.always_partition_third_party_non_cookie_storage.exempt_sessionstorage
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 - name: privacy.partition.bloburl_per_agent_cluster
