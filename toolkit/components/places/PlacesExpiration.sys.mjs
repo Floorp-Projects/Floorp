@@ -272,8 +272,8 @@ const EXPIRATION_QUERIES = {
     sql: `DELETE FROM moz_pages_w_icons
           WHERE page_url_hash NOT IN (
             SELECT url_hash FROM moz_places
-          ) OR id NOT IN (
-            SELECT DISTINCT page_id FROM moz_icons_to_pages
+          ) OR NOT EXISTS (
+            SELECT 1 FROM moz_icons_to_pages WHERE page_id = moz_pages_w_icons.id
           )`,
     actions:
       ACTION.TIMED_OVERLIMIT |
