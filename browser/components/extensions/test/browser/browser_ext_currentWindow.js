@@ -74,6 +74,7 @@ add_task(async function() {
 
       browser_action: {
         default_popup: "popup.html",
+        default_area: "navbar",
       },
     },
 

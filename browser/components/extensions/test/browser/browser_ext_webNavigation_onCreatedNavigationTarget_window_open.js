@@ -118,6 +118,7 @@ add_task(async function test_window_open_close_from_browserAction_popup() {
     manifest: {
       browser_action: {
         default_popup: "popup.html",
+        default_area: "navbar",
       },
       permissions: ["webNavigation", "tabs", "<all_urls>"],
     },

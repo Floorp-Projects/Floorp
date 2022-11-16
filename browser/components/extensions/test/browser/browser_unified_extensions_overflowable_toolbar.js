@@ -94,6 +94,17 @@ async function withWindowOverflowed(win, taskFn) {
   doc.documentElement.removeAttribute("persist");
   const navbar = doc.getElementById(CustomizableUI.AREA_NAVBAR);
 
+  win.moveTo(0, 0);
+
+  const widthDiff = win.screen.availWidth - win.outerWidth;
+  const heightDiff = win.screen.availHeight - win.outerHeight;
+
+  if (widthDiff || heightDiff) {
+    let resizeDone = BrowserTestUtils.waitForEvent(win, "resize", false);
+    win.resizeBy(widthDiff, heightDiff);
+    await resizeDone;
+  }
+
   // The OverflowableToolbar operates asynchronously at times, so we will
   // poll a widget's overflowedItem attribute to detect whether or not the
   // widgets have finished being moved. We'll use the first widget that
@@ -111,7 +122,9 @@ async function withWindowOverflowed(win, taskFn) {
       browser_specific_settings: {
         gecko: { id: "unified-extensions-overflowable-toolbar@ext-0" },
       },
-      browser_action: {},
+      browser_action: {
+        default_area: "navbar",
+      },
       // We pass `activeTab` to have a different permission message when
       // hovering the primary/action button.
       permissions: ["activeTab", "contextMenus"],
@@ -135,7 +148,9 @@ async function withWindowOverflowed(win, taskFn) {
       browser_specific_settings: {
         gecko: { id: "unified-extensions-overflowable-toolbar@ext-1" },
       },
-      browser_action: {},
+      browser_action: {
+        default_area: "navbar",
+      },
       permissions: ["contextMenus"],
     },
     background() {
@@ -161,7 +176,9 @@ async function withWindowOverflowed(win, taskFn) {
   for (let i = 2; i < NUM_EXTENSIONS; ++i) {
     manifests.push({
       name: `Extension #${i}`,
-      browser_action: {},
+      browser_action: {
+        default_area: "navbar",
+      },
     });
   }
 
@@ -204,19 +221,28 @@ async function withWindowOverflowed(win, taskFn) {
   CustomizableUI.removeListener(listener);
 
   const originalWindowWidth = win.outerWidth;
-  win.resizeTo(OVERFLOW_WINDOW_WIDTH_PX, win.outerHeight);
-  const extensionIDs = extensions.map(extension => extension.id);
 
-  await TestUtils.waitForCondition(() => {
-    return (
-      navbar.hasAttribute("overflowing") &&
-      doc.getElementById(signpostWidgetID).getAttribute("overflowedItem") ==
-        "true" &&
-      doc
-        .querySelector(`[data-extensionid='${extensionIDs[0]}']`)
-        ?.getAttribute("overflowedItem") == "true"
-    );
-  });
+  let widgetOverflowListener = {
+    _remainingOverflowables: NUM_EXTENSIONS + DEFAULT_WIDGET_IDS.length,
+    _deferred: PromiseUtils.defer(),
+
+    get promise() {
+      return this._deferred.promise;
+    },
+
+    onWidgetOverflow(widgetNode, areaNode) {
+      this._remainingOverflowables--;
+      if (!this._remainingOverflowables) {
+        this._deferred.resolve();
+      }
+    },
+  };
+  CustomizableUI.addListener(widgetOverflowListener);
+
+  win.resizeTo(OVERFLOW_WINDOW_WIDTH_PX, win.outerHeight);
+  await widgetOverflowListener.promise;
+  CustomizableUI.removeListener(widgetOverflowListener);
+
   Assert.ok(
     navbar.hasAttribute("overflowing"),
     "Should have an overflowing toolbar."
@@ -229,6 +255,8 @@ async function withWindowOverflowed(win, taskFn) {
   const unifiedExtensionList = doc.getElementById(
     navbar.getAttribute("addon-webext-overflowtarget")
   );
+
+  const extensionIDs = extensions.map(extension => extension.id);
 
   try {
     await taskFn(defaultList, unifiedExtensionList, extensionIDs);

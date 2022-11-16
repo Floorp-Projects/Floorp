@@ -92,7 +92,14 @@ async function showBrowserAction(window, extensionId) {
       "Expect widget overflow state to match toolbar"
     );
   } else if (group.areaType == lazy.CustomizableUI.TYPE_PANEL) {
-    await navbar.overflowable.show();
+    if (window.gUnifiedExtensions.isEnabled) {
+      let panel = window.gUnifiedExtensions.panel;
+      let shown = BrowserTestUtils.waitForPopupEvent(panel, "shown");
+      window.gUnifiedExtensions.togglePanel();
+      await shown;
+    } else {
+      await navbar.overflowable.show();
+    }
   }
 }
 

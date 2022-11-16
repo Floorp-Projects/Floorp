@@ -21,6 +21,7 @@ add_task(async function test_management_install() {
     manifest: {
       browser_action: {
         browser_style: false,
+        default_area: "navbar",
       },
       permissions: ["management"],
     },

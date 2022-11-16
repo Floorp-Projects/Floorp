@@ -134,7 +134,9 @@ async function test_clickData(testAsNonPersistent = false) {
 async function test_clickData_reset(testAsNonPersistent = false) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      browser_action: {},
+      browser_action: {
+        default_area: "navbar",
+      },
       page_action: {},
       background: {
         persistent: !testAsNonPersistent,

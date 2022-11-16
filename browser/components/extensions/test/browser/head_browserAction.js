@@ -46,6 +46,7 @@ async function testPopupSize(
     manifest: {
       browser_action: {
         default_popup: "popup.html",
+        default_area: "navbar",
         browser_style: false,
       },
     },
@@ -139,7 +140,9 @@ async function testPopupSize(
   let widget = getBrowserActionWidget(extension);
   CustomizableUI.addWidgetToArea(widget.id, getCustomizableUIPanelID());
 
-  let panel = browserWin.PanelUI.overflowPanel;
+  let panel = browserWin.gUnifiedExtensions.isEnabled
+    ? browserWin.gUnifiedExtensions.panel
+    : browserWin.PanelUI.overflowPanel;
   panel.setAttribute("animate", "false");
 
   let panelMultiView = panel.firstElementChild;
