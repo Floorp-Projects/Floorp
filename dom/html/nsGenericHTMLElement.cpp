@@ -1973,7 +1973,10 @@ bool nsGenericHTMLFormElement::IsElementDisabledForEvents(WidgetEvent* aEvent,
     case ePointerCancel:
     case ePointerGotCapture:
     case ePointerLostCapture:
-      return !StaticPrefs::dom_forms_always_allow_pointer_events_enabled();
+      if (StaticPrefs::dom_forms_always_allow_pointer_events_enabled()) {
+        return false;
+      }
+      [[fallthrough]];
     default:
       break;
   }
