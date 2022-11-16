@@ -54,30 +54,56 @@ class ToolbarAutocompleteFeature(
      *
      * @param providers New list of autocomplete providers.
      * The list can be empty in which case autocompletion will be disabled until there is at least one provider.
+     * @param refreshAutocomplete Whether to immediately update the autocompletion suggestion
+     * based on the new providers.
      */
     @Synchronized
-    fun updateAutocompleteProviders(providers: List<AutocompleteProvider>) {
+    fun updateAutocompleteProviders(
+        providers: List<AutocompleteProvider>,
+        refreshAutocomplete: Boolean = true,
+    ) {
         autocompleteProviders.clear()
         autocompleteProviders.addAll(providers)
+        if (refreshAutocomplete) toolbar.refreshAutocomplete()
     }
 
     /**
      * Adds the specified provider to the current list of providers.
      *
+     * @param provider New [AutocompleteProvider] to add to the current list.
+     * If this exact instance already exists it will not be added again.
+     * @param refreshAutocomplete Whether to immediately update the autocompletion suggestion
+     * based on the new providers.
+     *
      * @return `true` if the provider has been added, `false` if the provider already exists.
      */
     @Synchronized
-    fun addAutocompleteProvider(provider: AutocompleteProvider): Boolean {
-        return autocompleteProviders.add(provider)
+    fun addAutocompleteProvider(
+        provider: AutocompleteProvider,
+        refreshAutocomplete: Boolean = true,
+    ): Boolean {
+        return autocompleteProviders.add(provider).also {
+            if (refreshAutocomplete) toolbar.refreshAutocomplete()
+        }
     }
 
     /**
      * Remove an autocomplete provider from the current providers list.
      *
+     * @param provider [AutocompleteProvider] instance to remove from the current list.
+     * If it isn't set already calling this method will have no effect.
+     * @param refreshAutocomplete Whether to immediately update the autocompletion suggestion
+     * based on the new providers.
+     *
      * @return `true` if the provider has been removed, `false` if the provider could not be found.
      */
     @Synchronized
-    fun removeAutocompleteProvider(provider: AutocompleteProvider): Boolean {
-        return autocompleteProviders.remove(provider)
+    fun removeAutocompleteProvider(
+        provider: AutocompleteProvider,
+        refreshAutocomplete: Boolean = true,
+    ): Boolean {
+        return autocompleteProviders.remove(provider).also {
+            if (refreshAutocomplete) toolbar.refreshAutocomplete()
+        }
     }
 }

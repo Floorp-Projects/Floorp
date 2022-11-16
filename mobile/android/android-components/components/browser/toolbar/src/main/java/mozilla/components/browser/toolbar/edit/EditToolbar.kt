@@ -236,6 +236,13 @@ class EditToolbar internal constructor(
         )
     }
 
+    /**
+     * Attempt to restart the autocomplete functionality with the current user input.
+     */
+    internal fun refreshAutocompleteSuggestion() {
+        views.url.refreshAutocompleteSuggestions()
+    }
+
     internal fun invalidateActions() {
         views.editActionsStart.invalidateActions()
         views.editActionsEnd.invalidateActions()

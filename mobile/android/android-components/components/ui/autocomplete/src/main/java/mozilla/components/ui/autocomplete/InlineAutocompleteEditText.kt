@@ -112,6 +112,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
 
     private var filterListener: OnFilterListener? = null
     fun setOnFilterListener(l: OnFilterListener) { filterListener = l }
+    fun refreshAutocompleteSuggestions() { filterListener?.invoke(originalText) }
 
     private var searchStateChangeListener: OnSearchStateChangeListener? = null
     fun setOnSearchStateChangeListener(l: OnSearchStateChangeListener) { searchStateChangeListener = l }

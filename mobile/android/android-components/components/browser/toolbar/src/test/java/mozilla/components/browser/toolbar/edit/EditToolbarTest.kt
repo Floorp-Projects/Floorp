@@ -65,6 +65,29 @@ class EditToolbarTest {
     }
 
     @Test
+    fun `GIVEN existing user input WHEN a call to refresh autocomplete suggestions is made THEN retart the autocomplete functionality with the current text`() {
+        val toolbar = BrowserToolbar(testContext)
+        toolbar.edit.views.url.onAttachedToWindow()
+        // Fake existing user input.
+        toolbar.edit.views.url.setText("Test")
+        val latch = CountDownLatch(1)
+        var invokedWithParams: List<Any?>? = null
+        // Only now enable the autocomplete functionality.
+        toolbar.setAutocompleteListener { p1, p2 ->
+            invokedWithParams = listOf(p1, p2)
+            latch.countDown()
+        }
+
+        toolbar.refreshAutocomplete()
+
+        // Autocomplete filter will be invoked on a worker thread.
+        // Serialize here for the sake of tests.
+        latch.await()
+        assertEquals("Test", invokedWithParams!![0])
+        assertTrue(invokedWithParams!![1] is AutocompleteDelegate)
+    }
+
+    @Test
     fun `focus change is forwarded to listener`() {
         var listenerInvoked = false
         var value = false

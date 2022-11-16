@@ -849,6 +849,17 @@ class BrowserToolbarTest {
     }
 
     @Test
+    fun `WHEN an attempt to refresh autocomplete suggestions is made THEN forward the call to edit toolbar`() {
+        val toolbar = BrowserToolbar(testContext)
+        toolbar.edit = mock()
+        toolbar.setAutocompleteListener { _, _ -> }
+
+        toolbar.refreshAutocomplete()
+
+        verify(toolbar.edit).refreshAutocompleteSuggestion()
+    }
+
+    @Test
     fun `onStop is forwarded to display toolbar`() {
         val toolbar = BrowserToolbar(testContext)
         toolbar.display = mock()

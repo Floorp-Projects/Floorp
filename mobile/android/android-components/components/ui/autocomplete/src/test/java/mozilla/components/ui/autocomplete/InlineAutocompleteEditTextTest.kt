@@ -301,6 +301,24 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
+    fun `GIVEN an autocomplete listener WHEN asked to refresh autocomplete suggestions THEN restart the autocomplete functionality with the curret text`() {
+        val et = InlineAutocompleteEditText(testContext, attributes)
+        et.onAttachedToWindow()
+        et.setText("Test")
+        var lastInvokedWithText: String? = null
+        var invokedCounter = 0
+        et.setOnFilterListener { p1 ->
+            lastInvokedWithText = p1
+            invokedCounter++
+        }
+
+        et.refreshAutocompleteSuggestions()
+
+        assertEquals("Test", lastInvokedWithText)
+        assertEquals(1, invokedCounter)
+    }
+
+    @Test
     fun onCreateInputConnection() {
         val et = spy(InlineAutocompleteEditText(testContext, attributes))
         val icw = et.onCreateInputConnection(mock(EditorInfo::class.java))

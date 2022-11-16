@@ -227,6 +227,7 @@
     <ID>UndocumentedPublicFunction:IconGenerator.kt$IconGenerator$fun generate(context: Context, request: IconRequest): Icon</ID>
     <ID>UndocumentedPublicFunction:IconPreprarer.kt$IconPreprarer$fun prepare(context: Context, request: IconRequest): IconRequest</ID>
     <ID>UndocumentedPublicFunction:IconProcessor.kt$IconProcessor$fun process( context: Context, request: IconRequest, resource: IconRequest.Resource?, icon: Icon, desiredSize: DesiredSize, ): Icon?</ID>
+    <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun refreshAutocompleteSuggestions()</ID>
     <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun setOnCommitListener(l: OnCommitListener)</ID>
     <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun setOnDispatchKeyEventPreImeListener(l: OnDispatchKeyEventPreImeListener?)</ID>
     <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun setOnFilterListener(l: OnFilterListener)</ID>

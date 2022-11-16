@@ -15,7 +15,7 @@ permalink: /changelog/
   * 🆕 [Bug #1800268](https://bugzilla.mozilla.org/show_bug.cgi?id=1800268) New autocomplete providers for bookmarks, local tabs or synced tabs that can be set for `ToolbarAutocompleteFeature`.
 
 * **feature-toolbar**
-  * ⚠️ **This is a breaking change**: `ToolbarAutocompleteFeature` has a new API for updating at any time `AutocompleteProvider` (add or remove any of them) individually or in bulk. This change allows supporting any instance and any number of autocomplete providers. [bug #1800268](https://bugzilla.mozilla.org/show_bug.cgi?id=1800268)
+  * ⚠️ [Bug #1800268](https://bugzilla.mozilla.org/show_bug.cgi?id=1800268) **This is a breaking change**: `ToolbarAutocompleteFeature` has a new API for updating at any time `AutocompleteProvider` (add or remove any of them) individually or in bulk. This change allows supporting any instance and any number of autocomplete providers and optionally query for new autocomplete results when providers change.
 
 * **feature-awesomebar**
   * 🆕 [Bug #1800268](https://bugzilla.mozilla.org/show_bug.cgi?id=1800268) A new optional lambda `resultsHostFilter` has been added to the constructors of some AwesomeBar suggestions providers. This will allow for external url filtering of the provided suggestions.

@@ -25,6 +25,7 @@ import java.lang.ref.WeakReference
 /**
  * Interface to be implemented by components that provide browser toolbar functionality.
  */
+@Suppress("TooManyFunctions")
 interface Toolbar {
     /**
      * Sets/Gets the title to be displayed on the toolbar.
@@ -100,6 +101,11 @@ interface Toolbar {
      * @param filter A function which will perform autocompletion and send results to [AutocompleteDelegate].
      */
     fun setAutocompleteListener(filter: suspend (String, AutocompleteDelegate) -> Unit)
+
+    /**
+     * Attempt to restart the autocomplete functionality with the current user input.
+     */
+    fun refreshAutocomplete() = Unit
 
     /**
      * Adds an action to be displayed on the right side of the toolbar in display mode.

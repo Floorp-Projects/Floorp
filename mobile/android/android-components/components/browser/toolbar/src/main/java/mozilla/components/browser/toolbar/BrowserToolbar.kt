@@ -165,6 +165,10 @@ class BrowserToolbar @JvmOverloads constructor(
         edit.setAutocompleteListener(filter)
     }
 
+    override fun refreshAutocomplete() {
+        edit.refreshAutocompleteSuggestion()
+    }
+
     init {
         addView(display.rootView)
         addView(edit.rootView)

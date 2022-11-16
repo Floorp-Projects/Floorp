@@ -511,6 +511,42 @@ class ToolbarAutocompleteFeatureTest {
         )
     }
 
+    @Test
+    fun `GIVEN a request to refresh autocomplete WHEN the providers are updated THEN also refresh autocomplete`() {
+        val toolbar: Toolbar = mock()
+        val feature = ToolbarAutocompleteFeature(toolbar)
+
+        feature.updateAutocompleteProviders(emptyList(), false)
+        verify(toolbar, never()).refreshAutocomplete()
+
+        feature.updateAutocompleteProviders(emptyList(), true)
+        verify(toolbar).refreshAutocomplete()
+    }
+
+    @Test
+    fun `GIVEN a request to refresh autocomplete WHEN a provider is added THEN also refresh autocomplete`() {
+        val toolbar: Toolbar = mock()
+        val feature = ToolbarAutocompleteFeature(toolbar)
+
+        feature.addAutocompleteProvider(mock(), false)
+        verify(toolbar, never()).refreshAutocomplete()
+
+        feature.addAutocompleteProvider(mock(), true)
+        verify(toolbar).refreshAutocomplete()
+    }
+
+    @Test
+    fun `GIVEN a request to refresh autocomplete WHEN a provider is removed THEN also refresh autocomplete`() {
+        val toolbar: Toolbar = mock()
+        val feature = ToolbarAutocompleteFeature(toolbar)
+
+        feature.removeAutocompleteProvider(mock(), false)
+        verify(toolbar, never()).refreshAutocomplete()
+
+        feature.removeAutocompleteProvider(mock(), true)
+        verify(toolbar).refreshAutocomplete()
+    }
+
     @Suppress("SameParameterValue")
     private fun verifyNoAutocompleteResult(toolbar: TestToolbar, autocompleteDelegate: AutocompleteDelegate, query: String) = runTest {
         toolbar.autocompleteFilter!!(query, autocompleteDelegate)
