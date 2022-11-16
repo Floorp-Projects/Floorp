@@ -2493,7 +2493,6 @@ void ScrollFrameHelper::CompleteAsyncScroll(
     ScrollOrigin aOrigin) {
   SetLastSnapTargetIds(std::move(aSnapTargetIds));
 
-  bool scrollPositionChanged = mDestination != GetScrollPosition();
   bool isNotHandledByApz =
       nsLayoutUtils::CanScrollOriginClobberApz(aOrigin) ||
       ScrollAnimationState().contains(AnimationState::MainThread);
@@ -2516,9 +2515,7 @@ void ScrollFrameHelper::CompleteAsyncScroll(
   // For scrolling handled by APZ, the `scrollend` event is posted in
   // SetTransformingByAPZ() when the APZC is transitioning from a transforming
   // to a non-transforming state (e.g. a transition from PANNING to NOTHING).
-  // The scrollend event should not be fired for a scroll that does not
-  // result in a scroll position change.
-  if (isNotHandledByApz && scrollPositionChanged) {
+  if (isNotHandledByApz) {
     PostScrollEndEvent();
   }
 }
