@@ -524,7 +524,7 @@ export var PlacesUIUtils = {
     this.lastBookmarkDialogDeferred = lazy.PromiseUtils.defer();
 
     let dialogURL = "chrome://browser/content/places/bookmarkProperties.xhtml";
-    let features = "centerscreen,chrome,modal";
+    let features = "centerscreen,chrome,modal,resizable=no";
     let bookmarkGuid;
 
     if (
