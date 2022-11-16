@@ -58,9 +58,8 @@ export class UrlbarResult {
     }
     this.source = resultSource;
 
-    // UrlbarView is responsible for updating these.
+    // UrlbarView is responsible for updating this.
     this.rowIndex = -1;
-    this.isVisible = false;
 
     // May be used to indicate an heuristic result. Heuristic results can bypass
     // source filters in the ProvidersManager, that otherwise may skip them.

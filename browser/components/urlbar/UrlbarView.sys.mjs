@@ -613,7 +613,7 @@ export class UrlbarView {
       this.clear();
     }
     this.#queryUpdatedResults = true;
-    this.#updateResults(queryContext);
+    this.#updateResults();
 
     let firstResult = queryContext.results[0];
 
@@ -959,7 +959,7 @@ export class UrlbarView {
     return resultIsSearchSuggestion && seenSearchSuggestion;
   }
 
-  #updateResults(queryContext) {
+  #updateResults() {
     // TODO: For now this just compares search suggestions to the rest, in the
     // future we should make it support any type of result. Or, even better,
     // results should be grouped, thus we can directly update groups.
@@ -967,7 +967,7 @@ export class UrlbarView {
     // Walk rows and find an insertion index for results. To avoid flicker, we
     // skip rows until we find one compatible with the result we want to apply.
     // If we couldn't find a compatible range, we'll just update.
-    let results = queryContext.results;
+    let results = this.#queryContext.results;
     if (results[0]?.heuristic && !this.#shouldShowHeuristic(results[0])) {
       // Exclude the heuristic.
       results = results.slice(1);
@@ -1055,7 +1055,7 @@ export class UrlbarView {
       let newVisibleSpanCount =
         visibleSpanCount + lazy.UrlbarUtils.getSpanForResult(result);
       if (
-        newVisibleSpanCount <= queryContext.maxResults &&
+        newVisibleSpanCount <= this.#queryContext.maxResults &&
         !seenMisplacedResult
       ) {
         // The new row can be visible.
@@ -1796,6 +1796,8 @@ export class UrlbarView {
    * deferred until all rows have been updated.
    */
   #updateIndices() {
+    this.visibleResults = [];
+
     // `currentLabel` is the last-seen row label as we iterate through the rows.
     // When we encounter a label that's different from `currentLabel`, we add it
     // to the row and set it to `currentLabel`; we remove the labels for all
@@ -1812,9 +1814,9 @@ export class UrlbarView {
       let visible = this.#isElementVisible(item);
       visibleRowsExist = visibleRowsExist || visible;
 
-      // Show or hide the row's label as appropriate.
       let label;
       if (visible) {
+        this.visibleResults.push(item.result);
         label = this.#rowLabel(item, currentLabel);
         if (label) {
           if (lazy.ObjectUtils.deepEqual(label, currentLabel)) {
@@ -1903,7 +1905,6 @@ export class UrlbarView {
   }
 
   #setRowVisibility(row, visible) {
-    row.result.isVisible = visible;
     row.style.display = visible ? "" : "none";
     if (
       !visible &&
