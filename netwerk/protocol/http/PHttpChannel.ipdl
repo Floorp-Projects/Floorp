@@ -102,6 +102,9 @@ child:
   // Called if redirect successful so that child can complete setup.
   async Redirect3Complete();
 
+  // Called if the redirect failed/was vetoed
+  async RedirectFailed(nsresult status);
+
   // Report a security message to the console associated with this
   // channel.
   async ReportSecurityMessage(nsString messageTag, nsString messageCategory);

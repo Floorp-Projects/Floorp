@@ -140,6 +140,7 @@ class HttpChannelChild final : public PHttpChannelChild,
       const NetAddr& oldPeerAddr,
       const ResourceTimingStructArgs& aTiming) override;
   mozilla::ipc::IPCResult RecvRedirect3Complete() override;
+  mozilla::ipc::IPCResult RecvRedirectFailed(const nsresult& status) override;
   mozilla::ipc::IPCResult RecvDeleteSelf() override;
 
   mozilla::ipc::IPCResult RecvReportSecurityMessage(

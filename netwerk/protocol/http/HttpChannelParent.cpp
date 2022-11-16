@@ -610,7 +610,7 @@ bool HttpChannelParent::ConnectChannel(const uint32_t& registrarId) {
   nsCOMPtr<nsIChannel> channel;
   rv = NS_LinkRedirectChannels(registrarId, this, getter_AddRefs(channel));
   if (NS_FAILED(rv)) {
-    NS_ERROR("Could not find the http channel to connect its IPC parent");
+    NS_WARNING("Could not find the http channel to connect its IPC parent");
     // This makes the channel delete itself safely.  It's the only thing
     // we can do now, since this parent channel cannot be used and there is
     // no other way to tell the child side there were something wrong.
@@ -739,6 +739,14 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvCancel(
   // since OnDataAvailable could be off-main-thread.
   mCacheNeedFlowControlInitialized = true;
   mNeedFlowControl = false;
+
+  // If the channel is cancelled before the redirect is completed
+  // RecvRedirect2Verify will not be called, so we must clear the callback.
+  if (mRedirectCallback) {
+    mRedirectCallback->OnRedirectVerifyCallback(NS_ERROR_UNEXPECTED);
+    mRedirectCallback = nullptr;
+  }
+
   return IPC_OK();
 }
 
@@ -842,7 +850,6 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
   nsCOMPtr<nsIParentChannel> redirectParentChannel;
   rv = redirectReg->GetParentChannel(mRedirectChannelId,
                                      getter_AddRefs(redirectParentChannel));
-  MOZ_ASSERT(redirectParentChannel);
   if (!redirectParentChannel) {
     ContinueRedirect2Verify(rv);
     return IPC_OK();
@@ -1806,9 +1813,13 @@ HttpChannelParent::CompleteRedirect(nsresult status) {
     return NS_OK;
   }
 
-  if (NS_SUCCEEDED(status) && !mIPCClosed) {
+  if (!mIPCClosed) {
     // TODO: check return value: assume child dead if failed
-    Unused << SendRedirect3Complete();
+    if (NS_SUCCEEDED(status)) {
+      Unused << SendRedirect3Complete();
+    } else {
+      Unused << SendRedirectFailed(status);
+    }
   }
 
   mRedirectChannel = nullptr;
