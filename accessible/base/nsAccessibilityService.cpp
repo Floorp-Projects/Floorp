@@ -985,6 +985,21 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
     return nullptr;
   }
 
+  if (nsMenuPopupFrame* popupFrame = do_QueryFrame(frame)) {
+    // Hidden tooltips and panels don't create accessibles in the whole subtree.
+    // Showing them gets handled by RootAccessible::ProcessDOMEvent.
+    if (content->IsAnyOfXULElements(nsGkAtoms::tooltip, nsGkAtoms::panel)) {
+      nsPopupState popupState = popupFrame->PopupState();
+      if (popupState == ePopupHiding || popupState == ePopupInvisible ||
+          popupState == ePopupClosed) {
+        if (aIsSubtreeHidden) {
+          *aIsSubtreeHidden = true;
+        }
+        return nullptr;
+      }
+    }
+  }
+
   if (frame->GetContent() != content) {
     // Not the main content for this frame. This happens because <area>
     // elements return the image frame as their primary frame. The main content

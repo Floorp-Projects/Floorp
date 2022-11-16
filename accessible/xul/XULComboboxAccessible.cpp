@@ -54,6 +54,10 @@ uint64_t XULComboboxAccessible::NativeState() const {
   return state | states::HASPOPUP;
 }
 
+bool XULComboboxAccessible::IsAcceptableChild(nsIContent* aContent) const {
+  return AccessibleWrap::IsAcceptableChild(aContent) && !aContent->IsText();
+}
+
 void XULComboboxAccessible::Description(nsString& aDescription) const {
   aDescription.Truncate();
   // Use description of currently focused option

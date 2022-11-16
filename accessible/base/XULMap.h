@@ -37,6 +37,7 @@ XULMAP_TYPE(toolbarbutton, XULToolbarButtonAccessible)
 XULMAP(description,
        [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
          if (aElement->ClassList()->Contains(u"tooltip-label"_ns)) {
+           // FIXME(emilio): Why this special case?
            return nullptr;
          }
 
@@ -45,22 +46,6 @@ XULMAP(description,
 
 XULMAP(tooltip,
        [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
-         nsIFrame* frame = aElement->GetPrimaryFrame();
-         if (!frame) {
-           return nullptr;
-         }
-
-         nsMenuPopupFrame* popupFrame = do_QueryFrame(frame);
-         if (!popupFrame) {
-           return nullptr;
-         }
-
-         nsPopupState popupState = popupFrame->PopupState();
-         if (popupState == ePopupHiding || popupState == ePopupInvisible ||
-             popupState == ePopupClosed) {
-           return nullptr;
-         }
-
          return new XULTooltipAccessible(aElement, aContext->Document());
        })
 
@@ -75,7 +60,7 @@ XULMAP(label,
 XULMAP(image,
        [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
          // Don't include nameless images in accessible tree.
-         if (!aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext)) {
+         if (!aElement->HasAttr(nsGkAtoms::tooltiptext)) {
            return nullptr;
          }
 
