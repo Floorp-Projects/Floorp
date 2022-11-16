@@ -505,9 +505,24 @@ class PrioritizableRunnable : public Runnable, public nsIRunnablePriority {
 
  protected:
   virtual ~PrioritizableRunnable() = default;
-  ;
+
   nsCOMPtr<nsIRunnable> mRunnable;
   uint32_t mPriority;
+};
+
+class PrioritizableCancelableRunnable : public CancelableRunnable,
+                                        public nsIRunnablePriority {
+ public:
+  PrioritizableCancelableRunnable(uint32_t aPriority, const char* aName)
+      : CancelableRunnable(aName), mPriority(aPriority) {}
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIRUNNABLEPRIORITY
+
+ protected:
+  virtual ~PrioritizableCancelableRunnable() = default;
+
+  const uint32_t mPriority;
 };
 
 extern already_AddRefed<nsIRunnable> CreateRenderBlockingRunnable(

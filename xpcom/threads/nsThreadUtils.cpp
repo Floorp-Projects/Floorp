@@ -143,6 +143,15 @@ already_AddRefed<nsIRunnable> mozilla::CreateRenderBlockingRunnable(
   return runnable.forget();
 }
 
+NS_IMPL_ISUPPORTS_INHERITED(PrioritizableCancelableRunnable, CancelableRunnable,
+                            nsIRunnablePriority)
+
+NS_IMETHODIMP
+PrioritizableCancelableRunnable::GetPriority(uint32_t* aPriority) {
+  *aPriority = mPriority;
+  return NS_OK;
+}
+
 #endif  // XPCOM_GLUE_AVOID_NSPR
 
 //-----------------------------------------------------------------------------
