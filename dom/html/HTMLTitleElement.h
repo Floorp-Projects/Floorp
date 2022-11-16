@@ -28,7 +28,7 @@ class HTMLTitleElement final : public nsGenericHTMLElement,
   NS_DECL_ISUPPORTS_INHERITED
 
   // HTMLTitleElement
-  void GetText(DOMString& aText, ErrorResult& aError);
+  void GetText(DOMString& aText, ErrorResult& aError) const;
   void SetText(const nsAString& aText, ErrorResult& aError);
 
   // nsIMutationObserver

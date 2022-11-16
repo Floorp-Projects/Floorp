@@ -78,7 +78,7 @@ class HTMLOutputElement final : public nsGenericHTMLFormControlElement,
 
   void SetDefaultValue(const nsAString& aDefaultValue, ErrorResult& aRv);
 
-  void GetValue(nsAString& aValue);
+  void GetValue(nsAString& aValue) const;
   void SetValue(const nsAString& aValue, ErrorResult& aRv);
 
   // nsIConstraintValidation::WillValidate is fine.

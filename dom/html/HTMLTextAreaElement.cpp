@@ -343,7 +343,7 @@ void HTMLTextAreaElement::SetLastValueChangeWasInteractive(
 }
 
 void HTMLTextAreaElement::GetDefaultValue(nsAString& aDefaultValue,
-                                          ErrorResult& aError) {
+                                          ErrorResult& aError) const {
   if (!nsContentUtils::GetNodeTextContent(this, false, aDefaultValue,
                                           fallible)) {
     aError.Throw(NS_ERROR_OUT_OF_MEMORY);

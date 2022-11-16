@@ -81,7 +81,7 @@ class SVGAElement final : public SVGAElementBase, public Link {
   void SetHreflang(const nsAString& aHreflang, mozilla::ErrorResult& rv);
   void GetType(nsAString& aType);
   void SetType(const nsAString& aType, mozilla::ErrorResult& rv);
-  void GetText(nsAString& aText, mozilla::ErrorResult& rv);
+  void GetText(nsAString& aText, mozilla::ErrorResult& rv) const;
   void SetText(const nsAString& aText, mozilla::ErrorResult& rv);
 
   void NodeInfoChanged(Document* aOldDoc) final {

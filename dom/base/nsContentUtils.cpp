@@ -5630,7 +5630,8 @@ nsresult nsContentUtils::SetNodeTextContent(nsIContent* aContent,
   return rv.StealNSResult();
 }
 
-static bool AppendNodeTextContentsRecurse(nsINode* aNode, nsAString& aResult,
+static bool AppendNodeTextContentsRecurse(const nsINode* aNode,
+                                          nsAString& aResult,
                                           const fallible_t& aFallible) {
   for (nsIContent* child = aNode->GetFirstChild(); child;
        child = child->GetNextSibling()) {
@@ -5651,10 +5652,10 @@ static bool AppendNodeTextContentsRecurse(nsINode* aNode, nsAString& aResult,
 }
 
 /* static */
-bool nsContentUtils::AppendNodeTextContent(nsINode* aNode, bool aDeep,
+bool nsContentUtils::AppendNodeTextContent(const nsINode* aNode, bool aDeep,
                                            nsAString& aResult,
                                            const fallible_t& aFallible) {
-  if (Text* text = aNode->GetAsText()) {
+  if (const Text* text = aNode->GetAsText()) {
     return text->AppendTextTo(aResult, aFallible);
   }
   if (aDeep) {
@@ -7522,14 +7523,14 @@ mozilla::LogModule* nsContentUtils::ResistFingerprintingLog() {
 }
 mozilla::LogModule* nsContentUtils::DOMDumpLog() { return sDOMDumpLog; }
 
-bool nsContentUtils::GetNodeTextContent(nsINode* aNode, bool aDeep,
+bool nsContentUtils::GetNodeTextContent(const nsINode* aNode, bool aDeep,
                                         nsAString& aResult,
                                         const fallible_t& aFallible) {
   aResult.Truncate();
   return AppendNodeTextContent(aNode, aDeep, aResult, aFallible);
 }
 
-void nsContentUtils::GetNodeTextContent(nsINode* aNode, bool aDeep,
+void nsContentUtils::GetNodeTextContent(const nsINode* aNode, bool aDeep,
                                         nsAString& aResult) {
   if (!GetNodeTextContent(aNode, aDeep, aResult, fallible)) {
     NS_ABORT_OOM(0);  // Unfortunately we don't know the allocation size

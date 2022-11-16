@@ -94,7 +94,7 @@ nsresult HTMLOutputElement::BindToTree(BindContext& aContext,
   return rv;
 }
 
-void HTMLOutputElement::GetValue(nsAString& aValue) {
+void HTMLOutputElement::GetValue(nsAString& aValue) const {
   nsContentUtils::GetNodeTextContent(this, true, aValue);
 }
 

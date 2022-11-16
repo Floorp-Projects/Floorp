@@ -171,7 +171,8 @@ nsDOMTokenList* HTMLAnchorElement::RelList() {
   return mRelList;
 }
 
-void HTMLAnchorElement::GetText(nsAString& aText, mozilla::ErrorResult& aRv) {
+void HTMLAnchorElement::GetText(nsAString& aText,
+                                mozilla::ErrorResult& aRv) const {
   if (NS_WARN_IF(
           !nsContentUtils::GetNodeTextContent(this, true, aText, fallible))) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
