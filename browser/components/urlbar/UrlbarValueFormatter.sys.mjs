@@ -119,6 +119,7 @@ export class UrlbarValueFormatter {
         this.urlbarInput.setAttribute("domaindir", "ltr");
         this.inputField.scrollLeft = 0;
       }
+      this.urlbarInput.updateTextOverflow();
     });
   }
 
