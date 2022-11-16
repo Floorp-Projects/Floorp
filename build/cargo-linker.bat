@@ -1,2 +1,2 @@
 @echo off
-%PYTHON3% %~dp0\cargo-linker %*
+%MOZ_CARGO_WRAP_LD% %MOZ_CARGO_WRAP_LDFLAGS% %*
