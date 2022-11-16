@@ -123,7 +123,7 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   Atomic<bool> mHaveCipherSuiteAndProtocol;
 
   /* mHaveCertErrrorBits is relied on to determine whether or not a SPDY
-     connection is eligible for joining in nsNSSSocketInfo::JoinConnection() */
+     connection is eligible for joining in NSSSocketControl::JoinConnection() */
   Atomic<bool> mHaveCertErrorBits;
 
  private:
