@@ -85,10 +85,8 @@ class nsLocalFile final
   nsresult CreateAndKeepOpen(uint32_t aType, int aFlags, uint32_t aPermissions,
                              bool aSkipAncestors, PRFileDesc** aResult);
 
-  enum class TimeField { AccessedTime, ModifiedTime };
-  nsresult SetTimeImpl(PRTime aTime, TimeField aTimeField, bool aFollowLinks);
-  nsresult GetTimeImpl(PRTime* aTime, TimeField aTimeField, bool aFollowLinks);
-
+  nsresult SetLastModifiedTimeImpl(PRTime aLastModTime, bool aFollowLinks);
+  nsresult GetLastModifiedTimeImpl(PRTime* aLastModTime, bool aFollowLinks);
   nsresult GetCreationTimeImpl(PRTime* aCreationTime, bool aFollowLinks);
 
 #if defined(USE_LINUX_QUOTACTL)
