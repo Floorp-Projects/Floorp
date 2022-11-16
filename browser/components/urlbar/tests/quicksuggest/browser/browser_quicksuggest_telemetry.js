@@ -15,8 +15,9 @@ ChromeUtils.defineESModuleGetters(this, {
 XPCOMUtils.defineLazyModuleGetters(this, {
   CONTEXTUAL_SERVICES_PING_TYPES:
     "resource:///modules/PartnerLinkAttribution.jsm",
-  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+  sinon: "resource://testing-common/Sinon.jsm",
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
 });
 
 const { TELEMETRY_SCALARS } = UrlbarProviderQuickSuggest;
@@ -1162,9 +1163,9 @@ add_task(async function telemetryEnvironmentOnStartup() {
   await TelemetryEnvironment.testCleanRestart().onInitialized();
 });
 
-// When a quick suggest result is added but not visible in the view, impression
-// telemetry should not be recorded for it.
-add_task(async function hiddenRowImpression() {
+// When a quick suggest result is added to the view but hidden during the view
+// update, impression telemetry should not be recorded for it.
+add_task(async function impression_hiddenRow() {
   Services.telemetry.clearEvents();
 
   // Increase the timeout of the remove-stale-rows timer so that it doesn't
@@ -1349,6 +1350,221 @@ add_task(async function hiddenRowImpression() {
   UrlbarProvidersManager.unregisterProvider(provider);
   UrlbarView.removeStaleRowsTimeout = originalRemoveStaleRowsTimeout;
 });
+
+// When a quick suggest result has not been added to the view, impression
+// telemetry should not be recorded for it even if it's the result most recently
+// returned by the provider.
+add_task(async function impression_notAddedToView() {
+  Services.telemetry.clearEvents();
+
+  // Open a new tab since we'll load a page.
+  await BrowserTestUtils.withNewTab("about:blank", async () => {
+    // Do an initial search that doesn't match any suggestions to make sure
+    // there aren't any quick suggest results in the view to start.
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "this doesn't match anything",
+      fireInputEvent: true,
+    });
+    await QuickSuggestTestUtils.assertNoQuickSuggestResults(window);
+    await UrlbarTestUtils.promisePopupClose(window);
+
+    // Now do a search for a suggestion and hit enter after the provider adds it
+    // but before it appears in the view.
+    await doEngagementWithoutAddingResultToView(SUGGESTIONS[0].keywords[0]);
+
+    // The quick suggest provider added a result but it wasn't visible in the
+    // view, and no other quick suggest results were visible in the view. No
+    // impression telemetry should be recorded.
+    QuickSuggestTestUtils.assertScalars({});
+    QuickSuggestTestUtils.assertEvents([]);
+    QuickSuggestTestUtils.assertPings(spy, []);
+  });
+});
+
+// When a quick suggest result is visible in the view, impression telemetry
+// should be recorded for it even if it's not the result most recently returned
+// by the provider.
+add_task(async function impression_previousResultStillVisible() {
+  Services.telemetry.clearEvents();
+
+  // Open a new tab since we'll load a page.
+  await BrowserTestUtils.withNewTab("about:blank", async () => {
+    // Do a search for the first suggestion.
+    let firstSuggestion = SUGGESTIONS[0];
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: firstSuggestion.keywords[0],
+      fireInputEvent: true,
+    });
+
+    let index = 1;
+    await QuickSuggestTestUtils.assertIsQuickSuggest({
+      window,
+      index,
+      url: firstSuggestion.url,
+    });
+
+    // Without closing the view, do a second search for the second suggestion
+    // and hit enter after the provider adds it but before it appears in the
+    // view.
+    await doEngagementWithoutAddingResultToView(
+      SUGGESTIONS[1].keywords[0],
+      index
+    );
+
+    // An impression for the first suggestion should be recorded since it's
+    // still visible in the view, not the second suggestion.
+    QuickSuggestTestUtils.assertScalars({
+      [TELEMETRY_SCALARS.IMPRESSION]: index + 1,
+    });
+    QuickSuggestTestUtils.assertEvents([
+      {
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
+        method: "engagement",
+        object: "impression_only",
+        extra: {
+          match_type: "firefox-suggest",
+          position: String(index + 1),
+          suggestion_type: "sponsored",
+        },
+      },
+    ]);
+    QuickSuggestTestUtils.assertPings(spy, [
+      {
+        type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
+        payload: {
+          improve_suggest_experience_checked: false,
+          block_id: firstSuggestion.id,
+          is_clicked: false,
+          match_type: "firefox-suggest",
+          position: index + 1,
+        },
+      },
+    ]);
+  });
+});
+
+/**
+ * Does a search that causes the quick suggest provider to return a result
+ * without adding it to the view and then hits enter to load a SERP and create
+ * an engagement.
+ *
+ * @param {string} searchString
+ *   The search string.
+ * @param {number} previousResultIndex
+ *   If the view is already open and showing a quick suggest result, pass its
+ *   index here. Otherwise pass -1.
+ */
+async function doEngagementWithoutAddingResultToView(
+  searchString,
+  previousResultIndex = -1
+) {
+  // Set the timeout of the chunk timer to a really high value so that it will
+  // not fire. The view updates when the timer fires, which we specifically want
+  // to avoid here.
+  let originalChunkDelayMs = UrlbarProvidersManager._chunkResultsDelayMs;
+  UrlbarProvidersManager._chunkResultsDelayMs = 30000;
+  registerCleanupFunction(() => {
+    UrlbarProvidersManager._chunkResultsDelayMs = originalChunkDelayMs;
+  });
+
+  // Stub `UrlbarProviderQuickSuggest.getPriority()` to return Infinity.
+  let sandbox = sinon.createSandbox();
+  let getPriorityStub = sandbox.stub(UrlbarProviderQuickSuggest, "getPriority");
+  getPriorityStub.returns(Infinity);
+
+  // Spy on `UrlbarProviderQuickSuggest.onEngagement()`.
+  let onEngagementSpy = sandbox.spy(UrlbarProviderQuickSuggest, "onEngagement");
+
+  let sandboxCleanup = () => {
+    getPriorityStub?.restore();
+    getPriorityStub = null;
+    sandbox?.restore();
+    sandbox = null;
+  };
+  registerCleanupFunction(sandboxCleanup);
+
+  // In addition to setting the chunk timeout to a large value above, in order
+  // to prevent the view from updating there also needs to be a heuristic
+  // provider that takes a long time to add results. Set one up that doesn't add
+  // any results until we resolve its `finishQueryPromise`. Set its priority to
+  // Infinity too so that only it and the quick suggest provider will be active.
+  let provider = new DelayingTestProvider({
+    results: [],
+    priority: Infinity,
+    type: UrlbarUtils.PROVIDER_TYPE.HEURISTIC,
+  });
+  UrlbarProvidersManager.registerProvider(provider);
+
+  let resolveQuery;
+  provider.finishQueryPromise = new Promise(r => (resolveQuery = r));
+
+  // Add a query listener so we can grab the query context.
+  let context;
+  let queryListener = {
+    onQueryStarted: c => (context = c),
+  };
+  gURLBar.controller.addQueryListener(queryListener);
+
+  // Do a search but don't wait for it to finish.
+  gURLBar.focus();
+  UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: searchString,
+    fireInputEvent: true,
+  });
+
+  // Wait for the quick suggest provider to add its result to `context.results`.
+  let result = await TestUtils.waitForCondition(
+    () =>
+      context?.results.find(
+        r => r.providerName == "UrlbarProviderQuickSuggest"
+      ),
+    "Waiting for quick suggest result to be added to context.results"
+  );
+
+  gURLBar.controller.removeQueryListener(queryListener);
+
+  // The view should not have updated, so the result's `rowIndex` should still
+  // have its initial value of -1.
+  Assert.equal(result.rowIndex, -1, "result.rowIndex is still -1");
+
+  // If there's a result from the previous query, assert it's still in the
+  // view. Otherwise assume that the view should be closed. These are mostly
+  // sanity checks because they should only fail if the telemetry assertions
+  // below also fail.
+  if (previousResultIndex >= 0) {
+    let rows = gURLBar.view.panel.querySelector(".urlbarView-results");
+    Assert.equal(
+      rows.children[previousResultIndex].result.providerName,
+      "UrlbarProviderQuickSuggest",
+      "Result already in view is a quick suggest"
+    );
+  } else {
+    Assert.ok(!gURLBar.view.isOpen, "View is closed");
+  }
+
+  // Hit enter to load a SERP for the search string. This should notify the
+  // quick suggest provider that an engagement occurred.
+  let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  await UrlbarTestUtils.promisePopupClose(window, () => {
+    EventUtils.synthesizeKey("KEY_Enter");
+  });
+  await loadPromise;
+
+  let engagementCalls = onEngagementSpy.getCalls().filter(call => {
+    let state = call.args[1];
+    return state == "engagement";
+  });
+  Assert.equal(engagementCalls.length, 1, "One engagement occurred");
+
+  // Clean up.
+  resolveQuery();
+  UrlbarProvidersManager.unregisterProvider(provider);
+  UrlbarProvidersManager._chunkResultsDelayMs = originalChunkDelayMs;
+  sandboxCleanup();
+}
 
 /**
  * A test provider that doesn't finish `startQuery()` until `finishQueryPromise`

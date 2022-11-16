@@ -1456,6 +1456,7 @@ export class UrlbarInput {
       isPrivate: this.isPrivate,
       maxResults: lazy.UrlbarPrefs.get("maxRichResults"),
       searchString,
+      view: this.view,
       userContextId: this.window.gBrowser.selectedBrowser.getAttribute(
         "usercontextid"
       ),
