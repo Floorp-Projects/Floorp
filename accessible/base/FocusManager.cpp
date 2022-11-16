@@ -28,6 +28,7 @@ FocusManager::FocusManager() {}
 FocusManager::~FocusManager() {}
 
 LocalAccessible* FocusManager::FocusedLocalAccessible() const {
+  MOZ_ASSERT(NS_IsMainThread());
   if (mActiveItem) {
     if (mActiveItem->IsDefunct()) {
       MOZ_ASSERT_UNREACHABLE("Stored active item is unbound from document");
@@ -49,9 +50,23 @@ LocalAccessible* FocusManager::FocusedLocalAccessible() const {
 }
 
 Accessible* FocusManager::FocusedAccessible() const {
+#if defined(ANDROID)
+  // It's not safe to call FocusedLocalAccessible() except on the main thread.
+  // Android might query RemoteAccessibles on the UI thread, which might call
+  // FocusedAccessible(). Never try to get the focused LocalAccessible in this
+  // case.
+  if (NS_IsMainThread()) {
+    if (Accessible* focusedAcc = FocusedLocalAccessible()) {
+      return focusedAcc;
+    }
+  } else {
+    nsAccessibilityService::GetAndroidMonitor().AssertCurrentThreadOwns();
+  }
+#else
   if (Accessible* focusedAcc = FocusedLocalAccessible()) {
     return focusedAcc;
   }
+#endif  // defined(ANDROID)
 
   if (!XRE_IsParentProcess()) {
     // DocAccessibleParent's don't exist in the content
