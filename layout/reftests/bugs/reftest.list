@@ -285,7 +285,6 @@ skip-if(Android&&asyncPan) == 243519-1.html 243519-1-ref.html
 == 244135-2.html 244135-2-ref.html
 == 244932-1.html 244932-1-ref.html
 == 246669-1.html 246669-1-ref.html
-fails-if(Android) == chrome://reftest/content/bugs/249141.xhtml chrome://reftest/content/bugs/249141-ref.xhtml # dependent on width of '…' and '*' in the default font
 == 249982-1.html 249982-1-ref.html
 == 252920-1.html 252920-1-ref.html
 == 253701-1.html 253701-1-ref.html
@@ -328,7 +327,6 @@ random-if(d2d) fuzzy(0-25,0-2040) fails-if(useDrawSnapshot) HTTP == 289480.html#
 == 296904-1.html 296904-1-ref.html
 == 299136-1.html 299136-1-ref.html
 == 299837-1.html 299837-1-ref.html
-== chrome://reftest/content/bugs/299837-2.xhtml chrome://reftest/content/bugs/299837-2-ref.xhtml
 skip-if(Android) random-if(d2d) == chrome://reftest/content/bugs/299837-3.xhtml chrome://reftest/content/bugs/299837-3-ref.xhtml # bug 587631
 == 300691-1a.html 300691-1-ref.html
 == 300691-1b.html 300691-1-ref.html

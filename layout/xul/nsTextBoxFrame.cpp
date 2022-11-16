@@ -727,8 +727,7 @@ void nsTextBoxFrame::UpdateAccessTitle() {
    * toolkit/components/prompts/src/CommonDialog.jsm (setLabelForNode)
    * toolkit/content/widgets/text.js (formatAccessKey)
    */
-  int32_t menuAccessKey;
-  nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
+  int32_t menuAccessKey = nsMenuBarListener::GetMenuAccessKey();
   if (!menuAccessKey || mAccessKey.IsEmpty()) return;
 
   if (!AlwaysAppendAccessKey() &&
@@ -775,8 +774,7 @@ void nsTextBoxFrame::UpdateAccessTitle() {
 }
 
 void nsTextBoxFrame::UpdateAccessIndex() {
-  int32_t menuAccessKey;
-  nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
+  int32_t menuAccessKey = nsMenuBarListener::GetMenuAccessKey();
   if (menuAccessKey) {
     if (mAccessKey.IsEmpty()) {
       if (mAccessKeyInfo) {

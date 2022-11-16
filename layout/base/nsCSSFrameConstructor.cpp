@@ -39,6 +39,7 @@
 #include "mozilla/Unused.h"
 #include "RetainedDisplayListBuilder.h"
 #include "nsAbsoluteContainingBlock.h"
+#include "nsMenuBarListener.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCheckboxRadioFrame.h"
 #include "nsCRT.h"
@@ -66,6 +67,7 @@
 #include "nsIFormControl.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsTextFragment.h"
+#include "nsTextBoxFrame.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
@@ -1503,7 +1505,7 @@ struct nsGenConInitializer {
 };
 
 already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGenConTextNode(
-    nsFrameConstructorState& aState, const nsString& aString,
+    nsFrameConstructorState& aState, const nsAString& aString,
     UniquePtr<nsGenConInitializer> aInitializer) {
   RefPtr<nsTextNode> content = new (mDocument->NodeInfoManager())
       nsTextNode(mDocument->NodeInfoManager());
@@ -1518,21 +1520,28 @@ already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGenConTextNode(
   return content.forget();
 }
 
-already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGeneratedContent(
+void nsCSSFrameConstructor::CreateGeneratedContent(
     nsFrameConstructorState& aState, Element& aOriginatingElement,
-    ComputedStyle& aPseudoStyle, uint32_t aContentIndex) {
+    ComputedStyle& aPseudoStyle, uint32_t aContentIndex,
+    const FunctionRef<void(nsIContent*)> aAddChild) {
   using Type = StyleContentItem::Tag;
   // Get the content value
   const auto& item = aPseudoStyle.StyleContent()->ContentAt(aContentIndex);
   const Type type = item.tag;
 
   switch (type) {
-    case Type::Image:
-      return GeneratedImageContent::Create(*mDocument, aContentIndex);
+    case Type::Image: {
+      RefPtr c = GeneratedImageContent::Create(*mDocument, aContentIndex);
+      aAddChild(c);
+      return;
+    }
 
-    case Type::String:
-      return CreateGenConTextNode(
+    case Type::String: {
+      RefPtr text = CreateGenConTextNode(
           aState, NS_ConvertUTF8toUTF16(item.AsString().AsString()), nullptr);
+      aAddChild(text);
+      return;
+    }
 
     case Type::Attr: {
       const auto& attr = item.AsAttr();
@@ -1542,7 +1551,7 @@ already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGeneratedContent(
       if (!ns->IsEmpty()) {
         nsresult rv = nsNameSpaceManager::GetInstance()->RegisterNameSpace(
             ns.forget(), attrNameSpace);
-        NS_ENSURE_SUCCESS(rv, nullptr);
+        NS_ENSURE_SUCCESS_VOID(rv);
       }
 
       if (mDocument->IsHTMLDocument() && aOriginatingElement.IsHTMLElement()) {
@@ -1552,7 +1561,8 @@ already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGeneratedContent(
       nsCOMPtr<nsIContent> content;
       NS_NewAttributeContent(mDocument->NodeInfoManager(), attrNameSpace,
                              attrName, getter_AddRefs(content));
-      return content.forget();
+      aAddChild(content);
+      return;
     }
 
     case Type::Counter:
@@ -1579,7 +1589,9 @@ already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGeneratedContent(
 
       auto initializer = MakeUnique<nsGenConInitializer>(
           std::move(node), counterList, &nsCSSFrameConstructor::CountersDirty);
-      return CreateGenConTextNode(aState, u""_ns, std::move(initializer));
+      RefPtr c = CreateGenConTextNode(aState, u""_ns, std::move(initializer));
+      aAddChild(c);
+      return;
     }
     case Type::OpenQuote:
     case Type::CloseQuote:
@@ -1590,9 +1602,97 @@ already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGeneratedContent(
           mContainStyleScopeManager.QuoteListFor(aOriginatingElement);
       auto initializer = MakeUnique<nsGenConInitializer>(
           std::move(node), quoteList, &nsCSSFrameConstructor::QuotesDirty);
-      return CreateGenConTextNode(aState, u""_ns, std::move(initializer));
+      RefPtr c = CreateGenConTextNode(aState, u""_ns, std::move(initializer));
+      aAddChild(c);
+      return;
     }
 
+    case Type::MozLabelContent: {
+      nsAutoString accesskey;
+      if (!aOriginatingElement.GetAttr(nsGkAtoms::accesskey, accesskey) ||
+          accesskey.IsEmpty() || !nsMenuBarListener::GetMenuAccessKey()) {
+        // Easy path: just return a regular value attribute content.
+        nsCOMPtr<nsIContent> content;
+        NS_NewAttributeContent(mDocument->NodeInfoManager(), kNameSpaceID_None,
+                               nsGkAtoms::value, getter_AddRefs(content));
+        aAddChild(content);
+        return;
+      }
+
+      nsAutoString value;
+      aOriginatingElement.GetAttr(nsGkAtoms::value, value);
+
+      auto AppendAccessKeyLabel = [&] {
+        nsAutoString accessKeyLabel = u"("_ns + accesskey + u")"_ns;
+        if (!StringEndsWith(value, accessKeyLabel)) {
+          if (nsTextBoxFrame::InsertSeparatorBeforeAccessKey() &&
+              !value.IsEmpty() && !NS_IS_SPACE(value.Last())) {
+            value.Append(' ');
+          }
+          value.Append(accessKeyLabel);
+        }
+      };
+      if (nsTextBoxFrame::AlwaysAppendAccessKey()) {
+        AppendAccessKeyLabel();
+        RefPtr c = CreateGenConTextNode(aState, value, nullptr);
+        aAddChild(c);
+        return;
+      }
+
+      const auto accessKeyStart = [&]() -> Maybe<size_t> {
+        nsAString::const_iterator start, end;
+        value.BeginReading(start);
+        value.EndReading(end);
+
+        const auto originalStart = start;
+        // not appending access key - do case-sensitive search
+        // first
+        bool found = true;
+        if (!FindInReadable(accesskey, start, end)) {
+          start = originalStart;
+          // didn't find it - perform a case-insensitive search
+          found = FindInReadable(accesskey, start, end,
+                                 nsCaseInsensitiveStringComparator);
+        }
+        if (!found) {
+          return Nothing();
+        }
+        return Some(Distance(originalStart, start));
+      }();
+
+      if (accessKeyStart.isNothing()) {
+        AppendAccessKeyLabel();
+        RefPtr c = CreateGenConTextNode(aState, value, nullptr);
+        aAddChild(c);
+        return;
+      }
+
+      if (*accessKeyStart != 0) {
+        RefPtr beginning = CreateGenConTextNode(
+            aState, Substring(value, 0, *accessKeyStart), nullptr);
+        aAddChild(beginning);
+      }
+
+      {
+        RefPtr accessKeyText = CreateGenConTextNode(
+            aState, Substring(value, *accessKeyStart, accesskey.Length()),
+            nullptr);
+        RefPtr<nsIContent> underline =
+            mDocument->CreateHTMLElement(nsGkAtoms::u);
+        underline->AppendChildTo(accessKeyText, /* aNotify = */ false,
+                                 IgnoreErrors());
+        aAddChild(underline);
+      }
+
+      size_t accessKeyEnd = *accessKeyStart + accesskey.Length();
+      if (accessKeyEnd != value.Length()) {
+        RefPtr valueEnd = CreateGenConTextNode(
+            aState, Substring(value, *accessKeyStart + accesskey.Length()),
+            nullptr);
+        aAddChild(valueEnd);
+      }
+      break;
+    }
     case Type::MozAltContent: {
       // Use the "alt" attribute; if that fails and the node is an HTML
       // <input>, try the value attribute and then fall back to some default
@@ -1603,7 +1703,8 @@ already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGeneratedContent(
         nsCOMPtr<nsIContent> content;
         NS_NewAttributeContent(mDocument->NodeInfoManager(), kNameSpaceID_None,
                                nsGkAtoms::alt, getter_AddRefs(content));
-        return content.forget();
+        aAddChild(content);
+        return;
       }
 
       if (aOriginatingElement.IsHTMLElement(nsGkAtoms::input)) {
@@ -1612,20 +1713,22 @@ already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGeneratedContent(
           NS_NewAttributeContent(mDocument->NodeInfoManager(),
                                  kNameSpaceID_None, nsGkAtoms::value,
                                  getter_AddRefs(content));
-          return content.forget();
+          aAddChild(content);
+          return;
         }
 
         nsAutoString temp;
         nsContentUtils::GetMaybeLocalizedString(
             nsContentUtils::eFORMS_PROPERTIES, "Submit", mDocument, temp);
-        return CreateGenConTextNode(aState, temp, nullptr);
+        RefPtr c = CreateGenConTextNode(aState, temp, nullptr);
+        aAddChild(c);
+        return;
       }
-
       break;
     }
   }
 
-  return nullptr;
+  return;
 }
 
 void nsCSSFrameConstructor::CreateGeneratedContentFromListStyle(
@@ -1817,10 +1920,8 @@ void nsCSSFrameConstructor::CreateGeneratedContentItem(
   };
   const uint32_t contentCount = pseudoStyle->StyleContent()->ContentCount();
   for (uint32_t contentIndex = 0; contentIndex < contentCount; contentIndex++) {
-    if (RefPtr<nsIContent> content = CreateGeneratedContent(
-            aState, aOriginatingElement, *pseudoStyle, contentIndex)) {
-      AppendChild(content);
-    }
+    CreateGeneratedContent(aState, aOriginatingElement, *pseudoStyle,
+                           contentIndex, AppendChild);
   }
   // If a ::marker has no 'content' then generate it from its 'list-style-*'.
   if (contentCount == 0 && aPseudoElement == PseudoStyleType::marker) {
@@ -4095,6 +4196,12 @@ nsCSSFrameConstructor::FindXULLabelOrDescriptionData(const Element& aElement,
                                                      ComputedStyle&) {
   // Follow CSS display value if no value attribute
   if (!aElement.HasAttr(nsGkAtoms::value)) {
+    return nullptr;
+  }
+
+  // Follow CSS display if there's no crop="center".
+  if (!aElement.AttrValueIs(kNameSpaceID_None, nsGkAtoms::crop,
+                            nsGkAtoms::center, eCaseMatters)) {
     return nullptr;
   }
 

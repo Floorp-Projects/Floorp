@@ -187,6 +187,7 @@ var popupTests = [
   test() {
     var label = document.getElementById("label");
     label.value = "This is a tooltip";
+    label.textContent = "";
     gButton = document.getElementById("withtooltip");
     disableNonTestMouse(true);
     synthesizeMouse(gButton, 2, 2, { type: "mouseover" });

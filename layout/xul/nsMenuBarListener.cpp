@@ -109,11 +109,9 @@ void nsMenuBarListener::OnDestroyMenuBarFrame() {
   mTopWindowEventTarget = nullptr;
 }
 
-nsresult nsMenuBarListener::GetMenuAccessKey(int32_t* aAccessKey) {
-  if (!aAccessKey) return NS_ERROR_INVALID_POINTER;
+int32_t nsMenuBarListener::GetMenuAccessKey() {
   InitAccessKey();
-  *aAccessKey = mAccessKey;
-  return NS_OK;
+  return mAccessKey;
 }
 
 void nsMenuBarListener::InitAccessKey() {
