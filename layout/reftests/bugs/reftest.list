@@ -1166,7 +1166,7 @@ fuzzy(0-4,0-361) == 449519-1.html 449519-1-ref.html
 == 455171-5.html 455171-5-ref.html
 == 455280-1.xhtml 455280-1-ref.xhtml
 fails-if(Android) == 455826-1.html 455826-1-ref.html
-fails-if(cocoaWidget) == chrome://reftest/content/bugs/456147.xhtml 456147-ref.html # bug 458047
+== chrome://reftest/content/bugs/456147.xhtml 456147-ref.html
 fuzzy(24-60,107-570) fuzzy-if(Android&&/^aarch64-gcc3/.test(xulRuntime.XPCOMABI),0-54,0-618) == 456219-1a.html 456219-1-ref.html # bug 1128229
 fuzzy(24-60,107-1251) == 456219-1b.html 456219-1-ref.html # bug 1128229
 fuzzy(24-60,107-497) fuzzy-if(geckoview&&device,53-60,426-4421) == 456219-1c.html 456219-1-ref.html # bug 1128229
