@@ -488,7 +488,6 @@ mod test {
         let snap = snapshot(&hist);
 
         let expected_json = json!({
-            "count": 10,
             "sum": 55,
             "values": {
                 "1": 1,
@@ -522,7 +521,6 @@ mod test {
         let snap = snapshot(&hist);
 
         let expected_json = json!({
-            "count": 4,
             "sum": 4612,
             "values": {
                 "1024": 2,

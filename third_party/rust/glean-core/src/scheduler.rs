@@ -115,6 +115,9 @@ fn schedule_internal(
             scheduler.start_scheduler(submitter, now, When::Reschedule);
             return;
         }
+    } else {
+        // No value in last_sent_build. Better set one.
+        last_sent_build_metric.set_sync(glean, &glean.app_build);
     }
 
     let last_sent_time = get_last_sent_time_metric().get_value(glean, INTERNAL_STORAGE);
@@ -323,6 +326,35 @@ mod test {
             validator_run_count: Arc::clone(&scheduler_count),
         };
         (submitter, submitter_count, scheduler, scheduler_count)
+    }
+
+    // Ensure on first run that we actually set the last sent build metric.
+    // (and that we send an "overdue" ping if it's after the scheduled hour)
+    #[test]
+    fn first_run_last_sent_build() {
+        let (mut glean, _t) = new_glean(None);
+
+        glean.app_build = "a build".into();
+        let lsb_metric = get_last_sent_build_metric();
+        assert_eq!(None, lsb_metric.get_value(&glean, Some(INTERNAL_STORAGE)));
+
+        let fake_now = FixedOffset::east(0)
+            .ymd(2022, 11, 15)
+            .and_hms(SCHEDULED_HOUR, 0, 1);
+
+        let (submitter, submitter_count, scheduler, scheduler_count) = new_proxies(
+            |_, reason| assert_eq!(reason, Some("overdue")),
+            |_, when| assert_eq!(when, When::Reschedule),
+        );
+
+        schedule_internal(&glean, submitter, scheduler, fake_now);
+        assert_eq!(1, submitter_count.swap(0, Ordering::Relaxed));
+        assert_eq!(1, scheduler_count.swap(0, Ordering::Relaxed));
+
+        assert_eq!(
+            Some(glean.app_build.to_string()),
+            lsb_metric.get_value(&glean, Some(INTERNAL_STORAGE))
+        );
     }
 
     // Ensure that if we have a different build, we immediately submit an "upgrade" ping
