@@ -146,7 +146,7 @@ def make_task(config, jobs):
                 "checkout": False,
                 "command": job["command"],
             },
-            "worker-type": "images",
+            "worker-type": "b-linux-gcp",
             "worker": {
                 "chain-of-trust": True,
                 "docker-image": {"in-tree": "fetch"},
