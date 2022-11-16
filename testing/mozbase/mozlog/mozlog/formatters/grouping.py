@@ -3,13 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import absolute_import
 
-from mozlog.formatters import base
 import collections
 import os
-import sys
-import subprocess
 import platform
+import subprocess
+import sys
+
 import six
+from mozlog.formatters import base
 
 DEFAULT_MOVE_UP_CODE = u"\x1b[A"
 DEFAULT_CLEAR_EOL_CODE = u"\x1b[K"
@@ -86,12 +87,12 @@ class GroupingFormatter(base.BaseFormatter):
 
     def get_move_up_and_clear_eol_codes(self):
         try:
-            import blessings
+            import blessed
         except ImportError:
             return DEFAULT_MOVE_UP_CODE, DEFAULT_CLEAR_EOL_CODE
 
         try:
-            self.terminal = blessings.Terminal()
+            self.terminal = blessed.Terminal()
             return self.terminal.move_up, self.terminal.clear_eol
         except Exception as exception:
             sys.stderr.write(
