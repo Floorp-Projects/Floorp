@@ -7,6 +7,11 @@
 :root {
   --icon-size: 32px;
   --dot-position: calc(var(--icon-size) / 2 + var(--arrowpanel-menuitem-margin-inline) + var(--arrowpanel-menuitem-padding-inline) - 4px);
+  /* uei = unified extensions item */
+  --uei-button-hover-bgcolor: var(--panel-item-hover-bgcolor);
+  --uei-button-hover-color: inherit;
+  --uei-button-active-bgcolor: var(--panel-item-active-bgcolor);
+  --uei-button-active-color: inherit;
 }
 
 :root[uidensity="compact"] {
@@ -16,6 +21,11 @@
 unified-extensions-item {
   align-items: center;
   display: flex;
+}
+
+unified-extensions-item,
+.unified-extensions-item {
+  padding-block: 2px;
 }
 
 /* This is based on the attention UI defined in:
@@ -39,6 +49,7 @@ unified-extensions-item[attention]:-moz-locale-dir(rtl) {
 
 .unified-extensions-item-action {
   overflow: hidden;
+  background-color: transparent;
 }
 
 /* The padding-block for menuitems is set to 0 in compact mode which, with the
@@ -56,7 +67,10 @@ unified-extensions-item[attention]:-moz-locale-dir(rtl) {
   opacity: 0.5;
 }
 
-unified-extensions-item[secondary-button-hovered="true"] .unified-extensions-item-action.subviewbutton {
+:is(
+  unified-extensions-item[secondary-button-hovered="true"],
+  .unified-extensions-item[secondary-button-hovered="true"]
+) .unified-extensions-item-action.subviewbutton {
   color: inherit;
 }
 
@@ -100,6 +114,8 @@ unified-extensions-item:not([secondary-button-hovered="true"]) .unified-extensio
   margin-inline-end: var(--arrowpanel-menuitem-margin-inline);
   /* Have the icon even padding all around by default */
   padding: var(--arrowpanel-menuitem-padding-inline);
+  border: 1px solid transparent;
+  background-color: transparent;
 }
 
 .unified-extensions-item-open-menu.subviewbutton > .toolbarbutton-text {
@@ -132,6 +148,7 @@ toolbaritem.unified-extensions-item .unified-extensions-item-open-menu.subviewbu
   -moz-box-flex: 0;
   margin-inline-start: var(--arrowpanel-menuitem-margin-inline);
   padding: var(--arrowpanel-menuitem-padding);
+  border: 1px solid transparent;
 }
 
 /* When the unified extensions pref is set, we want to always have a "large"
@@ -171,4 +188,64 @@ toolbaritem.unified-extensions-item[unified-extensions="true"] .unified-extensio
 
 .widget-overflow-list .unified-extensions-item[attention][unified-extensions="false"]:-moz-locale-dir(rtl) {
   background-position-x: right 12px;
+}
+
+@media (prefers-contrast) {
+  .unified-extensions-item[attention],
+  unified-extensions-item[attention] {
+    background-image: radial-gradient(circle, ButtonText, ButtonText 2px, transparent 2px);
+  }
+
+  .unified-extensions-item-action:not([disabled]).subviewbutton,
+  .unified-extensions-item-open-menu.subviewbutton,
+  toolbaritem.unified-extensions-item .unified-extensions-action:not([disabled]).subviewbutton,
+  toolbaritem.unified-extensions-item .unified-extensions-item-open-menu.subviewbutton {
+    border-color: currentColor;
+    background-color: ButtonFace;
+    color: ButtonText;
+    --uei-button-hover-bgcolor: SelectedItem;
+    --uei-button-hover-color: SelectedItemText;
+    --uei-button-active-bgcolor: ButtonFace;
+    --uei-button-active-color: ButtonText;
+  }
+
+  .unified-extensions-item-action[disabled].subviewbutton {
+    background-color: Canvas;
+    color: GrayText;
+  }
+
+  .unified-extensions-item-action[disabled] .unified-extensions-item-message,
+  unified-extensions-item[secondary-button-hovered="true"] .unified-extensions-item-action[disabled].subviewbutton,
+  .unified-extensions-item[secondary-button-hovered="true"] .unified-extensions-item-action[disabled].subviewbutton {
+    color: GrayText;
+  }
+
+  .unified-extensions-item-action:not([disabled]) .unified-extensions-item-message {
+    color: ButtonText;
+  }
+
+  .unified-extensions-item-action:not([disabled]):hover .unified-extensions-item-message {
+    color: inherit;
+  }
+}
+
+:is(
+  .unified-extensions-item-action:not([disabled]).subviewbutton,
+  .unified-extensions-item-open-menu.subviewbutton,
+  toolbaritem.unified-extensions-item .unified-extensions-action:not([disabled]).subviewbutton,
+  toolbaritem.unified-extensions-item .unified-extensions-item-open-menu.subviewbutton
+):hover:not(:active) {
+  background-color: var(--uei-button-hover-bgcolor);
+  color: var(--uei-button-hover-color);
+  border-color: var(--uei-button-hover-bgcolor);
+}
+
+:is(
+  .unified-extensions-item-action:not([disabled]).subviewbutton,
+  .unified-extensions-item-open-menu.subviewbutton,
+  toolbaritem.unified-extensions-item .unified-extensions-action:not([disabled]).subviewbutton,
+  toolbaritem.unified-extensions-item .unified-extensions-item-open-menu.subviewbutton
+):hover:active {
+  background-color: var(--uei-button-active-bgcolor);
+  color: var(--uei-button-active-color);
 }
