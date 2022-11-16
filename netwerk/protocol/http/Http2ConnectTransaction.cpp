@@ -30,7 +30,7 @@
 #include "prio.h"
 
 #if defined(FUZZING)
-#  include "FuzzySecurityInfo.h"
+#  include "FuzzySocketControl.h"
 #  include "mozilla/StaticPrefs_fuzzing.h"
 #endif
 
@@ -666,7 +666,7 @@ OutputStreamShim::AsyncWait(nsIOutputStreamCallback* callback,
     // target is on the socket thread. That's all we really care about.
     nsCOMPtr<nsIEventTarget> sts =
         do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID);
-    MOZ_ASSERT((!target && !callback) || (target == sts));
+    MOZ_ASSERT(!target || (target == sts));
     if (target && (target != sts)) {
       return NS_ERROR_FAILURE;
     }
@@ -891,7 +891,7 @@ InputStreamShim::AsyncWait(nsIInputStreamCallback* callback, unsigned int flags,
     // target is on the socket thread. That's all we really care about.
     nsCOMPtr<nsIEventTarget> sts =
         do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID);
-    MOZ_ASSERT((!target && !callback) || (target == sts));
+    MOZ_ASSERT(!target || (target == sts));
     if (target && (target != sts)) {
       return NS_ERROR_FAILURE;
     }

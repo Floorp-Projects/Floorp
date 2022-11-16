@@ -746,8 +746,10 @@ nsresult nsHttpTransaction::ReadSegments(nsAHttpSegmentReader* reader,
     mConnected = true;
     nsCOMPtr<nsITLSSocketControl> tlsSocketControl;
     mConnection->GetTLSSocketControl(getter_AddRefs(tlsSocketControl));
-    MutexAutoLock lock(mLock);
-    mTLSSocketControl = tlsSocketControl;
+    if (tlsSocketControl) {
+      MutexAutoLock lock(mLock);
+      tlsSocketControl->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
+    }
   }
 
   mDeferredSendProgress = false;
@@ -989,9 +991,7 @@ bool nsHttpTransaction::DataSentToChildProcess() { return false; }
 
 already_AddRefed<nsITransportSecurityInfo> nsHttpTransaction::SecurityInfo() {
   MutexAutoLock lock(mLock);
-  nsCOMPtr<nsITransportSecurityInfo> securityInfo(
-      do_QueryInterface(mTLSSocketControl));
-  return securityInfo.forget();
+  return do_AddRef(mSecurityInfo);
 }
 
 bool nsHttpTransaction::HasStickyConnection() const {
@@ -1333,19 +1333,16 @@ bool nsHttpTransaction::ShouldRestartOn0RttError(nsresult reason) {
          mEarlyDataWasAvailable && SecurityErrorThatMayNeedRestart(reason);
 }
 
-static void MaybeRemoveSSLToken(nsITLSSocketControl* aSocketControl) {
+static void MaybeRemoveSSLToken(nsITransportSecurityInfo* aSecurityInfo) {
   if (!StaticPrefs::
           network_http_remove_resumption_token_when_early_data_failed()) {
     return;
   }
-
-  nsCOMPtr<nsITransportSecurityInfo> info(do_QueryInterface(aSocketControl));
-  if (!info) {
+  if (!aSecurityInfo) {
     return;
   }
-
   nsAutoCString key;
-  info->GetPeerId(key);
+  aSecurityInfo->GetPeerId(key);
   nsresult rv = SSLTokensCache::RemoveAll(key);
   LOG(("RemoveSSLToken [key=%s, rv=%" PRIx32 "]", key.get(),
        static_cast<uint32_t>(rv)));
@@ -1415,8 +1412,10 @@ void nsHttpTransaction::Close(nsresult reason) {
       // Try to get TLSSocketControl for this transaction.
       nsCOMPtr<nsITLSSocketControl> tlsSocketControl;
       mConnection->GetTLSSocketControl(getter_AddRefs(tlsSocketControl));
-      MutexAutoLock lock(mLock);
-      mTLSSocketControl = tlsSocketControl;
+      if (tlsSocketControl) {
+        MutexAutoLock lock(mLock);
+        tlsSocketControl->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
+      }
     }
   }
   mConnected = false;
@@ -1781,13 +1780,14 @@ nsresult nsHttpTransaction::Restart() {
   if (seekable) seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
 
   if (mDoNotTryEarlyData) {
-    MaybeRemoveSSLToken(mTLSSocketControl);
+    MutexAutoLock lock(mLock);
+    MaybeRemoveSSLToken(mSecurityInfo);
   }
 
   // clear old connection state...
   {
     MutexAutoLock lock(mLock);
-    mTLSSocketControl = nullptr;
+    mSecurityInfo = nullptr;
   }
 
   if (mConnection) {
@@ -2991,8 +2991,10 @@ nsresult nsHttpTransaction::Finish0RTT(bool aRestart,
     mConnected = true;
     nsCOMPtr<nsITLSSocketControl> tlsSocketControl;
     mConnection->GetTLSSocketControl(getter_AddRefs(tlsSocketControl));
-    MutexAutoLock lock(mLock);
-    mTLSSocketControl = tlsSocketControl;
+    if (tlsSocketControl) {
+      MutexAutoLock lock(mLock);
+      tlsSocketControl->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
+    }
   }
   return NS_OK;
 }

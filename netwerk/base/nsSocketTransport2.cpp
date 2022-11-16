@@ -47,7 +47,7 @@
 
 #if defined(FUZZING)
 #  include "FuzzyLayer.h"
-#  include "FuzzySecurityInfo.h"
+#  include "FuzzySocketControl.h"
 #  include "mozilla/StaticPrefs_fuzzing.h"
 #endif
 
@@ -1173,18 +1173,12 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
     // info
     bool isSSL = mTypes[i].EqualsLiteral("ssl");
     if (isSSL || mTypes[i].EqualsLiteral("starttls")) {
-      // remember security info and give notification callbacks to PSM...
-      nsCOMPtr<nsIInterfaceRequestor> callbacks;
+      // remember security info
       {
         MutexAutoLock lock(mLock);
         mTLSSocketControl = tlsSocketControl;
-        callbacks = mCallbacks;
         SOCKET_LOG(("  [tlsSocketControl=%p callbacks=%p]\n",
                     mTLSSocketControl.get(), mCallbacks.get()));
-      }
-      // don't call into PSM while holding mLock!!
-      if (tlsSocketControl) {
-        tlsSocketControl->SetNotificationCallbacks(callbacks);
       }
       // remember if socket type is SSL so we can ProxyStartSSL if need be.
       usingSSL = isSSL;
@@ -1335,7 +1329,7 @@ nsresult nsSocketTransport::InitiateSocket() {
     SOCKET_LOG(("Successfully attached fuzzing IOLayer.\n"));
 
     if (usingSSL) {
-      mTLSSocketControl = new FuzzySecurityInfo();
+      mTLSSocketControl = new FuzzySocketControl();
     }
   }
 #endif
@@ -2233,13 +2227,6 @@ void nsSocketTransport::OnSocketDetached(PRFileDesc* fd) {
     mDNSRecord->ReportUnusable(SocketPort());
   }
 
-  // break any potential reference cycle between the security info object
-  // and ourselves by resetting its notification callbacks object.  see
-  // bug 285991 for details.
-  if (mTLSSocketControl) {
-    mTLSSocketControl->SetNotificationCallbacks(nullptr);
-  }
-
   // finally, release our reference to the socket (must do this within
   // the transport lock) possibly closing the socket. Also release our
   // listeners to break potential refcount cycles.
@@ -2420,22 +2407,10 @@ nsSocketTransport::SetSecurityCallbacks(nsIInterfaceRequestor* callbacks) {
   NS_NewNotificationCallbacksAggregation(callbacks, nullptr,
                                          GetCurrentEventTarget(),
                                          getter_AddRefs(threadsafeCallbacks));
-
-  nsCOMPtr<nsITLSSocketControl> tlsSocketControl;
-  {
-    MutexAutoLock lock(mLock);
-    mCallbacks = threadsafeCallbacks;
-    SOCKET_LOG(("Reset callbacks for tlsSocketInfo=%p callbacks=%p\n",
-                mTLSSocketControl.get(), mCallbacks.get()));
-
-    tlsSocketControl = mTLSSocketControl;
-  }
-
-  // don't call into PSM while holding mLock!!
-  if (tlsSocketControl) {
-    tlsSocketControl->SetNotificationCallbacks(threadsafeCallbacks);
-  }
-
+  MutexAutoLock lock(mLock);
+  mCallbacks = threadsafeCallbacks;
+  SOCKET_LOG(("Reset callbacks for tlsSocketInfo=%p callbacks=%p\n",
+              mTLSSocketControl.get(), mCallbacks.get()));
   return NS_OK;
 }
 

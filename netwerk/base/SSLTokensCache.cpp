@@ -3,13 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SSLTokensCache.h"
-#include "mozilla/ArrayAlgorithm.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/Logging.h"
-#include "nsIOService.h"
-#include "nsNSSIOLayer.h"
-#include "TransportSecurityInfo.h"
+
 #include "CertVerifier.h"
+#include "CommonSocketControl.h"
+#include "TransportSecurityInfo.h"
+#include "mozilla/ArrayAlgorithm.h"
+#include "mozilla/Logging.h"
+#include "mozilla/Preferences.h"
+#include "nsIOService.h"
 #include "ssl.h"
 #include "sslexp.h"
 
@@ -192,7 +193,7 @@ SSLTokensCache::~SSLTokensCache() { LOG(("SSLTokensCache::~SSLTokensCache")); }
 // static
 nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
                              uint32_t aTokenLen,
-                             nsITransportSecurityInfo* aSecInfo) {
+                             CommonSocketControl* aSocketControl) {
   PRUint32 expirationTime;
   SSLResumptionTokenInfo tokenInfo;
   if (SSL_GetResumptionTokenInfo(aToken, aTokenLen, &tokenInfo,
@@ -205,13 +206,13 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
   expirationTime = tokenInfo.expirationTime;
   SSL_DestroyResumptionTokenInfo(&tokenInfo);
 
-  return Put(aKey, aToken, aTokenLen, aSecInfo, expirationTime);
+  return Put(aKey, aToken, aTokenLen, aSocketControl, expirationTime);
 }
 
 // static
 nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
                              uint32_t aTokenLen,
-                             nsITransportSecurityInfo* aSecInfo,
+                             CommonSocketControl* aSocketControl,
                              PRUint32 aExpirationTime) {
   StaticMutexAutoLock lock(sLock);
 
@@ -223,25 +224,30 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (!aSecInfo) {
+  if (!aSocketControl) {
     return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsITransportSecurityInfo> securityInfo;
+  nsresult rv = aSocketControl->GetSecurityInfo(getter_AddRefs(securityInfo));
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   nsCOMPtr<nsIX509Cert> cert;
-  aSecInfo->GetServerCert(getter_AddRefs(cert));
+  securityInfo->GetServerCert(getter_AddRefs(cert));
   if (!cert) {
     return NS_ERROR_FAILURE;
   }
 
   nsTArray<uint8_t> certBytes;
-  nsresult rv = cert->GetRawDER(certBytes);
+  rv = cert->GetRawDER(certBytes);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   Maybe<nsTArray<nsTArray<uint8_t>>> succeededCertChainBytes;
   nsTArray<RefPtr<nsIX509Cert>> succeededCertArray;
-  rv = aSecInfo->GetSucceededCertChain(succeededCertArray);
+  rv = securityInfo->GetSucceededCertChain(succeededCertArray);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -259,7 +265,7 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
     }
 
     bool builtInRoot = false;
-    rv = aSecInfo->GetIsBuiltCertChainRootBuiltInRoot(&builtInRoot);
+    rv = securityInfo->GetIsBuiltCertChainRootBuiltInRoot(&builtInRoot);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -267,27 +273,27 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
   }
 
   bool isEV;
-  rv = aSecInfo->GetIsExtendedValidation(&isEV);
+  rv = securityInfo->GetIsExtendedValidation(&isEV);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   uint16_t certificateTransparencyStatus;
-  rv = aSecInfo->GetCertificateTransparencyStatus(
+  rv = securityInfo->GetCertificateTransparencyStatus(
       &certificateTransparencyStatus);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   nsITransportSecurityInfo::OverridableErrorCategory overridableErrorCategory;
-  rv = aSecInfo->GetOverridableErrorCategory(&overridableErrorCategory);
+  rv = securityInfo->GetOverridableErrorCategory(&overridableErrorCategory);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   Maybe<nsTArray<nsTArray<uint8_t>>> failedCertChainBytes;
   nsTArray<RefPtr<nsIX509Cert>> failedCertArray;
-  rv = aSecInfo->GetFailedCertChain(failedCertArray);
+  rv = securityInfo->GetFailedCertChain(failedCertArray);
   if (NS_FAILED(rv)) {
     return rv;
   }

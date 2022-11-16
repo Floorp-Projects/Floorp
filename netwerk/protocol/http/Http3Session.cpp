@@ -96,14 +96,10 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
       aConnInfo->ProxyInfo() ? aConnInfo->ProxyInfo()->IsHTTPS() : false;
 
   // Create security control and info object for quic.
-  mSocketControl = new QuicSocketControl(controlFlags, this);
-  mSocketControl->SetHostName(httpsProxy ? aConnInfo->ProxyInfo()->Host().get()
-                                         : aConnInfo->GetOrigin().get());
-  mSocketControl->SetPort(httpsProxy ? aConnInfo->ProxyInfo()->Port()
-                                     : aConnInfo->OriginPort());
-
-  // don't call into PSM while holding mLock!!
-  mSocketControl->SetNotificationCallbacks(callbacks);
+  mSocketControl = new QuicSocketControl(
+      httpsProxy ? aConnInfo->ProxyInfo()->Host() : aConnInfo->GetOrigin(),
+      httpsProxy ? aConnInfo->ProxyInfo()->Port() : aConnInfo->OriginPort(),
+      controlFlags, this);
 
   NetAddr selfAddr;
   MOZ_ALWAYS_SUCCEEDS(aSelfAddr->GetNetAddr(&selfAddr));
@@ -1904,7 +1900,7 @@ void Http3Session::CallCertVerification(Maybe<nsCString> aEchPublicName) {
   const nsACString& hostname =
       verifyToEchPublicName ? *aEchPublicName : mSocketControl->GetHostName();
 
-  SECStatus rv = AuthCertificateHookWithInfo(
+  SECStatus rv = psm::AuthCertificateHookWithInfo(
       mSocketControl, hostname, static_cast<const void*>(this),
       std::move(certInfo.certs), stapledOCSPResponse, sctsFromTLSExtension,
       providerFlags);

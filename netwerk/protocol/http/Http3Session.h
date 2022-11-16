@@ -7,17 +7,18 @@
 #ifndef Http3Session_H__
 #define Http3Session_H__
 
-#include "nsISupportsImpl.h"
-#include "nsITimer.h"
-#include "nsIUDPSocket.h"
-#include "mozilla/net/NeqoHttp3Conn.h"
-#include "nsAHttpConnection.h"
-#include "nsRefPtrHashtable.h"
-#include "nsWeakReference.h"
 #include "HttpTrafficAnalyzer.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/net/NeqoHttp3Conn.h"
+#include "nsAHttpConnection.h"
 #include "nsDeque.h"
+#include "nsISupportsImpl.h"
+#include "nsITimer.h"
+#include "nsIUDPSocket.h"
+#include "nsRefPtrHashtable.h"
+#include "nsTHashMap.h"
+#include "nsWeakReference.h"
 
 /*
  * WebTransport

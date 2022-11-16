@@ -6,6 +6,7 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/psm/TransportSecurityInfo.h"
+#include "nsNSSCertificate.h"
 
 namespace IPC {
 
