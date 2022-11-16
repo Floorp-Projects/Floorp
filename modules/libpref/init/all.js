@@ -1970,6 +1970,8 @@ pref("extensions.manifestV2.actionsPopupURLRestricted", false);
 #else
   pref("extensions.openPopupWithoutUserGesture.enabled", false);
 #endif
+// Install origins restriction.
+pref("extensions.install_origins.enabled", false);
 
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.

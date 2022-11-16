@@ -23,26 +23,49 @@ add_task(async function setup() {
   AddonTestUtils.hookAMTelemetryEvents();
 });
 
-add_task(async function test_validation() {
-  await Assert.rejects(
-    promiseInstallWebExtension({
-      manifest: {
-        browser_specific_settings: {
-          gecko: { id: "en-US-no-dic@dictionaries.mozilla.org" },
+add_task(
+  {
+    // We need to enable this pref because some assertions verify that
+    // `installOrigins` is collected in some Telemetry events.
+    pref_set: [["extensions.install_origins.enabled", true]],
+  },
+  async function test_validation() {
+    await Assert.rejects(
+      promiseInstallWebExtension({
+        manifest: {
+          browser_specific_settings: {
+            gecko: { id: "en-US-no-dic@dictionaries.mozilla.org" },
+          },
+          dictionaries: {
+            "en-US": "en-US.dic",
+          },
         },
-        dictionaries: {
-          "en-US": "en-US.dic",
-        },
-      },
-    }),
-    /Expected file to be downloaded for install/
-  );
+      }),
+      /Expected file to be downloaded for install/
+    );
 
-  await Assert.rejects(
-    promiseInstallWebExtension({
+    await Assert.rejects(
+      promiseInstallWebExtension({
+        manifest: {
+          browser_specific_settings: {
+            gecko: { id: "en-US-no-aff@dictionaries.mozilla.org" },
+          },
+          dictionaries: {
+            "en-US": "en-US.dic",
+          },
+        },
+
+        files: {
+          "en-US.dic": "",
+        },
+      }),
+      /Expected file to be downloaded for install/
+    );
+
+    let addon = await promiseInstallWebExtension({
       manifest: {
         browser_specific_settings: {
-          gecko: { id: "en-US-no-aff@dictionaries.mozilla.org" },
+          gecko: { id: "en-US-1@dictionaries.mozilla.org" },
         },
         dictionaries: {
           "en-US": "en-US.dic",
@@ -51,124 +74,116 @@ add_task(async function test_validation() {
 
       files: {
         "en-US.dic": "",
+        "en-US.aff": "",
       },
-    }),
-    /Expected file to be downloaded for install/
-  );
-
-  let addon = await promiseInstallWebExtension({
-    manifest: {
-      browser_specific_settings: {
-        gecko: { id: "en-US-1@dictionaries.mozilla.org" },
-      },
-      dictionaries: {
-        "en-US": "en-US.dic",
-      },
-    },
-
-    files: {
-      "en-US.dic": "",
-      "en-US.aff": "",
-    },
-  });
-
-  let addon2 = await promiseInstallWebExtension({
-    manifest: {
-      browser_specific_settings: {
-        gecko: { id: "en-US-2@dictionaries.mozilla.org" },
-      },
-      dictionaries: {
-        "en-US": "dictionaries/en-US.dic",
-      },
-    },
-
-    files: {
-      "dictionaries/en-US.dic": "",
-      "dictionaries/en-US.aff": "",
-    },
-  });
-
-  await addon.uninstall();
-  await addon2.uninstall();
-
-  let amEvents = AddonTestUtils.getAMTelemetryEvents();
-
-  let amInstallEvents = amEvents
-    .filter(evt => evt.method === "install")
-    .map(evt => {
-      const { object, extra } = evt;
-      return { object, extra };
     });
 
-  Assert.deepEqual(
-    amInstallEvents.filter(evt => evt.object === "unknown"),
-    [
-      {
-        object: "unknown",
-        extra: {
-          step: "started",
-          error: "ERROR_CORRUPT_FILE",
-          install_origins: "0",
+    let addon2 = await promiseInstallWebExtension({
+      manifest: {
+        browser_specific_settings: {
+          gecko: { id: "en-US-2@dictionaries.mozilla.org" },
+        },
+        dictionaries: {
+          "en-US": "dictionaries/en-US.dic",
         },
       },
-      {
-        object: "unknown",
-        extra: {
-          step: "started",
-          error: "ERROR_CORRUPT_FILE",
-          install_origins: "0",
-        },
-      },
-    ],
-    "Got the expected install telemetry events for the corrupted dictionaries"
-  );
 
-  Assert.deepEqual(
-    amInstallEvents.filter(evt => evt.extra.addon_id === addon.id),
-    [
-      {
-        object: "dictionary",
-        extra: { step: "started", addon_id: addon.id, install_origins: "0" },
+      files: {
+        "dictionaries/en-US.dic": "",
+        "dictionaries/en-US.aff": "",
       },
-      {
-        object: "dictionary",
-        extra: { step: "completed", addon_id: addon.id, install_origins: "0" },
-      },
-    ],
-    "Got the expected install telemetry events for the first installed dictionary"
-  );
-
-  Assert.deepEqual(
-    amInstallEvents.filter(evt => evt.extra.addon_id === addon2.id),
-    [
-      {
-        object: "dictionary",
-        extra: { step: "started", addon_id: addon2.id, install_origins: "0" },
-      },
-      {
-        object: "dictionary",
-        extra: { step: "completed", addon_id: addon2.id, install_origins: "0" },
-      },
-    ],
-    "Got the expected install telemetry events for the second installed dictionary"
-  );
-
-  let amUninstallEvents = amEvents
-    .filter(evt => evt.method === "uninstall")
-    .map(evt => {
-      const { object, value } = evt;
-      return { object, value };
     });
 
-  Assert.deepEqual(
-    amUninstallEvents,
-    [
-      { object: "dictionary", value: addon.id },
-      { object: "dictionary", value: addon2.id },
-    ],
-    "Got the expected uninstall telemetry events"
-  );
-});
+    await addon.uninstall();
+    await addon2.uninstall();
+
+    let amEvents = AddonTestUtils.getAMTelemetryEvents();
+
+    let amInstallEvents = amEvents
+      .filter(evt => evt.method === "install")
+      .map(evt => {
+        const { object, extra } = evt;
+        return { object, extra };
+      });
+
+    Assert.deepEqual(
+      amInstallEvents.filter(evt => evt.object === "unknown"),
+      [
+        {
+          object: "unknown",
+          extra: {
+            step: "started",
+            error: "ERROR_CORRUPT_FILE",
+            install_origins: "0",
+          },
+        },
+        {
+          object: "unknown",
+          extra: {
+            step: "started",
+            error: "ERROR_CORRUPT_FILE",
+            install_origins: "0",
+          },
+        },
+      ],
+      "Got the expected install telemetry events for the corrupted dictionaries"
+    );
+
+    Assert.deepEqual(
+      amInstallEvents.filter(evt => evt.extra.addon_id === addon.id),
+      [
+        {
+          object: "dictionary",
+          extra: { step: "started", addon_id: addon.id, install_origins: "0" },
+        },
+        {
+          object: "dictionary",
+          extra: {
+            step: "completed",
+            addon_id: addon.id,
+            install_origins: "0",
+          },
+        },
+      ],
+      "Got the expected install telemetry events for the first installed dictionary"
+    );
+
+    Assert.deepEqual(
+      amInstallEvents.filter(evt => evt.extra.addon_id === addon2.id),
+      [
+        {
+          object: "dictionary",
+          extra: { step: "started", addon_id: addon2.id, install_origins: "0" },
+        },
+        {
+          object: "dictionary",
+          extra: {
+            step: "completed",
+            addon_id: addon2.id,
+            install_origins: "0",
+          },
+        },
+      ],
+      "Got the expected install telemetry events for the second installed dictionary"
+    );
+
+    let amUninstallEvents = amEvents
+      .filter(evt => evt.method === "uninstall")
+      .map(evt => {
+        const { object, value } = evt;
+        return { object, value };
+      });
+
+    Assert.deepEqual(
+      amUninstallEvents,
+      [
+        { object: "dictionary", value: addon.id },
+        { object: "dictionary", value: addon2.id },
+      ],
+      "Got the expected uninstall telemetry events"
+    );
+  }
+);
 
 const WORD = "Flehgragh";
 
