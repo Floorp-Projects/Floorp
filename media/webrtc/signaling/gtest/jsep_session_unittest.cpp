@@ -1374,6 +1374,50 @@ class JsepSessionTest : public JsepSessionTestBase,
     return parsed;
   }
 
+  std::string SetExtmap(const std::string& aSdp, const std::string& aUri,
+                        uint16_t aId, uint16_t* aOldId = nullptr) {
+    UniquePtr<Sdp> munge(Parse(aSdp));
+    for (size_t i = 0; i < munge->GetMediaSectionCount(); ++i) {
+      auto& attrs = munge->GetMediaSection(i).GetAttributeList();
+      if (attrs.HasAttribute(SdpAttribute::kExtmapAttribute)) {
+        auto extmap = attrs.GetExtmap();
+        for (auto it = extmap.mExtmaps.begin(); it != extmap.mExtmaps.end();
+             ++it) {
+          if (it->extensionname == aUri) {
+            if (aOldId) {
+              *aOldId = it->entry;
+            }
+
+            if (aId) {
+              it->entry = aId;
+            } else {
+              extmap.mExtmaps.erase(it);
+            }
+            break;
+          }
+        }
+        attrs.SetAttribute(extmap.Clone());
+      }
+    }
+    return munge->ToString();
+  }
+
+  uint16_t GetExtmap(const std::string& aSdp, const std::string& aUri) {
+    UniquePtr<Sdp> parsed(Parse(aSdp));
+    for (size_t i = 0; i < parsed->GetMediaSectionCount(); ++i) {
+      auto& attrs = parsed->GetMediaSection(i).GetAttributeList();
+      if (attrs.HasAttribute(SdpAttribute::kExtmapAttribute)) {
+        auto extmap = attrs.GetExtmap();
+        for (auto& ext : extmap.mExtmaps) {
+          if (ext.extensionname == aUri) {
+            return ext.entry;
+          }
+        }
+      }
+    }
+    return 0;
+  }
+
   void SwapOfferAnswerRoles() {
     mSessionOff.swap(mSessionAns);
     mOffCandidates.swap(mAnsCandidates);
@@ -4756,6 +4800,164 @@ TEST_F(JsepSessionTest, TestNegotiatedExtmapCollision) {
             reoffer.find("a=extmap:3 ", reoffer.find("a=extmap:3 ") + 1));
   ASSERT_EQ(std::string::npos,
             reoffer.find("a=extmap:11 ", reoffer.find("a=extmap:11 ") + 1));
+}
+
+TEST_F(JsepSessionTest, TestExtmapAnswerChangesId) {
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(*mSessionOff, "audio");
+  AddTracks(*mSessionAns, "audio");
+
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer, ALL_CHECKS);
+  SetRemoteOffer(offer, ALL_CHECKS);
+
+  std::string answer = CreateAnswer();
+  std::string mungedAnswer =
+      SetExtmap(answer, "urn:ietf:params:rtp-hdrext:sdes:mid", 14);
+  JsepSession::Result result =
+      mSessionOff->SetRemoteDescription(kJsepSdpAnswer, mungedAnswer);
+  ASSERT_TRUE(result.mError.isSome());
+  ASSERT_EQ(dom::PCError::InvalidAccessError, *result.mError);
+  ASSERT_NE(mSessionOff->GetLastError().find(
+                "Answer changed id for extmap attribute at level 0"),
+            std::string::npos);
+}
+
+TEST_F(JsepSessionTest, TestExtmapChangeId) {
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(*mSessionOff, "audio");
+  AddTracks(*mSessionAns, "audio");
+
+  OfferAnswer();
+
+  // RFC 5285 does not seem to forbid giving a pre-existing extension a new id,
+  // as long as that id has never been used before
+  {
+    std::string offer = CreateOffer();
+    SetLocalOffer(offer, ALL_CHECKS);
+    uint16_t oldId = 0;
+    std::string mungedOffer =
+        SetExtmap(offer, "urn:ietf:params:rtp-hdrext:sdes:mid", 14, &oldId);
+    ASSERT_NE(oldId, 0);
+    SetRemoteOffer(mungedOffer, ALL_CHECKS);
+
+    std::string answer = CreateAnswer();
+    SetLocalAnswer(answer, ALL_CHECKS);
+
+    std::string mungedAnswer =
+        SetExtmap(answer, "urn:ietf:params:rtp-hdrext:sdes:mid", oldId);
+    SetRemoteAnswer(mungedAnswer, ALL_CHECKS);
+  }
+
+  // Make sure going back to the previous id works
+  OfferAnswer();
+}
+
+TEST_F(JsepSessionTest, TestExtmapSwap) {
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(*mSessionOff, "audio");
+  AddTracks(*mSessionAns, "audio");
+
+  OfferAnswer();
+
+  std::string offer = CreateOffer();
+  uint16_t midId = GetExtmap(offer, "urn:ietf:params:rtp-hdrext:sdes:mid");
+  uint16_t ssrcLevelId = 0;
+  std::string mungedOffer =
+      SetExtmap(offer, "urn:ietf:params:rtp-hdrext:ssrc-audio-level", midId,
+                &ssrcLevelId);
+  mungedOffer = SetExtmap(mungedOffer, "urn:ietf:params:rtp-hdrext:sdes:mid",
+                          ssrcLevelId);
+
+  JsepSession::Result result =
+      mSessionAns->SetRemoteDescription(kJsepSdpOffer, mungedOffer);
+  ASSERT_TRUE(result.mError.isSome());
+  ASSERT_EQ(dom::PCError::InvalidAccessError, *result.mError);
+  ASSERT_NE(mSessionAns->GetLastError().find(
+                "Remote description attempted to remap RTP extension id"),
+            std::string::npos);
+}
+
+TEST_F(JsepSessionTest, TestExtmapReuse) {
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(*mSessionOff, "audio");
+  AddTracks(*mSessionAns, "audio");
+
+  OfferAnswer();
+
+  std::string offer = CreateOffer();
+  UniquePtr<Sdp> munge(Parse(offer));
+  ASSERT_EQ(1U, munge->GetMediaSectionCount());
+
+  auto& offerMediaAttrs = munge->GetMediaSection(0).GetAttributeList();
+  ASSERT_TRUE(offerMediaAttrs.HasAttribute(SdpAttribute::kExtmapAttribute));
+  auto offerExtmap = offerMediaAttrs.GetExtmap();
+  for (auto& ext : offerExtmap.mExtmaps) {
+    if (ext.extensionname == "urn:ietf:params:rtp-hdrext:ssrc-audio-level") {
+      ext.extensionname = "foo";
+    }
+  }
+
+  offerMediaAttrs.SetAttribute(offerExtmap.Clone());
+
+  std::string sdpString = munge->ToString();
+  JsepSession::Result result =
+      mSessionAns->SetRemoteDescription(kJsepSdpOffer, sdpString);
+  ASSERT_TRUE(result.mError.isSome());
+  ASSERT_EQ(dom::PCError::InvalidAccessError, *result.mError);
+  ASSERT_NE(mSessionAns->GetLastError().find(
+                "Remote description attempted to remap RTP extension id"),
+            std::string::npos);
+}
+
+TEST_F(JsepSessionTest, TestExtmapReuseAfterRenegotiation) {
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(*mSessionOff, "audio");
+  AddTracks(*mSessionAns, "audio");
+
+  OfferAnswer();
+
+  // Renegotiate without ssrc-audio-level
+  {
+    std::string offer = CreateOffer();
+    SetLocalOffer(offer, ALL_CHECKS);
+    // Passing 0 removes urn:ietf:params:rtp-hdrext:ssrc-audio-level
+    std::string mungedOffer =
+        SetExtmap(offer, "urn:ietf:params:rtp-hdrext:ssrc-audio-level", 0);
+    SetRemoteOffer(mungedOffer, ALL_CHECKS);
+
+    std::string answer = CreateAnswer();
+    SetLocalAnswer(answer, ALL_CHECKS);
+    SetRemoteAnswer(answer, ALL_CHECKS);
+  }
+
+  // Make sure trying to reuse the id for ssrc-audio-level fails, even though we
+  // did not use it last round.
+  {
+    std::string offer = CreateOffer();
+    UniquePtr<Sdp> munge(Parse(offer));
+    ASSERT_EQ(1U, munge->GetMediaSectionCount());
+
+    auto& offerMediaAttrs = munge->GetMediaSection(0).GetAttributeList();
+    ASSERT_TRUE(offerMediaAttrs.HasAttribute(SdpAttribute::kExtmapAttribute));
+    auto offerExtmap = offerMediaAttrs.GetExtmap();
+    for (auto& ext : offerExtmap.mExtmaps) {
+      if (ext.extensionname == "urn:ietf:params:rtp-hdrext:ssrc-audio-level") {
+        ext.extensionname = "foo";
+      }
+    }
+
+    offerMediaAttrs.SetAttribute(offerExtmap.Clone());
+
+    std::string sdpString = munge->ToString();
+    JsepSession::Result result =
+        mSessionAns->SetRemoteDescription(kJsepSdpOffer, sdpString);
+    ASSERT_TRUE(result.mError.isSome());
+    ASSERT_EQ(dom::PCError::InvalidAccessError, *result.mError);
+    ASSERT_NE(mSessionAns->GetLastError().find(
+                  "Remote description attempted to remap RTP extension id"),
+              std::string::npos);
+  }
 }
 
 TEST_F(JsepSessionTest, TestRtcpFbStar) {

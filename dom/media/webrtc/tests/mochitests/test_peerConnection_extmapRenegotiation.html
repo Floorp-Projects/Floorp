@@ -1,0 +1,206 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="iceTestUtils.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1799932",
+    title: "RTCPeerConnection check renegotiation of extmap"
+  });
+
+  function setExtmap(sdp, uri, id) {
+    const regex = new RegExp(`a=extmap:[0-9]+(\/[a-z]+)? ${uri}`, 'g');
+    if (id) {
+      return sdp.replaceAll(regex, `a=extmap:${id}$1 ${uri}`);
+    } else {
+      return sdp.replaceAll(regex, `a=unknownattr`);
+    }
+  }
+
+  function getExtmap(sdp, uri) {
+    const regex = new RegExp(`a=extmap:([0-9]+)(\/[a-z]+)? ${uri}`);
+    return sdp.match(regex)[1];
+  }
+
+  function replaceExtUri(sdp, oldUri, newUri) {
+    const regex = new RegExp(`(a=extmap:[0-9]+\/[a-z]+)? ${oldUri}`, 'g');
+    return sdp.replaceAll(regex, `$1 ${newUri}`);
+  }
+
+  const tests = [
+    async function checkAudioMidChange() {
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+
+      const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+      pc1.addTrack(stream.getTracks()[0]);
+      pc2.addTrack(stream.getTracks()[0]);
+
+      await connect(pc1, pc2, 2000, "Initial connection");
+
+      // Sadly, there's no way to tell the offerer to change the extmap. Other
+      // types of endpoint could conceivably do this, so we at least don't want
+      // to crash.
+      // TODO: Would be nice to be able to test this with an endpoint that
+      // actually changes the ids it uses.
+      const reoffer = await pc1.createOffer();
+      reoffer.sdp = setExtmap(reoffer.sdp, "urn:ietf:params:rtp-hdrext:sdes:mid", 14);
+      info(`New reoffer: ${reoffer.sdp}`);
+      await pc2.setRemoteDescription(reoffer);
+      await pc2.setLocalDescription();
+      await wait(2000);
+    },
+
+    async function checkVideoMidChange() {
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+
+      const stream = await navigator.mediaDevices.getUserMedia({video: true});
+      pc1.addTrack(stream.getTracks()[0]);
+      pc2.addTrack(stream.getTracks()[0]);
+
+      await connect(pc1, pc2, 2000, "Initial connection");
+
+      // Sadly, there's no way to tell the offerer to change the extmap. Other
+      // types of endpoint could conceivably do this, so we at least don't want
+      // to crash.
+      // TODO: Would be nice to be able to test this with an endpoint that
+      // actually changes the ids it uses.
+      const reoffer = await pc1.createOffer();
+      reoffer.sdp = setExtmap(reoffer.sdp, "urn:ietf:params:rtp-hdrext:sdes:mid", 14);
+      info(`New reoffer: ${reoffer.sdp}`);
+      await pc2.setRemoteDescription(reoffer);
+      await pc2.setLocalDescription();
+      await wait(2000);
+    },
+
+    async function checkAudioMidSwap() {
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+
+      const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+      pc1.addTrack(stream.getTracks()[0]);
+      pc2.addTrack(stream.getTracks()[0]);
+
+      await connect(pc1, pc2, 2000, "Initial connection");
+
+      // Sadly, there's no way to tell the offerer to change the extmap. Other
+      // types of endpoint could conceivably do this, so we at least don't want
+      // to crash.
+      // TODO: Would be nice to be able to test this with an endpoint that
+      // actually changes the ids it uses.
+      const reoffer = await pc1.createOffer();
+      const midId = getExtmap(reoffer.sdp, "urn:ietf:params:rtp-hdrext:sdes:mid");
+      const ssrcLevelId = getExtmap(reoffer.sdp, "urn:ietf:params:rtp-hdrext:ssrc-audio-level");
+      reoffer.sdp = setExtmap(reoffer.sdp, "urn:ietf:params:rtp-hdrext:sdes:mid", ssrcLevelId);
+      reoffer.sdp = setExtmap(reoffer.sdp, "urn:ietf:params:rtp-hdrext:ssrc-audio-level", midId);
+      info(`New reoffer: ${reoffer.sdp}`);
+      try {
+        await pc2.setRemoteDescription(reoffer);
+        ok(false, "sRD should fail when it attempts extension id remapping");
+      } catch (e) {
+        ok(true, "sRD should fail when it attempts extension id remapping");
+      }
+    },
+
+    async function checkVideoMidSwap() {
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+
+      const stream = await navigator.mediaDevices.getUserMedia({video: true});
+      pc1.addTrack(stream.getTracks()[0]);
+      pc2.addTrack(stream.getTracks()[0]);
+
+      await connect(pc1, pc2, 2000, "Initial connection");
+
+      // Sadly, there's no way to tell the offerer to change the extmap. Other
+      // types of endpoint could conceivably do this, so we at least don't want
+      // to crash.
+      // TODO: Would be nice to be able to test this with an endpoint that
+      // actually changes the ids it uses.
+      const reoffer = await pc1.createOffer();
+      const midId = getExtmap(reoffer.sdp, "urn:ietf:params:rtp-hdrext:sdes:mid");
+      const toffsetId = getExtmap(reoffer.sdp, "urn:ietf:params:rtp-hdrext:toffset");
+      reoffer.sdp = setExtmap(reoffer.sdp, "urn:ietf:params:rtp-hdrext:sdes:mid", toffsetId);
+      reoffer.sdp = setExtmap(reoffer.sdp, "urn:ietf:params:rtp-hdrext:toffset", midId);
+      info(`New reoffer: ${reoffer.sdp}`);
+      try {
+        await pc2.setRemoteDescription(reoffer);
+        ok(false, "sRD should fail when it attempts extension id remapping");
+      } catch (e) {
+        ok(true, "sRD should fail when it attempts extension id remapping");
+      }
+    },
+
+    async function checkAudioIdReuse() {
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+
+      const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+      pc1.addTrack(stream.getTracks()[0]);
+      pc2.addTrack(stream.getTracks()[0]);
+
+      await connect(pc1, pc2, 2000, "Initial connection");
+
+      // Sadly, there's no way to tell the offerer to change the extmap. Other
+      // types of endpoint could conceivably do this, so we at least don't want
+      // to crash.
+      // TODO: Would be nice to be able to test this with an endpoint that
+      // actually changes the ids it uses.
+      const reoffer = await pc1.createOffer();
+      // Change uri, but not the id, so the id now refers to foo.
+      reoffer.sdp = replaceExtUri(reoffer.sdp, "urn:ietf:params:rtp-hdrext:ssrc-audio-level", "foo");
+      info(`New reoffer: ${reoffer.sdp}`);
+      try {
+        await pc2.setRemoteDescription(reoffer);
+        ok(false, "sRD should fail when it attempts extension id remapping");
+      } catch (e) {
+        ok(true, "sRD should fail when it attempts extension id remapping");
+      }
+    },
+
+    async function checkVideoIdReuse() {
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+
+      const stream = await navigator.mediaDevices.getUserMedia({video: true});
+      pc1.addTrack(stream.getTracks()[0]);
+      pc2.addTrack(stream.getTracks()[0]);
+
+      await connect(pc1, pc2, 2000, "Initial connection");
+
+      // Sadly, there's no way to tell the offerer to change the extmap. Other
+      // types of endpoint could conceivably do this, so we at least don't want
+      // to crash.
+      // TODO: Would be nice to be able to test this with an endpoint that
+      // actually changes the ids it uses.
+      const reoffer = await pc1.createOffer();
+      // Change uri, but not the id, so the id now refers to foo.
+      reoffer.sdp = replaceExtUri(reoffer.sdp, "urn:ietf:params:rtp-hdrext:toffset", "foo");
+      info(`New reoffer: ${reoffer.sdp}`);
+      try {
+        await pc2.setRemoteDescription(reoffer);
+        ok(false, "sRD should fail when it attempts extension id remapping");
+      } catch (e) {
+        ok(true, "sRD should fail when it attempts extension id remapping");
+      }
+    },
+
+  ];
+
+  runNetworkTest(async () => {
+    for (const test of tests) {
+      info(`Running test: ${test.name}`);
+      await test();
+      info(`Done running test: ${test.name}`);
+    }
+  });
+
+</script>
+</pre>
+</body>
+</html>
