@@ -26,7 +26,9 @@ async function focusButtonAndPressKeyWithDelay(key, elem, modifiers) {
 add_task(async function testKeyBrowserAction() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      browser_action: {},
+      browser_action: {
+        default_area: "navbar",
+      },
     },
 
     async background() {

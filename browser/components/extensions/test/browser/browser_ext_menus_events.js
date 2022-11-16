@@ -153,6 +153,7 @@ async function testShowHideEvent({
       page_action: {},
       [action]: {
         default_popup: "popup.html",
+        default_area: "navbar",
       },
       permissions: ["menus"],
       optional_permissions: [PAGE_HOST_PATTERN],

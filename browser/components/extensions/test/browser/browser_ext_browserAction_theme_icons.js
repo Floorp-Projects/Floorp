@@ -65,13 +65,22 @@ async function testStaticTheme(options) {
   // Ensure we show the menupanel at least once. This makes sure that the
   // elements we're going to query the style of are in the flat tree.
   if (defaultArea == "menupanel") {
-    let overflowButton = document.getElementById("nav-bar-overflow-button");
-    await waitForElementShown(overflowButton.icon);
-    info("Open overflow menu");
-    let menu = document.getElementById("widget-overflow");
-    let shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
-    overflowButton.click();
-    await shown;
+    if (window.gUnifiedExtensions.isEnabled) {
+      let shown = BrowserTestUtils.waitForPopupEvent(
+        window.gUnifiedExtensions.panel,
+        "shown"
+      );
+      window.gUnifiedExtensions.togglePanel();
+      await shown;
+    } else {
+      let overflowButton = document.getElementById("nav-bar-overflow-button");
+      await waitForElementShown(overflowButton.icon);
+      info("Open overflow menu");
+      let menu = document.getElementById("widget-overflow");
+      let shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
+      overflowButton.click();
+      await shown;
+    }
   }
 
   // Confirm that the browser action has the correct default icon before a theme is loaded.
@@ -335,6 +344,7 @@ add_task(async function browseraction_theme_icons_dynamic_theme() {
     manifest: {
       browser_action: {
         default_icon: "default.png",
+        default_area: "navbar",
         theme_icons: [
           {
             light: "light.png",

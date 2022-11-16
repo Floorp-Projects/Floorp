@@ -10,6 +10,7 @@ add_task(async function testPageActionPopup() {
     manifest: {
       browser_action: {
         default_popup: `${BASE}/file_popup_api_injection_a.html`,
+        default_area: "navbar",
       },
       page_action: {
         default_popup: `${BASE}/file_popup_api_injection_b.html`,

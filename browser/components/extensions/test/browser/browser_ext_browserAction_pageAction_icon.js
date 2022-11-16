@@ -518,7 +518,9 @@ add_task(async function testDetailsObjects() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      browser_action: {},
+      browser_action: {
+        default_area: "navbar",
+      },
       page_action: {},
       background: {
         page: "data/background.html",
@@ -647,6 +649,7 @@ add_task(async function testPageActionIconLoadingOnBrowserActionThemedIcon() {
         default_icon: "common_cached_icon.png",
         default_popup: "default_popup.html",
         default_title: "BrowserAction title",
+        default_area: "navbar",
         theme_icons: [
           {
             dark: "1.png",

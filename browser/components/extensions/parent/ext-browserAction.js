@@ -508,7 +508,11 @@ this.browserAction = class extends ExtensionAPIPersistent {
     }
 
     if (this.widget.areaType == CustomizableUI.TYPE_PANEL) {
-      await window.document.getElementById("nav-bar").overflowable.show();
+      if (gUnifiedExtensionsEnabled) {
+        await window.gUnifiedExtensions.togglePanel();
+      } else {
+        await window.document.getElementById("nav-bar").overflowable.show();
+      }
     }
 
     // This should already have been checked by callers, but acts as an

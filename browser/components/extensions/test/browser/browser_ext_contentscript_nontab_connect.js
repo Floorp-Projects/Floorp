@@ -99,6 +99,7 @@ add_task(async function connect_from_browser_action_popup() {
       ],
       browser_action: {
         default_popup: "popup.html",
+        default_area: "navbar",
       },
     },
     files: {
