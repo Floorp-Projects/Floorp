@@ -2143,7 +2143,7 @@ void nsINode::ReplaceChildren(nsINode* aNode, ErrorResult& aRv) {
   // Needed when used in combination with contenteditable (maybe)
   mozAutoDocUpdate updateBatch(OwnerDoc(), true);
 
-  nsAutoMutationBatch mb(this, true, false);
+  nsAutoMutationBatch mb(this, true, true);
 
   // Replace all with node within this.
   while (mFirstChild) {
@@ -2731,10 +2731,14 @@ nsINode* nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
    */
   nsINode* result = aReplace ? aRefChild : aNewChild;
   if (nodeType == DOCUMENT_FRAGMENT_NODE) {
-    if (!aReplace) {
-      mb.Init(this, true, true);
-    }
     nsAutoMutationBatch* mutationBatch = nsAutoMutationBatch::GetCurrentBatch();
+    if (mutationBatch && mutationBatch != &mb) {
+      mutationBatch = nullptr;
+    } else if (!aReplace) {
+      mb.Init(this, true, true);
+      mutationBatch = nsAutoMutationBatch::GetCurrentBatch();
+    }
+
     if (mutationBatch) {
       mutationBatch->RemovalDone();
       mutationBatch->SetPrevSibling(
