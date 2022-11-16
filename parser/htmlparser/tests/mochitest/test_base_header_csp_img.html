@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Base with base-uri CSP header</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <!-- Base should be ignored -->
+  <base href="http://example.org/">
+</head>
+<body>
+
+<img src="/tests/parser/htmlparser/tests/mochitest/file_base_csp_img.sjs?image" width=10 height=10>
+
+<script>
+add_task(async function() {
+  let response = await fetch(
+    "http://mochi.test:8888/tests/parser/htmlparser/tests/mochitest/file_base_csp_img.sjs?result"
+  );
+  let hosts = await response.json();
+
+  is(hosts.length, 1, "One host");
+  is(hosts[0], "mochi.test", "Host was not influenced by base");
+
+  info("finished");
+});
+</script>
+
+</body>
+</html>
+
