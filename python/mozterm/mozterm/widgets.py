@@ -6,6 +6,8 @@ from __future__ import absolute_import, unicode_literals
 
 from .terminal import Terminal
 
+DEFAULT = "\x1b(B\x1b[m"
+
 
 class BaseWidget(object):
     def __init__(self, terminal=None):
@@ -39,7 +41,16 @@ class Footer(BaseWidget):
         for part in parts:
             try:
                 func, part = part
-                encoded = getattr(self.term, func)(part)
+                attribute = getattr(self.term, func)
+                # In Blessed, these attributes aren't always callable
+                if callable(attribute):
+                    encoded = attribute(part)
+                else:
+                    # If it's not callable, assume it's just the raw
+                    # ANSI Escape Sequence and prepend it ourselves.
+                    # Append DEFAULT to stop text that comes afterwards
+                    # from inheriting the formatting we prepended.
+                    encoded = attribute + part + DEFAULT
             except ValueError:
                 encoded = part
 

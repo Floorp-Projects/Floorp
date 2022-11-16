@@ -4,41 +4,42 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import sys
 from io import StringIO
 
 import mozunit
 import pytest
-
 from mozterm import Terminal
 from mozterm.widgets import Footer
 
 
 @pytest.fixture
-def terminal(monkeypatch):
-    blessings = pytest.importorskip("blessings")
+def terminal():
+    blessed = pytest.importorskip("blessed")
 
     kind = "xterm-256color"
     try:
         term = Terminal(stream=StringIO(), force_styling=True, kind=kind)
-    except blessings.curses.error:
+    except blessed.curses.error:
         pytest.skip("terminal '{}' not found".format(kind))
 
-    # For some reason blessings returns None for width/height though a comment
-    # says that shouldn't ever happen.
-    monkeypatch.setattr(term, "_height_and_width", lambda: (100, 100))
     return term
 
 
+@pytest.mark.skipif(
+    not sys.platform.startswith("win"),
+    reason="Only do ANSI Escape Sequence comparisons on Windows.",
+)
 def test_footer(terminal):
     footer = Footer(terminal=terminal)
     footer.write(
         [
-            ("dim", "foo"),
+            ("bright_black", "foo"),
             ("green", "bar"),
         ]
     )
     value = terminal.stream.getvalue()
-    expected = "\x1b7\x1b[2mfoo\x1b(B\x1b[m \x1b[32mbar\x1b(B\x1b[m\x1b8"
+    expected = "\x1b7\x1b[90mfoo\x1b(B\x1b[m \x1b[32mbar\x1b(B\x1b[m\x1b8"
     assert value == expected
 
     footer.clear()
