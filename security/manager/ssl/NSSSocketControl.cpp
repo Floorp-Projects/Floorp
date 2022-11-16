@@ -30,9 +30,9 @@ NSSSocketControl::NSSSocketControl(SharedSSLState& aState,
       mIsShortWritePending(false),
       mShortWritePendingByte(0),
       mShortWriteOriginalAmount(-1),
-      mKEAUsed(nsISSLSocketControl::KEY_EXCHANGE_UNKNOWN),
+      mKEAUsed(nsITLSSocketControl::KEY_EXCHANGE_UNKNOWN),
       mKEAKeyBits(0),
-      mMACAlgorithmUsed(nsISSLSocketControl::SSL_MAC_UNKNOWN),
+      mMACAlgorithmUsed(nsITLSSocketControl::SSL_MAC_UNKNOWN),
       mProviderTlsFlags(providerTlsFlags),
       mSocketCreationTimestamp(TimeStamp::Now()),
       mPlaintextBytesRead(0) {
@@ -43,7 +43,7 @@ NSSSocketControl::NSSSocketControl(SharedSSLState& aState,
 NSSSocketControl::~NSSSocketControl() = default;
 
 NS_IMPL_ISUPPORTS_INHERITED(NSSSocketControl, TransportSecurityInfo,
-                            nsISSLSocketControl)
+                            nsITLSSocketControl)
 
 NS_IMETHODIMP
 NSSSocketControl::GetProviderTlsFlags(uint32_t* aProviderTlsFlags) {

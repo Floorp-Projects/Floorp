@@ -206,7 +206,7 @@ FWD_TS_T_PTR(GetPeerAddr, mozilla::net::NetAddr);
 FWD_TS_T_PTR(GetSelfAddr, mozilla::net::NetAddr);
 FWD_TS_T_ADDREF(GetScriptablePeerAddr, nsINetAddr);
 FWD_TS_T_ADDREF(GetScriptableSelfAddr, nsINetAddr);
-FWD_TS_T_ADDREF(GetTlsSocketControl, nsISSLSocketControl);
+FWD_TS_T_ADDREF(GetTlsSocketControl, nsITLSSocketControl);
 FWD_TS_T_PTR(GetConnectionFlags, uint32_t);
 FWD_TS_T(SetConnectionFlags, uint32_t);
 FWD_TS_T(SetIsPrivate, bool);

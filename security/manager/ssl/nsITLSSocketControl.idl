@@ -17,7 +17,7 @@ interface nsITlsHandshakeCallbackListener;
 [ref] native nsCStringTArrayRef(nsTArray<nsCString>);
 
 [scriptable, builtinclass, uuid(418265c8-654e-4fbb-ba62-4eed27de1f03)]
-interface nsISSLSocketControl : nsISupports {
+interface nsITLSSocketControl : nsISupports {
     attribute nsIInterfaceRequestor     notificationCallbacks;
 
     void proxyStartSSL();

@@ -7,21 +7,20 @@
 #ifndef FuzzySecurityInfo_h__
 #define FuzzySecurityInfo_h__
 
+#include "nsCOMPtr.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsITLSSocketControl.h"
+#include "nsITransportSecurityInfo.h"
 #include "prerror.h"
 #include "sslproto.h"
 #include "sslt.h"
-
-#include "nsCOMPtr.h"
-#include "nsISSLSocketControl.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsITransportSecurityInfo.h"
 
 namespace mozilla {
 namespace net {
 
 class FuzzySecurityInfo final : public nsITransportSecurityInfo,
                                 public nsIInterfaceRequestor,
-                                public nsISSLSocketControl {
+                                public nsITLSSocketControl {
  public:
   FuzzySecurityInfo();
 

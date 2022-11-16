@@ -255,7 +255,7 @@ class Http2Session final : public ASpdySession,
   void ConnectSlowConsumer(Http2StreamBase* stream);
 
   [[nodiscard]] nsresult ConfirmTLSProfile();
-  [[nodiscard]] static bool ALPNCallback(nsISSLSocketControl* tlsSocketControl);
+  [[nodiscard]] static bool ALPNCallback(nsITLSSocketControl* tlsSocketControl);
 
   uint64_t Serial() { return mSerial; }
 

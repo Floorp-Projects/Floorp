@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/BasePrincipal.h"
-#include "mozilla/ErrorResult.h"
-#include "TCPSocket.h"
 #include "TCPServerSocket.h"
+#include "TCPSocket.h"
 #include "TCPSocketChild.h"
 #include "TCPSocketParent.h"
+#include "mozilla/BasePrincipal.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TCPSocketBinding.h"
@@ -21,24 +21,24 @@
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsIArrayBufferInputStream.h"
-#include "nsISocketTransportService.h"
-#include "nsISocketTransport.h"
-#include "nsIMultiplexInputStream.h"
-#include "nsIAsyncStreamCopier.h"
-#include "nsIInputStream.h"
-#include "nsIInputStreamPump.h"
-#include "nsIBinaryInputStream.h"
-#include "nsIScriptableInputStream.h"
 #include "nsIAsyncInputStream.h"
-#include "nsISupportsPrimitives.h"
-#include "nsITransport.h"
-#include "nsIObserverService.h"
-#include "nsIOutputStream.h"
-#include "nsINSSErrorsService.h"
-#include "nsISSLSocketControl.h"
-#include "nsIProtocolProxyService.h"
+#include "nsIAsyncStreamCopier.h"
+#include "nsIBinaryInputStream.h"
 #include "nsICancelable.h"
 #include "nsIChannel.h"
+#include "nsIInputStream.h"
+#include "nsIInputStreamPump.h"
+#include "nsIMultiplexInputStream.h"
+#include "nsINSSErrorsService.h"
+#include "nsIObserverService.h"
+#include "nsIOutputStream.h"
+#include "nsIProtocolProxyService.h"
+#include "nsIScriptableInputStream.h"
+#include "nsISocketTransport.h"
+#include "nsISocketTransportService.h"
+#include "nsISupportsPrimitives.h"
+#include "nsITLSSocketControl.h"
+#include "nsITransport.h"
 #include "nsIURIMutator.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -455,7 +455,7 @@ void TCPSocket::NotifyCopyComplete(nsresult aStatus) {
 }
 
 void TCPSocket::ActivateTLS() {
-  nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
+  nsCOMPtr<nsITLSSocketControl> tlsSocketControl;
   mTransport->GetTlsSocketControl(getter_AddRefs(tlsSocketControl));
   if (tlsSocketControl) {
     tlsSocketControl->StartTLS();

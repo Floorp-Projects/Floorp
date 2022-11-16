@@ -4,45 +4,45 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
+
 #include "nsSocketTransport2.h"
 
-#include "mozilla/Attributes.h"
-#include "mozilla/SyncRunnable.h"
-#include "mozilla/Telemetry.h"
-#include "nsIOService.h"
-#include "nsStreamUtils.h"
-#include "nsNetSegmentUtils.h"
-#include "nsNetAddr.h"
-#include "nsTransportUtils.h"
-#include "nsProxyInfo.h"
-#include "nsNetCID.h"
-#include "nsNetUtil.h"
-#include "nsCOMPtr.h"
-#include "plstr.h"
-#include "prerr.h"
 #include "IOActivityMonitor.h"
 #include "NSSErrorsService.h"
-#include "mozilla/dom/ToJSValue.h"
-#include "mozilla/net/NeckoChild.h"
-#include "nsThreadUtils.h"
-#include "nsSocketProviderService.h"
-#include "nsISocketProvider.h"
-#include "nsISSLSocketControl.h"
-#include "nsIPipe.h"
-#include "nsIClassInfoImpl.h"
-#include "nsURLHelper.h"
-#include "nsIDNSService.h"
-#include "nsIDNSRecord.h"
-#include "nsIDNSByTypeRecord.h"
-#include "nsICancelable.h"
 #include "NetworkDataCountLayer.h"
 #include "QuicSocketControl.h"
-#include <algorithm>
-#include "sslexp.h"
-#include "mozilla/net/SSLTokensCache.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/StaticPrefs_network.h"
-
+#include "mozilla/SyncRunnable.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/dom/ToJSValue.h"
+#include "mozilla/net/NeckoChild.h"
+#include "mozilla/net/SSLTokensCache.h"
+#include "nsCOMPtr.h"
+#include "nsICancelable.h"
+#include "nsIClassInfoImpl.h"
+#include "nsIDNSByTypeRecord.h"
+#include "nsIDNSRecord.h"
+#include "nsIDNSService.h"
+#include "nsIOService.h"
+#include "nsIPipe.h"
+#include "nsISocketProvider.h"
+#include "nsITLSSocketControl.h"
+#include "nsNetAddr.h"
+#include "nsNetCID.h"
+#include "nsNetSegmentUtils.h"
+#include "nsNetUtil.h"
 #include "nsPrintfCString.h"
+#include "nsProxyInfo.h"
+#include "nsSocketProviderService.h"
+#include "nsStreamUtils.h"
+#include "nsThreadUtils.h"
+#include "nsTransportUtils.h"
+#include "nsURLHelper.h"
+#include "plstr.h"
+#include "prerr.h"
+#include "sslexp.h"
 #include "xpcpublic.h"
 
 #if defined(FUZZING)
@@ -1118,7 +1118,7 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
     rv = spserv->GetSocketProvider(mTypes[i].get(), getter_AddRefs(provider));
     if (NS_FAILED(rv)) break;
 
-    nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
+    nsCOMPtr<nsITLSSocketControl> tlsSocketControl;
     if (i == 0) {
       // if this is the first type, we'll want the
       // service to allocate a new socket
@@ -2401,7 +2401,7 @@ nsSocketTransport::Close(nsresult reason) {
 }
 
 NS_IMETHODIMP
-nsSocketTransport::GetTlsSocketControl(nsISSLSocketControl** tlsSocketControl) {
+nsSocketTransport::GetTlsSocketControl(nsITLSSocketControl** tlsSocketControl) {
   MutexAutoLock lock(mLock);
   *tlsSocketControl = do_AddRef(mTLSSocketControl).take();
   return NS_OK;
@@ -2421,7 +2421,7 @@ nsSocketTransport::SetSecurityCallbacks(nsIInterfaceRequestor* callbacks) {
                                          GetCurrentEventTarget(),
                                          getter_AddRefs(threadsafeCallbacks));
 
-  nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
+  nsCOMPtr<nsITLSSocketControl> tlsSocketControl;
   {
     MutexAutoLock lock(mLock);
     mCallbacks = threadsafeCallbacks;

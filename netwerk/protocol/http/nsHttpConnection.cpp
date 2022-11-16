@@ -14,8 +14,14 @@
 #define LOG_ENABLED() LOG5_ENABLED()
 
 #include "ASpdySession.h"
+#include "Http2ConnectTransaction.h"
+#include "NSSErrorsService.h"
+#include "TLSTransportLayer.h"
 #include "mozilla/ChaosMode.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
+#include "mozpkix/pkixnss.h"
+#include "nsCRT.h"
 #include "nsHttpConnection.h"
 #include "nsHttpHandler.h"
 #include "nsHttpRequestHead.h"
@@ -23,23 +29,17 @@
 #include "nsIClassOfService.h"
 #include "nsIOService.h"
 #include "nsISocketTransport.h"
-#include "nsSocketTransportService2.h"
-#include "nsISSLSocketControl.h"
 #include "nsISupportsPriority.h"
+#include "nsITLSSocketControl.h"
 #include "nsITransportSecurityInfo.h"
-#include "nsCRT.h"
-#include "nsQueryObject.h"
 #include "nsPreloadedStream.h"
 #include "nsProxyRelease.h"
+#include "nsQueryObject.h"
 #include "nsSocketTransport2.h"
+#include "nsSocketTransportService2.h"
 #include "nsStringStream.h"
-#include "mozpkix/pkixnss.h"
 #include "sslerr.h"
 #include "sslt.h"
-#include "NSSErrorsService.h"
-#include "Http2ConnectTransaction.h"
-#include "TLSTransportLayer.h"
-#include "mozilla/StaticPrefs_network.h"
 
 namespace mozilla::net {
 
@@ -269,7 +269,7 @@ void nsHttpConnection::Start0RTTSpdy(SpdyVersion spdyVersion) {
   mTransaction = mSpdySession;
 }
 
-void nsHttpConnection::StartSpdy(nsISSLSocketControl* sslControl,
+void nsHttpConnection::StartSpdy(nsITLSSocketControl* sslControl,
                                  SpdyVersion spdyVersion) {
   LOG(("nsHttpConnection::StartSpdy [this=%p, mDid0RTTSpdy=%d]\n", this,
        mDid0RTTSpdy));
@@ -651,7 +651,7 @@ void nsHttpConnection::Close(nsresult reason, bool aIsShutdown) {
     }
   }
 
-  nsCOMPtr<nsISSLSocketControl> ssl;
+  nsCOMPtr<nsITLSSocketControl> ssl;
   GetTLSSocketControl(getter_AddRefs(ssl));
   if (ssl) {
     ssl->SetHandshakeCallbackListener(nullptr);
@@ -1192,7 +1192,7 @@ void nsHttpConnection::UpdateTCPKeepalive(nsITimer* aTimer, void* aClosure) {
 }
 
 void nsHttpConnection::GetTLSSocketControl(
-    nsISSLSocketControl** tlsSocketControl) {
+    nsITLSSocketControl** tlsSocketControl) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("nsHttpConnection::GetSecurityInfo trans=%p socket=%p\n",
        mTransaction.get(), mSocketTransport.get()));
@@ -1423,7 +1423,7 @@ void nsHttpConnection::CloseTransaction(nsAHttpTransaction* trans,
 
 bool nsHttpConnection::CheckCanWrite0RTTData() {
   MOZ_ASSERT(mTlsHandshaker->EarlyDataAvailable());
-  nsCOMPtr<nsISSLSocketControl> ssl;
+  nsCOMPtr<nsITLSSocketControl> ssl;
   GetTLSSocketControl(getter_AddRefs(ssl));
   if (!ssl) {
     return false;
@@ -2192,7 +2192,7 @@ bool nsHttpConnection::NoClientCertAuth() const {
     return false;
   }
 
-  nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
+  nsCOMPtr<nsITLSSocketControl> tlsSocketControl;
   mSocketTransport->GetTlsSocketControl(getter_AddRefs(tlsSocketControl));
   if (!tlsSocketControl) {
     return false;
@@ -2261,7 +2261,7 @@ void nsHttpConnection::HandshakeDoneInternal() {
     return;
   }
 
-  nsCOMPtr<nsISSLSocketControl> ssl;
+  nsCOMPtr<nsITLSSocketControl> ssl;
   GetTLSSocketControl(getter_AddRefs(ssl));
   if (!ssl) {
     mTlsHandshaker->FinishNPNSetup(false, false);
@@ -2322,8 +2322,8 @@ void nsHttpConnection::HandshakeDoneInternal() {
   int16_t tlsVersion;
   ssl->GetSSLVersionUsed(&tlsVersion);
   mConnInfo->SetLessThanTls13(
-      (tlsVersion < nsISSLSocketControl::TLS_VERSION_1_3) &&
-      (tlsVersion != nsISSLSocketControl::SSL_VERSION_UNKNOWN));
+      (tlsVersion < nsITLSSocketControl::TLS_VERSION_1_3) &&
+      (tlsVersion != nsITLSSocketControl::SSL_VERSION_UNKNOWN));
 
   mTlsHandshaker->EarlyDataTelemetry(tlsVersion, earlyDataAccepted,
                                      mContentBytesWritten0RTT);

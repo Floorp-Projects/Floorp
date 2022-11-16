@@ -29,14 +29,14 @@ class NSSSocketControl final : public CommonSocketControl {
   void SetTLSVersionRange(SSLVersionRange range) { mTLSVersionRange = range; }
   SSLVersionRange GetTLSVersionRange() const { return mTLSVersionRange; };
 
-  // From nsISSLSocketControl.
+  // From nsITLSSocketControl.
   NS_IMETHOD ProxyStartSSL(void) override;
   NS_IMETHOD StartTLS(void) override;
   NS_IMETHOD SetNPNList(nsTArray<nsCString>& aNPNList) override;
   NS_IMETHOD GetAlpnEarlySelection(nsACString& _retval) override;
   NS_IMETHOD GetEarlyDataAccepted(bool* aEarlyDataAccepted) override;
   NS_IMETHOD DriveHandshake(void) override;
-  using nsISSLSocketControl::GetKEAUsed;
+  using nsITLSSocketControl::GetKEAUsed;
   NS_IMETHOD GetKEAUsed(int16_t* aKEAUsed) override;
   NS_IMETHOD GetKEAKeyBits(uint32_t* aKEAKeyBits) override;
   NS_IMETHOD GetProviderTlsFlags(uint32_t* aProviderTlsFlags) override;
@@ -199,7 +199,7 @@ class NSSSocketControl final : public CommonSocketControl {
 #endif
 
   // mKEA* are used in false start and http/2 detetermination
-  // Values are from nsISSLSocketControl
+  // Values are from nsITLSSocketControl
   int16_t mKEAUsed;
   uint32_t mKEAKeyBits;
   int16_t mMACAlgorithmUsed;

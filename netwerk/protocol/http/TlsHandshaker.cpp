@@ -8,11 +8,11 @@
 #include "HttpLog.h"
 
 #include "TlsHandshaker.h"
-#include "nsHttpConnectionInfo.h"
-#include "nsHttpConnection.h"
-#include "nsHttpHandler.h"
-#include "nsISSLSocketControl.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "nsHttpConnection.h"
+#include "nsHttpConnectionInfo.h"
+#include "nsHttpHandler.h"
+#include "nsITLSSocketControl.h"
 
 #define TLS_EARLY_DATA_NOT_AVAILABLE 0
 #define TLS_EARLY_DATA_AVAILABLE_BUT_NOT_USED 1
@@ -97,7 +97,7 @@ nsresult TlsHandshaker::InitSSLParams(bool connectingToProxy,
     return NS_ERROR_ABORT;
   }
 
-  nsCOMPtr<nsISSLSocketControl> ssl;
+  nsCOMPtr<nsITLSSocketControl> ssl;
   mOwner->GetTLSSocketControl(getter_AddRefs(ssl));
   if (!ssl) {
     return NS_ERROR_FAILURE;
@@ -130,7 +130,7 @@ nsresult TlsHandshaker::InitSSLParams(bool connectingToProxy,
 // offer list for both NPN and ALPN. ALPN validation callbacks are made
 // now before the handshake is complete, and NPN validation callbacks
 // are made during the handshake.
-nsresult TlsHandshaker::SetupNPNList(nsISSLSocketControl* ssl, uint32_t caps,
+nsresult TlsHandshaker::SetupNPNList(nsITLSSocketControl* ssl, uint32_t caps,
                                      bool connectingToProxy) {
   nsTArray<nsCString> protocolArray;
 
@@ -184,7 +184,7 @@ bool TlsHandshaker::EnsureNPNComplete() {
     return false;
   }
 
-  nsCOMPtr<nsISSLSocketControl> ssl;
+  nsCOMPtr<nsITLSSocketControl> ssl;
   mOwner->GetTLSSocketControl(getter_AddRefs(ssl));
   if (!ssl) {
     FinishNPNSetup(false, false);
@@ -233,7 +233,7 @@ void TlsHandshaker::FinishNPNSetup(bool handshakeSucceeded,
   EarlyDataDone();
 }
 
-void TlsHandshaker::Check0RttEnabled(nsISSLSocketControl* ssl) {
+void TlsHandshaker::Check0RttEnabled(nsITLSSocketControl* ssl) {
   if (!mOwner) {
     return;
   }
@@ -296,7 +296,7 @@ void TlsHandshaker::EarlyDataTelemetry(int16_t tlsVersion,
                                        bool earlyDataAccepted,
                                        int64_t aContentBytesWritten0RTT) {
   // Send the 0RTT telemetry only for tls1.3
-  if (tlsVersion > nsISSLSocketControl::TLS_VERSION_1_2) {
+  if (tlsVersion > nsITLSSocketControl::TLS_VERSION_1_2) {
     Telemetry::Accumulate(Telemetry::TLS_EARLY_DATA_NEGOTIATED,
                           (mEarlyDataState == EarlyData::NOT_AVAILABLE)
                               ? TLS_EARLY_DATA_NOT_AVAILABLE

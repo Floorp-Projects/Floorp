@@ -14,8 +14,8 @@
 
 class nsIAsyncInputStream;
 class nsIAsyncOutputStream;
-class nsISSLSocketControl;
 class nsISocketTransport;
+class nsITLSSocketControl;
 
 namespace mozilla {
 namespace net {
@@ -111,7 +111,7 @@ class nsAHttpConnection : public nsISupports {
       nsAHttpTransaction* aTransaction) = 0;
 
   // called by a transaction to get the TLS socket control from the socket.
-  virtual void GetTLSSocketControl(nsISSLSocketControl**) = 0;
+  virtual void GetTLSSocketControl(nsITLSSocketControl**) = 0;
 
   // called by a transaction to determine whether or not the connection is
   // persistent... important in determining the end of a response.
@@ -202,7 +202,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
     }                                                                        \
     return (fwdObject)->GetConnectionInfo(result);                           \
   }                                                                          \
-  void GetTLSSocketControl(nsISSLSocketControl** result) override {          \
+  void GetTLSSocketControl(nsITLSSocketControl** result) override {          \
     if (!(fwdObject)) {                                                      \
       *result = nullptr;                                                     \
       return;                                                                \

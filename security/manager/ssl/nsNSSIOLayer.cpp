@@ -1227,7 +1227,7 @@ nsresult nsSSLIOLayerNewSocket(int32_t family, const char* host, int32_t port,
                                nsIProxyInfo* proxy,
                                const OriginAttributes& originAttributes,
                                PRFileDesc** fd,
-                               nsISSLSocketControl** tlsSocketControl,
+                               nsITLSSocketControl** tlsSocketControl,
                                bool forSTARTTLS, uint32_t flags,
                                uint32_t tlsFlags) {
   PRFileDesc* sock = PR_OpenTCPSocket(family);
@@ -1532,7 +1532,7 @@ nsresult nsSSLIOLayerAddToSocket(int32_t family, const char* host, int32_t port,
                                  nsIProxyInfo* proxy,
                                  const OriginAttributes& originAttributes,
                                  PRFileDesc* fd,
-                                 nsISSLSocketControl** tlsSocketControl,
+                                 nsITLSSocketControl** tlsSocketControl,
                                  bool forSTARTTLS, uint32_t providerFlags,
                                  uint32_t providerTlsFlags) {
   PRFileDesc* layer = nullptr;

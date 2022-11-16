@@ -21,14 +21,14 @@ using namespace mozilla;
 extern LazyLogModule gPIPNSSLog;
 
 NS_IMPL_ISUPPORTS_INHERITED(CommonSocketControl, TransportSecurityInfo,
-                            nsISSLSocketControl)
+                            nsITLSSocketControl)
 
 CommonSocketControl::CommonSocketControl(uint32_t aProviderFlags)
     : mHandshakeCompleted(false),
       mJoined(false),
       mSentClientCert(false),
       mFailedVerification(false),
-      mSSLVersionUsed(nsISSLSocketControl::SSL_VERSION_UNKNOWN),
+      mSSLVersionUsed(nsITLSSocketControl::SSL_VERSION_UNKNOWN),
       mProviderFlags(aProviderFlags) {}
 
 NS_IMETHODIMP

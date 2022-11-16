@@ -18,7 +18,7 @@ FuzzySecurityInfo::FuzzySecurityInfo() {}
 FuzzySecurityInfo::~FuzzySecurityInfo() {}
 
 NS_IMPL_ISUPPORTS(FuzzySecurityInfo, nsITransportSecurityInfo,
-                  nsIInterfaceRequestor, nsISSLSocketControl)
+                  nsIInterfaceRequestor, nsITLSSocketControl)
 
 NS_IMETHODIMP
 FuzzySecurityInfo::GetErrorCode(int32_t* state) {
@@ -195,20 +195,20 @@ FuzzySecurityInfo::GetKEAKeyBits(uint32_t* aKeyBits) {
 NS_IMETHODIMP
 FuzzySecurityInfo::GetSSLVersionUsed(int16_t* aSSLVersionUsed) {
   // Must be >= TLS 1.2 for HTTP2
-  *aSSLVersionUsed = nsISSLSocketControl::TLS_VERSION_1_2;
+  *aSSLVersionUsed = nsITLSSocketControl::TLS_VERSION_1_2;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 FuzzySecurityInfo::GetSSLVersionOffered(int16_t* aSSLVersionOffered) {
-  *aSSLVersionOffered = nsISSLSocketControl::TLS_VERSION_1_2;
+  *aSSLVersionOffered = nsITLSSocketControl::TLS_VERSION_1_2;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 FuzzySecurityInfo::GetMACAlgorithmUsed(int16_t* aMac) {
   // The only valid choice for HTTP2 is SSL_MAC_AEAD
-  *aMac = nsISSLSocketControl::SSL_MAC_AEAD;
+  *aMac = nsITLSSocketControl::SSL_MAC_AEAD;
   return NS_OK;
 }
 
