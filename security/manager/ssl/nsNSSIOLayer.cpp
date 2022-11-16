@@ -578,21 +578,26 @@ static void reportHandshakeResult(int32_t bytesTransferred, bool wasReading,
   Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_RESULT, bucket);
 
   if (bucket == 0) {
+    nsCOMPtr<nsITransportSecurityInfo> securityInfo;
+    if (NS_FAILED(socketInfo->GetSecurityInfo(getter_AddRefs(securityInfo))) ||
+        !securityInfo) {
+      return;
+    }
     // Web Privacy Telemetry for successful connections.
     bool success = true;
 
     bool usedPrivateDNS = false;
-    success &= socketInfo->GetUsedPrivateDNS(&usedPrivateDNS) == NS_OK;
+    success &= securityInfo->GetUsedPrivateDNS(&usedPrivateDNS) == NS_OK;
 
     bool madeOCSPRequest = false;
-    success &= socketInfo->GetMadeOCSPRequests(&madeOCSPRequest) == NS_OK;
+    success &= securityInfo->GetMadeOCSPRequests(&madeOCSPRequest) == NS_OK;
 
     uint16_t protocolVersion = 0;
-    success &= socketInfo->GetProtocolVersion(&protocolVersion) == NS_OK;
+    success &= securityInfo->GetProtocolVersion(&protocolVersion) == NS_OK;
     bool usedTLS13 = protocolVersion == 4;
 
     bool usedECH = false;
-    success &= socketInfo->GetIsAcceptedEch(&usedECH) == NS_OK;
+    success &= securityInfo->GetIsAcceptedEch(&usedECH) == NS_OK;
 
     // As bucket is 0 we are reporting the results of a sucessful connection
     // and so TransportSecurityInfo should be populated. However, this isn't
@@ -1553,13 +1558,12 @@ nsresult nsSSLIOLayerAddToSocket(int32_t family, const char* host, int32_t port,
   }
 
   NSSSocketControl* infoObject =
-      new NSSSocketControl(*sharedState, providerFlags, providerTlsFlags);
+      new NSSSocketControl(nsDependentCString(host), port, *sharedState,
+                           providerFlags, providerTlsFlags);
   if (!infoObject) return NS_ERROR_FAILURE;
 
   NS_ADDREF(infoObject);
   infoObject->SetForSTARTTLS(forSTARTTLS);
-  infoObject->SetHostName(host);
-  infoObject->SetPort(port);
   infoObject->SetOriginAttributes(originAttributes);
   if (allocatedState) {
     infoObject->SetSharedOwningReference(allocatedState);

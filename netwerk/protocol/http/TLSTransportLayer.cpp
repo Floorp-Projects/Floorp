@@ -139,8 +139,18 @@ TLSTransportLayer::InputStreamWrapper::AsyncWait(
   PRPollDesc pd;
   pd.fd = mTransport->mFD;
   pd.in_flags = PR_POLL_READ | PR_POLL_EXCEPT;
-  int32_t rv = PR_Poll(&pd, 1, PR_INTERVAL_NO_TIMEOUT);
-  LOG(("TLSTransportLayer::InputStreamWrapper::AsyncWait rv=%d", rv));
+  // Only run PR_Poll on the socket thread. Also, make sure this lives at least
+  // as long as that operation.
+  auto DoPoll = [self = RefPtr{this}, pd(pd)]() mutable {
+    int32_t rv = PR_Poll(&pd, 1, PR_INTERVAL_NO_TIMEOUT);
+    LOG(("TLSTransportLayer::InputStreamWrapper::AsyncWait rv=%d", rv));
+  };
+  if (OnSocketThread()) {
+    DoPoll();
+  } else {
+    gSocketTransportService->Dispatch(NS_NewRunnableFunction(
+        "TLSTransportLayer::InputStreamWrapper::AsyncWait", DoPoll));
+  }
   return NS_OK;
 }
 
@@ -313,6 +323,7 @@ TLSTransportLayer::TLSTransportLayer(nsISocketTransport* aTransport,
 }
 
 TLSTransportLayer::~TLSTransportLayer() {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("TLSTransportLayer dtor this=[%p]", this));
   if (mFD) {
     PR_Close(mFD);

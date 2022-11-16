@@ -6,16 +6,18 @@
 #define SSLTokensCache_h_
 
 #include "CertVerifier.h"  // For EVStatus
-#include "TransportSecurityInfo.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPtr.h"
 #include "nsClassHashtable.h"
 #include "nsIMemoryReporter.h"
+#include "nsITransportSecurityInfo.h"
 #include "nsTArray.h"
 #include "nsTHashMap.h"
 #include "nsXULAppAPI.h"
+
+class CommonSocketControl;
 
 namespace mozilla {
 namespace net {
@@ -44,9 +46,9 @@ class SSLTokensCache : public nsIMemoryReporter {
   static nsresult Shutdown();
 
   static nsresult Put(const nsACString& aKey, const uint8_t* aToken,
-                      uint32_t aTokenLen, nsITransportSecurityInfo* aSecInfo);
+                      uint32_t aTokenLen, CommonSocketControl* aSocketControl);
   static nsresult Put(const nsACString& aKey, const uint8_t* aToken,
-                      uint32_t aTokenLen, nsITransportSecurityInfo* aSecInfo,
+                      uint32_t aTokenLen, CommonSocketControl* aSocketControl,
                       PRUint32 aExpirationTime);
   static nsresult Get(const nsACString& aKey, nsTArray<uint8_t>& aToken,
                       SessionCacheInfo& aResult, uint64_t* aTokenId = nullptr);
