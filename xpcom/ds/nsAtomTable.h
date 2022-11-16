@@ -15,6 +15,15 @@
 void NS_InitAtomTable();
 void NS_ShutdownAtomTable();
 
+namespace mozilla {
+struct AtomsSizes {
+  size_t mTable;
+  size_t mDynamicAtoms;
+
+  AtomsSizes() : mTable(0), mDynamicAtoms(0) {}
+};
+}  // namespace mozilla
+
 void NS_AddSizeOfAtoms(mozilla::MallocSizeOf aMallocSizeOf,
                        mozilla::AtomsSizes& aSizes);
 

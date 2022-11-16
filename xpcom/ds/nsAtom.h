@@ -16,12 +16,7 @@
 #include "nsString.h"
 
 namespace mozilla {
-struct AtomsSizes {
-  size_t mTable;
-  size_t mDynamicAtoms;
-
-  AtomsSizes() : mTable(0), mDynamicAtoms(0) {}
-};
+struct AtomsSizes;
 }  // namespace mozilla
 
 class nsStaticAtom;
