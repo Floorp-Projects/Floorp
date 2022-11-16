@@ -213,6 +213,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/intl/UnicodeProperties.h"
@@ -683,6 +684,21 @@ Directionality RecomputeDirectionality(Element* aElement, bool aNotify) {
   }
 
   Directionality dir = eDir_LTR;
+
+  // https://html.spec.whatwg.org/multipage/dom.html#the-directionality:
+  //
+  // If the element is an input element whose type attribute is in the
+  // Telephone state, and the dir attribute is not in a defined state
+  // (i.e. it is not present or has an invalid value)
+  //
+  //     The directionality of the element is 'ltr'.
+  if (auto* input = HTMLInputElement::FromNode(*aElement)) {
+    if (input->ControlType() == FormControlType::InputTel) {
+      aElement->SetDirectionality(dir, aNotify);
+      return dir;
+    }
+  }
+
   if (nsIContent* parent = GetParentOrHostOrSlot(aElement)) {
     if (ShadowRoot* shadow = ShadowRoot::FromNode(parent)) {
       parent = shadow->GetHost();
