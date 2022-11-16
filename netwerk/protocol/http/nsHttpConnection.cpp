@@ -295,9 +295,8 @@ void nsHttpConnection::StartSpdy(nsISSLSocketControl* sslControl,
     // coleased with this connection. We should avoid coalescing with the
     // existing HTTP/3 connection if the transaction doesn't allow to use
     // HTTP/3.
-    bool disallowHttp3 =
-        mTransaction ? mTransaction->Caps() & NS_HTTP_DISALLOW_HTTP3 : false;
-    gHttpHandler->ConnMgr()->ReportSpdyConnection(this, true, disallowHttp3);
+    gHttpHandler->ConnMgr()->ReportSpdyConnection(this, true,
+                                                  mTransactionDisallowHttp3);
   }
 
   // Setting the connection as reused allows some transactions that fail
@@ -524,6 +523,8 @@ nsresult nsHttpConnection::Activate(nsAHttpTransaction* trans, uint32_t caps,
 
   // set mKeepAlive according to what will be requested
   mKeepAliveMask = mKeepAlive = (caps & NS_HTTP_ALLOW_KEEPALIVE);
+
+  mTransactionDisallowHttp3 |= (caps & NS_HTTP_DISALLOW_HTTP3);
 
   // need to handle HTTP CONNECT tunnels if this is the first time if
   // we are tunneling through a proxy
