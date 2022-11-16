@@ -1645,6 +1645,12 @@ class nsINode : public mozilla::dom::EventTarget {
 
   bool UnoptimizableCCNode() const;
 
+  /**
+   * Fire a DOMNodeRemoved mutation event for all children of this node
+   * TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+   */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FireNodeRemovedForChildren();
+
  private:
   mozilla::dom::SVGUseElement* DoGetContainingSVGUseShadowHost() const;
 
