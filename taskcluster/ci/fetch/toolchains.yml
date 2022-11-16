@@ -186,12 +186,9 @@ zlib-1.2.12:
     description: zlib 1.2.12 source code
     fetch:
         type: static-url
-        url: http://zlib.net/zlib-1.2.12.tar.gz
+        url: https://zlib.net/fossils/zlib-1.2.12.tar.gz
         sha256: 91844808532e5ce316b3c010929493c0244f3d37593afd6de04f71821d5136d9
         size: 1490071
-        gpg-signature:
-            sig-url: "{url}.asc"
-            key-path: build/unix/build-gcc/5ED46A6721D365587791E2AA783FCD8E58BCAFBA.key
 
 nsis-3.07:
     description: nsis 3.07 source code
