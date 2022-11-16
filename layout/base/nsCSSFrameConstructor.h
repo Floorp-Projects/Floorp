@@ -443,7 +443,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
    * then we also set aText to the returned node.
    */
   already_AddRefed<nsIContent> CreateGenConTextNode(
-      nsFrameConstructorState& aState, const nsString& aString,
+      nsFrameConstructorState& aState, const nsAString& aString,
       mozilla::UniquePtr<nsGenConInitializer> aInitializer);
 
   /**
@@ -452,11 +452,13 @@ class nsCSSFrameConstructor final : public nsFrameManager {
    * to the document, and creating frames for it.
    * @param aOriginatingElement is the node that has the before/after style.
    * @param aComputedStyle is the 'before' or 'after' pseudo-element style.
-   * @param aContentIndex is the index of the content item to create
+   * @param aContentIndex is the index of the content item to create.
+   * @param aAddChild callback to be called for each generated content child.
    */
-  already_AddRefed<nsIContent> CreateGeneratedContent(
+  void CreateGeneratedContent(
       nsFrameConstructorState& aState, Element& aOriginatingElement,
-      ComputedStyle& aComputedStyle, uint32_t aContentIndex);
+      ComputedStyle& aPseudoStyle, uint32_t aContentIndex,
+      const mozilla::FunctionRef<void(nsIContent*)> aAddChild);
 
   /**
    * Create child content nodes for a ::marker from its 'list-style-*' values.

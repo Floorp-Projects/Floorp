@@ -1007,16 +1007,22 @@ nsresult nsXULElement::PreHandleEvent(EventChainVisitor& aVisitor) {
 
 nsChangeHint nsXULElement::GetAttributeChangeHint(const nsAtom* aAttribute,
                                                   int32_t aModType) const {
-  if (aAttribute == nsGkAtoms::value &&
-      (aModType == MutationEvent_Binding::REMOVAL ||
-       aModType == MutationEvent_Binding::ADDITION) &&
-      IsAnyOfXULElements(nsGkAtoms::label, nsGkAtoms::description)) {
-    // Label and description dynamically morph between a normal
-    // block and a cropping single-line XUL text frame.  If the
-    // value attribute is being added or removed, then we need to
-    // return a hint of frame change.  (See bugzilla bug 95475 for
-    // details.)
-    return nsChangeHint_ReconstructFrame;
+  if (IsAnyOfXULElements(nsGkAtoms::label, nsGkAtoms::description)) {
+    if (aAttribute == nsGkAtoms::value &&
+        (aModType == MutationEvent_Binding::REMOVAL ||
+         aModType == MutationEvent_Binding::ADDITION)) {
+      // Label and description dynamically morph between a normal block and a
+      // cropping single-line XUL text frame.  If the
+      // value attribute is being added or removed, then we need to
+      // return a hint of frame change.  (See bugzilla bug 95475 for
+      // details.)
+      return nsChangeHint_ReconstructFrame;
+    }
+    if ((aAttribute == nsGkAtoms::crop || aAttribute == nsGkAtoms::accesskey) &&
+        HasAttr(nsGkAtoms::value)) {
+      // They also can change based on crop="center", or accesskey.
+      return nsChangeHint_ReconstructFrame;
+    }
   }
 
   if (aAttribute == nsGkAtoms::type &&

@@ -37,6 +37,10 @@
   outline-offset: var(--focus-outline-offset);
 }
 
+#label-box {
+  min-width: 0;
+}
+
 #label-box:not([native]) {
   -moz-box-align: center;
   -moz-box-pack: center;

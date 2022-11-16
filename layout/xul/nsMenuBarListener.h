@@ -50,7 +50,7 @@ class nsMenuBarListener final : public nsIDOMEventListener {
    * GetMenuAccessKey() returns keyCode value of a modifier key which is
    * used for accesskey.  Returns 0 if the platform doesn't support access key.
    */
-  static nsresult GetMenuAccessKey(int32_t* aAccessKey);
+  static int32_t GetMenuAccessKey();
 
   /**
    * IsAccessKeyPressed() returns true if the modifier state of aEvent matches

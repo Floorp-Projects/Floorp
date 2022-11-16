@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:root { -moz-box-layout: flex }
+
 #unknownContentType {
   font: menu;
 }
@@ -24,4 +26,9 @@ description {
 #container > .small-indent,
 .small-indent label {
   margin-inline-start: 0;
+}
+
+#source,
+#location {
+  contain: inline-size;
 }

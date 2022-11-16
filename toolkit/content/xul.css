@@ -139,6 +139,50 @@ label html|span.accesskey {
   text-decoration-skip-ink: none;
 }
 
+label[value],
+description[value] {
+  /* Preserves legacy behavior, maybe could be removed */
+  display: -moz-box;
+}
+
+label[value][crop],
+description[value][crop] {
+  min-width: 0;
+}
+
+label[value]::before,
+description[value]::before {
+  /* This displays the value attribute, along with the underlined
+   * accesskey if needed */
+  content: -moz-label-content;
+  display: block;
+  white-space: nowrap;
+}
+
+label[value][crop]::before,
+description[value][crop]::before {
+  min-width: 0;
+  max-width: 100%;
+  /* This implements crop=end/right */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Invert the direction to clip at the start rather than end */
+label[value]:is([crop="left"], [crop="start"])::before,
+description[value]:is([crop="left"], [crop="start"])::before {
+  direction: rtl;
+}
+label[value]:is([crop="left"], [crop="start"]):-moz-locale-dir(rtl)::before,
+description[value]:is([crop="left"], [crop="start"]):-moz-locale-dir(rtl)::before {
+  direction: ltr;
+}
+
+.checkbox-label-box,
+.radio-label-box {
+  min-width: 0;
+}
+
 /********** toolbarbutton **********/
 
 toolbar[mode="icons"] .toolbarbutton-text,

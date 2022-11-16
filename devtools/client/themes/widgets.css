@@ -410,6 +410,7 @@
 .table-widget-cell {
   display: block;
   border-inline-end: 1px solid var(--table-splitter-color) !important;
+  line-height: unset !important;
 }
 
 .table-widget-column:not([hidden]) {
