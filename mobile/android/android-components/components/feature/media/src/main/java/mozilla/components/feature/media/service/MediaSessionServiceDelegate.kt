@@ -234,6 +234,10 @@ internal class MediaSessionServiceDelegate(
     @VisibleForTesting
     internal fun shutdown() {
         mediaSession.release()
+        // Explicitly cancel media notification.
+        // Otherwise, when media is paused, with [STOP_FOREGROUND_DETACH] notification behavior,
+        // the notification will persist even after service is stopped and destroyed.
+        notificationManager.cancel(notificationId)
         service.stopSelf()
     }
 
