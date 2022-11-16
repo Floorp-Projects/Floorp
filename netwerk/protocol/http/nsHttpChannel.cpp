@@ -261,10 +261,10 @@ bool nsHttpChannel::WillRedirect(const nsHttpResponseHead& response) {
 nsresult StoreAuthorizationMetaData(nsICacheEntry* entry,
                                     nsHttpRequestHead* requestHead);
 
-class AutoRedirectVetoNotifier {
+class MOZ_STACK_CLASS AutoRedirectVetoNotifier {
  public:
-  explicit AutoRedirectVetoNotifier(nsHttpChannel* channel)
-      : mChannel(channel) {
+  explicit AutoRedirectVetoNotifier(nsHttpChannel* channel, nsresult& aRv)
+      : mChannel(channel), mRv(aRv) {
     if (mChannel->LoadHasAutoRedirectVetoNotifier()) {
       MOZ_CRASH("Nested AutoRedirectVetoNotifier on the stack");
       mChannel = nullptr;
@@ -273,20 +273,27 @@ class AutoRedirectVetoNotifier {
 
     mChannel->StoreHasAutoRedirectVetoNotifier(true);
   }
-  ~AutoRedirectVetoNotifier() { ReportRedirectResult(false); }
-  void RedirectSucceeded() { ReportRedirectResult(true); }
+  ~AutoRedirectVetoNotifier() { ReportRedirectResult(mRv); }
+  void RedirectSucceeded() { ReportRedirectResult(NS_OK); }
 
  private:
   nsHttpChannel* mChannel;
-  void ReportRedirectResult(bool succeeded);
+  bool mCalledReport = false;
+  nsresult& mRv;
+  void ReportRedirectResult(nsresult aRv);
 };
 
-void AutoRedirectVetoNotifier::ReportRedirectResult(bool succeeded) {
+void AutoRedirectVetoNotifier::ReportRedirectResult(nsresult aRv) {
   if (!mChannel) return;
+
+  if (mCalledReport) {
+    return;
+  }
+  mCalledReport = true;
 
   mChannel->mRedirectChannel = nullptr;
 
-  if (succeeded) {
+  if (NS_SUCCEEDED(aRv)) {
     mChannel->RemoveAsNonTailRequest();
   }
 
@@ -297,7 +304,7 @@ void AutoRedirectVetoNotifier::ReportRedirectResult(bool succeeded) {
   nsHttpChannel* channel = mChannel;
   mChannel = nullptr;
 
-  if (vetoHook) vetoHook->OnRedirectResult(succeeded);
+  if (vetoHook) vetoHook->OnRedirectResult(NS_SUCCEEDED(aRv));
 
   // Drop after the notification
   channel->StoreHasAutoRedirectVetoNotifier(false);
@@ -2863,7 +2870,7 @@ nsresult nsHttpChannel::StartRedirectChannelToURI(nsIURI* upgradedURI,
   if (NS_SUCCEEDED(rv)) rv = WaitForRedirectCallback();
 
   if (NS_FAILED(rv)) {
-    AutoRedirectVetoNotifier notifier(this);
+    AutoRedirectVetoNotifier notifier(this, rv);
 
     /* Remove the async call to ContinueAsyncRedirectChannelToURI().
      * It is called directly by our callers upon return (to clean up
@@ -2907,7 +2914,7 @@ nsresult nsHttpChannel::ContinueAsyncRedirectChannelToURI(nsresult rv) {
 }
 
 nsresult nsHttpChannel::OpenRedirectChannel(nsresult rv) {
-  AutoRedirectVetoNotifier notifier(this);
+  AutoRedirectVetoNotifier notifier(this, rv);
 
   // Make sure to do this after we received redirect veto answer,
   // i.e. after all sinks had been notified
@@ -2950,7 +2957,7 @@ nsresult nsHttpChannel::AsyncDoReplaceWithProxy(nsIProxyInfo* pi) {
   if (NS_SUCCEEDED(rv)) rv = WaitForRedirectCallback();
 
   if (NS_FAILED(rv)) {
-    AutoRedirectVetoNotifier notifier(this);
+    AutoRedirectVetoNotifier notifier(this, rv);
     PopRedirectAsyncFunc(&nsHttpChannel::ContinueDoReplaceWithProxy);
   }
 
@@ -2958,7 +2965,7 @@ nsresult nsHttpChannel::AsyncDoReplaceWithProxy(nsIProxyInfo* pi) {
 }
 
 nsresult nsHttpChannel::ContinueDoReplaceWithProxy(nsresult rv) {
-  AutoRedirectVetoNotifier notifier(this);
+  AutoRedirectVetoNotifier notifier(this, rv);
 
   if (NS_FAILED(rv)) return rv;
 
@@ -5294,7 +5301,7 @@ nsresult nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv) {
   if (NS_SUCCEEDED(rv)) rv = WaitForRedirectCallback();
 
   if (NS_FAILED(rv)) {
-    AutoRedirectVetoNotifier notifier(this);
+    AutoRedirectVetoNotifier notifier(this, rv);
     PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessRedirection);
   }
 
@@ -5302,7 +5309,7 @@ nsresult nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv) {
 }
 
 nsresult nsHttpChannel::ContinueProcessRedirection(nsresult rv) {
-  AutoRedirectVetoNotifier notifier(this);
+  AutoRedirectVetoNotifier notifier(this, rv);
 
   LOG(("nsHttpChannel::ContinueProcessRedirection [rv=%" PRIx32 ",this=%p]\n",
        static_cast<uint32_t>(rv), this));
@@ -9641,7 +9648,7 @@ nsresult nsHttpChannel::RedirectToInterceptedChannel() {
   }
 
   if (NS_FAILED(rv)) {
-    AutoRedirectVetoNotifier notifier(this);
+    AutoRedirectVetoNotifier notifier(this, rv);
 
     PopRedirectAsyncFunc(&nsHttpChannel::ContinueAsyncRedirectChannelToURI);
   }
