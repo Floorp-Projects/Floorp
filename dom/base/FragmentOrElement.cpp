@@ -2069,21 +2069,6 @@ void FragmentOrElement::SetInnerHTMLInternal(const nsAString& aInnerHTML,
   }
 }
 
-void FragmentOrElement::FireNodeRemovedForChildren() {
-  Document* doc = OwnerDoc();
-  // Optimize the common case
-  if (!nsContentUtils::HasMutationListeners(
-          doc, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
-    return;
-  }
-
-  nsCOMPtr<nsINode> child;
-  for (child = GetFirstChild(); child && child->GetParentNode() == this;
-       child = child->GetNextSibling()) {
-    nsContentUtils::MaybeFireNodeRemoved(child, this);
-  }
-}
-
 void FragmentOrElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
                                                size_t* aNodeSize) const {
   nsIContent::AddSizeOfExcludingThis(aSizes, aNodeSize);

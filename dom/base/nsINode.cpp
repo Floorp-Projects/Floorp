@@ -2139,11 +2139,30 @@ void nsINode::ReplaceChildren(nsINode* aNode, ErrorResult& aRv) {
       return;
     }
   }
+  nsCOMPtr<nsINode> node = aNode;
+
+  // Batch possible DOMSubtreeModified events.
+  mozAutoSubtreeModified subtree(OwnerDoc(), nullptr);
+
+  if (nsContentUtils::HasMutationListeners(
+          OwnerDoc(), NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
+    FireNodeRemovedForChildren();
+    if (node) {
+      if (node->NodeType() == DOCUMENT_FRAGMENT_NODE) {
+        node->FireNodeRemovedForChildren();
+      } else if (nsCOMPtr<nsINode> parent = node->GetParentNode()) {
+        nsContentUtils::MaybeFireNodeRemoved(node, parent);
+      }
+    }
+  }
 
   // Needed when used in combination with contenteditable (maybe)
   mozAutoDocUpdate updateBatch(OwnerDoc(), true);
 
   nsAutoMutationBatch mb(this, true, true);
+
+  // The code above explicitly dispatched DOMNodeRemoved events if needed.
+  nsAutoScriptBlockerSuppressNodeRemoved scriptBlocker;
 
   // Replace all with node within this.
   while (mFirstChild) {
@@ -3555,6 +3574,21 @@ void nsINode::RemoveMutationObserver(
     nsMultiMutationObserver* aMultiMutationObserver) {
   if (aMultiMutationObserver) {
     aMultiMutationObserver->RemoveMutationObserverFromNode(this);
+  }
+}
+
+void nsINode::FireNodeRemovedForChildren() {
+  Document* doc = OwnerDoc();
+  // Optimize the common case
+  if (!nsContentUtils::HasMutationListeners(
+          doc, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
+    return;
+  }
+
+  nsCOMPtr<nsINode> child;
+  for (child = GetFirstChild(); child && child->GetParentNode() == this;
+       child = child->GetNextSibling()) {
+    nsContentUtils::MaybeFireNodeRemoved(child, this);
   }
 }
 
