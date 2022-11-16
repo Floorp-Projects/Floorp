@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "glean-core"
-version = "51.8.0"
+version = "51.8.1"
 authors = [
     "Jan-Erik Rediger <jrediger@mozilla.com>",
     "The Glean Team <glean-team@mozilla.com>",

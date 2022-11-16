@@ -59,9 +59,17 @@ fn serializer_should_correctly_serialize_timing_distribution() {
             .snapshot_as_json(glean.storage(), "store1", true)
             .unwrap();
 
+        // We check the exact format to catch changes to the serialization.
+        let expected = json!({
+            "sum": duration,
+            "values": {
+                "58": 1,
+                "64": 0,
+            }
+        });
         assert_eq!(
-            json!(duration),
-            snapshot["timing_distribution"]["telemetry.distribution"]["sum"]
+            expected,
+            snapshot["timing_distribution"]["telemetry.distribution"]
         );
     }
 }
@@ -89,18 +97,22 @@ fn set_value_properly_sets_the_value_in_all_stores() {
     metric.set_start(id, 0);
     metric.set_stop_and_accumulate(&glean, id, duration);
 
+    // We check the exact format to catch changes to the serialization.
+    let expected = json!({
+        "sum": 1,
+        "values": {
+            "1": 1,
+            "2": 0,
+        }
+    });
     for store_name in store_names {
         let snapshot = StorageManager
             .snapshot_as_json(glean.storage(), &store_name, true)
             .unwrap();
 
         assert_eq!(
-            json!(duration),
-            snapshot["timing_distribution"]["telemetry.distribution"]["sum"]
-        );
-        assert_eq!(
-            json!(1),
-            snapshot["timing_distribution"]["telemetry.distribution"]["values"]["1"]
+            expected,
+            snapshot["timing_distribution"]["telemetry.distribution"]
         );
     }
 }

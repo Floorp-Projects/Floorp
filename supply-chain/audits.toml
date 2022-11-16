@@ -535,6 +535,12 @@ version = "51.7.0"
 notes = "Maintained by the Glean team at Mozilla"
 
 [[audits.glean]]
+who = "Chris H-C <chutten@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "51.8.1"
+notes = "Maintained by the Glean Team at Mozilla"
+
+[[audits.glean]]
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "50.1.2 -> 50.1.3"
@@ -592,6 +598,12 @@ who = "Chris H-C <chutten@mozilla.com>"
 criteria = "safe-to-deploy"
 version = "51.7.0"
 notes = "Maintained by the Glean team at Mozilla"
+
+[[audits.glean-core]]
+who = "Chris H-C <chutten@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "51.8.1"
+notes = "Maintained by the Glean Team at Mozilla"
 
 [[audits.glean-core]]
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
