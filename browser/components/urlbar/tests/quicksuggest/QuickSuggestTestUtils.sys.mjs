@@ -776,33 +776,4 @@ export class QuickSuggestTestUtils {
       });
     });
   }
-
-  /**
-   * Sets the app's locales, calls your callback, and resets locales.
-   *
-   * @param {Array} locales
-   *   An array of locale strings. The entire array will be set as the available
-   *   locales, and the first locale in the array will be set as the requested
-   *   locale.
-   * @param {Function} callback
-   *  The callback to be called with the {@link locales} set. This function can
-   *  be async.
-   */
-  async withLocales(locales, callback) {
-    let available = Services.locale.availableLocales;
-    let requested = Services.locale.requestedLocales;
-
-    Services.locale.availableLocales = locales;
-    Services.locale.requestedLocales = locales.slice(0, 1);
-    this.Assert.equal(
-      Services.locale.appLocaleAsBCP47,
-      locales[0],
-      "App locale is now " + locales[0]
-    );
-
-    await callback();
-
-    Services.locale.availableLocales = available;
-    Services.locale.requestedLocales = requested;
-  }
 }
