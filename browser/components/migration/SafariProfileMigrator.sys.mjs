@@ -13,6 +13,7 @@ import {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PropertyListUtils: "resource://gre/modules/PropertyListUtils.sys.mjs",
 });
@@ -47,6 +48,12 @@ Bookmarks.prototype = {
           ? this.READING_LIST_COLLECTION
           : this.ROOT_COLLECTION;
       await this._migrateCollection(children, collection);
+      if (
+        this._histogramBookmarkRoots &
+        MigrationUtils.SOURCE_BOOKMARK_ROOTS_BOOKMARKS_TOOLBAR
+      ) {
+        lazy.PlacesUIUtils.maybeToggleBookmarkToolbarVisibilityAfterMigration();
+      }
     })().then(
       () => aCallback(true),
       e => {

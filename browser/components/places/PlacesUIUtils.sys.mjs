@@ -1514,6 +1514,16 @@ export var PlacesUIUtils = {
     }
   },
 
+  maybeToggleBookmarkToolbarVisibilityAfterMigration() {
+    if (
+      Services.prefs.getBoolPref(
+        "browser.migrate.showBookmarksToolbarAfterMigration"
+      )
+    ) {
+      this.maybeToggleBookmarkToolbarVisibility(true);
+    }
+  },
+
   async managedPlacesContextShowing(event) {
     let menupopup = event.target;
     let document = menupopup.ownerDocument;
