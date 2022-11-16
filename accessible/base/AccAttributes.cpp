@@ -221,18 +221,10 @@ size_t AccAttributes::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
 size_t AccAttributes::Entry::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) {
   size_t size = 0;
 
-  {
-    AtomsSizes atomsSizes;
-    Name()->AddSizeOfIncludingThis(aMallocSizeOf, atomsSizes);
-    size += atomsSizes.mDynamicAtoms;
-  }
+  // We don't count the size of Name() since it's counted by the atoms table
+  // memory reporter.
 
-  if (mValue->is<RefPtr<nsAtom>>()) {
-    AtomsSizes atomsSizes;
-    mValue->as<RefPtr<nsAtom>>()->AddSizeOfIncludingThis(aMallocSizeOf,
-                                                         atomsSizes);
-    size += atomsSizes.mDynamicAtoms;
-  } else if (mValue->is<nsTArray<int32_t>>()) {
+  if (mValue->is<nsTArray<int32_t>>()) {
     size += mValue->as<nsTArray<int32_t>>().ShallowSizeOfExcludingThis(
         aMallocSizeOf);
   } else if (mValue->is<UniquePtr<nsString>>()) {
@@ -251,13 +243,14 @@ size_t AccAttributes::Entry::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) {
     size += mValue->as<nsTArray<uint64_t>>().ShallowSizeOfExcludingThis(
         aMallocSizeOf);
   } else {
-    // This type is stored directly and already counted.
+    // This type is stored directly and already counted or is an atom and
+    // stored and counted in the atoms table.
     // Assert that we have exhausted all the remaining variant types.
-    MOZ_ASSERT(mValue->is<bool>() || mValue->is<float>() ||
-               mValue->is<double>() || mValue->is<int32_t>() ||
-               mValue->is<uint64_t>() || mValue->is<CSSCoord>() ||
-               mValue->is<FontSize>() || mValue->is<Color>() ||
-               mValue->is<DeleteEntry>());
+    MOZ_ASSERT(mValue->is<RefPtr<nsAtom>>() || mValue->is<bool>() ||
+               mValue->is<float>() || mValue->is<double>() ||
+               mValue->is<int32_t>() || mValue->is<uint64_t>() ||
+               mValue->is<CSSCoord>() || mValue->is<FontSize>() ||
+               mValue->is<Color>() || mValue->is<DeleteEntry>());
   }
 
   return size;
