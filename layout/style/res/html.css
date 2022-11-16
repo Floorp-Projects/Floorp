@@ -25,6 +25,11 @@
 :-moz-dir-attr-like-auto:dir(ltr) { direction: ltr; }
 :-moz-dir-attr-like-auto:dir(rtl) { direction: rtl; }
 
+/* https://html.spec.whatwg.org/#bidi-rendering */
+input[type=tel]:dir(ltr) {
+  direction: ltr;
+}
+
 /* To ensure http://www.w3.org/TR/REC-html40/struct/dirlang.html#style-bidi:
  *
  * "When a block element that does not have a dir attribute is transformed to
