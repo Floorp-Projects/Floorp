@@ -114,6 +114,9 @@ class ProvidersManager {
       let { [symbol]: muxer } = ChromeUtils.importESModule(module);
       this.registerMuxer(muxer);
     }
+
+    // This is defined as a property so tests can override it.
+    this._chunkResultsDelayMs = CHUNK_RESULTS_DELAY_MS;
   }
 
   /**
@@ -606,7 +609,7 @@ class Query {
         this._heuristicProviderTimer = new lazy.SkippableTimer({
           name: "Heuristic provider timer",
           callback: () => this._notifyResults(),
-          time: CHUNK_RESULTS_DELAY_MS,
+          time: UrlbarProvidersManager._chunkResultsDelayMs,
           logger: provider.logger,
         });
       }
@@ -614,7 +617,7 @@ class Query {
       this._chunkTimer = new lazy.SkippableTimer({
         name: "Query chunk timer",
         callback: () => this._notifyResults(),
-        time: CHUNK_RESULTS_DELAY_MS,
+        time: UrlbarProvidersManager._chunkResultsDelayMs,
         logger: provider.logger,
       });
     }

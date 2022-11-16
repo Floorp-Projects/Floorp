@@ -333,14 +333,39 @@ class ProviderQuickSuggest extends UrlbarProvider {
       this._merino?.resetSession();
     }
 
-    // Per spec, we count impressions only when the user picks a result, i.e.,
-    // when `state` is "engagement".
-    if (result?.isVisible && state == "engagement") {
-      this._recordEngagementTelemetry(
-        result,
-        isPrivate,
-        details.selIndex == result.rowIndex ? details.selType : ""
-      );
+    // Impression and clicked telemetry are both recorded on engagement. We
+    // define "impression" to mean a quick suggest result was present in the
+    // view when any result was picked.
+    if (state == "engagement") {
+      // Find the quick suggest result that's currently visible in the view.
+      // It's probably the result from the last query so check it first, but due
+      // to the async nature of how results are added to the view and made
+      // visible, it may not be.
+      if (
+        result &&
+        (result.rowIndex < 0 ||
+          queryContext.view?.visibleResults?.[result.rowIndex] != result)
+      ) {
+        // The result from the last query isn't visible.
+        result = null;
+      }
+
+      // If the result isn't visible, find a visible one. Quick suggest results
+      // typically appear last in the view, so do a reverse search.
+      if (!result) {
+        result = queryContext.view?.visibleResults?.findLast(
+          r => r.providerName == this.name
+        );
+      }
+
+      // Finally, record telemetry if there's a visible result.
+      if (result) {
+        this._recordEngagementTelemetry(
+          result,
+          isPrivate,
+          details.selIndex == result.rowIndex ? details.selType : ""
+        );
+      }
     }
   }
 
