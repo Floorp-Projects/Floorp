@@ -158,7 +158,7 @@ void HTMLAnchorElement::GetLinkTarget(nsAString& aTarget) {
   }
 }
 
-void HTMLAnchorElement::GetTarget(nsAString& aValue) {
+void HTMLAnchorElement::GetTarget(nsAString& aValue) const {
   if (!GetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue)) {
     GetBaseTarget(aValue);
   }
@@ -180,10 +180,6 @@ void HTMLAnchorElement::GetText(nsAString& aText, mozilla::ErrorResult& aRv) {
 
 void HTMLAnchorElement::SetText(const nsAString& aText, ErrorResult& aRv) {
   aRv = nsContentUtils::SetNodeTextContent(this, aText, false);
-}
-
-void HTMLAnchorElement::ToString(nsAString& aSource) {
-  return GetHref(aSource);
 }
 
 already_AddRefed<nsIURI> HTMLAnchorElement::GetHrefURI() const {
