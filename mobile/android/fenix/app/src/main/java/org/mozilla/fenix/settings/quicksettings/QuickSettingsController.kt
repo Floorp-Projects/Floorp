@@ -263,8 +263,11 @@ class DefaultQuickSettingsController(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun handlePermissionsChange(updatedPermissions: SitePermissions) {
+        val tab = requireNotNull(browserStore.state.findTabOrCustomTab(sessionId)) {
+            "A session is required to update permission"
+        }
         ioScope.launch {
-            permissionStorage.updateSitePermissions(updatedPermissions)
+            permissionStorage.updateSitePermissions(updatedPermissions, tab.content.private)
             reload(sessionId)
         }
     }

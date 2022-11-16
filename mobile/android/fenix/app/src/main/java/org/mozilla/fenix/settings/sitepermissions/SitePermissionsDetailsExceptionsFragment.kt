@@ -59,7 +59,12 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
         showToolbar(sitePermissions.origin.stripDefaultPort())
         viewLifecycleOwner.lifecycleScope.launch(Main) {
             sitePermissions =
-                requireNotNull(requireComponents.core.permissionStorage.findSitePermissionsBy(sitePermissions.origin))
+                requireNotNull(
+                    requireComponents.core.permissionStorage.findSitePermissionsBy(
+                        sitePermissions.origin,
+                        private = false,
+                    ),
+                )
             bindCategoryPhoneFeatures()
         }
     }

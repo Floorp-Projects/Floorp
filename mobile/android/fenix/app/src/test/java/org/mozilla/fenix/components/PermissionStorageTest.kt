@@ -30,7 +30,7 @@ class PermissionStorageTest {
 
         storage.add(sitePermissions)
 
-        coVerify { sitePermissionsStorage.save(sitePermissions) }
+        coVerify { sitePermissionsStorage.save(sitePermissions, private = false) }
     }
 
     @Test
@@ -39,11 +39,11 @@ class PermissionStorageTest {
         val sitePermissionsStorage: SitePermissionsStorage = mockk(relaxed = true)
         val storage = PermissionStorage(testContext, this.coroutineContext, sitePermissionsStorage)
 
-        coEvery { sitePermissionsStorage.findSitePermissionsBy(any()) } returns sitePermissions
+        coEvery { sitePermissionsStorage.findSitePermissionsBy(any(), any(), any()) } returns sitePermissions
 
-        val result = storage.findSitePermissionsBy("origin")
+        val result = storage.findSitePermissionsBy("origin", false)
 
-        coVerify { sitePermissionsStorage.findSitePermissionsBy("origin") }
+        coVerify { sitePermissionsStorage.findSitePermissionsBy("origin", private = false) }
 
         assertEquals(sitePermissions, result)
     }
@@ -54,9 +54,9 @@ class PermissionStorageTest {
         val sitePermissionsStorage: SitePermissionsStorage = mockk(relaxed = true)
         val storage = PermissionStorage(testContext, this.coroutineContext, sitePermissionsStorage)
 
-        storage.updateSitePermissions(sitePermissions)
+        storage.updateSitePermissions(sitePermissions, private = false)
 
-        coVerify { sitePermissionsStorage.update(sitePermissions) }
+        coVerify { sitePermissionsStorage.update(sitePermissions, private = false) }
     }
 
     @Test
@@ -82,7 +82,7 @@ class PermissionStorageTest {
 
         storage.deleteSitePermissions(sitePermissions)
 
-        coVerify { sitePermissionsStorage.remove(sitePermissions) }
+        coVerify { sitePermissionsStorage.remove(sitePermissions, private = false) }
     }
 
     @Test

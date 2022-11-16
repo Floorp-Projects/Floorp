@@ -1251,7 +1251,7 @@ abstract class BaseBrowserFragment :
         viewLifecycleOwner.lifecycleScope.launch(Main) {
             val sitePermissions: SitePermissions? = tab.content.url.getOrigin()?.let { origin ->
                 val storage = requireComponents.core.permissionStorage
-                storage.findSitePermissionsBy(origin)
+                storage.findSitePermissionsBy(origin, tab.content.private)
             }
 
             view?.let {

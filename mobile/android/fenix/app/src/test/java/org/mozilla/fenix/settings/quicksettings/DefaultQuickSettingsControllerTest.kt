@@ -284,7 +284,7 @@ class DefaultQuickSettingsControllerTest {
             advanceUntilIdle()
 
             coVerifyOrder {
-                permissionStorage.updateSitePermissions(testPermissions)
+                permissionStorage.updateSitePermissions(testPermissions, tab.content.private)
                 reload(tab.id)
             }
         }

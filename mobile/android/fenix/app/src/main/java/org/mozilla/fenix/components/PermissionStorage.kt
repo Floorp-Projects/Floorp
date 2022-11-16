@@ -20,26 +20,58 @@ class PermissionStorage(
         context.components.core.geckoSitePermissionsStorage,
 ) {
 
+    /**
+     * Persists the [sitePermissions] provided as a parameter.
+     * @param sitePermissions the [sitePermissions] to be stored.
+     */
     suspend fun add(sitePermissions: SitePermissions) = withContext(dispatcher) {
-        permissionsStorage.save(sitePermissions)
+        permissionsStorage.save(sitePermissions, private = false)
     }
 
-    suspend fun findSitePermissionsBy(origin: String): SitePermissions? = withContext(dispatcher) {
-        permissionsStorage.findSitePermissionsBy(origin)
-    }
+    /**
+     * Finds all SitePermissions that match the [origin].
+     * @param origin the site to be used as filter in the search.
+     * @param private indicates if the [origin] belongs to a private session.
+     */
+    suspend fun findSitePermissionsBy(origin: String, private: Boolean): SitePermissions? =
+        withContext(dispatcher) {
+            permissionsStorage.findSitePermissionsBy(origin, private = private)
+        }
 
-    suspend fun updateSitePermissions(sitePermissions: SitePermissions) = withContext(dispatcher) {
-        permissionsStorage.update(sitePermissions)
-    }
+    /**
+     * Replaces an existing SitePermissions with the values of [sitePermissions] provided as a parameter.
+     * @param sitePermissions the sitePermissions to be updated.
+     * @param private indicates if the [SitePermissions] belongs to a private session.
+     */
+    suspend fun updateSitePermissions(sitePermissions: SitePermissions, private: Boolean) =
+        withContext(dispatcher) {
+            permissionsStorage.update(sitePermissions, private = private)
+        }
 
+    /**
+     * Returns all saved [SitePermissions] instances as a [DataSource.Factory].
+     *
+     * A consuming app can transform the data source into a `LiveData<PagedList>` of when using RxJava2 into a
+     * `Flowable<PagedList>` or `Observable<PagedList>`, that can be observed.
+     *
+     * - https://developer.android.com/topic/libraries/architecture/paging/data
+     * - https://developer.android.com/topic/libraries/architecture/paging/ui
+     */
     suspend fun getSitePermissionsPaged(): DataSource.Factory<Int, SitePermissions> {
         return permissionsStorage.getSitePermissionsPaged()
     }
 
+    /**
+     * Deletes all sitePermissions that match the sitePermissions provided as a parameter.
+     * @param sitePermissions the sitePermissions to be deleted from the storage.
+     */
     suspend fun deleteSitePermissions(sitePermissions: SitePermissions) = withContext(dispatcher) {
-        permissionsStorage.remove(sitePermissions)
+        permissionsStorage.remove(sitePermissions, private = false)
     }
 
+    /**
+     * Deletes all sitePermissions sitePermissions.
+     */
     suspend fun deleteAllSitePermissions() = withContext(dispatcher) {
         permissionsStorage.removeAll()
     }

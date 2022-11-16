@@ -224,7 +224,10 @@ class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
     private fun updatedSitePermissions(status: SitePermissions.Status) {
         val updatedSitePermissions = getSitePermission().update(getFeature(), status)
         viewLifecycleOwner.lifecycleScope.launch(Main) {
-            requireComponents.core.permissionStorage.updateSitePermissions(updatedSitePermissions)
+            requireComponents.core.permissionStorage.updateSitePermissions(
+                sitePermissions = updatedSitePermissions,
+                private = false,
+            )
             requireComponents.tryReloadTabBy(updatedSitePermissions.origin)
         }
     }
@@ -233,7 +236,10 @@ class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
     internal fun updatedSitePermissions(autoplayValue: AutoplayValue) {
         val updatedSitePermissions = autoplayValue.updateSitePermissions(getSitePermission())
         viewLifecycleOwner.lifecycleScope.launch(Main) {
-            requireComponents.core.permissionStorage.updateSitePermissions(updatedSitePermissions)
+            requireComponents.core.permissionStorage.updateSitePermissions(
+                sitePermissions = updatedSitePermissions,
+                private = false,
+            )
             requireComponents.tryReloadTabBy(updatedSitePermissions.origin)
         }
     }
