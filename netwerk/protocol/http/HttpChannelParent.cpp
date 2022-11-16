@@ -72,8 +72,6 @@ HttpChannelParent::HttpChannelParent(dom::BrowserParent* iframeEmbedding,
       mPBOverride(aOverrideStatus),
       mStatus(NS_OK),
       mIgnoreProgress(false),
-      mSentRedirect1BeginFailed(false),
-      mReceivedRedirect2Verify(false),
       mHasSuspendedByBackPressure(false),
       mCacheNeedFlowControlInitialized(false),
       mNeedFlowControl(true),
@@ -902,34 +900,10 @@ HttpChannelParent::ContinueVerification(
 }
 
 void HttpChannelParent::ContinueRedirect2Verify(const nsresult& aResult) {
-  LOG(("HttpChannelParent::ContinueRedirect2Verify [this=%p result=%" PRIx32
-       "]\n",
+  LOG(
+      ("HttpChannelParent::ContinueRedirect2Verify "
+       "[this=%p result=%" PRIx32 "]\n",
        this, static_cast<uint32_t>(aResult)));
-
-  if (!mRedirectCallback) {
-    // This should according the logic never happen, log the situation.
-    if (mReceivedRedirect2Verify) {
-      LOG(("RecvRedirect2Verify[%p]: Duplicate fire", this));
-    }
-    if (mSentRedirect1BeginFailed) {
-      LOG(("RecvRedirect2Verify[%p]: Send to child failed", this));
-    }
-    if ((mRedirectChannelId > 0) && NS_FAILED(aResult)) {
-      LOG(("RecvRedirect2Verify[%p]: Redirect failed", this));
-    }
-    if ((mRedirectChannelId > 0) && NS_SUCCEEDED(aResult)) {
-      LOG(("RecvRedirect2Verify[%p]: Redirect succeeded", this));
-    }
-    if (!mRedirectChannel) {
-      LOG(("RecvRedirect2Verify[%p]: Missing redirect channel", this));
-    }
-
-    NS_ERROR(
-        "Unexpcted call to HttpChannelParent::RecvRedirect2Verify, "
-        "mRedirectCallback null");
-  }
-
-  mReceivedRedirect2Verify = true;
 
   if (mRedirectCallback) {
     LOG(
@@ -939,6 +913,11 @@ void HttpChannelParent::ContinueRedirect2Verify(const nsresult& aResult) {
          this, static_cast<uint32_t>(aResult), mRedirectCallback.get()));
     mRedirectCallback->OnRedirectVerifyCallback(aResult);
     mRedirectCallback = nullptr;
+  } else {
+    LOG(
+        ("RecvRedirect2Verify[%p]: NO CALLBACKS! | "
+         "mRedirectChannelId: %" PRIx64 ", mRedirectChannel: %p",
+         this, mRedirectChannelId, mRedirectChannel.get()));
   }
 }
 
@@ -1781,17 +1760,13 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
     responseHead = &cleanedUpResponseHead;
   }
 
-  bool result = false;
   if (!mIPCClosed) {
-    result = SendRedirect1Begin(
-        mRedirectChannelId, newOriginalURI, newLoadFlags, redirectFlags,
-        loadInfoForwarderArg, *responseHead, securityInfo, channelId,
-        mChannel->GetPeerAddr(), GetTimingAttributes(mChannel));
-  }
-  if (!result) {
-    // Bug 621446 investigation
-    mSentRedirect1BeginFailed = true;
-    return NS_BINDING_ABORTED;
+    if (!SendRedirect1Begin(mRedirectChannelId, newOriginalURI, newLoadFlags,
+                            redirectFlags, loadInfoForwarderArg, *responseHead,
+                            securityInfo, channelId, mChannel->GetPeerAddr(),
+                            GetTimingAttributes(mChannel))) {
+      return NS_BINDING_ABORTED;
+    }
   }
 
   // Result is handled in RecvRedirect2Verify above
