@@ -304,7 +304,7 @@ void AutoRedirectVetoNotifier::ReportRedirectResult(nsresult aRv) {
   nsHttpChannel* channel = mChannel;
   mChannel = nullptr;
 
-  if (vetoHook) vetoHook->OnRedirectResult(NS_SUCCEEDED(aRv));
+  if (vetoHook) vetoHook->OnRedirectResult(aRv);
 
   // Drop after the notification
   channel->StoreHasAutoRedirectVetoNotifier(false);

@@ -307,8 +307,8 @@ nsPrefetchNode::AsyncOnChannelRedirect(
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsPrefetchNode::OnRedirectResult(bool proceeding) {
-  if (proceeding && mRedirectChannel) mChannel = mRedirectChannel;
+nsPrefetchNode::OnRedirectResult(nsresult status) {
+  if (NS_SUCCEEDED(status) && mRedirectChannel) mChannel = mRedirectChannel;
 
   mRedirectChannel = nullptr;
 

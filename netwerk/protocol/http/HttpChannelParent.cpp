@@ -1795,9 +1795,9 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
 }
 
 NS_IMETHODIMP
-HttpChannelParent::CompleteRedirect(bool succeeded) {
-  LOG(("HttpChannelParent::CompleteRedirect [this=%p succeeded=%d]\n", this,
-       succeeded));
+HttpChannelParent::CompleteRedirect(nsresult status) {
+  LOG(("HttpChannelParent::CompleteRedirect [this=%p status=0x%X]\n", this,
+       static_cast<uint32_t>(status)));
 
   // If this was an internal redirect for a service worker interception then
   // we will not have a redirecting channel here.  Hide this redirect from
@@ -1806,7 +1806,7 @@ HttpChannelParent::CompleteRedirect(bool succeeded) {
     return NS_OK;
   }
 
-  if (succeeded && !mIPCClosed) {
+  if (NS_SUCCEEDED(status) && !mIPCClosed) {
     // TODO: check return value: assume child dead if failed
     Unused << SendRedirect3Complete();
   }
@@ -1935,11 +1935,11 @@ HttpChannelParent::AsyncOnChannelRedirect(
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpChannelParent::OnRedirectResult(bool succeeded) {
-  LOG(("HttpChannelParent::OnRedirectResult [this=%p, suc=%d]", this,
-       succeeded));
+HttpChannelParent::OnRedirectResult(nsresult status) {
+  LOG(("HttpChannelParent::OnRedirectResult [this=%p, status=0x%X]", this,
+       static_cast<uint32_t>(status)));
 
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   nsCOMPtr<nsIParentChannel> redirectChannel;
   if (mRedirectChannelId) {
@@ -1972,12 +1972,16 @@ HttpChannelParent::OnRedirectResult(bool succeeded) {
   }
 
   if (!redirectChannel) {
-    succeeded = false;
+    if (NS_FAILED(rv)) {
+      status = rv;
+    } else {
+      status = NS_ERROR_NULL_POINTER;
+    }
   }
 
-  CompleteRedirect(succeeded);
+  CompleteRedirect(status);
 
-  if (succeeded) {
+  if (NS_SUCCEEDED(status)) {
     if (!SameCOMIdentity(redirectChannel,
                          static_cast<nsIParentRedirectingChannel*>(this))) {
       Delete();

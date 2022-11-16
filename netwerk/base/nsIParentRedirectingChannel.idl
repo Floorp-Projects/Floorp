@@ -64,5 +64,5 @@ interface nsIParentRedirectingChannel : nsIParentChannel
    * Primarilly used by HttpChannelParent::OnRedirectResult and kept as
    * mActiveChannel and mRedirectChannel in that class.
    */
-  void completeRedirect(in boolean succeeded);
+  void completeRedirect(in nsresult succeeded);
 };

@@ -357,8 +357,8 @@ EarlyHintPreloader::AsyncOnChannelRedirect(
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-EarlyHintPreloader::OnRedirectResult(bool aProceeding) {
-  if (aProceeding && mRedirectChannel) {
+EarlyHintPreloader::OnRedirectResult(nsresult aStatus) {
+  if (NS_SUCCEEDED(aStatus) && mRedirectChannel) {
     mChannel = mRedirectChannel;
   }
 

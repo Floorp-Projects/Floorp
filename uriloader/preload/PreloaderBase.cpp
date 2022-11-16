@@ -79,8 +79,8 @@ NS_IMETHODIMP PreloaderBase::RedirectSink::AsyncOnChannelRedirect(
   return NS_OK;
 }
 
-NS_IMETHODIMP PreloaderBase::RedirectSink::OnRedirectResult(bool proceeding) {
-  if (proceeding && mRedirectChannel) {
+NS_IMETHODIMP PreloaderBase::RedirectSink::OnRedirectResult(nsresult status) {
+  if (NS_SUCCEEDED(status) && mRedirectChannel) {
     mPreloader->mChannel = std::move(mRedirectChannel);
   } else {
     mRedirectChannel = nullptr;
@@ -89,7 +89,7 @@ NS_IMETHODIMP PreloaderBase::RedirectSink::OnRedirectResult(bool proceeding) {
   if (mCallbacks) {
     nsCOMPtr<nsIRedirectResultListener> sink(do_GetInterface(mCallbacks));
     if (sink) {
-      return sink->OnRedirectResult(proceeding);
+      return sink->OnRedirectResult(status);
     }
   }
 

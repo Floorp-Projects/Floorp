@@ -475,8 +475,8 @@ WebTransportSessionProxy::AsyncOnChannelRedirect(
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-WebTransportSessionProxy::OnRedirectResult(bool aProceeding) {
-  if (aProceeding && mRedirectChannel) {
+WebTransportSessionProxy::OnRedirectResult(nsresult aStatus) {
+  if (NS_SUCCEEDED(aStatus) && mRedirectChannel) {
     mChannel = mRedirectChannel;
   }
 
