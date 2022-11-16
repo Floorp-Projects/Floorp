@@ -206,6 +206,10 @@ urlbar:
       type: boolean
       fallbackPref: browser.urlbar.showSearchTerms.featureGate
       description: Gate for the show search terms feature. If false, the preference#search will not show the search terms feature checkbox, and search terms will never persist in the urlbar. If true, the preference checkbox will be shown on preferences#search, and the user can choose to persist search terms on or off in the urlbar.
+    weatherFeatureGate:
+      type: boolean
+      fallbackPref: browser.urlbar.weather.featureGate
+      description: Feature gate that controls exposing all aspects of weather suggestions to the user.
 aboutwelcome:
   description: "The about:welcome page"
   owner: omc@mozilla.com
