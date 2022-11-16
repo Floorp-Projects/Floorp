@@ -5,8 +5,8 @@
 
 const EXPORTED_SYMBOLS = ["ProgressDelegateParent"];
 
-const { GeckoViewActorParent } = ChromeUtils.import(
-  "resource://gre/modules/GeckoViewActorParent.jsm"
+const { GeckoViewActorParent } = ChromeUtils.importESModule(
+  "resource://gre/modules/GeckoViewActorParent.sys.mjs"
 );
 
 class ProgressDelegateParent extends GeckoViewActorParent {}

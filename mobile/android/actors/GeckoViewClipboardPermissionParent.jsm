@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { GeckoViewActorParent } = ChromeUtils.import(
-  "resource://gre/modules/GeckoViewActorParent.jsm"
+const { GeckoViewActorParent } = ChromeUtils.importESModule(
+  "resource://gre/modules/GeckoViewActorParent.sys.mjs"
 );
 
 const EXPORTED_SYMBOLS = ["GeckoViewClipboardPermissionParent"];

@@ -5,8 +5,8 @@
 
 var EXPORTED_SYMBOLS = ["LoadURIDelegateParent"];
 
-const { GeckoViewActorParent } = ChromeUtils.import(
-  "resource://gre/modules/GeckoViewActorParent.jsm"
+const { GeckoViewActorParent } = ChromeUtils.importESModule(
+  "resource://gre/modules/GeckoViewActorParent.sys.mjs"
 );
 
 // For this.eventDispatcher in the child

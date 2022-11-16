@@ -2,13 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { GeckoViewUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewUtils.sys.mjs"
-);
+import { GeckoViewUtils } from "resource://gre/modules/GeckoViewUtils.sys.mjs";
 
-const EXPORTED_SYMBOLS = ["GeckoViewActorParent"];
-
-class GeckoViewActorParent extends JSWindowActorParent {
+export class GeckoViewActorParent extends JSWindowActorParent {
   static initLogging(aModuleName) {
     const tag = aModuleName.replace("GeckoView", "");
     return GeckoViewUtils.initLogging(tag);

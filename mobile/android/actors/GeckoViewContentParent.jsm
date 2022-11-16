@@ -9,10 +9,9 @@ const { GeckoViewUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/GeckoViewUtils.sys.mjs"
 );
 
-const { GeckoViewActorParent } = ChromeUtils.import(
-  "resource://gre/modules/GeckoViewActorParent.jsm"
+const { GeckoViewActorParent } = ChromeUtils.importESModule(
+  "resource://gre/modules/GeckoViewActorParent.sys.mjs"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 

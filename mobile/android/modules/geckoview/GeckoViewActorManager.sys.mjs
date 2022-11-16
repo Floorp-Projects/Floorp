@@ -2,17 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["GeckoViewActorManager"];
-
-const { GeckoViewUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewUtils.sys.mjs"
-);
+import { GeckoViewUtils } from "resource://gre/modules/GeckoViewUtils.sys.mjs";
 
 const actors = new Set();
 
-var GeckoViewActorManager = {
+export var GeckoViewActorManager = {
   addJSWindowActors(actors) {
     for (const [actorName, actor] of Object.entries(actors)) {
       this._register(actorName, actor);

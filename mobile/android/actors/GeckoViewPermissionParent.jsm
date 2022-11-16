@@ -11,8 +11,8 @@ const { GeckoViewUtils } = ChromeUtils.importESModule(
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { GeckoViewActorParent } = ChromeUtils.import(
-  "resource://gre/modules/GeckoViewActorParent.jsm"
+const { GeckoViewActorParent } = ChromeUtils.importESModule(
+  "resource://gre/modules/GeckoViewActorParent.sys.mjs"
 );
 
 class GeckoViewPermissionParent extends GeckoViewActorParent {

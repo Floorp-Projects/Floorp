@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { GeckoViewActorChild } = ChromeUtils.import(
-  "resource://gre/modules/GeckoViewActorChild.jsm"
+const { GeckoViewActorChild } = ChromeUtils.importESModule(
+  "resource://gre/modules/GeckoViewActorChild.sys.mjs"
 );
 
 const EXPORTED_SYMBOLS = ["GeckoViewFormValidationChild"];
