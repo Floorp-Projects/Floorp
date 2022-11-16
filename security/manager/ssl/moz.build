@@ -139,6 +139,7 @@ UNIFIED_SOURCES += [
     "nsSiteSecurityService.cpp",
     "NSSKeyStore.cpp",
     "nsSSLSocketProvider.cpp",
+    "NSSSocketControl.cpp",
     "nsTLSSocketProvider.cpp",
     "OSKeyStore.cpp",
     "PKCS11ModuleDB.cpp",

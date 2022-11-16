@@ -65,7 +65,7 @@
 //
 // SSLServerCertVerificationResult must be dispatched to the socket transport
 // thread because we must only call SSL_* functions on the socket transport
-// thread since they may do I/O, because many parts of nsNSSSocketInfo (the
+// thread since they may do I/O, because many parts of NSSSocketControl (the
 // subclass of TransportSecurityInfo used when validating certificates during
 // an SSL handshake) and the PSM NSS I/O layer are not thread-safe, and because
 // we need the event to interrupt the PR_Poll that may waiting for I/O on the
@@ -99,6 +99,7 @@
 #include "CryptoTask.h"
 #include "ExtendedValidation.h"
 #include "NSSCertDBTrustDomain.h"
+#include "NSSSocketControl.h"
 #include "PSMRunnable.h"
 #include "RootCertificateTelemetryUtils.h"
 #include "ScopedNSSTypes.h"
@@ -382,7 +383,7 @@ static nsresult OverrideAllowedForHost(
 // Prohibit changing the server cert only if we negotiated SPDY,
 // in order to support SPDY's cross-origin connection pooling.
 static SECStatus BlockServerCertChangeForSpdy(
-    nsNSSSocketInfo* infoObject, const UniqueCERTCertificate& serverCert) {
+    NSSSocketControl* infoObject, const UniqueCERTCertificate& serverCert) {
   if (!infoObject->IsHandshakeCompleted()) {
     // first handshake on this connection, not a
     // renegotiation.
@@ -890,7 +891,7 @@ SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig,
   // and many things in PSM assume that we are a client.
   MOZ_ASSERT(!isServer, "AuthCertificateHook: isServer unexpectedly true");
 
-  nsNSSSocketInfo* socketInfo = static_cast<nsNSSSocketInfo*>(arg);
+  NSSSocketControl* socketInfo = static_cast<NSSSocketControl*>(arg);
 
   UniqueCERTCertificate serverCert(SSL_PeerCertificate(fd));
 
@@ -998,7 +999,7 @@ SECStatus AuthCertificateHookWithInfo(
   }
 
   uint32_t certVerifierFlags = 0;
-  // QuicTransportSecInfo does not have a SharedState as nsNSSSocketInfo.
+  // QuicSocketControl does not have a SharedState as NSSSocketControl.
   // Here we need prefs for ocsp. This are prefs they are the same for
   // PublicSSLState and PrivateSSLState, just take them from one of them.
   if (!PublicSSLState()->IsOCSPStaplingEnabled() ||

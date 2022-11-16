@@ -6,6 +6,7 @@
 
 #include "nsNSSCallbacks.h"
 
+#include "NSSSocketControl.h"
 #include "PSMRunnable.h"
 #include "ScopedNSSTypes.h"
 #include "SharedCertVerifier.h"
@@ -700,7 +701,7 @@ nsCString getSignatureName(uint32_t aSignatureScheme) {
 
 // call with shutdown prevention lock held
 static void PreliminaryHandshakeDone(PRFileDesc* fd) {
-  nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*)fd->higher->secret;
+  NSSSocketControl* infoObject = (NSSSocketControl*)fd->higher->secret;
   if (!infoObject) {
     return;
   }
@@ -752,7 +753,7 @@ SECStatus CanFalseStartCallback(PRFileDesc* fd, void* client_data,
                                 PRBool* canFalseStart) {
   *canFalseStart = false;
 
-  nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*)fd->higher->secret;
+  NSSSocketControl* infoObject = (NSSSocketControl*)fd->higher->secret;
   if (!infoObject) {
     PR_SetError(PR_INVALID_STATE_ERROR, 0);
     return SECFailure;
@@ -1011,7 +1012,7 @@ static void AccumulateCipherSuite(Telemetry::HistogramID probe,
 void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   SECStatus rv;
 
-  nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*)fd->higher->secret;
+  NSSSocketControl* infoObject = (NSSSocketControl*)fd->higher->secret;
 
   // Do the bookkeeping that needs to be done after the
   // server's ServerHello...ServerHelloDone have been processed, but that

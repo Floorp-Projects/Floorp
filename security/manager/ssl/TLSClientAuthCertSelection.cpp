@@ -720,7 +720,7 @@ SECStatus SSLGetClientAuthDataHook(void* arg, PRFileDesc* socket,
   *pRetCert = nullptr;
   *pRetKey = nullptr;
 
-  RefPtr<nsNSSSocketInfo> info(static_cast<nsNSSSocketInfo*>(arg));
+  RefPtr<NSSSocketControl> info(static_cast<NSSSocketControl*>(arg));
   Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_CLIENT_AUTH_CERT_USAGE,
                        u"requested"_ns, 1);
 
@@ -754,7 +754,7 @@ SECStatus SSLGetClientAuthDataHook(void* arg, PRFileDesc* socket,
   // authentication certificate in the parent process.
   // Otherwise, dispatch an event to the main thread to do the selection.
   // When those events finish, they will run the continuation, which gives the
-  // appropriate information to the nsNSSSocketInfo, which then calls
+  // appropriate information to the NSSSocketControl, which then calls
   // SSL_ClientCertCallbackComplete to continue the connection.
   if (XRE_IsSocketProcess()) {
     // Currently, the IPC client certs module only refreshes its view of
