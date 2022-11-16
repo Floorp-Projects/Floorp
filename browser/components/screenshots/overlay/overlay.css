@@ -73,6 +73,12 @@
   padding: 10px 25px;
 }
 
+@media (forced-colors: active), (prefers-contrast) {
+  :-moz-native-anonymous #screenshots-cancel-button {
+    border-color: ButtonBorder;
+  }
+}
+
 :-moz-native-anonymous .screenshots-button {
   cursor: pointer;
   appearance: none;
@@ -102,6 +108,23 @@
   background-color: #ededf0;
 }
 
+@media (forced-colors: active), (prefers-contrast) {
+  :-moz-native-anonymous .screenshots-button {
+    background-color: ButtonFace;
+    color: ButtonText;
+  }
+
+  :-moz-native-anonymous .screenshots-button:hover {
+    background-color: ButtonText;
+    color: ButtonFace;
+  }
+}
+
+:-moz-native-anonymous button img {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
 :-moz-native-anonymous #buttons {
   position: absolute;
   margin: 10px 8px;
@@ -122,11 +145,31 @@
   padding: 10px 0;
 }
 
+@media (forced-colors: active), (prefers-contrast) {
+  :-moz-native-anonymous #cancel > img {
+    color: ButtonText;
+  }
+
+  :-moz-native-anonymous #cancel:hover > img {
+    color: ButtonFace;
+  }
+}
+
 :-moz-native-anonymous #copy > img {
   color: #38383d;
   content: url('chrome://browser/content/screenshots/copy.svg');
   width: 16px;
   height: 16px;
+}
+
+@media (forced-colors: active), (prefers-contrast) {
+  :-moz-native-anonymous #copy > img {
+    color: ButtonText;
+  }
+
+  :-moz-native-anonymous #copy:hover > img {
+    color: ButtonFace;
+  }
 }
 
 :-moz-native-anonymous #download {
@@ -139,9 +182,21 @@
 }
 
 :-moz-native-anonymous #download > img {
-  content: url('chrome://browser/content/screenshots/download-white.svg');
+  content: url('chrome://browser/content/screenshots/download.svg');
   width: 16px;
   height: 16px;
+}
+
+@media (forced-colors: active), (prefers-contrast) {
+  :-moz-native-anonymous #download {
+    background-color: ButtonFace;
+    color: ButtonText;
+  }
+
+  :-moz-native-anonymous #download:hover {
+    background-color: ButtonText;
+    color: ButtonFace;
+  }
 }
 
 :-moz-native-anonymous .fixed-container {
@@ -213,6 +268,12 @@
   text-align: center;
   padding-top: 20px;
   width: 400px;
+}
+
+@media (forced-colors: active), (prefers-contrast) {
+  :-moz-native-anonymous .preview-instructions {
+    color: CanvasText;
+  }
 }
 
 :-moz-native-anonymous #hover-highlight {
