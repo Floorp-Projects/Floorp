@@ -9,10 +9,10 @@
   --grey-90-a10: rgba(12, 12, 13, 0.1);
   --grey-90-a20: rgba(12, 12, 13, 0.2);
   --grey-30: #d7d7db;
-  --light-background: #fff;
-  --light-foreground: rgb(21, 20, 26);
-  --dark-background: rgb(28, 27, 34);
-  --dark-foreground: rgb(251, 251, 254);
+  --light-theme-background: #fff;
+  --light-theme-foreground: rgb(21, 20, 26);
+  --dark-theme-background: rgb(28, 27, 34);
+  --dark-theme-foreground: rgb(251, 251, 254);
   --body-padding: 64px;
   --font-size: 12;
   --content-width: 22em;
@@ -20,8 +20,8 @@
 }
 
 body {
-  --main-background: var(--light-background);
-  --main-foreground: var(--light-foreground);
+  --main-background: var(--light-theme-background);
+  --main-foreground: var(--light-theme-foreground);
   --primary-color: rgb(0, 97, 224);
   --toolbar-border: var(--grey-90-a20);
   --toolbar-transparent-border: transparent;
@@ -55,7 +55,10 @@ body {
   --font-value-border: var(--grey-30);
   --icon-fill: rgb(91, 91, 102);
   --icon-disabled-fill: rgba(91, 91, 102, 0.4);
-  --link-foreground: rgb(5, 62, 148);
+  --text-selected-background: var(--selected-background);
+  --text-selected-foreground: inherit;
+  --link-foreground: var(--primary-color);
+  --link-selected-background: var(--selected-background);
   --link-selected-foreground: #333;
   --visited-link-foreground: #b5007f;
   /* light colours */
@@ -70,8 +73,8 @@ body.sepia {
 }
 
 body.dark {
-  --main-background: var(--dark-background);
-  --main-foreground: var(--dark-foreground);
+  --main-background: var(--dark-theme-background);
+  --main-foreground: var(--dark-theme-foreground);
   --primary-color: rgb(0, 221, 255);
   --toolbar-border: rgba(249, 249, 250, 0.2);
   --toolbar-box-shadow: black;
@@ -86,7 +89,6 @@ body.dark {
   --font-value-border: #656468;
   --icon-fill: rgb(251, 251, 254);
   --icon-disabled-fill: rgba(251, 251, 254, 0.4);
-  --link-foreground: rgb(0, 97, 224);
   --link-selected-foreground: #fff;
   --visited-link-foreground: #e675fd;
   /* dark colours */
@@ -128,8 +130,11 @@ body.hcm {
   --font-value-border: CanvasText;
   --icon-fill: ButtonText;
   --icon-disabled-fill: GrayText;
+  --text-selected-background: SelectedItem;
+  --text-selected-foreground: SelectedItemText;
   --link-foreground: LinkText;
-  --link-selected-foreground: ActiveText;
+  --link-selected-background: SelectedItem;
+  --link-selected-foreground: SelectedItemText;
   --visited-link-foreground: VisitedText;
 }
 
@@ -144,29 +149,34 @@ body.loaded {
   transition: color 0.4s, background-color 0.4s;
 }
 
-body.dark *::-moz-selection {
-  background-color: var(--selected-background);
+*::selection {
+  background-color: var(--text-selected-background);
+  color: var(--text-selected-foreground);
 }
 
-a::-moz-selection {
+a {
+  border-radius: 2px;
+}
+
+a::selection {
+  background-color: var(--link-selected-background);
   color: var(--link-selected-foreground);
 }
 
-body.sans-serif,
-body.sans-serif .remove-button {
+a:focus-visible {
+  outline: 2px solid var(--outline-focus-color);
+  outline-offset: 1px;
+}
+
+body.sans-serif {
   font-family: Helvetica, Arial, sans-serif;
 }
 
-body.serif,
-body.serif .remove-button {
+body.serif {
   font-family: Georgia, "Times New Roman", serif;
 }
 
 /* Override some controls and content styles based on color scheme */
-
-.container > .header > .domain {
-  border-bottom-color: var(--main-foreground) !important;
-}
 
 blockquote {
   border-inline-start: 2px solid var(--main-foreground) !important;
@@ -174,20 +184,20 @@ blockquote {
 
 .light-button,
 .auto-button {
-  color: var(--light-foreground);
-  background-color: var(--light-background);
+  color: var(--light-theme-foreground);
+  background-color: var(--light-theme-background);
 }
 
 @media (prefers-color-scheme: dark) {
   .auto-button {
-    color: var(--dark-foreground);
-    background-color: var(--dark-background);
+    color: var(--dark-theme-foreground);
+    background-color: var(--dark-theme-background);
   }
 }
 
 .dark-button {
-  color: var(--dark-foreground);
-  background-color: var(--dark-background);
+  color: var(--dark-theme-foreground);
+  background-color: var(--dark-theme-background);
 }
 
 .sepia-button {
@@ -226,8 +236,7 @@ blockquote {
   line-height: 1.48em;
   padding-bottom: 4px;
   font-family: Helvetica, Arial, sans-serif;
-  text-decoration: none;
-  border-bottom: 1px solid;
+  text-decoration: underline var(--main-foreground) !important;
   color: var(--link-foreground);
 }
 
@@ -302,7 +311,7 @@ blockquote {
   list-style: none;
   user-select: none;
 
-  /* Set focus oulines to the primary color without having to specify it
+  /* Set focus outlines to the primary color without having to specify it
    * per each element. */
   accent-color: var(--primary-color);
 }
