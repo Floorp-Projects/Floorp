@@ -50,7 +50,10 @@ async function clearTelemetry() {
   // sync first to avoid any race conditions where telemetry arrives after
   // clearing.
   if (!isCleared()) {
-    await TestUtils.waitForCondition(isCleared);
+    await TestUtils.waitForCondition(
+      isCleared,
+      "waiting for query stripping probes to be cleared"
+    );
   }
 
   ok(true, "Telemetry has been cleared.");
@@ -65,23 +68,15 @@ async function verifyQueryString(browser, expected) {
   });
 }
 
-async function getTelemetryProbe(probeInParent, key, label, checkCntFn) {
+async function getTelemetryProbe(key, label, checkCntFn) {
   let histogram;
 
   // Wait until the telemetry probe appears.
   await TestUtils.waitForCondition(() => {
-    let histograms;
-    if (probeInParent) {
-      histograms = Services.telemetry.getSnapshotForHistograms(
-        "main",
-        false /* clear */
-      ).parent;
-    } else {
-      histograms = Services.telemetry.getSnapshotForHistograms(
-        "main",
-        false /* clear */
-      ).content;
-    }
+    let histograms = Services.telemetry.getSnapshotForHistograms(
+      "main",
+      false /* clear */
+    ).parent;
     histogram = histograms[key];
 
     let checkRes = false;
@@ -91,18 +86,13 @@ async function getTelemetryProbe(probeInParent, key, label, checkCntFn) {
     }
 
     return checkRes;
-  });
+  }, `waiting for telemetry probe (key=${key}, label=${label}) to appear`);
 
   return histogram.values[label];
 }
 
-async function checkTelemetryProbe(probeInParent, key, expectedCnt, label) {
-  let cnt = await getTelemetryProbe(
-    probeInParent,
-    key,
-    label,
-    cnt => cnt == expectedCnt
-  );
+async function checkTelemetryProbe(key, expectedCnt, label) {
+  let cnt = await getTelemetryProbe(key, label, cnt => cnt == expectedCnt);
 
   is(cnt, expectedCnt, "There should be expected count in telemetry.");
 }
@@ -131,21 +121,18 @@ add_task(async function testQueryStrippingNavigationInParent() {
     await verifyQueryString(browser, "");
   });
 
-  // Verify the telemetry probe. The stripping for new tab loading would happen
-  // in the parent process, so we check values in parent process.
+  // Verify the telemetry probe.
   await checkTelemetryProbe(
-    true,
     QUERY_STRIPPING_COUNT,
     1,
     LABEL_STRIP_FOR_NAVIGATION
   );
-  await checkTelemetryProbe(true, QUERY_STRIPPING_PARAM_COUNT, 1, "1");
+  await checkTelemetryProbe(QUERY_STRIPPING_PARAM_COUNT, 1, "1");
 
   // Because there would be some loading happening during the test and they
   // could interfere the count here. So, we only verify if the counter is
   // increased, but not the exact count.
   let newNavigationCnt = await getTelemetryProbe(
-    true,
     QUERY_STRIPPING_COUNT,
     LABEL_NAVIGATION,
     cnt => cnt > 0
@@ -176,18 +163,16 @@ add_task(async function testQueryStrippingNavigationInContent() {
     await verifyQueryString(browser, "");
   });
 
-  // Verify the telemetry probe in content process.
+  // Verify the telemetry probe.
   await checkTelemetryProbe(
-    false,
     QUERY_STRIPPING_COUNT,
     1,
     LABEL_STRIP_FOR_NAVIGATION
   );
-  await checkTelemetryProbe(false, QUERY_STRIPPING_PARAM_COUNT, 1, "1");
+  await checkTelemetryProbe(QUERY_STRIPPING_PARAM_COUNT, 1, "1");
 
   // Check if the navigation count is increased.
   let newNavigationCnt = await getTelemetryProbe(
-    false,
     QUERY_STRIPPING_COUNT,
     LABEL_NAVIGATION,
     cnt => cnt > 0
@@ -220,29 +205,22 @@ add_task(async function testQueryStrippingNavigationInContentQueryCount() {
     await verifyQueryString(browser, "");
   });
 
-  // Verify the telemetry probe in content process.
+  // Verify the telemetry probe.
   await checkTelemetryProbe(
-    false,
     QUERY_STRIPPING_COUNT,
     1,
     LABEL_STRIP_FOR_NAVIGATION
   );
 
-  await getTelemetryProbe(false, QUERY_STRIPPING_PARAM_COUNT, "0", cnt => !cnt);
-  await getTelemetryProbe(false, QUERY_STRIPPING_PARAM_COUNT, "1", cnt => !cnt);
-  await getTelemetryProbe(false, QUERY_STRIPPING_PARAM_COUNT, "2", cnt => !cnt);
-  await getTelemetryProbe(false, QUERY_STRIPPING_PARAM_COUNT, "3", cnt => !cnt);
-  await getTelemetryProbe(
-    false,
-    QUERY_STRIPPING_PARAM_COUNT,
-    "4",
-    cnt => cnt == 1
-  );
-  await getTelemetryProbe(false, QUERY_STRIPPING_PARAM_COUNT, "5", cnt => !cnt);
+  await getTelemetryProbe(QUERY_STRIPPING_PARAM_COUNT, "0", cnt => !cnt);
+  await getTelemetryProbe(QUERY_STRIPPING_PARAM_COUNT, "1", cnt => !cnt);
+  await getTelemetryProbe(QUERY_STRIPPING_PARAM_COUNT, "2", cnt => !cnt);
+  await getTelemetryProbe(QUERY_STRIPPING_PARAM_COUNT, "3", cnt => !cnt);
+  await getTelemetryProbe(QUERY_STRIPPING_PARAM_COUNT, "4", cnt => cnt == 1);
+  await getTelemetryProbe(QUERY_STRIPPING_PARAM_COUNT, "5", cnt => !cnt);
 
   // Check if the navigation count is increased.
   let newNavigationCnt = await getTelemetryProbe(
-    false,
     QUERY_STRIPPING_COUNT,
     LABEL_NAVIGATION,
     cnt => cnt > 0
@@ -275,14 +253,9 @@ add_task(async function testQueryStrippingRedirect() {
 
   // Verify the telemetry probe in parent process. Note that there is no
   // non-test loading is using redirect. So, we can check the exact count here.
-  await checkTelemetryProbe(
-    true,
-    QUERY_STRIPPING_COUNT,
-    1,
-    LABEL_STRIP_FOR_REDIRECT
-  );
-  await checkTelemetryProbe(true, QUERY_STRIPPING_COUNT, 1, LABEL_REDIRECT);
-  await checkTelemetryProbe(true, QUERY_STRIPPING_PARAM_COUNT, 1, "1");
+  await checkTelemetryProbe(QUERY_STRIPPING_COUNT, 1, LABEL_STRIP_FOR_REDIRECT);
+  await checkTelemetryProbe(QUERY_STRIPPING_COUNT, 1, LABEL_REDIRECT);
+  await checkTelemetryProbe(QUERY_STRIPPING_PARAM_COUNT, 1, "1");
 
   await clearTelemetry();
 });
@@ -301,17 +274,14 @@ add_task(async function testQueryStrippingDisabled() {
     await verifyQueryString(browser, "paramToStrip=value");
   });
 
-  // Verify the telemetry probe. There should be no stripped navigation count in
-  // parent.
+  // Verify the telemetry probe. There should be no stripped navigation count.
   await checkTelemetryProbe(
-    true,
     QUERY_STRIPPING_COUNT,
     undefined,
     LABEL_STRIP_FOR_NAVIGATION
   );
   // Check if the navigation count is increased.
   let newNavigationCnt = await getTelemetryProbe(
-    true,
     QUERY_STRIPPING_COUNT,
     LABEL_NAVIGATION,
     cnt => cnt > 0
@@ -339,17 +309,15 @@ add_task(async function testQueryStrippingDisabled() {
     await verifyQueryString(browser, "paramToStrip=value");
   });
 
-  // Verify the telemetry probe in content process. There should be no  stripped
-  // navigation count in content.
+  // Verify the telemetry probe in content process. There should be no stripped
+  // navigation count.
   await checkTelemetryProbe(
-    false,
     QUERY_STRIPPING_COUNT,
     undefined,
     LABEL_STRIP_FOR_NAVIGATION
   );
   // Check if the navigation count is increased.
   newNavigationCnt = await getTelemetryProbe(
-    false,
     QUERY_STRIPPING_COUNT,
     LABEL_NAVIGATION,
     cnt => cnt > 0
@@ -379,12 +347,11 @@ add_task(async function testQueryStrippingDisabled() {
 
   // Verify the telemetry probe. The stripped redirect count should not exist.
   await checkTelemetryProbe(
-    true,
     QUERY_STRIPPING_COUNT,
     undefined,
     LABEL_STRIP_FOR_REDIRECT
   );
-  await checkTelemetryProbe(true, QUERY_STRIPPING_COUNT, 1, LABEL_REDIRECT);
+  await checkTelemetryProbe(QUERY_STRIPPING_COUNT, 1, LABEL_REDIRECT);
 
   await clearTelemetry();
 });
