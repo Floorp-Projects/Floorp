@@ -1454,6 +1454,10 @@ void DocAccessible::ProcessQueuedCacheUpdates() {
     return;
   }
 
+  AUTO_PROFILER_MARKER_TEXT("DocAccessible::ProcessQueuedCacheUpdates", A11Y,
+                            {}, ""_ns);
+  // DO NOT ADD CODE ABOVE THIS BLOCK: THIS CODE IS MEASURING TIMINGS.
+
   nsTArray<CacheData> data;
   for (auto iter = mQueuedCacheUpdates.Iter(); !iter.Done(); iter.Next()) {
     LocalAccessible* acc = iter.Key();
