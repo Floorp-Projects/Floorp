@@ -51,14 +51,16 @@ nsSHEntry::nsSHEntry(const nsSHEntry& aOther)
       mURI(aOther.mURI),
       mOriginalURI(aOther.mOriginalURI),
       mResultPrincipalURI(aOther.mResultPrincipalURI),
-      mUnstrippedURI(aOther.mUnstrippedURI),
       mReferrerInfo(aOther.mReferrerInfo),
       mTitle(aOther.mTitle),
       mPostData(aOther.mPostData),
-      mLoadType(0),  // XXX why not copy?
+      mLoadType(0)  // XXX why not copy?
+      ,
       mID(aOther.mID),
-      mScrollPositionX(0),  // XXX why not copy?
-      mScrollPositionY(0),  // XXX why not copy?
+      mScrollPositionX(0)  // XXX why not copy?
+      ,
+      mScrollPositionY(0)  // XXX why not copy?
+      ,
       mParent(aOther.mParent),
       mStateData(aOther.mStateData),
       mSrcdocData(aOther.mSrcdocData),
@@ -145,19 +147,6 @@ nsSHEntry::GetResultPrincipalURI(nsIURI** aResultPrincipalURI) {
 NS_IMETHODIMP
 nsSHEntry::SetResultPrincipalURI(nsIURI* aResultPrincipalURI) {
   mResultPrincipalURI = aResultPrincipalURI;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHEntry::GetUnstrippedURI(nsIURI** aUnstrippedURI) {
-  *aUnstrippedURI = mUnstrippedURI;
-  NS_IF_ADDREF(*aUnstrippedURI);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHEntry::SetUnstrippedURI(nsIURI* aUnstrippedURI) {
-  mUnstrippedURI = aUnstrippedURI;
   return NS_OK;
 }
 
@@ -374,16 +363,18 @@ nsSHEntry::SetContentType(const nsACString& aContentType) {
 }
 
 NS_IMETHODIMP
-nsSHEntry::Create(
-    nsIURI* aURI, const nsAString& aTitle, nsIInputStream* aInputStream,
-    uint32_t aCacheKey, const nsACString& aContentType,
-    nsIPrincipal* aTriggeringPrincipal, nsIPrincipal* aPrincipalToInherit,
-    nsIPrincipal* aPartitionedPrincipalToInherit,
-    nsIContentSecurityPolicy* aCsp, const nsID& aDocShellID,
-    bool aDynamicCreation, nsIURI* aOriginalURI, nsIURI* aResultPrincipalURI,
-    nsIURI* aUnstrippedURI, bool aLoadReplace, nsIReferrerInfo* aReferrerInfo,
-    const nsAString& aSrcdocData, bool aSrcdocEntry, nsIURI* aBaseURI,
-    bool aSaveLayoutState, bool aExpired, bool aUserActivation) {
+nsSHEntry::Create(nsIURI* aURI, const nsAString& aTitle,
+                  nsIInputStream* aInputStream, uint32_t aCacheKey,
+                  const nsACString& aContentType,
+                  nsIPrincipal* aTriggeringPrincipal,
+                  nsIPrincipal* aPrincipalToInherit,
+                  nsIPrincipal* aPartitionedPrincipalToInherit,
+                  nsIContentSecurityPolicy* aCsp, const nsID& aDocShellID,
+                  bool aDynamicCreation, nsIURI* aOriginalURI,
+                  nsIURI* aResultPrincipalURI, bool aLoadReplace,
+                  nsIReferrerInfo* aReferrerInfo, const nsAString& aSrcdocData,
+                  bool aSrcdocEntry, nsIURI* aBaseURI, bool aSaveLayoutState,
+                  bool aExpired, bool aUserActivation) {
   MOZ_ASSERT(
       aTriggeringPrincipal,
       "need a valid triggeringPrincipal to create a session history entry");
@@ -422,7 +413,6 @@ nsSHEntry::Create(
 
   mOriginalURI = aOriginalURI;
   mResultPrincipalURI = aResultPrincipalURI;
-  mUnstrippedURI = aUnstrippedURI;
   mLoadReplace = aLoadReplace;
   mReferrerInfo = aReferrerInfo;
 
@@ -902,9 +892,6 @@ nsSHEntry::CreateLoadInfo(nsDocShellLoadState** aLoadState) {
   nsCOMPtr<nsIURI> resultPrincipalURI = GetResultPrincipalURI();
   emplacedResultPrincipalURI.emplace(std::move(resultPrincipalURI));
   loadState->SetMaybeResultPrincipalURI(emplacedResultPrincipalURI);
-
-  nsCOMPtr<nsIURI> unstrippedURI = GetUnstrippedURI();
-  loadState->SetUnstrippedURI(unstrippedURI);
 
   loadState->SetLoadReplace(GetLoadReplace());
   nsCOMPtr<nsIInputStream> postData = GetPostData();

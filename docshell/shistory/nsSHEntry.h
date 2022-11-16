@@ -45,7 +45,6 @@ class nsSHEntry : public nsISHEntry {
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIURI> mOriginalURI;
   nsCOMPtr<nsIURI> mResultPrincipalURI;
-  nsCOMPtr<nsIURI> mUnstrippedURI;
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
   nsString mTitle;
   nsString mName;
