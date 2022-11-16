@@ -1011,7 +1011,7 @@ class TestRecursiveMakeBackend(BackendTester):
 
         expected = [
             "CARGO_FILE := %s/code/Cargo.toml" % env.topsrcdir,
-            "CARGO_TARGET_DIR := %s" % env.topobjdir,
+            "CARGO_TARGET_DIR := .",
             "RUST_PROGRAMS += i686-pc-windows-msvc/release/target.exe",
             "RUST_CARGO_PROGRAMS += target",
             "HOST_RUST_PROGRAMS += i686-pc-windows-msvc/release/host.exe",
