@@ -5,34 +5,46 @@
 package org.mozilla.fenix.search.toolbar
 
 import android.content.Context
+import android.graphics.Bitmap
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.core.graphics.drawable.toBitmap
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.spyk
 import io.mockk.verify
+import mozilla.components.browser.domains.autocomplete.BaseDomainAutocompleteProvider
 import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
+import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.feature.awesomebar.provider.SessionAutocompleteProvider
+import mozilla.components.feature.syncedtabs.SyncedTabsAutocompleteProvider
+import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.search.SearchEngineSource
 import org.mozilla.fenix.search.SearchFragmentState
+import org.mozilla.fenix.utils.Settings
 import java.util.UUID
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -127,6 +139,7 @@ class ToolbarViewTest {
     @Test
     fun `GIVEN search term is set WHEN switching to edit mode THEN the cursor is set at the end of the search term`() {
         every { context.settings().showUnifiedSearchFeature } returns true
+        every { context.settings().shouldShowHistorySuggestions } returns true
         val view = buildToolbarView(false)
         mockkObject(FeatureFlags)
 
@@ -140,6 +153,7 @@ class ToolbarViewTest {
     @Test
     fun `GIVEN no search term is set WHEN switching to edit mode THEN the cursor is set at the end of the search term`() {
         every { context.settings().showUnifiedSearchFeature } returns true
+        every { context.settings().shouldShowHistorySuggestions } returns true
         val view = buildToolbarView(false)
         mockkObject(FeatureFlags)
 
@@ -255,10 +269,369 @@ class ToolbarViewTest {
         assertEquals(context.getString(R.string.search_hint), toolbarView.view.edit.hint)
     }
 
-    private fun buildToolbarView(isPrivate: Boolean) = ToolbarView(
-        context,
-        context.settings(),
-        interactor,
+    @Test
+    fun `GIVEN normal browsing mode WHEN the toolbar view is initialized THEN create an autocomplete feature with valid engine`() {
+        val toolbarView = buildToolbarView(false)
+
+        val autocompleteFeature = toolbarView.autocompleteFeature
+
+        assertNotNull(autocompleteFeature.engine)
+    }
+
+    @Test
+    fun `GIVEN normal private mode WHEN the toolbar view is initialized THEN create an autocomplete feature with null engine`() {
+        val toolbarView = buildToolbarView(true)
+
+        val autocompleteFeature = toolbarView.autocompleteFeature
+
+        assertNull(autocompleteFeature.engine)
+    }
+
+    @Test
+    fun `GIVEN autocomplete disabled WHEN the toolbar view is initialized THEN create an autocomplete with disabled functionality`() {
+        val settings: Settings = mockk {
+            every { shouldAutocompleteInAwesomebar } returns false
+        }
+        val toolbarView = buildToolbarView(true, settings)
+
+        val autocompleteFeature = toolbarView.autocompleteFeature
+
+        assertFalse(autocompleteFeature.shouldAutocomplete())
+    }
+
+    @Test
+    fun `GIVEN autocomplete enabled WHEN the toolbar view is initialized THEN create an autocomplete with enabled functionality`() {
+        val settings: Settings = mockk {
+            every { shouldAutocompleteInAwesomebar } returns true
+        }
+        val toolbarView = buildToolbarView(true, settings)
+
+        val autocompleteFeature = toolbarView.autocompleteFeature
+
+        assertTrue(autocompleteFeature.shouldAutocomplete())
+    }
+
+    @Test
+    fun `GIVEN unified search is disabled and history suggestions enabled a new search state with the default search engine source selected WHEN updating the toolbar THEN reconfigure autocomplete suggestions`() {
+        mockkConstructor(ToolbarAutocompleteFeature::class) {
+            val historyProvider: PlacesHistoryStorage = mockk(relaxed = true)
+            val domainsProvider: BaseDomainAutocompleteProvider = mockk(relaxed = true)
+            val components: Components = mockk(relaxed = true) {
+                every { core.historyStorage } returns historyProvider
+                every { core.domainsAutocompleteProvider } returns domainsProvider
+            }
+
+            val settings: Settings = mockk(relaxed = true) {
+                every { showUnifiedSearchFeature } returns false
+                every { shouldShowHistorySuggestions } returns true
+            }
+            val toolbarView = buildToolbarView(
+                isPrivate = false,
+                settings = settings,
+                components = components,
+            )
+
+            toolbarView.update(defaultState)
+
+            verify {
+                toolbarView.autocompleteFeature.updateAutocompleteProviders(
+                    providers = listOf(historyProvider, domainsProvider),
+                    refreshAutocomplete = true,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `GIVEN unified search is disabled, history suggestions disabled and a new search state with the default search engine source selected WHEN updating the toolbar THEN reconfigure autocomplete suggestions`() {
+        mockkConstructor(ToolbarAutocompleteFeature::class) {
+            val historyProvider: PlacesHistoryStorage = mockk(relaxed = true)
+            val domainsProvider: BaseDomainAutocompleteProvider = mockk(relaxed = true)
+            val components: Components = mockk(relaxed = true) {
+                every { core.historyStorage } returns historyProvider
+                every { core.domainsAutocompleteProvider } returns domainsProvider
+            }
+
+            val settings: Settings = mockk(relaxed = true) {
+                every { showUnifiedSearchFeature } returns false
+                every { shouldShowHistorySuggestions } returns false
+            }
+            val toolbarView = buildToolbarView(
+                isPrivate = false,
+                settings = settings,
+                components = components,
+            )
+
+            toolbarView.update(defaultState)
+
+            verify {
+                toolbarView.autocompleteFeature.updateAutocompleteProviders(
+                    providers = listOf(domainsProvider),
+                    refreshAutocomplete = true,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `GIVEN unified search is disabled and a new search state with other than the default search engine source selected WHEN updating the toolbar THEN reconfigure autocomplete suggestions`() {
+        mockkConstructor(ToolbarAutocompleteFeature::class) {
+            val historyProvider: PlacesHistoryStorage = mockk(relaxed = true)
+            val domainsProvider: BaseDomainAutocompleteProvider = mockk(relaxed = true)
+            val components: Components = mockk(relaxed = true) {
+                every { core.historyStorage } returns historyProvider
+                every { core.domainsAutocompleteProvider } returns domainsProvider
+            }
+
+            val settings: Settings = mockk(relaxed = true) {
+                every { showUnifiedSearchFeature } returns false
+                every { shouldShowHistorySuggestions } returns true
+            }
+            val toolbarView = buildToolbarView(
+                isPrivate = false,
+                settings = settings,
+                components = components,
+            )
+
+            toolbarView.update(defaultState.copy(searchEngineSource = SearchEngineSource.Tabs(fakeSearchEngine)))
+            verify {
+                toolbarView.autocompleteFeature.updateAutocompleteProviders(
+                    providers = emptyList(),
+                    refreshAutocomplete = true,
+                )
+            }
+
+            toolbarView.update(defaultState.copy(searchEngineSource = SearchEngineSource.Bookmarks(fakeSearchEngine)))
+            verify {
+                toolbarView.autocompleteFeature.updateAutocompleteProviders(
+                    providers = emptyList(),
+                    refreshAutocomplete = true,
+                )
+            }
+
+            toolbarView.update(defaultState.copy(searchEngineSource = SearchEngineSource.History(fakeSearchEngine)))
+            verify {
+                toolbarView.autocompleteFeature.updateAutocompleteProviders(
+                    providers = emptyList(),
+                    refreshAutocomplete = true,
+                )
+            }
+
+            toolbarView.update(defaultState.copy(searchEngineSource = SearchEngineSource.Shortcut(fakeSearchEngine)))
+            verify {
+                toolbarView.autocompleteFeature.updateAutocompleteProviders(
+                    providers = emptyList(),
+                    refreshAutocomplete = true,
+                )
+            }
+
+            toolbarView.update(defaultState.copy(searchEngineSource = SearchEngineSource.None))
+            verify {
+                toolbarView.autocompleteFeature.updateAutocompleteProviders(
+                    providers = emptyList(),
+                    refreshAutocomplete = true,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `GIVEN history suggestions enabled and a new search state with the default search engine source selected WHEN updating the toolbar THEN reconfigure autocomplete suggestions`() {
+        mockkConstructor(ToolbarAutocompleteFeature::class) {
+            val historyProvider: PlacesHistoryStorage = mockk(relaxed = true)
+            val domainsProvider: BaseDomainAutocompleteProvider = mockk(relaxed = true)
+            val components: Components = mockk(relaxed = true) {
+                every { core.historyStorage } returns historyProvider
+                every { core.domainsAutocompleteProvider } returns domainsProvider
+            }
+
+            val settings: Settings = mockk(relaxed = true) {
+                every { showUnifiedSearchFeature } returns true
+                every { shouldShowHistorySuggestions } returns true
+            }
+            val toolbarView = buildToolbarView(
+                isPrivate = false,
+                settings = settings,
+                components = components,
+            )
+
+            toolbarView.update(defaultState)
+
+            verify {
+                toolbarView.autocompleteFeature.updateAutocompleteProviders(
+                    providers = listOf(historyProvider, domainsProvider),
+                    refreshAutocomplete = true,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `GIVEN history suggestions disabled and a new search state with the default search engine source selected WHEN updating the toolbar THEN reconfigure autocomplete suggestions`() {
+        mockkConstructor(ToolbarAutocompleteFeature::class) {
+            val historyProvider: PlacesHistoryStorage = mockk(relaxed = true)
+            val domainsProvider: BaseDomainAutocompleteProvider = mockk(relaxed = true)
+            val components: Components = mockk(relaxed = true) {
+                every { core.historyStorage } returns historyProvider
+                every { core.domainsAutocompleteProvider } returns domainsProvider
+            }
+            val settings: Settings = mockk(relaxed = true) {
+                every { showUnifiedSearchFeature } returns true
+                every { shouldShowHistorySuggestions } returns false
+            }
+            val toolbarView = buildToolbarView(
+                isPrivate = false,
+                settings = settings,
+                components = components,
+            )
+
+            toolbarView.update(defaultState)
+
+            verify {
+                toolbarView.autocompleteFeature.updateAutocompleteProviders(
+                    providers = listOf(domainsProvider),
+                    refreshAutocomplete = true,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `GIVEN a new search state with the tabs engine source selected WHEN updating the toolbar THEN reconfigure autocomplete suggestions`() {
+        mockkConstructor(ToolbarAutocompleteFeature::class) {
+            val localSessionProvider: SessionAutocompleteProvider = mockk(relaxed = true)
+            val syncedSessionsProvider: SyncedTabsAutocompleteProvider = mockk(relaxed = true)
+            val components: Components = mockk(relaxed = true) {
+                every { core.sessionAutocompleteProvider } returns localSessionProvider
+                every { backgroundServices.syncedTabsAutocompleteProvider } returns syncedSessionsProvider
+            }
+            val settings: Settings = mockk(relaxed = true) {
+                every { showUnifiedSearchFeature } returns true
+            }
+            val toolbarView = buildToolbarView(
+                isPrivate = false,
+                settings = settings,
+                components = components,
+            )
+
+            toolbarView.update(defaultState.copy(searchEngineSource = SearchEngineSource.Tabs(fakeSearchEngine)))
+
+            verify {
+                toolbarView.autocompleteFeature.updateAutocompleteProviders(
+                    providers = listOf(localSessionProvider, syncedSessionsProvider),
+                    refreshAutocomplete = true,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `GIVEN a new search state with the bookmarks engine source selected WHEN updating the toolbar THEN reconfigure autocomplete suggestions`() {
+        mockkConstructor(ToolbarAutocompleteFeature::class) {
+            val bookmarksProvider: PlacesBookmarksStorage = mockk(relaxed = true)
+            val components: Components = mockk(relaxed = true) {
+                every { core.bookmarksStorage } returns bookmarksProvider
+            }
+            val settings: Settings = mockk(relaxed = true) {
+                every { showUnifiedSearchFeature } returns true
+            }
+            val toolbarView = buildToolbarView(
+                isPrivate = false,
+                settings = settings,
+                components = components,
+            )
+
+            toolbarView.update(defaultState.copy(searchEngineSource = SearchEngineSource.Bookmarks(fakeSearchEngine)))
+
+            verify {
+                toolbarView.autocompleteFeature.updateAutocompleteProviders(
+                    providers = listOf(bookmarksProvider),
+                    refreshAutocomplete = true,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `GIVEN a new search state with the history engine source selected WHEN updating the toolbar THEN reconfigure autocomplete suggestions`() {
+        mockkConstructor(ToolbarAutocompleteFeature::class) {
+            val historyProvider: PlacesHistoryStorage = mockk(relaxed = true)
+            val components: Components = mockk(relaxed = true) {
+                every { core.historyStorage } returns historyProvider
+            }
+            val settings: Settings = mockk(relaxed = true) {
+                every { showUnifiedSearchFeature } returns true
+            }
+            val toolbarView = buildToolbarView(
+                isPrivate = false,
+                settings = settings,
+                components = components,
+            )
+
+            toolbarView.update(defaultState.copy(searchEngineSource = SearchEngineSource.History(fakeSearchEngine)))
+
+            verify {
+                toolbarView.autocompleteFeature.updateAutocompleteProviders(
+                    providers = listOf(historyProvider),
+                    refreshAutocomplete = true,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `GIVEN a new search state with no engine source selected WHEN updating the toolbar THEN reconfigure autocomplete suggestions`() {
+        mockkConstructor(ToolbarAutocompleteFeature::class) {
+            val settings: Settings = mockk(relaxed = true) {
+                every { showUnifiedSearchFeature } returns true
+            }
+            val toolbarView = buildToolbarView(
+                false,
+                settings = settings,
+            )
+
+            toolbarView.update(defaultState.copy(searchEngineSource = SearchEngineSource.None))
+
+            verify {
+                toolbarView.autocompleteFeature.updateAutocompleteProviders(
+                    providers = emptyList(),
+                    refreshAutocomplete = true,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `GIVEN a new search state with a shortcut engine source selected WHEN updating the toolbar THEN reconfigure autocomplete suggestions`() {
+        mockkConstructor(ToolbarAutocompleteFeature::class) {
+            val settings: Settings = mockk(relaxed = true) {
+                every { showUnifiedSearchFeature } returns true
+            }
+            val toolbarView = buildToolbarView(
+                isPrivate = false,
+                settings = settings,
+            )
+
+            toolbarView.update(defaultState.copy(searchEngineSource = SearchEngineSource.Shortcut(fakeSearchEngine)))
+
+            verify {
+                toolbarView.autocompleteFeature.updateAutocompleteProviders(
+                    providers = emptyList(),
+                    refreshAutocomplete = true,
+                )
+            }
+        }
+    }
+
+    private fun buildToolbarView(
+        isPrivate: Boolean,
+        settings: Settings = context.settings(),
+        components: Components = mockk(relaxed = true),
+    ) = ToolbarView(
+        context = context,
+        settings = settings,
+        components = components,
+        interactor = interactor,
         isPrivate = isPrivate,
         view = toolbar,
         fromHomeFragment = false,
@@ -272,3 +645,14 @@ class ToolbarViewTest {
         isGeneral = isGeneral,
     )
 }
+
+/**
+ * Get a fake [SearchEngine] to use where a simple mock won't suffice.
+ */
+private val fakeSearchEngine = SearchEngine(
+    id = "fakeId",
+    name = "fakeName",
+    icon = Bitmap.createBitmap(1, 1, Bitmap.Config.ALPHA_8),
+    type = SearchEngine.Type.CUSTOM,
+    resultUrls = emptyList(),
+)

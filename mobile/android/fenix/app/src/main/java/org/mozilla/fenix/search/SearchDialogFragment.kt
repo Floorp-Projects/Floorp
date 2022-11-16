@@ -45,7 +45,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
@@ -53,10 +52,8 @@ import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.menu.candidate.DrawableMenuIcon
 import mozilla.components.concept.menu.candidate.TextMenuCandidate
-import mozilla.components.concept.toolbar.AutocompleteProvider
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.qr.QrFeature
-import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.service.glean.private.NoExtras
@@ -231,33 +228,13 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         toolbarView = ToolbarView(
             requireContext(),
             requireContext().settings(),
+            requireComponents,
             interactor,
             isPrivate,
             binding.toolbar,
             fromHomeFragment,
         ).also {
             inlineAutocompleteEditText = it.view.findViewById(R.id.mozac_browser_toolbar_edit_url_view)
-        }
-
-        if (requireContext().settings().shouldAutocompleteInAwesomebar) {
-            val engineForSpeculativeConnects = if (!isPrivate) requireComponents.core.engine else null
-
-            ToolbarAutocompleteFeature(
-                binding.toolbar,
-                engineForSpeculativeConnects,
-                { store.state.searchEngineSource.searchEngine?.type != SearchEngine.Type.APPLICATION },
-            ).apply {
-                updateAutocompleteProviders(
-                    listOfNotNull(
-                        historyStorageProvider(),
-                        // Assume the history provider has priority 0 and set priority 1 for the domains provider
-                        // to ensure the first source checked for autocomplete suggestions is history.
-                        ShippedDomainsProvider(1).also { shippedDomainsProvider ->
-                            shippedDomainsProvider.initialize(requireContext())
-                        },
-                    ),
-                )
-            }
         }
 
         val awesomeBar = binding.awesomeBar
@@ -661,14 +638,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
         view?.hideKeyboard()
         dismissAllowingStateLoss()
-    }
-
-    private fun historyStorageProvider(): AutocompleteProvider? {
-        return if (requireContext().settings().shouldShowHistorySuggestions) {
-            requireComponents.core.historyStorage
-        } else {
-            null
-        }
     }
 
     @Suppress("DEPRECATION")

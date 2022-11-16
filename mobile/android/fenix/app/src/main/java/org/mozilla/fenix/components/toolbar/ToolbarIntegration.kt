@@ -8,15 +8,11 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
-import mozilla.components.browser.domains.autocomplete.BaseDomainAutocompleteProvider
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar
-import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.toolbar.AutocompleteProvider
 import mozilla.components.feature.tabs.toolbar.TabCounterToolbarButton
-import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarBehaviorController
 import mozilla.components.feature.toolbar.ToolbarFeature
 import mozilla.components.feature.toolbar.ToolbarPresenter
@@ -28,6 +24,9 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
 
+/**
+ * Feature configuring the toolbar when in display mode.
+ */
 abstract class ToolbarIntegration(
     context: Context,
     toolbar: BrowserToolbar,
@@ -77,18 +76,14 @@ abstract class ToolbarIntegration(
     }
 }
 
-@Suppress("LongParameterList")
 class DefaultToolbarIntegration(
     context: Context,
     toolbar: BrowserToolbar,
     toolbarMenu: ToolbarMenu,
-    domainAutocompleteProvider: BaseDomainAutocompleteProvider,
-    historyStorage: AutocompleteProvider,
     lifecycleOwner: LifecycleOwner,
     sessionId: String? = null,
     isPrivate: Boolean,
     interactor: BrowserToolbarInteractor,
-    engine: Engine,
 ) : ToolbarIntegration(
     context = context,
     toolbar = toolbar,
@@ -150,22 +145,6 @@ class DefaultToolbarIntegration(
         tabsAction.updateCount(tabCount)
 
         toolbar.addBrowserAction(tabsAction)
-
-        val engineForSpeculativeConnects = if (!isPrivate) engine else null
-        ToolbarAutocompleteFeature(
-            toolbar,
-            engineForSpeculativeConnects,
-        ).apply {
-            updateAutocompleteProviders(
-                listOfNotNull(
-                    when (context.settings().shouldShowHistorySuggestions) {
-                        true -> historyStorage
-                        false -> null
-                    },
-                    domainAutocompleteProvider,
-                ),
-            )
-        }
     }
 
     override fun start() {
