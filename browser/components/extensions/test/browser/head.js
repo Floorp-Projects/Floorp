@@ -329,8 +329,10 @@ var awaitExtensionPanel = function(extension, win = window, awaitLoad = true) {
   return AppUiTestDelegate.awaitExtensionPanel(win, extension.id, awaitLoad);
 };
 
-function getCustomizableUIPanelID() {
-  return CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
+function getCustomizableUIPanelID(win = window) {
+  return win.gUnifiedExtensions.isEnabled
+    ? CustomizableUI.AREA_ADDONS
+    : CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
 }
 
 function getBrowserActionWidget(extension) {
