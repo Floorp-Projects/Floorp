@@ -1041,7 +1041,7 @@ InterceptedHttpChannel::OnRedirectVerifyCallback(nsresult rv) {
   nsCOMPtr<nsIRedirectResultListener> hook;
   GetCallback(hook);
   if (hook) {
-    hook->OnRedirectResult(NS_SUCCEEDED(rv));
+    hook->OnRedirectResult(rv);
   }
 
   if (NS_FAILED(rv)) {
