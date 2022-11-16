@@ -507,6 +507,7 @@ html {
   right: 0;
   bottom: 0;
   margin: auto;
+  pointer-events: none;
 }
 .onboardingContainer .screen[pos=split] .section-secondary,
 .onboardingContainer .screen[pos=split] .section-main {
