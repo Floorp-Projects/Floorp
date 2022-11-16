@@ -280,8 +280,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   // since the information can be recontructed from ODA.
   uint8_t mIgnoreProgress : 1;
 
-  uint8_t mSentRedirect1BeginFailed : 1;
-  uint8_t mReceivedRedirect2Verify : 1;
   uint8_t mHasSuspendedByBackPressure : 1;
 
   // Set if we get the result of and cache |mNeedFlowControl|
