@@ -44,7 +44,6 @@ from __future__ import absolute_import
 import argparse
 import concurrent.futures
 import errno
-import glob
 import logging
 import os
 import shutil
@@ -147,30 +146,19 @@ def extract_payload(payload_path, output_path):
             return True
         elif header == "pb":
             logging.info("Extracting pbzx payload")
-            extract = "parse_pbzx.py"
+            extract = "extract_pbzx.py"
 
             payload_dir = os.path.dirname(payload_path)
-            # First, unpack the PBZX into cpio parts.
-            subprocess.check_call(["parse_pbzx.py", payload_path], cwd=payload_dir)
-            # Next, decompress any parts that are .xz, and feed them all into pax.
+            # First, extract the PBZX into cpio.
+            subprocess.check_call([extract, payload_path], cwd=payload_dir)
+            # Next, feed the extracted PBZX into pax.
             pax_proc = subprocess.Popen(
                 ["pax", "-r", "-k", "-s", ":^/::"],
                 stdin=subprocess.PIPE,
                 cwd=output_path,
             )
-            for part in sorted(glob.glob(os.path.join(payload_dir, "Payload.part*"))):
-                if part.endswith(".xz"):
-                    logging.info("Extracting xz part {}".format(part))
-                    # This would be easier if we pulled in the lzma module...
-                    xz_proc = subprocess.Popen(
-                        ["xz", "-dc", part], stdout=subprocess.PIPE, cwd=payload_dir
-                    )
-                    shutil.copyfileobj(xz_proc.stdout, pax_proc.stdin)
-                    xz_proc.wait()
-                else:
-                    logging.info("Copying plain cpio part {}".format(part))
-                    with open(part, "rb") as f:
-                        shutil.copyfileobj(f, pax_proc.stdin)
+            with open(payload_path + ".cpio", "rb") as f:
+                shutil.copyfileobj(f, pax_proc.stdin)
             pax_proc.stdin.close()
             pax_proc.wait()
             return True
