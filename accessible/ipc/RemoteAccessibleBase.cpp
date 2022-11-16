@@ -1716,11 +1716,9 @@ size_t RemoteAccessibleBase<Derived>::SizeOfExcludingThis(
     size += mCachedFields->SizeOfIncludingThis(aMallocSizeOf);
   }
 
-  // Count children
+  // We don't recurse into mChildren because they're already counted in their
+  // document's mAccessibles.
   size += mChildren.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (Derived* child : mChildren) {
-    size += child->SizeOfIncludingThis(aMallocSizeOf);
-  }
 
   return size;
 }
