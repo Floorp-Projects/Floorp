@@ -386,10 +386,17 @@ const SecondaryCTA = props => {
   })));
 };
 const OnboardingVideo = props => {
-  var _props$content, _props$content2;
+  const vidUrl = props.content.video_url;
+  const autoplay = props.content.autoPlay;
 
-  const vidUrl = (_props$content = props.content) === null || _props$content === void 0 ? void 0 : _props$content.video_url;
-  const autoplay = (_props$content2 = props.content) === null || _props$content2 === void 0 ? void 0 : _props$content2.autoPlay;
+  const handleVideoAction = event => {
+    props.handleAction({
+      currentTarget: {
+        value: event
+      }
+    });
+  };
+
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("video", {
     // eslint-disable-line jsx-a11y/media-has-caption
     controls: true,
@@ -397,8 +404,8 @@ const OnboardingVideo = props => {
     src: vidUrl,
     width: "604px",
     height: "340px",
-    value: "video_container",
-    onEnded: props.handleAction
+    onPlay: () => handleVideoAction("video_start"),
+    onEnded: () => handleVideoAction("video_end")
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("source", {
     src: vidUrl
   })));
@@ -485,9 +492,9 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       // Populate MULTI_ACTION data actions property with selected checkbox actions from tiles data
       action.data = {
         actions: this.props.activeMultiSelect.map(id => {
-          var _props$content3, _props$content3$tiles, _props$content3$tiles2;
+          var _props$content, _props$content$tiles, _props$content$tiles$;
 
-          return (_props$content3 = props.content) === null || _props$content3 === void 0 ? void 0 : (_props$content3$tiles = _props$content3.tiles) === null || _props$content3$tiles === void 0 ? void 0 : (_props$content3$tiles2 = _props$content3$tiles.data.find(ckbx => ckbx.id === id)) === null || _props$content3$tiles2 === void 0 ? void 0 : _props$content3$tiles2.action;
+          return (_props$content = props.content) === null || _props$content === void 0 ? void 0 : (_props$content$tiles = _props$content.tiles) === null || _props$content$tiles === void 0 ? void 0 : (_props$content$tiles$ = _props$content$tiles.data.find(ckbx => ckbx.id === id)) === null || _props$content$tiles$ === void 0 ? void 0 : _props$content$tiles$.action;
         })
       };
     }
