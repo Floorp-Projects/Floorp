@@ -72,6 +72,8 @@ addAccessibleTask(
   <div id="switch" role="switch"></div>
   <div id="timer" role="timer"></div>
   <div id="tooltip" role="tooltip"></div>
+  <input type="radio" role="menuitemradio" id="menuitemradio">
+  <input type="checkbox" role="menuitemcheckbox" id="menuitemcheckbox">
 
   <!-- text entries -->
   <div id="textbox_multiline" role="textbox" aria-multiline="true"></div>
@@ -183,6 +185,8 @@ addAccessibleTask(
     testRoleAndSubRole(accDoc, "switch", "AXCheckBox", "AXSwitch");
     testRoleAndSubRole(accDoc, "timer", null, "AXApplicationTimer");
     testRoleAndSubRole(accDoc, "tooltip", "AXGroup", "AXUserInterfaceTooltip");
+    testRoleAndSubRole(accDoc, "menuitemradio", "AXMenuItem", null);
+    testRoleAndSubRole(accDoc, "menuitemcheckbox", "AXMenuItem", null);
 
     // Text boxes
     testRoleAndSubRole(accDoc, "textbox_multiline", "AXTextArea");

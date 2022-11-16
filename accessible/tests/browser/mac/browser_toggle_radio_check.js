@@ -218,3 +218,84 @@ addAccessibleTask(
     );
   }
 );
+
+/**
+ * Test input[type=checkbox] with role=menuitemcheckbox
+ */
+addAccessibleTask(
+  `<input type="checkbox" role="menuitemcheckbox" id="vehicle"><label for="vehicle"> Bike</label>`,
+  async (browser, accDoc) => {
+    let checkbox = getNativeInterface(accDoc, "vehicle");
+    await untilCacheIs(
+      () => checkbox.getAttributeValue("AXValue"),
+      0,
+      "Correct initial value"
+    );
+
+    let actions = checkbox.actionNames;
+    ok(actions.includes("AXPress"), "Has press action");
+
+    let evt = waitForMacEvent("AXValueChanged", "vehicle");
+    checkbox.performAction("AXPress");
+    await evt;
+    await untilCacheIs(
+      () => checkbox.getAttributeValue("AXValue"),
+      1,
+      "Correct checked value"
+    );
+
+    evt = waitForMacEvent("AXValueChanged", "vehicle");
+    checkbox.performAction("AXPress");
+    await evt;
+    await untilCacheIs(
+      () => checkbox.getAttributeValue("AXValue"),
+      0,
+      "Correct checked value"
+    );
+  }
+);
+
+/**
+ * Test input[type=radio] with role=menuitemradio
+ */
+addAccessibleTask(
+  `<input type="radio" role="menuitemradio" id="huey" name="drone" value="huey" checked>
+   <label for="huey">Huey</label>
+   <input type="radio" role="menuitemradio" id="dewey" name="drone" value="dewey">
+   <label for="dewey">Dewey</label>`,
+  async (browser, accDoc) => {
+    let huey = getNativeInterface(accDoc, "huey");
+    await untilCacheIs(
+      () => huey.getAttributeValue("AXValue"),
+      1,
+      "Correct initial value for huey"
+    );
+
+    let dewey = getNativeInterface(accDoc, "dewey");
+    await untilCacheIs(
+      () => dewey.getAttributeValue("AXValue"),
+      0,
+      "Correct initial value for dewey"
+    );
+
+    let actions = dewey.actionNames;
+    ok(actions.includes("AXPress"), "Has press action");
+
+    let evt = Promise.all([
+      waitForMacEvent("AXValueChanged", "huey"),
+      waitForMacEvent("AXValueChanged", "dewey"),
+    ]);
+    dewey.performAction("AXPress");
+    await evt;
+    await untilCacheIs(
+      () => dewey.getAttributeValue("AXValue"),
+      1,
+      "Correct checked value for dewey"
+    );
+    await untilCacheIs(
+      () => huey.getAttributeValue("AXValue"),
+      0,
+      "Correct checked value for huey"
+    );
+  }
+);
