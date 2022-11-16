@@ -69,3 +69,18 @@ browser.engagement:
       - metrics
     no_lint:
       - BASELINE_PING
+
+ping.centre:
+  send_failures:
+    type: counter
+    description: |
+      The number of PingCentre send failures.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1800079
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1800079
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+    expires: 115

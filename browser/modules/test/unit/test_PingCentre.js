@@ -32,7 +32,7 @@ function _setUp() {
   sandbox.restore();
 }
 
-add_task(function setup() {
+add_setup(function setup() {
   sandbox = sinon.createSandbox();
   _setUp();
   pingCentre = new PingCentre({ topic: "test_topic" });
@@ -43,6 +43,12 @@ add_task(function setup() {
     Services.prefs.clearUserPref(PingCentreConstants.FHR_UPLOAD_ENABLED_PREF);
     Services.prefs.clearUserPref(PingCentreConstants.LOGGING_PREF);
   });
+
+  // On Android, FOG is set up through head.js
+  if (AppConstants.platform != "android") {
+    do_get_profile();
+    Services.fog.initializeFOG();
+  }
 });
 
 add_task(function test_enabled() {
@@ -140,4 +146,13 @@ add_task(function test_sendStructuredIngestionPing_success() {
   pingCentre.sendStructuredIngestionPing(FAKE_PING, FAKE_ENDPOINT);
 
   Assert.equal(PingCentre._sendStandalonePing.callCount, 1, "Should be sent");
+});
+
+add_task(async function test_sendStructuredIngestionPing_failure() {
+  _setUp();
+  sandbox.stub(PingCentre, "_sendStandalonePing").rejects();
+  Assert.equal(undefined, Glean.pingCentre.sendFailures.testGetValue());
+  await pingCentre.sendStructuredIngestionPing(FAKE_PING, FAKE_ENDPOINT);
+
+  Assert.equal(1, Glean.pingCentre.sendFailures.testGetValue());
 });
