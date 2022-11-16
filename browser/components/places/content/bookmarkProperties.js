@@ -77,8 +77,6 @@ const BOOKMARK_FOLDER = 1;
 const ACTION_EDIT = 0;
 const ACTION_ADD = 1;
 
-var elementsHeight = new Map();
-
 var BookmarkPropertiesPanel = {
   /** UI Text Strings */
   __strings: null,
@@ -254,11 +252,7 @@ var BookmarkPropertiesPanel = {
       );
     }
 
-    // Allow initialization to complete in a truely async manner so that we're
-    // not blocking the main thread.
-    document.mozSubdialogReady = this._initDialog().catch(ex => {
-      Cu.reportError(`Failed to initialize dialog: ${ex}`);
-    });
+    await this._initDialog();
   },
 
   _getIconUrl() {
@@ -282,49 +276,40 @@ var BookmarkPropertiesPanel = {
     acceptButton.label = this._getAcceptLabel();
     let acceptButtonDisabled = false;
 
-    // Do not use sizeToContent, otherwise, due to bug 90276, the dialog will
-    // grow at every opening.
     // Since elements can be uncollapsed asynchronously, we must observe their
-    // mutations and resize the dialog using a cached element size.
+    // mutations and resize the dialog accordingly.
     this._mutationObserver = new MutationObserver(mutations => {
-      for (let mutation of mutations) {
-        let target = mutation.target;
-        let id = target.id;
-        if (!/^editBMPanel_.*(Row|Checkbox)$/.test(id)) {
-          continue;
+      for (let { target, oldValue } of mutations) {
+        let collapsed = target.getAttribute("collapsed") == "true";
+        if (
+          /^editBMPanel_.*(Row|Checkbox)$/.test(target.id) &&
+          collapsed != (oldValue == "true")
+        ) {
+          // To support both kind of dialogs (window and dialog-box) we need
+          // both resizeBy and sizeToContent, otherwise either the dialog
+          // doesn't resize, or it gets empty unused space.
+          if (collapsed) {
+            let diff = this._mutationObserver._heightsById.get(target.id);
+            window.resizeBy(0, -diff);
+          } else {
+            let diff = target.getBoundingClientRect().height;
+            this._mutationObserver._heightsById.set(target.id, diff);
+            window.resizeBy(0, diff);
+          }
+          window.sizeToContent();
         }
-
-        let collapsed = target.getAttribute("collapsed") === "true";
-        let wasCollapsed = mutation.oldValue === "true";
-        if (collapsed == wasCollapsed) {
-          continue;
-        }
-
-        let heightDiff;
-        if (collapsed) {
-          heightDiff = -elementsHeight.get(id);
-          elementsHeight.delete(id);
-        } else {
-          heightDiff = target.getBoundingClientRect().height;
-          elementsHeight.set(id, heightDiff);
-        }
-        window.resizeBy(0, heightDiff);
       }
     });
-
+    this._mutationObserver._heightsById = new Map();
     this._mutationObserver.observe(document, {
       subtree: true,
       attributeOldValue: true,
       attributeFilter: ["collapsed"],
     });
 
-    // Some controls are flexible and we want to update their cached size when
-    // the dialog is resized.
-    window.addEventListener("resize", this);
-
     switch (this._action) {
       case ACTION_EDIT:
-        gEditItemOverlay.initPanel({
+        await gEditItemOverlay.initPanel({
           node: this._node,
           hiddenRows: this._hiddenRows,
           focusedElement: "first",
@@ -334,7 +319,7 @@ var BookmarkPropertiesPanel = {
       case ACTION_ADD:
         this._node = await this._promiseNewItem();
         // Edit the new item
-        gEditItemOverlay.initPanel({
+        await gEditItemOverlay.initPanel({
           node: this._node,
           hiddenRows: this._hiddenRows,
           postData: this._postData,
@@ -385,12 +370,6 @@ var BookmarkPropertiesPanel = {
             .getButton("accept").disabled = !this._inputIsValid();
         }
         break;
-      case "resize":
-        for (let id of elementsHeight.keys()) {
-          let { height } = document.getElementById(id).getBoundingClientRect();
-          elementsHeight.set(id, height);
-        }
-        break;
     }
   },
 
@@ -405,8 +384,6 @@ var BookmarkPropertiesPanel = {
     // gEditItemOverlay does not exist anymore here, so don't rely on it.
     this._mutationObserver.disconnect();
     delete this._mutationObserver;
-
-    window.removeEventListener("resize", this);
 
     // Calling removeEventListener with arguments which do not identify any
     // currently registered EventListener on the EventTarget has no effect.
@@ -545,5 +522,9 @@ var BookmarkPropertiesPanel = {
 };
 
 document.addEventListener("DOMContentLoaded", function() {
-  BookmarkPropertiesPanel.onDialogLoad();
+  // Content initialization is asynchronous, thus set mozSubdialogReady
+  // immediately to properly wait for it.
+  document.mozSubdialogReady = BookmarkPropertiesPanel.onDialogLoad()
+    .catch(ex => console.error(`Failed to initialize dialog: ${ex}`))
+    .then(() => window.sizeToContent());
 });
