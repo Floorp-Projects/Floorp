@@ -9,6 +9,11 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
+* **browser-storage-sync**:
+* **feature-awesomebar**
+* **feature-syncedtabs**
+  * 🆕 [Bug #1800268](https://bugzilla.mozilla.org/show_bug.cgi?id=1800268) New autocomplete providers for bookmarks, local tabs or synced tabs that can be set for `ToolbarAutocompleteFeature`.
+
 * **feature-toolbar**
   * ⚠️ **This is a breaking change**: `ToolbarAutocompleteFeature` has a new API for updating at any time `AutocompleteProvider` (add or remove any of them) individually or in bulk. This change allows supporting any instance and any number of autocomplete providers. [bug #1800268](https://bugzilla.mozilla.org/show_bug.cgi?id=1800268)
 

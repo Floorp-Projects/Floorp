@@ -15,12 +15,30 @@ import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
+import mozilla.components.concept.toolbar.AutocompleteProvider
+import mozilla.components.concept.toolbar.AutocompleteResult
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.utils.doesUrlStartsWithText
+import mozilla.components.support.utils.segmentAwareDomainMatch
+
+@VisibleForTesting
+internal const val BOOKMARKS_AUTOCOMPLETE_SOURCE_NAME = "placesBookmarks"
+
+/**
+ * How many bookmarks to try and find from which to pick one that can be an autocomplete suggestion.
+ */
+private const val BOOKMARKS_AUTOCOMPLETE_QUERY_LIMIT = 20
 
 /**
  * Implementation of the [BookmarksStorage] which is backed by a Rust Places lib via [PlacesApi].
  */
-open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), BookmarksStorage, SyncableStore {
+open class PlacesBookmarksStorage(
+    context: Context,
+    override val autocompletePriority: Int = 0,
+) : PlacesStorage(context),
+    BookmarksStorage,
+    SyncableStore,
+    AutocompleteProvider {
 
     override val logger = Logger("PlacesBookmarksStorage")
 
@@ -239,5 +257,23 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
 
     override fun registerWithSyncManager() {
         places.registerWithSyncManager()
+    }
+
+    override suspend fun getAutocompleteSuggestion(query: String): AutocompleteResult? {
+        val bookmarkUrl = searchBookmarks(query, BOOKMARKS_AUTOCOMPLETE_QUERY_LIMIT)
+            .mapNotNull { it.url }
+            .firstOrNull { doesUrlStartsWithText(it, query) }
+            ?: return null
+
+        val resultText = segmentAwareDomainMatch(query, arrayListOf(bookmarkUrl))
+        return resultText?.let {
+            AutocompleteResult(
+                input = query,
+                text = it.matchedSegment,
+                url = it.url,
+                source = BOOKMARKS_AUTOCOMPLETE_SOURCE_NAME,
+                totalItems = 1,
+            )
+        }
     }
 }

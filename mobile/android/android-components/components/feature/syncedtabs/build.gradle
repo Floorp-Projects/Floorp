@@ -40,7 +40,9 @@ dependencies {
     implementation project(':browser-storage-sync')
     implementation project(':concept-awesomebar')
     implementation project(':concept-engine')
+    implementation project(':concept-toolbar')
     implementation project(':feature-session')
+    implementation project(':support-utils')
     implementation project(':support-ktx')
     implementation project(':support-base')
 

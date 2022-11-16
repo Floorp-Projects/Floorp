@@ -6,6 +6,7 @@ package mozilla.components.browser.storage.sync
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.appservices.places.uniffi.PlacesApiException
 import mozilla.components.concept.storage.BookmarkInfo
@@ -203,5 +204,36 @@ class PlacesBookmarksStorageTest {
         with(bookmarks.searchBookmarks("mozilla")) {
             assertTrue(this.isEmpty())
         }
+    }
+
+    @Test
+    fun `GIVEN bookmarks exist WHEN asked for autocomplete suggestions THEN return the first matching bookmark`() = runTest {
+        bookmarks.apply {
+            addItem(BookmarkRoot.Mobile.id, "https://www.mozilla.org/en-us/firefox", "Mozilla", 5u)
+            addItem(BookmarkRoot.Toolbar.id, "https://support.mozilla.org/", "Support", 2u)
+        }
+
+        // Try querying for a bookmarks that doesn't exist
+        var suggestion = bookmarks.getAutocompleteSuggestion("test")
+        assertNull(suggestion)
+
+        // And now for ones that do exist
+        suggestion = bookmarks.getAutocompleteSuggestion("moz")
+        assertNotNull(suggestion)
+        assertEquals("moz", suggestion?.input)
+        // There are multiple bookmarks from the mozilla host with no guarantee about the read order.
+        // Use a smaller URL that would match all.
+        assertTrue(suggestion?.text?.startsWith("mozilla.org/en-us/") ?: false)
+        assertTrue(suggestion?.url?.startsWith("https://www.mozilla.org/en-us/") ?: false)
+        assertEquals(BOOKMARKS_AUTOCOMPLETE_SOURCE_NAME, suggestion?.source)
+        assertEquals(1, suggestion?.totalItems)
+
+        suggestion = bookmarks.getAutocompleteSuggestion("sup")
+        assertNotNull(suggestion)
+        assertEquals("sup", suggestion?.input)
+        assertEquals("support.mozilla.org/", suggestion?.text)
+        assertEquals("https://support.mozilla.org/", suggestion?.url)
+        assertEquals(BOOKMARKS_AUTOCOMPLETE_SOURCE_NAME, suggestion?.source)
+        assertEquals(1, suggestion?.totalItems)
     }
 }

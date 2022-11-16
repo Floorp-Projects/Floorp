@@ -27,37 +27,47 @@ fun segmentAwareDomainMatch(query: String, urls: Iterable<String>): DomainMatch?
     }
 }
 
-@SuppressWarnings("ReturnCount")
+/**
+ * Check if [url] starts with the exact [text] or if [url]'s domain start with the exact [text].
+ *
+ * @return `true` if [url] starts with [text], `false` otherwise.
+ */
+fun doesUrlStartsWithText(url: String, text: String) = findUrlMatchingText(url, text) != null
+
 private fun basicMatch(query: String, urls: Sequence<String>): String? {
-    for (rawUrl in urls) {
-        if (rawUrl.startsWith(query)) {
-            return rawUrl
-        }
+    return urls.firstOrNull { findUrlMatchingText(it, query) != null }
+}
 
-        val url = try {
-            Uri.parse(rawUrl)
-        } catch (e: MalformedURLException) {
-            null
-        }
+@SuppressWarnings("ReturnCount")
+private fun findUrlMatchingText(url: String, text: String): String? {
+    if (url.startsWith(text)) {
+        return url
+    }
 
-        var urlSansProtocol = url?.host
-        urlSansProtocol += url?.port?.orEmpty() + url?.path
-        urlSansProtocol?.let {
-            if (it.startsWith(query) || it.noCommonSubdomains().startsWith(query)) {
-                return rawUrl
-            }
-        }
+    val uri = try {
+        Uri.parse(url)
+    } catch (e: MalformedURLException) {
+        null
+    }
 
-        val host = url?.host ?: ""
-
-        if (host.startsWith(query)) {
-            return rawUrl
-        }
-
-        if (host.noCommonSubdomains().startsWith(query)) {
-            return rawUrl
+    var urlSansProtocol = uri?.host
+    urlSansProtocol += uri?.port?.orEmpty() + uri?.path
+    urlSansProtocol?.let {
+        if (it.startsWith(text) || it.noCommonSubdomains().startsWith(text)) {
+            return url
         }
     }
+
+    val host = uri?.host ?: ""
+
+    if (host.startsWith(text)) {
+        return url
+    }
+
+    if (host.noCommonSubdomains().startsWith(text)) {
+        return url
+    }
+
     return null
 }
 
