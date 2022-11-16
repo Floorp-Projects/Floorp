@@ -122,8 +122,8 @@ class HTMLAnchorElement final : public nsGenericHTMLElement,
   void SetType(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetHTMLAttr(nsGkAtoms::type, aValue, rv);
   }
-  void GetText(nsAString& aValue, mozilla::ErrorResult& rv);
-  void SetText(const nsAString& aValue, mozilla::ErrorResult& rv);
+  void GetText(nsAString& aText, mozilla::ErrorResult& aRv) const;
+  void SetText(const nsAString& aText, mozilla::ErrorResult& aRv);
 
   // Link::GetOrigin is OK for us
 

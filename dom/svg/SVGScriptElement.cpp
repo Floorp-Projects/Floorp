@@ -100,7 +100,7 @@ bool SVGScriptElement::GetScriptType(nsAString& type) {
   return GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
 }
 
-void SVGScriptElement::GetScriptText(nsAString& text) {
+void SVGScriptElement::GetScriptText(nsAString& text) const {
   nsContentUtils::GetNodeTextContent(this, false, text);
 }
 

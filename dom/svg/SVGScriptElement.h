@@ -40,7 +40,7 @@ class SVGScriptElement final : public SVGScriptElementBase,
 
   // nsIScriptElement
   virtual bool GetScriptType(nsAString& type) override;
-  virtual void GetScriptText(nsAString& text) override;
+  virtual void GetScriptText(nsAString& text) const override;
   virtual void GetScriptCharset(nsAString& charset) override;
   virtual void FreezeExecutionAttrs(Document* aOwnerDoc) override;
   virtual CORSMode GetCORSMode() const override;

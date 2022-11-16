@@ -242,7 +242,7 @@ class HTMLTextAreaElement final : public TextControlElement,
     SetHTMLAttr(nsGkAtoms::wrap, aWrap, aError);
   }
   void GetType(nsAString& aType);
-  void GetDefaultValue(nsAString& aDefaultValue, ErrorResult& aError);
+  void GetDefaultValue(nsAString& aDefaultValue, ErrorResult& aError) const;
   void SetDefaultValue(const nsAString& aDefaultValue, ErrorResult& aError);
   void GetValue(nsAString& aValue);
   /**
