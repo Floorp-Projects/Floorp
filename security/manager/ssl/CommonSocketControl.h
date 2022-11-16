@@ -7,16 +7,16 @@
 #ifndef CommonSocketControl_h
 #define CommonSocketControl_h
 
+#include "TransportSecurityInfo.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/net/SSLTokensCache.h"
-#include "nsISSLSocketControl.h"
-#include "TransportSecurityInfo.h"
+#include "nsITLSSocketControl.h"
 
 class CommonSocketControl : public mozilla::psm::TransportSecurityInfo,
-                            public nsISSLSocketControl {
+                            public nsITLSSocketControl {
  public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSISSLSOCKETCONTROL
+  NS_DECL_NSITLSSOCKETCONTROL
 
   explicit CommonSocketControl(uint32_t providerFlags);
 
