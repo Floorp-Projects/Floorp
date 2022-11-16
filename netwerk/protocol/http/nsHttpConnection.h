@@ -371,6 +371,7 @@ class nsHttpConnection final : public HttpConnectionBase,
 
   bool mRequestDone{false};
   bool mHasTLSTransportLayer{false};
+  bool mTransactionDisallowHttp3{false};
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpConnection, NS_HTTPCONNECTION_IID)
