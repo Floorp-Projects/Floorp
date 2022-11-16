@@ -24,7 +24,7 @@ impl InternalPings {
             baseline: PingType::new(
                 "baseline",
                 true,
-                false,
+                true,
                 vec![
                     "active".to_string(),
                     "dirty_startup".to_string(),
