@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["GeckoViewPrompterParent"];
 
-const { GeckoViewActorParent } = ChromeUtils.import(
-  "resource://gre/modules/GeckoViewActorParent.jsm"
+const { GeckoViewActorParent } = ChromeUtils.importESModule(
+  "resource://gre/modules/GeckoViewActorParent.sys.mjs"
 );
 
 const DIALOGS = [

@@ -1164,12 +1164,6 @@
   "resource://gre/modules/GMPInstallManager.jsm":
     "toolkit/modules/GMPInstallManager.jsm",
   "resource://gre/modules/GMPUtils.jsm": "toolkit/modules/GMPUtils.jsm",
-  "resource://gre/modules/GeckoViewActorChild.jsm":
-    "mobile/android/modules/geckoview/GeckoViewActorChild.jsm",
-  "resource://gre/modules/GeckoViewActorManager.jsm":
-    "mobile/android/modules/geckoview/GeckoViewActorManager.jsm",
-  "resource://gre/modules/GeckoViewActorParent.jsm":
-    "mobile/android/modules/geckoview/GeckoViewActorParent.jsm",
   "resource://gre/modules/GeckoViewAutocomplete.jsm":
     "mobile/android/modules/geckoview/GeckoViewAutocomplete.jsm",
   "resource://gre/modules/GeckoViewAutofill.jsm":
