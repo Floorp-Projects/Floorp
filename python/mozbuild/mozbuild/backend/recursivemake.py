@@ -1201,9 +1201,8 @@ class RecursiveMakeBackend(MakeBackend):
         self, obj, backend_file, target_variable, target_cargo_variable
     ):
         backend_file.write_once("CARGO_FILE := %s\n" % obj.cargo_file)
-        target_dir = mozpath.normpath(backend_file.environment.topobjdir)
-        backend_file.write("CARGO_TARGET_DIR := %s\n" % target_dir)
-        backend_file.write("%s += $(DEPTH)/%s\n" % (target_variable, obj.location))
+        backend_file.write_once("CARGO_TARGET_DIR := .\n")
+        backend_file.write("%s += %s\n" % (target_variable, obj.location))
         backend_file.write("%s += %s\n" % (target_cargo_variable, obj.name))
 
     def _process_rust_program(self, obj, backend_file):
