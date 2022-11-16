@@ -120,6 +120,11 @@ function createContext(searchString = "foo", properties = {}) {
       properties
     )
   );
+  context.view = {
+    get visibleResults() {
+      return context.results;
+    },
+  };
   UrlbarTokenizer.tokenize(context);
   return context;
 }
