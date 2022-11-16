@@ -554,7 +554,12 @@ class DisplayToolbar internal constructor(
         }
 
         views.progress.progress = progress
-        val event = AccessibilityEvent.obtain(AccessibilityEvent.TYPE_VIEW_SCROLLED).apply {
+        val event = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            AccessibilityEvent(AccessibilityEvent.TYPE_VIEW_SCROLLED)
+        } else {
+            @Suppress("DEPRECATION")
+            AccessibilityEvent.obtain(AccessibilityEvent.TYPE_VIEW_SCROLLED)
+        }.apply {
             scrollY = progress
             maxScrollY = views.progress.max
         }

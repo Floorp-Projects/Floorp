@@ -27,6 +27,7 @@ import mozilla.components.support.ktx.android.content.addContact
 import mozilla.components.support.ktx.android.content.share
 import mozilla.components.support.ktx.kotlin.stripMailToProtocol
 import mozilla.components.support.ktx.kotlin.takeOrReplace
+import mozilla.components.support.utils.ext.queryIntentActivitiesCompat
 
 /**
  * A candidate for an item to be displayed in the context menu.
@@ -460,7 +461,7 @@ data class ContextMenuCandidate(
             title: CharSequence,
         ): Intent {
             val chooserIntent: Intent
-            val resolveInfos = context.packageManager.queryIntentActivities(intent, 0).toHashSet()
+            val resolveInfos = context.packageManager.queryIntentActivitiesCompat(intent, 0).toHashSet()
 
             val excludedComponentNames = resolveInfos
                 .map { it.activityInfo }

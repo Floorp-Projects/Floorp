@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.ui.translateName
+import mozilla.components.support.utils.ext.getParcelableExtraCompat
 import org.mozilla.samples.browser.BrowserActivity
 import org.mozilla.samples.browser.R
 import org.mozilla.samples.browser.ext.components
@@ -30,7 +31,7 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_installed_add_on_details)
-        val addon = requireNotNull(intent.getParcelableExtra<Addon>("add_on"))
+        val addon = requireNotNull(intent.getParcelableExtraCompat("add_on", Addon::class.java))
         bindAddon(addon)
     }
 

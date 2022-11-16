@@ -13,6 +13,7 @@ import android.os.Build
 import mozilla.components.concept.sync.MigratingAccountInfo
 import mozilla.components.support.ktx.kotlin.toHexString
 import mozilla.components.support.ktx.kotlin.toSha256Digest
+import mozilla.components.support.utils.ext.getPackageInfoCompat
 
 /**
  * Data structure describing an FxA account within another package that may be used to sign-in.
@@ -177,7 +178,7 @@ object AccountSharing {
     fun getSignaturePostAPI28(packageManager: PackageManager, packageName: String): String? {
         // For API28+, we can perform some extra checks.
         val packageInfo = try {
-            packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNING_CERTIFICATES)
+            packageManager.getPackageInfoCompat(packageName, PackageManager.GET_SIGNING_CERTIFICATES)
         } catch (e: PackageManager.NameNotFoundException) {
             return null
         }

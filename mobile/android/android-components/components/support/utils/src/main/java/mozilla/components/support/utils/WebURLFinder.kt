@@ -73,7 +73,7 @@ class WebURLFinder {
 
     @SuppressWarnings("LargeClass")
     companion object {
-        // Taken from mozilla.components.support.utils.URLStringUtils. See documentation
+        // Taken from mozilla.components.support.ktx.util.URLStringUtils. See documentation
         // there for a complete description.
         private const val autolinkWebUrlPattern = "(\\w+-)*\\w+(://[/]*|:|\\.)(\\w+-)*\\w+([\\S&&[^\\w-]]\\S*)?"
 

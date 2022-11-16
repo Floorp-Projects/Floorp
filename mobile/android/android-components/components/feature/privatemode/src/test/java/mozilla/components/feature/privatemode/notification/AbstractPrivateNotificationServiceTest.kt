@@ -24,6 +24,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
+import mozilla.components.support.utils.ext.stopForegroundCompat
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -94,7 +95,7 @@ class AbstractPrivateNotificationServiceTest {
         service.onTaskRemoved(mock())
 
         verify(service.store).dispatch(TabListAction.RemoveAllPrivateTabsAction)
-        verify(service).stopForeground(true)
+        verify(service).stopForegroundCompat(true)
         verify(service).stopSelf()
     }
 

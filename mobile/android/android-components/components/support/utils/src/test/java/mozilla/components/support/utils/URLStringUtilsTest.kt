@@ -6,9 +6,10 @@ package mozilla.components.support.utils
 
 import androidx.core.text.TextDirectionHeuristicCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.support.utils.URLStringUtils.isSearchTerm
-import mozilla.components.support.utils.URLStringUtils.isURLLike
-import mozilla.components.support.utils.URLStringUtils.toNormalizedURL
+import mozilla.components.support.ktx.util.URLStringUtils
+import mozilla.components.support.ktx.util.URLStringUtils.isSearchTerm
+import mozilla.components.support.ktx.util.URLStringUtils.isURLLike
+import mozilla.components.support.ktx.util.URLStringUtils.toNormalizedURL
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

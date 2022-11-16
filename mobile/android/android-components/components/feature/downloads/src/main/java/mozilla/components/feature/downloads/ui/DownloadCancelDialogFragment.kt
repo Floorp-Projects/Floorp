@@ -25,6 +25,7 @@ import androidx.core.content.ContextCompat
 import kotlinx.parcelize.Parcelize
 import mozilla.components.feature.downloads.R
 import mozilla.components.feature.downloads.databinding.MozacDownloadCancelBinding
+import mozilla.components.support.utils.ext.getParcelableCompat
 
 /**
  * The dialog warns the user that closing last private tab leads to cancellation of active private
@@ -39,8 +40,12 @@ class DownloadCancelDialogFragment : AppCompatDialogFragment() {
     private val downloadCount by lazy { safeArguments.getInt(KEY_DOWNLOAD_COUNT) }
     private val tabId by lazy { safeArguments.getString(KEY_TAB_ID) }
     private val source by lazy { safeArguments.getString(KEY_SOURCE) }
-    private val promptStyling by lazy { safeArguments.getParcelable(KEY_STYLE) ?: PromptStyling() }
-    private val promptText by lazy { safeArguments.getParcelable(KEY_TEXT) ?: PromptText() }
+    private val promptStyling by lazy {
+        safeArguments.getParcelableCompat(KEY_STYLE, PromptStyling::class.java) ?: PromptStyling()
+    }
+    private val promptText by lazy {
+        safeArguments.getParcelableCompat(KEY_TEXT, PromptText::class.java) ?: PromptText()
+    }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return Dialog(requireContext()).apply {

@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.feature.prompts.R
+import mozilla.components.support.utils.ext.getParcelableArrayCompat
 
 private const val KEY_CHOICES = "KEY_CHOICES"
 private const val KEY_DIALOG_TYPE = "KEY_DIALOG_TYPE"
@@ -29,7 +30,7 @@ private const val KEY_DIALOG_TYPE = "KEY_DIALOG_TYPE"
 internal class ChoiceDialogFragment : PromptDialogFragment() {
 
     internal val choices: Array<Choice> by lazy {
-        safeArguments.getParcelableArray(KEY_CHOICES)!!.toArrayOfChoices()
+        safeArguments.getParcelableArrayCompat(KEY_CHOICES, Choice::class.java) ?: emptyArray()
     }
 
     @VisibleForTesting

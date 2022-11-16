@@ -15,6 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.utils.ext.getParcelableCompat
 import java.util.Locale
 
 /**
@@ -38,7 +39,7 @@ abstract class BaseVoiceSearchActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Retrieve the previous intent from the saved state
-        previousIntent = savedInstanceState?.get(PREVIOUS_INTENT) as Intent?
+        previousIntent = savedInstanceState?.getParcelableCompat(PREVIOUS_INTENT, Intent::class.java)
         if (previousIntent.isForSpeechProcessing()) {
             // Don't reopen the speech recognizer
             return

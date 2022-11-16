@@ -26,6 +26,7 @@ import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.android.net.isUnderPrivateAppDirectory
+import mozilla.components.support.utils.ext.getParcelableExtraCompat
 
 /**
  * The image capture intent doesn't return the URI where the image is saved,
@@ -212,7 +213,7 @@ internal class FilePicker(
     }
 
     private fun saveCaptureUriIfPresent(intent: Intent) =
-        intent.getParcelableExtra<Uri>(EXTRA_OUTPUT)?.let { captureUri = it }
+        intent.getParcelableExtraCompat(EXTRA_OUTPUT, Uri::class.java)?.let { captureUri = it }
 
     @VisibleForTesting
     fun askAndroidPermissionsForRequest(permissions: List<String>, request: File) {

@@ -35,6 +35,7 @@ import mozilla.components.feature.autofill.structure.parseStructure
 import mozilla.components.feature.autofill.structure.toRawStructure
 import mozilla.components.feature.autofill.ui.search.LoginsAdapter
 import mozilla.components.support.ktx.android.view.showKeyboard
+import mozilla.components.support.utils.ext.getParcelableExtraCompat
 
 /**
  * Activity responsible for letting the user manually search and pick credentials for auto-filling a
@@ -58,7 +59,7 @@ abstract class AbstractAutofillSearchActivity : FragmentActivity() {
         }
 
         val structure: AssistStructure? =
-            intent.getParcelableExtra(AutofillManager.EXTRA_ASSIST_STRUCTURE)
+            intent.getParcelableExtraCompat(AutofillManager.EXTRA_ASSIST_STRUCTURE, AssistStructure::class.java)
         if (structure == null) {
             finish()
             return

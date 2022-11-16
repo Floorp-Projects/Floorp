@@ -31,6 +31,7 @@ import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
 
+@Suppress("DEPRECATION") // Suppress deprecation for getPackageInfo used in tests with SDK 28
 @RunWith(AndroidJUnit4::class)
 class AccountSharingTest {
 

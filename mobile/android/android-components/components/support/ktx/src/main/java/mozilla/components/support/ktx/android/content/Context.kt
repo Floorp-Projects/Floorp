@@ -39,14 +39,15 @@ import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.R
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
+import mozilla.components.support.utils.ext.getPackageInfoCompat
 import java.io.File
 
 /**
  * The (visible) version name of the application, as specified by the <manifest> tag's versionName
  * attribute. E.g. "2.0".
  */
-val Context.appVersionName: String?
-    get() = packageManager.getPackageInfo(packageName, 0).versionName
+val Context.appVersionName: String
+    get() = packageManager.getPackageInfoCompat(packageName, 0).versionName
 
 /**
  * Returns the name (label) of the application or the package name as a fallback.

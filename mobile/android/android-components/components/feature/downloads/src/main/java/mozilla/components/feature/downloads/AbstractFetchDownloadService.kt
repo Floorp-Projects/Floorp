@@ -74,6 +74,7 @@ import mozilla.components.support.ktx.kotlin.ifNullOrEmpty
 import mozilla.components.support.ktx.kotlin.sanitizeURL
 import mozilla.components.support.ktx.kotlinx.coroutines.throttleLatest
 import mozilla.components.support.utils.DownloadUtils
+import mozilla.components.support.utils.ext.stopForegroundCompat
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -408,7 +409,7 @@ abstract class AbstractFetchDownloadService : Service() {
     internal fun clearAllDownloadsNotificationsAndJobs() {
         val notificationManager = NotificationManagerCompat.from(context)
 
-        stopForeground(true)
+        stopForegroundCompat(true)
         compatForegroundNotificationId = COMPAT_DEFAULT_FOREGROUND_ID
 
         // Before doing any cleaning, we have to stop the notification updater scope.
@@ -641,7 +642,7 @@ abstract class AbstractFetchDownloadService : Service() {
             if (isSelectedForegroundId && needNewForegroundNotification) {
                 // We need to deselect the actual foreground notification, because while it is
                 // selected the user will not be able to dismiss it.
-                stopForeground(false)
+                stopForegroundCompat(false)
 
                 // Now we need to find a new foreground notification, if needed.
                 val newSelectedForegroundDownload = downloadJobs.values.firstOrNull { it.status == DOWNLOADING }
@@ -658,7 +659,7 @@ abstract class AbstractFetchDownloadService : Service() {
         // swipe the foreground notification.
         val finishedDownloading = downloadJobs.values.toList().all { it.status == COMPLETED }
         if (finishedDownloading) {
-            stopForeground(false)
+            stopForegroundCompat(false)
         }
     }
 

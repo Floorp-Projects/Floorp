@@ -38,6 +38,7 @@ import mozilla.components.feature.addons.databinding.MozacFeatureAddonsFragmentD
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
+import mozilla.components.support.utils.ext.getParcelableCompat
 import java.io.IOException
 
 @VisibleForTesting internal const val KEY_INSTALLED_ADDON = "KEY_ADDON"
@@ -72,7 +73,7 @@ class AddonInstallationDialogFragment : AppCompatDialogFragment() {
 
     private val safeArguments get() = requireNotNull(arguments)
 
-    internal val addon get() = requireNotNull(safeArguments.getParcelable<Addon>(KEY_ADDON))
+    internal val addon get() = requireNotNull(safeArguments.getParcelableCompat(KEY_ADDON, Addon::class.java))
     private var allowPrivateBrowsing: Boolean = false
 
     internal val confirmButtonRadius
@@ -163,7 +164,7 @@ class AddonInstallationDialogFragment : AppCompatDialogFragment() {
                 requireContext().appName,
             )
 
-        val icon = safeArguments.getParcelable<Bitmap>(KEY_ICON)
+        val icon = safeArguments.getParcelableCompat(KEY_ICON, Bitmap::class.java)
         if (icon != null) {
             binding.icon.setImageDrawable(BitmapDrawable(resources, icon))
         } else {

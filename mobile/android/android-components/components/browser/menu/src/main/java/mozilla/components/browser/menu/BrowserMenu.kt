@@ -82,15 +82,25 @@ open class BrowserMenu internal constructor(
 
         menuList?.accessibilityDelegate = object : View.AccessibilityDelegate() {
             override fun onInitializeAccessibilityNodeInfo(
-                host: View?,
-                info: AccessibilityNodeInfo?,
+                host: View,
+                info: AccessibilityNodeInfo,
             ) {
                 super.onInitializeAccessibilityNodeInfo(host, info)
-                info?.collectionInfo = AccessibilityNodeInfo.CollectionInfo.obtain(
-                    adapter.interactiveCount,
-                    0,
-                    false,
-                )
+                info.collectionInfo =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        AccessibilityNodeInfo.CollectionInfo(
+                            adapter.interactiveCount,
+                            0,
+                            false,
+                        )
+                    } else {
+                        @Suppress("DEPRECATION")
+                        AccessibilityNodeInfo.CollectionInfo.obtain(
+                            adapter.interactiveCount,
+                            0,
+                            false,
+                        )
+                    }
             }
         }
 
@@ -248,12 +258,12 @@ open class BrowserMenu internal constructor(
         DOWN(mozilla.components.concept.menu.Orientation.DOWN),
     }
 
-    override fun onViewDetachedFromWindow(v: View?) {
+    override fun onViewDetachedFromWindow(v: View) {
         currentPopup?.dismiss()
         currAnchor?.removeOnAttachStateChangeListener(this)
     }
 
-    override fun onViewAttachedToWindow(v: View?) {
+    override fun onViewAttachedToWindow(v: View) {
         // no-op
     }
 }

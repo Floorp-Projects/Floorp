@@ -33,6 +33,7 @@ import mozilla.components.feature.media.notification.MediaNotification
 import mozilla.components.feature.media.session.MediaSessionCallback
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.utils.ext.stopForegroundCompat
 
 @VisibleForTesting
 internal class BecomingNoisyReceiver(private val controller: MediaSession.Controller?) : BroadcastReceiver() {
@@ -208,7 +209,7 @@ internal class MediaSessionServiceDelegate(
 
     @VisibleForTesting
     internal fun stopForeground() {
-        service.stopForeground(false)
+        service.stopForegroundCompat(false)
         isForegroundService = false
     }
 

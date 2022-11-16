@@ -25,6 +25,7 @@ import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.content.ContextCompat
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
+import mozilla.components.support.utils.ext.getParcelableCompat
 
 internal const val KEY_ADDON = "KEY_ADDON"
 private const val KEY_DIALOG_GRAVITY = "KEY_DIALOG_GRAVITY"
@@ -51,7 +52,7 @@ class PermissionsDialogFragment : AppCompatDialogFragment() {
 
     private val safeArguments get() = requireNotNull(arguments)
 
-    internal val addon get() = requireNotNull(safeArguments.getParcelable<Addon>(KEY_ADDON))
+    internal val addon get() = requireNotNull(safeArguments.getParcelableCompat(KEY_ADDON, Addon::class.java))
 
     internal val positiveButtonRadius
         get() =

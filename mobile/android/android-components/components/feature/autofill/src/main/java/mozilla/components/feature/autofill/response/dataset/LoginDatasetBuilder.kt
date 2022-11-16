@@ -14,7 +14,9 @@ import android.graphics.BlendMode
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.service.autofill.Dataset
+import android.service.autofill.Field
 import android.service.autofill.InlinePresentation
+import android.service.autofill.Presentations
 import android.text.TextUtils
 import android.view.autofill.AutofillId
 import android.view.autofill.AutofillValue
@@ -178,9 +180,25 @@ internal fun Dataset.Builder.setValue(
     presentation: RemoteViews,
     inlinePresentation: InlinePresentation? = null,
 ): Dataset.Builder {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && inlinePresentation != null) {
-        this.setValue(id, value, presentation, inlinePresentation)
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        val fieldBuilder: Field.Builder = Field.Builder()
+        if (value != null) {
+            fieldBuilder.setValue(value)
+        }
+        val presentationsBuilder = Presentations.Builder()
+        presentationsBuilder.setMenuPresentation(presentation)
+
+        if (inlinePresentation != null) {
+            presentationsBuilder.setInlinePresentation(inlinePresentation)
+        }
+
+        fieldBuilder.setPresentations(presentationsBuilder.build())
+        this.setField(id, fieldBuilder.build())
+    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && inlinePresentation != null) {
+        @Suppress("DEPRECATION")
+        setValue(id, value, presentation, inlinePresentation)
     } else {
-        this.setValue(id, value, presentation)
+        @Suppress("DEPRECATION")
+        setValue(id, value, presentation)
     }
 }

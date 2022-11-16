@@ -11,6 +11,7 @@ import android.content.pm.Signature
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import androidx.annotation.VisibleForTesting
+import mozilla.components.support.utils.ext.getPackageInfoCompat
 import java.io.ByteArrayInputStream
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
@@ -89,7 +90,7 @@ class AndroidAssetFinder {
     private fun PackageManager.getPackageSignatureInfo(packageName: String): PackageInfo? {
         return try {
             if (SDK_INT >= Build.VERSION_CODES.P) {
-                getPackageInfo(packageName, PackageManager.GET_SIGNING_CERTIFICATES)
+                getPackageInfoCompat(packageName, PackageManager.GET_SIGNING_CERTIFICATES)
             } else {
                 @Suppress("Deprecation")
                 getPackageInfo(packageName, PackageManager.GET_SIGNATURES)

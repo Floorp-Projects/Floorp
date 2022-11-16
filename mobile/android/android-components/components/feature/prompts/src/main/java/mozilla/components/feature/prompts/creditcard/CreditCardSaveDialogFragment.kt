@@ -34,6 +34,7 @@ import mozilla.components.feature.prompts.facts.emitCreditCardAutofillCreatedFac
 import mozilla.components.feature.prompts.facts.emitCreditCardAutofillUpdatedFact
 import mozilla.components.support.ktx.android.view.toScope
 import mozilla.components.support.utils.creditCardIssuerNetwork
+import mozilla.components.support.utils.ext.getParcelableCompat
 
 private const val KEY_CREDIT_CARD = "KEY_CREDIT_CARD"
 
@@ -44,7 +45,9 @@ private const val KEY_CREDIT_CARD = "KEY_CREDIT_CARD"
 internal class CreditCardSaveDialogFragment : PromptDialogFragment() {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal val creditCard by lazy { safeArguments.getParcelable<CreditCardEntry>(KEY_CREDIT_CARD)!! }
+    internal val creditCard by lazy {
+        safeArguments.getParcelableCompat(KEY_CREDIT_CARD, CreditCardEntry::class.java)!!
+    }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var confirmResult: Result = Result.CanBeCreated

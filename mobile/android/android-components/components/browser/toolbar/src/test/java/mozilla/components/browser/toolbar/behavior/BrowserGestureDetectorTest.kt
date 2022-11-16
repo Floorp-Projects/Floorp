@@ -13,6 +13,7 @@ import android.view.MotionEvent.ACTION_POINTER_DOWN
 import android.view.MotionEvent.ACTION_UP
 import android.view.ScaleGestureDetector
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -204,7 +205,8 @@ class BrowserGestureDetectorTest {
 
     @Test
     fun `Detector should not crash when the scroll detector receives a null first MotionEvent`() {
-        val detector = BrowserGestureDetector(testContext, gesturesListener)
+        val crashReporting: CrashReporting = mock()
+        val detector = BrowserGestureDetector(testContext, gesturesListener, crashReporting)
         // We need a previous event for ACTION_MOVE.
         // Don't use ACTION_DOWN (first pointer on the screen) but ACTION_POINTER_DOWN (other later pointer)
         // just to artificially be able to recreate the bug from 8552. This should not happen IRL.
@@ -216,8 +218,10 @@ class BrowserGestureDetectorTest {
         detector.handleTouchEvent(moveEvent)
         detector.handleTouchEvent(moveEvent2)
 
-        verify(scrollListener).invoke(-100f, -200f)
+        verify(scrollListener, never()).invoke(-100f, -200f)
         // We don't crash but neither can identify vertical / horizontal scrolls.
+
+        verify(crashReporting).submitCaughtException(any())
         verify(verticalScrollListener, never()).invoke(anyFloat())
         verify(horizontalScrollListener, never()).invoke(anyFloat())
         verify(scaleBeginListener, never()).invoke(anyFloat())

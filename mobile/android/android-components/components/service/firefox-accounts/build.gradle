@@ -40,6 +40,7 @@ dependencies {
     api project(':support-base')
     implementation project(':support-sync-telemetry')
     implementation project(':support-ktx')
+    implementation project(':support-utils')
     implementation project(':lib-dataprotect')
     implementation project(':lib-state')
 

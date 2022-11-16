@@ -40,9 +40,9 @@ class DownloadDialogFragmentTest {
         dialog.setDownload(download)
 
         assertNotNull(dialog.arguments)
-        val fileName = dialog.arguments!![KEY_FILE_NAME]
-        val url = dialog.arguments!![DownloadDialogFragment.KEY_URL]
-        val contentLength = dialog.arguments!![DownloadDialogFragment.KEY_CONTENT_LENGTH]
+        val fileName = dialog.arguments!!.getString(KEY_FILE_NAME)
+        val url = dialog.arguments!!.getString(DownloadDialogFragment.KEY_URL)
+        val contentLength = dialog.arguments!!.getLong(DownloadDialogFragment.KEY_CONTENT_LENGTH)
 
         assertEquals(fileName, download.fileName)
         assertEquals(url, download.url)

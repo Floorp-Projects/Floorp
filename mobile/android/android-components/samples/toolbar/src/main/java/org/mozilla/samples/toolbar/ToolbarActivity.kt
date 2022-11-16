@@ -45,7 +45,7 @@ import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.android.view.hideKeyboard
-import mozilla.components.support.utils.URLStringUtils
+import mozilla.components.support.ktx.util.URLStringUtils
 import mozilla.components.ui.tabcounter.TabCounter
 import org.mozilla.samples.toolbar.databinding.ActivityToolbarBinding
 

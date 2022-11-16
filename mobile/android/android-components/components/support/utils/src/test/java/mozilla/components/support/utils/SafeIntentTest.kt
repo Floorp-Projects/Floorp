@@ -219,27 +219,30 @@ class SafeIntentTest {
 
     @Test
     fun `getParcelableExtra returns null if intent throws OutOfMemoryError`() {
+        @Suppress("DEPRECATION")
         doThrow(OutOfMemoryError::class.java)
             .`when`(intent).getParcelableExtra<Parcelable>(anyString())
 
-        assertNull(SafeIntent(intent).getParcelableExtra(""))
+        assertNull(SafeIntent(intent).getParcelableExtra("", Parcelable::class.java))
     }
 
     @Test
     fun `getParcelableArrayListExtra returns null if intent throws OutOfMemoryError`() {
+        @Suppress("DEPRECATION")
         doThrow(OutOfMemoryError::class.java)
             .`when`(intent).getParcelableArrayListExtra<Parcelable>(anyString())
 
-        assertNull(SafeIntent(intent).getParcelableArrayListExtra<Parcelable>(""))
+        assertNull(SafeIntent(intent).getParcelableArrayListExtra("", Parcelable::class.java))
     }
 
     @Test
     fun `getParcelableArrayListExtra returns ArrayList if intent is safe`() {
         val expected = ArrayList<Any>()
+        @Suppress("DEPRECATION")
         doReturn(expected)
             .`when`(intent).getParcelableArrayListExtra<Parcelable>(anyString())
 
-        assertEquals(expected, SafeIntent(intent).getParcelableArrayListExtra<Parcelable>(""))
+        assertEquals(expected, SafeIntent(intent).getParcelableArrayListExtra("", Parcelable::class.java))
     }
 
     @Test

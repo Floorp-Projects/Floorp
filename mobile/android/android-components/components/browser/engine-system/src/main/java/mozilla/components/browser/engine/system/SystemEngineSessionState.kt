@@ -18,7 +18,10 @@ class SystemEngineSessionState(
         writer.beginObject()
 
         bundle?.keySet()?.forEach { key ->
-            when (val value = bundle[key]) {
+            when (
+                @Suppress("DEPRECATION")
+                val value = bundle[key]
+            ) {
                 is Number -> writer.name(key).value(value)
                 is String -> writer.name(key).value(value)
                 is Boolean -> writer.name(key).value(value)

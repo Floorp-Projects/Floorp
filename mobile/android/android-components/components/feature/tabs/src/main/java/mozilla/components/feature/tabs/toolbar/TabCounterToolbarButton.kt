@@ -62,11 +62,11 @@ open class TabCounterToolbarButton(
 
             addOnAttachStateChangeListener(
                 object : View.OnAttachStateChangeListener {
-                    override fun onViewAttachedToWindow(v: View?) {
+                    override fun onViewAttachedToWindow(v: View) {
                         setCount(getTabCount(store.state))
                     }
 
-                    override fun onViewDetachedFromWindow(v: View?) { /* no-op */ }
+                    override fun onViewDetachedFromWindow(v: View) { /* no-op */ }
                 },
             )
 

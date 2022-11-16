@@ -30,6 +30,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
+import mozilla.components.support.utils.ext.stopForegroundCompat
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -272,7 +273,7 @@ class MediaSessionServiceDelegateTest {
 
         verify(delegate).updateMediaSession(mediaTab)
         verify(delegate).unregisterBecomingNoisyListenerIfNeeded()
-        verify(delegate.service).stopForeground(false)
+        verify(delegate.service).stopForegroundCompat(false)
         verify(delegate.notificationManager).notify(eq(delegate.notificationId), any())
         assertFalse(delegate.isForegroundService)
     }
@@ -306,7 +307,7 @@ class MediaSessionServiceDelegateTest {
 
         verify(delegate).updateMediaSession(mediaTab)
         verify(delegate).unregisterBecomingNoisyListenerIfNeeded()
-        verify(delegate.service).stopForeground(false)
+        verify(delegate.service).stopForegroundCompat(false)
         verify(delegate.notificationManager).notify(eq(delegate.notificationId), any())
         assertFalse(delegate.isForegroundService)
     }
@@ -362,9 +363,9 @@ class MediaSessionServiceDelegateTest {
         assertEquals(expectedPlaybackState.actions, playbackStateCaptor.value.actions)
         assertEquals(expectedPlaybackState.position, playbackStateCaptor.value.position)
         verify(delegate.mediaSession).setMetadata(metadataCaptor.capture())
-        assertEquals(mediaTab.content.title, metadataCaptor.value.bundle[MediaMetadataCompat.METADATA_KEY_TITLE])
-        assertEquals(mediaTab.content.url, metadataCaptor.value.bundle[MediaMetadataCompat.METADATA_KEY_ARTIST])
-        assertEquals(-1L, metadataCaptor.value.bundle[MediaMetadataCompat.METADATA_KEY_DURATION])
+        assertEquals(mediaTab.content.title, metadataCaptor.value.bundle.getString(MediaMetadataCompat.METADATA_KEY_TITLE))
+        assertEquals(mediaTab.content.url, metadataCaptor.value.bundle.getString(MediaMetadataCompat.METADATA_KEY_ARTIST))
+        assertEquals(-1L, metadataCaptor.value.bundle.getLong(MediaMetadataCompat.METADATA_KEY_DURATION))
     }
 
     @Test
@@ -374,7 +375,7 @@ class MediaSessionServiceDelegateTest {
 
         delegate.stopForeground()
 
-        verify(delegate.service).stopForeground(false)
+        verify(delegate.service).stopForegroundCompat(false)
         assertFalse(delegate.isForegroundService)
     }
 

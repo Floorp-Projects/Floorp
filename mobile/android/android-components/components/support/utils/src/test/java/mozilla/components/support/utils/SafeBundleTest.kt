@@ -44,9 +44,10 @@ class SafeBundleTest {
 
     @Test
     fun `getParcelable returns null if bundle throws OutOfMemoryError`() {
+        @Suppress("DEPRECATION")
         doThrow(OutOfMemoryError::class.java).`when`(bundle).getParcelable<Parcelable>(anyString())
 
-        assertNull(SafeBundle(bundle).getParcelable(""))
+        assertNull(SafeBundle(bundle).getParcelable("", Parcelable::class.java))
     }
 
     @Test

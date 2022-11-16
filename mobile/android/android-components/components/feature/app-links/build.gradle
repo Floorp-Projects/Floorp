@@ -38,6 +38,7 @@ dependencies {
     implementation project(':concept-engine')
     implementation project(':support-base')
     implementation project(':support-ktx')
+    implementation project(':support-utils')
     implementation project(':feature-session')
 
     implementation Dependencies.kotlin_stdlib

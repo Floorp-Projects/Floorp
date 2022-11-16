@@ -27,6 +27,7 @@ import mozilla.components.feature.autofill.facts.emitAutofillConfirmationFact
 import mozilla.components.feature.autofill.handler.EXTRA_LOGIN_ID
 import mozilla.components.feature.autofill.handler.FillRequestHandler
 import mozilla.components.feature.autofill.structure.toRawStructure
+import mozilla.components.support.utils.ext.getParcelableExtraCompat
 
 /**
  * Activity responsible for asking the user to confirm before autofilling a third-party app. It is
@@ -43,7 +44,10 @@ abstract class AbstractAutofillConfirmActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val structure: AssistStructure? = intent.getParcelableExtra(AutofillManager.EXTRA_ASSIST_STRUCTURE)
+        val structure: AssistStructure? = intent.getParcelableExtraCompat(
+            AutofillManager.EXTRA_ASSIST_STRUCTURE,
+            AssistStructure::class.java,
+        )
         val loginId = intent.getStringExtra(EXTRA_LOGIN_ID)
         if (loginId == null) {
             cancel()

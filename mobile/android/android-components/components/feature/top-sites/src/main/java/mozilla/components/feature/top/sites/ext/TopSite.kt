@@ -5,7 +5,7 @@
 package mozilla.components.feature.top.sites.ext
 
 import mozilla.components.feature.top.sites.TopSite
-import mozilla.components.support.utils.URLStringUtils
+import mozilla.components.support.ktx.util.URLStringUtils
 
 /**
  * Returns true if the given url is in the list top site and false otherwise.

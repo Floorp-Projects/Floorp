@@ -11,9 +11,9 @@ import android.view.View
  * [View.OnAttachStateChangeListener.onViewDetachedFromWindow].
  */
 internal class ViewDetachedListener(val onDismiss: () -> Unit) : View.OnAttachStateChangeListener {
-    override fun onViewAttachedToWindow(v: View?) = Unit
+    override fun onViewAttachedToWindow(v: View) = Unit
 
-    override fun onViewDetachedFromWindow(v: View?) {
+    override fun onViewDetachedFromWindow(v: View) {
         onDismiss()
     }
 }

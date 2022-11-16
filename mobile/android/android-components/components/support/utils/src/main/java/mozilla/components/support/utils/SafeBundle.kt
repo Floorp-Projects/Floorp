@@ -7,6 +7,7 @@ package mozilla.components.support.utils
 import android.os.Bundle
 import android.os.Parcelable
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.utils.ext.getParcelableCompat
 
 /**
  * See SafeIntent for more background: applications can put garbage values into Bundles. This is primarily
@@ -26,8 +27,15 @@ class SafeBundle(val unsafe: Bundle) {
     fun keySet(): Set<String>? =
         safeAccess { keySet() }
 
-    fun <T : Parcelable> getParcelable(name: String): T? =
-        safeAccess { getParcelable<T>(name) }
+    /**
+     * Returns the value associated with the given key or null.
+     * @param name the key name.
+     * @param clazz the desired class of the object .
+     * null is returned when the Object is not of type clazz, no mapping exists for that key name
+     * or a value of null is explicitly associated with the key.
+     */
+    fun <T : Parcelable> getParcelable(name: String, clazz: Class<T>): T? =
+        safeAccess { getParcelableCompat(name, clazz) }
 
     @SuppressWarnings("TooGenericExceptionCaught")
     private fun <T> safeAccess(default: T? = null, block: Bundle.() -> T): T? {

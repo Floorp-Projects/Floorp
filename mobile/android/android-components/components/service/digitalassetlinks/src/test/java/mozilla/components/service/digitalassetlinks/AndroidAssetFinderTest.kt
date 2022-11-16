@@ -43,11 +43,13 @@ class AndroidAssetFinderTest {
 
         MockitoAnnotations.openMocks(this)
         packageInfo = PackageInfo()
+        @Suppress("DEPRECATION")
         `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
     }
 
     @Test
     fun `test getAndroidAppAsset returns empty list if name not found`() {
+        @Suppress("DEPRECATION")
         `when`(packageManager.getPackageInfo(anyString(), anyInt()))
             .thenThrow(PackageManager.NameNotFoundException::class.java)
 

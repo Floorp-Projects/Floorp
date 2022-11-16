@@ -6,7 +6,7 @@ package mozilla.components.support.ktx.kotlin
 
 import android.net.Uri
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
-import mozilla.components.support.utils.URLStringUtils
+import mozilla.components.support.ktx.util.URLStringUtils
 import java.io.File
 import java.net.MalformedURLException
 import java.net.URL

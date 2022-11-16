@@ -22,6 +22,7 @@ import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
 import mozilla.components.feature.customtabs.store.SaveCreatorPackageNameAction
 import mozilla.components.service.digitalassetlinks.RelationChecker
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.utils.ext.getParcelableCompat
 
 /**
  * Maximum number of speculative connections we will open when an app calls into
@@ -94,7 +95,7 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
 
         // A list of other likely URLs. Let's open a speculative connection for them up to a limit.
         otherLikelyBundles?.take(MAX_SPECULATIVE_URLS)?.forEach { bundle ->
-            bundle.getParcelable<Uri>(KEY_URL)?.let { uri ->
+            bundle.getParcelableCompat(KEY_URL, Uri::class.java)?.let { uri ->
                 engine.speculativeConnect(uri.toString())
             }
         }

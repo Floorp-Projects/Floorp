@@ -25,6 +25,7 @@ import mozilla.components.feature.autofill.facts.emitAutofillLock
 import mozilla.components.feature.autofill.handler.FillRequestHandler
 import mozilla.components.feature.autofill.handler.MAX_LOGINS
 import mozilla.components.feature.autofill.structure.ParsedStructure
+import mozilla.components.support.utils.ext.getParcelableExtraCompat
 
 /**
  * Activity responsible for unlocking the autofill service by asking the user to verify with a
@@ -113,9 +114,12 @@ abstract class AbstractAutofillUnlockActivity : FragmentActivity() {
 }
 
 internal fun Intent.getImeSpec(): InlinePresentationSpec? {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        return getParcelableExtra(AbstractAutofillUnlockActivity.EXTRA_IME_SPEC)
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        getParcelableExtraCompat(
+            AbstractAutofillUnlockActivity.EXTRA_IME_SPEC,
+            InlinePresentationSpec::class.java,
+        )
     } else {
-        return null
+        null
     }
 }

@@ -12,7 +12,7 @@ import kotlinx.coroutines.Job
  */
 class CancelOnDetach(private val job: Job) : View.OnAttachStateChangeListener {
 
-    override fun onViewAttachedToWindow(v: View?) = Unit
+    override fun onViewAttachedToWindow(v: View) = Unit
 
-    override fun onViewDetachedFromWindow(v: View?) = job.cancel()
+    override fun onViewDetachedFromWindow(v: View) = job.cancel()
 }

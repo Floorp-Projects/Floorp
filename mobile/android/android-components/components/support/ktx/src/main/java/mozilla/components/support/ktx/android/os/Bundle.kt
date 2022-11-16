@@ -14,6 +14,7 @@ import android.os.Bundle
 infix fun Bundle.contentEquals(other: Bundle): Boolean {
     if (size() != other.size()) return false
 
+    @Suppress("DEPRECATION") // we still need to use get(String) in order to compare any Objects.
     return keySet().all { key ->
         val valueTwo = other.get(key)
         when (val valueOne = get(key)) {

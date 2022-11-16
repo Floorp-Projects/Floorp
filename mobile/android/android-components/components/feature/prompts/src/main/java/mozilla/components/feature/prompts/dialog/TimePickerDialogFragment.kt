@@ -35,6 +35,7 @@ import mozilla.components.feature.prompts.ext.year
 import mozilla.components.feature.prompts.widget.MonthAndYearPicker
 import mozilla.components.feature.prompts.widget.TimePrecisionPicker
 import mozilla.components.support.utils.TimePicker.shouldShowSecondsPicker
+import mozilla.components.support.utils.ext.getSerializableCompat
 import java.util.Calendar
 import java.util.Date
 
@@ -57,15 +58,21 @@ internal class TimePickerDialogFragment :
     DialogInterface.OnClickListener,
     MonthAndYearPicker.OnDateSetListener,
     TimePrecisionPicker.OnTimeSetListener {
-    private val initialDate: Date by lazy { safeArguments.getSerializable(KEY_INITIAL_DATE) as Date }
-    private val minimumDate: Date? by lazy { safeArguments.getSerializable((KEY_MIN_DATE)) as? Date }
-    private val maximumDate: Date? by lazy { safeArguments.getSerializable(KEY_MAX_DATE) as? Date }
+    private val initialDate: Date by lazy {
+        safeArguments.getSerializableCompat(KEY_INITIAL_DATE, Date::class.java) as Date
+    }
+    private val minimumDate: Date? by lazy {
+        safeArguments.getSerializableCompat(KEY_MIN_DATE, Date::class.java) as? Date
+    }
+    private val maximumDate: Date? by lazy {
+        safeArguments.getSerializableCompat(KEY_MAX_DATE, Date::class.java) as? Date
+    }
     private val selectionType: Int by lazy { safeArguments.getInt(KEY_SELECTION_TYPE) }
     private val stepSize: String? by lazy { safeArguments.getString(KEY_STEP_VALUE) }
 
     @VisibleForTesting(otherwise = PRIVATE)
     internal var selectedDate: Date
-        get() = safeArguments.getSerializable(KEY_SELECTED_DATE) as Date
+        get() = safeArguments.getSerializableCompat(KEY_SELECTED_DATE, Date::class.java) as Date
         set(value) {
             safeArguments.putSerializable(KEY_SELECTED_DATE, value)
         }

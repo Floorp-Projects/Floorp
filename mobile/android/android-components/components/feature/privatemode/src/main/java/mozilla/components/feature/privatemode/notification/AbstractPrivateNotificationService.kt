@@ -32,6 +32,7 @@ import mozilla.components.support.ktx.android.notification.ChannelData
 import mozilla.components.support.ktx.android.notification.ensureNotificationChannelExists
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.support.utils.PendingIntentUtils
+import mozilla.components.support.utils.ext.stopForegroundCompat
 import java.util.Locale
 
 /**
@@ -188,7 +189,7 @@ abstract class AbstractPrivateNotificationService : Service() {
     }
 
     private fun stopService() {
-        stopForeground(true)
+        stopForegroundCompat(true)
         stopSelf()
     }
 

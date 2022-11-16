@@ -9,6 +9,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
+* **All components**
+  * ⚠️Increased `compileSdkVersion` to 33 (Android 13)
+
 # 108.0.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v107.0.0...v108.0.0)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/v108.0.0/android-components/buildSrc/src/main/java/Dependencies.kt)

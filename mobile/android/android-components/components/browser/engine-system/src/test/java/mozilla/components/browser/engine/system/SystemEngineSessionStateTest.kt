@@ -42,11 +42,11 @@ class SystemEngineSessionStateTest {
         assertTrue(bundle.containsKey("k3"))
         assertTrue(bundle.containsKey("k4"))
 
-        assertEquals("v0", bundle.get("k0"))
-        assertEquals(1, bundle.get("k1"))
-        assertEquals(true, bundle.get("k2"))
-        assertEquals(5.0, bundle.get("k3"))
-        assertEquals(1.0f, bundle.get("k4"))
+        assertEquals("v0", bundle.getString("k0"))
+        assertEquals(1, bundle.getInt("k1"))
+        assertEquals(true, bundle.getBoolean("k2"))
+        assertEquals(5.0, bundle.getDouble("k3"), 0.0)
+        assertEquals(1.0f, bundle.getFloat("k4"))
     }
 
     @Test
@@ -84,13 +84,13 @@ class SystemEngineSessionStateTest {
         assertTrue(bundle.containsKey("k6"))
         assertTrue(bundle.containsKey("k7"))
 
-        assertEquals("v0", bundle.get("k0"))
-        assertEquals(1, bundle.get("k1"))
-        assertEquals(true, bundle.get("k2"))
-        assertEquals(5.0, bundle.get("k4"))
-        assertEquals(1.0, bundle.get("k5")) // Implicit conversion to Double
-        assertEquals(42.25, bundle.get("k6")) // Implicit conversion to Double
-        assertEquals(23.23, bundle.get("k7"))
+        assertEquals("v0", bundle.getString("k0"))
+        assertEquals(1, bundle.getInt("k1"))
+        assertEquals(true, bundle.getBoolean("k2"))
+        assertEquals(5.0, bundle.getDouble("k4"), 0.0)
+        assertEquals(1.0, bundle.getDouble("k5"), 0.0)
+        assertEquals(42.25, bundle.getDouble("k6"), 0.0)
+        assertEquals(23.23, bundle.getDouble("k7"), 0.0)
     }
 
     @Test
@@ -127,12 +127,12 @@ class SystemEngineSessionStateTest {
         assertTrue(bundle.containsKey("k6"))
         assertTrue(bundle.containsKey("k7"))
 
-        assertEquals("v0", bundle.get("k0"))
-        assertEquals(1.0, bundle.get("k1")) // We only see token "number", so we have to read a double and can't know that this was an int.
-        assertEquals(true, bundle.get("k2"))
-        assertEquals(5.0, bundle.get("k4"))
-        assertEquals(1.0, bundle.get("k5")) // Implicit conversion to Double
-        assertEquals(42.25, bundle.get("k6")) // Implicit conversion to Double
-        assertEquals(23.23, bundle.get("k7"))
+        assertEquals("v0", bundle.getString("k0"))
+        assertEquals(1.0, bundle.getDouble("k1"), 0.0) // We only see token "number", so we have to read a double and can't know that this was an int.
+        assertEquals(true, bundle.getBoolean("k2"))
+        assertEquals(5.0, bundle.getDouble("k4"), 0.0)
+        assertEquals(1.0, bundle.getDouble("k5"), 0.0)
+        assertEquals(42.25, bundle.getDouble("k6"), 0.0)
+        assertEquals(23.23, bundle.getDouble("k7"), 0.0)
     }
 }

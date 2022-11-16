@@ -8,6 +8,7 @@ import android.content.Context
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
+import android.webkit.WebSettings.LOAD_NO_CACHE
 import android.webkit.WebStorage
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -264,9 +265,7 @@ class SystemEngineSession(
         webView.settings.apply {
             // Explicitly set global defaults.
 
-            @Suppress("DEPRECATION")
-            // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/8512
-            setAppCacheEnabled(false)
+            cacheMode = LOAD_NO_CACHE
             databaseEnabled = false
 
             setDeprecatedWebSettings(this)

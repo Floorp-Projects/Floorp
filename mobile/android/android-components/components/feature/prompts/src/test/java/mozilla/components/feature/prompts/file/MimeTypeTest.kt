@@ -59,6 +59,7 @@ class MimeTypeTest {
 
         `when`(context.packageManager).thenReturn(packageManager)
         `when`(context.packageName).thenReturn("org.mozilla.browser")
+        @Suppress("DEPRECATION")
         `when`(packageManager.resolveActivity(notNull(), eq(MATCH_DEFAULT_ONLY))).thenReturn(null)
     }
 
@@ -234,6 +235,7 @@ class MimeTypeTest {
         val uri = Uri.parse("context://abcd")
         val image = MimeType.Image { _, _, _ -> uri }
 
+        @Suppress("DEPRECATION")
         `when`(
             packageManager
                 .resolveContentProvider(eq("org.mozilla.browser.fileprovider"), anyInt()),
@@ -245,6 +247,7 @@ class MimeTypeTest {
             assertEquals(action, ACTION_IMAGE_CAPTURE)
             assertEquals(1, extras?.size())
 
+            @Suppress("DEPRECATION")
             val photoUri = extras!!.get(EXTRA_OUTPUT) as Uri
             assertEquals(uri, photoUri)
         }
@@ -258,17 +261,17 @@ class MimeTypeTest {
         val frontCaptureRequest = request.copy(captureMode = PromptRequest.File.FacingMode.FRONT_CAMERA)
         image.buildIntent(context, frontCaptureRequest)?.run {
             assertEquals(action, ACTION_IMAGE_CAPTURE)
-            assertEquals(1, extras!!.get(MimeType.CAMERA_FACING))
-            assertEquals(1, extras!!.get(MimeType.LENS_FACING_FRONT))
-            assertEquals(true, extras!!.get(MimeType.USE_FRONT_CAMERA))
+            assertEquals(1, extras!!.getInt(MimeType.CAMERA_FACING))
+            assertEquals(1, extras!!.getInt(MimeType.LENS_FACING_FRONT))
+            assertEquals(true, extras!!.getBoolean(MimeType.USE_FRONT_CAMERA))
         }
 
         val backCaptureRequest = request.copy(captureMode = PromptRequest.File.FacingMode.BACK_CAMERA)
         image.buildIntent(context, backCaptureRequest)?.run {
             assertEquals(action, ACTION_IMAGE_CAPTURE)
-            assertEquals(0, extras!!.get(MimeType.CAMERA_FACING))
-            assertEquals(1, extras!!.get(MimeType.LENS_FACING_BACK))
-            assertEquals(true, extras!!.get(MimeType.USE_BACK_CAMERA))
+            assertEquals(0, extras!!.getInt(MimeType.CAMERA_FACING))
+            assertEquals(1, extras!!.getInt(MimeType.LENS_FACING_BACK))
+            assertEquals(true, extras!!.getBoolean(MimeType.USE_BACK_CAMERA))
         }
     }
 
@@ -291,17 +294,17 @@ class MimeTypeTest {
         val frontCaptureRequest = request.copy(captureMode = PromptRequest.File.FacingMode.FRONT_CAMERA)
         MimeType.Video.buildIntent(context, frontCaptureRequest)?.run {
             assertEquals(action, ACTION_VIDEO_CAPTURE)
-            assertEquals(1, extras!!.get(MimeType.CAMERA_FACING))
-            assertEquals(1, extras!!.get(MimeType.LENS_FACING_FRONT))
-            assertEquals(true, extras!!.get(MimeType.USE_FRONT_CAMERA))
+            assertEquals(1, extras!!.getInt(MimeType.CAMERA_FACING))
+            assertEquals(1, extras!!.getInt(MimeType.LENS_FACING_FRONT))
+            assertEquals(true, extras!!.getBoolean(MimeType.USE_FRONT_CAMERA))
         }
 
         val backCaptureRequest = request.copy(captureMode = PromptRequest.File.FacingMode.BACK_CAMERA)
         MimeType.Video.buildIntent(context, backCaptureRequest)?.run {
             assertEquals(action, ACTION_VIDEO_CAPTURE)
-            assertEquals(0, extras!!.get(MimeType.CAMERA_FACING))
-            assertEquals(1, extras!!.get(MimeType.LENS_FACING_BACK))
-            assertEquals(true, extras!!.get(MimeType.USE_BACK_CAMERA))
+            assertEquals(0, extras!!.getInt(MimeType.CAMERA_FACING))
+            assertEquals(1, extras!!.getInt(MimeType.LENS_FACING_BACK))
+            assertEquals(true, extras!!.getBoolean(MimeType.USE_BACK_CAMERA))
         }
     }
 
@@ -324,7 +327,7 @@ class MimeTypeTest {
             assertEquals(type, "*/*")
             assertTrue(categories.contains(CATEGORY_OPENABLE))
 
-            val mimeType = extras!!.get(EXTRA_MIME_TYPES)
+            val mimeType = extras!!.getStringArray(EXTRA_MIME_TYPES)
             assertNull(mimeType)
 
             val allowMultipleFiles = extras!!.getBoolean(EXTRA_ALLOW_MULTIPLE)
@@ -342,7 +345,7 @@ class MimeTypeTest {
             assertEquals(type, "*/*")
             assertTrue(categories.contains(CATEGORY_OPENABLE))
 
-            val mimeTypes = extras!!.get(EXTRA_MIME_TYPES) as Array<*>
+            val mimeTypes = extras!!.getStringArray(EXTRA_MIME_TYPES) as Array<*>
             assertEquals(mimeTypes.first(), "image/jpeg")
 
             val allowMultipleFiles = extras!!.getBoolean(EXTRA_ALLOW_MULTIPLE)
@@ -365,7 +368,7 @@ class MimeTypeTest {
         with(MimeType.Wildcard.buildIntent(testContext, extensionsRequest)) {
             assertEquals(action, ACTION_GET_CONTENT)
 
-            val mimeTypes = extras!!.get(EXTRA_MIME_TYPES) as Array<*>
+            val mimeTypes = extras!!.getStringArray(EXTRA_MIME_TYPES) as Array<*>
             assertEquals(mimeTypes[0], "image/gif")
             assertEquals(mimeTypes[1], "image/jpeg")
             assertEquals(mimeTypes[2], "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
@@ -379,6 +382,7 @@ class MimeTypeTest {
         info.activityInfo.applicationInfo = ApplicationInfo()
         info.activityInfo.applicationInfo.packageName = "com.example.app"
         info.activityInfo.name = "SomeActivity"
+        @Suppress("DEPRECATION")
         `when`(packageManager.resolveActivity(notNull(), eq(MATCH_DEFAULT_ONLY))).thenReturn(info)
     }
 

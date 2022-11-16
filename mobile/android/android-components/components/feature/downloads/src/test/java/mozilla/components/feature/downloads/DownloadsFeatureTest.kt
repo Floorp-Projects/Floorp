@@ -8,7 +8,6 @@ import android.Manifest.permission.INTERNET
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.ActivityNotFoundException
 import android.content.Context
-import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
@@ -683,7 +682,8 @@ class DownloadsFeatureTest {
         )
 
         val mockList = listOf(app)
-        whenever(packageManager.queryIntentActivities(any<Intent>(), anyInt())).thenReturn(mockList)
+        @Suppress("DEPRECATION")
+        whenever(packageManager.queryIntentActivities(any(), anyInt())).thenReturn(mockList)
 
         val downloadManager: DownloadManager = mock()
 

@@ -251,7 +251,7 @@ private class SubscriptionViewBinding<S : State, A : Action>(
     private val view: View,
     private val subscription: Store.Subscription<S, A>,
 ) : View.OnAttachStateChangeListener, Store.Subscription.Binding {
-    override fun onViewAttachedToWindow(v: View?) {
+    override fun onViewAttachedToWindow(v: View) {
         subscription.resume()
     }
 

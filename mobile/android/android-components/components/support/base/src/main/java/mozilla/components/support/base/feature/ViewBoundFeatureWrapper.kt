@@ -195,11 +195,11 @@ class ViewBoundFeatureWrapper<T : LifecycleAwareFeature>() {
 internal class ViewBinding<T : LifecycleAwareFeature>(
     private val wrapper: ViewBoundFeatureWrapper<T>,
 ) : View.OnAttachStateChangeListener {
-    override fun onViewDetachedFromWindow(v: View?) {
+    override fun onViewDetachedFromWindow(v: View) {
         wrapper.clear()
     }
 
-    override fun onViewAttachedToWindow(v: View?) = Unit
+    override fun onViewAttachedToWindow(v: View) = Unit
 }
 
 /**

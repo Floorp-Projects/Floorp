@@ -94,6 +94,7 @@ class WebAppShortcutManagerTest {
             ),
         )
         val session = buildInstallableSession(manifest)
+        @Suppress("DEPRECATION")
         `when`(packageManager.queryBroadcastReceivers(any(), anyInt())).thenReturn(emptyList())
 
         manager.requestPinShortcut(context, session)

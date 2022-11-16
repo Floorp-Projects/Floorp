@@ -28,6 +28,7 @@ dependencies {
     implementation project(':concept-fetch')
     implementation project(':support-base')
     implementation project(':support-ktx')
+    implementation project(':support-utils')
 
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.androidx_test_junit

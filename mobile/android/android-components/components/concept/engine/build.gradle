@@ -36,6 +36,7 @@ dependencies {
     api project(':concept-storage')
     api project(':concept-fetch')
 
+    testImplementation project(':support-utils')
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.androidx_test_junit
     testImplementation Dependencies.testing_robolectric

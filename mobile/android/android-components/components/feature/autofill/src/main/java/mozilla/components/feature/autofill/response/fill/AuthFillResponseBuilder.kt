@@ -14,6 +14,7 @@ import android.os.Build
 import android.os.Parcel
 import android.service.autofill.FillResponse
 import android.service.autofill.InlinePresentation
+import android.service.autofill.Presentations
 import android.view.autofill.AutofillId
 import android.widget.RemoteViews
 import android.widget.inline.InlinePresentationSpec
@@ -101,9 +102,20 @@ internal fun FillResponse.Builder.setAuthentication(
     inlinePresentation: InlinePresentation? = null,
     presentation: RemoteViews,
 ): FillResponse.Builder {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && inlinePresentation != null) {
-        this.setAuthentication(ids, authentication, presentation, inlinePresentation)
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        val presentations: Presentations.Builder = Presentations.Builder()
+        presentations.apply {
+            inlinePresentation?.let {
+                setInlinePresentation(it)
+            }
+            setMenuPresentation(presentation)
+        }
+        setAuthentication(ids, authentication, presentations.build())
+    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        @Suppress("DEPRECATION")
+        setAuthentication(ids, authentication, presentation, inlinePresentation)
     } else {
-        this.setAuthentication(ids, authentication, presentation)
+        @Suppress("DEPRECATION")
+        setAuthentication(ids, authentication, presentation)
     }
 }

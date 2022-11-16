@@ -14,6 +14,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
 import com.google.android.material.snackbar.Snackbar
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.support.ktx.android.view.findViewInHierarchy
 
@@ -42,6 +43,7 @@ class BrowserToolbarBehavior(
     val context: Context?,
     attrs: AttributeSet?,
     private val toolbarPosition: ToolbarPosition,
+    private val crashReporting: CrashReporting? = null,
 ) : CoordinatorLayout.Behavior<BrowserToolbar>(context, attrs) {
     // This implementation is heavily based on this blog article:
     // https://android.jlelse.eu/scroll-your-bottom-navigation-view-away-with-10-lines-of-code-346f1ed40e9e
@@ -235,6 +237,7 @@ class BrowserToolbarBehavior(
                     yTranslator.snapImmediately(browserToolbar)
                 },
             ),
+            crashReporting = crashReporting,
         )
 
     @VisibleForTesting

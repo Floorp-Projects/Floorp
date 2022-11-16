@@ -295,7 +295,6 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    @Suppress("Deprecation")
     fun initSettings() {
         val engineSession = spy(SystemEngineSession(testContext))
         assertNotNull(engineSession.internalSettings)
@@ -388,7 +387,7 @@ class SystemEngineSessionTest {
         engineSession.settings.trackingProtectionPolicy = null
         verify(engineSession).disableTrackingProtection()
 
-        verify(webViewSettings).setAppCacheEnabled(false)
+        verify(webViewSettings).cacheMode = WebSettings.LOAD_NO_CACHE
         verify(webViewSettings).setGeolocationEnabled(false)
         verify(webViewSettings).databaseEnabled = false
         verify(webViewSettings).savePassword = false

@@ -16,6 +16,7 @@ import mozilla.components.lib.crash.Crash
 import mozilla.components.support.base.ext.getStacktraceAsJsonString
 import mozilla.components.support.base.ext.getStacktraceAsString
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.utils.ext.getPackageInfoCompat
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -106,7 +107,7 @@ class MozillaSocorroService(
 
     init {
         val packageInfo = try {
-            applicationContext.packageManager.getPackageInfo(applicationContext.packageName, 0)
+            applicationContext.packageManager.getPackageInfoCompat(applicationContext.packageName, 0)
         } catch (e: PackageManager.NameNotFoundException) {
             logger.error("package name not found, failed to get application version")
             null
@@ -375,7 +376,7 @@ class MozillaSocorroService(
     private fun sendPackageInstallTime(os: OutputStream, boundary: String, nameSet: MutableSet<String>) {
         val packageManager = applicationContext.packageManager
         try {
-            val packageInfo = packageManager.getPackageInfo(applicationContext.packageName, 0)
+            val packageInfo = packageManager.getPackageInfoCompat(applicationContext.packageName, 0)
             sendPart(
                 os,
                 boundary,

@@ -59,7 +59,7 @@ open class BrowserActivity : AppCompatActivity(), ComponentCallbacks2 {
             }
         }
 
-        super.onBackPressed()
+        super.getOnBackPressedDispatcher().onBackPressed()
     }
 
     override fun onCreateView(parent: View?, name: String, context: Context, attrs: AttributeSet): View? =

@@ -16,6 +16,7 @@ import androidx.activity.result.ActivityResult
 import mozilla.components.feature.search.widget.BaseVoiceSearchActivity.Companion.PREVIOUS_INTENT
 import mozilla.components.feature.search.widget.BaseVoiceSearchActivity.Companion.SPEECH_PROCESSING
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.utils.ext.getParcelableCompat
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -105,7 +106,7 @@ class BaseVoiceSearchActivityTest {
         controller.create(savedInstanceState)
         controller.saveInstanceState(outState)
 
-        assertEquals(previousIntent, outState.getParcelable<Intent>(PREVIOUS_INTENT))
+        assertEquals(previousIntent, outState.getParcelableCompat(PREVIOUS_INTENT, Intent::class.java))
     }
 
     @Test

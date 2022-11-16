@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.support.utils
+package mozilla.components.support.ktx.util
 
 import android.net.Uri
 import android.text.TextUtils
 import androidx.annotation.VisibleForTesting
 import androidx.core.text.TextDirectionHeuristicCompat
-import androidx.core.text.TextDirectionHeuristicsCompat.FIRSTSTRONG_LTR
+import androidx.core.text.TextDirectionHeuristicsCompat
 import java.util.regex.Pattern
 
 object URLStringUtils {
@@ -76,7 +76,10 @@ object URLStringUtils {
         // http://www-.com
         // www.c-c-
         // 3-3
-        Pattern.compile("^\\s*(\\w+-+)*\\w+(://[/]*|:|\\.)(\\w+-+)*\\w+([\\S&&[^\\w-]]\\S*)?\\s*$", flags)
+        Pattern.compile(
+            "^\\s*(\\w+-+)*\\w+(://[/]*|:|\\.)(\\w+-+)*\\w+([\\S&&[^\\w-]]\\S*)?\\s*$",
+            flags,
+        )
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -105,7 +108,7 @@ object URLStringUtils {
      */
     fun toDisplayUrl(
         originalUrl: CharSequence,
-        textDirectionHeuristic: TextDirectionHeuristicCompat = FIRSTSTRONG_LTR,
+        textDirectionHeuristic: TextDirectionHeuristicCompat = TextDirectionHeuristicsCompat.FIRSTSTRONG_LTR,
     ): CharSequence {
         val strippedText = maybeStripTrailingSlash(maybeStripUrlProtocol(originalUrl))
 

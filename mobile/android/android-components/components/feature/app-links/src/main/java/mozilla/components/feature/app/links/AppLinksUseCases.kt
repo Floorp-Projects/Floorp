@@ -18,6 +18,8 @@ import androidx.annotation.VisibleForTesting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.pm.isPackageInstalled
 import mozilla.components.support.ktx.android.net.isHttpOrHttps
+import mozilla.components.support.utils.ext.queryIntentActivitiesCompat
+import mozilla.components.support.utils.ext.resolveActivityCompat
 import java.lang.Exception
 import java.lang.NullPointerException
 import java.lang.NumberFormatException
@@ -59,7 +61,7 @@ class AppLinksUseCases(
     internal fun findActivities(intent: Intent): List<ResolveInfo> {
         return try {
             context.packageManager
-                .queryIntentActivities(intent, PackageManager.GET_RESOLVED_FILTER)
+                .queryIntentActivitiesCompat(intent, PackageManager.GET_RESOLVED_FILTER)
         } catch (e: RuntimeException) {
             Logger("AppLinksUseCases").error("failed to query activities", e)
             emptyList()
@@ -67,7 +69,7 @@ class AppLinksUseCases(
     }
 
     private fun findDefaultActivity(intent: Intent): ResolveInfo? {
-        return context.packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+        return context.packageManager.resolveActivityCompat(intent, PackageManager.MATCH_DEFAULT_ONLY)
     }
 
     /**

@@ -114,16 +114,20 @@ class ContextTest {
         assertTrue(result)
         // verify all the properties we set for the share Intent
         val chooserIntent = argCaptor.value
-        val chooserTitle: String = chooserIntent.extras!![EXTRA_TITLE] as String
-        val shareIntent: Intent = chooserIntent.extras!![EXTRA_INTENT] as Intent
+        val chooserTitle: String = chooserIntent.extras!!.getString(EXTRA_TITLE) as String
+
+        @Suppress("DEPRECATION")
+        val shareIntent: Intent = chooserIntent.extras!!.get(EXTRA_INTENT) as Intent
 
         assertTrue(chooserIntent.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION != 0)
         assertTrue(chooserIntent.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0)
         assertEquals(context.getString(R.string.mozac_support_ktx_menu_share_with), chooserTitle)
         assertEquals(ACTION_SEND, shareIntent.action)
+
+        @Suppress("DEPRECATION")
         assertEquals(ShadowFileProvider.FAKE_URI_RESULT, shareIntent.extras!![EXTRA_STREAM])
-        assertEquals("subject", shareIntent.extras!![EXTRA_SUBJECT])
-        assertEquals("message", shareIntent.extras!![EXTRA_TEXT])
+        assertEquals("subject", shareIntent.extras!!.getString(EXTRA_SUBJECT))
+        assertEquals("message", shareIntent.extras!!.getString(EXTRA_TEXT))
         assertTrue(shareIntent.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION != 0)
         assertTrue(shareIntent.flags and Intent.FLAG_ACTIVITY_NEW_DOCUMENT != 0)
     }

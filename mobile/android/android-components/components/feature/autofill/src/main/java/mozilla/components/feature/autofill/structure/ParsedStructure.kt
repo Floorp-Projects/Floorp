@@ -28,8 +28,8 @@ data class ParsedStructure(
     val packageName: String,
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
-        parcel.readParcelable(AutofillId::class.java.classLoader),
-        parcel.readParcelable(AutofillId::class.java.classLoader),
+        parcel.readParcelableCompat(AutofillId::class.java),
+        parcel.readParcelableCompat(AutofillId::class.java),
         parcel.readString(),
         parcel.readString() ?: "",
     )
@@ -98,4 +98,13 @@ internal fun parseStructure(context: Context, structure: RawStructure): ParsedSt
     }
 
     return parsedStructure
+}
+
+internal fun <T> Parcel.readParcelableCompat(clazz: Class<T>): T? {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        readParcelable(clazz.classLoader, clazz)
+    } else {
+        @Suppress("DEPRECATION")
+        readParcelable(clazz.classLoader)
+    }
 }

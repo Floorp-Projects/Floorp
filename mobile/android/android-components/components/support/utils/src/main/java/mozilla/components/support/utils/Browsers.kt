@@ -14,6 +14,9 @@ import android.net.Uri
 import android.os.Build
 import androidx.annotation.VisibleForTesting
 import androidx.core.net.toUri
+import mozilla.components.support.utils.ext.getPackageInfoCompat
+import mozilla.components.support.utils.ext.queryIntentActivitiesCompat
+import mozilla.components.support.utils.ext.resolveActivityCompat
 import java.util.HashMap
 
 /**
@@ -253,7 +256,7 @@ class Browsers private constructor(
             // installed packages. getPackageInfo() is fast regardless of a package being installed
             try {
                 // We don't need the result, we only need to detect when the package doesn't exist
-                packageManager.getPackageInfo(browser.packageName, 0)
+                packageManager.getPackageInfoCompat(browser.packageName, 0)
             } catch (e: PackageManager.NameNotFoundException) {
                 continue
             }
@@ -263,7 +266,7 @@ class Browsers private constructor(
             intent.setPackage(browser.packageName)
             intent.addCategory(Intent.CATEGORY_BROWSABLE)
 
-            val info = packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+            val info = packageManager.resolveActivityCompat(intent, PackageManager.MATCH_DEFAULT_ONLY)
                 ?: continue
 
             if (info.activityInfo == null || !info.activityInfo.exported) {
@@ -278,7 +281,7 @@ class Browsers private constructor(
         val intent = Intent(Intent.ACTION_VIEW, uri)
         intent.addCategory(Intent.CATEGORY_BROWSABLE)
 
-        val resolveInfo = packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+        val resolveInfo = packageManager.resolveActivityCompat(intent, PackageManager.MATCH_DEFAULT_ONLY)
             ?: return null
 
         if (resolveInfo.activityInfo == null || !resolveInfo.activityInfo.exported) {
@@ -343,15 +346,13 @@ class Browsers private constructor(
                 PackageManager.MATCH_DEFAULT_ONLY
             }
 
-            val httpResults = packageManager.queryIntentActivities(httpIntent, flag)
-                .orEmpty()
+            val httpResults = packageManager.queryIntentActivitiesCompat(httpIntent, flag)
                 .filter {
                     it.activityInfo.exported &&
                         (includeThisApp || it.activityInfo.packageName != context.packageName)
                 }
 
-            val httpsResults = packageManager.queryIntentActivities(httpsIntent, flag)
-                .orEmpty()
+            val httpsResults = packageManager.queryIntentActivitiesCompat(httpsIntent, flag)
                 .filter {
                     it.activityInfo.exported &&
                         (includeThisApp || it.activityInfo.packageName != context.packageName)
@@ -384,7 +385,7 @@ class Browsers private constructor(
             } else {
                 PackageManager.MATCH_DEFAULT_ONLY
             }
-            return packageManager.queryIntentActivities(intent, flag)
+            return packageManager.queryIntentActivitiesCompat(intent, flag)
                 .orEmpty()
                 .filter {
                     it.activityInfo.exported && (

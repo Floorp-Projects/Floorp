@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.feature.downloads.R
+import mozilla.components.support.utils.ext.getParcelableArrayListCompat
 import java.util.ArrayList
 
 /**
@@ -26,7 +27,8 @@ internal class DownloadAppChooserDialog : AppCompatDialogFragment() {
     private val safeArguments get() = requireNotNull(arguments)
     internal val appsList: ArrayList<DownloaderApp>
         get() =
-            safeArguments.getParcelableArrayList<DownloaderApp>(KEY_APP_LIST) ?: arrayListOf()
+            safeArguments.getParcelableArrayListCompat(KEY_APP_LIST, DownloaderApp::class.java)
+                ?: arrayListOf()
 
     internal val dialogGravity: Int get() =
         safeArguments.getInt(KEY_DIALOG_GRAVITY, DEFAULT_VALUE)

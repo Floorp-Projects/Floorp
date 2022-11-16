@@ -6,6 +6,7 @@ package mozilla.components.concept.engine.prompt
 
 import android.os.Bundle
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.utils.ext.getParcelableCompat
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,7 +34,7 @@ class ShareDataTest {
             putParcelable("noText", noText)
             putParcelable("noUrl", noUrl)
         }
-        assertEquals(noText, bundle.getParcelable<ShareData>("noText"))
-        assertEquals(noUrl, bundle.getParcelable<ShareData>("noUrl"))
+        assertEquals(noText, bundle.getParcelableCompat("noText", ShareData::class.java))
+        assertEquals(noUrl, bundle.getParcelableCompat("noUrl", ShareData::class.java))
     }
 }

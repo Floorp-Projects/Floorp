@@ -44,6 +44,7 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.toScope
+import mozilla.components.support.utils.ext.getParcelableCompat
 import kotlin.reflect.KProperty
 import com.google.android.material.R as MaterialR
 
@@ -77,7 +78,7 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
     private val httpRealm by lazy { safeArguments.getString(KEY_LOGIN_HTTP_REALM) }
 
     @VisibleForTesting
-    internal val icon by lazy { safeArguments.getParcelable<Bitmap>(KEY_LOGIN_ICON) }
+    internal val icon by lazy { safeArguments.getParcelableCompat(KEY_LOGIN_ICON, Bitmap::class.java) }
 
     @VisibleForTesting
     internal var username by SafeArgString(KEY_LOGIN_USERNAME)

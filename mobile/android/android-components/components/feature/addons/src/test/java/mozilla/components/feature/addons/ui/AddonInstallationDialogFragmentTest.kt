@@ -23,6 +23,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
+import mozilla.components.support.utils.ext.getParcelableCompat
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -57,7 +58,7 @@ class AddonInstallationDialogFragmentTest {
         val mockedCollectionProvider = mock<AddonCollectionProvider>()
         val fragment = createAddonInstallationDialogFragment(addon, mockedCollectionProvider)
         assertSame(mockedCollectionProvider, fragment.addonCollectionProvider)
-        assertSame(addon, fragment.arguments?.getParcelable(KEY_INSTALLED_ADDON))
+        assertSame(addon, fragment.arguments?.getParcelableCompat(KEY_INSTALLED_ADDON, Addon::class.java))
 
         doReturn(testContext).`when`(fragment).requireContext()
         val dialog = fragment.onCreateDialog(null)
@@ -150,9 +151,9 @@ class AddonInstallationDialogFragmentTest {
         val fragment = createAddonInstallationDialogFragment(addon, mockedCollectionProvider)
 
         whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).thenReturn(bitmap)
-        assertNull(fragment.arguments?.getParcelable<Bitmap>(KEY_ICON))
+        assertNull(fragment.arguments?.getParcelableCompat(KEY_ICON, Bitmap::class.java))
         fragment.fetchIcon(addon, mockedImageView, scope).join()
-        assertNotNull(fragment.arguments?.getParcelable<Bitmap>(KEY_ICON))
+        assertNotNull(fragment.arguments?.getParcelableCompat(KEY_ICON, Bitmap::class.java))
         verify(mockedImageView).setImageDrawable(Mockito.any())
     }
 
