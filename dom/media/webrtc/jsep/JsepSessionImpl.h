@@ -47,6 +47,7 @@ class JsepSessionCopyableStuff {
   size_t mTransportIdCounter = 0;
   std::vector<JsepExtmapMediaType> mRtpExtensions;
   std::set<uint16_t> mExtmapEntriesEverUsed;
+  std::map<uint16_t, std::string> mExtmapEntriesEverNegotiated;
   std::string mDefaultRemoteStreamId;
   std::string mCNAME;
   // Used to prevent duplicate local SSRCs. Not used to prevent local/remote or

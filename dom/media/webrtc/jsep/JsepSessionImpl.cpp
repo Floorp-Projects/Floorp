@@ -526,6 +526,9 @@ void JsepSessionImpl::AddCommonExtmaps(const SdpMediaSection& remoteMsection,
       continue;
     }
 
+    mExtmapEntriesEverNegotiated[negotiatedExtension.entry] =
+        negotiatedExtension.extensionname;
+
     for (auto& originalExtension : mRtpExtensions) {
       if (negotiatedExtension.extensionname ==
           originalExtension.mExtmap.extensionname) {
@@ -1833,18 +1836,41 @@ nsresult JsepSessionImpl::ValidateLocalDescription(const Sdp& description,
 }
 
 nsresult JsepSessionImpl::ValidateRemoteDescription(const Sdp& description) {
-  if (!mCurrentRemoteDescription || !mCurrentLocalDescription) {
-    // Not renegotiation; checks for whether a remote answer are consistent
-    // with our offer are handled in ValidateAnswer()
+  if (!mCurrentLocalDescription) {
+    // Initial offer; nothing to validate besides the stuff in ParseSdp
     return NS_OK;
   }
 
-  if (mCurrentRemoteDescription->GetMediaSectionCount() >
+  if (mCurrentLocalDescription->GetMediaSectionCount() >
       description.GetMediaSectionCount()) {
     JSEP_SET_ERROR(
         "New remote description has fewer m-sections than the "
         "previous remote description.");
     return NS_ERROR_INVALID_ARG;
+  }
+
+  for (size_t i = 0; i < description.GetMediaSectionCount(); ++i) {
+    const SdpAttributeList& attrs =
+        description.GetMediaSection(i).GetAttributeList();
+
+    if (attrs.HasAttribute(SdpAttribute::kExtmapAttribute)) {
+      for (const auto& ext : attrs.GetExtmap().mExtmaps) {
+        if (mExtmapEntriesEverNegotiated.count(ext.entry) &&
+            mExtmapEntriesEverNegotiated[ext.entry] != ext.extensionname) {
+          JSEP_SET_ERROR(
+              "Remote description attempted to remap RTP extension id "
+              << ext.entry << " from "
+              << mExtmapEntriesEverNegotiated[ext.entry] << " to "
+              << ext.extensionname);
+          return NS_ERROR_INVALID_ARG;
+        }
+      }
+    }
+  }
+
+  if (!mCurrentRemoteDescription) {
+    // No further checking for initial answers
+    return NS_OK;
   }
 
   // These are solely to check that bundle is valid
