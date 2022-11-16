@@ -670,7 +670,7 @@ element.resolveElement = function(id, win) {
 
   const el = lazy.ContentDOMReference.resolve(id);
 
-  if (element.isStale(el, win)) {
+  if (element.isStale(el)) {
     throw new lazy.error.StaleElementReferenceError(
       lazy.pprint`The element reference of ${el ||
         JSON.stringify(id.webElRef)} ` +
@@ -711,39 +711,24 @@ element.isCollection = function(seq) {
 /**
  * Determines if <var>el</var> is stale.
  *
- * A stale element is an element no longer attached to the DOM or which
- * node document is not the active document of the current browsing
- * context.
- *
- * The currently selected browsing context, specified through
- * <var>win<var>, is a WebDriver concept defining the target
- * against which commands will run.  As the current browsing context
- * may differ from <var>el</var>'s associated context, an element is
- * considered stale even if it is connected to a living (not discarded)
- * browsing context such as an <tt>&lt;iframe&gt;</tt>.
+ * An element is stale if its node document is not the active document
+ * or if it is not connected.
  *
  * @param {Element=} el
  *     Element to check for staleness.  If null, which may be
  *     the case if the element has been unwrapped from a weak
  *     reference, it is always considered stale.
- * @param {WindowProxy=} win
- *     Current window global, which may differ from the associated
- *     window global of <var>el</var>.  When retrieving XUL
- *     elements, this is optional.
  *
  * @return {boolean}
  *     True if <var>el</var> is stale, false otherwise.
  */
-element.isStale = function(el, win = undefined) {
-  if (typeof win == "undefined") {
-    win = el.ownerGlobal;
-  }
-
-  if (el === null || !el.ownerGlobal || el.ownerDocument !== win.document) {
+element.isStale = function(el) {
+  if (el == null || !el.ownerGlobal) {
+    // Without a valid inner window the document is basically closed.
     return true;
   }
 
-  return !el.isConnected;
+  return !el.ownerGlobal.document.isActive() || !el.isConnected;
 };
 
 /**
