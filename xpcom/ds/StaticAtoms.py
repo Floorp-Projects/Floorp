@@ -1204,6 +1204,7 @@ STATIC_ATOMS = [
     Atom("targets", "targets"),
     Atom("tbody", "tbody"),
     Atom("td", "td"),
+    Atom("tel", "tel"),
     Atom("_template", "template"),
     Atom("text_decoration", "text-decoration"),
     Atom("terminate", "terminate"),
