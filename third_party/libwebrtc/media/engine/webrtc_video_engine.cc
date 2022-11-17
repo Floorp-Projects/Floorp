@@ -3694,8 +3694,8 @@ EncoderStreamFactory::CreateDefaultVideoStreams(
   if (encoder_config.simulcast_layers[0].target_bitrate_bps <= 0) {
     layer.target_bitrate_bps = max_bitrate_bps;
   } else {
-    layer.target_bitrate_bps =
-        encoder_config.simulcast_layers[0].target_bitrate_bps;
+    layer.target_bitrate_bps = std::min(
+        encoder_config.simulcast_layers[0].target_bitrate_bps, max_bitrate_bps);
   }
   layer.max_bitrate_bps = max_bitrate_bps;
   layer.max_qp = max_qp_;
