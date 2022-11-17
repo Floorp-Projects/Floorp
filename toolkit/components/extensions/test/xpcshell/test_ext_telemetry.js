@@ -14,8 +14,8 @@ const { TelemetryArchiveTesting } = ChromeUtils.import(
   "resource://testing-common/TelemetryArchiveTesting.jsm"
 );
 
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 
 // All tests run privileged unless otherwise specified not to.

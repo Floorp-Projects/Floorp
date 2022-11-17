@@ -1,8 +1,11 @@
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  MockRegistry: "resource://testing-common/MockRegistry.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   ctypes: "resource://gre/modules/ctypes.jsm",
-  MockRegistry: "resource://testing-common/MockRegistry.jsm",
 });
 
 do_get_profile();

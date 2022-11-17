@@ -5,8 +5,8 @@
 var { AppConstants } = SpecialPowers.ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-var { AppTestDelegate } = SpecialPowers.ChromeUtils.import(
-  "resource://specialpowers/AppTestDelegate.jsm"
+var { AppTestDelegate } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://specialpowers/AppTestDelegate.sys.mjs"
 );
 
 let remote = SpecialPowers.getBoolPref("extensions.webextensions.remote");
@@ -39,7 +39,7 @@ if (remote) {
 }
 
 let Assert = {
-  // Cut-down version based on Assert.jsm. Only supports regexp and objects as
+  // Cut-down version based on Assert.sys.mjs. Only supports regexp and objects as
   // the expected variables.
   rejects(promise, expected, msg) {
     return promise.then(

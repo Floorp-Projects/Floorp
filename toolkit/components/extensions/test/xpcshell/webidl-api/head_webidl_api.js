@@ -5,8 +5,11 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  TestUtils: "resource://testing-common/TestUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
-  TestUtils: "resource://testing-common/TestUtils.jsm",
   ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
 });
 

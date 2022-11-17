@@ -25,12 +25,12 @@ var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.import(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  ContentTask: "resource://testing-common/ContentTask.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   PromiseTestUtils: "resource://testing-common/PromiseTestUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ContentTask: "resource://testing-common/ContentTask.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
   ExtensionData: "resource://gre/modules/Extension.jsm",
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",

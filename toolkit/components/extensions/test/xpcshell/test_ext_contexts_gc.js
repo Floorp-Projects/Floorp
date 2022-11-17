@@ -17,8 +17,8 @@ ExtensionTestUtils.mockAppInfo();
 
 async function reloadTopContext(contentPage) {
   await contentPage.spawn(null, async () => {
-    let { TestUtils } = ChromeUtils.import(
-      "resource://testing-common/TestUtils.jsm"
+    let { TestUtils } = ChromeUtils.importESModule(
+      "resource://testing-common/TestUtils.sys.mjs"
     );
     let windowNukeObserved = TestUtils.topicObserved("inner-window-nuked");
     info(`Reloading top-level document`);

@@ -3,10 +3,6 @@
 
 "use strict";
 
-const { BrowserTestUtils } = ChromeUtils.import(
-  "resource://testing-common/BrowserTestUtils.jsm"
-);
-
 const URL_PATH = "browser/toolkit/components/extensions/test/browser/data";
 const TEST_URL = `http://example.com/${URL_PATH}/test_downloads_referrer.html`;
 const DOWNLOAD_URL = `http://example.com/${URL_PATH}/test-download.txt`;

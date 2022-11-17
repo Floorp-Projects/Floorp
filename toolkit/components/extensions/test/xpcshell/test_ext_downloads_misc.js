@@ -8,8 +8,8 @@ const { Downloads } = ChromeUtils.importESModule(
 
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 
 const server = createHttpServer();
