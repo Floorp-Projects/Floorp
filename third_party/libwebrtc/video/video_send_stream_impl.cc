@@ -373,8 +373,8 @@ void VideoSendStreamImpl::Stop() {
   StopVideoSendStream();
 }
 
-// RTC_RUN_ON(rtp_transport_queue_)
 void VideoSendStreamImpl::StopVideoSendStream() {
+  RTC_DCHECK_RUN_ON(rtp_transport_queue_);
   bitrate_allocator_->RemoveObserver(this);
   check_encoder_activity_task_.Stop();
   video_stream_encoder_->OnBitrateUpdated(DataRate::Zero(), DataRate::Zero(),

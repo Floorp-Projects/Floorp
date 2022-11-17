@@ -1039,8 +1039,8 @@ absl::optional<Syncable::Info> ChannelReceive::GetSyncInfo() const {
   return info;
 }
 
-// RTC_RUN_ON(worker_thread_checker_)
 void ChannelReceive::UpdatePlayoutTimestamp(bool rtcp, int64_t now_ms) {
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   // TODO(bugs.webrtc.org/11993): Expect to be called exclusively on the
   // network thread. Once that's done, we won't need video_sync_lock_.
 

@@ -19,8 +19,20 @@
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/thread_annotations.h"
 
+namespace rtc {
+class TaskQueue;
+}  // namespace rtc
+
 namespace webrtc {
+class SequenceChecker;
 namespace webrtc_sequence_checker_internal {
+
+inline void AssertHeld(const SequenceChecker* checker)
+    RTC_ASSERT_EXCLUSIVE_LOCK(checker) {}
+inline void AssertHeld(const TaskQueueBase* task_queue)
+    RTC_ASSERT_EXCLUSIVE_LOCK(task_queue) {}
+inline void AssertHeld(const rtc::TaskQueue* task_queue)
+    RTC_ASSERT_EXCLUSIVE_LOCK(task_queue) {}
 
 // Real implementation of SequenceChecker, for use in debug mode, or
 // for temporary use in release mode (e.g. to RTC_CHECK on a threading issue
@@ -61,22 +73,6 @@ class SequenceCheckerDoNothing {
  public:
   bool IsCurrent() const { return true; }
   void Detach() {}
-};
-
-// Helper class used by RTC_DCHECK_RUN_ON (see example usage below).
-class RTC_SCOPED_LOCKABLE SequenceCheckerScope {
- public:
-  template <typename ThreadLikeObject>
-  explicit SequenceCheckerScope(const ThreadLikeObject* thread_like_object)
-      RTC_EXCLUSIVE_LOCK_FUNCTION(thread_like_object) {}
-  SequenceCheckerScope(const SequenceCheckerScope&) = delete;
-  SequenceCheckerScope& operator=(const SequenceCheckerScope&) = delete;
-  ~SequenceCheckerScope() RTC_UNLOCK_FUNCTION() {}
-
-  template <typename ThreadLikeObject>
-  static bool IsCurrent(const ThreadLikeObject* thread_like_object) {
-    return thread_like_object->IsCurrent();
-  }
 };
 
 std::string ExpectationToString(const SequenceCheckerImpl* checker);

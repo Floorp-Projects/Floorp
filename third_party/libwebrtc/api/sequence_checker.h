@@ -107,10 +107,9 @@ class RTC_LOCKABLE SequenceChecker
 #define RTC_RUN_ON(x) \
   RTC_THREAD_ANNOTATION_ATTRIBUTE__(exclusive_locks_required(x))
 
-#define RTC_DCHECK_RUN_ON(x)                                     \
-  webrtc::webrtc_sequence_checker_internal::SequenceCheckerScope \
-      seq_check_scope(x);                                        \
-  RTC_DCHECK((x)->IsCurrent())                                   \
-      << webrtc::webrtc_sequence_checker_internal::ExpectationToString(x)
+#define RTC_DCHECK_RUN_ON(x)                                               \
+  RTC_DCHECK((x)->IsCurrent())                                             \
+      << webrtc::webrtc_sequence_checker_internal::ExpectationToString(x); \
+  webrtc::webrtc_sequence_checker_internal::AssertHeld(x)
 
 #endif  // API_SEQUENCE_CHECKER_H_
