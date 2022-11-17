@@ -109,6 +109,7 @@ const BROWSER_UI_CONTAINER_IDS = {
   "widget-overflow-fixed-list": "pinned-overflow-menu",
   "page-action-buttons": "pageaction-urlbar",
   pageActionPanel: "pageaction-panel",
+  "unified-extensions-area": "unified-extensions-area",
 
   // This should appear last as some of the above are inside the nav bar.
   "nav-bar": "nav-bar",

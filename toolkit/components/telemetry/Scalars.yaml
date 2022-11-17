@@ -948,6 +948,25 @@ browser.ui.interaction:
     record_in_processes:
       - 'main'
 
+  unified_extensions_area:
+    bug_numbers:
+      - 1800114
+    description: >
+      Records a count of interactions with items in the Unified Extensions area.
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - dtownsend@mozilla.com
+      - mconley@mozilla.com
+      - wdurand@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
   pinned_overflow_menu:
     bug_numbers:
       - 1620358
