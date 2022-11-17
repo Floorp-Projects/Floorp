@@ -7,8 +7,8 @@ const TEST_HOST = "example.org";
 const TEST_FILE = "\u3002.bin";
 const TEST_URL = `http://${TEST_HOST}/${TEST_FILE}`;
 
-const { XPCShellContentUtils } = ChromeUtils.import(
-  "resource://testing-common/XPCShellContentUtils.jsm"
+const { XPCShellContentUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/XPCShellContentUtils.sys.mjs"
 );
 XPCShellContentUtils.initMochitest(this);
 const server = XPCShellContentUtils.createHttpServer({

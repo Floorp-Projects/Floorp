@@ -4,8 +4,8 @@
 // manager for push notifications against a specific scope, that service is
 // instantiated before the message is delivered.
 
-const { MockRegistrar } = ChromeUtils.import(
-  "resource://testing-common/MockRegistrar.jsm"
+const { MockRegistrar } = ChromeUtils.importESModule(
+  "resource://testing-common/MockRegistrar.sys.mjs"
 );
 
 let pushService = Cc["@mozilla.org/push/Service;1"].getService(

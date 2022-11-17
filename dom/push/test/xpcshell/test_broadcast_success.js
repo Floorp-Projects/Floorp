@@ -13,8 +13,8 @@ const { JSONFile } = ChromeUtils.importESModule(
   "resource://gre/modules/JSONFile.sys.mjs"
 );
 
-const { FileTestUtils } = ChromeUtils.import(
-  "resource://testing-common/FileTestUtils.jsm"
+const { FileTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/FileTestUtils.sys.mjs"
 );
 const { broadcastHandler } = ChromeUtils.importESModule(
   "resource://test/broadcast_handler.sys.mjs"

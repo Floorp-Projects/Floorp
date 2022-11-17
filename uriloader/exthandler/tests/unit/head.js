@@ -22,8 +22,8 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 const { HandlerServiceTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/HandlerServiceTestUtils.sys.mjs"
 );
-var { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+var { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
