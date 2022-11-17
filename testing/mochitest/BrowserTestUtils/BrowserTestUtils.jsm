@@ -28,7 +28,6 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const lazy = {};
 
@@ -1992,10 +1991,7 @@ var BrowserTestUtils = {
               extrafile.append(dumpID + ".extra");
               if (extrafile.exists()) {
                 if (AppConstants.MOZ_CRASHREPORTER) {
-                  let extradata = await OS.File.read(extrafile.path, {
-                    encoding: "utf-8",
-                  });
-                  extra = JSON.parse(extradata);
+                  extra = await IOUtils.readJSON(extrafile.path);
                 } else {
                   dump(
                     "\nCrashReporter not enabled - will not return any extra data\n"
