@@ -19,21 +19,21 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
 });
 
-let { Assert: AssertCls } = ChromeUtils.import(
-  "resource://testing-common/Assert.jsm"
+let { Assert: AssertCls } = ChromeUtils.importESModule(
+  "resource://testing-common/Assert.sys.mjs"
 );
 let Assert = AssertCls;
 
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
 
-const { FileTestUtils } = ChromeUtils.import(
-  "resource://testing-common/FileTestUtils.jsm"
+const { FileTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/FileTestUtils.sys.mjs"
 );
 
 const LoginInfo = Components.Constructor(

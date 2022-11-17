@@ -9,8 +9,8 @@ const { LoginManagerParent } = ChromeUtils.import(
 var { LoginTestUtils } = ChromeUtils.import(
   "resource://testing-common/LoginTestUtils.jsm"
 );
-const { ContentTaskUtils } = ChromeUtils.import(
-  "resource://testing-common/ContentTaskUtils.jsm"
+const { ContentTaskUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/ContentTaskUtils.sys.mjs"
 );
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
@@ -128,8 +128,8 @@ async function submitFormAndGetResults(
   responseSelectors
 ) {
   async function contentSubmitForm([contentFormAction, contentSelectorValues]) {
-    const { WrapPrivileged } = ChromeUtils.import(
-      "resource://specialpowers/WrapPrivileged.jsm"
+    const { WrapPrivileged } = ChromeUtils.importESModule(
+      "resource://specialpowers/WrapPrivileged.sys.mjs"
     );
     let doc = content.document;
     let form = doc.querySelector("form");
