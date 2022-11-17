@@ -125,9 +125,9 @@ def loader(kind, path, config, params, loaded_tasks):
         files_changed = get_changed_files(params["head_repository"], params["head_rev"], params["base_rev"])
         affected_components = get_affected_components(files_changed, config.get("files-affecting-components"), upstream_component_dependencies, downstream_component_dependencies)
 
-    if "dependencies-src" in affected_components:
-        logger.info("Dependencies plugin changed. Rebuilding every component.")
-        affected_components = ALL_COMPONENTS
+        if "dependencies-src" in affected_components:
+            logger.info("Dependencies plugin changed. Rebuilding every component.")
+            affected_components = ALL_COMPONENTS
 
     logger.info("Files changed: %s" % " ".join(files_changed))
     if affected_components is ALL_COMPONENTS:
