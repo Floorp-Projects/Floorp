@@ -982,7 +982,8 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     }
     case IntID::PanelAnimations:
       // Disabled on systems without CSD, see bug 1385079.
-      aResult = sCSDAvailable;
+      // Disabled on wayland, see bug 1800442 and bug 1800368.
+      aResult = sCSDAvailable && !GdkIsWaylandDisplay();
       break;
     case IntID::UseOverlayScrollbars: {
       aResult = StaticPrefs::widget_gtk_overlay_scrollbars_enabled();
