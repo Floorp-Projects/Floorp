@@ -149,9 +149,9 @@ define(function(require, exports, module) {
       Services.prefs.getBoolPref("devtools.custom-formatters.enabled", false);
 
     if (useCustomFormatters) {
-      const JsonMl = require("devtools/client/shared/components/reps/reps/jsonml");
-      reps.unshift(JsonMl);
-      exportedReps.JsonMl = JsonMl;
+      const CustomFormatter = require("devtools/client/shared/components/reps/reps/custom-formatter");
+      reps.unshift(CustomFormatter);
+      exportedReps.CustomFormatter = CustomFormatter;
     }
   }
 
@@ -182,7 +182,7 @@ define(function(require, exports, module) {
   ) {
     const repsList = noGrip ? noGripReps : reps;
     for (const rep of repsList) {
-      if (rep === exportedReps.JsonMl && !mayUseCustomFormatter) {
+      if (rep === exportedReps.CustomFormatter && !mayUseCustomFormatter) {
         continue;
       }
 
