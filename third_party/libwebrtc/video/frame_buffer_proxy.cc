@@ -364,6 +364,7 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
     // VideoReceiveStream2 wants frames on the decoder thread.
     decode_queue_->PostTask(
         SafeTask(decode_safety_, [this, frame = std::move(frame)]() mutable {
+          RTC_DCHECK_RUN_ON(decode_queue_);
           receiver_->OnEncodedFrame(std::move(frame));
         }));
   }
@@ -375,7 +376,10 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
       timeout_tracker_.Stop();
       return;
     }
-    receiver_->OnDecodableFrameTimeout(delay);
+    decode_queue_->PostTask(SafeTask(decode_safety_, [this, delay]() {
+      RTC_DCHECK_RUN_ON(decode_queue_);
+      receiver_->OnDecodableFrameTimeout(delay);
+    }));
     // Stop sending timeouts until receive starts waiting for a new frame.
     timeout_tracker_.Stop();
     decoder_ready_for_new_frame_ = false;
@@ -494,7 +498,7 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
   TaskQueueBase* const worker_queue_;
   TaskQueueBase* const decode_queue_;
   VCMReceiveStatisticsCallback* const stats_proxy_;
-  FrameSchedulingReceiver* const receiver_;
+  FrameSchedulingReceiver* const receiver_ RTC_PT_GUARDED_BY(decode_queue_);
   VCMTiming* const timing_;
   const std::unique_ptr<FrameDecodeScheduler> frame_decode_scheduler_
       RTC_GUARDED_BY(&worker_sequence_checker_);
