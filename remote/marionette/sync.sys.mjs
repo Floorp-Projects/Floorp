@@ -403,7 +403,7 @@ export class DebounceCallback {
 /**
  * Wait for a message to be fired from a particular message manager.
  *
- * This method has been duplicated from BrowserTestUtils.jsm.
+ * This method has been duplicated from BrowserTestUtils.sys.mjs.
  *
  * @param {nsIMessageManager} messageManager
  *     The message manager that should be used.
@@ -451,7 +451,7 @@ export function waitForMessage(
 /**
  * Wait for the specified observer topic to be observed.
  *
- * This method has been duplicated from TestUtils.jsm.
+ * This method has been duplicated from TestUtils.sys.mjs.
  *
  * Because this function is intended for testing, any error in checkFn
  * will cause the returned promise to be rejected instead of waiting for
