@@ -3043,6 +3043,7 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetFeedbackParameters(
 
 void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetRecvParameters(
     const ChangedRecvParameters& params) {
+  RTC_DCHECK(stream_);
   bool video_needs_recreation = false;
   if (params.codec_settings) {
     video_needs_recreation = ConfigureCodecs(*params.codec_settings);
@@ -3051,19 +3052,13 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetRecvParameters(
   if (params.rtp_header_extensions) {
     if (config_.rtp.extensions != *params.rtp_header_extensions) {
       config_.rtp.extensions = *params.rtp_header_extensions;
-      if (stream_) {
-        stream_->SetRtpExtensions(config_.rtp.extensions);
-      } else {
-        video_needs_recreation = true;
-      }
+      stream_->SetRtpExtensions(config_.rtp.extensions);
     }
 
     if (flexfec_config_.rtp.extensions != *params.rtp_header_extensions) {
       flexfec_config_.rtp.extensions = *params.rtp_header_extensions;
       if (flexfec_stream_) {
         flexfec_stream_->SetRtpExtensions(flexfec_config_.rtp.extensions);
-      } else if (flexfec_config_.IsCompleteAndEnabled()) {
-        video_needs_recreation = true;
       }
     }
   }
