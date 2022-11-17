@@ -297,26 +297,6 @@ FileDescriptorFile::SetPermissionsOfLink(uint32_t aPermissions) {
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::GetLastAccessedTime(PRTime* aLastAccessedTime) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-FileDescriptorFile::SetLastAccessedTime(PRTime aLastAccessedTime) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-FileDescriptorFile::GetLastAccessedTimeOfLink(PRTime* aLastAccessedTime) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-FileDescriptorFile::SetLastAccessedTimeOfLink(PRTime aLastAccessedTime) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 FileDescriptorFile::GetLastModifiedTime(PRTime* aLastModTime) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
