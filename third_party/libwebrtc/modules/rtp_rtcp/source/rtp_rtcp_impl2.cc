@@ -764,17 +764,17 @@ void ModuleRtpRtcpImpl2::PeriodicUpdate() {
   }
 }
 
-// RTC_RUN_ON(worker_queue_);
 void ModuleRtpRtcpImpl2::MaybeSendRtcp() {
+  RTC_DCHECK_RUN_ON(worker_queue_);
   if (rtcp_sender_.TimeToSendRTCPReport())
     rtcp_sender_.SendRTCP(GetFeedbackState(), kRtcpReport);
 }
 
 // TODO(bugs.webrtc.org/12889): Consider removing this function when the issue
 // is resolved.
-// RTC_RUN_ON(worker_queue_);
 void ModuleRtpRtcpImpl2::MaybeSendRtcpAtOrAfterTimestamp(
     Timestamp execution_time) {
+  RTC_DCHECK_RUN_ON(worker_queue_);
   Timestamp now = clock_->CurrentTime();
   if (now >= execution_time) {
     MaybeSendRtcp();

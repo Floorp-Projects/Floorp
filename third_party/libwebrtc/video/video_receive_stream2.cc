@@ -669,7 +669,7 @@ void VideoReceiveStream2::SetDepacketizerToDecoderFrameTransformer(
 }
 
 void VideoReceiveStream2::RequestKeyFrame(Timestamp now) {
-  // Running on worker_sequence_checker_.
+  RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
   // Called from RtpVideoStreamReceiver (rtp_video_stream_receiver_ is
   // ultimately responsible).
   rtp_video_stream_receiver_.RequestKeyFrame();
@@ -785,9 +785,9 @@ void VideoReceiveStream2::OnDecodableFrameTimeout(TimeDelta wait_time) {
       }));
 }
 
-// RTC_RUN_ON(decode_queue_)
 void VideoReceiveStream2::HandleEncodedFrame(
     std::unique_ptr<EncodedFrame> frame) {
+  RTC_DCHECK_RUN_ON(&decode_queue_);
   Timestamp now = clock_->CurrentTime();
 
   // Current OnPreDecode only cares about QP for VP8.
@@ -857,7 +857,7 @@ void VideoReceiveStream2::HandleEncodedFrame(
 
 int VideoReceiveStream2::DecodeAndMaybeDispatchEncodedFrame(
     std::unique_ptr<EncodedFrame> frame) {
-  // Running on decode_queue_.
+  RTC_DCHECK_RUN_ON(&decode_queue_);
 
   // If `buffered_encoded_frames_` grows out of control (=60 queued frames),
   // maybe due to a stuck decoder, we just halt the process here and log the
@@ -915,12 +915,12 @@ int VideoReceiveStream2::DecodeAndMaybeDispatchEncodedFrame(
   return decode_result;
 }
 
-// RTC_RUN_ON(packet_sequence_checker_)
 void VideoReceiveStream2::HandleKeyFrameGeneration(
     bool received_frame_is_keyframe,
     Timestamp now,
     bool always_request_key_frame,
     bool keyframe_request_is_due) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   bool request_key_frame = always_request_key_frame;
 
   // Repeat sending keyframe requests if we've requested a keyframe.
@@ -944,9 +944,9 @@ void VideoReceiveStream2::HandleKeyFrameGeneration(
   }
 }
 
-// RTC_RUN_ON(packet_sequence_checker_)
 void VideoReceiveStream2::HandleFrameBufferTimeout(Timestamp now,
                                                    TimeDelta wait) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   absl::optional<int64_t> last_packet_ms =
       rtp_video_stream_receiver_.LastReceivedPacketMs();
 
@@ -968,8 +968,8 @@ void VideoReceiveStream2::HandleFrameBufferTimeout(Timestamp now,
   }
 }
 
-// RTC_RUN_ON(packet_sequence_checker_)
 bool VideoReceiveStream2::IsReceivingKeyFrame(Timestamp now) const {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   absl::optional<int64_t> last_keyframe_packet_ms =
       rtp_video_stream_receiver_.LastReceivedKeyframePacketMs();
 
@@ -982,7 +982,7 @@ bool VideoReceiveStream2::IsReceivingKeyFrame(Timestamp now) const {
 }
 
 void VideoReceiveStream2::UpdatePlayoutDelays() const {
-  // Running on worker_sequence_checker_.
+  RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
   const std::initializer_list<absl::optional<TimeDelta>> min_delays = {
       frame_minimum_playout_delay_, base_minimum_playout_delay_,
       syncable_minimum_playout_delay_};
