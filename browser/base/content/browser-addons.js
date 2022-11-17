@@ -1509,21 +1509,56 @@ var gUnifiedExtensions = {
 
   /**
    * Gets a list of active AddonWrapper instances of type "extension", sorted
-   * alphabetically based on add-on's names.
+   * alphabetically based on add-on's names. Optionally, filter out extensions
+   * with browser action.
    *
-   * @return {Array<AddonWrapper>} An array of active extensions.
+   * @param {bool} all When set to true (the default), return the list of all
+   *                   active extensions, including the ones that have a
+   *                   browser action. Otherwise, extensions with browser
+   *                   action are filtered out.
+   * @returns {Array<AddonWrapper>} An array of active extensions.
    */
-  async getActiveExtensions() {
+  async getActiveExtensions(all = true) {
     // TODO: Bug 1778682 - Use a new method on `AddonManager` so that we get
     // the same list of extensions as the one in `about:addons`.
 
-    // We only want to display active and visible extensions, and we want to
-    // list them alphabetically.
+    // We only want to display active and visible extensions that do not have a
+    // browser action, and we want to list them alphabetically.
     let addons = await AddonManager.getAddonsByTypes(["extension"]);
-    addons = addons.filter(addon => !addon.hidden && addon.isActive);
+    addons = addons.filter(
+      addon =>
+        !addon.hidden &&
+        addon.isActive &&
+        (all ||
+          !WebExtensionPolicy.getByID(addon.id).extension.hasBrowserActionUI)
+    );
     addons.sort((a1, a2) => a1.name.localeCompare(a2.name));
 
     return addons;
+  },
+
+  /**
+   * Returns true when there are active extensions listed/shown in the unified
+   * extensions panel, and false otherwise (e.g. when extensions are pinned in
+   * the toolbar OR there are 0 active extensions).
+   *
+   * @returns {boolean} Whether there are extensions listed in the panel.
+   */
+  async hasExtensionsInPanel() {
+    const extensions = await this.getActiveExtensions();
+
+    return !!extensions
+      .map(extension => {
+        const policy = WebExtensionPolicy.getByID(extension.id);
+        return this.browserActionFor(policy)?.widget;
+      })
+      .filter(widget => {
+        return (
+          !widget ||
+          widget?.areaType !== CustomizableUI.TYPE_TOOLBAR ||
+          widget?.forWindow(window).overflowed
+        );
+      }).length;
   },
 
   handleEvent(event) {
@@ -1540,7 +1575,10 @@ var gUnifiedExtensions = {
 
   async onPanelViewShowing(panelview) {
     const list = panelview.querySelector(".unified-extensions-list");
-    const extensions = await this.getActiveExtensions();
+    // Only add extensions that do not have a browser action in this list since
+    // the extensions with browser action have CUI widgets and will appear in
+    // the panel (or toolbar) via the CUI mechanism.
+    const extensions = await this.getActiveExtensions(/* all */ false);
 
     for (const extension of extensions) {
       const item = document.createElement("unified-extensions-item");
@@ -1584,9 +1622,9 @@ var gUnifiedExtensions = {
       }
 
       let panel = this.panel;
-      // The button should directly open `about:addons` when there is no active
-      // extension to show in the panel.
-      if ((await this.getActiveExtensions()).length === 0) {
+      // The button should directly open `about:addons` when the user does not
+      // have any active extensions listed in the unified extensions panel.
+      if (!(await this.hasExtensionsInPanel())) {
         await BrowserOpenAddonsMgr("addons://discover/");
         return;
       }

@@ -587,51 +587,7 @@ add_task(async function test_context_menu_without_browserActionFor_global() {
   cleanup();
 });
 
-add_task(async function test_browser_action_context_menu() {
-  const extWithMenuBrowserAction = ExtensionTestUtils.loadExtension({
-    manifest: {
-      browser_action: {
-        default_area: "navbar",
-      },
-      permissions: ["contextMenus"],
-    },
-    background() {
-      browser.contextMenus.create(
-        {
-          id: "some-menu-id",
-          title: "Click me!",
-          contexts: ["all"],
-        },
-        () => browser.test.sendMessage("ready")
-      );
-    },
-    useAddonManager: "temporary",
-  });
-  const extWithSubMenuBrowserAction = ExtensionTestUtils.loadExtension({
-    manifest: {
-      browser_action: {
-        default_area: "navbar",
-      },
-      permissions: ["contextMenus"],
-    },
-    background() {
-      browser.contextMenus.create({
-        id: "some-menu-id",
-        title: "Open sub-menu",
-        contexts: ["all"],
-      });
-      browser.contextMenus.create(
-        {
-          id: "some-sub-menu-id",
-          parentId: "some-menu-id",
-          title: "Click me!",
-          contexts: ["all"],
-        },
-        () => browser.test.sendMessage("ready")
-      );
-    },
-    useAddonManager: "temporary",
-  });
+add_task(async function test_page_action_context_menu() {
   const extWithMenuPageAction = ExtensionTestUtils.loadExtension({
     manifest: {
       page_action: {},
@@ -644,7 +600,7 @@ add_task(async function test_browser_action_context_menu() {
           title: "Click me!",
           contexts: ["all"],
         },
-        () => browser.test.sendMessage("ready")
+        () => browser.test.sendMessage("menu-created")
       );
     },
     useAddonManager: "temporary",
@@ -655,59 +611,19 @@ add_task(async function test_browser_action_context_menu() {
     },
     useAddonManager: "temporary",
   });
-  const extWithoutMenu2 = ExtensionTestUtils.loadExtension({
-    manifest: {
-      browser_action: {
-        default_area: "navbar",
-      },
-      name: "extension with a browser action but no menu",
-    },
-    useAddonManager: "temporary",
-  });
 
-  const extensions = [
-    extWithMenuBrowserAction,
-    extWithMenuPageAction,
-    extWithSubMenuBrowserAction,
-    extWithoutMenu1,
-    extWithoutMenu2,
-  ];
+  const extensions = [extWithMenuPageAction, extWithoutMenu1];
 
   await Promise.all(extensions.map(extension => extension.startup()));
 
-  await extWithMenuBrowserAction.awaitMessage("ready");
-  await extWithMenuPageAction.awaitMessage("ready");
-  await extWithSubMenuBrowserAction.awaitMessage("ready");
+  await extWithMenuPageAction.awaitMessage("menu-created");
 
   await openExtensionsPanel(win);
-
-  info("extension with browser action and a menu");
-  // The context menu for the extension that declares a browser action menu
-  // should have the menu item created by the extension, a menu separator and
-  // the 3 default menu items.
-  let contextMenu = await openUnifiedExtensionsContextMenu(
-    win,
-    extWithMenuBrowserAction.id
-  );
-  assertVisibleContextMenuItems(contextMenu, 5);
-
-  const [item, separator] = contextMenu.children;
-  is(
-    item.getAttribute("label"),
-    "Click me!",
-    "expected menu item as first child"
-  );
-  is(
-    separator.tagName,
-    "menuseparator",
-    "expected separator after last menu item created by the extension"
-  );
-  await closeChromeContextMenu(contextMenu.id, null, win);
 
   info("extension with page action and a menu");
   // This extension declares a page action so its menu shouldn't be added to
   // the unified extensions context menu.
-  contextMenu = await openUnifiedExtensionsContextMenu(
+  let contextMenu = await openUnifiedExtensionsContextMenu(
     win,
     extWithMenuPageAction.id
   );
@@ -719,32 +635,6 @@ add_task(async function test_browser_action_context_menu() {
   // be 3 menu items corresponding to the default manage/remove/report items.
   contextMenu = await openUnifiedExtensionsContextMenu(win, extWithoutMenu1.id);
   assertVisibleContextMenuItems(contextMenu, 3);
-  await closeChromeContextMenu(contextMenu.id, null, win);
-
-  info("extension with browser action and no menu");
-  // There is no context menu created by this extension, so there should only
-  // be 3 menu items corresponding to the default manage/remove/report items.
-  contextMenu = await openUnifiedExtensionsContextMenu(win, extWithoutMenu2.id);
-  assertVisibleContextMenuItems(contextMenu, 3);
-  await closeChromeContextMenu(contextMenu.id, null, win);
-
-  info("extension with browser action and menu + sub-menu");
-  // Open a context menu that has a sub-menu and verify that we can get to the
-  // sub-menu item.
-  contextMenu = await openUnifiedExtensionsContextMenu(
-    win,
-    extWithSubMenuBrowserAction.id
-  );
-  assertVisibleContextMenuItems(contextMenu, 5);
-  const popup = await openSubmenu(contextMenu.children[0]);
-  is(popup.children.length, 1, "expected 1 submenu item");
-  is(
-    popup.children[0].getAttribute("label"),
-    "Click me!",
-    "expected menu item"
-  );
-  // The number of items in the (main) context menu should remain the same.
-  assertVisibleContextMenuItems(contextMenu, 5);
   await closeChromeContextMenu(contextMenu.id, null, win);
 
   await closeExtensionsPanel(win);

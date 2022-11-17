@@ -686,11 +686,12 @@ var ExtensionsUI = {
       );
     }
 
-    // Insert all before Manage Extension, after any extension's menu items.
+    // Insert all before Pin to toolbar OR Manage Extension, after any
+    // extension's menu items.
     let items = [headerItem, whenClicked, alwaysOn, allDomains, separator];
     let manageItem =
       popup.querySelector(".customize-context-manageExtension") ||
-      popup.querySelector(".unified-extensions-context-menu-manage-extension");
+      popup.querySelector(".unified-extensions-context-menu-pin-to-toolbar");
     items.forEach(item => item && popup.insertBefore(item, manageItem));
 
     let cleanup = () => items.forEach(item => item?.remove());
