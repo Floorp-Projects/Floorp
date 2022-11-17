@@ -66,12 +66,12 @@ To add a new message type to the Messaging Experiments schema:
 3. Add the new schema to the list in `make-schemas.py <make_schemas_script_>`_.
 4. Build the new schema by running:
 
-  .. code-block:: shell
+   .. code-block:: shell
 
-     cd browser/components/newtab/content-src/asrouter/schemas/
-     ../../../../../../mach python make-schemas.py
+      cd browser/components/newtab/content-src/asrouter/schemas/
+      ../../../../../../mach python make-schemas.py
 
-4. Commit the results.
+5. Commit the results.
 
 Likewise, if you are modifying a message schema you must rebuild the generated
 schema:
