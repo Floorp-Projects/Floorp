@@ -34,7 +34,6 @@ import mozilla.components.concept.base.images.ImageLoadRequest
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 
 /**
  * Card which will display a thumbnail. If a thumbnail is not available for [url], the favicon
@@ -138,7 +137,7 @@ private fun ThumbnailImage(
 @Preview
 @Composable
 private fun ThumbnailCardPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         ThumbnailCard(
             url = "https://mozilla.com",
             key = "123",

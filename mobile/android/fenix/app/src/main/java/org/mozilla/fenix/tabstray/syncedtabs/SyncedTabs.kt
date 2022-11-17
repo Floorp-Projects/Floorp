@@ -40,7 +40,6 @@ import org.mozilla.fenix.compose.ext.dashedBorder
 import org.mozilla.fenix.compose.list.ExpandableListHeader
 import org.mozilla.fenix.compose.list.FaviconListItem
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 import mozilla.components.browser.storage.sync.Tab as SyncTab
 
 private const val EXPANDED_BY_DEFAULT = true
@@ -240,7 +239,7 @@ fun SyncedTabsNoTabsItem() {
 @Composable
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun SyncedTabsListItemsPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         Column(Modifier.background(FirefoxTheme.colors.layer1)) {
             SyncedTabsSectionHeader(headerText = "Google Pixel Pro Max +Ultra 5000")
 
@@ -276,7 +275,7 @@ private fun SyncedTabsListItemsPreview() {
 @Composable
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun SyncedTabsErrorPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             SyncedTabsErrorItem(
                 errorText = stringResource(R.string.synced_tabs_no_tabs),
@@ -293,7 +292,7 @@ private fun SyncedTabsErrorPreview() {
 @Composable
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun SyncedTabsListPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             SyncedTabsList(
                 syncedTabs = getFakeSyncedTabList(),

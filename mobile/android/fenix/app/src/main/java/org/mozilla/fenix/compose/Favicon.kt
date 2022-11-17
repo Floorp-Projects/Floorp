@@ -24,7 +24,6 @@ import mozilla.components.browser.icons.compose.Placeholder
 import mozilla.components.browser.icons.compose.WithIcon
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 
 /**
  * Load and display the favicon of a particular website.
@@ -98,7 +97,7 @@ private fun FaviconPlaceholder(
 @Composable
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun FaviconPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             Favicon(
                 url = "www.mozilla.com",

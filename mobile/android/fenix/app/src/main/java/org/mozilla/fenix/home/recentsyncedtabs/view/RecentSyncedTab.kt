@@ -52,7 +52,6 @@ import org.mozilla.fenix.compose.button.SecondaryButton
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 
 /**
  * A recent synced tab card.
@@ -287,7 +286,7 @@ private fun LoadedRecentSyncedTab() {
         url = "https://mozilla.org",
         previewImageUrl = "https://mozilla.org",
     )
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         RecentSyncedTab(
             tab = tab,
             onRecentSyncedTabClick = {},
@@ -301,7 +300,7 @@ private fun LoadedRecentSyncedTab() {
 @Preview
 @Composable
 private fun LoadingRecentSyncedTab() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         RecentSyncedTab(
             tab = null,
             buttonBackgroundColor = FirefoxTheme.colors.layer3,

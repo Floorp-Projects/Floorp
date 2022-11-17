@@ -43,7 +43,6 @@ import org.mozilla.fenix.compose.list.FaviconListItem
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.tabstray.ext.toDisplayTitle
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 
 private val ROUNDED_CORNER_SHAPE = RoundedCornerShape(8.dp)
 
@@ -226,7 +225,7 @@ private fun InactiveTabsAutoClosePrompt(
 @Preview(name = "Auto close dialog dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(name = "Auto close dialog light", uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun InactiveTabsAutoClosePromptPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             InactiveTabsAutoClosePrompt(
                 onDismissClick = {},
@@ -243,7 +242,7 @@ private fun InactiveTabsListPreview() {
     var expanded by remember { mutableStateOf(true) }
     var showAutoClosePrompt by remember { mutableStateOf(true) }
 
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             InactiveTabsList(
                 inactiveTabs = generateFakeInactiveTabsList(),

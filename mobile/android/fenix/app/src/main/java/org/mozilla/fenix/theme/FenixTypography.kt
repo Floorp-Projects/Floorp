@@ -144,7 +144,7 @@ private fun TypographyPreview() {
         Pair("Overline", defaultTypography.overline),
     )
 
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         LazyColumn(
             modifier = Modifier
                 .background(FirefoxTheme.colors.layer1)

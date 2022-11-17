@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.settings.wallpaper.WallpaperThumbnails
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 
 /**
  * A view that shows content of a WallpaperOnboarding dialog.
@@ -125,7 +124,7 @@ fun WallpaperOnboarding(
 @ExperimentalMaterialApi
 @Composable
 private fun WallpaperSnackbarPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         WallpaperOnboarding(
             wallpapers = listOf(Wallpaper.Default),
             currentWallpaper = Wallpaper.Default,

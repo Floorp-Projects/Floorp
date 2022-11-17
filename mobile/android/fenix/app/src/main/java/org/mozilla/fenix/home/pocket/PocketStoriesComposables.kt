@@ -73,7 +73,6 @@ import org.mozilla.fenix.compose.TabSubtitleWithInterdot
 import org.mozilla.fenix.compose.inComposePreview
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -579,7 +578,7 @@ fun PoweredByPocketHeader(
 @Composable
 @Preview
 private fun PocketStoriesComposablesPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         Box(Modifier.background(FirefoxTheme.colors.layer2)) {
             Column {
                 PocketStories(

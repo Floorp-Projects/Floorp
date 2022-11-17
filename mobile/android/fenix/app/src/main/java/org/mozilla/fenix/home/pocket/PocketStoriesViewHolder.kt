@@ -27,7 +27,6 @@ import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.compose.home.HomeSectionHeader
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 import org.mozilla.fenix.wallpapers.WallpaperState
 
 /**
@@ -105,7 +104,7 @@ class PocketStoriesViewHolder(
 @Composable
 @Preview
 fun PocketStoriesViewHolderPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         Column {
             HomeSectionHeader(
                 headerText = stringResource(R.string.pocket_stories_header_1),

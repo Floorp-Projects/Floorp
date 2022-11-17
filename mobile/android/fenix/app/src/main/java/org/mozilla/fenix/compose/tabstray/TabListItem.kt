@@ -34,7 +34,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ThumbnailCard
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 
 /**
  * List item used to display a tab that supports clicks,
@@ -172,7 +171,7 @@ private fun Thumbnail(
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun TabListItemPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         TabListItem(
             tab = createTab(url = "www.mozilla.com", title = "Mozilla"),
             onCloseClick = {},
@@ -187,7 +186,7 @@ private fun TabListItemPreview() {
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun SelectedTabListItemPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         TabListItem(
             tab = createTab(url = "www.mozilla.com", title = "Mozilla"),
             onCloseClick = {},

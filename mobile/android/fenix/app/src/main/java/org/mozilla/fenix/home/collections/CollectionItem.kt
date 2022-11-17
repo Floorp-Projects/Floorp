@@ -46,7 +46,6 @@ import org.mozilla.fenix.R.string
 import org.mozilla.fenix.compose.list.FaviconListItem
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 
 /**
  * Rectangular shape with only right angles used to display a middle tab.
@@ -195,7 +194,7 @@ private fun Modifier.clipTop() = this.then(
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun TabInCollectionPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         Column {
             Box(modifier = Modifier.height(56.dp)) {
                 DismissedTabBackground(

@@ -52,7 +52,6 @@ import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ClickableSubstringLink
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 import org.mozilla.fenix.wallpapers.Wallpaper
 
 /**
@@ -330,7 +329,7 @@ private fun WallpaperThumbnailItem(
 @Preview
 @Composable
 private fun WallpaperThumbnailsPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         WallpaperSettings(
             defaultWallpaper = Wallpaper.Default,
             loadWallpaperResource = { null },

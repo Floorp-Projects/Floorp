@@ -28,7 +28,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.inComposePreview
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 import org.mozilla.fenix.wallpapers.Wallpaper
 
 /**
@@ -124,7 +123,7 @@ private fun HomeSectionHeaderContent(
 @Composable
 @Preview
 private fun HomeSectionsHeaderPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         HomeSectionHeader(
             headerText = stringResource(R.string.recently_saved_title),
             description = stringResource(R.string.recently_saved_show_all_content_description_2),

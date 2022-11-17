@@ -27,7 +27,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 
 /**
  * [RecyclerView.ViewHolder] for displaying the Pocket feature header.
@@ -83,7 +82,7 @@ class PocketRecommendationsHeaderViewHolder(
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun PocketRecommendationsFooterViewHolderPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         Box(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
             PoweredByPocketHeader(
                 onLearnMoreClicked = {},

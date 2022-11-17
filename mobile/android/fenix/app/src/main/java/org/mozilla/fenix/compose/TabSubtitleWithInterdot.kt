@@ -16,7 +16,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 
 /**
  * Special caption text for a tab layout shown on one line.
@@ -106,7 +105,7 @@ fun TabSubtitleWithInterdot(
 @Composable
 @Preview
 private fun TabSubtitleWithInterdotPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         Box(Modifier.background(FirefoxTheme.colors.layer2)) {
             TabSubtitleWithInterdot(
                 firstText = "firstText",

@@ -26,7 +26,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 
 /**
  * Default layout of a large tab shown in a list taking String arguments for title and caption.
@@ -171,7 +170,7 @@ fun ListItemTabSurface(
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun ListItemTabLargePreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         ListItemTabLarge(
             imageUrl = "",
             title = "This is a very long title for a tab but needs to be so for this preview",
@@ -184,7 +183,7 @@ private fun ListItemTabLargePreview() {
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun ListItemTabSurfacePreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         ListItemTabSurface(
             imageUrl = "",
         ) {
@@ -201,7 +200,7 @@ private fun ListItemTabSurfacePreview() {
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun ListItemTabSurfaceWithCustomBackgroundPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         ListItemTabSurface(
             imageUrl = "",
             backgroundColor = Color.Cyan,

@@ -54,7 +54,6 @@ import org.mozilla.fenix.compose.Image
 import org.mozilla.fenix.compose.inComposePreview
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 
 private val cardShape = RoundedCornerShape(8.dp)
 
@@ -280,7 +279,7 @@ private fun RecentBookmarksMenu(
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun RecentBookmarksPreview() {
-    FirefoxTheme(theme = Theme.getTheme()) {
+    FirefoxTheme {
         RecentBookmarks(
             bookmarks = listOf(
                 RecentBookmark(
