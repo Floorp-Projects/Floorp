@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.CoroutineScope
@@ -68,29 +69,19 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
 
         searchSuggestionsViewModel.state.observe(
             viewLifecycleOwner,
-            { state ->
-                binding.enableSearchSuggestionsContainer.visibility = View.GONE
-                binding.noSuggestionsContainer.visibility = View.GONE
+        ) { state ->
+            binding.enableSearchSuggestionsContainer.isVisible = false
+            binding.noSuggestionsContainer.isVisible = false
 
-                when (state) {
-                    is State.ReadyForSuggestions -> { /* Handled by Jetpack Compose implementation */
-                    }
-                    is State.NoSuggestionsAPI ->
-                        binding.noSuggestionsContainer.visibility = if (state.givePrompt) {
-                            View.VISIBLE
-                        } else {
-                            View.GONE
-                        }
-                    is State.Disabled ->
-                        binding.enableSearchSuggestionsContainer.visibility =
-                            if (state.givePrompt) {
-                                View.VISIBLE
-                            } else {
-                                View.GONE
-                            }
+            when (state) {
+                is State.ReadyForSuggestions -> { /* Handled by Jetpack Compose implementation */
                 }
-            },
-        )
+                is State.NoSuggestionsAPI ->
+                    binding.noSuggestionsContainer.isVisible = state.givePrompt
+                is State.Disabled ->
+                    binding.enableSearchSuggestionsContainer.isVisible = state.givePrompt
+            }
+        }
     }
 
     override fun onCreateView(

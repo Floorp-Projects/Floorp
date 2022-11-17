@@ -8,13 +8,13 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.AttributeSet
-import android.view.View
 import android.widget.RadioButton
 import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.res.TypedArrayUtils.getAttr
 import androidx.core.content.withStyledAttributes
 import androidx.core.text.HtmlCompat
+import androidx.core.view.isVisible
 import androidx.preference.Preference
 import androidx.preference.PreferenceManager
 import androidx.preference.PreferenceViewHolder
@@ -164,9 +164,9 @@ open class RadioButtonPreference @JvmOverloads constructor(
                     summary
                 }
 
-                it.visibility = View.VISIBLE
+                it.isVisible = true
             } else {
-                it.visibility = View.GONE
+                it.isVisible = false
             }
         }
     }

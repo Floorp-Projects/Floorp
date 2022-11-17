@@ -292,16 +292,16 @@ class UrlInputFragment :
         }
 
         if (isOverlay) {
-            binding.landingLayout.visibility = View.GONE
+            binding.landingLayout.isVisible = false
         } else {
             binding.backgroundView.background = AppCompatResources.getDrawable(
                 requireContext(),
                 R.drawable.home_background,
             )
 
-            binding.dismissView.visibility = View.GONE
+            binding.dismissView.isVisible = false
 
-            binding.menuView.visibility = View.VISIBLE
+            binding.menuView.isVisible = true
         }
 
         tab?.let { tab ->
@@ -311,8 +311,8 @@ class UrlInputFragment :
                 tab.content.url
             }
 
-            binding.searchViewContainer.visibility = View.GONE
-            binding.menuView.visibility = View.GONE
+            binding.searchViewContainer.isVisible = false
+            binding.menuView.isVisible = false
         }
 
         binding.browserToolbar.editMode()
@@ -517,14 +517,14 @@ class UrlInputFragment :
         */
 
         if (reverse) {
-            binding.toolbarBottomBorder.visibility = View.VISIBLE
+            binding.toolbarBottomBorder.isVisible = true
 
             if (!isOverlay) {
-                binding.dismissView.visibility = View.GONE
-                binding.menuView.visibility = View.VISIBLE
+                binding.dismissView.isVisible = false
+                binding.menuView.isVisible = true
             }
         } else {
-            binding.toolbarBottomBorder.visibility = View.GONE
+            binding.toolbarBottomBorder.isVisible = false
         }
     }
 
@@ -671,20 +671,20 @@ class UrlInputFragment :
         searchSuggestionsViewModel.setSearchQuery(text)
 
         if (text.trim { it <= ' ' }.isEmpty()) {
-            binding.searchViewContainer.visibility = View.GONE
+            binding.searchViewContainer.isVisible = false
 
             if (!isOverlay) {
                 playVisibilityAnimation(true)
             }
         } else {
-            binding.menuView.visibility = View.GONE
+            binding.menuView.isVisible = false
 
-            if (!isOverlay && binding.dismissView.visibility != View.VISIBLE) {
+            if (!isOverlay && binding.dismissView.isVisible != true) {
                 playVisibilityAnimation(false)
-                binding.dismissView.visibility = View.VISIBLE
+                binding.dismissView.isVisible = true
             }
 
-            binding.searchViewContainer.visibility = View.VISIBLE
+            binding.searchViewContainer.isVisible = true
         }
     }
 }

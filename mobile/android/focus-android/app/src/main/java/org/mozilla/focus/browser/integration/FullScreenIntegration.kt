@@ -8,6 +8,7 @@ import android.app.Activity
 import android.os.Build
 import android.view.View
 import androidx.annotation.VisibleForTesting
+import androidx.core.view.isVisible
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.EngineView
@@ -54,7 +55,7 @@ class FullScreenIntegration(
     internal fun fullScreenChanged(enabled: Boolean) {
         if (enabled) {
             enterBrowserFullscreen()
-            statusBar.visibility = View.GONE
+            statusBar.isVisible = false
 
             switchToImmersiveMode()
         } else {
@@ -63,7 +64,7 @@ class FullScreenIntegration(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && activity.isInPictureInPictureMode) {
                 activity.moveTaskToBack(false)
             }
-            statusBar.visibility = View.VISIBLE
+            statusBar.isVisible = true
             exitBrowserFullscreen()
 
             exitImmersiveMode()

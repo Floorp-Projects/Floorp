@@ -288,7 +288,7 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment(), CoroutineScope {
         ) {
             domainView.text = domainFormatter?.invoke(exception.url) ?: exception.url
 
-            checkBoxView.visibility = if (isSelectionMode) View.VISIBLE else View.GONE
+            checkBoxView.isVisible = isSelectionMode
             checkBoxView.isChecked = selectedExceptions.contains(exception)
             checkBoxView.setOnCheckedChangeListener { _: CompoundButton, isChecked: Boolean ->
                 if (isChecked) {
@@ -300,7 +300,7 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment(), CoroutineScope {
                 fragment.activity?.invalidateOptionsMenu()
             }
 
-            handleView.visibility = if (isSelectionMode) View.GONE else View.VISIBLE
+            handleView.isVisible = isSelectionMode
             handleView.setOnTouchListener { _, event ->
                 if (event.actionMasked == MotionEvent.ACTION_DOWN) {
                     itemTouchHelper.startDrag(this)

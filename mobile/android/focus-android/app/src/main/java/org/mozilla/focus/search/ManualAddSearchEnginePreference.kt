@@ -11,10 +11,10 @@ import android.text.Editable
 import android.text.TextUtils
 import android.text.TextWatcher
 import android.util.AttributeSet
-import android.view.View
 import android.widget.EditText
 import android.widget.ProgressBar
 import androidx.core.os.bundleOf
+import androidx.core.view.isVisible
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import com.google.android.material.textfield.TextInputLayout
@@ -112,7 +112,7 @@ class ManualAddSearchEnginePreference(context: Context, attrs: AttributeSet) :
     }
 
     fun setProgressViewShown(isShown: Boolean) {
-        progressView?.visibility = if (isShown) View.VISIBLE else View.GONE
+        progressView?.isVisible = isShown
     }
 
     private fun updateState() {

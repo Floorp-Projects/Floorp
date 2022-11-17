@@ -9,6 +9,7 @@ import android.content.res.Resources
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
+import androidx.core.view.isVisible
 import mozilla.components.browser.engine.gecko.GeckoEngineView
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.feature.session.FullScreenFeature
@@ -315,7 +316,7 @@ internal class FullScreenIntegrationTest {
 
         verify(integration).enterBrowserFullscreen()
         verify(integration).switchToImmersiveMode()
-        verify(statusBar).visibility = View.GONE
+        verify(statusBar).isVisible = false
     }
 
     @Test
@@ -352,6 +353,6 @@ internal class FullScreenIntegrationTest {
 
         verify(integration).exitBrowserFullscreen()
         verify(integration).exitImmersiveMode()
-        verify(statusBar).visibility = View.VISIBLE
+        verify(statusBar).isVisible = true
     }
 }

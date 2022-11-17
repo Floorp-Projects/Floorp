@@ -4,8 +4,8 @@
 
 package org.mozilla.focus.ext
 
-import android.view.View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.isVisible
 import mozilla.components.browser.engine.gecko.GeckoEngineView
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.behavior.BrowserToolbarBehavior
@@ -64,7 +64,7 @@ internal class BrowserToolbarTest {
     fun `GIVEN a BrowserToolbar WHEN showAsFixed is called THEN show the toolbar with the engineView below it`() {
         toolbar.showAsFixed(testContext, engineView)
 
-        verify(toolbar).visibility = View.VISIBLE
+        verify(toolbar).isVisible = true
         verify(engineView).setDynamicToolbarMaxHeight(0)
         assertEquals(toolbarHeight, (engineView.layoutParams as? CoordinatorLayout.LayoutParams)?.topMargin)
     }
@@ -73,7 +73,7 @@ internal class BrowserToolbarTest {
     fun `GIVEN a BrowserToolbar WHEN hide is called THEN show the toolbar with the engineView below it`() {
         toolbar.hide(engineView)
 
-        verify(toolbar).visibility = View.GONE
+        verify(toolbar).isVisible = false
         verify(engineView).setDynamicToolbarMaxHeight(0)
         assertEquals(0, (engineView.layoutParams as? CoordinatorLayout.LayoutParams)?.topMargin)
     }

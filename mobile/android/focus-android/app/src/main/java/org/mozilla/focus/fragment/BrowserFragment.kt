@@ -22,6 +22,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.net.toUri
+import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.preference.PreferenceManager
 import com.google.android.material.snackbar.Snackbar
@@ -543,7 +544,7 @@ class BrowserFragment :
             .add(R.id.crash_container, crashReporterFragment, CrashReporterFragment.FRAGMENT_TAG)
             .commit()
 
-        binding.crashContainer.visibility = View.VISIBLE
+        binding.crashContainer.isVisible = true
     }
 
     private fun hideCrashReporter() {
@@ -556,7 +557,7 @@ class BrowserFragment :
             .remove(fragment)
             .commit()
 
-        binding.crashContainer.visibility = View.GONE
+        binding.crashContainer.isVisible = false
     }
 
     fun crashReporterIsVisible(): Boolean = requireActivity().supportFragmentManager.let {

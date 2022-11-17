@@ -17,6 +17,7 @@ import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -292,7 +293,7 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment(), CoroutineScope
         ) {
             domainView.text = domainFormatter?.invoke(domain) ?: domain
 
-            checkBoxView.visibility = if (isSelectionMode) View.VISIBLE else View.GONE
+            checkBoxView.isVisible = isSelectionMode
             checkBoxView.isChecked = selectedDomains.contains(domain)
             checkBoxView.setOnCheckedChangeListener { _: CompoundButton, isChecked: Boolean ->
                 if (isChecked) {
@@ -304,7 +305,7 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment(), CoroutineScope
                 fragment.activity?.invalidateOptionsMenu()
             }
 
-            handleView.visibility = if (isSelectionMode) View.GONE else View.VISIBLE
+            handleView.isVisible = isSelectionMode
             handleView.setOnTouchListener { _, event ->
                 if (event.actionMasked == MotionEvent.ACTION_DOWN) {
                     itemTouchHelper.startDrag(this)

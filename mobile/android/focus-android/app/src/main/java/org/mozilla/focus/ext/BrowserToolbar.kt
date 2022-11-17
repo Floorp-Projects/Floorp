@@ -5,8 +5,8 @@
 package org.mozilla.focus.ext
 
 import android.content.Context
-import android.view.View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.isVisible
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.behavior.BrowserToolbarBehavior
 import mozilla.components.concept.engine.EngineView
@@ -65,7 +65,7 @@ fun BrowserToolbar.enableDynamicBehavior(context: Context, engineView: EngineVie
  * @param engineView [EngineView] that must be shown immediately below the toolbar.
  */
 fun BrowserToolbar.showAsFixed(context: Context, engineView: EngineView) {
-    visibility = View.VISIBLE
+    isVisible = true
 
     engineView.setDynamicToolbarMaxHeight(0)
 
@@ -82,5 +82,5 @@ fun BrowserToolbar.hide(engineView: EngineView) {
     engineView.setDynamicToolbarMaxHeight(0)
     (engineView.asView().layoutParams as? CoordinatorLayout.LayoutParams)?.topMargin = 0
 
-    visibility = View.GONE
+    isVisible = false
 }

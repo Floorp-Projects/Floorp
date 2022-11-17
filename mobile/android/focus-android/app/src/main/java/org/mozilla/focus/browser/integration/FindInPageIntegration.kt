@@ -4,7 +4,7 @@
 
 package org.mozilla.focus.browser.integration
 
-import android.view.View
+import androidx.core.view.isVisible
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
@@ -38,11 +38,11 @@ class FindInPageIntegration(
     }
 
     fun show(sessionState: SessionState) {
-        findInPageView.visibility = View.VISIBLE
+        findInPageView.isVisible = true
         feature.bind(sessionState)
     }
 
     fun hide() {
-        findInPageView.visibility = View.GONE
+        findInPageView.isVisible = false
     }
 }

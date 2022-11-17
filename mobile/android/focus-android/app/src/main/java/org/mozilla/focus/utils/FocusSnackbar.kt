@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.ContentViewCallback
@@ -35,7 +36,7 @@ class FocusSnackbar private constructor(
     fun setAction(text: String, action: () -> Unit) = apply {
         binding.snackbarAction.apply {
             setText(text)
-            visibility = View.VISIBLE
+            isVisible = true
             setOnClickListener {
                 action.invoke()
                 dismiss()
