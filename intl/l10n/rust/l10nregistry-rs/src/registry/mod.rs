@@ -9,6 +9,7 @@ use crate::{
 };
 use fluent_bundle::FluentResource;
 use fluent_fallback::generator::BundleGenerator;
+use rustc_hash::FxHashSet;
 use std::{
     cell::{Ref, RefCell, RefMut},
     collections::HashSet,
@@ -342,7 +343,7 @@ where
     fn bundles_iter(
         &self,
         locales: Self::LocalesIter,
-        resource_ids: Vec<ResourceId>,
+        resource_ids: FxHashSet<ResourceId>,
     ) -> Self::Iter {
         let resource_ids = resource_ids.into_iter().collect();
         self.generate_bundles_sync(locales, resource_ids)
@@ -353,7 +354,7 @@ where
     fn bundles_stream(
         &self,
         locales: Self::LocalesIter,
-        resource_ids: Vec<ResourceId>,
+        resource_ids: FxHashSet<ResourceId>,
     ) -> Self::Stream {
         let resource_ids = resource_ids.into_iter().collect();
         self.generate_bundles(locales, resource_ids)

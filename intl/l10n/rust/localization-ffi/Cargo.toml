@@ -16,7 +16,7 @@ thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 async-trait = "0.1"
 moz_task = { path = "../../../../xpcom/rust/moz_task" }
 fluent-ffi = { path = "../fluent-ffi" }
-fluent-fallback = "0.6.0"
+fluent-fallback = "0.7.0"
 l10nregistry-ffi = { path = "../l10nregistry-ffi" }
 xpcom = { path = "../../../../xpcom/rust/xpcom" }
 cstr = "0.2"

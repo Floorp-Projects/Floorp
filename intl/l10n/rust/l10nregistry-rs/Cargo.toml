@@ -8,8 +8,8 @@ edition = "2018"
 [dependencies]
 async-trait = "0.1"
 fluent-bundle = "0.15.2"
-fluent-fallback = "0.6.0"
-fluent-testing = { version = "0.0.2", optional = true, features = ["sync", "async"] }
+fluent-fallback = "0.7.0"
+fluent-testing = { version = "0.0.3", optional = true, features = ["sync", "async"] }
 futures = "0.3"
 pin-project-lite = "0.2"
 replace_with = "0.1"

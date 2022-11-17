@@ -93,7 +93,7 @@ fluent = { version = "0.16.0", features = ["fluent-pseudo"] }
 fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
 l10nregistry-ffi = { path = "../../../../intl/l10n/rust/l10nregistry-ffi" }
 l10nregistry = { path = "../../../../intl/l10n/rust/l10nregistry-rs" }
-fluent-fallback = "0.6.0"
+fluent-fallback = "0.7.0"
 localization-ffi = { path = "../../../../intl/l10n/rust/localization-ffi" }
 
 processtools = { path = "../../../components/processtools" }

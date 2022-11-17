@@ -5,6 +5,7 @@ use crate::{
     types::ResourceId,
 };
 use once_cell::sync::OnceCell;
+use rustc_hash::FxHashSet;
 use std::rc::Rc;
 
 pub struct Localization<G, P>
@@ -16,7 +17,7 @@ where
     generator: G,
     provider: P,
     sync: bool,
-    res_ids: Vec<ResourceId>,
+    res_ids: FxHashSet<ResourceId>,
 }
 
 impl<G, P> Localization<G, P>
@@ -24,13 +25,16 @@ where
     G: BundleGenerator<LocalesIter = P::Iter> + Default,
     P: LocalesProvider + Default,
 {
-    pub fn new(res_ids: Vec<ResourceId>, sync: bool) -> Self {
+    pub fn new<I>(res_ids: I, sync: bool) -> Self
+    where
+        I: IntoIterator<Item = ResourceId>,
+    {
         Self {
             bundles: OnceCell::new(),
             generator: G::default(),
             provider: P::default(),
             sync,
-            res_ids,
+            res_ids: FxHashSet::from_iter(res_ids.into_iter()),
         }
     }
 }
@@ -40,13 +44,16 @@ where
     G: BundleGenerator<LocalesIter = P::Iter>,
     P: LocalesProvider,
 {
-    pub fn with_env(res_ids: Vec<ResourceId>, sync: bool, provider: P, generator: G) -> Self {
+    pub fn with_env<I>(res_ids: I, sync: bool, provider: P, generator: G) -> Self
+    where
+        I: IntoIterator<Item = ResourceId>,
+    {
         Self {
             bundles: OnceCell::new(),
             generator,
             provider,
             sync,
-            res_ids,
+            res_ids: FxHashSet::from_iter(res_ids.into_iter()),
         }
     }
 
@@ -55,7 +62,7 @@ where
     }
 
     pub fn add_resource_id<T: Into<ResourceId>>(&mut self, res_id: T) {
-        self.res_ids.push(res_id.into());
+        self.res_ids.insert(res_id.into());
         self.on_change();
     }
 

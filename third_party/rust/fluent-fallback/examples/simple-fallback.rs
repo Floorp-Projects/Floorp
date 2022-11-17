@@ -28,6 +28,7 @@ use fluent_fallback::{
 };
 use fluent_langneg::{negotiate_languages, NegotiationStrategy};
 
+use rustc_hash::FxHashSet;
 use unic_langid::{langid, LanguageIdentifier};
 
 /// This helper struct holds the scheme for converting
@@ -111,7 +112,7 @@ fn main() {
     let bundles = get_resource_manager();
 
     let loc = Localization::with_env(
-        L10N_RESOURCES.iter().map(|&res| res.into()).collect(),
+        L10N_RESOURCES.iter().map(|&res| res.into()),
         true,
         app_locales,
         bundles,
@@ -168,7 +169,7 @@ fn collatz(n: isize) -> isize {
 struct BundleIter {
     res_path_scheme: String,
     locales: <Vec<LanguageIdentifier> as IntoIterator>::IntoIter,
-    res_ids: Vec<ResourceId>,
+    res_ids: FxHashSet<ResourceId>,
 }
 
 impl Iterator for BundleIter {
@@ -225,7 +226,7 @@ impl BundleGenerator for Bundles {
     fn bundles_iter(
         &self,
         locales: std::vec::IntoIter<LanguageIdentifier>,
-        res_ids: Vec<ResourceId>,
+        res_ids: FxHashSet<ResourceId>,
     ) -> Self::Iter {
         BundleIter {
             res_path_scheme: self.res_path_scheme.to_string_lossy().to_string(),

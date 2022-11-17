@@ -1675,15 +1675,16 @@ dependencies = [
 
 [[package]]
 name = "fluent-fallback"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0ebe8c34b89a10c8a431de9c0c5c2005b79c438d9a498a028c4e05b88afb3d6"
+checksum = "08fdcccdeb6c01cb085f2bb3420506e6c67f025cee5db047529838c673a7d82b"
 dependencies = [
  "async-trait",
  "chunky-vec",
  "fluent-bundle",
  "futures 0.3.23",
  "once_cell",
+ "rustc-hash",
  "unic-langid",
 ]
 
@@ -1746,9 +1747,9 @@ dependencies = [
 
 [[package]]
 name = "fluent-testing"
-version = "0.0.2"
+version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e4597df830d853d8a319c9cba05bc62d59288b613f1f445638444e05e4041fdf"
+checksum = "cd97ebaec22ed506c034098decf727363925b77fa265d20816f17f35c871e7f8"
 dependencies = [
  "fluent-bundle",
  "fluent-fallback",
