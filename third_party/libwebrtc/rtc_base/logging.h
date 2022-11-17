@@ -512,14 +512,6 @@ class LogMessage {
   LogMessage(const char* file, int line, LoggingSeverity sev, const char* tag) {
   }
 #endif
-  // DEPRECATED - DO NOT USE - PLEASE USE THE MACROS INSTEAD OF THE CLASS.
-  // Android code should use the 'const char*' version since tags are static
-  // and we want to avoid allocating a std::string copy per log line.
-  ABSL_DEPRECATED("Use RTC_LOG macros instead of accessing this class directly")
-  LogMessage(const char* file,
-             int line,
-             LoggingSeverity sev,
-             absl::string_view tag) {}
   ~LogMessage() = default;
 
   inline void AddTag(const char* tag) {}
