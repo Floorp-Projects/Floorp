@@ -60,7 +60,7 @@ export const MultiStageProtonScreen = props => {
 };
 
 export const ProtonScreenActionButtons = props => {
-  const { content } = props;
+  const { content, addonName } = props;
   const defaultValue = content.checkbox?.defaultValue;
 
   const [isChecked, setIsChecked] = useState(defaultValue || false);
@@ -85,6 +85,13 @@ export const ProtonScreenActionButtons = props => {
           value={isChecked ? "checkbox" : "primary_button"}
           disabled={content.primary_button?.disabled === true}
           onClick={props.handleAction}
+          data-l10n-args={
+            addonName
+              ? JSON.stringify({
+                  "addon-name": addonName,
+                })
+              : ""
+          }
         />
       </Localized>
       {content.checkbox ? (
@@ -355,14 +362,17 @@ export class ProtonScreen extends React.PureComponent {
 
             {content.logo ? this.renderLogo(content.logo) : null}
 
-            <div className={`${isRtamo ? "rtamo-icon" : "hide-rtamo-icon"}`}>
-              <img
-                className={`${isTheme ? "rtamo-theme-icon" : ""}`}
-                src={this.props.iconURL}
-                role="presentation"
-                alt=""
-              />
-            </div>
+            {isRtamo ? (
+              <div className="rtamo-icon">
+                <img
+                  className={`${isTheme ? "rtamo-theme-icon" : "brand-logo"}`}
+                  src={this.props.iconURL}
+                  role="presentation"
+                  alt=""
+                />
+              </div>
+            ) : null}
+
             <div className="main-content-inner">
               <div className={`welcome-text ${content.title_style || ""}`}>
                 <Localized text={content.title}>
@@ -393,6 +403,7 @@ export class ProtonScreen extends React.PureComponent {
               {this.renderLanguageSwitcher()}
               <ProtonScreenActionButtons
                 content={content}
+                addonName={this.props.addonName}
                 handleAction={this.props.handleAction}
               />
             </div>

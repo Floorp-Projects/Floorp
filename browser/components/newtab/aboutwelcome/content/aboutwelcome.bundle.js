@@ -107,24 +107,20 @@ const DEFAULT_RTAMO_CONTENT = {
   template: "return_to_amo",
   utm_term: "rtamo",
   content: {
-    position: "corner",
-    hero_text: {
-      string_id: "mr1-welcome-screen-hero-text"
-    },
+    position: "split",
     title: {
-      string_id: "return-to-amo-subtitle"
+      string_id: "mr1-return-to-amo-subtitle"
     },
-    has_noodles: true,
+    has_noodles: false,
     subtitle: {
-      string_id: "return-to-amo-addon-title"
+      string_id: "mr1-return-to-amo-addon-title"
     },
-    help_text: {
-      string_id: "mr1-onboarding-welcome-image-caption"
-    },
-    backdrop: "#212121 url(chrome://activity-stream/content/data/content/assets/proton-bkg.avif) center/cover no-repeat fixed",
+    backdrop: "var(--mr-welcome-background-color) var(--mr-welcome-background-gradient)",
+    background: "url('chrome://activity-stream/content/data/content/assets/mr-rtamo-background-image.svg') no-repeat center",
+    progress_bar: true,
     primary_button: {
       label: {
-        string_id: "return-to-amo-add-extension-label"
+        string_id: "mr1-return-to-amo-add-extension-label"
       },
       source_id: "ADD_EXTENSION_BUTTON",
       action: {
@@ -151,7 +147,8 @@ const DEFAULT_RTAMO_CONTENT = {
       source_id: "RTAMO_FXA_SIGNIN_BUTTON",
       action: {
         data: {
-          entrypoint: "activity-stream-firstrun"
+          entrypoint: "activity-stream-firstrun",
+          where: "tab"
         },
         type: "SHOW_FIREFOX_ACCOUNTS",
         addFlowParams: true
@@ -731,7 +728,8 @@ const ProtonScreenActionButtons = props => {
   var _content$checkbox, _content$primary_butt, _content$primary_butt2;
 
   const {
-    content
+    content,
+    addonName
   } = props;
   const defaultValue = (_content$checkbox = content.checkbox) === null || _content$checkbox === void 0 ? void 0 : _content$checkbox.defaultValue;
   const [isChecked, setIsChecked] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(defaultValue || false);
@@ -752,7 +750,10 @@ const ProtonScreenActionButtons = props => {
     ,
     value: isChecked ? "checkbox" : "primary_button",
     disabled: ((_content$primary_butt2 = content.primary_button) === null || _content$primary_butt2 === void 0 ? void 0 : _content$primary_butt2.disabled) === true,
-    onClick: props.handleAction
+    onClick: props.handleAction,
+    "data-l10n-args": addonName ? JSON.stringify({
+      "addon-name": addonName
+    }) : ""
   })), content.checkbox ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "checkbox-container"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
@@ -937,14 +938,14 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       style: content.background && isCenterPosition ? {
         background: content.background
       } : {}
-    }, content.dismiss_button ? this.renderDismissButton() : null, content.logo ? this.renderLogo(content.logo) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-      className: `${isRtamo ? "rtamo-icon" : "hide-rtamo-icon"}`
+    }, content.dismiss_button ? this.renderDismissButton() : null, content.logo ? this.renderLogo(content.logo) : null, isRtamo ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+      className: "rtamo-icon"
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", {
-      className: `${isTheme ? "rtamo-theme-icon" : ""}`,
+      className: `${isTheme ? "rtamo-theme-icon" : "brand-logo"}`,
       src: this.props.iconURL,
       role: "presentation",
       alt: ""
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    })) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: "main-content-inner"
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: `welcome-text ${content.title_style || ""}`
@@ -967,6 +968,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       handleAction: this.props.handleAction
     }) : null, this.renderContentTiles(), this.renderLanguageSwitcher(), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(ProtonScreenActionButtons, {
       content: content,
+      addonName: this.props.addonName,
       handleAction: this.props.handleAction
     })), hideStepsIndicator ? null : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: `steps ${content.progress_bar ? "progress-bar" : ""}`,
@@ -1806,7 +1808,7 @@ class ReturnToAMO extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComp
     }
 
     if (content !== null && content !== void 0 && content.primary_button.label) {
-      content.primary_button.label.string_id = type.includes("theme") ? "return-to-amo-add-theme-label" : "return-to-amo-add-extension-label";
+      content.primary_button.label.string_id = type.includes("theme") ? "return-to-amo-add-theme-label" : "mr1-return-to-amo-add-extension-label";
     } // For experiments, when needed below rendered UI allows settings hard coded strings
     // directly inside JSON except for ReturnToAMOText which picks add-on name and icon from fluent string
 
