@@ -80,9 +80,9 @@ xpcshell Testing API
 
 xpcshell tests have access to the following functions. They are defined
 in
-`testing/xpcshell/head.js <https://searchfox.org/mozilla-central/source/testing/xpcshell/head.js>`__
+:searchfox:`testing/xpcshell/head.js <testing/xpcshell/head.js>`
 and
-`testing/modules/Assert.jsm <https://searchfox.org/mozilla-central/source/testing/modules/Assert.jsm>`__.
+:searchfox:`testing/modules/Assert.sys.mjs <testing/modules/Assert.sys.mjs>`.
 
 Assertions
 ^^^^^^^^^^
@@ -102,7 +102,7 @@ Assertions
 
 
 These assertion methods are provided by
-`Assert.jsm </en/docs/Mozilla/JavaScript_code_modules/Assert.jsm>`__.
+:searchfox:`testing/modules/Assert.sys.mjs <testing/modules/Assert.sys.mjs>`.
 It implements the `CommonJS Unit Testing specification version
 1.1 <http://wiki.commonjs.org/wiki/Unit_Testing/1.1>`__, which
 provides a basic, standardized interface for performing in-code

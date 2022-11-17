@@ -8,9 +8,9 @@
  * observer notification.
  *
  * More complex functions are likely to belong to a separate test-only module.
- * Examples include Assert.jsm for generic assertions, FileTestUtils.jsm to work
- * with local files and their contents, and BrowserTestUtils.jsm to work with
- * browser windows and tabs.
+ * Examples include Assert.sys.mjs for generic assertions, FileTestUtils.sys.mjs
+ * to work with local files and their contents, and BrowserTestUtils.sys.mjs to
+ * work with browser windows and tabs.
  *
  * Individual components also offer testing functions to other components, for
  * example LoginTestUtils.jsm.

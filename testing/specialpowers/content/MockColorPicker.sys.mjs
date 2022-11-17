@@ -4,11 +4,9 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "WrapPrivileged",
-  "resource://specialpowers/WrapPrivileged.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  WrapPrivileged: "resource://specialpowers/WrapPrivileged.sys.mjs",
+});
 
 const Cm = Components.manager;
 
@@ -110,7 +108,7 @@ MockColorPickerInstance.prototype = {
         }
       } catch (ex) {
         dump(
-          "TEST-UNEXPECTED-FAIL | Exception in MockColorPicker.jsm open() " +
+          "TEST-UNEXPECTED-FAIL | Exception in MockColorPicker.sys.mjs open() " +
             "method: " +
             ex +
             "\n"

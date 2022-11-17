@@ -6,4 +6,6 @@
 
 // We run this code in a .jsm rather than here to avoid keeping the current
 // compartment alive.
-ChromeUtils.import("chrome://mochikit/content/ShutdownLeaksCollector.jsm");
+ChromeUtils.importESModule(
+  "chrome://mochikit/content/ShutdownLeaksCollector.sys.mjs"
+);

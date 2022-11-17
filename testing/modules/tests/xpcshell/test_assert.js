@@ -5,7 +5,9 @@
 // https://github.com/joyent/node/blob/6101eb184db77d0b11eb96e48744e57ecce4b73d/test/simple/test-assert.js
 // MIT license: http://opensource.org/licenses/MIT
 
-var { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+var { Assert } = ChromeUtils.importESModule(
+  "resource://testing-common/Assert.sys.mjs"
+);
 
 function run_test() {
   let assert = new Assert();

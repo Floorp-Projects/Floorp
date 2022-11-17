@@ -12,11 +12,9 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Assert",
-  "resource://testing-common/Assert.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Assert: "resource://testing-common/Assert.sys.mjs",
+});
 
 // Note: When updating the set of globals exposed to sandboxes by
 // default, please also update the ESLint plugin rule defined in

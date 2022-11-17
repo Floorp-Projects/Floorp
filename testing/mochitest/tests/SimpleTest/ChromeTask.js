@@ -11,8 +11,8 @@ function ChromeTask_ChromeScript() {
 
   "use strict";
 
-  const { Assert: AssertCls } = ChromeUtils.import(
-    "resource://testing-common/Assert.jsm"
+  const { Assert: AssertCls } = ChromeUtils.importESModule(
+    "resource://testing-common/Assert.sys.mjs"
   );
 
   addMessageListener("chrome-task:spawn", async function(aData) {
