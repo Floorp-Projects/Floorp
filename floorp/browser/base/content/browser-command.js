@@ -151,7 +151,6 @@ setSidebarWidth(webpanel_id)
           browserManagerSidebarWebpanel.setAttribute("autoscroll", "false");
           browserManagerSidebarWebpanel.setAttribute("disablehistory", "true");
           browserManagerSidebarWebpanel.setAttribute("disablefullscreen", "true");
-          browserManagerSidebarWebpanel.setAttribute("style", "min-width:13em;");
           browserManagerSidebarWebpanel.setAttribute("tooltip", "aHTMLTooltip");
           browserManagerSidebarWebpanel.setAttribute("disableglobalhistory", "true");
           browserManagerSidebarWebpanel.setAttribute("messagemanagergroup", "webext-browsers");
@@ -185,9 +184,9 @@ function changeSidebarVisibility() {
   let sidebar2box = document.getElementById("sidebar2-box");
 
   if (sidebarsplit2.getAttribute("hidden") == "true" || sidebarsplit2.getAttribute("hidden") == "true") {
-    sidebar2.style.minWidth = "15em";
+    sidebar2.style.minWidth = "auto";
     sidebar2.style.maxWidth = "";
-    sidebar2box.style.minWidth = "15em";
+    sidebar2box.style.minWidth = "auto";
     sidebar2box.style.maxWidth = "";
     siderbar2header.style.display = "";
     sidebarsplit2.setAttribute("hidden", "false");
