@@ -33,6 +33,11 @@ body {
   white-space: nowrap;
 }
 
+button img {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
 .button.hidden,
 .hidden.preview-button {
   display: none;
@@ -48,6 +53,13 @@ body {
 .button.active,
 .active.preview-button {
   background-color: #dedede;
+}
+
+@media (forced-colors: active), (prefers-contrast) {
+  .button.active,
+  .active.preview-button {
+    background-color: ButtonFace;
+  }
 }
 
 .button.tiny,
@@ -109,6 +121,18 @@ body {
   background: #dedede;
 }
 
+@media (forced-colors: active), (prefers-contrast) {
+  .button.block-button:hover,
+  .block-button.preview-button:hover {
+    background-color: ButtonText;
+  }
+
+  .button.block-button:active,
+  .block-button.preview-button:active {
+    background-color: ButtonFace;
+  }
+}
+
 .button.download,
 .download.preview-button,
 .button.flag,
@@ -136,6 +160,20 @@ body {
 .button.download:active,
 .download.preview-button:active {
   background-color: #dedede;
+}
+
+@media (forced-colors: active), (prefers-contrast) {
+  .button.download:hover,
+  .download.preview-button:hover {
+    background-color: ButtonText;
+    color: ButtonFace;
+  }
+
+  .button.download:active,
+  .download.preview-button:active {
+    background-color: ButtonFace;
+    color: ButtonText;
+  }
 }
 
 .button.primary,
@@ -168,6 +206,40 @@ body {
   background-color: #0065cc;
 }
 
+@media (forced-colors: active), (prefers-contrast) {
+  .button.primary,
+  .primary.highlight-retry-cancel,
+  .primary.highlight-button-cancel,
+  .highlight-button-download,
+  .primary.highlight-button-copy {
+    background-color: ButtonFace;
+    color: ButtonText;
+  }
+
+  .button.primary:hover,
+  .primary.highlight-button-retry:hover,
+  .primary.highlight-button-cancel:hover,
+  .highlight-button-download:hover,
+  .primary.highlight-button-copy:hover,
+  .button.primary:focus,
+  .primary.highlight-button-retry:focus,
+  .primary.highlight-button-cancel:focus,
+  .highlight-button-download:focus,
+  .primary.highlight-button-copy:focus {
+    background-color: ButtonText;
+    color: ButtonFace;
+  }
+
+  .button.primary:active,
+  .primary.highlight-button-retry:active,
+  .primary.highlight-button-cancel:active,
+  .highlight-button-download:active,
+  .primary.highlight-button-copy:active {
+    background-color: ButtonFace;
+    color: ButtonText;
+  }
+}
+
 .button.secondary,
 .highlight-button-retry,
 .highlight-button-cancel,
@@ -193,6 +265,35 @@ body {
   background-color: #dedede;
 }
 
+@media (forced-colors: active), (prefers-contrast) {
+  .button.secondary,
+  .highlight-button-retry,
+  .highlight-button-cancel,
+  .secondary.highlight-button-download,
+  .highlight-button-copy {
+    background-color: ButtonFace;
+    color: ButtonText;
+  }
+
+  .button.secondary:hover,
+  .highlight-button-retry:hover,
+  .highlight-button-cancel:hover,
+  .secondary.highlight-button-download:hover,
+  .highlight-button-copy:hover {
+    background-color: ButtonText;
+    color: ButtonFace;
+  }
+
+  .button.secondary:active,
+  .highlight-button-retry:active,
+  .highlight-button-cancel:active,
+  .secondary.highlight-button-download:active,
+  .highlight-button-copy:active {
+    background-color: ButtonFace;
+    color: ButtonText;
+  }
+}
+
 .button.transparent,
 .transparent.preview-button {
   background-color: transparent;
@@ -211,6 +312,28 @@ body {
   background-color: #dedede;
 }
 
+@media (forced-colors: active), (prefers-contrast) {
+  .button.transparent,
+  .transparent.preview-button {
+    background-color: ButtonFace;
+    color: ButtonText;
+  }
+
+  .button.transparent:hover,
+  .transparent.preview-button:hover {
+    background-color: ButtonText;
+    color: ButtonFace;
+  }
+
+  .button.transparent:focus,
+  .transparent.preview-button:focus,
+  .button.transparent:active,
+  .transparent.preview-button:active {
+    background-color: ButtonFace;
+    color: ButtonText;
+  }
+}
+
 .button.warning,
 .warning.preview-button {
   color: #fff;
@@ -227,6 +350,27 @@ body {
 .button.warning:active,
 .warning.preview-button:active {
   background: #a11910;
+}
+
+@media (forced-colors: active), (prefers-contrast) {
+  .button.warning,
+  .warning.preview-button {
+    color: ButtonText;
+    background-color: ButtonFace;
+  }
+
+  .button.warning:hover,
+  .warning.preview-button:hover,
+  .button.warning:focus,
+  .warning.preview-button:focus {
+    background-color: ButtonText;
+    color: ButtonFace;
+  }
+
+  .button.warning:active,
+  .warning.preview-button:active {
+    background-color: ButtonFace;
+  }
 }
 
 @keyframes bounce {
