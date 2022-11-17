@@ -833,8 +833,7 @@ bool ReadableStream::Transfer(JSContext* aCx, UniqueMessagePortId& aPortId) {
   }
 
   // Step 5: Let writable be a new WritableStream in the current Realm.
-  RefPtr<WritableStream> writable = new WritableStream(
-      mGlobal, WritableStream::HoldDropJSObjectsCaller::Implicit);
+  RefPtr<WritableStream> writable = new WritableStream(mGlobal);
 
   // Step 6: Perform ! SetUpCrossRealmTransformWritable(writable, port1).
   // MOZ_KnownLive because Port1 never changes before CC
@@ -958,8 +957,7 @@ WritableStreamTransferReceivingStepsImpl(JSContext* aCx,
   // Step 2: Let port be a deserializedRecord.[[Deserialized]].
 
   // Step 3: Perform ! SetUpCrossRealmTransformWritable(value, port).
-  auto writable = MakeRefPtr<WritableStream>(
-      aGlobal, WritableStream::HoldDropJSObjectsCaller::Implicit);
+  auto writable = MakeRefPtr<WritableStream>(aGlobal);
   ErrorResult rv;
   SetUpCrossRealmTransformWritable(writable, &aPort, rv);
   if (rv.MaybeSetPendingException(aCx)) {

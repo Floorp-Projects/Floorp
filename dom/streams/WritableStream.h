@@ -39,16 +39,8 @@ class WritableStream : public nsISupports, public nsWrapperCache {
   virtual void LastRelease() {}
 
  public:
-  // If one extends WritableStream with another cycle collectable class,
-  // calling HoldJSObjects and DropJSObjects should happen using 'this' of
-  // that extending class. And in that case Explicit should be passed to the
-  // constructor of WriteableStream so that it doesn't make those calls.
-  // See also https://bugzilla.mozilla.org/show_bug.cgi?id=1801214.
-  enum class HoldDropJSObjectsCaller { Implicit, Explicit };
-  explicit WritableStream(const GlobalObject& aGlobal,
-                          HoldDropJSObjectsCaller aHoldDropCaller);
-  explicit WritableStream(nsIGlobalObject* aGlobal,
-                          HoldDropJSObjectsCaller aHoldDropCaller);
+  explicit WritableStream(const GlobalObject& aGlobal);
+  explicit WritableStream(nsIGlobalObject* aGlobal);
 
   enum class WriterState { Writable, Closed, Erroring, Errored };
 
@@ -196,7 +188,6 @@ class WritableStream : public nsISupports, public nsWrapperCache {
   nsTArray<RefPtr<Promise>> mWriteRequests;
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  HoldDropJSObjectsCaller mHoldDropCaller;
 };
 
 MOZ_CAN_RUN_SCRIPT already_AddRefed<WritableStream> CreateWritableStream(
