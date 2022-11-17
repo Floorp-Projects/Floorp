@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/array_view.h"
 #include "api/media_stream_interface.h"
 #include "api/scoped_refptr.h"
 #include "media/base/media_channel.h"
@@ -50,12 +51,14 @@ class TrackMediaInfoMap {
  public:
   TrackMediaInfoMap();
 
+  // Takes ownership of the "infos". Does not affect the lifetime of the senders
+  // or receivers, but TrackMediaInfoMap will keep their associated tracks alive
+  // through reference counting until the map is destroyed.
   void Initialize(
       absl::optional<cricket::VoiceMediaInfo> voice_media_info,
       absl::optional<cricket::VideoMediaInfo> video_media_info,
-      const std::vector<rtc::scoped_refptr<RtpSenderInternal>>& rtp_senders,
-      const std::vector<rtc::scoped_refptr<RtpReceiverInternal>>&
-          rtp_receivers);
+      rtc::ArrayView<rtc::scoped_refptr<RtpSenderInternal>> rtp_senders,
+      rtc::ArrayView<rtc::scoped_refptr<RtpReceiverInternal>> rtp_receivers);
 
   const absl::optional<cricket::VoiceMediaInfo>& voice_media_info() const {
     RTC_DCHECK(is_initialized_);
@@ -104,6 +107,8 @@ class TrackMediaInfoMap {
   absl::optional<cricket::VideoMediaInfo> video_media_info_;
   // These maps map tracks (identified by a pointer) to their corresponding info
   // object of the correct kind. One track can map to multiple info objects.
+  // Known tracks are guaranteed to be alive because they are also stored as
+  // entries in the reverse maps below.
   std::map<const AudioTrackInterface*, std::vector<cricket::VoiceSenderInfo*>>
       voice_infos_by_local_track_;
   std::map<const AudioTrackInterface*, cricket::VoiceReceiverInfo*>
@@ -114,7 +119,8 @@ class TrackMediaInfoMap {
       video_info_by_remote_track_;
   // These maps map info objects to their corresponding tracks. They are always
   // the inverse of the maps above. One info object always maps to only one
-  // track.
+  // track. The use of scoped_refptr<> here ensures the tracks outlive
+  // TrackMediaInfoMap.
   std::map<const cricket::VoiceSenderInfo*,
            rtc::scoped_refptr<AudioTrackInterface>>
       audio_track_by_sender_info_;
