@@ -11,8 +11,8 @@
 
 do_get_profile(); // must be called before getting nsIX509CertDB
 
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 
 async function check_no_enterprise_roots_imported(
