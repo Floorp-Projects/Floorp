@@ -54,7 +54,7 @@ bool PersistentBufferProviderBasic::ReturnDrawTarget(
 }
 
 already_AddRefed<gfx::SourceSurface>
-PersistentBufferProviderBasic::BorrowSnapshot() {
+PersistentBufferProviderBasic::BorrowSnapshot(gfx::DrawTarget* aTarget) {
   mSnapshot = mDrawTarget->Snapshot();
   RefPtr<SourceSurface> snapshot = mSnapshot;
   return snapshot.forget();
@@ -133,8 +133,8 @@ bool PersistentBufferProviderAccelerated::ReturnDrawTarget(
 }
 
 already_AddRefed<gfx::SourceSurface>
-PersistentBufferProviderAccelerated::BorrowSnapshot() {
-  mSnapshot = GetDrawTargetWebgl()->GetDataSnapshot();
+PersistentBufferProviderAccelerated::BorrowSnapshot(gfx::DrawTarget* aTarget) {
+  mSnapshot = GetDrawTargetWebgl()->GetOptimizedSnapshot(aTarget);
   return do_AddRef(mSnapshot);
 }
 
@@ -530,7 +530,7 @@ TextureClient* PersistentBufferProviderShared::GetTextureClient() {
 }
 
 already_AddRefed<gfx::SourceSurface>
-PersistentBufferProviderShared::BorrowSnapshot() {
+PersistentBufferProviderShared::BorrowSnapshot(gfx::DrawTarget* aTarget) {
   // If we have a permanent back buffer we can always use that to snapshot.
   if (mPermanentBackBuffer) {
     mSnapshot = mPermanentBackBuffer->BorrowSnapshot();

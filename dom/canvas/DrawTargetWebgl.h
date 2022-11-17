@@ -348,6 +348,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
   already_AddRefed<SourceSurface> GetDataSnapshot();
   already_AddRefed<SourceSurface> Snapshot() override;
+  already_AddRefed<SourceSurface> GetOptimizedSnapshot(DrawTarget* aTarget);
   already_AddRefed<SourceSurface> GetBackingSurface() override;
   void DetachAllSnapshots() override;
 
