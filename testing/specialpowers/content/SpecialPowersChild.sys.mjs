@@ -10,33 +10,14 @@ const { ExtensionUtils } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "MockFilePicker",
-  "resource://specialpowers/MockFilePicker.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "MockColorPicker",
-  "resource://specialpowers/MockColorPicker.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "MockPermissionPrompt",
-  "resource://specialpowers/MockPermissionPrompt.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SpecialPowersSandbox",
-  "resource://specialpowers/SpecialPowersSandbox.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "WrapPrivileged",
-  "resource://specialpowers/WrapPrivileged.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  ContentTaskUtils: "resource://testing-common/ContentTaskUtils.sys.mjs",
+  MockColorPicker: "resource://specialpowers/MockColorPicker.sys.mjs",
+  MockFilePicker: "resource://specialpowers/MockFilePicker.sys.mjs",
+  MockPermissionPrompt: "resource://specialpowers/MockPermissionPrompt.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  SpecialPowersSandbox: "resource://specialpowers/SpecialPowersSandbox.sys.mjs",
+  WrapPrivileged: "resource://specialpowers/WrapPrivileged.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -49,11 +30,6 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "PerTestCoverageUtils",
   "resource://testing-common/PerTestCoverageUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ContentTaskUtils",
-  "resource://testing-common/ContentTaskUtils.jsm"
 );
 
 Cu.crashIfNotInAutomation();
@@ -1530,7 +1506,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
    * value.
    *
    * The sandbox also has access to an Assert object, as provided by
-   * Assert.jsm. Any assertion methods called before the task resolves
+   * Assert.sys.mjs. Any assertion methods called before the task resolves
    * will be relayed back to the test environment of the caller.
    *
    * @param {BrowsingContext or FrameLoaderOwner or WindowProxy} target

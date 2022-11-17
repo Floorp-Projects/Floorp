@@ -9,6 +9,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   HiddenFrame: "resource://gre/modules/HiddenFrame.sys.mjs",
+  SpecialPowersSandbox: "resource://specialpowers/SpecialPowersSandbox.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -16,7 +17,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
   PerTestCoverageUtils: "resource://testing-common/PerTestCoverageUtils.jsm",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
-  SpecialPowersSandbox: "resource://specialpowers/SpecialPowersSandbox.jsm",
 });
 
 class SpecialPowersError extends Error {

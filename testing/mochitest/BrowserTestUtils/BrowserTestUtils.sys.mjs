@@ -19,15 +19,16 @@ const { ComponentUtils } = ChromeUtils.import(
   "resource://gre/modules/ComponentUtils.jsm"
 );
 
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
-);
+import { TestUtils } from "resource://testing-common/TestUtils.sys.mjs";
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  ContentTask: "resource://testing-common/ContentTask.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  ContentTask: "resource://testing-common/ContentTask.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
@@ -501,7 +502,7 @@ export var BrowserTestUtils = {
               return;
             }
 
-            // See testing/mochitest/BrowserTestUtils/content/BrowserTestUtilsChild.jsm
+            // See testing/mochitest/BrowserTestUtils/content/BrowserTestUtilsChild.sys.mjs
             // for the difference between visibleURL and internalURL.
             if (!isWanted(maybeErrorPage ? visibleURL : internalURL)) {
               return;
@@ -1476,7 +1477,7 @@ export var BrowserTestUtils = {
 
   /**
    * This is an internal method to be invoked by
-   * BrowserTestUtilsParent.jsm when a content event we were listening for
+   * BrowserTestUtilsParent.sys.mjs when a content event we were listening for
    * happens.
    *
    * @private

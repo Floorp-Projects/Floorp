@@ -18,11 +18,14 @@ ChromeUtils.importESModule("resource://gre/modules/ActorManagerParent.sys.mjs");
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  ContentTask: "resource://testing-common/ContentTask.sys.mjs",
+  TestUtils: "resource://testing-common/TestUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ContentTask: "resource://testing-common/ContentTask.jsm",
   HttpServer: "resource://testing-common/httpd.js",
   MessageChannel: "resource://testing-common/MessageChannel.jsm",
-  TestUtils: "resource://testing-common/TestUtils.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {

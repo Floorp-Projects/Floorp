@@ -10,7 +10,7 @@ import { DownloadPaths } from "resource://gre/modules/DownloadPaths.sys.mjs";
 import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+import { Assert } from "resource://testing-common/Assert.sys.mjs";
 
 let gFileCounter = 1;
 let gPathsToRemove = [];

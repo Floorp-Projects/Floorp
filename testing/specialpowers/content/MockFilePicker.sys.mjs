@@ -4,19 +4,14 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "WrapPrivileged",
-  "resource://specialpowers/WrapPrivileged.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  WrapPrivileged: "resource://specialpowers/WrapPrivileged.sys.mjs",
+});
 
 const Cm = Components.manager;
 
 const CONTRACT_ID = "@mozilla.org/filepicker;1";
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
-});
 
 if (import.meta.url.includes("specialpowers")) {
   Cu.crashIfNotInAutomation();
