@@ -70,7 +70,7 @@ AimdRateControl::AimdRateControl(const FieldTrialsView* key_value_config)
 
 AimdRateControl::AimdRateControl(const FieldTrialsView* key_value_config,
                                  bool send_side)
-    : min_configured_bitrate_(congestion_controller::GetMinBitrate()),
+    : min_configured_bitrate_(kCongestionControllerMinBitrate),
       max_configured_bitrate_(DataRate::KilobitsPerSec(30000)),
       current_bitrate_(max_configured_bitrate_),
       latest_estimated_throughput_(current_bitrate_),

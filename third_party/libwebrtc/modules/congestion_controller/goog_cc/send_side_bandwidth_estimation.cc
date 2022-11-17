@@ -204,8 +204,7 @@ SendSideBandwidthEstimation::SendSideBandwidthEstimation(
       expected_packets_since_last_loss_update_(0),
       current_target_(DataRate::Zero()),
       last_logged_target_(DataRate::Zero()),
-      min_bitrate_configured_(
-          DataRate::BitsPerSec(congestion_controller::GetMinBitrateBps())),
+      min_bitrate_configured_(kCongestionControllerMinBitrate),
       max_bitrate_configured_(kDefaultMaxBitrate),
       last_low_bitrate_log_(Timestamp::MinusInfinity()),
       has_decreased_since_last_fraction_loss_(false),
@@ -253,8 +252,7 @@ void SendSideBandwidthEstimation::OnRouteChange() {
   lost_packets_since_last_loss_update_ = 0;
   expected_packets_since_last_loss_update_ = 0;
   current_target_ = DataRate::Zero();
-  min_bitrate_configured_ =
-      DataRate::BitsPerSec(congestion_controller::GetMinBitrateBps());
+  min_bitrate_configured_ = kCongestionControllerMinBitrate;
   max_bitrate_configured_ = kDefaultMaxBitrate;
   last_low_bitrate_log_ = Timestamp::MinusInfinity();
   has_decreased_since_last_fraction_loss_ = false;
@@ -300,7 +298,7 @@ void SendSideBandwidthEstimation::SetSendBitrate(DataRate bitrate,
 void SendSideBandwidthEstimation::SetMinMaxBitrate(DataRate min_bitrate,
                                                    DataRate max_bitrate) {
   min_bitrate_configured_ =
-      std::max(min_bitrate, congestion_controller::GetMinBitrate());
+      std::max(min_bitrate, kCongestionControllerMinBitrate);
   if (max_bitrate > DataRate::Zero() && max_bitrate.IsFinite()) {
     max_bitrate_configured_ = std::max(min_bitrate_configured_, max_bitrate);
   } else {

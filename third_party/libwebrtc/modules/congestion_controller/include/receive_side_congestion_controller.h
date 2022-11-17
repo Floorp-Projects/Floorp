@@ -86,7 +86,6 @@ class ReceiveSideCongestionController : public CallStatsObserver {
   std::unique_ptr<RemoteBitrateEstimator> rbe_ RTC_GUARDED_BY(mutex_);
   bool using_absolute_send_time_ RTC_GUARDED_BY(mutex_);
   uint32_t packets_since_absolute_send_time_ RTC_GUARDED_BY(mutex_);
-  int min_bitrate_bps_ RTC_GUARDED_BY(mutex_);
 };
 
 }  // namespace webrtc
