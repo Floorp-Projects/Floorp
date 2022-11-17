@@ -9,8 +9,8 @@
 /* import-globals-from head_trr.js */
 /* import-globals-from head_http3.js */
 
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 
 const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
@@ -21,8 +21,8 @@ const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 const TRR_Domain = "foo.example.com";
 
-const { MockRegistrar } = ChromeUtils.import(
-  "resource://testing-common/MockRegistrar.jsm"
+const { MockRegistrar } = ChromeUtils.importESModule(
+  "resource://testing-common/MockRegistrar.sys.mjs"
 );
 
 const gOverride = Cc["@mozilla.org/network/native-dns-override;1"].getService(

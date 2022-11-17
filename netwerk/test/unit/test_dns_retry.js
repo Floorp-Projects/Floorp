@@ -30,8 +30,8 @@ const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
 const ncs = Cc[
   "@mozilla.org/network/network-connectivity-service;1"
 ].getService(Ci.nsINetworkConnectivityService);
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 
 registerCleanupFunction(async () => {

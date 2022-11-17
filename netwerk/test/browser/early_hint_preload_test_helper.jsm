@@ -10,9 +10,11 @@ const EXPORTED_SYMBOLS = [
   "test_hint_preload_internal",
 ];
 
-const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
-const { BrowserTestUtils } = ChromeUtils.import(
-  "resource://testing-common/BrowserTestUtils.jsm"
+const { Assert } = ChromeUtils.importESModule(
+  "resource://testing-common/Assert.sys.mjs"
+);
+const { BrowserTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/BrowserTestUtils.sys.mjs"
 );
 const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
 
