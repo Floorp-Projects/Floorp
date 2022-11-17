@@ -9,7 +9,6 @@ task-defaults:
         kind: build
         platform: toolchains/opt
         tier: 1
-    worker-type: b-android-large
 
 
 linux64-android-sdk-linux-repack:
@@ -30,6 +29,7 @@ linux64-android-sdk-linux-repack:
     worker:
         docker-image: {in-tree: base}
         max-run-time: 600
+    worker-type: b-android
 
 
 linux64-android-gradle-dependencies:
@@ -47,6 +47,7 @@ linux64-android-gradle-dependencies:
             - android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt
             - android-components/build.gradle
             - android-components/gradle/wrapper/gradle-wrapper.properties
+            - focus-android/buildSrc/src/main/java/FocusDependencies.kt
         toolchain-artifact: public/build/android-gradle-dependencies.tar.xz
         toolchain-alias: android-gradle-dependencies
     treeherder:
@@ -56,5 +57,10 @@ linux64-android-gradle-dependencies:
         env:
             # TODO do no hardcode
             ANDROID_SDK_ROOT: /builds/worker/fetches/android-sdk-linux
-        max-run-time: 4000
+        max-run-time: 14400
+        artifacts:
+            - type: directory
+              name: public/logs/nexus
+              path: /opt/sonatype/nexus/logs
         retry-exit-status: [1]
+    worker-type: b-android-large

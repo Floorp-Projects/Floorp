@@ -13,9 +13,9 @@ function get_abs_path {
 
 CURRENT_DIR="$(get_abs_path $0)"
 REPO_ROOT_DIR="$(get_abs_path $CURRENT_DIR/../../../..)"
-PROJECT_DIR="$REPO_ROOT_DIR/android-components"
+ANDROID_COMPONENTS_DIR="$REPO_ROOT_DIR/android-components"
 
-pushd $PROJECT_DIR
+pushd "$ANDROID_COMPONENTS_DIR"
 
 . "$REPO_ROOT_DIR/taskcluster/scripts/toolchain/android-gradle-dependencies/before.sh"
 
@@ -23,7 +23,7 @@ COMPONENT_REGEX='^  ([-a-z]+):$'
 # Components to ignore on first pass. They don't have any extra dependencies so we can
 # filter them out. Other components are built in second pass.
 COMPONENTS_TO_EXCLUDE_IN_FIRST_PASS='(samples-browser|tooling-detekt|tooling-lint)'
-FIRST_PASS_COMPONENTS=$(grep -E "$COMPONENT_REGEX" "$PROJECT_DIR/.buildconfig.yml" | sed -E "s/$COMPONENT_REGEX/:\1/g" | grep -E -v "$COMPONENTS_TO_EXCLUDE_IN_FIRST_PASS")
+FIRST_PASS_COMPONENTS=$(grep -E "$COMPONENT_REGEX" "$ANDROID_COMPONENTS_DIR/.buildconfig.yml" | sed -E "s/$COMPONENT_REGEX/:\1/g" | grep -E -v "$COMPONENTS_TO_EXCLUDE_IN_FIRST_PASS")
 
 ASSEMBLE_COMMANDS=$(echo "$FIRST_PASS_COMPONENTS" | sed "s/$/:assemble/g")
 ASSEMBLE_TEST_COMMANDS=$(echo "$FIRST_PASS_COMPONENTS" | sed "s/$/:assembleAndroidTest/g")
@@ -54,6 +54,23 @@ set +e; ./gradlew $GRADLE_ARGS -Pcoverage $TEST_COMMANDS; set -e
   :samples-browser:assemble :samples-browser:assembleAndroidTest :samples-browser:test :samples-browser:lint
   # :tooling-lint:lintRelease and :samples-browser:lintRelease do not exist
 
+
+FOCUS_DIR="$REPO_ROOT_DIR/focus-android"
+
+pushd "$FOCUS_DIR"
+
+# We build everything to be sure to fetch all dependencies
+./gradlew $GRADLE_ARGS assembleFocusDebug testFocusDebugUnitTest detekt ktlint clean
+
+# Some tests may be flaky, although they still download dependencies. So we let the following
+# command fail, if needed.
+set +e; ./gradlew $GRADLE_ARGS test; set -e
+
+# ./gradlew lint is missing because of https://github.com/mozilla-mobile/fenix/issues/10439. So far,
+# we're lucky and the dependencies it fetches are found elsewhere.
+
+
 . "$REPO_ROOT_DIR/taskcluster/scripts/toolchain/android-gradle-dependencies/after.sh"
 
+popd
 popd
