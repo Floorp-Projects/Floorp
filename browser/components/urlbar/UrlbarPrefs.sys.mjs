@@ -261,6 +261,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether results will include top sites and the view will open on focus.
   ["suggest.topsites", true],
 
+  // If `browser.urlbar.weather.featureGate` is true, this controls whether
+  // weather suggestions are turned on.
+  ["suggest.weather", true],
+
   // JSON'ed array of blocked quick suggest URL digests.
   ["quicksuggest.blockedDigests", ""],
 
@@ -377,6 +381,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   //  1 - Show search history
   //  2 - Show search and browsing history
   ["update2.emptySearchBehavior", 0],
+
+  // Feature gate pref for weather suggestions in the urlbar.
+  ["weather.featureGate", false],
 ]);
 const PREF_OTHER_DEFAULTS = new Map([
   ["browser.fixup.dns_first_for_single_words", false],

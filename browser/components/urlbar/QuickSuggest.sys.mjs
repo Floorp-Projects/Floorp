@@ -24,6 +24,7 @@ const FEATURES = {
   ImpressionCaps: "resource:///modules/urlbar/private/ImpressionCaps.sys.mjs",
   RemoteSettingsClient:
     "resource:///modules/urlbar/private/RemoteSettingsClient.sys.mjs",
+  Weather: "resource:///modules/urlbar/private/Weather.sys.mjs",
 };
 
 const TIMESTAMP_TEMPLATE = "%YYYYMMDDHH%";
@@ -119,6 +120,14 @@ class _QuickSuggest {
    */
   get impressionCaps() {
     return this.#features.ImpressionCaps;
+  }
+
+  /**
+   * @returns {Weather}
+   *   A feature that periodically fetches weather suggestions from Merino.
+   */
+  get weather() {
+    return this.#features.Weather;
   }
 
   get logger() {
