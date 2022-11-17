@@ -404,6 +404,13 @@ pref("browser.urlbar.suggest.calculator",           false);
   pref("browser.urlbar.quickactions.showInZeroPrefix", true);
 #endif
 
+// Feature gate pref for weather suggestions in the urlbar.
+pref("browser.urlbar.weather.featureGate", false);
+
+// If `browser.urlbar.weather.featureGate` is true, this controls whether
+// weather suggestions are turned on.
+pref("browser.urlbar.suggest.weather", true);
+
 // When `browser.urlbar.bestMatch.enabled` is true, this controls whether best
 // match results are shown in the urlbar. This pref is exposed to the user in
 // the UI, and it's sticky so that its user-branch value persists regardless of

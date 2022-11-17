@@ -58,6 +58,7 @@ EXTRA_JS_MODULES["urlbar/private"] += [
     "private/BlockedSuggestions.sys.mjs",
     "private/ImpressionCaps.sys.mjs",
     "private/RemoteSettingsClient.sys.mjs",
+    "private/Weather.sys.mjs",
 ]
 
 TESTING_JS_MODULES += [

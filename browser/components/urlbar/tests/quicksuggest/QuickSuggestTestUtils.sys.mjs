@@ -12,6 +12,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
+  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
@@ -775,5 +777,81 @@ export class QuickSuggestTestUtils {
         resolve();
       });
     });
+  }
+
+  /**
+   * Sets the app's locales, calls your callback, and resets locales.
+   *
+   * @param {Array} locales
+   *   An array of locale strings. The entire array will be set as the available
+   *   locales, and the first locale in the array will be set as the requested
+   *   locale.
+   * @param {Function} callback
+   *  The callback to be called with the {@link locales} set. This function can
+   *  be async.
+   */
+  async withLocales(locales, callback) {
+    let promiseChanges = async desiredLocales => {
+      this.info?.(
+        "Changing locales from " +
+          JSON.stringify(Services.locale.requestedLocales) +
+          " to " +
+          JSON.stringify(desiredLocales)
+      );
+
+      if (desiredLocales[0] == Services.locale.requestedLocales[0]) {
+        // Nothing happens when the locale doesn't actually change.
+        return;
+      }
+
+      this.info?.("Waiting for intl:requested-locales-changed");
+      await lazy.TestUtils.topicObserved("intl:requested-locales-changed");
+      this.info?.("Observed intl:requested-locales-changed");
+
+      // Wait for the search service to reload engines. Otherwise tests can fail
+      // in strange ways due to internal search service state during shutdown.
+      // It won't always reload engines but it's hard to tell in advance when it
+      // won't, so also set a timeout.
+      this.info?.("Waiting for TOPIC_SEARCH_SERVICE");
+      await Promise.race([
+        lazy.TestUtils.topicObserved(
+          lazy.SearchUtils.TOPIC_SEARCH_SERVICE,
+          (subject, data) => {
+            this.info?.("Observed TOPIC_SEARCH_SERVICE with data: " + data);
+            return data == "engines-reloaded";
+          }
+        ),
+        new Promise(resolve => {
+          lazy.setTimeout(() => {
+            this.info?.("Timed out waiting for TOPIC_SEARCH_SERVICE");
+            resolve();
+          }, 2000);
+        }),
+      ]);
+
+      this.info?.("Done waiting for locale changes");
+    };
+
+    let available = Services.locale.availableLocales;
+    let requested = Services.locale.requestedLocales;
+
+    let newRequested = locales.slice(0, 1);
+    let promise = promiseChanges(newRequested);
+    Services.locale.availableLocales = locales;
+    Services.locale.requestedLocales = newRequested;
+    await promise;
+
+    this.Assert.equal(
+      Services.locale.appLocaleAsBCP47,
+      locales[0],
+      "App locale is now " + locales[0]
+    );
+
+    await callback();
+
+    promise = promiseChanges(requested);
+    Services.locale.availableLocales = available;
+    Services.locale.requestedLocales = requested;
+    await promise;
   }
 }
