@@ -16,6 +16,7 @@
 #include <memory>
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "api/scoped_refptr.h"
 #include "api/task_queue/task_queue_factory.h"
@@ -103,7 +104,7 @@ class TestAudioDeviceModule : public AudioDeviceModule {
   // Returns a Capturer instance that gets its data from a file. The sample rate
   // and channels will be checked against the Wav file.
   static std::unique_ptr<Capturer> CreateWavFileReader(
-      std::string filename,
+      absl::string_view filename,
       int sampling_frequency_in_hz,
       int num_channels = 1);
 
@@ -111,12 +112,13 @@ class TestAudioDeviceModule : public AudioDeviceModule {
   // Automatically detects sample rate and num of channels.
   // `repeat` - if true, the file will be replayed from the start when we reach
   // the end of file.
-  static std::unique_ptr<Capturer> CreateWavFileReader(std::string filename,
-                                                       bool repeat = false);
+  static std::unique_ptr<Capturer> CreateWavFileReader(
+      absl::string_view filename,
+      bool repeat = false);
 
   // Returns a Renderer instance that writes its data to a file.
   static std::unique_ptr<Renderer> CreateWavFileWriter(
-      std::string filename,
+      absl::string_view filename,
       int sampling_frequency_in_hz,
       int num_channels = 1);
 
@@ -124,7 +126,7 @@ class TestAudioDeviceModule : public AudioDeviceModule {
   // off silence at the beginning (not necessarily perfect silence, see
   // kAmplitudeThreshold) and at the end (only actual 0 samples in this case).
   static std::unique_ptr<Renderer> CreateBoundedWavFileWriter(
-      std::string filename,
+      absl::string_view filename,
       int sampling_frequency_in_hz,
       int num_channels = 1);
 
