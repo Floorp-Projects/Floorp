@@ -15,7 +15,7 @@ features:
       is-enabled:
         description: If `true`, the app will show the new onboarding screen
         type: Boolean
-        default: false
+        default: true
       is-cfr-enabled:
         description: If `true`, the app will show the cfrs
         type: Boolean
