@@ -10,8 +10,8 @@ registerManifests(manifests);
 function run_test() {
   const uuidGenerator = Services.uuid;
 
-  let { newAppInfo } = ChromeUtils.import(
-    "resource://testing-common/AppInfo.jsm"
+  let { newAppInfo } = ChromeUtils.importESModule(
+    "resource://testing-common/AppInfo.sys.mjs"
   );
   let XULAppInfo = newAppInfo({
     name: "XPCShell",

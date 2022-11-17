@@ -14,7 +14,7 @@ var util = require("util");
 module.exports = {
   globals: util._extend(
     {
-      // testing/specialpowers/content/SpecialPowersParent.jsm
+      // testing/specialpowers/content/SpecialPowersParent.sys.mjs
 
       // SPLoadChromeScript block
       createWindowlessBrowser: false,

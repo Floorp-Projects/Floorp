@@ -28,7 +28,7 @@ const extraGlobals = [
   "simulateNoScriptActivity",
   "registerXPCTestComponents",
 
-  // Assert.jsm globals.
+  // Assert.sys.mjs globals.
   "setReporter",
   "report",
   "ok",

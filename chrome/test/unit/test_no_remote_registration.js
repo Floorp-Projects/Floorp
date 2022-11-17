@@ -55,8 +55,8 @@ var testProtocols = [
   },
 ];
 function run_test() {
-  const { newAppInfo } = ChromeUtils.import(
-    "resource://testing-common/AppInfo.jsm"
+  const { newAppInfo } = ChromeUtils.importESModule(
+    "resource://testing-common/AppInfo.sys.mjs"
   );
   let XULAppInfo = newAppInfo({
     name: "XPCShell",

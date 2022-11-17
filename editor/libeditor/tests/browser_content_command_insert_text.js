@@ -6,8 +6,8 @@
 const { CustomizableUITestUtils } = ChromeUtils.import(
   "resource://testing-common/CustomizableUITestUtils.jsm"
 );
-const { ContentTaskUtils } = ChromeUtils.import(
-  "resource://testing-common/ContentTaskUtils.jsm"
+const { ContentTaskUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/ContentTaskUtils.sys.mjs"
 );
 const gCUITestUtils = new CustomizableUITestUtils(window);
 const gDOMWindowUtils = EventUtils._getDOMWindowUtils(window);

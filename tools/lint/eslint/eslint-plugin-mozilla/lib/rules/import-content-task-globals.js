@@ -43,7 +43,7 @@ module.exports = {
           helpers.addVarToScope(name, context.getScope(), value);
         }
         let globals = [
-          // testing/specialpowers/content/SpecialPowersChild.jsm
+          // testing/specialpowers/content/SpecialPowersChild.sys.mjs
           // SpecialPowersChild._spawnTask
           "SpecialPowers",
           "ContentTaskUtils",
@@ -61,7 +61,7 @@ module.exports = {
           helpers.addVarToScope(name, context.getScope(), value);
         }
         let globals = [
-          // testing/specialpowers/content/SpecialPowersParent.jsm
+          // testing/specialpowers/content/SpecialPowersParent.sys.mjs
           // SpecialPowersParent._spawnChrome
           "windowGlobalParent",
           "browsingContext",
