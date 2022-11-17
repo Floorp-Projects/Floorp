@@ -16,8 +16,8 @@ add_task(async function test() {
     { innerWindowId },
     async function(args) {
       let doc = content.document;
-      let { TestUtils } = ChromeUtils.import(
-        "resource://testing-common/TestUtils.jsm"
+      let { TestUtils } = ChromeUtils.importESModule(
+        "resource://testing-common/TestUtils.sys.mjs"
       );
       let promise = TestUtils.topicObserved(
         "inner-window-nuked",

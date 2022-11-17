@@ -4,7 +4,7 @@
 
 ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
 const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+const {TestUtils} = ChromeUtils.importESModule("resource://testing-common/TestUtils.sys.mjs");
 
 function getWindowlessBrowser(url) {
   let ssm = Services.scriptSecurityManager;
