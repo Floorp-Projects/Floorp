@@ -559,17 +559,16 @@ static void LastRememberedSizeCallback(
     MOZ_ASSERT(!frame->IsFrameOfType(nsIFrame::eLineParticipant) ||
                    frame->IsFrameOfType(nsIFrame::eReplaced),
                "Should have unobserved non-replaced inline.");
+    MOZ_ASSERT(!frame->HidesContent(),
+               "Should have unobserved element skipping its contents.");
     const nsStylePosition* stylePos = frame->StylePosition();
     const WritingMode wm = frame->GetWritingMode();
-    bool canRememberBSize = stylePos->ContainIntrinsicBSize(wm).IsAutoLength();
-    bool canRememberISize = stylePos->ContainIntrinsicISize(wm).IsAutoLength();
-    MOZ_ASSERT(canRememberBSize || !target->HasLastRememberedBSize(),
+    bool canUpdateBSize = stylePos->ContainIntrinsicBSize(wm).IsAutoLength();
+    bool canUpdateISize = stylePos->ContainIntrinsicISize(wm).IsAutoLength();
+    MOZ_ASSERT(canUpdateBSize || !target->HasLastRememberedBSize(),
                "Should have removed the last remembered block size.");
-    MOZ_ASSERT(canRememberISize || !target->HasLastRememberedISize(),
+    MOZ_ASSERT(canUpdateISize || !target->HasLastRememberedISize(),
                "Should have removed the last remembered inline size.");
-    const auto containAxes = frame->GetContainSizeAxes();
-    bool canUpdateBSize = canRememberBSize && !containAxes.mBContained;
-    bool canUpdateISize = canRememberISize && !containAxes.mIContained;
     MOZ_ASSERT(canUpdateBSize || canUpdateISize,
                "Should have unobserved if we can't update any size.");
     AutoTArray<RefPtr<ResizeObserverSize>, 1> contentSizeList;
