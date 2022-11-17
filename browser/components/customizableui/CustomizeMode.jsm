@@ -1864,10 +1864,7 @@ CustomizeMode.prototype = {
     }
 
     // Do nothing if the widget is not allowed to move to the target area.
-    if (
-      targetArea.id != kPaletteId &&
-      !CustomizableUI.canWidgetMoveToArea(draggedItemId, targetArea.id)
-    ) {
+    if (!CustomizableUI.canWidgetMoveToArea(draggedItemId, targetArea.id)) {
       return;
     }
 
@@ -2044,6 +2041,10 @@ CustomizeMode.prototype = {
       return;
     }
 
+    if (!CustomizableUI.canWidgetMoveToArea(aDraggedItemId, aTargetArea.id)) {
+      return;
+    }
+
     // Is the target area the customization palette?
     if (aTargetArea.id == kPaletteId) {
       // Did we drag from outside the palette?
@@ -2073,10 +2074,6 @@ CustomizeMode.prototype = {
         this.visiblePalette.insertBefore(draggedItem, aTargetNode.parentNode);
       }
       this._onDragEnd(aEvent);
-      return;
-    }
-
-    if (!CustomizableUI.canWidgetMoveToArea(aDraggedItemId, aTargetArea.id)) {
       return;
     }
 
