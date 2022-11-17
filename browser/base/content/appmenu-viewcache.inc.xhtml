@@ -246,18 +246,18 @@
                    />
   </panelview>
 
-  <panelview id="PanelUI-profiler">
+  <panelview id="PanelUI-profiler" showheader="true">
     <vbox id="PanelUI-profiler-header" animationready="false">
-      <hbox id="PanelUI-profiler-header-bar">
-        <label flex="1" data-l10n-id="profiler-popup-title" />
-        <vbox class="PanelUI-profiler-toolbarbutton-container">
-          <toolbarbutton id="PanelUI-profiler-info-button"
-                        class="panel-info-button"
-                        closemenu="none"
-                        data-l10n-id="profiler-popup-reveal-description-button">
-            <image/>
-          </toolbarbutton>
-        </vbox>
+      <hbox id="PanelUI-profiler-header-bar" class="panel-header panel-header-with-info-button">
+        <html:h1>
+          <html:span data-l10n-id="profiler-popup-header-text"></html:span>
+        </html:h1>
+        <toolbarbutton id="PanelUI-profiler-info-button"
+                      class="panel-info-button"
+                      closemenu="none"
+                      data-l10n-id="profiler-popup-reveal-description-button">
+          <image/>
+        </toolbarbutton>
       </hbox>
       <toolbarseparator />
       <hbox id="PanelUI-profiler-info">
@@ -655,11 +655,14 @@
     </vbox>
   </panelview>
 
-  <panelview id="PanelUI-whatsNew" class="PanelUI-subView">
+  <panelview id="PanelUI-whatsNew" class="PanelUI-subView" showheader="true">
+    <hbox id="PanelUI-whatsNew-title" class="panel-header">
+      <html:h1>
+        <html:span data-l10n-id="whatsnew-panel-header"></html:span>
+      </html:h1>
+    </hbox>
+    <toolbarseparator/>
     <vbox class="panel-subview-body">
-      <box id="PanelUI-whatsNew-title" class="panel-header">
-        <label data-l10n-id="whatsnew-panel-header"/>
-      </box>
       <toolbaritem id="PanelUI-whatsNew-content"
                    orient="vertical"
                    smoothscroll="false">
@@ -668,6 +671,7 @@
         </html:div>
       </toolbaritem>
     </vbox>
+    <toolbarseparator/>
     <checkbox id="panelMenu-toggleWhatsNew"
               class="panelMenu-toggleWhatsNew-checkbox"
               onclick="ToolbarPanelHub.toggleWhatsNewPref(event)"

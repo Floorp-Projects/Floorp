@@ -22,6 +22,12 @@
   --arrowpanel-menuitem-padding-inline: 8px;
   --arrowpanel-menuitem-padding: var(--arrowpanel-menuitem-padding-block) var(--arrowpanel-menuitem-padding-inline);
   --arrowpanel-menuitem-border-radius: 4px;
+  --arrowpanel-header-back-icon-padding: 8px;
+  --arrowpanel-header-back-icon-full-width: calc(16px + (2 * var(--arrowpanel-header-back-icon-padding)));
+  --arrowpanel-header-info-icon-padding: 4px;
+  --arrowpanel-header-info-icon-margin-inline-end: 4px;
+  --arrowpanel-header-info-icon-full-width: calc(16px + (2 * var(--arrowpanel-header-info-icon-padding)));
+  --arrowpanel-header-height: calc(16px + (var(--arrowpanel-header-back-icon-padding) * 2) + (var(--panel-separator-margin-horizontal) * 2));
   --panel-separator-margin-vertical: 4px;
   --panel-separator-margin-horizontal: 8px;
   --panel-separator-margin: var(--panel-separator-margin-vertical) var(--panel-separator-margin-horizontal);
@@ -39,6 +45,8 @@
 :root[uidensity=compact] {
   --arrowpanel-menuitem-margin-inline: 4px;
   --arrowpanel-menuitem-padding-block: 0px;
+  --arrowpanel-header-back-icon-padding: 4px;
+  --arrowpanel-header-info-icon-margin-inline-end: 0px;
   --panel-separator-margin-horizontal: 4px;
   --panel-subview-body-padding-block: 4px;
 }
@@ -168,8 +176,8 @@ toolbarseparator + .panel-subview-body {
   appearance: none;
   color: inherit;
   padding: 0;
-  margin-inline-end: 4px;
   border-radius: var(--toolbarbutton-border-radius);
+  flex-shrink: 0;
 }
 
 .panel-info-button[disabled=true] {
@@ -193,7 +201,7 @@ toolbarseparator + .panel-subview-body {
   list-style-image: url(chrome://global/skin/icons/info.svg);
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
-  padding: 4px;
+  padding: var(--arrowpanel-header-info-icon-padding);
 }
 
 #wrapper-edit-controls:is([place="palette"],[place="panel"]) > #edit-controls,
@@ -1586,11 +1594,20 @@ radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
 }
 
 .panel-header {
-  align-items: center;
   display: flex;
-  flex: 1 auto;
-  padding: 4px;
-  padding-top: 8px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  /* Set the header's padding according to menuitems horizontal padding
+     to make sure they are even from all sides and aligned according to that padding. */
+  padding: var(--arrowpanel-menuitem-margin-inline);
+  /* Calculate the header's height assuming it includes an icon even if it doesn't,
+     to make sure all headers are the same height (assuming their text is a one liner). */
+  min-height: var(--arrowpanel-header-height);
+}
+
+.panel-header + toolbarseparator {
+  margin-top: 0 !important;
 }
 
 .panel-header > h1 {
@@ -1598,8 +1615,21 @@ radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
   flex: auto;
   font-size: inherit;
   font-weight: 600;
-  margin: 4px 0;
-  text-align: center;
+  margin: 0;
+}
+
+.panel-header.panel-header-with-info-button > .panel-info-button {
+  margin-inline-end: var(--arrowpanel-header-info-icon-margin-inline-end);
+}
+
+.panel-header.panel-header-with-info-button > h1 {
+  /* Add the size of the info button to center properly. */
+  margin-inline-start: calc(var(--arrowpanel-header-info-icon-full-width) + var(--arrowpanel-header-info-icon-margin-inline-end));
+}
+
+.panel-header > .subviewbutton-back + h1 {
+  /* Add the size of the back button to center properly. */
+  margin-inline-end: var(--arrowpanel-header-back-icon-full-width);
 }
 
 .panel-header > h1 > span {
@@ -1607,40 +1637,28 @@ radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
   white-space: pre-wrap;
 }
 
-.panel-header > .subviewbutton-back + h1 {
-  /* Add the size of the back button to center properly. */
-  margin-inline-end: 32px;
-}
-
 .panel-header > .subviewbutton-back {
   -moz-context-properties: fill;
   fill: var(--arrowpanel-color);
   list-style-image: url(chrome://global/skin/icons/arrow-left.svg);
-  padding: 8px;
-}
-
-.subviewbutton-back {
-  margin: 0 4px;
+  padding: var(--arrowpanel-header-back-icon-padding);
 }
 
 .panel-header > .subviewbutton-back:-moz-locale-dir(rtl) {
   list-style-image: url(chrome://global/skin/icons/arrow-right.svg);
 }
 
+.subviewbutton-back {
+  margin: 0;
+}
+
 .subviewbutton-back > .toolbarbutton-text {
-  /* !important to override .cui-widget-panel .toolbarbutton-text
-   * selector further down. */
-  display: none !important;
+  display: none;
 }
 
 /* What's New panel */
 #customizationui-widget-multiview #PanelUI-whatsNew {
   max-width: var(--menu-panel-width);
-}
-
-#protections-popup-main-header-label {
-  margin-inline-start: 30px;
-  text-align: center;
 }
 
 #protections-popup #messaging-system-message-container {
@@ -1692,12 +1710,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   display: none;
 }
 
-#PanelUI-whatsNew .panel-subview-body {
-  padding-top: 0;
-}
-
 #PanelUI-whatsNew .panelMenu-toggleWhatsNew-checkbox {
-  border-top: 1px solid var(--panel-separator-color);
   padding-inline-start: 16px;
   min-height: 41px;
 }
@@ -1866,17 +1879,6 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   border-color: #0003;
 }
 
-#PanelUI-profiler-header-bar + toolbarseparator {
-  margin-top: 0;
-}
-
-#PanelUI-profiler-header-bar label {
-  margin-inline-start: 32px;
-  padding: 12px;
-  font-weight: 600;
-  text-align: center;
-}
-
 #PanelUI-profiler-header[isinfocollapsed="true"] #PanelUI-profiler-info {
   opacity: 0;
   pointer-events: none;
@@ -1908,11 +1910,6 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 #PanelUI-profiler-content {
   position: relative;
   padding: calc(15px - var(--panel-separator-margin-vertical)) 15px 15px;
-}
-
-.PanelUI-profiler-toolbarbutton-container {
-  -moz-box-pack: center;
-  margin-inline-end: 4px;
 }
 
 .PanelUI-profiler-description-title {

@@ -15,11 +15,12 @@
   <panelmultiview id="permission-popup-multiView"
                   mainViewId="permission-popup-mainView">
     <panelview id="permission-popup-mainView"
-               role="document">
-      <vbox id="permission-popup-mainView-panel-header">
-        <label>
+               role="document"
+               showheader="true">
+      <vbox id="permission-popup-mainView-panel-header" class="panel-header">
+        <html:h1>
           <html:span id="permission-popup-mainView-panel-header-span" role="heading" aria-level="1"/>
-        </label>
+        </html:h1>
       </vbox>
       <toolbarseparator></toolbarseparator>
       <hbox class="permission-popup-section">

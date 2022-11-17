@@ -3,20 +3,3 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @import url("chrome://browser/skin/addons/unified-extensions-item.css");
-
-.unified-extensions-panel-header {
-  align-items: center;
-  display: flex;
-  font-weight: 600;
-  padding: 4px;
-  padding-top: 8px;
-}
-
-.unified-extensions-panel-header > h1 {
-  display: inline;
-  flex: auto;
-  font-size: inherit;
-  font-weight: 600;
-  margin: 4px 0;
-  text-align: center;
-}
