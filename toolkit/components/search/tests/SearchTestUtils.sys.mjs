@@ -1,8 +1,6 @@
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { MockRegistrar } = ChromeUtils.import(
-  "resource://testing-common/MockRegistrar.jsm"
-);
+import { MockRegistrar } from "resource://testing-common/MockRegistrar.sys.mjs";
 
 const lazy = {};
 

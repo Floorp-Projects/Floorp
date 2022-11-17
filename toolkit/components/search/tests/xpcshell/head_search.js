@@ -14,6 +14,7 @@ ChromeUtils.defineESModuleGetters(this, {
   SearchSettings: "resource://gre/modules/SearchSettings.sys.mjs",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+  TestUtils: "resource://testing-common/TestUtils.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
@@ -21,7 +22,6 @@ ChromeUtils.defineESModuleGetters(this, {
 XPCOMUtils.defineLazyModuleGetters(this, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
   RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
-  TestUtils: "resource://testing-common/TestUtils.jsm",
   sinon: "resource://testing-common/Sinon.jsm",
 });
 
