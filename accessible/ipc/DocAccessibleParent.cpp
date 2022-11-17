@@ -1032,6 +1032,7 @@ void DocAccessibleParent::Destroy() {
     return;
   }
 
+  mChildren.Clear();
   // The code above should have already completely cleared these, but to be
   // extra safe make sure they are cleared here.
   thisDoc->mAccessibles.Clear();
