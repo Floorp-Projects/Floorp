@@ -75,7 +75,7 @@ def target_tasks_ac_default(full_task_graph, parameters, graph_config):
 
 def get_gv_version(repo, revision):
     gecko_kt = repo.run(
-        "show", f"{revision}:android-components/buildSrc/src/main/java/Gecko.kt"
+        "show", f"{revision}:android-components/plugins/dependencies/src/main/java/Gecko.kt"
     )
     match = re.search(r'version = "([^"]*)"', gecko_kt, re.MULTILINE)
     if not match:
