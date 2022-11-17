@@ -171,7 +171,7 @@ add_task(async function test_asrouter() {
           id: "cfr",
           enabled: true,
           type: "remote-settings",
-          bucket: "cfr",
+          collection: "cfr",
           updateCyleInMs: 3600000,
         }),
       ],

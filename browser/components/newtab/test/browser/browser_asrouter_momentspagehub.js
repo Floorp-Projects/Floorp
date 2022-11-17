@@ -19,7 +19,7 @@ add_task(async function test_with_rs_messages() {
     set: [
       [
         "browser.newtabpage.activity-stream.asrouter.providers.whats-new-panel",
-        `{"id":"cfr","enabled":true,"type":"remote-settings","bucket":"cfr","updateCycleInMs":0}`,
+        `{"id":"cfr","enabled":true,"type":"remote-settings","collection":"cfr","updateCycleInMs":0}`,
       ],
     ],
   });

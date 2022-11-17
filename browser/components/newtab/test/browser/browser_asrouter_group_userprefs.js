@@ -34,7 +34,7 @@ add_setup(async function() {
     set: [
       [
         "browser.newtabpage.activity-stream.asrouter.providers.cfr",
-        `{"id":"cfr","enabled":true,"type":"remote-settings","bucket":"cfr","updateCycleInMs":0}`,
+        `{"id":"cfr","enabled":true,"type":"remote-settings","collection":"cfr","updateCycleInMs":0}`,
       ],
     ],
   });
@@ -91,7 +91,7 @@ add_task(async function test_heartbeat_tactic_2() {
     set: [
       [
         "browser.newtabpage.activity-stream.asrouter.providers.message-groups",
-        `{"id":"message-groups","enabled":true,"type":"remote-settings","bucket":"message-groups","updateCycleInMs":0}`,
+        `{"id":"message-groups","enabled":true,"type":"remote-settings","collection":"message-groups","updateCycleInMs":0}`,
       ],
       ["browser.userPreference.messaging-experiments", true],
     ],

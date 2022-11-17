@@ -982,7 +982,7 @@ describe("ASRouter", () => {
         id: "cfr",
         enabled: true,
         type: "remote-settings",
-        bucket: "cfr",
+        collection: "cfr",
       };
       await createRouterAndInit([provider]);
 
@@ -1002,7 +1002,7 @@ describe("ASRouter", () => {
         id: "cfr",
         enabled: true,
         type: "remote-settings",
-        bucket: "cfr",
+        collection: "cfr",
       };
       await createRouterAndInit([provider]);
 
@@ -2390,7 +2390,7 @@ describe("ASRouter", () => {
         id: "cfr",
         enabled: true,
         type: "remote-settings",
-        bucket: "cfr",
+        collection: "cfr",
       };
       await createRouterAndInit([provider]);
       sandbox.spy(Router, "setState");
@@ -2405,7 +2405,7 @@ describe("ASRouter", () => {
             id: "cfr",
             enabled: true,
             type: "remote-settings",
-            bucket: "cfr",
+            collection: "cfr",
             lastUpdated: undefined,
             errors: [],
           },
@@ -2465,7 +2465,7 @@ describe("ASRouter", () => {
           {
             id: "message-groups",
             enabled: true,
-            bucket: "bucket",
+            collection: "collection",
             type: "remote-settings",
           },
         ],
@@ -2498,7 +2498,7 @@ describe("ASRouter", () => {
           {
             id: "message-groups",
             enabled: true,
-            bucket: "bucket",
+            collection: "collection",
             type: "remote-settings",
           },
         ],
@@ -2526,7 +2526,7 @@ describe("ASRouter", () => {
           {
             id: "message-groups",
             enabled: true,
-            bucket: "bucket",
+            collection: "collection",
             type: "remote-settings",
           },
         ],
@@ -2547,7 +2547,7 @@ describe("ASRouter", () => {
           {
             id: "cfr",
             enabled: true,
-            bucket: "bucket",
+            collection: "collection",
             type: "remote-settings",
           },
         ],
@@ -2570,7 +2570,7 @@ describe("ASRouter", () => {
           {
             id: "cfr",
             enabled: true,
-            bucket: "bucket",
+            collection: "collection",
             type: "remote-settings",
             userPreferences: ["cfrAddons"],
           },
@@ -2788,7 +2788,7 @@ describe("ASRouter", () => {
     beforeEach(() => {
       provider = {
         id: "cfr",
-        bucket: "cfr",
+        collection: "cfr",
       };
       sandbox
         .stub(MessageLoaderUtils, "_getRemoteSettingsMessages")

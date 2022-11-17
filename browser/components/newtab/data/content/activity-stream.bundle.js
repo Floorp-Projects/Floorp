@@ -1588,7 +1588,7 @@ class ASRouterAdminInner extends (external_React_default()).PureComponent {
           rel: "noopener noreferrer"
         }, info.url), ")");
       } else if (provider.type === "remote-settings") {
-        label = `remote settings (${provider.bucket})`;
+        label = `remote settings (${provider.collection})`;
       } else if (provider.type === "remote-experiments") {
         label = /*#__PURE__*/external_React_default().createElement("span", null, "remote settings (", /*#__PURE__*/external_React_default().createElement("a", {
           className: "providerUrl",
