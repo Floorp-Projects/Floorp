@@ -4,9 +4,24 @@
 
 @import "chrome://browser/skin/customizableui/panelUI-shared.css";
 
+#PlacesToolbar menupopup {
+  color: var(--arrowpanel-color);
+  --panel-background: var(--arrowpanel-background);
+  --panel-border-color: var(--arrowpanel-border-color);
+}
+
 menupopup::part(drop-indicator) {
   /* To account for the shadow margin + border of the panel */
   margin-inline-start: 5px;
+}
+
+/* Styled differently to allow for user interaction with menu separator */
+#PlacesToolbar menupopup[placespopup="true"] menuseparator {
+  appearance: none !important;
+}
+
+menuitem.subviewbutton {
+  appearance: none !important;
 }
 
 .subviewradio > .radio-label-box {

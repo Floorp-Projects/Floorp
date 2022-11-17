@@ -17,6 +17,7 @@ menubar {
   font: menu;
 }
 
+
 menu,
 menuitem,
 menucaption {
@@ -34,8 +35,8 @@ menucaption {
   background-color: initial;
 }
 
-menu:where([_moz-menuactive="true"]),
-menuitem:where([_moz-menuactive="true"]) {
+menu[_moz-menuactive="true"],
+menuitem[_moz-menuactive="true"] {
   color: -moz-menuhovertext;
   background-color: -moz-menuhover;
 }
@@ -45,9 +46,9 @@ menucaption[customoptionstyling="true"] {
   appearance: none;
 }
 
-menu:where([disabled="true"]),
-menuitem:where([disabled="true"]),
-menucaption:where([disabled="true"]) {
+menu[disabled="true"],
+menuitem[disabled="true"],
+menucaption[disabled="true"] {
   color: GrayText;
 }
 
@@ -174,6 +175,6 @@ menuitem[type="radio"] {
 /* ::::: menuseparator ::::: */
 
 menuseparator {
-  appearance: auto;
-  -moz-default-appearance: menuseparator;
+  appearance: auto !important;
+  -moz-default-appearance: menuseparator !important;
 }
