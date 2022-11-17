@@ -1340,6 +1340,7 @@ rtc_source_set("track_media_info_map") {
   deps = [
     ":rtp_receiver",
     ":rtp_sender",
+    "../api:array_view",
     "../api:media_stream_interface",
     "../api:rtp_parameters",
     "../api:scoped_refptr",

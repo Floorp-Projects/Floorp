@@ -38,8 +38,8 @@ const V* FindAddressOrNull(const std::map<K, V>& map, const K& key) {
 }
 
 void GetAudioAndVideoTrackBySsrc(
-    const std::vector<rtc::scoped_refptr<RtpSenderInternal>>& rtp_senders,
-    const std::vector<rtc::scoped_refptr<RtpReceiverInternal>>& rtp_receivers,
+    rtc::ArrayView<rtc::scoped_refptr<RtpSenderInternal>> rtp_senders,
+    rtc::ArrayView<rtc::scoped_refptr<RtpReceiverInternal>> rtp_receivers,
     std::map<uint32_t, AudioTrackInterface*>* local_audio_track_by_ssrc,
     std::map<uint32_t, VideoTrackInterface*>* local_video_track_by_ssrc,
     std::map<uint32_t, AudioTrackInterface*>* remote_audio_track_by_ssrc,
@@ -109,8 +109,8 @@ TrackMediaInfoMap::TrackMediaInfoMap() = default;
 void TrackMediaInfoMap::Initialize(
     absl::optional<cricket::VoiceMediaInfo> voice_media_info,
     absl::optional<cricket::VideoMediaInfo> video_media_info,
-    const std::vector<rtc::scoped_refptr<RtpSenderInternal>>& rtp_senders,
-    const std::vector<rtc::scoped_refptr<RtpReceiverInternal>>& rtp_receivers) {
+    rtc::ArrayView<rtc::scoped_refptr<RtpSenderInternal>> rtp_senders,
+    rtc::ArrayView<rtc::scoped_refptr<RtpReceiverInternal>> rtp_receivers) {
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
   RTC_DCHECK(!is_initialized_);
   is_initialized_ = true;
