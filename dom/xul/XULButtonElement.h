@@ -20,6 +20,10 @@ class XULButtonElement final : public nsXULElement {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY bool MouseClicked(WidgetGUIEvent&);
   MOZ_CAN_RUN_SCRIPT nsresult PostHandleEvent(EventChainPostVisitor&) override;
 
+  nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
+                                      int32_t aModType) const override;
+
+
  private:
   void Blurred();
   bool mIsHandlingKeyEvent = false;

@@ -33,6 +33,13 @@ class XULTextElement final : public nsXULElement {
     SetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, aValue, true);
   }
 
+  nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
+                                      int32_t aModType) const override;
+
+  NS_IMPL_FROMNODE_HELPER(XULTextElement,
+                          IsAnyOfXULElements(nsGkAtoms::label,
+                                             nsGkAtoms::description));
+
  protected:
   virtual ~XULTextElement() = default;
   JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
