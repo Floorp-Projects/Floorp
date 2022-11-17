@@ -45,8 +45,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Oxirgi xatchoʻplar</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">Yaqinda saqlangan</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Barcha saqlangan xatchoʻplarni koʻrsatish</string>
@@ -260,36 +258,12 @@
     <string name="search_header_menu_item">Bu safar qidiramiz:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">%1$sda yangiliklar</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Endi toʻxtagan joydan davom etish osonroq.</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Moslashtirilgan %1$s bosh sahifasi</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Ochiq varaqlar, xatchoʻplar va tarixiga oʻting.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Qulay tartibli varaqlar</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Yaxshilangan tartib va avtomatik yopiladigan varaqlar yordamida tartibsizliklarni toʻgʻrilang.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Oxirgi qidiruvlar</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Bosh sahifa va varaqlar orqali oxirgi qidiruvlarga yana tashrif buyuring.</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Moslashtirilgan Firefox bosh sahifasi endi toʻxtagan joydan davom etishni osonlashtiradi. Oxirgi varaqlar, xatchoʻplar va qidiruv natijalarini endi osongina topasiz.</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Moshlashtirilgan bosh sahifangizni kutib oling. Oxirgi varaqlar, xatchoʻplar va qidiruv natijalar shu yerda chiqadi.</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Mustaqil internetga xush kelibsiz</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">Shaxsiy internetga xush kelibsiz</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Koʻplab ranglar. Yaxshiroq maxfiylik. Odamlarga foydali bir xil majburiyat.</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Telefondan noutbukka yoki aksincha qayting</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">Ekranlarga oʻtish har doimgidan osonroq</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -1254,33 +1228,20 @@
     <string name="delete_history_group_snackbar">Guruh oʻchirildi</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">%sga xush kelibsiz!</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">Yaxshiroq internetga xush kelibsiz</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">Foyda uchun emas, insonlar uchun tuzilgan brauzer.</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Firefoxni qurilmalarga sinxronlash</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">Qolgan joyidan davom eting</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Xatchoʻp, tarix va parollarni bu qurilmadagi %1$sga oʻtkazing.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">Ekranlar oʻrtasida uzluksiz oʻtish uchun yorliqlar va parollarni qurilmalar oʻrtasida sinxronlang.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Roʻyxatdan oʻtish</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">Kirish</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sinxronizatsiya yoqilgan</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Doimiy maxfiylik</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Standart maxfiylik himoyasi</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">Kompaniyalarning sizni onlayn kuzatishlarini %1$s avtomatik ravishda bloklaydi.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Kuzatuvchilar sizni saytlar boʻylab kuzatish uchun cookie-fayllardan foydalanishiga yoʻl qoʻyilmaydi.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1294,17 +1255,10 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">Sahifalar tezroq yuklanishi uchun koʻproq kuzatuvchilarni bloklaydi, lekin baʼzi sahifalar toʻgʻri ishlamasligi mumkin.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Asboblar paneli joylashuvini tanlang</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Asboblar paneliga oson kirishni taʼminlang. Uni pastki qismda qoldiring yoki yuqoriga koʻchiring.</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">Uni pastki qismida qoldiring yoki yuqoriga koʻchiring.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Sizning maxfiyligingiz</string>
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">Maʼlumotlaringizni oʻzingiz boshqaring</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Maʼlumotlaringizni onlayn va biz bilan ulashishingizni nazorat qilish uchun  %sni yaratdik.</string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">Firefox sizga nimalarni onlayn va nimalarni bizga ulashishingiz uchun nazoratni sizga taqdim etadi.</string>
     <!-- Text for the button to read the privacy notice -->
@@ -1398,6 +1352,38 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_2">Tashrif buyurilmagan saytlardan olingan cookie fayllar</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Barcha uchinchi tomon cookie fayllar (saytlarning buzilishiga olib kelishi mumkin)</string>
+
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Barcha cookie fayllar (saytlar ishlashini buzadi)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Saytlararo cookie fayllarni izolyatsiyalash</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Tarkibni kuzatish</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Barcha varaqlarda</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Faqat maxsiy varaqlarda</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Kriptomaynerlar</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Raqamli imzo yigʻuvchilar</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Tafsilotlar</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocked">Bloklangan</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">Ruxsat berilgan</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Ijtimoiy tarmoq kuzatuvchilari</string>
+
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Ijtimoiy tarmoqlarning sahifadagi brauzeringiz faoliyatini kuzatib borish imkoniyatini cheklaydi.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Saytlararo kuzatuvchi cookie fayllar</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Saytlararo cookie fayllar</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Reklama tarmoqlari va analitik kompaniyalar koʻplab saytlarda brauzer maʼlumotlarini yigʻish uchun foydalanadigan cookie fayllarni bloklaydi.</string>
 
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">Barcha veb-saytlarni kattalashtirish</string>

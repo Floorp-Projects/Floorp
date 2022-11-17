@@ -49,8 +49,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Recente bladwijzers</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">Onlangs opgeslagen</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Alle opgeslagen bladwijzers tonen</string>
@@ -268,37 +266,12 @@
     <string name="search_header_menu_item">Deze keer zoeken met:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Wat is er nieuw in %1$s</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Het is nu eenvoudiger om verder te gaan waar u was gebleven.</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Gepersonaliseerde %1$s-startpagina</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Spring naar uw open tabbladen, bladwijzers en navigatiegeschiedenis.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Nette, geordende tabbladen</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Verwijder tabbladrommel met een verbeterde opmaak en automatisch sluitende tabbladen.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Recente zoekopdrachten</string>
-
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Bekijk uw laatste zoekopdrachten opnieuw vanaf uw startpagina en tabbladen.</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Uw gepersonaliseerde Firefox-startpagina maakt het nu eenvoudiger om verder te gaan waar u was gebleven. Vind uw recente tabbladen, bladwijzers en zoekresultaten.</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Maak kennis met uw gepersonaliseerde startpagina. Recente tabbladen, bladwijzers en zoekresultaten worden hier weergegeven.</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Welkom bij een onafhankelijk internet</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">Welkom bij een meer persoonlijk internet</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Meer kleuren. Betere privacy. Dezelfde toewijding aan mensen boven winst.</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Spring van telefoon naar laptop en terug</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">Van scherm wisselen is eenvoudiger dan ooit</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -1261,33 +1234,20 @@
     <string name="delete_history_group_snackbar">Groep verwijderd</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Welkom bij %s!</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">Welkom bij een beter internet</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">Een browser gebouwd voor mensen, niet voor winst.</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Synchroniseer Firefox tussen apparaten</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">Ga verder waar u was gebleven</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Breng bladwijzers, geschiedenis en wachtwoorden naar %1$s op dit apparaat.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">Synchroniseer tabbladen en wachtwoorden op verschillende apparaten voor naadloos schakelen tussen schermen.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Registreren</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">Aanmelden</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Synchronisatie is ingeschakeld</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Privacy die altijd aan staat</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Standaard privacybescherming</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s zorgt er automatisch voor dat bedrijven u niet stiekem volgen op internet.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Met Totale cookiebescherming om te voorkomen dat trackers cookies gebruiken om u stiekem op het internet te volgen.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1300,17 +1260,10 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">Blokkeert meer trackers, zodat pagina’s sneller worden geladen, maar sommige functionaliteit op een pagina werkt mogelijk niet.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Kies uw werkbalkplaatsing</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Plaats de werkbalk binnen handbereik. Houd hem onderaan of verplaats hem naar boven.</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">Houd hem onderaan, of verplaats hem naar boven.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Uw privacy</string>
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">U beheert uw gegevens</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">We hebben %s ontworpen om u controle te geven over wat u online deelt en wat u met ons deelt.</string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">Firefox geeft u controle over wat u online deelt en wat u met ons deelt.</string>
     <!-- Text for the button to read the privacy notice -->
@@ -1971,4 +1924,6 @@
     <string name="a11y_action_label_expand">uitvouwen</string>
     <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
     <string name="a11y_action_label_wallpaper_collection_learn_more">koppeling openen voor meer info over deze collectie</string>
-    </resources>
+    <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
+    <string name="a11y_action_label_read_article">het artikel te lezen</string>
+</resources>
