@@ -11,28 +11,13 @@ menupopup::part(drop-indicator) {
   margin-inline-start: 5px;
 }
 
+toolbarbutton menupopup[placespopup] {
+  --nested-margin: calc(-1 * (var(--arrowpanel-menuitem-padding-inline) + var(--panel-shadow-margin)));
+}
+
 /* Add border-radius on Windows 7 */
 @media (-moz-platform: windows-win7) {
-  #BMB_bookmarksPopup menupopup::part(content) {
+  toolbarbutton menupopup[placespopup]::part(content) {
     border-radius: 3.5px;
   }
-}
-
-@media (-moz-windows-non-native-menus) {
-  /* Override the menu-right margin rule windows/global/menu.css */
-  #BMB_bookmarksPopup .menu-right {
-    margin-inline-end: 0;
-  }
-}
-
-/* bookmark panel separator */
-#BMB_bookmarksPopup menuseparator {
-  padding-block: 0;
-}
-
-/* Disabled empty item looks too small otherwise, because it has no icon. */
-menuitem.subviewbutton[disabled]:not(.menuitem-iconic) {
-  /* This is 16px for an icon + 3px for its margins + 1px for its padding +
-   * 2px for its border, see above */
-  min-height: 22px;
 }
