@@ -15,6 +15,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import androidx.annotation.WorkerThread
+import androidx.core.view.forEach
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -165,8 +166,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
     }
 
     private fun enableAllSubviews(shouldEnable: Boolean, viewGroup: ViewGroup) {
-        for (i in 0 until viewGroup.childCount) {
-            val child = viewGroup.getChildAt(i)
+        viewGroup.forEach { child ->
             if (child is ViewGroup) {
                 enableAllSubviews(shouldEnable, child)
             } else {
