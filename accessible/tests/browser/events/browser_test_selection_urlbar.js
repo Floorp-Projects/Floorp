@@ -10,10 +10,6 @@ ChromeUtils.defineESModuleGetters(this, {
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
 });
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  BrowserTestUtils: "resource://testing-common/BrowserTestUtils.jsm",
-});
-
 // Check that the URL bar manages accessibility
 // selection notifications appropriately on startup (new window).
 async function runTests() {

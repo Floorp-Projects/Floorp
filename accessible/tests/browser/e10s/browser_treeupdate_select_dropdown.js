@@ -34,8 +34,8 @@ addAccessibleTask(
       "Dropdown item focused after select expanded"
     );
     await invokeContentTask(browser, [], () => {
-      const { ContentTaskUtils } = ChromeUtils.import(
-        "resource://testing-common/ContentTaskUtils.jsm"
+      const { ContentTaskUtils } = ChromeUtils.importESModule(
+        "resource://testing-common/ContentTaskUtils.sys.mjs"
       );
       const EventUtils = ContentTaskUtils.getEventUtils(content);
       EventUtils.synthesizeKey("VK_DOWN", { altKey: true }, content);

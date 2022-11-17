@@ -795,8 +795,8 @@ async function waitForImageMap(browser, accDoc, id = "imgmap") {
   const onReorder = waitForEvent(EVENT_REORDER, id);
   // Wave over image map
   await invokeContentTask(browser, [id], contentId => {
-    const { ContentTaskUtils } = ChromeUtils.import(
-      "resource://testing-common/ContentTaskUtils.jsm"
+    const { ContentTaskUtils } = ChromeUtils.importESModule(
+      "resource://testing-common/ContentTaskUtils.sys.mjs"
     );
     const EventUtils = ContentTaskUtils.getEventUtils(content);
     EventUtils.synthesizeMouse(

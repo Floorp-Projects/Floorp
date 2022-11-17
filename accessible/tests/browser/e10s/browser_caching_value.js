@@ -34,8 +34,8 @@ const valueTests = [
     async action(browser) {
       await invokeFocus(browser, "select");
       await invokeContentTask(browser, [], () => {
-        const { ContentTaskUtils } = ChromeUtils.import(
-          "resource://testing-common/ContentTaskUtils.jsm"
+        const { ContentTaskUtils } = ChromeUtils.importESModule(
+          "resource://testing-common/ContentTaskUtils.sys.mjs"
         );
         const EventUtils = ContentTaskUtils.getEventUtils(content);
         EventUtils.synthesizeKey("3", {}, content);
@@ -141,8 +141,8 @@ const valueTests = [
     async action(browser) {
       await invokeFocus(browser, "range");
       await invokeContentTask(browser, [], () => {
-        const { ContentTaskUtils } = ChromeUtils.import(
-          "resource://testing-common/ContentTaskUtils.jsm"
+        const { ContentTaskUtils } = ChromeUtils.importESModule(
+          "resource://testing-common/ContentTaskUtils.sys.mjs"
         );
         const EventUtils = ContentTaskUtils.getEventUtils(content);
         EventUtils.synthesizeKey("VK_LEFT", {}, content);
