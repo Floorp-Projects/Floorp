@@ -185,6 +185,10 @@ description[value]:is([crop="left"], [crop="start"]):-moz-locale-dir(rtl)::befor
 
 /********** toolbarbutton **********/
 
+toolbarbutton[crop] {
+  min-width: 0;
+}
+
 toolbar[mode="icons"] .toolbarbutton-text,
 toolbar[mode="text"] .toolbarbutton-icon,
 html|label.toolbarbutton-badge:empty {
