@@ -10,11 +10,9 @@ const { NormandyMigrations } = ChromeUtils.import(
 const { PromiseUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PromiseUtils.sys.mjs"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "TestUtils",
-  "resource://testing-common/TestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  TestUtils: "resource://testing-common/TestUtils.sys.mjs",
+});
 
 /* import-globals-from utils.js */
 load("utils.js");

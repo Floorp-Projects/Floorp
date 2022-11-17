@@ -10,8 +10,8 @@ const {
 } = ChromeUtils.importESModule(
   "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
 );
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 
 PoliciesPrefTracker.start();

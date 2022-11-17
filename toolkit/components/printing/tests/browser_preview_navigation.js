@@ -132,8 +132,8 @@ add_task(async function testPreviewScroll() {
     // scroll down the document
     // and verify the indicator is updated correctly
     await SpecialPowers.spawn(previewBrowser, [], async function() {
-      const { ContentTaskUtils } = ChromeUtils.import(
-        "resource://testing-common/ContentTaskUtils.jsm"
+      const { ContentTaskUtils } = ChromeUtils.importESModule(
+        "resource://testing-common/ContentTaskUtils.sys.mjs"
       );
       const EventUtils = ContentTaskUtils.getEventUtils(content);
       content.focus();

@@ -6,7 +6,7 @@
  * will fail tests in this case, unless the test explicitly allows rejections.
  */
 
-const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+import { Assert } from "resource://testing-common/Assert.sys.mjs";
 
 export var PromiseTestUtils = {
   /**

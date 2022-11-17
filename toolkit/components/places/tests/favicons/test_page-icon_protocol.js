@@ -8,8 +8,8 @@ const ICON_DATAURL =
 const TEST_URI = NetUtil.newURI("http://mozilla.org/");
 const ICON_URI = NetUtil.newURI("http://mozilla.org/favicon.ico");
 
-const { XPCShellContentUtils } = ChromeUtils.import(
-  "resource://testing-common/XPCShellContentUtils.jsm"
+const { XPCShellContentUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/XPCShellContentUtils.sys.mjs"
 );
 
 const PAGE_ICON_TEST_URLS = [

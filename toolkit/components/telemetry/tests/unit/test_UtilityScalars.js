@@ -5,8 +5,8 @@
 const { TelemetryController } = ChromeUtils.import(
   "resource://gre/modules/TelemetryController.jsm"
 );
-const { ContentTaskUtils } = ChromeUtils.import(
-  "resource://testing-common/ContentTaskUtils.jsm"
+const { ContentTaskUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/ContentTaskUtils.sys.mjs"
 );
 
 const UTILITY_ONLY_UINT_SCALAR = "telemetry.test.utility_only_uint";

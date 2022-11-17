@@ -61,8 +61,8 @@ add_task(async function test() {
       const fullscreenPromise = waitForFullScreenState(browser, true);
 
       await SpecialPowers.spawn(browser, [], async function() {
-        const { ContentTaskUtils } = ChromeUtils.import(
-          "resource://testing-common/ContentTaskUtils.jsm"
+        const { ContentTaskUtils } = ChromeUtils.importESModule(
+          "resource://testing-common/ContentTaskUtils.sys.mjs"
         );
         const EventUtils = ContentTaskUtils.getEventUtils(content);
         await EventUtils.synthesizeKey(

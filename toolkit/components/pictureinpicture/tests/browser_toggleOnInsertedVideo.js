@@ -28,8 +28,8 @@ add_task(async () => {
         }
 
         let newVideo = doc.createElement("video");
-        const { ContentTaskUtils } = ChromeUtils.import(
-          "resource://testing-common/ContentTaskUtils.jsm"
+        const { ContentTaskUtils } = ChromeUtils.importESModule(
+          "resource://testing-common/ContentTaskUtils.sys.mjs"
         );
         let ready = ContentTaskUtils.waitForEvent(newVideo, "canplay");
         newVideo.src = "test-video.mp4";

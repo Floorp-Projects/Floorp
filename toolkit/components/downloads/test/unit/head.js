@@ -23,19 +23,19 @@ ChromeUtils.defineESModuleGetters(this, {
   DownloadPaths: "resource://gre/modules/DownloadPaths.sys.mjs",
   Downloads: "resource://gre/modules/Downloads.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
+  FileTestUtils: "resource://testing-common/FileTestUtils.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  MockRegistrar: "resource://testing-common/MockRegistrar.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+  TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  FileTestUtils: "resource://testing-common/FileTestUtils.jsm",
   HttpServer: "resource://testing-common/httpd.js",
-  MockRegistrar: "resource://testing-common/MockRegistrar.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
-  TestUtils: "resource://testing-common/TestUtils.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

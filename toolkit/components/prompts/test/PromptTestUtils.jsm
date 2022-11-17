@@ -11,12 +11,12 @@
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { BrowserTestUtils } = ChromeUtils.import(
-  "resource://testing-common/BrowserTestUtils.jsm"
+const { BrowserTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/BrowserTestUtils.sys.mjs"
 );
 
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 
 const EXPORTED_SYMBOLS = ["PromptTestUtils"];

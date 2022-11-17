@@ -23,8 +23,8 @@ const { TelemetrySession } = ChromeUtils.import(
 );
 
 // Set up our dummy AppInfo object so we can control the appBuildID.
-const { getAppInfo, updateAppInfo } = ChromeUtils.import(
-  "resource://testing-common/AppInfo.jsm"
+const { getAppInfo, updateAppInfo } = ChromeUtils.importESModule(
+  "resource://testing-common/AppInfo.sys.mjs"
 );
 updateAppInfo();
 

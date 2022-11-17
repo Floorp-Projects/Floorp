@@ -17,8 +17,8 @@ const { Region } = ChromeUtils.importESModule(
   "resource://gre/modules/Region.sys.mjs"
 );
 
-const { updateAppInfo } = ChromeUtils.import(
-  "resource://testing-common/AppInfo.jsm"
+const { updateAppInfo } = ChromeUtils.importESModule(
+  "resource://testing-common/AppInfo.sys.mjs"
 );
 
 const { Preferences } = ChromeUtils.importESModule(

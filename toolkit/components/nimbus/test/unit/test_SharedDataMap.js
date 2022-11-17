@@ -1,11 +1,11 @@
 const { SharedDataMap } = ChromeUtils.import(
   "resource://nimbus/lib/SharedDataMap.jsm"
 );
-const { FileTestUtils } = ChromeUtils.import(
-  "resource://testing-common/FileTestUtils.jsm"
+const { FileTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/FileTestUtils.sys.mjs"
 );
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 
 const PATH = FileTestUtils.getTempFile("shared-data-map").path;

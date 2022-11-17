@@ -41,11 +41,11 @@ ChromeUtils.defineESModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
+  TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   NetUtil: "resource://gre/modules/NetUtil.jsm",
-  TestUtils: "resource://testing-common/TestUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "SMALLPNG_DATA_URI", function() {

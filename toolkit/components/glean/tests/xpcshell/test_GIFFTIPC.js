@@ -6,8 +6,8 @@
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
-const { ContentTaskUtils } = ChromeUtils.import(
-  "resource://testing-common/ContentTaskUtils.jsm"
+const { ContentTaskUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/ContentTaskUtils.sys.mjs"
 );
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"

@@ -20,9 +20,6 @@ const { ExperimentManager } = ChromeUtils.import(
 const { RemoteSettingsExperimentLoader } = ChromeUtils.import(
   "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
 );
-const { BrowserTestUtils } = ChromeUtils.import(
-  "resource://testing-common/BrowserTestUtils.jsm"
-);
 const { TelemetryEnvironment } = ChromeUtils.import(
   "resource://gre/modules/TelemetryEnvironment.jsm"
 );

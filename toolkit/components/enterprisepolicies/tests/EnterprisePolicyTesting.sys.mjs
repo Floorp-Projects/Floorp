@@ -4,13 +4,12 @@
 
 import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
 
-const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+import { Assert } from "resource://testing-common/Assert.sys.mjs";
+
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FileTestUtils",
-  "resource://testing-common/FileTestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  FileTestUtils: "resource://testing-common/FileTestUtils.sys.mjs",
+});
 
 export var EnterprisePolicyTesting = {
   // |json| must be an object representing the desired policy configuration, OR a

@@ -4,9 +4,6 @@ const { Preferences } = ChromeUtils.importESModule(
 const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
-);
 const { AboutPages } = ChromeUtils.import(
   "resource://normandy-content/AboutPages.jsm"
 );

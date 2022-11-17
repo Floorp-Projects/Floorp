@@ -4,8 +4,8 @@ const { clearInterval, setInterval, setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
 
-const { BrowserTestUtils } = ChromeUtils.import(
-  "resource://testing-common/BrowserTestUtils.jsm"
+const { BrowserTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/BrowserTestUtils.sys.mjs"
 );
 
 var tabSubDialogsEnabled = Services.prefs.getBoolPref(

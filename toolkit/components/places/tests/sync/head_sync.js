@@ -25,8 +25,8 @@ var { SyncedBookmarksMirror } = ChromeUtils.importESModule(
   "resource://gre/modules/SyncedBookmarksMirror.sys.mjs"
 );
 var { CommonUtils } = ChromeUtils.import("resource://services-common/utils.js");
-var { FileTestUtils } = ChromeUtils.import(
-  "resource://testing-common/FileTestUtils.jsm"
+var { FileTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/FileTestUtils.sys.mjs"
 );
 var {
   HTTP_400,

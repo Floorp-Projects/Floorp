@@ -8,8 +8,8 @@ const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { getCrashManagerNoCreate } = ChromeUtils.import(
   "resource://gre/modules/CrashManager.jsm"
 );
-const { makeFakeAppDir } = ChromeUtils.import(
-  "resource://testing-common/AppData.jsm"
+const { makeFakeAppDir } = ChromeUtils.importESModule(
+  "resource://testing-common/AppData.sys.mjs"
 );
 
 add_task(async function test_instantiation() {

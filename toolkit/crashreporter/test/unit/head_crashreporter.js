@@ -1,6 +1,6 @@
 var { OS, require } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { makeFakeAppDir } = ChromeUtils.import(
-  "resource://testing-common/AppData.jsm"
+const { makeFakeAppDir } = ChromeUtils.importESModule(
+  "resource://testing-common/AppData.sys.mjs"
 );
 var { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
