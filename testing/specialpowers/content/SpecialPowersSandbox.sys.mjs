@@ -10,8 +10,6 @@
  * results back to the caller.
  */
 
-var EXPORTED_SYMBOLS = ["SpecialPowersSandbox"];
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -45,7 +43,7 @@ function expectingFail(fn) {
   }
 }
 
-class SpecialPowersSandbox {
+export class SpecialPowersSandbox {
   constructor(name, reportCallback, opts = {}) {
     this.name = name;
     this.reportCallback = reportCallback;

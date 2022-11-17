@@ -32,7 +32,7 @@ FINAL_TARGET_FILES.content += [
     "redirect.html",
     "server.js",
     "shutdown-leaks-collector.js",
-    "ShutdownLeaksCollector.jsm",
+    "ShutdownLeaksCollector.sys.mjs",
 ]
 
 FINAL_TARGET_FILES.content.dynamic += [

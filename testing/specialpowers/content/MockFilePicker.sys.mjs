@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["MockFilePicker"];
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -20,8 +18,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
 });
 
-/* globals __URI__ */
-if (__URI__.includes("specialpowers")) {
+if (import.meta.url.includes("specialpowers")) {
   Cu.crashIfNotInAutomation();
 }
 
@@ -37,7 +34,7 @@ var newFactory = function(window) {
   };
 };
 
-var MockFilePicker = {
+export var MockFilePicker = {
   returnOK: Ci.nsIFilePicker.returnOK,
   returnCancel: Ci.nsIFilePicker.returnCancel,
   returnReplace: Ci.nsIFilePicker.returnReplace,

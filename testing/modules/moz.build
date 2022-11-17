@@ -8,22 +8,22 @@ XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 
 TESTING_JS_MODULES += [
-    "AppData.jsm",
-    "AppInfo.jsm",
-    "Assert.jsm",
-    "CoverageUtils.jsm",
-    "FileTestUtils.jsm",
-    "MockRegistrar.jsm",
+    "AppData.sys.mjs",
+    "AppInfo.sys.mjs",
+    "Assert.sys.mjs",
+    "CoverageUtils.sys.mjs",
+    "FileTestUtils.sys.mjs",
+    "MockRegistrar.sys.mjs",
     "sinon-7.2.7.js",
     "Sinon.jsm",
     "StructuredLog.jsm",
-    "TestUtils.jsm",
-    "XPCShellContentUtils.jsm",
+    "TestUtils.sys.mjs",
+    "XPCShellContentUtils.sys.mjs",
 ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     TESTING_JS_MODULES += [
-        "MockRegistry.jsm",
+        "MockRegistry.sys.mjs",
     ]
 
 

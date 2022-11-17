@@ -142,7 +142,7 @@ For operations that are common to a specific set of tests, you can use the `head
 file to share JS code.
 
 Where code is needed across various directories of tests, you should consider if it's
-common enough to warrant being in `BrowserTestUtils.jsm`, or if not, setting up
+common enough to warrant being in `BrowserTestUtils.sys.mjs`, or if not, setting up
 a separate `jsm` module containing your test helpers. You can add these to
 `TESTING_JS_MODULES` in `moz.build` to avoid packaging them with Firefox. They
 will be available in `resource://testing-common/` to all tests.

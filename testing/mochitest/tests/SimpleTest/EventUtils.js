@@ -1284,8 +1284,8 @@ function synthesizeAndWaitNativeMouseMove(
 ) {
   let browser = gBrowser.selectedTab.linkedBrowser;
   let mm = browser.messageManager;
-  let { ContentTask } = _EU_ChromeUtils.import(
-    "resource://testing-common/ContentTask.jsm"
+  let { ContentTask } = _EU_ChromeUtils.importESModule(
+    "resource://testing-common/ContentTask.sys.mjs"
   );
 
   let eventRegisteredPromise = new Promise(resolve => {
@@ -1436,8 +1436,8 @@ function synthesizeAndWaitKey(
   let mm = browser.messageManager;
   let keyCode = _createKeyboardEventDictionary(aKey, aEvent, null, aWindow)
     .dictionary.keyCode;
-  let { ContentTask } = _EU_ChromeUtils.import(
-    "resource://testing-common/ContentTask.jsm"
+  let { ContentTask } = _EU_ChromeUtils.importESModule(
+    "resource://testing-common/ContentTask.sys.mjs"
   );
 
   let keyRegisteredPromise = new Promise(resolve => {

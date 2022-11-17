@@ -33,23 +33,23 @@ this.specialpowers = class extends ExtensionAPI {
       allFrames: true,
       includeChrome: true,
       child: {
-        moduleURI: "resource://specialpowers/SpecialPowersChild.jsm",
+        esModuleURI: "resource://specialpowers/SpecialPowersChild.sys.mjs",
         observers: [
           "chrome-document-global-created",
           "content-document-global-created",
         ],
       },
       parent: {
-        moduleURI: "resource://specialpowers/SpecialPowersParent.jsm",
+        esModuleURI: "resource://specialpowers/SpecialPowersParent.sys.mjs",
       },
     });
 
     ChromeUtils.registerWindowActor("AppTestDelegate", {
       parent: {
-        moduleURI: "resource://specialpowers/AppTestDelegateParent.jsm",
+        esModuleURI: "resource://specialpowers/AppTestDelegateParent.sys.mjs",
       },
       child: {
-        moduleURI: "resource://specialpowers/AppTestDelegateChild.jsm",
+        esModuleURI: "resource://specialpowers/AppTestDelegateChild.sys.mjs",
         events: {
           DOMContentLoaded: { capture: true },
           load: { capture: true },

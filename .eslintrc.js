@@ -1920,7 +1920,6 @@ module.exports = {
         "security/manager/ssl/tests/mochitest/mixedcontent/test_dynUnsecurePicture.html",
         "security/manager/ssl/tests/mochitest/mixedcontent/test_dynUnsecurePicturePreload.html",
         "security/sandbox/test/browser_bug1393259.js",
-        "testing/mochitest/BrowserTestUtils/BrowserTestUtils.jsm ",
         "testing/mochitest/chrome/test_sanityEventUtils.xhtml",
         "testing/mochitest/server.js",
         "testing/mochitest/tests/Harness_sanity/test_SpecialPowersExtension.html",

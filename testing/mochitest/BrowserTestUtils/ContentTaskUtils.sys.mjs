@@ -14,15 +14,9 @@
 
 /* eslint-disable mozilla/use-ownerGlobal */
 
-"use strict";
+import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["ContentTaskUtils"];
-
-const { setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
-
-var ContentTaskUtils = {
+export var ContentTaskUtils = {
   /**
    * Checks if a DOM element is hidden.
    *
@@ -181,6 +175,7 @@ var ContentTaskUtils = {
     let EventUtils = (content._EventUtils = {});
 
     EventUtils.window = {};
+    EventUtils.setTimeout = setTimeout;
     EventUtils.parent = EventUtils.window;
     /* eslint-disable camelcase */
     EventUtils._EU_Ci = Ci;

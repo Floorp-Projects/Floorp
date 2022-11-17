@@ -295,7 +295,6 @@ function test_cross_iframe_contentDocument_no_allow() {
   ifr.setAttribute("src", "https://example.org/tests/dom/security/featurePolicy/test/mochitest/empty.html");
   ifr.onload = async function() {
     await SpecialPowers.spawn(ifr, [], () => {
-      /* import-globals-from ../../../../../testing/modules/Assert.jsm */
       Assert.ok("featurePolicy" in this.content.document, "We have this.content.document.featurePolicy");
 
       Assert.ok(!this.content.document.featurePolicy.allowsFeature("foobar"), "Random feature");

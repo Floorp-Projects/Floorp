@@ -1,10 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["AppTestDelegate"];
-
 class Delegate {
   actor(window) {
     return window.windowGlobalChild.getActor("AppTestDelegate");
@@ -53,4 +49,4 @@ class Delegate {
   }
 }
 
-var AppTestDelegate = new Delegate();
+export var AppTestDelegate = new Delegate();

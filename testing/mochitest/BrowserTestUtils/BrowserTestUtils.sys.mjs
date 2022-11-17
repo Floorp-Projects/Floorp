@@ -12,19 +12,13 @@
 // This file uses ContentTask & frame scripts, where these are available.
 /* global ContentTaskUtils */
 
-"use strict";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["BrowserTestUtils"];
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
 const { ComponentUtils } = ChromeUtils.import(
   "resource://gre/modules/ComponentUtils.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
@@ -82,10 +76,10 @@ const kAboutPageRegistrationContentScript =
 function registerActors() {
   ChromeUtils.registerWindowActor("BrowserTestUtils", {
     parent: {
-      moduleURI: "resource://testing-common/BrowserTestUtilsParent.jsm",
+      esModuleURI: "resource://testing-common/BrowserTestUtilsParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource://testing-common/BrowserTestUtilsChild.jsm",
+      esModuleURI: "resource://testing-common/BrowserTestUtilsChild.sys.mjs",
       events: {
         DOMContentLoaded: { capture: true },
         load: { capture: true },
@@ -97,10 +91,12 @@ function registerActors() {
 
   ChromeUtils.registerWindowActor("ContentEventListener", {
     parent: {
-      moduleURI: "resource://testing-common/ContentEventListenerParent.jsm",
+      esModuleURI:
+        "resource://testing-common/ContentEventListenerParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource://testing-common/ContentEventListenerChild.jsm",
+      esModuleURI:
+        "resource://testing-common/ContentEventListenerChild.sys.mjs",
       events: {
         // We need to see the creation of all new windows, in case they have
         // a browsing context we are interested in.
@@ -122,7 +118,7 @@ registerActors();
  *
  * @class
  */
-var BrowserTestUtils = {
+export var BrowserTestUtils = {
   /**
    * Loads a page in a new tab, executes a Task and closes the tab.
    *

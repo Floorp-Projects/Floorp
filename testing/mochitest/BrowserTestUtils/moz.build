@@ -5,12 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TESTING_JS_MODULES += [
-    "BrowserTestUtils.jsm",
-    "BrowserTestUtilsChild.jsm",
-    "BrowserTestUtilsParent.jsm",
+    "BrowserTestUtils.sys.mjs",
+    "BrowserTestUtilsChild.sys.mjs",
+    "BrowserTestUtilsParent.sys.mjs",
     "content/content-task.js",
-    "ContentEventListenerChild.jsm",
-    "ContentEventListenerParent.jsm",
-    "ContentTask.jsm",
-    "ContentTaskUtils.jsm",
+    "ContentEventListenerChild.sys.mjs",
+    "ContentEventListenerParent.sys.mjs",
+    "ContentTask.sys.mjs",
+    "ContentTaskUtils.sys.mjs",
 ]
