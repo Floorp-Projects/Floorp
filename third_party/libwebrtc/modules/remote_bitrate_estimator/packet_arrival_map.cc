@@ -19,6 +19,7 @@ constexpr size_t PacketArrivalTimeMap::kMaxNumberOfPackets;
 
 void PacketArrivalTimeMap::AddPacket(int64_t sequence_number,
                                      Timestamp arrival_time) {
+  RTC_DCHECK_GE(arrival_time, Timestamp::Zero());
   if (!has_seen_packet_) {
     // First packet.
     has_seen_packet_ = true;
@@ -45,7 +46,7 @@ void PacketArrivalTimeMap::AddPacket(int64_t sequence_number,
     }
 
     arrival_times_.insert(arrival_times_.begin(), missing_packets,
-                          Timestamp::Zero());
+                          Timestamp::MinusInfinity());
     arrival_times_[0] = arrival_time;
     begin_sequence_number_ = sequence_number;
     return;
@@ -64,7 +65,7 @@ void PacketArrivalTimeMap::AddPacket(int64_t sequence_number,
       // Also trim the buffer to remove leading non-received packets, to
       // ensure that the buffer only spans received packets.
       while (packets_to_remove < arrival_times_.size() &&
-             arrival_times_[packets_to_remove] == Timestamp::Zero()) {
+             arrival_times_[packets_to_remove].IsInfinite()) {
         ++packets_to_remove;
       }
 
@@ -81,7 +82,7 @@ void PacketArrivalTimeMap::AddPacket(int64_t sequence_number,
   size_t missing_gap_packets = pos - arrival_times_.size();
   if (missing_gap_packets > 0) {
     arrival_times_.insert(arrival_times_.end(), missing_gap_packets,
-                          Timestamp::Zero());
+                          Timestamp::MinusInfinity());
   }
   RTC_DCHECK_EQ(arrival_times_.size(), pos);
   arrival_times_.push_back(arrival_time);
@@ -100,7 +101,7 @@ void PacketArrivalTimeMap::RemoveOldPackets(int64_t sequence_number,
 bool PacketArrivalTimeMap::has_received(int64_t sequence_number) const {
   int64_t pos = sequence_number - begin_sequence_number_;
   if (pos >= 0 && pos < static_cast<int64_t>(arrival_times_.size()) &&
-      arrival_times_[pos] != Timestamp::Zero()) {
+      arrival_times_[pos].IsFinite()) {
     return true;
   }
   return false;
