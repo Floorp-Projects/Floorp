@@ -32,54 +32,6 @@ namespace webrtc {
 namespace {
 using TimeScopedNetworkConfig = DegradedCall::TimeScopedNetworkConfig;
 
-bool ParseConfigParam(const FieldTrialsView& trials,
-                      absl::string_view exp_name,
-                      int* field) {
-  std::string group = trials.Lookup(exp_name);
-  if (group.empty())
-    return false;
-
-  return (sscanf(group.c_str(), "%d", field) == 1);
-}
-
-absl::optional<TimeScopedNetworkConfig> ParseDegradationConfig(
-    const FieldTrialsView& trials,
-    bool send) {
-  std::string exp_prefix = "WebRTCFakeNetwork";
-  if (send) {
-    exp_prefix += "Send";
-  } else {
-    exp_prefix += "Receive";
-  }
-
-  TimeScopedNetworkConfig config;
-  bool configured = false;
-  configured |=
-      ParseConfigParam(trials, exp_prefix + "DelayMs", &config.queue_delay_ms);
-  configured |= ParseConfigParam(trials, exp_prefix + "DelayStdDevMs",
-                                 &config.delay_standard_deviation_ms);
-  int queue_length = 0;
-  if (ParseConfigParam(trials, exp_prefix + "QueueLength", &queue_length)) {
-    RTC_CHECK_GE(queue_length, 0);
-    config.queue_length_packets = queue_length;
-    configured = true;
-  }
-  configured |= ParseConfigParam(trials, exp_prefix + "CapacityKbps",
-                                 &config.link_capacity_kbps);
-  configured |= ParseConfigParam(trials, exp_prefix + "LossPercent",
-                                 &config.loss_percent);
-  int allow_reordering = 0;
-  if (ParseConfigParam(trials, exp_prefix + "AllowReordering",
-                       &allow_reordering)) {
-    config.allow_reordering = true;
-    configured = true;
-  }
-  configured |= ParseConfigParam(trials, exp_prefix + "AvgBurstLossLength",
-                                 &config.avg_burst_loss_length);
-  return configured ? absl::optional<TimeScopedNetworkConfig>(config)
-                    : absl::nullopt;
-}
-
 std::vector<TimeScopedNetworkConfig> GetNetworkConfigs(
     const FieldTrialsView& trials,
     bool send) {
@@ -126,16 +78,7 @@ std::vector<TimeScopedNetworkConfig> GetNetworkConfigs(
   ParseFieldTrial({&trials_list},
                   trials.Lookup(send ? "WebRTC-FakeNetworkSendConfig"
                                      : "WebRTC-FakeNetworkReceiveConfig"));
-  std::vector<TimeScopedNetworkConfig> configs = trials_list.Get();
-  if (configs.empty()) {
-    // Try legacy fallback trials.
-    absl::optional<DegradedCall::TimeScopedNetworkConfig> fallback_config =
-        ParseDegradationConfig(trials, send);
-    if (fallback_config.has_value()) {
-      configs.push_back(*fallback_config);
-    }
-  }
-  return configs;
+  return trials_list.Get();
 }
 
 }  // namespace
