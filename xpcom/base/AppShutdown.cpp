@@ -315,6 +315,7 @@ bool AppShutdown::IsRestarting() {
 
 #ifdef DEBUG
 static bool sNotifyingShutdownObservers = false;
+static bool sAdvancingShutdownPhase = false;
 
 bool AppShutdown::IsNoOrLegalShutdownTopic(const char* aTopic) {
   if (!XRE_IsParentProcess()) {
@@ -332,6 +333,12 @@ void AppShutdown::AdvanceShutdownPhaseInternal(
     ShutdownPhase aPhase, bool doNotify, const char16_t* aNotificationData,
     const nsCOMPtr<nsISupports>& aNotificationSubject) {
   AssertIsOnMainThread();
+#ifdef DEBUG
+  // Prevent us from re-entrance
+  MOZ_ASSERT(!sAdvancingShutdownPhase);
+  sAdvancingShutdownPhase = true;
+  auto exit = MakeScopeExit([] { sAdvancingShutdownPhase = false; });
+#endif
 
   // We ensure that we can move only forward. We cannot
   // MOZ_ASSERT here as there are some tests that fire
