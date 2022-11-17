@@ -1002,10 +1002,7 @@ TEST_F(VideoSendStreamImplTest, ConfiguresBitratesForSvc) {
               using_alr
                   ? stream.min_bitrate_bps
                   : static_cast<int>(stream.target_bitrate_bps *
-                                     trials.GetSimulcastHysteresisFactor(
-                                         test_config.screenshare
-                                             ? VideoCodecMode::kScreensharing
-                                             : VideoCodecMode::kRealtimeVideo));
+                                     (test_config.screenshare ? 1.35 : 1.2));
           // Min padding bitrate may override padding target.
           expected_padding =
               std::max(expected_padding, test_config.min_padding_bitrate_bps);
