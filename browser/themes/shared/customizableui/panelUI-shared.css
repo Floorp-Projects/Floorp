@@ -132,6 +132,7 @@
   filter: grayscale(100%);
 }
 
+#BMB_bookmarksPopup menupopup,
 .cui-widget-panel,
 #widget-overflow,
 #unified-extensions-panel {
@@ -210,109 +211,40 @@ toolbarseparator + .panel-subview-body {
   margin: var(--arrowpanel-menuitem-margin);
 }
 
-/* Bookmark-related menupopup tweaks to make them feel like standard panels */
+#BMB_bookmarksPopup {
+  max-width: 30em;
+}
 
-toolbarbutton menupopup[placespopup] {
+#BMB_bookmarksPopup menupopup {
   appearance: none;
-  border: none;
-  font: menu;
   background-color: transparent;
   --panel-background: var(--arrowpanel-background);
   --panel-color: var(--arrowpanel-color);
   --panel-border-color: var(--arrowpanel-border-color);
   --panel-border-radius: var(--arrowpanel-border-radius);
   --panel-padding: var(--panel-subview-body-padding);
-  --nested-margin: calc(-1 * (var(--arrowpanel-menuitem-padding-inline) + var(--panel-shadow-margin)));
 }
 
-toolbarbutton menupopup[placespopup] menupopup[placespopup] {
-  /* Align non top-level menupopup's first menuitem with the menuitem that opened it.
-   * The 1px is for the menupopup's border. */
-  margin-top: calc(-1 * (var(--panel-subview-body-padding-block) + var(--panel-shadow-margin) + 1px));
+#BMB_bookmarksPopup .subviewbutton {
+  padding: var(--arrowpanel-menuitem-padding);
 }
 
-toolbarbutton menupopup[placespopup] > :is(menu, menuitem)[disabled] {
-  color: var(--panel-disabled-color);
-}
-
-toolbarbutton menupopup[placespopup] > :is(menu, menuitem):not([disabled])[_moz-menuactive] {
-  color: inherit;
-  background-color: var(--panel-item-hover-bgcolor);
-}
-
-toolbarbutton menupopup[placespopup] > :is(menu, menuitem):not([disabled])[_moz-menuactive]:active {
-  color: inherit;
-  background-color: var(--panel-item-active-bgcolor);
-}
-
-toolbarbutton menupopup[placespopup] > :is(menu, menuitem) :is(
-  .menu-text,
-  .menu-iconic-text,
-  .menu-iconic-icon,
-  .menu-iconic-left,
-  .menu-iconic-accel,
-  .menu-accel-container,
-  .menu-accel,
-  .menu-right
-) {
-  /* Reset every spacing and appearance set by the platforms' menu.css
-   * and set the ones we need in the following rules. */
-  margin: 0 !important;
-  padding: 0 !important;
-  appearance: none !important;
-}
-
-toolbarbutton menupopup[placespopup] > :is(.menu-iconic, .menuitem-iconic) > .menu-iconic-left {
-  margin-inline-end: 8px !important;
-}
-
-toolbarbutton menupopup[placespopup] > :is(menu, menuitem) > .menu-accel-container > :is(.menu-accel, .menu-iconic-accel) {
-  margin-inline-start: 16px !important;
-  color: var(--panel-shortcut-color);
-}
-
-toolbarbutton menupopup[placespopup][emptyplacesresult] > menuitem > .menu-accel-container > .menu-accel {
-  margin: 0 !important;
-}
-
-toolbarbutton menupopup[placespopup] > menu > .menu-right {
-  list-style-image: url(chrome://global/skin/icons/arrow-right.svg);
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  fill-opacity: 0.6;
-  width: unset;
-  height: unset;
-  /* Reset the rect we inherit from the button */
-  -moz-image-region: auto;
-}
-
-toolbarbutton menupopup[placespopup] > menu > .menu-right:-moz-locale-dir(rtl) {
-  list-style-image: url(chrome://global/skin/icons/arrow-left.svg);
-}
-
-/* menuseparators in bookmark-related menupopups are styled differently
- * to allow for user interaction with them (e.g. drag, right click ...) */
-toolbarbutton menupopup[placespopup] menuseparator {
-  position: relative;
+#PlacesToolbar menupopup {
   appearance: none;
-  border: none;
-  min-height: 0;
-  margin: 0 var(--panel-separator-margin-horizontal);
-  padding-inline: 0;
-  padding-top: var(--panel-separator-margin-vertical);
-  padding-bottom: calc(var(--panel-separator-margin-vertical) + 1px);
+  --panel-background: var(--arrowpanel-background);
+  font: menu;
 }
 
-toolbarbutton menupopup[placespopup] menuseparator::before {
-  content: '';
-  position: absolute;
-  width: 100%;
-  border-top: 1px solid var(--panel-separator-color);
-  border-bottom: none;
+#PlacesToolbar menupopup[placespopup=true]::part(content),
+#PlacesToolbar menupopup[placespopup=true]::part(arrowscrollbox),
+#PlacesToolbar menupopup {
+  border-radius: var(--arrowpanel-border-radius);
 }
 
-#BMB_bookmarksPopup {
-  max-width: 30em;
+#PlacesToolbar menupopup[placespopup=true]::part(arrowscrollbox) {
+  padding: var(--panel-subview-body-padding);
+  background: var(--arrowpanel-background) !important;
+  color: var(--arrowpanel-color) !important;
 }
 
 #confirmation-hint {
@@ -963,7 +895,8 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   display: none;
 }
 
-toolbarbutton menupopup[placespopup] > :is(menu, menuitem),
+#PlacesToolbar menuitem,
+#PlacesToolbar menu,
 .subview-subheader,
 panelview .toolbarbutton-1,
 .subviewbutton,
@@ -993,12 +926,47 @@ panelview .toolbarbutton-1,
   color: var(--panel-disabled-color);
 }
 
+#PlacesToolbar menu > .menu-right,
+.subviewbutton > .menu-right {
+  appearance: none;
+  list-style-image: url(chrome://global/skin/icons/arrow-right.svg);
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.6;
+  width: unset;
+  height: unset;
+  /* Reset the rect we inherit from the button */
+  -moz-image-region: auto;
+}
+
+#PlacesToolbar menu > .menu-right {
+  margin-inline-end: 0;
+}
+
+#PlacesToolbar menu > .menu-right:-moz-locale-dir(rtl),
+.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
+  list-style-image: url(chrome://global/skin/icons/arrow-left.svg);
+}
+
+
+#PlacesToolbar menu > .menu-right,
+#PlacesToolbar menu > .menu-iconic-left,
+.subviewbutton > .menu-right,
+.subviewbutton > .menu-accel-container > .menu-iconic-accel,
+.subviewbutton > .menu-iconic-left,
+.subviewbutton > .menu-iconic-text {
+  padding-block: 0;
+}
+
+#BMB_bookmarksPopup .subviewbutton > .menu-iconic-text,
+#PlacesToolbar menu > .menu-iconic-text,
+#PlacesToolbar menuitem > .menu-iconic-text,
 .subviewbutton-iconic > .toolbarbutton-text,
 .subviewbutton[image] > .toolbarbutton-text,
 .subviewbutton[targetURI] > .toolbarbutton-text,
 .subviewbutton.bookmark-item > .toolbarbutton-text,
 .subviewbutton[checked="true"] > .toolbarbutton-text {
-  padding-inline-start: 8px;
+  padding-inline-start: 8px; /* See '.subviewbutton-iconic > .toolbarbutton-text' rule above. */
 }
 
 .subviewbutton-iconic > .toolbarbutton-icon {
@@ -1098,6 +1066,17 @@ panelview .toolbarbutton-1,
   /* Set the footer's bottom margin according to menuitems inline margin
      to make sure the footer's margin is even from all sides. */
   margin-bottom: var(--arrowpanel-menuitem-margin-inline);
+}
+
+.subviewbutton > .menu-text {
+  appearance: none;
+  padding-inline-start: 0 !important; /* to override menu.css on Windows */
+}
+
+.subviewbutton > .menu-accel-container > .menu-iconic-accel,
+.subviewbutton > .menu-accel-container > .menu-accel {
+  margin-inline-end: 0 !important; /* to override menu.css on Windows */
+  color: var(--panel-shortcut-color);
 }
 
 .subviewbutton[shortcut]::after {
@@ -1257,6 +1236,48 @@ panelview .toolbarbutton-1 {
   box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
 
+:is(
+  menu.subviewbutton,
+  #PlacesToolbar menuitem,
+  #PlacesToolbar menu,
+  menuitem.subviewbutton
+):not([disabled])[_moz-menuactive] {
+  color: inherit;
+  background-color: var(--panel-item-hover-bgcolor);
+}
+
+:is(
+  menu.subviewbutton,
+  #PlacesToolbar menuitem,
+  #PlacesToolbar menu,
+  menuitem.subviewbutton
+):not([disabled])[_moz-menuactive]:active {
+  color: inherit;
+  background-color: var(--panel-item-active-bgcolor);
+  box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
+}
+
+#PlacesToolbar menuitem,
+#PlacesToolbar menu {
+  color: var(--arrowpanel-color);
+}
+
+#PlacesToolbar menuitem[disabled=true],
+#PlacesToolbar menu[disabled=true] {
+  color: var(--panel-disabled-color);
+}
+
+#BMB_bookmarksPopup .subviewbutton:not([disabled="true"]) {
+  color: inherit;
+}
+
+/* Disabled (empty) item is always alone and never has an icon, so fix its left padding */
+#BMB_bookmarksPopup menupopup[emptyplacesresult] .bookmark-item.subviewbutton {
+  padding-left: 6px;
+}
+
+.PanelUI-subView menuseparator,
+#PlacesToolbar menupopup[placespopup=true] toolbarseparator,
 #widget-overflow-mainView > toolbarseparator,
 #widget-overflow-mainView > .panel-subview-body > toolbarseparator,
 .PanelUI-subView toolbarseparator,
@@ -1264,6 +1285,7 @@ panelview .toolbarbutton-1 {
 #permission-popup-mainView > toolbarseparator,
 #editBookmarkPanel toolbarseparator,
 #downloadsFooterButtons > toolbarseparator,
+.cui-widget-panelview menuseparator,
 .cui-widget-panel toolbarseparator {
   appearance: none;
   min-height: 0;
@@ -1273,8 +1295,41 @@ panelview .toolbarbutton-1 {
   padding: 0;
 }
 
+/* Styled differently to allow for user interaction with menu separator */
+#PlacesToolbar menupopup[placespopup="true"] menuseparator {
+  position: relative;
+  appearance: none;
+  border: none;
+  min-height: 0;
+  margin: 0 var(--panel-separator-margin-horizontal);
+  padding-inline: 0;
+  padding-top: var(--panel-separator-margin-vertical);
+  padding-bottom: calc(var(--panel-separator-margin-vertical) + 1px);
+}
+
+#PlacesToolbar menupopup[placespopup="true"] menuseparator::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  border-top: 1px solid var(--panel-separator-color);
+  border-bottom: none;
+}
+
 .PanelUI-subView toolbarseparator.proton-zap {
   border-image: var(--panel-separator-zap-gradient, none) 1;
+}
+
+.PanelUI-subView toolbarseparator.small-separator {
+  margin-inline: 5px;
+}
+
+.cui-widget-panelview menuseparator.small-separator {
+  margin-inline: 10px;
+}
+
+.subviewbutton > .menu-accel-container {
+  -moz-box-pack: end;
+  margin-inline: 10px auto;
 }
 
 .PanelUI-remotetabs-clientcontainer > toolbarbutton[itemtype="tab"],
@@ -1393,6 +1448,13 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 .widget-overflow-list .toolbarbutton-1:not(.toolbarbutton-combined) > .toolbarbutton-text {
   text-align: start;
   padding-inline-start: .5em;
+}
+
+#PlacesToolbar menu > .menu-iconic-left,
+#PlacesToolbar menuitem > .menu-iconic-left,
+.subviewbutton > .menu-iconic-left {
+  appearance: none;
+  margin-inline-end: 0;
 }
 
 #PanelUI-panicView > .panel-subview-body,

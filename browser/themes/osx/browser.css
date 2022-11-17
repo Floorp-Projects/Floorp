@@ -170,6 +170,19 @@
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.svg");
 }
 
+#PlacesToolbar menupopup[placespopup=true]::part(content) {
+  border: 1px solid var(--arrowpanel-border-color) !important;
+}
+
+#PlacesToolbar menupopup > menu .menu-iconic-icon,
+#PlacesToolbar menupopup > menuitem .menu-iconic-icon {
+  margin-inline-end: 0;
+}
+
+#PlacesToolbar menu menupopup {
+  margin-top: -8px;
+}
+
 /* Inactive elements are faded out on OSX */
 .toolbarbutton-1:not(:hover):-moz-window-inactive,
 .bookmark-item:not(:hover):-moz-window-inactive,

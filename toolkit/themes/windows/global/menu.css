@@ -45,17 +45,17 @@ menucaption {
   }
 }
 
-menu:where([disabled="true"]),
-menuitem:where([disabled="true"]),
-menu:where([_moz-menuactive="true"][disabled="true"]),
-menuitem:where([_moz-menuactive="true"][disabled="true"]) {
+menu[disabled="true"],
+menuitem[disabled="true"],
+menu[_moz-menuactive="true"][disabled="true"],
+menuitem[_moz-menuactive="true"][disabled="true"] {
   color: GrayText;
   text-shadow: none;
 }
 
 @media (-moz-windows-non-native-menus) {
-  menu:where([_moz-menuactive="true"][disabled="true"]),
-  menuitem:where([_moz-menuactive="true"][disabled="true"]) {
+  menu[_moz-menuactive="true"][disabled="true"],
+  menuitem[_moz-menuactive="true"][disabled="true"] {
     background-color: -moz-menuhoverdisabled;
   }
 }
@@ -220,8 +220,8 @@ menupopup > menucaption {
   max-width: 42em;
 }
 
-menu:where([_moz-menuactive="true"]:not([disabled="true"])),
-menuitem:where([_moz-menuactive="true"]:not([disabled="true"])) {
+menu[_moz-menuactive="true"],
+menuitem[_moz-menuactive="true"] {
   background-color: -moz-menuhover;
   color: -moz-menuhovertext;
 }

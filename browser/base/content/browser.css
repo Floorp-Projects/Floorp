@@ -1076,6 +1076,18 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
   display: none;
 }
 
+/* Give these menupopups an arrow panel styling */
+#BMB_bookmarksPopup,
+#PlacesToolbar menupopup {
+  background: transparent;
+  border: none;
+}
+
+#BMB_bookmarksPopup,
+#BMB_bookmarksPopup menupopup {
+  appearance: none;
+}
+
 @media (-moz-panel-animations) and (prefers-reduced-motion: no-preference) {
 @media (-moz-platform: macos) {
   /* On Mac, use the properties "-moz-window-transform" and "-moz-window-opacity"

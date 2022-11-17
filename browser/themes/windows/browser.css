@@ -285,6 +285,10 @@ menuitem.bookmark-item {
   margin-block: 0;
 }
 
+.bookmark-item > .menu-iconic-left > .menu-iconic-icon {
+  padding-inline-start: 0;
+}
+
 .bookmark-item[cutting] > .toolbarbutton-icon,
 .bookmark-item[cutting] > .menu-iconic-left > .menu-iconic-icon {
   opacity: 0.5;
@@ -389,6 +393,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 #panelMenu_bookmarksToolbar {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.svg");
   -moz-image-region: auto;
+}
+
+#PlacesToolbar menu menupopup {
+  margin-top: -13px;
 }
 
 /* Status panel */
