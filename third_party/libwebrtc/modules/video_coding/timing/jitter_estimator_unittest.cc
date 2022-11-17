@@ -12,6 +12,7 @@
 #include <stdint.h>
 
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "absl/types/optional.h"
@@ -19,7 +20,6 @@
 #include "api/units/data_size.h"
 #include "api/units/frequency.h"
 #include "api/units/time_delta.h"
-#include "rtc_base/experiments/jitter_upper_bound_experiment.h"
 #include "rtc_base/numerics/histogram_percentile_counter.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/time_utils.h"
@@ -96,45 +96,15 @@ TEST_F(TestJitterEstimator, TestLowRateDisabled) {
   }
 }
 
-TEST_F(TestJitterEstimator, TestUpperBound) {
-  struct TestContext {
-    TestContext()
-        : upper_bound(0.0),
-          rtt_mult(0),
-          rtt_mult_add_cap_ms(absl::nullopt),
-          percentiles(1000) {}
-    double upper_bound;
-    double rtt_mult;
-    absl::optional<TimeDelta> rtt_mult_add_cap_ms;
-    rtc::HistogramPercentileCounter percentiles;
-  };
-  std::vector<TestContext> test_cases(4);
+TEST_F(TestJitterEstimator, RttMultAddCap) {
+  std::vector<std::pair<TimeDelta, rtc::HistogramPercentileCounter>>
+      jitter_by_rtt_mult_cap;
+  jitter_by_rtt_mult_cap.emplace_back(
+      /*rtt_mult_add_cap=*/TimeDelta::Millis(10), /*long_tail_boundary=*/1000);
+  jitter_by_rtt_mult_cap.emplace_back(
+      /*rtt_mult_add_cap=*/TimeDelta::Millis(200), /*long_tail_boundary=*/1000);
 
-  // Large upper bound, rtt_mult = 0, and nullopt for rtt_mult addition cap.
-  test_cases[0].upper_bound = 100.0;
-  test_cases[0].rtt_mult = 0;
-  test_cases[0].rtt_mult_add_cap_ms = absl::nullopt;
-  // Small upper bound, rtt_mult = 0, and nullopt for rtt_mult addition cap.
-  test_cases[1].upper_bound = 3.5;
-  test_cases[1].rtt_mult = 0;
-  test_cases[1].rtt_mult_add_cap_ms = absl::nullopt;
-  // Large upper bound, rtt_mult = 1, and large rtt_mult addition cap value.
-  test_cases[2].upper_bound = 1000.0;
-  test_cases[2].rtt_mult = 1.0;
-  test_cases[2].rtt_mult_add_cap_ms = TimeDelta::Millis(200);
-  // Large upper bound, rtt_mult = 1, and small rtt_mult addition cap value.
-  test_cases[3].upper_bound = 1000.0;
-  test_cases[3].rtt_mult = 1.0;
-  test_cases[3].rtt_mult_add_cap_ms = TimeDelta::Millis(10);
-
-  // Test jitter buffer upper_bound and rtt_mult addition cap sizes.
-  for (TestContext& context : test_cases) {
-    // Set up field trial and reset jitter estimator.
-    char string_buf[64];
-    rtc::SimpleStringBuilder ssb(string_buf);
-    ssb << JitterUpperBoundExperiment::kJitterUpperBoundExperimentName
-        << "/Enabled-" << context.upper_bound << "/";
-    test::ScopedKeyValueConfig field_trials(field_trials_, ssb.str());
+  for (auto& [rtt_mult_add_cap, jitter] : jitter_by_rtt_mult_cap) {
     SetUp();
 
     ValueGenerator gen(50);
@@ -143,30 +113,18 @@ TEST_F(TestJitterEstimator, TestUpperBound) {
     for (int i = 0; i < 100; ++i) {
       estimator_->UpdateEstimate(gen.Delay(), gen.FrameSize());
       fake_clock_.AdvanceTime(time_delta);
-      estimator_->FrameNacked();    // To test rtt_mult.
-      estimator_->UpdateRtt(kRtt);  // To test rtt_mult.
-      context.percentiles.Add(
-          estimator_
-              ->GetJitterEstimate(context.rtt_mult, context.rtt_mult_add_cap_ms)
+      estimator_->FrameNacked();
+      estimator_->UpdateRtt(kRtt);
+      jitter.Add(
+          estimator_->GetJitterEstimate(/*rtt_mult=*/1.0, rtt_mult_add_cap)
               .ms());
       gen.Advance();
     }
   }
 
-  // Median should be similar after three seconds. Allow 5% error margin.
-  uint32_t median_unbound = *test_cases[0].percentiles.GetPercentile(0.5);
-  uint32_t median_bounded = *test_cases[1].percentiles.GetPercentile(0.5);
-  EXPECT_NEAR(median_unbound, median_bounded, (median_unbound * 5) / 100);
-
-  // Max should be lower for the bounded case.
-  uint32_t max_unbound = *test_cases[0].percentiles.GetPercentile(1.0);
-  uint32_t max_bounded = *test_cases[1].percentiles.GetPercentile(1.0);
-  EXPECT_GT(max_unbound, static_cast<uint32_t>(max_bounded * 1.25));
-
-  // With rtt_mult = 1, max should be lower with small rtt_mult add cap value.
-  max_unbound = *test_cases[2].percentiles.GetPercentile(1.0);
-  max_bounded = *test_cases[3].percentiles.GetPercentile(1.0);
-  EXPECT_GT(max_unbound, static_cast<uint32_t>(max_bounded * 1.25));
+  // 200ms cap should result in at least 25% higher max compared to 10ms.
+  EXPECT_GT(*jitter_by_rtt_mult_cap[1].second.GetPercentile(1.0),
+            *jitter_by_rtt_mult_cap[0].second.GetPercentile(1.0) * 1.25);
 }
 
 }  // namespace webrtc

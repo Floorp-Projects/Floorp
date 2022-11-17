@@ -23,7 +23,6 @@
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "modules/video_coding/timing/rtt_filter.h"
-#include "rtc_base/experiments/jitter_upper_bound_experiment.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "system_wrappers/include/clock.h"
 
@@ -53,9 +52,6 @@ JitterEstimator::JitterEstimator(Clock* clock,
                                  const FieldTrialsView& field_trials)
     : fps_counter_(30),  // TODO(sprang): Use an estimator with limit based on
                          // time, rather than number of samples.
-      time_deviation_upper_bound_(
-          JitterUpperBoundExperiment::GetUpperBoundSigmas().value_or(
-              kDefaultMaxTimestampDeviationInSigmas)),
       enable_reduced_delay_(
           !field_trials.IsEnabled("WebRTC-ReducedJitterDelayKillSwitch")),
       clock_(clock) {
@@ -133,8 +129,8 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
   prev_frame_size_ = frame_size;
 
   // Cap frame_delay based on the current time deviation noise.
-  TimeDelta max_time_deviation =
-      TimeDelta::Millis(time_deviation_upper_bound_ * sqrt(var_noise_) + 0.5);
+  TimeDelta max_time_deviation = TimeDelta::Millis(
+      kDefaultMaxTimestampDeviationInSigmas * sqrt(var_noise_) + 0.5);
   frame_delay.Clamp(-max_time_deviation, max_time_deviation);
 
   // Only update the Kalman filter if the sample is not considered an extreme
