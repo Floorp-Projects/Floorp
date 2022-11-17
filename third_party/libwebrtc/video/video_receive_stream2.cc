@@ -762,12 +762,6 @@ TimeDelta VideoReceiveStream2::GetMaxWait() const {
 }
 
 void VideoReceiveStream2::OnEncodedFrame(std::unique_ptr<EncodedFrame> frame) {
-  if (!decode_queue_.IsCurrent()) {
-    decode_queue_.PostTask([this, frame = std::move(frame)]() mutable {
-      OnEncodedFrame(std::move(frame));
-    });
-    return;
-  }
   RTC_DCHECK_RUN_ON(&decode_queue_);
   if (decoder_stopped_)
     return;
@@ -776,26 +770,24 @@ void VideoReceiveStream2::OnEncodedFrame(std::unique_ptr<EncodedFrame> frame) {
 }
 
 void VideoReceiveStream2::OnDecodableFrameTimeout(TimeDelta wait_time) {
-  if (!call_->worker_thread()->IsCurrent()) {
-    call_->worker_thread()->PostTask(
-        SafeTask(task_safety_.flag(),
-                 [this, wait_time] { OnDecodableFrameTimeout(wait_time); }));
-    return;
-  }
-
+  RTC_DCHECK_RUN_ON(&decode_queue_);
+  Timestamp now = clock_->CurrentTime();
   // TODO(bugs.webrtc.org/11993): PostTask to the network thread.
-  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-  HandleFrameBufferTimeout(clock_->CurrentTime(), wait_time);
+  call_->worker_thread()->PostTask(
+      SafeTask(task_safety_.flag(), [this, wait_time, now] {
+        RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+        HandleFrameBufferTimeout(now, wait_time);
 
-  decode_queue_.PostTask([this] {
-    RTC_DCHECK_RUN_ON(&decode_queue_);
-    frame_buffer_->StartNextDecode(keyframe_required_);
-  });
+        decode_queue_.PostTask([this] {
+          RTC_DCHECK_RUN_ON(&decode_queue_);
+          frame_buffer_->StartNextDecode(keyframe_required_);
+        });
+      }));
 }
 
+// RTC_RUN_ON(decode_queue_)
 void VideoReceiveStream2::HandleEncodedFrame(
     std::unique_ptr<EncodedFrame> frame) {
-  // Running on `decode_queue_`.
   Timestamp now = clock_->CurrentTime();
 
   // Current OnPreDecode only cares about QP for VP8.
