@@ -139,6 +139,36 @@ class _ASRouterPreferences {
     }
   }
 
+  /**
+   * Bug 1800087 - Migrate the ASRouter message provider prefs' values to the
+   * current format (provider.bucket -> provider.collection).
+   *
+   * TODO (Bug 1800937): Remove migration code after the next watershed release.
+   */
+  _migrateProviderPrefs() {
+    const prefList = Services.prefs.getChildList(this._providerPrefBranch);
+    for (const pref of prefList) {
+      if (!Services.prefs.prefHasUserValue(pref)) {
+        continue;
+      }
+      try {
+        let value = JSON.parse(Services.prefs.getStringPref(pref, ""));
+        if (value && "bucket" in value && !("collection" in value)) {
+          const { bucket, ...rest } = value;
+          Services.prefs.setStringPref(
+            pref,
+            JSON.stringify({
+              ...rest,
+              collection: bucket,
+            })
+          );
+        }
+      } catch (e) {
+        Services.prefs.clearUserPref(pref);
+      }
+    }
+  }
+
   get devtoolsEnabled() {
     if (!this._initialized || this._devtoolsEnabled === null) {
       this._devtoolsEnabled = Services.prefs.getBoolPref(
@@ -191,6 +221,7 @@ class _ASRouterPreferences {
     if (this._initialized) {
       return;
     }
+    this._migrateProviderPrefs();
     Services.prefs.addObserver(this._providerPrefBranch, this);
     Services.prefs.addObserver(this._devtoolsPref, this);
     for (const id of Object.keys(USER_PREFERENCES)) {

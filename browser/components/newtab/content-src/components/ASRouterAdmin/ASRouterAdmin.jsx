@@ -1229,7 +1229,7 @@ export class ASRouterAdminInner extends React.PureComponent {
                 </span>
               );
             } else if (provider.type === "remote-settings") {
-              label = `remote settings (${provider.bucket})`;
+              label = `remote settings (${provider.collection})`;
             } else if (provider.type === "remote-experiments") {
               label = (
                 <span>

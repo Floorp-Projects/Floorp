@@ -31,6 +31,10 @@ describe("ASRouterPreferences", () => {
   let addObserverStub;
   let stringPrefStub;
   let boolPrefStub;
+  let resetStub;
+  let hasUserValueStub;
+  let childListStub;
+  let setStringPrefStub;
 
   beforeEach(() => {
     ASRouterPreferences = new _ASRouterPreferences();
@@ -38,21 +42,28 @@ describe("ASRouterPreferences", () => {
     sandbox = sinon.createSandbox();
     addObserverStub = sandbox.stub(global.Services.prefs, "addObserver");
     stringPrefStub = sandbox.stub(global.Services.prefs, "getStringPref");
+    resetStub = sandbox.stub(global.Services.prefs, "clearUserPref");
+    setStringPrefStub = sandbox.stub(global.Services.prefs, "setStringPref");
     FAKE_PROVIDERS.forEach(provider => {
       stringPrefStub
         .withArgs(`${PROVIDER_PREF_BRANCH}${provider.id}`)
         .returns(JSON.stringify(provider));
     });
-    sandbox
-      .stub(global.Services.prefs, "getChildList")
-      .withArgs(PROVIDER_PREF_BRANCH)
-      .returns(
-        FAKE_PROVIDERS.map(provider => `${PROVIDER_PREF_BRANCH}${provider.id}`)
-      );
 
     boolPrefStub = sandbox
       .stub(global.Services.prefs, "getBoolPref")
       .returns(false);
+
+    hasUserValueStub = sandbox
+      .stub(global.Services.prefs, "prefHasUserValue")
+      .returns(false);
+
+    childListStub = sandbox.stub(global.Services.prefs, "getChildList");
+    childListStub
+      .withArgs(PROVIDER_PREF_BRANCH)
+      .returns(
+        FAKE_PROVIDERS.map(provider => `${PROVIDER_PREF_BRANCH}${provider.id}`)
+      );
   });
 
   afterEach(() => {
@@ -76,6 +87,114 @@ describe("ASRouterPreferences", () => {
     it("should set ._initialized to true", () => {
       ASRouterPreferences.init();
       assert.isTrue(ASRouterPreferences._initialized);
+    });
+    it("should migrate the provider prefs", () => {
+      ASRouterPreferences.uninit();
+      // Should be migrated because they contain bucket and not collection
+      const MIGRATE_PROVIDERS = [
+        { id: "baz", bucket: "buk" },
+        { id: "qux", bucket: "buk" },
+      ];
+      // Should be cleared to defaults because it throws on setStringPref
+      const ERROR_PROVIDER = { id: "err", bucket: "buk" };
+      // Should not be migrated because, although modified, it lacks bucket
+      const MODIFIED_SAFE_PROVIDER = { id: "safe" };
+      const ALL_PROVIDERS = [
+        ...MIGRATE_PROVIDERS,
+        ...FAKE_PROVIDERS, // Should not be migrated because they're unmodified
+        MODIFIED_SAFE_PROVIDER,
+        ERROR_PROVIDER,
+      ];
+      // The migrator should attempt to read prefs for all of these providers
+      const TRY_PROVIDERS = [
+        ...MIGRATE_PROVIDERS,
+        MODIFIED_SAFE_PROVIDER,
+        ERROR_PROVIDER,
+      ];
+
+      // Update the full list of provider prefs
+      childListStub
+        .withArgs(PROVIDER_PREF_BRANCH)
+        .returns(
+          ALL_PROVIDERS.map(provider => getPrefNameForProvider(provider.id))
+        );
+      // Stub the pref values so the migrator can read them
+      ALL_PROVIDERS.forEach(provider => {
+        stringPrefStub
+          .withArgs(getPrefNameForProvider(provider.id))
+          .returns(JSON.stringify(provider));
+      });
+
+      // Consider these providers' prefs "modified"
+      TRY_PROVIDERS.forEach(provider => {
+        hasUserValueStub
+          .withArgs(`${PROVIDER_PREF_BRANCH}${provider.id}`)
+          .returns(true);
+      });
+      // Spoof an error when trying to set the pref for this provider so we can
+      // test that the pref is gracefully reset on error
+      setStringPrefStub
+        .withArgs(getPrefNameForProvider(ERROR_PROVIDER.id))
+        .throws();
+
+      ASRouterPreferences.init();
+
+      // The migrator should have tried to check each pref for user modification
+      ALL_PROVIDERS.forEach(provider =>
+        assert.calledWith(hasUserValueStub, getPrefNameForProvider(provider.id))
+      );
+      // Test that we don't call getStringPref for providers that don't have a
+      // user-defined value
+      FAKE_PROVIDERS.forEach(provider =>
+        assert.neverCalledWith(
+          stringPrefStub,
+          getPrefNameForProvider(provider.id)
+        )
+      );
+      // But we do call it for providers that do have a user-defined value
+      TRY_PROVIDERS.forEach(provider =>
+        assert.calledWith(stringPrefStub, getPrefNameForProvider(provider.id))
+      );
+
+      // Test that we don't call setStringPref to migrate providers that don't
+      // have a bucket property
+      assert.neverCalledWith(
+        setStringPrefStub,
+        getPrefNameForProvider(MODIFIED_SAFE_PROVIDER.id)
+      );
+
+      /**
+       * For a given provider, return a sinon matcher that matches if the value
+       * looks like a migrated version of the original provider. Requires that:
+       * its id matches the original provider's id; it has no bucket; and its
+       * collection is set to the value of the original provider's bucket.
+       * @param {object} provider the provider object to compare to
+       * @returns {object} custom matcher object for sinon
+       */
+      function providerJsonMatches(provider) {
+        return sandbox.match(migrated => {
+          const parsed = JSON.parse(migrated);
+          return (
+            parsed.id === provider.id &&
+            !("bucket" in parsed) &&
+            parsed.collection === provider.bucket
+          );
+        });
+      }
+
+      // Test that we call setStringPref to migrate providers that have a bucket
+      // property and don't have a collection property
+      MIGRATE_PROVIDERS.forEach(provider =>
+        assert.calledWith(
+          setStringPrefStub,
+          getPrefNameForProvider(provider.id),
+          providerJsonMatches(provider) // Verify the migrated pref value
+        )
+      );
+
+      // Test that we clear the pref for providers that throw when we try to
+      // read or write them
+      assert.calledWith(resetStub, getPrefNameForProvider(ERROR_PROVIDER.id));
     });
     it(`should set ${NUMBER_OF_PREFS_TO_OBSERVE} observers and not re-initialize if already initialized`, () => {
       ASRouterPreferences.init();
@@ -226,27 +345,25 @@ describe("ASRouterPreferences", () => {
   });
   describe("#enableOrDisableProvider", () => {
     it("should enable an existing provider if second param is true", () => {
-      const setStub = sandbox.stub(global.Services.prefs, "setStringPref");
       setPrefForProvider("foo", { id: "foo", enabled: false });
       assert.isFalse(ASRouterPreferences.providers[0].enabled);
 
       ASRouterPreferences.enableOrDisableProvider("foo", true);
 
       assert.calledWith(
-        setStub,
+        setStringPrefStub,
         getPrefNameForProvider("foo"),
         JSON.stringify({ id: "foo", enabled: true })
       );
     });
     it("should disable an existing provider if second param is false", () => {
-      const setStub = sandbox.stub(global.Services.prefs, "setStringPref");
       setPrefForProvider("foo", { id: "foo", enabled: true });
       assert.isTrue(ASRouterPreferences.providers[0].enabled);
 
       ASRouterPreferences.enableOrDisableProvider("foo", false);
 
       assert.calledWith(
-        setStub,
+        setStringPrefStub,
         getPrefNameForProvider("foo"),
         JSON.stringify({ id: "foo", enabled: false })
       );
@@ -278,7 +395,6 @@ describe("ASRouterPreferences", () => {
   });
   describe("#resetProviderPref", () => {
     it("should reset the pref and user prefs", () => {
-      const resetStub = sandbox.stub(global.Services.prefs, "clearUserPref");
       ASRouterPreferences.resetProviderPref();
       FAKE_PROVIDERS.forEach(provider => {
         assert.calledWith(resetStub, getPrefNameForProvider(provider.id));
@@ -299,7 +415,7 @@ describe("ASRouterPreferences", () => {
       stringPrefStub
         .withArgs(getPrefNameForProvider(testProvider.id))
         .returns(JSON.stringify(testProvider));
-      global.Services.prefs.getChildList
+      childListStub
         .withArgs(PROVIDER_PREF_BRANCH)
         .returns(
           newProviders.map(provider => getPrefNameForProvider(provider.id))
@@ -318,9 +434,7 @@ describe("ASRouterPreferences", () => {
 
       assert.isFalse(ASRouterPreferences.devtoolsEnabled);
       boolPrefStub.withArgs(DEVTOOLS_PREF).returns(true);
-      global.Services.prefs.getChildList
-        .withArgs(PROVIDER_PREF_BRANCH)
-        .returns([]);
+      childListStub.withArgs(PROVIDER_PREF_BRANCH).returns([]);
       ASRouterPreferences.observe(null, null, DEVTOOLS_PREF);
 
       // Cache should be invalidated so we access the new value of the pref now

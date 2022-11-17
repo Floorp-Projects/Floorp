@@ -271,18 +271,20 @@ const MessageLoaderUtils = {
    * 2). The Remote Settings downloader is able to detect the duplicate download
    * requests for the same attachment and ignore the redundent requests automatically.
    *
-   * @param {obj} provider An AS router provider
+   * @param {object} provider An AS router provider
    * @param {string} provider.id The id of the provider
-   * @param {string} provider.bucket The name of the Remote Settings bucket
-   * @param {func} options.dispatchCFRAction dispatch an action the main AS Store
-   * @returns {Promise} resolves with an array of messages, or an empty array if none could be fetched
+   * @param {string} provider.collection Remote Settings collection name
+   * @param {object} options
+   * @param {function} options.dispatchCFRAction Action handler function
+   * @returns {Promise<object[]>} Resolves with an array of messages, or an
+   *                              empty array if none could be fetched
    */
   async _remoteSettingsLoader(provider, options) {
     let messages = [];
-    if (provider.bucket) {
+    if (provider.collection) {
       try {
         messages = await MessageLoaderUtils._getRemoteSettingsMessages(
-          provider.bucket
+          provider.collection
         );
         if (!messages.length) {
           MessageLoaderUtils._handleRemoteSettingsUndesiredEvent(
@@ -332,8 +334,14 @@ const MessageLoaderUtils = {
     return messages;
   },
 
-  _getRemoteSettingsMessages(bucket) {
-    return RemoteSettings(bucket).get();
+  /**
+   * Fetch messages from a given collection in Remote Settings.
+   *
+   * @param {string} collection The remote settings collection identifier
+   * @returns {Promise<object[]>} Resolves with an array of messages
+   */
+  _getRemoteSettingsMessages(collection) {
+    return RemoteSettings(collection).get();
   },
 
   /**

@@ -79,7 +79,7 @@ export const FAKE_REMOTE_PROVIDER = {
 export const FAKE_REMOTE_SETTINGS_PROVIDER = {
   id: "remotey-settingsy",
   type: "remote-settings",
-  bucket: "bucketname",
+  collection: "collectionname",
   enabled: true,
 };
 
