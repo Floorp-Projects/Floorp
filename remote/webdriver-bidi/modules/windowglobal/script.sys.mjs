@@ -64,7 +64,7 @@ class ScriptModule extends Module {
       // WebDriver BiDi.
       .map(frame => {
         return {
-          columnNumber: frame.columnNumber,
+          columnNumber: frame.columnNumber - 1,
           functionName: frame.functionName,
           lineNumber: frame.lineNumber - 1,
           url: frame.filename,
@@ -72,7 +72,7 @@ class ScriptModule extends Module {
       });
 
     return {
-      columnNumber: stack.column,
+      columnNumber: stack.column - 1,
       exception: lazy.serialize(
         exception,
         1,
