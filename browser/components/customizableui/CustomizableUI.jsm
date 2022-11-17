@@ -2429,6 +2429,12 @@ var CustomizableUIInternal = {
   },
 
   addWidgetToArea(aWidgetId, aArea, aPosition, aInitialAdd) {
+    if (aArea == CustomizableUI.AREA_NO_AREA) {
+      throw new Error(
+        "AREA_NO_AREA is only used as an argument for " +
+          "canWidgetMoveToArea. Use removeWidgetFromArea instead."
+      );
+    }
     if (!gAreas.has(aArea)) {
       throw new Error("Unknown customization area: " + aArea);
     }
@@ -2909,6 +2915,17 @@ var CustomizableUIInternal = {
             }
           }
         }
+
+        // Extension widgets cannot enter the customization palette, so if
+        // at this point, we haven't found an area for them, move them into
+        // AREA_ADDONS.
+        if (
+          lazy.gUnifiedExtensionsEnabled &&
+          !widget.currentArea &&
+          CustomizableUI.isWebExtensionWidget(widget.id)
+        ) {
+          this.addWidgetToArea(widget.id, CustomizableUI.AREA_ADDONS);
+        }
       }
     } finally {
       // Ensure we always have this widget in gSeenWidgets, and save
@@ -3283,6 +3300,12 @@ var CustomizableUIInternal = {
     gNewElementCount = 0;
     lazy.log.debug("State reset");
 
+    // Later in the function, we're going to add any area-less extension
+    // buttons to the AREA_ADDONS area. We'll remember the old placements
+    // for that area so that we don't need to re-add widgets that are already
+    // in there in the DOM.
+    let oldAddonPlacements = gPlacements[CustomizableUI.AREA_ADDONS] || [];
+
     // Reset placements to make restoring default placements possible.
     gPlacements = new Map();
     gDirtyAreaCache = new Set();
@@ -3291,7 +3314,27 @@ var CustomizableUIInternal = {
     gSavedState = null;
     // Restore the state for each area to its defaults
     for (let [areaId] of gAreas) {
-      this.restoreStateForArea(areaId);
+      // If the Unified Extensions UI is enabled, we'll be adding any
+      // extension buttons that aren't already in AREA_ADDONS there,
+      // so we can skip restoring the state for it.
+      if (areaId != CustomizableUI.AREA_ADDONS) {
+        this.restoreStateForArea(areaId);
+      }
+    }
+
+    if (lazy.gUnifiedExtensionsEnabled) {
+      // restoreStateForArea will have normally set an array for the placements
+      // for each area, but since we skip AREA_ADDONS intentionally, that array
+      // doesn't get set, so we do that manually here.
+      gPlacements.set(CustomizableUI.AREA_ADDONS, []);
+      for (let [widgetId] of gPalette) {
+        if (
+          CustomizableUI.isWebExtensionWidget(widgetId) &&
+          !oldAddonPlacements.includes(widgetId)
+        ) {
+          this.addWidgetToArea(widgetId, CustomizableUI.AREA_ADDONS);
+        }
+      }
     }
   },
 
@@ -3454,6 +3497,25 @@ var CustomizableUIInternal = {
       !CustomizableUI.isWebExtensionWidget(aWidgetId)
     ) {
       return false;
+    }
+
+    if (
+      lazy.gUnifiedExtensionsEnabled &&
+      CustomizableUI.isWebExtensionWidget(aWidgetId)
+    ) {
+      // Extension widgets cannot move to the customization palette.
+      if (aArea == CustomizableUI.AREA_NO_AREA) {
+        return false;
+      }
+
+      // Extension widgets cannot move to panels, with the exception of the
+      // AREA_ADDONS area.
+      if (
+        gAreas.get(aArea).get("type") == CustomizableUI.TYPE_PANEL &&
+        aArea != CustomizableUI.AREA_ADDONS
+      ) {
+        return false;
+      }
     }
 
     let placement = this.getPlacementOfWidget(aWidgetId);
@@ -3692,6 +3754,15 @@ var CustomizableUI = {
    * Constant reference to the ID of the addons area.
    */
   AREA_ADDONS: "unified-extensions-area",
+  /**
+   * Constant reference to the ID of the customization palette, which is
+   * where widgets go when they're not assigned to an area. Note that this
+   * area is "virtual" in that it's never set as a value for a widgets
+   * currentArea or defaultArea. It's only used for the `canWidgetMoveToArea`
+   * function to check if widgets can be moved to the palette. Callers who
+   * wish to move items to the palette should use `removeWidgetFromArea`.
+   */
+  AREA_NO_AREA: "customization-palette",
   /**
    * Constant indicating the area is a panel.
    */
@@ -4455,7 +4526,9 @@ var CustomizableUI = {
    * is already in the right area.
    *
    * @param aWidgetId the widget ID or DOM node you want to move somewhere
-   * @param aArea     the area ID you want to move it to.
+   * @param aArea     the area ID you want to move it to. This can also be
+   *                  AREA_NO_AREA to see if the widget can move to the
+   *                  customization palette, whether it's removable or not.
    * @return true if this is possible, false if it is not. The same caveats as
    *              for isWidgetRemovable apply, however, if no windows are open.
    */
