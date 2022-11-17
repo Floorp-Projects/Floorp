@@ -9,9 +9,6 @@ const { ASRouter } = ChromeUtils.import(
 const { BrowserUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/BrowserUtils.sys.mjs"
 );
-const { BrowserTestUtils } = ChromeUtils.import(
-  "resource://testing-common/BrowserTestUtils.jsm"
-);
 const { Downloader } = ChromeUtils.import(
   "resource://services-settings/Attachments.jsm"
 );

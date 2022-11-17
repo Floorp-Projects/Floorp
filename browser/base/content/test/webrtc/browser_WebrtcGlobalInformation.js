@@ -4,10 +4,6 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  BrowserTestUtils: "resource://testing-common/BrowserTestUtils.jsm",
-});
-
 const ProcessTools = Cc["@mozilla.org/processtools-service;1"].getService(
   Ci.nsIProcessToolsService
 );

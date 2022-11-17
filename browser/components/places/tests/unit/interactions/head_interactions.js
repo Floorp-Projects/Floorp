@@ -16,12 +16,12 @@ ChromeUtils.defineESModuleGetters(this, {
   SnapshotScorer: "resource:///modules/SnapshotScorer.sys.mjs",
   SnapshotSelector: "resource:///modules/SnapshotSelector.sys.mjs",
   Snapshots: "resource:///modules/Snapshots.sys.mjs",
+  TestUtils: "resource://testing-common/TestUtils.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
-  TestUtils: "resource://testing-common/TestUtils.jsm",
 });
 
 // Initialize profile.

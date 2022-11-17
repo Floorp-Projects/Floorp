@@ -1,7 +1,3 @@
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
-);
-
 add_task(async function initialState() {
   // check pref permutations to verify the UI opens in the correct state
   const prefTests = [

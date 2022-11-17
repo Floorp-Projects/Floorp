@@ -7,10 +7,6 @@ const { SpecialMessageActions } = ChromeUtils.import(
   "resource://messaging-system/lib/SpecialMessageActions.jsm"
 );
 
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
-);
-
 const HOMEPAGE_PREF = "browser.startup.homepage";
 const NEWTAB_PREF = "browser.newtabpage.enabled";
 const PINPBM_DISABLED_PREF = "browser.startup.upgradeDialog.pinPBM.disabled";

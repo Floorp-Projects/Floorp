@@ -3,8 +3,6 @@
 
 "use strict";
 
-const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
-
 const fxaDevices = [
   {
     id: 1,

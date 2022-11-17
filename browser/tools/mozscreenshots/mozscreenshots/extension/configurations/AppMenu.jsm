@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["AppMenu"];
 
-const { BrowserTestUtils } = ChromeUtils.import(
-  "resource://testing-common/BrowserTestUtils.jsm"
+const { BrowserTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/BrowserTestUtils.sys.mjs"
 );
 
 var AppMenu = {

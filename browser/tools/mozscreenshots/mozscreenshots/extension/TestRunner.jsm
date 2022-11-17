@@ -24,11 +24,9 @@ const { Rect } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "BrowserTestUtils",
-  "resource://testing-common/BrowserTestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserTestUtils: "resource://testing-common/BrowserTestUtils.sys.mjs",
+});
 // Screenshot.jsm must be imported this way for xpcshell tests to work
 ChromeUtils.defineModuleGetter(
   lazy,
