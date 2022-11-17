@@ -18,14 +18,14 @@ panel {
   --panel-border-color: ThreeDShadow;
   --panel-width: initial;
   /* To account for the box-shadow below */
-  margin: -4px;
-  -moz-window-input-region-margin: 4px;
+  --panel-shadow-margin: 4px;
+  margin: calc(-1 * var(--panel-shadow-margin));
+  -moz-window-input-region-margin: var(--panel-shadow-margin);
 }
 
 menupopup > menu > menupopup {
-  /* Vertically align nested menupopups: 4px from the shadow plus the top
-   * padding */
-  margin-top: calc(-4px - var(--panel-padding-block));
+  /* Vertically align nested menupopups: the shadow plus the top padding */
+  margin-top: calc(-1 * (var(--panel-shadow-margin) + var(--panel-padding-block)));
 }
 
 /* ::::: arrow panel ::::: */
@@ -47,8 +47,8 @@ menupopup > menu > menupopup {
   min-width: 0;
   min-height: 0;
 
-  box-shadow: 0 0 4px hsla(0,0%,0%,.2);
-  margin: 4px;
+  box-shadow: 0 0 var(--panel-shadow-margin) hsla(0,0%,0%,.2);
+  margin: var(--panel-shadow-margin);
 }
 
 :is(panel, menupopup)[orient=vertical]::part(content) {
