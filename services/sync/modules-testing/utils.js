@@ -26,7 +26,9 @@ const { CommonUtils } = ChromeUtils.import(
 const { CryptoUtils } = ChromeUtils.import(
   "resource://services-crypto/utils.js"
 );
-const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+const { Assert } = ChromeUtils.importESModule(
+  "resource://testing-common/Assert.sys.mjs"
+);
 const { initTestLogging } = ChromeUtils.import(
   "resource://testing-common/services/common/logging.js"
 );

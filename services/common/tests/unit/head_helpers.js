@@ -36,8 +36,8 @@ var {
 var { getTestLogger, initTestLogging } = ChromeUtils.import(
   "resource://testing-common/services/common/logging.js"
 );
-var { MockRegistrar } = ChromeUtils.import(
-  "resource://testing-common/MockRegistrar.jsm"
+var { MockRegistrar } = ChromeUtils.importESModule(
+  "resource://testing-common/MockRegistrar.sys.mjs"
 );
 var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 

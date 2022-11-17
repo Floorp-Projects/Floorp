@@ -7,8 +7,8 @@ var Cm = Components.manager;
 // Shared logging for all HTTP server functions.
 var { Log } = ChromeUtils.importESModule("resource://gre/modules/Log.sys.mjs");
 var { CommonUtils } = ChromeUtils.import("resource://services-common/utils.js");
-var { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+var { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 var {
   AccountState,

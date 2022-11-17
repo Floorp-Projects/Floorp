@@ -13,7 +13,7 @@ const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
 const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
 
 // Unfortunately, due to where TPS is run, we can't directly reuse the logic from
-// BrowserTestUtils.jsm. Moreover, we can't resolve the URI it loads the content
+// BrowserTestUtils.sys.mjs. Moreover, we can't resolve the URI it loads the content
 // frame script from ("chrome://mochikit/content/tests/BrowserTestUtils/content-utils.js"),
 // hence the hackiness here and in BrowserTabs.Add.
 Services.mm.loadFrameScript(
