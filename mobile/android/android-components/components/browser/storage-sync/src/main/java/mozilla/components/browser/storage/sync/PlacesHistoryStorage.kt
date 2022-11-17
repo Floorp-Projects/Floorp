@@ -420,7 +420,7 @@ open class PlacesHistoryStorage(
         }
 
         val schemasToIgnore = listOf(
-            "about", "imap", "news", "mailbox", "moz-anno", "moz-extension",
+            "", "about", "imap", "news", "mailbox", "moz-anno", "moz-extension",
             "view-source", "chrome", "resource", "data", "javascript", "blob",
         )
 

@@ -1423,6 +1423,7 @@ class PlacesHistoryStorageTest {
         assertFalse(history.canAddUri("resource://internal-thingy-js-inspector/script.js"))
         assertFalse(history.canAddUri("javascript:alert('hello!');"))
         assertFalse(history.canAddUri("blob:https://api.mozilla.com/resource.png"))
+        assertFalse(history.canAddUri("://example.com"))
     }
 
     @Test
