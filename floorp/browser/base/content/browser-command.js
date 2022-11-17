@@ -192,6 +192,7 @@ function changeSidebarVisibility() {
     siderbar2header.style.display = "";
     sidebarsplit2.setAttribute("hidden", "false");
     displayIcons();
+    setSelectedPanel();
     Services.prefs.setBoolPref(sidebar2BoolStatus, true);
   } else {
     sidebar2.style.minWidth = "0";
