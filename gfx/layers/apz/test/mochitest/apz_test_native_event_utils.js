@@ -1282,13 +1282,25 @@ function promiseMoveMouseAndScrollWheelOver(
     offsetY: dy,
   });
   if (waitForScroll) {
-    p = p.then(() =>
-      promiseNativeWheelAndWaitForScrollEvent(target, dx, dy, 0, -scrollDelta)
-    );
+    p = p.then(() => {
+      return promiseNativeWheelAndWaitForScrollEvent(
+        target,
+        dx,
+        dy,
+        0,
+        -scrollDelta
+      );
+    });
   } else {
-    p = p.then(() =>
-      promiseNativeWheelAndWaitForWheelEvent(target, dx, dy, 0, -scrollDelta)
-    );
+    p = p.then(() => {
+      return promiseNativeWheelAndWaitForWheelEvent(
+        target,
+        dx,
+        dy,
+        0,
+        -scrollDelta
+      );
+    });
   }
   return p;
 }
