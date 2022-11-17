@@ -740,12 +740,12 @@ class RTCStatsCollectorTest : public ::testing::Test {
     // track (sender)
     graph.sender = stats_->SetupLocalTrackAndSender(
         cricket::MEDIA_TYPE_VIDEO, "LocalVideoTrackID", 3, false, 50);
-    graph.sender_track_id = "RTCMediaStreamTrack_sender_" +
+    graph.sender_track_id = "DEPRECATED_RTCMediaStreamTrack_sender_" +
                             rtc::ToString(graph.sender->AttachmentId());
     // track (receiver) and stream (remote stream)
     graph.receiver = stats_->SetupRemoteTrackAndReceiver(
         cricket::MEDIA_TYPE_VIDEO, "RemoteVideoTrackID", "RemoteStreamId", 4);
-    graph.receiver_track_id = "RTCMediaStreamTrack_receiver_" +
+    graph.receiver_track_id = "DEPRECATED_RTCMediaStreamTrack_receiver_" +
                               rtc::ToString(graph.receiver->AttachmentId());
     graph.remote_stream_id = "RTCMediaStream_RemoteStreamId";
     // peer-connection
@@ -853,13 +853,13 @@ class RTCStatsCollectorTest : public ::testing::Test {
     // track (sender)
     graph.sender = stats_->SetupLocalTrackAndSender(
         cricket::MEDIA_TYPE_AUDIO, "LocalAudioTrackID", kLocalSsrc, false, 50);
-    graph.sender_track_id = "RTCMediaStreamTrack_sender_" +
+    graph.sender_track_id = "DEPRECATED_RTCMediaStreamTrack_sender_" +
                             rtc::ToString(graph.sender->AttachmentId());
     // track (receiver) and stream (remote stream)
     graph.receiver = stats_->SetupRemoteTrackAndReceiver(
         cricket::MEDIA_TYPE_AUDIO, "RemoteAudioTrackID", "RemoteStreamId",
         kRemoteSsrc);
-    graph.receiver_track_id = "RTCMediaStreamTrack_receiver_" +
+    graph.receiver_track_id = "DEPRECATED_RTCMediaStreamTrack_receiver_" +
                               rtc::ToString(graph.receiver->AttachmentId());
     graph.remote_stream_id = "RTCMediaStream_RemoteStreamId";
     // peer-connection
