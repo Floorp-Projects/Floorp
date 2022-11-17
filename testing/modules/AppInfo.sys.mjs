@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["newAppInfo", "getAppInfo", "updateAppInfo"];
-
 let origPlatformInfo = Cc["@mozilla.org/xre/app-info;1"].getService(
   Ci.nsIPlatformInfo
 );
@@ -30,7 +26,7 @@ let origRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(
  *
  *   crashReporter:   nsICrashReporter interface is implemented if true
  */
-var newAppInfo = function(options = {}) {
+export var newAppInfo = function(options = {}) {
   let appInfo = {
     // nsIXULAppInfo
     vendor: "Mozilla",
@@ -102,7 +98,7 @@ var currentAppInfo = newAppInfo();
 /**
  * Obtain a reference to the current object used to define XULAppInfo.
  */
-var getAppInfo = function() {
+export var getAppInfo = function() {
   return currentAppInfo;
 };
 
@@ -114,7 +110,7 @@ var getAppInfo = function() {
  * To change the current XULAppInfo, simply call this function. If there was
  * a previously registered app info object, it will be unloaded and replaced.
  */
-var updateAppInfo = function(options) {
+export var updateAppInfo = function(options) {
   currentAppInfo = newAppInfo(options);
 
   let id = Components.ID("{fbfae60b-64a4-44ef-a911-08ceb70b9f31}");

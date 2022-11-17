@@ -2,15 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["MockRegistry"];
-
 const { MockRegistrar } = ChromeUtils.import(
   "resource://testing-common/MockRegistrar.jsm"
 );
 
-class MockRegistry {
+export class MockRegistry {
   constructor() {
     // Three level structure of Maps pointing to Maps pointing to Maps
     // this.roots is the top of the structure and has ROOT_KEY_* values

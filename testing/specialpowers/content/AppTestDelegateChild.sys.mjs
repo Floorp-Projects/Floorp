@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["AppTestDelegateChild"];
-
-class AppTestDelegateChild extends JSWindowActorChild {
+export class AppTestDelegateChild extends JSWindowActorChild {
   handleEvent(event) {
     switch (event.type) {
       case "DOMContentLoaded":

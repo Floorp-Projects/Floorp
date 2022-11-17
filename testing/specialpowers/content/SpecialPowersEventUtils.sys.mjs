@@ -2,21 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["EventUtils"];
-
 /**
  * Loads a stub copy of EventUtils.js which can be used by things like
  * content tasks without holding any direct references to windows.
  */
 
-let EventUtils = {};
+import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
-EventUtils.window = {};
+export let EventUtils = { setTimeout, window: {}, _EU_Ci: Ci, _EU_Cc: Cc };
+
 EventUtils.parent = EventUtils.window;
-EventUtils._EU_Ci = Ci;
-EventUtils._EU_Cc = Cc;
 
 EventUtils.synthesizeClick = element =>
   new Promise(resolve => {

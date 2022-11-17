@@ -2,18 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["MockRegistrar"];
-
 const Cm = Components.manager;
 
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
+import { Log } from "resource://gre/modules/Log.sys.mjs";
+
 var logger = Log.repository.getLogger("MockRegistrar");
 
-var MockRegistrar = Object.freeze({
+export var MockRegistrar = Object.freeze({
   _registeredComponents: new Map(),
   _originalCIDs: new Map(),
   get registrar() {

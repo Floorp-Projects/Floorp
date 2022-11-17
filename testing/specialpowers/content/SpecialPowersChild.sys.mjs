@@ -4,10 +4,6 @@
 /* This code is loaded in every child process that is started by mochitest.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["SpecialPowersChild"];
-
 const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
@@ -47,9 +43,8 @@ ChromeUtils.defineModuleGetter(
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
 );
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+
 ChromeUtils.defineModuleGetter(
   lazy,
   "PerTestCoverageUtils",
@@ -151,7 +146,7 @@ SPConsoleListener.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIConsoleListener", "nsIObserver"]),
 };
 
-class SpecialPowersChild extends JSWindowActorChild {
+export class SpecialPowersChild extends JSWindowActorChild {
   constructor() {
     super();
 

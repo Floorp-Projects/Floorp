@@ -15,22 +15,22 @@ FINAL_TARGET_FILES += [
 ]
 
 FINAL_TARGET_FILES.content += [
-    "../modules/Assert.jsm",
-    "content/AppTestDelegate.jsm",
-    "content/AppTestDelegateChild.jsm",
-    "content/AppTestDelegateParent.jsm",
-    "content/MockColorPicker.jsm",
-    "content/MockFilePicker.jsm",
-    "content/MockPermissionPrompt.jsm",
-    "content/SpecialPowersChild.jsm",
-    "content/SpecialPowersEventUtils.jsm",
-    "content/SpecialPowersParent.jsm",
-    "content/SpecialPowersSandbox.jsm",
-    "content/WrapPrivileged.jsm",
+    "../modules/Assert.sys.mjs",
+    "content/AppTestDelegate.sys.mjs",
+    "content/AppTestDelegateChild.sys.mjs",
+    "content/AppTestDelegateParent.sys.mjs",
+    "content/MockColorPicker.sys.mjs",
+    "content/MockFilePicker.sys.mjs",
+    "content/MockPermissionPrompt.sys.mjs",
+    "content/SpecialPowersChild.sys.mjs",
+    "content/SpecialPowersEventUtils.sys.mjs",
+    "content/SpecialPowersParent.sys.mjs",
+    "content/SpecialPowersSandbox.sys.mjs",
+    "content/WrapPrivileged.sys.mjs",
 ]
 
 TESTING_JS_MODULES += [
-    "content/MockFilePicker.jsm",
+    "content/MockFilePicker.sys.mjs",
 ]
 
 with Files("**"):

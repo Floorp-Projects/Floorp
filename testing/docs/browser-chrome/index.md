@@ -6,7 +6,7 @@ Firefox browser window. The test files are named `browser_something.js` by
 convention, and in addition to mochitest assertions supports the
 [CommonJS standard assertions](http://wiki.commonjs.org/wiki/Unit_Testing/1.1),
 like [nodejs' assert module](https://nodejs.org/api/assert.html#assert) but
-implemented in [`Assert.jsm`](../assert.rst).
+implemented in [`Assert.sys.mjs`](../assert.rst).
 
 These tests are used to test UI-related behaviour in Firefox for
 Desktop. They do not run on Android. If you're testing internal code that

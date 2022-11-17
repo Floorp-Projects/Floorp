@@ -18,8 +18,6 @@ add_task(async function dragimage_remote_tab() {
     let image = content.document.body.firstElementChild;
     let target = content.document.body.lastElementChild;
 
-    const EventUtils = ContentTaskUtils.getEventUtils(content);
-
     await EventUtils.synthesizePlainDragAndDrop({
       srcElement: image,
       destElement: target,

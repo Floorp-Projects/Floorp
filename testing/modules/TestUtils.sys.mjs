@@ -16,13 +16,8 @@
  * example LoginTestUtils.jsm.
  */
 
-"use strict";
+import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["TestUtils"];
-
-const { clearTimeout, setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
 const ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(
   Ci.nsIConsoleAPIStorage
 );
@@ -33,7 +28,7 @@ const ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(
  *
  * @class
  */
-var TestUtils = {
+export var TestUtils = {
   executeSoon(callbackFn) {
     Services.tm.dispatchToMainThread(callbackFn);
   },

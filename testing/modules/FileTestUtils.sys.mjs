@@ -6,25 +6,16 @@
  * Provides testing functions dealing with local files and their contents.
  */
 
-"use strict";
+import { DownloadPaths } from "resource://gre/modules/DownloadPaths.sys.mjs";
+import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["FileTestUtils"];
-
-const { DownloadPaths } = ChromeUtils.importESModule(
-  "resource://gre/modules/DownloadPaths.sys.mjs"
-);
-const { FileUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/FileUtils.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
 
 let gFileCounter = 1;
 let gPathsToRemove = [];
 
-var FileTestUtils = {
+export var FileTestUtils = {
   /**
    * Returns a reference to a temporary file that is guaranteed not to exist and
    * to have never been created before. If a file or a directory with this name

@@ -2,21 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { addDebuggerToGlobal } from "resource://gre/modules/jsdebugger.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["CoverageCollector"];
-
-/* globals Debugger */
-const { addDebuggerToGlobal } = ChromeUtils.importESModule(
-  "resource://gre/modules/jsdebugger.sys.mjs"
-);
 // eslint-disable-next-line mozilla/reject-globalThis-modification
 addDebuggerToGlobal(globalThis);
 
 /**
  * Records coverage for each test by way of the js debugger.
  */
-var CoverageCollector = function(prefix) {
+export var CoverageCollector = function(prefix) {
   this._prefix = prefix;
   this._dbg = new Debugger();
   this._dbg.collectCoverageInfo = true;

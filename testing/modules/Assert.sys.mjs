@@ -6,10 +6,6 @@
 // Copyright (c) 2009 Thomas Robinson <280north.com>
 // MIT license: http://opensource.org/licenses/MIT
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["Assert"];
-
 const { ObjectUtils } = ChromeUtils.import(
   "resource://gre/modules/ObjectUtils.jsm"
 );
@@ -37,7 +33,7 @@ const { ObjectUtils } = ChromeUtils.import(
  *
  * @class
  */
-function Assert(reporterFunc, isDefault) {
+export function Assert(reporterFunc, isDefault) {
   if (reporterFunc) {
     this.setReporter(reporterFunc);
   }
@@ -132,7 +128,11 @@ Assert.AssertionError = function(options) {
   let stack = Components.stack;
   do {
     stack = stack.asyncCaller || stack.caller;
-  } while (stack && stack.filename && stack.filename.includes("Assert.jsm"));
+  } while (
+    stack &&
+    stack.filename &&
+    stack.filename.includes("Assert.sys.mjs")
+  );
   this.stack = stack;
 };
 

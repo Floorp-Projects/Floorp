@@ -34,7 +34,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1560741
     });
 
     let checkRequest = async (expectedResponse, msg) => {
-      /* import-globals-from ../../../../testing/modules/Assert.jsm */
       let response = await this.content.Notification.requestPermission();
       Assert.equal(response, expectedResponse, msg);
     };
@@ -44,7 +43,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1560741
                               checkRequest);
 
     let checkPermission = async (expectedPermission, msg) => {
-      /* import-globals-from ../../../../testing/modules/Assert.jsm */
       let permission = this.content.Notification.permission;
       Assert.equal(permission, expectedPermission, msg);
     };

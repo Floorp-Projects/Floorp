@@ -2,13 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["AppTestDelegateParent"];
-
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -17,7 +11,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AppUiTestDelegate: "resource://testing-common/AppUiTestDelegate.jsm",
 });
 
-class AppTestDelegateParent extends JSWindowActorParent {
+export class AppTestDelegateParent extends JSWindowActorParent {
   constructor() {
     super();
     this._tabs = new Map();

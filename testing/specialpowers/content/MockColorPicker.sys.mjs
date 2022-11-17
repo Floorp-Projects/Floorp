@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["MockColorPicker"];
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -30,7 +28,7 @@ var newFactory = function(window) {
   };
 };
 
-var MockColorPicker = {
+export var MockColorPicker = {
   init(window) {
     this.reset();
     this.factory = newFactory(window);

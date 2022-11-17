@@ -4,10 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["ContentTask"];
-
 const FRAME_SCRIPT = "resource://testing-common/content-task.js";
 
 /**
@@ -28,7 +24,7 @@ var gMessageID = 1;
 /**
  * This object provides the public module functions.
  */
-var ContentTask = {
+export var ContentTask = {
   /**
    * _testScope saves the current testScope from
    * browser-test.js. This is used to implement SimpleTest functions

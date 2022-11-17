@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
 /**
  * This module handles wrapping privileged objects so that they can be exposed
@@ -16,8 +15,6 @@
 /* globals XPCNativeWrapper */
 
 Cu.crashIfNotInAutomation();
-
-var EXPORTED_SYMBOLS = ["WrapPrivileged"];
 
 let wrappedObjects = new WeakMap();
 let perWindowInfo = new WeakMap();
@@ -373,7 +370,7 @@ function disableAutoWrap(...objs) {
   objs.forEach(x => noAutoWrap.add(x));
 }
 
-var WrapPrivileged = {
+export var WrapPrivileged = {
   wrap: wrapIfUnwrapped,
   unwrap: unwrapIfWrapped,
 
