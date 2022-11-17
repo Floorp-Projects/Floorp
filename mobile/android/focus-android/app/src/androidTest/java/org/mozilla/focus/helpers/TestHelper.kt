@@ -13,7 +13,6 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.storage.StorageManager
@@ -25,7 +24,7 @@ import androidx.annotation.RequiresApi
 import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsIntent.SHARE_STATE_ON
-import androidx.core.content.getSystemService
+import androidx.core.net.toUri
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -164,7 +163,7 @@ object TestHelper {
     fun openAppFromExternalLink(url: String) {
         val intent = Intent().apply {
             action = Intent.ACTION_VIEW
-            data = Uri.parse(url)
+            data = url.toUri()
             `package` = packageName
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
@@ -240,7 +239,7 @@ object TestHelper {
             .setActionButton(createTestBitmap(), customActionButtonDescription, pendingIntent, true)
             .setDefaultColorSchemeParams(customTabColorSchemeBuilder.build())
             .build()
-        customTabsIntent.intent.data = Uri.parse(pageUrl)
+        customTabsIntent.intent.data = pageUrl.toUri()
         customTabsIntent.intent.component = ComponentName(appContext, IntentReceiverActivity::class.java)
         return customTabsIntent.intent
     }

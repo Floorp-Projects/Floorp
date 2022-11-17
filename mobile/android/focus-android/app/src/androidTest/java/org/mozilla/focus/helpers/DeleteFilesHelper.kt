@@ -9,6 +9,7 @@ import android.database.Cursor
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
+import androidx.core.net.toUri
 
 object DeleteFilesHelper {
     fun deleteFileUsingDisplayName(context: Context, displayName: String): Boolean {
@@ -43,7 +44,7 @@ object DeleteFilesHelper {
             val columnIndex: Int = cursor.getColumnIndex(projection[0])
             val fileId: Long = cursor.getLong(columnIndex)
             cursor.close()
-            Uri.parse("$extUri/$fileId")
+            "$extUri/$fileId".toUri()
         } else {
             null
         }

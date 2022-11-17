@@ -4,7 +4,7 @@
 
 package org.mozilla.focus.ext
 
-import android.net.Uri
+import androidx.core.net.toUri
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -68,7 +68,7 @@ class UriTest {
         assertEquals(
             "truncatedHost($url)",
             expectedTruncatedPath,
-            Uri.parse(url).truncatedHost(),
+            url.toUri().truncatedHost(),
         )
     }
 
@@ -76,7 +76,7 @@ class UriTest {
         assertEquals(
             "truncatedPath($url)",
             expectedTruncatedPath,
-            Uri.parse(url).truncatedPath(),
+            url.toUri().truncatedPath(),
         )
     }
 }

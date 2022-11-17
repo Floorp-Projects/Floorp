@@ -10,10 +10,10 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.net.Uri
 import android.os.Build
 import android.util.TypedValue
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import org.mozilla.focus.R
 import org.mozilla.focus.utils.UrlUtils
 
@@ -119,7 +119,7 @@ class IconGenerator {
         private fun getRepresentativeSnippet(url: String?): String? {
             if (url == null || url.isEmpty()) return null
 
-            val uri = Uri.parse(url)
+            val uri = url.toUri()
             val snippet = if (!uri.host.isNullOrEmpty()) {
                 uri.host // cached by Uri class.
             } else if (!uri.path.isNullOrEmpty()) { // The uri may not have a host for e.g. file:// uri

@@ -4,7 +4,6 @@
 
 package org.mozilla.focus.ext
 
-import android.net.Uri
 import androidx.compose.ui.graphics.Color
 import androidx.core.net.toUri
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
@@ -24,7 +23,7 @@ fun String.beautifyUrl(): String {
 
     val beautifulUrl = StringBuilder()
 
-    val uri = Uri.parse(this)
+    val uri = this.toUri()
 
     // Use only the truncated host name
 

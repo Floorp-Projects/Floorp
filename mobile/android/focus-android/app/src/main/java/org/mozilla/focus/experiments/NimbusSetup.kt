@@ -5,7 +5,7 @@
 package org.mozilla.focus.experiments
 
 import android.content.Context
-import android.net.Uri
+import androidx.core.net.toUri
 import mozilla.components.service.nimbus.Nimbus
 import mozilla.components.service.nimbus.NimbusApi
 import mozilla.components.service.nimbus.NimbusAppInfo
@@ -39,9 +39,9 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
         // but we keep this here to not mix feature flags and how we configure Nimbus.
         val serverSettings = if (!url.isNullOrBlank()) {
             if (context.settings.shouldUseNimbusPreview) {
-                NimbusServerSettings(url = Uri.parse(url), collection = "nimbus-preview")
+                NimbusServerSettings(url = url.toUri(), collection = "nimbus-preview")
             } else {
-                NimbusServerSettings(url = Uri.parse(url))
+                NimbusServerSettings(url = url.toUri())
             }
         } else {
             null

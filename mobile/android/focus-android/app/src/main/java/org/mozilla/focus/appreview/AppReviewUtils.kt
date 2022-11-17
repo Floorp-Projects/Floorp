@@ -8,7 +8,7 @@ import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
+import androidx.core.net.toUri
 import androidx.preference.PreferenceManager
 import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManagerFactory
@@ -108,7 +108,12 @@ class AppReviewUtils {
 
         private fun openPlayStore(activity: Activity) {
             try {
-                activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SupportUtils.RATE_APP_URL)))
+                activity.startActivity(
+                    Intent(
+                        Intent.ACTION_VIEW,
+                        SupportUtils.RATE_APP_URL.toUri(),
+                    ),
+                )
             } catch (e: ActivityNotFoundException) {
                 // Device without the play store installed.
                 // Opening the play store website.

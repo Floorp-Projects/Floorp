@@ -4,9 +4,9 @@
 
 package org.mozilla.focus.helpers
 
-import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import androidx.core.net.toUri
 import androidx.test.platform.app.InstrumentationRegistry
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -34,7 +34,7 @@ object MockWebServerHelper {
         override fun dispatch(request: RecordedRequest): MockResponse {
             val assetManager = InstrumentationRegistry.getInstrumentation().context.assets
             try {
-                val pathWithoutQueryParams = Uri.parse(request.path!!.drop(1)).path
+                val pathWithoutQueryParams = request.path!!.drop(1).toUri().path
                 assetManager.open(pathWithoutQueryParams!!).use { inputStream ->
                     return fileToResponse(pathWithoutQueryParams, inputStream)
                 }

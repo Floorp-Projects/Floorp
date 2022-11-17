@@ -6,10 +6,10 @@ package org.mozilla.focus.activity
 
 import android.app.Activity
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
+import androidx.core.net.toUri
 import mozilla.components.feature.search.ext.buildSearchUrl
 import mozilla.components.feature.search.ext.waitForSelectedOrDefaultSearchEngine
 import mozilla.components.support.utils.SafeIntent
@@ -33,7 +33,7 @@ class TextActionActivity : Activity() {
             val searchIntent = Intent(this, IntentReceiverActivity::class.java)
             searchIntent.action = Intent.ACTION_VIEW
             searchIntent.putExtra(EXTRA_TEXT_SELECTION, true)
-            searchIntent.data = Uri.parse(searchUrl)
+            searchIntent.data = searchUrl.toUri()
             searchIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
 
             startActivity(searchIntent)

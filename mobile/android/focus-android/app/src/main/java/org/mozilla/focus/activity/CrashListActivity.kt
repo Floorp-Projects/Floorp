@@ -5,7 +5,7 @@
 package org.mozilla.focus.activity
 
 import android.content.Intent
-import android.net.Uri
+import androidx.core.net.toUri
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.ui.AbstractCrashListActivity
 import org.mozilla.focus.ext.components
@@ -15,7 +15,7 @@ class CrashListActivity : AbstractCrashListActivity() {
 
     override fun onCrashServiceSelected(url: String) {
         val intent = Intent(Intent.ACTION_VIEW).apply {
-            data = Uri.parse(url)
+            data = url.toUri()
             `package` = packageName
         }
         startActivity(intent)
