@@ -492,25 +492,10 @@ void DocAccessible::Shutdown() {
   for (auto iter = mAccessibleCache.Iter(); !iter.Done(); iter.Next()) {
     LocalAccessible* accessible = iter.Data();
     MOZ_ASSERT(accessible);
-    if (accessible) {
-      // This might have been focused with FocusManager::ActiveItemChanged. In
-      // that case, we must notify FocusManager so that it clears the active
-      // item. Otherwise, it will hold on to a defunct Accessible. Normally,
-      // this happens in UnbindFromDocument, but we don't call that when the
-      // whole document shuts down.
-      if (FocusMgr()->WasLastFocused(accessible)) {
-        FocusMgr()->ActiveItemChanged(nullptr);
-#ifdef A11Y_LOG
-        if (logging::IsEnabled(logging::eFocus)) {
-          logging::ActiveItemChangeCausedBy("doc shutdown", accessible);
-        }
-#endif
-      }
-      if (!accessible->IsDefunct()) {
-        // Unlink parent to avoid its cleaning overhead in shutdown.
-        accessible->mParent = nullptr;
-        accessible->Shutdown();
-      }
+    if (accessible && !accessible->IsDefunct()) {
+      // Unlink parent to avoid its cleaning overhead in shutdown.
+      accessible->mParent = nullptr;
+      accessible->Shutdown();
     }
     iter.Remove();
   }
