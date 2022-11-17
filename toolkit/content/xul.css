@@ -139,10 +139,14 @@ label html|span.accesskey {
   text-decoration-skip-ink: none;
 }
 
-label:where([value]),
 description:where([value]) {
   /* Preserves legacy behavior, maybe could be removed */
   display: -moz-box;
+}
+
+label:where([value]) {
+  /* Preserves legacy behavior, maybe could be removed */
+  display: -moz-inline-box;
 }
 
 label[value][crop],
