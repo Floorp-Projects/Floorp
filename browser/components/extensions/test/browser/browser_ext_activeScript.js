@@ -27,6 +27,7 @@ async function makeExtension({
   manifest_version = 3,
   granted = [],
   noStaticScript = false,
+  withUnifiedExtensionsPanel,
 }) {
   info(`Loading extension ` + JSON.stringify({ id, granted }));
 
@@ -44,14 +45,18 @@ async function makeExtension({
         ],
   };
 
-  if (manifest_version === 3) {
-    manifest.action = {
-      default_area: "navbar",
-    };
-  } else {
-    manifest.browser_action = {
-      default_area: "navbar",
-    };
+  // When the unified extensions pref is enabled, we want to verify the behavior
+  // of the non-CUI widgets inside the panel.
+  if (!withUnifiedExtensionsPanel) {
+    if (manifest_version === 3) {
+      manifest.action = {
+        default_area: "navbar",
+      };
+    } else {
+      manifest.browser_action = {
+        default_area: "navbar",
+      };
+    }
   }
 
   let ext = ExtensionTestUtils.loadExtension({
@@ -215,26 +220,39 @@ const verifyActionActiveScript = async ({
     id: "ext0@test",
     manifest_version: 2,
     granted: ["*://example.com/*"],
+    withUnifiedExtensionsPanel,
   });
 
-  let ext1 = await makeExtension({ id: "ext1@test" });
+  let ext1 = await makeExtension({
+    id: "ext1@test",
+    withUnifiedExtensionsPanel,
+  });
 
   let ext2 = await makeExtension({
     id: "ext2@test",
     granted: ["*://example.com/*"],
+    withUnifiedExtensionsPanel,
   });
 
   let ext3 = await makeExtension({
     id: "ext3@test",
     granted: ["*://mochi.test/*"],
+    withUnifiedExtensionsPanel,
   });
 
   // Test run_at script ordering.
-  let ext4 = await makeExtension({ id: "ext4@test" });
+  let ext4 = await makeExtension({
+    id: "ext4@test",
+    withUnifiedExtensionsPanel,
+  });
 
   // Test without static scripts in the manifest, because they add optional
   // permissions, and we specifically want to test activeTab without them.
-  let ext5 = await makeExtension({ id: "ext5@test", noStaticScript: true });
+  let ext5 = await makeExtension({
+    id: "ext5@test",
+    noStaticScript: true,
+    withUnifiedExtensionsPanel,
+  });
 
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     info("No content scripts run on top level about:blank.");
@@ -458,14 +476,9 @@ add_task(async function test_action_activeScript() {
 });
 
 add_task(async function test_activeScript_with_unified_extensions_panel() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.unifiedExtensions.enabled", true]],
-  });
-
   const win = await promiseEnableUnifiedExtensions();
 
   await verifyActionActiveScript({ win, withUnifiedExtensionsPanel: true });
 
   await BrowserTestUtils.closeWindow(win);
-  await SpecialPowers.popPrefEnv();
 });

@@ -3374,6 +3374,10 @@ class Extension extends ExtensionData {
     }
     return this._optionalOrigins;
   }
+
+  get hasBrowserActionUI() {
+    return this.manifest.browser_action || this.manifest.action;
+  }
 }
 
 class Dictionary extends ExtensionData {

@@ -6,9 +6,16 @@ const { ExtensionPermissions } = ChromeUtils.import(
 
 loadTestSubscript("head_unified_extensions.js");
 
+let win;
+
 add_setup(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.manifestV3.enabled", true]],
+  });
+
+  win = await promiseEnableUnifiedExtensions();
+  registerCleanupFunction(async () => {
+    await BrowserTestUtils.closeWindow(win);
   });
 });
 
@@ -80,29 +87,21 @@ async function testOriginControls(
 
   let buttonOrWidget;
   let menu;
-  let manageExtensionClassName;
-  let visibleOriginItems;
+  let nextMenuItemClassName;
 
   switch (contextMenuId) {
     case "toolbar-context-menu":
       let target = `#${CSS.escape(makeWidgetId(extension.id))}-BAP`;
       buttonOrWidget = win.document.querySelector(target).parentElement;
       menu = await openChromeContextMenu(contextMenuId, target, win);
-      manageExtensionClassName = "customize-context-manageExtension";
-      visibleOriginItems = menu.querySelectorAll(
-        ":is(menuitem, menuseparator):not([hidden])"
-      );
+      nextMenuItemClassName = "customize-context-manageExtension";
       break;
 
     case "unified-extensions-context-menu":
       await openExtensionsPanel(win);
       buttonOrWidget = getUnifiedExtensionsItem(win, extension.id);
       menu = await openUnifiedExtensionsContextMenu(win, extension.id);
-      manageExtensionClassName =
-        "unified-extensions-context-menu-manage-extension";
-      visibleOriginItems = menu.querySelectorAll(
-        ".unified-extensions-context-menu-management-separator ~ :is(menuitem, menuseparator):not([hidden])"
-      );
+      nextMenuItemClassName = "unified-extensions-context-menu-pin-to-toolbar";
       break;
 
     default:
@@ -110,6 +109,9 @@ async function testOriginControls(
   }
 
   let doc = menu.ownerDocument;
+  let visibleOriginItems = menu.querySelectorAll(
+    ":is(menuitem, menuseparator):not([hidden])"
+  );
 
   info("Check expected menu items.");
   for (let i = 0; i < items.length; i++) {
@@ -132,7 +134,7 @@ async function testOriginControls(
     );
     is(
       visibleOriginItems[items.length + 1].className,
-      manageExtensionClassName,
+      nextMenuItemClassName,
       "All items accounted for."
     );
   }
@@ -220,16 +222,23 @@ const originControlsInContextMenu = async options => {
   if (options.contextMenuId === "unified-extensions-context-menu") {
     // Unified button should only show a notification indicator when extensions
     // asking for attention are not already visible in the toolbar.
+    moveWidget(ext1, options.win, false);
     moveWidget(ext2, options.win, false);
     moveWidget(ext3, options.win, false);
+    moveWidget(ext4, options.win, false);
+    moveWidget(ext5, options.win, false);
     unifiedButton = options.win.document.querySelector(
       "#unified-extensions-button"
     );
   } else {
     // TestVerify runs this again in the same Firefox instance, so move the
-    // widgets back to the toolbar for testing outside the unified button.
+    // widgets back to the toolbar for testing outside the unified extensions
+    // panel.
+    moveWidget(ext1, options.win, true);
     moveWidget(ext2, options.win, true);
     moveWidget(ext3, options.win, true);
+    moveWidget(ext4, options.win, true);
+    moveWidget(ext5, options.win, true);
   }
 
   const NO_ACCESS = { id: "origin-controls-no-access", args: null };
@@ -385,23 +394,14 @@ const originControlsInContextMenu = async options => {
 
 add_task(async function originControls_in_browserAction_contextMenu() {
   await originControlsInContextMenu({
-    win: window,
+    win,
     contextMenuId: "toolbar-context-menu",
   });
 });
 
 add_task(async function originControls_in_unifiedExtensions_contextMenu() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.unifiedExtensions.enabled", true]],
-  });
-
-  const win = await promiseEnableUnifiedExtensions();
-
   await originControlsInContextMenu({
     win,
     contextMenuId: "unified-extensions-context-menu",
   });
-
-  await BrowserTestUtils.closeWindow(win);
-  await SpecialPowers.popPrefEnv();
 });

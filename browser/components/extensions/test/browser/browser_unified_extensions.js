@@ -294,10 +294,30 @@ add_task(async function test_panel_has_a_manage_extensions_button() {
 });
 
 add_task(async function test_list_active_extensions_only() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.manifestV3.enabled", true]],
+  });
+
   const arrayOfManifestData = [
     { name: "hidden addon", hidden: true },
     { name: "regular addon", hidden: false },
     { name: "disabled addon", hidden: false },
+    {
+      name: "regular addon with browser action",
+      hidden: false,
+      browser_action: {},
+    },
+    {
+      manifest_version: 3,
+      name: "regular mv3 addon with browser action",
+      hidden: false,
+      action: {},
+    },
+    {
+      name: "regular addon with page action",
+      hidden: false,
+      page_action: {},
+    },
   ];
   const extensions = createExtensions(arrayOfManifestData, {
     // We have to use the mock provider below so we don't need to use the
@@ -334,6 +354,27 @@ add_task(async function test_list_active_extensions_only() {
       // Mark this add-on as disabled.
       userDisabled: true,
     },
+    {
+      id: extensions[3].id,
+      name: arrayOfManifestData[3].name,
+      type: "extension",
+      version: "1",
+      hidden: arrayOfManifestData[3].hidden,
+    },
+    {
+      id: extensions[4].id,
+      name: arrayOfManifestData[4].name,
+      type: "extension",
+      version: "1",
+      hidden: arrayOfManifestData[4].hidden,
+    },
+    {
+      id: extensions[5].id,
+      name: arrayOfManifestData[5].name,
+      type: "extension",
+      version: "1",
+      hidden: arrayOfManifestData[4].hidden,
+    },
   ]);
 
   await openExtensionsPanel(win);
@@ -350,6 +391,23 @@ add_task(async function test_list_active_extensions_only() {
 
   const disabledAddonItem = getUnifiedExtensionsItem(win, extensions[2].id);
   is(disabledAddonItem, null, `didn't expect an item for ${extensions[2].id}`);
+
+  const browserActionItem = getUnifiedExtensionsItem(win, extensions[3].id);
+  is(browserActionItem, null, `didn't expect an item for ${extensions[3].id}`);
+
+  const mv3BrowserActionItem = getUnifiedExtensionsItem(win, extensions[4].id);
+  is(
+    mv3BrowserActionItem,
+    null,
+    `didn't expect an item for ${extensions[4].id}`
+  );
+
+  const pageActionItem = getUnifiedExtensionsItem(win, extensions[5].id);
+  is(
+    pageActionItem.querySelector(".unified-extensions-item-name").textContent,
+    "regular addon with page action",
+    "expected an item for a regular add-on with page action"
+  );
 
   await closeExtensionsPanel(win);
 
