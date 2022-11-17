@@ -68,6 +68,8 @@ class LossBasedBweV2 {
     double higher_bandwidth_bias_factor = 0.0;
     double higher_log_bandwidth_bias_factor = 0.0;
     double inherent_loss_lower_bound = 0.0;
+    double loss_threshold_of_high_bandwidth_preference = 0.0;
+    double bandwidth_preference_smoothing_factor = 0.0;
     DataRate inherent_loss_upper_bound_bandwidth_balance =
         DataRate::MinusInfinity();
     double inherent_loss_upper_bound_offset = 0.0;
@@ -89,6 +91,7 @@ class LossBasedBweV2 {
     double max_increase_factor = 0.0;
     TimeDelta delayed_increase_window = TimeDelta::Zero();
     bool use_acked_bitrate_only_when_overusing = false;
+    bool not_increase_if_inherent_loss_less_than_average_loss = false;
   };
 
   struct Derivatives {
@@ -125,6 +128,7 @@ class LossBasedBweV2 {
   double GetFeasibleInherentLoss(
       const ChannelParameters& channel_parameters) const;
   double GetInherentLossUpperBound(DataRate bandwidth) const;
+  double AdjustBiasFactor(double loss_rate, double bias_factor) const;
   double GetHighBandwidthBias(DataRate bandwidth) const;
   double GetObjective(const ChannelParameters& channel_parameters) const;
   DataRate GetSendingRate(DataRate instantaneous_sending_rate) const;
