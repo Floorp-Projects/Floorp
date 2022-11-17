@@ -11,13 +11,9 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/AsyncShutdown.jsm"
 );
 ChromeUtils.defineESModuleGetters(this, {
+  FileTestUtils: "resource://testing-common/FileTestUtils.sys.mjs",
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "FileTestUtils",
-  "resource://testing-common/FileTestUtils.jsm"
-);
 
 /**
  * Returns a reference to a temporary file that is guaranteed not to exist and

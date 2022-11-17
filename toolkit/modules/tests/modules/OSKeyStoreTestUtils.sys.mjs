@@ -8,9 +8,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
-);
+import { TestUtils } from "resource://testing-common/TestUtils.sys.mjs";
 
 // Debug builds will be treated as "official" builds for the purposes of the automated testing for behavior of OSKeyStore.ensureLoggedIn
 // We want to ensure that we catch test failures that would only otherwise show up in official builds

@@ -10,12 +10,16 @@ const { AppConstants } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  Assert: "resource://testing-common/Assert.sys.mjs",
+  MockRegistrar: "resource://testing-common/MockRegistrar.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
-  Assert: "resource://testing-common/Assert.jsm",
+
   // AttributionCode is only needed for Firefox
   AttributionCode: "resource:///modules/AttributionCode.jsm",
-  MockRegistrar: "resource://testing-common/MockRegistrar.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["TelemetryEnvironmentTesting"];

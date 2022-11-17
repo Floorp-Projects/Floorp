@@ -4,8 +4,8 @@
 
 "use strict";
 
-var { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+var { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 
 let OSKeyStoreTestUtils;

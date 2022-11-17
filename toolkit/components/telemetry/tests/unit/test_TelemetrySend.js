@@ -9,8 +9,8 @@
 const { TelemetryController } = ChromeUtils.import(
   "resource://gre/modules/TelemetryController.jsm"
 );
-const { MockRegistrar } = ChromeUtils.import(
-  "resource://testing-common/MockRegistrar.jsm"
+const { MockRegistrar } = ChromeUtils.importESModule(
+  "resource://testing-common/MockRegistrar.sys.mjs"
 );
 const { TelemetrySend } = ChromeUtils.import(
   "resource://gre/modules/TelemetrySend.jsm"

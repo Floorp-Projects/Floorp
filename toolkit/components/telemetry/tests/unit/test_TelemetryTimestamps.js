@@ -11,8 +11,8 @@ const { TelemetrySession } = ChromeUtils.import(
 // The @mozilla/xre/app-info;1 XPCOM object provided by the xpcshell test harness doesn't
 // implement the nsIXULAppInfo interface, which is needed by Services and
 // TelemetrySession.jsm. updateAppInfo() creates and registers a minimal mock app-info.
-const { updateAppInfo } = ChromeUtils.import(
-  "resource://testing-common/AppInfo.jsm"
+const { updateAppInfo } = ChromeUtils.importESModule(
+  "resource://testing-common/AppInfo.sys.mjs"
 );
 updateAppInfo();
 

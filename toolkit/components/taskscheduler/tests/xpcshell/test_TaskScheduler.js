@@ -9,8 +9,8 @@
 // only touches on the basics of argument checking. On platforms without a task
 // scheduler implementation, these interfaces currently do nothing else.
 
-const { updateAppInfo } = ChromeUtils.import(
-  "resource://testing-common/AppInfo.jsm"
+const { updateAppInfo } = ChromeUtils.importESModule(
+  "resource://testing-common/AppInfo.sys.mjs"
 );
 updateAppInfo();
 

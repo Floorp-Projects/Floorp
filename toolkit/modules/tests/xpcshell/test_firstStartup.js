@@ -6,8 +6,8 @@ const { AppConstants } = ChromeUtils.importESModule(
 const { FirstStartup } = ChromeUtils.importESModule(
   "resource://gre/modules/FirstStartup.sys.mjs"
 );
-const { updateAppInfo } = ChromeUtils.import(
-  "resource://testing-common/AppInfo.jsm"
+const { updateAppInfo } = ChromeUtils.importESModule(
+  "resource://testing-common/AppInfo.sys.mjs"
 );
 
 const PREF_TIMEOUT = "first-startup.timeout";

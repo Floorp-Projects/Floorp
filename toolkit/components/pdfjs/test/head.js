@@ -56,8 +56,8 @@ async function waitForPdfJSAllLayers(browser, url, layers) {
   await Promise.all([loadPromise, annotationPromise, annotationEditorPromise]);
 
   await SpecialPowers.spawn(browser, [layers], async function(layers) {
-    const { ContentTaskUtils } = ChromeUtils.import(
-      "resource://testing-common/ContentTaskUtils.jsm"
+    const { ContentTaskUtils } = ChromeUtils.importESModule(
+      "resource://testing-common/ContentTaskUtils.sys.mjs"
     );
     const { document } = content;
 
@@ -140,8 +140,8 @@ async function enableEditor(browser, name) {
  */
 async function getSpanBox(browser, text) {
   return SpecialPowers.spawn(browser, [text], async function(text) {
-    const { ContentTaskUtils } = ChromeUtils.import(
-      "resource://testing-common/ContentTaskUtils.jsm"
+    const { ContentTaskUtils } = ChromeUtils.importESModule(
+      "resource://testing-common/ContentTaskUtils.sys.mjs"
     );
     const { document } = content;
 
@@ -252,8 +252,8 @@ async function focusEditorLayer(browser) {
  */
 async function hitKey(browser, char) {
   await SpecialPowers.spawn(browser, [char], async function(char) {
-    const { ContentTaskUtils } = ChromeUtils.import(
-      "resource://testing-common/ContentTaskUtils.jsm"
+    const { ContentTaskUtils } = ChromeUtils.importESModule(
+      "resource://testing-common/ContentTaskUtils.sys.mjs"
     );
     const EventUtils = ContentTaskUtils.getEventUtils(content);
     await EventUtils.synthesizeKey(char, {}, content);

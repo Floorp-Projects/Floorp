@@ -27,11 +27,11 @@ const { TelemetryUtils } = ChromeUtils.import(
 const { Preferences } = ChromeUtils.importESModule(
   "resource://gre/modules/Preferences.sys.mjs"
 );
-const { ContentTaskUtils } = ChromeUtils.import(
-  "resource://testing-common/ContentTaskUtils.jsm"
+const { ContentTaskUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/ContentTaskUtils.sys.mjs"
 );
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 const { TelemetryArchiveTesting } = ChromeUtils.import(
   "resource://testing-common/TelemetryArchiveTesting.jsm"

@@ -1,12 +1,8 @@
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TestUtils",
-  "resource://testing-common/TestUtils.jsm"
-);
 
 export var PlacesTestUtils = Object.freeze({
   /**

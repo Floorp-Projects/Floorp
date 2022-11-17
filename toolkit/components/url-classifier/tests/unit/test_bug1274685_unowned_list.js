@@ -1,8 +1,8 @@
 const { SafeBrowsing } = ChromeUtils.import(
   "resource://gre/modules/SafeBrowsing.jsm"
 );
-const { updateAppInfo } = ChromeUtils.import(
-  "resource://testing-common/AppInfo.jsm"
+const { updateAppInfo } = ChromeUtils.importESModule(
+  "resource://testing-common/AppInfo.sys.mjs"
 );
 
 // 'Cc["@mozilla.org/xre/app-info;1"]' for xpcshell has no nsIXULAppInfo

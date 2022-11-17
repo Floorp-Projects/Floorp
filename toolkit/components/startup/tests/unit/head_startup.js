@@ -11,8 +11,8 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 var gAppInfo = null;
 
 function createAppInfo(ID, name, version, platformVersion = "1.0") {
-  let { newAppInfo } = ChromeUtils.import(
-    "resource://testing-common/AppInfo.jsm"
+  let { newAppInfo } = ChromeUtils.importESModule(
+    "resource://testing-common/AppInfo.sys.mjs"
   );
   gAppInfo = newAppInfo({
     ID,

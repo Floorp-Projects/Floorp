@@ -10,8 +10,8 @@ const { TelemetryStorage } = ChromeUtils.import(
 const { TelemetryUtils } = ChromeUtils.import(
   "resource://gre/modules/TelemetryUtils.jsm"
 );
-const { makeFakeAppDir } = ChromeUtils.import(
-  "resource://testing-common/AppData.jsm"
+const { makeFakeAppDir } = ChromeUtils.importESModule(
+  "resource://testing-common/AppData.sys.mjs"
 );
 
 // The name of the pending pings directory outside of the user profile,

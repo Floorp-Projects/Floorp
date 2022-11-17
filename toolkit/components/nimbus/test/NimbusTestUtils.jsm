@@ -12,8 +12,8 @@ const { ExperimentStore } = ChromeUtils.import(
   "resource://nimbus/lib/ExperimentStore.jsm"
 );
 
-const { FileTestUtils } = ChromeUtils.import(
-  "resource://testing-common/FileTestUtils.jsm"
+const { FileTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/FileTestUtils.sys.mjs"
 );
 
 const lazy = {};

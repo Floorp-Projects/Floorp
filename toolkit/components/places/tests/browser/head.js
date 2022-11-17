@@ -6,11 +6,6 @@ var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "BrowserTestUtils",
-  "resource://testing-common/BrowserTestUtils.jsm"
-);
 
 const TRANSITION_LINK = PlacesUtils.history.TRANSITION_LINK;
 const TRANSITION_TYPED = PlacesUtils.history.TRANSITION_TYPED;

@@ -5,7 +5,9 @@
 
 const EXPORTED_SYMBOLS = ["TelemetryTestUtils"];
 
-const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+const { Assert } = ChromeUtils.importESModule(
+  "resource://testing-common/Assert.sys.mjs"
+);
 
 var TelemetryTestUtils = {
   /* Scalars */

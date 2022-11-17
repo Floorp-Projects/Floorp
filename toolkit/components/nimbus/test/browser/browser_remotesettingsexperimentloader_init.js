@@ -12,9 +12,6 @@ const { ExperimentManager } = ChromeUtils.import(
 const { ExperimentAPI } = ChromeUtils.import(
   "resource://nimbus/ExperimentAPI.jsm"
 );
-const { BrowserTestUtils } = ChromeUtils.import(
-  "resource://testing-common/BrowserTestUtils.jsm"
-);
 
 function getRecipe(slug) {
   return ExperimentFakes.recipe(slug, {

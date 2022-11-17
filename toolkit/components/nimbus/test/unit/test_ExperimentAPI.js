@@ -6,8 +6,8 @@ const { ExperimentAPI } = ChromeUtils.import(
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
 );
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 const COLLECTION_ID_PREF = "messaging-system.rsexperimentloader.collection_id";
 

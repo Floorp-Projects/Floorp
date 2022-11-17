@@ -8,8 +8,8 @@ const { TelemetryController } = ChromeUtils.import(
 const { TelemetrySession } = ChromeUtils.import(
   "resource://gre/modules/TelemetrySession.jsm"
 );
-const { ContentTaskUtils } = ChromeUtils.import(
-  "resource://testing-common/ContentTaskUtils.jsm"
+const { ContentTaskUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/ContentTaskUtils.sys.mjs"
 );
 
 const MESSAGE_CHILD_TEST_DONE = "ChildTest:Done";
