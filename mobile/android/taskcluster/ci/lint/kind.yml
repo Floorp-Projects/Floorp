@@ -16,6 +16,7 @@ kind-dependencies:
 task-defaults:
     attributes:
         code-review: true
+        retrigger: true
     fetches:
         toolchain:
             - android-sdk-linux
@@ -38,30 +39,8 @@ task-defaults:
         skip-unless-changed:
             - "android-components/**"
 
-tasks:
-    compare-locales:
-        description: 'Validate strings.xml with compare-locales'
-        run:
-            using: run-task
-            cwd: '{checkout}/android-components'
-            command: 'pip install --user "compare-locales>=5.0.2,<6.0" && compare-locales --validate l10n.toml .'
-        treeherder:
-            symbol: compare-locale
-            tier: 2
-    detektAndKtlint:
-        description: 'Running detekt and ktlint over all modules'
-        run:
-            gradlew: [detekt, ktlint, githubLintDetektDetails]
-            pre-gradlew:
-                - ["cd", "android-components"]
-            using: gradlew
-        treeherder:
-            symbol: detektKtlint
-        worker:
-            artifacts:
-                - name: public/reports
-                  path: /builds/worker/checkouts/vcs/build/reports
-                  type: directory
-                - name: public/github
-                  path: /builds/worker/github
-                  type: directory
+tasks-from:
+    - compare-locales.yml
+    - detekt.yml
+    - ktlint.yml
+    - lint.yml

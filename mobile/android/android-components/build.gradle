@@ -414,9 +414,11 @@ tasks.register("githubBuildDetails", GithubDetailsTask) {
 }
 
 tasks.register("githubLintDetektDetails", GithubDetailsTask) {
-    text = """### Test result files
+    text = "### [Detekt Results Android-Components]({reportsUrl}/detekt.html)"
+}
 
-- [Detekt Results]({reportsUrl}/detekt.html)"""
+tasks.register("githubLintAndroidDetails", GithubDetailsTask) {
+    text = "### [Android Lint Results Android-Components]({reportsUrl}/lint-results-debug.html)"
 }
 
 tasks.register("testToolsDir", Exec) {
