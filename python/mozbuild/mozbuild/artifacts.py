@@ -129,13 +129,38 @@ class ArtifactJob(object):
         ("bin/http3server", ("bin", "bin")),
         ("bin/plugins/gmp-*/*/*", ("bin/plugins", "bin")),
         ("bin/plugins/*", ("bin/plugins", "plugins")),
-        ("bin/components/*.xpt", ("bin/components", "bin/components")),
     }
 
     # We can tell our input is a test archive by this suffix, which happens to
     # be the same across platforms.
     _test_zip_archive_suffix = ".common.tests.zip"
     _test_tar_archive_suffix = ".common.tests.tar.gz"
+
+    # A map of extra archives to fetch and unpack.  An extra archive might
+    # include optional build output to incorporate into the local artifact
+    # build.  Test archives and crashreporter symbols could be extra archives
+    # but they require special handling; this mechanism is generic and intended
+    # only for the simplest cases.
+    #
+    # Each suffix key matches a candidate archive (i.e., an artifact produced by
+    # an upstream build).  Each value is itself a dictionary that must contain
+    # the following keys:
+    #
+    # - `description`: a purely informational string description.
+    # - `src_prefix`: entry names in the archive with leading `src_prefix` will
+    #   have the prefix stripped.
+    # - `dest_prefix`: entry names in the archive will have `dest_prefix`
+    #   prepended.
+    #
+    # The entries in the archive, suitably renamed, will be extracted into `dist`.
+    _extra_archives = {
+        ".xpt_artifacts.zip": {
+            "description": "XPT Artifacts",
+            "src_prefix": "",
+            "dest_prefix": "xpt_artifacts",
+        },
+    }
+    _extra_archive_suffixes = tuple(sorted(_extra_archives.keys()))
 
     def __init__(
         self,
@@ -190,6 +215,8 @@ class ArtifactJob(object):
                 self._symbols_archive_suffix
             ):
                 yield name
+            elif name.endswith(ArtifactJob._extra_archive_suffixes):
+                yield name
             else:
                 self.log(
                     logging.DEBUG,
@@ -222,6 +249,8 @@ class ArtifactJob(object):
             self._symbols_archive_suffix
         ):
             return self.process_symbols_archive(filename, processed_filename)
+        if filename.endswith(ArtifactJob._extra_archive_suffixes):
+            return self.process_extra_archive(filename, processed_filename)
         return self.process_package_artifact(filename, processed_filename)
 
     def process_package_artifact(self, filename, processed_filename):
@@ -365,6 +394,43 @@ class ArtifactJob(object):
                     )
                     continue
                 destpath = mozpath.join("crashreporter-symbols", filename)
+                self.log(
+                    logging.INFO,
+                    "artifact",
+                    {"destpath": destpath},
+                    "Adding {destpath} to processed archive",
+                )
+                writer.add(destpath.encode("utf-8"), entry)
+
+    def process_extra_archive(self, filename, processed_filename):
+        for suffix, extra_archive in ArtifactJob._extra_archives.items():
+            if filename.endswith(suffix):
+                self.log(
+                    logging.INFO,
+                    "artifact",
+                    {"filename": filename, "description": extra_archive["description"]},
+                    '"{filename}" is a recognized extra archive ({description})',
+                )
+                break
+        else:
+            raise ValueError('"{}" is not a recognized extra archive!'.format(filename))
+
+        src_prefix = extra_archive["src_prefix"]
+        dest_prefix = extra_archive["dest_prefix"]
+
+        with self.get_writer(file=processed_filename, compress_level=5) as writer:
+            for filename, entry in self.iter_artifact_archive(filename):
+                if not filename.startswith(src_prefix):
+                    self.log(
+                        logging.DEBUG,
+                        "artifact",
+                        {"filename": filename, "src_prefix": src_prefix},
+                        "Skipping extra archive item {filename} "
+                        "that does not start with {src_prefix}",
+                    )
+                    continue
+                destpath = mozpath.relpath(filename, src_prefix)
+                destpath = mozpath.join(dest_prefix, destpath)
                 self.log(
                     logging.INFO,
                     "artifact",
