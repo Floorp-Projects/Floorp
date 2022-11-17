@@ -88,6 +88,7 @@ constexpr int kShortTimeout = 1000;
 constexpr int kMaxExpectedSimulatedRtt = 200;
 const SocketAddress kLocalAddr1("192.168.1.2", 0);
 const SocketAddress kLocalAddr2("192.168.1.3", 0);
+const SocketAddress kLinkLocalIPv6Addr("fe80::aabb:ccff:fedd:eeff", 0);
 const SocketAddress kNatAddr1("77.77.77.77", rtc::NAT_SERVER_UDP_PORT);
 const SocketAddress kNatAddr2("88.88.88.88", rtc::NAT_SERVER_UDP_PORT);
 const SocketAddress kStunAddr("99.99.99.1", STUN_SERVER_PORT);
@@ -515,6 +516,18 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
     return &networks_.back();
   }
 
+  rtc::Network* MakeNetworkMultipleAddrs(
+      const SocketAddress& global_addr,
+      const SocketAddress& link_local_addr,
+      const webrtc::FieldTrialsView* field_trials) {
+    networks_.emplace_back("unittest", "unittest", global_addr.ipaddr(), 32,
+                           rtc::ADAPTER_TYPE_UNKNOWN, field_trials);
+    networks_.back().AddIP(link_local_addr.ipaddr());
+    networks_.back().AddIP(global_addr.ipaddr());
+    networks_.back().AddIP(link_local_addr.ipaddr());
+    return &networks_.back();
+  }
+
   // helpers for above functions
   std::unique_ptr<UDPPort> CreateUdpPort(const SocketAddress& addr) {
     return CreateUdpPort(addr, &socket_factory_);
@@ -524,6 +537,16 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
     return UDPPort::Create(&main_, socket_factory, MakeNetwork(addr), 0, 0,
                            username_, password_, true, absl::nullopt,
                            &field_trials_);
+  }
+  std::unique_ptr<UDPPort> CreateUdpPortMultipleAddrs(
+      const SocketAddress& global_addr,
+      const SocketAddress& link_local_addr,
+      PacketSocketFactory* socket_factory,
+      const webrtc::test::ScopedKeyValueConfig& field_trials) {
+    return UDPPort::Create(
+        &main_, socket_factory,
+        MakeNetworkMultipleAddrs(global_addr, link_local_addr, &field_trials),
+        0, 0, username_, password_, true, absl::nullopt, &field_trials);
   }
   std::unique_ptr<TCPPort> CreateTcpPort(const SocketAddress& addr) {
     return CreateTcpPort(addr, &socket_factory_);
@@ -1704,7 +1727,7 @@ void PortTest::ExpectPortsCanConnect(bool can_connect, Port* p1, Port* p2) {
   }
 }
 
-TEST_F(PortTest, TestUdpV6CrossTypePorts) {
+TEST_F(PortTest, TestUdpSingleAddressV6CrossTypePorts) {
   FakePacketSocketFactory factory;
   std::unique_ptr<Port> ports[4];
   SocketAddress addresses[4] = {
@@ -1732,6 +1755,42 @@ TEST_F(PortTest, TestUdpV6CrossTypePorts) {
   ExpectPortsCanConnect(true, link_local1, link_local2);
   ExpectPortsCanConnect(true, localhost, standard);
   ExpectPortsCanConnect(true, standard, localhost);
+}
+
+TEST_F(PortTest, TestUdpMultipleAddressesV6CrossTypePorts) {
+  webrtc::test::ScopedKeyValueConfig field_trials(
+      "WebRTC-PreferGlobalIPv6ToLinkLocal/Enabled/");
+  FakePacketSocketFactory factory;
+  std::unique_ptr<Port> ports[5];
+  SocketAddress addresses[5] = {
+      SocketAddress("2001:db8::1", 0), SocketAddress("2001:db8::2", 0),
+      SocketAddress("fe80::1", 0), SocketAddress("fe80::2", 0),
+      SocketAddress("::1", 0)};
+  for (int i = 0; i < 5; i++) {
+    FakeAsyncPacketSocket* socket = new FakeAsyncPacketSocket();
+    factory.set_next_udp_socket(socket);
+    ports[i] = CreateUdpPortMultipleAddrs(addresses[i], kLinkLocalIPv6Addr,
+                                          &factory, field_trials);
+    socket->set_state(AsyncPacketSocket::STATE_BINDING);
+    socket->SignalAddressReady(socket, addresses[i]);
+    ports[i]->PrepareAddress();
+  }
+
+  Port* standard1 = ports[0].get();
+  Port* standard2 = ports[1].get();
+  Port* link_local1 = ports[2].get();
+  Port* link_local2 = ports[3].get();
+  Port* localhost = ports[4].get();
+
+  ExpectPortsCanConnect(false, link_local1, standard1);
+  ExpectPortsCanConnect(false, standard1, link_local1);
+  ExpectPortsCanConnect(false, link_local1, localhost);
+  ExpectPortsCanConnect(false, localhost, link_local1);
+
+  ExpectPortsCanConnect(true, link_local1, link_local2);
+  ExpectPortsCanConnect(true, localhost, standard1);
+  ExpectPortsCanConnect(true, standard1, localhost);
+  ExpectPortsCanConnect(true, standard2, standard1);
 }
 
 // This test verifies DSCP value set through SetOption interface can be
