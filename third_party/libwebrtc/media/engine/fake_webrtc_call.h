@@ -323,6 +323,11 @@ class FakeFlexfecReceiveStream final : public webrtc::FlexfecReceiveStream {
   }
   void SetRtcpMode(webrtc::RtcpMode mode) override { config_.rtcp_mode = mode; }
 
+  int payload_type() const override { return config_.payload_type; }
+  void SetPayloadType(int payload_type) override {
+    config_.payload_type = payload_type;
+  }
+
   const webrtc::FlexfecReceiveStream::Config& GetConfig() const;
 
   uint32_t remote_ssrc() const { return config_.rtp.remote_ssrc; }
