@@ -162,8 +162,6 @@ CoverageCollector.prototype._getMethodNames = function() {
  * to a json file in a specified directory.
  */
 CoverageCollector.prototype.recordTestCoverage = function(testName) {
-  const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
   dump("Collecting coverage for: " + testName + "\n");
   let rawLines = this._getLinesCovered(testName);
   let methods = this._getMethodNames();
@@ -202,10 +200,11 @@ CoverageCollector.prototype.recordTestCoverage = function(testName) {
 
     result.push(rec);
   }
-  let arr = this._encoder.encode(JSON.stringify(result, null, 2));
   let path = this._prefix + "/jscov_" + Date.now() + ".json";
   dump("Writing coverage to: " + path + "\n");
-  return OS.File.writeAtomic(path, arr, { tmpPath: path + ".tmp" });
+  return IOUtils.writeUTF8(path, JSON.stringify(result, undefined, 2), {
+    tmpPath: `${path}.tmp`,
+  });
 };
 
 /**
