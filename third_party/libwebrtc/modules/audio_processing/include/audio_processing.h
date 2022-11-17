@@ -22,6 +22,7 @@
 
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/audio/echo_canceller3_config.h"
@@ -621,9 +622,18 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
   // return value of true indicates that the file has been
   // sucessfully opened, while a value of false indicates that
   // opening the file failed.
+  //
+  // TODO(webrtc:13579): Remove std::string version once downstream users have
+  // implemented the absl::string_view version.
   virtual bool CreateAndAttachAecDump(const std::string& file_name,
                                       int64_t max_log_size_bytes,
                                       rtc::TaskQueue* worker_queue) = 0;
+  virtual bool CreateAndAttachAecDump(absl::string_view file_name,
+                                      int64_t max_log_size_bytes,
+                                      rtc::TaskQueue* worker_queue) {
+    return CreateAndAttachAecDump(std::string(file_name), max_log_size_bytes,
+                                  worker_queue);
+  }
   virtual bool CreateAndAttachAecDump(FILE* handle,
                                       int64_t max_log_size_bytes,
                                       rtc::TaskQueue* worker_queue) = 0;

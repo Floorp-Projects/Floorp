@@ -41,7 +41,10 @@ rtc_library("api") {
     "../../rtc_base/system:rtc_export",
     "agc:gain_control_interface",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("audio_frame_proxies") {

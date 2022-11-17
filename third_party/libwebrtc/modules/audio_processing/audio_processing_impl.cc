@@ -18,6 +18,7 @@
 #include <utility>
 
 #include "absl/strings/match.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/audio/audio_frame.h"
@@ -1653,8 +1654,15 @@ int AudioProcessingImpl::recommended_stream_analog_level_locked() const {
 bool AudioProcessingImpl::CreateAndAttachAecDump(const std::string& file_name,
                                                  int64_t max_log_size_bytes,
                                                  rtc::TaskQueue* worker_queue) {
-  std::unique_ptr<AecDump> aec_dump =
-      AecDumpFactory::Create(file_name, max_log_size_bytes, worker_queue);
+  return CreateAndAttachAecDump(absl::string_view(file_name),
+                                max_log_size_bytes, worker_queue);
+}
+
+bool AudioProcessingImpl::CreateAndAttachAecDump(absl::string_view file_name,
+                                                 int64_t max_log_size_bytes,
+                                                 rtc::TaskQueue* worker_queue) {
+  std::unique_ptr<AecDump> aec_dump = AecDumpFactory::Create(
+      std::string(file_name), max_log_size_bytes, worker_queue);
   if (!aec_dump) {
     return false;
   }

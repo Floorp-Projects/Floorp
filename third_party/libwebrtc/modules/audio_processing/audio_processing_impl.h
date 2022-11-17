@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "api/function_view.h"
 #include "modules/audio_processing/aec3/echo_canceller3.h"
@@ -71,6 +72,9 @@ class AudioProcessingImpl : public AudioProcessing {
   int Initialize(const ProcessingConfig& processing_config) override;
   void ApplyConfig(const AudioProcessing::Config& config) override;
   bool CreateAndAttachAecDump(const std::string& file_name,
+                              int64_t max_log_size_bytes,
+                              rtc::TaskQueue* worker_queue) override;
+  bool CreateAndAttachAecDump(absl::string_view file_name,
                               int64_t max_log_size_bytes,
                               rtc::TaskQueue* worker_queue) override;
   bool CreateAndAttachAecDump(FILE* handle,
