@@ -316,5 +316,69 @@ addAccessibleTask(
       "Select value correct after changing option back"
     );
   },
-  { chrome: true, topLevel: true, iframe: true, remoteIFrame: true }
+  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);
+
+/**
+ * Test combobox values for non-editable comboboxes.
+ */
+addAccessibleTask(
+  `
+  <div id="combo-div-1" role="combobox">value</div>
+  <div id="combo-div-2" role="combobox">
+    <div role="listbox">
+      <div role="option">value</div>
+    </div>
+  </div>
+  <div id="combo-div-3" role="combobox">
+    <div role="group">value</div>
+  </div>
+  <div id="combo-div-4" role="combobox">foo
+    <div role="listbox">
+      <div role="option">bar</div>
+    </div>
+  </div>
+
+  <input id="combo-input-1" role="combobox" value="value" disabled></input>
+  <input id="combo-input-2" role="combobox" value="value" disabled>testing</input>
+
+  <div id="combo-div-selected" role="combobox">
+    <div role="listbox">
+      <div aria-selected="true" role="option">value</div>
+    </div>
+  </div>
+`,
+  async function(browser, docAcc) {
+    const comboDiv1 = findAccessibleChildByID(docAcc, "combo-div-1");
+    const comboDiv2 = findAccessibleChildByID(docAcc, "combo-div-2");
+    const comboDiv3 = findAccessibleChildByID(docAcc, "combo-div-3");
+    const comboDiv4 = findAccessibleChildByID(docAcc, "combo-div-4");
+    const comboInput1 = findAccessibleChildByID(docAcc, "combo-input-1");
+    const comboInput2 = findAccessibleChildByID(docAcc, "combo-input-2");
+    const comboDivSelected = findAccessibleChildByID(
+      docAcc,
+      "combo-div-selected"
+    );
+
+    // Text as a descendant of the combobox: included in the value.
+    is(comboDiv1.value, "value", "Combobox value correct");
+
+    // Text as the descendant of a listbox: excluded from the value.
+    is(comboDiv2.value, "", "Combobox value correct");
+
+    // Text as the descendant of some other role that includes text in name computation.
+    // Here, the group role contains the text node with "value" in it.
+    is(comboDiv3.value, "value", "Combobox value correct");
+
+    // Some descendant text included, but text descendant of a listbox excluded.
+    is(comboDiv4.value, "foo", "Combobox value correct");
+
+    // Combobox inputs with explicit value report that value.
+    is(comboInput1.value, "value", "Combobox value correct");
+    is(comboInput2.value, "value", "Combobox value correct");
+
+    // Combobox role with aria-selected reports correct value.
+    is(comboDivSelected.value, "value", "Combobox value correct");
+  },
+  { chrome: true, iframe: true, remoteIframe: true }
 );
