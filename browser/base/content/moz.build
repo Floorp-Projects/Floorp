@@ -130,6 +130,9 @@ with Files("blockedSite.xhtml"):
 with Files("browser-addons.js"):
     BUG_COMPONENT = ("Toolkit", "Add-ons Manager")
 
+with Files("browser-unified-extensions.js"):
+    BUG_COMPONENT = ("Toolkit", "Add-ons Manager")
+
 with Files("*menu*"):
     BUG_COMPONENT = ("Firefox", "Menus")
 
