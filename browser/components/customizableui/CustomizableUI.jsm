@@ -231,6 +231,7 @@ var CustomizableUIInternal = {
     this.loadSavedState();
     this._updateForNewVersion();
     this._updateForNewProtonVersion();
+    this._updateForUnifiedExtensions();
     this._markObsoleteBuiltinButtonsSeen();
 
     this.registerArea(
@@ -692,6 +693,61 @@ var CustomizableUIInternal = {
     }
 
     Services.prefs.setIntPref(kPrefProtonToolbarVersion, VERSION);
+  },
+
+  _updateForUnifiedExtensions() {
+    if (!gSavedState?.placements) {
+      return;
+    }
+
+    let overflowPlacements =
+      gSavedState.placements[CustomizableUI.AREA_FIXED_OVERFLOW_PANEL] || [];
+    // The most likely case is that there are no AREA_ADDONS placements, in which case the
+    // array won't exist.
+    let addonsPlacements =
+      gSavedState.placements[CustomizableUI.AREA_ADDONS] || [];
+
+    if (lazy.gUnifiedExtensionsEnabled) {
+      // Migration algorithm for transitioning to Unified Extensions:
+      //
+      // 1. Create two arrays, one for extension widgets, one for built-in widgets.
+      // 2. Iterate all items in the overflow panel, and push them into the
+      //    appropriate array based on whether or not its an extension widget.
+      // 3. Overwrite the overflow panel placements with the built-in widgets array.
+      // 4. Prepend the extension widgets to the addonsPlacements array. Note that this
+      //    does not overwrite this array as a precaution because it's possible
+      //    (though pretty unlikely) that some widgets are already there.
+      //
+      // For extension widgets that were in the palette, they will be appended to the
+      // addons area when they're created within createWidget.
+      let extWidgets = [];
+      let builtInWidgets = [];
+      for (let widgetId of overflowPlacements) {
+        if (CustomizableUI.isWebExtensionWidget(widgetId)) {
+          extWidgets.push(widgetId);
+        } else {
+          builtInWidgets.push(widgetId);
+        }
+      }
+      gSavedState.placements[
+        CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+      ] = builtInWidgets;
+      gSavedState.placements[CustomizableUI.AREA_ADDONS] = [
+        ...extWidgets,
+        ...addonsPlacements,
+      ];
+    } else {
+      // This is an emergency backstop in case things go sideways and we need to
+      // temporarily flip back the Unified Extensions pref if it had already been
+      // enabled. We will do simplest thing and just empty the AREA_ADDONS placements,
+      // and append them to the bottom of the overflow panel, and then blow away
+      // the AREA_ADDONS placements.
+      gSavedState.placements[CustomizableUI.AREA_FIXED_OVERFLOW_PANEL] = [
+        ...overflowPlacements,
+        ...addonsPlacements,
+      ];
+      delete gSavedState.placements[CustomizableUI.AREA_ADDONS];
+    }
   },
 
   /**
@@ -4504,10 +4560,7 @@ var CustomizableUI = {
    */
   isWebExtensionWidget(aWidgetId) {
     let widget = this.getWidget(aWidgetId);
-    if (widget) {
-      return widget.webExtension;
-    }
-    return aWidgetId.endsWith("-browser-action");
+    return widget?.webExtension || aWidgetId.endsWith("-browser-action");
   },
   /**
    * Add listeners to a panel that will close it. For use from the menu panel
