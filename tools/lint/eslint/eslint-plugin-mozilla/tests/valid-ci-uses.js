@@ -21,7 +21,7 @@ function invalidCode(code, messageId, data) {
   return { code, errors: [{ messageId, data }] };
 }
 
-process.env.TEST_XPIDLDIR = `${__dirname}/xpidl`;
+process.env.MOZ_XPT_ARTIFACTS_DIR = `${__dirname}/xpidl`;
 
 const tests = {
   valid: ["Ci.nsIURIFixup", "Ci.nsIURIFixup.FIXUP_FLAG_NONE"],

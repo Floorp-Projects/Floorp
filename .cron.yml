@@ -361,3 +361,13 @@ jobs:
           - mozilla-central
       when:
           - {hour: 0, minute: 00}
+
+    - name: eslint-build
+      job:
+          type: decision-task
+          treeherder-symbol: eslint-build
+          target-tasks-method: eslint-build
+      run-on-projects:
+          - mozilla-central
+      when:
+          - {hour: 0, minute: 00}

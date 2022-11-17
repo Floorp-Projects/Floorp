@@ -17,6 +17,9 @@ apt_packages+=('python-is-python3')
 apt_packages+=('shellcheck')
 apt_packages+=('sudo')
 apt_packages+=('wget')
+apt_packages+=('unzip')
+apt_packages+=('tar')
+apt_packages+=('zstd')
 
 apt-get update
 apt-get install "${apt_packages[@]}"

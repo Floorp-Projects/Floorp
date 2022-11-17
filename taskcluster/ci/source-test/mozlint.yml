@@ -118,6 +118,32 @@ eslint:
             - 'tools/lint/eslint/eslint-plugin-mozilla/**'
             - 'tools/lint/eslint/eslint-plugin-spidermonkey-js/**'
 
+eslint-build:
+    description: ESLint checks with build data
+    treeherder:
+        symbol: js(ES-B)
+        tier: 3
+    run:
+        using: run-task
+        cwd: '{checkout}'
+        command: >
+            export MOZ_XPT_ARTIFACTS_DIR="$MOZ_FETCHES_DIR/$MOZ_XPT_ARTIFACTS_DIRNAME" &&
+            find "$MOZ_XPT_ARTIFACTS_DIR" &&
+            cp -r /build/node_modules_eslint node_modules &&
+            cp -r /build/node_modules_eslint-plugin-mozilla/ tools/lint/eslint/eslint-plugin-mozilla/node_modules &&
+            ln -s ../tools/lint/eslint/eslint-plugin-mozilla node_modules &&
+            ln -s ../tools/lint/eslint/eslint-plugin-spidermonkey-js node_modules &&
+            ./mach lint -v -l eslint -f treeherder -f json:/builds/worker/mozlint.json * --rule "mozilla/valid-services-property: error" --rule "mozilla/valid-ci-uses: error"
+    worker:
+        env:
+            MOZ_XPT_ARTIFACTS_DIRNAME: xpt_artifacts
+    require-build:
+        .*: build-linux64/opt
+    fetches:
+        build:
+            - artifact: target.xpt_artifacts.zip
+              dest: xpt_artifacts
+
 license:
     description: Check for license blocks in source files.
     treeherder:
