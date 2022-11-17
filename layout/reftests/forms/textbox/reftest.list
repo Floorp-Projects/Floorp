@@ -1,6 +1,7 @@
 # access-key tests are no use on OS X because access keys are not indicated visually
 # no real XUL theme on Android so we just skip
 skip-if(cocoaWidget||Android) != chrome://reftest/content/forms/textbox/accesskey-1.xhtml chrome://reftest/content/forms/textbox/accesskey-1-notref.xhtml
+== chrome://reftest/content/forms/textbox/accesskey-1-dyn.xhtml chrome://reftest/content/forms/textbox/accesskey-1.xhtml
 fuzzy(0-1,0-3) skip-if(cocoaWidget||Android) == chrome://reftest/content/forms/textbox/accesskey-2.xhtml chrome://reftest/content/forms/textbox/accesskey-2-ref.xhtml
 skip-if(cocoaWidget||Android) == chrome://reftest/content/forms/textbox/accesskey-3.xhtml chrome://reftest/content/forms/textbox/accesskey-3-ref.xhtml
 skip-if(cocoaWidget||Android) != chrome://reftest/content/forms/textbox/accesskey-3.xhtml chrome://reftest/content/forms/textbox/accesskey-3-notref.xhtml
