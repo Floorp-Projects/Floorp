@@ -30,7 +30,7 @@ task-defaults:
         kind: test
         platform: 'lint/opt'
         tier: 1
-    worker-type: b-android
+    worker-type: b-android-large
     worker:
         docker-image: {in-tree: base}
         max-run-time: 600

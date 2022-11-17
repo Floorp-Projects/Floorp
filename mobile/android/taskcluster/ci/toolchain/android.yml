@@ -9,7 +9,7 @@ task-defaults:
         kind: build
         platform: toolchains/opt
         tier: 1
-    worker-type: b-android
+    worker-type: b-android-large
 
 
 linux64-android-sdk-linux-repack:

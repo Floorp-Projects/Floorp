@@ -39,7 +39,7 @@ task-defaults:
         kind: build
         platform: AC-android-all/opt
         tier: 1
-    worker-type: b-android
+    worker-type: b-android-large
     worker:
         chain-of-trust: true
         docker-image: {in-tree: base}
