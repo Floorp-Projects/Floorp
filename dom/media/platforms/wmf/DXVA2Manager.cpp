@@ -482,6 +482,12 @@ D3D9DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
         break;
       }
     }
+    if (StaticPrefs::media_wmf_dxva_d3d9_amd_pre_uvd4_disabled() &&
+        mIsAMDPreUVD4) {
+      aFailureReason.AssignLiteral(
+          "D3D9DXVA2Manager is disabled on AMDPreUVD4");
+      return E_FAIL;
+    }
   }
 
   RefPtr<IDirect3DSurface9> syncSurf;
