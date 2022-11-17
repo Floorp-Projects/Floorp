@@ -43,7 +43,7 @@ Covered Content
 
 Which content is included in ``gecko-strings`` is
 controlled by the project configurations of each product, on each branch.
-Currently, those are :file:`browser/locales/l10n.toml` and 
+Currently, those are :file:`browser/locales/l10n.toml` and
 :file:`mobile/android/locales/l10n.toml` in ``mozilla-central``.
 
 Created Content Structure
@@ -73,7 +73,7 @@ which we strip, they're added to the dedicated :file:`_configs` folder.
 .. code-block:: bash
 
    $ ls _configs
-   browser.toml   devtools-client.toml  devtools-shared.toml  
+   browser.toml   devtools-client.toml  devtools-shared.toml
    mobile-android.toml  toolkit.toml
 
 
