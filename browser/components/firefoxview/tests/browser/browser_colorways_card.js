@@ -53,9 +53,6 @@ function getTestElements(document) {
     expiryPill: document.querySelector("#colorways-collection-expiry-date"),
     expiry: document.querySelector("#colorways-collection-expiry-date > span"),
     figure: document.getElementById("colorways-collection-figure"),
-    noCollectionNotice: document.getElementById(
-      "no-current-colorway-collection-notice"
-    ),
   };
 }
 
@@ -121,11 +118,7 @@ add_task(async function no_collection_test() {
   try {
     await withFirefoxView({}, async browser => {
       const { document } = browser.contentWindow;
-      const { noCollectionNotice, description } = getTestElements(document);
-      ok(
-        BrowserTestUtils.is_visible(noCollectionNotice),
-        "No Active Colorway Collection Notice should be visible"
-      );
+      const { description } = getTestElements(document);
       is(description, null, "Colorway description should be hidden");
     });
   } finally {
@@ -140,11 +133,7 @@ add_task(async function colorway_closet_disabled() {
   try {
     await withFirefoxView({}, async browser => {
       const { document } = browser.contentWindow;
-      const { noCollectionNotice, description } = getTestElements(document);
-      ok(
-        BrowserTestUtils.is_visible(noCollectionNotice),
-        "No Active Colorway Collection Notice should be visible when Colorway Closet is disabled"
-      );
+      const { description } = getTestElements(document);
       is(
         description,
         null,
@@ -165,11 +154,6 @@ add_task(async function no_active_colorway_test() {
     await withFirefoxView({}, async browser => {
       const { document } = browser.contentWindow;
       const el = getTestElements(document);
-      is(
-        el.noCollectionNotice,
-        null,
-        "No Active Colorway Collection Notice should be hidden"
-      );
       ok(
         BrowserTestUtils.is_visible(el.description),
         "Colorway description should be visible"
@@ -245,11 +229,6 @@ add_task(async function active_colorway_test() {
     await withFirefoxView({}, async browser => {
       const { document } = browser.contentWindow;
       const el = getTestElements(document);
-      is(
-        el.noCollectionNotice,
-        null,
-        "No Active Colorway Collection Notice should be hidden"
-      );
       ok(
         BrowserTestUtils.is_visible(el.description),
         "Colorway description should be visible"
@@ -318,11 +297,6 @@ add_task(async function active_colorway_without_intensity_test() {
     await withFirefoxView({}, async browser => {
       const { document } = browser.contentWindow;
       const el = getTestElements(document);
-      is(
-        el.noCollectionNotice,
-        null,
-        "No Active Colorway Collection Notice should be hidden"
-      );
       ok(
         BrowserTestUtils.is_visible(el.description),
         "Colorway description should be visible"
@@ -356,11 +330,6 @@ add_task(async function active_colorway_is_outdated_test() {
     await withFirefoxView({}, async browser => {
       const { document } = browser.contentWindow;
       const el = getTestElements(document);
-      is(
-        el.noCollectionNotice,
-        null,
-        "No Active Colorway Collection Notice should be hidden"
-      );
       ok(
         BrowserTestUtils.is_visible(el.description),
         "Description should be visible"
@@ -406,11 +375,6 @@ add_task(async function change_active_colorway_test() {
       info("Start with no intensity theme");
       const { document } = browser.contentWindow;
       let el = getTestElements(document);
-      is(
-        el.noCollectionNotice,
-        null,
-        "No Active Colorway Collection Notice should be hidden"
-      );
       ok(
         BrowserTestUtils.is_visible(el.description),
         "Colorway description should be visible"
@@ -428,11 +392,6 @@ add_task(async function change_active_colorway_test() {
       info("Revert to default theme");
       await theme.disable();
       el = getTestElements(document);
-      is(
-        el.noCollectionNotice,
-        null,
-        "No Active Colorway Collection Notice should be hidden"
-      );
       ok(
         BrowserTestUtils.is_visible(el.description),
         "Colorway description should be visible"

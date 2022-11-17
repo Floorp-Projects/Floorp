@@ -47,13 +47,13 @@ class ColorwaysCard extends HTMLElement {
       BuiltInThemes.findActiveColorwayCollection();
     this.container.classList.toggle("no-collection", !colorwaysCollection);
     this.container.classList.toggle("content-container", colorwaysCollection);
-    const template = colorwaysCollection
-      ? this.activeCollectionTemplate
-      : this.noCollectionTemplate;
+    const template = colorwaysCollection ? this.activeCollectionTemplate : null;
     if (this.container.firstChild) {
       this.container.firstChild.remove();
     }
-    this.container.append(document.importNode(template.content, true));
+    if (template) {
+      this.container.append(document.importNode(template.content, true));
+    }
     this.button = this.querySelector("#colorways-button");
     this.collection_title = this.querySelector("#colorways-collection-title");
     this.description = this.querySelector("#colorways-collection-description");
