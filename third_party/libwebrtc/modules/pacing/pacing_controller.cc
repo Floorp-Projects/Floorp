@@ -48,10 +48,10 @@ bool IsEnabled(const FieldTrialsView& field_trials, absl::string_view key) {
 std::unique_ptr<PacingController::PacketQueue> CreatePacketQueue(
     const FieldTrialsView& field_trials,
     Timestamp creation_time) {
-  if (field_trials.IsEnabled("WebRTC-Pacer-UsePrioritizedPacketQueue")) {
-    return std::make_unique<PrioritizedPacketQueue>(creation_time);
+  if (field_trials.IsDisabled("WebRTC-Pacer-UsePrioritizedPacketQueue")) {
+    return std::make_unique<RoundRobinPacketQueue>(creation_time);
   }
-  return std::make_unique<RoundRobinPacketQueue>(creation_time);
+  return std::make_unique<PrioritizedPacketQueue>(creation_time);
 }
 
 }  // namespace
