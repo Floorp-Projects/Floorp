@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1632975
+-->
+<head>
+  <title>Test for Bug 1632975</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function observeTest(mutationsList) {
+  for (let mutation of mutationsList) {
+    for (let node of mutation.addedNodes) {
+      if (node.nodeName.toLowerCase() == "script") {
+        node.setAttribute("type", "text/zpconsent")
+      }
+    }
+  }
+}
+
+const observer = new MutationObserver(observeTest);
+observer.observe(document.body, { childList: true, subtree: true });
+
+let script2Ran = false;
+let script3Ran = false;
+script4Ran = false;
+
+onload = () => {
+  ok(!script2Ran, "script2 should not have run");
+  ok(!script3Ran, "script3 should not have run");
+  ok(!script4Ran, "script4 should not have run");
+  SimpleTest.finish();
+}
+</script>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1632975">Mozilla Bug 1632975</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <script id="script2">
+    script2Ran = true;
+  </script>
+
+  <script id="script3" type="disabled">
+    script3Ran = true;
+  </script>
+
+  <script id="script4" src="data:text/javascript,script4Ran = true;"></script>
+</div>
+</body>
+</html>
