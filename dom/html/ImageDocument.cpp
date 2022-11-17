@@ -177,6 +177,7 @@ nsresult ImageDocument::StartDocumentLoad(
   }
 
   mOriginalZoomLevel = IsSiteSpecific() ? 1.0 : GetZoomLevel();
+  CheckFullZoom();
   mOriginalResolution = GetResolution();
 
   if (BrowsingContext* context = GetBrowsingContext()) {
@@ -255,6 +256,7 @@ void ImageDocument::OnPageShow(bool aPersisted,
                                bool aOnlySystemGroup) {
   if (aPersisted) {
     mOriginalZoomLevel = IsSiteSpecific() ? 1.0 : GetZoomLevel();
+    CheckFullZoom();
     mOriginalResolution = GetResolution();
   }
   RefPtr<ImageDocument> kungFuDeathGrip(this);
@@ -486,6 +488,7 @@ ImageDocument::HandleEvent(Event* aEvent) {
   aEvent->GetType(eventType);
   if (eventType.EqualsLiteral("resize")) {
     CheckOverflowing(false);
+    CheckFullZoom();
   } else if (eventType.EqualsLiteral("click") &&
              StaticPrefs::browser_enable_click_image_resizing() &&
              !mIsInObjectOrEmbed) {
@@ -736,6 +739,22 @@ float ImageDocument::GetZoomLevel() {
     return bc->FullZoom();
   }
   return mOriginalZoomLevel;
+}
+
+void ImageDocument::CheckFullZoom() {
+  nsDOMTokenList* classList =
+      mImageContent ? mImageContent->ClassList() : nullptr;
+
+  if (!classList) {
+    return;
+  }
+
+  classList->Toggle(u"fullZoomOut"_ns,
+                    dom::Optional<bool>(GetZoomLevel() > mOriginalZoomLevel),
+                    IgnoreErrors());
+  classList->Toggle(u"fullZoomIn"_ns,
+                    dom::Optional<bool>(GetZoomLevel() < mOriginalZoomLevel),
+                    IgnoreErrors());
 }
 
 float ImageDocument::GetResolution() {

@@ -16,6 +16,14 @@ body {
 }
 
 @media not print {
+  .fullZoomOut {
+    cursor: zoom-out;
+  }
+
+  .fullZoomIn {
+    cursor: zoom-in;
+  }
+
   .shrinkToFit {
     cursor: zoom-in;
   }
