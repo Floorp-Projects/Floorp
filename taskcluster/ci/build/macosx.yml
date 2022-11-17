@@ -318,6 +318,9 @@ macosx64-devedition/opt:
             - artifact: target.perftests.tests.tar.gz
               extract: false
               dest: ../artifacts
+            - artifact: target.xpt_artifacts.zip
+              extract: false
+              dest: ../artifacts
             - artifact: target.common.tests.tar.gz
               dest: x64/common
             - artifact: target.cppunittest.tests.tar.gz
@@ -610,6 +613,9 @@ macosx64-shippable/opt:
               extract: false
               dest: ../artifacts
             - artifact: target.perftests.tests.tar.gz
+              extract: false
+              dest: ../artifacts
+            - artifact: target.xpt_artifacts.zip
               extract: false
               dest: ../artifacts
             - artifact: target.common.tests.tar.gz

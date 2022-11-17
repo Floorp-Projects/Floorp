@@ -111,6 +111,9 @@ GTEST_PACKAGE = $(PKG_BASENAME).gtest.tests.tar.gz
 # macOS codesigning package naming
 MACOS_CODESIGN_ARCHIVE_BASENAME = $(PKG_BASENAME).codesign-entitlements
 
+# `.xpt` artifacts: for use in artifact builds.
+XPT_ARTIFACTS_ARCHIVE_BASENAME = $(PKG_BASENAME).xpt_artifacts
+
 ifneq (,$(wildcard $(DIST)/bin/application.ini))
 BUILDID = $(shell $(PYTHON3) $(MOZILLA_DIR)/config/printconfigsetting.py $(DIST)/bin/application.ini App BuildID)
 else

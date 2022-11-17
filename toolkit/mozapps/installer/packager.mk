@@ -100,6 +100,13 @@ ifneq (,$(MOZ_ASAN)$(LIBFUZZER)$(MOZ_UBSAN))
 	$(PYTHON3) $(MOZILLA_DIR)/build/unix/rewrite_sanitizer_dylib.py '$(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)'
 endif # MOZ_ASAN || LIBFUZZER || MOZ_UBSAN
 endif # Darwin
+ifndef MOZ_ARTIFACT_BUILDS
+	@echo 'Generating XPT artifacts archive ($(XPT_ARTIFACTS_ARCHIVE_BASENAME).zip)'
+	$(call py_action,zip,-C $(topobjdir)/config/makefiles/xpidl '$(ABS_DIST)/$(PKG_PATH)$(XPT_ARTIFACTS_ARCHIVE_BASENAME).zip' '*.xpt')
+else
+	@echo 'Packaging existing XPT artifacts from artifact build into archive ($(XPT_ARTIFACTS_ARCHIVE_BASENAME).zip)'
+	$(call py_action,zip,-C $(ABS_DIST)/xpt_artifacts '$(ABS_DIST)/$(PKG_PATH)$(XPT_ARTIFACTS_ARCHIVE_BASENAME).zip' '*.xpt')
+endif # COMPILE_ENVIRONMENT
 
 prepare-package: stage-package
 
