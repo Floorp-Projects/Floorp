@@ -702,7 +702,7 @@ if (rtc_build_libvpx) {
       "../../api/video:video_frame",
       "../../api/video_codecs:video_codecs_api",
       "../../modules/video_coding:frame_dependencies_calculator",
-      "../../modules/video_coding:mock_libvpx_interface",
+      "../../modules/video_coding:webrtc_libvpx_interface",
       "../../modules/video_coding:webrtc_vp9",
       "../../rtc_base:safe_compare",
       rtc_libvpx_dir,

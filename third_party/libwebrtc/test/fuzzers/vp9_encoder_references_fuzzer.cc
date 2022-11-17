@@ -18,12 +18,11 @@
 #include "api/video/video_frame.h"
 #include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/video_encoder.h"
-#include "modules/video_coding/codecs/interface/mock_libvpx_interface.h"
+#include "modules/video_coding/codecs/interface/libvpx_interface.h"
 #include "modules/video_coding/codecs/vp9/libvpx_vp9_encoder.h"
 #include "modules/video_coding/frame_dependencies_calculator.h"
 #include "rtc_base/numerics/safe_compare.h"
 #include "test/fuzzers/fuzz_data_helper.h"
-#include "test/gmock.h"
 
 // Fuzzer simulates various svc configurations and libvpx encoder dropping
 // layer frames.
@@ -32,7 +31,6 @@ namespace webrtc {
 namespace {
 
 using test::FuzzDataHelper;
-using ::testing::NiceMock;
 
 constexpr int kBitrateEnabledBps = 100'000;
 
@@ -304,7 +302,7 @@ struct LibvpxState {
   vpx_codec_cx_pkt pkt = {};
 };
 
-class StubLibvpx : public NiceMock<MockLibvpxInterface> {
+class StubLibvpx : public LibvpxInterface {
  public:
   explicit StubLibvpx(LibvpxState* state) : state_(state) { RTC_CHECK(state_); }
 
@@ -408,6 +406,86 @@ class StubLibvpx : public NiceMock<MockLibvpxInterface> {
       const vpx_codec_enc_cfg_t* cfg) const override {
     state_->config = *cfg;
     return VPX_CODEC_OK;
+  }
+
+  vpx_image_t* img_alloc(vpx_image_t* img,
+                         vpx_img_fmt_t fmt,
+                         unsigned int d_w,
+                         unsigned int d_h,
+                         unsigned int align) const override {
+    return nullptr;
+  }
+  void img_free(vpx_image_t* img) const override {}
+  vpx_codec_err_t codec_enc_init_multi(vpx_codec_ctx_t* ctx,
+                                       vpx_codec_iface_t* iface,
+                                       vpx_codec_enc_cfg_t* cfg,
+                                       int num_enc,
+                                       vpx_codec_flags_t flags,
+                                       vpx_rational_t* dsf) const override {
+    return VPX_CODEC_OK;
+  }
+  vpx_codec_err_t codec_destroy(vpx_codec_ctx_t* ctx) const override {
+    return VPX_CODEC_OK;
+  }
+  vpx_codec_err_t codec_control(vpx_codec_ctx_t* ctx,
+                                vp8e_enc_control_id ctrl_id,
+                                uint32_t param) const override {
+    return VPX_CODEC_OK;
+  }
+  vpx_codec_err_t codec_control(vpx_codec_ctx_t* ctx,
+                                vp8e_enc_control_id ctrl_id,
+                                int param) const override {
+    return VPX_CODEC_OK;
+  }
+  vpx_codec_err_t codec_control(vpx_codec_ctx_t* ctx,
+                                vp8e_enc_control_id ctrl_id,
+                                int* param) const override {
+    return VPX_CODEC_OK;
+  }
+  vpx_codec_err_t codec_control(vpx_codec_ctx_t* ctx,
+                                vp8e_enc_control_id ctrl_id,
+                                vpx_roi_map* param) const override {
+    return VPX_CODEC_OK;
+  }
+  vpx_codec_err_t codec_control(vpx_codec_ctx_t* ctx,
+                                vp8e_enc_control_id ctrl_id,
+                                vpx_active_map* param) const override {
+    return VPX_CODEC_OK;
+  }
+  vpx_codec_err_t codec_control(vpx_codec_ctx_t* ctx,
+                                vp8e_enc_control_id ctrl_id,
+                                vpx_scaling_mode* param) const override {
+    return VPX_CODEC_OK;
+  }
+  vpx_codec_err_t codec_control(vpx_codec_ctx_t* ctx,
+                                vp8e_enc_control_id ctrl_id,
+                                vpx_svc_extra_cfg_t* param) const override {
+    return VPX_CODEC_OK;
+  }
+  vpx_codec_err_t codec_control(
+      vpx_codec_ctx_t* ctx,
+      vp8e_enc_control_id ctrl_id,
+      vpx_svc_spatial_layer_sync_t* param) const override {
+    return VPX_CODEC_OK;
+  }
+  vpx_codec_err_t codec_control(vpx_codec_ctx_t* ctx,
+                                vp8e_enc_control_id ctrl_id,
+                                vpx_rc_funcs_t* param) const override {
+    return VPX_CODEC_OK;
+  }
+  const vpx_codec_cx_pkt_t* codec_get_cx_data(
+      vpx_codec_ctx_t* ctx,
+      vpx_codec_iter_t* iter) const override {
+    return nullptr;
+  }
+  const char* codec_error_detail(vpx_codec_ctx_t* ctx) const override {
+    return nullptr;
+  }
+  const char* codec_error(vpx_codec_ctx_t* ctx) const override {
+    return nullptr;
+  }
+  const char* codec_err_to_string(vpx_codec_err_t err) const override {
+    return nullptr;
   }
 
  private:
