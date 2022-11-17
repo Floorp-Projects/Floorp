@@ -244,6 +244,13 @@ interface nsIFile : nsISupports
     attribute unsigned long permissionsOfLink;
 
     /**
+     * The last accesss time of the file in milliseconds from midnight, January
+     * 1, 1970 GMT, if available.
+     */
+    attribute PRTime lastAccessedTime;
+    attribute PRTime lastAccessedTimeOfLink;
+
+    /**
      *  File Times are to be in milliseconds from
      *  midnight (00:00:00), January 1, 1970 Greenwich Mean
      *  Time (GMT).
