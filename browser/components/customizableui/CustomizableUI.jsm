@@ -3322,11 +3322,12 @@ var CustomizableUIInternal = {
       }
     }
 
+    // restoreStateForArea will have normally set an array for the placements
+    // for each area, but since we skip AREA_ADDONS intentionally, that array
+    // doesn't get set, so we do that manually here.
+    gPlacements.set(CustomizableUI.AREA_ADDONS, []);
+
     if (lazy.gUnifiedExtensionsEnabled) {
-      // restoreStateForArea will have normally set an array for the placements
-      // for each area, but since we skip AREA_ADDONS intentionally, that array
-      // doesn't get set, so we do that manually here.
-      gPlacements.set(CustomizableUI.AREA_ADDONS, []);
       for (let [widgetId] of gPalette) {
         if (
           CustomizableUI.isWebExtensionWidget(widgetId) &&
