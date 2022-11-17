@@ -404,6 +404,7 @@ struct MediaSenderInfo {
   // this list, the ReportBlockData::RTCPReportBlock::source_ssrc(), which is
   // the SSRC of the corresponding outbound RTP stream, is unique.
   std::vector<webrtc::ReportBlockData> report_block_datas;
+  absl::optional<bool> active;
 };
 
 struct MediaReceiverInfo {

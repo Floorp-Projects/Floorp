@@ -2666,6 +2666,15 @@ WebRtcVideoChannel::WebRtcVideoSendStream::GetPerLayerVideoSenderInfos(
     auto info = common_info;
     info.add_ssrc(pair.first);
     info.rid = parameters_.config.rtp.GetRidForSsrc(pair.first);
+    // Search the associated encoding by SSRC.
+    auto encoding_it = std::find_if(
+        rtp_parameters_.encodings.begin(), rtp_parameters_.encodings.end(),
+        [&pair](const webrtc::RtpEncodingParameters& parameters) {
+          return parameters.ssrc && pair.first == *parameters.ssrc;
+        });
+    if (encoding_it != rtp_parameters_.encodings.end()) {
+      info.active = encoding_it->active;
+    }
     auto stream_stats = pair.second;
     RTC_DCHECK_EQ(stream_stats.type,
                   webrtc::VideoSendStream::StreamStats::StreamType::kMedia);
