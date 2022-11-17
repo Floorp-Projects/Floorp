@@ -101,4 +101,8 @@ if(webpanel_id_ != "" && BROWSER_SIDEBAR_DATA.index.indexOf(webpanel_id_) != -1)
 removeAttributeSelectedNode();
 if(webpanel_id_ != "" && BROWSER_SIDEBAR_DATA.index.indexOf(webpanel_id_) != -1) getSelectedNode().setAttribute("checked", "true");
 setAllfavicons();
-changeSidebarVisibility();
+
+// sidebar display
+if (!Services.prefs.getBoolPref("floorp.browser.sidebar.is.displayed", false)) {
+  changeSidebarVisibility();
+}

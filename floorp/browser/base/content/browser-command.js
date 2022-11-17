@@ -182,6 +182,7 @@ function changeSidebarVisibility() {
   let siderbar2header = document.getElementById("sidebar2-header");
   let sidebarsplit2 = document.getElementById("sidebar-splitter2");
   let sidebar2box = document.getElementById("sidebar2-box");
+  let sidebar2BoolStatus = "floorp.browser.sidebar.is.displayed";
 
   if (sidebarsplit2.getAttribute("hidden") == "true" || sidebarsplit2.getAttribute("hidden") == "true") {
     sidebar2.style.minWidth = "auto";
@@ -191,6 +192,7 @@ function changeSidebarVisibility() {
     siderbar2header.style.display = "";
     sidebarsplit2.setAttribute("hidden", "false");
     displayIcons();
+    Services.prefs.setBoolPref(sidebar2BoolStatus, true);
   } else {
     sidebar2.style.minWidth = "0";
     sidebar2.style.maxWidth = "0";
@@ -200,6 +202,7 @@ function changeSidebarVisibility() {
     sidebarsplit2.setAttribute("hidden", "true");
     hideIcons();
     removeAttributeSelectedNode();
+    Services.prefs.setBoolPref(sidebar2BoolStatus, false);
   }
 }
 
