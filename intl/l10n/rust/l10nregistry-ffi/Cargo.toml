@@ -20,4 +20,4 @@ async-trait = "0.1"
 moz_task = { path = "../../../../xpcom/rust/moz_task" }
 xpcom = { path = "../../../../xpcom/rust/xpcom" }
 fluent-ffi = { path = "../fluent-ffi" }
-fluent-fallback = "0.6.0"
+fluent-fallback = "0.7.0"

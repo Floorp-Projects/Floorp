@@ -38,7 +38,7 @@ impl std::fmt::Display for LocalizationError {
                 write!(
                     f,
                     "[fluent][resolver] errors in {}/{}: {}",
-                    locale.to_string(),
+                    locale,
                     id,
                     errors.join(", ")
                 )

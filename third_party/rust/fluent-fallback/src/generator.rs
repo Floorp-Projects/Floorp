@@ -1,5 +1,6 @@
 use fluent_bundle::{FluentBundle, FluentError, FluentResource};
 use futures::Stream;
+use rustc_hash::FxHashSet;
 use std::borrow::Borrow;
 use unic_langid::LanguageIdentifier;
 
@@ -22,14 +23,18 @@ pub trait BundleGenerator {
     type Iter: Iterator<Item = FluentBundleResult<Self::Resource>>;
     type Stream: Stream<Item = FluentBundleResult<Self::Resource>>;
 
-    fn bundles_iter(&self, _locales: Self::LocalesIter, _res_ids: Vec<ResourceId>) -> Self::Iter {
+    fn bundles_iter(
+        &self,
+        _locales: Self::LocalesIter,
+        _res_ids: FxHashSet<ResourceId>,
+    ) -> Self::Iter {
         unimplemented!();
     }
 
     fn bundles_stream(
         &self,
         _locales: Self::LocalesIter,
-        _res_ids: Vec<ResourceId>,
+        _res_ids: FxHashSet<ResourceId>,
     ) -> Self::Stream {
         unimplemented!();
     }

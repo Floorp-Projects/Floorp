@@ -28,7 +28,7 @@ pub struct L10nMessage<'l> {
     pub attributes: Vec<L10nAttribute<'l>>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ResourceType {
     /// This is a required resource.
     ///
@@ -53,7 +53,7 @@ pub enum ResourceType {
 }
 
 /// A resource identifier for a localization resource.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash)]
 pub struct ResourceId {
     /// The resource identifier.
     pub value: String,
