@@ -23,8 +23,6 @@ let dialog = {
 
     this._handlerInfo = handler.QueryInterface(Ci.nsIHandlerInfo);
     this._principal = principal?.QueryInterface(Ci.nsIPrincipal);
-    this._addonPolicy =
-      this._principal?.addonPolicy ?? this._principal?.contentScriptAddonPolicy;
     this._browsingContext = browsingContext;
     this._outArgs = outArgs.QueryInterface(Ci.nsIWritablePropertyBag);
     this._preferredHandlerName = preferredHandlerName;
@@ -84,13 +82,6 @@ let dialog = {
    * the triggering principal and the preferred application handler.
    */
   get l10nDescriptionId() {
-    if (this._addonPolicy) {
-      if (this._preferredHandlerName) {
-        return "permission-dialog-description-extension-app";
-      }
-      return "permission-dialog-description-extension";
-    }
-
     if (this._principal?.schemeIs("file")) {
       if (this._preferredHandlerName) {
         return "permission-dialog-description-file-app";
@@ -125,9 +116,6 @@ let dialog = {
       return null;
     }
 
-    if (this._addonPolicy) {
-      return "permission-dialog-remember-extension";
-    }
     if (this._principal.schemeIs("file")) {
       return "permission-dialog-remember-file";
     }
@@ -180,7 +168,6 @@ let dialog = {
     document.l10n.setAttributes(description, this.l10nDescriptionId, {
       host,
       scheme,
-      extension: this._addonPolicy?.name,
       appName: this._preferredHandlerName,
     });
 
