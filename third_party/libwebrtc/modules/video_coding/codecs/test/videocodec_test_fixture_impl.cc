@@ -29,11 +29,20 @@
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/video_decoder.h"
+#include "api/video_codecs/video_decoder_factory_template.h"
+#include "api/video_codecs/video_decoder_factory_template_dav1d_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_libvpx_vp8_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_libvpx_vp9_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_open_h264_adapter.h"
 #include "api/video_codecs/video_encoder_config.h"
+#include "api/video_codecs/video_encoder_factory.h"
+#include "api/video_codecs/video_encoder_factory_template.h"
+#include "api/video_codecs/video_encoder_factory_template_libaom_av1_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template_libvpx_vp8_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template_libvpx_vp9_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template_open_h264_adapter.h"
 #include "common_video/h264/h264_common.h"
 #include "media/base/media_constants.h"
-#include "media/engine/internal_decoder_factory.h"
-#include "media/engine/internal_encoder_factory.h"
 #include "media/engine/simulcast.h"
 #include "modules/video_coding/codecs/h264/include/h264_globals.h"
 #include "modules/video_coding/codecs/vp9/svc_config.h"
@@ -157,9 +166,12 @@ SdpVideoFormat CreateSdpVideoFormat(
         {cricket::kH264FmtpProfileLevelId,
          *H264ProfileLevelIdToString(H264ProfileLevelId(
              config.h264_codec_settings.profile, H264Level::kLevel3_1))},
-        {cricket::kH264FmtpPacketizationMode, packetization_mode}};
+        {cricket::kH264FmtpPacketizationMode, packetization_mode},
+        {cricket::kH264FmtpLevelAsymmetryAllowed, "1"}};
 
     return SdpVideoFormat(config.codec_name, codec_params);
+  } else if (config.codec_settings.codecType == kVideoCodecVP9) {
+    return SdpVideoFormat(config.codec_name, {{"profile-id", "0"}});
   }
 
   return SdpVideoFormat(config.codec_name);
@@ -406,8 +418,16 @@ class VideoCodecTestFixtureImpl::CpuProcessTime final {
 };
 
 VideoCodecTestFixtureImpl::VideoCodecTestFixtureImpl(Config config)
-    : encoder_factory_(std::make_unique<InternalEncoderFactory>()),
-      decoder_factory_(std::make_unique<InternalDecoderFactory>()),
+    : encoder_factory_(std::make_unique<webrtc::VideoEncoderFactoryTemplate<
+                           webrtc::LibvpxVp8EncoderTemplateAdapter,
+                           webrtc::LibvpxVp9EncoderTemplateAdapter,
+                           webrtc::OpenH264EncoderTemplateAdapter,
+                           webrtc::LibaomAv1EncoderTemplateAdapter>>()),
+      decoder_factory_(std::make_unique<webrtc::VideoDecoderFactoryTemplate<
+                           webrtc::LibvpxVp8DecoderTemplateAdapter,
+                           webrtc::LibvpxVp9DecoderTemplateAdapter,
+                           webrtc::OpenH264DecoderTemplateAdapter,
+                           webrtc::Dav1dDecoderTemplateAdapter>>()),
       config_(config) {}
 
 VideoCodecTestFixtureImpl::VideoCodecTestFixtureImpl(
