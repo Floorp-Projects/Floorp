@@ -404,7 +404,6 @@ PlacesViewBase.prototype = {
     let type = aPlacesNode.type;
     if (type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
       element = document.createXULElement("menuseparator");
-      element.setAttribute("class", "small-separator");
     } else {
       if (type == Ci.nsINavHistoryResultNode.RESULT_TYPE_URI) {
         element = document.createXULElement("menuitem");
@@ -2107,7 +2106,6 @@ PlacesPanelMenuView.prototype = {
     let button;
     if (type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
       button = document.createXULElement("toolbarseparator");
-      button.setAttribute("class", "small-separator");
     } else {
       button = document.createXULElement("toolbarbutton");
       button.className = "bookmark-item";

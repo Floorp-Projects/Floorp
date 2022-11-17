@@ -16,7 +16,11 @@ panel {
   --panel-border-radius: 0;
   --panel-border-color: ThreeDShadow;
   --panel-width: initial;
-  --windows-panel-box-shadow: 0 0 4px hsla(0,0%,0%,.2);
+
+  --panel-shadow-margin: 4px;
+  -moz-window-input-region-margin: var(--panel-shadow-margin);
+  --windows-panel-box-shadow: 0 0 var(--panel-shadow-margin) hsla(0,0%,0%,.2);
+  margin: calc(-1 * var(--panel-shadow-margin));
 }
 
 
@@ -34,6 +38,7 @@ panel {
     --panel-background: transparent;
     --panel-border-color: transparent;
     --nested-margin: -3px;
+    --panel-shadow-margin: 0px;
   }
 }
 
@@ -45,9 +50,6 @@ panel {
     /* Prevent any background or border around the outside of the shadow. */
     background-color: transparent;
     border: none;
-    /* To account for the box-shadow below */
-    margin: -4px;
-    -moz-window-input-region-margin: 4px;
 
     --panel-border-radius: 4px;
     --panel-padding: 4px 0;
@@ -64,7 +66,7 @@ panel {
 
   menupopup::part(content) {
     box-shadow: var(--windows-panel-box-shadow);
-    margin: 4px;
+    margin: var(--panel-shadow-margin);
   }
 }
 
@@ -79,8 +81,7 @@ menupopup > menu > menupopup {
   background: transparent;
   border: none;
   /* To account for the box-shadow below */
-  margin: -4px;
-  -moz-window-input-region-margin: 4px;
+  --panel-shadow-margin: 4px;
 }
 
 :is(panel, menupopup)::part(content) {
@@ -101,7 +102,7 @@ menupopup > menu > menupopup {
 }
 
 :is(panel, menupopup)[type="arrow"]::part(content) {
-  margin: 4px;
+  margin: var(--panel-shadow-margin);
   box-shadow: var(--windows-panel-box-shadow);
 }
 
