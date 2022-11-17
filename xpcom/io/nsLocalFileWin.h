@@ -53,15 +53,6 @@ class nsLocalFile final : public nsILocalFileWin {
   // (com1, com2, etc...) and truncates the string if so.
   static void CheckForReservedFileName(nsString& aFileName);
 
-  // PRFileInfo64 does not hvae an accessTime field;
-  struct FileInfo {
-    PRFileType type;
-    PROffset64 size;
-    PRTime creationTime;
-    PRTime accessTime;
-    PRTime modifyTime;
-  };
-
  private:
   // CopyMove and CopySingleFile constants for |options| parameter:
   enum CopyFileOption {
@@ -90,7 +81,7 @@ class nsLocalFile final : public nsILocalFileWin {
   // mWorkingPath
   nsString mShortWorkingPath;
 
-  FileInfo mFileInfo;
+  PRFileInfo64 mFileInfo64;
 
   void MakeDirty() {
     mDirty = true;
@@ -112,10 +103,7 @@ class nsLocalFile final : public nsILocalFileWin {
   nsresult CopySingleFile(nsIFile* aSource, nsIFile* aDest,
                           const nsAString& aNewName, uint32_t aOptions);
 
-  enum class TimeField { AccessedTime, ModifiedTime };
-
-  nsresult SetDateImpl(int64_t aTime, TimeField aTimeField);
-  nsresult GetDateImpl(PRTime* aTime, TimeField aTimeField, bool aFollowLinks);
+  nsresult SetModDate(int64_t aLastModifiedTime, const wchar_t* aFilePath);
   nsresult HasFileAttribute(DWORD aFileAttrib, bool* aResult);
   nsresult AppendInternal(const nsString& aNode, bool aMultipleComponents);
 

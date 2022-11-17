@@ -154,12 +154,11 @@ static nsCString FormatErrorMessage(nsresult aError,
   info.mPath.Construct(aInternalFileInfo.mPath);
   info.mType.Construct(aInternalFileInfo.mType);
   info.mSize.Construct(aInternalFileInfo.mSize);
+  info.mLastModified.Construct(aInternalFileInfo.mLastModified);
 
   if (aInternalFileInfo.mCreationTime.isSome()) {
     info.mCreationTime.Construct(aInternalFileInfo.mCreationTime.ref());
   }
-  info.mLastAccessed.Construct(aInternalFileInfo.mLastAccessed);
-  info.mLastModified.Construct(aInternalFileInfo.mLastModified);
 
   info.mPermissions.Construct(aInternalFileInfo.mPermissions);
 
@@ -731,38 +730,21 @@ already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
 }
 
 /* static */
-already_AddRefed<Promise> IOUtils::SetAccessTime(
-    GlobalObject& aGlobal, const nsAString& aPath,
-    const Optional<int64_t>& aAccess, ErrorResult& aError) {
-  return SetTime(aGlobal, aPath, aAccess, &nsIFile::SetLastAccessedTime,
-                 aError);
-}
-
-/* static */
 already_AddRefed<Promise> IOUtils::SetModificationTime(
     GlobalObject& aGlobal, const nsAString& aPath,
     const Optional<int64_t>& aModification, ErrorResult& aError) {
-  return SetTime(aGlobal, aPath, aModification, &nsIFile::SetLastModifiedTime,
-                 aError);
-}
-
-/* static */
-already_AddRefed<Promise> IOUtils::SetTime(GlobalObject& aGlobal,
-                                           const nsAString& aPath,
-                                           const Optional<int64_t>& aNewTime,
-                                           IOUtils::SetTimeFn aSetTimeFn,
-                                           ErrorResult& aError) {
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
         REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-        int64_t newTime = aNewTime.WasPassed() ? aNewTime.Value()
-                                               : PR_Now() / PR_USEC_PER_MSEC;
+        Maybe<int64_t> newTime = Nothing();
+        if (aModification.WasPassed()) {
+          newTime = Some(aModification.Value());
+        }
         DispatchAndResolve<int64_t>(
-            state->mEventQueue, promise,
-            [file = std::move(file), aSetTimeFn, newTime]() {
-              return SetTimeSync(file, aSetTimeFn, newTime);
+            state->mEventQueue, promise, [file = std::move(file), newTime]() {
+              return SetModificationTimeSync(file, newTime);
             });
       });
 }
@@ -1738,6 +1720,9 @@ Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
     MOZ_TRY(aFile->GetFileSize(&size));
   }
   info.mSize = size;
+  PRTime lastModified = 0;
+  MOZ_TRY(aFile->GetLastModifiedTime(&lastModified));
+  info.mLastModified = static_cast<int64_t>(lastModified);
 
   PRTime creationTime = 0;
   if (nsresult rv = aFile->GetCreationTime(&creationTime); NS_SUCCEEDED(rv)) {
@@ -1747,23 +1732,25 @@ Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
     return Err(IOError(rv));
   }
 
-  PRTime lastAccessed = 0;
-  MOZ_TRY(aFile->GetLastAccessedTime(&lastAccessed));
-  info.mLastAccessed = static_cast<int64_t>(lastAccessed);
-
-  PRTime lastModified = 0;
-  MOZ_TRY(aFile->GetLastModifiedTime(&lastModified));
-  info.mLastModified = static_cast<int64_t>(lastModified);
-
   MOZ_TRY(aFile->GetPermissions(&info.mPermissions));
 
   return info;
 }
 
 /* static */
-Result<int64_t, IOUtils::IOError> IOUtils::SetTimeSync(
-    nsIFile* aFile, IOUtils::SetTimeFn aSetTimeFn, int64_t aNewTime) {
+Result<int64_t, IOUtils::IOError> IOUtils::SetModificationTimeSync(
+    nsIFile* aFile, const Maybe<int64_t>& aNewModTime) {
   MOZ_ASSERT(!NS_IsMainThread());
+
+  int64_t now = aNewModTime.valueOrFrom([]() {
+    // NB: PR_Now reports time in microseconds since the Unix epoch
+    //     (1970-01-01T00:00:00Z). Both nsLocalFile's lastModifiedTime and
+    //     JavaScript's Date primitive values are to be expressed in
+    //     milliseconds since Epoch.
+    int64_t nowMicros = PR_Now();
+    int64_t nowMillis = nowMicros / PR_USEC_PER_MSEC;
+    return nowMillis;
+  });
 
   // nsIFile::SetLastModifiedTime will *not* do what is expected when passed 0
   // as an argument. Rather than setting the time to 0, it will recalculate the
@@ -1772,7 +1759,7 @@ Result<int64_t, IOUtils::IOError> IOUtils::SetTimeSync(
   //
   // If it ever becomes possible to set a file time to 0, this check should be
   // removed, though this use case seems rare.
-  if (aNewTime == 0) {
+  if (now == 0) {
     return Err(
         IOError(NS_ERROR_ILLEGAL_VALUE)
             .WithMessage(
@@ -1782,7 +1769,7 @@ Result<int64_t, IOUtils::IOError> IOUtils::SetTimeSync(
                 aFile->HumanReadablePath().get()));
   }
 
-  nsresult rv = (aFile->*aSetTimeFn)(aNewTime);
+  nsresult rv = aFile->SetLastModifiedTime(now);
 
   if (NS_FAILED(rv)) {
     IOError err(rv);
@@ -1794,7 +1781,7 @@ Result<int64_t, IOUtils::IOError> IOUtils::SetTimeSync(
     }
     return Err(err);
   }
-  return aNewTime;
+  return now;
 }
 
 /* static */
