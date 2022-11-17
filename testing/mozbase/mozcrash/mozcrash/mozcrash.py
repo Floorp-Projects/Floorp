@@ -10,18 +10,17 @@ import os
 import re
 import shutil
 import signal
-import six
 import subprocess
 import sys
 import tempfile
 import zipfile
 from collections import namedtuple
-from redo import retriable
-
 
 import mozfile
 import mozinfo
 import mozlog
+import six
+from redo import retriable
 
 __all__ = [
     "check_for_crashes",
@@ -118,11 +117,11 @@ def check_for_crashes(
         crash_count += 1
         output = None
         if info.java_stack:
-            output = u"PROCESS-CRASH | {name} | {stack}".format(
+            output = "PROCESS-CRASH | {name} | {stack}".format(
                 name=test_name, stack=info.java_stack
             )
         elif not quiet:
-            stackwalk_output = [u"Crash dump filename: {}".format(info.minidump_path)]
+            stackwalk_output = ["Crash dump filename: {}".format(info.minidump_path)]
             if info.reason:
                 stackwalk_output.append("Mozilla crash reason: %s" % info.reason)
             if info.stackwalk_stderr:
@@ -138,7 +137,7 @@ def check_for_crashes(
                 )
             signature = info.signature if info.signature else "unknown top frame"
 
-            output = u"PROCESS-CRASH | {name} | application crashed [{sig}]\n{out}\n{err}".format(
+            output = "PROCESS-CRASH | {name} | application crashed [{sig}]\n{out}\n{err}".format(
                 name=test_name,
                 sig=signature,
                 out="\n".join(stackwalk_output),
@@ -264,10 +263,12 @@ class CrashInfo(object):
             # in stackwalk_binary, as later checks will handle this properly
             # when our actual error reporting is setup.
             possible_names = ["minidump-stackwalk", "minidump_stackwalk"]
+            state_dir = os.environ.get(
+                "MOZBUILD_STATE_PATH",
+                os.path.expanduser(os.path.join("~", ".mozbuild")),
+            )
             for possible_name in possible_names:
-                stackwalk_binary = os.path.expanduser(
-                    "~/.mozbuild/{name}/{name}".format(name=possible_name)
-                )
+                stackwalk_binary = os.path.join(state_dir, possible_name, possible_name)
                 if mozinfo.isWin and not stackwalk_binary.endswith(".exe"):
                     stackwalk_binary += ".exe"
                 if os.path.exists(stackwalk_binary):
@@ -430,7 +431,7 @@ class CrashInfo(object):
             if self.symbols_path:
                 command.append(self.symbols_path)
 
-            self.logger.info(u"Copy/paste: {}".format(" ".join(command)))
+            self.logger.info("Copy/paste: {}".format(" ".join(command)))
             # run minidump-stackwalk
             p = subprocess.Popen(
                 command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -534,7 +535,7 @@ class CrashInfo(object):
 
         shutil.move(path, self.dump_save_path)
         self.logger.info(
-            u"Saved minidump as {}".format(
+            "Saved minidump as {}".format(
                 os.path.join(self.dump_save_path, os.path.basename(path))
             )
         )
@@ -542,7 +543,7 @@ class CrashInfo(object):
         if os.path.isfile(extra):
             shutil.move(extra, self.dump_save_path)
             self.logger.info(
-                u"Saved app info as {}".format(
+                "Saved app info as {}".format(
                     os.path.join(self.dump_save_path, os.path.basename(extra))
                 )
             )
@@ -602,14 +603,14 @@ def check_for_java_exception(logcat, test_name=None, quiet=False):
                     exception_location = m.group(1)
                 if not quiet:
                     output = (
-                        u"PROCESS-CRASH | {name} | java-exception {type} {loc}".format(
+                        "PROCESS-CRASH | {name} | java-exception {type} {loc}".format(
                             name=test_name, type=exception_type, loc=exception_location
                         )
                     )
                     print(output.encode("utf-8"))
             else:
                 print(
-                    u"Automation Error: java exception in logcat at line "
+                    "Automation Error: java exception in logcat at line "
                     "{0} of {1}: {2}".format(i, len(logcat), line)
                 )
             break
@@ -657,12 +658,12 @@ if mozinfo.isWin:
                 os.path.join(utility_path, "minidumpwriter.exe")
             )
             log.info(
-                u"Using {} to write a dump to {} for [{}]".format(
+                "Using {} to write a dump to {} for [{}]".format(
                     minidumpwriter, file_name, pid
                 )
             )
             if not os.path.exists(minidumpwriter):
-                log.error(u"minidumpwriter not found in {}".format(utility_path))
+                log.error("minidumpwriter not found in {}".format(utility_path))
                 return
 
             status = subprocess.Popen([minidumpwriter, str(pid), file_name]).wait()
@@ -670,7 +671,7 @@ if mozinfo.isWin:
                 log.error("minidumpwriter exited with status: %d" % status)
             return
 
-        log.info(u"Writing a dump to {} for [{}]".format(file_name, pid))
+        log.info("Writing a dump to {} for [{}]".format(file_name, pid))
 
         proc_handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, 0, pid)
         if not proc_handle:
