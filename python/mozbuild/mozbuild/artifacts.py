@@ -1392,7 +1392,15 @@ https://firefox-source-docs.mozilla.org/contributing/vcs/mercurial_bundles.html
                 {"processed_filename": processed_filename},
                 "Writing processed {processed_filename}",
             )
-            self._artifact_job.process_artifact(filename, processed_filename)
+            try:
+                self._artifact_job.process_artifact(filename, processed_filename)
+            except Exception as e:
+                # Delete the partial output of failed processing.
+                try:
+                    os.remove(processed_filename)
+                except FileNotFoundError:
+                    pass
+                raise e
 
         self._artifact_cache._persist_limit.register_file(processed_filename)
 
