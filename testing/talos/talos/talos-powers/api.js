@@ -16,7 +16,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AboutHomeStartupCache: "resource:///modules/BrowserGlue.jsm",
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   PerTestCoverageUtils: "resource://testing-common/PerTestCoverageUtils.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
 });
@@ -149,18 +148,14 @@ TalosPowersService.prototype = {
     return new Promise((resolve, reject) => {
       Services.profiler.Pause();
       Services.profiler.getProfileDataAsync().then(
-        profile => {
-          let encoder = new TextEncoder();
-          let array = encoder.encode(JSON.stringify(profile));
-
-          OS.File.writeAtomic(profileFile, array, {
-            tmpPath: profileFile + ".tmp",
+        profile =>
+          IOUtils.writeJSON(profileFile, profile, {
+            tmpPath: `${profileFile}.tmp`,
           }).then(() => {
             Services.profiler.StopProfiler();
             resolve();
             Services.obs.notifyObservers(null, "talos-profile-gathered");
-          });
-        },
+          }),
         error => {
           Cu.reportError("Failed to gather profile: " + error);
           // FIXME: We should probably send a message down to the
