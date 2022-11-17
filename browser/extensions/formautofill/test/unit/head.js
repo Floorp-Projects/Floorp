@@ -19,15 +19,15 @@ var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.import(
 var { ExtensionTestUtils } = ChromeUtils.import(
   "resource://testing-common/ExtensionXPCShellUtils.jsm"
 );
-var { FileTestUtils } = ChromeUtils.import(
-  "resource://testing-common/FileTestUtils.jsm"
+var { FileTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/FileTestUtils.sys.mjs"
 );
 var { MockDocument } = ChromeUtils.importESModule(
   "resource://testing-common/MockDocument.sys.mjs"
 );
 var { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
-var { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+var { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 
 ChromeUtils.defineModuleGetter(

@@ -9,8 +9,8 @@
 
 // Globals
 
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
