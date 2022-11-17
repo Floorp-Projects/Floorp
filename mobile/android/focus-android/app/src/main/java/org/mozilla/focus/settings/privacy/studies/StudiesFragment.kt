@@ -139,18 +139,16 @@ class StudiesFragment : BaseSettingsLikeFragment() {
     private fun setObservers() {
         viewModel.exposedStudies.observe(
             viewLifecycleOwner,
-            { studies ->
-                binding.studiesList.studiesAdapter.submitList(studies)
-            },
-        )
+        ) { studies ->
+            binding.studiesList.studiesAdapter.submitList(studies)
+        }
 
         viewModel.studiesState.observe(
             viewLifecycleOwner,
-            { state ->
-                binding.studiesSwitch.isChecked = state
-                setStudiesTitleByState(state)
-            },
-        )
+        ) { state ->
+            binding.studiesSwitch.isChecked = state
+            setStudiesTitleByState(state)
+        }
     }
 
     override fun onDestroyView() {
