@@ -998,6 +998,17 @@ void DrawTargetD2D1::PopClip() {
   CurrentLayer().mPushedClips.pop_back();
 }
 
+bool DrawTargetD2D1::RemoveAllClips() {
+  if (!EnsureInitialized()) {
+    return false;
+  }
+  mCurrentClippedGeometry = nullptr;
+  while (!CurrentLayer().mPushedClips.empty()) {
+    PopClip();
+  }
+  return true;
+}
+
 void DrawTargetD2D1::PushLayer(bool aOpaque, Float aOpacity,
                                SourceSurface* aMask,
                                const Matrix& aMaskTransform,
