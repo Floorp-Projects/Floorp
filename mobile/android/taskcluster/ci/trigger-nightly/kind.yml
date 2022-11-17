@@ -17,7 +17,7 @@ task-defaults:
         platform: release/opt
         tier: 2
         symbol: trigger-nightly
-    worker-type: b-android-large
+    worker-type: b-android
     worker:
         docker-image: {in-tree: base}
         max-run-time: 600

@@ -19,7 +19,7 @@ transforms:
 task-defaults:
     attributes:
         code-review: true
-    worker-type: b-android-large
+    worker-type: b-android
     worker:
         docker-image: {in-tree: base}
         max-run-time: 600
