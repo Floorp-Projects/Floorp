@@ -10,7 +10,9 @@
 var { require } = ChromeUtils.importESModule(
   "resource://devtools/shared/loader/Loader.sys.mjs"
 );
-var { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+var { Assert } = ChromeUtils.importESModule(
+  "resource://testing-common/Assert.sys.mjs"
+);
 var { gDevTools } = require("resource://devtools/client/framework/devtools.js");
 var { BrowserLoader } = ChromeUtils.import(
   "resource://devtools/shared/loader/browser-loader.js"
