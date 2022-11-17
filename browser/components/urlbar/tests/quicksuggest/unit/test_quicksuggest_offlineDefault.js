@@ -91,7 +91,7 @@ async function doTest({ locale, home, expectedOfflineDefault }) {
 
   // Set the region and locale, call the function, check the pref values.
   Region._setHomeRegion(home, false);
-  await withLocales([locale], async () => {
+  await QuickSuggestTestUtils.withLocales([locale], async () => {
     await UrlbarPrefs.updateFirefoxSuggestScenario();
     for (let { name, get, expectedOfflineValue, expectedOtherValue } of PREFS) {
       let expectedValue = expectedOfflineDefault
@@ -124,33 +124,4 @@ async function doTest({ locale, home, expectedOfflineDefault }) {
       Services.prefs.getDefaultBranch(name)[set]("", originalDefault);
     }
   }
-}
-
-/**
- * Sets the app's locales, calls your callback, and resets locales.
- *
- * @param {Array} locales
- *   An array of locale strings. The entire array will be set as the available
- *   locales, and the first locale in the array will be set as the requested
- *   locale.
- * @param {Function} callback
- *  The callback to be called with the {@link locales} set. This function can be
- *  async.
- */
-async function withLocales(locales, callback) {
-  let available = Services.locale.availableLocales;
-  let requested = Services.locale.requestedLocales;
-
-  Services.locale.availableLocales = locales;
-  Services.locale.requestedLocales = locales.slice(0, 1);
-  Assert.equal(
-    Services.locale.appLocaleAsBCP47,
-    locales[0],
-    "App locale is now " + locales[0]
-  );
-
-  await callback();
-
-  Services.locale.availableLocales = available;
-  Services.locale.requestedLocales = requested;
 }
