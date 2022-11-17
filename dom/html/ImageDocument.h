@@ -96,6 +96,7 @@ class ImageDocument final : public MediaDocument,
 
   void ResetZoomLevel();
   float GetZoomLevel();
+  void CheckFullZoom();
   float GetResolution();
 
   void UpdateSizeFromLayout();
