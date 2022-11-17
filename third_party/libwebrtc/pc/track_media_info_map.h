@@ -38,20 +38,32 @@ namespace webrtc {
 // |[Voice/Video][Sender/Receiver]Info| has statistical information for a set of
 // SSRCs. Looking at the RTP senders and receivers uncovers the track <-> info
 // relationships, which this class does.
+//
+// In the spec, "track" attachment stats have been made obsolete, and in Unified
+// Plan there is just one sender and one receiver per transceiver, so we may be
+// able to simplify/delete this class.
+// TODO(https://crbug.com/webrtc/14175): Simplify or delete this class when
+// "track" stats have been deleted.
+// TODO(https://crbug.com/webrtc/13528): Simplify or delete this class when
+// Plan B is gone from the native library (already gone for Chrome).
 class TrackMediaInfoMap {
  public:
-  TrackMediaInfoMap(
-      std::unique_ptr<cricket::VoiceMediaInfo> voice_media_info,
-      std::unique_ptr<cricket::VideoMediaInfo> video_media_info,
+  TrackMediaInfoMap();
+
+  void Initialize(
+      absl::optional<cricket::VoiceMediaInfo> voice_media_info,
+      absl::optional<cricket::VideoMediaInfo> video_media_info,
       const std::vector<rtc::scoped_refptr<RtpSenderInternal>>& rtp_senders,
       const std::vector<rtc::scoped_refptr<RtpReceiverInternal>>&
           rtp_receivers);
 
-  const cricket::VoiceMediaInfo* voice_media_info() const {
-    return voice_media_info_.get();
+  const absl::optional<cricket::VoiceMediaInfo>& voice_media_info() const {
+    RTC_DCHECK(is_initialized_);
+    return voice_media_info_;
   }
-  const cricket::VideoMediaInfo* video_media_info() const {
-    return video_media_info_.get();
+  const absl::optional<cricket::VideoMediaInfo>& video_media_info() const {
+    RTC_DCHECK(is_initialized_);
+    return video_media_info_;
   }
 
   const std::vector<cricket::VoiceSenderInfo*>* GetVoiceSenderInfos(
@@ -87,10 +99,9 @@ class TrackMediaInfoMap {
       const MediaStreamTrackInterface* track) const;
 
  private:
-  absl::optional<std::string> voice_mid_;
-  absl::optional<std::string> video_mid_;
-  std::unique_ptr<cricket::VoiceMediaInfo> voice_media_info_;
-  std::unique_ptr<cricket::VideoMediaInfo> video_media_info_;
+  bool is_initialized_ = false;
+  absl::optional<cricket::VoiceMediaInfo> voice_media_info_;
+  absl::optional<cricket::VideoMediaInfo> video_media_info_;
   // These maps map tracks (identified by a pointer) to their corresponding info
   // object of the correct kind. One track can map to multiple info objects.
   std::map<const AudioTrackInterface*, std::vector<cricket::VoiceSenderInfo*>>
