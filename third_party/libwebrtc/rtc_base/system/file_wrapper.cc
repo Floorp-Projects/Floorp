@@ -28,7 +28,7 @@ namespace {
 FILE* FileOpen(absl::string_view file_name_utf8, bool read_only, int* error) {
   RTC_CHECK_EQ(file_name_utf8.find_first_of('\0'), absl::string_view::npos)
       << "Invalid filename, containing NUL character";
-  std::string file_name = std::string(file_name_utf8);
+  std::string file_name(file_name_utf8);
 #if defined(_WIN32)
   int len = MultiByteToWideChar(CP_UTF8, 0, file_name.c_str(), -1, nullptr, 0);
   std::wstring wstr(len, 0);

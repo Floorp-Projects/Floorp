@@ -175,7 +175,7 @@ bool SSLIdentity::PemToDer(absl::string_view pem_type,
                            std::string* der) {
   // Find the inner body. We need this to fulfill the contract of returning
   // pem_length.
-  std::string pem_type_str = std::string(pem_type);
+  std::string pem_type_str(pem_type);
   size_t header = pem_string.find("-----BEGIN " + pem_type_str + "-----");
   if (header == absl::string_view::npos) {
     return false;
@@ -188,8 +188,7 @@ bool SSLIdentity::PemToDer(absl::string_view pem_type,
   if (trailer == absl::string_view::npos) {
     return false;
   }
-  std::string inner =
-      std::string(pem_string.substr(body + 1, trailer - (body + 1)));
+  std::string inner(pem_string.substr(body + 1, trailer - (body + 1)));
   *der = Base64::Decode(inner, Base64::DO_PARSE_WHITE | Base64::DO_PAD_ANY |
                                    Base64::DO_TERM_BUFFER);
   return true;

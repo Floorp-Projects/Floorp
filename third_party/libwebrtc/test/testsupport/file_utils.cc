@@ -136,7 +136,7 @@ absl::optional<std::vector<std::string>> ReadDirectory(absl::string_view path) {
   if (path.length() == 0)
     return absl::optional<std::vector<std::string>>();
 
-  std::string path_str = std::string(path);
+  std::string path_str(path);
 
 #if defined(WEBRTC_WIN)
   // Append separator character if needed.
@@ -186,7 +186,7 @@ absl::optional<std::vector<std::string>> ReadDirectory(absl::string_view path) {
 }
 
 bool CreateDir(absl::string_view directory_name) {
-  std::string directory_name_str = std::string(directory_name);
+  std::string directory_name_str(directory_name);
   struct stat path_info = {0};
   // Check if the path exists already:
   if (stat(directory_name_str.c_str(), &path_info) == 0) {

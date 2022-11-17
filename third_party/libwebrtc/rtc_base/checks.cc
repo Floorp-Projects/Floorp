@@ -41,7 +41,7 @@ namespace {
 
 RTC_NORETURN void WriteFatalLogAndAbort(absl::string_view output) {
 #if defined(WEBRTC_ANDROID)
-  std::string output_str = std::string(output);
+  std::string output_str(output);
   __android_log_print(ANDROID_LOG_ERROR, RTC_LOG_TAG_ANDROID, "%s\n",
                       output_str.c_str());
 #endif

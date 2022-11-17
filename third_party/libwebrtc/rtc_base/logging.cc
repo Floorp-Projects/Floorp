@@ -353,14 +353,14 @@ void LogMessage::UpdateMinLogSeverity()
 }
 
 #if defined(WEBRTC_ANDROID)
-void LogMessage::OutputToDebug(absl::string_view str,
+void LogMessage::OutputToDebug(absl::string_view msg,
                                LoggingSeverity severity,
                                const char* tag) {
 #else
-void LogMessage::OutputToDebug(absl::string_view str,
+void LogMessage::OutputToDebug(absl::string_view msg,
                                LoggingSeverity severity) {
 #endif
-  std::string str_str = std::string(str);
+  std::string msg_str(msg);
   bool log_to_stderr = log_to_stderr_;
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS) && defined(NDEBUG)
   // On the Mac, all stderr output goes to the Console log and causes clutter.
@@ -385,13 +385,13 @@ void LogMessage::OutputToDebug(absl::string_view str,
 #if defined(WEBRTC_WIN)
   // Always log to the debugger.
   // Perhaps stderr should be controlled by a preference, as on Mac?
-  OutputDebugStringA(str_str.c_str());
+  OutputDebugStringA(msg_str.c_str());
   if (log_to_stderr) {
     // This handles dynamically allocated consoles, too.
     if (HANDLE error_handle = ::GetStdHandle(STD_ERROR_HANDLE)) {
       log_to_stderr = false;
       DWORD written = 0;
-      ::WriteFile(error_handle, str.data(), static_cast<DWORD>(str.size()),
+      ::WriteFile(error_handle, msg.data(), static_cast<DWORD>(msg.size()),
                   &written, 0);
     }
   }
@@ -420,19 +420,19 @@ void LogMessage::OutputToDebug(absl::string_view str,
       prio = ANDROID_LOG_UNKNOWN;
   }
 
-  int size = str.size();
+  int size = msg.size();
   int line = 0;
   int idx = 0;
   const int max_lines = size / kMaxLogLineSize + 1;
   if (max_lines == 1) {
-    __android_log_print(prio, tag, "%.*s", size, str_str.c_str());
+    __android_log_print(prio, tag, "%.*s", size, msg_str.c_str());
   } else {
     while (size > 0) {
       const int len = std::min(size, kMaxLogLineSize);
-      // Use the size of the string in the format (str may have \0 in the
+      // Use the size of the string in the format (msg may have \0 in the
       // middle).
       __android_log_print(prio, tag, "[%d/%d] %.*s", line + 1, max_lines, len,
-                          str_str.c_str() + idx);
+                          msg_str.c_str() + idx);
       idx += len;
       size -= len;
       ++line;
@@ -440,7 +440,7 @@ void LogMessage::OutputToDebug(absl::string_view str,
   }
 #endif  // WEBRTC_ANDROID
   if (log_to_stderr) {
-    fprintf(stderr, "%s", str_str.c_str());
+    fprintf(stderr, "%s", msg_str.c_str());
     fflush(stderr);
   }
 }

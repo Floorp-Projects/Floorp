@@ -25,7 +25,7 @@ absl::optional<signed_type> ParseSigned(absl::string_view str, int base) {
     return absl::nullopt;
 
   if (isdigit(static_cast<unsigned char>(str[0])) || str[0] == '-') {
-    std::string str_str = std::string(str);
+    std::string str_str(str);
     char* end = nullptr;
     errno = 0;
     const signed_type value = std::strtoll(str_str.c_str(), &end, base);
@@ -43,7 +43,7 @@ absl::optional<unsigned_type> ParseUnsigned(absl::string_view str, int base) {
     return absl::nullopt;
 
   if (isdigit(static_cast<unsigned char>(str[0])) || str[0] == '-') {
-    std::string str_str = std::string(str);
+    std::string str_str(str);
     // Explicitly discard negative values. std::strtoull parsing causes unsigned
     // wraparound. We cannot just reject values that start with -, though, since
     // -0 is perfectly fine, as is -0000000000000000000000000000000.
@@ -86,7 +86,7 @@ absl::optional<T> ParseFloatingPoint(absl::string_view str) {
 
   if (str[0] == '\0')
     return absl::nullopt;
-  std::string str_str = std::string(str);
+  std::string str_str(str);
   char* end = nullptr;
   errno = 0;
   const T value = StrToT<T>(str_str.c_str(), &end);
