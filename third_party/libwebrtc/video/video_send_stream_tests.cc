@@ -1487,11 +1487,6 @@ TEST_F(VideoSendStreamTest, MinTransmitBitrateRespectsRemb) {
           bitrate_capped_(false),
           task_safety_flag_(PendingTaskSafetyFlag::CreateDetached()) {}
 
-    ~BitrateObserver() override {
-      // Make sure we free `rtp_rtcp_` in the same context as we constructed it.
-      SendTask(RTC_FROM_HERE, task_queue_, [this]() { rtp_rtcp_ = nullptr; });
-    }
-
    private:
     Action OnSendRtp(const uint8_t* packet, size_t length) override {
       if (IsRtcpPacket(rtc::MakeArrayView(packet, length)))
@@ -1547,7 +1542,10 @@ TEST_F(VideoSendStreamTest, MinTransmitBitrateRespectsRemb) {
       encoder_config->min_transmit_bitrate_bps = kMinTransmitBitrateBps;
     }
 
-    void OnStreamsStopped() override { task_safety_flag_->SetNotAlive(); }
+    void OnStreamsStopped() override {
+      task_safety_flag_->SetNotAlive();
+      rtp_rtcp_.reset();
+    }
 
     void PerformTest() override {
       EXPECT_TRUE(Wait())
