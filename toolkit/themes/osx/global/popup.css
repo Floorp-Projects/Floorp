@@ -19,6 +19,11 @@ panel {
   --panel-border-color: transparent;
   --panel-border-radius: 0;
   --panel-width: initial;
+
+  /* This var is used on panelUI-shared.css to calculate panel shadow margins,
+   * but as shadows on macOS are being taken care of by the OS, there's
+   * no need for CSS to do calculations, so just set it to 0px here. */
+  --panel-shadow-margin: 0px;
 }
 
 menupopup > menu > menupopup {
