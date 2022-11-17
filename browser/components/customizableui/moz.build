@@ -9,6 +9,7 @@ DIRS += [
 ]
 
 BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 
 TESTING_JS_MODULES += [
     "test/CustomizableUITestUtils.jsm",
