@@ -47,6 +47,7 @@ WEBRTC_ONLY_DEPS = [
     'src/third_party',
     'src/third_party/gtest-parallel',
     'src/third_party/jdk/extras',
+    'src/third_party/proguard',
     'src/tools',
 ]
 
