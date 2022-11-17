@@ -47,6 +47,9 @@ static constexpr int64_t kMaxVbaThrottleTimeMs = 500;
 
 constexpr TimeDelta kEncoderTimeOut = TimeDelta::Seconds(2);
 
+constexpr double kVideoHysteresis = 1.2;
+constexpr double kScreenshareHysteresis = 1.35;
+
 // When send-side BWE is used a stricter 1.1x pacing factor is used, rather than
 // the 2.5x which is used with receive-side BWE. Provides a more careful
 // bandwidth rampup with less risk of overshoots causing adverse effects like
@@ -95,8 +98,9 @@ int CalculateMaxPadBitrateBps(const std::vector<VideoStream>& streams,
       // Without alr probing, pad up to start bitrate of the
       // highest active stream.
       const double hysteresis_factor =
-          RateControlSettings::ParseFromFieldTrials()
-              .GetSimulcastHysteresisFactor(content_type);
+          content_type == VideoEncoderConfig::ContentType::kScreen
+              ? kScreenshareHysteresis
+              : kVideoHysteresis;
       if (is_svc) {
         // For SVC, since there is only one "stream", the padding bitrate
         // needed to enable the top spatial layer is stored in the
