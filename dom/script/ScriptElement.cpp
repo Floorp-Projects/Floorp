@@ -115,6 +115,9 @@ bool ScriptElement::MaybeProcessScript() {
 
   mAlreadyStarted = true;
 
+  nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+      "ScriptElement::MaybeProcessScript", []() { nsAutoMicroTask mt; }));
+
   nsCOMPtr<nsIParser> parser = ((nsIScriptElement*)this)->GetCreatorParser();
   if (parser) {
     nsCOMPtr<nsIContentSink> sink = parser->GetContentSink();
