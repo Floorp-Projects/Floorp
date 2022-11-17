@@ -1,0 +1,2 @@
+# StorageManager isn't enabled on Android
+skip-if(Android) pref(dom.fs.enabled,true) load 1800470.html
