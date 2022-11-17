@@ -10,7 +10,9 @@ var { require } = BrowserLoader({
   baseURI: "resource://devtools/client/memory/",
   window,
 });
-var { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+var { Assert } = ChromeUtils.importESModule(
+  "resource://testing-common/Assert.sys.mjs"
+);
 
 var EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
 

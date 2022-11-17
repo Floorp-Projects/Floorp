@@ -13,8 +13,8 @@ const {
 const {
   DevToolsServer,
 } = require("resource://devtools/server/devtools-server.js");
-const { BrowserTestUtils } = ChromeUtils.import(
-  "resource://testing-common/BrowserTestUtils.jsm"
+const { BrowserTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/BrowserTestUtils.sys.mjs"
 );
 const {
   DocumentWalker: _documentWalker,
