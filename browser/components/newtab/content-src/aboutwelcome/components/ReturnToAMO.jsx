@@ -70,7 +70,7 @@ export class ReturnToAMO extends React.PureComponent {
     if (content?.primary_button.label) {
       content.primary_button.label.string_id = type.includes("theme")
         ? "return-to-amo-add-theme-label"
-        : "return-to-amo-add-extension-label";
+        : "mr1-return-to-amo-add-extension-label";
     }
 
     // For experiments, when needed below rendered UI allows settings hard coded strings

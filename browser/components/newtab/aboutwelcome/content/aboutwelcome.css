@@ -873,8 +873,13 @@ html {
   margin-bottom: 10px;
   margin-top: 24px;
 }
-.onboardingContainer .hide-rtamo-icon {
-  display: none;
+.onboardingContainer .rtamo-icon {
+  text-align: start;
+}
+@media only screen and (max-width: 800px) {
+  .onboardingContainer .rtamo-icon {
+    text-align: center;
+  }
 }
 .onboardingContainer .welcome-text {
   display: flex;

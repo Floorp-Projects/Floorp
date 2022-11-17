@@ -23,6 +23,12 @@ return-to-amo-addon-title = Now let’s get you <img data-l10n-name="icon"/> <b>
 return-to-amo-add-extension-label = Add the Extension
 return-to-amo-add-theme-label = Add the Theme
 
+##  Variables: $addon-name (String) - Name of the add-on to be installed
+
+mr1-return-to-amo-subtitle = Say hello to { -brand-short-name }
+mr1-return-to-amo-addon-title = You’ve got a fast, private browser at your fingertips. Now you can add <b>{ $addon-name }</b> and do even more with { -brand-short-name }.
+mr1-return-to-amo-add-extension-label = Add { $addon-name }
+
 ## Multistage onboarding strings (about:welcome pages)
 
 # Aria-label to make the "steps" of multistage onboarding visible to screen readers.
