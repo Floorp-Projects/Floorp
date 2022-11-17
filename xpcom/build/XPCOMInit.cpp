@@ -585,7 +585,6 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
 
     // This must happen after the shutdown of media and widgets, which
     // are triggered by the NS_XPCOM_SHUTDOWN_OBSERVER_ID notification.
-    NS_ProcessPendingEvents(thread);
     gfxPlatform::ShutdownLayersIPC();
 
     mozilla::AppShutdown::AdvanceShutdownPhase(
@@ -595,11 +594,11 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
     // dispatches to non main-thread threads.
     ThreadEventTarget::XPCOMShutdownThreadsNotificationFinished();
 #endif
-    NS_ProcessPendingEvents(thread);
 
     // Shutdown the timer thread and all timers that might still be alive
     nsTimerImpl::Shutdown();
 
+    // Have an extra round of processing after the timers went away.
     NS_ProcessPendingEvents(thread);
 
     // Shutdown all remaining threads.  This method does not return until
@@ -617,10 +616,8 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
     // XPCOMShutdownFinal is the default phase for ClearOnShutdown.
     // This AdvanceShutdownPhase will thus free most ClearOnShutdown()'ed
     // smart pointers. Some destructors may fire extra main thread runnables
-    // that will be processed below.
+    // that will be processed inside AdvanceShutdownPhase.
     AppShutdown::AdvanceShutdownPhase(ShutdownPhase::XPCOMShutdownFinal);
-
-    NS_ProcessPendingEvents(thread);
 
     // Shutdown the main thread, processing our last round of events, and then
     // mark that we've finished main thread event processing.
