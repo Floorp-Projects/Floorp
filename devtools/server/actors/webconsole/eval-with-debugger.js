@@ -323,15 +323,7 @@ function parseErrorOutput(dbgGlobal, string) {
   }
 }
 
-/**
- * Creates a side-effect-free debugger instance
- *
- * @param boolean skipCheckingEffectfulOffsets
- *        If true, effectful offsets are excluded from the checks for side effects.
- * @return object
- *         Side-effect-free debugger.
- */
-function makeSideeffectFreeDebugger(skipCheckingEffectfulOffsets) {
+function makeSideeffectFreeDebugger() {
   // We ensure that the metadata for native functions is loaded before we
   // initialize sideeffect-prevention because the data is lazy-loaded, and this
   // logic can run inside of debuggee compartments because the
@@ -349,47 +341,45 @@ function makeSideeffectFreeDebugger(skipCheckingEffectfulOffsets) {
   const dbg = new Debugger();
   dbg.addAllGlobalsAsDebuggees();
 
-  if (!skipCheckingEffectfulOffsets) {
-    const timeoutDuration = 100;
-    const endTime = Date.now() + timeoutDuration;
-    let count = 0;
-    function shouldCancel() {
-      // To keep the evaled code as quick as possible, we avoid querying the
-      // current time on ever single step and instead check every 100 steps
-      // as an arbitrary count that seemed to be "often enough".
-      return ++count % 100 === 0 && Date.now() > endTime;
-    }
+  const timeoutDuration = 100;
+  const endTime = Date.now() + timeoutDuration;
+  let count = 0;
+  function shouldCancel() {
+    // To keep the evaled code as quick as possible, we avoid querying the
+    // current time on ever single step and instead check every 100 steps
+    // as an arbitrary count that seemed to be "often enough".
+    return ++count % 100 === 0 && Date.now() > endTime;
+  }
 
-    const executedScripts = new Set();
-    const handler = {
-      hit: () => null,
-    };
-    dbg.onEnterFrame = frame => {
+  const executedScripts = new Set();
+  const handler = {
+    hit: () => null,
+  };
+  dbg.onEnterFrame = frame => {
+    if (shouldCancel()) {
+      return null;
+    }
+    frame.onStep = () => {
       if (shouldCancel()) {
         return null;
       }
-      frame.onStep = () => {
-        if (shouldCancel()) {
-          return null;
-        }
-        return undefined;
-      };
-
-      const script = frame.script;
-
-      if (executedScripts.has(script)) {
-        return undefined;
-      }
-      executedScripts.add(script);
-
-      const offsets = script.getEffectfulOffsets();
-      for (const offset of offsets) {
-        script.setBreakpoint(offset, handler);
-      }
-
       return undefined;
     };
-  }
+
+    const script = frame.script;
+
+    if (executedScripts.has(script)) {
+      return undefined;
+    }
+    executedScripts.add(script);
+
+    const offsets = script.getEffectfulOffsets();
+    for (const offset of offsets) {
+      script.setBreakpoint(offset, handler);
+    }
+
+    return undefined;
+  };
 
   // The debugger only calls onNativeCall handlers on the debugger that is
   // explicitly calling eval, so we need to add this hook on "dbg" even though
