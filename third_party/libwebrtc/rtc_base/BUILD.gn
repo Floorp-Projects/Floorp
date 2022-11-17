@@ -464,6 +464,10 @@ rtc_library("checks") {
     "system:inline",
     "system:rtc_export",
   ]
+  if (build_with_chromium) {
+    sources += [ "../../webrtc_overrides/rtc_base/checks_overrides.cc" ]
+    deps += [ "//base" ]
+  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/meta:type_traits",
     "//third_party/abseil-cpp/absl/strings",
