@@ -1307,9 +1307,9 @@ void HTMLCanvasElement::SetFrameCapture(
 }
 
 already_AddRefed<SourceSurface> HTMLCanvasElement::GetSurfaceSnapshot(
-    gfxAlphaType* const aOutAlphaType) {
+    gfxAlphaType* const aOutAlphaType, DrawTarget* aTarget) {
   if (mCurrentContext) {
-    return mCurrentContext->GetSurfaceSnapshot(aOutAlphaType);
+    return mCurrentContext->GetOptimizedSnapshot(aTarget, aOutAlphaType);
   } else if (mOffscreenDisplay) {
     return mOffscreenDisplay->GetSurfaceSnapshot();
   }

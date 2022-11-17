@@ -426,8 +426,13 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
                             const nsAString& aEncoderOptions,
                             nsIInputStream** aStream) override;
 
+  already_AddRefed<mozilla::gfx::SourceSurface> GetOptimizedSnapshot(
+      mozilla::gfx::DrawTarget* aTarget, gfxAlphaType* aOutAlphaType) override;
+
   already_AddRefed<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(
-      gfxAlphaType* aOutAlphaType = nullptr) override;
+      gfxAlphaType* aOutAlphaType = nullptr) override {
+    return GetOptimizedSnapshot(nullptr, aOutAlphaType);
+  }
 
   virtual void SetOpaqueValueFromOpaqueAttr(bool aOpaqueAttrValue) override;
   bool GetIsOpaque() override { return mOpaque; }

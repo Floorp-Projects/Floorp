@@ -871,6 +871,19 @@ already_AddRefed<SourceSurface> DrawTargetWebgl::Snapshot() {
   return do_AddRef(mSnapshot);
 }
 
+// If we need to provide a snapshot for another DrawTargetWebgl that shares the
+// same WebGL context, then it is safe to directly return a snapshot. Otherwise,
+// we may be exporting to another thread and require a data snapshot.
+already_AddRefed<SourceSurface> DrawTargetWebgl::GetOptimizedSnapshot(
+    DrawTarget* aTarget) {
+  if (aTarget && aTarget->GetBackendType() == BackendType::WEBGL &&
+      static_cast<DrawTargetWebgl*>(aTarget)->mSharedContext ==
+          mSharedContext) {
+    return Snapshot();
+  }
+  return GetDataSnapshot();
+}
+
 // Read from the WebGL context into a buffer. This handles both swizzling BGRA
 // to RGBA and flipping the image.
 bool DrawTargetWebgl::SharedContext::ReadInto(uint8_t* aDstData,

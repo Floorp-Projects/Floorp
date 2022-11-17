@@ -7387,7 +7387,7 @@ SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
     pAlphaType =
         nullptr;  // Coersce GetSurfaceSnapshot to give us Opaque/Premult only.
   }
-  result.mSourceSurface = aElement->GetSurfaceSnapshot(pAlphaType);
+  result.mSourceSurface = aElement->GetSurfaceSnapshot(pAlphaType, aTarget);
   if (!result.mSourceSurface) {
     // If the element doesn't have a context then we won't get a snapshot. The
     // canvas spec wants us to not error and just draw nothing, so return an
