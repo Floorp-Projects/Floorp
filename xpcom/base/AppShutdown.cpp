@@ -315,7 +315,6 @@ bool AppShutdown::IsRestarting() {
 
 #ifdef DEBUG
 static bool sNotifyingShutdownObservers = false;
-static bool sAdvancingShutdownPhase = false;
 
 bool AppShutdown::IsNoOrLegalShutdownTopic(const char* aTopic) {
   if (!XRE_IsParentProcess()) {
@@ -333,12 +332,6 @@ void AppShutdown::AdvanceShutdownPhaseInternal(
     ShutdownPhase aPhase, bool doNotify, const char16_t* aNotificationData,
     const nsCOMPtr<nsISupports>& aNotificationSubject) {
   AssertIsOnMainThread();
-#ifdef DEBUG
-  // Prevent us from re-entrance
-  MOZ_ASSERT(!sAdvancingShutdownPhase);
-  sAdvancingShutdownPhase = true;
-  auto exit = MakeScopeExit([] { sAdvancingShutdownPhase = false; });
-#endif
 
   // We ensure that we can move only forward. We cannot
   // MOZ_ASSERT here as there are some tests that fire
@@ -347,23 +340,6 @@ void AppShutdown::AdvanceShutdownPhaseInternal(
   if (sCurrentShutdownPhase >= aPhase) {
     return;
   }
-
-  nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
-  if (sCurrentShutdownPhase >= ShutdownPhase::AppShutdownConfirmed) {
-    // Give runnables dispatched so far as part of the ongoing phase a chance
-    // to run before actually advancing the phase. We can do this only after
-    // we passed the point of no return and thus can expect a linear flow
-    // through our shutdown phases. This way the processing is also covered
-    // by the terminator's timer.
-    // Note that this happens only for main thread runnables, such that the
-    // correct way of ensuring shutdown processing remains to have an async
-    // shutdown blocker.
-    if (thread) {
-      NS_ProcessPendingEvents(thread);
-    }
-  }
-
-  // From now on any IsInOrBeyond checks will find the new phase set.
   sCurrentShutdownPhase = aPhase;
 
   // TODO: Bug 1768581
@@ -395,10 +371,6 @@ void AppShutdown::AdvanceShutdownPhaseInternal(
 #endif
         obsService->NotifyObservers(aNotificationSubject, aTopic,
                                     aNotificationData);
-        // Empty our MT event queue again after the notification has finished
-        if (thread) {
-          NS_ProcessPendingEvents(thread);
-        }
       }
     }
   }
