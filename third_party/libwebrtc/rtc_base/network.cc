@@ -287,7 +287,8 @@ webrtc::MdnsResponderInterface* NetworkManager::GetMdnsResponder() const {
 
 NetworkManagerBase::NetworkManagerBase(
     const webrtc::FieldTrialsView* field_trials)
-    : enumeration_permission_(NetworkManager::ENUMERATION_ALLOWED),
+    : field_trials_(field_trials),
+      enumeration_permission_(NetworkManager::ENUMERATION_ALLOWED),
       signal_network_preference_change_(
           field_trials
               ? field_trials->IsEnabled("WebRTC-SignalNetworkPreferenceChange")
@@ -303,7 +304,7 @@ std::vector<const Network*> NetworkManagerBase::GetAnyAddressNetworks() {
   if (!ipv4_any_address_network_) {
     const rtc::IPAddress ipv4_any_address(INADDR_ANY);
     ipv4_any_address_network_ = std::make_unique<Network>(
-        "any", "any", ipv4_any_address, 0, ADAPTER_TYPE_ANY);
+        "any", "any", ipv4_any_address, 0, ADAPTER_TYPE_ANY, field_trials_);
     ipv4_any_address_network_->set_default_local_address_provider(this);
     ipv4_any_address_network_->set_mdns_responder_provider(this);
     ipv4_any_address_network_->AddIP(ipv4_any_address);
@@ -313,7 +314,7 @@ std::vector<const Network*> NetworkManagerBase::GetAnyAddressNetworks() {
   if (!ipv6_any_address_network_) {
     const rtc::IPAddress ipv6_any_address(in6addr_any);
     ipv6_any_address_network_ = std::make_unique<Network>(
-        "any", "any", ipv6_any_address, 0, ADAPTER_TYPE_ANY);
+        "any", "any", ipv6_any_address, 0, ADAPTER_TYPE_ANY, field_trials_);
     ipv6_any_address_network_->set_default_local_address_provider(this);
     ipv6_any_address_network_->set_mdns_responder_provider(this);
     ipv6_any_address_network_->AddIP(ipv6_any_address);
@@ -650,9 +651,9 @@ void BasicNetworkManager::ConvertIfAddrs(
       if_info.adapter_type = ADAPTER_TYPE_VPN;
     }
 
-    auto network =
-        std::make_unique<Network>(cursor->ifa_name, cursor->ifa_name, prefix,
-                                  prefix_length, if_info.adapter_type);
+    auto network = std::make_unique<Network>(
+        cursor->ifa_name, cursor->ifa_name, prefix, prefix_length,
+        if_info.adapter_type, field_trials_.get());
     network->set_default_local_address_provider(this);
     network->set_scope_id(scope_id);
     network->AddIP(ip);
@@ -1063,8 +1064,10 @@ Network::Network(absl::string_view name,
                  absl::string_view desc,
                  const IPAddress& prefix,
                  int prefix_length,
-                 AdapterType type)
-    : name_(name),
+                 AdapterType type,
+                 const webrtc::FieldTrialsView* field_trials)
+    : field_trials_(field_trials),
+      name_(name),
       description_(desc),
       prefix_(prefix),
       prefix_length_(prefix_length),
@@ -1107,12 +1110,20 @@ IPAddress Network::GetBestIP() const {
     return static_cast<IPAddress>(ips_.at(0));
   }
 
-  InterfaceAddress selected_ip, ula_ip;
-
+  InterfaceAddress selected_ip, link_local_ip, ula_ip;
+  const bool prefer_global_ipv6_to_link_local =
+      field_trials_
+          ? field_trials_->IsEnabled("WebRTC-PreferGlobalIPv6ToLinkLocal")
+          : false;
   for (const InterfaceAddress& ip : ips_) {
     // Ignore any address which has been deprecated already.
     if (ip.ipv6_flags() & IPV6_ADDRESS_FLAG_DEPRECATED)
       continue;
+
+    if (prefer_global_ipv6_to_link_local && IPIsLinkLocal(ip)) {
+      link_local_ip = ip;
+      continue;
+    }
 
     // ULA address should only be returned when we have no other
     // global IP.
@@ -1127,9 +1138,14 @@ IPAddress Network::GetBestIP() const {
       break;
   }
 
-  // No proper global IPv6 address found, use ULA instead.
-  if (IPIsUnspec(selected_ip) && !IPIsUnspec(ula_ip)) {
-    selected_ip = ula_ip;
+  if (IPIsUnspec(selected_ip)) {
+    if (prefer_global_ipv6_to_link_local && !IPIsUnspec(link_local_ip)) {
+      // No proper global IPv6 address found, use link local address instead.
+      selected_ip = link_local_ip;
+    } else if (!IPIsUnspec(ula_ip)) {
+      // No proper global and link local address found, use ULA instead.
+      selected_ip = ula_ip;
+    }
   }
 
   return static_cast<IPAddress>(selected_ip);
