@@ -2489,7 +2489,7 @@ nsresult nsLocalFile::SetModDate(PRTime aLastModifiedTime,
   nsresult rv = NS_OK;
   // if at least one of these fails...
   if (!(SystemTimeToFileTime(&st, &ft) != 0 &&
-        SetFileTime(file, nullptr, &ft, &ft) != 0)) {
+        SetFileTime(file, nullptr, nullptr, &ft) != 0)) {
     rv = ConvertWinError(GetLastError());
   }
 
