@@ -1913,6 +1913,12 @@ void DrawTargetSkia::PopClip() {
   SetTransform(GetTransform());
 }
 
+bool DrawTargetSkia::RemoveAllClips() {
+  mCanvas->restoreToCount(1);
+  SetTransform(GetTransform());
+  return true;
+}
+
 // Get clip bounds in device space for the clipping region. By default, only
 // bounds for simple (empty or rect) regions are reported. If explicitly
 // allowed, the bounds will be reported for complex (all other) regions as well.

@@ -419,6 +419,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   void PushDeviceSpaceClipRects(const IntRect* aRects,
                                 uint32_t aCount) override;
   void PopClip() override;
+  bool RemoveAllClips() override;
   void PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
                  const Matrix& aMaskTransform,
                  const IntRect& aBounds = IntRect(),

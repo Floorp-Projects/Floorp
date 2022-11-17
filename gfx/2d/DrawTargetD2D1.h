@@ -95,6 +95,8 @@ class DrawTargetD2D1 : public DrawTarget {
                                         uint32_t aCount) override;
 
   virtual void PopClip() override;
+  virtual bool RemoveAllClips() override;
+
   virtual void PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
                          const Matrix& aMaskTransform,
                          const IntRect& aBounds = IntRect(),
