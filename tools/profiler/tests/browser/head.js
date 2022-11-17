@@ -5,10 +5,6 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const { BrowserTestUtils } = ChromeUtils.import(
-  "resource://testing-common/BrowserTestUtils.jsm"
-);
-
 const BASE_URL = "http://example.com/browser/tools/profiler/tests/browser/";
 const BASE_URL_HTTPS =
   "https://example.com/browser/tools/profiler/tests/browser/";

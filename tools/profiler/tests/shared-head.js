@@ -373,7 +373,7 @@ function escapeStringRegexp(string) {
 /** ------ Assertions helper ------ */
 /**
  * This assert helper function makes it easy to check a lot of properties in an
- * object. We augment Assert.jsm to make it easier to use.
+ * object. We augment Assert.sys.mjs to make it easier to use.
  */
 Object.assign(Assert, {
   /*

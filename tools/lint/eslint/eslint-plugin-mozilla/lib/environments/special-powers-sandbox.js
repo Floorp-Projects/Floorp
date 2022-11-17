@@ -18,7 +18,7 @@ module.exports = {
     Cu: false,
     Services: false,
 
-    // testing/specialpowers/content/SpecialPowersSandbox.jsm
+    // testing/specialpowers/content/SpecialPowersSandbox.sys.mjs
 
     // SANDBOX_GLOBALS
     Blob: false,

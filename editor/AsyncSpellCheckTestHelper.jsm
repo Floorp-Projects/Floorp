@@ -104,8 +104,8 @@ function maybeOnSpellCheck(editableElement, callback) {
  *                         started.
  */
 function onSpellCheck(editableElement, callback) {
-  const { TestUtils } = ChromeUtils.import(
-    "resource://testing-common/TestUtils.jsm"
+  const { TestUtils } = ChromeUtils.importESModule(
+    "resource://testing-common/TestUtils.sys.mjs"
   );
 
   let editor = editableElement.editor;

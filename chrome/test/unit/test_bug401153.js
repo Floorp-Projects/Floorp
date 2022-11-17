@@ -7,8 +7,8 @@ var MANIFESTS = [do_get_file("data/test_bug401153.manifest")];
 
 registerManifests(MANIFESTS);
 
-const { updateAppInfo } = ChromeUtils.import(
-  "resource://testing-common/AppInfo.jsm"
+const { updateAppInfo } = ChromeUtils.importESModule(
+  "resource://testing-common/AppInfo.sys.mjs"
 );
 updateAppInfo({
   name: "XPCShell",
