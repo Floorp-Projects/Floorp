@@ -230,7 +230,6 @@ function openBrowserWindow(
   postData = null,
   forcePrivate = false
 ) {
-  let chromeURL = AppConstants.BROWSER_CHROME_URL;
   const isStartup =
     cmdLine && cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH;
 
@@ -317,10 +316,11 @@ function openBrowserWindow(
       }
 
       let openTime = win.openTime;
-      win.location = chromeURL;
+      win.location = AppConstants.BROWSER_CHROME_URL;
       win.arguments = args; // <-- needs to be a plain JS array here.
 
       ChromeUtils.addProfilerMarker("earlyBlankWindowVisible", openTime);
+      lazy.BrowserWindowTracker.registerOpeningWindow(win, forcePrivate);
       return win;
     }
   }
@@ -350,13 +350,11 @@ function openBrowserWindow(
     args = array;
   }
 
-  let features =
-    "chrome,dialog=no,all" + gBrowserContentHandler.getFeatures(cmdLine);
-  if (forcePrivate) {
-    features += ",private";
-  }
-
-  return Services.ww.openWindow(null, chromeURL, "_blank", features, args);
+  return lazy.BrowserWindowTracker.openWindow({
+    args,
+    features: gBrowserContentHandler.getFeatures(cmdLine),
+    private: forcePrivate,
+  });
 }
 
 function openPreferences(cmdLine, extraArgs) {
@@ -931,7 +929,7 @@ nsBrowserContentHandler.prototype = {
 };
 var gBrowserContentHandler = new nsBrowserContentHandler();
 
-function handURIToExistingBrowser(
+async function handURIToExistingBrowser(
   uri,
   location,
   cmdLine,
@@ -949,6 +947,13 @@ function handURIToExistingBrowser(
   var navWin = lazy.BrowserWindowTracker.getTopWindow({
     private: allowPrivate,
   });
+
+  if (!navWin) {
+    navWin = await lazy.BrowserWindowTracker.getPendingWindow({
+      private: allowPrivate,
+    });
+  }
+
   if (!navWin) {
     // if we couldn't load it in an existing window, open a new one
     openBrowserWindow(
