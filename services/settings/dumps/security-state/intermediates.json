@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "schema": 1668703692740,
+      "derHash": "Jk3xRY+17x/J358TRehKbMGkcc9HWudZj/UrhnE1Gfs=",
+      "subject": "CN=SHECA OV Server CA G6,O=UniTrust,C=CN",
+      "subjectDN": "MEAxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDEeMBwGA1UEAwwVU0hFQ0EgT1YgU2VydmVyIENBIEc2",
+      "whitelist": false,
+      "attachment": {
+        "hash": "c5cc446526bddaf1a804aa3514d41f7bb9acd5d20bc373bb1b5c8dda91163adf",
+        "size": 2003,
+        "filename": "TVu2cg_z0GgoU6VFycG8xi71BHVnrqMBxVlovl_W8Ok=.pem",
+        "location": "security-state-staging/intermediates/2359474e-c40f-4c83-8ea9-7298b5ec66f0.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "TVu2cg/z0GgoU6VFycG8xi71BHVnrqMBxVlovl/W8Ok=",
+      "crlite_enrolled": false,
+      "id": "16b383c7-a13d-4faa-b0f5-912422a45f5e",
+      "last_modified": 1668704223146
+    },
+    {
+      "schema": 1668674893607,
+      "derHash": "AEgjQbEEoN5uDx1QjbhMtRT3SU/gSYITOlx1ATbFXcg=",
+      "subject": "CN=Hongkong Post Root CA 3,O=Hongkong Post,L=Hong Kong,ST=Hong Kong,C=HK",
+      "subjectDN": "MG8xCzAJBgNVBAYTAkhLMRIwEAYDVQQIEwlIb25nIEtvbmcxEjAQBgNVBAcTCUhvbmcgS29uZzEWMBQGA1UEChMNSG9uZ2tvbmcgUG9zdDEgMB4GA1UEAxMXSG9uZ2tvbmcgUG9zdCBSb290IENBIDM=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "1769ef49c13db2ca1f82506a6c4aaa6ea94918c140d50b6096ee7f81ff82cf46",
+        "size": 2024,
+        "filename": "JUHlO6WzsHrL5wl6xKA-BAwRz3ptSmfLIT1Vi1AWegY=.pem",
+        "location": "security-state-staging/intermediates/569425e5-70f5-4d17-9375-130302d7faca.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "JUHlO6WzsHrL5wl6xKA+BAwRz3ptSmfLIT1Vi1AWegY=",
+      "crlite_enrolled": false,
+      "id": "3aa0463f-d538-4149-9aab-0811ed205212",
+      "last_modified": 1668675423131
+    },
+    {
+      "schema": 1668566894507,
+      "derHash": "LErWS06GLX1GQk2foT6pqXSmL3xLYIrhqHFCTMmmhz0=",
+      "subject": "CN=CrowdStrike TLS CA 2022,O=CrowdStrike\\, Inc.,C=US",
+      "subjectDN": "MEsxCzAJBgNVBAYTAlVTMRowGAYDVQQKExFDcm93ZFN0cmlrZSwgSW5jLjEgMB4GA1UEAxMXQ3Jvd2RTdHJpa2UgVExTIENBIDIwMjI=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "33ddc8825dd673ff7f560e7853a5e0d291bb6cb6cf90aad4c4593390e46269f1",
+        "size": 1711,
+        "filename": "o1stY0JqCx4_MuMRqWJETN_Heofxx39-E3XvVnnzWwo=.pem",
+        "location": "security-state-staging/intermediates/87cebe8e-a76e-4af9-b874-8a495d8ce5f7.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "o1stY0JqCx4/MuMRqWJETN/Heofxx39+E3XvVnnzWwo=",
+      "crlite_enrolled": false,
+      "id": "b535d0e1-ea0e-4159-ac70-c6114f51be54",
+      "last_modified": 1668567423462
+    },
+    {
       "schema": 1667530084667,
       "derHash": "rX9Xqj/F6vQxAiSkdQqXzYed4ZidS4arCLeig3O8tIk=",
       "subject": "CN=Encryption Everywhere G5 TLS ECC P-384 SHA384 2022 CA1,O=DigiCert\\, Inc.,C=US",
@@ -26785,5 +26839,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1667750224254
+  "timestamp": 1668704223146
 }
