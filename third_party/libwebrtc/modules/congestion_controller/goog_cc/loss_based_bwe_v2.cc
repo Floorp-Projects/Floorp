@@ -254,7 +254,7 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
        recovering_after_loss_timestamp_ + config_->delayed_increase_window <
            last_send_time_most_recent_observation_)) {
     bandwidth_limit_in_current_window_ = std::max(
-        congestion_controller::GetMinBitrate(),
+        kCongestionControllerMinBitrate,
         best_candidate.loss_limited_bandwidth * config_->max_increase_factor);
     recovering_after_loss_timestamp_ = last_send_time_most_recent_observation_;
   }
