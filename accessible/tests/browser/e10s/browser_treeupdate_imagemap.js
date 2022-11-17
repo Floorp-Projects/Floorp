@@ -101,8 +101,8 @@ async function testContainer(browser) {
   await invokeSetAttribute(browser, "map", "name", "atoz_map");
   // XXX: force repainting of the image (see bug 745788 for details).
   await invokeContentTask(browser, [], () => {
-    const { ContentTaskUtils } = ChromeUtils.import(
-      "resource://testing-common/ContentTaskUtils.jsm"
+    const { ContentTaskUtils } = ChromeUtils.importESModule(
+      "resource://testing-common/ContentTaskUtils.sys.mjs"
     );
     const EventUtils = ContentTaskUtils.getEventUtils(content);
     EventUtils.synthesizeMouse(

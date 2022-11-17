@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+import { Assert } from "resource://testing-common/Assert.sys.mjs";
 
 const MAX_TRIM_LENGTH = 100;
 
