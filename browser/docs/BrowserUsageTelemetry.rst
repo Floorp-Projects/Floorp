@@ -47,6 +47,7 @@ For the purposes of this telemetry a set of areas are defined:
   * ``pageaction-panel`` - The page action (meatball) menu.
   * ``nav-bar-start`` - The area of the navigation toolbar before the address bar.
   * ``nav-bar-end`` - The area of the navigastion toolbar after the address bar.
+  * ``unified-extensions-area`` - The unified extensions panel.
 
 * In ``about:preferences`` the different cagtegories are used:
 
