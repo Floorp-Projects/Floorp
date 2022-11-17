@@ -178,18 +178,6 @@ rtc_library("rtt_mult_experiment") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
-rtc_library("jitter_upper_bound_experiment") {
-  sources = [
-    "jitter_upper_bound_experiment.cc",
-    "jitter_upper_bound_experiment.h",
-  ]
-  deps = [
-    "..:logging",
-    "../../system_wrappers:field_trial",
-  ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
-}
-
 rtc_library("rate_control_settings") {
   sources = [
     "rate_control_settings.cc",

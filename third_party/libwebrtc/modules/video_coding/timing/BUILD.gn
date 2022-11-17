@@ -44,7 +44,6 @@ rtc_library("jitter_estimator") {
     "../../../api/units:timestamp",
     "../../../rtc_base",
     "../../../rtc_base:safe_conversions",
-    "../../../rtc_base/experiments:jitter_upper_bound_experiment",
     "../../../system_wrappers",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
@@ -106,7 +105,6 @@ rtc_library("timing_unittests") {
     "../../../rtc_base:histogram_percentile_counter",
     "../../../rtc_base:stringutils",
     "../../../rtc_base:timeutils",
-    "../../../rtc_base/experiments:jitter_upper_bound_experiment",
     "../../../system_wrappers:system_wrappers",
     "../../../test:scoped_key_value_config",
     "../../../test:test_support",
