@@ -4,8 +4,8 @@
 
 /* globals chrome */
 
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 
 const PREF_MAX_READ = "webextensions.native-messaging.max-input-message-bytes";

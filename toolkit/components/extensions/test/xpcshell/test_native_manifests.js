@@ -20,8 +20,8 @@ const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 let registry = null;
 if (AppConstants.platform == "win") {
-  var { MockRegistry } = ChromeUtils.import(
-    "resource://testing-common/MockRegistry.jsm"
+  var { MockRegistry } = ChromeUtils.importESModule(
+    "resource://testing-common/MockRegistry.sys.mjs"
   );
   registry = new MockRegistry();
   registerCleanupFunction(() => {

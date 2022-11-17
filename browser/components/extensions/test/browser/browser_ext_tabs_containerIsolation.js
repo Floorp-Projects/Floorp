@@ -2,8 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
-const { XPCShellContentUtils } = ChromeUtils.import(
-  "resource://testing-common/XPCShellContentUtils.jsm"
+const { XPCShellContentUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/XPCShellContentUtils.sys.mjs"
 );
 XPCShellContentUtils.initMochitest(this);
 const server = XPCShellContentUtils.createHttpServer({

@@ -4,11 +4,9 @@
 
 /* exported IS_OOP, valueSum, clearHistograms, getSnapshots, promiseTelemetryRecorded */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ContentTaskUtils",
-  "resource://testing-common/ContentTaskUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  ContentTaskUtils: "resource://testing-common/ContentTaskUtils.sys.mjs",
+});
 
 // Allows to run xpcshell telemetry test also on products (e.g. Thunderbird) where
 // that telemetry wouldn't be actually collected in practice (but to be sure
