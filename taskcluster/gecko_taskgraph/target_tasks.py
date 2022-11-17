@@ -1389,3 +1389,14 @@ def target_tasks_are_we_esmified_yet(full_task_graph, parameters, graph_config):
     return [
         l for l, t in full_task_graph.tasks.items() if t.kind == "are-we-esmified-yet"
     ]
+
+
+@_target_task("eslint-build")
+def target_tasks_eslint_build(full_task_graph, parameters, graph_config):
+    """Select the task to run additional ESLint rules which require a build."""
+
+    for name, task in full_task_graph.tasks.items():
+        if task.kind != "source-test":
+            continue
+        if name == "eslint-build":
+            yield name

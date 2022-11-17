@@ -74,31 +74,40 @@ module.exports = {
    *   A map of interface names to the interface details.
    */
   get xpidlData() {
-    let objdir;
-    if (process.env.MOZ_OBJDIR) {
-      objdir = `${process.env.MOZ_OBJDIR}/config/makefiles/xpidl/`;
-    } else if (process.env.TEST_XPIDLDIR) {
-      objdir = process.env.TEST_XPIDLDIR;
-    }
-    if (!objdir) {
+    let xpidlDir;
+
+    if (process.env.TASK_ID && !process.env.MOZ_XPT_ARTIFACTS_DIR) {
       throw new Error(
-        "This rule needs MOZ_OBJDIR defining in the environment. It must be a full build."
+        "MOZ_XPT_ARTIFACTS_DIR must be set for this rule in automation"
+      );
+    }
+    xpidlDir = process.env.MOZ_XPT_ARTIFACTS_DIR;
+
+    if (!xpidlDir && process.env.MOZ_OBJDIR) {
+      xpidlDir = `${process.env.MOZ_OBJDIR}/dist/xpt_artifacts/`;
+      if (!fs.existsSync(xpidlDir)) {
+        xpidlDir = `${process.env.MOZ_OBJDIR}/config/makefiles/xpidl/`;
+      }
+    }
+    if (!xpidlDir) {
+      throw new Error(
+        "MOZ_OBJDIR must be defined in the environment for this rule, i.e. MOZ_OBJDIR=objdir-ff ./mach ..."
       );
     }
     if (xpidlData) {
       return xpidlData;
     }
-    let files = fs.readdirSync(`${objdir}`);
+    let files = fs.readdirSync(`${xpidlDir}`);
     // `Makefile` is an expected file in the directory.
     if (files.length <= 1) {
-      throw new Error("Missing xpidl files, this rule needs a full build.");
+      throw new Error("Missing xpidl data files, maybe you need to build?");
     }
     xpidlData = new Map();
     for (let file of files) {
       if (!file.endsWith(".xpt")) {
         continue;
       }
-      let data = JSON.parse(fs.readFileSync(path.join(`${objdir}`, file)));
+      let data = JSON.parse(fs.readFileSync(path.join(`${xpidlDir}`, file)));
       for (let details of data) {
         xpidlData.set(details.name, details);
       }
