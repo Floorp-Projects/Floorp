@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["PermissionPrompts"];
 
-const { BrowserTestUtils } = ChromeUtils.import(
-  "resource://testing-common/BrowserTestUtils.jsm"
+const { BrowserTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/BrowserTestUtils.sys.mjs"
 );
 
 const URL =
@@ -159,8 +159,8 @@ async function clickOn(selector, beforeContentFn) {
   }
 
   await SpecialPowers.spawn(lastTab.linkedBrowser, [selector], arg => {
-    const { EventUtils } = ChromeUtils.import(
-      "resource://specialpowers/SpecialPowersEventUtils.jsm"
+    const { EventUtils } = ChromeUtils.importESModule(
+      "resource://specialpowers/SpecialPowersEventUtils.sys.mjs"
     );
 
     let element = content.document.querySelector(arg);

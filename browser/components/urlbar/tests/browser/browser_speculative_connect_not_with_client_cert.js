@@ -7,8 +7,8 @@
 
 // Tests that we don't speculatively connect when user certificates are installed
 
-const { MockRegistrar } = ChromeUtils.import(
-  "resource://testing-common/MockRegistrar.jsm"
+const { MockRegistrar } = ChromeUtils.importESModule(
+  "resource://testing-common/MockRegistrar.sys.mjs"
 );
 
 const certOverrideService = Cc[

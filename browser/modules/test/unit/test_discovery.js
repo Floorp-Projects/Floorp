@@ -7,8 +7,8 @@
 // ClientID fails without...
 do_get_profile();
 
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 const { Discovery } = ChromeUtils.import("resource:///modules/Discovery.jsm");

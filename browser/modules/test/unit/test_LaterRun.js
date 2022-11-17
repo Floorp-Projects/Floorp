@@ -8,8 +8,8 @@ const kProfileCreationTime = "browser.laterrun.bookkeeping.profileCreationTime";
 const { LaterRun } = ChromeUtils.import("resource:///modules/LaterRun.jsm");
 
 Services.prefs.setBoolPref(kEnabledPref, true);
-const { updateAppInfo } = ChromeUtils.import(
-  "resource://testing-common/AppInfo.jsm"
+const { updateAppInfo } = ChromeUtils.importESModule(
+  "resource://testing-common/AppInfo.sys.mjs"
 );
 updateAppInfo();
 

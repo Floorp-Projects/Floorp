@@ -11,8 +11,8 @@ const { UnsubmittedCrashHandler } = ChromeUtils.import(
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 );
-const { makeFakeAppDir } = ChromeUtils.import(
-  "resource://testing-common/AppData.jsm"
+const { makeFakeAppDir } = ChromeUtils.importESModule(
+  "resource://testing-common/AppData.sys.mjs"
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
@@ -197,7 +197,7 @@ add_setup(async function() {
   // Pending crash reports are stored in the UAppData folder,
   // which exists outside of the profile folder. In order to
   // not overwrite / clear pending crash reports for the poor
-  // soul who runs this test, we use AppData.jsm to point to
+  // soul who runs this test, we use AppData.sys.mjs to point to
   // a special made-up directory inside the profile
   // directory.
   await makeFakeAppDir();

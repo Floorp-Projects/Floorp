@@ -183,24 +183,22 @@ the view, and etc.
 
 BrowserTestUtils
 ~~~~~~~~~~~~~~~~
-`BrowserTestUtils.jsm <https://searchfox.org/mozilla-central/source/testing/moc
-hitest/BrowserTestUtils/BrowserTestUtils.jsm>`_ is useful for browser window
-testing. This file contains methods that can help with opening tabs, waiting
-for certain events to happen in the window, opening new or private windows, and
-etc.
+`BrowserTestUtils.sys.mjs <../../testing/browser-chrome/browsertestutils.html>`_
+is useful for browser window testing. This file contains methods that can help
+with opening tabs, waiting for certain events to happen in the window, opening
+new or private windows, and etc.
 
 TestUtils
 ~~~~~~~~~
-`TestUtils.jsm <https://searchfox.org/mozilla-central/source/testing/modules/
-TestUtils.jsm>`_ is useful for general purpose testing and does not depend on
-the browser window. This file contains methods that are useful when waiting for
-a condition to return true, waiting for a specific preference to change,
-and etc.
+`TestUtils.jsm <../../testing/testutils.html>`_ is useful for general
+purpose testing and does not depend on the browser window. This file contains
+methods that are useful when waiting for a condition to return true, waiting for
+a specific preference to change, and etc.
 
 PlacesTestUtils
 ~~~~~~~~~~~~~~~
-`PlacesTestUtils.jsm <https://searchfox.org/mozilla-central/source/toolkit/comp
-onents/places/tests/PlacesTestUtils.jsm>`_ is useful for adding visits, adding
+:searchfox:`PlacesTestUtils.sys.mjs <toolkit/components/places/tests/PlacesTestU
+tils.sys.mjs>` is useful for adding visits, adding
 bookmarks, waiting for notification of visited pages, and etc.
 
 EventUtils

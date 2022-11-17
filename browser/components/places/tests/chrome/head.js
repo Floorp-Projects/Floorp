@@ -11,13 +11,9 @@ Services.scriptloader.loadSubScript(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  BrowserTestUtils: "resource://testing-common/BrowserTestUtils.sys.mjs",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "BrowserTestUtils",
-  "resource://testing-common/BrowserTestUtils.jsm"
-);
 
 ChromeUtils.defineESModuleGetters(window, {
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",

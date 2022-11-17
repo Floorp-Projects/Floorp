@@ -14,11 +14,9 @@ ChromeUtils.defineModuleGetter(
   "resource://services-settings/remote-settings.js"
 );
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TestUtils",
-  "resource://testing-common/TestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  TestUtils: "resource://testing-common/TestUtils.sys.mjs",
+});
 
 const kConfigCollectionKey = "doh-config";
 const kProviderCollectionKey = "doh-providers";

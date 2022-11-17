@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["Preferences"];
 
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 var Preferences = {
   init(libDir) {

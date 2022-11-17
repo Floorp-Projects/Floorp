@@ -7,12 +7,6 @@ let { LoginTestUtils } = ChromeUtils.import(
   "resource://testing-common/LoginTestUtils.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "TestUtils",
-  "resource://testing-common/TestUtils.jsm"
-);
-
 // Test that create in about:logins asks for primary password
 add_task(async function test_policy_admin() {
   await setupPolicyEngineWithJson({

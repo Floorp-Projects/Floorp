@@ -155,8 +155,8 @@ add_task(async function() {
     "network.proxy.type",
     Ci.nsIProtocolProxyService.PROXYCONFIG_SYSTEM
   );
-  let { MockRegistrar } = ChromeUtils.import(
-    "resource://testing-common/MockRegistrar.jsm"
+  let { MockRegistrar } = ChromeUtils.importESModule(
+    "resource://testing-common/MockRegistrar.sys.mjs"
   );
   let mockProxy = MockRegistrar.register(
     "@mozilla.org/system-proxy-settings;1",

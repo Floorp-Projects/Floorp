@@ -1,11 +1,6 @@
 ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "TestUtils",
-  "resource://testing-common/TestUtils.jsm"
-);
 
 XPCOMUtils.defineLazyGetter(this, "gFluentStrings", function() {
   return new Localization(["branding/brand.ftl", "browser/browser.ftl"], true);

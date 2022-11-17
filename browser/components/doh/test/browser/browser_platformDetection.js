@@ -13,8 +13,8 @@ add_task(setup);
 add_task(async function testPlatformIndications() {
   // Check if the platform heuristics actually cause a "disable_doh" event
 
-  let { MockRegistrar } = ChromeUtils.import(
-    "resource://testing-common/MockRegistrar.jsm"
+  let { MockRegistrar } = ChromeUtils.importESModule(
+    "resource://testing-common/MockRegistrar.sys.mjs"
   );
 
   let mockedLinkService = {

@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
-
 ChromeUtils.defineModuleGetter(
   this,
   "TelemetryTestUtils",
