@@ -9036,6 +9036,9 @@ TEST_F(WebRtcVideoChannelBaseTest, EncoderSelectorSwitchCodec) {
 
   ASSERT_TRUE(channel_->GetSendCodec(&codec));
   EXPECT_EQ("VP9", codec.name);
+
+  // Deregister the encoder selector in case it's called during test tear-down.
+  channel_->SetEncoderSelector(kSsrc, nullptr);
 }
 
 }  // namespace cricket
