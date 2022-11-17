@@ -76,6 +76,7 @@ using ::testing::Eq;
 using ::testing::Field;
 using ::testing::Gt;
 using ::testing::IsEmpty;
+using ::testing::Lt;
 using ::testing::Pair;
 using ::testing::Return;
 using ::testing::SizeIs;
@@ -3778,6 +3779,46 @@ TEST_F(Vp9SettingsTest, MaxBitrateDeterminedBySvcResolutions) {
   EXPECT_THAT(
       stream->GetVideoStreams(),
       ElementsAre(Field(&webrtc::VideoStream::max_bitrate_bps, Eq(2000000))));
+}
+
+TEST_F(Vp9SettingsTest, Vp9SvcTargetBitrateCappedByMax) {
+  cricket::VideoSendParameters parameters;
+  parameters.codecs.push_back(GetEngineCodec("VP9"));
+  ASSERT_TRUE(channel_->SetSendParameters(parameters));
+
+  std::vector<uint32_t> ssrcs = MAKE_VECTOR(kSsrcs3);
+
+  FakeVideoSendStream* stream =
+      AddSendStream(CreateSimStreamParams("cname", ssrcs));
+
+  webrtc::VideoSendStream::Config config = stream->GetConfig().Copy();
+
+  webrtc::test::FrameForwarder frame_forwarder;
+  EXPECT_TRUE(channel_->SetVideoSend(ssrcs[0], nullptr, &frame_forwarder));
+  channel_->SetSend(true);
+
+  // Set up 3 spatial layers with 720p, which should result in a max bitrate of
+  // 2084 kbps.
+  frame_forwarder.IncomingCapturedFrame(
+      frame_source_.GetFrame(1280, 720, webrtc::VideoRotation::kVideoRotation_0,
+                             /*duration_us=*/33000));
+
+  webrtc::VideoCodecVP9 vp9_settings;
+  ASSERT_TRUE(stream->GetVp9Settings(&vp9_settings)) << "No VP9 config set.";
+
+  const size_t kNumSpatialLayers = ssrcs.size();
+  const size_t kNumTemporalLayers = 3;
+  EXPECT_EQ(vp9_settings.numberOfSpatialLayers, kNumSpatialLayers);
+  EXPECT_EQ(vp9_settings.numberOfTemporalLayers, kNumTemporalLayers);
+
+  EXPECT_TRUE(channel_->SetVideoSend(ssrcs[0], nullptr, nullptr));
+
+  // VideoStream both min and max bitrate should be lower than legacy 2.5Mbps
+  // default stream cap.
+  EXPECT_THAT(
+      stream->GetVideoStreams()[0],
+      AllOf(Field(&webrtc::VideoStream::max_bitrate_bps, Lt(2500000)),
+            Field(&webrtc::VideoStream::target_bitrate_bps, Lt(2500000))));
 }
 
 class Vp9SettingsTestWithFieldTrial
