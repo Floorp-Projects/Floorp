@@ -18,9 +18,5 @@ add_task(async function about_firefoxview_smoke_test() {
       document.getElementById("recently-closed-tabs-container"),
       "recently-closed-tabs-container element exists"
     );
-    ok(
-      document.getElementById("colorways-no-collection-template"),
-      "colorways-no-collection-template element exists"
-    );
   });
 });
