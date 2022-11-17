@@ -313,6 +313,8 @@ class nsTableWrapperFrame : public nsContainerFrame {
       const mozilla::LogicalSize& aAreaOccupiedByCaption) const;
 
  private:
+  nscoord GetFallbackLogicalBaseline(mozilla::WritingMode aWritingMode) const;
+
   nsFrameList mCaptionFrames;
 };
 

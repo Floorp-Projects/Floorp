@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Reference case for bug 1673677</title>
+<style>
+.flex {
+  display: flex;
+  align-items: baseline;
+  border: 1px solid;
+  margin-bottom: 5px;
+  width: fit-content;
+}
+.wrapper {
+  /* Explicitly specify size, due to bug 1166120 */
+  inline-size: 125px;
+  block-size: 100px;
+}
+table, tr, td {
+  border: 1px solid;
+  border-width: 2px 2px 4px 4px;
+  padding: 3px 3px 6px 6px;
+  margin: 8px 8px 12px 12px;
+  border-spacing: 0;
+}
+td {
+  vertical-align: baseline;
+  line-height: 0;
+}
+.filler-nested-table {
+  inline-size: 50px;
+  block-size: 75px;
+  background: purple;
+  display: inline-block;
+}
+.filler {
+  inline-size: 40px;
+  block-size: 30px;
+  background: pink;
+  display: inline-block;
+}
+.inner-table {
+  contain: layout;
+}
+</style>
+<div class="flex">
+  <div class="wrapper">
+    <table class="inner-table" style="writing-mode: vertical-lr;">
+      <tr><td><div class="filler-nested-table"></div></td></tr>
+    </table>
+  </div>
+  <div><div class="filler"></div></div>
+</div>
+<div class="flex" style="writing-mode: vertical-lr;">
+  <div class="wrapper">
+    <table class="inner-table" style="writing-mode: horizontal-tb;">
+      <tr><td><div class="filler-nested-table"></div></td></tr>
+    </table>
+  </div>
+  <div><div class="filler"></div></div>
+</div>
+<div class="flex" style="writing-mode: vertical-rl;">
+  <div class="wrapper">
+    <table class="inner-table" style="writing-mode: horizontal-tb;">
+      <tr><td><div class="filler-nested-table"></div></td></tr>
+    </table>
+  </div>
+  <div><div class="filler"></div></div>
+</div>
