@@ -97,7 +97,7 @@ std::string RTCMediaStreamTrackStatsIDFromDirectionAndAttachment(
     int attachment_id) {
   char buf[1024];
   rtc::SimpleStringBuilder sb(buf);
-  sb << "RTCMediaStreamTrack_" << direction << "_" << attachment_id;
+  sb << "DEPRECATED_RTCMediaStreamTrack_" << direction << "_" << attachment_id;
   return sb.str();
 }
 
