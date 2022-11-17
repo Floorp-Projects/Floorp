@@ -7,8 +7,8 @@
 
 "use strict";
 
-var { getAppInfo } = ChromeUtils.import(
-  "resource://testing-common/AppInfo.jsm"
+var { getAppInfo } = ChromeUtils.importESModule(
+  "resource://testing-common/AppInfo.sys.mjs"
 );
 
 var settingsTemplate;
