@@ -38,8 +38,8 @@ add_task(function test_normalize_crash_if_media_missing() {
 });
 
 // Tests that changing a file's modification time is possible
-add_task(function test_file_modification_time() {
-  var file = do_get_profile();
+add_task(async function test_file_modification_time() {
+  let file = do_get_profile();
   file.append("testfile");
 
   // Should never happen but get rid of it anyway
@@ -47,34 +47,98 @@ add_task(function test_file_modification_time() {
     file.remove(true);
   }
 
-  var now = Date.now();
+  const now = Date.now();
   file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
   Assert.ok(file.exists());
 
+  const atime = file.lastAccessedTime;
+
   // Modification time may be out by up to 2 seconds on FAT filesystems. Test
   // with a bit of leeway, close enough probably means it is correct.
-  var diff = Math.abs(file.lastModifiedTime - now);
+  let diff = Math.abs(file.lastModifiedTime - now);
   Assert.ok(diff < MAX_TIME_DIFFERENCE);
 
-  var yesterday = now - MILLIS_PER_DAY;
+  const yesterday = now - MILLIS_PER_DAY;
   file.lastModifiedTime = yesterday;
 
   diff = Math.abs(file.lastModifiedTime - yesterday);
   Assert.ok(diff < MAX_TIME_DIFFERENCE);
+  Assert.equal(
+    file.lastAccessedTime,
+    atime,
+    "Setting lastModifiedTime should not set lastAccessedTime"
+  );
 
-  var tomorrow = now - MILLIS_PER_DAY;
+  const tomorrow = now - MILLIS_PER_DAY;
   file.lastModifiedTime = tomorrow;
 
   diff = Math.abs(file.lastModifiedTime - tomorrow);
   Assert.ok(diff < MAX_TIME_DIFFERENCE);
 
-  var bug377307 = 1172950238000;
+  const bug377307 = 1172950238000;
   file.lastModifiedTime = bug377307;
 
   diff = Math.abs(file.lastModifiedTime - bug377307);
   Assert.ok(diff < MAX_TIME_DIFFERENCE);
 
+  file.lastModifiedTime = 0;
+  Assert.greater(
+    file.lastModifiedTime,
+    now,
+    "Setting lastModifiedTime to 0 should set it to current date and time"
+  );
+
   file.remove(true);
+});
+
+add_task(function test_lastAccessedTime() {
+  const file = do_get_profile();
+
+  file.append("test-atime");
+  if (file.exists()) {
+    file.remove(true);
+  }
+
+  const now = Date.now();
+  file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
+  Assert.ok(file.exists());
+
+  const mtime = file.lastModifiedTime;
+
+  // Modification time may be out by up to 2 seconds on FAT filesystems. Test
+  // with a bit of leeway, close enough probably means it is correct.
+  let diff = Math.abs(file.lastModifiedTime - now);
+  Assert.ok(diff < MAX_TIME_DIFFERENCE);
+
+  const yesterday = now - MILLIS_PER_DAY;
+  file.lastModifiedTime = yesterday;
+
+  diff = Math.abs(file.lastAccessedTime - yesterday);
+  Assert.ok(diff < MAX_TIME_DIFFERENCE);
+  Assert.equal(
+    file.lastModifiedTime,
+    mtime,
+    "Setting lastAccessedTime should not set lastModifiedTime"
+  );
+
+  const tomorrow = now - MILLIS_PER_DAY;
+  file.lastAccessedTime = tomorrow;
+
+  diff = Math.abs(file.lastAccessedTime - tomorrow);
+  Assert.ok(diff < MAX_TIME_DIFFERENCE);
+
+  const bug377307 = 1172950238000;
+  file.lastAccessedTime = bug377307;
+
+  diff = Math.abs(file.lastAccessedTime - bug377307);
+  Assert.ok(diff < MAX_TIME_DIFFERENCE);
+
+  file.lastAccessedTime = 0;
+  Assert.greater(
+    file.lastAccessedTime,
+    now,
+    "Setting lastAccessedTime to 0 should set it to the current date and time"
+  );
 });
 
 // Tests that changing a directory's modification time is possible
