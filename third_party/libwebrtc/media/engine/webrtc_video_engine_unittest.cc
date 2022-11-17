@@ -1808,68 +1808,9 @@ TEST_F(WebRtcVideoChannelBaseTest, SetSendWithoutCodecs) {
 TEST_F(WebRtcVideoChannelBaseTest, SetSendSetsTransportBufferSizes) {
   EXPECT_TRUE(SetOneCodec(DefaultCodec()));
   EXPECT_TRUE(SetSend(true));
-  EXPECT_EQ(64 * 1024, network_interface_.sendbuf_size());
-  EXPECT_EQ(256 * 1024, network_interface_.recvbuf_size());
+  EXPECT_EQ(kVideoRtpSendBufferSize, network_interface_.sendbuf_size());
+  EXPECT_EQ(kVideoRtpRecvBufferSize, network_interface_.recvbuf_size());
 }
-
-// Test that we properly set the send and recv buffer sizes when overriding
-// via field trials.
-TEST_F(WebRtcVideoChannelBaseTest, OverridesRecvBufferSize) {
-  // Set field trial to override the default recv buffer size, and then re-run
-  // setup where the interface is created and configured.
-  const int kCustomRecvBufferSize = 123456;
-  override_field_trials_ = std::make_unique<webrtc::test::ScopedKeyValueConfig>(
-      field_trials_, "WebRTC-IncreasedReceivebuffers/123456/");
-
-  ResetTest();
-
-  EXPECT_TRUE(SetOneCodec(DefaultCodec()));
-  EXPECT_TRUE(SetSend(true));
-  EXPECT_EQ(64 * 1024, network_interface_.sendbuf_size());
-  EXPECT_EQ(kCustomRecvBufferSize, network_interface_.recvbuf_size());
-}
-
-// Test that we properly set the send and recv buffer sizes when overriding
-// via field trials with suffix.
-TEST_F(WebRtcVideoChannelBaseTest, OverridesRecvBufferSizeWithSuffix) {
-  // Set field trial to override the default recv buffer size, and then re-run
-  // setup where the interface is created and configured.
-  const int kCustomRecvBufferSize = 123456;
-  override_field_trials_ = std::make_unique<webrtc::test::ScopedKeyValueConfig>(
-      field_trials_, "WebRTC-IncreasedReceivebuffers/123456_Dogfood/");
-  ResetTest();
-
-  EXPECT_TRUE(SetOneCodec(DefaultCodec()));
-  EXPECT_TRUE(SetSend(true));
-  EXPECT_EQ(64 * 1024, network_interface_.sendbuf_size());
-  EXPECT_EQ(kCustomRecvBufferSize, network_interface_.recvbuf_size());
-}
-
-class InvalidRecvBufferSizeFieldTrial
-    : public WebRtcVideoChannelBaseTest,
-      public ::testing::WithParamInterface<const char*> {};
-
-// Test that we properly set the send and recv buffer sizes when overriding
-// via field trials that don't make any sense.
-TEST_P(InvalidRecvBufferSizeFieldTrial, InvalidRecvBufferSize) {
-  // Set bogus field trial values to override the default recv buffer size, and
-  // then re-run setup where the interface is created and configured. The
-  // default value should still be used.
-  override_field_trials_ = std::make_unique<webrtc::test::ScopedKeyValueConfig>(
-      field_trials_,
-      std::string("WebRTC-IncreasedReceivebuffers/") + GetParam() + "/");
-
-  ResetTest();
-
-  EXPECT_TRUE(SetOneCodec(DefaultCodec()));
-  EXPECT_TRUE(SetSend(true));
-  EXPECT_EQ(64 * 1024, network_interface_.sendbuf_size());
-  EXPECT_EQ(256 * 1024, network_interface_.recvbuf_size());
-}
-
-INSTANTIATE_TEST_SUITE_P(All,
-                         InvalidRecvBufferSizeFieldTrial,
-                         Values("NotANumber", "-1", " ", "0"));
 
 // Test that stats work properly for a 1-1 call.
 TEST_F(WebRtcVideoChannelBaseTest, GetStats) {
