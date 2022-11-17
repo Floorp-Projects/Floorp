@@ -12,6 +12,7 @@
     - firefox-desktop-background-task
   hasExposure: false
   variables: {}
+
 testFeature:
   description: Test only feature
   owner: barret@mozilla.com
@@ -32,6 +33,7 @@ testFeature:
       type: string
       setPref: nimbus.testing.testSetString
       description: A string pref set by Nimbus tests
+
 nimbus-qa-1:
   description: A feature for testing pref-setting on the default branch.
   owner: barret@mozilla.com
@@ -41,6 +43,7 @@ nimbus-qa-1:
       type: string
       setPref: nimbus.qa.pref-1
       description: The value to set for the pref.
+
 nimbus-qa-2:
   description: A feature for testing pref-setting on the user branch.
   owner: barret@mozilla.com
@@ -51,6 +54,7 @@ nimbus-qa-2:
       type: string
       setPref: nimbus.qa.pref-2
       description: The value to set for the pref.
+
 search:
   description: The Search Services
   owner: search-and-suggest-program@mozilla.com
@@ -71,6 +75,7 @@ search:
     seperatePrivateDefaultUrlbarResultEnabled:
       type: boolean
       description: Whether the urlbar result for the separate private default is shown.
+
 urlbar:
   description: The Address Bar
   owner: search-and-suggest-program@mozilla.com
@@ -210,6 +215,7 @@ urlbar:
       type: boolean
       fallbackPref: browser.urlbar.weather.featureGate
       description: Feature gate that controls exposing all aspects of weather suggestions to the user.
+
 aboutwelcome:
   description: "The about:welcome page"
   owner: omc@mozilla.com
@@ -253,6 +259,7 @@ aboutwelcome:
       fallbackPref: browser.aboutwelcome.templateMR
       description: >-
         Should users see the MR 50-50 split template?
+
 moreFromMozilla:
   description: "New page on about:preferences to suggest more Mozilla products"
   owner: omc@mozilla.com
@@ -269,6 +276,7 @@ moreFromMozilla:
       type: string
       fallbackPref: browser.preferences.moreFromMozilla.template
       description: UI template used to display Mozilla products. Possible values simple, advanced. Default is simple.
+
 abouthomecache:
   description: "The startup about:home cache."
   owner: omc@mozilla.com
@@ -279,6 +287,7 @@ abouthomecache:
       type: boolean
       fallbackPref: browser.startup.homepage.abouthome_cache.enabled
       description: Is the feature enabled?
+
 newtab:
   description: "The about:newtab page"
   owner: omc@mozilla.com
@@ -302,6 +311,7 @@ newtab:
       type: boolean
       fallbackPref: browser.topsites.contile.enabled
       description: Enable the Contile integration for Sponsored Top Sites
+
 pocketNewtab:
   description: The Pocket section in newtab
   owner: sdowne@getpocket.com
@@ -465,6 +475,31 @@ pocketNewtab:
         browser.newtabpage.activity-stream.discoverystream.spocs.cacheTimeout
       description: >-
         Set sponsored content cache timeout in minutes.
+    discoveryStreamConfig:
+      description: A JSON blob of discovery stream configuration.
+      type: string
+      setPref: "browser.newtabpage.activity-stream.discoverystream.config"
+    spocsEndpoint:
+      description: The URL for the spocs endpoint.
+      type: string
+      setPref: "browser.newtabpage.activity-stream.discoverystream.spocs-endpoint"
+    regionStoriesConfig:
+      description: A comma-separated list of locales to get stories for.
+      type: string
+      setPref: "browser.newtabpage.activity-stream.discoverystream.region-stories-config"
+    regionStoriesBlock:
+      description: A comma-separated list of regions that do not get stories, regardless of locale-list-config.
+      type: string
+      setPref: "browser.newtabpage.activity-stream.discoverystream.region-stories-block"
+    localeListConfig:
+      description: A comma-separated list of locales that get stories, regardless of region-stories-config.
+      type: string
+      setPref: "browser.newtabpage.activity-stream.discoverystream.locale-list-config"
+    regionSpocsConfig:
+      description: A comma-separated list of regions that get spocs by default.
+      type: string
+      setPref: "browser.newtabpage.activity-stream.discoverystream.region-spocs-config"
+
 saveToPocket:
   description: The save to Pocket feature
   owner: sdowne@getpocket.com
@@ -479,6 +514,7 @@ saveToPocket:
       type: boolean
       fallbackPref: extensions.pocket.refresh.hideRecentSaves.enabled
       description: Hides the recently saved section in the home panel.
+
 password-autocomplete:
   description: A special autocomplete UI for password fields.
   owner: sgalich@mozilla.com
@@ -487,6 +523,7 @@ password-autocomplete:
     directMigrateSingleProfile:
       type: boolean
       description: Enable direct migration?
+
 shellService:
   description: "Interface with OS, e.g., pinning and set default"
   owner: desktop-integrations@mozilla.com
@@ -511,6 +548,7 @@ shellService:
         Should setting it as the default PDF handler only replace existing PDF
         handlers that are browsers, and not other PDF handlers such as Acrobat
         Reader or Nitro PDF.
+
 upgradeDialog:
   description: The dialog shown for major upgrades
   owner: omc@mozilla.com
@@ -521,6 +559,7 @@ upgradeDialog:
       type: boolean
       fallbackPref: browser.startup.upgradeDialog.enabled
       description: Is the feature enabled?
+
 readerMode:
   description: Firefox Reader Mode
   owner: sdowne@getpocket.com
@@ -533,6 +572,7 @@ readerMode:
       description: >-
         What version of Pocket CTA to show in Reader Mode (Empty string is no
         CTA)
+
 tcpPreferences:
   description: "Toggles the Total Cookie Protection section in about:preferences"
   owner: tihuang@mozilla.com
@@ -543,6 +583,7 @@ tcpPreferences:
       type: boolean
       fallbackPref: "privacy.restrict3rdpartystorage.rollout.preferences.TCPToggleInStandard"
       description: "Turn on the section in about:preferences"
+
 tcpByDefault:
   description: "Enables TCP by default by updating the default pref value of network.cookie.cookieBehavior."
   owner: tihuang@mozilla.com
@@ -562,6 +603,7 @@ cfr:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
+
 "moments-page":
   description: "A Firefox Messaging System message for the moments-page message channel"
   owner: omc@mozilla.com
@@ -573,6 +615,7 @@ cfr:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
+
 infobar:
   description: "A Firefox Messaging system message for the infobar message channel"
   owner: omc@mozilla.com
@@ -584,6 +627,7 @@ infobar:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
+
 spotlight:
   description: "A Firefox Messaging System message for the spotlight message channel"
   owner: omc@mozilla.com
@@ -595,6 +639,7 @@ spotlight:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
+
 fxms-message-1:
   description: "A Firefox Messaging System message"
   owner: omc@mozilla.com
@@ -606,6 +651,7 @@ fxms-message-1:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
+
 pbNewtab:
   description: "A Firefox Messaging System message for the pbNewtab message channel"
   owner: omc@mozilla.com
@@ -617,6 +663,7 @@ pbNewtab:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
+
 backgroundTaskMessage:
   description: "A Firefox Messaging System message for the background task message channel"
   owner: nalexander@mozilla.com
@@ -630,6 +677,7 @@ backgroundTaskMessage:
     uri: "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json"
   variables: {}
+
 syncAfterTabChange:
   description: "Schedule a sync after any tab change"
   owner: sync-team@mozilla.com
@@ -644,6 +692,7 @@ syncAfterTabChange:
     syncDelayAfterTabChangeOverride:
       type: boolean
       description: Whether to override the pref in case we need to lengthen or diable the increased sync
+
 pictureinpicture:
   description: Message for first time Picture-in-Picture users
   owner: nbaumgardner@mozilla.com
@@ -659,6 +708,7 @@ pictureinpicture:
     showIconOnly:
       type: boolean
       description: Whether to show the first time PiP toggle or show the PiP icon only
+
 glean:
   description: "The Glean data collection SDK within Firefox Desktop"
   owner: glean-team@mozilla.com
@@ -668,6 +718,7 @@ glean:
       type: "boolean"
       fallbackPref: "browser.newtabpage.ping.enabled"
       description: "Whether to submit the 'newtab' ping"
+
 majorRelease2022:
   description: Major Release 2022
   owner: firefoxview@mozilla.com
@@ -706,3 +757,48 @@ majorRelease2022:
       type: boolean
       fallbackPref: "browser.majorrelease.onboarding"
       description: "Whether or not to use the MR2022 onboarding settings."
+
+browserLowMemoryPrefs:
+  description: Prefs which control the browser's behaviour under low memory.
+  owner: haftandilian@mozilla.com
+  hasExposure: false
+  variables:
+    lowMemoryResponseMask:
+      description: Control the response on macOS when under memory pressure.
+      type: int
+      setPref: "browser.lowMemoryResponseMask"
+    lowMemoryResponseOnWarn:
+      description: Controls which macOS memory-pressure levels trigger the browser low memory response.
+      type: boolean
+      setPref: "browser.lowMemoryResponseOnWarn"
+    tabsUnloadOnLowMemory:
+      description: Whether to unload tabs when available memory is running low.
+      type: boolean
+      setPref: "browser.tabs.unloadOnLowMemory"
+
+scriptLoaderPrefs:
+  description: Prefs that control the script loader.
+  owner: npierron@mozilla.com
+  hasExposure: false
+  variables:
+    delazificationStrategy:
+      description: >-
+        Selects which parsing/delazification strategy should be used while
+        parsing scripts off-main-thread. See DelazificationOption in
+        CompileOptions.h for values.
+      type: int
+      setPref: "dom.script_loader.delazification.strategy"
+
+echPrefs:
+  description: Prefs that control Encrypted Client Hello.
+  owner: kershaw@mozilla.com
+  hasExposure: false
+  variables:
+    configEnabled:
+      description: Whether to enable encrypted client hello.
+      type: boolean
+      setPref: "network.dns.echconfig.enabled"
+    greaseProbability:
+      description: Probability of GREASEing a TLS connection with ECH (0-100).
+      type: int
+      setPref: "security.tls.ech.grease_probability"
