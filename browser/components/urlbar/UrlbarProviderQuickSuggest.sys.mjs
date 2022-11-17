@@ -15,6 +15,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   MerinoClient: "resource:///modules/MerinoClient.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
 });
 
@@ -78,6 +79,14 @@ class ProviderQuickSuggest extends UrlbarProvider {
     return { ...TELEMETRY_SCALARS };
   }
 
+  getPriority(context) {
+    if (!context.searchString) {
+      // Zero-prefix suggestions have the same priority as top sites.
+      return lazy.UrlbarProviderTopSites.PRIORITY;
+    }
+    return super.getPriority(context);
+  }
+
   /**
    * Whether this provider should be invoked for the given context.
    * If this method returns false, the providers manager won't start a query
@@ -98,14 +107,26 @@ class ProviderQuickSuggest extends UrlbarProvider {
     ) {
       return false;
     }
+
+    if (
+      !lazy.UrlbarPrefs.get("quickSuggestEnabled") ||
+      queryContext.isPrivate ||
+      queryContext.searchMode
+    ) {
+      return false;
+    }
+
+    // Trim only the start of the search string because a trailing space can
+    // affect the suggestions.
+    this._searchString = queryContext.searchString.trimStart();
+
+    if (!this._searchString) {
+      return !!lazy.QuickSuggest.weather.suggestion;
+    }
     return (
-      queryContext.trimmedSearchString &&
-      !queryContext.searchMode &&
-      !queryContext.isPrivate &&
-      lazy.UrlbarPrefs.get("quickSuggestEnabled") &&
-      (lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") ||
-        lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored") ||
-        lazy.UrlbarPrefs.get("quicksuggest.dataCollection.enabled"))
+      lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") ||
+      lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored") ||
+      lazy.UrlbarPrefs.get("quicksuggest.dataCollection.enabled")
     );
   }
 
@@ -120,10 +141,16 @@ class ProviderQuickSuggest extends UrlbarProvider {
    */
   async startQuery(queryContext, addCallback) {
     let instance = this.queryInstance;
+    let searchString = this._searchString;
 
-    // Trim only the start of the search string because a trailing space can
-    // affect the suggestions.
-    let searchString = queryContext.searchString.trimStart();
+    if (!searchString) {
+      let result = this._makeWeatherResult();
+      if (result) {
+        addCallback(this, result);
+        this._resultFromLastQuery = result;
+      }
+      return;
+    }
 
     // There are two sources for quick suggest: remote settings and Merino.
     let promises = [];
@@ -568,7 +595,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
    */
   async _fetchMerinoSuggestions(queryContext, searchString) {
     if (!this._merino) {
-      this._merino = new lazy.MerinoClient();
+      this._merino = new lazy.MerinoClient(this.name);
     }
 
     let providers;
@@ -588,6 +615,50 @@ class ProviderQuickSuggest extends UrlbarProvider {
     });
 
     return suggestions;
+  }
+
+  /**
+   * Returns a UrlbarResult for the current prefetched weather suggestion if
+   * there is one.
+   *
+   * @returns {UrlbarResult}
+   *   A result or null if there's no weather suggestion.
+   */
+  _makeWeatherResult() {
+    let { suggestion } = lazy.QuickSuggest.weather;
+    if (!suggestion) {
+      return null;
+    }
+
+    let unit = Services.locale.appLocaleAsBCP47 == "en-US" ? "f" : "c";
+    let result = new lazy.UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.URL,
+      UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
+      {
+        title:
+          suggestion.city_name +
+          " • " +
+          suggestion.current_conditions.temperature[unit] +
+          "° " +
+          suggestion.current_conditions.summary +
+          " • " +
+          suggestion.forecast.summary +
+          " • H " +
+          suggestion.forecast.high[unit] +
+          "° • L " +
+          suggestion.forecast.low[unit] +
+          "°",
+        url: suggestion.url,
+        icon: "chrome://global/skin/icons/highlights.svg",
+        helpUrl: lazy.QuickSuggest.HELP_URL,
+        helpL10nId: "firefox-suggest-urlbar-learn-more",
+        requestId: suggestion.request_id,
+        source: suggestion.source,
+      }
+    );
+
+    result.suggestedIndex = 0;
+    return result;
   }
 
   /**
