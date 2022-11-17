@@ -43,7 +43,7 @@ TEST(PacketArrivalMapTest, InsertsFirstItemIntoMap) {
 TEST(PacketArrivalMapTest, InsertsWithGaps) {
   PacketArrivalTimeMap map;
 
-  map.AddPacket(42, Timestamp::Millis(10));
+  map.AddPacket(42, Timestamp::Zero());
   map.AddPacket(45, Timestamp::Millis(11));
   EXPECT_EQ(map.begin_sequence_number(), 42);
   EXPECT_EQ(map.end_sequence_number(), 46);
@@ -55,9 +55,9 @@ TEST(PacketArrivalMapTest, InsertsWithGaps) {
   EXPECT_TRUE(map.has_received(45));
   EXPECT_FALSE(map.has_received(46));
 
-  EXPECT_EQ(map.get(42), Timestamp::Millis(10));
-  EXPECT_EQ(map.get(43), Timestamp::Zero());
-  EXPECT_EQ(map.get(44), Timestamp::Zero());
+  EXPECT_EQ(map.get(42), Timestamp::Zero());
+  EXPECT_LT(map.get(43), Timestamp::Zero());
+  EXPECT_LT(map.get(44), Timestamp::Zero());
   EXPECT_EQ(map.get(45), Timestamp::Millis(11));
 
   EXPECT_EQ(map.clamp(-100), 42);

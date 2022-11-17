@@ -292,7 +292,7 @@ RemoteEstimatorProxy::MaybeBuildFeedbackPacket(
 
   for (int64_t seq = start_seq; seq < end_seq; ++seq) {
     Timestamp arrival_time = packet_arrival_times_.get(seq);
-    if (arrival_time == Timestamp::Zero()) {
+    if (arrival_time.IsInfinite()) {
       // Packet not received.
       continue;
     }
