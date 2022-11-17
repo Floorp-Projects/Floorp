@@ -293,6 +293,10 @@ class nsContentDispatchChooser {
       return false;
     }
 
+    if (aPrincipal.isAddonOrExpandedAddonPrincipal) {
+      return true;
+    }
+
     let key = this._getSkipProtoDialogPermissionKey(scheme);
     return (
       Services.perms.testPermissionFromPrincipal(aPrincipal, key) ===
@@ -392,28 +396,16 @@ class nsContentDispatchChooser {
       return;
     }
 
-    let principal = aPrincipal;
-
-    // If this action was triggered by an extension content script then set the
-    // permission on the extension's principal.
-    let addonPolicy = aPrincipal.contentScriptAddonPolicy;
-    if (addonPolicy) {
-      principal = Services.scriptSecurityManager.principalWithOA(
-        addonPolicy.extension.principal,
-        principal.originAttributes
-      );
-    }
-
     let permKey = this._getSkipProtoDialogPermissionKey(aScheme);
     if (aAllow) {
       Services.perms.addFromPrincipal(
-        principal,
+        aPrincipal,
         permKey,
         Services.perms.ALLOW_ACTION,
         Services.perms.EXPIRE_NEVER
       );
     } else {
-      Services.perms.removeFromPrincipal(principal, permKey);
+      Services.perms.removeFromPrincipal(aPrincipal, permKey);
     }
   }
 
@@ -423,18 +415,11 @@ class nsContentDispatchChooser {
    * @returns {boolean} - true if we can store permissions, false otherwise.
    */
   _isSupportedPrincipal(aPrincipal) {
-    if (!aPrincipal) {
-      return false;
-    }
-
-    // If this is an add-on content script then we will be able to store
-    // permissions against the add-on's principal.
-    if (aPrincipal.contentScriptAddonPolicy) {
-      return true;
-    }
-
-    return ["http", "https", "moz-extension", "file"].some(scheme =>
-      aPrincipal.schemeIs(scheme)
+    return (
+      aPrincipal &&
+      ["http", "https", "moz-extension", "file"].some(scheme =>
+        aPrincipal.schemeIs(scheme)
+      )
     );
   }
 }
