@@ -697,7 +697,7 @@ def run(
         "framework): %s\n" % perfcompare_url
     )
     print(
-        "If you need any help, you can find us in the #perf-help Element channel:\n"
+        "If you need any help, you can find us in the #perf-help Matrix channel:\n"
         "https://matrix.to/#/#perf-help:mozilla.org"
     )
     print(
