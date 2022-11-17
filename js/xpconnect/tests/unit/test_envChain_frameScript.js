@@ -7,8 +7,8 @@
 // Verify the environment chain for frame scripts described in
 // js/src/vm/EnvironmentObject.h.
 
-const { XPCShellContentUtils } = ChromeUtils.import(
-  "resource://testing-common/XPCShellContentUtils.jsm"
+const { XPCShellContentUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/XPCShellContentUtils.sys.mjs"
 );
 
 XPCShellContentUtils.init(this);

@@ -156,9 +156,8 @@ add_test(function test_categoryRegistration()
   const XULAPPINFO_CID = Components.ID("{fc937916-656b-4fb3-a395-8c63569e27a8}");
 
   // Create a fake app entry for our category registration apps filter.
-  let tmp = {};
-  ChromeUtils.import("resource://testing-common/AppInfo.jsm", tmp);
-  let XULAppInfo = tmp.newAppInfo({
+  let { newAppInfo } = ChromeUtils.import("resource://testing-common/AppInfo.jsm");
+  let XULAppInfo = newAppInfo({
     name: "catRegTest",
     ID: "{adb42a9a-0d19-4849-bf4d-627614ca19be}",
     version: "1",
