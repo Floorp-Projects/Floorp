@@ -83,6 +83,7 @@ TEST_F(NetEqDecodingTest, MAYBE_TestOpusBitExactness) {
       "c5eb0a8fcf7e8255a40f821cb815e1096619efeb";
 
   const std::string network_stats_checksum =
+      "3d043e47e5f4bb81d37e7bce8c44bf802965c853|"
       "076662525572dba753b11578330bd491923f7f5e";
 
   DecodeAndCompare(input_rtp_file, output_checksum, network_stats_checksum,
