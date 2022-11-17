@@ -287,11 +287,21 @@ class JarFileReader(object):
         self.compressed = header["compression"] != JAR_STORED
         self.compress = header["compression"]
 
+    def readable(self):
+        return True
+
     def read(self, length=-1):
         """
         Read some amount of uncompressed data.
         """
         return self.uncompressed_data.read(length)
+
+    def readinto(self, b):
+        """
+        Read bytes into a pre-allocated, writable bytes-like object `b` and return
+        the number of bytes read.
+        """
+        return self.uncompressed_data.readinto(b)
 
     def readlines(self):
         """
@@ -318,6 +328,10 @@ class JarFileReader(object):
         Free the uncompressed data buffer.
         """
         self.uncompressed_data.close()
+
+    @property
+    def closed(self):
+        return self.uncompressed_data.closed
 
     @property
     def compressed_data(self):
