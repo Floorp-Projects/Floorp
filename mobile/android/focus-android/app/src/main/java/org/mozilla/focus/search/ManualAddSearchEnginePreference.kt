@@ -14,6 +14,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.EditText
 import android.widget.ProgressBar
+import androidx.core.os.bundleOf
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import com.google.android.material.textfield.TextInputLayout
@@ -72,12 +73,12 @@ class ManualAddSearchEnginePreference(context: Context, attrs: AttributeSet) :
 
     override fun onSaveInstanceState(): Parcelable {
         val state = super.onSaveInstanceState()
-        val bundle = Bundle()
-        bundle.putParcelable(SUPER_STATE_KEY, state)
-        bundle.putString(SEARCH_ENGINE_NAME_KEY, engineNameEditText?.text.toString())
-        bundle.putString(SEARCH_QUERY_KEY, searchQueryEditText?.text.toString())
 
-        return bundle
+        return bundleOf(
+            SUPER_STATE_KEY to state,
+            SEARCH_ENGINE_NAME_KEY to engineNameEditText?.text.toString(),
+            SEARCH_QUERY_KEY to searchQueryEditText?.text.toString(),
+        )
     }
 
     fun validateEngineNameAndShowError(engineName: String, existingEngines: List<SearchEngine>): Boolean {
