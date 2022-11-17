@@ -1,7 +1,7 @@
 "use strict";
 
-const { XPCShellContentUtils } = ChromeUtils.import(
-  "resource://testing-common/XPCShellContentUtils.jsm"
+const { XPCShellContentUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/XPCShellContentUtils.sys.mjs"
 );
 
 XPCShellContentUtils.init(this);
@@ -32,8 +32,8 @@ function childFrameScript() {
   /* eslint-env mozilla/frame-script */
   "use strict";
 
-  let { MockFilePicker } = ChromeUtils.import(
-    "resource://testing-common/MockFilePicker.jsm"
+  let { MockFilePicker } = ChromeUtils.importESModule(
+    "resource://testing-common/MockFilePicker.sys.mjs"
   );
 
   function parentReady(message) {

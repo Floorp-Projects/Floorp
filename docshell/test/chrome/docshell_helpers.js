@@ -18,8 +18,8 @@ var imports = [
 for (var name of imports) {
   window[name] = window.opener.wrappedJSObject[name];
 }
-const { BrowserTestUtils } = ChromeUtils.import(
-  "resource://testing-common/BrowserTestUtils.jsm"
+const { BrowserTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/BrowserTestUtils.sys.mjs"
 );
 
 const ACTOR_MODULE_URI =

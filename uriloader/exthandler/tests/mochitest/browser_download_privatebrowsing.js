@@ -14,11 +14,11 @@ const { Downloads } = ChromeUtils.importESModule(
 const { DownloadPaths } = ChromeUtils.importESModule(
   "resource://gre/modules/DownloadPaths.sys.mjs"
 );
-const { FileTestUtils } = ChromeUtils.import(
-  "resource://testing-common/FileTestUtils.jsm"
+const { FileTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/FileTestUtils.sys.mjs"
 );
-const { MockRegistrar } = ChromeUtils.import(
-  "resource://testing-common/MockRegistrar.jsm"
+const { MockRegistrar } = ChromeUtils.importESModule(
+  "resource://testing-common/MockRegistrar.sys.mjs"
 );
 
 add_task(async function test_setup() {

@@ -9,8 +9,8 @@ Services.scriptloader.loadSubScript(
   "chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
   EventUtils
 );
-const { ContentTaskUtils } = ChromeUtils.import(
-  "resource://testing-common/ContentTaskUtils.jsm"
+const { ContentTaskUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/ContentTaskUtils.sys.mjs"
 );
 
 function getRecordedKeypressCount() {

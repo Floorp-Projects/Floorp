@@ -8,7 +8,7 @@
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+import { Assert } from "resource://testing-common/Assert.sys.mjs";
 
 const lazy = {};
 
