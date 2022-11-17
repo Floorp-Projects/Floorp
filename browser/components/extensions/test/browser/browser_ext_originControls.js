@@ -33,6 +33,7 @@ async function makeExtension({
     content_scripts,
     action: {
       default_popup: "popup.html",
+      default_area: "navbar",
     },
   };
   if (manifest_version < 3) {
@@ -80,6 +81,7 @@ async function testOriginControls(
   let buttonOrWidget;
   let menu;
   let manageExtensionClassName;
+  let visibleOriginItems;
 
   switch (contextMenuId) {
     case "toolbar-context-menu":
@@ -87,6 +89,9 @@ async function testOriginControls(
       buttonOrWidget = win.document.querySelector(target).parentElement;
       menu = await openChromeContextMenu(contextMenuId, target, win);
       manageExtensionClassName = "customize-context-manageExtension";
+      visibleOriginItems = menu.querySelectorAll(
+        ":is(menuitem, menuseparator):not([hidden])"
+      );
       break;
 
     case "unified-extensions-context-menu":
@@ -95,6 +100,9 @@ async function testOriginControls(
       menu = await openUnifiedExtensionsContextMenu(win, extension.id);
       manageExtensionClassName =
         "unified-extensions-context-menu-manage-extension";
+      visibleOriginItems = menu.querySelectorAll(
+        ".unified-extensions-context-menu-management-separator ~ :is(menuitem, menuseparator):not([hidden])"
+      );
       break;
 
     default:
@@ -102,31 +110,28 @@ async function testOriginControls(
   }
 
   let doc = menu.ownerDocument;
-  let visibleItems = menu.querySelectorAll(
-    ":is(menuitem, menuseparator):not([hidden])"
-  );
 
   info("Check expected menu items.");
   for (let i = 0; i < items.length; i++) {
-    let l10n = doc.l10n.getAttributes(visibleItems[i]);
+    let l10n = doc.l10n.getAttributes(visibleOriginItems[i]);
     Assert.deepEqual(
       l10n,
       items[i],
       `Visible menu item ${i} has correct l10n attrs.`
     );
 
-    let checked = visibleItems[i].getAttribute("checked") === "true";
+    let checked = visibleOriginItems[i].getAttribute("checked") === "true";
     is(i === selected, checked, `Expected checked value for item ${i}.`);
   }
 
   if (items.length) {
     is(
-      visibleItems[items.length].nodeName,
+      visibleOriginItems[items.length].nodeName,
       "menuseparator",
       "Found separator."
     );
     is(
-      visibleItems[items.length + 1].className,
+      visibleOriginItems[items.length + 1].className,
       manageExtensionClassName,
       "All items accounted for."
     );
@@ -140,7 +145,7 @@ async function testOriginControls(
 
   let itemToClick;
   if (click) {
-    itemToClick = visibleItems[click];
+    itemToClick = visibleOriginItems[click];
   }
   await closeChromeContextMenu(contextMenuId, itemToClick, win);
 
@@ -160,11 +165,13 @@ async function testOriginControls(
   }
 }
 
-// Move the widget to the toolbar or the overflow panel.
-function moveWidget(ext, pinToToolbar = false) {
-  let area = pinToToolbar
-    ? CustomizableUI.AREA_NAVBAR
+// Move the widget to the toolbar or the addons panel (if Unified Extensions
+// is enabled) or the overflow panel otherwise.
+function moveWidget(ext, win, pinToToolbar = false) {
+  let overflowPanelArea = win.gUnifiedExtensions.isEnabled
+    ? CustomizableUI.AREA_ADDONS
     : CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
+  let area = pinToToolbar ? CustomizableUI.AREA_NAVBAR : overflowPanelArea;
   let widgetId = `${makeWidgetId(ext.id)}-browser-action`;
   CustomizableUI.addWidgetToArea(widgetId, area);
 }
@@ -213,16 +220,16 @@ const originControlsInContextMenu = async options => {
   if (options.contextMenuId === "unified-extensions-context-menu") {
     // Unified button should only show a notification indicator when extensions
     // asking for attention are not already visible in the toolbar.
-    moveWidget(ext2, false);
-    moveWidget(ext3, false);
+    moveWidget(ext2, options.win, false);
+    moveWidget(ext3, options.win, false);
     unifiedButton = options.win.document.querySelector(
       "#unified-extensions-button"
     );
   } else {
     // TestVerify runs this again in the same Firefox instance, so move the
     // widgets back to the toolbar for testing outside the unified button.
-    moveWidget(ext2, true);
-    moveWidget(ext3, true);
+    moveWidget(ext2, options.win, true);
+    moveWidget(ext3, options.win, true);
   }
 
   const NO_ACCESS = { id: "origin-controls-no-access", args: null };
