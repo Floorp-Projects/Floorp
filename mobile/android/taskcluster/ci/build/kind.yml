@@ -2,11 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: ac_taskgraph.loader.build_config:loader
+loader: android_taskgraph.loader.build_config:loader
 
 transforms:
-    - ac_taskgraph.transforms.build:transforms
-    - ac_taskgraph.transforms.gradle_optimization:transforms
+    - android_taskgraph.transforms.build:transforms
+    - android_taskgraph.transforms.gradle_optimization:transforms
     - taskgraph.transforms.code_review:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms

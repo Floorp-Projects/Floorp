@@ -11,8 +11,8 @@ kind-dependencies:
 
 transforms:
     - taskgraph.transforms.code_review:transforms
-    - ac_taskgraph.transforms.chunk:transforms
-    - ac_taskgraph.transforms.complete:transforms
+    - android_taskgraph.transforms.chunk:transforms
+    - android_taskgraph.transforms.complete:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 

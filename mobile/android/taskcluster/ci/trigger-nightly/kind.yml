@@ -5,7 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
-    - ac_taskgraph.transforms.trigger_nightly:transforms
+    - android_taskgraph.transforms.trigger_nightly:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
