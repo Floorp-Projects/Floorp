@@ -391,8 +391,10 @@ void SendSideBandwidthEstimation::UpdatePacketsLost(int64_t packets_lost,
     }
 
     has_decreased_since_last_fraction_loss_ = false;
-    int64_t lost_q8 = (lost_packets_since_last_loss_update_ + packets_lost)
-                      << 8;
+    int64_t lost_q8 =
+        std::max<int64_t>(lost_packets_since_last_loss_update_ + packets_lost,
+                          0)
+        << 8;
     last_fraction_loss_ = std::min<int>(lost_q8 / expected, 255);
 
     // Reset accumulators.
@@ -401,6 +403,7 @@ void SendSideBandwidthEstimation::UpdatePacketsLost(int64_t packets_lost,
     last_loss_packet_report_ = at_time;
     UpdateEstimate(at_time);
   }
+
   UpdateUmaStatsPacketsLost(at_time, packets_lost);
 }
 

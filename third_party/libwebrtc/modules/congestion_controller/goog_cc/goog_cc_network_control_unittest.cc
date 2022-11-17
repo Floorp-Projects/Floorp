@@ -677,7 +677,7 @@ TEST(GoogCcScenario, LossBasedRecoversFasterAfterCrossInducedLoss) {
       AverageBitrateAfterCrossInducedLoss("googcc_unit/cross_loss_based");
 
   EXPECT_GE(average_bitrate_with_loss_based,
-            average_bitrate_without_loss_based * 1.1);
+            average_bitrate_without_loss_based * 1.05);
 }
 
 TEST(GoogCcScenario, LossBasedEstimatorCapsRateAtModerateLoss) {
