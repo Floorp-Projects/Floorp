@@ -16,7 +16,6 @@ const { DownloadPaths } = ChromeUtils.importESModule(
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -71,32 +70,19 @@ var FileTestUtils = {
    *
    * @param path
    *        String representing the path to remove.
-   * @param isDir [optional]
-   *        Indicates whether this is a directory. If not specified, this will
-   *        be determined by querying the file system.
    */
-  async tolerantRemove(path, isDir) {
+  async tolerantRemove(path) {
     try {
-      if (isDir === undefined) {
-        isDir = (await OS.File.stat(path)).isDir;
-      }
-      if (isDir) {
-        // The test created a directory, remove its contents recursively. The
-        // deletion may still fail with an access denied error on Windows if any
-        // of the files in the folder were recently deleted.
-        await OS.File.removeDir(path);
-      } else {
-        // This is the usual case of a test file that has to be removed.
-        await OS.File.remove(path);
-      }
+      await IOUtils.remove(path, { recursive: true });
     } catch (ex) {
       // On Windows, we may get an access denied error instead of a no such file
       // error if the file existed before, and was recently deleted. There is no
       // way to distinguish this from an access list issue because checking for
       // the file existence would also result in the same error.
       if (
-        !(ex instanceof OS.File.Error) ||
-        !(ex.becauseNoSuchFile || ex.becauseAccessDenied)
+        !DOMException.isInstance(ex) ||
+        ex.name !== "NotFoundError" ||
+        ex.name !== "NotAllowedError"
       ) {
         throw ex;
       }
@@ -125,27 +111,23 @@ XPCOMUtils.defineLazyGetter(
     // our temporary directory. This can cause our shutdown blocker to fail due
     // to, e.g., JSONFile attempting to flush its contents to disk while we are
     // trying to delete the file.
-    OS.File.shutdown.addBlocker("Removing test files", async () => {
+
+    IOUtils.sendTelemetry.addBlocker("Removing test files", async () => {
       // Remove the files we know about first.
       for (let path of gPathsToRemove) {
         await this.tolerantRemove(path);
       }
 
-      if (!(await OS.File.exists(dir.path))) {
+      if (!(await IOUtils.exists(dir.path))) {
         return;
       }
 
       // Detect any extra files, like the ".part" files of downloads.
-      let iterator = new OS.File.DirectoryIterator(dir.path);
-      try {
-        await iterator.forEach(entry =>
-          this.tolerantRemove(entry.path, entry.isDir)
-        );
-      } finally {
-        iterator.close();
+      for (const child of await IOUtils.getChildren(dir.path)) {
+        await this.tolerantRemove(child);
       }
       // This will fail if any test leaves inaccessible files behind.
-      await OS.File.removeEmptyDir(dir.path);
+      await IOUtils.remove(dir.path, { recursive: false });
     });
     return dir;
   }
