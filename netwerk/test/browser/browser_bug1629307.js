@@ -11,10 +11,6 @@ const { PromptTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromptTestUtils.jsm"
 );
 
-const { BrowserTestUtils } = ChromeUtils.import(
-  "resource://testing-common/BrowserTestUtils.jsm"
-);
-
 add_task(async function() {
   let URL =
     "https://example.com/browser/netwerk/test/browser/test_1629307.html";

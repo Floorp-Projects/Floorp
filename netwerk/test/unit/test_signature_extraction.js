@@ -17,11 +17,9 @@ ChromeUtils.defineModuleGetter(
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "FileTestUtils",
-  "resource://testing-common/FileTestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  FileTestUtils: "resource://testing-common/FileTestUtils.sys.mjs",
+});
 
 const BackgroundFileSaverOutputStream = Components.Constructor(
   "@mozilla.org/network/background-file-saver;1?mode=outputstream",

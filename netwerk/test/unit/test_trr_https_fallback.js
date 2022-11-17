@@ -5,8 +5,8 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 
 let h2Port;
