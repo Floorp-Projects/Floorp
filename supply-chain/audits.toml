@@ -418,6 +418,11 @@ who = "Zibi Braniecki <zibi@unicode.org>"
 criteria = "safe-to-deploy"
 version = "0.6.0"
 
+[[audits.fluent-fallback]]
+who = "Greg Tatum <tatum.creative@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.6.0 -> 0.7.0"
+
 [[audits.fluent-langneg]]
 who = "Zibi Braniecki <zibi@unicode.org>"
 criteria = "safe-to-deploy"
@@ -437,6 +442,11 @@ version = "0.11.0"
 who = "Zibi Braniecki <zibi@unicode.org>"
 criteria = "safe-to-run"
 version = "0.0.2"
+
+[[audits.fluent-testing]]
+who = "Greg Tatum <tatum.creative@gmail.com>"
+criteria = "safe-to-run"
+delta = "0.0.2 -> 0.0.3"
 
 [[audits.fnv]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
