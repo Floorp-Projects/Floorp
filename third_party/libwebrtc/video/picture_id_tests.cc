@@ -135,11 +135,15 @@ class PictureIdObserver : public test::RtpRtcpObserver {
     // Expect continuously increasing picture id.
     int diff = ForwardDiff<uint16_t, kPictureIdWraparound>(last.picture_id,
                                                            current.picture_id);
-    if (diff > 1) {
+    EXPECT_LE(diff - 1, max_expected_picture_id_gap_);
+    if (diff > 2) {
       // If the VideoSendStream is destroyed, any frames still in queue is lost.
-      // Gaps only possible for first frame after a recreation, i.e. key frames.
+      // This can result in a two-frame gap, which will result in logs like
+      // "packet transmission failed, no matching RTP module found, or
+      // transmission error".
+      // A larger gap is only possible for first frame after a recreation, i.e.
+      // key frames.
       EXPECT_EQ(VideoFrameType::kVideoFrameKey, current.frame_type);
-      EXPECT_LE(diff - 1, max_expected_picture_id_gap_);
     }
   }
 
