@@ -80,10 +80,7 @@
 
 #identity-popup-mainView,
 #permission-popup-mainView,
-#protections-popup-mainView,
-#identity-popup-mainView-panel-header,
-#permission-popup-mainView-panel-header,
-#protections-popup-mainView-panel-header {
+#protections-popup-mainView {
   min-width: var(--popup-width);
   max-width: var(--popup-width);
 }
@@ -96,7 +93,7 @@
 }
 
 #protections-popup[toast] #protections-popup-mainView-panel-header {
-  min-height: 30px;
+  min-height: unset; /* revert panelUI-shared.css */
 }
 
 #identity-popup-security-description > description {
@@ -134,58 +131,38 @@
   margin: 0;
 }
 
+#protections-popup .panel-header > h1 > span,
+#permission-popup .panel-header > h1 > span,
+#identity-popup .panel-header > h1 > span {
+  /* This is needed for the overflow-wrap to work correctly when the domain name is really long. */
+  max-width: calc(var(--popup-width) - 2 * var(--arrowpanel-menuitem-margin-inline));
+  overflow-wrap: break-word;
+}
+
+#protections-popup .panel-header > h1 > span {
+  /* The protections popup panel header text needs a different calculation because it contains an info button.
+   * icon-full-width and icon-margin are included twice to compensate for the margin-inline-start of the text,
+   * used to center it even if the header includes a info button. See .panel-header-with-info-button */
+  max-width: calc(var(--popup-width)
+                  - var(--arrowpanel-menuitem-margin-inline) * 2
+                  - var(--arrowpanel-header-info-icon-full-width) * 2
+                  - var(--arrowpanel-header-info-icon-margin-inline-end) * 2);
+}
+
+#identity-popup .panel-header > .subviewbutton-back + h1 > span {
+  /* Same idea as above, but in the identity popup when there's a back button. */
+  max-width: calc(var(--popup-width)
+                  - var(--arrowpanel-menuitem-margin-inline) * 2
+                  - var(--arrowpanel-header-back-icon-full-width) * 2);
+}
+
 #protections-popup:not([infoMessageShowing]) #protections-popup-mainView-panel-header-section + toolbarseparator {
   display: none;
 }
 
-#permission-popup-mainView-panel-header,
-#identity-popup-mainView-panel-header,
-#protections-popup-mainView-panel-header {
-  min-height: 40px;
-  -moz-box-pack: center;
-  -moz-box-align: center;
-}
-
-#identity-popup-mainView-panel-header,
-#permission-popup-mainView-panel-header {
-  padding: 4px 8px;
-}
-
 #protections-popup-mainView-panel-header-section {
+  /* Don't display the info message on top of the panel content while it fades in and out */
   overflow: hidden;
-}
-
-#permission-popup-mainView-panel-header-span,
-#identity-popup-mainView-panel-header-span,
-#protections-popup-mainView-panel-header-span {
-  font-weight: 600;
-}
-
-#protections-popup-mainView-panel-header-span {
-  margin: var(--vertical-section-padding) 0;
-  /* 9px + 26px to compensate for the info button */
-  margin-inline-start: 35px;
-}
-
-#permission-popup-mainView-panel-header-span,
-#identity-popup-mainView-panel-header-span,
-#protections-popup-mainView-panel-header-span,
-#protections-popup-toast-panel-tp-on-desc,
-#protections-popup-toast-panel-tp-off-desc,
-#protections-popup .panel-header > h1 > span,
-#permission-popup .panel-header > h1 > span,
-#identity-popup .panel-header > h1 > span {
-  display: inline-block;
-  text-align: center;
-  overflow-wrap: break-word;
-  /* This is needed for the overflow-wrap to work correctly.
-   * The panel-header has 1em padding on each side. */
-  max-width: calc(var(--popup-width) - 2 * var(--horizontal-padding));
-}
-
-#identity-popup-mainView-panel-header-span,
-#permission-popup-mainView-panel-header-span {
-  margin-top: 4px;
 }
 
 #permission-popup-permissions-content > description,
@@ -273,10 +250,6 @@
 .identity-popup-security-connection-icon {
   width: 16px;
   height: 16px;
-}
-
-#identity-popup-mainView-panel-header-span {
-  margin-top: 4px;
 }
 
 .identity-popup-connection-secure.security-view,
@@ -759,17 +732,9 @@
   stroke: #ffbd4f;
 }
 
-#protections-popup-mainView-panel-header {
-  min-height: 43.5px;
-}
-
 #protections-popup-tp-switch-breakage-link,
 #protections-popup-tp-switch-breakage-fixed-link {
   text-decoration: underline;
-}
-
-#protections-popup-info-button {
-  margin-inline-end: 16px;
 }
 
 .permission-popup-section {

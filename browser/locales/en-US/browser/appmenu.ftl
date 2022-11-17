@@ -143,8 +143,7 @@ profiler-popup-button-capturing =
   .label = Profiler
   .tooltiptext = The profiler is capturing a profile
 
-profiler-popup-title =
-  .value = { -profiler-brand-name }
+profiler-popup-header-text = { -profiler-brand-name }
 
 profiler-popup-reveal-description-button =
   .aria-label = Reveal more information

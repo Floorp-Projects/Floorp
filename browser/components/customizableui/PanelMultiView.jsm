@@ -1374,20 +1374,27 @@ var PanelView = class extends AssociatedToNode {
     };
 
     // If the header already exists, update or remove it as requested.
-    let header = this.node.firstElementChild;
-    if (header && header.classList.contains("panel-header")) {
-      if (value) {
-        // The back button has a label in it - we want to select
-        // the label that's a direct child of the header.
-        header.querySelector(".panel-header > h1 > span").textContent = value;
-        ensureHeaderSeparator(header);
-      } else {
+    let header = this.node.querySelector(".panel-header");
+    if (header) {
+      if (!this.node.getAttribute("mainview")) {
+        if (value) {
+          // The back button has a label in it - we want to select
+          // the span that's a child of the header.
+          header.querySelector(".panel-header > h1 > span").textContent = value;
+          ensureHeaderSeparator(header);
+        } else {
+          if (header.nextSibling.tagName == "toolbarseparator") {
+            header.nextSibling.remove();
+          }
+          header.remove();
+        }
+        return;
+      } else if (!this.node.getAttribute("showheader")) {
         if (header.nextSibling.tagName == "toolbarseparator") {
           header.nextSibling.remove();
         }
         header.remove();
       }
-      return;
     }
 
     // The header doesn't exist, only create it if needed.

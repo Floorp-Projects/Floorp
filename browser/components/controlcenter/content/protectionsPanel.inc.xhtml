@@ -17,14 +17,16 @@
                   mainViewId="protections-popup-mainView">
     <panelview id="protections-popup-mainView"
                class="PanelUI-subView"
-               role="document">
+               role="document"
+               showheader="true">
       <vbox id="protections-popup-mainView-panel-header-section">
         <hbox id="protections-popup-mainView-panel-header"
+              class="panel-header panel-header-with-info-button"
               onclick="gProtectionsHandler.onHeaderClicked(event);">
-          <label id="protections-popup-main-header-label" flex="1"
+          <html:h1 id="protections-popup-main-header-label"
                  role="heading" aria-level="1">
             <html:span id="protections-popup-mainView-panel-header-span"/>
-          </label>
+          </html:h1>
           <toolbarbutton id="protections-popup-info-button" class="panel-info-button"
                          data-l10n-id="protections-panel-etp-more-info">
             <image/>

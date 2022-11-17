@@ -157,11 +157,6 @@ panelview:not([visible]) {
   visibility: collapse;
 }
 
-/* Hide the header when a subview is reused as a main view. */
-panelview[mainview] > .panel-header {
-  display: none;
-}
-
 .panel-viewcontainer {
   overflow: hidden;
   min-width: 0;
