@@ -2649,6 +2649,14 @@ WebRtcVideoChannel::WebRtcVideoSendStream::GetPerLayerVideoSenderInfos(
     if (stats.substreams.empty()) {
       for (uint32_t ssrc : parameters_.config.rtp.ssrcs) {
         common_info.add_ssrc(ssrc);
+        auto encoding_it = std::find_if(
+            rtp_parameters_.encodings.begin(), rtp_parameters_.encodings.end(),
+            [&ssrc](const webrtc::RtpEncodingParameters& parameters) {
+              return parameters.ssrc && parameters.ssrc == ssrc;
+            });
+        if (encoding_it != rtp_parameters_.encodings.end()) {
+          common_info.active = encoding_it->active;
+        }
       }
       common_info.framerate_sent = stats.encode_frame_rate;
       common_info.frames_encoded = stats.frames_encoded;
