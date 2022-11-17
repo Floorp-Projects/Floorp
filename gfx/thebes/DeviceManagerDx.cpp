@@ -392,6 +392,18 @@ bool DeviceManagerDx::CreateCanvasDeviceLocked() {
     return false;
   }
 
+  if (StaticPrefs::
+          gfx_direct2d_target_independent_rasterization_disabled_AtStartup()) {
+    int creationFlags = 0x2;  // disable target independent rasterization
+    const GUID D2D_INTERNAL_DEVICE_CREATION_OPTIONS = {
+        0xfb3a8e1a,
+        0x2e3c,
+        0x4de1,
+        {0x84, 0x42, 0x40, 0x43, 0xe0, 0xb0, 0x94, 0x95}};
+    mCanvasDevice->SetPrivateData(D2D_INTERNAL_DEVICE_CREATION_OPTIONS,
+                                  sizeof(creationFlags), &creationFlags);
+  }
+
   if (FAILED(hr) || !mCanvasDevice) {
     NS_WARNING("Failed to acquire a D3D11 device for Canvas");
     return false;

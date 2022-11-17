@@ -5779,6 +5779,11 @@
   value: true
   mirror: always
 
+- name: gfx.direct2d.target-independent-rasterization.disabled
+  type: bool
+  value: false
+  mirror: once
+
 - name: gfx.direct3d11.reuse-decoder-device
   type: bool
   value: true
