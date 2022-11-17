@@ -139,8 +139,8 @@ label html|span.accesskey {
   text-decoration-skip-ink: none;
 }
 
-label[value],
-description[value] {
+label:where([value]),
+description:where([value]) {
   /* Preserves legacy behavior, maybe could be removed */
   display: -moz-box;
 }
