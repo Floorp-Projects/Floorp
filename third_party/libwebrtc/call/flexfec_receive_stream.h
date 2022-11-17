@@ -65,6 +65,10 @@ class FlexfecReceiveStream : public RtpPacketSinkInterface,
   // Perhaps this should be in ReceiveStreamInterface and apply to audio streams
   // as well (although there's no logic that would use it at present).
   virtual void SetRtcpMode(RtcpMode mode) = 0;
+
+  // Called to change the payload type after initialization.
+  virtual void SetPayloadType(int payload_type) = 0;
+  virtual int payload_type() const = 0;
 };
 
 }  // namespace webrtc
