@@ -13,7 +13,7 @@ Content Sources
 ---------------
 
 The content of each revision in ``gecko-strings`` corresponds to a given
-revision in each original repository. For example, we have
+revision in each original repository. For example, we could have
 
 +------------------+--------------+
 | Repository       | Revision     |
@@ -35,20 +35,16 @@ revision in each original repository. For example, we have
 | comm-esr68       | d05d4d87d25c |
 +------------------+--------------+
 
-At this point, there's no content that's shared between ``mozilla-*`` and
-``comm-*``. Thus we can just convert one repository and its branches at a time.
+The assumption is that there's no content that's shared between ``mozilla-*`` and
+``comm-*``, so we can just convert one repository and its branches at a time.
 
 Covered Content
 ---------------
 
 Which content is included in ``gecko-strings`` is
 controlled by the project configurations of each product, on each branch.
-At this point, those are
-
-* :file:`browser/locales/l10n.toml`, :file:`mobile/android/locales/l10n.toml`
-  in ``mozilla-central``, and
-* :file:`mail/locales/l10n.toml`, :file:`calendar/locales/l10n.toml`, and
-  :file:`suite/locales/l10n.toml` in ``comm-central``.
+Currently, those are :file:`browser/locales/l10n.toml` and 
+:file:`mobile/android/locales/l10n.toml` in ``mozilla-central``.
 
 Created Content Structure
 -------------------------
@@ -77,8 +73,8 @@ which we strip, they're added to the dedicated :file:`_configs` folder.
 .. code-block:: bash
 
    $ ls _configs
-   browser.toml   devtools-client.toml  mail.toml            suite.toml
-   calendar.toml  devtools-shared.toml  mobile-android.toml  toolkit.toml
+   browser.toml   devtools-client.toml  devtools-shared.toml  
+   mobile-android.toml  toolkit.toml
 
 
 L10n File Contents
