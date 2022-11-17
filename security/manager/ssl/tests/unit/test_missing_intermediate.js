@@ -8,8 +8,8 @@
 // Tests that if a server does not send a complete certificate chain, we can
 // make use of cached intermediates to build a trust path.
 
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
 );
 
 do_get_profile(); // must be called before getting nsIX509CertDB

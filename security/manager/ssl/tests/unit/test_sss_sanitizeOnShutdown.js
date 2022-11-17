@@ -6,8 +6,11 @@
 // The purpose of this test is to ensure that Firefox sanitizes site security
 // service data on shutdown if configured to do so.
 
+ChromeUtils.defineESModuleGetters(this, {
+  TestUtils: "resource://testing-common/TestUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
-  TestUtils: "resource://testing-common/TestUtils.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
 });
 

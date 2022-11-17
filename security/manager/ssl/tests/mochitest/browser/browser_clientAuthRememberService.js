@@ -19,8 +19,8 @@ var certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
 
 var deleted = false;
 
-const { MockRegistrar } = ChromeUtils.import(
-  "resource://testing-common/MockRegistrar.jsm"
+const { MockRegistrar } = ChromeUtils.importESModule(
+  "resource://testing-common/MockRegistrar.sys.mjs"
 );
 
 function findCertByCommonName(commonName) {
