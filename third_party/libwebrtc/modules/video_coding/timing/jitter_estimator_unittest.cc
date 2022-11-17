@@ -65,32 +65,15 @@ class ValueGenerator {
   int64_t counter_;
 };
 
-// 5 fps, disable jitter delay altogether.
 TEST_F(TestJitterEstimator, TestLowRate) {
   ValueGenerator gen(10);
+  // At 5 fps, we disable jitter delay altogether.
   TimeDelta time_delta = 1 / Frequency::Hertz(5);
   for (int i = 0; i < 60; ++i) {
     estimator_->UpdateEstimate(gen.Delay(), gen.FrameSize());
     fake_clock_.AdvanceTime(time_delta);
     if (i > 2)
       EXPECT_EQ(estimator_->GetJitterEstimate(0, absl::nullopt),
-                TimeDelta::Zero());
-    gen.Advance();
-  }
-}
-
-TEST_F(TestJitterEstimator, TestLowRateDisabled) {
-  test::ScopedKeyValueConfig field_trials(
-      field_trials_, "WebRTC-ReducedJitterDelayKillSwitch/Enabled/");
-  SetUp();
-
-  ValueGenerator gen(10);
-  TimeDelta time_delta = 1 / Frequency::Hertz(5);
-  for (int i = 0; i < 60; ++i) {
-    estimator_->UpdateEstimate(gen.Delay(), gen.FrameSize());
-    fake_clock_.AdvanceTime(time_delta);
-    if (i > 2)
-      EXPECT_GT(estimator_->GetJitterEstimate(0, absl::nullopt),
                 TimeDelta::Zero());
     gen.Advance();
   }
