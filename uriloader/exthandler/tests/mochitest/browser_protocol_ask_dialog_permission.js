@@ -7,6 +7,10 @@ var { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 
+const { ExtensionPermissions } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionPermissions.jsm"
+);
+
 let gHandlerService = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
   Ci.nsIHandlerService
 );
@@ -209,6 +213,7 @@ async function testOpenProto(
       actionCheckbox,
       actionConfirm,
       actionChangeApp,
+      checkContents,
     } = permDialogOptions;
 
     if (actionChangeApp) {
@@ -254,6 +259,10 @@ async function testOpenProto(
         hasChangeApp,
         "Permission dialog change app link label"
       );
+    }
+
+    if (checkContents) {
+      checkContents(dialogEl);
     }
 
     if (actionChangeApp) {
@@ -780,12 +789,253 @@ add_task(async function test_non_standard_protocol() {
 });
 
 /**
- * Tests that we skip the permission dialog for extension callers.
+ * Tests that we show the permission dialog for extension content scripts.
  */
-add_task(async function test_extension_principal() {
+add_task(async function test_extension_content_script_permission() {
   let scheme = TEST_PROTOS[0];
   await BrowserTestUtils.withNewTab(ORIGIN1, async browser => {
     let testExtension;
+
+    await testOpenProto(browser, scheme, {
+      triggerLoad: async () => {
+        let uri = `${scheme}://test`;
+
+        const EXTENSION_DATA = {
+          manifest: {
+            content_scripts: [
+              {
+                matches: [browser.currentURI.spec],
+                js: ["navigate.js"],
+              },
+            ],
+            browser_specific_settings: {
+              gecko: { id: "allowed@mochi.test" },
+            },
+          },
+          files: {
+            "navigate.js": `window.location.href = "${uri}";`,
+          },
+          useAddonManager: "permanent",
+        };
+
+        testExtension = ExtensionTestUtils.loadExtension(EXTENSION_DATA);
+        await testExtension.startup();
+      },
+      permDialogOptions: {
+        hasCheckbox: true,
+        chooserIsNext: true,
+        hasChangeApp: false,
+        actionCheckbox: true,
+        actionConfirm: true,
+        checkContents: dialogEl => {
+          let description = dialogEl.querySelector("#description");
+          let { id, args } = description.ownerDocument.l10n.getAttributes(
+            description
+          );
+          is(
+            id,
+            "permission-dialog-description-extension",
+            "Should be using the correct string."
+          );
+          is(
+            args.extension,
+            "Generated extension",
+            "Should have the correct extension name."
+          );
+        },
+      },
+      chooserDialogOptions: {
+        hasCheckbox: true,
+        actionConfirm: false, // Cancel dialog
+      },
+    });
+
+    let extensionPrincipal = Services.scriptSecurityManager.createContentPrincipal(
+      Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+      {}
+    );
+    let extensionPrivatePrincipal = Services.scriptSecurityManager.createContentPrincipal(
+      Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+      { privateBrowsingId: 1 }
+    );
+
+    let key = getSkipProtoDialogPermissionKey(scheme);
+    is(
+      Services.perms.testPermissionFromPrincipal(extensionPrincipal, key),
+      Services.perms.ALLOW_ACTION,
+      "Should have permanently allowed the extension"
+    );
+    is(
+      Services.perms.testPermissionFromPrincipal(
+        extensionPrivatePrincipal,
+        key
+      ),
+      Services.perms.UNKNOWN_ACTION,
+      "Should not have changed the private principal permission"
+    );
+    is(
+      Services.perms.testPermissionFromPrincipal(PRINCIPAL1, key),
+      Services.perms.UNKNOWN_ACTION,
+      "Should not have allowed the page"
+    );
+
+    await testExtension.unload();
+
+    is(
+      Services.perms.testPermissionFromPrincipal(extensionPrincipal, key),
+      Services.perms.UNKNOWN_ACTION,
+      "Should have cleared the extension's normal principal permission"
+    );
+    is(
+      Services.perms.testPermissionFromPrincipal(
+        extensionPrivatePrincipal,
+        key
+      ),
+      Services.perms.UNKNOWN_ACTION,
+      "Should have cleared the private browsing principal"
+    );
+  });
+});
+
+/**
+ * Tests that we show the permission dialog for extension content scripts.
+ */
+add_task(async function test_extension_private_content_script_permission() {
+  let scheme = TEST_PROTOS[0];
+  let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
+
+  await BrowserTestUtils.withNewTab(
+    { gBrowser: win.gBrowser, url: ORIGIN1 },
+    async browser => {
+      let testExtension;
+
+      await testOpenProto(browser, scheme, {
+        triggerLoad: async () => {
+          let uri = `${scheme}://test`;
+
+          const EXTENSION_DATA = {
+            manifest: {
+              content_scripts: [
+                {
+                  matches: [browser.currentURI.spec],
+                  js: ["navigate.js"],
+                },
+              ],
+              browser_specific_settings: {
+                gecko: { id: "allowed@mochi.test" },
+              },
+            },
+            files: {
+              "navigate.js": `window.location.href = "${uri}";`,
+            },
+            useAddonManager: "permanent",
+          };
+
+          testExtension = ExtensionTestUtils.loadExtension(EXTENSION_DATA);
+          await testExtension.startup();
+          let perms = {
+            permissions: ["internal:privateBrowsingAllowed"],
+            origins: [],
+          };
+          await ExtensionPermissions.add("allowed@mochi.test", perms);
+          let addon = await AddonManager.getAddonByID("allowed@mochi.test");
+          await addon.reload();
+        },
+        permDialogOptions: {
+          hasCheckbox: true,
+          chooserIsNext: true,
+          hasChangeApp: false,
+          actionCheckbox: true,
+          actionConfirm: true,
+          checkContents: dialogEl => {
+            let description = dialogEl.querySelector("#description");
+            let { id, args } = description.ownerDocument.l10n.getAttributes(
+              description
+            );
+            is(
+              id,
+              "permission-dialog-description-extension",
+              "Should be using the correct string."
+            );
+            is(
+              args.extension,
+              "Generated extension",
+              "Should have the correct extension name."
+            );
+          },
+        },
+        chooserDialogOptions: {
+          hasCheckbox: true,
+          actionConfirm: false, // Cancel dialog
+        },
+      });
+
+      let extensionPrincipal = Services.scriptSecurityManager.createContentPrincipal(
+        Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+        {}
+      );
+      let extensionPrivatePrincipal = Services.scriptSecurityManager.createContentPrincipal(
+        Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+        { privateBrowsingId: 1 }
+      );
+
+      let key = getSkipProtoDialogPermissionKey(scheme);
+      is(
+        Services.perms.testPermissionFromPrincipal(extensionPrincipal, key),
+        Services.perms.UNKNOWN_ACTION,
+        "Should not have changed the extension's normal principal permission"
+      );
+      is(
+        Services.perms.testPermissionFromPrincipal(
+          extensionPrivatePrincipal,
+          key
+        ),
+        Services.perms.ALLOW_ACTION,
+        "Should have allowed the private browsing principal"
+      );
+      is(
+        Services.perms.testPermissionFromPrincipal(PRINCIPAL1, key),
+        Services.perms.UNKNOWN_ACTION,
+        "Should not have allowed the page"
+      );
+
+      await testExtension.unload();
+
+      is(
+        Services.perms.testPermissionFromPrincipal(extensionPrincipal, key),
+        Services.perms.UNKNOWN_ACTION,
+        "Should have cleared the extension's normal principal permission"
+      );
+      is(
+        Services.perms.testPermissionFromPrincipal(
+          extensionPrivatePrincipal,
+          key
+        ),
+        Services.perms.UNKNOWN_ACTION,
+        "Should have cleared the private browsing principal"
+      );
+    }
+  );
+
+  await BrowserTestUtils.closeWindow(win);
+});
+
+/**
+ * Tests that we do not show the permission dialog for extension content scripts
+ * when the page already has permission.
+ */
+add_task(async function test_extension_allowed_content() {
+  let scheme = TEST_PROTOS[0];
+  await BrowserTestUtils.withNewTab(ORIGIN1, async browser => {
+    let testExtension;
+
+    let key = getSkipProtoDialogPermissionKey(scheme);
+    Services.perms.addFromPrincipal(
+      PRINCIPAL1,
+      key,
+      Services.perms.ALLOW_ACTION,
+      Services.perms.EXPIRE_NEVER
+    );
 
     await testOpenProto(browser, scheme, {
       triggerLoad: async () => {
@@ -813,6 +1063,158 @@ add_task(async function test_extension_principal() {
         actionConfirm: false, // Cancel dialog
       },
     });
+
+    let extensionPrincipal = Services.scriptSecurityManager.createContentPrincipal(
+      Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+      {}
+    );
+
+    is(
+      Services.perms.testPermissionFromPrincipal(extensionPrincipal, key),
+      Services.perms.UNKNOWN_ACTION,
+      "Should not have permanently allowed the extension"
+    );
+
+    await testExtension.unload();
+    Services.perms.removeFromPrincipal(PRINCIPAL1, key);
+  });
+});
+
+/**
+ * Tests that we do not show the permission dialog for extension content scripts
+ * when the extension already has permission.
+ */
+add_task(async function test_extension_allowed_extension() {
+  let scheme = TEST_PROTOS[0];
+  await BrowserTestUtils.withNewTab(ORIGIN1, async browser => {
+    let testExtension;
+
+    let key = getSkipProtoDialogPermissionKey(scheme);
+
+    await testOpenProto(browser, scheme, {
+      triggerLoad: async () => {
+        const EXTENSION_DATA = {
+          manifest: {
+            permissions: [`${ORIGIN1}/*`],
+          },
+          background() {
+            browser.test.onMessage.addListener(async (msg, uri) => {
+              switch (msg) {
+                case "engage":
+                  browser.tabs.executeScript({
+                    code: `window.location.href = "${uri}";`,
+                  });
+                  break;
+                default:
+                  browser.test.fail(`Unexpected message received: ${msg}`);
+              }
+            });
+          },
+        };
+
+        testExtension = ExtensionTestUtils.loadExtension(EXTENSION_DATA);
+        await testExtension.startup();
+
+        let extensionPrincipal = Services.scriptSecurityManager.createContentPrincipal(
+          Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+          {}
+        );
+        Services.perms.addFromPrincipal(
+          extensionPrincipal,
+          key,
+          Services.perms.ALLOW_ACTION,
+          Services.perms.EXPIRE_NEVER
+        );
+
+        testExtension.sendMessage("engage", `${scheme}://test`);
+      },
+      chooserDialogOptions: {
+        hasCheckbox: true,
+        actionConfirm: false, // Cancel dialog
+      },
+    });
+
+    await testExtension.unload();
+    Services.perms.removeFromPrincipal(PRINCIPAL1, key);
+  });
+});
+
+/**
+ * Tests that we show the permission dialog for extensions directly opening a
+ * protocol.
+ */
+add_task(async function test_extension_principal() {
+  let scheme = TEST_PROTOS[0];
+  await BrowserTestUtils.withNewTab(ORIGIN1, async browser => {
+    let testExtension;
+
+    await testOpenProto(browser, scheme, {
+      triggerLoad: async () => {
+        const EXTENSION_DATA = {
+          background() {
+            browser.test.onMessage.addListener(async (msg, url) => {
+              switch (msg) {
+                case "engage":
+                  browser.tabs.update({
+                    url,
+                  });
+                  break;
+                default:
+                  browser.test.fail(`Unexpected message received: ${msg}`);
+              }
+            });
+          },
+        };
+
+        testExtension = ExtensionTestUtils.loadExtension(EXTENSION_DATA);
+        await testExtension.startup();
+        testExtension.sendMessage("engage", `${scheme}://test`);
+      },
+      permDialogOptions: {
+        hasCheckbox: true,
+        chooserIsNext: true,
+        hasChangeApp: false,
+        actionCheckbox: true,
+        actionConfirm: true,
+        checkContents: dialogEl => {
+          let description = dialogEl.querySelector("#description");
+          let { id, args } = description.ownerDocument.l10n.getAttributes(
+            description
+          );
+          is(
+            id,
+            "permission-dialog-description-extension",
+            "Should be using the correct string."
+          );
+          is(
+            args.extension,
+            "Generated extension",
+            "Should have the correct extension name."
+          );
+        },
+      },
+      chooserDialogOptions: {
+        hasCheckbox: true,
+        actionConfirm: false, // Cancel dialog
+      },
+    });
+
+    let extensionPrincipal = Services.scriptSecurityManager.createContentPrincipal(
+      Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+      {}
+    );
+
+    let key = getSkipProtoDialogPermissionKey(scheme);
+    is(
+      Services.perms.testPermissionFromPrincipal(extensionPrincipal, key),
+      Services.perms.ALLOW_ACTION,
+      "Should have permanently allowed the extension"
+    );
+    is(
+      Services.perms.testPermissionFromPrincipal(PRINCIPAL1, key),
+      Services.perms.UNKNOWN_ACTION,
+      "Should not have allowed the page"
+    );
 
     await testExtension.unload();
   });
