@@ -55,10 +55,12 @@ class FullScreenMacApplicationHandler : public FullScreenApplicationHandler {
       std::function<bool(const std::string&, const std::string&)>;
 
   FullScreenMacApplicationHandler(DesktopCapturer::SourceId sourceId,
-                                  TitlePredicate title_predicate)
+                                  TitlePredicate title_predicate,
+                                  bool ignore_original_window)
       : FullScreenApplicationHandler(sourceId),
         title_predicate_(title_predicate),
-        owner_pid_(GetWindowOwnerPid(sourceId)) {}
+        owner_pid_(GetWindowOwnerPid(sourceId)),
+        ignore_original_window_(ignore_original_window) {}
 
  protected:
   using CachePredicate =
@@ -119,7 +121,7 @@ class FullScreenMacApplicationHandler : public FullScreenApplicationHandler {
   DesktopCapturer::SourceId FindFullScreenWindow(
       const DesktopCapturer::SourceList& source_list,
       int64_t timestamp) const override {
-    return IsWindowOnScreen(GetSourceId())
+    return !ignore_original_window_ && IsWindowOnScreen(GetSourceId())
                ? 0
                : FindFullScreenWindowWithSamePid(source_list, timestamp);
   }
@@ -127,6 +129,7 @@ class FullScreenMacApplicationHandler : public FullScreenApplicationHandler {
  protected:
   const TitlePredicate title_predicate_;
   const int owner_pid_;
+  const bool ignore_original_window_;
   mutable int64_t cache_timestamp_ = 0;
   mutable DesktopCapturer::SourceList cache_sources_;
 };
@@ -151,7 +154,7 @@ bool slide_show_title_predicate(const std::string& original_title,
 class OpenOfficeApplicationHandler : public FullScreenMacApplicationHandler {
  public:
   OpenOfficeApplicationHandler(DesktopCapturer::SourceId sourceId)
-      : FullScreenMacApplicationHandler(sourceId, nullptr) {}
+      : FullScreenMacApplicationHandler(sourceId, nullptr, false) {}
 
   DesktopCapturer::SourceId FindFullScreenWindow(
       const DesktopCapturer::SourceList& source_list,
@@ -207,10 +210,12 @@ CreateFullScreenMacApplicationHandler(DesktopCapturer::SourceId sourceId) {
     const std::string name{last_slash ? last_slash + 1 : buffer};
     const std::string owner_name = GetWindowOwnerName(sourceId);
     FullScreenMacApplicationHandler::TitlePredicate predicate = nullptr;
+    bool ignore_original_window = false;
     if (name.find("Google Chrome") == 0 || name == "Chromium") {
       predicate = equal_title_predicate;
     } else if (name == "Microsoft PowerPoint") {
       predicate = slide_show_title_predicate;
+      ignore_original_window = true;
     } else if (name == "Keynote") {
       predicate = equal_title_predicate;
     } else if (owner_name == "OpenOffice") {
@@ -218,7 +223,8 @@ CreateFullScreenMacApplicationHandler(DesktopCapturer::SourceId sourceId) {
     }
 
     if (predicate) {
-      result.reset(new FullScreenMacApplicationHandler(sourceId, predicate));
+      result.reset(new FullScreenMacApplicationHandler(sourceId, predicate,
+                                                       ignore_original_window));
     }
   }
 
