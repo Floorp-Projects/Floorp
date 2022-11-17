@@ -160,6 +160,7 @@ class SearchTest {
         }
     }
 
+    @Ignore("Test run timing out: https://github.com/mozilla-mobile/fenix/issues/27704")
     @SmokeTest
     @Test
     fun searchGroupShowsInRecentlyVisitedTest() {
@@ -194,6 +195,7 @@ class SearchTest {
         }
     }
 
+    @Ignore("Test run timing out: https://github.com/mozilla-mobile/fenix/issues/27704")
     @Test
     fun verifySearchGroupHistoryWithNoDuplicatesTest() {
         val firstPageUrl = getGenericAsset(searchMockServer, 1).url
@@ -275,6 +277,7 @@ class SearchTest {
         }
     }
 
+    @Ignore("Test run timing out: https://github.com/mozilla-mobile/fenix/issues/27704")
     @SmokeTest
     @Test
     fun noSearchGroupFromPrivateBrowsingTest() {
@@ -313,6 +316,7 @@ class SearchTest {
         }
     }
 
+    @Ignore("Test run timing out: https://github.com/mozilla-mobile/fenix/issues/27704")
     @SmokeTest
     @Test
     fun deleteItemsFromSearchGroupHistoryTest() {
@@ -361,6 +365,7 @@ class SearchTest {
         }
     }
 
+    @Ignore("Test run timing out: https://github.com/mozilla-mobile/fenix/issues/27704")
     @Test
     fun deleteSearchGroupFromHistoryTest() {
         queryString = "test search"
@@ -407,6 +412,7 @@ class SearchTest {
         }
     }
 
+    @Ignore("Test run timing out: https://github.com/mozilla-mobile/fenix/issues/27704")
     @Test
     fun reopenTabsFromSearchGroupTest() {
         val firstPageUrl = getGenericAsset(searchMockServer, 1).url
@@ -460,6 +466,7 @@ class SearchTest {
         }
     }
 
+    @Ignore("Test run timing out: https://github.com/mozilla-mobile/fenix/issues/27704")
     @Test
     fun sharePageFromASearchGroupTest() {
         val firstPageUrl = getGenericAsset(searchMockServer, 1).url
