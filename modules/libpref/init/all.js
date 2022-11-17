@@ -1058,7 +1058,7 @@ pref("javascript.options.mem.gc_allocation_threshold_mb", 27);
 pref("javascript.options.mem.gc_malloc_threshold_base_mb", 38);
 
 // JSGC_SMALL_HEAP_INCREMENTAL_LIMIT
-pref("javascript.options.mem.gc_small_heap_incremental_limit", 140);
+pref("javascript.options.mem.gc_small_heap_incremental_limit", 150);
 
 // JSGC_LARGE_HEAP_INCREMENTAL_LIMIT
 pref("javascript.options.mem.gc_large_heap_incremental_limit", 110);
