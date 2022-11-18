@@ -14,7 +14,7 @@
 #include "test/gtest.h"
 #include "test/testsupport/rtc_expect_death.h"
 
-// Quality testing of PushResampler is handled through output_mixer_unittest.cc.
+// Quality testing of PushResampler is done in audio/remix_resample_unittest.cc.
 
 namespace webrtc {
 

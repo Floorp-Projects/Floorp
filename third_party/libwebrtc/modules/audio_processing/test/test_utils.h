@@ -114,8 +114,6 @@ class ChannelBufferVectorWriter final {
 // Exits on failure; do not use in unit tests.
 FILE* OpenFile(const std::string& filename, const char* mode);
 
-size_t SamplesFromRate(int rate);
-
 void SetFrameSampleRate(Int16FrameData* frame, int sample_rate_hz);
 
 template <typename T>

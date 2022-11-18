@@ -143,16 +143,13 @@ void RunAudioConverterTest(size_t src_channels,
 }
 
 TEST(AudioConverterTest, ConversionsPassSNRThreshold) {
-  const int kSampleRates[] = {8000, 16000, 32000, 44100, 48000};
-  const size_t kChannels[] = {1, 2};
-  for (size_t src_rate = 0; src_rate < arraysize(kSampleRates); ++src_rate) {
-    for (size_t dst_rate = 0; dst_rate < arraysize(kSampleRates); ++dst_rate) {
-      for (size_t src_channel = 0; src_channel < arraysize(kChannels);
-           ++src_channel) {
-        for (size_t dst_channel = 0; dst_channel < arraysize(kChannels);
-             ++dst_channel) {
-          RunAudioConverterTest(kChannels[src_channel], kSampleRates[src_rate],
-                                kChannels[dst_channel], kSampleRates[dst_rate]);
+  const int kSampleRates[] = {8000, 11025, 16000, 22050, 32000, 44100, 48000};
+  const int kChannels[] = {1, 2};
+  for (int src_rate : kSampleRates) {
+    for (int dst_rate : kSampleRates) {
+      for (size_t src_channels : kChannels) {
+        for (size_t dst_channels : kChannels) {
+          RunAudioConverterTest(src_channels, src_rate, dst_channels, dst_rate);
         }
       }
     }
