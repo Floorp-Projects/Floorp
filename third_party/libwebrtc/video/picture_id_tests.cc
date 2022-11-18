@@ -237,7 +237,14 @@ class PictureIdTest : public test::CallTest,
   std::unique_ptr<PictureIdObserver> observer_;
 };
 
-INSTANTIATE_TEST_SUITE_P(TemporalLayers,
+// TODO(bugs.webrtc.org/13725): Enable on android when flakiness fixed.
+#if defined(WEBRTC_ANDROID)
+#define MAYBE_TemporalLayers DISABLED_TemporalLayers
+#else
+#define MAYBE_TemporalLayers TemporalLayers
+#endif
+
+INSTANTIATE_TEST_SUITE_P(MAYBE_TemporalLayers,
                          PictureIdTest,
                          ::testing::ValuesIn(kNumTemporalLayers));
 
