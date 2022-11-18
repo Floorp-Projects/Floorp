@@ -694,14 +694,13 @@ COM and pointers
    "Should I be using ``nsCOMPtr`` here?". Generally the only valid use
    of ``NS_RELEASE`` is when you are storing refcounted pointers in a
    long-lived datastructure.
--  Declare new XPCOM interfaces using `XPIDL <https://developer.mozilla.org/docs/Mozilla/Tech/XPIDL>`__, so they
+-  Declare new XPCOM interfaces using :doc:`XPIDL </xpcom/xpidl>`, so they
    will be scriptable.
--  Use `nsCOMPtr <https://developer.mozilla.org/docs/Mozilla/Tech/XPCOM/Reference/Glue_classes/nsCOMPtr>`__ for strong references, and
-   `nsWeakPtr <https://developer.mozilla.org/docs/Mozilla/Tech/XPCOM/Weak_reference>`__ for weak references.
+-  Use :doc:`nsCOMPtr </xpcom/refptr>` for strong references, and
+   ``nsWeakPtr`` for weak references.
 -  Don't use ``QueryInterface`` directly. Use ``CallQueryInterface`` or
    ``do_QueryInterface`` instead.
--  Use `Contract
-   IDs <news://news.mozilla.org/3994AE3E.D96EF810@netscape.com>`__,
+-  Use :ref:`Contract IDs <contract_ids>`,
    instead of CIDs with ``do_CreateInstance``/``do_GetService``.
 -  Use pointers, instead of references for function out parameters, even
    for primitive types.

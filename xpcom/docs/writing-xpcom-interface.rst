@@ -58,6 +58,7 @@ And hook it up to the :code:`path/to/moz.build`
 
 Next write the initial :code:`.idl` file: :code:`path/to/nsIComponentName.idl`
 
+.. _contract_ids:
 .. code:: c++
 
     /* This Source Code Form is subject to the terms of the Mozilla Public
