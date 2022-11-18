@@ -12,6 +12,7 @@ import mozilla.components.service.nimbus.NimbusAppInfo
 import mozilla.components.service.nimbus.NimbusDisabled
 import mozilla.components.service.nimbus.NimbusServerSettings
 import mozilla.components.support.base.log.logger.Logger
+import org.json.JSONObject
 import org.mozilla.experiments.nimbus.NimbusInterface
 import org.mozilla.experiments.nimbus.internal.EnrolledExperiment
 import org.mozilla.experiments.nimbus.internal.NimbusException
@@ -74,6 +75,16 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
         context.settings().isFirstNimbusRun = false
     }
 
+    // These values can be used in the JEXL expressions when targeting experiments.
+    val customTargetingAttributes = JSONObject().apply {
+        // By convention, we should use snake case.
+        put("is_first_run", isFirstNimbusRun)
+
+        // This camelCase attribute is a boolean value represented as a string.
+        // This is left for backwards compatibility.
+        put("isFirstRun", isFirstNimbusRun.toString())
+    }
+
     // The name "fenix" here corresponds to the app_name defined for the family of apps
     // that encompasses all of the channels for the Fenix app.  This is defined upstream in
     // the telemetry system. For more context on where the app_name come from see:
@@ -86,9 +97,7 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
         // passed into Glean. `Config.channel.toString()` turned out to be non-deterministic
         // and would mostly produce the value `Beta` and rarely would produce `beta`.
         channel = BuildConfig.BUILD_TYPE.let { if (it == "debug") "developer" else it },
-        customTargetingAttributes = mapOf(
-            "isFirstRun" to isFirstNimbusRun.toString(),
-        ),
+        customTargetingAttributes = customTargetingAttributes,
     )
     return try {
         Nimbus(context, appInfo, serverSettings, errorReporter).apply {
