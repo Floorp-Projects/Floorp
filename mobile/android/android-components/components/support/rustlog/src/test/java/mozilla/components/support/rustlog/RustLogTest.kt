@@ -17,7 +17,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.verifyNoInteractions
 
 @RunWith(AndroidJUnit4::class)
 class RustLogTest {
@@ -46,65 +45,6 @@ class RustLogTest {
 
         RustLog.disable()
         RustLog.enable(mock())
-    }
-
-    @Test
-    fun `maybeSendLogToCrashReporter log processing ignores low priority stuff`() {
-        val crashReporter = mock<CrashReporting>()
-        val onLog = CrashReporterOnLog(crashReporter)
-
-        onLog(android.util.Log.VERBOSE, "sync15:multiple", "Stuff broke")
-        verifyNoInteractions(crashReporter)
-
-        onLog(android.util.Log.DEBUG, "sync15:multiple", "Stuff broke")
-        verifyNoInteractions(crashReporter)
-
-        onLog(android.util.Log.INFO, "sync15:multiple", "Stuff broke")
-        verifyNoInteractions(crashReporter)
-
-        onLog(android.util.Log.WARN, "sync15:multiple", "Stuff broke")
-        verifyNoInteractions(crashReporter)
-
-        onLog(android.util.Log.WARN, null, "Stuff broke")
-        verifyNoInteractions(crashReporter)
-    }
-
-    @Test
-    fun `maybeSendLogToCrashReporter log processing reports error level stuff`() {
-        val crashReporter = TestCrashReporter()
-        val onLog = CrashReporterOnLog(crashReporter)
-
-        onLog(android.util.Log.ERROR, "sync15:multiple", "Stuff broke")
-        crashReporter.assertLastException(1, "sync15:multiple - Stuff broke")
-
-        onLog(android.util.Log.ERROR, null, "Something maybe broke")
-        crashReporter.assertLastException(2, "null - Something maybe broke")
-    }
-
-    @Test
-    fun `maybeSendLogToCrashReporter log processing ignores certain tags`() {
-        val expectedIgnoredTags = listOf("viaduct::backend::ffi")
-        val crashReporter = TestCrashReporter()
-        val onLog = CrashReporterOnLog(crashReporter)
-
-        expectedIgnoredTags.forEach { tag ->
-            onLog(android.util.Log.ERROR, tag, "Stuff broke")
-            assertTrue(crashReporter.exceptions.isEmpty())
-        }
-
-        // null tags are fine
-        onLog(android.util.Log.ERROR, null, "Stuff broke")
-        crashReporter.assertLastException(1, "null - Stuff broke")
-
-        // subsequent non-null and non-ignored are fine
-        onLog(android.util.Log.ERROR, "sync15:places", "DB stuff broke")
-        crashReporter.assertLastException(2, "sync15:places - DB stuff broke")
-
-        // ignored are still ignored
-        expectedIgnoredTags.forEach { tag ->
-            onLog(android.util.Log.ERROR, tag, "Stuff broke")
-            assertEquals(2, crashReporter.exceptions.size)
-        }
     }
 
     @Test

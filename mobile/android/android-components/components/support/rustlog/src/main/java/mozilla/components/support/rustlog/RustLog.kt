@@ -38,7 +38,7 @@ object RustLog {
      * @param crashReporter [CrashReporting] instance used for reporting 'error' log messages.
      */
     fun enable(crashReporter: CrashReporting? = null) {
-        RustLogAdapter.enable(CrashReporterOnLog(crashReporter))
+        RustLogAdapter.enable(ForwardOnLog(crashReporter))
     }
 
     /**
@@ -72,11 +72,9 @@ object RustLog {
 }
 
 @VisibleForTesting
-internal class CrashReporterOnLog(private val crashReporter: CrashReporting? = null) : OnLog {
+internal class ForwardOnLog(private val crashReporter: CrashReporting? = null) : OnLog {
     override fun invoke(level: Int, tag: String?, msg: String): Boolean {
         val priority = levelToPriority(level)
-
-        crashReporter?.let { maybeSendLogToCrashReporter(it, priority, tag, msg) }
 
         Log.log(priority, tag, null, msg)
         // Return true to keep open. Eventually we could intercept calls
@@ -85,25 +83,6 @@ internal class CrashReporterOnLog(private val crashReporter: CrashReporting? = n
         // false if any happen, but for now this is fine. (Exceptions thrown
         // by a log sink will also close us)
         return true
-    }
-
-    private fun maybeSendLogToCrashReporter(
-        crashReporter: CrashReporting,
-        priority: Log.Priority,
-        tag: String?,
-        msg: String,
-    ) {
-        val ignoredTags = listOf(
-            // Majority of these are likely to be various network issues.
-            "viaduct::backend::ffi",
-        )
-        if (priority != Log.Priority.ERROR) {
-            return
-        }
-        if (ignoredTags.contains(tag)) {
-            return
-        }
-        crashReporter.submitCaughtException(RustErrorException(tag, msg))
     }
 }
 
