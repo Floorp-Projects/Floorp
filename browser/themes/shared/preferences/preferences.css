@@ -667,6 +667,11 @@ richlistitem[selected] .actionsMenu:focus-visible {
  * Font group and font dialog menulist fixes
  */
 
+#font-chooser-group {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+}
+
 #defaultFont {
   width: 25ch;
 }
@@ -675,6 +680,7 @@ richlistitem[selected] .actionsMenu:focus-visible {
 #serif,
 #sans-serif,
 #monospace {
+  width: 0; /* Might be able to be removed */
   min-width: 30ch;
 }
 
