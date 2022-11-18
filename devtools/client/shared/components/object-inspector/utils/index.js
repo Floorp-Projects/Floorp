@@ -5,7 +5,7 @@
 const client = require("resource://devtools/client/shared/components/object-inspector/utils/client.js");
 const loadProperties = require("resource://devtools/client/shared/components/object-inspector/utils/load-properties.js");
 const node = require("resource://devtools/client/shared/components/object-inspector/utils/node.js");
-const { nodeIsError, nodeIsPrimitive, nodeHasCustomFormatter, nodeHasCustomFormattedBody } = node;
+const { nodeIsError, nodeIsPrimitive } = node;
 const selection = require("resource://devtools/client/shared/components/object-inspector/utils/selection.js");
 
 const {
@@ -25,7 +25,9 @@ function shouldRenderRootsInReps(roots, props = {}) {
 
   return (
     (name === null || typeof name === "undefined") &&
-    (nodeIsPrimitive(root) || (nodeHasCustomFormatter(root) && !nodeHasCustomFormattedBody(root)) ||
+    (nodeIsPrimitive(root) ||
+      (root?.contents?.value?.useCustomFormatter === true &&
+        Array.isArray(root?.contents?.value?.header)) ||
       (nodeIsError(root) && props?.customFormat === true))
   );
 }
@@ -33,6 +35,7 @@ function shouldRenderRootsInReps(roots, props = {}) {
 function renderRep(item, props) {
   return Rep({
     ...props,
+    front: item.contents.front,
     object: node.getValue(item),
     mode: props.mode || MODE.TINY,
     defaultRep: Grip,

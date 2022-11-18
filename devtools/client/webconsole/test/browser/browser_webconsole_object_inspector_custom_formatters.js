@@ -78,11 +78,7 @@ async function testCustomFormatting(
     return findConsoleAPIMessage(hud, messageText);
   });
 
-  let headerSelector = ".objectBox-jsonml";
-  if (bodyText) {
-    headerSelector = `[aria-level="1"] ${headerSelector}`;
-  }
-  const headerJsonMlNode = node.querySelector(headerSelector);
+  const headerJsonMlNode = node.querySelector(".objectBox-jsonml");
   if (hasCustomFormatter) {
     ok(headerJsonMlNode, "The message is custom formatted");
 
@@ -97,33 +93,32 @@ async function testCustomFormatting(
     );
 
     if (bodyText) {
-      const arrow = node.querySelector(".arrow");
+      const arrow = node.querySelector(".collapse-button");
 
       ok(arrow, "There must be a toggle arrow for the header");
 
       info("Expanding the Object");
-      const onMapOiMutation = waitForNodeMutation(node.querySelector(".tree"), {
-        childList: true,
-      });
+      const onBodyRendered = waitFor(
+        () =>
+          !!node.querySelector(
+            ".objectBox-jsonml-body-wrapper .objectBox-jsonml"
+          )
+      );
 
-      node.querySelector(".arrow").click();
-      await onMapOiMutation;
+      arrow.click();
+      await onBodyRendered;
 
       ok(
-        node.querySelector(".arrow").classList.contains("expanded"),
+        node.querySelector(".collapse-button").classList.contains("expanded"),
         "The arrow of the node has the expected class after clicking on it"
       );
 
       const bodyJsonMlNode = node.querySelector(
-        '[aria-level="2"] .objectBox-jsonml'
+        ".objectBox-jsonml-body-wrapper > .objectBox-jsonml"
       );
       ok(bodyJsonMlNode, "The body is custom formatted");
 
-      if (!bodyJsonMlNode) {
-        return;
-      }
-
-      is(bodyJsonMlNode.textContent, bodyText, "The body text is correct");
+      is(bodyJsonMlNode?.textContent, bodyText, "The body text is correct");
       is(
         bodyJsonMlNode.getAttribute("style"),
         bodyStyles,
