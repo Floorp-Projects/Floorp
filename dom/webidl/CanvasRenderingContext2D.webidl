@@ -43,7 +43,10 @@ interface CanvasRenderingContext2D {
   // associated with a canvas.
   readonly attribute HTMLCanvasElement? canvas;
 
-  [SetterThrows]
+  // Use `CanvasRenderingContext2D.font` instead (bug 1294362).
+  [Deprecated="MozTextStyle",
+   Pref="dom.mozTextStyle.enabled",
+   SetterThrows]
   attribute UTF8String mozTextStyle;
 
   // image smoothing mode -- if disabled, images won't be smoothed
