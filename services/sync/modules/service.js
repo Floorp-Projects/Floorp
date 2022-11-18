@@ -16,6 +16,9 @@ const KEYS_WBO = "keys";
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
 const { Log } = ChromeUtils.importESModule(
   "resource://gre/modules/Log.sys.mjs"
 );
@@ -85,13 +88,15 @@ const fxAccounts = getFxAccountsSingleton();
 function getEngineModules() {
   let result = {
     Addons: { module: "addons.js", symbol: "AddonsEngine" },
-    Bookmarks: { module: "bookmarks.js", symbol: "BookmarksEngine" },
-    Form: { module: "forms.js", symbol: "FormEngine" },
-    History: { module: "history.js", symbol: "HistoryEngine" },
     Password: { module: "passwords.js", symbol: "PasswordEngine" },
     Prefs: { module: "prefs.js", symbol: "PrefsEngine" },
-    Tab: { module: "tabs.js", symbol: "TabEngine" },
   };
+  if (AppConstants.MOZ_APP_NAME != "thunderbird") {
+    result.Bookmarks = { module: "bookmarks.js", symbol: "BookmarksEngine" };
+    result.Form = { module: "forms.js", symbol: "FormEngine" };
+    result.History = { module: "history.js", symbol: "HistoryEngine" };
+    result.Tab = { module: "tabs.js", symbol: "TabEngine" };
+  }
   if (Svc.Prefs.get("engine.addresses.available", false)) {
     result.Addresses = {
       module: "resource://autofill/FormAutofillSync.jsm",

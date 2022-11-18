@@ -41,15 +41,19 @@ EXTRA_JS_MODULES["services-sync"] += [
 
 EXTRA_JS_MODULES["services-sync"].engines += [
     "modules/engines/addons.js",
-    "modules/engines/bookmarks.js",
     "modules/engines/clients.js",
     "modules/engines/extension-storage.js",
-    "modules/engines/forms.js",
-    "modules/engines/history.js",
     "modules/engines/passwords.js",
     "modules/engines/prefs.js",
-    "modules/engines/tabs.js",
 ]
+
+if not CONFIG["MOZ_THUNDERBIRD"]:
+    EXTRA_JS_MODULES["services-sync"].engines += [
+        "modules/engines/bookmarks.js",
+        "modules/engines/forms.js",
+        "modules/engines/history.js",
+        "modules/engines/tabs.js",
+    ]
 
 EXTRA_JS_MODULES["services-sync"].stages += [
     "modules/stages/declined.js",
