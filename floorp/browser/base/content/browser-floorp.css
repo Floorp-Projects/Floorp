@@ -167,6 +167,10 @@
   #addons-icon{
     list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
   }
+
+#add-button{
+    list-style-image: url("chrome://browser/skin/floorplegacy/newtab.svg");
+  }
   
   :root[sizemode="fullscreen"] :is(#sidebar-select-box){
     display: none;

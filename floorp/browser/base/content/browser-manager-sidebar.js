@@ -69,7 +69,7 @@ if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
 if(Services.prefs.getStringPref("floorp.browser.sidebar2.page") != "") setSidebarMode();
  })};
 Services.prefs.addObserver("floorp.browser.sidebar2.global.webpanel.width", function(){
-setSidebarWidth(Services.prefs.getStringPref("floorp.browser.sidebar2.page"))
+setSidebarWidth(Services.prefs.getStringPref("floorp.browser.sidebar2.page",""))
 })
 const DEFAULT_STATIC_SIDEBAR_MODES_AMOUNT = 5 /* Static sidebar modes, that are unchangable by user. Starts from 0 */
 const DEFAULT_DYNAMIC_CUSTOMURL_MODES_AMOUNT = 19 /* CustomURL modes, that are editable by user. Starts from 0 */
@@ -95,7 +95,13 @@ if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
     setAllfavicons()
   })
  }
+let contextMenuObserver = new MutationObserver(contextMenuObserverFunc)
+let addbutton = document.getElementById("add-button")
+addbutton.ondragover = sidebarDragOver
+	addbutton.ondragleave = sidebarDragLeave
+	addbutton.ondrop = sidebarDrop
 
+Services.obs.addObserver(obsPanelRe,"obs-panel-re")
 //startup functions
 const webpanel_id_ = Services.prefs.getStringPref("floorp.browser.sidebar2.page", "");
 setSidebarIconView();
@@ -104,3 +110,14 @@ removeAttributeSelectedNode();
 if(webpanel_id_ != "" && BROWSER_SIDEBAR_DATA.index.indexOf(webpanel_id_) != -1) getSelectedNode().setAttribute("checked", "true");
 setAllfavicons();
 changeSidebarVisibility();
+
+addContextBox("bsb-context-add","bsb-context-add","fill-login",`
+AddBMSWebpanel(gContextMenu.browser.currentURI.spec,gContextMenu.browser.getAttribute("usercontextid") ?? 0)
+`)
+
+addContextBox("bsb-context-link-add","bsb-context-link-add","context-sep-sendlinktodevice",`
+AddBMSWebpanel(gContextMenu.linkURL,gContextMenu.browser.getAttribute("usercontextid") ?? 0)
+`)
+contextMenuObserverAdd("context-viewsource")
+contextMenuObserverAdd("context-viewimage")
+contextMenuObserverAdd("context-openlink")

@@ -30,16 +30,23 @@ var urlList = [
 
 function onLoad() {
 bsbObject = JSON.parse(Services.prefs.getStringPref(`floorp.browser.sidebar2.data`, undefined))
-let params = window.arguments[0] || {};
+let paramsTemp = window.arguments[0] || {};
+let params = {}
+if(window.arguments[0].id ?? "" != ""){
+  params = window.arguments[0]
+}else if(window.arguments[0].wrappedJSObject.id ?? "" != ""){
+  params = window.arguments[0].wrappedJSObject
+}
 newPanel = params.new
 panelId = params.id
+if(!newPanel) Services.obs.notifyObservers({eventType:"mouseOver",id:`BSB-${panelId}`},"obs-panel-re")
 let panelUserAgent = newPanel ? false : bsbObject.data[panelId].userAgent ?? false
 let panelWidth = newPanel ? 0 : bsbObject.data[panelId].width ?? 0
 
 document.addEventListener("dialogaccept", setPref);
 
-let panelUserContext = newPanel ? -1 : bsbObject.data[panelId].usercontext
-        var url = newPanel ? "" : ( bsbObject.data[params.id].url)
+let panelUserContext = params.userContext ?? (newPanel ? -1 : bsbObject.data[panelId].usercontext)
+        var url = params.url ?? (newPanel ? "" : ( bsbObject.data[params.id].url))
 let urlN = urlList.indexOf(url) + 1
 document.querySelector("#pageSelect").value = urlN
 setTimeout(setBox,1000)
@@ -123,4 +130,6 @@ elem.style.visibility = style
 }
 }
 
-function onunload(){}
+function onunload(){
+if(!newPanel) Services.obs.notifyObservers({eventType:"mouseOut",id:`BSB-${panelId}`},"obs-panel-re")
+}

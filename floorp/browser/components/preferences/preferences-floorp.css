@@ -590,3 +590,15 @@ min-height:60px;
 #BSBView richlistitem > .container-buttons {
   margin-inline-end: 4px;
 }
+
+.BSB-list-selected{
+--in-content-button-background: color-mix(in srgb, currentColor 15%, transparent);
+--in-content-button-background-hover: color-mix(in srgb, currentColor 30%, transparent);
+--in-content-button-background-active: color-mix(in srgb, currentColor 45%, transparent);
+--in-content-button-text-color: var(--in-content-item-selected-text);
+--in-content-button-text-color-hover: var(--in-content-item-selected-text);
+--in-content-button-text-color-active: var(--in-content-button-text-color-hover);
+--in-content-focus-outline-color: var(--in-content-item-selected-text);
+background-color: var(--in-content-item-selected);
+color: var(--in-content-item-selected-text);
+}
