@@ -82,7 +82,7 @@ void RemoteEstimatorProxy::MaybeCullOldPackets(int64_t sequence_number,
 void RemoteEstimatorProxy::IncomingPacket(int64_t arrival_time_ms,
                                           size_t payload_size,
                                           const RTPHeader& header) {
-  if (arrival_time_ms < 0 || arrival_time_ms > kMaxTimeMs) {
+  if (arrival_time_ms < 0 || arrival_time_ms >= kMaxTimeMs) {
     RTC_LOG(LS_WARNING) << "Arrival time out of bounds: " << arrival_time_ms;
     return;
   }
@@ -292,7 +292,7 @@ RemoteEstimatorProxy::MaybeBuildFeedbackPacket(
 
   for (int64_t seq = start_seq; seq < end_seq; ++seq) {
     Timestamp arrival_time = packet_arrival_times_.get(seq);
-    if (arrival_time.IsInfinite()) {
+    if (arrival_time < Timestamp::Zero()) {
       // Packet not received.
       continue;
     }

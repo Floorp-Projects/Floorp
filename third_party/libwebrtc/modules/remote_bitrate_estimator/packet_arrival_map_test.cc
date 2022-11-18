@@ -102,8 +102,7 @@ TEST(PacketArrivalMapTest, GrowsBufferAndRemoveOld) {
 
   EXPECT_EQ(map.begin_sequence_number(), 43);
   EXPECT_EQ(map.end_sequence_number(), kLargeSeq + 1);
-  EXPECT_EQ(static_cast<size_t>(map.end_sequence_number() -
-                                map.begin_sequence_number()),
+  EXPECT_EQ(map.end_sequence_number() - map.begin_sequence_number(),
             PacketArrivalTimeMap::kMaxNumberOfPackets);
 
   EXPECT_FALSE(map.has_received(41));
