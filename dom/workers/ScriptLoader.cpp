@@ -1035,15 +1035,14 @@ nsresult ScriptLoaderRunnable::Run() {
     return NS_OK;
   }
 
-  RefPtr<CacheCreator> cacheCreator = new CacheCreator(mWorkerRef->Private());
+  MOZ_ASSERT(!mCacheCreator);
+  mCacheCreator = new CacheCreator(mWorkerRef->Private());
 
   for (ThreadSafeRequestHandle* handle : mLoadingRequests) {
     handle->mRunnable = this;
     WorkerLoadContext* loadContext = handle->GetContext();
-    loadContext->SetCacheCreator(cacheCreator);
-    loadContext->GetCacheCreator()->AddLoader(
-        MakeNotNull<RefPtr<CacheLoadHandler>>(
-            mWorkerRef, handle, loadContext->IsTopLevel(), mScriptLoader));
+    mCacheCreator->AddLoader(MakeNotNull<RefPtr<CacheLoadHandler>>(
+        mWorkerRef, handle, loadContext->IsTopLevel(), mScriptLoader));
   }
 
   // The worker may have a null principal on first load, but in that case its
@@ -1055,7 +1054,7 @@ nsresult ScriptLoaderRunnable::Run() {
     principal = parentWorker->GetPrincipal();
   }
 
-  nsresult rv = cacheCreator->Load(principal);
+  nsresult rv = mCacheCreator->Load(principal);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     CancelMainThread(rv);
     return rv;
@@ -1098,7 +1097,6 @@ void ScriptLoaderRunnable::MaybeExecuteFinishedScripts(
   // cache and the loading is completed.
   WorkerLoadContext* loadContext = aRequestHandle->GetContext();
   if (!loadContext->IsAwaitingPromise()) {
-    loadContext->ClearCacheCreator();
     if (aRequestHandle->GetContext()->IsTopLevel()) {
       mWorkerRef->Private()->WorkerScriptLoaded();
     }
@@ -1153,7 +1151,6 @@ void ScriptLoaderRunnable::CancelMainThread(nsresult aCancelResult) {
           NS_WARNING("Failed to cancel channel!");
         }
       }
-      loadContext->ClearCacheCreator();
       if (callLoadingFinished && !loadContext->mLoadingFinished) {
         LoadingFinished(handle, aCancelResult);
       }
@@ -1205,6 +1202,10 @@ void ScriptLoaderRunnable::DispatchProcessPendingRequests() {
   // If there are no unexecutable load infos, we can unuse things before the
   // execution of the scripts and the stopping of the sync loop.
   if (maybeRangeToExecute) {
+    if (maybeRangeToExecute->second == end) {
+      mCacheCreator = nullptr;
+    }
+
     RefPtr<ScriptExecutorRunnable> runnable = new ScriptExecutorRunnable(
         mScriptLoader, mWorkerRef->Private(), mScriptLoader->mSyncLoopTarget,
         Span<RefPtr<ThreadSafeRequestHandle>>{maybeRangeToExecute->first,

@@ -85,7 +85,7 @@ void CachePromiseHandler::RejectedCallback(JSContext* aCx,
 
   // This will delete the cache object and will call LoadingFinished() with an
   // error for each ongoing operation.
-  auto cacheCreator = loadContext->GetCacheCreator();
+  auto* cacheCreator = mRequestHandle->GetCacheCreator();
   if (cacheCreator) {
     cacheCreator->DeleteCache(NS_ERROR_FAILURE);
   }
@@ -425,11 +425,10 @@ void CacheLoadHandler::ResolvedCallback(JSContext* aCx,
     loadContext->mCacheStatus = WorkerLoadContext::Cached;
 
     if (mRequestHandle->IsCancelled()) {
-      auto cacheCreator = loadContext->GetCacheCreator();
+      auto* cacheCreator = mRequestHandle->GetCacheCreator();
       if (cacheCreator) {
         cacheCreator->DeleteCache(mRequestHandle->GetCancelResult());
       }
-      loadContext->ClearCacheCreator();
       return;
     }
 
@@ -437,7 +436,6 @@ void CacheLoadHandler::ResolvedCallback(JSContext* aCx,
         (uint8_t*)"", 0, mChannelInfo, std::move(mPrincipalInfo),
         mCSPHeaderValue, mCSPReportOnlyHeaderValue, mReferrerPolicyHeaderValue);
 
-    loadContext->ClearCacheCreator();
     mRequestHandle->OnStreamComplete(rv);
     return;
   }
