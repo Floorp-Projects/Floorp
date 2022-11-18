@@ -14,7 +14,7 @@ add_task(async function aboutPrefs_foregroundCheck_malformedXML() {
       continueFile: CONTINUE_CHECK,
     },
     {
-      panelId: "checkingFailed",
+      panelId: "noUpdatesFound",
       checkActiveUpdate: null,
       continueFile: null,
     },
