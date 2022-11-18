@@ -1299,8 +1299,7 @@ static const SSLSignatureScheme sEnabledSignatureSchemes[] = {
     ssl_sig_ecdsa_secp521r1_sha512, ssl_sig_rsa_pss_sha256,
     ssl_sig_rsa_pss_sha384,         ssl_sig_rsa_pss_sha512,
     ssl_sig_rsa_pkcs1_sha256,       ssl_sig_rsa_pkcs1_sha384,
-    ssl_sig_rsa_pkcs1_sha512,       ssl_sig_ecdsa_sha1,
-    ssl_sig_rsa_pkcs1_sha1,
+    ssl_sig_rsa_pkcs1_sha512,       ssl_sig_rsa_pkcs1_sha1,
 };
 
 static nsresult nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
