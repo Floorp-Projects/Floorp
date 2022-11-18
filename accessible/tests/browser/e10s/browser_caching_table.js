@@ -478,3 +478,20 @@ addAccessibleTask(
     remoteIframe: isCacheEnabled,
   }
 );
+
+/**
+ * Test that building the cache for a malformed table with an iframe inside a
+ * row doesn't crash (bug 1800780).
+ */
+addAccessibleTask(
+  `<table><tr id="tr"></tr></table>`,
+  async function(browser, docAcc) {
+    let reordered = waitForEvent(EVENT_REORDER, "tr");
+    await invokeContentTask(browser, [], () => {
+      const iframe = content.document.createElement("iframe");
+      content.document.getElementById("tr").append(iframe);
+    });
+    await reordered;
+  },
+  { topLevel: true }
+);
