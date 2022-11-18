@@ -5,12 +5,9 @@ Distributed sccache (sccache-dist)
 ==================================
 
 `sccache <https://github.com/mozilla/sccache>`_ is a ccache-like tool written in
-rust.
+Rust by Mozilla.
 
-Distributed sccache (also referred to as sccache-dist) is being rolled out to
-Mozilla offices as a replacement for icecc. The steps for setting up your
-machine as an sccache-dist server as well as distributing your build to servers
-in your office are detailed below.
+The steps for setting up your machine as an sccache-dist server are detailed below.
 
 In addition to improved security properties, distributed sccache offers
 distribution and caching of rust compilation, so it should be an improvement
@@ -32,14 +29,6 @@ must read::
 
     [dist.auth]
     type = "mozilla"
-
-* The scheduler url to use is: ``https://sccache1.corpdmz.<OFFICE>.mozilla.com``,
-  where <OFFICE> is, for instance, sfo1. A complete list of office short names
-  to be used can be found in the `Office Addressing Schemes spreadsheet <https://docs.google.com/spreadsheets/d/1alscUTcfFyu3L0vs_S_cGi9JxF4uPrfsmwJko9annWE/edit#gid=0>`_.
-
-* To use distributed sccache from a Mozilla office, you must be on the corporate
-  network. Use the ``Mozilla`` ssid for wireless. The corp vlan is the default
-  if wired.
 
 * If you're compiling from a macOS client, there are a handful of additional
   considerations outlined here:
@@ -165,20 +154,10 @@ similar.
   version of ``sccache-dist``. Please use a ``sccache-dist`` binary acquired in
   this fashion to ensure compatibility with statically linked dependencies.
 
-* Collect the IP of your builder and request assignment of a static IP in a bug
-  filed in
-  `NetOps :: Other <https://bugzilla.mozilla.org/enter_bug.cgi?product=Infrastructure%20%26%20Operations&component=NetOps%3A%20Office%20Other>`_
-  This bug should include your office (SFO, YVR, etc.), your MAC address, and a
-  description of why you want a static IP (“To serve as an sccache builder”
-  should be sufficient).
-
-* Visit the ``sccache`` section of https://login.mozilla.com to generate an auth
-  token for your builder.
-
 * The instructions at https://github.com/mozilla/sccache/blob/master/docs/DistributedQuickstart.md#configure-a-build-server
   should contain everything else required to configure and run the server.
 
-  *NOTE* Port 10500 will be used by convention for builders in offices.
+  *NOTE* Port 10500 will be used by convention for builders.
   Please use port 10500 in the ``public_addr`` section of your builder config.
 
   Extra logging may be helpful when setting up a server. To enable logging,
@@ -189,11 +168,6 @@ similar.
   build of ``sccache`` does not include `pull request 822
   <https://github.com/mozilla/sccache/pull/822>`_. (``sccache`` binaries from
   ``mach bootstrap`` do include this PR.)
-
-  As when configuring a client, the scheduler url to use is:
-  ``https://sccache1.corpdmz.<OFFICE>.mozilla.com``, where <OFFICE> is an
-  office abbreviation found
-  `here <https://docs.google.com/spreadsheets/d/1alscUTcfFyu3L0vs_S_cGi9JxF4uPrfsmwJko9annWE/edit#gid=0>`_.
 
 
 Common questions/considerations
