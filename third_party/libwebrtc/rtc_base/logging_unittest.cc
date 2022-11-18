@@ -27,6 +27,16 @@
 
 namespace rtc {
 
+namespace {
+
+#if defined(WEBRTC_WIN)
+constexpr char kFakeFilePath[] = "some\\path\\myfile.cc";
+#else
+constexpr char kFakeFilePath[] = "some/path/myfile.cc";
+#endif
+
+}  // namespace
+
 class LogSinkImpl : public LogSink {
  public:
   explicit LogSinkImpl(std::string* log_data) : log_data_(log_data) {}
@@ -205,8 +215,8 @@ TEST(LogTest, WallClockStartTime) {
 }
 
 TEST(LogTest, CheckExtraErrorField) {
-  LogMessageForTesting log_msg("some/path/myfile.cc", 100, LS_WARNING,
-                               ERRCTX_ERRNO, 0xD);
+  LogMessageForTesting log_msg(kFakeFilePath, 100, LS_WARNING, ERRCTX_ERRNO,
+                               0xD);
   log_msg.stream() << "This gets added at dtor time";
 
   const std::string& extra = log_msg.get_extra();
@@ -224,7 +234,7 @@ TEST(LogTest, CheckFilePathParsed) {
   const char* tag = nullptr;
 #endif
   {
-    LogMessageForTesting log_msg("some/path/myfile.cc", 100, LS_INFO);
+    LogMessageForTesting log_msg(kFakeFilePath, 100, LS_INFO);
     log_msg.stream() << "<- Does this look right?";
 #if defined(WEBRTC_ANDROID)
     tag = log_msg.get_tag();
