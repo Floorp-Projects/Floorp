@@ -21,29 +21,14 @@ mod stat;
 mod transaction;
 
 pub use arch_migrator::{
-    MigrateError as ArchMigrateError,
-    MigrateResult as ArchMigrateResult,
-    Migrator as ArchMigrator,
+    MigrateError as ArchMigrateError, MigrateResult as ArchMigrateResult, Migrator as ArchMigrator,
 };
-pub use cursor::{
-    RoCursorImpl,
-    RwCursorImpl,
-};
+pub use cursor::{RoCursorImpl, RwCursorImpl};
 pub use database::DatabaseImpl;
-pub use environment::{
-    EnvironmentBuilderImpl,
-    EnvironmentImpl,
-};
+pub use environment::{EnvironmentBuilderImpl, EnvironmentImpl};
 pub use error::ErrorImpl;
-pub use flags::{
-    DatabaseFlagsImpl,
-    EnvironmentFlagsImpl,
-    WriteFlagsImpl,
-};
+pub use flags::{DatabaseFlagsImpl, EnvironmentFlagsImpl, WriteFlagsImpl};
 pub use info::InfoImpl;
 pub use iter::IterImpl;
 pub use stat::StatImpl;
-pub use transaction::{
-    RoTransactionImpl,
-    RwTransactionImpl,
-};
+pub use transaction::{RoTransactionImpl, RwTransactionImpl};

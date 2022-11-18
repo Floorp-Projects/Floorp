@@ -8,16 +8,9 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use std::{
-    env::args,
-    io,
-    path::Path,
-};
+use std::{env::args, io, path::Path};
 
-use rkv::migrator::{
-    LmdbArchMigrateError,
-    LmdbArchMigrator,
-};
+use rkv::migrator::{LmdbArchMigrateError, LmdbArchMigrator};
 
 fn main() -> Result<(), LmdbArchMigrateError> {
     let mut cli_args = args();
@@ -35,8 +28,8 @@ fn main() -> Result<(), LmdbArchMigrateError> {
                         None => return Err("-s must be followed by database name".into()),
                         Some(str) => Some(str),
                     };
-                },
-                str => return Err(format!("arg -{} not recognized", str).into()),
+                }
+                str => return Err(format!("arg -{str} not recognized").into()),
             }
         } else {
             if env_path.is_some() {

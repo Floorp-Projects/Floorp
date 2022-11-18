@@ -11,26 +11,12 @@
 use std::marker::PhantomData;
 
 use crate::{
-    backend::{
-        BackendDatabase,
-        BackendIter,
-        BackendRoCursor,
-        BackendRwTransaction,
-    },
+    backend::{BackendDatabase, BackendIter, BackendRoCursor, BackendRwTransaction},
     error::StoreError,
-    readwrite::{
-        Readable,
-        Writer,
-    },
+    readwrite::{Readable, Writer},
     store::{
-        keys::{
-            Key,
-            PrimitiveInt,
-        },
-        multi::{
-            Iter,
-            MultiStore,
-        },
+        keys::{Key, PrimitiveInt},
+        multi::{Iter, MultiStore},
     },
     value::Value,
 };
@@ -79,7 +65,13 @@ where
         self.inner.put(writer, Key::new(&k)?, v)
     }
 
-    pub fn put_with_flags<T>(&self, writer: &mut Writer<T>, k: K, v: &Value, flags: T::Flags) -> EmptyResult
+    pub fn put_with_flags<T>(
+        &self,
+        writer: &mut Writer<T>,
+        k: K,
+        v: &Value,
+        flags: T::Flags,
+    ) -> EmptyResult
     where
         T: BackendRwTransaction<Database = D>,
     {
@@ -119,22 +111,34 @@ mod tests {
 
     #[test]
     fn test_integer_keys() {
-        let root = Builder::new().prefix("test_integer_keys").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_integer_keys")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
-        let k = Rkv::new::<backend::Lmdb>(root.path()).expect("new succeeded");
-        let s = k.open_multi_integer("s", StoreOptions::create()).expect("open");
+        let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
+        let s = k
+            .open_multi_integer("s", StoreOptions::create())
+            .expect("open");
 
         macro_rules! test_integer_keys {
             ($type:ty, $key:expr) => {{
                 let mut writer = k.write().expect("writer");
 
-                s.put(&mut writer, $key, &Value::Str("hello!")).expect("write");
-                assert_eq!(s.get_first(&writer, $key).expect("read"), Some(Value::Str("hello!")));
+                s.put(&mut writer, $key, &Value::Str("hello!"))
+                    .expect("write");
+                assert_eq!(
+                    s.get_first(&writer, $key).expect("read"),
+                    Some(Value::Str("hello!"))
+                );
                 writer.commit().expect("committed");
 
                 let reader = k.read().expect("reader");
-                assert_eq!(s.get_first(&reader, $key).expect("read"), Some(Value::Str("hello!")));
+                assert_eq!(
+                    s.get_first(&reader, $key).expect("read"),
+                    Some(Value::Str("hello!"))
+                );
             }};
         }
 
@@ -144,19 +148,31 @@ mod tests {
 
     #[test]
     fn test_clear() {
-        let root = Builder::new().prefix("test_multi_integer_clear").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_multi_integer_clear")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
-        let k = Rkv::new::<backend::Lmdb>(root.path()).expect("new succeeded");
-        let s = k.open_multi_integer("s", StoreOptions::create()).expect("open");
+        let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
+        let s = k
+            .open_multi_integer("s", StoreOptions::create())
+            .expect("open");
 
         {
             let mut writer = k.write().expect("writer");
             s.put(&mut writer, 1, &Value::Str("hello!")).expect("write");
-            s.put(&mut writer, 1, &Value::Str("hello1!")).expect("write");
+            s.put(&mut writer, 1, &Value::Str("hello1!"))
+                .expect("write");
             s.put(&mut writer, 2, &Value::Str("hello!")).expect("write");
-            assert_eq!(s.get_first(&writer, 1).expect("read"), Some(Value::Str("hello!")));
-            assert_eq!(s.get_first(&writer, 2).expect("read"), Some(Value::Str("hello!")));
+            assert_eq!(
+                s.get_first(&writer, 1).expect("read"),
+                Some(Value::Str("hello!"))
+            );
+            assert_eq!(
+                s.get_first(&writer, 2).expect("read"),
+                Some(Value::Str("hello!"))
+            );
             assert_eq!(s.get_first(&writer, 3).expect("read"), None);
             writer.commit().expect("committed");
         }
@@ -175,18 +191,27 @@ mod tests {
 
     #[test]
     fn test_dup() {
-        let root = Builder::new().prefix("test_multi_integer_dup").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_multi_integer_dup")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
-        let k = Rkv::new::<backend::Lmdb>(root.path()).expect("new succeeded");
-        let s = k.open_multi_integer("s", StoreOptions::create()).expect("open");
+        let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
+        let s = k
+            .open_multi_integer("s", StoreOptions::create())
+            .expect("open");
 
         {
             let mut writer = k.write().expect("writer");
             s.put(&mut writer, 1, &Value::Str("hello!")).expect("write");
             s.put(&mut writer, 1, &Value::Str("hello!")).expect("write");
-            s.put(&mut writer, 1, &Value::Str("hello1!")).expect("write");
-            assert_eq!(s.get_first(&writer, 1).expect("read"), Some(Value::Str("hello!")));
+            s.put(&mut writer, 1, &Value::Str("hello1!"))
+                .expect("write");
+            assert_eq!(
+                s.get_first(&writer, 1).expect("read"),
+                Some(Value::Str("hello!"))
+            );
             assert_eq!(s.get_first(&writer, 2).expect("read"), None);
             assert_eq!(s.get_first(&writer, 3).expect("read"), None);
             writer.commit().expect("committed");
@@ -206,42 +231,66 @@ mod tests {
 
     #[test]
     fn test_dup_2() {
-        let root = Builder::new().prefix("test_multi_integer_dup").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_multi_integer_dup")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
-        let k = Rkv::new::<backend::Lmdb>(root.path()).expect("new succeeded");
-        let s = k.open_multi_integer("s", StoreOptions::create()).expect("open");
+        let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
+        let s = k
+            .open_multi_integer("s", StoreOptions::create())
+            .expect("open");
 
         {
             let mut writer = k.write().expect("writer");
             s.put(&mut writer, 1, &Value::Str("hello!")).expect("write");
             s.put(&mut writer, 1, &Value::Str("hello!")).expect("write");
-            s.put(&mut writer, 1, &Value::Str("hello1!")).expect("write");
+            s.put(&mut writer, 1, &Value::Str("hello1!"))
+                .expect("write");
 
             let mut iter = s.get(&writer, 1).expect("read");
-            assert_eq!(iter.next().expect("first").expect("ok").1, Value::Str("hello!"));
-            assert_eq!(iter.next().expect("second").expect("ok").1, Value::Str("hello1!"));
+            assert_eq!(
+                iter.next().expect("first").expect("ok").1,
+                Value::Str("hello!")
+            );
+            assert_eq!(
+                iter.next().expect("second").expect("ok").1,
+                Value::Str("hello1!")
+            );
             assert!(iter.next().is_none());
         }
     }
 
     #[test]
     fn test_del() {
-        let root = Builder::new().prefix("test_multi_integer_dup").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_multi_integer_dup")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
-        let k = Rkv::new::<backend::Lmdb>(root.path()).expect("new succeeded");
-        let s = k.open_multi_integer("s", StoreOptions::create()).expect("open");
+        let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
+        let s = k
+            .open_multi_integer("s", StoreOptions::create())
+            .expect("open");
 
         {
             let mut writer = k.write().expect("writer");
             s.put(&mut writer, 1, &Value::Str("hello!")).expect("write");
             s.put(&mut writer, 1, &Value::Str("hello!")).expect("write");
-            s.put(&mut writer, 1, &Value::Str("hello1!")).expect("write");
+            s.put(&mut writer, 1, &Value::Str("hello1!"))
+                .expect("write");
             {
                 let mut iter = s.get(&writer, 1).expect("read");
-                assert_eq!(iter.next().expect("first").expect("ok").1, Value::Str("hello!"));
-                assert_eq!(iter.next().expect("second").expect("ok").1, Value::Str("hello1!"));
+                assert_eq!(
+                    iter.next().expect("first").expect("ok").1,
+                    Value::Str("hello!")
+                );
+                assert_eq!(
+                    iter.next().expect("second").expect("ok").1,
+                    Value::Str("hello1!")
+                );
                 assert!(iter.next().is_none());
             }
             writer.commit().expect("committed");
@@ -249,29 +298,38 @@ mod tests {
 
         {
             let mut writer = k.write().expect("writer");
-            s.delete(&mut writer, 1, &Value::Str("hello!")).expect("deleted");
+            s.delete(&mut writer, 1, &Value::Str("hello!"))
+                .expect("deleted");
             writer.commit().expect("committed");
 
             let reader = k.read().expect("reader");
             let mut iter = s.get(&reader, 1).expect("read");
-            assert_eq!(iter.next().expect("first").expect("ok").1, Value::Str("hello1!"));
+            assert_eq!(
+                iter.next().expect("first").expect("ok").1,
+                Value::Str("hello1!")
+            );
             assert!(iter.next().is_none());
         }
 
         {
             let mut writer = k.write().expect("writer");
-            s.delete(&mut writer, 1, &Value::Str("hello!")).expect_err("deleted");
+            s.delete(&mut writer, 1, &Value::Str("hello!"))
+                .expect_err("deleted");
             writer.commit().expect("committed");
 
             let reader = k.read().expect("reader");
             let mut iter = s.get(&reader, 1).expect("read");
-            assert_eq!(iter.next().expect("first").expect("ok").1, Value::Str("hello1!"));
+            assert_eq!(
+                iter.next().expect("first").expect("ok").1,
+                Value::Str("hello1!")
+            );
             assert!(iter.next().is_none());
         }
 
         {
             let mut writer = k.write().expect("writer");
-            s.delete(&mut writer, 1, &Value::Str("hello1!")).expect("deleted");
+            s.delete(&mut writer, 1, &Value::Str("hello1!"))
+                .expect("deleted");
             writer.commit().expect("committed");
 
             let reader = k.read().expect("reader");
@@ -281,7 +339,8 @@ mod tests {
 
         {
             let mut writer = k.write().expect("writer");
-            s.delete(&mut writer, 1, &Value::Str("hello1!")).expect_err("deleted");
+            s.delete(&mut writer, 1, &Value::Str("hello1!"))
+                .expect_err("deleted");
             writer.commit().expect("committed");
 
             let reader = k.read().expect("reader");
@@ -292,34 +351,54 @@ mod tests {
 
     #[test]
     fn test_persist() {
-        let root = Builder::new().prefix("test_multi_integer_persist").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_multi_integer_persist")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
         {
-            let k = Rkv::new::<backend::Lmdb>(root.path()).expect("new succeeded");
-            let s = k.open_multi_integer("s", StoreOptions::create()).expect("open");
+            let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
+            let s = k
+                .open_multi_integer("s", StoreOptions::create())
+                .expect("open");
 
             let mut writer = k.write().expect("writer");
             s.put(&mut writer, 1, &Value::Str("hello!")).expect("write");
-            s.put(&mut writer, 1, &Value::Str("hello1!")).expect("write");
+            s.put(&mut writer, 1, &Value::Str("hello1!"))
+                .expect("write");
             s.put(&mut writer, 2, &Value::Str("hello!")).expect("write");
             {
                 let mut iter = s.get(&writer, 1).expect("read");
-                assert_eq!(iter.next().expect("first").expect("ok").1, Value::Str("hello!"));
-                assert_eq!(iter.next().expect("second").expect("ok").1, Value::Str("hello1!"));
+                assert_eq!(
+                    iter.next().expect("first").expect("ok").1,
+                    Value::Str("hello!")
+                );
+                assert_eq!(
+                    iter.next().expect("second").expect("ok").1,
+                    Value::Str("hello1!")
+                );
                 assert!(iter.next().is_none());
             }
             writer.commit().expect("committed");
         }
 
         {
-            let k = Rkv::new::<backend::Lmdb>(root.path()).expect("new succeeded");
-            let s = k.open_multi_integer("s", StoreOptions::create()).expect("open");
+            let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
+            let s = k
+                .open_multi_integer("s", StoreOptions::create())
+                .expect("open");
 
             let reader = k.read().expect("reader");
             let mut iter = s.get(&reader, 1).expect("read");
-            assert_eq!(iter.next().expect("first").expect("ok").1, Value::Str("hello!"));
-            assert_eq!(iter.next().expect("second").expect("ok").1, Value::Str("hello1!"));
+            assert_eq!(
+                iter.next().expect("first").expect("ok").1,
+                Value::Str("hello!")
+            );
+            assert_eq!(
+                iter.next().expect("second").expect("ok").1,
+                Value::Str("hello1!")
+            );
             assert!(iter.next().is_none());
         }
     }
@@ -336,22 +415,34 @@ mod tests_safe {
 
     #[test]
     fn test_integer_keys() {
-        let root = Builder::new().prefix("test_integer_keys").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_integer_keys")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
         let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
-        let s = k.open_multi_integer("s", StoreOptions::create()).expect("open");
+        let s = k
+            .open_multi_integer("s", StoreOptions::create())
+            .expect("open");
 
         macro_rules! test_integer_keys {
             ($type:ty, $key:expr) => {{
                 let mut writer = k.write().expect("writer");
 
-                s.put(&mut writer, $key, &Value::Str("hello!")).expect("write");
-                assert_eq!(s.get_first(&writer, $key).expect("read"), Some(Value::Str("hello!")));
+                s.put(&mut writer, $key, &Value::Str("hello!"))
+                    .expect("write");
+                assert_eq!(
+                    s.get_first(&writer, $key).expect("read"),
+                    Some(Value::Str("hello!"))
+                );
                 writer.commit().expect("committed");
 
                 let reader = k.read().expect("reader");
-                assert_eq!(s.get_first(&reader, $key).expect("read"), Some(Value::Str("hello!")));
+                assert_eq!(
+                    s.get_first(&reader, $key).expect("read"),
+                    Some(Value::Str("hello!"))
+                );
             }};
         }
 
@@ -361,19 +452,31 @@ mod tests_safe {
 
     #[test]
     fn test_clear() {
-        let root = Builder::new().prefix("test_multi_integer_clear").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_multi_integer_clear")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
         let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
-        let s = k.open_multi_integer("s", StoreOptions::create()).expect("open");
+        let s = k
+            .open_multi_integer("s", StoreOptions::create())
+            .expect("open");
 
         {
             let mut writer = k.write().expect("writer");
             s.put(&mut writer, 1, &Value::Str("hello!")).expect("write");
-            s.put(&mut writer, 1, &Value::Str("hello1!")).expect("write");
+            s.put(&mut writer, 1, &Value::Str("hello1!"))
+                .expect("write");
             s.put(&mut writer, 2, &Value::Str("hello!")).expect("write");
-            assert_eq!(s.get_first(&writer, 1).expect("read"), Some(Value::Str("hello!")));
-            assert_eq!(s.get_first(&writer, 2).expect("read"), Some(Value::Str("hello!")));
+            assert_eq!(
+                s.get_first(&writer, 1).expect("read"),
+                Some(Value::Str("hello!"))
+            );
+            assert_eq!(
+                s.get_first(&writer, 2).expect("read"),
+                Some(Value::Str("hello!"))
+            );
             assert_eq!(s.get_first(&writer, 3).expect("read"), None);
             writer.commit().expect("committed");
         }
@@ -392,18 +495,27 @@ mod tests_safe {
 
     #[test]
     fn test_dup() {
-        let root = Builder::new().prefix("test_multi_integer_dup").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_multi_integer_dup")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
         let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
-        let s = k.open_multi_integer("s", StoreOptions::create()).expect("open");
+        let s = k
+            .open_multi_integer("s", StoreOptions::create())
+            .expect("open");
 
         {
             let mut writer = k.write().expect("writer");
             s.put(&mut writer, 1, &Value::Str("hello!")).expect("write");
             s.put(&mut writer, 1, &Value::Str("hello!")).expect("write");
-            s.put(&mut writer, 1, &Value::Str("hello1!")).expect("write");
-            assert_eq!(s.get_first(&writer, 1).expect("read"), Some(Value::Str("hello!")));
+            s.put(&mut writer, 1, &Value::Str("hello1!"))
+                .expect("write");
+            assert_eq!(
+                s.get_first(&writer, 1).expect("read"),
+                Some(Value::Str("hello!"))
+            );
             assert_eq!(s.get_first(&writer, 2).expect("read"), None);
             assert_eq!(s.get_first(&writer, 3).expect("read"), None);
             writer.commit().expect("committed");
@@ -423,42 +535,66 @@ mod tests_safe {
 
     #[test]
     fn test_dup_2() {
-        let root = Builder::new().prefix("test_multi_integer_dup").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_multi_integer_dup")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
         let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
-        let s = k.open_multi_integer("s", StoreOptions::create()).expect("open");
+        let s = k
+            .open_multi_integer("s", StoreOptions::create())
+            .expect("open");
 
         {
             let mut writer = k.write().expect("writer");
             s.put(&mut writer, 1, &Value::Str("hello!")).expect("write");
             s.put(&mut writer, 1, &Value::Str("hello!")).expect("write");
-            s.put(&mut writer, 1, &Value::Str("hello1!")).expect("write");
+            s.put(&mut writer, 1, &Value::Str("hello1!"))
+                .expect("write");
 
             let mut iter = s.get(&writer, 1).expect("read");
-            assert_eq!(iter.next().expect("first").expect("ok").1, Value::Str("hello!"));
-            assert_eq!(iter.next().expect("second").expect("ok").1, Value::Str("hello1!"));
+            assert_eq!(
+                iter.next().expect("first").expect("ok").1,
+                Value::Str("hello!")
+            );
+            assert_eq!(
+                iter.next().expect("second").expect("ok").1,
+                Value::Str("hello1!")
+            );
             assert!(iter.next().is_none());
         }
     }
 
     #[test]
     fn test_del() {
-        let root = Builder::new().prefix("test_multi_integer_dup").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_multi_integer_dup")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
         let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
-        let s = k.open_multi_integer("s", StoreOptions::create()).expect("open");
+        let s = k
+            .open_multi_integer("s", StoreOptions::create())
+            .expect("open");
 
         {
             let mut writer = k.write().expect("writer");
             s.put(&mut writer, 1, &Value::Str("hello!")).expect("write");
             s.put(&mut writer, 1, &Value::Str("hello!")).expect("write");
-            s.put(&mut writer, 1, &Value::Str("hello1!")).expect("write");
+            s.put(&mut writer, 1, &Value::Str("hello1!"))
+                .expect("write");
             {
                 let mut iter = s.get(&writer, 1).expect("read");
-                assert_eq!(iter.next().expect("first").expect("ok").1, Value::Str("hello!"));
-                assert_eq!(iter.next().expect("second").expect("ok").1, Value::Str("hello1!"));
+                assert_eq!(
+                    iter.next().expect("first").expect("ok").1,
+                    Value::Str("hello!")
+                );
+                assert_eq!(
+                    iter.next().expect("second").expect("ok").1,
+                    Value::Str("hello1!")
+                );
                 assert!(iter.next().is_none());
             }
             writer.commit().expect("committed");
@@ -466,29 +602,38 @@ mod tests_safe {
 
         {
             let mut writer = k.write().expect("writer");
-            s.delete(&mut writer, 1, &Value::Str("hello!")).expect("deleted");
+            s.delete(&mut writer, 1, &Value::Str("hello!"))
+                .expect("deleted");
             writer.commit().expect("committed");
 
             let reader = k.read().expect("reader");
             let mut iter = s.get(&reader, 1).expect("read");
-            assert_eq!(iter.next().expect("first").expect("ok").1, Value::Str("hello1!"));
+            assert_eq!(
+                iter.next().expect("first").expect("ok").1,
+                Value::Str("hello1!")
+            );
             assert!(iter.next().is_none());
         }
 
         {
             let mut writer = k.write().expect("writer");
-            s.delete(&mut writer, 1, &Value::Str("hello!")).expect_err("deleted");
+            s.delete(&mut writer, 1, &Value::Str("hello!"))
+                .expect_err("deleted");
             writer.commit().expect("committed");
 
             let reader = k.read().expect("reader");
             let mut iter = s.get(&reader, 1).expect("read");
-            assert_eq!(iter.next().expect("first").expect("ok").1, Value::Str("hello1!"));
+            assert_eq!(
+                iter.next().expect("first").expect("ok").1,
+                Value::Str("hello1!")
+            );
             assert!(iter.next().is_none());
         }
 
         {
             let mut writer = k.write().expect("writer");
-            s.delete(&mut writer, 1, &Value::Str("hello1!")).expect("deleted");
+            s.delete(&mut writer, 1, &Value::Str("hello1!"))
+                .expect("deleted");
             writer.commit().expect("committed");
 
             let reader = k.read().expect("reader");
@@ -498,7 +643,8 @@ mod tests_safe {
 
         {
             let mut writer = k.write().expect("writer");
-            s.delete(&mut writer, 1, &Value::Str("hello1!")).expect_err("deleted");
+            s.delete(&mut writer, 1, &Value::Str("hello1!"))
+                .expect_err("deleted");
             writer.commit().expect("committed");
 
             let reader = k.read().expect("reader");
@@ -509,21 +655,33 @@ mod tests_safe {
 
     #[test]
     fn test_persist() {
-        let root = Builder::new().prefix("test_multi_integer_persist").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_multi_integer_persist")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
         {
             let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
-            let s = k.open_multi_integer("s", StoreOptions::create()).expect("open");
+            let s = k
+                .open_multi_integer("s", StoreOptions::create())
+                .expect("open");
 
             let mut writer = k.write().expect("writer");
             s.put(&mut writer, 1, &Value::Str("hello!")).expect("write");
-            s.put(&mut writer, 1, &Value::Str("hello1!")).expect("write");
+            s.put(&mut writer, 1, &Value::Str("hello1!"))
+                .expect("write");
             s.put(&mut writer, 2, &Value::Str("hello!")).expect("write");
             {
                 let mut iter = s.get(&writer, 1).expect("read");
-                assert_eq!(iter.next().expect("first").expect("ok").1, Value::Str("hello!"));
-                assert_eq!(iter.next().expect("second").expect("ok").1, Value::Str("hello1!"));
+                assert_eq!(
+                    iter.next().expect("first").expect("ok").1,
+                    Value::Str("hello!")
+                );
+                assert_eq!(
+                    iter.next().expect("second").expect("ok").1,
+                    Value::Str("hello1!")
+                );
                 assert!(iter.next().is_none());
             }
             writer.commit().expect("committed");
@@ -531,12 +689,20 @@ mod tests_safe {
 
         {
             let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
-            let s = k.open_multi_integer("s", StoreOptions::create()).expect("open");
+            let s = k
+                .open_multi_integer("s", StoreOptions::create())
+                .expect("open");
 
             let reader = k.read().expect("reader");
             let mut iter = s.get(&reader, 1).expect("read");
-            assert_eq!(iter.next().expect("first").expect("ok").1, Value::Str("hello!"));
-            assert_eq!(iter.next().expect("second").expect("ok").1, Value::Str("hello1!"));
+            assert_eq!(
+                iter.next().expect("first").expect("ok").1,
+                Value::Str("hello!")
+            );
+            assert_eq!(
+                iter.next().expect("second").expect("ok").1,
+                Value::Str("hello1!")
+            );
             assert!(iter.next().is_none());
         }
     }

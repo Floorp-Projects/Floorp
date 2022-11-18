@@ -8,10 +8,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-use super::{
-    snapshot::Snapshot,
-    IterImpl,
-};
+use super::{snapshot::Snapshot, IterImpl};
 use crate::backend::traits::BackendRoCursor;
 
 #[derive(Debug)]
@@ -29,14 +26,18 @@ impl<'c> BackendRoCursor<'c> for RoCursorImpl<'c> {
     where
         K: AsRef<[u8]> + 'c,
     {
-        IterImpl(Box::new(self.0.iter().skip_while(move |&(k, _)| k < key.as_ref())))
+        IterImpl(Box::new(
+            self.0.iter().skip_while(move |&(k, _)| k < key.as_ref()),
+        ))
     }
 
     fn into_iter_dup_of<K>(self, key: K) -> Self::Iter
     where
         K: AsRef<[u8]> + 'c,
     {
-        IterImpl(Box::new(self.0.iter().filter(move |&(k, _)| k == key.as_ref())))
+        IterImpl(Box::new(
+            self.0.iter().filter(move |&(k, _)| k == key.as_ref()),
+        ))
     }
 }
 
@@ -45,7 +46,10 @@ impl<'c> BackendRoCursor<'c> for RoCursorImpl<'c> {
     type Iter = IterImpl<'c>;
 
     fn into_iter(self) -> Self::Iter {
-        let flattened = self.0.iter().flat_map(|(key, values)| values.map(move |value| (key, value)));
+        let flattened = self
+            .0
+            .iter()
+            .flat_map(|(key, values)| values.map(move |value| (key, value)));
         IterImpl(Box::new(flattened))
     }
 
