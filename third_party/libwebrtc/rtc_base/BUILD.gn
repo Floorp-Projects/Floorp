@@ -1184,7 +1184,6 @@ rtc_library("rtc_base") {
     #"rtc_certificate.h",
     #"rtc_certificate_generator.cc",
     #"rtc_certificate_generator.h",
-    "sigslot_repeater.h",
     #"socket_adapters.cc",
     #"socket_adapters.h",
     #"socket_address_pair.cc",
