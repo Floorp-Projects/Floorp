@@ -16,6 +16,7 @@
 #include "api/array_view.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/strings/string_builder.h"
+#include "test/testsupport/file_utils.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
@@ -120,6 +121,30 @@ std::string PeerConnectionE2EQualityTestFixture::VideoSubscription::ToString()
   }
   out << "} }";
   return out.Release();
+}
+
+PeerConnectionE2EQualityTestFixture::VideoDumpOptions::VideoDumpOptions(
+    absl::string_view output_directory,
+    int sampling_modulo)
+    : output_directory_(output_directory), sampling_modulo_(sampling_modulo) {
+  RTC_CHECK_GT(sampling_modulo, 0);
+}
+
+std::string
+PeerConnectionE2EQualityTestFixture::VideoDumpOptions::GetInputDumpFileName(
+    absl::string_view stream_label) const {
+  rtc::StringBuilder file_name;
+  file_name << stream_label << ".y4m";
+  return test::JoinFilename(output_directory_, file_name.Release());
+}
+
+std::string
+PeerConnectionE2EQualityTestFixture::VideoDumpOptions::GetOutputDumpFileName(
+    absl::string_view stream_label,
+    absl::string_view receiver) const {
+  rtc::StringBuilder file_name;
+  file_name << stream_label << "_" << receiver << ".y4m";
+  return test::JoinFilename(output_directory_, file_name.Release());
 }
 
 PeerConnectionE2EQualityTestFixture::VideoConfig::VideoConfig(

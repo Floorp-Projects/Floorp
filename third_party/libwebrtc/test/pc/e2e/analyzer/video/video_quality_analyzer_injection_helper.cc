@@ -128,11 +128,21 @@ VideoQualityAnalyzerInjectionHelper::CreateFramePreprocessor(
     absl::string_view peer_name,
     const VideoConfig& config) {
   std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>> sinks;
-  test::VideoFrameWriter* writer =
-      MaybeCreateVideoWriter(config.input_dump_file_name, config);
-  if (writer) {
+  test::VideoFrameWriter* writer = nullptr;
+  if (config.input_dump_options.has_value()) {
+    // Using new API for video dumping.
+    writer = MaybeCreateVideoWriter(
+        config.input_dump_options->GetInputDumpFileName(peer_name), config);
+    RTC_CHECK(writer);
     sinks.push_back(std::make_unique<VideoWriter>(
-        writer, config.input_dump_sampling_modulo));
+        writer, config.input_dump_options->sampling_modulo()));
+  } else {
+    // Using old API. To be removed.
+    writer = MaybeCreateVideoWriter(config.input_dump_file_name, config);
+    if (writer) {
+      sinks.push_back(std::make_unique<VideoWriter>(
+          writer, config.input_dump_sampling_modulo));
+    }
   }
   if (config.show_on_screen) {
     sinks.push_back(absl::WrapUnique(
@@ -206,7 +216,7 @@ VideoQualityAnalyzerInjectionHelper::MaybeCreateVideoWriter(
   // only one file will be used.
   std::unique_ptr<test::VideoFrameWriter> video_writer =
       std::make_unique<test::Y4mVideoFrameWriterImpl>(
-          file_name.value(), config.width, config.height, config.fps);
+          *file_name, config.width, config.height, config.fps);
   if (config.output_dump_use_fixed_framerate) {
     video_writer = std::make_unique<test::FixedFpsVideoFrameWriterAdapter>(
         config.fps, clock_, std::move(video_writer));
@@ -257,19 +267,31 @@ VideoQualityAnalyzerInjectionHelper::PopulateSinks(
   const VideoConfig& config = it->second;
 
   std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>> sinks;
-  absl::optional<std::string> output_dump_file_name =
-      config.output_dump_file_name;
-  if (output_dump_file_name.has_value() && peers_count_ > 2) {
-    // TODO(titovartem): make this default behavior for any amount of peers.
-    rtc::StringBuilder builder(*output_dump_file_name);
-    builder << "." << receiver_stream.peer_name;
-    output_dump_file_name = builder.str();
-  }
-  test::VideoFrameWriter* writer =
-      MaybeCreateVideoWriter(output_dump_file_name, config);
-  if (writer) {
+  test::VideoFrameWriter* writer = nullptr;
+  if (config.output_dump_options.has_value()) {
+    // Using new API with output directory.
+    writer = MaybeCreateVideoWriter(
+        config.output_dump_options->GetOutputDumpFileName(
+            receiver_stream.stream_label, receiver_stream.peer_name),
+        config);
+    RTC_CHECK(writer);
     sinks.push_back(std::make_unique<VideoWriter>(
-        writer, config.output_dump_sampling_modulo));
+        writer, config.output_dump_options->sampling_modulo()));
+  } else {
+    // Using old API. To be removed.
+    absl::optional<std::string> output_dump_file_name =
+        config.output_dump_file_name;
+    if (output_dump_file_name.has_value() && peers_count_ > 2) {
+      // TODO(titovartem): make this default behavior for any amount of peers.
+      rtc::StringBuilder builder(*output_dump_file_name);
+      builder << "." << receiver_stream.peer_name;
+      output_dump_file_name = builder.str();
+    }
+    writer = MaybeCreateVideoWriter(output_dump_file_name, config);
+    if (writer) {
+      sinks.push_back(std::make_unique<VideoWriter>(
+          writer, config.output_dump_sampling_modulo));
+    }
   }
   if (config.show_on_screen) {
     sinks.push_back(absl::WrapUnique(
