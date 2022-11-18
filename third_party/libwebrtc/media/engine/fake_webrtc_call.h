@@ -293,6 +293,10 @@ class FakeVideoReceiveStream final
     config_.rtp.lntf.enabled = enabled;
   }
 
+  void SetNackHistory(webrtc::TimeDelta history) override {
+    config_.rtp.nack.rtp_history_ms = history.ms();
+  }
+
   void Start() override;
   void Stop() override;
 

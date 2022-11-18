@@ -173,6 +173,14 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
     jitter_estimator_.UpdateRtt(TimeDelta::Millis(max_rtt_ms));
   }
 
+  void SetMaxWaits(TimeDelta max_wait_for_keyframe,
+                   TimeDelta max_wait_for_frame) override {
+    RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
+    timeout_tracker_.SetTimeouts(
+        {.max_wait_for_keyframe = max_wait_for_keyframe,
+         .max_wait_for_frame = max_wait_for_frame});
+  }
+
   void StartNextDecode(bool keyframe_required) override {
     if (!worker_queue_->IsCurrent()) {
       worker_queue_->PostTask(SafeTask(

@@ -314,6 +314,11 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
   // thread.
   virtual void SetLossNotificationEnabled(bool enabled) = 0;
 
+  // Modify `rtp.nack.rtp_history_ms` post construction. Setting this value
+  // to 0 disables nack.
+  // Must be called on the packet delivery thread.
+  virtual void SetNackHistory(TimeDelta history) = 0;
+
  protected:
   virtual ~VideoReceiveStreamInterface() {}
 };

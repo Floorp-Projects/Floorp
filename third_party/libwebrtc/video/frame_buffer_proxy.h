@@ -59,6 +59,8 @@ class FrameBufferProxy {
       std::unique_ptr<EncodedFrame> frame) = 0;
   virtual void UpdateRtt(int64_t max_rtt_ms) = 0;
   virtual int Size() = 0;
+  virtual void SetMaxWaits(TimeDelta max_wait_for_keyframe,
+                           TimeDelta max_wait_for_frame) = 0;
 
   // Run on either the worker thread or the decode thread.
   virtual void StartNextDecode(bool keyframe_required) = 0;
