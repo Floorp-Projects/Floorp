@@ -148,6 +148,7 @@ class VideoReceiveStream2
   void SetRtcpMode(RtcpMode mode) override;
   void SetFlexFecProtection(RtpPacketSinkInterface* flexfec_sink) override;
   void SetLossNotificationEnabled(bool enabled) override;
+  void SetNackHistory(TimeDelta history) override;
 
   webrtc::VideoReceiveStreamInterface::Stats GetStats() const override;
 
@@ -195,7 +196,9 @@ class VideoReceiveStream2
   TimeDelta GetMaxWait() const RTC_RUN_ON(decode_queue_);
   void HandleEncodedFrame(std::unique_ptr<EncodedFrame> frame)
       RTC_RUN_ON(decode_queue_);
-  void HandleFrameBufferTimeout(Timestamp now, TimeDelta wait)
+  void HandleFrameBufferTimeout(Timestamp now,
+                                TimeDelta wait,
+                                TimeDelta max_wait_for_keyframe)
       RTC_RUN_ON(packet_sequence_checker_);
   void UpdatePlayoutDelays() const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(worker_sequence_checker_);
@@ -203,9 +206,11 @@ class VideoReceiveStream2
   void HandleKeyFrameGeneration(bool received_frame_is_keyframe,
                                 Timestamp now,
                                 bool always_request_key_frame,
-                                bool keyframe_request_is_due)
+                                bool keyframe_request_is_due,
+                                TimeDelta max_wait_for_keyframe)
       RTC_RUN_ON(packet_sequence_checker_);
-  bool IsReceivingKeyFrame(Timestamp timestamp) const
+  bool IsReceivingKeyFrame(Timestamp timestamp,
+                           TimeDelta max_wait_for_keyframe) const
       RTC_RUN_ON(packet_sequence_checker_);
   int DecodeAndMaybeDispatchEncodedFrame(std::unique_ptr<EncodedFrame> frame)
       RTC_RUN_ON(decode_queue_);
@@ -274,8 +279,8 @@ class VideoReceiveStream2
       RTC_GUARDED_BY(worker_sequence_checker_);
 
   // Keyframe request intervals are configurable through field trials.
-  const TimeDelta max_wait_for_keyframe_;
-  const TimeDelta max_wait_for_frame_;
+  TimeDelta max_wait_for_keyframe_ RTC_GUARDED_BY(decode_queue_);
+  TimeDelta max_wait_for_frame_ RTC_GUARDED_BY(decode_queue_);
 
   // All of them tries to change current min_playout_delay on `timing_` but
   // source of the change request is different in each case. Among them the
