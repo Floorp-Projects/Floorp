@@ -149,8 +149,6 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
                             bool decodability_flag,
                             bool buffering_allowed) override;
 
-  bool IsUlpfecEnabled() const;
-
   // Returns true if a decryptor is attached and frames can be decrypted.
   // Updated by OnDecryptionStatusChangeCallback. Note this refers to Frame
   // Decryption not SRTP.

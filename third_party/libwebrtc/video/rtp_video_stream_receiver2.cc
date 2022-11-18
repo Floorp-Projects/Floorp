@@ -714,10 +714,6 @@ void RtpVideoStreamReceiver2::SendLossNotification(
                                   decodability_flag, buffering_allowed);
 }
 
-bool RtpVideoStreamReceiver2::IsUlpfecEnabled() const {
-  return config_.rtp.ulpfec_payload_type != -1;
-}
-
 bool RtpVideoStreamReceiver2::IsDecryptable() const {
   RTC_DCHECK_RUN_ON(&worker_task_checker_);
   return frames_decryptable_;
