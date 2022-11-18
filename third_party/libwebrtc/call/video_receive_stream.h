@@ -303,6 +303,13 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
 
   virtual void SetRtcpMode(RtcpMode mode) = 0;
 
+  // Sets or clears a flexfec RTP sink. This affects `rtp.packet_sink_` and
+  // `rtp.protected_by_flexfec` parts of the configuration. Must be called on
+  // the packet delivery thread.
+  // TODO(bugs.webrtc.org/11993): Packet delivery thread today means `worker
+  // thread` but will be `network thread`.
+  virtual void SetFlexFecProtection(RtpPacketSinkInterface* flexfec_sink) = 0;
+
  protected:
   virtual ~VideoReceiveStreamInterface() {}
 };

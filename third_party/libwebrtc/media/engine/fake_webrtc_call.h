@@ -284,6 +284,11 @@ class FakeVideoReceiveStream final
     config_.rtp.rtcp_mode = mode;
   }
 
+  void SetFlexFecProtection(webrtc::RtpPacketSinkInterface* sink) override {
+    config_.rtp.packet_sink_ = sink;
+    config_.rtp.protected_by_flexfec = (sink != nullptr);
+  }
+
   void Start() override;
   void Stop() override;
 

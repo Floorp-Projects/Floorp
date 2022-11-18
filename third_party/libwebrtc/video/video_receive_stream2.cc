@@ -508,6 +508,16 @@ void VideoReceiveStream2::SetRtcpMode(RtcpMode mode) {
   rtp_video_stream_receiver_.SetRtcpMode(mode);
 }
 
+void VideoReceiveStream2::SetFlexFecProtection(
+    RtpPacketSinkInterface* flexfec_sink) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  rtp_video_stream_receiver_.SetPacketSink(flexfec_sink);
+  // TODO(tommi): Stop using the config struct for the internal state.
+  const_cast<RtpPacketSinkInterface*&>(config_.rtp.packet_sink_) = flexfec_sink;
+  const_cast<bool&>(config_.rtp.protected_by_flexfec) =
+      (flexfec_sink != nullptr);
+}
+
 void VideoReceiveStream2::CreateAndRegisterExternalDecoder(
     const Decoder& decoder) {
   TRACE_EVENT0("webrtc",
