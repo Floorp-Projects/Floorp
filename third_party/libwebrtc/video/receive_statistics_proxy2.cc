@@ -770,10 +770,10 @@ void ReceiveStatisticsProxy::OnDecodedFrame(const VideoFrame& frame,
                                             absl::optional<uint8_t> qp,
                                             TimeDelta decode_time,
                                             VideoContentType content_type) {
-  webrtc::TimeDelta processing_delay = webrtc::TimeDelta::Millis(0);
+  TimeDelta processing_delay = TimeDelta::Zero();
   webrtc::Timestamp current_time = clock_->CurrentTime();
   // TODO(bugs.webrtc.org/13984): some tests do not fill packet_infos().
-  webrtc::TimeDelta assembly_time = webrtc::TimeDelta::Millis(0);
+  TimeDelta assembly_time = TimeDelta::Zero();
   if (frame.packet_infos().size() > 0) {
     const auto [first_packet, last_packet] = std::minmax_element(
         frame.packet_infos().cbegin(), frame.packet_infos().cend(),
@@ -804,8 +804,8 @@ void ReceiveStatisticsProxy::OnDecodedFrame(
     const VideoFrameMetaData& frame_meta,
     absl::optional<uint8_t> qp,
     TimeDelta decode_time,
-    webrtc::TimeDelta processing_delay,
-    webrtc::TimeDelta assembly_time,
+    TimeDelta processing_delay,
+    TimeDelta assembly_time,
     VideoContentType content_type) {
   RTC_DCHECK_RUN_ON(&main_thread_);
 

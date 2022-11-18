@@ -746,7 +746,7 @@ class SimpleVideoStreamEncoderFactory {
   };
 
   test::ScopedKeyValueConfig field_trials_;
-  GlobalSimulatedTimeController time_controller_{Timestamp::Millis(0)};
+  GlobalSimulatedTimeController time_controller_{Timestamp::Zero()};
   std::unique_ptr<TaskQueueFactory> task_queue_factory_{
       time_controller_.CreateTaskQueueFactory()};
   std::unique_ptr<MockableSendStatisticsProxy> stats_proxy_ =
@@ -9116,7 +9116,7 @@ TEST(VideoStreamEncoderSimpleTest, CreateDestroy) {
 
   // Lots of boiler plate.
   test::ScopedKeyValueConfig field_trials;
-  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
   auto stats_proxy = std::make_unique<MockableSendStatisticsProxy>(
       time_controller.GetClock(), VideoSendStream::Config(nullptr),
       webrtc::VideoEncoderConfig::ContentType::kRealtimeVideo, field_trials);

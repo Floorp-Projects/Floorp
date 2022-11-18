@@ -194,7 +194,7 @@ class TestFrameBuffer2 : public ::testing::Test {
                          });
     });
     if (max_wait_time == 0) {
-      time_controller_.AdvanceTime(TimeDelta::Millis(0));
+      time_controller_.AdvanceTime(TimeDelta::Zero());
     }
   }
 
@@ -304,7 +304,7 @@ TEST_F(TestFrameBuffer2, DISABLED_OneUnorderedSuperFrame) {
   ExtractFrame(50);
   InsertFrame(pid, 1, ts, true, kFrameSize);
   InsertFrame(pid, 0, ts, false, kFrameSize);
-  time_controller_.AdvanceTime(TimeDelta::Millis(0));
+  time_controller_.AdvanceTime(TimeDelta::Zero());
 
   CheckFrame(0, pid, 0);
   CheckFrame(1, pid, 1);

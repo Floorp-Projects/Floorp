@@ -126,7 +126,7 @@ TEST(FrameCadenceAdapterTest, CountsOutstandingFramesToProcess) {
 
 TEST(FrameCadenceAdapterTest, FrameRateFollowsRateStatisticsByDefault) {
   test::ScopedKeyValueConfig no_field_trials;
-  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
   auto adapter = CreateAdapter(no_field_trials, time_controller.GetClock());
   adapter->Initialize(nullptr);
 
@@ -148,7 +148,7 @@ TEST(FrameCadenceAdapterTest, FrameRateFollowsRateStatisticsByDefault) {
 TEST(FrameCadenceAdapterTest,
      FrameRateFollowsRateStatisticsWhenFeatureDisabled) {
   ZeroHertzFieldTrialDisabler feature_disabler;
-  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
   auto adapter = CreateAdapter(feature_disabler, time_controller.GetClock());
   adapter->Initialize(nullptr);
 
@@ -169,7 +169,7 @@ TEST(FrameCadenceAdapterTest,
 
 TEST(FrameCadenceAdapterTest, FrameRateFollowsMaxFpsWhenZeroHertzActivated) {
   ZeroHertzFieldTrialEnabler enabler;
-  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
   auto adapter = CreateAdapter(enabler, time_controller.GetClock());
   adapter->Initialize(nullptr);
   adapter->SetZeroHertzModeEnabled(
@@ -185,7 +185,7 @@ TEST(FrameCadenceAdapterTest, FrameRateFollowsMaxFpsWhenZeroHertzActivated) {
 TEST(FrameCadenceAdapterTest,
      FrameRateFollowsRateStatisticsAfterZeroHertzDeactivated) {
   ZeroHertzFieldTrialEnabler enabler;
-  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
   auto adapter = CreateAdapter(enabler, time_controller.GetClock());
   adapter->Initialize(nullptr);
   adapter->SetZeroHertzModeEnabled(
@@ -214,7 +214,7 @@ TEST(FrameCadenceAdapterTest,
 TEST(FrameCadenceAdapterTest, ForwardsFramesDelayed) {
   ZeroHertzFieldTrialEnabler enabler;
   MockCallback callback;
-  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
   auto adapter = CreateAdapter(enabler, time_controller.GetClock());
   adapter->Initialize(&callback);
   adapter->SetZeroHertzModeEnabled(
@@ -336,7 +336,7 @@ TEST(FrameCadenceAdapterTest, StopsRepeatingFramesDelayed) {
   // At 3.5s, we receive this frame.
   ZeroHertzFieldTrialEnabler enabler;
   MockCallback callback;
-  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
   auto adapter = CreateAdapter(enabler, time_controller.GetClock());
   adapter->Initialize(&callback);
   adapter->SetZeroHertzModeEnabled(
@@ -364,7 +364,7 @@ TEST(FrameCadenceAdapterTest, StopsRepeatingFramesDelayed) {
 TEST(FrameCadenceAdapterTest, RequestsRefreshFrameOnKeyFrameRequestWhenNew) {
   ZeroHertzFieldTrialEnabler enabler;
   MockCallback callback;
-  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
   auto adapter = CreateAdapter(enabler, time_controller.GetClock());
   adapter->Initialize(&callback);
   adapter->SetZeroHertzModeEnabled(
@@ -382,7 +382,7 @@ TEST(FrameCadenceAdapterTest, RequestsRefreshFrameOnKeyFrameRequestWhenNew) {
 TEST(FrameCadenceAdapterTest, IgnoresKeyFrameRequestShortlyAfterFrame) {
   ZeroHertzFieldTrialEnabler enabler;
   MockCallback callback;
-  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
   auto adapter = CreateAdapter(enabler, time_controller.GetClock());
   adapter->Initialize(&callback);
   adapter->SetZeroHertzModeEnabled(
@@ -397,7 +397,7 @@ TEST(FrameCadenceAdapterTest, IgnoresKeyFrameRequestShortlyAfterFrame) {
 TEST(FrameCadenceAdapterTest, RequestsRefreshFramesUntilArrival) {
   ZeroHertzFieldTrialEnabler enabler;
   MockCallback callback;
-  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
   auto adapter = CreateAdapter(enabler, time_controller.GetClock());
   adapter->Initialize(&callback);
   adapter->SetZeroHertzModeEnabled(
@@ -423,7 +423,7 @@ TEST(FrameCadenceAdapterTest, RequestsRefreshFramesUntilArrival) {
 TEST(FrameCadenceAdapterTest, RequestsRefreshAfterFrameDrop) {
   ZeroHertzFieldTrialEnabler enabler;
   MockCallback callback;
-  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
   auto adapter = CreateAdapter(enabler, time_controller.GetClock());
   adapter->Initialize(&callback);
   adapter->SetZeroHertzModeEnabled(
@@ -464,7 +464,7 @@ TEST(FrameCadenceAdapterTest, RequestsRefreshAfterFrameDrop) {
 TEST(FrameCadenceAdapterTest, OmitsRefreshAfterFrameDropWithTimelyFrameEntry) {
   ZeroHertzFieldTrialEnabler enabler;
   MockCallback callback;
-  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
   auto adapter = CreateAdapter(enabler, time_controller.GetClock());
   adapter->Initialize(&callback);
   adapter->SetZeroHertzModeEnabled(
@@ -524,7 +524,7 @@ class FrameCadenceAdapterSimulcastLayersParamTest
  protected:
   ZeroHertzFieldTrialEnabler enabler_;
   MockCallback callback_;
-  GlobalSimulatedTimeController time_controller_{Timestamp::Millis(0)};
+  GlobalSimulatedTimeController time_controller_{Timestamp::Zero()};
   const std::unique_ptr<FrameCadenceAdapterInterface> adapter_{
       CreateAdapter(enabler_, time_controller_.GetClock())};
 };
@@ -651,7 +651,7 @@ class ZeroHertzLayerQualityConvergenceTest : public ::testing::Test {
  protected:
   ZeroHertzFieldTrialEnabler field_trial_enabler_;
   MockCallback callback_;
-  GlobalSimulatedTimeController time_controller_{Timestamp::Millis(0)};
+  GlobalSimulatedTimeController time_controller_{Timestamp::Zero()};
   std::unique_ptr<FrameCadenceAdapterInterface> adapter_{
       CreateAdapter(field_trial_enabler_, time_controller_.GetClock())};
 };
