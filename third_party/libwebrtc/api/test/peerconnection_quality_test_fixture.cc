@@ -125,10 +125,19 @@ std::string PeerConnectionE2EQualityTestFixture::VideoSubscription::ToString()
 
 PeerConnectionE2EQualityTestFixture::VideoDumpOptions::VideoDumpOptions(
     absl::string_view output_directory,
-    int sampling_modulo)
-    : output_directory_(output_directory), sampling_modulo_(sampling_modulo) {
+    int sampling_modulo,
+    bool export_frame_ids)
+    : output_directory_(output_directory),
+      sampling_modulo_(sampling_modulo),
+      export_frame_ids_(export_frame_ids) {
   RTC_CHECK_GT(sampling_modulo, 0);
 }
+PeerConnectionE2EQualityTestFixture::VideoDumpOptions::VideoDumpOptions(
+    absl::string_view output_directory,
+    bool export_frame_ids)
+    : VideoDumpOptions(output_directory,
+                       kDefaultSamplingModulo,
+                       export_frame_ids) {}
 
 std::string
 PeerConnectionE2EQualityTestFixture::VideoDumpOptions::GetInputDumpFileName(
@@ -138,6 +147,15 @@ PeerConnectionE2EQualityTestFixture::VideoDumpOptions::GetInputDumpFileName(
   return test::JoinFilename(output_directory_, file_name.Release());
 }
 
+absl::optional<std::string> PeerConnectionE2EQualityTestFixture::
+    VideoDumpOptions::GetInputFrameIdsDumpFileName(
+        absl::string_view stream_label) const {
+  if (!export_frame_ids_) {
+    return absl::nullopt;
+  }
+  return GetInputDumpFileName(stream_label) + ".frame_ids.txt";
+}
+
 std::string
 PeerConnectionE2EQualityTestFixture::VideoDumpOptions::GetOutputDumpFileName(
     absl::string_view stream_label,
@@ -145,6 +163,16 @@ PeerConnectionE2EQualityTestFixture::VideoDumpOptions::GetOutputDumpFileName(
   rtc::StringBuilder file_name;
   file_name << stream_label << "_" << receiver << ".y4m";
   return test::JoinFilename(output_directory_, file_name.Release());
+}
+
+absl::optional<std::string> PeerConnectionE2EQualityTestFixture::
+    VideoDumpOptions::GetOutputFrameIdsDumpFileName(
+        absl::string_view stream_label,
+        absl::string_view receiver) const {
+  if (!export_frame_ids_) {
+    return absl::nullopt;
+  }
+  return GetOutputDumpFileName(stream_label, receiver) + ".frame_ids.txt";
 }
 
 PeerConnectionE2EQualityTestFixture::VideoConfig::VideoConfig(
