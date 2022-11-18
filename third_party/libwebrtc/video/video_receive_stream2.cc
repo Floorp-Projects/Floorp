@@ -352,8 +352,8 @@ void VideoReceiveStream2::Start() {
     return;
   }
 
-  const bool protected_by_fec = config_.rtp.protected_by_flexfec ||
-                                rtp_video_stream_receiver_.IsUlpfecEnabled();
+  const bool protected_by_fec =
+      config_.rtp.protected_by_flexfec || config_.rtp.ulpfec_payload_type != -1;
 
   if (config_.rtp.nack.rtp_history_ms > 0 && protected_by_fec) {
     frame_buffer_->SetProtectionMode(kProtectionNackFEC);
@@ -533,8 +533,8 @@ void VideoReceiveStream2::SetNackHistory(TimeDelta history) {
   // TODO(tommi): Stop using the config struct for the internal state.
   const_cast<int&>(config_.rtp.nack.rtp_history_ms) = history.ms();
 
-  const bool protected_by_fec = config_.rtp.protected_by_flexfec ||
-                                rtp_video_stream_receiver_.IsUlpfecEnabled();
+  const bool protected_by_fec =
+      config_.rtp.protected_by_flexfec || config_.rtp.ulpfec_payload_type != -1;
 
   frame_buffer_->SetProtectionMode(history.ms() > 0 && protected_by_fec
                                        ? kProtectionNackFEC
