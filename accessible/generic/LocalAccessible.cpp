@@ -401,7 +401,6 @@ uint64_t LocalAccessible::NativeState() const {
     }
 
     state |= NativeInteractiveState();
-    if (FocusMgr()->IsFocused(this)) state |= states::FOCUSED;
   }
 
   // Gather states::INVISIBLE and states::OFFSCREEN flags for this object.

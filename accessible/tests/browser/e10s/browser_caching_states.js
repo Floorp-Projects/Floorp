@@ -212,6 +212,27 @@ addAccessibleTask(
   }
 );
 
+/**
+ * Test caching of the focused state in iframes.
+ */
+addAccessibleTask(
+  `
+  <button id="button">button</button>
+  `,
+  async function(browser, iframeDocAcc, topDocAcc) {
+    testStates(topDocAcc, STATE_FOCUSED);
+    const button = findAccessibleChildByID(iframeDocAcc, "button");
+    testStates(button, 0, 0, STATE_FOCUSED);
+    let focused = waitForEvent(EVENT_FOCUS, button);
+    info("Focusing button in iframe");
+    button.takeFocus();
+    await focused;
+    testStates(topDocAcc, 0, 0, STATE_FOCUSED);
+    testStates(button, STATE_FOCUSED);
+  },
+  { topLevel: false, iframe: true, remoteIframe: true }
+);
+
 function checkOpacity(acc, present) {
   // eslint-disable-next-line no-unused-vars
   let [_, extraState] = getStates(acc);
