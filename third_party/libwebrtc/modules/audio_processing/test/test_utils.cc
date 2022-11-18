@@ -77,10 +77,6 @@ FILE* OpenFile(const std::string& filename, const char* mode) {
   return file;
 }
 
-size_t SamplesFromRate(int rate) {
-  return static_cast<size_t>(AudioProcessing::kChunkSizeMs * rate / 1000);
-}
-
 void SetFrameSampleRate(Int16FrameData* frame, int sample_rate_hz) {
   frame->sample_rate_hz = sample_rate_hz;
   frame->samples_per_channel =

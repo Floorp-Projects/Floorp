@@ -92,9 +92,9 @@ static constexpr int kClippedLevelMin = 70;
 //   2. Parameter getters are never called concurrently with the corresponding
 //      setter.
 //
-// APM accepts only linear PCM audio data in chunks of 10 ms. The int16
-// interfaces use interleaved data, while the float interfaces use deinterleaved
-// data.
+// APM accepts only linear PCM audio data in chunks of ~10 ms (see
+// AudioProcessing::GetFrameSize() for details). The int16 interfaces use
+// interleaved data, while the float interfaces use deinterleaved data.
 //
 // Usage example, omitting error checking:
 // AudioProcessing* apm = AudioProcessingBuilder().Create();
@@ -535,7 +535,7 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
   // enqueueing was successfull.
   virtual bool PostRuntimeSetting(RuntimeSetting setting) = 0;
 
-  // Accepts and produces a 10 ms frame interleaved 16 bit integer audio as
+  // Accepts and produces a ~10 ms frame of interleaved 16 bit integer audio as
   // specified in `input_config` and `output_config`. `src` and `dest` may use
   // the same memory, if desired.
   virtual int ProcessStream(const int16_t* const src,
@@ -555,7 +555,7 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
                             const StreamConfig& output_config,
                             float* const* dest) = 0;
 
-  // Accepts and produces a 10 ms frame of interleaved 16 bit integer audio for
+  // Accepts and produces a ~10 ms frame of interleaved 16 bit integer audio for
   // the reverse direction audio stream as specified in `input_config` and
   // `output_config`. `src` and `dest` may use the same memory, if desired.
   virtual int ProcessReverseStream(const int16_t* const src,
@@ -576,10 +576,10 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
   virtual int AnalyzeReverseStream(const float* const* data,
                                    const StreamConfig& reverse_config) = 0;
 
-  // Returns the most recently produced 10 ms of the linear AEC output at a rate
-  // of 16 kHz. If there is more than one capture channel, a mono representation
-  // of the input is returned. Returns true/false to indicate whether an output
-  // returned.
+  // Returns the most recently produced ~10 ms of the linear AEC output at a
+  // rate of 16 kHz. If there is more than one capture channel, a mono
+  // representation of the input is returned. Returns true/false to indicate
+  // whether an output returned.
   virtual bool GetLinearAecOutput(
       rtc::ArrayView<std::array<float, 160>> linear_output) const = 0;
 
@@ -706,7 +706,29 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
   static constexpr int kMaxNativeSampleRateHz =
       kNativeSampleRatesHz[kNumNativeSampleRates - 1];
 
+  // APM processes audio in chunks of about 10 ms. See GetFrameSize() for
+  // details.
   static constexpr int kChunkSizeMs = 10;
+
+  // Returns floor(sample_rate_hz/100): the number of samples per channel used
+  // as input and output to the audio processing module in calls to
+  // ProcessStream, ProcessReverseStream, AnalyzeReverseStream, and
+  // GetLinearAecOutput.
+  //
+  // This is exactly 10 ms for sample rates divisible by 100. For example:
+  //  - 48000 Hz (480 samples per channel),
+  //  - 44100 Hz (441 samples per channel),
+  //  - 16000 Hz (160 samples per channel).
+  //
+  // Sample rates not divisible by 100 are received/produced in frames of
+  // approximately 10 ms. For example:
+  //  - 22050 Hz (220 samples per channel, or ~9.98 ms per frame),
+  //  - 11025 Hz (110 samples per channel, or ~9.98 ms per frame).
+  // These nondivisible sample rates yield lower audio quality compared to
+  // multiples of 100. Internal resampling to 10 ms frames causes a simulated
+  // clock drift effect which impacts the performance of (for example) echo
+  // cancellation.
+  static int GetFrameSize(int sample_rate_hz) { return sample_rate_hz / 100; }
 };
 
 class RTC_EXPORT AudioProcessingBuilder {
@@ -804,8 +826,7 @@ class StreamConfig {
 
  private:
   static size_t calculate_frames(int sample_rate_hz) {
-    return static_cast<size_t>(AudioProcessing::kChunkSizeMs * sample_rate_hz /
-                               1000);
+    return static_cast<size_t>(AudioProcessing::GetFrameSize(sample_rate_hz));
   }
 
   int sample_rate_hz_;
