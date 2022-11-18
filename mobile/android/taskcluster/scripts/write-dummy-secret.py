@@ -11,7 +11,7 @@ import os
 
 
 def write_secret_to_file(path, secret):
-    path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../' + path))
+    path = os.path.abspath(os.path.join(os.getcwd(), path))
     try:
         os.makedirs(os.path.dirname(path))
     except OSError as error:

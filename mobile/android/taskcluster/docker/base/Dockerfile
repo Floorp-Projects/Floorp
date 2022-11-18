@@ -32,6 +32,7 @@ RUN apt-get update -qq \
     && apt-get install -y tzdata \
     && apt-get install -y openjdk-8-jdk \
                           openjdk-11-jdk \
+                          wget \
                           expect \
                           git \
                           curl \

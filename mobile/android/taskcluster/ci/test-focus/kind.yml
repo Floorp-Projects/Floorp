@@ -14,12 +14,14 @@ kind-dependencies:
 task-defaults:
     attributes:
         retrigger: true
-    description: Unit tests
+    description: Focus unit tests
     fetches:
         toolchain:
             - android-sdk-linux
             - android-gradle-dependencies
     run:
+        pre-gradlew:
+            - ["cd", "focus-android"]
         using: gradlew
         use-caches: false
     treeherder:
@@ -40,8 +42,8 @@ tasks:
                 - content: "faketoken"
                   path: .adjust_token
         treeherder:
-            platform: 'android-all/opt'
-            symbol: debug(T)
+            platform: 'focus-android-all/opt'
+            symbol: focus-debug(T)
             tier: 1
         worker:
             artifacts:

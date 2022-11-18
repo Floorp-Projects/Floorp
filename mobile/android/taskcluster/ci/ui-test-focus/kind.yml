@@ -10,7 +10,7 @@ transforms:
 
 kind-dependencies:
     - toolchain
-    - build-focus
+    - build-apk
 
 task-defaults:
     attributes:
@@ -19,8 +19,8 @@ task-defaults:
         retrigger: true
     dependencies:
         # key is arbitrary, the value corresponds to <kind name>-<build-name>
-        signed-debug-apk: signing-focus-debug
-        signed-android-test: signing-android-test-debug
+        signed-apk-debug-apk: signing-apk-focus-debug
+        signed-apk-android-test: signing-apk-focus-android-test-debug
     worker-type: b-android
     worker:
         docker-image: {in-tree: ui-tests}
@@ -34,7 +34,7 @@ task-defaults:
               type: directory
     treeherder:
         kind: test
-        platform: 'ui-test/opt'
+        platform: 'focus-ui-test/opt'
         tier: 2
     run:
         use-caches: false
@@ -47,19 +47,21 @@ task-defaults:
               key: firebaseToken
               path: .firebase_token.json
               json: true
+        pre-commands:
+            - ["cd", "focus-android"]
         commands:
-            - [wget, {artifact-reference: '<signed-debug-apk/public/build/focus/arm64-v8a/target.apk>'}, '-O', app.apk]
-            - [wget, {artifact-reference: '<signed-android-test/public/build/app-focus-androidTest.apk>'}, '-O', android-test.apk]
+            - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/focus/arm64-v8a/target.apk>'}, '-O', app.apk]
+            - [wget, {artifact-reference: '<signed-apk-android-test/public/build/app-focus-androidTest.apk>'}, '-O', android-test.apk]
 
 tasks:
     arm-debug:
-        description: 'UI tests with firebase'
+        description: 'Focus UI tests with firebase'
         run-on-tasks-for: [github-pull-request, github-push]
         run:
             commands:
                 - ['automation/taskcluster/androidTest/ui-test.sh', 'arm64-v8a', 'app.apk', 'android-test.apk', '50']
         treeherder:
-            symbol: debug(ui-test-arm)
+            symbol: focus-debug(ui-test-arm)
     arm-nightly:
         attributes:
             build-type: nightly-firebase
@@ -67,13 +69,13 @@ tasks:
         run-on-tasks-for: [github-push]
         run-on-git-branches: [main]
         dependencies:
-            signed-debug-apk: signing-nightly-firebase
-            signed-android-test: signing-android-test-nightly
+            signed-apk-debug-apk: signing-apk-focus-nightly-firebase
+            signed-apk-android-test: signing-apk-focus-android-test-nightly
         run:
             commands:
                 - ['automation/taskcluster/androidTest/ui-test.sh', 'arm-start-test', 'app.apk', 'android-test.apk', '1']
         treeherder:
-            symbol: nightly(ui-test-arm-nightly)
+            symbol: focus-nightly(ui-test-arm-nightly)
     arm-beta:
         attributes:
             build-type: nightly-firebase
@@ -81,10 +83,10 @@ tasks:
         run-on-tasks-for: [github-push]
         run-on-git-branches: [main, releases_v]
         dependencies:
-            signed-debug-apk: signing-beta-firebase
-            signed-android-test: signing-android-test-beta
+            signed-apk-debug-apk: signing-apk-focus-beta-firebase
+            signed-apk-android-test: signing-apk-focus-android-test-beta
         run:
             commands:
                 - ['automation/taskcluster/androidTest/ui-test.sh', 'arm-beta-tests', 'app.apk', 'android-test.apk', '1']
         treeherder:
-            symbol: beta(ui-test-arm-beta)
+            symbol: focus-beta(ui-test-arm-beta)

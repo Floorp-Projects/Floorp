@@ -5,8 +5,8 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
-    - ac_taskgraph.transforms.ui_tests:transforms
-    - ac_taskgraph.transforms.gradle_optimization:transforms
+    - android_taskgraph.transforms.ui_tests:transforms
+    - android_taskgraph.transforms.gradle_optimization:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
