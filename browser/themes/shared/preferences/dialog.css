@@ -11,12 +11,8 @@ dialog {
   padding: 0;
 }
 
-/* Put padding around the contents of the dialog, but do that on `body`
- * instead of `html` for HTML cases, to avoid issues with the scroll
- * height of the document, which gets measured to determine the size
- * of the dialog we display. */
-:root:not(html),
-body {
+/* Add some padding around the contents of the dialog */
+dialog {
   padding: 6px;
 }
 
