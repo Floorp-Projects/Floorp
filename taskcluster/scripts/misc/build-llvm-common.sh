@@ -111,6 +111,12 @@ case "$target" in
   else
     sysroot=$MOZ_FETCHES_DIR/sysroot-${target%-unknown-linux-gnu}-linux-gnu
   fi
+  if [ "${target%-unknown-linux-gnu}" = i686 ]; then
+    EXTRA_CMAKE_FLAGS="
+      $EXTRA_CMAKE_FLAGS
+      -DLLVM_TABLEGEN=$MOZ_FETCHES_DIR/clang/bin/llvm-tblgen
+    "
+  fi
   EXTRA_CMAKE_FLAGS="
     $EXTRA_CMAKE_FLAGS
     -DCMAKE_SYSROOT=$sysroot
