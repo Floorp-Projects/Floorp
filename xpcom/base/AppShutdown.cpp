@@ -340,6 +340,23 @@ void AppShutdown::AdvanceShutdownPhaseInternal(
   if (sCurrentShutdownPhase >= aPhase) {
     return;
   }
+
+  nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
+  if (sCurrentShutdownPhase >= ShutdownPhase::AppShutdownConfirmed) {
+    // Give runnables dispatched so far as part of the ongoing phase a chance
+    // to run before actually advancing the phase. We can do this only after
+    // we passed the point of no return and thus can expect a linear flow
+    // through our shutdown phases. This way the processing is also covered
+    // by the terminator's timer.
+    // Note that this happens only for main thread runnables, such that the
+    // correct way of ensuring shutdown processing remains to have an async
+    // shutdown blocker.
+    if (thread) {
+      NS_ProcessPendingEvents(thread);
+    }
+  }
+
+  // From now on any IsInOrBeyond checks will find the new phase set.
   sCurrentShutdownPhase = aPhase;
 
   // TODO: Bug 1768581
@@ -371,6 +388,10 @@ void AppShutdown::AdvanceShutdownPhaseInternal(
 #endif
         obsService->NotifyObservers(aNotificationSubject, aTopic,
                                     aNotificationData);
+        // Empty our MT event queue again after the notification has finished
+        if (thread) {
+          NS_ProcessPendingEvents(thread);
+        }
       }
     }
   }
