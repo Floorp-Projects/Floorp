@@ -134,6 +134,11 @@ class DummyAudioProcessing : public AudioProcessing {
     MOZ_CRASH("Unexpected call");
     return false;
   }
+  bool CreateAndAttachAecDump(absl::string_view, int64_t,
+                              rtc::TaskQueue*) override {
+    MOZ_CRASH("Unexpected call");
+    return false;
+  }
   bool CreateAndAttachAecDump(FILE*, int64_t, rtc::TaskQueue*) override {
     MOZ_CRASH("Unexpected call");
     return false;
