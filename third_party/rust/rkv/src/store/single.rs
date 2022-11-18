@@ -11,10 +11,19 @@
 use std::marker::PhantomData;
 
 use crate::{
-    backend::{BackendDatabase, BackendFlags, BackendIter, BackendRoCursor, BackendRwTransaction},
+    backend::{
+        BackendDatabase,
+        BackendFlags,
+        BackendIter,
+        BackendRoCursor,
+        BackendRwTransaction,
+    },
     error::StoreError,
     helpers::read_transform,
-    readwrite::{Readable, Writer},
+    readwrite::{
+        Readable,
+        Writer,
+    },
     value::Value,
 };
 
@@ -35,7 +44,9 @@ where
     D: BackendDatabase,
 {
     pub(crate) fn new(db: D) -> SingleStore<D> {
-        SingleStore { db }
+        SingleStore {
+            db,
+        }
     }
 
     pub fn get<'r, R, K>(&self, reader: &'r R, k: K) -> Result<Option<Value<'r>>, StoreError>
@@ -122,9 +133,11 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         match self.iter.next() {
             None => None,
-            Some(Ok((key, bytes))) => match read_transform(Ok(bytes)) {
-                Ok(val) => Some(Ok((key, val))),
-                Err(err) => Some(Err(err)),
+            Some(Ok((key, bytes))) => {
+                match read_transform(Ok(bytes)) {
+                    Ok(val) => Some(Ok((key, val))),
+                    Err(err) => Some(Err(err)),
+                }
             },
             Some(Err(err)) => Some(Err(err.into())),
         }

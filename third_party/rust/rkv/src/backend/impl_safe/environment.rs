@@ -13,18 +13,36 @@ use std::{
     collections::HashMap,
     fs,
     ops::DerefMut,
-    path::{Path, PathBuf},
-    sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard},
+    path::{
+        Path,
+        PathBuf,
+    },
+    sync::{
+        Arc,
+        RwLock,
+        RwLockReadGuard,
+        RwLockWriteGuard,
+    },
 };
 
 use id_arena::Arena;
 use log::warn;
 
 use super::{
-    database::Database, DatabaseFlagsImpl, DatabaseImpl, EnvironmentFlagsImpl, ErrorImpl, InfoImpl,
-    RoTransactionImpl, RwTransactionImpl, StatImpl,
+    database::Database,
+    DatabaseFlagsImpl,
+    DatabaseImpl,
+    EnvironmentFlagsImpl,
+    ErrorImpl,
+    InfoImpl,
+    RoTransactionImpl,
+    RwTransactionImpl,
+    StatImpl,
 };
-use crate::backend::traits::{BackendEnvironment, BackendEnvironmentBuilder};
+use crate::backend::traits::{
+    BackendEnvironment,
+    BackendEnvironmentBuilder,
+};
 
 const DEFAULT_DB_FILENAME: &str = "data.safe.bin";
 
@@ -99,13 +117,7 @@ impl<'b> BackendEnvironmentBuilder<'b> for EnvironmentBuilderImpl {
             }
             fs::create_dir_all(path)?;
         }
-        let mut env = EnvironmentImpl::new(
-            path,
-            self.flags,
-            self.max_readers,
-            self.max_dbs,
-            self.map_size,
-        )?;
+        let mut env = EnvironmentImpl::new(path, self.flags, self.max_readers, self.max_dbs, self.map_size)?;
         env.read_from_disk(self.discard_if_corrupted)?;
         Ok(env)
     }
@@ -144,21 +156,14 @@ pub struct EnvironmentImpl {
 impl EnvironmentImpl {
     fn serialize(&self) -> Result<Vec<u8>, ErrorImpl> {
         let dbs = self.dbs.read().map_err(|_| ErrorImpl::EnvPoisonError)?;
-        let data: HashMap<_, _> = dbs
-            .name_map
-            .iter()
-            .map(|(name, id)| (name, &dbs.arena[id.0]))
-            .collect();
+        let data: HashMap<_, _> = dbs.name_map.iter().map(|(name, id)| (name, &dbs.arena[id.0])).collect();
         Ok(bincode::serialize(&data)?)
     }
 
-    fn deserialize(
-        bytes: &[u8],
-        discard_if_corrupted: bool,
-    ) -> Result<(DatabaseArena, DatabaseNameMap), ErrorImpl> {
+    fn deserialize(bytes: &[u8], discard_if_corrupted: bool) -> Result<(DatabaseArena, DatabaseNameMap), ErrorImpl> {
         let mut arena = DatabaseArena::new();
         let mut name_map = HashMap::new();
-        let data: HashMap<_, _> = match bincode::deserialize(bytes) {
+        let data: HashMap<_, _> = match bincode::deserialize(&bytes) {
             Err(_) if discard_if_corrupted => Ok(HashMap::new()),
             result => result,
         }?;
@@ -208,7 +213,10 @@ impl EnvironmentImpl {
             return Ok(());
         };
         let (arena, name_map) = Self::deserialize(&fs::read(&path)?, discard_if_corrupted)?;
-        self.dbs = RwLock::new(EnvironmentDbs { arena, name_map });
+        self.dbs = RwLock::new(EnvironmentDbs {
+            arena,
+            name_map,
+        });
         Ok(())
     }
 
@@ -255,26 +263,20 @@ impl<'e> BackendEnvironment<'e> for EnvironmentImpl {
         Ok(*db)
     }
 
-    fn create_db(
-        &self,
-        name: Option<&str>,
-        flags: Self::Flags,
-    ) -> Result<Self::Database, Self::Error> {
+    fn create_db(&self, name: Option<&str>, flags: Self::Flags) -> Result<Self::Database, Self::Error> {
         if Arc::strong_count(&self.ro_txns) > 1 {
             return Err(ErrorImpl::DbsIllegalOpen);
         }
         // TOOD: don't reallocate `name`.
         let key = name.map(String::from);
         let mut dbs = self.dbs.write().map_err(|_| ErrorImpl::EnvPoisonError)?;
-        if dbs.name_map.keys().filter_map(|k| k.as_ref()).count() >= self.max_dbs && name.is_some() {
+        if dbs.name_map.keys().filter_map(|k| k.as_ref()).count() >= self.max_dbs && name != None {
             return Err(ErrorImpl::DbsFull);
         }
         let parts = EnvironmentDbsRefMut::from(dbs.deref_mut());
         let arena = parts.arena;
         let name_map = parts.name_map;
-        let id = name_map
-            .entry(key)
-            .or_insert_with(|| DatabaseImpl(arena.alloc(Database::new(Some(flags), None))));
+        let id = name_map.entry(key).or_insert_with(|| DatabaseImpl(arena.alloc(Database::new(Some(flags), None))));
         Ok(*id)
     }
 
@@ -309,10 +311,7 @@ impl<'e> BackendEnvironment<'e> for EnvironmentImpl {
     }
 
     fn set_map_size(&self, size: usize) -> Result<(), Self::Error> {
-        warn!(
-            "`set_map_size({})` is ignored by this storage backend.",
-            size
-        );
+        warn!("`set_map_size({})` is ignored by this storage backend.", size);
         Ok(())
     }
 
@@ -321,6 +320,6 @@ impl<'e> BackendEnvironment<'e> for EnvironmentImpl {
         // they're both currently unimplemented with this storage backend.
         let mut db_filename = self.path.clone();
         db_filename.push(DEFAULT_DB_FILENAME);
-        vec![db_filename]
+        return vec![db_filename];
     }
 }

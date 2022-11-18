@@ -10,18 +10,32 @@
 
 use std::{
     fs,
-    path::{Path, PathBuf},
+    path::{
+        Path,
+        PathBuf,
+    },
 };
 
 use lmdb::Error as LmdbError;
 
 use super::{
-    DatabaseFlagsImpl, DatabaseImpl, EnvironmentFlagsImpl, ErrorImpl, InfoImpl, RoTransactionImpl,
-    RwTransactionImpl, StatImpl,
+    DatabaseFlagsImpl,
+    DatabaseImpl,
+    EnvironmentFlagsImpl,
+    ErrorImpl,
+    InfoImpl,
+    RoTransactionImpl,
+    RwTransactionImpl,
+    StatImpl,
 };
 use crate::backend::traits::{
-    BackendEnvironment, BackendEnvironmentBuilder, BackendInfo, BackendIter, BackendRoCursor,
-    BackendRoCursorTransaction, BackendStat,
+    BackendEnvironment,
+    BackendEnvironmentBuilder,
+    BackendInfo,
+    BackendIter,
+    BackendRoCursor,
+    BackendRoCursorTransaction,
+    BackendStat,
 };
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
@@ -98,7 +112,7 @@ impl<'b> BackendEnvironmentBuilder<'b> for EnvironmentBuilderImpl {
                 if !path.is_file() {
                     return Err(ErrorImpl::UnsuitableEnvironmentPath(path.into()));
                 }
-            }
+            },
             EnvironmentPathType::SubDir => {
                 if !path.is_dir() {
                     if !self.make_dir_if_needed {
@@ -106,21 +120,12 @@ impl<'b> BackendEnvironmentBuilder<'b> for EnvironmentBuilderImpl {
                     }
                     fs::create_dir_all(path)?;
                 }
-            }
+            },
         }
 
-        self.builder
-            .open(path)
-            .map_err(ErrorImpl::LmdbError)
-            .and_then(|lmdbenv| {
-                EnvironmentImpl::new(
-                    path,
-                    self.env_path_type,
-                    self.env_lock_type,
-                    self.env_db_type,
-                    lmdbenv,
-                )
-            })
+        self.builder.open(path).map_err(ErrorImpl::LmdbError).and_then(|lmdbenv| {
+            EnvironmentImpl::new(path, self.env_path_type, self.env_lock_type, self.env_db_type, lmdbenv)
+        })
     }
 }
 
@@ -182,54 +187,33 @@ impl<'e> BackendEnvironment<'e> for EnvironmentImpl {
         if self.env_db_type == EnvironmentDefaultDbType::SingleDatabase {
             return Ok(vec![None]);
         }
-        let db = self
-            .lmdbenv
-            .open_db(None)
-            .map(DatabaseImpl)
-            .map_err(ErrorImpl::LmdbError)?;
+        let db = self.lmdbenv.open_db(None).map(DatabaseImpl).map_err(ErrorImpl::LmdbError)?;
         let reader = self.begin_ro_txn()?;
         let cursor = reader.open_ro_cursor(&db)?;
         let mut iter = cursor.into_iter();
         let mut store = vec![];
         while let Some(result) = iter.next() {
             let (key, _) = result?;
-            let name = String::from_utf8(key.to_owned())
-                .map_err(|_| ErrorImpl::LmdbError(lmdb::Error::Corrupted))?;
+            let name = String::from_utf8(key.to_owned()).map_err(|_| ErrorImpl::LmdbError(lmdb::Error::Corrupted))?;
             store.push(Some(name));
         }
         Ok(store)
     }
 
     fn open_db(&self, name: Option<&str>) -> Result<Self::Database, Self::Error> {
-        self.lmdbenv
-            .open_db(name)
-            .map(DatabaseImpl)
-            .map_err(ErrorImpl::LmdbError)
+        self.lmdbenv.open_db(name).map(DatabaseImpl).map_err(ErrorImpl::LmdbError)
     }
 
-    fn create_db(
-        &self,
-        name: Option<&str>,
-        flags: Self::Flags,
-    ) -> Result<Self::Database, Self::Error> {
-        self.lmdbenv
-            .create_db(name, flags.0)
-            .map(DatabaseImpl)
-            .map_err(ErrorImpl::LmdbError)
+    fn create_db(&self, name: Option<&str>, flags: Self::Flags) -> Result<Self::Database, Self::Error> {
+        self.lmdbenv.create_db(name, flags.0).map(DatabaseImpl).map_err(ErrorImpl::LmdbError)
     }
 
     fn begin_ro_txn(&'e self) -> Result<Self::RoTransaction, Self::Error> {
-        self.lmdbenv
-            .begin_ro_txn()
-            .map(RoTransactionImpl)
-            .map_err(ErrorImpl::LmdbError)
+        self.lmdbenv.begin_ro_txn().map(RoTransactionImpl).map_err(ErrorImpl::LmdbError)
     }
 
     fn begin_rw_txn(&'e self) -> Result<Self::RwTransaction, Self::Error> {
-        self.lmdbenv
-            .begin_rw_txn()
-            .map(RwTransactionImpl)
-            .map_err(ErrorImpl::LmdbError)
+        self.lmdbenv.begin_rw_txn().map(RwTransactionImpl).map_err(ErrorImpl::LmdbError)
     }
 
     fn sync(&self, force: bool) -> Result<(), Self::Error> {
@@ -237,17 +221,11 @@ impl<'e> BackendEnvironment<'e> for EnvironmentImpl {
     }
 
     fn stat(&self) -> Result<Self::Stat, Self::Error> {
-        self.lmdbenv
-            .stat()
-            .map(StatImpl)
-            .map_err(ErrorImpl::LmdbError)
+        self.lmdbenv.stat().map(StatImpl).map_err(ErrorImpl::LmdbError)
     }
 
     fn info(&self) -> Result<Self::Info, Self::Error> {
-        self.lmdbenv
-            .info()
-            .map(InfoImpl)
-            .map_err(ErrorImpl::LmdbError)
+        self.lmdbenv.info().map(InfoImpl).map_err(ErrorImpl::LmdbError)
     }
 
     fn freelist(&self) -> Result<usize, Self::Error> {
@@ -269,9 +247,7 @@ impl<'e> BackendEnvironment<'e> for EnvironmentImpl {
     }
 
     fn set_map_size(&self, size: usize) -> Result<(), Self::Error> {
-        self.lmdbenv
-            .set_map_size(size)
-            .map_err(ErrorImpl::LmdbError)
+        self.lmdbenv.set_map_size(size).map_err(ErrorImpl::LmdbError)
     }
 
     fn get_files_on_disk(&self) -> Vec<PathBuf> {

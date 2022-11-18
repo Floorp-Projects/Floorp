@@ -7,13 +7,25 @@
 //!
 //!     cargo run --example iterator
 
-use std::{fs, str};
+use std::{
+    fs,
+    str,
+};
 
 use tempfile::Builder;
 
 use rkv::{
-    backend::{SafeMode, SafeModeDatabase, SafeModeEnvironment},
-    Manager, Rkv, SingleStore, StoreError, StoreOptions, Value,
+    backend::{
+        Lmdb,
+        LmdbDatabase,
+        LmdbEnvironment,
+    },
+    Manager,
+    Rkv,
+    SingleStore,
+    StoreError,
+    StoreOptions,
+    Value,
 };
 
 fn main() {
@@ -21,8 +33,8 @@ fn main() {
     fs::create_dir_all(root.path()).unwrap();
     let p = root.path();
 
-    let mut manager = Manager::<SafeModeEnvironment>::singleton().write().unwrap();
-    let created_arc = manager.get_or_create(p, Rkv::new::<SafeMode>).unwrap();
+    let mut manager = Manager::<LmdbEnvironment>::singleton().write().unwrap();
+    let created_arc = manager.get_or_create(p, Rkv::new::<Lmdb>).unwrap();
     let k = created_arc.read().unwrap();
     let store = k.open_single("store", StoreOptions::create()).unwrap();
 
@@ -35,8 +47,7 @@ fn main() {
     // returns the (key, value) tuples in order.
     let mut iter = store.iter_start(&reader).unwrap();
     while let Some(Ok((country, city))) = iter.next() {
-        let country = str::from_utf8(country).unwrap();
-        println!("{country}, {city:?}");
+        println!("{}, {:?}", str::from_utf8(country).unwrap(), city);
     }
 
     println!();
@@ -45,21 +56,18 @@ fn main() {
     // than the given key.
     let mut iter = store.iter_from(&reader, "Japan").unwrap();
     while let Some(Ok((country, city))) = iter.next() {
-        println!("{}, {city:?}", str::from_utf8(country).unwrap());
+        println!("{}, {:?}", str::from_utf8(country).unwrap(), city);
     }
 
     println!();
     println!("Iterating from the given prefix...");
     let mut iter = store.iter_from(&reader, "Un").unwrap();
     while let Some(Ok((country, city))) = iter.next() {
-        println!("{}, {city:?}", str::from_utf8(country).unwrap());
+        println!("{}, {:?}", str::from_utf8(country).unwrap(), city);
     }
 }
 
-fn populate_store(
-    k: &Rkv<SafeModeEnvironment>,
-    store: SingleStore<SafeModeDatabase>,
-) -> Result<(), StoreError> {
+fn populate_store(k: &Rkv<LmdbEnvironment>, store: SingleStore<LmdbDatabase>) -> Result<(), StoreError> {
     let mut writer = k.write()?;
     for (country, city) in vec![
         ("Canada", Value::Str("Ottawa")),

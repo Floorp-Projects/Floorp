@@ -47,6 +47,8 @@ pub struct CloseOptions {
 
 impl CloseOptions {
     pub fn delete_files_on_disk() -> CloseOptions {
-        CloseOptions { delete: true }
+        CloseOptions {
+            delete: true,
+        }
     }
 }
