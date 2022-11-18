@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_workers_WorkerLoadContext_h__
 #define mozilla_dom_workers_WorkerLoadContext_h__
 
+#include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsIRequest.h"
 #include "mozilla/CORSMode.h"
@@ -36,12 +37,23 @@ class CacheCreator;
  * WorkerLoadContext has the following generic fields applied to all worker
  * ScriptLoadRequests (and primarily used for error handling):
  *
- *    * mLoadResult
- *        Used to store the result of a load. In particular, it is used for
- *        error handling when a load fails (for example, a malformed URI).
  *    * mMutedErrorFlag
  *        Set when we finish loading a script, and used to determine whether a
  *        given error is thrown or muted.
+ *    * mLoadResult
+ *        In order to report errors correctly in the worker thread, we need to
+ *        move them from the main thread to the worker. This field records the
+ *        load error, for throwing when we return to the worker thread.
+ *    * mKind
+ *        See documentation of WorkerLoadContext::Kind.
+ *    * mClientInfo
+ *        A snapshot of a global living in the system (see documentation for
+ *        ClientInfo). In worker loading, this field is important for CSP
+ *        information and knowing what to intercept for Service Worker
+ *        interception.
+ *    * mChannel
+ *        The channel used by this request for it's load. Used for cancellation,
+ *        in order to cancel the stream.
  *
  * The rest of the fields on this class focus on enabling the ServiceWorker
  * usecase, in particular -- using the Cache API to store the worker so that
@@ -102,6 +114,7 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
   bool mIsTopLevel = true;
   Kind mKind;
   Maybe<ClientInfo> mClientInfo;
+  nsCOMPtr<nsIChannel> mChannel;
 
   /* These fields are only used by service workers */
   /* TODO: Split out a ServiceWorkerLoadContext */

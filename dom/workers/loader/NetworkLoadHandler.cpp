@@ -75,6 +75,12 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
   MOZ_ASSERT(!mRequestHandle->IsEmpty());
   WorkerLoadContext* loadContext = mRequestHandle->GetContext();
 
+  if (!loadContext->mChannel) {
+    return NS_BINDING_ABORTED;
+  }
+
+  loadContext->mChannel = nullptr;
+
   if (NS_FAILED(aStatus)) {
     return aStatus;
   }
