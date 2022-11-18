@@ -357,7 +357,7 @@ class ScriptExecutorRunnable final : public MainThreadWorkerSyncRunnable {
  public:
   ScriptExecutorRunnable(WorkerScriptLoader* aScriptLoader,
                          WorkerPrivate* aWorkerPrivate,
-                         nsIEventTarget* aSyncLoopTarget,
+                         nsISerialEventTarget* aSyncLoopTarget,
                          WorkerLoadContext* aLoadContext);
 
  private:
@@ -378,7 +378,7 @@ class AbruptCancellationRunnable final : public MainThreadWorkerSyncRunnable {
 
  public:
   AbruptCancellationRunnable(WorkerScriptLoader* aScriptLoader,
-                             nsIEventTarget* aSyncLoopTarget);
+                             nsISerialEventTarget* aSyncLoopTarget);
 
  private:
   ~AbruptCancellationRunnable() = default;
@@ -402,7 +402,7 @@ static bool EvaluateSourceBuffer(JSContext* aCx,
 WorkerScriptLoader::WorkerScriptLoader(
     WorkerPrivate* aWorkerPrivate,
     UniquePtr<SerializedStackHolder> aOriginStack,
-    nsIEventTarget* aSyncLoopTarget, WorkerScriptType aWorkerScriptType,
+    nsISerialEventTarget* aSyncLoopTarget, WorkerScriptType aWorkerScriptType,
     ErrorResult& aRv)
     : mOriginStack(std::move(aOriginStack)),
       mSyncLoopTarget(aSyncLoopTarget),
@@ -1196,7 +1196,7 @@ void WorkerScriptLoader::LogExceptionToConsole(JSContext* aCx,
 NS_IMPL_ISUPPORTS(WorkerScriptLoader, nsINamed)
 
 AbruptCancellationRunnable::AbruptCancellationRunnable(
-    WorkerScriptLoader* aScriptLoader, nsIEventTarget* aSyncLoopTarget)
+    WorkerScriptLoader* aScriptLoader, nsISerialEventTarget* aSyncLoopTarget)
     : MainThreadWorkerSyncRunnable(aScriptLoader->mWorkerRef->Private(),
                                    aSyncLoopTarget),
       mScriptLoader(aScriptLoader) {}
@@ -1216,7 +1216,7 @@ bool AbruptCancellationRunnable::WorkerRun(JSContext* aCx,
 
 ScriptExecutorRunnable::ScriptExecutorRunnable(
     WorkerScriptLoader* aScriptLoader, WorkerPrivate* aWorkerPrivate,
-    nsIEventTarget* aSyncLoopTarget, WorkerLoadContext* aLoadContext)
+    nsISerialEventTarget* aSyncLoopTarget, WorkerLoadContext* aLoadContext)
     : MainThreadWorkerSyncRunnable(aWorkerPrivate, aSyncLoopTarget),
       mScriptLoader(aScriptLoader),
       mLoadContext(aLoadContext) {}
