@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WorkerLoadContext.h"
+#include "mozilla/dom/workerinternals/ScriptLoader.h"
 #include "CacheLoadHandler.h"  // CacheCreator
 
 namespace mozilla {
@@ -41,7 +42,26 @@ ThreadSafeRequestHandle::ThreadSafeRequestHandle(
 
 already_AddRefed<JS::loader::ScriptLoadRequest>
 ThreadSafeRequestHandle::ReleaseRequest() {
+  mRunnable = nullptr;
   return mRequest.forget();
+}
+
+nsresult ThreadSafeRequestHandle::OnStreamComplete(nsresult aStatus) {
+  return mRunnable->OnStreamComplete(this, aStatus);
+}
+
+void ThreadSafeRequestHandle::LoadingFinished(nsresult aRv) {
+  mRunnable->LoadingFinished(this, aRv);
+}
+
+void ThreadSafeRequestHandle::MaybeExecuteFinishedScripts() {
+  mRunnable->MaybeExecuteFinishedScripts(this);
+}
+
+bool ThreadSafeRequestHandle::IsCancelled() { return mRunnable->IsCancelled(); }
+
+nsresult ThreadSafeRequestHandle::GetCancelResult() {
+  return mRunnable->GetCancelResult();
 }
 
 ThreadSafeRequestHandle::~ThreadSafeRequestHandle() {
