@@ -31,12 +31,12 @@ namespace mozilla::dom {
 //////////////////////////////////////////////////////////////
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ScriptLoadContext)
-NS_INTERFACE_MAP_END_INHERITING(JS::loader::LoadContextCCBase)
+NS_INTERFACE_MAP_END_INHERITING(JS::loader::LoadContextBase)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ScriptLoadContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ScriptLoadContext,
-                                                JS::loader::LoadContextCCBase)
+                                                JS::loader::LoadContextBase)
   if (Runnable* runnable = tmp->mRunnable.exchange(nullptr)) {
     runnable->Release();
   }
@@ -44,15 +44,15 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ScriptLoadContext,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ScriptLoadContext,
-                                                  JS::loader::LoadContextCCBase)
+                                                  JS::loader::LoadContextBase)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoadBlockedDocument)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(ScriptLoadContext, JS::loader::LoadContextCCBase)
-NS_IMPL_RELEASE_INHERITED(ScriptLoadContext, JS::loader::LoadContextCCBase)
+NS_IMPL_ADDREF_INHERITED(ScriptLoadContext, JS::loader::LoadContextBase)
+NS_IMPL_RELEASE_INHERITED(ScriptLoadContext, JS::loader::LoadContextBase)
 
 ScriptLoadContext::ScriptLoadContext()
-    : JS::loader::LoadContextCCBase(JS::loader::ContextKind::Window),
+    : JS::loader::LoadContextBase(JS::loader::ContextKind::Window),
       mScriptMode(ScriptMode::eBlocking),
       mScriptFromHead(false),
       mIsInline(true),

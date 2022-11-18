@@ -16,6 +16,22 @@ namespace JS::loader {
 // LoadContextBase
 ////////////////////////////////////////////////////////////////
 
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LoadContextBase)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(LoadContextBase)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(LoadContextBase)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(LoadContextBase)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(LoadContextBase)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRequest)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(LoadContextBase)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRequest)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 LoadContextBase::LoadContextBase(ContextKind kind)
     : mKind(kind), mRequest(nullptr) {}
 
@@ -42,37 +58,5 @@ mozilla::dom::WorkerLoadContext* LoadContextBase::AsWorkerContext() {
   MOZ_ASSERT(IsWorkerContext());
   return static_cast<mozilla::dom::WorkerLoadContext*>(this);
 }
-
-////////////////////////////////////////////////////////////////
-// LoadContextCCBase
-////////////////////////////////////////////////////////////////
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LoadContextCCBase)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(LoadContextCCBase)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(LoadContextCCBase)
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(LoadContextCCBase)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(LoadContextCCBase)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRequest)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(LoadContextCCBase)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRequest)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-LoadContextCCBase::LoadContextCCBase(ContextKind kind)
-    : LoadContextBase(kind) {}
-
-////////////////////////////////////////////////////////////////
-// LoadContextNoCCBase
-////////////////////////////////////////////////////////////////
-
-NS_IMPL_ISUPPORTS0(LoadContextNoCCBase);
-
-LoadContextNoCCBase::LoadContextNoCCBase(ContextKind kind)
-    : LoadContextBase(kind) {}
 
 }  // namespace JS::loader

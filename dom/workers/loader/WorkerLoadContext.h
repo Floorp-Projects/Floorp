@@ -51,7 +51,7 @@ class CacheCreator;
  *
  */
 
-class WorkerLoadContext : public JS::loader::LoadContextNoCCBase {
+class WorkerLoadContext : public JS::loader::LoadContextBase {
  public:
   /* Worker Load Context Kinds
    *
@@ -80,13 +80,10 @@ class WorkerLoadContext : public JS::loader::LoadContextNoCCBase {
 
   explicit WorkerLoadContext(Kind aKind, const Maybe<ClientInfo>& aClientInfo);
 
-  void SetRequest(JS::loader::ScriptLoadRequest* aRequest) override {
-    LoadContextBase::SetRequest(aRequest);
-    mIsTopLevel = aRequest->IsTopLevel() && (mKind == Kind::MainScript);
-  }
-
   // Used to detect if the `is top-level` bit is set on a given module.
-  bool IsTopLevel() { return mIsTopLevel; };
+  bool IsTopLevel() {
+    return mRequest->IsTopLevel() && (mKind == Kind::MainScript);
+  };
 
   static Kind GetKind(bool isMainScript, bool isDebuggerScript) {
     if (isDebuggerScript) {
