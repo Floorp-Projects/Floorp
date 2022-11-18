@@ -279,45 +279,45 @@ void nsCoreUtils::ConvertScrollTypeToPercents(uint32_t aScrollType,
   WhenToScroll whenY, whenX;
   switch (aScrollType) {
     case nsIAccessibleScrollType::SCROLL_TYPE_TOP_LEFT:
-      whereY = kScrollToTop;
+      whereY = WhereToScroll::Start;
       whenY = WhenToScroll::Always;
-      whereX = kScrollToLeft;
+      whereX = WhereToScroll::Start;
       whenX = WhenToScroll::Always;
       break;
     case nsIAccessibleScrollType::SCROLL_TYPE_BOTTOM_RIGHT:
-      whereY = kScrollToBottom;
+      whereY = WhereToScroll::End;
       whenY = WhenToScroll::Always;
-      whereX = kScrollToRight;
+      whereX = WhereToScroll::End;
       whenX = WhenToScroll::Always;
       break;
     case nsIAccessibleScrollType::SCROLL_TYPE_TOP_EDGE:
-      whereY = kScrollToTop;
+      whereY = WhereToScroll::Start;
       whenY = WhenToScroll::Always;
-      whereX = kScrollMinimum;
+      whereX = WhereToScroll::Nearest;
       whenX = WhenToScroll::IfNotFullyVisible;
       break;
     case nsIAccessibleScrollType::SCROLL_TYPE_BOTTOM_EDGE:
-      whereY = kScrollToBottom;
+      whereY = WhereToScroll::End;
       whenY = WhenToScroll::Always;
-      whereX = kScrollMinimum;
+      whereX = WhereToScroll::Nearest;
       whenX = WhenToScroll::IfNotFullyVisible;
       break;
     case nsIAccessibleScrollType::SCROLL_TYPE_LEFT_EDGE:
-      whereY = kScrollMinimum;
+      whereY = WhereToScroll::Nearest;
       whenY = WhenToScroll::IfNotFullyVisible;
-      whereX = kScrollToLeft;
+      whereX = WhereToScroll::Start;
       whenX = WhenToScroll::Always;
       break;
     case nsIAccessibleScrollType::SCROLL_TYPE_RIGHT_EDGE:
-      whereY = kScrollMinimum;
+      whereY = WhereToScroll::Nearest;
       whenY = WhenToScroll::IfNotFullyVisible;
-      whereX = kScrollToRight;
+      whereX = WhereToScroll::End;
       whenX = WhenToScroll::Always;
       break;
     default:
-      whereY = kScrollMinimum;
+      whereY = WhereToScroll::Nearest;
       whenY = WhenToScroll::IfNotFullyVisible;
-      whereX = kScrollMinimum;
+      whereX = WhereToScroll::Nearest;
       whenX = WhenToScroll::IfNotFullyVisible;
   }
   *aVertical = ScrollAxis(whereY, whenY);

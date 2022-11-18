@@ -67,6 +67,19 @@ struct ParamTraits<mozilla::ScrollFlags>
                                     mozilla::ScrollFlags::ALL_BITS> {};
 
 template <>
+struct ParamTraits<mozilla::WhereToScroll> {
+  using paramType = mozilla::WhereToScroll;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mPercentage);
+  }
+
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mPercentage);
+  }
+};
+
+template <>
 struct ParamTraits<mozilla::ScrollAxis> {
   typedef mozilla::ScrollAxis paramType;
 

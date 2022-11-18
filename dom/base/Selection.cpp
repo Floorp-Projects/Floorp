@@ -2981,11 +2981,15 @@ nsresult Selection::PostScrollSelectionIntoViewEvent(SelectionRegion aRegion,
 }
 
 void Selection::ScrollIntoView(int16_t aRegion, bool aIsSynchronous,
-                               WhereToScroll aVPercent, WhereToScroll aHPercent,
+                               int16_t aVPercent, int16_t aHPercent,
                                ErrorResult& aRv) {
   int32_t flags = aIsSynchronous ? Selection::SCROLL_SYNCHRONOUS : 0;
-  nsresult rv = ScrollIntoView(aRegion, ScrollAxis(aVPercent),
-                               ScrollAxis(aHPercent), flags);
+  // -1 means nearest in this API.
+  const auto v =
+      aVPercent == -1 ? WhereToScroll::Nearest : WhereToScroll(aVPercent);
+  const auto h =
+      aHPercent == -1 ? WhereToScroll::Nearest : WhereToScroll(aHPercent);
+  nsresult rv = ScrollIntoView(aRegion, ScrollAxis(v), ScrollAxis(h), flags);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
   }
