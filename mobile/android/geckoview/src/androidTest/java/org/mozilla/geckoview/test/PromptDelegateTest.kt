@@ -1,6 +1,14 @@
 package org.mozilla.geckoview.test
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.MediumTest
+import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
+import org.junit.Assert
+import org.junit.Ignore
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.mozilla.geckoview.AllowOrDeny
+import org.mozilla.geckoview.Autocomplete
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate
@@ -13,16 +21,6 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 
-import androidx.test.filters.MediumTest
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.hamcrest.Matchers.*
-import org.junit.Assert
-import org.junit.Ignore
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.mozilla.geckoview.Autocomplete
-import org.junit.Assume.assumeThat
-
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 class PromptDelegateTest : BaseSessionTest() {
@@ -32,8 +30,7 @@ class PromptDelegateTest : BaseSessionTest() {
 
         sessionRule.delegateDuringNextWait(object : PromptDelegate, NavigationDelegate {
             @AssertCalled(count = 1)
-            override fun onPopupPrompt(session: GeckoSession, prompt: PromptDelegate.PopupPrompt)
-                    : GeckoResult<PromptDelegate.PromptResponse>? {
+            override fun onPopupPrompt(session: GeckoSession, prompt: PromptDelegate.PopupPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URL should not be null", prompt.targetUri, notNullValue())
                 assertThat("URL should match", prompt.targetUri, endsWith(HELLO_HTML_PATH))
@@ -41,8 +38,10 @@ class PromptDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 2)
-            override fun onLoadRequest(session: GeckoSession,
-                                       request: LoadRequest): GeckoResult<AllowOrDeny>? {
+            override fun onLoadRequest(
+                session: GeckoSession,
+                request: LoadRequest
+            ): GeckoResult<AllowOrDeny>? {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URL should not be null", request.uri, notNullValue())
                 assertThat("URL should match", request.uri, endsWith(forEachCall(POPUP_HTML_PATH, HELLO_HTML_PATH)))
@@ -67,8 +66,7 @@ class PromptDelegateTest : BaseSessionTest() {
 
         sessionRule.delegateUntilTestEnd(object : PromptDelegate, NavigationDelegate {
             @AssertCalled(count = 1)
-            override fun onPopupPrompt(session: GeckoSession, prompt: PromptDelegate.PopupPrompt)
-                    : GeckoResult<PromptDelegate.PromptResponse>? {
+            override fun onPopupPrompt(session: GeckoSession, prompt: PromptDelegate.PopupPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URL should not be null", prompt.targetUri, notNullValue())
                 assertThat("URL should match", prompt.targetUri, endsWith(HELLO_HTML_PATH))
@@ -76,8 +74,10 @@ class PromptDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1)
-            override fun onLoadRequest(session: GeckoSession,
-                                       request: LoadRequest): GeckoResult<AllowOrDeny>? {
+            override fun onLoadRequest(
+                session: GeckoSession,
+                request: LoadRequest
+            ): GeckoResult<AllowOrDeny>? {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URL should not be null", request.uri, notNullValue())
                 assertThat("URL should match", request.uri, endsWith(POPUP_HTML_PATH))
@@ -96,7 +96,8 @@ class PromptDelegateTest : BaseSessionTest() {
     }
 
     @Ignore // TODO: Reenable when 1501574 is fixed.
-    @Test fun alertTest() {
+    @Test
+    fun alertTest() {
         mainSession.evaluateJS("alert('Alert!');")
 
         sessionRule.waitUntilCalled(object : PromptDelegate {
@@ -114,26 +115,34 @@ class PromptDelegateTest : BaseSessionTest() {
         sessionRule.delegateDuringNextWait(object : Autocomplete.StorageDelegate {
             @AssertCalled
             override fun onLoginFetch(domain: String): GeckoResult<Array<Autocomplete.LoginEntry>>? {
-                return GeckoResult.fromValue(arrayOf(
-                    Autocomplete.LoginEntry.Builder()
-                        .origin(GeckoSessionTestRule.TEST_ENDPOINT)
-                        .formActionOrigin(GeckoSessionTestRule.TEST_ENDPOINT)
-                        .httpRealm("Fake Realm")
-                        .username("test-username")
-                        .password("test-password")
-                        .formActionOrigin(null)
-                        .guid("test-guid")
-                        .build()
-                ));
+                return GeckoResult.fromValue(
+                    arrayOf(
+                        Autocomplete.LoginEntry.Builder()
+                            .origin(GeckoSessionTestRule.TEST_ENDPOINT)
+                            .formActionOrigin(GeckoSessionTestRule.TEST_ENDPOINT)
+                            .httpRealm("Fake Realm")
+                            .username("test-username")
+                            .password("test-password")
+                            .formActionOrigin(null)
+                            .guid("test-guid")
+                            .build()
+                    )
+                )
             }
         })
         sessionRule.waitUntilCalled(object : PromptDelegate, Autocomplete.StorageDelegate {
             @AssertCalled
             override fun onAuthPrompt(session: GeckoSession, prompt: AuthPrompt): GeckoResult<PromptResponse>? {
-                assertThat("Saved login should appear here",
-                    prompt.authOptions.username, equalTo("test-username"))
-                assertThat("Saved login should appear here",
-                    prompt.authOptions.password, equalTo("test-password"))
+                assertThat(
+                    "Saved login should appear here",
+                    prompt.authOptions.username,
+                    equalTo("test-username")
+                )
+                assertThat(
+                    "Saved login should appear here",
+                    prompt.authOptions.password,
+                    equalTo("test-password")
+                )
                 return null
             }
         })
@@ -143,8 +152,11 @@ class PromptDelegateTest : BaseSessionTest() {
     // This also tests that the login save prompt gets automatically dismissed if
     // the login information is incorrect.
     @Test fun loginStorageHttpAuth() {
-        sessionRule.setPrefsUntilTestEnd(mapOf(
-            "signon.rememberSignons" to true))
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                "signon.rememberSignons" to true
+            )
+        )
         val result = GeckoResult<PromptDelegate.BasePrompt>()
         val promptInstanceDelegate = object : PromptDelegate.PromptInstanceDelegate {
             var prompt: PromptDelegate.BasePrompt? = null
@@ -156,12 +168,12 @@ class PromptDelegateTest : BaseSessionTest() {
         sessionRule.delegateUntilTestEnd(object : PromptDelegate, Autocomplete.StorageDelegate {
             @AssertCalled
             override fun onAuthPrompt(session: GeckoSession, prompt: AuthPrompt): GeckoResult<PromptResponse>? {
-                return GeckoResult.fromValue(prompt.confirm("foo", "bar"));
+                return GeckoResult.fromValue(prompt.confirm("foo", "bar"))
             }
 
             @AssertCalled
             override fun onLoginFetch(domain: String): GeckoResult<Array<Autocomplete.LoginEntry>>? {
-                return GeckoResult.fromValue(arrayOf());
+                return GeckoResult.fromValue(arrayOf())
             }
 
             @AssertCalled
@@ -194,7 +206,7 @@ class PromptDelegateTest : BaseSessionTest() {
         sessionRule.delegateUntilTestEnd(object : PromptDelegate {
             @AssertCalled(count = 2)
             override fun onAuthPrompt(session: GeckoSession, prompt: PromptDelegate.AuthPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
-                //TODO: Figure out some better testing here.
+                // TODO: Figure out some better testing here.
                 return null
             }
         })
@@ -218,9 +230,11 @@ class PromptDelegateTest : BaseSessionTest() {
             }
         })
 
-        assertThat("Result should match",
-                mainSession.waitForJS("confirm('Confirm?')") as Boolean,
-                equalTo(true))
+        assertThat(
+            "Result should match",
+            mainSession.waitForJS("confirm('Confirm?')") as Boolean,
+            equalTo(true)
+        )
 
         sessionRule.delegateDuringNextWait(object : PromptDelegate {
             @AssertCalled(count = 1)
@@ -230,9 +244,11 @@ class PromptDelegateTest : BaseSessionTest() {
             }
         })
 
-        assertThat("Result should match",
-                mainSession.waitForJS("confirm('Confirm?')") as Boolean,
-                equalTo(false))
+        assertThat(
+            "Result should match",
+            mainSession.waitForJS("confirm('Confirm?')") as Boolean,
+            equalTo(false)
+        )
     }
 
     @Test
@@ -242,14 +258,14 @@ class PromptDelegateTest : BaseSessionTest() {
 
         mainSession.evaluateJS(
             "document.querySelector('#text').value = 'Some text';" +
-            "document.querySelector('#submit').click();"
+                "document.querySelector('#submit').click();"
         )
 
         // Submitting the form causes a navigation
         sessionRule.waitForPageStop()
 
         val result = GeckoResult<Void>()
-        sessionRule.delegateUntilTestEnd(object: ProgressDelegate {
+        sessionRule.delegateUntilTestEnd(object : ProgressDelegate {
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("Only HELLO_HTML_PATH should load", url, endsWith(HELLO_HTML_PATH))
                 result.complete(null)
@@ -269,7 +285,7 @@ class PromptDelegateTest : BaseSessionTest() {
         })
 
         // This should trigger a confirm resubmit prompt
-        mainSession.reload();
+        mainSession.reload()
 
         sessionRule.waitUntilCalled(object : PromptDelegate {
             @AssertCalled(count = 1)
@@ -282,7 +298,7 @@ class PromptDelegateTest : BaseSessionTest() {
         sessionRule.waitForResult(promptResult)
 
         // Trigger it again, this time the load should go through
-        mainSession.reload();
+        mainSession.reload()
         sessionRule.waitUntilCalled(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onRepostConfirmPrompt(session: GeckoSession, prompt: PromptDelegate.RepostConfirmPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
@@ -305,16 +321,17 @@ class PromptDelegateTest : BaseSessionTest() {
         sessionRule.delegateUntilTestEnd(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onChoicePrompt(session: GeckoSession, prompt: PromptDelegate.ChoicePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
-                assertThat("Should not be multiple", prompt.type, equalTo(PromptDelegate.ChoicePrompt.Type.SINGLE));
-                assertThat("There should be two choices", prompt.choices.size, equalTo(2));
-                assertThat("First choice is correct", prompt.choices[0].label, equalTo("ABC"));
-                assertThat("Second choice is correct", prompt.choices[1].label, equalTo("DEF"));
-                result.complete(prompt.confirm(prompt.choices[1]));
+                assertThat("Should not be multiple", prompt.type, equalTo(PromptDelegate.ChoicePrompt.Type.SINGLE))
+                assertThat("There should be two choices", prompt.choices.size, equalTo(2))
+                assertThat("First choice is correct", prompt.choices[0].label, equalTo("ABC"))
+                assertThat("Second choice is correct", prompt.choices[1].label, equalTo("DEF"))
+                result.complete(prompt.confirm(prompt.choices[1]))
                 return result
             }
         })
 
-        val promise = mainSession.evaluatePromiseJS("""new Promise(function(resolve) {
+        val promise = mainSession.evaluatePromiseJS(
+            """new Promise(function(resolve) {
             let events = [];
             // Record the events for testing purposes.
             for (const t of ["change", "input"]) {
@@ -325,13 +342,16 @@ class PromptDelegateTest : BaseSessionTest() {
                     }
                 });
             }
-        })""");
+        })"""
+        )
 
         mainSession.synthesizeTap(10, 10)
         sessionRule.waitForResult(result)
-        assertThat("Events should be as expected",
-                promise.value as String,
-                equalTo("input(composed=true) change(composed=false)"))
+        assertThat(
+            "Events should be as expected",
+            promise.value as String,
+            equalTo("input(composed=true) change(composed=false)")
+        )
     }
 
     @Test
@@ -344,12 +364,12 @@ class PromptDelegateTest : BaseSessionTest() {
         sessionRule.delegateUntilTestEnd(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onChoicePrompt(session: GeckoSession, prompt: PromptDelegate.ChoicePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
-                assertThat("Should not be multiple", prompt.type, equalTo(PromptDelegate.ChoicePrompt.Type.SINGLE));
-                assertThat("There should be three choices", prompt.choices.size, equalTo(3));
-                assertThat("First choice is correct", prompt.choices[0].label, equalTo("ABC"));
-                assertThat("Second choice is correct", prompt.choices[1].label, equalTo("DEF"));
-                assertThat("Third choice is correct", prompt.choices[2].label, equalTo("GHI"));
-                result.complete(null);
+                assertThat("Should not be multiple", prompt.type, equalTo(PromptDelegate.ChoicePrompt.Type.SINGLE))
+                assertThat("There should be three choices", prompt.choices.size, equalTo(3))
+                assertThat("First choice is correct", prompt.choices[0].label, equalTo("ABC"))
+                assertThat("Second choice is correct", prompt.choices[1].label, equalTo("DEF"))
+                assertThat("Third choice is correct", prompt.choices[2].label, equalTo("GHI"))
+                result.complete(null)
                 return null
             }
         })
@@ -368,12 +388,12 @@ class PromptDelegateTest : BaseSessionTest() {
         sessionRule.delegateUntilTestEnd(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onChoicePrompt(session: GeckoSession, prompt: PromptDelegate.ChoicePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
-                assertThat("Should be multiple", prompt.type, equalTo(PromptDelegate.ChoicePrompt.Type.MULTIPLE));
-                assertThat("There should be three choices", prompt.choices.size, equalTo(3));
-                assertThat("First choice is correct", prompt.choices[0].label, equalTo("ABC"));
-                assertThat("Second choice is correct", prompt.choices[1].label, equalTo("DEF"));
-                assertThat("Third choice is correct", prompt.choices[2].label, equalTo("GHI"));
-                result.complete(null);
+                assertThat("Should be multiple", prompt.type, equalTo(PromptDelegate.ChoicePrompt.Type.MULTIPLE))
+                assertThat("There should be three choices", prompt.choices.size, equalTo(3))
+                assertThat("First choice is correct", prompt.choices[0].label, equalTo("ABC"))
+                assertThat("Second choice is correct", prompt.choices[1].label, equalTo("DEF"))
+                assertThat("Third choice is correct", prompt.choices[2].label, equalTo("GHI"))
+                result.complete(null)
                 return null
             }
         })
@@ -399,7 +419,7 @@ class PromptDelegateTest : BaseSessionTest() {
             }
         }
 
-        sessionRule.delegateUntilTestEnd(object: PromptDelegate {
+        sessionRule.delegateUntilTestEnd(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onChoicePrompt(session: GeckoSession, prompt: PromptDelegate.ChoicePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("There should be two choices", prompt.choices.size, equalTo(2))
@@ -408,28 +428,34 @@ class PromptDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.evaluateJS("""
+        mainSession.evaluateJS(
+            """
             document.querySelector("select").addEventListener("focus", () => {
                 window.setTimeout(() => {
                     document.querySelector("select").innerHTML =
                         "<option>foo</option><option>bar</option><option>baz</option>";
                 }, 100);
             }, { once: true })
-        """.trimIndent())
+            """.trimIndent()
+        )
 
-        val promise = mainSession.evaluatePromiseJS("""
+        val promise = mainSession.evaluatePromiseJS(
+            """
             new Promise(resolve => {
                 document.querySelector("select").addEventListener("change", e => {
                     resolve(e.target.value);
                 });
             })
-        """.trimIndent())
+            """.trimIndent()
+        )
 
         mainSession.synthesizeTap(10, 10)
         sessionRule.waitForResult(result)
-        assertThat("Selected item should be as expected",
-                   promise.value as String,
-                   equalTo("baz"))
+        assertThat(
+            "Selected item should be as expected",
+            promise.value as String,
+            equalTo("baz")
+        )
     }
 
     @Test
@@ -445,7 +471,7 @@ class PromptDelegateTest : BaseSessionTest() {
             }
         }
 
-        sessionRule.delegateUntilTestEnd(object: PromptDelegate {
+        sessionRule.delegateUntilTestEnd(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onChoicePrompt(session: GeckoSession, prompt: PromptDelegate.ChoicePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("There should be two choices", prompt.choices.size, equalTo(2))
@@ -461,14 +487,16 @@ class PromptDelegateTest : BaseSessionTest() {
 
     @Test
     fun onBeforeUnloadTest() {
-    	sessionRule.setPrefsUntilTestEnd(mapOf(
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
                 "dom.require_user_interaction_for_beforeunload" to false
-        ))
+            )
+        )
         mainSession.loadTestPath(BEFORE_UNLOAD)
         sessionRule.waitForPageStop()
 
         val result = GeckoResult<Void>()
-        sessionRule.delegateUntilTestEnd(object: ProgressDelegate {
+        sessionRule.delegateUntilTestEnd(object : ProgressDelegate {
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("Only HELLO2_HTML_PATH should load", url, endsWith(HELLO2_HTML_PATH))
                 result.complete(null)
@@ -533,9 +561,11 @@ class PromptDelegateTest : BaseSessionTest() {
             }
         })
 
-        assertThat("Result should match",
-                mainSession.waitForJS("prompt('Prompt:', 'default')") as String,
-                equalTo("foo"))
+        assertThat(
+            "Result should match",
+            mainSession.waitForJS("prompt('Prompt:', 'default')") as String,
+            equalTo("foo")
+        )
     }
 
     @Test fun colorTest() {
@@ -552,36 +582,46 @@ class PromptDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.evaluateJS("""
+        mainSession.evaluateJS(
+            """
             this.c = document.getElementById('colorexample');
-        """.trimIndent())
+            """.trimIndent()
+        )
 
-        val promise = mainSession.evaluatePromiseJS("""
+        val promise = mainSession.evaluatePromiseJS(
+            """
             new Promise((resolve, reject) => {
                 this.c.addEventListener(
                     'change',
                     event => resolve(event.target.value),
                     false
                 );
-            })""".trimIndent())
+            })
+            """.trimIndent()
+        )
 
         mainSession.evaluateJS("this.c.click();")
 
-        assertThat("Value should match",
-                promise.value as String,
-                equalTo("#123456"))
+        assertThat(
+            "Value should match",
+            promise.value as String,
+            equalTo("#123456")
+        )
     }
 
     @WithDisplay(width = 100, height = 100)
-    @Test fun dateTest() {
+    @Test
+    fun dateTest() {
         mainSession.loadTestPath(PROMPT_HTML_PATH)
         mainSession.waitForPageStop()
 
-        mainSession.evaluateJS("""
+        mainSession.evaluateJS(
+            """
             document.body.addEventListener("click", () => {
                 document.getElementById('dateexample').showPicker();
             });
-        """.trimIndent())
+            """.trimIndent()
+        )
 
         mainSession.synthesizeTap(1, 1) // Provides user activation.
         sessionRule.waitUntilCalled(object : PromptDelegate {
@@ -593,7 +633,8 @@ class PromptDelegateTest : BaseSessionTest() {
     }
 
     @WithDisplay(width = 100, height = 100)
-    @Test fun dateTestByTap() {
+    @Test
+    fun dateTestByTap() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 
         mainSession.loadTestPath(PROMPT_HTML_PATH)
@@ -602,10 +643,12 @@ class PromptDelegateTest : BaseSessionTest() {
         // By removing first element in PROMPT_HTML_PATH, dateexample becomes first element.
         //
         // TODO: What better calculation of element bounds for synthesizeTap?
-        mainSession.evaluateJS("""
+        mainSession.evaluateJS(
+            """
             document.getElementById('selectexample').remove();
             document.getElementById('dateexample').getBoundingClientRect();
-        """.trimIndent())
+            """.trimIndent()
+        )
         mainSession.synthesizeTap(10, 10)
 
         sessionRule.waitUntilCalled(object : PromptDelegate {
@@ -618,7 +661,8 @@ class PromptDelegateTest : BaseSessionTest() {
     }
 
     @WithDisplay(width = 100, height = 100)
-    @Test fun monthTestByTap() {
+    @Test
+    fun monthTestByTap() {
         // Gecko doesn't have the widget for <input type=month>. But GeckoView can show the picker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 
@@ -626,11 +670,13 @@ class PromptDelegateTest : BaseSessionTest() {
         mainSession.waitForPageStop()
 
         // TODO: What better calculation of element bounds for synthesizeTap?
-        mainSession.evaluateJS("""
+        mainSession.evaluateJS(
+            """
             document.getElementById('selectexample').remove();
             document.getElementById('dateexample').remove();
             document.getElementById('weekexample').getBoundingClientRect();
-        """.trimIndent())
+            """.trimIndent()
+        )
         mainSession.synthesizeTap(10, 10)
 
         sessionRule.waitUntilCalled(object : PromptDelegate {
@@ -643,19 +689,22 @@ class PromptDelegateTest : BaseSessionTest() {
     }
 
     @WithDisplay(width = 100, height = 100)
-    @Test fun dateTestParameters() {
+    @Test
+    fun dateTestParameters() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 
         mainSession.loadTestPath(PROMPT_HTML_PATH)
         mainSession.waitForPageStop()
 
-        mainSession.evaluateJS("""
+        mainSession.evaluateJS(
+            """
             document.getElementById('selectexample').remove();
             document.getElementById('dateexample').min = "2022-01-01";
             document.getElementById('dateexample').max = "2022-12-31";
             document.getElementById('dateexample').step = "10";
             document.getElementById('dateexample').getBoundingClientRect();
-        """.trimIndent())
+            """.trimIndent()
+        )
         mainSession.synthesizeTap(10, 10)
 
         sessionRule.waitUntilCalled(object : PromptDelegate {
@@ -671,7 +720,8 @@ class PromptDelegateTest : BaseSessionTest() {
     }
 
     @WithDisplay(width = 100, height = 100)
-    @Test fun dateTestDismiss() {
+    @Test
+    fun dateTestDismiss() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 
         mainSession.loadTestPath(PROMPT_HTML_PATH)
@@ -684,10 +734,9 @@ class PromptDelegateTest : BaseSessionTest() {
             }
         }
 
-        sessionRule.delegateUntilTestEnd(object: PromptDelegate {
+        sessionRule.delegateUntilTestEnd(object : PromptDelegate {
             @AssertCalled(count = 1)
-            override fun onDateTimePrompt(session: GeckoSession, prompt: PromptDelegate.DateTimePrompt)
-                    : GeckoResult<PromptDelegate.PromptResponse> {
+            override fun onDateTimePrompt(session: GeckoSession, prompt: PromptDelegate.DateTimePrompt): GeckoResult<PromptDelegate.PromptResponse> {
                 assertThat("<input type=date> is tapped", prompt.type, equalTo(PromptDelegate.DateTimePrompt.Type.DATE))
                 prompt.setDelegate(promptInstanceDelegate)
                 mainSession.evaluateJS("document.getElementById('dateexample').blur()")
@@ -701,7 +750,8 @@ class PromptDelegateTest : BaseSessionTest() {
     }
 
     @WithDisplay(width = 100, height = 100)
-    @Test fun monthTestDismiss() {
+    @Test
+    fun monthTestDismiss() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 
         mainSession.loadTestPath(PROMPT_HTML_PATH)
@@ -714,10 +764,9 @@ class PromptDelegateTest : BaseSessionTest() {
             }
         }
 
-        sessionRule.delegateUntilTestEnd(object: PromptDelegate {
+        sessionRule.delegateUntilTestEnd(object : PromptDelegate {
             @AssertCalled(count = 1)
-            override fun onDateTimePrompt(session: GeckoSession, prompt: PromptDelegate.DateTimePrompt)
-                    : GeckoResult<PromptDelegate.PromptResponse> {
+            override fun onDateTimePrompt(session: GeckoSession, prompt: PromptDelegate.DateTimePrompt): GeckoResult<PromptDelegate.PromptResponse> {
                 assertThat("<input type=month> is tapped", prompt.type, equalTo(PromptDelegate.DateTimePrompt.Type.MONTH))
                 prompt.setDelegate(promptInstanceDelegate)
                 mainSession.evaluateJS("document.getElementById('monthexample').blur()")
@@ -725,10 +774,12 @@ class PromptDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.evaluateJS("""
+        mainSession.evaluateJS(
+            """
             document.getElementById('selectexample').remove();
             document.getElementById('dateexample').remove();
-        """.trimIndent())
+            """.trimIndent()
+        )
         mainSession.synthesizeTap(10, 10)
         sessionRule.waitForResult(result)
     }
@@ -772,7 +823,7 @@ class PromptDelegateTest : BaseSessionTest() {
         })
 
         try {
-            mainSession.waitForJS("""window.navigator.share({text: "${shareText}"})""")
+            mainSession.waitForJS("""window.navigator.share({text: "$shareText"})""")
         } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
             Assert.fail("Share must succeed." + e.reason as String)
         }
@@ -797,7 +848,7 @@ class PromptDelegateTest : BaseSessionTest() {
         })
 
         try {
-            mainSession.waitForJS("""window.navigator.share({url: "${shareUrl}"})""")
+            mainSession.waitForJS("""window.navigator.share({url: "$shareUrl"})""")
         } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
             Assert.fail("Share must succeed." + e.reason as String)
         }
@@ -822,7 +873,7 @@ class PromptDelegateTest : BaseSessionTest() {
         })
 
         try {
-            mainSession.waitForJS("""window.navigator.share({title: "${shareTitle}"})""")
+            mainSession.waitForJS("""window.navigator.share({title: "$shareTitle"})""")
         } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
             Assert.fail("Share must succeed." + e.reason as String)
         }
@@ -843,11 +894,14 @@ class PromptDelegateTest : BaseSessionTest() {
         })
 
         try {
-            mainSession.waitForJS("""window.navigator.share({url: "${shareUrl}"})""")
+            mainSession.waitForJS("""window.navigator.share({url: "$shareUrl"})""")
             Assert.fail("Request should have failed")
         } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
-            assertThat("Error should be correct",
-                    e.reason as String, containsString("DataError"))
+            assertThat(
+                "Error should be correct",
+                e.reason as String,
+                containsString("DataError")
+            )
         }
     }
 
@@ -866,11 +920,14 @@ class PromptDelegateTest : BaseSessionTest() {
         })
 
         try {
-            mainSession.waitForJS("""window.navigator.share({url: "${shareUrl}"})""")
+            mainSession.waitForJS("""window.navigator.share({url: "$shareUrl"})""")
             Assert.fail("Request should have failed")
         } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
-            assertThat("Error should be correct",
-                    e.reason as String, containsString("AbortError"))
+            assertThat(
+                "Error should be correct",
+                e.reason as String,
+                containsString("AbortError")
+            )
         }
     }
 
@@ -889,11 +946,14 @@ class PromptDelegateTest : BaseSessionTest() {
         })
 
         try {
-            mainSession.waitForJS("""window.navigator.share({url: "${shareUrl}"})""")
+            mainSession.waitForJS("""window.navigator.share({url: "$shareUrl"})""")
             Assert.fail("Request should have failed")
         } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
-            assertThat("Error should be correct",
-                    e.reason as String, containsString("AbortError"))
+            assertThat(
+                "Error should be correct",
+                e.reason as String,
+                containsString("AbortError")
+            )
         }
     }
 
@@ -913,8 +973,11 @@ class PromptDelegateTest : BaseSessionTest() {
             mainSession.waitForJS("""window.navigator.share({})""")
             Assert.fail("Request should have failed")
         } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
-            assertThat("Error should be correct",
-                    e.reason as String, containsString("TypeError"))
+            assertThat(
+                "Error should be correct",
+                e.reason as String,
+                containsString("TypeError")
+            )
         }
     }
 
@@ -934,11 +997,14 @@ class PromptDelegateTest : BaseSessionTest() {
         })
 
         try {
-            mainSession.waitForJS("""window.navigator.share({url: "${shareUrl}"})""")
+            mainSession.waitForJS("""window.navigator.share({url: "$shareUrl"})""")
             Assert.fail("Request should have failed")
         } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
-            assertThat("Error should be correct",
-                    e.reason as String, containsString("TypeError"))
+            assertThat(
+                "Error should be correct",
+                e.reason as String,
+                containsString("TypeError")
+            )
         }
     }
 
@@ -957,11 +1023,14 @@ class PromptDelegateTest : BaseSessionTest() {
         })
 
         try {
-            mainSession.waitForJS("""window.navigator.share({url: "${shareUrl}"})""")
+            mainSession.waitForJS("""window.navigator.share({url: "$shareUrl"})""")
             Assert.fail("Request should have failed")
         } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
-            assertThat("Error should be correct",
-                    e.reason as String, containsString("NotAllowedError"))
+            assertThat(
+                "Error should be correct",
+                e.reason as String,
+                containsString("NotAllowedError")
+            )
         }
     }
 }

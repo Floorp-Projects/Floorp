@@ -8,13 +8,7 @@ package org.mozilla.geckoview.test
 import android.os.Parcel
 import android.os.SystemClock
 import android.view.KeyEvent
-
 import androidx.test.platform.app.InstrumentationRegistry
-
-import org.mozilla.geckoview.GeckoRuntimeSettings
-import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
-
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.json.JSONArray
@@ -23,7 +17,9 @@ import org.junit.Assume.assumeThat
 import org.junit.Rule
 import org.junit.rules.ErrorCollector
 import org.junit.rules.RuleChain
-
+import org.mozilla.geckoview.GeckoRuntimeSettings
+import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import kotlin.reflect.KClass
 
 /**
@@ -145,8 +141,8 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
 
     fun <T> assertThat(reason: String, v: T, m: Matcher<in T>) = sessionRule.checkThat(reason, v, m)
     fun <T> assertInAutomationThat(reason: String, v: T, m: Matcher<in T>) =
-            if (sessionRule.env.isAutomation) assertThat(reason, v, m)
-            else assumeThat(reason, v, m)
+        if (sessionRule.env.isAutomation) assertThat(reason, v, m)
+        else assumeThat(reason, v, m)
 
     init {
         if (!noErrorCollector) {
@@ -157,13 +153,13 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
     fun <T> forEachCall(vararg values: T): T = sessionRule.forEachCall(*values)
 
     fun getTestBytes(path: String) =
-            InstrumentationRegistry.getInstrumentation().targetContext.resources.assets
-                    .open(path.removePrefix("/assets/")).readBytes()
+        InstrumentationRegistry.getInstrumentation().targetContext.resources.assets
+            .open(path.removePrefix("/assets/")).readBytes()
 
     fun createTestUrl(path: String) = GeckoSessionTestRule.TEST_ENDPOINT + path
 
     fun GeckoSession.loadTestPath(path: String) =
-            this.loadUri(createTestUrl(path))
+        this.loadUri(createTestUrl(path))
 
     inline fun GeckoRuntimeSettings.toParcel(lambda: (Parcel) -> Unit) {
         val parcel = Parcel.obtain()
@@ -175,70 +171,76 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
 
             lambda(parcel)
 
-            assertThat("Read parcel matches written parcel",
-                       parcel.dataPosition(), Matchers.equalTo(pos))
+            assertThat(
+                "Read parcel matches written parcel",
+                parcel.dataPosition(),
+                Matchers.equalTo(pos)
+            )
         } finally {
             parcel.recycle()
         }
     }
 
     fun GeckoSession.open() =
-            sessionRule.openSession(this)
+        sessionRule.openSession(this)
 
     fun GeckoSession.waitForPageStop() =
-            sessionRule.waitForPageStop(this)
+        sessionRule.waitForPageStop(this)
 
     fun GeckoSession.waitForPageStops(count: Int) =
-            sessionRule.waitForPageStops(this, count)
+        sessionRule.waitForPageStops(this, count)
 
     fun GeckoSession.waitUntilCalled(ifce: KClass<*>, vararg methods: String) =
-            sessionRule.waitUntilCalled(this, ifce, *methods)
+        sessionRule.waitUntilCalled(this, ifce, *methods)
 
     fun GeckoSession.waitUntilCalled(callback: Any) =
-            sessionRule.waitUntilCalled(this, callback)
+        sessionRule.waitUntilCalled(this, callback)
 
     fun GeckoSession.addDisplay(x: Int, y: Int) =
-            sessionRule.addDisplay(this, x, y)
+        sessionRule.addDisplay(this, x, y)
 
     fun GeckoSession.releaseDisplay() =
-            sessionRule.releaseDisplay(this)
+        sessionRule.releaseDisplay(this)
 
     fun GeckoSession.forCallbacksDuringWait(callback: Any) =
-            sessionRule.forCallbacksDuringWait(this, callback)
+        sessionRule.forCallbacksDuringWait(this, callback)
 
     fun GeckoSession.delegateUntilTestEnd(callback: Any) =
-            sessionRule.delegateUntilTestEnd(this, callback)
+        sessionRule.delegateUntilTestEnd(this, callback)
 
     fun GeckoSession.delegateDuringNextWait(callback: Any) =
-            sessionRule.delegateDuringNextWait(this, callback)
+        sessionRule.delegateDuringNextWait(this, callback)
 
     fun GeckoSession.synthesizeTap(x: Int, y: Int) =
-            sessionRule.synthesizeTap(this, x, y)
+        sessionRule.synthesizeTap(this, x, y)
 
     fun GeckoSession.synthesizeMouseMove(x: Int, y: Int) =
-            sessionRule.synthesizeMouseMove(this, x, y)
+        sessionRule.synthesizeMouseMove(this, x, y)
 
     fun GeckoSession.evaluateJS(js: String): Any? =
-            sessionRule.evaluateJS(this, js)
+        sessionRule.evaluateJS(this, js)
 
     fun GeckoSession.evaluatePromiseJS(js: String): GeckoSessionTestRule.ExtensionPromise =
-            sessionRule.evaluatePromiseJS(this, js)
+        sessionRule.evaluatePromiseJS(this, js)
 
     fun GeckoSession.waitForJS(js: String): Any? =
-            sessionRule.waitForJS(this, js)
+        sessionRule.waitForJS(this, js)
 
     fun GeckoSession.waitForRoundTrip() = sessionRule.waitForRoundTrip(this)
 
     fun GeckoSession.pressKey(keyCode: Int) {
         // Create a Promise to listen to the key event, and wait on it below.
         val promise = this.evaluatePromiseJS(
-                """new Promise(r => window.addEventListener(
-                    'keyup', r, { once: true }))""")
+            """new Promise(r => window.addEventListener(
+                    'keyup', r, { once: true }))"""
+        )
         val time = SystemClock.uptimeMillis()
         val keyEvent = KeyEvent(time, time, KeyEvent.ACTION_DOWN, keyCode, 0)
         this.textInput.onKeyDown(keyCode, keyEvent)
         this.textInput.onKeyUp(
-                keyCode, KeyEvent.changeAction(keyEvent, KeyEvent.ACTION_UP))
+            keyCode,
+            KeyEvent.changeAction(keyEvent, KeyEvent.ACTION_UP)
+        )
         promise.value
     }
 
@@ -249,18 +251,18 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
     fun GeckoSession.getLinkColor(selector: String) = sessionRule.getLinkColor(this, selector)
 
     fun GeckoSession.setResolutionAndScaleTo(resolution: Float) =
-            sessionRule.setResolutionAndScaleTo(this, resolution)
+        sessionRule.setResolutionAndScaleTo(this, resolution)
 
     var GeckoSession.active: Boolean
-            get() = sessionRule.getActive(this)
-            set(value) = setActive(value)
+        get() = sessionRule.getActive(this)
+        set(value) = setActive(value)
 
     @Suppress("UNCHECKED_CAST")
     fun Any?.asJsonArray(): JSONArray = this as JSONArray
 
     @Suppress("UNCHECKED_CAST")
-    fun<V> JSONObject.asMap(): Map<String?,V?> {
-        val result = HashMap<String?,V?>()
+    fun<V> JSONObject.asMap(): Map<String?, V?> {
+        val result = HashMap<String?, V?>()
         for (key in this.keys()) {
             result[key] = this[key] as V
         }

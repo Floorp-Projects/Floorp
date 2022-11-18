@@ -12,24 +12,18 @@ import android.os.ParcelFileDescriptor
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
-import junit.framework.TestCase.fail
-import org.hamcrest.core.IsEqual.equalTo
-import org.junit.Assert.assertTrue
 import org.junit.After
-import org.junit.Assume.assumeThat
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.Autofill
-import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import java.io.File
 import java.io.InputStream
-import java.lang.Thread.sleep
-import java.util.*
+import java.util.* // ktlint-disable no-wildcard-imports
 import kotlin.math.roundToInt
 
 @RunWith(AndroidJUnit4::class)
@@ -62,7 +56,7 @@ class PdfCreationTest : BaseSessionTest() {
     }
 
     private fun createFileDescriptor(pdfInputStream: InputStream): ParcelFileDescriptor {
-        val file = File.createTempFile("temp", null);
+        val file = File.createTempFile("temp", null)
         pdfInputStream.use { input ->
             file.outputStream().use { output ->
                 input.copyTo(output)
@@ -90,7 +84,8 @@ class PdfCreationTest : BaseSessionTest() {
     }
 
     @NullDelegate(Autofill.Delegate::class)
-    @Test fun singleColorPdf() {
+    @Test
+    fun singleColorPdf() {
         activityRule.scenario.onActivity {
             mainSession.loadTestPath(COLOR_ORANGE_BACKGROUND_HTML_PATH)
             mainSession.waitForPageStop()
@@ -106,7 +101,8 @@ class PdfCreationTest : BaseSessionTest() {
     }
 
     @NullDelegate(Autofill.Delegate::class)
-    @Test fun rgbColorsPdf() {
+    @Test
+    fun rgbColorsPdf() {
         activityRule.scenario.onActivity {
             mainSession.loadTestPath(COLOR_GRID_HTML_PATH)
             mainSession.waitForPageStop()
@@ -114,18 +110,19 @@ class PdfCreationTest : BaseSessionTest() {
             sessionRule.waitForResult(pdfInputStream).let {
                 val bitmap = pdfToBitmap(it)!![0]
                 val scaled = Bitmap.createScaledBitmap(bitmap, scaledWidth, scaledHeight, false)
-                val redPixel = scaled.getPixel(2,scaledHeight / 2)
+                val redPixel = scaled.getPixel(2, scaledHeight / 2)
                 assertTrue("The PDF red color matches.", redPixel == Color.RED)
                 val greenPixel = scaled.getPixel(scaledWidth / 2, scaledHeight / 2)
                 assertTrue("The PDF green color matches.", greenPixel == Color.GREEN)
                 val bluePixel = scaled.getPixel(scaledWidth - 2, scaledHeight / 2)
                 assertTrue("The PDF blue color matches.", bluePixel == Color.BLUE)
-                val doPixelsMatch = (redPixel == Color.RED
-                        && greenPixel == Color.GREEN
-                        && bluePixel == Color.BLUE)
+                val doPixelsMatch = (
+                    redPixel == Color.RED &&
+                        greenPixel == Color.GREEN &&
+                        bluePixel == Color.BLUE
+                    )
                 assertTrue("The PDF generated RGB colors.", doPixelsMatch)
             }
         }
     }
-
 }

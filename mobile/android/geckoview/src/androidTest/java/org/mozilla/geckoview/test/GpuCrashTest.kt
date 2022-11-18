@@ -1,8 +1,8 @@
 package org.mozilla.geckoview.test
 
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.MediumTest
+import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
@@ -13,7 +13,6 @@ import org.mozilla.geckoview.BuildConfig
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.IgnoreCrash
 import org.mozilla.geckoview.test.util.UiThreadUtils
-
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest

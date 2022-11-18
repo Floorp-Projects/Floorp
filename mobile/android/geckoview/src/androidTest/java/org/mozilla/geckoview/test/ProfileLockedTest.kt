@@ -13,13 +13,16 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ClosedSessionAtStart
 @MediumTest
 class ProfileLockedTest : BaseSessionTest() {
     private val targetContext
-            get() = InstrumentationRegistry.getInstrumentation().targetContext
+        get() = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
     @ClosedSessionAtStart
     fun profileLocked() {
         val runtime0 = RuntimeInstance.start(
-            targetContext, TestRuntimeService.instance0::class.java, temporaryProfile.get())
+            targetContext,
+            TestRuntimeService.instance0::class.java,
+            temporaryProfile.get()
+        )
 
         // Start the first runtime and wait until it's ready
         sessionRule.waitForResult(runtime0.started)
@@ -29,7 +32,10 @@ class ProfileLockedTest : BaseSessionTest() {
         // Now start a _second_ runtime with the same profile folder, this will kill the first
         // runtime
         val runtime1 = RuntimeInstance.start(
-            targetContext, TestRuntimeService.instance1::class.java, temporaryProfile.get())
+            targetContext,
+            TestRuntimeService.instance1::class.java,
+            temporaryProfile.get()
+        )
 
         // Wait for the first runtime to disconnect
         sessionRule.waitForResult(runtime0.disconnected)
@@ -37,7 +43,10 @@ class ProfileLockedTest : BaseSessionTest() {
         // GeckoRuntime will quit after killing the offending process
         sessionRule.waitForResult(runtime1.quitted)
 
-        assertThat("The service shouldn't be connected anymore",
-                runtime0.isConnected, equalTo(false))
+        assertThat(
+            "The service shouldn't be connected anymore",
+            runtime0.isConnected,
+            equalTo(false)
+        )
     }
 }

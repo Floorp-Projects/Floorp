@@ -4,14 +4,13 @@
 
 package org.mozilla.geckoview.test
 
-
-import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.MediumTest
 import org.hamcrest.Matchers
 import org.json.JSONObject
+import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.junit.Assume.assumeThat
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.MediaDelegate
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate
@@ -23,43 +22,48 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 class MediaDelegateXOriginTest : BaseSessionTest() {
 
     private fun requestRecordingPermission(allowAudio: Boolean, allowCamera: Boolean) {
-
         mainSession.delegateDuringNextWait(object : PermissionDelegate {
             @GeckoSessionTestRule.AssertCalled(count = 1)
             override fun onMediaPermissionRequest(
-                    session: GeckoSession, uri: String,
-                    video: Array<out GeckoSession.PermissionDelegate.MediaSource>?,
-                    audio: Array<out GeckoSession.PermissionDelegate.MediaSource>?,
-                    callback: GeckoSession.PermissionDelegate.MediaCallback) {
-                if (! (allowAudio || allowCamera)) {
-                    callback.reject();
-                    return;
+                session: GeckoSession,
+                uri: String,
+                video: Array<out GeckoSession.PermissionDelegate.MediaSource>?,
+                audio: Array<out GeckoSession.PermissionDelegate.MediaSource>?,
+                callback: GeckoSession.PermissionDelegate.MediaCallback
+            ) {
+                if (!(allowAudio || allowCamera)) {
+                    callback.reject()
+                    return
                 }
-                var audioDevice: GeckoSession.PermissionDelegate.MediaSource? = null;
-                var videoDevice: GeckoSession.PermissionDelegate.MediaSource? = null;
+                var audioDevice: GeckoSession.PermissionDelegate.MediaSource? = null
+                var videoDevice: GeckoSession.PermissionDelegate.MediaSource? = null
                 if (allowAudio) {
-                    audioDevice = audio!![0];
+                    audioDevice = audio!![0]
                 }
                 if (allowCamera) {
-                    videoDevice = video!![0];
+                    videoDevice = video!![0]
                 }
 
                 if (videoDevice != null || audioDevice != null) {
-                    callback.grant(videoDevice, audioDevice);
+                    callback.grant(videoDevice, audioDevice)
                 }
             }
 
-            override fun onAndroidPermissionsRequest(session: GeckoSession,
-                                                     permissions: Array<out String>?,
-                                                     callback: GeckoSession.PermissionDelegate.Callback) {
+            override fun onAndroidPermissionsRequest(
+                session: GeckoSession,
+                permissions: Array<out String>?,
+                callback: GeckoSession.PermissionDelegate.Callback
+            ) {
                 callback.grant()
             }
         })
 
         mainSession.delegateDuringNextWait(object : MediaDelegate {
             @GeckoSessionTestRule.AssertCalled(count = 1)
-            override fun onRecordingStatusChanged(session: GeckoSession,
-                                                devices:  Array<MediaDelegate.RecordingDevice>) {
+            override fun onRecordingStatusChanged(
+                session: GeckoSession,
+                devices: Array<MediaDelegate.RecordingDevice>
+            ) {
                 var audioActive = false
                 var cameraActive = false
                 for (device in devices) {
@@ -71,15 +75,21 @@ class MediaDelegateXOriginTest : BaseSessionTest() {
                     }
                 }
 
-                assertThat("Camera is ${if (allowCamera) { "active" } else { "inactive" }}",
-                        cameraActive, Matchers.equalTo(allowCamera))
+                assertThat(
+                    "Camera is ${if (allowCamera) { "active" } else { "inactive" }}",
+                    cameraActive,
+                    Matchers.equalTo(allowCamera)
+                )
 
-                assertThat("Audio is ${if (allowAudio ) { "active" } else { "inactive" }}" ,
-                        audioActive, Matchers.equalTo(allowAudio))
+                assertThat(
+                    "Audio is ${if (allowAudio) { "active" } else { "inactive" }}",
+                    audioActive,
+                    Matchers.equalTo(allowAudio)
+                )
             }
         })
 
-        var constraints : String?
+        var constraints: String?
         if (allowAudio && allowCamera) {
             constraints = """{
                        video: { width: 320, height: 240, frameRate: 10 },
@@ -101,32 +111,37 @@ class MediaDelegateXOriginTest : BaseSessionTest() {
     }
 
     private fun requestRecordingPermissionNoAllow(allowAudio: Boolean, allowCamera: Boolean) {
-
         mainSession.delegateDuringNextWait(object : PermissionDelegate {
             @GeckoSessionTestRule.AssertCalled(count = 0)
             override fun onMediaPermissionRequest(
-                    session: GeckoSession, uri: String,
-                    video: Array<out GeckoSession.PermissionDelegate.MediaSource>?,
-                    audio: Array<out GeckoSession.PermissionDelegate.MediaSource>?,
-                    callback: GeckoSession.PermissionDelegate.MediaCallback) {
+                session: GeckoSession,
+                uri: String,
+                video: Array<out GeckoSession.PermissionDelegate.MediaSource>?,
+                audio: Array<out GeckoSession.PermissionDelegate.MediaSource>?,
+                callback: GeckoSession.PermissionDelegate.MediaCallback
+            ) {
                 callback.reject()
             }
 
             @GeckoSessionTestRule.AssertCalled(count = 0)
-            override fun onAndroidPermissionsRequest(session: GeckoSession,
-                                                     permissions: Array<out String>?,
-                                                     callback: GeckoSession.PermissionDelegate.Callback) {
+            override fun onAndroidPermissionsRequest(
+                session: GeckoSession,
+                permissions: Array<out String>?,
+                callback: GeckoSession.PermissionDelegate.Callback
+            ) {
                 callback.reject()
             }
         })
 
         mainSession.delegateDuringNextWait(object : MediaDelegate {
             @GeckoSessionTestRule.AssertCalled(count = 0)
-            override fun onRecordingStatusChanged(session: GeckoSession,
-                                                devices:  Array<org.mozilla.geckoview.GeckoSession.MediaDelegate.RecordingDevice>) {}
+            override fun onRecordingStatusChanged(
+                session: GeckoSession,
+                devices: Array<org.mozilla.geckoview.GeckoSession.MediaDelegate.RecordingDevice>
+            ) {}
         })
 
-        var constraints : String?
+        var constraints: String?
         if (allowAudio && allowCamera) {
             constraints = """{
                        video: { width: 320, height: 240, frameRate: 10 },
@@ -155,11 +170,14 @@ class MediaDelegateXOriginTest : BaseSessionTest() {
         mainSession.waitForPageStop()
 
         val devices = mainSession.waitForJS(
-                "window.navigator.mediaDevices.enumerateDevices()").asJSList<JSONObject>()
+            "window.navigator.mediaDevices.enumerateDevices()"
+        ).asJSList<JSONObject>()
         val audioDevice = devices.find { map -> map.getString("kind") == "audioinput" }
         val videoDevice = devices.find { map -> map.getString("kind") == "videoinput" }
-        requestRecordingPermission(allowAudio = audioDevice != null,
-                allowCamera = videoDevice != null)
+        requestRecordingPermission(
+            allowAudio = audioDevice != null,
+            allowCamera = videoDevice != null
+        )
     }
 
     @Test fun testDeviceRecordingEventAudioAndVideoInXOriginIframeNoAllow() {
@@ -167,10 +185,13 @@ class MediaDelegateXOriginTest : BaseSessionTest() {
         mainSession.waitForPageStop()
 
         val devices = mainSession.waitForJS(
-                "window.navigator.mediaDevices.enumerateDevices()").asJSList<JSONObject>()
+            "window.navigator.mediaDevices.enumerateDevices()"
+        ).asJSList<JSONObject>()
         val audioDevice = devices.find { map -> map.getString("kind") == "audioinput" }
         val videoDevice = devices.find { map -> map.getString("kind") == "videoinput" }
-        requestRecordingPermissionNoAllow(allowAudio = audioDevice != null,
-                allowCamera = videoDevice != null)
+        requestRecordingPermissionNoAllow(
+            allowAudio = audioDevice != null,
+            allowCamera = videoDevice != null
+        )
     }
 }

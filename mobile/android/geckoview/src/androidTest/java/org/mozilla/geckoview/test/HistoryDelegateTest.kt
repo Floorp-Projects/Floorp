@@ -4,19 +4,17 @@
 
 package org.mozilla.geckoview.test
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.MediumTest
+import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
+import org.junit.Assume.assumeThat
+import org.junit.Ignore
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.HistoryDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
-
-
-import androidx.test.filters.MediumTest
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.hamcrest.Matchers.*
-import org.junit.Assume.assumeThat
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.Ignore
 import org.mozilla.geckoview.test.util.UiThreadUtils
 
 @RunWith(AndroidJUnit4::class)
@@ -32,19 +30,27 @@ class HistoryDelegateTest : BaseSessionTest() {
         val testUri = createTestUrl(LINKS_HTML_PATH)
         sessionRule.delegateDuringNextWait(object : GeckoSession.HistoryDelegate {
             @AssertCalled(count = 1)
-            override fun onVisited(session: GeckoSession, url: String,
-                                   lastVisitedURL: String?,
-                                   flags: Int): GeckoResult<Boolean>? {
+            override fun onVisited(
+                session: GeckoSession,
+                url: String,
+                lastVisitedURL: String?,
+                flags: Int
+            ): GeckoResult<Boolean>? {
                 assertThat("Should pass visited URL", url, equalTo(testUri))
                 assertThat("Should not pass last visited URL", lastVisitedURL, nullValue())
-                assertThat("Should set visit flags", flags,
-                    equalTo(GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL))
+                assertThat(
+                    "Should set visit flags",
+                    flags,
+                    equalTo(GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL)
+                )
                 return GeckoResult.fromValue(true)
             }
 
             @AssertCalled(count = 1)
-            override fun getVisited(session: GeckoSession,
-                                    urls: Array<String>) : GeckoResult<BooleanArray>? {
+            override fun getVisited(
+                session: GeckoSession,
+                urls: Array<String>
+            ): GeckoResult<BooleanArray>? {
                 val expected = arrayOf(
                     "https://mozilla.org/",
                     "https://getfirefox.com/",
@@ -52,8 +58,11 @@ class HistoryDelegateTest : BaseSessionTest() {
                     "https://testpilot.firefox.com/",
                     "https://accounts.firefox.com/"
                 )
-                assertThat("Should pass URLs to check", urls.sorted(),
-                    equalTo(expected.sorted()))
+                assertThat(
+                    "Should pass URLs to check",
+                    urls.sorted(),
+                    equalTo(expected.sorted())
+                )
 
                 val visits = BooleanArray(urls.size, {
                     when (urls[it]) {
@@ -68,8 +77,11 @@ class HistoryDelegateTest : BaseSessionTest() {
         // Since `getVisited` is called asynchronously after the page loads, we
         // can't use `waitForPageStop` here.
         mainSession.loadUri(testUri)
-        mainSession.waitUntilCalled(GeckoSession.HistoryDelegate::class,
-                                            "onVisited", "getVisited")
+        mainSession.waitUntilCalled(
+            GeckoSession.HistoryDelegate::class,
+            "onVisited",
+            "getVisited"
+        )
 
         // Sometimes link changes are not applied immediately, wait for a little bit
         UiThreadUtils.waitForCondition({
@@ -95,19 +107,29 @@ class HistoryDelegateTest : BaseSessionTest() {
         )
     }
 
-    @Ignore //disable test on debug for frequent failures Bug 1544169
-    @Test fun onHistoryStateChange() {
+    @Ignore // disable test on debug for frequent failures Bug 1544169
+    @Test
+    fun onHistoryStateChange() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
 
         sessionRule.waitUntilCalled(object : HistoryDelegate {
             @AssertCalled(count = 1)
             override fun onHistoryStateChange(session: GeckoSession, state: GeckoSession.HistoryDelegate.HistoryList) {
-                assertThat("History should have one entry", state.size,
-                        equalTo(1))
-                assertThat("URLs should match", state[state.currentIndex].uri,
-                        endsWith(HELLO_HTML_PATH))
-                assertThat("History index should be 0", state.currentIndex,
-                        equalTo(0))
+                assertThat(
+                    "History should have one entry",
+                    state.size,
+                    equalTo(1)
+                )
+                assertThat(
+                    "URLs should match",
+                    state[state.currentIndex].uri,
+                    endsWith(HELLO_HTML_PATH)
+                )
+                assertThat(
+                    "History index should be 0",
+                    state.currentIndex,
+                    equalTo(0)
+                )
             }
         })
 
@@ -116,12 +138,21 @@ class HistoryDelegateTest : BaseSessionTest() {
         sessionRule.waitUntilCalled(object : HistoryDelegate {
             @AssertCalled(count = 1)
             override fun onHistoryStateChange(session: GeckoSession, state: GeckoSession.HistoryDelegate.HistoryList) {
-                assertThat("History should have two entries", state.size,
-                        equalTo(2))
-                assertThat("URLs should match", state[state.currentIndex].uri,
-                        endsWith(HELLO2_HTML_PATH))
-                assertThat("History index should be 1", state.currentIndex,
-                        equalTo(1))
+                assertThat(
+                    "History should have two entries",
+                    state.size,
+                    equalTo(2)
+                )
+                assertThat(
+                    "URLs should match",
+                    state[state.currentIndex].uri,
+                    endsWith(HELLO2_HTML_PATH)
+                )
+                assertThat(
+                    "History index should be 1",
+                    state.currentIndex,
+                    equalTo(1)
+                )
             }
         })
 
@@ -130,12 +161,21 @@ class HistoryDelegateTest : BaseSessionTest() {
         sessionRule.waitUntilCalled(object : HistoryDelegate {
             @AssertCalled(count = 1)
             override fun onHistoryStateChange(session: GeckoSession, state: GeckoSession.HistoryDelegate.HistoryList) {
-                assertThat("History should have two entries", state.size,
-                        equalTo(2))
-                assertThat("URLs should match", state[state.currentIndex].uri,
-                        endsWith(HELLO_HTML_PATH))
-                assertThat("History index should be 0", state.currentIndex,
-                        equalTo(0))
+                assertThat(
+                    "History should have two entries",
+                    state.size,
+                    equalTo(2)
+                )
+                assertThat(
+                    "URLs should match",
+                    state[state.currentIndex].uri,
+                    endsWith(HELLO_HTML_PATH)
+                )
+                assertThat(
+                    "History index should be 0",
+                    state.currentIndex,
+                    equalTo(0)
+                )
             }
         })
 
@@ -144,12 +184,21 @@ class HistoryDelegateTest : BaseSessionTest() {
         sessionRule.waitUntilCalled(object : HistoryDelegate {
             @AssertCalled(count = 1)
             override fun onHistoryStateChange(session: GeckoSession, state: GeckoSession.HistoryDelegate.HistoryList) {
-                assertThat("History should have two entries", state.size,
-                        equalTo(2))
-                assertThat("URLs should match", state[state.currentIndex].uri,
-                        endsWith(HELLO2_HTML_PATH))
-                assertThat("History index should be 1", state.currentIndex,
-                        equalTo(1))
+                assertThat(
+                    "History should have two entries",
+                    state.size,
+                    equalTo(2)
+                )
+                assertThat(
+                    "URLs should match",
+                    state[state.currentIndex].uri,
+                    endsWith(HELLO2_HTML_PATH)
+                )
+                assertThat(
+                    "History index should be 1",
+                    state.currentIndex,
+                    equalTo(1)
+                )
             }
         })
 
@@ -158,12 +207,21 @@ class HistoryDelegateTest : BaseSessionTest() {
         sessionRule.waitUntilCalled(object : HistoryDelegate {
             @AssertCalled(count = 1)
             override fun onHistoryStateChange(session: GeckoSession, state: GeckoSession.HistoryDelegate.HistoryList) {
-                assertThat("History should have two entries", state.size,
-                        equalTo(2))
-                assertThat("URLs should match", state[state.currentIndex].uri,
-                        endsWith(HELLO_HTML_PATH))
-                assertThat("History index should be 1", state.currentIndex,
-                        equalTo(0))
+                assertThat(
+                    "History should have two entries",
+                    state.size,
+                    equalTo(2)
+                )
+                assertThat(
+                    "URLs should match",
+                    state[state.currentIndex].uri,
+                    endsWith(HELLO_HTML_PATH)
+                )
+                assertThat(
+                    "History index should be 1",
+                    state.currentIndex,
+                    equalTo(0)
+                )
             }
         })
 
@@ -172,12 +230,21 @@ class HistoryDelegateTest : BaseSessionTest() {
         sessionRule.waitUntilCalled(object : HistoryDelegate {
             @AssertCalled(count = 1)
             override fun onHistoryStateChange(session: GeckoSession, state: GeckoSession.HistoryDelegate.HistoryList) {
-                assertThat("History should have two entries", state.size,
-                        equalTo(2))
-                assertThat("URLs should match", state[state.currentIndex].uri,
-                        endsWith(HELLO2_HTML_PATH))
-                assertThat("History index should be 1", state.currentIndex,
-                        equalTo(1))
+                assertThat(
+                    "History should have two entries",
+                    state.size,
+                    equalTo(2)
+                )
+                assertThat(
+                    "URLs should match",
+                    state[state.currentIndex].uri,
+                    endsWith(HELLO2_HTML_PATH)
+                )
+                assertThat(
+                    "History index should be 1",
+                    state.currentIndex,
+                    equalTo(1)
+                )
             }
         })
     }
@@ -192,12 +259,21 @@ class HistoryDelegateTest : BaseSessionTest() {
         sessionRule.waitUntilCalled(object : HistoryDelegate {
             @AssertCalled(count = 1)
             override fun onHistoryStateChange(session: GeckoSession, state: GeckoSession.HistoryDelegate.HistoryList) {
-                assertThat("History should have one entry", state.size,
-                        equalTo(1))
-                assertThat("URLs should match", state[state.currentIndex].uri,
-                        endsWith(HELLO_HTML_PATH))
-                assertThat("History index should be 0", state.currentIndex,
-                        equalTo(0))
+                assertThat(
+                    "History should have one entry",
+                    state.size,
+                    equalTo(1)
+                )
+                assertThat(
+                    "URLs should match",
+                    state[state.currentIndex].uri,
+                    endsWith(HELLO_HTML_PATH)
+                )
+                assertThat(
+                    "History index should be 0",
+                    state.currentIndex,
+                    equalTo(0)
+                )
             }
         })
 
@@ -206,16 +282,22 @@ class HistoryDelegateTest : BaseSessionTest() {
         sessionRule.waitUntilCalled(object : HistoryDelegate {
             @AssertCalled(count = 1)
             override fun onHistoryStateChange(session: GeckoSession, state: GeckoSession.HistoryDelegate.HistoryList) {
-                assertThat("History should have two entries", state.size,
-                        equalTo(2))
-                assertThat("URLs should match", state[state.currentIndex].uri,
-                        endsWith(HELLO2_HTML_PATH))
-                assertThat("History index should be 1", state.currentIndex,
-                        equalTo(1))
+                assertThat(
+                    "History should have two entries",
+                    state.size,
+                    equalTo(2)
+                )
+                assertThat(
+                    "URLs should match",
+                    state[state.currentIndex].uri,
+                    endsWith(HELLO2_HTML_PATH)
+                )
+                assertThat(
+                    "History index should be 1",
+                    state.currentIndex,
+                    equalTo(1)
+                )
             }
         })
     }
-
-
-
 }

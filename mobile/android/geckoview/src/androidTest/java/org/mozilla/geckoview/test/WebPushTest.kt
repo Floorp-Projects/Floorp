@@ -5,17 +5,17 @@
 package org.mozilla.geckoview.test
 
 import android.os.Parcel
-import androidx.test.filters.MediumTest
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import android.util.Base64
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.MediumTest
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.geckoview.*
+import org.mozilla.geckoview.* // ktlint-disable no-wildcard-imports
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.RejectedPromiseException
@@ -61,7 +61,7 @@ class WebPushTest : BaseSessionTest() {
         // Grant "desktop notification" permission
         mainSession.delegateUntilTestEnd(object : PermissionDelegate {
             override fun onContentPermissionRequest(session: GeckoSession, perm: GeckoSession.PermissionDelegate.ContentPermission):
-                    GeckoResult<Int>? {
+                GeckoResult<Int>? {
                 assertThat("Should grant DESKTOP_NOTIFICATIONS permission", perm.permission, equalTo(GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION))
                 return GeckoResult.fromValue(GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW)
             }
@@ -145,7 +145,7 @@ class WebPushTest : BaseSessionTest() {
 
         val p = mainSession.evaluatePromiseJS("window.doWaitForPushEvent()")
 
-        val testPayload = "The Payload";
+        val testPayload = "The Payload"
         sessionRule.runtime.webPushController.onPushEvent(delegate!!.storedSubscription!!.scope, testPayload.toByteArray(Charsets.UTF_8))
 
         assertThat("Push data should match", p.value as String, equalTo(testPayload))
@@ -204,17 +204,25 @@ class WebPushTest : BaseSessionTest() {
 
     @Test(expected = IllegalArgumentException::class)
     fun invalidDuplicateKeys() {
-        WebPushSubscription("https://scope", PUSH_ENDPOINT,
-                WebPushUtils.keyToBytes(APP_SERVER_KEY_PAIR.public as ECPublicKey),
-                WebPushUtils.keyToBytes(APP_SERVER_KEY_PAIR.public as ECPublicKey)!!, AUTH_SECRET)
+        WebPushSubscription(
+            "https://scope",
+            PUSH_ENDPOINT,
+            WebPushUtils.keyToBytes(APP_SERVER_KEY_PAIR.public as ECPublicKey),
+            WebPushUtils.keyToBytes(APP_SERVER_KEY_PAIR.public as ECPublicKey)!!,
+            AUTH_SECRET
+        )
     }
 
     @Test
     fun parceling() {
-        val testScope = "https://test.scope";
-        val sub = WebPushSubscription(testScope, PUSH_ENDPOINT,
-                WebPushUtils.keyToBytes(APP_SERVER_KEY_PAIR.public as ECPublicKey),
-                WebPushUtils.keyToBytes(BROWSER_KEY_PAIR.public as ECPublicKey)!!, AUTH_SECRET)
+        val testScope = "https://test.scope"
+        val sub = WebPushSubscription(
+            testScope,
+            PUSH_ENDPOINT,
+            WebPushUtils.keyToBytes(APP_SERVER_KEY_PAIR.public as ECPublicKey),
+            WebPushUtils.keyToBytes(BROWSER_KEY_PAIR.public as ECPublicKey)!!,
+            AUTH_SECRET
+        )
 
         val parcel = Parcel.obtain()
         sub.writeToParcel(parcel, 0)

@@ -6,30 +6,28 @@ package org.mozilla.geckoview.test
 
 import android.os.Handler
 import android.os.Looper
-import org.mozilla.geckoview.GeckoResult
-import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.GeckoSession.SessionState
-import org.mozilla.geckoview.GeckoSession.ContentDelegate
-import org.mozilla.geckoview.GeckoSession.NavigationDelegate
-import org.mozilla.geckoview.GeckoSession.ScrollDelegate
-import org.mozilla.geckoview.GeckoSession.PermissionDelegate
-import org.mozilla.geckoview.GeckoSession.PromptDelegate
-import org.mozilla.geckoview.GeckoSession.ProgressDelegate
-import org.mozilla.geckoview.GeckoSession.HistoryDelegate
-import org.mozilla.geckoview.GeckoSessionSettings
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.*
-import org.mozilla.geckoview.test.util.UiThreadUtils
-
-import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
-
-import org.hamcrest.Matchers.*
+import androidx.test.filters.MediumTest
+import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.geckoview.GeckoResult
+import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoSession.ContentDelegate
+import org.mozilla.geckoview.GeckoSession.HistoryDelegate
+import org.mozilla.geckoview.GeckoSession.NavigationDelegate
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate
+import org.mozilla.geckoview.GeckoSession.ProgressDelegate
+import org.mozilla.geckoview.GeckoSession.PromptDelegate
+import org.mozilla.geckoview.GeckoSession.ScrollDelegate
+import org.mozilla.geckoview.GeckoSession.SessionState
+import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.WebRequestError
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.* // ktlint-disable no-wildcard-imports
+import org.mozilla.geckoview.test.util.UiThreadUtils
 
 /**
  * Test for the GeckoSessionTestRule class, to ensure it properly sets up a session for
@@ -42,32 +40,47 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
     @Test fun getSession() {
         assertThat("Can get session", mainSession, notNullValue())
-        assertThat("Session is open",
-                   mainSession.isOpen, equalTo(true))
+        assertThat(
+            "Session is open",
+            mainSession.isOpen,
+            equalTo(true)
+        )
     }
 
     @ClosedSessionAtStart
-    @Test fun getSession_closedSession() {
+    @Test
+    fun getSession_closedSession() {
         assertThat("Session is closed", mainSession.isOpen, equalTo(false))
     }
 
-    @Setting.List(Setting(key = Setting.Key.USE_PRIVATE_MODE, value = "true"),
-                  Setting(key = Setting.Key.DISPLAY_MODE, value = "DISPLAY_MODE_MINIMAL_UI"),
-                  Setting(key = Setting.Key.ALLOW_JAVASCRIPT, value = "false"))
+    @Setting.List(
+        Setting(key = Setting.Key.USE_PRIVATE_MODE, value = "true"),
+        Setting(key = Setting.Key.DISPLAY_MODE, value = "DISPLAY_MODE_MINIMAL_UI"),
+        Setting(key = Setting.Key.ALLOW_JAVASCRIPT, value = "false")
+    )
     @Setting(key = Setting.Key.USE_TRACKING_PROTECTION, value = "true")
-    @Test fun settingsApplied() {
-        assertThat("USE_PRIVATE_MODE should be set",
-                   mainSession.settings.usePrivateMode,
-                   equalTo(true))
-        assertThat("DISPLAY_MODE should be set",
-                   mainSession.settings.displayMode,
-                   equalTo(GeckoSessionSettings.DISPLAY_MODE_MINIMAL_UI))
-        assertThat("USE_TRACKING_PROTECTION should be set",
-                   mainSession.settings.useTrackingProtection,
-                   equalTo(true))
-        assertThat("ALLOW_JAVASCRIPT should be set",
-                mainSession.settings.allowJavascript,
-                equalTo(false))
+    @Test
+    fun settingsApplied() {
+        assertThat(
+            "USE_PRIVATE_MODE should be set",
+            mainSession.settings.usePrivateMode,
+            equalTo(true)
+        )
+        assertThat(
+            "DISPLAY_MODE should be set",
+            mainSession.settings.displayMode,
+            equalTo(GeckoSessionSettings.DISPLAY_MODE_MINIMAL_UI)
+        )
+        assertThat(
+            "USE_TRACKING_PROTECTION should be set",
+            mainSession.settings.useTrackingProtection,
+            equalTo(true)
+        )
+        assertThat(
+            "ALLOW_JAVASCRIPT should be set",
+            mainSession.settings.allowJavascript,
+            equalTo(false)
+        )
     }
 
     @Test(expected = UiThreadUtils.TimeoutException::class)
@@ -87,34 +100,56 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         })
     }
 
-    @NullDelegate.List(NullDelegate(ContentDelegate::class),
-                       NullDelegate(NavigationDelegate::class))
+    @NullDelegate.List(
+        NullDelegate(ContentDelegate::class),
+        NullDelegate(NavigationDelegate::class)
+    )
     @NullDelegate(ScrollDelegate::class)
-    @Test fun nullDelegate() {
-        assertThat("Content delegate should be null",
-                   mainSession.contentDelegate, nullValue())
-        assertThat("Navigation delegate should be null",
-                   mainSession.navigationDelegate, nullValue())
-        assertThat("Scroll delegate should be null",
-                   mainSession.scrollDelegate, nullValue())
+    @Test
+    fun nullDelegate() {
+        assertThat(
+            "Content delegate should be null",
+            mainSession.contentDelegate,
+            nullValue()
+        )
+        assertThat(
+            "Navigation delegate should be null",
+            mainSession.navigationDelegate,
+            nullValue()
+        )
+        assertThat(
+            "Scroll delegate should be null",
+            mainSession.scrollDelegate,
+            nullValue()
+        )
 
-        assertThat("Progress delegate should not be null",
-                   mainSession.progressDelegate, notNullValue())
+        assertThat(
+            "Progress delegate should not be null",
+            mainSession.progressDelegate,
+            notNullValue()
+        )
     }
 
     @NullDelegate(ProgressDelegate::class)
     @ClosedSessionAtStart
-    @Test fun nullDelegate_closed() {
-        assertThat("Progress delegate should be null",
-                   mainSession.progressDelegate, nullValue())
+    @Test
+    fun nullDelegate_closed() {
+        assertThat(
+            "Progress delegate should be null",
+            mainSession.progressDelegate,
+            nullValue()
+        )
     }
 
     @Test(expected = AssertionError::class)
     @NullDelegate(ProgressDelegate::class)
     @ClosedSessionAtStart
     fun nullDelegate_requireProgressOnOpen() {
-        assertThat("Progress delegate should be null",
-                   mainSession.progressDelegate, nullValue())
+        assertThat(
+            "Progress delegate should be null",
+            mainSession.progressDelegate,
+            nullValue()
+        )
 
         mainSession.open()
     }
@@ -179,8 +214,10 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
                 counter++
             }
 
-            override fun onSecurityChange(session: GeckoSession,
-                                          securityInfo: ProgressDelegate.SecurityInformation) {
+            override fun onSecurityChange(
+                session: GeckoSession,
+                securityInfo: ProgressDelegate.SecurityInformation
+            ) {
                 counter++
             }
 
@@ -198,8 +235,11 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
     @Test fun waitUntilCalled_specificInterfaceMethod() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
-        sessionRule.waitUntilCalled(ProgressDelegate::class,
-                                     "onPageStart", "onPageStop")
+        sessionRule.waitUntilCalled(
+            ProgressDelegate::class,
+            "onPageStart",
+            "onPageStop"
+        )
 
         var counter = 0
 
@@ -249,7 +289,8 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @NullDelegate(ScrollDelegate::class)
-    @Test fun waitUntilCalled_notThrowOnNonNullDelegateMethod() {
+    @Test
+    fun waitUntilCalled_notThrowOnNonNullDelegateMethod() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
@@ -273,8 +314,10 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
                 counter++
             }
 
-            override fun onSecurityChange(session: GeckoSession,
-                                          securityInfo: ProgressDelegate.SecurityInformation) {
+            override fun onSecurityChange(
+                session: GeckoSession,
+                securityInfo: ProgressDelegate.SecurityInformation
+            ) {
                 counter++
             }
 
@@ -325,7 +368,8 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @NullDelegate(ScrollDelegate::class)
-    @Test fun waitUntilCalled_notThrowOnNonNullDelegateObject() {
+    @Test
+    fun waitUntilCalled_notThrowOnNonNullDelegateObject() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
@@ -369,10 +413,16 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 val info = sessionRule.currentCall
                 assertThat("Method info should be valid", info, notNullValue())
-                assertThat("Counter should be correct",
-                           info.counter, equalTo(forEachCall(1, 2)))
-                assertThat("Order should equal counter",
-                           info.order, equalTo(info.counter))
+                assertThat(
+                    "Counter should be correct",
+                    info.counter,
+                    equalTo(forEachCall(1, 2))
+                )
+                assertThat(
+                    "Order should equal counter",
+                    info.order,
+                    equalTo(info.counter)
+                )
                 counter++
             }
         })
@@ -782,10 +832,16 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 val info = sessionRule.currentCall
                 assertThat("Method info should be valid", info, notNullValue())
-                assertThat("Counter should be correct",
-                           info.counter, equalTo(1))
-                assertThat("Order should equal counter",
-                           info.order, equalTo(0))
+                assertThat(
+                    "Counter should be correct",
+                    info.counter,
+                    equalTo(1)
+                )
+                assertThat(
+                    "Order should equal counter",
+                    info.order,
+                    equalTo(0)
+                )
             }
         })
     }
@@ -830,7 +886,8 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @NullDelegate(ScrollDelegate::class)
-    @Test fun forCallbacksDuringWait_notThrowOnNonNullDelegate() {
+    @Test
+    fun forCallbacksDuringWait_notThrowOnNonNullDelegate() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
         mainSession.reload()
@@ -921,10 +978,16 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 val info = sessionRule.currentCall
                 assertThat("Method info should be valid", info, notNullValue())
-                assertThat("Counter should be correct",
-                           info.counter, equalTo(1))
-                assertThat("Order should equal counter",
-                           info.order, equalTo(0))
+                assertThat(
+                    "Counter should be correct",
+                    info.counter,
+                    equalTo(1)
+                )
+                assertThat(
+                    "Order should equal counter",
+                    info.order,
+                    equalTo(0)
+                )
             }
         })
 
@@ -985,28 +1048,29 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         var testCounter = 0
         var waitCounter = 0
 
-        sessionRule.delegateUntilTestEnd(object : ProgressDelegate,
-                                                  NavigationDelegate {
-            @AssertCalled(count = 1, order = [2])
-            override fun onPageStart(session: GeckoSession, url: String) {
-                testCounter++
-            }
+        sessionRule.delegateUntilTestEnd(object :
+                ProgressDelegate,
+                NavigationDelegate {
+                @AssertCalled(count = 1, order = [2])
+                override fun onPageStart(session: GeckoSession, url: String) {
+                    testCounter++
+                }
 
-            @AssertCalled(count = 1, order = [4])
-            override fun onPageStop(session: GeckoSession, success: Boolean) {
-                testCounter++
-            }
+                @AssertCalled(count = 1, order = [4])
+                override fun onPageStop(session: GeckoSession, success: Boolean) {
+                    testCounter++
+                }
 
-            @AssertCalled(count = 2, order = [1, 3])
-            override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
-                testCounter++
-            }
+                @AssertCalled(count = 2, order = [1, 3])
+                override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
+                    testCounter++
+                }
 
-            @AssertCalled(count = 2, order = [1, 3])
-            override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
-                testCounter++
-            }
-        })
+                @AssertCalled(count = 2, order = [1, 3])
+                override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
+                    testCounter++
+                }
+            })
 
         sessionRule.delegateDuringNextWait(object : ProgressDelegate {
             @AssertCalled(count = 1, order = [1])
@@ -1023,8 +1087,11 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
-        assertThat("Text delegate should be overridden",
-                   testCounter, equalTo(2))
+        assertThat(
+            "Text delegate should be overridden",
+            testCounter,
+            equalTo(2)
+        )
         assertThat("Wait delegate should be used", waitCounter, equalTo(2))
 
         mainSession.reload()
@@ -1058,7 +1125,8 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
     @Test fun wrapSession() {
         val session = sessionRule.wrapSession(
-          GeckoSession(mainSession.settings))
+            GeckoSession(mainSession.settings)
+        )
         sessionRule.openSession(session)
         session.reload()
         session.waitForPageStop()
@@ -1068,14 +1136,17 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         val newSession = sessionRule.createOpenSession()
         assertThat("Can create session", newSession, notNullValue())
         assertThat("New session is open", newSession.isOpen, equalTo(true))
-        assertThat("New session has same settings",
-                   newSession.settings, equalTo(mainSession.settings))
+        assertThat(
+            "New session has same settings",
+            newSession.settings,
+            equalTo(mainSession.settings)
+        )
     }
 
     @Test fun createOpenSession_withSettings() {
         val settings = GeckoSessionSettings.Builder(mainSession.settings)
-                .usePrivateMode(true)
-                .build()
+            .usePrivateMode(true)
+            .build()
 
         val newSession = sessionRule.createOpenSession(settings)
         assertThat("New session has same settings", newSession.settings, equalTo(settings))
@@ -1108,8 +1179,11 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         val newSession = sessionRule.createClosedSession()
         assertThat("Can create session", newSession, notNullValue())
         assertThat("New session is open", newSession.isOpen, equalTo(false))
-        assertThat("New session has same settings",
-                   newSession.settings, equalTo(mainSession.settings))
+        assertThat(
+            "New session has same settings",
+            newSession.settings,
+            equalTo(mainSession.settings)
+        )
     }
 
     @Test fun createClosedSession_withSettings() {
@@ -1384,7 +1458,8 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @WithDisplay(width = 100, height = 100)
-    @Test fun synthesizeTap() {
+    @Test
+    fun synthesizeTap() {
         mainSession.loadTestPath(CLICK_TO_RELOAD_HTML_PATH)
         mainSession.waitForPageStop()
 
@@ -1393,7 +1468,8 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @WithDisplay(width = 100, height = 100)
-    @Test fun synthesizeMouseMove() {
+    @Test
+    fun synthesizeMouseMove() {
         mainSession.loadTestPath(MOUSE_TO_RELOAD_HTML_PATH)
         mainSession.waitForPageStop()
 
@@ -1402,81 +1478,123 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @Test fun evaluateExtensionJS() {
-        assertThat("JS string result should be correct",
-                sessionRule.evaluateExtensionJS("return 'foo';") as String, equalTo("foo"))
+        assertThat(
+            "JS string result should be correct",
+            sessionRule.evaluateExtensionJS("return 'foo';") as String,
+            equalTo("foo")
+        )
 
-        assertThat("JS number result should be correct",
-                sessionRule.evaluateExtensionJS("return 1+1;") as Double, equalTo(2.0))
+        assertThat(
+            "JS number result should be correct",
+            sessionRule.evaluateExtensionJS("return 1+1;") as Double,
+            equalTo(2.0)
+        )
 
-        assertThat("JS boolean result should be correct",
-                sessionRule.evaluateExtensionJS("return !0;") as Boolean, equalTo(true))
+        assertThat(
+            "JS boolean result should be correct",
+            sessionRule.evaluateExtensionJS("return !0;") as Boolean,
+            equalTo(true)
+        )
 
         val expected = JSONObject("{bar:42,baz:true,foo:'bar'}")
         val actual = sessionRule.evaluateExtensionJS("return {foo:'bar',bar:42,baz:true};") as JSONObject
         for (key in expected.keys()) {
-            assertThat("JS object result should be correct",
-                    actual.get(key), equalTo(expected.get(key)))
+            assertThat(
+                "JS object result should be correct",
+                actual.get(key),
+                equalTo(expected.get(key))
+            )
         }
 
-        assertThat("JS array result should be correct",
-                sessionRule.evaluateExtensionJS("return [1,2,3];") as JSONArray,
-                equalTo(JSONArray("[1,2,3]")))
+        assertThat(
+            "JS array result should be correct",
+            sessionRule.evaluateExtensionJS("return [1,2,3];") as JSONArray,
+            equalTo(JSONArray("[1,2,3]"))
+        )
 
-        assertThat("Can access extension APIS",
-                sessionRule.evaluateExtensionJS("return !!browser.runtime;") as Boolean,
-                equalTo(true))
+        assertThat(
+            "Can access extension APIS",
+            sessionRule.evaluateExtensionJS("return !!browser.runtime;") as Boolean,
+            equalTo(true)
+        )
 
-        assertThat("Can access extension APIS",
-                sessionRule.evaluateExtensionJS("""
+        assertThat(
+            "Can access extension APIS",
+            sessionRule.evaluateExtensionJS(
+                """
                     return true;
-                    // Comments at the end are allowed""".trimIndent()) as Boolean,
-                equalTo(true))
+                    // Comments at the end are allowed
+                """.trimIndent()
+            ) as Boolean,
+            equalTo(true)
+        )
 
         try {
             sessionRule.evaluateExtensionJS("test({ what")
             assertThat("Should fail", true, equalTo(false))
         } catch (e: RejectedPromiseException) {
-            assertThat("Syntax errors are reported",
-                    e.message,  containsString("SyntaxError"))
+            assertThat(
+                "Syntax errors are reported",
+                e.message,
+                containsString("SyntaxError")
+            )
         }
     }
 
     @Test fun evaluateJS() {
-        mainSession.loadTestPath(HELLO_HTML_PATH);
-        mainSession.waitForPageStop();
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
 
-        assertThat("JS string result should be correct",
-                   mainSession.evaluateJS("'foo'") as String, equalTo("foo"))
+        assertThat(
+            "JS string result should be correct",
+            mainSession.evaluateJS("'foo'") as String,
+            equalTo("foo")
+        )
 
-        assertThat("JS number result should be correct",
-                   mainSession.evaluateJS("1+1") as Double, equalTo(2.0))
+        assertThat(
+            "JS number result should be correct",
+            mainSession.evaluateJS("1+1") as Double,
+            equalTo(2.0)
+        )
 
-        assertThat("JS boolean result should be correct",
-                   mainSession.evaluateJS("!0") as Boolean, equalTo(true))
+        assertThat(
+            "JS boolean result should be correct",
+            mainSession.evaluateJS("!0") as Boolean,
+            equalTo(true)
+        )
 
         val expected = JSONObject("{bar:42,baz:true,foo:'bar'}")
         val actual = mainSession.evaluateJS("({foo:'bar',bar:42,baz:true})") as JSONObject
         for (key in expected.keys()) {
-            assertThat("JS object result should be correct",
-                    actual.get(key), equalTo(expected.get(key)))
+            assertThat(
+                "JS object result should be correct",
+                actual.get(key),
+                equalTo(expected.get(key))
+            )
         }
 
-        assertThat("JS array result should be correct",
-                   mainSession.evaluateJS("[1,2,3]") as JSONArray,
-                   equalTo(JSONArray("[1,2,3]")))
+        assertThat(
+            "JS array result should be correct",
+            mainSession.evaluateJS("[1,2,3]") as JSONArray,
+            equalTo(JSONArray("[1,2,3]"))
+        )
 
-        assertThat("JS DOM object result should be correct",
-                   mainSession.evaluateJS("document.body.tagName") as String,
-                   equalTo("BODY"))
+        assertThat(
+            "JS DOM object result should be correct",
+            mainSession.evaluateJS("document.body.tagName") as String,
+            equalTo("BODY")
+        )
     }
 
     @Test fun evaluateJS_windowObject() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
 
-        assertThat("JS DOM window result should be correct",
-                   (mainSession.evaluateJS("window.location.pathname")) as String,
-                   equalTo(HELLO_HTML_PATH))
+        assertThat(
+            "JS DOM window result should be correct",
+            (mainSession.evaluateJS("window.location.pathname")) as String,
+            equalTo(HELLO_HTML_PATH)
+        )
     }
 
     @Test fun evaluateJS_multipleSessions() {
@@ -1484,34 +1602,47 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         mainSession.waitForPageStop()
 
         mainSession.evaluateJS("this.foo = 42")
-        assertThat("Variable should be set",
-                   mainSession.evaluateJS("this.foo") as Double, equalTo(42.0))
+        assertThat(
+            "Variable should be set",
+            mainSession.evaluateJS("this.foo") as Double,
+            equalTo(42.0)
+        )
 
         val newSession = sessionRule.createOpenSession()
         newSession.loadTestPath(HELLO_HTML_PATH)
         newSession.waitForPageStop()
 
         val result = newSession.evaluateJS("this.foo")
-        assertThat("New session should have separate JS context",
-                   result, nullValue())
+        assertThat(
+            "New session should have separate JS context",
+            result,
+            nullValue()
+        )
     }
 
     @Test fun evaluateJS_supportPromises() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
 
-        assertThat("Can get resolved promise",
+        assertThat(
+            "Can get resolved promise",
             mainSession.evaluatePromiseJS(
-                    "new Promise(resolve => resolve('foo'))").value as String,
-            equalTo("foo"));
+                "new Promise(resolve => resolve('foo'))"
+            ).value as String,
+            equalTo("foo")
+        )
 
         val promise = mainSession.evaluatePromiseJS(
-                "new Promise(r => window.resolve = r)")
+            "new Promise(r => window.resolve = r)"
+        )
 
         mainSession.evaluateJS("window.resolve('bar')")
 
-        assertThat("Can wait for promise to resolve",
-                promise.value as String, equalTo("bar"))
+        assertThat(
+            "Can wait for promise to resolve",
+            promise.value as String,
+            equalTo("bar")
+        )
     }
 
     @Test(expected = RejectedPromiseException::class)
@@ -1526,9 +1657,11 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         mainSession.waitForPageStop()
         // Test that we can still receive delegate callbacks during evaluateJS,
         // by calling alert(), which blocks until prompt delegate is called.
-        assertThat("JS blocking result should be correct",
-                   mainSession.evaluateJS("alert(); 'foo'") as String,
-                   equalTo("foo"))
+        assertThat(
+            "JS blocking result should be correct",
+            mainSession.evaluateJS("alert(); 'foo'") as String,
+            equalTo("foo")
+        )
     }
 
     @TimeoutMillis(1000)
@@ -1568,36 +1701,47 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @Test fun getPrefs_undefinedPrefReturnsNull() {
-        assertThat("Undefined pref should have null value",
-                   sessionRule.getPrefs("invalid.pref")[0], equalTo(JSONObject.NULL))
+        assertThat(
+            "Undefined pref should have null value",
+            sessionRule.getPrefs("invalid.pref")[0],
+            equalTo(JSONObject.NULL)
+        )
     }
 
     @Test fun setPrefsUntilTestEnd() {
-        sessionRule.setPrefsUntilTestEnd(mapOf(
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
                 "test.pref.bool" to true,
                 "test.pref.int" to 1,
-                "test.pref.foo" to "foo"))
+                "test.pref.foo" to "foo"
+            )
+        )
 
         var prefs = sessionRule.getPrefs(
-                "test.pref.bool",
-                "test.pref.int",
-                "test.pref.foo",
-                "test.pref.bar")
+            "test.pref.bool",
+            "test.pref.int",
+            "test.pref.foo",
+            "test.pref.bar"
+        )
 
         assertThat("Prefs should be set", prefs[0] as Boolean, equalTo(true))
         assertThat("Prefs should be set", prefs[1] as Int, equalTo(1))
         assertThat("Prefs should be set", prefs[2] as String, equalTo("foo"))
         assertThat("Prefs should be set", prefs[3], equalTo(JSONObject.NULL))
 
-        sessionRule.setPrefsUntilTestEnd(mapOf(
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
                 "test.pref.foo" to "bar",
-                "test.pref.bar" to "baz"))
+                "test.pref.bar" to "baz"
+            )
+        )
 
         prefs = sessionRule.getPrefs(
-                        "test.pref.bool",
-                        "test.pref.int",
-                        "test.pref.foo",
-                        "test.pref.bar")
+            "test.pref.bool",
+            "test.pref.int",
+            "test.pref.foo",
+            "test.pref.bar"
+        )
 
         assertThat("New prefs should be set", prefs[0] as Boolean, equalTo(true))
         assertThat("New prefs should be set", prefs[1] as Int, equalTo(1))
@@ -1609,15 +1753,19 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
-        sessionRule.setPrefsDuringNextWait(mapOf(
+        sessionRule.setPrefsDuringNextWait(
+            mapOf(
                 "test.pref.bool" to true,
                 "test.pref.int" to 1,
-                "test.pref.foo" to "foo"))
+                "test.pref.foo" to "foo"
+            )
+        )
 
         var prefs = sessionRule.getPrefs(
-                        "test.pref.bool",
-                        "test.pref.int",
-                        "test.pref.foo")
+            "test.pref.bool",
+            "test.pref.int",
+            "test.pref.foo"
+        )
 
         assertThat("Prefs should be set before wait", prefs[0] as Boolean, equalTo(true))
         assertThat("Prefs should be set before wait", prefs[1] as Int, equalTo(1))
@@ -1627,9 +1775,10 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         mainSession.waitForPageStop()
 
         prefs = sessionRule.getPrefs(
-                "test.pref.bool",
-                "test.pref.int",
-                "test.pref.foo")
+            "test.pref.bool",
+            "test.pref.int",
+            "test.pref.foo"
+        )
 
         assertThat("Prefs should be cleared after wait", prefs[0], equalTo(JSONObject.NULL))
         assertThat("Prefs should be cleared after wait", prefs[1], equalTo(JSONObject.NULL))
@@ -1640,18 +1789,25 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
-        sessionRule.setPrefsUntilTestEnd(mapOf(
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
                 "test.pref.int" to 1,
-                "test.pref.foo" to "foo"))
+                "test.pref.foo" to "foo"
+            )
+        )
 
-        sessionRule.setPrefsDuringNextWait(mapOf(
+        sessionRule.setPrefsDuringNextWait(
+            mapOf(
                 "test.pref.foo" to "bar",
-                "test.pref.bar" to "baz"))
+                "test.pref.bar" to "baz"
+            )
+        )
 
         var prefs = sessionRule.getPrefs(
-                "test.pref.int",
-                "test.pref.foo",
-                "test.pref.bar")
+            "test.pref.int",
+            "test.pref.foo",
+            "test.pref.bar"
+        )
 
         assertThat("Prefs should be overridden", prefs[0] as Int, equalTo(1))
         assertThat("Prefs should be overridden", prefs[1] as String, equalTo("bar"))
@@ -1661,9 +1817,10 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         mainSession.waitForPageStop()
 
         prefs = sessionRule.getPrefs(
-                        "test.pref.int",
-                        "test.pref.foo",
-                        "test.pref.bar")
+            "test.pref.int",
+            "test.pref.foo",
+            "test.pref.bar"
+        )
 
         assertThat("Overriden prefs should be restored", prefs[0] as Int, equalTo(1))
         assertThat("Overriden prefs should be restored", prefs[1] as String, equalTo("foo"))
@@ -1674,14 +1831,16 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
-        assertThat("waitForJS should return correct result",
-                   mainSession.waitForJS("alert(), 'foo'") as String,
-                   equalTo("foo"))
+        assertThat(
+            "waitForJS should return correct result",
+            mainSession.waitForJS("alert(), 'foo'") as String,
+            equalTo("foo")
+        )
 
         mainSession.forCallbacksDuringWait(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onAlertPrompt(session: GeckoSession, prompt: PromptDelegate.AlertPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
-                return null;
+                return null
             }
         })
     }
@@ -1689,9 +1848,11 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     @Test fun waitForJS_resolvePromise() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
-        assertThat("waitForJS should wait for promises",
-                   mainSession.waitForJS("Promise.resolve('foo')") as String,
-                   equalTo("foo"))
+        assertThat(
+            "waitForJS should wait for promises",
+            mainSession.waitForJS("Promise.resolve('foo')") as String,
+            equalTo("foo")
+        )
     }
 
     @Test fun waitForJS_delegateDuringWait() {
@@ -1738,31 +1899,41 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         lateinit var delegate: TestDelegate
 
         sessionRule.addExternalDelegateUntilTestEnd(
-                TestDelegate::class, { newDelegate -> delegate = newDelegate }, { },
-                object : TestDelegate {
-            @AssertCalled(count = 1)
-            override fun onDelegate(foo: String, bar: String): Int {
-                assertThat("First argument should be correct", foo, equalTo("foo"))
-                assertThat("Second argument should be correct", bar, equalTo("bar"))
-                return 42
+            TestDelegate::class,
+            { newDelegate -> delegate = newDelegate },
+            { },
+            object : TestDelegate {
+                @AssertCalled(count = 1)
+                override fun onDelegate(foo: String, bar: String): Int {
+                    assertThat("First argument should be correct", foo, equalTo("foo"))
+                    assertThat("Second argument should be correct", bar, equalTo("bar"))
+                    return 42
+                }
             }
-        })
+        )
 
         assertThat("Delegate should be registered", delegate, notNullValue())
-        assertThat("Delegate return value should be correct",
-                   delegate.onDelegate("foo", "bar"), equalTo(42))
+        assertThat(
+            "Delegate return value should be correct",
+            delegate.onDelegate("foo", "bar"),
+            equalTo(42)
+        )
         sessionRule.performTestEndCheck()
     }
 
     @Test(expected = AssertionError::class)
     fun addExternalDelegateUntilTestEnd_throwOnNotCalled() {
-        sessionRule.addExternalDelegateUntilTestEnd(TestDelegate::class, { }, { },
-                                                    object : TestDelegate {
-            @AssertCalled(count = 1)
-            override fun onDelegate(foo: String, bar: String): Int {
-                return 42
+        sessionRule.addExternalDelegateUntilTestEnd(
+            TestDelegate::class,
+            { },
+            { },
+            object : TestDelegate {
+                @AssertCalled(count = 1)
+                override fun onDelegate(foo: String, bar: String): Int {
+                    return 42
+                }
             }
-        })
+        )
         sessionRule.performTestEndCheck()
     }
 
@@ -1772,9 +1943,12 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
         var delegate: Runnable? = null
 
-        sessionRule.addExternalDelegateDuringNextWait(Runnable::class,
-                                                      { newDelegate -> delegate = newDelegate },
-                                                      { delegate = null }, Runnable { })
+        sessionRule.addExternalDelegateDuringNextWait(
+            Runnable::class,
+            { newDelegate -> delegate = newDelegate },
+            { delegate = null },
+            Runnable { }
+        )
 
         assertThat("Delegate should be registered", delegate, notNullValue())
         delegate?.run()
@@ -1794,37 +1968,52 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         val register = { newDelegate: TestDelegate -> delegate = newDelegate }
         val unregister = { _: TestDelegate -> delegate = null }
 
-        sessionRule.addExternalDelegateDuringNextWait(TestDelegate::class, register, unregister,
-                object : TestDelegate {
-                    @AssertCalled(count = 1)
-                    override fun onDelegate(foo: String, bar: String): Int {
-                        return 24
-                    }
-                })
+        sessionRule.addExternalDelegateDuringNextWait(
+            TestDelegate::class,
+            register,
+            unregister,
+            object : TestDelegate {
+                @AssertCalled(count = 1)
+                override fun onDelegate(foo: String, bar: String): Int {
+                    return 24
+                }
+            }
+        )
 
-        sessionRule.addExternalDelegateUntilTestEnd(TestDelegate::class, register, unregister,
-                object : TestDelegate {
-                    @AssertCalled(count = 1)
-                    override fun onDelegate(foo: String, bar: String): Int {
-                        return 42
-                    }
-                })
+        sessionRule.addExternalDelegateUntilTestEnd(
+            TestDelegate::class,
+            register,
+            unregister,
+            object : TestDelegate {
+                @AssertCalled(count = 1)
+                override fun onDelegate(foo: String, bar: String): Int {
+                    return 42
+                }
+            }
+        )
 
         assertThat("Wait delegate should be registered", delegate, notNullValue())
-        assertThat("Wait delegate return value should be correct",
-                delegate?.onDelegate("", ""), equalTo(24))
+        assertThat(
+            "Wait delegate return value should be correct",
+            delegate?.onDelegate("", ""),
+            equalTo(24)
+        )
 
         mainSession.reload()
         mainSession.waitForPageStop()
 
         assertThat("Test delegate should still be registered", delegate, notNullValue())
-        assertThat("Test delegate return value should be correct",
-                delegate?.onDelegate("", ""), equalTo(42))
+        assertThat(
+            "Test delegate return value should be correct",
+            delegate?.onDelegate("", ""),
+            equalTo(42)
+        )
         sessionRule.performTestEndCheck()
     }
 
     @IgnoreCrash
-    @Test fun contentCrashIgnored() {
+    @Test
+    fun contentCrashIgnored() {
         // TODO: Bug 1673953
         assumeThat(sessionRule.env.isFission, equalTo(false))
 

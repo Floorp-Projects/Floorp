@@ -3,17 +3,16 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 package org.mozilla.geckoview.test
 
+import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
+import org.junit.Assert.assertThat
 import org.junit.Test
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.test.util.Environment
 
-import org.hamcrest.Matchers.*
-import org.junit.Assert.assertThat
-
 val env = Environment()
 
 fun <T> GeckoResult<T>.pollDefault(): T? =
-        this.poll(env.defaultTimeoutMillis)
+    this.poll(env.defaultTimeoutMillis)
 
 class GeckoResultTestKotlin {
     class MockException : RuntimeException()
@@ -26,7 +25,8 @@ class GeckoResultTestKotlin {
         assertThat("Value should match", result.pollDefault(), equalTo(42))
     }
 
-    @Test(expected = MockException::class) fun pollIncompleteWithError() {
+    @Test(expected = MockException::class)
+    fun pollIncompleteWithError() {
         val result = GeckoResult<Void>()
 
         val thread = Thread { result.completeExceptionally(MockException()) }

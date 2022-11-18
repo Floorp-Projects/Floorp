@@ -4,27 +4,23 @@ import android.graphics.Matrix
 import android.os.Build
 import android.os.Bundle
 import android.os.LocaleList
-import android.text.InputType
 import android.util.Pair
 import android.util.SparseArray
 import android.view.View
 import android.view.ViewStructure
 import android.view.autofill.AutofillId
 import android.view.autofill.AutofillValue
-import androidx.test.filters.LargeTest
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.core.view.ViewCompat
 import androidx.test.ext.junit.rules.ActivityScenarioRule
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.LargeTest
 import androidx.test.filters.SdkSuppress
-
 import org.hamcrest.Matchers.equalTo
-import org.junit.*
+import org.junit.* // ktlint-disable no-wildcard-imports
 import org.junit.Assume.assumeThat
-
 import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.Autofill
-
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import org.mozilla.geckoview.test.util.UiThreadUtils
@@ -67,16 +63,22 @@ class GeckoViewTest : BaseSessionTest() {
             assertThat("Session is open", it.view.session!!.isOpen, equalTo(true))
             val newSession = GeckoSession()
             it.view.setSession(newSession)
-            assertThat("The new session should be correctly set.",
-                it.view.session, equalTo(newSession))
+            assertThat(
+                "The new session should be correctly set.",
+                it.view.session,
+                equalTo(newSession)
+            )
         }
     }
 
     @Test(expected = java.lang.IllegalStateException::class)
     fun displayAlreadyAcquired() {
         activityRule.scenario.onActivity {
-            assertThat("View should be attached",
-                    ViewCompat.isAttachedToWindow(it.view), equalTo(true))
+            assertThat(
+                "View should be attached",
+                ViewCompat.isAttachedToWindow(it.view),
+                equalTo(true)
+            )
             it.view.session!!.acquireDisplay()
         }
     }
@@ -98,12 +100,12 @@ class GeckoViewTest : BaseSessionTest() {
             val shouldBeHighPri = getContentProcessesOomScore(highPids)
             val shouldBeLowPri = getContentProcessesOomScore(lowPids)
             // Note that higher oom score means less priority
-            shouldBeHighPri.count { it > 100 } == 0
-                    && shouldBeLowPri.count { it < 300 } == 0
+            shouldBeHighPri.count { it > 100 } == 0 &&
+                shouldBeLowPri.count { it < 300 } == 0
         }, env.defaultTimeoutMillis)
     }
 
-    fun getContentProcessesOomScore(pids: Collection<Int>) : List<Int> {
+    fun getContentProcessesOomScore(pids: Collection<Int>): List<Int> {
         return pids.map { pid ->
             File("/proc/$pid/oom_score").readText(Charsets.UTF_8).trim().toInt()
         }
@@ -111,10 +113,12 @@ class GeckoViewTest : BaseSessionTest() {
 
     fun setupPriorityTest(): GeckoSession {
         // This makes the test a little bit faster
-        sessionRule.setPrefsUntilTestEnd(mapOf(
-            "dom.ipc.processPriorityManager.backgroundGracePeriodMS" to 0,
-            "dom.ipc.processPriorityManager.backgroundPerceivableGracePeriodMS" to 0,
-        ))
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                "dom.ipc.processPriorityManager.backgroundGracePeriodMS" to 0,
+                "dom.ipc.processPriorityManager.backgroundPerceivableGracePeriodMS" to 0
+            )
+        )
 
         val otherSession = sessionRule.createOpenSession()
         // The process manager sets newly created processes to FOREGROUND priority until they
@@ -131,7 +135,8 @@ class GeckoViewTest : BaseSessionTest() {
         mainSession.waitForPageStop()
 
         waitUntilContentProcessPriority(
-            high = listOf(mainSession), low = listOf(otherSession)
+            high = listOf(mainSession),
+            low = listOf(otherSession)
         )
 
         return otherSession
@@ -178,23 +183,31 @@ class GeckoViewTest : BaseSessionTest() {
             it.view.setSession(otherSession)
 
             waitUntilContentProcessPriority(
-                high = listOf(otherSession), low = listOf(mainSession))
+                high = listOf(otherSession),
+                low = listOf(mainSession)
+            )
 
             // After releasing otherSession, both sessions should be low priority
             it.view.releaseSession()
 
             waitUntilContentProcessPriority(
-                high = listOf(), low = listOf(mainSession, otherSession))
+                high = listOf(),
+                low = listOf(mainSession, otherSession)
+            )
 
             // Test that re-setting mainSession in the view raises the priority again
             it.view.setSession(mainSession)
             waitUntilContentProcessPriority(
-                high = listOf(mainSession), low = listOf(otherSession))
+                high = listOf(mainSession),
+                low = listOf(otherSession)
+            )
 
             // Setting the session to active should also raise priority
             otherSession.setActive(true)
             waitUntilContentProcessPriority(
-                high = listOf(mainSession, otherSession), low = listOf())
+                high = listOf(mainSession, otherSession),
+                low = listOf()
+            )
         }
     }
 
@@ -210,14 +223,16 @@ class GeckoViewTest : BaseSessionTest() {
         otherSession.setPriorityHint(GeckoSession.PRIORITY_HIGH)
 
         waitUntilContentProcessPriority(
-            high = listOf(mainSession, otherSession), low = listOf()
+            high = listOf(mainSession, otherSession),
+            low = listOf()
         )
 
         // Setting priorityHint to PRIORITY_DEFAULT should lower priority
         otherSession.setPriorityHint(GeckoSession.PRIORITY_DEFAULT)
 
         waitUntilContentProcessPriority(
-            high = listOf(mainSession), low = listOf(otherSession)
+            high = listOf(mainSession),
+            low = listOf(otherSession)
         )
     }
 
@@ -242,14 +257,17 @@ class GeckoViewTest : BaseSessionTest() {
             "#user1" to "username@example.com",
             "#user2" to "username@example.com",
             "#pass1" to "test-password",
-            "#pass2" to "test-password")
+            "#pass2" to "test-password"
+        )
 
         // Set up promises to monitor the values changing.
         val promises = autofills.map { entry ->
             // Repeat each test with both the top document and the iframe document.
-            mainSession.evaluatePromiseJS("""
+            mainSession.evaluatePromiseJS(
+                """
                 window.getDataForAllFrames('${entry.key}', '${entry.value}')
-                """)
+                """
+            )
         }
 
         activityRule.scenario.onActivity {
@@ -294,7 +312,7 @@ class GeckoViewTest : BaseSessionTest() {
         private var inputType = 0
         var children = Array<MockViewStructure?>(0, { null })
         var childIndex = 0
-        var hints : Array<out String>? = null
+        var hints: Array<out String>? = null
 
         override fun setId(p0: Int, p1: String?, p2: String?, p3: String?) {
             id = p0
@@ -326,7 +344,7 @@ class GeckoViewTest : BaseSessionTest() {
             inputType = p0
         }
 
-        fun getInputType() : Int {
+        fun getInputType(): Int {
             return inputType
         }
 
@@ -418,6 +436,5 @@ class GeckoViewTest : BaseSessionTest() {
         override fun getAttributes(): MutableList<Pair<String, String>>? {
             TODO("Not yet implemented")
         }
-
     }
 }
