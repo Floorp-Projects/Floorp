@@ -45,7 +45,7 @@ class VCMDecodedFrameCallback : public DecodedImageCallback {
 
   void OnDecoderImplementationName(const char* implementation_name);
 
-  void Map(uint32_t timestamp, const VCMFrameInformation& frameInfo);
+  void Map(uint32_t timestamp, const FrameInformation& frameInfo);
   void ClearTimestampMap();
 
  private:
@@ -60,7 +60,7 @@ class VCMDecodedFrameCallback : public DecodedImageCallback {
   VCMReceiveCallback* _receiveCallback = nullptr;
   VCMTiming* _timing;
   Mutex lock_;
-  VCMTimestampMap _timestampMap RTC_GUARDED_BY(lock_);
+  TimestampMap _timestampMap RTC_GUARDED_BY(lock_);
   int64_t ntp_offset_;
 };
 

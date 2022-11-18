@@ -15,11 +15,11 @@
 #include <algorithm>
 #include <cmath>
 
+#include "absl/types/optional.h"
 #include "api/video/video_timing.h"
 #include "modules/video_coding/include/video_error_codes.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/clock.h"
 
@@ -74,7 +74,7 @@ void VCMDecodedFrameCallback::Decoded(VideoFrame& decodedImage,
                        "timestamp", decodedImage.timestamp());
   // TODO(holmer): We should improve this so that we can handle multiple
   // callbacks from one call to Decode().
-  absl::optional<VCMFrameInformation> frameInfo;
+  absl::optional<FrameInformation> frameInfo;
   int timestamp_map_size = 0;
   int dropped_frames = 0;
   {
@@ -113,14 +113,14 @@ void VCMDecodedFrameCallback::Decoded(VideoFrame& decodedImage,
   }
   decodedImage.set_render_parameters(render_parameters);
 
-  RTC_DCHECK(frameInfo->decodeStart);
+  RTC_DCHECK(frameInfo->decode_start);
   const Timestamp now = _clock->CurrentTime();
   const TimeDelta decode_time = decode_time_ms
                                     ? TimeDelta::Millis(*decode_time_ms)
-                                    : now - *frameInfo->decodeStart;
+                                    : now - *frameInfo->decode_start;
   _timing->StopDecodeTimer(decode_time, now);
   decodedImage.set_processing_time(
-      {*frameInfo->decodeStart, *frameInfo->decodeStart + decode_time});
+      {*frameInfo->decode_start, *frameInfo->decode_start + decode_time});
 
   // Report timing information.
   TimingFrameInfo timing_frame_info;
@@ -164,16 +164,17 @@ void VCMDecodedFrameCallback::Decoded(VideoFrame& decodedImage,
   }
 
   timing_frame_info.flags = frameInfo->timing.flags;
-  timing_frame_info.decode_start_ms = frameInfo->decodeStart->ms();
+  timing_frame_info.decode_start_ms = frameInfo->decode_start->ms();
   timing_frame_info.decode_finish_ms = now.ms();
-  timing_frame_info.render_time_ms = frameInfo->renderTimeMs;
+  timing_frame_info.render_time_ms =
+      frameInfo->render_time ? frameInfo->render_time->ms() : -1;
   timing_frame_info.rtp_timestamp = decodedImage.timestamp();
   timing_frame_info.receive_start_ms = frameInfo->timing.receive_start_ms;
   timing_frame_info.receive_finish_ms = frameInfo->timing.receive_finish_ms;
   _timing->SetTimingFrameInfo(timing_frame_info);
 
-  decodedImage.set_timestamp_us(frameInfo->renderTimeMs *
-                                rtc::kNumMicrosecsPerMillisec);
+  decodedImage.set_timestamp_us(
+      frameInfo->render_time ? frameInfo->render_time->us() : -1);
   _receiveCallback->FrameToRender(decodedImage, qp, decode_time,
                                   frameInfo->content_type);
 }
@@ -184,7 +185,7 @@ void VCMDecodedFrameCallback::OnDecoderImplementationName(
 }
 
 void VCMDecodedFrameCallback::Map(uint32_t timestamp,
-                                  const VCMFrameInformation& frameInfo) {
+                                  const FrameInformation& frameInfo) {
   int dropped_frames = 0;
   {
     MutexLock lock(&lock_);
@@ -237,9 +238,12 @@ bool VCMGenericDecoder::Configure(const VideoDecoder::Settings& settings) {
 int32_t VCMGenericDecoder::Decode(const VCMEncodedFrame& frame, Timestamp now) {
   TRACE_EVENT1("webrtc", "VCMGenericDecoder::Decode", "timestamp",
                frame.Timestamp());
-  VCMFrameInformation frame_info;
-  frame_info.decodeStart = now;
-  frame_info.renderTimeMs = frame.RenderTimeMs();
+  FrameInformation frame_info;
+  frame_info.decode_start = now;
+  frame_info.render_time =
+      frame.RenderTimeMs() >= 0
+          ? absl::make_optional(Timestamp::Millis(frame.RenderTimeMs()))
+          : absl::nullopt;
   frame_info.rotation = frame.rotation();
   frame_info.timing = frame.video_timing();
   frame_info.ntp_time_ms = frame.EncodedImage().ntp_time_ms_;

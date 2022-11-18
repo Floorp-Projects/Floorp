@@ -24,12 +24,12 @@ constexpr int kTimestamp4 = 4;
 constexpr int kTimestamp5 = 5;
 constexpr int kTimestamp6 = 6;
 constexpr int kTimestamp7 = 7;
-constexpr int64_t kRenderTime1 = 1000;
-constexpr int64_t kRenderTime2 = 2000;
-constexpr int64_t kRenderTime4 = 4000;
-constexpr int64_t kRenderTime5 = 5000;
-constexpr int64_t kRenderTime6 = 6000;
-constexpr int64_t kRenderTime7 = 7000;
+constexpr Timestamp kRenderTime1 = Timestamp::Seconds(1);
+constexpr Timestamp kRenderTime2 = Timestamp::Seconds(2);
+constexpr Timestamp kRenderTime4 = Timestamp::Seconds(4);
+constexpr Timestamp kRenderTime5 = Timestamp::Seconds(5);
+constexpr Timestamp kRenderTime6 = Timestamp::Seconds(6);
+constexpr Timestamp kRenderTime7 = Timestamp::Seconds(7);
 }  // namespace
 
 class VcmTimestampMapTest : public ::testing::Test {
@@ -37,25 +37,25 @@ class VcmTimestampMapTest : public ::testing::Test {
   VcmTimestampMapTest() : _timestampMap(kTimestampMapSize) {}
 
   void SetUp() override {
-    _timestampMap.Add(kTimestamp1, VCMFrameInformation({kRenderTime1}));
-    _timestampMap.Add(kTimestamp2, VCMFrameInformation({kRenderTime2}));
-    _timestampMap.Add(kTimestamp4, VCMFrameInformation({kRenderTime4}));
+    _timestampMap.Add(kTimestamp1, FrameInformation({kRenderTime1}));
+    _timestampMap.Add(kTimestamp2, FrameInformation({kRenderTime2}));
+    _timestampMap.Add(kTimestamp4, FrameInformation({kRenderTime4}));
   }
 
-  VCMTimestampMap _timestampMap;
+  TimestampMap _timestampMap;
 };
 
 TEST_F(VcmTimestampMapTest, PopExistingFrameInfo) {
   EXPECT_EQ(_timestampMap.Size(), 3u);
   auto frameInfo = _timestampMap.Pop(kTimestamp1);
   ASSERT_TRUE(frameInfo);
-  EXPECT_EQ(frameInfo->renderTimeMs, kRenderTime1);
+  EXPECT_EQ(frameInfo->render_time, kRenderTime1);
   frameInfo = _timestampMap.Pop(kTimestamp2);
   ASSERT_TRUE(frameInfo);
-  EXPECT_EQ(frameInfo->renderTimeMs, kRenderTime2);
+  EXPECT_EQ(frameInfo->render_time, kRenderTime2);
   frameInfo = _timestampMap.Pop(kTimestamp4);
   ASSERT_TRUE(frameInfo);
-  EXPECT_EQ(frameInfo->renderTimeMs, kRenderTime4);
+  EXPECT_EQ(frameInfo->render_time, kRenderTime4);
 }
 
 TEST_F(VcmTimestampMapTest, PopNonexistingClearsOlderFrameInfos) {
@@ -66,9 +66,9 @@ TEST_F(VcmTimestampMapTest, PopNonexistingClearsOlderFrameInfos) {
 
 TEST_F(VcmTimestampMapTest, SizeIsIncrementedWhenAddingNewFrameInfo) {
   EXPECT_EQ(_timestampMap.Size(), 3u);
-  _timestampMap.Add(kTimestamp5, VCMFrameInformation({kRenderTime5}));
+  _timestampMap.Add(kTimestamp5, FrameInformation({kRenderTime5}));
   EXPECT_EQ(_timestampMap.Size(), 4u);
-  _timestampMap.Add(kTimestamp6, VCMFrameInformation({kRenderTime6}));
+  _timestampMap.Add(kTimestamp6, FrameInformation({kRenderTime6}));
   EXPECT_EQ(_timestampMap.Size(), 5u);
 }
 
@@ -101,11 +101,11 @@ TEST_F(VcmTimestampMapTest, PopLastAddedClearsMap) {
 
 TEST_F(VcmTimestampMapTest, LastAddedIsDiscardedIfMapGetsFull) {
   EXPECT_EQ(_timestampMap.Size(), 3u);
-  _timestampMap.Add(kTimestamp5, VCMFrameInformation({kRenderTime5}));
+  _timestampMap.Add(kTimestamp5, FrameInformation({kRenderTime5}));
   EXPECT_EQ(_timestampMap.Size(), 4u);
-  _timestampMap.Add(kTimestamp6, VCMFrameInformation({kRenderTime6}));
+  _timestampMap.Add(kTimestamp6, FrameInformation({kRenderTime6}));
   EXPECT_EQ(_timestampMap.Size(), 5u);
-  _timestampMap.Add(kTimestamp7, VCMFrameInformation({kRenderTime7}));
+  _timestampMap.Add(kTimestamp7, FrameInformation({kRenderTime7}));
   // Size is not incremented since the oldest element is discarded.
   EXPECT_EQ(_timestampMap.Size(), 5u);
   EXPECT_FALSE(_timestampMap.Pop(kTimestamp1));
