@@ -1032,6 +1032,8 @@ bool nsPresContext::UpdateContainerQueryStyles() {
     return false;
   }
 
+  AUTO_PROFILER_MARKER_TEXT("UpdateContainerQueryStyles", LAYOUT, {}, ""_ns);
+
   PresShell()->DoFlushLayout(/* aInterruptible = */ false);
 
   bool anyChanged = false;
