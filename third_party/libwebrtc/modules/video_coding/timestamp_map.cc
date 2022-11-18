@@ -16,15 +16,15 @@
 
 namespace webrtc {
 
-VCMTimestampMap::VCMTimestampMap(size_t capacity)
+TimestampMap::TimestampMap(size_t capacity)
     : ring_buffer_(new TimestampDataTuple[capacity]),
       capacity_(capacity),
       next_add_idx_(0),
       next_pop_idx_(0) {}
 
-VCMTimestampMap::~VCMTimestampMap() {}
+TimestampMap::~TimestampMap() {}
 
-void VCMTimestampMap::Add(uint32_t timestamp, const VCMFrameInformation& data) {
+void TimestampMap::Add(uint32_t timestamp, const FrameInformation& data) {
   ring_buffer_[next_add_idx_].timestamp = timestamp;
   ring_buffer_[next_add_idx_].data = data;
   next_add_idx_ = (next_add_idx_ + 1) % capacity_;
@@ -35,11 +35,11 @@ void VCMTimestampMap::Add(uint32_t timestamp, const VCMFrameInformation& data) {
   }
 }
 
-absl::optional<VCMFrameInformation> VCMTimestampMap::Pop(uint32_t timestamp) {
+absl::optional<FrameInformation> TimestampMap::Pop(uint32_t timestamp) {
   while (!IsEmpty()) {
     if (ring_buffer_[next_pop_idx_].timestamp == timestamp) {
       // Found start time for this timestamp.
-      const VCMFrameInformation& data = ring_buffer_[next_pop_idx_].data;
+      const FrameInformation& data = ring_buffer_[next_pop_idx_].data;
       ring_buffer_[next_pop_idx_].timestamp = 0;
       next_pop_idx_ = (next_pop_idx_ + 1) % capacity_;
       return data;
@@ -57,11 +57,11 @@ absl::optional<VCMFrameInformation> VCMTimestampMap::Pop(uint32_t timestamp) {
   return absl::nullopt;
 }
 
-bool VCMTimestampMap::IsEmpty() const {
+bool TimestampMap::IsEmpty() const {
   return (next_add_idx_ == next_pop_idx_);
 }
 
-size_t VCMTimestampMap::Size() const {
+size_t TimestampMap::Size() const {
   // The maximum number of elements in the list is `capacity_` - 1. The list is
   // empty if the add and pop indices are equal.
   return next_add_idx_ >= next_pop_idx_
@@ -69,7 +69,7 @@ size_t VCMTimestampMap::Size() const {
              : next_add_idx_ + capacity_ - next_pop_idx_;
 }
 
-void VCMTimestampMap::Clear() {
+void TimestampMap::Clear() {
   while (!IsEmpty()) {
     ring_buffer_[next_pop_idx_].timestamp = 0;
     next_pop_idx_ = (next_pop_idx_ + 1) % capacity_;
