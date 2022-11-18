@@ -1006,6 +1006,9 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
     if (layer_frames_.empty()) {
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
+    if (layer_frames_.front().IsKeyframe()) {
+      force_key_frame_ = true;
+    }
   }
 
   vpx_svc_layer_id_t layer_id = {0};
