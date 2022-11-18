@@ -5898,6 +5898,16 @@
 #endif
   mirror: once
 
+# [Android] OPPO, realme and OnePlus device seem to crash when using Font
+# Match API. We turn off this feature on these devices. Set true if you want to
+# turn on it at force.
+#if defined(MOZ_WIDGET_ANDROID)
+- name: gfx.font-list.use_font_match_api.force-enabled
+  type: bool
+  value: false
+  mirror: once
+#endif
+
 # Whether to load fonts (e.g. Twemoji Mozilla) bundled with the application:
 #  -1 - Auto behavior based on OS version (currently, disables loading on
 #       "low-memory" Android devices)
