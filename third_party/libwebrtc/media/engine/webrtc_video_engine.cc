@@ -2855,12 +2855,15 @@ void WebRtcVideoChannel::WebRtcVideoSendStream::RecreateWebRtcStream() {
 
   parameters_.encoder_config.encoder_specific_settings = NULL;
 
+  // Calls stream_->UpdateActiveSimulcastLayers() to start the VideoSendStream
+  // if necessary conditions are met.
+  UpdateSendState();
+
+  // Attach the source after starting the send stream to prevent frames from
+  // being injected into a not-yet initializated video stream encoder.
   if (source_) {
     stream_->SetSource(source_, GetDegradationPreference());
   }
-
-  // Call stream_->Start() if necessary conditions are met.
-  UpdateSendState();
 }
 
 WebRtcVideoChannel::WebRtcVideoReceiveStream::WebRtcVideoReceiveStream(
