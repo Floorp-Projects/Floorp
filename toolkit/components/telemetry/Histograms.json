@@ -16784,7 +16784,7 @@
     "products": ["firefox"],
     "alert_emails": ["fbraun@mozilla.com", "tschuster@mozilla.com", "seceng-telemetry@mozilla.com"],
     "bug_numbers": [1763367],
-    "expires_in_version": "110",
+    "expires_in_version": "116",
     "kind" : "enumerated",
     "n_values": 32,
     "description": "Whether a cookie was skipped in GetCookiesForURI because of a same-site issue. This is a bit field.",
