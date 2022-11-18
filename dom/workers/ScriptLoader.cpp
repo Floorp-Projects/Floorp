@@ -981,6 +981,8 @@ nsresult WorkerScriptLoader::LoadScript(
     }
   }
 
+  loadContext->mChannel.swap(channel);
+
   return NS_OK;
 }
 
@@ -1056,6 +1058,7 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
 
   WorkerLoadContext* loadContext = aRequest->GetWorkerLoadContext();
 
+  NS_ASSERTION(!loadContext->mChannel, "Should no longer have a channel!");
   NS_ASSERTION(aRequest->IsReadyToRun(), "Should be scheduled!");
 
   mRv.MightThrowJSException();
