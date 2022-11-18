@@ -15,6 +15,21 @@ job-defaults:
         toolchain:
             - linux64-clang-15-stage1
 
+linux32-llvm-symbolizer:
+    description: "llvm-symbolizer for Linux"
+    treeherder:
+        symbol: TL32(llvm-symbolizer)
+    run:
+        arguments:
+            - i686-unknown-linux-gnu
+            - build/build-clang/clang-15.json
+        resources:
+            - build/build-clang/clang-15.json
+            - taskcluster/scripts/misc/build-llvm-common.sh
+    fetches:
+        toolchain:
+            - linux32-toolchain-sysroot
+
 linux64-llvm-symbolizer:
     description: "llvm-symbolizer for Linux"
     treeherder:

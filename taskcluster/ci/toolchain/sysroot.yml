@@ -111,6 +111,28 @@ sysroot-aarch64-linux-gnu:
         arguments:
             - arm64
 
+linux32-toolchain-sysroot:
+    description: "Sysroot for linux32 toolchain builds"
+    worker:
+        env:
+            PACKAGES_TASKS: {task-reference: '<gcc-7>'}
+    treeherder:
+        symbol: TL(sysroot32-toolchain)
+    dependencies:
+        gcc-7: packages-deb8-32-gcc-7
+    run:
+        arguments:
+            - i386
+            # For clang
+            - binutils-dev
+            - libxml2-dev
+            # For minidump-stackwalk
+            - libcurl4-openssl-dev
+            - libssl-dev
+            - libbz2-dev
+            # For msix-package
+            - libicu-dev
+
 linux64-toolchain-sysroot:
     description: "Sysroot for linux64 toolchain builds"
     worker:
