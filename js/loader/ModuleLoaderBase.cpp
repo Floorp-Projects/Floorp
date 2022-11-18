@@ -654,7 +654,7 @@ nsresult ModuleLoaderBase::ResolveRequestedModules(
   ModuleScript* ms = aRequest->mModuleScript;
 
   AutoJSAPI jsapi;
-  if (!jsapi.Init(ms->ModuleRecord())) {
+  if (!jsapi.Init(mGlobalObject)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -829,7 +829,10 @@ void ModuleLoaderBase::FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
                                                     nsresult aResult) {
   AutoJSAPI jsapi;
   MOZ_ASSERT(NS_FAILED(aResult));
-  MOZ_ALWAYS_TRUE(jsapi.Init(aRequest->mDynamicPromise));
+  if (!jsapi.Init(mGlobalObject)) {
+    return;
+  }
+
   FinishDynamicImport(jsapi.cx(), aRequest, aResult, nullptr);
 }
 
@@ -971,7 +974,7 @@ bool ModuleLoaderBase::InstantiateModuleGraph(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(moduleScript->ModuleRecord());
 
   AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(moduleScript->ModuleRecord()))) {
+  if (NS_WARN_IF(!jsapi.Init(mGlobalObject))) {
     return false;
   }
 
