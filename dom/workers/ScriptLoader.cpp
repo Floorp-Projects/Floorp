@@ -352,13 +352,13 @@ namespace loader {
 
 class ScriptExecutorRunnable final : public MainThreadWorkerSyncRunnable {
   RefPtr<WorkerScriptLoader> mScriptLoader;
-  RefPtr<WorkerLoadContext> mLoadContext;
+  RefPtr<ThreadSafeRequestHandle> mRequestHandle;
 
  public:
   ScriptExecutorRunnable(WorkerScriptLoader* aScriptLoader,
                          WorkerPrivate* aWorkerPrivate,
                          nsISerialEventTarget* aSyncLoopTarget,
-                         WorkerLoadContext* aLoadContext);
+                         ThreadSafeRequestHandle* aRequestHandle);
 
  private:
   ~ScriptExecutorRunnable() = default;
@@ -422,10 +422,11 @@ WorkerScriptLoader::WorkerScriptLoader(
         // released by the ScriptLoader. In other words, something has caused
         // the process to close and we have no control over it. We cannot wait
         // for a safe cleanup. This usually impacts service workers.
-        nsTArray<WorkerLoadContext*> scriptLoadList = self->GetLoadingList();
+        nsTArray<ThreadSafeRequestHandle*> scriptLoadList =
+            self->GetLoadingList();
         // Dispatch to clear out any service worker promises that may be running
         NS_DispatchToMainThread(
-            NewRunnableMethod<nsTArray<WorkerLoadContext*>&&>(
+            NewRunnableMethod<nsTArray<ThreadSafeRequestHandle*>&&>(
                 "WorkerScriptLoader::CancelMainThreadWithBindingAborted", self,
                 &WorkerScriptLoader::CancelMainThreadWithBindingAborted,
                 std::move(scriptLoadList)));
@@ -453,11 +454,14 @@ void WorkerScriptLoader::CreateScriptRequests(
   }
 }
 
-nsTArray<WorkerLoadContext*> WorkerScriptLoader::GetLoadingList() {
-  nsTArray<WorkerLoadContext*> list;
+nsTArray<ThreadSafeRequestHandle*> WorkerScriptLoader::GetLoadingList() {
+  mWorkerRef->Private()->AssertIsOnWorkerThread();
+  nsTArray<ThreadSafeRequestHandle*> list;
   for (ScriptLoadRequest* req = mLoadingRequests.getFirst(); req;
        req = req->getNext()) {
-    list.AppendElement(req->GetWorkerLoadContext());
+    ThreadSafeRequestHandle* handle =
+        new ThreadSafeRequestHandle(req, mSyncLoopTarget.get());
+    list.AppendElement(handle);
   }
   return list;
 }
@@ -507,11 +511,13 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
 bool WorkerScriptLoader::DispatchLoadScript(ScriptLoadRequest* aRequest) {
   mWorkerRef->Private()->AssertIsOnWorkerThread();
 
-  nsTArray<WorkerLoadContext*> scriptLoadList;
-  scriptLoadList.AppendElement(aRequest->GetWorkerLoadContext());
+  nsTArray<ThreadSafeRequestHandle*> scriptLoadList;
+  ThreadSafeRequestHandle* handle =
+      new ThreadSafeRequestHandle(aRequest, mSyncLoopTarget.get());
+  scriptLoadList.AppendElement(handle);
 
-  nsresult rv =
-      NS_DispatchToMainThread(NewRunnableMethod<nsTArray<WorkerLoadContext*>&&>(
+  nsresult rv = NS_DispatchToMainThread(
+      NewRunnableMethod<nsTArray<ThreadSafeRequestHandle*>&&>(
           "WorkerScriptLoader::LoadScripts", this,
           &WorkerScriptLoader::LoadScripts, std::move(scriptLoadList)));
 
@@ -526,10 +532,10 @@ bool WorkerScriptLoader::DispatchLoadScript(ScriptLoadRequest* aRequest) {
 bool WorkerScriptLoader::DispatchLoadScripts() {
   mWorkerRef->Private()->AssertIsOnWorkerThread();
 
-  nsTArray<WorkerLoadContext*> scriptLoadList = GetLoadingList();
+  nsTArray<ThreadSafeRequestHandle*> scriptLoadList = GetLoadingList();
 
-  nsresult rv =
-      NS_DispatchToMainThread(NewRunnableMethod<nsTArray<WorkerLoadContext*>&&>(
+  nsresult rv = NS_DispatchToMainThread(
+      NewRunnableMethod<nsTArray<ThreadSafeRequestHandle*>&&>(
           "WorkerScriptLoader::LoadScripts", this,
           &WorkerScriptLoader::LoadScripts, std::move(scriptLoadList)));
 
@@ -572,15 +578,15 @@ nsIGlobalObject* WorkerScriptLoader::GetGlobal() {
              : mWorkerRef->Private()->DebuggerGlobalScope();
 }
 
-void WorkerScriptLoader::LoadingFinished(ScriptLoadRequest* aRequest,
-                                         nsresult aRv) {
+void WorkerScriptLoader::LoadingFinished(
+    ThreadSafeRequestHandle* aRequestHandle, nsresult aRv) {
   AssertIsOnMainThread();
 
   if (IsCancelled()) {
     return;
   }
 
-  WorkerLoadContext* loadContext = aRequest->GetWorkerLoadContext();
+  WorkerLoadContext* loadContext = aRequestHandle->GetContext();
 
   loadContext->mLoadResult = aRv;
   MOZ_ASSERT(!loadContext->mLoadingFinished);
@@ -591,19 +597,19 @@ void WorkerScriptLoader::LoadingFinished(ScriptLoadRequest* aRequest,
         mWorkerRef->Private()->PrincipalURIMatchesScriptURL());
   }
 
-  MaybeExecuteFinishedScripts(aRequest);
+  MaybeExecuteFinishedScripts(aRequestHandle);
 }
 
 void WorkerScriptLoader::MaybeExecuteFinishedScripts(
-    ScriptLoadRequest* aRequest) {
+    ThreadSafeRequestHandle* aRequestHandle) {
   AssertIsOnMainThread();
 
   // We execute the last step if we don't have a pending operation with the
   // cache and the loading is completed.
-  WorkerLoadContext* loadContext = aRequest->GetWorkerLoadContext();
+  WorkerLoadContext* loadContext = aRequestHandle->GetContext();
   if (!loadContext->IsAwaitingPromise()) {
     loadContext->ClearCacheCreator();
-    DispatchMaybeMoveToLoadedList(aRequest);
+    DispatchMaybeMoveToLoadedList(aRequestHandle);
   }
 }
 
@@ -682,25 +688,25 @@ bool WorkerScriptLoader::ProcessPendingRequests(JSContext* aCx) {
   return true;
 }
 
-nsresult WorkerScriptLoader::OnStreamComplete(ScriptLoadRequest* aRequest,
-                                              nsresult aStatus) {
+nsresult WorkerScriptLoader::OnStreamComplete(
+    ThreadSafeRequestHandle* aRequestHandle, nsresult aStatus) {
   AssertIsOnMainThread();
 
   // We expect our callers to runtime-check this in advance.
   MOZ_ASSERT(!IsCancelled());
 
-  LoadingFinished(aRequest, aStatus);
+  LoadingFinished(aRequestHandle, aStatus);
   return NS_OK;
 }
 
 void WorkerScriptLoader::CancelMainThreadWithBindingAborted(
-    nsTArray<WorkerLoadContext*>&& aContextList) {
+    nsTArray<ThreadSafeRequestHandle*>&& aContextList) {
   AssertIsOnMainThread();
   CancelMainThread(NS_BINDING_ABORTED, &aContextList);
 }
 
 void WorkerScriptLoader::CancelMainThread(
-    nsresult aCancelResult, nsTArray<WorkerLoadContext*>* aContextList) {
+    nsresult aCancelResult, nsTArray<ThreadSafeRequestHandle*>* aContextList) {
   AssertIsOnMainThread();
   {
     MutexAutoLock lock(CleanUpLock());
@@ -714,10 +720,14 @@ void WorkerScriptLoader::CancelMainThread(
     mCancelMainThread = Some(aCancelResult);
 
     bool shouldDispatch = false;
-    for (WorkerLoadContext* loadContext : *aContextList) {
+    for (ThreadSafeRequestHandle* handle : *aContextList) {
+      if (handle->IsEmpty()) {
+        continue;
+      }
       // In the case of a cancellation, service workers fetching from the
       // cache will still be doing work despite CancelMainThread. Eagerly
       // clear the promises associated with these scripts.
+      WorkerLoadContext* loadContext = handle->GetContext();
       if (!loadContext) {
         continue;
       }
@@ -743,7 +753,7 @@ void WorkerScriptLoader::CancelMainThread(
 }
 
 nsresult WorkerScriptLoader::LoadScripts(
-    nsTArray<WorkerLoadContext*>&& aContextList) {
+    nsTArray<ThreadSafeRequestHandle*>&& aContextList) {
   AssertIsOnMainThread();
 
   // Convert the origin stack to JSON (which must be done on the main
@@ -754,10 +764,10 @@ nsresult WorkerScriptLoader::LoadScripts(
   }
 
   if (!mWorkerRef->Private()->IsServiceWorker() || IsDebuggerScript()) {
-    for (WorkerLoadContext* loadContext : aContextList) {
-      nsresult rv = LoadScript(loadContext->mRequest);
+    for (ThreadSafeRequestHandle* handle : aContextList) {
+      nsresult rv = LoadScript(handle);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        LoadingFinished(loadContext->mRequest, rv);
+        LoadingFinished(handle, rv);
         CancelMainThread(rv, &aContextList);
         return rv;
       }
@@ -768,10 +778,11 @@ nsresult WorkerScriptLoader::LoadScripts(
 
   RefPtr<CacheCreator> cacheCreator = new CacheCreator(mWorkerRef->Private());
 
-  for (WorkerLoadContext* loadContext : aContextList) {
+  for (ThreadSafeRequestHandle* handle : aContextList) {
+    WorkerLoadContext* loadContext = handle->GetContext();
     loadContext->SetCacheCreator(cacheCreator);
     loadContext->GetCacheCreator()->AddLoader(
-        MakeNotNull<RefPtr<CacheLoadHandler>>(mWorkerRef, loadContext->mRequest,
+        MakeNotNull<RefPtr<CacheLoadHandler>>(mWorkerRef, handle,
                                               loadContext->IsTopLevel(), this));
   }
 
@@ -793,10 +804,11 @@ nsresult WorkerScriptLoader::LoadScripts(
   return NS_OK;
 }
 
-nsresult WorkerScriptLoader::LoadScript(ScriptLoadRequest* aRequest) {
+nsresult WorkerScriptLoader::LoadScript(
+    ThreadSafeRequestHandle* aRequestHandle) {
   AssertIsOnMainThread();
 
-  WorkerLoadContext* loadContext = aRequest->GetWorkerLoadContext();
+  WorkerLoadContext* loadContext = aRequestHandle->GetContext();
   MOZ_ASSERT_IF(loadContext->IsTopLevel(), !IsDebuggerScript());
 
   // The URL passed to us for loading was invalid, stop loading at this point.
@@ -872,8 +884,8 @@ nsresult WorkerScriptLoader::LoadScript(ScriptLoadRequest* aRequest) {
 
     rv = ChannelFromScriptURL(
         principal, parentDoc, mWorkerRef->Private(), loadGroup, ios, secMan,
-        aRequest->mURI, loadContext->mClientInfo, mController,
-        loadContext->IsTopLevel(), mWorkerScriptType,
+        aRequestHandle->GetRequest()->mURI, loadContext->mClientInfo,
+        mController, loadContext->IsTopLevel(), mWorkerScriptType,
         mWorkerRef->Private()->ContentPolicyType(), loadFlags,
         mWorkerRef->Private()->CookieJarSettings(), referrerInfo,
         getter_AddRefs(channel));
@@ -889,7 +901,8 @@ nsresult WorkerScriptLoader::LoadScript(ScriptLoadRequest* aRequest) {
 
   // We need to know which index we're on in OnStreamComplete so we know
   // where to put the result.
-  RefPtr<NetworkLoadHandler> listener = new NetworkLoadHandler(this, aRequest);
+  RefPtr<NetworkLoadHandler> listener =
+      new NetworkLoadHandler(this, aRequestHandle);
 
   RefPtr<ScriptResponseHeaderProcessor> headerProcessor = nullptr;
 
@@ -972,16 +985,15 @@ nsresult WorkerScriptLoader::LoadScript(ScriptLoadRequest* aRequest) {
 }
 
 void WorkerScriptLoader::DispatchMaybeMoveToLoadedList(
-    ScriptLoadRequest* aRequest) {
+    ThreadSafeRequestHandle* aRequestHandle) {
   AssertIsOnMainThread();
 
-  if (aRequest->GetWorkerLoadContext()->IsTopLevel()) {
+  if (aRequestHandle->GetContext()->IsTopLevel()) {
     mWorkerRef->Private()->WorkerScriptLoaded();
   }
 
-  RefPtr<ScriptExecutorRunnable> runnable =
-      new ScriptExecutorRunnable(this, mWorkerRef->Private(), mSyncLoopTarget,
-                                 aRequest->GetWorkerLoadContext());
+  RefPtr<ScriptExecutorRunnable> runnable = new ScriptExecutorRunnable(
+      this, mWorkerRef->Private(), mSyncLoopTarget, aRequestHandle);
   if (!runnable->Dispatch()) {
     MOZ_ASSERT(false, "This should never fail!");
   }
@@ -1216,10 +1228,11 @@ bool AbruptCancellationRunnable::WorkerRun(JSContext* aCx,
 
 ScriptExecutorRunnable::ScriptExecutorRunnable(
     WorkerScriptLoader* aScriptLoader, WorkerPrivate* aWorkerPrivate,
-    nsISerialEventTarget* aSyncLoopTarget, WorkerLoadContext* aLoadContext)
+    nsISerialEventTarget* aSyncLoopTarget,
+    ThreadSafeRequestHandle* aRequestHandle)
     : MainThreadWorkerSyncRunnable(aWorkerPrivate, aSyncLoopTarget),
       mScriptLoader(aScriptLoader),
-      mLoadContext(aLoadContext) {}
+      mRequestHandle(aRequestHandle) {}
 
 bool ScriptExecutorRunnable::IsDebuggerRunnable() const {
   // ScriptExecutorRunnable is used to execute both worker and debugger scripts.
@@ -1236,7 +1249,7 @@ bool ScriptExecutorRunnable::PreRun(WorkerPrivate* aWorkerPrivate) {
       mScriptLoader->mSyncLoopTarget == mSyncLoopTarget,
       "Unexpected SyncLoopTarget. Check if the sync loop was closed early");
 
-  if (!mLoadContext->IsTopLevel()) {
+  if (!mRequestHandle->GetContext()->IsTopLevel()) {
     return true;
   }
 
@@ -1262,9 +1275,13 @@ bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
       "Unexpected SyncLoopTarget. Check if the sync loop was closed early");
 
   // The request must be valid.
-  MOZ_ASSERT(mLoadContext->mRequest);
+  MOZ_ASSERT(!mRequestHandle->IsEmpty());
 
-  mScriptLoader->MaybeMoveToLoadedList(mLoadContext->mRequest);
+  // Release the request to the worker. From this point on, the Request Handle
+  // is empty.
+  RefPtr<ScriptLoadRequest> request = mRequestHandle->ReleaseRequest();
+
+  mScriptLoader->MaybeMoveToLoadedList(request);
   return mScriptLoader->ProcessPendingRequests(aCx);
 }
 

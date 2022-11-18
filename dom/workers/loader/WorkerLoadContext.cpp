@@ -35,5 +35,30 @@ WorkerLoadContext::GetCacheCreator() {
   return mCacheCreator.get();
 }
 
+ThreadSafeRequestHandle::ThreadSafeRequestHandle(
+    JS::loader::ScriptLoadRequest* aRequest, nsISerialEventTarget* aSyncTarget)
+    : mRequest(aRequest), mOwningEventTarget(aSyncTarget) {}
+
+already_AddRefed<JS::loader::ScriptLoadRequest>
+ThreadSafeRequestHandle::ReleaseRequest() {
+  return mRequest.forget();
+}
+
+ThreadSafeRequestHandle::~ThreadSafeRequestHandle() {
+  // Normally we only touch mStrongRef on the owning thread.  This is safe,
+  // however, because when we do use mStrongRef on the owning thread we are
+  // always holding a strong ref to the ThreadsafeHandle via the owning
+  // runnable.  So we cannot run the ThreadsafeHandle destructor simultaneously.
+  if (!mRequest || mOwningEventTarget->IsOnCurrentThread()) {
+    return;
+  }
+
+  // Dispatch in NS_ProxyRelease is guaranteed to succeed here because we block
+  // shutdown until all Contexts have been destroyed. Therefore it is ok to have
+  // MOZ_ALWAYS_SUCCEED here.
+  MOZ_ALWAYS_SUCCEEDS(NS_ProxyRelease("ThreadSafeRequestHandle::mRequest",
+                                      mOwningEventTarget, mRequest.forget()));
+}
+
 }  // namespace dom
 }  // namespace mozilla

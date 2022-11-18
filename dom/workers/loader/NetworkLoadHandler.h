@@ -44,7 +44,7 @@ class NetworkLoadHandler final : public nsIStreamLoaderObserver,
   NS_DECL_ISUPPORTS
 
   NetworkLoadHandler(WorkerScriptLoader* aLoader,
-                     JS::loader::ScriptLoadRequest* aRequest);
+                     ThreadSafeRequestHandle* aRequestHandle);
 
   NS_IMETHOD
   OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
@@ -71,7 +71,7 @@ class NetworkLoadHandler final : public nsIStreamLoaderObserver,
   RefPtr<WorkerScriptLoader> mLoader;
   UniquePtr<ScriptDecoder> mDecoder;
   RefPtr<ThreadSafeWorkerRef> mWorkerRef;
-  RefPtr<WorkerLoadContext> mLoadContext;
+  RefPtr<ThreadSafeRequestHandle> mRequestHandle;
 };
 
 }  // namespace mozilla::dom::workerinternals::loader
