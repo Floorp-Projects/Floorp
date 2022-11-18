@@ -79,10 +79,11 @@ const HTTP_DOWNLOAD_ACTIVITIES = [
  * routed to the remote Web Console.
  *
  * @constructor
- * @param {Function(nsIChannel): boolean} ignoreChannelFunction
+ * @param {Object} options
+ * @param {Function(nsIChannel): boolean} options.ignoreChannelFunction
  *        This function will be called for every detected channel to decide if it
  *        should be monitored or not.
- * @param {Function(NetworkEvent): owner} onNetworkEvent
+ * @param {Function(NetworkEvent): owner} options.onNetworkEvent
  *        This method is invoked once for every new network request with a single
  *        "networkEvent" argument, which is an object created by
  *        NetworkUtils:createNetworkEvent, containing initial network request
@@ -165,7 +166,20 @@ export class NetworkObserver {
    */
   #throttler = null;
 
-  constructor(ignoreChannelFunction, onNetworkEvent) {
+  constructor(options = {}) {
+    const { ignoreChannelFunction, onNetworkEvent } = options;
+    if (typeof ignoreChannelFunction !== "function") {
+      throw new Error(
+        `Expected "ignoreChannelFunction" to be a function, got ${ignoreChannelFunction} (${typeof ignoreChannelFunction})`
+      );
+    }
+
+    if (typeof onNetworkEvent !== "function") {
+      throw new Error(
+        `Expected "onNetworkEvent" to be a function, got ${onNetworkEvent} (${typeof onNetworkEvent})`
+      );
+    }
+
     this.#ignoreChannelFunction = ignoreChannelFunction;
     this.#onNetworkEvent = onNetworkEvent;
 
