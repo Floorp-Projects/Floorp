@@ -136,19 +136,16 @@ void TaskQueuePacedSender::SetPacingRates(DataRate pacing_rate,
 
 void TaskQueuePacedSender::EnqueuePackets(
     std::vector<std::unique_ptr<RtpPacketToSend>> packets) {
-  TRACE_EVENT0(TRACE_DISABLED_BY_DEFAULT("webrtc"),
-               "TaskQueuePacedSender::EnqueuePackets");
-  for (auto& packet : packets) {
-    RTC_UNUSED(packet);
-    TRACE_EVENT2(TRACE_DISABLED_BY_DEFAULT("webrtc"),
-                 "TaskQueuePacedSender::EnqueuePackets::Loop",
-                 "sequence_number", packet->SequenceNumber(), "rtp_timestamp",
-                 packet->Timestamp());
-  }
-
-  task_queue_.PostTask([this, packets_ = std::move(packets)]() mutable {
+  task_queue_.PostTask([this, packets = std::move(packets)]() mutable {
     RTC_DCHECK_RUN_ON(&task_queue_);
-    for (auto& packet : packets_) {
+    TRACE_EVENT0(TRACE_DISABLED_BY_DEFAULT("webrtc"),
+                 "TaskQueuePacedSender::EnqueuePackets");
+    for (auto& packet : packets) {
+      TRACE_EVENT2(TRACE_DISABLED_BY_DEFAULT("webrtc"),
+                   "TaskQueuePacedSender::EnqueuePackets::Loop",
+                   "sequence_number", packet->SequenceNumber(), "rtp_timestamp",
+                   packet->Timestamp());
+
       size_t packet_size = packet->payload_size() + packet->padding_size();
       if (include_overhead_) {
         packet_size += packet->headers_size();
