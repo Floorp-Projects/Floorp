@@ -397,8 +397,7 @@ void WebRtcVoiceEngine::Init() {
     options.audio_jitter_buffer_max_packets = 200;
     options.audio_jitter_buffer_fast_accelerate = false;
     options.audio_jitter_buffer_min_delay_ms = 0;
-    bool error = ApplyOptions(options);
-    RTC_DCHECK(error);
+    ApplyOptions(options);
   }
   initialized_ = true;
 }
@@ -419,7 +418,7 @@ VoiceMediaChannel* WebRtcVoiceEngine::CreateMediaChannel(
                                      call);
 }
 
-bool WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
+void WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   RTC_LOG(LS_INFO) << "WebRtcVoiceEngine::ApplyOptions: "
                    << options_in.ToString();
@@ -451,7 +450,6 @@ bool WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
   // On iOS, VPIO provides built-in AGC.
   options.auto_gain_control = false;
   RTC_LOG(LS_INFO) << "Always disable AGC on iOS. Use built-in instead.";
-#elif defined(WEBRTC_ANDROID)
 #endif
 
 #if defined(WEBRTC_IOS) || defined(WEBRTC_ANDROID)
@@ -522,35 +520,25 @@ bool WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
   }
 
   if (options.stereo_swapping) {
-    RTC_LOG(LS_INFO) << "Stereo swapping enabled? " << *options.stereo_swapping;
     audio_state()->SetStereoChannelSwapping(*options.stereo_swapping);
   }
 
   if (options.audio_jitter_buffer_max_packets) {
-    RTC_LOG(LS_INFO) << "NetEq capacity is "
-                     << *options.audio_jitter_buffer_max_packets;
     audio_jitter_buffer_max_packets_ =
         std::max(20, *options.audio_jitter_buffer_max_packets);
   }
   if (options.audio_jitter_buffer_fast_accelerate) {
-    RTC_LOG(LS_INFO) << "NetEq fast mode? "
-                     << *options.audio_jitter_buffer_fast_accelerate;
     audio_jitter_buffer_fast_accelerate_ =
         *options.audio_jitter_buffer_fast_accelerate;
   }
   if (options.audio_jitter_buffer_min_delay_ms) {
-    RTC_LOG(LS_INFO) << "NetEq minimum delay is "
-                     << *options.audio_jitter_buffer_min_delay_ms;
     audio_jitter_buffer_min_delay_ms_ =
         *options.audio_jitter_buffer_min_delay_ms;
   }
 
   webrtc::AudioProcessing* ap = apm();
   if (!ap) {
-    RTC_LOG(LS_INFO)
-        << "No audio processing module present. No software-provided effects "
-           "(AEC, NS, AGC, ...) are activated";
-    return true;
+    return;
   }
 
   webrtc::AudioProcessing::Config apm_config = ap->GetConfig();
@@ -581,11 +569,9 @@ bool WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
     apm_config.noise_suppression.enabled = enabled;
     apm_config.noise_suppression.level =
         webrtc::AudioProcessing::Config::NoiseSuppression::Level::kHigh;
-    RTC_LOG(LS_INFO) << "NS set to " << enabled;
   }
 
   ap->ApplyConfig(apm_config);
-  return true;
 }
 
 const std::vector<AudioCodec>& WebRtcVoiceEngine::send_codecs() const {
@@ -1499,11 +1485,7 @@ bool WebRtcVoiceMediaChannel::SetOptions(const AudioOptions& options) {
   // on top.  This means there is no way to "clear" options such that
   // they go back to the engine default.
   options_.SetAll(options);
-  if (!engine()->ApplyOptions(options_)) {
-    RTC_LOG(LS_WARNING)
-        << "Failed to apply engine options during channel SetOptions.";
-    return false;
-  }
+  engine()->ApplyOptions(options_);
 
   absl::optional<std::string> audio_network_adaptor_config =
       GetAudioNetworkAdaptorConfig(options_);
