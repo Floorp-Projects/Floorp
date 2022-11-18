@@ -10746,6 +10746,14 @@
   value: 120
   mirror: always
 
+# For lax-by-default cookies ignore cross-site redirects when the final
+# redirect is same-site again.
+# https://github.com/httpwg/http-extensions/issues/2104
+- name: network.cookie.sameSite.laxByDefault.allowBoomerangRedirect
+  type: bool
+  value: true
+  mirror: always
+
 - name: network.cookie.sameSite.noneRequiresSecure
   type: bool
   value: @IS_EARLY_BETA_OR_EARLIER@

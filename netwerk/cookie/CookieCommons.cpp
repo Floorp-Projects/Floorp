@@ -610,7 +610,7 @@ bool CookieCommons::IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI,
       rv = redirectPrincipal->IsThirdPartyChannel(aChannel, &isForeign);
       // if at any point we encounter a cross-origin redirect we can return.
       if (NS_FAILED(rv) || isForeign) {
-        *aHadCrossSiteRedirects = true;
+        *aHadCrossSiteRedirects = isForeign;
         return true;
       }
 

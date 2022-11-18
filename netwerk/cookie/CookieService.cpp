@@ -1093,13 +1093,27 @@ void CookieService::GetCookiesForURI(
         }
       }
 
+      // Lax-by-default cookies are processed even with an intermediate
+      // cross-site redirect (they are treated like aIsSameSiteForeign = false).
+      //
+      // This is outside of ProcessSameSiteCookieForForeignRequest to still
+      // collect the same telemetry.
+      if (blockCookie && aHadCrossSiteRedirects &&
+          cookie->IsDefaultSameSite() &&
+          StaticPrefs::
+              network_cookie_sameSite_laxByDefault_allowBoomerangRedirect()) {
+        blockCookie = false;
+      }
+
       if (blockCookie) {
-        CookieLogging::LogMessageToConsole(
-            crc, aHostURI, nsIScriptError::warningFlag,
-            CONSOLE_REJECTION_CATEGORY, "CookieBlockedCrossSiteRedirect"_ns,
-            AutoTArray<nsString, 1>{
-                NS_ConvertUTF8toUTF16(cookie->Name()),
-            });
+        if (aHadCrossSiteRedirects) {
+          CookieLogging::LogMessageToConsole(
+              crc, aHostURI, nsIScriptError::warningFlag,
+              CONSOLE_REJECTION_CATEGORY, "CookieBlockedCrossSiteRedirect"_ns,
+              AutoTArray<nsString, 1>{
+                  NS_ConvertUTF8toUTF16(cookie->Name()),
+              });
+        }
         continue;
       }
     }
