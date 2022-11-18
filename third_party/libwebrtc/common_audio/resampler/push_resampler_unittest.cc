@@ -18,11 +18,6 @@
 
 namespace webrtc {
 
-// The below tests are temporarily disabled on WEBRTC_WIN due to problems
-// with clang debug builds.
-// TODO(tommi): Re-enable when we've figured out what the problem is.
-// http://crbug.com/615050
-#if !defined(WEBRTC_WIN) && defined(__clang__) && !defined(NDEBUG)
 TEST(PushResamplerTest, VerifiesInputParameters) {
   PushResampler<int16_t> resampler;
   EXPECT_EQ(0, resampler.InitializeIfNeeded(16000, 16000, 1));
@@ -48,8 +43,6 @@ TEST(PushResamplerDeathTest, VerifiesBadInputParameters3) {
   RTC_EXPECT_DEATH(resampler.InitializeIfNeeded(16000, 16000, 0),
                    "num_channels");
 }
-
-#endif
 #endif
 
 }  // namespace webrtc
