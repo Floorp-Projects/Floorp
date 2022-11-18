@@ -152,17 +152,6 @@ mozilla::dom::WorkerLoadContext* ScriptLoadRequest::GetWorkerLoadContext() {
   return mLoadContext->AsWorkerContext();
 }
 
-already_AddRefed<mozilla::dom::WorkerLoadContext>
-ScriptLoadRequest::StealWorkerLoadContext() {
-  MOZ_ASSERT(mLoadContext);
-  RefPtr<mozilla::dom::WorkerLoadContext> workerContext =
-      mLoadContext->AsWorkerContext();
-  // Break cycle.
-  mLoadContext->mRequest = nullptr;
-  mLoadContext = nullptr;
-  return workerContext.forget();
-}
-
 ModuleLoadRequest* ScriptLoadRequest::AsModuleRequest() {
   MOZ_ASSERT(IsModuleRequest());
   return static_cast<ModuleLoadRequest*>(this);

@@ -28,18 +28,7 @@ class ScriptLoadRequest;
  *
  * LoadContexts augment the loading of a ScriptLoadRequest.  This class
  * is used as a base for all LoadContexts, and provides shared functionality.
- * This class should not be inherited from directly, unless you plan on
- * implementing a unique nsISupports behavior not handled by LoadContextNoCCBase
- * or LoadContextCCBase.
  *
- * Different loading environments have different rules applied to how a script
- * is loaded. In DOM scripts, there are flags controlling load order (Async,
- * Deferred, normal) as well as other elements that impact the loading of a
- * script (<preload>). In the case of workers, service workers are potentially
- * loaded from the Cache. For more detailed information per context see
- *     * The ScriptLoadContext: dom/script/ScriptLoadContext.h
- *     * The ComponentLoadContext: js/xpconnect/loader/ComponentModuleLoader.h
- *     * The WorkerLoadContext: dom/workers/loader/WorkerLoadContext.h
  */
 
 enum class ContextKind { Window, Component, Worker };
@@ -52,9 +41,12 @@ class LoadContextBase : public nsISupports {
   virtual ~LoadContextBase() = default;
 
  public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(LoadContextBase)
+
   explicit LoadContextBase(ContextKind kind);
 
-  virtual void SetRequest(JS::loader::ScriptLoadRequest* aRequest);
+  void SetRequest(JS::loader::ScriptLoadRequest* aRequest);
 
   // Used to output a string for the Gecko Profiler.
   virtual void GetProfilerLabel(nsACString& aOutString);
@@ -70,32 +62,6 @@ class LoadContextBase : public nsISupports {
   mozilla::dom::WorkerLoadContext* AsWorkerContext();
 
   RefPtr<JS::loader::ScriptLoadRequest> mRequest;
-};
-
-// A variant of the LoadContextbase with CC. Used by most LoadContexts. This
-// works with the cycle collector and is the default class to inherit from.
-class LoadContextCCBase : public LoadContextBase {
- public:
-  explicit LoadContextCCBase(ContextKind kind);
-
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(LoadContextCCBase)
-
- protected:
-  virtual ~LoadContextCCBase() = default;
-};
-
-// A variant of the LoadContextbase without CC. Used by the WorkerLoadContext,
-// so that it can refcounted safely across threads. Note: You must manually
-// break the cycle pointing to ScriptLoadRequest if you use this!
-class LoadContextNoCCBase : public LoadContextBase {
- public:
-  explicit LoadContextNoCCBase(ContextKind kind);
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-
- protected:
-  virtual ~LoadContextNoCCBase() = default;
 };
 
 }  // namespace JS::loader

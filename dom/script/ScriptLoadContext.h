@@ -74,7 +74,7 @@ class Element;
  *
  */
 
-class ScriptLoadContext : public JS::loader::LoadContextCCBase,
+class ScriptLoadContext : public JS::loader::LoadContextBase,
                           public PreloaderBase {
  protected:
   virtual ~ScriptLoadContext();
@@ -84,7 +84,7 @@ class ScriptLoadContext : public JS::loader::LoadContextCCBase,
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ScriptLoadContext,
-                                           JS::loader::LoadContextCCBase)
+                                           JS::loader::LoadContextBase)
 
   // PreloaderBase
   static void PrioritizeAsPreload(nsIChannel* aChannel);

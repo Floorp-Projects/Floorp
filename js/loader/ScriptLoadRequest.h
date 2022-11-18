@@ -313,7 +313,6 @@ class ScriptLoadRequest
   mozilla::loader::ComponentLoadContext* GetComponentLoadContext();
 
   mozilla::dom::WorkerLoadContext* GetWorkerLoadContext();
-  already_AddRefed<mozilla::dom::WorkerLoadContext> StealWorkerLoadContext();
 
   const ScriptKind mKind;  // Whether this is a classic script or a module
                            // script.

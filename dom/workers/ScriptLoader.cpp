@@ -677,8 +677,8 @@ bool WorkerScriptLoader::ProcessPendingRequests(JSContext* aCx) {
     // once modules are introduced as we will have some extra work to do.
     if (!EvaluateScript(aCx, req)) {
       mExecutionAborted = true;
-      RefPtr<WorkerLoadContext> loadInfo = req->StealWorkerLoadContext();
-      mMutedErrorFlag = loadInfo->mMutedErrorFlag.valueOr(true);
+      WorkerLoadContext* loadContext = req->GetWorkerLoadContext();
+      mMutedErrorFlag = loadContext->mMutedErrorFlag.valueOr(true);
       mLoadedRequests.CancelRequestsAndClear();
       break;
     }
@@ -1038,7 +1038,7 @@ void WorkerScriptLoader::AbruptShutdown() {
 
   while (!mLoadedRequests.isEmpty()) {
     RefPtr<ScriptLoadRequest> request = mLoadedRequests.StealFirst();
-    RefPtr<WorkerLoadContext> loadContext = request->StealWorkerLoadContext();
+    WorkerLoadContext* loadContext = request->GetWorkerLoadContext();
     mRv.MightThrowJSException();
     if (NS_FAILED(loadContext->mLoadResult)) {
       ReportErrorToConsole(request, loadContext->mLoadResult);
@@ -1111,7 +1111,6 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
   }
   // steal the loadContext so that the cycle is broken and cycle collector can
   // collect the scriptLoadRequest.
-  RefPtr<WorkerLoadContext> droppedContext = aRequest->StealWorkerLoadContext();
   return true;
 }
 
