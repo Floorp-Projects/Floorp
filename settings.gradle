@@ -64,6 +64,11 @@ project(':test_runner').projectDir = new File("${json.topsrcdir}/mobile/android/
 project(':exoplayer2').projectDir = new File("${json.topsrcdir}/mobile/android/exoplayer2")
 project(':omnijar').projectDir = new File("${json.topsrcdir}/mobile/android/app/omnijar")
 
+if (hasProperty("androidFormatLintTest")) {
+    include ':androidFormatLintTest'
+    project(':androidFormatLintTest').projectDir = new File("${json.topsrcdir}/tools/lint/test/files/android-format")
+}
+
 // The Gradle instance is shared between settings.gradle and all the
 // other build.gradle files (see
 // http://forums.gradle.org/gradle/topics/define_extension_properties_from_settings_xml).
