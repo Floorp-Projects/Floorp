@@ -192,7 +192,7 @@ async function impressions_test(isOnboarding) {
         name: `${ENGINE_NAME}2`,
         search_url: `https://${firstEngineHost}-2.com/`,
       },
-      true
+      { skipUnload: true }
     );
 
     for (let i = 0; i < 3; i++) {

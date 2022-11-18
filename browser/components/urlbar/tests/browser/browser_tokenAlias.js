@@ -649,7 +649,7 @@ add_task(async function nonPrefixedKeyword() {
       name,
       keyword: alias,
     },
-    true
+    { skipUnload: true }
   );
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -696,7 +696,7 @@ add_task(async function multipleMatchingEngines() {
       name: "TestFoo",
       keyword: `${ALIAS}foo`,
     },
-    true
+    { skipUnload: true }
   );
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({

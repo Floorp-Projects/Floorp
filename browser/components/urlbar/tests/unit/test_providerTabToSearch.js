@@ -171,7 +171,7 @@ add_task(async function ignoreWww() {
       name: "TestWww",
       search_url: "https://www.foo.bar/",
     },
-    true
+    { skipUnload: true }
   );
   let wwwTestEngine = Services.search.getEngineByName("TestWww");
   context = createContext("foo", { isPrivate: false });
@@ -247,14 +247,14 @@ add_task(async function conflictingEngines() {
       name: "TestFooBar",
       search_url: "https://foobar.com/",
     },
-    true
+    { skipUnload: true }
   );
   let extension2 = await SearchTestUtils.installSearchExtension(
     {
       name: "TestFoo",
       search_url: "https://foo.com/",
     },
-    true
+    { skipUnload: true }
   );
   let fooBarTestEngine = Services.search.getEngineByName("TestFooBar");
   let fooTestEngine = Services.search.getEngineByName("TestFoo");
@@ -336,7 +336,7 @@ add_task(async function multipleEnginesForHostname() {
       name: "TestMaps",
       search_url: "https://example.com/maps/",
     },
-    true
+    { skipUnload: true }
   );
 
   let context = createContext("examp", { isPrivate: false });
@@ -433,7 +433,7 @@ add_task(async function test_publicSuffix() {
       name: "MyTest",
       search_url: "https://test.mytest.it/",
     },
-    true
+    { skipUnload: true }
   );
   let engine = Services.search.getEngineByName("MyTest");
   await PlacesTestUtils.addVisits(["https://test.mytest.it/"]);
@@ -474,7 +474,7 @@ add_task(async function test_publicSuffixIsHost() {
       name: "SuffixTest",
       search_url: "https://somesuffix.com.mx/",
     },
-    true
+    { skipUnload: true }
   );
 
   // The top level domain will be autofilled, not the full domain.
@@ -505,7 +505,7 @@ add_task(async function test_disabledEngine() {
       name: "Disabled",
       search_url: "https://disabled.com/",
     },
-    true
+    { skipUnload: true }
   );
   let engine = Services.search.getEngineByName("Disabled");
   await PlacesTestUtils.addVisits(["https://disabled.com/"]);

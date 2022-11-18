@@ -226,43 +226,87 @@ export var SearchTestUtils = {
    * This function automatically registers an unload for the extension, this
    * may be skipped with the skipUnload argument.
    *
-   * @param {object} [options]
+   * @param {object} [manifest]
    *   See {@link createEngineManifest}
-   * @param {boolean} [skipUnload]
+   * @param {object} [options]
+   *   Options for how the engine is installed and uninstalled.
+   * @param {boolean} [options.setAsDefault]
+   *   Whether or not to set the engine as default automatically. If this is
+   *   true, the engine will be set as default, and the previous default engine
+   *   will be restored when the test exits.
+   * @param {boolean} [options.setAsDefaultPrivate]
+   *   Whether or not to set the engine as default automatically for private mode.
+   *   If this is true, the engine will be set as default, and the previous default
+   *   engine will be restored when the test exits.
+   * @param {boolean} [options.skipUnload]
    *   If true, this will skip the automatic unloading of the extension.
    * @returns {object}
-   *   The loaded extension. This will need unloading before ending the test.
+   *   The loaded extension.
    */
-  async installSearchExtension(options = {}, skipUnload = false) {
+  async installSearchExtension(
+    manifest = {},
+    {
+      setAsDefault = false,
+      setAsDefaultPrivate = false,
+      skipUnload = false,
+    } = {}
+  ) {
     await Services.search.init();
 
     let extensionInfo = {
       useAddonManager: "permanent",
-      manifest: this.createEngineManifest(options),
+      manifest: this.createEngineManifest(manifest),
     };
 
     let extension;
 
+    let previousEngine = Services.search.defaultEngine;
+    let previousPrivateEngine = Services.search.defaultPrivateEngine;
+
+    async function cleanup() {
+      if (setAsDefault) {
+        await Services.search.setDefault(
+          previousEngine,
+          Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+        );
+      }
+      if (setAsDefaultPrivate) {
+        await Services.search.setDefaultPrivate(
+          previousPrivateEngine,
+          Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+        );
+      }
+      await extension.unload();
+    }
+
     // Cleanup must be registered before loading the extension to avoid
     // failures for mochitests.
     if (!skipUnload && this._isMochitest) {
-      gTestScope.registerCleanupFunction(async () => {
-        await extension.unload();
-      });
+      gTestScope.registerCleanupFunction(cleanup);
     }
 
     extension = gTestScope.ExtensionTestUtils.loadExtension(extensionInfo);
     await extension.startup();
-    if (!options.skipWaitForSearchEngine) {
-      await lazy.AddonTestUtils.waitForSearchProviderStartup(extension);
+    await lazy.AddonTestUtils.waitForSearchProviderStartup(extension);
+    let engine = Services.search.getEngineByName(manifest.name);
+
+    if (setAsDefault) {
+      await Services.search.setDefault(
+        engine,
+        Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+      );
+    }
+    if (setAsDefaultPrivate) {
+      await Services.search.setDefaultPrivate(
+        engine,
+        Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+      );
     }
 
     // For xpcshell-tests we must register the unload after adding the extension.
     // See bug 1694409 for why this is.
     if (!skipUnload && !this._isMochitest) {
-      gTestScope.registerCleanupFunction(async () => {
-        await extension.unload();
-      });
+      gTestScope.registerCleanupFunction(cleanup);
     }
 
     return extension;
