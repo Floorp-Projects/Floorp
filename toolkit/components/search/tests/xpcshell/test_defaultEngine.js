@@ -20,12 +20,12 @@ add_setup(async () => {
 
   await Services.search.init();
 
-  engine1 = await SearchTestUtils.promiseNewSearchEngine(
-    `${gDataUrl}engine.xml`
-  );
-  engine2 = await SearchTestUtils.promiseNewSearchEngine(
-    `${gDataUrl}engine2.xml`
-  );
+  engine1 = await SearchTestUtils.promiseNewSearchEngine({
+    url: `${gDataUrl}engine.xml`,
+  });
+  engine2 = await SearchTestUtils.promiseNewSearchEngine({
+    url: `${gDataUrl}engine2.xml`,
+  });
 });
 
 function promiseDefaultNotification() {

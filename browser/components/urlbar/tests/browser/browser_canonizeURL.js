@@ -73,20 +73,10 @@ add_task(async function checkCtrlWorks() {
 
 add_task(async function checkPrefTurnsOffCanonize() {
   // Add a dummy search engine to avoid hitting the network.
-  let engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
-  );
-  let oldDefaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(
-    engine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
-  registerCleanupFunction(async () =>
-    Services.search.setDefault(
-      oldDefaultEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    )
-  );
+  await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME,
+    setAsDefault: true,
+  });
 
   const win = await BrowserTestUtils.openNewBrowserWindow();
 

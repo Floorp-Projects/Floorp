@@ -18,7 +18,9 @@ add_task(async function setup() {
   );
 
   useHttpServer();
-  await SearchTestUtils.promiseNewSearchEngine(`${gDataUrl}engine.xml`);
+  await SearchTestUtils.promiseNewSearchEngine({
+    url: `${gDataUrl}engine.xml`,
+  });
 });
 
 function checkIdentifier(engineName, expectedIdentifier, expectedTelemetryId) {

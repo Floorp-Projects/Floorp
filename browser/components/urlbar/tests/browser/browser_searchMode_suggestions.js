@@ -16,9 +16,9 @@ let suggestionsEngine;
 let expectedFormHistoryResults = [];
 
 add_setup(async function() {
-  suggestionsEngine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + SUGGESTIONS_ENGINE_NAME
-  );
+  suggestionsEngine = await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + SUGGESTIONS_ENGINE_NAME,
+  });
 
   let oldDefaultEngine = await Services.search.getDefault();
   await SearchTestUtils.installSearchExtension({
@@ -400,9 +400,9 @@ add_task(async function nonEmptySearch_nonMatching() {
 });
 
 add_task(async function nonEmptySearch_withHistory() {
-  let manySuggestionsEngine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + MANY_SUGGESTIONS_ENGINE_NAME
-  );
+  let manySuggestionsEngine = await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + MANY_SUGGESTIONS_ENGINE_NAME,
+  });
   // URLs with the same host as the search engine.
   let query = "ciao";
   await PlacesTestUtils.addVisits([

@@ -435,9 +435,9 @@ add_task(async function test_adaptive_mouse() {
 add_task(async function test_adaptive_searchmode() {
   info("Check adaptive history is not shown in search mode.");
 
-  let suggestionsEngine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
-  );
+  let suggestionsEngine = await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + "searchSuggestionEngine.xml",
+  });
 
   let url1 = "http://site.tld/1";
   let url2 = "http://site.tld/2";

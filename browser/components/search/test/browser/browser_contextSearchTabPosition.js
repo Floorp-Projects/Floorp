@@ -5,19 +5,9 @@
 let engine;
 
 add_setup(async function() {
-  engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + "testEngine.xml"
-  );
-  const current = await Services.search.getDefault();
-  await Services.search.setDefault(
-    engine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
-  registerCleanupFunction(async () => {
-    await Services.search.setDefault(
-      current,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
+  engine = await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + "testEngine.xml",
+    setAsDefault: true,
   });
 });
 

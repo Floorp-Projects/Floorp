@@ -24,25 +24,14 @@ if (AppConstants.platform == "macosx") {
 add_setup(async function() {
   // Add a default engine with suggestions, to avoid hitting the network when
   // fetching them.
-  let defaultEngine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
-  );
+  let defaultEngine = await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME,
+    setAsDefault: true,
+  });
   defaultEngine.alias = "@default";
-  let oldDefaultEngine = await Services.search.getDefault();
-  Services.search.setDefault(
-    defaultEngine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
   await SearchTestUtils.installSearchExtension({
     name: TEST_ALIAS_ENGINE_NAME,
     keyword: ALIAS,
-  });
-
-  registerCleanupFunction(async function() {
-    Services.search.setDefault(
-      oldDefaultEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
   });
 
   // Search results aren't shown in quantumbar unless search suggestions are

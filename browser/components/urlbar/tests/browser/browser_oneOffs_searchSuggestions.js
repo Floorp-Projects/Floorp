@@ -28,12 +28,12 @@ add_setup(async function() {
       ["browser.urlbar.maxHistoricalSearchSuggestions", 2],
     ],
   });
-  gEngine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
-  );
-  gEngine2 = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + TEST_ENGINE2_BASENAME
-  );
+  gEngine = await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME,
+  });
+  gEngine2 = await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + TEST_ENGINE2_BASENAME,
+  });
   let oldDefaultEngine = await Services.search.getDefault();
   await Services.search.moveEngine(gEngine2, 0);
   await Services.search.moveEngine(gEngine, 0);

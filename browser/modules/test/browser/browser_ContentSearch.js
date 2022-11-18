@@ -29,9 +29,6 @@ function sendEventToContent(browser, data) {
 }
 
 add_setup(async function() {
-  const originalEngine = await Services.search.getDefault();
-  const originalPrivateEngine = await Services.search.getDefaultPrivate();
-
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.newtab.preload", false],
@@ -40,35 +37,20 @@ add_setup(async function() {
     ],
   });
 
-  let engine = await SearchTestUtils.promiseNewSearchEngine(
-    "chrome://mochitests/content/browser/browser/components/search/test/browser/testEngine.xml"
-  );
-  await Services.search.setDefault(
-    engine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
+  await SearchTestUtils.promiseNewSearchEngine({
+    url:
+      "chrome://mochitests/content/browser/browser/components/search/test/browser/testEngine.xml",
+    setAsDefault: true,
+  });
 
-  let engine2 = await SearchTestUtils.promiseNewSearchEngine(
-    "chrome://mochitests/content/browser/browser/components/search/test/browser/testEngine_diacritics.xml"
-  );
-  await Services.search.setDefaultPrivate(
-    engine2,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
+  await SearchTestUtils.promiseNewSearchEngine({
+    url:
+      "chrome://mochitests/content/browser/browser/components/search/test/browser/testEngine_diacritics.xml",
+    setAsDefaultPrivate: true,
+  });
 
-  await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + "testEngine_chromeicon.xml"
-  );
-
-  registerCleanupFunction(async () => {
-    await Services.search.setDefault(
-      originalEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
-    await Services.search.setDefaultPrivate(
-      originalPrivateEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
+  await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + "testEngine_chromeicon.xml",
   });
 });
 
@@ -457,9 +439,9 @@ async function waitForNewEngine(browser, basename) {
   let statePromise = await waitForTestMsg(browser, "CurrentState", 2);
 
   // Wait for addOpenSearchEngine().
-  let engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + basename
-  );
+  let engine = await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + basename,
+  });
   let results = await statePromise.donePromise;
   return [engine, ...results];
 }

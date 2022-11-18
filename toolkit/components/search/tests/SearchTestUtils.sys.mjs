@@ -40,15 +40,56 @@ export var SearchTestUtils = {
    * Adds an OpenSearch based engine to the search service. It will remove
    * the engine at the end of the test.
    *
-   * @param {string}   url                     The URL of the engine to add.
+   * @param {object} options
+   *   The options for the new search engine.
+   * @param {string} options.url
+   *   The URL of the engine to add.
+   * @param {boolean} [options.setAsDefault]
+   *   Whether or not to set the engine as default automatically. If this is
+   *   true, the engine will be set as default, and the previous default engine
+   *   will be restored when the test exits.
+   * @param {boolean} [options.setAsDefaultPrivate]
+   *   Whether or not to set the engine as default automatically for private mode.
+   *   If this is true, the engine will be set as default, and the previous default
+   *   engine will be restored when the test exits.
    * @returns {Promise} Returns a promise that is resolved with the new engine
    *                    or rejected if it fails.
    */
-  async promiseNewSearchEngine(url) {
+  async promiseNewSearchEngine({
+    url,
+    setAsDefault = false,
+    setAsDefaultPrivate = false,
+  }) {
     // OpenSearch engines can only be added via http protocols.
     url = url.replace("chrome://mochitests/content", "https://example.com");
     let engine = await Services.search.addOpenSearchEngine(url, "");
+    let previousEngine = Services.search.defaultEngine;
+    let previousPrivateEngine = Services.search.defaultPrivateEngine;
+    if (setAsDefault) {
+      await Services.search.setDefault(
+        engine,
+        Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+      );
+    }
+    if (setAsDefaultPrivate) {
+      await Services.search.setDefaultPrivate(
+        engine,
+        Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+      );
+    }
     gTestScope.registerCleanupFunction(async () => {
+      if (setAsDefault) {
+        await Services.search.setDefault(
+          previousEngine,
+          Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+        );
+      }
+      if (setAsDefaultPrivate) {
+        await Services.search.setDefaultPrivate(
+          previousPrivateEngine,
+          Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+        );
+      }
       try {
         await Services.search.removeEngine(engine);
       } catch (ex) {

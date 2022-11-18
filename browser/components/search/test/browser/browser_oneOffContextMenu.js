@@ -13,9 +13,9 @@ add_setup(async function() {
   });
   searchIcon = searchbar.querySelector(".searchbar-search-button");
 
-  await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
-  );
+  await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME,
+  });
 });
 
 add_task(async function telemetry() {

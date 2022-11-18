@@ -21,9 +21,9 @@ add_setup(async function() {
   searchIcon = searchbar.querySelector(".searchbar-search-button");
 
   let defaultEngine = await Services.search.getDefault();
-  await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + "testEngine_diacritics.xml"
-  );
+  await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + "testEngine_diacritics.xml",
+  });
   registerCleanupFunction(async () => {
     await Services.search.setDefault(
       defaultEngine,

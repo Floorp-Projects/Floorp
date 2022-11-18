@@ -34,9 +34,9 @@ add_setup(async function() {
     await resetEngines();
   });
 
-  await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
-  );
+  await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME,
+  });
 });
 
 async function testSearchBarChangeEngine(win, testPrivate, isPrivateWindow) {
