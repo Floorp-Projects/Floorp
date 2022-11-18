@@ -2222,14 +2222,14 @@ export class UrlbarInput {
    * related to the input text directionality. Overflow fade masks use these
    * attributes to appear at the proper side of the urlbar.
    */
-  _updateTextOverflow() {
+  updateTextOverflow() {
     if (!this._overflowing) {
       this.removeAttribute("textoverflow");
       return;
     }
 
     let isRTL =
-      this.getAttribute("domaindir") != "ltr" &&
+      this.getAttribute("domaindir") === "rtl" &&
       this._checkForRtlText(this.value);
 
     this.window.promiseDocumentFlushed(() => {
@@ -3324,7 +3324,7 @@ export class UrlbarInput {
       return;
     }
     this._overflowing = true;
-    this._updateTextOverflow();
+    this.updateTextOverflow();
   }
 
   _on_underflow(event) {
@@ -3337,7 +3337,7 @@ export class UrlbarInput {
     }
     this._overflowing = false;
 
-    this._updateTextOverflow();
+    this.updateTextOverflow();
 
     this._updateUrlTooltip();
   }
@@ -3401,7 +3401,7 @@ export class UrlbarInput {
   }
 
   _on_scrollend(event) {
-    this._updateTextOverflow();
+    this.updateTextOverflow();
   }
 
   _on_TabSelect(event) {
