@@ -1294,6 +1294,10 @@ panelview .toolbarbutton-1 {
   height: 16px;
 }
 
+#PanelUI-fxa-remotetabs-tabspane {
+  min-width: 0;
+}
+
 #PanelUI-fxa-menu-account-settings-button > .toolbarbutton-icon {
   border-radius: 50%;
 }
