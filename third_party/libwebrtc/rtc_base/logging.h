@@ -119,12 +119,12 @@ class LogMessage;
 // the most flexible way.
 class LogLineRef {
  public:
-  absl::string_view message() { return message_; }
-  absl::string_view filename() { return filename_; };
-  int line() { return line_; };
-  absl::optional<PlatformThreadId> thread_id() { return thread_id_; };
-  webrtc::Timestamp timestamp() { return timestamp_; };
-  absl::string_view tag() const { return tag_; };
+  absl::string_view message() const { return message_; }
+  absl::string_view filename() const { return filename_; }
+  int line() const { return line_; }
+  absl::optional<PlatformThreadId> thread_id() const { return thread_id_; }
+  webrtc::Timestamp timestamp() const { return timestamp_; }
+  absl::string_view tag() const { return tag_; }
   LoggingSeverity severity() const { return severity_; }
 
   std::string DefaultLogLine() const;
