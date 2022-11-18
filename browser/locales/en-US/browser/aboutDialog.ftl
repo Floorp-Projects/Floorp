@@ -26,6 +26,7 @@ update-failed-main =
 
 update-adminDisabled = Updates disabled by your system administrator
 update-noUpdatesFound = { -brand-short-name } is up to date
+aboutdialog-update-checking-failed = Failed to check for updates.
 update-otherInstanceHandlingUpdates = { -brand-short-name } is being updated by another instance
 
 update-manual = Updates available at <label data-l10n-name="manual-link"/>
