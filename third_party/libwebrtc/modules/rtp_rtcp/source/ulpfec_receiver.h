@@ -23,6 +23,7 @@
 #include "modules/rtp_rtcp/source/forward_error_correction.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "rtc_base/system/no_unique_address.h"
+#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 
@@ -33,18 +34,22 @@ struct FecPacketCounter {
   size_t num_fec_packets = 0;  // Number of received FEC packets.
   size_t num_recovered_packets =
       0;  // Number of recovered media packets using FEC.
-  int64_t first_packet_time_ms = -1;  // Time when first packet is received.
+  // Time when first packet is received.
+  Timestamp first_packet_time = Timestamp::MinusInfinity();
 };
 
 class UlpfecReceiver {
  public:
   UlpfecReceiver(uint32_t ssrc,
+                 int ulpfec_payload_type,
                  RecoveredPacketReceiver* callback,
-                 rtc::ArrayView<const RtpExtension> extensions);
+                 rtc::ArrayView<const RtpExtension> extensions,
+                 Clock* clock);
   ~UlpfecReceiver();
 
-  bool AddReceivedRedPacket(const RtpPacketReceived& rtp_packet,
-                            uint8_t ulpfec_payload_type);
+  int ulpfec_payload_type() const { return ulpfec_payload_type_; }
+
+  bool AddReceivedRedPacket(const RtpPacketReceived& rtp_packet);
 
   void ProcessReceivedFec();
 
@@ -54,6 +59,8 @@ class UlpfecReceiver {
 
  private:
   const uint32_t ssrc_;
+  const int ulpfec_payload_type_;
+  Clock* const clock_;
   RtpHeaderExtensionMap extensions_ RTC_GUARDED_BY(&sequence_checker_);
 
   RTC_NO_UNIQUE_ADDRESS SequenceChecker sequence_checker_;

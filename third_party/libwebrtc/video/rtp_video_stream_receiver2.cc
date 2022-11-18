@@ -240,8 +240,10 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
       rtp_receive_statistics_(rtp_receive_statistics),
       ulpfec_receiver_(
           std::make_unique<UlpfecReceiver>(config->rtp.remote_ssrc,
+                                           config_.rtp.ulpfec_payload_type,
                                            this,
-                                           config->rtp.extensions)),
+                                           config->rtp.extensions,
+                                           clock)),
       packet_sink_(config->rtp.packet_sink_),
       receiving_(false),
       last_packet_log_ms_(-1),
@@ -324,7 +326,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
 RtpVideoStreamReceiver2::~RtpVideoStreamReceiver2() {
   if (packet_router_)
     packet_router_->RemoveReceiveRtpModule(rtp_rtcp_.get());
-  UpdateHistograms();
+  ulpfec_receiver_.reset();
   if (frame_transformer_delegate_)
     frame_transformer_delegate_->Reset();
 }
@@ -1049,8 +1051,7 @@ void RtpVideoStreamReceiver2::ParseAndHandleEncapsulatingHeader(
       // packets.
       NotifyReceiverOfEmptyPacket(packet.SequenceNumber());
     }
-    if (!ulpfec_receiver_->AddReceivedRedPacket(
-            packet, config_.rtp.ulpfec_payload_type)) {
+    if (!ulpfec_receiver_->AddReceivedRedPacket(packet)) {
       return;
     }
     ulpfec_receiver_->ProcessReceivedFec();
@@ -1174,33 +1175,6 @@ void RtpVideoStreamReceiver2::StartReceive() {
 void RtpVideoStreamReceiver2::StopReceive() {
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   receiving_ = false;
-}
-
-void RtpVideoStreamReceiver2::UpdateHistograms() {
-  FecPacketCounter counter = ulpfec_receiver_->GetPacketCounter();
-  if (counter.first_packet_time_ms == -1)
-    return;
-
-  int64_t elapsed_sec =
-      (clock_->TimeInMilliseconds() - counter.first_packet_time_ms) / 1000;
-  if (elapsed_sec < metrics::kMinRunTimeInSeconds)
-    return;
-
-  if (counter.num_packets > 0) {
-    RTC_HISTOGRAM_PERCENTAGE(
-        "WebRTC.Video.ReceivedFecPacketsInPercent",
-        static_cast<int>(counter.num_fec_packets * 100 / counter.num_packets));
-  }
-  if (counter.num_fec_packets > 0) {
-    RTC_HISTOGRAM_PERCENTAGE("WebRTC.Video.RecoveredMediaPacketsInPercentOfFec",
-                             static_cast<int>(counter.num_recovered_packets *
-                                              100 / counter.num_fec_packets));
-  }
-  if (config_.rtp.ulpfec_payload_type != -1) {
-    RTC_HISTOGRAM_COUNTS_10000(
-        "WebRTC.Video.FecBitrateReceivedInKbps",
-        static_cast<int>(counter.num_bytes * 8 / elapsed_sec / 1000));
-  }
 }
 
 void RtpVideoStreamReceiver2::InsertSpsPpsIntoTracker(uint8_t payload_type) {

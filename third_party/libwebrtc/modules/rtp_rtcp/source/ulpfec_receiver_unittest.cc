@@ -50,7 +50,11 @@ class UlpfecReceiverTest : public ::testing::Test {
  protected:
   UlpfecReceiverTest()
       : fec_(ForwardErrorCorrection::CreateUlpfec(kMediaSsrc)),
-        receiver_fec_(kMediaSsrc, &recovered_packet_receiver_, {}),
+        receiver_fec_(kMediaSsrc,
+                      kFecPayloadType,
+                      &recovered_packet_receiver_,
+                      {},
+                      Clock::GetRealTimeClock()),
         packet_generator_(kMediaSsrc) {}
 
   // Generates `num_fec_packets` FEC packets, given `media_packets`.
@@ -125,13 +129,13 @@ void UlpfecReceiverTest::BuildAndAddRedMediaPacket(AugmentedPacket* packet,
                                                    bool is_recovered) {
   RtpPacketReceived red_packet =
       packet_generator_.BuildMediaRedPacket(*packet, is_recovered);
-  EXPECT_TRUE(receiver_fec_.AddReceivedRedPacket(red_packet, kFecPayloadType));
+  EXPECT_TRUE(receiver_fec_.AddReceivedRedPacket(red_packet));
 }
 
 void UlpfecReceiverTest::BuildAndAddRedFecPacket(Packet* packet) {
   RtpPacketReceived red_packet =
       packet_generator_.BuildUlpfecRedPacket(*packet);
-  EXPECT_TRUE(receiver_fec_.AddReceivedRedPacket(red_packet, kFecPayloadType));
+  EXPECT_TRUE(receiver_fec_.AddReceivedRedPacket(red_packet));
 }
 
 void UlpfecReceiverTest::VerifyReconstructedMediaPacket(
@@ -175,11 +179,12 @@ void UlpfecReceiverTest::SurvivesMaliciousPacket(const uint8_t* data,
                                                  size_t length,
                                                  uint8_t ulpfec_payload_type) {
   NullRecoveredPacketReceiver null_callback;
-  UlpfecReceiver receiver_fec(kMediaSsrc, &null_callback, {});
+  UlpfecReceiver receiver_fec(kMediaSsrc, ulpfec_payload_type, &null_callback,
+                              {}, Clock::GetRealTimeClock());
 
   RtpPacketReceived rtp_packet;
   ASSERT_TRUE(rtp_packet.Parse(data, length));
-  receiver_fec.AddReceivedRedPacket(rtp_packet, ulpfec_payload_type);
+  receiver_fec.AddReceivedRedPacket(rtp_packet);
 }
 
 TEST_F(UlpfecReceiverTest, TwoMediaOneFec) {
@@ -192,7 +197,7 @@ TEST_F(UlpfecReceiverTest, TwoMediaOneFec) {
 
   FecPacketCounter counter = receiver_fec_.GetPacketCounter();
   EXPECT_EQ(0u, counter.num_packets);
-  EXPECT_EQ(-1, counter.first_packet_time_ms);
+  EXPECT_EQ(Timestamp::MinusInfinity(), counter.first_packet_time);
 
   // Recovery
   auto it = augmented_media_packets.begin();
@@ -203,8 +208,8 @@ TEST_F(UlpfecReceiverTest, TwoMediaOneFec) {
   EXPECT_EQ(1u, counter.num_packets);
   EXPECT_EQ(0u, counter.num_fec_packets);
   EXPECT_EQ(0u, counter.num_recovered_packets);
-  const int64_t first_packet_time_ms = counter.first_packet_time_ms;
-  EXPECT_NE(-1, first_packet_time_ms);
+  const Timestamp first_packet_time = counter.first_packet_time;
+  EXPECT_NE(Timestamp::MinusInfinity(), first_packet_time);
 
   // Drop one media packet.
   auto fec_it = fec_packets.begin();
@@ -217,7 +222,7 @@ TEST_F(UlpfecReceiverTest, TwoMediaOneFec) {
   EXPECT_EQ(2u, counter.num_packets);
   EXPECT_EQ(1u, counter.num_fec_packets);
   EXPECT_EQ(1u, counter.num_recovered_packets);
-  EXPECT_EQ(first_packet_time_ms, counter.first_packet_time_ms);
+  EXPECT_EQ(first_packet_time, counter.first_packet_time);
 }
 
 TEST_F(UlpfecReceiverTest, TwoMediaOneFecNotUsesRecoveredPackets) {
@@ -230,7 +235,7 @@ TEST_F(UlpfecReceiverTest, TwoMediaOneFecNotUsesRecoveredPackets) {
 
   FecPacketCounter counter = receiver_fec_.GetPacketCounter();
   EXPECT_EQ(0u, counter.num_packets);
-  EXPECT_EQ(-1, counter.first_packet_time_ms);
+  EXPECT_EQ(Timestamp::MinusInfinity(), counter.first_packet_time);
 
   // Recovery
   auto it = augmented_media_packets.begin();
@@ -241,8 +246,8 @@ TEST_F(UlpfecReceiverTest, TwoMediaOneFecNotUsesRecoveredPackets) {
   EXPECT_EQ(1u, counter.num_packets);
   EXPECT_EQ(0u, counter.num_fec_packets);
   EXPECT_EQ(0u, counter.num_recovered_packets);
-  const int64_t first_packet_time_ms = counter.first_packet_time_ms;
-  EXPECT_NE(-1, first_packet_time_ms);
+  const Timestamp first_packet_time = counter.first_packet_time;
+  EXPECT_NE(Timestamp::MinusInfinity(), first_packet_time);
 
   // Drop one media packet.
   auto fec_it = fec_packets.begin();
@@ -254,7 +259,7 @@ TEST_F(UlpfecReceiverTest, TwoMediaOneFecNotUsesRecoveredPackets) {
   EXPECT_EQ(2u, counter.num_packets);
   EXPECT_EQ(1u, counter.num_fec_packets);
   EXPECT_EQ(0u, counter.num_recovered_packets);
-  EXPECT_EQ(first_packet_time_ms, counter.first_packet_time_ms);
+  EXPECT_EQ(first_packet_time, counter.first_packet_time);
 }
 
 TEST_F(UlpfecReceiverTest, InjectGarbageFecHeaderLengthRecovery) {
