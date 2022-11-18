@@ -632,55 +632,19 @@ export var PlacesDBUtils = {
         },
       },
 
-      // D.10 recalculate positions
-      // This requires multiple related statements.
-      // We can detect a folder with bad position values comparing the sum of
-      // all distinct position values (+1 since position is 0-based) with the
-      // triangular numbers obtained by the number of children (n).
-      // SUM(DISTINCT position + 1) == (n * (n + 1) / 2).
-      // id is not a PRIMARY KEY on purpose, since we need a rowid that
-      // increments monotonically.
+      // D.10 fix non-consecutive positions.
       {
-        query: `CREATE TEMP TABLE IF NOT EXISTS moz_bm_reindex_temp (
-          id INTEGER
-        , parent INTEGER
-        , position INTEGER
-        )`,
+        query: `
+          WITH positions(item_id, pos, seq) AS (
+            SELECT id, position AS pos,
+                   (row_number() OVER (PARTITION BY parent ORDER BY position)) - 1 AS seq
+            FROM moz_bookmarks
+          )
+          UPDATE moz_bookmarks
+          SET position = seq
+          FROM positions
+          WHERE item_id = moz_bookmarks.id AND seq <> pos`,
       },
-      {
-        query: `INSERT INTO moz_bm_reindex_temp
-        SELECT id, parent, 0
-        FROM moz_bookmarks b
-        WHERE parent IN (
-          SELECT parent
-          FROM moz_bookmarks
-          GROUP BY parent
-          HAVING (SUM(DISTINCT position + 1) - (count(*) * (count(*) + 1) / 2)) <> 0
-        )
-        ORDER BY parent ASC, position ASC, ROWID ASC`,
-      },
-      {
-        query: `CREATE INDEX IF NOT EXISTS moz_bm_reindex_temp_index
-        ON moz_bm_reindex_temp(parent)`,
-      },
-      {
-        query: `UPDATE moz_bm_reindex_temp SET position = (
-          ROWID - (SELECT MIN(t.ROWID) FROM moz_bm_reindex_temp t
-                    WHERE t.parent = moz_bm_reindex_temp.parent)
-        )`,
-      },
-      {
-        query: `CREATE TEMP TRIGGER IF NOT EXISTS moz_bm_reindex_temp_trigger
-        BEFORE DELETE ON moz_bm_reindex_temp
-        FOR EACH ROW
-        BEGIN
-          UPDATE moz_bookmarks SET position = OLD.position WHERE id = OLD.id;
-        END`,
-      },
-      { query: `DELETE FROM moz_bm_reindex_temp` },
-      { query: `DROP INDEX moz_bm_reindex_temp_index` },
-      { query: `DROP TRIGGER moz_bm_reindex_temp_trigger` },
-      { query: `DROP TABLE moz_bm_reindex_temp` },
 
       // D.12 Fix empty-named tags.
       // Tags were allowed to have empty names due to a UI bug.  Fix them by
