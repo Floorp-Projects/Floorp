@@ -3082,8 +3082,8 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
   // main-thread side knows to scroll the content into view before we get
   // the bounding content rect and ask APZ to adjust the visual viewport.
   presShell->ScrollContentIntoView(
-      element, ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
-      ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
+      element, ScrollAxis(WhereToScroll::Nearest, WhenToScroll::IfNotVisible),
+      ScrollAxis(WhereToScroll::Nearest, WhenToScroll::IfNotVisible),
       ScrollFlags::ScrollOverflowHidden);
 
   if (shouldSkip) {

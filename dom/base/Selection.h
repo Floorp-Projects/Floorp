@@ -465,18 +465,17 @@ class Selection final : public nsSupportsWeakReference,
                             nsINode& aEndNode, uint32_t aEndOffset,
                             bool aAllowAdjacent,
                             nsTArray<RefPtr<nsRange>>& aReturn,
-                            mozilla::ErrorResult& aRv);
+                            ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT void ScrollIntoView(int16_t aRegion, bool aIsSynchronous,
-                                         WhereToScroll aVPercent,
-                                         WhereToScroll aHPercent,
-                                         mozilla::ErrorResult& aRv);
+                                         int16_t aVPercent, int16_t aHPercent,
+                                         ErrorResult& aRv);
 
   void SetColors(const nsAString& aForeColor, const nsAString& aBackColor,
                  const nsAString& aAltForeColor, const nsAString& aAltBackColor,
-                 mozilla::ErrorResult& aRv);
+                 ErrorResult& aRv);
 
-  void ResetColors(mozilla::ErrorResult& aRv);
+  void ResetColors(ErrorResult& aRv);
 
   /**
    * Non-JS callers should use the following
