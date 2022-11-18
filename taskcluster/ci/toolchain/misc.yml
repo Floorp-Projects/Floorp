@@ -85,6 +85,38 @@ linux64-libdmg:
             - linux64-clang-toolchain
             - linux64-toolchain-sysroot
 
+linux64-mkbom:
+    description: "mkbom toolchain build"
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TL(mkbom)
+    run:
+        script: build-mkbom-linux.sh
+        toolchain-artifact: public/build/mkbom.tar.zst
+    fetches:
+        fetch:
+            - bomutils
+        toolchain:
+            - linux64-clang-toolchain
+            - linux64-toolchain-sysroot
+
+linux64-xar:
+    description: "xar toolchain build"
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TL(xar)
+    run:
+        script: build-xar-linux.sh
+        toolchain-artifact: public/build/xar.tar.zst
+    fetches:
+        fetch:
+            - xar
+        toolchain:
+            - linux64-clang-toolchain
+            - linux64-toolchain-sysroot
+
 linux64-mar-tools:
     description: "mar-tools toolchain build"
     treeherder:

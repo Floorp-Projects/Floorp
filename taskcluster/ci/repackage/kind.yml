@@ -68,7 +68,7 @@ job-template:
     package-formats:
         by-build-platform:
             linux.*: [mar]
-            macosx64\b.*: [mar, dmg]
+            macosx64\b.*: [mar, dmg, pkg]
             win32\b.*: [mar, installer]
             win64\b.*: [mar, installer]
     fetches:
