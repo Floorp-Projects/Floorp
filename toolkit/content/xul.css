@@ -149,6 +149,11 @@ label:where([value]) {
   display: -moz-inline-box;
 }
 
+label[value],
+description[value] {
+  white-space: nowrap;
+}
+
 label[value][crop],
 description[value][crop] {
   min-width: 0;
@@ -160,7 +165,6 @@ description[value]::before {
    * accesskey if needed */
   content: -moz-label-content;
   display: block;
-  white-space: nowrap;
 }
 
 label[value][crop]::before,

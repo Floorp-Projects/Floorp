@@ -889,6 +889,8 @@ toolbarspring {
   /* ensure we use the direction of the bookmarks label instead of the
    * browser locale */
   unicode-bidi: plaintext;
+  /* Preserve whitespace in bookmark names */
+  white-space: pre;
 }
 
 /* Apply crisp rendering for favicons at exactly 2dppx resolution */
