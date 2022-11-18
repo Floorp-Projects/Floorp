@@ -144,6 +144,7 @@ menubar > menu:-moz-window-inactive {
 @media (-moz-windows-non-native-menus) {
   .menu-right {
     appearance: none;
+    width: unset;
     list-style-image: url("chrome://global/skin/icons/arrow-right.svg");
     -moz-context-properties: fill, fill-opacity;
     fill: currentColor;
