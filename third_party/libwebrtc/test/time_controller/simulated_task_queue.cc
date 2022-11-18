@@ -81,10 +81,7 @@ void SimulatedTaskQueue::PostDelayedHighPrecisionTask(
     absl::AnyInvocable<void() &&> task,
     TimeDelta delay) {
   MutexLock lock(&lock_);
-  // Some tests start to fail when precision of this simulated task queue is
-  // changed, thus delay is rounded to milliseconds.
-  Timestamp target_time =
-      handler_->CurrentTime() + TimeDelta::Millis(delay.ms());
+  Timestamp target_time = handler_->CurrentTime() + delay;
   delayed_tasks_[target_time].push_back(std::move(task));
   next_run_time_ = std::min(next_run_time_, target_time);
 }
