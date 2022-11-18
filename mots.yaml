@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-11-15T11:44:13.774494'
+updated_at: '2022-11-17T22:29:32.539475'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -3391,6 +3391,21 @@ modules:
     meta:
       components:
         - 'Release Engineering :: Applications: MozharnessCore'
+  - machine_name: python_usage
+    name: Python usage, tools, and style
+    description: Aspects of Python use such as tooling, formatting and naming style
+    includes:
+      - tools/lint/python/**/*
+    excludes: []
+    owners:
+      - *ahal
+    peers:
+      - *glandium
+      - *marco
+      - *Sylvestre
+    meta:
+      components:
+        - 'Developer Infrastructure :: Lint and Formatting'
   - machine_name: testing_firefox_ui
     name: firefox-ui
     description: Firefox UI test framework.
@@ -3621,5 +3636,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: f86aab2956ebb04f7f2f579f745069dab34aee15
-  export: 1ea593ebc0fa9aee25618639a12fb73758f50d00
+  config: a27cc8ec97c4e0e3a0ad4a0983d0f2fc79902a8d
+  export: 4c7e1fd03f97fd54bffed4dc7e8082b92f8134ee
