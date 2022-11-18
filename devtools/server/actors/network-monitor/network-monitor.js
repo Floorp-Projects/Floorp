@@ -63,12 +63,10 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
 
     // Immediately start watching for new request according to `filters`.
     // NetworkMonitor will call `onNetworkEvent` method.
-    this.onNetworkEvent = this.onNetworkEvent.bind(this);
-    this.shouldIgnoreChannel = this.shouldIgnoreChannel.bind(this);
-    this.observer = new lazy.NetworkObserver(
-      this.shouldIgnoreChannel,
-      this.onNetworkEvent
-    );
+    this.observer = new lazy.NetworkObserver({
+      ignoreChannelFunction: this.shouldIgnoreChannel.bind(this),
+      onNetworkEvent: this.onNetworkEvent.bind(this),
+    });
 
     this.stackTraces = new Set();
     this.lastFrames = new Map();

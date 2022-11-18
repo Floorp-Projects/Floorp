@@ -61,10 +61,10 @@ class NetworkEventWatcher {
     this.onNetworkEventUpdated = onUpdated;
     // Boolean to know if we keep previous document network events or not.
     this.persist = false;
-    this.listener = new lazy.NetworkObserver(
-      this.shouldIgnoreChannel.bind(this),
-      this.onNetworkEvent.bind(this)
-    );
+    this.listener = new lazy.NetworkObserver({
+      ignoreChannelFunction: this.shouldIgnoreChannel.bind(this),
+      onNetworkEvent: this.onNetworkEvent.bind(this),
+    });
 
     Services.obs.addObserver(this, "window-global-destroyed");
   }
