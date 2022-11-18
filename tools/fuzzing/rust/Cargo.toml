@@ -7,5 +7,5 @@ authors = ["fuzzing@mozilla.com"]
 libc = "0.2"
 tempfile = "3"
 lazy_static = "1.4.0"
-rkv = { version = "0.17", features = ["with-fuzzer-no-link"] }
+rkv = { version = "0.18", features = ["with-fuzzer-no-link"] }
 lmdb-rkv = { version = "0.14", features = ["with-fuzzer-no-link"] }

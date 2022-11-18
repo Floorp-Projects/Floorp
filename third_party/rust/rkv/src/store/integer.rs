@@ -11,20 +11,11 @@
 use std::marker::PhantomData;
 
 use crate::{
-    backend::{
-        BackendDatabase,
-        BackendRwTransaction,
-    },
+    backend::{BackendDatabase, BackendRwTransaction},
     error::StoreError,
-    readwrite::{
-        Readable,
-        Writer,
-    },
+    readwrite::{Readable, Writer},
     store::{
-        keys::{
-            Key,
-            PrimitiveInt,
-        },
+        keys::{Key, PrimitiveInt},
         single::SingleStore,
     },
     value::Value,
@@ -90,22 +81,32 @@ mod tests {
 
     #[test]
     fn test_integer_keys() {
-        let root = Builder::new().prefix("test_integer_keys").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_integer_keys")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
-        let k = Rkv::new::<backend::Lmdb>(root.path()).expect("new succeeded");
+        let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
         let s = k.open_integer("s", StoreOptions::create()).expect("open");
 
         macro_rules! test_integer_keys {
             ($type:ty, $key:expr) => {{
                 let mut writer = k.write().expect("writer");
 
-                s.put(&mut writer, $key, &Value::Str("hello!")).expect("write");
-                assert_eq!(s.get(&writer, $key).expect("read"), Some(Value::Str("hello!")));
+                s.put(&mut writer, $key, &Value::Str("hello!"))
+                    .expect("write");
+                assert_eq!(
+                    s.get(&writer, $key).expect("read"),
+                    Some(Value::Str("hello!"))
+                );
                 writer.commit().expect("committed");
 
                 let reader = k.read().expect("reader");
-                assert_eq!(s.get(&reader, $key).expect("read"), Some(Value::Str("hello!")));
+                assert_eq!(
+                    s.get(&reader, $key).expect("read"),
+                    Some(Value::Str("hello!"))
+                );
             }};
         }
 
@@ -115,10 +116,13 @@ mod tests {
 
     #[test]
     fn test_clear() {
-        let root = Builder::new().prefix("test_integer_clear").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_integer_clear")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
-        let k = Rkv::new::<backend::Lmdb>(root.path()).expect("new succeeded");
+        let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
         let s = k.open_integer("s", StoreOptions::create()).expect("open");
 
         {
@@ -146,10 +150,13 @@ mod tests {
 
     #[test]
     fn test_dup() {
-        let root = Builder::new().prefix("test_integer_dup").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_integer_dup")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
-        let k = Rkv::new::<backend::Lmdb>(root.path()).expect("new succeeded");
+        let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
         let s = k.open_integer("s", StoreOptions::create()).expect("open");
 
         {
@@ -177,10 +184,13 @@ mod tests {
 
     #[test]
     fn test_del() {
-        let root = Builder::new().prefix("test_integer_del").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_integer_del")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
-        let k = Rkv::new::<backend::Lmdb>(root.path()).expect("new succeeded");
+        let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
         let s = k.open_integer("s", StoreOptions::create()).expect("open");
 
         {
@@ -224,11 +234,14 @@ mod tests {
 
     #[test]
     fn test_persist() {
-        let root = Builder::new().prefix("test_integer_persist").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_integer_persist")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
         {
-            let k = Rkv::new::<backend::Lmdb>(root.path()).expect("new succeeded");
+            let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
             let s = k.open_integer("s", StoreOptions::create()).expect("open");
 
             let mut writer = k.write().expect("writer");
@@ -242,7 +255,7 @@ mod tests {
         }
 
         {
-            let k = Rkv::new::<backend::Lmdb>(root.path()).expect("new succeeded");
+            let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
             let s = k.open_integer("s", StoreOptions::create()).expect("open");
 
             let reader = k.read().expect("reader");
@@ -254,10 +267,13 @@ mod tests {
 
     #[test]
     fn test_intertwine_read_write() {
-        let root = Builder::new().prefix("test_integer_intertwine_read_write").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_integer_intertwine_read_write")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
-        let k = Rkv::new::<backend::Lmdb>(root.path()).expect("new succeeded");
+        let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
         let s = k.open_integer("s", StoreOptions::create()).expect("open");
 
         {
@@ -279,12 +295,24 @@ mod tests {
         }
 
         {
-            s.put(&mut writer, 1, &Value::Str("goodbye!")).expect("write");
-            s.put(&mut writer, 2, &Value::Str("goodbye!")).expect("write");
-            s.put(&mut writer, 3, &Value::Str("goodbye!")).expect("write");
-            assert_eq!(s.get(&writer, 1).expect("read"), Some(Value::Str("goodbye!")));
-            assert_eq!(s.get(&writer, 2).expect("read"), Some(Value::Str("goodbye!")));
-            assert_eq!(s.get(&writer, 3).expect("read"), Some(Value::Str("goodbye!")));
+            s.put(&mut writer, 1, &Value::Str("goodbye!"))
+                .expect("write");
+            s.put(&mut writer, 2, &Value::Str("goodbye!"))
+                .expect("write");
+            s.put(&mut writer, 3, &Value::Str("goodbye!"))
+                .expect("write");
+            assert_eq!(
+                s.get(&writer, 1).expect("read"),
+                Some(Value::Str("goodbye!"))
+            );
+            assert_eq!(
+                s.get(&writer, 2).expect("read"),
+                Some(Value::Str("goodbye!"))
+            );
+            assert_eq!(
+                s.get(&writer, 3).expect("read"),
+                Some(Value::Str("goodbye!"))
+            );
             writer.commit().expect("committed");
         }
 
@@ -298,16 +326,28 @@ mod tests {
             let mut writer = k.write().expect("writer");
             s.put(&mut writer, 1, &Value::Str("hello!")).expect("write");
             assert_eq!(s.get(&writer, 1).expect("read"), Some(Value::Str("hello!")));
-            assert_eq!(s.get(&writer, 2).expect("read"), Some(Value::Str("goodbye!")));
-            assert_eq!(s.get(&writer, 3).expect("read"), Some(Value::Str("goodbye!")));
+            assert_eq!(
+                s.get(&writer, 2).expect("read"),
+                Some(Value::Str("goodbye!"))
+            );
+            assert_eq!(
+                s.get(&writer, 3).expect("read"),
+                Some(Value::Str("goodbye!"))
+            );
             writer.commit().expect("committed");
         }
 
         {
             let reader = k.write().expect("reader");
             assert_eq!(s.get(&reader, 1).expect("read"), Some(Value::Str("hello!")));
-            assert_eq!(s.get(&reader, 2).expect("read"), Some(Value::Str("goodbye!")));
-            assert_eq!(s.get(&reader, 3).expect("read"), Some(Value::Str("goodbye!")));
+            assert_eq!(
+                s.get(&reader, 2).expect("read"),
+                Some(Value::Str("goodbye!"))
+            );
+            assert_eq!(
+                s.get(&reader, 3).expect("read"),
+                Some(Value::Str("goodbye!"))
+            );
             reader.commit().expect("committed");
         }
     }
@@ -324,7 +364,10 @@ mod tests_safe {
 
     #[test]
     fn test_integer_keys() {
-        let root = Builder::new().prefix("test_integer_keys").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_integer_keys")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
         let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
@@ -334,12 +377,19 @@ mod tests_safe {
             ($type:ty, $key:expr) => {{
                 let mut writer = k.write().expect("writer");
 
-                s.put(&mut writer, $key, &Value::Str("hello!")).expect("write");
-                assert_eq!(s.get(&writer, $key).expect("read"), Some(Value::Str("hello!")));
+                s.put(&mut writer, $key, &Value::Str("hello!"))
+                    .expect("write");
+                assert_eq!(
+                    s.get(&writer, $key).expect("read"),
+                    Some(Value::Str("hello!"))
+                );
                 writer.commit().expect("committed");
 
                 let reader = k.read().expect("reader");
-                assert_eq!(s.get(&reader, $key).expect("read"), Some(Value::Str("hello!")));
+                assert_eq!(
+                    s.get(&reader, $key).expect("read"),
+                    Some(Value::Str("hello!"))
+                );
             }};
         }
 
@@ -349,7 +399,10 @@ mod tests_safe {
 
     #[test]
     fn test_clear() {
-        let root = Builder::new().prefix("test_integer_clear").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_integer_clear")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
         let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
@@ -380,7 +433,10 @@ mod tests_safe {
 
     #[test]
     fn test_dup() {
-        let root = Builder::new().prefix("test_integer_dup").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_integer_dup")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
         let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
@@ -411,7 +467,10 @@ mod tests_safe {
 
     #[test]
     fn test_del() {
-        let root = Builder::new().prefix("test_integer_del").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_integer_del")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
         let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
@@ -458,7 +517,10 @@ mod tests_safe {
 
     #[test]
     fn test_persist() {
-        let root = Builder::new().prefix("test_integer_persist").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_integer_persist")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
         {
@@ -488,7 +550,10 @@ mod tests_safe {
 
     #[test]
     fn test_intertwine_read_write() {
-        let root = Builder::new().prefix("test_integer_intertwine_read_write").tempdir().expect("tempdir");
+        let root = Builder::new()
+            .prefix("test_integer_intertwine_read_write")
+            .tempdir()
+            .expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
 
         let k = Rkv::new::<backend::SafeMode>(root.path()).expect("new succeeded");
@@ -513,12 +578,24 @@ mod tests_safe {
         }
 
         {
-            s.put(&mut writer, 1, &Value::Str("goodbye!")).expect("write");
-            s.put(&mut writer, 2, &Value::Str("goodbye!")).expect("write");
-            s.put(&mut writer, 3, &Value::Str("goodbye!")).expect("write");
-            assert_eq!(s.get(&writer, 1).expect("read"), Some(Value::Str("goodbye!")));
-            assert_eq!(s.get(&writer, 2).expect("read"), Some(Value::Str("goodbye!")));
-            assert_eq!(s.get(&writer, 3).expect("read"), Some(Value::Str("goodbye!")));
+            s.put(&mut writer, 1, &Value::Str("goodbye!"))
+                .expect("write");
+            s.put(&mut writer, 2, &Value::Str("goodbye!"))
+                .expect("write");
+            s.put(&mut writer, 3, &Value::Str("goodbye!"))
+                .expect("write");
+            assert_eq!(
+                s.get(&writer, 1).expect("read"),
+                Some(Value::Str("goodbye!"))
+            );
+            assert_eq!(
+                s.get(&writer, 2).expect("read"),
+                Some(Value::Str("goodbye!"))
+            );
+            assert_eq!(
+                s.get(&writer, 3).expect("read"),
+                Some(Value::Str("goodbye!"))
+            );
             writer.commit().expect("committed");
         }
 
@@ -532,16 +609,28 @@ mod tests_safe {
             let mut writer = k.write().expect("writer");
             s.put(&mut writer, 1, &Value::Str("hello!")).expect("write");
             assert_eq!(s.get(&writer, 1).expect("read"), Some(Value::Str("hello!")));
-            assert_eq!(s.get(&writer, 2).expect("read"), Some(Value::Str("goodbye!")));
-            assert_eq!(s.get(&writer, 3).expect("read"), Some(Value::Str("goodbye!")));
+            assert_eq!(
+                s.get(&writer, 2).expect("read"),
+                Some(Value::Str("goodbye!"))
+            );
+            assert_eq!(
+                s.get(&writer, 3).expect("read"),
+                Some(Value::Str("goodbye!"))
+            );
             writer.commit().expect("committed");
         }
 
         {
             let reader = k.write().expect("reader");
             assert_eq!(s.get(&reader, 1).expect("read"), Some(Value::Str("hello!")));
-            assert_eq!(s.get(&reader, 2).expect("read"), Some(Value::Str("goodbye!")));
-            assert_eq!(s.get(&reader, 3).expect("read"), Some(Value::Str("goodbye!")));
+            assert_eq!(
+                s.get(&reader, 2).expect("read"),
+                Some(Value::Str("goodbye!"))
+            );
+            assert_eq!(
+                s.get(&reader, 3).expect("read"),
+                Some(Value::Str("goodbye!"))
+            );
             reader.commit().expect("committed");
         }
     }

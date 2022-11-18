@@ -44,20 +44,12 @@
 //!    it cannot overwrite nor append data.
 
 use crate::{
-    backend::{
-        LmdbEnvironment,
-        SafeModeEnvironment,
-    },
+    backend::{LmdbEnvironment, SafeModeEnvironment},
     error::MigrateError,
-    Rkv,
-    StoreOptions,
+    Rkv, StoreOptions,
 };
 
-pub use crate::backend::{
-    LmdbArchMigrateError,
-    LmdbArchMigrateResult,
-    LmdbArchMigrator,
-};
+pub use crate::backend::{LmdbArchMigrateError, LmdbArchMigrateResult, LmdbArchMigrator};
 
 // FIXME: should parametrize this instead.
 
@@ -108,17 +100,15 @@ macro_rules! fn_migrator {
             F: FnOnce(crate::backend::$builder) -> crate::backend::$builder,
             D: std::ops::Deref<Target = Rkv<$dst_env>>,
         {
-            use crate::{
-                backend::*,
-                CloseOptions,
-            };
+            use crate::{backend::*, CloseOptions};
 
             let mut manager = crate::Manager::<$src_env>::singleton().write()?;
             let mut builder = Rkv::<$src_env>::environment_builder::<$builder>();
             builder.set_max_dbs(crate::env::DEFAULT_MAX_DBS);
             builder = build(builder);
 
-            let src_env = manager.get_or_create_from_builder(path, builder, Rkv::from_builder::<$builder>)?;
+            let src_env =
+                manager.get_or_create_from_builder(path, builder, Rkv::from_builder::<$builder>)?;
             Migrator::$migrate(src_env.read()?, dst_env)?;
 
             drop(src_env);
@@ -143,11 +133,15 @@ macro_rules! fn_migrator {
             match Migrator::$migrate(path, |builder| builder, dst_env) {
                 // Source environment is an invalid file or corrupted database.
                 Err(crate::MigrateError::StoreError(crate::StoreError::FileInvalid)) => Ok(()),
-                Err(crate::MigrateError::StoreError(crate::StoreError::DatabaseCorrupted)) => Ok(()),
+                Err(crate::MigrateError::StoreError(crate::StoreError::DatabaseCorrupted)) => {
+                    Ok(())
+                }
                 // Path not accessible.
                 Err(crate::MigrateError::StoreError(crate::StoreError::IoError(_))) => Ok(()),
                 // Path accessible but incompatible for configuration.
-                Err(crate::MigrateError::StoreError(crate::StoreError::UnsuitableEnvironmentPath(_))) => Ok(()),
+                Err(crate::MigrateError::StoreError(
+                    crate::StoreError::UnsuitableEnvironmentPath(_),
+                )) => Ok(()),
                 // Couldn't close source environment and delete files on disk (e.g. other stores still open).
                 Err(crate::MigrateError::CloseError(_)) => Ok(()),
                 // Nothing to migrate.
