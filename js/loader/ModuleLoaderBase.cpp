@@ -267,6 +267,9 @@ bool ModuleLoaderBase::HostPopulateImportMeta(
 bool ModuleLoaderBase::HostImportModuleDynamically(
     JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
     JS::Handle<JSObject*> aModuleRequest, JS::Handle<JSObject*> aPromise) {
+  MOZ_DIAGNOSTIC_ASSERT(aModuleRequest);
+  MOZ_DIAGNOSTIC_ASSERT(aPromise);
+
   RefPtr<LoadedScript> script(GetLoadedScriptOrNull(aCx, aReferencingPrivate));
 
   JS::Rooted<JSString*> specifierString(
@@ -944,6 +947,11 @@ void ModuleLoaderBase::FinishDynamicImport(
 
   // Complete the dynamic import, report failures indicated by aResult or as a
   // pending exception on the context.
+
+  if (!aRequest->mDynamicPromise) {
+    // Import has already been completed.
+    return;
+  }
 
   if (NS_FAILED(aResult) &&
       aResult != NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE) {
