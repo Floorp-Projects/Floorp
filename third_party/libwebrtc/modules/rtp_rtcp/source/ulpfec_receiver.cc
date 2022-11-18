@@ -17,19 +17,50 @@
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/time_utils.h"
+#include "system_wrappers/include/metrics.h"
 
 namespace webrtc {
 
 UlpfecReceiver::UlpfecReceiver(uint32_t ssrc,
+                               int ulpfec_payload_type,
                                RecoveredPacketReceiver* callback,
-                               rtc::ArrayView<const RtpExtension> extensions)
+                               rtc::ArrayView<const RtpExtension> extensions,
+                               Clock* clock)
     : ssrc_(ssrc),
+      ulpfec_payload_type_(ulpfec_payload_type),
+      clock_(clock),
       extensions_(extensions),
       recovered_packet_callback_(callback),
       fec_(ForwardErrorCorrection::CreateUlpfec(ssrc_)) {}
 
 UlpfecReceiver::~UlpfecReceiver() {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
+
+  if (packet_counter_.first_packet_time != Timestamp::MinusInfinity()) {
+    const Timestamp now = clock_->CurrentTime();
+    TimeDelta elapsed = (now - packet_counter_.first_packet_time);
+    if (elapsed.seconds() >= metrics::kMinRunTimeInSeconds) {
+      if (packet_counter_.num_packets > 0) {
+        RTC_HISTOGRAM_PERCENTAGE(
+            "WebRTC.Video.ReceivedFecPacketsInPercent",
+            static_cast<int>(packet_counter_.num_fec_packets * 100 /
+                             packet_counter_.num_packets));
+      }
+      if (packet_counter_.num_fec_packets > 0) {
+        RTC_HISTOGRAM_PERCENTAGE(
+            "WebRTC.Video.RecoveredMediaPacketsInPercentOfFec",
+            static_cast<int>(packet_counter_.num_recovered_packets * 100 /
+                             packet_counter_.num_fec_packets));
+      }
+      if (ulpfec_payload_type_ != -1) {
+        RTC_HISTOGRAM_COUNTS_10000(
+            "WebRTC.Video.FecBitrateReceivedInKbps",
+            static_cast<int>(packet_counter_.num_bytes * 8 / elapsed.seconds() /
+                             1000));
+      }
+    }
+  }
+
   received_packets_.clear();
   fec_->ResetState(&recovered_packets_);
 }
@@ -73,8 +104,7 @@ void UlpfecReceiver::SetRtpExtensions(
 //    block length:  10 bits Length in bytes of the corresponding data
 //        block excluding header.
 
-bool UlpfecReceiver::AddReceivedRedPacket(const RtpPacketReceived& rtp_packet,
-                                          uint8_t ulpfec_payload_type) {
+bool UlpfecReceiver::AddReceivedRedPacket(const RtpPacketReceived& rtp_packet) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   // TODO(bugs.webrtc.org/11993): We get here via Call::DeliverRtp, so should be
   // moved to the network thread.
@@ -104,7 +134,7 @@ bool UlpfecReceiver::AddReceivedRedPacket(const RtpPacketReceived& rtp_packet,
 
   // Get payload type from RED header and sequence number from RTP header.
   uint8_t payload_type = rtp_packet.payload()[0] & 0x7f;
-  received_packet->is_fec = payload_type == ulpfec_payload_type;
+  received_packet->is_fec = payload_type == ulpfec_payload_type_;
   received_packet->is_recovered = rtp_packet.recovered();
   received_packet->ssrc = rtp_packet.Ssrc();
   received_packet->seq_num = rtp_packet.SequenceNumber();
@@ -118,8 +148,8 @@ bool UlpfecReceiver::AddReceivedRedPacket(const RtpPacketReceived& rtp_packet,
 
   ++packet_counter_.num_packets;
   packet_counter_.num_bytes += rtp_packet.size();
-  if (packet_counter_.first_packet_time_ms == -1) {
-    packet_counter_.first_packet_time_ms = rtc::TimeMillis();
+  if (packet_counter_.first_packet_time == Timestamp::MinusInfinity()) {
+    packet_counter_.first_packet_time = clock_->CurrentTime();
   }
 
   if (received_packet->is_fec) {

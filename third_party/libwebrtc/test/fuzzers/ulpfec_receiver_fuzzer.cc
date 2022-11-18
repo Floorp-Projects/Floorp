@@ -36,7 +36,8 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
   uint16_t media_seq_num = ByteReader<uint16_t>::ReadLittleEndian(data + 10);
 
   DummyCallback callback;
-  UlpfecReceiver receiver(ulpfec_ssrc, &callback, {});
+  UlpfecReceiver receiver(ulpfec_ssrc, 0, &callback, {},
+                          Clock::GetRealTimeClock());
 
   test::FuzzDataHelper fuzz_data(rtc::MakeArrayView(data, size));
   while (fuzz_data.CanReadBytes(kMinDataNeeded)) {
@@ -62,7 +63,7 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
       parsed_packet.SetSsrc(media_ssrc);
     }
 
-    receiver.AddReceivedRedPacket(parsed_packet, 0);
+    receiver.AddReceivedRedPacket(parsed_packet);
   }
 
   receiver.ProcessReceivedFec();
