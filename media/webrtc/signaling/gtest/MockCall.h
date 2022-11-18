@@ -191,6 +191,8 @@ class MockVideoReceiveStream : public webrtc::VideoReceiveStreamInterface {
 
   void SetLossNotificationEnabled(bool enabled) override {}
 
+  void SetNackHistory(webrtc::TimeDelta history) override {}
+
   void SetRtpExtensions(std::vector<webrtc::RtpExtension> extensions) override {
   }
   webrtc::RtpHeaderExtensionMap GetRtpExtensionMap() const override;
