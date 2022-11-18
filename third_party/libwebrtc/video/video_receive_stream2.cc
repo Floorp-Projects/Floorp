@@ -518,6 +518,13 @@ void VideoReceiveStream2::SetFlexFecProtection(
       (flexfec_sink != nullptr);
 }
 
+void VideoReceiveStream2::SetLossNotificationEnabled(bool enabled) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  // TODO(tommi): Stop using the config struct for the internal state.
+  const_cast<bool&>(config_.rtp.lntf.enabled) = enabled;
+  rtp_video_stream_receiver_.SetLossNotificationEnabled(enabled);
+}
+
 void VideoReceiveStream2::CreateAndRegisterExternalDecoder(
     const Decoder& decoder) {
   TRACE_EVENT0("webrtc",
