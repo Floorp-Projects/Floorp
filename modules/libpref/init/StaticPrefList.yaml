@@ -13273,7 +13273,7 @@
 
 - name: security.ssl3.ecdhe_ecdsa_aes_128_sha
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 - name: security.ssl3.ecdhe_rsa_aes_256_sha
@@ -13283,7 +13283,7 @@
 
 - name: security.ssl3.ecdhe_ecdsa_aes_256_sha
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 - name: security.ssl3.dhe_rsa_aes_128_sha
