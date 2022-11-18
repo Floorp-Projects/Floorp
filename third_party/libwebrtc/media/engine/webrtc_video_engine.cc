@@ -2985,7 +2985,7 @@ bool WebRtcVideoChannel::WebRtcVideoReceiveStream::ReconfigureCodecs(
   const bool has_lntf = HasLntf(codec.codec);
   if (config_.rtp.lntf.enabled != has_lntf) {
     config_.rtp.lntf.enabled = has_lntf;
-    recreate_needed = true;
+    stream_->SetLossNotificationEnabled(has_lntf);
   }
 
   const int rtp_history_ms = HasNack(codec.codec) ? kNackHistoryMs : 0;
@@ -3060,23 +3060,26 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetFeedbackParameters(
     }
   }
 
+  config_.rtp.lntf.enabled = lntf_enabled;
+  stream_->SetLossNotificationEnabled(lntf_enabled);
+
   int nack_history_ms =
       nack_enabled ? rtx_time != -1 ? rtx_time : kNackHistoryMs : 0;
-  if (config_.rtp.lntf.enabled == lntf_enabled &&
-      config_.rtp.nack.rtp_history_ms == nack_history_ms) {
+  if (config_.rtp.nack.rtp_history_ms == nack_history_ms) {
     RTC_LOG(LS_INFO)
         << "Ignoring call to SetFeedbackParameters because parameters are "
-           "unchanged; lntf="
-        << lntf_enabled << ", nack=" << nack_enabled
-        << ", rtx_time=" << rtx_time;
+           "unchanged; nack="
+        << nack_enabled << ", rtx_time=" << rtx_time;
     return;
   }
 
-  config_.rtp.lntf.enabled = lntf_enabled;
+  RTC_LOG_F(LS_INFO) << "(recv) because of SetFeedbackParameters; nack="
+                     << nack_enabled << ". rtp_history_ms "
+                     << config_.rtp.nack.rtp_history_ms << "->"
+                     << nack_history_ms;
+
   config_.rtp.nack.rtp_history_ms = nack_history_ms;
 
-  RTC_LOG_F(LS_INFO) << "(recv) because of SetFeedbackParameters; nack="
-                     << nack_enabled;
   RecreateReceiveStream();
 }
 
