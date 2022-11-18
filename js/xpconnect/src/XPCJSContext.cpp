@@ -1413,7 +1413,9 @@ WatchdogManager* XPCJSContext::GetWatchdogManager() {
 XPCJSContext* XPCJSContext::NewXPCJSContext() {
   XPCJSContext* self = new XPCJSContext();
   nsresult rv = self->Initialize();
-  if (NS_FAILED(rv)) {
+  if (rv == NS_ERROR_OUT_OF_MEMORY) {
+    mozalloc_handle_oom(0);
+  } else if (NS_FAILED(rv)) {
     MOZ_CRASH("new XPCJSContext failed to initialize.");
   }
 
