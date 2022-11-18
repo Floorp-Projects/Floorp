@@ -2397,7 +2397,6 @@ void nsHttpConnection::HandshakeDoneInternal() {
   Telemetry::Accumulate(Telemetry::SPDY_NPN_CONNECT, UsingSpdy());
 
   mTlsHandshaker->FinishNPNSetup(true, true);
-  Unused << ResumeSend();
 }
 
 void nsHttpConnection::SetTunnelSetupDone() {
