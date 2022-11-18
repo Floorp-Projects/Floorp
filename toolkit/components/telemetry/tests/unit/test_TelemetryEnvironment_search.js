@@ -356,7 +356,7 @@ add_task(async function test_defaultSearchEngine_paramsChanged() {
       name: "TestEngine",
       search_url: "https://www.google.com/fake1",
     },
-    true
+    { skipUnload: true }
   );
 
   let promise = new Promise(resolve => {

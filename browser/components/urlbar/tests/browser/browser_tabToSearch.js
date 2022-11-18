@@ -602,7 +602,7 @@ add_task(async function onboard_multipleEnginesForHostname() {
       name: `${TEST_ENGINE_NAME}Maps`,
       search_url: `https://${TEST_ENGINE_DOMAIN}/maps/`,
     },
-    true
+    { skipUnload: true }
   );
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({

@@ -21,7 +21,7 @@ add_task(async function test_basic_upgrade() {
       search_url_get_params: `q={searchTerms}&version=1.0`,
       keyword: "foo",
     },
-    true
+    { skipUnload: true }
   );
 
   let engine = await Services.search.getEngineByAlias("foo");
@@ -79,7 +79,7 @@ add_task(async function test_upgrade_changes_name() {
       search_url_get_params: `q={searchTerms}&version=1.0`,
       version: "1.0",
     },
-    true
+    { skipUnload: true }
   );
 
   let engine = Services.search.getEngineByName("engine");
@@ -152,7 +152,7 @@ add_task(async function test_upgrade_to_existing_name_not_allowed() {
       search_url_get_params: `q={searchTerms}&version=1.0`,
       version: "1.0",
     },
-    true
+    { skipUnload: true }
   );
 
   let engine = Services.search.getEngineByName("engine");

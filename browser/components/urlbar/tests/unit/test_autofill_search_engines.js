@@ -37,7 +37,7 @@ add_task(async function searchEngines() {
           name: ENGINE_NAME,
           search_url: "https://www.example.com/",
         },
-        true
+        { skipUnload: true }
       );
     } else {
       let httpServer = makeTestServer();

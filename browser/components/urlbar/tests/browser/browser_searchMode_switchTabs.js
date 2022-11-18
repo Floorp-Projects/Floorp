@@ -200,7 +200,7 @@ add_task(async function slow_load() {
     {
       name: engineName,
     },
-    true
+    { skipUnload: true }
   );
 
   const originalTab = gBrowser.selectedTab;
@@ -238,7 +238,7 @@ add_task(async function slow_load_guaranteed() {
     {
       name: engineName,
     },
-    true
+    { skipUnload: true }
   );
 
   const backgroundTab = BrowserTestUtils.addTab(gBrowser);

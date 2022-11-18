@@ -32,7 +32,7 @@ add_task(async function test_migrateLegacyEngine() {
       name: "simple",
       search_url: "https://example.com/",
     },
-    true
+    { skipUnload: true }
   );
 
   engine = Services.search.getEngineByName("simple");
@@ -71,7 +71,7 @@ add_task(async function test_migrateLegacyEngineDifferentName() {
       name: "simple search",
       search_url: "https://example.com/",
     },
-    true
+    { skipUnload: true }
   );
 
   engine = Services.search.getEngineByName("simple");

@@ -232,7 +232,7 @@ add_task(async function tabToSearch() {
       name: "Test",
       search_url: engineURL,
     },
-    true
+    { skipUnload: true }
   );
   let engine = Services.search.getEngineByName("Test");
 

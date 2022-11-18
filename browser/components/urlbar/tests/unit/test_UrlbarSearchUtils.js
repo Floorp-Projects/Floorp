@@ -87,7 +87,7 @@ add_task(async function add_search_engine_match() {
       keyword: "pork",
       search_url: "https://www.bacon.moz/",
     },
-    true
+    { skipUnload: true }
   );
   let matchedEngine = (
     await UrlbarSearchUtils.enginesForDomainPrefix("bacon")
@@ -240,7 +240,7 @@ add_task(async function test_get_root_domain_from_engine() {
       name: "TestEngine2",
       search_url: "https://example.com/",
     },
-    true
+    { skipUnload: true }
   );
   let engine = Services.search.getEngineByName("TestEngine2");
   Assert.equal(UrlbarSearchUtils.getRootDomainFromEngine(engine), "example");
@@ -251,7 +251,7 @@ add_task(async function test_get_root_domain_from_engine() {
       name: "TestEngine",
       search_url: "https://www.subdomain.othersubdomain.example.com",
     },
-    true
+    { skipUnload: true }
   );
   engine = Services.search.getEngineByName("TestEngine");
   Assert.equal(UrlbarSearchUtils.getRootDomainFromEngine(engine), "example");
@@ -265,7 +265,7 @@ add_task(async function test_get_root_domain_from_engine() {
       search_url: "https://mochi.test/",
       search_url_get_params: "search={searchTerms}",
     },
-    true
+    { skipUnload: true }
   );
   engine = Services.search.getEngineByName("TestMalformed");
   Assert.equal(UrlbarSearchUtils.getRootDomainFromEngine(engine), "mochi");
@@ -278,7 +278,7 @@ add_task(async function test_get_root_domain_from_engine() {
       search_url: "https://subdomain.foobar/",
       search_url_get_params: "search={searchTerms}",
     },
-    true
+    { skipUnload: true }
   );
   engine = Services.search.getEngineByName("TestMalformed");
   Assert.equal(
@@ -351,7 +351,7 @@ add_task(async function get_search_term_if_default_serp_uri() {
       search_url: "https://example.com/",
       search_url_get_params: "?q={searchTerms}&pc=sample_code",
     },
-    true
+    { skipUnload: true }
   );
   let engine = Services.search.getEngineByName("TestEngine");
   let originalDefaultEngine = Services.search.defaultEngine;
@@ -411,7 +411,7 @@ add_task(async function matchAllDomainLevels() {
           name: domain,
           search_url: `https://${domain}/`,
         },
-        true
+        { skipUnload: true }
       );
       extensions.push(ext);
     }

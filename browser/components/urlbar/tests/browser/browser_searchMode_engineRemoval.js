@@ -10,7 +10,10 @@
 // Tests that we exit search mode in the active tab when the search mode engine
 // is removed.
 add_task(async function activeTab() {
-  let extension = await SearchTestUtils.installSearchExtension({}, true);
+  let extension = await SearchTestUtils.installSearchExtension(
+    {},
+    { skipUnload: true }
+  );
   let engine = Services.search.getEngineByName("Example");
   await Services.search.moveEngine(engine, 0);
 
@@ -32,7 +35,10 @@ add_task(async function activeTab() {
 // Tests that we exit search mode in a background tab when the search mode
 // engine is removed.
 add_task(async function backgroundTab() {
-  let extension = await SearchTestUtils.installSearchExtension({}, true);
+  let extension = await SearchTestUtils.installSearchExtension(
+    {},
+    { skipUnload: true }
+  );
   let engine = Services.search.getEngineByName("Example");
   await Services.search.moveEngine(engine, 0);
 
@@ -67,7 +73,10 @@ add_task(async function backgroundTab() {
 // Tests that we exit search mode in a background window when the search mode
 // engine is removed.
 add_task(async function backgroundWindow() {
-  let extension = await SearchTestUtils.installSearchExtension({}, true);
+  let extension = await SearchTestUtils.installSearchExtension(
+    {},
+    { skipUnload: true }
+  );
   let engine = Services.search.getEngineByName("Example");
   await Services.search.moveEngine(engine, 0);
 

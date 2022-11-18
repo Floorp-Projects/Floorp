@@ -21,7 +21,10 @@ add_task(async function setup() {
   await Services.search.init();
   await promiseAfterSettings();
 
-  extension = await SearchTestUtils.installSearchExtension({}, true);
+  extension = await SearchTestUtils.installSearchExtension(
+    {},
+    { skipUnload: true }
+  );
   await extension.awaitStartup();
 
   // For these tests, stub-out the removeEngine function, so that when we

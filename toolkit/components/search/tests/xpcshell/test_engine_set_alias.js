@@ -14,7 +14,7 @@ add_task(async function test_engine_set_alias() {
       keyword: "b",
       search_url: "https://www.bacon.test/find",
     },
-    true
+    { skipUnload: true }
   );
   let engine1 = await Services.search.getEngineByName("bacon");
   Assert.ok(engine1.aliases.includes("b"));
@@ -31,7 +31,7 @@ add_task(async function test_engine_set_alias_with_left_space() {
       keyword: "   a",
       search_url: "https://www.bacon.test/find",
     },
-    true
+    { skipUnload: true }
   );
   let engine2 = await Services.search.getEngineByName("bacon");
   Assert.ok(engine2.aliases.includes("a"));
@@ -48,7 +48,7 @@ add_task(async function test_engine_set_alias_with_right_space() {
       keyword: "c   ",
       search_url: "https://www.bacon.test/find",
     },
-    true
+    { skipUnload: true }
   );
   let engine3 = await Services.search.getEngineByName("bacon");
   Assert.ok(engine3.aliases.includes("c"));
@@ -65,7 +65,7 @@ add_task(async function test_engine_set_alias_with_right_left_space() {
       keyword: " o  ",
       search_url: "https://www.bacon.test/find",
     },
-    true
+    { skipUnload: true }
   );
   let engine4 = await Services.search.getEngineByName("bacon");
   Assert.ok(engine4.aliases.includes("o"));
@@ -82,7 +82,7 @@ add_task(async function test_engine_set_alias_with_space() {
       keyword: " ",
       search_url: "https://www.bacon.test/find",
     },
-    true
+    { skipUnload: true }
   );
   let engine5 = await Services.search.getEngineByName("bacon");
   Assert.equal(engine5.alias, "");
@@ -100,7 +100,7 @@ add_task(async function test_engine_change_alias() {
       keyword: " o  ",
       search_url: "https://www.bacon.test/find",
     },
-    true
+    { skipUnload: true }
   );
   let engine6 = await Services.search.getEngineByName("bacon");
 
