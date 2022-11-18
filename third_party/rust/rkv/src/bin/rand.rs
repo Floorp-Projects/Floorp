@@ -14,22 +14,11 @@
 //! the number of key/value pairs to create via the `-n <number>` flag
 //! (for which the default value is 50).
 
-use std::{
-    env::args,
-    fs,
-    fs::File,
-    io::Read,
-    path::Path,
-};
+use std::{env::args, fs, fs::File, io::Read, path::Path};
 
 use rkv::{
-    backend::{
-        BackendEnvironmentBuilder,
-        Lmdb,
-    },
-    Rkv,
-    StoreOptions,
-    Value,
+    backend::{BackendEnvironmentBuilder, Lmdb},
+    Rkv, StoreOptions, Value,
 };
 
 fn main() {
@@ -49,13 +38,13 @@ fn main() {
                         None => panic!("-s must be followed by database arg"),
                         Some(str) => Some(str),
                     };
-                },
+                }
                 "n" => {
                     num_pairs = match args.next() {
                         None => panic!("-s must be followed by number of pairs"),
                         Some(str) => str.parse().expect("number"),
                     };
-                },
+                }
                 str => panic!("arg -{} not recognized", str),
             }
         } else {
@@ -80,7 +69,9 @@ fn main() {
     // of the pairs (assuming maximum key and value sizes).
     builder.set_map_size((511 + 65535) * num_pairs * 2);
     let rkv = Rkv::from_builder(Path::new(&path), builder).expect("Rkv");
-    let store = rkv.open_single(database.as_deref(), StoreOptions::create()).expect("opened");
+    let store = rkv
+        .open_single(database.as_deref(), StoreOptions::create())
+        .expect("opened");
     let mut writer = rkv.write().expect("writer");
 
     // Generate random values for the number of keys and key/value lengths.
@@ -106,7 +97,9 @@ fn main() {
         let mut value: Vec<u8> = vec![0; value_len];
         random.read_exact(&mut value[0..value_len]).unwrap();
 
-        store.put(&mut writer, key, &Value::Blob(&value)).expect("wrote");
+        store
+            .put(&mut writer, key, &Value::Blob(&value))
+            .expect("wrote");
     }
 
     writer.commit().expect("committed");

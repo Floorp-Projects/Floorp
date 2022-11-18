@@ -859,9 +859,9 @@ dependencies = [
 
 [[package]]
 name = "glean"
-version = "51.8.1"
+version = "51.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d1f6f93391e6a54301b0896347a100f5f742ccc89bf48c9bd4dad06e7282716"
+checksum = "43db04e51b1b7e796177e3bda4fdbeb3b649d6e429524863b1ecf699fabc7d6c"
 dependencies = [
  "chrono",
  "crossbeam-channel",
@@ -879,9 +879,9 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "51.8.1"
+version = "51.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8523726fb4d4aa5098198208d5c6e16e26382652a792f42be62caa966bfcd99b"
+checksum = "b223c24117a769c9d13e3d9a349187113c364f8ca2831b42651f35d0edba4a5f"
 dependencies = [
  "android_logger",
  "bincode",
@@ -892,6 +892,7 @@ dependencies = [
  "log",
  "once_cell",
  "oslog",
+ "remove_dir_all",
  "rkv",
  "serde",
  "serde_json",
@@ -1533,9 +1534,9 @@ checksum = "074864da206b4973b84eb91683020dbefd6a8c3f0f38e054d93954e891935e4e"
 
 [[package]]
 name = "ordered-float"
-version = "1.0.2"
+version = "3.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18869315e81473c951eb56ad5558bbc56978562d3ecfb87abb7a1e944cea4518"
+checksum = "d84eb1409416d254e4a9c8fa56cc24701755025b458f0fcd8e59e1f5f40c23bf"
 dependencies = [
  "num-traits",
 ]
@@ -1598,28 +1599,9 @@ dependencies = [
 
 [[package]]
 name = "paste"
-version = "0.1.18"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45ca20c77d80be666aef2b45486da86238fabe33e38306bd3118fe4af33fa880"
-dependencies = [
- "paste-impl",
- "proc-macro-hack",
-]
-
-[[package]]
-name = "paste"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c520e05135d6e763148b6426a837e239041653ba7becd2e538c076c738025fc"
-
-[[package]]
-name = "paste-impl"
-version = "0.1.18"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d95a7db200b97ef370c8e6de0088252f7e0dfff7d047a28528e47456c0fc98b6"
-dependencies = [
- "proc-macro-hack",
-]
 
 [[package]]
 name = "peek-poke"
@@ -1714,12 +1696,6 @@ dependencies = [
  "quote",
  "version_check",
 ]
-
-[[package]]
-name = "proc-macro-hack"
-version = "0.5.19"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dbf0c48bc1d91375ae5c3cd81e3722dff1abcf81a30960240640d223f59fe0e5"
 
 [[package]]
 name = "proc-macro2"
@@ -1844,10 +1820,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7fe5bd57d1d7414c6b5ed48563a2c855d995ff777729dcd91c369ec7fea395ae"
 
 [[package]]
-name = "rkv"
-version = "0.17.0"
+name = "remove_dir_all"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28e2e15d3fff125cfc4fb3f1b226ff83af057c4715061ded16193b7142beefc9"
+checksum = "3acd125665422973a33ac9d3dd2df85edad0f4ae9b00dafb1a05e43a9f5ef8e7"
+dependencies = [
+ "winapi",
+]
+
+[[package]]
+name = "rkv"
+version = "0.18.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2c3b196786090b5b57c9bb0f4afca6ac6a5bfb6182c0161ef32f1ecade43ac47"
 dependencies = [
  "arrayref",
  "bincode",
@@ -1858,7 +1843,7 @@ dependencies = [
  "lmdb-rkv",
  "log",
  "ordered-float",
- "paste 0.1.18",
+ "paste",
  "serde",
  "serde_derive",
  "thiserror",
@@ -1935,9 +1920,9 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.137"
+version = "1.0.147"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61ea8d54c77f8315140a05f4c7237403bf38b72704d031543aa1d16abbf517d1"
+checksum = "d193d69bae983fc11a79df82342761dfbf28a99fc8d203dca4c3c1b590948965"
 dependencies = [
  "serde_derive",
 ]
@@ -1953,9 +1938,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.137"
+version = "1.0.147"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f26faba0c3959972377d3b2d306ee9f71faee9714294e41bb777f83f88578be"
+checksum = "4f1d362ca8fc9c3e3a7484440752472d68a6caa98f1ab81d99b5dfe517cec852"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2225,7 +2210,7 @@ dependencies = [
  "cargo_metadata",
  "log",
  "once_cell",
- "paste 1.0.7",
+ "paste",
  "static_assertions",
  "uniffi_macros",
 ]
@@ -2245,7 +2230,7 @@ dependencies = [
  "goblin",
  "heck",
  "once_cell",
- "paste 1.0.7",
+ "paste",
  "serde",
  "serde_json",
  "toml",

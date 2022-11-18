@@ -14,17 +14,8 @@ use std::fs;
 use tempfile::Builder;
 
 use rkv::{
-    backend::{
-        Lmdb,
-        LmdbDatabase,
-        LmdbRoCursor,
-        LmdbRwTransaction,
-    },
-    Readable,
-    Rkv,
-    StoreOptions,
-    Value,
-    Writer,
+    backend::{SafeMode, SafeModeDatabase, SafeModeRoCursor, SafeModeRwTransaction},
+    Readable, Rkv, StoreOptions, Value, Writer,
 };
 
 /// Consider a struct like this:
@@ -41,14 +32,17 @@ use rkv::{
 /// Note that the reader functions take `Readable` because they might run within a Read
 /// Transaction or a Write Transaction.  The test demonstrates fetching values via both.
 
-type SingleStore = rkv::SingleStore<LmdbDatabase>;
-type MultiStore = rkv::MultiStore<LmdbDatabase>;
+type SingleStore = rkv::SingleStore<SafeModeDatabase>;
+type MultiStore = rkv::MultiStore<SafeModeDatabase>;
 
 #[test]
 fn read_many() {
-    let root = Builder::new().prefix("test_txns").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_txns")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
-    let k = Rkv::new::<Lmdb>(root.path()).expect("new succeeded");
+    let k = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
     let samplestore = k.open_single("s", StoreOptions::create()).expect("open");
     let datestore = k.open_multi("m", StoreOptions::create()).expect("open");
     let valuestore = k.open_multi("m", StoreOptions::create()).expect("open");
@@ -57,8 +51,8 @@ fn read_many() {
         let mut writer = k.write().expect("env write lock");
 
         for id in 0..30_u64 {
-            let value = format!("value{}", id);
-            let date = format!("2019-06-{}", id);
+            let value = format!("value{id}");
+            let date = format!("2019-06-{id}");
             put_id_field(&mut writer, datestore, &date, id);
             put_id_field(&mut writer, valuestore, &value, id);
             put_sample(&mut writer, samplestore, id, &value);
@@ -66,49 +60,47 @@ fn read_many() {
 
         // now we read in the same transaction
         for id in 0..30_u64 {
-            let value = format!("value{}", id);
-            let date = format!("2019-06-{}", id);
+            let value = format!("value{id}");
+            let date = format!("2019-06-{id}");
             let ids = get_ids_by_field(&writer, datestore, &date);
             let ids2 = get_ids_by_field(&writer, valuestore, &value);
             let samples = get_samples(&writer, samplestore, &ids);
             let samples2 = get_samples(&writer, samplestore, &ids2);
-            println!("{:?}, {:?}", samples, samples2);
+            println!("{samples:?}, {samples2:?}");
         }
     }
 
     {
         let reader = k.read().expect("env read lock");
         for id in 0..30_u64 {
-            let value = format!("value{}", id);
-            let date = format!("2019-06-{}", id);
+            let value = format!("value{id}");
+            let date = format!("2019-06-{id}");
             let ids = get_ids_by_field(&reader, datestore, &date);
             let ids2 = get_ids_by_field(&reader, valuestore, &value);
             let samples = get_samples(&reader, samplestore, &ids);
             let samples2 = get_samples(&reader, samplestore, &ids2);
-            println!("{:?}, {:?}", samples, samples2);
+            println!("{samples:?}, {samples2:?}");
         }
     }
 }
 
 fn get_ids_by_field<'t, T>(txn: &'t T, store: MultiStore, field: &'t str) -> Vec<u64>
 where
-    T: Readable<'t, Database = LmdbDatabase, RoCursor = LmdbRoCursor<'t>>,
+    T: Readable<'t, Database = SafeModeDatabase, RoCursor = SafeModeRoCursor<'t>>,
 {
     store
         .get(txn, field)
         .expect("get iterator")
-        .map(|id| {
-            match id.expect("field") {
-                (_, Value::U64(id)) => id,
-                _ => panic!("getting value in iter"),
-            }
+        .map(|id| match id.expect("field") {
+            (_, Value::U64(id)) => id,
+            _ => panic!("getting value in iter"),
         })
         .collect::<Vec<u64>>()
 }
 
 fn get_samples<'t, T>(txn: &'t T, samplestore: SingleStore, ids: &[u64]) -> Vec<String>
 where
-    T: Readable<'t, Database = LmdbDatabase, RoCursor = LmdbRoCursor<'t>>,
+    T: Readable<'t, Database = SafeModeDatabase, RoCursor = SafeModeRoCursor<'t>>,
 {
     ids.iter()
         .map(|id| {
@@ -122,11 +114,18 @@ where
         .collect::<Vec<String>>()
 }
 
-fn put_sample(txn: &mut Writer<LmdbRwTransaction>, samplestore: SingleStore, id: u64, value: &str) {
+fn put_sample(
+    txn: &mut Writer<SafeModeRwTransaction>,
+    samplestore: SingleStore,
+    id: u64,
+    value: &str,
+) {
     let idbytes = id.to_be_bytes();
-    samplestore.put(txn, &idbytes, &Value::Str(value)).expect("put id");
+    samplestore
+        .put(txn, &idbytes, &Value::Str(value))
+        .expect("put id");
 }
 
-fn put_id_field(txn: &mut Writer<LmdbRwTransaction>, store: MultiStore, field: &str, id: u64) {
+fn put_id_field(txn: &mut Writer<SafeModeRwTransaction>, store: MultiStore, field: &str, id: u64) {
     store.put(txn, field, &Value::U64(id)).expect("put id");
 }

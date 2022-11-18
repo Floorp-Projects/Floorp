@@ -11,19 +11,10 @@
 use std::marker::PhantomData;
 
 use crate::{
-    backend::{
-        BackendDatabase,
-        BackendFlags,
-        BackendIter,
-        BackendRoCursor,
-        BackendRwTransaction,
-    },
+    backend::{BackendDatabase, BackendFlags, BackendIter, BackendRoCursor, BackendRwTransaction},
     error::StoreError,
     helpers::read_transform,
-    readwrite::{
-        Readable,
-        Writer,
-    },
+    readwrite::{Readable, Writer},
     value::Value,
 };
 
@@ -44,9 +35,7 @@ where
     D: BackendDatabase,
 {
     pub(crate) fn new(db: D) -> MultiStore<D> {
-        MultiStore {
-            db,
-        }
+        MultiStore { db }
     }
 
     /// Provides a cursor to all of the values for the duplicate entries that match this
@@ -87,7 +76,13 @@ where
         writer.put(&self.db, &k, v, T::Flags::empty())
     }
 
-    pub fn put_with_flags<T, K>(&self, writer: &mut Writer<T>, k: K, v: &Value, flags: T::Flags) -> EmptyResult
+    pub fn put_with_flags<T, K>(
+        &self,
+        writer: &mut Writer<T>,
+        k: K,
+        v: &Value,
+        flags: T::Flags,
+    ) -> EmptyResult
     where
         T: BackendRwTransaction<Database = D>,
         K: AsRef<[u8]>,
@@ -128,11 +123,9 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         match self.iter.next() {
             None => None,
-            Some(Ok((key, bytes))) => {
-                match read_transform(Ok(bytes)) {
-                    Ok(val) => Some(Ok((key, val))),
-                    Err(err) => Some(Err(err)),
-                }
+            Some(Ok((key, bytes))) => match read_transform(Ok(bytes)) {
+                Ok(val) => Some(Ok((key, val))),
+                Err(err) => Some(Err(err)),
             },
             Some(Err(err)) => Some(Err(err.into())),
         }

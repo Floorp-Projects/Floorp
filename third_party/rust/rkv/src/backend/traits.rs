@@ -9,22 +9,12 @@
 // specific language governing permissions and limitations under the License.
 
 use std::{
-    fmt::{
-        Debug,
-        Display,
-    },
-    path::{
-        Path,
-        PathBuf,
-    },
+    fmt::{Debug, Display},
+    path::{Path, PathBuf},
 };
 
 use crate::{
-    backend::common::{
-        DatabaseFlags,
-        EnvironmentFlags,
-        WriteFlags,
-    },
+    backend::common::{DatabaseFlags, EnvironmentFlags, WriteFlags},
     error::StoreError,
 };
 
@@ -111,7 +101,11 @@ pub trait BackendEnvironment<'e>: Debug {
 
     fn open_db(&self, name: Option<&str>) -> Result<Self::Database, Self::Error>;
 
-    fn create_db(&self, name: Option<&str>, flags: Self::Flags) -> Result<Self::Database, Self::Error>;
+    fn create_db(
+        &self,
+        name: Option<&str>,
+        flags: Self::Flags,
+    ) -> Result<Self::Database, Self::Error>;
 
     fn begin_ro_txn(&'e self) -> Result<Self::RoTransaction, Self::Error>;
 
@@ -148,13 +142,24 @@ pub trait BackendRwTransaction: Debug {
 
     fn get(&self, db: &Self::Database, key: &[u8]) -> Result<&[u8], Self::Error>;
 
-    fn put(&mut self, db: &Self::Database, key: &[u8], value: &[u8], flags: Self::Flags) -> Result<(), Self::Error>;
+    fn put(
+        &mut self,
+        db: &Self::Database,
+        key: &[u8],
+        value: &[u8],
+        flags: Self::Flags,
+    ) -> Result<(), Self::Error>;
 
     #[cfg(not(feature = "db-dup-sort"))]
     fn del(&mut self, db: &Self::Database, key: &[u8]) -> Result<(), Self::Error>;
 
     #[cfg(feature = "db-dup-sort")]
-    fn del(&mut self, db: &Self::Database, key: &[u8], value: Option<&[u8]>) -> Result<(), Self::Error>;
+    fn del(
+        &mut self,
+        db: &Self::Database,
+        key: &[u8],
+        value: Option<&[u8]>,
+    ) -> Result<(), Self::Error>;
 
     fn clear_db(&mut self, db: &Self::Database) -> Result<(), Self::Error>;
 

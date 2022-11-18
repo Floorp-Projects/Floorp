@@ -22,12 +22,12 @@ pub struct IterImpl<'i, C> {
 }
 
 impl<'i, C> IterImpl<'i, C> {
-    pub(crate) fn new(mut cursor: C, to_iter: impl FnOnce(&mut C) -> lmdb::Iter<'i>) -> IterImpl<'i, C> {
+    pub(crate) fn new(
+        mut cursor: C,
+        to_iter: impl FnOnce(&mut C) -> lmdb::Iter<'i>,
+    ) -> IterImpl<'i, C> {
         let iter = to_iter(&mut cursor);
-        IterImpl {
-            cursor,
-            iter,
-        }
+        IterImpl { cursor, iter }
     }
 }
 

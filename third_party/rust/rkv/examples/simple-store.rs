@@ -12,21 +12,12 @@ use std::fs;
 use tempfile::Builder;
 
 use rkv::{
-    backend::{
-        BackendStat,
-        Lmdb,
-        LmdbDatabase,
-        LmdbEnvironment,
-        LmdbRwTransaction,
-    },
-    Manager,
-    Rkv,
-    StoreOptions,
-    Value,
+    backend::{SafeMode, SafeModeDatabase, SafeModeEnvironment, SafeModeRwTransaction},
+    Manager, Rkv, StoreOptions, Value,
 };
 
-type MultiStore = rkv::MultiStore<LmdbDatabase>;
-type Writer<'w> = rkv::Writer<LmdbRwTransaction<'w>>;
+type MultiStore = rkv::MultiStore<SafeModeDatabase>;
+type Writer<'w> = rkv::Writer<SafeModeRwTransaction<'w>>;
 
 fn getput<'w, 's>(store: MultiStore, writer: &'w mut Writer, ids: &'s mut Vec<String>) {
     let keys = vec!["str1", "str2", "str3"];
@@ -52,7 +43,9 @@ fn delete(store: MultiStore, writer: &mut Writer) {
     let vals = vec!["string uno", "string quatro", "string siete"];
     // we convert the writer into a cursor so that we can safely read
     for i in 0..keys.len() {
-        store.delete(writer, &keys[i], &Value::Str(vals[i])).unwrap();
+        store
+            .delete(writer, &keys[i], &Value::Str(vals[i]))
+            .unwrap();
     }
 }
 
@@ -62,8 +55,8 @@ fn main() {
     let p = root.path();
 
     // The manager enforces that each process opens the same lmdb environment at most once
-    let mut manager = Manager::<LmdbEnvironment>::singleton().write().unwrap();
-    let created_arc = manager.get_or_create(p, Rkv::new::<Lmdb>).unwrap();
+    let mut manager = Manager::<SafeModeEnvironment>::singleton().write().unwrap();
+    let created_arc = manager.get_or_create(p, Rkv::new::<SafeMode>).unwrap();
     let k = created_arc.read().unwrap();
 
     // Creates a store called "store"
@@ -75,13 +68,31 @@ fn main() {
         // Use a writer to mutate the store
         let mut writer = k.write().unwrap();
         store.put(&mut writer, "int", &Value::I64(1234)).unwrap();
-        store.put(&mut writer, "uint", &Value::U64(1234_u64)).unwrap();
-        store.put(&mut writer, "float", &Value::F64(1234.0.into())).unwrap();
-        store.put(&mut writer, "instant", &Value::Instant(1_528_318_073_700)).unwrap();
-        store.put(&mut writer, "boolean", &Value::Bool(true)).unwrap();
-        store.put(&mut writer, "string", &Value::Str("héllo, yöu")).unwrap();
-        store.put(&mut writer, "json", &Value::Json(r#"{"foo":"bar", "number": 1}"#)).unwrap();
-        store.put(&mut writer, "blob", &Value::Blob(b"blob")).unwrap();
+        store
+            .put(&mut writer, "uint", &Value::U64(1234_u64))
+            .unwrap();
+        store
+            .put(&mut writer, "float", &Value::F64(1234.0.into()))
+            .unwrap();
+        store
+            .put(&mut writer, "instant", &Value::Instant(1_528_318_073_700))
+            .unwrap();
+        store
+            .put(&mut writer, "boolean", &Value::Bool(true))
+            .unwrap();
+        store
+            .put(&mut writer, "string", &Value::Str("héllo, yöu"))
+            .unwrap();
+        store
+            .put(
+                &mut writer,
+                "json",
+                &Value::Json(r#"{"foo":"bar", "number": 1}"#),
+            )
+            .unwrap();
+        store
+            .put(&mut writer, "blob", &Value::Blob(b"blob"))
+            .unwrap();
         writer.commit().unwrap();
     }
 
@@ -89,15 +100,33 @@ fn main() {
     {
         let mut ids = Vec::new();
         let mut writer = k.write().unwrap();
-        multistore.put(&mut writer, "str1", &Value::Str("string uno")).unwrap();
-        multistore.put(&mut writer, "str1", &Value::Str("string dos")).unwrap();
-        multistore.put(&mut writer, "str1", &Value::Str("string tres")).unwrap();
-        multistore.put(&mut writer, "str2", &Value::Str("string quatro")).unwrap();
-        multistore.put(&mut writer, "str2", &Value::Str("string cinco")).unwrap();
-        multistore.put(&mut writer, "str2", &Value::Str("string seis")).unwrap();
-        multistore.put(&mut writer, "str3", &Value::Str("string siete")).unwrap();
-        multistore.put(&mut writer, "str3", &Value::Str("string ocho")).unwrap();
-        multistore.put(&mut writer, "str3", &Value::Str("string nueve")).unwrap();
+        multistore
+            .put(&mut writer, "str1", &Value::Str("string uno"))
+            .unwrap();
+        multistore
+            .put(&mut writer, "str1", &Value::Str("string dos"))
+            .unwrap();
+        multistore
+            .put(&mut writer, "str1", &Value::Str("string tres"))
+            .unwrap();
+        multistore
+            .put(&mut writer, "str2", &Value::Str("string quatro"))
+            .unwrap();
+        multistore
+            .put(&mut writer, "str2", &Value::Str("string cinco"))
+            .unwrap();
+        multistore
+            .put(&mut writer, "str2", &Value::Str("string seis"))
+            .unwrap();
+        multistore
+            .put(&mut writer, "str3", &Value::Str("string siete"))
+            .unwrap();
+        multistore
+            .put(&mut writer, "str3", &Value::Str("string ocho"))
+            .unwrap();
+        multistore
+            .put(&mut writer, "str3", &Value::Str("string nueve"))
+            .unwrap();
         getput(multistore, &mut writer, &mut ids);
         writer.commit().unwrap();
         let mut writer = k.write().unwrap();
@@ -117,7 +146,10 @@ fn main() {
         println!("Get string {:?}", store.get(&reader, "string").unwrap());
         println!("Get json {:?}", store.get(&reader, "json").unwrap());
         println!("Get blob {:?}", store.get(&reader, "blob").unwrap());
-        println!("Get non-existent {:?}", store.get(&reader, "non-existent").unwrap());
+        println!(
+            "Get non-existent {:?}",
+            store.get(&reader, "non-existent").unwrap()
+        );
     }
 
     println!("Looking up keys via Writer.get()...");
@@ -126,11 +158,17 @@ fn main() {
         store.put(&mut writer, "foo", &Value::Str("bar")).unwrap();
         store.put(&mut writer, "bar", &Value::Str("baz")).unwrap();
         store.delete(&mut writer, "foo").unwrap();
-        println!("It should be None! ({:?})", store.get(&writer, "foo").unwrap());
+        println!(
+            "It should be None! ({:?})",
+            store.get(&writer, "foo").unwrap()
+        );
         println!("Get bar ({:?})", store.get(&writer, "bar").unwrap());
         writer.commit().unwrap();
         let reader = k.read().expect("reader");
-        println!("It should be None! ({:?})", store.get(&reader, "foo").unwrap());
+        println!(
+            "It should be None! ({:?})",
+            store.get(&reader, "foo").unwrap()
+        );
         println!("Get bar {:?}", store.get(&reader, "bar").unwrap());
     }
 
@@ -142,7 +180,10 @@ fn main() {
         writer.abort();
 
         let reader = k.read().expect("reader");
-        println!("It should be None! ({:?})", store.get(&reader, "foo").unwrap());
+        println!(
+            "It should be None! ({:?})",
+            store.get(&reader, "foo").unwrap()
+        );
         // Explicitly aborting a transaction is not required unless an early
         // abort is desired, since both read and write transactions will
         // implicitly be aborted once they go out of scope.
@@ -154,7 +195,10 @@ fn main() {
         let mut writer = k.write().unwrap();
         store.put(&mut writer, "foo", &Value::Str("bar")).unwrap();
         store.delete(&mut writer, "foo").unwrap();
-        println!("It should be None! ({:?})", store.get(&writer, "foo").unwrap());
+        println!(
+            "It should be None! ({:?})",
+            store.get(&writer, "foo").unwrap()
+        );
         writer.commit().unwrap();
 
         // Committing a transaction consumes the writer, preventing you
@@ -173,22 +217,36 @@ fn main() {
         writer.commit().unwrap();
 
         let reader = k.read().expect("reader");
-        println!("It should be None! ({:?})", store.get(&reader, "foo").unwrap());
-        println!("It should be None! ({:?})", store.get(&reader, "bar").unwrap());
+        println!(
+            "It should be None! ({:?})",
+            store.get(&reader, "foo").unwrap()
+        );
+        println!(
+            "It should be None! ({:?})",
+            store.get(&reader, "bar").unwrap()
+        );
     }
 
     println!("Write and read on multiple stores...");
     {
-        let another_store = k.open_single("another_store", StoreOptions::create()).unwrap();
+        let another_store = k
+            .open_single("another_store", StoreOptions::create())
+            .unwrap();
         let mut writer = k.write().unwrap();
         store.put(&mut writer, "foo", &Value::Str("bar")).unwrap();
-        another_store.put(&mut writer, "foo", &Value::Str("baz")).unwrap();
+        another_store
+            .put(&mut writer, "foo", &Value::Str("baz"))
+            .unwrap();
         writer.commit().unwrap();
 
         let reader = k.read().unwrap();
-        println!("Get from store value: {:?}", store.get(&reader, "foo").unwrap());
-        println!("Get from another store value: {:?}", another_store.get(&reader, "foo").unwrap());
+        println!(
+            "Get from store value: {:?}",
+            store.get(&reader, "foo").unwrap()
+        );
+        println!(
+            "Get from another store value: {:?}",
+            another_store.get(&reader, "foo").unwrap()
+        );
     }
-
-    println!("Environment statistics: btree depth = {}", k.stat().unwrap().depth());
 }

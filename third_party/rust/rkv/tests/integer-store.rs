@@ -15,32 +15,37 @@ use std::fs;
 use serde_derive::Serialize;
 use tempfile::Builder;
 
-use rkv::{
-    backend::Lmdb,
-    PrimitiveInt,
-    Rkv,
-    StoreOptions,
-    Value,
-};
+use rkv::{backend::SafeMode, PrimitiveInt, Rkv, StoreOptions, Value};
 
 #[test]
 fn test_integer_keys() {
-    let root = Builder::new().prefix("test_integer_keys").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_integer_keys")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
-    let k = Rkv::new::<Lmdb>(root.path()).expect("new succeeded");
+    let k = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
     let s = k.open_integer("s", StoreOptions::create()).expect("open");
 
     macro_rules! test_integer_keys {
         ($store:expr, $key:expr) => {{
             let mut writer = k.write().expect("writer");
 
-            $store.put(&mut writer, $key, &Value::Str("hello!")).expect("write");
-            assert_eq!($store.get(&writer, $key).expect("read"), Some(Value::Str("hello!")));
+            $store
+                .put(&mut writer, $key, &Value::Str("hello!"))
+                .expect("write");
+            assert_eq!(
+                $store.get(&writer, $key).expect("read"),
+                Some(Value::Str("hello!"))
+            );
             writer.commit().expect("committed");
 
             let reader = k.read().expect("reader");
-            assert_eq!($store.get(&reader, $key).expect("read"), Some(Value::Str("hello!")));
+            assert_eq!(
+                $store.get(&reader, $key).expect("read"),
+                Some(Value::Str("hello!"))
+            );
         }};
     }
 
