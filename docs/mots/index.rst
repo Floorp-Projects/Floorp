@@ -3298,6 +3298,29 @@ Configuration-driven script harness.
     * - Bugzilla Components
       - Release Engineering :: Applications: MozharnessCore
 
+Python usage, tools, and style
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Aspects of Python use such as tooling, formatting and naming style
+
+
+.. list-table::
+    :stub-columns: 1
+    :widths: 30 70
+
+    * - Owner(s)
+      -
+        | `Andrew Halberstadt (ahal) <https://people.mozilla.org/s?query=ahal>`__
+    * - Peer(s)
+      -
+        | `Mike Hommey (glandium) <https://people.mozilla.org/s?query=glandium>`__
+        | `Marco Castelluccio (marco) <https://people.mozilla.org/s?query=marco>`__
+        | `Sylvestre Ledru (Sylvestre) <https://people.mozilla.org/s?query=Sylvestre>`__
+    * - Includes
+      -
+        | `tools/lint/python/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=tools/lint/python/\*\*/\*>`__
+    * - Bugzilla Components
+      - Developer Infrastructure :: Lint and Formatting
+
 firefox-ui
 ~~~~~~~~~~
 Firefox UI test framework.
