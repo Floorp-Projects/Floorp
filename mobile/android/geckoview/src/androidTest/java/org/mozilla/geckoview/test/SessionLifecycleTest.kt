@@ -4,19 +4,17 @@
 
 package org.mozilla.geckoview.test
 
+import android.os.Bundle
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.MediumTest
+import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ClosedSessionAtStart
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.UiThreadUtils
-
-import android.os.Bundle
-import androidx.test.filters.MediumTest
-import androidx.test.ext.junit.runners.AndroidJUnit4
-
-import org.hamcrest.Matchers.*
-import org.junit.Test
-import org.junit.runner.RunWith
 import java.lang.ref.ReferenceQueue
 import java.lang.ref.WeakReference
 
@@ -65,29 +63,36 @@ class SessionLifecycleTest : BaseSessionTest() {
     }
 
     @ClosedSessionAtStart
-    @Test fun restoreRuntimeSettings_noSession() {
+    @Test
+    fun restoreRuntimeSettings_noSession() {
         val extrasSetting = Bundle(2)
         extrasSetting.putInt("test1", 10)
         extrasSetting.putBoolean("test2", true)
 
         val settings = GeckoRuntimeSettings.Builder()
-                       .javaScriptEnabled(false)
-                       .extras(extrasSetting)
-                       .build()
+            .javaScriptEnabled(false)
+            .extras(extrasSetting)
+            .build()
 
         settings.toParcel { parcel ->
             val newSettings = GeckoRuntimeSettings.Builder().build()
             newSettings.readFromParcel(parcel)
 
-            assertThat("Parceled settings must match",
-                       newSettings.javaScriptEnabled,
-                       equalTo(settings.javaScriptEnabled))
-            assertThat("Parceled settings must match",
-                       newSettings.extras.getInt("test1"),
-                       equalTo(settings.extras.getInt("test1")))
-            assertThat("Parceled settings must match",
-                       newSettings.extras.getBoolean("test2"),
-                       equalTo(settings.extras.getBoolean("test2")))
+            assertThat(
+                "Parceled settings must match",
+                newSettings.javaScriptEnabled,
+                equalTo(settings.javaScriptEnabled)
+            )
+            assertThat(
+                "Parceled settings must match",
+                newSettings.extras.getInt("test1"),
+                equalTo(settings.extras.getInt("test1"))
+            )
+            assertThat(
+                "Parceled settings must match",
+                newSettings.extras.getBoolean("test2"),
+                equalTo(settings.extras.getBoolean("test2"))
+            )
         }
     }
 
@@ -124,7 +129,8 @@ class SessionLifecycleTest : BaseSessionTest() {
 
     // Waits for 4 requestAnimationFrame calls and computes rate
     private fun computeRequestAnimationFrameRate(session: GeckoSession): Double {
-        return session.evaluateJS("""
+        return session.evaluateJS(
+            """
             new Promise(resolve => {
                 let start = 0;
                 let frames = 0;
@@ -141,18 +147,22 @@ class SessionLifecycleTest : BaseSessionTest() {
                 }
                 window.requestAnimationFrame(raf);
             });
-        """) as Double
+        """
+        ) as Double
     }
 
     @WithDisplay(width = 100, height = 100)
-    @Test fun asyncScriptsSuspendedWhileInactive() {
-        sessionRule.setPrefsUntilTestEnd(mapOf(
+    @Test
+    fun asyncScriptsSuspendedWhileInactive() {
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
                 "privacy.reduceTimerPrecision" to false,
                 // This makes the throttled frame rate 4 times faster than normal,
                 // so this test doesn't time out. Should still be significantly slower tha
                 // the active frame rate so we can measure the effects
                 "layout.throttled_frame_rate" to 4
-        ))
+            )
+        )
 
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
@@ -161,38 +171,59 @@ class SessionLifecycleTest : BaseSessionTest() {
 
         // Deactivate the GeckoSession and confirm that rAF/setTimeout/etc callbacks do not run
         mainSession.setActive(false)
-        assertThat("docShell shouldn't be active after calling setActive(false)",
-                mainSession.active, equalTo(false))
+        assertThat(
+            "docShell shouldn't be active after calling setActive(false)",
+            mainSession.active,
+            equalTo(false)
+        )
 
-        mainSession.evaluateJS("""
+        mainSession.evaluateJS(
+            """
             function fail() {
                 document.documentElement.style.backgroundColor = 'green';
             }
             setTimeout(fail, 1);
             fetch("missing.html").catch(fail);
-        """)
+        """
+        )
 
         var rafRate = computeRequestAnimationFrameRate(mainSession)
-        assertThat("requestAnimationFrame should be called about once a second",
-            rafRate, greaterThan(450.0))
-        assertThat("requestAnimationFrame should be called about once a second",
-                rafRate, lessThan(10000.0))
+        assertThat(
+            "requestAnimationFrame should be called about once a second",
+            rafRate,
+            greaterThan(450.0)
+        )
+        assertThat(
+            "requestAnimationFrame should be called about once a second",
+            rafRate,
+            lessThan(10000.0)
+        )
 
         val isNotGreen = mainSession.evaluateJS(
-                "document.documentElement.style.backgroundColor !== 'green'") as Boolean
+            "document.documentElement.style.backgroundColor !== 'green'"
+        ) as Boolean
         assertThat("timeouts have not run yet", isNotGreen, equalTo(true))
 
         // Reactivate the GeckoSession and confirm that rAF/setTimeout/etc callbacks now run
         mainSession.setActive(true)
-        assertThat("docShell should be active after calling setActive(true)",
-                mainSession.active, equalTo(true))
+        assertThat(
+            "docShell should be active after calling setActive(true)",
+            mainSession.active,
+            equalTo(true)
+        )
 
         // At 60fps, once a frame is about 16.6 ms
         rafRate = computeRequestAnimationFrameRate(mainSession)
-        assertThat("requestAnimationFrame should be called about once a frame",
-                rafRate, lessThan(60.0))
-        assertThat("requestAnimationFrame should be called about once a frame",
-                rafRate, greaterThan(5.0))
+        assertThat(
+            "requestAnimationFrame should be called about once a frame",
+            rafRate,
+            lessThan(60.0)
+        )
+        assertThat(
+            "requestAnimationFrame should be called about once a frame",
+            rafRate,
+            greaterThan(5.0)
+        )
     }
 
     private fun waitUntilCollected(ref: QueuedWeakReference<*>) {
@@ -202,6 +233,8 @@ class SessionLifecycleTest : BaseSessionTest() {
         }, sessionRule.timeoutMillis)
     }
 
-    class QueuedWeakReference<T> @JvmOverloads constructor(obj: T, var queue: ReferenceQueue<T> =
-            ReferenceQueue()) : WeakReference<T>(obj, queue)
+    class QueuedWeakReference<T> @JvmOverloads constructor(
+        obj: T,
+        var queue: ReferenceQueue<T> = ReferenceQueue()
+    ) : WeakReference<T>(obj, queue)
 }

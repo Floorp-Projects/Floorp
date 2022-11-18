@@ -4,11 +4,9 @@
 
 package org.mozilla.geckoview.test
 
-import org.mozilla.geckoview.GeckoSession
-
-import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.hamcrest.Matchers.*
+import androidx.test.filters.MediumTest
+import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -17,8 +15,11 @@ import org.junit.runner.RunWith
 class LocaleTest : BaseSessionTest() {
 
     @Test fun setLocale() {
-        sessionRule.runtime.settings.setLocales(arrayOf("en-GB"));
-        assertThat("Requested locale is found", sessionRule.requestedLocales.indexOf("en-GB"),
-                greaterThanOrEqualTo(0))
+        sessionRule.runtime.settings.setLocales(arrayOf("en-GB"))
+        assertThat(
+            "Requested locale is found",
+            sessionRule.requestedLocales.indexOf("en-GB"),
+            greaterThanOrEqualTo(0)
+        )
     }
 }

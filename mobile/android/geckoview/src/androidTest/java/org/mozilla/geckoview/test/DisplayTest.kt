@@ -1,8 +1,8 @@
 package org.mozilla.geckoview.test
 
-import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.hamcrest.Matchers.*
+import androidx.test.filters.MediumTest
+import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
 import org.junit.Test
 import org.junit.runner.RunWith
 

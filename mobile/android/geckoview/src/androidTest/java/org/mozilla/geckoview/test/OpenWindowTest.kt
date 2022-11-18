@@ -1,21 +1,21 @@
 package org.mozilla.geckoview.test
 
-import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.MediumTest
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.gecko.util.ThreadUtils
-import org.mozilla.geckoview.*
+import org.mozilla.geckoview.* // ktlint-disable no-wildcard-imports
 import org.mozilla.geckoview.GeckoRuntime.ServiceWorkerDelegate
 import org.mozilla.geckoview.GeckoSession.ContentDelegate
-import org.mozilla.geckoview.GeckoSession.PermissionDelegate
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import org.mozilla.geckoview.test.util.UiThreadUtils
 
 @RunWith(AndroidJUnit4::class)
@@ -30,7 +30,7 @@ class OpenWindowTest : BaseSessionTest() {
         mainSession.delegateUntilTestEnd(object : PermissionDelegate {
             override fun onContentPermissionRequest(session: GeckoSession, perm: PermissionDelegate.ContentPermission): GeckoResult<Int>? {
                 assertThat("Should grant DESKTOP_NOTIFICATIONS permission", perm.permission, equalTo(PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION))
-                return GeckoResult.fromValue(PermissionDelegate.ContentPermission.VALUE_ALLOW);
+                return GeckoResult.fromValue(PermissionDelegate.ContentPermission.VALUE_ALLOW)
             }
         })
     }
@@ -39,8 +39,11 @@ class OpenWindowTest : BaseSessionTest() {
         mainSession.loadTestPath(OPEN_WINDOW_PATH)
         sessionRule.waitForPageStop()
         val result = mainSession.waitForJS("Notification.requestPermission()")
-        assertThat("Permission should be granted",
-                result as String, equalTo("granted"))
+        assertThat(
+            "Permission should be granted",
+            result as String,
+            equalTo("granted")
+        )
 
         val notificationResult = GeckoResult<Void>()
         var notificationShown: WebNotification? = null
@@ -52,7 +55,7 @@ class OpenWindowTest : BaseSessionTest() {
                 notificationResult.complete(null)
             }
         })
-        mainSession.evaluateJS("showNotification()");
+        mainSession.evaluateJS("showNotification()")
         sessionRule.waitForResult(notificationResult)
         notificationShown!!.click()
     }

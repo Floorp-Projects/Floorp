@@ -4,13 +4,12 @@
 
 package org.mozilla.geckoview.test
 
-import org.mozilla.geckoview.GeckoSession
-
-import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.hamcrest.Matchers.*
+import androidx.test.filters.MediumTest
+import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.geckoview.GeckoSession
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -27,58 +26,97 @@ class FinderTest : BaseSessionTest() {
         assertThat("Should not have wrapped", result.wrapped, equalTo(false))
         assertThat("Current count should be correct", result.current, equalTo(1))
         assertThat("Total count should be correct", result.total, equalTo(2))
-        assertThat("Search string should be correct",
-                   result.searchString, equalTo("dolore"))
+        assertThat(
+            "Search string should be correct",
+            result.searchString,
+            equalTo("dolore")
+        )
         assertThat("Flags should be correct", result.flags, equalTo(0))
 
         // Search again using new flags.
-        result = sessionRule.waitForResult(mainSession.finder.find(
-                null, GeckoSession.FINDER_FIND_BACKWARDS
-                                        or GeckoSession.FINDER_FIND_MATCH_CASE
-                                        or GeckoSession.FINDER_FIND_WHOLE_WORD))
+        result = sessionRule.waitForResult(
+            mainSession.finder.find(
+                null,
+                GeckoSession.FINDER_FIND_BACKWARDS
+                    or GeckoSession.FINDER_FIND_MATCH_CASE
+                    or GeckoSession.FINDER_FIND_WHOLE_WORD
+            )
+        )
 
         assertThat("Should be found", result.found, equalTo(true))
         assertThat("Should have wrapped", result.wrapped, equalTo(true))
         assertThat("Current count should be correct", result.current, equalTo(2))
         assertThat("Total count should be correct", result.total, equalTo(2))
-        assertThat("Search string should be correct",
-                   result.searchString, equalTo("dolore"))
-        assertThat("Flags should be correct", result.flags,
-                   equalTo(GeckoSession.FINDER_FIND_BACKWARDS
-                                            or GeckoSession.FINDER_FIND_MATCH_CASE
-                                            or GeckoSession.FINDER_FIND_WHOLE_WORD))
+        assertThat(
+            "Search string should be correct",
+            result.searchString,
+            equalTo("dolore")
+        )
+        assertThat(
+            "Flags should be correct",
+            result.flags,
+            equalTo(
+                GeckoSession.FINDER_FIND_BACKWARDS
+                    or GeckoSession.FINDER_FIND_MATCH_CASE
+                    or GeckoSession.FINDER_FIND_WHOLE_WORD
+            )
+        )
 
         // And again using same flags.
-        result = sessionRule.waitForResult(mainSession.finder.find(
-                null, GeckoSession.FINDER_FIND_BACKWARDS
-                                        or GeckoSession.FINDER_FIND_MATCH_CASE
-                                        or GeckoSession.FINDER_FIND_WHOLE_WORD))
+        result = sessionRule.waitForResult(
+            mainSession.finder.find(
+                null,
+                GeckoSession.FINDER_FIND_BACKWARDS
+                    or GeckoSession.FINDER_FIND_MATCH_CASE
+                    or GeckoSession.FINDER_FIND_WHOLE_WORD
+            )
+        )
 
         assertThat("Should be found", result.found, equalTo(true))
         assertThat("Should not have wrapped", result.wrapped, equalTo(false))
         assertThat("Current count should be correct", result.current, equalTo(1))
         assertThat("Total count should be correct", result.total, equalTo(2))
-        assertThat("Search string should be correct",
-                   result.searchString, equalTo("dolore"))
-        assertThat("Flags should be correct", result.flags,
-                   equalTo(GeckoSession.FINDER_FIND_BACKWARDS
-                                            or GeckoSession.FINDER_FIND_MATCH_CASE
-                                            or GeckoSession.FINDER_FIND_WHOLE_WORD))
+        assertThat(
+            "Search string should be correct",
+            result.searchString,
+            equalTo("dolore")
+        )
+        assertThat(
+            "Flags should be correct",
+            result.flags,
+            equalTo(
+                GeckoSession.FINDER_FIND_BACKWARDS
+                    or GeckoSession.FINDER_FIND_MATCH_CASE
+                    or GeckoSession.FINDER_FIND_WHOLE_WORD
+            )
+        )
 
         // And again but go forward.
-        result = sessionRule.waitForResult(mainSession.finder.find(
-                null, GeckoSession.FINDER_FIND_MATCH_CASE
-                                        or GeckoSession.FINDER_FIND_WHOLE_WORD))
+        result = sessionRule.waitForResult(
+            mainSession.finder.find(
+                null,
+                GeckoSession.FINDER_FIND_MATCH_CASE
+                    or GeckoSession.FINDER_FIND_WHOLE_WORD
+            )
+        )
 
         assertThat("Should be found", result.found, equalTo(true))
         assertThat("Should not have wrapped", result.wrapped, equalTo(false))
         assertThat("Current count should be correct", result.current, equalTo(2))
         assertThat("Total count should be correct", result.total, equalTo(2))
-        assertThat("Search string should be correct",
-                   result.searchString, equalTo("dolore"))
-        assertThat("Flags should be correct", result.flags,
-                   equalTo(GeckoSession.FINDER_FIND_MATCH_CASE
-                                            or GeckoSession.FINDER_FIND_WHOLE_WORD))
+        assertThat(
+            "Search string should be correct",
+            result.searchString,
+            equalTo("dolore")
+        )
+        assertThat(
+            "Flags should be correct",
+            result.flags,
+            equalTo(
+                GeckoSession.FINDER_FIND_MATCH_CASE
+                    or GeckoSession.FINDER_FIND_WHOLE_WORD
+            )
+        )
     }
 
     @Test fun find_notFound() {
@@ -91,8 +129,11 @@ class FinderTest : BaseSessionTest() {
         assertThat("Should have wrapped", result.wrapped, equalTo(true))
         assertThat("Current count should be correct", result.current, equalTo(0))
         assertThat("Total count should be correct", result.total, equalTo(0))
-        assertThat("Search string should be correct",
-                   result.searchString, equalTo("foo"))
+        assertThat(
+            "Search string should be correct",
+            result.searchString,
+            equalTo("foo")
+        )
         assertThat("Flags should be correct", result.flags, equalTo(0))
 
         result = sessionRule.waitForResult(mainSession.finder.find("lore", 0))
@@ -108,12 +149,19 @@ class FinderTest : BaseSessionTest() {
 
         assertThat("Total count should be correct", result.total, equalTo(3))
 
-        result = sessionRule.waitForResult(mainSession.finder.find(
-                null, GeckoSession.FINDER_FIND_MATCH_CASE))
+        result = sessionRule.waitForResult(
+            mainSession.finder.find(
+                null,
+                GeckoSession.FINDER_FIND_MATCH_CASE
+            )
+        )
 
         assertThat("Total count should be correct", result.total, equalTo(2))
-        assertThat("Flags should be correct",
-                   result.flags, equalTo(GeckoSession.FINDER_FIND_MATCH_CASE))
+        assertThat(
+            "Flags should be correct",
+            result.flags,
+            equalTo(GeckoSession.FINDER_FIND_MATCH_CASE)
+        )
     }
 
     @Test fun find_wholeWord() {
@@ -124,24 +172,38 @@ class FinderTest : BaseSessionTest() {
 
         assertThat("Total count should be correct", result.total, equalTo(4))
 
-        result = sessionRule.waitForResult(mainSession.finder.find(
-                null, GeckoSession.FINDER_FIND_WHOLE_WORD))
+        result = sessionRule.waitForResult(
+            mainSession.finder.find(
+                null,
+                GeckoSession.FINDER_FIND_WHOLE_WORD
+            )
+        )
 
         assertThat("Total count should be correct", result.total, equalTo(2))
-        assertThat("Flags should be correct",
-                   result.flags, equalTo(GeckoSession.FINDER_FIND_WHOLE_WORD))
+        assertThat(
+            "Flags should be correct",
+            result.flags,
+            equalTo(GeckoSession.FINDER_FIND_WHOLE_WORD)
+        )
     }
 
     @Test fun find_linksOnly() {
         mainSession.loadTestPath(LOREM_IPSUM_HTML_PATH)
         mainSession.waitForPageStop()
 
-        val result = sessionRule.waitForResult(mainSession.finder.find(
-                "nim", GeckoSession.FINDER_FIND_LINKS_ONLY))
+        val result = sessionRule.waitForResult(
+            mainSession.finder.find(
+                "nim",
+                GeckoSession.FINDER_FIND_LINKS_ONLY
+            )
+        )
 
         assertThat("Total count should be correct", result.total, equalTo(1))
-        assertThat("Flags should be correct",
-                   result.flags, equalTo(GeckoSession.FINDER_FIND_LINKS_ONLY))
+        assertThat(
+            "Flags should be correct",
+            result.flags,
+            equalTo(GeckoSession.FINDER_FIND_LINKS_ONLY)
+        )
     }
 
     @Test fun clear() {
@@ -152,14 +214,18 @@ class FinderTest : BaseSessionTest() {
 
         assertThat("Match should be found", result.found, equalTo(true))
 
-        assertThat("Match should be selected",
-                   mainSession.evaluateJS("window.getSelection().toString()") as String,
-                   equalTo("Lore"))
+        assertThat(
+            "Match should be selected",
+            mainSession.evaluateJS("window.getSelection().toString()") as String,
+            equalTo("Lore")
+        )
 
         mainSession.finder.clear()
 
-        assertThat("Match should be cleared",
-                   mainSession.evaluateJS("window.getSelection().isCollapsed") as Boolean,
-                   equalTo(true))
+        assertThat(
+            "Match should be cleared",
+            mainSession.evaluateJS("window.getSelection().isCollapsed") as Boolean,
+            equalTo(true)
+        )
     }
 }

@@ -6,14 +6,13 @@ package org.mozilla.geckoview.test
 
 import android.os.Build
 import android.os.SystemClock
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.filters.MediumTest
 import androidx.test.filters.SdkSuppress
-import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
@@ -23,10 +22,9 @@ import org.junit.rules.ExpectedException
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.mozilla.gecko.util.ThreadUtils
-import org.mozilla.geckoview.*
+import org.mozilla.geckoview.* // ktlint-disable no-wildcard-imports
 import org.mozilla.geckoview.test.util.RuntimeCreator
 import org.mozilla.geckoview.test.util.TestServer
-import org.mozilla.geckoview.test.util.UiThreadUtils
 import java.io.IOException
 import java.lang.IllegalStateException
 import java.math.BigInteger
@@ -34,23 +32,26 @@ import java.net.UnknownHostException
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 import java.security.MessageDigest
-import java.util.*
+import java.util.* // ktlint-disable no-wildcard-imports
 
 @MediumTest
 @RunWith(Parameterized::class)
 class WebExecutorTest {
     companion object {
         const val TEST_PORT: Int = 4242
-        const val TEST_ENDPOINT: String = "http://localhost:${TEST_PORT}"
+        const val TEST_ENDPOINT: String = "http://localhost:$TEST_PORT"
 
         @get:Parameterized.Parameters(name = "{0}")
         @JvmStatic
         val parameters: List<Array<out Any>> = listOf(
-                arrayOf("#conservative"),
-                arrayOf("#normal"))
+            arrayOf("#conservative"),
+            arrayOf("#normal")
+        )
     }
 
-    @field:Parameterized.Parameter(0) @JvmField var id: String = ""
+    @field:Parameterized.Parameter(0)
+    @JvmField
+    var id: String = ""
 
     lateinit var executor: GeckoWebExecutor
     lateinit var server: TestServer
@@ -108,7 +109,7 @@ class WebExecutorTest {
         return builder.toString()
     }
 
-    fun webRequestBuilder(uri: String) : WebRequest.Builder {
+    fun webRequestBuilder(uri: String): WebRequest.Builder {
         val beConservative = when (id) {
             "#conservative" -> true
             else -> false
@@ -116,7 +117,7 @@ class WebExecutorTest {
         return WebRequest.Builder(uri).beConservative(beConservative)
     }
 
-    fun webRequest(uri: String) : WebRequest {
+    fun webRequest(uri: String): WebRequest {
         return webRequestBuilder(uri).build()
     }
 
@@ -127,15 +128,15 @@ class WebExecutorTest {
         val referrer = "http://foo/bar"
 
         val request = webRequestBuilder(uri)
-                .method("POST")
-                .header("Header1", "Clobbered")
-                .header("Header1", "Value")
-                .addHeader("Header2", "Value1")
-                .addHeader("Header2", "Value2")
-                .referrer(referrer)
-                .header("Content-Type", "text/plain")
-                .body(bodyString)
-                .build()
+            .method("POST")
+            .header("Header1", "Clobbered")
+            .header("Header1", "Value")
+            .addHeader("Header2", "Value1")
+            .addHeader("Header2", "Value2")
+            .referrer(referrer)
+            .header("Content-Type", "text/plain")
+            .body(bodyString)
+            .build()
 
         val response = fetch(request)
 
@@ -151,7 +152,7 @@ class WebExecutorTest {
         assertThat("Headers should match", body.getJSONObject("headers").getString("Header2"), equalTo("Value1, Value2"))
         assertThat("Headers should match", body.getJSONObject("headers").getString("Content-Type"), equalTo("text/plain"))
         assertThat("Referrer should match", body.getJSONObject("headers").getString("Referer"), equalTo("http://foo/"))
-        assertThat("Data should match", body.getString("data"), equalTo(bodyString));
+        assertThat("Data should match", body.getString("data"), equalTo(bodyString))
     }
 
     @Test
@@ -171,7 +172,7 @@ class WebExecutorTest {
     fun testRedirect() {
         val response = fetch(webRequest("$TEST_ENDPOINT/redirect-to?url=/status/200"))
 
-        assertThat("URI should match", response.uri, equalTo(TEST_ENDPOINT +"/status/200"))
+        assertThat("URI should match", response.uri, equalTo(TEST_ENDPOINT + "/status/200"))
         assertThat("Redirected should match", response.redirected, equalTo(true))
         assertThat("Status code should match", response.statusCode, equalTo(200))
     }
@@ -224,22 +225,28 @@ class WebExecutorTest {
         assertThat("Status should match", response.statusCode, equalTo(200))
         assertThat("isSecure should match", response.isSecure, equalTo(true))
 
-        val expectedSubject = if (env.isAutomation)
+        val expectedSubject = if (env.isAutomation) {
             "CN=example.com"
-        else
+        } else {
             "CN=www.example.org,OU=Technology,O=Internet Corporation for Assigned Names and Numbers,L=Los Angeles,ST=California,C=US"
+        }
 
-        val expectedIssuer = if (env.isAutomation)
+        val expectedIssuer = if (env.isAutomation) {
             "OU=Profile Guided Optimization,O=Mozilla Testing,CN=Temporary Certificate Authority"
-        else
+        } else {
             "CN=DigiCert SHA2 Secure Server CA,O=DigiCert Inc,C=US"
+        }
 
-        assertThat("Subject should match",
-                response.certificate?.subjectX500Principal?.name,
-                equalTo(expectedSubject))
-        assertThat("Issuer should match",
-                response.certificate?.issuerX500Principal?.name,
-                equalTo(expectedIssuer))
+        assertThat(
+            "Subject should match",
+            response.certificate?.subjectX500Principal?.name,
+            equalTo(expectedSubject)
+        )
+        assertThat(
+            "Issuer should match",
+            response.certificate?.issuerX500Principal?.name,
+            equalTo(expectedIssuer)
+        )
     }
 
     @Test
@@ -252,14 +259,18 @@ class WebExecutorTest {
         assertThat("Status code should match", response.statusCode, equalTo(200))
 
         val body = response.getJSONBody()
-        assertThat("Body should match",
-                body.getJSONObject("cookies").getString("uptimeMillis"),
-                equalTo(uptimeMillis.toString()))
+        assertThat(
+            "Body should match",
+            body.getJSONObject("cookies").getString("uptimeMillis"),
+            equalTo(uptimeMillis.toString())
+        )
 
         val anotherBody = fetch(webRequest("$TEST_ENDPOINT/cookies")).getJSONBody()
-        assertThat("Body should match",
-                anotherBody.getJSONObject("cookies").getString("uptimeMillis"),
-                equalTo(uptimeMillis.toString()))
+        assertThat(
+            "Body should match",
+            anotherBody.getJSONObject("cookies").getString("uptimeMillis"),
+            equalTo(uptimeMillis.toString())
+        )
     }
 
     @Test
@@ -272,9 +283,11 @@ class WebExecutorTest {
         assertThat("Status code should match", response.statusCode, equalTo(200))
 
         val body = response.getJSONBody()
-        assertThat("Cookies should not be set for the test server",
-                body.getJSONObject("cookies").length(),
-                equalTo(0))
+        assertThat(
+            "Cookies should not be set for the test server",
+            body.getJSONObject("cookies").length(),
+            equalTo(0)
+        )
     }
 
     @Test
@@ -282,8 +295,10 @@ class WebExecutorTest {
         // Ensure a cookie is set for the test server
         testCookies()
 
-        val response = fetch(webRequest("$TEST_ENDPOINT/cookies"),
-                GeckoWebExecutor.FETCH_FLAGS_ANONYMOUS)
+        val response = fetch(
+            webRequest("$TEST_ENDPOINT/cookies"),
+            GeckoWebExecutor.FETCH_FLAGS_ANONYMOUS
+        )
 
         assertThat("Status code should match", response.statusCode, equalTo(200))
         val cookies = response.getJSONBody().getJSONObject("cookies")
@@ -294,9 +309,11 @@ class WebExecutorTest {
     fun testPrivateCookies() {
         val clearData = GeckoResult<Void>()
         ThreadUtils.runOnUiThread {
-            clearData.completeFrom(RuntimeCreator.getRuntime()
+            clearData.completeFrom(
+                RuntimeCreator.getRuntime()
                     .storageController
-                    .clearData(StorageController.ClearFlags.ALL))
+                    .clearData(StorageController.ClearFlags.ALL)
+            )
         }
 
         clearData.pollDefault()
@@ -309,19 +326,25 @@ class WebExecutorTest {
         assertThat("Status code should match", response.statusCode, equalTo(200))
 
         val body = response.getJSONBody()
-        assertThat("Cookies should be set for the test server",
-                body.getJSONObject("cookies").getString("uptimeMillis"),
-                equalTo(uptimeMillis.toString()))
+        assertThat(
+            "Cookies should be set for the test server",
+            body.getJSONObject("cookies").getString("uptimeMillis"),
+            equalTo(uptimeMillis.toString())
+        )
 
         val anotherBody = fetch(webRequest("$TEST_ENDPOINT/cookies"), GeckoWebExecutor.FETCH_FLAGS_PRIVATE).getJSONBody()
-        assertThat("Body should match",
-                anotherBody.getJSONObject("cookies").getString("uptimeMillis"),
-                equalTo(uptimeMillis.toString()))
+        assertThat(
+            "Body should match",
+            anotherBody.getJSONObject("cookies").getString("uptimeMillis"),
+            equalTo(uptimeMillis.toString())
+        )
 
         val yetAnotherBody = fetch(webRequest("$TEST_ENDPOINT/cookies")).getJSONBody()
-        assertThat("Cookies set in private session are not supposed to be seen in normal download",
-                yetAnotherBody.getJSONObject("cookies").length(),
-                equalTo(0))
+        assertThat(
+            "Cookies set in private session are not supposed to be seen in normal download",
+            yetAnotherBody.getJSONObject("cookies").length(),
+            equalTo(0)
+        )
     }
 
     @Test
@@ -337,24 +360,42 @@ class WebExecutorTest {
     @Test
     fun testResolveV4() {
         val addresses = executor.resolve("localhost").pollDefault()!!
-        assertThat("Addresses should not be null",
-                addresses, notNullValue())
-        assertThat("First address should be loopback",
-                addresses.first().isLoopbackAddress, equalTo(true))
-        assertThat("First address size should be 4",
-                addresses.first().address.size, equalTo(4))
+        assertThat(
+            "Addresses should not be null",
+            addresses,
+            notNullValue()
+        )
+        assertThat(
+            "First address should be loopback",
+            addresses.first().isLoopbackAddress,
+            equalTo(true)
+        )
+        assertThat(
+            "First address size should be 4",
+            addresses.first().address.size,
+            equalTo(4)
+        )
     }
 
     @Test
     @SdkSuppress(minSdkVersion = Build.VERSION_CODES.LOLLIPOP)
     fun testResolveV6() {
         val addresses = executor.resolve("ip6-localhost").pollDefault()!!
-        assertThat("Addresses should not be null",
-                addresses, notNullValue())
-        assertThat("First address should be loopback",
-                addresses.first().isLoopbackAddress, equalTo(true))
-        assertThat("First address size should be 16",
-                addresses.first().address.size, equalTo(16))
+        assertThat(
+            "Addresses should not be null",
+            addresses,
+            notNullValue()
+        )
+        assertThat(
+            "First address should be loopback",
+            addresses.first().isLoopbackAddress,
+            equalTo(true)
+        )
+        assertThat(
+            "First address size should be 16",
+            addresses.first().address.size,
+            equalTo(16)
+        )
     }
 
     @Test
@@ -383,19 +424,23 @@ class WebExecutorTest {
         assertThat("Byte counts should match", bytes.size, equalTo(expectedCount))
 
         val digest = MessageDigest.getInstance("SHA-256").digest(bytes)
-        assertThat("Hashes should match", response.headers["X-SHA-256"],
-                equalTo(String.format("%064x", BigInteger(1, digest))))
+        assertThat(
+            "Hashes should match",
+            response.headers["X-SHA-256"],
+            equalTo(String.format("%064x", BigInteger(1, digest)))
+        )
     }
 
     @Test(expected = IOException::class)
     fun testFetchStreamError() {
-
         val expectedCount = 1 * 1024 * 1024 // 1MB
-        val response = executor.fetch(webRequest("$TEST_ENDPOINT/bytes/$expectedCount"),
-                GeckoWebExecutor.FETCH_FLAGS_STREAM_FAILURE_TEST).pollDefault()!!
+        val response = executor.fetch(
+            webRequest("$TEST_ENDPOINT/bytes/$expectedCount"),
+            GeckoWebExecutor.FETCH_FLAGS_STREAM_FAILURE_TEST
+        ).pollDefault()!!
 
         assertThat("Status code should match", response.statusCode, equalTo(200))
-        assertThat("Content-Length should match",response.headers["Content-Length"]!!.toInt(), equalTo(expectedCount))
+        assertThat("Content-Length should match", response.headers["Content-Length"]!!.toInt(), equalTo(expectedCount))
 
         val stream = response.body!!
         val bytes = ByteArray(1)
@@ -416,7 +461,7 @@ class WebExecutorTest {
     @Test(expected = IOException::class)
     fun readTimeout() {
         val expectedCount = 10
-        val response = executor.fetch(webRequest("$TEST_ENDPOINT/trickle/${expectedCount}")).pollDefault()!!
+        val response = executor.fetch(webRequest("$TEST_ENDPOINT/trickle/$expectedCount")).pollDefault()!!
 
         assertThat("Status code should match", response.statusCode, equalTo(200))
         assertThat("Content-Length should match", response.headers["Content-Length"]!!.toInt(), equalTo(expectedCount))
@@ -436,15 +481,15 @@ class WebExecutorTest {
         assertThat("Status code should match", response.statusCode, equalTo(200))
         assertThat("Content-Length should match", response.headers["Content-Length"]!!.toInt(), equalTo(expectedCount))
 
-        val stream = response.body!!;
+        val stream = response.body!!
 
         assertThat("Stream should have 0 bytes available", stream.available(), equalTo(0))
 
         // Wait a second. Not perfect, but should be enough time for at least one buffer
         // to be appended if things are not going as they should.
-        SystemClock.sleep(1000);
+        SystemClock.sleep(1000)
 
-        assertThat("Stream should still have 0 bytes available", stream.available(), equalTo(0));
+        assertThat("Stream should still have 0 bytes available", stream.available(), equalTo(0))
 
         stream.close()
     }
@@ -469,9 +514,11 @@ class WebExecutorTest {
                 fetch(webRequest(uri))
                 throw IllegalStateException("fetch() should have thrown")
             } catch (e: IllegalArgumentException) {
-                assertThat("Message should match",
-                        e.message,
-                        equalTo("Unsupported URI scheme: $truncated"))
+                assertThat(
+                    "Message should match",
+                    e.message,
+                    equalTo("Unsupported URI scheme: $truncated")
+                )
             }
         }
 
@@ -486,9 +533,11 @@ class WebExecutorTest {
                 fetch(webRequest(uri))
                 throw IllegalStateException("fetch() should have thrown")
             } catch (e: WebRequestError) {
-                assertThat("Request should pass initial validation.",
-                        true,
-                        equalTo(true))
+                assertThat(
+                    "Request should pass initial validation.",
+                    true,
+                    equalTo(true)
+                )
             }
         }
     }

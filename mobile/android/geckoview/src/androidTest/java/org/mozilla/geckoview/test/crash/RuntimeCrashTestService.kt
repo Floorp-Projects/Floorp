@@ -6,13 +6,14 @@ import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.test.TestCrashHandler
 import org.mozilla.geckoview.test.TestRuntimeService
-import java.io.File
 
 class RuntimeCrashTestService : TestRuntimeService() {
     override fun createRuntime(context: Context, intent: Intent): GeckoRuntime {
-        return GeckoRuntime.create(this.applicationContext,
+        return GeckoRuntime.create(
+            this.applicationContext,
             GeckoRuntimeSettings.Builder()
                 .extras(intent.extras!!)
-                .crashHandler(TestCrashHandler::class.java).build())
+                .crashHandler(TestCrashHandler::class.java).build()
+        )
     }
 }

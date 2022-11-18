@@ -4,59 +4,70 @@
 
 package org.mozilla.geckoview.test
 
-import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
-
-import org.hamcrest.Matchers.*
+import androidx.test.filters.MediumTest
+import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
 import org.junit.Test
 import org.junit.runner.RunWith
-
-import org.mozilla.geckoview.GeckoResult
 import org.mozilla.gecko.util.ImageResource
+import org.mozilla.geckoview.GeckoResult
 
 class TestImage(
-        val path: String,
-        val type: String?,
-        val sizes: String?,
-        val widths: Array<Int>?,
-        val heights: Array<Int>?) {}
+    val path: String,
+    val type: String?,
+    val sizes: String?,
+    val widths: Array<Int>?,
+    val heights: Array<Int>?
+)
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 class ImageResourceTest : BaseSessionTest() {
     companion object {
         val kValidTestImage1 = TestImage(
-            "path.ico", "image/icon", "16x16 32x32 64x64",
+            "path.ico",
+            "image/icon",
+            "16x16 32x32 64x64",
             arrayOf(16, 32, 64),
             arrayOf(16, 32, 64)
         )
 
         val kValidTestImage2 = TestImage(
-            "path.png", "image/png", "128x128",
+            "path.png",
+            "image/png",
+            "128x128",
             arrayOf(128),
             arrayOf(128)
         )
 
         val kValidTestImage3 = TestImage(
-            "path.jpg", "image/jpg", "256x256",
+            "path.jpg",
+            "image/jpg",
+            "256x256",
             arrayOf(256),
             arrayOf(256)
         )
 
         val kValidTestImage4 = TestImage(
-            "path.png", "image/png", "300x128",
+            "path.png",
+            "image/png",
+            "300x128",
             arrayOf(300),
             arrayOf(128)
         )
 
         val kValidTestImage5 = TestImage(
-            "path.svg", "image/svg", "any",
+            "path.svg",
+            "image/svg",
+            "any",
             arrayOf(0),
             arrayOf(0)
         )
 
         val kValidTestImage6 = TestImage(
-            "path.svg", null, null,
+            "path.svg",
+            null,
+            null,
             null,
             null
         )
@@ -64,36 +75,42 @@ class ImageResourceTest : BaseSessionTest() {
 
     fun verifyEqual(image: ImageResource, base: TestImage) {
         assertThat(
-                "Path should match",
-                image.src,
-                equalTo(base.path))
+            "Path should match",
+            image.src,
+            equalTo(base.path)
+        )
         assertThat(
-                "Type should match",
-                image.type,
-                equalTo(base.type))
+            "Type should match",
+            image.type,
+            equalTo(base.type)
+        )
 
         assertThat(
-                "Sizes should match",
-                image.sizes?.size,
-                equalTo(base.widths?.size))
+            "Sizes should match",
+            image.sizes?.size,
+            equalTo(base.widths?.size)
+        )
 
         assertThat(
-                "Sizes should match",
-                image.sizes?.size,
-                equalTo(base.heights?.size))
+            "Sizes should match",
+            image.sizes?.size,
+            equalTo(base.heights?.size)
+        )
 
         if (image.sizes == null) {
-            return;
+            return
         }
         for (i in 0 until image.sizes!!.size) {
             assertThat(
-                    "Sizes widths should match",
-                    image.sizes!![i].width,
-                    equalTo(base.widths!![i]))
+                "Sizes widths should match",
+                image.sizes!![i].width,
+                equalTo(base.widths!![i])
+            )
             assertThat(
-                    "Sizes heights should match",
-                    image.sizes!![i].height,
-                    equalTo(base.heights!![i]))
+                "Sizes heights should match",
+                image.sizes!![i].height,
+                equalTo(base.heights!![i])
+            )
         }
     }
 
@@ -102,7 +119,7 @@ class ImageResourceTest : BaseSessionTest() {
         verifyEqual(image, base)
     }
 
-    fun buildCollection(bases: Array<TestImage>) : ImageResource.Collection {
+    fun buildCollection(bases: Array<TestImage>): ImageResource.Collection {
         val builder = ImageResource.Collection.Builder()
 
         bases.forEach {
@@ -125,28 +142,36 @@ class ImageResourceTest : BaseSessionTest() {
     @Test
     fun invalidImageSize() {
         val invalidImage1 = TestImage(
-            "path.ico", "image/icon", "16x16 32",
+            "path.ico",
+            "image/icon",
+            "16x16 32",
             arrayOf(16),
             arrayOf(16)
         )
         testValidImage(invalidImage1)
 
         val invalidImage2 = TestImage(
-            "path.ico", "image/icon", "16x16 32xa32",
+            "path.ico",
+            "image/icon",
+            "16x16 32xa32",
             arrayOf(16),
             arrayOf(16)
         )
         testValidImage(invalidImage2)
 
         val invalidImage3 = TestImage(
-            "path.ico", "image/icon", "",
+            "path.ico",
+            "image/icon",
+            "",
             null,
             null
         )
         testValidImage(invalidImage3)
 
         val invalidImage4 = TestImage(
-            "path.ico", "image/icon", "abxab",
+            "path.ico",
+            "image/icon",
+            "abxab",
             null,
             null
         )
@@ -155,9 +180,14 @@ class ImageResourceTest : BaseSessionTest() {
 
     @Test
     fun getBestRegular() {
-        val collection = buildCollection(arrayOf(
-            kValidTestImage1, kValidTestImage2, kValidTestImage3,
-            kValidTestImage4))
+        val collection = buildCollection(
+            arrayOf(
+                kValidTestImage1,
+                kValidTestImage2,
+                kValidTestImage3,
+                kValidTestImage4
+            )
+        )
         // 16, 32, 64
         verifyEqual(collection.getBest(10)!!, kValidTestImage1)
         verifyEqual(collection.getBest(16)!!, kValidTestImage1)
@@ -181,9 +211,15 @@ class ImageResourceTest : BaseSessionTest() {
 
     @Test
     fun getBestAny() {
-        val collection = buildCollection(arrayOf(
-            kValidTestImage1, kValidTestImage2, kValidTestImage3,
-            kValidTestImage4, kValidTestImage5))
+        val collection = buildCollection(
+            arrayOf(
+                kValidTestImage1,
+                kValidTestImage2,
+                kValidTestImage3,
+                kValidTestImage4,
+                kValidTestImage5
+            )
+        )
         // any
         verifyEqual(collection.getBest(10)!!, kValidTestImage5)
         verifyEqual(collection.getBest(16)!!, kValidTestImage5)
@@ -203,9 +239,15 @@ class ImageResourceTest : BaseSessionTest() {
     fun getBestNull() {
         // Don't include `any` since two `any` cases would result in undefined
         // results.
-        val collection = buildCollection(arrayOf(
-            kValidTestImage1, kValidTestImage2, kValidTestImage3,
-            kValidTestImage4, kValidTestImage6))
+        val collection = buildCollection(
+            arrayOf(
+                kValidTestImage1,
+                kValidTestImage2,
+                kValidTestImage3,
+                kValidTestImage4,
+                kValidTestImage6
+            )
+        )
         // null, handled as any
         verifyEqual(collection.getBest(10)!!, kValidTestImage6)
         verifyEqual(collection.getBest(16)!!, kValidTestImage6)
@@ -238,22 +280,27 @@ class ImageResourceTest : BaseSessionTest() {
 
         verifyEqual(image!!, testImage)
 
-        sessionRule.waitForResult(image.getBitmap(actualWidth)
-            .then { bitmap ->
-                assertThat(
+        sessionRule.waitForResult(
+            image.getBitmap(actualWidth)
+                .then { bitmap ->
+                    assertThat(
                         "Bitmap should be non-null",
                         bitmap,
-                        notNullValue())
-                assertThat(
+                        notNullValue()
+                    )
+                    assertThat(
                         "Bitmap width should match",
                         bitmap!!.getWidth(),
-                        equalTo(actualWidth))
-                assertThat(
+                        equalTo(actualWidth)
+                    )
+                    assertThat(
                         "Bitmap height should match",
                         bitmap.getHeight(),
-                        equalTo(actualHeight))
+                        equalTo(actualHeight)
+                    )
 
-                GeckoResult.fromValue(null)
-            })
+                    GeckoResult.fromValue(null)
+                }
+        )
     }
 }
