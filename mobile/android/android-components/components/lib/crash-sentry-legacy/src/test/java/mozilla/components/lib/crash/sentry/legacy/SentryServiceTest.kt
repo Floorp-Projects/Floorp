@@ -11,6 +11,8 @@ import io.sentry.context.Context
 import io.sentry.dsn.Dsn
 import io.sentry.event.Event
 import io.sentry.event.EventBuilder
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
@@ -19,10 +21,13 @@ import mozilla.components.support.test.eq
 import mozilla.components.support.test.ext.isLazyInitialized
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
@@ -36,8 +41,13 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import java.util.Date
 
+@ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class SentryServiceTest {
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = coroutinesTestRule.scope
 
     @Test
     fun `SentryService disables exception handler and forwards tags`() {
@@ -351,7 +361,7 @@ class SentryServiceTest {
     }
 
     @Test
-    fun `SentryService records breadcrumb when CrashReporterService report is called`() {
+    fun `SentryService records breadcrumb when CrashReporterService report is called`() = runTestOnMain {
         val client: SentryClient = mock()
         val clientContext: Context = mock()
         val testMessage = "test_Message"
@@ -378,6 +388,7 @@ class SentryServiceTest {
                 context = testContext,
                 services = listOf(service),
                 shouldPrompt = CrashReporter.Prompt.NEVER,
+                scope = scope,
             ).install(testContext),
         )
 
@@ -392,6 +403,7 @@ class SentryServiceTest {
                 testType,
             ),
         )
+        advanceUntilIdle()
         val crashBreadCrumbs = arrayListOf<Breadcrumb>()
         crashBreadCrumbs.addAll(reporter.crashBreadcrumbsCopy())
         val nativeCrash = Crash.NativeCodeCrash(
@@ -408,7 +420,7 @@ class SentryServiceTest {
     }
 
     @Test
-    fun `SentryService records breadcrumb caught exception report is called`() {
+    fun `SentryService records breadcrumb caught exception report is called`() = runTestOnMain {
         val client: SentryClient = mock()
         val clientContext: Context = mock()
         val testMessage = "test_Message"
@@ -435,6 +447,7 @@ class SentryServiceTest {
                 testContext,
                 services = listOf(service),
                 shouldPrompt = CrashReporter.Prompt.NEVER,
+                scope = scope,
             ).install(testContext),
         )
 
@@ -449,6 +462,7 @@ class SentryServiceTest {
                 testType,
             ),
         )
+        advanceUntilIdle()
         val throwable = RuntimeException("Test")
         val crashBreadCrumbs = arrayListOf<Breadcrumb>()
         crashBreadCrumbs.addAll(reporter.crashBreadcrumbsCopy())

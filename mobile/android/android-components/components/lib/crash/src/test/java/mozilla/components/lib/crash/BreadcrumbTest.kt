@@ -5,21 +5,31 @@
 package mozilla.components.lib.crash
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
 import java.lang.Thread.sleep
 import java.util.Date
 
+@ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class BreadcrumbTest {
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = coroutinesTestRule.scope
 
     @Before
     fun setUp() {
@@ -27,7 +37,7 @@ class BreadcrumbTest {
     }
 
     @Test
-    fun `RecordBreadCrumb stores breadCrumb in reporter`() {
+    fun `RecordBreadCrumb stores breadCrumb in reporter`() = runTestOnMain {
         val testMessage = "test_Message"
         val testData = hashMapOf("1" to "one", "2" to "two")
         val testCategory = "testing_category"
@@ -39,6 +49,7 @@ class BreadcrumbTest {
                 context = testContext,
                 services = listOf(mock()),
                 shouldPrompt = CrashReporter.Prompt.NEVER,
+                scope = scope,
             ).install(testContext),
         )
 
@@ -51,6 +62,8 @@ class BreadcrumbTest {
                 testType,
             ),
         )
+
+        advanceUntilIdle()
 
         assertEquals(reporter.crashBreadcrumbs.elementAt(0).message, testMessage)
         assertEquals(reporter.crashBreadcrumbs.elementAt(0).data, testData)
@@ -61,7 +74,7 @@ class BreadcrumbTest {
     }
 
     @Test
-    fun `Reporter stores current number of breadcrumbs`() {
+    fun `Reporter stores current number of breadcrumbs`() = runTestOnMain {
         val testMessage = "test_Message"
         val testData = hashMapOf("1" to "one", "2" to "two")
         val testCategory = "testing_category"
@@ -73,6 +86,7 @@ class BreadcrumbTest {
                 context = testContext,
                 services = listOf(mock()),
                 shouldPrompt = CrashReporter.Prompt.NEVER,
+                scope = scope,
             ).install(testContext),
         )
 
@@ -85,6 +99,7 @@ class BreadcrumbTest {
                 testType,
             ),
         )
+        advanceUntilIdle()
         assertEquals(reporter.crashBreadcrumbs.size, 1)
 
         reporter.recordCrashBreadcrumb(
@@ -96,6 +111,7 @@ class BreadcrumbTest {
                 testType,
             ),
         )
+        advanceUntilIdle()
         assertEquals(reporter.crashBreadcrumbs.size, 2)
 
         reporter.recordCrashBreadcrumb(
@@ -107,11 +123,12 @@ class BreadcrumbTest {
                 testType,
             ),
         )
+        advanceUntilIdle()
         assertEquals(reporter.crashBreadcrumbs.size, 3)
     }
 
     @Test
-    fun `RecordBreadcumb stores correct date`() {
+    fun `RecordBreadcumb stores correct date`() = runTestOnMain {
         val testMessage = "test_Message"
         val testData = hashMapOf("1" to "one", "2" to "two")
         val testCategory = "testing_category"
@@ -123,6 +140,7 @@ class BreadcrumbTest {
                 context = testContext,
                 services = listOf(mock()),
                 shouldPrompt = CrashReporter.Prompt.NEVER,
+                scope = scope,
             ).install(testContext),
         )
 
@@ -137,6 +155,7 @@ class BreadcrumbTest {
                 testType,
             ),
         )
+        advanceUntilIdle()
         sleep(100) /* make sure time elapsed */
         val afterDate = Date()
 
@@ -154,6 +173,7 @@ class BreadcrumbTest {
                 date,
             ),
         )
+        advanceUntilIdle()
         assertEquals(reporter.crashBreadcrumbs.elementAt(1).date.compareTo(date), 0)
     }
 

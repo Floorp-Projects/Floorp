@@ -181,11 +181,13 @@ class CrashReporter(
      * ```
      */
     override fun recordCrashBreadcrumb(breadcrumb: Breadcrumb) {
-        if (crashBreadcrumbs.size >= maxBreadCrumbs) {
-            crashBreadcrumbs.removeAt(0)
-        }
+        scope.launch {
+            if (crashBreadcrumbs.size >= maxBreadCrumbs) {
+                crashBreadcrumbs.removeAt(0)
+            }
 
-        crashBreadcrumbs.add(breadcrumb)
+            crashBreadcrumbs.add(breadcrumb)
+        }
     }
 
     internal fun onCrash(context: Context, crash: Crash) {
