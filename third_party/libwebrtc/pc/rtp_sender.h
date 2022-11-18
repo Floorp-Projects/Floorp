@@ -40,7 +40,6 @@
 #include "pc/legacy_stats_collector_interface.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 
@@ -314,7 +313,6 @@ class AudioRtpSender : public DtmfProviderInterface, public RtpSenderBase {
   // DtmfSenderProvider implementation.
   bool CanInsertDtmf() override;
   bool InsertDtmf(int code, int duration) override;
-  sigslot::signal0<>* GetOnDestroyedSignal() override;
 
   // ObserverInterface implementation.
   void OnChanged() override;
@@ -351,9 +349,9 @@ class AudioRtpSender : public DtmfProviderInterface, public RtpSenderBase {
     return rtc::scoped_refptr<AudioTrackInterface>(
         static_cast<AudioTrackInterface*>(track_.get()));
   }
-  sigslot::signal0<> SignalDestroyed;
 
   LegacyStatsCollectorInterface* legacy_stats_ = nullptr;
+  rtc::scoped_refptr<DtmfSender> dtmf_sender_;
   rtc::scoped_refptr<DtmfSenderInterface> dtmf_sender_proxy_;
   bool cached_track_enabled_ = false;
 
