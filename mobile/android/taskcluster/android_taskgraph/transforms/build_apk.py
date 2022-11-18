@@ -10,7 +10,7 @@ kind.
 import datetime
 
 from taskgraph.transforms.base import TransformSequence
-from focus_android_taskgraph.gradle import get_variant
+from android_taskgraph.gradle import get_variant
 
 
 transforms = TransformSequence()
@@ -53,6 +53,16 @@ def add_shippable_secrets(config, tasks):
                 ("faketoken", ".mls_token"),
                 ("https://fake@sentry.prod.mozaws.net/368", ".sentry_token"),
             )])
+
+        yield task
+
+
+@transforms.add
+def build_pre_gradle_command(config, tasks):
+    for task in tasks:
+        source_project_name = task["source-project-name"]
+        pre_gradlew = task["run"].setdefault("pre-gradlew", [])
+        pre_gradlew.append(["cd", source_project_name])
 
         yield task
 
@@ -129,6 +139,8 @@ def add_artifacts(config, tasks):
         gradle_build = task["run"].pop("gradle-build")
         variant_config = get_variant(gradle_build_type, gradle_build_name)
         artifacts = task.setdefault("worker", {}).setdefault("artifacts", [])
+        source_project_name = task.pop("source-project-name")
+
         task["attributes"]["apks"] = apks = {}
 
         if "apk-artifact-template" in task:
@@ -145,6 +157,7 @@ def add_artifacts(config, tasks):
                     "path": artifact_template["path"].format(
                         gradle_build_type=gradle_build_type,
                         gradle_build=gradle_build,
+                        source_project_name=source_project_name,
                         **apk
                     ),
                 })

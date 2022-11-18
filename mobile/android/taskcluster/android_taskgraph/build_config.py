@@ -8,15 +8,14 @@ import yaml
 
 from taskgraph.util.memoize import memoize
 
+from android_taskgraph import PROJECT_DIR, ANDROID_COMPONENTS_DIR
+
 
 EXTENSIONS = {
     'aar': ('.aar', '.pom', '-sources.jar'),
     'jar': ('.jar', '.pom', '-sources.jar')
 }
 CHECKSUMS_EXTENSIONS = ('.sha1', '.md5')
-CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-PROJECT_DIR = os.path.realpath(os.path.join(CURRENT_DIR, '..', '..'))
-ANDROID_COMPONENTS_DIR = os.path.join(PROJECT_DIR, "android-components")
 
 
 def get_components():

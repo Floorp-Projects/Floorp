@@ -12,7 +12,7 @@
 
 ### To download an APK when reviewing a PR:
 1. click on `Show All Checks`,
-2. click `Details` next to `build-focus-debug` or `build-klar-debug` for changes targeting Klar,
+2. click `Details` next to `build-apk-focus-debug` or `build-apk-klar-debug` for changes targeting Klar,
 2. click `View task in Taskcluster`,
 3. click the `Artifacts` row,
 4. click to download any of the apks listed here which use an appropriate name for each CPU architecture.

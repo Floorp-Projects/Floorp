@@ -10,7 +10,7 @@ transforms:
 
 kind-dependencies:
     - toolchain
-    - build
+    - build-focus
 
 task-defaults:
     attributes:

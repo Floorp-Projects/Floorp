@@ -6,11 +6,13 @@
 import os
 from importlib import import_module
 
-from mozilla_version.maven import MavenVersion
 from taskgraph.parameters import extend_parameters_schema
 from voluptuous import All, Any, Range, Required
 
-from .build_config import get_components, get_version
+CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
+PROJECT_DIR = os.path.realpath(os.path.join(CURRENT_DIR, '..', '..'))
+ANDROID_COMPONENTS_DIR = os.path.join(PROJECT_DIR, "android-components")
+FOCUS_DIR = os.path.join(PROJECT_DIR, "focus-android")
 
 
 extend_parameters_schema({

@@ -10,7 +10,7 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - build
+    - build-focus
 
 primary-dependency: build
 
@@ -28,7 +28,7 @@ job-template:
                         type: signing
                     default: {}
             default: {}
-    run-on-tasks-for: 
+    run-on-tasks-for:
         by-build-type:
             (focus-debug|android-test-debug|nightly-firebase|android-test-nightly|beta-firebase|android-test-beta): [github-push]
             default: []
