@@ -11,7 +11,7 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - build
+    - build-components
     - post-signing
     - signing
 

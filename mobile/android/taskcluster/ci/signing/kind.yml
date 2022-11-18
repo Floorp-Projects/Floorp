@@ -11,9 +11,9 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - build
+    - build-components
 
-primary-dependency: build
+primary-dependency: build-components
 
 group-by: component
 
