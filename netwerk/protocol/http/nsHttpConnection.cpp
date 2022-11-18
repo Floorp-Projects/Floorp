@@ -1538,11 +1538,10 @@ nsresult nsHttpConnection::OnSocketWritable() {
     rv = mSocketOutCondition = NS_OK;
     transactionBytes = 0;
 
-    bool npnComplete = mTlsHandshaker->EnsureNPNComplete();
-
     switch (mState) {
       case HttpConnectionState::SETTING_UP_TUNNEL:
-        if (mConnInfo->UsingHttpsProxy() && !npnComplete) {
+        if (mConnInfo->UsingHttpsProxy() &&
+            !mTlsHandshaker->EnsureNPNComplete()) {
           MOZ_DIAGNOSTIC_ASSERT(!mTlsHandshaker->EarlyDataAvailable());
           mSocketOutCondition = NS_BASE_STREAM_WOULD_BLOCK;
         } else {
@@ -1554,8 +1553,9 @@ nsresult nsHttpConnection::OnSocketWritable() {
         // transaction->readsegments() processing can proceed because we need to
         // know how to format the request differently for http/1, http/2, spdy,
         // etc.. and that is negotiated with NPN/ALPN in the SSL handshake.
-        if (!npnComplete && (!mTlsHandshaker->EarlyDataUsed() ||
-                             mTlsHandshaker->TlsHandshakeComplitionPending())) {
+        if (!mTlsHandshaker->EnsureNPNComplete() &&
+            (!mTlsHandshaker->EarlyDataUsed() ||
+             mTlsHandshaker->TlsHandshakeComplitionPending())) {
           // The handshake is not done and we cannot write 0RTT data or nss has
           // already finished 0RTT data.
           mSocketOutCondition = NS_BASE_STREAM_WOULD_BLOCK;
@@ -2397,6 +2397,7 @@ void nsHttpConnection::HandshakeDoneInternal() {
   Telemetry::Accumulate(Telemetry::SPDY_NPN_CONNECT, UsingSpdy());
 
   mTlsHandshaker->FinishNPNSetup(true, true);
+  Unused << ResumeSend();
 }
 
 void nsHttpConnection::SetTunnelSetupDone() {
