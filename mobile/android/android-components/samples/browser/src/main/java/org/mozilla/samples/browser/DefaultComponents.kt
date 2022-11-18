@@ -414,7 +414,9 @@ open class DefaultComponents(private val applicationContext: Context) {
     }
 
     val shippedDomainsProvider by lazy {
-        ShippedDomainsProvider().also { it.initialize(applicationContext) }
+        // Assume this is used together with other autocomplete providers (like history) which have priority 0
+        // and set priority 1 for the domains provider to ensure other providers' results are shown first.
+        ShippedDomainsProvider(1).also { it.initialize(applicationContext) }
     }
 
     val tabsUseCases: TabsUseCases by lazy { TabsUseCases(store) }

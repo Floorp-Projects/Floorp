@@ -88,8 +88,10 @@ class ToolbarActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
 
         ToolbarAutocompleteFeature(binding.toolbar).apply {
-            this.addDomainProvider(shippedDomainsProvider)
-            this.addDomainProvider(customDomainsProvider)
+            updateAutocompleteProviders(
+                providers = listOf(shippedDomainsProvider, customDomainsProvider),
+                refreshAutocomplete = false,
+            )
         }
     }
 

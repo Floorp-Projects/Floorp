@@ -46,8 +46,10 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         super.onCreateView(inflater, container, savedInstanceState)
         val binding = super.binding
         ToolbarAutocompleteFeature(binding.toolbar, components.engine).apply {
-            addHistoryStorageProvider(components.historyStorage)
-            addDomainProvider(components.shippedDomainsProvider)
+            updateAutocompleteProviders(
+                providers = listOf(components.historyStorage, components.shippedDomainsProvider),
+                refreshAutocomplete = false,
+            )
         }
 
         TabsToolbarFeature(
