@@ -497,8 +497,8 @@ TEST_P(RtpRtcpImpl2Test, RttForReceiverOnly) {
 
 TEST_P(RtpRtcpImpl2Test, NoSrBeforeMedia) {
   // Ignore fake transport delays in this test.
-  sender_.transport_.SimulateNetworkDelay(TimeDelta::Millis(0));
-  receiver_.transport_.SimulateNetworkDelay(TimeDelta::Millis(0));
+  sender_.transport_.SimulateNetworkDelay(TimeDelta::Zero());
+  receiver_.transport_.SimulateNetworkDelay(TimeDelta::Zero());
 
   // Move ahead to the instant a rtcp is expected.
   // Verify no SR is sent before media has been sent, RR should still be sent
@@ -607,7 +607,7 @@ TEST_P(RtpRtcpImpl2Test, SendsExtendedNackList) {
 }
 
 TEST_P(RtpRtcpImpl2Test, ReSendsNackListAfterRttMs) {
-  sender_.transport_.SimulateNetworkDelay(TimeDelta::Millis(0));
+  sender_.transport_.SimulateNetworkDelay(TimeDelta::Zero());
   // Send module sends a NACK.
   const uint16_t kNackLength = 2;
   uint16_t nack_list[kNackLength] = {123, 125};
@@ -632,7 +632,7 @@ TEST_P(RtpRtcpImpl2Test, ReSendsNackListAfterRttMs) {
 }
 
 TEST_P(RtpRtcpImpl2Test, UniqueNackRequests) {
-  receiver_.transport_.SimulateNetworkDelay(TimeDelta::Millis(0));
+  receiver_.transport_.SimulateNetworkDelay(TimeDelta::Zero());
   EXPECT_EQ(0U, receiver_.RtcpSent().nack_packets);
   EXPECT_EQ(0U, receiver_.RtcpSent().nack_requests);
   EXPECT_EQ(0U, receiver_.RtcpSent().unique_nack_requests);

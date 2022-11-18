@@ -57,7 +57,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
 
   void OnDecodedFrame(const VideoFrame& frame,
                       absl::optional<uint8_t> qp,
-                      webrtc::TimeDelta decode_time,
+                      TimeDelta decode_time,
                       VideoContentType content_type);
 
   // Called asyncronously on the worker thread as a result of a call to the
@@ -65,9 +65,9 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
   // the actual decoding happens.
   void OnDecodedFrame(const VideoFrameMetaData& frame_meta,
                       absl::optional<uint8_t> qp,
-                      webrtc::TimeDelta decode_time,
-                      webrtc::TimeDelta processing_delay,
-                      webrtc::TimeDelta assembly_time,
+                      TimeDelta decode_time,
+                      TimeDelta processing_delay,
+                      TimeDelta assembly_time,
                       VideoContentType content_type);
 
   void OnSyncOffsetUpdated(int64_t video_playout_ntp_ms,

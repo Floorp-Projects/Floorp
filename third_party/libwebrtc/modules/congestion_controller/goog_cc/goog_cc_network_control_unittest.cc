@@ -236,7 +236,7 @@ class NetworkControllerTestFixture {
       int min_data_rate_kbps = 0,
       int max_data_rate_kbps = 5 * kInitialBitrateKbps) {
     NetworkControllerConfig config;
-    config.constraints.at_time = Timestamp::Millis(0);
+    config.constraints.at_time = Timestamp::Zero();
     config.constraints.min_data_rate =
         DataRate::KilobitsPerSec(min_data_rate_kbps);
     config.constraints.max_data_rate =

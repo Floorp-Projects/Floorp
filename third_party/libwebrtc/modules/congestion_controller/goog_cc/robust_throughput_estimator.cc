@@ -90,8 +90,8 @@ absl::optional<DataRate> RobustThroughputEstimator::bitrate() const {
   if (window_.empty() || window_.size() < settings_.required_packets)
     return absl::nullopt;
 
-  TimeDelta largest_recv_gap(TimeDelta::Millis(0));
-  TimeDelta second_largest_recv_gap(TimeDelta::Millis(0));
+  TimeDelta largest_recv_gap(TimeDelta::Zero());
+  TimeDelta second_largest_recv_gap(TimeDelta::Zero());
   for (size_t i = 1; i < window_.size(); i++) {
     // Find receive time gaps.
     TimeDelta gap = window_[i].receive_time - window_[i - 1].receive_time;
