@@ -35,43 +35,29 @@ class ColorwaysCard extends HTMLElement {
   }
 
   connectedCallback() {
-    this.container = this.querySelector("#colorways");
-    this.activeCollectionTemplate = this.querySelector(
-      "#colorways-active-collection-template"
-    );
-    this.noCollectionTemplate = this.querySelector(
-      "#colorways-no-collection-template"
-    );
     const colorwaysCollection =
       NimbusFeatures.majorRelease2022.getVariable("colorwayCloset") &&
       BuiltInThemes.findActiveColorwayCollection();
-    this.container.classList.toggle("no-collection", !colorwaysCollection);
-    this.container.classList.toggle("content-container", colorwaysCollection);
-    const template = colorwaysCollection ? this.activeCollectionTemplate : null;
-    if (this.container.firstChild) {
-      this.container.firstChild.remove();
-    }
-    if (template) {
-      this.container.append(document.importNode(template.content, true));
+    if (!colorwaysCollection) {
+      this.hidden = true;
+      return;
     }
     this.button = this.querySelector("#colorways-button");
     this.collection_title = this.querySelector("#colorways-collection-title");
     this.description = this.querySelector("#colorways-collection-description");
     this.expiry = this.querySelector("#colorways-collection-expiry-date");
     this.figure = this.querySelector("#colorways-collection-figure");
-    if (colorwaysCollection) {
-      this.button.addEventListener("click", () => {
-        const { ColorwayClosetOpener } = ChromeUtils.import(
-          "resource:///modules/ColorwayClosetOpener.jsm"
-        );
-        ColorwayClosetOpener.openModal({
-          source: "firefoxview",
-        });
+    this.button.addEventListener("click", () => {
+      const { ColorwayClosetOpener } = ChromeUtils.import(
+        "resource:///modules/ColorwayClosetOpener.jsm"
+      );
+      ColorwayClosetOpener.openModal({
+        source: "firefoxview",
       });
-      this._initPromise.then(() => this._render());
-      AddonManager.addAddonListener(this);
-      window.addEventListener("unload", () => this.cleanup());
-    }
+    });
+    this._initPromise.then(() => this._render());
+    AddonManager.addAddonListener(this);
+    window.addEventListener("unload", () => this.cleanup());
   }
 
   cleanup() {
@@ -186,6 +172,7 @@ class ColorwaysCard extends HTMLElement {
       );
     }
     this.figure.src = figureUrl || "";
+    this.hidden = false;
   }
 }
 

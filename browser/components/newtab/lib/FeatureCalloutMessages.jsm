@@ -437,7 +437,7 @@ const MESSAGES = () => {
           EMPTY_SCREEN,
           {
             id: "FEATURE_CALLOUT_3",
-            parent_selector: "#colorways.content-container",
+            parent_selector: "#colorways",
             content: {
               position: "callout",
               arrow_position: "end",

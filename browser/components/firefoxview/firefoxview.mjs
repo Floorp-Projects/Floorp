@@ -7,7 +7,7 @@ const MediaQueryDOMSorting = {
     this.recentlyClosedTabs = document.getElementById(
       "recently-closed-tabs-container"
     );
-    this.colorwayLandmark = document.getElementById("colorway-landmark");
+    this.colorways = document.getElementById("colorways");
     this.mql = window.matchMedia("(max-width: 65rem)");
     this.mql.addEventListener("change", () => this.changeHandler());
     this.changeHandler();
@@ -18,9 +18,9 @@ const MediaQueryDOMSorting = {
   changeHandler() {
     const oldFocus = document.activeElement;
     if (this.mql.matches) {
-      this.recentlyClosedTabs.before(this.colorwayLandmark);
+      this.recentlyClosedTabs.before(this.colorways);
     } else {
-      this.colorwayLandmark.before(this.recentlyClosedTabs);
+      this.colorways.before(this.recentlyClosedTabs);
     }
     if (oldFocus) {
       Services.focus.setFocus(oldFocus, Ci.nsIFocusManager.FLAG_NOSCROLL);
