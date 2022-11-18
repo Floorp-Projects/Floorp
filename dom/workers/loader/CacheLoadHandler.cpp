@@ -280,11 +280,6 @@ void CacheLoadHandler::Fail(nsresult aRv) {
 
   loadContext->mCachePromise = nullptr;
 
-  loadContext->ClearCacheCreator();
-  if (mLoader->IsCancelled() || !loadContext->mRequest) {
-    return;
-  }
-
   mLoader->LoadingFinished(mRequestHandle, aRv);
 }
 
@@ -293,11 +288,6 @@ void CacheLoadHandler::Load(Cache* aCache) {
   MOZ_ASSERT(aCache);
   MOZ_ASSERT(!mRequestHandle->IsEmpty());
   WorkerLoadContext* loadContext = mRequestHandle->GetContext();
-
-  if (mLoader->IsCancelled()) {
-    Fail(NS_BINDING_ABORTED);
-    return;
-  }
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), loadContext->mRequest->mURL,
@@ -358,10 +348,6 @@ void CacheLoadHandler::ResolvedCallback(JSContext* aCx,
   // If we have already called 'Fail', we should not proceed. If we cancelled,
   // we should similarily not proceed.
   if (mFailed) {
-    return;
-  }
-  if (mLoader->IsCancelled()) {
-    Fail(NS_BINDING_ABORTED);
     return;
   }
 
@@ -512,11 +498,6 @@ CacheLoadHandler::OnStreamComplete(nsIStreamLoader* aLoader,
                    WorkerLoadContext::ReadingFromCache ||
                loadContext->mCacheStatus == WorkerLoadContext::Cancel);
     Fail(aStatus);
-    return NS_OK;
-  }
-
-  if (mLoader->IsCancelled() || !loadContext->mRequest) {
-    Fail(NS_BINDING_ABORTED);
     return NS_OK;
   }
 
