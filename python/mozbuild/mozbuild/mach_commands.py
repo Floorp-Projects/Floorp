@@ -2106,7 +2106,7 @@ def repackage(command_context):
     scriptworkers in order to bundle things up into shippable formats, such as a
     .dmg on OSX or an installer exe on Windows.
     """
-    print("Usage: ./mach repackage [dmg|installer|mar] [args...]")
+    print("Usage: ./mach repackage [dmg|pkg|installer|mar] [args...]")
 
 
 @SubCommand("repackage", "dmg", description="Repackage a tar file into a .dmg for OSX")
@@ -2127,6 +2127,19 @@ def repackage_dmg(command_context, input, output):
     from mozbuild.repackaging.dmg import repackage_dmg
 
     repackage_dmg(input, output)
+
+
+@SubCommand("repackage", "pkg", description="Repackage a tar file into a .pkg for OSX")
+@CommandArgument("--input", "-i", type=str, required=True, help="Input filename")
+@CommandArgument("--output", "-o", type=str, required=True, help="Output filename")
+def repackage_pkg(command_context, input, output):
+    if not os.path.exists(input):
+        print("Input file does not exist: %s" % input)
+        return 1
+
+    from mozbuild.repackaging.pkg import repackage_pkg
+
+    repackage_pkg(input, output)
 
 
 @SubCommand(
