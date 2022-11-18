@@ -104,7 +104,7 @@ add_task(
         const { document } = browser.contentWindow;
         await waitForCalloutScreen(document, 3);
         let parentLeft = document
-          .querySelector("#colorways.content-container")
+          .querySelector("#colorways")
           .getBoundingClientRect().left;
         let containerLeft = document
           .querySelector(calloutSelector)

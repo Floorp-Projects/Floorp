@@ -145,19 +145,16 @@
         </div>
       </details>
 
-      <aside id="colorway-landmark" class="content-container" is="colorways-card">
-        <template id="colorways-active-collection-template">
-          <figure role="presentation">
-            <img id="colorways-collection-figure" role="presentation">
-          </figure>
-          <header>
-            <h1 id="colorways-collection-title"></h1>
-            <div id="colorways-collection-expiry-date"><span></span></div>
-          </header>
-          <div id="colorways-collection-description"></div>
-          <button class="primary" id="colorways-button" data-l10n-id="firefoxview-try-colorways-button"></button>
-        </template>
-        <section id="colorways"></section>
+      <aside id="colorways" is="colorways-card" hidden>
+        <figure role="presentation">
+          <img id="colorways-collection-figure" role="presentation">
+        </figure>
+        <header>
+          <h1 id="colorways-collection-title"></h1>
+          <div id="colorways-collection-expiry-date"><span></span></div>
+        </header>
+        <div id="colorways-collection-description"></div>
+        <button class="primary" id="colorways-button" data-l10n-id="firefoxview-try-colorways-button"></button>
       </aside>
 
       <details class="content-container" is="recently-closed-tabs-container" id="recently-closed-tabs-container" open>

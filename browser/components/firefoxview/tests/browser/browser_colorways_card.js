@@ -118,8 +118,8 @@ add_task(async function no_collection_test() {
   try {
     await withFirefoxView({}, async browser => {
       const { document } = browser.contentWindow;
-      const { description } = getTestElements(document);
-      is(description, null, "Colorway description should be hidden");
+      const { container } = getTestElements(document);
+      ok(!BrowserTestUtils.is_visible(container), "Colorways card is hidden");
     });
   } finally {
     gCollectionEnabled = true;
@@ -133,11 +133,10 @@ add_task(async function colorway_closet_disabled() {
   try {
     await withFirefoxView({}, async browser => {
       const { document } = browser.contentWindow;
-      const { description } = getTestElements(document);
-      is(
-        description,
-        null,
-        "Colorway description should be hidden when Colorway Closet is disabled"
+      const { container } = getTestElements(document);
+      ok(
+        !BrowserTestUtils.is_visible(container),
+        "Colorways card is hidden when Colorway Closet is disabled"
       );
     });
   } finally {
