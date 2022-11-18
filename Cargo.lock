@@ -1694,11 +1694,8 @@ version = "0.1.0"
 dependencies = [
  "cstr",
  "fluent",
- "fluent-fallback",
  "fluent-pseudo",
- "futures 0.3.23",
  "intl-memoizer",
- "l10nregistry",
  "nsstring",
  "thin-vec",
  "unic-langid",
@@ -1719,12 +1716,10 @@ name = "fluent-langneg-ffi"
 version = "0.1.0"
 dependencies = [
  "fluent-langneg",
- "nserror",
  "nsstring",
  "thin-vec",
  "unic-langid",
  "unic-langid-ffi",
- "xpcom",
 ]
 
 [[package]]
@@ -3424,12 +3419,10 @@ version = "0.1.0"
 dependencies = [
  "async-task",
  "cstr",
- "futures-task",
  "libc",
  "log",
  "nserror",
  "nsstring",
- "thiserror",
  "xpcom",
 ]
 
@@ -5594,11 +5587,9 @@ dependencies = [
 name = "unic-langid-ffi"
 version = "0.1.0"
 dependencies = [
- "nserror",
  "nsstring",
  "thin-vec",
  "unic-langid",
- "xpcom",
 ]
 
 [[package]]

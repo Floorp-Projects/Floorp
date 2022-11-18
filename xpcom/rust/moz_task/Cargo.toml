@@ -11,8 +11,6 @@ log = "0.4"
 cstr = "0.2"
 libc = "0.2"
 async-task = { version = "4.0" }
-futures-task = { version = "0.3" }
 nserror = { path = "../nserror" }
 nsstring = { path = "../nsstring" }
-thiserror = "1.0"
 xpcom = { path = "../xpcom" }
