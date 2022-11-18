@@ -1,0 +1,48 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+const TEST_URL = URL_ROOT + "doc_network-observer.html";
+const REQUEST_URL =
+  URL_ROOT + `sjs_network-observer-test-server.sjs?sts=200&fmt=html`;
+
+// Check that the NetworkObserver can detect basic requests and calls the
+// onNetworkEvent callback when expected.
+add_task(async function testSingleRequest() {
+  await addTab(TEST_URL);
+
+  const onNetworkEvents = waitForNetworkEvents(REQUEST_URL, 1);
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [REQUEST_URL], _url => {
+    content.wrappedJSObject.sendRequest(_url);
+  });
+
+  const eventsCount = await onNetworkEvents;
+  is(eventsCount, 1, "Received the expected number of network events");
+});
+
+add_task(async function testMultipleRequests() {
+  await addTab(TEST_URL);
+  const EXPECTED_REQUESTS_COUNT = 5;
+
+  const onNetworkEvents = waitForNetworkEvents(
+    REQUEST_URL,
+    EXPECTED_REQUESTS_COUNT
+  );
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [REQUEST_URL, EXPECTED_REQUESTS_COUNT],
+    (_url, _count) => {
+      for (let i = 0; i < _count; i++) {
+        content.wrappedJSObject.sendRequest(_url);
+      }
+    }
+  );
+
+  const eventsCount = await onNetworkEvents;
+  is(
+    eventsCount,
+    EXPECTED_REQUESTS_COUNT,
+    "Received the expected number of network events"
+  );
+});
