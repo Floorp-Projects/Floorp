@@ -322,7 +322,8 @@
   outline: var(--focus-outline);
 }
 
-.urlbarView-button:hover {
+.urlbarView-button:hover,
+.urlbarView-button[open] {
   background-color: var(--autocomplete-popup-hover-background);
 }
 
@@ -336,6 +337,10 @@
 
 .urlbarView-button-help {
   background-image: url("chrome://global/skin/icons/help.svg");
+}
+
+.urlbarView-button-menu {
+  background-image: url("chrome://global/skin/icons/more.svg");
 }
 
 /* Tip rows */

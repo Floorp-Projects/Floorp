@@ -84,6 +84,9 @@ export class UrlbarInput {
                         role="listbox"/>
             </html:div>
           </html:div>
+          <menupopup class="urlbarView-result-menu">
+            <menuitem label="test" data-command="test"/>
+          </menupopup>
           <hbox class="search-one-offs"
                 includecurrentengine="true"
                 disabletab="true"/>
@@ -799,6 +802,7 @@ export class UrlbarInput {
    * @param {DOMElement} element the picked view element, if available.
    * @param {object} browser The browser to use for the load.
    */
+  // eslint-disable-next-line complexity
   pickResult(
     result,
     event,
@@ -818,6 +822,11 @@ export class UrlbarInput {
     ) {
       this.confirmSearchMode();
       this.search(this.value);
+      return;
+    }
+
+    if (element?.classList.contains("urlbarView-button-menu")) {
+      this.view.openResultMenu(result, element);
       return;
     }
 
