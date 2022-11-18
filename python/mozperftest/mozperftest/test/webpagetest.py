@@ -253,7 +253,10 @@ class WebPageTest(Layer):
         requested_results = requests.get(url)
         results_of_request = json.loads(requested_results.text)
         start = time.time()
-        if results_of_request["statusText"] == WPT_API_EXPIRED_MESSAGE:
+        if (
+            "statusText" in results_of_request.keys()
+            and results_of_request["statusText"] == WPT_API_EXPIRED_MESSAGE
+        ):
             raise WPTExpiredAPIKeyError("The API key has expired")
         while (
             requested_results.status_code == 200
