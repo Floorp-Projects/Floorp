@@ -64,6 +64,7 @@ export class UrlbarView {
 
     this.#mainContainer = this.panel.querySelector(".urlbarView-body-inner");
     this.#rows = this.panel.querySelector(".urlbarView-results");
+    this.#resultMenu = this.panel.querySelector(".urlbarView-result-menu");
 
     this.#rows.addEventListener("mousedown", this);
 
@@ -71,6 +72,8 @@ export class UrlbarView {
     // rows when they overflow.
     this.#rows.addEventListener("overflow", this);
     this.#rows.addEventListener("underflow", this);
+
+    this.#resultMenu.addEventListener("command", this);
 
     // `noresults` is used to style the one-offs without their usual top border
     // when no results are present.
@@ -743,6 +746,20 @@ export class UrlbarView {
     }
   }
 
+  openResultMenu(result, anchor) {
+    this.#resultMenuResult = result;
+    this.#resultMenu.openPopup(anchor, "bottomright topright");
+    anchor.toggleAttribute("open", true);
+    this.#resultMenu.addEventListener(
+      "popuphidden",
+      () => {
+        anchor.toggleAttribute("open", false);
+        this.#resultMenuResult = null;
+      },
+      { once: true }
+    );
+  }
+
   /**
    * Passes DOM events for the view to the on_<event type> methods.
    *
@@ -862,6 +879,8 @@ export class UrlbarView {
   #queryUpdatedResults;
   #queryWasCancelled;
   #removeStaleRowsTimer;
+  #resultMenu;
+  #resultMenuResult;
   #rows;
   #selectedElement;
 
@@ -1153,6 +1172,9 @@ export class UrlbarView {
     }
     if (result.payload.helpUrl) {
       this.#addRowButton(item, "help", result.payload.helpL10nId);
+    }
+    if (lazy.UrlbarPrefs.get("resultMenu")) {
+      this.#addRowButton(item, "menu", "urlbar-result-menu-button");
     }
   }
 
@@ -2709,6 +2731,18 @@ export class UrlbarView {
 
   on_resize() {
     this.#enableOrDisableRowWrap();
+  }
+
+  on_command(event) {
+    if (event.currentTarget == this.#resultMenu) {
+      let result = this.#resultMenuResult;
+      let menuitem = event.target;
+      switch (menuitem.dataset.command) {
+        case "test":
+          console.log(result);
+          break;
+      }
+    }
   }
 }
 

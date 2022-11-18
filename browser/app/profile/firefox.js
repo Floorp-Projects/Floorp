@@ -498,6 +498,9 @@ pref("browser.urlbar.switchTabs.adoptIntoActiveWindow", false);
 // should be opened in new tabs by default.
 pref("browser.urlbar.openintab", false);
 
+// Enable three-dot options button and menu for eligible results.
+pref("browser.urlbar.resultMenu", false);
+
 // If true, we show tail suggestions when available.
 pref("browser.urlbar.richSuggestions.tail", true);
 

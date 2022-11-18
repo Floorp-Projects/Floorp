@@ -112,6 +112,9 @@ urlbar-search-tips-confirm-short = Got it
 urlbar-tip-icon-description =
     .alt = Tip:
 
+urlbar-result-menu-button =
+    .title = Open menu
+
 ## Prompts users to use the Urlbar when they open a new tab or visit the
 ## homepage of their default search engine.
 ## Variables:
