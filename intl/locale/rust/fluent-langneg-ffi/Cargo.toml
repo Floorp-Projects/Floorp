@@ -6,9 +6,7 @@ authors = ["Zibi Braniecki <zibi@braniecki.net>"]
 edition = "2018"
 
 [dependencies]
-nserror = { path = "../../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
-xpcom = { path = "../../../../xpcom/rust/xpcom" }
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 fluent-langneg = { version = "0.13", features = ["cldr"] }
 unic-langid = "0.9"
