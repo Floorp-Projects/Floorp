@@ -198,8 +198,6 @@ rtc_library("video_coding") {
     "rtp_vp8_ref_finder.h",
     "rtp_vp9_ref_finder.cc",
     "rtp_vp9_ref_finder.h",
-    "timestamp_map.cc",
-    "timestamp_map.h",
     "video_codec_initializer.cc",
     "video_receiver2.cc",
     "video_receiver2.h",
@@ -277,6 +275,7 @@ rtc_library("video_coding") {
     "timing:timing_module",
   ]
   absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/base:core_headers",
     "//third_party/abseil-cpp/absl/container:inlined_vector",
     "//third_party/abseil-cpp/absl/types:optional",
@@ -1129,7 +1128,6 @@ if (rtc_include_tests) {
       "session_info_unittest.cc",
       "test/stream_generator.cc",
       "test/stream_generator.h",
-      "timestamp_map_unittest.cc",
       "utility/bandwidth_quality_scaler_unittest.cc",
       "utility/decoded_frames_history_unittest.cc",
       "utility/frame_dropper_unittest.cc",
@@ -1178,6 +1176,7 @@ if (rtc_include_tests) {
       "../../api:mock_fec_controller_override",
       "../../api:mock_video_decoder",
       "../../api:mock_video_encoder",
+      "../../api:rtp_packet_info",
       "../../api:scoped_refptr",
       "../../api:simulcast_test_fixture_api",
       "../../api:videocodec_test_fixture_api",
