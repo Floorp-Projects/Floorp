@@ -167,10 +167,6 @@ description[value]::before {
   display: block;
 }
 
-label[value=""]::before {
-  content: "\200B"; /* zwsp */
-}
-
 label[value][crop]::before,
 description[value][crop]::before {
   min-width: 0;
