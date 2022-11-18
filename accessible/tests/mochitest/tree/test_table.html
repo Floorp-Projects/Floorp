@@ -293,6 +293,19 @@
         ] };
         testAccessibleTree("table_with_focusable_block_tbody", accTree);
 
+      // ///////////////////////////////////////////////////////////////////////
+      // A table with a display:absolute th
+      // The th should get a generic cell accessible.
+      accTree =
+        { TABLE: [
+          { ROW: [
+            { CELL: [
+              { TEXT_LEAF: [ ] },
+            ] },
+          ] },
+        ] };
+      testAccessibleTree("table_containing_absolute_pos_th", accTree);
+
       SimpleTest.finish();
     }
 
@@ -453,6 +466,12 @@
         <td>text</td>
       </tr>
     </tbody>
+  </table>
+
+  <table id="table_containing_absolute_pos_th">
+    <tr>
+      <th style="position: absolute">text</th>
+    </tr>
   </table>
 </body>
 </html>
