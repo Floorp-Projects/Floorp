@@ -27,7 +27,6 @@
 #include "api/video/video_content_type.h"
 #include "api/video/video_timing.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/event.h"
 #include "test/fake_encoded_frame.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -103,11 +102,6 @@ class VCMReceiveStatisticsCallbackMock : public VCMReceiveStatisticsCallback {
               (const TimingFrameInfo& info),
               (override));
 };
-
-bool IsFrameBuffer2Enabled(const FieldTrialsView& field_trials) {
-  return field_trials.Lookup("WebRTC-FrameBuffer3").find("arm:FrameBuffer2") !=
-         std::string::npos;
-}
 
 }  // namespace
 
@@ -239,7 +233,7 @@ class FrameBufferProxyTest : public ::testing::Test,
 
 TEST_P(FrameBufferProxyTest, InitialTimeoutAfterKeyframeTimeoutPeriod) {
   StartNextDecodeForceKeyframe();
-  // No frame insterted. Timeout expected.
+  // No frame inserted. Timeout expected.
   EXPECT_THAT(WaitForFrameOrTimeout(kMaxWaitForKeyframe), TimedOut());
 
   // No new timeout set since receiver has not started new decode.
@@ -664,8 +658,6 @@ TEST_P(FrameBufferProxyTest, FrameCompleteCalledOnceForSingleTemporalUnit) {
 
 TEST_P(FrameBufferProxyTest, FrameCompleteCalledOnceForCompleteTemporalUnit) {
   // FrameBuffer2 logs the complete frame on the arrival of the last layer.
-  if (IsFrameBuffer2Enabled(field_trials_))
-    return;
   StartNextDecodeForceKeyframe();
 
   // `OnCompleteFrame` should not be called for the first two frames since they
@@ -742,18 +734,13 @@ TEST_P(FrameBufferProxyTest, NextFrameWithOldTimestamp) {
                           .AsLast()
                           .Build());
   // FrameBuffer2 drops the frame, while FrameBuffer3 will continue the stream.
-  if (!IsFrameBuffer2Enabled(field_trials_)) {
-    EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(test::WithId(2)));
-  } else {
-    EXPECT_THAT(WaitForFrameOrTimeout(kMaxWaitForFrame), TimedOut());
-  }
+  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(test::WithId(2)));
 }
 
 INSTANTIATE_TEST_SUITE_P(
     FrameBufferProxy,
     FrameBufferProxyTest,
-    ::testing::Values("WebRTC-FrameBuffer3/arm:FrameBuffer2/",
-                      "WebRTC-FrameBuffer3/arm:FrameBuffer3/",
+    ::testing::Values("WebRTC-FrameBuffer3/arm:FrameBuffer3/",
                       "WebRTC-FrameBuffer3/arm:SyncDecoding/"));
 
 class LowLatencyFrameBufferProxyTest : public ::testing::Test,
@@ -834,8 +821,6 @@ INSTANTIATE_TEST_SUITE_P(
     FrameBufferProxy,
     LowLatencyFrameBufferProxyTest,
     ::testing::Values(
-        "WebRTC-FrameBuffer3/arm:FrameBuffer2/"
-        "WebRTC-ZeroPlayoutDelay/min_pacing:16ms,max_decode_queue_size:5/",
         "WebRTC-FrameBuffer3/arm:FrameBuffer3/"
         "WebRTC-ZeroPlayoutDelay/min_pacing:16ms,max_decode_queue_size:5/",
         "WebRTC-FrameBuffer3/arm:SyncDecoding/"
