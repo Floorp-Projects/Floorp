@@ -16,9 +16,6 @@ const { setTimeout } = ChromeUtils.importESModule(
 const { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );
-const { BrowserTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/BrowserTestUtils.sys.mjs"
-);
 
 var Tabs = {
   init(libDir) {},
@@ -132,13 +129,12 @@ var Tabs = {
         await new Promise((resolve, reject) => {
           setTimeout(resolve, 3000);
         });
+
         // Make sure the tabstrip is scrolled all the way to the left.
-        let scrolled = BrowserTestUtils.waitForEvent(
-          browserWindow.gBrowser.tabContainer.arrowScrollbox,
-          "scrollend"
+        browserWindow.gBrowser.tabContainer.arrowScrollbox.scrollByIndex(
+          -100,
+          true
         );
-        browserWindow.gBrowser.tabContainer.arrowScrollbox.scrollByIndex(-100);
-        await scrolled;
 
         await allTabTitlesDisplayed(browserWindow);
       },
