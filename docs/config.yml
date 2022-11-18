@@ -44,6 +44,7 @@ categories:
         - taskcluster
         - tools/moztreedocs
     testing_doc:
+        - testing/automated-testing
         - testing/intermittent
         - testing/testing-policy
         - testing/ci-configs
