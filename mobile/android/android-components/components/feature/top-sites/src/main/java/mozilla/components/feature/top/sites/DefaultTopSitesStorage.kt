@@ -8,6 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
+import mozilla.components.feature.top.sites.ext.hasHost
 import mozilla.components.feature.top.sites.ext.hasUrl
 import mozilla.components.feature.top.sites.ext.toTopSite
 import mozilla.components.feature.top.sites.facts.emitTopSitesCountFact
@@ -121,7 +122,7 @@ class DefaultTopSitesStorage(
                 .map { it.toTopSite() }
                 .filter {
                     !pinnedSites.hasUrl(it.url) &&
-                        !providerTopSites.hasUrl(it.url) &&
+                        !providerTopSites.hasHost(it.url) &&
                         frecencyConfig.frecencyFilter?.invoke(it) ?: true
                 }
                 .take(numSitesRequired)

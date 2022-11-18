@@ -9,6 +9,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
+* **feature-top-sites**
+  * 🆕 A new filter `hasHost` was added when getting top frecent sites in order to remove duplicate frecent top sites that have same host/domain as provided top sites. For more references see [bug #1801285](https://bugzilla.mozilla.org/show_bug.cgi?id=1801285).
+
 * **browser-menu**:
   * 🚒 Bug Fixed [bug #1800885](https://bugzilla.mozilla.org/show_bug.cgi?id=1800885) Increase touch target of Add/Edit checkbox from `mozac_browser_menu_item_image_text_checkbox_button.xml` to improve accessibility.
   

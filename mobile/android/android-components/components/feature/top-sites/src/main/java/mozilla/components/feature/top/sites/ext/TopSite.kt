@@ -5,6 +5,7 @@
 package mozilla.components.feature.top.sites.ext
 
 import mozilla.components.feature.top.sites.TopSite
+import mozilla.components.support.ktx.kotlin.getRepresentativeSnippet
 import mozilla.components.support.ktx.util.URLStringUtils
 
 /**
@@ -21,4 +22,13 @@ fun List<TopSite>.hasUrl(url: String): Boolean {
     }
 
     return false
+}
+
+/**
+ * Returns true if the given url host/domain is in the list top site and false otherwise.
+ *
+ * @param url The URL string.
+ */
+fun List<TopSite>.hasHost(url: String): Boolean {
+    return this.any { it.url.getRepresentativeSnippet().equals(url.getRepresentativeSnippet(), true) }
 }

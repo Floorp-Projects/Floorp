@@ -17,6 +17,7 @@ import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -1066,6 +1067,103 @@ class DefaultTopSitesStorageTest {
         assertTrue(topSites.contains(providedFilteredSite))
         assertTrue(topSites.contains(defaultSite))
         assertTrue(topSites.contains(pinnedSite))
+        assertEquals(defaultTopSitesStorage.cachedTopSites, topSites)
+    }
+
+    @Test
+    fun `GIVEN frecent top sites host exist as a provided site WHEN top sites are retrieved THEN filters out frecent sites with host that already exist in provided sites`() = runTestOnMain {
+        val defaultTopSitesStorage = DefaultTopSitesStorage(
+            pinnedSitesStorage = pinnedSitesStorage,
+            historyStorage = historyStorage,
+            topSitesProvider = topSitesProvider,
+            defaultTopSites = listOf(),
+            coroutineContext = coroutineContext,
+        )
+
+        val defaultSiteFirefox = TopSite.Default(
+            id = 1,
+            title = "Firefox",
+            url = "https://firefox.com",
+            createdAt = 1,
+        )
+        val pinnedSite1 = TopSite.Pinned(
+            id = 2,
+            title = "Google",
+            url = "https://google.com",
+            createdAt = 2,
+        )
+        val providedSite1 = TopSite.Provided(
+            id = 3,
+            title = "Amazon",
+            url = "https://www.amazon.com/?tag=sponsored-shortcut",
+            clickUrl = "https://www.amazon.com/click",
+            imageUrl = "https://test.com/image2.jpg",
+            impressionUrl = "https://example.com",
+            createdAt = 3,
+        )
+        val providedSite2 = TopSite.Provided(
+            id = 4,
+            title = "UnderArmour",
+            url = "https://www.underarmour.com/?tag=sponsored-shortcut",
+            clickUrl = "https://www.underarmour.com/click",
+            imageUrl = "https://test.com/image2.jpg",
+            impressionUrl = "https://example.com",
+            createdAt = 4,
+        )
+
+        whenever(pinnedSitesStorage.getPinnedSites()).thenReturn(
+            listOf(
+                defaultSiteFirefox,
+                pinnedSite1,
+            ),
+        )
+        whenever(pinnedSitesStorage.getPinnedSitesCount()).thenReturn(2)
+        whenever(topSitesProvider.getTopSites()).thenReturn(
+            listOf(
+                providedSite1,
+                providedSite2,
+            ),
+        )
+
+        val frecentSite1 = TopFrecentSiteInfo("https://www.amazon.com", "Amazon")
+        val frecentSite2 = TopFrecentSiteInfo("https://www.amazon.com/Wireless-Charging-Station-Charger-AirPods/dp/B09KTY5GM7?pf_rd_r=NCJV8SPRQ2K43XM6WWKS&pf_rd_p=7b590888-dba4-4742-b2f2-7b20b1700e00&pd_rd_r=4fbaf1df-96be-470a-9811-0bc2aa8b415f&pd_rd_w=Viqqz&pd_rd_wg=9Emfa", "Amazon")
+        val frecentSite3 = TopFrecentSiteInfo("https://www.underarmour.com", "UnderArmour")
+        val frecentSite4 = TopFrecentSiteInfo("https://www.underarmour.com/en-us/p/curry_brand_shoes_and_gear/mens_curry_sour_then_sweet_crewneck/195253758836.html", "UnderArmour")
+        val frecentSite5 = TopFrecentSiteInfo("https://www.example.com", "Example")
+        val frecentSite6 = TopFrecentSiteInfo("https://www.getfirefox.com", "Firefox")
+
+        whenever(historyStorage.getTopFrecentSites(anyInt(), any())).thenReturn(
+            listOf(
+                frecentSite1,
+                frecentSite2,
+                frecentSite3,
+                frecentSite4,
+                frecentSite5,
+                frecentSite6,
+            ),
+        )
+
+        val topSites = defaultTopSitesStorage.getTopSites(
+            totalSites = 10,
+            frecencyConfig = TopSitesFrecencyConfig(
+                frecencyTresholdOption = FrecencyThresholdOption.NONE,
+            ),
+            providerConfig = TopSitesProviderConfig(
+                showProviderTopSites = true,
+            ),
+        )
+
+        verify(historyStorage).getTopFrecentSites(10, frecencyThreshold = FrecencyThresholdOption.NONE)
+
+        assertEquals(6, topSites.size)
+        assertEquals(providedSite1, topSites[0])
+        assertEquals(providedSite2, topSites[1])
+        assertFalse(topSites.contains(frecentSite1.toTopSite()))
+        assertFalse(topSites.contains(frecentSite2.toTopSite()))
+        assertFalse(topSites.contains(frecentSite3.toTopSite()))
+        assertFalse(topSites.contains(frecentSite4.toTopSite()))
+        assertEquals(defaultSiteFirefox, topSites[2])
+        assertEquals(pinnedSite1, topSites[3])
         assertEquals(defaultTopSitesStorage.cachedTopSites, topSites)
     }
 }
