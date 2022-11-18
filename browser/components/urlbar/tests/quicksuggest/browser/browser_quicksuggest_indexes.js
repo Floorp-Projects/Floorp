@@ -346,9 +346,9 @@ async function withSuggestions(callback) {
   await SpecialPowers.pushPrefEnv({
     set: [[SUGGESTIONS_PREF, true]],
   });
-  let engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
-  );
+  let engine = await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME,
+  });
   let oldDefaultEngine = await Services.search.getDefault();
   await Services.search.setDefault(
     engine,

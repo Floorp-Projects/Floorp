@@ -17,19 +17,9 @@ var gTests = [
 ];
 
 add_setup(async function() {
-  let engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
-  );
-  let oldDefaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(
-    engine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
-  registerCleanupFunction(async function() {
-    await Services.search.setDefault(
-      oldDefaultEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
+  await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + "searchSuggestionEngine.xml",
+    setAsDefault: true,
   });
 });
 

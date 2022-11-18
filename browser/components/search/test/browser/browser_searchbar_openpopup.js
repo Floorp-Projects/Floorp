@@ -40,14 +40,10 @@ add_setup(async function() {
   searchIcon = searchbar.querySelector(".searchbar-search-button");
   goButton = searchbar.querySelector(".search-go-button");
 
-  let defaultEngine = await Services.search.getDefault();
-  engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + "testEngine.xml"
-  );
-  await Services.search.setDefault(
-    engine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
+  engine = await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + "testEngine.xml",
+    setAsDefault: true,
+  });
 
   await clearSearchbarHistory();
 
@@ -59,10 +55,6 @@ add_setup(async function() {
 
   registerCleanupFunction(async () => {
     await clearSearchbarHistory();
-    await Services.search.setDefault(
-      defaultEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
     gCUITestUtils.removeSearchBar();
   });
 });

@@ -23,9 +23,9 @@ let suggestionsEngine;
 let defaultEngine;
 
 add_setup(async function() {
-  suggestionsEngine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + SUGGESTIONS_ENGINE_NAME
-  );
+  suggestionsEngine = await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + SUGGESTIONS_ENGINE_NAME,
+  });
 
   let oldDefaultEngine = await Services.search.getDefault();
   await SearchTestUtils.installSearchExtension();

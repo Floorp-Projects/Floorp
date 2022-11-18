@@ -367,9 +367,9 @@ async function checkNonBuiltinFallback(checkPrivate) {
     : SearchUtils.MODIFIED_TYPE.DEFAULT;
   Services.search.restoreDefaultEngines();
 
-  let addedEngine = await SearchTestUtils.promiseNewSearchEngine(
-    `${gDataUrl}engine2.xml`
-  );
+  let addedEngine = await SearchTestUtils.promiseNewSearchEngine({
+    url: `${gDataUrl}engine2.xml`,
+  });
 
   await setDefault(checkPrivate, addedEngine);
 

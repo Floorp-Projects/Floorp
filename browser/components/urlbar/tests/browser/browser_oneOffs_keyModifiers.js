@@ -31,9 +31,9 @@ async function searchAndOpenPopup(value) {
 add_setup(async function() {
   // Add a search suggestion engine and move it to the front so that it appears
   // as the first one-off.
-  engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
-  );
+  engine = await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME,
+  });
   await Services.search.moveEngine(engine, 0);
 
   await SpecialPowers.pushPrefEnv({

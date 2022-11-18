@@ -54,14 +54,12 @@ add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.suggest.searches", false]],
   });
-  let engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
-  );
-  let defaultEngine = Services.search.defaultEngine;
-  Services.search.defaultEngine = engine;
+  await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + "searchSuggestionEngine.xml",
+    setAsDefault: true,
+  });
 
   registerCleanupFunction(async function() {
-    Services.search.defaultEngine = defaultEngine;
     await PlacesUtils.keywords.remove("get");
     await PlacesUtils.keywords.remove("post");
     await PlacesUtils.keywords.remove("question?");

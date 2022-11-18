@@ -165,9 +165,9 @@ add_task(async function staleReplacedWithFresh() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.suggest.searches", true]],
   });
-  let engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + "searchSuggestionEngineSlow.xml"
-  );
+  let engine = await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + "searchSuggestionEngineSlow.xml",
+  });
   let oldDefaultEngine = await Services.search.getDefault();
   await Services.search.moveEngine(engine, 0);
   await Services.search.setDefault(

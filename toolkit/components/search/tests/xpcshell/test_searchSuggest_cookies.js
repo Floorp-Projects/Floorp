@@ -77,20 +77,20 @@ add_task(async function setup() {
 
   let unicodeName = ["\u30a8", "\u30c9"].join("");
   let engines = [
-    await SearchTestUtils.promiseNewSearchEngine(
-      `${gDataUrl}engineMaker.sjs?${JSON.stringify({
+    await SearchTestUtils.promiseNewSearchEngine({
+      url: `${gDataUrl}engineMaker.sjs?${JSON.stringify({
         baseURL: gDataUrl,
         name: unicodeName,
         method: "GET",
-      })}`
-    ),
-    await SearchTestUtils.promiseNewSearchEngine(
-      `${gDataUrl}engineMaker.sjs?${JSON.stringify({
+      })}`,
+    }),
+    await SearchTestUtils.promiseNewSearchEngine({
+      url: `${gDataUrl}engineMaker.sjs?${JSON.stringify({
         baseURL: gDataUrl,
         name: "engine two",
         method: "GET",
-      })}`
-    ),
+      })}`,
+    }),
   ];
 
   // Clean up all the data.

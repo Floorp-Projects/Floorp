@@ -8,12 +8,12 @@ registerCleanupFunction(() => {
 });
 
 add_task(async function test_remove() {
-  await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + "testEngine_dupe.xml"
-  );
-  await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + "testEngine.xml"
-  );
+  await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + "testEngine_dupe.xml",
+  });
+  await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + "testEngine.xml",
+  });
   Services.prefs.setCharPref("browser.search.hiddenOneOffs", testPref);
 
   info("Removing testEngine_dupe.xml");
@@ -52,14 +52,14 @@ add_task(async function test_remove() {
 });
 
 add_task(async function test_add() {
-  await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + "testEngine.xml"
-  );
+  await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + "testEngine.xml",
+  });
   info("setting prefs to " + testPref);
   Services.prefs.setCharPref("browser.search.hiddenOneOffs", testPref);
-  await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + "testEngine_dupe.xml"
-  );
+  await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + "testEngine_dupe.xml",
+  });
   let hiddenOneOffs = Services.prefs
     .getCharPref("browser.search.hiddenOneOffs")
     .split(",");
@@ -88,9 +88,9 @@ add_task(async function test_diacritics() {
   );
 
   Preferences.set("browser.search.hiddenOneOffs", diacritic_engine);
-  await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + "testEngine_diacritics.xml"
-  );
+  await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + "testEngine_diacritics.xml",
+  });
 
   let hiddenOneOffs = Preferences.get("browser.search.hiddenOneOffs").split(
     ","

@@ -10,17 +10,11 @@ add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.suggest.quickactions", false]],
   });
-  const engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
-  );
-  engine.alias = "@default";
-
-  const defaultEngine = Services.search.defaultEngine;
-  Services.search.defaultEngine = engine;
-
-  registerCleanupFunction(async function() {
-    Services.search.defaultEngine = defaultEngine;
+  const engine = await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + "searchSuggestionEngine.xml",
+    setAsDefault: true,
   });
+  engine.alias = "@default";
 });
 
 add_task(async function returnKeypress() {

@@ -31,14 +31,10 @@ add_setup(async function() {
   textbox = searchbar.textbox;
   searchIcon = searchbar.querySelector(".searchbar-search-button");
 
-  let defaultEngine = await Services.search.getDefault();
-  let engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + "testEngine.xml"
-  );
-  await Services.search.setDefault(
-    engine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
+  await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + "testEngine.xml",
+    setAsDefault: true,
+  });
 
   // First cleanup the form history in case other tests left things there.
   info("cleanup the search history");
@@ -51,10 +47,6 @@ add_setup(async function() {
   await FormHistory.update(addOps);
 
   registerCleanupFunction(async () => {
-    await Services.search.setDefault(
-      defaultEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
     gCUITestUtils.removeSearchBar();
   });
 });

@@ -310,9 +310,9 @@ add_task(async function test_screenshot() {
 });
 
 add_task(async function test_other_search_mode() {
-  let defaultEngine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
-  );
+  let defaultEngine = await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + "searchSuggestionEngine.xml",
+  });
   defaultEngine.alias = "testalias";
   let oldDefaultEngine = await Services.search.getDefault();
   Services.search.setDefault(

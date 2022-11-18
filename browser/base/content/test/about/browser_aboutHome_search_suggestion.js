@@ -21,13 +21,12 @@ add_task(async function() {
     { gBrowser, url: "about:home" },
     async function(browser) {
       // Add a test engine that provides suggestions and switch to it.
-      let currEngine = await Services.search.getDefault();
-
       let engine;
       await promiseContentSearchChange(browser, async () => {
-        engine = await SearchTestUtils.promiseNewSearchEngine(
-          getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
-        );
+        engine = await SearchTestUtils.promiseNewSearchEngine({
+          url: getRootDirectory(gTestPath) + "searchSuggestionEngine.xml",
+          setAsDefault: true,
+        });
         await Services.search.setDefault(
           engine,
           Ci.nsISearchService.CHANGE_REASON_UNKNOWN
@@ -80,14 +79,6 @@ add_task(async function() {
           "Search suggestion table hidden"
         );
       });
-
-      await Services.search.setDefault(
-        currEngine,
-        Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-      );
-      try {
-        await Services.search.removeEngine(engine);
-      } catch (ex) {}
     }
   );
   await SpecialPowers.popPrefEnv();

@@ -220,14 +220,10 @@ add_setup(async function() {
   await PlacesUtils.history.clear();
 
   // Create a new search engine and mark it as default
-  let engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
-  );
-  let oldDefaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(
-    engine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
+  let engine = await SearchTestUtils.promiseNewSearchEngine({
+    url: getRootDirectory(gTestPath) + "searchSuggestionEngine.xml",
+    setAsDefault: true,
+  });
   await Services.search.moveEngine(engine, 0);
 
   await SearchTestUtils.installSearchExtension({
@@ -252,10 +248,6 @@ add_setup(async function() {
   };
 
   registerCleanupFunction(async function() {
-    await Services.search.setDefault(
-      oldDefaultEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
     await PlacesUtils.history.clear();
     TestUtils.waitForCondition = originalWaitForCondition;
   });

@@ -94,7 +94,13 @@ async function addTestEngines() {
   // This is a hack, ideally we should be setting up a configuration with
   // built-in engines, but the `chrome_settings_overrides` section that
   // WebExtensions need is only defined for browser/
-  await SearchTestUtils.promiseNewSearchEngine(`${gDataUrl}/engine.xml`);
-  await SearchTestUtils.promiseNewSearchEngine(`${gDataUrl}/enginePrivate.xml`);
-  await SearchTestUtils.promiseNewSearchEngine(`${gDataUrl}/enginePost.xml`);
+  await SearchTestUtils.promiseNewSearchEngine({
+    url: `${gDataUrl}/engine.xml`,
+  });
+  await SearchTestUtils.promiseNewSearchEngine({
+    url: `${gDataUrl}/enginePrivate.xml`,
+  });
+  await SearchTestUtils.promiseNewSearchEngine({
+    url: `${gDataUrl}/enginePost.xml`,
+  });
 }
