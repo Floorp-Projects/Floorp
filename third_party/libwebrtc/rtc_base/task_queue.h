@@ -18,7 +18,6 @@
 
 #include "absl/functional/any_invocable.h"
 #include "absl/memory/memory.h"
-#include "api/task_queue/queued_task.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "rtc_base/system/rtc_export.h"
