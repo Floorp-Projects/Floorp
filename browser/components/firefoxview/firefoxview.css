@@ -29,18 +29,6 @@
   --colorways-grid-template-rows: auto auto auto;
   --colorways-figure-display: flex;
   --colorways-header-flex-direction: column;
-  --colorways-no-collection-border-radius: 8px;
-  --colorways-no-collection-div-bg-position: center top;
-  --colorways-no-collection-div-bg-size: 100%;
-  --colorways-no-collection-div-padding-inline: var(--content-area-padding-inline);
-  --colorways-no-collection-div-padding-block: var(--content-area-padding-block);
-  --colorways-no-collection-notice-padding-block: 0 1em;
-  --colorways-no-collection-notice-padding-inline: 1em;
-  --colorways-no-collection-notice-height: auto;
-  --colorways-no-collection-notice-justify-content: center;
-  --colorways-no-collection-notice-margin: 0;
-  --colorways-no-collection-notice-width: auto;
-  --colorways-no-collection-notice-text-color: #FFF;
 
   --info-icon-background-color: #0090ED;
 }
@@ -65,7 +53,6 @@ body {
   --card-border-zap-gradient: var(--in-content-zap-gradient);
   --fxview-text-secondary-color: color-mix(in srgb, currentColor 70%, transparent);
   --newtab-background-color-secondary: #FFF;
-  --colorways-no-collection-notice-bg-color: transparent;
 
   /* ensure utility button hover states match those of the rest of the page */
   --in-content-button-background-hover: var(--fxview-element-background-hover);
@@ -145,9 +132,6 @@ body > main > details {
 }
 
 @media (max-width: 65rem) {
-  body {
-    --colorways-no-collection-notice-bg-color: var(--newtab-background-color-secondary);
-  }
   :root {
     --recently-closed-tabs-grid-row: 3;
     --details-grid-column: 1 / -1;
@@ -161,17 +145,6 @@ body > main > details {
     --colorways-grid-template-columns: 1fr var(--colorways-figure-size);
     --colorways-grid-template-rows: min-content min-content 1fr;
     --colorways-header-flex-direction: row;
-    --colorways-no-collection-div-bg-position: right top;
-    --colorways-no-collection-div-bg-size: 230px;
-    --colorways-no-collection-div-padding-inline: 0 246px;
-    --colorways-no-collection-div-padding-block: 0;
-    --colorways-no-collection-notice-padding-block: 0;
-    --colorways-no-collection-notice-padding-inline: var(--colorways-no-collection-border-radius);
-    --colorways-no-collection-notice-height: 107px;
-    --colorways-no-collection-notice-justify-content: flex-start;
-    --colorways-no-collection-notice-margin: 1px;
-    --colorways-no-collection-notice-width: 100%;
-    --colorways-no-collection-notice-text-color: inherit;
     --colorways-figure-margin: 0;
   }
 }
@@ -189,8 +162,6 @@ body > main > details {
     --colorways-grid-template-rows: auto;
     --colorways-figure-display: none;
     --colorways-header-flex-direction: column;
-    --colorways-no-collection-div-bg-size: 15%;
-    --colorways-no-collection-div-padding-inline: 0 15%;
   }
 }
 
@@ -233,23 +204,7 @@ body > main > details {
 }
 
 #colorways.no-collection {
-  display: block;
-  background: linear-gradient(51.95deg, #7542E5 -8.36%, #C953F2 98.73%);
-  border-radius: var(--colorways-no-collection-border-radius);
-}
-
-#colorways.no-collection > div {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding-inline: var(--colorways-no-collection-div-padding-inline);
-  padding-block: var(--colorways-no-collection-div-padding-block);
-  justify-content: flex-end;
-  background: url("chrome://browser/content/colorway-background.svg");
-  background-size: var(--colorways-no-collection-div-bg-size);
-  background-position: var(--colorways-no-collection-div-bg-position);
-  background-repeat: no-repeat;
-  border-radius: inherit;
+  visibility: collapse;
 }
 
 #colorways > header {
@@ -260,23 +215,6 @@ body > main > details {
   flex-wrap: wrap;
 }
 
-#no-current-colorway-collection-notice {
-  display: flex;
-  width: var(--colorways-no-collection-notice-width);
-  height: var(--colorways-no-collection-notice-height);
-  border-start-start-radius: calc(var(--colorways-no-collection-border-radius) - var(--colorways-no-collection-notice-margin));
-  border-end-start-radius: calc(var(--colorways-no-collection-border-radius) - var(--colorways-no-collection-notice-margin));
-  margin: var(--colorways-no-collection-notice-margin);
-  padding-block: var(--colorways-no-collection-notice-padding-block);
-  padding-inline: var(--colorways-no-collection-notice-padding-inline);
-  justify-content: var(--colorways-no-collection-notice-justify-content);
-  align-items: center;
-  font-size: 2em;
-  background-color: var(--colorways-no-collection-notice-bg-color);
-  color: var(--colorways-no-collection-notice-text-color);
-}
-
-#no-current-colorway-collection-notice,
 #colorways-collection-description {
   grid-area: colorways-description;
 }

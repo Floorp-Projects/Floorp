@@ -128,8 +128,8 @@ add_task(async function no_collection_test() {
         const { document } = browser.contentWindow;
         const { noCollectionNotice, description } = getTestElements(document);
         ok(
-          BrowserTestUtils.is_visible(noCollectionNotice),
-          "No Active Colorway Collection Notice should be visible"
+          !BrowserTestUtils.is_visible(noCollectionNotice),
+          "No Active Colorway Collection Notice should not be visible"
         );
         is(description, null, "Colorway description should be hidden");
       }
@@ -153,8 +153,8 @@ add_task(async function colorway_closet_disabled() {
         const { document } = browser.contentWindow;
         const { noCollectionNotice, description } = getTestElements(document);
         ok(
-          BrowserTestUtils.is_visible(noCollectionNotice),
-          "No Active Colorway Collection Notice should be visible when Colorway Closet is disabled"
+          !BrowserTestUtils.is_visible(noCollectionNotice),
+          "No Active Colorway Collection Notice should not be visible when Colorway Closet is disabled"
         );
         is(
           description,
