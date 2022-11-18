@@ -127,7 +127,11 @@ class LogLineRef {
   absl::string_view tag() const { return tag_; }
   LoggingSeverity severity() const { return severity_; }
 
+#if RTC_LOG_ENABLED()
   std::string DefaultLogLine() const;
+#else
+  std::string DefaultLogLine() const { return ""; }
+#endif
 
  private:
   friend class LogMessage;
