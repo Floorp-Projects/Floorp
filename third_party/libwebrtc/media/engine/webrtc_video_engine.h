@@ -505,11 +505,10 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     void SetLocalSsrc(uint32_t local_ssrc);
 
    private:
-    // Attempts to reconfigure an already existing `flexfec_stream_` or sets
-    // `flexfec_needs_recreation` to `true` if a new instance needs to be
-    // created by calling `RecreateReceiveStream()`. In all cases
-    // `SetFlexFecPayload()` will update `flexfec_config_`.
-    void SetFlexFecPayload(int payload_type, bool& flexfec_needs_recreation);
+    // Attempts to reconfigure an already existing `flexfec_stream_`, create
+    // one if the configuration is now complete or remove a flexfec stream
+    // when disabled.
+    void SetFlexFecPayload(int payload_type);
 
     void RecreateReceiveStream();
 
