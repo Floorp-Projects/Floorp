@@ -1651,13 +1651,6 @@ int AudioProcessingImpl::recommended_stream_analog_level_locked() const {
   return capture_.cached_stream_analog_level_;
 }
 
-bool AudioProcessingImpl::CreateAndAttachAecDump(const std::string& file_name,
-                                                 int64_t max_log_size_bytes,
-                                                 rtc::TaskQueue* worker_queue) {
-  return CreateAndAttachAecDump(absl::string_view(file_name),
-                                max_log_size_bytes, worker_queue);
-}
-
 bool AudioProcessingImpl::CreateAndAttachAecDump(absl::string_view file_name,
                                                  int64_t max_log_size_bytes,
                                                  rtc::TaskQueue* worker_queue) {

@@ -327,6 +327,7 @@ if (rtc_include_tests) {
       ":audio_processing_statistics",
       "../../test:test_support",
     ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
   }
 
   if (!build_with_chromium) {

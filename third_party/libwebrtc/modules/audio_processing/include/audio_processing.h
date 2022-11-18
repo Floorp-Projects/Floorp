@@ -627,13 +627,13 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
   // implemented the absl::string_view version.
   virtual bool CreateAndAttachAecDump(const std::string& file_name,
                                       int64_t max_log_size_bytes,
-                                      rtc::TaskQueue* worker_queue) = 0;
+                                      rtc::TaskQueue* worker_queue) {
+    return CreateAndAttachAecDump(absl::string_view(file_name),
+                                  max_log_size_bytes, worker_queue);
+  }
   virtual bool CreateAndAttachAecDump(absl::string_view file_name,
                                       int64_t max_log_size_bytes,
-                                      rtc::TaskQueue* worker_queue) {
-    return CreateAndAttachAecDump(std::string(file_name), max_log_size_bytes,
-                                  worker_queue);
-  }
+                                      rtc::TaskQueue* worker_queue) = 0;
   virtual bool CreateAndAttachAecDump(FILE* handle,
                                       int64_t max_log_size_bytes,
                                       rtc::TaskQueue* worker_queue) = 0;
