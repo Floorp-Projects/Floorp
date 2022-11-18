@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': 'e039fb69c177579233a69d27accabb0d15a09c3d',
+  'chromium_revision': '88bd4f95d98abaf899e060b8733739e252bb8479',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -20,15 +20,15 @@ vars = {
 
   # By default, download the fuchsia sdk from the public sdk directory.
   'fuchsia_sdk_cipd_prefix': 'fuchsia/sdk/gn/',
-  'fuchsia_version': 'version:9.20220802.1.1',
+  'fuchsia_version': 'version:9.20220802.3.1',
 }
 
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@27507f91377008e0c0b38f649951fba7c9d50bf7',
+    'https://chromium.googlesource.com/chromium/src/base@2cf9e16a5d1015e45c594f9fb9466544d67bd5aa',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@e821e4d06b5a67cd84a18d9db035b02ff316cb68',
+    'https://chromium.googlesource.com/chromium/src/build@c8168ef10ea9d95a87b291a607946e1320f973a2',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@56cc5bc2236676397fd722076690ae742e46c1ca',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -37,13 +37,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@2b9dec4289f1ce7aac40cc8cffa6d81a149bc329',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@fdc902ca9ba0c461ac15a77ea038d336f0e4348d',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@f3b028f87af301867f69ba4a59249269c3d81895',
+    'https://chromium.googlesource.com/chromium/src/testing@3787411136213dd865bdd9a2a9496d0173e0f193',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@144e47ec74600a83d858aaa055c631e1ee119476',
+    'https://chromium.googlesource.com/chromium/src/third_party@52189c0bdda055963a9a68301c525cb6f1e51f7d',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -132,7 +132,7 @@ deps = {
   'src/third_party/breakpad/breakpad':
     'https://chromium.googlesource.com/breakpad/breakpad.git@afc8daa2de3d9ef5da015ceb5e7436ed8adb5f47',
   'src/third_party/catapult':
-    'https://chromium.googlesource.com/catapult.git@81c03c3de984993f8e62d477b337527705102f64',
+    'https://chromium.googlesource.com/catapult.git@2a52133e52c1fd021510b0b474d11676a680856f',
   'src/third_party/ced/src': {
     'url': 'https://chromium.googlesource.com/external/github.com/google/compact_enc_det.git@ba412eaaacd3186085babcd901679a48863c7dd5',
   },
@@ -153,7 +153,7 @@ deps = {
       'condition': 'checkout_linux',
   },
   'src/third_party/freetype/src':
-    'https://chromium.googlesource.com/chromium/src/third_party/freetype2.git@d53c114165b152d58b8b86d3c25a2bd27b006136',
+    'https://chromium.googlesource.com/chromium/src/third_party/freetype2.git@dcb5fc5bcd1d73b6510ce20579ccbd8e96b639c5',
   'src/third_party/harfbuzz-ng/src':
     'https://chromium.googlesource.com/external/github.com/harfbuzz/harfbuzz.git@fa471043fccb94444510e3300ac2573297c82137',
   'src/third_party/google_benchmark/src': {
@@ -224,7 +224,7 @@ deps = {
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@711bef67400f096416cb1ba7f6560e533871490f',
   'src/third_party/libyuv':
-    'https://chromium.googlesource.com/libyuv/libyuv.git@b028453ba61043a560298acae28eb813ea9bc67d',
+    'https://chromium.googlesource.com/libyuv/libyuv.git@98ec7c28d5f4664d0cf5b7631e82a876ccb11c26',
   'src/third_party/lss': {
     'url': 'https://chromium.googlesource.com/linux-syscall-support.git@0d6435b731ef91d5182eaecff82ae96764222c48',
     'condition': 'checkout_android or checkout_linux',
@@ -266,7 +266,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@db5b4e68e8399cafbb3f54c3e054dc00ea7e2552',
+    'https://chromium.googlesource.com/chromium/src/tools@66b2c39f3e9cc93ee67905a791d1f03042cc390f',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
