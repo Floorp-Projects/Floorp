@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-11-17T22:29:32.539475'
+updated_at: '2022-11-18T17:04:04.115932'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -1174,7 +1174,7 @@ modules:
         - Mike Connor
         - Dan Witte
         - Christian Biesinger
-        - Shawn Wilsher (ping on irc)
+        - Shawn Wilsher
         - Ehsan Akhgari
       group: dev-platform
       components:
@@ -2128,7 +2128,7 @@ modules:
         - Mike Connor
         - Dan Witte
         - Christian Biesinger
-        - Shawn Wilsher (ping on irc)
+        - Shawn Wilsher
         - Honza Bambas
       group: dev-platform
       components:
@@ -3636,5 +3636,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: a27cc8ec97c4e0e3a0ad4a0983d0f2fc79902a8d
-  export: 4c7e1fd03f97fd54bffed4dc7e8082b92f8134ee
+  config: 0670d0be07bf5f7edc407507949cfec72d31b886
+  export: 58ed67259b377f89de90f03aa354a773a8768e9e

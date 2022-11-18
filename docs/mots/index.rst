@@ -398,7 +398,7 @@ Core: Cookies
     * - Owner(s) Emeritus
       - Monica Chew
     * - Peer(s) Emeritus
-      - Josh Matthews, Mike Connor, Dan Witte, Christian Biesinger, Shawn Wilsher (ping on irc), Ehsan Akhgari
+      - Josh Matthews, Mike Connor, Dan Witte, Christian Biesinger, Shawn Wilsher, Ehsan Akhgari
     * - Includes
       -
         | `netwerk/cookie/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=netwerk/cookie/\*\*/\*>`__
@@ -1553,7 +1553,7 @@ Core: Permissions
     * - Owner(s) Emeritus
       - Monica Chew, Ehsan Akhgari
     * - Peer(s) Emeritus
-      - Josh Matthews, Mike Connor, Dan Witte, Christian Biesinger, Shawn Wilsher (ping on irc), Honza Bambas
+      - Josh Matthews, Mike Connor, Dan Witte, Christian Biesinger, Shawn Wilsher, Honza Bambas
     * - Includes
       -
         | `extensions/permissions/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=extensions/permissions/\*\*/\*>`__
