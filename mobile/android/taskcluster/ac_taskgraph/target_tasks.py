@@ -4,6 +4,7 @@
 
 import os
 import re
+from subprocess import CalledProcessError
 from redo import retry
 
 from mozilla_version.maven import MavenVersion
@@ -74,10 +75,28 @@ def target_tasks_ac_default(full_task_graph, parameters, graph_config):
 
 
 def get_gv_version(repo, revision):
+    gecko_kt_path = get_gecko_kt_path(repo, revision)
     gecko_kt = repo.run(
-        "show", f"{revision}:android-components/plugins/dependencies/src/main/java/Gecko.kt"
+        "show", f"{revision}:{gecko_kt_path}"
     )
     match = re.search(r'version = "([^"]*)"', gecko_kt, re.MULTILINE)
     if not match:
         raise Exception(f"Couldn't parse geckoview version on commit {revision}")
     return MavenVersion.parse(match.group(1)).major_number
+
+
+GECKO_KT_MOVED_REVISION = "4335165c898b18d7c1b9ad1690f69ae07c5a5ba2"
+
+
+def get_gecko_kt_path(repo, revision):
+    try:
+        # This command returns a different exit code depending on whether the former revision
+        # is an ancestor of the latter
+        #
+        # https://git-scm.com/docs/git-merge-base#Documentation/git-merge-base.txt---is-ancestor
+        repo.run(
+            "merge-base", "--is-ancestor", GECKO_KT_MOVED_REVISION, revision
+        )
+        return "android-components/plugins/dependencies/src/main/java/Gecko.kt"
+    except CalledProcessError:
+        return "android-components/buildSrc/src/main/java/Gecko.kt"
