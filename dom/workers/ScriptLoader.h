@@ -10,6 +10,7 @@
 #include "js/loader/ScriptLoadRequest.h"
 #include "js/loader/ModuleLoaderBase.h"
 #include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerLoadContext.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/Maybe.h"
 #include "nsIContentPolicy.h"
@@ -168,7 +169,7 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
                      WorkerScriptType aWorkerScriptType, ErrorResult& aRv);
 
   void CancelMainThreadWithBindingAborted(
-      nsTArray<WorkerLoadContext*>&& aContextList);
+      nsTArray<ThreadSafeRequestHandle*>&& aContextList);
 
   void CreateScriptRequests(const nsTArray<nsString>& aScriptURLs,
                             const mozilla::Encoding* aDocumentEncoding,
@@ -187,7 +188,7 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
 
   nsIURI* GetInitialBaseURI();
 
-  void MaybeExecuteFinishedScripts(ScriptLoadRequest* aRequest);
+  void MaybeExecuteFinishedScripts(ThreadSafeRequestHandle* aRequestHandle);
 
   void MaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
 
@@ -199,7 +200,8 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
     return mLoadingRequests.isEmpty() && mLoadedRequests.isEmpty();
   }
 
-  nsresult OnStreamComplete(ScriptLoadRequest* aRequest, nsresult aStatus);
+  nsresult OnStreamComplete(ThreadSafeRequestHandle* aRequestHandle,
+                            nsresult aStatus);
 
   bool IsDebuggerScript() const { return mWorkerScriptType == DebuggerScript; }
 
@@ -216,11 +218,11 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
   }
 
   void CancelMainThread(nsresult aCancelResult,
-                        nsTArray<WorkerLoadContext*>* aContextList);
+                        nsTArray<ThreadSafeRequestHandle*>* aContextList);
 
-  nsresult LoadScripts(nsTArray<WorkerLoadContext*>&& aContextList);
+  nsresult LoadScripts(nsTArray<ThreadSafeRequestHandle*>&& aContextList);
 
-  nsresult LoadScript(ScriptLoadRequest* aRequest);
+  nsresult LoadScript(ThreadSafeRequestHandle* aRequestHandle);
 
   void ShutdownScriptLoader(bool aResult, bool aMutedError);
 
@@ -239,15 +241,14 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
 
   void DispatchAbruptShutdown();
 
-  nsTArray<WorkerLoadContext*> GetLoadingList();
+  nsTArray<ThreadSafeRequestHandle*> GetLoadingList();
 
   nsIGlobalObject* GetGlobal();
 
-  void LoadingFinished(ScriptLoadRequest* aRequest, nsresult aRv);
+  void LoadingFinished(ThreadSafeRequestHandle* aRequestHandle, nsresult aRv);
 
-  void DispatchMaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
+  void DispatchMaybeMoveToLoadedList(ThreadSafeRequestHandle* aRequestHandle);
 
-  bool HasLoadErrors(WorkerLoadContext* aLoadContext);
   bool EvaluateScript(JSContext* aCx, ScriptLoadRequest* aRequest);
 
   nsresult FillCompileOptionsForRequest(

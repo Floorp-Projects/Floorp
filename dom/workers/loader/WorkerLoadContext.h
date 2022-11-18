@@ -156,5 +156,27 @@ class WorkerLoadContext : public JS::loader::LoadContextNoCCBase {
   bool IsAwaitingPromise() const { return bool(mCachePromise); }
 };
 
+class ThreadSafeRequestHandle final {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ThreadSafeRequestHandle)
+
+  ThreadSafeRequestHandle(JS::loader::ScriptLoadRequest* aRequest,
+                          nsISerialEventTarget* aSyncTarget);
+
+  JS::loader::ScriptLoadRequest* GetRequest() const { return mRequest; }
+
+  WorkerLoadContext* GetContext() { return mRequest->GetWorkerLoadContext(); }
+
+  bool IsEmpty() { return !mRequest; }
+
+  already_AddRefed<JS::loader::ScriptLoadRequest> ReleaseRequest();
+
+ private:
+  ~ThreadSafeRequestHandle();
+
+  RefPtr<JS::loader::ScriptLoadRequest> mRequest;
+  nsCOMPtr<nsISerialEventTarget> mOwningEventTarget;
+};
+
 }  // namespace mozilla::dom
 #endif /* mozilla_dom_workers_WorkerLoadContext_h__ */
