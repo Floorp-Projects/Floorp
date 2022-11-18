@@ -19,20 +19,8 @@
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/thread_annotations.h"
 
-namespace rtc {
-class TaskQueue;
-}  // namespace rtc
-
 namespace webrtc {
-class SequenceChecker;
 namespace webrtc_sequence_checker_internal {
-
-inline void AssertHeld(const SequenceChecker* checker)
-    RTC_ASSERT_EXCLUSIVE_LOCK(checker) {}
-inline void AssertHeld(const TaskQueueBase* task_queue)
-    RTC_ASSERT_EXCLUSIVE_LOCK(task_queue) {}
-inline void AssertHeld(const rtc::TaskQueue* task_queue)
-    RTC_ASSERT_EXCLUSIVE_LOCK(task_queue) {}
 
 // Real implementation of SequenceChecker, for use in debug mode, or
 // for temporary use in release mode (e.g. to RTC_CHECK on a threading issue
