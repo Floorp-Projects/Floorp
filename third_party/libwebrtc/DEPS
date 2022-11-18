@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '246841c6cf9d13a0805877fc00df7502040cc89f',
+  'chromium_revision': '1093aeb892b7ddf4cbf81bb5895f8924a3e49345',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -20,13 +20,13 @@ vars = {
 
   # By default, download the fuchsia sdk from the public sdk directory.
   'fuchsia_sdk_cipd_prefix': 'fuchsia/sdk/gn/',
-  'fuchsia_version': 'version:9.20220804.0.1',
+  'fuchsia_version': 'version:9.20220804.2.1',
 }
 
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@63b71b0e4381cd7872ac043d9cc1a696f9004657',
+    'https://chromium.googlesource.com/chromium/src/base@91286a48e7b772a31aca77e74e5b65bd887e7d23',
   'src/build':
     'https://chromium.googlesource.com/chromium/src/build@664331e40d91ab9c6e6e306b2c4865014e92dc49',
   'src/buildtools':
@@ -37,13 +37,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@96b9b405e957e0b3314d6f4c3e2c1bd64923887f',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@15c4bf6d3b11fff76ab521cf2155ef7fd4c95fb6',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@3e4bb012caee87ac6f94c273d7f2ed6e724267e5',
+    'https://chromium.googlesource.com/chromium/src/testing@230a11a4ba07c25910b7cec63a5248116eea3f57',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@16988ac384dc884b0d4942ec9e2fb58283f3712a',
+    'https://chromium.googlesource.com/chromium/src/third_party@b93dd8afa979c2321daf4f5facd741a69554828f',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -224,7 +224,7 @@ deps = {
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@711bef67400f096416cb1ba7f6560e533871490f',
   'src/third_party/libyuv':
-    'https://chromium.googlesource.com/libyuv/libyuv.git@9892d70c965678381d2a70a1c9002d1cf136ee78',
+    'https://chromium.googlesource.com/libyuv/libyuv.git@d53f1beecdd8d959f7a3f2e19bd0bd7e7227a233',
   'src/third_party/lss': {
     'url': 'https://chromium.googlesource.com/linux-syscall-support.git@0d6435b731ef91d5182eaecff82ae96764222c48',
     'condition': 'checkout_android or checkout_linux',
@@ -266,7 +266,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@ee10a59e4a2d51e6d8c3878affbed3aba018d100',
+    'https://chromium.googlesource.com/chromium/src/tools@d934b81af5225e00b7c5a98549b0936384bd5080',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
