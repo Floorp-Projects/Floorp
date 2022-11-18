@@ -349,8 +349,8 @@ class ModuleLoaderBase : public nsISupports {
   JS::Value FindFirstParseError(ModuleLoadRequest* aRequest);
   static nsresult InitDebuggerDataForModuleGraph(JSContext* aCx,
                                                  ModuleLoadRequest* aRequest);
-  static nsresult ResolveRequestedModules(ModuleLoadRequest* aRequest,
-                                          nsCOMArray<nsIURI>* aUrlsOut);
+  nsresult ResolveRequestedModules(ModuleLoadRequest* aRequest,
+                                   nsCOMArray<nsIURI>* aUrlsOut);
 
   void SetModuleFetchFinishedAndResumeWaitingRequests(
       ModuleLoadRequest* aRequest, nsresult aResult);
@@ -371,8 +371,8 @@ class ModuleLoaderBase : public nsISupports {
    *        The result of running ModuleEvaluate -- If this is successful, then
    *        we can await the associated EvaluationPromise.
    */
-  static void FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
-                                           nsresult aResult);
+  void FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
+                                    nsresult aResult);
 
   /**
    * Wrapper for JSAPI FinishDynamicImport function. Takes an optional argument
