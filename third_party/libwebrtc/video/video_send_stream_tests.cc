@@ -114,6 +114,17 @@ struct Vp9TestParams {
   uint8_t num_temporal_layers;
   InterLayerPredMode inter_layer_pred;
 };
+
+using ParameterizationType = std::tuple<Vp9TestParams, bool>;
+
+std::string ParamInfoToStr(
+    const testing::TestParamInfo<ParameterizationType>& info) {
+  rtc::StringBuilder sb;
+  sb << std::get<0>(info.param).scalability_mode << "_"
+     << (std::get<1>(info.param) ? "WithIdentifier" : "WithoutIdentifier");
+  return sb.str();
+}
+
 }  // namespace
 
 class VideoSendStreamTest : public test::CallTest {
@@ -3054,6 +3065,8 @@ class Vp9HeaderObserver : public test::SendTest {
       last_packet_sequence_number_ = rtp_packet.SequenceNumber();
       last_packet_timestamp_ = rtp_packet.Timestamp();
       last_vp9_ = vp9_header;
+      last_temporal_idx_by_spatial_idx_[vp9_header.spatial_idx] =
+          vp9_header.temporal_idx;
     }
     return SEND_PACKET;
   }
@@ -3067,12 +3080,38 @@ class Vp9HeaderObserver : public test::SendTest {
     }
   }
 
+  bool IsTemporalShiftEnabled() const {
+    return params_.scalability_mode.find("_SHIFT") != std::string::npos;
+  }
+
   void VerifySpatialIdxWithinFrame(const RTPVideoHeaderVP9& vp9) const {
     bool new_layer = vp9.spatial_idx != last_vp9_.spatial_idx;
     EXPECT_EQ(new_layer, vp9.beginning_of_frame);
     EXPECT_EQ(new_layer, last_vp9_.end_of_frame);
     EXPECT_EQ(new_layer ? last_vp9_.spatial_idx + 1 : last_vp9_.spatial_idx,
               vp9.spatial_idx);
+  }
+
+  void VerifyTemporalIdxWithinFrame(const RTPVideoHeaderVP9& vp9) const {
+    if (!IsTemporalShiftEnabled()) {
+      EXPECT_EQ(vp9.temporal_idx, last_vp9_.temporal_idx);
+      return;
+    }
+    // Temporal shift.
+    EXPECT_EQ(params_.num_temporal_layers, 2);
+    if (vp9.spatial_idx == params_.num_spatial_layers - 1) {
+      // Lower spatial layers should be shifted.
+      int expected_tid =
+          (!vp9.inter_pic_predicted || vp9.temporal_idx == 1) ? 0 : 1;
+      for (int i = 0; i < vp9.spatial_idx; ++i) {
+        EXPECT_EQ(last_temporal_idx_by_spatial_idx_.at(i), expected_tid);
+      }
+    }
+    // Same within spatial layer.
+    bool new_layer = vp9.spatial_idx != last_vp9_.spatial_idx;
+    if (!new_layer) {
+      EXPECT_EQ(vp9.temporal_idx, last_vp9_.temporal_idx);
+    }
   }
 
   void VerifyFixedTemporalLayerStructure(const RTPVideoHeaderVP9& vp9,
@@ -3112,10 +3151,15 @@ class Vp9HeaderObserver : public test::SendTest {
     EXPECT_GE(vp9.temporal_idx, 0);  // 0,1,0,1,... (tid reset on I-frames).
     EXPECT_LE(vp9.temporal_idx, 1);
     EXPECT_TRUE(vp9.temporal_up_switch);
-    if (IsNewPictureId(vp9)) {
-      uint8_t expected_tid =
-          (!vp9.inter_pic_predicted || last_vp9_.temporal_idx == 1) ? 0 : 1;
-      EXPECT_EQ(expected_tid, vp9.temporal_idx);
+    // Verify temporal structure for the highest spatial layer (the structure
+    // may be shifted for lower spatial layer if temporal shift is configured).
+    if (IsHighestSpatialLayer(vp9) && vp9.beginning_of_frame) {
+      int expected_tid =
+          (!vp9.inter_pic_predicted ||
+           last_temporal_idx_by_spatial_idx_.at(vp9.spatial_idx) == 1)
+              ? 0
+              : 1;
+      EXPECT_EQ(vp9.temporal_idx, expected_tid);
     }
   }
 
@@ -3152,6 +3196,11 @@ class Vp9HeaderObserver : public test::SendTest {
 
   bool IsNewPictureId(const RTPVideoHeaderVP9& vp9) const {
     return frames_sent_ > 0 && (vp9.picture_id != last_vp9_.picture_id);
+  }
+
+  bool IsHighestSpatialLayer(const RTPVideoHeaderVP9& vp9) const {
+    return vp9.spatial_idx == params_.num_spatial_layers - 1 ||
+           vp9.spatial_idx == kNoSpatialIdx;
   }
 
   // Flexible mode (F=1):    Non-flexible mode (F=0):
@@ -3262,9 +3311,9 @@ class Vp9HeaderObserver : public test::SendTest {
       EXPECT_FALSE(last_packet_marker_);
       EXPECT_EQ(last_packet_timestamp_, rtp_packet.Timestamp());
       EXPECT_EQ(last_vp9_.picture_id, vp9_header.picture_id);
-      EXPECT_EQ(last_vp9_.temporal_idx, vp9_header.temporal_idx);
       EXPECT_EQ(last_vp9_.tl0_pic_idx, vp9_header.tl0_pic_idx);
       VerifySpatialIdxWithinFrame(vp9_header);
+      VerifyTemporalIdxWithinFrame(vp9_header);
       return;
     }
     // New frame.
@@ -3287,6 +3336,7 @@ class Vp9HeaderObserver : public test::SendTest {
   uint16_t last_packet_sequence_number_ = 0;
   uint32_t last_packet_timestamp_ = 0;
   RTPVideoHeaderVP9 last_vp9_;
+  std::map<int, int> last_temporal_idx_by_spatial_idx_;
   size_t packets_sent_ = 0;
   Mutex mutex_;
   size_t frames_sent_ = 0;
@@ -3295,8 +3345,7 @@ class Vp9HeaderObserver : public test::SendTest {
 };
 
 class Vp9Test : public VideoSendStreamTest,
-                public ::testing::WithParamInterface<
-                    ::testing::tuple<Vp9TestParams, bool>> {
+                public ::testing::WithParamInterface<ParameterizationType> {
  public:
   Vp9Test()
       : params_(::testing::get<0>(GetParam())),
@@ -3326,12 +3375,7 @@ INSTANTIATE_TEST_SUITE_P(
              {"S2T1", 2, 1, InterLayerPredMode::kOff},
              {"S3T3", 3, 3, InterLayerPredMode::kOff}}),
         ::testing::Values(false, true)),  // use_scalability_mode_identifier
-    [](const ::testing::TestParamInfo<Vp9Test::ParamType>& info) {
-      rtc::StringBuilder sb;
-      sb << std::get<0>(info.param).scalability_mode << "_"
-         << (std::get<1>(info.param) ? "WithIdentifier" : "WithoutIdentifier");
-      return sb.str();
-    });
+    ParamInfoToStr);
 
 INSTANTIATE_TEST_SUITE_P(
     ScalabilityModeOff,
@@ -3341,26 +3385,17 @@ INSTANTIATE_TEST_SUITE_P(
             {{"L2T3", 2, 3, InterLayerPredMode::kOn},
              {"S2T3", 2, 3, InterLayerPredMode::kOff}}),
         ::testing::Values(false)),  // use_scalability_mode_identifier
-    [](const ::testing::TestParamInfo<Vp9Test::ParamType>& info) {
-      rtc::StringBuilder sb;
-      sb << std::get<0>(info.param).scalability_mode << "_"
-         << (std::get<1>(info.param) ? "WithIdentifier" : "WithoutIdentifier");
-      return sb.str();
-    });
+    ParamInfoToStr);
 
 INSTANTIATE_TEST_SUITE_P(
     ScalabilityModeOn,
     Vp9Test,
     ::testing::Combine(
-        ::testing::ValuesIn<Vp9TestParams>({{"L2T1h", 2, 1,
-                                             InterLayerPredMode::kOn}}),
+        ::testing::ValuesIn<Vp9TestParams>(
+            {{"L2T1h", 2, 1, InterLayerPredMode::kOn},
+             {"L2T2_KEY_SHIFT", 2, 2, InterLayerPredMode::kOnKeyPic}}),
         ::testing::Values(true)),  // use_scalability_mode_identifier
-    [](const ::testing::TestParamInfo<Vp9Test::ParamType>& info) {
-      rtc::StringBuilder sb;
-      sb << std::get<0>(info.param).scalability_mode << "_"
-         << (std::get<1>(info.param) ? "WithIdentifier" : "WithoutIdentifier");
-      return sb.str();
-    });
+    ParamInfoToStr);
 
 TEST_P(Vp9Test, NonFlexMode) {
   TestVp9NonFlexMode(params_, use_scalability_mode_identifier_);
