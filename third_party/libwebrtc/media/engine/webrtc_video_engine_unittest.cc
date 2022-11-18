@@ -4231,11 +4231,11 @@ TEST_F(WebRtcVideoChannelFlexfecRecvTest,
 }
 
 // Test changing the configuration after a video stream has been created with
-// flexfec enabled and then turn off flexfec. This will result in the video
-// stream being recreated because the flexfec stream pointer is injected to the
-// video stream at construction and that config needs to be torn down.
+// flexfec enabled and then turn off flexfec. This will not result in the video
+// stream being recreated. The flexfec stream pointer that's held by the video
+// stream will be set/cleared as dictated by the configuration change.
 TEST_F(WebRtcVideoChannelFlexfecRecvTest,
-       DisablingFlexfecRecreatesVideoReceiveStream) {
+       DisablingFlexfecDoesNotRecreateVideoReceiveStream) {
   cricket::VideoRecvParameters recv_parameters;
   recv_parameters.codecs.push_back(GetEngineCodec("VP8"));
   recv_parameters.codecs.push_back(GetEngineCodec("flexfec-03"));
@@ -4258,9 +4258,10 @@ TEST_F(WebRtcVideoChannelFlexfecRecvTest,
   recv_parameters.codecs.clear();
   recv_parameters.codecs.push_back(GetEngineCodec("VP8"));
   ASSERT_TRUE(channel_->SetRecvParameters(recv_parameters));
-  // Now the count of created streams will be 3 since the video stream had to
-  // be recreated on account of the flexfec stream being deleted.
-  EXPECT_EQ(3, fake_call_->GetNumCreatedReceiveStreams())
+  // The count of created streams should remain 2 since the video stream will
+  // have been reconfigured to not reference flexfec and not recreated on
+  // account of the flexfec stream being deleted.
+  EXPECT_EQ(2, fake_call_->GetNumCreatedReceiveStreams())
       << "Disabling FlexFEC should not recreate VideoReceiveStreamInterface.";
   EXPECT_EQ(1U, fake_call_->GetVideoReceiveStreams().size())
       << "Disabling FlexFEC should not destroy VideoReceiveStreamInterface.";

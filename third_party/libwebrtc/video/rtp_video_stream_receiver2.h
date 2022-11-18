@@ -188,6 +188,13 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   // Forwards the call to set rtcp_sender_ to the RTCP mode of the rtcp sender.
   void SetRtcpMode(RtcpMode mode);
 
+  // Sets or clears the callback sink that gets called for RTP packets. Used for
+  // packet handlers such as FlexFec. Must be called on the packet delivery
+  // thread (same context as `OnRtpPacket` is called on).
+  // TODO(bugs.webrtc.org/11993): Packet delivery thread today means `worker
+  // thread` but will be `network thread`.
+  void SetPacketSink(RtpPacketSinkInterface* packet_sink);
+
   absl::optional<int64_t> LastReceivedPacketMs() const;
   absl::optional<int64_t> LastReceivedKeyframePacketMs() const;
 
@@ -326,6 +333,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   // that belong to the network thread. Once the packets are fully delivered
   // on the network thread, this comment will be deleted.
   RTC_NO_UNIQUE_ADDRESS SequenceChecker packet_sequence_checker_;
+  RtpPacketSinkInterface* packet_sink_ RTC_GUARDED_BY(packet_sequence_checker_);
   bool receiving_ RTC_GUARDED_BY(packet_sequence_checker_);
   int64_t last_packet_log_ms_ RTC_GUARDED_BY(packet_sequence_checker_);
 

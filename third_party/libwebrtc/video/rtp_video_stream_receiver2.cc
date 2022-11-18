@@ -233,6 +233,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
       ulpfec_receiver_(UlpfecReceiver::Create(config->rtp.remote_ssrc,
                                               this,
                                               config->rtp.extensions)),
+      packet_sink_(config->rtp.packet_sink_),
       receiving_(false),
       last_packet_log_ms_(-1),
       rtp_rtcp_(CreateRtpRtcpModule(
@@ -666,8 +667,8 @@ void RtpVideoStreamReceiver2::OnRtpPacket(const RtpPacketReceived& packet) {
     rtp_receive_statistics_->OnRtpPacket(packet);
   }
 
-  if (config_.rtp.packet_sink_) {
-    config_.rtp.packet_sink_->OnRtpPacket(packet);
+  if (packet_sink_) {
+    packet_sink_->OnRtpPacket(packet);
   }
 }
 
@@ -937,6 +938,12 @@ void RtpVideoStreamReceiver2::OnLocalSsrcChange(uint32_t local_ssrc) {
 void RtpVideoStreamReceiver2::SetRtcpMode(RtcpMode mode) {
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   rtp_rtcp_->SetRTCPStatus(mode);
+}
+
+void RtpVideoStreamReceiver2::SetPacketSink(
+    RtpPacketSinkInterface* packet_sink) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  packet_sink_ = packet_sink;
 }
 
 absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedPacketMs() const {
