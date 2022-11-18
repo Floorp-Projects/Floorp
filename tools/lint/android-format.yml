@@ -3,7 +3,7 @@ android-format:
     description: Android formatting lint
     include: ['mobile/android']
     exclude: []
-    extensions: ['java']
+    extensions: ['java', 'kt']
     support-files:
         - 'mobile/android/**/Makefile.in'
         - 'mobile/android/config/**'
