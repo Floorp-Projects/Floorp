@@ -17,26 +17,14 @@ const ENGINE_URL =
 add_setup(async function() {
   await Services.search.init();
 
-  await SearchTestUtils.installSearchExtension({
-    name: ENGINE_NAME,
-    search_url: ENGINE_URL,
-    search_url_get_params: "test={searchTerms}",
-  });
-
-  let engine = await Services.search.getEngineByName(ENGINE_NAME);
-  ok(engine, "Got a search engine");
-  let oldDefaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(
-    engine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  await SearchTestUtils.installSearchExtension(
+    {
+      name: ENGINE_NAME,
+      search_url: ENGINE_URL,
+      search_url_get_params: "test={searchTerms}",
+    },
+    { setAsDefault: true }
   );
-
-  registerCleanupFunction(async () => {
-    await Services.search.setDefault(
-      oldDefaultEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
-  });
 });
 
 async function openNewSearchTab(event_args, expect_new_window = false) {

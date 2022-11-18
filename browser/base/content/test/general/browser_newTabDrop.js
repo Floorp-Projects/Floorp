@@ -10,28 +10,20 @@ registerCleanupFunction(async function cleanup() {
   while (gBrowser.tabs.length > 1) {
     BrowserTestUtils.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
   }
-  await Services.search.setDefault(
-    originalEngine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
 });
 
-let originalEngine;
 add_task(async function test_setup() {
   // This test opens multiple tabs and some confirm dialogs, that takes long.
   requestLongerTimeout(2);
 
   // Stop search-engine loads from hitting the network
-  await SearchTestUtils.installSearchExtension({
-    name: "MozSearch",
-    search_url: "https://example.com/",
-    search_url_get_params: "q={searchTerms}",
-  });
-  let engine = Services.search.getEngineByName("MozSearch");
-  originalEngine = await Services.search.getDefault();
-  await Services.search.setDefault(
-    engine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  await SearchTestUtils.installSearchExtension(
+    {
+      name: "MozSearch",
+      search_url: "https://example.com/",
+      search_url_get_params: "q={searchTerms}",
+    },
+    { setAsDefault: true }
   );
 });
 

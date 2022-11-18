@@ -84,20 +84,15 @@ add_setup(async function() {
   Services.telemetry.canRecordExtended = true;
   Services.prefs.setBoolPref("browser.search.log", true);
 
-  let currentEngineName = (await Services.search.getDefault()).name;
-
-  await SearchTestUtils.installSearchExtension({
-    search_url: getPageUrl(true),
-    search_url_get_params: "s={searchTerms}&abc=ff",
-    suggest_url:
-      "https://example.com/browser/browser/components/search/test/browser/searchSuggestionEngine.sjs",
-    suggest_url_get_params: "query={searchTerms}",
-  });
-  let engine1 = Services.search.getEngineByName("Example");
-
-  await Services.search.setDefault(
-    engine1,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  await SearchTestUtils.installSearchExtension(
+    {
+      search_url: getPageUrl(true),
+      search_url_get_params: "s={searchTerms}&abc=ff",
+      suggest_url:
+        "https://example.com/browser/browser/components/search/test/browser/searchSuggestionEngine.sjs",
+      suggest_url_get_params: "query={searchTerms}",
+    },
+    { setAsDefault: true }
   );
 
   tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
@@ -108,10 +103,6 @@ add_setup(async function() {
     SearchSERPTelemetry.overrideSearchTelemetryForTests();
     Services.telemetry.canRecordExtended = oldCanRecord;
     Services.telemetry.clearScalars();
-    await Services.search.setDefault(
-      Services.search.getEngineByName(currentEngineName),
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
   });
 });
 

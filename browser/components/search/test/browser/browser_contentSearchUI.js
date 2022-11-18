@@ -263,7 +263,6 @@ function focusContentSearchBar() {
 
 let extension1;
 let extension2;
-let currentEngineName;
 
 add_setup(async function() {
   let originalOnMessageSearch = ContentSearch._onMessageSearch;
@@ -272,15 +271,17 @@ add_setup(async function() {
   ContentSearch._onMessageSearch = () => {};
   ContentSearch._onMessageManageEngines = () => {};
 
-  currentEngineName = (await Services.search.getDefault()).name;
   let currentEngines = await Services.search.getVisibleEngines();
 
-  extension1 = await SearchTestUtils.installSearchExtension({
-    name: TEST_ENGINE1.name,
-    suggest_url:
-      "https://example.com/browser/browser/components/search/test/browser/searchSuggestionEngine.sjs",
-    suggest_url_get_params: "query={searchTerms}",
-  });
+  extension1 = await SearchTestUtils.installSearchExtension(
+    {
+      name: TEST_ENGINE1.name,
+      suggest_url:
+        "https://example.com/browser/browser/components/search/test/browser/searchSuggestionEngine.sjs",
+      suggest_url_get_params: "query={searchTerms}",
+    },
+    { setAsDefault: true }
+  );
   extension2 = await SearchTestUtils.installSearchExtension({
     name: TEST_ENGINE2.name,
     suggest_url:
@@ -288,12 +289,6 @@ add_setup(async function() {
     suggest_url_get_params: "query={searchTerms}",
   });
 
-  let engine1 = Services.search.getEngineByName(TEST_ENGINE1.name);
-
-  await Services.search.setDefault(
-    engine1,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
   for (let engine of currentEngines) {
     await Services.search.removeEngine(engine);
   }
@@ -1107,13 +1102,7 @@ add_task(async function settings() {
 });
 
 add_task(async function cleanup() {
-  // Extensions must be unloaded before registerCleanupFunction runs, so
-  // unload them here.
   Services.search.restoreDefaultEngines();
-  await Services.search.setDefault(
-    Services.search.getEngineByName(currentEngineName),
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
 });
 
 function checkState(

@@ -64,21 +64,9 @@ add_setup(async function() {
   Services.telemetry.clearEvents();
 
   // Add a mock engine so we don't hit the network.
-  await SearchTestUtils.installSearchExtension();
-  let oldDefaultEngine = await Services.search.getDefault();
-  Services.search.setDefault(
-    Services.search.getEngineByName("Example"),
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
+  await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit(SUGGESTIONS);
-
-  registerCleanupFunction(() => {
-    Services.search.setDefault(
-      oldDefaultEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
-  });
 });
 
 /**

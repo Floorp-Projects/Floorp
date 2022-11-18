@@ -777,19 +777,12 @@ add_task(async function pasteAndGo_url() {
 });
 
 add_task(async function pasteAndGo_nonURL() {
-  let engine = Services.search.getEngineByName("Example");
-  let oldDefaultEngine = await Services.search.getDefault();
-  Services.search.setDefault(engine, Ci.nsISearchService.CHANGE_REASON_UNKNOWN);
-
+  await setDefaultEngine("Example");
   await doPasteAndGoTest(
     "pasteAndGo_nonURL",
     "https://example.com/?q=pasteAndGo_nonURL"
   );
-
-  Services.search.setDefault(
-    oldDefaultEngine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
+  await setDefaultEngine("Google");
 });
 
 async function doPasteAndGoTest(searchString, expectedURL) {

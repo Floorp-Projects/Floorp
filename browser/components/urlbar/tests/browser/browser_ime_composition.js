@@ -45,22 +45,15 @@ add_task(async function() {
     parentGuid: PlacesUtils.bookmarks.menuGuid,
   });
 
-  await SearchTestUtils.installSearchExtension({
-    name: "Test",
-    keyword: "@test",
-  });
-
-  let originalEngine = await Services.search.getDefault();
-  await Services.search.setDefault(
-    Services.search.getEngineByName("Test"),
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  await SearchTestUtils.installSearchExtension(
+    {
+      name: "Test",
+      keyword: "@test",
+    },
+    { setAsDefault: true }
   );
 
   registerCleanupFunction(async () => {
-    await Services.search.setDefault(
-      originalEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
     await PlacesUtils.bookmarks.remove(bm);
     await PlacesUtils.history.clear();
   });

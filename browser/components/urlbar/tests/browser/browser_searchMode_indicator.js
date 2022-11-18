@@ -27,21 +27,9 @@ add_setup(async function() {
     url: getRootDirectory(gTestPath) + SUGGESTIONS_ENGINE_NAME,
   });
 
-  let oldDefaultEngine = await Services.search.getDefault();
-  await SearchTestUtils.installSearchExtension();
+  await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
   defaultEngine = Services.search.getEngineByName("Example");
-  await Services.search.setDefault(
-    defaultEngine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
   await Services.search.moveEngine(suggestionsEngine, 0);
-
-  registerCleanupFunction(async () => {
-    await Services.search.setDefault(
-      oldDefaultEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
-  });
 
   // Set our top sites.
   await PlacesUtils.history.clear();

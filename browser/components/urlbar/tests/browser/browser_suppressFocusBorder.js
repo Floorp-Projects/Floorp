@@ -38,13 +38,10 @@ class AwaitPromiseProvider extends UrlbarTestUtils.TestProvider {
 }
 
 add_setup(async function() {
-  await SearchTestUtils.installSearchExtension();
-  let engine = Services.search.getEngineByName("Example");
-  let oldDefaultEngine = Services.search.defaultEngine;
-  Services.search.defaultEngine = engine;
+  await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
+
   registerCleanupFunction(function() {
     SpecialPowers.clipboardCopyString("");
-    Services.search.defaultEngine = oldDefaultEngine;
   });
 });
 

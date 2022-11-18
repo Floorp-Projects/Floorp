@@ -20,14 +20,12 @@ add_setup(async function() {
     url: getRootDirectory(gTestPath) + SUGGESTIONS_ENGINE_NAME,
   });
 
-  let oldDefaultEngine = await Services.search.getDefault();
-  await SearchTestUtils.installSearchExtension({
-    name: DEFAULT_ENGINE_NAME,
-    keyword: "@test",
-  });
-  await Services.search.setDefault(
-    Services.search.getEngineByName(DEFAULT_ENGINE_NAME),
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  await SearchTestUtils.installSearchExtension(
+    {
+      name: DEFAULT_ENGINE_NAME,
+      keyword: "@test",
+    },
+    { setAsDefault: true }
   );
   await Services.search.moveEngine(suggestionsEngine, 0);
 
@@ -62,10 +60,6 @@ add_setup(async function() {
   ]);
 
   registerCleanupFunction(async () => {
-    await Services.search.setDefault(
-      oldDefaultEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
     await UrlbarTestUtils.formHistory.clear();
   });
 

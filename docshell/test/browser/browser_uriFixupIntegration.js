@@ -25,41 +25,24 @@ add_setup(async function() {
     ],
   });
 
-  let oldCurrentEngine = await Services.search.getDefault();
-  let oldPrivateEngine = await Services.search.getDefaultPrivate();
-
   // Add new fake search engines.
-  await SearchTestUtils.installSearchExtension({
-    name: kSearchEngineID,
-    search_url: "https://example.com/",
-    search_url_get_params: "search={searchTerms}",
-  });
-  await Services.search.setDefault(
-    Services.search.getEngineByName(kSearchEngineID),
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  await SearchTestUtils.installSearchExtension(
+    {
+      name: kSearchEngineID,
+      search_url: "https://example.com/",
+      search_url_get_params: "search={searchTerms}",
+    },
+    { setAsDefault: true }
   );
 
-  await SearchTestUtils.installSearchExtension({
-    name: kPrivateSearchEngineID,
-    search_url: "https://example.com/",
-    search_url_get_params: "private={searchTerms}",
-  });
-  await Services.search.setDefaultPrivate(
-    Services.search.getEngineByName(kPrivateSearchEngineID),
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  await SearchTestUtils.installSearchExtension(
+    {
+      name: kPrivateSearchEngineID,
+      search_url: "https://example.com/",
+      search_url_get_params: "private={searchTerms}",
+    },
+    { setAsDefaultPrivate: true }
   );
-
-  // Remove the fake engines when done.
-  registerCleanupFunction(async () => {
-    await Services.search.setDefault(
-      oldCurrentEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
-    await Services.search.setDefaultPrivate(
-      oldPrivateEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
-  });
 });
 
 add_task(async function test() {

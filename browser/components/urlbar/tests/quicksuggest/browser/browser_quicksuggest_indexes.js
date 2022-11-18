@@ -54,21 +54,12 @@ add_setup(async function() {
   await UrlbarTestUtils.formHistory.clear();
 
   // Add a mock engine so we don't hit the network.
-  await SearchTestUtils.installSearchExtension();
-  let oldDefaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(
-    Services.search.getEngineByName("Example"),
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
+  await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit(TEST_DATA);
 
   registerCleanupFunction(async () => {
     await PlacesUtils.history.clear();
-    Services.search.setDefault(
-      oldDefaultEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
   });
 });
 

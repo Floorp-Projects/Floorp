@@ -11,22 +11,12 @@ const TEST_URL = "data:text/html,a test page";
 
 add_task(async function test_setup() {
   // Stop search-engine loads from hitting the network.
-  await SearchTestUtils.installSearchExtension();
-  let originalEngine = await Services.search.getDefault();
-  let engine = Services.search.getEngineByName("Example");
-  await Services.search.setDefault(
-    engine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
+  await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
 
   registerCleanupFunction(async function cleanup() {
     while (gBrowser.tabs.length > 1) {
       BrowserTestUtils.removeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
     }
-    await Services.search.setDefault(
-      originalEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
   });
 
   CustomizableUI.addWidgetToArea("home-button", "nav-bar");

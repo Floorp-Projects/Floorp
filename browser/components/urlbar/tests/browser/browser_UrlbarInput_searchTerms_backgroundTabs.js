@@ -5,7 +5,7 @@
 // These tests check the behavior of the Urlbar when search terms are
 // expected to be shown and tabs are opened in the background.
 
-let originalEngine, defaultTestEngine;
+let defaultTestEngine;
 
 // The main search string used in tests
 const SEARCH_STRING = "chocolate cake";
@@ -15,18 +15,17 @@ add_setup(async function() {
     set: [["browser.urlbar.showSearchTerms.featureGate", true]],
   });
 
-  await SearchTestUtils.installSearchExtension({
-    name: "MozSearch",
-    search_url: "https://www.example.com/",
-    search_url_get_params: "q={searchTerms}&pc=fake_code",
-  });
+  await SearchTestUtils.installSearchExtension(
+    {
+      name: "MozSearch",
+      search_url: "https://www.example.com/",
+      search_url_get_params: "q={searchTerms}&pc=fake_code",
+    },
+    { setAsDefault: true }
+  );
   defaultTestEngine = Services.search.getEngineByName("MozSearch");
 
-  originalEngine = await Services.search.getDefault();
-  Services.search.defaultEngine = defaultTestEngine;
-
   registerCleanupFunction(async function() {
-    Services.search.defaultEngine = originalEngine;
     await PlacesUtils.history.clear();
   });
 });

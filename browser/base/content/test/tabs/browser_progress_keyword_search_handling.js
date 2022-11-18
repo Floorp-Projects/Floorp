@@ -17,25 +17,14 @@ add_setup(async function() {
   });
 
   // Create an engine to use for the test.
-  await SearchTestUtils.installSearchExtension({
-    name: "MozSearch",
-    search_url: "https://example.com/",
-    search_url_get_params: "q={searchTerms}",
-  });
-
-  let originalEngine = await Services.search.getDefault();
-  let engineDefault = Services.search.getEngineByName("MozSearch");
-  await Services.search.setDefault(
-    engineDefault,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  await SearchTestUtils.installSearchExtension(
+    {
+      name: "MozSearch",
+      search_url: "https://example.com/",
+      search_url_get_params: "q={searchTerms}",
+    },
+    { setAsDefault: true }
   );
-
-  registerCleanupFunction(async function() {
-    await Services.search.setDefault(
-      originalEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
-  });
 });
 
 /*
