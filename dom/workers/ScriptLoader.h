@@ -42,7 +42,6 @@ namespace workerinternals {
 
 namespace loader {
 class ScriptExecutorRunnable;
-class AbruptCancellationRunnable;
 class CachePromiseHandler;
 class CacheLoadHandler;
 class CacheCreator;
@@ -120,7 +119,6 @@ class NetworkLoadHandler;
 class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
                            public nsINamed {
   friend class ScriptExecutorRunnable;
-  friend class AbruptCancellationRunnable;
   friend class CachePromiseHandler;
   friend class CacheLoadHandler;
   friend class CacheCreator;
@@ -226,8 +224,6 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
 
   void ShutdownScriptLoader(bool aResult, bool aMutedError);
 
-  void AbruptShutdown();
-
  private:
   ~WorkerScriptLoader() = default;
 
@@ -238,8 +234,6 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
   }
 
   void TryShutdown();
-
-  void DispatchAbruptShutdown();
 
   nsTArray<ThreadSafeRequestHandle*> GetLoadingList();
 

@@ -373,20 +373,6 @@ class ScriptExecutorRunnable final : public MainThreadWorkerSyncRunnable {
   nsresult Cancel() override;
 };
 
-class AbruptCancellationRunnable final : public MainThreadWorkerSyncRunnable {
-  RefPtr<WorkerScriptLoader> mScriptLoader;
-
- public:
-  AbruptCancellationRunnable(WorkerScriptLoader* aScriptLoader,
-                             nsISerialEventTarget* aSyncLoopTarget);
-
- private:
-  ~AbruptCancellationRunnable() = default;
-
-  virtual bool WorkerRun(JSContext* aCx,
-                         WorkerPrivate* aWorkerPrivate) override;
-};
-
 template <typename Unit>
 static bool EvaluateSourceBuffer(JSContext* aCx,
                                  const JS::CompileOptions& aOptions,
@@ -582,10 +568,6 @@ void WorkerScriptLoader::LoadingFinished(
     ThreadSafeRequestHandle* aRequestHandle, nsresult aRv) {
   AssertIsOnMainThread();
 
-  if (IsCancelled()) {
-    return;
-  }
-
   WorkerLoadContext* loadContext = aRequestHandle->GetContext();
 
   loadContext->mLoadResult = aRv;
@@ -692,9 +674,6 @@ nsresult WorkerScriptLoader::OnStreamComplete(
     ThreadSafeRequestHandle* aRequestHandle, nsresult aStatus) {
   AssertIsOnMainThread();
 
-  // We expect our callers to runtime-check this in advance.
-  MOZ_ASSERT(!IsCancelled());
-
   LoadingFinished(aRequestHandle, aStatus);
   return NS_OK;
 }
@@ -708,46 +687,48 @@ void WorkerScriptLoader::CancelMainThreadWithBindingAborted(
 void WorkerScriptLoader::CancelMainThread(
     nsresult aCancelResult, nsTArray<ThreadSafeRequestHandle*>* aContextList) {
   AssertIsOnMainThread();
+  if (IsCancelled()) {
+    return;
+  }
   {
     MutexAutoLock lock(CleanUpLock());
 
     // Check if we have already cancelled, or if the worker has been killed
     // before we cancel.
-    if (IsCancelled() || CleanedUp()) {
+    if (CleanedUp()) {
       return;
     }
 
     mCancelMainThread = Some(aCancelResult);
 
-    bool shouldDispatch = false;
     for (ThreadSafeRequestHandle* handle : *aContextList) {
       if (handle->IsEmpty()) {
         continue;
       }
-      // In the case of a cancellation, service workers fetching from the
-      // cache will still be doing work despite CancelMainThread. Eagerly
-      // clear the promises associated with these scripts.
       WorkerLoadContext* loadContext = handle->GetContext();
       if (!loadContext) {
         continue;
       }
+
+      bool callLoadingFinished = true;
+
       if (loadContext->IsAwaitingPromise()) {
-        // This will trigger LoadingFinished if we do not set the cancel flag
-        // ahead of time. But, as we do that above, this should not be a
-        // concern.
         MOZ_ASSERT(mWorkerRef->Private()->IsServiceWorker());
         loadContext->mCachePromise->MaybeReject(NS_BINDING_ABORTED);
         loadContext->mCachePromise = nullptr;
-        shouldDispatch = true;
+        callLoadingFinished = false;
       }
-      // If at least one request has not been dispatched, we need to dispatch.
-      if (!loadContext->mLoadingFinished) {
-        shouldDispatch = true;
+      if (loadContext->mChannel) {
+        if (NS_SUCCEEDED(loadContext->mChannel->Cancel(aCancelResult))) {
+          callLoadingFinished = false;
+        } else {
+          NS_WARNING("Failed to cancel channel!");
+        }
       }
       loadContext->ClearCacheCreator();
-    }
-    if (shouldDispatch) {
-      DispatchAbruptShutdown();
+      if (callLoadingFinished && !loadContext->mLoadingFinished) {
+        LoadingFinished(handle, aCancelResult);
+      }
     }
   }
 }
@@ -1018,40 +999,6 @@ nsresult WorkerScriptLoader::FillCompileOptionsForRequest(
   return NS_OK;
 }
 
-void WorkerScriptLoader::DispatchAbruptShutdown() {
-  AssertIsOnMainThread();
-
-  RefPtr<AbruptCancellationRunnable> runnable =
-      new AbruptCancellationRunnable(this, mSyncLoopTarget);
-  if (!runnable->Dispatch()) {
-    MOZ_ASSERT(false, "This should never fail!");
-  }
-}
-
-void WorkerScriptLoader::AbruptShutdown() {
-  mWorkerRef->Private()->AssertIsOnWorkerThread();
-
-  // Move all requests to the loaded list
-  while (!mLoadingRequests.isEmpty()) {
-    ScriptLoadRequest* request = mLoadingRequests.getFirst();
-    RefPtr<ScriptLoadRequest> req = mLoadingRequests.Steal(request);
-    mLoadedRequests.AppendElement(req);
-  }
-
-  while (!mLoadedRequests.isEmpty()) {
-    RefPtr<ScriptLoadRequest> request = mLoadedRequests.StealFirst();
-    WorkerLoadContext* loadContext = request->GetWorkerLoadContext();
-    mRv.MightThrowJSException();
-    if (NS_FAILED(loadContext->mLoadResult)) {
-      ReportErrorToConsole(request, loadContext->mLoadResult);
-      break;
-    }
-  }
-
-  mLoadedRequests.CancelRequestsAndClear();
-  ShutdownScriptLoader(true, false);
-}
-
 bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
                                         ScriptLoadRequest* aRequest) {
   mWorkerRef->Private()->AssertIsOnWorkerThread();
@@ -1061,6 +1008,7 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
   NS_ASSERTION(!loadContext->mChannel, "Should no longer have a channel!");
   NS_ASSERTION(aRequest->IsReadyToRun(), "Should be scheduled!");
 
+  MOZ_ASSERT(!mRv.Failed(), "Who failed it and why?");
   mRv.MightThrowJSException();
   if (NS_FAILED(loadContext->mLoadResult)) {
     ReportErrorToConsole(aRequest, loadContext->mLoadResult);
@@ -1208,25 +1156,6 @@ void WorkerScriptLoader::LogExceptionToConsole(JSContext* aCx,
 }
 
 NS_IMPL_ISUPPORTS(WorkerScriptLoader, nsINamed)
-
-AbruptCancellationRunnable::AbruptCancellationRunnable(
-    WorkerScriptLoader* aScriptLoader, nsISerialEventTarget* aSyncLoopTarget)
-    : MainThreadWorkerSyncRunnable(aScriptLoader->mWorkerRef->Private(),
-                                   aSyncLoopTarget),
-      mScriptLoader(aScriptLoader) {}
-
-bool AbruptCancellationRunnable::WorkerRun(JSContext* aCx,
-                                           WorkerPrivate* aWorkerPrivate) {
-  aWorkerPrivate->AssertIsOnWorkerThread();
-
-  // We must be on the same worker as we started on.
-  MOZ_ASSERT(
-      mScriptLoader->mSyncLoopTarget == mSyncLoopTarget,
-      "Unexpected SyncLoopTarget. Check if the sync loop was closed early");
-
-  mScriptLoader->AbruptShutdown();
-  return true;
-}
 
 ScriptExecutorRunnable::ScriptExecutorRunnable(
     WorkerScriptLoader* aScriptLoader, WorkerPrivate* aWorkerPrivate,
