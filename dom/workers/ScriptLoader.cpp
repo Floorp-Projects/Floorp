@@ -352,13 +352,13 @@ namespace loader {
 
 class ScriptExecutorRunnable final : public MainThreadWorkerSyncRunnable {
   RefPtr<WorkerScriptLoader> mScriptLoader;
-  RefPtr<ThreadSafeRequestHandle> mRequestHandle;
+  const Span<RefPtr<ThreadSafeRequestHandle>> mLoadedRequests;
 
  public:
   ScriptExecutorRunnable(WorkerScriptLoader* aScriptLoader,
                          WorkerPrivate* aWorkerPrivate,
                          nsISerialEventTarget* aSyncLoopTarget,
-                         ThreadSafeRequestHandle* aRequestHandle);
+                         Span<RefPtr<ThreadSafeRequestHandle>> aLoadedRequests);
 
  private:
   ~ScriptExecutorRunnable() = default;
@@ -1099,7 +1099,10 @@ void ScriptLoaderRunnable::MaybeExecuteFinishedScripts(
   WorkerLoadContext* loadContext = aRequestHandle->GetContext();
   if (!loadContext->IsAwaitingPromise()) {
     loadContext->ClearCacheCreator();
-    DispatchMaybeMoveToLoadedList(aRequestHandle);
+    if (aRequestHandle->GetContext()->IsTopLevel()) {
+      mWorkerRef->Private()->WorkerScriptLoaded();
+    }
+    DispatchProcessPendingRequests();
   }
 }
 
@@ -1155,32 +1158,70 @@ void ScriptLoaderRunnable::CancelMainThread(nsresult aCancelResult) {
         LoadingFinished(handle, aCancelResult);
       }
     }
+    DispatchProcessPendingRequests();
   }
 }
 
-void ScriptLoaderRunnable::DispatchMaybeMoveToLoadedList(
-    ThreadSafeRequestHandle* aRequestHandle) {
+void ScriptLoaderRunnable::DispatchProcessPendingRequests() {
   AssertIsOnMainThread();
 
-  if (aRequestHandle->GetContext()->IsTopLevel()) {
-    mWorkerRef->Private()->WorkerScriptLoaded();
-  }
+  const auto begin = mLoadingRequests.begin();
+  const auto end = mLoadingRequests.end();
+  using Iterator = decltype(begin);
+  const auto maybeRangeToExecute =
+      [begin, end]() -> Maybe<std::pair<Iterator, Iterator>> {
+    // firstItToExecute is the first loadInfo where mExecutionScheduled is
+    // unset.
+    auto firstItToExecute = std::find_if(
+        begin, end, [](const ThreadSafeRequestHandle* requestHandle) {
+          return !requestHandle->mExecutionScheduled;
+        });
 
-  RefPtr<ScriptExecutorRunnable> runnable = new ScriptExecutorRunnable(
-      mScriptLoader, mWorkerRef->Private(), mScriptLoader->mSyncLoopTarget,
-      aRequestHandle);
-  if (!runnable->Dispatch()) {
-    MOZ_ASSERT(false, "This should never fail!");
+    if (firstItToExecute == end) {
+      return Nothing();
+    }
+
+    // firstItUnexecutable is the first loadInfo that is not yet finished.
+    // Update mExecutionScheduled on the ones we're about to schedule for
+    // execution.
+    const auto firstItUnexecutable = std::find_if(
+        firstItToExecute, end, [](ThreadSafeRequestHandle* requestHandle) {
+          MOZ_ASSERT(!requestHandle->IsEmpty());
+          if (!requestHandle->Finished()) {
+            return true;
+          }
+
+          // We can execute this one.
+          requestHandle->mExecutionScheduled = true;
+
+          return false;
+        });
+
+    return firstItUnexecutable == firstItToExecute
+               ? Nothing()
+               : Some(std::pair(firstItToExecute, firstItUnexecutable));
+  }();
+
+  // If there are no unexecutable load infos, we can unuse things before the
+  // execution of the scripts and the stopping of the sync loop.
+  if (maybeRangeToExecute) {
+    RefPtr<ScriptExecutorRunnable> runnable = new ScriptExecutorRunnable(
+        mScriptLoader, mWorkerRef->Private(), mScriptLoader->mSyncLoopTarget,
+        Span<RefPtr<ThreadSafeRequestHandle>>{maybeRangeToExecute->first,
+                                              maybeRangeToExecute->second});
+    if (!runnable->Dispatch()) {
+      MOZ_ASSERT(false, "This should never fail!");
+    }
   }
 }
 
 ScriptExecutorRunnable::ScriptExecutorRunnable(
     WorkerScriptLoader* aScriptLoader, WorkerPrivate* aWorkerPrivate,
     nsISerialEventTarget* aSyncLoopTarget,
-    ThreadSafeRequestHandle* aRequestHandle)
+    Span<RefPtr<ThreadSafeRequestHandle>> aLoadedRequests)
     : MainThreadWorkerSyncRunnable(aWorkerPrivate, aSyncLoopTarget),
       mScriptLoader(aScriptLoader),
-      mRequestHandle(aRequestHandle) {}
+      mLoadedRequests(aLoadedRequests) {}
 
 bool ScriptExecutorRunnable::IsDebuggerRunnable() const {
   // ScriptExecutorRunnable is used to execute both worker and debugger scripts.
@@ -1197,7 +1238,7 @@ bool ScriptExecutorRunnable::PreRun(WorkerPrivate* aWorkerPrivate) {
       mScriptLoader->mSyncLoopTarget == mSyncLoopTarget,
       "Unexpected SyncLoopTarget. Check if the sync loop was closed early");
 
-  if (!mRequestHandle->GetContext()->IsTopLevel()) {
+  if (!mLoadedRequests.begin()->get()->GetContext()->IsTopLevel()) {
     return true;
   }
 
@@ -1222,14 +1263,16 @@ bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
       mScriptLoader->mSyncLoopTarget == mSyncLoopTarget,
       "Unexpected SyncLoopTarget. Check if the sync loop was closed early");
 
-  // The request must be valid.
-  MOZ_ASSERT(!mRequestHandle->IsEmpty());
+  for (const auto requestHandle : mLoadedRequests) {
+    // The request must be valid.
+    MOZ_ASSERT(!requestHandle->IsEmpty());
 
-  // Release the request to the worker. From this point on, the Request Handle
-  // is empty.
-  RefPtr<ScriptLoadRequest> request = mRequestHandle->ReleaseRequest();
+    // Release the request to the worker. From this point on, the Request Handle
+    // is empty.
+    RefPtr<ScriptLoadRequest> request = requestHandle->ReleaseRequest();
 
-  mScriptLoader->MaybeMoveToLoadedList(request);
+    mScriptLoader->MaybeMoveToLoadedList(request);
+  }
   return mScriptLoader->ProcessPendingRequests(aCx);
 }
 

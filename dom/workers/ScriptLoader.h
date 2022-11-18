@@ -269,7 +269,7 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
 class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
   RefPtr<WorkerScriptLoader> mScriptLoader;
   RefPtr<ThreadSafeWorkerRef> mWorkerRef;
-  nsTArray<RefPtr<ThreadSafeRequestHandle>> mLoadingRequests;
+  nsTArrayView<RefPtr<ThreadSafeRequestHandle>> mLoadingRequests;
   Maybe<nsresult> mCancelMainThread;
 
  public:
@@ -299,7 +299,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
 
   void CancelMainThread(nsresult aCancelResult);
 
-  void DispatchMaybeMoveToLoadedList(ThreadSafeRequestHandle* aRequestHandle);
+  void DispatchProcessPendingRequests();
 
   NS_IMETHOD
   Run() override;

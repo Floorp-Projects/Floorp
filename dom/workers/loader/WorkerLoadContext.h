@@ -189,11 +189,17 @@ class ThreadSafeRequestHandle final {
 
   bool IsCancelled();
 
+  bool Finished() {
+    return GetContext()->mLoadingFinished && !GetContext()->IsAwaitingPromise();
+  }
+
   nsresult GetCancelResult();
 
   already_AddRefed<JS::loader::ScriptLoadRequest> ReleaseRequest();
 
   RefPtr<workerinternals::loader::ScriptLoaderRunnable> mRunnable;
+
+  bool mExecutionScheduled = false;
 
  private:
   ~ThreadSafeRequestHandle();
