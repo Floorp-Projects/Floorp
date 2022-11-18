@@ -1218,7 +1218,9 @@ bool AppWindow::LoadPositionFromXUL(int32_t aSpecWidth, int32_t aSpecHeight) {
 
   // if we're the hidden window, don't try to validate our size/position. We're
   // special.
-  if (mIsHiddenWindow) return false;
+  if (mIsHiddenWindow) {
+    return false;
+  }
 
   nsCOMPtr<dom::Element> windowElement = GetWindowDOMElement();
   NS_ENSURE_TRUE(windowElement, false);
@@ -1282,7 +1284,7 @@ bool AppWindow::LoadPositionFromXUL(int32_t aSpecWidth, int32_t aSpecHeight) {
 
 static Maybe<int32_t> ReadIntAttribute(const Element& aElement, nsAtom* aAtom) {
   nsAutoString attrString;
-  if (!aElement.GetAttr(kNameSpaceID_None, aAtom, attrString)) {
+  if (!aElement.GetAttr(aAtom, attrString)) {
     return Nothing();
   }
 
@@ -2573,20 +2575,19 @@ void AppWindow::LoadPersistentWindowState() {
 
   // Check if the window wants to persist anything.
   nsAutoString persist;
-  docShellElement->GetAttr(kNameSpaceID_None, nsGkAtoms::persist, persist);
+  docShellElement->GetAttr(nsGkAtoms::persist, persist);
   if (persist.IsEmpty()) {
     return;
   }
 
-  auto loadValue = [&](const nsAtom* aAttr) {
+  auto loadValue = [&](nsAtom* aAttr) {
     nsDependentAtomString attrString(aAttr);
     if (persist.Find(attrString) >= 0) {
       nsAutoString value;
       nsresult rv = GetPersistentValue(aAttr, value);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to get persistent state.");
       if (NS_SUCCEEDED(rv) && !value.IsEmpty()) {
-        IgnoredErrorResult err;
-        docShellElement->SetAttribute(attrString, value, err);
+        docShellElement->SetAttr(aAttr, value, IgnoreErrors());
       }
     }
   };
