@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<pkg-info overwrite-permissions="true" relocatable="false" identifier="${CFBundleIdentifier}" postinstall-action="none" version="${simple_version}" format-version="2" generator-version="InstallCmds-681 (18F132)" install-location="/Applications" auth="root">
+    <payload numberOfFiles="${numberOfFiles}" installKBytes="${installKBytes}"/>
+    <bundle path="./${app_name}.app" id="${CFBundleIdentifier}" CFBundleShortVersionString="${CFBundleShortVersionString}" CFBundleVersion="${CFBundleVersion}"/>
+    <bundle-version>
+        <bundle id="${CFBundleIdentifier}"/>
+    </bundle-version>
+    <upgrade-bundle>
+        <bundle id="${CFBundleIdentifier}"/>
+    </upgrade-bundle>
+    <update-bundle/>
+    <atomic-update-bundle/>
+    <strict-identifier>
+        <bundle id="${CFBundleIdentifier}"/>
+    </strict-identifier>
+    <relocate>
+        <bundle id="${CFBundleIdentifier}"/>
+    </relocate>
+</pkg-info>
