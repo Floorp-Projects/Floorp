@@ -711,7 +711,7 @@ async function browseraction_contextmenu_remove_extension_helper(win) {
 // overwflow menu, and repeat the test with and without the customize
 // mode enabled).
 async function browseraction_contextmenu_report_extension_helper(win) {
-  SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     set: [["extensions.abuseReport.enabled", true]],
   });
   // let win;
@@ -1042,4 +1042,5 @@ add_task(async function test_non_unified_extensions_ui() {
   await test_no_toolbar_pinning_on_builtin_helper(win);
 
   await BrowserTestUtils.closeWindow(win);
+  await SpecialPowers.popPrefEnv();
 });

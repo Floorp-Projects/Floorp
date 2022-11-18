@@ -499,10 +499,19 @@ var OriginControls = {
 
   /**
    * Get origin controls messages (fluent IDs) to be shown to users for a given
-   * extension on a given host.
+   * extension on a given host. The messages might be different for extensions
+   * with a browser action (that might or might not open a popup).
    *
-   * @param {WebExtensionPolicy} policy
-   * @param {nsIURI} uri
+   * @param {object} params
+   * @param {WebExtensionPolicy} params.policy an extension's policy
+   * @param {nsIURI} params.uri                an URI
+   * @param {boolean} params.isAction          this should be true for
+   *                                           extensions with a browser
+   *                                           action, false otherwise.
+   * @param {boolean} params.hasPopup          this should be true when the
+   *                                           browser action opens a popup,
+   *                                           false otherwise.
+   *
    * @returns {object|null} An object with origin controls message IDs or
    *                        `null` when there is no message for the state.
    *  @param {string} default      the message ID corresponding to the state
@@ -511,22 +520,26 @@ var OriginControls = {
    *                               users hover interactive elements (e.g. a
    *                               button).
    */
-  getStateMessageIDs(policy, uri) {
+  getStateMessageIDs({ policy, uri, isAction = false, hasPopup = false }) {
     const state = this.getState(policy, uri);
 
     // TODO: add support for temporary access.
 
+    const onHoverForAction = hasPopup
+      ? "origin-controls-state-runnable-hover-open"
+      : "origin-controls-state-runnable-hover-run";
+
     if (state.noAccess) {
       return {
         default: "origin-controls-state-no-access",
-        onHover: null,
+        onHover: isAction ? onHoverForAction : null,
       };
     }
 
     if (state.allDomains || (state.alwaysOn && state.hasAccess)) {
       return {
         default: "origin-controls-state-always-on",
-        onHover: null,
+        onHover: isAction ? onHoverForAction : null,
       };
     }
 

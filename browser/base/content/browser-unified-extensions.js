@@ -119,12 +119,11 @@ customElements.define(
     }
 
     async _updateStateMessage({ hover = false } = {}) {
-      const policy = WebExtensionPolicy.getByID(this.addon.id);
+      const messages = OriginControls.getStateMessageIDs({
+        policy: WebExtensionPolicy.getByID(this.addon.id),
+        uri: this.ownerGlobal.gBrowser.currentURI,
+      });
 
-      const messages = OriginControls.getStateMessageIDs(
-        policy,
-        this.ownerGlobal.gBrowser.currentURI
-      );
       if (!messages) {
         return;
       }
