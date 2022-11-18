@@ -221,7 +221,8 @@ bool TextAttrsMgr::LangTextAttr::GetValueFor(LocalAccessible* aAccessible,
 
 void TextAttrsMgr::LangTextAttr::ExposeValue(AccAttributes* aAttributes,
                                              const nsString& aValue) {
-  aAttributes->SetAttributeStringCopy(nsGkAtoms::language, aValue);
+  RefPtr<nsAtom> lang = NS_Atomize(aValue);
+  aAttributes->SetAttribute(nsGkAtoms::language, lang);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -401,7 +402,8 @@ bool TextAttrsMgr::FontFamilyTextAttr::GetValueFor(LocalAccessible* aAccessible,
 
 void TextAttrsMgr::FontFamilyTextAttr::ExposeValue(AccAttributes* aAttributes,
                                                    const nsString& aValue) {
-  aAttributes->SetAttributeStringCopy(nsGkAtoms::font_family, aValue);
+  RefPtr<nsAtom> family = NS_Atomize(aValue);
+  aAttributes->SetAttribute(nsGkAtoms::font_family, family);
 }
 
 bool TextAttrsMgr::FontFamilyTextAttr::GetFontFamily(nsIFrame* aFrame,
