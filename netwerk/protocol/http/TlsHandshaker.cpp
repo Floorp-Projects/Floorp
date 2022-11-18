@@ -36,14 +36,16 @@ TlsHandshaker::HandshakeDone() {
   if (mOwner) {
     mTlsHandshakeComplitionPending = true;
 
-    // nsHttpConnection needs to handle the handshake done, but it can not be
-    // done here because NSS still holds a lock. We will call
-    // nsHttpConnection::ForceSend which is the standard way to force the
-    // nsHttpConnection sending code path. nsHttpConnection::ForceSend
-    // dispatches nsHttpConnection::OnOutputStreamReady that will call
-    // TlsHandshaker::EnsureNPNComplete and further
-    // nsHttpConnection::HandshakeDoneInternal.
-    Unused << mOwner->ForceSend();
+    // HandshakeDone needs to be dispatched so that it is not called inside
+    // nss locks.
+    RefPtr<TlsHandshaker> self(this);
+    NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+        "TlsHandshaker::HandshakeDoneInternal", [self{std::move(self)}]() {
+          if (self->mTlsHandshakeComplitionPending && self->mOwner) {
+            self->mOwner->HandshakeDoneInternal();
+            self->mTlsHandshakeComplitionPending = false;
+          }
+        }));
   }
   return NS_OK;
 }
@@ -179,9 +181,7 @@ bool TlsHandshaker::EnsureNPNComplete() {
   }
 
   if (mTlsHandshakeComplitionPending) {
-    mOwner->HandshakeDoneInternal();
-    mTlsHandshakeComplitionPending = false;
-    return true;
+    return false;
   }
 
   nsCOMPtr<nsITLSSocketControl> ssl;
@@ -206,12 +206,6 @@ bool TlsHandshaker::EnsureNPNComplete() {
   nsresult rv = ssl->DriveHandshake();
   if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
     FinishNPNSetup(false, true);
-    return true;
-  }
-
-  if (mTlsHandshakeComplitionPending) {
-    mOwner->HandshakeDoneInternal();
-    mTlsHandshakeComplitionPending = false;
     return true;
   }
 
