@@ -724,13 +724,8 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
     }
 
     let state = this.docState;
-    let toggle = this.getToggleElement(shadowRoot);
 
-    if (!this.isMouseOverToggle(toggle, event)) {
-      return;
-    }
-
-    let canStartPictureInPicture = (() => {
+    let overVideo = (() => {
       let { clientX, clientY } = event;
       let winUtils = this.contentWindow.windowUtils;
       // We use winUtils.nodesFromRect instead of document.elementsFromPoint,
@@ -753,35 +748,27 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
         state.toggleVisibilityThreshold
       );
 
-      // Even if pointing down directly over the toggle, we cannot guarantee that
-      // we can start Picture-in-Picture, due to the toggle's visibilityThreshold.
-      // Only start Picture-in-Picture if we know that we're hovering over the video.
-      let overVideo = false;
       for (let element of elements) {
-        let isInShadowRoot = element.containingShadowRoot == shadowRoot;
-
-        if (element == video || isInShadowRoot) {
-          overVideo = true;
-        }
-        // Do not launch Picture-in-Picture if video controls interfere
-        // with the toggle.
-        if (isInShadowRoot && element.parentElement?.id == "controlBar") {
-          return false;
+        if (element == video || element.containingShadowRoot == shadowRoot) {
+          return true;
         }
       }
 
-      return overVideo;
+      return false;
     })();
 
-    if (!canStartPictureInPicture) {
+    if (!overVideo) {
       return;
     }
 
-    state.isClickingToggle = true;
-    state.clickedElement = Cu.getWeakReference(event.originalTarget);
-    event.stopImmediatePropagation();
+    let toggle = this.getToggleElement(shadowRoot);
+    if (this.isMouseOverToggle(toggle, event)) {
+      state.isClickingToggle = true;
+      state.clickedElement = Cu.getWeakReference(event.originalTarget);
+      event.stopImmediatePropagation();
 
-    this.startPictureInPicture(event, video, toggle);
+      this.startPictureInPicture(event, video, toggle);
+    }
   }
 
   startPictureInPicture(event, video, toggle) {
