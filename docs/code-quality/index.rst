@@ -132,7 +132,7 @@ In this document, we try to list these all tools.
      - :ref:`clippy`
      - https://github.com/rust-lang/rust-clippy
 
-.. list-table:: Java
+.. list-table:: Java/Kotlin
    :widths: 20 20 20 20 20
    :header-rows: 1
 

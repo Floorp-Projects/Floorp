@@ -123,6 +123,10 @@ native code. `Bug
 1509539 <https://bugzilla.mozilla.org/show_bug.cgi?id=1509539>`_ tracks
 making Android Studio and Gradle do this automatically.
 
+If you want set up code formatting for Kotlin, please reference
+`IntelliJ IDEA configuration
+<https://pinterest.github.io/ktlint/rules/configuration-intellij-idea/>`_.
+
 Custom mozconfig with Android Studio
 ------------------------------------
 

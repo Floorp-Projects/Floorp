@@ -83,6 +83,8 @@ def gradle(log, topsrcdir=None, topobjdir=None, tasks=[], extra_args=[], verbose
             proc.kill()
             raise
 
+        return proc.returncode
+
 
 def format(config, fix=None, **lintargs):
     topsrcdir = lintargs["root"]
@@ -93,7 +95,7 @@ def format(config, fix=None, **lintargs):
     else:
         tasks = lintargs["substs"]["GRADLE_ANDROID_FORMAT_LINT_CHECK_TASKS"]
 
-    gradle(
+    ret = gradle(
         lintargs["log"],
         topsrcdir=topsrcdir,
         topobjdir=topobjdir,
@@ -116,6 +118,31 @@ def format(config, fix=None, **lintargs):
                 "level": "error",
             }
             results.append(result.from_config(config, **err))
+        folder = os.path.join(
+            topobjdir, "gradle", "build", path, "spotless", "spotlessKotlin"
+        )
+        for filename in glob.iglob(folder + "/**/*.kt", recursive=True):
+            err = {
+                "rule": "spotless-kt",
+                "path": os.path.join(path, mozpath.relpath(filename, folder)),
+                "lineno": 0,
+                "column": 0,
+                "message": "Formatting error, please run ./mach lint -l android-format --fix",
+                "level": "error",
+            }
+            results.append(result.from_config(config, **err))
+
+    if len(results) == 0 and ret != 0:
+        # spotless seems to hit unfixed error.
+        err = {
+            "rule": "spotless",
+            "path": "",
+            "lineno": 0,
+            "column": 0,
+            "message": "Unexpected error",
+            "level": "error",
+        }
+        results.append(result.from_config(config, **err))
 
     # If --fix was passed, we just report the number of files that were changed
     if fix:

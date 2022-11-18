@@ -362,5 +362,12 @@ subprojects {
             }
             googleJavaFormat('1.15.0')
         }
+        kotlin {
+            target project.fileTree(project.projectDir) {
+                include '**/*.kt'
+                exclude '**/thirdparty/**'
+            }
+            ktlint('0.46.1')
+        }
     }
 }

@@ -284,12 +284,14 @@ def gradle_android_api_lint_tasks(build_config):
 set_config("GRADLE_ANDROID_API_LINT_TASKS", gradle_android_api_lint_tasks)
 
 
-set_config("GRADLE_ANDROID_FORMAT_LINT_FIX_TASKS", ["spotlessJavaApply"])
+set_config(
+    "GRADLE_ANDROID_FORMAT_LINT_FIX_TASKS", ["spotlessJavaApply", "spotlessKotlinApply"]
+)
 
 
 @dependable
 def gradle_android_format_lint_check_tasks():
-    return ["spotlessJavaCheck"]
+    return ["spotlessJavaCheck", "spotlessKotlinCheck"]
 
 
 set_config(
