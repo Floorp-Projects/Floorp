@@ -669,7 +669,7 @@ richlistitem[selected] .actionsMenu:focus-visible {
 
 #font-chooser-group {
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: max-content 1fr max-content max-content;
 }
 
 #defaultFont {
