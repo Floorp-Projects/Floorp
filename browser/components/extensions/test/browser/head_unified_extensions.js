@@ -52,7 +52,7 @@ const closeExtensionsPanel = async win => {
   ok(button, "expected button");
 
   const hidden = BrowserTestUtils.waitForEvent(
-    win.document,
+    win.gUnifiedExtensions.panel,
     "popuphidden",
     true
   );

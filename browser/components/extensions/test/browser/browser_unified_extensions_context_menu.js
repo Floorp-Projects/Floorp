@@ -641,3 +641,31 @@ add_task(async function test_page_action_context_menu() {
 
   await Promise.all(extensions.map(extension => extension.unload()));
 });
+
+add_task(async function test_pin_to_toolbar() {
+  const [extension] = createExtensions([
+    { name: "an extension", browser_action: {} },
+  ]);
+  await extension.startup();
+
+  // Open the extension panel, then open the context menu for the extension.
+  await openExtensionsPanel(win);
+  const contextMenu = await openUnifiedExtensionsContextMenu(win, extension.id);
+
+  const pinToToolbarItem = contextMenu.querySelector(
+    ".unified-extensions-context-menu-pin-to-toolbar"
+  );
+  ok(pinToToolbarItem, "expected 'pin to toolbar' menu item");
+
+  const hidden = BrowserTestUtils.waitForEvent(
+    win.gUnifiedExtensions.panel,
+    "popuphidden",
+    true
+  );
+  contextMenu.activateItem(pinToToolbarItem);
+  await hidden;
+
+  // Undo the 'pin to toolbar' action.
+  await CustomizableUI.reset();
+  await extension.unload();
+});
