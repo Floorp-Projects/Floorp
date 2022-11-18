@@ -14,16 +14,6 @@ AddonTestUtils.initMochitest(this);
  * @param {Boolean} isCancel true if modal is to be closed using the Cancel button, or false if setting a colorway
  */
 async function testOpenModal(isCancel) {
-  const sinonSandbox = sinon.createSandbox();
-  let win = await loadInitialView("theme");
-  let pageDocument = win.document;
-  let ColorwayClosetCard = win.customElements.get("colorways-card");
-
-  const colorwayOpenModalSpy = sinonSandbox.spy(
-    ColorwayClosetOpener,
-    "openModal"
-  );
-
   // Set up mock themes
   const clearBuiltInThemesStubs = initBuiltInThemesStubs();
   const mockThemes = [
@@ -43,6 +33,16 @@ async function testOpenModal(isCancel) {
     await addon.disable();
     mockThemesAddons.push(addon);
   }
+
+  const sinonSandbox = sinon.createSandbox();
+  let win = await loadInitialView("theme");
+  let pageDocument = win.document;
+  let ColorwayClosetCard = win.customElements.get("colorways-card");
+
+  const colorwayOpenModalSpy = sinonSandbox.spy(
+    ColorwayClosetOpener,
+    "openModal"
+  );
 
   // Verify that active theme is not tested colorway and not listed as enabled in about:addons.
   const activeThemeId = Services.prefs.getStringPref(
@@ -561,31 +561,16 @@ add_task(async function testColorwayNoActiveCollection() {
   let win = await loadInitialView("theme");
   let doc = win.document;
   let colorwaySection = getSection(doc, "colorways-section");
+  let disabledSection = getSection(doc, "theme-disabled-section");
 
-  ok(colorwaySection, "colorway section was found");
-  ok(
-    !colorwaySection.querySelector("colorways-card"),
-    "colorway closet card was not found"
-  );
+  ok(!colorwaySection, "colorway section should not exist");
 
-  info("Verifying that header and subheader are still visible");
-  is(
-    colorwaySection.children[0].classList[0],
-    "list-section-heading",
-    "colorway section header should be first"
-  );
-  is(
-    colorwaySection.children[1].classList[0],
-    "list-section-subheading",
-    "colorway section subheader should be second"
-  );
-
-  let expiredAddonCard = colorwaySection.querySelector(
+  let expiredAddonCard = disabledSection.querySelector(
     `addon-card[addon-id='${NO_INTENSITY_EXPIRED_COLORWAY_THEME_ID}']`
   );
   ok(
-    colorwaySection.contains(expiredAddonCard),
-    "Colorways section contains the expired theme."
+    disabledSection.contains(expiredAddonCard),
+    "Disabled themes section contains the expired theme."
   );
 
   await closeView(win);
