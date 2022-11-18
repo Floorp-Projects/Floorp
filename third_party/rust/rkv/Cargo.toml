@@ -11,9 +11,8 @@
 
 [package]
 edition = "2018"
-rust-version = "1.58"
 name = "rkv"
-version = "0.18.2"
+version = "0.17.1"
 authors = [
     "Richard Newman <rnewman@twinql.com>",
     "Nan Jiang <najiang@mozilla.com>",
@@ -34,28 +33,6 @@ categories = ["database"]
 license = "Apache-2.0"
 repository = "https://github.com/mozilla/rkv"
 
-[[bin]]
-name = "rand"
-path = "src/bin/rand.rs"
-required-features = ["lmdb"]
-
-[[bin]]
-name = "dump"
-path = "src/bin/dump.rs"
-required-features = ["lmdb"]
-
-[[test]]
-name = "env-all"
-required-features = ["lmdb"]
-
-[[test]]
-name = "env-lmdb"
-required-features = ["lmdb"]
-
-[[test]]
-name = "env-migration"
-required-features = ["lmdb"]
-
 [dependencies.arrayref]
 version = "0.3"
 
@@ -63,7 +40,7 @@ version = "0.3"
 version = "1.0"
 
 [dependencies.bitflags]
-version = "1.2"
+version = "1.1"
 
 [dependencies.byteorder]
 version = "1"
@@ -76,7 +53,6 @@ version = "1.1"
 
 [dependencies.lmdb-rkv]
 version = "0.14"
-optional = true
 
 [dependencies.log]
 version = "0.4.4"
@@ -88,7 +64,7 @@ version = "3.0.0"
 version = "1.0.6"
 
 [dependencies.serde]
-version = "1.0.144"
+version = "1.0"
 features = [
     "derive",
     "rc",
@@ -119,17 +95,7 @@ default = [
     "db-dup-sort",
     "db-int-key",
 ]
-lmdb = ["lmdb-rkv"]
 no-canonicalize-path = []
-with-asan = [
-    "lmdb",
-    "lmdb-rkv/with-asan",
-]
-with-fuzzer = [
-    "lmdb",
-    "lmdb-rkv/with-fuzzer",
-]
-with-fuzzer-no-link = [
-    "lmdb",
-    "lmdb-rkv/with-fuzzer-no-link",
-]
+with-asan = ["lmdb-rkv/with-asan"]
+with-fuzzer = ["lmdb-rkv/with-fuzzer"]
+with-fuzzer-no-link = ["lmdb-rkv/with-fuzzer-no-link"]

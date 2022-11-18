@@ -1,6 +1,7 @@
 # rkv
 
-[![CI Build Status](https://github.com/mozilla/rkv/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mozilla/rkv/actions/workflows/ci.yml)
+[![Travis CI Build Status](https://travis-ci.org/mozilla/rkv.svg?branch=master)](https://travis-ci.org/mozilla/rkv)
+[![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/lk936u5y5bi6qafb/branch/master?svg=true)](https://ci.appveyor.com/project/mykmelez/rkv/branch/master)
 [![Documentation](https://docs.rs/rkv/badge.svg)](https://docs.rs/rkv/)
 [![Crate](https://img.shields.io/crates/v/rkv.svg)](https://crates.io/crates/rkv)
 
