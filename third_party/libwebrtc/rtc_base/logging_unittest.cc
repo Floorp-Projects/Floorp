@@ -55,7 +55,7 @@ class LogMessageForTesting : public LogMessage {
 
   const std::string& get_extra() const { return extra_; }
 #if defined(WEBRTC_ANDROID)
-  const char* get_tag() const { return tag_; }
+  const char* get_tag() const { return log_line_.tag().data(); }
 #endif
 
   // Returns the contents of the internal log stream.
@@ -216,17 +216,28 @@ TEST(LogTest, CheckExtraErrorField) {
 }
 
 TEST(LogTest, CheckFilePathParsed) {
-  LogMessageForTesting log_msg("some/path/myfile.cc", 100, LS_INFO);
-  log_msg.stream() << "<- Does this look right?";
-
-  const std::string stream = log_msg.GetPrintStream();
+  std::string str;
+  LogSinkImpl stream(&str);
+  LogMessage::AddLogToStream(&stream, LS_INFO);
+  EXPECT_EQ(LS_INFO, LogMessage::GetLogToStream(&stream));
 #if defined(WEBRTC_ANDROID)
-  const char* tag = log_msg.get_tag();
-  EXPECT_NE(nullptr, strstr(tag, "myfile.cc"));
-  EXPECT_NE(std::string::npos, stream.find("100"));
-#else
-  EXPECT_NE(std::string::npos, stream.find("(myfile.cc:100)"));
+  const char* tag = nullptr;
 #endif
+  {
+    LogMessageForTesting log_msg("some/path/myfile.cc", 100, LS_INFO);
+    log_msg.stream() << "<- Does this look right?";
+#if defined(WEBRTC_ANDROID)
+    tag = log_msg.get_tag();
+#endif
+  }
+
+#if defined(WEBRTC_ANDROID)
+  EXPECT_NE(nullptr, strstr(tag, "myfile.cc"));
+  EXPECT_NE(std::string::npos, str.find("100"));
+#else
+  EXPECT_NE(std::string::npos, str.find("(myfile.cc:100)"));
+#endif
+  LogMessage::RemoveLogToStream(&stream);
 }
 
 #if defined(WEBRTC_ANDROID)
