@@ -282,20 +282,6 @@ hfsplus-tools:
         sha256: b01b203a97f9a3bf36a027c13ddfc59292730552e62722d690d33bd5c24f5497
         size: 411205
 
-xar:
-    description: xar source code
-    fetch:
-        type: git
-        repo: https://github.com/gabrielesvelto/xar
-        revision: 199ff76a7463f6b6a2548b4db29cd3dd5026df69
-
-bomutils:
-    description: bomutils (mkbom) source code
-    fetch:
-        type: git
-        repo: https://github.com/hogliux/bomutils
-        revision: 3f7dc2dbbc36ca1c957ec629970026f45594a52c
-
 rust-size:
     description: rust-size source code
     fetch:
