@@ -26,7 +26,8 @@ class WorkerPrivate;
 
 namespace workerinternals::loader {
 class CacheCreator;
-}
+class ScriptLoaderRunnable;
+}  // namespace workerinternals::loader
 
 /*
  * WorkerLoadContext (for all workers)
@@ -179,7 +180,20 @@ class ThreadSafeRequestHandle final {
 
   bool IsEmpty() { return !mRequest; }
 
+  // Runnable controls
+  nsresult OnStreamComplete(nsresult aStatus);
+
+  void LoadingFinished(nsresult aRv);
+
+  void MaybeExecuteFinishedScripts();
+
+  bool IsCancelled();
+
+  nsresult GetCancelResult();
+
   already_AddRefed<JS::loader::ScriptLoadRequest> ReleaseRequest();
+
+  RefPtr<workerinternals::loader::ScriptLoaderRunnable> mRunnable;
 
  private:
   ~ThreadSafeRequestHandle();

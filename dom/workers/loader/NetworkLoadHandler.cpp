@@ -56,7 +56,7 @@ NetworkLoadHandler::OnStreamComplete(nsIStreamLoader* aLoader,
   // If we have cancelled, or we have no mRequest, it means that the loader has
   // shut down and we can exit early. If the cancel result is still NS_OK
   nsresult rv = DataReceivedFromNetwork(aLoader, aStatus, aStringLen, aString);
-  return mLoader->OnStreamComplete(mRequestHandle, rv);
+  return mRequestHandle->OnStreamComplete(rv);
 }
 
 nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
@@ -77,8 +77,8 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
     return aStatus;
   }
 
-  if (mLoader->IsCancelled()) {
-    return mLoader->GetCancelResult();
+  if (mRequestHandle->IsCancelled()) {
+    return mRequestHandle->GetCancelResult();
   }
 
   NS_ASSERTION(aString, "This should never be null!");
@@ -290,7 +290,7 @@ nsresult NetworkLoadHandler::PrepareForRequest(nsIRequest* aRequest) {
 
   // If one load info cancels or hits an error, it can race with the start
   // callback coming from another load info.
-  if (mLoader->IsCancelled()) {
+  if (mRequestHandle->IsCancelled()) {
     return NS_ERROR_FAILURE;
   }
 

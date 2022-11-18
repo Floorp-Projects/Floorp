@@ -64,9 +64,7 @@ void CachePromiseHandler::ResolvedCallback(JSContext* aCx,
   if (loadContext->mCachePromise) {
     loadContext->mCacheStatus = WorkerLoadContext::Cached;
     loadContext->mCachePromise = nullptr;
-    if (loadContext->mRequest) {
-      mLoader->MaybeExecuteFinishedScripts(mRequestHandle);
-    }
+    mRequestHandle->MaybeExecuteFinishedScripts();
   }
 }
 
@@ -280,7 +278,7 @@ void CacheLoadHandler::Fail(nsresult aRv) {
 
   loadContext->mCachePromise = nullptr;
 
-  mLoader->LoadingFinished(mRequestHandle, aRv);
+  mRequestHandle->LoadingFinished(aRv);
 }
 
 void CacheLoadHandler::Load(Cache* aCache) {
@@ -426,10 +424,10 @@ void CacheLoadHandler::ResolvedCallback(JSContext* aCx,
   if (!inputStream) {
     loadContext->mCacheStatus = WorkerLoadContext::Cached;
 
-    if (mLoader->IsCancelled()) {
+    if (mRequestHandle->IsCancelled()) {
       auto cacheCreator = loadContext->GetCacheCreator();
       if (cacheCreator) {
-        cacheCreator->DeleteCache(mLoader->GetCancelResult());
+        cacheCreator->DeleteCache(mRequestHandle->GetCancelResult());
       }
       loadContext->ClearCacheCreator();
       return;
@@ -440,7 +438,7 @@ void CacheLoadHandler::ResolvedCallback(JSContext* aCx,
         mCSPHeaderValue, mCSPReportOnlyHeaderValue, mReferrerPolicyHeaderValue);
 
     loadContext->ClearCacheCreator();
-    mLoader->OnStreamComplete(mRequestHandle, rv);
+    mRequestHandle->OnStreamComplete(rv);
     return;
   }
 
@@ -509,7 +507,7 @@ CacheLoadHandler::OnStreamComplete(nsIStreamLoader* aLoader,
   nsresult rv = DataReceivedFromCache(
       aString, aStringLen, mChannelInfo, std::move(mPrincipalInfo),
       mCSPHeaderValue, mCSPReportOnlyHeaderValue, mReferrerPolicyHeaderValue);
-  return mLoader->OnStreamComplete(mRequestHandle, rv);
+  return mRequestHandle->OnStreamComplete(rv);
 }
 
 nsresult CacheLoadHandler::DataReceivedFromCache(
