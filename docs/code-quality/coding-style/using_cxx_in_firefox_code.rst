@@ -531,8 +531,7 @@ Safety utilities
 Strings
 ~~~~~~~
 
-See the `Mozilla internal string
-guide <https://developer.mozilla.org/docs/Mozilla/Tech/XPCOM/Guide/Internal_strings>`__ for
+See the :doc:`Mozilla internal string guide </xpcom/stringguide>` for
 usage of ``nsAString`` (our copy-on-write replacement for
 ``std::u16string``) and ``nsACString`` (our copy-on-write replacement
 for ``std::string``).
