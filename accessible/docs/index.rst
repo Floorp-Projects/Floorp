@@ -9,6 +9,7 @@ The `Accessibility page on the Mozilla Wiki <https://wiki.mozilla.org/Accessibil
 .. toctree::
    :maxdepth: 1
 
+   Architecture
    DocumentAccessibilityLifecycle
    GeckoViewThreadTopography
    ColorsAndHighContrastMode
