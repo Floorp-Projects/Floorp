@@ -26,13 +26,12 @@ add_task(async function setup() {
 
   // Set a mock engine as the default so we don't hit the network below when we
   // do searches that return the default engine heuristic result.
-  await SearchTestUtils.installSearchExtension({
-    name: DEFAULT_ENGINE_NAME,
-    search_url: "https://my.search.com/",
-  });
-
-  Services.search.defaultEngine = Services.search.getEngineByName(
-    DEFAULT_ENGINE_NAME
+  await SearchTestUtils.installSearchExtension(
+    {
+      name: DEFAULT_ENGINE_NAME,
+      search_url: "https://my.search.com/",
+    },
+    { setAsDefault: true }
   );
 
   // History matches should not appear with @aliases, so this visit should not

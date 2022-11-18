@@ -5,8 +5,6 @@
 // These tests check the behavior of the Urlbar when a user enables
 // the search bar and showSearchTerms is true.
 
-let defaultTestEngine, originalEngine;
-
 const { CustomizableUITestUtils } = ChromeUtils.import(
   "resource://testing-common/CustomizableUITestUtils.jsm"
 );
@@ -22,24 +20,16 @@ add_setup(async function() {
     ],
   });
 
-  await SearchTestUtils.installSearchExtension({
-    name: "MozSearch",
-    search_url: "https://www.example.com/",
-    search_url_get_params: "q={searchTerms}&pc=fake_code",
-  });
-  defaultTestEngine = Services.search.getEngineByName("MozSearch");
-
-  originalEngine = await Services.search.getDefault();
-  await Services.search.setDefault(
-    defaultTestEngine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  await SearchTestUtils.installSearchExtension(
+    {
+      name: "MozSearch",
+      search_url: "https://www.example.com/",
+      search_url_get_params: "q={searchTerms}&pc=fake_code",
+    },
+    { setAsDefault: true }
   );
 
   registerCleanupFunction(async function() {
-    await Services.search.setDefault(
-      originalEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
     await PlacesUtils.history.clear();
     gCUITestUtils.removeSearchBar();
   });

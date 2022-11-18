@@ -4,7 +4,7 @@
 
 // These tests check the behavior of the Urlbar when using search mode
 
-let originalEngine, defaultTestEngine, mochiTestEngine;
+let defaultTestEngine;
 
 // The main search string used in tests
 const SEARCH_STRING = "chocolate cake";
@@ -21,24 +21,16 @@ add_setup(async function() {
   });
   defaultTestEngine = Services.search.getEngineByName("MozSearch");
 
-  await SearchTestUtils.installSearchExtension({
-    name: "MochiSearch",
-    search_url: "https://mochi.test:8888/",
-    search_url_get_params: "q={searchTerms}&pc=fake_code",
-  });
-  mochiTestEngine = Services.search.getEngineByName("MochiSearch");
-
-  originalEngine = await Services.search.getDefault();
-  await Services.search.setDefault(
-    mochiTestEngine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  await SearchTestUtils.installSearchExtension(
+    {
+      name: "MochiSearch",
+      search_url: "https://mochi.test:8888/",
+      search_url_get_params: "q={searchTerms}&pc=fake_code",
+    },
+    { setAsDefault: true }
   );
 
   registerCleanupFunction(async function() {
-    await Services.search.setDefault(
-      originalEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
     await PlacesUtils.history.clear();
   });
 });

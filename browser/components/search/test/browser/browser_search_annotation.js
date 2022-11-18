@@ -42,16 +42,15 @@ add_setup(async function() {
   await PlacesUtils.bookmarks.eraseEverything();
 
   await gCUITestUtils.addSearchBar();
-  await SearchTestUtils.installSearchExtension({
-    name: "Example",
-    keyword: "@test",
-  });
-
-  const defaultEngine = Services.search.defaultEngine;
-  Services.search.defaultEngine = Services.search.getEngineByName("Example");
+  await SearchTestUtils.installSearchExtension(
+    {
+      name: "Example",
+      keyword: "@test",
+    },
+    { setAsDefault: true }
+  );
 
   registerCleanupFunction(async function() {
-    Services.search.defaultEngine = defaultEngine;
     gCUITestUtils.removeSearchBar();
   });
 });

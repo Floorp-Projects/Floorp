@@ -6,22 +6,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 add_setup(async function() {
-  await SearchTestUtils.installSearchExtension();
+  await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
 
   let engine = Services.search.getEngineByName("Example");
-  let originalEngine = await Services.search.getDefault();
-  await Services.search.setDefault(
-    engine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
   await Services.search.moveEngine(engine, 0);
-
-  registerCleanupFunction(async function() {
-    await Services.search.setDefault(
-      originalEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
-  });
 });
 
 add_task(async function test_remove_history() {

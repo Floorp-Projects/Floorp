@@ -240,16 +240,14 @@ async function assertState(
 }
 
 add_setup(async function() {
-  let oldDefaultEngine = await Services.search.getDefault();
-  await SearchTestUtils.installSearchExtension({
-    name: TEST_DEFAULT_ENGINE_NAME,
-    keyword: "@test",
-  });
-  let engine = Services.search.getEngineByName(TEST_DEFAULT_ENGINE_NAME);
-  await Services.search.setDefault(
-    engine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  await SearchTestUtils.installSearchExtension(
+    {
+      name: TEST_DEFAULT_ENGINE_NAME,
+      keyword: "@test",
+    },
+    { setAsDefault: true }
   );
+  let engine = Services.search.getEngineByName(TEST_DEFAULT_ENGINE_NAME);
   await Services.search.moveEngine(engine, 0);
 
   for (let i = 0; i < 5; i++) {
@@ -262,10 +260,6 @@ add_setup(async function() {
   });
 
   registerCleanupFunction(async function() {
-    await Services.search.setDefault(
-      oldDefaultEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
     await PlacesUtils.history.clear();
     await PlacesUtils.keywords.remove(KEYWORD);
   });

@@ -4,28 +4,21 @@
 add_setup(async function() {
   await gCUITestUtils.addSearchBar();
   await clearSearchbarHistory();
-  let defaultEngine = await Services.search.getDefault();
 
-  await SearchTestUtils.installSearchExtension({
-    id: "test",
-    name: "test",
-    suggest_url:
-      "https://example.com/browser/browser/components/search/test/browser/searchSuggestionEngine.sjs",
-    suggest_url_get_params: "query={searchTerms}",
-  });
-
-  await Services.search.setDefault(
-    await Services.search.getEngineByName("test"),
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  await SearchTestUtils.installSearchExtension(
+    {
+      id: "test",
+      name: "test",
+      suggest_url:
+        "https://example.com/browser/browser/components/search/test/browser/searchSuggestionEngine.sjs",
+      suggest_url_get_params: "query={searchTerms}",
+    },
+    { setAsDefault: true }
   );
 
   registerCleanupFunction(async () => {
     await clearSearchbarHistory();
     gCUITestUtils.removeSearchBar();
-    await Services.search.setDefault(
-      defaultEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
   });
 });
 

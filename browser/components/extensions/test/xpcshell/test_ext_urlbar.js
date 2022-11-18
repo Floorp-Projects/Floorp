@@ -70,13 +70,13 @@ add_task(async function startup() {
   // Add a test engine and make it default so that when we do searches below,
   // Firefox doesn't try to include search suggestions from the actual default
   // engine from over the network.
-  await SearchTestUtils.installSearchExtension({
-    name: "Test engine",
-    keyword: "@testengine",
-    search_url_get_params: "s={searchTerms}",
-  });
-  Services.search.defaultEngine = Services.search.getEngineByName(
-    "Test engine"
+  await SearchTestUtils.installSearchExtension(
+    {
+      name: "Test engine",
+      keyword: "@testengine",
+      search_url_get_params: "s={searchTerms}",
+    },
+    { setAsDefault: true }
   );
 });
 

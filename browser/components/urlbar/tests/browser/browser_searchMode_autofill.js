@@ -13,13 +13,8 @@ add_setup(async function() {
     await PlacesTestUtils.addVisits([{ uri: "http://example.com/" }]);
   }
 
-  let oldDefaultEngine = await Services.search.getDefault();
-  await SearchTestUtils.installSearchExtension();
+  await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
   let defaultEngine = Services.search.getEngineByName("Example");
-  await Services.search.setDefault(
-    defaultEngine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
   await Services.search.moveEngine(defaultEngine, 0);
 
   await SpecialPowers.pushPrefEnv({
@@ -28,10 +23,6 @@ add_setup(async function() {
 
   registerCleanupFunction(async () => {
     await PlacesUtils.history.clear();
-    await Services.search.setDefault(
-      oldDefaultEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
   });
 });
 

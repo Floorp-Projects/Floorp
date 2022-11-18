@@ -14,23 +14,16 @@ add_setup(async function() {
     ],
   });
 
-  await SearchTestUtils.installSearchExtension({ name: "MozSearch" });
+  await SearchTestUtils.installSearchExtension(
+    { name: "MozSearch" },
+    { setAsDefault: true }
+  );
   await SearchTestUtils.installSearchExtension({
     name: "MozSearchPrivate",
     search_url: "https://example.com/private",
   });
 
-  let originalEngine = await Services.search.getDefault();
-  await Services.search.setDefault(
-    Services.search.getEngineByName("MozSearch"),
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-  );
-
   registerCleanupFunction(async function() {
-    await Services.search.setDefault(
-      originalEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
     await PlacesUtils.history.clear();
     await UrlbarTestUtils.formHistory.clear();
   });

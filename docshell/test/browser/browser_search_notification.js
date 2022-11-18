@@ -16,16 +16,13 @@ add_task(async function() {
     set: [["browser.fixup.dns_first_for_single_words", true]],
   });
   const kSearchEngineID = "test_urifixup_search_engine";
-  await SearchTestUtils.installSearchExtension({
-    name: kSearchEngineID,
-    search_url: "http://localhost/",
-    search_url_get_params: "search={searchTerms}",
-  });
-
-  let oldDefaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(
-    Services.search.getEngineByName(kSearchEngineID),
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  await SearchTestUtils.installSearchExtension(
+    {
+      name: kSearchEngineID,
+      search_url: "http://localhost/",
+      search_url_get_params: "search={searchTerms}",
+    },
+    { setAsDefault: true }
   );
 
   let selectedName = (await Services.search.getDefault()).name;
@@ -34,13 +31,6 @@ add_task(async function() {
     kSearchEngineID,
     "Check fake search engine is selected"
   );
-
-  registerCleanupFunction(async function() {
-    await Services.search.setDefault(
-      oldDefaultEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
-  });
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   gBrowser.selectedTab = tab;

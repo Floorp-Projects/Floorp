@@ -26,21 +26,21 @@ add_setup(async () => {
     set: [["browser.urlbar.showSearchTerms.featureGate", true]],
   });
 
-  await SearchTestUtils.installSearchExtension({
-    name: "MozSearch",
-    search_url: "https://www.example.com/",
-    search_url_get_params: "q={searchTerms}&pc=fake_code",
-  });
+  await SearchTestUtils.installSearchExtension(
+    {
+      name: "MozSearch",
+      search_url: "https://www.example.com/",
+      search_url_get_params: "q={searchTerms}&pc=fake_code",
+    },
+    { setAsDefault: true }
+  );
 
   testEngine = Services.search.getEngineByName("MozSearch");
-  const originalEngine = await Services.search.getDefault();
-  Services.search.defaultEngine = testEngine;
 
   // Enable event recording for the events.
   Services.telemetry.setEventRecordingEnabled("navigation", true);
 
   registerCleanupFunction(async function() {
-    Services.search.defaultEngine = originalEngine;
     await PlacesUtils.history.clear();
     Services.telemetry.clearScalars();
     Services.telemetry.clearEvents();

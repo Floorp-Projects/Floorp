@@ -40,22 +40,14 @@ add_task(async function setup() {
 
 add_task(async function test() {
   let url = "https://en.example.com/";
-  await SearchTestUtils.installSearchExtension({
-    name: "TestEngine",
-    search_url: url,
-  });
-  let engine = Services.search.getEngineByName("TestEngine");
-  let defaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(
-    engine,
-    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  await SearchTestUtils.installSearchExtension(
+    {
+      name: "TestEngine",
+      search_url: url,
+    },
+    { setAsDefault: true }
   );
-  registerCleanupFunction(async () => {
-    await Services.search.setDefault(
-      defaultEngine,
-      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
-    );
-  });
+
   // Make sure the engine domain would be autofilled.
   await PlacesUtils.bookmarks.insert({
     url,
@@ -77,7 +69,7 @@ add_task(async function test() {
           heuristic: true,
         }),
         makeSearchResult(context, {
-          engineName: engine.name,
+          engineName: "TestEngine",
           engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS,
           uri: "en.example.",
           providesSearchMode: true,
