@@ -128,7 +128,7 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
   RefPtr<ThreadSafeWorkerRef> mWorkerRef;
   UniquePtr<SerializedStackHolder> mOriginStack;
   nsString mOriginStackJSON;
-  nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
+  nsCOMPtr<nsISerialEventTarget> mSyncLoopTarget;
   ScriptLoadRequestList mLoadingRequests;
   ScriptLoadRequestList mLoadedRequests;
   Maybe<ServiceWorkerDescriptor> mController;
@@ -164,7 +164,7 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
 
   WorkerScriptLoader(WorkerPrivate* aWorkerPrivate,
                      UniquePtr<SerializedStackHolder> aOriginStack,
-                     nsIEventTarget* aSyncLoopTarget,
+                     nsISerialEventTarget* aSyncLoopTarget,
                      WorkerScriptType aWorkerScriptType, ErrorResult& aRv);
 
   void CancelMainThreadWithBindingAborted(
