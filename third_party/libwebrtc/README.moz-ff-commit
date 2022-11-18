@@ -16656,3 +16656,6 @@ c9734b75f6
 # MOZ_LIBWEBRTC_SRC=/Users/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
 # base of lastest vendoring
 d60aca679e
+# MOZ_LIBWEBRTC_SRC=/Users/mfroman/git-checkouts/moz-libwebrtc MOZ_LIBWEBRTC_COMMIT=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2bb8306b40
