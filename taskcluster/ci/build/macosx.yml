@@ -180,6 +180,77 @@ macosx64-fuzzing/debug:
     optimization:
         skip-unless-expanded: null
 
+macosx64-aarch64-asan-fuzzing/opt:
+    description: "MacOS X Aarch64 Cross-compile Fuzzing ASAN"
+    index:
+        job-name: macosx64-aarch64-fuzzing-asan-opt
+    attributes:
+        # The gtest libxul contains libFuzzer targets
+        skip-verify-test-packaging: true
+    treeherder:
+        platform: osx-cross/asan
+        symbol: Bofaarch64
+    worker:
+        max-run-time: 5400
+        env:
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
+            PERFHERDER_EXTRA_OPTIONS: aarch64-asan-fuzzing
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+        custom-build-variant-cfg: cross-fuzzing-asan
+        mozconfig-variant: nightly-fuzzing-asan
+        extra-config:
+            mozconfig_platform: macosx64-aarch64
+    use-sccache: true
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang
+            - linux64-sccache
+            - macosx64-aarch64-llvm-symbolizer
+            - macosx64-sdk
+            - sysroot-wasm32-wasi
+    optimization:
+        skip-unless-expanded: null
+
+macosx64-aarch64-fuzzing/debug:
+    description: "MacOS X Aarch64 Cross-compile Fuzzing Debug"
+    index:
+        job-name: macosx64-aarch64-fuzzing-debug
+    attributes:
+        enable-full-crashsymbols: true
+        # The gtest libxul contains libFuzzer targets
+        skip-verify-test-packaging: true
+    treeherder:
+        platform: osx-cross/debug
+        symbol: Bfaarch64
+    worker:
+        max-run-time: 5400
+        env:
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
+            PERFHERDER_EXTRA_OPTIONS: aarch64-fuzzing
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+        custom-build-variant-cfg: cross-fuzzing-debug
+        mozconfig-variant: debug-fuzzing
+        extra-config:
+            mozconfig_platform: macosx64-aarch64
+    use-sccache: true
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang
+            - linux64-sccache
+            - macosx64-aarch64-llvm-symbolizer
+            - macosx64-sdk
+            - sysroot-wasm32-wasi
+    optimization:
+        skip-unless-expanded: null
+
 macosx64-x64-devedition/opt:
     description: "MacOS X Dev Edition x64 (shippable)"
     worker-type: b-linux-gcp
