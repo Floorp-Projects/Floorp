@@ -206,8 +206,8 @@ add_task(async function test_state() {
   let promiseDone = barrier.wait();
 
   // Now that we have called `wait()`, the state contains interesting things
-  let state = barrier.state[0];
   info("State: " + JSON.stringify(barrier.state, null, "\t"));
+  let state = barrier.state[0];
   Assert.equal(state.filename, filename);
   Assert.equal(state.lineNumber, lineNumber + 1);
   Assert.equal(state.name, BLOCKER_NAME);
@@ -219,6 +219,59 @@ add_task(async function test_state() {
     state.stack.some(x => x.includes(filename)),
     "The stack contains the calling file's name"
   );
+
+  deferred.resolve();
+  await promiseDone;
+});
+
+add_task(async function test_multistate() {
+  info("Testing information contained in multiple `state`");
+
+  let BLOCKER_NAMES = [
+    "test_state blocker " + Math.random(),
+    "test_state blocker " + Math.random(),
+  ];
+
+  // Set up the barrier. Note that we cannot test `barrier.state`
+  // immediately, as it initially contains "Not started"
+  let barrier = asyncShutdownService.makeBarrier("test_filename");
+  let deferred = PromiseUtils.defer();
+  let { filename, lineNumber } = Components.stack;
+  for (let name of BLOCKER_NAMES) {
+    barrier.client.jsclient.addBlocker(name, () => deferred.promise, {
+      fetchState: () => ({ progress: name }),
+    });
+  }
+
+  let promiseDone = new Promise(r => barrier.wait(r));
+
+  // Now that we have called `wait()`, the state contains interesting things.
+  Assert.ok(
+    barrier.state instanceof Ci.nsIPropertyBag,
+    "State is a PropertyBag"
+  );
+  for (let i = 0; i < BLOCKER_NAMES.length; ++i) {
+    let state = barrier.state.getProperty(i.toString());
+    Assert.equal(typeof state, "string", "state is a string");
+    info("State: " + state + "\t");
+    state = JSON.parse(state);
+    Assert.equal(state.filename, filename);
+    Assert.equal(state.lineNumber, lineNumber + 2);
+    Assert.equal(state.name, BLOCKER_NAMES[i]);
+    Assert.ok(
+      state.stack.some(x => x.includes("test_multistate")),
+      "The stack contains the caller function's name"
+    );
+    Assert.ok(
+      state.stack.some(x => x.includes(filename)),
+      "The stack contains the calling file's name"
+    );
+    Assert.equal(
+      state.state.progress,
+      BLOCKER_NAMES[i],
+      "The state contains the fetchState provided value"
+    );
+  }
 
   deferred.resolve();
   await promiseDone;

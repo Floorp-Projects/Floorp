@@ -17,62 +17,87 @@ ChromeUtils.defineModuleGetter(
 );
 
 /**
- * Conversion between nsIPropertyBag and JS object
+ * Conversion between nsIPropertyBags and JS values.
+ * This uses a conservative approach to avoid losing data and doesn't throw.
+ * Don't use this if you need perfect serialization and deserialization.
  */
-var PropertyBagConverter = {
-  // From nsIPropertyBag to JS
-  toObject(bag) {
+class PropertyBagConverter {
+  /**
+   * When the js value to convert is a primitive, it is stored in the property
+   * bag under a key with this name.
+   */
+  get primitiveProperty() {
+    return "PropertyBagConverter_primitive";
+  }
+
+  /**
+   * Converts from a PropertyBag to a JS value.
+   * @param {nsIPropertyBag} bag The PropertyBag to convert.
+   * @returns {jsval} A JS value.
+   */
+  propertyBagToJsValue(bag) {
     if (!(bag instanceof Ci.nsIPropertyBag)) {
-      throw new TypeError("Not a property bag");
+      return null;
     }
     let result = {};
     for (let { name, value: property } of bag.enumerator) {
-      let value = this.toValue(property);
+      let value = this.#toValue(property);
+      if (name == this.primitiveProperty) {
+        return value;
+      }
       result[name] = value;
     }
     return result;
-  },
-  toValue(property) {
-    if (typeof property != "object") {
+  }
+
+  #toValue(property) {
+    if (property instanceof Ci.nsIPropertyBag) {
+      return this.propertyBagToJsValue(property);
+    }
+    if (["number", "boolean"].includes(typeof property)) {
       return property;
     }
-    if (Array.isArray(property)) {
-      return property.map(this.toValue, this);
-    }
-    if (property && property instanceof Ci.nsIPropertyBag) {
-      return this.toObject(property);
+    try {
+      return JSON.parse(property);
+    } catch (ex) {
+      // Not JSON.
     }
     return property;
-  },
+  }
 
-  // From JS to nsIPropertyBag
-  fromObject(obj) {
-    if (obj == null || typeof obj != "object") {
-      throw new TypeError("Invalid object: " + obj);
-    }
+  /**
+   * Converts from a JS value to a PropertyBag.
+   * @param {jsval} val JS value to convert.
+   * @returns {nsIPropertyBag} A PropertyBag.
+   * @note function is converted to "(function)" and undefined to null.
+   */
+  jsValueToPropertyBag(val) {
     let bag = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
       Ci.nsIWritablePropertyBag
     );
-    for (let k of Object.keys(obj)) {
-      let value = this.fromValue(obj[k]);
-      bag.setProperty(k, value);
+    if (val && typeof val == "object") {
+      for (let k of Object.keys(val)) {
+        bag.setProperty(k, this.#fromValue(val[k]));
+      }
+    } else {
+      bag.setProperty(this.primitiveProperty, this.#fromValue(val));
     }
     return bag;
-  },
-  fromValue(value) {
+  }
+
+  #fromValue(value) {
     if (typeof value == "function") {
-      return null; // Emulating the behavior of JSON.stringify with functions
+      return "(function)";
     }
-    if (Array.isArray(value)) {
-      return value.map(this.fromValue, this);
+    if (value === undefined) {
+      value = null;
     }
-    if (value == null || typeof value != "object") {
-      // Auto-converted to nsIVariant
+    if (["number", "boolean", "string"].includes(typeof value)) {
       return value;
     }
-    return this.fromObject(value);
-  },
-};
+    return JSON.stringify(value);
+  }
+}
 
 /**
  * Construct an instance of nsIAsyncShutdownClient from a
@@ -162,13 +187,8 @@ nsAsyncShutdownClient.prototype = {
     }
 
     this._moduleClient.addBlocker(xpcomBlocker.name, moduleBlocker, {
-      fetchState: () => {
-        let state = xpcomBlocker.state;
-        if (state) {
-          return PropertyBagConverter.toValue(state);
-        }
-        return null;
-      },
+      fetchState: () =>
+        new PropertyBagConverter().propertyBagToJsValue(xpcomBlocker.state),
       filename: fileName,
       lineNumber,
       stack,
@@ -202,7 +222,9 @@ function nsAsyncShutdownBarrier(moduleBarrier) {
 }
 nsAsyncShutdownBarrier.prototype = {
   get state() {
-    return PropertyBagConverter.fromValue(this._moduleBarrier.state);
+    return new PropertyBagConverter().jsValueToPropertyBag(
+      this._moduleBarrier.state
+    );
   },
   get client() {
     return this._client;
