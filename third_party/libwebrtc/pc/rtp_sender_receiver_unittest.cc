@@ -63,7 +63,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/location.h"
-#include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -102,8 +101,7 @@ namespace webrtc {
 
 class RtpSenderReceiverTest
     : public ::testing::Test,
-      public ::testing::WithParamInterface<std::pair<RidList, RidList>>,
-      public sigslot::has_slots<> {
+      public ::testing::WithParamInterface<std::pair<RidList, RidList>> {
  public:
   RtpSenderReceiverTest()
       : network_thread_(rtc::Thread::Current()),
@@ -209,8 +207,6 @@ class RtpSenderReceiverTest
     audio_rtp_sender_->SetStreams({local_stream_->id()});
     audio_rtp_sender_->SetMediaChannel(voice_media_channel());
     audio_rtp_sender_->SetSsrc(kAudioSsrc);
-    audio_rtp_sender_->GetOnDestroyedSignal()->connect(
-        this, &RtpSenderReceiverTest::OnAudioSenderDestroyed);
     VerifyVoiceChannelInput();
   }
 
@@ -219,8 +215,6 @@ class RtpSenderReceiverTest
         AudioRtpSender::Create(worker_thread_, /*id=*/"", nullptr, nullptr);
     audio_rtp_sender_->SetMediaChannel(voice_media_channel());
   }
-
-  void OnAudioSenderDestroyed() { audio_sender_destroyed_signal_fired_ = true; }
 
   void CreateVideoRtpSender(uint32_t ssrc) {
     CreateVideoRtpSender(false, ssrc);
@@ -528,7 +522,6 @@ class RtpSenderReceiverTest
   rtc::scoped_refptr<MediaStreamInterface> local_stream_;
   rtc::scoped_refptr<VideoTrackInterface> video_track_;
   rtc::scoped_refptr<AudioTrackInterface> audio_track_;
-  bool audio_sender_destroyed_signal_fired_ = false;
   webrtc::test::ScopedKeyValueConfig field_trials_;
 };
 
@@ -1619,15 +1612,6 @@ TEST_F(RtpSenderReceiverTest, InsertDtmf) {
                               send_ssrc, 1, expected_duration));
   EXPECT_TRUE(CompareDtmfInfo(voice_media_channel()->dtmf_info_queue()[2],
                               send_ssrc, 2, expected_duration));
-}
-
-// Make sure the signal from "GetOnDestroyedSignal()" fires when the sender is
-// destroyed, which is needed for the DTMF sender.
-TEST_F(RtpSenderReceiverTest, TestOnDestroyedSignal) {
-  CreateAudioRtpSender();
-  EXPECT_FALSE(audio_sender_destroyed_signal_fired_);
-  audio_rtp_sender_ = nullptr;
-  EXPECT_TRUE(audio_sender_destroyed_signal_fired_);
 }
 
 // Validate that the default FrameEncryptor setting is nullptr.
