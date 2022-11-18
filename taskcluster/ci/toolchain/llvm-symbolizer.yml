@@ -30,6 +30,21 @@ linux64-llvm-symbolizer:
         toolchain:
             - linux64-toolchain-sysroot
 
+macosx64-aarch64-llvm-symbolizer:
+    description: "llvm-symbolizer for macOS aarch64"
+    treeherder:
+        symbol: TM(llvm-symbolizer-aarch64)
+    run:
+        arguments:
+            - aarch64-apple-darwin
+            - build/build-clang/clang-15.json
+        resources:
+            - build/build-clang/clang-15.json
+            - taskcluster/scripts/misc/build-llvm-common.sh
+    fetches:
+        toolchain:
+            - macosx64-sdk
+
 macosx64-llvm-symbolizer:
     description: "llvm-symbolizer for macOS x64"
     treeherder:

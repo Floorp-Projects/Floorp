@@ -1,0 +1,5 @@
+. "$topsrcdir/browser/config/mozconfigs/macosx64/nightly-fuzzing-asan"
+
+ac_add_options --target=aarch64-apple-darwin
+
+. "$topsrcdir/build/mozconfig.common.override"
