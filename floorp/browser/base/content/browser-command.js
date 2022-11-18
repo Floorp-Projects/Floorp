@@ -218,13 +218,17 @@ function setCustomURLFavicon(sbar_id) {
     var sbar_url = sData.url
     if(sbar_url.slice(0,7) != "floorp//") document.getElementById(`${sbar_id}`).style.listStyleImage = `url(http://www.google.com/s2/favicons?domain=${sbar_url})`;
 
-    const wibpanel_usercontext = sData.usercontext ?? 0
+setUserContextLine(sbar_id.slice(7))
+}
+
+function setUserContextLine(id){
+    const wibpanel_usercontext = BROWSER_SIDEBAR_DATA.data[id].usercontext ?? 0
     const container_list = ContextualIdentityService.getPublicIdentities()
     if(wibpanel_usercontext != 0 && container_list.findIndex(e => e.userContextId === wibpanel_usercontext) != -1){
       let  container_color = container_list[container_list.findIndex(e => e.userContextId === wibpanel_usercontext)].color
-      document.getElementById(`${sbar_id}`).style.borderLeft = `solid 2px ${container_color == "toolbar" ? "var(--toolbar-field-color)" : container_color}`;
+      document.getElementById(`select-${id}`).style.borderLeft = `solid 2px ${container_color == "toolbar" ? "var(--toolbar-field-color)" : container_color}`;
     }else{
-      document.getElementById(`${sbar_id}`).style.borderLeft = "";
+if(document.getElementById(`select-${id}`).style.border != '1px solid blue')       document.getElementById(`select-${id}`).style.borderLeft = "";
     }
 }
 
@@ -272,6 +276,34 @@ function setSidebarPage(){
     changeSidebarVisibility();
   }
 }
+function sidebarMouseOver() {
+Services.obs.notifyObservers({eventType:"mouseOver",id:event.target.id},"obs-panel")
+}
+function sidebarMouseOut() {
+Services.obs.notifyObservers({eventType:"mouseOut",id:event.target.id},"obs-panel")
+}
+
+function sidebarDragStart() {
+		event.dataTransfer.setData('text/plain', event.target.id);
+	};
+function sidebarDragOver() {
+		event.preventDefault();
+		this.style.borderTop = '2px solid blue';
+	};
+function sidebarDragLeave() {
+		this.style.borderTop = '';
+	};
+function sidebarDrop() {
+		event.preventDefault();
+		let id = event.dataTransfer.getData('text/plain');
+		let elm_drag = document.getElementById(id);
+		this.parentNode.insertBefore(elm_drag, this);
+		this.style.borderTop = '';
+BROWSER_SIDEBAR_DATA.index.splice(0)
+for(let elem of document.querySelectorAll(".sicon-list")){BROWSER_SIDEBAR_DATA.index.push(elem.id.replace("select-",""))}
+Services.prefs.setStringPref(`floorp.browser.sidebar2.data`, JSON.stringify(BROWSER_SIDEBAR_DATA) );
+
+	};
 
 function setSidebarIconView() {
   for(let elem of BROWSER_SIDEBAR_DATA.index){
@@ -287,6 +319,12 @@ function setSidebarIconView() {
       sidebarItem.classList.add("webpanel-icon")
 sidebarItem.setAttribute("context","webpanel-context")
       }
+sidebarItem.onmouseover = sidebarMouseOver
+sidebarItem.onmouseout = sidebarMouseOut
+sidebarItem.ondragstart = sidebarDragStart
+	sidebarItem.ondragover = sidebarDragOver
+	sidebarItem.ondragleave = sidebarDragLeave
+	sidebarItem.ondrop = sidebarDrop
 
       let sidebarItemImage = document.createXULElement("image");
       sidebarItemImage.classList.add("toolbarbutton-icon")
@@ -298,9 +336,9 @@ sidebarItemLabel.setAttribute("crop","right")
 sidebarItemLabel.setAttribute("flex","1")
       sidebarItem.appendChild(sidebarItemLabel)
 
-      document.getElementById("sidebar-select-box").insertBefore(sidebarItem,document.getElementById("bsb_spacer"));
+      document.getElementById("sidebar-select-box").insertBefore(sidebarItem,document.getElementById("add-button"));
     }else{
-      document.getElementById("sidebar-select-box").insertBefore(document.getElementById(`select-${elem}`),document.getElementById("bsb_spacer"));
+      document.getElementById("sidebar-select-box").insertBefore(document.getElementById(`select-${elem}`),document.getElementById("add-button"));
     }
   }
   let siconAll = document.querySelectorAll(".sicon-list")
@@ -434,6 +472,46 @@ function changeWebpanelUA() {
    }  
   }
 
+function AddBMSWebpanel(url,uc){
+  let parentWindow = window
+  let updateNumberDate = new Date()
+  let updateNumber = `w${updateNumberDate.getFullYear()}${updateNumberDate.getMonth()}${updateNumberDate.getDate()}${updateNumberDate.getHours()}${updateNumberDate.getMinutes()}${updateNumberDate.getSeconds()}`
+let object = {"new":true,"id":updateNumber}
+if(url != "")object.url = url
+if(uc != "")object.userContext = uc
+  if (
+    parentWindow?.document.documentURI ==
+    "chrome://browser/content/hiddenWindowMac.xhtml"
+  ) {
+    parentWindow = null;
+  }
+  if (parentWindow?.gDialogBox) {
+    parentWindow.gDialogBox.open("chrome://browser/content/preferences/dialogs/customURLs.xhtml", object);
+  } else {
+    Services.ww.openWindow(
+      parentWindow,
+      "chrome://browser/content/preferences/dialogs/customURLs.xhtml",
+      "AddWebpanel",
+      "chrome,titlebar,dialog,centerscreen,modal",
+      object
+    );
+  }
+}
+
+function obsPanelRe(data_){
+    let data = data_.wrappedJSObject
+    switch(data.eventType){
+      case "mouseOver":
+	document.getElementById(data.id.replace("BSB-","select-")).style.border = '1px solid blue';
+setUserContextLine(data.id.replace("BSB-",""))
+        break
+      case "mouseOut":
+document.getElementById(data.id.replace("BSB-","select-")).style.border = '';
+setUserContextLine(data.id.replace("BSB-",""))
+        break
+    }
+  }
+
 /*---------------------------------------------------------------- design ----------------------------------------------------------------*/
 
 function setBrowserDesign() {
@@ -479,6 +557,26 @@ function setBrowserDesign() {
       break;
   }
   document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend', Tag);
+}
+
+/*---------------------------------------------------------------- Context Menu ----------------------------------------------------------------*/
+function addContextBox(id,l10n,insert,runFunction){
+let contextMenu = document.createXULElement("menuitem");
+contextMenu.setAttribute("data-l10n-id",l10n)
+contextMenu.id = id
+contextMenu.setAttribute("oncommand",runFunction)
+document.getElementById("contentAreaContextMenu").insertBefore(contextMenu,document.getElementById(insert))
+contextMenuObserverFunc()
+}
+
+function contextMenuObserverFunc(){
+if(document.getElementById("bsb-context-add") != null) document.getElementById("bsb-context-add").hidden = document.getElementById("context-viewsource").hidden || !document.getElementById("context-viewimage").hidden
+if(document.getElementById("bsb-context-link-add") != null) document.getElementById("bsb-context-link-add").hidden = document.getElementById("context-openlink").hidden
+}
+
+function contextMenuObserverAdd(id){
+contextMenuObserver.observe(document.getElementById(id), {attributes:true})
+contextMenuObserverFunc()
 }
 
 /*---------------------------------------------------------------- URLbar recalculation ----------------------------------------------------------------*/

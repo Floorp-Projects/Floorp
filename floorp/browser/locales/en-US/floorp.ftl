@@ -230,7 +230,7 @@ set-custom-URL-button =
 bsb-header = Browser Manager Sidebar
 bsb-context = Select Container Tabs
 bsb-userAgent-label = 
-  .label = Change User Agent to Mobile version
+  .label = Use Mobile version UserAgent in this panel
 bsb-width = Width (If this is 0, use global values)
 bsb-page = Page to open
 
@@ -238,7 +238,7 @@ bsb-add = Add webpanel on Browser Manager Sidebar
 
 bsb-setting = Webpanel Setting
 
-bsb-add-title = 
+bsb-add-title =
  .title = { bsb-add }
 
 bsb-setting-title = 
@@ -448,6 +448,9 @@ show-CustomURL-sidebar =
 Edit-Custom-URL =
  .label = Edit Custom URL in Sidebar
 
+sidebar-add-button =
+  .tooltiptext = { bsb-add }
+
 sidebar-addons-button =
   .tooltiptext = Open Addon manager
 
@@ -463,6 +466,11 @@ sidebar-keepWidth-button =
 sidebar2-keep-width-for-global =
   .label = Set the current panel size to all web panels that don't have a unique size
 
+bsb-context-add = 
+  .label = Add This Page on Webpanel
+
+bsb-context-link-add = 
+  .label = Add Link on Webpanel
 #################################################################### menu panel ############################################################
 
 open-profile-dir = 

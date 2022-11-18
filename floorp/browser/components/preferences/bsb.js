@@ -15,10 +15,28 @@ XPCOMUtils.defineLazyGetter(this, "L10n", () => {
 
 var gBSBPane = {
   _pane: null,
+  obsPanel(data_){
+    let data = data_.wrappedJSObject
+    switch(data.eventType){
+      case "mouseOver":
+	document.getElementById(data.id.replace("select-","BSB-")).style.border = '1px solid blue';
+        break
+      case "mouseOut":
+	document.getElementById(data.id.replace("select-","BSB-")).style.border = '';
+        break
+    }
+  },
+  mouseOver(id){
+Services.obs.notifyObservers({eventType:"mouseOver",id:id},"obs-panel-re")
+  },
+mouseOut(id){
+Services.obs.notifyObservers({eventType:"mouseOut",id:id},"obs-panel-re")
+  },
   deleteWebpanel(id){this.BSBs.index = this.BSBs.index.filter(n => n != id);delete this.BSBs.data[id];Services.prefs.setStringPref(`floorp.browser.sidebar2.data`, JSON.stringify(this.BSBs))},
 
   // called when the document is first parsed
   init() {
+Services.obs.addObserver(this.obsPanel,"obs-panel")
     Services.prefs.addObserver(`floorp.browser.sidebar2.data`, function() {
     this.BSBs = JSON.parse(Services.prefs.getStringPref(`floorp.browser.sidebar2.data`, undefined))
 this.panelSet()
@@ -67,10 +85,13 @@ case "floorp//bmt":
       let item = document.createXULElement("richlistitem");
       item.id = `BSB-${container}`
       item.classList.add("BSB-list")
+      item.onmouseover = function(){this.mouseOver(`BSB-${container}`)}.bind(this)
+      item.onmouseout = function(){this.mouseOut(`BSB-${container}`)}.bind(this)
 
       let outer = document.createXULElement("hbox");
       outer.setAttribute("flex", 1);
       outer.setAttribute("align", "center");
+
       item.appendChild(outer);
 
       let userContextIcon = document.createXULElement("hbox");
@@ -110,9 +131,8 @@ gSubDialog.open(
       removeButton.setAttribute("value", container);
       document.l10n.setAttributes(removeButton, "sidebar2-pref-delete");
       containerButtons.appendChild(removeButton);
-
-      this._list.appendChild(item);
-      }else{this._list.appendChild(document.getElementById(`BSB-${container}`));this.setURL(this.BSBs.data[container].url,document.getElementById(`BSB-${container}`).querySelector(".bsb_label"))}
+this._list.insertBefore(item,document.getElementById("BSBSpace"));
+      }else{this._list.insertBefore(document.getElementById(`BSB-${container}`),document.getElementById("BSBSpace"));this.setURL(this.BSBs.data[container].url,document.getElementById(`BSB-${container}`).querySelector(".bsb_label"))}
       }
        let BSBAll = document.querySelectorAll(".BSB-list")
        let sicon = BSBAll.length
@@ -124,3 +144,5 @@ gSubDialog.open(
     }
   }
 };
+
+
