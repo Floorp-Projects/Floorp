@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+"use strict";
+
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 const lazy = {};
 
@@ -41,7 +45,7 @@ function log(msg) {
  *
  *  There is currently no `refresh` method, though you are free to add one.
  */
-export class PrincipalsCollector {
+class PrincipalsCollector {
   /**
    * Creates a new PrincipalsCollector.
    */
@@ -162,3 +166,5 @@ export class PrincipalsCollector {
     return principals;
   }
 }
+
+const EXPORTED_SYMBOLS = ["PrincipalsCollector"];

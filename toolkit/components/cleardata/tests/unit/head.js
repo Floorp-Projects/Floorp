@@ -1,7 +1,7 @@
 "use strict";
 
-const { SiteDataTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/SiteDataTestUtils.sys.mjs"
+const { SiteDataTestUtils } = ChromeUtils.import(
+  "resource://testing-common/SiteDataTestUtils.jsm"
 );
 const { PermissionTestUtils } = ChromeUtils.import(
   "resource://testing-common/PermissionTestUtils.jsm"
