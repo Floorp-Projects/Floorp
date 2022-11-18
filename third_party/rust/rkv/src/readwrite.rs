@@ -10,12 +10,8 @@
 
 use crate::{
     backend::{
-        BackendDatabase,
-        BackendRoCursor,
-        BackendRoCursorTransaction,
-        BackendRoTransaction,
-        BackendRwCursorTransaction,
-        BackendRwTransaction,
+        BackendDatabase, BackendRoCursor, BackendRoCursorTransaction, BackendRoTransaction,
+        BackendRwCursorTransaction, BackendRwTransaction,
     },
     error::StoreError,
     helpers::read_transform,
@@ -115,12 +111,20 @@ where
         self.0.abort();
     }
 
-    pub(crate) fn put<K>(&mut self, db: &T::Database, k: &K, v: &Value, flags: T::Flags) -> Result<(), StoreError>
+    pub(crate) fn put<K>(
+        &mut self,
+        db: &T::Database,
+        k: &K,
+        v: &Value,
+        flags: T::Flags,
+    ) -> Result<(), StoreError>
     where
         K: AsRef<[u8]>,
     {
         // TODO: don't allocate twice.
-        self.0.put(db, k.as_ref(), &v.to_bytes()?, flags).map_err(|e| e.into())
+        self.0
+            .put(db, k.as_ref(), &v.to_bytes()?, flags)
+            .map_err(|e| e.into())
     }
 
     #[cfg(not(feature = "db-dup-sort"))]
@@ -132,7 +136,12 @@ where
     }
 
     #[cfg(feature = "db-dup-sort")]
-    pub(crate) fn delete<K>(&mut self, db: &T::Database, k: &K, v: Option<&[u8]>) -> Result<(), StoreError>
+    pub(crate) fn delete<K>(
+        &mut self,
+        db: &T::Database,
+        k: &K,
+        v: Option<&[u8]>,
+    ) -> Result<(), StoreError>
     where
         K: AsRef<[u8]>,
     {

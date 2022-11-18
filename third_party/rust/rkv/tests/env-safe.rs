@@ -16,37 +16,25 @@ use std::{
     fs,
     path::Path,
     str,
-    sync::{
-        Arc,
-        RwLock,
-    },
+    sync::{Arc, RwLock},
     thread,
 };
 
-use byteorder::{
-    ByteOrder,
-    LittleEndian,
-};
+use byteorder::{ByteOrder, LittleEndian};
 use tempfile::Builder;
 
 use rkv::{
     backend::{
-        BackendEnvironmentBuilder,
-        SafeMode,
-        SafeModeDatabase,
-        SafeModeEnvironment,
+        BackendEnvironmentBuilder, SafeMode, SafeModeDatabase, SafeModeEnvironment,
         SafeModeRwTransaction,
     },
-    Rkv,
-    SingleStore,
-    StoreError,
-    StoreOptions,
-    Value,
-    Writer,
+    Rkv, SingleStore, StoreError, StoreOptions, Value, Writer,
 };
 
 fn check_rkv(k: &Rkv<SafeModeEnvironment>) {
-    let _ = k.open_single(None, StoreOptions::create()).expect("created default");
+    let _ = k
+        .open_single(None, StoreOptions::create())
+        .expect("created default");
 
     let s = k.open_single("s", StoreOptions::create()).expect("opened");
     let reader = k.read().expect("reader");
@@ -58,7 +46,10 @@ fn check_rkv(k: &Rkv<SafeModeEnvironment>) {
 /// We can't open a directory that doesn't exist.
 #[test]
 fn test_open_fails_safe() {
-    let root = Builder::new().prefix("test_open_fails_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_open_fails_safe")
+        .tempdir()
+        .expect("tempdir");
     assert!(root.path().exists());
 
     let nope = root.path().join("nope/");
@@ -68,14 +59,17 @@ fn test_open_fails_safe() {
     match Rkv::new::<SafeMode>(nope.as_path()).err() {
         Some(StoreError::UnsuitableEnvironmentPath(p)) => {
             assert_eq!(pb, p);
-        },
+        }
         _ => panic!("expected error"),
     };
 }
 
 #[test]
 fn test_open_safe() {
-    let root = Builder::new().prefix("test_open_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_open_safe")
+        .tempdir()
+        .expect("tempdir");
     println!("Root path: {:?}", root.path());
     fs::create_dir_all(root.path()).expect("dir created");
     assert!(root.path().is_dir());
@@ -86,7 +80,10 @@ fn test_open_safe() {
 
 #[test]
 fn test_open_from_builder_safe() {
-    let root = Builder::new().prefix("test_open_from_builder_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_open_from_builder_safe")
+        .tempdir()
+        .expect("tempdir");
     println!("Root path: {:?}", root.path());
     fs::create_dir_all(root.path()).expect("dir created");
     assert!(root.path().is_dir());
@@ -100,7 +97,10 @@ fn test_open_from_builder_safe() {
 
 #[test]
 fn test_open_from_builder_with_dir_safe_1() {
-    let root = Builder::new().prefix("test_open_from_builder_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_open_from_builder_safe")
+        .tempdir()
+        .expect("tempdir");
     println!("Root path: {:?}", root.path());
 
     let mut builder = Rkv::environment_builder::<SafeMode>();
@@ -115,7 +115,7 @@ fn test_open_from_builder_with_dir_safe_1() {
 #[should_panic(expected = "rkv: UnsuitableEnvironmentPath(\"bogus\")")]
 fn test_open_from_builder_with_dir_safe_2() {
     let root = Path::new("bogus");
-    println!("Root path: {:?}", root);
+    println!("Root path: {root:?}");
     assert!(!root.is_dir());
 
     let mut builder = Rkv::environment_builder::<SafeMode>();
@@ -128,7 +128,10 @@ fn test_open_from_builder_with_dir_safe_2() {
 #[test]
 #[should_panic(expected = "opened: DbsFull")]
 fn test_create_with_capacity_safe_1() {
-    let root = Builder::new().prefix("test_create_with_capacity_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_create_with_capacity_safe")
+        .tempdir()
+        .expect("tempdir");
     println!("Root path: {:?}", root.path());
     fs::create_dir_all(root.path()).expect("dir created");
     assert!(root.path().is_dir());
@@ -139,12 +142,17 @@ fn test_create_with_capacity_safe_1() {
     // This errors with "opened: DbsFull" because we specified a capacity of one (database),
     // and check_rkv already opened one (plus the default database, which doesn't count
     // against the limit).
-    let _zzz = k.open_single("zzz", StoreOptions::create()).expect("opened");
+    let _zzz = k
+        .open_single("zzz", StoreOptions::create())
+        .expect("opened");
 }
 
 #[test]
 fn test_create_with_capacity_safe_2() {
-    let root = Builder::new().prefix("test_create_with_capacity_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_create_with_capacity_safe")
+        .tempdir()
+        .expect("tempdir");
     println!("Root path: {:?}", root.path());
     fs::create_dir_all(root.path()).expect("dir created");
     assert!(root.path().is_dir());
@@ -161,7 +169,10 @@ fn test_create_with_capacity_safe_2() {
 #[test]
 #[should_panic(expected = "opened: SafeModeError(DbNotFoundError)")]
 fn test_open_with_capacity_safe_1() {
-    let root = Builder::new().prefix("test_open_with_capacity_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_open_with_capacity_safe")
+        .tempdir()
+        .expect("tempdir");
     println!("Root path: {:?}", root.path());
     fs::create_dir_all(root.path()).expect("dir created");
     assert!(root.path().is_dir());
@@ -169,12 +180,17 @@ fn test_open_with_capacity_safe_1() {
     let k = Rkv::with_capacity::<SafeMode>(root.path(), 1).expect("rkv");
     check_rkv(&k);
 
-    let _zzz = k.open_single("zzz", StoreOptions::default()).expect("opened");
+    let _zzz = k
+        .open_single("zzz", StoreOptions::default())
+        .expect("opened");
 }
 
 #[test]
 fn test_open_with_capacity_safe_2() {
-    let root = Builder::new().prefix("test_open_with_capacity_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_open_with_capacity_safe")
+        .tempdir()
+        .expect("tempdir");
     println!("Root path: {:?}", root.path());
     fs::create_dir_all(root.path()).expect("dir created");
     assert!(root.path().is_dir());
@@ -182,12 +198,17 @@ fn test_open_with_capacity_safe_2() {
     let k = Rkv::with_capacity::<SafeMode>(root.path(), 1).expect("rkv");
     check_rkv(&k);
 
-    let _zzz = k.open_single(None, StoreOptions::default()).expect("opened");
+    let _zzz = k
+        .open_single(None, StoreOptions::default())
+        .expect("opened");
 }
 
 #[test]
 fn test_list_dbs_safe_1() {
-    let root = Builder::new().prefix("test_list_dbs_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_list_dbs_safe")
+        .tempdir()
+        .expect("tempdir");
     println!("Root path: {:?}", root.path());
     fs::create_dir_all(root.path()).expect("dir created");
     assert!(root.path().is_dir());
@@ -202,7 +223,10 @@ fn test_list_dbs_safe_1() {
 
 #[test]
 fn test_list_dbs_safe_2() {
-    let root = Builder::new().prefix("test_list_dbs_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_list_dbs_safe")
+        .tempdir()
+        .expect("tempdir");
     println!("Root path: {:?}", root.path());
     fs::create_dir_all(root.path()).expect("dir created");
     assert!(root.path().is_dir());
@@ -210,16 +234,24 @@ fn test_list_dbs_safe_2() {
     let k = Rkv::with_capacity::<SafeMode>(root.path(), 2).expect("rkv");
     check_rkv(&k);
 
-    let _ = k.open_single("zzz", StoreOptions::create()).expect("opened");
+    let _ = k
+        .open_single("zzz", StoreOptions::create())
+        .expect("opened");
 
     let mut dbs = k.get_dbs().unwrap();
     dbs.sort();
-    assert_eq!(dbs, vec![None, Some("s".to_owned()), Some("zzz".to_owned())]);
+    assert_eq!(
+        dbs,
+        vec![None, Some("s".to_owned()), Some("zzz".to_owned())]
+    );
 }
 
 #[test]
 fn test_list_dbs_safe_3() {
-    let root = Builder::new().prefix("test_list_dbs_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_list_dbs_safe")
+        .tempdir()
+        .expect("tempdir");
     println!("Root path: {:?}", root.path());
     fs::create_dir_all(root.path()).expect("dir created");
     assert!(root.path().is_dir());
@@ -235,7 +267,10 @@ fn test_list_dbs_safe_3() {
 
 #[test]
 fn test_round_trip_and_transactions_safe() {
-    let root = Builder::new().prefix("test_round_trip_and_transactions_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_round_trip_and_transactions_safe")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let k = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
@@ -243,14 +278,30 @@ fn test_round_trip_and_transactions_safe() {
 
     {
         let mut writer = k.write().expect("writer");
-        sk.put(&mut writer, "foo", &Value::I64(1234)).expect("wrote");
-        sk.put(&mut writer, "noo", &Value::F64(1234.0.into())).expect("wrote");
-        sk.put(&mut writer, "bar", &Value::Bool(true)).expect("wrote");
-        sk.put(&mut writer, "baz", &Value::Str("héllo, yöu")).expect("wrote");
-        assert_eq!(sk.get(&writer, "foo").expect("read"), Some(Value::I64(1234)));
-        assert_eq!(sk.get(&writer, "noo").expect("read"), Some(Value::F64(1234.0.into())));
-        assert_eq!(sk.get(&writer, "bar").expect("read"), Some(Value::Bool(true)));
-        assert_eq!(sk.get(&writer, "baz").expect("read"), Some(Value::Str("héllo, yöu")));
+        sk.put(&mut writer, "foo", &Value::I64(1234))
+            .expect("wrote");
+        sk.put(&mut writer, "noo", &Value::F64(1234.0.into()))
+            .expect("wrote");
+        sk.put(&mut writer, "bar", &Value::Bool(true))
+            .expect("wrote");
+        sk.put(&mut writer, "baz", &Value::Str("héllo, yöu"))
+            .expect("wrote");
+        assert_eq!(
+            sk.get(&writer, "foo").expect("read"),
+            Some(Value::I64(1234))
+        );
+        assert_eq!(
+            sk.get(&writer, "noo").expect("read"),
+            Some(Value::F64(1234.0.into()))
+        );
+        assert_eq!(
+            sk.get(&writer, "bar").expect("read"),
+            Some(Value::Bool(true))
+        );
+        assert_eq!(
+            sk.get(&writer, "baz").expect("read"),
+            Some(Value::Str("héllo, yöu"))
+        );
 
         // Isolation. Reads won't return values.
         let r = &k.read().unwrap();
@@ -270,12 +321,24 @@ fn test_round_trip_and_transactions_safe() {
 
     {
         let mut writer = k.write().expect("writer");
-        sk.put(&mut writer, "foo", &Value::I64(1234)).expect("wrote");
-        sk.put(&mut writer, "bar", &Value::Bool(true)).expect("wrote");
-        sk.put(&mut writer, "baz", &Value::Str("héllo, yöu")).expect("wrote");
-        assert_eq!(sk.get(&writer, "foo").expect("read"), Some(Value::I64(1234)));
-        assert_eq!(sk.get(&writer, "bar").expect("read"), Some(Value::Bool(true)));
-        assert_eq!(sk.get(&writer, "baz").expect("read"), Some(Value::Str("héllo, yöu")));
+        sk.put(&mut writer, "foo", &Value::I64(1234))
+            .expect("wrote");
+        sk.put(&mut writer, "bar", &Value::Bool(true))
+            .expect("wrote");
+        sk.put(&mut writer, "baz", &Value::Str("héllo, yöu"))
+            .expect("wrote");
+        assert_eq!(
+            sk.get(&writer, "foo").expect("read"),
+            Some(Value::I64(1234))
+        );
+        assert_eq!(
+            sk.get(&writer, "bar").expect("read"),
+            Some(Value::Bool(true))
+        );
+        assert_eq!(
+            sk.get(&writer, "baz").expect("read"),
+            Some(Value::Str("héllo, yöu"))
+        );
 
         writer.commit().expect("committed");
     }
@@ -286,7 +349,10 @@ fn test_round_trip_and_transactions_safe() {
         let r = k.read().unwrap();
         assert_eq!(sk.get(&r, "foo").expect("read"), Some(Value::I64(1234)));
         assert_eq!(sk.get(&r, "bar").expect("read"), Some(Value::Bool(true)));
-        assert_eq!(sk.get(&r, "baz").expect("read"), Some(Value::Str("héllo, yöu")));
+        assert_eq!(
+            sk.get(&r, "baz").expect("read"),
+            Some(Value::Str("héllo, yöu"))
+        );
     }
 
     {
@@ -302,7 +368,10 @@ fn test_round_trip_and_transactions_safe() {
         let r = k.read().unwrap();
         assert_eq!(sk.get(&r, "foo").expect("read"), Some(Value::I64(1234)));
         assert_eq!(sk.get(&r, "bar").expect("read"), Some(Value::Bool(true)));
-        assert_eq!(sk.get(&r, "baz").expect("read"), Some(Value::Str("héllo, yöu")));
+        assert_eq!(
+            sk.get(&r, "baz").expect("read"),
+            Some(Value::Str("héllo, yöu"))
+        );
     }
 
     // Dropped: tx rollback. Reads will still return values.
@@ -311,7 +380,10 @@ fn test_round_trip_and_transactions_safe() {
         let r = k.read().unwrap();
         assert_eq!(sk.get(&r, "foo").expect("read"), Some(Value::I64(1234)));
         assert_eq!(sk.get(&r, "bar").expect("read"), Some(Value::Bool(true)));
-        assert_eq!(sk.get(&r, "baz").expect("read"), Some(Value::Str("héllo, yöu")));
+        assert_eq!(
+            sk.get(&r, "baz").expect("read"),
+            Some(Value::Str("héllo, yöu"))
+        );
     }
 
     {
@@ -338,7 +410,10 @@ fn test_round_trip_and_transactions_safe() {
 
 #[test]
 fn test_single_store_clear_safe() {
-    let root = Builder::new().prefix("test_single_store_clear_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_single_store_clear_safe")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let k = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
@@ -346,9 +421,12 @@ fn test_single_store_clear_safe() {
 
     {
         let mut writer = k.write().expect("writer");
-        sk.put(&mut writer, "foo", &Value::I64(1234)).expect("wrote");
-        sk.put(&mut writer, "bar", &Value::Bool(true)).expect("wrote");
-        sk.put(&mut writer, "baz", &Value::Str("héllo, yöu")).expect("wrote");
+        sk.put(&mut writer, "foo", &Value::I64(1234))
+            .expect("wrote");
+        sk.put(&mut writer, "bar", &Value::Bool(true))
+            .expect("wrote");
+        sk.put(&mut writer, "baz", &Value::Str("héllo, yöu"))
+            .expect("wrote");
         writer.commit().expect("committed");
     }
 
@@ -368,7 +446,10 @@ fn test_single_store_clear_safe() {
 #[test]
 #[should_panic(expected = "KeyValuePairNotFound")]
 fn test_single_store_delete_nonexistent_safe() {
-    let root = Builder::new().prefix("test_single_store_delete_nonexistent_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_single_store_delete_nonexistent_safe")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let k = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
@@ -381,19 +462,34 @@ fn test_single_store_delete_nonexistent_safe() {
 #[test]
 #[cfg(feature = "db-dup-sort")]
 fn test_multi_put_get_del_safe() {
-    let root = Builder::new().prefix("test_multi_put_get_del_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_multi_put_get_del_safe")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let k = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
     let multistore = k.open_multi("multistore", StoreOptions::create()).unwrap();
 
     let mut writer = k.write().unwrap();
-    multistore.put(&mut writer, "str1", &Value::Str("str1 foo")).unwrap();
-    multistore.put(&mut writer, "str1", &Value::Str("str1 bar")).unwrap();
-    multistore.put(&mut writer, "str2", &Value::Str("str2 foo")).unwrap();
-    multistore.put(&mut writer, "str2", &Value::Str("str2 bar")).unwrap();
-    multistore.put(&mut writer, "str3", &Value::Str("str3 foo")).unwrap();
-    multistore.put(&mut writer, "str3", &Value::Str("str3 bar")).unwrap();
+    multistore
+        .put(&mut writer, "str1", &Value::Str("str1 foo"))
+        .unwrap();
+    multistore
+        .put(&mut writer, "str1", &Value::Str("str1 bar"))
+        .unwrap();
+    multistore
+        .put(&mut writer, "str2", &Value::Str("str2 foo"))
+        .unwrap();
+    multistore
+        .put(&mut writer, "str2", &Value::Str("str2 bar"))
+        .unwrap();
+    multistore
+        .put(&mut writer, "str3", &Value::Str("str3 foo"))
+        .unwrap();
+    multistore
+        .put(&mut writer, "str3", &Value::Str("str3 bar"))
+        .unwrap();
     writer.commit().unwrap();
 
     let writer = k.write().unwrap();
@@ -407,10 +503,20 @@ fn test_multi_put_get_del_safe() {
     writer.commit().unwrap();
 
     let mut writer = k.write().unwrap();
-    multistore.delete(&mut writer, "str1", &Value::Str("str1 foo")).unwrap();
-    assert_eq!(multistore.get_first(&writer, "str1").unwrap(), Some(Value::Str("str1 bar")));
-    multistore.delete(&mut writer, "str2", &Value::Str("str2 bar")).unwrap();
-    assert_eq!(multistore.get_first(&writer, "str2").unwrap(), Some(Value::Str("str2 foo")));
+    multistore
+        .delete(&mut writer, "str1", &Value::Str("str1 foo"))
+        .unwrap();
+    assert_eq!(
+        multistore.get_first(&writer, "str1").unwrap(),
+        Some(Value::Str("str1 bar"))
+    );
+    multistore
+        .delete(&mut writer, "str2", &Value::Str("str2 bar"))
+        .unwrap();
+    assert_eq!(
+        multistore.get_first(&writer, "str2").unwrap(),
+        Some(Value::Str("str2 foo"))
+    );
     multistore.delete_all(&mut writer, "str3").unwrap();
     assert_eq!(multistore.get_first(&writer, "str3").unwrap(), None);
     writer.commit().unwrap();
@@ -419,20 +525,37 @@ fn test_multi_put_get_del_safe() {
 #[test]
 #[cfg(feature = "db-dup-sort")]
 fn test_multiple_store_clear_safe() {
-    let root = Builder::new().prefix("test_multiple_store_clear_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_multiple_store_clear_safe")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let k = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
-    let multistore = k.open_multi("multistore", StoreOptions::create()).expect("opened");
+    let multistore = k
+        .open_multi("multistore", StoreOptions::create())
+        .expect("opened");
 
     {
         let mut writer = k.write().expect("writer");
-        multistore.put(&mut writer, "str1", &Value::Str("str1 foo")).unwrap();
-        multistore.put(&mut writer, "str1", &Value::Str("str1 bar")).unwrap();
-        multistore.put(&mut writer, "str2", &Value::Str("str2 foo")).unwrap();
-        multistore.put(&mut writer, "str2", &Value::Str("str2 bar")).unwrap();
-        multistore.put(&mut writer, "str3", &Value::Str("str3 foo")).unwrap();
-        multistore.put(&mut writer, "str3", &Value::Str("str3 bar")).unwrap();
+        multistore
+            .put(&mut writer, "str1", &Value::Str("str1 foo"))
+            .unwrap();
+        multistore
+            .put(&mut writer, "str1", &Value::Str("str1 bar"))
+            .unwrap();
+        multistore
+            .put(&mut writer, "str2", &Value::Str("str2 foo"))
+            .unwrap();
+        multistore
+            .put(&mut writer, "str2", &Value::Str("str2 bar"))
+            .unwrap();
+        multistore
+            .put(&mut writer, "str3", &Value::Str("str3 foo"))
+            .unwrap();
+        multistore
+            .put(&mut writer, "str3", &Value::Str("str3 bar"))
+            .unwrap();
         writer.commit().expect("committed");
     }
 
@@ -452,7 +575,10 @@ fn test_multiple_store_clear_safe() {
 
 #[test]
 fn test_open_store_for_read_safe() {
-    let root = Builder::new().prefix("test_open_store_for_read_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_open_store_for_read_safe")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let k = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
@@ -460,32 +586,46 @@ fn test_open_store_for_read_safe() {
     // First create the store, and start a write transaction on it.
     let sk = k.open_single("sk", StoreOptions::create()).expect("opened");
     let mut writer = k.write().expect("writer");
-    sk.put(&mut writer, "foo", &Value::Str("bar")).expect("write");
+    sk.put(&mut writer, "foo", &Value::Str("bar"))
+        .expect("write");
 
     // Open the same store for read, note that the write transaction is still in progress,
     // it should not block the reader though.
-    let sk_readonly = k.open_single("sk", StoreOptions::default()).expect("opened");
+    let sk_readonly = k
+        .open_single("sk", StoreOptions::default())
+        .expect("opened");
     writer.commit().expect("commit");
 
     // Now the write transaction is committed, any followed reads should see its change.
     let reader = k.read().expect("reader");
-    assert_eq!(sk_readonly.get(&reader, "foo").expect("read"), Some(Value::Str("bar")));
+    assert_eq!(
+        sk_readonly.get(&reader, "foo").expect("read"),
+        Some(Value::Str("bar"))
+    );
 }
 
 #[test]
 #[should_panic(expected = "open a missing store")]
 fn test_open_a_missing_store_safe() {
-    let root = Builder::new().prefix("test_open_a_missing_store_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_open_a_missing_store_safe")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let k = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
-    let _sk = k.open_single("sk", StoreOptions::default()).expect("open a missing store");
+    let _sk = k
+        .open_single("sk", StoreOptions::default())
+        .expect("open a missing store");
 }
 
 #[test]
 #[should_panic(expected = "new failed: FileInvalid")]
 fn test_open_a_broken_store_safe() {
-    let root = Builder::new().prefix("test_open_a_missing_store_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_open_a_missing_store_safe")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let dbfile = root.path().join("data.safe.bin");
@@ -496,7 +636,10 @@ fn test_open_a_broken_store_safe() {
 
 #[test]
 fn test_open_fail_with_badrslot_safe() {
-    let root = Builder::new().prefix("test_open_fail_with_badrslot_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_open_fail_with_badrslot_safe")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let k = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
@@ -517,7 +660,10 @@ fn test_open_fail_with_badrslot_safe() {
 
 #[test]
 fn test_create_fail_with_badrslot_safe() {
-    let root = Builder::new().prefix("test_create_fail_with_badrslot_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_create_fail_with_badrslot_safe")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let k = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
@@ -538,7 +684,10 @@ fn test_create_fail_with_badrslot_safe() {
 
 #[test]
 fn test_read_before_write_num_safe() {
-    let root = Builder::new().prefix("test_read_before_write_num_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_read_before_write_num_safe")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let k = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
@@ -549,7 +698,10 @@ fn test_read_before_write_num_safe() {
     // as the Value::I64 borrows an immutable reference to the Writer.
     // So we extract and copy its primitive value.
 
-    fn get_existing_foo(store: SingleStore<SafeModeDatabase>, writer: &Writer<SafeModeRwTransaction>) -> Option<i64> {
+    fn get_existing_foo(
+        store: SingleStore<SafeModeDatabase>,
+        writer: &Writer<SafeModeRwTransaction>,
+    ) -> Option<i64> {
         match store.get(writer, "foo").expect("read") {
             Some(Value::I64(val)) => Some(val),
             _ => None,
@@ -559,7 +711,8 @@ fn test_read_before_write_num_safe() {
     let mut writer = k.write().expect("writer");
     let mut existing = get_existing_foo(sk, &writer).unwrap_or(99);
     existing += 1;
-    sk.put(&mut writer, "foo", &Value::I64(existing)).expect("success");
+    sk.put(&mut writer, "foo", &Value::I64(existing))
+        .expect("success");
 
     let updated = get_existing_foo(sk, &writer).unwrap_or(99);
     assert_eq!(updated, 100);
@@ -568,7 +721,10 @@ fn test_read_before_write_num_safe() {
 
 #[test]
 fn test_read_before_write_str_safe() {
-    let root = Builder::new().prefix("test_read_before_write_str_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_read_before_write_str_safe")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let k = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
@@ -592,7 +748,8 @@ fn test_read_before_write_str_safe() {
     let mut writer = k.write().expect("writer");
     let mut existing = get_existing_foo(sk, &writer).unwrap_or_default();
     existing.push('…');
-    sk.put(&mut writer, "foo", &Value::Str(&existing)).expect("write");
+    sk.put(&mut writer, "foo", &Value::Str(&existing))
+        .expect("write");
 
     let updated = get_existing_foo(sk, &writer).unwrap_or_default();
     assert_eq!(updated, "…");
@@ -601,7 +758,10 @@ fn test_read_before_write_str_safe() {
 
 #[test]
 fn test_isolation_safe() {
-    let root = Builder::new().prefix("test_isolation_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_isolation_safe")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let k = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
@@ -644,7 +804,10 @@ fn test_isolation_safe() {
 
 #[test]
 fn test_blob_safe() {
-    let root = Builder::new().prefix("test_round_trip_blob_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_round_trip_blob_safe")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let k = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
@@ -652,8 +815,12 @@ fn test_blob_safe() {
 
     let mut writer = k.write().expect("writer");
     assert_eq!(sk.get(&writer, "foo").expect("read"), None);
-    sk.put(&mut writer, "foo", &Value::Blob(&[1, 2, 3, 4])).expect("wrote");
-    assert_eq!(sk.get(&writer, "foo").expect("read"), Some(Value::Blob(&[1, 2, 3, 4])));
+    sk.put(&mut writer, "foo", &Value::Blob(&[1, 2, 3, 4]))
+        .expect("wrote");
+    assert_eq!(
+        sk.get(&writer, "foo").expect("read"),
+        Some(Value::Blob(&[1, 2, 3, 4]))
+    );
 
     fn u16_to_u8(src: &[u16]) -> Vec<u8> {
         let mut dst = vec![0; 2 * src.len()];
@@ -672,7 +839,8 @@ fn test_blob_safe() {
     // reading, and converting back works as expected.
     let u16_array = [1000, 10000, 54321, 65535];
     assert_eq!(sk.get(&writer, "bar").expect("read"), None);
-    sk.put(&mut writer, "bar", &Value::Blob(&u16_to_u8(&u16_array))).expect("wrote");
+    sk.put(&mut writer, "bar", &Value::Blob(&u16_to_u8(&u16_array)))
+        .expect("wrote");
     let u8_array = match sk.get(&writer, "bar").expect("read") {
         Some(Value::Blob(val)) => val,
         _ => &[],
@@ -682,7 +850,10 @@ fn test_blob_safe() {
 
 #[test]
 fn test_sync_safe() {
-    let root = Builder::new().prefix("test_sync_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_sync_safe")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let mut builder = Rkv::environment_builder::<SafeMode>();
@@ -692,20 +863,29 @@ fn test_sync_safe() {
         let sk = k.open_single("sk", StoreOptions::create()).expect("opened");
         {
             let mut writer = k.write().expect("writer");
-            sk.put(&mut writer, "foo", &Value::I64(1234)).expect("wrote");
+            sk.put(&mut writer, "foo", &Value::I64(1234))
+                .expect("wrote");
             writer.commit().expect("committed");
             k.sync(true).expect("synced");
         }
     }
     let k = Rkv::from_builder(root.path(), builder).expect("new succeeded");
-    let sk = k.open_single("sk", StoreOptions::default()).expect("opened");
+    let sk = k
+        .open_single("sk", StoreOptions::default())
+        .expect("opened");
     let reader = k.read().expect("reader");
-    assert_eq!(sk.get(&reader, "foo").expect("read"), Some(Value::I64(1234)));
+    assert_eq!(
+        sk.get(&reader, "foo").expect("read"),
+        Some(Value::I64(1234))
+    );
 }
 
 #[test]
 fn test_iter_safe() {
-    let root = Builder::new().prefix("test_iter_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_iter_safe")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let k = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
@@ -719,12 +899,18 @@ fn test_iter_safe() {
     }
 
     let mut writer = k.write().expect("writer");
-    sk.put(&mut writer, "foo", &Value::I64(1234)).expect("wrote");
-    sk.put(&mut writer, "noo", &Value::F64(1234.0.into())).expect("wrote");
-    sk.put(&mut writer, "bar", &Value::Bool(true)).expect("wrote");
-    sk.put(&mut writer, "baz", &Value::Str("héllo, yöu")).expect("wrote");
-    sk.put(&mut writer, "héllò, töűrîst", &Value::Str("Emil.RuleZ!")).expect("wrote");
-    sk.put(&mut writer, "你好，遊客", &Value::Str("米克規則")).expect("wrote");
+    sk.put(&mut writer, "foo", &Value::I64(1234))
+        .expect("wrote");
+    sk.put(&mut writer, "noo", &Value::F64(1234.0.into()))
+        .expect("wrote");
+    sk.put(&mut writer, "bar", &Value::Bool(true))
+        .expect("wrote");
+    sk.put(&mut writer, "baz", &Value::Str("héllo, yöu"))
+        .expect("wrote");
+    sk.put(&mut writer, "héllò, töűrîst", &Value::Str("Emil.RuleZ!"))
+        .expect("wrote");
+    sk.put(&mut writer, "你好，遊客", &Value::Str("米克規則"))
+        .expect("wrote");
     writer.commit().expect("committed");
 
     let reader = k.read().unwrap();
@@ -780,17 +966,24 @@ fn test_iter_safe() {
 
 #[test]
 fn test_iter_from_key_greater_than_existing_safe() {
-    let root = Builder::new().prefix("test_iter_from_key_greater_than_existing_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_iter_from_key_greater_than_existing_safe")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let k = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
     let sk = k.open_single("sk", StoreOptions::create()).expect("opened");
 
     let mut writer = k.write().expect("writer");
-    sk.put(&mut writer, "foo", &Value::I64(1234)).expect("wrote");
-    sk.put(&mut writer, "noo", &Value::F64(1234.0.into())).expect("wrote");
-    sk.put(&mut writer, "bar", &Value::Bool(true)).expect("wrote");
-    sk.put(&mut writer, "baz", &Value::Str("héllo, yöu")).expect("wrote");
+    sk.put(&mut writer, "foo", &Value::I64(1234))
+        .expect("wrote");
+    sk.put(&mut writer, "noo", &Value::F64(1234.0.into()))
+        .expect("wrote");
+    sk.put(&mut writer, "bar", &Value::Bool(true))
+        .expect("wrote");
+    sk.put(&mut writer, "baz", &Value::Str("héllo, yöu"))
+        .expect("wrote");
     writer.commit().expect("committed");
 
     let reader = k.read().unwrap();
@@ -800,29 +993,52 @@ fn test_iter_from_key_greater_than_existing_safe() {
 
 #[test]
 fn test_multiple_store_read_write_safe() {
-    let root = Builder::new().prefix("test_multiple_store_read_write_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_multiple_store_read_write_safe")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let k = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
-    let s1 = k.open_single("store_1", StoreOptions::create()).expect("opened");
-    let s2 = k.open_single("store_2", StoreOptions::create()).expect("opened");
-    let s3 = k.open_single("store_3", StoreOptions::create()).expect("opened");
+    let s1 = k
+        .open_single("store_1", StoreOptions::create())
+        .expect("opened");
+    let s2 = k
+        .open_single("store_2", StoreOptions::create())
+        .expect("opened");
+    let s3 = k
+        .open_single("store_3", StoreOptions::create())
+        .expect("opened");
 
     let mut writer = k.write().expect("writer");
-    s1.put(&mut writer, "foo", &Value::Str("bar")).expect("wrote");
+    s1.put(&mut writer, "foo", &Value::Str("bar"))
+        .expect("wrote");
     s2.put(&mut writer, "foo", &Value::I64(123)).expect("wrote");
-    s3.put(&mut writer, "foo", &Value::Bool(true)).expect("wrote");
+    s3.put(&mut writer, "foo", &Value::Bool(true))
+        .expect("wrote");
 
-    assert_eq!(s1.get(&writer, "foo").expect("read"), Some(Value::Str("bar")));
+    assert_eq!(
+        s1.get(&writer, "foo").expect("read"),
+        Some(Value::Str("bar"))
+    );
     assert_eq!(s2.get(&writer, "foo").expect("read"), Some(Value::I64(123)));
-    assert_eq!(s3.get(&writer, "foo").expect("read"), Some(Value::Bool(true)));
+    assert_eq!(
+        s3.get(&writer, "foo").expect("read"),
+        Some(Value::Bool(true))
+    );
 
     writer.commit().expect("committed");
 
     let reader = k.read().expect("unbound_reader");
-    assert_eq!(s1.get(&reader, "foo").expect("read"), Some(Value::Str("bar")));
+    assert_eq!(
+        s1.get(&reader, "foo").expect("read"),
+        Some(Value::Str("bar"))
+    );
     assert_eq!(s2.get(&reader, "foo").expect("read"), Some(Value::I64(123)));
-    assert_eq!(s3.get(&reader, "foo").expect("read"), Some(Value::Bool(true)));
+    assert_eq!(
+        s3.get(&reader, "foo").expect("read"),
+        Some(Value::Bool(true))
+    );
     reader.abort();
 
     // test delete across multiple stores
@@ -840,28 +1056,47 @@ fn test_multiple_store_read_write_safe() {
 
 #[test]
 fn test_multiple_store_iter_safe() {
-    let root = Builder::new().prefix("test_multiple_store_iter_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_multiple_store_iter_safe")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
     let k = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
-    let s1 = k.open_single("store_1", StoreOptions::create()).expect("opened");
-    let s2 = k.open_single("store_2", StoreOptions::create()).expect("opened");
+    let s1 = k
+        .open_single("store_1", StoreOptions::create())
+        .expect("opened");
+    let s2 = k
+        .open_single("store_2", StoreOptions::create())
+        .expect("opened");
 
     let mut writer = k.write().expect("writer");
     // Write to "s1"
-    s1.put(&mut writer, "foo", &Value::I64(1234)).expect("wrote");
-    s1.put(&mut writer, "noo", &Value::F64(1234.0.into())).expect("wrote");
-    s1.put(&mut writer, "bar", &Value::Bool(true)).expect("wrote");
-    s1.put(&mut writer, "baz", &Value::Str("héllo, yöu")).expect("wrote");
-    s1.put(&mut writer, "héllò, töűrîst", &Value::Str("Emil.RuleZ!")).expect("wrote");
-    s1.put(&mut writer, "你好，遊客", &Value::Str("米克規則")).expect("wrote");
+    s1.put(&mut writer, "foo", &Value::I64(1234))
+        .expect("wrote");
+    s1.put(&mut writer, "noo", &Value::F64(1234.0.into()))
+        .expect("wrote");
+    s1.put(&mut writer, "bar", &Value::Bool(true))
+        .expect("wrote");
+    s1.put(&mut writer, "baz", &Value::Str("héllo, yöu"))
+        .expect("wrote");
+    s1.put(&mut writer, "héllò, töűrîst", &Value::Str("Emil.RuleZ!"))
+        .expect("wrote");
+    s1.put(&mut writer, "你好，遊客", &Value::Str("米克規則"))
+        .expect("wrote");
     // &mut writer to "s2"
-    s2.put(&mut writer, "foo", &Value::I64(1234)).expect("wrote");
-    s2.put(&mut writer, "noo", &Value::F64(1234.0.into())).expect("wrote");
-    s2.put(&mut writer, "bar", &Value::Bool(true)).expect("wrote");
-    s2.put(&mut writer, "baz", &Value::Str("héllo, yöu")).expect("wrote");
-    s2.put(&mut writer, "héllò, töűrîst", &Value::Str("Emil.RuleZ!")).expect("wrote");
-    s2.put(&mut writer, "你好，遊客", &Value::Str("米克規則")).expect("wrote");
+    s2.put(&mut writer, "foo", &Value::I64(1234))
+        .expect("wrote");
+    s2.put(&mut writer, "noo", &Value::F64(1234.0.into()))
+        .expect("wrote");
+    s2.put(&mut writer, "bar", &Value::Bool(true))
+        .expect("wrote");
+    s2.put(&mut writer, "baz", &Value::Str("héllo, yöu"))
+        .expect("wrote");
+    s2.put(&mut writer, "héllò, töűrîst", &Value::Str("Emil.RuleZ!"))
+        .expect("wrote");
+    s2.put(&mut writer, "你好，遊客", &Value::Str("米克規則"))
+        .expect("wrote");
     writer.commit().expect("committed");
 
     let reader = k.read().unwrap();
@@ -953,11 +1188,20 @@ fn test_multiple_store_iter_safe() {
 
 #[test]
 fn test_store_multiple_thread_safe() {
-    let root = Builder::new().prefix("test_multiple_thread_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_multiple_thread_safe")
+        .tempdir()
+        .expect("tempdir");
     fs::create_dir_all(root.path()).expect("dir created");
 
-    let rkv_arc = Arc::new(RwLock::new(Rkv::new::<SafeMode>(root.path()).expect("new succeeded")));
-    let store = rkv_arc.read().unwrap().open_single("test", StoreOptions::create()).expect("opened");
+    let rkv_arc = Arc::new(RwLock::new(
+        Rkv::new::<SafeMode>(root.path()).expect("new succeeded"),
+    ));
+    let store = rkv_arc
+        .read()
+        .unwrap()
+        .open_single("test", StoreOptions::create())
+        .expect("opened");
 
     let num_threads = 10;
     let mut write_handles = Vec::with_capacity(num_threads as usize);
@@ -974,7 +1218,9 @@ fn test_store_multiple_thread_safe() {
         write_handles.push(thread::spawn(move || {
             let rkv = rkv_arc.write().expect("rkv");
             let mut writer = rkv.write().expect("writer");
-            store.put(&mut writer, i.to_string(), &Value::U64(i)).expect("written");
+            store
+                .put(&mut writer, i.to_string(), &Value::U64(i))
+                .expect("written");
             writer.commit().unwrap();
         }));
     }
@@ -993,7 +1239,7 @@ fn test_store_multiple_thread_safe() {
                 Ok(Some(Value::U64(value))) => value,
                 Ok(Some(_)) => panic!("value type unexpected"),
                 Ok(None) => panic!("value not found"),
-                Err(err) => panic!(err),
+                Err(err) => panic!("{}", err),
             };
             assert_eq!(value, i);
             value
@@ -1002,20 +1248,32 @@ fn test_store_multiple_thread_safe() {
 
     // Sum the values returned from the threads and confirm that they're
     // equal to the sum of values written to the threads.
-    let thread_sum: u64 = read_handles.into_iter().map(|handle| handle.join().expect("value")).sum();
+    let thread_sum: u64 = read_handles
+        .into_iter()
+        .map(|handle| handle.join().expect("value"))
+        .sum();
     assert_eq!(thread_sum, (0..num_threads).sum());
 }
 
 #[test]
 fn test_use_value_as_key_safe() {
-    let root = Builder::new().prefix("test_use_value_as_key_safe").tempdir().expect("tempdir");
+    let root = Builder::new()
+        .prefix("test_use_value_as_key_safe")
+        .tempdir()
+        .expect("tempdir");
     let rkv = Rkv::new::<SafeMode>(root.path()).expect("new succeeded");
-    let store = rkv.open_single("store", StoreOptions::create()).expect("opened");
+    let store = rkv
+        .open_single("store", StoreOptions::create())
+        .expect("opened");
 
     {
         let mut writer = rkv.write().expect("writer");
-        store.put(&mut writer, "foo", &Value::Str("bar")).expect("wrote");
-        store.put(&mut writer, "bar", &Value::Str("baz")).expect("wrote");
+        store
+            .put(&mut writer, "foo", &Value::Str("bar"))
+            .expect("wrote");
+        store
+            .put(&mut writer, "bar", &Value::Str("baz"))
+            .expect("wrote");
         writer.commit().expect("committed");
     }
 
@@ -1032,7 +1290,9 @@ fn test_use_value_as_key_safe() {
 
     {
         let mut writer = rkv.write().expect("writer");
-        store.put(&mut writer, "bar", &Value::Str("baz")).expect("wrote");
+        store
+            .put(&mut writer, "bar", &Value::Str("baz"))
+            .expect("wrote");
         writer.commit().expect("committed");
     }
 
@@ -1050,13 +1310,25 @@ fn test_use_value_as_key_safe() {
     }
 
     {
-        let name1 = rkv.open_single("name1", StoreOptions::create()).expect("opened");
-        let name2 = rkv.open_single("name2", StoreOptions::create()).expect("opened");
+        let name1 = rkv
+            .open_single("name1", StoreOptions::create())
+            .expect("opened");
+        let name2 = rkv
+            .open_single("name2", StoreOptions::create())
+            .expect("opened");
         let mut writer = rkv.write().expect("writer");
-        name1.put(&mut writer, "key1", &Value::Str("bar")).expect("wrote");
-        name1.put(&mut writer, "bar", &Value::Str("baz")).expect("wrote");
-        name2.put(&mut writer, "key2", &Value::Str("bar")).expect("wrote");
-        name2.put(&mut writer, "bar", &Value::Str("baz")).expect("wrote");
+        name1
+            .put(&mut writer, "key1", &Value::Str("bar"))
+            .expect("wrote");
+        name1
+            .put(&mut writer, "bar", &Value::Str("baz"))
+            .expect("wrote");
+        name2
+            .put(&mut writer, "key2", &Value::Str("bar"))
+            .expect("wrote");
+        name2
+            .put(&mut writer, "bar", &Value::Str("baz"))
+            .expect("wrote");
         writer.commit().expect("committed");
     }
 
@@ -1071,8 +1343,16 @@ fn test_use_value_as_key_safe() {
     // still being borrowed by a retrieved value when you try to borrow
     // the Writer again to modify another value.
     let fields = vec![
-        (rkv.open_single("name1", StoreOptions::create()).expect("opened"), "key1"),
-        (rkv.open_single("name2", StoreOptions::create()).expect("opened"), "key2"),
+        (
+            rkv.open_single("name1", StoreOptions::create())
+                .expect("opened"),
+            "key1",
+        ),
+        (
+            rkv.open_single("name2", StoreOptions::create())
+                .expect("opened"),
+            "key2",
+        ),
     ];
     {
         let mut foreignkeys = Vec::new();
