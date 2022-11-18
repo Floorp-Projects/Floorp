@@ -17,11 +17,19 @@ pref("app.update.promptWaitTime", 691200);
 // update" link supplied in the "An update is available" page of the update
 // wizard.
 
-pref("app.update.url.manual", "https://floorp.ablaze.one");
-pref("app.update.url.details", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
-pref("app.releaseNotesURL", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
-pref("app.releaseNotesURL.aboutDialog", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
 
+// wizard.
+#if MOZ_UPDATE_CHANNEL == beta
+  pref("app.update.url.manual", "https://floorp.ablaze.one");
+  pref("app.update.url.details", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp-beta/");
+  pref("app.releaseNotesURL", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp-beta/");
+  pref("app.releaseNotesURL.aboutDialog", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp-beta/");
+#else
+  pref("app.update.url.manual", "https://floorp.ablaze.one");
+  pref("app.update.url.details", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/")
+  pref("app.releaseNotesURL", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");;
+  pref("app.releaseNotesURL.aboutDialog", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
+#endif
 // The number of days a binary is permitted to be old
 // without checking for an update.  This assumes that
 // app.update.checkInstallTime is true.
