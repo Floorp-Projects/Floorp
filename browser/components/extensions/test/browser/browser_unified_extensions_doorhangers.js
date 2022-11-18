@@ -135,4 +135,5 @@ add_task(async function test_permissions_prompt_with_pref_disabled() {
   await verifyPermissionsPrompt(anotherWindow, "addons-notification-icon");
 
   await BrowserTestUtils.closeWindow(anotherWindow);
+  await SpecialPowers.popPrefEnv();
 });

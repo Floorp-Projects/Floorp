@@ -466,6 +466,7 @@ add_task(async function test_overflowable_toolbar_legacy() {
   );
 
   await BrowserTestUtils.closeWindow(win);
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_menu_button() {

@@ -636,13 +636,18 @@ this.browserAction = class extends ExtensionAPIPersistent {
 
       case "focus":
       case "mouseover": {
+        let tab = window.gBrowser.selectedTab;
+        let popupURL = this.action.getPopupUrl(tab);
+
         let { node } = window.gBrowser && this.widget.forWindow(window);
         if (gUnifiedExtensionsEnabled && node) {
           const policy = WebExtensionPolicy.getByID(this.extension.id);
-          const messages = OriginControls.getStateMessageIDs(
+          const messages = OriginControls.getStateMessageIDs({
             policy,
-            window.gBrowser.currentURI
-          );
+            uri: window.gBrowser.currentURI,
+            isAction: true,
+            hasPopup: !!popupURL,
+          });
 
           if (messages?.onHover) {
             node.ownerDocument.l10n.setAttributes(
@@ -659,9 +664,6 @@ this.browserAction = class extends ExtensionAPIPersistent {
 
         // Begin pre-loading the browser for the popup, so it's more likely to
         // be ready by the time we get a complete click.
-        let tab = window.gBrowser.selectedTab;
-        let popupURL = this.action.getPopupUrl(tab);
-
         if (
           popupURL &&
           (this.pendingPopup || !ViewPopup.for(this.extension, window))
@@ -676,11 +678,16 @@ this.browserAction = class extends ExtensionAPIPersistent {
       case "mouseout": {
         let { node } = window.gBrowser && this.widget.forWindow(window);
         if (gUnifiedExtensionsEnabled && node) {
+          let tab = window.gBrowser.selectedTab;
+          let popupURL = this.action.getPopupUrl(tab);
+
           const policy = WebExtensionPolicy.getByID(this.extension.id);
-          const messages = OriginControls.getStateMessageIDs(
+          const messages = OriginControls.getStateMessageIDs({
             policy,
-            window.gBrowser.currentURI
-          );
+            uri: window.gBrowser.currentURI,
+            isAction: true,
+            hasPopup: !!popupURL,
+          });
 
           if (messages?.default) {
             node.ownerDocument.l10n.setAttributes(
@@ -840,10 +847,12 @@ this.browserAction = class extends ExtensionAPIPersistent {
     let messages;
     if (gUnifiedExtensionsEnabled) {
       let policy = WebExtensionPolicy.getByID(this.extension.id);
-      messages = OriginControls.getStateMessageIDs(
+      messages = OriginControls.getStateMessageIDs({
         policy,
-        node.ownerGlobal.gBrowser.currentURI
-      );
+        uri: node.ownerGlobal.gBrowser.currentURI,
+        isAction: true,
+        hasPopup: !!tabData.popup,
+      });
     }
 
     let callback = () => {
