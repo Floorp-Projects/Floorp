@@ -14,7 +14,7 @@ add_task(async function aboutDialog_foregroundCheck_malformedXML() {
       continueFile: CONTINUE_CHECK,
     },
     {
-      panelId: "checkingFailed",
+      panelId: "noUpdatesFound",
       checkActiveUpdate: null,
       continueFile: null,
     },

@@ -420,9 +420,6 @@ var gMainPane = {
       setEventListener("checkForUpdatesButton3", "command", function() {
         gAppUpdater.checkForUpdates();
       });
-      setEventListener("checkForUpdatesButton4", "command", function() {
-        gAppUpdater.checkForUpdates();
-      });
     }
 
     // Startup pref
