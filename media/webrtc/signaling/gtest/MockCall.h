@@ -189,6 +189,8 @@ class MockVideoReceiveStream : public webrtc::VideoReceiveStreamInterface {
 
   void SetFlexFecProtection(webrtc::RtpPacketSinkInterface* flexfec_sink) override {}
 
+  void SetLossNotificationEnabled(bool enabled) override {}
+
   void SetRtpExtensions(std::vector<webrtc::RtpExtension> extensions) override {
   }
   webrtc::RtpHeaderExtensionMap GetRtpExtensionMap() const override;
