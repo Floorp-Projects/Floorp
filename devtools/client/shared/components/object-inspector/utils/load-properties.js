@@ -12,7 +12,6 @@ const {
   getFullText,
   getPromiseState,
   getProxySlots,
-  getCustomFormatterBody,
 } = require("resource://devtools/client/shared/components/object-inspector/utils/client.js");
 
 const {
@@ -21,8 +20,6 @@ const {
   getFront,
   getValue,
   nodeHasAccessors,
-  nodeHasCustomFormatter,
-  nodeHasCustomFormattedBody,
   nodeHasProperties,
   nodeIsBucket,
   nodeIsDefaultProperties,
@@ -98,10 +95,6 @@ function loadItemProperties(item, client, loadedProperties, threadActorID) {
     promises.push(getProxySlots(getObjectFront()));
   }
 
-  if (shouldLoadCustomFormatterBody(item, loadedProperties)) {
-    promises.push(getCustomFormatterBody(getObjectFront(), item.contents.value.customFormatterIndex));
-  }
-
   return Promise.all(promises).then(mergeResponses);
 }
 
@@ -137,10 +130,6 @@ function mergeResponses(responses) {
       data.proxyTarget = response.proxyTarget;
       data.proxyHandler = response.proxyHandler;
     }
-
-    if (response.customFormatterBody) {
-      data.customFormatterBody = response.customFormatterBody;
-    }
   }
 
   return data;
@@ -157,7 +146,6 @@ function shouldLoadItemIndexedProperties(item, loadedProperties = new Map()) {
     !nodeIsProxy(item) &&
     !nodeNeedsNumericalBuckets(item) &&
     !nodeIsEntries(getClosestNonBucketNode(item)) &&
-    !nodeHasCustomFormatter(item) &&
     // The data is loaded when expanding the window node.
     !nodeIsDefaultProperties(item)
   );
@@ -177,7 +165,6 @@ function shouldLoadItemNonIndexedProperties(
     !nodeIsProxy(item) &&
     !nodeIsEntries(getClosestNonBucketNode(item)) &&
     !nodeIsBucket(item) &&
-    !nodeHasCustomFormatter(item) &&
     // The data is loaded when expanding the window node.
     !nodeIsDefaultProperties(item)
   );
@@ -191,7 +178,6 @@ function shouldLoadItemEntries(item, loadedProperties = new Map()) {
     value &&
     nodeIsEntries(getClosestNonBucketNode(item)) &&
     !loadedProperties.has(item.path) &&
-    !nodeHasCustomFormatter(item) &&
     !nodeNeedsNumericalBuckets(item)
   );
 }
@@ -209,8 +195,7 @@ function shouldLoadItemPrototype(item, loadedProperties = new Map()) {
     !nodeHasAccessors(item) &&
     !nodeIsPrimitive(item) &&
     !nodeIsLongString(item) &&
-    !nodeIsProxy(item) &&
-    !nodeHasCustomFormatter(item)
+    !nodeIsProxy(item)
   );
 }
 
@@ -227,8 +212,7 @@ function shouldLoadItemSymbols(item, loadedProperties = new Map()) {
     !nodeHasAccessors(item) &&
     !nodeIsPrimitive(item) &&
     !nodeIsLongString(item) &&
-    !nodeIsProxy(item) &&
-    !nodeHasCustomFormatter(item)
+    !nodeIsProxy(item)
   );
 }
 
@@ -246,25 +230,20 @@ function shouldLoadItemPrivateProperties(item, loadedProperties = new Map()) {
     !nodeHasAccessors(item) &&
     !nodeIsPrimitive(item) &&
     !nodeIsLongString(item) &&
-    !nodeIsProxy(item) &&
-    !nodeHasCustomFormatter(item)
+    !nodeIsProxy(item)
   );
 }
 
 function shouldLoadItemFullText(item, loadedProperties = new Map()) {
-  return !loadedProperties.has(item.path) && nodeIsLongString(item) && !nodeHasCustomFormatter(item);
+  return !loadedProperties.has(item.path) && nodeIsLongString(item);
 }
 
 function shouldLoadItemPromiseState(item, loadedProperties = new Map()) {
-  return !loadedProperties.has(item.path) && nodeIsPromise(item) && !nodeHasCustomFormatter(item);
+  return !loadedProperties.has(item.path) && nodeIsPromise(item);
 }
 
 function shouldLoadItemProxySlots(item, loadedProperties = new Map()) {
-  return !loadedProperties.has(item.path) && nodeIsProxy(item) && !nodeHasCustomFormatter(item);
-}
-
-function shouldLoadCustomFormatterBody(item, loadedProperties = new Map()) {
-  return !loadedProperties.has(item.path) && nodeHasCustomFormattedBody(item)
+  return !loadedProperties.has(item.path) && nodeIsProxy(item);
 }
 
 module.exports = {
@@ -278,5 +257,4 @@ module.exports = {
   shouldLoadItemFullText,
   shouldLoadItemPromiseState,
   shouldLoadItemProxySlots,
-  shouldLoadCustomFormatterBody,
 };
