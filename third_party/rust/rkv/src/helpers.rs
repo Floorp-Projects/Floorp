@@ -10,18 +10,12 @@
 
 use std::{
     io,
-    path::{
-        Path,
-        PathBuf,
-    },
+    path::{Path, PathBuf},
 };
 
 use url::Url;
 
-use crate::{
-    error::StoreError,
-    value::Value,
-};
+use crate::{error::StoreError, value::Value};
 
 pub(crate) fn read_transform(value: Result<&[u8], StoreError>) -> Result<Value, StoreError> {
     match value {
@@ -40,7 +34,9 @@ where
 
     Ok(if cfg!(target_os = "windows") {
         let map_err = |_| io::Error::new(io::ErrorKind::Other, "path canonicalization error");
-        Url::from_file_path(&canonical).and_then(|url| url.to_file_path()).map_err(map_err)?
+        Url::from_file_path(&canonical)
+            .and_then(|url| url.to_file_path())
+            .map_err(map_err)?
     } else {
         canonical
     })
