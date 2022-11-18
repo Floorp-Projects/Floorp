@@ -604,12 +604,15 @@ class AdaptingFrameForwarder : public test::FrameForwarder {
     test::FrameForwarder::AddOrUpdateSinkLocked(sink, wants);
   }
 
+  void RequestRefreshFrame() override { ++refresh_frames_requested_; }
+
   TimeController* const time_controller_;
   cricket::VideoAdapter adapter_;
   bool adaptation_enabled_ RTC_GUARDED_BY(mutex_);
   rtc::VideoSinkWants last_wants_ RTC_GUARDED_BY(mutex_);
   absl::optional<int> last_width_;
   absl::optional<int> last_height_;
+  int refresh_frames_requested_{0};
 };
 
 // TODO(nisse): Mock only VideoStreamEncoderObserver.
@@ -8606,6 +8609,29 @@ TEST_F(VideoStreamEncoderTest,
   WaitForEncodedFrame(1);
   video_stream_encoder_->TriggerQualityLow();
   EXPECT_TRUE(stats_proxy_->GetStats().bw_limited_resolution);
+
+  video_stream_encoder_->Stop();
+}
+
+TEST_F(VideoStreamEncoderTest,
+       RequestsRefreshFrameAfterEarlyDroppedNativeFrame) {
+  // Send a native frame before encoder rates have been set. The encoder is
+  // seen as paused at this time.
+  rtc::Event frame_destroyed_event;
+  video_source_.IncomingCapturedFrame(CreateFakeNativeFrame(
+      /*ntp_time_ms=*/1, &frame_destroyed_event, codec_width_, codec_height_));
+
+  // Frame should be dropped and destroyed.
+  ExpectDroppedFrame();
+  EXPECT_TRUE(frame_destroyed_event.Wait(kDefaultTimeoutMs));
+  EXPECT_EQ(video_source_.refresh_frames_requested_, 0);
+
+  // Set bitrates, unpausing the encoder and triggering a request for a refresh
+  // frame.
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      kTargetBitrate, kTargetBitrate, kTargetBitrate, 0, 0, 0);
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
+  EXPECT_EQ(video_source_.refresh_frames_requested_, 1);
 
   video_stream_encoder_->Stop();
 }
