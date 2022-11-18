@@ -2,16 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["SiteDataTestUtils"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { BrowserTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/BrowserTestUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { BrowserTestUtils } from "resource://testing-common/BrowserTestUtils.sys.mjs";
 
 const lazy = {};
 
@@ -29,7 +21,7 @@ XPCOMUtils.defineLazyServiceGetter(
  * Please note that you will have to clean up changes made manually, for
  * example using SiteDataTestUtils.clear().
  */
-var SiteDataTestUtils = {
+export var SiteDataTestUtils = {
   /**
    * Makes an origin have persistent data storage.
    *

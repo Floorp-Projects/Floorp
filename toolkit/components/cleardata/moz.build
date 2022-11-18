@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TESTING_JS_MODULES += [
-    "SiteDataTestUtils.jsm",
+    "SiteDataTestUtils.sys.mjs",
 ]
 
 XPIDL_SOURCES += [
@@ -15,9 +15,9 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = "toolkit_cleardata"
 
 EXTRA_JS_MODULES += [
-    "ClearDataService.jsm",
-    "PrincipalsCollector.jsm",
-    "ServiceWorkerCleanUp.jsm",
+    "ClearDataService.sys.mjs",
+    "PrincipalsCollector.sys.mjs",
+    "ServiceWorkerCleanUp.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [
