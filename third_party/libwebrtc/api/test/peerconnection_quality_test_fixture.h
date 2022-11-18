@@ -219,6 +219,8 @@ class PeerConnectionE2EQualityTestFixture {
 
   class VideoDumpOptions {
    public:
+    static constexpr int kDefaultSamplingModulo = 1;
+
     // output_directory - the output directory where stream will be dumped. The
     // output files' names will be constructed as
     // <stream_name>_<receiver_name>.<extension> for output dumps and
@@ -227,8 +229,16 @@ class PeerConnectionE2EQualityTestFixture {
     // sampling_modulo - the module for the video frames to be dumped. Modulo
     // equals X means every Xth frame will be written to the dump file. The
     // value must be greater than 0. (Default: 1)
+    // export_frame_ids - specifies if frame ids should be exported together
+    // with content of the stream. If true, an output file with the same name as
+    // video dump and suffix ".frame_ids.txt" will be created. It will contain
+    // the frame ids in the same order as original frames in the output
+    // file with stream content. File will contain one frame id per line.
+    // (Default: false)
     explicit VideoDumpOptions(absl::string_view output_directory,
-                              int sampling_modulo = 1);
+                              int sampling_modulo = kDefaultSamplingModulo,
+                              bool export_frame_ids = false);
+    VideoDumpOptions(absl::string_view output_directory, bool export_frame_ids);
 
     VideoDumpOptions(const VideoDumpOptions&) = default;
     VideoDumpOptions& operator=(const VideoDumpOptions&) = default;
@@ -237,14 +247,25 @@ class PeerConnectionE2EQualityTestFixture {
 
     std::string output_directory() const { return output_directory_; }
     int sampling_modulo() const { return sampling_modulo_; }
+    bool export_frame_ids() const { return export_frame_ids_; }
 
     std::string GetInputDumpFileName(absl::string_view stream_label) const;
+    // Returns file name for input frame ids dump if `export_frame_ids()` is
+    // true, absl::nullopt otherwise.
+    absl::optional<std::string> GetInputFrameIdsDumpFileName(
+        absl::string_view stream_label) const;
     std::string GetOutputDumpFileName(absl::string_view stream_label,
                                       absl::string_view receiver) const;
+    // Returns file name for output frame ids dump if `export_frame_ids()` is
+    // true, absl::nullopt otherwise.
+    absl::optional<std::string> GetOutputFrameIdsDumpFileName(
+        absl::string_view stream_label,
+        absl::string_view receiver) const;
 
    private:
     std::string output_directory_;
     int sampling_modulo_ = 1;
+    bool export_frame_ids_ = false;
   };
 
   // Contains properties of single video stream.
