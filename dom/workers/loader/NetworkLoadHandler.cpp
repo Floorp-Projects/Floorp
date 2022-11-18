@@ -353,7 +353,7 @@ nsresult NetworkLoadHandler::PrepareForRequest(nsIRequest* aRequest) {
   ir->Headers()->FillResponseHeaders(channel);
 
   RefPtr<mozilla::dom::Response> response = new mozilla::dom::Response(
-      loadContext->GetCacheCreator()->Global(), std::move(ir), nullptr);
+      mRequestHandle->GetCacheCreator()->Global(), std::move(ir), nullptr);
 
   mozilla::dom::RequestOrUSVString request;
 
@@ -366,8 +366,9 @@ nsresult NetworkLoadHandler::PrepareForRequest(nsIRequest* aRequest) {
   jsapi.Init();
 
   ErrorResult error;
-  RefPtr<Promise> cachePromise = loadContext->GetCacheCreator()->Cache_()->Put(
-      jsapi.cx(), request, *response, error);
+  RefPtr<Promise> cachePromise =
+      mRequestHandle->GetCacheCreator()->Cache_()->Put(jsapi.cx(), request,
+                                                       *response, error);
   error.WouldReportJSException();
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();

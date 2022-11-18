@@ -17,25 +17,6 @@ WorkerLoadContext::WorkerLoadContext(Kind aKind,
       mKind(aKind),
       mClientInfo(aClientInfo){};
 
-void WorkerLoadContext::SetCacheCreator(
-    RefPtr<workerinternals::loader::CacheCreator> aCacheCreator) {
-  AssertIsOnMainThread();
-  mCacheCreator =
-      new nsMainThreadPtrHolder<workerinternals::loader::CacheCreator>(
-          "WorkerLoadContext::mCacheCreator", aCacheCreator);
-}
-
-void WorkerLoadContext::ClearCacheCreator() {
-  AssertIsOnMainThread();
-  mCacheCreator = nullptr;
-}
-
-RefPtr<workerinternals::loader::CacheCreator>
-WorkerLoadContext::GetCacheCreator() {
-  AssertIsOnMainThread();
-  return mCacheCreator.get();
-}
-
 ThreadSafeRequestHandle::ThreadSafeRequestHandle(
     JS::loader::ScriptLoadRequest* aRequest, nsISerialEventTarget* aSyncTarget)
     : mRequest(aRequest), mOwningEventTarget(aSyncTarget) {}
@@ -62,6 +43,12 @@ bool ThreadSafeRequestHandle::IsCancelled() { return mRunnable->IsCancelled(); }
 
 nsresult ThreadSafeRequestHandle::GetCancelResult() {
   return mRunnable->GetCancelResult();
+}
+
+workerinternals::loader::CacheCreator*
+ThreadSafeRequestHandle::GetCacheCreator() {
+  AssertIsOnMainThread();
+  return mRunnable->GetCacheCreator();
 }
 
 ThreadSafeRequestHandle::~ThreadSafeRequestHandle() {

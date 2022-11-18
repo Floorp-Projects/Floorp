@@ -133,15 +133,6 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
   // when we're going to have an mCachePromise.
   nsCOMPtr<nsIInputStream> mCacheReadStream;
 
-  nsMainThreadPtrHandle<workerinternals::loader::CacheCreator> mCacheCreator;
-
-  void ClearCacheCreator();
-
-  void SetCacheCreator(
-      RefPtr<workerinternals::loader::CacheCreator> aCacheCreator);
-
-  RefPtr<workerinternals::loader::CacheCreator> GetCacheCreator();
-
   enum CacheStatus {
     // By default a normal script is just loaded from the network. But for
     // ServiceWorkers, we have to check if the cache contains the script and
@@ -196,6 +187,8 @@ class ThreadSafeRequestHandle final {
   nsresult GetCancelResult();
 
   already_AddRefed<JS::loader::ScriptLoadRequest> ReleaseRequest();
+
+  workerinternals::loader::CacheCreator* GetCacheCreator();
 
   RefPtr<workerinternals::loader::ScriptLoaderRunnable> mRunnable;
 

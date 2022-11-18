@@ -271,6 +271,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
   RefPtr<ThreadSafeWorkerRef> mWorkerRef;
   nsTArrayView<RefPtr<ThreadSafeRequestHandle>> mLoadingRequests;
   Maybe<nsresult> mCancelMainThread;
+  RefPtr<CacheCreator> mCacheCreator;
 
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -293,6 +294,8 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
   }
 
   void CancelMainThreadWithBindingAborted();
+
+  CacheCreator* GetCacheCreator() { return mCacheCreator; };
 
  private:
   ~ScriptLoaderRunnable() = default;
