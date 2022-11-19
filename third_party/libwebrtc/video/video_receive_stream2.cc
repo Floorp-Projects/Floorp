@@ -171,11 +171,6 @@ bool IsKeyFrameAndUnspecifiedResolution(const EncodedFrame& frame) {
          frame.EncodedImage()._encodedHeight == 0;
 }
 
-// TODO(https://bugs.webrtc.org/9974): Consider removing this workaround.
-// Maximum time between frames before resetting the FrameBuffer to avoid RTP
-// timestamps wraparound to affect FrameBuffer.
-constexpr TimeDelta kInactiveStreamThreshold = TimeDelta::Minutes(10);
-
 std::string OptionalDelayToLogString(const absl::optional<TimeDelta> opt) {
   return opt.has_value() ? ToLogString(*opt) : "<unset>";
 }
@@ -726,17 +721,6 @@ void VideoReceiveStream2::RequestKeyFrame(Timestamp now) {
 
 void VideoReceiveStream2::OnCompleteFrame(std::unique_ptr<EncodedFrame> frame) {
   RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
-
-  // TODO(https://bugs.webrtc.org/9974): Consider removing this workaround.
-  // TODO(https://bugs.webrtc.org/13343): Remove this check when FrameBuffer3 is
-  // deployed. With FrameBuffer3, this case is properly handled and tested in
-  // the FrameBufferProxyTest.PausedStream unit test.
-  Timestamp time_now = clock_->CurrentTime();
-  if (last_complete_frame_time_ &&
-      time_now - *last_complete_frame_time_ > kInactiveStreamThreshold) {
-    frame_buffer_->Clear();
-  }
-  last_complete_frame_time_ = time_now;
 
   const VideoPlayoutDelay& playout_delay = frame->EncodedImage().playout_delay_;
   if (playout_delay.min_ms >= 0) {
