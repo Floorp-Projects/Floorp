@@ -16,7 +16,8 @@
 namespace webrtc {
 
 namespace {
-constexpr double kThetaLow = 0.000001;
+// TODO(brandtr): The value below corresponds to 8 Gbps. Is that reasonable?
+constexpr double kMaxBandwidth = 0.000001;  // Unit: [1 / bytes per ms].
 }
 
 FrameDelayDeltaKalmanFilter::FrameDelayDeltaKalmanFilter() {
@@ -39,78 +40,85 @@ void FrameDelayDeltaKalmanFilter::PredictAndUpdate(
     double frame_size_variation_bytes,
     DataSize max_frame_size,
     double var_noise) {
-  // 1) Estimate prediction: There is no need to explicitly predict the
-  // estimate, since the state transition matrix is the identity.
+  // This member function follows the data flow in
+  // https://en.wikipedia.org/wiki/Kalman_filter#Details.
 
-  // 2) Estimate covariance prediction: This is done by simply adding the
-  // process noise covariance, again since the state transition matrix is the
-  // identity.
+  // 1) Estimate prediction: `x = F*x`.
+  // For this model, there is no need to explicitly predict the estimate, since
+  // the state transition matrix is the identity.
+
+  // 2) Estimate covariance prediction: `P = F*P*F' + Q`.
+  // Again, since the state transition matrix is the identity, this update
+  // is performed by simply adding the process noise covariance.
   estimate_cov_[0][0] += process_noise_cov_diag_[0];
   estimate_cov_[1][1] += process_noise_cov_diag_[1];
 
-  // Measurement update.
-  // TODO(brandtr): Reorganize the code below to follow the standard update
-  // order as given by, e.g., Wikipedia.
-  double Mh[2];
-  double hMh_sigma;
-  double kalmanGain[2];
-  double measureRes;
-  double t00, t01;
+  // 3) Innovation: `y = z - H*x`.
+  // This is the part of the measurement that cannot be explained by the current
+  // estimate.
+  double innovation =
+      frame_delay_variation.ms() -
+      GetFrameDelayVariationEstimateTotal(frame_size_variation_bytes);
 
-  // Kalman gain
-  // K = M*h'/(sigma2n + h*M*h') = M*h'/(1 + h*M*h')
-  // h = [dFS 1]
-  // Mh = M*h'
-  // hMh_sigma = h*M*h' + R
-  Mh[0] =
+  // 4) Innovation variance: `s = H*P*H' + r`.
+  double estim_cov_times_obs[2];
+  estim_cov_times_obs[0] =
       estimate_cov_[0][0] * frame_size_variation_bytes + estimate_cov_[0][1];
-  Mh[1] =
+  estim_cov_times_obs[1] =
       estimate_cov_[1][0] * frame_size_variation_bytes + estimate_cov_[1][1];
-  // sigma weights measurements with a small deltaFS as noisy and
-  // measurements with large deltaFS as good
+  // TODO(brandtr): Why is this check placed in the middle of this function?
+  // Should it be moved to the top?
   if (max_frame_size < DataSize::Bytes(1)) {
     return;
   }
-  double sigma = (300.0 * exp(-fabs(frame_size_variation_bytes) /
-                              (1e0 * max_frame_size.bytes())) +
-                  1) *
-                 sqrt(var_noise);
-  if (sigma < 1.0) {
-    sigma = 1.0;
+  double observation_noise_stddev =
+      (300.0 * exp(-fabs(frame_size_variation_bytes) /
+                   (1e0 * max_frame_size.bytes())) +
+       1) *
+      sqrt(var_noise);
+  if (observation_noise_stddev < 1.0) {
+    observation_noise_stddev = 1.0;
   }
-  // TODO(brandtr): Shouldn't we add sigma^2 here? Otherwise, the dimensional
-  // analysis fails.
-  hMh_sigma = frame_size_variation_bytes * Mh[0] + Mh[1] + sigma;
-  if ((hMh_sigma < 1e-9 && hMh_sigma >= 0) ||
-      (hMh_sigma > -1e-9 && hMh_sigma <= 0)) {
+  // TODO(brandtr): Shouldn't we add observation_noise_stddev^2 here? Otherwise,
+  // the dimensional analysis fails.
+  double innovation_var = frame_size_variation_bytes * estim_cov_times_obs[0] +
+                          estim_cov_times_obs[1] + observation_noise_stddev;
+  if ((innovation_var < 1e-9 && innovation_var >= 0) ||
+      (innovation_var > -1e-9 && innovation_var <= 0)) {
     RTC_DCHECK_NOTREACHED();
     return;
   }
-  kalmanGain[0] = Mh[0] / hMh_sigma;
-  kalmanGain[1] = Mh[1] / hMh_sigma;
 
-  // Correction
-  // theta = theta + K*(dT - h*theta)
-  measureRes = frame_delay_variation.ms() -
-               (frame_size_variation_bytes * estimate_[0] + estimate_[1]);
-  estimate_[0] += kalmanGain[0] * measureRes;
-  estimate_[1] += kalmanGain[1] * measureRes;
+  // 5) Optimal Kalman gain: `K = P*H'/s`.
+  // How much to trust the model vs. how much to trust the measurement.
+  double kalman_gain[2];
+  kalman_gain[0] = estim_cov_times_obs[0] / innovation_var;
+  kalman_gain[1] = estim_cov_times_obs[1] / innovation_var;
 
-  if (estimate_[0] < kThetaLow) {
-    estimate_[0] = kThetaLow;
+  // 6) Estimate update: `x = x + K*y`.
+  // Optimally weight the new information in the innovation and add it to the
+  // old estimate.
+  estimate_[0] += kalman_gain[0] * innovation;
+  estimate_[1] += kalman_gain[1] * innovation;
+
+  // (This clamping is not part of the linear Kalman filter.)
+  if (estimate_[0] < kMaxBandwidth) {
+    estimate_[0] = kMaxBandwidth;
   }
 
-  // M = (I - K*h)*M
-  t00 = estimate_cov_[0][0];
-  t01 = estimate_cov_[0][1];
-  estimate_cov_[0][0] = (1 - kalmanGain[0] * frame_size_variation_bytes) * t00 -
-                        kalmanGain[0] * estimate_cov_[1][0];
-  estimate_cov_[0][1] = (1 - kalmanGain[0] * frame_size_variation_bytes) * t01 -
-                        kalmanGain[0] * estimate_cov_[1][1];
-  estimate_cov_[1][0] = estimate_cov_[1][0] * (1 - kalmanGain[1]) -
-                        kalmanGain[1] * frame_size_variation_bytes * t00;
-  estimate_cov_[1][1] = estimate_cov_[1][1] * (1 - kalmanGain[1]) -
-                        kalmanGain[1] * frame_size_variation_bytes * t01;
+  // 7) Estimate covariance update: `P = (I - K*H)*P`
+  double t00 = estimate_cov_[0][0];
+  double t01 = estimate_cov_[0][1];
+  estimate_cov_[0][0] =
+      (1 - kalman_gain[0] * frame_size_variation_bytes) * t00 -
+      kalman_gain[0] * estimate_cov_[1][0];
+  estimate_cov_[0][1] =
+      (1 - kalman_gain[0] * frame_size_variation_bytes) * t01 -
+      kalman_gain[0] * estimate_cov_[1][1];
+  estimate_cov_[1][0] = estimate_cov_[1][0] * (1 - kalman_gain[1]) -
+                        kalman_gain[1] * frame_size_variation_bytes * t00;
+  estimate_cov_[1][1] = estimate_cov_[1][1] * (1 - kalman_gain[1]) -
+                        kalman_gain[1] * frame_size_variation_bytes * t01;
 
   // Covariance matrix, must be positive semi-definite.
   RTC_DCHECK(estimate_cov_[0][0] + estimate_cov_[1][1] >= 0 &&

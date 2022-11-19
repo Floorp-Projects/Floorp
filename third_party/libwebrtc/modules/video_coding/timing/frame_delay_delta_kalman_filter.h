@@ -46,6 +46,7 @@ namespace webrtc {
 //  * The measurement (`z`) is the (scalar) frame delay variation [ms].
 //  * The observation matrix (`H`) is a 1x2 vector set as
 //    `{frame_size_variation [bytes], 1.0}`.
+//  * The state estimate covariance (`P`) is a symmetric 2x2 matrix.
 //  * The process noise covariance (`Q`) is a constant 2x2 diagonal matrix
 //    [(1 / bytes per ms)^2, ms^2].
 //  * The observation noise covariance (`r`) is a scalar [ms^2] that is
