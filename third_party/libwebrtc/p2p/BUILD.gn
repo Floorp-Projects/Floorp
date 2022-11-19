@@ -167,8 +167,8 @@ if (rtc_include_tests) {
       "../api:libjingle_peerconnection_api",
       "../api/task_queue:pending_task_safety_flag",
       "../api/units:time_delta",
-      "../rtc_base",
       "../rtc_base:copy_on_write_buffer",
+      "../rtc_base:task_queue_for_test",
     ]
     absl_deps = [
       "//third_party/abseil-cpp/absl/algorithm:container",
@@ -183,8 +183,8 @@ if (rtc_include_tests) {
     sources = [ "base/fake_port_allocator.h" ]
     deps = [
       ":rtc_p2p",
-      "../rtc_base",
       "../rtc_base:net_helpers",
+      "../rtc_base:task_queue_for_test",
       "../rtc_base:threading",
       "../rtc_base/memory:always_valid_pointer",
       "../test:scoped_key_value_config",

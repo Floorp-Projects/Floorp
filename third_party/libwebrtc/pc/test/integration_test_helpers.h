@@ -107,13 +107,13 @@
 #include "rtc_base/gunit.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/ip_address.h"
-#include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/mdns_responder_interface.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/rtc_certificate_generator.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/ssl_stream_adapter.h"
+#include "rtc_base/task_queue_for_test.h"
 #include "rtc_base/task_utils/repeating_task.h"
 #include "rtc_base/test_certificate_verifier.h"
 #include "rtc_base/thread.h"
@@ -1429,7 +1429,7 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
 
     // If turn servers were created for the test they need to be destroyed on
     // the network thread.
-    network_thread()->Invoke<void>(RTC_FROM_HERE, [this] {
+    SendTask(network_thread(), [this] {
       turn_servers_.clear();
       turn_customizers_.clear();
     });
@@ -1641,25 +1641,22 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
       const std::string& common_name = "test turn server") {
     rtc::Thread* thread = network_thread();
     rtc::SocketFactory* socket_factory = fss_.get();
-    std::unique_ptr<cricket::TestTurnServer> turn_server =
-        network_thread()->Invoke<std::unique_ptr<cricket::TestTurnServer>>(
-            RTC_FROM_HERE, [thread, socket_factory, internal_address,
-                            external_address, type, common_name] {
-              return std::make_unique<cricket::TestTurnServer>(
-                  thread, socket_factory, internal_address, external_address,
-                  type,
-                  /*ignore_bad_certs=*/true, common_name);
-            });
+    std::unique_ptr<cricket::TestTurnServer> turn_server;
+    SendTask(network_thread(), [&] {
+      turn_server = std::make_unique<cricket::TestTurnServer>(
+          thread, socket_factory, internal_address, external_address, type,
+          /*ignore_bad_certs=*/true, common_name);
+    });
     turn_servers_.push_back(std::move(turn_server));
     // Interactions with the turn server should be done on the network thread.
     return turn_servers_.back().get();
   }
 
   cricket::TestTurnCustomizer* CreateTurnCustomizer() {
-    std::unique_ptr<cricket::TestTurnCustomizer> turn_customizer =
-        network_thread()->Invoke<std::unique_ptr<cricket::TestTurnCustomizer>>(
-            RTC_FROM_HERE,
-            [] { return std::make_unique<cricket::TestTurnCustomizer>(); });
+    std::unique_ptr<cricket::TestTurnCustomizer> turn_customizer;
+    SendTask(network_thread(), [&] {
+      turn_customizer = std::make_unique<cricket::TestTurnCustomizer>();
+    });
     turn_customizers_.push_back(std::move(turn_customizer));
     // Interactions with the turn customizer should be done on the network
     // thread.
@@ -1670,16 +1667,10 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
   // 0.
   void ExpectTurnCustomizerCountersIncremented(
       cricket::TestTurnCustomizer* turn_customizer) {
-    unsigned int allow_channel_data_counter =
-        network_thread()->Invoke<unsigned int>(
-            RTC_FROM_HERE, [turn_customizer] {
-              return turn_customizer->allow_channel_data_cnt_;
-            });
-    EXPECT_GT(allow_channel_data_counter, 0u);
-    unsigned int modify_counter = network_thread()->Invoke<unsigned int>(
-        RTC_FROM_HERE,
-        [turn_customizer] { return turn_customizer->modify_cnt_; });
-    EXPECT_GT(modify_counter, 0u);
+    SendTask(network_thread(), [turn_customizer] {
+      EXPECT_GT(turn_customizer->allow_channel_data_cnt_, 0u);
+      EXPECT_GT(turn_customizer->modify_cnt_, 0u);
+    });
   }
 
   // Once called, SDP blobs and ICE candidates will be automatically signaled
@@ -1758,10 +1749,10 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
   }
 
   void SetPortAllocatorFlags(uint32_t caller_flags, uint32_t callee_flags) {
-    network_thread()->Invoke<void>(RTC_FROM_HERE, [this, caller_flags] {
+    SendTask(network_thread(), [this, caller_flags] {
       caller()->port_allocator()->set_flags(caller_flags);
     });
-    network_thread()->Invoke<void>(RTC_FROM_HERE, [this, callee_flags] {
+    SendTask(network_thread(), [this, callee_flags] {
       callee()->port_allocator()->set_flags(callee_flags);
     });
   }

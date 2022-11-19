@@ -62,7 +62,6 @@
 #include "pc/video_track.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/gunit.h"
-#include "rtc_base/location.h"
 #include "rtc_base/thread.h"
 #include "test/gmock.h"
 #include "test/gtest.h"

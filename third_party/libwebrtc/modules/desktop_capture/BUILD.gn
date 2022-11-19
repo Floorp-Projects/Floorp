@@ -138,6 +138,7 @@ if (rtc_include_tests) {
       # TODO(bugs.webrtc.org/9987): Remove this dep on rtc_base:rtc_base once
       # rtc_base:threading is fully defined.
       "../../rtc_base:rtc_base",
+      "../../rtc_base:task_queue_for_test",
       "../../rtc_base:threading",
       "../../system_wrappers",
       "../../test:test_support",

@@ -26,8 +26,11 @@ namespace webrtc {
 
 inline void SendTask(TaskQueueBase* task_queue,
                      rtc::FunctionView<void()> task) {
-  RTC_CHECK(!task_queue->IsCurrent())
-      << "Called SendTask to a queue from the same queue";
+  if (task_queue->IsCurrent()) {
+    task();
+    return;
+  }
+
   rtc::Event event;
   absl::Cleanup cleanup = [&event] { event.Set(); };
   task_queue->PostTask([task, cleanup = std::move(cleanup)] { task(); });
@@ -53,6 +56,7 @@ class RTC_LOCKABLE TaskQueueForTest : public rtc::TaskQueue {
   // Wait for the completion of all tasks posted prior to the
   // WaitForPreviouslyPostedTasks() call.
   void WaitForPreviouslyPostedTasks() {
+    RTC_DCHECK(!Get()->IsCurrent());
     // Post an empty task on the queue and wait for it to finish, to ensure
     // that all already posted tasks on the queue get executed.
     SendTask([]() {});
