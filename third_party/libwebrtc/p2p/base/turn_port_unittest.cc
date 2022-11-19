@@ -35,8 +35,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/fake_clock.h"
 #include "rtc_base/gunit.h"
-#include "rtc_base/location.h"
-#include "rtc_base/message_handler.h"
 #include "rtc_base/net_helper.h"
 #include "rtc_base/socket.h"
 #include "rtc_base/socket_address.h"
@@ -118,8 +116,6 @@ static const cricket::ProtocolAddress kTurnPortHostnameProtoAddr(
     kTurnInvalidAddr,
     cricket::PROTO_UDP);
 
-static const unsigned int MSG_TESTFINISH = 0;
-
 #if defined(WEBRTC_LINUX) && !defined(WEBRTC_ANDROID)
 static int GetFDCount() {
   struct dirent* dp;
@@ -175,9 +171,7 @@ class TestConnectionWrapper : public sigslot::has_slots<> {
 
 // Note: This test uses a fake clock with a simulated network round trip
 // (between local port and TURN server) of kSimulatedRtt.
-class TurnPortTest : public ::testing::Test,
-                     public sigslot::has_slots<>,
-                     public rtc::MessageHandlerAutoCleanup {
+class TurnPortTest : public ::testing::Test, public sigslot::has_slots<> {
  public:
   TurnPortTest()
       : ss_(new TurnPortTestVirtualSocketServer()),
@@ -196,12 +190,6 @@ class TurnPortTest : public ::testing::Test,
     // so far", so we need to start the fake clock at a nonzero time...
     // TODO(deadbeef): Fix this.
     fake_clock_.AdvanceTime(webrtc::TimeDelta::Seconds(1));
-  }
-
-  virtual void OnMessage(rtc::Message* msg) {
-    RTC_CHECK(msg->message_id == MSG_TESTFINISH);
-    if (msg->message_id == MSG_TESTFINISH)
-      test_finish_ = true;
   }
 
   void OnTurnPortComplete(Port* port) { turn_ready_ = true; }
@@ -1674,7 +1662,7 @@ TEST_F(TurnPortTest, TestResolverShutdown) {
   ASSERT_TRUE_WAIT(turn_error_, kResolverTimeout);
   EXPECT_TRUE(turn_port_->Candidates().empty());
   turn_port_.reset();
-  rtc::Thread::Current()->Post(RTC_FROM_HERE, this, MSG_TESTFINISH);
+  rtc::Thread::Current()->PostTask([this] { test_finish_ = true; });
   // Waiting for above message to be processed.
   ASSERT_TRUE_SIMULATED_WAIT(test_finish_, 1, fake_clock_);
   EXPECT_EQ(last_fd_count, GetFDCount());
