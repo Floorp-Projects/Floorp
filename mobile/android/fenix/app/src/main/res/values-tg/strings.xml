@@ -46,8 +46,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Хатбаракҳои охирин</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">Иловашудаи охирин</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Намоиш додани ҳамаи хатбаракҳои нигоҳдошташуда</string>
@@ -263,37 +261,12 @@
     <string name="search_header_menu_item">Ҷустуҷӯи ин дафъа:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Дар %1$s чӣ нав аст</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Акнун ба он сомонае, ки шумо ба қарибӣ тамошо кардаед, баргардонидан осонтар аст.</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Шахсисозии саҳифаи асосии %1$s</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Ба варақаҳои кушода, хатбаракҳо ва таърихи тамошокунӣ гузаред.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Варакаҳои ботартиб ва соф</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Ба тартиб даровардани варақаҳо тавассути тарҳбандии беҳтаршуда ва пӯшидани варақаҳо ба таври худкор.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Ҷустуҷӯҳои охирин</string>
-
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Ҷустуҷӯҳои охирини худро тавассути саҳифаи асосӣ ва варақаҳо боздид намоед.</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Акнун саҳифаи асосии шахсишудаи шумо дар браузери Firefox бозгашти шуморо ба сомонаҳои охирин осон мекунад. Варақаҳо, хатбаракҳо ва натиҷаҳои ҷустуҷӯи охиринро ба даст оред.</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Бо саҳифаи асосии шахсии худ шинос шавед. Варақаҳо, хатбаракҳо ва натиҷаҳои ҷустуҷӯи охирин дар ин ҷо пайдо мешаванд.</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Хуш омадед ба Интернети мустақил</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">Хуш омадед ба Интернети хусуситар</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Рангҳои бештар. Махфияти беҳтар. Худи ҳамон вазифадорӣ ба одамон, на ба даромадҳо.</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Аз телефон ба ноутбук ба баръакс гузаред</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">Табдилдиҳии экранҳо боз ҳам осонтар шудааст</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -871,13 +844,13 @@
 
     <!-- Bookmarks -->
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
-    <string name="bookmark_delete_folder_confirmation_dialog">Шумо мутмаин ҳастед, ки мехоҳед ин ҷузвадонро нест намоед?</string>
+    <string name="bookmark_delete_folder_confirmation_dialog">Шумо мутмаин ҳастед, ки мехоҳед ин ҷузвдонро нест намоед?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s ҷузъҳои интихобшударо нест мекунад.</string>
     <!-- Text for the cancel button on delete bookmark dialog -->
     <string name="bookmark_delete_negative">Бекор кардан</string>
     <!-- Screen title for adding a bookmarks folder -->
-    <string name="bookmark_add_folder">Илова кардани ҷузвадон</string>
+    <string name="bookmark_add_folder">Илова кардани ҷузвдон</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Хатбарак нигоҳ дошта шуд!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -906,19 +879,19 @@
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">Таҳрир кардани хатбарак</string>
     <!-- Bookmark folder editing screen title -->
-    <string name="edit_bookmark_folder_fragment_title">Таҳрир кардани ҷузвадон</string>
+    <string name="edit_bookmark_folder_fragment_title">Таҳрир кардани ҷузвдон</string>
     <!-- Bookmark sign in button message -->
     <string name="bookmark_sign_in_button">Барои дидани хатбаракҳои ҳамоҳангшуда ворид шавед</string>
     <!-- Bookmark URL editing field label -->
     <string name="bookmark_url_label">Нишонии URL</string>
     <!-- Bookmark FOLDER editing field label -->
-    <string name="bookmark_folder_label">ҶУЗВАДОН</string>
+    <string name="bookmark_folder_label">ҶУЗВДОН</string>
     <!-- Bookmark NAME editing field label -->
     <string name="bookmark_name_label">НОМ</string>
     <!-- Bookmark add folder screen title -->
-    <string name="bookmark_add_folder_fragment_label">Илова кардани ҷузвадон</string>
+    <string name="bookmark_add_folder_fragment_label">Илова кардани ҷузвдон</string>
     <!-- Bookmark select folder screen title -->
-    <string name="bookmark_select_folder_fragment_label">Интихоб кардани ҷузвадон</string>
+    <string name="bookmark_select_folder_fragment_label">Интихоб кардани ҷузвдон</string>
     <!-- Bookmark editing error missing title -->
     <string name="bookmark_empty_title_error">Бояд унвон дошта бошад</string>
     <!-- Bookmark editing error missing or improper URL -->
@@ -932,7 +905,7 @@
     <string name="bookmark_deletion_multiple_snackbar_message_2">Хатбаракҳо нест карда шуданд</string>
 
     <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
-    <string name="bookmark_deletion_multiple_snackbar_message_3">Несткунии ҷузвадонҳои интихобшуда</string>
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Несткунии ҷузвдонҳои интихобшуда</string>
 
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">БОТИЛ КАРДАН</string>
@@ -1257,33 +1230,20 @@
     <string name="delete_history_group_snackbar">Гурӯҳ нест карда шуд</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Хуш омадед ба «%s!»</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">Хуш омадед ба Интернети беҳтар</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">Браузере, ки барои мардум, на барои даромад сохта шудааст.</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Firefox-ро байни дастгоҳҳо ҳамоҳанг кунед</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">Ба он ҷое, ки шумо ба қарибӣ тамошо кардаед, баргардонед</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Хатбаракҳо, таърих ва ниҳонвожаҳоро ба %1$s дар ин дастгоҳ интиқол диҳед.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">Барои гузариши бехалал байни экранҳои дастгоҳҳои худ, варақаҳо ва ниҳонвожаҳоро ҳамоҳанг созед.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Бақайдгирӣ</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">Ворид шудан</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Ҳамоҳангсозӣ фаъол аст</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Махфияти доимӣ</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Муҳофизати махфият ба таври пешфарз кор мекунад</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s маъракаҳоеро, ки шуморо дар атрофи Интернет пинҳонӣ пайгирӣ мекунанд, ба таври худкор қатъ мекунад.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Хусусияти «Муҳофизати пурра аз кукиҳо» васоити пайгириро аз истифодаи кукиҳо қатъ мекунад, то ки онҳо шуморо дар шабака ба таври пинҳонӣ пайгирӣ накунанд.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1296,17 +1256,10 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">Васоити пайгирии бештарро қатъ мекунад, то ки саҳифаҳо тезтар кушода шаванд, аммо баъзеи функсияҳои саҳифа метавонанд вайрон шаванд.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Ҷойгиркунии навори абзорҳои худро интихоб кунед</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Навори абзорҳоро барои дастрасии осон дар наздикӣ ҷойгир намоед. Онро дар поён нигоҳ доред ё ба боло гузоред.</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">Онро дар поён нигоҳ доред ё ба боло ҳаракат кунед.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Махфияти шумо</string>
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">Шумо маълумоти худро идора мекунед</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Мо %s-ро ҳамин тавр тарҳрезӣ кардаем, ки шумо тавонед он чизҳоеро, ки дар онлайн ва бо мо мубодила мекунед, идора намоед.</string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">Браузери «Firefox» имкон медиҳад, ки шумо тавонед он чизҳоеро, ки дар онлайн ва бо мо мубодила мекунед, мустақилона идора намоед.</string>
     <!-- Text for the button to read the privacy notice -->
