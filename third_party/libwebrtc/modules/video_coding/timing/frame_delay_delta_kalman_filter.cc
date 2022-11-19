@@ -20,27 +20,22 @@ constexpr double kThetaLow = 0.000001;
 }
 
 FrameDelayDeltaKalmanFilter::FrameDelayDeltaKalmanFilter() {
-  Reset();
-}
+  // TODO(brandtr): Is there a factor 1000 missing here?
+  theta_[0] = 1 / (512e3 / 8);  // Unit: [1 / bytes per ms]
+  theta_[1] = 0;                // Unit: [ms]
 
-// Resets the JitterEstimate.
-void FrameDelayDeltaKalmanFilter::Reset() {
-  theta_[0] = 1 / (512e3 / 8);
-  theta_[1] = 0;
-
-  theta_cov_[0][0] = 1e-4;
-  theta_cov_[1][1] = 1e2;
+  theta_cov_[0][0] = 1e-4;  // Unit: [(1 / bytes per ms)^2]
+  theta_cov_[1][1] = 1e2;   // Unit: [ms^2]
   theta_cov_[0][1] = theta_cov_[1][0] = 0;
-  q_cov_[0][0] = 2.5e-10;
-  q_cov_[1][1] = 1e-10;
+
+  q_cov_[0][0] = 2.5e-10;  // Unit: [(1 / bytes per ms)^2]
+  q_cov_[1][1] = 1e-10;    // Unit: [ms^2]
   q_cov_[0][1] = q_cov_[1][0] = 0;
 }
 
-// Updates Kalman estimate of the channel.
-// The caller is expected to sanity check the inputs.
-void FrameDelayDeltaKalmanFilter::KalmanEstimateChannel(
-    TimeDelta frame_delay,
-    double delta_frame_size_bytes,
+void FrameDelayDeltaKalmanFilter::PredictAndUpdate(
+    TimeDelta frame_delay_variation,
+    double frame_size_variation_bytes,
     DataSize max_frame_size,
     double var_noise) {
   double Mh[2];
@@ -63,21 +58,23 @@ void FrameDelayDeltaKalmanFilter::KalmanEstimateChannel(
   // h = [dFS 1]
   // Mh = M*h'
   // hMh_sigma = h*M*h' + R
-  Mh[0] = theta_cov_[0][0] * delta_frame_size_bytes + theta_cov_[0][1];
-  Mh[1] = theta_cov_[1][0] * delta_frame_size_bytes + theta_cov_[1][1];
+  Mh[0] = theta_cov_[0][0] * frame_size_variation_bytes + theta_cov_[0][1];
+  Mh[1] = theta_cov_[1][0] * frame_size_variation_bytes + theta_cov_[1][1];
   // sigma weights measurements with a small deltaFS as noisy and
   // measurements with large deltaFS as good
   if (max_frame_size < DataSize::Bytes(1)) {
     return;
   }
-  double sigma = (300.0 * exp(-fabs(delta_frame_size_bytes) /
+  double sigma = (300.0 * exp(-fabs(frame_size_variation_bytes) /
                               (1e0 * max_frame_size.bytes())) +
                   1) *
                  sqrt(var_noise);
   if (sigma < 1.0) {
     sigma = 1.0;
   }
-  hMh_sigma = delta_frame_size_bytes * Mh[0] + Mh[1] + sigma;
+  // TODO(brandtr): Shouldn't we add sigma^2 here? Otherwise, the dimensional
+  // analysis fails.
+  hMh_sigma = frame_size_variation_bytes * Mh[0] + Mh[1] + sigma;
   if ((hMh_sigma < 1e-9 && hMh_sigma >= 0) ||
       (hMh_sigma > -1e-9 && hMh_sigma <= 0)) {
     RTC_DCHECK_NOTREACHED();
@@ -88,8 +85,8 @@ void FrameDelayDeltaKalmanFilter::KalmanEstimateChannel(
 
   // Correction
   // theta = theta + K*(dT - h*theta)
-  measureRes =
-      frame_delay.ms() - (delta_frame_size_bytes * theta_[0] + theta_[1]);
+  measureRes = frame_delay_variation.ms() -
+               (frame_size_variation_bytes * theta_[0] + theta_[1]);
   theta_[0] += kalmanGain[0] * measureRes;
   theta_[1] += kalmanGain[1] * measureRes;
 
@@ -100,14 +97,14 @@ void FrameDelayDeltaKalmanFilter::KalmanEstimateChannel(
   // M = (I - K*h)*M
   t00 = theta_cov_[0][0];
   t01 = theta_cov_[0][1];
-  theta_cov_[0][0] = (1 - kalmanGain[0] * delta_frame_size_bytes) * t00 -
+  theta_cov_[0][0] = (1 - kalmanGain[0] * frame_size_variation_bytes) * t00 -
                      kalmanGain[0] * theta_cov_[1][0];
-  theta_cov_[0][1] = (1 - kalmanGain[0] * delta_frame_size_bytes) * t01 -
+  theta_cov_[0][1] = (1 - kalmanGain[0] * frame_size_variation_bytes) * t01 -
                      kalmanGain[0] * theta_cov_[1][1];
   theta_cov_[1][0] = theta_cov_[1][0] * (1 - kalmanGain[1]) -
-                     kalmanGain[1] * delta_frame_size_bytes * t00;
+                     kalmanGain[1] * frame_size_variation_bytes * t00;
   theta_cov_[1][1] = theta_cov_[1][1] * (1 - kalmanGain[1]) -
-                     kalmanGain[1] * delta_frame_size_bytes * t01;
+                     kalmanGain[1] * frame_size_variation_bytes * t01;
 
   // Covariance matrix, must be positive semi-definite.
   RTC_DCHECK(theta_cov_[0][0] + theta_cov_[1][1] >= 0 &&
@@ -117,16 +114,18 @@ void FrameDelayDeltaKalmanFilter::KalmanEstimateChannel(
              theta_cov_[0][0] >= 0);
 }
 
-// Calculate difference in delay between a sample and the expected delay
-// estimated by the Kalman filter
-double FrameDelayDeltaKalmanFilter::DeviationFromExpectedDelay(
-    TimeDelta frame_delay,
-    double delta_frame_size_bytes) const {
-  return frame_delay.ms() - (theta_[0] * delta_frame_size_bytes + theta_[1]);
+double FrameDelayDeltaKalmanFilter::GetFrameDelayVariationEstimateSizeBased(
+    double frame_size_variation_bytes) const {
+  // Unit: [1 / bytes per millisecond] * [bytes] = [milliseconds].
+  return theta_[0] * frame_size_variation_bytes;
 }
 
-double FrameDelayDeltaKalmanFilter::GetSlope() const {
-  return theta_[0];
+double FrameDelayDeltaKalmanFilter::GetFrameDelayVariationEstimateTotal(
+    double frame_size_variation_bytes) const {
+  double frame_transmission_delay_ms =
+      GetFrameDelayVariationEstimateSizeBased(frame_size_variation_bytes);
+  double link_queuing_delay_ms = theta_[1];
+  return frame_transmission_delay_ms + link_queuing_delay_ms;
 }
 
 }  // namespace webrtc
