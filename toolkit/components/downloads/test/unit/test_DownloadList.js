@@ -481,7 +481,7 @@ add_task(async function test_removeFinished_keepsDownloadingFile() {
   );
 
   Assert.ok(
-    await OS.File.exists(otherDownload.target.path),
+    await IOUtils.exists(otherDownload.target.path),
     "The file should not have been deleted."
   );
 });

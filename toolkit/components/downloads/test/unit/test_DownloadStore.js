@@ -442,7 +442,7 @@ add_task(async function test_insecure_download_deletion() {
 
   Assert.equal(loadedDownloadList1.length, 0, "Download should be removed");
   Assert.ok(
-    !(await OS.File.exists(targetPath1)),
+    !(await IOUtils.exists(targetPath1)),
     "The file should have been deleted."
   );
 
@@ -452,7 +452,7 @@ add_task(async function test_insecure_download_deletion() {
 
   Assert.equal(loadedDownloadList2.length, 1, "Download should be kept");
   Assert.ok(
-    await OS.File.exists(targetPath2),
+    await IOUtils.exists(targetPath2),
     "The file should have not been deleted."
   );
 });
