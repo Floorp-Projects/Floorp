@@ -308,6 +308,11 @@ class FakeVideoReceiveStream final
     config_.rtp.rtcp_xr = rtcp_xr;
   }
 
+  void SetAssociatedPayloadTypes(std::map<int, int> associated_payload_types) {
+    config_.rtp.rtx_associated_payload_types =
+        std::move(associated_payload_types);
+  }
+
   void Start() override;
   void Stop() override;
 

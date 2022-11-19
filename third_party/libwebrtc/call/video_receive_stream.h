@@ -324,6 +324,9 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
 
   virtual void SetRtcpXr(Config::Rtp::RtcpXr rtcp_xr) = 0;
 
+  virtual void SetAssociatedPayloadTypes(
+      std::map<int, int> associated_payload_types) = 0;
+
  protected:
   virtual ~VideoReceiveStreamInterface() {}
 };

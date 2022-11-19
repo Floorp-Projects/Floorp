@@ -326,6 +326,7 @@ rtc_library("rtc_audio_video") {
     "../rtc_base/experiments:normalize_simulcast_size_experiment",
     "../rtc_base/experiments:rate_control_settings",
     "../rtc_base/synchronization:mutex",
+    "../rtc_base/system:no_unique_address",
     "../rtc_base/system:rtc_export",
     "../rtc_base/third_party/base64",
     "../system_wrappers",
