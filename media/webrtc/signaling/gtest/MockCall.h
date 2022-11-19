@@ -198,6 +198,9 @@ class MockVideoReceiveStream : public webrtc::VideoReceiveStreamInterface {
 
   void SetRtcpXr(Config::Rtp::RtcpXr rtcp_xr) override {}
 
+  virtual void SetAssociatedPayloadTypes(
+      std::map<int, int> associated_payload_types) override {}
+
   void SetRtpExtensions(std::vector<webrtc::RtpExtension> extensions) override {
   }
   webrtc::RtpHeaderExtensionMap GetRtpExtensionMap() const override;
