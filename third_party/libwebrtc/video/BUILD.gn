@@ -868,7 +868,6 @@ if (rtc_include_tests) {
       "../rtc_base:byte_buffer",
       "../rtc_base:checks",
       "../rtc_base:gunit_helpers",
-      "../rtc_base:location",
       "../rtc_base:logging",
       "../rtc_base:macromagic",
       "../rtc_base:platform_thread",

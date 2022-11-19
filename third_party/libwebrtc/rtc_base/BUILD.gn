@@ -1422,7 +1422,6 @@ rtc_library("task_queue_for_test") {
   ]
   deps = [
     ":checks",
-    ":location",
     ":macromagic",
     ":rtc_event",
     ":rtc_task_queue",

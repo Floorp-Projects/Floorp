@@ -87,7 +87,7 @@ void CallTest::RegisterRtpExtension(const RtpExtension& extension) {
 }
 
 void CallTest::RunBaseTest(BaseTest* test) {
-  SendTask(RTC_FROM_HERE, task_queue(), [this, test]() {
+  SendTask(task_queue(), [this, test]() {
     num_video_streams_ = test->GetNumVideoStreams();
     num_audio_streams_ = test->GetNumAudioStreams();
     num_flexfec_streams_ = test->GetNumFlexfecStreams();
@@ -187,7 +187,7 @@ void CallTest::RunBaseTest(BaseTest* test) {
 
   test->PerformTest();
 
-  SendTask(RTC_FROM_HERE, task_queue(), [this, test]() {
+  SendTask(task_queue(), [this, test]() {
     Stop();
     test->OnStreamsStopped();
     DestroyStreams();

@@ -95,7 +95,7 @@ class BandwidthStatsTest : public test::EndToEndTest {
   ~BandwidthStatsTest() override {
     // Block until all already posted tasks run to avoid races when such task
     // accesses `this`.
-    SendTask(RTC_FROM_HERE, task_queue_, [] {});
+    SendTask(task_queue_, [] {});
   }
 
   void ModifyVideoConfigs(
@@ -358,7 +358,7 @@ TEST_F(BandwidthEndToEndTest, ReportsSetEncoderRates) {
       ASSERT_TRUE(Wait())
           << "Timed out while waiting for encoder SetRates() call.";
 
-      SendTask(RTC_FROM_HERE, task_queue_, [this]() {
+      SendTask(task_queue_, [this]() {
         WaitForEncoderTargetBitrateMatchStats();
         send_stream_->Stop();
         WaitForStatsReportZeroTargetBitrate();

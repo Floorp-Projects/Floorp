@@ -19,23 +19,20 @@
 #include "api/task_queue/task_queue_base.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
-#include "rtc_base/location.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
 
-inline void SendTask(rtc::Location loc,
-                     TaskQueueBase* task_queue,
+inline void SendTask(TaskQueueBase* task_queue,
                      rtc::FunctionView<void()> task) {
   RTC_CHECK(!task_queue->IsCurrent())
-      << "Called SendTask to a queue from the same queue at " << loc.ToString();
+      << "Called SendTask to a queue from the same queue";
   rtc::Event event;
   absl::Cleanup cleanup = [&event] { event.Set(); };
   task_queue->PostTask([task, cleanup = std::move(cleanup)] { task(); });
   RTC_CHECK(event.Wait(/*give_up_after_ms=*/rtc::Event::kForever,
-                       /*warn_after_ms=*/10'000))
-      << "Waited too long at " << loc.ToString();
+                       /*warn_after_ms=*/10'000));
 }
 
 class RTC_LOCKABLE TaskQueueForTest : public rtc::TaskQueue {
@@ -49,8 +46,8 @@ class RTC_LOCKABLE TaskQueueForTest : public rtc::TaskQueue {
 
   // A convenience, test-only method that blocks the current thread while
   // a task executes on the task queue.
-  void SendTask(rtc::FunctionView<void()> task, rtc::Location loc) {
-    ::webrtc::SendTask(loc, Get(), task);
+  void SendTask(rtc::FunctionView<void()> task) {
+    ::webrtc::SendTask(Get(), task);
   }
 
   // Wait for the completion of all tasks posted prior to the
@@ -58,7 +55,7 @@ class RTC_LOCKABLE TaskQueueForTest : public rtc::TaskQueue {
   void WaitForPreviouslyPostedTasks() {
     // Post an empty task on the queue and wait for it to finish, to ensure
     // that all already posted tasks on the queue get executed.
-    SendTask([]() {}, RTC_FROM_HERE);
+    SendTask([]() {});
   }
 };
 

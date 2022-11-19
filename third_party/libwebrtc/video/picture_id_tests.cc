@@ -217,7 +217,7 @@ class PictureIdTest : public test::CallTest,
   PictureIdTest() : num_temporal_layers_(GetParam()) {}
 
   virtual ~PictureIdTest() {
-    SendTask(RTC_FROM_HERE, task_queue(), [this]() {
+    SendTask(task_queue(), [this]() {
       send_transport_.reset();
       receive_transport_.reset();
       DestroyCalls();
@@ -254,7 +254,7 @@ void PictureIdTest::SetupEncoder(VideoEncoderFactory* encoder_factory,
       new PictureIdObserver(PayloadStringToCodecType(payload_name)));
 
   SendTask(
-      RTC_FROM_HERE, task_queue(), [this, encoder_factory, payload_name]() {
+      task_queue(), [this, encoder_factory, payload_name]() {
         CreateCalls();
 
         send_transport_.reset(new test::PacketTransport(
@@ -299,7 +299,7 @@ void PictureIdTest::SetVideoEncoderConfig(int num_streams) {
 
 void PictureIdTest::TestPictureIdContinuousAfterReconfigure(
     const std::vector<int>& ssrc_counts) {
-  SendTask(RTC_FROM_HERE, task_queue(), [this]() {
+  SendTask(task_queue(), [this]() {
     CreateVideoStreams();
     CreateFrameGeneratorCapturer(kFrameRate, kFrameMaxWidth, kFrameMaxHeight);
 
@@ -317,14 +317,14 @@ void PictureIdTest::TestPictureIdContinuousAfterReconfigure(
     observer_->SetExpectedSsrcs(ssrc_count);
     observer_->ResetObservedSsrcs();
     // Make sure the picture_id sequence is continuous on reinit and recreate.
-    SendTask(RTC_FROM_HERE, task_queue(), [this]() {
+    SendTask(task_queue(), [this]() {
       GetVideoSendStream()->ReconfigureVideoEncoder(
           GetVideoEncoderConfig()->Copy());
     });
     EXPECT_TRUE(observer_->Wait()) << "Timed out waiting for packets.";
   }
 
-  SendTask(RTC_FROM_HERE, task_queue(), [this]() {
+  SendTask(task_queue(), [this]() {
     Stop();
     DestroyStreams();
   });
@@ -332,7 +332,7 @@ void PictureIdTest::TestPictureIdContinuousAfterReconfigure(
 
 void PictureIdTest::TestPictureIdIncreaseAfterRecreateStreams(
     const std::vector<int>& ssrc_counts) {
-  SendTask(RTC_FROM_HERE, task_queue(), [this]() {
+  SendTask(task_queue(), [this]() {
     CreateVideoStreams();
     CreateFrameGeneratorCapturer(kFrameRate, kFrameMaxWidth, kFrameMaxHeight);
 
@@ -347,7 +347,7 @@ void PictureIdTest::TestPictureIdIncreaseAfterRecreateStreams(
   // with it, therefore it is expected that some frames might be lost.
   observer_->SetMaxExpectedPictureIdGap(kMaxFramesLost);
   for (int ssrc_count : ssrc_counts) {
-    SendTask(RTC_FROM_HERE, task_queue(), [this, &ssrc_count]() {
+    SendTask(task_queue(), [this, &ssrc_count]() {
       DestroyVideoSendStreams();
 
       SetVideoEncoderConfig(ssrc_count);
@@ -362,7 +362,7 @@ void PictureIdTest::TestPictureIdIncreaseAfterRecreateStreams(
     EXPECT_TRUE(observer_->Wait()) << "Timed out waiting for packets.";
   }
 
-  SendTask(RTC_FROM_HERE, task_queue(), [this]() {
+  SendTask(task_queue(), [this]() {
     Stop();
     DestroyStreams();
   });

@@ -379,12 +379,10 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
   // There is no guarantee, that last stats collection will happen at the end
   // of the call, so we force it after executor, which is among others is doing
   // stats collection, was stopped.
-  task_queue_->SendTask(
-      [&stats_poller]() {
-        // Get final end-of-call stats.
-        stats_poller.PollStatsAndNotifyObservers();
-      },
-      RTC_FROM_HERE);
+  task_queue_->SendTask([&stats_poller]() {
+    // Get final end-of-call stats.
+    stats_poller.PollStatsAndNotifyObservers();
+  });
   // We need to detach AEC dumping from peers, because dump uses `task_queue_`
   // inside.
   alice_->DetachAecDump();

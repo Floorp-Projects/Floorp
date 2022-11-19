@@ -503,7 +503,7 @@ void VideoCodecTestFixtureImpl::ProcessAllFrames(
   task_queue->PostTask([this] { processor_->Finalize(); });
 
   // Wait until we know that the last frame has been sent for encode.
-  task_queue->SendTask([] {}, RTC_FROM_HERE);
+  task_queue->SendTask([] {});
 
   // Give the VideoProcessor pipeline some time to process the last frame,
   // and then release the codecs.
@@ -720,11 +720,9 @@ bool VideoCodecTestFixtureImpl::SetUpAndInitObjects(
   cpu_process_time_.reset(new CpuProcessTime(config_));
 
   bool is_codec_created = false;
-  task_queue->SendTask(
-      [this, &is_codec_created]() {
-        is_codec_created = CreateEncoderAndDecoder();
-      },
-      RTC_FROM_HERE);
+  task_queue->SendTask([this, &is_codec_created]() {
+    is_codec_created = CreateEncoderAndDecoder();
+  });
 
   if (!is_codec_created) {
     return false;
@@ -778,20 +776,17 @@ bool VideoCodecTestFixtureImpl::SetUpAndInitObjects(
             encoder_.get(), &decoders_, source_frame_reader_.get(), config_,
             &stats_, &encoded_frame_writers_,
             decoded_frame_writers_.empty() ? nullptr : &decoded_frame_writers_);
-      },
-      RTC_FROM_HERE);
+      });
   return true;
 }
 
 void VideoCodecTestFixtureImpl::ReleaseAndCloseObjects(
     TaskQueueForTest* task_queue) {
-  task_queue->SendTask(
-      [this]() {
-        processor_.reset();
-        // The VideoProcessor must be destroyed before the codecs.
-        DestroyEncoderAndDecoder();
-      },
-      RTC_FROM_HERE);
+  task_queue->SendTask([this]() {
+    processor_.reset();
+    // The VideoProcessor must be destroyed before the codecs.
+    DestroyEncoderAndDecoder();
+  });
 
   source_frame_reader_->Close();
 
@@ -810,15 +805,13 @@ std::string VideoCodecTestFixtureImpl::GetCodecName(
     TaskQueueForTest* task_queue,
     bool is_encoder) const {
   std::string codec_name;
-  task_queue->SendTask(
-      [this, is_encoder, &codec_name] {
-        if (is_encoder) {
-          codec_name = encoder_->GetEncoderInfo().implementation_name;
-        } else {
-          codec_name = decoders_.at(0)->ImplementationName();
-        }
-      },
-      RTC_FROM_HERE);
+  task_queue->SendTask([this, is_encoder, &codec_name] {
+    if (is_encoder) {
+      codec_name = encoder_->GetEncoderInfo().implementation_name;
+    } else {
+      codec_name = decoders_.at(0)->ImplementationName();
+    }
+  });
   return codec_name;
 }
 

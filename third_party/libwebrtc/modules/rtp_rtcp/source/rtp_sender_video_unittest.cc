@@ -1520,8 +1520,7 @@ TEST_F(RtpSenderVideoWithFrameTransformerTest, OnTransformedFrameSendsVideo) {
         rtp_sender_video->SendEncodedImage(
             kPayload, kType, kTimestamp, *encoded_image, video_header,
             kDefaultExpectedRetransmissionTimeMs);
-      },
-      RTC_FROM_HERE);
+      });
   encoder_queue.WaitForPreviouslyPostedTasks();
   EXPECT_EQ(transport_.packets_sent(), 1);
 }
