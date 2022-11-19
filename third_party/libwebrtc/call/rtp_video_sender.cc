@@ -511,7 +511,7 @@ void RtpVideoSender::SetActiveModulesLocked(
     }
 
     RtpRtcpInterface& rtp_module = *rtp_streams_[i].rtp_rtcp;
-    const bool was_active = rtp_module.SendingMedia();
+    const bool was_active = rtp_module.Sending();
     const bool should_be_active = active_modules[i];
 
     // Sends a kRtcpByeCode when going from true to false.
@@ -669,6 +669,14 @@ void RtpVideoSender::OnVideoLayersAllocationUpdated(
       stream_allocation.rtp_stream_index = i;
       rtp_streams_[i].sender_video->SetVideoLayersAllocation(
           std::move(stream_allocation));
+      // Only send video frames on the rtp module if the encoder is configured
+      // to send. This is to prevent stray frames to be sent after an encoder
+      // has been reconfigured.
+      rtp_streams_[i].rtp_rtcp->SetSendingMediaStatus(
+          absl::c_any_of(allocation.active_spatial_layers,
+                         [&i](const VideoLayersAllocation::SpatialLayer layer) {
+                           return layer.rtp_stream_index == static_cast<int>(i);
+                         }));
     }
   }
 }
