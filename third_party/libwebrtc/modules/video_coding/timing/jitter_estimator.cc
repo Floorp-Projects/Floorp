@@ -78,7 +78,7 @@ void JitterEstimator::Reset() {
   rtt_filter_.Reset();
   fps_counter_.Reset();
 
-  kalman_filter_.Reset();
+  kalman_filter_ = FrameDelayDeltaKalmanFilter();
 }
 
 // Updates the estimates with the new measurements.
@@ -129,7 +129,8 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
   // the frame size also is large the deviation is probably due to an incorrect
   // line slope.
   double deviation =
-      kalman_filter_.DeviationFromExpectedDelay(frame_delay, delta_frame_bytes);
+      frame_delay.ms() -
+      kalman_filter_.GetFrameDelayVariationEstimateTotal(delta_frame_bytes);
 
   if (fabs(deviation) < kNumStdDevDelayOutlier * sqrt(var_noise_) ||
       frame_size.bytes() >
@@ -146,8 +147,8 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
     // frame.
     if (delta_frame_bytes > -0.25 * max_frame_size_.bytes()) {
       // Update the Kalman filter with the new data
-      kalman_filter_.KalmanEstimateChannel(frame_delay, delta_frame_bytes,
-                                           max_frame_size_, var_noise_);
+      kalman_filter_.PredictAndUpdate(frame_delay, delta_frame_bytes,
+                                      max_frame_size_, var_noise_);
     }
   } else {
     int nStdDev =
@@ -228,8 +229,8 @@ double JitterEstimator::NoiseThreshold() const {
 
 // Calculates the current jitter estimate from the filtered estimates.
 TimeDelta JitterEstimator::CalculateEstimate() {
-  double retMs = kalman_filter_.GetSlope() *
-                     (max_frame_size_.bytes() - avg_frame_size_.bytes()) +
+  double retMs = kalman_filter_.GetFrameDelayVariationEstimateSizeBased(
+                     max_frame_size_.bytes() - avg_frame_size_.bytes()) +
                  NoiseThreshold();
 
   TimeDelta ret = TimeDelta::Millis(retMs);

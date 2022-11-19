@@ -11,18 +11,80 @@
 #include "modules/video_coding/timing/frame_delay_delta_kalman_filter.h"
 
 #include "api/units/data_size.h"
+#include "api/units/frequency.h"
 #include "api/units/time_delta.h"
 #include "test/gtest.h"
 
 namespace webrtc {
 namespace {
 
-TEST(FrameDelayDeltaKalmanFilterTest, InitialBandwidthStateIs512kbps) {
+// This test verifies that the initial filter state (link bandwidth, link
+// propagation delay) is such that a frame of size zero would take no time to
+// propagate.
+TEST(FrameDelayDeltaKalmanFilterTest,
+     InitializedFilterWithZeroSizeFrameTakesNoTimeToPropagate) {
   FrameDelayDeltaKalmanFilter filter;
 
-  // The slope corresponds to the estimated bandwidth, and the initial value
-  // is set in the implementation.
-  EXPECT_EQ(filter.GetSlope(), 1 / (512e3 / 8));
+  // A zero-sized frame...
+  double frame_size_variation_bytes = 0.0;
+
+  // ...should take no time to propagate due to it's size...
+  EXPECT_EQ(filter.GetFrameDelayVariationEstimateSizeBased(
+                frame_size_variation_bytes),
+            0.0);
+
+  // ...and no time due to the initial link propagation delay being zero.
+  EXPECT_EQ(
+      filter.GetFrameDelayVariationEstimateTotal(frame_size_variation_bytes),
+      0.0);
+}
+
+// TODO(brandtr): Look into if there is a factor 1000 missing here? It seems
+// unreasonable to have an initial link bandwidth of 512 _mega_bits per second?
+TEST(FrameDelayDeltaKalmanFilterTest,
+     InitializedFilterWithSmallSizeFrameTakesFixedTimeToPropagate) {
+  FrameDelayDeltaKalmanFilter filter;
+
+  // A 1000-byte frame...
+  double frame_size_variation_bytes = 1000.0;
+  // ...should take around `1000.0 / (512e3 / 8.0) = 0.015625 ms` to transmit.
+  double expected_frame_delay_variation_estimate_ms = 1000.0 / (512e3 / 8.0);
+
+  EXPECT_EQ(filter.GetFrameDelayVariationEstimateSizeBased(
+                frame_size_variation_bytes),
+            expected_frame_delay_variation_estimate_ms);
+  EXPECT_EQ(
+      filter.GetFrameDelayVariationEstimateTotal(frame_size_variation_bytes),
+      expected_frame_delay_variation_estimate_ms);
+}
+
+TEST(FrameDelayDeltaKalmanFilterTest,
+     VerifyConvergenceWithAlternatingDeviations) {
+  FrameDelayDeltaKalmanFilter filter;
+
+  // One frame every 33 ms.
+  int framerate_fps = 30;
+  // Let's assume approximately 10% delay variation.
+  TimeDelta frame_delay_variation = TimeDelta::Millis(3);
+  // With a bitrate of 512 kbps, each frame will be around 2000 bytes.
+  DataSize max_frame_size = DataSize::Bytes(2000);
+  // And again, let's assume 10% size deviation.
+  double frame_size_variation_bytes = 200;
+  double var_noise = 0.1;
+  int test_duration_s = 60;
+
+  for (int i = 0; i < test_duration_s * framerate_fps; ++i) {
+    // For simplicity, assume alternating variations.
+    double sign = (i % 2 == 0) ? 1.0 : -1.0;
+    filter.PredictAndUpdate(sign * frame_delay_variation,
+                            sign * frame_size_variation_bytes, max_frame_size,
+                            var_noise);
+  }
+
+  // Verify that the filter has converged within a margin of 0.1 ms.
+  EXPECT_NEAR(
+      filter.GetFrameDelayVariationEstimateTotal(frame_size_variation_bytes),
+      frame_delay_variation.ms(), 0.1);
 }
 
 }  // namespace
