@@ -970,6 +970,11 @@ void RtpVideoStreamReceiver2::SetRtcpMode(RtcpMode mode) {
   rtp_rtcp_->SetRTCPStatus(mode);
 }
 
+void RtpVideoStreamReceiver2::SetReferenceTimeReport(bool enabled) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  rtp_rtcp_->SetNonSenderRttMeasurement(enabled);
+}
+
 void RtpVideoStreamReceiver2::SetPacketSink(
     RtpPacketSinkInterface* packet_sink) {
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);

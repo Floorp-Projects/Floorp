@@ -152,6 +152,7 @@ class VideoReceiveStream2
   void SetLossNotificationEnabled(bool enabled) override;
   void SetNackHistory(TimeDelta history) override;
   void SetUlpfecPayloadType(int payload_type) override;
+  void SetRtcpXr(Config::Rtp::RtcpXr rtcp_xr) override;
 
   webrtc::VideoReceiveStreamInterface::Stats GetStats() const override;
 

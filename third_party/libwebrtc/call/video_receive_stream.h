@@ -321,6 +321,8 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
 
   virtual void SetUlpfecPayloadType(int ulpfec_payload_type) = 0;
 
+  virtual void SetRtcpXr(Config::Rtp::RtcpXr rtcp_xr) = 0;
+
  protected:
   virtual ~VideoReceiveStreamInterface() {}
 };
