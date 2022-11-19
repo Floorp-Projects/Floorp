@@ -22,6 +22,7 @@
 #include "modules/desktop_capture/win/window_capture_utils.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/task_queue_for_test.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/win/scoped_com_initializer.h"
@@ -128,8 +129,7 @@ class WgcCapturerWinTest : public ::testing::TestWithParam<CaptureType>,
     window_thread_ = rtc::Thread::Create();
     window_thread_->SetName(kWindowThreadName, nullptr);
     window_thread_->Start();
-    window_thread_->Invoke<void>(RTC_FROM_HERE, [this, window_width,
-                                                 window_height]() {
+    SendTask(window_thread_.get(), [this, window_width, window_height]() {
       window_thread_id_ = GetCurrentThreadId();
       window_info_ =
           CreateTestWindow(kWindowTitle, window_height, window_width);

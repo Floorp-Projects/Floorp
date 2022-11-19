@@ -28,6 +28,7 @@
 #include "rtc_base/gunit.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/strings/string_builder.h"
+#include "rtc_base/task_queue_for_test.h"
 #include "system_wrappers/include/cpu_info.h"
 #include "system_wrappers/include/field_trial.h"
 #include "test/field_trial.h"
@@ -345,18 +346,17 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
                               });
 
   // Setup call.
-  signaling_thread->Invoke<void>(RTC_FROM_HERE, [this, &run_params] {
-    SetupCallOnSignalingThread(run_params);
-  });
+  SendTask(signaling_thread.get(),
+           [this, &run_params] { SetupCallOnSignalingThread(run_params); });
   std::unique_ptr<SignalingInterceptor> signaling_interceptor =
       CreateSignalingInterceptor(run_params);
   // Connect peers.
-  signaling_thread->Invoke<void>(RTC_FROM_HERE, [this, &signaling_interceptor] {
+  SendTask(signaling_thread.get(), [this, &signaling_interceptor] {
     ExchangeOfferAnswer(signaling_interceptor.get());
   });
   WaitUntilIceCandidatesGathered(signaling_thread.get());
 
-  signaling_thread->Invoke<void>(RTC_FROM_HERE, [this, &signaling_interceptor] {
+  SendTask(signaling_thread.get(), [this, &signaling_interceptor] {
     ExchangeIceCandidates(signaling_interceptor.get());
   });
   WaitUntilPeersAreConnected(signaling_thread.get());
@@ -388,8 +388,7 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
   alice_->DetachAecDump();
   bob_->DetachAecDump();
   // Tear down the call.
-  signaling_thread->Invoke<void>(RTC_FROM_HERE,
-                                 [this] { TearDownCallOnSignalingThread(); });
+  SendTask(signaling_thread.get(), [this] { TearDownCallOnSignalingThread(); });
 
   Timestamp end_time = Now();
   RTC_LOG(LS_INFO) << "All peers are disconnected.";
@@ -597,9 +596,11 @@ void PeerConnectionE2EQualityTest::WaitUntilIceCandidatesGathered(
     rtc::Thread* signaling_thread) {
   ASSERT_TRUE(time_controller_.Wait(
       [&]() {
-        return signaling_thread->Invoke<bool>(RTC_FROM_HERE, [&]() {
-          return alice_->IsIceGatheringDone() && bob_->IsIceGatheringDone();
+        bool result;
+        SendTask(signaling_thread, [&]() {
+          result = alice_->IsIceGatheringDone() && bob_->IsIceGatheringDone();
         });
+        return result;
       },
       2 * kDefaultTimeout));
 }
@@ -609,14 +610,16 @@ void PeerConnectionE2EQualityTest::WaitUntilPeersAreConnected(
   // This means that ICE and DTLS are connected.
   alice_connected_ = time_controller_.Wait(
       [&]() {
-        return signaling_thread->Invoke<bool>(
-            RTC_FROM_HERE, [&]() { return alice_->IsIceConnected(); });
+        bool result;
+        SendTask(signaling_thread, [&] { result = alice_->IsIceConnected(); });
+        return result;
       },
       kDefaultTimeout);
   bob_connected_ = time_controller_.Wait(
       [&]() {
-        return signaling_thread->Invoke<bool>(
-            RTC_FROM_HERE, [&]() { return bob_->IsIceConnected(); });
+        bool result;
+        SendTask(signaling_thread, [&] { result = bob_->IsIceConnected(); });
+        return result;
       },
       kDefaultTimeout);
 }
