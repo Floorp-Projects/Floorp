@@ -557,6 +557,12 @@ void VideoReceiveStream2::SetUlpfecPayloadType(int payload_type) {
   rtp_video_stream_receiver_.set_ulpfec_payload_type(payload_type);
 }
 
+void VideoReceiveStream2::SetRtcpXr(Config::Rtp::RtcpXr rtcp_xr) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  rtp_video_stream_receiver_.SetReferenceTimeReport(
+      rtcp_xr.receiver_reference_time_report);
+}
+
 void VideoReceiveStream2::CreateAndRegisterExternalDecoder(
     const Decoder& decoder) {
   TRACE_EVENT0("webrtc",

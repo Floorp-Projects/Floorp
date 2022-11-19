@@ -3010,9 +3010,8 @@ bool WebRtcVideoChannel::WebRtcVideoReceiveStream::ReconfigureCodecs(
 
   const bool has_rtr = HasRrtr(codec.codec);
   if (has_rtr != config_.rtp.rtcp_xr.receiver_reference_time_report) {
-    // TODO(tommi): Look into if/when this happens in practice.
     config_.rtp.rtcp_xr.receiver_reference_time_report = has_rtr;
-    recreate_needed = true;
+    stream_->SetRtcpXr(config_.rtp.rtcp_xr);
   }
 
   if (codec.ulpfec.red_rtx_payload_type != -1) {

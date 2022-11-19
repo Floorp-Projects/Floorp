@@ -186,6 +186,8 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   // Forwards the call to set rtcp_sender_ to the RTCP mode of the rtcp sender.
   void SetRtcpMode(RtcpMode mode);
 
+  void SetReferenceTimeReport(bool enabled);
+
   // Sets or clears the callback sink that gets called for RTP packets. Used for
   // packet handlers such as FlexFec. Must be called on the packet delivery
   // thread (same context as `OnRtpPacket` is called on).
