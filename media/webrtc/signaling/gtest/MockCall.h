@@ -193,6 +193,8 @@ class MockVideoReceiveStream : public webrtc::VideoReceiveStreamInterface {
 
   void SetNackHistory(webrtc::TimeDelta history) override {}
 
+  void SetUlpfecPayloadType(int ulpfec_payload_type) override {}
+
   void SetRtpExtensions(std::vector<webrtc::RtpExtension> extensions) override {
   }
   webrtc::RtpHeaderExtensionMap GetRtpExtensionMap() const override;
