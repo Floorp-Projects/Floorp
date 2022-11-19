@@ -202,10 +202,8 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   void SetNackHistory(TimeDelta history);
 
   int ulpfec_payload_type() const;
-  void set_ulpfec_payload_type(int payload_type);
-
   int red_payload_type() const;
-  void set_red_payload_type(int payload_type);
+  void SetProtectionPayloadTypes(int red_payload_type, int ulpfec_payload_type);
 
   absl::optional<int64_t> LastReceivedPacketMs() const;
   absl::optional<int64_t> LastReceivedKeyframePacketMs() const;

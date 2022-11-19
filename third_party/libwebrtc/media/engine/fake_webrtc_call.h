@@ -298,12 +298,10 @@ class FakeVideoReceiveStream final
     config_.rtp.nack.rtp_history_ms = history.ms();
   }
 
-  void SetUlpfecPayloadType(int ulpfec_payload_type) override {
-    config_.rtp.ulpfec_payload_type = ulpfec_payload_type;
-  }
-
-  void SetRedPayloadType(int red_payload_type) override {
+  void SetProtectionPayloadTypes(int red_payload_type,
+                                 int ulpfec_payload_type) override {
     config_.rtp.red_payload_type = red_payload_type;
+    config_.rtp.ulpfec_payload_type = ulpfec_payload_type;
   }
 
   void SetRtcpXr(Config::Rtp::RtcpXr rtcp_xr) override {
