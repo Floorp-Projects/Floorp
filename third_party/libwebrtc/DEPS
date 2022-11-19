@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '20e12fda4c9ff25cc2ecd18a4f903c32192a356c',
+  'chromium_revision': '2edc75a4bd86061a695552cb93a8c6e0f91707d4',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -20,13 +20,13 @@ vars = {
 
   # By default, download the fuchsia sdk from the public sdk directory.
   'fuchsia_sdk_cipd_prefix': 'fuchsia/sdk/gn/',
-  'fuchsia_version': 'version:9.20220811.0.1',
+  'fuchsia_version': 'version:9.20220811.2.1',
 }
 
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@3ca180e1f3f98d1f6d8503ac7ea75ebdc962e9fc',
+    'https://chromium.googlesource.com/chromium/src/base@319b678221c5031a0364947819265f74e51a1cab',
   'src/build':
     'https://chromium.googlesource.com/chromium/src/build@36b3854b7eab55b64dd6dee681ca8ed99984d5d9',
   'src/buildtools':
@@ -37,13 +37,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@36d2f78cc913c5e1889adcf8508a53ed6b7f0879',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@e9f50739ee648b8b3d45380272c7b4b92690fa00',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@29004acfffebc72ffb8328dda14defb6f1ceef04',
+    'https://chromium.googlesource.com/chromium/src/testing@08ab20398487931a8b8bfa2ad9394ec78e175e2d',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@2974d8aa5f019af26584f19cd6e7588df68fef28',
+    'https://chromium.googlesource.com/chromium/src/third_party@75ea04e77d2fffc52f4b8817d7856cce3d29d3b1',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -130,7 +130,7 @@ deps = {
   'src/third_party/boringssl/src':
     'https://boringssl.googlesource.com/boringssl.git@adaa322b63d1bfbd1abcf4a308926a9a83a6acbe',
   'src/third_party/breakpad/breakpad':
-    'https://chromium.googlesource.com/breakpad/breakpad.git@afc8daa2de3d9ef5da015ceb5e7436ed8adb5f47',
+    'https://chromium.googlesource.com/breakpad/breakpad.git@a7a8b9c3002dc4027708f6a644496496877a4b62',
   'src/third_party/catapult':
     'https://chromium.googlesource.com/catapult.git@b2cd6477b94b91a0b94b3430a50ba3bce650c5b6',
   'src/third_party/ced/src': {
@@ -266,7 +266,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@b7427143a55df8f99d1aef1f47d918ce8304f587',
+    'https://chromium.googlesource.com/chromium/src/tools@73e64c83562f54fbccc5c48b58f98129a7b430e8',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
