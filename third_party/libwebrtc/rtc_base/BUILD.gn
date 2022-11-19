@@ -851,6 +851,7 @@ rtc_library("async_resolver_interface") {
     "async_resolver_interface.h",
   ]
   deps = [
+    ":checks",
     ":socket_address",
     "system:rtc_export",
     "third_party/sigslot",
