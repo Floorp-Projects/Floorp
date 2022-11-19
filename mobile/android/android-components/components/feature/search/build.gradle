@@ -72,5 +72,6 @@ tasks.register("updateCookiesExtensionVersion", org.gradle.api.tasks.Copy) { tas
 preBuild.dependsOn "updateAdsExtensionVersion"
 preBuild.dependsOn "updateCookiesExtensionVersion"
 
+apply from: '../../../android-lint.gradle'
 apply from: '../../../publish.gradle'
 ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

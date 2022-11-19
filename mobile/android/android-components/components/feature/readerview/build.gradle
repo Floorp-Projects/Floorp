@@ -55,6 +55,7 @@ dependencies {
     testImplementation Dependencies.testing_coroutines
 }
 
+apply from: '../../../android-lint.gradle'
 apply from: '../../../publish.gradle'
 ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)
 

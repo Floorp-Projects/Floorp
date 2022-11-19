@@ -81,5 +81,6 @@ dependencies {
 }
 
 apply plugin: "org.mozilla.telemetry.glean-gradle-plugin"
+apply from: '../../../android-lint.gradle'
 apply from: '../../../publish.gradle'
 ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)
