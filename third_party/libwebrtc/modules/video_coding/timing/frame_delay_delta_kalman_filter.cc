@@ -30,11 +30,8 @@ FrameDelayDeltaKalmanFilter::FrameDelayDeltaKalmanFilter() {
   estimate_cov_[0][1] = estimate_cov_[1][0] = 0;
 
   // Process noise covariance.
-  process_noise_cov_[0][0] = 2.5e-10;  // Unit: [(1 / bytes per ms)^2]
-  process_noise_cov_[1][1] = 1e-10;    // Unit: [ms^2]
-  // TODO(brandtr): Remove, since matrix is always diagonal. No need to multiply
-  // by zero, below.
-  process_noise_cov_[0][1] = process_noise_cov_[1][0] = 0;
+  process_noise_cov_diag_[0] = 2.5e-10;  // Unit: [(1 / bytes per ms)^2]
+  process_noise_cov_diag_[1] = 1e-10;    // Unit: [ms^2]
 }
 
 void FrameDelayDeltaKalmanFilter::PredictAndUpdate(
@@ -48,10 +45,8 @@ void FrameDelayDeltaKalmanFilter::PredictAndUpdate(
   // 2) Estimate covariance prediction: This is done by simply adding the
   // process noise covariance, again since the state transition matrix is the
   // identity.
-  estimate_cov_[0][0] += process_noise_cov_[0][0];
-  estimate_cov_[0][1] += process_noise_cov_[0][1];  // TODO(brandtr): Remove.
-  estimate_cov_[1][0] += process_noise_cov_[1][0];
-  estimate_cov_[1][1] += process_noise_cov_[1][1];  // TODO(brandtr): Remove.
+  estimate_cov_[0][0] += process_noise_cov_diag_[0];
+  estimate_cov_[1][1] += process_noise_cov_diag_[1];
 
   // Measurement update.
   // TODO(brandtr): Reorganize the code below to follow the standard update
