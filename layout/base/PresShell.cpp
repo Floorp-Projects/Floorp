@@ -3331,7 +3331,7 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
     }
 
 #ifdef ACCESSIBILITY
-    if (nsAccessibilityService* accService = GetAccessibilityService()) {
+    if (nsAccessibilityService* accService = GetAccService()) {
       accService->NotifyOfAnchorJumpTo(target);
     }
 #endif
@@ -5641,8 +5641,7 @@ void PresShell::SetRenderingState(const RenderingState& aState) {
   mRenderingStateFlags = aState.mRenderingStateFlags;
   mResolution = aState.mResolution;
 #ifdef ACCESSIBILITY
-  if (nsAccessibilityService* accService =
-          PresShell::GetAccessibilityService()) {
+  if (nsAccessibilityService* accService = GetAccService()) {
     accService->NotifyOfResolutionChange(this, GetResolution());
   }
 #endif
@@ -10867,18 +10866,6 @@ nsIFrame* PresShell::GetAbsoluteContainingBlock(nsIFrame* aFrame) {
       aFrame, nsCSSFrameConstructor::ABS_POS);
 }
 
-#ifdef ACCESSIBILITY
-
-// static
-bool PresShell::IsAccessibilityActive() { return GetAccService() != nullptr; }
-
-// static
-nsAccessibilityService* PresShell::GetAccessibilityService() {
-  return GetAccService();
-}
-
-#endif  // #ifdef ACCESSIBILITY
-
 void PresShell::ActivenessMaybeChanged() {
   if (!mDocument) {
     return;
@@ -11021,7 +11008,7 @@ void PresShell::SetIsActive(bool aIsActive, bool aIsInActiveTab) {
 
   if (aIsActive) {
 #ifdef ACCESSIBILITY
-    if (nsAccessibilityService* accService = GetAccessibilityService()) {
+    if (nsAccessibilityService* accService = GetAccService()) {
       accService->PresShellActivated(this);
     }
 #endif

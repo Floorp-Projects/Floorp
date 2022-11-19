@@ -9448,8 +9448,7 @@ class MOZ_STACK_CLASS ReflowTextA11yNotifier {
   ReflowTextA11yNotifier(nsPresContext* aPresContext, nsIContent* aContent)
       : mContent(aContent), mPresContext(aPresContext) {}
   ~ReflowTextA11yNotifier() {
-    if (nsAccessibilityService* accService =
-            PresShell::GetAccessibilityService()) {
+    if (nsAccessibilityService* accService = GetAccService()) {
       accService->UpdateText(mPresContext->PresShell(), mContent);
     }
   }

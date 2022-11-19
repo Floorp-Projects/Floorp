@@ -1688,7 +1688,7 @@ void ContentParent::Init() {
 #ifdef ACCESSIBILITY
   // If accessibility is running in chrome process then start it in content
   // process.
-  if (PresShell::IsAccessibilityActive()) {
+  if (GetAccService()) {
 #  if defined(XP_WIN)
     // Don't init content a11y if we detect an incompat version of JAWS in use.
     if (!mozilla::a11y::Compatibility::IsOldJAWS()) {

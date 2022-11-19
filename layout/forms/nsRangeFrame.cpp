@@ -446,8 +446,7 @@ void nsRangeFrame::UpdateForValueChange() {
   }
 
 #ifdef ACCESSIBILITY
-  if (nsAccessibilityService* accService =
-          PresShell::GetAccessibilityService()) {
+  if (nsAccessibilityService* accService = GetAccService()) {
     accService->RangeValueChanged(PresShell(), mContent);
   }
 #endif

@@ -56,9 +56,6 @@ class AutoPointerEventTargetUpdater;
 class AutoWeakFrame;
 class gfxContext;
 class MobileViewportManager;
-#ifdef ACCESSIBILITY
-class nsAccessibilityService;
-#endif
 class nsAutoCauseReflowNotifier;
 class nsCanvasFrame;
 class nsCaret;
@@ -233,16 +230,6 @@ class PresShell final : public nsStubDocumentObserver,
   void SetDocAccessible(a11y::DocAccessible* aDocAccessible) {
     mDocAccessible = aDocAccessible;
   }
-
-  /**
-   * Return true if accessibility is active.
-   */
-  static bool IsAccessibilityActive();
-
-  /**
-   * Return accessibility service if accessibility is active.
-   */
-  static nsAccessibilityService* GetAccessibilityService();
 #endif  // #ifdef ACCESSIBILITY
 
   /**
@@ -1921,8 +1908,7 @@ class PresShell final : public nsStubDocumentObserver,
       mPresShell->mRenderingStateFlags = mOldState.mRenderingStateFlags;
       mPresShell->mResolution = mOldState.mResolution;
 #ifdef ACCESSIBILITY
-      if (nsAccessibilityService* accService =
-              PresShell::GetAccessibilityService()) {
+      if (nsAccessibilityService* accService = GetAccService()) {
         accService->NotifyOfResolutionChange(mPresShell,
                                              mPresShell->GetResolution());
       }
