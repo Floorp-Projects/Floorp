@@ -74,7 +74,13 @@ class TaskQueueStdlib final : public TaskQueueBase {
   struct NextTask {
     bool final_task = false;
     absl::AnyInvocable<void() &&> run_task;
-    int64_t sleep_time_ms = rtc::Event::kForever;
+    // TODO(bugs.webrtc.org/14366): While transitioning to TimeDelta, WebRTC and
+    // Chromium has a different idea about what type rtc::Event::kForever is.
+    // Code can't assume rtc::Event::kForever is the same type as timed wait
+    // arguments.
+    // Change `sleep_time_ms` to be explicit type, default value
+    // `rtc::Event::kForever` once transition is complete.
+    absl::optional<int64_t> sleep_time_ms;
   };
 
   static rtc::PlatformThread InitializeThread(TaskQueueStdlib* me,
@@ -246,7 +252,15 @@ void TaskQueueStdlib::ProcessTasks() {
       continue;
     }
 
-    flag_notify_.Wait(task.sleep_time_ms);
+    // TODO(bugs.webrtc.org/14366): While transitioning to TimeDelta, WebRTC and
+    // Chromium has a different idea about what type rtc::Event::kForever is.
+    // Code can't assume rtc::Event::kForever is the same type as timed wait
+    // arguments.
+    // Simplify after transitioning is complete.
+    if (task.sleep_time_ms.has_value())
+      flag_notify_.Wait(task.sleep_time_ms.value());
+    else
+      flag_notify_.Wait(rtc::Event::kForever);
   }
 }
 
