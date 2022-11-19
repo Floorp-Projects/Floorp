@@ -157,7 +157,10 @@ rtc_library("aec3") {
     "../../../system_wrappers:metrics",
     "../utility:cascaded_biquad_filter",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 
   if (target_cpu == "x86" || target_cpu == "x64") {
     deps += [ ":aec3_avx2" ]
@@ -208,6 +211,7 @@ rtc_source_set("adaptive_fir_filter") {
     "../../../api:array_view",
     "../../../rtc_base/system:arch",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 rtc_source_set("adaptive_fir_filter_erl") {

@@ -12,8 +12,8 @@
 #define MODULES_AUDIO_PROCESSING_AEC_DUMP_AEC_DUMP_FACTORY_H_
 
 #include <memory>
-#include <string>
 
+#include "absl/strings/string_view.h"
 #include "modules/audio_processing/include/aec_dump.h"
 #include "rtc_base/system/file_wrapper.h"
 #include "rtc_base/system/rtc_export.h"
@@ -35,7 +35,7 @@ class RTC_EXPORT AecDumpFactory {
   static std::unique_ptr<AecDump> Create(webrtc::FileWrapper file,
                                          int64_t max_log_size_bytes,
                                          rtc::TaskQueue* worker_queue);
-  static std::unique_ptr<AecDump> Create(std::string file_name,
+  static std::unique_ptr<AecDump> Create(absl::string_view file_name,
                                          int64_t max_log_size_bytes,
                                          rtc::TaskQueue* worker_queue);
   static std::unique_ptr<AecDump> Create(FILE* handle,

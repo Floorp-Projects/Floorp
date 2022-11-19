@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <utility>
 
+#include "absl/strings/string_view.h"
 #include "modules/audio_processing/aec3/aec3_common.h"
 #include "modules/audio_processing/high_pass_filter.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
@@ -37,7 +38,7 @@ bool DetectSaturation(rtc::ArrayView<const float> y) {
 // Retrieves a value from a field trial if it is available. If no value is
 // present, the default value is returned. If the retrieved value is beyond the
 // specified limits, the default value is returned instead.
-void RetrieveFieldTrialValue(const char* trial_name,
+void RetrieveFieldTrialValue(absl::string_view trial_name,
                              float min,
                              float max,
                              float* value_to_update) {
@@ -57,7 +58,7 @@ void RetrieveFieldTrialValue(const char* trial_name,
   }
 }
 
-void RetrieveFieldTrialValue(const char* trial_name,
+void RetrieveFieldTrialValue(absl::string_view trial_name,
                              int min,
                              int max,
                              int* value_to_update) {

@@ -230,6 +230,7 @@ if (rtc_include_tests) {
       "../../../../test:fileutils",
       "../../../../test:test_support",
     ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
   }
 
   unittest_resources = [

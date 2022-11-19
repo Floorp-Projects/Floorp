@@ -105,6 +105,7 @@ if (!build_with_chromium) {
     output_dir = "${root_out_dir}/py_quality_assessment/quality_assessment"
     deps = [
       "../../../../rtc_base:checks",
+      "//third_party/abseil-cpp/absl/strings",
     ]
   }
 
