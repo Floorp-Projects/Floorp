@@ -10,8 +10,10 @@
 
 #include "modules/audio_processing/test/test_utils.h"
 
+#include <string>
 #include <utility>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/system/arch.h"
 
@@ -68,10 +70,11 @@ void ChannelBufferVectorWriter::Write(const ChannelBuffer<float>& buffer) {
                   output_->data() + old_size);
 }
 
-FILE* OpenFile(const std::string& filename, const char* mode) {
-  FILE* file = fopen(filename.c_str(), mode);
+FILE* OpenFile(absl::string_view filename, absl::string_view mode) {
+  std::string filename_str(filename);
+  FILE* file = fopen(filename_str.c_str(), std::string(mode).c_str());
   if (!file) {
-    printf("Unable to open file %s\n", filename.c_str());
+    printf("Unable to open file %s\n", filename_str.c_str());
     exit(1);
   }
   return file;

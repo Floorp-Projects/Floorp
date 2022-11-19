@@ -18,6 +18,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "api/audio/echo_canceller3_config_json.h"
 #include "api/audio/echo_canceller3_factory.h"
 #include "api/audio/echo_detector_creator.h"
@@ -35,10 +36,10 @@ namespace webrtc {
 namespace test {
 namespace {
 // Helper for reading JSON from a file and parsing it to an AEC3 configuration.
-EchoCanceller3Config ReadAec3ConfigFromJsonFile(const std::string& filename) {
+EchoCanceller3Config ReadAec3ConfigFromJsonFile(absl::string_view filename) {
   std::string json_string;
   std::string s;
-  std::ifstream f(filename.c_str());
+  std::ifstream f(std::string(filename).c_str());
   if (f.fail()) {
     std::cout << "Failed to open the file " << filename << std::endl;
     RTC_CHECK_NOTREACHED();
@@ -60,7 +61,7 @@ EchoCanceller3Config ReadAec3ConfigFromJsonFile(const std::string& filename) {
   return cfg;
 }
 
-std::string GetIndexedOutputWavFilename(const std::string& wav_name,
+std::string GetIndexedOutputWavFilename(absl::string_view wav_name,
                                         int counter) {
   rtc::StringBuilder ss;
   ss << wav_name.substr(0, wav_name.size() - 4) << "_" << counter
@@ -89,11 +90,11 @@ void WriteEchoLikelihoodGraphFileFooter(std::ofstream* output_file) {
 // leaving the enclosing scope.
 class ScopedTimer {
  public:
-  ScopedTimer(ApiCallStatistics* api_call_statistics_,
+  ScopedTimer(ApiCallStatistics* api_call_statistics,
               ApiCallStatistics::CallType call_type)
       : start_time_(rtc::TimeNanos()),
         call_type_(call_type),
-        api_call_statistics_(api_call_statistics_) {}
+        api_call_statistics_(api_call_statistics) {}
 
   ~ScopedTimer() {
     api_call_statistics_->Add(rtc::TimeNanos() - start_time_, call_type_);
