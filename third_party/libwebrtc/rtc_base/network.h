@@ -433,7 +433,7 @@ class RTC_EXPORT Network {
   // Here is the rule on how we mark the IPv6 address as ignorable for WebRTC.
   // 1) return all global temporary dynamic and non-deprecated ones.
   // 2) if #1 not available, return global ones.
-  // 3) if #2 not available and WebRTC-PreferGlobalIPv6ToLinkLocal enabled,
+  // 3) if #2 not available and WebRTC-IPv6NetworkResolutionFixes enabled,
   // return local link ones.
   // 4) if #3 not available, use ULA ipv6 as last resort. (ULA stands for
   // unique local address, which is not route-able in open internet but might

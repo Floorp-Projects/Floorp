@@ -1759,7 +1759,7 @@ TEST_F(PortTest, TestUdpSingleAddressV6CrossTypePorts) {
 
 TEST_F(PortTest, TestUdpMultipleAddressesV6CrossTypePorts) {
   webrtc::test::ScopedKeyValueConfig field_trials(
-      "WebRTC-PreferGlobalIPv6ToLinkLocal/Enabled/");
+      "WebRTC-IPv6NetworkResolutionFixes/Enabled/");
   FakePacketSocketFactory factory;
   std::unique_ptr<Port> ports[5];
   SocketAddress addresses[5] = {

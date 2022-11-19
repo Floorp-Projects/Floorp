@@ -1111,9 +1111,11 @@ IPAddress Network::GetBestIP() const {
   }
 
   InterfaceAddress selected_ip, link_local_ip, ula_ip;
+  // Bug fix to prefer global IPv6 address over link local.
+  // Field trial key reserved in bugs.webrtc.org/14334
   const bool prefer_global_ipv6_to_link_local =
       field_trials_
-          ? field_trials_->IsEnabled("WebRTC-PreferGlobalIPv6ToLinkLocal")
+          ? field_trials_->IsEnabled("WebRTC-IPv6NetworkResolutionFixes")
           : false;
   for (const InterfaceAddress& ip : ips_) {
     // Ignore any address which has been deprecated already.
