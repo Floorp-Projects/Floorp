@@ -234,17 +234,15 @@ TimeDelta JitterEstimator::CalculateEstimate() {
 
   TimeDelta ret = TimeDelta::Millis(retMs);
 
-  constexpr TimeDelta kMinPrevEstimate = TimeDelta::Micros(10);
+  constexpr TimeDelta kMinEstimate = TimeDelta::Millis(1);
   constexpr TimeDelta kMaxEstimate = TimeDelta::Seconds(10);
   // A very low estimate (or negative) is neglected.
-  if (ret < TimeDelta::Millis(1)) {
-    if (!prev_estimate_ || prev_estimate_ <= kMinPrevEstimate) {
-      ret = TimeDelta::Millis(1);
-    } else {
-      ret = *prev_estimate_;
-    }
-  }
-  if (ret > kMaxEstimate) {  // Sanity
+  if (ret < kMinEstimate) {
+    ret = prev_estimate_.value_or(kMinEstimate);
+    // Sanity check to make sure that no other method has set `prev_estimate_`
+    // to a value lower than `kMinEstimate`.
+    RTC_DCHECK_GE(ret, kMinEstimate);
+  } else if (ret > kMaxEstimate) {  // Sanity
     ret = kMaxEstimate;
   }
   prev_estimate_ = ret;
