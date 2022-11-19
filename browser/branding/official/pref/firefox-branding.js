@@ -26,8 +26,8 @@ pref("app.update.promptWaitTime", 691200);
   pref("app.releaseNotesURL.aboutDialog", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp-beta/");
 #else
   pref("app.update.url.manual", "https://floorp.ablaze.one");
-  pref("app.update.url.details", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/")
-  pref("app.releaseNotesURL", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");;
+  pref("app.update.url.details", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
+  pref("app.releaseNotesURL", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
   pref("app.releaseNotesURL.aboutDialog", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
 #endif
 // The number of days a binary is permitted to be old
