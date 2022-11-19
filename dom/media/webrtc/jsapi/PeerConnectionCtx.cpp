@@ -129,11 +129,6 @@ class DummyAudioProcessing : public AudioProcessing {
     return 0;
   }
   void set_stream_key_pressed(bool) override { MOZ_CRASH("Unexpected call"); }
-  bool CreateAndAttachAecDump(const std::string&, int64_t,
-                              rtc::TaskQueue*) override {
-    MOZ_CRASH("Unexpected call");
-    return false;
-  }
   bool CreateAndAttachAecDump(absl::string_view, int64_t,
                               rtc::TaskQueue*) override {
     MOZ_CRASH("Unexpected call");
