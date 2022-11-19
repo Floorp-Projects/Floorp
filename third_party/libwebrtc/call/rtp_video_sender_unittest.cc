@@ -330,6 +330,41 @@ TEST(RtpVideoSenderTest, SendSimulcastSetActiveModules) {
             test.router()->OnEncodedImage(encoded_image_1, &codec_info).error);
 }
 
+TEST(
+    RtpVideoSenderTest,
+    DiscardsHigherSpatialVideoFramesAfterLayerDisabledInVideoLayersAllocation) {
+  constexpr uint8_t kPayload = 'a';
+  EncodedImage encoded_image_1;
+  encoded_image_1.SetTimestamp(1);
+  encoded_image_1.capture_time_ms_ = 2;
+  encoded_image_1._frameType = VideoFrameType::kVideoFrameKey;
+  encoded_image_1.SetEncodedData(EncodedImageBuffer::Create(&kPayload, 1));
+  EncodedImage encoded_image_2(encoded_image_1);
+  encoded_image_2.SetSpatialIndex(1);
+  CodecSpecificInfo codec_info;
+  codec_info.codecType = kVideoCodecVP8;
+  RtpVideoSenderTestFixture test({kSsrc1, kSsrc2}, {kRtxSsrc1, kRtxSsrc2},
+                                 kPayloadType, {});
+  test.SetActiveModules({true, true});
+  // A layer is sent on both rtp streams.
+  test.router()->OnVideoLayersAllocationUpdated(
+      {.active_spatial_layers = {{.rtp_stream_index = 0},
+                                 {.rtp_stream_index = 1}}});
+
+  EXPECT_EQ(EncodedImageCallback::Result::OK,
+            test.router()->OnEncodedImage(encoded_image_1, &codec_info).error);
+  EXPECT_EQ(EncodedImageCallback::Result::OK,
+            test.router()->OnEncodedImage(encoded_image_2, &codec_info).error);
+
+  // Only rtp stream index 0 is configured to send a stream.
+  test.router()->OnVideoLayersAllocationUpdated(
+      {.active_spatial_layers = {{.rtp_stream_index = 0}}});
+  EXPECT_EQ(EncodedImageCallback::Result::OK,
+            test.router()->OnEncodedImage(encoded_image_1, &codec_info).error);
+  EXPECT_NE(EncodedImageCallback::Result::OK,
+            test.router()->OnEncodedImage(encoded_image_2, &codec_info).error);
+}
+
 TEST(RtpVideoSenderTest, CreateWithNoPreviousStates) {
   RtpVideoSenderTestFixture test({kSsrc1, kSsrc2}, {kRtxSsrc1, kRtxSsrc2},
                                  kPayloadType, {});
