@@ -10,6 +10,7 @@
 
 #include <queue>
 
+#include "absl/strings/string_view.h"
 #include "api/test/network_emulation/create_cross_traffic.h"
 #include "api/test/network_emulation/cross_traffic.h"
 #include "api/transport/goog_cc_factory.h"
@@ -138,10 +139,10 @@ absl::optional<DataRate> PacketTransmissionAndFeedbackBlock(
 
 // Scenarios:
 
-void UpdatesTargetRateBasedOnLinkCapacity(std::string test_name = "") {
+void UpdatesTargetRateBasedOnLinkCapacity(absl::string_view test_name = "") {
   ScopedFieldTrials trial("WebRTC-SendSideBwe-WithOverhead/Enabled/");
   auto factory = CreateFeedbackOnlyFactory();
-  Scenario s("googcc_unit/target_capacity" + test_name, false);
+  Scenario s("googcc_unit/target_capacity" + std::string(test_name), false);
   CallClientConfig config;
   config.transport.cc_factory = &factory;
   config.transport.rates.min_rate = DataRate::KilobitsPerSec(10);
@@ -188,7 +189,7 @@ void UpdatesTargetRateBasedOnLinkCapacity(std::string test_name = "") {
   EXPECT_NEAR(client->target_rate().kbps(), 90, 25);
 }
 
-DataRate RunRembDipScenario(std::string test_name) {
+DataRate RunRembDipScenario(absl::string_view test_name) {
   Scenario s(test_name);
   NetworkSimulationConfig net_conf;
   net_conf.bandwidth = DataRate::KilobitsPerSec(2000);
@@ -619,7 +620,7 @@ TEST(GoogCcScenario, LossBasedControlDoesModestBackoffToHighLoss) {
   EXPECT_GT(client->target_rate().kbps(), 100);
 }
 
-DataRate AverageBitrateAfterCrossInducedLoss(std::string name) {
+DataRate AverageBitrateAfterCrossInducedLoss(absl::string_view name) {
   Scenario s(name, false);
   NetworkSimulationConfig net_conf;
   net_conf.bandwidth = DataRate::KilobitsPerSec(1000);
