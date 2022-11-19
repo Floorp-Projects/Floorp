@@ -122,7 +122,10 @@ UDPPort::AddressResolver::AddressResolver(
     std::function<void(const rtc::SocketAddress&, int)> done_callback)
     : socket_factory_(factory), done_(std::move(done_callback)) {}
 
-void UDPPort::AddressResolver::Resolve(const rtc::SocketAddress& address) {
+void UDPPort::AddressResolver::Resolve(
+    const rtc::SocketAddress& address,
+    int family,
+    const webrtc::FieldTrialsView& field_trials) {
   if (resolvers_.find(address) != resolvers_.end())
     return;
 
@@ -133,12 +136,19 @@ void UDPPort::AddressResolver::Resolve(const rtc::SocketAddress& address) {
       pair = std::make_pair(address, std::move(resolver));
 
   resolvers_.insert(std::move(pair));
-  resolver_ptr->Start(address, [this, address] {
+  auto callback = [this, address] {
     ResolverMap::const_iterator it = resolvers_.find(address);
     if (it != resolvers_.end()) {
       done_(it->first, it->second->result().GetError());
     }
-  });
+  };
+  // Bug fix for STUN hostname resolution on IPv6.
+  // Field trial key reserved in bugs.webrtc.org/14334
+  if (field_trials.IsEnabled("WebRTC-IPv6NetworkResolutionFixes")) {
+    resolver_ptr->Start(address, family, std::move(callback));
+  } else {
+    resolver_ptr->Start(address, std::move(callback));
+  }
 }
 
 bool UDPPort::AddressResolver::GetResolvedAddress(
@@ -444,7 +454,7 @@ void UDPPort::ResolveStunAddress(const rtc::SocketAddress& stun_addr) {
 
   RTC_LOG(LS_INFO) << ToString() << ": Starting STUN host lookup for "
                    << stun_addr.ToSensitiveString();
-  resolver_->Resolve(stun_addr);
+  resolver_->Resolve(stun_addr, Network()->family(), field_trials());
 }
 
 void UDPPort::OnResolveResult(const rtc::SocketAddress& input, int error) {
