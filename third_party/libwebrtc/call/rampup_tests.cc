@@ -362,15 +362,14 @@ void RampUpTester::TriggerTestDone() {
 
   // Stop polling stats.
   // Corner case for field_trials=WebRTC-QuickPerfTest/Enabled/
-  SendTask(RTC_FROM_HERE, task_queue_, [this] { pending_task_.Stop(); });
+  SendTask(task_queue_, [this] { pending_task_.Stop(); });
 
   // TODO(holmer): Add audio send stats here too when those APIs are available.
   if (!send_stream_)
     return;
 
   VideoSendStream::Stats send_stats;
-  SendTask(RTC_FROM_HERE, task_queue_,
-           [&] { send_stats = send_stream_->GetStats(); });
+  SendTask(task_queue_, [&] { send_stats = send_stream_->GetStats(); });
 
   send_stream_ = nullptr;  // To avoid dereferencing a bad pointer.
 

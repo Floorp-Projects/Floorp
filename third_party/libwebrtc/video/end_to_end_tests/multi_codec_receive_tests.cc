@@ -129,7 +129,7 @@ class FrameObserver : public test::RtpRtcpObserver,
 class MultiCodecReceiveTest : public test::CallTest {
  public:
   MultiCodecReceiveTest() {
-    SendTask(RTC_FROM_HERE, task_queue(), [this]() {
+    SendTask(task_queue(), [this]() {
       CreateCalls();
 
       send_transport_.reset(new test::PacketTransport(
@@ -151,7 +151,7 @@ class MultiCodecReceiveTest : public test::CallTest {
   }
 
   virtual ~MultiCodecReceiveTest() {
-    SendTask(RTC_FROM_HERE, task_queue(), [this]() {
+    SendTask(task_queue(), [this]() {
       send_transport_.reset();
       receive_transport_.reset();
       DestroyCalls();
@@ -243,7 +243,7 @@ void MultiCodecReceiveTest::RunTestWithCodecs(
         return nullptr;
       });
   // Create and start call.
-  SendTask(RTC_FROM_HERE, task_queue(),
+  SendTask(task_queue(),
            [this, &configs, &encoder_factory, &decoder_factory]() {
              CreateSendConfig(1, 0, 0, send_transport_.get());
              ConfigureEncoder(configs[0], &encoder_factory);
@@ -261,21 +261,20 @@ void MultiCodecReceiveTest::RunTestWithCodecs(
 
   for (size_t i = 1; i < configs.size(); ++i) {
     // Recreate VideoSendStream with new config (codec, temporal layers).
-    SendTask(
-        RTC_FROM_HERE, task_queue(), [this, i, &configs, &encoder_factory]() {
-          DestroyVideoSendStreams();
-          observer_.Reset(PayloadNameToPayloadType(configs[i].payload_name));
+    SendTask(task_queue(), [this, i, &configs, &encoder_factory]() {
+      DestroyVideoSendStreams();
+      observer_.Reset(PayloadNameToPayloadType(configs[i].payload_name));
 
-          ConfigureEncoder(configs[i], &encoder_factory);
-          CreateVideoSendStreams();
-          GetVideoSendStream()->Start();
-          CreateFrameGeneratorCapturer(kFps, kWidth / 2, kHeight / 2);
-          ConnectVideoSourcesToStreams();
-        });
+      ConfigureEncoder(configs[i], &encoder_factory);
+      CreateVideoSendStreams();
+      GetVideoSendStream()->Start();
+      CreateFrameGeneratorCapturer(kFps, kWidth / 2, kHeight / 2);
+      ConnectVideoSourcesToStreams();
+    });
     EXPECT_TRUE(observer_.Wait()) << "Timed out waiting for frames.";
   }
 
-  SendTask(RTC_FROM_HERE, task_queue(), [this]() {
+  SendTask(task_queue(), [this]() {
     Stop();
     DestroyStreams();
   });

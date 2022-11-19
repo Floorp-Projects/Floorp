@@ -15,7 +15,6 @@
 
 #include "absl/memory/memory.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/task_queue_for_test.h"
 
@@ -38,7 +37,7 @@ void TestActivitiesExecutor::Stop() {
     // Already stopped or not started.
     return;
   }
-  SendTask(RTC_FROM_HERE, task_queue_, [this]() {
+  SendTask(task_queue_, [this]() {
     MutexLock lock(&lock_);
     for (auto& handle : repeating_task_handles_) {
       handle.Stop();

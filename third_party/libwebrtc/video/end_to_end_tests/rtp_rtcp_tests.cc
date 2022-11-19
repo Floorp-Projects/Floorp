@@ -284,9 +284,8 @@ void RtpRtcpEndToEndTest::TestRtpStatePreservation(
   VideoEncoderConfig one_stream;
 
   SendTask(
-      RTC_FROM_HERE, task_queue(),
-      [this, &observer, &send_transport, &receive_transport, &one_stream,
-       use_rtx]() {
+      task_queue(), [this, &observer, &send_transport, &receive_transport,
+                     &one_stream, use_rtx]() {
         CreateCalls();
 
         send_transport = std::make_unique<test::PacketTransport>(
@@ -336,7 +335,7 @@ void RtpRtcpEndToEndTest::TestRtpStatePreservation(
   // Test stream resetting more than once to make sure that the state doesn't
   // get set once (this could be due to using std::map::insert for instance).
   for (size_t i = 0; i < 3; ++i) {
-    SendTask(RTC_FROM_HERE, task_queue(), [&]() {
+    SendTask(task_queue(), [&]() {
       DestroyVideoSendStreams();
 
       // Re-create VideoSendStream with only one stream.
@@ -358,7 +357,7 @@ void RtpRtcpEndToEndTest::TestRtpStatePreservation(
     EXPECT_TRUE(observer.Wait()) << "Timed out waiting for single RTP packet.";
 
     // Reconfigure back to use all streams.
-    SendTask(RTC_FROM_HERE, task_queue(), [this]() {
+    SendTask(task_queue(), [this]() {
       GetVideoSendStream()->ReconfigureVideoEncoder(
           GetVideoEncoderConfig()->Copy());
     });
@@ -367,14 +366,14 @@ void RtpRtcpEndToEndTest::TestRtpStatePreservation(
         << "Timed out waiting for all SSRCs to send packets.";
 
     // Reconfigure down to one stream.
-    SendTask(RTC_FROM_HERE, task_queue(), [this, &one_stream]() {
+    SendTask(task_queue(), [this, &one_stream]() {
       GetVideoSendStream()->ReconfigureVideoEncoder(one_stream.Copy());
     });
     observer.ResetExpectedSsrcs(1);
     EXPECT_TRUE(observer.Wait()) << "Timed out waiting for single RTP packet.";
 
     // Reconfigure back to use all streams.
-    SendTask(RTC_FROM_HERE, task_queue(), [this]() {
+    SendTask(task_queue(), [this]() {
       GetVideoSendStream()->ReconfigureVideoEncoder(
           GetVideoEncoderConfig()->Copy());
     });
@@ -383,14 +382,13 @@ void RtpRtcpEndToEndTest::TestRtpStatePreservation(
         << "Timed out waiting for all SSRCs to send packets.";
   }
 
-  SendTask(RTC_FROM_HERE, task_queue(),
-           [this, &send_transport, &receive_transport]() {
-             Stop();
-             DestroyStreams();
-             send_transport.reset();
-             receive_transport.reset();
-             DestroyCalls();
-           });
+  SendTask(task_queue(), [this, &send_transport, &receive_transport]() {
+    Stop();
+    DestroyStreams();
+    send_transport.reset();
+    receive_transport.reset();
+    DestroyCalls();
+  });
 }
 
 TEST_F(RtpRtcpEndToEndTest, RestartingSendStreamPreservesRtpState) {
@@ -484,7 +482,7 @@ TEST_F(RtpRtcpEndToEndTest, DISABLED_TestFlexfecRtpStatePreservation) {
   test::FunctionVideoEncoderFactory encoder_factory(
       []() { return VP8Encoder::Create(); });
 
-  SendTask(RTC_FROM_HERE, task_queue(), [&]() {
+  SendTask(task_queue(), [&]() {
     CreateCalls();
 
     BuiltInNetworkBehaviorConfig lossy_delayed_link;
@@ -563,7 +561,7 @@ TEST_F(RtpRtcpEndToEndTest, DISABLED_TestFlexfecRtpStatePreservation) {
   // Initial test.
   EXPECT_TRUE(observer.Wait()) << "Timed out waiting for packets.";
 
-  SendTask(RTC_FROM_HERE, task_queue(), [this, &observer]() {
+  SendTask(task_queue(), [this, &observer]() {
     // Ensure monotonicity when the VideoSendStream is restarted.
     Stop();
     observer.ResetPacketCount();
@@ -572,7 +570,7 @@ TEST_F(RtpRtcpEndToEndTest, DISABLED_TestFlexfecRtpStatePreservation) {
 
   EXPECT_TRUE(observer.Wait()) << "Timed out waiting for packets.";
 
-  SendTask(RTC_FROM_HERE, task_queue(), [this, &observer]() {
+  SendTask(task_queue(), [this, &observer]() {
     // Ensure monotonicity when the VideoSendStream is recreated.
     DestroyVideoSendStreams();
     observer.ResetPacketCount();
@@ -584,13 +582,12 @@ TEST_F(RtpRtcpEndToEndTest, DISABLED_TestFlexfecRtpStatePreservation) {
   EXPECT_TRUE(observer.Wait()) << "Timed out waiting for packets.";
 
   // Cleanup.
-  SendTask(RTC_FROM_HERE, task_queue(),
-           [this, &send_transport, &receive_transport]() {
-             Stop();
-             DestroyStreams();
-             send_transport.reset();
-             receive_transport.reset();
-             DestroyCalls();
-           });
+  SendTask(task_queue(), [this, &send_transport, &receive_transport]() {
+    Stop();
+    DestroyStreams();
+    send_transport.reset();
+    receive_transport.reset();
+    DestroyCalls();
+  });
 }
 }  // namespace webrtc

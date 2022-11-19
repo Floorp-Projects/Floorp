@@ -193,7 +193,7 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
   AudioReceiveStreamInterface* audio_receive_stream;
   std::unique_ptr<DriftingClock> drifting_clock;
 
-  SendTask(RTC_FROM_HERE, task_queue(), [&]() {
+  SendTask(task_queue(), [&]() {
     metrics::Reset();
     rtc::scoped_refptr<TestAudioDeviceModule> fake_audio_device =
         TestAudioDeviceModule::Create(
@@ -307,7 +307,7 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
   EXPECT_TRUE(observer->Wait())
       << "Timed out while waiting for audio and video to be synchronized.";
 
-  SendTask(RTC_FROM_HERE, task_queue(), [&]() {
+  SendTask(task_queue(), [&]() {
     // Clear the pointer to the receive stream since it will now be deleted.
     observer->set_receive_stream(nullptr);
 
@@ -870,7 +870,7 @@ TEST_F(CallPerfTest, MAYBE_KeepsHighBitrateWhenReconfiguringSender) {
       ASSERT_TRUE(time_to_reconfigure_.Wait(kDefaultTimeoutMs))
           << "Timed out before receiving an initial high bitrate.";
       frame_generator_->ChangeResolution(kDefaultWidth * 2, kDefaultHeight * 2);
-      SendTask(RTC_FROM_HERE, task_queue_, [&]() {
+      SendTask(task_queue_, [&]() {
         send_stream_->ReconfigureVideoEncoder(encoder_config_.Copy());
       });
       EXPECT_TRUE(Wait())
@@ -987,7 +987,7 @@ void CallPerfTest::TestMinAudioVideoBitrate(int test_bitrate_from,
         int64_t avg_rtt = 0;
         for (int i = 0; i < kBitrateMeasurements; i++) {
           Call::Stats call_stats;
-          SendTask(RTC_FROM_HERE, task_queue_, [this, &call_stats]() {
+          SendTask(task_queue_, [this, &call_stats]() {
             call_stats = sender_call_->GetStats();
           });
           avg_rtt += call_stats.rtt_ms;

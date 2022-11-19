@@ -81,7 +81,7 @@ TEST_F(SsrcEndToEndTest, UnknownRtpPacketGivesUnknownSsrcReturnCode) {
   std::unique_ptr<PacketInputObserver> input_observer;
 
   SendTask(
-      RTC_FROM_HERE, task_queue(),
+      task_queue(),
       [this, &send_transport, &receive_transport, &input_observer]() {
         CreateCalls();
 
@@ -117,14 +117,13 @@ TEST_F(SsrcEndToEndTest, UnknownRtpPacketGivesUnknownSsrcReturnCode) {
   // Wait() waits for a received packet.
   EXPECT_TRUE(input_observer->Wait());
 
-  SendTask(RTC_FROM_HERE, task_queue(),
-           [this, &send_transport, &receive_transport]() {
-             Stop();
-             DestroyStreams();
-             send_transport.reset();
-             receive_transport.reset();
-             DestroyCalls();
-           });
+  SendTask(task_queue(), [this, &send_transport, &receive_transport]() {
+    Stop();
+    DestroyStreams();
+    send_transport.reset();
+    receive_transport.reset();
+    DestroyCalls();
+  });
 }
 
 void SsrcEndToEndTest::TestSendsSetSsrcs(size_t num_ssrcs,
@@ -203,7 +202,7 @@ void SsrcEndToEndTest::TestSendsSetSsrcs(size_t num_ssrcs,
 
       if (send_single_ssrc_first_) {
         // Set full simulcast and continue with the rest of the SSRCs.
-        SendTask(RTC_FROM_HERE, task_queue_, [&]() {
+        SendTask(task_queue_, [&]() {
           send_stream_->ReconfigureVideoEncoder(
               std::move(video_encoder_config_all_streams_));
         });
