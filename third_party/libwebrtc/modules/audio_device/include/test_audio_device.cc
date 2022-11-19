@@ -142,16 +142,10 @@ class TestAudioDeviceModuleImpl
     return capturing_;
   }
 
-  // Blocks until the Renderer refuses to receive data.
-  // Returns false if `timeout_ms` passes before that happens.
-  bool WaitForPlayoutEnd(int timeout_ms = rtc::Event::kForever) override {
-    return done_rendering_.Wait(timeout_ms);
-  }
-
   // Blocks until the Recorder stops producing data.
   // Returns false if `timeout_ms` passes before that happens.
-  bool WaitForRecordingEnd(int timeout_ms = rtc::Event::kForever) override {
-    return done_capturing_.Wait(timeout_ms);
+  bool WaitForRecordingEnd() override {
+    return done_capturing_.Wait(rtc::Event::kForever);
   }
 
  private:
