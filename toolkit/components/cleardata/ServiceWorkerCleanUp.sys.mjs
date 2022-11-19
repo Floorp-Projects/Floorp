@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -22,8 +18,6 @@ if (Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_CONTENT) {
     "ServiceWorkerCleanUp.jsm can only be used in the parent process"
   );
 }
-
-const EXPORTED_SYMBOLS = ["ServiceWorkerCleanUp"];
 
 function unregisterServiceWorker(aSW) {
   return new Promise(resolve => {
@@ -57,7 +51,7 @@ function unregisterServiceWorkersMatching(filterFn) {
   return Promise.all(promises);
 }
 
-const ServiceWorkerCleanUp = {
+export const ServiceWorkerCleanUp = {
   removeFromHost(aHost) {
     return unregisterServiceWorkersMatching(sw =>
       Services.eTLD.hasRootDomain(sw.principal.host, aHost)
