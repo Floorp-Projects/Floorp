@@ -96,7 +96,6 @@ VideoStreamBufferController::CreateFromFieldTrial(
     TaskQueueBase* worker_queue,
     VCMTiming* timing,
     VCMReceiveStatisticsCallback* stats_proxy,
-    TaskQueueBase* decode_queue,
     FrameSchedulingReceiver* receiver,
     TimeDelta max_wait_for_keyframe,
     TimeDelta max_wait_for_frame,
@@ -116,7 +115,7 @@ VideoStreamBufferController::CreateFromFieldTrial(
             clock, worker_queue);
       }
       return std::make_unique<VideoStreamBufferController>(
-          clock, worker_queue, timing, stats_proxy, decode_queue, receiver,
+          clock, worker_queue, timing, stats_proxy, receiver,
           max_wait_for_keyframe, max_wait_for_frame, std::move(scheduler),
           field_trials);
     }
@@ -126,7 +125,7 @@ VideoStreamBufferController::CreateFromFieldTrial(
       auto scheduler =
           std::make_unique<TaskQueueFrameDecodeScheduler>(clock, worker_queue);
       return std::make_unique<VideoStreamBufferController>(
-          clock, worker_queue, timing, stats_proxy, decode_queue, receiver,
+          clock, worker_queue, timing, stats_proxy, receiver,
           max_wait_for_keyframe, max_wait_for_frame, std::move(scheduler),
           field_trials);
     }
@@ -138,7 +137,6 @@ VideoStreamBufferController::VideoStreamBufferController(
     TaskQueueBase* worker_queue,
     VCMTiming* timing,
     VCMReceiveStatisticsCallback* stats_proxy,
-    TaskQueueBase* decode_queue,
     FrameSchedulingReceiver* receiver,
     TimeDelta max_wait_for_keyframe,
     TimeDelta max_wait_for_frame,
@@ -146,8 +144,6 @@ VideoStreamBufferController::VideoStreamBufferController(
     const FieldTrialsView& field_trials)
     : field_trials_(field_trials),
       clock_(clock),
-      worker_queue_(worker_queue),
-      decode_queue_(decode_queue),
       stats_proxy_(stats_proxy),
       receiver_(receiver),
       timing_(timing),
@@ -159,7 +155,7 @@ VideoStreamBufferController::VideoStreamBufferController(
       decode_timing_(clock_, timing_),
       timeout_tracker_(
           clock_,
-          worker_queue_,
+          worker_queue,
           VideoReceiveStreamTimeoutTracker::Timeouts{
               .max_wait_for_keyframe = max_wait_for_keyframe,
               .max_wait_for_frame = max_wait_for_frame},
@@ -167,11 +163,9 @@ VideoStreamBufferController::VideoStreamBufferController(
       zero_playout_delay_max_decode_queue_size_(
           "max_decode_queue_size",
           kZeroPlayoutDelayDefaultMaxDecodeQueueSize) {
-  RTC_DCHECK(decode_queue_);
   RTC_DCHECK(stats_proxy_);
   RTC_DCHECK(receiver_);
   RTC_DCHECK(timing_);
-  RTC_DCHECK(worker_queue_);
   RTC_DCHECK(clock_);
   RTC_DCHECK(frame_decode_scheduler_);
   RTC_LOG(LS_WARNING) << "Using FrameBuffer3";
@@ -180,15 +174,11 @@ VideoStreamBufferController::VideoStreamBufferController(
                   field_trials.Lookup("WebRTC-ZeroPlayoutDelay"));
 }
 
-void VideoStreamBufferController::StopOnWorker() {
+void VideoStreamBufferController::Stop() {
   RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
   frame_decode_scheduler_->Stop();
   timeout_tracker_.Stop();
   decoder_ready_for_new_frame_ = false;
-  decode_queue_->PostTask([this] {
-    RTC_DCHECK_RUN_ON(decode_queue_);
-    decode_safety_->SetNotAlive();
-  });
 }
 
 void VideoStreamBufferController::SetProtectionMode(
@@ -238,13 +228,6 @@ void VideoStreamBufferController::SetMaxWaits(TimeDelta max_wait_for_keyframe,
 }
 
 void VideoStreamBufferController::StartNextDecode(bool keyframe_required) {
-  if (!worker_queue_->IsCurrent()) {
-    worker_queue_->PostTask(SafeTask(
-        worker_safety_.flag(),
-        [this, keyframe_required] { StartNextDecode(keyframe_required); }));
-    return;
-  }
-
   RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
   if (!timeout_tracker_.Running())
     timeout_tracker_.Start(keyframe_required);
@@ -325,28 +308,21 @@ void VideoStreamBufferController::OnFrameReady(
   timing_->SetLastDecodeScheduledTimestamp(now);
 
   decoder_ready_for_new_frame_ = false;
-  // VideoReceiveStream2 wants frames on the decoder thread.
-  decode_queue_->PostTask(
-      SafeTask(decode_safety_, [this, frame = std::move(frame)]() mutable {
-        RTC_DCHECK_RUN_ON(decode_queue_);
-        receiver_->OnEncodedFrame(std::move(frame));
-      }));
+  receiver_->OnEncodedFrame(std::move(frame));
 }
 
 void VideoStreamBufferController::OnTimeout(TimeDelta delay) {
   RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
+
+  // Stop sending timeouts until receiver starts waiting for a new frame.
+  timeout_tracker_.Stop();
+
   // If the stream is paused then ignore the timeout.
   if (!decoder_ready_for_new_frame_) {
-    timeout_tracker_.Stop();
     return;
   }
-  decode_queue_->PostTask(SafeTask(decode_safety_, [this, delay]() {
-    RTC_DCHECK_RUN_ON(decode_queue_);
-    receiver_->OnDecodableFrameTimeout(delay);
-  }));
-  // Stop sending timeouts until receive starts waiting for a new frame.
-  timeout_tracker_.Stop();
   decoder_ready_for_new_frame_ = false;
+  receiver_->OnDecodableFrameTimeout(delay);
 }
 
 void VideoStreamBufferController::FrameReadyForDecode(uint32_t rtp_timestamp,
