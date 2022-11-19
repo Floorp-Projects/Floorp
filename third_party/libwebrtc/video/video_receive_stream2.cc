@@ -557,6 +557,11 @@ void VideoReceiveStream2::SetUlpfecPayloadType(int payload_type) {
   rtp_video_stream_receiver_.set_ulpfec_payload_type(payload_type);
 }
 
+void VideoReceiveStream2::SetRedPayloadType(int payload_type) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  rtp_video_stream_receiver_.set_red_payload_type(payload_type);
+}
+
 void VideoReceiveStream2::SetRtcpXr(Config::Rtp::RtcpXr rtcp_xr) {
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   rtp_video_stream_receiver_.SetReferenceTimeReport(

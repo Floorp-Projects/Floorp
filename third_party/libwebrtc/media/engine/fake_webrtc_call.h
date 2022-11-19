@@ -302,6 +302,10 @@ class FakeVideoReceiveStream final
     config_.rtp.ulpfec_payload_type = ulpfec_payload_type;
   }
 
+  void SetRedPayloadType(int red_payload_type) override {
+    config_.rtp.red_payload_type = red_payload_type;
+  }
+
   void SetRtcpXr(Config::Rtp::RtcpXr rtcp_xr) override {
     config_.rtp.rtcp_xr = rtcp_xr;
   }

@@ -204,6 +204,9 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   int ulpfec_payload_type() const;
   void set_ulpfec_payload_type(int payload_type);
 
+  int red_payload_type() const;
+  void set_red_payload_type(int payload_type);
+
   absl::optional<int64_t> LastReceivedPacketMs() const;
   absl::optional<int64_t> LastReceivedKeyframePacketMs() const;
 
@@ -335,6 +338,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   ReceiveStatistics* const rtp_receive_statistics_;
   std::unique_ptr<UlpfecReceiver> ulpfec_receiver_
       RTC_GUARDED_BY(packet_sequence_checker_);
+  int red_payload_type_ RTC_GUARDED_BY(packet_sequence_checker_);
 
   RTC_NO_UNIQUE_ADDRESS SequenceChecker worker_task_checker_;
   // TODO(bugs.webrtc.org/11993): This checker conceptually represents
