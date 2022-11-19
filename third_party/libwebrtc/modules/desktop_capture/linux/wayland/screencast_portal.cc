@@ -30,6 +30,21 @@ using xdg_portal::SetupSessionRequestHandlers;
 using xdg_portal::StartSessionRequest;
 using xdg_portal::TearDownSession;
 
+RequestResponse ToRequestResponseFromSignal(uint32_t signal_response) {
+  // See:
+  //  https://docs.flatpak.org/en/latest/portal-api-reference.html#gdbus-signal-org-freedesktop-portal-Request.Response
+  switch (signal_response) {
+    case 0:
+      return RequestResponse::kSuccess;
+    case 1:
+      return RequestResponse::kUserCancelled;
+    case 2:
+      return RequestResponse::kError;
+    default:
+      return RequestResponse::kUnknown;
+  }
+}
+
 }  // namespace
 
 ScreenCastPortal::ScreenCastPortal(
@@ -342,7 +357,7 @@ void ScreenCastPortal::OnStartRequestResponseSignal(GDBusConnection* connection,
                 response_data.receive());
   if (portal_response || !response_data) {
     RTC_LOG(LS_ERROR) << "Failed to start the screen cast session.";
-    that->OnPortalDone(static_cast<RequestResponse>(portal_response));
+    that->OnPortalDone(ToRequestResponseFromSignal(portal_response));
     return;
   }
 
