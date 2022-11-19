@@ -65,9 +65,20 @@
 
       this.finalCheck = function setValue_finalCheck()
       {
-        var tree =
+        let tree =
           { LABEL: [] };
-        if (aValue != kNoValue) {
+
+        const expectChild = (() => {
+          if (aValue === kNoValue) {
+            return false;
+          }
+          if (aValue === "") {
+            return this.labelNode.nodeName == "label";
+          }
+          return true;
+        })();
+
+        if (expectChild) {
           tree.LABEL.push({ STATICTEXT: [ ] });
         }
         testAccessibleTree(aID, tree);
@@ -119,7 +130,7 @@
 
       gQueue.push(new setValue("label", "shiroka strana", kRecreated));
       gQueue.push(new setValue("label", "?<>!+_", kTextChanged, "shiroka strana"));
-      gQueue.push(new setValue("label", "", kTextRemoved, "?<>!+_"));
+      gQueue.push(new setValue("label", "", kRecreated));
       gQueue.push(new setValue("label", kNoValue, kRecreated));
 
       gQueue.push(new setValue("descr", "hello world", kRecreated));
