@@ -195,6 +195,8 @@ class MockVideoReceiveStream : public webrtc::VideoReceiveStreamInterface {
 
   void SetUlpfecPayloadType(int ulpfec_payload_type) override {}
 
+  void SetRedPayloadType(int red_payload_type) override {}
+
   void SetRtcpXr(Config::Rtp::RtcpXr rtcp_xr) override {}
 
   void SetRtpExtensions(std::vector<webrtc::RtpExtension> extensions) override {
