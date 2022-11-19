@@ -424,8 +424,13 @@ void UDPPort::SendStunBindingRequests() {
   RTC_DCHECK(request_manager_.empty());
 
   for (ServerAddresses::const_iterator it = server_addresses_.begin();
-       it != server_addresses_.end(); ++it) {
-    SendStunBindingRequest(*it);
+       it != server_addresses_.end();) {
+    // sending a STUN binding request may cause the current SocketAddress to be
+    // erased from the set, invalidating the loop iterator before it is
+    // incremented (even if the SocketAddress itself still exists). So make a
+    // copy of the loop iterator, which may be safely invalidated.
+    ServerAddresses::const_iterator addr = it++;
+    SendStunBindingRequest(*addr);
   }
 }
 

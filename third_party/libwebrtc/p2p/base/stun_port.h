@@ -210,6 +210,9 @@ class UDPPort : public Port {
   void ResolveStunAddress(const rtc::SocketAddress& stun_addr);
   void OnResolveResult(const rtc::SocketAddress& input, int error);
 
+  // Send a STUN binding request to the given address. Calling this method may
+  // cause the set of known server addresses to be modified, eg. by replacing an
+  // unresolved server address with a resolved address.
   void SendStunBindingRequest(const rtc::SocketAddress& stun_addr);
 
   // Below methods handles binding request responses.

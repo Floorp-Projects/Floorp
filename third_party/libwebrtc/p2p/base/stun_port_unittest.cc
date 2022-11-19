@@ -307,13 +307,7 @@ class StunPortWithMockDnsResolverTest : public StunPortTest {
 };
 
 // Test that we can get an address from a STUN server specified by a hostname.
-// Crashes on Linux, see webrtc:7416
-#if defined(WEBRTC_LINUX) || defined(WEBRTC_WIN) || defined(WEBRTC_MAC)
-#define MAYBE_TestPrepareAddressHostname DISABLED_TestPrepareAddressHostname
-#else
-#define MAYBE_TestPrepareAddressHostname TestPrepareAddressHostname
-#endif
-TEST_F(StunPortWithMockDnsResolverTest, MAYBE_TestPrepareAddressHostname) {
+TEST_F(StunPortWithMockDnsResolverTest, TestPrepareAddressHostname) {
   SetDnsResolverExpectations(
       [](webrtc::MockAsyncDnsResolver* resolver,
          webrtc::MockAsyncDnsResolverResult* resolver_result) {
@@ -625,8 +619,7 @@ class StunIPv6PortTestWithMockDnsResolver : public StunIPv6PortTest {
 };
 
 // Test that we can get an address from a STUN server specified by a hostname.
-// Crashes on Linux, see webrtc:7416
-TEST_F(StunIPv6PortTestWithMockDnsResolver, MAYBE_TestPrepareAddressHostname) {
+TEST_F(StunIPv6PortTestWithMockDnsResolver, TestPrepareAddressHostname) {
   SetDnsResolverExpectations(
       [](webrtc::MockAsyncDnsResolver* resolver,
          webrtc::MockAsyncDnsResolverResult* resolver_result) {
