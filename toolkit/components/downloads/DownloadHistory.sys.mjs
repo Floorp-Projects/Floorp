@@ -13,12 +13,18 @@
 
 import { DownloadList } from "resource://gre/modules/DownloadList.sys.mjs";
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   Downloads: "resource://gre/modules/Downloads.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  OS: "resource://gre/modules/osfile.jsm",
 });
 
 // Places query used to retrieve all history downloads for the related list.
@@ -468,7 +474,7 @@ HistoryDownload.prototype = {
    */
   async refresh() {
     try {
-      this.target.size = (await IOUtils.stat(this.target.path)).size;
+      this.target.size = (await lazy.OS.File.stat(this.target.path)).size;
       this.target.exists = true;
     } catch (ex) {
       // We keep the known file size from the metadata, if any.
