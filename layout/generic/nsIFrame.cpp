@@ -6764,8 +6764,7 @@ void nsIFrame::DidReflow(nsPresContext* aPresContext,
   aPresContext->ReflowedFrame();
 
 #ifdef ACCESSIBILITY
-  if (nsAccessibilityService* accService =
-          PresShell::GetAccessibilityService()) {
+  if (nsAccessibilityService* accService = GetAccService()) {
     accService->NotifyOfPossibleBoundsChange(PresShell(), mContent);
   }
 #endif
