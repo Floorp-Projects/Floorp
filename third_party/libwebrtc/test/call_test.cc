@@ -700,8 +700,6 @@ constexpr size_t CallTest::kNumSsrcs;
 const int CallTest::kDefaultWidth;
 const int CallTest::kDefaultHeight;
 const int CallTest::kDefaultFramerate;
-const int CallTest::kDefaultTimeoutMs = 30 * 1000;
-const int CallTest::kLongTimeoutMs = 120 * 1000;
 const uint32_t CallTest::kSendRtxSsrcs[kNumSsrcs] = {
     0xBADCAFD, 0xBADCAFE, 0xBADCAFF, 0xBADCB00, 0xBADCB01, 0xBADCB02};
 const uint32_t CallTest::kVideoSendSsrcs[kNumSsrcs] = {
@@ -724,7 +722,7 @@ const std::map<uint8_t, MediaType> CallTest::payload_type_map_ = {
 
 BaseTest::BaseTest() {}
 
-BaseTest::BaseTest(int timeout_ms) : RtpRtcpObserver(timeout_ms) {}
+BaseTest::BaseTest(TimeDelta timeout) : RtpRtcpObserver(timeout) {}
 
 BaseTest::~BaseTest() {}
 
@@ -815,7 +813,7 @@ void BaseTest::OnFrameGeneratorCapturerCreated(
 
 void BaseTest::OnStreamsStopped() {}
 
-SendTest::SendTest(int timeout_ms) : BaseTest(timeout_ms) {}
+SendTest::SendTest(TimeDelta timeout) : BaseTest(timeout) {}
 
 bool SendTest::ShouldCreateReceivers() const {
   return false;
@@ -823,7 +821,7 @@ bool SendTest::ShouldCreateReceivers() const {
 
 EndToEndTest::EndToEndTest() {}
 
-EndToEndTest::EndToEndTest(int timeout_ms) : BaseTest(timeout_ms) {}
+EndToEndTest::EndToEndTest(TimeDelta timeout) : BaseTest(timeout) {}
 
 bool EndToEndTest::ShouldCreateReceivers() const {
   return true;

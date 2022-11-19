@@ -63,7 +63,7 @@ int RemoveOlderOrEqual(uint32_t timestamp, std::vector<uint32_t>* timestamps) {
 class FrameObserver : public test::RtpRtcpObserver,
                       public rtc::VideoSinkInterface<VideoFrame> {
  public:
-  FrameObserver() : test::RtpRtcpObserver(test::CallTest::kDefaultTimeoutMs) {}
+  FrameObserver() : test::RtpRtcpObserver(test::CallTest::kDefaultTimeout) {}
 
   void Reset(uint8_t expected_payload_type) {
     MutexLock lock(&mutex_);

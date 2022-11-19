@@ -53,7 +53,7 @@ TEST_F(FecEndToEndTest, ReceivesUlpfec) {
                                public rtc::VideoSinkInterface<VideoFrame> {
    public:
     UlpfecRenderObserver()
-        : EndToEndTest(kDefaultTimeoutMs),
+        : EndToEndTest(kDefaultTimeout),
           encoder_factory_([]() { return VP8Encoder::Create(); }),
           random_(0xcafef00d1),
           num_packets_sent_(0) {}
@@ -159,7 +159,7 @@ class FlexfecRenderObserver : public test::EndToEndTest,
   static constexpr uint32_t kFlexfecLocalSsrc = 456;
 
   explicit FlexfecRenderObserver(bool enable_nack, bool expect_flexfec_rtcp)
-      : test::EndToEndTest(test::CallTest::kDefaultTimeoutMs),
+      : test::EndToEndTest(test::CallTest::kDefaultTimeout),
         enable_nack_(enable_nack),
         expect_flexfec_rtcp_(expect_flexfec_rtcp),
         received_flexfec_rtcp_(false),
@@ -352,7 +352,7 @@ TEST_F(FecEndToEndTest, ReceivedUlpfecPacketsNotNacked) {
   class UlpfecNackObserver : public test::EndToEndTest {
    public:
     UlpfecNackObserver()
-        : EndToEndTest(kDefaultTimeoutMs),
+        : EndToEndTest(kDefaultTimeout),
           state_(kFirstPacket),
           ulpfec_sequence_number_(0),
           has_last_sequence_number_(false),

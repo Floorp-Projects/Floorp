@@ -53,7 +53,7 @@ class CodecObserver : public test::EndToEndTest,
                 const std::string& payload_name,
                 VideoEncoderFactory* encoder_factory,
                 VideoDecoderFactory* decoder_factory)
-      : EndToEndTest(4 * CodecEndToEndTest::kDefaultTimeoutMs),
+      : EndToEndTest(4 * CodecEndToEndTest::kDefaultTimeout),
         // TODO(hta): This timeout (120 seconds) is excessive.
         // https://bugs.webrtc.org/6830
         no_frames_to_wait_for_(no_frames_to_wait_for),

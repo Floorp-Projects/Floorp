@@ -29,7 +29,7 @@ class SsrcEndToEndTest : public test::CallTest {
 TEST_F(SsrcEndToEndTest, ReceiverUsesLocalSsrc) {
   class SyncRtcpObserver : public test::EndToEndTest {
    public:
-    SyncRtcpObserver() : EndToEndTest(kDefaultTimeoutMs) {}
+    SyncRtcpObserver() : EndToEndTest(kDefaultTimeout) {}
 
     Action OnReceiveRtcp(const uint8_t* packet, size_t length) override {
       test::RtcpPacketParser parser;
@@ -55,7 +55,7 @@ TEST_F(SsrcEndToEndTest, UnknownRtpPacketGivesUnknownSsrcReturnCode) {
     explicit PacketInputObserver(PacketReceiver* receiver)
         : receiver_(receiver) {}
 
-    bool Wait() { return delivered_packet_.Wait(kDefaultTimeoutMs); }
+    bool Wait() { return delivered_packet_.Wait(kDefaultTimeout.ms()); }
 
    private:
     DeliveryStatus DeliverPacket(MediaType media_type,
@@ -134,7 +134,7 @@ void SsrcEndToEndTest::TestSendsSetSsrcs(size_t num_ssrcs,
                   size_t num_ssrcs,
                   bool send_single_ssrc_first,
                   TaskQueueBase* task_queue)
-        : EndToEndTest(kDefaultTimeoutMs),
+        : EndToEndTest(kDefaultTimeout),
           num_ssrcs_(num_ssrcs),
           send_single_ssrc_first_(send_single_ssrc_first),
           ssrcs_to_observe_(num_ssrcs),
@@ -244,7 +244,7 @@ TEST_F(SsrcEndToEndTest, DISABLED_RedundantPayloadsTransmittedOnAllSsrcs) {
   class ObserveRedundantPayloads : public test::EndToEndTest {
    public:
     ObserveRedundantPayloads()
-        : EndToEndTest(kDefaultTimeoutMs),
+        : EndToEndTest(kDefaultTimeout),
           ssrcs_to_observe_(kNumSimulcastStreams) {
       for (size_t i = 0; i < kNumSimulcastStreams; ++i) {
         registered_rtx_ssrc_[kSendRtxSsrcs[i]] = true;

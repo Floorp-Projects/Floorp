@@ -35,7 +35,7 @@ enum : int {  // The first valid value is 1.
 constexpr int kExtraProcessTimeMs = 1000;
 }  // namespace
 
-AudioBweTest::AudioBweTest() : EndToEndTest(CallTest::kDefaultTimeoutMs) {}
+AudioBweTest::AudioBweTest() : EndToEndTest(CallTest::kDefaultTimeout) {}
 
 size_t AudioBweTest::GetNumVideoStreams() const {
   return 0;
