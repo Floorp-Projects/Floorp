@@ -1,0 +1,23 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIFile.idl"
+
+/**
+ * Utilities for migrating from legacy (non-Chromimum-based) Edge.
+ */
+[builtinclass, scriptable, uuid(9c7b7436-a17c-4c03-ba66-aeb5ae070126)]
+interface nsIEdgeMigrationUtils : nsISupports {
+    /**
+     * Determine if the Edge database is locked for writing.
+     *
+     * @param aFile The path to the Edge database.
+     *
+     * @returns A promise that is resolved to whether or not the given database
+     *          could be opened for writing.
+     */
+    [implicit_jscontext]
+    Promise isDbLocked(in nsIFile aFile);
+};
