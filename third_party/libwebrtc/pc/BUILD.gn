@@ -49,7 +49,6 @@ rtc_library("proxy") {
     "../api:scoped_refptr",
     "../api/task_queue",
     "../rtc_base:event_tracer",
-    "../rtc_base:location",
     "../rtc_base:rtc_event",
     "../rtc_base:stringutils",
     "../rtc_base:threading",
