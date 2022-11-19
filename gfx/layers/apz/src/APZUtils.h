@@ -77,8 +77,8 @@ inline bool ScrollSourceAllowsOverscroll(ScrollSource aSource) {
 const CSSCoord COORDINATE_EPSILON = 0.01f;
 
 inline bool IsZero(const CSSPoint& aPoint) {
-  return FuzzyEqualsAdditive(aPoint.x.value, 0.0f, COORDINATE_EPSILON.value) &&
-         FuzzyEqualsAdditive(aPoint.y.value, 0.0f, COORDINATE_EPSILON.value);
+  return FuzzyEqualsAdditive(aPoint.x, CSSCoord(), COORDINATE_EPSILON) &&
+         FuzzyEqualsAdditive(aPoint.y, CSSCoord(), COORDINATE_EPSILON);
 }
 
 // Represents async transforms consisting of a scale and a translation.
