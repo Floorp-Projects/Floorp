@@ -97,7 +97,8 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
       OnCompleteFrameCallback* complete_frame_callback,
       rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
-      const FieldTrialsView& field_trials);
+      const FieldTrialsView& field_trials,
+      RtcEventLog* event_log);
   ~RtpVideoStreamReceiver2() override;
 
   void AddReceiveCodec(uint8_t payload_type,
