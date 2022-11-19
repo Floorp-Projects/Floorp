@@ -28,7 +28,7 @@ class Clock;
 class JitterEstimator {
  public:
   explicit JitterEstimator(Clock* clock, const FieldTrialsView& field_trials);
-  virtual ~JitterEstimator();
+  ~JitterEstimator();
   JitterEstimator(const JitterEstimator&) = delete;
   JitterEstimator& operator=(const JitterEstimator&) = delete;
 
@@ -49,9 +49,8 @@ class JitterEstimator {
   //          - rtt_mult_add_cap : Multiplier cap from the RTTMultExperiment.
   //
   // Return value              : Jitter estimate.
-  virtual TimeDelta GetJitterEstimate(
-      double rtt_multiplier,
-      absl::optional<TimeDelta> rtt_mult_add_cap);
+  TimeDelta GetJitterEstimate(double rtt_multiplier,
+                              absl::optional<TimeDelta> rtt_mult_add_cap);
 
   // Updates the nack counter.
   void FrameNacked();
