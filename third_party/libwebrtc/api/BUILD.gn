@@ -347,6 +347,7 @@ rtc_source_set("async_dns_resolver") {
   visibility = [ "*" ]
   sources = [ "async_dns_resolver.h" ]
   deps = [
+    "../rtc_base:checks",
     "../rtc_base:socket_address",
     "../rtc_base/system:rtc_export",
   ]

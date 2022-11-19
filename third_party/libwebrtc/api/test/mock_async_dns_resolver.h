@@ -34,6 +34,10 @@ class MockAsyncDnsResolver : public AsyncDnsResolverInterface {
               Start,
               (const rtc::SocketAddress&, std::function<void()>),
               (override));
+  MOCK_METHOD(void,
+              Start,
+              (const rtc::SocketAddress&, int family, std::function<void()>),
+              (override));
   MOCK_METHOD(AsyncDnsResolverResult&, result, (), (const, override));
 };
 
@@ -42,6 +46,10 @@ class MockAsyncDnsResolverFactory : public AsyncDnsResolverFactoryInterface {
   MOCK_METHOD(std::unique_ptr<webrtc::AsyncDnsResolverInterface>,
               CreateAndResolve,
               (const rtc::SocketAddress&, std::function<void()>),
+              (override));
+  MOCK_METHOD(std::unique_ptr<webrtc::AsyncDnsResolverInterface>,
+              CreateAndResolve,
+              (const rtc::SocketAddress&, int, std::function<void()>),
               (override));
   MOCK_METHOD(std::unique_ptr<webrtc::AsyncDnsResolverInterface>,
               Create,
