@@ -53,12 +53,12 @@ rtc_library("video") {
   ]
 
   deps = [
-    ":frame_buffer_proxy",
     ":frame_cadence_adapter",
     ":frame_decode_scheduler",
     ":frame_dumping_decoder",
     ":unique_timestamp_counter",
     ":video_receive_stream_timeout_tracker",
+    ":video_stream_buffer_controller",
     ":video_stream_encoder_impl",
     "../api:array_view",
     "../api:fec_controller_api",
@@ -249,10 +249,10 @@ rtc_library("frame_cadence_adapter") {
   ]
 }
 
-rtc_library("frame_buffer_proxy") {
+rtc_library("video_stream_buffer_controller") {
   sources = [
-    "frame_buffer_proxy.cc",
-    "frame_buffer_proxy.h",
+    "video_stream_buffer_controller.cc",
+    "video_stream_buffer_controller.h",
   ]
   deps = [
     ":decode_synchronizer",
@@ -744,7 +744,6 @@ if (rtc_include_tests) {
       "end_to_end_tests/ssrc_tests.cc",
       "end_to_end_tests/stats_tests.cc",
       "end_to_end_tests/transport_feedback_tests.cc",
-      "frame_buffer_proxy_unittest.cc",
       "frame_cadence_adapter_unittest.cc",
       "frame_decode_timing_unittest.cc",
       "frame_encode_metadata_writer_unittest.cc",
@@ -767,12 +766,12 @@ if (rtc_include_tests) {
       "video_send_stream_impl_unittest.cc",
       "video_send_stream_tests.cc",
       "video_source_sink_controller_unittest.cc",
+      "video_stream_buffer_controller_unittest.cc",
       "video_stream_decoder_impl_unittest.cc",
       "video_stream_encoder_unittest.cc",
     ]
     deps = [
       ":decode_synchronizer",
-      ":frame_buffer_proxy",
       ":frame_cadence_adapter",
       ":frame_decode_scheduler",
       ":frame_decode_timing",
@@ -781,6 +780,7 @@ if (rtc_include_tests) {
       ":video",
       ":video_mocks",
       ":video_receive_stream_timeout_tracker",
+      ":video_stream_buffer_controller",
       ":video_stream_decoder_impl",
       ":video_stream_encoder_impl",
       "../api:create_frame_generator",
