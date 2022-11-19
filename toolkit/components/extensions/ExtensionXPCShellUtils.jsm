@@ -265,6 +265,7 @@ class ExtensionWrapper {
 
   /**
    * This method sends the message to force-sleep the background scripts.
+   *
    * @returns {Promise} resolves after the background is asleep and listeners primed.
    */
   terminateBackground(...args) {
@@ -790,10 +791,12 @@ var ExtensionTestUtils = {
    * @param {string} [options.redirectUrl]
    *        An optional URL that the initial page is expected to
    *        redirect to.
+   * @param {...any} args
+   *        Extra parameters to ensure compatibility
    *
    * @returns {ContentPage}
    */
-  loadContentPage(...args) {
-    return XPCShellContentUtils.loadContentPage(...args);
+  loadContentPage(url, options, ...args) {
+    return XPCShellContentUtils.loadContentPage(url, options, ...args);
   },
 };

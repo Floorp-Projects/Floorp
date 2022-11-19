@@ -263,10 +263,11 @@ let apiManager = new (class extends SchemaAPIManager {
 const ProxyMessenger = {
   /**
    * @typedef {object} ParentPort
-   * @prop {function(StructuredCloneHolder)} onPortMessage
-   * @prop {function()} onPortDisconnect
+   * @property {function(StructuredCloneHolder)} onPortMessage
+   * @property {function()} onPortDisconnect
    */
-  /** @type Map<number, ParentPort> */
+
+  /** @type {Map<number, ParentPort>} */
   ports: new Map(),
 
   init() {
@@ -824,7 +825,7 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
    * The returned "commands" object, exposing modules implemented from devtools/shared/commands.
    * Each attribute being a static interface to communicate with the server backend.
    *
-   * @returns {Promise<Object>}
+   * @returns {Promise<object>}
    */
   async getDevToolsCommands() {
     // Ensure that we try to instantiate a commands only once,
@@ -1082,7 +1083,7 @@ ParentAPIManager = {
    *
    * @param {BaseContext} context The context making this call.
    * @param {object} data Additional data about the call.
-   * @param {function} callable The actual implementation to invoke.
+   * @param {Function} callable The actual implementation to invoke.
    */
   async callAndLog(context, data, callable) {
     let { id } = context.extension;
@@ -1382,7 +1383,7 @@ class HiddenXULWindow {
   /**
    * Creates the browser XUL element that will contain the WebExtension Page.
    *
-   * @param {Object} xulAttributes
+   * @param {object} xulAttributes
    *        An object that contains the xul attributes to set of the newly
    *        created browser XUL element.
    *
@@ -1837,6 +1838,7 @@ async function promiseExtensionViewLoaded(browser) {
  * its related extension, viewType and browser element (both the top level context and any context
  * created for the extension urls running into its iframe descendants).
  *
+ * @param {object} params
  * @param {object} params.extension
  *        The Extension on which we are going to listen for the newly created ExtensionProxyContext.
  * @param {string} params.viewType
@@ -1844,10 +1846,10 @@ async function promiseExtensionViewLoaded(browser) {
  *        "devtools_page").
  * @param {XULElement} params.browser
  *        The browser element of the WebExtension page that we are watching.
- * @param {function} onExtensionProxyContextLoaded
+ * @param {Function} onExtensionProxyContextLoaded
  *        The callback that is called when a new context has been loaded (as `callback(context)`);
  *
- * @returns {function}
+ * @returns {Function}
  *          Unsubscribe the listener.
  */
 function watchExtensionProxyContextLoad(
@@ -1876,12 +1878,13 @@ function watchExtensionProxyContextLoad(
  * to be called for every ExtensionProxyContext created for an extension
  * background service worker given its related extension.
  *
+ * @param {object} params
  * @param {object} params.extension
  *        The Extension on which we are going to listen for the newly created ExtensionProxyContext.
- * @param {function} onExtensionWorkerContextLoaded
+ * @param {Function} onExtensionWorkerContextLoaded
  *        The callback that is called when the worker script has been fully loaded (as `callback(context)`);
  *
- * @returns {function}
+ * @returns {Function}
  *          Unsubscribe the listener.
  */
 function watchExtensionWorkerContextLoaded(
@@ -2318,6 +2321,7 @@ XPCOMUtils.defineLazyGetter(ExtensionParent, "PlatformInfo", () => {
 
 /**
  * Retreives the browser_style stylesheets needed for extension popups and sidebars.
+ *
  * @returns {Array<string>} an array of stylesheets needed for the current platform.
  */
 XPCOMUtils.defineLazyGetter(ExtensionParent, "extensionStylesheets", () => {

@@ -693,8 +693,8 @@ class ChildLocalAPIImplementation extends LocalAPIImplementation {
    * Call the given function and also log the call as appropriate
    * (i.e., with PerformanceCounters and/or activity logging)
    *
-   * @param {function} callable The actual implementation to invoke.
-   * @param {array} args Arguments to the function call.
+   * @param {Function} callable The actual implementation to invoke.
+   * @param {Array} args Arguments to the function call.
    * @returns {any} The return result of callable.
    */
   callAndLog(callable, args) {

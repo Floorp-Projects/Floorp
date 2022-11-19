@@ -6,7 +6,7 @@
 "use strict";
 
 /**
- * @fileOverview
+ * @file
  * This module is used for storing changes to settings that are
  * requested by extensions, and for finding out what the current value
  * of a setting should be, based on the precedence chain.
@@ -191,7 +191,7 @@ function getItem(type, key, id) {
  * @param {string} key
  *        A string that uniquely identifies the setting.
  *
- * @returns {array} an array of objects with properties for key, value, id, and enabled
+ * @returns {Array} an array of objects with properties for key, value, id, and enabled
  */
 function getAllItems(type, key) {
   ensureType(type);
@@ -360,14 +360,14 @@ var ExtensionSettingsStore = {
    *        A string that uniquely identifies the setting.
    * @param {string} value
    *        The value to be stored in the setting.
-   * @param {function} initialValueCallback
+   * @param {Function} initialValueCallback
    *        A function to be called to determine the initial value for the
    *        setting. This will be passed the value in the callbackArgument
    *        argument. If omitted the initial value will be undefined.
    * @param {any} callbackArgument
    *        The value to be passed into the initialValueCallback. It defaults to
    *        the value of the key argument.
-   * @param {function} settingDataUpdate
+   * @param {Function} settingDataUpdate
    *        A function to be called to modify the initial value if necessary.
    *
    * @returns {object | null} Either an object with properties for key and
@@ -533,7 +533,7 @@ var ExtensionSettingsStore = {
    * @param {string} type
    *        The type of setting to be returned.
    *
-   * @returns {array}
+   * @returns {Array}
    *          A list of settings which have been stored for the extension.
    */
   getAllForExtension(id, type) {
@@ -574,7 +574,7 @@ var ExtensionSettingsStore = {
    * @param {string} key
    *        A string that uniquely identifies the setting.
    *
-   * @returns {array} an array of objects with properties for key, value, id, and enabled
+   * @returns {Array} an array of objects with properties for key, value, id, and enabled
    */
   getAllSettings(type, key) {
     return getAllItems(type, key);

@@ -43,11 +43,11 @@ class FindContent {
    * data can then be used by `highlightResults`, `_collectRectData` and `_serializeRangeData`.
    *
    * @param {object} params - the params.
-   * @param {string} queryphrase - the text to search for.
-   * @param {boolean} caseSensitive - whether to use case sensitive matches.
-   * @param {boolean} includeRangeData - whether to collect and return range data.
-   * @param {boolean} matchDiacritics - whether diacritics must match.
-   * @param {boolean} searchString - whether to collect and return rect data.
+   * @param {string} params.queryphrase - the text to search for.
+   * @param {boolean} params.caseSensitive - whether to use case sensitive matches.
+   * @param {boolean} params.includeRangeData - whether to collect and return range data.
+   * @param {boolean} params.matchDiacritics - whether diacritics must match.
+   * @param {boolean} params.searchString - whether to collect and return rect data.
    *
    * @returns {object} that includes:
    *   {number} count - number of results found.
@@ -105,7 +105,7 @@ class FindContent {
    * and encodes it into a serializable form.  Useful to extensions for custom UI presentation
    * of search results, eg, getting surrounding context of results.
    *
-   * @returns {array} - serializable range data.
+   * @returns {Array} - serializable range data.
    */
   _serializeRangeData() {
     let ranges = this.iterator._previousRanges;
@@ -175,7 +175,7 @@ class FindContent {
    * Collects rect data of ranges found by most recent search made by `findRanges`.
    * Useful to extensions for custom highlighting of search results.
    *
-   * @returns {array} rectData - serializable rect data.
+   * @returns {Array} rectData - serializable rect data.
    */
   _collectRectData() {
     let rectData = [];

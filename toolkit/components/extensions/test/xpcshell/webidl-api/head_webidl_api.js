@@ -119,8 +119,8 @@ function mockHandleAPIRequest(extPage, mockHandleAPIRequest) {
  *
  * @param {string} testDescription
  *        Brief description of the test.
- * @param {Object} [options]
- * @param {Function} backgroundScript
+ * @param {object} [options]
+ * @param {Function} options.backgroundScript
  *        Test function running in the extension global. This function
  *        does receive a parameter of type object with the following
  *        properties:
@@ -131,7 +131,7 @@ function mockHandleAPIRequest(extPage, mockHandleAPIRequest) {
  *            is not an instance of global[globalConstructorName]
  *          - equal(val, exp, msg): throw an error including msg if
  *            val is not strictly equal to exp.
- * @param {Function} assertResults
+ * @param {Function} options.assertResults
  *        Function to be provided to assert the result returned by
  *        `backgroundScript`, or assert the error if it did throw.
  *        This function does receive a parameter of type object with
@@ -141,7 +141,7 @@ function mockHandleAPIRequest(extPage, mockHandleAPIRequest) {
  *        - testError: the error raised (or rejected if the return value
  *          value was a promise) from the call to `backgroundScript`
  *        - extension: the extension wrapper created by this helper.
- * @param {Function} mockAPIRequestHandler
+ * @param {Function} options.mockAPIRequestHandler
  *        Function to be used to mock mozIExtensionAPIRequestHandler.handleAPIRequest
  *        for the purpose of the test.
  *        This function received the same parameter that are listed in the idl

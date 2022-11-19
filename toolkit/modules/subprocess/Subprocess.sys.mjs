@@ -47,6 +47,7 @@ function platformSupportsDisclaimedSpawn() {
 
 /**
  * Allows for creation of and communication with OS-level sub-processes.
+ *
  * @namespace
  */
 export var Subprocess = {
@@ -98,7 +99,7 @@ export var Subprocess = {
    *
    * @returns {Promise<Process>}
    *
-   * @rejects {Error}
+   * @throws {Error}
    * May be rejected with an Error object if the process can not be
    * launched. The object will include an `errorCode` property with
    * one of the following values if it was rejected for the

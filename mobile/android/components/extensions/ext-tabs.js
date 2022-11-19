@@ -188,6 +188,7 @@ this.tabs = class extends ExtensionAPI {
          * Since multiple tabs currently can't be highlighted, onHighlighted
          * essentially acts an alias for self.tabs.onActivated but returns
          * the tabId in an array to match the API.
+         *
          * @see  https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/Tabs/onHighlighted
          */
         onHighlighted: makeGlobalEvent(

@@ -42,9 +42,10 @@ function trackEvents(wrapper) {
 
 /**
  * That that we get the expected events
+ *
  * @param {Extension} extension
  * @param {Map} events
- * @param {Object} expect
+ * @param {object} expect
  * @param {boolean} expect.background   delayed startup event expected
  * @param {boolean} expect.started      background has already started
  * @param {boolean} expect.delayedStart startup is delayed, notify start and

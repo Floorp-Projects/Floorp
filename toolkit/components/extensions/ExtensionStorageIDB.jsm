@@ -164,11 +164,12 @@ var ErrorsTelemetry = {
    * Record telemetry related to the unexpected errors raised while executing
    * a storage.local API call.
    *
-   * @param {string} extensionId
+   * @param {object} options
+   * @param {string} options.extensionId
    *        The id of the extension migrated.
-   * @param {string} storageMethod
+   * @param {string} options.storageMethod
    *        The storage.local API method being run.
-   * @param {Error}  error
+   * @param {Error}  options.error
    *        The unexpected error raised during the API call.
    */
   recordStorageLocalError({ extensionId, storageMethod, error }) {
@@ -213,7 +214,7 @@ class ExtensionStorageLocalIDB extends IndexedDB {
    *        said object. Any values which are StructuredCloneHolder
    *        instances are deserialized before being stored.
    * @param {object}  options
-   * @param {function} options.serialize
+   * @param {Function} options.serialize
    *        Set to a function which will be used to serialize the values into
    *        a StructuredCloneHolder object (if appropriate) and being sent
    *        across the processes (it is also used to detect data cloning errors
@@ -325,7 +326,7 @@ class ExtensionStorageLocalIDB extends IndexedDB {
    *
    * @param {string|Array<string>} keys
    *        A string key of a list of storage items keys to remove.
-   * @returns {Promise<Object>}
+   * @returns {Promise<object>}
    *          Returns an object which contains applied changes.
    */
   async remove(keys) {
@@ -364,7 +365,7 @@ class ExtensionStorageLocalIDB extends IndexedDB {
   /**
    * Asynchronously clears all storage entries.
    *
-   * @returns {Promise<Object>}
+   * @returns {Promise<object>}
    *          Returns an object which contains applied changes.
    */
   async clear() {
@@ -646,7 +647,7 @@ ExtensionStorageIDB = {
    * @param {BaseContext} context
    *        The extension context that is selecting the storage backend.
    *
-   * @returns {Promise<Object>}
+   * @returns {Promise<object>}
    *          Returns a promise which resolves to an object which provides a
    *          `backendEnabled` boolean property, and if it is true the extension should use
    *          the IDB backend and the object also includes a `storagePrincipal` property

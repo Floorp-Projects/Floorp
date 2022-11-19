@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyGetter(this, "isXpcshell", function() {
  *
  * @param {*} error
  *        The error to check.
- * @param {string|RegExp|function|null} expectedError
+ * @param {string | RegExp | Function | null} expectedError
  *        The expectation to check against. If this parameter is:
  *
  *        - a string, the error message must exactly equal the string.

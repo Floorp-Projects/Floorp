@@ -83,7 +83,7 @@ global.getToolboxEvalOptions = async function(context) {
  *
  * @param {Extension}              extension
  *   The extension that owns the devtools_page.
- * @param {Object}                 options
+ * @param {object}                 options
  * @param {Toolbox}                options.toolbox
  *   The developer toolbox instance related to this devtools_page.
  * @param {string}                 options.url

@@ -32,7 +32,7 @@ const TYPEOF_PRIMITIVES = ["bigint", "boolean", "number", "string", "symbol"];
  * This class implements the API object that is passed as a parameter to the
  * browser.userScripts.onBeforeScript API Event.
  *
- * @param {Object} params
+ * @param {object} params
  * @param {ContentScriptContextChild} params.context
  *        The context which has registered the userScripts.onBeforeScript listener.
  * @param {PlainJSONValue}            params.metadata
@@ -55,7 +55,7 @@ class UserScript {
   /**
    * Returns the API object provided to the userScripts.onBeforeScript listeners.
    *
-   * @returns {Object}
+   * @returns {object}
    *          The API object with the properties and methods to export
    *          to the extension code.
    */
@@ -71,7 +71,7 @@ class UserScript {
    * Define all the properties of a given plain object as lazy getters of the
    * userScript global object.
    *
-   * @param {Object} sourceObject
+   * @param {object} sourceObject
    *        A set of objects and methods to export into the userScript scope as globals.
    *
    * @throws {context.Error}
@@ -106,13 +106,13 @@ class UserScript {
    * @param {any} valueToExport
    *        A value to convert into an object accessible to the userScript.
    *
-   * @param {Object} privateOptions
+   * @param {object} privateOptions
    *        A set of options used when this method is called internally (not exposed in the
    *        api object exported to the onBeforeScript listeners).
-   * @param {Error}  Error
+   * @param {Error}  privateOptions.Error
    *        The Error constructor to use to report errors (defaults to the apiScript context's Error
    *        when missing).
-   * @param {Error}  errorMessage
+   * @param {Error}  privateOptions.errorMessage
    *        A custom error message to report exporting error on values not allowed.
    *
    * @returns {any}
@@ -186,12 +186,12 @@ class UserScript {
    * Export all the properties of the `src` plain object as lazy getters on the `dest` object,
    * or in a newly created userScript object if `dest` is `undefined`.
    *
-   * @param {Object} src
+   * @param {object} src
    *        A set of properties to define on a `dest` object as lazy getters.
-   * @param {Object} [dest]
+   * @param {object} [dest]
    *        An optional `dest` object (a new userScript object is created by default when not specified).
    *
-   * @returns {Object}
+   * @returns {object}
    *          The resulting userScript object.
    */
   exportLazyGetters(src, dest = undefined) {
@@ -223,7 +223,7 @@ class UserScript {
    * @param {Function} fn
    *        The apiScript function to wrap
    *
-   * @returns {Object}
+   * @returns {object}
    *          The resulting userScript function.
    */
   wrapFunction(fn) {
@@ -270,7 +270,7 @@ class UserScript {
    * would be hidden by the xrays vision, but excluding any property that could be tricky, e.g.
    * getters).
    *
-   * @param {Object|Array} obj
+   * @param {object | Array} obj
    *        The Object or Array object to shallow clone and iterate over.
    */
   *shallowCloneEntries(obj) {

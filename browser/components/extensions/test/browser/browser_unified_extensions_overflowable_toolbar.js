@@ -77,7 +77,7 @@ function getVisibleMenuItems(popup) {
  * 5. Unloads all of the test WebExtensions
  *
  * @param {DOMWindow} win The browser window to perform the test on.
- * @param {function} taskFn The async function to run once the window is in
+ * @param {Function} taskFn The async function to run once the window is in
  *   the overflow state. The function is called with the following arguments:
  *
  *     {Element} defaultList: The DOM element that holds overflowed default

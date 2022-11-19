@@ -25,31 +25,33 @@ const EXPORTED_SYMBOLS = [
  * @typedef {number|string} ConduitID
  *
  * @typedef {object} ConduitAddress
- * @prop {ConduitID} id Globally unique across all processes.
- * @prop {string[]} [recv]
- * @prop {string[]} [send]
- * @prop {string[]} [query]
- * @prop {string[]} [cast]
+ * @property {ConduitID} id Globally unique across all processes.
+ * @property {string[]} [recv]
+ * @property {string[]} [send]
+ * @property {string[]} [query]
+ * @property {string[]} [cast]
  * Lists of recvX, sendX, queryX and castX methods this subject will use.
  *
  * @typedef {"messenger"|"port"|"tab"} BroadcastKind
  * Kinds of broadcast targeting filters.
  *
- * @example:
- *
+ * @example
+ * ```js
+ * {
  *    init(actor) {
  *      this.conduit = actor.openConduit(this, {
  *        id: this.id,
  *        recv: ["recvAddNumber"],
  *        send: ["sendNumberUpdate"],
  *      });
- *    }
+ *    },
  *
  *    recvAddNumber({ num }, { actor, sender }) {
  *      num += 1;
  *      this.conduit.sendNumberUpdate(sender.id, { num });
  *    }
- *
+ * }
+ * ```
  */
 
 const {
@@ -71,23 +73,24 @@ const ADDON_ENV = new Set(["addon_child", "devtools_child"]);
  * Internal, keeps track of all parent and remote (child) conduits.
  */
 const Hub = {
-  /** @type Map<ConduitID, ConduitAddress> Info about all child conduits. */
+  /** @type {Map<ConduitID, ConduitAddress>} Info about all child conduits. */
   remotes: new Map(),
 
-  /** @type Map<ConduitID, BroadcastConduit> All open parent conduits. */
+  /** @type {Map<ConduitID, BroadcastConduit>} All open parent conduits. */
   conduits: new Map(),
 
-  /** @type Map<string, BroadcastConduit> Parent conduits by recvMethod. */
+  /** @type {Map<string, BroadcastConduit>} Parent conduits by recvMethod. */
   byMethod: new Map(),
 
-  /** @type WeakMap<ConduitsParent, Set<ConduitAddress>> Conduits by actor. */
+  /** @type {WeakMap<ConduitsParent, Set<ConduitAddress>>} Conduits by actor. */
   byActor: new DefaultWeakMap(() => new Set()),
 
-  /** @type Map<string, BroadcastConduit> */
+  /** @type {Map<string, BroadcastConduit>} */
   reportOnClosed: new Map(),
 
   /**
    * Save info about a new parent conduit, register it as a global listener.
+   *
    * @param {BroadcastConduit} conduit
    */
   openConduit(conduit) {
@@ -103,6 +106,7 @@ const Hub = {
 
   /**
    * Cleanup.
+   *
    * @param {BroadcastConduit} conduit
    */
   closeConduit({ id, address }) {
@@ -115,6 +119,7 @@ const Hub = {
   /**
    * Confirm that a remote conduit comes from an extension background
    * service worker.
+   *
    * @see ExtensionPolicyService::CheckParentFrames
    * @param {ConduitAddress} remote
    * @returns {boolean}
@@ -140,6 +145,7 @@ const Hub = {
   /**
    * Confirm that a remote conduit comes from an extension page or
    * an extension background service worker.
+   *
    * @see ExtensionPolicyService::CheckParentFrames
    * @param {ConduitAddress} remote
    * @returns {boolean}
@@ -176,6 +182,7 @@ const Hub = {
 
   /**
    * Fill in common address fields knowable from the parent process.
+   *
    * @param {ConduitAddress} address
    * @param {ConduitsParent} actor
    */
@@ -199,6 +206,7 @@ const Hub = {
 
   /**
    * Save info about a new remote conduit.
+   *
    * @param {ConduitAddress} address
    * @param {ConduitsParent} actor
    */
@@ -210,6 +218,7 @@ const Hub = {
 
   /**
    * Notifies listeners and cleans up after the remote conduit is closed.
+   *
    * @param {ConduitAddress} remote
    */
   recvConduitClosed(remote) {
@@ -226,6 +235,7 @@ const Hub = {
 
   /**
    * Close all remote conduits when the actor goes away.
+   *
    * @param {ConduitsParent} actor
    */
   actorClosed(actor) {
@@ -270,6 +280,7 @@ class BroadcastConduit extends BaseConduit {
 
   /**
    * Internal, sends a message to a specific conduit, used by sendX stubs.
+   *
    * @param {string} method
    * @param {boolean} query
    * @param {ConduitID} target
@@ -293,6 +304,7 @@ class BroadcastConduit extends BaseConduit {
   /**
    * Broadcasts a method call to all conduits of kind that satisfy filtering by
    * kind-specific properties from arg, returns an array of response promises.
+   *
    * @param {string} method
    * @param {BroadcastKind} kind
    * @param {object} arg
@@ -335,6 +347,7 @@ class BroadcastConduit extends BaseConduit {
 
   /**
    * Custom Promise.race() function that ignores certain resolutions and errors.
+   *
    * @param {Promise<response>[]} promises
    * @returns {Promise<response?>}
    */
@@ -388,6 +401,7 @@ class ConduitsParent extends JSWindowActorParent {
 
   /**
    * Group webRequest events to send them as a batch, reducing IPC overhead.
+   *
    * @param {string} name
    * @param {MessageData} data
    * @returns {Promise<object>}
@@ -424,8 +438,10 @@ class ConduitsParent extends JSWindowActorParent {
 
   /**
    * JSWindowActor method, routes the message to the target subject.
-   * @param {string} name
-   * @param {MessageData} data
+   *
+   * @param {object} options
+   * @param {string} options.name
+   * @param {MessageData} options.data
    * @returns {Promise?}
    */
   async receiveMessage({ name, data: { arg, query, sender } }) {

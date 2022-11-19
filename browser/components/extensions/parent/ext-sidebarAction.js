@@ -296,8 +296,12 @@ this.sidebarAction = class extends ExtensionAPI {
    * Gets the target object corresponding to the `details` parameter of the various
    * get* and set* API methods.
    *
-   * @param {Object} details
+   * @param {object} details
    *        An object with optional `tabId` or `windowId` properties.
+   * @param {number} [details.tabId]
+   *        The target tab.
+   * @param {number} [details.windowId]
+   *        The target window.
    * @throws if both `tabId` and `windowId` are specified, or if they are invalid.
    * @returns {XULElement|ChromeWindow|null}
    *        If a `tabId` was specified, the corresponding XULElement tab.
@@ -330,7 +334,7 @@ this.sidebarAction = class extends ExtensionAPI {
    *
    * @param {XULElement|ChromeWindow|null} target
    *        A XULElement tab, a ChromeWindow, or null for the global data.
-   * @returns {Object}
+   * @returns {object}
    *        The icon, title, panel, etc. associated with the target.
    */
   getContextData(target) {

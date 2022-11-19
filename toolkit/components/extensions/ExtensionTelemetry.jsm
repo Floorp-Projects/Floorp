@@ -151,7 +151,7 @@ class ExtensionTelemetryMetric {
    *
    * @param {string} metric
    *        The metric to record (used to retrieve the base histogram id from the _histogram object).
-   * @param {Object}                              options
+   * @param {object}                              options
    * @param {Extension | BrowserExtensionContent} options.extension
    *        The extension to record the telemetry for.
    * @param {string | undefined}                  [options.category]

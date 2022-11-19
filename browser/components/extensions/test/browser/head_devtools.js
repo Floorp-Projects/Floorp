@@ -91,7 +91,7 @@ function assertDevToolsExtensionEnabled(uuid, enabled) {
  * Also wait for the toolbox to attach to the new target, if we navigated
  * to a new process.
  *
- * @param {Object} tab The tab to redirect.
+ * @param {object} tab The tab to redirect.
  * @param {string} uri The url to be loaded in the current tab.
  * @param {boolean} isErrorPage You may pass `true` is the URL is an error
  *                    page. Otherwise BrowserTestUtils.browserLoaded will wait

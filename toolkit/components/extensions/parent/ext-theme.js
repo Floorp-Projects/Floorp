@@ -33,8 +33,13 @@ class Theme {
   /**
    * Creates a theme instance.
    *
-   * @param {string} extension Extension that created the theme.
-   * @param {Integer} windowId The windowId where the theme is applied.
+   * @param {object} options
+   * @param {string} options.extension Extension that created the theme.
+   * @param {Integer} options.windowId The windowId where the theme is applied.
+   * @param {object} options.details
+   * @param {object} options.darkDetails
+   * @param {object} options.experiment
+   * @param {object} options.startupData
    */
   constructor({
     extension,
@@ -91,9 +96,6 @@ class Theme {
   /**
    * Loads a theme by reading the properties from the extension's manifest.
    * This method will override any currently applied theme.
-   *
-   * @param {Object} details Theme part of the manifest. Supported
-   *   properties can be found in the schema under ThemeType.
    */
   load() {
     if (!this.lwtData) {
@@ -139,8 +141,8 @@ class Theme {
   }
 
   /**
-   * @param {Object} details Details
-   * @param {Object} styles Styles object in which to store the colors.
+   * @param {object} details Details
+   * @param {object} styles Styles object in which to store the colors.
    */
   loadDetails(details, styles) {
     if (details.colors) {
@@ -161,8 +163,8 @@ class Theme {
   /**
    * Helper method for loading colors found in the extension's manifest.
    *
-   * @param {Object} colors Dictionary mapping color properties to values.
-   * @param {Object} styles Styles object in which to store the colors.
+   * @param {object} colors Dictionary mapping color properties to values.
+   * @param {object} styles Styles object in which to store the colors.
    */
   loadColors(colors, styles) {
     for (let color of Object.keys(colors)) {
@@ -253,8 +255,8 @@ class Theme {
   /**
    * Helper method for loading images found in the extension's manifest.
    *
-   * @param {Object} images Dictionary mapping image properties to values.
-   * @param {Object} styles Styles object in which to store the colors.
+   * @param {object} images Dictionary mapping image properties to values.
+   * @param {object} styles Styles object in which to store the colors.
    */
   loadImages(images, styles) {
     const { baseURI, logger } = this.extension;
@@ -298,8 +300,8 @@ class Theme {
    * Properties are commonly used to specify more advanced behavior of colors,
    * images or icons.
    *
-   * @param {Object} properties Dictionary mapping properties to values.
-   * @param {Object} styles Styles object in which to store the colors.
+   * @param {object} properties Dictionary mapping properties to values.
+   * @param {object} styles Styles object in which to store the colors.
    */
   loadProperties(properties, styles) {
     let additionalBackgroundsCount =
@@ -380,8 +382,8 @@ class Theme {
    * Helper method for loading extension metadata required by downstream
    * consumers.
    *
-   * @param {Object} extension Extension object.
-   * @param {Object} styles Styles object in which to store the colors.
+   * @param {object} extension Extension object.
+   * @param {object} styles Styles object in which to store the colors.
    */
   loadMetadata(extension, styles) {
     styles.id = extension.id;

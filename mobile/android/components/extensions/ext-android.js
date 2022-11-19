@@ -187,7 +187,7 @@ class WindowTracker extends WindowTrackerBase {
  *        The API name of the event manager, e.g.,"runtime.onMessage".
  * @param {string} event
  *        The name of the EventDispatcher event to listen for.
- * @param {function} listener
+ * @param {Function} listener
  *        The listener function to call when an EventDispatcher event is
  *        recieved.
  *

@@ -112,7 +112,7 @@ class ServerKeyringDeleted extends Error {
 /**
  * Check for FXA and throw an exception if we don't have access.
  *
- * @param {Object} fxAccounts  The reference we were hoping to use to
+ * @param {object} fxAccounts  The reference we were hoping to use to
  *     access FxA
  * @param {string} action  The thing we were doing when we decided to
  *     see if we had access to FxA
@@ -264,7 +264,7 @@ class EncryptionRemoteTransformer {
    *
    * The default version just re-uses the record's ID.
    *
-   * @param {Object} record The record being encoded.
+   * @param {object} record The record being encoded.
    * @returns {Promise<string>} The ID to use.
    */
   getEncodedRecordId(record) {
@@ -348,7 +348,8 @@ class KeyRingEncryptionRemoteTransformer extends EncryptionRemoteTransformer {
  * - connection: a Sqlite connection. Meant for internal use only.
  * - kinto: a KintoBase object, suitable for using in Firefox. All
  *   collections in this database will use the same Sqlite connection.
- * @returns {Promise<Object>}
+ *
+ * @returns {Promise<object>}
  */
 async function storageSyncInit() {
   // Memoize the result to share the connection.
@@ -496,7 +497,8 @@ class CryptoCollection {
    * - salts: a normal JS Object with keys being collection IDs and
    *   values being base64-encoded salts to use when hashing IDs
    *   for that collection.
-   * @returns {Promise<Object>}
+   *
+   * @returns {Promise<object>}
    */
   async getKeyRingRecord() {
     const collection = await this.getCollection();
@@ -723,7 +725,7 @@ function cleanUpForContext(extension, context) {
  * @param {Extension} extension
  *                    The extension whose collection needs to
  *                    be opened.
- * @param {Object} options
+ * @param {object} options
  *                 Options to be passed to the call to `.collection()`.
  * @returns {Promise<Collection>}
  */
@@ -877,7 +879,7 @@ class ExtensionStorageSyncKinto {
    * one).
    *
    * @param {Collection} collection
-   * @param {Object} options
+   * @param {object} options
    *                 Additional options to be passed to sync().
    * @returns {Promise<SyncResultObject>}
    */
@@ -967,7 +969,7 @@ class ExtensionStorageSyncKinto {
    * Check whether the keys record (provided) already has salts for
    * all the extensions given in extIds.
    *
-   * @param {Object} keysRecord A previously-retrieved keys record.
+   * @param {object} keysRecord A previously-retrieved keys record.
    * @param {Array<string>} extIds The IDs of the extensions which
    *                need salts.
    * @returns {boolean}

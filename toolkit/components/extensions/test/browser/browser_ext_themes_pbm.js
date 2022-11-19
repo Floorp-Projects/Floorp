@@ -23,6 +23,7 @@ requestLongerTimeout(2);
 
 /**
  * Test a window's theme color scheme.
+ *
  * @param {*} options - Test options.
  * @param {Window} options.win - Window object to test.
  * @param {boolean} options.colorScheme - Whether expected chrome color scheme
@@ -66,7 +67,8 @@ async function testWindowColorScheme({
 
 /**
  * Match the prefers-color-scheme media query and return the results.
- * @param {Object} options
+ *
+ * @param {object} options
  * @param {Window} options.win - If chrome=true, window to test, otherwise
  * parent window of the content window to test.
  * @param {boolean} options.chrome - If true the media queries will be matched

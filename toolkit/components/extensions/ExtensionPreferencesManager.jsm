@@ -6,7 +6,7 @@
 "use strict";
 
 /**
- * @fileOverview
+ * @file
  * This module is used for managing preferences from WebExtension APIs.
  * It takes care of the precedence chain and decides whether a preference
  * needs to be updated when a change is requested by an API.
@@ -98,7 +98,7 @@ let settingsMap = new Map();
  * initial value of the setting. It reads an array of preference names from
  * the this scope, which gets bound to a settings object.
  *
- * @returns {Object}
+ * @returns {object}
  *          An object with one property per preference, which holds the current
  *          value of that preference.
  */
@@ -117,8 +117,8 @@ function initialValueCallback() {
  * Updates the initialValue stored to exclude any values that match
  * default preference values.
  *
- * @param {Object} initialValue Initial Value data from settings store.
- * @returns {Object}
+ * @param {object} initialValue Initial Value data from settings store.
+ * @returns {object}
  *          The initialValue object after updating the values.
  */
 function settingsUpdate(initialValue) {
@@ -143,11 +143,11 @@ function settingsUpdate(initialValue) {
  *
  * @param {string} name
  *        The api name of the setting.
- * @param {Object} setting
+ * @param {object} setting
  *        An object that represents a setting, which will have a setCallback
  *        property. If a onPrefsChanged function is provided it will be called
  *        with item when the preferences change.
- * @param {Object} item
+ * @param {object} item
  *        An object that represents an item handed back from the setting store
  *        from which the new pref values can be calculated.
  */
@@ -226,7 +226,7 @@ ExtensionPreferencesManager = {
    * automatically.
    *
    * @param {string} name The unique id of the setting.
-   * @param {Object} setting
+   * @param {object} setting
    *        A setting object that should have properties for
    *        prefNames, getCallback and setCallback.
    */
@@ -433,10 +433,12 @@ ExtensionPreferencesManager = {
   /**
    * Removes a set of settings that are available under certain addon permissions.
    *
-   * @param {string} id           The extension id.
-   * @param {array<string>}
-   *                 permissions   The permission name from the extension manifest.
-   * @returns {Promise}           A promise that resolves when all related settings are removed.
+   * @param {string} id
+   *        The extension id.
+   * @param {Array<string>} permissions
+   *        The permission name from the extension manifest.
+   * @returns {Promise}
+   *        A promise that resolves when all related settings are removed.
    */
   async removeSettingsForPermissions(id, permissions) {
     if (!permissions || !permissions.length) {
@@ -458,7 +460,7 @@ ExtensionPreferencesManager = {
    * @param {string} name
    *        The unique id of the setting.
    *
-   * @returns {Object} The current setting object.
+   * @returns {object} The current setting object.
    */
   async getSetting(name) {
     await lazy.ExtensionSettingsStore.initialize();

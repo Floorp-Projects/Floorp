@@ -64,7 +64,8 @@ async function loadTipExtension(options = {}) {
 
 /**
  * Updates the Top Sites feed.
- * @param {function} condition
+ *
+ * @param {Function} condition
  *   A callback that returns true after Top Sites are successfully updated.
  * @param {boolean} searchShortcuts
  *   True if Top Sites search shortcuts should be enabled.

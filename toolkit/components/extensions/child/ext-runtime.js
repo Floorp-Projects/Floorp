@@ -9,6 +9,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/WebNavigationFrames.jsm"
 );
 
+/* eslint-disable jsdoc/check-param-names */
 /**
  * With optional arguments on both ends, this case is ambiguous:
  *     runtime.sendMessage("string", {} or nullish)
@@ -19,9 +20,10 @@ ChromeUtils.defineModuleGetter(
  * @param {string?}  [extensionId]
  * @param {any}      message
  * @param {object?}  [options]
- * @param {function} [callback]
- * @returns {{extensionId: string?, message: any, callback: function?}}
+ * @param {Function} [callback]
+ * @returns {{extensionId: string?, message: any, callback: Function?}}
  */
+/* eslint-enable jsdoc/check-param-names */
 function parseBonkersArgs(...args) {
   let Error = ExtensionUtils.ExtensionError;
   let callback = typeof args[args.length - 1] === "function" && args.pop();

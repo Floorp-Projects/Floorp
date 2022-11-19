@@ -21,7 +21,7 @@ const CATEGORIES = ["popupShown", "clearAfterHover", "clearAfterMousedown"];
  * has a count of 1, and that it's the only value that
  * has been incremented.
  *
- * @param {Object} snapshot
+ * @param {object} snapshot
  *        The Telemetry histogram snapshot to examine.
  * @param {string} category
  *        The category in CATEGORIES whose index we expect to have

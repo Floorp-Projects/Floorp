@@ -8,7 +8,7 @@ loadTestSubscript("head_devtools.js");
  * Helper that returns the id of the last additional/extension tool for a provided
  * toolbox.
  *
- * @param {Object} toolbox
+ * @param {object} toolbox
  *        The DevTools toolbox object.
  * @param {string} label
  *        The expected label for the additional tool.
@@ -26,6 +26,7 @@ function getAdditionalPanelId(toolbox, label) {
 
 /**
  * Helper that returns the number of existing target actors for the content browserId
+ *
  * @param {Tab} tab
  * @returns {Integer} the number of targets
  */

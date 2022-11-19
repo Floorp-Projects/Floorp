@@ -30,7 +30,7 @@ class KintoExtContext extends ExtensionCommon.BaseContext {
  * Call the given function with a newly-constructed context.
  * Unload the context on the way out.
  *
- * @param {function} f    the function to call
+ * @param {Function} f    the function to call
  */
 async function withContext(f) {
   const ssm = Services.scriptSecurityManager;
@@ -51,7 +51,7 @@ async function withContext(f) {
  * Calls to this function can be replaced with calls to withContext
  * once the pref becomes on by default.
  *
- * @param {function} f    the function to call
+ * @param {Function} f    the function to call
  */
 async function withSyncContext(f) {
   const STORAGE_SYNC_PREF = "webextensions.storage.sync.enabled";

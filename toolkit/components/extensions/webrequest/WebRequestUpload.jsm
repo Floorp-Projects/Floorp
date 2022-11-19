@@ -133,7 +133,7 @@ class Headers extends Map {
  *
  * @param {Map} map
  *        The map to convert.
- * @returns {Object}
+ * @returns {object}
  */
 function mapToObject(map) {
   let result = {};

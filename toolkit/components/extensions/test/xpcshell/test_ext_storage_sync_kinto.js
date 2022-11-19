@@ -261,7 +261,7 @@ class KintoServer {
   /**
    * Add a record to those that can be served by this server.
    *
-   * @param {Object} properties  An object describing the record that
+   * @param {object} properties  An object describing the record that
    *   should be served. The properties of this object are:
    * - collectionId {string} This record should only be served if a
    *   request is for this collection.

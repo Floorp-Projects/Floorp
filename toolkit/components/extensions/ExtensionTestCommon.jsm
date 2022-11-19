@@ -524,7 +524,7 @@ ExtensionTestCommon = class ExtensionTestCommon {
   /**
    * Properly serialize a function into eval-able code string.
    *
-   * @param {function} script
+   * @param {Function} script
    * @returns {string}
    */
   static serializeFunction(script) {
@@ -542,7 +542,7 @@ ExtensionTestCommon = class ExtensionTestCommon {
   /**
    * Properly serialize a script into eval-able code string.
    *
-   * @param {string|function|Array} script
+   * @param {string | Function | Array} script
    * @returns {string}
    */
   static serializeScript(script) {
