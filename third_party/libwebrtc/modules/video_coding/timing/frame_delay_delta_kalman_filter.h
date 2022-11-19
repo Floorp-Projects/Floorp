@@ -91,7 +91,9 @@ class FrameDelayDeltaKalmanFilter {
   double estimate_[2];
   double estimate_cov_[2][2];  // Estimate covariance.
 
-  double process_noise_cov_[2][2];  // Process noise covariance.
+  // Process noise covariance. This is a diagonal matrix, so we only store the
+  // diagonal entries.
+  double process_noise_cov_diag_[2];
 };
 
 }  // namespace webrtc
