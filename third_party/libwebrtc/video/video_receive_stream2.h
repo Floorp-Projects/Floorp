@@ -154,6 +154,8 @@ class VideoReceiveStream2
   void SetProtectionPayloadTypes(int red_payload_type,
                                  int ulpfec_payload_type) override;
   void SetRtcpXr(Config::Rtp::RtcpXr rtcp_xr) override;
+  void SetAssociatedPayloadTypes(
+      std::map<int, int> associated_payload_types) override;
 
   webrtc::VideoReceiveStreamInterface::Stats GetStats() const override;
 

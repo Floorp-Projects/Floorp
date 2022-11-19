@@ -35,6 +35,7 @@
 #include "media/engine/unhandled_packets_buffer.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
@@ -424,7 +425,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     webrtc::DegradationPreference GetDegradationPreference() const
         RTC_EXCLUSIVE_LOCKS_REQUIRED(&thread_checker_);
 
-    webrtc::SequenceChecker thread_checker_;
+    RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker thread_checker_;
     webrtc::TaskQueueBase* const worker_thread_;
     const std::vector<uint32_t> ssrcs_ RTC_GUARDED_BY(&thread_checker_);
     const std::vector<SsrcGroup> ssrc_groups_ RTC_GUARDED_BY(&thread_checker_);
@@ -588,8 +589,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
 
   webrtc::TaskQueueBase* const worker_thread_;
   webrtc::ScopedTaskSafety task_safety_;
-  webrtc::SequenceChecker network_thread_checker_;
-  webrtc::SequenceChecker thread_checker_;
+  RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker network_thread_checker_;
+  RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker thread_checker_;
 
   uint32_t rtcp_receiver_report_ssrc_ RTC_GUARDED_BY(thread_checker_);
   bool sending_ RTC_GUARDED_BY(thread_checker_);

@@ -269,8 +269,9 @@ VideoReceiveStream2::VideoReceiveStream2(
 
   if (rtx_ssrc()) {
     rtx_receive_stream_ = std::make_unique<RtxReceiveStream>(
-        &rtp_video_stream_receiver_, config_.rtp.rtx_associated_payload_types,
-        remote_ssrc(), rtp_receive_statistics_.get());
+        &rtp_video_stream_receiver_,
+        std::move(config_.rtp.rtx_associated_payload_types), remote_ssrc(),
+        rtp_receive_statistics_.get());
   } else {
     rtp_receive_statistics_->EnableRetransmitDetection(remote_ssrc(), true);
   }
@@ -563,6 +564,23 @@ void VideoReceiveStream2::SetRtcpXr(Config::Rtp::RtcpXr rtcp_xr) {
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   rtp_video_stream_receiver_.SetReferenceTimeReport(
       rtcp_xr.receiver_reference_time_report);
+}
+
+void VideoReceiveStream2::SetAssociatedPayloadTypes(
+    std::map<int, int> associated_payload_types) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+
+  // For setting the associated payload types after construction, we currently
+  // assume that the rtx_ssrc cannot change. In such a case we can know that
+  // if the ssrc is non-0, a `rtx_receive_stream_` instance has previously been
+  // created and configured (and is referenced by `rtx_receiver_`) and we can
+  // simply reconfigure it.
+  // If rtx_ssrc is 0 however, we ignore this call.
+  if (!rtx_ssrc())
+    return;
+
+  rtx_receive_stream_->SetAssociatedPayloadTypes(
+      std::move(associated_payload_types));
 }
 
 void VideoReceiveStream2::CreateAndRegisterExternalDecoder(
