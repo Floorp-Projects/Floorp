@@ -59,6 +59,33 @@ TEST(FrameDelayDeltaKalmanFilterTest,
 }
 
 TEST(FrameDelayDeltaKalmanFilterTest,
+     NegativeNoiseVarianceDoesNotUpdateFilter) {
+  FrameDelayDeltaKalmanFilter filter;
+
+  // Negative variance...
+  double var_noise = -0.1;
+  filter.PredictAndUpdate(/*frame_delay_variation=*/TimeDelta::Millis(3),
+                          /*frame_size_variation_bytes=*/200.0,
+                          /*max_frame_size=*/DataSize::Bytes(2000), var_noise);
+
+  // ...does _not_ update the filter.
+  EXPECT_EQ(filter.GetFrameDelayVariationEstimateTotal(
+                /*frame_size_variation_bytes=*/0.0),
+            0.0);
+
+  // Positive variance...
+  var_noise = 0.1;
+  filter.PredictAndUpdate(/*frame_delay_variation=*/TimeDelta::Millis(3),
+                          /*frame_size_variation_bytes=*/200.0,
+                          /*max_frame_size=*/DataSize::Bytes(2000), var_noise);
+
+  // ...does update the filter.
+  EXPECT_GT(filter.GetFrameDelayVariationEstimateTotal(
+                /*frame_size_variation_bytes=*/0.0),
+            0.0);
+}
+
+TEST(FrameDelayDeltaKalmanFilterTest,
      VerifyConvergenceWithAlternatingDeviations) {
   FrameDelayDeltaKalmanFilter filter;
 

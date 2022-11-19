@@ -40,6 +40,14 @@ void FrameDelayDeltaKalmanFilter::PredictAndUpdate(
     double frame_size_variation_bytes,
     DataSize max_frame_size,
     double var_noise) {
+  // Sanity checks.
+  if (max_frame_size < DataSize::Bytes(1)) {
+    return;
+  }
+  if (var_noise <= 0.0) {
+    return;
+  }
+
   // This member function follows the data flow in
   // https://en.wikipedia.org/wiki/Kalman_filter#Details.
 
@@ -66,11 +74,6 @@ void FrameDelayDeltaKalmanFilter::PredictAndUpdate(
       estimate_cov_[0][0] * frame_size_variation_bytes + estimate_cov_[0][1];
   estim_cov_times_obs[1] =
       estimate_cov_[1][0] * frame_size_variation_bytes + estimate_cov_[1][1];
-  // TODO(brandtr): Why is this check placed in the middle of this function?
-  // Should it be moved to the top?
-  if (max_frame_size < DataSize::Bytes(1)) {
-    return;
-  }
   double observation_noise_stddev =
       (300.0 * exp(-fabs(frame_size_variation_bytes) /
                    (1e0 * max_frame_size.bytes())) +
