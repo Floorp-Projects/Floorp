@@ -251,9 +251,6 @@ TEST_P(RtcEventLogEncoderTest, RtcEventRouteChange) {
 }
 
 TEST_P(RtcEventLogEncoderTest, RtcEventRemoteEstimate) {
-  if (encoding_type_ == RtcEventLog::EncodingType::Legacy) {
-    return;
-  }
   std::vector<std::unique_ptr<RtcEventRemoteEstimate>> events(event_count_);
   for (size_t i = 0; i < event_count_; ++i) {
     events[i] = (i == 0 || !force_repeated_fields_)

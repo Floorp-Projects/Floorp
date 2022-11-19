@@ -1770,6 +1770,12 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::StoreParsedLegacyEvent(
       ice_candidate_pair_events_.push_back(status_or_value.value());
       break;
     }
+    case rtclog::Event::REMOTE_ESTIMATE: {
+      auto status_or_value = GetRemoteEstimateEvent(event);
+      RTC_RETURN_IF_ERROR(status_or_value.status());
+      remote_estimate_events_.push_back(status_or_value.value());
+      break;
+    }
     case rtclog::Event::UNKNOWN_EVENT: {
       break;
     }
@@ -2144,7 +2150,7 @@ ParsedRtcEventLog::GetIceCandidatePairConfig(
   LoggedIceCandidatePairConfig res;
   const rtclog::IceCandidatePairConfig& config =
       rtc_event.ice_candidate_pair_config();
-  RTC_CHECK(rtc_event.has_timestamp_us());
+  RTC_PARSE_CHECK_OR_RETURN(rtc_event.has_timestamp_us());
   res.timestamp = Timestamp::Micros(rtc_event.timestamp_us());
   RTC_PARSE_CHECK_OR_RETURN(config.has_config_type());
   res.type = GetRuntimeIceCandidatePairConfigType(config.config_type());
@@ -2183,7 +2189,7 @@ ParsedRtcEventLog::GetIceCandidatePairEvent(
   LoggedIceCandidatePairEvent res;
   const rtclog::IceCandidatePairEvent& event =
       rtc_event.ice_candidate_pair_event();
-  RTC_CHECK(rtc_event.has_timestamp_us());
+  RTC_PARSE_CHECK_OR_RETURN(rtc_event.has_timestamp_us());
   res.timestamp = Timestamp::Micros(rtc_event.timestamp_us());
   RTC_PARSE_CHECK_OR_RETURN(event.has_event_type());
   res.type = GetRuntimeIceCandidatePairEventType(event.event_type());
@@ -2191,6 +2197,23 @@ ParsedRtcEventLog::GetIceCandidatePairEvent(
   res.candidate_pair_id = event.candidate_pair_id();
   // transaction_id is not supported by rtclog::Event
   res.transaction_id = 0;
+  return res;
+}
+
+ParsedRtcEventLog::ParseStatusOr<LoggedRemoteEstimateEvent>
+ParsedRtcEventLog::GetRemoteEstimateEvent(const rtclog::Event& event) const {
+  RTC_PARSE_CHECK_OR_RETURN(event.has_type());
+  RTC_PARSE_CHECK_OR_RETURN_EQ(event.type(), rtclog::Event::REMOTE_ESTIMATE);
+  LoggedRemoteEstimateEvent res;
+  const rtclog::RemoteEstimate& remote_estimate_event = event.remote_estimate();
+  RTC_PARSE_CHECK_OR_RETURN(event.has_timestamp_us());
+  res.timestamp = Timestamp::Micros(event.timestamp_us());
+  if (remote_estimate_event.has_link_capacity_lower_kbps())
+    res.link_capacity_lower = DataRate::KilobitsPerSec(
+        remote_estimate_event.link_capacity_lower_kbps());
+  if (remote_estimate_event.has_link_capacity_upper_kbps())
+    res.link_capacity_upper = DataRate::KilobitsPerSec(
+        remote_estimate_event.link_capacity_upper_kbps());
   return res;
 }
 

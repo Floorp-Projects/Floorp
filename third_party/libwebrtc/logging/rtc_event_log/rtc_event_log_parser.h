@@ -725,6 +725,9 @@ class ParsedRtcEventLog {
   ParsedRtcEventLog::ParseStatusOr<LoggedIceCandidatePairEvent>
   GetIceCandidatePairEvent(const rtclog::Event& event) const;
 
+  ParsedRtcEventLog::ParseStatusOr<LoggedRemoteEstimateEvent>
+  GetRemoteEstimateEvent(const rtclog::Event& event) const;
+
   // Parsing functions for new format.
   ParseStatus StoreAlrStateEvent(const rtclog2::AlrState& proto);
   ParseStatus StoreAudioNetworkAdaptationEvent(
