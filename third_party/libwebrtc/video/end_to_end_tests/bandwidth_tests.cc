@@ -46,7 +46,7 @@ class BandwidthEndToEndTest : public test::CallTest {
 TEST_F(BandwidthEndToEndTest, ReceiveStreamSendsRemb) {
   class RembObserver : public test::EndToEndTest {
    public:
-    RembObserver() : EndToEndTest(kDefaultTimeoutMs) {}
+    RembObserver() : EndToEndTest(kDefaultTimeout) {}
 
     void ModifyVideoConfigs(
         VideoSendStream::Config* send_config,
@@ -85,7 +85,7 @@ TEST_F(BandwidthEndToEndTest, ReceiveStreamSendsRemb) {
 class BandwidthStatsTest : public test::EndToEndTest {
  public:
   BandwidthStatsTest(bool send_side_bwe, TaskQueueBase* task_queue)
-      : EndToEndTest(test::CallTest::kDefaultTimeoutMs),
+      : EndToEndTest(test::CallTest::kDefaultTimeout),
         sender_call_(nullptr),
         receiver_call_(nullptr),
         has_seen_pacer_delay_(false),
@@ -194,7 +194,7 @@ TEST_F(BandwidthEndToEndTest, RembWithSendSideBwe) {
   class BweObserver : public test::EndToEndTest {
    public:
     explicit BweObserver(TaskQueueBase* task_queue)
-        : EndToEndTest(kDefaultTimeoutMs),
+        : EndToEndTest(kDefaultTimeout),
           sender_call_(nullptr),
           clock_(Clock::GetRealTimeClock()),
           sender_ssrc_(0),
@@ -320,7 +320,7 @@ TEST_F(BandwidthEndToEndTest, ReportsSetEncoderRates) {
                                public test::FakeEncoder {
    public:
     explicit EncoderRateStatsTest(TaskQueueBase* task_queue)
-        : EndToEndTest(kDefaultTimeoutMs),
+        : EndToEndTest(kDefaultTimeout),
           FakeEncoder(Clock::GetRealTimeClock()),
           task_queue_(task_queue),
           send_stream_(nullptr),
@@ -368,7 +368,7 @@ TEST_F(BandwidthEndToEndTest, ReportsSetEncoderRates) {
     }
 
     void WaitForEncoderTargetBitrateMatchStats() {
-      for (int i = 0; i < kDefaultTimeoutMs; ++i) {
+      for (int i = 0; i < kDefaultTimeout.ms(); ++i) {
         VideoSendStream::Stats stats = send_stream_->GetStats();
         {
           MutexLock lock(&mutex_);
@@ -384,7 +384,7 @@ TEST_F(BandwidthEndToEndTest, ReportsSetEncoderRates) {
     }
 
     void WaitForStatsReportZeroTargetBitrate() {
-      for (int i = 0; i < kDefaultTimeoutMs; ++i) {
+      for (int i = 0; i < kDefaultTimeout.ms(); ++i) {
         if (send_stream_->GetStats().target_media_bitrate_bps == 0) {
           return;
         }

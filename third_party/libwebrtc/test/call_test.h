@@ -21,6 +21,7 @@
 #include "api/task_queue/task_queue_factory.h"
 #include "api/test/video/function_video_decoder_factory.h"
 #include "api/test/video/function_video_encoder_factory.h"
+#include "api/units/time_delta.h"
 #include "api/video/video_bitrate_allocator_factory.h"
 #include "call/call.h"
 #include "modules/audio_device/include/test_audio_device.h"
@@ -48,8 +49,8 @@ class CallTest : public ::testing::Test, public RtpPacketSinkInterface {
   static const int kDefaultWidth = 320;
   static const int kDefaultHeight = 180;
   static const int kDefaultFramerate = 30;
-  static const int kDefaultTimeoutMs;
-  static const int kLongTimeoutMs;
+  static constexpr TimeDelta kDefaultTimeout = TimeDelta::Seconds(30);
+  static constexpr TimeDelta kLongTimeout = TimeDelta::Seconds(120);
   enum classPayloadTypes : uint8_t {
     kSendRtxPayloadType = 98,
     kRtxRedPayloadType = 99,
@@ -246,7 +247,7 @@ class CallTest : public ::testing::Test, public RtpPacketSinkInterface {
 class BaseTest : public RtpRtcpObserver {
  public:
   BaseTest();
-  explicit BaseTest(int timeout_ms);
+  explicit BaseTest(TimeDelta timeout);
   virtual ~BaseTest();
 
   virtual void PerformTest() = 0;
@@ -307,7 +308,7 @@ class BaseTest : public RtpRtcpObserver {
 
 class SendTest : public BaseTest {
  public:
-  explicit SendTest(int timeout_ms);
+  explicit SendTest(TimeDelta timeout);
 
   bool ShouldCreateReceivers() const override;
 };
@@ -315,7 +316,7 @@ class SendTest : public BaseTest {
 class EndToEndTest : public BaseTest {
  public:
   EndToEndTest();
-  explicit EndToEndTest(int timeout_ms);
+  explicit EndToEndTest(TimeDelta timeout);
 
   bool ShouldCreateReceivers() const override;
 };

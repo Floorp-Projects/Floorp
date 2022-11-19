@@ -40,7 +40,7 @@ void RtpRtcpEndToEndTest::RespectsRtcpMode(RtcpMode rtcp_mode) {
   class RtcpModeObserver : public test::EndToEndTest {
    public:
     explicit RtcpModeObserver(RtcpMode rtcp_mode)
-        : EndToEndTest(kDefaultTimeoutMs),
+        : EndToEndTest(kDefaultTimeout),
           rtcp_mode_(rtcp_mode),
           sent_rtp_(0),
           sent_rtcp_(0) {}
@@ -167,7 +167,7 @@ void RtpRtcpEndToEndTest::TestRtpStatePreservation(
   class RtpSequenceObserver : public test::RtpRtcpObserver {
    public:
     explicit RtpSequenceObserver(bool use_rtx)
-        : test::RtpRtcpObserver(kDefaultTimeoutMs),
+        : test::RtpRtcpObserver(kDefaultTimeout),
           ssrcs_to_observe_(kNumSimulcastStreams) {
       for (size_t i = 0; i < kNumSimulcastStreams; ++i) {
         ssrc_is_rtx_[kVideoSendSsrcs[i]] = false;
@@ -187,7 +187,7 @@ void RtpRtcpEndToEndTest::TestRtpStatePreservation(
                               uint32_t timestamp,
                               bool only_padding)
         RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
-      static const int32_t kMaxTimestampGap = kDefaultTimeoutMs * 90;
+      static const int32_t kMaxTimestampGap = kDefaultTimeout.ms() * 90;
       auto timestamp_it = last_observed_timestamp_.find(ssrc);
       if (timestamp_it == last_observed_timestamp_.end()) {
         EXPECT_FALSE(only_padding);
@@ -409,7 +409,7 @@ TEST_F(RtpRtcpEndToEndTest, DISABLED_TestFlexfecRtpStatePreservation) {
   class RtpSequenceObserver : public test::RtpRtcpObserver {
    public:
     RtpSequenceObserver()
-        : test::RtpRtcpObserver(kDefaultTimeoutMs),
+        : test::RtpRtcpObserver(kDefaultTimeout),
           num_flexfec_packets_sent_(0) {}
 
     void ResetPacketCount() {

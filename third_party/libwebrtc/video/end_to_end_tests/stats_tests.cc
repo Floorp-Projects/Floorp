@@ -51,7 +51,7 @@ TEST_F(StatsEndToEndTest, GetStats) {
   class StatsObserver : public test::EndToEndTest {
    public:
     StatsObserver()
-        : EndToEndTest(kLongTimeoutMs), encoder_factory_([]() {
+        : EndToEndTest(kLongTimeout), encoder_factory_([]() {
             return std::make_unique<test::DelayedEncoder>(
                 Clock::GetRealTimeClock(), 10);
           }) {}
@@ -292,7 +292,7 @@ TEST_F(StatsEndToEndTest, GetStats) {
     void PerformTest() override {
       Clock* clock = Clock::GetRealTimeClock();
       int64_t now_ms = clock->TimeInMilliseconds();
-      int64_t stop_time_ms = now_ms + test::CallTest::kLongTimeoutMs;
+      int64_t stop_time_ms = now_ms + test::CallTest::kLongTimeout.ms();
       bool receive_ok = false;
       bool send_ok = false;
 
@@ -347,7 +347,7 @@ TEST_F(StatsEndToEndTest, TimingFramesAreReported) {
 
   class StatsObserver : public test::EndToEndTest {
    public:
-    StatsObserver() : EndToEndTest(kLongTimeoutMs) {}
+    StatsObserver() : EndToEndTest(kLongTimeout) {}
 
    private:
     void ModifyVideoConfigs(
@@ -400,7 +400,7 @@ TEST_F(StatsEndToEndTest, TestReceivedRtpPacketStats) {
   class ReceivedRtpStatsObserver : public test::EndToEndTest {
    public:
     explicit ReceivedRtpStatsObserver(TaskQueueBase* task_queue)
-        : EndToEndTest(kDefaultTimeoutMs), task_queue_(task_queue) {}
+        : EndToEndTest(kDefaultTimeout), task_queue_(task_queue) {}
 
    private:
     void OnVideoStreamsCreated(VideoSendStream* send_stream,
@@ -452,7 +452,7 @@ TEST_F(StatsEndToEndTest, MAYBE_ContentTypeSwitches) {
   class StatsObserver : public test::BaseTest,
                         public rtc::VideoSinkInterface<VideoFrame> {
    public:
-    StatsObserver() : BaseTest(kLongTimeoutMs), num_frames_received_(0) {}
+    StatsObserver() : BaseTest(kLongTimeout), num_frames_received_(0) {}
 
     bool ShouldCreateReceivers() const override { return true; }
 
@@ -583,7 +583,7 @@ TEST_F(StatsEndToEndTest, VerifyNackStats) {
   class NackObserver : public test::EndToEndTest {
    public:
     explicit NackObserver(TaskQueueBase* task_queue)
-        : EndToEndTest(kLongTimeoutMs), task_queue_(task_queue) {}
+        : EndToEndTest(kLongTimeout), task_queue_(task_queue) {}
 
    private:
     Action OnSendRtp(const uint8_t* packet, size_t length) override {
@@ -731,7 +731,8 @@ TEST_F(StatsEndToEndTest, CallReportsRttForSender) {
     Call::Stats stats;
     SendTask(task_queue(),
              [this, &stats]() { stats = sender_call_->GetStats(); });
-    ASSERT_GE(start_time_ms + kDefaultTimeoutMs, clock_->TimeInMilliseconds())
+    ASSERT_GE(start_time_ms + kDefaultTimeout.ms(),
+              clock_->TimeInMilliseconds())
         << "No RTT stats before timeout!";
     if (stats.rtt_ms != -1) {
       // To avoid failures caused by rounding or minor ntp clock adjustments,

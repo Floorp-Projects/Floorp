@@ -81,7 +81,7 @@ class LogObserver {
       }
     }
 
-    bool Wait() { return done_.Wait(test::CallTest::kDefaultTimeoutMs); }
+    bool Wait() { return done_.Wait(test::CallTest::kDefaultTimeout.ms()); }
 
     void PushExpectedLogLine(absl::string_view expected_log_line) {
       MutexLock lock(&mutex_);

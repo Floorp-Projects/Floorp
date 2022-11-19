@@ -29,7 +29,7 @@ constexpr int kSampleRate = 48000;
 }  // namespace
 
 AudioEndToEndTest::AudioEndToEndTest()
-    : EndToEndTest(CallTest::kDefaultTimeoutMs) {}
+    : EndToEndTest(CallTest::kDefaultTimeout) {}
 
 BuiltInNetworkBehaviorConfig AudioEndToEndTest::GetNetworkPipeConfig() const {
   return BuiltInNetworkBehaviorConfig();

@@ -43,7 +43,7 @@ const size_t kNumTemporalLayers[] = {1, 2, 3};
 class PictureIdObserver : public test::RtpRtcpObserver {
  public:
   explicit PictureIdObserver(VideoCodecType codec_type)
-      : test::RtpRtcpObserver(test::CallTest::kDefaultTimeoutMs),
+      : test::RtpRtcpObserver(test::CallTest::kDefaultTimeout),
         depacketizer_(CreateVideoRtpDepacketizer(codec_type)),
         max_expected_picture_id_gap_(0),
         max_expected_tl0_idx_gap_(0),

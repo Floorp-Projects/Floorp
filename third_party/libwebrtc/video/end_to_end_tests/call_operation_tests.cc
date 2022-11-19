@@ -88,7 +88,7 @@ TEST_F(CallOperationEndToEndTest, RendersSingleDelayedFrame) {
       event_.Set();
     }
 
-    bool Wait() { return event_.Wait(kDefaultTimeoutMs); }
+    bool Wait() { return event_.Wait(kDefaultTimeout.ms()); }
 
     rtc::Event event_;
   } renderer;
@@ -159,7 +159,7 @@ TEST_F(CallOperationEndToEndTest, TransmitsFirstFrame) {
    public:
     void OnFrame(const VideoFrame& video_frame) override { event_.Set(); }
 
-    bool Wait() { return event_.Wait(kDefaultTimeoutMs); }
+    bool Wait() { return event_.Wait(kDefaultTimeout.ms()); }
 
     rtc::Event event_;
   } renderer;

@@ -29,7 +29,7 @@ class DecryptedFrameObserver : public test::EndToEndTest,
                                public rtc::VideoSinkInterface<VideoFrame> {
  public:
   DecryptedFrameObserver()
-      : EndToEndTest(test::CallTest::kDefaultTimeoutMs),
+      : EndToEndTest(test::CallTest::kDefaultTimeout),
         encoder_factory_([] { return VP8Encoder::Create(); }) {}
 
  private:

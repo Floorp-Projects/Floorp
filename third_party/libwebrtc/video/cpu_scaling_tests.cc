@@ -55,7 +55,7 @@ void CpuOveruseTest::RunTestAndCheckForAdaptation(
    public:
     OveruseObserver(const DegradationPreference& degradation_preference,
                     bool expect_adaptation)
-        : SendTest(expect_adaptation ? kLongTimeoutMs : kDefaultTimeoutMs),
+        : SendTest(expect_adaptation ? kLongTimeout : kDefaultTimeout),
           degradation_preference_(degradation_preference),
           expect_adaptation_(expect_adaptation) {}
 

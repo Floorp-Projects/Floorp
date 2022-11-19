@@ -182,7 +182,7 @@ TEST_F(VideoSendStreamTest, SupportsCName) {
   static std::string kCName = "PjQatC14dGfbVwGPUOA9IH7RlsFDbWl4AhXEiDsBizo=";
   class CNameObserver : public test::SendTest {
    public:
-    CNameObserver() : SendTest(kDefaultTimeoutMs) {}
+    CNameObserver() : SendTest(kDefaultTimeout) {}
 
    private:
     Action OnSendRtcp(const uint8_t* packet, size_t length) override {
@@ -216,7 +216,7 @@ TEST_F(VideoSendStreamTest, SupportsCName) {
 TEST_F(VideoSendStreamTest, SupportsAbsoluteSendTime) {
   class AbsoluteSendTimeObserver : public test::SendTest {
    public:
-    AbsoluteSendTimeObserver() : SendTest(kDefaultTimeoutMs) {
+    AbsoluteSendTimeObserver() : SendTest(kDefaultTimeout) {
       extensions_.Register<AbsoluteSendTime>(kAbsSendTimeExtensionId);
     }
 
@@ -267,7 +267,7 @@ TEST_F(VideoSendStreamTest, SupportsTransmissionTimeOffset) {
   class TransmissionTimeOffsetObserver : public test::SendTest {
    public:
     TransmissionTimeOffsetObserver()
-        : SendTest(kDefaultTimeoutMs), encoder_factory_([]() {
+        : SendTest(kDefaultTimeout), encoder_factory_([]() {
             return std::make_unique<test::DelayedEncoder>(
                 Clock::GetRealTimeClock(), kEncodeDelayMs);
           }) {
@@ -314,7 +314,7 @@ TEST_F(VideoSendStreamTest, SupportsTransportWideSequenceNumbers) {
   class TransportWideSequenceNumberObserver : public test::SendTest {
    public:
     TransportWideSequenceNumberObserver()
-        : SendTest(kDefaultTimeoutMs), encoder_factory_([]() {
+        : SendTest(kDefaultTimeout), encoder_factory_([]() {
             return std::make_unique<test::FakeEncoder>(
                 Clock::GetRealTimeClock());
           }) {
@@ -356,7 +356,7 @@ TEST_F(VideoSendStreamTest, SupportsTransportWideSequenceNumbers) {
 TEST_F(VideoSendStreamTest, SupportsVideoRotation) {
   class VideoRotationObserver : public test::SendTest {
    public:
-    VideoRotationObserver() : SendTest(kDefaultTimeoutMs) {
+    VideoRotationObserver() : SendTest(kDefaultTimeout) {
       extensions_.Register<VideoOrientation>(kVideoRotationExtensionId);
     }
 
@@ -400,7 +400,7 @@ TEST_F(VideoSendStreamTest, SupportsVideoContentType) {
   class VideoContentTypeObserver : public test::SendTest {
    public:
     VideoContentTypeObserver()
-        : SendTest(kDefaultTimeoutMs), first_frame_sent_(false) {
+        : SendTest(kDefaultTimeout), first_frame_sent_(false) {
       extensions_.Register<VideoContentTypeExtension>(
           kVideoContentTypeExtensionId);
     }
@@ -446,7 +446,7 @@ TEST_F(VideoSendStreamTest, SupportsVideoTimingFrames) {
   class VideoTimingObserver : public test::SendTest {
    public:
     VideoTimingObserver()
-        : SendTest(kDefaultTimeoutMs), first_frame_sent_(false) {
+        : SendTest(kDefaultTimeout), first_frame_sent_(false) {
       extensions_.Register<VideoTimingExtension>(kVideoTimingExtensionId);
     }
 
@@ -510,7 +510,7 @@ class UlpfecObserver : public test::EndToEndTest {
  public:
   // Some of the test cases are expected to time out.
   // Use a shorter timeout window than the default one for those.
-  static constexpr int kReducedTimeoutMs = 10000;
+  static constexpr TimeDelta kReducedTimeout = TimeDelta::Seconds(10);
 
   UlpfecObserver(bool header_extensions_enabled,
                  bool use_nack,
@@ -518,8 +518,8 @@ class UlpfecObserver : public test::EndToEndTest {
                  bool expect_ulpfec,
                  const std::string& codec,
                  VideoEncoderFactory* encoder_factory)
-      : EndToEndTest(expect_ulpfec ? VideoSendStreamTest::kDefaultTimeoutMs
-                                   : kReducedTimeoutMs),
+      : EndToEndTest(expect_ulpfec ? VideoSendStreamTest::kDefaultTimeout
+                                   : kReducedTimeout),
         encoder_factory_(encoder_factory),
         payload_name_(codec),
         use_nack_(use_nack),
@@ -750,7 +750,7 @@ class FlexfecObserver : public test::EndToEndTest {
                   const std::string& codec,
                   VideoEncoderFactory* encoder_factory,
                   size_t num_video_streams)
-      : EndToEndTest(VideoSendStreamTest::kDefaultTimeoutMs),
+      : EndToEndTest(VideoSendStreamTest::kDefaultTimeout),
         encoder_factory_(encoder_factory),
         payload_name_(codec),
         use_nack_(use_nack),
@@ -946,7 +946,7 @@ void VideoSendStreamTest::TestNackRetransmission(
    public:
     explicit NackObserver(uint32_t retransmit_ssrc,
                           uint8_t retransmit_payload_type)
-        : SendTest(kDefaultTimeoutMs),
+        : SendTest(kDefaultTimeout),
           send_count_(0),
           retransmit_count_(0),
           retransmit_ssrc_(retransmit_ssrc),
@@ -1085,7 +1085,7 @@ void VideoSendStreamTest::TestPacketFragmentationSize(VideoFormat format,
                            size_t stop_size,
                            bool test_generic_packetization,
                            bool use_fec)
-        : SendTest(kLongTimeoutMs),
+        : SendTest(kLongTimeout),
           encoder_(stop),
           encoder_factory_(&encoder_),
           max_packet_size_(max_packet_size),
@@ -1319,7 +1319,7 @@ TEST_F(VideoSendStreamTest, NoPaddingWhenVideoIsMuted) {
   class NoPaddingWhenVideoIsMuted : public test::SendTest {
    public:
     NoPaddingWhenVideoIsMuted()
-        : SendTest(kDefaultTimeoutMs),
+        : SendTest(kDefaultTimeout),
           clock_(Clock::GetRealTimeClock()),
           capturer_(nullptr) {}
 
@@ -1408,7 +1408,7 @@ TEST_F(VideoSendStreamTest, PaddingIsPrimarilyRetransmissions) {
   class PaddingIsPrimarilyRetransmissions : public test::EndToEndTest {
    public:
     PaddingIsPrimarilyRetransmissions()
-        : EndToEndTest(kDefaultTimeoutMs),
+        : EndToEndTest(kDefaultTimeout),
           clock_(Clock::GetRealTimeClock()),
           padding_length_(0),
           total_length_(0),
@@ -1491,7 +1491,7 @@ TEST_F(VideoSendStreamTest, MinTransmitBitrateRespectsRemb) {
   class BitrateObserver : public test::SendTest {
    public:
     explicit BitrateObserver(TaskQueueBase* task_queue)
-        : SendTest(kDefaultTimeoutMs),
+        : SendTest(kDefaultTimeout),
           task_queue_(task_queue),
           retranmission_rate_limiter_(Clock::GetRealTimeClock(), 1000),
           stream_(nullptr),
@@ -1582,7 +1582,7 @@ TEST_F(VideoSendStreamTest, ChangingNetworkRoute) {
   class ChangingNetworkRouteTest : public test::EndToEndTest {
    public:
     explicit ChangingNetworkRouteTest(TaskQueueBase* task_queue)
-        : EndToEndTest(test::CallTest::kDefaultTimeoutMs),
+        : EndToEndTest(test::CallTest::kDefaultTimeout),
           task_queue_(task_queue),
           call_(nullptr) {
       module_process_thread_.Detach();
@@ -1707,7 +1707,7 @@ TEST_F(VideoSendStreamTest, DISABLED_RelayToDirectRoute) {
   class RelayToDirectRouteTest : public test::EndToEndTest {
    public:
     explicit RelayToDirectRouteTest(TaskQueueBase* task_queue)
-        : EndToEndTest(test::CallTest::kDefaultTimeoutMs),
+        : EndToEndTest(test::CallTest::kDefaultTimeout),
           task_queue_(task_queue),
           call_(nullptr),
           packets_sent_(0),
@@ -1802,7 +1802,7 @@ TEST_F(VideoSendStreamTest, ChangingTransportOverhead) {
   class ChangingTransportOverheadTest : public test::EndToEndTest {
    public:
     explicit ChangingTransportOverheadTest(TaskQueueBase* task_queue)
-        : EndToEndTest(test::CallTest::kDefaultTimeoutMs),
+        : EndToEndTest(test::CallTest::kDefaultTimeout),
           task_queue_(task_queue),
           call_(nullptr),
           packets_sent_(0),
@@ -1878,7 +1878,7 @@ class MaxPaddingSetTest : public test::SendTest {
   MaxPaddingSetTest(bool test_switch_content_type,
                     T* stream_reset_fun,
                     TaskQueueBase* task_queue)
-      : SendTest(test::CallTest::kDefaultTimeoutMs),
+      : SendTest(test::CallTest::kDefaultTimeout),
         running_without_padding_(test_switch_content_type),
         stream_resetter_(stream_reset_fun),
         task_queue_(task_queue) {
@@ -2036,7 +2036,7 @@ TEST_F(VideoSendStreamTest,
         }
       }
       EXPECT_TRUE(
-          init_encode_called_.Wait(VideoSendStreamTest::kDefaultTimeoutMs));
+          init_encode_called_.Wait(VideoSendStreamTest::kDefaultTimeout.ms()));
       {
         MutexLock lock(&mutex_);
         EXPECT_EQ(width, last_initialized_frame_width_);
@@ -2123,7 +2123,7 @@ TEST_F(VideoSendStreamTest, CanReconfigureToUseStartBitrateAbovePreviousMax) {
 
     bool WaitForStartBitrate() {
       return start_bitrate_changed_.Wait(
-          VideoSendStreamTest::kDefaultTimeoutMs);
+          VideoSendStreamTest::kDefaultTimeout.ms());
     }
 
    private:
@@ -2201,7 +2201,7 @@ class StartStopBitrateObserver : public test::FakeEncoder {
   }
 
   bool WaitForEncoderInit() {
-    return encoder_init_.Wait(VideoSendStreamTest::kDefaultTimeoutMs);
+    return encoder_init_.Wait(VideoSendStreamTest::kDefaultTimeout.ms());
   }
 
   bool WaitBitrateChanged(WaitUntil until) {
@@ -2218,7 +2218,7 @@ class StartStopBitrateObserver : public test::FakeEncoder {
           (until == WaitUntil::kZero && *bitrate_kbps == 0)) {
         return true;
       }
-    } while (bitrate_changed_.Wait(VideoSendStreamTest::kDefaultTimeoutMs));
+    } while (bitrate_changed_.Wait(VideoSendStreamTest::kDefaultTimeout.ms()));
     return false;
   }
 
@@ -2233,7 +2233,7 @@ TEST_F(VideoSendStreamTest, EncoderIsProperlyInitializedAndDestroyed) {
   class EncoderStateObserver : public test::SendTest, public VideoEncoder {
    public:
     explicit EncoderStateObserver(TaskQueueBase* task_queue)
-        : SendTest(kDefaultTimeoutMs),
+        : SendTest(kDefaultTimeout),
           task_queue_(task_queue),
           stream_(nullptr),
           initialized_(false),
@@ -2364,7 +2364,7 @@ class VideoCodecConfigObserver : public test::SendTest,
  public:
   VideoCodecConfigObserver(VideoCodecType video_codec_type,
                            TaskQueueBase* task_queue)
-      : SendTest(VideoSendStreamTest::kDefaultTimeoutMs),
+      : SendTest(VideoSendStreamTest::kDefaultTimeout),
         FakeEncoder(Clock::GetRealTimeClock()),
         video_codec_type_(video_codec_type),
         stream_(nullptr),
@@ -2411,7 +2411,7 @@ class VideoCodecConfigObserver : public test::SendTest,
 
   void PerformTest() override {
     EXPECT_TRUE(
-        init_encode_event_.Wait(VideoSendStreamTest::kDefaultTimeoutMs));
+        init_encode_event_.Wait(VideoSendStreamTest::kDefaultTimeout.ms()));
     ASSERT_EQ(1, FakeEncoder::GetNumInitializations())
         << "VideoEncoder not initialized.";
 
@@ -2422,7 +2422,7 @@ class VideoCodecConfigObserver : public test::SendTest,
       stream_->ReconfigureVideoEncoder(std::move(encoder_config_));
     });
     ASSERT_TRUE(
-        init_encode_event_.Wait(VideoSendStreamTest::kDefaultTimeoutMs));
+        init_encode_event_.Wait(VideoSendStreamTest::kDefaultTimeout.ms()));
     EXPECT_EQ(2, FakeEncoder::GetNumInitializations())
         << "ReconfigureVideoEncoder did not reinitialize the encoder with "
            "new encoder settings.";
@@ -2567,7 +2567,7 @@ TEST_F(VideoSendStreamTest, RtcpSenderReportContainsMediaBytesSent) {
   class RtcpSenderReportTest : public test::SendTest {
    public:
     RtcpSenderReportTest()
-        : SendTest(kDefaultTimeoutMs),
+        : SendTest(kDefaultTimeout),
           rtp_packets_sent_(0),
           media_bytes_sent_(0) {}
 
@@ -2642,7 +2642,7 @@ TEST_F(VideoSendStreamTest, TranslatesTwoLayerScreencastToTargetBitrate) {
                                       public test::FakeEncoder {
    public:
     ScreencastTargetBitrateTest()
-        : SendTest(kDefaultTimeoutMs),
+        : SendTest(kDefaultTimeout),
           test::FakeEncoder(Clock::GetRealTimeClock()),
           encoder_factory_(this) {}
 
@@ -2702,7 +2702,7 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
                                           public test::FakeEncoder {
    public:
     explicit EncoderBitrateThresholdObserver(TaskQueueBase* task_queue)
-        : SendTest(kDefaultTimeoutMs),
+        : SendTest(kDefaultTimeout),
           FakeEncoder(Clock::GetRealTimeClock()),
           task_queue_(task_queue),
           target_bitrate_(0),
@@ -2785,7 +2785,7 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
           return;
         }
       } while (bitrate_changed_event_.Wait(
-          std::max(int64_t{1}, VideoSendStreamTest::kDefaultTimeoutMs -
+          std::max(int64_t{1}, VideoSendStreamTest::kDefaultTimeout.ms() -
                                    (rtc::TimeMillis() - start_time))));
       MutexLock lock(&mutex_);
       EXPECT_EQ(target_bitrate_, expected_bitrate)
@@ -2826,10 +2826,10 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
 
     void PerformTest() override {
       ASSERT_TRUE(create_rate_allocator_event_.Wait(
-          VideoSendStreamTest::kDefaultTimeoutMs))
+          VideoSendStreamTest::kDefaultTimeout.ms()))
           << "Timed out while waiting for rate allocator to be created.";
       ASSERT_TRUE(
-          init_encode_event_.Wait(VideoSendStreamTest::kDefaultTimeoutMs))
+          init_encode_event_.Wait(VideoSendStreamTest::kDefaultTimeout.ms()))
           << "Timed out while waiting for encoder to be configured.";
       WaitForSetRates(kStartBitrateKbps);
       BitrateConstraints bitrate_config;
@@ -2846,7 +2846,7 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
         send_stream_->ReconfigureVideoEncoder(encoder_config_.Copy());
       });
       ASSERT_TRUE(create_rate_allocator_event_.Wait(
-          VideoSendStreamTest::kDefaultTimeoutMs));
+          VideoSendStreamTest::kDefaultTimeout.ms()));
       EXPECT_EQ(2, num_rate_allocator_creations_)
           << "Rate allocator should have been recreated.";
 
@@ -2858,7 +2858,7 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
         send_stream_->ReconfigureVideoEncoder(encoder_config_.Copy());
       });
       ASSERT_TRUE(create_rate_allocator_event_.Wait(
-          VideoSendStreamTest::kDefaultTimeoutMs));
+          VideoSendStreamTest::kDefaultTimeout.ms()));
       EXPECT_EQ(3, num_rate_allocator_creations_)
           << "Rate allocator should have been recreated.";
 
@@ -2898,7 +2898,7 @@ TEST_F(VideoSendStreamTest, ReportsSentResolution) {
                                       public test::FakeEncoder {
    public:
     explicit ScreencastTargetBitrateTest(TaskQueueBase* task_queue)
-        : SendTest(kDefaultTimeoutMs),
+        : SendTest(kDefaultTimeout),
           test::FakeEncoder(Clock::GetRealTimeClock()),
           send_stream_(nullptr),
           encoder_factory_(this),
@@ -2983,7 +2983,7 @@ TEST_F(VideoSendStreamTest, ReportsSentResolution) {
 class Vp9HeaderObserver : public test::SendTest {
  public:
   explicit Vp9HeaderObserver(const Vp9TestParams& params)
-      : SendTest(VideoSendStreamTest::kLongTimeoutMs),
+      : SendTest(VideoSendStreamTest::kLongTimeout),
         encoder_factory_([]() { return VP9Encoder::Create(); }),
         params_(params),
         vp9_settings_(VideoEncoder::GetDefaultVp9Settings()) {}
@@ -3643,7 +3643,7 @@ TEST_F(VideoSendStreamTest, EncoderConfigMaxFramerateReportedToSource) {
   class FpsObserver : public test::SendTest,
                       public test::FrameGeneratorCapturer::SinkWantsObserver {
    public:
-    FpsObserver() : SendTest(kDefaultTimeoutMs) {}
+    FpsObserver() : SendTest(kDefaultTimeout) {}
 
     void OnFrameGeneratorCapturerCreated(
         test::FrameGeneratorCapturer* frame_generator_capturer) override {
@@ -3681,7 +3681,7 @@ TEST_F(VideoSendStreamTest, RemoveOverheadFromBandwidth) {
                                           public test::FakeEncoder {
    public:
     explicit RemoveOverheadFromBandwidthTest(TaskQueueBase* task_queue)
-        : EndToEndTest(test::CallTest::kDefaultTimeoutMs),
+        : EndToEndTest(test::CallTest::kDefaultTimeout),
           FakeEncoder(Clock::GetRealTimeClock()),
           task_queue_(task_queue),
           encoder_factory_(this),
@@ -3736,8 +3736,8 @@ TEST_F(VideoSendStreamTest, RemoveOverheadFromBandwidth) {
       // At a bitrate of 60kbps with a packet size of 1200B video and an
       // overhead of 40B per packet video produces 2240bps overhead.
       // So the encoder BW should be set to 57760bps.
-      EXPECT_TRUE(
-          bitrate_changed_event_.Wait(VideoSendStreamTest::kDefaultTimeoutMs));
+      EXPECT_TRUE(bitrate_changed_event_.Wait(
+          VideoSendStreamTest::kDefaultTimeout.ms()));
       {
         MutexLock lock(&mutex_);
         EXPECT_LE(max_bitrate_bps_, 57760u);
@@ -3760,7 +3760,7 @@ class PacingFactorObserver : public test::SendTest {
  public:
   PacingFactorObserver(bool configure_send_side,
                        absl::optional<float> expected_pacing_factor)
-      : test::SendTest(VideoSendStreamTest::kDefaultTimeoutMs),
+      : test::SendTest(VideoSendStreamTest::kDefaultTimeout),
         configure_send_side_(configure_send_side),
         expected_pacing_factor_(expected_pacing_factor) {}
 
@@ -3856,7 +3856,7 @@ class ContentSwitchTest : public test::SendTest {
   static const uint32_t kMinPacketsToSend = 50;
 
   explicit ContentSwitchTest(T* stream_reset_fun, TaskQueueBase* task_queue)
-      : SendTest(test::CallTest::kDefaultTimeoutMs),
+      : SendTest(test::CallTest::kDefaultTimeout),
         call_(nullptr),
         state_(StreamState::kBeforeSwitch),
         send_stream_(nullptr),
@@ -3953,7 +3953,7 @@ class ContentSwitchTest : public test::SendTest {
   void PerformTest() override {
     while (GetStreamState() != StreamState::kAfterSwitchBack) {
       ASSERT_TRUE(
-          content_switch_event_.Wait(test::CallTest::kDefaultTimeoutMs));
+          content_switch_event_.Wait(test::CallTest::kDefaultTimeout.ms()));
       (*stream_resetter_)(send_stream_config_, encoder_config_, this);
     }
 
@@ -4017,7 +4017,7 @@ void VideoSendStreamTest::TestTemporalLayers(
                           const std::string& payload_name,
                           const std::vector<int>& num_temporal_layers,
                           const std::vector<ScalabilityMode>& scalability_mode)
-        : EndToEndTest(kDefaultTimeoutMs),
+        : EndToEndTest(kDefaultTimeout),
           encoder_factory_(encoder_factory),
           payload_name_(payload_name),
           num_temporal_layers_(num_temporal_layers),

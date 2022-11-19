@@ -44,7 +44,7 @@ void HistogramTest::VerifyHistogramStats(bool use_rtx,
                         public rtc::VideoSinkInterface<VideoFrame> {
    public:
     FrameObserver(bool use_rtx, bool use_fec, bool screenshare)
-        : EndToEndTest(kLongTimeoutMs),
+        : EndToEndTest(kLongTimeout),
           use_rtx_(use_rtx),
           use_fec_(use_fec),
           screenshare_(screenshare),

@@ -168,7 +168,7 @@ TEST_F(NetworkStateEndToEndTest, RespectsNetworkState) {
   class NetworkStateTest : public test::EndToEndTest, public test::FakeEncoder {
    public:
     explicit NetworkStateTest(TaskQueueBase* task_queue)
-        : EndToEndTest(kDefaultTimeoutMs),
+        : EndToEndTest(kDefaultTimeout),
           FakeEncoder(Clock::GetRealTimeClock()),
           e2e_test_task_queue_(task_queue),
           task_queue_(CreateDefaultTaskQueueFactory()->CreateTaskQueue(
@@ -235,7 +235,7 @@ TEST_F(NetworkStateEndToEndTest, RespectsNetworkState) {
     }
 
     void PerformTest() override {
-      EXPECT_TRUE(encoded_frames_.Wait(kDefaultTimeoutMs))
+      EXPECT_TRUE(encoded_frames_.Wait(kDefaultTimeout.ms()))
           << "No frames received by the encoder.";
 
       SendTask(task_queue_.get(), [this]() {
