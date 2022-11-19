@@ -1589,21 +1589,21 @@ inline bool OpIter<Policy>::readDelegate(uint32_t* relativeDepth,
                                          ValueVector* tryResults) {
   MOZ_ASSERT(Classify(op_) == OpKind::Delegate);
 
-  uint32_t originalDepth;
-  if (!readVarU32(&originalDepth)) {
-    return fail("unable to read delegate depth");
-  }
-
   Control& block = controlStack_.back();
   if (block.kind() != LabelKind::Try) {
     return fail("delegate can only be used within a try");
   }
 
+  uint32_t delegateDepth;
+  if (!readVarU32(&delegateDepth)) {
+    return fail("unable to read delegate depth");
+  }
+
   // Depths for delegate start counting in the surrounding block.
-  *relativeDepth = originalDepth + 1;
-  if (*relativeDepth >= controlStack_.length()) {
+  if (delegateDepth >= controlStack_.length() - 1) {
     return fail("delegate depth exceeds current nesting level");
   }
+  *relativeDepth = delegateDepth + 1;
 
   // Because `delegate` acts like `end` and ends the block, we will check
   // the stack here.
