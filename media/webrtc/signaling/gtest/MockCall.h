@@ -193,9 +193,8 @@ class MockVideoReceiveStream : public webrtc::VideoReceiveStreamInterface {
 
   void SetNackHistory(webrtc::TimeDelta history) override {}
 
-  void SetUlpfecPayloadType(int ulpfec_payload_type) override {}
-
-  void SetRedPayloadType(int red_payload_type) override {}
+  void SetProtectionPayloadTypes(int red_payload_type,
+                                 int ulpfec_payload_type) override {}
 
   void SetRtcpXr(Config::Rtp::RtcpXr rtcp_xr) override {}
 
