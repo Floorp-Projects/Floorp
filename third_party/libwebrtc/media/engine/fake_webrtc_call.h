@@ -23,6 +23,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/strings/string_view.h"
@@ -295,6 +296,10 @@ class FakeVideoReceiveStream final
 
   void SetNackHistory(webrtc::TimeDelta history) override {
     config_.rtp.nack.rtp_history_ms = history.ms();
+  }
+
+  void SetUlpfecPayloadType(int ulpfec_payload_type) override {
+    config_.rtp.ulpfec_payload_type = ulpfec_payload_type;
   }
 
   void Start() override;

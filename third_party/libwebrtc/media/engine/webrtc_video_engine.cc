@@ -2972,13 +2972,13 @@ bool WebRtcVideoChannel::WebRtcVideoReceiveStream::ReconfigureCodecs(
   ExtractCodecInformation(recv_codecs, rtx_associated_payload_types,
                           raw_payload_types, decoders);
 
-  bool recreate_needed = false;
-
   const auto& codec = recv_codecs.front();
   if (config_.rtp.ulpfec_payload_type != codec.ulpfec.ulpfec_payload_type) {
     config_.rtp.ulpfec_payload_type = codec.ulpfec.ulpfec_payload_type;
-    recreate_needed = true;
+    stream_->SetUlpfecPayloadType(config_.rtp.ulpfec_payload_type);
   }
+
+  bool recreate_needed = false;
 
   if (config_.rtp.red_payload_type != codec.ulpfec.red_payload_type) {
     config_.rtp.red_payload_type = codec.ulpfec.red_payload_type;

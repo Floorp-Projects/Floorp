@@ -127,22 +127,25 @@ std::unique_ptr<NackRequester> MaybeConstructNackModule(
 }
 
 std::unique_ptr<UlpfecReceiver> MaybeConstructUlpfecReceiver(
-    const VideoReceiveStreamInterface::Config::Rtp& rtp,
+    uint32_t remote_ssrc,
+    int red_payload_type,
+    int ulpfec_payload_type,
+    rtc::ArrayView<const RtpExtension> extensions,
     RecoveredPacketReceiver* callback,
     Clock* clock) {
-  RTC_DCHECK_GE(rtp.ulpfec_payload_type, -1);
-  if (rtp.red_payload_type == -1)
+  RTC_DCHECK_GE(red_payload_type, -1);
+  RTC_DCHECK_GE(ulpfec_payload_type, -1);
+  if (red_payload_type == -1)
     return nullptr;
 
   // TODO(tommi, brandtr): Consider including this check too once
   // `UlpfecReceiver` has been updated to not consider both red and ulpfec
   // payload ids.
-  //  if (rtp.ulpfec_payload_type == -1)
+  //  if (ulpfec_payload_type == -1)
   //    return nullptr;
 
-  return std::make_unique<UlpfecReceiver>(rtp.remote_ssrc,
-                                          rtp.ulpfec_payload_type, callback,
-                                          rtp.extensions, clock);
+  return std::make_unique<UlpfecReceiver>(remote_ssrc, ulpfec_payload_type,
+                                          callback, extensions, clock);
 }
 
 static const int kPacketLogIntervalMs = 10000;
@@ -260,7 +263,13 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
       forced_playout_delay_max_ms_("max_ms", absl::nullopt),
       forced_playout_delay_min_ms_("min_ms", absl::nullopt),
       rtp_receive_statistics_(rtp_receive_statistics),
-      ulpfec_receiver_(MaybeConstructUlpfecReceiver(config->rtp, this, clock)),
+      ulpfec_receiver_(
+          MaybeConstructUlpfecReceiver(config->rtp.remote_ssrc,
+                                       config->rtp.red_payload_type,
+                                       config->rtp.ulpfec_payload_type,
+                                       config->rtp.extensions,
+                                       this,
+                                       clock_)),
       packet_sink_(config->rtp.packet_sink_),
       receiving_(false),
       last_packet_log_ms_(-1),
@@ -994,6 +1003,18 @@ void RtpVideoStreamReceiver2::SetNackHistory(TimeDelta history) {
       history.ms() > 0 ? kMaxPacketAgeToNack : kDefaultMaxReorderingThreshold);
 }
 
+int RtpVideoStreamReceiver2::ulpfec_payload_type() const {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  return ulpfec_receiver_ ? ulpfec_receiver_->ulpfec_payload_type() : -1;
+}
+
+void RtpVideoStreamReceiver2::set_ulpfec_payload_type(int payload_type) {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  ulpfec_receiver_ = MaybeConstructUlpfecReceiver(
+      config_.rtp.remote_ssrc, config_.rtp.red_payload_type, payload_type,
+      config_.rtp.extensions, this, clock_);
+}
+
 absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedPacketMs() const {
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   if (last_received_rtp_system_time_) {
@@ -1062,16 +1083,18 @@ void RtpVideoStreamReceiver2::ReceivePacket(const RtpPacketReceived& packet) {
 void RtpVideoStreamReceiver2::ParseAndHandleEncapsulatingHeader(
     const RtpPacketReceived& packet) {
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-  if (packet.PayloadType() == config_.rtp.red_payload_type &&
-      packet.payload_size() > 0) {
-    if (packet.payload()[0] == config_.rtp.ulpfec_payload_type) {
-      // Notify video_receiver about received FEC packets to avoid NACKing these
-      // packets.
-      NotifyReceiverOfEmptyPacket(packet.SequenceNumber());
-    }
-    if (ulpfec_receiver_ && ulpfec_receiver_->AddReceivedRedPacket(packet)) {
-      ulpfec_receiver_->ProcessReceivedFec();
-    }
+  RTC_DCHECK_EQ(packet.PayloadType(), config_.rtp.red_payload_type);
+
+  if (!ulpfec_receiver_ || packet.payload_size() == 0U)
+    return;
+
+  if (packet.payload()[0] == ulpfec_receiver_->ulpfec_payload_type()) {
+    // Notify video_receiver about received FEC packets to avoid NACKing these
+    // packets.
+    NotifyReceiverOfEmptyPacket(packet.SequenceNumber());
+  }
+  if (ulpfec_receiver_->AddReceivedRedPacket(packet)) {
+    ulpfec_receiver_->ProcessReceivedFec();
   }
 }
 
