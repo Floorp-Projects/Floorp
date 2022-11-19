@@ -32,6 +32,7 @@
 #include "logging/rtc_event_log/events/rtc_event_probe_cluster_created.h"
 #include "logging/rtc_event_log/events/rtc_event_probe_result_failure.h"
 #include "logging/rtc_event_log/events/rtc_event_probe_result_success.h"
+#include "logging/rtc_event_log/events/rtc_event_remote_estimate.h"
 #include "logging/rtc_event_log/events/rtc_event_rtcp_packet_incoming.h"
 #include "logging/rtc_event_log/events/rtc_event_rtcp_packet_outgoing.h"
 #include "logging/rtc_event_log/events/rtc_event_rtp_packet_incoming.h"
@@ -331,6 +332,11 @@ std::string RtcEventLogEncoderLegacy::Encode(const RtcEvent& event) {
       return EncodeProbeResultSuccess(rtc_event);
     }
 
+    case RtcEvent::Type::RemoteEstimateEvent: {
+      auto& rtc_event = static_cast<const RtcEventRemoteEstimate&>(event);
+      return EncodeRemoteEstimate(rtc_event);
+    }
+
     case RtcEvent::Type::RtcpPacketIncoming: {
       auto& rtc_event = static_cast<const RtcEventRtcpPacketIncoming&>(event);
       return EncodeRtcpPacketIncoming(rtc_event);
@@ -369,7 +375,6 @@ std::string RtcEventLogEncoderLegacy::Encode(const RtcEvent& event) {
       RTC_DCHECK_NOTREACHED();
       break;
     case RtcEvent::Type::RouteChangeEvent:
-    case RtcEvent::Type::RemoteEstimateEvent:
     case RtcEvent::Type::GenericPacketReceived:
     case RtcEvent::Type::GenericPacketSent:
     case RtcEvent::Type::GenericAckReceived:
@@ -583,6 +588,23 @@ std::string RtcEventLogEncoderLegacy::EncodeProbeResultSuccess(
   probe_result->set_id(event.id());
   probe_result->set_result(rtclog::BweProbeResult::SUCCESS);
   probe_result->set_bitrate_bps(event.bitrate_bps());
+
+  return Serialize(&rtclog_event);
+}
+
+std::string RtcEventLogEncoderLegacy::EncodeRemoteEstimate(
+    const RtcEventRemoteEstimate& event) {
+  rtclog::Event rtclog_event;
+  rtclog_event.set_timestamp_us(event.timestamp_us());
+  rtclog_event.set_type(rtclog::Event::REMOTE_ESTIMATE);
+
+  auto* remote_estimate = rtclog_event.mutable_remote_estimate();
+  if (event.link_capacity_lower_.IsFinite())
+    remote_estimate->set_link_capacity_lower_kbps(
+        event.link_capacity_lower_.kbps<uint32_t>());
+  if (event.link_capacity_upper_.IsFinite())
+    remote_estimate->set_link_capacity_upper_kbps(
+        event.link_capacity_upper_.kbps<uint32_t>());
 
   return Serialize(&rtclog_event);
 }
