@@ -30,7 +30,6 @@
 #include "test/fake_encoded_frame.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
-#include "test/run_loop.h"
 #include "test/scoped_key_value_config.h"
 #include "test/time_controller/simulated_time_controller.h"
 #include "video/decode_synchronizer.h"
@@ -115,19 +114,17 @@ class VideoStreamBufferControllerFixture
       : field_trials_(GetParam()),
         time_controller_(kClockStart),
         clock_(time_controller_.GetClock()),
-        decode_queue_(time_controller_.GetTaskQueueFactory()->CreateTaskQueue(
-            "decode_queue",
-            TaskQueueFactory::Priority::NORMAL)),
         fake_metronome_(time_controller_.GetTaskQueueFactory(),
                         TimeDelta::Millis(16)),
-        decode_sync_(clock_, &fake_metronome_, run_loop_.task_queue()),
+        decode_sync_(clock_,
+                     &fake_metronome_,
+                     time_controller_.GetMainThread()),
         timing_(clock_, field_trials_),
         buffer_(VideoStreamBufferController::CreateFromFieldTrial(
             clock_,
-            run_loop_.task_queue(),
+            time_controller_.GetMainThread(),
             &timing_,
             &stats_callback_,
-            decode_queue_.Get(),
             this,
             kMaxWaitForKeyframe,
             kMaxWaitForFrame,
@@ -143,7 +140,7 @@ class VideoStreamBufferControllerFixture
 
   ~VideoStreamBufferControllerFixture() override {
     if (buffer_) {
-      buffer_->StopOnWorker();
+      buffer_->Stop();
     }
     fake_metronome_.Stop();
     time_controller_.AdvanceTime(TimeDelta::Zero());
@@ -165,37 +162,35 @@ class VideoStreamBufferControllerFixture
     if (wait_result_) {
       return std::move(wait_result_);
     }
-    run_loop_.PostTask([&] { time_controller_.AdvanceTime(wait); });
-    run_loop_.PostTask([&] {
-      if (wait_result_)
-        return;
+    time_controller_.AdvanceTime(TimeDelta::Zero());
+    if (wait_result_) {
+      return std::move(wait_result_);
+    }
 
-      // If run loop posted to a task queue, flush that if there is no result.
-      time_controller_.AdvanceTime(TimeDelta::Zero());
-      if (wait_result_)
-        return;
+    Timestamp now = clock_->CurrentTime();
+    // TODO(bugs.webrtc.org/13756): Remove this when rtc::Thread uses uses
+    // Timestamp instead of an integer milliseconds. This extra wait is needed
+    // for some tests that use the metronome. This is due to rounding
+    // milliseconds, affecting the precision of simulated time controller uses
+    // when posting tasks from threads.
+    TimeDelta potential_extra_wait =
+        Timestamp::Millis((now + wait).ms()) - (now + wait);
 
-      run_loop_.PostTask([&] {
-        time_controller_.AdvanceTime(TimeDelta::Zero());
-        // Quit if there is no result set.
-        if (!wait_result_)
-          run_loop_.Quit();
-      });
-    });
-    run_loop_.Run();
+    time_controller_.AdvanceTime(wait);
+    if (potential_extra_wait > TimeDelta::Zero()) {
+      time_controller_.AdvanceTime(potential_extra_wait);
+    }
     return std::move(wait_result_);
   }
 
   void StartNextDecode() {
     ResetLastResult();
     buffer_->StartNextDecode(false);
-    time_controller_.AdvanceTime(TimeDelta::Zero());
   }
 
   void StartNextDecodeForceKeyframe() {
     ResetLastResult();
     buffer_->StartNextDecode(true);
-    time_controller_.AdvanceTime(TimeDelta::Zero());
   }
 
   void ResetLastResult() { wait_result_.reset(); }
@@ -206,8 +201,6 @@ class VideoStreamBufferControllerFixture
   test::ScopedKeyValueConfig field_trials_;
   GlobalSimulatedTimeController time_controller_;
   Clock* const clock_;
-  test::RunLoop run_loop_;
-  rtc::TaskQueue decode_queue_;
   test::FakeMetronome fake_metronome_;
   DecodeSynchronizer decode_sync_;
   VCMTiming timing_;
@@ -222,7 +215,6 @@ class VideoStreamBufferControllerFixture
       RTC_DCHECK(absl::get<std::unique_ptr<EncodedFrame>>(result));
     }
     wait_result_.emplace(std::move(result));
-    run_loop_.Quit();
   }
 
   uint32_t dropped_frames_ = 0;
@@ -340,7 +332,7 @@ TEST_P(VideoStreamBufferControllerTest,
                                                            .AsLast()
                                                            .Refs({0})
                                                            .Build()));
-  buffer_->StopOnWorker();
+  buffer_->Stop();
   // Wait for 2x max wait time. Since we stopped, this should cause no timeouts
   // or frame-ready callbacks.
   EXPECT_THAT(WaitForFrameOrTimeout(kMaxWaitForFrame * 2), Eq(absl::nullopt));
@@ -580,33 +572,25 @@ TEST_P(VideoStreamBufferControllerTest, SameFrameNotScheduledTwice) {
 
   StartNextDecode();
 
-  // Warmup VCMTiming for 30fps.
-  for (int i = 1; i <= 30; ++i) {
-    buffer_->InsertFrame(WithReceiveTimeFromRtpTimestamp(
-        test::FakeFrameBuilder().Id(i).Time(i * kFps30Rtp).AsLast().Build()));
-    EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(test::WithId(i)));
-    StartNextDecode();
-  }
-
   // F2 arrives and is scheduled.
   buffer_->InsertFrame(WithReceiveTimeFromRtpTimestamp(
-      test::FakeFrameBuilder().Id(32).Time(32 * kFps30Rtp).AsLast().Build()));
+      test::FakeFrameBuilder().Id(2).Time(2 * kFps30Rtp).AsLast().Build()));
 
   // F3 arrives before F2 is extracted.
   time_controller_.AdvanceTime(kFps30Delay);
   buffer_->InsertFrame(WithReceiveTimeFromRtpTimestamp(
-      test::FakeFrameBuilder().Id(33).Time(33 * kFps30Rtp).AsLast().Build()));
+      test::FakeFrameBuilder().Id(3).Time(3 * kFps30Rtp).AsLast().Build()));
 
   // F1 arrives and is fast-forwarded since it is too late.
   // F2 is already scheduled and should not be rescheduled.
   time_controller_.AdvanceTime(kFps30Delay / 2);
   buffer_->InsertFrame(WithReceiveTimeFromRtpTimestamp(
-      test::FakeFrameBuilder().Id(31).Time(31 * kFps30Rtp).AsLast().Build()));
+      test::FakeFrameBuilder().Id(1).Time(1 * kFps30Rtp).AsLast().Build()));
 
-  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(test::WithId(32)));
+  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(test::WithId(2)));
   StartNextDecode();
 
-  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(test::WithId(33)));
+  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(test::WithId(3)));
   StartNextDecode();
   EXPECT_THAT(WaitForFrameOrTimeout(kMaxWaitForFrame), TimedOut());
   EXPECT_EQ(dropped_frames(), 1);

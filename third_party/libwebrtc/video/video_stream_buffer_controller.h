@@ -43,7 +43,6 @@ class VideoStreamBufferController {
       TaskQueueBase* worker_queue,
       VCMTiming* timing,
       VCMReceiveStatisticsCallback* stats_proxy,
-      TaskQueueBase* decode_queue,
       FrameSchedulingReceiver* receiver,
       TimeDelta max_wait_for_keyframe,
       TimeDelta max_wait_for_frame,
@@ -55,14 +54,13 @@ class VideoStreamBufferController {
       TaskQueueBase* worker_queue,
       VCMTiming* timing,
       VCMReceiveStatisticsCallback* stats_proxy,
-      TaskQueueBase* decode_queue,
       FrameSchedulingReceiver* receiver,
       TimeDelta max_wait_for_keyframe,
       TimeDelta max_wait_for_frame,
       std::unique_ptr<FrameDecodeScheduler> frame_decode_scheduler,
       const FieldTrialsView& field_trials);
 
-  void StopOnWorker();
+  void Stop();
   void SetProtectionMode(VCMVideoProtection protection_mode);
   void Clear();
   absl::optional<int64_t> InsertFrame(std::unique_ptr<EncodedFrame> frame);
@@ -90,10 +88,8 @@ class VideoStreamBufferController {
   const absl::optional<RttMultExperiment::Settings> rtt_mult_settings_ =
       RttMultExperiment::GetRttMultValue();
   Clock* const clock_;
-  TaskQueueBase* const worker_queue_;
-  TaskQueueBase* const decode_queue_;
   VCMReceiveStatisticsCallback* const stats_proxy_;
-  FrameSchedulingReceiver* const receiver_ RTC_PT_GUARDED_BY(decode_queue_);
+  FrameSchedulingReceiver* const receiver_;
   VCMTiming* const timing_;
   const std::unique_ptr<FrameDecodeScheduler> frame_decode_scheduler_
       RTC_GUARDED_BY(&worker_sequence_checker_);
@@ -125,8 +121,6 @@ class VideoStreamBufferController {
   // the frame's render time == 0.
   FieldTrialParameter<unsigned> zero_playout_delay_max_decode_queue_size_;
 
-  rtc::scoped_refptr<PendingTaskSafetyFlag> decode_safety_ =
-      PendingTaskSafetyFlag::CreateDetached();
   ScopedTaskSafety worker_safety_;
 };
 
