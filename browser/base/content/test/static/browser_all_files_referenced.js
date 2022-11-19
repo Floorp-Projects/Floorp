@@ -289,9 +289,8 @@ var whitelist = [
   // toolkit/xre/MacRunFromDmgUtils.mm
   { file: "resource://gre/localization/en-US/toolkit/global/run-from-dmg.ftl" },
 
-  // References to esm generated from jsm programatically
+  // References to esm generated from jsm programmatically
   { file: "resource://gre/modules/LangPackMatcher.sys.mjs" },
-  { file: "resource://gre/modules/PluralForm.sys.mjs" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {

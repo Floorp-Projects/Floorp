@@ -1,8 +1,6 @@
-ChromeUtils.defineModuleGetter(
-  this,
-  "SiteDataTestUtils",
-  "resource://testing-common/SiteDataTestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  SiteDataTestUtils: "resource://testing-common/SiteDataTestUtils.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   this,
   "DownloadUtils",

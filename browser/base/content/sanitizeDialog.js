@@ -5,7 +5,9 @@
 
 /* import-globals-from /toolkit/content/preferencesBindings.js */
 
-var { Sanitizer } = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
+var { Sanitizer } = ChromeUtils.importESModule(
+  "resource:///modules/Sanitizer.sys.mjs"
+);
 
 Preferences.addAll([
   { id: "privacy.cpd.history", type: "bool" },

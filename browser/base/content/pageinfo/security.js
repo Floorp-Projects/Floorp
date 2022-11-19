@@ -17,11 +17,9 @@ ChromeUtils.defineModuleGetter(
   "LoginHelper",
   "resource://gre/modules/LoginHelper.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "PluralForm",
-  "resource://gre/modules/PluralForm.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  PluralForm: "resource://gre/modules/PluralForm.sys.mjs",
+});
 
 var security = {
   async init(uri, windowInfo) {
