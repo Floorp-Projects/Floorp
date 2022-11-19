@@ -401,6 +401,9 @@ sidebar2-unload-panel =
 sidebar2-change-ua-panel =
   .label = Switch User agent to Mobile/Desktop version at this panel
 
+sidebar2-delete-panel =
+  .label = Delete this panel
+
 sidebar-close-button =
   .tooltiptext = Close sidebar
 

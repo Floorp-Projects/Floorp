@@ -88,7 +88,7 @@ async function setTreeStyleTabURL() {
   let sidebarURL = option.replace("options/options.html", "sidebar/sidebar.html")
   window.setTimeout(() => {
     webpanel.setAttribute("src", sidebarURL);
-  }, 50);
+  }, 1250);
 }
 
 function setSidebarWidth(webpanel_id){
