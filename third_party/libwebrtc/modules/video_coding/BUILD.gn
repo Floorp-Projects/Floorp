@@ -160,6 +160,42 @@ rtc_library("frame_helpers") {
   absl_deps = [ "//third_party/abseil-cpp/absl/container:inlined_vector" ]
 }
 
+rtc_library("frame_buffer2") {
+  sources = [
+    "frame_buffer2.cc",
+    "frame_buffer2.h",
+  ]
+  deps = [
+    ":frame_helpers",
+    ":video_codec_interface",
+    ":video_coding_utility",
+    "../../api:field_trials_view",
+    "../../api:sequence_checker",
+    "../../api/task_queue",
+    "../../api/units:data_size",
+    "../../api/units:time_delta",
+    "../../api/video:encoded_frame",
+    "../../api/video:encoded_image",
+    "../../api/video:video_rtp_headers",
+    "../../rtc_base:checks",
+    "../../rtc_base:event_tracer",
+    "../../rtc_base:logging",
+    "../../rtc_base:macromagic",
+    "../../rtc_base:rtc_event",
+    "../../rtc_base:rtc_numerics",
+    "../../rtc_base/experiments:field_trial_parser",
+    "../../rtc_base/experiments:rtt_mult_experiment",
+    "../../rtc_base/synchronization:mutex",
+    "../../rtc_base/system:no_unique_address",
+    "../../rtc_base/task_utils:repeating_task",
+    "../../system_wrappers",
+    "timing:inter_frame_delay",
+    "timing:jitter_estimator",
+    "timing:timing_module",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/container:inlined_vector" ]
+}
+
 rtc_library("video_coding") {
   visibility = [ "*" ]
   sources = [
@@ -170,8 +206,6 @@ rtc_library("video_coding") {
     "fec_controller_default.cc",
     "fec_controller_default.h",
     "fec_rate_table.h",
-    "frame_buffer2.cc",
-    "frame_buffer2.h",
     "frame_object.cc",
     "frame_object.h",
     "generic_decoder.cc",
@@ -1152,6 +1186,7 @@ if (rtc_include_tests) {
       ":chain_diff_calculator",
       ":codec_globals_headers",
       ":encoded_frame",
+      ":frame_buffer2",
       ":frame_dependencies_calculator",
       ":h264_packet_buffer",
       ":nack_requester",
