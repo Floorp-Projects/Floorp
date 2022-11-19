@@ -13,11 +13,9 @@ const TEST_IDN_ORIGIN =
 const TEST_PUNY_ORIGIN = "https://xn--hxajbheg2az3al.xn--jxalpdlp/";
 const TEST_PUNY_SUB_ORIGIN = "https://sub1.xn--hxajbheg2az3al.xn--jxalpdlp/";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "SiteDataTestUtils",
-  "resource://testing-common/SiteDataTestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  SiteDataTestUtils: "resource://testing-common/SiteDataTestUtils.sys.mjs",
+});
 
 async function testClearing(
   testQuota,

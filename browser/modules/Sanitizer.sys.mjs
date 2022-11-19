@@ -3,24 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["Sanitizer"];
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  PrincipalsCollector: "resource://gre/modules/PrincipalsCollector.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   FormHistory: "resource://gre/modules/FormHistory.jsm",
-  PrincipalsCollector: "resource://gre/modules/PrincipalsCollector.jsm",
+
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.jsm",
 });
@@ -40,7 +36,7 @@ function log(msg) {
 // Used as unique id for pending sanitizations.
 var gPendingSanitizationSerial = 0;
 
-var Sanitizer = {
+export var Sanitizer = {
   /**
    * Whether we should sanitize on shutdown.
    */
