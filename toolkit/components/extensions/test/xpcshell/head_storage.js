@@ -19,7 +19,7 @@ const STORAGE_SYNC_PREF = "webextensions.storage.sync.enabled";
  *        either "local" or "sync" according to what we want to test
  * @param {string} prop
  *        "key" to look up using the storage API
- * @param {Object} value
+ * @param {object} value
  *        "value" to compare against
  */
 async function checkGetImpl(areaName, prop, value) {

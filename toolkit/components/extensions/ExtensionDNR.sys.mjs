@@ -67,7 +67,7 @@ const gRuleManagers = [];
  *  - block
  *  - redirect / upgradeScheme
  *  - allow / allowAllRequests
- **/
+ */
 
 // The RuleCondition class represents a rule's "condition" type as described in
 // schemas/declarative_net_request.json. This class exists to allow the JS
@@ -419,12 +419,13 @@ class MatchedRule {
 
 class RequestDetails {
   /**
-   * @param {nsIURI} requestURI - URL of the requested resource.
-   * @param {nsIURI} [initiatorURI] - URL of triggering principal (non-null).
-   * @param {string} type - ResourceType (MozContentPolicyType).
-   * @param {string} [method] - HTTP method
-   * @param {integer} [tabId]
-   **/
+   * @param {object} options
+   * @param {nsIURI} options.requestURI - URL of the requested resource.
+   * @param {nsIURI} [options.initiatorURI] - URL of triggering principal (non-null).
+   * @param {string} options.type - ResourceType (MozContentPolicyType).
+   * @param {string} [options.method] - HTTP method
+   * @param {integer} [options.tabId]
+   */
   constructor({ requestURI, initiatorURI, type, method, tabId }) {
     this.requestURI = requestURI;
     this.initiatorURI = initiatorURI;
@@ -709,7 +710,7 @@ class RequestEvaluator {
    * @param {string} host - The canonical representation of the host of a URL.
    * @returns {boolean} Whether the given host is a (sub)domain of any of the
    *   given domains.
-   **/
+   */
   #matchesDomains(domains, host) {
     return domains.some(domain => {
       return (
@@ -798,7 +799,7 @@ function clearRuleManager(extension) {
  * @param {object|RequestDetails} request
  * @param {Extension} [extension]
  * @returns {MatchedRule[]}
- **/
+ */
 function getMatchedRulesForRequest(request, extension) {
   let requestDetails = new RequestDetails(request);
   let ruleManagers = gRuleManagers;

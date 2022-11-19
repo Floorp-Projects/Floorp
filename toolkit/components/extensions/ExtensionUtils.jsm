@@ -313,6 +313,7 @@ function parseMatchPatterns(patterns, options) {
 
 /**
  * Fetch icon content and convert it to a data: URI.
+ *
  * @param {string} iconUrl Icon url to fetch.
  * @returns {Promise<string>}
  */

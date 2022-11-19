@@ -219,7 +219,7 @@ const checkSetCookiePermissions = (extension, uri, cookie) => {
  *
  * If allowPattern is true, an OriginAttributesPattern may be returned instead.
  *
- * @param {Object} details
+ * @param {object} details
  *        The details received from the extension.
  * @param {BaseContext} context
  * @param {boolean} allowPattern
@@ -227,12 +227,12 @@ const checkSetCookiePermissions = (extension, uri, cookie) => {
  *        OriginAttributes. The get/set/remove cookie methods operate on exact
  *        OriginAttributes, the getAll method allows a partial pattern and may
  *        potentially match cookies with distinct origin attributes.
- * @returns {Object} An object with the following properties:
+ * @returns {object} An object with the following properties:
  *  - originAttributes {OriginAttributes|OriginAttributesPattern}
  *  - isPattern {boolean} Whether originAttributes is a pattern.
  *  - isPrivate {boolean} Whether the cookie belongs to private browsing mode.
  *  - storeId {string} The storeId of the cookie.
- **/
+ */
 const oaFromDetails = (details, context, allowPattern) => {
   // Default values, may be filled in based on details.
   let originAttributes = {
@@ -299,7 +299,8 @@ const oaFromDetails = (details, context, allowPattern) => {
 
 /**
  * Query the cookie store for matching cookies.
- * @param {Object} detailsIn
+ *
+ * @param {object} detailsIn
  * @param {Array} props          Properties the extension is interested in matching against.
  *                               The firstPartyDomain / partitionKey / storeId
  *                               props are always accounted for.

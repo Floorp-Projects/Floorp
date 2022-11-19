@@ -9,10 +9,10 @@
  * for more details about the overall design.
  *
  * @typedef {object} MessageData
- * @prop {ConduitID} [target]
- * @prop {ConduitID} [sender]
- * @prop {boolean} query
- * @prop {object} arg
+ * @property {ConduitID} [target]
+ * @property {ConduitID} [sender]
+ * @property {boolean} query
+ * @property {object} arg
  */
 
 const EXPORTED_SYMBOLS = [
@@ -54,6 +54,7 @@ class BaseConduit {
 
   /**
    * Internal, partially @abstract, uses the actor to send the message/query.
+   *
    * @param {string} method
    * @param {boolean} query Flag indicating a response is expected.
    * @param {JSWindowActor} actor
@@ -69,6 +70,7 @@ class BaseConduit {
 
   /**
    * Internal, calls the specific recvX method based on the message.
+   *
    * @param {string} name Message/method name.
    * @param {object} arg  Message data, the one and only method argument.
    * @param {object} meta Metadata about the method call.
@@ -102,6 +104,7 @@ class PointConduit extends BaseConduit {
 
   /**
    * Internal, sends messages via the actor, used by sendX stubs.
+   *
    * @param {string} method
    * @param {boolean} query
    * @param {object?} arg
@@ -117,6 +120,7 @@ class PointConduit extends BaseConduit {
 
   /**
    * Closes the conduit from further IPC, notifies the parent side by default.
+   *
    * @param {boolean} silent
    */
   close(silent = false) {
@@ -139,7 +143,8 @@ class PointConduit extends BaseConduit {
 
   /**
    * Set the callback to be called when the conduit is closed.
-   * @param {function} callback
+   *
+   * @param {Function} callback
    */
   setCloseCallback(callback) {
     this.closeCallback = callback;
@@ -157,6 +162,7 @@ class ConduitsChild extends JSWindowActorChild {
 
   /**
    * Public entry point a child-side subject uses to open a conduit.
+   *
    * @param {object} subject
    * @param {ConduitAddress} address
    * @returns {PointConduit}
@@ -169,8 +175,10 @@ class ConduitsChild extends JSWindowActorChild {
 
   /**
    * JSWindowActor method, routes the message to the target subject.
-   * @param {string} name
-   * @param {MessageData|MessageData[]} data
+   *
+   * @param {object} options
+   * @param {string} options.name
+   * @param {MessageData | MessageData[]} options.data
    * @returns {Promise?}
    */
   receiveMessage({ name, data }) {

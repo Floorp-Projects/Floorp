@@ -15,8 +15,9 @@ function waitForAboutNewTabReady(browser, url) {
 
 /**
  * Test whether a given browser has the new tab page theme applied
- * @param {Object} browser to test against
- * @param {Object} theme that is applied
+ *
+ * @param {object} browser to test against
+ * @param {object} theme that is applied
  * @param {boolean} isBrightText whether the brighttext attribute should be set
  * @returns {Promise} The task as a promise
  */
@@ -68,7 +69,8 @@ function test_ntp_theme(browser, theme, isBrightText) {
 
 /**
  * Test whether a given browser has the default theme applied
- * @param {Object} browser to test against
+ *
+ * @param {object} browser to test against
  * @param {string} url being tested
  * @returns {Promise} The task as a promise
  */

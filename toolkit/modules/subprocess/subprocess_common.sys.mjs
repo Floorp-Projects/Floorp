@@ -242,7 +242,7 @@ class OutputPipe extends Pipe {
    *          the number of bytes successfully written, once the operation has
    *          completed.
    *
-   * @rejects {object}
+   * @throws {object}
    *          May be rejected with an Error object, or an object with similar
    *          properties. The object will include an `errorCode` property with
    *          one of the following values if it was rejected for the
@@ -438,7 +438,7 @@ class InputPipe extends Pipe {
    *        The number of bytes to read.
    * @returns {Promise<ArrayBuffer>}
    *
-   * @rejects {object}
+   * @throws {object}
    *          May be rejected with an Error object, or an object with similar
    *          properties. The object will include an `errorCode` property with
    *          one of the following values if it was rejected for the
@@ -470,7 +470,7 @@ class InputPipe extends Pipe {
    *        The number of bytes to read.
    * @returns {Promise<object>}
    *
-   * @rejects {object}
+   * @throws {object}
    *          May be rejected with an Error object, or an object with similar
    *          properties. The object will include an `errorCode` property with
    *          one of the following values if it was rejected for the
@@ -512,7 +512,7 @@ class InputPipe extends Pipe {
    *        An options object as expected by TextDecoder.decode.
    * @returns {Promise<string>}
    *
-   * @rejects {object}
+   * @throws {object}
    *          May be rejected with an Error object, or an object with similar
    *          properties. The object will include an `errorCode` property with
    *          one of the following values if it was rejected for the
@@ -537,7 +537,7 @@ class InputPipe extends Pipe {
    *
    * @returns {Promise<integer>}
    *
-   * @rejects {object}
+   * @throws {object}
    *          May be rejected with an Error object, or an object with similar
    *          properties. The object will include an `errorCode` property with
    *          one of the following values if it was rejected for the
@@ -555,7 +555,7 @@ class InputPipe extends Pipe {
 
 /**
  * @class Process
- * @extends BaseProcess
+ * @augments BaseProcess
  */
 
 /**

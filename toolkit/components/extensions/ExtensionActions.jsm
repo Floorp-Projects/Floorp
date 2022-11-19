@@ -98,7 +98,7 @@ class PanelActionBase {
    *        "popup", "badgeBackgroundColor", "badgeTextColor" or "enabled".
    * @param {string} value
    *        Value for prop.
-   * @returns {Object}
+   * @returns {object}
    *        The object to which the property has been set.
    */
   setProperty(target, prop, value) {
@@ -118,7 +118,7 @@ class PanelActionBase {
    *
    * @param {XULElement|ChromeWindow|null} target
    *        A XULElement tab, a ChromeWindow, or null for the global data.
-   * @returns {Object}
+   * @returns {object}
    *        The icon, title, badge, etc. associated with the target.
    */
   getContextData(target) {
@@ -358,8 +358,10 @@ class PanelActionBase {
    * Gets the target object corresponding to the `details` parameter of the various
    * get* and set* API methods.
    *
-   * @param {Object} details
+   * @param {object} details
    *        An object with optional `tabId` or `windowId` properties.
+   * @param {number} [details.tabId]
+   * @param {number} [details.windowId]
    * @throws if both `tabId` and `windowId` are specified, or if they are invalid.
    * @returns {XULElement|ChromeWindow|null}
    *        If a `tabId` was specified, the corresponding XULElement tab.
@@ -578,7 +580,7 @@ class BrowserActionBase extends PanelActionBase {
   /**
    * Determines the text badge color to be used in a tab, window, or globally.
    *
-   * @param {Object} values
+   * @param {object} values
    *        The values associated with the tab or window, or global values.
    * @returns {ColorArray}
    */

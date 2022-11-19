@@ -92,8 +92,6 @@ const AUTOCLOSE_TAGS = new Set(["img", "input", "link", "source"]);
  *        appended to it, based on the values in `opts`.
  * @property {string} [srcAttr = "src"]
  *        The attribute in which to store the element's source URL.
- * @property {string} [srcAttr = "src"]
- *        The attribute in which to store the element's source URL.
  * @property {boolean} [liveSrc = false]
  *        If true, changing the source attribute after the element has
  *        been inserted into the document is expected to trigger a new
@@ -857,27 +855,39 @@ function computeBaseURLs(tests, expectedSources, forbiddenSources = {}) {
 }
 
 /**
+ * @typedef InjectedUrl
+ *        A URL present in styles injected by the content script.
+ * @type {object}
+ * @property {string} origin
+ *        The origin of the URL, one of "page", "contentScript", or "extension".
+ * @param {string} href
+ *        The URL string.
+ * @param {boolean} inline
+ *        If true, the URL is present in an inline stylesheet, which may be
+ *        blocked by CSP prior to parsing, depending on its origin.
+ */
+
+/**
+ * @typedef InjectedSource
+ *        An inline CSS source injected by the content script.
+ * @type {object}
+ * @param {string} origin
+ *        The origin of the CSS, one of "page", "contentScript", or "extension".
+ * @param {string} css
+ *        The CSS source text.
+ */
+
+/**
  * Generates a set of expected and forbidden URLs and sources based on the CSS
  * injected by our content script.
  *
  * @param {object} message
  *        The "css-sources" message sent by the content script, containing lists
  *        of CSS sources injected into the page.
- * @param {Array<object>} message.urls
+ * @param {Array<InjectedUrl>} message.urls
  *        A list of URLs present in styles injected by the content script.
- * @param {string} message.urls.*.origin
- *        The origin of the URL, one of "page", "contentScript", or "extension".
- * @param {string} message.urls.*.href
- *        The URL string.
- * @param {boolean} message.urls.*.inline
- *        If true, the URL is present in an inline stylesheet, which may be
- *        blocked by CSP prior to parsing, depending on its origin.
- * @param {Array<object>} message.sources
+ * @param {Array<InjectedSource>} message.sources
  *        A list of inline CSS sources injected by the content script.
- * @param {string} message.sources.*.origin
- *        The origin of the CSS, one of "page", "contentScript", or "extension".
- * @param {string} message.sources.*.css
- *        The CSS source text.
  * @param {boolean} [cspEnabled = false]
  *        If true, a strict CSP is enabled for this page, and inline page
  *        sources should be blocked. URLs present in these sources will not be
@@ -931,7 +941,7 @@ function computeExpectedForbiddenURLs(
  * @param {Promise<object>} urlsPromise
  *        A promise which resolves to an object containing expected and
  *        forbidden URL sets, as returned by {@see computeBaseURLs}.
- * @param {object<string, string>} origins
+ * @param {Object<string, string>} origins
  *        A mapping of origin parameters as they appear in URL query
  *        strings to the origin strings returned by corresponding
  *        principals. These values are used to test requests against

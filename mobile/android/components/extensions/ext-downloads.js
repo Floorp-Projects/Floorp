@@ -85,8 +85,8 @@ class DownloadItem {
   /**
    * Initializes an object that represents a download
    *
-   * @param {Object} downloadInfo - an object from Java when creating a download
-   * @param {Object} options - an object passed in to download() function
+   * @param {object} downloadInfo - an object from Java when creating a download
+   * @param {object} options - an object passed in to download() function
    * @param {Extension} extension - instance of an extension object
    */
   constructor(downloadInfo, options, extension) {
@@ -112,8 +112,8 @@ class DownloadItem {
   /**
    * This function updates the download item it was called on.
    *
-   * @param {Object} data that arrived from the app (Java)
-   * @returns {Object|null} an object of <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/downloads/onChanged#downloaddelta>downloadDelta type</a>
+   * @param {object} data that arrived from the app (Java)
+   * @returns {object | null} an object of <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/downloads/onChanged#downloaddelta>downloadDelta type</a>
    */
   update(data) {
     const { downloadItemId } = data;

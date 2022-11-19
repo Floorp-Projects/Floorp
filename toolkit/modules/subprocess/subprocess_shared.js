@@ -73,6 +73,7 @@ var Library = class Library {
 
 /**
  * Holds constants which apply to various Subprocess operations.
+ *
  * @namespace
  * @lends Subprocess
  */

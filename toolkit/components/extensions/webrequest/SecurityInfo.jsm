@@ -41,16 +41,16 @@ const SecurityInfo = {
    *
    * @param {nsIChannel} channel
    *        If null channel is assumed to be insecure.
-   * @param {Object} options
+   * @param {object} options
    *
-   * @returns {Object}
+   * @returns {object}
    *         Returns an object containing following members:
    *          - state: The security of the connection used to fetch this
    *                   request. Has one of following string values:
-   *                    * "insecure": the connection was not secure (only http)
-   *                    * "weak": the connection has minor security issues
-   *                    * "broken": secure connection failed (e.g. expired cert)
-   *                    * "secure": the connection was properly secured.
+   *                    - "insecure": the connection was not secure (only http)
+   *                    - "weak": the connection has minor security issues
+   *                    - "broken": secure connection failed (e.g. expired cert)
+   *                    - "secure": the connection was properly secured.
    *          If state == broken:
    *            - errorMessage: full error message from
    *                            nsITransportSecurityInfo.
@@ -226,8 +226,8 @@ const SecurityInfo = {
    *
    * @param {nsIX509Cert} cert
    *        The certificate to extract the information from.
-   * @param {Object} options
-   * @returns {Object}
+   * @param {object} options
+   * @returns {object}
    *         An object with following format:
    *           {
    *             subject: subjectName,
@@ -317,9 +317,9 @@ const SecurityInfo = {
    * @param {number} state
    *        nsITransportSecurityInfo.securityState.
    *
-   * @returns {array<string>}
+   * @returns {Array<string>}
    *         List of weakness reasons. A subset of { cipher } where
-   *         * cipher: The cipher suite is consireded to be weak (RC4).
+   *         cipher: The cipher suite is consireded to be weak (RC4).
    */
   getReasonsForWeakness(state) {
     // If there's non-fatal security issues the request has STATE_IS_BROKEN

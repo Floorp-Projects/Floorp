@@ -72,21 +72,27 @@ let extensionData = {
 };
 
 /**
+ * @typedef {object} ExpectedResourcesToLoad
+ * @property {object} img1_loaded    image from a first party origin.
+ * @property {object} img3_loaded    image from a third party origin.
+ * @property {object} script1_loaded script from a first party origin.
+ * @property {object} script3_loaded script from a third party origin.
+ * @property {object} [cspJSON] expected final document CSP (in JSON format, See dom/webidl/CSPDictionaries.webidl).
+ */
+
+/**
  * Test a combination of Content Security Policies against first/third party images/scripts.
- * @param {Object} opts
+ *
+ * @param {object} opts
  * @param {string} opts.site_csp The CSP to be sent by the site, or null.
  * @param {string} opts.ext1_csp The CSP to be sent by the first extension,
  *                          "" to remove the header, or null to not modify it.
  * @param {string} opts.ext2_csp The CSP to be sent by the first extension,
  *                          "" to remove the header, or null to not modify it.
- * @param {Object} opts.expect   Object containing information which resources are expected to be loaded.
- * @param {Object} opts.expect.img1_loaded    image from a first party origin.
- * @param {Object} opts.expect.img3_loaded    image from a third party origin.
- * @param {Object} opts.expect.script1_loaded script from a first party origin.
- * @param {Object} opts.expect.script3_loaded script from a third party origin.
- * @param {Object} [opts.expect.cspJSON] expected final document CSP (in JSON format, See dom/webidl/CSPDictionaries.webidl).
- * @param {Object} [opts.extData1] first test extension definition data (defaults to extensionData).
- * @param {Object} [opts.extData2] second test extension definition data (defaults to extensionData).
+ * @param {ExpectedResourcesToLoad} opts.expect
+ *                          Object containing information which resources are expected to be loaded.
+ * @param {object} [opts.ext1_data] first test extension definition data (defaults to extensionData).
+ * @param {object} [opts.ext2_data] second test extension definition data (defaults to extensionData).
  */
 async function test_csp({
   site_csp,

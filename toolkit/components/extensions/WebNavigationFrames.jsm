@@ -11,7 +11,7 @@ const EXPORTED_SYMBOLS = ["WebNavigationFrames"];
 /**
  * The FrameDetail object which represents a frame in WebExtensions APIs.
  *
- * @typedef  {Object}  FrameDetail
+ * @typedef  {object}  FrameDetail
  * @inner
  * @property {number}  frameId        - Represents the numeric id which identify the frame in its tab.
  * @property {number}  parentFrameId  - Represents the numeric id which identify the parent frame.
@@ -50,6 +50,7 @@ function getParentFrameId(bc) {
 
 /**
  * Convert a BrowsingContext into internal FrameDetail json.
+ *
  * @param {BrowsingContext} bc
  * @returns {FrameDetail}
  */

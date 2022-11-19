@@ -53,7 +53,7 @@ this.normandyAddonStudy = class extends ExtensionAPI {
          * Returns an object with metadata about the client which may
          * be required for constructing survey URLs.
          *
-         * @returns {Object}
+         * @returns {object}
          */
         async getClientMetadata() {
           return {

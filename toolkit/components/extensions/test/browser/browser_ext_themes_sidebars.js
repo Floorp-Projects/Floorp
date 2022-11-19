@@ -4,7 +4,8 @@
 
 /**
  * Test whether the selected browser has the sidebar theme applied
- * @param {Object} theme that is applied
+ *
+ * @param {object} theme that is applied
  * @param {boolean} isBrightText whether the brighttext attribute should be set
  */
 async function test_sidebar_theme(theme, isBrightText) {

@@ -17,9 +17,9 @@ const { Utils } = ChromeUtils.import("resource://services-sync/util.js");
 /**
  * Like Assert.throws, but for generators.
  *
- * @param {string | Object | function} constraint
+ * @param {string | object | Function} constraint
  *        What to use to check the exception.
- * @param {function} f
+ * @param {Function} f
  *        The function to call.
  */
 async function throwsGen(constraint, f) {

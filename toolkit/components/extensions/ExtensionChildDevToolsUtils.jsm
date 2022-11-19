@@ -6,7 +6,7 @@
 "use strict";
 
 /**
- * @fileOverview
+ * @file
  * This module contains utilities for interacting with DevTools
  * from the child process.
  */

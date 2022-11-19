@@ -38,17 +38,23 @@ baseCSP[3] = {
 };
 
 /**
+ * @typedef TestPolicyExpects
+ * @type {object}
+ * @param {boolean} workerEvalAllowed
+ * @param {boolean} workerImportScriptsAllowed
+ * @param {boolean} workerWasmAllowed
+ */
+
+/**
  * Tests that content security policies for an add-on are actually applied to *
  * documents that belong to it. This tests both the base policies and add-on
  * specific policies, and ensures that the parsed policies applied to the
  * document's principal match what was specified in the policy string.
  *
- * @param {number} [manifest_version]
- * @param {object} [customCSP]
- * @param {object} expects
- * @param {object} expects.workerEvalAllowed
- * @param {object} expects.workerImportScriptsAllowed
- * @param {object} expects.workerWasmAllowed
+ * @param {object} options
+ * @param {number} [options.manifest_version]
+ * @param {object} [options.customCSP]
+ * @param {TestPolicyExpects} options.expects
  */
 async function testPolicy({
   manifest_version = 2,

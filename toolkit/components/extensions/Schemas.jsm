@@ -157,9 +157,9 @@ async function readJSONAndBlobbify(url) {
  *
  * @param {object} object
  *        The object on which to define the getter.
- * @param {string|Symbol} prop
+ * @param {string | symbol} prop
  *        The property name for which to define the getter.
- * @param {function} getter
+ * @param {Function} getter
  *        The function to call in order to generate the final property
  *        value.
  */
@@ -208,9 +208,9 @@ function exportLazyGetter(object, prop, getter) {
  *
  * @param {object} object
  *        The object on which to define the getter.
- * @param {string|Symbol} prop
+ * @param {string | symbol} prop
  *        The property name for which to define the getter.
- * @param {function} getter
+ * @param {Function} getter
  *        The function to call in order to generate the final property
  *        descriptor object. This will be called, and the property
  *        descriptor installed on the object, the first time the
@@ -489,12 +489,12 @@ class Context {
    * If the context has a `currentTarget` value, this is prepended to
    * the message to indicate the location of the error.
    *
-   * @param {string|function} errorMessage
+   * @param {string | Function} errorMessage
    *        The error message which will be displayed when this is the
    *        only possible matching schema. If a function is passed, it
    *        will be evaluated when the error string is first needed, and
    *        must return a string.
-   * @param {string|function} choicesMessage
+   * @param {string | Function} choicesMessage
    *        The message describing the valid what constitutes a valid
    *        value for this schema, which will be displayed when multiple
    *        schema choices are available and none match.
@@ -617,7 +617,7 @@ class Context {
    * Executes the given callback, and returns an array of choice strings
    * passed to {@see #error} during its execution.
    *
-   * @param {function} callback
+   * @param {Function} callback
    * @returns {object}
    *          An object with a `result` property containing the return
    *          value of the callback, and a `choice` property containing
@@ -663,7 +663,7 @@ class Context {
    * when reporting type errors.
    *
    * @param {string} component
-   * @param {function} callback
+   * @param {Function} callback
    * @returns {*}
    */
   withPath(component, callback) {
@@ -3594,7 +3594,7 @@ class SchemaRoot extends Namespace {
    *        The top-level namespace to check permissions for.
    * @param {object} wrapperFuncs
    *        Wrapper functions for the given context.
-   * @param {function} wrapperFuncs.hasPermission
+   * @param {Function} wrapperFuncs.hasPermission
    *        A function which, when given a string argument, returns true
    *        if the context has the given permission.
    * @returns {boolean}
@@ -3795,7 +3795,7 @@ Schemas = {
    *        The top-level namespace to check permissions for.
    * @param {object} wrapperFuncs
    *        Wrapper functions for the given context.
-   * @param {function} wrapperFuncs.hasPermission
+   * @param {Function} wrapperFuncs.hasPermission
    *        A function which, when given a string argument, returns true
    *        if the context has the given permission.
    * @returns {boolean}

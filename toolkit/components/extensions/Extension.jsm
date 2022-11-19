@@ -623,12 +623,13 @@ class ExtensionData {
    * A factory function that allows the construction of ExtensionData, with
    * the isPrivileged flag computed asynchronously.
    *
-   * @param {nsIURI} rootURI
+   * @param {object} options
+   * @param {nsIURI} options.rootURI
    *  The URI pointing to the extension root.
-   * @param {function(type, id)} checkPrivileged
+   * @param {function(type, id)} options.checkPrivileged
    *  An (async) function that takes the addon type and addon ID and returns
    *  whether the given add-on is privileged.
-   * @param {boolean} temporarilyInstalled
+   * @param {boolean} options.temporarilyInstalled
    *  whether the given add-on is installed as temporary.
    * @returns {ExtensionData}
    */
@@ -666,6 +667,7 @@ class ExtensionData {
 
   /**
    * Report an error about the extension's manifest file.
+   *
    * @param {string} message The error message
    */
   manifestError(message) {
@@ -674,6 +676,7 @@ class ExtensionData {
 
   /**
    * Report a warning about the extension's manifest file.
+   *
    * @param {string} message The warning message
    */
   manifestWarning(message) {
@@ -837,7 +840,7 @@ class ExtensionData {
    *
    * @param {Array} permissionsArray
    * @param {Array} [hostPermissions]
-   * @returns {Object} permissions object
+   * @returns {object} permissions object
    */
   permissionsObject(permissionsArray = [], hostPermissions = []) {
     let permissions = new Set();
@@ -1007,10 +1010,10 @@ class ExtensionData {
    * to optional.  This also handles any updates required for permission removal.
    *
    * @param {string} id The id of the addon being updated
-   * @param {Object} oldPermissions
-   * @param {Object} oldOptionalPermissions
-   * @param {Object} newPermissions
-   * @param {Object} newOptionalPermissions
+   * @param {object} oldPermissions
+   * @param {object} oldOptionalPermissions
+   * @param {object} newPermissions
+   * @param {object} newOptionalPermissions
    */
   static async migratePermissions(
     id,
@@ -1846,18 +1849,23 @@ class ExtensionData {
   }
 
   /**
+   * @typedef {object} HostPermissions
+   * @param {string} allUrls   permission used to obtain all urls access
+   * @param {Set} wildcards    set contains permissions with wildcards
+   * @param {Set} sites        set contains explicit host permissions
+   * @param {Map} wildcardsMap mapping origin wildcards to labels
+   * @param {Map} sitesMap     mapping origin patterns to labels
+   */
+
+  /**
    * Classify host permissions
-   * @param {array<string>} origins
+   *
+   * @param {Array<string>} origins
    *                        permission origins
    * @param {boolean}       ignoreNonWebSchemes
    *                        return only these schemes: *, http, https, ws, wss
    *
-   * @returns {object}
-   *   @param {string} .allUrls   permission used to obtain all urls access
-   *   @param {Set} .wildcards    set contains permissions with wildcards
-   *   @param {Set} .sites        set contains explicit host permissions
-   *   @param {Map} .wildcardsMap mapping origin wildcards to labels
-   *   @param {Map} .sitesMap     mapping origin patterns to labels
+   * @returns {HostPermissions}
    */
   static classifyOriginPermissions(origins = [], ignoreNonWebSchemes = false) {
     let allUrls = null,
@@ -1918,13 +1926,13 @@ class ExtensionData {
    *
    * @param {object} info Information about the permissions being requested.
    *
-   * @param {array<string>} info.permissions.origins
+   * @param {Array<string>} info.permissions.origins
    *                        Origin permissions requested.
-   * @param {array<string>} info.permissions.permissions
+   * @param {Array<string>} info.permissions.permissions
    *                        Regular (non-origin) permissions requested.
-   * @param {array<string>} info.optionalPermissions.origins
+   * @param {Array<string>} info.optionalPermissions.origins
    *                        Optional origin permissions listed in the manifest.
-   * @param {array<string>} info.optionalPermissions.permissions
+   * @param {Array<string>} info.optionalPermissions.permissions
    *                        Optional (non-origin) permissions listed in the manifest.
    * @param {boolean} info.unsigned
    *                  True if the prompt is for installing an unsigned addon.
@@ -1944,7 +1952,7 @@ class ExtensionData {
    * @param {boolean} options.buildOptionalOrigins
    *                  Wether to build optional origins Maps for permission
    *                  controls.  Defaults to false.
-   * @param {function} options.getKeyForPermission
+   * @param {Function} options.getKeyForPermission
    *                   An optional callback function that returns the locale key for a given
    *                   permission name (set by default to a callback returning the locale
    *                   key following the default convention `webextPerms.description.PERMNAME`).
@@ -2399,7 +2407,8 @@ let pendingExtensions = new Map();
 /**
  * This class is the main representation of an active WebExtension
  * in the main process.
- * @extends ExtensionData
+ *
+ * @augments ExtensionData
  */
 class Extension extends ExtensionData {
   constructor(addonData, startupReason, updateReason) {

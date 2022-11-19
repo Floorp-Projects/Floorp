@@ -344,7 +344,7 @@ class ExtensionShortcuts {
   /**
    * Creates a Map from commands for each command in the manifest.commands object.
    *
-   * @param {Object} manifest The manifest JSON object.
+   * @param {object} manifest The manifest JSON object.
    * @returns {Map<string, object>}
    */
   loadCommandsFromManifest(manifest) {
@@ -384,6 +384,7 @@ class ExtensionShortcuts {
 
   /**
    * Registers the commands to a document.
+   *
    * @param {ChromeWindow} window The XUL window to insert the Keyset.
    * @param {Map} commands The commands to be set.
    */

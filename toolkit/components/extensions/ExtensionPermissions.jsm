@@ -309,7 +309,7 @@ var ExtensionPermissions = {
    * in the format that is passed to browser.permissions.request().
    *
    * @param {string} extensionId The extension id
-   * @param {Object} perms Object with permissions and origins array.
+   * @param {object} perms Object with permissions and origins array.
    * @param {EventEmitter} emitter optional object implementing emitter interfaces
    */
   async add(extensionId, perms, emitter) {
@@ -348,7 +348,7 @@ var ExtensionPermissions = {
    * in the format that is passed to browser.permissions.request().
    *
    * @param {string} extensionId The extension id
-   * @param {Object} perms Object with permissions and origins array.
+   * @param {object} perms Object with permissions and origins array.
    * @param {EventEmitter} emitter optional object implementing emitter interfaces
    */
   async remove(extensionId, perms, emitter) {
@@ -427,15 +427,20 @@ var ExtensionPermissions = {
 
 var OriginControls = {
   /**
+   * @typedef {object} OriginControlState
+   * @param {boolean} noAccess     no options, can never access host.
+   * @param {boolean} whenClicked  option to access host when clicked.
+   * @param {boolean} alwaysOn     option to always access this host.
+   * @param {boolean} allDomains   option to access to all domains.
+   * @param {boolean} hasAccess    extension currently has access to host.
+   */
+
+  /**
    * Get origin controls state for a given extension on a given host.
+   *
    * @param {WebExtensionPolicy} policy
    * @param {nsIURI} uri
-   * @returns {object} Extension origin controls for this host include:
-   *  @param {boolean} noAccess     no options, can never access host.
-   *  @param {boolean} whenClicked  option to access host when clicked.
-   *  @param {boolean} alwaysOn     option to always access this host.
-   *  @param {boolean} allDomains   option to access to all domains.
-   *  @param {boolean} hasAccess    extension currently has access to host.
+   * @returns {OriginControlState} Extension origin controls for this host include:
    */
   getState(policy, uri) {
     let allDomains = new MatchPattern("*://*/*");
@@ -498,6 +503,15 @@ var OriginControls = {
   },
 
   /**
+   * @typedef {object} FluentIdInfo
+   * @param {string} default      the message ID corresponding to the state
+   *                              that should be displayed by default.
+   * @param {string | null} onHover an optional message ID to be shown when
+   *                              users hover interactive elements (e.g. a
+   *                              button).
+   */
+
+  /**
    * Get origin controls messages (fluent IDs) to be shown to users for a given
    * extension on a given host. The messages might be different for extensions
    * with a browser action (that might or might not open a popup).
@@ -512,13 +526,8 @@ var OriginControls = {
    *                                           browser action opens a popup,
    *                                           false otherwise.
    *
-   * @returns {object|null} An object with origin controls message IDs or
+   * @returns {FluentIdInfo?} An object with origin controls message IDs or
    *                        `null` when there is no message for the state.
-   *  @param {string} default      the message ID corresponding to the state
-   *                               that should be displayed by default.
-   *  @param {string|null} onHover an optional message ID to be shown when
-   *                               users hover interactive elements (e.g. a
-   *                               button).
    */
   getStateMessageIDs({ policy, uri, isAction = false, hasPopup = false }) {
     const state = this.getState(policy, uri);
