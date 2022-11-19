@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <memory>
 
+#include "absl/strings/string_view.h"
 #include "modules/congestion_controller/goog_cc/delay_based_bwe.h"
 #include "rtc_base/checks.h"
 
@@ -145,7 +146,7 @@ int64_t StreamGenerator::GenerateFrame(std::vector<PacketResult>* packets,
 
 DelayBasedBweTest::DelayBasedBweTest() : DelayBasedBweTest("") {}
 
-DelayBasedBweTest::DelayBasedBweTest(const std::string& field_trial_string)
+DelayBasedBweTest::DelayBasedBweTest(absl::string_view field_trial_string)
     : field_trial(
           std::make_unique<test::ScopedFieldTrials>(field_trial_string)),
       clock_(100000000),
