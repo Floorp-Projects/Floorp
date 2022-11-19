@@ -350,14 +350,14 @@ void AppShutdown::AdvanceShutdownPhaseInternal(
 
   nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
   if (sCurrentShutdownPhase >= ShutdownPhase::AppShutdownConfirmed) {
-    // Give runnables dispatched so far as part of the ongoing phase a chance
-    // to run before actually advancing the phase. We can do this only after
-    // we passed the point of no return and thus can expect a linear flow
-    // through our shutdown phases. This way the processing is also covered
-    // by the terminator's timer.
-    // Note that this happens only for main thread runnables, such that the
-    // correct way of ensuring shutdown processing remains to have an async
-    // shutdown blocker.
+    // Give runnables dispatched between two calls to AdvanceShutdownPhase
+    // a chance to run before actually advancing the phase. We must do this
+    // only after we passed the point of no return and thus can expect a linear
+    // flow through our shutdown phases. This way the processing is also
+    // covered by the terminator's timer of the previous phase.
+    // Note that this affects only main thread runnables, such that the correct
+    // way of ensuring shutdown processing remains to have an async shutdown
+    // blocker.
     if (thread) {
       NS_ProcessPendingEvents(thread);
     }
@@ -366,22 +366,24 @@ void AppShutdown::AdvanceShutdownPhaseInternal(
   // From now on any IsInOrBeyond checks will find the new phase set.
   sCurrentShutdownPhase = aPhase;
 
-  // TODO: Bug 1768581
-  // We think it would be more logical to have the following order here:
-  //    AppShutdown::MaybeFastShutdown(aPhase);
-  //    sTerminator->AdvancePhase(aPhase);
-  //    obsService->NotifyObservers(...);
-  //    mozilla::KillClearOnShutdown(aPhase);
-
 #ifndef ANDROID
   if (sTerminator) {
     sTerminator->AdvancePhase(aPhase);
   }
 #endif
 
+  AppShutdown::MaybeFastShutdown(aPhase);
+
+  // This will null out the gathered pointers for this phase synchronously.
+  // Note that we keep the old order here to avoid breakage, so be aware that
+  // the notifications fired below will find these already cleared in case
+  // you expected the opposite.
   mozilla::KillClearOnShutdown(aPhase);
 
-  AppShutdown::MaybeFastShutdown(aPhase);
+  // Empty our MT event queue to process any side effects thereof.
+  if (thread) {
+    NS_ProcessPendingEvents(thread);
+  }
 
   if (doNotify) {
     const char* aTopic = AppShutdown::GetObserverKey(aPhase);
