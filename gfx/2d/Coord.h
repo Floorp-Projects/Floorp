@@ -8,6 +8,7 @@
 #define MOZILLA_GFX_COORD_H_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/FloatingPoint.h"
 #include "Types.h"
 #include "BaseCoord.h"
 
@@ -152,6 +153,24 @@ struct MOZ_EMPTY_BASES CoordTyped
 typedef CoordTyped<UnknownUnits> Coord;
 
 }  // namespace gfx
+
+template <class Units, class F>
+static MOZ_ALWAYS_INLINE bool FuzzyEqualsAdditive(
+    gfx::CoordTyped<Units, F> aValue1, gfx::CoordTyped<Units, F> aValue2,
+    gfx::CoordTyped<Units, F> aEpsilon =
+        detail::FuzzyEqualsEpsilon<F>::value()) {
+  return FuzzyEqualsAdditive(aValue1.value, aValue2.value, aEpsilon.value);
+}
+
+template <class Units, class F>
+static MOZ_ALWAYS_INLINE bool FuzzyEqualsMultiplicative(
+    gfx::CoordTyped<Units, F> aValue1, gfx::CoordTyped<Units, F> aValue2,
+    gfx::CoordTyped<Units, F> aEpsilon =
+        detail::FuzzyEqualsEpsilon<F>::value()) {
+  return FuzzyEqualsMultiplicative(aValue1.value, aValue2.value,
+                                   aEpsilon.value);
+}
+
 }  // namespace mozilla
 
 #endif /* MOZILLA_GFX_COORD_H_ */

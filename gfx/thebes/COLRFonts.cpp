@@ -879,10 +879,10 @@ struct PaintLinearGradient : public PaintPatternBase {
       p2 += v * firstStop;
     }
     Point p3;
-    if (FuzzyEqualsMultiplicative(p2.y.value, p0.y.value)) {
+    if (FuzzyEqualsMultiplicative(p2.y, p0.y)) {
       // rotation vector is horizontal
       p3 = Point(p0.x, p1.y);
-    } else if (FuzzyEqualsMultiplicative(p2.x.value, p0.x.value)) {
+    } else if (FuzzyEqualsMultiplicative(p2.x, p0.x)) {
       // rotation vector is vertical
       p3 = Point(p1.x, p0.y);
     } else {

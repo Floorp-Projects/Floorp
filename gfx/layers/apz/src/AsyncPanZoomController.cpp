@@ -73,7 +73,6 @@
 #include "mozilla/layers/APZPublicUtils.h"  // for GetScrollMode
 #include "mozilla/mozalloc.h"               // for operator new, etc
 #include "mozilla/Unused.h"                 // for unused
-#include "mozilla/FloatingPoint.h"          // for FuzzyEquals*
 #include "nsAlgorithm.h"                    // for clamped
 #include "nsCOMPtr.h"                       // for already_AddRefed
 #include "nsDebug.h"                        // for NS_WARNING
@@ -564,8 +563,7 @@ bool AsyncPanZoomController::IsZero(ParentLayerCoord aCoord) const {
     return true;
   }
 
-  return FuzzyEqualsAdditive((aCoord / zoom).value, 0.0f,
-                             COORDINATE_EPSILON.value);
+  return FuzzyEqualsAdditive((aCoord / zoom), CSSCoord(), COORDINATE_EPSILON);
 }
 
 bool AsyncPanZoomController::FuzzyGreater(ParentLayerCoord aCoord1,
@@ -5216,11 +5214,10 @@ void AsyncPanZoomController::NotifyLayersUpdated(
   // XXX Suspicious comparison between layout and visual scroll offsets.
   // This may not do the right thing when we're zoomed in.
   CSSPoint lastScrollOffset = mLastContentPaintMetrics.GetLayoutScrollOffset();
-  bool userScrolled =
-      !FuzzyEqualsAdditive(Metrics().GetVisualScrollOffset().x.value,
-                           lastScrollOffset.x.value) ||
-      !FuzzyEqualsAdditive(Metrics().GetVisualScrollOffset().y.value,
-                           lastScrollOffset.y.value);
+  bool userScrolled = !FuzzyEqualsAdditive(Metrics().GetVisualScrollOffset().x,
+                                           lastScrollOffset.x) ||
+                      !FuzzyEqualsAdditive(Metrics().GetVisualScrollOffset().y,
+                                           lastScrollOffset.y);
 
   if (aScrollMetadata.DidContentGetPainted()) {
     mLastContentPaintMetadata = aScrollMetadata;
@@ -5340,9 +5337,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     // TODO: Rely entirely on |aScrollMetadata.IsResolutionUpdated()| to
     //       determine which branch to take, and drop the other conditions.
     if (FuzzyEqualsAdditive(
-            Metrics().GetCompositionBoundsWidthIgnoringScrollbars().value,
-            aLayerMetrics.GetCompositionBoundsWidthIgnoringScrollbars()
-                .value) &&
+            Metrics().GetCompositionBoundsWidthIgnoringScrollbars(),
+            aLayerMetrics.GetCompositionBoundsWidthIgnoringScrollbars()) &&
         Metrics().GetDevPixelsPerCSSPixel() ==
             aLayerMetrics.GetDevPixelsPerCSSPixel() &&
         !viewportSizeUpdated && !aScrollMetadata.IsResolutionUpdated()) {
