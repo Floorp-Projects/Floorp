@@ -622,15 +622,6 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
   // return value of true indicates that the file has been
   // sucessfully opened, while a value of false indicates that
   // opening the file failed.
-  //
-  // TODO(webrtc:13579): Remove std::string version once downstream users have
-  // implemented the absl::string_view version.
-  virtual bool CreateAndAttachAecDump(const std::string& file_name,
-                                      int64_t max_log_size_bytes,
-                                      rtc::TaskQueue* worker_queue) {
-    return CreateAndAttachAecDump(absl::string_view(file_name),
-                                  max_log_size_bytes, worker_queue);
-  }
   virtual bool CreateAndAttachAecDump(absl::string_view file_name,
                                       int64_t max_log_size_bytes,
                                       rtc::TaskQueue* worker_queue) = 0;
