@@ -126,6 +126,25 @@ std::unique_ptr<NackRequester> MaybeConstructNackModule(
                                          keyframe_request_sender, field_trials);
 }
 
+std::unique_ptr<UlpfecReceiver> MaybeConstructUlpfecReceiver(
+    const VideoReceiveStreamInterface::Config::Rtp& rtp,
+    RecoveredPacketReceiver* callback,
+    Clock* clock) {
+  RTC_DCHECK_GE(rtp.ulpfec_payload_type, -1);
+  if (rtp.red_payload_type == -1)
+    return nullptr;
+
+  // TODO(tommi, brandtr): Consider including this check too once
+  // `UlpfecReceiver` has been updated to not consider both red and ulpfec
+  // payload ids.
+  //  if (rtp.ulpfec_payload_type == -1)
+  //    return nullptr;
+
+  return std::make_unique<UlpfecReceiver>(rtp.remote_ssrc,
+                                          rtp.ulpfec_payload_type, callback,
+                                          rtp.extensions, clock);
+}
+
 static const int kPacketLogIntervalMs = 10000;
 
 }  // namespace
@@ -241,12 +260,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
       forced_playout_delay_max_ms_("max_ms", absl::nullopt),
       forced_playout_delay_min_ms_("min_ms", absl::nullopt),
       rtp_receive_statistics_(rtp_receive_statistics),
-      ulpfec_receiver_(
-          std::make_unique<UlpfecReceiver>(config->rtp.remote_ssrc,
-                                           config_.rtp.ulpfec_payload_type,
-                                           this,
-                                           config->rtp.extensions,
-                                           clock)),
+      ulpfec_receiver_(MaybeConstructUlpfecReceiver(config->rtp, this, clock)),
       packet_sink_(config->rtp.packet_sink_),
       receiving_(false),
       last_packet_log_ms_(-1),
@@ -1055,10 +1069,9 @@ void RtpVideoStreamReceiver2::ParseAndHandleEncapsulatingHeader(
       // packets.
       NotifyReceiverOfEmptyPacket(packet.SequenceNumber());
     }
-    if (!ulpfec_receiver_->AddReceivedRedPacket(packet)) {
-      return;
+    if (ulpfec_receiver_ && ulpfec_receiver_->AddReceivedRedPacket(packet)) {
+      ulpfec_receiver_->ProcessReceivedFec();
     }
-    ulpfec_receiver_->ProcessReceivedFec();
   }
 }
 

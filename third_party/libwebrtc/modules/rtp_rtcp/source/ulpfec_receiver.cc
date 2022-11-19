@@ -31,7 +31,12 @@ UlpfecReceiver::UlpfecReceiver(uint32_t ssrc,
       clock_(clock),
       extensions_(extensions),
       recovered_packet_callback_(callback),
-      fec_(ForwardErrorCorrection::CreateUlpfec(ssrc_)) {}
+      fec_(ForwardErrorCorrection::CreateUlpfec(ssrc_)) {
+  // TODO(tommi, brandtr): Once considerations for red have been split
+  // away from this implementation, we can require the ulpfec payload type
+  // to always be valid and use uint8 for storage (as is done elsewhere).
+  RTC_DCHECK_GE(ulpfec_payload_type_, -1);
+}
 
 UlpfecReceiver::~UlpfecReceiver() {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
