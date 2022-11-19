@@ -55,6 +55,7 @@ def main(argv):
     golang_env = os.environ.copy()
     golang_env['GOROOT'] = go_root_dir
     golang_env['GOPATH'] = golang_workspace
+    golang_env['GO111MODULE'] = 'off'
     collider_out = os.path.join(
         golang_workspace, 'collidermain' + utils.GetExecutableExtension())
     subprocess.check_call(
