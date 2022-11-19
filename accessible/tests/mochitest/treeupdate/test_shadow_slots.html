@@ -182,6 +182,13 @@
       });
     }
 
+    async function justAttachShadow() {
+      await _dynamicShadowTest("justAttachShadow",
+        (container, host) => {
+          host.attachShadow({ mode: "open" });
+        }, { SECTION: [{ SECTION: [] }] });
+    }
+
     async function doTest() {
       await attachFlatShadow();
 
@@ -214,6 +221,8 @@
       await shadowReassignDynamic_4();
 
       shadowProcessInvalidation();
+
+      await justAttachShadow();
 
       SimpleTest.finish();
     }
@@ -487,6 +496,12 @@
         .attachShadow({ mode: "open" })
         .appendChild(document.querySelector("#shadowProcessInvalidation > .shadowtree").content.cloneNode(true));
     </script>
+  </div>
+
+  <div id="justAttachShadow">
+    <section class="host">
+      <button></button>
+    </section>
   </div>
 
   <div id="eventdump"></div>

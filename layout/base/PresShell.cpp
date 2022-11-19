@@ -3068,6 +3068,12 @@ void PresShell::ShadowRootWillBeAttached(Element& aElement) {
     }
   }
 
+#ifdef ACCESSIBILITY
+  if (nsAccessibilityService* accService = GetAccService()) {
+    accService->ScheduleAccessibilitySubtreeUpdate(this, &aElement);
+  }
+#endif
+
   --mChangeNestCount;
 }
 
