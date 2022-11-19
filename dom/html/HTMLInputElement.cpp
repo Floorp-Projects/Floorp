@@ -4485,8 +4485,8 @@ void HTMLInputElement::HandleTypeChange(FormControlType aNewType,
   // Changing type may affect directionality because of the special-case for
   // <input type=tel>, as specified in
   // https://html.spec.whatwg.org/multipage/dom.html#the-directionality
-  if (oldType == FormControlType::InputTel ||
-      mType == FormControlType::InputTel) {
+  if (!HasDirAuto() && (oldType == FormControlType::InputTel ||
+                        mType == FormControlType::InputTel)) {
     RecomputeDirectionality(this, aNotify);
   }
 
