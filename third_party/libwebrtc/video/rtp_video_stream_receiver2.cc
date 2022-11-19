@@ -1014,31 +1014,19 @@ int RtpVideoStreamReceiver2::ulpfec_payload_type() const {
   return ulpfec_receiver_ ? ulpfec_receiver_->ulpfec_payload_type() : -1;
 }
 
-void RtpVideoStreamReceiver2::set_ulpfec_payload_type(int payload_type) {
-  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-  ulpfec_receiver_ = MaybeConstructUlpfecReceiver(
-      config_.rtp.remote_ssrc, red_payload_type_, payload_type,
-      config_.rtp.extensions, this, clock_);
-}
-
 int RtpVideoStreamReceiver2::red_payload_type() const {
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   return red_payload_type_;
 }
 
-void RtpVideoStreamReceiver2::set_red_payload_type(int payload_type) {
+void RtpVideoStreamReceiver2::SetProtectionPayloadTypes(
+    int red_payload_type,
+    int ulpfec_payload_type) {
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-  RTC_DCHECK_GE(payload_type, -1);
-  RTC_DCHECK_LE(payload_type, 0x7f);
-  // TODO(tommi, brandtr): It would be less error prone to require both
-  // red and ulpfec payload ids to be set at the same time.
-
-  // Stash away the currently configured ulpfec payload id to carry over to the
-  // potentially new `ulpfec_receiver_` instance.
-  int ulpfec_type = ulpfec_payload_type();
-  red_payload_type_ = payload_type;
+  RTC_DCHECK(red_payload_type >= -1 && red_payload_type < 0x80);
+  RTC_DCHECK(ulpfec_payload_type >= -1 && ulpfec_payload_type < 0x80);
   ulpfec_receiver_ = MaybeConstructUlpfecReceiver(
-      config_.rtp.remote_ssrc, red_payload_type_, ulpfec_type,
+      config_.rtp.remote_ssrc, red_payload_type, ulpfec_payload_type,
       config_.rtp.extensions, this, clock_);
 }
 

@@ -319,9 +319,8 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
   // Must be called on the packet delivery thread.
   virtual void SetNackHistory(TimeDelta history) = 0;
 
-  virtual void SetUlpfecPayloadType(int ulpfec_payload_type) = 0;
-
-  virtual void SetRedPayloadType(int red_payload_type) = 0;
+  virtual void SetProtectionPayloadTypes(int red_payload_type,
+                                         int ulpfec_payload_type) = 0;
 
   virtual void SetRtcpXr(Config::Rtp::RtcpXr rtcp_xr) = 0;
 
