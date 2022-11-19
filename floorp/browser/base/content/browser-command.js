@@ -299,10 +299,9 @@ function sidebarDrop() {
 		let elm_drag = document.getElementById(id);
 		this.parentNode.insertBefore(elm_drag, this);
 		this.style.borderTop = '';
-BROWSER_SIDEBAR_DATA.index.splice(0)
-for(let elem of document.querySelectorAll(".sicon-list")){BROWSER_SIDEBAR_DATA.index.push(elem.id.replace("select-",""))}
-Services.prefs.setStringPref(`floorp.browser.sidebar2.data`, JSON.stringify(BROWSER_SIDEBAR_DATA) );
-
+    BROWSER_SIDEBAR_DATA.index.splice(0);
+   for(let elem of document.querySelectorAll(".sicon-list")){BROWSER_SIDEBAR_DATA.index.push(elem.id.replace("select-",""))};
+     Services.prefs.setStringPref(`floorp.browser.sidebar2.data`, JSON.stringify(BROWSER_SIDEBAR_DATA) );
 	};
 
 function setSidebarIconView() {
@@ -310,31 +309,37 @@ function setSidebarIconView() {
     if(document.getElementById(`select-${elem}`) == null){
       let sidebarItem = document.createXULElement("toolbarbutton");
       sidebarItem.id = `select-${elem}`;
-      sidebarItem.classList.add("sidepanel-icon")
-      sidebarItem.classList.add("sicon-list")
-      sidebarItem.setAttribute("oncommand","setSidebarPage()")
-      if(BROWSER_SIDEBAR_DATA.data[elem]["url"].slice(0,8) == "floorp//"){
-        if(BROWSER_SIDEBAR_DATA.data[elem]["url"] in STATIC_SIDEBAR_L10N_LIST) sidebarItem.setAttribute("data-l10n-id",STATIC_SIDEBAR_L10N_LIST[BROWSER_SIDEBAR_DATA.data[elem].url])
-      }else{
-      sidebarItem.classList.add("webpanel-icon")
-sidebarItem.setAttribute("context","webpanel-context")
-      }
-sidebarItem.onmouseover = sidebarMouseOver
-sidebarItem.onmouseout = sidebarMouseOut
-sidebarItem.ondragstart = sidebarDragStart
+      sidebarItem.classList.add("sidepanel-icon");
+      sidebarItem.classList.add("sicon-list");
+      sidebarItem.setAttribute("oncommand","setSidebarPage()");
+     if(BROWSER_SIDEBAR_DATA.data[elem]["url"].slice(0,8) == "floorp//"){
+        if(BROWSER_SIDEBAR_DATA.data[elem]["url"] in STATIC_SIDEBAR_L10N_LIST){
+          //0~4 - StaticModeSetter | Browser Manager, Bookmark, History, Downloads, TreeStyleTab have l10n & Delete panel
+          sidebarItem.setAttribute("data-l10n-id",STATIC_SIDEBAR_L10N_LIST[BROWSER_SIDEBAR_DATA.data[elem].url] );
+          sidebarItem.setAttribute("context", "all-panel-context");
+        }
+     }else{
+        //5~ CustomURLSetter | Custom URL have l10n, Userangent, Delete panel & etc...
+        sidebarItem.classList.add("webpanel-icon");
+        sidebarItem.setAttribute("context","webpanel-context");
+     }
+
+  sidebarItem.onmouseover = sidebarMouseOver
+  sidebarItem.onmouseout = sidebarMouseOut
+  sidebarItem.ondragstart = sidebarDragStart
 	sidebarItem.ondragover = sidebarDragOver
 	sidebarItem.ondragleave = sidebarDragLeave
 	sidebarItem.ondrop = sidebarDrop
 
-      let sidebarItemImage = document.createXULElement("image");
-      sidebarItemImage.classList.add("toolbarbutton-icon")
-      sidebarItem.appendChild(sidebarItemImage)
+  let sidebarItemImage = document.createXULElement("image");
+  sidebarItemImage.classList.add("toolbarbutton-icon")
+  sidebarItem.appendChild(sidebarItemImage)
 
-      let sidebarItemLabel = document.createXULElement("label");
-      sidebarItemLabel.classList.add("toolbarbutton-text")
-sidebarItemLabel.setAttribute("crop","right")
-sidebarItemLabel.setAttribute("flex","1")
-      sidebarItem.appendChild(sidebarItemLabel)
+  let sidebarItemLabel = document.createXULElement("label");
+  sidebarItemLabel.classList.add("toolbarbutton-text")
+  sidebarItemLabel.setAttribute("crop","right")
+  sidebarItemLabel.setAttribute("flex","1")
+  sidebarItem.appendChild(sidebarItemLabel)
 
       document.getElementById("sidebar-select-box").insertBefore(sidebarItem,document.getElementById("add-button"));
     }else{
@@ -462,6 +467,24 @@ function changeWebpanelUA() {
 
   //reload webpanel
   sidebarSiteAction(2);
+}
+
+function deleteWebpanel(){
+  let sidebarsplit2 = document.getElementById("sidebar-splitter2");
+
+  if (sidebarsplit2.getAttribute("hidden") != "true") {
+    changeSidebarVisibility();
+  }
+
+  let index = BROWSER_SIDEBAR_DATA.index.indexOf(clickedWebpanel.replace("select-", ""));
+  BROWSER_SIDEBAR_DATA.index.splice(index, 1);
+  delete BROWSER_SIDEBAR_DATA.data[clickedWebpanel.replace("select-", "")];
+  Services.prefs.setStringPref(`floorp.browser.sidebar2.data`, JSON.stringify(BROWSER_SIDEBAR_DATA));
+
+  //Delete webpanel from sidebar. If it is Browser Manager or TST, Cannot delete.
+  try{contextWebpanel.remove();
+      document.getElementById(clickedWebpanel).remove();
+    } catch(e){};
 }
 
  function muteSidebar(){
