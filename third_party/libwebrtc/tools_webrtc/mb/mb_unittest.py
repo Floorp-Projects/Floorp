@@ -91,9 +91,9 @@ class FakeMBW(mb.WebRTCMetaBuildWrapper):
     abpath = self._AbsPath(path)
     self.files[abpath] = contents
 
-  def Call(self, cmd, env=None, buffer_output=True, stdin=None):
+  def Call(self, cmd, env=None, capture_output=True, stdin=None):
     del env
-    del buffer_output
+    del capture_output
     del stdin
     self.calls.append(cmd)
     if self.cmds:
@@ -231,11 +231,11 @@ def CreateFakeMBW(files=None, win32=False):
       mbw.files[path] = contents
       if path.endswith('.runtime_deps'):
 
-        def FakeCall(cmd, env=None, buffer_output=True, stdin=None):
+        def FakeCall(cmd, env=None, capture_output=True, stdin=None):
           # pylint: disable=cell-var-from-loop
           del cmd
           del env
-          del buffer_output
+          del capture_output
           del stdin
           mbw.files[path] = contents
           return 0, '', ''
