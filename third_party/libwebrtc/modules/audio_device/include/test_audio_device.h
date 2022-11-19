@@ -23,7 +23,6 @@
 #include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_device/include/audio_device_defines.h"
 #include "rtc_base/buffer.h"
-#include "rtc_base/event.h"
 
 namespace webrtc {
 
@@ -141,12 +140,9 @@ class TestAudioDeviceModule : public AudioDeviceModule {
   bool Playing() const override = 0;
   bool Recording() const override = 0;
 
-  // Blocks until the Renderer refuses to receive data.
-  // Returns false if `timeout_ms` passes before that happens.
-  virtual bool WaitForPlayoutEnd(int timeout_ms = rtc::Event::kForever) = 0;
   // Blocks until the Recorder stops producing data.
   // Returns false if `timeout_ms` passes before that happens.
-  virtual bool WaitForRecordingEnd(int timeout_ms = rtc::Event::kForever) = 0;
+  virtual bool WaitForRecordingEnd() = 0;
 };
 
 }  // namespace webrtc
