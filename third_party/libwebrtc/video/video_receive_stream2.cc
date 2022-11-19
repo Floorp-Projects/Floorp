@@ -262,7 +262,7 @@ VideoReceiveStream2::VideoReceiveStream2(
 
   timing_->set_render_delay(TimeDelta::Millis(config_.render_delay_ms));
 
-  frame_buffer_ = FrameBufferProxy::CreateFromFieldTrial(
+  buffer_ = VideoStreamBufferController::CreateFromFieldTrial(
       clock_, call_->worker_thread(), timing_.get(), &stats_proxy_,
       decode_queue_.Get(), this, max_wait_for_keyframe_, max_wait_for_frame_,
       decode_sync_, call_->trials());
@@ -354,7 +354,7 @@ void VideoReceiveStream2::Start() {
       rtp_video_stream_receiver_.ulpfec_payload_type() != -1;
 
   if (config_.rtp.nack.rtp_history_ms > 0 && protected_by_fec) {
-    frame_buffer_->SetProtectionMode(kProtectionNackFEC);
+    buffer_->SetProtectionMode(kProtectionNackFEC);
   }
 
   transport_adapter_.Enable();
@@ -411,7 +411,7 @@ void VideoReceiveStream2::Start() {
     RTC_DCHECK_RUN_ON(&decode_queue_);
     decoder_stopped_ = false;
   });
-  frame_buffer_->StartNextDecode(true);
+  buffer_->StartNextDecode(true);
   decoder_running_ = true;
 
   {
@@ -434,7 +434,7 @@ void VideoReceiveStream2::Stop() {
   stats_proxy_.OnUniqueFramesCounted(
       rtp_video_stream_receiver_.GetUniqueFramesSeen());
 
-  frame_buffer_->StopOnWorker();
+  buffer_->StopOnWorker();
   call_stats_->DeregisterStatsObserver(this);
   if (decoder_running_) {
     rtc::Event done;
@@ -535,9 +535,9 @@ void VideoReceiveStream2::SetNackHistory(TimeDelta history) {
       config_.rtp.protected_by_flexfec ||
       rtp_video_stream_receiver_.ulpfec_payload_type() != -1;
 
-  frame_buffer_->SetProtectionMode(history.ms() > 0 && protected_by_fec
-                                       ? kProtectionNackFEC
-                                       : kProtectionNack);
+  buffer_->SetProtectionMode(history.ms() > 0 && protected_by_fec
+                                 ? kProtectionNackFEC
+                                 : kProtectionNack);
 
   rtp_video_stream_receiver_.SetNackHistory(history);
   TimeDelta max_wait_for_keyframe = DetermineMaxWaitForFrame(history, true);
@@ -549,7 +549,7 @@ void VideoReceiveStream2::SetNackHistory(TimeDelta history) {
     max_wait_for_frame_ = max_wait_for_frame;
   });
 
-  frame_buffer_->SetMaxWaits(max_wait_for_keyframe, max_wait_for_frame);
+  buffer_->SetMaxWaits(max_wait_for_keyframe, max_wait_for_frame);
 }
 
 void VideoReceiveStream2::SetProtectionPayloadTypes(int red_payload_type,
@@ -749,7 +749,7 @@ void VideoReceiveStream2::OnCompleteFrame(std::unique_ptr<EncodedFrame> frame) {
     UpdatePlayoutDelays();
   }
 
-  auto last_continuous_pid = frame_buffer_->InsertFrame(std::move(frame));
+  auto last_continuous_pid = buffer_->InsertFrame(std::move(frame));
   if (last_continuous_pid.has_value()) {
     {
       // TODO(bugs.webrtc.org/11993): Call on the network thread.
@@ -762,7 +762,7 @@ void VideoReceiveStream2::OnCompleteFrame(std::unique_ptr<EncodedFrame> frame) {
 void VideoReceiveStream2::OnRttUpdate(int64_t avg_rtt_ms, int64_t max_rtt_ms) {
   RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
   // TODO(bugs.webrtc.org/13757): Replace with TimeDelta.
-  frame_buffer_->UpdateRtt(max_rtt_ms);
+  buffer_->UpdateRtt(max_rtt_ms);
   rtp_video_stream_receiver_.UpdateRtt(max_rtt_ms);
   stats_proxy_.OnRttUpdate(avg_rtt_ms);
 }
@@ -813,7 +813,7 @@ void VideoReceiveStream2::OnEncodedFrame(std::unique_ptr<EncodedFrame> frame) {
   if (decoder_stopped_)
     return;
   HandleEncodedFrame(std::move(frame));
-  frame_buffer_->StartNextDecode(keyframe_required_);
+  buffer_->StartNextDecode(keyframe_required_);
 }
 
 void VideoReceiveStream2::OnDecodableFrameTimeout(TimeDelta wait_time) {
@@ -828,7 +828,7 @@ void VideoReceiveStream2::OnDecodableFrameTimeout(TimeDelta wait_time) {
 
         decode_queue_.PostTask([this] {
           RTC_DCHECK_RUN_ON(&decode_queue_);
-          frame_buffer_->StartNextDecode(keyframe_required_);
+          buffer_->StartNextDecode(keyframe_required_);
         });
       }));
 }
@@ -1069,7 +1069,7 @@ void VideoReceiveStream2::UpdatePlayoutDelays() const {
           std::lrint(*frame_maximum_playout_delay_ * kFrameRate);
       // Subtract frames in buffer.
       max_composition_delay_in_frames =
-          std::max(max_composition_delay_in_frames - frame_buffer_->Size(), 0);
+          std::max(max_composition_delay_in_frames - buffer_->Size(), 0);
       timing_->SetMaxCompositionDelayInFrames(max_composition_delay_in_frames);
     }
   }

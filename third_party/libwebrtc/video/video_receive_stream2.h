@@ -34,11 +34,11 @@
 #include "rtc_base/task_queue.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/clock.h"
-#include "video/frame_buffer_proxy.h"
 #include "video/receive_statistics_proxy2.h"
 #include "video/rtp_streams_synchronizer2.h"
 #include "video/rtp_video_stream_receiver2.h"
 #include "video/transport_adapter.h"
+#include "video/video_stream_buffer_controller.h"
 #include "video/video_stream_decoder2.h"
 
 namespace webrtc {
@@ -262,7 +262,7 @@ class VideoReceiveStream2
   // moved to the new VideoStreamDecoder.
   std::vector<std::unique_ptr<VideoDecoder>> video_decoders_;
 
-  std::unique_ptr<FrameBufferProxy> frame_buffer_;
+  std::unique_ptr<VideoStreamBufferController> buffer_;
 
   std::unique_ptr<RtpStreamReceiverInterface> media_receiver_
       RTC_GUARDED_BY(packet_sequence_checker_);
