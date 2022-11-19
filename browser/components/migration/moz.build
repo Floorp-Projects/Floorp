@@ -12,6 +12,7 @@ JAR_MANIFESTS += ["jar.mn"]
 
 XPIDL_SOURCES += [
     "nsIBrowserProfileMigrator.idl",
+    "nsIEdgeMigrationUtils.idl",
 ]
 
 XPIDL_MODULE = "migration"
@@ -29,7 +30,11 @@ if CONFIG["OS_ARCH"] == "WINNT":
         DIRS += [
             "tests/unit/insertIEHistory",
         ]
+    EXPORTS += [
+        "nsEdgeMigrationUtils.h",
+    ]
     SOURCES += [
+        "nsEdgeMigrationUtils.cpp",
         "nsIEHistoryEnumerator.cpp",
     ]
     EXTRA_JS_MODULES += [

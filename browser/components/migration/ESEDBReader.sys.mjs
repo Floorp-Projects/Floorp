@@ -17,8 +17,6 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   return new ConsoleAPI(consoleOptions);
 });
 
-ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
-
 // We have a globally unique identifier for ESE instances. A new one
 // is used for each different database opened.
 let gESEInstanceCounter = 0;
@@ -780,20 +778,16 @@ export let ESEDBReader = {
   },
 
   async dbLocked(dbFile) {
-    let options = { winShare: lazy.OS.Constants.Win.FILE_SHARE_READ };
-    let locked = true;
-    await lazy.OS.File.open(dbFile.path, { read: true }, options).then(
-      fileHandle => {
-        locked = false;
-        // Return the close promise so we wait for the file to be closed again.
-        // Otherwise the file might still be kept open by this handle by the time
-        // that we try to use the ESE APIs to access it.
-        return fileHandle.close();
-      },
-      () => {
-        Cu.reportError("ESE DB at " + dbFile.path + " is locked.");
-      }
-    );
+    const utils = Cc[
+      "@mozilla.org/profile/migrator/edgemigrationutils;1"
+    ].createInstance(Ci.nsIEdgeMigrationUtils);
+
+    const locked = await utils.isDbLocked(dbFile);
+
+    if (locked) {
+      Cu.reportError(`ESE DB at ${dbFile.path} is locked.`);
+    }
+
     return locked;
   },
 
