@@ -421,6 +421,9 @@ class RTC_EXPORT Network {
   // Returns the length, in bits, of this network's prefix.
   int prefix_length() const { return prefix_length_; }
 
+  // Returns the family for the network prefix.
+  int family() const { return prefix_.family(); }
+
   // `key_` has unique value per network interface. Used in sorting network
   // interfaces. Key is derived from interface name and it's prefix.
   std::string key() const { return key_; }

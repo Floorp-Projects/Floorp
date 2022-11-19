@@ -334,6 +334,7 @@ TEST_F(NetworkTest, TestNetworkConstruct) {
   EXPECT_EQ("Test Network Adapter 1", ipv4_network1.description());
   EXPECT_EQ(IPAddress(0x12345600U), ipv4_network1.prefix());
   EXPECT_EQ(24, ipv4_network1.prefix_length());
+  EXPECT_EQ(AF_INET, ipv4_network1.family());
   EXPECT_FALSE(ipv4_network1.ignored());
 }
 
@@ -1125,6 +1126,7 @@ TEST_F(NetworkTest, TestIPv6Selection) {
   // Create a network with this prefix.
   Network ipv6_network("test_eth0", "Test NetworkAdapter", TruncateIP(ip, 64),
                        64);
+  EXPECT_EQ(AF_INET6, ipv6_network.family());
 
   // When there is no address added, it should return an unspecified
   // address.
