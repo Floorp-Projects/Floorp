@@ -358,16 +358,7 @@ void VideoReceiveStream2::Start() {
     renderer = this;
   }
 
-  int decoders_count = 0;
   for (const Decoder& decoder : config_.decoders) {
-    // Create up to maximum_pre_stream_decoders_ up front, wait the the other
-    // decoders until they are requested (i.e., we receive the corresponding
-    // payload).
-    if (decoders_count < static_cast<int>(maximum_pre_stream_decoders_)) {
-      CreateAndRegisterExternalDecoder(decoder);
-      ++decoders_count;
-    }
-
     VideoDecoder::Settings settings;
     settings.set_codec_type(
         PayloadStringToCodecType(decoder.video_format.name));
@@ -400,6 +391,18 @@ void VideoReceiveStream2::Start() {
   stats_proxy_.DecoderThreadStarting();
   decode_queue_.PostTask([this] {
     RTC_DCHECK_RUN_ON(&decode_queue_);
+    // Create up to maximum_pre_stream_decoders_ up front, wait the the other
+    // decoders until they are requested (i.e., we receive the corresponding
+    // payload).
+    int decoders_count = 0;
+    for (const Decoder& decoder : config_.decoders) {
+      if (decoders_count >= maximum_pre_stream_decoders_) {
+        break;
+      }
+      CreateAndRegisterExternalDecoder(decoder);
+      ++decoders_count;
+    }
+
     decoder_stopped_ = false;
   });
   buffer_->StartNextDecode(true);

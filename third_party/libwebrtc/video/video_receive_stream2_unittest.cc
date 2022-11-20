@@ -494,33 +494,29 @@ TEST_P(VideoReceiveStream2Test, LazyDecoderCreation) {
   // Only 1 decoder is created by default. It will be H265 since that was the
   // first in the decoder list.
   EXPECT_CALL(mock_h264_decoder_factory_, CreateVideoDecoder(_)).Times(0);
-  EXPECT_CALL(mock_h264_decoder_factory_,
-              CreateVideoDecoder(
-                  testing::Field(&SdpVideoFormat::name, testing::Eq("H265"))))
-      .Times(1);
+  EXPECT_CALL(
+      mock_h264_decoder_factory_,
+      CreateVideoDecoder(Field(&SdpVideoFormat::name, testing::Eq("H265"))));
   video_receive_stream_->Start();
+  // Decoder creation happens on the decoder thread, make sure it runs.
+  time_controller_.AdvanceTime(TimeDelta::Zero());
 
   EXPECT_TRUE(
       testing::Mock::VerifyAndClearExpectations(&mock_h264_decoder_factory_));
 
-  EXPECT_CALL(mock_h264_decoder_factory_,
-              CreateVideoDecoder(
-                  testing::Field(&SdpVideoFormat::name, testing::Eq("H264"))))
-      .Times(1);
-  rtc::Event init_decode_event;
-  EXPECT_CALL(mock_decoder_, Configure).WillOnce(WithoutArgs([&] {
-    init_decode_event.Set();
-    return true;
-  }));
-  EXPECT_CALL(mock_decoder_, RegisterDecodeCompleteCallback(_));
-  EXPECT_CALL(mock_decoder_, Decode(_, false, _));
+  EXPECT_CALL(
+      mock_h264_decoder_factory_,
+      CreateVideoDecoder(Field(&SdpVideoFormat::name, testing::Eq("H264"))));
+  EXPECT_CALL(mock_decoder_, Configure);
+  EXPECT_CALL(mock_decoder_, RegisterDecodeCompleteCallback);
+  EXPECT_CALL(mock_decoder_, Decode);
   RtpPacketReceived parsed_packet;
   ASSERT_TRUE(parsed_packet.Parse(rtppacket.data(), rtppacket.size()));
   rtp_stream_receiver_controller_.OnRtpPacket(parsed_packet);
-  EXPECT_CALL(mock_decoder_, Release());
+  EXPECT_CALL(mock_decoder_, Release);
 
   // Make sure the decoder thread had a chance to run.
-  init_decode_event.Wait(kDefaultTimeOut.ms());
+  time_controller_.AdvanceTime(TimeDelta::Zero());
 }
 
 TEST_P(VideoReceiveStream2Test, PassesNtpTime) {
