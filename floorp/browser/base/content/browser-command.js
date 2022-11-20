@@ -215,10 +215,9 @@ function displayBrowserManagerSidebar() {
 
 function setCustomURLFavicon(sbar_id) {
   let sbar_url = BROWSER_SIDEBAR_DATA.data[sbar_id.slice(7)].url;
-  if (sbar_url.slice(0,7) != "floorp//") {
-    document.getElementById(`${sbar_id}`).style.listStyleImage = `url(chrome://devtools/skin/images/globe.svg)`;
-  }
   if(sbar_url.startsWith("http://") || sbar_url.startsWith("https://")) {
+    document.getElementById(`${sbar_id}`).style.listStyleImage = `url(chrome://devtools/skin/images/globe.svg)`;
+
     let icon_url = `http://www.google.com/s2/favicons?domain=${sbar_url}`;
     fetch(icon_url)
       .then(async(response) => {
@@ -245,6 +244,8 @@ function setCustomURLFavicon(sbar_id) {
         console.log("function: setCustomURLFavicon -> site -> function: fetch : " + reject);
       });
   } else if (sbar_url.startsWith("moz-extension://")) {
+    document.getElementById(`${sbar_id}`).style.listStyleImage = `url(chrome://mozapps/skin/extensions/extensionGeneric.svg)`;
+
     let addon_id = (new URL(sbar_url)).hostname;
     let addon_base_url = `moz-extension://${addon_id}`
     fetch(addon_base_url + "/manifest.json")
