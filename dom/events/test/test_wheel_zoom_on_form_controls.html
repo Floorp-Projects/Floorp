@@ -58,7 +58,10 @@
   SimpleTest.waitForExplicitFinish();
   SimpleTest.waitForFocus(() => {
     SpecialPowers.pushPrefEnv({
-      "set":[["test.events.async.enabled", true]]
+      "set":[
+        ["mousewheel.with_control.action", 3],  // Scroll on Ctrl + mousewheel
+        ["test.events.async.enabled", true],
+      ]
     }, test)
   });
 </script>
