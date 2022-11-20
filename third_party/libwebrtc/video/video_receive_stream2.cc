@@ -396,7 +396,7 @@ void VideoReceiveStream2::Start() {
     // payload).
     int decoders_count = 0;
     for (const Decoder& decoder : config_.decoders) {
-      if (decoders_count >= maximum_pre_stream_decoders_) {
+      if (decoders_count >= static_cast<int>(maximum_pre_stream_decoders_)) {
         break;
       }
       CreateAndRegisterExternalDecoder(decoder);
