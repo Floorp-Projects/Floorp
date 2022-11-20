@@ -75,7 +75,7 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
   test::ScopedKeyValueConfig field_trials;
   VCMTiming timing(time_controller.GetClock(), field_trials);
   video_coding::FrameBuffer frame_buffer(time_controller.GetClock(), &timing,
-                                         nullptr, field_trials);
+                                         field_trials);
 
   bool next_frame_task_running = false;
 
