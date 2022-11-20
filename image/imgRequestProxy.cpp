@@ -22,7 +22,6 @@
 
 using namespace mozilla;
 using namespace mozilla::image;
-using mozilla::dom::Document;
 
 // The split of imgRequestProxy and imgRequestProxyStatic means that
 // certain overridden functions need to be usable in the destructor.
@@ -109,6 +108,7 @@ imgRequestProxy::imgRequestProxy()
       mLoadFlags(nsIRequest::LOAD_NORMAL),
       mLockCount(0),
       mAnimationConsumers(0),
+      mCancelable(true),
       mCanceled(false),
       mIsInLoadGroup(false),
       mForceDispatchLoadGroup(false),
@@ -462,9 +462,18 @@ NS_IMETHODIMP imgRequestProxy::CancelWithReason(nsresult aStatus,
   return CancelWithReasonImpl(aStatus, aReason);
 }
 
+void imgRequestProxy::SetCancelable(bool aCancelable) {
+  MOZ_ASSERT(NS_IsMainThread());
+  mCancelable = aCancelable;
+}
+
 NS_IMETHODIMP
 imgRequestProxy::Cancel(nsresult status) {
   if (mCanceled) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (NS_WARN_IF(!mCancelable)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -491,6 +500,13 @@ imgRequestProxy::CancelAndForgetObserver(nsresult aStatus) {
   // RemoveProxy call right now, because we need to deliver the
   // onStopRequest.
   if (mCanceled && !mListener) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (NS_WARN_IF(!mCancelable)) {
+    MOZ_ASSERT(mCancelable,
+               "Shouldn't try to cancel non-cancelable requests via "
+               "CancelAndForgetObserver");
     return NS_ERROR_FAILURE;
   }
 
