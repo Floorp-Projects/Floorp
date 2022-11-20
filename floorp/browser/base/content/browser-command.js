@@ -218,7 +218,12 @@ function setCustomURLFavicon(sbar_id) {
   if(sbar_url.startsWith("http://") || sbar_url.startsWith("https://")) {
     document.getElementById(`${sbar_id}`).style.listStyleImage = `url(chrome://devtools/skin/images/globe.svg)`;
 
-    let icon_url = `http://www.google.com/s2/favicons?domain=${sbar_url}`;
+    let os_languages = Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences).regionalPrefsLocales;
+
+    let icon_url = os_languages.includes("zh-CN") ?
+      `https://favicon.yandex.net/favicon/v2/${sbar_url}` :  // Access to Google is blocked in China.
+      `https://www.google.com/s2/favicons?domain=${sbar_url}`;
+
     fetch(icon_url)
       .then(async(response) => {
         if (response.status !== 200) {
@@ -235,6 +240,11 @@ function setCustomURLFavicon(sbar_id) {
           })
           reader.readAsDataURL(blob_data);
         });
+
+        if (icon_data_url === "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWIAAYAAAwAABQABggWTzwAAAABJRU5ErkJggg==") {
+          // Yandex returns an icon of size 1px with status code 200 when the icon could not be retrieved; if the Data URL matches, Yandex assumes that the retrieval failed.
+          throw "Yandex 404"
+        }
 
         if (BROWSER_SIDEBAR_DATA.data[sbar_id.slice(7)].url === sbar_url) {  // Check that the URL has not changed after the icon is retrieved.
           document.getElementById(`${sbar_id}`).style.listStyleImage = `url(${icon_data_url})`;
