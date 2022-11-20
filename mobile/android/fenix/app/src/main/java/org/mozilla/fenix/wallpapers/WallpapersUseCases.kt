@@ -76,7 +76,10 @@ class WallpapersUseCases(
     }
     val loadBitmap: LoadBitmapUseCase by lazy {
         if (FeatureFlags.wallpaperV2Enabled) {
-            DefaultLoadBitmapUseCase(context)
+            DefaultLoadBitmapUseCase(
+                filesDir = context.filesDir,
+                getOrientation = { context.resources.configuration.orientation },
+            )
         } else {
             LegacyLoadBitmapUseCase(context)
         }
@@ -372,17 +375,19 @@ class WallpapersUseCases(
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal class DefaultLoadBitmapUseCase(private val context: Context) : LoadBitmapUseCase {
+    internal class DefaultLoadBitmapUseCase(
+        private val filesDir: File,
+        private val getOrientation: () -> Int,
+    ) : LoadBitmapUseCase {
         override suspend fun invoke(wallpaper: Wallpaper): Bitmap? =
-            loadWallpaperFromDisk(context, wallpaper)
+            loadWallpaperFromDisk(wallpaper)
 
         private suspend fun loadWallpaperFromDisk(
-            context: Context,
             wallpaper: Wallpaper,
         ): Bitmap? = Result.runCatching {
-            val path = wallpaper.getLocalPathFromContext(context)
+            val path = wallpaper.getLocalPathFromContext()
             withContext(Dispatchers.IO) {
-                val file = File(context.filesDir, path)
+                val file = File(filesDir, path)
                 BitmapFactory.decodeStream(file.inputStream())
             }
         }.getOrNull()
@@ -391,8 +396,8 @@ class WallpapersUseCases(
          * Get the expected local path on disk for a wallpaper. This will differ depending
          * on orientation and app theme.
          */
-        private fun Wallpaper.getLocalPathFromContext(context: Context): String {
-            val orientation = if (context.isLandscape()) {
+        private fun Wallpaper.getLocalPathFromContext(): String {
+            val orientation = if (isLandscape()) {
                 Wallpaper.ImageType.Landscape
             } else {
                 Wallpaper.ImageType.Portrait
@@ -400,8 +405,8 @@ class WallpapersUseCases(
             return Wallpaper.getLocalPath(name, orientation)
         }
 
-        private fun Context.isLandscape(): Boolean {
-            return resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        private fun isLandscape(): Boolean {
+            return getOrientation() == Configuration.ORIENTATION_LANDSCAPE
         }
     }
 
