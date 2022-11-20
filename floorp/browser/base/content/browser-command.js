@@ -224,6 +224,16 @@ function displayBrowserManagerSidebar() {
 
 function setCustomURLFavicon(sbar_id) {
   let sbar_url = BROWSER_SIDEBAR_DATA.data[sbar_id.slice(7)].url;
+
+  try {
+    new URL(sbar_url);
+  } catch (e) {
+    console.error(e);
+    document.getElementById(`${sbar_id}`).style.listStyleImage = `url(chrome://devtools/skin/images/globe.svg)`;
+    setUserContextLine(sbar_id.slice(7));
+    return;
+  }
+
   if(sbar_url.startsWith("http://") || sbar_url.startsWith("https://")) {
     document.getElementById(`${sbar_id}`).style.listStyleImage = `url(chrome://devtools/skin/images/globe.svg)`;
 
@@ -274,7 +284,7 @@ function setCustomURLFavicon(sbar_id) {
         }
       })
       .catch(reject => {
-        console.log("function: setCustomURLFavicon -> site -> function: fetch : " + reject);
+        console.error(reject);
       });
   } else if (sbar_url.startsWith("moz-extension://")) {
     document.getElementById(`${sbar_id}`).style.listStyleImage = `url(chrome://mozapps/skin/extensions/extensionGeneric.svg)`;
@@ -291,7 +301,8 @@ function setCustomURLFavicon(sbar_id) {
 
         let addon_icon_path = addon_manifest["icons"][
           Math.max(...Object.keys(addon_manifest["icons"]))
-        ]
+        ];
+        if (addon_icon_path === undefined) throw "Icon not found.";
 
         let addon_icon_url = addon_icon_path.startsWith("/") ?
           `${addon_base_url}${addon_icon_path}` :
@@ -302,7 +313,7 @@ function setCustomURLFavicon(sbar_id) {
         }
       })
       .catch(reject => {
-        console.log("function: setCustomURLFavicon -> addon -> function: fetch : " + reject);
+        console.error(reject);
       });
   }
 
