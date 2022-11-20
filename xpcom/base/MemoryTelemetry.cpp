@@ -486,25 +486,6 @@ nsresult MemoryTelemetry::FinishGatheringTotalMemory(
   return total;
 }
 
-void MemoryTelemetry::GetUniqueSetSize(
-    std::function<void(const int64_t&)>&& aCallback) {
-  mThreadPool->Dispatch(
-      NS_NewRunnableFunction(
-          "MemoryTelemetry::GetUniqueSetSize",
-          [callback = std::move(aCallback)]() mutable {
-            RefPtr<nsMemoryReporterManager> mgr =
-                nsMemoryReporterManager::GetOrCreate();
-            MOZ_RELEASE_ASSERT(mgr);
-
-            int64_t uss = mgr->ResidentUnique();
-
-            NS_DispatchToMainThread(NS_NewRunnableFunction(
-                "MemoryTelemetry::GetUniqueSetSizeResult",
-                [uss, callback = std::move(callback)]() { callback(uss); }));
-          }),
-      NS_DISPATCH_NORMAL);
-}
-
 nsresult MemoryTelemetry::Observe(nsISupports* aSubject, const char* aTopic,
                                   const char16_t* aData) {
   if (strcmp(aTopic, kTopicCycleCollectorBegin) == 0) {

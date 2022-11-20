@@ -39,8 +39,6 @@ class MemoryTelemetry final : public nsIObserver,
   nsresult GatherReports(
       const std::function<void()>& aCompletionCallback = nullptr);
 
-  void GetUniqueSetSize(std::function<void(const int64_t&)>&& aCallback);
-
   /**
    * Does expensive initialization, which should happen only after startup has
    * completed, and the event loop is idle.
