@@ -33,8 +33,8 @@
 #endif
 
 #include "absl/memory/memory.h"
+#include "api/units/time_delta.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/openssl.h"
@@ -165,6 +165,8 @@ static void LogSslError() {
 /////////////////////////////////////////////////////////////////////////////
 
 namespace rtc {
+
+using ::webrtc::TimeDelta;
 
 namespace webrtc_openssl_adapter_internal {
 
@@ -392,7 +394,7 @@ int OpenSSLAdapter::ContinueSSL() {
   RTC_DCHECK(state_ == SSL_CONNECTING);
 
   // Clear the DTLS timer
-  Thread::Current()->Clear(this, MSG_TIMEOUT);
+  timer_.reset();
 
   int code = (role_ == SSL_CLIENT) ? SSL_connect(ssl_) : SSL_accept(ssl_);
   switch (SSL_get_error(ssl_, code)) {
@@ -420,10 +422,10 @@ int OpenSSLAdapter::ContinueSSL() {
       RTC_LOG(LS_VERBOSE) << " -- error want read";
       struct timeval timeout;
       if (DTLSv1_get_timeout(ssl_, &timeout)) {
-        int delay = timeout.tv_sec * 1000 + timeout.tv_usec / 1000;
-
-        Thread::Current()->PostDelayed(RTC_FROM_HERE, delay, this, MSG_TIMEOUT,
-                                       0);
+        TimeDelta delay = TimeDelta::Seconds(timeout.tv_sec) +
+                          TimeDelta::Micros(timeout.tv_usec);
+        Thread::Current()->PostDelayedTask(
+            SafeTask(timer_.flag(), [this] { OnTimeout(); }), delay);
       }
       break;
 
@@ -470,7 +472,7 @@ void OpenSSLAdapter::Cleanup() {
   identity_.reset();
 
   // Clear the DTLS timer
-  Thread::Current()->Clear(this, MSG_TIMEOUT);
+  timer_.reset();
 }
 
 int OpenSSLAdapter::DoSslWrite(const void* pv, size_t cb, int* error) {
@@ -673,12 +675,10 @@ bool OpenSSLAdapter::IsResumedSession() {
   return (ssl_ && SSL_session_reused(ssl_) == 1);
 }
 
-void OpenSSLAdapter::OnMessage(Message* msg) {
-  if (MSG_TIMEOUT == msg->message_id) {
-    RTC_LOG(LS_INFO) << "DTLS timeout expired";
-    DTLSv1_handle_timeout(ssl_);
-    ContinueSSL();
-  }
+void OpenSSLAdapter::OnTimeout() {
+  RTC_LOG(LS_INFO) << "DTLS timeout expired";
+  DTLSv1_handle_timeout(ssl_);
+  ContinueSSL();
 }
 
 void OpenSSLAdapter::OnConnectEvent(Socket* socket) {
