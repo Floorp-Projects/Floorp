@@ -705,3 +705,18 @@ function setTabbarMode() {
       break;
   }
 }
+/*---------------------------------------------------------------- Multirow-Tab ----------------------------------------------------------------*/
+
+function setMultirowTabMaxHeight() {
+  try{document.querySelector("#tabbrowser-arrowscrollbox").shadowRoot.querySelector("[part=scrollbox]").removeAttribute("style")}catch(e){};
+
+  let rowValue = Services.prefs.getIntPref("floorp.browser.tabbar.multirow.max.row");
+  let tabHeight = document.querySelector(".tabbrowser-tab").clientHeight;
+  document.querySelector("#tabbrowser-arrowscrollbox").shadowRoot.querySelector("[part=scrollbox]").
+    setAttribute("style", "max-height: " + tabHeight*rowValue + "px !important;");
+}
+
+function removeMultirowTabMaxHeight() {
+  document.querySelector("#tabbrowser-arrowscrollbox").shadowRoot.querySelector("[part=scrollbox]").
+    removeAttribute("style");
+}

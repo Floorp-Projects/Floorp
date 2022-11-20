@@ -15,7 +15,8 @@ function updateDesign(){
   if (designID)designID.remove();
   setBrowserDesign();
   URLbarrecalculation();
+  window.setTimeout(setMultirowTabMaxHeight, 1000);
  }
 
-Services.prefs.addObserver("floorp.browser.user.interface",updateDesign)
+Services.prefs.addObserver("floorp.browser.user.interface",updateDesign);
 Services.obs.addObserver(updateDesign, "update-photon-pref");

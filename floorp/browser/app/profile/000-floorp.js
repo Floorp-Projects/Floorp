@@ -219,6 +219,7 @@ pref("browser.tabs.closeWindowWithLastTab", false);//最後のタブを閉じて
 pref("general.config.obscure_value", 0);
 
 pref("floorp.enable.multitab", false);
+pref("floorp.browser.tabbar.multirow.max.row", 3);
 
 //font
 

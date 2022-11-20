@@ -18,3 +18,13 @@
    setTabbarMode();
   }
  )
+
+//-------------------------------------------------------------------------Multirow-tabs----------------------------------------------------------------------------
+
+window.setTimeout(function(){
+  if (Services.prefs.getBoolPref("floorp.enable.multitab")) {
+    setMultirowTabMaxHeight();
+  }
+}, 3000);
+
+Services.prefs.addObserver("floorp.browser.tabbar.multirow.max.row",setMultirowTabMaxHeight);
