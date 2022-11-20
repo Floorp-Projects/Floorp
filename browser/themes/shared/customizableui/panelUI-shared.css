@@ -1410,10 +1410,6 @@ toolbarpaletteitem[place="panel"] > toolbaritem {
   margin: 0;
 }
 
-.widget-overflow-list {
-  width: var(--menu-panel-width-wide);
-}
-
 /* In customize mode, the overflow list is constrained by its container,
  * so we set width: auto to avoid the scrollbar not fitting.
  */
