@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "modules/desktop_capture/linux/wayland/portal_request_response.h"
 #include "modules/desktop_capture/linux/wayland/scoped_glib.h"
 #include "modules/desktop_capture/linux/wayland/xdg_session_details.h"
@@ -43,7 +44,6 @@ using SessionRequestResponseSignalHandler = void (*)(GDBusConnection*,
                                                      const char*,
                                                      GVariant*,
                                                      gpointer);
-using SessionRequestResponseSignalCallback = void (*)(std::string);
 using StartRequestResponseSignalHandler = void (*)(GDBusConnection*,
                                                    const char*,
                                                    const char*,
@@ -59,22 +59,23 @@ std::string RequestResponseToString(RequestResponse request);
 
 // Returns a string path for signal handle based on the provided connection and
 // token.
-std::string PrepareSignalHandle(const char* token, GDBusConnection* connection);
+std::string PrepareSignalHandle(absl::string_view token,
+                                GDBusConnection* connection);
 
 // Sets up the callback to execute when a response signal is received for the
 // given object.
-uint32_t SetupRequestResponseSignal(const char* object_path,
+uint32_t SetupRequestResponseSignal(absl::string_view object_path,
                                     const GDBusSignalCallback callback,
                                     gpointer user_data,
                                     GDBusConnection* connection);
 
-void RequestSessionProxy(const char* interface_name,
+void RequestSessionProxy(absl::string_view interface_name,
                          const ProxyRequestCallback proxy_request_callback,
                          GCancellable* cancellable,
                          gpointer user_data);
 
 void SetupSessionRequestHandlers(
-    const std::string& portal_prefix,
+    absl::string_view portal_prefix,
     const SessionRequestCallback session_request_callback,
     const SessionRequestResponseSignalHandler request_response_signale_handler,
     GDBusConnection* connection,
@@ -85,8 +86,8 @@ void SetupSessionRequestHandlers(
     gpointer user_data);
 
 void StartSessionRequest(
-    const std::string& prefix,
-    const std::string session_handle,
+    absl::string_view prefix,
+    absl::string_view session_handle,
     const StartRequestResponseSignalHandler signal_handler,
     const SessionStartRequestedHandler session_started_handler,
     GDBusProxy* proxy,
@@ -97,7 +98,7 @@ void StartSessionRequest(
     gpointer user_data);
 
 // Tears down the portal session and cleans up related objects.
-void TearDownSession(std::string session_handle,
+void TearDownSession(absl::string_view session_handle,
                      GDBusProxy* proxy,
                      GCancellable* cancellable,
                      GDBusConnection* connection);
