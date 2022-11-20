@@ -203,11 +203,33 @@ class VideoReceiveStream2
   void OnDecodableFrameTimeout(TimeDelta wait) override;
 
   void CreateAndRegisterExternalDecoder(const Decoder& decoder);
-  void HandleEncodedFrameOnDecodeQueue(std::unique_ptr<EncodedFrame> frame,
-                                       Timestamp now,
-                                       bool keyframe_request_is_due,
-                                       bool keyframe_required)
-      RTC_RUN_ON(decode_queue_);
+
+  struct DecodeFrameResult {
+    DecodeFrameResult(const DecodeFrameResult&) = delete;
+    DecodeFrameResult& operator=(const DecodeFrameResult&) = delete;
+    DecodeFrameResult(DecodeFrameResult&&) = default;
+    DecodeFrameResult& operator=(DecodeFrameResult&&) = default;
+
+    // True if the decoder returned code WEBRTC_VIDEO_CODEC_OK_REQUEST_KEYFRAME,
+    // or if the decoder failed and a keyframe is required. When true, a
+    // keyframe request should be sent even if a keyframe request was sent
+    // recently.
+    bool force_request_key_frame;
+
+    // The picture id of the frame that was decoded, or nullopt if the frame was
+    // not decoded.
+    absl::optional<int64_t> decoded_frame_picture_id;
+
+    // True if the next frame decoded must be a keyframe. This value will set
+    // the value of `keyframe_required_`, which will force the frame buffer to
+    // drop all frames that are not keyframes.
+    bool keyframe_required;
+  };
+
+  DecodeFrameResult HandleEncodedFrameOnDecodeQueue(
+      std::unique_ptr<EncodedFrame> frame,
+      bool keyframe_request_is_due,
+      bool keyframe_required) RTC_RUN_ON(decode_queue_);
   void UpdatePlayoutDelays() const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(worker_sequence_checker_);
   void RequestKeyFrame(Timestamp now) RTC_RUN_ON(packet_sequence_checker_);

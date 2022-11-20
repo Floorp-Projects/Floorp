@@ -811,15 +811,45 @@ void VideoReceiveStream2::OnEncodedFrame(std::unique_ptr<EncodedFrame> frame) {
   const bool keyframe_request_is_due =
       !last_keyframe_request_ ||
       now >= (*last_keyframe_request_ + max_wait_for_keyframe_);
+  const bool received_frame_is_keyframe =
+      frame->FrameType() == VideoFrameType::kVideoFrameKey;
 
-  decode_queue_.PostTask([this, frame = std::move(frame), now,
-                          keyframe_request_is_due,
+  // Current OnPreDecode only cares about QP for VP8.
+  int qp = -1;
+  if (frame->CodecSpecific()->codecType == kVideoCodecVP8) {
+    if (!vp8::GetQp(frame->data(), frame->size(), &qp)) {
+      RTC_LOG(LS_WARNING) << "Failed to extract QP from VP8 video frame";
+    }
+  }
+  stats_proxy_.OnPreDecode(frame->CodecSpecific()->codecType, qp);
+
+  decode_queue_.PostTask([this, now, keyframe_request_is_due,
+                          received_frame_is_keyframe, frame = std::move(frame),
                           keyframe_required = keyframe_required_]() mutable {
     RTC_DCHECK_RUN_ON(&decode_queue_);
     if (decoder_stopped_)
       return;
-    HandleEncodedFrameOnDecodeQueue(std::move(frame), now,
-                                    keyframe_request_is_due, keyframe_required);
+    DecodeFrameResult result = HandleEncodedFrameOnDecodeQueue(
+        std::move(frame), keyframe_request_is_due, keyframe_required);
+
+    // TODO(bugs.webrtc.org/11993): Make this PostTask to the network thread.
+    call_->worker_thread()->PostTask(
+        SafeTask(task_safety_.flag(),
+                 [this, now, result = std::move(result),
+                  received_frame_is_keyframe, keyframe_request_is_due]() {
+                   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+                   keyframe_required_ = result.keyframe_required;
+
+                   if (result.decoded_frame_picture_id) {
+                     rtp_video_stream_receiver_.FrameDecoded(
+                         *result.decoded_frame_picture_id);
+                   }
+
+                   HandleKeyFrameGeneration(received_frame_is_keyframe, now,
+                                            result.force_request_key_frame,
+                                            keyframe_request_is_due);
+                   buffer_->StartNextDecode(keyframe_required_);
+                 }));
   });
 }
 
@@ -850,24 +880,15 @@ void VideoReceiveStream2::OnDecodableFrameTimeout(TimeDelta wait) {
   buffer_->StartNextDecode(keyframe_required_);
 }
 
-void VideoReceiveStream2::HandleEncodedFrameOnDecodeQueue(
+VideoReceiveStream2::DecodeFrameResult
+VideoReceiveStream2::HandleEncodedFrameOnDecodeQueue(
     std::unique_ptr<EncodedFrame> frame,
-    Timestamp now,
     bool keyframe_request_is_due,
     bool keyframe_required) {
   RTC_DCHECK_RUN_ON(&decode_queue_);
 
-  // Current OnPreDecode only cares about QP for VP8.
-  int qp = -1;
-  if (frame->CodecSpecific()->codecType == kVideoCodecVP8) {
-    if (!vp8::GetQp(frame->data(), frame->size(), &qp)) {
-      RTC_LOG(LS_WARNING) << "Failed to extract QP from VP8 video frame";
-    }
-  }
-  stats_proxy_.OnPreDecode(frame->CodecSpecific()->codecType, qp);
-
   bool force_request_key_frame = false;
-  int64_t decoded_frame_picture_id = -1;
+  absl::optional<int64_t> decoded_frame_picture_id;
 
   if (!video_receiver_.IsExternalDecoderRegistered(frame->PayloadType())) {
     // Look for the decoder with this payload type.
@@ -880,8 +901,6 @@ void VideoReceiveStream2::HandleEncodedFrameOnDecodeQueue(
   }
 
   int64_t frame_id = frame->Id();
-  bool received_frame_is_keyframe =
-      frame->FrameType() == VideoFrameType::kVideoFrameKey;
   int decode_result = DecodeAndMaybeDispatchEncodedFrame(std::move(frame));
   if (decode_result == WEBRTC_VIDEO_CODEC_OK ||
       decode_result == WEBRTC_VIDEO_CODEC_OK_REQUEST_KEYFRAME) {
@@ -899,24 +918,11 @@ void VideoReceiveStream2::HandleEncodedFrameOnDecodeQueue(
     force_request_key_frame = true;
   }
 
-  {
-    // TODO(bugs.webrtc.org/11993): Make this PostTask to the network thread.
-    call_->worker_thread()->PostTask(SafeTask(
-        task_safety_.flag(), [this, now, received_frame_is_keyframe,
-                              force_request_key_frame, decoded_frame_picture_id,
-                              keyframe_request_is_due, keyframe_required]() {
-          RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-          keyframe_required_ = keyframe_required;
-
-          if (decoded_frame_picture_id != -1)
-            rtp_video_stream_receiver_.FrameDecoded(decoded_frame_picture_id);
-
-          HandleKeyFrameGeneration(received_frame_is_keyframe, now,
-                                   force_request_key_frame,
-                                   keyframe_request_is_due);
-          buffer_->StartNextDecode(keyframe_required_);
-        }));
-  }
+  return DecodeFrameResult{
+      .force_request_key_frame = force_request_key_frame,
+      .decoded_frame_picture_id = std::move(decoded_frame_picture_id),
+      .keyframe_required = keyframe_required,
+  };
 }
 
 int VideoReceiveStream2::DecodeAndMaybeDispatchEncodedFrame(

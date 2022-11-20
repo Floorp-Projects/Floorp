@@ -978,16 +978,12 @@ void ReceiveStatisticsProxy::OnDiscardedPackets(uint32_t packets_discarded) {
 }
 
 void ReceiveStatisticsProxy::OnPreDecode(VideoCodecType codec_type, int qp) {
-  RTC_DCHECK_RUN_ON(&decode_queue_);
-  worker_thread_->PostTask(
-      SafeTask(task_safety_.flag(), [codec_type, qp, this]() {
-        RTC_DCHECK_RUN_ON(&main_thread_);
-        last_codec_type_ = codec_type;
-        if (last_codec_type_ == kVideoCodecVP8 && qp != -1) {
-          qp_counters_.vp8.Add(qp);
-          qp_sample_.Add(qp);
-        }
-      }));
+  RTC_DCHECK_RUN_ON(&main_thread_);
+  last_codec_type_ = codec_type;
+  if (last_codec_type_ == kVideoCodecVP8 && qp != -1) {
+    qp_counters_.vp8.Add(qp);
+    qp_sample_.Add(qp);
+  }
 }
 
 void ReceiveStatisticsProxy::OnStreamInactive() {
