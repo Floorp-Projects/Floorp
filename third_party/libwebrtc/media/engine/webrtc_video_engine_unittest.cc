@@ -1076,6 +1076,8 @@ TEST_F(WebRtcVideoEngineTest, RegisterDecodersIfSupported) {
 
   EXPECT_TRUE(
       channel->AddRecvStream(cricket::StreamParams::CreateLegacy(kSsrc)));
+  // Decoder creation happens on the decoder thread, make sure it runs.
+  time_controller_.AdvanceTime(webrtc::TimeDelta::Zero());
   ASSERT_EQ(1u, decoder_factory_->decoders().size());
 
   // Setting codecs of the same type should not reallocate the decoder.
@@ -1102,6 +1104,8 @@ TEST_F(WebRtcVideoEngineTest, RegisterH264DecoderIfSupported) {
 
   EXPECT_TRUE(
       channel->AddRecvStream(cricket::StreamParams::CreateLegacy(kSsrc)));
+  // Decoder creation happens on the decoder thread, make sure it runs.
+  time_controller_.AdvanceTime(webrtc::TimeDelta::Zero());
   ASSERT_EQ(1u, decoder_factory_->decoders().size());
 }
 
