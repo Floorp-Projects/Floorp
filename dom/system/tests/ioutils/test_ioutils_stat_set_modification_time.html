@@ -59,6 +59,11 @@
         1000, // Allow for 1 second deviation in case of slow tests.
         "IOUtils::stat can get the last modification date for a regular file"
       );
+      Assert.less(
+        (fileInfo.lastAccessed - new Date().valueOf()),
+        1000,
+        "IOUtils::stat can get the last access date for a regular file"
+      );
 
       await cleanup(emptyFileName, tempFileName, tempDirName)
     });
@@ -96,6 +101,31 @@
           stamp,
           newFileInfo.lastModified,
           "IOUtils::setModificationTime returns the updated time stamp."
+        );
+        is(
+          newFileInfo.lastAccessed,
+          oldFileInfo.lastAccessed,
+          "IOUtils::setModificationTime does not change lastAccessed"
+        );
+
+        await sleep(500);
+
+        const newerStamp = await IOUtils.setAccessTime(tmpFileName);
+        const newerFileInfo = await IOUtils.stat(tmpFileName);
+
+        ok(
+          newerFileInfo.lastAccessed > newFileInfo.lastAccessed,
+          "IOUtils::setAccessTime can update the lastAccessed time stamp on the file system"
+        );
+        is(
+          newerStamp,
+          newerFileInfo.lastAccessed,
+          "IOUtils::setAccessTime returns the updated time stamp."
+        );
+        is(
+          newerFileInfo.lastModified,
+          newFileInfo.lastModified,
+          "IOUtils::setAccessTime does not change lastModified"
         );
       }
 

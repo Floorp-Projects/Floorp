@@ -172,7 +172,24 @@ namespace IOUtils {
   [NewObject]
   Promise<undefined> copy(DOMString sourcePath, DOMString destPath, optional CopyOptions options = {});
   /**
-   * Updates the |modification| time for the file at |path|.
+   * Updates the access time for the file at |path|.
+   *
+   * @param path         An absolute file path identifying the file whose
+   *                     modification time is to be set. This file must exist
+   *                     and will not be created.
+   * @param modification An optional access time for the file expressed in
+   *                     milliseconds since the Unix epoch
+   *                     (1970-01-01T00:00:00Z). The current system time is used
+   *                     if this parameter is not provided.
+   *
+   * @return Resolves with the updated access time time expressed in
+   *         milliseconds since the Unix epoch, otherwise rejects with a
+   *         DOMException.
+   */
+  [NewObject]
+  Promise<long long> setAccessTime(DOMString path, optional long long access);
+  /**
+   * Updates the modification time for the file at |path|.
    *
    * @param path         An absolute file path identifying the file whose
    *                     modification time is to be set. This file must exist
@@ -623,21 +640,18 @@ dictionary FileInfo {
    * obtained.
    */
   DOMString path;
+
   /**
    * Identifies if the file at |path| is a regular file, directory, or something
    * something else.
    */
   FileType type;
+
   /**
    * If this represents a regular file, the size of the file in bytes.
    * Otherwise, -1.
    */
   long long size;
-  /**
-   * The timestamp of the last file modification, represented in milliseconds
-   * since Epoch (1970-01-01T00:00:00.000Z).
-   */
-  long long lastModified;
 
   /**
    * The timestamp of file creation, represented in milliseconds since Epoch
@@ -646,6 +660,19 @@ dictionary FileInfo {
    * This is only available on MacOS and Windows.
    */
   long long creationTime;
+
+  /**
+   * The timestmp of last file accesss, represented in milliseconds since Epoch
+   * (1970-01-01T00:00:00.000Z).
+   */
+  long long lastAccessed;
+
+  /**
+   * The timestamp of the last file modification, represented in milliseconds
+   * since Epoch (1970-01-01T00:00:00.000Z).
+   */
+  long long lastModified;
+
   /**
    * The permissions of the file, expressed as a UNIX file mode.
    *
