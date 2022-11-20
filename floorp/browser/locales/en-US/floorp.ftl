@@ -270,6 +270,20 @@ sidebar2-pref-setting =
 
 sidebar2-global-width = Global value of webpanel's width
 
+use-icon-provider-option = Use Icon Provider
+
+use-icon-provider-option-google =
+ .label = Google
+
+use-icon-provider-option-duckduckgo =
+ .label = DuckDuckGo
+
+use-icon-provider-option-yandex =
+ .label = Yandex (Available in China)
+
+use-icon-provider-option-hatena =
+ .label = Hatena (Available in China)
+
 memory-and-performance = Memory Performance Settings
 
 min-memory = 
