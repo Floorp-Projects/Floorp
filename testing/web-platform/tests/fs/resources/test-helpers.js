@@ -80,13 +80,6 @@ async function createFileWithContents(test, name, contents, parent) {
   return handle;
 }
 
-function garbageCollect() {
-  // TODO(https://github.com/web-platform-tests/wpt/issues/7899): Change to
-  // some sort of cross-browser GC trigger.
-  if (self.gc)
-    self.gc();
-};
-
 var fs_cleanups = [];
 
 async function cleanup(test, value, cleanup_func) {
