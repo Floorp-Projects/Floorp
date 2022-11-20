@@ -131,6 +131,15 @@ class TaskQueuePacedSender : public RtpPacketPacer, public RtpPacketSender {
   Stats GetStats() const;
 
   Clock* const clock_;
+  struct BurstyPacerFlags {
+    // Parses `kBurstyPacerFieldTrial`. Example:
+    // --force-fieldtrials=WebRTC-BurstyPacer/burst:20ms/
+    explicit BurstyPacerFlags(const FieldTrialsView& field_trials);
+    // If set, the pacer is allowed to build up a packet "debt" that correspond
+    // to approximately the send rate during the specified interval.
+    FieldTrialOptional<TimeDelta> burst;
+  };
+  const BurstyPacerFlags bursty_pacer_flags_;
   struct SlackedPacerFlags {
     // Parses `kSlackedTaskQueuePacedSenderFieldTrial`. Example:
     // --force-fieldtrials=WebRTC-SlackedTaskQueuePacedSender/Enabled,max_queue_time:75ms/
