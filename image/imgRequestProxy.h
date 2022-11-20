@@ -111,6 +111,10 @@ class imgRequestProxy : public mozilla::PreloaderBase,
   void MarkValidating();
   void ClearValidating();
 
+  // Flags this image load as not cancelable temporarily. This is needed so that
+  // stylesheets can be shared across documents properly, see bug 1800979.
+  void SetCancelable(bool);
+
   already_AddRefed<nsIEventTarget> GetEventTarget() const override;
 
   // Removes all animation consumers that were created with
@@ -215,6 +219,7 @@ class imgRequestProxy : public mozilla::PreloaderBase,
   nsLoadFlags mLoadFlags;
   uint32_t mLockCount;
   uint32_t mAnimationConsumers;
+  bool mCancelable : 1;
   bool mCanceled : 1;
   bool mIsInLoadGroup : 1;
   bool mForceDispatchLoadGroup : 1;
