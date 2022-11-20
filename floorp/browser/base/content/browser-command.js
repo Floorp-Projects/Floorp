@@ -214,11 +214,66 @@ function displayBrowserManagerSidebar() {
 }
 
 function setCustomURLFavicon(sbar_id) {
-    let sData = BROWSER_SIDEBAR_DATA.data[sbar_id.slice(7)]
-    var sbar_url = sData.url
-    if(sbar_url.slice(0,7) != "floorp//") document.getElementById(`${sbar_id}`).style.listStyleImage = `url(http://www.google.com/s2/favicons?domain=${sbar_url})`;
+  let sbar_url = BROWSER_SIDEBAR_DATA.data[sbar_id.slice(7)].url;
+  if(sbar_url.startsWith("http://") || sbar_url.startsWith("https://")) {
+    document.getElementById(`${sbar_id}`).style.listStyleImage = `url(chrome://devtools/skin/images/globe.svg)`;
 
-setUserContextLine(sbar_id.slice(7))
+    let icon_url = `http://www.google.com/s2/favicons?domain=${sbar_url}`;
+    fetch(icon_url)
+      .then(async(response) => {
+        if (response.status !== 200) {
+          throw `${response.status} ${response.statusText}`;
+        }
+
+        let reader = new FileReader();
+
+        let blob_data = await response.blob();
+
+        let icon_data_url = await new Promise(resolve => {
+          reader.addEventListener("load", function () {
+            resolve(this.result);
+          })
+          reader.readAsDataURL(blob_data);
+        });
+
+        if (BROWSER_SIDEBAR_DATA.data[sbar_id.slice(7)].url === sbar_url) {  // Check that the URL has not changed after the icon is retrieved.
+          document.getElementById(`${sbar_id}`).style.listStyleImage = `url(${icon_data_url})`;
+        }
+      })
+      .catch(reject => {
+        console.log("function: setCustomURLFavicon -> site -> function: fetch : " + reject);
+      });
+  } else if (sbar_url.startsWith("moz-extension://")) {
+    document.getElementById(`${sbar_id}`).style.listStyleImage = `url(chrome://mozapps/skin/extensions/extensionGeneric.svg)`;
+
+    let addon_id = (new URL(sbar_url)).hostname;
+    let addon_base_url = `moz-extension://${addon_id}`
+    fetch(addon_base_url + "/manifest.json")
+      .then(async(response) => {
+        if (response.status !== 200) {
+          throw `${response.status} ${response.statusText}`;
+        }
+
+        let addon_manifest = await response.json();
+
+        let addon_icon_path = addon_manifest["icons"][
+          Math.max(...Object.keys(addon_manifest["icons"]))
+        ]
+
+        let addon_icon_url = addon_icon_path.startsWith("/") ?
+          `${addon_base_url}${addon_icon_path}` :
+          `${addon_base_url}/${addon_icon_path}`;
+
+        if (BROWSER_SIDEBAR_DATA.data[sbar_id.slice(7)].url === sbar_url) {  // Check that the URL has not changed after the icon is retrieved.
+          document.getElementById(`${sbar_id}`).style.listStyleImage = `url(${addon_icon_url})`;
+        }
+      })
+      .catch(reject => {
+        console.log("function: setCustomURLFavicon -> addon -> function: fetch : " + reject);
+      });
+  }
+
+  setUserContextLine(sbar_id.slice(7));
 }
 
 function setUserContextLine(id){
