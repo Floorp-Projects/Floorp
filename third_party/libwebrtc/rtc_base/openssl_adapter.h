@@ -20,8 +20,8 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "rtc_base/buffer.h"
-#include "rtc_base/message_handler.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "rtc_base/boringssl_identity.h"
 #else
@@ -45,8 +45,7 @@ std::string StrJoin(const std::vector<std::string>& list, char delimiter);
 
 }  // namespace webrtc_openssl_adapter_internal
 
-class OpenSSLAdapter final : public SSLAdapter,
-                             public MessageHandlerAutoCleanup {
+class OpenSSLAdapter final : public SSLAdapter {
  public:
   static bool InitializeSSL();
   static bool CleanupSSL();
@@ -114,17 +113,15 @@ class OpenSSLAdapter final : public SSLAdapter,
     SSL_ERROR
   };
 
-  enum { MSG_TIMEOUT };
-
   int BeginSSL();
   int ContinueSSL();
   void Error(absl::string_view context, int err, bool signal = true);
   void Cleanup();
+  void OnTimeout();
 
   // Return value and arguments have the same meanings as for Send; `error` is
   // an output parameter filled with the result of SSL_get_error.
   int DoSslWrite(const void* pv, size_t cb, int* error);
-  void OnMessage(Message* msg) override;
   bool SSLPostConnectionCheck(SSL* ssl, absl::string_view host);
 
 #if !defined(NDEBUG)
@@ -185,6 +182,8 @@ class OpenSSLAdapter final : public SSLAdapter,
   std::vector<std::string> elliptic_curves_;
   // Holds the result of the call to run of the ssl_cert_verify_->Verify()
   bool custom_cert_verifier_status_;
+  // Flag to cancel pending timeout task.
+  webrtc::ScopedTaskSafety timer_;
 };
 
 // The OpenSSLAdapterFactory is responsbile for creating multiple new
