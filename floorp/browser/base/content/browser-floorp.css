@@ -79,6 +79,10 @@
     background-color: color-mix(in srgb, currentColor 20%, transparent) ;
     box-shadow: 0 0 4px rgba(0,0,0,.4) ;
     }
+    .sidepanel-icon:not([checked="true"]):active, .sidepanel-browser-icon:active, .sidebar2-icon:active {
+      background-color: color-mix(in srgb, currentColor 20%, transparent);
+      box-shadow: 0 0 4px rgba(0,0,0,.4);
+    }
   }
   
   @media (prefers-contrast) {
