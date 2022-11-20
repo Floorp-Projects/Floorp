@@ -265,7 +265,7 @@ function setCustomURLFavicon(sbar_id) {
         });
 
         if (icon_data_url === "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWIAAYAAAwAABQABggWTzwAAAABJRU5ErkJggg==") {
-          // Yandex returns an icon of size 1px with status code 200 when the icon could not be retrieved; if the Data URL matches, Yandex assumes that the retrieval failed.
+          // Yandex will return a 1px size icon with status code 200 if the icon is not available. If it matches a specific Data URL, it will be considered as a failure to acquire, and this process will be aborted.
           throw "Yandex 404"
         }
 
