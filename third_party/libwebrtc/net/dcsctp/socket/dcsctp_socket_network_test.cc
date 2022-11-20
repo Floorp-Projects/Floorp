@@ -18,6 +18,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/test/create_network_emulation_manager.h"
 #include "api/test/network_emulation_manager.h"
@@ -61,7 +62,8 @@ constexpr size_t kSmallPayloadSize = 10;
 constexpr size_t kLargePayloadSize = 10000;
 constexpr size_t kHugePayloadSize = 262144;
 constexpr size_t kBufferedAmountLowThreshold = kLargePayloadSize * 2;
-constexpr int kPrintBandwidthDurationMillis = 1000;
+constexpr webrtc::TimeDelta kPrintBandwidthDuration =
+    webrtc::TimeDelta::Seconds(1);
 constexpr webrtc::TimeDelta kBenchmarkRuntime(webrtc::TimeDelta::Seconds(10));
 constexpr webrtc::TimeDelta kAWhile(webrtc::TimeDelta::Seconds(1));
 
@@ -91,10 +93,6 @@ enum class ActorMode {
   kThroughputSender,
   kThroughputReceiver,
   kLimitedRetransmissionSender,
-};
-
-enum class MessageId : uint32_t {
-  kPrintBandwidth = 1,
 };
 
 // An abstraction around EmulatedEndpoint, representing a bound socket that
@@ -134,9 +132,7 @@ class BoundSocket : public webrtc::EmulatedNetworkReceiverInterface {
 };
 
 // Sends at a constant rate but with random packet sizes.
-class SctpActor : public rtc::MessageHandlerAutoCleanup,
-                  public DcSctpSocketCallbacks,
-                  public sigslot::has_slots<> {
+class SctpActor : public DcSctpSocketCallbacks {
  public:
   SctpActor(absl::string_view name,
             BoundSocket& emulated_socket,
@@ -160,25 +156,23 @@ class SctpActor : public rtc::MessageHandlerAutoCleanup,
     });
   }
 
-  void OnMessage(rtc::Message* pmsg) override {
-    if (pmsg->message_id == static_cast<uint32_t>(MessageId::kPrintBandwidth)) {
-      TimeMs now = TimeMillis();
-      DurationMs duration = now - last_bandwidth_printout_;
+  void PrintBandwidth() {
+    TimeMs now = TimeMillis();
+    DurationMs duration = now - last_bandwidth_printout_;
 
-      double bitrate_mbps =
-          static_cast<double>(received_bytes_ * 8) / *duration / 1000;
-      RTC_LOG(LS_INFO) << log_prefix()
-                       << rtc::StringFormat("Received %0.2f Mbps",
-                                            bitrate_mbps);
+    double bitrate_mbps =
+        static_cast<double>(received_bytes_ * 8) / *duration / 1000;
+    RTC_LOG(LS_INFO) << log_prefix()
+                     << rtc::StringFormat("Received %0.2f Mbps", bitrate_mbps);
 
-      received_bitrate_mbps_.push_back(bitrate_mbps);
-      received_bytes_ = 0;
-      last_bandwidth_printout_ = now;
-      // Print again in a second.
-      if (mode_ == ActorMode::kThroughputReceiver) {
-        thread_->PostDelayed(RTC_FROM_HERE, kPrintBandwidthDurationMillis, this,
-                             static_cast<uint32_t>(MessageId::kPrintBandwidth));
-      }
+    received_bitrate_mbps_.push_back(bitrate_mbps);
+    received_bytes_ = 0;
+    last_bandwidth_printout_ = now;
+    // Print again in a second.
+    if (mode_ == ActorMode::kThroughputReceiver) {
+      thread_->PostDelayedTask(
+          SafeTask(safety_.flag(), [this] { PrintBandwidth(); }),
+          kPrintBandwidthDuration);
     }
   }
 
@@ -282,8 +276,9 @@ class SctpActor : public rtc::MessageHandlerAutoCleanup,
                         SendOptions());
 
     } else if (mode == ActorMode::kThroughputReceiver) {
-      thread_->PostDelayed(RTC_FROM_HERE, kPrintBandwidthDurationMillis, this,
-                           static_cast<uint32_t>(MessageId::kPrintBandwidth));
+      thread_->PostDelayedTask(
+          SafeTask(safety_.flag(), [this] { PrintBandwidth(); }),
+          kPrintBandwidthDuration);
     }
   }
 
@@ -322,6 +317,7 @@ class SctpActor : public rtc::MessageHandlerAutoCleanup,
   TimeMs last_bandwidth_printout_;
   // Per-second received bitrates, in Mbps
   std::vector<double> received_bitrate_mbps_;
+  webrtc::ScopedTaskSafety safety_;
 };
 
 class DcSctpSocketNetworkTest : public testing::Test {
