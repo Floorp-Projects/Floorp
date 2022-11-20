@@ -13,6 +13,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
@@ -51,8 +52,8 @@ ScreenDrawerLockPosix::~ScreenDrawerLockPosix() {
 }
 
 // static
-void ScreenDrawerLockPosix::Unlink(const char* name) {
-  sem_unlink(name);
+void ScreenDrawerLockPosix::Unlink(absl::string_view name) {
+  sem_unlink(std::string(name).c_str());
 }
 
 }  // namespace webrtc

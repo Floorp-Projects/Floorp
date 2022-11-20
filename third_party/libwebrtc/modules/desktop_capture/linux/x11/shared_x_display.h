@@ -12,9 +12,9 @@
 #define MODULES_DESKTOP_CAPTURE_LINUX_X11_SHARED_X_DISPLAY_H_
 
 #include <map>
-#include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "api/ref_counted_base.h"
 #include "api/scoped_refptr.h"
 #include "rtc_base/system/rtc_export.h"
@@ -42,7 +42,7 @@ class RTC_EXPORT SharedXDisplay
   // connection failed. Equivalent to CreateDefault() when `display_name` is
   // empty.
   static rtc::scoped_refptr<SharedXDisplay> Create(
-      const std::string& display_name);
+      absl::string_view display_name);
 
   // Creates X11 Display connection for the default display (e.g. specified in
   // DISPLAY). NULL is returned if X11 connection failed.

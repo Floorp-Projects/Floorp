@@ -9,6 +9,9 @@
  */
 #include "modules/desktop_capture/linux/wayland/xdg_desktop_portal_utils.h"
 
+#include <string>
+
+#include "absl/strings/string_view.h"
 #include "modules/desktop_capture/linux/wayland/scoped_glib.h"
 #include "rtc_base/logging.h"
 
@@ -30,7 +33,7 @@ std::string RequestResponseToString(RequestResponse request) {
   }
 }
 
-std::string PrepareSignalHandle(const char* token,
+std::string PrepareSignalHandle(absl::string_view token,
                                 GDBusConnection* connection) {
   Scoped<char> sender(
       g_strdup(g_dbus_connection_get_unique_name(connection) + 1));
@@ -39,33 +42,36 @@ std::string PrepareSignalHandle(const char* token,
       sender.get()[i] = '_';
     }
   }
-  const char* handle = g_strconcat(kDesktopRequestObjectPath, "/", sender.get(),
-                                   "/", token, /*end of varargs*/ nullptr);
+  const char* handle =
+      g_strconcat(kDesktopRequestObjectPath, "/", sender.get(), "/",
+                  std::string(token).c_str(), /*end of varargs*/ nullptr);
   return handle;
 }
 
-uint32_t SetupRequestResponseSignal(const char* object_path,
+uint32_t SetupRequestResponseSignal(absl::string_view object_path,
                                     const GDBusSignalCallback callback,
                                     gpointer user_data,
                                     GDBusConnection* connection) {
   return g_dbus_connection_signal_subscribe(
       connection, kDesktopBusName, kRequestInterfaceName, "Response",
-      object_path, /*arg0=*/nullptr, G_DBUS_SIGNAL_FLAGS_NO_MATCH_RULE,
-      callback, user_data, /*user_data_free_func=*/nullptr);
+      std::string(object_path).c_str(), /*arg0=*/nullptr,
+      G_DBUS_SIGNAL_FLAGS_NO_MATCH_RULE, callback, user_data,
+      /*user_data_free_func=*/nullptr);
 }
 
-void RequestSessionProxy(const char* interface_name,
+void RequestSessionProxy(absl::string_view interface_name,
                          const ProxyRequestCallback proxy_request_callback,
                          GCancellable* cancellable,
                          gpointer user_data) {
   g_dbus_proxy_new_for_bus(
       G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_NONE, /*info=*/nullptr,
-      kDesktopBusName, kDesktopObjectPath, interface_name, cancellable,
+      kDesktopBusName, kDesktopObjectPath, std::string(interface_name).c_str(),
+      cancellable,
       reinterpret_cast<GAsyncReadyCallback>(proxy_request_callback), user_data);
 }
 
 void SetupSessionRequestHandlers(
-    const std::string& portal_prefix,
+    absl::string_view portal_prefix,
     const SessionRequestCallback session_request_callback,
     const SessionRequestResponseSignalHandler request_response_signale_handler,
     GDBusConnection* connection,
@@ -78,13 +84,15 @@ void SetupSessionRequestHandlers(
   Scoped<char> variant_string;
 
   g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
-  variant_string = g_strdup_printf("%s_session%d", portal_prefix.c_str(),
-                                   g_random_int_range(0, G_MAXINT));
+  variant_string =
+      g_strdup_printf("%.*s_session%d", static_cast<int>(portal_prefix.size()),
+                      portal_prefix.data(), g_random_int_range(0, G_MAXINT));
   g_variant_builder_add(&builder, "{sv}", "session_handle_token",
                         g_variant_new_string(variant_string.get()));
 
-  variant_string = g_strdup_printf("%s_%d", portal_prefix.c_str(),
-                                   g_random_int_range(0, G_MAXINT));
+  variant_string =
+      g_strdup_printf("%.*s_%d", static_cast<int>(portal_prefix.size()),
+                      portal_prefix.data(), g_random_int_range(0, G_MAXINT));
   g_variant_builder_add(&builder, "{sv}", "handle_token",
                         g_variant_new_string(variant_string.get()));
 
@@ -102,8 +110,8 @@ void SetupSessionRequestHandlers(
 }
 
 void StartSessionRequest(
-    const std::string& prefix,
-    const std::string session_handle,
+    absl::string_view prefix,
+    absl::string_view session_handle,
     const StartRequestResponseSignalHandler signal_handler,
     const SessionStartRequestedHandler session_started_handler,
     GDBusProxy* proxy,
@@ -117,7 +125,8 @@ void StartSessionRequest(
 
   g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
   variant_string =
-      g_strdup_printf("%s%d", prefix.c_str(), g_random_int_range(0, G_MAXINT));
+      g_strdup_printf("%.*s%d", static_cast<int>(prefix.size()), prefix.data(),
+                      g_random_int_range(0, G_MAXINT));
   g_variant_builder_add(&builder, "{sv}", "handle_token",
                         g_variant_new_string(variant_string.get()));
 
@@ -131,21 +140,21 @@ void StartSessionRequest(
   RTC_LOG(LS_INFO) << "Starting the portal session.";
   g_dbus_proxy_call(
       proxy, "Start",
-      g_variant_new("(osa{sv})", session_handle.c_str(), parent_window,
-                    &builder),
+      g_variant_new("(osa{sv})", std::string(session_handle).c_str(),
+                    parent_window, &builder),
       G_DBUS_CALL_FLAGS_NONE, /*timeout=*/-1, cancellable,
       reinterpret_cast<GAsyncReadyCallback>(session_started_handler),
       user_data);
 }
 
-void TearDownSession(std::string session_handle,
+void TearDownSession(absl::string_view session_handle,
                      GDBusProxy* proxy,
                      GCancellable* cancellable,
                      GDBusConnection* connection) {
   if (!session_handle.empty()) {
-    Scoped<GDBusMessage> message(
-        g_dbus_message_new_method_call(kDesktopBusName, session_handle.c_str(),
-                                       kSessionInterfaceName, "Close"));
+    Scoped<GDBusMessage> message(g_dbus_message_new_method_call(
+        kDesktopBusName, std::string(session_handle).c_str(),
+        kSessionInterfaceName, "Close"));
     if (message.get()) {
       Scoped<GError> error;
       g_dbus_connection_send_message(connection, message.get(),
