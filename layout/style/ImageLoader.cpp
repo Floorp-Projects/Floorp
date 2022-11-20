@@ -85,7 +85,13 @@ void ImageLoader::Init() {
 /* static */
 void ImageLoader::Shutdown() {
   for (const auto& entry : *sImages) {
-    entry.GetKey()->CancelAndForgetObserver(NS_BINDING_ABORTED);
+    imgIRequest* imgRequest = entry.GetKey();
+    // All the images we put in sImages are imgRequestProxy, see LoadImage, but
+    // it's non-trivial to make the hash table to use that without changing a
+    // lot of other code.
+    auto* req = static_cast<imgRequestProxy*>(imgRequest);
+    req->SetCancelable(true);
+    req->CancelAndForgetObserver(NS_BINDING_ABORTED);
   }
 
   sImages = nullptr;
@@ -444,6 +450,10 @@ already_AddRefed<imgRequestProxy> ImageLoader::LoadImage(
   if (NS_FAILED(rv) || !request) {
     return nullptr;
   }
+
+  // This image could be shared across documents, so its load cannot be
+  // canceled, see bug 1800979.
+  request->SetCancelable(false);
   sImages->GetOrInsertNew(request);
   return request.forget();
 }
@@ -467,6 +477,8 @@ void ImageLoader::UnloadImage(imgRequestProxy* aImage) {
     return;
   }
 
+  // Now we want to really cancel the request.
+  aImage->SetCancelable(true);
   aImage->CancelAndForgetObserver(NS_BINDING_ABORTED);
   MOZ_DIAGNOSTIC_ASSERT(lookup.Data()->mImageLoaders.IsEmpty(),
                         "Shouldn't be keeping references to any loader "
