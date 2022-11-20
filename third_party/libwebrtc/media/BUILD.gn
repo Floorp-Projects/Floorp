@@ -531,6 +531,8 @@ if (rtc_include_tests) {
       "../api:call_api",
       "../api:fec_controller_api",
       "../api:scoped_refptr",
+      "../api/task_queue",
+      "../api/task_queue:pending_task_safety_flag",
       "../api/transport:field_trial_based_config",
       "../api/video:encoded_image",
       "../api/video:video_bitrate_allocation",
