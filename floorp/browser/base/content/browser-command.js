@@ -3,6 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+let os_languages = Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences).regionalPrefsLocales;
+let prefBranch = Services.prefs.getDefaultBranch(null);
+prefBranch.setStringPref(
+  "floorp.browser.sidebar.useIconProvider",
+  os_languages.includes("zh-CN") ?
+    "yandex" :
+    "google"
+);
+
 function enableRestMode() {
   if (Services.prefs.getBoolPref("floorp.browser.rest.mode", false)) {
     var Tag = document.createElement("style");
@@ -218,11 +227,25 @@ function setCustomURLFavicon(sbar_id) {
   if(sbar_url.startsWith("http://") || sbar_url.startsWith("https://")) {
     document.getElementById(`${sbar_id}`).style.listStyleImage = `url(chrome://devtools/skin/images/globe.svg)`;
 
-    let os_languages = Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences).regionalPrefsLocales;
-
-    let icon_url = os_languages.includes("zh-CN") ?
-      `https://favicon.yandex.net/favicon/v2/${sbar_url}` :  // Access to Google is blocked in China.
-      `https://www.google.com/s2/favicons?domain=${sbar_url}`;
+    let iconProvider = Services.prefs.getStringPref("floorp.browser.sidebar.useIconProvider", null);
+    let icon_url;
+    switch (iconProvider) {
+      case "google":
+        icon_url = `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(sbar_url)}`;
+        break;
+      case "duckduckgo":
+        icon_url = `https://external-content.duckduckgo.com/ip3/${(new URL(sbar_url)).hostname}.ico`;
+        break;
+      case "yandex":
+        icon_url = `https://favicon.yandex.net/favicon/v2/${(new URL(sbar_url)).origin}`;
+        break;
+      case "hatena":
+        icon_url = `https://cdn-ak.favicon.st-hatena.com/?url=${encodeURIComponent(sbar_url)}`; // or `https://favicon.hatena.ne.jp/?url=${encodeURIComponent(sbar_url)}`
+        break;
+      default:
+        icon_url = `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(sbar_url)}`;
+        break;
+    }
 
     fetch(icon_url)
       .then(async(response) => {
