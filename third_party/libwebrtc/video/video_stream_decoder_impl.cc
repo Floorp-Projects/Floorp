@@ -33,10 +33,7 @@ VideoStreamDecoderImpl::VideoStreamDecoderImpl(
       decoder_factory_(decoder_factory),
       decoder_settings_(std::move(decoder_settings)),
       shut_down_(false),
-      frame_buffer_(Clock::GetRealTimeClock(),
-                    &timing_,
-                    nullptr,
-                    *field_trials_),
+      frame_buffer_(Clock::GetRealTimeClock(), &timing_, *field_trials_),
       bookkeeping_queue_(task_queue_factory->CreateTaskQueue(
           "video_stream_decoder_bookkeeping_queue",
           TaskQueueFactory::Priority::NORMAL)),

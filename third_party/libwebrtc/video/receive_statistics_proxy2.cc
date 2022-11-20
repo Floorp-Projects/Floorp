@@ -665,20 +665,6 @@ void ReceiveStatisticsProxy::OnFrameBufferTimingsUpdated(
     int jitter_buffer_ms,
     int min_playout_delay_ms,
     int render_delay_ms) {
-  // Only called on main_thread_ with FrameBuffer3
-  if (!worker_thread_->IsCurrent()) {
-    RTC_DCHECK_RUN_ON(&decode_queue_);
-    worker_thread_->PostTask(SafeTask(
-        task_safety_.flag(),
-        [max_decode_ms, current_delay_ms, target_delay_ms, jitter_buffer_ms,
-         min_playout_delay_ms, render_delay_ms, this]() {
-          OnFrameBufferTimingsUpdated(max_decode_ms, current_delay_ms,
-                                      target_delay_ms, jitter_buffer_ms,
-                                      min_playout_delay_ms, render_delay_ms);
-        }));
-    return;
-  }
-
   RTC_DCHECK_RUN_ON(&main_thread_);
   stats_.max_decode_ms = max_decode_ms;
   stats_.current_delay_ms = current_delay_ms;
@@ -701,14 +687,6 @@ void ReceiveStatisticsProxy::OnUniqueFramesCounted(int num_unique_frames) {
 
 void ReceiveStatisticsProxy::OnTimingFrameInfoUpdated(
     const TimingFrameInfo& info) {
-  // Only called on main_thread_ with FrameBuffer3
-  if (!worker_thread_->IsCurrent()) {
-    RTC_DCHECK_RUN_ON(&decode_queue_);
-    worker_thread_->PostTask(SafeTask(task_safety_.flag(), [info, this]() {
-      OnTimingFrameInfoUpdated(info);
-    }));
-    return;
-  }
   RTC_DCHECK_RUN_ON(&main_thread_);
   if (info.flags != VideoSendTiming::kInvalid) {
     int64_t now_ms = clock_->TimeInMilliseconds();
