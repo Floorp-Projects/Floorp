@@ -77,9 +77,23 @@ if(document.getElementById("translateoption") != null){
     el = document.getElementById("treestyletaboption");
     el.addEventListener("click", opentreestyletaboption, false);
 
-document.getElementById("GlobalWidth").value = Services.prefs.getIntPref("floorp.browser.sidebar2.global.webpanel.width", undefined);
-document.getElementById("GlobalWidth").addEventListener('change', bsbGlobalWidthSet, false);
-Services.prefs.addObserver("floorp.browser.sidebar2.global.webpanel.width", function(){document.getElementById("GlobalWidth").value = Services.prefs.getIntPref("floorp.browser.sidebar2.global.webpanel.width", undefined);})
+   document.getElementById("GlobalWidth").
+            value = Services.prefs.getIntPref("floorp.browser.sidebar2.global.webpanel.width", undefined);
+   document.getElementById("GlobalWidth").
+            addEventListener('change', bsbGlobalWidthSet, false);
+   Services.prefs.addObserver("floorp.browser.sidebar2.global.webpanel.width", function(){
+    document.getElementById("GlobalWidth").value = Services.prefs.getIntPref("floorp.browser.sidebar2.global.webpanel.width", undefined);
+   })
+
+
+   document.getElementById("MultirowValue").
+            value = Services.prefs.getIntPref("floorp.browser.tabbar.multirow.max.row", undefined);
+   document.getElementById("MultirowValue").
+            addEventListener('change', setMultirowValue, false);
+   Services.prefs.addObserver("floorp.browser.tabbar.multirow.max.row", function(){
+    document.getElementById("MultirowValue").value = Services.prefs.getIntPref("floorp.browser.tabbar.multirow.max.row", undefined);
+   })
+
 
     document.getElementById("leptonButton").addEventListener("click", function(){
       window.location.href = "about:preferences#lepton";
@@ -101,4 +115,8 @@ floorpMain()
 
 function bsbGlobalWidthSet(){
 Services.prefs.setIntPref("floorp.browser.sidebar2.global.webpanel.width", Number(document.getElementById("GlobalWidth").value));
+}
+
+function setMultirowValue(){
+  Services.prefs.setIntPref("floorp.browser.tabbar.multirow.max.row", Number(document.getElementById("MultirowValue").value));
 }
