@@ -11,6 +11,9 @@ var gTab1, gTab2, gLevel1;
 function test() {
   waitForExplicitFinish();
 
+  // Scroll on Ctrl + mousewheel
+  SpecialPowers.pushPrefEnv({ set: [["mousewheel.with_control.action", 3]] });
+
   (async function() {
     gTab1 = BrowserTestUtils.addTab(gBrowser);
     gTab2 = BrowserTestUtils.addTab(gBrowser);
