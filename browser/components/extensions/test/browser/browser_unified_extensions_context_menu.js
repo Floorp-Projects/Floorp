@@ -669,3 +669,46 @@ add_task(async function test_pin_to_toolbar() {
   await CustomizableUI.reset();
   await extension.unload();
 });
+
+add_task(async function test_contextmenu_command_closes_panel() {
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      name: "an extension",
+      browser_action: {},
+      permissions: ["contextMenus"],
+    },
+    background() {
+      browser.contextMenus.create(
+        {
+          id: "some-menu-id",
+          title: "Click me!",
+          contexts: ["all"],
+        },
+        () => browser.test.sendMessage("menu-created")
+      );
+    },
+    useAddonManager: "temporary",
+  });
+  await extension.startup();
+  await extension.awaitMessage("menu-created");
+
+  await openExtensionsPanel(win);
+  const contextMenu = await openUnifiedExtensionsContextMenu(win, extension.id);
+
+  const firstMenuItem = contextMenu.querySelector("menuitem");
+  is(
+    firstMenuItem?.getAttribute("label"),
+    "Click me!",
+    "expected custom menu item as first child"
+  );
+
+  const hidden = BrowserTestUtils.waitForEvent(
+    win.gUnifiedExtensions.panel,
+    "popuphidden",
+    true
+  );
+  contextMenu.activateItem(firstMenuItem);
+  await hidden;
+
+  await extension.unload();
+});

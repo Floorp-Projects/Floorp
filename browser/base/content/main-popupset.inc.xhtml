@@ -639,7 +639,8 @@
   </html:template>
 
   <menupopup id="unified-extensions-context-menu"
-             onpopupshowing="gUnifiedExtensions.updateContextMenu(this, event)">
+             onpopupshowing="gUnifiedExtensions.updateContextMenu(this, event)"
+             oncommand="gUnifiedExtensions.onContextMenuCommand(this, event)">
     <menuitem oncommand="gUnifiedExtensions.onPinToToolbarChange(this.parentElement, event);"
               data-lazy-l10n-id="unified-extensions-context-menu-pin-to-toolbar"
               type="checkbox"

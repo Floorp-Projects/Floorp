@@ -149,9 +149,21 @@ async function testOriginControls(
   if (click) {
     itemToClick = visibleOriginItems[click];
   }
-  await closeChromeContextMenu(contextMenuId, itemToClick, win);
 
-  if (contextMenuId === "unified-extensions-context-menu") {
+  // Clicking a menu item of the unified extensions context menu should close
+  // the unified extensions panel automatically.
+  let panelHidden =
+    itemToClick && contextMenuId === "unified-extensions-context-menu"
+      ? BrowserTestUtils.waitForEvent(win.document, "popuphidden", true)
+      : Promise.resolve();
+
+  await closeChromeContextMenu(contextMenuId, itemToClick, win);
+  await panelHidden;
+
+  // When there is no menu item to close, we should manually close the unified
+  // extensions panel because simply closing the context menu will not close
+  // it.
+  if (!itemToClick && contextMenuId === "unified-extensions-context-menu") {
     await closeExtensionsPanel(win);
   }
 
