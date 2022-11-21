@@ -250,14 +250,10 @@ static bool EnumerateNativeProperties(JSContext* cx, Handle<NativeObject*> pobj,
       Rooted<RecordType*> rec(cx);
       if (RecordObject::maybeUnbox(pobj, &rec)) {
         Rooted<ArrayObject*> keys(cx, rec->keys());
-        RootedId id(cx);
-        RootedString key(cx);
 
         for (size_t i = 0; i < keys->length(); i++) {
-          key.set(keys->getDenseElement(i).toString());
-          if (!JS_StringToId(cx, key, &id)) {
-            return false;
-          }
+          JSAtom* key = &keys->getDenseElement(i).toString()->asAtom();
+          PropertyKey id = AtomToId(key);
           if (!Enumerate<CheckForDuplicates>(cx, pobj, id,
                                              /* enumerable = */ true, flags,
                                              visited, props)) {
@@ -269,13 +265,13 @@ static bool EnumerateNativeProperties(JSContext* cx, Handle<NativeObject*> pobj,
       } else {
         mozilla::Maybe<TupleType&> tup = TupleObject::maybeUnbox(pobj);
         if (tup) {
-          uint32_t len = (*tup).length();
-          RootedId id(cx);
+          uint32_t len = tup->length();
 
           for (size_t i = 0; i < len; i++) {
-            if (!JS_IndexToId(cx, i, &id)) {
-              return false;
-            }
+            // We expect tuple indices not to get so large that `i` won't
+            // fit into an `int32_t`.
+            MOZ_ASSERT(PropertyKey::fitsInInt(i));
+            PropertyKey id = PropertyKey::Int(i);
             if (!Enumerate<CheckForDuplicates>(cx, pobj, id,
                                                /* enumerable = */ true, flags,
                                                visited, props)) {
