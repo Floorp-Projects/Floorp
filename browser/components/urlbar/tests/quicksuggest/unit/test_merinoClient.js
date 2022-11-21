@@ -15,6 +15,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
+// Set the `merino.timeoutMs` pref to a large value so that the client will not
+// inadvertently time out during fetches. This is especially important on CI and
+// when running this test in verify mode. Tasks that specifically test timeouts
+// may need to set a more reasonable value for their duration.
+const TEST_TIMEOUT_MS = 30000;
+
 // The expected suggestion objects returned from `MerinoClient.fetch()`.
 const EXPECTED_MERINO_SUGGESTIONS = [];
 
@@ -22,7 +28,12 @@ const { SEARCH_PARAMS } = MerinoClient;
 
 let gClient;
 
-add_task(async function init() {
+add_setup(async function init() {
+  UrlbarPrefs.set("merino.timeoutMs", TEST_TIMEOUT_MS);
+  registerCleanupFunction(() => {
+    UrlbarPrefs.clear("merino.timeoutMs");
+  });
+
   gClient = new MerinoClient();
   await MerinoTestUtils.server.start();
 
@@ -187,14 +198,21 @@ add_task(async function httpError() {
 
 // Tests a client timeout.
 add_task(async function clientTimeout() {
-  await doClientTimeoutTest();
+  await doClientTimeoutTest({
+    prefTimeoutMs: 200,
+    responseDelayMs: 400,
+  });
 });
 
 // Tests a client timeout followed by an HTTP error. Only the timeout should be
 // recorded.
 add_task(async function clientTimeoutFollowedByHTTPError() {
   MerinoTestUtils.server.response = { status: 500 };
-  await doClientTimeoutTest({ expectedResponseStatus: 500 });
+  await doClientTimeoutTest({
+    prefTimeoutMs: 200,
+    responseDelayMs: 400,
+    expectedResponseStatus: 500,
+  });
 });
 
 // Tests a client timeout when a timeout value is passed to `fetch()`, which
@@ -211,26 +229,27 @@ add_task(async function timeoutPassedToFetch() {
   // not hit, then Merino will return a response before the 30000ms timeout
   // elapses and the request will complete successfully.
 
-  UrlbarPrefs.set("merino.timeoutMs", 30000);
-
   await doClientTimeoutTest({
-    responseDelay: 400,
+    prefTimeoutMs: 30000,
+    responseDelayMs: 400,
     fetchArgs: { query: "search", timeoutMs: 1 },
   });
-
-  UrlbarPrefs.clear("merino.timeoutMs");
 });
 
 async function doClientTimeoutTest({
-  responseDelay = 2 * UrlbarPrefs.get("merino.timeoutMs"),
+  prefTimeoutMs,
+  responseDelayMs,
   fetchArgs = { query: "search" },
   expectedResponseStatus = 200,
 } = {}) {
   let histograms = MerinoTestUtils.getAndClearHistograms();
 
+  let originalPrefTimeoutMs = UrlbarPrefs.get("merino.timeoutMs");
+  UrlbarPrefs.set("merino.timeoutMs", prefTimeoutMs);
+
   // Make the server return a delayed response so the client times out waiting
   // for it.
-  MerinoTestUtils.server.response.delay = responseDelay;
+  MerinoTestUtils.server.response.delay = responseDelayMs;
 
   let responsePromise = gClient.waitForNextResponse();
   await fetchAndCheckSuggestions({ args: fetchArgs, expected: [] });
@@ -283,6 +302,7 @@ async function doClientTimeoutTest({
   });
 
   MerinoTestUtils.server.reset();
+  UrlbarPrefs.set("merino.timeoutMs", originalPrefTimeoutMs);
 }
 
 // By design, when a fetch times out, the client allows it to finish so we can
@@ -295,7 +315,7 @@ add_task(async function newFetchAbortsPrevious() {
   // Make the server return a very delayed response so that it would time out
   // and we can start a second fetch that will abort the first fetch.
   MerinoTestUtils.server.response.delay =
-    10000 * UrlbarPrefs.get("merino.timeoutMs");
+    100 * UrlbarPrefs.get("merino.timeoutMs");
 
   // Do the first fetch.
   await fetchAndCheckSuggestions({ expected: [] });
