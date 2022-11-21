@@ -46,3 +46,18 @@ cookie.banners:
       - reject
       - reject_or_accept
       - invalid
+cookie.banners.click:
+  handle_duration:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Counts how long it takes to handle cookie banners successfully from
+      DOMContentLoaded until click.
+    bugs:
+      - https://bugzilla.mozilla.org/1797078
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1797078#c6
+    notification_emails:
+      - pbz@mozilla.com
+      - tihuang@mozilla.com
+    expires: 115
