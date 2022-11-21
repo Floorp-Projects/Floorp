@@ -1296,7 +1296,7 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
   MOZ_TRY(aFile->Exists(&exists));
 
   if (exists && aOptions.mMode == WriteMode::Create) {
-    return Err(IOError(NS_ERROR_DOM_TYPE_MISMATCH_ERR)
+    return Err(IOError(NS_ERROR_FILE_ALREADY_EXISTS)
                    .WithMessage("Refusing to overwrite the file at %s\n"
                                 "Specify `mode: \"overwrite\"` to allow "
                                 "overwriting the destination",
