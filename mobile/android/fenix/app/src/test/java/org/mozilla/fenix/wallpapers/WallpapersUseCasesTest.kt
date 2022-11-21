@@ -1,6 +1,5 @@
 package org.mozilla.fenix.wallpapers
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -12,16 +11,12 @@ import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
-import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
-import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.utils.Settings
@@ -34,11 +29,7 @@ import java.io.File
 import java.util.*
 import kotlin.random.Random
 
-@RunWith(AndroidJUnit4::class)
 class WallpapersUseCasesTest {
-
-    @get:Rule
-    val gleanTestRule = GleanTestRule(testContext)
 
     // initialize this once, so it can be shared throughout tests
     private val baseFakeDate = Date()
