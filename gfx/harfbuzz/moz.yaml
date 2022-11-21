@@ -61,3 +61,11 @@ vendoring:
     - ".*"
     - ".*/**"
     - src/hb-ucdn
+
+updatebot:
+  maintainer-phab: jfkthame
+  maintainer-bz: jfkthame@gmail.com
+  fuzzy-query: "'crashtest | 'reftest !'print !'jsref"
+  tasks:
+    - type: vendoring
+      enabled: true
