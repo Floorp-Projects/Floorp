@@ -272,10 +272,13 @@ class SitePermsAddonInstalling extends SitePermsAddonWrapper {
   }
 }
 
+// Numeric id included in the install telemetry events to correlate multiple events related
+// to the same install or update flow.
+let nextInstallId = 0;
+
 class SitePermsAddonInstall {
   #listeners = new Set();
   #installEvents = {
-    DOWNLOAD_ENDED: "onDownloadEnded",
     INSTALL_CANCELLED: "onInstallCancelled",
     INSTALL_ENDED: "onInstallEnded",
     INSTALL_FAILED: "onInstallFailed",
@@ -293,6 +296,7 @@ class SitePermsAddonInstall {
       this.principal.siteOriginNoSuffix,
       this
     );
+    this.installId = ++nextInstallId;
   }
 
   get installTelemetryInfo() {
@@ -321,7 +325,7 @@ class SitePermsAddonInstall {
           // to install/uninstall/enable/disable addons.  We may need to
           // do that here in the future.
           this.#callInstallListeners(this.#installEvents.INSTALL_FAILED);
-        } else {
+        } else if (this.state !== lazy.AddonManager.STATE_CANCELLED) {
           this.cancel();
         }
         return;
@@ -353,11 +357,17 @@ class SitePermsAddonInstall {
       return;
     }
 
-    this.#callInstallListeners(this.#installEvents.DOWNLOAD_ENDED);
     this.checkPrompt();
   }
 
   cancel() {
+    // This method can be called if the install is already cancelled.
+    // We don't want to go further in such case as it would lead to duplicated Telemetry events.
+    if (this.state == lazy.AddonManager.STATE_CANCELLED) {
+      console.error("SitePermsAddonInstall#cancel called twice on ", this);
+      return;
+    }
+
     this.state = lazy.AddonManager.STATE_CANCELLED;
     this.#callInstallListeners(this.#installEvents.INSTALL_CANCELLED);
   }
@@ -395,16 +405,11 @@ class SitePermsAddonInstall {
       return;
     }
 
-    for (const listener of this.#listeners) {
-      try {
-        listener[eventName]?.(this);
-      } catch (e) {
-        console.warn(
-          `SitePermsAddonInstall threw exception when calling listener callback for event "${eventName}":`,
-          e
-        );
-      }
-    }
+    lazy.AddonManagerPrivate.callInstallListeners(
+      eventName,
+      Array.from(this.#listeners),
+      this
+    );
   }
 }
 

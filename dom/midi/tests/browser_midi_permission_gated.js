@@ -13,11 +13,19 @@ const PAGE_WITH_IFRAMES_URL = `https://example.org/document-builder.sjs?html=
   )}"></iframe>`;
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonTestUtils",
+  "resource://testing-common/AddonTestUtils.jsm"
+);
 
 add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["midi.prompt.testing", false]],
   });
+
+  AddonTestUtils.initMochitest(this);
+  AddonTestUtils.hookAMTelemetryEvents();
 
   registerCleanupFunction(async () => {
     // Remove the permission.
@@ -36,6 +44,7 @@ add_setup(async function() {
     await SpecialPowers.removePermission("install", {
       url: EXAMPLE_COM_URL,
     });
+
     while (gBrowser.tabs.length > 1) {
       BrowserTestUtils.removeTab(gBrowser.selectedTab);
     }
@@ -67,7 +76,7 @@ add_task(async function testRequestMIDIAccess() {
     });
   });
 
-  info("Deny site permission addon install");
+  info("Deny site permission addon install in first popup");
   let addonInstallPanel = await onAddonInstallBlockedNotification;
   const [
     installPopupHeader,
@@ -110,7 +119,9 @@ add_task(async function testRequestMIDIAccess() {
     "SecurityError: WebMIDI requires a site permission add-on to activate"
   );
 
-  info("Request midi-sysex access again");
+  assertSitePermissionInstallTelemetryEvents(["site_warning", "cancelled"]);
+
+  info("Deny site permission addon install in second popup");
   onAddonInstallBlockedNotification = waitForNotification(
     "addon-install-blocked"
   );
@@ -119,8 +130,6 @@ add_task(async function testRequestMIDIAccess() {
       sysex: true,
     });
   });
-
-  info("Accept site permission addon install");
   addonInstallPanel = await onAddonInstallBlockedNotification;
   notification = addonInstallPanel.childNodes[0];
   let dialogPromise = waitForInstallDialog();
@@ -144,6 +153,51 @@ add_task(async function testRequestMIDIAccess() {
     "Install dialog has expected description"
   );
 
+  // secondaryButton is the "Cancel" button
+  installDialog.secondaryButton.click();
+
+  rejectionMessage = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    async () => {
+      let errorMessage;
+      try {
+        await content.midiAccessRequestPromise;
+      } catch (e) {
+        errorMessage = `${e.name}: ${e.message}`;
+      }
+
+      delete content.midiAccessRequestPromise;
+      return errorMessage;
+    }
+  );
+  is(
+    rejectionMessage,
+    "SecurityError: WebMIDI requires a site permission add-on to activate"
+  );
+
+  assertSitePermissionInstallTelemetryEvents([
+    "site_warning",
+    "permissions_prompt",
+    "cancelled",
+  ]);
+
+  info("Request midi-sysex access again");
+  onAddonInstallBlockedNotification = waitForNotification(
+    "addon-install-blocked"
+  );
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    content.midiAccessRequestPromise = content.navigator.requestMIDIAccess({
+      sysex: true,
+    });
+  });
+
+  info("Accept site permission addon install");
+  addonInstallPanel = await onAddonInstallBlockedNotification;
+  notification = addonInstallPanel.childNodes[0];
+  dialogPromise = waitForInstallDialog();
+  notification.button.click();
+  installDialog = await dialogPromise;
   installDialog.button.click();
 
   info("Wait for the midi-sysex access request promise to resolve");
@@ -195,6 +249,12 @@ add_task(async function testRequestMIDIAccess() {
     "resolved",
     "requestMIDIAccess resolved without user prompt"
   );
+
+  assertSitePermissionInstallTelemetryEvents([
+    "site_warning",
+    "permissions_prompt",
+    "completed",
+  ]);
 
   info("Request midi access without sysex");
   onAddonInstallBlockedNotification = waitForNotification(
@@ -275,6 +335,12 @@ add_task(async function testRequestMIDIAccess() {
     "and midi value should also have ALLOW permission"
   );
 
+  assertSitePermissionInstallTelemetryEvents([
+    "site_warning",
+    "permissions_prompt",
+    "completed",
+  ]);
+
   info("Check that we don't prompt user again when they perm denied");
   // remove permission to have a clean state
   await SpecialPowers.removePermission("midi-sysex", {
@@ -333,6 +399,8 @@ add_task(async function testRequestMIDIAccess() {
     "SecurityError",
     "requestMIDIAccess was rejected without user prompt"
   );
+
+  assertSitePermissionInstallTelemetryEvents(["site_warning", "cancelled"]);
 });
 
 add_task(async function testIframeRequestMIDIAccess() {
@@ -422,6 +490,12 @@ add_task(async function testIframeRequestMIDIAccess() {
     "requestMIDIAccess resolved without user prompt"
   );
 
+  assertSitePermissionInstallTelemetryEvents([
+    "site_warning",
+    "permissions_prompt",
+    "completed",
+  ]);
+
   info("Check that request is rejected when done from a cross-origin iframe");
   const crossOriginIframeBrowsingContext = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
@@ -472,6 +546,7 @@ add_task(async function testIframeRequestMIDIAccess() {
       "an error message is sent to the console"
     )
   );
+  assertSitePermissionInstallTelemetryEvents([]);
 });
 
 add_task(async function testRequestMIDIAccessLocalhost() {
@@ -557,6 +632,8 @@ add_task(async function testRequestMIDIAccessLocalhost() {
     "midi-notification",
     "midi notification was displayed again"
   );
+
+  assertSitePermissionInstallTelemetryEvents([]);
 });
 
 add_task(async function testDisabledRequestMIDIAccessFile() {
@@ -581,6 +658,26 @@ add_task(async function testDisabledRequestMIDIAccessFile() {
     "navigator.requestMIDIAccess is not defined on file scheme"
   );
 });
+
+// Ignore any additional telemetry events collected in this file.
+// Unfortunately it doesn't work to have this in a cleanup function.
+// Keep this as the last task done.
+add_task(function teardown_telemetry_events() {
+  AddonTestUtils.getAMTelemetryEvents();
+});
+
+/**
+ *  Check that the expected sitepermission install events are recorded.
+ *
+ * @param {Array<String>} expectedSteps: An array of the expected extra.step values recorded.
+ */
+function assertSitePermissionInstallTelemetryEvents(expectedSteps) {
+  let amInstallEvents = AddonTestUtils.getAMTelemetryEvents()
+    .filter(evt => evt.method === "install" && evt.object === "sitepermission")
+    .map(evt => evt.extra.step);
+
+  Assert.deepEqual(amInstallEvents, expectedSteps);
+}
 
 async function waitForInstallDialog(id = "addon-webext-permissions") {
   let panel = await waitForNotification(id);
