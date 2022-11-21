@@ -39,8 +39,8 @@
 #  include "mozilla/widget/WinCompositorWindowThread.h"
 #  include "mozilla/gfx/DeviceManagerDx.h"
 #  include "mozilla/webrender/DCLayerTree.h"
-//#  include "nsWindowsHelpers.h"
-//#  include <d3d11.h>
+// #  include "nsWindowsHelpers.h"
+// #  include <d3d11.h>
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -388,6 +388,13 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
     return;
   }
 
+  HandleFrameOneDocInner(aWindowId, aRender);
+
+  DecPendingFrameCount(aWindowId);
+}
+
+void RenderThread::HandleFrameOneDocInner(wr::WindowId aWindowId,
+                                          bool aRender) {
   if (IsDestroyed(aWindowId)) {
     return;
   }
@@ -427,17 +434,6 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
                   /* aReadbackSize */ Nothing(),
                   /* aReadbackFormat */ Nothing(),
                   /* aReadbackBuffer */ Nothing());
-
-  {  // scope lock
-    auto windows = mWindowInfos.Lock();
-    auto it = windows->find(AsUint64(aWindowId));
-    if (it == windows->end()) {
-      MOZ_ASSERT(false);
-      return;
-    }
-    WindowInfo* info = it->second;
-    info->mPendingFrames.pop();
-  }
 
   // The start time is from WebRenderBridgeParent::CompositeToTarget. From that
   // point until now (when the frame is finally pushed to the screen) is
@@ -733,6 +729,17 @@ void RenderThread::DecPendingFrameBuildCount(wr::WindowId aWindowId) {
   WindowInfo* info = it->second;
   MOZ_RELEASE_ASSERT(info->mPendingFrameBuild >= 1);
   info->mPendingFrameBuild--;
+}
+
+void RenderThread::DecPendingFrameCount(wr::WindowId aWindowId) {
+  auto windows = mWindowInfos.Lock();
+  auto it = windows->find(AsUint64(aWindowId));
+  if (it == windows->end()) {
+    MOZ_ASSERT(false);
+    return;
+  }
+  WindowInfo* info = it->second;
+  info->mPendingFrames.pop();
 }
 
 void RenderThread::RegisterExternalImage(
