@@ -3,6 +3,32 @@
 
 "use strict";
 
+const TEST_PAGE_LONG = TEST_ROOT + "test-video-selection.html";
+
+const IMPROVED_CONTROLS_ENABLED_PREF =
+  "media.videocontrols.picture-in-picture.improved-video-controls.enabled";
+
+async function getVideoCurrentTime(browser, videoID) {
+  return SpecialPowers.spawn(browser, [videoID], async videoID => {
+    return content.document.getElementById(videoID).currentTime;
+  });
+}
+
+async function getVideoDuration(browser, videoID) {
+  return SpecialPowers.spawn(browser, [videoID], async videoID => {
+    return content.document.getElementById(videoID).duration;
+  });
+}
+
+function checkTimeCloseEnough(actual, expected, message) {
+  let equal = Math.abs(actual - expected);
+  if (equal <= 0.5) {
+    is(equal <= 0.5, true, message);
+  } else {
+    is(actual, expected, message);
+  }
+}
+
 /**
  * Tests the functionality of improved Picture-in-picture
  * playback controls.
@@ -24,9 +50,6 @@ add_task(async () => {
       await SpecialPowers.spawn(browser, [videoID], async videoID => {
         await content.document.getElementById(videoID).play();
       });
-
-      const IMPROVED_CONTROLS_ENABLED_PREF =
-        "media.videocontrols.picture-in-picture.improved-video-controls.enabled";
 
       await SpecialPowers.pushPrefEnv({
         set: [[IMPROVED_CONTROLS_ENABLED_PREF, true]],
@@ -90,6 +113,114 @@ add_task(async () => {
       Assert.ok(
         seekBackwardButton.hidden,
         "The Backward button is not visible"
+      );
+    }
+  );
+});
+
+/**
+ * Tests the functionality of Picture-in-picture
+ * video scrubber
+ */
+add_task(async function testVideoScrubber() {
+  let videoID = "long";
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: TEST_PAGE_LONG,
+      gBrowser,
+    },
+    async browser => {
+      await ensureVideosReady(browser);
+
+      await SpecialPowers.pushPrefEnv({
+        set: [[IMPROVED_CONTROLS_ENABLED_PREF, true]],
+      });
+
+      // Open the video in PiP
+      let pipWin = await triggerPictureInPicture(browser, videoID);
+      ok(pipWin, "Got Picture-in-Picture window.");
+
+      let scrubber = pipWin.document.getElementById("scrubber");
+      scrubber.focus();
+
+      let currentTime = await getVideoCurrentTime(browser, videoID);
+      let expectedVideoTime = 0;
+      const duration = await getVideoDuration(browser, videoID);
+      checkTimeCloseEnough(
+        currentTime,
+        expectedVideoTime,
+        "Video current time is 0"
+      );
+
+      EventUtils.synthesizeKey("KEY_ArrowRight", {}, pipWin);
+
+      currentTime = await getVideoCurrentTime(browser, videoID);
+      expectedVideoTime = 5;
+      checkTimeCloseEnough(
+        currentTime,
+        expectedVideoTime,
+        "Video current time is 5"
+      );
+
+      EventUtils.synthesizeKey("KEY_ArrowLeft", {}, pipWin);
+
+      currentTime = await getVideoCurrentTime(browser, videoID);
+      expectedVideoTime = 0;
+      checkTimeCloseEnough(
+        currentTime,
+        expectedVideoTime,
+        "Video current time is 0"
+      );
+
+      let rect = scrubber.getBoundingClientRect();
+
+      EventUtils.synthesizeMouse(
+        scrubber,
+        rect.width / 2,
+        rect.height / 2,
+        {},
+        pipWin
+      );
+
+      expectedVideoTime = duration / 2;
+      currentTime = await getVideoCurrentTime(browser, videoID);
+      checkTimeCloseEnough(
+        currentTime,
+        expectedVideoTime,
+        "Video current time is 3.98..."
+      );
+
+      EventUtils.synthesizeMouse(
+        scrubber,
+        rect.width / 2,
+        rect.height / 2,
+        { type: "mousedown" },
+        pipWin
+      );
+
+      EventUtils.synthesizeMouse(
+        scrubber,
+        rect.width,
+        rect.height / 2,
+        { type: "mousemove" },
+        pipWin
+      );
+
+      EventUtils.synthesizeMouse(
+        scrubber,
+        rect.width,
+        rect.height / 2,
+        { type: "mouseup" },
+        pipWin
+      );
+
+      expectedVideoTime = duration;
+      currentTime = await getVideoCurrentTime(browser, videoID);
+      checkTimeCloseEnough(
+        currentTime,
+        expectedVideoTime,
+        "Video current time is 7.96..."
       );
     }
   );
