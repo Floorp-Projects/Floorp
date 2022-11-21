@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import mozilla.components.lib.state.ext.observeAsComposableState
-import org.mozilla.focus.ext.getParcelableCompat
+import mozilla.components.support.utils.ext.getParcelableCompat
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.settings.BaseComposeFragment
 import org.mozilla.focus.settings.permissions.SitePermissionOption

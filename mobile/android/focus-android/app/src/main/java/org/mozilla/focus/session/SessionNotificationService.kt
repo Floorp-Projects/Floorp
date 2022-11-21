@@ -17,12 +17,12 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.utils.ThreadUtils
+import mozilla.components.support.utils.ext.stopForegroundCompat
 import org.mozilla.focus.GleanMetrics.Notifications
 import org.mozilla.focus.GleanMetrics.RecentApps
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.ext.components
-import org.mozilla.focus.ext.stopForegroundCompat
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.IntentUtils
 

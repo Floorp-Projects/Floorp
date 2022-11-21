@@ -10,7 +10,7 @@ import android.content.Intent
 import android.content.pm.LabeledIntent
 import android.os.Build
 import android.os.Parcelable
-import org.mozilla.focus.ext.queryIntentActivitiesCompat
+import mozilla.components.support.utils.ext.queryIntentActivitiesCompat
 
 object IntentUtils {
 

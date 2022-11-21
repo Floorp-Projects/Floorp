@@ -30,10 +30,10 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.pm.PackageInfoCompat
 import kotlinx.coroutines.Job
 import mozilla.components.browser.state.state.SessionState
+import mozilla.components.support.utils.ext.getPackageInfoCompat
 import org.mozilla.focus.R
 import org.mozilla.focus.databinding.FragmentAboutBinding
 import org.mozilla.focus.ext.components
-import org.mozilla.focus.ext.getPackageInfoCompat
 import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.settings.BaseSettingsLikeFragment
 import org.mozilla.focus.state.AppAction

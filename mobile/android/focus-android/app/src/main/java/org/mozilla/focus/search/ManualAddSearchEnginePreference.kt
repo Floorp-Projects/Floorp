@@ -18,8 +18,8 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import com.google.android.material.textfield.TextInputLayout
 import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.support.utils.ext.getParcelableCompat
 import org.mozilla.focus.R
-import org.mozilla.focus.ext.getParcelableCompat
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
 

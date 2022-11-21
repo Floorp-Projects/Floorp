@@ -2,10 +2,10 @@ package org.mozilla.focus.utils
 
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
+import mozilla.components.support.utils.ext.getPackageInfoCompat
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.focus.ext.getPackageInfoCompat
 import org.robolectric.RobolectricTestRunner
 import java.util.Locale
 

@@ -7,8 +7,8 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.view.View
 import androidx.collection.ArrayMap
+import mozilla.components.support.utils.ext.getPackageInfoCompat
 import org.mozilla.focus.R
-import org.mozilla.focus.ext.getPackageInfoCompat
 import org.mozilla.focus.locale.Locales
 import org.mozilla.focus.utils.HtmlLoader
 import org.mozilla.focus.utils.SupportUtils.manifestoURL
