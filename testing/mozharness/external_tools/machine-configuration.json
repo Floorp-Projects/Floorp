@@ -22,7 +22,7 @@
     "win10-vm": {
         "screen_resolution": {
             "x": 2560,
-            "y": 1600
+            "y": 1440
         },
         "mouse_position": {
             "x": 1010,
