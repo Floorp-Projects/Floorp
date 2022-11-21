@@ -697,6 +697,11 @@ bool nsIDNService::isLabelSafe(const nsAString& label) {
       return false;
     }
 
+    if (ch == 0x307 &&
+        (previousChar == 'i' || previousChar == 'j' || previousChar == 'l')) {
+      return false;
+    }
+
     // Check for mixed numbering systems
     auto genCat = GetGeneralCategory(ch);
     if (genCat == HB_UNICODE_GENERAL_CATEGORY_DECIMAL_NUMBER) {
