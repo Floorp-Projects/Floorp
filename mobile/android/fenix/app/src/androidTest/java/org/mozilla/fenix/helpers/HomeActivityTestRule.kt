@@ -6,6 +6,7 @@
 
 package org.mozilla.fenix.helpers
 
+import android.content.Intent
 import android.view.ViewConfiguration.getLongPressTimeout
 import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.rule.ActivityTestRule
@@ -161,6 +162,8 @@ class HomeActivityIntentTestRule internal constructor(
 
     private val longTapUserPreference = getLongPressTimeout()
 
+    private lateinit var intent: Intent
+
     /**
      * Update settings after the activity was created.
      */
@@ -169,6 +172,19 @@ class HomeActivityIntentTestRule internal constructor(
             settings(this)
             applyFlagUpdates()
         }
+    }
+
+    override fun getActivityIntent(): Intent {
+        return if(this::intent.isInitialized) {
+            this.intent
+        } else {
+            super.getActivityIntent()
+        }
+    }
+
+    fun withIntent(intent: Intent): HomeActivityIntentTestRule {
+        this.intent = intent
+        return this
     }
 
     override fun beforeActivityLaunched() {

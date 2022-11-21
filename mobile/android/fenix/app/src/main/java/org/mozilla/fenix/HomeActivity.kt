@@ -276,7 +276,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             val safeIntent = intent?.toSafeIntent()
             safeIntent
                 ?.let(::getIntentSource)
-                ?.also { Events.appOpened.record(Events.AppOpenedExtra(it)) }
+                ?.also {
+                    Events.appOpened.record(Events.AppOpenedExtra(it))
+                    components.analytics.experiments.recordEvent("app_opened")
+                }
         }
         supportActionBar?.hide()
 
