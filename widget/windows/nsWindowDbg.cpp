@@ -8,7 +8,6 @@
  */
 
 #include "nsWindowDbg.h"
-#include "nsWindowLoggedMessages.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include <winuser.h>
@@ -40,24 +39,8 @@ std::unordered_set<UINT> gEventsToLogOriginalParams = {
     WM_GETTEXT,           WM_GETMINMAXINFO, WM_MEASUREITEM,
 };
 
-// If you add an event here, you must add cases for these to
-// MakeMessageSpecificData() and AppendFriendlyMessageSpecificData()
-// in nsWindowLoggedMessages.cpp.
-std::unordered_set<UINT> gEventsToRecordInAboutPage = {WM_WINDOWPOSCHANGING,
-                                                       WM_WINDOWPOSCHANGED,
-                                                       WM_SIZING,
-                                                       WM_SIZE,
-                                                       WM_DPICHANGED,
-                                                       WM_SETTINGCHANGE,
-                                                       WM_NCCALCSIZE,
-                                                       WM_MOVE,
-                                                       WM_MOVING,
-                                                       WM_GETMINMAXINFO};
-
-PrintEvent::PrintEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
-                       LRESULT retValue)
-    : mHwnd(hwnd),
-      mMsg(msg),
+PrintEvent::PrintEvent(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT retValue)
+    : mMsg(msg),
       mWParam(wParam),
       mLParam(lParam),
       mRetValue(retValue),
@@ -79,14 +62,10 @@ PrintEvent::~PrintEvent() {
       ++gEventCounter;
     }
   }
-  if (mMsg == WM_DESTROY) {
-    // Remove any logged messages for this window.
-    WindowClosed(mHwnd);
-  }
 }
 
-void EventMsgInfo::LogParameters(nsCString& str, WPARAM wParam, LPARAM lParam,
-                                 bool isPreCall) {
+void EventMsgInfo::LogParameters(nsAutoCString& str, WPARAM wParam,
+                                 LPARAM lParam, bool isPreCall) {
   if (mParamInfoFn) {
     str = mParamInfoFn(wParam, lParam, isPreCall);
   } else {
@@ -102,21 +81,21 @@ void EventMsgInfo::LogParameters(nsCString& str, WPARAM wParam, LPARAM lParam,
   }
 }
 
-nsAutoCString DefaultParamInfo(uint64_t wParam, uint64_t lParam,
-                               bool /* isPreCall */) {
+nsAutoCString DefaultParamInfoFn(uint64_t wParam, uint64_t lParam,
+                                 bool /* isPreCall */) {
   nsAutoCString result;
   result.AppendPrintf("(0x%08llX 0x%08llX)", wParam, lParam);
   return result;
 }
 
-nsAutoCString EmptyParamInfo(uint64_t wParam, uint64_t lParam,
-                             bool /* isPreCall */) {
+nsAutoCString EmptyParamInfoFn(uint64_t wParam, uint64_t lParam,
+                               bool /* isPreCall */) {
   nsAutoCString result;
   return result;
 }
 
 void AppendEnumValueInfo(
-    nsCString& str, uint64_t value,
+    nsAutoCString& str, uint64_t value,
     const std::unordered_map<uint64_t, const char*>& valuesAndNames,
     const char* name) {
   if (name != nullptr) {
@@ -130,7 +109,7 @@ void AppendEnumValueInfo(
   }
 }
 
-bool AppendFlagsInfo(nsCString& str, uint64_t flags,
+bool AppendFlagsInfo(nsAutoCString& str, uint64_t flags,
                      const nsTArray<EnumValueAndName>& flagsAndNames,
                      const char* name) {
   if (name != nullptr) {
@@ -175,17 +154,13 @@ bool PrintEvent::PrintEventInternal() {
   mozilla::LogLevel logLevel = (*gWindowsEventLog).Level();
   bool isPreCall = mResult.isNothing();
   if (isPreCall || mShouldLogPostCall) {
-    bool recordInAboutPage = gEventsToRecordInAboutPage.find(mMsg) !=
-                             gEventsToRecordInAboutPage.end();
-    bool writeToWindowsLog;
     if (isPreCall) {
-      writeToWindowsLog =
-          (logLevel >= mozilla::LogLevel::Info &&
-           (logLevel >= mozilla::LogLevel::Debug || (gLastEventMsg != mMsg)) &&
-           (logLevel >= mozilla::LogLevel::Verbose ||
-            (mMsg != WM_SETCURSOR && mMsg != WM_MOUSEMOVE &&
-             mMsg != WM_NCHITTEST)));
-      bool shouldLogAtAll = recordInAboutPage || writeToWindowsLog;
+      bool shouldLogAtAll =
+          logLevel >= mozilla::LogLevel::Info &&
+          (logLevel >= mozilla::LogLevel::Debug || (gLastEventMsg != mMsg)) &&
+          (logLevel >= mozilla::LogLevel::Verbose ||
+           (mMsg != WM_SETCURSOR && mMsg != WM_MOUSEMOVE &&
+            mMsg != WM_NCHITTEST));
       // Since calling mParamInfoFn() allocates a string, only go down this code
       // path if we're going to log this message to reduce allocations.
       if (!shouldLogAtAll) {
@@ -198,67 +173,54 @@ bool PrintEvent::PrintEventInternal() {
         // Pre-call and we don't want to log both, so skip this one.
         return false;
       }
+    }
+    const auto& eventMsgInfo = gAllEvents.find(mMsg);
+    const char* msgText =
+        eventMsgInfo != gAllEvents.end() ? eventMsgInfo->second.mStr : nullptr;
+    nsAutoCString paramInfo;
+    if (eventMsgInfo != gAllEvents.end()) {
+      eventMsgInfo->second.LogParameters(paramInfo, mWParam, mLParam,
+                                         isPreCall);
     } else {
-      writeToWindowsLog = true;
+      paramInfo = DefaultParamInfoFn(mWParam, mLParam, isPreCall);
     }
-    if (recordInAboutPage) {
-      LogWindowMessage(mHwnd, mMsg, isPreCall,
-                       mEventCounter.valueOr(gEventCounter), mWParam, mLParam,
-                       mResult, mRetValue);
-    }
+    const char* resultMsg = mResult.isSome()
+                                ? (mResult.value() ? "true" : "false")
+                                : "initial call";
+    MOZ_LOG(
+        gWindowsEventLog, LogLevel::Info,
+        ("%6ld - 0x%04X %s %s: 0x%08llX (%s)\n",
+         mEventCounter.valueOr(gEventCounter), mMsg, paramInfo.get(),
+         msgText ? msgText : "Unknown",
+         mResult.isSome() ? static_cast<uint64_t>(mRetValue) : 0, resultMsg));
     gLastEventMsg = mMsg;
-    if (writeToWindowsLog) {
-      const auto& eventMsgInfo = gAllEvents.find(mMsg);
-      const char* msgText = eventMsgInfo != gAllEvents.end()
-                                ? eventMsgInfo->second.mStr
-                                : nullptr;
-      nsAutoCString paramInfo;
-      if (eventMsgInfo != gAllEvents.end()) {
-        eventMsgInfo->second.LogParameters(paramInfo, mWParam, mLParam,
-                                           isPreCall);
-      } else {
-        paramInfo = DefaultParamInfo(mWParam, mLParam, isPreCall);
-      }
-      const char* resultMsg = mResult.isSome()
-                                  ? (mResult.value() ? "true" : "false")
-                                  : "initial call";
-      nsAutoCString logMessage;
-      logMessage.AppendPrintf(
-          "%6ld 0x%08llX - 0x%04X %s %s: 0x%08llX (%s)\n",
-          mEventCounter.valueOr(gEventCounter),
-          reinterpret_cast<uint64_t>(mHwnd), mMsg, paramInfo.get(),
-          msgText ? msgText : "Unknown",
-          mResult.isSome() ? static_cast<uint64_t>(mRetValue) : 0, resultMsg);
-      const char* logMessageData = logMessage.Data();
-      MOZ_LOG(gWindowsEventLog, LogLevel::Info, ("%s", logMessageData));
-    }
     return true;
   }
   return false;
 }
 
-void TrueFalseParamInfo(nsCString& result, uint64_t value, const char* name,
-                        bool /* isPreCall */) {
+void TrueFalseParamInfoFn(nsAutoCString& result, uint64_t value,
+                          const char* name, bool /* isPreCall */) {
   result.AppendPrintf("%s=%s", name, value == TRUE ? "TRUE" : "FALSE");
 }
 
-void TrueFalseLowOrderWordParamInfo(nsCString& result, uint64_t value,
-                                    const char* name, bool /* isPreCall */) {
+void TrueFalseLowOrderWordParamInfoFn(nsAutoCString& result, uint64_t value,
+                                      const char* name, bool /* isPreCall */) {
   result.AppendPrintf("%s=%s", name, LOWORD(value) == TRUE ? "TRUE" : "FALSE");
 }
 
-void HexParamInfo(nsCString& result, uint64_t value, const char* name,
-                  bool /* isPreCall */) {
+void HexParamInfoFn(nsAutoCString& result, uint64_t value, const char* name,
+                    bool /* isPreCall */) {
   result.AppendPrintf("%s=0x%08llX", name, value);
 }
 
-void IntParamInfo(nsCString& result, uint64_t value, const char* name,
-                  bool /* isPreCall */) {
+void IntParamInfoFn(nsAutoCString& result, uint64_t value, const char* name,
+                    bool /* isPreCall */) {
   result.AppendPrintf("%s=%lld", name, value);
 }
 
-void RectParamInfo(nsCString& str, uint64_t value, const char* name,
-                   bool /* isPreCall */) {
+void RectParamInfoFn(nsAutoCString& str, uint64_t value, const char* name,
+                     bool /* isPreCall */) {
   LPRECT rect = reinterpret_cast<LPRECT>(value);
   if (rect == nullptr) {
     str.AppendPrintf("NULL rect?");
@@ -274,8 +236,8 @@ void RectParamInfo(nsCString& str, uint64_t value, const char* name,
 #define VALANDNAME_ENTRY(_msg) \
   { _msg, #_msg }
 
-void CreateStructParamInfo(nsCString& str, uint64_t value, const char* name,
-                           bool /* isPreCall */) {
+void CreateStructParamInfoFn(nsAutoCString& str, uint64_t value,
+                             const char* name, bool /* isPreCall */) {
   CREATESTRUCT* createStruct = reinterpret_cast<CREATESTRUCT*>(value);
   if (createStruct == nullptr) {
     str.AppendASCII("NULL createStruct?");
@@ -350,30 +312,26 @@ void CreateStructParamInfo(nsCString& str, uint64_t value, const char* name,
                   "dwExStyle");
 }
 
-void XLowWordYHighWordParamInfo(nsCString& str, uint64_t value,
-                                const char* name, bool /* isPreCall */) {
+void XLowWordYHighWordParamInfoFn(nsAutoCString& str, uint64_t value,
+                                  const char* name, bool /* isPreCall */) {
   str.AppendPrintf("%s: x=%d y=%d", name, static_cast<int>(LOWORD(value)),
                    static_cast<int>(HIWORD(value)));
 }
 
-void PointParamInfo(nsCString& str, uint64_t value, const char* name,
-                    bool /* isPreCall */) {
+void PointParamInfoFn(nsAutoCString& str, uint64_t value, const char* name,
+                      bool /* isPreCall */) {
   str.AppendPrintf("%s: x=%d y=%d", name, static_cast<int>(GET_X_LPARAM(value)),
                    static_cast<int>(GET_Y_LPARAM(value)));
 }
 
-void PointExplicitParamInfo(nsCString& str, POINT point, const char* name) {
-  str.AppendPrintf("%s: x=%ld y=%ld", name, point.x, point.y);
-}
-
-void PointsParamInfo(nsCString& str, uint64_t value, const char* name,
-                     bool /* isPreCall */) {
+void PointsParamInfoFn(nsAutoCString& str, uint64_t value, const char* name,
+                       bool /* isPreCall */) {
   PPOINTS points = reinterpret_cast<PPOINTS>(&value);
   str.AppendPrintf("%s: x=%d y=%d", name, points->x, points->y);
 }
 
-void VirtualKeyParamInfo(nsCString& result, uint64_t param, const char* name,
-                         bool /* isPreCall */) {
+void VirtualKeyParamInfoFn(nsAutoCString& result, uint64_t param,
+                           const char* name, bool /* isPreCall */) {
   const static std::unordered_map<uint64_t, const char*> virtualKeys{
       VALANDNAME_ENTRY(VK_LBUTTON),
       VALANDNAME_ENTRY(VK_RBUTTON),
@@ -556,8 +514,8 @@ void VirtualKeyParamInfo(nsCString& result, uint64_t param, const char* name,
   AppendEnumValueInfo(result, param, virtualKeys, name);
 }
 
-void VirtualModifierKeysParamInfo(nsCString& result, uint64_t param,
-                                  const char* name, bool /* isPreCall */) {
+void VirtualModifierKeysParamInfoFn(nsAutoCString& result, uint64_t param,
+                                    const char* name, bool /* isPreCall */) {
   const static nsTArray<EnumValueAndName> virtualKeys{
       VALANDNAME_ENTRY(MK_CONTROL),  VALANDNAME_ENTRY(MK_LBUTTON),
       VALANDNAME_ENTRY(MK_MBUTTON),  VALANDNAME_ENTRY(MK_RBUTTON),
@@ -566,8 +524,9 @@ void VirtualModifierKeysParamInfo(nsCString& result, uint64_t param,
   AppendFlagsInfo(result, param, virtualKeys, name);
 }
 
-void ParentNotifyEventParamInfo(nsCString& str, uint64_t param,
-                                const char* /* name */, bool /* isPreCall */) {
+void ParentNotifyEventParamInfoFn(nsAutoCString& str, uint64_t param,
+                                  const char* /* name */,
+                                  bool /* isPreCall */) {
   const static std::unordered_map<uint64_t, const char*> eventValues{
       VALANDNAME_ENTRY(WM_CREATE),      VALANDNAME_ENTRY(WM_DESTROY),
       VALANDNAME_ENTRY(WM_LBUTTONDOWN), VALANDNAME_ENTRY(WM_MBUTTONDOWN),
@@ -575,11 +534,11 @@ void ParentNotifyEventParamInfo(nsCString& str, uint64_t param,
       VALANDNAME_ENTRY(WM_POINTERDOWN)};
   AppendEnumValueInfo(str, LOWORD(param), eventValues, "event");
   str.AppendASCII(" ");
-  HexParamInfo(str, HIWORD(param), "hiWord", false);
+  HexParamInfoFn(str, HIWORD(param), "hiWord", false);
 }
 
-void KeystrokeFlagsParamInfo(nsCString& str, uint64_t param,
-                             const char* /* name */, bool /* isPreCall */) {
+void KeystrokeFlagsParamInfoFn(nsAutoCString& str, uint64_t param,
+                               const char* /* name */, bool /* isPreCall */) {
   WORD repeatCount = LOWORD(param);
   WORD keyFlags = HIWORD(param);
   WORD scanCode = LOBYTE(keyFlags);
@@ -598,16 +557,17 @@ void KeystrokeFlagsParamInfo(nsCString& str, uint64_t param,
       wasKeyDown ? 1 : 0, transitionState ? 1 : 0);
 };
 
-void VirtualKeysLowWordDistanceHighWordParamInfo(nsCString& str, uint64_t value,
-                                                 const char* /* name */,
-                                                 bool isPreCall) {
-  VirtualModifierKeysParamInfo(str, LOWORD(value), "virtualKeys", isPreCall);
+void VirtualKeysLowWordDistanceHighWordParamInfoFn(nsAutoCString& str,
+                                                   uint64_t value,
+                                                   const char* /* name */,
+                                                   bool isPreCall) {
+  VirtualModifierKeysParamInfoFn(str, LOWORD(value), "virtualKeys", isPreCall);
   str.AppendASCII(" ");
-  IntParamInfo(str, HIWORD(value), "distance", isPreCall);
+  IntParamInfoFn(str, HIWORD(value), "distance", isPreCall);
 }
 
-void ShowWindowReasonParamInfo(nsCString& str, uint64_t value, const char* name,
-                               bool /* isPreCall */) {
+void ShowWindowReasonParamInfoFn(nsAutoCString& str, uint64_t value,
+                                 const char* name, bool /* isPreCall */) {
   const static std::unordered_map<uint64_t, const char*> showWindowReasonValues{
       VALANDNAME_ENTRY(SW_OTHERUNZOOM),
       VALANDNAME_ENTRY(SW_OTHERZOOM),
@@ -617,8 +577,8 @@ void ShowWindowReasonParamInfo(nsCString& str, uint64_t value, const char* name,
   AppendEnumValueInfo(str, value, showWindowReasonValues, name);
 }
 
-void WindowEdgeParamInfo(nsCString& str, uint64_t value, const char* name,
-                         bool /* isPreCall */) {
+void WindowEdgeParamInfoFn(nsAutoCString& str, uint64_t value, const char* name,
+                           bool /* isPreCall */) {
   const static std::unordered_map<uint64_t, const char*> windowEdgeValues{
       VALANDNAME_ENTRY(WMSZ_BOTTOM),      VALANDNAME_ENTRY(WMSZ_BOTTOMLEFT),
       VALANDNAME_ENTRY(WMSZ_BOTTOMRIGHT), VALANDNAME_ENTRY(WMSZ_LEFT),
@@ -627,8 +587,8 @@ void WindowEdgeParamInfo(nsCString& str, uint64_t value, const char* name,
   AppendEnumValueInfo(str, value, windowEdgeValues, name);
 }
 
-void UiActionParamInfo(nsCString& str, uint64_t value, const char* name,
-                       bool /* isPreCall */) {
+void UiActionParamInfoFn(nsAutoCString& str, uint64_t value, const char* name,
+                         bool /* isPreCall */) {
   const static std::unordered_map<uint64_t, const char*> uiActionValues {
     VALANDNAME_ENTRY(SPI_GETACCESSTIMEOUT),
         VALANDNAME_ENTRY(SPI_GETAUDIODESCRIPTION),
@@ -844,8 +804,8 @@ void UiActionParamInfo(nsCString& str, uint64_t value, const char* name,
   AppendEnumValueInfo(str, value, uiActionValues, name);
 }
 
-nsAutoCString WmSizeParamInfo(uint64_t wParam, uint64_t lParam,
-                              bool /* isPreCall */) {
+nsAutoCString WmSizeParamInfoFn(uint64_t wParam, uint64_t lParam,
+                                bool /* isPreCall */) {
   nsAutoCString result;
   const static std::unordered_map<uint64_t, const char*> sizeValues{
       VALANDNAME_ENTRY(SIZE_RESTORED), VALANDNAME_ENTRY(SIZE_MINIMIZED),
@@ -866,92 +826,93 @@ const nsTArray<EnumValueAndName> windowPositionFlags = {
     VALANDNAME_ENTRY(SWP_SHOWWINDOW),
 };
 
-void WindowPosParamInfo(nsCString& str, uint64_t value, const char* name,
-                        bool /* isPreCall */) {
+void WindowPosParamInfoFn(nsAutoCString& str, uint64_t value, const char* name,
+                          bool /* isPreCall */) {
   LPWINDOWPOS windowPos = reinterpret_cast<LPWINDOWPOS>(value);
   if (windowPos == nullptr) {
     str.AppendASCII("null windowPos?");
     return;
   }
-  HexParamInfo(str, reinterpret_cast<uint64_t>(windowPos->hwnd), "hwnd", false);
+  HexParamInfoFn(str, reinterpret_cast<uint64_t>(windowPos->hwnd), "hwnd",
+                 false);
   str.AppendASCII(" ");
-  HexParamInfo(str, reinterpret_cast<uint64_t>(windowPos->hwndInsertAfter),
-               "hwndInsertAfter", false);
+  HexParamInfoFn(str, reinterpret_cast<uint64_t>(windowPos->hwndInsertAfter),
+                 "hwndInsertAfter", false);
   str.AppendASCII(" ");
-  IntParamInfo(str, windowPos->x, "x", false);
+  IntParamInfoFn(str, windowPos->x, "x", false);
   str.AppendASCII(" ");
-  IntParamInfo(str, windowPos->y, "y", false);
+  IntParamInfoFn(str, windowPos->y, "y", false);
   str.AppendASCII(" ");
-  IntParamInfo(str, windowPos->cx, "cx", false);
+  IntParamInfoFn(str, windowPos->cx, "cx", false);
   str.AppendASCII(" ");
-  IntParamInfo(str, windowPos->cy, "cy", false);
+  IntParamInfoFn(str, windowPos->cy, "cy", false);
   str.AppendASCII(" ");
   AppendFlagsInfo(str, windowPos->flags, windowPositionFlags, "flags");
 }
 
-void StyleOrExtendedParamInfo(nsCString& str, uint64_t value, const char* name,
-                              bool /* isPreCall */) {
+void StyleOrExtendedParamInfoFn(nsAutoCString& str, uint64_t value,
+                                const char* name, bool /* isPreCall */) {
   const static std::unordered_map<uint64_t, const char*> styleOrExtended{
       VALANDNAME_ENTRY(GWL_EXSTYLE), VALANDNAME_ENTRY(GWL_STYLE)};
   AppendEnumValueInfo(str, value, styleOrExtended, name);
 }
 
-void StyleStructParamInfo(nsCString& str, uint64_t value, const char* name,
-                          bool /* isPreCall */) {
+void StyleStructParamInfoFn(nsAutoCString& str, uint64_t value,
+                            const char* name, bool /* isPreCall */) {
   LPSTYLESTRUCT styleStruct = reinterpret_cast<LPSTYLESTRUCT>(value);
   if (styleStruct == nullptr) {
     str.AppendASCII("null STYLESTRUCT?");
     return;
   }
-  HexParamInfo(str, styleStruct->styleOld, "styleOld", false);
+  HexParamInfoFn(str, styleStruct->styleOld, "styleOld", false);
   str.AppendASCII(" ");
-  HexParamInfo(str, styleStruct->styleNew, "styleNew", false);
+  HexParamInfoFn(str, styleStruct->styleNew, "styleNew", false);
 }
 
-void NcCalcSizeParamsParamInfo(nsCString& str, uint64_t value, const char* name,
-                               bool /* isPreCall */) {
+void NcCalcSizeParamsParamInfoFn(nsAutoCString& str, uint64_t value,
+                                 const char* name, bool /* isPreCall */) {
   LPNCCALCSIZE_PARAMS params = reinterpret_cast<LPNCCALCSIZE_PARAMS>(value);
   if (params == nullptr) {
     str.AppendASCII("null NCCALCSIZE_PARAMS?");
     return;
   }
   str.AppendPrintf("%s[0]: ", name);
-  RectParamInfo(str, reinterpret_cast<uintptr_t>(&params->rgrc[0]), nullptr,
-                false);
+  RectParamInfoFn(str, reinterpret_cast<uintptr_t>(&params->rgrc[0]), nullptr,
+                  false);
   str.AppendPrintf(" %s[1]: ", name);
-  RectParamInfo(str, reinterpret_cast<uintptr_t>(&params->rgrc[1]), nullptr,
-                false);
+  RectParamInfoFn(str, reinterpret_cast<uintptr_t>(&params->rgrc[1]), nullptr,
+                  false);
   str.AppendPrintf(" %s[2]: ", name);
-  RectParamInfo(str, reinterpret_cast<uintptr_t>(&params->rgrc[2]), nullptr,
-                false);
+  RectParamInfoFn(str, reinterpret_cast<uintptr_t>(&params->rgrc[2]), nullptr,
+                  false);
   str.AppendASCII(" ");
-  WindowPosParamInfo(str, reinterpret_cast<uintptr_t>(params->lppos), nullptr,
-                     false);
+  WindowPosParamInfoFn(str, reinterpret_cast<uintptr_t>(params->lppos), nullptr,
+                       false);
 }
 
-nsAutoCString WmNcCalcSizeParamInfo(uint64_t wParam, uint64_t lParam,
-                                    bool /* isPreCall */) {
+nsAutoCString WmNcCalcSizeParamInfoFn(uint64_t wParam, uint64_t lParam,
+                                      bool /* isPreCall */) {
   nsAutoCString result;
-  TrueFalseParamInfo(result, wParam, "shouldIndicateValidArea", false);
+  TrueFalseParamInfoFn(result, wParam, "shouldIndicateValidArea", false);
   result.AppendASCII(" ");
   if (wParam == TRUE) {
-    NcCalcSizeParamsParamInfo(result, lParam, "ncCalcSizeParams", false);
+    NcCalcSizeParamsParamInfoFn(result, lParam, "ncCalcSizeParams", false);
   } else {
-    RectParamInfo(result, lParam, "rect", false);
+    RectParamInfoFn(result, lParam, "rect", false);
   }
   return result;
 }
 
-void ActivateWParamInfo(nsCString& result, uint64_t wParam, const char* name,
-                        bool /* isPreCall */) {
+void ActivateWParamInfoFn(nsAutoCString& result, uint64_t wParam,
+                          const char* name, bool /* isPreCall */) {
   const static std::unordered_map<uint64_t, const char*> activateValues{
       VALANDNAME_ENTRY(WA_ACTIVE), VALANDNAME_ENTRY(WA_CLICKACTIVE),
       VALANDNAME_ENTRY(WA_INACTIVE)};
   AppendEnumValueInfo(result, wParam, activateValues, name);
 }
 
-void HitTestParamInfo(nsCString& result, uint64_t param, const char* name,
-                      bool /* isPreCall */) {
+void HitTestParamInfoFn(nsAutoCString& result, uint64_t param, const char* name,
+                        bool /* isPreCall */) {
   const static std::unordered_map<uint64_t, const char*> hitTestResults{
       VALANDNAME_ENTRY(HTBORDER),     VALANDNAME_ENTRY(HTBOTTOM),
       VALANDNAME_ENTRY(HTBOTTOMLEFT), VALANDNAME_ENTRY(HTBOTTOMRIGHT),
@@ -970,36 +931,20 @@ void HitTestParamInfo(nsCString& result, uint64_t param, const char* name,
   AppendEnumValueInfo(result, param, hitTestResults, name);
 }
 
-void SetCursorLParamInfo(nsCString& result, uint64_t lParam,
-                         const char* /* name */, bool /* isPreCall */) {
-  HitTestParamInfo(result, LOWORD(lParam), "hitTestResult", false);
+void SetCursorLParamInfoFn(nsAutoCString& result, uint64_t lParam,
+                           const char* /* name */, bool /* isPreCall */) {
+  HitTestParamInfoFn(result, LOWORD(lParam), "hitTestResult", false);
   result.AppendASCII(" ");
-  HexParamInfo(result, HIWORD(lParam), "message", false);
+  HexParamInfoFn(result, HIWORD(lParam), "message", false);
 }
 
-void MinMaxInfoParamInfo(nsCString& result, uint64_t value,
-                         const char* /* name */, bool /* isPreCall */) {
-  PMINMAXINFO minMaxInfo = reinterpret_cast<PMINMAXINFO>(value);
-  if (minMaxInfo == nullptr) {
-    result.AppendPrintf("NULL minMaxInfo?");
-    return;
-  }
-  PointExplicitParamInfo(result, minMaxInfo->ptMaxSize, "maxSize");
-  result.AppendASCII(" ");
-  PointExplicitParamInfo(result, minMaxInfo->ptMaxPosition, "maxPosition");
-  result.AppendASCII(" ");
-  PointExplicitParamInfo(result, minMaxInfo->ptMinTrackSize, "minTrackSize");
-  result.AppendASCII(" ");
-  PointExplicitParamInfo(result, minMaxInfo->ptMaxTrackSize, "maxTrackSize");
-}
-
-void WideStringParamInfo(nsCString& result, uint64_t value, const char* name,
-                         bool /* isPreCall */) {
+void WideStringParamInfoFn(nsAutoCString& result, uint64_t value,
+                           const char* name, bool /* isPreCall */) {
   result.AppendPrintf("%s=%S", name, reinterpret_cast<LPCWSTR>(value));
 }
 
-void DeviceEventParamInfo(nsCString& result, uint64_t value, const char* name,
-                          bool /* isPreCall */) {
+void DeviceEventParamInfoFn(nsAutoCString& result, uint64_t value,
+                            const char* name, bool /* isPreCall */) {
   const static std::unordered_map<uint64_t, const char*> deviceEventValues{
       VALANDNAME_ENTRY(DBT_DEVNODES_CHANGED),
       VALANDNAME_ENTRY(DBT_QUERYCHANGECONFIG),
@@ -1016,32 +961,26 @@ void DeviceEventParamInfo(nsCString& result, uint64_t value, const char* name,
   AppendEnumValueInfo(result, value, deviceEventValues, name);
 }
 
-void ResolutionParamInfo(nsCString& result, uint64_t value, const char* name,
-                         bool /* isPreCall */) {
+void ResolutionParamInfoFn(nsAutoCString& result, uint64_t value,
+                           const char* name, bool /* isPreCall */) {
   result.AppendPrintf("horizontalRes=%d verticalRes=%d", LOWORD(value),
                       HIWORD(value));
 }
 
 // Window message with default wParam/lParam logging
-#define ENTRY(_msg) \
-  {                 \
-    _msg, {         \
-#      _msg, _msg   \
-    }               \
+#define ENTRY(_msg)       \
+  {                       \
+    _msg, { #_msg, _msg } \
   }
 // Window message with no parameters
-#define ENTRY_WITH_NO_PARAM_INFO(_msg) \
-  {                                    \
-    _msg, {                            \
-#      _msg, _msg, EmptyParamInfo      \
-    }                                  \
+#define ENTRY_WITH_NO_PARAM_INFO(_msg)      \
+  {                                         \
+    _msg, { #_msg, _msg, EmptyParamInfoFn } \
   }
 // Window message with custom parameter logging functions
 #define ENTRY_WITH_CUSTOM_PARAM_INFO(_msg, paramInfoFn) \
   {                                                     \
-    _msg, {                                             \
-#      _msg, _msg, paramInfoFn                          \
-    }                                                   \
+    _msg, { #_msg, _msg, paramInfoFn }                  \
   }
 // Window message with separate custom wParam and lParam logging functions
 #define ENTRY_WITH_SPLIT_PARAM_INFOS(_msg, wParamInfoFn, wParamName,           \
@@ -1054,20 +993,20 @@ void ResolutionParamInfo(nsCString& result, uint64_t value, const char* name,
 std::unordered_map<UINT, EventMsgInfo> gAllEvents = {
     ENTRY_WITH_NO_PARAM_INFO(WM_NULL),
     ENTRY_WITH_SPLIT_PARAM_INFOS(WM_CREATE, nullptr, nullptr,
-                                 CreateStructParamInfo, "createStruct"),
+                                 CreateStructParamInfoFn, "createStruct"),
     ENTRY_WITH_NO_PARAM_INFO(WM_DESTROY),
     ENTRY_WITH_SPLIT_PARAM_INFOS(WM_MOVE, nullptr, nullptr,
-                                 XLowWordYHighWordParamInfo, "upperLeft"),
-    ENTRY_WITH_CUSTOM_PARAM_INFO(WM_SIZE, WmSizeParamInfo),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_ACTIVATE, ActivateWParamInfo, "wParam",
-                                 HexParamInfo, "handle"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_SETFOCUS, HexParamInfo, "handle", nullptr,
+                                 XLowWordYHighWordParamInfoFn, "upperLeft"),
+    ENTRY_WITH_CUSTOM_PARAM_INFO(WM_SIZE, WmSizeParamInfoFn),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_ACTIVATE, ActivateWParamInfoFn, "wParam",
+                                 HexParamInfoFn, "handle"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_SETFOCUS, HexParamInfoFn, "handle", nullptr,
                                  nullptr),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_KILLFOCUS, HexParamInfo, "handle", nullptr,
-                                 nullptr),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_ENABLE, TrueFalseParamInfo, "enabled",
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_KILLFOCUS, HexParamInfoFn, "handle",
                                  nullptr, nullptr),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_SETREDRAW, TrueFalseParamInfo,
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_ENABLE, TrueFalseParamInfoFn, "enabled",
+                                 nullptr, nullptr),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_SETREDRAW, TrueFalseParamInfoFn,
                                  "redrawState", nullptr, nullptr),
     ENTRY(WM_SETTEXT),
     ENTRY(WM_GETTEXT),
@@ -1075,34 +1014,33 @@ std::unordered_map<UINT, EventMsgInfo> gAllEvents = {
     ENTRY_WITH_NO_PARAM_INFO(WM_PAINT),
     ENTRY_WITH_NO_PARAM_INFO(WM_CLOSE),
     ENTRY(WM_QUERYENDSESSION),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_QUIT, HexParamInfo, "exitCode", nullptr,
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_QUIT, HexParamInfoFn, "exitCode", nullptr,
                                  nullptr),
     ENTRY(WM_QUERYOPEN),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_ERASEBKGND, HexParamInfo, "deviceContext",
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_ERASEBKGND, HexParamInfoFn, "deviceContext",
                                  nullptr, nullptr),
     ENTRY(WM_SYSCOLORCHANGE),
     ENTRY(WM_ENDSESSION),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_SHOWWINDOW, TrueFalseParamInfo,
-                                 "windowBeingShown", ShowWindowReasonParamInfo,
-                                 "status"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_SETTINGCHANGE, UiActionParamInfo,
-                                 "uiAction", WideStringParamInfo,
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_SHOWWINDOW, TrueFalseParamInfoFn,
+                                 "windowBeingShown",
+                                 ShowWindowReasonParamInfoFn, "status"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_SETTINGCHANGE, UiActionParamInfoFn,
+                                 "uiAction", WideStringParamInfoFn,
                                  "paramChanged"),
     ENTRY_WITH_SPLIT_PARAM_INFOS(WM_DEVMODECHANGE, nullptr, nullptr,
-                                 WideStringParamInfo, "deviceName"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_ACTIVATEAPP, TrueFalseParamInfo,
-                                 "activated", HexParamInfo, "threadId"),
+                                 WideStringParamInfoFn, "deviceName"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_ACTIVATEAPP, TrueFalseParamInfoFn,
+                                 "activated", HexParamInfoFn, "threadId"),
     ENTRY(WM_FONTCHANGE),
     ENTRY(WM_TIMECHANGE),
     ENTRY(WM_CANCELMODE),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_SETCURSOR, HexParamInfo, "windowHandle",
-                                 SetCursorLParamInfo, ""),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_MOUSEACTIVATE, HexParamInfo, "windowHandle",
-                                 SetCursorLParamInfo, ""),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_SETCURSOR, HexParamInfoFn, "windowHandle",
+                                 SetCursorLParamInfoFn, ""),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_MOUSEACTIVATE, HexParamInfoFn,
+                                 "windowHandle", SetCursorLParamInfoFn, ""),
     ENTRY(WM_CHILDACTIVATE),
     ENTRY(WM_QUEUESYNC),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_GETMINMAXINFO, nullptr, nullptr,
-                                 MinMaxInfoParamInfo, ""),
+    ENTRY(WM_GETMINMAXINFO),
     ENTRY(WM_PAINTICON),
     ENTRY(WM_ICONERASEBKGND),
     ENTRY(WM_NEXTDLGCTL),
@@ -1122,9 +1060,9 @@ std::unordered_map<UINT, EventMsgInfo> gAllEvents = {
     ENTRY(WM_COMPACTING),
     ENTRY(WM_COMMNOTIFY),
     ENTRY_WITH_SPLIT_PARAM_INFOS(WM_WINDOWPOSCHANGING, nullptr, nullptr,
-                                 WindowPosParamInfo, "newSizeAndPos"),
+                                 WindowPosParamInfoFn, "newSizeAndPos"),
     ENTRY_WITH_SPLIT_PARAM_INFOS(WM_WINDOWPOSCHANGED, nullptr, nullptr,
-                                 WindowPosParamInfo, "newSizeAndPos"),
+                                 WindowPosParamInfoFn, "newSizeAndPos"),
     ENTRY(WM_POWER),
     ENTRY(WM_COPYDATA),
     ENTRY(WM_CANCELJOURNAL),
@@ -1136,50 +1074,50 @@ std::unordered_map<UINT, EventMsgInfo> gAllEvents = {
     ENTRY(WM_USERCHANGED),
     ENTRY(WM_NOTIFYFORMAT),
     ENTRY(WM_CONTEXTMENU),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_STYLECHANGING, StyleOrExtendedParamInfo,
-                                 "styleOrExtended", StyleStructParamInfo,
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_STYLECHANGING, StyleOrExtendedParamInfoFn,
+                                 "styleOrExtended", StyleStructParamInfoFn,
                                  "newStyles"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_STYLECHANGED, StyleOrExtendedParamInfo,
-                                 "styleOrExtended", StyleStructParamInfo,
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_STYLECHANGED, StyleOrExtendedParamInfoFn,
+                                 "styleOrExtended", StyleStructParamInfoFn,
                                  "newStyles"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_DISPLAYCHANGE, IntParamInfo, "bitsPerPixel",
-                                 ResolutionParamInfo, ""),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_DISPLAYCHANGE, IntParamInfoFn,
+                                 "bitsPerPixel", ResolutionParamInfoFn, ""),
     ENTRY(WM_GETICON),
     ENTRY(WM_SETICON),
     ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCCREATE, nullptr, nullptr,
-                                 CreateStructParamInfo, "createStruct"),
+                                 CreateStructParamInfoFn, "createStruct"),
     ENTRY_WITH_NO_PARAM_INFO(WM_NCDESTROY),
-    ENTRY_WITH_CUSTOM_PARAM_INFO(WM_NCCALCSIZE, WmNcCalcSizeParamInfo),
+    ENTRY_WITH_CUSTOM_PARAM_INFO(WM_NCCALCSIZE, WmNcCalcSizeParamInfoFn),
     ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCHITTEST, nullptr, nullptr,
-                                 XLowWordYHighWordParamInfo, "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCPAINT, HexParamInfo, "updateRegionHandle",
-                                 nullptr, nullptr),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCACTIVATE, TrueFalseParamInfo,
-                                 "isTitleBarOrIconActive", HexParamInfo,
+                                 XLowWordYHighWordParamInfoFn, "mousePos"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCPAINT, HexParamInfoFn,
+                                 "updateRegionHandle", nullptr, nullptr),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCACTIVATE, TrueFalseParamInfoFn,
+                                 "isTitleBarOrIconActive", HexParamInfoFn,
                                  "updateRegion"),
     ENTRY(WM_GETDLGCODE),
     ENTRY(WM_SYNCPAINT),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCMOUSEMOVE, VirtualModifierKeysParamInfo,
-                                 "virtualKeys", XLowWordYHighWordParamInfo,
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCMOUSEMOVE, VirtualModifierKeysParamInfoFn,
+                                 "virtualKeys", XLowWordYHighWordParamInfoFn,
                                  "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCLBUTTONDOWN, HitTestParamInfo,
-                                 "hitTestValue", PointsParamInfo, "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCLBUTTONUP, HitTestParamInfo,
-                                 "hitTestValue", PointsParamInfo, "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCLBUTTONDBLCLK, HitTestParamInfo,
-                                 "hitTestValue", PointsParamInfo, "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCRBUTTONDOWN, HitTestParamInfo,
-                                 "hitTestValue", PointsParamInfo, "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCRBUTTONUP, HitTestParamInfo,
-                                 "hitTestValue", PointsParamInfo, "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCRBUTTONDBLCLK, HitTestParamInfo,
-                                 "hitTestValue", PointsParamInfo, "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCMBUTTONDOWN, HitTestParamInfo,
-                                 "hitTestValue", PointsParamInfo, "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCMBUTTONUP, HitTestParamInfo,
-                                 "hitTestValue", PointsParamInfo, "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCMBUTTONDBLCLK, HitTestParamInfo,
-                                 "hitTestValue", PointsParamInfo, "mousePos"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCLBUTTONDOWN, HitTestParamInfoFn,
+                                 "hitTestValue", PointsParamInfoFn, "mousePos"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCLBUTTONUP, HitTestParamInfoFn,
+                                 "hitTestValue", PointsParamInfoFn, "mousePos"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCLBUTTONDBLCLK, HitTestParamInfoFn,
+                                 "hitTestValue", PointsParamInfoFn, "mousePos"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCRBUTTONDOWN, HitTestParamInfoFn,
+                                 "hitTestValue", PointsParamInfoFn, "mousePos"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCRBUTTONUP, HitTestParamInfoFn,
+                                 "hitTestValue", PointsParamInfoFn, "mousePos"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCRBUTTONDBLCLK, HitTestParamInfoFn,
+                                 "hitTestValue", PointsParamInfoFn, "mousePos"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCMBUTTONDOWN, HitTestParamInfoFn,
+                                 "hitTestValue", PointsParamInfoFn, "mousePos"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCMBUTTONUP, HitTestParamInfoFn,
+                                 "hitTestValue", PointsParamInfoFn, "mousePos"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCMBUTTONDBLCLK, HitTestParamInfoFn,
+                                 "hitTestValue", PointsParamInfoFn, "mousePos"),
     ENTRY(EM_GETSEL),
     ENTRY(EM_SETSEL),
     ENTRY(EM_GETRECT),
@@ -1226,22 +1164,22 @@ std::unordered_map<UINT, EventMsgInfo> gAllEvents = {
     ENTRY(SBM_ENABLE_ARROWS),
     ENTRY(SBM_SETSCROLLINFO),
     ENTRY(SBM_GETSCROLLINFO),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_KEYDOWN, VirtualKeyParamInfo, "vKey",
-                                 KeystrokeFlagsParamInfo, ""),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_KEYUP, VirtualKeyParamInfo, "vKey",
-                                 KeystrokeFlagsParamInfo, ""),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_CHAR, IntParamInfo, "charCode",
-                                 KeystrokeFlagsParamInfo, ""),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_DEADCHAR, IntParamInfo, "charCode",
-                                 KeystrokeFlagsParamInfo, ""),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_SYSKEYDOWN, VirtualKeyParamInfo, "vKey",
-                                 KeystrokeFlagsParamInfo, ""),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_SYSKEYUP, VirtualKeyParamInfo, "vKey",
-                                 KeystrokeFlagsParamInfo, ""),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_SYSCHAR, IntParamInfo, "charCode",
-                                 KeystrokeFlagsParamInfo, ""),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_SYSDEADCHAR, IntParamInfo, "charCode",
-                                 KeystrokeFlagsParamInfo, ""),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_KEYDOWN, VirtualKeyParamInfoFn, "vKey",
+                                 KeystrokeFlagsParamInfoFn, ""),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_KEYUP, VirtualKeyParamInfoFn, "vKey",
+                                 KeystrokeFlagsParamInfoFn, ""),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_CHAR, IntParamInfoFn, "charCode",
+                                 KeystrokeFlagsParamInfoFn, ""),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_DEADCHAR, IntParamInfoFn, "charCode",
+                                 KeystrokeFlagsParamInfoFn, ""),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_SYSKEYDOWN, VirtualKeyParamInfoFn, "vKey",
+                                 KeystrokeFlagsParamInfoFn, ""),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_SYSKEYUP, VirtualKeyParamInfoFn, "vKey",
+                                 KeystrokeFlagsParamInfoFn, ""),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_SYSCHAR, IntParamInfoFn, "charCode",
+                                 KeystrokeFlagsParamInfoFn, ""),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_SYSDEADCHAR, IntParamInfoFn, "charCode",
+                                 KeystrokeFlagsParamInfoFn, ""),
     ENTRY(WM_KEYLAST),
     ENTRY(WM_IME_STARTCOMPOSITION),
     ENTRY(WM_IME_ENDCOMPOSITION),
@@ -1348,56 +1286,56 @@ std::unordered_map<UINT, EventMsgInfo> gAllEvents = {
     ENTRY(LB_INITSTORAGE),
     ENTRY(LB_ITEMFROMPOINT),
     ENTRY(LB_MSGMAX),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_MOUSEMOVE, VirtualModifierKeysParamInfo,
-                                 "virtualKeys", XLowWordYHighWordParamInfo,
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_MOUSEMOVE, VirtualModifierKeysParamInfoFn,
+                                 "virtualKeys", XLowWordYHighWordParamInfoFn,
                                  "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_LBUTTONDOWN, VirtualModifierKeysParamInfo,
-                                 "virtualKeys", XLowWordYHighWordParamInfo,
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_LBUTTONDOWN, VirtualModifierKeysParamInfoFn,
+                                 "virtualKeys", XLowWordYHighWordParamInfoFn,
                                  "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_LBUTTONUP, VirtualModifierKeysParamInfo,
-                                 "virtualKeys", XLowWordYHighWordParamInfo,
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_LBUTTONUP, VirtualModifierKeysParamInfoFn,
+                                 "virtualKeys", XLowWordYHighWordParamInfoFn,
                                  "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_LBUTTONDBLCLK, VirtualModifierKeysParamInfo,
-                                 "virtualKeys", XLowWordYHighWordParamInfo,
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_LBUTTONDBLCLK,
+                                 VirtualModifierKeysParamInfoFn, "virtualKeys",
+                                 XLowWordYHighWordParamInfoFn, "mousePos"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_RBUTTONDOWN, VirtualModifierKeysParamInfoFn,
+                                 "virtualKeys", XLowWordYHighWordParamInfoFn,
                                  "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_RBUTTONDOWN, VirtualModifierKeysParamInfo,
-                                 "virtualKeys", XLowWordYHighWordParamInfo,
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_RBUTTONUP, VirtualModifierKeysParamInfoFn,
+                                 "virtualKeys", XLowWordYHighWordParamInfoFn,
                                  "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_RBUTTONUP, VirtualModifierKeysParamInfo,
-                                 "virtualKeys", XLowWordYHighWordParamInfo,
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_RBUTTONDBLCLK,
+                                 VirtualModifierKeysParamInfoFn, "virtualKeys",
+                                 XLowWordYHighWordParamInfoFn, "mousePos"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_MBUTTONDOWN, VirtualModifierKeysParamInfoFn,
+                                 "virtualKeys", XLowWordYHighWordParamInfoFn,
                                  "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_RBUTTONDBLCLK, VirtualModifierKeysParamInfo,
-                                 "virtualKeys", XLowWordYHighWordParamInfo,
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_MBUTTONUP, VirtualModifierKeysParamInfoFn,
+                                 "virtualKeys", XLowWordYHighWordParamInfoFn,
                                  "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_MBUTTONDOWN, VirtualModifierKeysParamInfo,
-                                 "virtualKeys", XLowWordYHighWordParamInfo,
-                                 "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_MBUTTONUP, VirtualModifierKeysParamInfo,
-                                 "virtualKeys", XLowWordYHighWordParamInfo,
-                                 "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_MBUTTONDBLCLK, VirtualModifierKeysParamInfo,
-                                 "virtualKeys", XLowWordYHighWordParamInfo,
-                                 "mousePos"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_MBUTTONDBLCLK,
+                                 VirtualModifierKeysParamInfoFn, "virtualKeys",
+                                 XLowWordYHighWordParamInfoFn, "mousePos"),
     ENTRY_WITH_SPLIT_PARAM_INFOS(WM_MOUSEWHEEL,
-                                 VirtualKeysLowWordDistanceHighWordParamInfo,
-                                 "", XLowWordYHighWordParamInfo, "mousePos"),
+                                 VirtualKeysLowWordDistanceHighWordParamInfoFn,
+                                 "", XLowWordYHighWordParamInfoFn, "mousePos"),
     ENTRY_WITH_SPLIT_PARAM_INFOS(WM_MOUSEHWHEEL,
-                                 VirtualKeysLowWordDistanceHighWordParamInfo,
-                                 "", XLowWordYHighWordParamInfo, "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_PARENTNOTIFY, ParentNotifyEventParamInfo,
-                                 "", PointParamInfo, "pointerLocation"),
+                                 VirtualKeysLowWordDistanceHighWordParamInfoFn,
+                                 "", XLowWordYHighWordParamInfoFn, "mousePos"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_PARENTNOTIFY, ParentNotifyEventParamInfoFn,
+                                 "", PointParamInfoFn, "pointerLocation"),
     ENTRY(WM_ENTERMENULOOP),
     ENTRY(WM_EXITMENULOOP),
     ENTRY(WM_NEXTMENU),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_SIZING, WindowEdgeParamInfo, "edge",
-                                 RectParamInfo, "rect"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_SIZING, WindowEdgeParamInfoFn, "edge",
+                                 RectParamInfoFn, "rect"),
     ENTRY_WITH_SPLIT_PARAM_INFOS(WM_CAPTURECHANGED, nullptr, nullptr,
-                                 HexParamInfo, "windowHandle"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_MOVING, nullptr, nullptr, RectParamInfo,
+                                 HexParamInfoFn, "windowHandle"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_MOVING, nullptr, nullptr, RectParamInfoFn,
                                  "rect"),
     ENTRY(WM_POWERBROADCAST),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_DEVICECHANGE, DeviceEventParamInfo, "event",
-                                 HexParamInfo, "data"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_DEVICECHANGE, DeviceEventParamInfoFn,
+                                 "event", HexParamInfoFn, "data"),
     ENTRY(WM_MDICREATE),
     ENTRY(WM_MDIDESTROY),
     ENTRY(WM_MDIACTIVATE),
@@ -1422,11 +1360,11 @@ std::unordered_map<UINT, EventMsgInfo> gAllEvents = {
     ENTRY(WM_IME_REQUEST),
     ENTRY(WM_IME_KEYDOWN),
     ENTRY(WM_IME_KEYUP),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCMOUSEHOVER, VirtualModifierKeysParamInfo,
-                                 "virtualKeys", XLowWordYHighWordParamInfo,
-                                 "mousePos"),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_MOUSEHOVER, VirtualModifierKeysParamInfo,
-                                 "virtualKeys", XLowWordYHighWordParamInfo,
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_NCMOUSEHOVER,
+                                 VirtualModifierKeysParamInfoFn, "virtualKeys",
+                                 XLowWordYHighWordParamInfoFn, "mousePos"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_MOUSEHOVER, VirtualModifierKeysParamInfoFn,
+                                 "virtualKeys", XLowWordYHighWordParamInfoFn,
                                  "mousePos"),
     ENTRY_WITH_NO_PARAM_INFO(WM_NCMOUSELEAVE),
     ENTRY_WITH_NO_PARAM_INFO(WM_MOUSELEAVE),
@@ -1469,8 +1407,8 @@ std::unordered_map<UINT, EventMsgInfo> gAllEvents = {
     ENTRY(WM_GESTURE),
     ENTRY(WM_GESTURENOTIFY),
     ENTRY(WM_GETTITLEBARINFOEX),
-    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_DPICHANGED, XLowWordYHighWordParamInfo,
-                                 "newDPI", RectParamInfo,
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_DPICHANGED, XLowWordYHighWordParamInfoFn,
+                                 "newDPI", RectParamInfoFn,
                                  "suggestedSizeAndPos"),
     {0x0, {nullptr, 0x0}}};
 #undef ENTRY
