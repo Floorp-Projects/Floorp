@@ -205,6 +205,8 @@ impl LocalizationRc {
             } else {
                 ret_val.set_is_void(true);
             }
+            #[cfg(debug_assertions)]
+            debug_assert_variables_exist(&errors, &[id], |id| id.to_string());
             ret_err.extend(errors.into_iter().map(|err| err.to_string().into()));
             true
         } else {
@@ -236,6 +238,8 @@ impl LocalizationRc {
                     ret_val.push(void_string);
                 }
             }
+            #[cfg(debug_assertions)]
+            debug_assert_variables_exist(&errors, &keys, |key| key.id.to_string());
             ret_err.extend(errors.into_iter().map(|err| err.to_string().into()));
             true
         } else {
@@ -272,6 +276,8 @@ impl LocalizationRc {
                 });
             }
             assert_eq!(keys.len(), ret_val.len());
+            #[cfg(debug_assertions)]
+            debug_assert_variables_exist(&errors, &keys, |key| key.id.to_string());
             ret_err.extend(errors.into_iter().map(|err| err.to_string().into()));
             true
         } else {
@@ -306,6 +312,8 @@ impl LocalizationRc {
                 v.set_is_void(true);
                 v
             };
+            #[cfg(debug_assertions)]
+            debug_assert_variables_exist(&errors, &[id], |id| id.to_string());
             let errors = errors
                 .into_iter()
                 .map(|err| err.to_string().into())
@@ -348,6 +356,8 @@ impl LocalizationRc {
 
             assert_eq!(keys.len(), ret_val.len());
 
+            #[cfg(debug_assertions)]
+            debug_assert_variables_exist(&errors, &keys, |key| key.id.to_string());
             let errors = errors
                 .into_iter()
                 .map(|err| err.to_string().into())
@@ -398,6 +408,9 @@ impl LocalizationRc {
                 .collect::<ThinVec<_>>();
 
             assert_eq!(keys.len(), ret_val.len());
+
+            #[cfg(debug_assertions)]
+            debug_assert_variables_exist(&errors, &keys, |key| key.id.to_string());
 
             let errors = errors
                 .into_iter()
@@ -570,4 +583,43 @@ pub extern "C" fn localization_is_sync(loc: &LocalizationRc) -> bool {
 #[no_mangle]
 pub extern "C" fn localization_on_change(loc: &LocalizationRc) {
     loc.on_change();
+}
+
+#[cfg(debug_assertions)]
+fn debug_assert_variables_exist<K, F>(
+    errors: &[fluent_fallback::LocalizationError],
+    keys: &[K],
+    to_string: F,
+) where
+    F: Fn(&K) -> String,
+{
+    for error in errors {
+        if let fluent_fallback::LocalizationError::Resolver { errors, .. } = error {
+            use fluent::{
+                resolver::{errors::ReferenceKind, ResolverError},
+                FluentError,
+            };
+            for error in errors {
+                if let FluentError::ResolverError(ResolverError::Reference(
+                    ReferenceKind::Variable { id },
+                )) = error
+                {
+                    // This error needs to be actionable for Firefox engineers to fix
+                    // their Fluent issues. It might be nicer to share the specific
+                    // message, but at this point we don't have that information.
+                    eprintln!(
+                        "Fluent error, the argument \"${}\" was not provided a value.",
+                        id
+                    );
+                    eprintln!("This error happened while formatting the following messages:");
+                    for key in keys {
+                        eprintln!("  {:?}", to_string(key))
+                    }
+
+                    // Panic with the slightly more cryptic ResolverError.
+                    panic!("{}", error.to_string());
+                }
+            }
+        }
+    }
 }
