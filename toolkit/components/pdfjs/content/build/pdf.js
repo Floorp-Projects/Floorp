@@ -42,7 +42,7 @@ return /******/ (() => { // webpackBootstrap
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.VerbosityLevel = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.UNSUPPORTED_FEATURES = exports.TextRenderingMode = exports.StreamType = exports.RenderingIntentFlag = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.LINE_FACTOR = exports.LINE_DESCENT_FACTOR = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FontType = exports.FeatureTest = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMode = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationEditorType = exports.AnnotationEditorPrefix = exports.AnnotationEditorParamsType = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
+exports.VerbosityLevel = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.UNSUPPORTED_FEATURES = exports.TextRenderingMode = exports.StreamType = exports.RenderingIntentFlag = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.LINE_FACTOR = exports.LINE_DESCENT_FACTOR = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FontType = exports.FeatureTest = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.BASELINE_FACTOR = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMode = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationEditorType = exports.AnnotationEditorPrefix = exports.AnnotationEditorParamsType = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
 exports.arrayByteLength = arrayByteLength;
 exports.arraysToBytes = arraysToBytes;
 exports.assert = assert;
@@ -77,10 +77,13 @@ const LINE_FACTOR = 1.35;
 exports.LINE_FACTOR = LINE_FACTOR;
 const LINE_DESCENT_FACTOR = 0.35;
 exports.LINE_DESCENT_FACTOR = LINE_DESCENT_FACTOR;
+const BASELINE_FACTOR = LINE_DESCENT_FACTOR / LINE_FACTOR;
+exports.BASELINE_FACTOR = BASELINE_FACTOR;
 const RenderingIntentFlag = {
   ANY: 0x01,
   DISPLAY: 0x02,
   PRINT: 0x04,
+  SAVE: 0x08,
   ANNOTATIONS_FORMS: 0x10,
   ANNOTATIONS_STORAGE: 0x20,
   ANNOTATIONS_DISABLE: 0x40,
@@ -1138,7 +1141,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '3.1.20',
+    apiVersion: '3.1.22',
     data: source.data,
     password: source.password,
     disableAutoFetch: source.disableAutoFetch,
@@ -2757,9 +2760,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.1.20';
+const version = '3.1.22';
 exports.version = version;
-const build = '7e5008f0f';
+const build = 'f4341779d';
 exports.build = build;
 
 /***/ }),
@@ -6180,6 +6183,19 @@ class CanvasGraphics {
       lineWidth /= fontSizeScale;
     }
     ctx.lineWidth = lineWidth;
+    if (font.isInvalidPDFjsFont) {
+      const chars = [];
+      let width = 0;
+      for (const glyph of glyphs) {
+        chars.push(glyph.unicode);
+        width += glyph.width;
+      }
+      ctx.fillText(chars.join(""), 0, 0);
+      current.x += width * widthAdvanceScale * textHScale;
+      ctx.restore();
+      this.compose();
+      return undefined;
+    }
     let x = 0,
       i;
     for (i = 0; i < glyphsLength; ++i) {
@@ -8925,12 +8941,7 @@ class FreeTextEditor extends _editor.AnnotationEditor {
     }
     const buffer = [];
     for (const div of divs) {
-      const first = div.firstChild;
-      if (first?.nodeName === "#text") {
-        buffer.push(first.data);
-      } else {
-        buffer.push("");
-      }
+      buffer.push(div.innerText.replace(/\r\n?|\n/, ""));
     }
     return buffer.join("\n");
   }
@@ -12915,8 +12926,8 @@ var _is_node = __w_pdfjs_require__(12);
 var _text_layer = __w_pdfjs_require__(28);
 var _svg = __w_pdfjs_require__(29);
 var _xfa_layer = __w_pdfjs_require__(27);
-const pdfjsVersion = '3.1.20';
-const pdfjsBuild = '7e5008f0f';
+const pdfjsVersion = '3.1.22';
+const pdfjsBuild = 'f4341779d';
 ;
 })();
 
