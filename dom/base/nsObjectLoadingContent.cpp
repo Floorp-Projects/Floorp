@@ -1831,6 +1831,9 @@ nsresult nsObjectLoadingContent::OpenChannel() {
   }
 
   nsContentPolicyType contentPolicyType = GetContentPolicyType();
+  // The setting of LOAD_BYPASS_SERVICE_WORKER here is now an optimization.
+  // ServiceWorkerInterceptController::ShouldPrepareForIntercept does a more
+  // expensive check of BrowsingContext ancestors to look for object/embed.
   nsLoadFlags loadFlags = nsIChannel::LOAD_CALL_CONTENT_SNIFFERS |
                           nsIChannel::LOAD_BYPASS_SERVICE_WORKER |
                           nsIRequest::LOAD_HTML_OBJECT_DATA;
