@@ -14,6 +14,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/SwipeTracker.h"
 #include "UnitTransforms.h"
 
 namespace mozilla {
@@ -422,10 +423,11 @@ PanGestureInput::PanGestureInput()
       mUserDeltaMultiplierX(1.0),
       mUserDeltaMultiplierY(1.0),
       mHandledByAPZ(false),
-      mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection(false),
       mOverscrollBehaviorAllowsSwipe(false),
       mSimulateMomentum(false),
-      mIsNoLineOrPageDelta(true) {}
+      mIsNoLineOrPageDelta(true),
+      mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection(
+          false) {}
 
 PanGestureInput::PanGestureInput(PanGestureType aType, uint32_t aTime,
                                  TimeStamp aTimeStamp,
@@ -441,10 +443,24 @@ PanGestureInput::PanGestureInput(PanGestureType aType, uint32_t aTime,
       mUserDeltaMultiplierX(1.0),
       mUserDeltaMultiplierY(1.0),
       mHandledByAPZ(false),
-      mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection(false),
       mOverscrollBehaviorAllowsSwipe(false),
       mSimulateMomentum(false),
-      mIsNoLineOrPageDelta(true) {}
+      mIsNoLineOrPageDelta(true) {
+  mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection =
+      SwipeTracker::CanTriggerSwipe(*this);
+}
+
+PanGestureInput::PanGestureInput(PanGestureType aType, uint32_t aTime,
+                                 TimeStamp aTimeStamp,
+                                 const ScreenPoint& aPanStartPoint,
+                                 const ScreenPoint& aPanDisplacement,
+                                 Modifiers aModifiers,
+                                 IsEligibleForSwipe aIsEligibleForSwipe)
+    : PanGestureInput(aType, aTime, aTimeStamp, aPanStartPoint,
+                      aPanDisplacement, aModifiers) {
+  mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection &=
+      bool(aIsEligibleForSwipe);
+}
 
 void PanGestureInput::SetLineOrPageDeltas(int32_t aLineOrPageDeltaX,
                                           int32_t aLineOrPageDeltaY) {

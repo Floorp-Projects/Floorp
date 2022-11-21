@@ -200,8 +200,6 @@ static uint32_t sUniqueKeyEventId = 0;
 
 - (bool)beginOrEndGestureForEventPhase:(NSEvent*)aEvent;
 
-- (bool)shouldConsiderStartingSwipeFromEvent:(NSEvent*)aEvent;
-
 @end
 
 #pragma mark -
@@ -2722,20 +2720,6 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
-- (bool)shouldConsiderStartingSwipeFromEvent:(NSEvent*)anEvent {
-  // Only initiate horizontal tracking for gestures that have just begun --
-  // otherwise a scroll to one side of the page can have a swipe tacked on
-  // to it.
-  // [NSEvent isSwipeTrackingFromScrollEventsEnabled] checks whether the
-  // AppleEnableSwipeNavigateWithScrolls global preference is set.  If it isn't,
-  // fluid swipe tracking is disabled, and a horizontal two-finger gesture is
-  // always a scroll (even in Safari).  This preference can't (currently) be set
-  // from the Preferences UI -- only using 'defaults write'.
-  NSEventPhase eventPhase = [anEvent phase];
-  return [anEvent type] == NSEventTypeScrollWheel && eventPhase == NSEventPhaseBegan &&
-         [anEvent hasPreciseScrollingDeltas] && [NSEvent isSwipeTrackingFromScrollEventsEnabled];
-}
-
 - (void)setUsingOMTCompositor:(BOOL)aUseOMTC {
   mUsingOMTCompositor = aUseOMTC;
 }
@@ -3095,36 +3079,6 @@ static bool ShouldDispatchBackForwardCommandForMouseButton(int16_t aButton) {
   [self sendWheelStartOrStop:second forEvent:theEvent];
 }
 
-static PanGestureInput::PanGestureType PanGestureTypeForEvent(NSEvent* aEvent) {
-  switch ([aEvent phase]) {
-    case NSEventPhaseMayBegin:
-      return PanGestureInput::PANGESTURE_MAYSTART;
-    case NSEventPhaseCancelled:
-      return PanGestureInput::PANGESTURE_CANCELLED;
-    case NSEventPhaseBegan:
-      return PanGestureInput::PANGESTURE_START;
-    case NSEventPhaseChanged:
-      return PanGestureInput::PANGESTURE_PAN;
-    case NSEventPhaseEnded:
-      return PanGestureInput::PANGESTURE_END;
-    case NSEventPhaseNone:
-      switch ([aEvent momentumPhase]) {
-        case NSEventPhaseBegan:
-          return PanGestureInput::PANGESTURE_MOMENTUMSTART;
-        case NSEventPhaseChanged:
-          return PanGestureInput::PANGESTURE_MOMENTUMPAN;
-        case NSEventPhaseEnded:
-          return PanGestureInput::PANGESTURE_MOMENTUMEND;
-        default:
-          NS_ERROR("unexpected event phase");
-          return PanGestureInput::PANGESTURE_PAN;
-      }
-    default:
-      NS_ERROR("unexpected event phase");
-      return PanGestureInput::PANGESTURE_PAN;
-  }
-}
-
 static int32_t RoundUp(double aDouble) {
   return aDouble < 0 ? static_cast<int32_t>(floor(aDouble)) : static_cast<int32_t>(ceil(aDouble));
 }
@@ -3213,23 +3167,13 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   }
 
   if (usePreciseDeltas && hasPhaseInformation) {
-    PanGestureInput panEvent(PanGestureTypeForEvent(theEvent), eventIntervalTime, eventTimeStamp,
-                             position, ScreenPoint(), modifiers);
+    PanGestureInput panEvent =
+        nsCocoaUtils::CreatePanGestureEvent(theEvent, eventIntervalTime, eventTimeStamp, position,
+                                            preciseDelta, lineOrPageDelta, modifiers);
 
-    // Always force zero deltas on event types that shouldn't cause any scrolling,
-    // so that we don't dispatch DOM wheel events for them.
-    bool shouldIgnoreDeltas = panEvent.mType == PanGestureInput::PANGESTURE_MAYSTART ||
-                              panEvent.mType == PanGestureInput::PANGESTURE_CANCELLED;
-
-    if (!shouldIgnoreDeltas) {
-      panEvent.mPanDisplacement = preciseDelta;
-      panEvent.SetLineOrPageDeltas(lineOrPageDelta.x, lineOrPageDelta.y);
-    }
-
-    bool canTriggerSwipe = [self shouldConsiderStartingSwipeFromEvent:theEvent] &&
+    // NOTE: This `canTriggerSwipe` will be dropped in a subsequent change.
+    bool canTriggerSwipe = nsCocoaUtils::ShouldConsiderStartingSwipeFromEvent(theEvent) &&
                            SwipeTracker::CanTriggerSwipe(panEvent);
-    ;
-    panEvent.mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection = canTriggerSwipe;
     geckoChildDeathGrip->DispatchAPZWheelInputEvent(panEvent, canTriggerSwipe);
   } else if (usePreciseDeltas) {
     // This is on 10.6 or old touchpads that don't have any phase information.

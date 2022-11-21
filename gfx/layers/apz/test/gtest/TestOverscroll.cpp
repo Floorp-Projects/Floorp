@@ -1784,8 +1784,15 @@ TEST_F(APZCOverscrollTesterMock,
   // Start a new horizontal pan gesture on the child scroller which should be
   // handled by the child APZC now.
   QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 1);
-  PanGesture(PanGestureInput::PANGESTURE_START, manager, panPoint,
-             ScreenPoint(-2, 0), mcc->Time());
+  APZEventResult result = PanGesture(PanGestureInput::PANGESTURE_START, manager,
+                                     panPoint, ScreenPoint(-2, 0), mcc->Time());
+  // The above horizontal pan start event was flagged as "this event may trigger
+  // swipe" and either the root scrollable frame or the horizontal child
+  // scrollable frame is not scrollable in the pan start direction, thus the pan
+  // start event run into the short circuit path for swipe-to-navigation in
+  // InputQueue::ReceivePanGestureInput, which means it's waiting for the
+  // content response, so we need to respond explicitly here.
+  manager->ContentReceivedInputBlock(result.mInputBlockId, false);
   mcc->AdvanceByMillis(10);
   QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 1);
   PanGesture(PanGestureInput::PANGESTURE_PAN, manager, panPoint,
