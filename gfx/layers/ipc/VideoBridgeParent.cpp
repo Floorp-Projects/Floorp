@@ -6,6 +6,7 @@
 
 #include "VideoBridgeParent.h"
 #include "CompositorThread.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/VideoBridgeUtils.h"
@@ -16,19 +17,23 @@ namespace layers {
 using namespace mozilla::ipc;
 using namespace mozilla::gfx;
 
-static EnumeratedArray<VideoBridgeSource, VideoBridgeSource::_Count,
-                       VideoBridgeParent*>
-    sVideoBridgeFromProcess;
+using VideoBridgeTable =
+    EnumeratedArray<VideoBridgeSource, VideoBridgeSource::_Count,
+                    VideoBridgeParent*>;
+
+static StaticDataMutex<VideoBridgeTable> sVideoBridgeFromProcess(
+    "VideoBridges");
 
 VideoBridgeParent::VideoBridgeParent(VideoBridgeSource aSource)
     : mCompositorThreadHolder(CompositorThreadHolder::GetSingleton()),
       mClosed(false) {
   mSelfRef = this;
+  auto videoBridgeFromProcess = sVideoBridgeFromProcess.Lock();
   switch (aSource) {
     case VideoBridgeSource::RddProcess:
     case VideoBridgeSource::GpuProcess:
     case VideoBridgeSource::MFMediaEngineCDMProcess:
-      sVideoBridgeFromProcess[aSource] = this;
+      (*videoBridgeFromProcess)[aSource] = this;
       break;
     default:
       MOZ_CRASH("Unhandled case");
@@ -36,7 +41,8 @@ VideoBridgeParent::VideoBridgeParent(VideoBridgeSource aSource)
 }
 
 VideoBridgeParent::~VideoBridgeParent() {
-  for (auto& bridgeParent : sVideoBridgeFromProcess) {
+  auto videoBridgeFromProcess = sVideoBridgeFromProcess.Lock();
+  for (auto& bridgeParent : *videoBridgeFromProcess) {
     if (bridgeParent == this) {
       bridgeParent = nullptr;
     }
@@ -65,12 +71,13 @@ void VideoBridgeParent::Bind(Endpoint<PVideoBridgeParent>&& aEndpoint) {
 VideoBridgeParent* VideoBridgeParent::GetSingleton(
     const Maybe<VideoBridgeSource>& aSource) {
   MOZ_ASSERT(aSource.isSome());
+  auto videoBridgeFromProcess = sVideoBridgeFromProcess.Lock();
   switch (aSource.value()) {
     case VideoBridgeSource::RddProcess:
     case VideoBridgeSource::GpuProcess:
     case VideoBridgeSource::MFMediaEngineCDMProcess:
-      MOZ_ASSERT(sVideoBridgeFromProcess[aSource.value()]);
-      return sVideoBridgeFromProcess[aSource.value()];
+      MOZ_ASSERT((*videoBridgeFromProcess)[aSource.value()]);
+      return (*videoBridgeFromProcess)[aSource.value()];
     default:
       MOZ_CRASH("Unhandled case");
   }
@@ -89,7 +96,8 @@ void VideoBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
 
 /* static */
 void VideoBridgeParent::Shutdown() {
-  for (auto& bridgeParent : sVideoBridgeFromProcess) {
+  auto videoBridgeFromProcess = sVideoBridgeFromProcess.Lock();
+  for (auto& bridgeParent : *videoBridgeFromProcess) {
     if (bridgeParent) {
       bridgeParent->ReleaseCompositorThread();
     }
