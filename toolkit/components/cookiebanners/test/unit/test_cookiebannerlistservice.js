@@ -133,6 +133,25 @@ const RULE_E_GLOBAL = {
   cookies: {},
 };
 
+const RULE_F_EMPTY_CLICK = {
+  id: genUUID(),
+  click: {},
+  domain: "example.com",
+  cookies: {
+    optOut: [
+      {
+        name: "doOptOut",
+        value: "true",
+        isSecure: true,
+      },
+      {
+        name: "hideBanner",
+        value: "1",
+      },
+    ],
+  },
+};
+
 // Testing with RemoteSettings requires a profile.
 do_get_profile();
 
@@ -415,4 +434,44 @@ add_task(async function test_rule_test_pref() {
   rulesRemoved = [];
 
   Services.prefs.clearUserPref(PREF_TEST_RULES);
+});
+
+/**
+ * Tests empty click rules don't get imported.
+ */
+add_task(async function test_empty_click_rule() {
+  info("Initializing RemoteSettings collection " + COLLECTION_NAME);
+
+  let db = RemoteSettings(COLLECTION_NAME).db;
+  db.clear();
+  await db.create(RULE_F_EMPTY_CLICK);
+  await db.importChanges({}, Date.now());
+
+  let insertPromise = waitForInsert(() => rulesInserted.length >= 1);
+
+  info(
+    "Initializing the cookie banner list service which triggers a collection get call"
+  );
+  let cookieBannerListService = Cc[
+    "@mozilla.org/cookie-banner-list-service;1"
+  ].getService(Ci.nsICookieBannerListService);
+  await cookieBannerListService.initForTest();
+
+  await insertPromise;
+
+  let ruleF = rulesInserted.find(
+    rule => rule.domain == RULE_F_EMPTY_CLICK.domain
+  );
+
+  Assert.ok(ruleF, "Has rule F.");
+  Assert.ok(ruleF.cookiesOptOut?.length, "Should have imported a cookie rule.");
+  Assert.equal(ruleF.clickRule, null, "Should not have imported a click rule.");
+
+  // Cleanup
+  cookieBannerListService.shutdown();
+  rulesInserted = [];
+  rulesRemoved = [];
+
+  db.clear();
+  await db.importChanges({}, Date.now());
 });
