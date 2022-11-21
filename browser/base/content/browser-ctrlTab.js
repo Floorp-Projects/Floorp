@@ -240,6 +240,7 @@ var ctrlTab = {
 
     let label = (preview._label = document.createXULElement("label"));
     label.className = "ctrlTab-label plain";
+    label.setAttribute("crop", "end");
     previewInner.appendChild(label);
 
     return preview;
@@ -280,7 +281,7 @@ var ctrlTab = {
       canvas.style.maxHeight = canvasHeight + "px";
       canvas.appendChild(tabPreviews.get(aTab));
 
-      aPreview._label.textContent = aTab.label;
+      aPreview._label.setAttribute("value", aTab.label);
       aPreview.setAttribute("tooltiptext", aTab.label);
       if (aTab.image) {
         aPreview._favicon.setAttribute("src", aTab.image);
@@ -290,7 +291,7 @@ var ctrlTab = {
       aPreview.hidden = false;
     } else {
       aPreview.hidden = true;
-      aPreview._label.textContent = "";
+      aPreview._label.removeAttribute("value");
       aPreview.removeAttribute("tooltiptext");
       aPreview._favicon.removeAttribute("src");
     }
