@@ -454,9 +454,7 @@ APZEventResult InputQueue::ReceivePanGestureInput(
     MaybeRequestContentResponse(aTarget, block);
 
     if (aFlags.mTargetConfirmed && event.mOverscrollBehaviorAllowsSwipe &&
-        event
-            .RequiresContentResponseIfCannotScrollHorizontallyInStartDirection() &&
-        !CanScrollTargetHorizontally(event, block)) {
+        event.MayTriggerSwipe() && !CanScrollTargetHorizontally(event, block)) {
       // This event may trigger a swipe gesture, depending on what our caller
       // wants to do it. We need to suspend handling of this block until we get
       // a content response which will tell us whether to proceed or abort the

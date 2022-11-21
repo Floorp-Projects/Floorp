@@ -1879,7 +1879,7 @@ nsEventStatus nsChildView::DispatchAPZInputEvent(InputData& aEvent) {
   return result.GetStatus();
 }
 
-void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe) {
+void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent) {
   if (mSwipeTracker && aEvent.mInputType == PANGESTURE_INPUT) {
     // Give the swipe tracker a first pass at the event. If a new pan gesture
     // has been started since the beginning of the swipe, the swipe tracker
@@ -1902,8 +1902,7 @@ void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTrigger
           return;
         }
 
-        event = MayStartSwipeForAPZ(aEvent.AsPanGestureInput(), result,
-                                    CanTriggerSwipe{aCanTriggerSwipe});
+        event = MayStartSwipeForAPZ(aEvent.AsPanGestureInput(), result);
         break;
       }
       case SCROLLWHEEL_INPUT: {
@@ -1932,7 +1931,7 @@ void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTrigger
   nsEventStatus status;
   switch (aEvent.mInputType) {
     case PANGESTURE_INPUT: {
-      if (MayStartSwipeForNonAPZ(aEvent.AsPanGestureInput(), CanTriggerSwipe{aCanTriggerSwipe})) {
+      if (MayStartSwipeForNonAPZ(aEvent.AsPanGestureInput())) {
         return;
       }
       event = aEvent.AsPanGestureInput().ToWidgetEvent(this);
@@ -3171,10 +3170,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
         nsCocoaUtils::CreatePanGestureEvent(theEvent, eventIntervalTime, eventTimeStamp, position,
                                             preciseDelta, lineOrPageDelta, modifiers);
 
-    // NOTE: This `canTriggerSwipe` will be dropped in a subsequent change.
-    bool canTriggerSwipe = nsCocoaUtils::ShouldConsiderStartingSwipeFromEvent(theEvent) &&
-                           SwipeTracker::CanTriggerSwipe(panEvent);
-    geckoChildDeathGrip->DispatchAPZWheelInputEvent(panEvent, canTriggerSwipe);
+    geckoChildDeathGrip->DispatchAPZWheelInputEvent(panEvent);
   } else if (usePreciseDeltas) {
     // This is on 10.6 or old touchpads that don't have any phase information.
     ScrollWheelInput wheelEvent(
@@ -3193,7 +3189,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
     wheelEvent.mLineOrPageDeltaX = lineOrPageDelta.x;
     wheelEvent.mLineOrPageDeltaY = lineOrPageDelta.y;
     wheelEvent.mIsMomentum = nsCocoaUtils::IsMomentumScrollEvent(theEvent);
-    geckoChildDeathGrip->DispatchAPZWheelInputEvent(wheelEvent, false);
+    geckoChildDeathGrip->DispatchAPZWheelInputEvent(wheelEvent);
   } else {
     ScrollWheelInput::ScrollMode scrollMode = ScrollWheelInput::SCROLLMODE_INSTANT;
     if (StaticPrefs::general_smoothScroll() && StaticPrefs::general_smoothScroll_mouseWheel()) {
@@ -3214,7 +3210,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
                                 WheelDeltaAdjustmentStrategy::eNone);
     wheelEvent.mLineOrPageDeltaX = lineOrPageDelta.x;
     wheelEvent.mLineOrPageDeltaY = lineOrPageDelta.y;
-    geckoChildDeathGrip->DispatchAPZWheelInputEvent(wheelEvent, false);
+    geckoChildDeathGrip->DispatchAPZWheelInputEvent(wheelEvent);
   }
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
