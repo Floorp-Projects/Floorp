@@ -165,8 +165,12 @@ class DiscoveryStreamFeed {
   }
 
   get showSponsoredTopsites() {
-    // Combine user-set sponsored opt-out with Mozilla-set config
-    return this.store.getState().Prefs.values[PREF_SHOW_SPONSORED_TOPSITES];
+    const placements = this.getPlacements();
+    // Combine user-set sponsored opt-out with placement data
+    return !!(
+      this.store.getState().Prefs.values[PREF_SHOW_SPONSORED_TOPSITES] &&
+      placements.find(placement => placement.name === "sponsored-topsites")
+    );
   }
 
   get showStories() {
@@ -1854,22 +1858,36 @@ class DiscoveryStreamFeed {
       case PREF_COLLECTIONS_ENABLED:
         this.onCollectionsChanged();
         break;
-      case PREF_USER_TOPSTORIES:
-      case PREF_SYSTEM_TOPSTORIES:
-        if (!action.data.value) {
+      case PREF_USER_TOPSITES:
+      case PREF_SYSTEM_TOPSITES:
+        if (
+          !(
+            this.showTopsites ||
+            (this.showStories && this.showSponsoredStories)
+          )
+        ) {
           // Ensure we delete any remote data potentially related to spocs.
           this.clearSpocs();
-        } else {
+        }
+        break;
+      case PREF_USER_TOPSTORIES:
+      case PREF_SYSTEM_TOPSTORIES:
+        if (
+          !(
+            this.showStories ||
+            (this.showTopsites && this.showSponsoredTopsites)
+          )
+        ) {
+          // Ensure we delete any remote data potentially related to spocs.
+          this.clearSpocs();
+        }
+        if (action.data.value) {
           this.enableStories();
         }
         break;
       // Check if spocs was disabled. Remove them if they were.
       case PREF_SHOW_SPONSORED:
       case PREF_SHOW_SPONSORED_TOPSITES:
-        if (!action.data.value) {
-          // Ensure we delete any remote data potentially related to spocs.
-          this.clearSpocs();
-        }
         const dispatch = update =>
           this.store.dispatch(ac.BroadcastToContent(update));
         // We refresh placements data because one of the spocs were turned off.
@@ -1877,6 +1895,20 @@ class DiscoveryStreamFeed {
           dispatch,
           this.store.getState().DiscoveryStream.layout
         );
+        // Currently the order of this is important.
+        // We need to check this after updatePlacements is called,
+        // because some of the spoc logic depends on the result of placement updates.
+        if (
+          !(
+            (this.showSponsoredStories ||
+              (this.showTopSites && this.showSponsoredTopSites)) &&
+            (this.showSponsoredTopsites ||
+              (this.showStories && this.showSponsoredStories))
+          )
+        ) {
+          // Ensure we delete any remote data potentially related to spocs.
+          this.clearSpocs();
+        }
         // Placements have changed so consider spocs expired, and reload them.
         await this.cache.set("spocs", {});
         await this.loadSpocs(dispatch);
