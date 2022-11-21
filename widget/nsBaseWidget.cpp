@@ -2233,10 +2233,15 @@ void nsBaseWidget::ReportSwipeStarted(uint64_t aInputBlockId,
   if (mSwipeEventQueue && mSwipeEventQueue->inputBlockId == aInputBlockId) {
     if (aStartSwipe) {
       PanGestureInput& startEvent = mSwipeEventQueue->queuedEvents[0];
-      TrackScrollEventAsSwipe(startEvent, mSwipeEventQueue->allowedDirections);
+      TrackScrollEventAsSwipe(startEvent, mSwipeEventQueue->allowedDirections,
+                              aInputBlockId);
       for (size_t i = 1; i < mSwipeEventQueue->queuedEvents.Length(); i++) {
         mSwipeTracker->ProcessEvent(mSwipeEventQueue->queuedEvents[i]);
       }
+    } else if (mAPZC) {
+      // If the event wasn't start swipe, we need to notify it to APZ.
+      mAPZC->SetBrowserGestureResponse(aInputBlockId,
+                                       BrowserGestureResponse::NotConsumed);
     }
     mSwipeEventQueue = nullptr;
   }
@@ -2244,7 +2249,7 @@ void nsBaseWidget::ReportSwipeStarted(uint64_t aInputBlockId,
 
 void nsBaseWidget::TrackScrollEventAsSwipe(
     const mozilla::PanGestureInput& aSwipeStartEvent,
-    uint32_t aAllowedDirections) {
+    uint32_t aAllowedDirections, uint64_t aInputBlockId) {
   // If a swipe is currently being tracked kill it -- it's been interrupted
   // by another gesture event.
   if (mSwipeTracker) {
@@ -2263,6 +2268,11 @@ void nsBaseWidget::TrackScrollEventAsSwipe(
 
   if (!mAPZC) {
     mCurrentPanGestureBelongsToSwipe = true;
+  } else {
+    // Now SwipeTracker has started consuming pan events, notify it to APZ so
+    // that APZ can discard queued events.
+    mAPZC->SetBrowserGestureResponse(aInputBlockId,
+                                     BrowserGestureResponse::Consumed);
   }
 }
 
@@ -2305,7 +2315,8 @@ WidgetWheelEvent nsBaseWidget::MayStartSwipeForAPZ(
         // scrolling for the event.
         // We know now that MayStartSwipe wants a swipe, so we can start
         // the swipe now.
-        TrackScrollEventAsSwipe(aPanInput, swipeInfo.allowedDirections);
+        TrackScrollEventAsSwipe(aPanInput, swipeInfo.allowedDirections,
+                                aApzResult.mInputBlockId);
       } else {
         // We don't know whether this event can start a swipe, so we need
         // to queue up events and wait for a call to ReportSwipeStarted.
@@ -2316,6 +2327,12 @@ WidgetWheelEvent nsBaseWidget::MayStartSwipeForAPZ(
         mSwipeEventQueue = MakeUnique<SwipeEventQueue>(
             swipeInfo.allowedDirections, aApzResult.mInputBlockId);
       }
+    } else {
+      // Inform that the browser gesture didn't use the pan event (pan-start
+      // precisely), so that APZ can now start using the event for
+      // scrolling/overscrolling.
+      mAPZC->SetBrowserGestureResponse(aApzResult.mInputBlockId,
+                                       BrowserGestureResponse::NotConsumed);
     }
   }
 
@@ -2353,7 +2370,8 @@ bool nsBaseWidget::MayStartSwipeForNonAPZ(const PanGestureInput& aPanInput) {
   // the event was routed to a child process, so we use InputAPZContext
   // to get that piece of information.
   ScrollableLayerGuid guid;
-  InputAPZContext context(guid, 0, nsEventStatus_eIgnore);
+  uint64_t blockId = 0;
+  InputAPZContext context(guid, blockId, nsEventStatus_eIgnore);
 
   WidgetWheelEvent event = aPanInput.ToWidgetEvent(this);
   event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
@@ -2364,9 +2382,9 @@ bool nsBaseWidget::MayStartSwipeForNonAPZ(const PanGestureInput& aPanInput) {
       // We don't know whether this event can start a swipe, so we need
       // to queue up events and wait for a call to ReportSwipeStarted.
       mSwipeEventQueue =
-          MakeUnique<SwipeEventQueue>(swipeInfo.allowedDirections, 0);
+          MakeUnique<SwipeEventQueue>(swipeInfo.allowedDirections, blockId);
     } else if (event.TriggersSwipe()) {
-      TrackScrollEventAsSwipe(aPanInput, swipeInfo.allowedDirections);
+      TrackScrollEventAsSwipe(aPanInput, swipeInfo.allowedDirections, blockId);
     }
   }
 
