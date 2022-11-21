@@ -3,9 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
-  --icon-size: 32px;
-  --dot-position: calc(var(--icon-size) / 2 + var(--arrowpanel-menuitem-margin-inline) + var(--arrowpanel-menuitem-padding-inline) - 4px);
   /* uei = unified extensions item */
+  --uei-icon-size: 32px;
+  --uei-dot-position: calc(var(--uei-icon-size) / 2 + var(--arrowpanel-menuitem-margin-inline) + var(--arrowpanel-menuitem-padding-inline) - 4px);
   --uei-button-hover-bgcolor: var(--panel-item-hover-bgcolor);
   --uei-button-hover-color: inherit;
   --uei-button-active-bgcolor: var(--panel-item-active-bgcolor);
@@ -13,15 +13,15 @@
 }
 
 :root[uidensity="compact"] {
-  --icon-size: 24px;
+  --uei-icon-size: 24px;
 }
 
+/* Align extensions rendered with custom elements. */
 unified-extensions-item {
   align-items: center;
   display: flex;
 }
 
-unified-extensions-item,
 .unified-extensions-item {
   padding-block: 2px;
 }
@@ -29,20 +29,21 @@ unified-extensions-item,
 /* This is based on the attention UI defined in:
  * https://searchfox.org/mozilla-central/rev/560b7b1b17/browser/themes/shared/tabs.css#624 */
 #unified-extensions-button[attention],
-.unified-extensions-item[attention],
-unified-extensions-item[attention] {
+.unified-extensions-item[attention] {
   background-image: radial-gradient(circle, var(--tab-attention-icon-color), var(--tab-attention-icon-color) 2px, transparent 2px);
   background-position: center bottom max(0px, calc(var(--arrowpanel-menuitem-padding-block) - 4px));
   background-size: 8px 8px;
   background-repeat: no-repeat;
 }
 
-unified-extensions-item[attention] {
-  background-position: left var(--dot-position) bottom 0px;
+/* Adjust attention dots for the custom elements. */
+.unified-extensions-list > unified-extensions-item[attention] {
+  background-position: left var(--uei-dot-position) bottom 0px;
 }
 
-unified-extensions-item[attention]:-moz-locale-dir(rtl) {
-  background-position-x: right var(--dot-position);
+/* Adjust attention dots for the custom elements. */
+.unified-extensions-list > unified-extensions-item[attention]:-moz-locale-dir(rtl) {
+  background-position-x: right var(--uei-dot-position);
 }
 
 .unified-extensions-item-action {
@@ -65,10 +66,7 @@ unified-extensions-item[attention]:-moz-locale-dir(rtl) {
   opacity: 0.5;
 }
 
-:is(
-  unified-extensions-item[secondary-button-hovered="true"],
-  .unified-extensions-item[secondary-button-hovered="true"]
-) .unified-extensions-item-action.subviewbutton {
+.unified-extensions-item[secondary-button-hovered="true"] .unified-extensions-item-action.subviewbutton {
   color: inherit;
 }
 
@@ -76,8 +74,8 @@ unified-extensions-item[attention]:-moz-locale-dir(rtl) {
 /* When the unified extensions pref is enabled, we also want to increase the
  * size of the icons in the extension CUI widgets. */
 panel .unified-extensions-item[unified-extensions="true"] .webextension-browser-action > .toolbarbutton-badge-stack > .toolbarbutton-icon {
-  height: var(--icon-size);
-  width: var(--icon-size);
+  height: var(--uei-icon-size);
+  width: var(--uei-icon-size);
   margin-inline-end: 6px;
 }
 
@@ -98,9 +96,6 @@ panel .unified-extensions-item[unified-extensions="true"] .webextension-browser-
   color: var(--panel-description-color);
 }
 
-unified-extensions-item[secondary-button-hovered="true"] .unified-extensions-item-message:not(.unified-extensions-item-message-hover),
-unified-extensions-item:not([secondary-button-hovered="true"]) .unified-extensions-item-message-hover,
-/* The two selectors below are for CUI widgets. */
 .unified-extensions-item[secondary-button-hovered="true"] .unified-extensions-item-message:not(.unified-extensions-item-message-hover),
 .unified-extensions-item:not([secondary-button-hovered="true"]) .unified-extensions-item-message-hover {
   display: none;
@@ -170,27 +165,24 @@ toolbaritem.unified-extensions-item[unified-extensions="true"] .unified-extensio
   display: block;
 }
 
-.widget-overflow-list .unified-extensions-item[attention],
-#unified-extensions-panel .unified-extensions-item[attention] {
+:is(#unified-extensions-panel, .widget-overflow-list) toolbaritem.unified-extensions-item[attention] {
   background-position: left calc(12px + var(--arrowpanel-menuitem-margin-inline)) bottom;
 }
 
-.widget-overflow-list .unified-extensions-item[attention]:-moz-locale-dir(rtl),
-#unified-extensions-panel .unified-extensions-item[attention]:-moz-locale-dir(rtl) {
+:is(#unified-extensions-panel, .widget-overflow-list) toolbaritem.unified-extensions-item[attention]:-moz-locale-dir(rtl) {
   background-position-x: right calc(12px + var(--arrowpanel-menuitem-margin-inline));
 }
 
-.widget-overflow-list .unified-extensions-item[attention][unified-extensions="false"] {
+.widget-overflow-list toolbaritem.unified-extensions-item[attention][unified-extensions="false"] {
   background-position-x: left 12px;
 }
 
-.widget-overflow-list .unified-extensions-item[attention][unified-extensions="false"]:-moz-locale-dir(rtl) {
+.widget-overflow-list toolbaritem.unified-extensions-item[attention][unified-extensions="false"]:-moz-locale-dir(rtl) {
   background-position-x: right 12px;
 }
 
 @media (prefers-contrast) {
-  .unified-extensions-item[attention],
-  unified-extensions-item[attention] {
+  .unified-extensions-item[attention] {
     background-image: radial-gradient(circle, ButtonText, ButtonText 2px, transparent 2px);
   }
 
@@ -213,7 +205,6 @@ toolbaritem.unified-extensions-item[unified-extensions="true"] .unified-extensio
   }
 
   .unified-extensions-item-action[disabled] .unified-extensions-item-message,
-  unified-extensions-item[secondary-button-hovered="true"] .unified-extensions-item-action[disabled].subviewbutton,
   .unified-extensions-item[secondary-button-hovered="true"] .unified-extensions-item-action[disabled].subviewbutton {
     color: GrayText;
   }
