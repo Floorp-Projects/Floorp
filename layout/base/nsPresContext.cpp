@@ -2612,12 +2612,6 @@ size_t nsPresContext::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
   return 0;
 }
 
-bool nsPresContext::IsRootContentDocument() const {
-  // Default to the in process version for now, but we should try
-  // to remove callers of this.
-  return IsRootContentDocumentInProcess();
-}
-
 bool nsPresContext::IsRootContentDocumentInProcess() const {
   if (mDocument->IsResourceDoc()) {
     return false;

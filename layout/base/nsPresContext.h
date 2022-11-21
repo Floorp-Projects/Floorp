@@ -1035,12 +1035,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   }
 
   /**
-   * Deprecated. Please use the InProcess or CrossProcess variants
-   * to specify which behaviour you want.
-   */
-  bool IsRootContentDocument() const;
-
-  /**
    * We are a root content document in process if: we are not a resource doc, we
    * are not chrome, and we either have no parent in the current process or our
    * parent is chrome.
