@@ -24,22 +24,50 @@ CURRENT_DIR=`pwd`
 cd $MOZ_LIBWEBRTC_SRC
 
 # pull new upstream commits
-git checkout master
-git remote add upstream https://webrtc.googlesource.com/src
-git fetch upstream
-git merge upstream/master
+if [ "0" == `grep "https://webrtc.googlesource.com/src" .git/config | wc -l | tr -d " " || true` ]; then
+  echo "Setting up upstream remote (https://webrtc.googlesource.com/src)."
+  git checkout master
+  git remote add upstream https://webrtc.googlesource.com/src
+  git fetch upstream
+  git merge upstream/master
+else
+  echo "Upstream remote (https://webrtc.googlesource.com/src) already configured."
+fi
 
 # fetch upstream's branch-heads/xxxx
-git config --local --add remote.upstream.fetch '+refs/branch-heads/*:refs/remotes/branch-heads/*'
-git fetch upstream
+if [ "0" == `grep "refs/remotes/branch-heads" .git/config | wc -l | tr -d " " || true` ]; then
+  echo "Setting up upstream remote branch-heads."
+  git config --local --add remote.upstream.fetch '+refs/branch-heads/*:refs/remotes/branch-heads/*'
+  git fetch upstream
+else
+  echo "Upstream remote branch-heads already configured."
+fi
 
 # checkout our previous branch to make sure commits are visible in the repo
 git checkout $MOZ_PRIOR_GIT_BRANCH
 
+# clear any possible previous patches
+rm -f *.patch
+
 # create a new work branch and "export" a new patch stack to rebase
-git branch $MOZ_LIBWEBRTC_COMMIT $MOZ_LIBWEBRTC_BASE
+# find the common commit between our previous work branch and trunk
+CHERRY_PICK_BASE=`git merge-base $MOZ_PRIOR_GIT_BRANCH master`
+echo "common commit: $CHERRY_PICK_BASE"
+
+# create a new branch at the common commit and checkout the new branch
+git branch $MOZ_LIBWEBRTC_COMMIT $CHERRY_PICK_BASE
 git checkout $MOZ_LIBWEBRTC_COMMIT
-git format-patch -k $MOZ_LIBWEBRTC_BASE..$MOZ_PRIOR_GIT_BRANCH
+
+# grab the patches for all the commits in chrome's release branch for libwebrtc
+git format-patch -k $CHERRY_PICK_BASE..branch-heads/$MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM
+# tweak the release branch commit summaries to show they were cherry picked
+sed -i.bak -e "/^Subject: / s/^Subject: /Subject: (cherry-pick-branch-heads\/$MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM) /" *.patch
+git am *.patch # applies to branch mozpatches
+rm *.patch
+
+# grab all the moz patches and apply
+# git format-patch -k $MOZ_LIBWEBRTC_BASE..$MOZ_PRIOR_GIT_BRANCH
+git format-patch -k branch-heads/$MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM..$MOZ_PRIOR_GIT_BRANCH
 git am *.patch # applies to branch mozpatches
 rm *.patch
 
