@@ -1918,9 +1918,12 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public GeckoResult<Void> clearDataFromBaseDomain(@NonNull String, long);
     method @AnyThread @NonNull public GeckoResult<Void> clearDataFromHost(@NonNull String, long);
     method @AnyThread @NonNull public GeckoResult<List<GeckoSession.PermissionDelegate.ContentPermission>> getAllPermissions();
+    method @AnyThread @NonNull public GeckoResult<Integer> getCookieBannerModeForDomain(@NonNull String, boolean);
     method @AnyThread @NonNull public GeckoResult<List<GeckoSession.PermissionDelegate.ContentPermission>> getPermissions(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<List<GeckoSession.PermissionDelegate.ContentPermission>> getPermissions(@NonNull String, boolean);
     method @AnyThread @NonNull public GeckoResult<List<GeckoSession.PermissionDelegate.ContentPermission>> getPermissions(@NonNull String, @Nullable String, boolean);
+    method @AnyThread public void removeCookieBannerModeForDomain(@NonNull String, boolean);
+    method @AnyThread public void setCookieBannerModeForDomain(@NonNull String, int, boolean);
     method @AnyThread public void setPermission(@NonNull GeckoSession.PermissionDelegate.ContentPermission, int);
     method @AnyThread public void setPrivateBrowsingPermanentPermission(@NonNull GeckoSession.PermissionDelegate.ContentPermission, int);
   }
