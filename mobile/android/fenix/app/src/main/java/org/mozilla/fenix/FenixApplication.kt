@@ -131,16 +131,9 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             return
         }
 
-        // We can initialize Nimbus before Glean because Glean will queue messages
-        // before it's initialized.
-        initializeNimbus()
-
-        // We need to always initialize Glean and do it early here.
-        initializeGlean()
-
+        // DO NOT ADD ANYTHING ABOVE HERE.
         setupInMainProcessOnly()
-
-        downloadWallpapers()
+        // DO NOT ADD ANYTHING UNDER HERE.
 
         // DO NOT MOVE ANYTHING BELOW THIS elapsedRealtimeNanos CALL.
         val stop = SystemClock.elapsedRealtimeNanos()
@@ -198,9 +191,20 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
     @CallSuper
     open fun setupInMainProcessOnly() {
+        // ⚠️ DO NOT ADD ANYTHING ABOVE THIS LINE.
+        // Especially references to the engine/BrowserStore which can alter the app initialization.
+        // See: https://github.com/mozilla-mobile/fenix/issues/26320
+        //
+        // We can initialize Nimbus before Glean because Glean will queue messages
+        // before it's initialized.
+        initializeNimbus()
+
         ProfilerMarkerFactProcessor.create { components.core.engine.profiler }.register()
 
         run {
+            // We need to always initialize Glean and do it early here.
+            initializeGlean()
+
             // Attention: Do not invoke any code from a-s in this scope.
             val megazordSetup = finishSetupMegazord()
 
@@ -246,6 +250,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         initVisualCompletenessQueueAndQueueTasks()
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(TelemetryLifecycleObserver(components.core.store))
+
+        downloadWallpapers()
     }
 
     @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
