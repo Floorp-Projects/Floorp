@@ -39,7 +39,6 @@ updatebot:
   fuzzy-query: media
   tasks:
     - type: vendoring
-      branch: master
       enabled: True
       frequency: every
 

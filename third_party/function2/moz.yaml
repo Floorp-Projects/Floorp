@@ -22,7 +22,6 @@ updatebot:
   maintainer-bz: nika@thelayzells.com
   tasks:
     - type: vendoring
-      branch: master
       enabled: True
       frequency: every
 

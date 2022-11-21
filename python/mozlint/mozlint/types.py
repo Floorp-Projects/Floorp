@@ -87,40 +87,6 @@ class BaseType(object):
         pass
 
 
-class FileType(BaseType):
-    """Abstract base class for linter types that check each file
-
-    Subclasses of this linter type will read each file and check the file contents
-    """
-
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def lint_single_file(payload, line, config):
-        """Run linter defined by `config` against `paths` with `lintargs`.
-
-        :param path: Path to the file to lint.
-        :param config: Linter config the paths are being linted against.
-        :param lintargs: External arguments to the linter not defined in
-                         the definition, but passed in by a consumer.
-        :returns: An error message or None
-        """
-        pass
-
-    def _lint(self, path, config, **lintargs):
-        if os.path.isdir(path):
-            return self._lint_dir(path, config, **lintargs)
-
-        payload = config["payload"]
-
-        errors = []
-        message = self.lint_single_file(payload, path, config)
-        if message:
-            errors.append(result.from_config(config, message=message, path=path))
-
-        return errors
-
-
 class LineType(BaseType):
     """Abstract base class for linter types that check each line individually.
 
@@ -182,6 +148,10 @@ class ExternalType(BaseType):
         return func(files, config, **lintargs)
 
 
+class ExternalFileType(ExternalType):
+    batch = False
+
+
 class GlobalType(ExternalType):
     """Linter type that runs an external global linting function just once.
 
@@ -237,6 +207,7 @@ supported_types = {
     "string": StringType(),
     "regex": RegexType(),
     "external": ExternalType(),
+    "external-file": ExternalFileType(),
     "global": GlobalType(),
     "structured_log": StructuredLogType(),
 }
