@@ -3882,6 +3882,81 @@ void mozilla::startup::IncreaseDescriptorLimits() {
 #endif
 }
 
+#ifdef XP_WIN
+
+static uint32_t GetMicrocodeVersionByVendor(HKEY key, DWORD upper,
+                                            DWORD lower) {
+  WCHAR data[13];  // The CPUID vendor string is 12 characters long plus null
+  DWORD len = sizeof(data);
+  DWORD vtype;
+
+  if (RegQueryValueExW(key, L"VendorIdentifier", nullptr, &vtype,
+                       reinterpret_cast<LPBYTE>(data), &len) == ERROR_SUCCESS) {
+    if (wcscmp(L"GenuineIntel", data) == 0) {
+      // Intel reports the microcode version in the upper 32 bits of the MSR
+      return upper;
+    }
+
+    if (wcscmp(L"AuthenticAMD", data) == 0) {
+      // AMD reports the microcode version in the lower 32 bits of the MSR
+      return lower;
+    }
+
+    // Unknown CPU vendor, return whatever half is non-zero
+    return lower ? lower : upper;
+  }
+
+  return 0;  // No clue
+}
+
+#endif  // XP_WIN
+
+static void MaybeAddCPUMicrocodeCrashAnnotation() {
+#ifdef XP_WIN
+  // Add CPU microcode version to the crash report as "CPUMicrocodeVersion".
+  // It feels like this code may belong in nsSystemInfo instead.
+  uint32_t cpuUpdateRevision = 0;
+  HKEY key;
+  static const WCHAR keyName[] =
+      L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0";
+
+  if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName, 0, KEY_QUERY_VALUE, &key) ==
+      ERROR_SUCCESS) {
+    DWORD updateRevision[2];
+    DWORD len = sizeof(updateRevision);
+    DWORD vtype;
+
+    // Windows 7 uses "Update Signature", 8 uses "Update Revision".
+    // For AMD CPUs, "CurrentPatchLevel" is sometimes used.
+    // Take the first one we find.
+    LPCWSTR choices[] = {L"Update Signature", L"Update Revision",
+                         L"CurrentPatchLevel"};
+    for (const auto& oneChoice : choices) {
+      if (RegQueryValueExW(key, oneChoice, nullptr, &vtype,
+                           reinterpret_cast<LPBYTE>(updateRevision),
+                           &len) == ERROR_SUCCESS) {
+        if (vtype == REG_BINARY && len == sizeof(updateRevision)) {
+          cpuUpdateRevision = GetMicrocodeVersionByVendor(
+              key, updateRevision[1], updateRevision[0]);
+          break;
+        }
+
+        if (vtype == REG_DWORD && len == sizeof(updateRevision[0])) {
+          cpuUpdateRevision = static_cast<int>(updateRevision[0]);
+          break;
+        }
+      }
+    }
+  }
+
+  if (cpuUpdateRevision > 0) {
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::CPUMicrocodeVersion,
+        nsPrintfCString("0x%" PRIx32, cpuUpdateRevision));
+  }
+#endif
+}
+
 /*
  * XRE_mainInit - Initial setup and command line parameter processing.
  * Main() will exit early if either return value != 0 or if aExitFlag is
@@ -4312,51 +4387,7 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
 
   gSafeMode = safeModeRequested.value();
 
-#ifdef XP_WIN
-  {
-    // Add CPU microcode version to the crash report as "CPUMicrocodeVersion".
-    // It feels like this code may belong in nsSystemInfo instead.
-    int cpuUpdateRevision = -1;
-    HKEY key;
-    static const WCHAR keyName[] =
-        L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0";
-
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName, 0, KEY_QUERY_VALUE, &key) ==
-        ERROR_SUCCESS) {
-      DWORD updateRevision[2];
-      DWORD len = sizeof(updateRevision);
-      DWORD vtype;
-
-      // Windows 7 uses "Update Signature", 8 uses "Update Revision".
-      // For AMD CPUs, "CurrentPatchLevel" is sometimes used.
-      // Take the first one we find.
-      LPCWSTR choices[] = {L"Update Signature", L"Update Revision",
-                           L"CurrentPatchLevel"};
-      for (size_t oneChoice = 0; oneChoice < ArrayLength(choices);
-           oneChoice++) {
-        if (RegQueryValueExW(key, choices[oneChoice], 0, &vtype,
-                             reinterpret_cast<LPBYTE>(updateRevision),
-                             &len) == ERROR_SUCCESS) {
-          if (vtype == REG_BINARY && len == sizeof(updateRevision)) {
-            // The first word is unused
-            cpuUpdateRevision = static_cast<int>(updateRevision[1]);
-            break;
-          } else if (vtype == REG_DWORD && len == sizeof(updateRevision[0])) {
-            cpuUpdateRevision = static_cast<int>(updateRevision[0]);
-            break;
-          }
-        }
-      }
-    }
-
-    if (cpuUpdateRevision > 0) {
-      CrashReporter::AnnotateCrashReport(
-          CrashReporter::Annotation::CPUMicrocodeVersion,
-          nsPrintfCString("0x%x", cpuUpdateRevision));
-    }
-  }
-#endif
-
+  MaybeAddCPUMicrocodeCrashAnnotation();
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::SafeMode,
                                      gSafeMode);
 
