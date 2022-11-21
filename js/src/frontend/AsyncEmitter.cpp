@@ -17,7 +17,7 @@
 using namespace js;
 using namespace js::frontend;
 
-bool AsyncEmitter::prepareForParamsWithExpression() {
+bool AsyncEmitter::prepareForParamsWithExpressionOrDestructuring() {
   MOZ_ASSERT(state_ == State::Start);
 #ifdef DEBUG
   state_ = State::Parameters;
@@ -28,7 +28,7 @@ bool AsyncEmitter::prepareForParamsWithExpression() {
   return rejectTryCatch_->emitTry();
 }
 
-bool AsyncEmitter::prepareForParamsWithoutExpression() {
+bool AsyncEmitter::prepareForParamsWithoutExpressionOrDestructuring() {
   MOZ_ASSERT(state_ == State::Start);
 #ifdef DEBUG
   state_ = State::Parameters;
