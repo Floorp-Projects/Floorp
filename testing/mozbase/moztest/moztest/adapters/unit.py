@@ -4,11 +4,10 @@
 
 from __future__ import absolute_import
 
-import unittest
 import sys
 import time
 import traceback
-
+import unittest
 from unittest import TextTestResult
 
 """Adapter used to output structuredlog messages from unittest
@@ -95,7 +94,9 @@ class StructuredTestResult(TextTestResult):
             tb = tb.tb_next
         # Header usually included by print_exception
         lines = ["Traceback (most recent call last):\n"]
-        if exctype is test.failureException:
+        if exctype is test.failureException and hasattr(
+            self, "_count_relevant_tb_levels"
+        ):
             length = self._count_relevant_tb_levels(tb)
             lines += traceback.format_tb(tb, length)
         else:
