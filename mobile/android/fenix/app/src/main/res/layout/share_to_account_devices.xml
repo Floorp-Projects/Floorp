@@ -11,16 +11,12 @@
 
     <TextView
         android:id="@+id/accountHeaderText"
+        style="@style/ShareHeaderTextStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="12dp"
-        android:singleLine="true"
         android:text="@string/share_device_subheader"
-        android:textAllCaps="true"
-        android:textColor="?attr/textSecondary"
-        android:textSize="12sp"
-        android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
