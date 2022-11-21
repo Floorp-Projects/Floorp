@@ -18,6 +18,8 @@ add_task(async function test_clicking_with_delayed_banner() {
 
   insertTestClickRules();
 
+  await testClickResultTelemetry({});
+
   // A test page that has a delayed load event.
   let TEST_PAGE = TEST_ORIGIN_A + TEST_PATH + "file_delayed_banner_load.html";
   await openPageAndVerify({
@@ -26,5 +28,10 @@ add_task(async function test_clicking_with_delayed_banner() {
     testURL: TEST_PAGE,
     visible: false,
     expected: "OptOut",
+  });
+
+  await testClickResultTelemetry({
+    success: 1,
+    success_mutation_post_load: 1,
   });
 });
