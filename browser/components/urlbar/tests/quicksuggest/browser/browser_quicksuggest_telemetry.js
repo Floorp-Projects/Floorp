@@ -1218,43 +1218,34 @@ add_task(async function impression_hiddenRow() {
     );
   }
 
-  // Set up a second search. It will trigger a quick suggest result, and this
-  // time the test provider will return many URL results. URL rows can't replace
-  // search suggestions in the view, so they'll be hidden until the search
-  // completes or the remove-stale-rows timer fires. The quick suggest row
-  // should be last due to its `suggestedIndex` and it should also be hidden.
-  results = [];
-  for (let i = 0; i < maxCount; i++) {
-    results.push(
-      new UrlbarResult(
-        UrlbarUtils.RESULT_TYPE.URL,
-        UrlbarUtils.RESULT_SOURCE.HISTORY,
-        {
-          url: "http://example.com/" + i,
-        }
-      )
-    );
-  }
-  provider._results = results;
-
-  // Don't allow the search to finish until we check the updated rows. We'll
-  // accomplish that by adding a mutation observer to observe completion of the
-  // view update and delaying resolving the provider's `finishQueryPromise`.
+  // Now set up a second search that triggers a quick suggest result. Add a
+  // mutation listener to the view so we can tell when the quick suggest row is
+  // added.
   let mutationPromise = new Promise(resolve => {
     let observer = new MutationObserver(mutations => {
-      observer.disconnect();
-      resolve();
+      let rows = UrlbarTestUtils.getResultsContainer(window).children;
+      for (let row of rows) {
+        if (row.result.providerName == "UrlbarProviderQuickSuggest") {
+          observer.disconnect();
+          resolve(row);
+          return;
+        }
+      }
     });
     observer.observe(UrlbarTestUtils.getResultsContainer(window), {
       childList: true,
     });
   });
 
-  // Now do the second search but don't wait for it to finish.
+  // Set the test provider's `finishQueryPromise` to a promise that doesn't
+  // resolve. That will prevent the search from completing, which will prevent
+  // the view from removing stale rows and showing the quick suggest row.
   let resolveQuery;
   provider.finishQueryPromise = new Promise(
     resolve => (resolveQuery = resolve)
   );
+
+  // Start the second search but don't wait for it to finish.
   gURLBar.focus();
   let queryPromise = UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -1262,58 +1253,17 @@ add_task(async function impression_hiddenRow() {
     fireInputEvent: true,
   });
 
-  // Wait for the view update to happen.
-  await mutationPromise;
-
-  // Now check the rows. At this point, the view has updated but since the
-  // search hasn't finished and the remove-stale-rows timer hasn't fired, the
-  // URL and quick suggest rows should all be hidden. We can't use
-  // `UrlbarTestUtils.getDetailsOfResultAt()` here because it waits for the
-  // search to finish.
-  Assert.equal(
-    UrlbarTestUtils.getResultCount(window),
-    2 * maxCount - 1,
-    "Row count before search finishes"
-  );
-
-  let rows = UrlbarTestUtils.getResultsContainer(window).children;
-  for (let i = 1; i < rows.length; i++) {
-    let row = rows[i];
-    if (i < maxCount) {
-      Assert.equal(
-        row.result.type,
-        UrlbarUtils.RESULT_TYPE.SEARCH,
-        "Row is a search result at index " + i
-      );
-      Assert.equal(
-        row.getAttribute("stale"),
-        "true",
-        "Row is stale at index " + i
-      );
-      Assert.ok(
-        BrowserTestUtils.is_visible(row),
-        "Row is visible at index " + i
-      );
-    } else {
-      Assert.equal(
-        row.result.type,
-        UrlbarUtils.RESULT_TYPE.URL,
-        "Row is a URL result at index " + i
-      );
-      Assert.ok(!row.hasAttribute("stale"), "Row is not stale at index " + i);
-      Assert.ok(BrowserTestUtils.is_hidden(row), "Row is hidden at index " + i);
-    }
-  }
-
-  let lastRow = rows[rows.length - 1];
-  Assert.equal(
-    lastRow.result.providerName,
-    "UrlbarProviderQuickSuggest",
-    "Last row is the quick suggest result"
-  );
+  // Wait for the quick suggest row to be added to the view. It should be hidden
+  // because (a) quick suggest results have a `suggestedIndex`, and rows with
+  // suggested indexes can't replace rows without suggested indexes, and (b) the
+  // view already contains the maximum number of rows due to the first search.
+  // It should remain hidden until the search completes or the remove-stale-rows
+  // timer fires. Next, we'll hit enter, which will cancel the search and close
+  // the view, so the row should never appear.
+  let quickSuggestRow = await mutationPromise;
   Assert.ok(
-    BrowserTestUtils.is_hidden(lastRow),
-    "Double check: Last row is hidden"
+    BrowserTestUtils.is_hidden(quickSuggestRow),
+    "Quick suggest row is hidden"
   );
 
   // Hit enter to pick the heuristic search result. This will cancel the search
