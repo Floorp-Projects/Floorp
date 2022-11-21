@@ -41,7 +41,7 @@ add_task(async function test_error_target_downloadingToSameFile() {
   );
 
   Assert.ok(
-    await OS.File.exists(download.target.path),
+    await IOUtils.exists(download.target.path),
     "The file should not have been deleted."
   );
 });
