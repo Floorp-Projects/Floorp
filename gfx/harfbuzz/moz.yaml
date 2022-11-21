@@ -20,11 +20,11 @@ origin:
 
   # Human-readable identifier for this version/release
   # Generally "version NNN", "tag SSS", "bookmark SSS"
-  release: 5.3.1 [commit 970321db7bddbe8c579b73751fc655a924ea3ce6]
+  release: 5.3.1 (2022-10-19T22:06:46+02:00).
 
   # Revision to pull in
   # Must be a long or short commit SHA (long preferred)
-  revision: 970321db7bddbe8c579b73751fc655a924ea3ce6
+  revision: 5.3.1
 
   # The package's license, where possible using the mnemonic from
   # https://spdx.org/licenses/
@@ -32,3 +32,32 @@ origin:
   # A "LICENSE" file must exist containing the full license text
   license: MIT
   license-file: COPYING
+
+  notes: >
+    To test the upstream's main branch tip, one can
+    run `./mach vendor --revision tip gfx/harfbuzz/moz.yaml`
+
+vendoring:
+  url: https://github.com/harfbuzz/harfbuzz
+  source-hosting: github
+  tracking: tag
+
+  include:
+    - AUTHORS
+    - autogen.sh
+    - configure.ac
+    - COPYING
+    - git.mk
+    - harfbuzz.doap
+    - Makefile.am
+    - NEWS
+    - README.md
+    - src
+    - THANKS
+
+  exclude:
+    - "**"
+    - "**/.*"
+    - ".*"
+    - ".*/**"
+    - src/hb-ucdn
