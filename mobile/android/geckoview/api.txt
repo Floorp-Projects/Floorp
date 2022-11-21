@@ -44,6 +44,7 @@ import java.io.InputStream;
 import java.lang.Boolean;
 import java.lang.CharSequence;
 import java.lang.Class;
+import java.lang.Deprecated;
 import java.lang.Double;
 import java.lang.Exception;
 import java.lang.Float;
@@ -75,6 +76,7 @@ import org.mozilla.geckoview.Autofill;
 import org.mozilla.geckoview.CompositorController;
 import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.ContentBlockingController;
+import org.mozilla.geckoview.DeprecationSchedule;
 import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
@@ -385,8 +387,8 @@ package org.mozilla.geckoview {
     field protected boolean mRepopulatedMenu;
     field @Nullable protected GeckoSession.SelectionActionDelegate.Selection mSelection;
     field @Nullable protected GeckoSession mSession;
-    field @NonNull protected final Matrix mTempMatrix;
-    field @NonNull protected final RectF mTempRect;
+    field @Deprecated @DeprecationSchedule(id="selection-fission",version=112) @NonNull protected final Matrix mTempMatrix;
+    field @Deprecated @DeprecationSchedule(id="selection-fission",version=112) @NonNull protected final RectF mTempRect;
     field protected final boolean mUseFloatingToolbar;
   }
 
@@ -1509,8 +1511,9 @@ package org.mozilla.geckoview {
     method @AnyThread public void selectAll();
     method @AnyThread public void unselect();
     field @NonNull public final Collection<String> availableActions;
-    field @Nullable public final RectF clientRect;
+    field @Deprecated @DeprecationSchedule(id="selection-fission",version=112) @Nullable public final RectF clientRect;
     field public final int flags;
+    field @Nullable public final RectF screenRect;
     field @NonNull public final String text;
   }
 

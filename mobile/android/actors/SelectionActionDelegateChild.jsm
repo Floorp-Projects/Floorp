@@ -6,6 +6,12 @@ const { GeckoViewActorChild } = ChromeUtils.importESModule(
   "resource://gre/modules/GeckoViewActorChild.sys.mjs"
 );
 
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  LayoutUtils: "resource://gre/modules/LayoutUtils.sys.mjs",
+});
+
 const EXPORTED_SYMBOLS = ["SelectionActionDelegateChild"];
 
 const MAGNIFIER_PREF = "layout.accessiblecaret.magnifier.enabled";
@@ -310,7 +316,40 @@ class SelectionActionDelegateChild extends GeckoViewActorChild {
         action.predicate.call(this, aEvent)
       );
 
-      const offset = this._getFrameOffset(aEvent);
+      const screenRect = (() => {
+        const boundingRect = aEvent.boundingClientRect;
+        if (!boundingRect) {
+          return null;
+        }
+        const rect = lazy.LayoutUtils.rectToScreenRect(
+          aEvent.target.ownerGlobal,
+          boundingRect
+        );
+        return {
+          left: rect.left,
+          top: rect.top,
+          right: rect.right,
+          bottom: rect.bottom + this._accessiblecaretHeight,
+        };
+      })();
+
+      const clientRect = (() => {
+        const boundingRect = aEvent.boundingClientRect;
+        if (!boundingRect) {
+          return null;
+        }
+        const offset = this._getFrameOffset(aEvent);
+        return {
+          left: aEvent.boundingClientRect.left + offset.left,
+          top: aEvent.boundingClientRect.top + offset.top,
+          right: aEvent.boundingClientRect.right + offset.left,
+          bottom:
+            aEvent.boundingClientRect.bottom +
+            offset.top +
+            this._accessiblecaretHeight,
+        };
+      })();
+
       const password = this._isPasswordField(aEvent);
 
       const msg = {
@@ -318,20 +357,11 @@ class SelectionActionDelegateChild extends GeckoViewActorChild {
         editable: aEvent.selectionEditable,
         password,
         selection: password ? "" : aEvent.selectedTextContent,
-        clientRect: !aEvent.boundingClientRect
-          ? null
-          : {
-              left: aEvent.boundingClientRect.left + offset.left,
-              top: aEvent.boundingClientRect.top + offset.top,
-              right: aEvent.boundingClientRect.right + offset.left,
-              bottom: aEvent.boundingClientRect.bottom + offset.top,
-            },
+        // clientRect is deprecated
+        clientRect,
+        screenRect,
         actions: actions.map(action => action.id),
       };
-
-      if (msg.clientRect) {
-        msg.clientRect.bottom += this._accessiblecaretHeight;
-      }
 
       if (this._isActive && JSON.stringify(msg) === this._previousMessage) {
         // Don't call again if we're already active and things haven't changed.
