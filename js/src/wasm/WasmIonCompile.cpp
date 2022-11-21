@@ -3084,9 +3084,9 @@ class FunctionCompiler {
     const TagOffsetVector& offsets = tagType->argOffsets_;
 
     // Get the data pointer from the exception object
-    auto* data = MWasmLoadObjectField::New(alloc(), exception,
-                                           WasmExceptionObject::offsetOfData(),
-                                           MIRType::Pointer);
+    auto* data = MWasmLoadField::New(alloc(), exception,
+                                     WasmExceptionObject::offsetOfData(),
+                                     MIRType::Pointer);
     curBlock_->add(data);
 
     // Presize the values vector to the number of params
@@ -3096,8 +3096,8 @@ class FunctionCompiler {
 
     // Load each value from the data pointer
     for (size_t i = 0; i < params.length(); i++) {
-      auto* load = MWasmLoadObjectDataField::New(
-          alloc(), exception, data, offsets[i], params[i].toMIRType());
+      auto* load = MWasmLoadFieldKA::New(alloc(), exception, data, offsets[i],
+                                         params[i].toMIRType());
       if (!load || !values->append(load)) {
         return false;
       }
@@ -3206,9 +3206,9 @@ class FunctionCompiler {
     }
 
     // Load the data pointer from the object
-    auto* data = MWasmLoadObjectField::New(alloc(), exception,
-                                           WasmExceptionObject::offsetOfData(),
-                                           MIRType::Pointer);
+    auto* data = MWasmLoadField::New(alloc(), exception,
+                                     WasmExceptionObject::offsetOfData(),
+                                     MIRType::Pointer);
     if (!data) {
       return false;
     }
@@ -3221,8 +3221,8 @@ class FunctionCompiler {
       uint32_t offset = tagType->argOffsets_[i];
 
       if (!type.isRefRepr()) {
-        auto* store = MWasmStoreObjectDataField::New(alloc(), exception, data,
-                                                     offset, argValues[i]);
+        auto* store = MWasmStoreFieldKA::New(alloc(), exception, data, offset,
+                                             argValues[i]);
         if (!store) {
           return false;
         }
@@ -3238,15 +3238,15 @@ class FunctionCompiler {
       curBlock_->add(fieldAddr);
 
       // Load the previous value
-      auto* prevValue = MWasmLoadObjectDataField::New(alloc(), exception, data,
-                                                      offset, type.toMIRType());
+      auto* prevValue = MWasmLoadFieldKA::New(alloc(), exception, data, offset,
+                                              type.toMIRType());
       if (!prevValue) {
         return false;
       }
       curBlock_->add(prevValue);
 
       // Store the new value
-      auto* store = MWasmStoreObjectDataRefField::New(
+      auto* store = MWasmStoreFieldRefKA::New(
           alloc(), instancePointer_, exception, fieldAddr, argValues[i]);
       if (!store) {
         return false;

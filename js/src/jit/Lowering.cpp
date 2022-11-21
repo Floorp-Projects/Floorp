@@ -6721,7 +6721,7 @@ void LIRGenerator::visitWasmFence(MWasmFence* ins) {
   add(new (alloc()) LWasmFence, ins);
 }
 
-void LIRGenerator::visitWasmLoadObjectField(MWasmLoadObjectField* ins) {
+void LIRGenerator::visitWasmLoadField(MWasmLoadField* ins) {
   size_t offs = ins->offset();
   LAllocation obj = useRegister(ins->obj());
   if (ins->type() == MIRType::Int64) {
@@ -6731,40 +6731,38 @@ void LIRGenerator::visitWasmLoadObjectField(MWasmLoadObjectField* ins) {
   }
 }
 
-void LIRGenerator::visitWasmLoadObjectDataField(MWasmLoadObjectDataField* ins) {
+void LIRGenerator::visitWasmLoadFieldKA(MWasmLoadFieldKA* ins) {
   size_t offs = ins->offset();
-  LAllocation data = useRegister(ins->data());
+  LAllocation obj = useRegister(ins->obj());
   if (ins->type() == MIRType::Int64) {
-    defineInt64(new (alloc()) LWasmLoadSlotI64(data, offs), ins);
+    defineInt64(new (alloc()) LWasmLoadSlotI64(obj, offs), ins);
   } else {
-    define(new (alloc()) LWasmLoadSlot(data, offs, ins->type()), ins);
+    define(new (alloc()) LWasmLoadSlot(obj, offs, ins->type()), ins);
   }
-  add(new (alloc()) LKeepAliveObject(useKeepalive(ins->obj())), ins);
+  add(new (alloc()) LKeepAliveObject(useKeepalive(ins->ka())), ins);
 }
 
-void LIRGenerator::visitWasmStoreObjectDataField(
-    MWasmStoreObjectDataField* ins) {
+void LIRGenerator::visitWasmStoreFieldKA(MWasmStoreFieldKA* ins) {
   MDefinition* value = ins->value();
   size_t offs = ins->offset();
-  LAllocation data = useRegister(ins->data());
+  LAllocation obj = useRegister(ins->obj());
   LInstruction* lir;
   if (value->type() == MIRType::Int64) {
-    lir = new (alloc()) LWasmStoreSlotI64(useInt64Register(value), data, offs);
+    lir = new (alloc()) LWasmStoreSlotI64(useInt64Register(value), obj, offs);
   } else {
     lir = new (alloc())
-        LWasmStoreSlot(useRegister(value), data, offs, value->type());
+        LWasmStoreSlot(useRegister(value), obj, offs, value->type());
   }
   add(lir, ins);
-  add(new (alloc()) LKeepAliveObject(useKeepalive(ins->obj())), ins);
+  add(new (alloc()) LKeepAliveObject(useKeepalive(ins->ka())), ins);
 }
 
-void LIRGenerator::visitWasmStoreObjectDataRefField(
-    MWasmStoreObjectDataRefField* ins) {
+void LIRGenerator::visitWasmStoreFieldRefKA(MWasmStoreFieldRefKA* ins) {
   LAllocation instance = useRegister(ins->instance());
   LAllocation valueAddr = useFixed(ins->valueAddr(), PreBarrierReg);
   LAllocation value = useRegister(ins->value());
   add(new (alloc()) LWasmStoreRef(instance, valueAddr, value, temp()), ins);
-  add(new (alloc()) LKeepAliveObject(useKeepalive(ins->obj())), ins);
+  add(new (alloc()) LKeepAliveObject(useKeepalive(ins->ka())), ins);
 }
 
 #ifdef FUZZING_JS_FUZZILLI
