@@ -9,6 +9,7 @@ import android.app.PendingIntent
 import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.lib.crash.service.CrashTelemetryService
@@ -19,6 +20,7 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
@@ -408,7 +410,7 @@ class CrashReporterTest {
     }
 
     @Test
-    fun `CrashReporter forwards caught exception crashes to service`() {
+    fun `CrashReporter forwards caught exception crashes to service`() = runTestOnMain {
         val testMessage = "test_Message"
         val testData = hashMapOf("1" to "one", "2" to "two")
         val testCategory = "testing_category"
@@ -441,6 +443,7 @@ class CrashReporterTest {
                 context = testContext,
                 services = listOf(service),
                 shouldPrompt = CrashReporter.Prompt.NEVER,
+                scope = scope,
             ).install(testContext),
         )
 
@@ -453,6 +456,7 @@ class CrashReporterTest {
             testType,
         )
         reporter.recordCrashBreadcrumb(breadcrumb)
+        advanceUntilIdle()
 
         reporter.submitCaughtException(throwable).joinBlocking()
 
@@ -462,7 +466,7 @@ class CrashReporterTest {
     }
 
     @Test
-    fun `Caught exception with no stack trace should be reported as CrashReporterException`() {
+    fun `Caught exception with no stack trace should be reported as CrashReporterException`() = runTestOnMain {
         val testMessage = "test_Message"
         val testData = hashMapOf("1" to "one", "2" to "two")
         val testCategory = "testing_category"
@@ -495,6 +499,7 @@ class CrashReporterTest {
                 context = testContext,
                 services = listOf(service),
                 shouldPrompt = CrashReporter.Prompt.NEVER,
+                scope = scope,
             ).install(testContext),
         )
 
@@ -508,6 +513,7 @@ class CrashReporterTest {
             testType,
         )
         reporter.recordCrashBreadcrumb(breadcrumb)
+        advanceUntilIdle()
 
         reporter.submitCaughtException(throwable).joinBlocking()
 
@@ -726,7 +732,7 @@ class CrashReporterTest {
     }
 
     @Test
-    fun `Breadcrumbs stores only max number of breadcrumbs`() {
+    fun `Breadcrumbs stores only max number of breadcrumbs`() = runTestOnMain {
         val testMessage = "test_Message"
         val testData = hashMapOf("1" to "one", "2" to "two")
         val testCategory = "testing_category"
@@ -737,11 +743,13 @@ class CrashReporterTest {
             context = testContext,
             services = listOf(mock()),
             maxBreadCrumbs = 5,
+            scope = scope,
         )
 
         repeat(10) {
             crashReporter.recordCrashBreadcrumb(Breadcrumb(testMessage, testData, testCategory, testLevel, testType))
         }
+        advanceUntilIdle()
         assertEquals(crashReporter.crashBreadcrumbs.size, 5)
 
         crashReporter = CrashReporter(
@@ -752,11 +760,12 @@ class CrashReporterTest {
         repeat(15) {
             crashReporter.recordCrashBreadcrumb(Breadcrumb(testMessage, testData, testCategory, testLevel, testType))
         }
+        advanceUntilIdle()
         assertEquals(crashReporter.crashBreadcrumbs.size, 5)
     }
 
     @Test
-    fun `Breadcrumb priority queue stores the latest breadcrumbs`() {
+    fun `Breadcrumb priority queue stores the latest breadcrumbs`() = runTestOnMain {
         val testMessage = "test_Message"
         val testData = hashMapOf("1" to "one", "2" to "two")
         val testCategory = "testing_category"
@@ -767,6 +776,7 @@ class CrashReporterTest {
             context = testContext,
             services = listOf(mock()),
             maxBreadCrumbs = maxNum,
+            scope = scope,
         )
 
         repeat(maxNum) {
@@ -775,6 +785,7 @@ class CrashReporterTest {
             )
             sleep(10) /* make sure time elapsed */
         }
+        advanceUntilIdle()
 
         for (i in 0 until maxNum) {
             assertEquals(crashReporter.crashBreadcrumbs.elementAt(i).level, Breadcrumb.Level.CRITICAL)
@@ -792,6 +803,7 @@ class CrashReporterTest {
             )
             sleep(10) /* make sure time elapsed */
         }
+        advanceUntilIdle()
 
         for (i in 0 until maxNum) {
             assertEquals(crashReporter.crashBreadcrumbs.elementAt(i).level, Breadcrumb.Level.DEBUG)
@@ -805,7 +817,7 @@ class CrashReporterTest {
     }
 
     @Test
-    fun `Breadcrumb priority queue output list result is sorted by time`() {
+    fun `Breadcrumb priority queue output list result is sorted by time`() = runTestOnMain {
         val testMessage = "test_Message"
         val testData = hashMapOf("1" to "one", "2" to "two")
         val testCategory = "testing_category"
@@ -816,6 +828,7 @@ class CrashReporterTest {
             context = testContext,
             services = listOf(mock()),
             maxBreadCrumbs = 5,
+            scope = scope,
         )
 
         repeat(maxNum) {
@@ -824,6 +837,7 @@ class CrashReporterTest {
             )
             sleep(10) /* make sure time elapsed */
         }
+        advanceUntilIdle()
 
         var time = crashReporter.crashBreadcrumbs[0].date
         for (i in 1 until crashReporter.crashBreadcrumbs.size) {
@@ -837,6 +851,7 @@ class CrashReporterTest {
             )
             sleep(10) /* make sure time elapsed */
         }
+        advanceUntilIdle()
 
         time = crashReporter.crashBreadcrumbs[0].date
         for (i in 1 until crashReporter.crashBreadcrumbs.size) {
