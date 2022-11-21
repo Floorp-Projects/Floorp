@@ -5,9 +5,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.*
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
-import org.mozilla.fenix.helpers.RetryTestRule
+import org.mozilla.fenix.helpers.*
 import org.mozilla.fenix.ui.robots.homeScreen
 
 class NimbusEventTest {
@@ -43,9 +41,8 @@ class NimbusEventTest {
     fun homeScreenNimbusEventsTest() {
         homeScreen { }.dismissOnboarding()
 
-        homeScreen {
-            verifyHomeScreen()
-            Assert.assertTrue(evaluateAgainstNimbusTargetingHelper("'app_opened'|eventSum('Days', 28, 0) > 0"))
+        Experimentation.withHelper {
+            Assert.assertTrue(evalJexl("'app_opened'|eventSum('Days', 28, 0) > 0"))
         }
     }
 }
