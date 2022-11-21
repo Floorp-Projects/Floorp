@@ -13,12 +13,12 @@
             promiseEnableUnifiedExtensions
 */
 
-const promiseEnableUnifiedExtensions = async () => {
+const promiseEnableUnifiedExtensions = async (options = {}) => {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.unifiedExtensions.enabled", true]],
   });
 
-  return BrowserTestUtils.openNewBrowserWindow();
+  return BrowserTestUtils.openNewBrowserWindow(options);
 };
 
 const promiseDisableUnifiedExtensions = async () => {
@@ -127,7 +127,7 @@ const clickUnifiedExtensionsItem = async (
 let extensionsCreated = 0;
 const createExtensions = (
   arrayOfManifestData,
-  { useAddonManager = true } = {}
+  { useAddonManager = true, incognitoOverride } = {}
 ) => {
   return arrayOfManifestData.map(manifestData =>
     ExtensionTestUtils.loadExtension({
@@ -139,6 +139,7 @@ const createExtensions = (
         ...manifestData,
       },
       useAddonManager: useAddonManager ? "temporary" : undefined,
+      incognitoOverride,
     })
   );
 };
