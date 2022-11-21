@@ -2,15 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
 from __future__ import absolute_import
 
-from threading import Lock
 import codecs
 import locale
+from threading import Lock
 
-from mozlog.structuredlog import log_levels
 import six
 from mozlog.handlers.messagehandler import MessageHandler
+from mozlog.structuredlog import log_levels
 
 
 class BaseHandler(object):
@@ -77,12 +78,15 @@ class StreamHandler(BaseHandler):
         with self._lock:
             if six.PY3:
                 import io
+
                 import mozfile
 
                 source_enc = "utf-8"
                 target_enc = "utf-8"
                 if isinstance(self.stream, io.BytesIO):
-                    target_enc = self.stream.encoding
+                    target_enc = None
+                    if hasattr(self.stream, "encoding"):
+                        target_enc = self.stream.encoding
                 if target_enc is None:
                     target_enc = locale.getpreferredencoding()
 
