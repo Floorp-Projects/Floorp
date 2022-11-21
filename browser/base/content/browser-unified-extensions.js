@@ -173,6 +173,7 @@ customElements.define(
       }
 
       this.setAttribute("extension-id", this.addon.id);
+      this.classList.add("unified-extensions-item");
 
       // Note that the data-extensionid attribute is used by context menu handlers
       // to identify the extension being manipulated by the context menu.
