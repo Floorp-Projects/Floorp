@@ -1322,12 +1322,22 @@ describe("DiscoveryStreamFeed", () => {
     it("should return false from showSponsoredTopsites if user pref showSponsoredTopSites is false", async () => {
       feed.store.getState = () => ({
         Prefs: { values: { showSponsoredTopSites: false } },
+        DiscoveryStream: {
+          spocs: {
+            placements: [{ name: "sponsored-topsites" }],
+          },
+        },
       });
       assert.isFalse(feed.showSponsoredTopsites);
     });
     it("should return true from showSponsoredTopsites if user pref showSponsoredTopSites is true", async () => {
       feed.store.getState = () => ({
         Prefs: { values: { showSponsoredTopSites: true } },
+        DiscoveryStream: {
+          spocs: {
+            placements: [{ name: "sponsored-topsites" }],
+          },
+        },
       });
       assert.isTrue(feed.showSponsoredTopsites);
     });
@@ -1406,6 +1416,35 @@ describe("DiscoveryStreamFeed", () => {
   });
 
   describe("#clearSpocs", () => {
+    let defaultState;
+    let DiscoveryStream;
+    let Prefs;
+    beforeEach(() => {
+      Object.defineProperty(feed, "config", {
+        get: () => ({ show_spocs: true }),
+      });
+      DiscoveryStream = {
+        layout: [],
+        spocs: {
+          placements: [{ name: "sponsored-topsites" }],
+        },
+      };
+      Prefs = {
+        values: {
+          "feeds.section.topstories": true,
+          "feeds.system.topstories": true,
+          "feeds.topsites": true,
+          "feeds.system.topsites": true,
+          showSponsoredTopSites: true,
+          showSponsored: true,
+        },
+      };
+      defaultState = {
+        DiscoveryStream,
+        Prefs,
+      };
+      feed.store.getState = () => defaultState;
+    });
     it("should not fail with no endpoint", async () => {
       sandbox.stub(feed.store, "getState").returns({
         Prefs: {
@@ -1440,6 +1479,47 @@ describe("DiscoveryStreamFeed", () => {
         feed.fetchFromEndpoint.firstCall.args[1].body,
         '{"pocket_id":"1234"}'
       );
+    });
+    it("should properly call clearSpocs when sponsored content is changed", async () => {
+      sandbox.stub(feed, "clearSpocs").returns(Promise.resolve());
+      //sandbox.stub(feed, "updatePlacements").returns();
+      sandbox.stub(feed, "loadSpocs").returns();
+
+      await feed.onAction({
+        type: at.PREF_CHANGED,
+        data: { name: "showSponsored" },
+      });
+
+      assert.notCalled(feed.clearSpocs);
+
+      Prefs.values.showSponsoredTopSites = false;
+      Prefs.values.showSponsored = false;
+
+      await feed.onAction({
+        type: at.PREF_CHANGED,
+        data: { name: "showSponsored" },
+      });
+
+      assert.calledOnce(feed.clearSpocs);
+    });
+    it("should call clearSpocs when top stories and top sites is turned off", async () => {
+      sandbox.stub(feed, "clearSpocs").returns(Promise.resolve());
+      Prefs.values["feeds.section.topstories"] = false;
+      Prefs.values["feeds.topsites"] = false;
+
+      await feed.onAction({
+        type: at.PREF_CHANGED,
+        data: { name: "feeds.section.topstories" },
+      });
+
+      assert.calledOnce(feed.clearSpocs);
+
+      await feed.onAction({
+        type: at.PREF_CHANGED,
+        data: { name: "feeds.topsites" },
+      });
+
+      assert.calledTwice(feed.clearSpocs);
     });
   });
 
@@ -2530,26 +2610,6 @@ describe("DiscoveryStreamFeed", () => {
       });
 
       assert.calledOnce(feed.onCollectionsChanged);
-    });
-    it("should call clearSpocs when sponsored content is turned off", async () => {
-      sandbox.stub(feed, "clearSpocs").returns(Promise.resolve());
-
-      await feed.onAction({
-        type: at.PREF_CHANGED,
-        data: { name: "showSponsored", value: false },
-      });
-
-      assert.calledOnce(feed.clearSpocs);
-    });
-    it("should call clearSpocs when top stories is turned off", async () => {
-      sandbox.stub(feed, "clearSpocs").returns(Promise.resolve());
-
-      await feed.onAction({
-        type: at.PREF_CHANGED,
-        data: { name: "feeds.section.topstories", value: false },
-      });
-
-      assert.calledOnce(feed.clearSpocs);
     });
     it("should re enable stories when top stories is turned on", async () => {
       sandbox.stub(feed, "refreshAll").returns(Promise.resolve());
