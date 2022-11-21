@@ -101,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.1.20';
+    const workerVersion = '3.1.22';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -445,6 +445,7 @@ class WorkerMessageHandler {
             return stream.bytes;
           }
         }
+        const needAppearances = acroFormRef && acroForm instanceof _primitives.Dict && newRefs.some(ref => ref.needAppearances);
         const xfa = acroForm instanceof _primitives.Dict && acroForm.get("XFA") || null;
         let xfaDatasetsRef = null;
         let hasXfaDatasetsEntry = false;
@@ -452,15 +453,13 @@ class WorkerMessageHandler {
           for (let i = 0, ii = xfa.length; i < ii; i += 2) {
             if (xfa[i] === "datasets") {
               xfaDatasetsRef = xfa[i + 1];
-              acroFormRef = null;
               hasXfaDatasetsEntry = true;
             }
           }
           if (xfaDatasetsRef === null) {
-            xfaDatasetsRef = xref.getNewRef();
+            xfaDatasetsRef = xref.getNewTemporaryRef();
           }
         } else if (xfa) {
-          acroFormRef = null;
           (0, _util.warn)("Unsupported XFA type.");
         }
         let newXrefInfo = Object.create(null);
@@ -477,7 +476,7 @@ class WorkerMessageHandler {
           newXrefInfo = {
             rootRef: xref.trailer.getRaw("Root") || null,
             encryptRef: xref.trailer.getRaw("Encrypt") || null,
-            newRef: xref.getNewRef(),
+            newRef: xref.getNewTemporaryRef(),
             infoRef: xref.trailer.getRaw("Info") || null,
             info: infoObj,
             fileIds: xref.trailer.get("ID") || null,
@@ -485,19 +484,23 @@ class WorkerMessageHandler {
             filename
           };
         }
-        xref.resetNewRef();
-        return (0, _writer.incrementalUpdate)({
-          originalData: stream.bytes,
-          xrefInfo: newXrefInfo,
-          newRefs,
-          xref,
-          hasXfa: !!xfa,
-          xfaDatasetsRef,
-          hasXfaDatasetsEntry,
-          acroFormRef,
-          acroForm,
-          xfaData
-        });
+        try {
+          return (0, _writer.incrementalUpdate)({
+            originalData: stream.bytes,
+            xrefInfo: newXrefInfo,
+            newRefs,
+            xref,
+            hasXfa: !!xfa,
+            xfaDatasetsRef,
+            hasXfaDatasetsEntry,
+            needAppearances,
+            acroFormRef,
+            acroForm,
+            xfaData
+          });
+        } finally {
+          xref.resetNewTemporaryRef();
+        }
       });
     });
     handler.on("GetOperatorList", function wphSetupRenderPage(data, sink) {
@@ -618,7 +621,7 @@ if (typeof window === "undefined" && !_is_node.isNodeJS && typeof self !== "unde
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.VerbosityLevel = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.UNSUPPORTED_FEATURES = exports.TextRenderingMode = exports.StreamType = exports.RenderingIntentFlag = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.LINE_FACTOR = exports.LINE_DESCENT_FACTOR = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FontType = exports.FeatureTest = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMode = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationEditorType = exports.AnnotationEditorPrefix = exports.AnnotationEditorParamsType = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
+exports.VerbosityLevel = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.UNSUPPORTED_FEATURES = exports.TextRenderingMode = exports.StreamType = exports.RenderingIntentFlag = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.LINE_FACTOR = exports.LINE_DESCENT_FACTOR = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FontType = exports.FeatureTest = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.BASELINE_FACTOR = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMode = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationEditorType = exports.AnnotationEditorPrefix = exports.AnnotationEditorParamsType = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
 exports.arrayByteLength = arrayByteLength;
 exports.arraysToBytes = arraysToBytes;
 exports.assert = assert;
@@ -653,10 +656,13 @@ const LINE_FACTOR = 1.35;
 exports.LINE_FACTOR = LINE_FACTOR;
 const LINE_DESCENT_FACTOR = 0.35;
 exports.LINE_DESCENT_FACTOR = LINE_DESCENT_FACTOR;
+const BASELINE_FACTOR = LINE_DESCENT_FACTOR / LINE_FACTOR;
+exports.BASELINE_FACTOR = BASELINE_FACTOR;
 const RenderingIntentFlag = {
   ANY: 0x01,
   DISPLAY: 0x02,
   PRINT: 0x04,
+  SAVE: 0x08,
   ANNOTATIONS_FORMS: 0x10,
   ANNOTATIONS_STORAGE: 0x20,
   ANNOTATIONS_DISABLE: 0x40,
@@ -1794,6 +1800,7 @@ exports.getArrayLookupTableFactory = getArrayLookupTableFactory;
 exports.getInheritableProperty = getInheritableProperty;
 exports.getLookupTableFactory = getLookupTableFactory;
 exports.getNewAnnotationsMap = getNewAnnotationsMap;
+exports.getRotationMatrix = getRotationMatrix;
 exports.isWhiteSpace = isWhiteSpace;
 exports.log2 = log2;
 exports.numberToString = numberToString;
@@ -1802,6 +1809,8 @@ exports.readInt8 = readInt8;
 exports.readUint16 = readUint16;
 exports.readUint32 = readUint32;
 exports.recoverJsURL = recoverJsURL;
+exports.stringToUTF16HexString = stringToUTF16HexString;
+exports.stringToUTF16String = stringToUTF16String;
 exports.toRomanNumerals = toRomanNumerals;
 exports.validateCSSFont = validateCSSFont;
 var _util = __w_pdfjs_require__(2);
@@ -2193,6 +2202,34 @@ function getNewAnnotationsMap(annotationStorage) {
     annotations.push(value);
   }
   return newAnnotationsByPage.size > 0 ? newAnnotationsByPage : null;
+}
+function stringToUTF16HexString(str) {
+  const buf = [];
+  for (let i = 0, ii = str.length; i < ii; i++) {
+    const char = str.charCodeAt(i);
+    buf.push((char >> 8 & 0xff).toString(16).padStart(2, "0"), (char & 0xff).toString(16).padStart(2, "0"));
+  }
+  return buf.join("");
+}
+function stringToUTF16String(str) {
+  const buf = [];
+  for (let i = 0, ii = str.length; i < ii; i++) {
+    const char = str.charCodeAt(i);
+    buf.push(String.fromCharCode(char >> 8 & 0xff), String.fromCharCode(char & 0xff));
+  }
+  return buf.join("");
+}
+function getRotationMatrix(rotation, width, height) {
+  switch (rotation) {
+    case 90:
+      return [0, 1, -1, 0, width, 0];
+    case 180:
+      return [-1, 0, 0, -1, width, height];
+    case 270:
+      return [0, -1, 1, 0, 0, height];
+    default:
+      throw new Error("Invalid rotation");
+  }
 }
 
 /***/ }),
@@ -4285,7 +4322,8 @@ class AnnotationFactory {
       xfaDatasets,
       collectFields,
       needAppearances: !collectFields && acroFormDict.get("NeedAppearances") === true,
-      pageIndex
+      pageIndex,
+      isOffscreenCanvasSupported: _util.FeatureTest.isOffscreenCanvasSupported && pdfManager.evaluatorOptions.isOffscreenCanvasSupported
     };
     switch (subtype) {
       case "Link":
@@ -4383,7 +4421,7 @@ class AnnotationFactory {
             baseFont.set("Subtype", _primitives.Name.get("Type1"));
             baseFont.set("Encoding", _primitives.Name.get("WinAnsiEncoding"));
             const buffer = [];
-            baseFontRef = xref.getNewRef();
+            baseFontRef = xref.getNewTemporaryRef();
             (0, _writer.writeObject)(baseFontRef, baseFont, buffer, null);
             dependencies.push({
               ref: baseFontRef,
@@ -4411,16 +4449,20 @@ class AnnotationFactory {
     }
     const xref = evaluator.xref;
     const promises = [];
+    const isOffscreenCanvasSupported = _util.FeatureTest.isOffscreenCanvasSupported && evaluator.options.isOffscreenCanvasSupported;
     for (const annotation of annotations) {
       switch (annotation.annotationType) {
         case _util.AnnotationEditorType.FREETEXT:
           promises.push(FreeTextAnnotation.createNewPrintAnnotation(xref, annotation, {
             evaluator,
-            task
+            task,
+            isOffscreenCanvasSupported
           }));
           break;
         case _util.AnnotationEditorType.INK:
-          promises.push(InkAnnotation.createNewPrintAnnotation(xref, annotation));
+          promises.push(InkAnnotation.createNewPrintAnnotation(xref, annotation, {
+            isOffscreenCanvasSupported
+          }));
           break;
       }
     }
@@ -4549,6 +4591,7 @@ class Annotation {
       this.data.fieldName = this._constructFieldName(dict);
       this.data.pageIndex = params.pageIndex;
     }
+    this._isOffscreenCanvasSupported = params.isOffscreenCanvasSupported;
     this._fallbackFontDict = null;
     this._needAppearances = false;
   }
@@ -4600,6 +4643,14 @@ class Annotation {
       str,
       dir
     };
+  }
+  setDefaultAppearance(params) {
+    const defaultAppearance = (0, _core_utils.getInheritableProperty)({
+      dict: params.dict,
+      key: "DA"
+    }) || params.acroForm.get("DA");
+    this._defaultAppearance = typeof defaultAppearance === "string" ? defaultAppearance : "";
+    this.data.defaultAppearanceData = (0, _default_appearance.parseDefaultAppearance)(this._defaultAppearance);
   }
   setTitle(title) {
     this._title = this._parseStringHelper(title);
@@ -5101,21 +5152,26 @@ class MarkupAnnotation extends Annotation {
     this._streams.push(this.appearance, appearanceStream);
   }
   static async createNewAnnotation(xref, annotation, dependencies, params) {
-    const annotationRef = xref.getNewRef();
-    const apRef = xref.getNewRef();
-    const annotationDict = this.createNewDict(annotation, xref, {
-      apRef
-    });
+    const annotationRef = xref.getNewTemporaryRef();
     const ap = await this.createNewAppearanceStream(annotation, xref, params);
     const buffer = [];
-    let transform = xref.encrypt ? xref.encrypt.createCipherTransform(apRef.num, apRef.gen) : null;
-    (0, _writer.writeObject)(apRef, ap, buffer, transform);
-    dependencies.push({
-      ref: apRef,
-      data: buffer.join("")
-    });
+    let annotationDict;
+    if (ap) {
+      const apRef = xref.getNewTemporaryRef();
+      annotationDict = this.createNewDict(annotation, xref, {
+        apRef
+      });
+      const transform = xref.encrypt ? xref.encrypt.createCipherTransform(apRef.num, apRef.gen) : null;
+      (0, _writer.writeObject)(apRef, ap, buffer, transform);
+      dependencies.push({
+        ref: apRef,
+        data: buffer.join("")
+      });
+    } else {
+      annotationDict = this.createNewDict(annotation, xref, {});
+    }
     buffer.length = 0;
-    transform = xref.encrypt ? xref.encrypt.createCipherTransform(annotationRef.num, annotationRef.gen) : null;
+    const transform = xref.encrypt ? xref.encrypt.createCipherTransform(annotationRef.num, annotationRef.gen) : null;
     (0, _writer.writeObject)(annotationRef, annotationDict, buffer, transform);
     return {
       ref: annotationRef,
@@ -5129,7 +5185,8 @@ class MarkupAnnotation extends Annotation {
     });
     return new this.prototype.constructor({
       dict: annotationDict,
-      xref
+      xref,
+      isOffscreenCanvasSupported: params.isOffscreenCanvasSupported
     });
   }
 }
@@ -5171,12 +5228,7 @@ class WidgetAnnotation extends Annotation {
       data.fieldValue = data.defaultFieldValue;
     }
     data.alternativeText = (0, _util.stringToPDFString)(dict.get("TU") || "");
-    const defaultAppearance = (0, _core_utils.getInheritableProperty)({
-      dict,
-      key: "DA"
-    }) || params.acroForm.get("DA");
-    this._defaultAppearance = typeof defaultAppearance === "string" ? defaultAppearance : "";
-    data.defaultAppearanceData = (0, _default_appearance.parseDefaultAppearance)(this._defaultAppearance);
+    this.setDefaultAppearance(params);
     data.hasAppearance = this._needAppearances && data.fieldValue !== undefined && data.fieldValue !== null || data.hasAppearance;
     const fieldType = (0, _core_utils.getInheritableProperty)({
       dict,
@@ -5223,18 +5275,6 @@ class WidgetAnnotation extends Annotation {
   hasFieldFlag(flag) {
     return !!(this.data.fieldFlags & flag);
   }
-  static _getRotationMatrix(rotation, width, height) {
-    switch (rotation) {
-      case 90:
-        return [0, 1, -1, 0, width, 0];
-      case 180:
-        return [-1, 0, 0, -1, width, height];
-      case 270:
-        return [0, -1, 1, 0, 0, height];
-      default:
-        throw new Error("Invalid rotation");
-    }
-  }
   getRotationMatrix(annotationStorage) {
     const storageEntry = annotationStorage ? annotationStorage.get(this.data.id) : undefined;
     let rotation = storageEntry && storageEntry.rotation;
@@ -5246,7 +5286,7 @@ class WidgetAnnotation extends Annotation {
     }
     const width = this.data.rect[2] - this.data.rect[0];
     const height = this.data.rect[3] - this.data.rect[1];
-    return WidgetAnnotation._getRotationMatrix(rotation, width, height);
+    return (0, _core_utils.getRotationMatrix)(rotation, width, height);
   }
   getBorderAndBackgroundAppearances(annotationStorage) {
     const storageEntry = annotationStorage ? annotationStorage.get(this.data.id) : undefined;
@@ -5281,7 +5321,7 @@ class WidgetAnnotation extends Annotation {
     if (!this._hasText) {
       return super.getOperatorList(evaluator, task, intent, renderForms, annotationStorage);
     }
-    const content = await this._getAppearance(evaluator, task, annotationStorage);
+    const content = await this._getAppearance(evaluator, task, intent, annotationStorage);
     if (this.appearance && content === null) {
       return super.getOperatorList(evaluator, task, intent, renderForms, annotationStorage);
     }
@@ -5350,67 +5390,86 @@ class WidgetAnnotation extends Annotation {
     if (rotation === undefined) {
       rotation = this.rotation;
     }
-    let appearance = await this._getAppearance(evaluator, task, annotationStorage);
-    if (appearance === null) {
-      return null;
+    let appearance = null;
+    if (!this._needAppearances) {
+      appearance = await this._getAppearance(evaluator, task, _util.RenderingIntentFlag.SAVE, annotationStorage);
+      if (appearance === null) {
+        return null;
+      }
+    } else {}
+    let needAppearances = false;
+    if (appearance && appearance.needAppearances) {
+      needAppearances = true;
+      appearance = null;
     }
     const {
       xref
     } = evaluator;
-    const dict = xref.fetchIfRef(this.ref);
-    if (!(dict instanceof _primitives.Dict)) {
+    const originalDict = xref.fetchIfRef(this.ref);
+    if (!(originalDict instanceof _primitives.Dict)) {
       return null;
     }
-    const bbox = [0, 0, this.data.rect[2] - this.data.rect[0], this.data.rect[3] - this.data.rect[1]];
+    const dict = new _primitives.Dict(xref);
+    for (const key of originalDict.getKeys()) {
+      if (key !== "AP") {
+        dict.set(key, originalDict.getRaw(key));
+      }
+    }
     const xfa = {
       path: (0, _util.stringToPDFString)(dict.get("T") || ""),
       value
     };
-    const newRef = xref.getNewRef();
-    const AP = new _primitives.Dict(xref);
-    AP.set("N", newRef);
-    const encrypt = xref.encrypt;
-    let originalTransform = null;
-    let newTransform = null;
-    if (encrypt) {
-      originalTransform = encrypt.createCipherTransform(this.ref.num, this.ref.gen);
-      newTransform = encrypt.createCipherTransform(newRef.num, newRef.gen);
-      appearance = newTransform.encryptString(appearance);
-    }
     const encoder = val => (0, _util.isAscii)(val) ? val : (0, _util.stringToUTF16BEString)(val);
     dict.set("V", Array.isArray(value) ? value.map(encoder) : encoder(value));
-    dict.set("AP", AP);
-    dict.set("M", `D:${(0, _util.getModificationDate)()}`);
     const maybeMK = this._getMKDict(rotation);
     if (maybeMK) {
       dict.set("MK", maybeMK);
     }
-    const appearanceDict = new _primitives.Dict(xref);
-    appearanceDict.set("Length", appearance.length);
-    appearanceDict.set("Subtype", _primitives.Name.get("Form"));
-    appearanceDict.set("Resources", this._getSaveFieldResources(xref));
-    appearanceDict.set("BBox", bbox);
-    const rotationMatrix = this.getRotationMatrix(annotationStorage);
-    if (rotationMatrix !== _util.IDENTITY_MATRIX) {
-      appearanceDict.set("Matrix", rotationMatrix);
-    }
-    const bufferOriginal = [`${this.ref.num} ${this.ref.gen} obj\n`];
-    (0, _writer.writeDict)(dict, bufferOriginal, originalTransform);
-    bufferOriginal.push("\nendobj\n");
-    const bufferNew = [`${newRef.num} ${newRef.gen} obj\n`];
-    (0, _writer.writeDict)(appearanceDict, bufferNew, newTransform);
-    bufferNew.push(" stream\n", appearance, "\nendstream\nendobj\n");
-    return [{
+    const encrypt = xref.encrypt;
+    const originalTransform = encrypt ? encrypt.createCipherTransform(this.ref.num, this.ref.gen) : null;
+    const buffer = [];
+    const changes = [{
       ref: this.ref,
-      data: bufferOriginal.join(""),
-      xfa
-    }, {
-      ref: newRef,
-      data: bufferNew.join(""),
-      xfa: null
+      data: "",
+      xfa,
+      needAppearances
     }];
+    if (appearance !== null) {
+      const newRef = xref.getNewTemporaryRef();
+      const AP = new _primitives.Dict(xref);
+      dict.set("AP", AP);
+      AP.set("N", newRef);
+      let newTransform = null;
+      if (encrypt) {
+        newTransform = encrypt.createCipherTransform(newRef.num, newRef.gen);
+        appearance = newTransform.encryptString(appearance);
+      }
+      const resources = this._getSaveFieldResources(xref);
+      const appearanceStream = new _stream.StringStream(appearance);
+      const appearanceDict = appearanceStream.dict = new _primitives.Dict(xref);
+      appearanceDict.set("Length", appearance.length);
+      appearanceDict.set("Subtype", _primitives.Name.get("Form"));
+      appearanceDict.set("Resources", resources);
+      appearanceDict.set("BBox", [0, 0, this.data.rect[2] - this.data.rect[0], this.data.rect[3] - this.data.rect[1]]);
+      const rotationMatrix = this.getRotationMatrix(annotationStorage);
+      if (rotationMatrix !== _util.IDENTITY_MATRIX) {
+        appearanceDict.set("Matrix", rotationMatrix);
+      }
+      (0, _writer.writeObject)(newRef, appearanceStream, buffer, newTransform);
+      changes.push({
+        ref: newRef,
+        data: buffer.join(""),
+        xfa: null,
+        needAppearances: false
+      });
+      buffer.length = 0;
+    }
+    dict.set("M", `D:${(0, _util.getModificationDate)()}`);
+    (0, _writer.writeObject)(this.ref, dict, buffer, originalTransform);
+    changes[0].data = buffer.join("");
+    return changes;
   }
-  async _getAppearance(evaluator, task, annotationStorage) {
+  async _getAppearance(evaluator, task, intent, annotationStorage) {
     const isPassword = this.hasFieldFlag(_util.AnnotationFieldFlag.PASSWORD);
     if (isPassword) {
       return null;
@@ -5445,11 +5504,15 @@ class WidgetAnnotation extends Annotation {
       rotation = this.rotation;
     }
     let lineCount = -1;
+    let lines;
     if (this.data.multiLine) {
-      lineCount = value.split(/\r\n|\r|\n/).length;
+      lines = value.split(/\r\n?|\n/).map(line => line.normalize("NFC"));
+      lineCount = lines.length;
+    } else {
+      lines = [value.replace(/\r\n?|\n/, "").normalize("NFC")];
     }
-    const defaultPadding = 2;
-    const hPadding = defaultPadding;
+    const defaultPadding = 1;
+    const defaultHPadding = 2;
     let totalHeight = this.data.rect[3] - this.data.rect[1];
     let totalWidth = this.data.rect[2] - this.data.rect[0];
     if (rotation === 90 || rotation === 270) {
@@ -5458,26 +5521,76 @@ class WidgetAnnotation extends Annotation {
     if (!this._defaultAppearance) {
       this.data.defaultAppearanceData = (0, _default_appearance.parseDefaultAppearance)(this._defaultAppearance = "/Helvetica 0 Tf 0 g");
     }
-    const font = await WidgetAnnotation._getFontData(evaluator, task, this.data.defaultAppearanceData, this._fieldResources.mergedResources);
-    const [defaultAppearance, fontSize] = this._computeFontSize(totalHeight - defaultPadding, totalWidth - 2 * hPadding, value, font, lineCount);
+    let font = await WidgetAnnotation._getFontData(evaluator, task, this.data.defaultAppearanceData, this._fieldResources.mergedResources);
+    let defaultAppearance, fontSize, lineHeight;
+    const encodedLines = [];
+    let encodingError = false;
+    for (const line of lines) {
+      const encodedString = font.encodeString(line);
+      if (encodedString.length > 1) {
+        encodingError = true;
+      }
+      encodedLines.push(encodedString.join(""));
+    }
+    if (encodingError && intent & _util.RenderingIntentFlag.SAVE) {
+      return {
+        needAppearances: true
+      };
+    }
+    if (encodingError && this._isOffscreenCanvasSupported) {
+      const fontFamily = this.data.comb ? "monospace" : "sans-serif";
+      const fakeUnicodeFont = new _default_appearance.FakeUnicodeFont(evaluator.xref, fontFamily);
+      const resources = fakeUnicodeFont.createFontResources(lines.join(""));
+      const newFont = resources.getRaw("Font");
+      if (this._fieldResources.mergedResources.has("Font")) {
+        const oldFont = this._fieldResources.mergedResources.get("Font");
+        for (const key of newFont.getKeys()) {
+          oldFont.set(key, newFont.getRaw(key));
+        }
+      } else {
+        this._fieldResources.mergedResources.set("Font", newFont);
+      }
+      const fontName = fakeUnicodeFont.fontName.name;
+      font = await WidgetAnnotation._getFontData(evaluator, task, {
+        fontName,
+        fontSize: 0
+      }, resources);
+      for (let i = 0, ii = encodedLines.length; i < ii; i++) {
+        encodedLines[i] = (0, _core_utils.stringToUTF16String)(lines[i]);
+      }
+      const savedDefaultAppearance = Object.assign(Object.create(null), this.data.defaultAppearanceData);
+      this.data.defaultAppearanceData.fontSize = 0;
+      this.data.defaultAppearanceData.fontName = fontName;
+      [defaultAppearance, fontSize, lineHeight] = this._computeFontSize(totalHeight - 2 * defaultPadding, totalWidth - 2 * defaultHPadding, value, font, lineCount);
+      this.data.defaultAppearanceData = savedDefaultAppearance;
+    } else {
+      if (!this._isOffscreenCanvasSupported) {
+        (0, _util.warn)("_getAppearance: OffscreenCanvas is not supported, annotation may not render correctly.");
+      }
+      [defaultAppearance, fontSize, lineHeight] = this._computeFontSize(totalHeight - 2 * defaultPadding, totalWidth - 2 * defaultHPadding, value, font, lineCount);
+    }
     let descent = font.descent;
     if (isNaN(descent)) {
-      descent = 0;
+      descent = _util.BASELINE_FACTOR * lineHeight;
+    } else {
+      descent = Math.max(_util.BASELINE_FACTOR * lineHeight, Math.abs(descent) * fontSize);
     }
     const defaultVPadding = Math.min(Math.floor((totalHeight - fontSize) / 2), defaultPadding);
-    const vPadding = defaultVPadding + Math.abs(descent) * fontSize;
     const alignment = this.data.textAlignment;
     if (this.data.multiLine) {
-      return this._getMultilineAppearance(defaultAppearance, value, font, fontSize, totalWidth, totalHeight, alignment, hPadding, vPadding, annotationStorage);
+      return this._getMultilineAppearance(defaultAppearance, encodedLines, font, fontSize, totalWidth, totalHeight, alignment, defaultHPadding, defaultVPadding, descent, lineHeight, annotationStorage);
     }
-    const encodedString = font.encodeString(value).join("");
     if (this.data.comb) {
-      return this._getCombAppearance(defaultAppearance, font, encodedString, totalWidth, hPadding, vPadding, annotationStorage);
+      return this._getCombAppearance(defaultAppearance, font, encodedLines[0], fontSize, totalWidth, totalHeight, defaultHPadding, defaultVPadding, descent, lineHeight, annotationStorage);
     }
+    const bottomPadding = defaultVPadding + descent;
     if (alignment === 0 || alignment > 2) {
-      return `/Tx BMC q ${colors}BT ` + defaultAppearance + ` 1 0 0 1 ${hPadding} ${vPadding} Tm (${(0, _util.escapeString)(encodedString)}) Tj` + " ET Q EMC";
+      return `/Tx BMC q ${colors}BT ` + defaultAppearance + ` 1 0 0 1 ${(0, _core_utils.numberToString)(defaultHPadding)} ${(0, _core_utils.numberToString)(bottomPadding)} Tm (${(0, _util.escapeString)(encodedLines[0])}) Tj` + " ET Q EMC";
     }
-    const renderedText = this._renderText(encodedString, font, fontSize, totalWidth, alignment, hPadding, vPadding);
+    const prevInfo = {
+      shift: 0
+    };
+    const renderedText = this._renderText(encodedLines[0], font, fontSize, totalWidth, alignment, prevInfo, defaultHPadding, bottomPadding);
     return `/Tx BMC q ${colors}BT ` + defaultAppearance + ` 1 0 0 1 0 0 Tm ${renderedText}` + " ET Q EMC";
   }
   static async _getFontData(evaluator, task, appearanceData, resources) {
@@ -5502,11 +5615,14 @@ class WidgetAnnotation extends Annotation {
     let {
       fontSize
     } = this.data.defaultAppearanceData;
+    let lineHeight = (fontSize || 12) * _util.LINE_FACTOR,
+      numberOfLines = Math.round(height / lineHeight);
     if (!fontSize) {
       const roundWithTwoDigits = x => Math.floor(x * 100) / 100;
       if (lineCount === -1) {
         const textWidth = this._getTextWidth(text, font);
-        fontSize = roundWithTwoDigits(Math.min(height / _util.LINE_FACTOR, width / textWidth));
+        fontSize = roundWithTwoDigits(Math.min(height / _util.LINE_FACTOR, textWidth > width ? width / textWidth : Infinity));
+        numberOfLines = 1;
       } else {
         const lines = text.split(/\r\n?|\n/);
         const cachedLines = [];
@@ -5531,9 +5647,6 @@ class WidgetAnnotation extends Annotation {
           }
           return false;
         };
-        fontSize = 12;
-        let lineHeight = fontSize * _util.LINE_FACTOR;
-        let numberOfLines = Math.round(height / lineHeight);
         numberOfLines = Math.max(numberOfLines, lineCount);
         while (true) {
           lineHeight = height / numberOfLines;
@@ -5555,9 +5668,9 @@ class WidgetAnnotation extends Annotation {
         fontColor
       });
     }
-    return [this._defaultAppearance, fontSize];
+    return [this._defaultAppearance, fontSize, height / numberOfLines];
   }
-  _renderText(text, font, fontSize, totalWidth, alignment, hPadding, vPadding) {
+  _renderText(text, font, fontSize, totalWidth, alignment, prevInfo, hPadding, vPadding) {
     let shift;
     if (alignment === 1) {
       const width = this._getTextWidth(text, font) * fontSize;
@@ -5568,9 +5681,10 @@ class WidgetAnnotation extends Annotation {
     } else {
       shift = hPadding;
     }
-    shift = (0, _core_utils.numberToString)(shift);
+    const shiftStr = (0, _core_utils.numberToString)(shift - prevInfo.shift);
+    prevInfo.shift = shift;
     vPadding = (0, _core_utils.numberToString)(vPadding);
-    return `${shift} ${vPadding} Td (${(0, _util.escapeString)(text)}) Tj`;
+    return `${shiftStr} ${vPadding} Td (${(0, _util.escapeString)(text)}) Tj`;
   }
   _getSaveFieldResources(xref) {
     const {
@@ -5638,34 +5752,38 @@ class TextWidgetAnnotation extends WidgetAnnotation {
     this.data.comb = this.hasFieldFlag(_util.AnnotationFieldFlag.COMB) && !this.hasFieldFlag(_util.AnnotationFieldFlag.MULTILINE) && !this.hasFieldFlag(_util.AnnotationFieldFlag.PASSWORD) && !this.hasFieldFlag(_util.AnnotationFieldFlag.FILESELECT) && this.data.maxLen !== 0;
     this.data.doNotScroll = this.hasFieldFlag(_util.AnnotationFieldFlag.DONOTSCROLL);
   }
-  _getCombAppearance(defaultAppearance, font, text, width, hPadding, vPadding, annotationStorage) {
-    const combWidth = (0, _core_utils.numberToString)(width / this.data.maxLen);
+  _getCombAppearance(defaultAppearance, font, text, fontSize, width, height, hPadding, vPadding, descent, lineHeight, annotationStorage) {
+    const combWidth = width / this.data.maxLen;
+    const colors = this.getBorderAndBackgroundAppearances(annotationStorage);
     const buf = [];
     const positions = font.getCharPositions(text);
     for (const [start, end] of positions) {
       buf.push(`(${(0, _util.escapeString)(text.substring(start, end))}) Tj`);
     }
-    const colors = this.getBorderAndBackgroundAppearances(annotationStorage);
-    const renderedComb = buf.join(` ${combWidth} 0 Td `);
-    return `/Tx BMC q ${colors}BT ` + defaultAppearance + ` 1 0 0 1 ${hPadding} ${vPadding} Tm ${renderedComb}` + " ET Q EMC";
+    const renderedComb = buf.join(` ${(0, _core_utils.numberToString)(combWidth)} 0 Td `);
+    return `/Tx BMC q ${colors}BT ` + defaultAppearance + ` 1 0 0 1 ${(0, _core_utils.numberToString)(hPadding)} ${(0, _core_utils.numberToString)(vPadding + descent)} Tm ${renderedComb}` + " ET Q EMC";
   }
-  _getMultilineAppearance(defaultAppearance, text, font, fontSize, width, height, alignment, hPadding, vPadding, annotationStorage) {
-    const lines = text.split(/\r\n?|\n/);
+  _getMultilineAppearance(defaultAppearance, lines, font, fontSize, width, height, alignment, hPadding, vPadding, descent, lineHeight, annotationStorage) {
     const buf = [];
     const totalWidth = width - 2 * hPadding;
-    for (const line of lines) {
+    const prevInfo = {
+      shift: 0
+    };
+    for (let i = 0, ii = lines.length; i < ii; i++) {
+      const line = lines[i];
       const chunks = this._splitLine(line, font, fontSize, totalWidth);
-      for (const chunk of chunks) {
-        const padding = buf.length === 0 ? hPadding : 0;
-        buf.push(this._renderText(chunk, font, fontSize, width, alignment, padding, -fontSize));
+      for (let j = 0, jj = chunks.length; j < jj; j++) {
+        const chunk = chunks[j];
+        const vShift = i === 0 && j === 0 ? -vPadding - (lineHeight - descent) : -lineHeight;
+        buf.push(this._renderText(chunk, font, fontSize, width, alignment, prevInfo, hPadding, vShift));
       }
     }
-    const renderedText = buf.join("\n");
     const colors = this.getBorderAndBackgroundAppearances(annotationStorage);
-    return `/Tx BMC q ${colors}BT ` + defaultAppearance + ` 1 0 0 1 0 ${height} Tm ${renderedText}` + " ET Q EMC";
+    const renderedText = buf.join("\n");
+    return `/Tx BMC q ${colors}BT ` + defaultAppearance + ` 1 0 0 1 0 ${(0, _core_utils.numberToString)(height)} Tm ${renderedText}` + " ET Q EMC";
   }
   _splitLine(line, font, fontSize, width, cache = {}) {
-    line = cache.line || font.encodeString(line).join("");
+    line = cache.line || line;
     const glyphs = cache.glyphs || font.charsToGlyphs(line);
     if (glyphs.length <= 1) {
       return [line];
@@ -6159,9 +6277,9 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
       type
     };
   }
-  async _getAppearance(evaluator, task, annotationStorage) {
+  async _getAppearance(evaluator, task, intent, annotationStorage) {
     if (this.data.combo) {
-      return super._getAppearance(evaluator, task, annotationStorage);
+      return super._getAppearance(evaluator, task, intent, annotationStorage);
     }
     let exportedValue, rotation;
     const storageEntry = annotationStorage ? annotationStorage.get(this.data.id) : undefined;
@@ -6177,8 +6295,8 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
     } else if (!Array.isArray(exportedValue)) {
       exportedValue = [exportedValue];
     }
-    const defaultPadding = 2;
-    const hPadding = defaultPadding;
+    const defaultPadding = 1;
+    const defaultHPadding = 2;
     let totalHeight = this.data.rect[3] - this.data.rect[1];
     let totalWidth = this.data.rect[2] - this.data.rect[0];
     if (rotation === 90 || rotation === 270) {
@@ -6215,7 +6333,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
           value = displayValue;
         }
       }
-      [defaultAppearance, fontSize] = this._computeFontSize(lineHeight, totalWidth - 2 * hPadding, value, font, -1);
+      [defaultAppearance, fontSize] = this._computeFontSize(lineHeight, totalWidth - 2 * defaultHPadding, value, font, -1);
     } else {
       defaultAppearance = this._defaultAppearance;
     }
@@ -6241,13 +6359,15 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
       }
     }
     buf.push("BT", defaultAppearance, `1 0 0 1 0 ${totalHeight} Tm`);
+    const prevInfo = {
+      shift: 0
+    };
     for (let i = firstIndex; i < end; i++) {
       const {
         displayValue
       } = this.data.options[i];
-      const hpadding = i === firstIndex ? hPadding : 0;
       const vpadding = i === firstIndex ? vPadding : 0;
-      buf.push(this._renderText(displayValue, font, fontSize, totalWidth, 0, hpadding, -lineHeight + vpadding));
+      buf.push(this._renderText(displayValue, font, fontSize, totalWidth, 0, prevInfo, defaultHPadding, -lineHeight + vpadding));
     }
     buf.push("ET Q EMC");
     return buf.join("\n");
@@ -6361,6 +6481,15 @@ class FreeTextAnnotation extends MarkupAnnotation {
   constructor(parameters) {
     super(parameters);
     this.data.annotationType = _util.AnnotationType.FREETEXT;
+    this.setDefaultAppearance(parameters);
+    if (!this.appearance && this._isOffscreenCanvasSupported) {
+      const fakeUnicodeFont = new _default_appearance.FakeUnicodeFont(parameters.xref, "sans-serif");
+      const fontData = this.data.defaultAppearanceData;
+      this.appearance = fakeUnicodeFont.createAppearance(this._contents.str, this.rectangle, this.rotation, fontData.fontSize || 10, fontData.fontColor);
+      this._streams.push(this.appearance, _default_appearance.FakeUnicodeFont.toUnicodeStream);
+    } else if (!this._isOffscreenCanvasSupported) {
+      (0, _util.warn)("FreeTextAnnotation: OffscreenCanvas is not supported, annotation may not render correctly.");
+    }
   }
   get hasTextContent() {
     return !!this.appearance;
@@ -6384,19 +6513,21 @@ class FreeTextAnnotation extends MarkupAnnotation {
     freetext.set("Rect", rect);
     const da = `/Helv ${fontSize} Tf ${(0, _default_appearance.getPdfColor)(color, true)}`;
     freetext.set("DA", da);
-    freetext.set("Contents", value);
+    freetext.set("Contents", (0, _util.isAscii)(value) ? value : (0, _util.stringToUTF16BEString)(value));
     freetext.set("F", 4);
     freetext.set("Border", [0, 0, 0]);
     freetext.set("Rotate", rotation);
     if (user) {
-      freetext.set("T", (0, _util.stringToUTF8String)(user));
+      freetext.set("T", (0, _util.isAscii)(user) ? user : (0, _util.stringToUTF16BEString)(user));
     }
-    const n = new _primitives.Dict(xref);
-    freetext.set("AP", n);
-    if (apRef) {
-      n.set("N", apRef);
-    } else {
-      n.set("N", ap);
+    if (apRef || ap) {
+      const n = new _primitives.Dict(xref);
+      freetext.set("AP", n);
+      if (apRef) {
+        n.set("N", apRef);
+      } else {
+        n.set("N", ap);
+      }
     }
     return freetext;
   }
@@ -6441,7 +6572,11 @@ class FreeTextAnnotation extends MarkupAnnotation {
     let totalWidth = -Infinity;
     const encodedLines = [];
     for (let line of lines) {
-      line = helv.encodeString(line).join("");
+      const encoded = helv.encodeString(line);
+      if (encoded.length > 1) {
+        return null;
+      }
+      line = encoded.join("");
       encodedLines.push(line);
       let lineWidth = 0;
       const glyphs = helv.charsToGlyphs(line);
@@ -6478,7 +6613,7 @@ class FreeTextAnnotation extends MarkupAnnotation {
     appearanceStreamDict.set("Length", appearance.length);
     appearanceStreamDict.set("Resources", resources);
     if (rotation) {
-      const matrix = WidgetAnnotation._getRotationMatrix(rotation, w, h);
+      const matrix = (0, _core_utils.getRotationMatrix)(rotation, w, h);
       appearanceStreamDict.set("Matrix", matrix);
     }
     const ap = new _stream.StringStream(appearance);
@@ -6801,7 +6936,7 @@ class InkAnnotation extends MarkupAnnotation {
     appearanceStreamDict.set("BBox", [0, 0, w, h]);
     appearanceStreamDict.set("Length", appearance.length);
     if (rotation) {
-      const matrix = WidgetAnnotation._getRotationMatrix(rotation, w, h);
+      const matrix = (0, _core_utils.getRotationMatrix)(rotation, w, h);
       appearanceStreamDict.set("Matrix", matrix);
     }
     if (opacity !== 1) {
@@ -6958,14 +7093,15 @@ class FileAttachmentAnnotation extends MarkupAnnotation {
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
+exports.FakeUnicodeFont = void 0;
 exports.createDefaultAppearance = createDefaultAppearance;
 exports.getPdfColor = getPdfColor;
 exports.parseDefaultAppearance = parseDefaultAppearance;
+var _primitives = __w_pdfjs_require__(3);
 var _core_utils = __w_pdfjs_require__(4);
 var _util = __w_pdfjs_require__(2);
 var _colorspace = __w_pdfjs_require__(12);
 var _evaluator = __w_pdfjs_require__(13);
-var _primitives = __w_pdfjs_require__(3);
 var _stream = __w_pdfjs_require__(8);
 class DefaultAppearanceEvaluator extends _evaluator.EvaluatorPreprocessor {
   constructor(str) {
@@ -7038,6 +7174,200 @@ function createDefaultAppearance({
 }) {
   return `/${(0, _core_utils.escapePDFName)(fontName)} ${fontSize} Tf ${getPdfColor(fontColor, true)}`;
 }
+class FakeUnicodeFont {
+  constructor(xref, fontFamily) {
+    this.xref = xref;
+    this.widths = null;
+    this.firstChar = Infinity;
+    this.lastChar = -Infinity;
+    this.fontFamily = fontFamily;
+    const canvas = new OffscreenCanvas(1, 1);
+    this.ctxMeasure = canvas.getContext("2d");
+    if (!FakeUnicodeFont._fontNameId) {
+      FakeUnicodeFont._fontNameId = 1;
+    }
+    this.fontName = _primitives.Name.get(`InvalidPDFjsFont_${fontFamily}_${FakeUnicodeFont._fontNameId++}`);
+  }
+  get toUnicodeRef() {
+    if (!FakeUnicodeFont._toUnicodeRef) {
+      const toUnicode = `/CIDInit /ProcSet findresource begin
+12 dict begin
+begincmap
+/CIDSystemInfo
+<< /Registry (Adobe)
+/Ordering (UCS) /Supplement 0 >> def
+/CMapName /Adobe-Identity-UCS def
+/CMapType 2 def
+1 begincodespacerange
+<0000> <FFFF>
+endcodespacerange
+1 beginbfrange
+<0000> <FFFF> <0000>
+endbfrange
+endcmap CMapName currentdict /CMap defineresource pop end end`;
+      const toUnicodeStream = FakeUnicodeFont.toUnicodeStream = new _stream.StringStream(toUnicode);
+      const toUnicodeDict = new _primitives.Dict(this.xref);
+      toUnicodeStream.dict = toUnicodeDict;
+      toUnicodeDict.set("Length", toUnicode.length);
+      FakeUnicodeFont._toUnicodeRef = this.xref.getNewPersistentRef(toUnicodeStream);
+    }
+    return FakeUnicodeFont._toUnicodeRef;
+  }
+  get fontDescriptorRef() {
+    if (!FakeUnicodeFont._fontDescriptorRef) {
+      const fontDescriptor = new _primitives.Dict(this.xref);
+      fontDescriptor.set("Type", _primitives.Name.get("FontDescriptor"));
+      fontDescriptor.set("FontName", this.fontName);
+      fontDescriptor.set("FontFamily", "MyriadPro Regular");
+      fontDescriptor.set("FontBBox", [0, 0, 0, 0]);
+      fontDescriptor.set("FontStretch", _primitives.Name.get("Normal"));
+      fontDescriptor.set("FontWeight", 400);
+      fontDescriptor.set("ItalicAngle", 0);
+      FakeUnicodeFont._fontDescriptorRef = this.xref.getNewPersistentRef(fontDescriptor);
+    }
+    return FakeUnicodeFont._fontDescriptorRef;
+  }
+  get descendantFontRef() {
+    const descendantFont = new _primitives.Dict(this.xref);
+    descendantFont.set("BaseFont", this.fontName);
+    descendantFont.set("Type", _primitives.Name.get("Font"));
+    descendantFont.set("Subtype", _primitives.Name.get("CIDFontType0"));
+    descendantFont.set("CIDToGIDMap", _primitives.Name.get("Identity"));
+    descendantFont.set("FirstChar", this.firstChar);
+    descendantFont.set("LastChar", this.lastChar);
+    descendantFont.set("FontDescriptor", this.fontDescriptorRef);
+    descendantFont.set("DW", 1000);
+    const widths = [];
+    const chars = [...this.widths.entries()].sort();
+    let currentChar = null;
+    let currentWidths = null;
+    for (const [char, width] of chars) {
+      if (!currentChar) {
+        currentChar = char;
+        currentWidths = [width];
+        continue;
+      }
+      if (char === currentChar + currentWidths.length) {
+        currentWidths.push(width);
+      } else {
+        widths.push(currentChar, currentWidths);
+        currentChar = char;
+        currentWidths = [width];
+      }
+    }
+    if (currentChar) {
+      widths.push(currentChar, currentWidths);
+    }
+    descendantFont.set("W", widths);
+    const cidSystemInfo = new _primitives.Dict(this.xref);
+    cidSystemInfo.set("Ordering", "Identity");
+    cidSystemInfo.set("Registry", "Adobe");
+    cidSystemInfo.set("Supplement", 0);
+    descendantFont.set("CIDSystemInfo", cidSystemInfo);
+    return this.xref.getNewPersistentRef(descendantFont);
+  }
+  get baseFontRef() {
+    const baseFont = new _primitives.Dict(this.xref);
+    baseFont.set("BaseFont", this.fontName);
+    baseFont.set("Type", _primitives.Name.get("Font"));
+    baseFont.set("Subtype", _primitives.Name.get("Type0"));
+    baseFont.set("Encoding", _primitives.Name.get("Identity-H"));
+    baseFont.set("DescendantFonts", [this.descendantFontRef]);
+    baseFont.set("ToUnicode", this.toUnicodeRef);
+    return this.xref.getNewPersistentRef(baseFont);
+  }
+  get resources() {
+    const resources = new _primitives.Dict(this.xref);
+    const font = new _primitives.Dict(this.xref);
+    font.set(this.fontName.name, this.baseFontRef);
+    resources.set("Font", font);
+    return resources;
+  }
+  _createContext() {
+    this.widths = new Map();
+    this.ctxMeasure.font = `1000px ${this.fontFamily}`;
+    return this.ctxMeasure;
+  }
+  createFontResources(text) {
+    const ctx = this._createContext();
+    for (const line of text.split(/\r\n?|\n/)) {
+      for (const char of line.split("")) {
+        const code = char.charCodeAt(0);
+        if (this.widths.has(code)) {
+          continue;
+        }
+        const metrics = ctx.measureText(char);
+        const width = Math.ceil(metrics.width);
+        this.widths.set(code, width);
+        this.firstChar = Math.min(code, this.firstChar);
+        this.lastChar = Math.max(code, this.lastChar);
+      }
+    }
+    return this.resources;
+  }
+  createAppearance(text, rect, rotation, fontSize, bgColor) {
+    const ctx = this._createContext();
+    const lines = [];
+    let maxWidth = -Infinity;
+    for (const line of text.split(/\r\n?|\n/)) {
+      lines.push(line);
+      const lineWidth = ctx.measureText(line).width;
+      maxWidth = Math.max(maxWidth, lineWidth);
+      for (const char of line.split("")) {
+        const code = char.charCodeAt(0);
+        let width = this.widths.get(code);
+        if (width === undefined) {
+          const metrics = ctx.measureText(char);
+          width = Math.ceil(metrics.width);
+          this.widths.set(code, width);
+          this.firstChar = Math.min(code, this.firstChar);
+          this.lastChar = Math.max(code, this.lastChar);
+        }
+      }
+    }
+    maxWidth *= fontSize / 1000;
+    const [x1, y1, x2, y2] = rect;
+    let w = x2 - x1;
+    let h = y2 - y1;
+    if (rotation % 180 !== 0) {
+      [w, h] = [h, w];
+    }
+    let hscale = 1;
+    if (maxWidth > w) {
+      hscale = w / maxWidth;
+    }
+    let vscale = 1;
+    const lineHeight = _util.LINE_FACTOR * fontSize;
+    const lineDescent = _util.LINE_DESCENT_FACTOR * fontSize;
+    const maxHeight = lineHeight * lines.length;
+    if (maxHeight > h) {
+      vscale = h / maxHeight;
+    }
+    const fscale = Math.min(hscale, vscale);
+    const newFontSize = fontSize * fscale;
+    const buffer = ["q", `0 0 ${(0, _core_utils.numberToString)(w)} ${(0, _core_utils.numberToString)(h)} re W n`, `BT`, `1 0 0 1 0 ${(0, _core_utils.numberToString)(h + lineDescent)} Tm 0 Tc ${getPdfColor(bgColor, true)}`, `/${this.fontName.name} ${(0, _core_utils.numberToString)(newFontSize)} Tf`];
+    const vShift = (0, _core_utils.numberToString)(lineHeight);
+    for (const line of lines) {
+      buffer.push(`0 -${vShift} Td <${(0, _core_utils.stringToUTF16HexString)(line)}> Tj`);
+    }
+    buffer.push("ET", "Q");
+    const appearance = buffer.join("\n");
+    const appearanceStreamDict = new _primitives.Dict(this.xref);
+    appearanceStreamDict.set("Subtype", _primitives.Name.get("Form"));
+    appearanceStreamDict.set("Type", _primitives.Name.get("XObject"));
+    appearanceStreamDict.set("BBox", [0, 0, w, h]);
+    appearanceStreamDict.set("Length", appearance.length);
+    appearanceStreamDict.set("Resources", this.resources);
+    if (rotation) {
+      const matrix = (0, _core_utils.getRotationMatrix)(rotation, w, h);
+      appearanceStreamDict.set("Matrix", matrix);
+    }
+    const ap = new _stream.StringStream(appearance);
+    ap.dict = appearanceStreamDict;
+    return ap;
+  }
+}
+exports.FakeUnicodeFont = FakeUnicodeFont;
 
 /***/ }),
 /* 12 */
@@ -20293,7 +20623,7 @@ var _stream = __w_pdfjs_require__(8);
 var _type1_font = __w_pdfjs_require__(46);
 const PRIVATE_USE_AREAS = [[0xe000, 0xf8ff], [0x100000, 0x10fffd]];
 const PDF_GLYPH_SPACE_UNITS = 1000;
-const EXPORT_DATA_PROPERTIES = ["ascent", "bbox", "black", "bold", "charProcOperatorList", "composite", "cssFontInfo", "data", "defaultVMetrics", "defaultWidth", "descent", "fallbackName", "fontMatrix", "fontType", "isType3Font", "italic", "loadedName", "mimetype", "missingFile", "name", "remeasure", "subtype", "type", "vertical"];
+const EXPORT_DATA_PROPERTIES = ["ascent", "bbox", "black", "bold", "charProcOperatorList", "composite", "cssFontInfo", "data", "defaultVMetrics", "defaultWidth", "descent", "fallbackName", "fontMatrix", "fontType", "isInvalidPDFjsFont", "isType3Font", "italic", "loadedName", "mimetype", "missingFile", "name", "remeasure", "subtype", "type", "vertical"];
 const EXPORT_DATA_EXTRA_PROPERTIES = ["cMap", "defaultEncoding", "differences", "isMonospace", "isSerifFont", "isSymbolicFont", "seacMap", "toFontChar", "toUnicode", "vmetrics", "widths"];
 function adjustWidths(properties) {
   if (!properties.fontMatrix) {
@@ -20835,13 +21165,17 @@ class Font {
     let subtype = properties.subtype;
     this.type = type;
     this.subtype = subtype;
-    let fallbackName = "sans-serif";
-    if (this.isMonospace) {
-      fallbackName = "monospace";
+    const matches = name.match(/^InvalidPDFjsFont_(.*)_\d+$/);
+    this.isInvalidPDFjsFont = !!matches;
+    if (this.isInvalidPDFjsFont) {
+      this.fallbackName = matches[1];
+    } else if (this.isMonospace) {
+      this.fallbackName = "monospace";
     } else if (this.isSerifFont) {
-      fallbackName = "serif";
+      this.fallbackName = "serif";
+    } else {
+      this.fallbackName = "sans-serif";
     }
-    this.fallbackName = fallbackName;
     this.differences = properties.differences;
     this.widths = properties.widths;
     this.defaultWidth = properties.defaultWidth;
@@ -35533,7 +35867,7 @@ function writeStream(stream, buffer, transform) {
   if (transform !== null) {
     string = transform.encryptString(string);
   }
-  buffer.push(string, "\nendstream\n");
+  buffer.push(string, "\nendstream");
 }
 function writeArray(array, buffer, transform) {
   buffer.push("[");
@@ -35635,43 +35969,53 @@ function writeXFADataForAcroform(str, newRefs) {
   xml.documentElement.dump(buffer);
   return buffer.join("");
 }
+function updateAcroform({
+  xref,
+  acroForm,
+  acroFormRef,
+  hasXfa,
+  hasXfaDatasetsEntry,
+  xfaDatasetsRef,
+  needAppearances,
+  newRefs
+}) {
+  if (hasXfa && !hasXfaDatasetsEntry && !xfaDatasetsRef) {
+    (0, _util.warn)("XFA - Cannot save it");
+  }
+  if (!needAppearances && (!hasXfa || !xfaDatasetsRef)) {
+    return;
+  }
+  const dict = new _primitives.Dict(xref);
+  for (const key of acroForm.getKeys()) {
+    dict.set(key, acroForm.getRaw(key));
+  }
+  if (hasXfa && !hasXfaDatasetsEntry) {
+    const newXfa = acroForm.get("XFA").slice();
+    newXfa.splice(2, 0, "datasets");
+    newXfa.splice(3, 0, xfaDatasetsRef);
+    dict.set("XFA", newXfa);
+  }
+  if (needAppearances) {
+    dict.set("NeedAppearances", true);
+  }
+  const encrypt = xref.encrypt;
+  let transform = null;
+  if (encrypt) {
+    transform = encrypt.createCipherTransform(acroFormRef.num, acroFormRef.gen);
+  }
+  const buffer = [];
+  writeObject(acroFormRef, dict, buffer, transform);
+  newRefs.push({
+    ref: acroFormRef,
+    data: buffer.join("")
+  });
+}
 function updateXFA({
   xfaData,
   xfaDatasetsRef,
-  hasXfaDatasetsEntry,
-  acroFormRef,
-  acroForm,
   newRefs,
-  xref,
-  xrefInfo
+  xref
 }) {
-  if (xref === null) {
-    return;
-  }
-  if (!hasXfaDatasetsEntry) {
-    if (!acroFormRef) {
-      (0, _util.warn)("XFA - Cannot save it");
-      return;
-    }
-    const oldXfa = acroForm.get("XFA");
-    const newXfa = oldXfa.slice();
-    newXfa.splice(2, 0, "datasets");
-    newXfa.splice(3, 0, xfaDatasetsRef);
-    acroForm.set("XFA", newXfa);
-    const encrypt = xref.encrypt;
-    let transform = null;
-    if (encrypt) {
-      transform = encrypt.createCipherTransform(acroFormRef.num, acroFormRef.gen);
-    }
-    const buffer = [`${acroFormRef.num} ${acroFormRef.gen} obj\n`];
-    writeDict(acroForm, buffer, transform);
-    buffer.push("\n");
-    acroForm.set("XFA", oldXfa);
-    newRefs.push({
-      ref: acroFormRef,
-      data: buffer.join("")
-    });
-  }
   if (xfaData === null) {
     const datasets = xref.fetchIfRef(xfaDatasetsRef);
     xfaData = writeXFADataForAcroform(datasets.getString(), newRefs);
@@ -35695,20 +36039,27 @@ function incrementalUpdate({
   hasXfa = false,
   xfaDatasetsRef = null,
   hasXfaDatasetsEntry = false,
+  needAppearances,
   acroFormRef = null,
   acroForm = null,
   xfaData = null
 }) {
+  updateAcroform({
+    xref,
+    acroForm,
+    acroFormRef,
+    hasXfa,
+    hasXfaDatasetsEntry,
+    xfaDatasetsRef,
+    needAppearances,
+    newRefs
+  });
   if (hasXfa) {
     updateXFA({
       xfaData,
       xfaDatasetsRef,
-      hasXfaDatasetsEntry,
-      acroFormRef,
-      acroForm,
       newRefs,
-      xref,
-      xrefInfo
+      xref
     });
   }
   const newXref = new _primitives.Dict(null);
@@ -50812,16 +51163,25 @@ class XRef {
     this._cacheMap = new Map();
     this._pendingRefs = new _primitives.RefSet();
     this.stats = new _core_utils.DocStats(pdfManager.msgHandler);
-    this._newRefNum = null;
+    this._newPersistentRefNum = null;
+    this._newTemporaryRefNum = null;
   }
-  getNewRef() {
-    if (this._newRefNum === null) {
-      this._newRefNum = this.entries.length || 1;
+  getNewPersistentRef(obj) {
+    if (this._newPersistentRefNum === null) {
+      this._newPersistentRefNum = this.entries.length || 1;
     }
-    return _primitives.Ref.get(this._newRefNum++, 0);
+    const num = this._newPersistentRefNum++;
+    this._cacheMap.set(num, obj);
+    return _primitives.Ref.get(num, 0);
   }
-  resetNewRef() {
-    this._newRefNum = null;
+  getNewTemporaryRef() {
+    if (this._newTemporaryRefNum === null) {
+      this._newTemporaryRefNum = this.entries.length || 1;
+    }
+    return _primitives.Ref.get(this._newTemporaryRefNum++, 0);
+  }
+  resetNewTemporaryRef() {
+    this._newTemporaryRefNum = null;
   }
   setStartXRef(startXRef) {
     this.startXRefQueue = [startXRef];
@@ -52091,8 +52451,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.1.20';
-const pdfjsBuild = '7e5008f0f';
+const pdfjsVersion = '3.1.22';
+const pdfjsBuild = 'f4341779d';
 })();
 
 /******/ 	return __webpack_exports__;
