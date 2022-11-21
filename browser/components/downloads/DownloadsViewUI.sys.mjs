@@ -562,13 +562,6 @@ DownloadsViewUI.DownloadElementShell.prototype = {
    */
   showStatus(status, hoverStatus = status) {
     let document = this.element.ownerDocument;
-    function resetDescription(d) {
-      d.removeAttribute("data-l10n-id");
-      d.removeAttribute("value");
-      d.removeAttribute("tooltiptext");
-      d.innerText = "";
-    }
-    resetDescription(this._downloadDetailsNormal);
     if (status?.l10n) {
       document.l10n.setAttributes(
         this._downloadDetailsNormal,
@@ -576,10 +569,10 @@ DownloadsViewUI.DownloadElementShell.prototype = {
         status.l10n.args
       );
     } else {
+      this._downloadDetailsNormal.removeAttribute("data-l10n-id");
+      this._downloadDetailsNormal.setAttribute("value", status);
       this._downloadDetailsNormal.setAttribute("tooltiptext", status);
-      this._downloadDetailsNormal.innerText = status;
     }
-    resetDescription(this._downloadDetailsHover);
     if (hoverStatus?.l10n) {
       hoverStatus.l10n.id
         ? document.l10n.setAttributes(
@@ -592,7 +585,8 @@ DownloadsViewUI.DownloadElementShell.prototype = {
             hoverStatus.l10n
           );
     } else {
-      this._downloadDetailsHover.innerText = hoverStatus;
+      this._downloadDetailsHover.removeAttribute("data-l10n-id");
+      this._downloadDetailsHover.setAttribute("value", hoverStatus);
     }
   },
 
