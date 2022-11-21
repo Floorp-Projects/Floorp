@@ -2151,6 +2151,7 @@ nsresult WinUtils::RestoreHiDPIMode() {
   }
   return NS_OK;
 }
+#endif
 
 /* static */
 const char* WinUtils::WinEventToEventName(UINT msg) {
@@ -2159,7 +2160,5 @@ const char* WinUtils::WinEventToEventName(UINT msg) {
              ? eventMsgInfo->second.mStr
              : nullptr;
 }
-#endif
-
 }  // namespace widget
 }  // namespace mozilla
