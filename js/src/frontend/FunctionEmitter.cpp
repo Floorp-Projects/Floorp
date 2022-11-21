@@ -360,12 +360,12 @@ bool FunctionScriptEmitter::prepareForParameters() {
   }
 
   if (funbox_->needsPromiseResult()) {
-    if (funbox_->hasParameterExprs || funbox_->hasDestructuringArgs) {
-      if (!asyncEmitter_->prepareForParamsWithExpressionOrDestructuring()) {
+    if (funbox_->hasParameterExprs) {
+      if (!asyncEmitter_->prepareForParamsWithExpression()) {
         return false;
       }
     } else {
-      if (!asyncEmitter_->prepareForParamsWithoutExpressionOrDestructuring()) {
+      if (!asyncEmitter_->prepareForParamsWithoutExpression()) {
         return false;
       }
     }
