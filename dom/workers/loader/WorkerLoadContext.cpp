@@ -23,8 +23,10 @@ ThreadSafeRequestHandle::ThreadSafeRequestHandle(
 
 already_AddRefed<JS::loader::ScriptLoadRequest>
 ThreadSafeRequestHandle::ReleaseRequest() {
+  RefPtr<JS::loader::ScriptLoadRequest> request;
+  mRequest.swap(request);
   mRunnable = nullptr;
-  return mRequest.forget();
+  return request.forget();
 }
 
 nsresult ThreadSafeRequestHandle::OnStreamComplete(nsresult aStatus) {
