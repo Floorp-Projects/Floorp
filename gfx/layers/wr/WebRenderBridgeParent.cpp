@@ -2183,15 +2183,17 @@ void WebRenderBridgeParent::SetOMTASampleTime() {
   }
 }
 
-void WebRenderBridgeParent::CompositeIfNeeded() {
-  if (mSkippedComposite) {
-    mSkippedComposite = false;
-    if (mCompositorScheduler) {
-      mCompositorScheduler->ScheduleComposition(
-          mSkippedCompositeReasons | RenderReasons::SKIPPED_COMPOSITE);
-    }
-    mSkippedCompositeReasons = wr::RenderReasons::NONE;
+void WebRenderBridgeParent::RetrySkippedComposite() {
+  if (!mSkippedComposite) {
+    return;
   }
+
+  mSkippedComposite = false;
+  if (mCompositorScheduler) {
+    mCompositorScheduler->ScheduleComposition(mSkippedCompositeReasons |
+                                              RenderReasons::SKIPPED_COMPOSITE);
+  }
+  mSkippedCompositeReasons = wr::RenderReasons::NONE;
 }
 
 void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,

@@ -218,7 +218,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   void NotifySceneBuiltForEpoch(const wr::Epoch& aEpoch,
                                 const TimeStamp& aEndTime);
 
-  void CompositeIfNeeded();
+  void RetrySkippedComposite();
 
   TextureFactoryIdentifier GetTextureFactoryIdentifier();
 
