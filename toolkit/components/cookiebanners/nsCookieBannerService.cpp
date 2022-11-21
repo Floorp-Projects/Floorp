@@ -49,6 +49,8 @@ nsCString ConvertModeToStringForTelemetry(uint32_t aModes) {
       return "reject"_ns;
     case nsICookieBannerService::MODE_REJECT_OR_ACCEPT:
       return "reject_or_accept"_ns;
+    case nsICookieBannerService::MODE_DETECT_ONLY:
+      return "detect_only"_ns;
     default:
       // Fall back to return "invalid" if we got any unsupported service
       // mode. Note this this also includes MODE_UNSET.
@@ -609,10 +611,8 @@ void nsCookieBannerService::DailyReportTelemetry() {
   nsCString modePBMStr = ConvertModeToStringForTelemetry(modePBM);
 
   nsTArray<nsCString> serviceModeLabels = {
-      "disabled"_ns,
-      "reject"_ns,
-      "reject_or_accept"_ns,
-      "invalid"_ns,
+      "disabled"_ns,    "reject"_ns,  "reject_or_accept"_ns,
+      "detect_only"_ns, "invalid"_ns,
   };
 
   // Record the service mode glean.
