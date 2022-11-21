@@ -7,6 +7,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
+#include "mozilla/mscom/EnsureMTA.h"
 #ifndef __MINGW32__
 #  include <comutil.h>
 #  include <wrl.h>
@@ -186,19 +187,42 @@ nsWindowsPackageManager::GetCampaignId(nsAString& aCampaignId) {
   if (!SUCCEEDED(hr) || storeContext == nullptr) return NS_ERROR_FAILURE;
 
   ComPtr<IAsyncOperation<StoreProductResult*> > asyncSpr = nullptr;
-  hr = storeContext->GetStoreProductForCurrentAppAsync(&asyncSpr);
-  if (!SUCCEEDED(hr) || asyncSpr == nullptr) return NS_ERROR_FAILURE;
 
-  ComPtr<IAsyncInfo> asyncInfo = nullptr;
-  hr = asyncSpr->QueryInterface(IID_IAsyncInfo, &asyncInfo);
-  if (!SUCCEEDED(hr)) return NS_ERROR_FAILURE;
+  {
+    nsAutoHandle event(CreateEventW(nullptr, true, false, nullptr));
+    bool asyncOpSucceeded = false;
 
-  AsyncStatus status;
-  do {
-    asyncInfo->get_Status(&status);
-  } while (status == AsyncStatus::Started);
+    // Despite the documentation indicating otherwise, the async operations
+    // and callbacks used here don't seem to work outside of a COM MTA.
+    mozilla::mscom::EnsureMTA(
+        [&event, &asyncOpSucceeded, &hr, &storeContext, &asyncSpr]() -> void {
+          auto callback =
+              Callback<IAsyncOperationCompletedHandler<StoreProductResult*> >(
+                  [&asyncOpSucceeded, &event](
+                      IAsyncOperation<StoreProductResult*>* asyncInfo,
+                      AsyncStatus status) -> HRESULT {
+                    asyncOpSucceeded = status == AsyncStatus::Completed;
+                    return SetEvent(event.get());
+                  });
 
-  if (status != AsyncStatus::Completed) return NS_ERROR_FAILURE;
+          hr = storeContext->GetStoreProductForCurrentAppAsync(&asyncSpr);
+          if (!SUCCEEDED(hr) || asyncSpr == nullptr) {
+            asyncOpSucceeded = false;
+            return;
+          }
+          hr = asyncSpr->put_Completed(callback.Get());
+          if (!SUCCEEDED(hr)) {
+            asyncOpSucceeded = false;
+            return;
+          }
+
+          DWORD ret = WaitForSingleObject(event.get(), 30000);
+          if (ret != WAIT_OBJECT_0) {
+            asyncOpSucceeded = false;
+          }
+        });
+    if (!asyncOpSucceeded) return NS_ERROR_FAILURE;
+  }
 
   ComPtr<IStoreProductResult> productResult = nullptr;
   hr = asyncSpr->GetResults(&productResult);
@@ -244,16 +268,36 @@ nsWindowsPackageManager::GetCampaignId(nsAString& aCampaignId) {
   // the AppStoreLicense.
   if (aCampaignId.IsEmpty()) {
     ComPtr<IAsyncOperation<StoreAppLicense*> > asyncSal = nullptr;
-    hr = storeContext->GetAppLicenseAsync(&asyncSal);
-    if (!SUCCEEDED(hr) || asyncSal == nullptr) return NS_ERROR_FAILURE;
-    hr = asyncSal->QueryInterface(IID_IAsyncInfo, &asyncInfo);
-    if (!SUCCEEDED(hr)) return NS_ERROR_FAILURE;
-    AsyncStatus status;
-    do {
-      asyncInfo->get_Status(&status);
-    } while (status == AsyncStatus::Started);
+    bool asyncOpSucceeded = false;
+    nsAutoHandle event(CreateEventW(nullptr, true, false, nullptr));
+    mozilla::mscom::EnsureMTA(
+        [&event, &asyncOpSucceeded, &hr, &storeContext, &asyncSal]() -> void {
+          auto callback =
+              Callback<IAsyncOperationCompletedHandler<StoreAppLicense*> >(
+                  [&asyncOpSucceeded, &event](
+                      IAsyncOperation<StoreAppLicense*>* asyncInfo,
+                      AsyncStatus status) -> HRESULT {
+                    asyncOpSucceeded = status == AsyncStatus::Completed;
+                    return SetEvent(event.get());
+                  });
 
-    if (status != AsyncStatus::Completed) return NS_ERROR_FAILURE;
+          hr = storeContext->GetAppLicenseAsync(&asyncSal);
+          if (!SUCCEEDED(hr) || asyncSal == nullptr) {
+            asyncOpSucceeded = false;
+            return;
+          }
+          hr = asyncSal->put_Completed(callback.Get());
+          if (!SUCCEEDED(hr)) {
+            asyncOpSucceeded = false;
+            return;
+          }
+
+          DWORD ret = WaitForSingleObject(event.get(), 30000);
+          if (ret != WAIT_OBJECT_0) {
+            asyncOpSucceeded = false;
+          }
+        });
+    if (!asyncOpSucceeded) return NS_ERROR_FAILURE;
 
     ComPtr<IStoreAppLicense> license = nullptr;
     hr = asyncSal->GetResults(&license);
@@ -275,7 +319,9 @@ nsWindowsPackageManager::GetCampaignId(nsAString& aCampaignId) {
     if (jsonData.isMember(CAMPAIGN_ID_JSON_FIELD_NAME) &&
         jsonData[CAMPAIGN_ID_JSON_FIELD_NAME].isString()) {
       aCampaignId.Assign(
-          *(jsonData[CAMPAIGN_ID_JSON_FIELD_NAME].asString().c_str()));
+          NS_ConvertUTF8toUTF16(
+              jsonData[CAMPAIGN_ID_JSON_FIELD_NAME].asString().c_str())
+              .get());
       if (aCampaignId.Length() > 0) {
         aCampaignId.AppendLiteral("&msstoresignedin=false");
       }
