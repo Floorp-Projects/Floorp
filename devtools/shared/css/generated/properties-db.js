@@ -6119,6 +6119,57 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "container": {
+    "isInherited": false,
+    "subproperties": [
+      "container-name",
+      "container-type"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "inline-size",
+      "none",
+      "normal",
+      "revert",
+      "revert-layer",
+      "size",
+      "unset"
+    ]
+  },
+  "container-name": {
+    "isInherited": false,
+    "subproperties": [
+      "container-name"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "none",
+      "revert",
+      "revert-layer",
+      "unset"
+    ]
+  },
+  "container-type": {
+    "isInherited": false,
+    "subproperties": [
+      "container-type"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "inline-size",
+      "normal",
+      "revert",
+      "revert-layer",
+      "size",
+      "unset"
+    ]
+  },
   "content": {
     "isInherited": false,
     "subproperties": [
