@@ -1,0 +1,34 @@
+# Version of this schema
+schema: 1
+
+bugzilla:
+  # Bugzilla product and component for this directory and subdirectories
+  product: Core
+  component: "Graphics: Text"
+
+# Document the source of externally hosted code
+origin:
+
+  # Short name of the package/library
+  name: harfbuzz
+
+  description: HarfBuzz is a text shaping engine.
+
+  # Full URL for the package's homepage/etc
+  # Usually different from repository url
+  url: https://github.com/harfbuzz/harfbuzz
+
+  # Human-readable identifier for this version/release
+  # Generally "version NNN", "tag SSS", "bookmark SSS"
+  release: 5.3.1 [commit 970321db7bddbe8c579b73751fc655a924ea3ce6]
+
+  # Revision to pull in
+  # Must be a long or short commit SHA (long preferred)
+  revision: 970321db7bddbe8c579b73751fc655a924ea3ce6
+
+  # The package's license, where possible using the mnemonic from
+  # https://spdx.org/licenses/
+  # Multiple licenses can be specified (as a YAML list)
+  # A "LICENSE" file must exist containing the full license text
+  license: MIT
+  license-file: COPYING
