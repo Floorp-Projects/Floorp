@@ -5947,9 +5947,8 @@ static bool ShortestPaths(JSContext* cx, unsigned argc, Value* vp) {
 
   for (size_t i = 0; i < length; i++) {
     RootedValue el(cx, objs->getDenseElement(i));
-    if (!el.isObject() && !el.isString() && !el.isSymbol()) {
-      JS_ReportErrorASCII(cx,
-                          "Each target must be an object, string, or symbol");
+    if (!el.isGCThing()) {
+      JS_ReportErrorASCII(cx, "Each target must be a GC thing");
       return false;
     }
   }

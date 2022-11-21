@@ -63,6 +63,11 @@ assertEq(paths.length, 2, "Two sets of paths expected");
 paths = shortestPaths([f], {maxNumPaths: 1});
 assertEq(paths[0].length, 1, "Single path expected");
 
+print();
+print("shortestPaths([1234n])")
+paths = shortestPaths([1234n]);
+dumpPaths(paths);
+
 var exc;
 
 try { paths = shortestPaths(); } catch (exc) { e = ""+exc; };
