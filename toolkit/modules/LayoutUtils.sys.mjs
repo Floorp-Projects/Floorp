@@ -5,13 +5,27 @@
 
 export var LayoutUtils = {
   /**
-   * For a given DOM element, returns its position in screen coordinates
+   * For a given DOM element, returns its position in screen coordinates of CSS units
    * (<https://developer.mozilla.org/en-US/docs/Web/CSS/CSSOM_View/Coordinate_systems#screen>).
    */
   getElementBoundingScreenRect(aElement) {
     let rect = aElement.getBoundingClientRect();
     let win = aElement.ownerGlobal;
 
+    const { x, y, width, height } = this._rectToClientRect(win, rect);
+    return win.windowUtils.toScreenRectInCSSUnits(x, y, width, height);
+  },
+
+  /**
+   * Similar to getElementBoundingScreenRect using window and rect,
+   * returns screen coordinates in screen units.
+   */
+  rectToScreenRect(win, rect) {
+    const { x, y, width, height } = this._rectToClientRect(win, rect);
+    return win.ownerGlobal.windowUtils.toScreenRect(x, y, width, height);
+  },
+
+  _rectToClientRect(win, rect) {
     let x = rect.left;
     let y = rect.top;
 
@@ -35,11 +49,11 @@ export var LayoutUtils = {
       parentFrame = win.browsingContext?.embedderElement;
     }
 
-    return aElement.ownerGlobal.windowUtils.toScreenRectInCSSUnits(
+    return {
       x,
       y,
-      rect.width,
-      rect.height
-    );
+      width: rect.width,
+      height: rect.height,
+    };
   },
 };
