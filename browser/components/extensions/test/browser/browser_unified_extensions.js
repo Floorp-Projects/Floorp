@@ -483,28 +483,6 @@ add_task(async function test_list_active_extensions_only() {
   mockProvider.unregister();
 });
 
-add_task(async function test_no_addons_themes_widget_when_pref_is_enabled() {
-  if (
-    !Services.prefs.getBoolPref("extensions.unifiedExtensions.enabled", false)
-  ) {
-    ok(true, "Skip task because unifiedExtensions pref is disabled");
-    return;
-  }
-
-  const addonsAndThemesWidgetId = "add-ons-button";
-
-  // Add the button to the navbar, which should not do anything because the
-  // add-ons and themes button should not exist when the unified extensions
-  // pref is enabled.
-  CustomizableUI.addWidgetToArea(
-    addonsAndThemesWidgetId,
-    CustomizableUI.AREA_NAVBAR
-  );
-
-  let addonsButton = win.document.getElementById(addonsAndThemesWidgetId);
-  is(addonsButton, null, "expected no add-ons and themes button");
-});
-
 add_task(async function test_button_opens_discopane_when_no_extension() {
   // The test harness registers regular extensions so we need to mock the
   // `getActiveExtensions` extension to simulate zero extensions installed.
