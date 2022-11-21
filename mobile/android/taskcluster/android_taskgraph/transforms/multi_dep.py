@@ -4,6 +4,8 @@
 
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.schema import resolve_keyed_by
+from taskgraph.util.treeherder import inherit_treeherder_from_dep, join_symbol
 
 transforms = TransformSequence()
 
@@ -37,6 +39,21 @@ def _get_all_deps(task):
 
 
 @transforms.add
+def resolve_keys(config, tasks):
+    for task in tasks:
+        resolve_keyed_by(
+            task,
+            "treeherder.job-symbol",
+            item_name=task["name"],
+            **{
+                'build-type': task["attributes"]["build-type"],
+                'level': config.params["level"],
+            }
+        )
+        yield task
+
+
+@transforms.add
 def build_upstream_artifacts(config, tasks):
     for task in tasks:
         worker_definition = {
@@ -44,13 +61,25 @@ def build_upstream_artifacts(config, tasks):
         }
 
         for dep in _get_all_deps(task):
-            paths = sorted(dep.attributes["artifacts"].values())
+            paths = list(dep.attributes.get("artifacts", {}).values())
+            paths.extend([
+                apk_metadata["name"]
+                for apk_metadata in dep.attributes.get("apks", {}).values()
+            ])
             if paths:
                 worker_definition["upstream-artifacts"].append({
                     "taskId": {"task-reference": f"<{dep.kind}>"},
-                    "taskType": dep.kind,
-                    "paths": paths,
+                    "taskType": _get_task_type(dep.kind),
+                    "paths": sorted(paths),
                 })
 
-        task["worker"].update(worker_definition)
+        task.setdefault("worker", {}).update(worker_definition)
         yield task
+
+
+def _get_task_type(dep_kind):
+    if dep_kind.startswith("build-"):
+        return "build"
+    elif dep_kind.startswith("signing-"):
+        return "signing"
+    return dep_kind

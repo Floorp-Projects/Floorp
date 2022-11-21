@@ -8,6 +8,7 @@ transforms:
     - android_taskgraph.transforms.multi_dep:transforms
     - android_taskgraph.transforms.signing:transforms
     - android_taskgraph.transforms.treeherder:transforms
+    - android_taskgraph.transforms.clean_multi_dep:transforms
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:

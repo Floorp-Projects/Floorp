@@ -2,23 +2,26 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: focus_android_taskgraph.loader.multi_dep:loader
+loader: android_taskgraph.loader.multi_dep:loader
 
 transforms:
-    - focus_android_taskgraph.transforms.multi_dep:transforms
-    - focus_android_taskgraph.transforms.signing:transforms
+    - android_taskgraph.transforms.multi_dep:transforms
+    - android_taskgraph.transforms.signing_apk:transforms
+    - android_taskgraph.transforms.treeherder:transforms
+    - android_taskgraph.transforms.clean_multi_dep:transforms
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - build-focus
+    - build-apk
 
-primary-dependency: build
+primary-dependency: build-apk
 
 group-by: build-type
 
-job-template:
-    description: Sign Focus for Android
+task-template:
+    description: Sign Android APKs
     worker: {}
+    # TODO: Support Fenix
     signing-format: autograph_focus
     index:
         by-tasks-for:
@@ -35,12 +38,11 @@ job-template:
     treeherder:
         job-symbol:
             by-build-type:
-                focus-.*: Bfs
-                klar-.*: Bkls
                 default: Bs
-                android-test.+: Bats
-                beta-firebase: Bfs
-                nightly-firebase: Bfs
+                focus-(debug|nightly|beta|release)$: Bfs
+                focus-(nightly|beta)-firebase$: Bffs
+                focus-android-test-(debug|nightly|beta)$: Bats
+                klar-.*: Bkls
         kind: build
         platform: android-all/opt
         tier: 1

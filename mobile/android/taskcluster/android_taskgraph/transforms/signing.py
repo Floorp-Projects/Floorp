@@ -74,10 +74,3 @@ def set_signing_format(config, tasks):
             upstream_artifact["formats"] = ["autograph_gpg"]
 
         yield task
-
-
-@transforms.add
-def remove_dependent_tasks(config, tasks):
-    for task in tasks:
-        del task["dependent-tasks"]
-        yield task
