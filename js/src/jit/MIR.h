@@ -10707,19 +10707,19 @@ class MIonToWasmCall final : public MVariadicInstruction,
 #endif
 };
 
-// Load a field stored at a fixed offset on a wasm object. This field may be
-// any value type, including references. No barriers are performed.
-class MWasmLoadObjectField : public MUnaryInstruction,
-                             public NoTypePolicy::Data {
+// Load an object field stored at a fixed offset from a base pointer.  This
+// field may be any value type, including references.  No barriers are
+// performed.
+class MWasmLoadField : public MUnaryInstruction, public NoTypePolicy::Data {
   uint32_t offset_;
 
-  MWasmLoadObjectField(MDefinition* obj, uint32_t offset, MIRType type)
+  MWasmLoadField(MDefinition* obj, uint32_t offset, MIRType type)
       : MUnaryInstruction(classOpcode, obj), offset_(offset) {
     setResultType(type);
   }
 
  public:
-  INSTRUCTION_HEADER(WasmLoadObjectField)
+  INSTRUCTION_HEADER(WasmLoadField)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, obj))
 
@@ -10730,28 +10730,29 @@ class MWasmLoadObjectField : public MUnaryInstruction,
   }
 };
 
-// Load a field stored at a fixed offset within a wasm object's data buffer.
-// This field may be any value type, including references. No barriers are
+// Load a object field stored at a fixed offset from a base pointer.  This
+// field may be any value type, including references.  No barriers are
 // performed.
 //
-// This instruction takes the object owner of the data buffer as an input but
-// does not generate code to access it. This instruction extends the lifetime
-// of the owner object so that it cannot be collected while the data buffer
-// pointer is live.
-class MWasmLoadObjectDataField : public MBinaryInstruction,
-                                 public NoTypePolicy::Data {
+// This instruction takes a pointer to a second object `ka`, which it is
+// necessary to keep alive.  It is expected that `ka` holds a reference to
+// `obj`, but this is not enforced and no code is generated to access `ka`.
+// This instruction extends the lifetime of `ka` so that it, and hence `obj`,
+// cannot be collected while `obj` is live.  This is necessary if `obj` does
+// not point to a GC-managed object.
+class MWasmLoadFieldKA : public MBinaryInstruction, public NoTypePolicy::Data {
   uint32_t offset_;
 
-  MWasmLoadObjectDataField(MDefinition* obj, MDefinition* data, uint32_t offset,
-                           MIRType type)
-      : MBinaryInstruction(classOpcode, obj, data), offset_(offset) {
+  MWasmLoadFieldKA(MDefinition* ka, MDefinition* obj, uint32_t offset,
+                   MIRType type)
+      : MBinaryInstruction(classOpcode, ka, obj), offset_(offset) {
     setResultType(type);
   }
 
  public:
-  INSTRUCTION_HEADER(WasmLoadObjectDataField)
+  INSTRUCTION_HEADER(WasmLoadFieldKA)
   TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, obj), (1, data))
+  NAMED_OPERANDS((0, ka), (1, obj))
 
   uint32_t offset() const { return offset_; }
 
@@ -10760,28 +10761,26 @@ class MWasmLoadObjectDataField : public MBinaryInstruction,
   }
 };
 
-// Store a value to a field at a fixed offset within a wasm object's data
-// buffer. This field may be any value type, _excluding_ references. References
+// Store a value to an object field at a fixed offset from a base pointer.
+// This field may be any value type, _excluding_ references.  References
 // _must_ use the 'Ref' variant of this instruction.
 //
-// This instruction takes the object owner of the data buffer as an input but
-// does not generate code to access it. This instruction extends the lifetime
-// of the owner object so that it cannot be collected while the data buffer
-// pointer is live.
-class MWasmStoreObjectDataField : public MTernaryInstruction,
-                                  public NoTypePolicy::Data {
+// This instruction takes a second object `ka` that must be kept alive, as
+// described for MWasmLoadFieldKA above.
+class MWasmStoreFieldKA : public MTernaryInstruction,
+                          public NoTypePolicy::Data {
   uint32_t offset_;
 
-  MWasmStoreObjectDataField(MDefinition* obj, MDefinition* data,
-                            uint32_t offset, MDefinition* value)
-      : MTernaryInstruction(classOpcode, obj, data, value), offset_(offset) {
+  MWasmStoreFieldKA(MDefinition* ka, MDefinition* obj, uint32_t offset,
+                    MDefinition* value)
+      : MTernaryInstruction(classOpcode, ka, obj, value), offset_(offset) {
     MOZ_ASSERT(value->type() != MIRType::RefOrNull);
   }
 
  public:
-  INSTRUCTION_HEADER(WasmStoreObjectDataField)
+  INSTRUCTION_HEADER(WasmStoreFieldKA)
   TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, obj), (1, data), (2, value))
+  NAMED_OPERANDS((0, ka), (1, obj), (2, value))
 
   uint32_t offset() const { return offset_; }
 
@@ -10790,31 +10789,29 @@ class MWasmStoreObjectDataField : public MTernaryInstruction,
   }
 };
 
-// Store a reference value to a field within a wasm object's data buffer. This
-// instruction emits a pre-barrier. A post barrier _must_ be performed
-// separately.
+// Store a reference value to a location which (it is assumed) is within a
+// wasm object.  This instruction emits a pre-barrier.  A post barrier _must_
+// be performed separately.
 //
-// This instruction takes the object owner of the data buffer as an input but
-// does not generate code to access it. This instruction extends the lifetime
-// of the owner object so that it cannot be collected while the data buffer
-// pointer is live.
-class MWasmStoreObjectDataRefField : public MAryInstruction<4>,
-                                     public NoTypePolicy::Data {
-  MWasmStoreObjectDataRefField(MDefinition* instance, MDefinition* obj,
-                               MDefinition* valueAddr, MDefinition* value)
+// This instruction takes a second object `ka` that must be kept alive, as
+// described for MWasmLoadFieldKA above.
+class MWasmStoreFieldRefKA : public MAryInstruction<4>,
+                             public NoTypePolicy::Data {
+  MWasmStoreFieldRefKA(MDefinition* instance, MDefinition* ka,
+                       MDefinition* valueAddr, MDefinition* value)
       : MAryInstruction<4>(classOpcode) {
     MOZ_ASSERT(valueAddr->type() == MIRType::Pointer);
     MOZ_ASSERT(value->type() == MIRType::RefOrNull);
     initOperand(0, instance);
-    initOperand(1, obj);
+    initOperand(1, ka);
     initOperand(2, valueAddr);
     initOperand(3, value);
   }
 
  public:
-  INSTRUCTION_HEADER(WasmStoreObjectDataRefField)
+  INSTRUCTION_HEADER(WasmStoreFieldRefKA)
   TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, instance), (1, obj), (2, valueAddr), (3, value))
+  NAMED_OPERANDS((0, instance), (1, ka), (2, valueAddr), (3, value))
 
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::Any);

@@ -2840,16 +2840,16 @@
 - name: IonToWasmCall
   gen_boilerplate: false
 
-- name: WasmLoadObjectField
+- name: WasmLoadField
   gen_boilerplate: false
 
-- name: WasmLoadObjectDataField
+- name: WasmLoadFieldKA
   gen_boilerplate: false
 
-- name: WasmStoreObjectDataField
+- name: WasmStoreFieldKA
   gen_boilerplate: false
 
-- name: WasmStoreObjectDataRefField
+- name: WasmStoreFieldRefKA
   gen_boilerplate: false
 
 #ifdef FUZZING_JS_FUZZILLI
