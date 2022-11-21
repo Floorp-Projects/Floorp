@@ -55,6 +55,9 @@ NetworkLoadHandler::OnStreamComplete(nsIStreamLoader* aLoader,
                                      const uint8_t* aString) {
   // If we have cancelled, or we have no mRequest, it means that the loader has
   // shut down and we can exit early. If the cancel result is still NS_OK
+  if (mRequestHandle->IsEmpty()) {
+    return NS_OK;
+  }
   nsresult rv = DataReceivedFromNetwork(aLoader, aStatus, aStringLen, aString);
   return mRequestHandle->OnStreamComplete(rv);
 }
