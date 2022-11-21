@@ -25,12 +25,11 @@ struct BytecodeEmitter;
 //   the number of hops required to reach the |.generator| variable. In order
 //   to handle this, we can't reuse the same TryCatch emitter.
 //
-//   Simple case - For a function without expression or destructuring
-//   parameters:
+//   Simple case - For a function without expression parameters:
 //   `async function f(<params>) {<body>}`,
 //     AsyncEmitter ae(this);
 //
-//     ae.prepareForParamsWithoutExpressionOrDestructuring();
+//     ae.prepareForParamsWithoutExpression();
 //     // Emit Params.
 //     ...
 //     ae.paramsEpilogue(); // We need to emit the epilogue before the extra
@@ -44,11 +43,11 @@ struct BytecodeEmitter;
 //
 //     ae.emitEndFunction();
 //
-//   Complex case - For a function with expression or destructuring parameters:
+//   Complex case - For a function with expression parameters:
 //   `async function f(<expression>) {<body>}`,
 //     AsyncEmitter ae(this);
 //
-//     ae.prepareForParamsWithExpressionOrDestructuring();
+//     ae.prepareForParamsWithExpression();
 //
 //     // Emit Params.
 //     ...
@@ -97,26 +96,26 @@ class MOZ_STACK_CLASS AsyncEmitter {
   //              |
   //   +----------+
   //   |
-  //   | [Parameters with Expression or Destructuring]
-  //   |   prepareForParamsWithExpressionOrDestructuring    +------------+
-  //   +----------------------------------------------------| Parameters |-->+
-  //   |                                                    +------------+   |
-  //   |                                                                     |
-  //   | [Parameters Without Expression or Destructuring]                    |
-  //   |   prepareForParamsWithoutExpressionOrDestructuring +------------+   |
-  //   +----------------------------------------------------| Parameters |-->+
-  //   |                                                    +------------+   |
-  //   | [Modules]                                                           |
-  //   |   prepareForModule  +----------------+                              |
-  //   +-------------------->| ModulePrologue |--+                           |
-  //                         +----------------+  |                           |
-  //                                             |                           |
-  //                                             |                           |
-  //   +-----------------------------------------+                           |
-  //   |                                                                     |
-  //   |                                                                     |
-  //   V                     +------------+  paramsEpilogue                  |
-  //   +<--------------------| PostParams |<---------------------------------+
+  //   | [Parameters with Expression]
+  //   |   prepareForParamsWithExpression    +------------+
+  //   +-------------------------------------| Parameters |-->+
+  //   |                                     +------------+   |
+  //   |                                                      |
+  //   | [Parameters Without Expression]                      |
+  //   |   prepareForParamsWithoutExpression +------------+   |
+  //   +-------------------------------------| Parameters |-->+
+  //   |                                     +------------+   |
+  //   | [Modules]                                            |
+  //   |   prepareForModule  +----------------+               |
+  //   +-------------------->| ModulePrologue |--+            |
+  //                         +----------------+  |            |
+  //                                             |            |
+  //                                             |            |
+  //   +-----------------------------------------+            |
+  //   |                                                      |
+  //   |                                                      |
+  //   V                     +------------+  paramsEpilogue   |
+  //   +<--------------------| PostParams |<------------------+
   //   |                     +------------+
   //   |
   //   | [Script body]
@@ -159,8 +158,8 @@ class MOZ_STACK_CLASS AsyncEmitter {
  public:
   explicit AsyncEmitter(BytecodeEmitter* bce) : bce_(bce){};
 
-  [[nodiscard]] bool prepareForParamsWithoutExpressionOrDestructuring();
-  [[nodiscard]] bool prepareForParamsWithExpressionOrDestructuring();
+  [[nodiscard]] bool prepareForParamsWithoutExpression();
+  [[nodiscard]] bool prepareForParamsWithExpression();
   [[nodiscard]] bool prepareForModule();
   [[nodiscard]] bool emitParamsEpilogue();
   [[nodiscard]] bool prepareForBody();
