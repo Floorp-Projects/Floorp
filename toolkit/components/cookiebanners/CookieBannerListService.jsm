@@ -278,7 +278,9 @@ class CookieBannerListService {
   }
 
   #importClickRule(rule, click) {
-    if (!click) {
+    // Skip importing the rule if there is no click object or the click rule is
+    // empty - it doesn't have the mandatory presence attribute.
+    if (!click || !click.presence) {
       return;
     }
 
