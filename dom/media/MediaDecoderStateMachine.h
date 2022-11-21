@@ -247,6 +247,7 @@ class MediaDecoderStateMachine
   void PreservesPitchChanged() override;
   void PlayStateChanged() override;
   void LoopingChanged() override;
+  void UpdateSecondaryVideoContainer() override;
 
   void ReaderSuspendedChanged();
 
@@ -275,7 +276,6 @@ class MediaDecoderStateMachine
   }
 
   void StreamNameChanged();
-  void UpdateSecondaryVideoContainer();
   void UpdateOutputCaptured();
   void OutputTracksChanged();
   void OutputPrincipalChanged();
@@ -544,10 +544,6 @@ class MediaDecoderStateMachine
   // The device used with SetSink, or nullptr if no explicit device has been
   // set.
   Mirror<RefPtr<AudioDeviceInfo>> mSinkDevice;
-
-  // Set if the decoder is sending video to a secondary container. While set we
-  // should not suspend the decoder.
-  Mirror<RefPtr<VideoFrameContainer>> mSecondaryVideoContainer;
 
   // Whether all output should be captured into mOutputTracks, halted, or not
   // captured.

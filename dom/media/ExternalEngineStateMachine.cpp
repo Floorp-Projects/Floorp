@@ -416,11 +416,7 @@ RefPtr<ShutdownPromise> ExternalEngineStateMachine::Shutdown() {
   mVideoDataRequest.DisconnectIfExists();
   mAudioWaitRequest.DisconnectIfExists();
   mVideoWaitRequest.DisconnectIfExists();
-  mBuffered.DisconnectIfConnected();
-  mPlayState.DisconnectIfConnected();
-  mVolume.DisconnectIfConnected();
-  mPreservesPitch.DisconnectIfConnected();
-  mLooping.DisconnectIfConnected();
+
   mDuration.DisconnectAll();
   mCurrentPosition.DisconnectAll();
   // TODO : implement audible check
@@ -965,6 +961,12 @@ media::TimeUnit ExternalEngineStateMachine::GetVideoThreshold() {
     return state->GetTargetTime();
   }
   return mCurrentPosition.Ref();
+}
+
+void ExternalEngineStateMachine::UpdateSecondaryVideoContainer() {
+  AssertOnTaskQueue();
+  LOG("UpdateSecondaryVideoContainer=%p", mSecondaryVideoContainer.Ref().get());
+  mOnSecondaryVideoContainerInstalled.Notify(mSecondaryVideoContainer.Ref());
 }
 
 #undef FMT

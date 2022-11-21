@@ -171,6 +171,7 @@ class MediaDecoderStateMachineBase {
   virtual void PreservesPitchChanged() = 0;
   virtual void PlayStateChanged() = 0;
   virtual void LoopingChanged() = 0;
+  virtual void UpdateSecondaryVideoContainer() = 0;
 
   // Init tasks which should be done on the task queue.
   virtual void InitializationTask(MediaDecoder* aDecoder);
@@ -229,6 +230,10 @@ class MediaDecoderStateMachineBase {
   // Whether to seek back to the start of the media resource
   // upon reaching the end.
   Mirror<bool> mLooping;
+
+  // Set if the decoder is sending video to a secondary container. While set we
+  // should not suspend the decoder.
+  Mirror<RefPtr<VideoFrameContainer>> mSecondaryVideoContainer;
 
   // Duration of the media. This is guaranteed to be non-null after we finish
   // decoding the first frame.

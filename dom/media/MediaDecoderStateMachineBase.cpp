@@ -44,6 +44,7 @@ MediaDecoderStateMachineBase::MediaDecoderStateMachineBase(
       INIT_MIRROR(mVolume, 1.0),
       INIT_MIRROR(mPreservesPitch, true),
       INIT_MIRROR(mLooping, false),
+      INIT_MIRROR(mSecondaryVideoContainer, nullptr),
       INIT_CANONICAL(mDuration, media::NullableTimeUnit()),
       INIT_CANONICAL(mCurrentPosition, media::TimeUnit::Zero()),
       INIT_CANONICAL(mIsAudioDataAudible, false),
@@ -114,6 +115,8 @@ void MediaDecoderStateMachineBase::InitializationTask(MediaDecoder* aDecoder) {
   mVolume.Connect(aDecoder->CanonicalVolume());
   mPreservesPitch.Connect(aDecoder->CanonicalPreservesPitch());
   mLooping.Connect(aDecoder->CanonicalLooping());
+  mSecondaryVideoContainer.Connect(
+      aDecoder->CanonicalSecondaryVideoContainer());
 
   // Initialize watchers.
   mWatchManager.Watch(mBuffered,
@@ -124,15 +127,25 @@ void MediaDecoderStateMachineBase::InitializationTask(MediaDecoder* aDecoder) {
   mWatchManager.Watch(mPlayState,
                       &MediaDecoderStateMachineBase::PlayStateChanged);
   mWatchManager.Watch(mLooping, &MediaDecoderStateMachineBase::LoopingChanged);
+  mWatchManager.Watch(
+      mSecondaryVideoContainer,
+      &MediaDecoderStateMachineBase::UpdateSecondaryVideoContainer);
 }
 
 RefPtr<ShutdownPromise> MediaDecoderStateMachineBase::BeginShutdown() {
   MOZ_ASSERT(NS_IsMainThread());
-  return InvokeAsync(OwnerThread(), __func__,
-                     [self = RefPtr<MediaDecoderStateMachineBase>(this)]() {
-                       self->mWatchManager.Shutdown();
-                       return self->Shutdown();
-                     });
+  return InvokeAsync(
+      OwnerThread(), __func__,
+      [self = RefPtr<MediaDecoderStateMachineBase>(this), this]() {
+        mWatchManager.Shutdown();
+        mBuffered.DisconnectIfConnected();
+        mPlayState.DisconnectIfConnected();
+        mVolume.DisconnectIfConnected();
+        mPreservesPitch.DisconnectIfConnected();
+        mLooping.DisconnectIfConnected();
+        mSecondaryVideoContainer.DisconnectIfConnected();
+        return Shutdown();
+      });
 }
 
 RefPtr<MediaDecoder::SeekPromise> MediaDecoderStateMachineBase::InvokeSeek(

@@ -3211,14 +3211,8 @@ RefPtr<ShutdownPromise> MediaDecoderStateMachine::ShutdownState::Enter() {
   master->mAudibleListener.DisconnectIfExists();
 
   // Disconnect canonicals and mirrors before shutting down our task queue.
-  master->mBuffered.DisconnectIfConnected();
-  master->mPlayState.DisconnectIfConnected();
-  master->mVolume.DisconnectIfConnected();
-  master->mPreservesPitch.DisconnectIfConnected();
-  master->mLooping.DisconnectIfConnected();
   master->mStreamName.DisconnectIfConnected();
   master->mSinkDevice.DisconnectIfConnected();
-  master->mSecondaryVideoContainer.DisconnectIfConnected();
   master->mOutputCaptureState.DisconnectIfConnected();
   master->mOutputDummyTrack.DisconnectIfConnected();
   master->mOutputTracks.DisconnectIfConnected();
@@ -3257,7 +3251,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
       mSeamlessLoopingAllowed(false),
       INIT_MIRROR(mStreamName, nsAutoString()),
       INIT_MIRROR(mSinkDevice, nullptr),
-      INIT_MIRROR(mSecondaryVideoContainer, nullptr),
       INIT_MIRROR(mOutputCaptureState, MediaDecoder::OutputCaptureState::None),
       INIT_MIRROR(mOutputDummyTrack, nullptr),
       INIT_MIRROR(mOutputTracks, nsTArray<RefPtr<ProcessedMediaTrack>>()),
@@ -3291,8 +3284,6 @@ void MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder) {
 
   // Connect mirrors.
   mSinkDevice.Connect(aDecoder->CanonicalSinkDevice());
-  mSecondaryVideoContainer.Connect(
-      aDecoder->CanonicalSecondaryVideoContainer());
   mOutputCaptureState.Connect(aDecoder->CanonicalOutputCaptureState());
   mOutputDummyTrack.Connect(aDecoder->CanonicalOutputDummyTrack());
   mOutputTracks.Connect(aDecoder->CanonicalOutputTracks());
@@ -3301,8 +3292,6 @@ void MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder) {
   // Initialize watchers.
   mWatchManager.Watch(mStreamName,
                       &MediaDecoderStateMachine::StreamNameChanged);
-  mWatchManager.Watch(mSecondaryVideoContainer,
-                      &MediaDecoderStateMachine::UpdateSecondaryVideoContainer);
   mWatchManager.Watch(mOutputCaptureState,
                       &MediaDecoderStateMachine::UpdateOutputCaptured);
   mWatchManager.Watch(mOutputDummyTrack,
