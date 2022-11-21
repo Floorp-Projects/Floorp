@@ -148,118 +148,6 @@ async function panLeftToRightEnd(aElement, aX, aY, aMultiplier) {
 requestLongerTimeout(2);
 
 add_task(async () => {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
-      ["browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate"],
-      ["widget.disable-swipe-tracker", false],
-      ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
-      ["widget.swipe.success-velocity-contribution", 0.5],
-    ],
-  });
-
-  const firstPage = "about:about";
-  const secondPage = "about:mozilla";
-  const tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    firstPage,
-    true /* waitForLoad */
-  );
-
-  BrowserTestUtils.loadURI(tab.linkedBrowser, secondPage);
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, secondPage);
-
-  // Make sure we can go back to the previous page.
-  ok(gBrowser.webNavigation.canGoBack);
-  // and we cannot go forward to the next page.
-  ok(!gBrowser.webNavigation.canGoForward);
-
-  let wheelEventCount = 0;
-  tab.linkedBrowser.addEventListener("wheel", () => {
-    wheelEventCount++;
-  });
-
-  // Try to navigate forward.
-  await panRightToLeft(tab.linkedBrowser, 100, 100, 1);
-  // NOTE: The last endPhase shouldn't fire a wheel event since
-  // its delta is zero.
-  is(wheelEventCount, 3, "Received 3 wheel events");
-
-  await waitForWhile();
-  // Make sure any navigation didn't happen.
-  is(tab.linkedBrowser.currentURI.spec, secondPage);
-
-  // Try to navigate backward.
-  wheelEventCount = 0;
-  let startLoadingPromise = BrowserTestUtils.browserStarted(
-    tab.linkedBrowser,
-    firstPage
-  );
-  let stoppedLoadingPromise = BrowserTestUtils.browserStopped(
-    tab.linkedBrowser,
-    firstPage
-  );
-  await panLeftToRight(tab.linkedBrowser, 100, 100, 1);
-  // NOTE: We only get a wheel event for the beginPhase, rest of events have
-  // been captured by the swipe gesture module.
-  is(wheelEventCount, 1, "Received a wheel event");
-
-  // Make sure the gesture triggered going back to the previous page.
-  await Promise.all([startLoadingPromise, stoppedLoadingPromise]);
-
-  ok(gBrowser.webNavigation.canGoForward);
-
-  // Now try to navigate forward again.
-  wheelEventCount = 0;
-  startLoadingPromise = BrowserTestUtils.browserStarted(
-    tab.linkedBrowser,
-    secondPage
-  );
-  stoppedLoadingPromise = BrowserTestUtils.browserStopped(
-    tab.linkedBrowser,
-    secondPage
-  );
-  await panRightToLeft(tab.linkedBrowser, 100, 100, 1);
-  is(wheelEventCount, 1, "Received a wheel event");
-
-  await Promise.all([startLoadingPromise, stoppedLoadingPromise]);
-
-  ok(gBrowser.webNavigation.canGoBack);
-
-  // Now try to navigate backward again but with preventDefault-ed event
-  // handler.
-  wheelEventCount = 0;
-  let wheelEventListener = event => {
-    event.preventDefault();
-  };
-  tab.linkedBrowser.addEventListener("wheel", wheelEventListener);
-  await panLeftToRight(tab.linkedBrowser, 100, 100, 1);
-  is(wheelEventCount, 3, "Received all wheel events");
-
-  await waitForWhile();
-  // Make sure any navigation didn't happen.
-  is(tab.linkedBrowser.currentURI.spec, secondPage);
-
-  // Now drop the event handler and disable the swipe tracker and try to swipe
-  // again.
-  wheelEventCount = 0;
-  tab.linkedBrowser.removeEventListener("wheel", wheelEventListener);
-  await SpecialPowers.pushPrefEnv({
-    set: [["widget.disable-swipe-tracker", true]],
-  });
-
-  await panLeftToRight(tab.linkedBrowser, 100, 100, 1);
-  is(wheelEventCount, 3, "Received all wheel events");
-
-  await waitForWhile();
-  // Make sure any navigation didn't happen.
-  is(tab.linkedBrowser.currentURI.spec, secondPage);
-
-  BrowserTestUtils.removeTab(tab);
-  await SpecialPowers.popPrefEnv();
-});
-
-add_task(async () => {
   // Set the default values for an OS that supports swipe to nav, except for
   // whole-page-pixel-size which varies by OS, we vary it in differente tests
   // in this file.
@@ -914,5 +802,120 @@ add_task(async () => {
   ok(newWin.gBrowser.webNavigation.canGoBack);
 
   await BrowserTestUtils.closeWindow(newWin);
+  await SpecialPowers.popPrefEnv();
+});
+
+// NOTE: This test listens wheel events so that it causes an overscroll issue
+// (bug 1800022). To avoid the bug, we need to run this test case at the end
+// of this file.
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
+      ["browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate"],
+      ["widget.disable-swipe-tracker", false],
+      ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
+      ["widget.swipe.success-velocity-contribution", 0.5],
+    ],
+  });
+
+  const firstPage = "about:about";
+  const secondPage = "about:mozilla";
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    firstPage,
+    true /* waitForLoad */
+  );
+
+  BrowserTestUtils.loadURI(tab.linkedBrowser, secondPage);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, secondPage);
+
+  // Make sure we can go back to the previous page.
+  ok(gBrowser.webNavigation.canGoBack);
+  // and we cannot go forward to the next page.
+  ok(!gBrowser.webNavigation.canGoForward);
+
+  let wheelEventCount = 0;
+  tab.linkedBrowser.addEventListener("wheel", () => {
+    wheelEventCount++;
+  });
+
+  // Try to navigate forward.
+  await panRightToLeft(tab.linkedBrowser, 100, 100, 1);
+  // NOTE: The last endPhase shouldn't fire a wheel event since
+  // its delta is zero.
+  is(wheelEventCount, 3, "Received 3 wheel events");
+
+  await waitForWhile();
+  // Make sure any navigation didn't happen.
+  is(tab.linkedBrowser.currentURI.spec, secondPage);
+
+  // Try to navigate backward.
+  wheelEventCount = 0;
+  let startLoadingPromise = BrowserTestUtils.browserStarted(
+    tab.linkedBrowser,
+    firstPage
+  );
+  let stoppedLoadingPromise = BrowserTestUtils.browserStopped(
+    tab.linkedBrowser,
+    firstPage
+  );
+  await panLeftToRight(tab.linkedBrowser, 100, 100, 1);
+  // NOTE: We only get a wheel event for the beginPhase, rest of events have
+  // been captured by the swipe gesture module.
+  is(wheelEventCount, 1, "Received a wheel event");
+
+  // Make sure the gesture triggered going back to the previous page.
+  await Promise.all([startLoadingPromise, stoppedLoadingPromise]);
+
+  ok(gBrowser.webNavigation.canGoForward);
+
+  // Now try to navigate forward again.
+  wheelEventCount = 0;
+  startLoadingPromise = BrowserTestUtils.browserStarted(
+    tab.linkedBrowser,
+    secondPage
+  );
+  stoppedLoadingPromise = BrowserTestUtils.browserStopped(
+    tab.linkedBrowser,
+    secondPage
+  );
+  await panRightToLeft(tab.linkedBrowser, 100, 100, 1);
+  is(wheelEventCount, 1, "Received a wheel event");
+
+  await Promise.all([startLoadingPromise, stoppedLoadingPromise]);
+
+  ok(gBrowser.webNavigation.canGoBack);
+
+  // Now try to navigate backward again but with preventDefault-ed event
+  // handler.
+  wheelEventCount = 0;
+  let wheelEventListener = event => {
+    event.preventDefault();
+  };
+  tab.linkedBrowser.addEventListener("wheel", wheelEventListener);
+  await panLeftToRight(tab.linkedBrowser, 100, 100, 1);
+  is(wheelEventCount, 3, "Received all wheel events");
+
+  await waitForWhile();
+  // Make sure any navigation didn't happen.
+  is(tab.linkedBrowser.currentURI.spec, secondPage);
+
+  // Now drop the event handler and disable the swipe tracker and try to swipe
+  // again.
+  wheelEventCount = 0;
+  tab.linkedBrowser.removeEventListener("wheel", wheelEventListener);
+  await SpecialPowers.pushPrefEnv({
+    set: [["widget.disable-swipe-tracker", true]],
+  });
+
+  await panLeftToRight(tab.linkedBrowser, 100, 100, 1);
+  is(wheelEventCount, 3, "Received all wheel events");
+
+  await waitForWhile();
+  // Make sure any navigation didn't happen.
+  is(tab.linkedBrowser.currentURI.spec, secondPage);
+
+  BrowserTestUtils.removeTab(tab);
   await SpecialPowers.popPrefEnv();
 });
