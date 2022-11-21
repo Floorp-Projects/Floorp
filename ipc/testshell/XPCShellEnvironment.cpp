@@ -183,16 +183,51 @@ static bool GCZeal(JSContext* cx, unsigned argc, JS::Value* vp) {
 }
 #endif
 
-const JSFunctionSpec gGlobalFunctions[] = {JS_FN("print", Print, 0, 0),
-                                           JS_FN("load", Load, 1, 0),
-                                           JS_FN("quit", Quit, 0, 0),
-                                           JS_FN("dumpXPC", DumpXPC, 1, 0),
-                                           JS_FN("dump", Dump, 1, 0),
-                                           JS_FN("gc", GC, 0, 0),
-#ifdef JS_GC_ZEAL
-                                           JS_FN("gczeal", GCZeal, 1, 0),
+#ifdef ANDROID
+static bool ChangeTestShellDir(JSContext* cx, unsigned argc, Value* vp) {
+  // This method should only be used by testing/xpcshell/head.js to change to
+  // the correct directory on Android Remote XPCShell tests.
+  //
+  // TODO: Bug 1801725 - Find a more ergonomic way to do this than exposing
+  // identical methods in XPCShellEnvironment and XPCShellImpl to chdir on
+  // android for Remote XPCShell tests on Android.
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (args.length() != 1) {
+    JS_ReportErrorASCII(cx, "changeTestShellDir() takes one argument");
+    return false;
+  }
+
+  nsAutoJSCString path;
+  if (!path.init(cx, args[0])) {
+    JS_ReportErrorASCII(
+        cx, "changeTestShellDir(): could not convert argument 1 to string");
+    return false;
+  }
+
+  if (chdir(path.get())) {
+    JS_ReportErrorASCII(cx, "changeTestShellDir(): could not change directory");
+    return false;
+  }
+
+  return true;
+}
 #endif
-                                           JS_FS_END};
+
+const JSFunctionSpec gGlobalFunctions[] = {
+    JS_FN("print", Print, 0, 0),
+    JS_FN("load", Load, 1, 0),
+    JS_FN("quit", Quit, 0, 0),
+    JS_FN("dumpXPC", DumpXPC, 1, 0),
+    JS_FN("dump", Dump, 1, 0),
+    JS_FN("gc", GC, 0, 0),
+#ifdef JS_GC_ZEAL
+    JS_FN("gczeal", GCZeal, 1, 0),
+#endif
+#ifdef ANDROID
+    JS_FN("changeTestShellDir", ChangeTestShellDir, 1, 0),
+#endif
+    JS_FS_END};
 
 typedef enum JSShellErrNum {
 #define MSG_DEF(name, number, count, exception, format) name = number,

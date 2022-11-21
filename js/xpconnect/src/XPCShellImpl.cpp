@@ -37,6 +37,7 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsCOMPtr.h"
 #include "nsJSPrincipals.h"
+#include "nsJSUtils.h"
 #include "xpcpublic.h"
 #include "xpcprivate.h"
 #include "BackstagePass.h"
@@ -634,6 +635,37 @@ static bool RegisterAppManifest(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+#ifdef ANDROID
+static bool ChangeTestShellDir(JSContext* cx, unsigned argc, Value* vp) {
+  // This method should only be used by testing/xpcshell/head.js to change to
+  // the correct directory on Android Remote XPCShell tests.
+  //
+  // TODO: Bug 1801725 - Find a more ergonomic way to do this than exposing
+  // identical methods in XPCShellEnvironment and XPCShellImpl to chdir on
+  // android for Remote XPCShell tests on Android.
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (args.length() != 1) {
+    JS_ReportErrorASCII(cx, "changeTestShellDir() takes one argument");
+    return false;
+  }
+
+  nsAutoJSCString path;
+  if (!path.init(cx, args[0])) {
+    JS_ReportErrorASCII(
+        cx, "changeTestShellDir(): could not convert argument 1 to string");
+    return false;
+  }
+
+  if (chdir(path.get())) {
+    JS_ReportErrorASCII(cx, "changeTestShellDir(): could not change directory");
+    return false;
+  }
+
+  return true;
+}
+#endif
+
 #ifdef ENABLE_TESTS
 static bool RegisterXPCTestComponents(JSContext* cx, unsigned argc, Value* vp) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
@@ -669,6 +701,9 @@ static const JSFunctionSpec glob_functions[] = {
     JS_FN("setInterruptCallback", SetInterruptCallback, 1,0),
     JS_FN("simulateNoScriptActivity", SimulateNoScriptActivity, 1,0),
     JS_FN("registerAppManifest", RegisterAppManifest, 1, 0),
+#ifdef ANDROID
+    JS_FN("changeTestShellDir", ChangeTestShellDir, 1,0),
+#endif
 #ifdef ENABLE_TESTS
     JS_FN("registerXPCTestComponents", RegisterXPCTestComponents, 0, 0),
 #endif
