@@ -29,6 +29,7 @@
 #include "nsXULAppAPI.h"
 #include "SharedFontList-impl.h"
 #include "StandardFonts-linux.inc"
+#include "mozilla/intl/Locale.h"
 
 #include "mozilla/gfx/HelpersCairo.h"
 
@@ -60,6 +61,7 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::unicode;
+using namespace mozilla::intl;
 
 #ifndef FC_POSTSCRIPT_NAME
 #  define FC_POSTSCRIPT_NAME "postscriptname" /* String */
@@ -2087,6 +2089,12 @@ gfxFontEntry* gfxFcPlatformFontList::MakePlatformFont(
                                     std::move(face));
 }
 
+static bool UseCustomFontconfigLookupsForLocale(const Locale& aLocale) {
+  return aLocale.Script().EqualTo("Hans") || aLocale.Script().EqualTo("Hant") ||
+         aLocale.Script().EqualTo("Jpan") || aLocale.Script().EqualTo("Kore") ||
+         aLocale.Script().EqualTo("Arab");
+}
+
 bool gfxFcPlatformFontList::FindAndAddFamiliesLocked(
     nsPresContext* aPresContext, StyleGenericFontFamily aGeneric,
     const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
@@ -2136,14 +2144,28 @@ bool gfxFcPlatformFontList::FindAndAddFamiliesLocked(
   // Nimbus Sans L as alternatives for Helvetica.
 
   // Because the FcConfigSubstitute call is quite expensive, we cache the
-  // actual font families found via this process. We include the language (if
-  // any) as part of the cache key because fontconfig may have lang-specific
-  // rules that specify different substitutions.
+  // actual font families found via this process.
   nsAutoCString lang;
   GetSampleLangForGroup(aLanguage, lang);
-  nsAutoCString cacheKey(lang);
-  ToLowerCase(cacheKey);
-  cacheKey.Append(':');
+  ToLowerCase(lang);
+  nsAutoCString cacheKey;
+
+  // For languages that use CJK or Arabic script, we include the language as
+  // part of the cache key because fontconfig may have lang-specific rules that
+  // specify different substitutions. (In theory, this could apply to *any*
+  // language, but it's highly unlikely to matter for non-CJK/Arabic scripts,
+  // and it gets really expensive to do separate lookups for 300+ distinct lang
+  // tags e.g. on wikipedia.org, when they all end up mapping to the same font
+  // list.)
+  Locale locale;
+  if (LocaleParser::TryParse(lang, locale).isOk() &&
+      locale.AddLikelySubtags().isOk()) {
+    if (UseCustomFontconfigLookupsForLocale(locale)) {
+      cacheKey = lang;
+      cacheKey.Append(':');
+    }
+  }
+
   cacheKey.Append(familyName);
   if (const auto& cached = mFcSubstituteCache.Lookup(cacheKey)) {
     if (cached->IsEmpty()) {
@@ -2379,15 +2401,32 @@ gfxPlatformFontList::PrefFontList* gfxFcPlatformFontList::FindGenericFamilies(
   GetSampleLangForGroup(aLanguage, fcLang);
   ToLowerCase(fcLang);
 
-  nsAutoCString genericLang(aGeneric);
+  nsAutoCString cacheKey(aGeneric);
   if (fcLang.Length() > 0) {
-    genericLang.Append('-');
+    cacheKey.Append('-');
+    // If the script is CJK or Arabic, we cache by lang so that different fonts
+    // various locales can be supported; but otherwise, we cache by script
+    // subtag, to avoid a proliferation of entries for Western & similar
+    // languages.
+    // In theory, this means we could fail to respect custom fontconfig rules
+    // for individual (non-CJK/Arab) languages that share the same script, but
+    // such setups are probably vanishingly rare.
+    Locale locale;
+    if (LocaleParser::TryParse(fcLang, locale).isOk() &&
+        locale.AddLikelySubtags().isOk()) {
+      if (UseCustomFontconfigLookupsForLocale(locale)) {
+        cacheKey.Append(fcLang);
+      } else {
+        cacheKey.Append(locale.Script().Span());
+      }
+    } else {
+      cacheKey.Append(fcLang);
+    }
   }
-  genericLang.Append(fcLang);
 
   // try to get the family from the cache
   return mGenericMappings.WithEntryHandle(
-      genericLang, [&](auto&& entry) -> PrefFontList* {
+      cacheKey, [&](auto&& entry) -> PrefFontList* {
         if (!entry) {
           // if not found, ask fontconfig to pick the appropriate font
           RefPtr<FcPattern> genericPattern = dont_AddRef(FcPatternCreate());
