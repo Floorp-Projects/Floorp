@@ -22,6 +22,11 @@ ChromeUtils.defineESModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
 });
 
+/* global OS */
+Cc["@mozilla.org/net/osfileconstantsservice;1"]
+  .getService(Ci.nsIOSFileConstantsService)
+  .init();
+
 /**
  * Creates and starts a new download, using either DownloadCopySaver or
  * DownloadLegacySaver based on the current test run.
@@ -158,7 +163,7 @@ add_task(async function test_basic_tryToKeepPartialData() {
 
   // The target file should now have been created, and the ".part" file deleted.
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT + TEST_DATA_SHORT);
-  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
+  Assert.equal(false, await IOUtils.exists(download.target.partFilePath));
   Assert.equal(32, download.saver.getSha256Hash().length);
 });
 
@@ -392,22 +397,14 @@ add_task(async function test_windows_zoneInformation() {
       }
       await promiseVerifyContents(targetFile.path, TEST_DATA_SHORT);
 
-      // Verify that the Alternate Data Stream has been written.
-      let file = await OS.File.open(
-        targetFile.path + ":Zone.Identifier",
-        {},
-        { winAllowLengthBeyondMaxPathWithCaveats: true }
-      );
-      try {
-        Assert.equal(
-          new TextDecoder().decode(await file.read()),
-          test.expectedZoneId
-        );
-      } finally {
-        file.close();
+      let path = targetFile.path + ":Zone.Identifier";
+      if (Services.appinfo.OS === "WINNT") {
+        path = PathUtils.toExtendedWindowsPath(path);
       }
+
+      Assert.equal(await IOUtils.readUTF8(path), test.expectedZoneId);
     } finally {
-      await OS.File.remove(targetFile.path);
+      await IOUtils.remove(targetFile.path);
     }
   }
 });
@@ -649,7 +646,7 @@ add_task(async function test_empty_progress() {
   // We should have received the content type even for an empty file.
   Assert.equal(download.contentType, "text/plain");
 
-  Assert.equal((await OS.File.stat(download.target.path)).size, 0);
+  Assert.equal((await IOUtils.stat(download.target.path)).size, 0);
   Assert.ok(download.target.exists);
   Assert.equal(download.target.size, 0);
 });
@@ -679,11 +676,11 @@ add_task(async function test_empty_progress_tryToKeepPartialData() {
   await promiseDownloadStopped(download);
 
   // The target file should now have been created, and the ".part" file deleted.
-  Assert.equal((await OS.File.stat(download.target.path)).size, 0);
+  Assert.equal((await IOUtils.stat(download.target.path)).size, 0);
   Assert.ok(download.target.exists);
   Assert.equal(download.target.size, 0);
 
-  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
+  Assert.equal(false, await IOUtils.exists(download.target.partFilePath));
   Assert.equal(32, download.saver.getSha256Hash().length);
 });
 
@@ -763,7 +760,7 @@ add_task(async function test_empty_noprogress() {
   Assert.ok(download.target.exists);
   Assert.equal(download.target.size, 0);
 
-  Assert.equal((await OS.File.stat(download.target.path)).size, 0);
+  Assert.equal((await IOUtils.stat(download.target.path)).size, 0);
 });
 
 /**
@@ -860,7 +857,7 @@ add_task(async function test_cancel_midway() {
   Assert.ok(!download.target.exists);
   Assert.equal(download.target.size, 0);
 
-  Assert.equal(false, await OS.File.exists(download.target.path));
+  Assert.equal(false, await IOUtils.exists(download.target.path));
 
   // Progress properties are not reset by canceling.
   Assert.equal(download.progress, 50);
@@ -891,8 +888,8 @@ add_task(async function test_cancel_midway_tryToKeepPartialData() {
     useLegacySaver: gUseLegacySaver,
   });
 
-  Assert.ok(await OS.File.exists(download.target.path));
-  Assert.ok(await OS.File.exists(download.target.partFilePath));
+  Assert.ok(await IOUtils.exists(download.target.path));
+  Assert.ok(await IOUtils.exists(download.target.partFilePath));
 
   await download.cancel();
   await download.removePartialData();
@@ -901,8 +898,8 @@ add_task(async function test_cancel_midway_tryToKeepPartialData() {
   Assert.ok(download.canceled);
   Assert.ok(download.error === null);
 
-  Assert.equal(false, await OS.File.exists(download.target.path));
-  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
+  Assert.equal(false, await IOUtils.exists(download.target.path));
+  Assert.equal(false, await IOUtils.exists(download.target.partFilePath));
 });
 
 /**
@@ -937,7 +934,7 @@ add_task(async function test_cancel_immediately() {
   Assert.ok(download.canceled);
   Assert.ok(download.error === null);
 
-  Assert.equal(false, await OS.File.exists(download.target.path));
+  Assert.equal(false, await IOUtils.exists(download.target.path));
 
   // Check that the promise returned by the "cancel" method has been resolved.
   await promiseCancel;
@@ -997,7 +994,7 @@ add_task(async function test_cancel_midway_restart_tryToKeepPartialData() {
   Assert.ok(download.hasPartialData);
 
   // We should have kept the partial data and an empty target file placeholder.
-  Assert.ok(await OS.File.exists(download.target.path));
+  Assert.ok(await IOUtils.exists(download.target.path));
   await promiseVerifyContents(download.target.partFilePath, TEST_DATA_SHORT);
   Assert.ok(!download.target.exists);
   Assert.equal(download.target.size, 0);
@@ -1038,7 +1035,7 @@ add_task(async function test_cancel_midway_restart_tryToKeepPartialData() {
 
   // The target file should now have been created, and the ".part" file deleted.
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT + TEST_DATA_SHORT);
-  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
+  Assert.equal(false, await IOUtils.exists(download.target.partFilePath));
 });
 
 /**
@@ -1053,8 +1050,8 @@ add_task(async function test_cancel_midway_restart_removePartialData() {
   await download.removePartialData();
 
   Assert.ok(!download.hasPartialData);
-  Assert.equal(false, await OS.File.exists(download.target.path));
-  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
+  Assert.equal(false, await IOUtils.exists(download.target.path));
+  Assert.equal(false, await IOUtils.exists(download.target.partFilePath));
   Assert.ok(!download.target.exists);
   Assert.equal(download.target.size, 0);
 
@@ -1067,7 +1064,7 @@ add_task(async function test_cancel_midway_restart_removePartialData() {
 
   // The target file should now have been created, and the ".part" file deleted.
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT + TEST_DATA_SHORT);
-  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
+  Assert.equal(false, await IOUtils.exists(download.target.partFilePath));
 });
 
 /**
@@ -1089,8 +1086,8 @@ add_task(
     await promiseVerifyContents(download.target.partFilePath, TEST_DATA_SHORT);
 
     await download.removePartialData();
-    Assert.equal(false, await OS.File.exists(download.target.path));
-    Assert.equal(false, await OS.File.exists(download.target.partFilePath));
+    Assert.equal(false, await IOUtils.exists(download.target.path));
+    Assert.equal(false, await IOUtils.exists(download.target.partFilePath));
 
     // Restart the download from the beginning.
     mustInterruptResponses();
@@ -1101,14 +1098,14 @@ add_task(
 
     // While the download is in progress, we should still have a ".part" file.
     Assert.ok(!download.hasPartialData);
-    Assert.ok(await OS.File.exists(download.target.path));
-    Assert.ok(await OS.File.exists(download.target.partFilePath));
+    Assert.ok(await IOUtils.exists(download.target.path));
+    Assert.ok(await IOUtils.exists(download.target.partFilePath));
 
     // On Unix, verify that the file with the partially downloaded data is not
     // accessible by other users on the system.
     if (Services.appinfo.OS == "Darwin" || Services.appinfo.OS == "Linux") {
       Assert.equal(
-        (await OS.File.stat(download.target.partFilePath)).unixMode,
+        (await IOUtils.stat(download.target.partFilePath)).permissions,
         0o600
       );
     }
@@ -1117,8 +1114,8 @@ add_task(
 
     // The ".part" file should be deleted now that the download is canceled.
     Assert.ok(!download.hasPartialData);
-    Assert.equal(false, await OS.File.exists(download.target.path));
-    Assert.equal(false, await OS.File.exists(download.target.partFilePath));
+    Assert.equal(false, await IOUtils.exists(download.target.path));
+    Assert.equal(false, await IOUtils.exists(download.target.partFilePath));
 
     // The third time, we'll request and obtain the entire response again.
     continueResponses();
@@ -1132,7 +1129,7 @@ add_task(
       download.target,
       TEST_DATA_SHORT + TEST_DATA_SHORT
     );
-    Assert.equal(false, await OS.File.exists(download.target.partFilePath));
+    Assert.equal(false, await IOUtils.exists(download.target.partFilePath));
   }
 );
 
@@ -1293,7 +1290,7 @@ add_task(async function test_cancel_twice() {
   Assert.ok(download.canceled);
   Assert.ok(download.error === null);
 
-  Assert.equal(false, await OS.File.exists(download.target.path));
+  Assert.equal(false, await IOUtils.exists(download.target.path));
 });
 
 /**
@@ -1309,13 +1306,13 @@ add_task(async function test_refresh_succeeded() {
 
   // If the file is removed, only the "exists" property should change, and the
   // "size" property should keep its previous value.
-  await OS.File.move(download.target.path, download.target.path + ".old");
+  await IOUtils.move(download.target.path, `${download.target.path}.old`);
   await download.refresh();
   Assert.ok(!download.target.exists);
   Assert.equal(download.target.size, TEST_DATA_SHORT.length);
 
   // The DownloadTarget properties should be restored when the file is put back.
-  await OS.File.move(download.target.path + ".old", download.target.path);
+  await IOUtils.move(`${download.target.path}.old`, download.target.path);
   await download.refresh();
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT);
 });
@@ -1342,7 +1339,7 @@ add_task(async function test_finalize() {
   Assert.ok(download.canceled);
   Assert.ok(download.error === null);
 
-  Assert.equal(false, await OS.File.exists(download.target.path));
+  Assert.equal(false, await IOUtils.exists(download.target.path));
 });
 
 /**
@@ -1356,8 +1353,8 @@ add_task(async function test_finalize_tryToKeepPartialData() {
   await download.finalize();
 
   Assert.ok(download.hasPartialData);
-  Assert.ok(await OS.File.exists(download.target.path));
-  Assert.ok(await OS.File.exists(download.target.partFilePath));
+  Assert.ok(await IOUtils.exists(download.target.path));
+  Assert.ok(await IOUtils.exists(download.target.partFilePath));
 
   // Clean up.
   await download.removePartialData();
@@ -1369,8 +1366,8 @@ add_task(async function test_finalize_tryToKeepPartialData() {
   await download.finalize(true);
 
   Assert.ok(!download.hasPartialData);
-  Assert.equal(false, await OS.File.exists(download.target.path));
-  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
+  Assert.equal(false, await IOUtils.exists(download.target.path));
+  Assert.equal(false, await IOUtils.exists(download.target.partFilePath));
 });
 
 /**
@@ -1454,7 +1451,7 @@ add_task(async function test_error_source() {
     Assert.ok(download.error.becauseSourceFailed);
     Assert.ok(!download.error.becauseTargetFailed);
 
-    Assert.equal(false, await OS.File.exists(download.target.path));
+    Assert.equal(false, await IOUtils.exists(download.target.path));
     Assert.ok(!download.target.exists);
     Assert.equal(download.target.size, 0);
   } finally {
@@ -1516,7 +1513,7 @@ add_task(async function test_error_source_partial() {
   Assert.ok(!download.error.becauseTargetFailed);
   Assert.equal(download.error.result, Cr.NS_ERROR_NET_PARTIAL_TRANSFER);
 
-  Assert.equal(false, await OS.File.exists(download.target.path));
+  Assert.equal(false, await IOUtils.exists(download.target.path));
   Assert.ok(!download.target.exists);
   Assert.equal(download.target.size, 0);
 });
@@ -1563,7 +1560,7 @@ add_task(async function test_error_source_netreset() {
   Assert.ok(!download.error.becauseTargetFailed);
   Assert.equal(download.error.result, Cr.NS_ERROR_NET_RESET);
 
-  Assert.equal(false, await OS.File.exists(download.target.path));
+  Assert.equal(false, await IOUtils.exists(download.target.path));
 });
 
 /**
@@ -1901,7 +1898,7 @@ add_task(async function test_blocked_parental_controls() {
   }
 
   // Now that the download stopped, the target file should not exist.
-  Assert.equal(false, await OS.File.exists(download.target.path));
+  Assert.equal(false, await IOUtils.exists(download.target.path));
 
   cleanup();
 });
@@ -1932,7 +1929,7 @@ add_task(async function test_blocked_parental_controls_httpstatus450() {
     Assert.ok(download.stopped);
   }
 
-  Assert.equal(false, await OS.File.exists(download.target.path));
+  Assert.equal(false, await IOUtils.exists(download.target.path));
 });
 
 /**
@@ -1960,7 +1957,7 @@ add_task(async function test_blocked_applicationReputation() {
   });
 
   // Now that the download is blocked, the target file should not exist.
-  Assert.equal(false, await OS.File.exists(download.target.path));
+  Assert.equal(false, await IOUtils.exists(download.target.path));
   Assert.ok(!download.target.exists);
   Assert.equal(download.target.size, 0);
 
@@ -2053,8 +2050,8 @@ add_task(async function test_blocked_applicationReputation_confirmBlock() {
   });
 
   Assert.ok(download.hasBlockedData);
-  Assert.equal((await OS.File.stat(download.target.path)).size, 0);
-  Assert.ok(await OS.File.exists(download.target.partFilePath));
+  Assert.equal((await IOUtils.stat(download.target.path)).size, 0);
+  Assert.ok(await IOUtils.exists(download.target.partFilePath));
 
   await download.confirmBlock();
 
@@ -2063,8 +2060,8 @@ add_task(async function test_blocked_applicationReputation_confirmBlock() {
   Assert.ok(download.stopped);
   Assert.ok(!download.succeeded);
   Assert.ok(!download.hasBlockedData);
-  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
-  Assert.equal(false, await OS.File.exists(download.target.path));
+  Assert.equal(false, await IOUtils.exists(download.target.partFilePath));
+  Assert.equal(false, await IOUtils.exists(download.target.path));
   Assert.ok(!download.target.exists);
   Assert.equal(download.target.size, 0);
 });
@@ -2081,8 +2078,8 @@ add_task(async function test_blocked_applicationReputation_unblock() {
   });
 
   Assert.ok(download.hasBlockedData);
-  Assert.equal((await OS.File.stat(download.target.path)).size, 0);
-  Assert.ok(await OS.File.exists(download.target.partFilePath));
+  Assert.equal((await IOUtils.stat(download.target.path)).size, 0);
+  Assert.ok(await IOUtils.exists(download.target.partFilePath));
 
   await download.unblock();
 
@@ -2091,7 +2088,7 @@ add_task(async function test_blocked_applicationReputation_unblock() {
   Assert.ok(download.stopped);
   Assert.ok(download.succeeded);
   Assert.ok(!download.hasBlockedData);
-  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
+  Assert.equal(false, await IOUtils.exists(download.target.partFilePath));
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT + TEST_DATA_SHORT);
 
   // The only indication the download was previously blocked is the
@@ -2147,8 +2144,8 @@ add_task(async function test_blocked_applicationReputation_decisionRace() {
   Assert.ok(download.stopped);
   Assert.ok(download.succeeded);
   Assert.ok(!download.hasBlockedData);
-  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
-  Assert.ok(await OS.File.exists(download.target.path));
+  Assert.equal(false, await IOUtils.exists(download.target.partFilePath));
+  Assert.ok(await IOUtils.exists(download.target.path));
 
   download = await promiseBlockedDownload({
     keepPartialData: true,
@@ -2172,8 +2169,8 @@ add_task(async function test_blocked_applicationReputation_decisionRace() {
   Assert.ok(download.stopped);
   Assert.ok(!download.succeeded);
   Assert.ok(!download.hasBlockedData);
-  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
-  Assert.equal(false, await OS.File.exists(download.target.path));
+  Assert.equal(false, await IOUtils.exists(download.target.partFilePath));
+  Assert.equal(false, await IOUtils.exists(download.target.path));
   Assert.ok(!download.target.exists);
   Assert.equal(download.target.size, 0);
 });
@@ -2189,10 +2186,10 @@ add_task(async function test_blocked_applicationReputation_unblock() {
   });
 
   Assert.ok(download.hasBlockedData);
-  Assert.ok(await OS.File.exists(download.target.partFilePath));
+  Assert.ok(await IOUtils.exists(download.target.partFilePath));
 
   // Remove the blocked data without telling the download.
-  await OS.File.remove(download.target.partFilePath);
+  await IOUtils.remove(download.target.partFilePath);
 
   let unblockPromise = download.unblock();
   await unblockPromise.then(
@@ -2525,8 +2522,8 @@ add_task(async function test_download_cancel_retry_finalize() {
   // Cancel the download and make sure that the partial data do not exist.
   await download1.cancel();
   Assert.equal(targetFilePath, download1.target.path);
-  Assert.equal(false, await OS.File.exists(download1.target.path));
-  Assert.equal(false, await OS.File.exists(download1.target.partFilePath));
+  Assert.equal(false, await IOUtils.exists(download1.target.path));
+  Assert.equal(false, await IOUtils.exists(download1.target.partFilePath));
   continueResponses();
 
   // Download the same file again with a different download session.
@@ -2539,15 +2536,15 @@ add_task(async function test_download_cancel_retry_finalize() {
   // Wait for download to be completed.
   await promiseDownloadStopped(download2);
   Assert.equal(targetFilePath, download2.target.path);
-  Assert.ok(await OS.File.exists(download2.target.path));
-  Assert.equal(false, await OS.File.exists(download2.target.partFilePath));
+  Assert.ok(await IOUtils.exists(download2.target.path));
+  Assert.equal(false, await IOUtils.exists(download2.target.partFilePath));
 
   // Finalize the first download session.
   await download1.finalize(true);
 
   // The complete download should not have been removed.
-  Assert.ok(await OS.File.exists(download2.target.path));
-  Assert.equal(false, await OS.File.exists(download2.target.partFilePath));
+  Assert.ok(await IOUtils.exists(download2.target.path));
+  Assert.equal(false, await IOUtils.exists(download2.target.partFilePath));
 });
 
 /**
@@ -2560,12 +2557,12 @@ add_task(async function test_blocked_removeByHand_confirmBlock() {
   });
 
   Assert.ok(download1.hasBlockedData);
-  Assert.equal((await OS.File.stat(download1.target.path)).size, 0);
-  Assert.ok(await OS.File.exists(download1.target.partFilePath));
+  Assert.equal((await IOUtils.stat(download1.target.path)).size, 0);
+  Assert.ok(await IOUtils.exists(download1.target.partFilePath));
 
   // Remove the placeholder without telling the download.
-  await OS.File.remove(download1.target.path);
-  Assert.equal(false, await OS.File.exists(download1.target.path));
+  await IOUtils.remove(download1.target.path);
+  Assert.equal(false, await IOUtils.exists(download1.target.path));
 
   // Download a file with the same name as the blocked download.
   let download2 = await Downloads.createDownload({
@@ -2580,13 +2577,13 @@ add_task(async function test_blocked_removeByHand_confirmBlock() {
   // Wait for download to be completed.
   await promiseDownloadStopped(download2);
   Assert.equal(download1.target.path, download2.target.path);
-  Assert.ok(await OS.File.exists(download2.target.path));
+  Assert.ok(await IOUtils.exists(download2.target.path));
 
   // Remove the blocked download.
   await download1.confirmBlock();
 
   // After confirming the complete download should not have been removed.
-  Assert.ok(await OS.File.exists(download2.target.path));
+  Assert.ok(await IOUtils.exists(download2.target.path));
 });
 
 /**
@@ -2627,13 +2624,13 @@ add_task(async function test_launchWhenSucceeded_deleteTempFileOnExit() {
 
   Services.prefs.clearUserPref(kDeleteTempFileOnExit);
 
-  Assert.ok(await OS.File.exists(autoDeleteTargetPathOne));
-  Assert.ok(await OS.File.exists(autoDeleteTargetPathTwo));
-  Assert.ok(await OS.File.exists(noAutoDeleteTargetPath));
+  Assert.ok(await IOUtils.exists(autoDeleteTargetPathOne));
+  Assert.ok(await IOUtils.exists(autoDeleteTargetPathTwo));
+  Assert.ok(await IOUtils.exists(noAutoDeleteTargetPath));
 
   // Simulate leaving private browsing mode
   Services.obs.notifyObservers(null, "last-pb-context-exited");
-  Assert.equal(false, await OS.File.exists(autoDeleteTargetPathOne));
+  Assert.equal(false, await IOUtils.exists(autoDeleteTargetPathOne));
 
   // Simulate browser shutdown
   let expire = Cc[
@@ -2647,9 +2644,9 @@ add_task(async function test_launchWhenSucceeded_deleteTempFileOnExit() {
     Services.prefs.getBoolPref(
       "browser.download.improvements_to_download_panel"
     ),
-    await OS.File.exists(autoDeleteTargetPathTwo)
+    await IOUtils.exists(autoDeleteTargetPathTwo)
   );
-  Assert.ok(await OS.File.exists(noAutoDeleteTargetPath));
+  Assert.ok(await IOUtils.exists(noAutoDeleteTargetPath));
 });
 
 add_task(async function test_partitionKey() {
