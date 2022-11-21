@@ -185,7 +185,18 @@ function getStackFromProfile(profile, stack, libs) {
 }
 
 add_task(async function test_xpcom_graph_wait() {
-  TestUtils.assertPackagedBuild();
+  {
+    let omniJa = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
+    omniJa.append("omni.ja");
+    if (!omniJa.exists()) {
+      ok(
+        false,
+        "This test requires a packaged build, " +
+          "run 'mach package' and then use --appname=dist"
+      );
+      return;
+    }
+  }
 
   let profilePath = Cc["@mozilla.org/process/environment;1"]
     .getService(Ci.nsIEnvironment)
