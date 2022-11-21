@@ -5888,22 +5888,6 @@ static bool ShortestPaths(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   Rooted<ArrayObject*> objs(cx, &args[0].toObject().as<ArrayObject>());
-  size_t length = objs->getDenseInitializedLength();
-  if (length == 0) {
-    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[0],
-                     nullptr,
-                     "not a dense array object with one or more elements");
-    return false;
-  }
-
-  for (size_t i = 0; i < length; i++) {
-    RootedValue el(cx, objs->getDenseElement(i));
-    if (!el.isObject() && !el.isString() && !el.isSymbol()) {
-      JS_ReportErrorASCII(cx,
-                          "Each target must be an object, string, or symbol");
-      return false;
-    }
-  }
 
   RootedValue start(cx, NullValue());
   int32_t maxNumPaths = 3;
@@ -5948,6 +5932,24 @@ static bool ShortestPaths(JSContext* cx, unsigned argc, Value* vp) {
     if (maxNumPaths <= 0) {
       ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, v,
                        nullptr, "not greater than 0");
+      return false;
+    }
+  }
+
+  // Ensure we have at least one target.
+  size_t length = objs->getDenseInitializedLength();
+  if (length == 0) {
+    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[0],
+                     nullptr,
+                     "not a dense array object with one or more elements");
+    return false;
+  }
+
+  for (size_t i = 0; i < length; i++) {
+    RootedValue el(cx, objs->getDenseElement(i));
+    if (!el.isObject() && !el.isString() && !el.isSymbol()) {
+      JS_ReportErrorASCII(cx,
+                          "Each target must be an object, string, or symbol");
       return false;
     }
   }
