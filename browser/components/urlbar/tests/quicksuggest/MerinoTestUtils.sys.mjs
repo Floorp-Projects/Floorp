@@ -346,11 +346,7 @@ class MockMerinoServer {
     // Cancel delayed-response timers and resolve their promises. Otherwise, if
     // a test awaits this method before finishing, it will hang until the timers
     // fire and allow the server to send the responses.
-    for (let { timer, resolve } of this.#delayedResponseRecords) {
-      timer.cancel();
-      resolve();
-    }
-    this.#delayedResponseRecords.clear();
+    this.#cancelDelayedResponses();
 
     await this.#httpServer.stop();
     this.#url = null;
@@ -395,6 +391,7 @@ class MockMerinoServer {
   reset() {
     this.#requests = [];
     this.response = this.makeDefaultResponse();
+    this.#cancelDelayedResponses();
   }
 
   /**
@@ -519,7 +516,7 @@ class MockMerinoServer {
    * @param {nsIHttpResponse} httpResponse
    *   Response.
    */
-  async #handleRequest(httpRequest, httpResponse) {
+  #handleRequest(httpRequest, httpResponse) {
     this.info(
       "MockMerinoServer received request with query string: " +
         JSON.stringify(httpRequest.queryString)
@@ -541,38 +538,77 @@ class MockMerinoServer {
 
     let { response } = this;
 
-    if (typeof response.delay == "number") {
-      // Set up a timer to wait until the delay elapses. We need to store the
-      // timer and the resolve function so that if the server is stopped while a
-      // timer is pending, we can cancel it and resolve the promise so the
-      // response can be finished. See `stop()`.
-      let record;
-      await new Promise(resolve => {
-        let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    let finishResponse = () => {
+      let status = response.status || 200;
+      httpResponse.setStatusLine("", status, status);
+
+      let contentType = response.contentType || "application/json";
+      httpResponse.setHeader("Content-Type", contentType, false);
+
+      if (typeof response.body == "string") {
+        httpResponse.write(response.body);
+      } else if (response.body) {
+        httpResponse.write(JSON.stringify(response.body));
+      }
+
+      httpResponse.finish();
+    };
+
+    if (typeof response.delay != "number") {
+      finishResponse();
+      return;
+    }
+
+    // Set up a timer to wait until the delay elapses. Since we called
+    // `httpResponse.processAsync()`, we need to be careful to always finish the
+    // response, even if the timer is canceled. Otherwise the server will hang
+    // when we try to stop it at the end of the test. When an `nsITimer` is
+    // canceled, its callback is *not* called. Therefore we set up a race
+    // between the timer's callback and a deferred promise. If the timer is
+    // canceled, resolving the deferred promise will resolve the race, and the
+    // response can then be finished.
+
+    let delayedResponseID = this.#nextDelayedResponseID++;
+    this.info(
+      "MockMerinoServer delaying response: " +
+        JSON.stringify({ delayedResponseID, delay: response.delay })
+    );
+
+    let deferred = lazy.PromiseUtils.defer();
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    let record = { timer, resolve: deferred.resolve };
+    this.#delayedResponseRecords.add(record);
+
+    // Don't await this promise.
+    Promise.race([
+      deferred.promise,
+      new Promise(resolve => {
         timer.initWithCallback(
           resolve,
           response.delay,
           Ci.nsITimer.TYPE_ONE_SHOT
         );
-        record = { timer, resolve };
-        this.#delayedResponseRecords.add(record);
-      });
+      }),
+    ]).then(() => {
+      this.info(
+        "MockMerinoServer done delaying response: " +
+          JSON.stringify({ delayedResponseID })
+      );
+      deferred.resolve();
       this.#delayedResponseRecords.delete(record);
+      finishResponse();
+    });
+  }
+
+  /**
+   * Cancels the timers for delayed responses and resolves their promises.
+   */
+  #cancelDelayedResponses() {
+    for (let { timer, resolve } of this.#delayedResponseRecords) {
+      timer.cancel();
+      resolve();
     }
-
-    let status = response.status || 200;
-    httpResponse.setStatusLine("", status, status);
-
-    let contentType = response.contentType || "application/json";
-    httpResponse.setHeader("Content-Type", contentType, false);
-
-    if (typeof response.body == "string") {
-      httpResponse.write(response.body);
-    } else if (response.body) {
-      httpResponse.write(JSON.stringify(response.body));
-    }
-
-    httpResponse.finish();
+    this.#delayedResponseRecords.clear();
   }
 
   #httpServer = null;
@@ -581,5 +617,6 @@ class MockMerinoServer {
   #response = null;
   #requests = [];
   #nextRequestDeferred = null;
+  #nextDelayedResponseID = 0;
   #delayedResponseRecords = new Set();
 }
