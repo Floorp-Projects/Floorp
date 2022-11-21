@@ -2,16 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from mozlint.types import FileType
+from mozlint import result
+from mozlint.pathutils import expand_exclusions
 from mozbuild.vendor.moz_yaml import load_moz_yaml
 
 
-class UpdatebotValidator(FileType):
-    def __init__(self, *args, **kwargs):
-        super(UpdatebotValidator, self).__init__(*args, **kwargs)
-
-    def lint_single_file(self, payload, path, config):
-        if not path.endswith("moz.yaml") and "test/files/updatebot" not in path:
+class UpdatebotValidator:
+    def lint_file(self, path, **kwargs):
+        if not kwargs.get("testing", False) and not path.endswith("moz.yaml"):
+            # When testing, process all files provided
+            return None
+        if not kwargs.get("testing", False) and "test/files/updatebot" in path:
+            # When not testing, ignore the test files
             return None
 
         try:
@@ -33,9 +35,18 @@ class UpdatebotValidator(FileType):
 
 
 def lint(paths, config, **lintargs):
-    results = []
+    # expand_exclusions expects a list, and will convert a string
+    # into it if it doesn't receive one
+    if not isinstance(paths, list):
+        paths = [paths]
+
+    errors = []
+    files = list(expand_exclusions(paths, config, lintargs["root"]))
 
     m = UpdatebotValidator()
-    for path in paths:
-        results.extend(m._lint(path, config, **lintargs))
-    return results
+    for f in files:
+        message = m.lint_file(f, **lintargs)
+        if message:
+            errors.append(result.from_config(config, path=f, message=message))
+
+    return errors
