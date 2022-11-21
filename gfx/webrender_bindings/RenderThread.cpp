@@ -1353,22 +1353,13 @@ void wr_notifier_wake_up(mozilla::wr::WrWindowId aWindowId,
       aWindowId, aCompositeNeeded, isTrackedFrame);
 }
 
-void wr_notifier_new_frame_ready(mozilla::wr::WrWindowId aWindowId) {
+void wr_notifier_new_frame_ready(mozilla::wr::WrWindowId aWindowId,
+                                 bool aCompositeNeeded) {
   auto* renderThread = mozilla::wr::RenderThread::Get();
   renderThread->DecPendingFrameBuildCount(aWindowId);
 
-  bool render = true;
   bool isTrackedFrame = true;
-  renderThread->HandleFrameOneDoc(aWindowId, render, isTrackedFrame);
-}
-
-void wr_notifier_nop_frame_done(mozilla::wr::WrWindowId aWindowId) {
-  auto* renderThread = mozilla::wr::RenderThread::Get();
-  renderThread->DecPendingFrameBuildCount(aWindowId);
-
-  bool render = false;
-  bool isTrackedFrame = true;
-  renderThread->HandleFrameOneDoc(aWindowId, render, isTrackedFrame);
+  renderThread->HandleFrameOneDoc(aWindowId, aCompositeNeeded, isTrackedFrame);
 }
 
 void wr_notifier_external_event(mozilla::wr::WrWindowId aWindowId,
