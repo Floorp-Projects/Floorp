@@ -56,6 +56,23 @@ linux64-rust-1.65:
         toolchain:
             - linux64-clang-toolchain
 
+linux64-rust-nightly:
+    treeherder:
+        symbol: TL(rust-nightly)
+    run:
+        arguments: [
+            '--channel', 'nightly-2022-11-11',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
+            '--target', 'aarch64-unknown-linux-gnu',
+            '--target', 'wasm32-wasi',
+            '--compiler-builtins-hack',
+        ]
+    fetches:
+        toolchain:
+            - linux64-clang-toolchain
+
 # A patched rust toolchain that allows us to use sanitizers in our vendored
 # build environment. See the rust fetch's comments for more details.
 linux64-rust-dev:
@@ -77,7 +94,6 @@ linux64-rust-dev:
         toolchain:
             - linux64-clang-toolchain
             - linux64-binutils
-
 
 linux64-rust-cross-1.65:
     description: "rust repack with macos and windows cross support"
@@ -101,6 +117,28 @@ linux64-rust-cross-1.65:
             '--target', 'x86_64-linux-android',
         ]
         toolchain-alias: linux64-rust-cross
+
+linux64-rust-cross-nightly:
+    description: "rust nightly repack with macos and windows cross support"
+    treeherder:
+        symbol: TL(rust-cross-nightly)
+    run:
+        arguments: [
+            '--channel', 'nightly-2022-11-11',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
+            '--target', 'x86_64-apple-darwin',
+            '--target', 'aarch64-apple-darwin',
+            '--target', 'x86_64-pc-windows-msvc',
+            '--target', 'i686-pc-windows-msvc',
+            '--target', 'aarch64-pc-windows-msvc',
+            '--target', 'armv7-linux-androideabi',
+            '--target', 'thumbv7neon-linux-androideabi',
+            '--target', 'aarch64-linux-android',
+            '--target', 'i686-linux-android',
+            '--target', 'x86_64-linux-android',
+        ]
 
 linux64-rust-static-1.65:
     description: "rust repack with static linking support"

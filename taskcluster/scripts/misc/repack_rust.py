@@ -306,7 +306,13 @@ def fetch_manifest(channel="stable", host=None, targets=()):
                 "available": requests.head(url).status_code == 200,
             }
 
-        for pkg in ("cargo", "rustc", "rustfmt-preview", "clippy-preview"):
+        for pkg in (
+            "cargo",
+            "rustc",
+            "rustfmt-preview",
+            "clippy-preview",
+            "rust-analyzer-preview",
+        ):
             manifest["pkg"][pkg] = {
                 "version": "bors",
                 "target": {
@@ -395,7 +401,7 @@ def build_src(install_dir, host, targets, patches):
         docs = false
         sanitizers = true
         extended = true
-        tools = ["analysis", "cargo", "rustfmt", "clippy", "src"]
+        tools = ["analysis", "cargo", "rustfmt", "clippy", "src", "rust-analyzer"]
 
         [rust]
         ignore-git = false
@@ -489,6 +495,7 @@ def repack(
         rustsrc = fetch_package(manifest, "rust-src", host)
         rustfmt = fetch_optional(manifest, "rustfmt-preview", host)
         clippy = fetch_optional(manifest, "clippy-preview", host)
+        rust_analyzer = fetch_optional(manifest, "rust-analyzer-preview", host)
 
         log("Installing packages...")
 
@@ -505,6 +512,8 @@ def repack(
             install(os.path.basename(rustfmt["url"]), install_dir)
         if clippy:
             install(os.path.basename(clippy["url"]), install_dir)
+        if rust_analyzer:
+            install(os.path.basename(rust_analyzer["url"]), install_dir)
         for std in stds:
             install(os.path.basename(std["url"]), install_dir)
             pass

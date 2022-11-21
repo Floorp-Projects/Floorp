@@ -54,7 +54,7 @@ jobs:
                 - linux64-clang
                 - linux64-nasm
                 - linux64-node
-                - linux64-rust
+                - linux64-rust-nightly
                 - linux64-cbindgen
                 - linux64-dump_syms
                 - linux64-pkgconf
@@ -94,7 +94,7 @@ jobs:
                 - linux64-libdmg
                 - linux64-nasm
                 - linux64-node
-                - linux64-rust-macos
+                - linux64-rust-cross-nightly
                 - linux64-cbindgen
                 - linux64-dump_syms
                 - macosx64-sdk
@@ -135,7 +135,7 @@ jobs:
             toolchain:
                 - linux64-binutils
                 - linux64-clang
-                - linux64-rust-cross
+                - linux64-rust-cross-nightly
                 - linux64-rust-size
                 - linux64-nasm
                 - linux64-node
@@ -185,6 +185,9 @@ jobs:
                 - android-sdk-linux
                 - linux64-jdk
                 - linux64-clang
+                # TODO: Change to rust-cross-nightly once
+                # https://github.com/rust-lang/rust/pull/104628 is merged
+                # (that'd provide better scip indexing).
                 - linux64-rust-android
                 - linux64-rust-size
                 - linux64-cbindgen
