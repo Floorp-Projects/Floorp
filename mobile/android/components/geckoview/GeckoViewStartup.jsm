@@ -129,9 +129,6 @@ class GeckoViewStartup {
             "GeckoView:GetPermissionsByURI",
             "GeckoView:SetPermission",
             "GeckoView:SetPermissionByURI",
-            "GeckoView:GetCookieBannerModeForDomain",
-            "GeckoView:SetCookieBannerModeForDomain",
-            "GeckoView:RemoveCookieBannerModeForDomain",
           ],
         });
 
