@@ -6,7 +6,6 @@
 
 #include "Fetch.h"
 
-#include "js/RootingAPI.h"
 #include "js/Value.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/Document.h"
@@ -55,18 +54,15 @@ namespace mozilla::dom {
 namespace {
 
 void AbortStream(JSContext* aCx, ReadableStream* aReadableStream,
-                 ErrorResult& aRv, JS::Handle<JS::Value> aReasonDetails) {
+                 ErrorResult& aRv) {
   if (aReadableStream->State() != ReadableStream::ReaderState::Readable) {
     return;
   }
 
-  JS::Rooted<JS::Value> value(aCx, aReasonDetails);
-
-  if (aReasonDetails.isUndefined()) {
-    RefPtr<DOMException> e = DOMException::Create(NS_ERROR_DOM_ABORT_ERR);
-    if (!GetOrCreateDOMReflector(aCx, e, &value)) {
-      return;
-    }
+  RefPtr<DOMException> e = DOMException::Create(NS_ERROR_DOM_ABORT_ERR);
+  JS::Rooted<JS::Value> value(aCx);
+  if (!GetOrCreateDOMReflector(aCx, e, &value)) {
+    return;
   }
 
   ReadableStreamError(aCx, aReadableStream, value, aRv);
@@ -284,8 +280,7 @@ class WorkerFetchResolver final : public FetchDriverObserver {
   void OnResponseAvailableInternal(
       SafeRefPtr<InternalResponse> aResponse) override;
 
-  void OnResponseEnd(FetchDriverObserver::EndReason aReason,
-                     JS::Handle<JS::Value> aReasonDetails) override;
+  void OnResponseEnd(FetchDriverObserver::EndReason aReason) override;
 
   bool NeedOnDataAvailable() override;
 
@@ -361,14 +356,9 @@ class MainThreadFetchResolver final : public FetchDriverObserver {
 
   void SetLoadGroup(nsILoadGroup* aLoadGroup) { mLoadGroup = aLoadGroup; }
 
-  void OnResponseEnd(FetchDriverObserver::EndReason aReason,
-                     JS::Handle<JS::Value> aReasonDetails) override {
+  void OnResponseEnd(FetchDriverObserver::EndReason aReason) override {
     if (aReason == eAborted) {
-      if (!aReasonDetails.isUndefined()) {
-        mPromise->MaybeReject(aReasonDetails);
-      } else {
-        mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-      }
+      mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
     }
 
     mFetchObserver = nullptr;
@@ -521,14 +511,8 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
 
   if (signalImpl && signalImpl->Aborted()) {
     // Already aborted signal rejects immediately.
-    JS::Rooted<JS::Value> reason(cx, signalImpl->RawReason());
-    if (reason.get().isUndefined()) {
-      aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
-      return nullptr;
-    }
-
-    p->MaybeReject(reason);
-    return p.forget();
+    aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
+    return nullptr;
   }
 
   JS::Realm* realm = JS::GetCurrentRealmOrNull(cx);
@@ -881,8 +865,8 @@ void WorkerFetchResolver::OnDataAvailable() {
   Unused << r->Dispatch();
 }
 
-void WorkerFetchResolver::OnResponseEnd(FetchDriverObserver::EndReason aReason,
-                                        JS::Handle<JS::Value> aReasonDetails) {
+void WorkerFetchResolver::OnResponseEnd(
+    FetchDriverObserver::EndReason aReason) {
   AssertIsOnMainThread();
   MutexAutoLock lock(mPromiseProxy->Lock());
   if (mPromiseProxy->CleanedUp()) {
@@ -890,8 +874,6 @@ void WorkerFetchResolver::OnResponseEnd(FetchDriverObserver::EndReason aReason,
   }
 
   FlushConsoleReport();
-
-  Unused << aReasonDetails;
 
   RefPtr<WorkerFetchResponseEndRunnable> r = new WorkerFetchResponseEndRunnable(
       mPromiseProxy->GetWorkerPrivate(), this, aReason);
@@ -1211,20 +1193,9 @@ already_AddRefed<Promise> FetchBody<Derived>::ConsumeBody(
 
   RefPtr<AbortSignalImpl> signalImpl =
       DerivedClass()->GetSignalImplToConsumeBody();
-
   if (signalImpl && signalImpl->Aborted()) {
-    JS::Rooted<JS::Value> abortReason(aCx, signalImpl->RawReason());
-
-    if (abortReason.get().isUndefined()) {
-      aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
-      return nullptr;
-    }
-
-    nsCOMPtr<nsIGlobalObject> go = DerivedClass()->GetParentObject();
-
-    RefPtr<Promise> promise = Promise::Create(go, aRv);
-    promise->MaybeReject(abortReason);
-    return promise.forget();
+    aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
+    return nullptr;
   }
 
   bool bodyUsed = GetBodyUsed(aRv);
@@ -1369,8 +1340,7 @@ void FetchBody<Derived>::SetReadableStreamBody(JSContext* aCx,
   bool aborted = signalImpl->Aborted();
   if (aborted) {
     IgnoredErrorResult result;
-    JS::Rooted<JS::Value> abortReason(aCx, signalImpl->RawReason());
-    AbortStream(aCx, mReadableStreamBody, result, abortReason);
+    AbortStream(aCx, mReadableStreamBody, result);
     if (NS_WARN_IF(result.Failed())) {
       return;
     }
@@ -1425,8 +1395,7 @@ already_AddRefed<ReadableStream> FetchBody<Derived>::GetBody(JSContext* aCx,
   RefPtr<AbortSignalImpl> signalImpl = DerivedClass()->GetSignalImpl();
   if (signalImpl) {
     if (signalImpl->Aborted()) {
-      JS::Rooted<JS::Value> abortReason(aCx, signalImpl->RawReason());
-      AbortStream(aCx, body, aRv, abortReason);
+      AbortStream(aCx, body, aRv);
       if (NS_WARN_IF(aRv.Failed())) {
         return nullptr;
       }
@@ -1530,9 +1499,7 @@ void FetchBody<Derived>::RunAbortAlgorithm() {
 
   RefPtr<ReadableStream> body(mReadableStreamBody);
   IgnoredErrorResult result;
-
-  JS::Rooted<JS::Value> abortReason(cx, Signal()->RawReason());
-  AbortStream(cx, body, result, abortReason);
+  AbortStream(cx, body, result);
 }
 
 template void FetchBody<Request>::RunAbortAlgorithm();
