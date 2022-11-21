@@ -169,7 +169,8 @@ class RenderThread final {
   /// Automatically forwarded to the render thread. Will trigger a render for
   /// the current pending frame once one call per document in that pending
   /// frame has been received.
-  void HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender);
+  void HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender,
+                         bool aTrackedFrame);
 
   /// Automatically forwarded to the render thread.
   void SetClearColor(wr::WindowId aWindowId, wr::ColorF aColor);
@@ -306,7 +307,8 @@ class RenderThread final {
 
   explicit RenderThread(RefPtr<nsIThread> aThread);
 
-  void HandleFrameOneDocInner(wr::WindowId aWindowId, bool aRender);
+  void HandleFrameOneDocInner(wr::WindowId aWindowId, bool aRender,
+                              bool aTrackedFrame);
 
   void DeferredRenderTextureHostDestroy();
   void ShutDownTask();
