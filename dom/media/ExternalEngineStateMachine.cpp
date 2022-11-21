@@ -108,8 +108,7 @@ void ExternalEngineStateMachine::ChangeStateTo(State aNextState) {
 
 ExternalEngineStateMachine::ExternalEngineStateMachine(
     MediaDecoder* aDecoder, MediaFormatReader* aReader)
-    : MediaDecoderStateMachineBase(aDecoder, aReader),
-      mVideoFrameContainer(aDecoder->GetVideoFrameContainer()) {
+    : MediaDecoderStateMachineBase(aDecoder, aReader) {
   LOG("Created ExternalEngineStateMachine");
   MOZ_ASSERT(mState.IsInitEngine());
 #ifdef MOZ_WMF_MEDIA_ENGINE
