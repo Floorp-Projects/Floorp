@@ -232,6 +232,7 @@ class RenderThread final {
                             const TimeStamp& aStartTime);
   /// Can be called from any thread.
   void DecPendingFrameBuildCount(wr::WindowId aWindowId);
+  void DecPendingFrameCount(wr::WindowId aWindowId);
 
   /// Can be called from any thread.
   WebRenderThreadPool& ThreadPool() { return mThreadPool; }
@@ -304,6 +305,8 @@ class RenderThread final {
   };
 
   explicit RenderThread(RefPtr<nsIThread> aThread);
+
+  void HandleFrameOneDocInner(wr::WindowId aWindowId, bool aRender);
 
   void DeferredRenderTextureHostDestroy();
   void ShutDownTask();
