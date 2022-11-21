@@ -104,6 +104,10 @@ origin:
   # optional
   license-file: COPYING
 
+  # If there are any mozilla-specific notes you want to put
+  # about a library, they can be put here.
+  notes: Notes about the library
+
 # Configuration for the automated vendoring system.
 # optional
 vendoring:
@@ -379,6 +383,7 @@ def _schema_1():
             "origin": {
                 Required("name"): All(str, Length(min=1)),
                 Required("description"): All(str, Length(min=1)),
+                "notes": All(str, Length(min=1)),
                 Required("url"): FqdnUrl(),
                 Required("license"): Msg(License(), msg="Unsupported License"),
                 "license-file": All(str, Length(min=1)),
