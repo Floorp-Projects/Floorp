@@ -81,6 +81,11 @@ static std::map<HWND, std::map<UINT, CircularMessageBuffer>> gWindowMessages;
 
 const size_t kNumberOfWindowMessages = 5;
 
+static HWND GetHwndFromWidget(nsIWidget* windowWidget) {
+  nsWindow* window = static_cast<nsWindow*>(windowWidget);
+  return window->GetWindowHandle();
+}
+
 MessageSpecificData MakeMessageSpecificData(UINT event, WPARAM wParam,
                                             LPARAM lParam) {
   // Since we store this data for every message we log, make sure it's of a
@@ -249,6 +254,8 @@ nsCString MakeFriendlyMessage(UINT event, bool isPreEvent, long eventCounter,
   return str;
 }
 
+void WindowClosed(HWND hwnd) { gWindowMessages.erase(hwnd); }
+
 void LogWindowMessage(HWND hwnd, UINT event, bool isPreEvent, long eventCounter,
                       WPARAM wParam, LPARAM lParam, mozilla::Maybe<bool> result,
                       LRESULT retValue) {
@@ -270,8 +277,8 @@ void LogWindowMessage(HWND hwnd, UINT event, bool isPreEvent, long eventCounter,
 
 void GetLatestWindowMessages(RefPtr<nsIWidget> windowWidget,
                              nsTArray<nsCString>& messages) {
-  nsWindow* window = static_cast<nsWindow*>(&*windowWidget);
-  const auto& rawMessages = gWindowMessages[window->GetWindowHandle()];
+  HWND hwnd = GetHwndFromWidget(windowWidget);
+  const auto& rawMessages = gWindowMessages[hwnd];
   nsTArray<std::pair<WindowMessageDataSortKey, nsCString>>
       sortKeyAndMessageArray;
   sortKeyAndMessageArray.SetCapacity(rawMessages.size() *

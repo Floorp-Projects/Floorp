@@ -12,16 +12,15 @@
 #include "nsIWidget.h"
 #include "nsStringFwd.h"
 
-namespace mozilla {
-namespace widget {
+namespace mozilla::widget {
 
 void LogWindowMessage(HWND hwnd, UINT event, bool isPreEvent, long eventCounter,
                       WPARAM wParam, LPARAM lParam, mozilla::Maybe<bool> result,
                       LRESULT retValue);
+void WindowClosed(HWND hwnd);
 void GetLatestWindowMessages(RefPtr<nsIWidget> windowWidget,
                              nsTArray<nsCString>& messages);
 
-}  // namespace widget
-}  // namespace mozilla
+}  // namespace mozilla::widget
 
 #endif /* WindowLoggedMessages */
