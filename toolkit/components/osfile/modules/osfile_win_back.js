@@ -420,15 +420,6 @@
 
       libc.declareLazyFFI(
         SysFile,
-        "SetCurrentDirectory",
-        "SetCurrentDirectoryW",
-        ctypes.winapi_abi,
-        /* return*/ Type.zero_or_nothing,
-        Type.path
-      );
-
-      libc.declareLazyFFI(
-        SysFile,
         "SetEndOfFile",
         "SetEndOfFile",
         ctypes.winapi_abi,
