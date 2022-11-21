@@ -5174,7 +5174,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
                               LRESULT* aRetValue) {
   // For some events we might change the parameter values, so log
   // before and after we process them.
-  PrintEvent printEvent(msg, wParam, lParam, *aRetValue);
+  PrintEvent printEvent(mWnd, msg, wParam, lParam, *aRetValue);
   bool result = ProcessMessageInternal(msg, wParam, lParam, aRetValue);
   printEvent.SetResult(result);
 

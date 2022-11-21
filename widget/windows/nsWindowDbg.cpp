@@ -39,8 +39,10 @@ std::unordered_set<UINT> gEventsToLogOriginalParams = {
     WM_GETTEXT,           WM_GETMINMAXINFO, WM_MEASUREITEM,
 };
 
-PrintEvent::PrintEvent(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT retValue)
-    : mMsg(msg),
+PrintEvent::PrintEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
+                       LRESULT retValue)
+    : mHwnd(hwnd),
+      mMsg(msg),
       mWParam(wParam),
       mLParam(lParam),
       mRetValue(retValue),
@@ -189,8 +191,9 @@ bool PrintEvent::PrintEventInternal() {
                                 : "initial call";
     MOZ_LOG(
         gWindowsEventLog, LogLevel::Info,
-        ("%6ld - 0x%04X %s %s: 0x%08llX (%s)\n",
-         mEventCounter.valueOr(gEventCounter), mMsg, paramInfo.get(),
+        ("%6ld 0x%08llX - 0x%04X %s %s: 0x%08llX (%s)\n",
+         mEventCounter.valueOr(gEventCounter),
+         reinterpret_cast<uint64_t>(mHwnd), mMsg, paramInfo.get(),
          msgText ? msgText : "Unknown",
          mResult.isSome() ? static_cast<uint64_t>(mRetValue) : 0, resultMsg));
     gLastEventMsg = mMsg;
