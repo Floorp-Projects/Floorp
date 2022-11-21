@@ -407,7 +407,7 @@ bool gfxTextRun::GetAdjustedSpacingArray(
   memset(aSpacing->Elements(), 0, sizeof(gfxFont::Spacing) * spacingOffset);
   GetAdjustedSpacing(this, aSpacingRange, aProvider,
                      aSpacing->Elements() + spacingOffset);
-  memset(aSpacing->Elements() + aSpacingRange.end - aRange.start, 0,
+  memset(aSpacing->Elements() + spacingOffset + aSpacingRange.Length(), 0,
          sizeof(gfxFont::Spacing) * (aRange.end - aSpacingRange.end));
   return true;
 }
