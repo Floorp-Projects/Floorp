@@ -252,6 +252,10 @@ function setupSyncFxAMocks({ fxaDevices = null, state, syncEnabled = true }) {
     return {
       status: gUIStateStatus,
       syncEnabled,
+      email:
+        gUIStateStatus === UIState.STATUS_NOT_CONFIGURED
+          ? undefined
+          : "email@example.com",
     };
   });
 
@@ -277,6 +281,7 @@ function setupRecentDeviceListMocks() {
   sandbox.stub(UIState, "get").returns({
     status: UIState.STATUS_SIGNED_IN,
     syncEnabled: true,
+    email: "email@example.com",
   });
 
   return sandbox;
