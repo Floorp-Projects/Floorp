@@ -1425,17 +1425,20 @@ var gUnifiedExtensions = {
 
   async togglePanel(aEvent) {
     if (!CustomizationHandler.isCustomizing()) {
-      if (aEvent && aEvent.button !== 0) {
-        return;
+      if (aEvent) {
+        if (aEvent.button !== 0) {
+          return;
+        }
+
+        // The button should directly open `about:addons` when the user does not
+        // have any active extensions listed in the unified extensions panel.
+        if (!(await this.hasExtensionsInPanel())) {
+          await BrowserOpenAddonsMgr("addons://discover/");
+          return;
+        }
       }
 
       let panel = this.panel;
-      // The button should directly open `about:addons` when the user does not
-      // have any active extensions listed in the unified extensions panel.
-      if (!(await this.hasExtensionsInPanel())) {
-        await BrowserOpenAddonsMgr("addons://discover/");
-        return;
-      }
 
       if (!this._listView) {
         this._listView = PanelMultiView.getViewNode(
@@ -1509,6 +1512,11 @@ var gUnifiedExtensions = {
     }
   },
 
+  // This is registered on the top-level unified extensions context menu.
+  onContextMenuCommand(menu, event) {
+    this.togglePanel();
+  },
+
   browserActionFor(policy) {
     // Ideally, we wouldn't do that because `browserActionFor()` will only be
     // defined in `global` when at least one extension has required loading the
@@ -1520,21 +1528,18 @@ var gUnifiedExtensions = {
   async manageExtension(menu) {
     const id = this._getExtensionId(menu);
 
-    await this.togglePanel();
     await BrowserAddonUI.manageAddon(id, "unifiedExtensions");
   },
 
   async removeExtension(menu) {
     const id = this._getExtensionId(menu);
 
-    await this.togglePanel();
     await BrowserAddonUI.removeAddon(id, "unifiedExtensions");
   },
 
   async reportExtension(menu) {
     const id = this._getExtensionId(menu);
 
-    await this.togglePanel();
     await BrowserAddonUI.reportAddon(id, "unified_context_menu");
   },
 
@@ -1561,10 +1566,6 @@ var gUnifiedExtensions = {
     let widgetId = this._getWidgetId(menu);
     if (!widgetId) {
       return;
-    }
-
-    if (shouldPinToToolbar) {
-      await this.togglePanel();
     }
 
     this.pinToToolbar(widgetId, shouldPinToToolbar);
