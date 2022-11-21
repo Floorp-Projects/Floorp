@@ -59,7 +59,8 @@ class FetchDriverObserver {
     eByNetworking,
   };
 
-  virtual void OnResponseEnd(EndReason aReason){};
+  virtual void OnResponseEnd(EndReason aReason,
+                             JS::Handle<JS::Value> aReasonDetails){};
 
   nsIConsoleReportCollector* GetReporter() const { return mReporter; }
 
