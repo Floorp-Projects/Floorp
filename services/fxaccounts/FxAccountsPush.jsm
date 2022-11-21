@@ -160,11 +160,7 @@ FxAccountsPushService.prototype = {
           break;
         case ONLOGOUT_NOTIFICATION:
           // user signed out, we need to stop polling the Push Server
-          try {
-            await this.unsubscribe();
-          } catch (err) {
-            this.log.error("Error during unsubscribe", err);
-          }
+          await this.unsubscribe();
           break;
       }
     } catch (err) {
@@ -262,7 +258,8 @@ FxAccountsPushService.prototype = {
    *
    * Ref: https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/nsIPushService#unsubscribe()
    *
-   * @returns {Promise}
+   * @returns {Promise} - The promise resolves with a bool to indicate if we successfully unsubscribed.
+   *                      The promise never rejects.
    * @private
    */
   unsubscribe() {
@@ -297,7 +294,7 @@ FxAccountsPushService.prototype = {
    *
    * Ref: https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/nsIPushService#getSubscription()
    *
-   * @returns {Promise}
+   * @returns {Promise} - resolves with the subscription or null. Never rejects.
    */
   getSubscription() {
     return new Promise(resolve => {
