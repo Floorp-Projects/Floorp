@@ -49,13 +49,11 @@ exports.assert = assert;
 exports.bytesToString = bytesToString;
 exports.createPromiseCapability = createPromiseCapability;
 exports.createValidAbsoluteUrl = createValidAbsoluteUrl;
-exports.escapeString = escapeString;
 exports.getModificationDate = getModificationDate;
 exports.getVerbosityLevel = getVerbosityLevel;
 exports.info = info;
 exports.isArrayBuffer = isArrayBuffer;
 exports.isArrayEqual = isArrayEqual;
-exports.isAscii = isAscii;
 exports.objectFromMap = objectFromMap;
 exports.objectSize = objectSize;
 exports.setVerbosityLevel = setVerbosityLevel;
@@ -63,7 +61,6 @@ exports.shadow = shadow;
 exports.string32 = string32;
 exports.stringToBytes = stringToBytes;
 exports.stringToPDFString = stringToPDFString;
-exports.stringToUTF16BEString = stringToUTF16BEString;
 exports.stringToUTF8String = stringToUTF8String;
 exports.unreachable = unreachable;
 exports.utf8StringToString = utf8StringToString;
@@ -861,27 +858,6 @@ function stringToPDFString(str) {
   }
   return strBuf.join("");
 }
-function escapeString(str) {
-  return str.replace(/([()\\\n\r])/g, match => {
-    if (match === "\n") {
-      return "\\n";
-    } else if (match === "\r") {
-      return "\\r";
-    }
-    return `\\${match}`;
-  });
-}
-function isAscii(str) {
-  return /^[\x00-\x7F]*$/.test(str);
-}
-function stringToUTF16BEString(str) {
-  const buf = ["\xFE\xFF"];
-  for (let i = 0, ii = str.length; i < ii; i++) {
-    const char = str.charCodeAt(i);
-    buf.push(String.fromCharCode(char >> 8 & 0xff), String.fromCharCode(char & 0xff));
-  }
-  return buf.join("");
-}
 function stringToUTF8String(str) {
   return decodeURIComponent(escape(str));
 }
@@ -1141,7 +1117,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '3.1.49',
+    apiVersion: '3.1.62',
     data: source.data,
     password: source.password,
     disableAutoFetch: source.disableAutoFetch,
@@ -2760,9 +2736,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.1.49';
+const version = '3.1.62';
 exports.version = version;
-const build = 'c7d6ab2f7';
+const build = '748be3f70';
 exports.build = build;
 
 /***/ }),
@@ -12924,8 +12900,8 @@ var _is_node = __w_pdfjs_require__(12);
 var _text_layer = __w_pdfjs_require__(28);
 var _svg = __w_pdfjs_require__(29);
 var _xfa_layer = __w_pdfjs_require__(27);
-const pdfjsVersion = '3.1.49';
-const pdfjsBuild = 'c7d6ab2f7';
+const pdfjsVersion = '3.1.62';
+const pdfjsBuild = '748be3f70';
 ;
 })();
 
