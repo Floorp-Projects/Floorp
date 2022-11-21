@@ -935,15 +935,23 @@ nsTArray<bool> RemoteAccessibleBase<Derived>::PreProcessRelations(
               mCachedFields->GetAttribute<nsTArray<uint64_t>>(relAtom)) {
         for (uint64_t id : *maybeOldIDs) {
           // For each target, fetch its reverse relation map
-          nsTHashMap<nsUint64HashKey, nsTArray<uint64_t>>& reverseRels =
-              Document()->mReverseRelations.LookupOrInsert(id);
-          // Then fetch its reverse relation's ID list
-          nsTArray<uint64_t>& reverseRelIDs = reverseRels.LookupOrInsert(
-              static_cast<uint64_t>(*data.mReverseType));
-          //  There might be other reverse relations stored for this acc, so
-          //  remove our ID instead of deleting the array entirely.
-          DebugOnly<bool> removed = reverseRelIDs.RemoveElement(ID());
-          MOZ_ASSERT(removed, "Can't find old reverse relation");
+          // We need to call `Lookup` here instead of `LookupOrInsert` because
+          // it's possible the ID we're querying is from an acc that has since
+          // been Shutdown(), and so has intentionally removed its reverse rels
+          // from the doc's reverse rel cache.
+          if (auto reverseRels = Document()->mReverseRelations.Lookup(id)) {
+            // Then fetch its reverse relation's ID list. This should be safe
+            // to do via LookupOrInsert because by the time we've gotten here,
+            // we know the acc and `this` are still alive in the doc. If we hit
+            // the following assert, we don't have parity on implicit/explicit
+            // rels and something is wrong.
+            nsTArray<uint64_t>& reverseRelIDs = reverseRels->LookupOrInsert(
+                static_cast<uint64_t>(*data.mReverseType));
+            //  There might be other reverse relations stored for this acc, so
+            //  remove our ID instead of deleting the array entirely.
+            DebugOnly<bool> removed = reverseRelIDs.RemoveElement(ID());
+            MOZ_ASSERT(removed, "Can't find old reverse relation");
+          }
         }
       }
     }
