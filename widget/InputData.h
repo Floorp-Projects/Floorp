@@ -426,6 +426,18 @@ class PanGestureInput : public InputData {
   void SetIsNoLineOrPageDelta(bool aIsNoLineOrPageDelta) {
     mIsNoLineOrPageDelta = aIsNoLineOrPageDelta;
   }
+
+  // Returns true if this pan gesture event is elligible for browser swipe
+  // gesture considering the overscroll-behavior property of the target
+  // scroll container.
+  bool AllowsSwipe() const {
+    MOZ_ASSERT(mHandledByAPZ);
+    return mMayTriggerSwipe && mOverscrollBehaviorAllowsSwipe;
+  }
+
+  // Similar to above AllowsSwipe() but this doesn't care the
+  // overscroll-behavior property, this function should be only used for cases
+  // where APZ isn't involved.
   bool MayTriggerSwipe() const { return mMayTriggerSwipe; }
   bool RequiresContentResponseIfCannotScrollHorizontallyInStartDirection();
 
