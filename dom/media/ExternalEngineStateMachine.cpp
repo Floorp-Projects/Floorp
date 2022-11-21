@@ -739,8 +739,14 @@ void ExternalEngineStateMachine::OnRequestVideo() {
               OnLoadedFirstFrame();
             }
             RunningEngineUpdate(MediaData::Type::VIDEO_DATA);
-            mVideoFrameContainer->SetCurrentFrame(
-                mInfo->mVideo.mDisplay, aVideo->mImage, TimeStamp::Now());
+            // Send image to PIP window.
+            if (mSecondaryVideoContainer.Ref()) {
+              mSecondaryVideoContainer.Ref()->SetCurrentFrame(
+                  mInfo->mVideo.mDisplay, aVideo->mImage, TimeStamp::Now());
+            } else {
+              mVideoFrameContainer->SetCurrentFrame(
+                  mInfo->mVideo.mDisplay, aVideo->mImage, TimeStamp::Now());
+            }
           },
           [this, self](const MediaResult& aError) {
             mVideoDataRequest.Complete();
