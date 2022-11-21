@@ -1019,10 +1019,8 @@ nsRect Element::GetClientAreaRect() {
   // We can avoid a layout flush if this is the scrolling element of the
   // document, we have overlay scrollbars, and we aren't embedded in another
   // document
-  bool overlayScrollbars = presContext && presContext->UseOverlayScrollbars();
-  bool rootContentDocument =
-      presContext && presContext->IsRootContentDocument();
-  if (overlayScrollbars && rootContentDocument &&
+  if (presContext && presContext->UseOverlayScrollbars() &&
+      !doc->StyleOrLayoutObservablyDependsOnParentDocumentLayout() &&
       doc->IsScrollingElement(this)) {
     if (PresShell* presShell = doc->GetPresShell()) {
       // Ensure up to date dimensions, but don't reflow

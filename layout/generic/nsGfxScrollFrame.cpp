@@ -2794,7 +2794,8 @@ bool ScrollFrameHelper::IsAlwaysActive() const {
   // Unless this is the root scrollframe for a non-chrome document
   // which is the direct child of a chrome document, we default to not
   // being "active".
-  if (!(mIsRoot && mOuter->PresContext()->IsRootContentDocument())) {
+  if (!(mIsRoot &&
+        mOuter->PresContext()->IsRootContentDocumentCrossProcess())) {
     return false;
   }
 
