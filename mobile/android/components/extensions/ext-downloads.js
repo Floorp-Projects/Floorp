@@ -4,7 +4,6 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineESModuleGetters(this, {
   DownloadPaths: "resource://gre/modules/DownloadPaths.sys.mjs",
 });
@@ -158,21 +157,26 @@ this.downloads = class extends ExtensionAPI {
               return Promise.reject({ message: "filename must not be empty" });
             }
 
-            const path = OS.Path.split(filename);
-            if (path.absolute) {
+            if (PathUtils.isAbsolute(filename)) {
               return Promise.reject({
                 message: "filename must not be an absolute path",
               });
             }
 
-            if (path.components.some(component => component == "..")) {
+            const pathComponents = PathUtils.splitRelative(filename, {
+              allowEmpty: true,
+              allowCurrentDir: true,
+              allowParentDir: true,
+            });
+
+            if (pathComponents.some(component => component == "..")) {
               return Promise.reject({
                 message: "filename must not contain back-references (..)",
               });
             }
 
             if (
-              path.components.some(component => {
+              pathComponents.some(component => {
                 const sanitized = DownloadPaths.sanitize(component, {
                   compressWhitespaces: false,
                 });
