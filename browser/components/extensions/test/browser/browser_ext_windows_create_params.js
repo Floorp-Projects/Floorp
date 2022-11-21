@@ -124,3 +124,125 @@ add_task(async function testWindowCreateFocused() {
 
   ExtensionTestUtils.failOnSchemaWarnings(true);
 });
+
+add_task(async function testPopupTypeWithDimension() {
+  let extension = ExtensionTestUtils.loadExtension({
+    async background() {
+      await browser.windows.create({
+        type: "popup",
+        left: 123,
+        top: 123,
+        width: 151,
+        height: 152,
+      });
+      await browser.windows.create({
+        type: "popup",
+        left: 123,
+        width: 152,
+        height: 153,
+      });
+      await browser.windows.create({
+        type: "popup",
+        top: 123,
+        width: 153,
+        height: 154,
+      });
+      await browser.windows.create({
+        type: "popup",
+        left: screen.availWidth * 100,
+        top: screen.availHeight * 100,
+        width: 154,
+        height: 155,
+      });
+      await browser.windows.create({
+        type: "popup",
+        left: -screen.availWidth * 100,
+        top: -screen.availHeight * 100,
+        width: 155,
+        height: 156,
+      });
+      browser.test.sendMessage("windows-created");
+    },
+  });
+
+  const baseWindow = await BrowserTestUtils.openNewBrowserWindow();
+  baseWindow.resizeTo(150, 150);
+  baseWindow.moveTo(50, 50);
+
+  let windows = [];
+  let windowListener = (window, topic) => {
+    if (topic == "domwindowopened") {
+      windows.push(window);
+    }
+  };
+  Services.ww.registerNotification(windowListener);
+
+  await extension.startup();
+  await extension.awaitMessage("windows-created");
+  await extension.unload();
+
+  const regularScreen = getScreenAt(0, 0, 150, 150);
+  const roundedX = roundCssPixcel(123, regularScreen);
+  const roundedY = roundCssPixcel(123, regularScreen);
+
+  const availRectLarge = getCssAvailRect(
+    getScreenAt(screen.width * 100, screen.height * 100, 150, 150)
+  );
+  const maxRight = availRectLarge.right;
+  const maxBottom = availRectLarge.bottom;
+
+  const availRectSmall = getCssAvailRect(
+    getScreenAt(-screen.width * 100, -screen.height * 100, 150, 150150)
+  );
+  const minLeft = availRectSmall.left;
+  const minTop = availRectSmall.top;
+
+  const actualCoordinates = windows
+    .slice(0, 3)
+    .map(window => `${window.screenX},${window.screenY}`);
+  const offsetFromBase = 10;
+  const expectedCoordinates = [
+    `${roundedX},${roundedY}`,
+    // Missing top should be +10 from the last browser window.
+    `${roundedX},${baseWindow.screenY + offsetFromBase}`,
+    // Missing left should be +10 from the last browser window.
+    `${baseWindow.screenX + offsetFromBase},${roundedY}`,
+  ];
+  is(
+    actualCoordinates.join(" / "),
+    expectedCoordinates.join(" / "),
+    "expected popup type windows are opened at given coordinates"
+  );
+
+  const actualSizes = windows
+    .slice(0, 3)
+    .map(window => `${window.outerWidth}x${window.outerHeight}`);
+  const expectedSizes = [`151x152`, `152x153`, `153x154`];
+  is(
+    actualSizes.join(" / "),
+    expectedSizes.join(" / "),
+    "expected popup type windows are opened with given size"
+  );
+
+  const actualRect = {
+    top: windows[4].screenY,
+    bottom: windows[3].screenY + windows[3].outerHeight,
+    left: windows[4].screenX,
+    right: windows[3].screenX + windows[3].outerWidth,
+  };
+  const maxRect = {
+    top: minTop,
+    bottom: maxBottom,
+    left: minLeft,
+    right: maxRight,
+  };
+  isRectContained(actualRect, maxRect);
+
+  for (const window of windows) {
+    window.close();
+  }
+
+  Services.ww.unregisterNotification(windowListener);
+  windows = null;
+  await BrowserTestUtils.closeWindow(baseWindow);
+});
