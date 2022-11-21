@@ -5,7 +5,10 @@
 
 #include "nsISupports.idl"
 
+interface mozIDOMWindowProxy;
+
 [scriptable, uuid(3c5cfbfd-545c-4910-a34a-203063914f96)]
 interface nsIAboutWindowsMessages : nsISupports
 {
+  void getMessages(in mozIDOMWindowProxy currentWindow, out Array<Array<ACString> > messages, out Array<AString> windowTitles);
 };
