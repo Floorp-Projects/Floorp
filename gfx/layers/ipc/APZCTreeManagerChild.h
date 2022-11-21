@@ -53,9 +53,6 @@ class APZCTreeManagerChild : public IAPZCTreeManager,
       uint64_t aInputBlockId,
       const nsTArray<TouchBehaviorFlags>& aValues) override;
 
-  void SetBrowserGestureResponse(uint64_t aInputBlockId,
-                                 BrowserGestureResponse aResponse) override;
-
   void StartScrollbarDrag(const ScrollableLayerGuid& aGuid,
                           const AsyncDragMetrics& aDragMetrics) override;
 

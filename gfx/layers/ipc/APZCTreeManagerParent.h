@@ -52,9 +52,6 @@ class APZCTreeManagerParent : public PAPZCTreeManagerParent {
   mozilla::ipc::IPCResult RecvSetAllowedTouchBehavior(
       const uint64_t& aInputBlockId, nsTArray<TouchBehaviorFlags>&& aValues);
 
-  mozilla::ipc::IPCResult RecvSetBrowserGestureResponse(
-      const uint64_t& aInputBlockId, const BrowserGestureResponse& aResponse);
-
   mozilla::ipc::IPCResult RecvStartScrollbarDrag(
       const ScrollableLayerGuid& aGuid, const AsyncDragMetrics& aDragMetrics);
 

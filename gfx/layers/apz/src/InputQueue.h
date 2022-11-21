@@ -39,7 +39,6 @@ class AsyncDragMetrics;
 class QueuedInput;
 struct APZEventResult;
 struct APZHandledResult;
-enum class BrowserGestureResponse : bool;
 
 /**
  * This class stores incoming input events, associated with "input blocks",
@@ -152,9 +151,6 @@ class InputQueue {
       uint64_t aInputBlockId, APZHandledResult aHandledResult)>;
   void AddInputBlockCallback(uint64_t aInputBlockId,
                              InputBlockCallback&& aCallback);
-
-  void SetBrowserGestureResponse(uint64_t aInputBlockId,
-                                 BrowserGestureResponse aResponse);
 
  private:
   ~InputQueue();

@@ -382,22 +382,6 @@ void APZCTreeManager::SetAllowedTouchBehavior(
   mInputQueue->SetAllowedTouchBehavior(aInputBlockId, aValues);
 }
 
-void APZCTreeManager::SetBrowserGestureResponse(
-    uint64_t aInputBlockId, BrowserGestureResponse aResponse) {
-  if (!APZThreadUtils::IsControllerThread()) {
-    APZThreadUtils::RunOnControllerThread(
-        NewRunnableMethod<uint64_t, BrowserGestureResponse>(
-            "layers::APZCTreeManager::SetBrowserGestureResponse", this,
-            &APZCTreeManager::SetBrowserGestureResponse, aInputBlockId,
-            aResponse));
-    return;
-  }
-
-  APZThreadUtils::AssertOnControllerThread();
-
-  mInputQueue->SetBrowserGestureResponse(aInputBlockId, aResponse);
-}
-
 void APZCTreeManager::UpdateHitTestingTree(
     const WebRenderScrollDataWrapper& aRoot, bool aIsFirstPaint,
     LayersId aOriginatingLayersId, uint32_t aPaintSequenceNumber) {
@@ -1658,9 +1642,6 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(
           return state.Finish(*this, std::move(aCallback));
         }
 
-        panInput.mOverscrollBehaviorAllowsSwipe =
-            state.mHit.mTargetApzc->OverscrollBehaviorAllowsSwipe();
-
         state.mResult = mInputQueue->ReceiveInputEvent(
             state.mHit.mTargetApzc,
             TargetConfirmationFlags{state.mHit.mHitResult}, panInput);
@@ -1668,6 +1649,9 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(
         // Update the out-parameters so they are what the caller expects.
         panInput.mPanStartPoint = *untransformedStartPoint;
         panInput.mPanDisplacement = *untransformedDisplacement;
+
+        panInput.mOverscrollBehaviorAllowsSwipe =
+            state.mHit.mTargetApzc->OverscrollBehaviorAllowsSwipe();
       }
       break;
     }
@@ -3574,9 +3558,6 @@ bool APZCTreeManager::GetAPZTestData(LayersId aLayersId,
       std::string apzcState;
       if (apzc->GetCheckerboardMagnitude(clippedBounds)) {
         apzcState += "checkerboarding,";
-      }
-      if (apzc->IsOverscrolled()) {
-        apzcState += "overscrolled,";
       }
       aOutData->RecordAdditionalData(viewId, apzcState);
     }

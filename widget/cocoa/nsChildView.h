@@ -480,7 +480,7 @@ class nsChildView final : public nsBaseWidget {
 
   virtual LayoutDeviceIntPoint GetClientOffset() override;
 
-  void DispatchAPZWheelInputEvent(mozilla::InputData& aEvent);
+  void DispatchAPZWheelInputEvent(mozilla::InputData& aEvent, bool aCanTriggerSwipe);
   nsEventStatus DispatchAPZInputEvent(mozilla::InputData& aEvent);
 
   void DispatchDoubleTapGesture(mozilla::TimeStamp aEventTimeStamp,
