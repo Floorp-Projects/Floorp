@@ -134,15 +134,6 @@ Microsoft Defender Antivirus manually
     If you're already missing files (you'll see them listed in ``hg status``, you can have them
     brought back by reverting your source tree: ``hg update -C``).
 
-Cleanup
-~~~~~~~
-
-After finishing the bootstrap process, ``bootstrap.py`` can be removed.
-
-.. code-block:: shell
-
-    rm c:/mozilla-source/bootstrap.py
-
 3. Build
 --------
 
