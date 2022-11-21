@@ -162,7 +162,7 @@ if (window[window.GoogleAnalyticsObject || "ga"]?.loaded === undefined) {
   // Also process the Google Tag Manager dataLayer (bug 1713688)
   const dl = window.dataLayer;
 
-  if (Array.isArray(dl)) {
+  if (Array.isArray(dl) && !dl.find(e => e["gtm.start"])) {
     const oldPush = dl.push;
     const push = function(o) {
       if (oldPush) {
