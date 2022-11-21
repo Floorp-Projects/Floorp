@@ -153,8 +153,8 @@ bool OverscrollHandoffChain::HasAutoscrollApzc() const {
 }
 
 RefPtr<AsyncPanZoomController> OverscrollHandoffChain::FindFirstScrollable(
-    const InputData& aInput,
-    ScrollDirections* aOutAllowedScrollDirections) const {
+    const InputData& aInput, ScrollDirections* aOutAllowedScrollDirections,
+    IncludeOverscroll aIncludeOverscroll) const {
   // Start by allowing scrolling in both directions. As we do handoff
   // overscroll-behavior may restrict one or both of the directions.
   *aOutAllowedScrollDirections += ScrollDirection::eVertical;
@@ -170,7 +170,7 @@ RefPtr<AsyncPanZoomController> OverscrollHandoffChain::FindFirstScrollable(
     // `none`), we consider the APZC can be scrollable in terms of pan gestures
     // because it causes overscrolling even if it's not able to scroll to the
     // direction.
-    if (StaticPrefs::apz_overscroll_enabled() &&
+    if (StaticPrefs::apz_overscroll_enabled() && bool(aIncludeOverscroll) &&
         // FIXME: Bug 1707491: Drop this pan gesture input check.
         aInput.mInputType == PANGESTURE_INPUT && mChain[i]->IsRootContent()) {
       // Check whether the root content APZC is also overscrollable governed by

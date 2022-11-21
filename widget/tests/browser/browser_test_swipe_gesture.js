@@ -889,6 +889,71 @@ add_task(async () => {
   await SpecialPowers.popPrefEnv();
 });
 
+// A test case to make sure the short circuit path for swipe-to-navigations in
+// APZ works, i.e. cases where we know for sure that the target APZC for a given
+// pan-start event isn't scrollable in the pan-start event direction.
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
+      ["browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate"],
+      ["widget.disable-swipe-tracker", false],
+      ["apz.overscroll.enabled", true],
+    ],
+  });
+
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:about",
+    true /* waitForLoad */
+  );
+
+  const URL_ROOT = getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content/",
+    "http://mochi.test:8888/"
+  );
+  BrowserTestUtils.loadURI(
+    tab.linkedBrowser,
+    URL_ROOT + "helper_swipe_gesture.html"
+  );
+  await BrowserTestUtils.browserLoaded(
+    tab.linkedBrowser,
+    false /* includeSubFrames */,
+    URL_ROOT + "helper_swipe_gesture.html"
+  );
+
+  // Make sure the content can allow both of overscrolling and
+  // swipe-to-navigations.
+  const overscrollBehaviorX = await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [],
+    () => {
+      return content.window.getComputedStyle(content.document.documentElement)
+        .overscrollBehaviorX;
+    }
+  );
+  is(overscrollBehaviorX, "auto");
+
+  // Make sure we can go back to the previous page.
+  ok(gBrowser.webNavigation.canGoBack);
+
+  // Start a pan gesture but keep touching.
+  await panLeftToRightBegin(tab.linkedBrowser, 100, 100, 2);
+
+  // The above pan event should invoke a SwipeGestureStart event immediately so
+  // that the swipe-to-navigation icon box should be uncollapsed to show it.
+  ok(!gHistorySwipeAnimation._prevBox.collapsed);
+
+  // Finish the pan gesture, i.e. sending a pan-end event, otherwise a new
+  // pan-start event in the next will also generate a pan-interrupt event which
+  // will break the test.
+  await panLeftToRightUpdate(tab.linkedBrowser, 100, 100, 2);
+  await panLeftToRightEnd(tab.linkedBrowser, 100, 100, 2);
+
+  BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
+});
+
 // NOTE: This test listens wheel events so that it causes an overscroll issue
 // (bug 1800022). To avoid the bug, we need to run this test case at the end
 // of this file.
