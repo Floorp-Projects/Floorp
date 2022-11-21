@@ -43,6 +43,13 @@ void RemoteDragStartData::AddInitialDnDDataTo(
   for (uint32_t i = 0; i < mDataTransfer.Length(); ++i) {
     nsTArray<IPCDataTransferItem>& itemArray = mDataTransfer[i].items();
     for (auto& item : itemArray) {
+      if (!nsContentUtils::IPCDataTransferItemHasKnownFlavor(item)) {
+        NS_WARNING(
+            "Ignoring unknown flavor in "
+            "RemoteDragStartData::AddInitialDnDDataTo");
+        continue;
+      }
+
       RefPtr<nsVariantCC> variant = new nsVariantCC();
       // Special case kFilePromiseMime so that we get the right
       // nsIFlavorDataProvider for it.

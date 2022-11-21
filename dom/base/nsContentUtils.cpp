@@ -7760,12 +7760,37 @@ void nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(
   });
 }
 
+bool nsContentUtils::IPCDataTransferItemHasKnownFlavor(
+    const IPCDataTransferItem& aItem) {
+  // Unknown types are converted to kCustomTypesMime.
+  // FIXME(bug 1776879) text/plain is converted to text/unicode still.
+  if (aItem.flavor().EqualsASCII(kCustomTypesMime) ||
+      aItem.flavor().EqualsASCII(kUnicodeMime)) {
+    return true;
+  }
+
+  for (const char* format : DataTransfer::kKnownFormats) {
+    if (aItem.flavor().EqualsASCII(format)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 nsresult nsContentUtils::IPCTransferableToTransferable(
     const IPCDataTransfer& aDataTransfer, bool aAddDataFlavor,
-    nsITransferable* aTransferable) {
+    nsITransferable* aTransferable, const bool aFilterUnknownFlavors) {
   nsresult rv;
   const nsTArray<IPCDataTransferItem>& items = aDataTransfer.items();
   for (const auto& item : items) {
+    if (aFilterUnknownFlavors && !IPCDataTransferItemHasKnownFlavor(item)) {
+      NS_WARNING(
+          "Ignoring unknown flavor in "
+          "nsContentUtils::IPCTransferableToTransferable");
+      continue;
+    }
+
     if (aAddDataFlavor) {
       aTransferable->AddDataFlavor(item.flavor().get());
     }
@@ -7835,11 +7860,11 @@ nsresult nsContentUtils::IPCTransferableToTransferable(
     const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
     nsIPrincipal* aRequestingPrincipal,
     const nsContentPolicyType& aContentPolicyType, bool aAddDataFlavor,
-    nsITransferable* aTransferable) {
+    nsITransferable* aTransferable, const bool aFilterUnknownFlavors) {
   aTransferable->SetIsPrivateData(aIsPrivateData);
 
   nsresult rv = IPCTransferableToTransferable(aDataTransfer, aAddDataFlavor,
-                                              aTransferable);
+                                              aTransferable, aFilterUnknownFlavors);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aTransferable->SetRequestingPrincipal(aRequestingPrincipal);
