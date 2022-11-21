@@ -151,7 +151,7 @@ add_task(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
-      ["browser.gesture.swipe.eight", "Browser:ForwardOrForwardDuplicate"],
+      ["browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate"],
       ["widget.disable-swipe-tracker", false],
       ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
       ["widget.swipe.success-velocity-contribution", 0.5],
@@ -265,7 +265,7 @@ add_task(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
-      ["browser.gesture.swipe.eight", "Browser:ForwardOrForwardDuplicate"],
+      ["browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate"],
       ["browser.swipe.navigation-icon-move-distance", 0],
       ["widget.disable-swipe-tracker", false],
       ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
@@ -391,7 +391,7 @@ add_task(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
-      ["browser.gesture.swipe.eight", "Browser:ForwardOrForwardDuplicate"],
+      ["browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate"],
       ["widget.disable-swipe-tracker", false],
       ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
       // Set the velocity-contribution to 0 so we can exactly control the
@@ -489,7 +489,7 @@ add_task(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
-      ["browser.gesture.swipe.eight", "Browser:ForwardOrForwardDuplicate"],
+      ["browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate"],
       ["widget.disable-swipe-tracker", false],
       ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
       // Set the velocity-contribution to 1 (default 0.05f) so velocity is a
@@ -590,7 +590,7 @@ add_task(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
-      ["browser.gesture.swipe.eight", "Browser:ForwardOrForwardDuplicate"],
+      ["browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate"],
       ["widget.disable-swipe-tracker", false],
       ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
       // Set the velocity-contribution to 0 so we can exactly control the
@@ -650,7 +650,7 @@ add_task(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
-      ["browser.gesture.swipe.eight", "Browser:ForwardOrForwardDuplicate"],
+      ["browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate"],
       ["widget.disable-swipe-tracker", false],
       ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
       // Set the velocity-contribution to 0 so we can exactly control the
@@ -774,7 +774,7 @@ add_task(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
-      ["browser.gesture.swipe.eight", "Browser:ForwardOrForwardDuplicate"],
+      ["browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate"],
       ["widget.disable-swipe-tracker", false],
       ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
       ["widget.swipe.success-velocity-contribution", 999999.0],
@@ -844,7 +844,7 @@ add_task(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
-      ["browser.gesture.swipe.eight", "Browser:ForwardOrForwardDuplicate"],
+      ["browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate"],
       ["widget.disable-swipe-tracker", false],
       ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
       ["widget.swipe.success-velocity-contribution", 0.5],
