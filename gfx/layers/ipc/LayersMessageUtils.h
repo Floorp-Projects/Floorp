@@ -931,6 +931,13 @@ struct ParamTraits<mozilla::layers::AsyncDragMetrics> {
 };
 
 template <>
+struct ParamTraits<mozilla::layers::BrowserGestureResponse>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::layers::BrowserGestureResponse,
+          mozilla::layers::BrowserGestureResponse::NotConsumed,
+          mozilla::layers::BrowserGestureResponse::Consumed> {};
+
+template <>
 struct ParamTraits<mozilla::layers::CompositorOptions> {
   typedef mozilla::layers::CompositorOptions paramType;
 

@@ -247,6 +247,25 @@ class TestAPZCTreeManager : public APZCTreeManager {
    **/
   void CancelAnimation() { EXPECT_TRUE(false); }
 
+  APZEventResult ReceiveInputEvent(
+      InputData& aEvent,
+      InputBlockCallback&& aCallback = InputBlockCallback()) override {
+    APZEventResult result =
+        APZCTreeManager::ReceiveInputEvent(aEvent, std::move(aCallback));
+    if (aEvent.mInputType == PANGESTURE_INPUT &&
+        // In the APZCTreeManager::ReceiveInputEvent some type of pan gesture
+        // events are marked as `mHandledByAPZ = false` (e.g. with Ctrl key
+        // modifier which causes reflow zoom), in such cases the events will
+        // never be processed by InputQueue so we shouldn't try to invoke
+        // AllowsSwipe() here.
+        aEvent.AsPanGestureInput().mHandledByAPZ &&
+        aEvent.AsPanGestureInput().AllowsSwipe()) {
+      SetBrowserGestureResponse(result.mInputBlockId,
+                                BrowserGestureResponse::NotConsumed);
+    }
+    return result;
+  }
+
  protected:
   AsyncPanZoomController* NewAPZCInstance(
       LayersId aLayersId, GeckoContentController* aController) override;
@@ -275,9 +294,16 @@ class TestAsyncPanZoomController : public AsyncPanZoomController {
     // on APZCTreeManager. This allows us to templates for functions like
     // TouchDown, TouchUp, etc so that we can reuse the code for dispatching
     // events into both APZC and APZCTM.
-    return GetInputQueue()->ReceiveInputEvent(
+    APZEventResult result = GetInputQueue()->ReceiveInputEvent(
         this, TargetConfirmationFlags{!mWaitForMainThread}, aEvent,
         aTouchBehaviors);
+
+    if (aEvent.mInputType == PANGESTURE_INPUT &&
+        aEvent.AsPanGestureInput().AllowsSwipe()) {
+      GetInputQueue()->SetBrowserGestureResponse(
+          result.mInputBlockId, BrowserGestureResponse::NotConsumed);
+    }
+    return result;
   }
 
   void ContentReceivedInputBlock(uint64_t aInputBlockId, bool aPreventDefault) {

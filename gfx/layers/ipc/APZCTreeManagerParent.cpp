@@ -120,6 +120,17 @@ mozilla::ipc::IPCResult APZCTreeManagerParent::RecvSetAllowedTouchBehavior(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult APZCTreeManagerParent::RecvSetBrowserGestureResponse(
+    const uint64_t& aInputBlockId, const BrowserGestureResponse& aResponse) {
+  mUpdater->RunOnUpdaterThread(
+      mLayersId, NewRunnableMethod<uint64_t, BrowserGestureResponse>(
+                     "layers::IAPZCTreeManager::SetBrowserGestureResponse",
+                     mTreeManager, &IAPZCTreeManager::SetBrowserGestureResponse,
+                     aInputBlockId, aResponse));
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult APZCTreeManagerParent::RecvStartScrollbarDrag(
     const ScrollableLayerGuid& aGuid, const AsyncDragMetrics& aDragMetrics) {
   if (!IsGuidValid(aGuid)) {
