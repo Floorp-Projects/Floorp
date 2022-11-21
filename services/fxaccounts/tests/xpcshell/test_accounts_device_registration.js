@@ -102,24 +102,19 @@ function MockFxAccountsClient(device) {
     return Promise.resolve(!!uid && !this._deletedOnServer);
   };
 
-  const {
-    id: deviceId,
-    name: deviceName,
-    type: deviceType,
-    sessionToken,
-  } = device;
-
   this.registerDevice = (st, name, type) =>
-    Promise.resolve({ id: deviceId, name });
+    Promise.resolve({ id: device.id, name });
   this.updateDevice = (st, id, name) => Promise.resolve({ id, name });
   this.signOut = () => Promise.resolve({});
   this.getDeviceList = st =>
     Promise.resolve([
       {
-        id: deviceId,
-        name: deviceName,
-        type: deviceType,
-        isCurrentDevice: st === sessionToken,
+        id: device.id,
+        name: device.name,
+        type: device.type,
+        pushCallback: device.pushCallback,
+        pushEndpointExpired: device.pushEndpointExpired,
+        isCurrentDevice: st === device.sessionToken,
       },
     ]);
 
@@ -167,6 +162,7 @@ async function MockFxAccounts(credentials, device = {}) {
     },
     VERIFICATION_POLL_TIMEOUT_INITIAL: 1,
   });
+  fxa._internal.device._fxai = fxa._internal;
   await fxa._internal.setSignedInUser(credentials);
   Services.prefs.setStringPref(
     "identity.fxaccounts.account.device.name",
@@ -785,6 +781,8 @@ add_task(async function test_refreshDeviceList() {
     id: "deviceAAAAAA",
     name: "iPhone",
     type: "phone",
+    pushCallback: "http://mochi.test:8888",
+    pushEndpointExpired: false,
     sessionToken: credentials.sessionToken,
   });
   let spy = {
@@ -824,7 +822,36 @@ add_task(async function test_refreshDeviceList() {
           return result;
         });
     },
-    fxaPushService: null,
+    fxaPushService: {
+      registerPushEndpoint() {
+        return new Promise(resolve => {
+          resolve({
+            endpoint: "http://mochi.test:8888",
+            getKey(type) {
+              return ChromeUtils.base64URLDecode(
+                type === "auth" ? BOGUS_AUTHKEY : BOGUS_PUBLICKEY,
+                { padding: "ignore" }
+              );
+            },
+          });
+        });
+      },
+      unsubscribe() {
+        return Promise.resolve();
+      },
+      getSubscription() {
+        return Promise.resolve({
+          isExpired: () => {
+            return false;
+          },
+          endpoint: "http://mochi.test:8888",
+        });
+      },
+    },
+    async _handleTokenError(e) {
+      _(`Test failure: ${e} - ${e.stack}`);
+      throw e;
+    },
   };
   let device = new FxAccountsDevice(fxai);
   device._checkRemoteCommandsUpdateNeeded = async () => false;
@@ -847,6 +874,8 @@ add_task(async function test_refreshDeviceList() {
         id: "deviceAAAAAA",
         name: "iPhone",
         type: "phone",
+        pushCallback: "http://mochi.test:8888",
+        pushEndpointExpired: false,
         isCurrentDevice: true,
       },
     ],
@@ -958,6 +987,158 @@ add_task(async function test_refreshDeviceList() {
     `${ON_DEVICELIST_UPDATED} notified after reset`
   );
   Services.obs.removeObserver(deviceListUpdateObserver, ON_DEVICELIST_UPDATED);
+});
+
+add_task(async function test_push_resubscribe() {
+  let credentials = getTestUser("baz");
+
+  let storage = new MockStorageManager();
+  storage.initialize(credentials);
+  let state = new AccountState(storage);
+
+  let mockDevice = {
+    id: "deviceAAAAAA",
+    name: "iPhone",
+    type: "phone",
+    pushCallback: "http://mochi.test:8888",
+    pushEndpointExpired: false,
+    sessionToken: credentials.sessionToken,
+  };
+
+  var mockSubscription = {
+    isExpired: () => {
+      return false;
+    },
+    endpoint: "http://mochi.test:8888",
+  };
+
+  let fxAccountsClient = new MockFxAccountsClient(mockDevice);
+
+  const spy = {
+    _registerOrUpdateDevice: { count: 0 },
+  };
+
+  let fxai = {
+    _now: Date.now(),
+    _generation: 0,
+    fxAccountsClient,
+    now() {
+      return this._now;
+    },
+    withVerifiedAccountState(func) {
+      // Ensure `func` is called asynchronously, and simulate the possibility
+      // of a different user signng in while the promise is in-flight.
+      const currentGeneration = this._generation;
+      return Promise.resolve()
+        .then(_ => func(state))
+        .then(result => {
+          if (currentGeneration < this._generation) {
+            throw new Error("Another user has signed in");
+          }
+          return result;
+        });
+    },
+    fxaPushService: {
+      registerPushEndpoint() {
+        return new Promise(resolve => {
+          resolve({
+            endpoint: "http://mochi.test:8888",
+            getKey(type) {
+              return ChromeUtils.base64URLDecode(
+                type === "auth" ? BOGUS_AUTHKEY : BOGUS_PUBLICKEY,
+                { padding: "ignore" }
+              );
+            },
+          });
+        });
+      },
+      unsubscribe() {
+        return Promise.resolve();
+      },
+      getSubscription() {
+        return Promise.resolve(mockSubscription);
+      },
+    },
+    commands: {
+      async pollDeviceCommands() {},
+    },
+    async _handleTokenError(e) {
+      _(`Test failure: ${e} - ${e.stack}`);
+      throw e;
+    },
+  };
+  let device = new FxAccountsDevice(fxai);
+  device._checkRemoteCommandsUpdateNeeded = async () => false;
+  device._registerOrUpdateDevice = async () => {
+    spy._registerOrUpdateDevice.count += 1;
+  };
+
+  Assert.ok(await device.refreshDeviceList(), "Should refresh list");
+  Assert.equal(spy._registerOrUpdateDevice.count, 0, "not expecting a refresh");
+
+  mockDevice.pushEndpointExpired = true;
+  Assert.ok(
+    await device.refreshDeviceList({ ignoreCached: true }),
+    "Should refresh list"
+  );
+  Assert.equal(
+    spy._registerOrUpdateDevice.count,
+    1,
+    "end-point expired means should resubscribe"
+  );
+
+  mockDevice.pushEndpointExpired = false;
+  mockSubscription.isExpired = () => true;
+  Assert.ok(
+    await device.refreshDeviceList({ ignoreCached: true }),
+    "Should refresh list"
+  );
+  Assert.equal(
+    spy._registerOrUpdateDevice.count,
+    2,
+    "push service saying expired should resubscribe"
+  );
+
+  mockSubscription.isExpired = () => false;
+  mockSubscription.endpoint = "something-else";
+  Assert.ok(
+    await device.refreshDeviceList({ ignoreCached: true }),
+    "Should refresh list"
+  );
+  Assert.equal(
+    spy._registerOrUpdateDevice.count,
+    3,
+    "push service endpoint diff should resubscribe"
+  );
+
+  mockSubscription = null;
+  Assert.ok(
+    await device.refreshDeviceList({ ignoreCached: true }),
+    "Should refresh list"
+  );
+  Assert.equal(
+    spy._registerOrUpdateDevice.count,
+    4,
+    "push service saying no sub should resubscribe"
+  );
+
+  // reset everything to make sure we didn't leave something behind causing the above to
+  // not check what we thought it was.
+  mockSubscription = {
+    isExpired: () => {
+      return false;
+    },
+    endpoint: "http://mochi.test:8888",
+  };
+  Assert.ok(
+    await device.refreshDeviceList({ ignoreCached: true }),
+    "Should refresh list"
+  );
+  Assert.equal(
+    spy._registerOrUpdateDevice.count,
+    4,
+    "resetting to good data should not resubscribe"
+  );
 });
 
 add_task(async function test_checking_remote_availableCommands_mismatch() {
