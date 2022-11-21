@@ -157,6 +157,8 @@ static const RedirEntry kRedirMap[] = {
 #ifdef XP_WIN
     {"third-party", "chrome://global/content/aboutThirdParty.html",
      nsIAboutModule::ALLOW_SCRIPT},
+    {"windows-messages", "chrome://global/content/aboutWindowsMessages.html",
+     nsIAboutModule::ALLOW_SCRIPT},
 #endif
 #ifndef MOZ_GLEAN_ANDROID
     {"glean", "chrome://global/content/aboutGlean.html",
