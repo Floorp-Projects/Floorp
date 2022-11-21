@@ -29,6 +29,13 @@
     -moz-box-ordinal-group: 0 !important;
     scrollbar-width: thin;
   }
+
+  /* default */
+  #sidebar-select-box{
+    width: 3.8em;
+    max-width: 3.8em;
+    min-width: 3.8em;
+  }
   
   .sidepanel-icon, .sidepanel-browser-icon{
     appearance: none;
@@ -40,7 +47,8 @@
     padding: 11px 10px 10px 11px;
     scale: 1.0;
   }
-  
+
+  /* Linux only */
   @media (-moz-platform: linux) {
     .sidepanel-icon, .sidepanel-browser-icon {
       appearance: none;
@@ -53,12 +61,49 @@
       scale: 1.0;
     }
   }
+
+  /* uidensity: compact mode */
+  :root[uidensity=compact] .sidepanel-icon, :root[uidensity=compact] .sidepanel-browser-icon {
+      appearance: none;
+      -moz-context-properties: fill, fill-opacity;
+      border-radius: 4px;
+      color: inherit;
+      fill: currentColor;
+      margin: 2.5px 1.5px 4.5px 1px;
+      padding: 5px 5px 5px 5.5px;
+      scale: 1.0;
+  }
+
+  :root[uidensity=compact] #sidebar-select-box{
+    width: 2.5em;
+    max-width: 2.5em;
+    min-width: 2.5em;
+  }
+
+  /* uidensity: touch mode */
+  :root[uidensity=touch] .sidepanel-icon, :root[uidensity=touch] .sidepanel-browser-icon {
+    appearance: none;
+    -moz-context-properties: fill, fill-opacity;
+    border-radius: 4px;
+    color: inherit;
+    fill: currentColor;
+    margin: 1px 3px 2px 3px;
+    padding: 16px 16px 16px 18px;
+    scale: 1.0;
+  }
+
   
+  :root[uidensity=touch] #sidebar-select-box{
+    width: 5em;
+    max-width: 5em;
+    min-width: 5em;
+  }
+
   #sidebar-select-box{
     border-left: 1px solid var(--chrome-content-separator-color);
     border-right: 1px solid var(--chrome-content-separator-color);
   }
-  
+
   .sidebar2-icon {
     appearance: none;
     -moz-context-properties: fill, fill-opacity;
