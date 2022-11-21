@@ -208,8 +208,7 @@ void FetchService::FetchInstance::Cancel() {
 }
 
 void FetchService::FetchInstance::OnResponseEnd(
-    FetchDriverObserver::EndReason aReason,
-    JS::Handle<JS::Value> aReasonDetails) {
+    FetchDriverObserver::EndReason aReason) {
   FETCH_LOG(("FetchInstance::OnResponseEnd [%p]", this));
   if (aReason == eAborted) {
     FETCH_LOG(("FetchInstance::OnResponseEnd end with eAborted"));

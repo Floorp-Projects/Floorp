@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "js/Value.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/FetchDriver.h"
 
@@ -589,7 +588,7 @@ nsresult FetchDriver::HttpFetch(
     secFlags |= nsILoadInfo::SEC_DONT_FOLLOW_REDIRECTS;
   }
 
-  // This handles the use credentials flag in "HTTP
+  // This is handles the use credentials flag in "HTTP
   // network or cache fetch" in the spec and decides whether to transmit
   // cookies and other identifying information.
   if (mRequest->GetCredentialsMode() == RequestCredentials::Include) {
@@ -932,8 +931,7 @@ void FetchDriver::FailWithNetworkError(nsresult rv) {
 
   // mObserver could be null after OnResponseAvailable().
   if (mObserver) {
-    mObserver->OnResponseEnd(FetchDriverObserver::eByNetworking,
-                             JS::UndefinedHandleValue);
+    mObserver->OnResponseEnd(FetchDriverObserver::eByNetworking);
     mObserver = nullptr;
   }
 
@@ -1462,8 +1460,7 @@ void FetchDriver::FinishOnStopRequest(
   }
 
   if (mObserver) {
-    mObserver->OnResponseEnd(FetchDriverObserver::eByNetworking,
-                             JS::UndefinedHandleValue);
+    mObserver->OnResponseEnd(FetchDriverObserver::eByNetworking);
     mObserver = nullptr;
   }
 
@@ -1637,8 +1634,7 @@ void FetchDriver::RunAbortAlgorithm() {
 #ifdef DEBUG
     mResponseAvailableCalled = true;
 #endif
-    JS::Rooted<JS::Value> reason(RootingCx(), Signal()->RawReason());
-    mObserver->OnResponseEnd(FetchDriverObserver::eAborted, reason);
+    mObserver->OnResponseEnd(FetchDriverObserver::eAborted);
     mObserver = nullptr;
   }
 

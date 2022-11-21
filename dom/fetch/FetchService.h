@@ -116,8 +116,7 @@ class FetchService final : public nsIObserver {
     void Cancel();
 
     /* FetchDriverObserver interface */
-    void OnResponseEnd(FetchDriverObserver::EndReason aReason,
-                       JS::Handle<JS::Value> aReasonDetails) override;
+    void OnResponseEnd(FetchDriverObserver::EndReason aReason) override;
     void OnResponseAvailableInternal(
         SafeRefPtr<InternalResponse> aResponse) override;
     bool NeedOnDataAvailable() override;
