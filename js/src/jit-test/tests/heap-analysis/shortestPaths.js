@@ -73,3 +73,9 @@ assertEq(e, "TypeError: 100 is not an array object");
 
 try { paths = shortestPaths([f], {start: 200}); } catch (exc) { e = ""+exc; };
 assertEq(e, "TypeError: 200 is not a GC thing");
+
+// Bug 1799824.
+let arr = [{}];
+let objWithGetter = {get start() { arr.length = 0; return {}; }};
+try { paths = shortestPaths(arr, objWithGetter); } catch (exc) { e = ""+exc; }
+assertEq(e, "TypeError: arr is not a dense array object with one or more elements");
