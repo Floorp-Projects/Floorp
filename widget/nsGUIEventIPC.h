@@ -1176,10 +1176,7 @@ struct ParamTraits<mozilla::PanGestureInput>
     WriteParam(aWriter, aParam.mUserDeltaMultiplierY);
     WriteParam(aWriter, aParam.mDeltaType);
     WriteParam(aWriter, aParam.mHandledByAPZ);
-    WriteParam(
-        aWriter,
-        aParam
-            .mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection);
+    WriteParam(aWriter, aParam.mMayTriggerSwipe);
     WriteParam(aWriter, aParam.mOverscrollBehaviorAllowsSwipe);
     WriteParam(aWriter, aParam.mSimulateMomentum);
     WriteParam(aWriter, aParam.mIsNoLineOrPageDelta);
@@ -1198,10 +1195,8 @@ struct ParamTraits<mozilla::PanGestureInput>
            ReadParam(aReader, &aResult->mUserDeltaMultiplierY) &&
            ReadParam(aReader, &aResult->mDeltaType) &&
            ReadBoolForBitfield(aReader, aResult, &paramType::SetHandledByAPZ) &&
-           ReadBoolForBitfield(
-               aReader, aResult,
-               &paramType::
-                   SetRequiresContentResponseIfCannotScrollHorizontallyInStartDirection) &&
+           ReadBoolForBitfield(aReader, aResult,
+                               &paramType::SetMayTriggerSwipe) &&
            ReadBoolForBitfield(aReader, aResult,
                                &paramType::SetOverscrollBehaviorAllowsSwipe) &&
            ReadBoolForBitfield(aReader, aResult,

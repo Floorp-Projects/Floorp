@@ -426,8 +426,7 @@ PanGestureInput::PanGestureInput()
       mOverscrollBehaviorAllowsSwipe(false),
       mSimulateMomentum(false),
       mIsNoLineOrPageDelta(true),
-      mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection(
-          false) {}
+      mMayTriggerSwipe(false) {}
 
 PanGestureInput::PanGestureInput(PanGestureType aType, uint32_t aTime,
                                  TimeStamp aTimeStamp,
@@ -446,8 +445,7 @@ PanGestureInput::PanGestureInput(PanGestureType aType, uint32_t aTime,
       mOverscrollBehaviorAllowsSwipe(false),
       mSimulateMomentum(false),
       mIsNoLineOrPageDelta(true) {
-  mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection =
-      SwipeTracker::CanTriggerSwipe(*this);
+  mMayTriggerSwipe = SwipeTracker::CanTriggerSwipe(*this);
 }
 
 PanGestureInput::PanGestureInput(PanGestureType aType, uint32_t aTime,
@@ -458,8 +456,7 @@ PanGestureInput::PanGestureInput(PanGestureType aType, uint32_t aTime,
                                  IsEligibleForSwipe aIsEligibleForSwipe)
     : PanGestureInput(aType, aTime, aTimeStamp, aPanStartPoint,
                       aPanDisplacement, aModifiers) {
-  mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection &=
-      bool(aIsEligibleForSwipe);
+  mMayTriggerSwipe &= bool(aIsEligibleForSwipe);
 }
 
 void PanGestureInput::SetLineOrPageDeltas(int32_t aLineOrPageDeltaX,
