@@ -851,14 +851,6 @@ void nsBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                            nsGkAtoms::layer)) {
       forceLayer = true;
     }
-    // Check for frames that are marked as a part of the region used
-    // in calculating glass margins on Windows.
-    const nsStyleDisplay* styles = StyleDisplay();
-    if (styles->EffectiveAppearance() == StyleAppearance::MozWinExcludeGlass) {
-      aBuilder->AddWindowExcludeGlassRegion(
-          this, nsRect(aBuilder->ToReferenceFrame(this), GetSize()));
-    }
-
     nsStaticAtom* windowButtonTypes[] = {nsGkAtoms::min, nsGkAtoms::max,
                                          nsGkAtoms::close, nullptr};
     int32_t buttonTypeIndex = mContent->AsElement()->FindAttrValueIn(

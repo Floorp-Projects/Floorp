@@ -14,6 +14,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ServoStyleConstsInlines.h"
 #include "mozilla/UniquePtr.h"
@@ -1364,6 +1365,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   }
 
   mozilla::StyleAppearance EffectiveAppearance() const {
+    if (MOZ_LIKELY(mAppearance == mozilla::StyleAppearance::None)) {
+      return mAppearance;
+    }
     switch (mAppearance) {
       case mozilla::StyleAppearance::Auto:
       case mozilla::StyleAppearance::Button:
