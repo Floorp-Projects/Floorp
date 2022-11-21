@@ -31,5 +31,10 @@ sealed class Event {
          * Event recording the first time a URI is loaded in Firefox in a 24 hour period.
          */
         object FirstUriLoadForDay : GrowthData("ja86ek")
+
+        /**
+         * Event recording the first time Firefox is used 3 days in a row in the first week of install.
+         */
+        object FirstWeekSeriesActivity : GrowthData("20ay7u")
     }
 }

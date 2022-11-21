@@ -24,6 +24,7 @@ class MetricsMiddleware(
         is AppAction.ResumedMetricsAction -> {
             metrics.track(Event.GrowthData.SetAsDefault)
             metrics.track(Event.GrowthData.FirstAppOpenForDay)
+            metrics.track(Event.GrowthData.FirstWeekSeriesActivity)
         }
         else -> Unit
     }
