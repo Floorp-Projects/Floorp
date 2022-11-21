@@ -51,7 +51,9 @@ void CachePromiseHandler::ResolvedCallback(JSContext* aCx,
                                            JS::Handle<JS::Value> aValue,
                                            ErrorResult& aRv) {
   AssertIsOnMainThread();
-  MOZ_ASSERT(!mRequestHandle->IsEmpty());
+  if (mRequestHandle->IsEmpty()) {
+    return;
+  }
   WorkerLoadContext* loadContext = mRequestHandle->GetContext();
 
   // May already have been canceled by CacheLoadHandler::Fail from
@@ -72,7 +74,9 @@ void CachePromiseHandler::RejectedCallback(JSContext* aCx,
                                            JS::Handle<JS::Value> aValue,
                                            ErrorResult& aRv) {
   AssertIsOnMainThread();
-  MOZ_ASSERT(!mRequestHandle->IsEmpty());
+  if (mRequestHandle->IsEmpty()) {
+    return;
+  }
   WorkerLoadContext* loadContext = mRequestHandle->GetContext();
 
   // May already have been canceled by CacheLoadHandler::Fail from
@@ -253,8 +257,6 @@ CacheLoadHandler::CacheLoadHandler(ThreadSafeWorkerRef* aWorkerRef,
 
 void CacheLoadHandler::Fail(nsresult aRv) {
   AssertIsOnMainThread();
-  MOZ_ASSERT(!mRequestHandle->IsEmpty());
-  WorkerLoadContext* loadContext = mRequestHandle->GetContext();
   MOZ_ASSERT(NS_FAILED(aRv));
 
   if (mFailed) {
@@ -264,11 +266,17 @@ void CacheLoadHandler::Fail(nsresult aRv) {
   mFailed = true;
 
   if (mPump) {
-    MOZ_ASSERT(loadContext->mCacheStatus ==
-               WorkerLoadContext::ReadingFromCache);
+    MOZ_ASSERT_IF(!mRequestHandle->IsEmpty(),
+                  mRequestHandle->GetContext()->mCacheStatus ==
+                      WorkerLoadContext::ReadingFromCache);
     mPump->Cancel(aRv);
     mPump = nullptr;
   }
+  if (mRequestHandle->IsEmpty()) {
+    return;
+  }
+
+  WorkerLoadContext* loadContext = mRequestHandle->GetContext();
 
   loadContext->mCacheStatus = WorkerLoadContext::Cancel;
 
@@ -484,7 +492,9 @@ CacheLoadHandler::OnStreamComplete(nsIStreamLoader* aLoader,
                                    uint32_t aStringLen,
                                    const uint8_t* aString) {
   AssertIsOnMainThread();
-  MOZ_ASSERT(!mRequestHandle->IsEmpty());
+  if (mRequestHandle->IsEmpty()) {
+    return NS_OK;
+  }
   WorkerLoadContext* loadContext = mRequestHandle->GetContext();
 
   mPump = nullptr;
@@ -515,7 +525,9 @@ nsresult CacheLoadHandler::DataReceivedFromCache(
     const nsACString& aCSPReportOnlyHeaderValue,
     const nsACString& aReferrerPolicyHeaderValue) {
   AssertIsOnMainThread();
-  MOZ_ASSERT(!mRequestHandle->IsEmpty());
+  if (mRequestHandle->IsEmpty()) {
+    return NS_OK;
+  }
   WorkerLoadContext* loadContext = mRequestHandle->GetContext();
 
   MOZ_ASSERT(loadContext->mCacheStatus == WorkerLoadContext::Cached);
