@@ -805,6 +805,8 @@ function findChromeUrlsFromArray(array, prefix) {
 }
 
 add_task(async function checkAllTheFiles() {
+  TestUtils.assertPackagedBuild();
+
   const libxul = await IOUtils.read(PathUtils.xulLibraryPath);
   findChromeUrlsFromArray(libxul, "chrome://");
   findChromeUrlsFromArray(libxul, "resource://");
