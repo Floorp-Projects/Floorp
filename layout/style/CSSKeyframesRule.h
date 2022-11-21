@@ -39,6 +39,10 @@ class CSSKeyframesRule final : public css::Rule {
   void GetName(nsAString& aName) const;
   void SetName(const nsAString& aName);
   CSSRuleList* CssRules();
+
+  CSSKeyframeRule* IndexedGetter(uint32_t aIndex, bool& aFound);
+  uint32_t Length();
+
   void AppendRule(const nsAString& aRule);
   void DeleteRule(const nsAString& aKey);
   CSSKeyframeRule* FindRule(const nsAString& aKey);
@@ -48,6 +52,7 @@ class CSSKeyframesRule final : public css::Rule {
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
  private:
+  CSSKeyframeList* EnsureRules();
   uint32_t FindRuleIndexForKey(const nsAString& aKey);
 
   template <typename Func>

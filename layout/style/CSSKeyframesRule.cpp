@@ -318,19 +318,23 @@ void CSSKeyframesRule::GetCssText(nsACString& aCssText) const {
 }
 
 /* virtual */ dom::CSSRuleList* CSSKeyframesRule::CssRules() {
-  if (!mKeyframeList) {
-    mKeyframeList = new CSSKeyframeList(do_AddRef(mRawRule), mSheet, this);
-  }
-  return mKeyframeList;
+  return EnsureRules();
+}
+
+/* virtual */ dom::CSSKeyframeRule* CSSKeyframesRule::IndexedGetter(
+    uint32_t aIndex, bool& aFound) {
+  return EnsureRules()->IndexedGetter(aIndex, aFound);
+}
+
+/* virtual */ uint32_t CSSKeyframesRule::Length() {
+  return EnsureRules()->Length();
 }
 
 /* virtual */ dom::CSSKeyframeRule* CSSKeyframesRule::FindRule(
     const nsAString& aKey) {
   auto index = FindRuleIndexForKey(aKey);
   if (index != kRuleNotFound) {
-    // Construct mKeyframeList but ignore the result.
-    CssRules();
-    return mKeyframeList->GetRule(index);
+    return EnsureRules()->GetRule(index);
   }
   return nullptr;
 }
@@ -348,6 +352,13 @@ size_t CSSKeyframesRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
 JSObject* CSSKeyframesRule::WrapObject(JSContext* aCx,
                                        JS::Handle<JSObject*> aGivenProto) {
   return CSSKeyframesRule_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+dom::CSSKeyframeList* CSSKeyframesRule::EnsureRules() {
+  if (!mKeyframeList) {
+    mKeyframeList = new CSSKeyframeList(do_AddRef(mRawRule), mSheet, this);
+  }
+  return mKeyframeList;
 }
 
 }  // namespace mozilla::dom
