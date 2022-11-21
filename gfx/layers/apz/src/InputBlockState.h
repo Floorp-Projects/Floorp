@@ -31,7 +31,6 @@ class DragBlockState;
 class PanGestureBlockState;
 class PinchGestureBlockState;
 class KeyboardBlockState;
-enum class BrowserGestureResponse : bool;
 
 /**
  * A base class that stores state common to various input blocks.
@@ -156,7 +155,7 @@ class CancelableBlockState : public InputBlockState {
    * Record that content didn't respond in time.
    * @return false if this block already timed out, true if not.
    */
-  virtual bool TimeoutContentResponse();
+  bool TimeoutContentResponse();
 
   /**
    * Checks if the content response timer has already expired.
@@ -328,10 +327,6 @@ class PanGestureBlockState : public CancelableBlockState {
 
   PanGestureBlockState* AsPanGestureBlock() override { return this; }
 
-  bool ShouldDropEvents() const override;
-
-  bool TimeoutContentResponse() override;
-
   /**
    * @return Whether or not overscrolling is prevented for this block.
    */
@@ -340,9 +335,6 @@ class PanGestureBlockState : public CancelableBlockState {
   bool WasInterrupted() const { return mInterrupted; }
 
   void SetNeedsToWaitForContentResponse(bool aWaitForContentResponse);
-  void SetNeedsToWaitForBrowserGestureResponse(
-      bool aWaitForBrowserGestureResponse);
-  void SetBrowserGestureResponse(BrowserGestureResponse aResponse);
 
   ScrollDirections GetAllowedScrollDirections() const {
     return mAllowedScrollDirections;
@@ -351,13 +343,6 @@ class PanGestureBlockState : public CancelableBlockState {
  private:
   bool mInterrupted;
   bool mWaitingForContentResponse;
-  // A pan gesture may be used for browser's swipe gestures so APZ needs to wait
-  // for the response from the browser whether the gesture has been used for
-  // swipe or not. This `mWaitingForBrowserGestureResponse` flag represents the
-  // waiting state. And below `mStartedBrowserGesture` represents the response
-  // from the browser.
-  bool mWaitingForBrowserGestureResponse;
-  bool mStartedBrowserGesture;
   ScrollDirections mAllowedScrollDirections;
 };
 

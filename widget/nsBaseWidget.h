@@ -331,22 +331,27 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   void SwipeFinished() override;
   void ReportSwipeStarted(uint64_t aInputBlockId, bool aStartSwipe) override;
   void TrackScrollEventAsSwipe(const mozilla::PanGestureInput& aSwipeStartEvent,
-                               uint32_t aAllowedDirections,
-                               uint64_t aInputBlockId);
+                               uint32_t aAllowedDirections);
   struct SwipeInfo {
     bool wantsSwipe;
     uint32_t allowedDirections;
   };
   SwipeInfo SendMayStartSwipe(const mozilla::PanGestureInput& aSwipeStartEvent);
+  enum class CanTriggerSwipe : bool {
+    No = false,
+    Yes = true,
+  };
   // Returns a WidgetWheelEvent which needs to be handled by APZ regardless of
   // whether |aPanInput| event was used for SwipeTracker or not.
   mozilla::WidgetWheelEvent MayStartSwipeForAPZ(
       const mozilla::PanGestureInput& aPanInput,
-      const mozilla::layers::APZEventResult& aApzResult);
+      const mozilla::layers::APZEventResult& aApzResult,
+      CanTriggerSwipe aCanTriggerSwipe);
 
   // Returns true if |aPanInput| event was used for SwipeTracker, false
   // otherwise.
-  bool MayStartSwipeForNonAPZ(const mozilla::PanGestureInput& aPanInput);
+  bool MayStartSwipeForNonAPZ(const mozilla::PanGestureInput& aPanInput,
+                              CanTriggerSwipe aCanTriggerSwipe);
 
   void NotifyWindowDestroyed();
   void NotifySizeMoveDone();

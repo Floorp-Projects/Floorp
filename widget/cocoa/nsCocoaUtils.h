@@ -8,7 +8,6 @@
 
 #import <Cocoa/Cocoa.h>
 
-#include "InputData.h"
 #include "nsRect.h"
 #include "imgIContainer.h"
 #include "nsTArray.h"
@@ -455,11 +454,6 @@ class nsCocoaUtils {
   static nsresult MaybeRequestScreenCapturePermission();
 
   static void InvalidateHiDPIState();
-
-  static mozilla::PanGestureInput CreatePanGestureEvent(
-      NSEvent* aNativeEvent, uint32_t aTime, mozilla::TimeStamp aTimeStamp,
-      const mozilla::ScreenPoint& aPanStartPoint, const mozilla::ScreenPoint& aPreciseDelta,
-      const mozilla::gfx::IntPoint& aLineOrPageDelta, mozilla::Modifiers aModifiers);
 
  private:
   /**

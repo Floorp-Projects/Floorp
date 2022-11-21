@@ -39,8 +39,6 @@ enum ZoomToRectBehavior : uint32_t {
   ONLY_ZOOM_TO_DEFAULT_SCALE = 1 << 2,
 };
 
-enum class BrowserGestureResponse : bool;
-
 class AsyncDragMetrics;
 struct APZHandledResult;
 
@@ -109,9 +107,6 @@ class IAPZCTreeManager {
    */
   virtual void SetAllowedTouchBehavior(
       uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aValues) = 0;
-
-  virtual void SetBrowserGestureResponse(uint64_t aInputBlockId,
-                                         BrowserGestureResponse aResponse) = 0;
 
   virtual void StartScrollbarDrag(const ScrollableLayerGuid& aGuid,
                                   const AsyncDragMetrics& aDragMetrics) = 0;

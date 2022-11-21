@@ -323,8 +323,6 @@ class MouseInput : public InputData {
  * These events are currently only used for scrolling on desktop.
  */
 class PanGestureInput : public InputData {
-  friend struct IPC::ParamTraits<PanGestureInput>;
-
  protected:
   friend mozilla::layers::APZInputBridgeChild;
   friend mozilla::layers::PAPZInputBridgeParent;
@@ -400,12 +398,6 @@ class PanGestureInput : public InputData {
                   const ScreenPoint& aPanStartPoint,
                   const ScreenPoint& aPanDisplacement, Modifiers aModifiers);
 
-  enum class IsEligibleForSwipe : bool { No, Yes };
-  PanGestureInput(PanGestureType aType, uint32_t aTime, TimeStamp aTimeStamp,
-                  const ScreenPoint& aPanStartPoint,
-                  const ScreenPoint& aPanDisplacement, Modifiers aModifiers,
-                  IsEligibleForSwipe aIsEligibleForSwipe);
-
   void SetLineOrPageDeltas(int32_t aLineOrPageDeltaX,
                            int32_t aLineOrPageDeltaY);
 
@@ -417,29 +409,6 @@ class PanGestureInput : public InputData {
 
   ScreenPoint UserMultipliedPanDisplacement() const;
   ParentLayerPoint UserMultipliedLocalPanDisplacement() const;
-
-  void SetHandledByAPZ(bool aHandled) { mHandledByAPZ = aHandled; }
-  void SetOverscrollBehaviorAllowsSwipe(bool aAllows) {
-    mOverscrollBehaviorAllowsSwipe = aAllows;
-  }
-  void SetSimulateMomentum(bool aSimulate) { mSimulateMomentum = aSimulate; }
-  void SetIsNoLineOrPageDelta(bool aIsNoLineOrPageDelta) {
-    mIsNoLineOrPageDelta = aIsNoLineOrPageDelta;
-  }
-
-  // Returns true if this pan gesture event is elligible for browser swipe
-  // gesture considering the overscroll-behavior property of the target
-  // scroll container.
-  bool AllowsSwipe() const {
-    MOZ_ASSERT(mHandledByAPZ);
-    return mMayTriggerSwipe && mOverscrollBehaviorAllowsSwipe;
-  }
-
-  // Similar to above AllowsSwipe() but this doesn't care the
-  // overscroll-behavior property, this function should be only used for cases
-  // where APZ isn't involved.
-  bool MayTriggerSwipe() const { return mMayTriggerSwipe; }
-  bool RequiresContentResponseIfCannotScrollHorizontallyInStartDirection();
 
   static gfx::IntPoint GetIntegerDeltaForEvent(bool aIsStart, float x, float y);
 
@@ -468,8 +437,16 @@ class PanGestureInput : public InputData {
 
   bool mHandledByAPZ : 1;
 
-  // This is used by APZ to communicate to widget code whether the
-  // overscroll-behavior of the scroll frame handling this swipe allows
+  // If this is true, and this event started a new input block that couldn't
+  // find a scrollable target which is scrollable in the horizontal component
+  // of the scroll start direction, then this input block needs to be put on
+  // hold until a content response has arrived, even if the block has a
+  // confirmed target.
+  // This is used by events that can result in a swipe instead of a scroll.
+  bool mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection : 1;
+
+  // This is used by APZ to communicate to the macOS widget code whether
+  // the overscroll-behavior of the scroll frame handling this swipe allows
   // non-local overscroll behaviors in the horizontal direction (such as
   // swipe navigation).
   bool mOverscrollBehaviorAllowsSwipe : 1;
@@ -486,15 +463,19 @@ class PanGestureInput : public InputData {
   // code).
   bool mIsNoLineOrPageDelta : 1;
 
- private:
-  // If this is true, and this event started a new input block that couldn't
-  // find a scrollable target which is scrollable in the horizontal component
-  // of the scroll start direction, then this input block needs to be put on
-  // hold until a content response has arrived, even if the block has a
-  // confirmed target.
-  // This is used by events that can result in a swipe instead of a scroll.
-  bool mMayTriggerSwipe : 1;
-  void SetMayTriggerSwipe(bool aValue) { mMayTriggerSwipe = aValue; }
+  void SetHandledByAPZ(bool aHandled) { mHandledByAPZ = aHandled; }
+  void SetRequiresContentResponseIfCannotScrollHorizontallyInStartDirection(
+      bool aRequires) {
+    mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection =
+        aRequires;
+  }
+  void SetOverscrollBehaviorAllowsSwipe(bool aAllows) {
+    mOverscrollBehaviorAllowsSwipe = aAllows;
+  }
+  void SetSimulateMomentum(bool aSimulate) { mSimulateMomentum = aSimulate; }
+  void SetIsNoLineOrPageDelta(bool aIsNoLineOrPageDelta) {
+    mIsNoLineOrPageDelta = aIsNoLineOrPageDelta;
+  }
 };
 
 /**
