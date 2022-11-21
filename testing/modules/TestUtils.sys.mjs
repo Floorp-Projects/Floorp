@@ -341,4 +341,15 @@ export var TestUtils = {
     }
     return results;
   },
+
+  assertPackagedBuild() {
+    const omniJa = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
+    omniJa.append("omni.ja");
+    if (!omniJa.exists()) {
+      throw new Error(
+        "This test requires a packaged build, " +
+          "run 'mach package' and then use --appname=dist"
+      );
+    }
+  },
 };
