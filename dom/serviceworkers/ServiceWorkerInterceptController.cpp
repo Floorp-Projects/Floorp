@@ -11,6 +11,7 @@
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/StoragePrincipalHelper.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/InternalRequest.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "nsCOMPtr.h"
@@ -23,6 +24,22 @@
 
 namespace mozilla::dom {
 
+namespace {
+bool IsWithinObjectOrEmbed(const nsCOMPtr<nsILoadInfo>& loadInfo) {
+  RefPtr<BrowsingContext> browsingContext;
+  loadInfo->GetTargetBrowsingContext(getter_AddRefs(browsingContext));
+
+  for (BrowsingContext* cur = browsingContext.get(); cur;
+       cur = cur->GetParent()) {
+    if (cur->IsEmbedderTypeObjectOrEmbed()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+}  // namespace
+
 NS_IMPL_ISUPPORTS(ServiceWorkerInterceptController,
                   nsINetworkInterceptController)
 
@@ -32,6 +49,12 @@ ServiceWorkerInterceptController::ShouldPrepareForIntercept(
   *aShouldIntercept = false;
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+
+  // Block interception if the request's destination is within an object or
+  // embed element.
+  if (IsWithinObjectOrEmbed(loadInfo)) {
+    return NS_OK;
+  }
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
