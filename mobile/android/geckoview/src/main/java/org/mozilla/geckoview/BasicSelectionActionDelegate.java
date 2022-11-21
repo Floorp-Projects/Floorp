@@ -68,7 +68,13 @@ public class BasicSelectionActionDelegate
 
   protected final @NonNull Activity mActivity;
   protected final boolean mUseFloatingToolbar;
+
+  @Deprecated
+  @DeprecationSchedule(id = "selection-fission", version = 112)
   protected final @NonNull Matrix mTempMatrix = new Matrix();
+
+  @Deprecated
+  @DeprecationSchedule(id = "selection-fission", version = 112)
   protected final @NonNull RectF mTempRect = new RectF();
 
   private boolean mExternalActionsEnabled;
@@ -423,12 +429,15 @@ public class BasicSelectionActionDelegate
   public void onGetContentRect(
       final @Nullable ActionMode mode, final @Nullable View view, final @NonNull Rect outRect) {
     ThreadUtils.assertOnUiThread();
-    if (mSelection == null || mSelection.clientRect == null) {
+    if (mSelection == null || mSelection.screenRect == null) {
       return;
     }
+
+    // mTempMatrix and mTempRect are deprecated.
     mSession.getClientToScreenMatrix(mTempMatrix);
     mTempMatrix.mapRect(mTempRect, mSelection.clientRect);
-    mTempRect.roundOut(outRect);
+
+    mSelection.screenRect.roundOut(outRect);
   }
 
   @TargetApi(Build.VERSION_CODES.M)

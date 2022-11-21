@@ -350,7 +350,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
             document.querySelector('$id').style.padding = "10px";
             document.querySelector('$id').offsetHeight; // flush layout
         })()"""
-        val expectedDiff = RectF(20f, 20f, 20f, 20f) // left, top, right, bottom
+        val expectedDiff = RectF(10f, 10f, 10f, 10f) // left, top, right, bottom
         testClientRect(selectedContent, jsCssReset, jsBorder10pxPadding10px, expectedDiff)
     }
 
@@ -564,29 +564,29 @@ class SelectionActionDelegateTest : BaseSessionTest() {
             mainSession.evaluateJS(it)
             content.focus()
 
-            var clientRect = RectF()
+            var screenRect = RectF()
             content.select()
             mainSession.waitUntilCalled(object : SelectionActionDelegate {
                 @AssertCalled(count = 1)
                 override fun onShowActionRequest(session: GeckoSession, selection: Selection) {
-                    clientRect = selection.clientRect!!
+                    screenRect = selection.screenRect!!
                 }
             })
 
-            clientRect
+            screenRect
         }
 
-        val clientRectA = requestClientRect(initialJsA)
-        val clientRectB = requestClientRect(initialJsB)
+        val screenRectA = requestClientRect(initialJsA)
+        val screenRectB = requestClientRect(initialJsB)
 
         val fuzzyEqual = { a: Float, b: Float, e: Float -> Math.abs(a + e - b) <= 1 }
-        val result = fuzzyEqual(clientRectA.top, clientRectB.top, expectedDiff.top) &&
-            fuzzyEqual(clientRectA.left, clientRectB.left, expectedDiff.left) &&
-            fuzzyEqual(clientRectA.width(), clientRectB.width(), expectedDiff.width()) &&
-            fuzzyEqual(clientRectA.height(), clientRectB.height(), expectedDiff.height())
+        val result = fuzzyEqual(screenRectA.top, screenRectB.top, expectedDiff.top) &&
+            fuzzyEqual(screenRectA.left, screenRectB.left, expectedDiff.left) &&
+            fuzzyEqual(screenRectA.width(), screenRectB.width(), expectedDiff.width()) &&
+            fuzzyEqual(screenRectA.height(), screenRectB.height(), expectedDiff.height())
 
         assertThat(
-            "Selection rect is not at expected location. a$clientRectA b$clientRectB",
+            "Selection rect is not at expected location. a$screenRectA b$screenRectB",
             result,
             equalTo(true)
         )
@@ -796,7 +796,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
                 )
                 assertThat(
                     "Selection rect should be valid",
-                    selection.clientRect!!.isEmpty,
+                    selection.screenRect!!.isEmpty,
                     equalTo(false)
                 )
                 assertThat(

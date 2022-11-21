@@ -3494,8 +3494,15 @@ public class GeckoSession {
       /**
        * The bounds of the current selection in client coordinates. Use {@link
        * GeckoSession#getClientToScreenMatrix} to perform transformation to screen coordinates.
+       *
+       * @deprecated Use {@link #screenRect}.
        */
+      @Deprecated
+      @DeprecationSchedule(id = "selection-fission", version = 112)
       public final @Nullable RectF clientRect;
+
+      /** The bounds of the current selection in screen coordinates. */
+      public final @Nullable RectF screenRect;
 
       /** Set of valid actions available through {@link Selection#execute(String)} */
       public final @NonNull @SelectionActionDelegateAction Collection<String> availableActions;
@@ -3514,6 +3521,7 @@ public class GeckoSession {
                 | (bundle.getBoolean("password") ? SelectionActionDelegate.FLAG_IS_PASSWORD : 0);
         text = bundle.getString("selection");
         clientRect = bundle.getRectF("clientRect");
+        screenRect = bundle.getRectF("screenRect");
         availableActions = actions;
         mActionId = bundle.getString("actionId");
         mEventDispatcher = new WeakReference<>(eventDispatcher);
@@ -3524,6 +3532,7 @@ public class GeckoSession {
         flags = 0;
         text = "";
         clientRect = null;
+        screenRect = null;
         availableActions = new HashSet<>();
         mActionId = null;
         mEventDispatcher = null;

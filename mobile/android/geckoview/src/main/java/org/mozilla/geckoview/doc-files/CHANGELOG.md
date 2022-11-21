@@ -13,6 +13,17 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v109
+- Added [`SelectionActionDelegate.Selection.screenRect`][109.1] for fission compatible.
+- ⚠️ Deprecated [`SelectionActionDelegate.Selection.clientRect`][109.2],
+  [`BasicSelectionActionDelegate.mTempMatrix`][109.3] and
+  [`BasicSelectionActionDelegate.mTempRect`][109.4].
+  ([bug 1785759]({{bugzilla}}1785759))
+[109.1]: {{javadoc_uri}}/GeckoSession.SelectionActionDelegate.Selection.html#screenRect
+[109.2]: {{javadoc_uri}}/GeckoSession.SelectionActionDelegate.Selection.html#clientRect
+[109.3]: {{javadoc_uri}}/BasicSelectionActionDelegate.html#mTempMatrix
+[109.4]: {{javadoc_uri}}/BasicSelectionActionDelegate.html#mTempRect
+
 ## v108
 - Added [`ContentBlocking.CookieBannerMode`][108.1]; [`cookieBannerHandlingMode`][108.2] and [`cookieBannerHandlingModePrivateBrowsing`][108.3] to [`ContentBlocking.Settings.Builder`][81.1];
   [`getCookieBannerMode`][108.4], [`setCookieBannerMode`][108.5], [`getCookieBannerModePrivateBrowsing`][108.6] and [`setCookieBannerModePrivateBrowsing`][108.7] to [`ContentBlocking.Settings`][81.2]
@@ -1261,4 +1272,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 03c2cc7a451001bafc2ea252e28ba40f7227f111
+[api-version]: 2af2ce951d6aa03e2ea8a44b438bca35988143b2
