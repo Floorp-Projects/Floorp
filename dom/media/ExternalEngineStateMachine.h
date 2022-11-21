@@ -260,6 +260,8 @@ class ExternalEngineStateMachine final
 
   bool ShouldRunEngineUpdateForRequest();
 
+  void UpdateSecondaryVideoContainer() override;
+
   UniquePtr<ExternalPlaybackEngine> mEngine;
 
   bool mHasEnoughAudio = false;
