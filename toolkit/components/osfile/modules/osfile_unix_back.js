@@ -347,15 +347,6 @@
 
       libc.declareLazyFFI(
         SysFile,
-        "chdir",
-        "chdir",
-        ctypes.default_abi,
-        /* return*/ Type.negativeone_or_nothing,
-        Type.path
-      );
-
-      libc.declareLazyFFI(
-        SysFile,
         "chmod",
         "chmod",
         ctypes.default_abi,
