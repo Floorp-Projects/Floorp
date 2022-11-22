@@ -420,6 +420,9 @@ void nsAppShell::ScheduleNativeEventCallback() {
 }
 
 bool nsAppShell::ProcessNextNativeEvent(bool mayWait) {
+  if (mSuspendNativeCount) {
+    return false;
+  }
   bool didProcessEvent = g_main_context_iteration(nullptr, mayWait);
 #ifdef MOZ_WAYLAND
   mozilla::widget::WaylandDispatchDisplays();
