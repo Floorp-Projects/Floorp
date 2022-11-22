@@ -492,19 +492,26 @@ var BookmarkPropertiesPanel = {
         );
       }
 
-      itemGuid = await PlacesTransactions.NewBookmark(info).transact();
+      itemGuid = gEditItemOverlay.delayedApplyEnabled
+        ? PlacesUtils.bookmarks.unsavedGuid
+        : await PlacesTransactions.NewBookmark(info).transact();
     } else if (this._itemType == BOOKMARK_FOLDER) {
       // NewFolder requires a url rather than uri.
       info.children = this._URIs.map(item => {
         return { url: item.uri, title: item.title };
       });
-      itemGuid = await PlacesTransactions.NewFolder(info).transact();
+
+      itemGuid = gEditItemOverlay.delayedApplyEnabled
+        ? PlacesUtils.bookmarks.unsavedGuid
+        : await PlacesTransactions.NewFolder(info).transact();
     } else {
       throw new Error(`unexpected value for _itemType:  ${this._itemType}`);
     }
-
+    const itemId = gEditItemOverlay.delayedApplyEnabled
+      ? undefined
+      : await PlacesUtils.promiseItemId(itemGuid);
     return Object.freeze({
-      itemId: await PlacesUtils.promiseItemId(itemGuid),
+      itemId,
       bookmarkGuid: itemGuid,
       title: this._title,
       uri: this._uri ? this._uri.spec : "",

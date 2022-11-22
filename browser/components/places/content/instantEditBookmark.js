@@ -1340,6 +1340,16 @@ var gEditItemOverlay = {
         break;
     }
   },
+
+  /**
+   * Flag which signals to consumers that this script is loaded, thus instant
+   * apply logic should be used.
+   *
+   * @returns {boolean} Always false.
+   */
+  get delayedApplyEnabled() {
+    return false;
+  },
 };
 
 XPCOMUtils.defineLazyGetter(gEditItemOverlay, "_folderTree", () => {

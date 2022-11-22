@@ -593,14 +593,20 @@ var gEditItemOverlay = {
 
   makeNewStateObject() {
     if (this._paneInfo.isItem || this._paneInfo.isTag) {
-      let tags = "";
-      let keyword = "";
+      const options = { info: this._paneInfo };
 
       if (this._paneInfo.isBookmark) {
-        tags = this._element("tagsField").value;
-        keyword = this._element("keywordField").value;
+        options.tags = this._element("tagsField").value;
+        options.keyword = this._element("keywordField").value;
       }
-      return new PlacesUIUtils.BookmarkState(this._paneInfo, tags, keyword);
+
+      const dialogInfo = window.arguments[0];
+      if (typeof dialogInfo === "object" && dialogInfo.type === "folder") {
+        options.isFolder = true;
+        options.children = dialogInfo.URIList;
+      }
+
+      return new PlacesUIUtils.BookmarkState(options);
     }
     return null;
   },
@@ -1120,6 +1126,16 @@ var gEditItemOverlay = {
     }
 
     this._initTextField(this._tagsField, tags.join(", "));
+  },
+
+  /**
+   * Flag which signals to consumers that this script is loaded, thus delayed
+   * apply logic should be used.
+   *
+   * @returns {boolean} Always true.
+   */
+  get delayedApplyEnabled() {
+    return true;
   },
 };
 

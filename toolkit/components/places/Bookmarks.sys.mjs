@@ -160,6 +160,11 @@ export var Bookmarks = Object.freeze({
   ],
 
   /**
+   * GUID associated with bookmarks that haven't been saved to the database yet.
+   */
+  unsavedGuid: "new_________",
+
+  /**
    * GUIDs associated with virtual queries that are used for displaying bookmark
    * folders in the left pane.
    */
