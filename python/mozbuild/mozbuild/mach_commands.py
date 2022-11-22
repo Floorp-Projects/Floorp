@@ -386,6 +386,101 @@ def cargo_vet(command_context, arguments, stdout=None, env=os.environ):
     return res if stdout else res.returncode
 
 
+@SubCommand(
+    "cargo",
+    "audit",
+    description="Run `cargo audit` on a given crate.  Defaults to gkrust.",
+)
+@CommandArgument(
+    "--all-crates",
+    action="store_true",
+    help="Run `cargo audit` on all the crates in the tree.",
+)
+@CommandArgument(
+    "crates",
+    default=None,
+    nargs="*",
+    help="The crate name(s) to run `cargo audit` on.",
+)
+@CommandArgument(
+    "--jobs",
+    "-j",
+    default="0",
+    nargs="?",
+    metavar="jobs",
+    type=int,
+    help="Run `audit` in parallel using multiple processes.",
+)
+@CommandArgument("-v", "--verbose", action="store_true", help="Verbose output.")
+@CommandArgument(
+    "--message-format-json",
+    action="store_true",
+    help="Emit error messages as JSON.",
+)
+def audit(
+    command_context,
+    all_crates=None,
+    crates=None,
+    jobs=0,
+    verbose=False,
+    message_format_json=False,
+):
+    # XXX duplication with `mach vendor rust`
+    crates_and_roots = {
+        "gkrust": "toolkit/library/rust",
+        "gkrust-gtest": "toolkit/library/gtest/rust",
+        "geckodriver": "testing/geckodriver",
+    }
+
+    if all_crates:
+        crates = crates_and_roots.keys()
+    elif not crates:
+        crates = ["gkrust"]
+
+    final_ret = 0
+
+    for crate in crates:
+        root = crates_and_roots.get(crate, None)
+        if not root:
+            print(
+                "Cannot locate crate %s.  Please check your spelling or "
+                "add the crate information to the list." % crate
+            )
+            return 1
+
+        check_targets = [
+            "force-cargo-library-audit",
+            "force-cargo-host-library-audit",
+            "force-cargo-program-audit",
+            "force-cargo-host-program-audit",
+        ]
+
+        append_env = {}
+        if message_format_json:
+            append_env["USE_CARGO_JSON_MESSAGE_FORMAT"] = "1"
+
+        ret = 2
+
+        try:
+            ret = command_context._run_make(
+                srcdir=False,
+                directory=root,
+                ensure_exit_code=0,
+                silent=not verbose,
+                print_directory=False,
+                target=check_targets
+                + ["cargo_build_flags=-f %s/Cargo.lock" % command_context.topsrcdir],
+                num_jobs=jobs,
+                append_env=append_env,
+            )
+        except Exception as e:
+            print("%s" % e)
+        if ret != 0:
+            final_ret = ret
+
+    return final_ret
+
+
 @Command(
     "doctor",
     category="devenv",
