@@ -84,7 +84,7 @@ add_task(async function testWindowCreate() {
         if (platformInfo.os != "linux") {
           geom = { left: -50, top: -50, width: 800, height: 600 };
           await browser.windows.update(windowId, geom);
-          await checkWindow(geom);
+          await checkWindow({ ...geom, left: 0, top: 0 });
         }
 
         await browser.windows.remove(windowId);
