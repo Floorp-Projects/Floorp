@@ -2607,7 +2607,8 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
   }
 
   if (mPathVertexCapacity > 0 && !handle && entry && !aShadow &&
-      SupportsPattern(aPattern)) {
+      SupportsPattern(aPattern) &&
+      entry->GetPath().mPath.num_types <= mPathMaxComplexity) {
     if (entry->GetVertexRange().IsValid()) {
       // If there is a valid cached vertex data in the path vertex buffer, then
       // just draw that.
@@ -3715,6 +3716,9 @@ void DrawTargetWebgl::SharedContext::CachePrefs() {
       ResetPathVertexBuffer();
     }
   }
+
+  mPathMaxComplexity =
+      StaticPrefs::gfx_canvas_accelerated_gpu_path_complexity();
 }
 
 // For use within CanvasRenderingContext2D, called on BorrowDrawTarget.
