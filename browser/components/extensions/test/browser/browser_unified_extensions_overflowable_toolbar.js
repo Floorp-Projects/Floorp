@@ -179,6 +179,9 @@ async function withWindowOverflowed(win, taskFn) {
       browser_action: {
         default_area: "navbar",
       },
+      browser_specific_settings: {
+        gecko: { id: `unified-extensions-overflowable-toolbar@ext-${i}` },
+      },
     });
   }
 
