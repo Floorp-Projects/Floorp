@@ -100,6 +100,12 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
                           GtkSelectionData* aSelectionData);
   void SourceDataGetXDND(nsITransferable* aItem, GdkDragContext* aContext,
                          GtkSelectionData* aSelectionData);
+  void SourceDataGetUriList(GdkDragContext* aContext,
+                            GtkSelectionData* aSelectionData,
+                            uint32_t aDragItems);
+  bool SourceDataAppendURLFileItem(nsACString& aURI, nsITransferable* aItem);
+  bool SourceDataAppendURLItem(nsITransferable* aItem, bool aExternalDrop,
+                               nsACString& aURI);
 
   void SourceBeginDrag(GdkDragContext* aContext);
 
@@ -240,14 +246,13 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   gboolean DispatchDropEvent();
   static uint32_t GetCurrentModifiers();
 
-  nsresult CreateTempFile(nsITransferable* aItem,
-                          GtkSelectionData* aSelectionData);
+  nsresult CreateTempFile(nsITransferable* aItem, nsACString& aURI);
   bool RemoveTempFiles();
   static gboolean TaskRemoveTempFiles(gpointer data);
 
   // the url of the temporary file that has been created in the current drag
   // session
-  nsCString mTempFileUrl;
+  nsTArray<nsCString> mTempFileUrls;
   // stores all temporary files
   nsCOMArray<nsIFile> mTemporaryFiles;
   // timer to trigger deletion of temporary files
