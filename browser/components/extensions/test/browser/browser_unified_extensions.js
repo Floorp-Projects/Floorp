@@ -345,10 +345,22 @@ add_task(async function test_list_active_extensions_only() {
 
   await Promise.all(extensions.map(extension => extension.startup()));
 
+  const extensionWithoutPolicyID = "ext-without-policy@";
+
   // We use MockProvider because the "hidden" property cannot be set when
   // "useAddonManager" is passed to loadExtension.
   const mockProvider = new MockProvider();
   mockProvider.createAddons([
+    // We register an add-on here BUT without loading the extension above. That
+    // allows us to simulate the presence of an active add-on but without a
+    // WebExtensionPolicy.
+    {
+      id: extensionWithoutPolicyID,
+      name: "regular addon without policy",
+      type: "extension",
+      version: "1",
+      hidden: false,
+    },
     {
       id: extensions[0].id,
       name: arrayOfManifestData[0].name,
@@ -402,6 +414,12 @@ add_task(async function test_list_active_extensions_only() {
     },
   ]);
 
+  is(
+    WebExtensionPolicy.getByID(extensionWithoutPolicyID),
+    null,
+    "expected add-on without a policy"
+  );
+
   for (const isPrivate of [false, true]) {
     info(
       `verifying extensions listed in the panel with private browsing ${
@@ -411,6 +429,16 @@ add_task(async function test_list_active_extensions_only() {
     const aWin = await promiseEnableUnifiedExtensions({ private: isPrivate });
 
     await openExtensionsPanel(aWin);
+
+    const addonWithoutPolicyItem = getUnifiedExtensionsItem(
+      aWin,
+      extensionWithoutPolicyID
+    );
+    is(
+      addonWithoutPolicyItem,
+      null,
+      "didn't expect an item for an add-on without policy"
+    );
 
     const hiddenAddonItem = getUnifiedExtensionsItem(aWin, extensions[0].id);
     is(hiddenAddonItem, null, "didn't expect an item for a hidden add-on");
