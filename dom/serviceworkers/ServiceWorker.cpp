@@ -236,8 +236,14 @@ void ServiceWorker::GetScriptURL(nsString& aURL) const {
 void ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                                 const Sequence<JSObject*>& aTransferable,
                                 ErrorResult& aRv) {
+  // Step 6.1 of
+  // https://w3c.github.io/ServiceWorker/#service-worker-postmessage-options
+  // invokes
+  // https://w3c.github.io/ServiceWorker/#run-service-worker
+  // which returns failure in step 3 if the ServiceWorker state is redundant.
+  // This will result in the "in parallel" step 6.1 of postMessage itself early
+  // returning without starting the ServiceWorker and without throwing an error.
   if (State() == ServiceWorkerState::Redundant) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
