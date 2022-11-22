@@ -119,7 +119,7 @@
   EXPERIMENTAL(/* capitalized name   */ Gc,                                   \
                /* lower case name    */ gc,                                   \
                /* compile predicate  */ WASM_GC_ENABLED,                      \
-               /* compiler predicate */ BaselineAvailable(cx),                \
+               /* compiler predicate */ AnyCompilerAvailable(cx),             \
                /* flag predicate     */ WasmFunctionReferencesFlag(cx),       \
                /* shell flag         */ "gc",                                 \
                /* preference name    */ "gc")                                 \

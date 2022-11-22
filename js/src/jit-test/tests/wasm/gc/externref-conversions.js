@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled()
+// |jit-test| skip-if: !wasmGcEnabled() || wasmCompileMode().includes("ion")
 
 // Output type is non-nullable if the input type is non-nullable
 wasmValidateText(`(module

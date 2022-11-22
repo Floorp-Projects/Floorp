@@ -558,17 +558,17 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(GcOp::StructGet): {
             uint32_t unusedUint1, unusedUint2;
             CHECK(iter.readStructGet(&unusedUint1, &unusedUint2,
-                                     FieldExtension::None, &nothing));
+                                     FieldWideningOp::None, &nothing));
           }
           case uint32_t(GcOp::StructGetS): {
             uint32_t unusedUint1, unusedUint2;
             CHECK(iter.readStructGet(&unusedUint1, &unusedUint2,
-                                     FieldExtension::Signed, &nothing));
+                                     FieldWideningOp::Signed, &nothing));
           }
           case uint32_t(GcOp::StructGetU): {
             uint32_t unusedUint1, unusedUint2;
             CHECK(iter.readStructGet(&unusedUint1, &unusedUint2,
-                                     FieldExtension::Unsigned, &nothing));
+                                     FieldWideningOp::Unsigned, &nothing));
           }
           case uint32_t(GcOp::StructSet): {
             uint32_t unusedUint1, unusedUint2;
@@ -599,17 +599,17 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           }
           case uint32_t(GcOp::ArrayGet): {
             uint32_t unusedUint1;
-            CHECK(iter.readArrayGet(&unusedUint1, FieldExtension::None,
+            CHECK(iter.readArrayGet(&unusedUint1, FieldWideningOp::None,
                                     &nothing, &nothing));
           }
           case uint32_t(GcOp::ArrayGetS): {
             uint32_t unusedUint1;
-            CHECK(iter.readArrayGet(&unusedUint1, FieldExtension::Signed,
+            CHECK(iter.readArrayGet(&unusedUint1, FieldWideningOp::Signed,
                                     &nothing, &nothing));
           }
           case uint32_t(GcOp::ArrayGetU): {
             uint32_t unusedUint1;
-            CHECK(iter.readArrayGet(&unusedUint1, FieldExtension::Unsigned,
+            CHECK(iter.readArrayGet(&unusedUint1, FieldWideningOp::Unsigned,
                                     &nothing, &nothing));
           }
           case uint32_t(GcOp::ArraySet): {

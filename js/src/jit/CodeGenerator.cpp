@@ -8212,43 +8212,82 @@ void CodeGenerator::visitWasmCallIndirectAdjunctSafepoint(
 
 void CodeGenerator::visitWasmLoadSlot(LWasmLoadSlot* ins) {
   MIRType type = ins->type();
+  MWideningOp wideningOp = ins->wideningOp();
   Register container = ToRegister(ins->containerRef());
   Address addr(container, ins->offset());
   AnyRegister dst = ToAnyRegister(ins->output());
 
   switch (type) {
     case MIRType::Int32:
-      masm.load32(addr, dst.gpr());
+      switch (wideningOp) {
+        case MWideningOp::None:
+          masm.load32(addr, dst.gpr());
+          break;
+        case MWideningOp::FromU16:
+          masm.load16ZeroExtend(addr, dst.gpr());
+          break;
+        case MWideningOp::FromS16:
+          masm.load16SignExtend(addr, dst.gpr());
+          break;
+        case MWideningOp::FromU8:
+          masm.load8ZeroExtend(addr, dst.gpr());
+          break;
+        case MWideningOp::FromS8:
+          masm.load8SignExtend(addr, dst.gpr());
+          break;
+        default:
+          MOZ_CRASH("unexpected widening op in ::visitWasmLoadSlot");
+      }
       break;
     case MIRType::Float32:
+      MOZ_ASSERT(wideningOp == MWideningOp::None);
       masm.loadFloat32(addr, dst.fpu());
       break;
     case MIRType::Double:
+      MOZ_ASSERT(wideningOp == MWideningOp::None);
       masm.loadDouble(addr, dst.fpu());
       break;
     case MIRType::Pointer:
     case MIRType::RefOrNull:
+      MOZ_ASSERT(wideningOp == MWideningOp::None);
       masm.loadPtr(addr, dst.gpr());
       break;
 #ifdef ENABLE_WASM_SIMD
     case MIRType::Simd128:
+      MOZ_ASSERT(wideningOp == MWideningOp::None);
       masm.loadUnalignedSimd128(addr, dst.fpu());
       break;
 #endif
     default:
-      MOZ_CRASH("unexpected type in LoadPrimitiveValue");
+      MOZ_CRASH("unexpected type in ::visitWasmLoadSlot");
   }
 }
 
 void CodeGenerator::visitWasmStoreSlot(LWasmStoreSlot* ins) {
   MIRType type = ins->type();
+  MNarrowingOp narrowingOp = ins->narrowingOp();
   Register container = ToRegister(ins->containerRef());
   Address addr(container, ins->offset());
   AnyRegister src = ToAnyRegister(ins->value());
+  if (type != MIRType::Int32) {
+    MOZ_RELEASE_ASSERT(narrowingOp == MNarrowingOp::None);
+  }
 
   switch (type) {
     case MIRType::Int32:
-      masm.store32(src.gpr(), addr);
+      switch (narrowingOp) {
+        case MNarrowingOp::None:
+          masm.store32(src.gpr(), addr);
+          break;
+        case MNarrowingOp::To16:
+          masm.store16(src.gpr(), addr);
+          break;
+        case MNarrowingOp::To8:
+          masm.store8(src.gpr(), addr);
+          break;
+        default:
+          MOZ_CRASH();
+      }
       break;
     case MIRType::Float32:
       masm.storeFloat32(src.fpu(), addr);

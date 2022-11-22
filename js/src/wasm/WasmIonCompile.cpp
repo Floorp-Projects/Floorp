@@ -33,6 +33,7 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCodegenTypes.h"
 #include "wasm/WasmGC.h"
+#include "wasm/WasmGcObject.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmIntrinsic.h"
 #include "wasm/WasmOpIter.h"
@@ -1808,7 +1809,9 @@ class FunctionCompiler {
     if (!passArg(value, callee.argTypes[2], &args)) {
       return false;
     }
-    finishCall(&args);
+    if (!finishCall(&args)) {
+      return false;
+    }
     return builtinInstanceMethodCall(callee, lineOrBytecode, args);
   }
 
@@ -1936,7 +1939,7 @@ class FunctionCompiler {
     return true;
   }
 
-  bool finishCall(CallCompileState* call) {
+  [[nodiscard]] bool finishCall(CallCompileState* call) {
     if (inDeadCode()) {
       return true;
     }
@@ -3086,7 +3089,10 @@ class FunctionCompiler {
     // Get the data pointer from the exception object
     auto* data = MWasmLoadField::New(alloc(), exception,
                                      WasmExceptionObject::offsetOfData(),
-                                     MIRType::Pointer);
+                                     MIRType::Pointer, MWideningOp::None);
+    if (!data) {
+      return false;
+    }
     curBlock_->add(data);
 
     // Presize the values vector to the number of params
@@ -3096,8 +3102,9 @@ class FunctionCompiler {
 
     // Load each value from the data pointer
     for (size_t i = 0; i < params.length(); i++) {
-      auto* load = MWasmLoadFieldKA::New(alloc(), exception, data, offsets[i],
-                                         params[i].toMIRType());
+      auto* load =
+          MWasmLoadFieldKA::New(alloc(), exception, data, offsets[i],
+                                params[i].toMIRType(), MWideningOp::None);
       if (!load || !values->append(load)) {
         return false;
       }
@@ -3208,7 +3215,7 @@ class FunctionCompiler {
     // Load the data pointer from the object
     auto* data = MWasmLoadField::New(alloc(), exception,
                                      WasmExceptionObject::offsetOfData(),
-                                     MIRType::Pointer);
+                                     MIRType::Pointer, MWideningOp::None);
     if (!data) {
       return false;
     }
@@ -3222,7 +3229,7 @@ class FunctionCompiler {
 
       if (!type.isRefRepr()) {
         auto* store = MWasmStoreFieldKA::New(alloc(), exception, data, offset,
-                                             argValues[i]);
+                                             argValues[i], MNarrowingOp::None);
         if (!store) {
           return false;
         }
@@ -3238,8 +3245,9 @@ class FunctionCompiler {
       curBlock_->add(fieldAddr);
 
       // Load the previous value
-      auto* prevValue = MWasmLoadFieldKA::New(alloc(), exception, data, offset,
-                                              type.toMIRType());
+      auto* prevValue =
+          MWasmLoadFieldKA::New(alloc(), exception, data, offset,
+                                type.toMIRType(), MWideningOp::None);
       if (!prevValue) {
         return false;
       }
@@ -3327,6 +3335,276 @@ class FunctionCompiler {
     MOZ_ASSERT(exception->type() == MIRType::RefOrNull &&
                tag->type() == MIRType::RefOrNull);
     return throwFrom(exception, tag);
+  }
+
+  /***************************************************** Wasm GC helpers ***/
+
+  // Returns an MDefinition holding the runtime type denoted by `typeIndex`.
+  MDefinition* loadGcCanon(uint32_t typeIndex) {
+    uint32_t typeIdOffset = moduleEnv().offsetOfTypeId(typeIndex);
+
+    auto* load =
+        MWasmLoadGlobalVar::New(alloc(), MIRType::RefOrNull, typeIdOffset,
+                                /*isConst=*/true, instancePointer_);
+    if (!load) {
+      return nullptr;
+    }
+    curBlock_->add(load);
+    return load;
+  }
+
+  // Given a (FieldType, FieldExtension) pair, produce the (MIRType,
+  // MWideningOp) pair that will give the correct operation for reading the
+  // value from memory.
+  static void fieldLoadInfoToMIR(FieldType type, FieldWideningOp wideningOp,
+                                 MIRType* mirType, MWideningOp* mirWideningOp) {
+    switch (type.kind()) {
+      case FieldType::I8: {
+        switch (wideningOp) {
+          case FieldWideningOp::Signed:
+            *mirType = MIRType::Int32;
+            *mirWideningOp = MWideningOp::FromS8;
+            return;
+          case FieldWideningOp::Unsigned:
+            *mirType = MIRType::Int32;
+            *mirWideningOp = MWideningOp::FromU8;
+            return;
+          default:
+            MOZ_CRASH();
+        }
+      }
+      case FieldType::I16: {
+        switch (wideningOp) {
+          case FieldWideningOp::Signed:
+            *mirType = MIRType::Int32;
+            *mirWideningOp = MWideningOp::FromS16;
+            return;
+          case FieldWideningOp::Unsigned:
+            *mirType = MIRType::Int32;
+            *mirWideningOp = MWideningOp::FromU16;
+            return;
+          default:
+            MOZ_CRASH();
+        }
+      }
+      default: {
+        switch (wideningOp) {
+          case FieldWideningOp::None:
+            *mirType = type.toMIRType();
+            *mirWideningOp = MWideningOp::None;
+            return;
+          default:
+            MOZ_CRASH();
+        }
+      }
+    }
+  }
+
+  // Given a FieldType, produce the MNarrowingOp required for writing the
+  // value to memory.
+  static MNarrowingOp fieldStoreInfoToMIR(FieldType type) {
+    switch (type.kind()) {
+      case FieldType::I8:
+        return MNarrowingOp::To8;
+      case FieldType::I16:
+        return MNarrowingOp::To16;
+      default:
+        return MNarrowingOp::None;
+    }
+  }
+
+  // Helper function for EmitStruct{New,Set}: given a MIR pointer to a
+  // WasmStructObject, a MIR pointer to a value, and a field descriptor,
+  // generate MIR to write the value to the relevant field in the object.
+  bool writeValueToStructField(uint32_t lineOrBytecode,
+                               const StructField& field,
+                               MDefinition* structObject, MDefinition* value) {
+    FieldType fieldType = field.type;
+    uint32_t fieldOffset = field.offset;
+    MNarrowingOp fieldNarrowingOp = fieldStoreInfoToMIR(fieldType);
+
+    bool areaIsOutline;
+    uint32_t areaOffset;
+    WasmStructObject::fieldOffsetToAreaAndOffset(fieldType, fieldOffset,
+                                                 &areaIsOutline, &areaOffset);
+
+    // Make `base` point at the first byte of either the struct object as a
+    // whole or of the out-of-line data area.  And adjust `areaOffset`
+    // accordingly.
+    MDefinition* base;
+    if (areaIsOutline) {
+      auto* load = MWasmLoadField::New(alloc(), structObject,
+                                       WasmStructObject::offsetOfOutlineData(),
+                                       MIRType::Pointer, MWideningOp::None);
+      if (!load) {
+        return false;
+      }
+      curBlock_->add(load);
+      base = load;
+    } else {
+      base = structObject;
+      areaOffset += WasmStructObject::offsetOfInlineData();
+    }
+    // The transaction is to happen at `base + areaOffset`, so to speak.
+    // After this point we must ignore `fieldOffset`.
+
+    if (!fieldType.isRefRepr()) {
+      auto* store = MWasmStoreFieldKA::New(alloc(), structObject, base,
+                                           areaOffset, value, fieldNarrowingOp);
+      if (!store) {
+        return false;
+      }
+      curBlock_->add(store);
+      return true;
+    }
+
+    // Otherwise it's a ref store, for which we can't use a
+    // base-plus-constant-offset address form.  So roll the offset into the
+    // address at this point.
+    MOZ_ASSERT(fieldNarrowingOp == MNarrowingOp::None);
+    if (areaOffset != 0) {
+      auto* derived = MWasmDerivedPointer::New(alloc(), base, areaOffset);
+      if (!derived) {
+        return false;
+      }
+      curBlock_->add(derived);
+      base = derived;
+    }
+    // After this point we must ignore `areaOffset`.
+
+    // Load the previous value.
+    // FIXME optimisation opportunity: for the case where this field write
+    // results from struct.new, the old value is always zero.  So we should
+    // synthesise a suitable zero constant rather than reading it from the
+    // object.  See also bug 1799999.
+    auto* prevValue =
+        MWasmLoadFieldKA::New(alloc(), structObject, base, 0,
+                              fieldType.toMIRType(), MWideningOp::None);
+    if (!prevValue) {
+      return false;
+    }
+    curBlock_->add(prevValue);
+
+    // Store the new value
+    auto* store = MWasmStoreFieldRefKA::New(alloc(), instancePointer_,
+                                            structObject, base, value);
+    if (!store) {
+      return false;
+    }
+    curBlock_->add(store);
+
+    // Call the post-write barrier
+    return postBarrierPrecise(lineOrBytecode, base, prevValue);
+  }
+
+  // Helper function for EmitStructGet: given a MIR pointer to a
+  // WasmStructObject, a field descriptor and a field widening operation,
+  // generate MIR to read the value from the relevant field in the object.
+  MWasmLoadFieldKA* readValueFromStructField(const StructField& field,
+                                             FieldWideningOp wideningOp,
+                                             MDefinition* structObject) {
+    FieldType fieldType = field.type;
+    uint32_t fieldOffset = field.offset;
+
+    bool areaIsOutline;
+    uint32_t areaOffset;
+    WasmStructObject::fieldOffsetToAreaAndOffset(fieldType, fieldOffset,
+                                                 &areaIsOutline, &areaOffset);
+
+    // Make `base` point at the first byte of either the struct object as a
+    // whole or of the out-of-line data area.  And adjust `areaOffset`
+    // accordingly.
+    MDefinition* base;
+    if (areaIsOutline) {
+      auto* loadOOLptr = MWasmLoadField::New(
+          alloc(), structObject, WasmStructObject::offsetOfOutlineData(),
+          MIRType::Pointer, MWideningOp::None);
+      if (!loadOOLptr) {
+        return nullptr;
+      }
+      curBlock_->add(loadOOLptr);
+      base = loadOOLptr;
+    } else {
+      base = structObject;
+      areaOffset += WasmStructObject::offsetOfInlineData();
+    }
+    // The transaction is to happen at `base + areaOffset`, so to speak.
+    // After this point we must ignore `fieldOffset`.
+
+    MIRType mirType;
+    MWideningOp mirWideningOp;
+    fieldLoadInfoToMIR(fieldType, wideningOp, &mirType, &mirWideningOp);
+    auto* load = MWasmLoadFieldKA::New(alloc(), structObject, base, areaOffset,
+                                       mirType, mirWideningOp);
+    if (!load) {
+      return nullptr;
+    }
+    curBlock_->add(load);
+    return load;
+  }
+
+  // Generate MIR that causes a trap of kind `trapKind` if `arg` is zero.
+  // Currently `arg` may only be a MIRType::Int32, but that requirement could
+  // be relaxed if needed in future.
+  bool trapIfZero(wasm::Trap trapKind, MDefinition* arg) {
+    MOZ_ASSERT(arg->type() == MIRType::Int32);
+
+    MBasicBlock* trapBlock = nullptr;
+    if (!newBlock(curBlock_, &trapBlock)) {
+      return false;
+    }
+
+    auto* trap = MWasmTrap::New(alloc(), trapKind, bytecodeOffset());
+    if (!trap) {
+      return false;
+    }
+    trapBlock->end(trap);
+
+    MBasicBlock* joinBlock = nullptr;
+    if (!newBlock(curBlock_, &joinBlock)) {
+      return false;
+    }
+
+    auto* test = MTest::New(alloc(), arg, joinBlock, trapBlock);
+    if (!test) {
+      return false;
+    }
+    curBlock_->end(test);
+    curBlock_ = joinBlock;
+    return true;
+  }
+
+  // Generate MIR that attempts to downcast `ref` to `castToRTT`.  If the
+  // downcast fails, we trap.  If it succeeds, then `ref` can be assumed to
+  // have a type that is a subtype of (or the same as) `castToRTT` after this
+  // point.
+  bool refCast(uint32_t lineOrBytecode, MDefinition* ref,
+               MDefinition* castToRTT) {
+    // Create call: success = Instance::refTest(ref, castToRTT)
+    MDefinition* success;
+    {
+      const SymbolicAddressSignature& callee = SASigRefTest;
+      CallCompileState args;
+      if (!passInstance(callee.argTypes[0], &args)) {
+        return false;
+      }
+      if (!passArg(ref, callee.argTypes[1], &args)) {
+        return false;
+      }
+      if (!passArg(castToRTT, callee.argTypes[2], &args)) {
+        return false;
+      }
+      if (!finishCall(&args)) {
+        return false;
+      }
+      if (!builtinInstanceMethodCall(callee, lineOrBytecode, args, &success)) {
+        return false;
+      }
+    }
+
+    // Trap if `success` is zero.  If it's nonzero, we have established that
+    // `ref <: castToRTT`.
+    return trapIfZero(wasm::Trap::BadCast, success);
   }
 
   /************************************************************ DECODING ***/
@@ -4537,7 +4815,9 @@ static bool EmitMemoryGrow(FunctionCompiler& f) {
     return false;
   }
 
-  f.finishCall(&args);
+  if (!f.finishCall(&args)) {
+    return false;
+  }
 
   MDefinition* ret;
   if (!f.builtinInstanceMethodCall(callee, bytecodeOffset, args, &ret)) {
@@ -4563,7 +4843,9 @@ static bool EmitMemorySize(FunctionCompiler& f) {
     return false;
   }
 
-  f.finishCall(&args);
+  if (!f.finishCall(&args)) {
+    return false;
+  }
 
   MDefinition* ret;
   if (!f.builtinInstanceMethodCall(callee, bytecodeOffset, args, &ret)) {
@@ -5789,6 +6071,150 @@ static bool EmitCallRef(FunctionCompiler& f) {
 
 #endif  // ENABLE_WASM_FUNCTION_REFERENCES
 
+#ifdef ENABLE_WASM_GC
+
+static bool EmitStructNew(FunctionCompiler& f) {
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  uint32_t typeIndex;
+  DefVector args;
+  if (!f.iter().readStructNew(&typeIndex, &args)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  const StructType& structType = (*f.moduleEnv().types)[typeIndex].structType();
+  MOZ_ASSERT(args.length() == structType.fields_.length());
+
+  // Allocate a default initialized struct.  This requires the rtt value for
+  // the struct.
+  MDefinition* structRTT = f.loadGcCanon(typeIndex);
+  if (!structRTT) {
+    return false;
+  }
+
+  // Create call: structObject = Instance::structNew(structRTT)
+  MDefinition* structObject;
+  {
+    const SymbolicAddressSignature& callee = SASigStructNew;
+    CallCompileState args;
+    if (!f.passInstance(callee.argTypes[0], &args)) {
+      return false;
+    }
+    if (!f.passArg(structRTT, callee.argTypes[1], &args)) {
+      return false;
+    }
+    if (!f.finishCall(&args)) {
+      return false;
+    }
+    if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args,
+                                     &structObject)) {
+      return false;
+    }
+  }
+
+  // And fill in the fields.
+  for (uint32_t fieldIndex = 0; fieldIndex < structType.fields_.length();
+       fieldIndex++) {
+    const StructField& field = structType.fields_[fieldIndex];
+    if (!f.writeValueToStructField(lineOrBytecode, field, structObject,
+                                   args[fieldIndex])) {
+      return false;
+    }
+  }
+
+  f.iter().setResult(structObject);
+  return true;
+}
+
+static bool EmitStructSet(FunctionCompiler& f) {
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  uint32_t typeIndex;
+  uint32_t fieldIndex;
+  MDefinition* structObject;
+  MDefinition* value;
+  if (!f.iter().readStructSet(&typeIndex, &fieldIndex, &structObject, &value)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  // Check for null
+  if (!f.refAsNonNull(structObject)) {
+    return false;
+  }
+
+  // And fill in the field.
+  const StructType& structType = (*f.moduleEnv().types)[typeIndex].structType();
+  const StructField& field = structType.fields_[fieldIndex];
+  return f.writeValueToStructField(lineOrBytecode, field, structObject, value);
+}
+
+static bool EmitStructGet(FunctionCompiler& f, FieldWideningOp wideningOp) {
+  uint32_t typeIndex;
+  uint32_t fieldIndex;
+  MDefinition* structObject;
+  if (!f.iter().readStructGet(&typeIndex, &fieldIndex, wideningOp,
+                              &structObject)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  // Check for null
+  if (!f.refAsNonNull(structObject)) {
+    return false;
+  }
+
+  // And fetch the data.
+  const StructType& structType = (*f.moduleEnv().types)[typeIndex].structType();
+  const StructField& field = structType.fields_[fieldIndex];
+  MDefinition* load =
+      f.readValueFromStructField(field, wideningOp, structObject);
+  if (!load) {
+    return false;
+  }
+
+  f.iter().setResult(load);
+  return true;
+}
+
+static bool EmitRefCast(FunctionCompiler& f) {
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  MDefinition* ref;
+  uint32_t typeIndex;
+  if (!f.iter().readRefCast(&typeIndex, &ref)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  MDefinition* castToRTT = f.loadGcCanon(typeIndex);
+  if (!castToRTT) {
+    return false;
+  }
+
+  if (!f.refCast(lineOrBytecode, ref, castToRTT)) {
+    return false;
+  }
+
+  f.iter().setResult(ref);
+  return true;
+}
+
+#endif  // ENABLE_WASM_GC
+
 static bool EmitIntrinsic(FunctionCompiler& f) {
   const Intrinsic* intrinsic;
 
@@ -5814,7 +6240,9 @@ static bool EmitIntrinsic(FunctionCompiler& f) {
     return false;
   }
 
-  f.finishCall(&args);
+  if (!f.finishCall(&args)) {
+    return false;
+  }
 
   return f.builtinInstanceMethodCall(callee, bytecodeOffset, args);
 }
@@ -6344,7 +6772,26 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
       // Gc operations
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::GcPrefix): {
-        return f.iter().unrecognizedOpcode(&op);
+        if (!f.moduleEnv().gcEnabled()) {
+          return f.iter().unrecognizedOpcode(&op);
+        }
+        switch (op.b1) {
+          case uint32_t(GcOp::StructNew):
+            CHECK(EmitStructNew(f));
+          case uint32_t(GcOp::StructSet):
+            CHECK(EmitStructSet(f));
+          case uint32_t(GcOp::StructGet):
+            CHECK(EmitStructGet(f, FieldWideningOp::None));
+          case uint32_t(GcOp::StructGetS):
+            CHECK(EmitStructGet(f, FieldWideningOp::Signed));
+          case uint32_t(GcOp::StructGetU):
+            CHECK(EmitStructGet(f, FieldWideningOp::Unsigned));
+          case uint32_t(GcOp::RefCast):
+            CHECK(EmitRefCast(f));
+          default:
+            return f.iter().unrecognizedOpcode(&op);
+        }  // switch (op.b1)
+        break;
       }
 #endif
 

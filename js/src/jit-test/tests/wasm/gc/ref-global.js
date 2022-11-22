@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled()
+// |jit-test| skip-if: !wasmGcEnabled() || wasmCompileMode().includes("ion")
 
 // Basic private-to-module functionality.  At the moment all we have is null
 // pointers, not very exciting.

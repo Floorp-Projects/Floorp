@@ -1,5 +1,8 @@
 // |jit-test| skip-if: !wasmGcEnabled()
 
+// This tests a bunch of wasm struct stuff, but not i8 or i16 fields.
+// See structs2.js for i8/i16 field tests.
+
 var conf = getBuildConfiguration();
 
 var bin = wasmTextToBinary(

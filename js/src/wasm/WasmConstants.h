@@ -994,7 +994,7 @@ enum class NameType { Module = 0, Function = 1, Local = 2 };
 
 enum class FieldFlags { Mutable = 0x01, AllowedMask = 0x01 };
 
-enum class FieldExtension { None, Signed, Unsigned };
+enum class FieldWideningOp { None, Signed, Unsigned };
 
 // The WebAssembly spec hard-codes the virtual page size to be 64KiB and
 // requires the size of linear memory to always be a multiple of 64KiB.
