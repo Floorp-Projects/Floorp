@@ -1383,7 +1383,7 @@ var gSync = {
                 ?.id != "widget-overflow-list" &&
               document.getElementById("fxa-toolbar-menu-button")) ||
             document.getElementById("PanelUI-menu-button");
-          ConfirmationHint.show(anchorNode, "sendToDevice");
+          ConfirmationHint.show(anchorNode, "confirmation-hint-send-to-device");
         }
         fxAccounts.flushLogFile();
       });
