@@ -3087,9 +3087,9 @@ class FunctionCompiler {
     const TagOffsetVector& offsets = tagType->argOffsets_;
 
     // Get the data pointer from the exception object
-    auto* data = MWasmLoadField::New(alloc(), exception,
-                                     WasmExceptionObject::offsetOfData(),
-                                     MIRType::Pointer, MWideningOp::None);
+    auto* data = MWasmLoadField::New(
+        alloc(), exception, WasmExceptionObject::offsetOfData(),
+        MIRType::Pointer, MWideningOp::None, AliasSet::Load(AliasSet::Any));
     if (!data) {
       return false;
     }
@@ -3102,9 +3102,9 @@ class FunctionCompiler {
 
     // Load each value from the data pointer
     for (size_t i = 0; i < params.length(); i++) {
-      auto* load =
-          MWasmLoadFieldKA::New(alloc(), exception, data, offsets[i],
-                                params[i].toMIRType(), MWideningOp::None);
+      auto* load = MWasmLoadFieldKA::New(
+          alloc(), exception, data, offsets[i], params[i].toMIRType(),
+          MWideningOp::None, AliasSet::Load(AliasSet::Any));
       if (!load || !values->append(load)) {
         return false;
       }
@@ -3213,9 +3213,9 @@ class FunctionCompiler {
     }
 
     // Load the data pointer from the object
-    auto* data = MWasmLoadField::New(alloc(), exception,
-                                     WasmExceptionObject::offsetOfData(),
-                                     MIRType::Pointer, MWideningOp::None);
+    auto* data = MWasmLoadField::New(
+        alloc(), exception, WasmExceptionObject::offsetOfData(),
+        MIRType::Pointer, MWideningOp::None, AliasSet::Load(AliasSet::Any));
     if (!data) {
       return false;
     }
@@ -3229,7 +3229,8 @@ class FunctionCompiler {
 
       if (!type.isRefRepr()) {
         auto* store = MWasmStoreFieldKA::New(alloc(), exception, data, offset,
-                                             argValues[i], MNarrowingOp::None);
+                                             argValues[i], MNarrowingOp::None,
+                                             AliasSet::Store(AliasSet::Any));
         if (!store) {
           return false;
         }
@@ -3245,9 +3246,9 @@ class FunctionCompiler {
       curBlock_->add(fieldAddr);
 
       // Load the previous value
-      auto* prevValue =
-          MWasmLoadFieldKA::New(alloc(), exception, data, offset,
-                                type.toMIRType(), MWideningOp::None);
+      auto* prevValue = MWasmLoadFieldKA::New(
+          alloc(), exception, data, offset, type.toMIRType(), MWideningOp::None,
+          AliasSet::Load(AliasSet::Any));
       if (!prevValue) {
         return false;
       }
@@ -3255,7 +3256,8 @@ class FunctionCompiler {
 
       // Store the new value
       auto* store = MWasmStoreFieldRefKA::New(
-          alloc(), instancePointer_, exception, fieldAddr, argValues[i]);
+          alloc(), instancePointer_, exception, fieldAddr, argValues[i],
+          AliasSet::Store(AliasSet::Any));
       if (!store) {
         return false;
       }
@@ -3433,9 +3435,10 @@ class FunctionCompiler {
     // accordingly.
     MDefinition* base;
     if (areaIsOutline) {
-      auto* load = MWasmLoadField::New(alloc(), structObject,
-                                       WasmStructObject::offsetOfOutlineData(),
-                                       MIRType::Pointer, MWideningOp::None);
+      auto* load = MWasmLoadField::New(
+          alloc(), structObject, WasmStructObject::offsetOfOutlineData(),
+          MIRType::Pointer, MWideningOp::None,
+          AliasSet::Load(AliasSet::WasmStructOutlineDataPointer));
       if (!load) {
         return false;
       }
@@ -3448,9 +3451,16 @@ class FunctionCompiler {
     // The transaction is to happen at `base + areaOffset`, so to speak.
     // After this point we must ignore `fieldOffset`.
 
+    // The alias set denoting the field's location, although lacking a
+    // Load-vs-Store indication at this point.
+    AliasSet::Flag fieldAliasSet = areaIsOutline
+                                       ? AliasSet::WasmStructOutlineDataArea
+                                       : AliasSet::WasmStructInlineDataArea;
+
     if (!fieldType.isRefRepr()) {
       auto* store = MWasmStoreFieldKA::New(alloc(), structObject, base,
-                                           areaOffset, value, fieldNarrowingOp);
+                                           areaOffset, value, fieldNarrowingOp,
+                                           AliasSet::Store(fieldAliasSet));
       if (!store) {
         return false;
       }
@@ -3477,17 +3487,18 @@ class FunctionCompiler {
     // results from struct.new, the old value is always zero.  So we should
     // synthesise a suitable zero constant rather than reading it from the
     // object.  See also bug 1799999.
-    auto* prevValue =
-        MWasmLoadFieldKA::New(alloc(), structObject, base, 0,
-                              fieldType.toMIRType(), MWideningOp::None);
+    auto* prevValue = MWasmLoadFieldKA::New(
+        alloc(), structObject, base, 0, fieldType.toMIRType(),
+        MWideningOp::None, AliasSet::Load(fieldAliasSet));
     if (!prevValue) {
       return false;
     }
     curBlock_->add(prevValue);
 
     // Store the new value
-    auto* store = MWasmStoreFieldRefKA::New(alloc(), instancePointer_,
-                                            structObject, base, value);
+    auto* store =
+        MWasmStoreFieldRefKA::New(alloc(), instancePointer_, structObject, base,
+                                  value, AliasSet::Store(fieldAliasSet));
     if (!store) {
       return false;
     }
@@ -3518,7 +3529,8 @@ class FunctionCompiler {
     if (areaIsOutline) {
       auto* loadOOLptr = MWasmLoadField::New(
           alloc(), structObject, WasmStructObject::offsetOfOutlineData(),
-          MIRType::Pointer, MWideningOp::None);
+          MIRType::Pointer, MWideningOp::None,
+          AliasSet::Load(AliasSet::WasmStructOutlineDataPointer));
       if (!loadOOLptr) {
         return nullptr;
       }
@@ -3531,11 +3543,18 @@ class FunctionCompiler {
     // The transaction is to happen at `base + areaOffset`, so to speak.
     // After this point we must ignore `fieldOffset`.
 
+    // The alias set denoting the field's location, although lacking a
+    // Load-vs-Store indication at this point.
+    AliasSet::Flag fieldAliasSet = areaIsOutline
+                                       ? AliasSet::WasmStructOutlineDataArea
+                                       : AliasSet::WasmStructInlineDataArea;
+
     MIRType mirType;
     MWideningOp mirWideningOp;
     fieldLoadInfoToMIR(fieldType, wideningOp, &mirType, &mirWideningOp);
-    auto* load = MWasmLoadFieldKA::New(alloc(), structObject, base, areaOffset,
-                                       mirType, mirWideningOp);
+    auto* load =
+        MWasmLoadFieldKA::New(alloc(), structObject, base, areaOffset, mirType,
+                              mirWideningOp, AliasSet::Load(fieldAliasSet));
     if (!load) {
       return nullptr;
     }

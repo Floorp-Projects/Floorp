@@ -634,3 +634,51 @@ var bad = new Uint8Array([0x00, 0x61, 0x73, 0x6d,
 
 assertErrorMessage(() => new WebAssembly.Module(bad),
                    WebAssembly.CompileError, /signature index references non-signature/);
+
+// Exercise alias-analysis code for struct access
+{
+    let txt =
+    `(module
+       (type $meh (struct))
+       (type $hasOOL (struct
+                      ;; In-line storage
+                      (field i64) (field i64)
+                      (field $ILnonref (mut i64)) (field $ILref (mut eqref))
+                      (field i64) (field i64) (field i64) (field i64)
+                      (field i64) (field i64) (field i64) (field i64)
+                      (field i64) (field i64) (field i64) (field i64)
+                      ;; Out-of-line storage (or maybe it starts earlier, but
+                      ;; definitely not after this point).
+                      (field $OOLnonref (mut i64)) (field $OOLref (mut eqref)))
+       )
+       (func (export "create") (result eqref)
+         (struct.new $hasOOL
+           (i64.const 1)    (i64.const 2)
+           (i64.const 9876) (ref.null $meh)
+           (i64.const 3)    (i64.const 4)   (i64.const 5)   (i64.const 6)
+           (i64.const 7)    (i64.const 8)   (i64.const 9)   (i64.const 10)
+           (i64.const 11)   (i64.const 12)  (i64.const 13)  (i64.const 14)
+           (i64.const 4321) (ref.null $meh))
+       )
+       ;; Write to an OOL field, then an IL field, then to an OOL field, so
+       ;; that we can at least check (from inspection of the optimised MIR)
+       ;; that the GVN+alias analysis causes the OOL block pointer not to be
+       ;; reloaded for the second OOL write.  First for non-ref fields ..
+       (func (export "threeSetsNonReffy") (param eqref)
+         (local (ref $hasOOL))
+         (local.set 1 (ref.cast $hasOOL (local.get 0)))
+         (struct.set $hasOOL 16 (local.get 1) (i64.const 1337)) ;; set $OOLnonref
+         (struct.set $hasOOL 2  (local.get 1) (i64.const 7331)) ;; set $ILnonref
+         (struct.set $hasOOL 16 (local.get 1) (i64.const 9009)) ;; set $OOLnonref
+       )
+       ;; and the same for ref fields.
+       (func (export "threeSetsReffy") (param eqref)
+         (local (ref $hasOOL))
+         (local.set 1 (ref.cast $hasOOL (local.get 0)))
+         (struct.set $hasOOL 17 (local.get 1) (ref.null $meh)) ;; set $OOLref
+         (struct.set $hasOOL 3  (local.get 1) (ref.null $meh)) ;; set $ILref
+         (struct.set $hasOOL 17 (local.get 1) (ref.null $meh)) ;; set $OOLref
+       )
+     )`;
+    let exports = wasmEvalText(txt).exports;
+}
