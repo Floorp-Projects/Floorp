@@ -5,12 +5,13 @@
 # Generate updater.ini by doing some light substitution on the localized updater.ini input,
 # and appending the contents of updater_ini_append on Windows.
 
-from __future__ import absolute_import, unicode_literals, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
-import buildconfig
 import codecs
 import re
 import shutil
+
+import buildconfig
 
 
 def main(output, ini, ini_append=None, locale=None):
