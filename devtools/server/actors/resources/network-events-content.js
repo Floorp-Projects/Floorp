@@ -174,7 +174,12 @@ class NetworkEventContentWatcher {
     }
 
     this.onAvailable([resource]);
-    lazy.NetworkUtils.fetchRequestHeadersAndCookies(channel, actor, {});
+    const {
+      cookies,
+      headers,
+    } = lazy.NetworkUtils.fetchRequestHeadersAndCookies(channel);
+    actor.addRequestHeaders(headers);
+    actor.addRequestCookies(cookies);
   }
 
   /*

@@ -287,14 +287,14 @@ function createNetworkEvent(
  * so that the frontend can later fetch it via getRequestHeaders/getRequestCookies.
  *
  * @param {*} channel
- * @param {*} owner - The network event actor
- * @param {Object} extraStringData - The uncached response headers.
+ * @return {Object}
+ *     An object with two properties:
+ *     @property {Array<Object>} cookies
+ *         Array of { name, value } objects.
+ *     @property {Array<Object>} headers
+ *         Array of { name, value } objects.
  */
-function fetchRequestHeadersAndCookies(
-  channel,
-  owner,
-  { extraStringData = "" }
-) {
+function fetchRequestHeadersAndCookies(channel) {
   const headers = [];
   let cookies = [];
   let cookieHeader = null;
@@ -313,8 +313,7 @@ function fetchRequestHeadersAndCookies(
     cookies = lazy.NetworkHelper.parseCookieHeader(cookieHeader);
   }
 
-  owner.addRequestHeaders(headers, extraStringData);
-  owner.addRequestCookies(cookies);
+  return { cookies, headers };
 }
 
 /**
