@@ -9,7 +9,7 @@ MOZ_AUTOMATION_PACKAGE=0
 MOZ_AUTOMATION_PACKAGE_GENERATED_SOURCES=0
 MOZ_AUTOMATION_UPLOAD=0
 MOZ_AUTOMATION_CHECK=0
-ac_add_options --enable-application=tools/rusttests
+ac_add_options --enable-project=tools/rusttests
 . "$topsrcdir/build/mozconfig.common"
 . "$topsrcdir/build/mozconfig.common.override"
 

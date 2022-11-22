@@ -38,7 +38,7 @@ A basic ``MOZCONFIG`` file for doing a debug build, put into ``$HOME/mozconfigs/
 .. code::
 
     # Build only the JS shell
-    ac_add_options --enable-application=js
+    ac_add_options --enable-project=js
 
     # Enable the debugging tools: Assertions, debug only code etc.
     ac_add_options --enable-debug
@@ -122,7 +122,7 @@ have an optimized build ``MOZCONFIG``, and then activate it. An example
 .. code::
 
     # Build only the JS shell
-    ac_add_options --enable-application=js
+    ac_add_options --enable-project=js
 
     # Enable optimization for speed
     ac_add_options --enable-optimize

@@ -5,7 +5,7 @@
 . "$topsrcdir/build/mozconfig.common"
 
 # Build Fennec
-ac_add_options --enable-application=mobile/android
+ac_add_options --enable-project=mobile/android
 
 ac_add_options --with-gradle="$MOZ_FETCHES_DIR/android-gradle-dependencies/gradle-dist/bin/gradle"
 export GRADLE_MAVEN_REPOSITORIES="file://$MOZ_FETCHES_DIR/android-gradle-dependencies/mozilla","file://$MOZ_FETCHES_DIR/android-gradle-dependencies/google","file://$MOZ_FETCHES_DIR/android-gradle-dependencies/central","file://$MOZ_FETCHES_DIR/android-gradle-dependencies/gradle-plugins"

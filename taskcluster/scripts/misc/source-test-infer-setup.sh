@@ -3,7 +3,7 @@ source $GECKO_PATH/taskcluster/scripts/misc/source-test-common.sh
 
 # Write custom mozconfig
 MOZCONFIG=$GECKO_PATH/mozconfig
-echo "ac_add_options --enable-application=mobile/android" > $MOZCONFIG
+echo "ac_add_options --enable-project=mobile/android" > $MOZCONFIG
 echo "ac_add_options --target=arm-linux-androideabi" >> $MOZCONFIG
 echo "ac_add_options --with-android-sdk=${MOZ_FETCHES_DIR}/android-sdk-linux" >> $MOZCONFIG
 echo "ac_add_options --with-android-ndk=${MOZ_FETCHES_DIR}/android-ndk" >> $MOZCONFIG

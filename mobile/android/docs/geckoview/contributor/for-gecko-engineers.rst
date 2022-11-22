@@ -63,7 +63,7 @@ printed out a recommended ``mozconfig`` that looks something like this:
 ::
 
    # Build GeckoView/Firefox for Android:
-   ac_add_options --enable-application=mobile/android
+   ac_add_options --enable-project=mobile/android
 
    # Targeting the following architecture.
    # For regular phones, no --target is needed.

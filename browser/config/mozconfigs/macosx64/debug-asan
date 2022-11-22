@@ -1,6 +1,6 @@
 # Use at least -O1 for optimization to avoid stack space
 # exhaustions caused by Clang function inlining.
-ac_add_options --enable-application=browser
+ac_add_options --enable-project=browser
 ac_add_options --enable-debug
 ac_add_options --enable-optimize="-O1"
 

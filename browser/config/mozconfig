@@ -6,4 +6,4 @@
 #  . $topsrcdir/browser/config/mozconfig
 # to the top of your mozconfig file.
 
-ac_add_options --enable-application=browser
+ac_add_options --enable-project=browser

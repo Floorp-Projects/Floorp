@@ -9,7 +9,7 @@
 ac_add_options --enable-ctypes
 ac_add_options --enable-optimize
 ac_add_options --disable-debug
-ac_add_options --enable-application=js
+ac_add_options --enable-project=js
 ac_add_options --enable-nspr-build
 
 if [ -n "$AUTOMATION" ]; then

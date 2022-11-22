@@ -74,7 +74,7 @@ output as packages are downloaded and installed.
 
 MOBILE_ANDROID_MOZCONFIG_TEMPLATE = """
 # Build GeckoView/Firefox for Android:
-ac_add_options --enable-application=mobile/android
+ac_add_options --enable-project=mobile/android
 
 # Targeting the following architecture.
 # For regular phones, no --target is needed.
@@ -90,7 +90,7 @@ ac_add_options --enable-application=mobile/android
 
 MOBILE_ANDROID_ARTIFACT_MODE_MOZCONFIG_TEMPLATE = """
 # Build GeckoView/Firefox for Android Artifact Mode:
-ac_add_options --enable-application=mobile/android
+ac_add_options --enable-project=mobile/android
 ac_add_options --target=arm-linux-androideabi
 ac_add_options --enable-artifact-builds
 
