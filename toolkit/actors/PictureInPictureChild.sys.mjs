@@ -162,6 +162,9 @@ export class PictureInPictureLauncherChild extends JSWindowActorChild {
       );
     }
 
+    let scrubberPosition =
+      video.currentTime === 0 ? 0 : video.currentTime / video.duration;
+
     // All other requests to toggle PiP should open a new PiP
     // window
     const videoRef = lazy.ContentDOMReference.get(video);
@@ -173,6 +176,7 @@ export class PictureInPictureLauncherChild extends JSWindowActorChild {
       videoRef,
       ccEnabled: lazy.DISPLAY_TEXT_TRACKS_PREF,
       webVTTSubtitles: !!video.textTracks?.length,
+      scrubberPosition,
     });
   }
 
@@ -1406,6 +1410,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
       isFullscreen,
       isVideoControlsShowing,
       playerBottomControlsDOMRect,
+      isScrubberShowing,
     } = data;
     let textTracks = this.document.getElementById("texttracks");
     const originatingWindow = this.getWeakVideo().ownerGlobal;
@@ -1428,6 +1433,12 @@ export class PictureInPictureChild extends JSWindowActorChild {
         playerBottomControlsDOMRect.top;
 
       if (isOverlap) {
+        const root = this.document.querySelector(":root");
+        if (isScrubberShowing) {
+          root.style.setProperty("--player-controls-scrubber-height", "30px");
+        } else {
+          root.style.setProperty("--player-controls-scrubber-height", "0px");
+        }
         textTracks.setAttribute("overlap-video-controls", true);
       } else {
         textTracks.removeAttribute("overlap-video-controls");
@@ -1678,6 +1689,15 @@ export class PictureInPictureChild extends JSWindowActorChild {
         this.updateWebVTTTextTracksDisplay(cues);
         break;
       }
+      case "timeupdate": {
+        let currentTime = event.target.currentTime;
+        let duration = event.target.duration;
+        let scrubberPosition = currentTime === 0 ? 0 : currentTime / duration;
+        this.sendAsyncMessage("PictureInPicture:SetScrubberPosition", {
+          scrubberPosition,
+        });
+        break;
+      }
     }
   }
 
@@ -1794,7 +1814,23 @@ export class PictureInPictureChild extends JSWindowActorChild {
         this.setTextTrackFontSize();
         break;
       }
+      case "PictureInPicture:SetVideoTime": {
+        const { scrubberPosition } = message.data;
+        this.setVideoTime(scrubberPosition);
+        break;
+      }
     }
+  }
+
+  /**
+   * Set the current time of the video based of the position of the scrubber
+   * @param {Number} scrubberPosition A number between 0 and 1 representing the position of the scrubber
+   */
+  setVideoTime(scrubberPosition) {
+    const video = this.getWeakVideo();
+    let duration = this.videoWrapper.getDuration(video);
+    let currentTime = scrubberPosition * duration;
+    this.videoWrapper.setCurrentTime(video, currentTime);
   }
 
   /**
@@ -1856,6 +1892,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
       originatingVideo.addEventListener("volumechange", this);
       originatingVideo.addEventListener("resize", this);
       originatingVideo.addEventListener("emptied", this);
+      originatingVideo.addEventListener("timeupdate", this);
 
       if (lazy.DISPLAY_TEXT_TRACKS_PREF) {
         this.setupTextTracks(originatingVideo);
@@ -1901,6 +1938,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
       originatingVideo.removeEventListener("volumechange", this);
       originatingVideo.removeEventListener("resize", this);
       originatingVideo.removeEventListener("emptied", this);
+      originatingVideo.removeEventListener("timeupdate", this);
 
       if (lazy.DISPLAY_TEXT_TRACKS_PREF) {
         this.removeTextTracks(originatingVideo);
