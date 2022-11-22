@@ -215,7 +215,9 @@ class WasmStructObject : public WasmGcObject {
   static const JSClass class_;
 
   // Owned pointer to a malloc'd block containing out-of-line fields, or
-  // nullptr if none.
+  // nullptr if none.  Note that MIR alias analysis assumes this is readonly
+  // for the life of the object; do not change it once the object is created.
+  // See MWasmLoadObjectField::congruentTo.
   uint8_t* outlineData_;
 
   // The inline (wasm-struct-level) data fields.  This must be a multiple of
