@@ -1752,6 +1752,107 @@ nsresult nsDragService::CreateTempFile(nsITransferable* aItem,
   return NS_ERROR_FAILURE;
 }
 
+bool nsDragService::SourceDataGetXDND(nsITransferable* aItem,
+                                      GdkDragContext* aContext,
+                                      GtkSelectionData* aSelectionData) {
+  LOGDRAGSERVICE("nsDragService::SourceDataGetXDND");
+
+  // Indicate failure by default.
+  GdkAtom target = gtk_selection_data_get_target(aSelectionData);
+  gtk_selection_data_set(aSelectionData, target, 8, (guchar*)"E", 1);
+
+  GdkAtom property = gdk_atom_intern(gXdndDirectSaveType, FALSE);
+  GdkAtom type = gdk_atom_intern(kTextMime, FALSE);
+
+  GdkWindow* srcWindow = gdk_drag_context_get_source_window(aContext);
+  if (!srcWindow) {
+    LOGDRAGSERVICE("  failed to get source GdkWindow!");
+    return false;
+  }
+
+  guchar* data;
+  gint length;
+  if (!gdk_property_get(srcWindow, property, type, 0, INT32_MAX, FALSE, nullptr,
+                        nullptr, &length, &data)) {
+    LOGDRAGSERVICE("  failed to get gXdndDirectSaveType GdkWindow property.");
+    return false;
+  }
+
+  // Zero-terminate the string.
+  data = (guchar*)g_realloc(data, length + 1);
+  if (!data) {
+    return false;
+  }
+  data[length] = '\0';
+  gchar* hostname;
+  char* gfullpath = g_filename_from_uri((const gchar*)data, &hostname, nullptr);
+  g_free(data);
+  if (!gfullpath) {
+    LOGDRAGSERVICE("  failed to get file from uri.");
+    return false;
+  }
+
+  nsCString fullpath(gfullpath);
+  g_free(gfullpath);
+
+  LOGDRAGSERVICE("  XdndDirectSave filepath is %s", fullpath.get());
+
+  // If there is no hostname in the URI, NULL will be stored.
+  // We should not accept uris with from a different host.
+  if (hostname) {
+    nsCOMPtr<nsIPropertyBag2> infoService =
+        do_GetService(NS_SYSTEMINFO_CONTRACTID);
+    if (!infoService) {
+      return false;
+    }
+    nsAutoCString host;
+    if (NS_SUCCEEDED(infoService->GetPropertyAsACString(u"host"_ns, host))) {
+      if (!host.Equals(hostname)) {
+        LOGDRAGSERVICE("  ignored drag because of different host.");
+        // Special error code "F" for this case.
+        gtk_selection_data_set(aSelectionData, target, 8, (guchar*)"F", 1);
+        g_free(hostname);
+        return false;
+      }
+    }
+    g_free(hostname);
+  }
+
+  nsCOMPtr<nsIFile> file;
+  if (NS_FAILED(NS_NewNativeLocalFile(fullpath, false, getter_AddRefs(file)))) {
+    LOGDRAGSERVICE("  failed to get local file");
+    return false;
+  }
+
+  // We have to split the path into a directory and filename,
+  // because our internal file-promise API is based on these.
+  nsCOMPtr<nsIFile> directory;
+  file->GetParent(getter_AddRefs(directory));
+
+  aItem->SetTransferData(kFilePromiseDirectoryMime, directory);
+
+  nsCOMPtr<nsISupportsString> filenamePrimitive =
+      do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+  if (!filenamePrimitive) {
+    return false;
+  }
+
+  nsAutoString leafName;
+  file->GetLeafName(leafName);
+  filenamePrimitive->SetData(leafName);
+
+  aItem->SetTransferData(kFilePromiseDestFilename, filenamePrimitive);
+
+  nsresult rv;
+  nsCOMPtr<nsISupports> promiseData;
+  rv = aItem->GetTransferData(kFilePromiseMime, getter_AddRefs(promiseData));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  // Indicate success.
+  gtk_selection_data_set(aSelectionData, target, 8, (guchar*)"S", 1);
+  return true;
+}
+
 // We're asked to get data from mSourceDataItems and pass it to
 // GtkSelectionData (Gtk D&D interface).
 // We need to check mSourceDataItems data type and try to convert it
@@ -1844,84 +1945,9 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
   }
   // Someone is asking for the special Direct Save Protocol type.
   else if (mimeFlavor.EqualsLiteral(gXdndDirectSaveType)) {
-    // Indicate failure by default.
-    gtk_selection_data_set(aSelectionData, target, 8, (guchar*)"E", 1);
-
-    GdkAtom property = gdk_atom_intern(gXdndDirectSaveType, FALSE);
-    GdkAtom type = gdk_atom_intern(kTextMime, FALSE);
-
-    guchar* data;
-    gint length;
-    if (!gdk_property_get(gdk_drag_context_get_source_window(aContext),
-                          property, type, 0, INT32_MAX, FALSE, nullptr, nullptr,
-                          &length, &data)) {
+    if (SourceDataGetXDND(item, aContext, aSelectionData)) {
       return;
     }
-
-    // Zero-terminate the string.
-    data = (guchar*)g_realloc(data, length + 1);
-    if (!data) return;
-    data[length] = '\0';
-
-    gchar* hostname;
-    char* gfullpath =
-        g_filename_from_uri((const gchar*)data, &hostname, nullptr);
-    g_free(data);
-    if (!gfullpath) return;
-
-    nsCString fullpath(gfullpath);
-    g_free(gfullpath);
-
-    LOGDRAGSERVICE("  XdndDirectSave filepath is %s\n", fullpath.get());
-
-    // If there is no hostname in the URI, NULL will be stored.
-    // We should not accept uris with from a different host.
-    if (hostname) {
-      nsCOMPtr<nsIPropertyBag2> infoService =
-          do_GetService(NS_SYSTEMINFO_CONTRACTID);
-      if (!infoService) return;
-
-      nsAutoCString host;
-      if (NS_SUCCEEDED(infoService->GetPropertyAsACString(u"host"_ns, host))) {
-        if (!host.Equals(hostname)) {
-          LOGDRAGSERVICE("  ignored drag because of different host.\n");
-
-          // Special error code "F" for this case.
-          gtk_selection_data_set(aSelectionData, target, 8, (guchar*)"F", 1);
-          g_free(hostname);
-          return;
-        }
-      }
-
-      g_free(hostname);
-    }
-
-    nsCOMPtr<nsIFile> file;
-    if (NS_FAILED(
-            NS_NewNativeLocalFile(fullpath, false, getter_AddRefs(file)))) {
-      return;
-    }
-
-    // We have to split the path into a directory and filename,
-    // because our internal file-promise API is based on these.
-
-    nsCOMPtr<nsIFile> directory;
-    file->GetParent(getter_AddRefs(directory));
-
-    item->SetTransferData(kFilePromiseDirectoryMime, directory);
-
-    nsCOMPtr<nsISupportsString> filenamePrimitive =
-        do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
-    if (!filenamePrimitive) return;
-
-    nsAutoString leafName;
-    file->GetLeafName(leafName);
-    filenamePrimitive->SetData(leafName);
-
-    item->SetTransferData(kFilePromiseDestFilename, filenamePrimitive);
-
-    // Request a different type in GetTransferData.
-    actualFlavor = kFilePromiseMime;
     // if someone was asking for image we need to convert it
     // from kNativeImageMime
   } else if (mimeFlavor.EqualsLiteral(kPNGImageMime) ||
@@ -1938,15 +1964,6 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
   nsresult rv;
   nsCOMPtr<nsISupports> data;
   rv = item->GetTransferData(actualFlavor, getter_AddRefs(data));
-
-  if (strcmp(actualFlavor, kFilePromiseMime) == 0) {
-    if (NS_SUCCEEDED(rv)) {
-      // Indicate success.
-      gtk_selection_data_set(aSelectionData, target, 8, (guchar*)"S", 1);
-    }
-    return;
-  }
-
   if (NS_SUCCEEDED(rv)) {
     if (needToDoConversionToImage) {
       LOGDRAGSERVICE("  posting image\n");
