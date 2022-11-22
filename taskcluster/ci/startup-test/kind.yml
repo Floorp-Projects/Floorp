@@ -48,7 +48,7 @@ jobs:
             upstream_kind: build-signing
             upstream_artifact: target.tar.bz2
             binary: firefox
-        worker-type: b-linux
+        worker-type: b-linux-gcp
         worker:
             docker-image: {in-tree: ubuntu1804-test}
         shipping-product: firefox
@@ -67,7 +67,7 @@ jobs:
             upstream_kind: build-signing
             upstream_artifact: target.tar.bz2
             binary: firefox
-        worker-type: b-linux
+        worker-type: b-linux-gcp
         worker:
             docker-image: {in-tree: ubuntu1804-test}
         shipping-product: firefox
