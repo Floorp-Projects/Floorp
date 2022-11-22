@@ -138,6 +138,8 @@ export class NetworkObserver {
   #openRequests = new lazy.ChannelMap();
   /**
    * Object that holds response data coming from this.#httpResponseExaminer.
+   * The response data stored for each channel is an object with 2 properties:
+   * headers and cookies.
    * @type {ChannelMap}
    */
   #openResponses = new lazy.ChannelMap();
@@ -405,57 +407,52 @@ export class NetworkObserver {
           : channel.responseStatus
       );
 
-      const response = {
-        id: gSequenceId(),
-        channel,
-        headers: [],
-        cookies: [],
-      };
-
-      const setCookieHeaders = [];
-
+      // Read response headers and cookies, and add an entry in #openResponses.
       if (!blockedOrFailed) {
+        const responseHeaders = [];
+        const setCookieHeaders = [];
         channel.visitOriginalResponseHeaders({
           visitHeader(name, value) {
             const lowerName = name.toLowerCase();
             if (lowerName == "set-cookie") {
               setCookieHeaders.push(value);
             }
-            response.headers.push({ name, value });
+            responseHeaders.push({ name, value });
           },
         });
 
-        if (!response.headers.length) {
+        if (!responseHeaders.length) {
           // No need to continue.
           return;
         }
 
-        if (setCookieHeaders.length) {
-          response.cookies = setCookieHeaders.reduce((result, header) => {
-            const cookies = lazy.NetworkHelper.parseSetCookieHeader(header);
-            return result.concat(cookies);
-          }, []);
-        }
+        const responseCookies = setCookieHeaders.reduce((result, header) => {
+          const cookies = lazy.NetworkHelper.parseSetCookieHeader(header);
+          return result.concat(cookies);
+        }, []);
+        this.#openResponses.set(channel, {
+          cookies: responseCookies,
+          headers: responseHeaders,
+        });
       }
 
-      // Determine the HTTP version.
-      const httpVersionMaj = {};
-      const httpVersionMin = {};
-
       channel.QueryInterface(Ci.nsIHttpChannelInternal);
-      if (!blockedOrFailed) {
-        channel.getResponseVersion(httpVersionMaj, httpVersionMin);
 
-        response.status = channel.responseStatus;
-        response.statusText = channel.responseStatusText;
+      let httpVersion, status, statusText;
+      if (!blockedOrFailed) {
+        const httpVersionMaj = {};
+        const httpVersionMin = {};
+
+        channel.getResponseVersion(httpVersionMaj, httpVersionMin);
         if (httpVersionMaj.value > 1) {
-          response.httpVersion = "HTTP/" + httpVersionMaj.value;
+          httpVersion = "HTTP/" + httpVersionMaj.value;
         } else {
-          response.httpVersion =
+          httpVersion =
             "HTTP/" + httpVersionMaj.value + "." + httpVersionMin.value;
         }
 
-        this.#openResponses.set(channel, response);
+        status = channel.responseStatus;
+        statusText = channel.responseStatusText;
       }
 
       if (topic === "http-on-examine-cached-response") {
@@ -482,11 +479,11 @@ export class NetworkObserver {
 
         httpActivity.owner.addResponseStart(
           {
-            httpVersion: response.httpVersion,
+            httpVersion,
             remoteAddress: "",
             remotePort: "",
-            status: response.status,
-            statusText: response.statusText,
+            status,
+            statusText,
             headersSize: 0,
             waitingTime: 0,
           },
