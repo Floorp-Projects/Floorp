@@ -15,8 +15,12 @@ paths by default when using macOS's /usr/bin/python.
 Includes generous amount of logging to aid debugging for use in automated tests.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
+from __future__ import absolute_import, print_function
+
+import argparse
+import logging
+import os
+import sys
 
 #
 # These Objective-C bindings imports are included in the import path by default
@@ -26,11 +30,6 @@ from __future__ import print_function
 #
 from AppKit import NSScreen, NSWorkspace
 from Cocoa import NSURL
-
-import argparse
-import logging
-import os
-import sys
 
 
 def main():

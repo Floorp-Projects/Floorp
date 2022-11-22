@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
+
 import textwrap
 
 from marionette_harness.marionette_test import MarionetteTestCase

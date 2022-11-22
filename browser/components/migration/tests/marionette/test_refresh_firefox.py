@@ -1,9 +1,10 @@
 from __future__ import absolute_import, print_function
+
 import os
 import time
 
-from marionette_harness import MarionetteTestCase
 from marionette_driver.errors import NoAlertPresentException
+from marionette_harness import MarionetteTestCase
 
 
 # Holds info about things we need to cleanup after the tests are done.

@@ -6,7 +6,7 @@ from __future__ import absolute_import
 
 from urllib.parse import quote
 
-from marionette_driver import errors, Wait
+from marionette_driver import Wait, errors
 from marionette_driver.keys import Keys
 from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
@@ -245,8 +245,8 @@ class SessionStoreTestCase(WindowManagerMixin, MarionetteTestCase):
         :raises: WindowsError: if a Windows API call fails
         """
         import ctypes
-        from ctypes import Structure, POINTER, WINFUNCTYPE, windll, pointer, WinError
-        from ctypes.wintypes import HANDLE, DWORD, BOOL, WCHAR, UINT, ULONG, LPCWSTR
+        from ctypes import POINTER, WINFUNCTYPE, Structure, WinError, pointer, windll
+        from ctypes.wintypes import BOOL, DWORD, HANDLE, LPCWSTR, UINT, ULONG, WCHAR
 
         # set up Windows SDK types
         OpenProcess = windll.kernel32.OpenProcess
