@@ -20,7 +20,6 @@ class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         "m4",
         "unzip",
         "uuid",
-        "zip",
     ]
 
     # These are common packages for building Firefox for Desktop
