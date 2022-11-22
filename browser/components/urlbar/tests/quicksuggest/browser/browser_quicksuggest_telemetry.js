@@ -90,7 +90,7 @@ function add_suggestions_task(fn) {
 // Tests the following:
 // * impression telemetry
 // * offline scenario
-// * data collection disabled
+// * data collection disabled by user
 add_suggestions_task(async function impression_offline_dataCollectionDisabled(
   suggestion
 ) {
@@ -105,7 +105,7 @@ add_suggestions_task(async function impression_offline_dataCollectionDisabled(
 // Tests the following:
 // * impression telemetry
 // * offline scenario
-// * data collection enabled
+// * data collection enabled by user
 add_suggestions_task(async function impression_offline_dataCollectionEnabled(
   suggestion
 ) {
@@ -120,7 +120,7 @@ add_suggestions_task(async function impression_offline_dataCollectionEnabled(
 // Tests the following:
 // * impression telemetry
 // * online scenario
-// * data collection disabled
+// * data collection disabled by user
 add_suggestions_task(async function impression_online_dataCollectionDisabled(
   suggestion
 ) {
@@ -137,7 +137,7 @@ add_suggestions_task(async function impression_online_dataCollectionDisabled(
 // Tests the following:
 // * impression telemetry
 // * online scenario
-// * data collection enabled
+// * data collection enabled by user
 add_suggestions_task(async function impression_online_dataCollectionEnabled(
   suggestion
 ) {
@@ -158,7 +158,8 @@ add_suggestions_task(async function impression_bestMatch(suggestion) {
   UrlbarPrefs.set("bestMatch.enabled", true);
   await doImpressionTest({
     suggestion,
-    improve_suggest_experience_checked: false,
+    improve_suggest_experience_checked:
+      QuickSuggestTestUtils.DATA_COLLECTION_OFFLINE,
     isBestMatch: true,
   });
   UrlbarPrefs.clear("bestMatch.enabled");
@@ -292,7 +293,7 @@ add_task(async function noImpression_noQuickSuggestResult() {
 // Tests the following:
 // * click telemetry using keyboard
 // * offline scenario
-// * data collection disabled
+// * data collection disabled by user
 add_suggestions_task(
   async function click_keyboard_offline_dataCollectionDisabled(suggestion) {
     await QuickSuggestTestUtils.setScenario("offline");
@@ -308,7 +309,7 @@ add_suggestions_task(
 // Tests the following:
 // * click telemetry using keyboard
 // * offline scenario
-// * data collection enabled
+// * data collection enabled by user
 add_suggestions_task(
   async function click_keyboard_offline_dataCollectionEnabled(suggestion) {
     await QuickSuggestTestUtils.setScenario("offline");
@@ -324,7 +325,7 @@ add_suggestions_task(
 // Tests the following:
 // * click telemetry using keyboard
 // * online scenario
-// * data collection disabled
+// * data collection disabled by user
 add_suggestions_task(
   async function click_keyboard_online_dataCollectionDisabled(suggestion) {
     await QuickSuggestTestUtils.setScenario("online");
@@ -342,7 +343,7 @@ add_suggestions_task(
 // Tests the following:
 // * click telemetry using keyboard
 // * online scenario
-// * data collection enabled
+// * data collection enabled by user
 add_suggestions_task(async function click_keyboard_online_dataCollectionEnabled(
   suggestion
 ) {
@@ -360,7 +361,7 @@ add_suggestions_task(async function click_keyboard_online_dataCollectionEnabled(
 // Tests the following:
 // * click telemetry using mouse
 // * offline scenario
-// * data collection disabled
+// * data collection disabled by user
 add_suggestions_task(async function click_mouse_offline_dataCollectionDisabled(
   suggestion
 ) {
@@ -376,7 +377,7 @@ add_suggestions_task(async function click_mouse_offline_dataCollectionDisabled(
 // Tests the following:
 // * click telemetry using mouse
 // * offline scenario
-// * data collection enabled
+// * data collection enabled by user
 add_suggestions_task(async function click_mouse_offline_dataCollectionEnabled(
   suggestion
 ) {
@@ -392,7 +393,7 @@ add_suggestions_task(async function click_mouse_offline_dataCollectionEnabled(
 // Tests the following:
 // * click telemetry using mouse
 // * online scenario
-// * data collection disabled
+// * data collection disabled by user
 add_suggestions_task(async function click_mouse_online_dataCollectionDisabled(
   suggestion
 ) {
@@ -410,7 +411,7 @@ add_suggestions_task(async function click_mouse_online_dataCollectionDisabled(
 // Tests the following:
 // * click telemetry using mouse
 // * online scenario
-// * data collection enabled
+// * data collection enabled by user
 add_suggestions_task(async function click_mouse_online_dataCollectionEnabled(
   suggestion
 ) {
@@ -432,7 +433,8 @@ add_suggestions_task(async function click_keyboard_bestMatch(suggestion) {
   UrlbarPrefs.set("bestMatch.enabled", true);
   await doClickTest({
     suggestion,
-    improve_suggest_experience_checked: false,
+    improve_suggest_experience_checked:
+      QuickSuggestTestUtils.DATA_COLLECTION_OFFLINE,
     useKeyboard: true,
     isBestMatch: true,
   });
@@ -446,7 +448,8 @@ add_suggestions_task(async function click_mouse_bestMatch(suggestion) {
   UrlbarPrefs.set("bestMatch.enabled", true);
   await doClickTest({
     suggestion,
-    improve_suggest_experience_checked: false,
+    improve_suggest_experience_checked:
+      QuickSuggestTestUtils.DATA_COLLECTION_OFFLINE,
     isBestMatch: true,
   });
   UrlbarPrefs.clear("bestMatch.enabled");
@@ -1372,7 +1375,8 @@ add_task(async function impression_previousResultStillVisible() {
       {
         type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
         payload: {
-          improve_suggest_experience_checked: false,
+          improve_suggest_experience_checked:
+            QuickSuggestTestUtils.DATA_COLLECTION_OFFLINE,
           block_id: firstSuggestion.id,
           is_clicked: false,
           match_type: "firefox-suggest",
