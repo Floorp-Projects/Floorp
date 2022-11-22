@@ -496,10 +496,10 @@ class WidgetWheelEvent : public WidgetMouseEventBase {
     return result;
   }
 
-  // On OS X, scroll gestures that start at the edge of the scrollable range
-  // can result in a swipe gesture. For the first wheel event of such a
-  // gesture, call TriggersSwipe() after the event has been processed
-  // in order to find out whether a swipe should be started.
+  // Scroll gestures that start at the edge of the scrollable range can result
+  // in a swipe gesture. For the first wheel event of such a gesture, call
+  // TriggersSwipe() after the event has been processed in order to find out
+  // whether a swipe should be started.
   bool TriggersSwipe() const {
     return mCanTriggerSwipe && mViewPortIsOverscrolled &&
            this->mOverflowDeltaX != 0.0;
