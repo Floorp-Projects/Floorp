@@ -46,12 +46,12 @@ using namespace mozilla::widget;
 using mozilla::dom::Promise;
 using mozilla::gfx::DataSourceSurface;
 using mozilla::gfx::DrawTarget;
-using mozilla::gfx::SamplingFilter;
 using mozilla::gfx::IntPoint;
 using mozilla::gfx::IntRect;
 using mozilla::gfx::IntSize;
-using mozilla::gfx::SurfaceFormat;
+using mozilla::gfx::SamplingFilter;
 using mozilla::gfx::SourceSurface;
+using mozilla::gfx::SurfaceFormat;
 using mozilla::image::ImageRegion;
 
 LazyLogModule gCocoaUtilsLog("nsCocoaUtils");
@@ -807,12 +807,16 @@ struct KeyConversionData {
 
 static const KeyConversionData gKeyConversions[] = {
 
-#define KEYCODE_ENTRY(aStr, aCode) \
-  { #aStr, sizeof(#aStr) - 1, NS_##aStr, aCode }
+#define KEYCODE_ENTRY(aStr, aCode)             \
+  {                                            \
+#    aStr, sizeof(#aStr) - 1, NS_##aStr, aCode \
+  }
 
 // Some keycodes may have different name in KeyboardEvent from its key name.
-#define KEYCODE_ENTRY2(aStr, aNSName, aCode) \
-  { #aStr, sizeof(#aStr) - 1, NS_##aNSName, aCode }
+#define KEYCODE_ENTRY2(aStr, aNSName, aCode)      \
+  {                                               \
+#    aStr, sizeof(#aStr) - 1, NS_##aNSName, aCode \
+  }
 
     KEYCODE_ENTRY(VK_CANCEL, 0x001B),
     KEYCODE_ENTRY(VK_DELETE, NSDeleteFunctionKey),
@@ -1444,4 +1448,69 @@ void nsCocoaUtils::ResolveVideoCapturePromises(bool aGranted) {
     ResolveMediaCapturePromises(aGranted, sVideoCapturePromises);
   }));
   NS_DispatchToMainThread(runnable.forget());
+}
+
+static PanGestureInput::PanGestureType PanGestureTypeForEvent(NSEvent* aEvent) {
+  switch ([aEvent phase]) {
+    case NSEventPhaseMayBegin:
+      return PanGestureInput::PANGESTURE_MAYSTART;
+    case NSEventPhaseCancelled:
+      return PanGestureInput::PANGESTURE_CANCELLED;
+    case NSEventPhaseBegan:
+      return PanGestureInput::PANGESTURE_START;
+    case NSEventPhaseChanged:
+      return PanGestureInput::PANGESTURE_PAN;
+    case NSEventPhaseEnded:
+      return PanGestureInput::PANGESTURE_END;
+    case NSEventPhaseNone:
+      switch ([aEvent momentumPhase]) {
+        case NSEventPhaseBegan:
+          return PanGestureInput::PANGESTURE_MOMENTUMSTART;
+        case NSEventPhaseChanged:
+          return PanGestureInput::PANGESTURE_MOMENTUMPAN;
+        case NSEventPhaseEnded:
+          return PanGestureInput::PANGESTURE_MOMENTUMEND;
+        default:
+          NS_ERROR("unexpected event phase");
+          return PanGestureInput::PANGESTURE_PAN;
+      }
+    default:
+      NS_ERROR("unexpected event phase");
+      return PanGestureInput::PANGESTURE_PAN;
+  }
+}
+
+bool static ShouldConsiderStartingSwipeFromEvent(NSEvent* anEvent) {
+  // Only initiate horizontal tracking for gestures that have just begun --
+  // otherwise a scroll to one side of the page can have a swipe tacked on
+  // to it.
+  // [NSEvent isSwipeTrackingFromScrollEventsEnabled] checks whether the
+  // AppleEnableSwipeNavigateWithScrolls global preference is set.  If it isn't,
+  // fluid swipe tracking is disabled, and a horizontal two-finger gesture is
+  // always a scroll (even in Safari).  This preference can't (currently) be set
+  // from the Preferences UI -- only using 'defaults write'.
+  NSEventPhase eventPhase = [anEvent phase];
+  return [anEvent type] == NSEventTypeScrollWheel && eventPhase == NSEventPhaseBegan &&
+         [anEvent hasPreciseScrollingDeltas] && [NSEvent isSwipeTrackingFromScrollEventsEnabled];
+}
+
+PanGestureInput nsCocoaUtils::CreatePanGestureEvent(
+    NSEvent* aNativeEvent, uint32_t aTime, TimeStamp aTimeStamp, const ScreenPoint& aPanStartPoint,
+    const ScreenPoint& aPreciseDelta, const gfx::IntPoint& aLineOrPageDelta, Modifiers aModifiers) {
+  PanGestureInput::PanGestureType type = PanGestureTypeForEvent(aNativeEvent);
+  // Always force zero deltas on event types that shouldn't cause any scrolling,
+  // so that we don't dispatch DOM wheel events for them.
+  bool shouldIgnoreDeltas =
+      type == PanGestureInput::PANGESTURE_MAYSTART || type == PanGestureInput::PANGESTURE_CANCELLED;
+
+  PanGestureInput panEvent(
+      type, aTime, aTimeStamp, aPanStartPoint, !shouldIgnoreDeltas ? aPreciseDelta : ScreenPoint(),
+      aModifiers,
+      PanGestureInput::IsEligibleForSwipe(ShouldConsiderStartingSwipeFromEvent(aNativeEvent)));
+
+  if (!shouldIgnoreDeltas) {
+    panEvent.SetLineOrPageDeltas(aLineOrPageDelta.x, aLineOrPageDelta.y);
+  }
+
+  return panEvent;
 }

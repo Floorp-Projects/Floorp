@@ -5017,10 +5017,6 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
           panEvent.mSimulateMomentum =
               StaticPrefs::apz_gtk_kinetic_scroll_enabled();
 
-          panEvent
-              .mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection =
-              SwipeTracker::CanTriggerSwipe(panEvent);
-
           DispatchPanGesture(panEvent);
 
           if (mCurrentSynthesizedTouchpadPan.mSavedObserver != 0) {
