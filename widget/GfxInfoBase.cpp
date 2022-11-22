@@ -1746,6 +1746,8 @@ bool GfxInfoBase::BuildFeatureStateLog(JSContext* aCx,
     if (!SetJSPropertyString(aCx, obj, "type", aType) ||
         !SetJSPropertyString(aCx, obj, "status",
                              FeatureStatusToString(aStatus)) ||
+        (!aFailureId.IsEmpty() &&
+         !SetJSPropertyString(aCx, obj, "failureId", aFailureId.get())) ||
         (aMessage && !SetJSPropertyString(aCx, obj, "message", aMessage))) {
       return;
     }
