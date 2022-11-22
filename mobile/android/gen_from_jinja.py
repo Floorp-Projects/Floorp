@@ -6,8 +6,9 @@
 
 from __future__ import absolute_import, print_function
 
-from jinja2 import Environment, FileSystemLoader, StrictUndefined
 import os
+
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 
 def main(output_fd, input_filename, *args):
