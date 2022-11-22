@@ -24,6 +24,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://devtools/shared/network-observer/NetworkThrottleManager.sys.mjs",
   NetworkUtils:
     "resource://devtools/shared/network-observer/NetworkUtils.sys.mjs",
+  wildcardToRegExp:
+    "resource://devtools/shared/network-observer/WildcardToRegexp.sys.mjs",
 });
 
 const gActivityDistributor = Cc[
@@ -718,6 +720,17 @@ export class NetworkObserver {
       };
     }
 
+    // Check the request URL with ones manually blocked by the user in DevTools.
+    // If it's meant to be blocked, we cancel the request and annotate the event.
+    if (
+      this.#blockedURLs.some(url =>
+        lazy.wildcardToRegExp(url).test(channel.URI.spec)
+      )
+    ) {
+      channel.cancel(Cr.NS_BINDING_ABORTED);
+      blockedReason = "devtools";
+    }
+
     const event = lazy.NetworkUtils.createNetworkEvent(channel, {
       timestamp,
       fromCache,
@@ -725,7 +738,6 @@ export class NetworkObserver {
       extraStringData,
       blockedReason,
       blockingExtension,
-      blockedURLs: this.#blockedURLs,
       saveRequestAndResponseBodies: this.#saveRequestAndResponseBodies,
     });
 
@@ -768,7 +780,10 @@ export class NetworkObserver {
       return;
     }
 
-    this.#createNetworkEvent(channel, { timestamp, extraStringData });
+    this.#createNetworkEvent(channel, {
+      timestamp,
+      extraStringData,
+    });
   }
 
   /**
