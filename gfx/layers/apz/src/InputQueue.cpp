@@ -448,6 +448,11 @@ APZEventResult InputQueue::ReceivePanGestureInput(
     INPQ_LOG("started new pan gesture block %p id %" PRIu64 " for target %p\n",
              block.get(), block->GetBlockId(), aTarget.get());
 
+    mActivePanGestureBlock = block;
+
+    CancelAnimationsForNewBlock(block);
+    MaybeRequestContentResponse(aTarget, block);
+
     if (aFlags.mTargetConfirmed &&
         event
             .mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection &&
@@ -462,11 +467,6 @@ APZEventResult InputQueue::ReceivePanGestureInput(
       // and that a swipe can be started from this event if desired.
       result.SetStatusAsIgnore();
     }
-
-    mActivePanGestureBlock = block;
-
-    CancelAnimationsForNewBlock(block);
-    MaybeRequestContentResponse(aTarget, block);
   } else {
     INPQ_LOG("received new pan event (type=%d) in block %p\n", aEvent.mType,
              block.get());
