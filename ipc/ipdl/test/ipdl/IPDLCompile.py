@@ -1,6 +1,6 @@
 import copy
-import re
 import os
+import re
 import subprocess
 import tempfile
 

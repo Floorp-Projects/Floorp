@@ -12,10 +12,10 @@ http://dev.chromium.org/developers/how-tos/get-the-code for details about
 doing this efficiently.
 """
 
-import sys
 import os
-from subprocess import check_call
+import sys
 from shutil import rmtree
+from subprocess import check_call
 
 topsrcdir, chromiumtree, rev = sys.argv[1:]
 
