@@ -390,7 +390,8 @@ static bool CanScrollTargetHorizontally(const PanGestureInput& aInitialEvent,
   ScrollDirections allowedScrollDirections;
   RefPtr<AsyncPanZoomController> horizontallyScrollableAPZC =
       aBlock->GetOverscrollHandoffChain()->FindFirstScrollable(
-          horizontalComponent, &allowedScrollDirections);
+          horizontalComponent, &allowedScrollDirections,
+          OverscrollHandoffChain::IncludeOverscroll::No);
   return horizontallyScrollableAPZC &&
          horizontallyScrollableAPZC == aBlock->GetTargetApzc() &&
          allowedScrollDirections.contains(ScrollDirection::eHorizontal);
