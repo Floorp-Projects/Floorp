@@ -45,10 +45,6 @@ class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         "gst-plugins-good",
     ]
 
-    BROWSER_AUR_PACKAGES = [
-        "uuid",
-    ]
-
     MOBILE_ANDROID_COMMON_PACKAGES = [
         # See comment about 32 bit binaries and multilib below.
         "multilib/lib32-ncurses",
@@ -65,7 +61,6 @@ class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
     def install_browser_packages(self, mozconfig_builder, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode
-        self.aur_install(*self.BROWSER_AUR_PACKAGES)
         self.pacman_install(*self.BROWSER_PACKAGES)
 
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
