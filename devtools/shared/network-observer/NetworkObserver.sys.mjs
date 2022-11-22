@@ -95,11 +95,11 @@ const HTTP_DOWNLOAD_ACTIVITIES = [
  */
 export class NetworkObserver {
   /**
-   * Array of URL-like patterns used for request blocking.
+   * Map of URL patterns to RegExp
    *
-   * @type {Array<string>}
+   * @type {Map}
    */
-  #blockedURLs = [];
+  #blockedURLs = new Map();
   /**
    * Used by NetworkHelper.parseSecurityInfo to skip decoding known certificates.
    *
@@ -722,11 +722,7 @@ export class NetworkObserver {
 
     // Check the request URL with ones manually blocked by the user in DevTools.
     // If it's meant to be blocked, we cancel the request and annotate the event.
-    if (
-      this.#blockedURLs.some(url =>
-        lazy.wildcardToRegExp(url).test(channel.URI.spec)
-      )
-    ) {
+    if (blockedReason === undefined && this.#shouldBlockChannel(channel)) {
       channel.cancel(Cr.NS_BINDING_ABORTED);
       blockedReason = "devtools";
     }
@@ -784,6 +780,19 @@ export class NetworkObserver {
       timestamp,
       extraStringData,
     });
+  }
+
+  /**
+   * Check if the provided channel should be blocked given the current
+   * blocked URLs configured for this network observer.
+   */
+  #shouldBlockChannel(channel) {
+    for (const regexp of this.#blockedURLs.values()) {
+      if (regexp.test(channel.URI.spec)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -847,7 +856,7 @@ export class NetworkObserver {
   /**
    * Block a request based on certain filtering options.
    *
-   * Currently, an exact URL match is the only supported filter type.
+   * Currently, exact URL match or URL patterns are supported.
    */
   blockRequest(filter) {
     if (!filter || !filter.url) {
@@ -856,13 +865,13 @@ export class NetworkObserver {
       return;
     }
 
-    this.#blockedURLs.push(filter.url);
+    this.#addBlockedUrl(filter.url);
   }
 
   /**
    * Unblock a request based on certain filtering options.
    *
-   * Currently, an exact URL match is the only supported filter type.
+   * Currently, exact URL match or URL patterns are supported.
    */
   unblockRequest(filter) {
     if (!filter || !filter.url) {
@@ -871,7 +880,7 @@ export class NetworkObserver {
       return;
     }
 
-    this.#blockedURLs = this.#blockedURLs.filter(url => url != filter.url);
+    this.#blockedURLs.delete(filter.url);
   }
 
   /**
@@ -880,7 +889,13 @@ export class NetworkObserver {
    * This match will be a (String).includes match, not an exact URL match
    */
   setBlockedUrls(urls) {
-    this.#blockedURLs = urls || [];
+    urls = urls || [];
+    this.#blockedURLs = new Map();
+    urls.forEach(url => this.#addBlockedUrl(url));
+  }
+
+  #addBlockedUrl(url) {
+    this.#blockedURLs.set(url, lazy.wildcardToRegExp(url));
   }
 
   /**
@@ -888,7 +903,7 @@ export class NetworkObserver {
    * Useful as blockedURLs is mutated by both console & netmonitor
    */
   getBlockedUrls() {
-    return this.#blockedURLs;
+    return this.#blockedURLs.keys();
   }
 
   /**
