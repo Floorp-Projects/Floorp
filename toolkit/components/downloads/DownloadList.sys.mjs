@@ -267,7 +267,7 @@ DownloadList.prototype = {
         try {
           aView.onDownloadAdded(download);
         } catch (ex) {
-          Cu.reportError(ex);
+          console.error(ex);
         }
       }
       this._notifyAllViews("onDownloadBatchEnded");
@@ -307,7 +307,7 @@ DownloadList.prototype = {
           view[methodName](...args);
         }
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
   },
@@ -429,7 +429,7 @@ DownloadCombinedList.prototype = {
         {}
       );
     } catch (ex) {
-      Cu.reportError(
+      console.error(
         "DownloadsCommon: error recording telemetry event. " + ex.message
       );
     }
@@ -559,7 +559,7 @@ DownloadSummary.prototype = {
       try {
         aView.onSummaryChanged();
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
 
@@ -660,7 +660,7 @@ DownloadSummary.prototype = {
           view.onSummaryChanged();
         }
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
   },

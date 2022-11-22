@@ -421,7 +421,7 @@ var DownloadUtils = {
         try {
           uri = Services.io.newURI(origin);
         } catch (ex) {
-          Cu.reportError(ex);
+          console.error(ex);
         }
       }
     }

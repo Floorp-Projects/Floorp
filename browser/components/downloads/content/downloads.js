@@ -628,7 +628,7 @@ var DownloadsPanel = {
         false,
         null
       ).catch(e => {
-        Cu.reportError(e);
+        console.error(e);
         this._state = this.kStateHidden;
       });
 

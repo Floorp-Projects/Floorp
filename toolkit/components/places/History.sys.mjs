@@ -114,7 +114,7 @@ function notify(observers, notification, args = []) {
         ex.result != Cr.NS_ERROR_XPC_JSOBJECT_HAS_NO_FUNCTION_NAMED &&
         (AppConstants.DEBUG || Cu.isInAutomation)
       ) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
   }
@@ -1251,7 +1251,7 @@ var fetchAnnotatedPages = async function(db, annotations) {
     try {
       uri = new URL(row.getResultByName("url"));
     } catch (ex) {
-      Cu.reportError("Invalid URL read from database in fetchAnnotatedPages");
+      console.error("Invalid URL read from database in fetchAnnotatedPages");
       continue;
     }
 

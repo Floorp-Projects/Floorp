@@ -101,7 +101,7 @@ async function isPlaceholder(path) {
       return true;
     }
   } catch (ex) {
-    Cu.reportError(ex);
+    console.error(ex);
   }
   return false;
 }
@@ -299,7 +299,7 @@ Download.prototype = {
         this.onchange();
       }
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
   },
 
@@ -1719,7 +1719,7 @@ DownloadTarget.prototype = {
       // Report any error not caused by the file not being there. In any case,
       // the size of the download is not updated and the known value is kept.
       if (ex.name != "NotFoundError") {
-        Cu.reportError(ex);
+        console.error(ex);
       }
       this.exists = false;
     }
@@ -1735,7 +1735,7 @@ DownloadTarget.prototype = {
       this.partFileExists = (await IOUtils.stat(this.partFilePath)).size > 0;
     } catch (ex) {
       if (ex.name != "NotFoundError") {
-        Cu.reportError(ex);
+        console.error(ex);
       }
       this.partFileExists = false;
     }
@@ -2624,7 +2624,7 @@ DownloadCopySaver.prototype = {
         // is likely to happen when the component that executed the download has
         // just deleted the target file itself.
         if (!["NotFoundError", "NotAllowedError"].includes(ex.name)) {
-          Cu.reportError(ex);
+          console.error(ex);
         }
       }
     }

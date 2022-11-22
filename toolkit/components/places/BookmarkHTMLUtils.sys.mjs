@@ -154,7 +154,7 @@ export var BookmarkHTMLUtils = Object.freeze({
         aInitialImport
       );
     } catch (ex) {
-      Cu.reportError("Failed to import bookmarks from " + aSpec + ": " + ex);
+      console.error("Failed to import bookmarks from " + aSpec + ": " + ex);
       notifyObservers(
         PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED,
         aInitialImport
@@ -204,9 +204,7 @@ export var BookmarkHTMLUtils = Object.freeze({
         aInitialImport
       );
     } catch (ex) {
-      Cu.reportError(
-        "Failed to import bookmarks from " + aFilePath + ": " + ex
-      );
+      console.error("Failed to import bookmarks from " + aFilePath + ": " + ex);
       notifyObservers(
         PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED,
         aInitialImport
@@ -238,7 +236,7 @@ export var BookmarkHTMLUtils = Object.freeze({
         .getHistogramById("PLACES_EXPORT_TOHTML_MS")
         .add(Date.now() - startTime);
     } catch (ex) {
-      Cu.reportError("Unable to report telemetry.");
+      console.error("Unable to report telemetry.");
     }
 
     return count;
@@ -1044,7 +1042,7 @@ BookmarkExporter.prototype = {
     try {
       favicon = await PlacesUtils.promiseFaviconData(aItem.uri);
     } catch (ex) {
-      Cu.reportError("Unexpected Error trying to fetch icon data");
+      console.error("Unexpected Error trying to fetch icon data");
       return;
     }
 
@@ -1086,7 +1084,7 @@ function insertFaviconForNode(node) {
         Services.scriptSecurityManager.getSystemPrincipal()
       );
     } catch (ex) {
-      Cu.reportError("Failed to import favicon data:" + ex);
+      console.error("Failed to import favicon data:" + ex);
     }
   }
 
@@ -1104,7 +1102,7 @@ function insertFaviconForNode(node) {
       Services.scriptSecurityManager.getSystemPrincipal()
     );
   } catch (ex) {
-    Cu.reportError("Failed to import favicon URI:" + ex);
+    console.error("Failed to import favicon URI:" + ex);
   }
 }
 

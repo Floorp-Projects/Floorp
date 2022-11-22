@@ -416,7 +416,7 @@ class _Interactions {
           interaction.scrollingDistance += result.scrollingDistanceInPixels;
         },
         reason => {
-          Cu.reportError(reason);
+          console.error(reason);
         }
       )
       .then(() => {

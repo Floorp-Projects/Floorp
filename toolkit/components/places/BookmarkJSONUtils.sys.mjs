@@ -74,7 +74,7 @@ export var BookmarkJSONUtils = Object.freeze({
 
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS, aReplace);
     } catch (ex) {
-      Cu.reportError("Failed to restore bookmarks from " + aSpec + ": " + ex);
+      console.error("Failed to restore bookmarks from " + aSpec + ": " + ex);
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED, aReplace);
       throw ex;
     }
@@ -119,7 +119,7 @@ export var BookmarkJSONUtils = Object.freeze({
       }
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS, aReplace);
     } catch (ex) {
-      Cu.reportError(
+      console.error(
         "Failed to restore bookmarks from " + aFilePath + ": " + ex
       );
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED, aReplace);
@@ -155,7 +155,7 @@ export var BookmarkJSONUtils = Object.freeze({
         .getHistogramById("PLACES_BACKUPS_TOJSON_MS")
         .add(Date.now() - startTime);
     } catch (ex) {
-      Cu.reportError("Unable to report telemetry.");
+      console.error("Unable to report telemetry.");
     }
 
     let hash = generateHash(jsonString);
@@ -299,7 +299,7 @@ BookmarkImporter.prototype = {
       try {
         insertFaviconsForTree(node);
       } catch (ex) {
-        Cu.reportError(`Failed to insert favicons: ${ex}`);
+        console.error(`Failed to insert favicons: ${ex}`);
       }
     }
   },
@@ -440,7 +440,7 @@ function translateTreeTypes(node) {
       break;
     default:
       // No need to throw/reject here, insertTree will remove this node automatically.
-      Cu.reportError(`Unexpected bookmark type ${node.type}`);
+      console.error(`Unexpected bookmark type ${node.type}`);
       break;
   }
 
@@ -525,7 +525,7 @@ function insertFaviconForNode(node) {
         Services.scriptSecurityManager.getSystemPrincipal()
       );
     } catch (ex) {
-      Cu.reportError("Failed to import favicon data:" + ex);
+      console.error("Failed to import favicon data:" + ex);
     }
   }
 
@@ -543,7 +543,7 @@ function insertFaviconForNode(node) {
       Services.scriptSecurityManager.getSystemPrincipal()
     );
   } catch (ex) {
-    Cu.reportError("Failed to import favicon URI:" + ex);
+    console.error("Failed to import favicon URI:" + ex);
   }
 }
 

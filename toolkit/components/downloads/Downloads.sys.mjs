@@ -174,7 +174,7 @@ export var Downloads = {
             publicList
           );
         } catch (ex) {
-          Cu.reportError(ex);
+          console.error(ex);
         }
 
         let publicSummary = await this.getSummary(Downloads.PUBLIC);

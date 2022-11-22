@@ -182,7 +182,7 @@ export var PlacesDBUtils = {
             try {
               await db.execute(query, params || null);
             } catch (ex) {
-              Cu.reportError(ex);
+              console.error(ex);
               coherenceCheck = false;
             }
           }

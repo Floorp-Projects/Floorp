@@ -762,7 +762,7 @@ var PlacesOrganizer = {
           node: selectedNode,
           hiddenRows: ["folderPicker"],
         })
-        .catch(ex => Cu.reportError(ex));
+        .catch(ex => console.error(ex));
     } else if (!selectedNode && aNodeList[0]) {
       if (aNodeList.every(PlacesUtils.nodeIsURI)) {
         let uris = aNodeList.map(node => Services.io.newURI(node.uri));
@@ -771,7 +771,7 @@ var PlacesOrganizer = {
             uris,
             hiddenRows: ["folderPicker", "location", "keyword", "name"],
           })
-          .catch(ex => Cu.reportError(ex));
+          .catch(ex => console.error(ex));
       } else {
         let selectItemDesc = document.getElementById("selectItemDescription");
         let itemsCountLabel = document.getElementById("itemsCountText");
@@ -1335,7 +1335,7 @@ var ContentArea = {
         return view;
       }
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
     return ContentTree.view;
   },

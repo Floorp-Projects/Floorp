@@ -646,7 +646,7 @@ export var Bookmarks = Object.freeze({
         } catch (ex) {
           // This is not critical, regardless the bookmark has been created
           // and we should continue notifying the next ones.
-          Cu.reportError(
+          console.error(
             `An error occured while handling special bookmark data: ${ex}`
           );
         }
@@ -1596,7 +1596,7 @@ export var Bookmarks = Object.freeze({
           try {
             onResult(result);
           } catch (ex) {
-            Cu.reportError(ex);
+            console.error(ex);
           }
         }
       }
@@ -2279,7 +2279,7 @@ async function handleBookmarkItemSpecialData(itemId, item) {
         source: item.source,
       });
     } catch (ex) {
-      Cu.reportError(
+      console.error(
         `Failed to insert keyword "${item.keyword} for ${item.url}": ${ex}`
       );
     }
@@ -2293,7 +2293,7 @@ async function handleBookmarkItemSpecialData(itemId, item) {
       );
     } catch (ex) {
       // Invalid tag child, skip it.
-      Cu.reportError(
+      console.error(
         `Unable to set tags "${item.tags.join(", ")}" for ${item.url}: ${ex}`
       );
     }
@@ -2312,7 +2312,7 @@ async function handleBookmarkItemSpecialData(itemId, item) {
         annotations: new Map([[lazy.PlacesUtils.CHARSET_ANNO, charset]]),
       });
     } catch (ex) {
-      Cu.reportError(
+      console.error(
         `Failed to set charset "${item.charset}" for ${item.url}: ${ex}`
       );
     }

@@ -69,7 +69,7 @@ let InternalFaviconLoader = {
     try {
       request.cancel();
     } catch (ex) {
-      Cu.reportError(
+      console.error(
         "When cancelling a request for " +
           uri.spec +
           " because " +
@@ -1844,7 +1844,7 @@ export var PlacesUIUtils = {
       }
     ).catch(e => {
       // We want to report errors, but we still want to add the button then:
-      Cu.reportError(e);
+      console.error(e);
       return 0;
     });
 
@@ -2176,7 +2176,7 @@ function getTransactionsForTransferItems(
       // Only log if this is one of "our" types as external items, e.g. drag from
       // url bar to toolbar, shouldn't complain.
       if (PlacesUIUtils.PLACES_FLAVORS.includes(item.type)) {
-        Cu.reportError(
+        console.error(
           "Tried to move an unmovable Places " +
             "node, reverting to a copy operation."
         );

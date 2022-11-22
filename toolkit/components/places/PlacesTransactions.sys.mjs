@@ -1472,7 +1472,7 @@ PT.Remove.prototype = {
         try {
           await createItemsFromBookmarksTree(info, true);
         } catch (ex) {
-          Cu.reportError(`Unable to undo removal of ${info.guid}`);
+          console.error(`Unable to undo removal of ${info.guid}`);
         }
       }
     };
@@ -1646,7 +1646,7 @@ PT.RenameTag.prototype = {
             url = new URL(url.protocol + urlParams);
           }
         } catch (ex) {
-          Cu.reportError(
+          console.error(
             "Invalid bookmark url: " + row.getResultByName("url") + ": " + ex
           );
           continue;

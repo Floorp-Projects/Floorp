@@ -319,7 +319,7 @@ var DownloadCache = {
         url,
       });
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
   },
 
@@ -742,7 +742,7 @@ DownloadHistoryList.prototype = {
       try {
         this._insertPlacesNode(container.getChild(index));
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
 
