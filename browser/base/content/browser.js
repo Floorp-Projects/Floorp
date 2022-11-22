@@ -9832,25 +9832,21 @@ var ConfirmationHint = {
    * @param  anchor (DOM node, required)
    *         The anchor for the panel.
    * @param  messageId (string, required)
-   *         For getting the message string from browser.properties:
-   *         confirmationHint.<messageId>.label
+   *         For getting the message string from confirmationHints.ftl
    * @param  options (object, optional)
    *         An object with the following optional properties:
-   *         - event (DOM event): The event that triggered the feedback.
-   *         - showDescription (boolean): show description text (confirmationHint.<messageId>.description)
+   *         - event (DOM event): The event that triggered the feedback
+   *         - descriptionId (string): message ID of the description text
    *
    */
   show(anchor, messageId, options = {}) {
     this._reset();
 
-    this._message.textContent = gBrowserBundle.GetStringFromName(
-      `confirmationHint.${messageId}.label`
-    );
+    MozXULElement.insertFTLIfNeeded("browser/confirmationHints.ftl");
+    document.l10n.setAttributes(this._message, messageId);
 
-    if (options.showDescription) {
-      this._description.textContent = gBrowserBundle.GetStringFromName(
-        `confirmationHint.${messageId}.description`
-      );
+    if (options.descriptionId) {
+      document.l10n.setAttributes(this._description, options.descriptionId);
       this._description.hidden = false;
       this._panel.classList.add("with-description");
     } else {

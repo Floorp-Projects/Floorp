@@ -604,7 +604,10 @@ class LoginManagerPrompter {
           // visible icon as the anchor.
           const anchor = browser.ownerDocument.getElementById("identity-icon");
           lazy.log.debug("Showing the ConfirmationHint");
-          anchor.ownerGlobal.ConfirmationHint.show(anchor, "loginRemoved");
+          anchor.ownerGlobal.ConfirmationHint.show(
+            anchor,
+            "confirmation-hint-login-removed"
+          );
         },
       });
     }
@@ -786,7 +789,10 @@ class LoginManagerPrompter {
     if (notifySaved) {
       let anchor = notification.anchorElement;
       lazy.log.debug("Showing the ConfirmationHint.");
-      anchor.ownerGlobal.ConfirmationHint.show(anchor, "passwordSaved");
+      anchor.ownerGlobal.ConfirmationHint.show(
+        anchor,
+        "confirmation-hint-password-saved"
+      );
     }
 
     return notification;

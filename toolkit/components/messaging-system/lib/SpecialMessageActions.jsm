@@ -307,8 +307,8 @@ const SpecialMessageActions = {
       case "PIN_CURRENT_TAB":
         let tab = window.gBrowser.selectedTab;
         window.gBrowser.pinTab(tab);
-        window.ConfirmationHint.show(tab, "pinTab", {
-          showDescription: true,
+        window.ConfirmationHint.show(tab, "confirmation-hint-pin-tab", {
+          descriptionId: "confirmation-hint-pin-tab-description",
         });
         break;
       case "SHOW_FIREFOX_ACCOUNTS":
