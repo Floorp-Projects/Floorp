@@ -50,8 +50,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">최근 북마크</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">최근에 저장됨</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">저장된 북마크 모두 표시</string>
@@ -265,39 +263,18 @@
     <string name="search_settings_menu_item">검색 설정</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">이번만 검색:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">이번만 검색:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">이번만 검색:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">%1$s의 새 기능</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">이제 이전에 사용하던 부분을 쉽게 찾을 수 있습니다.</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">개인화된 %1$s 홈페이지</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">열린 탭, 북마크 및 방문 기록으로 이동합니다.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">깔끔하게 정리된 탭</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">향상된 레이아웃과 자동 탭 닫기로 탭을 깔끔하게 정리하세요.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">최근 검색</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">홈페이지와 탭에서 최근 검색을 다시 방문하세요.</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">이제 개인화된 Firefox 홈페이지에서 이전에 사용하던 부분을 쉽게 찾을 수 있습니다. 최근 탭, 북마크 및 검색 결과를 찾으세요.</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">개인화된 홈페이지를 만나보세요. 최근 탭, 북마크 및 검색 결과가 여기에 표시됩니다.</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">독립 인터넷에 오신 것을 환영합니다</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">나만의 인터넷에 오신 것을 환영합니다</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">더 많은 색상. 더 나은 개인 정보 보호. 이익보다는 사람들에 대한 헌신.</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">휴대전화에서 노트북으로 왔다가 다시 돌아가기</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">더 쉬워진 화면 전환</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -365,6 +342,14 @@
     <string name="preferences_add_private_browsing_shortcut">사생활 보호 모드 바로 가기 추가</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">HTTPS 전용 모드</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">쿠키 배너 감소</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">쿠키 배너 줄이기</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox는 자동으로 쿠키 배너에서 쿠키 요청을 거부하려고 시도합니다. 거부 옵션을 사용할 수 없는 경우, Firefox는 배너를 닫기 위해 모든 쿠키를 허용할 수 있습니다.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">보안 강화를 위해 HTTPS 암호화 프로토콜을 사용하여 사이트에 자동으로 연결을 시도합니다.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1290,34 +1275,21 @@
     <string name="delete_history_group_snackbar">그룹 삭제됨</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">%s에 오신걸 환영합니다!</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">더 나은 인터넷에 오신 것을 환영합니다</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">이익이 아닌 사람을 위해 만들어진 브라우저.</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">기기 간에 Firefox 동기화</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">중단한 부분부터 다시 시작하세요</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">이 기기의 %1$s에 북마크, 기록 및 비밀번호를 가져오세요.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">원활한 화면 전환을 위해 여러 기기에서 탭과 비밀번호를 동기화합니다.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">가입하기</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">로그인</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">동기화 켜짐</string>
 
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">상시 개인 정보 보호</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">기본적으로 사생활을 보호합니다</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s는 회사가 웹에서 사용자를 몰래 따라 다니는 것을 자동으로 중지합니다.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">전체 쿠키 보호 기능을 통해 추적기가 쿠키를 사용하여 사이트에서 사용자를 스토킹하는 것을 방지합니다.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1330,17 +1302,10 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">더 많은 추적기를 차단하여 페이지가 더 빨리 로드되지만, 일부 페이지의 기능이 손상될 수 있습니다.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">도구 모음 위치 선택</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">도구 모음을 쉽게 접근할 수 있는 곳에 놓으세요. 하단에 두거나 상단으로 옮기세요.</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">아래쪽에 두거나 위쪽으로 이동하세요.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">개인 정보 보호</string>
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">사용자가 자신의 데이터를 제어</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">우리는 %s가 무엇을 온라인에서 공유하고 우리와 공유할지 사용자가 제어할 수 있게 만들었습니다.</string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">Firefox를 사용하면 무엇을 온라인에서 공유하고 우리와 공유할지 사용자가 제어할 수 있습니다.</string>
     <!-- Text for the button to read the privacy notice -->
