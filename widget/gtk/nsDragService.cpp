@@ -1878,6 +1878,50 @@ bool nsDragService::SourceDataGetXDND(nsITransferable* aItem,
   return true;
 }
 
+bool nsDragService::SourceDataGetText(nsITransferable* aItem,
+                                      const nsACString& aMIMEType,
+                                      bool aNeedToDoConversionToPlainText,
+                                      GtkSelectionData* aSelectionData) {
+  LOGDRAGSERVICE("nsDragService::SourceDataGetPlain()");
+
+  nsresult rv;
+  nsCOMPtr<nsISupports> data;
+  rv = aItem->GetTransferData(PromiseFlatCString(aMIMEType).get(),
+                              getter_AddRefs(data));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  void* tmpData = nullptr;
+  uint32_t tmpDataLen = 0;
+
+  nsPrimitiveHelpers::CreateDataFromPrimitive(aMIMEType, data, &tmpData,
+                                              &tmpDataLen);
+  // if required, do the extra work to convert unicode to plain
+  // text and replace the output values with the plain text.
+  if (aNeedToDoConversionToPlainText) {
+    char* plainTextData = nullptr;
+    char16_t* castedUnicode = reinterpret_cast<char16_t*>(tmpData);
+    uint32_t plainTextLen = 0;
+    UTF16ToNewUTF8(castedUnicode, tmpDataLen / 2, &plainTextData,
+                   &plainTextLen);
+    if (tmpData) {
+      // this was not allocated using glib
+      free(tmpData);
+      tmpData = plainTextData;
+      tmpDataLen = plainTextLen;
+    }
+  }
+  if (tmpData) {
+    // this copies the data
+    GdkAtom target = gtk_selection_data_get_target(aSelectionData);
+    gtk_selection_data_set(aSelectionData, target, 8, (guchar*)tmpData,
+                           tmpDataLen);
+    // this wasn't allocated with glib
+    free(tmpData);
+  }
+
+  return true;
+}
+
 // We're asked to get data from mSourceDataItems and pass it to
 // GtkSelectionData (Gtk D&D interface).
 // We need to check mSourceDataItems data type and try to convert it
@@ -1913,32 +1957,16 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
   LOGDRAGSERVICE("  source data items %d", dragItems);
 #endif
 
-  // if someone was asking for text/plain, lookup unicode instead so
-  // we can convert it.
-  bool needToDoConversionToPlainText = false;
-
   nsDependentCString mimeFlavor(requestedTypeName.get());
-  const char* actualFlavor = nullptr;
+
   if (mimeFlavor.EqualsLiteral(kTextMime) ||
       mimeFlavor.EqualsLiteral(gTextPlainUTF8Type)) {
-    actualFlavor = kUnicodeMime;
-    needToDoConversionToPlainText = true;
-    LOGDRAGSERVICE("  convert %s => %s", actualFlavor, requestedTypeName.get());
-  }
-  // if someone was asking for _NETSCAPE_URL we need to convert to
-  // plain text but we also need to look for x-moz-url
-  else if (mimeFlavor.EqualsLiteral(gMozUrlType)) {
-    actualFlavor = kURLMime;
-    needToDoConversionToPlainText = true;
-    LOGDRAGSERVICE("  convert %s => %s", actualFlavor, requestedTypeName.get());
-  }
-  // if someone was asking for text/uri-list we need to convert to
-  // plain text.
-  else if (mimeFlavor.EqualsLiteral(gTextUriListType)) {
-    actualFlavor = gTextUriListType;
-    needToDoConversionToPlainText = true;
-    LOGDRAGSERVICE("  convert %s => %s", actualFlavor, requestedTypeName.get());
-
+    if (SourceDataGetText(item, nsDependentCString(kUnicodeMime),
+                          /* aNeedToDoConversionToPlainText */ true,
+                          aSelectionData)) {
+      return;
+    }
+  } else if (mimeFlavor.EqualsLiteral(gTextUriListType)) {
     // The desktop or file manager expects for drags of promise-file data
     // the text/uri-list flavor set to a temporary file that contains the
     // promise-file data.
@@ -1966,6 +1994,15 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
         return;
       }
     }
+
+    // fall back for text/uri-list
+    LOGDRAGSERVICE("  fall back to plain text/uri-list");
+    nsAutoCString list;
+    CreateURIList(mSourceDataItems, list);
+    gtk_selection_data_set(aSelectionData, target, 8, (guchar*)list.get(),
+                           list.Length());
+    // We're done here, data is set.
+    return;
   }
   // Someone is asking for the special Direct Save Protocol type.
   else if (mimeFlavor.EqualsLiteral(gXdndDirectSaveType)) {
@@ -1981,52 +2018,19 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
     if (SourceDataGetImage(item, aSelectionData)) {
       return;
     }
-  } else {
-    actualFlavor = requestedTypeName.get();
-    LOGDRAGSERVICE("  use %s", requestedTypeName.get());
-  }
-  nsresult rv;
-  nsCOMPtr<nsISupports> data;
-  rv = item->GetTransferData(actualFlavor, getter_AddRefs(data));
-  if (NS_SUCCEEDED(rv)) {
-    void* tmpData = nullptr;
-    uint32_t tmpDataLen = 0;
-
-    nsPrimitiveHelpers::CreateDataFromPrimitive(
-        nsDependentCString(actualFlavor), data, &tmpData, &tmpDataLen);
-    // if required, do the extra work to convert unicode to plain
-    // text and replace the output values with the plain text.
-    if (needToDoConversionToPlainText) {
-      char* plainTextData = nullptr;
-      char16_t* castedUnicode = reinterpret_cast<char16_t*>(tmpData);
-      uint32_t plainTextLen = 0;
-      UTF16ToNewUTF8(castedUnicode, tmpDataLen / 2, &plainTextData,
-                     &plainTextLen);
-      if (tmpData) {
-        // this was not allocated using glib
-        free(tmpData);
-        tmpData = plainTextData;
-        tmpDataLen = plainTextLen;
-      }
-    }
-    if (tmpData) {
-      // this copies the data
-      gtk_selection_data_set(aSelectionData, target, 8, (guchar*)tmpData,
-                             tmpDataLen);
-      // this wasn't allocated with glib
-      free(tmpData);
-    }
-  } else {
-    if (mimeFlavor.EqualsLiteral(gTextUriListType)) {
-      // fall back for text/uri-list
-      LOGDRAGSERVICE("  fall back to %s\n", requestedTypeName.get());
-      nsAutoCString list;
-      CreateURIList(mSourceDataItems, list);
-      gtk_selection_data_set(aSelectionData, target, 8, (guchar*)list.get(),
-                             list.Length());
+  } else if (mimeFlavor.EqualsLiteral(gMozUrlType)) {
+    // Someone was asking for _NETSCAPE_URL. We need to get it from
+    // transferable as x-moz-url and convert it to plain text.
+    // No need to check
+    if (SourceDataGetText(item, nsDependentCString(kURLMime),
+                          /* aNeedToDoConversionToPlainText */ true,
+                          aSelectionData)) {
       return;
     }
   }
+  // Just try to get and set whatever we're asked for.
+  SourceDataGetText(item, mimeFlavor,
+                    /* aNeedToDoConversionToPlainText */ false, aSelectionData);
 }
 
 void nsDragService::SourceBeginDrag(GdkDragContext* aContext) {
