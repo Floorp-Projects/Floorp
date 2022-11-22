@@ -805,6 +805,90 @@ add_task(async () => {
   await SpecialPowers.popPrefEnv();
 });
 
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
+      ["browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate"],
+      ["widget.disable-swipe-tracker", false],
+      ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
+      ["widget.swipe.success-velocity-contribution", 0.5],
+      ["apz.overscroll.enabled", true],
+      ["apz.test.logging_enabled", true],
+    ],
+  });
+
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:about",
+    true /* waitForLoad */
+  );
+
+  const URL_ROOT = getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content/",
+    "http://mochi.test:8888/"
+  );
+  BrowserTestUtils.loadURI(
+    tab.linkedBrowser,
+    URL_ROOT + "helper_swipe_gesture.html"
+  );
+  await BrowserTestUtils.browserLoaded(
+    tab.linkedBrowser,
+    false /* includeSubFrames */,
+    URL_ROOT + "helper_swipe_gesture.html"
+  );
+
+  // Make sure we can go back to the previous page.
+  ok(gBrowser.webNavigation.canGoBack);
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
+    // Set `overscroll-behavior-x: contain` and flush it.
+    content.document.documentElement.style.overscrollBehaviorX = "contain";
+    content.document.documentElement.getBoundingClientRect();
+    await content.wrappedJSObject.promiseApzFlushedRepaints();
+  });
+
+  // Start a pan gesture but keep touching.
+  await panLeftToRightBegin(tab.linkedBrowser, 100, 100, 2);
+
+  // Flush APZ pending requests to make sure the pan gesture has been processed.
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
+    await content.wrappedJSObject.promiseApzFlushedRepaints();
+  });
+
+  const isOverscrolled = await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [],
+    () => {
+      const scrollId = SpecialPowers.DOMWindowUtils.getViewId(
+        content.document.scrollingElement
+      );
+      const data = SpecialPowers.DOMWindowUtils.getCompositorAPZTestData();
+      return data.additionalData.some(entry => {
+        return (
+          entry.key == scrollId &&
+          entry.value.split(",").includes("overscrolled")
+        );
+      });
+    }
+  );
+
+  ok(isOverscrolled, "The root scroller should have overscrolled");
+
+  // Finish the pan gesture.
+  await panLeftToRightUpdate(tab.linkedBrowser, 100, 100, 2);
+  await panLeftToRightEnd(tab.linkedBrowser, 100, 100, 2);
+
+  // And wait a while to give a chance to navigate.
+  await waitForWhile();
+
+  // Make sure any navigation didn't happen.
+  is(tab.linkedBrowser.currentURI.spec, URL_ROOT + "helper_swipe_gesture.html");
+
+  BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
+});
+
 // NOTE: This test listens wheel events so that it causes an overscroll issue
 // (bug 1800022). To avoid the bug, we need to run this test case at the end
 // of this file.

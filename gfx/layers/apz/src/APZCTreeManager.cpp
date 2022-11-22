@@ -1642,6 +1642,9 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(
           return state.Finish(*this, std::move(aCallback));
         }
 
+        panInput.mOverscrollBehaviorAllowsSwipe =
+            state.mHit.mTargetApzc->OverscrollBehaviorAllowsSwipe();
+
         state.mResult = mInputQueue->ReceiveInputEvent(
             state.mHit.mTargetApzc,
             TargetConfirmationFlags{state.mHit.mHitResult}, panInput);
@@ -1649,9 +1652,6 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(
         // Update the out-parameters so they are what the caller expects.
         panInput.mPanStartPoint = *untransformedStartPoint;
         panInput.mPanDisplacement = *untransformedDisplacement;
-
-        panInput.mOverscrollBehaviorAllowsSwipe =
-            state.mHit.mTargetApzc->OverscrollBehaviorAllowsSwipe();
       }
       break;
     }
