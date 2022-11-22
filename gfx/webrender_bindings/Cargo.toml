@@ -21,6 +21,7 @@ thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 swgl = { path = "../wr/swgl" }
 wr_malloc_size_of = { path = "../wr/wr_malloc_size_of" }
 gecko-profiler = { path = "../../tools/profiler/rust-api" }
+remove_dir_all = "0.5.3"
 
 [dependencies.webrender]
 path = "../wr/webrender"
