@@ -10,28 +10,48 @@ function refreshMessages() {
   let windowMessages = {};
   let windowTitles = {};
   AboutWindowsMessages.getMessages(window, windowMessages, windowTitles);
-  let messagesUl = document.getElementById("messages-ul");
-  messagesUl.innerHTML = "";
+  let windowsDiv = document.getElementById("windows-div");
+  windowsDiv.innerHTML = "";
+  const templateCard = document.querySelector("template[name=window-card]");
   for (let i = 0; i < windowTitles.value.length; ++i) {
-    let titleLi = document.createElement("li");
-    let titleTextNode = document.createTextNode(windowTitles.value[i]);
-    if (i === 0) {
-      // bold the first window since it's the current one
-      let b = document.createElement("b");
-      b.appendChild(titleTextNode);
-      titleLi.appendChild(b);
-    } else {
-      titleLi.appendChild(titleTextNode);
-    }
+    let windowCard = templateCard.content
+      .cloneNode(true)
+      .querySelector("details");
+    // open the current window by default
+    windowCard.open = i === 0;
+    let summary = windowCard.querySelector("summary");
+    let titleSpan = summary.querySelector("h3.window-card-title");
+    titleSpan.appendChild(document.createTextNode(windowTitles.value[i]));
+    titleSpan.classList.toggle("current-window", windowCard.open);
+    let copyButton = summary.querySelector("button");
+    copyButton.addEventListener("click", async e => {
+      e.target.disabled = true;
+      await copyMessagesToClipboard(e);
+      e.target.disabled = false;
+    });
     let innerUl = document.createElement("ul");
     for (let j = 0; j < windowMessages.value[i].length; ++j) {
       let innerLi = document.createElement("li");
+      innerLi.className = "message";
       innerLi.innerText = windowMessages.value[i][j];
       innerUl.appendChild(innerLi);
     }
-    titleLi.appendChild(innerUl);
-    messagesUl.append(titleLi);
+    windowCard.appendChild(innerUl);
+    windowsDiv.append(windowCard);
   }
+}
+
+async function copyMessagesToClipboard(event) {
+  const details = event.target.parentElement.parentElement;
+  // Avoid copying the window name as it is Category 3 data,
+  // and only useful for the user to identify which window
+  // is which.
+  const messagesText =
+    Array.from(details.querySelector("ul").children)
+      .map(li => li.innerText)
+      .join("\n") + "\n";
+
+  await navigator.clipboard.writeText(messagesText);
 }
 
 function onLoad() {
