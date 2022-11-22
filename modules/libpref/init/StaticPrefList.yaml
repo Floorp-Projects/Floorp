@@ -12012,6 +12012,18 @@
   value: true
   mirror: always
 
+# WebTransport
+- name: network.webtransport.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# WebTransport Datagram support
+- name: network.webtransport.datagrams.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
