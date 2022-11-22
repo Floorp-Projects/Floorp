@@ -355,6 +355,13 @@ export class WelcomeScreen extends React.PureComponent {
           id => props.content?.tiles?.data.find(ckbx => ckbx.id === id)?.action
         ),
       };
+
+      // Send telemetry with selected checkbox ids
+      AboutWelcomeUtils.sendActionTelemetry(
+        props.messageId,
+        props.activeMultiSelect,
+        "SELECT_CHECKBOX"
+      );
     }
 
     if (["OPEN_URL", "SHOW_FIREFOX_ACCOUNTS"].includes(action.type)) {
