@@ -801,39 +801,55 @@ var snapshotFormatters = {
       for (let feature of featureLog.features) {
         let trs = [];
         for (let entry of feature.log) {
-          let contents;
-          if (!entry.hasOwnProperty("message")) {
-            // This is a default entry.
-            contents = entry.status + " by " + entry.type;
-          } else if (entry.message.length && entry.message[0] == "#") {
+          let bugNumber;
+          if (entry.hasOwnProperty("failureId")) {
             // This is a failure ID. See nsIGfxInfo.idl.
-            let m = /#BLOCKLIST_FEATURE_FAILURE_BUG_(\d+)/.exec(entry.message);
+            let m = /BUG_(\d+)/.exec(entry.failureId);
             if (m) {
-              let bugSpan = $.new("span");
-
-              let bugHref = $.new("a");
-              bugHref.href =
-                "https://bugzilla.mozilla.org/show_bug.cgi?id=" + m[1];
-              bugHref.setAttribute("data-l10n-name", "bug-link");
-              bugSpan.append(bugHref);
-              document.l10n.setAttributes(bugSpan, "support-blocklisted-bug", {
-                bugNumber: m[1],
-              });
-
-              contents = [bugSpan];
-            } else {
-              let unknownFailure = $.new("span");
-              document.l10n.setAttributes(unknownFailure, "unknown-failure", {
-                failureCode: entry.message.substr(1),
-              });
-              contents = [unknownFailure];
+              bugNumber = m[1];
             }
-          } else {
-            contents =
-              entry.status + " by " + entry.type + ": " + entry.message;
           }
 
-          trs.push($.new("tr", [$.new("td", contents)]));
+          let failureIdSpan = $.new("span", "");
+          if (bugNumber) {
+            let bugHref = $.new("a");
+            bugHref.href =
+              "https://bugzilla.mozilla.org/show_bug.cgi?id=" + bugNumber;
+            bugHref.setAttribute("data-l10n-name", "bug-link");
+            failureIdSpan.append(bugHref);
+            document.l10n.setAttributes(
+              failureIdSpan,
+              "support-blocklisted-bug",
+              {
+                bugNumber,
+              }
+            );
+          } else if (
+            entry.hasOwnProperty("failureId") &&
+            entry.failureId.length
+          ) {
+            document.l10n.setAttributes(failureIdSpan, "unknown-failure", {
+              failureCode: entry.failureId,
+            });
+          }
+
+          let messageSpan = $.new("span", "");
+          if (entry.hasOwnProperty("message") && entry.message.length) {
+            messageSpan.innerText = entry.message;
+          }
+
+          let typeCol = $.new("td", entry.type);
+          let statusCol = $.new("td", entry.status);
+          let messageCol = $.new("td", "");
+          let failureIdCol = $.new("td", "");
+          typeCol.style.width = "10%";
+          statusCol.style.width = "10%";
+          messageCol.style.width = "30%";
+          messageCol.appendChild(messageSpan);
+          failureIdCol.style.width = "50%";
+          failureIdCol.appendChild(failureIdSpan);
+
+          trs.push($.new("tr", [typeCol, statusCol, messageCol, failureIdCol]));
         }
         addRow("decisions", "#" + feature.name, [$.new("table", trs)]);
       }
