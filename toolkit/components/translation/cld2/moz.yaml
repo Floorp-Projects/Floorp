@@ -1,0 +1,37 @@
+# Version of this schema
+schema: 1
+
+bugzilla:
+  # Bugzilla product and component for this directory and subdirectories
+  product: Firefox
+  component: "Translation"
+
+# Document the source of externally hosted code
+origin:
+
+  # Short name of the package/library
+  name: cld2
+
+  description: Compact Language Detector 2
+
+  # Full URL for the package's homepage/etc
+  # Usually different from repository url
+  url: https://github.com/CLD2Owners/cld2
+
+  # Human-readable identifier for this version/release
+  # Generally "version NNN", "tag SSS", "bookmark SSS"
+  release: cffbd73e131353ca23de449b3b1a5182028a85a1
+
+  # Revision to pull in
+  # Must be a long or short commit SHA (long preferred)
+  revision: cffbd73e131353ca23de449b3b1a5182028a85a1
+
+  # The package's license, where possible using the mnemonic from
+  # https://spdx.org/licenses/
+  # Multiple licenses can be specified (as a YAML list)
+  # A "LICENSE" file must exist containing the full license text
+  license: Apache-2.0
+
+  notes: >
+    Imported in Bug 971047, cld2 is obsoleted by cld3 and abandoned upstream.
+    However, it is compiled to WASM using emscripten, so security-wise it is of lesser concern.
