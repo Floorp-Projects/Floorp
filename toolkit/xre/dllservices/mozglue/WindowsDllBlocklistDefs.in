@@ -255,8 +255,8 @@ ALL_PROCESSES += [
     DllBlocklistEntry("qipcap.dll", (7, 7, 819, 1)),
     DllBlocklistEntry("qipcap64.dll", (7, 7, 819, 1)),
 
-    # Cylance
-    DllBlocklistEntry("CylanceMemDef64.dll", (2, 48, 0, 707)),
+    # Cylance, bug 1756190 and bug 1799562
+    DllBlocklistEntry("CylanceMemDef64.dll", (2, 48, 4, 1125)),
 ]
 
 ALL_PROCESSES_TESTS += [
