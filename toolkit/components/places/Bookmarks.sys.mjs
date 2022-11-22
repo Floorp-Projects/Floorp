@@ -1756,6 +1756,9 @@ export var Bookmarks = Object.freeze({
       if (!parent || parent.type != this.TYPE_FOLDER) {
         throw new Error("No folder found for the provided GUID.");
       }
+      if (parent._childCount == 0) {
+        return;
+      }
 
       let sortedChildren = await reorderChildren(
         parent,
@@ -1764,28 +1767,24 @@ export var Bookmarks = Object.freeze({
       );
 
       const notifications = [];
-
-      // Note that child.index is the old index.
-      for (let i = 0; i < sortedChildren.length; ++i) {
-        let child = sortedChildren[i];
+      for (let child of sortedChildren) {
         notifications.push(
           new PlacesBookmarkMoved({
             id: child._id,
             itemType: child.type,
-            url: child.url && child.url.href,
+            url: child.url?.href,
             guid: child.guid,
             parentGuid: child.parentGuid,
             source: options.source,
-            index: i,
+            index: child.index,
             oldParentGuid: child.parentGuid,
-            oldIndex: child.index,
+            oldIndex: child._oldIndex,
             isTagging:
               child.parentGuid === Bookmarks.tagsGuid ||
               parent.parentGuid === Bookmarks.tagsGuid,
           })
         );
       }
-
       if (notifications.length) {
         PlacesObservers.notifyListeners(notifications);
       }
@@ -2791,152 +2790,90 @@ function reorderChildren(parent, orderedChildrenGuids, options) {
     "Bookmarks.jsm: reorderChildren",
     db =>
       db.executeTransaction(async function() {
-        // Select all of the direct children for the given parent.
-        let children = await fetchBookmarksByParent(db, {
-          parentGuid: parent.guid,
-        });
-        if (!children.length) {
+        // Fetch old indices for the notifications.
+        const oldIndices = new Map();
+        (
+          await db.executeCached(
+            `SELECT guid, position FROM moz_bookmarks WHERE parent = :parentId`,
+            { parentId: parent._id }
+          )
+        ).forEach(r =>
+          oldIndices.set(
+            r.getResultByName("guid"),
+            r.getResultByName("position")
+          )
+        );
+        // By the time the caller collects guids and the time reorder is invoked
+        // new bookmarks may appear, and the passed-in list becomes incomplete.
+        // To avoid unnecessary work then skip reorder if children are already
+        // in the requested sort order.
+        let lastIndex = 0,
+          needReorder = false;
+        for (let guid of orderedChildrenGuids) {
+          let requestedIndex = oldIndices.get(guid);
+          if (requestedIndex === undefined) {
+            // doesn't exist, just ignore it.
+            continue;
+          }
+          if (requestedIndex < lastIndex) {
+            needReorder = true;
+            break;
+          }
+          lastIndex = requestedIndex;
+        }
+        if (!needReorder) {
           return [];
         }
 
-        // Maps of GUIDs to indices for fast lookups in the comparator function.
-        let guidIndices = new Map();
-        let currentIndices = new Map();
-        for (let i = 0; i < orderedChildrenGuids.length; ++i) {
-          let guid = orderedChildrenGuids[i];
-          guidIndices.set(guid, i);
-        }
-
-        // If we got an incomplete list but everything we have is in the right
-        // order, we do nothing.
-        let needReorder = true;
-        let requestedChildIndices = [];
-        for (let i = 0; i < children.length; ++i) {
-          // Take the opportunity to build currentIndices here, since we already
-          // are iterating over the children array.
-          currentIndices.set(children[i].guid, i);
-
-          if (guidIndices.has(children[i].guid)) {
-            let index = guidIndices.get(children[i].guid);
-            requestedChildIndices.push(index);
+        const valuesFragment = orderedChildrenGuids
+          .map((g, i) => `("${g}", ${i})`)
+          .join();
+        await db.execute(
+          `UPDATE moz_bookmarks
+           SET position = sorted.pos,
+               lastModified = :lastModified
+           FROM (
+             WITH fixed(guid, pos) AS (
+               VALUES ${valuesFragment}
+             )
+             SELECT b.id,
+                    row_number() OVER (ORDER BY CASE WHEN fixed.pos IS NULL THEN 1 ELSE 0 END ASC, fixed.pos ASC, position ASC) - 1 AS pos
+             FROM moz_bookmarks b
+             LEFT JOIN fixed ON b.guid = fixed.guid
+             WHERE parent = :parentId
+           ) AS sorted
+           WHERE sorted.id = moz_bookmarks.id`,
+          {
+            parentId: parent._id,
+            lastModified: lazy.PlacesUtils.toPRTime(options.lastModified),
           }
-        }
-
-        if (requestedChildIndices.length) {
-          needReorder = false;
-          for (let i = 1; i < requestedChildIndices.length; ++i) {
-            if (requestedChildIndices[i - 1] > requestedChildIndices[i]) {
-              needReorder = true;
-              break;
-            }
-          }
-        }
-
-        if (needReorder) {
-          // Reorder the children array according to the specified order, provided
-          // GUIDs come first, others are appended in somehow random order.
-          children.sort((a, b) => {
-            // This works provided fetchBookmarksByParent returns sorted children.
-            if (!guidIndices.has(a.guid) && !guidIndices.has(b.guid)) {
-              return currentIndices.get(a.guid) < currentIndices.get(b.guid)
-                ? -1
-                : 1;
-            }
-            if (!guidIndices.has(a.guid)) {
-              return 1;
-            }
-            if (!guidIndices.has(b.guid)) {
-              return -1;
-            }
-            return guidIndices.get(a.guid) < guidIndices.get(b.guid) ? -1 : 1;
-          });
-
-          // Update the bookmarks position now.  If any unknown guid have been
-          // inserted meanwhile, its position will be set to -position, and we'll
-          // handle it later.
-          // To do the update in a single step, we build a VALUES (guid, position)
-          // table.  We then use count() in the sorting table to avoid skipping values
-          // when no more existing GUIDs have been provided.
-          let valuesTable = children
-            .map((child, i) => `("${child.guid}", ${i})`)
-            .join();
-          await db.execute(
-            `WITH sorting(g, p) AS (
-             VALUES ${valuesTable}
-           )
-           UPDATE moz_bookmarks SET
-             position = (
-               SELECT CASE count(*) WHEN 0 THEN -position
-                                           ELSE count(*) - 1
-                      END
-               FROM sorting a
-               JOIN sorting b ON b.p <= a.p
-               WHERE a.g = guid
-             ),
-             lastModified = :lastModified
-           WHERE parent = :parentId
-          `,
-            {
-              parentId: parent._id,
-              lastModified: lazy.PlacesUtils.toPRTime(options.lastModified),
-            }
-          );
-
-          let syncChangeDelta = lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
-            options.source
-          );
-          await setAncestorsLastModified(
-            db,
-            parent.guid,
-            options.lastModified,
-            syncChangeDelta
-          );
-
-          // Update position of items that could have been inserted in the meanwhile.
-          // Since this can happen rarely and it's only done for schema coherence
-          // resonds, we won't notify about these changes.
-          await db.executeCached(
-            `CREATE TEMP TRIGGER moz_bookmarks_reorder_trigger
-             AFTER UPDATE OF position ON moz_bookmarks
-             WHEN NEW.position = -1
-           BEGIN
-             UPDATE moz_bookmarks
-             SET position = (SELECT MAX(position) FROM moz_bookmarks
-                             WHERE parent = NEW.parent) +
-                            (SELECT count(*) FROM moz_bookmarks
-                             WHERE parent = NEW.parent
-                               AND position BETWEEN OLD.position AND -1)
-             WHERE guid = NEW.guid;
-           END
-          `
-          );
-
-          await db.executeCached(
-            `UPDATE moz_bookmarks SET position = -1 WHERE position < 0`
-          );
-
-          await db.executeCached(`DROP TRIGGER moz_bookmarks_reorder_trigger`);
-        }
-
-        // Remove the Sync orphan annotation from the reordered children, so that
-        // Sync doesn't try to reparent them once it sees the original parents. We
-        // only do this for explicitly ordered children, to avoid removing orphan
-        // annos set by Sync.
-        let possibleOrphanIds = [];
-        for (let child of children) {
-          if (guidIndices.has(child.guid)) {
-            possibleOrphanIds.push(child._id);
-          }
-        }
-        await db.executeCached(
-          `DELETE FROM moz_items_annos
-         WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes
-                                    WHERE name = :orphanAnno) AND
-               item_id IN (${possibleOrphanIds.join(", ")})`,
-          { orphanAnno: lazy.PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO }
         );
 
-        return children;
+        let syncChangeDelta = lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
+          options.source
+        );
+        await setAncestorsLastModified(
+          db,
+          parent.guid,
+          options.lastModified,
+          syncChangeDelta
+        );
+        // Fetch bookmarks for the notifications, adding _oldIndex to each.
+        return (
+          await fetchBookmarksByParent(db, {
+            parentGuid: parent.guid,
+          })
+        ).map(c => {
+          // We're not returning these objects to the caller, but just in case
+          // we'd decide to do it in the future, make sure this will be removed.
+          // See rowsToItemsArray() for additional details.
+          Object.defineProperty(c, "_oldIndex", {
+            value: oldIndices.get(c.guid) || 0,
+            enumerable: false,
+            configurable: true,
+          });
+          return c;
+        });
       })
   );
 }
