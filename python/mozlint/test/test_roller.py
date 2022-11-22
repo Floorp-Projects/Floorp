@@ -14,6 +14,7 @@ import pytest
 
 from mozlint.errors import LintersNotConfigured, NoValidLinter
 from mozlint.result import Issue, ResultSummary
+from mozlint.roller import LintRoller
 from itertools import chain
 
 
@@ -152,26 +153,41 @@ def test_roll_warnings(lint, linters, files):
     assert result.total_suppressed_warnings == 0
 
 
-def test_roll_code_review(monkeypatch, lint, linters, files):
+def test_roll_code_review(monkeypatch, linters, files):
     monkeypatch.setenv("CODE_REVIEW", "1")
-    lint.lintargs["show_warnings"] = False
+    lint = LintRoller(root=here, show_warnings=False)
     lint.read(linters("warning"))
     result = lint.roll(files)
     assert len(result.issues) == 1
     assert result.total_issues == 2
     assert len(result.suppressed_warnings) == 0
     assert result.total_suppressed_warnings == 0
+    assert result.returncode == 1
 
 
-def test_roll_code_review_warnings_disabled(monkeypatch, lint, linters, files):
+def test_roll_code_review_warnings_disabled(monkeypatch, linters, files):
     monkeypatch.setenv("CODE_REVIEW", "1")
-    lint.lintargs["show_warnings"] = False
+    lint = LintRoller(root=here, show_warnings=False)
     lint.read(linters("warning_no_code_review"))
     result = lint.roll(files)
     assert len(result.issues) == 0
     assert result.total_issues == 0
+    assert lint.result.fail_on_warnings is True
     assert len(result.suppressed_warnings) == 1
     assert result.total_suppressed_warnings == 2
+    assert result.returncode == 0
+
+
+def test_roll_code_review_warnings_soft(linters, files):
+    lint = LintRoller(root=here, show_warnings="soft")
+    lint.read(linters("warning_no_code_review"))
+    result = lint.roll(files)
+    assert len(result.issues) == 1
+    assert result.total_issues == 2
+    assert lint.result.fail_on_warnings is False
+    assert len(result.suppressed_warnings) == 0
+    assert result.total_suppressed_warnings == 0
+    assert result.returncode == 0
 
 
 def fake_run_worker(config, paths, **lintargs):

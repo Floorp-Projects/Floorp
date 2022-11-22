@@ -46,10 +46,13 @@ class MozlintParser(ArgumentParser):
         [
             ["-W", "--warnings"],
             {
+                "const": True,
+                "nargs": "?",
+                "choices": ["soft"],
                 "dest": "show_warnings",
-                "default": False,
-                "action": "store_true",
-                "help": "Display and fail on warnings in addition to errors.",
+                "help": "Display and fail on warnings in addition to errors. "
+                "--warnings=soft can be used to report warnings but only fail "
+                "on errors.",
             },
         ],
         [
