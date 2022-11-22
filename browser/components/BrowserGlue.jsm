@@ -818,12 +818,6 @@ XPCOMUtils.defineLazyGetter(lazy, "gBrowserBundle", function() {
   );
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gTabbrowserBundle", function() {
-  return Services.strings.createBundle(
-    "chrome://browser/locale/tabbrowser.properties"
-  );
-});
-
 const listeners = {
   observers: {
     "gmp-plugin-crash": ["PluginManager"],
@@ -3101,56 +3095,48 @@ BrowserGlue.prototype = {
     // Our prompt for quitting is most important, so replace others.
     win.gDialogBox.replaceDialogIfOpen();
 
-    let title, buttonLabel;
-    // More than 1 window. Compose our own message.
+    let titleId, buttonLabelId;
     if (windowcount > 1) {
-      title = lazy.gTabbrowserBundle.GetStringFromName(
-        "tabs.closeWindowsTitle"
-      );
-      title = lazy.PluralForm.get(windowcount, title).replace(
-        /#1/,
-        windowcount
-      );
-
-      buttonLabel =
-        AppConstants.platform == "win"
-          ? "tabs.closeWindowsButtonWin"
-          : "tabs.closeWindowsButton";
-      buttonLabel = lazy.gTabbrowserBundle.GetStringFromName(buttonLabel);
+      // More than 1 window. Compose our own message.
+      titleId = {
+        id: "tabbrowser-confirm-close-windows-title",
+        args: { windowCount: windowcount },
+      };
+      buttonLabelId = "tabbrowser-confirm-close-windows-button";
     } else if (shouldWarnForShortcut) {
-      let productName = lazy.gBrandBundle.GetStringFromName("brandShorterName");
-      title = lazy.gTabbrowserBundle.formatStringFromName(
-        "tabs.closeTabsWithKeyTitle",
-        [productName]
-      );
-      buttonLabel = lazy.gTabbrowserBundle.formatStringFromName(
-        "tabs.closeTabsWithKeyButton",
-        [productName]
-      );
+      titleId = "tabbrowser-confirm-close-tabs-with-key-title";
+      buttonLabelId = "tabbrowser-confirm-close-tabs-with-key-button";
     } else {
-      title = lazy.gTabbrowserBundle.GetStringFromName("tabs.closeTabsTitle");
-      title = lazy.PluralForm.get(pagecount, title).replace("#1", pagecount);
-      buttonLabel = lazy.gTabbrowserBundle.GetStringFromName(
-        "tabs.closeButtonMultiple"
-      );
+      titleId = {
+        id: "tabbrowser-confirm-close-tabs-title",
+        args: { tabCount: pagecount },
+      };
+      buttonLabelId = "tabbrowser-confirm-close-tabs-button";
     }
 
     // The checkbox label is different depending on whether the shortcut
     // was used to quit or not.
-    let checkboxLabel;
+    let checkboxLabelId;
     if (shouldWarnForShortcut) {
-      let quitKeyElement = win.document.getElementById("key_quitApplication");
-      let quitKey = lazy.ShortcutUtils.prettifyShortcut(quitKeyElement);
-
-      checkboxLabel = lazy.gTabbrowserBundle.formatStringFromName(
-        "tabs.closeTabsWithKeyConfirmCheckbox",
-        [quitKey]
-      );
+      const quitKeyElement = win.document.getElementById("key_quitApplication");
+      const quitKey = lazy.ShortcutUtils.prettifyShortcut(quitKeyElement);
+      checkboxLabelId = {
+        id: "tabbrowser-confirm-close-tabs-with-key-checkbox",
+        args: { quitKey },
+      };
     } else {
-      checkboxLabel = lazy.gTabbrowserBundle.GetStringFromName(
-        "tabs.closeTabsConfirmCheckbox"
-      );
+      checkboxLabelId = "tabbrowser-confirm-close-tabs-checkbox";
     }
+
+    const [
+      title,
+      buttonLabel,
+      checkboxLabel,
+    ] = win.gBrowser.tabLocalization.formatMessagesSync([
+      titleId,
+      buttonLabelId,
+      checkboxLabelId,
+    ]);
 
     let warnOnClose = { value: true };
     let flags =
@@ -3159,13 +3145,13 @@ BrowserGlue.prototype = {
     // buttonPressed will be 0 for closing, 1 for cancel (don't close/quit)
     let buttonPressed = Services.prompt.confirmEx(
       win,
-      title,
+      title.value,
       null,
       flags,
-      buttonLabel,
+      buttonLabel.value,
       null,
       null,
-      checkboxLabel,
+      checkboxLabel.value,
       warnOnClose
     );
     Services.telemetry.setEventRecordingEnabled("close_tab_warning", true);
