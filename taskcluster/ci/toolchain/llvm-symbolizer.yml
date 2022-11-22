@@ -198,7 +198,7 @@ macosx64-aarch64-llvm-symbolizer-trunk:
     attributes:
         cached_task: false
     treeherder:
-        symbol: TM(llvm-symbolizer-aarch64-trunk)
+        symbol: TM(llvm-sym-aarch64-trunk)
     run:
         arguments:
             - aarch64-apple-darwin
