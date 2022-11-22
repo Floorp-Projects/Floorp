@@ -45,7 +45,7 @@ decorate_task(
     );
     Assert.equal(Services.prefs.getCharPref(rolloutPref, "default"), "default");
 
-    let initPromise = Normandy.init();
+    let initPromise = Normandy.init({ runAsync: false });
 
     // note: There are no awaits before these asserts, so only the part of
     // Normandy's initialization before its first await can run.

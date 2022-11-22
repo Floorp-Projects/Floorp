@@ -83,7 +83,7 @@ var Normandy = {
     // Wait for the UI to be ready, or time out after 5 minutes.
     if (runAsync) {
       await Promise.race([
-        this.uiAvailableNotificationObserved,
+        this.uiAvailableNotificationObserved.promise,
         new Promise(resolve => setTimeout(resolve, 5 * 60 * 1000)),
       ]);
     }
