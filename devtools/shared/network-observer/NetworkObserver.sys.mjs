@@ -137,13 +137,6 @@ export class NetworkObserver {
    */
   #openRequests = new lazy.ChannelMap();
   /**
-   * Object that holds response data coming from this.#httpResponseExaminer.
-   * The response data stored for each channel is an object with 2 properties:
-   * headers and cookies.
-   * @type {ChannelMap}
-   */
-  #openResponses = new lazy.ChannelMap();
-  /**
    * Network response bodies are piped through a buffer of the given size
    * (in bytes).
    *
@@ -215,14 +208,6 @@ export class NetworkObserver {
       this.#serviceWorkerRequest,
       "service-worker-synthesized-response"
     );
-  }
-
-  getResponseByChannel(channel) {
-    return this.#openResponses.get(channel);
-  }
-
-  deleteResponseByChannel(channel) {
-    return this.#openResponses.delete(channel);
   }
 
   setSaveRequestAndResponseBodies(save) {
@@ -376,9 +361,7 @@ export class NetworkObserver {
   #httpResponseExaminer = DevToolsInfaillibleUtils.makeInfallible(
     (subject, topic, blockedReason) => {
       // The httpResponseExaminer is used to retrieve the uncached response
-      // headers. The data retrieved is stored in openResponses. The
-      // NetworkResponseListener is responsible with updating the httpActivity
-      // object with the data from the new object in openResponses.
+      // headers.
       if (
         this.#isDestroyed ||
         (topic != "http-on-examine-response" &&
@@ -407,9 +390,10 @@ export class NetworkObserver {
           : channel.responseStatus
       );
 
-      // Read response headers and cookies, and add an entry in #openResponses.
+      // Read response headers and cookies.
+      const responseHeaders = [];
+      const responseCookies = [];
       if (!blockedOrFailed) {
-        const responseHeaders = [];
         const setCookieHeaders = [];
         channel.visitOriginalResponseHeaders({
           visitHeader(name, value) {
@@ -426,13 +410,9 @@ export class NetworkObserver {
           return;
         }
 
-        const responseCookies = setCookieHeaders.reduce((result, header) => {
+        setCookieHeaders.forEach(header => {
           const cookies = lazy.NetworkHelper.parseSetCookieHeader(header);
-          return result.concat(cookies);
-        }, []);
-        this.#openResponses.set(channel, {
-          cookies: responseCookies,
-          headers: responseHeaders,
+          responseCookies.push(...cookies);
         });
       }
 
@@ -455,6 +435,7 @@ export class NetworkObserver {
         statusText = channel.responseStatusText;
       }
 
+      let httpActivity = this.#createOrGetActivityObject(channel);
       if (topic === "http-on-examine-cached-response") {
         // Service worker requests emits cached-response notification on non-e10s,
         // and we fake one on e10s.
@@ -464,7 +445,6 @@ export class NetworkObserver {
         // If this is a cached response (which are also emitted by service worker requests),
         // there never was a request event so we need to construct one here
         // so the frontend gets all the expected events.
-        let httpActivity = this.#createOrGetActivityObject(channel);
         if (!httpActivity.owner) {
           httpActivity = this.#createNetworkEvent(channel, {
             fromCache: !fromServiceWorker,
@@ -504,6 +484,11 @@ export class NetworkObserver {
         );
       } else if (topic === "http-on-failed-opening-request") {
         this.#createNetworkEvent(channel, { blockedReason });
+      }
+
+      if (httpActivity.owner) {
+        httpActivity.owner.addResponseHeaders(responseHeaders);
+        httpActivity.owner.addResponseCookies(responseCookies);
       }
     }
   );
@@ -1468,11 +1453,10 @@ export class NetworkObserver {
   }
 
   /*
-   * Clears all open requests and responses
+   * Clears the open requests channel map.
    */
   clear() {
     this.#openRequests.clear();
-    this.#openResponses.clear();
   }
 
   /**
