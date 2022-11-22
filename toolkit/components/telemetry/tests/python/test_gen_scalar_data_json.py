@@ -3,13 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import json
-import mozunit
 import os
 import sys
 import tempfile
 import unittest
 from io import StringIO
 from os import path
+
+import mozunit
 
 TELEMETRY_ROOT_PATH = path.abspath(
     path.join(path.dirname(__file__), path.pardir, path.pardir)

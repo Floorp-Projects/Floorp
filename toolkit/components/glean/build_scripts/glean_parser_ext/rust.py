@@ -12,11 +12,11 @@ import enum
 import json
 
 import jinja2
-
-from js import ID_BITS, ID_SIGNAL_BITS
-from util import generate_metric_ids, generate_ping_ids, get_metrics
 from glean_parser import util
 from glean_parser.metrics import Rate
+from util import generate_metric_ids, generate_ping_ids, get_metrics
+
+from js import ID_BITS, ID_SIGNAL_BITS
 
 # The list of all args to CommonMetricData.
 # No particular order is required, but I have these in common_metric_data.rs

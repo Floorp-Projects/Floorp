@@ -3,11 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import io
-import mozunit
+import sys
 from os import path
 from pathlib import Path
-import sys
 
+import mozunit
 from expect_helper import expect
 
 # Shenanigans to import the js outputter extension
@@ -15,8 +15,9 @@ FOG_ROOT_PATH = path.abspath(
     path.join(path.dirname(__file__), path.pardir, path.pardir)
 )
 sys.path.append(path.join(FOG_ROOT_PATH, "build_scripts", "glean_parser_ext"))
-import js
 import run_glean_parser
+
+import js
 
 
 def test_all_metric_types():

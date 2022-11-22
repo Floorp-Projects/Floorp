@@ -9,15 +9,15 @@ Outputter to generate Rust code for metrics.
 """
 
 import enum
-import jinja2
 import json
 import sys
 
-from js import ID_BITS, PING_INDEX_BITS
-from util import type_ids_and_categories
+import jinja2
 from glean_parser import util
 from glean_parser.metrics import Rate
+from util import type_ids_and_categories
 
+from js import ID_BITS, PING_INDEX_BITS
 
 # The list of all args to CommonMetricData.
 # No particular order is required, but I have these in common_metric_data.rs

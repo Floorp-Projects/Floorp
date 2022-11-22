@@ -2,12 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import atexit
 import io
 import re
-import yaml
-import atexit
-from . import shared_telemetry_utils as utils
 
+import yaml
+
+from . import shared_telemetry_utils as utils
 from .shared_telemetry_utils import ParserError
 
 atexit.register(ParserError.exit_func)

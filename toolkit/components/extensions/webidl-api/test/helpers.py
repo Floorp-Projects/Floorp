@@ -6,7 +6,6 @@ import sys
 
 import mozpack.path as mozpath
 
-
 setup_called = False
 
 

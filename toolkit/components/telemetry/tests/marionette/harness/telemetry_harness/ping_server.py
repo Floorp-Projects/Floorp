@@ -6,7 +6,6 @@ import json
 import zlib
 
 import mozlog
-
 import wptserve.logger
 from marionette_harness.runner import httpd
 

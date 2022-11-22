@@ -23,31 +23,27 @@
 
 from __future__ import print_function
 
-import buildconfig
+import ctypes
 import errno
-import sys
-import platform
 import os
+import platform
 import re
 import shutil
-import textwrap
 import subprocess
+import sys
+import textwrap
 import time
-import ctypes
-
 from optparse import OptionParser
 
-from mozbuild.util import memoize
+import buildconfig
 from mozbuild.generated_sources import (
     get_filename_with_digest,
     get_generated_sources,
     get_s3_region_and_bucket,
 )
+from mozbuild.util import memoize
 from mozpack.copier import FileRegistry
-from mozpack.manifests import (
-    InstallManifest,
-    UnreadableInstallManifest,
-)
+from mozpack.manifests import InstallManifest, UnreadableInstallManifest
 
 # Utility classes
 

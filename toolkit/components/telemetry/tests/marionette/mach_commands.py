@@ -9,11 +9,8 @@ import os
 import sys
 
 from mach.decorators import Command
-
-from mozbuild.base import (
-    MachCommandConditions as conditions,
-    BinaryNotFoundException,
-)
+from mozbuild.base import BinaryNotFoundException
+from mozbuild.base import MachCommandConditions as conditions
 
 
 def create_parser_tests():
@@ -26,11 +23,9 @@ def create_parser_tests():
 
 
 def run_telemetry(tests, binary=None, topsrcdir=None, **kwargs):
-    from mozlog.structured import commandline
-
-    from telemetry_harness.runtests import TelemetryTestRunner
-
     from marionette_harness.runtests import MarionetteHarness
+    from mozlog.structured import commandline
+    from telemetry_harness.runtests import TelemetryTestRunner
 
     parser = create_parser_tests()
 

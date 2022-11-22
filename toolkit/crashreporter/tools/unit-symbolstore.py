@@ -3,8 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from unittest import mock
-import mozunit
 import os
 import shutil
 import struct
@@ -12,13 +10,14 @@ import subprocess
 import sys
 import tempfile
 import unittest
-import buildconfig
-
+from unittest import mock
 from unittest.mock import patch
-from mozpack.manifests import InstallManifest
-import mozpack.path as mozpath
 
+import buildconfig
+import mozpack.path as mozpath
+import mozunit
 import symbolstore
+from mozpack.manifests import InstallManifest
 from symbolstore import realpath
 
 # Some simple functions to mock out files that the platform-specific dumpers will accept.
