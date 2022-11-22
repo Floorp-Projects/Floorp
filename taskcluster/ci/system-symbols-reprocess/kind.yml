@@ -28,7 +28,7 @@ job-template:
     description: Reprocess Symbols on Crash-Stats
     attributes:
         cron: true
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         docker-image: {in-tree: system-symbols-linux-scraper}
         max-run-time: 7200
