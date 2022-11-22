@@ -5610,9 +5610,16 @@
   value: 0.66
   mirror: always
 
+# The maximum size of the GPU path cache in MB.
 - name: gfx.canvas.accelerated.gpu-path-size
   type: RelaxedAtomicUint32
   value: 4
+  mirror: always
+
+# The maximum allowed complexity of a GPU path.
+- name: gfx.canvas.accelerated.gpu-path-complexity
+  type: RelaxedAtomicUint32
+  value: 4000
   mirror: always
 
 # 0x7fff is the maximum supported xlib surface size and is more than enough for canvases.

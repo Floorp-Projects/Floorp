@@ -169,6 +169,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     uint32_t mPathVertexOffset = 0;
     // The maximum size of the GPU path buffer.
     uint32_t mPathVertexCapacity = 0;
+    // The maximum supported type complexity of a GPU path.
+    uint32_t mPathMaxComplexity = 0;
     RefPtr<WebGLProgramJS> mSolidProgram;
     RefPtr<WebGLUniformLocationJS> mSolidProgramViewport;
     RefPtr<WebGLUniformLocationJS> mSolidProgramAA;
