@@ -92,6 +92,12 @@ void APZCTreeManagerChild::SetAllowedTouchBehavior(
   SendSetAllowedTouchBehavior(aInputBlockId, aValues);
 }
 
+void APZCTreeManagerChild::SetBrowserGestureResponse(
+    uint64_t aInputBlockId, BrowserGestureResponse aResponse) {
+  MOZ_ASSERT(NS_IsMainThread());
+  SendSetBrowserGestureResponse(aInputBlockId, aResponse);
+}
+
 void APZCTreeManagerChild::StartScrollbarDrag(
     const ScrollableLayerGuid& aGuid, const AsyncDragMetrics& aDragMetrics) {
   MOZ_ASSERT(NS_IsMainThread());

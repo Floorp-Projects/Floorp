@@ -131,6 +131,11 @@ APZEventResult PanGesture(PanGestureInput::PanGestureType aType,
   PanGestureInput input(aType, MillisecondsSinceStartup(aTime), aTime, aPoint,
                         aDelta, aModifiers);
   input.mSimulateMomentum = aSimulateMomentum;
+  if constexpr (std::is_same_v<InputReceiver, TestAsyncPanZoomController>) {
+    // In the case of TestAsyncPanZoomController we know for sure that the
+    // event will be handled by APZ so set it explicitly.
+    input.mHandledByAPZ = true;
+  }
   return aTarget->ReceiveInputEvent(input);
 }
 

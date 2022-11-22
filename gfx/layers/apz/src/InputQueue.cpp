@@ -454,17 +454,21 @@ APZEventResult InputQueue::ReceivePanGestureInput(
     CancelAnimationsForNewBlock(block);
     MaybeRequestContentResponse(aTarget, block);
 
-    if (aFlags.mTargetConfirmed && event.AllowsSwipe() &&
-        !CanScrollTargetHorizontally(event, block)) {
-      // This event may trigger a swipe gesture, depending on what our caller
-      // wants to do it. We need to suspend handling of this block until we get
-      // a content response which will tell us whether to proceed or abort the
-      // block.
-      block->SetNeedsToWaitForContentResponse(true);
+    if (event.AllowsSwipe() && !CanScrollTargetHorizontally(event, block)) {
+      // We will ask the browser whether this pan event is going to be used for
+      // swipe or not, so we need to wait the response.
+      block->SetNeedsToWaitForBrowserGestureResponse(true);
+      if (aFlags.mTargetConfirmed) {
+        // This event may trigger a swipe gesture, depending on what our caller
+        // wants to do it. We need to suspend handling of this block until we
+        // get a content response which will tell us whether to proceed or abort
+        // the block.
+        block->SetNeedsToWaitForContentResponse(true);
 
-      // Inform our caller that we haven't scrolled in response to the event
-      // and that a swipe can be started from this event if desired.
-      result.SetStatusAsIgnore();
+        // Inform our caller that we haven't scrolled in response to the event
+        // and that a swipe can be started from this event if desired.
+        result.SetStatusAsIgnore();
+      }
     }
   } else {
     INPQ_LOG("received new pan event (type=%d) in block %p\n", aEvent.mType,
@@ -891,6 +895,19 @@ void InputQueue::SetAllowedTouchBehavior(
   if (success) {
     ProcessQueue();
   }
+}
+
+void InputQueue::SetBrowserGestureResponse(uint64_t aInputBlockId,
+                                           BrowserGestureResponse aResponse) {
+  InputBlockState* inputBlock = FindBlockForId(aInputBlockId, nullptr);
+
+  if (inputBlock && inputBlock->AsPanGestureBlock()) {
+    PanGestureBlockState* block = inputBlock->AsPanGestureBlock();
+    block->SetBrowserGestureResponse(aResponse);
+  } else if (inputBlock) {
+    NS_WARNING("input block is not a pan gesture block");
+  }
+  ProcessQueue();
 }
 
 static APZHandledResult GetHandledResultFor(

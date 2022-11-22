@@ -382,6 +382,22 @@ void APZCTreeManager::SetAllowedTouchBehavior(
   mInputQueue->SetAllowedTouchBehavior(aInputBlockId, aValues);
 }
 
+void APZCTreeManager::SetBrowserGestureResponse(
+    uint64_t aInputBlockId, BrowserGestureResponse aResponse) {
+  if (!APZThreadUtils::IsControllerThread()) {
+    APZThreadUtils::RunOnControllerThread(
+        NewRunnableMethod<uint64_t, BrowserGestureResponse>(
+            "layers::APZCTreeManager::SetBrowserGestureResponse", this,
+            &APZCTreeManager::SetBrowserGestureResponse, aInputBlockId,
+            aResponse));
+    return;
+  }
+
+  APZThreadUtils::AssertOnControllerThread();
+
+  mInputQueue->SetBrowserGestureResponse(aInputBlockId, aResponse);
+}
+
 void APZCTreeManager::UpdateHitTestingTree(
     const WebRenderScrollDataWrapper& aRoot, bool aIsFirstPaint,
     LayersId aOriginatingLayersId, uint32_t aPaintSequenceNumber) {
