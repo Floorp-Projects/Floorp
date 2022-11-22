@@ -1718,7 +1718,7 @@ WritingMode nsIFrame::WritingModeForLine(WritingMode aSelfWM,
   MOZ_ASSERT(aSelfWM == GetWritingMode());
   WritingMode writingMode = aSelfWM;
 
-  if (StyleTextReset()->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
+  if (StyleTextReset()->mUnicodeBidi == StyleUnicodeBidi::Plaintext) {
     mozilla::intl::BidiEmbeddingLevel frameLevel =
         nsBidiPresUtils::GetFrameBaseLevel(aSubFrame);
     writingMode.SetDirectionFromBidiLevel(frameLevel);

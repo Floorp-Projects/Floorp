@@ -85,7 +85,8 @@ static char16_t GetBidiOverride(ComputedStyle* aComputedStyle) {
     return kLRO;
   }
   const nsStyleTextReset* text = aComputedStyle->StyleTextReset();
-  if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_BIDI_OVERRIDE) {
+  if (text->mUnicodeBidi == StyleUnicodeBidi::BidiOverride ||
+      text->mUnicodeBidi == StyleUnicodeBidi::IsolateOverride) {
     return StyleDirection::Rtl == vis->mDirection ? kRLO : kLRO;
   }
   return 0;
@@ -104,21 +105,21 @@ static char16_t GetBidiOverride(ComputedStyle* aComputedStyle) {
 static char16_t GetBidiControl(ComputedStyle* aComputedStyle) {
   const nsStyleVisibility* vis = aComputedStyle->StyleVisibility();
   const nsStyleTextReset* text = aComputedStyle->StyleTextReset();
-  if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_EMBED) {
-    return StyleDirection::Rtl == vis->mDirection ? kRLE : kLRE;
-  }
-  if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_ISOLATE) {
-    if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_BIDI_OVERRIDE) {
-      // isolate-override
+  switch (text->mUnicodeBidi) {
+    case StyleUnicodeBidi::Embed:
+      return StyleDirection::Rtl == vis->mDirection ? kRLE : kLRE;
+    case StyleUnicodeBidi::Isolate:
+      // <bdi> element already has its directionality set from content so
+      // we never need to return kFSI.
+      return StyleDirection::Rtl == vis->mDirection ? kRLI : kLRI;
+    case StyleUnicodeBidi::IsolateOverride:
+    case StyleUnicodeBidi::Plaintext:
       return kFSI;
-    }
-    // <bdi> element already has its directionality set from content so
-    // we never need to return kFSI.
-    return StyleDirection::Rtl == vis->mDirection ? kRLI : kLRI;
+    case StyleUnicodeBidi::Normal:
+    case StyleUnicodeBidi::BidiOverride:
+      break;
   }
-  if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
-    return kFSI;
-  }
+
   return 0;
 }
 
@@ -2474,8 +2475,8 @@ nsresult nsBidiPresUtils::ProcessTextForRenderingContext(
 /* static */
 BidiEmbeddingLevel nsBidiPresUtils::BidiLevelFromStyle(
     ComputedStyle* aComputedStyle) {
-  if (aComputedStyle->StyleTextReset()->mUnicodeBidi &
-      NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
+  if (aComputedStyle->StyleTextReset()->mUnicodeBidi ==
+      StyleUnicodeBidi::Plaintext) {
     return BidiEmbeddingLevel::DefaultLTR();
   }
 

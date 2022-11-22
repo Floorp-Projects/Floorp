@@ -22,6 +22,7 @@ ${helpers.single_keyword(
     "unicode-bidi",
     "normal embed isolate bidi-override isolate-override plaintext",
     engines="gecko servo-2013",
+    gecko_enum_prefix="StyleUnicodeBidi",
     animation_value_type="none",
     spec="https://drafts.csswg.org/css-writing-modes/#propdef-unicode-bidi",
     servo_restyle_damage="rebuild_and_reflow",

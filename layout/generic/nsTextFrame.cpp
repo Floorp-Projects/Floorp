@@ -2019,9 +2019,9 @@ bool BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1,
         }
 
         // 3. The boundary is a bidi isolation boundary.
-        const uint8_t unicodeBidi = ctx->StyleTextReset()->mUnicodeBidi;
-        if (unicodeBidi == NS_STYLE_UNICODE_BIDI_ISOLATE ||
-            unicodeBidi == NS_STYLE_UNICODE_BIDI_ISOLATE_OVERRIDE) {
+        const auto unicodeBidi = ctx->StyleTextReset()->mUnicodeBidi;
+        if (unicodeBidi == StyleUnicodeBidi::Isolate ||
+            unicodeBidi == StyleUnicodeBidi::IsolateOverride) {
           return true;
         }
 

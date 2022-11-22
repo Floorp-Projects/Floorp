@@ -7350,8 +7350,8 @@ nsRect ScrollFrameHelper::GetScrolledRect() const {
 StyleDirection ScrollFrameHelper::GetScrolledFrameDir() const {
   // If the scrolled frame has unicode-bidi: plaintext, the paragraph
   // direction set by the text content overrides the direction of the frame
-  if (mScrolledFrame->StyleTextReset()->mUnicodeBidi &
-      NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
+  if (mScrolledFrame->StyleTextReset()->mUnicodeBidi ==
+      StyleUnicodeBidi::Plaintext) {
     if (nsIFrame* child = mScrolledFrame->PrincipalChildList().FirstChild()) {
       return nsBidiPresUtils::ParagraphDirection(child) ==
                      mozilla::intl::BidiDirection::LTR
