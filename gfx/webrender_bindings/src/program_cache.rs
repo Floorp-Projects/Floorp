@@ -342,13 +342,12 @@ impl WrProgramCache {
 }
 
 pub fn remove_disk_cache(prof_path: &nsAString) -> Result<(), Error> {
-    use std::fs::remove_dir_all;
     use std::time::Instant;
 
     if let Some(cache_path) = get_cache_path_from_prof_path(prof_path) {
         if cache_path.exists() {
             let start = Instant::now();
-            remove_dir_all(&cache_path)?;
+            remove_dir_all::remove_dir_all(&cache_path)?;
             info!("removed all disk cache shaders in {:?}", start.elapsed());
         }
     }
