@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import concurrent.futures
 import lzma
 import os
 import plistlib
@@ -15,7 +16,7 @@ from urllib.parse import quote
 import mozfile
 
 TEMPLATE_DIRECTORY = Path(__file__).parent / "apple_pkg"
-RW_CHUNK_SIZE = 10240 * 1024  # 10MB read/write chunk sizes
+PBZX_CHUNK_SIZE = 16 * 1024 * 1024  # 16MB chunks
 
 
 def check_tools(*tools: List[Path]):
@@ -133,30 +134,37 @@ def create_payload(destination: Path, root_path: Path):
         tmp_payload_size = tmp_payload_path.stat().st_size
         print(f"Uncompressed Payload size: {tmp_payload_size // 1024}kb")
 
-        # Compress to xz
-        lzcomp = lzma.LZMACompressor()
-        xz_payload = Path(tmp_dir) / "Payload.xz"
-        with tmp_payload_path.open("rb") as f_in, xz_payload.open("wb") as xz_f:
-            while True:
-                chunk = f_in.read(RW_CHUNK_SIZE)
-                if not chunk:
-                    break
-                xz_f.write(lzcomp.compress(chunk))
-            xz_f.write(lzcomp.flush())
+        def compress_chunk(chunk):
+            compressed_chunk = lzma.compress(chunk)
+            return len(chunk), compressed_chunk
 
-        # Convert XZ file to pbzx Payload
-        xz_payload_size = xz_payload.stat().st_size
-        print(f"Compressed Payload size: {xz_payload_size // 1024}kb")
-        with destination.open("wb") as f_out, xz_payload.open("rb") as xz_in:
-            f_out.write(b"pbzx")
-            f_out.write(struct.pack(">Q", tmp_payload_size))
-            f_out.write(struct.pack(">Q", tmp_payload_size))  # yes, twice
-            f_out.write(struct.pack(">Q", xz_payload_size))
+        def chunker(fileobj, chunk_size):
             while True:
-                chunk = xz_in.read(RW_CHUNK_SIZE)
+                chunk = fileobj.read(chunk_size)
                 if not chunk:
                     break
-                f_out.write(chunk)
+                yield chunk
+
+        with tmp_payload_path.open("rb") as f_in, destination.open(
+            "wb"
+        ) as f_out, concurrent.futures.ThreadPoolExecutor(
+            max_workers=os.cpu_count()
+        ) as executor:
+            f_out.write(b"pbzx")
+            f_out.write(struct.pack(">Q", PBZX_CHUNK_SIZE))
+            chunks = chunker(f_in, PBZX_CHUNK_SIZE)
+            for uncompressed_size, compressed_chunk in executor.map(
+                compress_chunk, chunks
+            ):
+                f_out.write(struct.pack(">Q", uncompressed_size))
+                if len(compressed_chunk) < uncompressed_size:
+                    f_out.write(struct.pack(">Q", len(compressed_chunk)))
+                    f_out.write(compressed_chunk)
+                else:
+                    # Considering how unlikely this is, we prefer to just decompress
+                    # here than to keep the original uncompressed chunk around
+                    f_out.write(struct.pack(">Q", uncompressed_size))
+                    f_out.write(lzma.decompress(compressed_chunk))
 
         print(f"Compressed Payload file to {destination}")
         print(f"Compressed Payload size: {destination.stat().st_size // 1024}kb")
