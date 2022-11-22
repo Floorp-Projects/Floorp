@@ -9,12 +9,18 @@ import androidx.test.filters.MediumTest
 import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.geckoview.ContentBlocking.CookieBannerMode.COOKIE_BANNER_MODE_DISABLED
+import org.mozilla.geckoview.ContentBlocking.CookieBannerMode.COOKIE_BANNER_MODE_REJECT
+import org.mozilla.geckoview.ContentBlocking.CookieBannerMode.COOKIE_BANNER_MODE_REJECT_OR_ACCEPT
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.StorageController
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 class StorageControllerTest : BaseSessionTest() {
+
+    private val storageController
+        get() = sessionRule.runtime.storageController
 
     @Test fun clearData() {
         mainSession.loadUri("https://example.com")
@@ -664,6 +670,142 @@ class StorageControllerTest : BaseSessionTest() {
             "Local storage value should match",
             localStorage,
             equalTo("2")
+        )
+    }
+
+    @Test fun setCookieBannerModeForDomain() {
+        val contentBlocking = sessionRule.runtime.settings.contentBlocking
+        contentBlocking.cookieBannerMode = COOKIE_BANNER_MODE_REJECT
+
+        val session = sessionRule.createOpenSession(
+            GeckoSessionSettings.Builder(mainSession.settings)
+                .contextId("1")
+                .build()
+        )
+        session.loadUri("https://example.com")
+        session.waitForPageStop()
+
+        var mode = sessionRule.waitForResult(
+            storageController.getCookieBannerModeForDomain(
+                "https://example.com",
+                false
+            )
+        )
+
+        assertThat(
+            "Cookie banner mode should match",
+            mode,
+            equalTo(COOKIE_BANNER_MODE_REJECT)
+        )
+
+        sessionRule.waitForResult(
+            storageController.setCookieBannerModeForDomain(
+                "https://example.com",
+                COOKIE_BANNER_MODE_REJECT_OR_ACCEPT,
+                false
+            )
+        )
+
+        mode = sessionRule.waitForResult(
+            storageController.getCookieBannerModeForDomain(
+                "https://example.com",
+                false
+            )
+        )
+
+        assertThat(
+            "Cookie banner mode should match",
+            mode,
+            equalTo(COOKIE_BANNER_MODE_REJECT_OR_ACCEPT)
+        )
+    }
+
+    @Test
+    fun getCookieBannerModeForDomain() {
+        val contentBlocking = sessionRule.runtime.settings.contentBlocking
+        contentBlocking.cookieBannerMode = COOKIE_BANNER_MODE_DISABLED
+
+        val session = sessionRule.createOpenSession(
+            GeckoSessionSettings.Builder(mainSession.settings)
+                .contextId("1")
+                .build()
+        )
+        session.loadUri("https://example.com")
+        session.waitForPageStop()
+
+        try {
+            val mode = sessionRule.waitForResult(
+                storageController.getCookieBannerModeForDomain(
+                    "https://example.com",
+                    false
+                )
+            )
+            assertThat(
+                "Cookie banner mode should match",
+                mode,
+                equalTo(COOKIE_BANNER_MODE_DISABLED)
+            )
+        } catch (e: Exception) {
+            assertThat(
+                "Cookie banner mode should match",
+                e.message,
+                containsString("The cookie banner handling service is not available")
+            )
+        }
+    }
+
+    @Test fun removeCookieBannerModeForDomain() {
+        val contentBlocking = sessionRule.runtime.settings.contentBlocking
+        contentBlocking.cookieBannerModePrivateBrowsing = COOKIE_BANNER_MODE_REJECT
+        sessionRule.setPrefsUntilTestEnd(mapOf("cookiebanners.service.mode.privateBrowsing" to COOKIE_BANNER_MODE_REJECT))
+
+        val session = sessionRule.createOpenSession(
+            GeckoSessionSettings.Builder(mainSession.settings)
+                .contextId("1")
+                .build()
+        )
+        session.loadUri("https://example.com")
+        session.waitForPageStop()
+
+        sessionRule.waitForResult(
+            storageController.setCookieBannerModeForDomain(
+                "https://example.com",
+                COOKIE_BANNER_MODE_REJECT_OR_ACCEPT,
+                true
+            )
+        )
+
+        var mode = sessionRule.waitForResult(
+            storageController.getCookieBannerModeForDomain(
+                "https://example.com",
+                true
+            )
+        )
+
+        assertThat(
+            "Cookie banner mode should match $COOKIE_BANNER_MODE_REJECT_OR_ACCEPT but it is $mode",
+            mode,
+            equalTo(COOKIE_BANNER_MODE_REJECT_OR_ACCEPT)
+        )
+
+        sessionRule.waitForResult(
+            storageController.removeCookieBannerModeForDomain(
+                "https://example.com",
+                true
+            )
+        )
+
+        mode = sessionRule.waitForResult(
+            storageController.getCookieBannerModeForDomain(
+                "https://example.com",
+                true
+            )
+        )
+
+        assertThat(
+            "Cookie banner mode should match $COOKIE_BANNER_MODE_REJECT but it is $mode",
+            mode,
+            equalTo(COOKIE_BANNER_MODE_REJECT)
         )
     }
 }

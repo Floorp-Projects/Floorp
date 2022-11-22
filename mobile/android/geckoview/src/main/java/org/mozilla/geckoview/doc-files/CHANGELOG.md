@@ -19,10 +19,15 @@ exclude: true
   [`BasicSelectionActionDelegate.mTempMatrix`][109.3] and
   [`BasicSelectionActionDelegate.mTempRect`][109.4].
   ([bug 1785759]({{bugzilla}}1785759))
+- Added [`StorageController.setCookieBannerModeForDomain`][109.5], [`StorageController.getCookieBannerModeForDomain`][109.6] and [`StorageController.removeCookieBannerModeForDomain`][109.7] see ([bug 1797581]({{bugzilla}}1797581))
+
 [109.1]: {{javadoc_uri}}/GeckoSession.SelectionActionDelegate.Selection.html#screenRect
 [109.2]: {{javadoc_uri}}/GeckoSession.SelectionActionDelegate.Selection.html#clientRect
 [109.3]: {{javadoc_uri}}/BasicSelectionActionDelegate.html#mTempMatrix
 [109.4]: {{javadoc_uri}}/BasicSelectionActionDelegate.html#mTempRect
+[109.5]: {{javadoc_uri}}/StorageController.html#setCookieBannerModeForDomain(java.lang.String,int,boolean)
+[109.6]: {{javadoc_uri}}/StorageController.html#getCookieBannerModeForDomain(java.lang.String,boolean)
+[109.7]: {{javadoc_uri}}/StorageController.html#removeCookieBannerModeForDomain(java.lang.String,boolean)
 
 ## v108
 - Added [`ContentBlocking.CookieBannerMode`][108.1]; [`cookieBannerHandlingMode`][108.2] and [`cookieBannerHandlingModePrivateBrowsing`][108.3] to [`ContentBlocking.Settings.Builder`][81.1];
@@ -1272,4 +1277,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 2af2ce951d6aa03e2ea8a44b438bca35988143b2
+[api-version]: 56b14bd2184591e39396f9cf74aeb2b5d2b09b33
