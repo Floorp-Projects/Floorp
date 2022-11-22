@@ -23,7 +23,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   ChromeMigrationUtils: "resource:///modules/ChromeMigrationUtils.sys.mjs",
-  PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   Qihoo360seMigrationUtils: "resource:///modules/360seMigrationUtils.sys.mjs",
 });
@@ -264,7 +263,6 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
             bookmarks,
             parentGuid
           );
-          lazy.PlacesUIUtils.maybeToggleBookmarkToolbarVisibilityAfterMigration();
         }
 
         // Importing Other Bookmarks items
