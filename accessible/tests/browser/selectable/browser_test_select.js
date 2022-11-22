@@ -297,3 +297,33 @@ addAccessibleTask(
     remoteIframe: false,
   }
 );
+
+/**
+ * Ensure that we don't assert when dealing with defunct items in selection
+ * events dropped due to coalescence (bug 1800755).
+ */
+addAccessibleTask(
+  `
+<form id="form">
+  <select id="select">
+    <option>
+    <optgroup id="optgroup">
+      <option>
+    </optgroup>
+  </select>
+</form>
+  `,
+  async function(browser, docAcc) {
+    let selected = waitForEvent(EVENT_SELECTION_WITHIN, "select");
+    await invokeContentTask(browser, [], () => {
+      const form = content.document.getElementById("form");
+      const select = content.document.getElementById("select");
+      const optgroup = content.document.getElementById("optgroup");
+      form.reset();
+      select.selectedIndex = 1;
+      select.add(optgroup);
+      select.item(0).remove();
+    });
+    await selected;
+  }
+);

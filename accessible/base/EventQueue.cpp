@@ -357,14 +357,16 @@ void EventQueue::ProcessEventQueue() {
         // and manually push their new state to the parent process.
         AccSelChangeEvent* selChangeEvent = downcast_accEvent(event);
         LocalAccessible* item = selChangeEvent->mItem;
-        uint64_t itemID =
-            item->IsDoc() ? 0 : reinterpret_cast<uint64_t>(item->UniqueID());
-        bool selected =
-            selChangeEvent->mSelChangeType == AccSelChangeEvent::eSelectionAdd;
-        if (selected) {
-          selectedIDs.AppendElement(itemID);
-        } else {
-          unselectedIDs.AppendElement(itemID);
+        if (!item->IsDefunct()) {
+          uint64_t itemID =
+              item->IsDoc() ? 0 : reinterpret_cast<uint64_t>(item->UniqueID());
+          bool selected = selChangeEvent->mSelChangeType ==
+                          AccSelChangeEvent::eSelectionAdd;
+          if (selected) {
+            selectedIDs.AppendElement(itemID);
+          } else {
+            unselectedIDs.AppendElement(itemID);
+          }
         }
       }
     }
