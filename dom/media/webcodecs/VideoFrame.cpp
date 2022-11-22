@@ -122,6 +122,25 @@ static gfx::TransferFunction ToTransferFunction(
   return gfx::TransferFunction::Default;
 }
 
+static gfx::ColorSpace2 ToPrimaries(VideoColorPrimaries aPrimaries) {
+  switch (aPrimaries) {
+    case VideoColorPrimaries::Bt709:
+      return gfx::ColorSpace2::BT709;
+    case VideoColorPrimaries::Bt470bg:
+      return gfx::ColorSpace2::BT601_625;
+    case VideoColorPrimaries::Smpte170m:
+      return gfx::ColorSpace2::BT601_525;
+    case VideoColorPrimaries::Bt2020:
+      return gfx::ColorSpace2::BT2020;
+    case VideoColorPrimaries::Smpte432:
+      return gfx::ColorSpace2::DISPLAY_P3;
+    case VideoColorPrimaries::EndGuard_:
+      break;
+  }
+  MOZ_ASSERT_UNREACHABLE("unsupported VideoTransferCharacteristics");
+  return gfx::ColorSpace2::UNKNOWN;
+}
+
 static Maybe<VideoPixelFormat> ToVideoPixelFormat(gfx::SurfaceFormat aFormat) {
   switch (aFormat) {
     case gfx::SurfaceFormat::B8G8R8A8:
@@ -871,7 +890,9 @@ static Result<RefPtr<layers::Image>, nsCString> CreateYUVImageFromBuffer(
       data.mTransferFunction =
           ToTransferFunction(aColorSpace.mTransfer.Value());
     }
-    // TODO: take care of aColorSpace.mPrimaries (Bug 1798959).
+    if (aColorSpace.mPrimaries.WasPassed()) {
+      data.mColorPrimaries = ToPrimaries(aColorSpace.mPrimaries.Value());
+    }
 
     RefPtr<layers::PlanarYCbCrImage> image =
         new layers::RecyclingPlanarYCbCrImage(new layers::BufferRecycleBin());
@@ -913,7 +934,9 @@ static Result<RefPtr<layers::Image>, nsCString> CreateYUVImageFromBuffer(
       data.mTransferFunction =
           ToTransferFunction(aColorSpace.mTransfer.Value());
     }
-    // TODO: take care of aColorSpace.mPrimaries (Bug 1798959).
+    if (aColorSpace.mPrimaries.WasPassed()) {
+      data.mColorPrimaries = ToPrimaries(aColorSpace.mPrimaries.Value());
+    }
 
     RefPtr<layers::NVImage> image = new layers::NVImage();
     if (!image->SetData(data)) {
