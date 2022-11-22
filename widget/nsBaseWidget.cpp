@@ -2293,11 +2293,9 @@ nsBaseWidget::SwipeInfo nsBaseWidget::SendMayStartSwipe(
 }
 
 WidgetWheelEvent nsBaseWidget::MayStartSwipeForAPZ(
-    const PanGestureInput& aPanInput, const APZEventResult& aApzResult,
-    CanTriggerSwipe aCanTriggerSwipe) {
+    const PanGestureInput& aPanInput, const APZEventResult& aApzResult) {
   WidgetWheelEvent event = aPanInput.ToWidgetEvent(this);
-  if (aCanTriggerSwipe == CanTriggerSwipe::Yes &&
-      aPanInput.mOverscrollBehaviorAllowsSwipe) {
+  if (aPanInput.MayTriggerSwipe() && aPanInput.mOverscrollBehaviorAllowsSwipe) {
     SwipeInfo swipeInfo = SendMayStartSwipe(aPanInput);
     event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
     if (swipeInfo.wantsSwipe) {
@@ -2329,8 +2327,7 @@ WidgetWheelEvent nsBaseWidget::MayStartSwipeForAPZ(
   return event;
 }
 
-bool nsBaseWidget::MayStartSwipeForNonAPZ(const PanGestureInput& aPanInput,
-                                          CanTriggerSwipe aCanTriggerSwipe) {
+bool nsBaseWidget::MayStartSwipeForNonAPZ(const PanGestureInput& aPanInput) {
   if (aPanInput.mType == PanGestureInput::PANGESTURE_MAYSTART ||
       aPanInput.mType == PanGestureInput::PANGESTURE_START) {
     mCurrentPanGestureBelongsToSwipe = false;
@@ -2346,7 +2343,7 @@ bool nsBaseWidget::MayStartSwipeForNonAPZ(const PanGestureInput& aPanInput,
     return true;
   }
 
-  if (aCanTriggerSwipe == CanTriggerSwipe::No) {
+  if (!aPanInput.MayTriggerSwipe()) {
     return false;
   }
 
