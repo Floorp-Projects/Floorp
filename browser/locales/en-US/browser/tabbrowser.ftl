@@ -91,3 +91,22 @@ tabbrowser-confirm-caretbrowsing-checkbox = Do not show me this dialog box again
 #   $domain (String): URL of the page that is trying to steal focus.
 tabbrowser-allow-dialogs-to-get-focus =
     .label = Allow notifications like this from { $domain } to take you to their tab
+
+tabbrowser-customizemode-tab-title = Customize { -brand-short-name }
+
+## Context menu buttons, of which only one will be visible at a time
+
+tabbrowser-context-mute-tab =
+    .label = Mute Tab
+    .accesskey = M
+tabbrowser-context-unmute-tab =
+    .label = Unmute Tab
+    .accesskey = m
+# The accesskey should match the accesskey for tabbrowser-context-mute-tab
+tabbrowser-context-mute-selected-tabs =
+    .label = Mute Tabs
+    .accesskey = M
+# The accesskey should match the accesskey for tabbrowser-context-unmute-tab
+tabbrowser-context-unmute-selected-tabs =
+    .label = Unmute Tabs
+    .accesskey = m
