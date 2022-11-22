@@ -37,6 +37,33 @@ XPCOMUtils.defineLazyPreferenceGetter(
 const FIRST_CONTENT_PROCESS_TOPIC = "ipc:first-content-process-created";
 const SITEPERMS_ADDON_ID_SUFFIX = "@siteperms.mozilla.org";
 
+// Generate a per-session random salt, which is then used to generate
+// per-siteOrigin hashed strings used as the addon id in SitePermsAddonWrapper constructor
+// (expected to be matching new addon id generated for the same siteOrigin during
+// the same browsing session and different ones in new browsing sessions).
+//
+// NOTE: `generateSalt` is exported for testing purpose, should not be
+// used outside of tests.
+let SALT;
+export function generateSalt() {
+  //TODO: Use Services.env (See Bug 1541508).
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  // Throw if we're not in test and SALT is already defined
+  if (typeof SALT !== "undefined" && !env.exists("XPCSHELL_TEST_PROFILE_DIR")) {
+    throw new Error("This should only be called from XPCShell tests");
+  }
+  SALT = crypto.getRandomValues(new Uint8Array(12)).join("");
+}
+
+function getSalt() {
+  if (!SALT) {
+    generateSalt();
+  }
+  return SALT;
+}
+
 class SitePermsAddonWrapper {
   // An array of nsIPermission granted for the siteOrigin.
   // We can't use a Set as handlePermissionChange might be called with different
@@ -61,8 +88,10 @@ class SitePermsAddonWrapper {
     this.principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
       this.siteOrigin
     );
+    // Use a template string for the concat in case `siteOrigin` isn't a string.
+    const saltedValue = `${this.siteOrigin}${getSalt()}`;
     this.id = `${computeSha256HashAsString(
-      this.siteOrigin
+      saltedValue
     )}${SITEPERMS_ADDON_ID_SUFFIX}`;
 
     for (const perm of permissions) {
