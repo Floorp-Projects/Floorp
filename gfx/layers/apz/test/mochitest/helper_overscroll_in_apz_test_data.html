@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, minimum-scale=1.0">
+<title>A simple test checks "overscrolled" info in APZTestData</title>
+<title>Tests scroll anchoring updates in-progress wheel scrolling __relatively__</title>
+<script src="apz_test_utils.js"></script>
+<script src="apz_test_native_event_utils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<div style="height: 300vh; background-color: blue;"></div><!-- Make the root scrollable -->
+<script>
+  async function test() {
+    // Try to overscroll by using setAsyncScrollOffset to avoid race conditions
+    // that APZTestData haven't been arrived on the main-thread.
+    SpecialPowers.DOMWindowUtils.setAsyncScrollOffset(document.scrollingElement, 0, -100);
+
+    const scrollId =
+      SpecialPowers.DOMWindowUtils.getViewId(document.scrollingElement);
+    const data = SpecialPowers.DOMWindowUtils.getCompositorAPZTestData();
+    for (apzcData of data.additionalData) {
+      if (apzcData.key == scrollId) {
+        ok(apzcData.value.split(",").includes("overscrolled"));
+      }
+    }
+  }
+
+  waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
+</script>

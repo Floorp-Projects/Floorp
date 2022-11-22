@@ -3559,6 +3559,9 @@ bool APZCTreeManager::GetAPZTestData(LayersId aLayersId,
       if (apzc->GetCheckerboardMagnitude(clippedBounds)) {
         apzcState += "checkerboarding,";
       }
+      if (apzc->IsOverscrolled()) {
+        apzcState += "overscrolled,";
+      }
       aOutData->RecordAdditionalData(viewId, apzcState);
     }
   }
