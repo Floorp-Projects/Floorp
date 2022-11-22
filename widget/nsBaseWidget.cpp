@@ -2295,7 +2295,7 @@ nsBaseWidget::SwipeInfo nsBaseWidget::SendMayStartSwipe(
 WidgetWheelEvent nsBaseWidget::MayStartSwipeForAPZ(
     const PanGestureInput& aPanInput, const APZEventResult& aApzResult) {
   WidgetWheelEvent event = aPanInput.ToWidgetEvent(this);
-  if (aPanInput.MayTriggerSwipe() && aPanInput.mOverscrollBehaviorAllowsSwipe) {
+  if (aPanInput.AllowsSwipe()) {
     SwipeInfo swipeInfo = SendMayStartSwipe(aPanInput);
     event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
     if (swipeInfo.wantsSwipe) {
