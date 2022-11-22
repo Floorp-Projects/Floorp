@@ -654,6 +654,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
               node.querySelector(".unified-extensions-item-message-default"),
               messages.onHover
             );
+            node.dataset.showsHoverMessage = true;
           }
         }
 
@@ -694,6 +695,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
               node.querySelector(".unified-extensions-item-message-default"),
               messages.default
             );
+            delete node.dataset.showsHoverMessage;
           }
         }
 
@@ -845,7 +847,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
     let title = tabData.title || this.extension.name;
 
     let messages;
-    if (gUnifiedExtensionsEnabled) {
+    if (gUnifiedExtensionsEnabled && !node.dataset.showsHoverMessage) {
       let policy = WebExtensionPolicy.getByID(this.extension.id);
       messages = OriginControls.getStateMessageIDs({
         policy,
