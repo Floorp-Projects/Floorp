@@ -1,9 +1,5 @@
 "use strict";
 
-const { CustomizableUI } = ChromeUtils.import(
-  "resource:///modules/CustomizableUI.jsm"
-);
-
 add_task(async function() {
   let migrator = await MigrationUtils.getMigrator("ie");
   // Sanity check for the source.
@@ -23,21 +19,6 @@ add_task(async function() {
     }
   };
   PlacesUtils.observers.addListener(["bookmark-added"], listener);
-  let observerNotified = false;
-  Services.obs.addObserver((aSubject, aTopic, aData) => {
-    let [toolbar, visibility] = JSON.parse(aData);
-    Assert.equal(
-      toolbar,
-      CustomizableUI.AREA_BOOKMARKS,
-      "Notification should be received for bookmarks toolbar"
-    );
-    Assert.equal(
-      visibility,
-      "true",
-      "Notification should say to reveal the bookmarks toolbar"
-    );
-    observerNotified = true;
-  }, "browser-set-toolbar-visibility");
 
   await promiseMigration(migrator, MigrationUtils.resourceTypes.BOOKMARKS);
   PlacesUtils.observers.removeListener(["bookmark-added"], listener);
@@ -46,7 +27,4 @@ add_task(async function() {
     itemCount,
     "Ensure telemetry matches actual number of imported items."
   );
-
-  // Check the bookmarks have been imported to all the expected parents.
-  Assert.ok(observerNotified, "The observer should be notified upon migration");
 });

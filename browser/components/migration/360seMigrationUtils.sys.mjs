@@ -9,7 +9,6 @@ import { MigrationUtils } from "resource:///modules/MigrationUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
 });
@@ -103,7 +102,6 @@ Bookmarks.prototype = {
       if (toolbarBMs.length) {
         let parentGuid = lazy.PlacesUtils.bookmarks.toolbarGuid;
         await MigrationUtils.insertManyBookmarksWrapper(toolbarBMs, parentGuid);
-        lazy.PlacesUIUtils.maybeToggleBookmarkToolbarVisibilityAfterMigration();
       }
     })().then(
       () => aCallback(true),

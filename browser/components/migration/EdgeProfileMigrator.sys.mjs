@@ -16,7 +16,6 @@ import { MSMigrationUtils } from "resource:///modules/MSMigrationUtils.sys.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ESEDBReader: "resource:///modules/ESEDBReader.sys.mjs",
-  PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
 
@@ -386,7 +385,6 @@ EdgeBookmarksMigrator.prototype = {
     if (toolbarBMs.length) {
       let parentGuid = lazy.PlacesUtils.bookmarks.toolbarGuid;
       await MigrationUtils.insertManyBookmarksWrapper(toolbarBMs, parentGuid);
-      lazy.PlacesUIUtils.maybeToggleBookmarkToolbarVisibilityAfterMigration();
     }
   },
 
