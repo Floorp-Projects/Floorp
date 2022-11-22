@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-11-18T17:04:04.115932'
+updated_at: '2022-11-22T11:18:09.250715'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -888,13 +888,6 @@ people:
     name: Tomislav Jovanovic
     nick: zombie
 modules:
-  - name: Mots config
-    includes:
-      - mots.yaml
-    owners:
-      - *zeid
-    machine_name: _mots
-
   - name: mozilla-toplevel
     description: The top level directory for the mozilla tree.
     includes:
@@ -3377,6 +3370,13 @@ modules:
     meta:
       components:
         - 'Testing :: Marionette'
+  - name: mots config
+    includes:
+      - mots.yaml
+    owners:
+      - *zeid
+    machine_name: mots
+
   - machine_name: mozharness
     name: mozharness
     description: Configuration-driven script harness.
@@ -3636,5 +3636,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 0670d0be07bf5f7edc407507949cfec72d31b886
-  export: 58ed67259b377f89de90f03aa354a773a8768e9e
+  config: 7c07774ff027a30568a0784fdb2fb079cbab2582
+  export: e72a56c522a7d887400438e58c87b8ec519a035a

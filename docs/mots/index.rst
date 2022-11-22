@@ -20,21 +20,6 @@ The system is overseen by the owner and peers of the Module Ownership module. Fo
 Modules
 -------
 
-Mots config
-~~~~~~~~~~~
-
-
-.. list-table::
-    :stub-columns: 1
-    :widths: 30 70
-
-    * - Owner(s)
-      -
-        | `Zeid Zabaneh (zeid) <https://people.mozilla.org/s?query=zeid>`__
-    * - Includes
-      -
-        | `mots.yaml <https://searchfox.org/mozilla-central/search?q=&path=mots.yaml>`__
-
 mozilla-toplevel
 ~~~~~~~~~~~~~~~~
 The top level directory for the mozilla tree.
@@ -3275,6 +3260,21 @@ Marionette is a remote protocol that lets out-of-process programs communicate wi
         | `testing/marionette/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=testing/marionette/\*\*/\*>`__
     * - Bugzilla Components
       - Testing :: Marionette
+
+mots config
+~~~~~~~~~~~
+
+
+.. list-table::
+    :stub-columns: 1
+    :widths: 30 70
+
+    * - Owner(s)
+      -
+        | `Zeid Zabaneh (zeid) <https://people.mozilla.org/s?query=zeid>`__
+    * - Includes
+      -
+        | `mots.yaml <https://searchfox.org/mozilla-central/search?q=&path=mots.yaml>`__
 
 mozharness
 ~~~~~~~~~~
