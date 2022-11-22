@@ -20,6 +20,14 @@ def migrate(ctx):
         target,
         [
             FTL.Message(
+                id=FTL.Identifier("tabbrowser-empty-tab-title"),
+                value=COPY(source, "tabs.emptyTabTitle"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("tabbrowser-empty-private-tab-title"),
+                value=COPY(source, "tabs.emptyPrivateTabTitle2"),
+            ),
+            FTL.Message(
                 id=FTL.Identifier("tabbrowser-menuitem-close-tab"),
                 attributes=[
                     FTL.Attribute(
