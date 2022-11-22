@@ -129,6 +129,12 @@ async function testResourceAvailableFeature() {
   info("Check resource available feature of the ResourceCommand");
 
   const tab = await addTab(STYLE_TEST_URL);
+  let resourceTimingEntryCounts = await getResourceTimingCount(tab);
+  is(
+    resourceTimingEntryCounts,
+    2,
+    "Should have two entires for resource timing"
+  );
 
   const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
@@ -153,6 +159,13 @@ async function testResourceAvailableFeature() {
     ok(expectedResource, "Found a matching expected resource for the resource");
     await assertResource(availableResource, expectedResource);
   }
+
+  resourceTimingEntryCounts = await getResourceTimingCount(tab);
+  is(
+    resourceTimingEntryCounts,
+    2,
+    "Should still have two entires for resource timing after devtools APIs have been triggered"
+  );
 
   info("Check whether ResourceCommand gets additonal stylesheet");
   await ContentTask.spawn(
@@ -539,4 +552,10 @@ function assertUpdate(update, expected) {
   if (expected.event?.cause) {
     is(update.event?.cause, expected.event.cause, "cause is correct");
   }
+}
+
+function getResourceTimingCount(tab) {
+  return ContentTask.spawn(tab.linkedBrowser, [], () => {
+    return content.performance.getEntriesByType("resource").length;
+  });
 }

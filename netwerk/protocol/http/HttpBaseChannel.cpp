@@ -5356,6 +5356,15 @@ void HttpBaseChannel::MaybeReportTimingData() {
     return;
   }
 
+  // Devtools can create fetch requests on behalf the content document.
+  // If we don't exclude these requests, they'd also be reported
+  // to the content document.
+  bool isInDevToolsContext;
+  mLoadInfo->GetIsInDevToolsContext(&isInDevToolsContext);
+  if (isInDevToolsContext) {
+    return;
+  }
+
   mozilla::dom::PerformanceStorage* documentPerformance =
       mLoadInfo->GetPerformanceStorage();
   if (documentPerformance) {
