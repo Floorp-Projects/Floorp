@@ -53,7 +53,10 @@ class VsyncSource {
   virtual void NotifyVsync(const TimeStamp& aVsyncTimestamp,
                            const TimeStamp& aOutputTimestamp);
 
-  // Can be called on any thread
+  // Can be called on any thread.
+  // Adding the same dispatcher multiple times will increment a count.
+  // This means that the sequence "Add, Add, Remove" has the same behavior as
+  // "Add, Remove, Add".
   void AddVsyncDispatcher(VsyncDispatcher* aDispatcher);
   void RemoveVsyncDispatcher(VsyncDispatcher* aDispatcher);
 
@@ -75,12 +78,21 @@ class VsyncSource {
   // Can be called on any thread
   void UpdateVsyncStatus();
 
+  struct DispatcherRefWithCount {
+    // The dispatcher.
+    RefPtr<VsyncDispatcher> mDispatcher;
+    // The number of add calls minus the number of remove calls for this
+    // dispatcher. Should always be > 0 as long as this dispatcher is in
+    // mDispatchers.
+    size_t mCount = 0;
+  };
+
   struct State {
     // The set of VsyncDispatchers which are registered with this source.
     // At the moment, the length of this array is always zero or one.
     // The ability to register multiple dispatchers is not used yet; it is
     // intended for when we have one dispatcher per widget.
-    nsTArray<RefPtr<VsyncDispatcher>> mDispatchers;
+    nsTArray<DispatcherRefWithCount> mDispatchers;
 
     // The vsync ID which we used for the last vsync event.
     VsyncId mVsyncId;
