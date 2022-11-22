@@ -12,9 +12,10 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "bundle", function() {
-  return Services.strings.createBundle(
-    "chrome://browser/locale/tabbrowser.properties"
+XPCOMUtils.defineLazyGetter(lazy, "l10n", () => {
+  return new Localization(
+    ["browser/tabbrowser.ftl", "branding/brand.ftl"],
+    true
   );
 });
 
@@ -23,14 +24,6 @@ XPCOMUtils.defineLazyGetter(lazy, "bundle", function() {
  * called without any tabbrowser instance.
  */
 const OpenInTabsUtils = {
-  getString(key) {
-    return lazy.bundle.GetStringFromName(key);
-  },
-
-  getFormattedString(key, params) {
-    return lazy.bundle.formatStringFromName(key, params);
-  },
-
   /**
    * Gives the user a chance to cancel loading lots of tabs at once.
    */
@@ -47,25 +40,26 @@ const OpenInTabsUtils = {
     // default to true: if it were false, we wouldn't get this far
     let warnOnOpen = { value: true };
 
-    const messageKey = "tabs.openWarningMultipleBranded";
-    const openKey = "tabs.openButtonMultiple";
-    const BRANDING_BUNDLE_URI = "chrome://branding/locale/brand.properties";
-    let brandShortName = Services.strings
-      .createBundle(BRANDING_BUNDLE_URI)
-      .GetStringFromName("brandShortName");
+    const [title, message, button, checkbox] = lazy.l10n.formatMessagesSync([
+      { id: "tabbrowser-confirm-open-multiple-tabs-title" },
+      {
+        id: "tabbrowser-confirm-open-multiple-tabs-message",
+        args: { tabCount: numTabsToOpen },
+      },
+      { id: "tabbrowser-confirm-open-multiple-tabs-button" },
+      { id: "tabbrowser-confirm-open-multiple-tabs-checkbox" },
+    ]);
 
     let buttonPressed = Services.prompt.confirmEx(
       aWindow,
-      this.getString("tabs.openWarningTitle"),
-      this.getFormattedString(messageKey, [numTabsToOpen, brandShortName]),
+      title.value,
+      message.value,
       Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0 +
         Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_1,
-      this.getString(openKey),
+      button.value,
       null,
       null,
-      this.getFormattedString("tabs.openWarningPromptMeBranded", [
-        brandShortName,
-      ]),
+      checkbox.value,
       warnOnOpen
     );
 
