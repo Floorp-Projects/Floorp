@@ -64,6 +64,19 @@ BaseWebSocketChannel::BaseWebSocketChannel()
   mSerial = (processBits << kWebSocketIDWebSocketBits) | webSocketBits;
 }
 
+BaseWebSocketChannel::~BaseWebSocketChannel() {
+  NS_ReleaseOnMainThread("BaseWebSocketChannel::mLoadGroup",
+                         mLoadGroup.forget());
+  NS_ReleaseOnMainThread("BaseWebSocketChannel::mLoadInfo", mLoadInfo.forget());
+  nsCOMPtr<nsIEventTarget> target;
+  {
+    auto lock = mTargetThread.Lock();
+    target.swap(*lock);
+  }
+  NS_ReleaseOnMainThread("BaseWebSocketChannel::mTargetThread",
+                         target.forget());
+}
+
 //-----------------------------------------------------------------------------
 // BaseWebSocketChannel::nsIWebSocketChannel
 //-----------------------------------------------------------------------------
