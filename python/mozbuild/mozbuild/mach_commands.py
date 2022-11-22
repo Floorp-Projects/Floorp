@@ -217,6 +217,114 @@ def check(
 
 @SubCommand(
     "cargo",
+    "udeps",
+    description="Run `cargo udeps` on a given crate.  Defaults to gkrust.",
+    metrics_path=MOZBUILD_METRICS_PATH,
+)
+@CommandArgument(
+    "--all-crates",
+    action="store_true",
+    help="Check all of the crates in the tree.",
+)
+@CommandArgument("crates", default=None, nargs="*", help="The crate name(s) to check.")
+@CommandArgument(
+    "--jobs",
+    "-j",
+    default="0",
+    nargs="?",
+    metavar="jobs",
+    type=int,
+    help="Run the tests in parallel using multiple processes.",
+)
+@CommandArgument("-v", "--verbose", action="store_true", help="Verbose output.")
+@CommandArgument(
+    "--message-format-json",
+    action="store_true",
+    help="Emit error messages as JSON.",
+)
+@CommandArgument(
+    "--expect-unused",
+    action="store_true",
+    help="Do not return an error exit code if udeps detects unused dependencies.",
+)
+def udeps(
+    command_context,
+    all_crates=None,
+    crates=None,
+    jobs=0,
+    verbose=False,
+    message_format_json=False,
+    expect_unused=False,
+):
+    from mozbuild.controller.building import BuildDriver
+
+    command_context.log_manager.enable_all_structured_loggers()
+
+    try:
+        command_context.config_environment
+    except BuildEnvironmentNotFoundException:
+        build = command_context._spawn(BuildDriver)
+        ret = build.build(
+            command_context.metrics,
+            what=["pre-export", "export"],
+            jobs=jobs,
+            verbose=verbose,
+            mach_context=command_context._mach_context,
+        )
+        if ret != 0:
+            return ret
+    # XXX duplication with `mach vendor rust`
+    crates_and_roots = {
+        "gkrust": "toolkit/library/rust",
+        "gkrust-gtest": "toolkit/library/gtest/rust",
+        "geckodriver": "testing/geckodriver",
+    }
+
+    if all_crates:
+        crates = crates_and_roots.keys()
+    elif not crates:
+        crates = ["gkrust"]
+
+    for crate in crates:
+        root = crates_and_roots.get(crate, None)
+        if not root:
+            print(
+                "Cannot locate crate %s.  Please check your spelling or "
+                "add the crate information to the list." % crate
+            )
+            return 1
+
+        udeps_targets = [
+            "force-cargo-library-udeps",
+            "force-cargo-host-library-udeps",
+            "force-cargo-program-udeps",
+            "force-cargo-host-program-udeps",
+        ]
+
+        append_env = {}
+        if message_format_json:
+            append_env["USE_CARGO_JSON_MESSAGE_FORMAT"] = "1"
+        if expect_unused:
+            append_env["CARGO_UDEPS_EXPECT_ERR"] = "1"
+
+        ret = command_context._run_make(
+            srcdir=False,
+            directory=root,
+            ensure_exit_code=0,
+            silent=not verbose,
+            print_directory=False,
+            target=udeps_targets,
+            num_jobs=jobs,
+            append_env=append_env,
+        )
+        if ret != 0:
+            return ret
+
+    return 0
+
+
+@SubCommand(
+    "cargo",
     "vet",
     description="Run `cargo vet`.",
 )
