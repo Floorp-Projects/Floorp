@@ -6,7 +6,37 @@
 
 let AboutWindowsMessages = null;
 
-function onLoad() {}
+function refreshMessages() {
+  let windowMessages = {};
+  let windowTitles = {};
+  AboutWindowsMessages.getMessages(window, windowMessages, windowTitles);
+  let messagesUl = document.getElementById("messages-ul");
+  messagesUl.innerHTML = "";
+  for (let i = 0; i < windowTitles.value.length; ++i) {
+    let titleLi = document.createElement("li");
+    let titleTextNode = document.createTextNode(windowTitles.value[i]);
+    if (i === 0) {
+      // bold the first window since it's the current one
+      let b = document.createElement("b");
+      b.appendChild(titleTextNode);
+      titleLi.appendChild(b);
+    } else {
+      titleLi.appendChild(titleTextNode);
+    }
+    let innerUl = document.createElement("ul");
+    for (let j = 0; j < windowMessages.value[i].length; ++j) {
+      let innerLi = document.createElement("li");
+      innerLi.innerText = windowMessages.value[i][j];
+      innerUl.appendChild(innerLi);
+    }
+    titleLi.appendChild(innerUl);
+    messagesUl.append(titleLi);
+  }
+}
+
+function onLoad() {
+  refreshMessages();
+}
 
 try {
   AboutWindowsMessages = Cc["@mozilla.org/about-windowsmessages;1"].getService(
