@@ -5094,14 +5094,12 @@ void nsWindow::DispatchPanGesture(PanGestureInput& aPanInput) {
   }
 
   WidgetWheelEvent event = aPanInput.ToWidgetEvent(this);
-  bool canTriggerSwipe = SwipeTracker::CanTriggerSwipe(aPanInput);
   if (!mAPZC) {
-    if (MayStartSwipeForNonAPZ(aPanInput, CanTriggerSwipe{canTriggerSwipe})) {
+    if (MayStartSwipeForNonAPZ(aPanInput)) {
       return;
     }
   } else {
-    event = MayStartSwipeForAPZ(aPanInput, result,
-                                CanTriggerSwipe{canTriggerSwipe});
+    event = MayStartSwipeForAPZ(aPanInput, result);
   }
 
   ProcessUntransformedAPZEvent(&event, result);
