@@ -39,3 +39,40 @@ MsaaXULMenuitemAccessible::get_accKeyboardShortcut(
   *pszKeyboardShortcut = ::SysAllocStringLen(shortcut.get(), shortcut.Length());
   return *pszKeyboardShortcut ? S_OK : E_OUTOFMEMORY;
 }
+
+STDMETHODIMP
+MsaaXULMenuitemAccessible::get_accName(
+    /* [optional][in] */ VARIANT varChild,
+    /* [retval][out] */ BSTR __RPC_FAR* pszName) {
+  if (varChild.vt != VT_I4 || varChild.lVal != CHILDID_SELF) {
+    return MsaaAccessible::get_accName(varChild, pszName);
+  }
+  if (!pszName) {
+    return E_INVALIDARG;
+  }
+  LocalAccessible* acc = LocalAcc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+
+  *pszName = nullptr;
+  nsAutoString name;
+  acc->Name(name);
+  if (name.IsVoid()) {
+    return S_FALSE;
+  }
+
+  nsAutoString accel;
+  if (dom::Element* el = acc->Elm()) {
+    el->GetAttr(kNameSpaceID_None, nsGkAtoms::acceltext, accel);
+  }
+  if (!accel.IsEmpty()) {
+    name += u"\t"_ns + accel;
+  }
+
+  *pszName = ::SysAllocStringLen(name.get(), name.Length());
+  if (!*pszName) {
+    return E_OUTOFMEMORY;
+  }
+  return S_OK;
+}
