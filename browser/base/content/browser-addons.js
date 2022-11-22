@@ -1325,21 +1325,13 @@ var gUnifiedExtensions = {
     // We only want to display active and visible extensions that do not have a
     // browser action, and we want to list them alphabetically.
     let addons = await AddonManager.getAddonsByTypes(["extension"]);
-    addons = addons.filter(addon => {
-      if (addon.hidden || !addon.isActive) {
-        return false;
-      }
-
-      const extension = WebExtensionPolicy.getByID(addon.id)?.extension;
-      // Ignore extensions that cannot access the current window (e.g.
-      // extensions not allowed in PB mode when we are in a private window)
-      // since users cannot do anything with those extensions anyway.
-      if (!extension?.canAccessWindow(window)) {
-        return false;
-      }
-
-      return all || !extension?.hasBrowserActionUI;
-    });
+    addons = addons.filter(
+      addon =>
+        !addon.hidden &&
+        addon.isActive &&
+        (all ||
+          !WebExtensionPolicy.getByID(addon.id).extension.hasBrowserActionUI)
+    );
     addons.sort((a1, a2) => a1.name.localeCompare(a2.name));
 
     return addons;

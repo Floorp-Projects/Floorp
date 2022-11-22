@@ -5,9 +5,7 @@
 async function testIncognito(incognitoOverride) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      browser_action: {
-        default_area: "navbar",
-      },
+      browser_action: {},
     },
     incognitoOverride,
   });
