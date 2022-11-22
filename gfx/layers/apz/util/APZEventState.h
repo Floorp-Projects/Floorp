@@ -74,7 +74,6 @@ class APZEventState final {
   void ProcessMouseEvent(const WidgetMouseEvent& aEvent,
                          uint64_t aInputBlockId);
   void ProcessAPZStateChange(ViewID aViewId, APZStateChange aChange, int aArg);
-  void ProcessClusterHit();
 
  private:
   ~APZEventState();
