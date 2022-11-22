@@ -34,8 +34,6 @@ html::view-transition-new(root) { animation: unset; opacity: 0 }
 </style>
 <div id=shared></div>
 <script>
-failIfNot(document.startViewTransition, "Missing document.startViewTransition");
-
 async function runTest() {
   document.startViewTransition(() => {
     requestAnimationFrame(() => requestAnimationFrame(takeScreenshot));

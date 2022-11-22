@@ -57,8 +57,6 @@ html::view-transition-old(root) { animation: unset; opacity: 1; }
 <div id=two class=shared></div>
 
 <script>
-failIfNot(document.startViewTransition, "Missing document.startViewTransition");
-
 async function runTest() {
   document.startViewTransition(() => {
     one.remove();
