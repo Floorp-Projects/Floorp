@@ -21,6 +21,7 @@ ChromeUtils.defineModuleGetter(
 ChromeUtils.defineESModuleGetters(lazy, {
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
 });
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 
 function isStructuredCloneHolder(value) {
   return (
@@ -104,7 +105,10 @@ var ExtensionStorage = {
    * @returns {Promise<JSONFile>}
    */
   async _readFile(extensionId) {
-    await IOUtils.makeDirectory(this.getExtensionDir(extensionId));
+    lazy.OS.File.makeDir(this.getExtensionDir(extensionId), {
+      ignoreExisting: true,
+      from: lazy.OS.Constants.Path.profileDir,
+    });
 
     let jsonFile = new lazy.JSONFile({
       path: this.getStorageFile(extensionId),
@@ -182,7 +186,7 @@ var ExtensionStorage = {
    * @returns {string}
    */
   getExtensionDir(extensionId) {
-    return PathUtils.join(this.extensionDir, extensionId);
+    return lazy.OS.Path.join(this.extensionDir, extensionId);
   },
 
   /**
@@ -194,7 +198,7 @@ var ExtensionStorage = {
    * @returns {string}
    */
   getStorageFile(extensionId) {
-    return PathUtils.join(this.extensionDir, extensionId, "storage.js");
+    return lazy.OS.Path.join(this.extensionDir, extensionId, "storage.js");
   },
 
   /**
@@ -446,7 +450,7 @@ var ExtensionStorage = {
 };
 
 XPCOMUtils.defineLazyGetter(ExtensionStorage, "extensionDir", () =>
-  PathUtils.join(PathUtils.profileDir, "browser-extension-data")
+  lazy.OS.Path.join(lazy.OS.Constants.Path.profileDir, "browser-extension-data")
 );
 
 ExtensionStorage.init();

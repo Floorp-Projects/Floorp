@@ -21,6 +21,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
+  OS: "resource://gre/modules/osfile.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
 });
 
@@ -99,8 +100,18 @@ var NativeManifests = {
 
   _tryPath(type, path, name, context, logIfNotFound) {
     return Promise.resolve()
-      .then(() => IOUtils.readJSON(path))
-      .then(manifest => {
+      .then(() => lazy.OS.File.read(path, { encoding: "utf-8" }))
+      .then(data => {
+        let manifest;
+        try {
+          manifest = JSON.parse(data);
+        } catch (ex) {
+          Cu.reportError(
+            `Error parsing native manifest ${path}: ${ex.message}`
+          );
+          return null;
+        }
+
         let normalized = lazy.Schemas.normalize(
           manifest,
           "manifest.NativeManifest",
@@ -137,7 +148,7 @@ var NativeManifests = {
         return manifest;
       })
       .catch(ex => {
-        if (DOMException.isInstance(ex) && ex.name == "NotFoundError") {
+        if (ex instanceof lazy.OS.File.Error && ex.becauseNoSuchFile) {
           if (logIfNotFound) {
             Cu.reportError(
               `Error reading native manifest file ${path}: file is referenced in the registry but does not exist`
@@ -151,7 +162,7 @@ var NativeManifests = {
 
   async _tryPaths(type, name, dirs, context) {
     for (let dir of dirs) {
-      let path = PathUtils.join(dir, TYPES[type], `${name}.json`);
+      let path = lazy.OS.Path.join(dir, TYPES[type], `${name}.json`);
       let manifest = await this._tryPath(type, path, name, context, false);
       if (manifest) {
         return { path, manifest };
