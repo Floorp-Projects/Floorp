@@ -158,6 +158,56 @@ describe("MultiStageAboutWelcome module", () => {
       finishStub.restore();
       telemetryStub.restore();
     });
+
+    it("should send telemetry ping on collectSelect", () => {
+      const screens = [
+        {
+          id: "EASY_SETUP_TEST",
+          content: {
+            tiles: {
+              type: "multiselect",
+              data: [
+                {
+                  id: "checkbox-1",
+                  defaultValue: true,
+                },
+              ],
+            },
+            primary_button: {
+              label: "Test Button",
+              action: {
+                collectSelect: true,
+              },
+            },
+          },
+        },
+      ];
+      const EASY_SETUP_PROPS = {
+        screens,
+        message_id: "DEFAULT_ABOUTWELCOME",
+        startScreen: 0,
+      };
+      const stub = sinon.stub(AboutWelcomeUtils, "sendActionTelemetry");
+      let wrapper = mount(<MultiStageAboutWelcome {...EASY_SETUP_PROPS} />);
+      wrapper.update();
+
+      let welcomeScreenWrapper = wrapper.find(WelcomeScreen);
+      const btnPrimary = welcomeScreenWrapper.find(".primary");
+      btnPrimary.simulate("click");
+      assert.calledTwice(stub);
+      assert.equal(
+        stub.firstCall.args[0],
+        welcomeScreenWrapper.props().messageId
+      );
+      assert.equal(stub.firstCall.args[1], "primary_button");
+      assert.equal(
+        stub.lastCall.args[0],
+        welcomeScreenWrapper.props().messageId
+      );
+      assert.ok(stub.lastCall.args[1].includes("checkbox-1"));
+      assert.equal(stub.lastCall.args[2], "SELECT_CHECKBOX");
+      stub.restore();
+    });
   });
 
   describe("WelcomeScreen component", () => {
