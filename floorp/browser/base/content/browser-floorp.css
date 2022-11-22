@@ -31,6 +31,10 @@
   }
 
   /* default */
+  .sidepanel-icon > .toolbarbutton-icon {
+    width: 16px !important;
+  }
+  
   #sidebar-select-box{
     width: 3.8em;
     max-width: 3.8em;
@@ -69,15 +73,15 @@
       border-radius: 4px;
       color: inherit;
       fill: currentColor;
-      margin: 2.5px 1.5px 4.5px 1px;
+      margin: 3.5px 3.5px 4.5px 3.5px;
       padding: 5px 5px 5px 5.5px;
       scale: 1.0;
   }
 
   :root[uidensity=compact] #sidebar-select-box{
-    width: 2.5em;
-    max-width: 2.5em;
-    min-width: 2.5em;
+    width: 3em;
+    max-width: 3em;
+    min-width: 3em;
   }
 
   /* uidensity: touch mode */
@@ -88,7 +92,7 @@
     color: inherit;
     fill: currentColor;
     margin: 1px 3px 2px 3px;
-    padding: 16px 16px 16px 18px;
+    padding: 16px 16px 16px 16px;
     scale: 1.0;
   }
 
@@ -97,6 +101,10 @@
     width: 5em;
     max-width: 5em;
     min-width: 5em;
+  }
+
+  :root[uidensity=touch] .sidepanel-icon > .toolbarbutton-icon {
+    width: 20px !important;
   }
 
   #sidebar-select-box{
@@ -136,10 +144,6 @@
     }
   }
 
-  .sidepanel-icon > .toolbarbutton-icon {
-    width: 16px !important;
-  }
-  
   #sidebar2-back {
     list-style-image: url("chrome://browser/skin/back.svg");
   }
@@ -196,12 +200,6 @@
   
   [data-l10n-id="show-TST-sidebar"] {
     list-style-image: url("chrome://browser/skin/TST-dark.svg");
-  }
-  
-  @media (-moz-platform: linux) {
-   #select-TST {
-     padding: 11px 6px 11px 11px !important;
-   }
   }
   
   #select-CustomURL{
