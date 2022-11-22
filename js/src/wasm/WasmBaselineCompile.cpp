@@ -6346,13 +6346,13 @@ void BaseCompiler::emitGcArrayBoundsCheck(RegI32 index, RegI32 numElements) {
 }
 
 template <typename T>
-void BaseCompiler::emitGcGet(FieldType type, FieldExtension extension,
+void BaseCompiler::emitGcGet(FieldType type, FieldWideningOp wideningOp,
                              const T& src) {
   switch (type.kind()) {
     case FieldType::I8: {
-      MOZ_ASSERT(extension != FieldExtension::None);
+      MOZ_ASSERT(wideningOp != FieldWideningOp::None);
       RegI32 r = needI32();
-      if (extension == FieldExtension::Unsigned) {
+      if (wideningOp == FieldWideningOp::Unsigned) {
         masm.load8ZeroExtend(src, r);
       } else {
         masm.load8SignExtend(src, r);
@@ -6361,9 +6361,9 @@ void BaseCompiler::emitGcGet(FieldType type, FieldExtension extension,
       break;
     }
     case FieldType::I16: {
-      MOZ_ASSERT(extension != FieldExtension::None);
+      MOZ_ASSERT(wideningOp != FieldWideningOp::None);
       RegI32 r = needI32();
-      if (extension == FieldExtension::Unsigned) {
+      if (wideningOp == FieldWideningOp::Unsigned) {
         masm.load16ZeroExtend(src, r);
       } else {
         masm.load16SignExtend(src, r);
@@ -6372,28 +6372,28 @@ void BaseCompiler::emitGcGet(FieldType type, FieldExtension extension,
       break;
     }
     case FieldType::I32: {
-      MOZ_ASSERT(extension == FieldExtension::None);
+      MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegI32 r = needI32();
       masm.load32(src, r);
       pushI32(r);
       break;
     }
     case FieldType::I64: {
-      MOZ_ASSERT(extension == FieldExtension::None);
+      MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegI64 r = needI64();
       masm.load64(src, r);
       pushI64(r);
       break;
     }
     case FieldType::F32: {
-      MOZ_ASSERT(extension == FieldExtension::None);
+      MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegF32 r = needF32();
       masm.loadFloat32(src, r);
       pushF32(r);
       break;
     }
     case FieldType::F64: {
-      MOZ_ASSERT(extension == FieldExtension::None);
+      MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegF64 r = needF64();
       masm.loadDouble(src, r);
       pushF64(r);
@@ -6401,7 +6401,7 @@ void BaseCompiler::emitGcGet(FieldType type, FieldExtension extension,
     }
 #  ifdef ENABLE_WASM_SIMD
     case FieldType::V128: {
-      MOZ_ASSERT(extension == FieldExtension::None);
+      MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegV128 r = needV128();
       masm.loadUnalignedSimd128(src, r);
       pushV128(r);
@@ -6409,7 +6409,7 @@ void BaseCompiler::emitGcGet(FieldType type, FieldExtension extension,
     }
 #  endif
     case FieldType::Ref: {
-      MOZ_ASSERT(extension == FieldExtension::None);
+      MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegRef r = needRef();
       masm.loadPtr(src, r);
       pushRef(r);
@@ -6643,11 +6643,11 @@ bool BaseCompiler::emitStructNewDefault() {
   return emitInstanceCall(SASigStructNew);
 }
 
-bool BaseCompiler::emitStructGet(FieldExtension extension) {
+bool BaseCompiler::emitStructGet(FieldWideningOp wideningOp) {
   uint32_t typeIndex;
   uint32_t fieldIndex;
   Nothing nothing;
-  if (!iter_.readStructGet(&typeIndex, &fieldIndex, extension, &nothing)) {
+  if (!iter_.readStructGet(&typeIndex, &fieldIndex, wideningOp, &nothing)) {
     return false;
   }
 
@@ -6681,7 +6681,7 @@ bool BaseCompiler::emitStructGet(FieldExtension extension) {
   }
 
   // Load the value
-  emitGcGet(fieldType, extension, Address(rbase, areaOffset));
+  emitGcGet(fieldType, wideningOp, Address(rbase, areaOffset));
 
   freePtr(rbase);
   freeRef(rp);
@@ -6942,10 +6942,10 @@ bool BaseCompiler::emitArrayNewElem() {
   return emitInstanceCall(SASigArrayNewElem);
 }
 
-bool BaseCompiler::emitArrayGet(FieldExtension extension) {
+bool BaseCompiler::emitArrayGet(FieldWideningOp wideningOp) {
   uint32_t typeIndex;
   Nothing nothing;
-  if (!iter_.readArrayGet(&typeIndex, extension, &nothing, &nothing)) {
+  if (!iter_.readArrayGet(&typeIndex, wideningOp, &nothing, &nothing)) {
     return false;
   }
 
@@ -6974,11 +6974,11 @@ bool BaseCompiler::emitArrayGet(FieldExtension extension) {
   // Load the value
   uint32_t shift = arrayType.elementType_.indexingShift();
   if (IsShiftInScaleRange(shift)) {
-    emitGcGet(arrayType.elementType_, extension,
+    emitGcGet(arrayType.elementType_, wideningOp,
               BaseIndex(rdata, index, ShiftToScale(shift), 0));
   } else {
     masm.lshiftPtr(Imm32(shift), index);
-    emitGcGet(arrayType.elementType_, extension,
+    emitGcGet(arrayType.elementType_, wideningOp,
               BaseIndex(rdata, index, TimesOne, 0));
   }
 
@@ -9349,11 +9349,11 @@ bool BaseCompiler::emitBody() {
           case uint32_t(GcOp::StructNewDefault):
             CHECK_NEXT(emitStructNewDefault());
           case uint32_t(GcOp::StructGet):
-            CHECK_NEXT(emitStructGet(FieldExtension::None));
+            CHECK_NEXT(emitStructGet(FieldWideningOp::None));
           case uint32_t(GcOp::StructGetS):
-            CHECK_NEXT(emitStructGet(FieldExtension::Signed));
+            CHECK_NEXT(emitStructGet(FieldWideningOp::Signed));
           case uint32_t(GcOp::StructGetU):
-            CHECK_NEXT(emitStructGet(FieldExtension::Unsigned));
+            CHECK_NEXT(emitStructGet(FieldWideningOp::Unsigned));
           case uint32_t(GcOp::StructSet):
             CHECK_NEXT(emitStructSet());
           case uint32_t(GcOp::ArrayNew):
@@ -9367,11 +9367,11 @@ bool BaseCompiler::emitBody() {
           case uint32_t(GcOp::ArrayNewElem):
             CHECK_NEXT(emitArrayNewElem());
           case uint32_t(GcOp::ArrayGet):
-            CHECK_NEXT(emitArrayGet(FieldExtension::None));
+            CHECK_NEXT(emitArrayGet(FieldWideningOp::None));
           case uint32_t(GcOp::ArrayGetS):
-            CHECK_NEXT(emitArrayGet(FieldExtension::Signed));
+            CHECK_NEXT(emitArrayGet(FieldWideningOp::Signed));
           case uint32_t(GcOp::ArrayGetU):
-            CHECK_NEXT(emitArrayGet(FieldExtension::Unsigned));
+            CHECK_NEXT(emitArrayGet(FieldWideningOp::Unsigned));
           case uint32_t(GcOp::ArraySet):
             CHECK_NEXT(emitArraySet());
           case uint32_t(GcOp::ArrayLenWithTypeIndex):

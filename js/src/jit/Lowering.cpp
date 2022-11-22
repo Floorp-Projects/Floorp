@@ -5175,8 +5175,8 @@ void LIRGenerator::visitWasmStoreInstance(MWasmStoreInstance* ins) {
     MOZ_ASSERT(value->type() != MIRType::RefOrNull);
     LAllocation instance = useRegisterAtStart(ins->instance());
     LAllocation valueAlloc = useRegisterAtStart(value);
-    add(new (alloc())
-            LWasmStoreSlot(valueAlloc, instance, ins->offset(), value->type()),
+    add(new (alloc()) LWasmStoreSlot(valueAlloc, instance, ins->offset(),
+                                     value->type(), MNarrowingOp::None),
         ins);
   }
 }
@@ -5240,7 +5240,9 @@ void LIRGenerator::visitWasmLoadGlobalVar(MWasmLoadGlobalVar* ins) {
     defineInt64(new (alloc()) LWasmLoadSlotI64(instance, offs), ins);
   } else {
     LAllocation instance = useRegisterAtStart(ins->instance());
-    define(new (alloc()) LWasmLoadSlot(instance, offs, ins->type()), ins);
+    define(new (alloc())
+               LWasmLoadSlot(instance, offs, ins->type(), MWideningOp::None),
+           ins);
   }
 }
 
@@ -5256,7 +5258,9 @@ void LIRGenerator::visitWasmLoadGlobalCell(MWasmLoadGlobalCell* ins) {
     defineInt64(new (alloc()) LWasmLoadSlotI64(cellPtr, /*offs=*/0), ins);
   } else {
     LAllocation cellPtr = useRegisterAtStart(ins->cellPtr());
-    define(new (alloc()) LWasmLoadSlot(cellPtr, /*offs=*/0, ins->type()), ins);
+    define(new (alloc()) LWasmLoadSlot(cellPtr, /*offs=*/0, ins->type(),
+                                       MWideningOp::None),
+           ins);
   }
 }
 
@@ -5282,7 +5286,8 @@ void LIRGenerator::visitWasmStoreGlobalVar(MWasmStoreGlobalVar* ins) {
     MOZ_ASSERT(value->type() != MIRType::RefOrNull);
     LAllocation instance = useRegisterAtStart(ins->instance());
     LAllocation valueAlloc = useRegisterAtStart(value);
-    add(new (alloc()) LWasmStoreSlot(valueAlloc, instance, offs, value->type()),
+    add(new (alloc()) LWasmStoreSlot(valueAlloc, instance, offs, value->type(),
+                                     MNarrowingOp::None),
         ins);
   }
 }
@@ -5303,7 +5308,8 @@ void LIRGenerator::visitWasmStoreGlobalCell(MWasmStoreGlobalCell* ins) {
     MOZ_ASSERT(value->type() != MIRType::RefOrNull);
     LAllocation cellPtr = useRegisterAtStart(ins->cellPtr());
     LAllocation valueAlloc = useRegisterAtStart(value);
-    add(new (alloc()) LWasmStoreSlot(valueAlloc, cellPtr, offs, value->type()));
+    add(new (alloc()) LWasmStoreSlot(valueAlloc, cellPtr, offs, value->type(),
+                                     MNarrowingOp::None));
   }
 }
 
@@ -5317,8 +5323,9 @@ void LIRGenerator::visitWasmStoreStackResult(MWasmStoreStackResult* ins) {
                                           useRegister(stackResultArea), offs);
   } else {
     MOZ_ASSERT(value->type() != MIRType::RefOrNull);
-    lir = new (alloc()) LWasmStoreSlot(
-        useRegister(value), useRegister(stackResultArea), offs, value->type());
+    lir = new (alloc())
+        LWasmStoreSlot(useRegister(value), useRegister(stackResultArea), offs,
+                       value->type(), MNarrowingOp::None);
   }
   add(lir, ins);
 }
@@ -6724,20 +6731,26 @@ void LIRGenerator::visitWasmFence(MWasmFence* ins) {
 void LIRGenerator::visitWasmLoadField(MWasmLoadField* ins) {
   size_t offs = ins->offset();
   LAllocation obj = useRegister(ins->obj());
+  MWideningOp wideningOp = ins->wideningOp();
   if (ins->type() == MIRType::Int64) {
+    MOZ_RELEASE_ASSERT(wideningOp == MWideningOp::None);
     defineInt64(new (alloc()) LWasmLoadSlotI64(obj, offs), ins);
   } else {
-    define(new (alloc()) LWasmLoadSlot(obj, offs, ins->type()), ins);
+    define(new (alloc()) LWasmLoadSlot(obj, offs, ins->type(), wideningOp),
+           ins);
   }
 }
 
 void LIRGenerator::visitWasmLoadFieldKA(MWasmLoadFieldKA* ins) {
   size_t offs = ins->offset();
   LAllocation obj = useRegister(ins->obj());
+  MWideningOp wideningOp = ins->wideningOp();
   if (ins->type() == MIRType::Int64) {
+    MOZ_RELEASE_ASSERT(wideningOp == MWideningOp::None);
     defineInt64(new (alloc()) LWasmLoadSlotI64(obj, offs), ins);
   } else {
-    define(new (alloc()) LWasmLoadSlot(obj, offs, ins->type()), ins);
+    define(new (alloc()) LWasmLoadSlot(obj, offs, ins->type(), wideningOp),
+           ins);
   }
   add(new (alloc()) LKeepAliveObject(useKeepalive(ins->ka())), ins);
 }
@@ -6745,13 +6758,15 @@ void LIRGenerator::visitWasmLoadFieldKA(MWasmLoadFieldKA* ins) {
 void LIRGenerator::visitWasmStoreFieldKA(MWasmStoreFieldKA* ins) {
   MDefinition* value = ins->value();
   size_t offs = ins->offset();
+  MNarrowingOp narrowingOp = ins->narrowingOp();
   LAllocation obj = useRegister(ins->obj());
   LInstruction* lir;
   if (value->type() == MIRType::Int64) {
+    MOZ_RELEASE_ASSERT(narrowingOp == MNarrowingOp::None);
     lir = new (alloc()) LWasmStoreSlotI64(useInt64Register(value), obj, offs);
   } else {
-    lir = new (alloc())
-        LWasmStoreSlot(useRegister(value), obj, offs, value->type());
+    lir = new (alloc()) LWasmStoreSlot(useRegister(value), obj, offs,
+                                       value->type(), narrowingOp);
   }
   add(lir, ins);
   add(new (alloc()) LKeepAliveObject(useKeepalive(ins->ka())), ins);

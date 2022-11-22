@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled()
+// |jit-test| skip-if: !wasmGcEnabled() || wasmCompileMode().includes("ion")
 
 function typingModule(types, castToTypeIndex, brParams, blockResults) {
   return `(module

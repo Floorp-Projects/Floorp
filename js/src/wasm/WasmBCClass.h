@@ -1614,14 +1614,14 @@ struct BaseCompiler final {
 #ifdef ENABLE_WASM_GC
   [[nodiscard]] bool emitStructNew();
   [[nodiscard]] bool emitStructNewDefault();
-  [[nodiscard]] bool emitStructGet(FieldExtension extension);
+  [[nodiscard]] bool emitStructGet(FieldWideningOp wideningOp);
   [[nodiscard]] bool emitStructSet();
   [[nodiscard]] bool emitArrayNew();
   [[nodiscard]] bool emitArrayNewFixed();
   [[nodiscard]] bool emitArrayNewDefault();
   [[nodiscard]] bool emitArrayNewData();
   [[nodiscard]] bool emitArrayNewElem();
-  [[nodiscard]] bool emitArrayGet(FieldExtension extension);
+  [[nodiscard]] bool emitArrayGet(FieldWideningOp wideningOp);
   [[nodiscard]] bool emitArraySet();
   [[nodiscard]] bool emitArrayLen(bool decodeIgnoredTypeIndex);
   [[nodiscard]] bool emitArrayCopy();
@@ -1637,7 +1637,7 @@ struct BaseCompiler final {
   RegI32 emitGcArrayGetNumElements(RegRef rp);
   void emitGcArrayBoundsCheck(RegI32 index, RegI32 numElements);
   template <typename T>
-  void emitGcGet(FieldType type, FieldExtension extension, const T& src);
+  void emitGcGet(FieldType type, FieldWideningOp wideningOp, const T& src);
   template <typename T>
   void emitGcSetScalar(const T& dst, FieldType type, AnyReg value);
 

@@ -251,19 +251,15 @@ bool wasm::BaselineDisabledByFeatures(JSContext* cx, bool* isDisabled,
 
 bool wasm::IonDisabledByFeatures(JSContext* cx, bool* isDisabled,
                                  JSStringBuilder* reason) {
-  // Ion has no debugging support, no gc support.
+  // Ion has no debugging support.
   bool debug = WasmDebuggerActive(cx);
-  bool gc = WasmGcFlag(cx);
   if (reason) {
     char sep = 0;
     if (debug && !Append(reason, "debug", &sep)) {
       return false;
     }
-    if (gc && !Append(reason, "gc", &sep)) {
-      return false;
-    }
   }
-  *isDisabled = debug || gc;
+  *isDisabled = debug;
   return true;
 }
 

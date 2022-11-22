@@ -10707,14 +10707,32 @@ class MIonToWasmCall final : public MVariadicInstruction,
 #endif
 };
 
+// For accesses to wasm object fields, we need to be able to describe 8- and
+// 16-bit accesses.  But MIRType can't represent those.  Hence these two
+// supplemental enums, used for reading and writing fields respectively.
+
+// Indicates how to widen an 8- or 16-bit value (when it is read from memory).
+enum class MWideningOp : uint8_t { None, FromU16, FromS16, FromU8, FromS8 };
+
+// Indicates how to narrow a 32-bit value (when it is written to memory).  The
+// operation is a simple truncate.
+enum class MNarrowingOp : uint8_t { None, To16, To8 };
+
 // Load an object field stored at a fixed offset from a base pointer.  This
 // field may be any value type, including references.  No barriers are
 // performed.
 class MWasmLoadField : public MUnaryInstruction, public NoTypePolicy::Data {
   uint32_t offset_;
+  MWideningOp wideningOp_;
 
-  MWasmLoadField(MDefinition* obj, uint32_t offset, MIRType type)
-      : MUnaryInstruction(classOpcode, obj), offset_(offset) {
+  MWasmLoadField(MDefinition* obj, uint32_t offset, MIRType type,
+                 MWideningOp wideningOp)
+      : MUnaryInstruction(classOpcode, obj),
+        offset_(offset),
+        wideningOp_(wideningOp) {
+    // "if you want to widen the value when it is loaded, the destination type
+    // must be Int32".
+    MOZ_ASSERT_IF(wideningOp != MWideningOp::None, type == MIRType::Int32);
     setResultType(type);
   }
 
@@ -10724,6 +10742,7 @@ class MWasmLoadField : public MUnaryInstruction, public NoTypePolicy::Data {
   NAMED_OPERANDS((0, obj))
 
   uint32_t offset() const { return offset_; }
+  MWideningOp wideningOp() const { return wideningOp_; }
 
   AliasSet getAliasSet() const override {
     return AliasSet::Load(AliasSet::Any);
@@ -10742,10 +10761,14 @@ class MWasmLoadField : public MUnaryInstruction, public NoTypePolicy::Data {
 // not point to a GC-managed object.
 class MWasmLoadFieldKA : public MBinaryInstruction, public NoTypePolicy::Data {
   uint32_t offset_;
+  MWideningOp wideningOp_;
 
   MWasmLoadFieldKA(MDefinition* ka, MDefinition* obj, uint32_t offset,
-                   MIRType type)
-      : MBinaryInstruction(classOpcode, ka, obj), offset_(offset) {
+                   MIRType type, MWideningOp wideningOp)
+      : MBinaryInstruction(classOpcode, ka, obj),
+        offset_(offset),
+        wideningOp_(wideningOp) {
+    MOZ_ASSERT_IF(wideningOp != MWideningOp::None, type == MIRType::Int32);
     setResultType(type);
   }
 
@@ -10755,6 +10778,7 @@ class MWasmLoadFieldKA : public MBinaryInstruction, public NoTypePolicy::Data {
   NAMED_OPERANDS((0, ka), (1, obj))
 
   uint32_t offset() const { return offset_; }
+  MWideningOp wideningOp() const { return wideningOp_; }
 
   AliasSet getAliasSet() const override {
     return AliasSet::Load(AliasSet::Any);
@@ -10770,11 +10794,18 @@ class MWasmLoadFieldKA : public MBinaryInstruction, public NoTypePolicy::Data {
 class MWasmStoreFieldKA : public MTernaryInstruction,
                           public NoTypePolicy::Data {
   uint32_t offset_;
+  MNarrowingOp narrowingOp_;
 
   MWasmStoreFieldKA(MDefinition* ka, MDefinition* obj, uint32_t offset,
-                    MDefinition* value)
-      : MTernaryInstruction(classOpcode, ka, obj, value), offset_(offset) {
+                    MDefinition* value, MNarrowingOp narrowingOp)
+      : MTernaryInstruction(classOpcode, ka, obj, value),
+        offset_(offset),
+        narrowingOp_(narrowingOp) {
     MOZ_ASSERT(value->type() != MIRType::RefOrNull);
+    // "if you want to narrow the value when it is stored, the source type
+    // must be Int32".
+    MOZ_ASSERT_IF(narrowingOp != MNarrowingOp::None,
+                  value->type() == MIRType::Int32);
   }
 
  public:
@@ -10783,6 +10814,7 @@ class MWasmStoreFieldKA : public MTernaryInstruction,
   NAMED_OPERANDS((0, ka), (1, obj), (2, value))
 
   uint32_t offset() const { return offset_; }
+  MNarrowingOp narrowingOp() const { return narrowingOp_; }
 
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::Any);

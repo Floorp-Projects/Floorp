@@ -2795,6 +2795,7 @@
   arguments:
     offset: size_t
     type: MIRType
+    wideningOp: MWideningOp
 
 - name: WasmLoadSlotI64
   result_type: Int64
@@ -2810,6 +2811,7 @@
   arguments:
     offset: size_t
     type: MIRType
+    narrowingOp: MNarrowingOp
 
 - name: WasmStoreSlotI64
   operands:
