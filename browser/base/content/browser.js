@@ -325,12 +325,6 @@ XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", () => {
   );
 });
 
-XPCOMUtils.defineLazyGetter(this, "gTabBrowserBundle", () => {
-  return Services.strings.createBundle(
-    "chrome://browser/locale/tabbrowser.properties"
-  );
-});
-
 XPCOMUtils.defineLazyGetter(this, "gCustomizeMode", () => {
   let { CustomizeMode } = ChromeUtils.import(
     "resource:///modules/CustomizeMode.jsm"
