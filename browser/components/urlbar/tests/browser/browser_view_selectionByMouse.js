@@ -299,3 +299,35 @@ add_task(async function withSelectionByKeyboard() {
     });
   }
 });
+
+add_task(async function withDnsFirstForSingleWordsPref() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.fixup.dns_first_for_single_words", true]],
+  });
+
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "https://example.org/",
+    title: "example",
+  });
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    value: "ex",
+    window,
+  });
+
+  const details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  const target = details.element.action;
+  EventUtils.synthesizeMouseAtCenter(target, { type: "mousedown" });
+  const onLoaded = BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    false,
+    "https://example.org/"
+  );
+  EventUtils.synthesizeMouseAtCenter(target, { type: "mouseup" });
+  await onLoaded;
+  Assert.ok(true, "Expected page is opened");
+
+  await PlacesUtils.bookmarks.eraseEverything();
+  await SpecialPowers.popPrefEnv();
+});
