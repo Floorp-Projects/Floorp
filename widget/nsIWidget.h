@@ -163,13 +163,11 @@ typedef void* nsNativeWidget;
  */
 
 enum nsTransparencyMode {
-  eTransparencyOpaque = 0,   // Fully opaque
-  eTransparencyTransparent,  // Parts of the window may be transparent
-  eTransparencyGlass,  // Transparent parts of the window have Vista AeroGlass
-                       // effect applied
-  eTransparencyBorderlessGlass  // As above, but without a border around the
-                                // opaque areas when there would otherwise be
-                                // one with eTransparencyGlass
+  eTransparencyOpaque = 0,      // Fully opaque
+  eTransparencyTransparent,     // Parts of the window may be transparent
+  eTransparencyBorderlessGlass  // Transparent parts of the window has windows 7
+                                // glass effect, without a border around opaque
+                                // areas.
   // If you add to the end here, you must update the serialization code in
   // WidgetMessageUtils.h
 };

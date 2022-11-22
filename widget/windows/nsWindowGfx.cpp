@@ -293,7 +293,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
         // don't need to double buffer with anything but GDI
         BufferMode doubleBuffering = mozilla::layers::BufferMode::BUFFER_NONE;
         switch (mTransparencyMode) {
-          case eTransparencyGlass:
           case eTransparencyBorderlessGlass:
           default:
             // If we're not doing translucency, then double buffer
