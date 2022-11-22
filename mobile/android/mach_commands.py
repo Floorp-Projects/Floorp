@@ -9,21 +9,9 @@ import logging
 import os
 
 import mozpack.path as mozpath
-
-from mozbuild.base import (
-    MachCommandConditions as conditions,
-)
-
-from mozbuild.shellutil import (
-    split as shell_split,
-)
-
-from mach.decorators import (
-    CommandArgument,
-    Command,
-    SubCommand,
-)
-
+from mach.decorators import Command, CommandArgument, SubCommand
+from mozbuild.base import MachCommandConditions as conditions
+from mozbuild.shellutil import split as shell_split
 
 # Mach's conditions facility doesn't support subcommands.  Print a
 # deprecation message ourselves instead.
