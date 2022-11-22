@@ -1330,15 +1330,15 @@ var gUnifiedExtensions = {
         return false;
       }
 
-      const extension = WebExtensionPolicy.getByID(addon.id)?.extension;
+      const policy = WebExtensionPolicy.getByID(addon.id);
       // Ignore extensions that cannot access the current window (e.g.
       // extensions not allowed in PB mode when we are in a private window)
       // since users cannot do anything with those extensions anyway.
-      if (!extension?.canAccessWindow(window)) {
+      if (!policy?.canAccessWindow(window)) {
         return false;
       }
 
-      return all || !extension?.hasBrowserActionUI;
+      return all || !policy.extension.hasBrowserActionUI;
     });
     addons.sort((a1, a2) => a1.name.localeCompare(a2.name));
 
