@@ -1385,3 +1385,18 @@ const clickOnSidebarTab = (doc, name) => {
   );
   AccessibilityUtils.resetEnv();
 };
+
+/**
+ * Type the provided string the netmonitor window. The correct input should be
+ * focused prior to using this helper.
+ *
+ * @param {string} string
+ *     The string to type.
+ * @param {Object} monitor
+ *     The netmonitor instance used to type the string.
+ */
+function typeInNetmonitor(string, monitor) {
+  for (const ch of string) {
+    EventUtils.synthesizeKey(ch, {}, monitor.panelWin);
+  }
+}
