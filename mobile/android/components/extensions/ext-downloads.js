@@ -4,14 +4,13 @@
 
 "use strict";
 
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineESModuleGetters(this, {
   DownloadPaths: "resource://gre/modules/DownloadPaths.sys.mjs",
 });
 XPCOMUtils.defineLazyModuleGetters(this, {
   DownloadTracker: "resource://gre/modules/GeckoViewWebExtension.jsm",
 });
-
-Cu.importGlobalModules(["PathUtils"]);
 
 var { ignoreEvent } = ExtensionCommon;
 
@@ -159,26 +158,21 @@ this.downloads = class extends ExtensionAPI {
               return Promise.reject({ message: "filename must not be empty" });
             }
 
-            if (PathUtils.isAbsolute(filename)) {
+            const path = OS.Path.split(filename);
+            if (path.absolute) {
               return Promise.reject({
                 message: "filename must not be an absolute path",
               });
             }
 
-            const pathComponents = PathUtils.splitRelative(filename, {
-              allowEmpty: true,
-              allowCurrentDir: true,
-              allowParentDir: true,
-            });
-
-            if (pathComponents.some(component => component == "..")) {
+            if (path.components.some(component => component == "..")) {
               return Promise.reject({
                 message: "filename must not contain back-references (..)",
               });
             }
 
             if (
-              pathComponents.some(component => {
+              path.components.some(component => {
                 const sanitized = DownloadPaths.sanitize(component, {
                   compressWhitespaces: false,
                 });
