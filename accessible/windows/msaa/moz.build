@@ -36,7 +36,6 @@ UNIFIED_SOURCES += [
     "nsWinUtils.cpp",
     "Platform.cpp",
     "RootAccessibleWrap.cpp",
-    "XULMenuAccessibleWrap.cpp",
 ]
 
 SOURCES += [
