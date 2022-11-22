@@ -105,9 +105,12 @@ class OverscrollHandoffChain {
   // Since overscroll-behavior can restrict handoff in some directions,
   // |aOutAllowedScrollDirections| is populated with the scroll directions
   // in which scrolling of the returned APZC is allowed.
+  // |aIncludeOverscroll| is an optional flag whether to consider overscrollable
+  // as scrollable or not.
+  enum class IncludeOverscroll : bool { No, Yes };
   RefPtr<AsyncPanZoomController> FindFirstScrollable(
-      const InputData& aInput,
-      ScrollDirections* aOutAllowedScrollDirections) const;
+      const InputData& aInput, ScrollDirections* aOutAllowedScrollDirections,
+      IncludeOverscroll aIncludeOverscroll = IncludeOverscroll::Yes) const;
 
   // Return a pair of true and the root content APZC if all non-root APZCs in
   // this handoff chain starting from |aApzc| are not able to scroll downwards
