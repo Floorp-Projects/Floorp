@@ -18,6 +18,8 @@ i386|amd64)
   else
     gcc_version=4.9
   fi
+  # The Debian Jessie GPG key expired.
+  extra_apt_opt='Apt::Key::gpgvcommand "/usr/local/sbin/gpgvnoexpkeysig"'
   ;;
 arm64)
   dist=buster
@@ -66,6 +68,7 @@ queue_base="$TASKCLUSTER_ROOT_URL/api/queue/v1"
   $sysroot \
   - \
   --aptopt=/etc/apt/apt.conf.d/99taskcluster \
+  ${extra_apt_opt:+--aptopt="$extra_apt_opt"} \
   --dpkgopt=path-exclude="*" \
   --dpkgopt=path-include="/lib/*" \
   --dpkgopt=path-include="/lib32/*" \
