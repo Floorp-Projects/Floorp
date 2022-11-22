@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <winuser.h>
+#include "mozilla/StaticPrefs_storage.h"
 #include "nsWindowLoggedMessages.h"
 #include "nsWindow.h"
 #include "WinUtils.h"
@@ -78,8 +79,6 @@ struct CircularMessageBuffer {
   std::vector<WindowMessageData> mMessages;
 };
 static std::map<HWND, std::map<UINT, CircularMessageBuffer>> gWindowMessages;
-
-const size_t kNumberOfWindowMessages = 5;
 
 static HWND GetHwndFromWidget(nsIWidget* windowWidget) {
   nsWindow* window = static_cast<nsWindow*>(windowWidget);
@@ -264,7 +263,9 @@ void LogWindowMessage(HWND hwnd, UINT event, bool isPreEvent, long eventCounter,
   WindowMessageData messageData = {
       eventCounter, isPreEvent, MakeMessageSpecificData(event, wParam, lParam),
       result, retValue};
-  if (hwndWindowMessages.mMessages.size() < kNumberOfWindowMessages) {
+  uint32_t numberOfMessagesToKeep =
+      StaticPrefs::widget_windows_messages_to_log();
+  if (hwndWindowMessages.mMessages.size() < numberOfMessagesToKeep) {
     // haven't reached limit yet
     hwndWindowMessages.mMessages.push_back(std::move(messageData));
   } else {
@@ -272,7 +273,7 @@ void LogWindowMessage(HWND hwnd, UINT event, bool isPreEvent, long eventCounter,
         std::move(messageData);
   }
   hwndWindowMessages.mNextFreeIndex =
-      (hwndWindowMessages.mNextFreeIndex + 1) % kNumberOfWindowMessages;
+      (hwndWindowMessages.mNextFreeIndex + 1) % numberOfMessagesToKeep;
 }
 
 void GetLatestWindowMessages(RefPtr<nsIWidget> windowWidget,
@@ -281,8 +282,8 @@ void GetLatestWindowMessages(RefPtr<nsIWidget> windowWidget,
   const auto& rawMessages = gWindowMessages[hwnd];
   nsTArray<std::pair<WindowMessageDataSortKey, nsCString>>
       sortKeyAndMessageArray;
-  sortKeyAndMessageArray.SetCapacity(rawMessages.size() *
-                                     kNumberOfWindowMessages);
+  sortKeyAndMessageArray.SetCapacity(
+      rawMessages.size() * StaticPrefs::widget_windows_messages_to_log());
   for (const auto& eventAndMessage : rawMessages) {
     for (const auto& messageData : eventAndMessage.second.mMessages) {
       nsCString message = MakeFriendlyMessage(
