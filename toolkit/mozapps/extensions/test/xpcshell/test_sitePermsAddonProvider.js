@@ -825,5 +825,87 @@ add_task(
 
     addons = await promiseAddonsByTypes([SITEPERMS_ADDON_TYPE]);
     Assert.equal(addons.length, 1, "...and addon is uninstalled");
+
+    await addons[0]?.uninstall();
+  }
+);
+
+add_task(
+  {
+    pref_set: [[SITEPERMS_ADDON_PROVIDER_PREF, true]],
+  },
+  async function test_salted_hash_addon_id() {
+    // Make sure the test will also be able to run if it is the only one executed.
+    Services.obs.notifyObservers(null, "ipc:first-content-process-created");
+    ok(
+      AddonManager.hasProvider("SitePermsAddonProvider"),
+      "Expect SitePermsAddonProvider to be registered"
+    );
+    // Make sure no sitepermission addon is already installed.
+    let addons = await promiseAddonsByTypes([SITEPERMS_ADDON_TYPE]);
+    Assert.equal(addons.length, 0, "There's no addons");
+
+    expectAndHandleInstallPrompts();
+    await AddonManager.installSitePermsAddonFromWebpage(
+      null,
+      PRINCIPAL_COM,
+      GATED_SITE_PERM1
+    );
+    addons = await promiseAddonsByTypes([SITEPERMS_ADDON_TYPE]);
+    Assert.equal(
+      addons.length,
+      1,
+      "installSitePermsAddonFromWebpage should add the addon..."
+    );
+    Assert.equal(
+      PermissionTestUtils.testExactPermission(PRINCIPAL_COM, GATED_SITE_PERM1),
+      true,
+      "...and set the permission"
+    );
+
+    addons = await promiseAddonsByTypes([SITEPERMS_ADDON_TYPE]);
+    Assert.equal(addons.length, 1, "There is an addon installed");
+
+    const firstSaltedAddonId = addons[0].id;
+    ok(firstSaltedAddonId, "Got the first addon id");
+
+    info("Verify addon id after mocking new browsing session");
+
+    const { generateSalt } = ChromeUtils.importESModule(
+      "resource://gre/modules/addons/SitePermsAddonProvider.sys.mjs"
+    );
+    generateSalt();
+
+    await promiseRestartManager();
+
+    addons = await promiseAddonsByTypes([SITEPERMS_ADDON_TYPE]);
+    Assert.equal(addons.length, 1, "There is an addon installed");
+
+    const secondSaltedAddonId = addons[0].id;
+    ok(
+      secondSaltedAddonId,
+      "Got the second addon id after mocking new browsing session"
+    );
+
+    Assert.notEqual(
+      firstSaltedAddonId,
+      secondSaltedAddonId,
+      "The two addon ids are different"
+    );
+
+    // Confirm that new installs from the same siteOrigin will still
+    // belong to the existing addon entry while the salt isn't expected
+    // to have changed.
+    expectAndHandleInstallPrompts();
+    await AddonManager.installSitePermsAddonFromWebpage(
+      null,
+      PRINCIPAL_COM,
+      GATED_SITE_PERM1
+    );
+
+    addons = await promiseAddonsByTypes([SITEPERMS_ADDON_TYPE]);
+    Assert.equal(addons.length, 1, "There is still a single addon installed");
+
+    await addons[0]?.uninstall();
   }
 );
