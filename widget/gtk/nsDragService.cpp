@@ -1752,32 +1752,32 @@ nsresult nsDragService::CreateTempFile(nsITransferable* aItem,
   return NS_ERROR_FAILURE;
 }
 
-bool nsDragService::SourceDataGetImage(nsITransferable* aItem,
+void nsDragService::SourceDataGetImage(nsITransferable* aItem,
                                        GtkSelectionData* aSelectionData) {
   LOGDRAGSERVICE("nsDragService::SourceDataGetImage()");
 
   nsresult rv;
   nsCOMPtr<nsISupports> data;
   rv = aItem->GetTransferData(kNativeImageMime, getter_AddRefs(data));
-  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   LOGDRAGSERVICE("  posting image\n");
   nsCOMPtr<imgIContainer> image = do_QueryInterface(data);
   if (!image) {
     LOGDRAGSERVICE("  do_QueryInterface failed\n");
-    return false;
+    return;
   }
   RefPtr<GdkPixbuf> pixbuf = nsImageToPixbuf::ImageToPixbuf(image);
   if (!pixbuf) {
     LOGDRAGSERVICE("  ImageToPixbuf failed\n");
-    return false;
+    return;
   }
   gtk_selection_data_set_pixbuf(aSelectionData, pixbuf);
   LOGDRAGSERVICE("  image data set\n");
-  return true;
+  return;
 }
 
-bool nsDragService::SourceDataGetXDND(nsITransferable* aItem,
+void nsDragService::SourceDataGetXDND(nsITransferable* aItem,
                                       GdkDragContext* aContext,
                                       GtkSelectionData* aSelectionData) {
   LOGDRAGSERVICE("nsDragService::SourceDataGetXDND");
@@ -1792,7 +1792,7 @@ bool nsDragService::SourceDataGetXDND(nsITransferable* aItem,
   GdkWindow* srcWindow = gdk_drag_context_get_source_window(aContext);
   if (!srcWindow) {
     LOGDRAGSERVICE("  failed to get source GdkWindow!");
-    return false;
+    return;
   }
 
   guchar* data;
@@ -1800,13 +1800,13 @@ bool nsDragService::SourceDataGetXDND(nsITransferable* aItem,
   if (!gdk_property_get(srcWindow, property, type, 0, INT32_MAX, FALSE, nullptr,
                         nullptr, &length, &data)) {
     LOGDRAGSERVICE("  failed to get gXdndDirectSaveType GdkWindow property.");
-    return false;
+    return;
   }
 
   // Zero-terminate the string.
   data = (guchar*)g_realloc(data, length + 1);
   if (!data) {
-    return false;
+    return;
   }
   data[length] = '\0';
   gchar* hostname;
@@ -1814,7 +1814,7 @@ bool nsDragService::SourceDataGetXDND(nsITransferable* aItem,
   g_free(data);
   if (!gfullpath) {
     LOGDRAGSERVICE("  failed to get file from uri.");
-    return false;
+    return;
   }
 
   nsCString fullpath(gfullpath);
@@ -1828,7 +1828,7 @@ bool nsDragService::SourceDataGetXDND(nsITransferable* aItem,
     nsCOMPtr<nsIPropertyBag2> infoService =
         do_GetService(NS_SYSTEMINFO_CONTRACTID);
     if (!infoService) {
-      return false;
+      return;
     }
     nsAutoCString host;
     if (NS_SUCCEEDED(infoService->GetPropertyAsACString(u"host"_ns, host))) {
@@ -1837,7 +1837,7 @@ bool nsDragService::SourceDataGetXDND(nsITransferable* aItem,
         // Special error code "F" for this case.
         gtk_selection_data_set(aSelectionData, target, 8, (guchar*)"F", 1);
         g_free(hostname);
-        return false;
+        return;
       }
     }
     g_free(hostname);
@@ -1846,7 +1846,7 @@ bool nsDragService::SourceDataGetXDND(nsITransferable* aItem,
   nsCOMPtr<nsIFile> file;
   if (NS_FAILED(NS_NewNativeLocalFile(fullpath, false, getter_AddRefs(file)))) {
     LOGDRAGSERVICE("  failed to get local file");
-    return false;
+    return;
   }
 
   // We have to split the path into a directory and filename,
@@ -1859,7 +1859,7 @@ bool nsDragService::SourceDataGetXDND(nsITransferable* aItem,
   nsCOMPtr<nsISupportsString> filenamePrimitive =
       do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
   if (!filenamePrimitive) {
-    return false;
+    return;
   }
 
   nsAutoString leafName;
@@ -1871,11 +1871,11 @@ bool nsDragService::SourceDataGetXDND(nsITransferable* aItem,
   nsresult rv;
   nsCOMPtr<nsISupports> promiseData;
   rv = aItem->GetTransferData(kFilePromiseMime, getter_AddRefs(promiseData));
-  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_SUCCESS(rv, );
 
   // Indicate success.
   gtk_selection_data_set(aSelectionData, target, 8, (guchar*)"S", 1);
-  return true;
+  return;
 }
 
 bool nsDragService::SourceDataGetText(nsITransferable* aItem,
@@ -1961,11 +1961,11 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
 
   if (mimeFlavor.EqualsLiteral(kTextMime) ||
       mimeFlavor.EqualsLiteral(gTextPlainUTF8Type)) {
-    if (SourceDataGetText(item, nsDependentCString(kUnicodeMime),
-                          /* aNeedToDoConversionToPlainText */ true,
-                          aSelectionData)) {
-      return;
-    }
+    SourceDataGetText(item, nsDependentCString(kUnicodeMime),
+                      /* aNeedToDoConversionToPlainText */ true,
+                      aSelectionData);
+    // no fallback for text mime types
+    return;
   } else if (mimeFlavor.EqualsLiteral(gTextUriListType)) {
     // The desktop or file manager expects for drags of promise-file data
     // the text/uri-list flavor set to a temporary file that contains the
@@ -2006,18 +2006,16 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
   }
   // Someone is asking for the special Direct Save Protocol type.
   else if (mimeFlavor.EqualsLiteral(gXdndDirectSaveType)) {
-    if (SourceDataGetXDND(item, aContext, aSelectionData)) {
-      return;
-    }
-    // if someone was asking for image we need to convert it
-    // from kNativeImageMime
+    SourceDataGetXDND(item, aContext, aSelectionData);
+    // no fallback for XDND mime types
+    return;
   } else if (mimeFlavor.EqualsLiteral(kPNGImageMime) ||
              mimeFlavor.EqualsLiteral(kJPEGImageMime) ||
              mimeFlavor.EqualsLiteral(kJPGImageMime) ||
              mimeFlavor.EqualsLiteral(kGIFImageMime)) {
-    if (SourceDataGetImage(item, aSelectionData)) {
-      return;
-    }
+    // no fallback for image mime types
+    SourceDataGetImage(item, aSelectionData);
+    return;
   } else if (mimeFlavor.EqualsLiteral(gMozUrlType)) {
     // Someone was asking for _NETSCAPE_URL. We need to get it from
     // transferable as x-moz-url and convert it to plain text.

@@ -96,9 +96,9 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   bool SourceDataGetText(nsITransferable* aItem, const nsACString& aMIMEType,
                          bool aNeedToDoConversionToPlainText,
                          GtkSelectionData* aSelectionData);
-  bool SourceDataGetImage(nsITransferable* aItem,
+  void SourceDataGetImage(nsITransferable* aItem,
                           GtkSelectionData* aSelectionData);
-  bool SourceDataGetXDND(nsITransferable* aItem, GdkDragContext* aContext,
+  void SourceDataGetXDND(nsITransferable* aItem, GdkDragContext* aContext,
                          GtkSelectionData* aSelectionData);
 
   void SourceBeginDrag(GdkDragContext* aContext);
