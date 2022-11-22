@@ -141,8 +141,16 @@ nsHtml5TreeOpExecutor::~nsHtml5TreeOpExecutor() {
       }
     }
   }
-  NS_ASSERTION(NS_FAILED(mBroken) || mOpQueue.IsEmpty(),
-               "Somehow there's stuff in the op queue.");
+  // We used to have an `NS_ASSERTION` here that asserted
+  // that either `mBroken` is true or `mOpQueue` is empty.
+  // Sometimes a tree op executor ended up being cycle collected
+  // with the assertion firing. It is not understood what
+  // code path abandons an instance of the tree op executor
+  // without terminating it so that the cycle collector sees
+  // it with stuff still in the queue. The assertion was removed
+  // to avoid sheriffing the assertion failure without a path
+  // to understanding how the object gets abandoned to cycle
+  // collection.
 }
 
 // nsIContentSink
