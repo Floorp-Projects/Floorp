@@ -283,7 +283,7 @@ export var PlacesBackups = {
         .getHistogramById("PLACES_BACKUPS_DAYSFROMLAST")
         .add(backupAge);
     } catch (ex) {
-      Cu.reportError(new Error("Unable to report telemetry."));
+      console.error(new Error("Unable to report telemetry."));
     }
     return backupAge <= maxDays;
   },
@@ -516,7 +516,7 @@ export var PlacesBackups = {
         .getHistogramById("PLACES_BACKUPS_BOOKMARKSTREE_MS")
         .add(Date.now() - startTime);
     } catch (ex) {
-      Cu.reportError("Unable to report telemetry.");
+      console.error("Unable to report telemetry.");
     }
     return [root, root.itemsCount];
   },

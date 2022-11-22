@@ -342,7 +342,7 @@ export var DownloadsCommon = {
     try {
       await lazy.PlacesUtils.history.remove(download.source.url);
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
     let list = await lazy.Downloads.getList(lazy.Downloads.ALL);
     await list.remove(download);
@@ -366,7 +366,7 @@ export var DownloadsCommon = {
       try {
         await lazy.PlacesUtils.history.remove(download.source.url);
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
     if (clearHistory > 0) {
@@ -582,7 +582,7 @@ export var DownloadsCommon = {
     if (typeof download.launch !== "function") {
       download = await lazy.Downloads.createDownload(download);
     }
-    return download.launch(options).catch(ex => Cu.reportError(ex));
+    return download.launch(options).catch(ex => console.error(ex));
   },
 
   /**
@@ -695,7 +695,7 @@ export var DownloadsCommon = {
           Ci.nsIPrompt.BUTTON_POS_0_DEFAULT;
         break;
       default:
-        Cu.reportError("Unexpected dialog type: " + dialogType);
+        console.error("Unexpected dialog type: " + dialogType);
         return "cancel";
     }
 
@@ -1348,7 +1348,7 @@ DownloadsIndicatorDataCtor.prototype = {
           break;
         default:
           attention = DownloadsCommon.ATTENTION_SEVERE;
-          Cu.reportError(
+          console.error(
             "Unknown reputation verdict: " +
               download.error.reputationCheckVerdict
           );

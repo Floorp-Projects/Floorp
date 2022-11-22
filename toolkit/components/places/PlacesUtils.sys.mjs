@@ -613,7 +613,7 @@ export var PlacesUtils = {
       }
       return action;
     } catch (ex) {
-      Cu.reportError(`Invalid action url "${url}"`);
+      console.error(`Invalid action url "${url}"`);
       return null;
     }
   },
@@ -1767,7 +1767,7 @@ export var PlacesUtils = {
           item.type = PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR;
           break;
         default:
-          Cu.reportError(`Unexpected bookmark type ${type}`);
+          console.error(`Unexpected bookmark type ${type}`);
           break;
       }
       return item;
@@ -1850,7 +1850,7 @@ export var PlacesUtils = {
             configurable: false,
           });
         } catch (ex) {
-          Cu.reportError("Failed to fetch the data for the root item");
+          console.error("Failed to fetch the data for the root item");
           throw ex;
         }
       } else {
@@ -1873,7 +1873,7 @@ export var PlacesUtils = {
           rootItem.itemsCount++;
         } catch (ex) {
           // This is a bogus child, report and skip it.
-          Cu.reportError("Failed to fetch the data for an item " + ex);
+          console.error("Failed to fetch the data for an item " + ex);
           continue;
         }
       }
@@ -2437,7 +2437,7 @@ PlacesUtils.keywords = {
         try {
           onResult(entry);
         } catch (ex) {
-          Cu.reportError(ex);
+          console.error(ex);
         }
       }
     };

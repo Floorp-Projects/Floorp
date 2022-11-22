@@ -139,7 +139,7 @@ DownloadStore.prototype = {
           }
         } catch (ex) {
           // If an item is unrecognized, don't prevent others from being loaded.
-          Cu.reportError(ex);
+          console.error(ex);
         }
       }
 
@@ -148,7 +148,7 @@ DownloadStore.prototype = {
           await Promise.all(removePromises);
           await this.save();
         } catch (ex) {
-          Cu.reportError(ex);
+          console.error(ex);
         }
       }
     })();
@@ -186,7 +186,7 @@ DownloadStore.prototype = {
         } catch (ex) {
           // If an item cannot be converted to a serializable form, don't
           // prevent others from being saved.
-          Cu.reportError(ex);
+          console.error(ex);
         }
       }
 

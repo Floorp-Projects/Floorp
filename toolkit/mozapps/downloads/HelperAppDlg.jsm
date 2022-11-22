@@ -169,7 +169,7 @@ nsUnknownContentTypeDialog.prototype = {
       let parent = aContext.getInterface(Ci.nsIDOMWindow);
       this._mDownloadDir = new downloadModule.DownloadLastDir(parent);
     } catch (ex) {
-      Cu.reportError(
+      console.error(
         "Missing window information when showing nsIHelperAppLauncherDialog: " +
           ex
       );
@@ -268,7 +268,7 @@ nsUnknownContentTypeDialog.prototype = {
         }
       }
       if (!parent) {
-        Cu.reportError(
+        console.error(
           "No candidate parent windows were found for the save filepicker." +
             "This should never happen."
         );
@@ -485,7 +485,7 @@ nsUnknownContentTypeDialog.prototype = {
         try {
           url = Services.io.newURI(origin);
         } catch (ex) {
-          Cu.reportError(ex);
+          console.error(ex);
         }
       }
     }
@@ -1099,7 +1099,7 @@ nsUnknownContentTypeDialog.prototype = {
         this.updateHelperAppPref();
       }
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
 
     this.onUnload();
@@ -1113,7 +1113,7 @@ nsUnknownContentTypeDialog.prototype = {
     try {
       this.mLauncher.cancel(Cr.NS_BINDING_ABORTED);
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
 
     this.onUnload();

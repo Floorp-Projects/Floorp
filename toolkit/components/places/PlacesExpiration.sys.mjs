@@ -802,7 +802,7 @@ nsPlacesExpiration.prototype = {
         }
       );
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
       return;
     }
 
@@ -812,7 +812,7 @@ nsPlacesExpiration.prototype = {
           .getHistogramById("PLACES_MOST_RECENT_EXPIRED_VISIT_DAYS")
           .add(this._mostRecentExpiredVisitDays);
       } catch (ex) {
-        Cu.reportError("Unable to report telemetry.");
+        console.error("Unable to report telemetry.");
       } finally {
         delete this._mostRecentExpiredVisitDays;
       }
@@ -838,7 +838,7 @@ nsPlacesExpiration.prototype = {
               .getHistogramById("PLACES_EXPIRATION_STEPS_TO_CLEAN2")
               .add(this._telemetrySteps);
           } catch (ex) {
-            Cu.reportError("Unable to report telemetry.");
+            console.error("Unable to report telemetry.");
           }
         }
         this._telemetrySteps = 1;

@@ -45,7 +45,7 @@ async function setDownloadDir() {
     try {
       await IOUtils.remove(tmpDir, { recursive: true });
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
   });
   Services.prefs.setIntPref("browser.download.folderList", 2);

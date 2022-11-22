@@ -1527,7 +1527,7 @@ PlacesTreeView.prototype = {
       try {
         await PlacesControllerDragHelper.onDrop(ip, aDataTransfer, this._tree);
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       } finally {
         // We should only clear the drop target once
         // the onDrop is complete, as it is an async function.
@@ -1813,7 +1813,7 @@ PlacesTreeView.prototype = {
 
     let node = this._rows[aRow];
     if (!node) {
-      Cu.reportError("isEditable called for an unbuilt row.");
+      console.error("isEditable called for an unbuilt row.");
       return false;
     }
     let itemGuid = node.bookmarkGuid;
