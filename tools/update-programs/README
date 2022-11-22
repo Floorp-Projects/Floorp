@@ -16,4 +16,4 @@ following will be built:
 3. the Windows Default Browser Agent (when `--enable-default-browser-agent`);
 
 Packaging the installer and uninstaller is not yet supported: instead,
-use an (artifact) build with `--enable-application=browser`.
+use an (artifact) build with `--enable-project=browser`.

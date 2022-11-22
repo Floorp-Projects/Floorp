@@ -18,7 +18,7 @@ including options not usable from the command-line, may appear in
 Using a ``mozconfig`` configuration file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The choice of which Mozilla application to build and other configuration
+The choice of which Mozilla project to build and other configuration
 options can be configured in a ``mozconfig`` file. (It is possible to
 manually call ``configure`` with command-line options, but this is not
 recommended). The ``mozconfig`` file should be in your source directory
@@ -34,7 +34,7 @@ If your mozconfig isn't in your source directory, you can also use the
 ``MOZCONFIG`` environment variable to specify the path to your
 ``mozconfig``. The path you specify **must** be an **absolute** path or
 else ``client.mk`` will not find it. This is useful if you choose to
-have multiple ``mozconfig`` files for different applications or
+have multiple ``mozconfig`` files for different projects or
 configurations (see below for a full example). Note that in the
 ``export`` example below the filename was not ``mozconfig``. Regardless
 of the name of the actual file you use, we refer to this file as the
@@ -60,7 +60,7 @@ Setting the ``mozconfig`` path:
 
 -  Options prefixed with ``mk_add_options`` are passed to
    ``client.mk``. The most important of these is ``MOZ_OBJDIR``, which
-   controls where your application gets built (also known as the object
+   controls where your project gets built (also known as the object
    directory).
 -  Options prefixed with ``ac_add_options`` are passed to ``configure``,
    and affect the build process.
@@ -70,7 +70,7 @@ Building with an objdir
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 This means that the source code and object files are not intermingled in
-your directory system and you can build multiple applications (e.g.,
+your directory system and you can build multiple projects (e.g.,
 Firefox and Thunderbird) from the same source tree. If you do not
 specify a ``MOZ_OBJDIR``, it will be automatically set to
 ``@TOPSRCDIR@/obj-@CONFIG_GUESS@``.
@@ -148,18 +148,18 @@ number of cores on your system.
 If your machine is overheating, you might want to try a lower value.
 
 
-Choose an application
-~~~~~~~~~~~~~~~~~~~~~
+Choose a project
+~~~~~~~~~~~~~~~~
 
-The ``--enable-application=application`` flag is used to select an
-application to build. Firefox is the default.
+The ``--enable-project=project`` flag is used to select a project to
+build. Firefox is the default.
 
 Choose one of the following options to add to your ``mozconfig`` file:
 
 Browser (Firefox)
    .. code::
 
-      ac_add_options --enable-application=browser
+      ac_add_options --enable-project=browser
 
    .. note::
 
@@ -168,24 +168,24 @@ Browser (Firefox)
 Mail (Thunderbird)
    .. code::
 
-      ac_add_options --enable-application=comm/mail
+      ac_add_options --enable-project=comm/mail
 
 Mozilla Suite (SeaMonkey)
    .. code::
 
-      ac_add_options --enable-application=suite
+      ac_add_options --enable-project=suite
 
 Calendar (Lightning Extension, uses Thunderbird)
    .. code::
 
-      ac_add_options --enable-application=comm/mail
+      ac_add_options --enable-project=comm/mail
       ac_add_options --enable-calendar
 
 
 Selecting build options
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-The build options you choose depends on what application you are
+The build options you choose depends on what project you are
 building and what you will be using the build for. If you want to use
 the build regularly, you will want a release build without extra
 debugging information; if you are a developer who wants to hack the
@@ -195,7 +195,7 @@ debugging macros.
 There are many options recognized by the configure script which are
 special-purpose options intended for embedders or other special
 situations, and should not be used to build the full suite/XUL
-applications. The full list of options can be obtained by running
+projects. The full list of options can be obtained by running
 ``./mach configure -- --help``.
 
 .. warning::
@@ -281,7 +281,7 @@ Tests
 ^^^^^
 
 ``ac_add_options --disable-tests``
-   By default, many auxiliary test applications are built, which can
+   By default, many auxiliary test programs are built, which can
    help debug and patch the mozilla source. Disabling these tests can
    speed build time and reduce disk space considerably. Developers
    should generally not use this option.
@@ -337,12 +337,12 @@ directory within each repository.
       64bits) <http://hg.mozilla.org/mozilla-central/file/tip/browser/config/mozconfigs/macosx64/debug>`__
       :name: Firefox.2C_Default_Release_Configuration
 
-Building multiple applications from the same source tree
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Building multiple projects from the same source tree
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-It is possible to build multiple applications from the same source tree,
+It is possible to build multiple projects from the same source tree,
 as long as you `use a different objdir <#Building_with_an_Objdir>`__ for
-each application.
+each project.
 
 You need to create multiple ``mozconfig`` files.
 
@@ -366,7 +366,7 @@ Thunderbird. You should first create three ``mozconfig`` files.
 
    # Build Firefox
    mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-firefox
-   ac_add_options --enable-application=browser
+   ac_add_options --enable-project=browser
 
 ``mozconfig-thunderbird``:
 
@@ -377,7 +377,7 @@ Thunderbird. You should first create three ``mozconfig`` files.
 
    # Build Thunderbird
    mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-thunderbird
-   ac_add_options --enable-application=comm/mail
+   ac_add_options --enable-project=comm/mail
 
 To build Firefox, run the following commands:
 

@@ -143,7 +143,7 @@ ac_add_options --enable-artifact-builds
 
 JS_MOZCONFIG_TEMPLATE = """\
 # Build only the SpiderMonkey JS test shell
-ac_add_options --enable-application=js
+ac_add_options --enable-project=js
 """
 
 # Upgrade Mercurial older than this.

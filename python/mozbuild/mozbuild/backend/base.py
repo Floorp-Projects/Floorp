@@ -215,8 +215,8 @@ class BuildBackend(LoggingMixin):
         invalidate the XUL cache (which includes some JS) at application
         startup-time.  The application checks for .purgecaches in the
         application directory, which varies according to
-        --enable-application.  There's a further wrinkle on macOS, where
-        the real application directory is part of a Cocoa bundle
+        --enable-application/--enable-project.  There's a further wrinkle on
+        macOS, where the real application directory is part of a Cocoa bundle
         produced from the regular application directory by the build
         system.  In this case, we write to both locations, since the
         build system recreates the Cocoa bundle from the contents of the
