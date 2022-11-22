@@ -165,6 +165,7 @@ description[value]::before {
    * accesskey if needed */
   content: -moz-label-content;
   display: block;
+  -moz-box-flex: 1;
 }
 
 label[value=""]::before {
