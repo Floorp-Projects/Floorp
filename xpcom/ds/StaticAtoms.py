@@ -4,10 +4,15 @@
 
 # flake8: noqa
 
-from Atom import Atom, InheritingAnonBoxAtom, NonInheritingAnonBoxAtom
-from Atom import PseudoElementAtom
-from HTMLAtoms import HTML_PARSER_ATOMS
 import sys
+
+from Atom import (
+    Atom,
+    InheritingAnonBoxAtom,
+    NonInheritingAnonBoxAtom,
+    PseudoElementAtom,
+)
+from HTMLAtoms import HTML_PARSER_ATOMS
 
 # Static atom definitions, used to generate nsGkAtomList.h.
 #

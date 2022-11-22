@@ -3,13 +3,11 @@ import os
 import re
 import struct
 from collections import defaultdict
-
 from uuid import UUID
 
+import buildconfig
 from mozbuild.util import FileAvoidWrite
 from perfecthash import PerfectHash
-import buildconfig
-
 
 NO_CONTRACT_ID = 0xFFFFFFFF
 

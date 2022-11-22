@@ -2,10 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from io import StringIO
-from incremental_dafsa import Dafsa, Node
-import mozunit
 import unittest
+from io import StringIO
+
+import mozunit
+from incremental_dafsa import Dafsa, Node
 
 
 def _node_to_string(node: Node, prefix, buffer, cache):

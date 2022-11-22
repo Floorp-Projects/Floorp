@@ -21,10 +21,11 @@ maintainable, rather than being as optimized as possible, due to the relatively
 small dataset it was designed for. In the future we may want to optimize further.
 """
 
-from collections import namedtuple
-from mozbuild.util import ensure_bytes
 import textwrap
+from collections import namedtuple
+
 import six
+from mozbuild.util import ensure_bytes
 
 
 # Iteration over bytestrings works differently in Python 2 and 3; this function

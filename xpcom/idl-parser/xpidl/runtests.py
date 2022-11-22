@@ -14,10 +14,10 @@ import sys
 # which conflicts with the xpidl submodule in the imports further below.
 sys.path.pop(0)
 
-import mozunit
 import unittest
-from xpidl import xpidl
-from xpidl import header
+
+import mozunit
+from xpidl import header, xpidl
 
 
 class TestParser(unittest.TestCase):

@@ -9,9 +9,10 @@
 
 from __future__ import absolute_import
 
-from xpidl import xpidl
-import json
 import itertools
+import json
+
+from xpidl import xpidl
 
 # A map of xpidl.py types to xpt enum variants
 TypeMap = {
