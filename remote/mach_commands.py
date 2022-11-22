@@ -2,11 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import (
-    absolute_import,
-    print_function,
-    unicode_literals,
-)
+from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import json
@@ -16,25 +12,14 @@ import shutil
 import subprocess
 import sys
 import tempfile
-
 from collections import OrderedDict
 
-from six import iteritems
-
-from mach.decorators import (
-    Command,
-    CommandArgument,
-    SubCommand,
-)
-
-from mozbuild.base import (
-    MozbuildObject,
-    BinaryNotFoundException,
-)
-from mozbuild import nodeutil
 import mozlog
 import mozprofile
-
+from mach.decorators import Command, CommandArgument, SubCommand
+from mozbuild import nodeutil
+from mozbuild.base import BinaryNotFoundException, MozbuildObject
+from six import iteritems
 
 EX_CONFIG = 78
 EX_SOFTWARE = 70
