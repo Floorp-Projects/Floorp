@@ -329,6 +329,9 @@ $(call RUN_CARGO,udeps)
 endef
 endif
 
+define CARGO_AUDIT
+$(call RUN_CARGO,audit)
+endef
 
 cargo_host_linker_env_var := CARGO_TARGET_$(call varize,$(RUST_HOST_TARGET))_LINKER
 cargo_linker_env_var := CARGO_TARGET_$(call varize,$(RUST_TARGET))_LINKER
@@ -462,12 +465,18 @@ endif
 
 force-cargo-library-check:
 	$(call CARGO_CHECK) --lib $(cargo_target_flag) $(rust_features_flag)
+
+force-cargo-library-audit:
+	$(call CARGO_AUDIT)
+
 force-cargo-library-udeps:
 	$(call CARGO_UDEPS) --lib $(cargo_target_flag) $(rust_features_flag)
 else
 force-cargo-library-check:
 	@true
 force-cargo-library-udeps:
+	@true
+force-cargo-library-audit:
 	@true
 endif # RUST_LIBRARY_FILE
 
@@ -501,10 +510,16 @@ $(HOST_RUST_LIBRARY_FILE): force-cargo-host-library-build ;
 
 force-cargo-host-library-check:
 	$(call CARGO_CHECK) --lib $(cargo_host_flag) $(host_rust_features_flag)
+
+force-cargo-host-library-audit:
+	$(call CARGO_AUDIT) --lib $(filter-out --release $(cargo_target_flag)) $(host_rust_features_flag)
+
 force-cargo-host-library-udeps:
 	$(call CARGO_UDEPS) --lib $(cargo_host_flag) $(host_rust_features_flag)
 else
 force-cargo-host-library-check:
+	@true
+force-cargo-host-library-audit:
 	@true
 force-cargo-host-library-udeps:
 	@true
@@ -520,10 +535,15 @@ $(RUST_PROGRAMS): force-cargo-program-build ;
 
 force-cargo-program-check:
 	$(call CARGO_CHECK) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag)
+force-cargo-program-audit:
+	$(call CARGO_AUDIT) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(filter-out --release $(cargo_target_flag))
+
 force-cargo-program-udeps:
 	$(call CARGO_UDEPS) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag)
 else
 force-cargo-program-check:
+	@true
+force-cargo-program-audit:
 	@true
 force-cargo-program-udeps:
 	@true
@@ -539,11 +559,17 @@ $(HOST_RUST_PROGRAMS): force-cargo-host-program-build ;
 force-cargo-host-program-check:
 	$(REPORT_BUILD)
 	$(call CARGO_CHECK) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag)
+force-cargo-host-program-audit:
+	$(REPORT_BUILD)
+	$(call CARGO_CHECK) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(filter-out --release $(cargo_target_flag))
+
 force-cargo-host-program-udeps:
 	$(REPORT_BUILD)
 	$(call CARGO_UDEPS) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag)
 else
 force-cargo-host-program-check:
+	@true
+force-cargo-host-program-audit:
 	@true
 force-cargo-host-program-udeps:
 	@true
