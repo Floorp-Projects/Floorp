@@ -6186,6 +6186,7 @@ dependencies = [
  "webrender",
  "winapi",
  "wr_malloc_size_of",
+ "remove_dir_all",
 ]
 
 [[package]]
