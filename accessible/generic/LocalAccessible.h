@@ -468,11 +468,6 @@ class LocalAccessible : public nsISupports, public Accessible {
 
   HTMLImageMapAccessible* AsImageMap();
 
-  RemoteAccessible* Proxy() const {
-    MOZ_ASSERT(IsProxy());
-    return mBits.proxy;
-  }
-
   OuterDocAccessible* AsOuterDoc();
 
   a11y::RootAccessible* AsRoot();
@@ -1040,10 +1035,7 @@ class LocalAccessible : public nsISupports, public Accessible {
 
   friend class EmbeddedObjCollector;
 
-  union {
-    AccGroupInfo* groupInfo;
-    RemoteAccessible* proxy;
-  } mutable mBits;
+  mutable AccGroupInfo* mGroupInfo;
   friend class AccGroupInfo;
 
  private:
