@@ -12,6 +12,9 @@ def migrate(ctx):
     source = "browser/chrome/browser/tabbrowser.properties"
     target = "browser/browser/tabbrowser.ftl"
 
+    browser_source = "browser/chrome/browser/browser.properties"
+    browser_target = "browser/browser/browser.ftl"
+
     ctx.add_transforms(
         target,
         target,
@@ -191,6 +194,102 @@ def migrate(ctx):
             FTL.Message(
                 id=FTL.Identifier("tabbrowser-confirm-caretbrowsing-checkbox"),
                 value=COPY(source, "browsewithcaret.checkMsg"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("tabbrowser-customizemode-tab-title"),
+                value=REPLACE(
+                    browser_source,
+                    "customizeMode.tabTitle",
+                    {"%1$S": TERM_REFERENCE("brand-short-name")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("tabbrowser-context-mute-tab"),
+                attributes=[
+                    FTL.Attribute(
+                        id=FTL.Identifier("label"),
+                        value=COPY(browser_source, "muteTab.label"),
+                    ),
+                    FTL.Attribute(
+                        id=FTL.Identifier("accesskey"),
+                        value=COPY(browser_source, "muteTab.accesskey"),
+                    ),
+                ],
+            ),
+            FTL.Message(
+                id=FTL.Identifier("tabbrowser-context-unmute-tab"),
+                attributes=[
+                    FTL.Attribute(
+                        id=FTL.Identifier("label"),
+                        value=COPY(browser_source, "unmuteTab.label"),
+                    ),
+                    FTL.Attribute(
+                        id=FTL.Identifier("accesskey"),
+                        value=COPY(browser_source, "unmuteTab.accesskey"),
+                    ),
+                ],
+            ),
+            FTL.Message(
+                id=FTL.Identifier("tabbrowser-context-mute-selected-tabs"),
+                attributes=[
+                    FTL.Attribute(
+                        id=FTL.Identifier("label"),
+                        value=COPY(browser_source, "muteSelectedTabs2.label"),
+                    ),
+                    FTL.Attribute(
+                        id=FTL.Identifier("accesskey"),
+                        value=COPY(browser_source, "muteSelectedTabs2.accesskey"),
+                    ),
+                ],
+            ),
+            FTL.Message(
+                id=FTL.Identifier("tabbrowser-context-unmute-selected-tabs"),
+                attributes=[
+                    FTL.Attribute(
+                        id=FTL.Identifier("label"),
+                        value=COPY(browser_source, "unmuteSelectedTabs2.label"),
+                    ),
+                    FTL.Attribute(
+                        id=FTL.Identifier("accesskey"),
+                        value=COPY(browser_source, "unmuteSelectedTabs2.accesskey"),
+                    ),
+                ],
+            ),
+        ],
+    )
+
+    ctx.add_transforms(
+        browser_target,
+        browser_target,
+        [
+            FTL.Message(
+                id=FTL.Identifier("refresh-blocked-refresh-label"),
+                value=REPLACE(
+                    browser_source,
+                    "refreshBlocked.refreshLabel",
+                    {"%1$S": TERM_REFERENCE("brand-short-name")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("refresh-blocked-redirect-label"),
+                value=REPLACE(
+                    browser_source,
+                    "refreshBlocked.redirectLabel",
+                    {"%1$S": TERM_REFERENCE("brand-short-name")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("refresh-blocked-allow"),
+                attributes=[
+                    FTL.Attribute(
+                        id=FTL.Identifier("label"),
+                        value=COPY(browser_source, "refreshBlocked.goButton"),
+                    ),
+                    FTL.Attribute(
+                        id=FTL.Identifier("accesskey"),
+                        value=COPY(browser_source, "refreshBlocked.goButton.accesskey"),
+                    ),
+                ],
             ),
         ],
     )

@@ -157,3 +157,45 @@ add_task(async function test_can_block_refresh_from_header() {
   await testRealRefresh(HEADER_PAGE, 100);
   await testRealRefresh(HEADER_PAGE, 500);
 });
+
+/**
+ * Tests that we can update a notification when multiple reload/redirect
+ * attempts happen.
+ */
+add_task(async function test_can_update_notification() {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:blank",
+    },
+    async function(browser) {
+      await pushPrefs(["accessibility.blockautorefresh", true]);
+
+      // First, attempt a redirect
+      BrowserTestUtils.loadURI(browser, META_PAGE + "?d=0&p=" + TARGET_PAGE);
+      await BrowserTestUtils.browserLoaded(browser);
+
+      // Once browserLoaded resolves, all nsIWebProgressListener callbacks
+      // should have fired, so the notification should be visible.
+      let notificationBox = gBrowser.getNotificationBox(browser);
+      let notification = notificationBox.currentNotification;
+
+      let message = notification.messageText.querySelector("span");
+      is(
+        message.dataset.l10nId,
+        "refresh-blocked-redirect-label",
+        "Should be showing the redirect message"
+      );
+
+      // Next, attempt a refresh
+      await attemptFakeRefresh(browser, false);
+
+      message = notification.messageText.querySelector("span");
+      is(
+        message.dataset.l10nId,
+        "refresh-blocked-refresh-label",
+        "Should be showing the refresh message"
+      );
+    }
+  );
+});

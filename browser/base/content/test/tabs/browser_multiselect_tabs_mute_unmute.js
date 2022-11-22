@@ -297,7 +297,11 @@ add_task(async function checkTabContextMenu() {
   ok(muted(tab2), "Tab2 is muted");
   ok(!muted(tab3, "Tab3 is not muted"));
 
-  let labels = ["Unmute Tabs", "Mute Tabs", "Unmute Tabs"];
+  const l10nIds = [
+    "tabbrowser-context-unmute-selected-tabs",
+    "tabbrowser-context-mute-selected-tabs",
+    "tabbrowser-context-unmute-selected-tabs",
+  ];
 
   for (let i = 0; i <= 2; i++) {
     updateTabContextMenu(tabs[i]);
@@ -310,9 +314,9 @@ add_task(async function checkTabContextMenu() {
       "toggleMuteAudio menu for selected tab is not hidden - contextTab" + i
     );
     is(
-      menuItemToggleMuteSelectedTabs.label,
-      labels[i],
-      labels[i] + " should be shown"
+      menuItemToggleMuteSelectedTabs.dataset.l10nId,
+      l10nIds[i],
+      l10nIds[i] + " should be shown"
     );
   }
 
