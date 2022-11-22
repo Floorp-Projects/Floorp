@@ -56,8 +56,7 @@ nsNativeThemeWin::nsNativeThemeWin()
       mProgressDeterminateTimeStamp(TimeStamp::Now()),
       mProgressIndeterminateTimeStamp(TimeStamp::Now()),
       mBorderCacheValid(),
-      mMinimumWidgetSizeCacheValid(),
-      mGutterSizeCacheValid(false) {
+      mMinimumWidgetSizeCacheValid() {
   // If there is a relevant change in forms.css for windows platform,
   // static widget style variables (e.g. sButtonBorderSize) should be
   // reinitialized here.
@@ -224,17 +223,6 @@ static SIZE GetGutterSize(HANDLE theme, HDC hdc) {
   ret.cx = width;
   ret.cy = height;
   return ret;
-}
-
-SIZE nsNativeThemeWin::GetCachedGutterSize(HANDLE theme) {
-  if (mGutterSizeCacheValid) {
-    return mGutterSizeCache;
-  }
-
-  mGutterSizeCache = GetGutterSize(theme, nullptr);
-  mGutterSizeCacheValid = true;
-
-  return mGutterSizeCache;
 }
 
 /* DrawThemeBGRTLAware - render a theme part based on rtl state.
@@ -2100,9 +2088,9 @@ LayoutDeviceIntSize nsNativeThemeWin::GetMinimumWidgetSize(
     return Theme::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance);
   }
 
-  mozilla::Maybe<nsUXThemeClass> themeClass = GetThemeClass(aAppearance);
   HTHEME theme = NULL;
-  if (!themeClass.isNothing()) {
+  Maybe<nsUXThemeClass> themeClass = GetThemeClass(aAppearance);
+  if (themeClass.isSome()) {
     theme = nsUXThemeData::GetTheme(themeClass.value());
   }
   if (!theme) {
@@ -2147,28 +2135,7 @@ LayoutDeviceIntSize nsNativeThemeWin::GetMinimumWidgetSize(
       ScaleForFrameDPI(&result, aFrame);
       return result;
     }
-    case StyleAppearance::Menuitem:
-    case StyleAppearance::Checkmenuitem:
-    case StyleAppearance::Radiomenuitem:
-      if (!IsTopLevelMenu(aFrame)) {
-        SIZE gutterSize(GetCachedGutterSize(theme));
-        LayoutDeviceIntSize result(gutterSize.cx, gutterSize.cy);
-        ScaleForFrameDPI(&result, aFrame);
-        return result;
-      }
-      break;
 
-    case StyleAppearance::Menuimage:
-    case StyleAppearance::Menucheckbox:
-    case StyleAppearance::Menuradio: {
-      SIZE boxSize(GetCachedGutterSize(theme));
-      LayoutDeviceIntSize result(boxSize.cx + 2, boxSize.cy);
-      ScaleForFrameDPI(&result, aFrame);
-      return result;
-    }
-
-    case StyleAppearance::Menuitemtext:
-      return {};
 
     case StyleAppearance::ProgressBar:
       // Best-fit size for progress meters is too large for most
@@ -2361,7 +2328,6 @@ nsNativeThemeWin::ThemeChanged() {
   nsUXThemeData::Invalidate();
   memset(mBorderCacheValid, 0, sizeof(mBorderCacheValid));
   memset(mMinimumWidgetSizeCacheValid, 0, sizeof(mMinimumWidgetSizeCacheValid));
-  mGutterSizeCacheValid = false;
   return NS_OK;
 }
 
@@ -2654,12 +2620,6 @@ LayoutDeviceIntSize nsNativeThemeWin::ClassicGetMinimumWidgetSize(
     case StyleAppearance::Radio:
     case StyleAppearance::Checkbox:
       result.width = result.height = 13;
-      break;
-    case StyleAppearance::Menucheckbox:
-    case StyleAppearance::Menuradio:
-    case StyleAppearance::Menuarrow:
-      result.width = ::GetSystemMetrics(SM_CXMENUCHECK);
-      result.height = ::GetSystemMetrics(SM_CYMENUCHECK);
       break;
     case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton:
