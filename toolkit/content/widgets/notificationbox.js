@@ -508,10 +508,26 @@
 
     /**
      * Changes the text of an existing notification. If the notification was
-     * created with a custom fragment, it will be overwritten with plain text.
+     * created with a custom fragment, it will be overwritten with plain text
+     * or a localized message.
+     *
+     * @param {string | { "l10n-id": string, "l10n-args"?: string }} value
      */
     set label(value) {
-      this.messageText.textContent = value;
+      if (value && typeof value == "object" && "l10n-id" in value) {
+        const message = document.createElement("span");
+        document.l10n.setAttributes(
+          message,
+          value["l10n-id"],
+          value["l10n-args"]
+        );
+        while (this.messageText.firstChild) {
+          this.messageText.firstChild.remove();
+        }
+        this.messageText.appendChild(message);
+      } else {
+        this.messageText.textContent = value;
+      }
     }
 
     /**
@@ -709,8 +725,28 @@
         }
       }
 
+      /**
+       * Changes the text of an existing notification. If the notification was
+       * created with a custom fragment, it will be overwritten with plain text
+       * or a localized message.
+       *
+       * @param {string | { "l10n-id": string, "l10n-args"?: string }} value
+       */
       set label(value) {
-        this.messageText.textContent = value;
+        if (value && typeof value == "object" && "l10n-id" in value) {
+          const message = document.createElement("span");
+          document.l10n.setAttributes(
+            message,
+            value["l10n-id"],
+            value["l10n-args"]
+          );
+          while (this.messageText.firstChild) {
+            this.messageText.firstChild.remove();
+          }
+          this.messageText.appendChild(message);
+        } else {
+          this.messageText.textContent = value;
+        }
         this.setAlertRole();
       }
 

@@ -124,6 +124,26 @@ var tests =
 [
   {
     test(nb, ntf) {
+      ntf = nb.appendNotification("mutable", {
+          label: "Original",
+          priority: nb.PRIORITY_INFO_LOW,
+        }, testtag_notificationbox_buttons);
+
+      ntf.label = "Changed string";
+      SimpleTest.is(ntf.messageText.textContent, "Changed string", "set notification label with string");
+
+      ntf.label = { "l10n-id": "foo-bar" };
+      const message = ntf.messageText.querySelector("span");
+      SimpleTest.is(message.dataset.l10nId, "foo-bar", "set notification label with l10n id");
+      return ntf;
+    },
+    result(nb, ntf) {
+      nb.removeNotification(ntf);
+      testtag_notificationbox_State(nb, "set notification label", null, 0);
+    }
+  },
+  {
+    test(nb, ntf) {
       // append a new notification
       ntf = nb.appendNotification("note", {
           label: "Notification", 
