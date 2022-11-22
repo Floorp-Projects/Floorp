@@ -123,6 +123,8 @@ win64-llvm-symbolizer-15:
 
 linux32-llvm-symbolizer-trunk:
     description: "llvm-symbolizer for Linux"
+    attributes:
+        cached_task: false
     treeherder:
         symbol: TL32(llvm-symbolizer-trunk)
     run:
@@ -193,6 +195,8 @@ macosx64-llvm-symbolizer-trunk:
 
 macosx64-aarch64-llvm-symbolizer-trunk:
     description: "llvm-symbolizer for macOS aarch64"
+    attributes:
+        cached_task: false
     treeherder:
         symbol: TM(llvm-symbolizer-aarch64-trunk)
     run:
