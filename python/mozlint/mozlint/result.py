@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from collections import defaultdict
+from itertools import chain
 from json import JSONEncoder
 import os
 import mozpack.path as mozpath
@@ -15,7 +16,8 @@ class ResultSummary(object):
 
     root = None
 
-    def __init__(self, root):
+    def __init__(self, root, fail_on_warnings=True):
+        self.fail_on_warnings = fail_on_warnings
         self.reset()
 
         # Store the repository root folder to be able to build
@@ -30,9 +32,19 @@ class ResultSummary(object):
         self.suppressed_warnings = defaultdict(int)
         self.fixed = 0
 
+    def has_issues_failure(self):
+        """Returns true in case issues were detected during the lint run. Do not
+        consider warning issues in case `self.fail_on_warnings` is set to False.
+        """
+        if self.fail_on_warnings is False:
+            return any(
+                result.level != "warning" for result in chain(*self.issues.values())
+            )
+        return len(self.issues) >= 1
+
     @property
     def returncode(self):
-        if self.issues or self.failed:
+        if self.has_issues_failure() or self.failed:
             return 1
         return 0
 
