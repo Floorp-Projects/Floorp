@@ -960,3 +960,102 @@ add_task(async function test_messages_origin_controls() {
 
   await SpecialPowers.popPrefEnv();
 });
+
+add_task(async function test_hover_message_when_button_updates_itself() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.manifestV3.enabled", true]],
+  });
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      name: "an extension that refreshes its title",
+      action: {},
+    },
+    background() {
+      browser.test.onMessage.addListener(async msg => {
+        browser.test.assertEq(
+          "update-button",
+          msg,
+          "expected 'update-button' message"
+        );
+
+        browser.action.setTitle({ title: "a title" });
+
+        browser.test.sendMessage(`${msg}-done`);
+      });
+
+      browser.test.sendMessage("background-ready");
+    },
+    useAddonManager: "temporary",
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-ready");
+
+  await openExtensionsPanel(win);
+
+  const item = getUnifiedExtensionsItem(win, extension.id);
+  ok(item, "expected item in the panel");
+
+  const actionButton = item.querySelector(".unified-extensions-item-action");
+  ok(actionButton, "expected an action button");
+
+  const menuButton = item.querySelector(".unified-extensions-item-open-menu");
+  ok(menuButton, "expected a open menu button");
+
+  const hovered = BrowserTestUtils.waitForEvent(actionButton, "mouseover");
+  EventUtils.synthesizeMouseAtCenter(actionButton, { type: "mouseover" }, win);
+  await hovered;
+
+  is(
+    item.dataset.showsHoverMessage,
+    "true",
+    "Got the expected dataset attribute set on hover"
+  );
+
+  const message = item.querySelector(
+    ".unified-extensions-item-message-default"
+  );
+  ok(message, "expected a default message element");
+
+  const expectedL10nAttributes = {
+    id: "origin-controls-state-runnable-hover-run",
+    args: null,
+  };
+  Assert.deepEqual(
+    win.document.l10n.getAttributes(message),
+    expectedL10nAttributes,
+    "expected l10n attributes for the default message"
+  );
+
+  extension.sendMessage("update-button");
+  await extension.awaitMessage("update-button-done");
+
+  await new Promise(resolve =>
+    message.ownerGlobal.requestAnimationFrame(resolve)
+  );
+
+  Assert.deepEqual(
+    win.document.l10n.getAttributes(message),
+    expectedL10nAttributes,
+    "expected l10n attributes for the default message to remain the same as before"
+  );
+
+  const hoveredGearButton = BrowserTestUtils.waitForEvent(
+    menuButton,
+    "mouseover"
+  );
+  EventUtils.synthesizeMouseAtCenter(menuButton, { type: "mouseover" }, win);
+  await hoveredGearButton;
+
+  is(
+    item.dataset.showsHoverMessage,
+    undefined,
+    "dataset attribute cleared when action button is not focused"
+  );
+
+  await closeExtensionsPanel(win);
+
+  await extension.unload();
+});
