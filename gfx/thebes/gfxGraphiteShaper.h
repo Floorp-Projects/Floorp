@@ -39,7 +39,7 @@ class gfxGraphiteShaper : public gfxFontShaper {
   // Graphite is run in a rlbox sandbox. Callback GrGetAdvance must be
   // explicitly permitted. Since the sandbox is owned in gfxFontEntry class,
   // gfxFontEntry needs access to the protected callback.
-  friend class gfxFontEntry;
+  friend class gfxFontEntryCallbacks;
   static tainted_opaque_gr<float> GrGetAdvance(
       rlbox_sandbox_gr& sandbox, tainted_opaque_gr<const void*> appFontHandle,
       tainted_opaque_gr<uint16_t> glyphid);

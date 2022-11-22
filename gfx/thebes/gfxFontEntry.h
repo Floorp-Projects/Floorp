@@ -127,6 +127,8 @@ struct gfxFontFeatureInfo {
   uint32_t mLangSys;
 };
 
+class gfxFontEntryCallbacks;
+
 class gfxFontEntry {
  public:
   typedef mozilla::gfx::DrawTarget DrawTarget;
@@ -701,13 +703,7 @@ class gfxFontEntry {
   // number of current users of this entry's mGrFace
   nsrefcnt mGrFaceRefCnt = 0;
 
-  static tainted_opaque_gr<const void*> GrGetTable(
-      rlbox_sandbox_gr& sandbox, tainted_opaque_gr<const void*> aAppFaceHandle,
-      tainted_opaque_gr<unsigned int> aName,
-      tainted_opaque_gr<unsigned int*> aLen);
-  static void GrReleaseTable(rlbox_sandbox_gr& sandbox,
-                             tainted_opaque_gr<const void*> aAppFaceHandle,
-                             tainted_opaque_gr<const void*> aTableBuffer);
+  friend class gfxFontEntryCallbacks;
 
   // For memory reporting: size of user-font data belonging to this entry.
   // We record this in the font entry because the actual data block may be

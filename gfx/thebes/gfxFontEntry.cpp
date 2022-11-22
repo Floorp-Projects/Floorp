@@ -605,6 +605,56 @@ hb_blob_t* gfxFontEntry::HBGetTable(hb_face_t* face, uint32_t aTag,
   return fontEntry->GetFontTable(aTag);
 }
 
+static thread_local gfxFontEntry* tl_grGetFontTableCallbackData = nullptr;
+
+class gfxFontEntryCallbacks {
+ public:
+  static tainted_gr<const void*> GrGetTable(
+      rlbox_sandbox_gr& sandbox, tainted_gr<const void*> /* aAppFaceHandle */,
+      tainted_gr<unsigned int> aName, tainted_gr<unsigned int*> aLen) {
+    gfxFontEntry* fontEntry = tl_grGetFontTableCallbackData;
+    *aLen = 0;
+    tainted_gr<const void*> ret = nullptr;
+
+    if (fontEntry) {
+      unsigned int fontTableKey = aName.unverified_safe_because(
+          "This is only being used to index into a hashmap, which is robust "
+          "for any value. No checks needed.");
+      gfxFontUtils::AutoHBBlob blob(fontEntry->GetFontTable(fontTableKey));
+
+      if (blob) {
+        unsigned int blobLength;
+        const void* tableData = hb_blob_get_data(blob, &blobLength);
+        // tableData is read-only data shared with the sandbox.
+        // Making a copy in sandbox memory
+        tainted_gr<void*> t_tableData = rlbox::sandbox_reinterpret_cast<void*>(
+            sandbox.malloc_in_sandbox<char>(blobLength));
+        if (t_tableData) {
+          rlbox::memcpy(sandbox, t_tableData, tableData, blobLength);
+          *aLen = blobLength;
+          ret = rlbox::sandbox_const_cast<const void*>(t_tableData);
+        }
+      }
+    }
+
+    return ret;
+  }
+
+  static void GrReleaseTable(rlbox_sandbox_gr& sandbox,
+                             tainted_gr<const void*> /* aAppFaceHandle */,
+                             tainted_gr<const void*> aTableBuffer) {
+    sandbox.free_in_sandbox(aTableBuffer);
+  }
+
+  static tainted_gr<float> GrGetAdvance(rlbox_sandbox_gr& sandbox,
+                                        tainted_gr<const void*> appFontHandle,
+                                        tainted_gr<uint16_t> glyphid) {
+    tainted_opaque_gr<float> ret = gfxGraphiteShaper::GrGetAdvance(
+        sandbox, appFontHandle.to_opaque(), glyphid.to_opaque());
+    return rlbox::from_opaque(ret);
+  }
+};
+
 struct gfxFontEntry::GrSandboxData {
   rlbox_sandbox_gr sandbox;
   sandbox_callback_gr<const void* (*)(const void*, unsigned int, unsigned int*)>
@@ -617,10 +667,12 @@ struct gfxFontEntry::GrSandboxData {
 
   GrSandboxData() {
     sandbox.create_sandbox();
-    grGetTableCallback = sandbox.register_callback(GrGetTable);
-    grReleaseTableCallback = sandbox.register_callback(GrReleaseTable);
+    grGetTableCallback =
+        sandbox.register_callback(gfxFontEntryCallbacks::GrGetTable);
+    grReleaseTableCallback =
+        sandbox.register_callback(gfxFontEntryCallbacks::GrReleaseTable);
     grGetGlyphAdvanceCallback =
-        sandbox.register_callback(gfxGraphiteShaper::GrGetAdvance);
+        sandbox.register_callback(gfxFontEntryCallbacks::GrGetAdvance);
   }
 
   ~GrSandboxData() {
@@ -630,52 +682,6 @@ struct gfxFontEntry::GrSandboxData {
     sandbox.destroy_sandbox();
   }
 };
-
-static thread_local gfxFontEntry* tl_grGetFontTableCallbackData = nullptr;
-
-/*static*/
-tainted_opaque_gr<const void*> gfxFontEntry::GrGetTable(
-    rlbox_sandbox_gr& sandbox,
-    tainted_opaque_gr<const void*> /* aAppFaceHandle */,
-    tainted_opaque_gr<unsigned int> aName,
-    tainted_opaque_gr<unsigned int*> aLen) {
-  gfxFontEntry* fontEntry = tl_grGetFontTableCallbackData;
-  tainted_gr<unsigned int*> t_aLen = rlbox::from_opaque(aLen);
-  *t_aLen = 0;
-  tainted_gr<const void*> ret = nullptr;
-
-  if (fontEntry) {
-    unsigned int fontTableKey =
-        rlbox::from_opaque(aName).unverified_safe_because(
-            "This is only being used to index into a hashmap, which is robust "
-            "for any value. No checks needed.");
-    gfxFontUtils::AutoHBBlob blob(fontEntry->GetFontTable(fontTableKey));
-
-    if (blob) {
-      unsigned int blobLength;
-      const void* tableData = hb_blob_get_data(blob, &blobLength);
-      // tableData is read-only data shared with the sandbox.
-      // Making a copy in sandbox memory
-      tainted_gr<void*> t_tableData = rlbox::sandbox_reinterpret_cast<void*>(
-          sandbox.malloc_in_sandbox<char>(blobLength));
-      if (t_tableData) {
-        rlbox::memcpy(sandbox, t_tableData, tableData, blobLength);
-        *t_aLen = blobLength;
-        ret = rlbox::sandbox_const_cast<const void*>(t_tableData);
-      }
-    }
-  }
-
-  return ret.to_opaque();
-}
-
-/*static*/
-void gfxFontEntry::GrReleaseTable(
-    rlbox_sandbox_gr& sandbox,
-    tainted_opaque_gr<const void*> /* aAppFaceHandle */,
-    tainted_opaque_gr<const void*> aTableBuffer) {
-  sandbox.free_in_sandbox(rlbox::from_opaque(aTableBuffer));
-}
 
 rlbox_sandbox_gr* gfxFontEntry::GetGrSandbox() {
   AutoReadLock lock(mLock);
