@@ -523,8 +523,6 @@ class Accessible {
 
   bool IsMenuPopup() const { return mType == eMenuPopupType; }
 
-  bool IsProxy() const { return mType == eProxyType; }
-
   bool IsOuterDoc() const { return mType == eOuterDocType; }
 
   bool IsProgress() const { return mType == eProgressType; }
