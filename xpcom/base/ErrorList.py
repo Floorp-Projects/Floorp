@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from __future__ import absolute_import
+
 from collections import OrderedDict
 
 
@@ -1379,8 +1380,9 @@ use super::nsresult;
 def gen_jinja(output, input_filename):
     # This is used to generate Java code for error lists, and can be expanded to
     # other required contexts in the future if desired.
-    from jinja2 import Environment, FileSystemLoader, StrictUndefined
     import os
+
+    from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
     # FileSystemLoader requires the path to the directory containing templates,
     # not the file name of the template itself.

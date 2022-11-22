@@ -7,17 +7,16 @@
 
 """A parser for cross-platform IDL (XPIDL) files."""
 
-from __future__ import absolute_import
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
-import sys
 import os.path
 import re
-from ply import lex
-from ply import yacc
-import six
+import sys
 import textwrap
 from collections import namedtuple
+
+import six
+from ply import lex, yacc
 
 """A type conforms to the following pattern:
 

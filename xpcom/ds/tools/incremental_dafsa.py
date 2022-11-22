@@ -10,7 +10,7 @@ functions for converting to a compatible structure. This legacy format is define
 in make_dafsa.py.
 """
 
-from typing import List, Dict, Optional, Callable
+from typing import Callable, Dict, List, Optional
 
 
 class Node:

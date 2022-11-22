@@ -6,9 +6,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import json
-from perfecthash import PerfectHash
 from collections import OrderedDict
+
 import buildconfig
+from perfecthash import PerfectHash
 
 # Pick a nice power-of-two size for our intermediate PHF tables.
 PHFSIZE = 512
@@ -628,8 +629,8 @@ def link_and_write(files, outfile, outheader):
 
 
 def main():
-    from argparse import ArgumentParser
     import sys
+    from argparse import ArgumentParser
 
     parser = ArgumentParser()
     parser.add_argument("outfile", help="Output C++ file to generate")

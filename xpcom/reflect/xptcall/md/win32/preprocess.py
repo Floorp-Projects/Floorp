@@ -5,10 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import errno
-import sys
 import os
 import shlex
 import subprocess
+import sys
 import tempfile
 
 import buildconfig
