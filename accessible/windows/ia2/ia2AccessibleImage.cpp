@@ -9,7 +9,7 @@
 
 #include "AccessibleImage_i.c"
 
-#include "ImageAccessibleWrap.h"
+#include "ImageAccessible.h"
 #include "IUnknownImpl.h"
 #include "nsIAccessibleTypes.h"
 

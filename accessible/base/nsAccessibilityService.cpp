@@ -8,7 +8,7 @@
 // NOTE: alphabetically ordered
 #include "AccAttributes.h"
 #include "ApplicationAccessibleWrap.h"
-#include "ARIAGridAccessibleWrap.h"
+#include "ARIAGridAccessible.h"
 #include "ARIAMap.h"
 #include "DocAccessible-inl.h"
 #include "DocAccessibleChild.h"
@@ -19,7 +19,7 @@
 #include "HTMLLinkAccessible.h"
 #include "HTMLListAccessible.h"
 #include "HTMLSelectAccessible.h"
-#include "HTMLTableAccessibleWrap.h"
+#include "HTMLTableAccessible.h"
 #include "HyperTextAccessibleWrap.h"
 #include "RootAccessible.h"
 #include "StyleInfo.h"
@@ -39,7 +39,7 @@
 #endif
 #include "States.h"
 #include "Statistics.h"
-#include "TextLeafAccessibleWrap.h"
+#include "TextLeafAccessible.h"
 #include "TreeWalker.h"
 #include "xpcAccessibleApplication.h"
 
@@ -81,10 +81,10 @@
 #include "XULComboboxAccessible.h"
 #include "XULElementAccessibles.h"
 #include "XULFormControlAccessible.h"
-#include "XULListboxAccessibleWrap.h"
-#include "XULMenuAccessibleWrap.h"
+#include "XULListboxAccessible.h"
+#include "XULMenuAccessible.h"
 #include "XULTabAccessible.h"
-#include "XULTreeGridAccessibleWrap.h"
+#include "XULTreeGridAccessible.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -1108,7 +1108,7 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
     if (isARIATablePart && (!newAcc || newAcc->IsGenericHyperText())) {
       if ((roleMapEntry->accTypes & eTableCell)) {
         if (aContext->IsTableRow()) {
-          newAcc = new ARIAGridCellAccessibleWrap(content, document);
+          newAcc = new ARIAGridCellAccessible(content, document);
         }
 
       } else if (roleMapEntry->IsOfType(eTableRow)) {
@@ -1124,7 +1124,7 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
         }
 
       } else if (roleMapEntry->IsOfType(eTable)) {
-        newAcc = new ARIAGridAccessibleWrap(content, document);
+        newAcc = new ARIAGridAccessible(content, document);
       }
     }
 
@@ -1482,7 +1482,7 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       break;
     case eHTMLTableType:
       if (aContent->IsHTMLElement(nsGkAtoms::table)) {
-        newAcc = new HTMLTableAccessibleWrap(aContent, document);
+        newAcc = new HTMLTableAccessible(aContent, document);
       } else {
         newAcc = new HyperTextAccessibleWrap(aContent, document);
       }
@@ -1494,7 +1494,7 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       // Otherwise create a generic text accessible to avoid text jamming
       // when reading by AT.
       if (aContext->IsHTMLTableRow() || aContext->IsHTMLTable()) {
-        newAcc = new HTMLTableCellAccessibleWrap(aContent, document);
+        newAcc = new HTMLTableCellAccessible(aContent, document);
       } else {
         newAcc = new HyperTextAccessibleWrap(aContent, document);
       }
@@ -1551,14 +1551,14 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
     case eImageType:
       if (aContent->IsElement() &&
           ShouldCreateImgAccessible(aContent->AsElement(), document)) {
-        newAcc = new ImageAccessibleWrap(aContent, document);
+        newAcc = new ImageAccessible(aContent, document);
       }
       break;
     case eOuterDocType:
       newAcc = new OuterDocAccessible(aContent, document);
       break;
     case eTextLeafType:
-      newAcc = new TextLeafAccessibleWrap(aContent, document);
+      newAcc = new TextLeafAccessible(aContent, document);
       break;
     default:
       MOZ_ASSERT(false);

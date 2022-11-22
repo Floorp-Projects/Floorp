@@ -11,16 +11,16 @@ XULMAP_TYPE(findbar, XULToolbarAccessible)
 XULMAP_TYPE(groupbox, XULGroupboxAccessible)
 XULMAP_TYPE(iframe, OuterDocAccessible)
 XULMAP_TYPE(listheader, XULColumAccessible)
-XULMAP_TYPE(menu, XULMenuitemAccessibleWrap)
+XULMAP_TYPE(menu, XULMenuitemAccessible)
 XULMAP_TYPE(menubar, XULMenubarAccessible)
-XULMAP_TYPE(menucaption, XULMenuitemAccessibleWrap)
-XULMAP_TYPE(menuitem, XULMenuitemAccessibleWrap)
+XULMAP_TYPE(menucaption, XULMenuitemAccessible)
+XULMAP_TYPE(menuitem, XULMenuitemAccessible)
 XULMAP_TYPE(menulist, XULComboboxAccessible)
 XULMAP_TYPE(menuseparator, XULMenuSeparatorAccessible)
 XULMAP_TYPE(notification, XULAlertAccessible)
 XULMAP_TYPE(radio, XULRadioButtonAccessible)
 XULMAP_TYPE(radiogroup, XULRadioGroupAccessible)
-XULMAP_TYPE(richlistbox, XULListboxAccessibleWrap)
+XULMAP_TYPE(richlistbox, XULListboxAccessible)
 XULMAP_TYPE(richlistitem, XULListitemAccessible)
 XULMAP_TYPE(statusbar, XULStatusBarAccessible)
 XULMAP_TYPE(tab, XULTabAccessible)
@@ -64,7 +64,7 @@ XULMAP(image,
            return nullptr;
          }
 
-         return new ImageAccessibleWrap(aElement, aContext->Document());
+         return new ImageAccessible(aElement, aContext->Document());
        })
 
 XULMAP(menupopup, [](Element* aElement, LocalAccessible* aContext) {
@@ -114,6 +114,6 @@ XULMAP(tree,
          }
 
          // Table or tree table accessible.
-         return new XULTreeGridAccessibleWrap(aElement, aContext->Document(),
-                                              treeFrame);
+         return new XULTreeGridAccessible(aElement, aContext->Document(),
+                                          treeFrame);
        })

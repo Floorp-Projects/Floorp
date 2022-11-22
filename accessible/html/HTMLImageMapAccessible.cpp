@@ -26,7 +26,7 @@ using namespace mozilla::a11y;
 
 HTMLImageMapAccessible::HTMLImageMapAccessible(nsIContent* aContent,
                                                DocAccessible* aDoc)
-    : ImageAccessibleWrap(aContent, aDoc) {
+    : ImageAccessible(aContent, aDoc) {
   mType = eImageMapType;
 
   UpdateChildAreas(false);
