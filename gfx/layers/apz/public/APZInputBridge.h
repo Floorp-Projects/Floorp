@@ -262,6 +262,15 @@ class APZInputBridge {
 std::ostream& operator<<(std::ostream& aOut,
                          const APZHandledResult& aHandledResult);
 
+// This enum class is used for communicating between APZ and the browser gesture
+// support code. APZ needs to wait for the browser to send this response just
+// like APZ waits for the content's response if there's an APZ ware event
+// listener in the content process.
+enum class BrowserGestureResponse : bool {
+  NotConsumed = 0,  // Representing the browser doesn't consume the gesture
+  Consumed = 1,  // Representing the browser has started consuming the gesture.
+};
+
 }  // namespace layers
 }  // namespace mozilla
 
