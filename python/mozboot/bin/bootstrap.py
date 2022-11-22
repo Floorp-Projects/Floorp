@@ -233,12 +233,6 @@ def git_clone_firefox(git: Path, dest: Path, watchman: Path):
             subprocess.check_call(config_args, cwd=str(dest), env=env)
         return dest
     finally:
-        if not cinnabar:
-            print(
-                "Failed to install git-cinnabar. Try performing a manual "
-                "installation: https://github.com/glandium/git-cinnabar/wiki/"
-                "Mozilla:-A-git-workflow-for-Gecko-development"
-            )
         if tempdir:
             shutil.rmtree(str(tempdir))
 
