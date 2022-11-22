@@ -1876,32 +1876,26 @@ void nsDragService::SourceDataGetXDND(nsITransferable* aItem,
     return;
   }
 
-  guchar* data;
-  gint length;
-  if (!gdk_property_get(srcWindow, property, type, 0, INT32_MAX, FALSE, nullptr,
-                        nullptr, &length, &data)) {
-    LOGDRAGSERVICE("  failed to get gXdndDirectSaveType GdkWindow property.");
-    return;
+  // Ensure null termination.
+  nsAutoCString data;
+  {
+    GUniquePtr<guchar> gdata;
+    gint length = 0;
+    if (!gdk_property_get(srcWindow, property, type, 0, INT32_MAX, FALSE,
+                          nullptr, nullptr, &length, getter_Transfers(gdata))) {
+      LOGDRAGSERVICE("  failed to get gXdndDirectSaveType GdkWindow property.");
+      return;
+    }
+    data.Assign(nsDependentCSubstring((const char*)gdata.get(), length));
   }
 
-  // Zero-terminate the string.
-  data = (guchar*)g_realloc(data, length + 1);
-  if (!data) {
-    return;
-  }
-  data[length] = '\0';
-  gchar* hostname;
-  char* gfullpath = g_filename_from_uri((const gchar*)data, &hostname, nullptr);
-  g_free(data);
-  if (!gfullpath) {
+  GUniquePtr<char> hostname;
+  GUniquePtr<char> fullpath(
+      g_filename_from_uri(data.get(), getter_Transfers(hostname), nullptr));
+  if (!fullpath) {
     LOGDRAGSERVICE("  failed to get file from uri.");
     return;
   }
-
-  nsCString fullpath(gfullpath);
-  g_free(gfullpath);
-
-  LOGDRAGSERVICE("  XdndDirectSave filepath is %s", fullpath.get());
 
   // If there is no hostname in the URI, NULL will be stored.
   // We should not accept uris with from a different host.
@@ -1913,19 +1907,20 @@ void nsDragService::SourceDataGetXDND(nsITransferable* aItem,
     }
     nsAutoCString host;
     if (NS_SUCCEEDED(infoService->GetPropertyAsACString(u"host"_ns, host))) {
-      if (!host.Equals(hostname)) {
+      if (!host.Equals(hostname.get())) {
         LOGDRAGSERVICE("  ignored drag because of different host.");
         // Special error code "F" for this case.
         gtk_selection_data_set(aSelectionData, target, 8, (guchar*)"F", 1);
-        g_free(hostname);
         return;
       }
     }
-    g_free(hostname);
   }
 
+  LOGDRAGSERVICE("  XdndDirectSave filepath is %s", fullpath.get());
+
   nsCOMPtr<nsIFile> file;
-  if (NS_FAILED(NS_NewNativeLocalFile(fullpath, false, getter_AddRefs(file)))) {
+  if (NS_FAILED(NS_NewNativeLocalFile(nsDependentCString(fullpath.get()), false,
+                                      getter_AddRefs(file)))) {
     LOGDRAGSERVICE("  failed to get local file");
     return;
   }
@@ -1949,10 +1944,10 @@ void nsDragService::SourceDataGetXDND(nsITransferable* aItem,
 
   aItem->SetTransferData(kFilePromiseDestFilename, filenamePrimitive);
 
-  nsresult rv;
   nsCOMPtr<nsISupports> promiseData;
-  rv = aItem->GetTransferData(kFilePromiseMime, getter_AddRefs(promiseData));
-  NS_ENSURE_SUCCESS(rv, );
+  nsresult rv =
+      aItem->GetTransferData(kFilePromiseMime, getter_AddRefs(promiseData));
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   // Indicate success.
   gtk_selection_data_set(aSelectionData, target, 8, (guchar*)"S", 1);
