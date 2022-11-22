@@ -5,6 +5,9 @@
 loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
+    - test-focus
+    - ui-test-focus
+    - build-apk
     - build-components
     - build-samples-browser
     - lint

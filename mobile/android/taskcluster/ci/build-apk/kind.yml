@@ -42,6 +42,8 @@ task-defaults:
 
 tasks:
     focus-debug:
+        attributes:
+            code-review: true
         description: 'Focus debug build from source code'
         run-on-tasks-for: [github-pull-request, github-push]
         run:
@@ -52,6 +54,8 @@ tasks:
             symbol: focus-debug(Bf)
 
     klar-debug:
+        attributes:
+            code-review: true
         description: 'Klar debug build from source code'
         run-on-tasks-for: [github-pull-request, github-push]
         run:
