@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// This is only needed for getting a temp file location, which IOUtils
-// cannot currently do.
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 add_task(async () => {
   info(
     "Test that off-main thread fileio is captured for a profiled thread, " +
@@ -120,8 +116,7 @@ async function startProfilerAndTriggerFileIO({
     threadsFilter
   );
 
-  const tmpDir = OS.Constants.Path.tmpDir;
-  const path = OS.Path.join(tmpDir, filename);
+  const path = PathUtils.join(PathUtils.tempDir, filename);
 
   info(`Using a temporary file to test FileIO: ${path}`);
 
