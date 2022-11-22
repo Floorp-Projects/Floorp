@@ -65,11 +65,12 @@ var BrowserTabs = {
    * @param profile The profile to search for tabs
    * @return true if the specified tab could be found, otherwise false
    */
-  Find(uri, title, profile) {
+  async Find(uri, title, profile) {
     // Find the uri in Weave's list of tabs for the given profile.
     let tabEngine = Weave.Service.engineManager.get("tabs");
     for (let client of Weave.Service.clientsEngine.remoteClients) {
-      let tabClient = tabEngine.getAllClients().find(x => x.id === client.id);
+      let tabClients = await tabEngine.getAllClients();
+      let tabClient = tabClients.find(x => x.id === client.id);
       if (!tabClient || !tabClient.tabs) {
         continue;
       }

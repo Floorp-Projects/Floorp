@@ -17,9 +17,8 @@ var phases = { phase1: "profile1", phase2: "profile2", phase3: "profile1" };
 var tabs1 = [
   { uri: "https://www.mozilla.org/en-US/firefox/", profile: "profile1" },
   {
-    uri:
-      "data:text/html,<html><head><title>Hello</title></head><body>Hello</body></html>",
-    title: "Hello",
+    uri: "https://example.com/",
+    title: "Example Domain",
     profile: "profile1",
   },
 ];
@@ -27,8 +26,7 @@ var tabs1 = [
 var tabs2 = [
   { uri: "https://www.mozilla.org/en-US/contribute/", profile: "profile2" },
   {
-    uri:
-      "data:text/html,<html><head><title>Bye</title></head><body>Bye</body></html>",
+    uri: "https://example.com/",
     profile: "profile2",
   },
 ];

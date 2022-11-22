@@ -353,7 +353,7 @@ var TPS = {
             "profile must be defined when verifying tabs"
           );
           lazy.Logger.AssertTrue(
-            lazy.BrowserTabs.Find(tab.uri, tab.title, tab.profile),
+            await lazy.BrowserTabs.Find(tab.uri, tab.title, tab.profile),
             "error locating tab"
           );
           break;
@@ -363,7 +363,7 @@ var TPS = {
             "profile must be defined when verifying tabs"
           );
           lazy.Logger.AssertTrue(
-            !lazy.BrowserTabs.Find(tab.uri, tab.title, tab.profile),
+            await !lazy.BrowserTabs.Find(tab.uri, tab.title, tab.profile),
             "tab found which was expected to be absent"
           );
           break;
