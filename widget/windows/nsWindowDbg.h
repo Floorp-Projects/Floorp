@@ -43,12 +43,14 @@ extern std::unordered_map<UINT, EventMsgInfo> gAllEvents;
 // RAII-style class to log before and after an event is handled.
 class PrintEvent final {
  public:
-  PrintEvent(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT retValue);
+  PrintEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
+             LRESULT retValue);
   void SetResult(bool result) { mResult = mozilla::Some(result); }
   ~PrintEvent();
 
  private:
   bool PrintEventInternal();
+  const HWND mHwnd;
   const UINT mMsg;
   const WPARAM mWParam;
   const LPARAM mLParam;
