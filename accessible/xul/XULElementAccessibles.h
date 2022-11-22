@@ -7,7 +7,7 @@
 #define mozilla_a11y_XULElementAccessibles_h__
 
 #include "HyperTextAccessibleWrap.h"
-#include "TextLeafAccessibleWrap.h"
+#include "TextLeafAccessible.h"
 
 namespace mozilla {
 namespace a11y {
@@ -47,10 +47,10 @@ inline XULLabelAccessible* LocalAccessible::AsXULLabel() {
  * Used to implement text interface on XUL label accessible in case when text
  * is provided by @value attribute (no underlying text frame).
  */
-class XULLabelTextLeafAccessible final : public TextLeafAccessibleWrap {
+class XULLabelTextLeafAccessible final : public TextLeafAccessible {
  public:
   XULLabelTextLeafAccessible(nsIContent* aContent, DocAccessible* aDoc)
-      : TextLeafAccessibleWrap(aContent, aDoc) {
+      : TextLeafAccessible(aContent, aDoc) {
     mStateFlags |= eSharedNode;
   }
 

@@ -124,7 +124,7 @@ void XULLabelAccessible::UpdateLabelValue(const nsString& aValue) {
 role XULLabelTextLeafAccessible::NativeRole() const { return roles::TEXT_LEAF; }
 
 uint64_t XULLabelTextLeafAccessible::NativeState() const {
-  return TextLeafAccessibleWrap::NativeState() | states::READONLY;
+  return TextLeafAccessible::NativeState() | states::READONLY;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

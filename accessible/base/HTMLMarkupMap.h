@@ -351,7 +351,7 @@ MARKUPMAP(
     [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       if (!aElement->GetPrimaryFrame() ||
           aElement->GetPrimaryFrame()->AccessibleType() != eHTMLTableType) {
-        return new ARIAGridAccessibleWrap(aElement, aContext->Document());
+        return new ARIAGridAccessible(aElement, aContext->Document());
       }
 
       // Make sure that our children are proper layout table parts
@@ -364,7 +364,7 @@ MARKUPMAP(
           nsIFrame* childFrame = child->GetPrimaryFrame();
           if (childFrame && (!childFrame->IsTableRowGroupFrame() &&
                              !childFrame->IsTableRowFrame())) {
-            return new ARIAGridAccessibleWrap(aElement, aContext->Document());
+            return new ARIAGridAccessible(aElement, aContext->Document());
           }
         }
       }
@@ -390,11 +390,11 @@ MARKUPMAP(
         if (!aContext->IsHTMLTableRow() || !aElement->GetPrimaryFrame() ||
             aElement->GetPrimaryFrame()->AccessibleType() !=
                 eHTMLTableCellType) {
-          return new ARIAGridCellAccessibleWrap(aElement, aContext->Document());
+          return new ARIAGridCellAccessible(aElement, aContext->Document());
         }
         if (aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::scope)) {
-          return new HTMLTableHeaderCellAccessibleWrap(aElement,
-                                                       aContext->Document());
+          return new HTMLTableHeaderCellAccessible(aElement,
+                                                   aContext->Document());
         }
       }
       return nullptr;
@@ -416,10 +416,10 @@ MARKUPMAP(
         if (!aContext->IsHTMLTableRow() || !aElement->GetPrimaryFrame() ||
             aElement->GetPrimaryFrame()->AccessibleType() !=
                 eHTMLTableCellType) {
-          return new ARIAGridCellAccessibleWrap(aElement, aContext->Document());
+          return new ARIAGridCellAccessible(aElement, aContext->Document());
         }
-        return new HTMLTableHeaderCellAccessibleWrap(aElement,
-                                                     aContext->Document());
+        return new HTMLTableHeaderCellAccessible(aElement,
+                                                 aContext->Document());
       }
       return nullptr;
     },

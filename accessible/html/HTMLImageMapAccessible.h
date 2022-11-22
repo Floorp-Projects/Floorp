@@ -7,7 +7,7 @@
 #define mozilla_a11y_HTMLImageMapAccessible_h__
 
 #include "HTMLLinkAccessible.h"
-#include "ImageAccessibleWrap.h"
+#include "ImageAccessible.h"
 
 namespace mozilla {
 namespace a11y {
@@ -15,13 +15,12 @@ namespace a11y {
 /**
  * Used for HTML image maps.
  */
-class HTMLImageMapAccessible final : public ImageAccessibleWrap {
+class HTMLImageMapAccessible final : public ImageAccessible {
  public:
   HTMLImageMapAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports and cycle collector
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLImageMapAccessible,
-                                       ImageAccessibleWrap)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLImageMapAccessible, ImageAccessible)
 
   // LocalAccessible
   virtual a11y::role NativeRole() const override;
