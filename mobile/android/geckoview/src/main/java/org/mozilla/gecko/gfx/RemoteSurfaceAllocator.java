@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.gfx;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public final class RemoteSurfaceAllocator extends ISurfaceAllocator.Stub {
   private static final String LOGTAG = "RemoteSurfaceAllocator";
 
@@ -13,7 +15,7 @@ public final class RemoteSurfaceAllocator extends ISurfaceAllocator.Stub {
   private final int mAllocatorId;
   /// Monotonically increasing counter used to generate unique handles
   /// for each SurfaceTexture by combining with mAllocatorId.
-  private static volatile int sNextHandle = 1;
+  private static AtomicInteger sNextHandle = new AtomicInteger(1);
 
   /**
    * Retrieves the singleton allocator instance for this process.
@@ -35,7 +37,7 @@ public final class RemoteSurfaceAllocator extends ISurfaceAllocator.Stub {
   @Override
   public GeckoSurface acquireSurface(
       final int width, final int height, final boolean singleBufferMode) {
-    final long handle = ((long) mAllocatorId << 32) | sNextHandle++;
+    final long handle = ((long) mAllocatorId << 32) | sNextHandle.getAndIncrement();
     final GeckoSurfaceTexture gst = GeckoSurfaceTexture.acquire(singleBufferMode, handle);
 
     if (gst == null) {
