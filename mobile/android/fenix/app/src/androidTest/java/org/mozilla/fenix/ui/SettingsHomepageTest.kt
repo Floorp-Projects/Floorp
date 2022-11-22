@@ -15,6 +15,8 @@ import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
+import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestHelper.openAppFromExternalLink
 import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -180,19 +182,6 @@ class SettingsHomepageTest {
     fun startOnLastTabTest() {
         val firstWebPage = getGenericAsset(mockWebServer, 1)
 
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openHomepageSubMenu {
-            clickStartOnHomepageButton()
-        }
-
-        restartApp(activityIntentTestRule)
-
-        homeScreen {
-            verifyHomeScreen()
-        }
-
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
         }.goToHomescreen {
@@ -205,6 +194,31 @@ class SettingsHomepageTest {
 
         browserScreen {
             verifyUrl(firstWebPage.url.toString())
+        }
+    }
+
+    @Test
+    fun ignoreStartOnHomeWhenLaunchedByExternalLinkTest() {
+        val genericPage = getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openHomepageSubMenu {
+            clickStartOnHomepageButton()
+        }.goBack {}
+
+        with(activityIntentTestRule) {
+            finishActivity()
+            mDevice.waitForIdle()
+            this.applySettingsExceptions {
+                it.isTCPCFREnabled = false
+            }
+            openAppFromExternalLink(genericPage.url.toString())
+        }
+
+        browserScreen {
+            verifyPageContent(genericPage.content)
         }
     }
 
