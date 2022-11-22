@@ -5806,13 +5806,14 @@ browser.searchinit:
       - 1691050
       - 1725501
       - 1763528
+      - 1801017
     description: >
       Records the WebExtension ID of a search engine where the WebExtension
       is not installed (= 1), disabled (= 2), search engine no longer specified (= 4),
       a different name (= 5), where the submission URL is different between the
       search engine and the WebExtension (= 6). The value '3' has been replaced
       by '6' to distinguish newer entries.
-    expires: "110"
+    expires: "116"
     keyed: true
     kind: uint
     notification_emails:
