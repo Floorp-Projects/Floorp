@@ -919,9 +919,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTextReset {
 
   mozilla::StyleTextDecorationLine mTextDecorationLine;
   uint8_t mTextDecorationStyle;  // NS_STYLE_TEXT_DECORATION_STYLE_*
-  uint8_t mUnicodeBidi;          // NS_STYLE_UNICODE_BIDI_*
-  nscoord mInitialLetterSink;    // 0 means normal
-  float mInitialLetterSize;      // 0.0f means normal
+  mozilla::StyleUnicodeBidi mUnicodeBidi;
+  nscoord mInitialLetterSink;  // 0 means normal
+  float mInitialLetterSize;    // 0.0f means normal
   mozilla::StyleColor mTextDecorationColor;
   mozilla::StyleTextDecorationLength mTextDecorationThickness;
 };

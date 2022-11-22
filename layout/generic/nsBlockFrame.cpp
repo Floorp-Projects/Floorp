@@ -2344,14 +2344,15 @@ void nsBlockFrame::MarkLineDirty(LineIterator aLine,
  */
 static inline bool IsAlignedLeft(StyleTextAlign aAlignment,
                                  StyleDirection aDirection,
-                                 uint8_t aUnicodeBidi, nsIFrame* aFrame) {
+                                 StyleUnicodeBidi aUnicodeBidi,
+                                 nsIFrame* aFrame) {
   return SVGUtils::IsInSVGTextSubtree(aFrame) ||
          StyleTextAlign::Left == aAlignment ||
          (((StyleTextAlign::Start == aAlignment &&
             StyleDirection::Ltr == aDirection) ||
            (StyleTextAlign::End == aAlignment &&
             StyleDirection::Rtl == aDirection)) &&
-          !(NS_STYLE_UNICODE_BIDI_PLAINTEXT & aUnicodeBidi));
+          aUnicodeBidi != StyleUnicodeBidi::Plaintext);
 }
 
 void nsBlockFrame::PrepareResizeReflow(BlockReflowState& aState) {
