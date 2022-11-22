@@ -91,7 +91,6 @@ ac_add_options --enable-project=mobile/android
 MOBILE_ANDROID_ARTIFACT_MODE_MOZCONFIG_TEMPLATE = """
 # Build GeckoView/Firefox for Android Artifact Mode:
 ac_add_options --enable-project=mobile/android
-ac_add_options --target=arm-linux-androideabi
 ac_add_options --enable-artifact-builds
 
 {extra_lines}
