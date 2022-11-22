@@ -3,7 +3,7 @@
 
 import fluent.syntax.ast as FTL
 from fluent.migrate.helpers import TERM_REFERENCE, VARIABLE_REFERENCE
-from fluent.migrate.transforms import COPY, PLURALS, REPLACE, REPLACE_IN_TEXT
+from fluent.migrate.transforms import COPY, PLURALS, REPLACE, REPLACE_IN_TEXT, Transform
 
 
 def migrate(ctx):
@@ -190,6 +190,63 @@ def migrate(ctx):
             FTL.Message(
                 id=FTL.Identifier("tabbrowser-confirm-close-tabs-checkbox"),
                 value=COPY(source, "tabs.closeTabsConfirmCheckbox"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("tabbrowser-confirm-close-windows-title"),
+                value=PLURALS(
+                    source,
+                    "tabs.closeWindowsTitle",
+                    VARIABLE_REFERENCE("windowCount"),
+                    foreach=lambda n: REPLACE_IN_TEXT(
+                        n,
+                        {"#1": VARIABLE_REFERENCE("windowCount")},
+                    ),
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("tabbrowser-confirm-close-windows-button"),
+                value=Transform.pattern_of(
+                    FTL.SelectExpression(
+                        selector=FTL.FunctionReference(
+                            id=FTL.Identifier("PLATFORM"), arguments=FTL.CallArguments()
+                        ),
+                        variants=[
+                            FTL.Variant(
+                                key=FTL.Identifier("windows"),
+                                value=COPY(source, "tabs.closeWindowsButtonWin"),
+                            ),
+                            FTL.Variant(
+                                key=FTL.Identifier("other"),
+                                value=COPY(source, "tabs.closeWindowsButton"),
+                                default=True,
+                            ),
+                        ],
+                    )
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("tabbrowser-confirm-close-tabs-with-key-title"),
+                value=REPLACE(
+                    source,
+                    "tabs.closeTabsWithKeyTitle",
+                    {"%1$S": TERM_REFERENCE("brand-short-name")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("tabbrowser-confirm-close-tabs-with-key-button"),
+                value=REPLACE(
+                    source,
+                    "tabs.closeTabsWithKeyButton",
+                    {"%1$S": TERM_REFERENCE("brand-short-name")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("tabbrowser-confirm-close-tabs-with-key-checkbox"),
+                value=REPLACE(
+                    source,
+                    "tabs.closeTabsWithKeyConfirmCheckbox",
+                    {"%1$S": VARIABLE_REFERENCE("quitKey")},
+                ),
             ),
             FTL.Message(
                 id=FTL.Identifier("tabbrowser-confirm-caretbrowsing-title"),
