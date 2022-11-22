@@ -39,6 +39,17 @@ std::unordered_set<UINT> gEventsToLogOriginalParams = {
     WM_GETTEXT,           WM_GETMINMAXINFO, WM_MEASUREITEM,
 };
 
+std::unordered_set<UINT> gEventsToRecordInAboutPage = {WM_WINDOWPOSCHANGING,
+                                                       WM_WINDOWPOSCHANGED,
+                                                       WM_SIZING,
+                                                       WM_SIZE,
+                                                       WM_DPICHANGED,
+                                                       WM_SETTINGCHANGE,
+                                                       WM_NCCALCSIZE,
+                                                       WM_MOVE,
+                                                       WM_MOVING,
+                                                       WM_GETMINMAXINFO};
+
 PrintEvent::PrintEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
                        LRESULT retValue)
     : mHwnd(hwnd),
@@ -156,13 +167,16 @@ bool PrintEvent::PrintEventInternal() {
   mozilla::LogLevel logLevel = (*gWindowsEventLog).Level();
   bool isPreCall = mResult.isNothing();
   if (isPreCall || mShouldLogPostCall) {
+    bool recordInAboutPage = gEventsToRecordInAboutPage.find(mMsg) !=
+                             gEventsToRecordInAboutPage.end();
     if (isPreCall) {
       bool shouldLogAtAll =
-          logLevel >= mozilla::LogLevel::Info &&
-          (logLevel >= mozilla::LogLevel::Debug || (gLastEventMsg != mMsg)) &&
-          (logLevel >= mozilla::LogLevel::Verbose ||
-           (mMsg != WM_SETCURSOR && mMsg != WM_MOUSEMOVE &&
-            mMsg != WM_NCHITTEST));
+          recordInAboutPage ||
+          (logLevel >= mozilla::LogLevel::Info &&
+           (logLevel >= mozilla::LogLevel::Debug || (gLastEventMsg != mMsg)) &&
+           (logLevel >= mozilla::LogLevel::Verbose ||
+            (mMsg != WM_SETCURSOR && mMsg != WM_MOUSEMOVE &&
+             mMsg != WM_NCHITTEST)));
       // Since calling mParamInfoFn() allocates a string, only go down this code
       // path if we're going to log this message to reduce allocations.
       if (!shouldLogAtAll) {
@@ -325,6 +339,11 @@ void PointParamInfoFn(nsAutoCString& str, uint64_t value, const char* name,
                       bool /* isPreCall */) {
   str.AppendPrintf("%s: x=%d y=%d", name, static_cast<int>(GET_X_LPARAM(value)),
                    static_cast<int>(GET_Y_LPARAM(value)));
+}
+
+void PointExplicitParamInfoFn(nsAutoCString& str, POINT point,
+                              const char* name) {
+  str.AppendPrintf("%s: x=%ld y=%ld", name, point.x, point.y);
 }
 
 void PointsParamInfoFn(nsAutoCString& str, uint64_t value, const char* name,
@@ -941,6 +960,22 @@ void SetCursorLParamInfoFn(nsAutoCString& result, uint64_t lParam,
   HexParamInfoFn(result, HIWORD(lParam), "message", false);
 }
 
+void MinMaxInfoParamInfoFn(nsAutoCString& result, uint64_t value,
+                           const char* /* name */, bool /* isPreCall */) {
+  PMINMAXINFO minMaxInfo = reinterpret_cast<PMINMAXINFO>(value);
+  if (minMaxInfo == nullptr) {
+    result.AppendPrintf("NULL minMaxInfo?");
+    return;
+  }
+  PointExplicitParamInfoFn(result, minMaxInfo->ptMaxSize, "maxSize");
+  result.AppendASCII(" ");
+  PointExplicitParamInfoFn(result, minMaxInfo->ptMaxPosition, "maxPosition");
+  result.AppendASCII(" ");
+  PointExplicitParamInfoFn(result, minMaxInfo->ptMinTrackSize, "minTrackSize");
+  result.AppendASCII(" ");
+  PointExplicitParamInfoFn(result, minMaxInfo->ptMaxTrackSize, "maxTrackSize");
+}
+
 void WideStringParamInfoFn(nsAutoCString& result, uint64_t value,
                            const char* name, bool /* isPreCall */) {
   result.AppendPrintf("%s=%S", name, reinterpret_cast<LPCWSTR>(value));
@@ -1043,7 +1078,8 @@ std::unordered_map<UINT, EventMsgInfo> gAllEvents = {
                                  "windowHandle", SetCursorLParamInfoFn, ""),
     ENTRY(WM_CHILDACTIVATE),
     ENTRY(WM_QUEUESYNC),
-    ENTRY(WM_GETMINMAXINFO),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_GETMINMAXINFO, nullptr, nullptr,
+                                 MinMaxInfoParamInfoFn, ""),
     ENTRY(WM_PAINTICON),
     ENTRY(WM_ICONERASEBKGND),
     ENTRY(WM_NEXTDLGCTL),
