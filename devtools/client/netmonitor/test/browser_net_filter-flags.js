@@ -151,12 +151,6 @@ add_task(async function() {
 
   store.dispatch(Actions.batchEnable(false));
 
-  function type(string) {
-    for (const ch of string) {
-      EventUtils.synthesizeKey(ch, {}, monitor.panelWin);
-    }
-  }
-
   // Filtering network request will start fetching data lazily
   // (fetching requestHeaders & responseHeaders for filtering WS & XHR)
   // Lazy fetching will be executed when user focuses on filter box.
@@ -164,7 +158,7 @@ add_task(async function() {
     const filterBox = document.querySelector(".devtools-filterinput");
     filterBox.focus();
     filterBox.value = "";
-    type(value);
+    typeInNetmonitor(value, monitor);
   }
 
   info("Starting test... ");

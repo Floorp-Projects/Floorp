@@ -96,8 +96,5 @@ function setFreetextFilter(monitor, value) {
   const filterBox = document.querySelector(".devtools-filterinput");
   filterBox.focus();
   filterBox.value = "";
-
-  for (const ch of value) {
-    EventUtils.synthesizeKey(ch, {}, monitor.panelWin);
-  }
+  typeInNetmonitor(value, monitor);
 }

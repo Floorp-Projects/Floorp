@@ -26,13 +26,6 @@ add_task(async function() {
   // Open the request blocking panel
   store.dispatch(Actions.toggleRequestBlockingPanel());
 
-  // Helper for keyboard typing
-  const type = string => {
-    for (const ch of string) {
-      EventUtils.synthesizeKey(ch, {}, monitor.panelWin);
-    }
-  };
-
   // wait for the add input to get focus
   await waitUntil(() => {
     return document.querySelector(
@@ -41,9 +34,9 @@ add_task(async function() {
   });
 
   // Add patterns which should block some of the requests
-  type("test1");
+  typeInNetmonitor("test1", monitor);
   EventUtils.synthesizeKey("KEY_Enter");
-  type("test/*/test3");
+  typeInNetmonitor("test/*/test3", monitor);
   EventUtils.synthesizeKey("KEY_Enter");
 
   // Close the blocking panel to ensure it's opened by the context menu later

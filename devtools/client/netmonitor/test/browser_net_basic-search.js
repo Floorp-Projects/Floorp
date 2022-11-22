@@ -34,16 +34,9 @@ add_task(async function() {
   // Open the Search panel
   store.dispatch(Actions.openSearch());
 
-  // Helper for keyboard typing
-  const type = string => {
-    for (const ch of string) {
-      EventUtils.synthesizeKey(ch, {}, monitor.panelWin);
-    }
-  };
-
   // Fill Filter input with text and check displayed messages.
   // The filter should be focused automatically.
-  type("test");
+  typeInNetmonitor("test", monitor);
   EventUtils.synthesizeKey("KEY_Enter");
 
   // Wait till there are two resources rendered in the results.
