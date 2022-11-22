@@ -121,6 +121,12 @@ static const char gTextPlainUTF8Type[] = "text/plain;charset=utf-8";
 static const char gXdndDirectSaveType[] = "XdndDirectSave0";
 static const char gTabDropType[] = "application/x-moz-tabbrowser-tab";
 
+// See https://docs.gtk.org/gtk3/enum.DragResult.html
+static const char kGtkDragResults[][100]{
+    "GTK_DRAG_RESULT_SUCCESS",        "GTK_DRAG_RESULT_NO_TARGET",
+    "GTK_DRAG_RESULT_USER_CANCELLED", "GTK_DRAG_RESULT_TIMEOUT_EXPIRED",
+    "GTK_DRAG_RESULT_GRAB_BROKEN",    "GTK_DRAG_RESULT_ERROR"};
+
 static void invisibleSourceDragBegin(GtkWidget* aWidget,
                                      GdkDragContext* aContext, gpointer aData);
 
@@ -355,6 +361,9 @@ nsresult nsDragService::InvokeDragSessionImpl(
   // the transferables since we're going to hang onto this beyond the
   // length of this call
   mSourceDataItems = aArrayTransferables;
+
+  LOGDRAGSERVICE("nsDragService::InvokeDragSessionImpl");
+
   // get the list of items we offer for drags
   GtkTargetList* sourceList = GetSourceList();
 
@@ -406,9 +415,8 @@ nsresult nsDragService::InvokeDragSessionImpl(
     }
   }
 
-  LOGDRAGSERVICE(
-      "nsDragService::InvokeDragSessionImpl GdkDragContext [%p] nsWindow [%p]",
-      context, mSourceWindow.get());
+  LOGDRAGSERVICE("  GdkDragContext [%p] nsWindow [%p]", context,
+                 mSourceWindow.get());
 
   nsresult rv;
   if (context) {
@@ -443,7 +451,9 @@ bool nsDragService::SetAlphaPixmap(SourceSurface* aSurface,
 
   // Transparent drag icons need, like a lot of transparency-related things,
   // a compositing X window manager
-  if (!gdk_screen_is_composited(screen)) return false;
+  if (!gdk_screen_is_composited(screen)) {
+    return false;
+  }
 
 #ifdef cairo_image_surface_create
 #  error "Looks like we're including Mozilla's cairo instead of system cairo"
@@ -1116,6 +1126,7 @@ void nsDragService::ReplyToDragMotion(GdkDragContext* aDragContext,
     action = GDK_ACTION_MOVE;
   }
 
+  LOGDRAGSERVICE("  gdk_drag_status() action %d", action);
   gdk_drag_status(aDragContext, action, aTime);
 }
 
@@ -1312,6 +1323,7 @@ GtkTargetList* nsDragService::GetSourceList(void) {
   unsigned int numDragItems = 0;
 
   mSourceDataItems->GetLength(&numDragItems);
+  LOGDRAGSERVICE("  numDragItems = %d", numDragItems);
 
   // Check to see if we're dragging > 1 item.
   if (numDragItems > 1) {
@@ -1434,7 +1446,8 @@ GtkTargetList* nsDragService::GetSourceList(void) {
 
 void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
                                          gint aResult) {
-  LOGDRAGSERVICE("SourceEndDragSession(%p) result %d\n", aContext, aResult);
+  LOGDRAGSERVICE("SourceEndDragSession(%p) result %s\n", aContext,
+                 kGtkDragResults[aResult]);
 
   // this just releases the list of data items that we provide
   mSourceDataItems = nullptr;
@@ -1655,10 +1668,6 @@ nsresult nsDragService::CreateTempFile(nsITransferable* aItem,
   rv = NS_NewChannel(getter_AddRefs(channel), sourceURI, principal,
                      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
                      contentPolicyType, cookieJarSettings);
-  /*
-                       contentPolicyType, nsIContentPolicy::TYPE_OTHER,
-                       cookieJarSettings);
-  */
   if (NS_FAILED(rv)) {
     LOGDRAGSERVICE("  Failed to create new channel for source uri");
     return rv;
@@ -1682,9 +1691,7 @@ nsresult nsDragService::CreateTempFile(nsITransferable* aItem,
   // clean them up when nsDragService is destructed
   nsCOMPtr<nsIFile> tempFile;
   tmpDir->Clone(getter_AddRefs(tempFile));
-
   mTemporaryFiles.AppendObject(tempFile);
-
   if (mTempFileTimerID) {
     g_source_remove(mTempFileTimerID);
     mTempFileTimerID = 0;
@@ -2014,11 +2021,14 @@ void nsDragService::SourceBeginDrag(GdkDragContext* aContext) {
       rv = transferable->GetTransferData(kFilePromiseDestFilename,
                                          getter_AddRefs(data));
       if (NS_FAILED(rv)) {
+        LOGDRAGSERVICE("  transferable doesn't contain '%s",
+                       kFilePromiseDestFilename);
         return;
       }
 
       nsCOMPtr<nsISupportsString> fileName = do_QueryInterface(data);
       if (!fileName) {
+        LOGDRAGSERVICE("  failed to get file name");
         return;
       }
 
@@ -2035,6 +2045,7 @@ void nsDragService::SourceBeginDrag(GdkDragContext* aContext) {
                           property, type, 8, GDK_PROP_MODE_REPLACE,
                           (const guchar*)fileNameCStr.get(),
                           fileNameCStr.Length());
+      break;
     }
   }
 }
@@ -2048,7 +2059,10 @@ void nsDragService::SetDragIcon(GdkDragContext* aContext) {
   nsPresContext* pc;
   RefPtr<SourceSurface> surface;
   DrawDrag(mSourceNode, mRegion, mScreenPosition, &dragRect, &surface, &pc);
-  if (!pc) return;
+  if (!pc) {
+    LOGDRAGSERVICE("  PresContext is missing!");
+    return;
+  }
 
   const auto screenPoint =
       LayoutDeviceIntPoint::Round(mScreenPosition * pc->CSSToDevPixelScale());
@@ -2086,20 +2100,31 @@ void nsDragService::SetDragIcon(GdkDragContext* aContext) {
           OpenDragPopup();
           gtk_drag_set_icon_widget(aContext, gtkWidget, offsetX, offsetY);
           return;
+        } else {
+          LOGDRAGSERVICE("  NS_NATIVE_SHELLWIDGET is missing!");
         }
+      } else {
+        LOGDRAGSERVICE("  NearestWidget is missing!");
       }
+    } else {
+      LOGDRAGSERVICE("  PrimaryFrame is missing!");
     }
   }
 
   if (surface) {
+    LOGDRAGSERVICE("  We have a surface");
     if (!SetAlphaPixmap(surface, aContext, offsetX, offsetY, dragRect)) {
       RefPtr<GdkPixbuf> dragPixbuf = nsImageToPixbuf::SourceSurfaceToPixbuf(
           surface, dragRect.width, dragRect.height);
       if (dragPixbuf) {
         LOGDRAGSERVICE("  set drag pixbuf");
         gtk_drag_set_icon_pixbuf(aContext, dragPixbuf, offsetX, offsetY);
+      } else {
+        LOGDRAGSERVICE("  SourceSurfaceToPixbuf failed!");
       }
     }
+  } else {
+    LOGDRAGSERVICE("  Surface is missing!");
   }
 }
 
@@ -2141,14 +2166,15 @@ static gboolean invisibleSourceDragFailed(GtkWidget* aWidget,
       GUniquePtr<gchar> name(gdk_atom_name(atom));
       if (name && !strcmp(name.get(), gTabDropType)) {
         aResult = GTK_DRAG_RESULT_NO_TARGET;
-        LOGDRAGSERVICESTATIC(
-            "invisibleSourceDragFailed(%p): Wayland tab drop\n", aContext);
+        LOGDRAGSERVICESTATIC("invisibleSourceDragFailed(%p): Wayland tab drop",
+                             aContext);
         break;
       }
     }
   }
 #endif
-  LOGDRAGSERVICESTATIC("invisibleSourceDragFailed(%p) %i", aContext, aResult);
+  LOGDRAGSERVICESTATIC("invisibleSourceDragFailed(%p) %s", aContext,
+                       kGtkDragResults[aResult]);
   nsDragService* dragService = (nsDragService*)aData;
   // End the drag session now (rather than waiting for the drag-end signal)
   // so that operations performed on dropEffect == none can start immediately
@@ -2480,7 +2506,7 @@ void nsDragService::UpdateDragAction(GdkDragContext* aDragContext) {
   GdkDragAction gdkAction = GDK_ACTION_DEFAULT;
   if (aDragContext) {
     gdkAction = gdk_drag_context_get_actions(aDragContext);
-    LOGDRAGSERVICE("  gdk_drag_context_get_actions() returns %x", gdkAction);
+    LOGDRAGSERVICE("  gdk_drag_context_get_actions() returns 0x%X", gdkAction);
 
     // When D&D modifiers (CTRL/SHIFT) are involved,
     // gdk_drag_context_get_actions() on X11 returns selected action but
@@ -2493,7 +2519,7 @@ void nsDragService::UpdateDragAction(GdkDragContext* aDragContext) {
     if (widget::GdkIsWaylandDisplay()) {
       GdkDragAction gdkActionSelected =
           gdk_drag_context_get_selected_action(aDragContext);
-      LOGDRAGSERVICE("  gdk_drag_context_get_selected_action() returns %x",
+      LOGDRAGSERVICE("  gdk_drag_context_get_selected_action() returns 0x%X",
                      gdkActionSelected);
       if (gdkActionSelected) {
         gdkAction = gdkActionSelected;
