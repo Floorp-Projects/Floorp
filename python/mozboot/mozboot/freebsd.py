@@ -23,7 +23,6 @@ class FreeBSDBootstrapper(BaseBootstrapper):
             "py%d%d-sqlite3" % sys.version_info[0:2],
             "rust",
             "watchman",
-            "zip",
         ]
 
         self.browser_packages = [

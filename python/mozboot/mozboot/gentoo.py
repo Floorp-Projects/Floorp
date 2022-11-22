@@ -19,9 +19,7 @@ class GentooBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         self.ensure_system_packages()
 
     def ensure_system_packages(self):
-        self.run_as_root(
-            ["emerge", "--noreplace", "--quiet", "app-arch/zip", "dev-util/watchman"]
-        )
+        self.run_as_root(["emerge", "--noreplace", "--quiet", "dev-util/watchman"])
 
     def install_browser_packages(self, mozconfig_builder, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode

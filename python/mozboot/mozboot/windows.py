@@ -50,7 +50,6 @@ class WindowsBootstrapper(BaseBootstrapper):
         "patchutils",
         "diffutils",
         "tar",
-        "zip",
         "unzip",
         "mingw-w64-x86_64-toolchain",  # TODO: Remove when Mercurial is installable from a wheel.
         "mingw-w64-i686-toolchain",

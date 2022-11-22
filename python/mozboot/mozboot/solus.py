@@ -20,7 +20,7 @@ if sys.version_info < (3,):
 class SolusBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     """Solus experimental bootstrapper."""
 
-    SYSTEM_PACKAGES = ["unzip", "zip"]
+    SYSTEM_PACKAGES = ["unzip"]
     SYSTEM_COMPONENTS = ["system.devel"]
 
     BROWSER_PACKAGES = [
