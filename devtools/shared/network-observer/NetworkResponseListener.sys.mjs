@@ -59,13 +59,6 @@ export class NetworkResponseListener {
    */
   #decodedCertificateCache;
   /**
-   * This NetworkResponseListener tracks the NetworkObserver.openResponses
-   * object to find the associated uncached headers.
-   *
-   * @type {boolean}
-   */
-  #foundOpenResponse = false;
-  /**
    * See constructor argument of the same name.
    *
    * @type {Object}
@@ -229,7 +222,6 @@ export class NetworkResponseListener {
    * @param unsigned long count
    */
   onDataAvailable(request, inputStream, offset, count) {
-    this.#findOpenResponse();
     const data = lazy.NetUtil.readInputStreamToString(inputStream, count);
 
     this.#bodySize += count;
@@ -267,7 +259,6 @@ export class NetworkResponseListener {
 
     this.#request = request;
     this.#onSecurityInfo = this.#getSecurityInfo();
-    this.#findOpenResponse();
     // We need to track the offset for the onDataAvailable calls where
     // we pass the data from our pipe to the converter.
     this.#offset = 0;
@@ -415,7 +406,6 @@ export class NetworkResponseListener {
     if (!this.#httpActivity) {
       return;
     }
-    this.#findOpenResponse();
     this.#sink.outputStream.close();
   }
 
@@ -437,38 +427,6 @@ export class NetworkResponseListener {
   }
 
   /**
-   * Find the open response object associated to the current request. The
-   * NetworkObserver._httpResponseExaminer() method saves the response headers in
-   * NetworkObserver.openResponses. This method takes the data from the open
-   * response object and puts it into the HTTP activity object, then sends it to
-   * the remote Web Console instance.
-   *
-   * @private
-   */
-  #findOpenResponse() {
-    if (this.#isDestroyed) {
-      return;
-    }
-
-    if (this.#foundOpenResponse) {
-      return;
-    }
-
-    const channel = this.#httpActivity.channel;
-    const openResponse = this.#networkObserver.getResponseByChannel(channel);
-
-    if (!openResponse) {
-      return;
-    }
-
-    this.#foundOpenResponse = true;
-    this.#networkObserver.deleteResponseByChannel(channel);
-
-    this.#httpActivity.owner.addResponseHeaders(openResponse.headers);
-    this.#httpActivity.owner.addResponseCookies(openResponse.cookies);
-  }
-
-  /**
    * Clean up the response listener once the response input stream is closed.
    * This is called from onStopRequest() or from onInputStreamReady() when the
    * stream is closed.
@@ -481,7 +439,6 @@ export class NetworkResponseListener {
     // Remove our listener from the request input stream.
     this.setAsyncListener(this.#sink.inputStream, null);
 
-    this.#findOpenResponse();
     if (this.#request.fromCache || this.#httpActivity.responseStatus == 304) {
       this.#fetchCacheInformation();
     }
