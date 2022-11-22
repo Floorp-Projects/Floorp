@@ -58,6 +58,8 @@ fi
 # * o pipefail: All stages of all pipes should succeed.
 set -eEuo pipefail
 
+find_base_commit
+find_next_commit
 echo "MOZ_LIBWEBRTC_BASE: $MOZ_LIBWEBRTC_BASE"
 echo "MOZ_LIBWEBRTC_NEXT_BASE: $MOZ_LIBWEBRTC_NEXT_BASE"
 echo "MOZ_LIBWEBRTC_REVERT_SHA: $MOZ_LIBWEBRTC_REVERT_SHA"

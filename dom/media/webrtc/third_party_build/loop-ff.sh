@@ -91,13 +91,8 @@ ERROR_HELP=""
 
 for (( ; ; )); do
 
-# read the last line of README.moz-ff-commit to retrieve our current base
-# commit in moz-libwebrtc
-MOZ_LIBWEBRTC_BASE=`tail -1 third_party/libwebrtc/README.moz-ff-commit`
-# calculate the next commit above our current base commit
-MOZ_LIBWEBRTC_NEXT_BASE=`cd $MOZ_LIBWEBRTC_SRC ; \
-git log --oneline --ancestry-path $MOZ_LIBWEBRTC_BASE^..$MOZ_GIT_RELEASE_BRANCH \
- | tail -2 | head -1 | awk '{print$1;}'`
+find_base_commit
+find_next_commit
 
 echo "============ loop ff ============" 2>&1| tee -a $LOOP_OUTPUT_LOG
 
