@@ -10,13 +10,11 @@ Produce skeleton Performance Data Review Requests.
 This was mostly copies from glean_parser, and should be kept in sync.
 """
 
+import re
 from pathlib import Path
 from typing import Sequence
-import re
 
-
-from glean_parser import parser
-from glean_parser import util
+from glean_parser import parser, util
 
 
 def generate(

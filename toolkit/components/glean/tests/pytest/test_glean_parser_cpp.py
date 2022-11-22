@@ -3,11 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import io
-import mozunit
+import sys
 from os import path
 from pathlib import Path
-import sys
 
+import mozunit
 from expect_helper import expect
 
 # Shenanigans to import the cpp outputter extension

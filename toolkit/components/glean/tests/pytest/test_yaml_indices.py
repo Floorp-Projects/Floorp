@@ -2,9 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import mozunit
-from os import path
 import sys
+from os import path
+
+import mozunit
 
 # Shenanigans to import the metrics index's lists of yamls
 FOG_ROOT_PATH = path.abspath(

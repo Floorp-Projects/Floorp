@@ -7,11 +7,12 @@
 # The events are defined in files provided as command-line arguments.
 
 from __future__ import print_function
-from mozparsers.shared_telemetry_utils import ParserError
-from mozparsers import parse_events
 
 import sys
+
 import buildconfig
+from mozparsers import parse_events
+from mozparsers.shared_telemetry_utils import ParserError
 
 banner = """/* This file is auto-generated, see gen_event_enum.py.  */
 """

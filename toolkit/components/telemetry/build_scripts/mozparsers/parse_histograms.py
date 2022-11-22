@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import atexit
 import collections
 import itertools
 import json
@@ -10,12 +11,11 @@ import os
 import re
 import runpy
 import sys
-import atexit
-from . import shared_telemetry_utils as utils
-
-from ctypes import c_int
-from .shared_telemetry_utils import ParserError
 from collections import OrderedDict
+from ctypes import c_int
+
+from . import shared_telemetry_utils as utils
+from .shared_telemetry_utils import ParserError
 
 atexit.register(ParserError.exit_func)
 

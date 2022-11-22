@@ -6,12 +6,13 @@
 # in a file provided as a command-line argument.
 
 from __future__ import print_function
-from mozparsers.shared_telemetry_utils import static_assert, ParserError
-from mozparsers import parse_histograms
 
 import sys
-import buildconfig
 from os import path
+
+import buildconfig
+from mozparsers import parse_histograms
+from mozparsers.shared_telemetry_utils import ParserError, static_assert
 
 COMPONENTS_PATH = path.abspath(
     path.join(path.dirname(__file__), path.pardir, path.pardir)

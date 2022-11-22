@@ -8,9 +8,9 @@
 Utility functions for the glean_parser-based code generator
 """
 import copy
+from typing import Dict, List, Tuple
 
 from glean_parser import util
-from typing import Dict, List, Tuple
 
 
 def generate_ping_ids(objs):

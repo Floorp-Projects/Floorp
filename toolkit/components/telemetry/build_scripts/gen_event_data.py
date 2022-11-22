@@ -6,14 +6,15 @@
 # in a file provided as a command-line argument.
 
 from __future__ import print_function
-from collections import OrderedDict
-from mozparsers.shared_telemetry_utils import static_assert, ParserError
-from mozparsers import parse_events
 
+import itertools
 import json
 import sys
-import itertools
+from collections import OrderedDict
 from os import path
+
+from mozparsers import parse_events
+from mozparsers.shared_telemetry_utils import ParserError, static_assert
 
 COMPONENTS_PATH = path.abspath(
     path.join(path.dirname(__file__), path.pardir, path.pardir)

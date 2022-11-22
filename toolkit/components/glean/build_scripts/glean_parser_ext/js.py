@@ -14,11 +14,10 @@ that uses this code to look up metrics by name.
 """
 
 import jinja2
+from glean_parser import util
 from perfecthash import PerfectHash
 from string_table import StringTable
-
 from util import generate_metric_ids, generate_ping_ids, get_metrics
-from glean_parser import util
 
 """
 We need to store several bits of information in the Perfect Hash Map Entry:

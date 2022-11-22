@@ -13,13 +13,13 @@
 # The histograms are defined in files provided as command-line arguments.
 
 from __future__ import print_function
-from mozparsers.shared_telemetry_utils import ParserError
-from mozparsers import parse_histograms
 
 import itertools
 import sys
-import buildconfig
 
+import buildconfig
+from mozparsers import parse_histograms
+from mozparsers.shared_telemetry_utils import ParserError
 
 banner = """/* This file is auto-generated, see gen_histogram_enum.py.  */
 """

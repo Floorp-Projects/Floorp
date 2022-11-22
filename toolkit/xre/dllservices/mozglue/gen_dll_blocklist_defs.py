@@ -6,11 +6,12 @@
 
 from __future__ import print_function
 
-from copy import deepcopy
-from six import iteritems
-from struct import unpack
 import os
+from copy import deepcopy
+from struct import unpack
 from uuid import UUID
+
+from six import iteritems
 
 H_HEADER = """/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */

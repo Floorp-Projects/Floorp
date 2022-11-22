@@ -6,10 +6,12 @@
 # defined in a file provided as a command-line argument.
 
 from __future__ import print_function
-from mozparsers.shared_telemetry_utils import static_assert, ParserError
-from mozparsers import parse_user_interactions
+
 import sys
 from os import path
+
+from mozparsers import parse_user_interactions
+from mozparsers.shared_telemetry_utils import ParserError, static_assert
 
 COMPONENTS_PATH = path.abspath(
     path.join(path.dirname(__file__), path.pardir, path.pardir)
@@ -17,9 +19,9 @@ COMPONENTS_PATH = path.abspath(
 sys.path.append(
     path.join(COMPONENTS_PATH, "glean", "build_scripts", "glean_parser_ext")
 )
-from string_table import StringTable
-
 import sys
+
+from string_table import StringTable
 
 # The banner/text at the top of the generated file.
 banner = """/* This file is auto-generated, only for internal use in

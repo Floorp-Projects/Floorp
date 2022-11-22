@@ -26,14 +26,14 @@ GENERATED_HEADER = """
 def data_review(command_context, bug=None):
     # Get the metrics_index's list of metrics indices
     # by loading the index as a module.
-    from os import path
     import sys
+    from os import path
 
     sys.path.append(path.join(path.dirname(__file__), path.pardir))
-    from metrics_index import metrics_yamls
+    from pathlib import Path
 
     from glean_parser import data_review
-    from pathlib import Path
+    from metrics_index import metrics_yamls
 
     return data_review.generate(
         bug, [Path(command_context.topsrcdir) / x for x in metrics_yamls]
@@ -51,15 +51,16 @@ def data_review(command_context, bug=None):
 def perf_data_review(command_context, bug=None):
     # Get the metrics_index's list of metrics indices
     # by loading the index as a module.
-    from os import path
     import sys
+    from os import path
 
     sys.path.append(path.join(path.dirname(__file__), path.pardir))
     from metrics_index import metrics_yamls
 
     sys.path.append(path.dirname(__file__))
-    import perf_data_review
     from pathlib import Path
+
+    import perf_data_review
 
     return perf_data_review.generate(
         bug, [Path(command_context.topsrcdir) / x for x in metrics_yamls]
@@ -75,6 +76,7 @@ def perf_data_review(command_context, bug=None):
 )
 def update_glean_tags(command_context):
     from pathlib import Path
+
     import yaml
     from mozbuild.backend.configenvironment import ConfigEnvironment
     from mozbuild.frontend.reader import BuildReader
@@ -159,8 +161,8 @@ def replace_in_file_or_die(path, pattern, replace):
 )
 @CommandArgument("version", help="Glean version to upgrade to")
 def update_glean(command_context, version):
-    from pathlib import Path
     import textwrap
+    from pathlib import Path
 
     topsrcdir = Path(command_context.topsrcdir)
 

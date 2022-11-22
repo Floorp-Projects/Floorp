@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_harness.runtests import cli as mn_cli
-
 from telemetry_harness.runner import TelemetryTestRunner
 
 

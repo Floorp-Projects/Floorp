@@ -4,7 +4,6 @@
 
 from marionette_harness import MarionetteTestCase
 
-
 EXT_ID = "extension-with-bg-sw@test"
 EXT_DIR_PATH = "extension-with-bg-sw"
 PREF_BG_SW_ENABLED = "extensions.backgroundServiceWorker.enabled"

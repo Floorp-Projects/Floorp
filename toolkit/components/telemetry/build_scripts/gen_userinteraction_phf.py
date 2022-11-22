@@ -3,14 +3,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import print_function
+
 from mozparsers.shared_telemetry_utils import ParserError
 from perfecthash import PerfectHash
 
 PHFSIZE = 1024
 
-from mozparsers import parse_user_interactions
 import sys
 
+from mozparsers import parse_user_interactions
 
 banner = """/* This file is auto-generated, see gen_userinteraction_phf.py.  */
 """

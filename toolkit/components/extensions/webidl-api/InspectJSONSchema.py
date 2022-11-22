@@ -3,8 +3,8 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
-import sys
 import os
+import sys
 
 # Sanity check (ensure the script has been executed through `mach python`).
 try:
@@ -26,9 +26,9 @@ module_dir = os.path.dirname(__file__)
 sys.path.append(module_dir)
 
 from GenerateWebIDLBindings import (
+    APIEntry,
     load_and_parse_JSONSchema,
     set_logging_level,
-    APIEntry,
 )
 
 
