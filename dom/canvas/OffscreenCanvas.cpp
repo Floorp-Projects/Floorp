@@ -82,10 +82,8 @@ void OffscreenCanvas::SetWidth(uint32_t aWidth, ErrorResult& aRv) {
     return;
   }
 
-  if (mWidth != aWidth) {
-    mWidth = aWidth;
-    CanvasAttrChanged();
-  }
+  mWidth = aWidth;
+  CanvasAttrChanged();
 }
 
 void OffscreenCanvas::SetHeight(uint32_t aHeight, ErrorResult& aRv) {
@@ -95,10 +93,8 @@ void OffscreenCanvas::SetHeight(uint32_t aHeight, ErrorResult& aRv) {
     return;
   }
 
-  if (mHeight != aHeight) {
-    mHeight = aHeight;
-    CanvasAttrChanged();
-  }
+  mHeight = aHeight;
+  CanvasAttrChanged();
 }
 
 void OffscreenCanvas::GetContext(
