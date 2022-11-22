@@ -36,14 +36,9 @@ if [ "x$AUTO_FIX_REVERT_AS_NOOP" = "x" ]; then
   AUTO_FIX_REVERT_AS_NOOP="0"
 fi
 
-# read the last line of README.moz-ff-commit to retrieve our current base
-# commit in moz-libwebrtc
-export MOZ_LIBWEBRTC_BASE=`tail -1 third_party/libwebrtc/README.moz-ff-commit`
+find_base_commit
+find_next_commit
 
-# calculate the next commit above our current base commit
-export MOZ_LIBWEBRTC_NEXT_BASE=`cd $MOZ_LIBWEBRTC_SRC ; \
-git log --oneline --reverse --ancestry-path $MOZ_LIBWEBRTC_BASE^..master \
- | head -2 | tail -1 | awk '{print$1;}'`
 MOZ_LIBWEBRTC_COMMIT_MSG=`cd $MOZ_LIBWEBRTC_SRC ; \
 git show --name-only --oneline $MOZ_LIBWEBRTC_NEXT_BASE \
  | head -1 | sed 's/[^ ]* //'`
