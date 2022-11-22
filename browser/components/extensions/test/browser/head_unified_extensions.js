@@ -13,12 +13,12 @@
             promiseEnableUnifiedExtensions
 */
 
-const promiseEnableUnifiedExtensions = async () => {
+const promiseEnableUnifiedExtensions = async (options = {}) => {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.unifiedExtensions.enabled", true]],
   });
 
-  return BrowserTestUtils.openNewBrowserWindow();
+  return BrowserTestUtils.openNewBrowserWindow(options);
 };
 
 const promiseDisableUnifiedExtensions = async () => {
@@ -127,18 +127,21 @@ const clickUnifiedExtensionsItem = async (
 let extensionsCreated = 0;
 const createExtensions = (
   arrayOfManifestData,
-  { useAddonManager = true } = {}
+  { useAddonManager = true, incognitoOverride } = {}
 ) => {
   return arrayOfManifestData.map(manifestData =>
     ExtensionTestUtils.loadExtension({
       manifest: {
         name: "default-extension-name",
         browser_specific_settings: {
-          gecko: { id: `@ext-${extensionsCreated++}` },
+          // We prefix the ID with a timestamp to have unique extension IDs
+          // between different test files.
+          gecko: { id: `${Date.now()}@ext-${extensionsCreated++}` },
         },
         ...manifestData,
       },
       useAddonManager: useAddonManager ? "temporary" : undefined,
+      incognitoOverride,
     })
   );
 };
