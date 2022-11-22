@@ -256,6 +256,7 @@ add_task(async () => {
   is(tab.linkedBrowser.currentURI.spec, secondPage);
 
   BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async () => {
@@ -381,6 +382,7 @@ add_task(async () => {
   ok(gBrowser.webNavigation.canGoForward);
 
   BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
 });
 
 // Same test as above but whole-page-pixel-size is increased and the multipliers passed to panLeftToRight correspondingly increased.
@@ -392,6 +394,7 @@ add_task(async () => {
     set: [
       ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
       ["browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate"],
+      ["browser.swipe.navigation-icon-move-distance", 0],
       ["widget.disable-swipe-tracker", false],
       ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
       // Set the velocity-contribution to 0 so we can exactly control the
@@ -480,6 +483,7 @@ add_task(async () => {
   ok(gBrowser.webNavigation.canGoForward);
 
   BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async () => {
@@ -490,6 +494,7 @@ add_task(async () => {
     set: [
       ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
       ["browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate"],
+      ["browser.swipe.navigation-icon-move-distance", 0],
       ["widget.disable-swipe-tracker", false],
       ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
       // Set the velocity-contribution to 1 (default 0.05f) so velocity is a
@@ -581,6 +586,7 @@ add_task(async () => {
     numTries--;
   }
   ok(numTries > 0, "never ran the test");
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async () => {
@@ -644,6 +650,7 @@ add_task(async () => {
   );
 
   BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async () => {
@@ -766,6 +773,7 @@ add_task(async () => {
   gBrowser.tabbox.removeEventListener("MozSwipeGestureEnd", anObserver, true);
 
   BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async () => {
@@ -837,6 +845,7 @@ add_task(async () => {
   });
 
   BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
 });
 
 // A simple test case on RTL.
@@ -905,4 +914,5 @@ add_task(async () => {
   ok(newWin.gBrowser.webNavigation.canGoBack);
 
   await BrowserTestUtils.closeWindow(newWin);
+  await SpecialPowers.popPrefEnv();
 });
