@@ -6,6 +6,25 @@
 
 var EXPORTED_SYMBOLS = ["GeckoViewStorageController"];
 
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+
+const lazy = {};
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "serviceMode",
+  "cookiebanners.service.mode",
+  Ci.nsICookieBannerService.MODE_DISABLED
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "serviceModePBM",
+  "cookiebanners.service.mode.privateBrowsing",
+  Ci.nsICookieBannerService.MODE_DISABLED
+);
 const { GeckoViewUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/GeckoViewUtils.sys.mjs"
 );
@@ -197,6 +216,62 @@ const GeckoViewStorageController = {
           aData.newValue,
           expirePolicy
         );
+        break;
+      }
+      case "GeckoView:SetCookieBannerModeForDomain": {
+        try {
+          const uri = Services.io.newURI(aData.uri);
+          Services.cookieBanners.setDomainPref(
+            uri,
+            aData.mode,
+            aData.isPrivateBrowsing
+          );
+          aCallback.onSuccess();
+        } catch (ex) {
+          debug`Failed SetCookieBannerModeForDomain ${ex}`;
+        }
+        break;
+      }
+
+      case "GeckoView:RemoveCookieBannerModeForDomain": {
+        try {
+          const uri = Services.io.newURI(aData.uri);
+          Services.cookieBanners.removeDomainPref(uri, aData.isPrivateBrowsing);
+          aCallback.onSuccess();
+        } catch (ex) {
+          debug`Failed RemoveCookieBannerModeForDomain ${ex}`;
+        }
+        break;
+      }
+
+      case "GeckoView:GetCookieBannerModeForDomain": {
+        try {
+          let globalMode;
+          if (aData.isPrivateBrowsing) {
+            globalMode = lazy.serviceModePBM;
+          } else {
+            globalMode = lazy.serviceMode;
+          }
+
+          if (globalMode === Ci.nsICookieBannerService.MODE_DISABLED) {
+            aCallback.onSuccess({ mode: globalMode });
+            return;
+          }
+
+          const uri = Services.io.newURI(aData.uri);
+          const mode = Services.cookieBanners.getDomainPref(
+            uri,
+            aData.isPrivateBrowsing
+          );
+          if (mode !== Ci.nsICookieBannerService.MODE_UNSET) {
+            aCallback.onSuccess({ mode });
+          } else {
+            aCallback.onSuccess({ mode: globalMode });
+          }
+        } catch (ex) {
+          aCallback.onError(`Unexpected error: ${ex}`);
+          debug`Failed GetCookieBannerModeForDomain ${ex}`;
+        }
         break;
       }
     }
