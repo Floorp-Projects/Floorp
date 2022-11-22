@@ -9,12 +9,13 @@ ChromeUtils.defineESModuleGetters(this, {
   Downloads: "resource://gre/modules/Downloads.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
   this,
   "DownloadLastDir",
   "resource://gre/modules/DownloadLastDir.jsm"
 );
+
+Cu.importGlobalProperties(["IOUtils", "PathUtils"]);
 
 var { EventEmitter, ignoreEvent } = ExtensionCommon;
 
@@ -669,21 +670,26 @@ this.downloads = class extends ExtensionAPIPersistent {
               return Promise.reject({ message: "filename must not be empty" });
             }
 
-            let path = OS.Path.split(filename);
-            if (path.absolute) {
+            if (PathUtils.isAbsolute(filename)) {
               return Promise.reject({
                 message: "filename must not be an absolute path",
               });
             }
 
-            if (path.components.some(component => component == "..")) {
+            const pathComponents = PathUtils.splitRelative(filename, {
+              allowEmpty: true,
+              allowCurrentDir: true,
+              allowParentDir: true,
+            });
+
+            if (pathComponents.some(component => component == "..")) {
               return Promise.reject({
                 message: "filename must not contain back-references (..)",
               });
             }
 
             if (
-              path.components.some(component => {
+              pathComponents.some(component => {
                 let sanitized = DownloadPaths.sanitize(component, {
                   compressWhitespaces: false,
                 });
@@ -826,7 +832,10 @@ this.downloads = class extends ExtensionAPIPersistent {
               }
             }
 
-            let target = OS.Path.join(downloadsDir, filename || "download");
+            let target = PathUtils.joinRelative(
+              downloadsDir,
+              filename || "download"
+            );
 
             let saveAs;
             if (options.saveAs !== null) {
@@ -843,10 +852,10 @@ this.downloads = class extends ExtensionAPIPersistent {
             }
 
             // Create any needed subdirectories if required by filename.
-            const dir = OS.Path.dirname(target);
-            await OS.File.makeDir(dir, { from: downloadsDir });
+            const dir = PathUtils.parent(target);
+            await IOUtils.makeDirectory(dir);
 
-            if (await OS.File.exists(target)) {
+            if (await IOUtils.exists(target)) {
               // This has a race, something else could come along and create
               // the file between this test and them time the download code
               // creates the target file.  But we can't easily fix it without
@@ -860,7 +869,7 @@ this.downloads = class extends ExtensionAPIPersistent {
                   if (saveAs) {
                     // createNiceUniqueFile actually creates the file, which
                     // is premature if we need to show a SaveAs dialog.
-                    await OS.File.remove(target);
+                    await IOUtils.remove(target);
                   }
                   break;
 
@@ -915,7 +924,7 @@ this.downloads = class extends ExtensionAPIPersistent {
             // so that this doesn't break where navigator:browser isn't the
             // main window (e.g. Thunderbird).
             const window = global.windowTracker.getTopWindow().window;
-            const basename = OS.Path.basename(target);
+            const basename = PathUtils.filename(target);
             const ext = basename.match(/\.([^.]+)$/)?.[1];
 
             // If the filename passed in by the extension is a simple name
@@ -1054,7 +1063,7 @@ this.downloads = class extends ExtensionAPIPersistent {
                 message: `Cannot remove incomplete download id ${id}`,
               });
             }
-            return OS.File.remove(item.filename, { ignoreAbsent: false }).catch(
+            return IOUtils.remove(item.filename, { ignoreAbsent: false }).catch(
               err => {
                 return Promise.reject({
                   message: `Could not remove download id ${item.id} because the file doesn't exist`,
@@ -1206,7 +1215,7 @@ this.downloads = class extends ExtensionAPIPersistent {
                 let file = FileUtils.File(download.target.path);
                 path = Services.io.newFileURI(file).spec;
               } else {
-                path = OS.Path.basename(download.target.path);
+                path = PathUtils.filename(download.target.path);
                 pathPrefix = "//";
               }
 
