@@ -5,16 +5,15 @@
 Drives the throttling feature when the test calls our
 controlled server.
 """
-import time
 import http.client
-import os
 import json
-from urllib.parse import urlparse
+import os
 import sys
+import time
+from urllib.parse import urlparse
 
 from mozperftest.test.browsertime import add_option
 from mozperftest.utils import get_tc_secret
-
 
 ENDPOINTS = {
     "linux": "h3.dev.mozaws.net",
