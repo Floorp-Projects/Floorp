@@ -3131,7 +3131,6 @@ exports.CSS_PROPERTIES = {
       "outline-style",
       "outline-width",
       "outline-offset",
-      "size",
       "page",
       "padding-top",
       "padding-right",
