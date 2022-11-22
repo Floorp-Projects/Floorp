@@ -2670,19 +2670,20 @@ export class UrlbarView {
     }
 
     this.window.top.removeEventListener("mouseup", this);
+
+    // When mouseup outside of browser, as the target will not be element,
+    // ignore it.
+    let element =
+      event.target.nodeType === event.target.ELEMENT_NODE
+        ? this.#getClosestSelectableElement(event.target)
+        : null;
+    if (element) {
+      this.input.pickElement(element, event);
+    }
+
+    // Unselect the selected element here because pickElement() may use the
+    // selected element.
     this.#selectElement(null);
-
-    if (event.target.nodeType !== event.target.ELEMENT_NODE) {
-      // When mouseup out side of browser, the target will be document.
-      return;
-    }
-
-    let element = this.#getClosestSelectableElement(event.target);
-    if (!element) {
-      // Ignore clicks on elements that can't be selected/picked.
-      return;
-    }
-    this.input.pickElement(element, event);
   }
 
   on_overflow(event) {
