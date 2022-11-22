@@ -1400,8 +1400,8 @@ GtkTargetList* nsDragService::GetSourceList(void) {
         else if (flavorStr.EqualsLiteral(kFilePromiseURLMime)) {
           TargetArrayAddTarget(targetArray, gTextUriListType);
         }
-        // XdndDirectSave
-        else if (widget::GdkIsX11Display() &&
+        // XdndDirectSave, use on X.org only.
+        else if (widget::GdkIsX11Display() && !widget::IsXWaylandProtocol() &&
                  flavorStr.EqualsLiteral(kFilePromiseMime)) {
           TargetArrayAddTarget(targetArray, gXdndDirectSaveType);
         }
