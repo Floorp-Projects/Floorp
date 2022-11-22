@@ -176,6 +176,7 @@ MOCHITEST_MANIFESTS += [
 MOCHITEST_CHROME_MANIFESTS += [
     "mochitest/beacon/chrome.ini",
     "mochitest/chrome/chrome.ini",
+    "mochitest/fs/chrome.ini",
     "mochitest/general/chrome.ini",
     "mochitest/geolocation/chrome.ini",
     "mochitest/keyhandling/chrome.ini",
