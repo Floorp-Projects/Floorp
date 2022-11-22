@@ -328,20 +328,7 @@ add_task(async function test_list_active_extensions_only() {
     // We have to use the mock provider below so we don't need to use the
     // `addonManager` here.
     useAddonManager: false,
-    // Allow all extensions in PB mode by default.
-    incognitoOverride: "spanning",
   });
-  // This extension is loaded with a different `incognitoOverride` value to
-  // make sure it won't show up in a private window.
-  extensions.push(
-    ExtensionTestUtils.loadExtension({
-      manifest: {
-        name: "regular addon with private browsing disabled",
-      },
-      useAddonManager: false,
-      incognitoOverride: "not_allowed",
-    })
-  );
 
   await Promise.all(extensions.map(extension => extension.startup()));
 
@@ -393,91 +380,41 @@ add_task(async function test_list_active_extensions_only() {
       version: "1",
       hidden: arrayOfManifestData[5].hidden,
     },
-    {
-      id: extensions[6].id,
-      name: "regular addon with private browsing disabled",
-      type: "extension",
-      version: "1",
-      hidden: false,
-    },
   ]);
 
-  for (const isPrivate of [false, true]) {
-    info(
-      `verifying extensions listed in the panel with private browsing ${
-        isPrivate ? "enabled" : "disabled"
-      }`
-    );
-    const aWin = await promiseEnableUnifiedExtensions({ private: isPrivate });
+  await openExtensionsPanel(win);
 
-    await openExtensionsPanel(aWin);
+  const hiddenAddonItem = getUnifiedExtensionsItem(win, extensions[0].id);
+  is(hiddenAddonItem, null, `didn't expect an item for ${extensions[0].id}`);
 
-    const hiddenAddonItem = getUnifiedExtensionsItem(aWin, extensions[0].id);
-    is(hiddenAddonItem, null, `didn't expect an item for ${extensions[0].id}`);
+  const regularAddonItem = getUnifiedExtensionsItem(win, extensions[1].id);
+  is(
+    regularAddonItem.querySelector(".unified-extensions-item-name").textContent,
+    "regular addon",
+    "expected an item for a regular add-on"
+  );
 
-    const regularAddonItem = getUnifiedExtensionsItem(aWin, extensions[1].id);
-    is(
-      regularAddonItem.querySelector(".unified-extensions-item-name")
-        .textContent,
-      "regular addon",
-      "expected an item for a regular add-on"
-    );
+  const disabledAddonItem = getUnifiedExtensionsItem(win, extensions[2].id);
+  is(disabledAddonItem, null, `didn't expect an item for ${extensions[2].id}`);
 
-    const disabledAddonItem = getUnifiedExtensionsItem(aWin, extensions[2].id);
-    is(
-      disabledAddonItem,
-      null,
-      `didn't expect an item for ${extensions[2].id}`
-    );
+  const browserActionItem = getUnifiedExtensionsItem(win, extensions[3].id);
+  is(browserActionItem, null, `didn't expect an item for ${extensions[3].id}`);
 
-    const browserActionItem = getUnifiedExtensionsItem(aWin, extensions[3].id);
-    is(
-      browserActionItem,
-      null,
-      `didn't expect an item for ${extensions[3].id}`
-    );
+  const mv3BrowserActionItem = getUnifiedExtensionsItem(win, extensions[4].id);
+  is(
+    mv3BrowserActionItem,
+    null,
+    `didn't expect an item for ${extensions[4].id}`
+  );
 
-    const mv3BrowserActionItem = getUnifiedExtensionsItem(
-      aWin,
-      extensions[4].id
-    );
-    is(
-      mv3BrowserActionItem,
-      null,
-      `didn't expect an item for ${extensions[4].id}`
-    );
+  const pageActionItem = getUnifiedExtensionsItem(win, extensions[5].id);
+  is(
+    pageActionItem.querySelector(".unified-extensions-item-name").textContent,
+    "regular addon with page action",
+    "expected an item for a regular add-on with page action"
+  );
 
-    const pageActionItem = getUnifiedExtensionsItem(aWin, extensions[5].id);
-    is(
-      pageActionItem.querySelector(".unified-extensions-item-name").textContent,
-      "regular addon with page action",
-      "expected an item for a regular add-on with page action"
-    );
-
-    const privateBrowsingDisabledItem = getUnifiedExtensionsItem(
-      aWin,
-      extensions[6].id
-    );
-    if (isPrivate) {
-      is(
-        privateBrowsingDisabledItem,
-        null,
-        "didn't expect an item for a regular add-on with private browsing disabled"
-      );
-    } else {
-      is(
-        privateBrowsingDisabledItem.querySelector(
-          ".unified-extensions-item-name"
-        ).textContent,
-        "regular addon with private browsing disabled",
-        "expected an item for a regular add-on with private browsing disabled"
-      );
-    }
-
-    await closeExtensionsPanel(aWin);
-
-    await BrowserTestUtils.closeWindow(aWin);
-  }
+  await closeExtensionsPanel(win);
 
   await Promise.all(extensions.map(extension => extension.unload()));
   mockProvider.unregister();
