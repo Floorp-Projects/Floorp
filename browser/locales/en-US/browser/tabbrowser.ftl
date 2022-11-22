@@ -107,6 +107,18 @@ tabbrowser-confirm-close-tabs-with-key-button = Quit { -brand-short-name }
 #   $quitKey (String): the text of the keyboard shortcut for quitting.
 tabbrowser-confirm-close-tabs-with-key-checkbox = Confirm before quitting with { $quitKey }
 
+## Confirmation dialog when opening multiple tabs simultaneously
+
+tabbrowser-confirm-open-multiple-tabs-title = Confirm open
+# Variables:
+#   $tabCount (Number): The number of tabs that will be opened.
+tabbrowser-confirm-open-multiple-tabs-message =
+    { $tabCount ->
+       *[other] You are about to open { $tabCount } tabs. This might slow down { -brand-short-name } while the pages are loading. Are you sure you want to continue?
+    }
+tabbrowser-confirm-open-multiple-tabs-button = Open tabs
+tabbrowser-confirm-open-multiple-tabs-checkbox = Warn me when opening multiple tabs might slow down { -brand-short-name }
+
 ## Confirmation dialog for enabling caret browsing
 
 tabbrowser-confirm-caretbrowsing-title = Caret Browsing

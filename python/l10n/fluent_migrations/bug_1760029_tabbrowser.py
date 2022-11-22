@@ -249,6 +249,45 @@ def migrate(ctx):
                 ),
             ),
             FTL.Message(
+                id=FTL.Identifier("tabbrowser-confirm-open-multiple-tabs-title"),
+                value=COPY(source, "tabs.openWarningTitle"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("tabbrowser-confirm-open-multiple-tabs-message"),
+                value=Transform.pattern_of(
+                    FTL.SelectExpression(
+                        selector=VARIABLE_REFERENCE("tabCount"),
+                        variants=[
+                            FTL.Variant(
+                                key=FTL.Identifier("other"),
+                                value=REPLACE(
+                                    source,
+                                    "tabs.openWarningMultipleBranded",
+                                    {
+                                        "%1$S": VARIABLE_REFERENCE("tabCount"),
+                                        "%2$S": TERM_REFERENCE("brand-short-name"),
+                                        ".  ": FTL.TextElement(". "),
+                                    },
+                                ),
+                                default=True,
+                            ),
+                        ],
+                    )
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("tabbrowser-confirm-open-multiple-tabs-button"),
+                value=COPY(source, "tabs.openButtonMultiple"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("tabbrowser-confirm-open-multiple-tabs-checkbox"),
+                value=REPLACE(
+                    source,
+                    "tabs.openWarningPromptMeBranded",
+                    {"%1$S": TERM_REFERENCE("brand-short-name")},
+                ),
+            ),
+            FTL.Message(
                 id=FTL.Identifier("tabbrowser-confirm-caretbrowsing-title"),
                 value=COPY(source, "browsewithcaret.checkWindowTitle"),
             ),
