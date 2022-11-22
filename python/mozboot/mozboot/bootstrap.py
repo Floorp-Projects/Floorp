@@ -326,7 +326,6 @@ class Bootstrapper(object):
         state_dir = Path(get_state_dir())
         self.instance.state_dir = state_dir
 
-        hg_installed, hg_modern = self.instance.ensure_mercurial_modern()
         hg = to_optional_path(which("hg"))
 
         # We need to enable the loading of hgrc in case extensions are
@@ -356,6 +355,10 @@ class Bootstrapper(object):
 
         # Possibly configure Mercurial, but not if the current checkout or repo
         # type is Git.
+        hg_installed = bool(hg)
+        if checkout_type == "hg":
+            hg_installed, hg_modern = self.instance.ensure_mercurial_modern()
+
         if hg_installed and checkout_type == "hg":
             if not self.instance.no_interactive:
                 configure_hg = self.instance.prompt_yesno(prompt=CONFIGURE_MERCURIAL)
@@ -611,11 +614,11 @@ def current_firefox_checkout(env, hg: Optional[Path] = None):
         # Just check for known-good files in the checkout, to prevent attempted
         # foot-shootings.  Determining a canonical git checkout of mozilla-unified
         # is...complicated
-        elif git_dir.exists():
+        elif git_dir.exists() or hg_dir.exists():
             moz_configure = path / "moz.configure"
             if moz_configure.exists():
                 _warn_if_risky_revision(path)
-                return "git", path
+                return ("git" if git_dir.exists() else "hg"), path
 
         if not len(path.parents):
             break
