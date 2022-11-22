@@ -388,6 +388,9 @@ with Files("Worker*"):
 with Files("Extension*"):
     BUG_COMPONENT = ("WebExtensions", "General")
 
+with Files("WebTransport*"):
+    BUG_COMPONENT = ("Core", "Networking")
+
 GENERATED_WEBIDL_FILES = [
     "CSS2Properties.webidl",
 ]
@@ -994,6 +997,10 @@ WEBIDL_FILES = [
     "WebGPU.webidl",
     "WebSocket.webidl",
     "WebTaskScheduling.webidl",
+    "WebTransport.webidl",
+    "WebTransportDatagramDuplexStream.webidl",
+    "WebTransportError.webidl",
+    "WebTransportSendReceiveStream.webidl",
     "WebXR.webidl",
     "WheelEvent.webidl",
     "WidevineCDMManifest.webidl",

@@ -40,13 +40,13 @@ class BodyStreamHolder;
 class UniqueMessagePortId;
 class MessagePort;
 
-class ReadableStream final : public nsISupports, public nsWrapperCache {
+class ReadableStream : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ReadableStream)
 
  protected:
-  ~ReadableStream();
+  virtual ~ReadableStream();
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
 
