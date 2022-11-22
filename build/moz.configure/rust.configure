@@ -128,7 +128,8 @@ set_config(
 set_config(
     "MOZ_CLANG_NEWER_THAN_RUSTC_LLVM",
     depends(c_compiler, rustc_info)(
-        lambda c_compiler, rustc_info: c_compiler.type == "clang"
+        lambda c_compiler, rustc_info: rustc_info
+        and c_compiler.type == "clang"
         and c_compiler.version.major > rustc_info.llvm_version.major
     ),
 )
