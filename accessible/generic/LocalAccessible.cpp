@@ -1755,13 +1755,6 @@ role LocalAccessible::ARIATransformRole(role aRole) const {
     // mapping to menu.
     if (mParent && mParent->IsCombobox()) {
       return roles::COMBOBOX_LIST;
-    } else {
-      // Listbox is owned by a combobox
-      Relation rel = RelationByType(RelationType::NODE_CHILD_OF);
-      LocalAccessible* targetAcc = nullptr;
-      while ((targetAcc = rel.LocalNext())) {
-        if (targetAcc->IsCombobox()) return roles::COMBOBOX_LIST;
-      }
     }
 
   } else if (aRole == roles::OPTION) {
