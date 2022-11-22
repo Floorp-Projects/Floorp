@@ -5,36 +5,17 @@
 package org.mozilla.fenix.experiments
 
 import android.content.Context
-import android.net.Uri
-import mozilla.components.service.nimbus.Nimbus
 import mozilla.components.service.nimbus.NimbusApi
 import mozilla.components.service.nimbus.NimbusAppInfo
-import mozilla.components.service.nimbus.NimbusDisabled
-import mozilla.components.service.nimbus.NimbusServerSettings
+import mozilla.components.service.nimbus.NimbusBuilder
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONObject
-import org.mozilla.experiments.nimbus.NimbusInterface
-import org.mozilla.experiments.nimbus.internal.EnrolledExperiment
 import org.mozilla.experiments.nimbus.internal.NimbusException
-import org.mozilla.experiments.nimbus.joinOrTimeout
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.nimbus.FxNimbus
-import org.mozilla.fenix.perf.runBlockingIncrement
-
-/**
- * Fenix specific observer of Nimbus events.
- *
- * The generated code `FxNimbus` provides a cache which should be invalidated
- * when the experiments recipes are updated.
- */
-private val observer = object : NimbusInterface.Observer {
-    override fun onUpdatesApplied(updated: List<EnrolledExperiment>) {
-        FxNimbus.invalidateCachedValues()
-    }
-}
 
 /**
  * The maximum amount of time the app launch will be blocked to load experiments from disk.
@@ -44,45 +25,23 @@ private val observer = object : NimbusInterface.Observer {
  */
 private const val TIME_OUT_LOADING_EXPERIMENT_FROM_DISK_MS = 200L
 
-@Suppress("TooGenericExceptionCaught")
-fun createNimbus(context: Context, url: String?): NimbusApi {
-    // Once application-services has switched to using the new
-    // error reporting system, we may not need this anymore.
-    // https://mozilla-hub.atlassian.net/browse/EXP-2868
-    val errorReporter: ((String, Throwable) -> Unit) = reporter@{ message, e ->
-        Logger.error("Nimbus error: $message", e)
-
-        if (e is NimbusException && !e.isReportableError()) {
-            return@reporter
-        }
-
-        context.components.analytics.crashReporter.submitCaughtException(e)
-    }
-    // Eventually we'll want to use `NimbusDisabled` when we have no NIMBUS_ENDPOINT.
-    // but we keep this here to not mix feature flags and how we configure Nimbus.
-    val serverSettings = if (!url.isNullOrBlank()) {
-        if (context.settings().nimbusUsePreview) {
-            NimbusServerSettings(url = Uri.parse(url), collection = "nimbus-preview")
-        } else {
-            NimbusServerSettings(url = Uri.parse(url))
-        }
-    } else {
-        null
-    }
-
-    val isFirstNimbusRun = context.settings().isFirstNimbusRun
-    if (isFirstNimbusRun) {
+/**
+ * Create the Nimbus singleton object for the Fenix app.
+ */
+fun createNimbus(context: Context, urlString: String?): NimbusApi {
+    val isAppFirstRun = context.settings().isFirstNimbusRun
+    if (isAppFirstRun) {
         context.settings().isFirstNimbusRun = false
     }
 
     // These values can be used in the JEXL expressions when targeting experiments.
     val customTargetingAttributes = JSONObject().apply {
         // By convention, we should use snake case.
-        put("is_first_run", isFirstNimbusRun)
+        put("is_first_run", isAppFirstRun)
 
         // This camelCase attribute is a boolean value represented as a string.
         // This is left for backwards compatibility.
-        put("isFirstRun", isFirstNimbusRun.toString())
+        put("isFirstRun", isAppFirstRun.toString())
     }
 
     // The name "fenix" here corresponds to the app_name defined for the family of apps
@@ -99,43 +58,26 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
         channel = BuildConfig.BUILD_TYPE.let { if (it == "debug") "developer" else it },
         customTargetingAttributes = customTargetingAttributes,
     )
-    return try {
-        Nimbus(context, appInfo, serverSettings, errorReporter).apply {
-            // We register our own internal observer for housekeeping the Nimbus SDK and
-            // generated code.
-            register(observer)
 
-            // Apply any experiment recipes we downloaded last time, or
-            // if this is the first time, we load the ones bundled in the res/raw
-            // directory.
-            val job = if (isFirstNimbusRun || url.isNullOrBlank()) {
-                applyLocalExperiments(R.raw.initial_experiments)
-            } else {
-                applyPendingExperiments()
+    return NimbusBuilder(context).apply {
+        url = urlString
+        errorReporter = { message, e ->
+            Logger.error("Nimbus error: $message", e)
+            if (e !is NimbusException || e.isReportableError()) {
+                context.components.analytics.crashReporter.submitCaughtException(e)
             }
-
-            // We always want initialize Nimbus to happen ASAP and before any features (engine/UI)
-            // have been initialized. For that reason, we use runBlocking here to avoid
-            // inconsistency in the experiments.
-            // We can safely do this because Nimbus does most of its work on background threads,
-            // including the loading the initial experiments from disk. For this reason, we have a
-            // `joinOrTimeout` to limit the blocking until TIME_OUT_LOADING_EXPERIMENT_FROM_DISK_MS.
-            runBlockingIncrement {
-                // We only read from disk when loading first-run experiments. This is the only time
-                // that we should join and block. Otherwise, we don't want to wait.
-                job.joinOrTimeout(TIME_OUT_LOADING_EXPERIMENT_FROM_DISK_MS)
-            }
-            // By now, on this thread, we have a fully initialized Nimbus object, ready for use:
-            // * we gave a 200ms timeout to the loading of a file from res/raw
-            // * on completion or cancellation, applyPendingExperiments or initialize was
-            //   called, and this thread waited for that to complete.
         }
-    } catch (e: Throwable) {
-        // Something went wrong. We'd like not to, but stability of the app is more important than
-        // failing fast here.
-        errorReporter("Failed to initialize Nimbus", e)
-        NimbusDisabled(context)
-    }
+        initialExperiments = R.raw.initial_experiments
+        timeoutLoadingExperiment = TIME_OUT_LOADING_EXPERIMENT_FROM_DISK_MS
+        usePreviewCollection = context.settings().nimbusUsePreview
+        isFirstRun = isAppFirstRun
+        onCreateCallback = { nimbus ->
+            FxNimbus.initialize { nimbus }
+        }
+        onApplyCallback = {
+            FxNimbus.invalidateCachedValues()
+        }
+    }.build(appInfo)
 }
 
 /**
