@@ -56,12 +56,18 @@ void FileSystemManager::BeginRequest(
     std::function<void(nsresult)>&& aFailure) {
   MOZ_ASSERT(!mShutdown);
 
+  MOZ_ASSERT(mGlobal);
+
+  // Check if we're allowed to use storage
+  if (mGlobal->GetStorageAccess() < StorageAccess::eSessionScoped) {
+    aFailure(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
   if (mBackgroundRequestHandler->FileSystemManagerChildStrongRef()) {
     aSuccess(mBackgroundRequestHandler->FileSystemManagerChildStrongRef());
     return;
   }
-
-  MOZ_ASSERT(mGlobal);
 
   QM_TRY_INSPECT(const auto& principalInfo, mGlobal->GetStorageKey(), QM_VOID,
                  [&aFailure](nsresult rv) { aFailure(rv); });
