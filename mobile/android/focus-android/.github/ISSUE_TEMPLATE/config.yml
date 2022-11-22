@@ -1,0 +1,7 @@
+blank_issues_enabled: false
+contact_links:
+  - name: We are now using Bugzilla for issue tracking!
+    url: https://bugzilla.mozilla.org/enter_bug.cgi?product=Focus
+    about: Please file your ticket there. In commit messages, please reference the ticket using "Bug 1234567 - " as prefix.  
+
+
