@@ -592,12 +592,6 @@ yo{
             lg{"Àkókò Ìwọ̀ oorùn Greenland"}
             ls{"Àkókò Àfẹnukò Ìwọ̀ Oòrùn Greenland"}
         }
-        "meta:Gulf"{
-            ls{
-                "Gulf Standard Time [translation hint: translate as just \u0022Gulf T"
-                "ime\u0022]"
-            }
-        }
         "meta:Guyana"{
             ls{"Àkókò Gúyànà"}
         }

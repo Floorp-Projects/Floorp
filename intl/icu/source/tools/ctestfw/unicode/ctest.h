@@ -237,7 +237,7 @@ log_data_err(const char *pattern, ...);
  * Log a known issue.
  * @param ticket ticket number such as "ICU-12345" for ICU tickets or "CLDR-6636" for CLDR tickets.
  * @param fmt ...  sprintf-style format, optional message. can be NULL.
- * @return TRUE if known issue test should be skipped, FALSE if it should be run
+ * @return true if known issue test should be skipped, false if it should be run
  */
 T_CTEST_API UBool
 T_CTEST_EXPORT2

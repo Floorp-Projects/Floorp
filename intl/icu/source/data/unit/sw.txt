@@ -172,7 +172,7 @@ sw{
             }
             milligram-ofglucose-per-deciliter{
                 dnam{"miligramu kwa kila desilita"}
-                one{"miligramu kwa kila desilita"}
+                one{"miligramu {0} kwa kila desilita"}
                 other{"miligramu {0} kwa kila desilita"}
             }
             millimole-per-liter{
@@ -341,6 +341,12 @@ sw{
                 dnam{"nanosekunde"}
                 one{"nanosekunde {0}"}
                 other{"nanosekunde {0}"}
+            }
+            quarter{
+                dnam{"robo"}
+                one{"robo {0}"}
+                other{"robo {0}"}
+                per{"{0} kwa robo"}
             }
             second{
                 dnam{"sekunde"}
@@ -683,11 +689,6 @@ sw{
                 other{"kilogramu {0}"}
                 per{"{0} kwa kila kilogramu"}
             }
-            metric-ton{
-                dnam{"tani mita"}
-                one{"tani mita {0}"}
-                other{"tani mita {0}"}
-            }
             microgram{
                 dnam{"mikrogramu"}
                 one{"mikrogramu {0}"}
@@ -729,6 +730,11 @@ sw{
                 dnam{"tani fupi"}
                 one{"tani fupi {0}"}
                 other{"tani fupi {0}"}
+            }
+            tonne{
+                dnam{"tani mita"}
+                one{"tani mita {0}"}
+                other{"tani mita {0}"}
             }
         }
         power{
@@ -1069,6 +1075,10 @@ sw{
                 one{"{0}°"}
                 other{"{0}°"}
             }
+            revolution{
+                one{"raundi {0}"}
+                other{"raundi {0}"}
+            }
         }
         area{
             acre{
@@ -1188,10 +1198,17 @@ sw{
                 one{"mwezi {0}"}
                 other{"miezi {0}"}
             }
+            quarter{
+                dnam{"robo"}
+                one{"robo {0}"}
+                other{"robo {0}"}
+                per{"{0} kwa robo"}
+            }
             second{
                 dnam{"sekunde"}
                 one{"sek {0}"}
                 other{"sek {0}"}
+                per{"{0} kwa kila sek"}
             }
             week{
                 dnam{"wiki"}
@@ -1219,6 +1236,14 @@ sw{
                 dnam{"N"}
             }
         }
+        graphics{
+            dot-per-centimeter{
+                dnam{"dpcm"}
+            }
+            dot-per-inch{
+                dnam{"dpi"}
+            }
+        }
         length{
             centimeter{
                 dnam{"sentimita"}
@@ -1226,13 +1251,13 @@ sw{
                 other{"cm {0}"}
             }
             foot{
-                one{"Futi {0}"}
-                other{"Futi {0}"}
+                one{"futi {0}"}
+                other{"futi {0}"}
             }
             inch{
-                dnam{"Inchi"}
-                one{"Inchi {0}"}
-                other{"Inchi {0}"}
+                dnam{"inchi"}
+                one{"inchi {0}"}
+                other{"inchi {0}"}
             }
             kilometer{
                 dnam{"km"}
@@ -1249,8 +1274,8 @@ sw{
                 other{"mita {0}"}
             }
             mile{
-                one{"Maili {0}"}
-                other{"Maili {0}"}
+                one{"maili {0}"}
+                other{"maili {0}"}
             }
             millimeter{
                 dnam{"milimita"}
@@ -1261,9 +1286,12 @@ sw{
                 one{"pm {0}"}
                 other{"pm {0}"}
             }
+            solar-radius{
+                dnam{"R☉"}
+            }
             yard{
-                one{"Yadi {0}"}
-                other{"Yadi {0}"}
+                one{"yadi {0}"}
+                other{"yadi {0}"}
             }
         }
         light{
@@ -1398,6 +1426,8 @@ sw{
             }
             revolution{
                 dnam{"mzunguko"}
+                one{"raundi {0}"}
+                other{"raundi {0}"}
             }
         }
         area{
@@ -1668,6 +1698,12 @@ sw{
                 dnam{"nanosekunde"}
                 one{"nanosekunde {0}"}
                 other{"nanosekunde {0}"}
+            }
+            quarter{
+                dnam{"robo"}
+                one{"robo {0}"}
+                other{"robo {0}"}
+                per{"{0} kwa robo"}
             }
             second{
                 dnam{"sekunde"}
@@ -2001,11 +2037,6 @@ sw{
                 other{"kg {0}"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"tani mita"}
-                one{"tani mita {0}"}
-                other{"tani mita {0}"}
-            }
             microgram{
                 dnam{"mikrogramu"}
                 one{"mikrogramu {0}"}
@@ -2047,6 +2078,11 @@ sw{
                 dnam{"tani fupi"}
                 one{"tani fupi {0}"}
                 other{"tani fupi {0}"}
+            }
+            tonne{
+                dnam{"tani mita"}
+                one{"tani mita {0}"}
+                other{"tani mita {0}"}
             }
         }
         power{

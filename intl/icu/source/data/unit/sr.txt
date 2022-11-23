@@ -1230,6 +1230,31 @@ sr{
                 one{"{0} наносекунда"}
                 other{"{0} наносекунди"}
             }
+            quarter{
+                case{
+                    accusative{
+                        few{"{0} квартала"}
+                        one{"{0} квартал"}
+                        other{"{0} квартала"}
+                    }
+                    genitive{
+                        few{"{0} квартала"}
+                        one{"{0} квартала"}
+                        other{"{0} квартала"}
+                    }
+                    instrumental{
+                        few{"{0} кварталима"}
+                        one{"{0} кварталом"}
+                        other{"{0} квартала"}
+                    }
+                }
+                dnam{"квартали"}
+                few{"{0} квартала"}
+                gender{"inanimate"}
+                one{"{0} квартал"}
+                other{"{0} квартала"}
+                per{"{0}/к"}
+            }
             second{
                 case{
                     accusative{
@@ -2211,30 +2236,6 @@ sr{
                 other{"{0} килограма"}
                 per{"{0} по килограму"}
             }
-            metric-ton{
-                case{
-                    accusative{
-                        few{"{0} метричке тоне"}
-                        one{"{0} метричку тону"}
-                        other{"{0} метричких тона"}
-                    }
-                    genitive{
-                        few{"{0} метричке тоне"}
-                        one{"{0} метричке тоне"}
-                        other{"{0} метричких тона"}
-                    }
-                    instrumental{
-                        few{"{0} метричке тоне"}
-                        one{"{0} метричком тоном"}
-                        other{"{0} метричких тона"}
-                    }
-                }
-                dnam{"метричке тоне"}
-                few{"{0} метричке тоне"}
-                gender{"feminine"}
-                one{"{0} метричка тона"}
-                other{"{0} метричких тона"}
-            }
             microgram{
                 case{
                     accusative{
@@ -2320,6 +2321,30 @@ sr{
                 few{"{0} тоне"}
                 one{"{0} тона"}
                 other{"{0} тона"}
+            }
+            tonne{
+                case{
+                    accusative{
+                        few{"{0} метричке тоне"}
+                        one{"{0} метричку тону"}
+                        other{"{0} метричких тона"}
+                    }
+                    genitive{
+                        few{"{0} метричке тоне"}
+                        one{"{0} метричке тоне"}
+                        other{"{0} метричких тона"}
+                    }
+                    instrumental{
+                        few{"{0} метричке тоне"}
+                        one{"{0} метричком тоном"}
+                        other{"{0} метричких тона"}
+                    }
+                }
+                dnam{"метричке тоне"}
+                few{"{0} метричке тоне"}
+                gender{"feminine"}
+                one{"{0} метричка тона"}
+                other{"{0} метричких тона"}
             }
         }
         power{
@@ -3366,6 +3391,13 @@ sr{
                 one{"{0} м"}
                 other{"{0} м"}
             }
+            quarter{
+                dnam{"кв"}
+                few{"{0} к"}
+                one{"{0} к"}
+                other{"{0} к"}
+                per{"{0}/к"}
+            }
             second{
                 dnam{"с"}
                 few{"{0} с"}
@@ -3919,6 +3951,13 @@ sr{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
+            quarter{
+                dnam{"кв"}
+                few{"{0} кв"}
+                one{"{0} кв"}
+                other{"{0} кв"}
+                per{"{0}/к"}
+            }
             second{
                 dnam{"сек"}
                 few{"{0} сек"}
@@ -4263,12 +4302,6 @@ sr{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                few{"{0} t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 few{"{0} μg"}
@@ -4306,6 +4339,12 @@ sr{
                 few{"{0} tn"}
                 one{"{0} tn"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"t"}
+                few{"{0} t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

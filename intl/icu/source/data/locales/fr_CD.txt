@@ -30,7 +30,7 @@ fr_CD{
             }
             intervalFormats{
                 y{
-                    y{"y – y"}
+                    y{"y – y"}
                 }
             }
         }

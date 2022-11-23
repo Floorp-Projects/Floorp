@@ -5,11 +5,11 @@ bs{
     collations{
         search{
             Sequence{"[import hr-u-co-search]"}
-            Version{"41"}
+            Version{"42"}
         }
         standard{
             Sequence{"[import hr]"}
-            Version{"41"}
+            Version{"42"}
         }
     }
 }

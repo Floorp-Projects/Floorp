@@ -312,6 +312,7 @@ tr{
         CI{"Fildişi Sahili"}
         CZ{"Çek Cumhuriyeti"}
         FK{"Falkland Adaları (Malvinas Adaları)"}
+        NZ{"Aotearoa Yeni Zelanda"}
         SZ{"Svaziland"}
         TL{"Doğu Timor"}
     }

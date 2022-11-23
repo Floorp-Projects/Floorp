@@ -53,6 +53,10 @@ ks_Deva{
         "meta:GMT"{
             ls{"ग्रीनविच मीन वख"}
         }
+        fallbackFormat{"{1} ({0})"}
+        gmtFormat{"जी एम टी {0}"}
+        gmtZeroFormat{"जी एम टी"}
+        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} वख"}
         regionFormatDaylight{"{0} डे लाइट वख"}
         regionFormatStandard{"{0} स्टैन्डर्ड वख"}

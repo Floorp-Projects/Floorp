@@ -59,6 +59,12 @@ sa{
                 "G d MMM y",
                 "G d/M/y",
                 "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} तेन {0}",
                 "{1} तेन {0}",
                 "{1}, {0}",
@@ -101,6 +107,12 @@ sa{
                 "d MMM y",
                 "d/M/yy",
                 "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} तदा {0}",
                 "{1} तदा {0}",
                 "{1}, {0}",
@@ -618,5 +630,22 @@ sa{
         UK{"सं.अ."}
         US{"सं.रा."}
         metric{"छन्दोमान"}
+    }
+    personNames{
+        nameOrderLocales{
+            givenFirst{
+                "und",
+                "sa",
+            }
+            surnameFirst{
+                "ko",
+                "si",
+                "ta",
+                "te",
+                "vi",
+                "yue",
+                "zh",
+            }
+        }
     }
 }

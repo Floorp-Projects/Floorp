@@ -113,5 +113,6 @@ yo_BJ{
     Countries%variant{
         CZ{"Shɛ́ɛ́kì"}
         TL{"Ìlà Òòrùn Tímɔ̀"}
+        TR{"Èdè Tɔɔki"}
     }
 }

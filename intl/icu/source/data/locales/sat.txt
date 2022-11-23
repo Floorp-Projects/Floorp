@@ -7,6 +7,20 @@ sat{
     NumberElements{
         default{"olck"}
         latn{
+            patternsShort{
+                currencyFormat{
+                    1000{
+                        one{"¤0 ᱜᱮᱞᱥᱟᱭ"}
+                        other{"¤ 0 ᱜᱮᱞᱥᱟᱭ"}
+                        two{"¤ 0 ᱜᱮᱞᱥᱟᱭ"}
+                    }
+                    100000{
+                        one{"¤ 000 ᱜᱮᱞᱥᱟᱭ"}
+                        other{"¤ 000 ᱜᱮᱞᱥᱟᱭ"}
+                        two{"¤ 000 ᱜᱮᱞᱥᱟᱭ"}
+                    }
+                }
+            }
             symbols{
                 decimal{"."}
                 group{","}
@@ -235,6 +249,18 @@ sat{
             }
         }
     }
+    characterLabel{
+        activities{"ᱠᱟᱹᱢᱤ"}
+        african_scripts{"ᱟᱯᱷᱨᱤᱠᱟᱭ ᱞᱤᱯᱤ"}
+        american_scripts{"ᱟᱢᱮᱨᱤᱠᱤ ᱞᱤᱯᱤ"}
+        body{"ᱦᱚᱲᱢᱚ"}
+        currency_symbols{"ᱯᱩᱭᱥᱟᱹ ᱪᱤᱱᱦᱟᱹ"}
+        digits{"ᱮᱞᱠᱷᱟ"}
+        emoji{"ᱤᱢᱚᱡᱤ"}
+        female{"ᱠᱩᱲᱤ"}
+        flag{"ᱪᱤᱨ"}
+        flags{"ᱪᱤᱨ ᱠᱚ"}
+    }
     delimiters{
         alternateQuotationEnd{"’"}
         alternateQuotationStart{"‘"}
@@ -256,11 +282,26 @@ sat{
         day-short{
             dn{"ᱢᱟᱦᱟ"}
         }
+        dayOfYear{
+            dn{"ᱥᱮᱨᱢᱟ ᱨᱮᱭᱟᱠ ᱢᱟᱦᱟ"}
+        }
+        dayOfYear-narrow{
+            dn{"ᱥᱮᱨᱢᱟ ᱨᱮᱭᱟᱠ ᱢᱟᱦᱟ"}
+        }
+        dayOfYear-short{
+            dn{"ᱥᱮᱨᱢᱟ ᱨᱮᱭᱟᱠ ᱢᱟᱦᱟ"}
+        }
         dayperiod{
             dn{"ᱥᱮᱛᱟᱜ/ᱟᱹᱭᱩᱵ"}
         }
         era{
             dn{"ᱡᱩᱜᱽ"}
+        }
+        era-narrow{
+            dn{"ᱡ"}
+        }
+        era-short{
+            dn{"ᱡᱩ"}
         }
         hour{
             dn{"ᱴᱟᱲᱟᱝ"}
@@ -295,6 +336,13 @@ sat{
         second-short{
             dn{"ᱴᱤᱨᱤᱡ"}
         }
+        sun{
+            relative{
+                "-1"{"ᱢᱟᱲᱟᱝ ᱥᱤᱸᱜᱮ"}
+                "0"{"ᱱᱤᱭᱟᱹ ᱥᱤᱸᱜᱮ"}
+                "1"{"ᱦᱟᱹᱡᱩᱜ ᱠᱟᱱ ᱥᱤᱸᱜᱮ"}
+            }
+        }
         week{
             dn{"ᱦᱟᱯᱛᱟ/ᱮᱢᱦᱟ"}
         }
@@ -304,8 +352,23 @@ sat{
         week-short{
             dn{"ᱦᱟᱯᱛᱟ/ᱮᱢᱦᱟ"}
         }
+        weekOfMonth{
+            dn{"ᱪᱟᱸᱫᱚ ᱨᱮᱭᱟᱠ ᱦᱟᱯᱛᱟ"}
+        }
+        weekOfMonth-narrow{
+            dn{"ᱪᱟᱸᱫᱚ ᱨᱮᱭᱟᱠ ᱦᱟᱯᱛᱟ"}
+        }
+        weekOfMonth-short{
+            dn{"ᱪᱟᱸᱫᱚ ᱨᱮᱭᱟᱠ ᱦᱟᱯᱛᱟ"}
+        }
         weekday{
             dn{"ᱦᱟᱯᱛᱟ ᱨᱮᱭᱟᱜ ᱢᱟᱦᱟ"}
+        }
+        weekdayOfMonth{
+            dn{"ᱪᱟᱸᱫᱚ ᱨᱮᱭᱟᱠ ᱢᱟᱦᱟ"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"ᱪᱟᱸᱫᱚ ᱨᱮᱭᱟᱠ ᱢᱟᱦᱟ"}
         }
         year{
             dn{"ᱥᱮᱨᱢᱟ/ᱵᱚᱪᱷᱚᱞᱨ"}
@@ -321,5 +384,19 @@ sat{
         UK{"ᱭᱩᱠᱮ"}
         US{"ᱭᱩᱮᱥ"}
         metric{"ᱢᱮᱴᱨᱤᱠ"}
+    }
+    personNames{
+        nameOrderLocales{
+            givenFirst{
+                "und",
+                "sat",
+            }
+            surnameFirst{
+                "ko",
+                "vi",
+                "yue",
+                "zh",
+            }
+        }
     }
 }

@@ -1024,9 +1024,6 @@ no{
         "Europe:Kaliningrad"{
             ec{"Kaliningrad"}
         }
-        "Europe:Kiev"{
-            ec{"Kiev"}
-        }
         "Europe:Kirov"{
             ec{"Kirov"}
         }

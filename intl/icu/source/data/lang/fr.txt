@@ -44,6 +44,7 @@ fr{
         am{"amharique"}
         an{"aragonais"}
         ang{"ancien anglais"}
+        ann{"obolo"}
         anp{"angika"}
         ar{"arabe"}
         ar_001{"arabe standard moderne"}
@@ -60,6 +61,7 @@ fr{
         asa{"asu"}
         ase{"langue des signes américaine"}
         ast{"asturien"}
+        atj{"atikamekw"}
         av{"avar"}
         avk{"kotava"}
         awa{"awadhi"}
@@ -125,14 +127,22 @@ fr{
         chr{"cherokee"}
         chy{"cheyenne"}
         ckb{"sorani"}
+        clc{"chilcotin"}
         co{"corse"}
         cop{"copte"}
         cps{"capiznon"}
         cr{"cree"}
+        crg{"mitchif"}
         crh{"tatar de Crimée"}
+        crj{"cri de l’Est (dialecte du Sud)"}
+        crk{"cri des plaines"}
+        crl{"cri de l’Est (dialecte du Nord)"}
+        crm{"cri de Moose"}
+        crr{"algonquin de Caroline"}
         crs{"créole seychellois"}
         cs{"tchèque"}
         csb{"kachoube"}
+        csw{"cri des marais"}
         cu{"slavon d’église"}
         cv{"tchouvache"}
         cy{"gallois"}
@@ -200,7 +210,7 @@ fr{
         frm{"moyen français"}
         fro{"ancien français"}
         frp{"francoprovençal"}
-        frr{"frison du Nord"}
+        frr{"frison septentrional"}
         frs{"frison oriental"}
         fur{"frioulan"}
         fy{"frison occidental"}
@@ -233,9 +243,10 @@ fr{
         gv{"mannois"}
         gwi{"gwichʼin"}
         ha{"haoussa"}
-        hai{"haida"}
+        hai{"haïda"}
         hak{"hakka"}
         haw{"hawaïen"}
+        hax{"haïda du Sud"}
         he{"hébreu"}
         hi{"hindi"}
         hif{"hindi fidjien"}
@@ -249,6 +260,7 @@ fr{
         ht{"créole haïtien"}
         hu{"hongrois"}
         hup{"hupa"}
+        hur{"halkomelem"}
         hy{"arménien"}
         hz{"héréro"}
         ia{"interlingua"}
@@ -259,6 +271,7 @@ fr{
         ig{"igbo"}
         ii{"yi du Sichuan"}
         ik{"inupiaq"}
+        ikt{"inuktitut de l’Ouest canadien"}
         ilo{"ilocano"}
         inh{"ingouche"}
         io{"ido"}
@@ -325,6 +338,7 @@ fr{
         kut{"kutenai"}
         kv{"komi"}
         kw{"cornique"}
+        kwk{"kwak’wala"}
         ky{"kirghize"}
         la{"latin"}
         lad{"ladino"}
@@ -337,6 +351,7 @@ fr{
         lg{"ganda"}
         li{"limbourgeois"}
         lij{"ligure"}
+        lil{"lillooet"}
         liv{"livonien"}
         lkt{"lakota"}
         lmo{"lombard"}
@@ -346,6 +361,7 @@ fr{
         lou{"créole louisianais"}
         loz{"lozi"}
         lrc{"lori du Nord"}
+        lsm{"samia"}
         lt{"lituanien"}
         ltg{"latgalien"}
         lu{"luba-katanga (kiluba)"}
@@ -384,6 +400,7 @@ fr{
         mn{"mongol"}
         mnc{"mandchou"}
         mni{"manipuri"}
+        moe{"innu-aimun"}
         moh{"mohawk"}
         mos{"moré"}
         mr{"marathi"}
@@ -436,6 +453,11 @@ fr{
         nzi{"nzema"}
         oc{"occitan"}
         oj{"ojibwa"}
+        ojb{"ojibwé du Nord-Ouest"}
+        ojc{"ojibwé central"}
+        ojs{"oji-cri"}
+        ojw{"ojibwé occidental"}
+        oka{"colville-okanagan"}
         om{"oromo"}
         or{"odia"}
         os{"ossète"}
@@ -455,10 +477,12 @@ fr{
         pfl{"allemand palatin"}
         phn{"phénicien"}
         pi{"pali"}
+        pis{"pijin"}
         pl{"polonais"}
         pms{"piémontais"}
         pnt{"pontique"}
         pon{"pohnpei"}
+        pqm{"malécite-passamaquoddy"}
         prg{"prussien"}
         pro{"provençal ancien"}
         ps{"pachto"}
@@ -520,6 +544,7 @@ fr{
         sid{"sidamo"}
         sk{"slovaque"}
         sl{"slovène"}
+        slh{"lushootseed du Sud"}
         sli{"bas-silésien"}
         sly{"sélayar"}
         sm{"samoan"}
@@ -539,6 +564,7 @@ fr{
         ssy{"saho"}
         st{"sotho du Sud"}
         stq{"saterlandais"}
+        str{"salish des détroits"}
         su{"soundanais"}
         suk{"soukouma"}
         sus{"soussou"}
@@ -551,6 +577,7 @@ fr{
         syr{"syriaque"}
         szl{"silésien"}
         ta{"tamoul"}
+        tce{"tutchone du Sud"}
         tcy{"toulou"}
         te{"télougou"}
         tem{"timné"}
@@ -558,7 +585,9 @@ fr{
         ter{"tereno"}
         tet{"tétoum"}
         tg{"tadjik"}
+        tgx{"tagish"}
         th{"thaï"}
+        tht{"tahltan"}
         ti{"tigrigna"}
         tig{"tigré"}
         tiv{"tiv"}
@@ -573,6 +602,7 @@ fr{
         tn{"tswana"}
         to{"tongien"}
         tog{"tonga nyasa"}
+        tok{"toki pona"}
         tpi{"tok pisin"}
         tr{"turc"}
         tru{"touroyo"}
@@ -581,6 +611,7 @@ fr{
         tsd{"tsakonien"}
         tsi{"tsimshian"}
         tt{"tatar"}
+        ttm{"tutchone du Nord"}
         ttt{"tati caucasien"}
         tum{"tumbuka"}
         tvl{"tuvalu"}
@@ -655,10 +686,12 @@ fr{
         az{"azéri"}
     }
     Languages%variant{
+        hi_Latn{"hinglish"}
         ps{"pashto"}
         ug{"ouïgour"}
     }
     Scripts{
+        Adlm{"adlam"}
         Arab{"arabe"}
         Aran{"nastaliq"}
         Armi{"araméen impérial"}
@@ -744,7 +777,7 @@ fr{
         Nand{"nandinagari"}
         Nkoo{"n’ko"}
         Ogam{"ogam"}
-        Olck{"ol tchiki"}
+        Olck{"ol-chiki"}
         Orkh{"orkhon"}
         Orya{"odia"}
         Osma{"osmanais"}
@@ -758,6 +791,7 @@ fr{
         Prti{"parthe des inscriptions"}
         Qaag{"zawgyi"}
         Rjng{"rejang"}
+        Rohg{"hanifi"}
         Roro{"rongorongo"}
         Runr{"runique"}
         Samr{"samaritain"}
@@ -918,6 +952,7 @@ fr{
             armn{"chiffres arméniens"}
             armnlow{"chiffres arméniens minuscules"}
             beng{"chiffres bengalis"}
+            cakm{"chiffres chakmas"}
             deva{"chiffres dévanagaris"}
             ethi{"chiffres éthiopiens"}
             finance{"Chiffres financiers"}
@@ -934,6 +969,7 @@ fr{
             hantfin{"chiffres financiers en chinois traditionnel"}
             hebr{"chiffres hébreux"}
             hmnp{"chiffres nyiakeng puachue hmong"}
+            java{"chiffres javanais"}
             jpan{"chiffres japonais"}
             jpanfin{"chiffres japonais financiers"}
             khmr{"chiffres khmers"}
@@ -942,8 +978,10 @@ fr{
             latn{"chiffres occidentaux"}
             mlym{"chiffres malayâlams"}
             mong{"chiffres mongols"}
+            mtei{"chiffres meitei-mayeks"}
             mymr{"chiffres birmans"}
-            native{"Chiffres natifs"}
+            native{"chiffres natifs"}
+            olck{"chiffres ol-chikis"}
             orya{"chiffres oriyas"}
             roman{"chiffres romains"}
             romanlow{"chiffres romains minuscules"}
@@ -953,7 +991,7 @@ fr{
             thai{"chiffres thaïs"}
             tibt{"chiffres tibétains"}
             traditional{"Chiffres traditionnels"}
-            vaii{"Chiffres en vaï"}
+            vaii{"chiffres en vaï"}
             wcho{"chiffres wantcho"}
         }
     }

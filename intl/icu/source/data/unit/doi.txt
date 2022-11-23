@@ -7,6 +7,16 @@ doi{
         hms{"h:mm:ss"}
         ms{"m:ss"}
     }
+    units{
+        mass{
+            gram{
+                dnam{"ग्राम"}
+            }
+            kilogram{
+                dnam{"किल्लो"}
+            }
+        }
+    }
     unitsNarrow{
         consumption{
             mile-per-gallon-imperial{

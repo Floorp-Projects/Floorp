@@ -312,6 +312,7 @@ de{
         CI{"Elfenbeinküste"}
         CZ{"Tschechische Republik"}
         FK{"Falklandinseln (Malwinen)"}
+        NZ{"Aotearoa (Neuseeland)"}
         SZ{"Swasiland"}
         TL{"Osttimor"}
     }

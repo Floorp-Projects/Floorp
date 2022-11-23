@@ -18,6 +18,9 @@ de_CH{
     }
     calendar{
         gregorian{
+            availableFormats{
+                GyMd{"dd.MM.y GGGGG"}
+            }
             dayNames{
                 format{
                     short{
@@ -29,6 +32,11 @@ de_CH{
                         "Fr",
                         "Sa",
                     }
+                }
+            }
+            intervalFormats{
+                M{
+                    M{"M – M"}
                 }
             }
         }

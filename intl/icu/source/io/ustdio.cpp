@@ -182,7 +182,7 @@ static const UChar * u_file_translit(UFILE *f, const UChar *src, int32_t *count,
     f->fTranslit->length += *count;
 
     /* Now, translit in place as much as we can  */
-    if(flush == FALSE)
+    if(flush == false)
     {
         textLength = f->fTranslit->length;
         pos.contextStart = 0;
@@ -239,7 +239,7 @@ ufile_flush_translit(UFILE *f)
         return;
 #endif
 
-    u_file_write_flush(NULL, 0, f, FALSE, TRUE);
+    u_file_write_flush(NULL, 0, f, false, true);
 }
 
 
@@ -250,7 +250,7 @@ ufile_flush_io(UFILE *f)
     return; /* skip if no file */
   }
 
-  u_file_write_flush(NULL, 0, f, TRUE, FALSE);
+  u_file_write_flush(NULL, 0, f, true, false);
 }
 
 
@@ -296,7 +296,7 @@ u_fputc(UChar32      uc,
 {
     UChar buf[2];
     int32_t idx = 0;
-    UBool isError = FALSE;
+    UBool isError = false;
 
     U16_APPEND(buf, idx, UPRV_LENGTHOF(buf), uc, isError);
     if (isError) {
@@ -396,7 +396,7 @@ u_file_write(    const UChar     *chars,
              int32_t        count,
              UFILE         *f)
 {
-    return u_file_write_flush(chars,count,f,FALSE,FALSE);
+    return u_file_write_flush(chars,count,f,false,false);
 }
 
 
@@ -589,13 +589,13 @@ u_fgets(UChar        *s,
 U_CFUNC UBool U_EXPORT2
 ufile_getch(UFILE *f, UChar *ch)
 {
-    UBool isValidChar = FALSE;
+    UBool isValidChar = false;
 
     *ch = U_EOF;
     /* if we have an available character in the buffer, return it */
     if(f->str.fPos < f->str.fLimit){
         *ch = *(f->str.fPos)++;
-        isValidChar = TRUE;
+        isValidChar = true;
     }
     else {
         /* otherwise, fill the buffer and return the next character */
@@ -604,7 +604,7 @@ ufile_getch(UFILE *f, UChar *ch)
         }
         if(f->str.fPos < f->str.fLimit) {
             *ch = *(f->str.fPos)++;
-            isValidChar = TRUE;
+            isValidChar = true;
         }
     }
     return isValidChar;
@@ -621,7 +621,7 @@ u_fgetc(UFILE        *f)
 U_CFUNC UBool U_EXPORT2
 ufile_getch32(UFILE *f, UChar32 *c32)
 {
-    UBool isValidChar = FALSE;
+    UBool isValidChar = false;
     u_localized_string *str;
 
     *c32 = U_EOF;
@@ -639,14 +639,14 @@ ufile_getch32(UFILE *f, UChar32 *c32)
             if (str->fPos < str->fLimit) {
                 UChar c16 = *(str->fPos)++;
                 *c32 = U16_GET_SUPPLEMENTARY(*c32, c16);
-                isValidChar = TRUE;
+                isValidChar = true;
             }
             else {
                 *c32 = U_EOF;
             }
         }
         else {
-            isValidChar = TRUE;
+            isValidChar = true;
         }
     }
 

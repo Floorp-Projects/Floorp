@@ -1220,6 +1220,9 @@ or{
         "Pacific:Johnston"{
             ec{"ଜନଷ୍ଟନ୍"}
         }
+        "Pacific:Kanton"{
+            ec{"କ୍ୟାଣ୍ଟନ"}
+        }
         "Pacific:Kiritimati"{
             ec{"କିରିତିମାଟି"}
         }

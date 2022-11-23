@@ -400,11 +400,6 @@ lb{
                 one{"{0} Kilogramm"}
                 other{"{0} Kilogramm"}
             }
-            metric-ton{
-                dnam{"Tonnen"}
-                one{"{0} Tonn"}
-                other{"{0} Tonnen"}
-            }
             microgram{
                 dnam{"Mikrogramm"}
                 one{"{0} Mikrogramm"}
@@ -439,6 +434,11 @@ lb{
                 dnam{"Long tons"}
                 one{"{0} Long ton"}
                 other{"{0} Long tons"}
+            }
+            tonne{
+                dnam{"Tonnen"}
+                one{"{0} Tonn"}
+                other{"{0} Tonnen"}
             }
         }
         power{
@@ -843,10 +843,6 @@ lb{
                 one{"{0} kg"}
                 other{"{0} kg"}
             }
-            metric-ton{
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 one{"{0} μg"}
                 other{"{0} μg"}
@@ -875,6 +871,10 @@ lb{
             ton{
                 one{"{0} tn"}
                 other{"{0} tn"}
+            }
+            tonne{
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{
@@ -1434,11 +1434,6 @@ lb{
                 one{"{0} kg"}
                 other{"{0} kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -1473,6 +1468,11 @@ lb{
                 dnam{"tn"}
                 one{"{0} tn"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

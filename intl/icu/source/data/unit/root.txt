@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 root{
-    Version{"41"}
+    Version{"42"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -288,6 +288,11 @@ root{
                 dnam{"ns"}
                 other{"{0} ns"}
             }
+            quarter{
+                dnam{"qtr"}
+                other{"{0} q"}
+                per{"{0}/q"}
+            }
             second{
                 dnam{"sec"}
                 other{"{0} s"}
@@ -556,10 +561,6 @@ root{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 other{"{0} μg"}
@@ -593,6 +594,10 @@ root{
             ton{
                 dnam{"tn"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"t"}
+                other{"{0} t"}
             }
         }
         power{

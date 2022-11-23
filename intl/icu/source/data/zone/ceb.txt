@@ -36,7 +36,7 @@ ceb{
             ls{"Tamdanang Oras sa West Africa"}
         }
         "meta:Alaska"{
-            ld{"Oras sa Tag-init sa Alaska"}
+            ld{"Daylight Time sa Alaska"}
             lg{"Oras sa Alaska"}
             ls{"Tamdanang Oras sa Alaska"}
         }
@@ -46,27 +46,27 @@ ceb{
             ls{"Tamdanang Oras sa Amazon"}
         }
         "meta:America_Central"{
-            ld{"Sentrong Oras sa Tag-init"}
-            lg{"Sentrong Oras"}
-            ls{"Sentong Tamdanan nga Oras"}
+            ld{"Central Daylight Time"}
+            lg{"Central Time"}
+            ls{"Central Standard Time"}
         }
         "meta:America_Eastern"{
-            ld{"Oras sa Tag-init sa Sidlakan"}
-            lg{"Oras sa Sidlakan"}
-            ls{"Tamdanan nga Oras sa Sidlakan"}
+            ld{"Eastern Daylight Time"}
+            lg{"Eastern Time"}
+            ls{"Eastern Standard Time"}
         }
         "meta:America_Mountain"{
-            ld{"Oras sa Tag-init sa Kabukiran"}
-            lg{"Oras sa Kabukiran"}
-            ls{"Tamdanang Oras sa Kabukiran"}
+            ld{"Mountain Daylight Time"}
+            lg{"Mountain Time"}
+            ls{"Mountain Standard Time"}
         }
         "meta:America_Pacific"{
-            ld{"Oras sa Tag-init sa Pasipiko"}
-            lg{"Oras sa Pasipiko"}
-            ls{"Tamdanang Oras sa Pasipiko"}
+            ld{"Pacific Daylight Time"}
+            lg{"Pacific Time"}
+            ls{"Pacific Standard Time"}
         }
         "meta:Apia"{
-            ld{"Oras sa Tag-init sa Apia"}
+            ld{"Daylight Time sa Apia"}
             lg{"Oras sa Apia"}
             ls{"Tamdanang Oras sa Apia"}
         }
@@ -91,9 +91,9 @@ ceb{
             ls{"Tamdanang Oras sa Armenia"}
         }
         "meta:Atlantic"{
-            ld{"Oras sa Tag-init sa Atlantiko"}
-            lg{"Oras sa Atlantiko"}
-            ls{"Tamdanang Oras sa Atlantiko"}
+            ld{"Atlantic Daylight Time"}
+            lg{"Atlantic Time"}
+            ls{"Atlantic Standard Time"}
         }
         "meta:Australia_Central"{
             ld{"Oras sa Tag-init sa Central Australia"}
@@ -510,7 +510,7 @@ ceb{
             ls{"Tamdanang Oras sa Sakhalin"}
         }
         "meta:Samoa"{
-            ld{"Oras sa Tag-init sa Samoa"}
+            ld{"Daylight Time sa Samoa"}
             lg{"Oras sa Samoa"}
             ls{"Tamdanang Oras sa Samoa"}
         }
@@ -616,8 +616,8 @@ ceb{
         gmtFormat{"GMT {0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
-        regionFormat{"{0} Oras"}
-        regionFormatDaylight{"{0} Oras sa Tag-init"}
-        regionFormatStandard{"{0} Tamdanang Oras"}
+        regionFormat{"Oras sa {0}"}
+        regionFormatDaylight{"Daylight Time sa {0}"}
+        regionFormatStandard{"Tamdanang Oras sa {0}"}
     }
 }

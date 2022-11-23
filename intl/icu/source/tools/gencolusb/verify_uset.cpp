@@ -21,7 +21,7 @@ int main(int argc, const char *argv[]) {
   UErrorCode errorCode = U_ZERO_ERROR;
 #if defined (COLLUNSAFE_PATTERN)
   puts("verify pattern");
-  const UnicodeString unsafeBackwardPattern(FALSE, collunsafe_pattern, collunsafe_len);
+  const UnicodeString unsafeBackwardPattern(false, collunsafe_pattern, collunsafe_len);
   fprintf(stderr, "\n -- pat '%c%c%c%c%c'\n",
           collunsafe_pattern[0],
           collunsafe_pattern[1],

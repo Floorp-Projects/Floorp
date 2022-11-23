@@ -147,6 +147,11 @@ ha{
             }
         }
         concentr{
+            item{
+                dnam{"abubuwa"}
+                one{"abu {0}"}
+                other{"abubuwa {0}"}
+            }
             karat{
                 dnam{"karats"}
                 one{"karat {0}"}
@@ -211,9 +216,9 @@ ha{
             }
         }
         coordinate{
-            dnam{"cardinal direction"}
+            dnam{"wurin fuskanta"}
             east{"Gabas {0}"}
-            north{"arewa {0}"}
+            north{"Arewa {0}"}
             south{"Kudu {0}"}
             west{"Yamma {0}"}
         }
@@ -288,13 +293,13 @@ ha{
             }
             decade{
                 dnam{"shekaru goma-goma"}
-                one{"shekaru goma {0}"}
-                other{"shekaru goma-goma {0}"}
+                one{"sk gm {0}"}
+                other{"shk gm-gm {0}"}
             }
             hour{
                 dnam{"saʼoʼi"}
-                one{"sa'a {0}"}
-                other{"sa'o'i {0}"}
+                one{"sa′a {0}"}
+                other{"sa′o′i {0}"}
                 per{"{0} a saʼa"}
             }
             microsecond{
@@ -323,6 +328,12 @@ ha{
                 dnam{"nanosekan"}
                 one{"nanosekan {0}"}
                 other{"nanosekans {0}"}
+            }
+            quarter{
+                dnam{"kwatoci"}
+                one{"kwata {0}"}
+                other{"kwatoci {0}"}
+                per{"k/{0}"}
             }
             second{
                 dnam{"daƙiƙoƙi"}
@@ -662,14 +673,9 @@ ha{
                 other{"kilogiramgiram {0}"}
                 per{"{0} a kilogiram"}
             }
-            metric-ton{
-                dnam{"metric tons"}
-                one{"metric ton {0}"}
-                other{"metric tons {0}"}
-            }
             microgram{
                 dnam{"makirogiramgiram"}
-                one{"makirogiram {0}"}
+                one{"Makirogiram {0}"}
                 other{"makirogiramgiram {0}"}
             }
             milligram{
@@ -689,7 +695,7 @@ ha{
                 other{"oza-ozar troy {0}"}
             }
             pound{
-                one{"laba {0}"}
+                one{"Laba {0}"}
                 other{"laba-laba {0}"}
             }
             solar-mass{
@@ -706,6 +712,11 @@ ha{
                 dnam{"tan-tan"}
                 one{"tan {0}"}
                 other{"tan-tan {0}"}
+            }
+            tonne{
+                dnam{"metric tons"}
+                one{"metric ton {0}"}
+                other{"metric tons {0}"}
             }
         }
         power{
@@ -743,7 +754,7 @@ ha{
         pressure{
             atmosphere{
                 dnam{"yanaye-yanaye"}
-                one{"yanayi {0}"}
+                one{"Yanayi {0}"}
                 other{"yanaye-yanaye {0}"}
             }
             bar{
@@ -795,8 +806,8 @@ ha{
         speed{
             kilometer-per-hour{
                 dnam{"kilomitoci a saʼa"}
-                one{"kilomita a sa'a {0}"}
-                other{"kilomitoci a sa'a {0}"}
+                one{"kilomita {0} a sa′a"}
+                other{"kilomitoci {0} a sa′a"}
             }
             knot{
                 dnam{"knots"}
@@ -810,23 +821,23 @@ ha{
             }
             mile-per-hour{
                 dnam{"mil-mil a saʼa"}
-                one{"mil a sa'a {0}"}
-                other{"mil-mil a sa'a {0}"}
+                one{"mil {0} a sa′a"}
+                other{"mil-mil {0} a sa′a"}
             }
         }
         temperature{
             celsius{
                 dnam{"digiri-digiri Selsiyas"}
-                one{"digiri Selsiyas {0}"}
+                one{"Digiri Selsiyas {0}"}
                 other{"digiri-digiri Selsiyas {0}"}
             }
             fahrenheit{
                 dnam{"digiri-digiri faranhit"}
-                one{"digiri Faranhit {0}"}
+                one{"Digiri Faranhit {0}"}
                 other{"digiri-digiri faranhit {0}"}
             }
             generic{
-                one{"digiri {0}"}
+                one{"Digirin yanayi {0}"}
                 other{"digiri-digiri {0}"}
             }
             kelvin{
@@ -843,7 +854,7 @@ ha{
             }
             pound-force-foot{
                 dnam{"pound-feet"}
-                one{"pound-force-foot {0}"}
+                one{"Pound-force-foot {0}"}
                 other{"pound-feet {0}"}
             }
         }
@@ -1099,7 +1110,14 @@ ha{
                 other{"yd²{0}"}
             }
         }
+        compound{
+            10p6{"M{0}"}
+        }
         concentr{
+            item{
+                one{"abu{0}"}
+                other{"Abw{0}"}
+            }
             karat{
                 dnam{"karat"}
                 one{"kt{0}"}
@@ -1229,8 +1247,8 @@ ha{
                 other{"r{0}"}
             }
             decade{
-                one{"shkr gm{0}"}
-                other{"shkr gm{0}"}
+                one{"sk gm{0}"}
+                other{"sk gm{0}"}
             }
             hour{
                 dnam{"saʼa"}
@@ -1259,6 +1277,11 @@ ha{
             nanosecond{
                 one{"ns{0}"}
                 other{"ns{0}"}
+            }
+            quarter{
+                one{"kwt{0}"}
+                other{"kwt{0}"}
+                per{"k/{0}"}
             }
             second{
                 dnam{"daƙ"}
@@ -1550,10 +1573,6 @@ ha{
                 one{"kg{0}"}
                 other{"kg{0}"}
             }
-            metric-ton{
-                one{"t{0}"}
-                other{"t{0}"}
-            }
             microgram{
                 one{"μg{0}"}
                 other{"μg{0}"}
@@ -1590,6 +1609,10 @@ ha{
                 dnam{"tan"}
                 one{"tn{0}"}
                 other{"tn{0}"}
+            }
+            tonne{
+                one{"t{0}"}
+                other{"t{0}"}
             }
         }
         power{
@@ -1948,7 +1971,16 @@ ha{
                 other{"yd² {0}"}
             }
         }
+        compound{
+            10p15{"P{0}"}
+            10p6{"M{0}"}
+        }
         concentr{
+            item{
+                dnam{"abu"}
+                one{"abu {0}"}
+                other{"Abw. {0}"}
+            }
             karat{
                 dnam{"karats"}
                 one{"kt {0}"}
@@ -2078,13 +2110,13 @@ ha{
             day{
                 dnam{"ranaku"}
                 one{"rana {0}"}
-                other{"ranaku {0}"}
+                other{"Rnk. {0}"}
                 per{"{0}/r"}
             }
             decade{
                 dnam{"shkr gm"}
-                one{"shkr gm {0}"}
-                other{"shkr gm {0}"}
+                one{"sk gm {0}"}
+                other{"sk gm {0}"}
             }
             hour{
                 dnam{"saʼoʼi"}
@@ -2118,6 +2150,12 @@ ha{
                 dnam{"nanoseks"}
                 one{"ns {0}"}
                 other{"ns {0}"}
+            }
+            quarter{
+                dnam{"kwt"}
+                one{"kwt {0}"}
+                other{"kwtc {0}"}
+                per{"k/{0}"}
             }
             second{
                 dnam{"daƙ"}
@@ -2425,10 +2463,6 @@ ha{
                 one{"kg {0}"}
                 other{"kg {0}"}
             }
-            metric-ton{
-                one{"t {0}"}
-                other{"t {0}"}
-            }
             microgram{
                 one{"μg {0}"}
                 other{"μg {0}"}
@@ -2465,6 +2499,10 @@ ha{
                 dnam{"tan-tan"}
                 one{"tn {0}"}
                 other{"tn {0}"}
+            }
+            tonne{
+                one{"t {0}"}
+                other{"t {0}"}
             }
         }
         power{

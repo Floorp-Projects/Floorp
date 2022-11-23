@@ -182,14 +182,14 @@ mi{
             ls{"Wā Arowhānui Uropi Uru"}
         }
         "meta:GMT"{
-            ls{"Wā Toharite Greenwich"}
+            ls{"Wā Toharite Kiriwīti"}
         }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
-        regionFormat{"{0}"}
-        regionFormatDaylight{"{0} (+1)"}
-        regionFormatStandard{"{0} (+0)"}
+        regionFormat{"{0} Wā"}
+        regionFormatDaylight{"{0} Wā Awatea"}
+        regionFormatStandard{"{0} Wā Aro Whānui"}
     }
 }

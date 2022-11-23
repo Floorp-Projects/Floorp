@@ -5,4 +5,10 @@ bn_IN{
     Languages{
         ksh{"কোলোনিয়ান"}
     }
+    Types{
+        calendar{
+            gregorian{"গ্রেগোরিয়ান ক্যালেন্ডার"}
+            iso8601{"ISO-8601 ক্যালেন্ডার"}
+        }
+    }
 }

@@ -79,7 +79,7 @@ hr{
         CG{"Kongo - Brazzaville"}
         CH{"Švicarska"}
         CI{"Obala Bjelokosti"}
-        CK{"Cookovi Otoci"}
+        CK{"Cookovi otoci"}
         CL{"Čile"}
         CM{"Kamerun"}
         CN{"Kina"}
@@ -190,7 +190,7 @@ hr{
         MN{"Mongolija"}
         MO{"PUP Makao Kina"}
         MP{"Sjevernomarijanski otoci"}
-        MQ{"Martinique"}
+        MQ{"Martinik"}
         MR{"Mauretanija"}
         MS{"Montserrat"}
         MT{"Malta"}

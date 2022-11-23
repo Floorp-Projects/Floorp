@@ -404,6 +404,7 @@ ce{
     }
     Languages%short{
         en_GB{"ингалсан (Британи)"}
+        en_US{"ингалсан (АЦШ)"}
     }
     Scripts{
         Arab{"Ӏаьрбийн"}

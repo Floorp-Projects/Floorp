@@ -4,7 +4,7 @@
 en_SL{
     %%Parent{"en_001"}
     Currencies{
-        SLL{
+        SLE{
             "Le",
             "Sierra Leonean Leone",
         }

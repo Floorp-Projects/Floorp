@@ -313,9 +313,6 @@ hi_Latn{
         "America:Glace_Bay"{
             ec{"Glace Bay"}
         }
-        "America:Godthab"{
-            ec{"Godthab"}
-        }
         "America:Goose_Bay"{
             ec{"Goose Bay"}
         }
@@ -347,25 +344,7 @@ hi_Latn{
             ec{"Hermosillo"}
         }
         "America:Indiana:Knox"{
-            ec{"Indiana/Knox"}
-        }
-        "America:Indiana:Marengo"{
-            ec{"Indiana/Marengo"}
-        }
-        "America:Indiana:Petersburg"{
-            ec{"Indiana/Petersburg"}
-        }
-        "America:Indiana:Tell_City"{
-            ec{"Indiana/Tell City"}
-        }
-        "America:Indiana:Vevay"{
-            ec{"वेवे, इंडियाना"}
-        }
-        "America:Indiana:Vincennes"{
-            ec{"Indiana/Vincennes"}
-        }
-        "America:Indiana:Winamac"{
-            ec{"Indiana/Winamac"}
+            ec{"Knox, Indiana"}
         }
         "America:Indianapolis"{
             ec{"Indianapolis"}
@@ -385,9 +364,6 @@ hi_Latn{
         "America:Juneau"{
             ec{"Juneau"}
         }
-        "America:Kentucky:Monticello"{
-            ec{"Kentucky/Monticello"}
-        }
         "America:Kralendijk"{
             ec{"Kralendijk"}
         }
@@ -402,9 +378,6 @@ hi_Latn{
         }
         "America:Louisville"{
             ec{"Louisville"}
-        }
-        "America:Lower_Princes"{
-            ec{"Lower Princes"}
         }
         "America:Maceio"{
             ec{"Maceio"}
@@ -472,15 +445,6 @@ hi_Latn{
         "America:Noronha"{
             ec{"Noronha"}
         }
-        "America:North_Dakota:Beulah"{
-            ec{"North Dakota/Beulah"}
-        }
-        "America:North_Dakota:Center"{
-            ec{"North Dakota/Center"}
-        }
-        "America:North_Dakota:New_Salem"{
-            ec{"North Dakota/New Salem"}
-        }
         "America:Ojinaga"{
             ec{"Ojinaga"}
         }
@@ -536,22 +500,16 @@ hi_Latn{
             ec{"Santiago"}
         }
         "America:Santo_Domingo"{
-            ec{"Santo_Domingo"}
+            ec{"Santo Domingo"}
         }
         "America:Sao_Paulo"{
             ec{"Sao Paulo"}
-        }
-        "America:Scoresbysund"{
-            ec{"Scoresbysund"}
         }
         "America:Sitka"{
             ec{"Sitka"}
         }
         "America:St_Barthelemy"{
             ec{"St Barthelemy"}
-        }
-        "America:St_Johns"{
-            ec{"St Johns"}
         }
         "America:Swift_Current"{
             ec{"Swift Current"}
@@ -736,9 +694,6 @@ hi_Latn{
         "Asia:Karachi"{
             ec{"Karachi"}
         }
-        "Asia:Katmandu"{
-            ec{"Katmandu"}
-        }
         "Asia:Khandyga"{
             ec{"Khandyga"}
         }
@@ -907,9 +862,6 @@ hi_Latn{
         "Australia:Broken_Hill"{
             ec{"Broken Hill"}
         }
-        "Australia:Currie"{
-            ec{"Currie"}
-        }
         "Australia:Darwin"{
             ec{"Darwin"}
         }
@@ -996,9 +948,6 @@ hi_Latn{
         }
         "Europe:Kaliningrad"{
             ec{"Kaliningrad"}
-        }
-        "Europe:Kiev"{
-            ec{"Kiev"}
         }
         "Europe:Kirov"{
             ec{"Kirov"}
@@ -1165,9 +1114,6 @@ hi_Latn{
         "Pacific:Efate"{
             ec{"Efate"}
         }
-        "Pacific:Enderbury"{
-            ec{"Enderbury"}
-        }
         "Pacific:Fakaofo"{
             ec{"Fakaofo"}
         }
@@ -1289,6 +1235,9 @@ hi_Latn{
             ld{"St. Pierre & Miquelon Daylight Time"}
             lg{"St. Pierre & Miquelon Time"}
             ls{"St. Pierre & Miquelon Standard Time"}
+        }
+        "meta:Reunion"{
+            ls{"Reunion Time"}
         }
     }
 }

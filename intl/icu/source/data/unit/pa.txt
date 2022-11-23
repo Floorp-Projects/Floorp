@@ -649,6 +649,19 @@ pa{
                 one{"{0} ਨੈਨੋਸਕਿੰਟ"}
                 other{"{0} ਨੈਨੋਸਕਿੰਟ"}
             }
+            quarter{
+                case{
+                    oblique{
+                        one{"{0} ਤਿਮਾਹੀ"}
+                        other{"{0} ਤਿਮਾਹੀਆਂ"}
+                    }
+                }
+                dnam{"ਤਿਮਾਹੀਆਂ"}
+                gender{"feminine"}
+                one{"{0} ਤਿਮਾਹੀ"}
+                other{"{0} ਤਿਮਾਹੀਆਂ"}
+                per{"{0}/ਤਿਮਾਹੀ"}
+            }
             second{
                 case{
                     oblique{
@@ -1240,18 +1253,6 @@ pa{
                 other{"{0} ਕਿਲੋਗ੍ਰਾਮ"}
                 per{"{0} ਪ੍ਰਤੀ ਕਿਲੋਗ੍ਰਾਮ"}
             }
-            metric-ton{
-                case{
-                    oblique{
-                        one{"{0} ਮੀਟਰਿਕ ਟਨ"}
-                        other{"{0} ਮੀਟਰਿਕ ਟਨ"}
-                    }
-                }
-                dnam{"ਮੀਟਰਿਕ ਟਨ"}
-                gender{"masculine"}
-                one{"{0} ਮੀਟਰਿਕ ਟਨ"}
-                other{"{0} ਮੀਟਰਿਕ ਟਨ"}
-            }
             microgram{
                 case{
                     oblique{
@@ -1307,6 +1308,18 @@ pa{
                 dnam{"ਅਮਰੀਕੀ ਟਨ"}
                 one{"{0} ਅਮਰੀਕੀ ਟਨ"}
                 other{"{0} ਅਮਰੀਕੀ ਟਨ"}
+            }
+            tonne{
+                case{
+                    oblique{
+                        one{"{0} ਮੀਟਰਿਕ ਟਨ"}
+                        other{"{0} ਮੀਟਰਿਕ ਟਨ"}
+                    }
+                }
+                dnam{"ਮੀਟਰਿਕ ਟਨ"}
+                gender{"masculine"}
+                one{"{0} ਮੀਟਰਿਕ ਟਨ"}
+                other{"{0} ਮੀਟਰਿਕ ਟਨ"}
             }
         }
         power{
@@ -1865,10 +1878,6 @@ pa{
                 one{"{0}ਏਕੜ"}
                 other{"{0}ਏਕੜ"}
             }
-            hectare{
-                one{"{0}ਹੈਕ"}
-                other{"{0}ਹੈਕ"}
-            }
             square-centimeter{
                 one{"{0}ਸੈਮੀ²"}
                 other{"{0}ਸੈਮੀ²"}
@@ -1918,7 +1927,7 @@ pa{
             10p-6{"ਮਾ.{0}"}
             10p-9{"ਨੈ.{0}"}
             10p1{"ਡੇ.{0}"}
-            10p15{"ਪੇਟਾ{0}"}
+            10p15{"ਪੈਟਾ{0}"}
             10p18{"ਐਕਸਾ{0}"}
             10p2{"ਹੈ.{0}"}
             10p21{"ਜ਼ੀਟਾ{0}"}
@@ -2049,6 +2058,10 @@ pa{
                 other{"{0} ਦਿਨ"}
                 per{"{0}/ਦਿਨ"}
             }
+            decade{
+                one{"{0} ਦਹਾਕਾ"}
+                other{"{0} ਦਹਾਕੇ"}
+            }
             hour{
                 dnam{"ਘੰਟਾ"}
                 one{"{0} ਘੰਟਾ"}
@@ -2078,6 +2091,12 @@ pa{
             nanosecond{
                 one{"{0} ns"}
                 other{"{0} ns"}
+            }
+            quarter{
+                dnam{"ਤਿਮਾਹੀ"}
+                one{"{0} ਤਿਮਾਹੀ"}
+                other{"{0} ਤਿਮਾਹੀਆਂ"}
+                per{"{0}/ਤਿਮਾਹੀ"}
             }
             second{
                 dnam{"ਸਕਿੰਟ"}
@@ -2116,11 +2135,11 @@ pa{
         }
         energy{
             calorie{
-                one{"{0} ਕੈਲੋਰੀਆਂ"}
+                one{"{0} ਕੈਲੋਰੀ"}
                 other{"{0} ਕੈਲੋਰੀਆਂ"}
             }
             foodcalorie{
-                one{"{0} ਕੈਲੋਰੀਆਂ"}
+                one{"{0} ਕੈਲੋਰੀ"}
                 other{"{0} ਕੈਲੋਰੀਆਂ"}
             }
             joule{
@@ -2232,7 +2251,6 @@ pa{
                 per{"{0}/ਮੀ."}
             }
             micrometer{
-                dnam{"ਮਾਇਕ੍ਰੋ. ਮੀ."}
                 one{"{0} μm"}
                 other{"{0} μm"}
             }
@@ -2240,10 +2258,6 @@ pa{
                 dnam{"ਮੀਲ"}
                 one{"{0} ਮੀਲ"}
                 other{"{0} ਮੀਲ"}
-            }
-            mile-scandinavian{
-                one{"{0}smi"}
-                other{"{0}smi"}
             }
             millimeter{
                 dnam{"ਮਿ.ਮੀ."}
@@ -2472,14 +2486,6 @@ pa{
                 one{"{0} ਡੈ.ਲਿ."}
                 other{"{0} ਡੈ.ਲਿ."}
             }
-            dessert-spoon{
-                one{"{0} ਡੈ.ਸ."}
-                other{"{0} ਡੈ.ਸ."}
-            }
-            dessert-spoon-imperial{
-                one{"{0} ਇ.ਡੈ.ਸ."}
-                other{"{0} ਇ.ਡੈ.ਸ."}
-            }
             fluid-ounce{
                 one{"{0} ਤ. ਔਂਸ"}
                 other{"{0} ਤ. ਔਂਸ"}
@@ -2491,10 +2497,6 @@ pa{
             gallon{
                 one{"{0}ਗੈਲਨ"}
                 other{"{0}ਗੈਲਨ"}
-            }
-            gallon-imperial{
-                one{"{0} ਗੈ.ਇ."}
-                other{"{0} ਗੈ.ਇ."}
             }
             hectoliter{
                 one{"{0} ਹੈ.ਲਿ."}
@@ -2547,7 +2549,7 @@ pa{
         angle{
             arc-minute{
                 dnam{"ਚਾਪ-ਮਿੰਟ"}
-                one{"{0} ਚਾਪਮਿੰਟ"}
+                one{"{0} ਚਾਪ-ਮਿੰਟ"}
                 other{"{0} ਚਾਪ-ਮਿੰਟ"}
             }
             arc-second{
@@ -2649,7 +2651,7 @@ pa{
             10p-9{"ਨੈ.{0}"}
             10p1{"ਡੇ.{0}"}
             10p12{"ਟੈ.{0}"}
-            10p15{"ਪੇਟਾ{0}"}
+            10p15{"ਪੈਟਾ{0}"}
             10p18{"ਐਕਸਾ{0}"}
             10p2{"ਹੈ.{0}"}
             10p21{"ਜ਼ੀਟਾ{0}"}
@@ -2688,7 +2690,7 @@ pa{
             item{
                 dnam{"ਆਈਟਮ"}
                 one{"{0} ਆਈਟਮ"}
-                other{"{0} ਆਈਟਮ"}
+                other{"{0} ਆਈਟਮਾਂ"}
             }
             karat{
                 dnam{"ਕੇਰਟ"}
@@ -2864,6 +2866,12 @@ pa{
                 dnam{"ਨੈਨੋਸਕਿੰਟ"}
                 one{"{0} ns"}
                 other{"{0} ns"}
+            }
+            quarter{
+                dnam{"ਤਿਮਾਹੀ"}
+                one{"{0} ਤਿਮਾਹੀ"}
+                other{"{0} ਤਿਮਾਹੀਆਂ"}
+                per{"{0}/ਤਿਮਾਹੀ"}
             }
             second{
                 dnam{"ਸਕਿੰਟ"}
@@ -3184,11 +3192,6 @@ pa{
                 other{"{0} ਕਿ.ਗ੍ਰਾ."}
                 per{"{0}/ਕਿ.ਗ੍ਰਾ."}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -3228,6 +3231,11 @@ pa{
                 dnam{"ਅਮਰੀਕੀ ਟਨ"}
                 one{"{0} ਅਮਰੀਕੀ ਟਨ"}
                 other{"{0} ਅਮਰੀਕੀ ਟਨ"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

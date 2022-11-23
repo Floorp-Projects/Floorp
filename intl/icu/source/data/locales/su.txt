@@ -36,6 +36,12 @@ su{
                 "d MMM y G",
                 "d/M/y GGGGG",
                 "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} 'jam' {0}",
                 "{1} 'jam' {0}",
                 "{1}, {0}",
@@ -52,7 +58,7 @@ su{
                 "GGGGGyMd",
             }
             intervalFormats{
-                fallback{"{0} – {1}"}
+                fallback{"{0} – {1}"}
             }
         }
         gregorian{
@@ -66,6 +72,12 @@ su{
                 "d MMM y",
                 "d/M/yy",
                 "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} 'jam' {0}",
                 "{1} 'jam' {0}",
                 "{1}, {0}",
@@ -89,8 +101,8 @@ su{
                 EHm{"E HH.mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"E d"}
-                Ehm{"E h.mm a"}
-                Ehms{"E h.mm.ss a"}
+                Ehm{"E h.mm a"}
+                Ehms{"E h.mm.ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM y G"}
@@ -106,11 +118,11 @@ su{
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
-                h{"h a"}
-                hm{"h.mm a"}
-                hms{"h.mm.ss a"}
-                hmsv{"h.mm.ss a v"}
-                hmv{"h.mm a v"}
+                h{"h a"}
+                hm{"h.mm a"}
+                hms{"h.mm.ss a"}
+                hmsv{"h.mm.ss a v"}
+                hmv{"h.mm a v"}
                 ms{"mm.ss"}
                 yM{"M/y"}
                 yMEd{"E, d/M/y"}
@@ -189,7 +201,7 @@ su{
                 }
             }
             intervalFormats{
-                fallback{"{0} – {1}"}
+                fallback{"{0} – {1}"}
             }
             monthNames{
                 format{
@@ -424,5 +436,19 @@ su{
         UK{"U.K."}
         US{"A.S."}
         metric{"Métrik"}
+    }
+    personNames{
+        nameOrderLocales{
+            givenFirst{
+                "und",
+                "su",
+            }
+            surnameFirst{
+                "ko",
+                "vi",
+                "yue",
+                "zh",
+            }
+        }
     }
 }

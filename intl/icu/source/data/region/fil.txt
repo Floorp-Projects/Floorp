@@ -312,6 +312,8 @@ fil{
         CI{"Ivory Coast"}
         CZ{"Czech Republic"}
         FK{"Falkland Islands (Islas Malvinas)"}
+        NZ{"Aotearoa New Zealand"}
         TL{"East Timor"}
+        TR{"Türkiye"}
     }
 }

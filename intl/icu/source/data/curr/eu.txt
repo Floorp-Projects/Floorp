@@ -904,6 +904,10 @@ eu{
             "SKK",
             "koroa eslovakiarra",
         }
+        SLE{
+            "SLE",
+            "leone sierraleonar berria",
+        }
         SLL{
             "SLL",
             "leone sierraleonarra",
@@ -1051,6 +1055,10 @@ eu{
         VEB{
             "VEB",
             "Venezuelako bolivarra (1871–2008)",
+        }
+        VED{
+            "VED",
+            "bolivar subiraua",
         }
         VEF{
             "VEF",
@@ -2216,6 +2224,10 @@ eu{
             one{"koroa eslovakiar"}
             other{"koroa eslovakiar"}
         }
+        SLE{
+            one{"leone sierraleonar berri"}
+            other{"leone sierraleonar berri"}
+        }
         SLL{
             one{"leone sierraleonar"}
             other{"leone sierraleonar"}
@@ -2363,6 +2375,10 @@ eu{
         VEB{
             one{"Venezuelako bolivar (1871–2008)"}
             other{"Venezuelako bolivar (1871–2008)"}
+        }
+        VED{
+            one{"bolivar subirau"}
+            other{"bolivar subirau"}
         }
         VEF{
             one{"Venezuelako bolivar (2008–2018)"}

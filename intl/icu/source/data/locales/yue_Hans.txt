@@ -111,6 +111,8 @@ yue_Hans{
             }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                accountingFormat%alphaNextToNumber{"¤ #,##0.00;(¤ #,##0.00)"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
@@ -1160,6 +1162,12 @@ yue_Hans{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimePatterns%atTime{
+                "{1} {0}",
+                "{1}{0}",
+                "{1}{0}",
+                "{1} {0}",
+            }
             DateTimeSkeletons{
                 "HHmmsszzzz",
                 "HHmmssz",
@@ -1384,6 +1392,12 @@ yue_Hans{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
+                "{1}{0}",
+                "{1}{0}",
+                "{1}{0}",
                 "{1} {0}",
             }
             DateTimeSkeletons{
@@ -3571,5 +3585,41 @@ yue_Hans{
         UK{"英制"}
         US{"美制"}
         metric{"公制"}
+    }
+    personNames{
+        initialPattern{
+            initial{"{0}"}
+        }
+        namePattern{
+            givenFirst-long-addressing-formal{"{surname}{prefix}"}
+            givenFirst-long-addressing-informal{"{given-informal}"}
+            givenFirst-medium-addressing-formal{"{surname}{prefix}"}
+            givenFirst-medium-addressing-informal{"{given-informal}"}
+            givenFirst-short-addressing-formal{"{surname}{prefix}"}
+            givenFirst-short-addressing-informal{"{given-informal}"}
+            sorting-long-referring-formal{"{surname}{given}{suffix} {given2}"}
+            sorting-long-referring-informal{"{surname}{given-informal}"}
+            sorting-medium-referring-formal{"{surname}{given}{suffix} {given2-initial}"}
+            sorting-medium-referring-informal{"{surname}{given-informal}"}
+            sorting-short-referring-formal{"{surname}{given} {given2-initial}"}
+            sorting-short-referring-informal{"{surname}{given-informal}"}
+            surnameFirst-long-addressing-formal{"{surname}{prefix}"}
+            surnameFirst-long-addressing-informal{"{given-informal}"}
+            surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-monogram-allCaps}"}
+            surnameFirst-long-referring-formal{"{surname}{given}{suffix} {given2}"}
+            surnameFirst-long-referring-informal{"{surname}{given-informal}"}
+            surnameFirst-medium-addressing-formal{"{surname}{prefix}"}
+            surnameFirst-medium-addressing-informal{"{given-informal}"}
+            surnameFirst-medium-monogram-formal{"{surname-monogram}"}
+            surnameFirst-medium-monogram-informal{"{given-informal-monogram}"}
+            surnameFirst-medium-referring-formal{"{surname}{given}{suffix} {given2-initial}"}
+            surnameFirst-medium-referring-informal{"{surname}{given-informal}"}
+            surnameFirst-short-addressing-formal{"{surname}{prefix}"}
+            surnameFirst-short-addressing-informal{"{given-informal}"}
+            surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-short-referring-formal{"{surname}{given} {given2-initial}"}
+            surnameFirst-short-referring-informal{"{surname}{given}"}
+        }
     }
 }

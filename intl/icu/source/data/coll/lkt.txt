@@ -11,7 +11,7 @@ lkt{
                 "&S<š<<<Š"
                 "&Z<ž<<<Ž"
             }
-            Version{"41"}
+            Version{"42"}
         }
     }
 }
