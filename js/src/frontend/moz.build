@@ -81,6 +81,10 @@ if CONFIG["JS_ENABLE_SMOOSH"]:
         "Frontend2.cpp",
     ]
 
+if CONFIG["ENABLE_DECORATORS"]:
+    UNIFIED_SOURCES += [
+        "DecoratorEmitter.cpp",
+    ]
 
 # Parser.cpp cannot be built in unified mode because of explicit
 #   template instantiations.
