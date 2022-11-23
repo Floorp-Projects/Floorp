@@ -20,16 +20,23 @@ def test_basic(lint, paths):
 
     assert len(results) == 2
 
-    i = 0
-    assert "no-revision.yaml" in results[i][0].path
-    assert (
-        'If "vendoring" is present, "revision" must be present in "origin"'
-        in results[i][0].message
-    )
+    expected_results = 0
 
-    i += 1
-    assert "cargo-mismatch.yaml" in results[i][0].path
-    assert "wasn't found in Cargo.lock" in results[i][0].message
+    for r in results:
+        if "no-revision.yaml" in r[0].path:
+            expected_results += 1
+            assert "no-revision.yaml" in r[0].path
+            assert (
+                'If "vendoring" is present, "revision" must be present in "origin"'
+                in r[0].message
+            )
+
+        if "cargo-mismatch.yaml" in r[0].path:
+            expected_results += 1
+            assert "cargo-mismatch.yaml" in r[0].path
+            assert "wasn't found in Cargo.lock" in r[0].message
+
+    assert expected_results == 2
 
 
 if __name__ == "__main__":
