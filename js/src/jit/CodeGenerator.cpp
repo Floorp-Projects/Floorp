@@ -13183,7 +13183,7 @@ bool CodeGenerator::link(JSContext* cx, const WarpSnapshot* snapshot) {
     }
     if (!ionTable->finishIonEntry(cx, nativeToBytecodeScriptListLength_,
                                   nativeToBytecodeScriptList_,
-                                  entry->ionEntry())) {
+                                  entry->asIon())) {
       js_free(nativeToBytecodeScriptList_);
       js_free(nativeToBytecodeMap_);
       return false;

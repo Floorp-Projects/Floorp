@@ -156,15 +156,15 @@ class JitcodeGlobalEntry : public JitCodeRange {
   }
   bool isDummy() const { return kind() == Kind::Dummy; }
 
-  inline const IonEntry& ionEntry() const;
-  inline const BaselineEntry& baselineEntry() const;
-  inline const BaselineInterpreterEntry& baselineInterpreterEntry() const;
-  inline const DummyEntry& dummyEntry() const;
+  inline const IonEntry& asIon() const;
+  inline const BaselineEntry& asBaseline() const;
+  inline const BaselineInterpreterEntry& asBaselineInterpreter() const;
+  inline const DummyEntry& asDummy() const;
 
-  inline IonEntry& ionEntry();
-  inline BaselineEntry& baselineEntry();
-  inline BaselineInterpreterEntry& baselineInterpreterEntry();
-  inline DummyEntry& dummyEntry();
+  inline IonEntry& asIon();
+  inline BaselineEntry& asBaseline();
+  inline BaselineInterpreterEntry& asBaselineInterpreter();
+  inline DummyEntry& asDummy();
 
   JitCode* jitcode() const { return jitcode_; }
   JitCode** jitcodePtr() { return &jitcode_; }
@@ -358,44 +358,43 @@ class DummyEntry : public JitcodeGlobalEntry {
   uint64_t lookupRealmID() const { return 0; }
 };
 
-inline const IonEntry& JitcodeGlobalEntry::ionEntry() const {
+inline const IonEntry& JitcodeGlobalEntry::asIon() const {
   MOZ_ASSERT(isIon());
   return *static_cast<const IonEntry*>(this);
 }
 
-inline const BaselineEntry& JitcodeGlobalEntry::baselineEntry() const {
+inline const BaselineEntry& JitcodeGlobalEntry::asBaseline() const {
   MOZ_ASSERT(isBaseline());
   return *static_cast<const BaselineEntry*>(this);
 }
 
 inline const BaselineInterpreterEntry&
-JitcodeGlobalEntry::baselineInterpreterEntry() const {
+JitcodeGlobalEntry::asBaselineInterpreter() const {
   MOZ_ASSERT(isBaselineInterpreter());
   return *static_cast<const BaselineInterpreterEntry*>(this);
 }
 
-inline const DummyEntry& JitcodeGlobalEntry::dummyEntry() const {
+inline const DummyEntry& JitcodeGlobalEntry::asDummy() const {
   MOZ_ASSERT(isDummy());
   return *static_cast<const DummyEntry*>(this);
 }
 
-inline IonEntry& JitcodeGlobalEntry::ionEntry() {
+inline IonEntry& JitcodeGlobalEntry::asIon() {
   MOZ_ASSERT(isIon());
   return *static_cast<IonEntry*>(this);
 }
 
-inline BaselineEntry& JitcodeGlobalEntry::baselineEntry() {
+inline BaselineEntry& JitcodeGlobalEntry::asBaseline() {
   MOZ_ASSERT(isBaseline());
   return *static_cast<BaselineEntry*>(this);
 }
 
-inline BaselineInterpreterEntry&
-JitcodeGlobalEntry::baselineInterpreterEntry() {
+inline BaselineInterpreterEntry& JitcodeGlobalEntry::asBaselineInterpreter() {
   MOZ_ASSERT(isBaselineInterpreter());
   return *static_cast<BaselineInterpreterEntry*>(this);
 }
 
-inline DummyEntry& JitcodeGlobalEntry::dummyEntry() {
+inline DummyEntry& JitcodeGlobalEntry::asDummy() {
   MOZ_ASSERT(isDummy());
   return *static_cast<DummyEntry*>(this);
 }
