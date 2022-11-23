@@ -537,8 +537,10 @@ nsresult nsXULTooltipListener::FindTooltip(nsIContent* aTarget,
 
   // On Windows, the OS shows the tooltip, so we don't want Gecko to do it
 #ifdef XP_WIN
-  if (aTarget->AsElement()->HasAttr(nsGkAtoms::titlebar_button)) {
-    return NS_OK;
+  if (nsIFrame* f = aTarget->GetPrimaryFrame()) {
+    if (f->StyleDisplay()->GetWindowButtonType()) {
+      return NS_OK;
+    }
   }
 #endif
 
