@@ -185,10 +185,7 @@ jobs:
                 - android-sdk-linux
                 - linux64-jdk
                 - linux64-clang
-                # TODO: Change to rust-cross-nightly once
-                # https://github.com/rust-lang/rust/pull/104628 is merged
-                # (that'd provide better scip indexing).
-                - linux64-rust-android
+                - linux64-rust-cross-nightly
                 - linux64-rust-size
                 - linux64-cbindgen
                 - linux64-dump_syms

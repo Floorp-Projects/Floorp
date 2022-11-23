@@ -61,7 +61,7 @@ linux64-rust-nightly:
         symbol: TL(rust-nightly)
     run:
         arguments: [
-            '--channel', 'nightly-2022-11-11',
+            '--channel', 'nightly-2022-11-22',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
@@ -124,7 +124,7 @@ linux64-rust-cross-nightly:
         symbol: TL(rust-cross-nightly)
     run:
         arguments: [
-            '--channel', 'nightly-2022-11-11',
+            '--channel', 'nightly-2022-11-22',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
