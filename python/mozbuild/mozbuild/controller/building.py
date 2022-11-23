@@ -765,11 +765,11 @@ class StaticAnalysisFooter(Footer):
         processed = monitor.num_files_processed
         percent = "(%.2f%%)" % (processed * 100.0 / total)
         parts = [
-            ("dim", "Processing"),
+            ("bright_black", "Processing"),
             ("yellow", str(processed)),
-            ("dim", "of"),
+            ("bright_black", "of"),
             ("yellow", str(total)),
-            ("dim", "files"),
+            ("bright_black", "files"),
             ("green", percent),
         ]
         if monitor.current_file:
