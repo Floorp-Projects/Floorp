@@ -22,4 +22,22 @@ class LocaleTest : BaseSessionTest() {
             greaterThanOrEqualTo(0)
         )
     }
+
+    @Test fun duplicateLocales() {
+        sessionRule.runtime.settings.setLocales(arrayOf("en-gb", "en-US", "en-gb", "en-fr", "en-us", "en-FR"))
+        assertThat(
+            "Locales have no duplicates",
+            sessionRule.requestedLocales,
+            equalTo(listOf("en-GB", "en-US", "en-FR"))
+        )
+    }
+
+    @Test fun lowerCaseToUpperCaseLocales() {
+        sessionRule.runtime.settings.setLocales(arrayOf("en-gb", "en-us", "en-fr"))
+        assertThat(
+            "Locales are formatted properly",
+            sessionRule.requestedLocales,
+            equalTo(listOf("en-GB", "en-US", "en-FR"))
+        )
+    }
 }

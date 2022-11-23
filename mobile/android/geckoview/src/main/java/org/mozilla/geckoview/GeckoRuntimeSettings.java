@@ -22,7 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoSystemStateListener;
@@ -778,23 +778,23 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
   }
 
   private String computeAcceptLanguages() {
-    final ArrayList<String> locales = new ArrayList<String>();
+    final LinkedHashMap<String, String> locales = new LinkedHashMap<>();
 
     // Explicitly-set app prefs come first:
     if (mRequestedLocales != null) {
       for (final String locale : mRequestedLocales) {
-        locales.add(locale.toLowerCase(Locale.ROOT));
+        locales.put(locale.toLowerCase(Locale.ROOT), locale);
       }
     }
     // OS prefs come second:
     for (final String locale : getDefaultLocales()) {
       final String localeLowerCase = locale.toLowerCase(Locale.ROOT);
-      if (!locales.contains(localeLowerCase)) {
-        locales.add(localeLowerCase);
+      if (!locales.containsKey(localeLowerCase)) {
+        locales.put(localeLowerCase, locale);
       }
     }
 
-    return TextUtils.join(",", locales);
+    return TextUtils.join(",", locales.values());
   }
 
   private static String[] getDefaultLocales() {
