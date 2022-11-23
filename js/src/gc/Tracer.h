@@ -365,6 +365,9 @@ void TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc, gc::Cell** thingp,
 
 void TraceGCCellPtrRoot(JSTracer* trc, JS::GCCellPtr* thingp, const char* name);
 
+void TraceManuallyBarrieredGCCellPtr(JSTracer* trc, JS::GCCellPtr* thingp,
+                                     const char* name);
+
 namespace gc {
 
 // Trace through a shape or group iteratively during cycle collection to avoid
