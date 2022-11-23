@@ -8,14 +8,11 @@ import { Colorways } from "./MRColorways";
 import { MobileDownloads } from "./MobileDownloads";
 import { MultiSelect } from "./MultiSelect";
 import { Themes } from "./Themes";
-import {
-  OnboardingVideo,
-  SecondaryCTA,
-  StepsIndicator,
-} from "./MultiStageAboutWelcome";
+import { SecondaryCTA, StepsIndicator } from "./MultiStageAboutWelcome";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { CTAParagraph } from "./CTAParagraph";
 import { HeroImage } from "./HeroImage";
+import { OnboardingVideo } from "./OnboardingVideo";
 
 export const MultiStageProtonScreen = props => {
   const { autoAdvance, handleAction, order } = props;
