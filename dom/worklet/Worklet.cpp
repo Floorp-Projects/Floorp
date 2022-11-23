@@ -261,7 +261,11 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
   virtual void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
                                 ErrorResult& aRv) override {
     MOZ_ASSERT(NS_IsMainThread());
-    RejectPromises(NS_ERROR_DOM_NETWORK_ERR);
+
+    // https://html.spec.whatwg.org/multipage/worklets.html#dom-worklet-addmodule
+    // Step 6.4.1. If script is null, then:
+    //   Step 1.1.2. Reject promise with an "AbortError" DOMException.
+    RejectPromises(NS_ERROR_DOM_ABORT_ERR);
   }
 
   const nsCString& URL() const { return mURL; }
