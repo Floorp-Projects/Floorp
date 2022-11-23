@@ -354,7 +354,7 @@ class TabbedBrowsingTest {
             // dismiss search dialog
             homeScreen { }.pressBack()
             verifyPrivateSessionMessage()
-            verifyHomeToolbar()
+            verifyNavigationToolbar()
         }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
@@ -365,7 +365,7 @@ class TabbedBrowsingTest {
             // dismiss search dialog
             homeScreen { }.pressBack()
             verifyHomeWordmark()
-            verifyHomeToolbar()
+            verifyNavigationToolbar()
         }
     }
 }

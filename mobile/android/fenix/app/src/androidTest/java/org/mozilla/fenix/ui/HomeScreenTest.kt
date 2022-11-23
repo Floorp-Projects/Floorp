@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
@@ -35,10 +36,11 @@ class HomeScreenTest {
     private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
 
-    @get:Rule
-    val activityTestRule = HomeActivityTestRule.withDefaultSettingsOverrides()
+    @get:Rule(order = 0)
+    val activityTestRule =
+        AndroidComposeTestRule(HomeActivityTestRule.withDefaultSettingsOverrides()) { it.activity }
 
-    @Rule
+    @Rule(order = 1)
     @JvmField
     val retryTestRule = RetryTestRule(3)
 
@@ -62,21 +64,26 @@ class HomeScreenTest {
         homeScreen { }.dismissOnboarding()
 
         homeScreen {
-            verifyHomeScreen()
-            verifyNavigationToolbar()
-            verifyHomePrivateBrowsingButton()
-            verifyHomeMenu()
             verifyHomeWordmark()
-            verifyTabButton()
-            verifyCollectionsHeader()
-            verifyHomeToolbar()
-            verifyHomeComponent()
-
-            // Verify Top Sites
-            verifyExistingTopSitesList()
+            verifyHomePrivateBrowsingButton()
             verifyExistingTopSitesTabs("Wikipedia")
             verifyExistingTopSitesTabs("Top Articles")
             verifyExistingTopSitesTabs("Google")
+            verifyCollectionsHeader()
+            verifyNoCollectionsText()
+            scrollToPocketProvokingStories()
+            swipePocketProvokingStories()
+            verifyPocketRecommendedStoriesItems(activityTestRule, 1, 3, 4, 5, 6, 7)
+            verifyPocketSponsoredStoriesItems(activityTestRule, 2, 8)
+            verifyDiscoverMoreStoriesButton(activityTestRule, 9)
+            verifyStoriesByTopicItems()
+            verifyPoweredByPocket(activityTestRule)
+            verifyCustomizeHomepageButton(true)
+            verifyNavigationToolbar()
+            verifyDefaultSearchEngine("Google")
+            verifyHomeMenuButton()
+            verifyTabButton()
+            verifyNoTabsOpened()
         }
     }
 
@@ -89,11 +96,11 @@ class HomeScreenTest {
             verifyHomeScreen()
             verifyNavigationToolbar()
             verifyHomePrivateBrowsingButton()
-            verifyHomeMenu()
+            verifyHomeMenuButton()
             verifyHomeWordmark()
             verifyTabButton()
             verifyPrivateSessionMessage()
-            verifyHomeToolbar()
+            verifyNavigationToolbar()
             verifyHomeComponent()
         }.openCommonMythsLink {
             verifyUrl("common-myths-about-private-browsing")
@@ -107,11 +114,11 @@ class HomeScreenTest {
             verifyHomeScreen()
             verifyNavigationToolbar()
             verifyHomePrivateBrowsingButton()
-            verifyHomeMenu()
+            verifyHomeMenuButton()
             verifyHomeWordmark()
             verifyTabButton()
             verifyPrivateSessionMessage()
-            verifyHomeToolbar()
+            verifyNavigationToolbar()
             verifyHomeComponent()
         }
     }
@@ -144,7 +151,7 @@ class HomeScreenTest {
 
     @Test
     fun dismissOnboardingUsingHelpTest() {
-        activityTestRule.applySettingsExceptions {
+        activityTestRule.activityRule.applySettingsExceptions {
             it.isJumpBackInCFREnabled = false
             it.isWallpaperOnboardingEnabled = false
         }
@@ -174,7 +181,7 @@ class HomeScreenTest {
 
     @Test
     fun verifyPocketHomepageStoriesTest() {
-        activityTestRule.applySettingsExceptions {
+        activityTestRule.activityRule.applySettingsExceptions {
             it.isRecentTabsFeatureEnabled = false
             it.isRecentlyVisitedFeatureEnabled = false
         }

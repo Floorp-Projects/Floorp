@@ -115,7 +115,7 @@ class SmokeTest {
             verifyHomeScreen()
             verifyNavigationToolbar()
             verifyHomePrivateBrowsingButton()
-            verifyHomeMenu()
+            verifyHomeMenuButton()
             verifyHomeWordmark()
 
             verifyWelcomeHeader()

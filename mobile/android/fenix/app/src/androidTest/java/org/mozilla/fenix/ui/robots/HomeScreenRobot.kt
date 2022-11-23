@@ -8,9 +8,13 @@ package org.mozilla.fenix.ui.robots
 
 import android.graphics.Bitmap
 import android.widget.EditText
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.onChildAt
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.recyclerview.widget.RecyclerView
@@ -75,12 +79,11 @@ class HomeScreenRobot {
     fun verifyFocusedNavigationToolbar() = assertFocusedNavigationToolbar()
     fun verifyHomeScreen() = assertHomeScreen()
     fun verifyHomePrivateBrowsingButton() = assertHomePrivateBrowsingButton()
-    fun verifyHomeMenu() = assertHomeMenu()
+    fun verifyHomeMenuButton() = assertHomeMenuButton()
     fun verifyTabButton() = assertTabButton()
     fun verifyCollectionsHeader() = assertCollectionsHeader()
     fun verifyNoCollectionsText() = assertNoCollectionsText()
     fun verifyHomeWordmark() = assertHomeWordmark()
-    fun verifyHomeToolbar() = assertHomeToolbar()
     fun verifyHomeComponent() = assertHomeComponent()
     fun verifyDefaultSearchEngine(searchEngine: String) = verifySearchEngineIcon(searchEngine)
     fun verifyNoTabsOpened() = assertNoTabsOpened()
@@ -267,6 +270,39 @@ class HomeScreenRobot {
         }
     }
 
+    fun scrollToPocketProvokingStories() =
+        scrollToElementByText(getStringResource(R.string.pocket_stories_categories_header))
+
+    fun swipePocketProvokingStories() {
+        UiScrollable(UiSelector().resourceId("pocket.stories")).setAsHorizontalList()
+            .swipeLeft(3)
+    }
+
+    fun verifyPocketRecommendedStoriesItems(composeTestRule: ComposeTestRule, vararg positions: Int) {
+        composeTestRule.onNodeWithTag("pocket.stories").assertIsDisplayed()
+        positions.forEach {
+            composeTestRule.onNodeWithTag("pocket.stories")
+                .onChildAt(it - 1)
+                .assert(hasTestTag("pocket.recommended.story"))
+        }
+    }
+
+    fun verifyPocketSponsoredStoriesItems(composeTestRule: ComposeTestRule, vararg positions: Int) {
+        composeTestRule.onNodeWithTag("pocket.stories").assertIsDisplayed()
+        positions.forEach {
+            composeTestRule.onNodeWithTag("pocket.stories")
+                .onChildAt(it - 1)
+                .assert(hasTestTag("pocket.sponsored.story"))
+        }
+    }
+
+    fun verifyDiscoverMoreStoriesButton(composeTestRule: ComposeTestRule, position: Int) {
+        composeTestRule.onNodeWithTag("pocket.stories")
+            .assertIsDisplayed()
+            .onChildAt(position - 1)
+            .assert(hasTestTag("pocket.discover.more.story"))
+    }
+
     fun verifyStoriesByTopic(enabled: Boolean) {
         if (enabled) {
             scrollToElementByText(getStringResource(R.string.pocket_stories_categories_header))
@@ -289,6 +325,15 @@ class HomeScreenRobot {
                 ).waitForExists(waitingTime),
             )
         }
+    }
+
+    fun verifyStoriesByTopicItems() =
+        assertTrue(mDevice.findObject(UiSelector().resourceId("pocket.categories")).childCount > 1)
+
+    fun verifyPoweredByPocket(rule: ComposeTestRule) {
+        homeScreenList().scrollIntoView(mDevice.findObject(UiSelector().resourceId("pocket.header")))
+        rule.onNodeWithTag("pocket.header.title", true).assertIsDisplayed()
+        rule.onNodeWithTag("pocket.header.subtitle", true).assertIsDisplayed()
     }
 
     fun verifyCustomizeHomepageButton(enabled: Boolean) {
@@ -619,7 +664,7 @@ private fun assertHomeScreen() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertHomeMenu() = onView(ViewMatchers.withResourceName("menuButton"))
+private fun assertHomeMenuButton() = onView(ViewMatchers.withResourceName("menuButton"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertHomePrivateBrowsingButton() =
@@ -629,9 +674,6 @@ private fun assertHomePrivateBrowsingButton() =
 private val homepageWordmark = onView(ViewMatchers.withResourceName("wordmark"))
 private fun assertHomeWordmark() =
     homepageWordmark.check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-private fun assertHomeToolbar() = onView(ViewMatchers.withResourceName("toolbar"))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertTabButton() =
     onView(allOf(withId(R.id.tab_button), isDisplayed()))
@@ -668,9 +710,9 @@ private fun getSearchEngine(searchEngineName: String) =
     appContext.components.core.store.state.search.searchEngines.find { it.name == searchEngineName }
 
 private fun verifySearchEngineIcon(searchEngineName: String) {
-    val ddgSearchEngine = getSearchEngine(searchEngineName)
+    val defaultSearchEngine = getSearchEngine(searchEngineName)
         ?: throw AssertionError("No search engine with name $searchEngineName")
-    verifySearchEngineIcon(ddgSearchEngine.icon, ddgSearchEngine.name)
+    verifySearchEngineIcon(defaultSearchEngine.icon, defaultSearchEngine.name)
 }
 
 // First Run elements
@@ -948,6 +990,17 @@ private fun sponsoredShortcut(sponsoredShortcutTitle: String) =
             .res("$packageName:id/top_site_title")
             .textContains(sponsoredShortcutTitle),
     )
+
+private fun discoverMoreStoriesButton(position: Int) =
+    mDevice
+        .findObject(
+            UiSelector()
+                .resourceId("pocket.stories"),
+        ).getChild(
+            UiSelector()
+                .resourceId("pocket.discover.more.story")
+                .index(position - 1),
+        )
 
 val deleteFromHistory =
     onView(
