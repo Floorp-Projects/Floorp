@@ -31,6 +31,7 @@ namespace gc {
 
 enum IncrementalProgress { NotFinished = 0, Finished };
 
+class AutoSetMarkColor;
 struct Cell;
 
 struct EphemeronEdgeTableHashPolicy {
@@ -273,26 +274,85 @@ class GCMarker {
 #endif
 
   bool isActive() const { return state != NotActive; }
+  bool isRegularMarking() const { return state == RegularMarking; }
+  bool isWeakMarking() const { return state == WeakMarking; }
+
+  gc::MarkColor markColor() const { return markColor_; }
+
+  bool isDrained();
 
   void start();
   void stop();
   void reset();
 
+  enum ShouldReportMarkTime : bool {
+    ReportMarkTime = true,
+    DontReportMarkTime = false
+  };
+  [[nodiscard]] bool markUntilBudgetExhausted(
+      SliceBudget& budget, ShouldReportMarkTime reportTime = ReportMarkTime);
+
+  void setRootMarkingMode(bool newState);
+
+  bool enterWeakMarkingMode();
+  void leaveWeakMarkingMode();
+
+  // Do not use linear-time weak marking for the rest of this collection.
+  // Currently, this will only be triggered by an OOM when updating needed data
+  // structures.
+  void abortLinearWeakMarking();
+
+  // 'delegate' is no longer the delegate of 'key'.
+  void severWeakDelegate(JSObject* key, JSObject* delegate);
+
+  // 'delegate' is now the delegate of 'key'. Update weakmap marking state.
+  void restoreWeakDelegate(JSObject* key, JSObject* delegate);
+
+#ifdef DEBUG
+  // We can't check atom marking if the helper thread lock is already held by
+  // the current thread. This allows us to disable the check.
+  void setCheckAtomMarking(bool check);
+
+  bool shouldCheckCompartments() { return strictCompartmentChecking; }
+#endif
+
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+
+  static GCMarker* fromTracer(JSTracer* trc) {
+    MOZ_ASSERT(trc->isMarkingTracer());
+    auto* marker = reinterpret_cast<GCMarker*>(uintptr_t(trc) -
+                                               offsetof(GCMarker, tracer_));
+    MOZ_ASSERT(marker->tracer() == trc);
+    return marker;
+  }
+
+  // Internal public methods, for ease of use by the rest of the GC:
+
   // If |thing| is unmarked, mark it and then traverse its children.
   template <uint32_t = gc::MarkingOptions::None, typename T>
   void markAndTraverse(T* thing);
 
-  // Traverse a GC thing's children, using a strategy depending on the type.
-  // This can either processing them immediately or push them onto the mark
-  // stack for later.
   template <typename T>
-  void traverse(T* thing);
+  void markImplicitEdges(T* oldThing);
 
-  // Calls traverse on target after making additional assertions.
-  template <typename S, typename T>
-  void markAndTraverseEdge(S source, T* target);
-  template <typename S, typename T>
-  void markAndTraverseEdge(S source, const T& target);
+ private:
+  /*
+   * Care must be taken changing the mark color from gray to black. The cycle
+   * collector depends on the invariant that there are no black to gray edges
+   * in the GC heap. This invariant lets the CC not trace through black
+   * objects. If this invariant is violated, the cycle collector may free
+   * objects that are still reachable.
+   */
+  void setMarkColor(gc::MarkColor newColor);
+  friend class js::gc::AutoSetMarkColor;
+
+  bool isMarkStackEmpty() { return stack.isEmpty(); }
+
+  bool hasBlackEntries() const { return stack.position() > grayPosition; }
+  bool hasGrayEntries() const { return grayPosition > 0 && !stack.isEmpty(); }
+
+  void processMarkStackTop(SliceBudget& budget);
+  friend class gc::GCRuntime;
 
   // Helper methods that coerce their second argument to the base pointer
   // type.
@@ -305,100 +365,25 @@ class GCMarker {
     markAndTraverseEdge(source, target);
   }
 
+  // Calls traverse on target after making additional assertions.
+  template <typename S, typename T>
+  void markAndTraverseEdge(S source, T* target);
+  template <typename S, typename T>
+  void markAndTraverseEdge(S source, const T& target);
+
   template <typename S, typename T>
   void checkTraversedEdge(S source, T* target);
 
-#ifdef DEBUG
-  // We can't check atom marking if the helper thread lock is already held by
-  // the current thread. This allows us to disable the check.
-  void setCheckAtomMarking(bool check);
-#endif
-
-  /*
-   * Care must be taken changing the mark color from gray to black. The cycle
-   * collector depends on the invariant that there are no black to gray edges
-   * in the GC heap. This invariant lets the CC not trace through black
-   * objects. If this invariant is violated, the cycle collector may free
-   * objects that are still reachable.
-   */
-  void setMarkColor(gc::MarkColor newColor);
-  gc::MarkColor markColor() const { return markColor_; }
-
-  void setRootMarkingMode(bool newState);
-
-  bool enterWeakMarkingMode();
-  void leaveWeakMarkingMode();
-
-  // Do not use linear-time weak marking for the rest of this collection.
-  // Currently, this will only be triggered by an OOM when updating needed data
-  // structures.
-  void abortLinearWeakMarking() {
-    if (state == WeakMarking) {
-      leaveWeakMarkingMode();
-    }
-    state = IterativeMarking;
-  }
-
-  void delayMarkingChildrenOnOOM(gc::Cell* cell);
-  void delayMarkingChildren(gc::Cell* cell);
-
-  // 'delegate' is no longer the delegate of 'key'.
-  void severWeakDelegate(JSObject* key, JSObject* delegate);
-
-  // 'delegate' is now the delegate of 'key'. Update weakmap marking state.
-  void restoreWeakDelegate(JSObject* key, JSObject* delegate);
-
-  bool isDrained();
-
-  enum ShouldReportMarkTime : bool {
-    ReportMarkTime = true,
-    DontReportMarkTime = false
-  };
-  [[nodiscard]] bool markUntilBudgetExhausted(
-      SliceBudget& budget, ShouldReportMarkTime reportTime = ReportMarkTime);
-
-  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-
-#ifdef DEBUG
-  bool shouldCheckCompartments() { return strictCompartmentChecking; }
-#endif
-
-  // Mark through edges whose target color depends on the colors of two source
-  // entities (eg a WeakMap and one of its keys), and push the target onto the
-  // mark stack.
-  void markEphemeronEdges(gc::EphemeronEdgeVector& edges,
-                          gc::CellColor srcColor);
-
-  static GCMarker* fromTracer(JSTracer* trc) {
-    MOZ_ASSERT(trc->isMarkingTracer());
-    auto* marker = reinterpret_cast<GCMarker*>(uintptr_t(trc) -
-                                               offsetof(GCMarker, tracer_));
-    MOZ_ASSERT(marker->tracer() == trc);
-    return marker;
-  }
-
+  // Mark the given GC thing, but do not trace its children. Return true
+  // if the thing became marked.
   template <typename T>
-  void markImplicitEdges(T* oldThing);
+  [[nodiscard]] bool mark(T* thing);
 
-  bool isRegularMarking() const { return state == RegularMarking; }
-  bool isWeakMarking() const { return state == WeakMarking; }
-
-  bool isMarkStackEmpty() { return stack.isEmpty(); }
-
-  bool hasBlackEntries() const { return stack.position() > grayPosition; }
-
-  bool hasGrayEntries() const { return grayPosition > 0 && !stack.isEmpty(); }
-
- private:
-#ifdef DEBUG
-  void checkZone(void* p);
-#else
-  void checkZone(void* p) {}
-#endif
-
-  // Push an object onto the stack for later tracing and assert that it has
-  // already been marked.
-  inline void repush(JSObject* obj);
+  // Traverse a GC thing's children, using a strategy depending on the type.
+  // This can either processing them immediately or push them onto the mark
+  // stack for later.
+  template <typename T>
+  void traverse(T* thing);
 
   // Process a marked thing's children by calling T::traceChildren().
   template <typename T>
@@ -413,8 +398,6 @@ class GCMarker {
   template <typename T>
   void pushThing(T* thing);
 
-  template <typename T>
-  void markImplicitEdgesHelper(T oldThing);
   void eagerlyMarkChildren(JSLinearString* str);
   void eagerlyMarkChildren(JSRope* rope);
   void eagerlyMarkChildren(JSString* str);
@@ -422,23 +405,34 @@ class GCMarker {
   void eagerlyMarkChildren(PropMap* map);
   void eagerlyMarkChildren(Scope* scope);
 
-  // We may not have concrete types yet, so this has to be outside the header.
-  template <typename T>
-  void dispatchToTraceChildren(T* thing);
-
-  // Mark the given GC thing, but do not trace its children. Return true
-  // if the thing became marked.
-  template <typename T>
-  [[nodiscard]] bool mark(T* thing);
-
   template <typename T>
   inline void pushTaggedPtr(T* ptr);
 
   inline void pushValueRange(JSObject* obj, SlotsOrElementsKind kind,
                              size_t start, size_t end);
 
-  void processMarkStackTop(SliceBudget& budget);
-  friend class gc::GCRuntime;
+  // Push an object onto the stack for later tracing and assert that it has
+  // already been marked.
+  inline void repush(JSObject* obj);
+
+  template <typename T>
+  void markImplicitEdgesHelper(T oldThing);
+
+  // Mark through edges whose target color depends on the colors of two source
+  // entities (eg a WeakMap and one of its keys), and push the target onto the
+  // mark stack.
+  void markEphemeronEdges(gc::EphemeronEdgeVector& edges,
+                          gc::CellColor srcColor);
+  friend class JS::Zone;
+
+#ifdef DEBUG
+  void checkZone(void* p);
+#else
+  void checkZone(void* p) {}
+#endif
+
+  void delayMarkingChildrenOnOOM(gc::Cell* cell);
+  void delayMarkingChildren(gc::Cell* cell);
 
   void markDelayedChildren(gc::Arena* arena);
   void markAllDelayedChildren(ShouldReportMarkTime reportTime);
