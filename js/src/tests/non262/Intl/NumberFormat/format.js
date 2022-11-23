@@ -31,9 +31,9 @@ assertEq(format.format(123456789.123456789), "￥123,456,789");
 // Locale ar-JO; currency JOD.
 // The Jordanian Dinar divides into 1000 fils. Jordan uses (real) Arabic digits.
 format = new Intl.NumberFormat("ar-jo", {style: "currency", currency: "JOD"});
-assertEq(format.format(0), "٠٫٠٠٠ د.أ.‏");
-assertEq(format.format(-1), "؜-١٫٠٠٠ د.أ.‏");
-assertEq(format.format(123456789.123456789), "١٢٣٬٤٥٦٬٧٨٩٫١٢٣ د.أ.‏");
+assertEq(format.format(0), "\u{200F}٠٫٠٠٠ د.أ.\u{200F}");
+assertEq(format.format(-1), "\u{061C}-\u{200F}١٫٠٠٠ د.أ.\u{200F}");
+assertEq(format.format(123456789.123456789), "\u{200F}١٢٣٬٤٥٦٬٧٨٩٫١٢٣ د.أ.\u{200F}");
 
 // Locale th-TH; Thai digits, percent, two significant digits.
 format = new Intl.NumberFormat("th-th-u-nu-thai",
