@@ -3,7 +3,7 @@ if (typeof Intl === "object") {
 
     const date = new Date(Date.UTC(2012, 11, 12, 3, 0, 0));
 
-    assertEq([date].toLocaleString("en-us", {timeZone: "UTC"}), "12/12/2012, 3:00:00\u202FAM");
+    assertEq([date].toLocaleString("en-us", {timeZone: "UTC"}), "12/12/2012, 3:00:00 AM");
     assertEq([date].toLocaleString(["de", "en"], {timeZone: "UTC"}), "12.12.2012, 03:00:00");
     assertEq([date].toLocaleString("th-th", {timeZone: "UTC"}), "12/12/2555 03:00:00");
     assertEq([date].toLocaleString("th-th-u-nu-thai", {timeZone: "UTC"}), "๑๒/๑๒/๒๕๕๕ ๐๓:๐๐:๐๐");

@@ -28,15 +28,7 @@ const tests = {
       "second": "sec.",
       "timeZoneName": "zone",
     },
-    narrow: {
-      "year": "yr",
-      "quarter": "qtr",
-      "month": "mo",
-      "weekOfYear": "wk",
-      "hour": "hr",
-      "minute": "min",
-      "second": "sec",
-    },
+    narrow: {},
   },
   "de": {
     long: {
