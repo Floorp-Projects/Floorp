@@ -623,28 +623,6 @@ nsresult nsIDNService::decodeACE(const nsACString& in, nsACString& out,
   return NS_OK;
 }
 
-namespace mozilla::net {
-
-enum ScriptCombo : int32_t {
-  UNSET = -1,
-  BOPO = 0,
-  CYRL = 1,
-  GREK = 2,
-  HANG = 3,
-  HANI = 4,
-  HIRA = 5,
-  KATA = 6,
-  LATN = 7,
-  OTHR = 8,
-  JPAN = 9,   // Latin + Han + Hiragana + Katakana
-  CHNA = 10,  // Latin + Han + Bopomofo
-  KORE = 11,  // Latin + Han + Hangul
-  HNLT = 12,  // Latin + Han (could be any of the above combinations)
-  FAIL = 13,
-};
-
-}  // namespace mozilla::net
-
 bool nsIDNService::isLabelSafe(const nsAString& label) {
   AutoReadLock lock(mLock);
 
@@ -671,7 +649,7 @@ bool nsIDNService::isLabelSafe(const nsAString& label) {
   HanVariantType savedHanVariant = HVT_NotHan;
 #endif
 
-  ScriptCombo savedScript = ScriptCombo::UNSET;
+  int32_t savedScript = -1;
 
   while (current != end) {
     uint32_t ch = *current++;
@@ -693,17 +671,6 @@ bool nsIDNService::isLabelSafe(const nsAString& label) {
       if (illegalScriptCombo(script, savedScript)) {
         return false;
       }
-    }
-
-    // U+30FC should be preceded by a Hiragana/Katakana.
-    if (ch == 0x30fc && lastScript != Script::HIRAGANA &&
-        lastScript != Script::KATAKANA) {
-      return false;
-    }
-
-    if (ch == 0x307 &&
-        (previousChar == 'i' || previousChar == 'j' || previousChar == 'l')) {
-      return false;
     }
 
     // Check for mixed numbering systems
@@ -787,30 +754,36 @@ bool nsIDNService::isLabelSafe(const nsAString& label) {
 }
 
 // Scripts that we care about in illegalScriptCombo
-static inline ScriptCombo findScriptIndex(Script aScript) {
-  switch (aScript) {
-    case Script::BOPOMOFO:
-      return ScriptCombo::BOPO;
-    case Script::CYRILLIC:
-      return ScriptCombo::CYRL;
-    case Script::GREEK:
-      return ScriptCombo::GREK;
-    case Script::HANGUL:
-      return ScriptCombo::HANG;
-    case Script::HAN:
-      return ScriptCombo::HANI;
-    case Script::HIRAGANA:
-      return ScriptCombo::HIRA;
-    case Script::KATAKANA:
-      return ScriptCombo::KATA;
-    case Script::LATIN:
-      return ScriptCombo::LATN;
-    default:
-      return ScriptCombo::OTHR;
+static const Script scriptTable[] = {
+    Script::BOPOMOFO, Script::CYRILLIC, Script::GREEK,    Script::HANGUL,
+    Script::HAN,      Script::HIRAGANA, Script::KATAKANA, Script::LATIN};
+
+#define BOPO 0
+#define CYRL 1
+#define GREK 2
+#define HANG 3
+#define HANI 4
+#define HIRA 5
+#define KATA 6
+#define LATN 7
+#define OTHR 8
+#define JPAN 9   // Latin + Han + Hiragana + Katakana
+#define CHNA 10  // Latin + Han + Bopomofo
+#define KORE 11  // Latin + Han + Hangul
+#define HNLT 12  // Latin + Han (could be any of the above combinations)
+#define FAIL 13
+
+static inline int32_t findScriptIndex(Script aScript) {
+  int32_t tableLength = mozilla::ArrayLength(scriptTable);
+  for (int32_t index = 0; index < tableLength; ++index) {
+    if (aScript == scriptTable[index]) {
+      return index;
+    }
   }
+  return OTHR;
 }
 
-static const ScriptCombo scriptComboTable[13][9] = {
+static const int32_t scriptComboTable[13][9] = {
     /* thisScript: BOPO  CYRL  GREK  HANG  HANI  HIRA  KATA  LATN  OTHR
      * savedScript */
     /* BOPO */ {BOPO, FAIL, FAIL, FAIL, CHNA, FAIL, FAIL, CHNA, FAIL},
@@ -827,8 +800,8 @@ static const ScriptCombo scriptComboTable[13][9] = {
     /* KORE */ {FAIL, FAIL, FAIL, KORE, KORE, FAIL, FAIL, KORE, FAIL},
     /* HNLT */ {CHNA, FAIL, FAIL, KORE, HNLT, JPAN, JPAN, HNLT, FAIL}};
 
-bool nsIDNService::illegalScriptCombo(Script script, ScriptCombo& savedScript) {
-  if (savedScript == ScriptCombo::UNSET) {
+bool nsIDNService::illegalScriptCombo(Script script, int32_t& savedScript) {
+  if (savedScript == -1) {
     savedScript = findScriptIndex(script);
     return false;
   }
@@ -846,3 +819,18 @@ bool nsIDNService::illegalScriptCombo(Script script, ScriptCombo& savedScript) {
            mRestrictionProfile == eHighlyRestrictiveProfile) ||
           savedScript == FAIL);
 }
+
+#undef BOPO
+#undef CYRL
+#undef GREK
+#undef HANG
+#undef HANI
+#undef HIRA
+#undef KATA
+#undef LATN
+#undef OTHR
+#undef JPAN
+#undef CHNA
+#undef KORE
+#undef HNLT
+#undef FAIL
