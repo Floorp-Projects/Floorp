@@ -174,18 +174,6 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   friend class JS::Zone;
 };
 
-namespace detail {
-
-template <typename T>
-struct RemoveBarrier {};
-
-template <typename T>
-struct RemoveBarrier<js::HeapPtr<T>> {
-  using Type = T;
-};
-
-}  // namespace detail
-
 template <class Key, class Value>
 class WeakMap
     : private HashMap<Key, Value, MovableCellHasher<Key>, ZoneAllocPolicy>,
@@ -213,7 +201,7 @@ class WeakMap
   // Resolve ambiguity with LinkedListElement<>::remove.
   using Base::remove;
 
-  using UnbarrieredKey = typename detail::RemoveBarrier<Key>::Type;
+  using UnbarrieredKey = typename RemoveBarrier<Key>::Type;
 
   explicit WeakMap(JSContext* cx, JSObject* memOf = nullptr);
   explicit WeakMap(JS::Zone* zone, JSObject* memOf = nullptr);

@@ -1097,6 +1097,28 @@ class MOZ_HEAP_CLASS ImmutableTenuredPtr {
   const T* address() { return &value; }
 };
 
+// Template to remove any barrier wrapper and get the underlying type.
+template <typename T>
+struct RemoveBarrier {
+  using Type = T;
+};
+template <typename T>
+struct RemoveBarrier<HeapPtr<T>> {
+  using Type = T;
+};
+template <typename T>
+struct RemoveBarrier<GCPtr<T>> {
+  using Type = T;
+};
+template <typename T>
+struct RemoveBarrier<PreBarriered<T>> {
+  using Type = T;
+};
+template <typename T>
+struct RemoveBarrier<WeakHeapPtr<T>> {
+  using Type = T;
+};
+
 #if MOZ_IS_GCC
 template struct JS_PUBLIC_API MovableCellHasher<JSObject*>;
 #endif
