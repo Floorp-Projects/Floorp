@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-11-22T11:18:09.250715'
+updated_at: '2022-11-23T10:37:48.042080'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -693,6 +693,10 @@ people:
     bmo_id: 489889
     name: Andreas Pehrson
     nick: pehrsons
+  - &perrym
+    bmo_id: 697076
+    name: Perry McManis
+    nick: perrym
   - &peterv
     bmo_id: 24295
     name: Peter Van der Beken
@@ -828,6 +832,10 @@ people:
     bmo_id: 644141
     name: Toshihito Kikuchi
     nick: toshi
+  - &travis
+    bmo_id: 628857
+    name: Travis Long
+    nick: travis_
   - &TYLin
     bmo_id: 503090
     name: Ting-Yu Lin
@@ -3584,13 +3592,15 @@ modules:
         machine_name: application_startup
 
       - name: Telemetry
-        description: The core infrastructure in the Firefox client to send back Telemetry
-          and FHR data. Includes the common mechanism to record, view and submit data
-          like histograms, the Telemetry environment and custom pings. This module
+        description: >
+          The core infrastructure in the Firefox client to send back telemetry
+          data. Includes the common mechanisms to record, view and submit data: Legacy
+          Telemetry and Glean (via Firefox on Glean (FOG)). This module
           does ''not'' include responsibility for every piece of submitted Telemetry
           data. Each team/module is responsible for their own measurements (histograms,
           scalars, other ping submissions, etc.).
         includes:
+          - toolkit/components/glean/**/*
           - toolkit/components/telemetry/**/*
           - toolkit/content/aboutTelemetry.*
         meta:
@@ -3603,6 +3613,8 @@ modules:
         peers:
           - *aplacitelli
           - *janerik
+          - *perrym
+          - *travis
         machine_name: telemetry
 
       - name: UI Widgets
@@ -3636,5 +3648,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 7c07774ff027a30568a0784fdb2fb079cbab2582
-  export: e72a56c522a7d887400438e58c87b8ec519a035a
+  config: 11f27e1d35b17db064d66f47954fb8a7e0a11187
+  export: 38491a307805f150c2be79e7c286daf81e80de8f
