@@ -513,28 +513,9 @@ const JSPropertySpec MapObject::staticProperties[] = {
   return NativeDefineDataProperty(cx, nativeProto, iteratorId, entriesFn, 0);
 }
 
-template <class MutableRange>
-static void TraceKey(MutableRange& r, const PreBarriered<HashableValue>& key,
-                     JSTracer* trc) {
-  HashableValue newKey = key;
-  newKey.trace(trc);
-
-  // Check whether the key was moved by the GC. This is a bitwise comparison.
-  if (newKey != key.get()) {
-    // Update the key stored in the table. The hash function must take account
-    // of the fact that the thing being hashed may have been moved by GC. This
-    // is only an issue for BigInt as for other types the hash function only
-    // uses the bits of the Value.
-    r.rekeyFront(newKey);
-  }
-}
-
 void MapObject::trace(JSTracer* trc, JSObject* obj) {
   if (ValueMap* map = obj->as<MapObject>().getTableUnchecked()) {
-    for (auto r = map->mutableAll(); !r.empty(); r.popFront()) {
-      TraceKey(r, r.front().key, trc);
-      TraceEdge(trc, &r.front().value, "value");
-    }
+    map->trace(trc);
   }
 }
 
@@ -1426,9 +1407,7 @@ SetObject* SetObject::create(JSContext* cx,
 void SetObject::trace(JSTracer* trc, JSObject* obj) {
   SetObject* setobj = static_cast<SetObject*>(obj);
   if (ValueSet* set = setobj->getData()) {
-    for (auto r = set->mutableAll(); !r.empty(); r.popFront()) {
-      TraceKey(r, r.front(), trc);
-    }
+    set->trace(trc);
   }
 }
 
