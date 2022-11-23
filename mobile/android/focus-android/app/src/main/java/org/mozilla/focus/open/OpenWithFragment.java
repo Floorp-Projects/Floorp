@@ -29,6 +29,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import org.mozilla.focus.GleanMetrics.OpenWith;
 import org.mozilla.focus.R;
+import org.mozilla.focus.ext.ContextKt;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 
 public class OpenWithFragment extends AppCompatDialogFragment implements AppAdapter.OnAppSelectedListener {
@@ -97,7 +98,7 @@ public class OpenWithFragment extends AppCompatDialogFragment implements AppAdap
 
             // The support library makes the bottomsheet full width on all devices (and then uses a 16:9
             // keyline). On tablets, the system bottom sheets use a narrower width - lets do that too:
-            if (getContext().getResources().getBoolean(R.bool.is_tablet)) {
+            if (ContextKt.isTablet(getContext())) {
                 int width = getContext().getResources().getDimensionPixelSize(R.dimen.tablet_bottom_sheet_width);
                 final Window window = getWindow();
                 if (window != null) {
@@ -125,7 +126,7 @@ public class OpenWithFragment extends AppCompatDialogFragment implements AppAdap
 
         @Override
         public void show() {
-            if (getContext().getResources().getBoolean(R.bool.is_tablet)) {
+            if (ContextKt.isTablet(getContext())) {
                 final int peekHeight = getContext().getResources().getDimensionPixelSize(R.dimen.tablet_bottom_sheet_peekheight);
 
                 BottomSheetBehavior<View> bsBehaviour = BottomSheetBehavior.from((View) contentView.getParent());

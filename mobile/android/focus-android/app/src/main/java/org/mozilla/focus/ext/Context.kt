@@ -11,8 +11,8 @@ import android.view.accessibility.AccessibilityManager
 import mozilla.components.support.utils.ext.getPackageInfoCompat
 import org.mozilla.focus.Components
 import org.mozilla.focus.FocusApplication
-import org.mozilla.focus.R
 import org.mozilla.focus.utils.Settings
+import org.mozilla.gecko.util.HardwareUtils
 import java.text.DateFormat
 
 /**
@@ -51,7 +51,7 @@ val Context.installedDate: String
 /**
  * Checks if the current device is a tablet.
  */
-fun Context.isTablet(): Boolean = resources.getBoolean(R.bool.is_tablet)
+fun Context.isTablet(): Boolean = HardwareUtils.isTablet(this)
 
 /**
  * Casts [Context] to [Activity].

@@ -3,9 +3,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
-    <!-- We are overriding this value in values-sw600dp -->
-    <bool name="is_tablet">false</bool>
-
     <integer name="erase_animation_alpha_duration">250</integer>
     <integer name="erase_animation_scale_duration">100</integer>
     <integer name="erase_animation_translate_duration">100</integer>
