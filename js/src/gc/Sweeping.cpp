@@ -561,8 +561,12 @@ IncrementalProgress GCRuntime::markGrayRoots(SliceBudget& budget,
   gcstats::AutoPhase ap(stats(), phase);
 
   AutoUpdateLiveCompartments updateLive(this);
+  marker.setRootMarkingMode(true);
+  auto guard =
+      mozilla::MakeScopeExit([this]() { marker.setRootMarkingMode(false); });
 
-  if (traceEmbeddingGrayRoots(marker.tracer(), budget) == NotFinished) {
+  IncrementalProgress result = traceEmbeddingGrayRoots(marker.tracer(), budget);
+  if (result == NotFinished) {
     return NotFinished;
   }
 

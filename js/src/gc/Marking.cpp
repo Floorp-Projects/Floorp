@@ -903,20 +903,24 @@ static inline bool ShouldMark(GCMarker* gcmarker, T* thing) {
   return zone->shouldMarkInZone(gcmarker->markColor());
 }
 
-MarkingTracer::MarkingTracer(JSRuntime* runtime)
-    : GenericTracerImpl(runtime, JS::TracerKind::Marking,
-                        JS::TraceOptions(JS::WeakMapTraceAction::Expand,
-                                         JS::WeakEdgeTraceAction::Skip)) {
+template <uint32_t opts>
+MarkingTracerT<opts>::MarkingTracerT(JSRuntime* runtime)
+    : GenericTracerImpl<MarkingTracerT<opts>>(
+          runtime, JS::TracerKind::Marking,
+          JS::TraceOptions(JS::WeakMapTraceAction::Expand,
+                           JS::WeakEdgeTraceAction::Skip)) {
   // The MarkingTracer is owned by the the GCMarker.
   MOZ_ASSERT(this == runtime->gc.marker.tracer());
 }
 
-MOZ_ALWAYS_INLINE GCMarker* MarkingTracer::getMarker() {
+template <uint32_t opts>
+MOZ_ALWAYS_INLINE GCMarker* MarkingTracerT<opts>::getMarker() {
   return GCMarker::fromTracer(this);
 }
 
+template <uint32_t opts>
 template <typename T>
-void MarkingTracer::onEdge(T** thingp, const char* name) {
+void MarkingTracerT<opts>::onEdge(T** thingp, const char* name) {
   T* thing = *thingp;
 
   // Do per-type marking precondition checks.
@@ -927,7 +931,7 @@ void MarkingTracer::onEdge(T** thingp, const char* name) {
     return;
   }
 
-  MOZ_ASSERT(!IsOwnedByOtherRuntime(runtime(), thing));
+  MOZ_ASSERT(!IsOwnedByOtherRuntime(this->runtime(), thing));
 
 #ifdef DEBUG
   CheckMarkedThing(marker, thing);
@@ -936,12 +940,18 @@ void MarkingTracer::onEdge(T** thingp, const char* name) {
   AutoClearTracingSource acts(this);
   marker->markAndTraverse(thing);
 
-  // Mark the compartment as live.
-  SetCompartmentHasMarkedCells(thing);
+  if constexpr (opts == MarkingOptions::MarkRootCompartments) {
+    // Mark the compartment as live.
+    SetCompartmentHasMarkedCells(thing);
+  }
 }
 
-#define INSTANTIATE_ONEDGE_METHOD(name, type, _1, _2) \
-  template void MarkingTracer::onEdge<type>(type * *thingp, const char* name);
+#define INSTANTIATE_ONEDGE_METHOD(name, type, _1, _2)                 \
+  template void MarkingTracerT<MarkingOptions::None>::onEdge<type>(   \
+      type * *thingp, const char* name);                              \
+  template void                                                       \
+  MarkingTracerT<MarkingOptions::MarkRootCompartments>::onEdge<type>( \
+      type * *thingp, const char* name);
 JS_FOR_EACH_TRACEKIND(INSTANTIATE_ONEDGE_METHOD)
 #undef INSTANTIATE_ONEDGE_METHOD
 
@@ -1767,7 +1777,7 @@ size_t MarkStack::sizeOfExcludingThis(
  * potential key.
  */
 GCMarker::GCMarker(JSRuntime* rt)
-    : tracer_(rt),
+    : tracer_(mozilla::VariantType<MarkingTracer>(), rt),
       runtime_(rt),
       stack(),
       grayPosition(0),
@@ -1903,6 +1913,18 @@ void GCMarker::pushValueRange(JSObject* obj, SlotsOrElementsKind kind,
 void GCMarker::repush(JSObject* obj) {
   MOZ_ASSERT(obj->asTenured().isMarkedAtLeast(markColor()));
   pushTaggedPtr(obj);
+}
+
+void GCMarker::setRootMarkingMode(bool newState) {
+  if (newState) {
+    MOZ_ASSERT(state == RegularMarking);
+    state = RootMarking;
+    tracer_.emplace<RootMarkingTracer>(runtime());
+  } else {
+    MOZ_ASSERT(state == RootMarking);
+    state = RegularMarking;
+    tracer_.emplace<MarkingTracer>(runtime());
+  }
 }
 
 bool GCMarker::enterWeakMarkingMode() {
