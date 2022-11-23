@@ -55,8 +55,6 @@ class JitcodeGlobalTable;
 class JitcodeIonTable;
 class JitcodeRegionEntry;
 
-class JitcodeGlobalEntry;
-
 struct NativeToBytecode {
   CodeOffset nativeOffset;
   InlineScriptTree* tree;
@@ -66,11 +64,10 @@ struct NativeToBytecode {
 // Describes range [start, end) of JIT-generated code.
 class JitCodeRange {
  protected:
-  void* nativeStartAddr_ = nullptr;
-  void* nativeEndAddr_ = nullptr;
+  void* const nativeStartAddr_;
+  void* const nativeEndAddr_;
 
  public:
-  JitCodeRange() = default;
   JitCodeRange(void* start, void* end)
       : nativeStartAddr_(start), nativeEndAddr_(end) {
     MOZ_ASSERT(start < end);
@@ -96,354 +93,90 @@ class JitCodeRange {
   }
 };
 
-class JitcodeGlobalEntry {
-  friend class JitcodeGlobalTable;
+typedef Vector<BytecodeLocation, 0, SystemAllocPolicy> BytecodeLocationVector;
+
+struct IonEntry;
+struct BaselineEntry;
+struct BaselineInterpreterEntry;
+struct DummyEntry;
+
+// Base class for all entries.
+class JitcodeGlobalEntry : public JitCodeRange {
+ protected:
+  JitCode* jitcode_;
+  // If this entry is referenced from the profiler buffer, this is the
+  // position where the most recent sample that references it starts.
+  // Otherwise set to kNoSampleInBuffer.
+  static const uint64_t kNoSampleInBuffer = UINT64_MAX;
+  uint64_t samplePositionInBuffer_ = kNoSampleInBuffer;
 
  public:
   enum Kind { INVALID = 0, Ion, Baseline, BaselineInterpreter, Dummy, LIMIT };
+
+ protected:
   static_assert(LIMIT <= 8);
+  Kind kind_ : 7;
 
-  typedef Vector<BytecodeLocation, 0, SystemAllocPolicy> BytecodeLocationVector;
+  JitcodeGlobalEntry(Kind kind, JitCode* code, void* nativeStartAddr,
+                     void* nativeEndAddr)
+      : JitCodeRange(nativeStartAddr, nativeEndAddr),
+        jitcode_(code),
+        kind_(kind) {
+    MOZ_ASSERT(code);
+    MOZ_ASSERT(nativeStartAddr);
+    MOZ_ASSERT(nativeEndAddr);
+    MOZ_ASSERT(kind > INVALID && kind < LIMIT);
+  }
 
-  struct BaseEntry : public JitCodeRange {
-    static const uint64_t kNoSampleInBuffer = UINT64_MAX;
+  // Protected destructor to ensure this is called through DestroyPolicy.
+  ~JitcodeGlobalEntry() = default;
 
-    JitCode* jitcode_;
-    // If this entry is referenced from the profiler buffer, this is the
-    // position where the most recent sample that references it starts.
-    // Otherwise set to kNoSampleInBuffer.
-    uint64_t samplePositionInBuffer_;
-    Kind kind_ : 7;
-
-    void init() {
-      jitcode_ = nullptr;
-      nativeStartAddr_ = nullptr;
-      nativeEndAddr_ = nullptr;
-      samplePositionInBuffer_ = kNoSampleInBuffer;
-      kind_ = INVALID;
-    }
-
-    void init(Kind kind, JitCode* code, void* nativeStartAddr,
-              void* nativeEndAddr) {
-      MOZ_ASSERT(code);
-      MOZ_ASSERT(nativeStartAddr);
-      MOZ_ASSERT(nativeEndAddr);
-      MOZ_ASSERT(kind > INVALID && kind < LIMIT);
-      jitcode_ = code;
-      nativeStartAddr_ = nativeStartAddr;
-      nativeEndAddr_ = nativeEndAddr;
-      samplePositionInBuffer_ = kNoSampleInBuffer;
-      kind_ = kind;
-    }
-
-    void setSamplePositionInBuffer(uint64_t bufferWritePos) {
-      samplePositionInBuffer_ = bufferWritePos;
-    }
-    void setAsExpired() { samplePositionInBuffer_ = kNoSampleInBuffer; }
-    bool isSampled(uint64_t bufferRangeStart) {
-      if (samplePositionInBuffer_ == kNoSampleInBuffer) {
-        return false;
-      }
-      return bufferRangeStart <= samplePositionInBuffer_;
-    }
-
-    Kind kind() const { return kind_; }
-    JitCode* jitcode() const { return jitcode_; }
-
-    bool traceJitcode(JSTracer* trc);
-    bool isJitcodeMarkedFromAnyThread(JSRuntime* rt);
-  };
-
-  struct IonEntry : public BaseEntry {
-    // regionTable_ points to the start of the region table within the
-    // packed map for compile represented by this entry.  Since the
-    // region table occurs at the tail of the memory region, this pointer
-    // points somewhere inside the region memory space, and not to the start
-    // of the memory space.
-    JitcodeIonTable* regionTable_;
-
-    struct ScriptNamePair {
-      JSScript* script;
-      char* str;
-    };
-
-    struct SizedScriptList {
-      uint32_t size;
-      ScriptNamePair pairs[1];
-      SizedScriptList(uint32_t sz, JSScript** scrs, char** strs) : size(sz) {
-        for (uint32_t i = 0; i < size; i++) {
-          pairs[i].script = scrs[i];
-          pairs[i].str = strs[i];
-        }
-      }
-
-      static uint32_t AllocSizeFor(uint32_t nscripts) {
-        return sizeof(SizedScriptList) +
-               ((nscripts - 1) * sizeof(ScriptNamePair));
-      }
-    };
-
-    SizedScriptList* scriptList_;
-
-    void init(JitCode* code, void* nativeStartAddr, void* nativeEndAddr,
-              SizedScriptList* scriptList, JitcodeIonTable* regionTable) {
-      MOZ_ASSERT(scriptList);
-      MOZ_ASSERT(regionTable);
-      BaseEntry::init(Ion, code, nativeStartAddr, nativeEndAddr);
-      regionTable_ = regionTable;
-      scriptList_ = scriptList;
-    }
-
-    SizedScriptList* sizedScriptList() const { return scriptList_; }
-
-    unsigned numScripts() const { return scriptList_->size; }
-
-    JSScript* getScript(unsigned idx) const {
-      MOZ_ASSERT(idx < numScripts());
-      return sizedScriptList()->pairs[idx].script;
-    }
-
-    const char* getStr(unsigned idx) const {
-      MOZ_ASSERT(idx < numScripts());
-      return sizedScriptList()->pairs[idx].str;
-    }
-
-    void destroy();
-
-    JitcodeIonTable* regionTable() const { return regionTable_; }
-
-    void* canonicalNativeAddrFor(void* ptr) const;
-
-    [[nodiscard]] bool callStackAtAddr(void* ptr,
-                                       BytecodeLocationVector& results,
-                                       uint32_t* depth) const;
-
-    uint32_t callStackAtAddr(void* ptr, const char** results,
-                             uint32_t maxResults) const;
-
-    uint64_t lookupRealmID(void* ptr) const;
-
-    bool trace(JSTracer* trc);
-    void traceWeak(JSTracer* trc);
-  };
-
-  struct BaselineEntry : public BaseEntry {
-    JSScript* script_;
-    const char* str_;
-
-    void init(JitCode* code, void* nativeStartAddr, void* nativeEndAddr,
-              JSScript* script, const char* str) {
-      MOZ_ASSERT(script != nullptr);
-      BaseEntry::init(Baseline, code, nativeStartAddr, nativeEndAddr);
-      script_ = script;
-      str_ = str;
-    }
-
-    JSScript* script() const { return script_; }
-
-    const char* str() const { return str_; }
-
-    void destroy();
-
-    void* canonicalNativeAddrFor(void* ptr) const;
-
-    [[nodiscard]] bool callStackAtAddr(void* ptr,
-                                       BytecodeLocationVector& results,
-                                       uint32_t* depth) const;
-
-    uint32_t callStackAtAddr(void* ptr, const char** results,
-                             uint32_t maxResults) const;
-
-    uint64_t lookupRealmID() const;
-
-    bool trace(JSTracer* trc);
-    void traceWeak(JSTracer* trc);
-  };
-
-  struct BaselineInterpreterEntry : public BaseEntry {
-    void init(JitCode* code, void* nativeStartAddr, void* nativeEndAddr) {
-      BaseEntry::init(BaselineInterpreter, code, nativeStartAddr,
-                      nativeEndAddr);
-    }
-
-    void destroy() {}
-
-    void* canonicalNativeAddrFor(void* ptr) const;
-
-    [[nodiscard]] bool callStackAtAddr(void* ptr,
-                                       BytecodeLocationVector& results,
-                                       uint32_t* depth) const;
-
-    uint32_t callStackAtAddr(void* ptr, const char** results,
-                             uint32_t maxResults) const;
-
-    uint64_t lookupRealmID() const;
-  };
-
-  // Dummy entries are created for jitcode generated when profiling is not
-  // turned on, so that they have representation in the global table if they are
-  // on the stack when profiling is enabled.
-  struct DummyEntry : public BaseEntry {
-    void init(JitCode* code, void* nativeStartAddr, void* nativeEndAddr) {
-      BaseEntry::init(Dummy, code, nativeStartAddr, nativeEndAddr);
-    }
-
-    void destroy() {}
-
-    void* canonicalNativeAddrFor(JSRuntime* rt, void* ptr) const {
-      return nullptr;
-    }
-
-    [[nodiscard]] bool callStackAtAddr(JSRuntime* rt, void* ptr,
-                                       BytecodeLocationVector& results,
-                                       uint32_t* depth) const {
-      return true;
-    }
-
-    uint32_t callStackAtAddr(JSRuntime* rt, void* ptr, const char** results,
-                             uint32_t maxResults) const {
-      return 0;
-    }
-
-    uint64_t lookupRealmID() const { return 0; }
-  };
-
- private:
-  union {
-    // Shadowing BaseEntry instance to allow access to base fields
-    // and type extraction.
-    BaseEntry base_;
-
-    // The most common entry type: describing jitcode generated by
-    // Ion main-line code.
-    IonEntry ion_;
-
-    // Baseline jitcode.
-    BaselineEntry baseline_;
-
-    // BaselineInterpreter code.
-    BaselineInterpreterEntry baselineInterpreter_;
-
-    // Dummy entries.
-    DummyEntry dummy_;
-  };
+  JitcodeGlobalEntry(const JitcodeGlobalEntry& other) = delete;
+  void operator=(const JitcodeGlobalEntry& other) = delete;
 
  public:
-  JitcodeGlobalEntry() { base_.init(); }
+  struct DestroyPolicy {
+    void operator()(JitcodeGlobalEntry* entry);
+  };
 
-  explicit JitcodeGlobalEntry(const IonEntry& ion) : JitcodeGlobalEntry() {
-    ion_ = ion;
+  void setSamplePositionInBuffer(uint64_t bufferWritePos) {
+    samplePositionInBuffer_ = bufferWritePos;
   }
-
-  explicit JitcodeGlobalEntry(const BaselineEntry& baseline)
-      : JitcodeGlobalEntry() {
-    baseline_ = baseline;
-  }
-
-  explicit JitcodeGlobalEntry(const BaselineInterpreterEntry& baselineInterp)
-      : JitcodeGlobalEntry() {
-    baselineInterpreter_ = baselineInterp;
-  }
-
-  explicit JitcodeGlobalEntry(const DummyEntry& dummy) : JitcodeGlobalEntry() {
-    dummy_ = dummy;
-  }
-
-  void destroy() {
-    switch (kind()) {
-      case Ion:
-        ionEntry().destroy();
-        break;
-      case Baseline:
-        baselineEntry().destroy();
-        break;
-      case BaselineInterpreter:
-        baselineInterpreterEntry().destroy();
-        break;
-      case Dummy:
-        dummyEntry().destroy();
-        break;
-      default:
-        MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
-    }
-  }
-
-  JitCode* jitcode() const { return baseEntry().jitcode(); }
-  void* nativeStartAddr() const { return base_.nativeStartAddr(); }
-  void* nativeEndAddr() const { return base_.nativeEndAddr(); }
-
-  void setSamplePositionInBuffer(uint64_t samplePositionInBuffer) {
-    baseEntry().setSamplePositionInBuffer(samplePositionInBuffer);
-  }
-  void setAsExpired() { baseEntry().setAsExpired(); }
+  void setAsExpired() { samplePositionInBuffer_ = kNoSampleInBuffer; }
   bool isSampled(uint64_t bufferRangeStart) {
-    return baseEntry().isSampled(bufferRangeStart);
+    if (samplePositionInBuffer_ == kNoSampleInBuffer) {
+      return false;
+    }
+    return bufferRangeStart <= samplePositionInBuffer_;
   }
 
-  bool containsPointer(void* ptr) const { return base_.containsPointer(ptr); }
-
-  Kind kind() const { return base_.kind(); }
-
-  bool isValid() const { return (kind() > INVALID) && (kind() < LIMIT); }
+  Kind kind() const { return kind_; }
   bool isIon() const { return kind() == Ion; }
   bool isBaseline() const { return kind() == Baseline; }
   bool isBaselineInterpreter() const { return kind() == BaselineInterpreter; }
   bool isDummy() const { return kind() == Dummy; }
 
-  BaseEntry& baseEntry() {
-    MOZ_ASSERT(isValid());
-    return base_;
-  }
-  IonEntry& ionEntry() {
-    MOZ_ASSERT(isIon());
-    return ion_;
-  }
-  BaselineEntry& baselineEntry() {
-    MOZ_ASSERT(isBaseline());
-    return baseline_;
-  }
-  BaselineInterpreterEntry& baselineInterpreterEntry() {
-    MOZ_ASSERT(isBaselineInterpreter());
-    return baselineInterpreter_;
-  }
-  DummyEntry& dummyEntry() {
-    MOZ_ASSERT(isDummy());
-    return dummy_;
-  }
-  const BaseEntry& baseEntry() const {
-    MOZ_ASSERT(isValid());
-    return base_;
-  }
-  const IonEntry& ionEntry() const {
-    MOZ_ASSERT(isIon());
-    return ion_;
-  }
-  const BaselineEntry& baselineEntry() const {
-    MOZ_ASSERT(isBaseline());
-    return baseline_;
-  }
-  const BaselineInterpreterEntry& baselineInterpreterEntry() const {
-    MOZ_ASSERT(isBaselineInterpreter());
-    return baselineInterpreter_;
-  }
-  const DummyEntry& dummyEntry() const {
-    MOZ_ASSERT(isDummy());
-    return dummy_;
-  }
+  inline const IonEntry& ionEntry() const;
+  inline const BaselineEntry& baselineEntry() const;
+  inline const BaselineInterpreterEntry& baselineInterpreterEntry() const;
+  inline const DummyEntry& dummyEntry() const;
 
-  void* canonicalNativeAddrFor(JSRuntime* rt, void* ptr) const {
-    switch (kind()) {
-      case Ion:
-        return ionEntry().canonicalNativeAddrFor(ptr);
-      case Baseline:
-        return baselineEntry().canonicalNativeAddrFor(ptr);
-      case Dummy:
-        return dummyEntry().canonicalNativeAddrFor(rt, ptr);
-      default:
-        MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
-    }
-    return nullptr;
-  }
+  inline IonEntry& ionEntry();
+  inline BaselineEntry& baselineEntry();
+  inline BaselineInterpreterEntry& baselineInterpreterEntry();
+  inline DummyEntry& dummyEntry();
+
+  JitCode* jitcode() const { return jitcode_; }
+  JitCode** jitcodePtr() { return &jitcode_; }
+  Zone* zone() const { return jitcode()->zone(); }
+
+  bool traceJitcode(JSTracer* trc);
+  bool isJitcodeMarkedFromAnyThread(JSRuntime* rt);
+
+  bool trace(JSTracer* trc);
+  void traceWeak(JSTracer* trc);
+  uint64_t lookupRealmID(JSRuntime* rt, void* ptr) const;
+  void* canonicalNativeAddrFor(JSRuntime* rt, void* ptr) const;
 
   // Read the inline call stack at a given point in the native code and append
   // into the given vector.  Innermost (script,pc) pair will be appended first,
@@ -452,93 +185,213 @@ class JitcodeGlobalEntry {
   // Returns false on memory failure.
   [[nodiscard]] bool callStackAtAddr(JSRuntime* rt, void* ptr,
                                      BytecodeLocationVector& results,
-                                     uint32_t* depth) const {
-    switch (kind()) {
-      case Ion:
-        return ionEntry().callStackAtAddr(ptr, results, depth);
-      case Baseline:
-        return baselineEntry().callStackAtAddr(ptr, results, depth);
-      case BaselineInterpreter:
-        return baselineInterpreterEntry().callStackAtAddr(ptr, results, depth);
-      case Dummy:
-        return dummyEntry().callStackAtAddr(rt, ptr, results, depth);
-      default:
-        MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
+                                     uint32_t* depth) const;
+  uint32_t callStackAtAddr(JSRuntime* rt, void* ptr, const char** results,
+                           uint32_t maxResults) const;
+};
+
+using UniqueJitcodeGlobalEntry =
+    UniquePtr<JitcodeGlobalEntry, JitcodeGlobalEntry::DestroyPolicy>;
+
+template <typename T, typename... Args>
+inline UniqueJitcodeGlobalEntry MakeJitcodeGlobalEntry(JSContext* cx,
+                                                       Args&&... args) {
+  UniqueJitcodeGlobalEntry res(js_new<T>(std::forward<Args>(args)...));
+  if (!res) {
+    ReportOutOfMemory(cx);
+  }
+  return res;
+}
+
+struct IonEntry : public JitcodeGlobalEntry {
+  // regionTable_ points to the start of the region table within the
+  // packed map for compile represented by this entry.  Since the
+  // region table occurs at the tail of the memory region, this pointer
+  // points somewhere inside the region memory space, and not to the start
+  // of the memory space.
+  JitcodeIonTable* regionTable_ = nullptr;
+
+  struct ScriptNamePair {
+    JSScript* script;
+    char* str;
+  };
+
+  struct SizedScriptList {
+    uint32_t size;
+    ScriptNamePair pairs[1];
+    SizedScriptList(uint32_t sz, JSScript** scrs, char** strs) : size(sz) {
+      for (uint32_t i = 0; i < size; i++) {
+        pairs[i].script = scrs[i];
+        pairs[i].str = strs[i];
+      }
     }
-    return false;
+
+    static uint32_t AllocSizeFor(uint32_t nscripts) {
+      return sizeof(SizedScriptList) +
+             ((nscripts - 1) * sizeof(ScriptNamePair));
+    }
+  };
+
+  SizedScriptList* scriptList_ = nullptr;
+
+  IonEntry(JitCode* code, void* nativeStartAddr, void* nativeEndAddr)
+      : JitcodeGlobalEntry(Ion, code, nativeStartAddr, nativeEndAddr) {}
+
+  void initScriptListAndTable(SizedScriptList* scriptList,
+                              JitcodeIonTable* regionTable) {
+    MOZ_ASSERT(!scriptList_);
+    MOZ_ASSERT(scriptList);
+    MOZ_ASSERT(!regionTable_);
+    MOZ_ASSERT(regionTable);
+    regionTable_ = regionTable;
+    scriptList_ = scriptList;
+  }
+  ~IonEntry();
+
+  SizedScriptList* sizedScriptList() const { return scriptList_; }
+
+  unsigned numScripts() const { return scriptList_->size; }
+
+  JSScript* getScript(unsigned idx) const {
+    MOZ_ASSERT(idx < numScripts());
+    return sizedScriptList()->pairs[idx].script;
+  }
+
+  const char* getStr(unsigned idx) const {
+    MOZ_ASSERT(idx < numScripts());
+    return sizedScriptList()->pairs[idx].str;
+  }
+
+  JitcodeIonTable* regionTable() const { return regionTable_; }
+
+  void* canonicalNativeAddrFor(void* ptr) const;
+
+  [[nodiscard]] bool callStackAtAddr(void* ptr, BytecodeLocationVector& results,
+                                     uint32_t* depth) const;
+
+  uint32_t callStackAtAddr(void* ptr, const char** results,
+                           uint32_t maxResults) const;
+
+  uint64_t lookupRealmID(void* ptr) const;
+
+  bool trace(JSTracer* trc);
+  void traceWeak(JSTracer* trc);
+};
+
+struct BaselineEntry : public JitcodeGlobalEntry {
+  JSScript* script_;
+  UniqueChars str_;
+
+  BaselineEntry(JitCode* code, void* nativeStartAddr, void* nativeEndAddr,
+                JSScript* script, UniqueChars str)
+      : JitcodeGlobalEntry(Baseline, code, nativeStartAddr, nativeEndAddr),
+        script_(script),
+        str_(std::move(str)) {
+    MOZ_ASSERT(script_);
+    MOZ_ASSERT(str_);
+  }
+
+  JSScript* script() const { return script_; }
+
+  const char* str() const { return str_.get(); }
+
+  void* canonicalNativeAddrFor(void* ptr) const;
+
+  [[nodiscard]] bool callStackAtAddr(void* ptr, BytecodeLocationVector& results,
+                                     uint32_t* depth) const;
+
+  uint32_t callStackAtAddr(void* ptr, const char** results,
+                           uint32_t maxResults) const;
+
+  uint64_t lookupRealmID() const;
+
+  bool trace(JSTracer* trc);
+  void traceWeak(JSTracer* trc);
+};
+
+struct BaselineInterpreterEntry : public JitcodeGlobalEntry {
+  BaselineInterpreterEntry(JitCode* code, void* nativeStartAddr,
+                           void* nativeEndAddr)
+      : JitcodeGlobalEntry(BaselineInterpreter, code, nativeStartAddr,
+                           nativeEndAddr) {}
+
+  void* canonicalNativeAddrFor(void* ptr) const;
+
+  [[nodiscard]] bool callStackAtAddr(void* ptr, BytecodeLocationVector& results,
+                                     uint32_t* depth) const;
+
+  uint32_t callStackAtAddr(void* ptr, const char** results,
+                           uint32_t maxResults) const;
+
+  uint64_t lookupRealmID() const;
+};
+
+// Dummy entries are created for jitcode generated when profiling is not
+// turned on, so that they have representation in the global table if they are
+// on the stack when profiling is enabled.
+struct DummyEntry : public JitcodeGlobalEntry {
+  DummyEntry(JitCode* code, void* nativeStartAddr, void* nativeEndAddr)
+      : JitcodeGlobalEntry(Dummy, code, nativeStartAddr, nativeEndAddr) {}
+
+  void* canonicalNativeAddrFor(JSRuntime* rt, void* ptr) const {
+    return nullptr;
+  }
+
+  [[nodiscard]] bool callStackAtAddr(JSRuntime* rt, void* ptr,
+                                     BytecodeLocationVector& results,
+                                     uint32_t* depth) const {
+    return true;
   }
 
   uint32_t callStackAtAddr(JSRuntime* rt, void* ptr, const char** results,
                            uint32_t maxResults) const {
-    switch (kind()) {
-      case Ion:
-        return ionEntry().callStackAtAddr(ptr, results, maxResults);
-      case Baseline:
-        return baselineEntry().callStackAtAddr(ptr, results, maxResults);
-      case BaselineInterpreter:
-        return baselineInterpreterEntry().callStackAtAddr(ptr, results,
-                                                          maxResults);
-      case Dummy:
-        return dummyEntry().callStackAtAddr(rt, ptr, results, maxResults);
-      default:
-        MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
-    }
-    return false;
+    return 0;
   }
 
-  uint64_t lookupRealmID(JSRuntime* rt, void* ptr) const {
-    switch (kind()) {
-      case Ion:
-        return ionEntry().lookupRealmID(ptr);
-      case Baseline:
-        return baselineEntry().lookupRealmID();
-      case Dummy:
-        return dummyEntry().lookupRealmID();
-      default:
-        MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
-    }
-  }
-
-  // Figure out the number of the (JSScript*, jsbytecode*) pairs that are active
-  // at this location.
-  uint32_t lookupInlineCallDepth(void* ptr);
-
-  Zone* zone() { return baseEntry().jitcode()->zone(); }
-
-  bool trace(JSTracer* trc) {
-    bool tracedAny = baseEntry().traceJitcode(trc);
-    switch (kind()) {
-      case Ion:
-        tracedAny |= ionEntry().trace(trc);
-        break;
-      case Baseline:
-        tracedAny |= baselineEntry().trace(trc);
-        break;
-      case BaselineInterpreter:
-      case Dummy:
-        break;
-      default:
-        MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
-    }
-    return tracedAny;
-  }
-
-  void traceWeak(JSTracer* trc) {
-    switch (kind()) {
-      case Ion:
-        ionEntry().traceWeak(trc);
-        break;
-      case Baseline:
-        baselineEntry().traceWeak(trc);
-        break;
-      case BaselineInterpreter:
-      case Dummy:
-        break;
-      default:
-        MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
-    }
-  }
+  uint64_t lookupRealmID() const { return 0; }
 };
+
+inline const IonEntry& JitcodeGlobalEntry::ionEntry() const {
+  MOZ_ASSERT(isIon());
+  return *static_cast<const IonEntry*>(this);
+}
+
+inline const BaselineEntry& JitcodeGlobalEntry::baselineEntry() const {
+  MOZ_ASSERT(isBaseline());
+  return *static_cast<const BaselineEntry*>(this);
+}
+
+inline const BaselineInterpreterEntry&
+JitcodeGlobalEntry::baselineInterpreterEntry() const {
+  MOZ_ASSERT(isBaselineInterpreter());
+  return *static_cast<const BaselineInterpreterEntry*>(this);
+}
+
+inline const DummyEntry& JitcodeGlobalEntry::dummyEntry() const {
+  MOZ_ASSERT(isDummy());
+  return *static_cast<const DummyEntry*>(this);
+}
+
+inline IonEntry& JitcodeGlobalEntry::ionEntry() {
+  MOZ_ASSERT(isIon());
+  return *static_cast<IonEntry*>(this);
+}
+
+inline BaselineEntry& JitcodeGlobalEntry::baselineEntry() {
+  MOZ_ASSERT(isBaseline());
+  return *static_cast<BaselineEntry*>(this);
+}
+
+inline BaselineInterpreterEntry&
+JitcodeGlobalEntry::baselineInterpreterEntry() {
+  MOZ_ASSERT(isBaselineInterpreter());
+  return *static_cast<BaselineInterpreterEntry*>(this);
+}
+
+inline DummyEntry& JitcodeGlobalEntry::dummyEntry() {
+  MOZ_ASSERT(isDummy());
+  return *static_cast<DummyEntry*>(this);
+}
 
 // Global table of JitcodeGlobalEntry entries.
 class JitcodeGlobalTable {
@@ -546,8 +399,7 @@ class JitcodeGlobalTable {
   // Vector containing (and owning) all entries. This is unsorted and used for
   // iterating over all entries, because the AvlTree currently doesn't support
   // modifications while iterating.
-  using EntryVector =
-      Vector<UniquePtr<JitcodeGlobalEntry>, 0, SystemAllocPolicy>;
+  using EntryVector = Vector<UniqueJitcodeGlobalEntry, 0, SystemAllocPolicy>;
   EntryVector entries_;
 
   // AVL tree containing all entries in the Vector above. This is used to
@@ -570,27 +422,13 @@ class JitcodeGlobalTable {
   const JitcodeGlobalEntry* lookupForSampler(void* ptr, JSRuntime* rt,
                                              uint64_t samplePosInBuffer);
 
-  [[nodiscard]] bool addEntry(const JitcodeGlobalEntry::IonEntry& entry) {
-    return addEntry(JitcodeGlobalEntry(entry));
-  }
-  [[nodiscard]] bool addEntry(const JitcodeGlobalEntry::BaselineEntry& entry) {
-    return addEntry(JitcodeGlobalEntry(entry));
-  }
-  [[nodiscard]] bool addEntry(
-      const JitcodeGlobalEntry::BaselineInterpreterEntry& entry) {
-    return addEntry(JitcodeGlobalEntry(entry));
-  }
-  [[nodiscard]] bool addEntry(const JitcodeGlobalEntry::DummyEntry& entry) {
-    return addEntry(JitcodeGlobalEntry(entry));
-  }
+  [[nodiscard]] bool addEntry(UniqueJitcodeGlobalEntry entry);
 
   void setAllEntriesAsExpired();
   [[nodiscard]] bool markIteratively(GCMarker* marker);
   void traceWeak(JSRuntime* rt, JSTracer* trc);
 
  private:
-  [[nodiscard]] bool addEntry(const JitcodeGlobalEntry& entry);
-
   JitcodeGlobalEntry* lookupInternal(void* ptr);
 };
 
@@ -896,9 +734,8 @@ class JitcodeIonTable {
  public:
   JitcodeIonTable() = delete;
 
-  [[nodiscard]] bool makeIonEntry(JSContext* cx, JitCode* code,
-                                  uint32_t numScripts, JSScript** scripts,
-                                  JitcodeGlobalEntry::IonEntry& out);
+  [[nodiscard]] bool finishIonEntry(JSContext* cx, uint32_t numScripts,
+                                    JSScript** scripts, IonEntry& out);
 
   uint32_t numRegions() const { return numRegions_; }
 
