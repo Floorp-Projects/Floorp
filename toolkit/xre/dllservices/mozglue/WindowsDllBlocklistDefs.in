@@ -327,6 +327,17 @@ CHILD_PROCESSES += [
     DllBlocklistEntry("hmpalert.dll", (3, 8, 8, 889)),
 ]
 
+SOCKET_PROCESSES += [
+    # Causes crashes in the socket process, bug 1760668
+    DllBlocklistEntry("ipseng64.dll", (17, 2, 6, 25)),
+    DllBlocklistEntry("ipseng32.dll", (17, 2, 6, 25)),
+]
+
+SOCKET_PROCESSES_TESTS += [
+    # DLLs used by TestDllBlocklist* gTests
+    DllBlocklistEntry("testdllblocklist_socketprocessonly.dll", ALL_VERSIONS),
+]
+
 UTILITY_PROCESSES += [
     # Generated dynamic code that we block
     DllBlocklistEntry("cyinjct.dll", ALL_VERSIONS),
@@ -337,7 +348,3 @@ UTILITY_PROCESSES_TESTS += [
     DllBlocklistEntry("testdllblocklist_utilityprocessonly.dll", ALL_VERSIONS),
 ]
 
-SOCKET_PROCESSES_TESTS += [
-    # DLLs used by TestDllBlocklist* gTests
-    DllBlocklistEntry("testdllblocklist_socketprocessonly.dll", ALL_VERSIONS),
-]
