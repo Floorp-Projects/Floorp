@@ -1,22 +1,19 @@
 diff --git a/arm/arm_init.c b/arm/arm_init.c
 --- a/arm/arm_init.c
 +++ b/arm/arm_init.c
-@@ -34,9 +34,9 @@
-  * implementation which reads /proc/cpufino.
-  */
- #ifndef PNG_ARM_NEON_FILE
- #  ifdef __linux__
--#     define PNG_ARM_NEON_FILE "contrib/arm-neon/linux.c"
-+#     define PNG_ARM_NEON_FILE "linux.c"
+@@ -41,7 +41,7 @@
+      /* ARM Neon is expected to be available on the target CPU architecture. */
+ #    error "PNG_ARM_NEON_CHECK_SUPPORTED must not be defined on this CPU arch"
+ #  elif defined(__linux__)
+-#    define PNG_ARM_NEON_FILE "contrib/arm-neon/linux.c"
++#    define PNG_ARM_NEON_FILE "linux.c"
+ #  else
+ #    error "No support for run-time ARM Neon checking; use compile-time options"
  #  endif
- #endif
- 
- #ifdef PNG_ARM_NEON_FILE
 diff --git a/arm/filter_neon.S b/arm/filter_neon.S
 --- a/arm/filter_neon.S
 +++ b/arm/filter_neon.S
-@@ -9,8 +9,14 @@
-  * For conditions of distribution and use, see the disclaimer
+@@ -10,6 +10,12 @@
   * and license in png.h
   */
  
@@ -29,4 +26,3 @@ diff --git a/arm/filter_neon.S b/arm/filter_neon.S
  /* This is required to get the symbol renames, which are #defines, and the
   * definitions (or not) of PNG_ARM_NEON_OPT and PNG_ARM_NEON_IMPLEMENTATION.
   */
- #define PNG_VERSION_INFO_ONLY
