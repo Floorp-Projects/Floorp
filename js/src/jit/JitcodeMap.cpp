@@ -197,85 +197,6 @@ uint64_t JitcodeGlobalEntry::BaselineInterpreterEntry::lookupRealmID() const {
   MOZ_CRASH("shouldn't be called for BaselineInterpreter entries");
 }
 
-static int ComparePointers(const void* a, const void* b) {
-  const uint8_t* a_ptr = reinterpret_cast<const uint8_t*>(a);
-  const uint8_t* b_ptr = reinterpret_cast<const uint8_t*>(b);
-  if (a_ptr < b_ptr) {
-    return -1;
-  }
-  if (a_ptr > b_ptr) {
-    return 1;
-  }
-  return 0;
-}
-
-/* static */
-int JitcodeGlobalEntry::compare(const JitcodeGlobalEntry& ent1,
-                                const JitcodeGlobalEntry& ent2) {
-  // Both parts of compare cannot be a query.
-  MOZ_ASSERT(!(ent1.isQuery() && ent2.isQuery()));
-
-  // Ensure no overlaps for non-query lookups.
-  MOZ_ASSERT_IF(!ent1.isQuery() && !ent2.isQuery(), !ent1.overlapsWith(ent2));
-
-  // For two non-query entries, just comapare the start addresses.
-  if (!ent1.isQuery() && !ent2.isQuery()) {
-    return ComparePointers(ent1.nativeStartAddr(), ent2.nativeStartAddr());
-  }
-
-  void* ptr = ent1.isQuery() ? ent1.nativeStartAddr() : ent2.nativeStartAddr();
-  const JitcodeGlobalEntry& ent = ent1.isQuery() ? ent2 : ent1;
-  int flip = ent1.isQuery() ? 1 : -1;
-
-  if (ent.startsBelowPointer(ptr)) {
-    if (ent.endsAbovePointer(ptr)) {
-      return 0;
-    }
-
-    // query ptr > entry
-    return flip * 1;
-  }
-
-  // query ptr < entry
-  return flip * -1;
-}
-
-JitcodeGlobalTable::Enum::Enum(JitcodeGlobalTable& table, JSRuntime* rt)
-    : Range(table), rt_(rt), next_(cur_ ? cur_->tower_->next(0) : nullptr) {
-  for (int level = JitcodeSkiplistTower::MAX_HEIGHT - 1; level >= 0; level--) {
-    prevTower_[level] = nullptr;
-  }
-}
-
-void JitcodeGlobalTable::Enum::popFront() {
-  MOZ_ASSERT(!empty());
-
-  // Did not remove current entry; advance prevTower_.
-  if (cur_ != table_.freeEntries_) {
-    for (int level = cur_->tower_->height() - 1; level >= 0; level--) {
-      JitcodeGlobalEntry* prevTowerEntry = prevTower_[level];
-
-      if (prevTowerEntry) {
-        if (prevTowerEntry->tower_->next(level) == cur_) {
-          prevTower_[level] = cur_;
-        }
-      } else {
-        prevTower_[level] = table_.startTower_[level];
-      }
-    }
-  }
-
-  cur_ = next_;
-  if (!empty()) {
-    next_ = cur_->tower_->next(0);
-  }
-}
-
-void JitcodeGlobalTable::Enum::removeFront() {
-  MOZ_ASSERT(!empty());
-  table_.releaseEntry(*cur_, prevTower_, rt_);
-}
-
 const JitcodeGlobalEntry* JitcodeGlobalTable::lookupForSampler(
     void* ptr, JSRuntime* rt, uint64_t samplePosInBuffer) {
   JitcodeGlobalEntry* entry = lookupInternal(ptr);
@@ -295,265 +216,52 @@ const JitcodeGlobalEntry* JitcodeGlobalTable::lookupForSampler(
 }
 
 JitcodeGlobalEntry* JitcodeGlobalTable::lookupInternal(void* ptr) {
-  JitcodeGlobalEntry query = JitcodeGlobalEntry::MakeQuery(ptr);
-  JitcodeGlobalEntry* searchTower[JitcodeSkiplistTower::MAX_HEIGHT];
-  searchInternal(query, searchTower);
+  // Search for an entry containing the one-byte range starting at |ptr|.
+  JitCodeRange range(ptr, static_cast<uint8_t*>(ptr) + 1);
 
-  if (searchTower[0] == nullptr) {
-    // Check startTower
-    if (startTower_[0] == nullptr) {
-      return nullptr;
-    }
-
-    MOZ_ASSERT(startTower_[0]->compareTo(query) >= 0);
-    int cmp = startTower_[0]->compareTo(query);
-    MOZ_ASSERT(cmp >= 0);
-    return (cmp == 0) ? startTower_[0] : nullptr;
+  if (JitCodeRange** entry = tree_.maybeLookup(&range)) {
+    MOZ_ASSERT((*entry)->containsPointer(ptr));
+    auto* base = static_cast<JitcodeGlobalEntry::BaseEntry*>(*entry);
+    // XXX: this is a hack, will be fixed in the next patch.
+    return reinterpret_cast<JitcodeGlobalEntry*>(base);
   }
 
-  JitcodeGlobalEntry* bottom = searchTower[0];
-  MOZ_ASSERT(bottom->compareTo(query) < 0);
-
-  JitcodeGlobalEntry* bottomNext = bottom->tower_->next(0);
-  if (bottomNext == nullptr) {
-    return nullptr;
-  }
-
-  int cmp = bottomNext->compareTo(query);
-  MOZ_ASSERT(cmp >= 0);
-  return (cmp == 0) ? bottomNext : nullptr;
+  return nullptr;
 }
 
 bool JitcodeGlobalTable::addEntry(const JitcodeGlobalEntry& entry) {
   MOZ_ASSERT(entry.isIon() || entry.isBaseline() ||
              entry.isBaselineInterpreter() || entry.isDummy());
 
-  JitcodeGlobalEntry* searchTower[JitcodeSkiplistTower::MAX_HEIGHT];
-  searchInternal(entry, searchTower);
-
-  // Allocate a new entry and tower.
-  JitcodeSkiplistTower* newTower = allocateTower(generateTowerHeight());
-  if (!newTower) {
-    return false;
-  }
-
-  JitcodeGlobalEntry* newEntry = allocateEntry();
+  UniquePtr<JitcodeGlobalEntry> newEntry = MakeUnique<JitcodeGlobalEntry>();
   if (!newEntry) {
     return false;
   }
-
   *newEntry = entry;
-  newEntry->tower_ = newTower;
 
-  // Suppress profiler sampling while skiplist is being mutated.
+  // Assert the new entry does not have a code range that's equal to (or
+  // contained in) one of the existing entries, because that would confuse the
+  // AVL tree.
+  MOZ_ASSERT(!tree_.maybeLookup(&newEntry->baseEntry()));
+
+  // Suppress profiler sampling while data structures are being mutated.
   AutoSuppressProfilerSampling suppressSampling(TlsContext.get());
 
-  // Link up entry with forward entries taken from tower.
-  for (int level = newTower->height() - 1; level >= 0; level--) {
-    JitcodeGlobalEntry* searchTowerEntry = searchTower[level];
-    if (searchTowerEntry) {
-      MOZ_ASSERT(searchTowerEntry->compareTo(*newEntry) < 0);
-      JitcodeGlobalEntry* searchTowerNextEntry =
-          searchTowerEntry->tower_->next(level);
-
-      MOZ_ASSERT_IF(searchTowerNextEntry,
-                    searchTowerNextEntry->compareTo(*newEntry) > 0);
-
-      newTower->setNext(level, searchTowerNextEntry);
-      searchTowerEntry->tower_->setNext(level, newEntry);
-    } else {
-      newTower->setNext(level, startTower_[level]);
-      startTower_[level] = newEntry;
-    }
+  if (!entries_.append(std::move(newEntry))) {
+    return false;
   }
-  skiplistSize_++;
-  // verifySkiplist(); - disabled for release.
+  if (!tree_.insert(&entries_.back()->baseEntry())) {
+    entries_.popBack();
+    return false;
+  }
 
   return true;
 }
 
-void JitcodeGlobalTable::removeEntry(JitcodeGlobalEntry& entry,
-                                     JitcodeGlobalEntry** prevTower) {
-  MOZ_ASSERT(!TlsContext.get()->isProfilerSamplingEnabled());
-
-  // Unlink query entry.
-  for (int level = entry.tower_->height() - 1; level >= 0; level--) {
-    JitcodeGlobalEntry* prevTowerEntry = prevTower[level];
-    if (prevTowerEntry) {
-      MOZ_ASSERT(prevTowerEntry->tower_->next(level) == &entry);
-      prevTowerEntry->tower_->setNext(level, entry.tower_->next(level));
-    } else {
-      startTower_[level] = entry.tower_->next(level);
-    }
-  }
-  skiplistSize_--;
-  // verifySkiplist(); - disabled for release.
-
-  // Entry has been unlinked.
-  entry.destroy();
-  entry.tower_->addToFreeList(&(freeTowers_[entry.tower_->height() - 1]));
-  entry.tower_ = nullptr;
-  entry = JitcodeGlobalEntry();
-  entry.addToFreeList(&freeEntries_);
-}
-
-void JitcodeGlobalTable::releaseEntry(JitcodeGlobalEntry& entry,
-                                      JitcodeGlobalEntry** prevTower,
-                                      JSRuntime* rt) {
-#ifdef DEBUG
-  Maybe<uint64_t> rangeStart = rt->profilerSampleBufferRangeStart();
-  MOZ_ASSERT_IF(rangeStart, !entry.isSampled(*rangeStart));
-#endif
-  removeEntry(entry, prevTower);
-}
-
-void JitcodeGlobalTable::searchInternal(const JitcodeGlobalEntry& query,
-                                        JitcodeGlobalEntry** towerOut) {
-  JitcodeGlobalEntry* cur = nullptr;
-  for (int level = JitcodeSkiplistTower::MAX_HEIGHT - 1; level >= 0; level--) {
-    JitcodeGlobalEntry* entry = searchAtHeight(level, cur, query);
-    MOZ_ASSERT_IF(entry == nullptr, cur == nullptr);
-    towerOut[level] = entry;
-    cur = entry;
-  }
-
-  // Validate the resulting tower.
-#ifdef DEBUG
-  for (int level = JitcodeSkiplistTower::MAX_HEIGHT - 1; level >= 0; level--) {
-    if (towerOut[level] == nullptr) {
-      // If we got NULL for a given level, then we should have gotten NULL
-      // for the level above as well.
-      MOZ_ASSERT_IF(unsigned(level) < (JitcodeSkiplistTower::MAX_HEIGHT - 1),
-                    towerOut[level + 1] == nullptr);
-      continue;
-    }
-
-    JitcodeGlobalEntry* cur = towerOut[level];
-
-    // Non-null result at a given level must sort < query.
-    MOZ_ASSERT(cur->compareTo(query) < 0);
-
-    // The entry must have a tower height that accomodates level.
-    if (!cur->tower_->next(level)) {
-      continue;
-    }
-
-    JitcodeGlobalEntry* next = cur->tower_->next(level);
-
-    // Next entry must have tower height that accomodates level.
-    MOZ_ASSERT(unsigned(level) < next->tower_->height());
-
-    // Next entry must sort >= query.
-    MOZ_ASSERT(next->compareTo(query) >= 0);
-  }
-#endif  // DEBUG
-}
-
-JitcodeGlobalEntry* JitcodeGlobalTable::searchAtHeight(
-    unsigned level, JitcodeGlobalEntry* start,
-    const JitcodeGlobalEntry& query) {
-  JitcodeGlobalEntry* cur = start;
-
-  // If starting with nullptr, use the start tower.
-  if (start == nullptr) {
-    cur = startTower_[level];
-    if (cur == nullptr || cur->compareTo(query) >= 0) {
-      return nullptr;
-    }
-  }
-
-  // Keep skipping at |level| until we reach an entry < query whose
-  // successor is an entry >= query.
-  for (;;) {
-    JitcodeGlobalEntry* next = cur->tower_->next(level);
-    if (next == nullptr || next->compareTo(query) >= 0) {
-      return cur;
-    }
-
-    cur = next;
-  }
-}
-
-unsigned JitcodeGlobalTable::generateTowerHeight() {
-  // Implementation taken from Hars L. and Pteruska G.,
-  // "Pseudorandom Recursions: Small and fast Pseudorandom number generators for
-  //  embedded applications."
-  rand_ ^= mozilla::RotateLeft(rand_, 5) ^ mozilla::RotateLeft(rand_, 24);
-  rand_ += 0x37798849;
-
-  // Return 1 + number of lowbit zeros in new randval, capped at MAX_HEIGHT.
-  unsigned result = 0;
-  for (unsigned i = 0; i < JitcodeSkiplistTower::MAX_HEIGHT - 1; i++) {
-    if ((rand_ >> i) & 0x1) {
-      break;
-    }
-    result++;
-  }
-  return result + 1;
-}
-
-JitcodeSkiplistTower* JitcodeGlobalTable::allocateTower(unsigned height) {
-  MOZ_ASSERT(height >= 1);
-  JitcodeSkiplistTower* tower =
-      JitcodeSkiplistTower::PopFromFreeList(&freeTowers_[height - 1]);
-  if (tower) {
-    return tower;
-  }
-
-  size_t size = JitcodeSkiplistTower::CalculateSize(height);
-  tower = (JitcodeSkiplistTower*)alloc_.alloc(size);
-  if (!tower) {
-    return nullptr;
-  }
-
-  return new (tower) JitcodeSkiplistTower(height);
-}
-
-JitcodeGlobalEntry* JitcodeGlobalTable::allocateEntry() {
-  JitcodeGlobalEntry* entry =
-      JitcodeGlobalEntry::PopFromFreeList(&freeEntries_);
-  if (entry) {
-    return entry;
-  }
-
-  return alloc_.new_<JitcodeGlobalEntry>();
-}
-
-#ifdef DEBUG
-void JitcodeGlobalTable::verifySkiplist() {
-  JitcodeGlobalEntry* curTower[JitcodeSkiplistTower::MAX_HEIGHT];
-  for (unsigned i = 0; i < JitcodeSkiplistTower::MAX_HEIGHT; i++) {
-    curTower[i] = startTower_[i];
-  }
-
-  uint32_t count = 0;
-  JitcodeGlobalEntry* curEntry = startTower_[0];
-  while (curEntry) {
-    count++;
-    unsigned curHeight = curEntry->tower_->height();
-    MOZ_ASSERT(curHeight >= 1);
-
-    for (unsigned i = 0; i < JitcodeSkiplistTower::MAX_HEIGHT; i++) {
-      if (i < curHeight) {
-        MOZ_ASSERT(curTower[i] == curEntry);
-        JitcodeGlobalEntry* nextEntry = curEntry->tower_->next(i);
-        MOZ_ASSERT_IF(nextEntry, curEntry->compareTo(*nextEntry) < 0);
-        curTower[i] = nextEntry;
-      } else {
-        MOZ_ASSERT_IF(curTower[i], curTower[i]->compareTo(*curEntry) > 0);
-      }
-    }
-    curEntry = curEntry->tower_->next(0);
-  }
-
-  MOZ_ASSERT(count == skiplistSize_);
-}
-#endif  // DEBUG
-
 void JitcodeGlobalTable::setAllEntriesAsExpired() {
   AutoSuppressProfilerSampling suppressSampling(TlsContext.get());
-  for (Range r(*this); !r.empty(); r.popFront()) {
-    auto entry = r.front();
+  for (EntryVector::Range r(entries_.all()); !r.empty(); r.popFront()) {
+    auto& entry = r.front();
     entry->setAsExpired();
   }
 }
@@ -591,8 +299,8 @@ bool JitcodeGlobalTable::markIteratively(GCMarker* marker) {
       marker->runtime()->profilerSampleBufferRangeStart();
 
   bool markedAny = false;
-  for (Range r(*this); !r.empty(); r.popFront()) {
-    JitcodeGlobalEntry* entry = r.front();
+  for (EntryVector::Range r(entries_.all()); !r.empty(); r.popFront()) {
+    auto& entry = r.front();
 
     // If an entry is not sampled, reset its buffer position to the invalid
     // position, and conditionally mark the rest of the entry if its
@@ -622,21 +330,30 @@ bool JitcodeGlobalTable::markIteratively(GCMarker* marker) {
 
 void JitcodeGlobalTable::traceWeak(JSRuntime* rt, JSTracer* trc) {
   AutoSuppressProfilerSampling suppressSampling(rt->mainContextFromOwnThread());
-  for (Enum e(*this, rt); !e.empty(); e.popFront()) {
-    JitcodeGlobalEntry* entry = e.front();
 
+  entries_.eraseIf([&](auto& entry) {
     if (!entry->zone()->isCollecting() || entry->zone()->isGCFinished()) {
-      continue;
+      return false;
     }
 
-    if (!TraceManuallyBarrieredWeakEdge(
+    if (TraceManuallyBarrieredWeakEdge(
             trc, &entry->baseEntry().jitcode_,
             "JitcodeGlobalTable::JitcodeGlobalEntry::jitcode_")) {
-      e.removeFront();
-    } else {
       entry->traceWeak(trc);
+      return false;
     }
-  }
+
+    // We have to remove the entry.
+#ifdef DEBUG
+    Maybe<uint64_t> rangeStart = rt->profilerSampleBufferRangeStart();
+    MOZ_ASSERT_IF(rangeStart, !entry->isSampled(*rangeStart));
+#endif
+    entry->destroy();
+    tree_.remove(&entry->baseEntry());
+    return true;
+  });
+
+  MOZ_ASSERT(tree_.empty() == entries_.empty());
 }
 
 bool JitcodeGlobalEntry::BaseEntry::traceJitcode(JSTracer* trc) {
