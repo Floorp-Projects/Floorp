@@ -942,11 +942,17 @@ bool nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth,
     // on a non-default-dpi display (bug 829963)
     devContext->CheckDPIChange();
     int32_t p2a = devContext->AppUnitsPerDevPixel();
+    if (auto* frame = GetFrame()) {
+      // Usually the resize would deal with this, but there are some cases (like
+      // web-extension popups) where frames might already be correctly sized etc
+      // due to a call to e.g. nsDocumentViewer::GetContentSize or so.
+      frame->InvalidateFrame();
+    }
+
     mViewManager->SetWindowDimensions(NSIntPixelsToAppUnits(aWidth, p2a),
                                       NSIntPixelsToAppUnits(aHeight, p2a));
 
-    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-    if (pm) {
+    if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
       PresShell* presShell = mViewManager->GetPresShell();
       if (presShell && presShell->GetDocument()) {
         pm->AdjustPopupsOnWindowChange(presShell);
