@@ -3,9 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
-import buildconfig
+
 import subprocess
 import sys
+
+import buildconfig
 
 
 def main(output, lib_file, *scripts):

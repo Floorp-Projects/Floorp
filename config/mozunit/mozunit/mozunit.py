@@ -3,19 +3,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
+
 import inspect
 import io
 import os
-from six import (
-    BytesIO,
-    StringIO,
-)
 import sys
 import unittest
-from unittest import TextTestRunner as _TestRunner, TestResult as _TestResult
+from unittest import TestResult as _TestResult
+from unittest import TextTestRunner as _TestRunner
 
 import pytest
 import six
+from six import BytesIO, StringIO
 
 here = os.path.abspath(os.path.dirname(__file__))
 

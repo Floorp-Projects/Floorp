@@ -1,18 +1,18 @@
 from __future__ import absolute_import
-import unittest
 
 import os
-import six
-import sys
 import os.path
+import sys
 import time
-from tempfile import mkdtemp
+import unittest
 from shutil import rmtree
-import mozunit
-from mozprocess import processhandler
+from tempfile import mkdtemp
 
-from nsinstall import nsinstall
+import mozunit
 import nsinstall as nsinstall_module
+import six
+from mozprocess import processhandler
+from nsinstall import nsinstall
 
 NSINSTALL_PATH = nsinstall_module.__file__
 

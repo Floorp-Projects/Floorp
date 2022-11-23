@@ -44,6 +44,7 @@ import argparse
 import re
 import subprocess
 import sys
+
 import buildconfig
 
 # The obvious way to implement this script is to search for occurrences of
