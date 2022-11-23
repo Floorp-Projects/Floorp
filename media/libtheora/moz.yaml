@@ -38,8 +38,6 @@ vendoring:
     - tools
     - win32
     - autogen.sh
-    - .gitignore
-    - .gitlab-ci.yml
     - .travis.yml
     - configure.ac
     - SConstruct

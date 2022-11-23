@@ -19,7 +19,6 @@ vendoring:
   skip-vendoring-steps:
     - update-moz-build
   exclude:
-    - .github
     - configure.ac
     - docs
     - INSTALL
