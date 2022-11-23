@@ -16,7 +16,7 @@
         </vbox>
         <hbox class="tab-content" align="center">
           <stack class="tab-icon-stack">
-            <hbox class="tab-throbber" layer="true"/>
+            <hbox class="tab-throbber"/>
             <hbox class="tab-icon-pending"/>
             <html:img class="tab-icon-image" role="presentation" decoding="sync" />
             <image class="tab-sharing-icon-overlay" role="presentation"/>
