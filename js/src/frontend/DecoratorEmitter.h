@@ -7,13 +7,30 @@
 
 #include "mozilla/Attributes.h"
 
+#include "frontend/ParseNode.h"
+
 namespace js::frontend {
 
 struct BytecodeEmitter;
 
 class MOZ_STACK_CLASS DecoratorEmitter {
+ private:
+  BytecodeEmitter* bce_;
+
  public:
+  enum Kind { Method, Getter, Setter, Field, Accessor, Class };
+
   explicit DecoratorEmitter(BytecodeEmitter* bce);
+
+  [[nodiscard]] bool emitApplyDecoratorsToElementDefinition(
+      Kind kind, ParseNode* key, ListNode* decorators);
+
+ private:
+  [[nodiscard]] bool emitDecorationState();
+
+  [[nodiscard]] bool emitUpdateDecorationState();
+
+  [[nodiscard]] bool emitCreateDecoratorContextObject();
 };
 
 } /* namespace js::frontend */

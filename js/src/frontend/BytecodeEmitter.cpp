@@ -28,6 +28,7 @@
 #include "frontend/BytecodeControlStructures.h"  // NestableControl, BreakableControl, LabelControl, LoopControl, TryFinallyControl
 #include "frontend/CallOrNewEmitter.h"           // CallOrNewEmitter
 #include "frontend/CForEmitter.h"                // CForEmitter
+#include "frontend/DecoratorEmitter.h"           // DecoratorEmitter
 #include "frontend/DefaultEmitter.h"             // DefaultEmitter
 #include "frontend/DoWhileEmitter.h"             // DoWhileEmitter
 #include "frontend/ElemOpEmitter.h"              // ElemOpEmitter
@@ -8870,7 +8871,6 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
     BinaryNode* prop = &propdef->as<BinaryNode>();
 
     ParseNode* key = prop->left();
-    ParseNode* propVal = prop->right();
     AccessorType accessorType;
     if (prop->is<ClassMethod>()) {
       ClassMethod& method = prop->as<ClassMethod>();
@@ -8888,9 +8888,10 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
       accessorType = AccessorType::None;
     }
 
-    auto emitValue = [this, &key, &propVal, accessorType, &pe]() {
+    auto emitValue = [this, &key, &prop, accessorType, &pe]() {
       //            [stack] CTOR? OBJ CTOR? KEY?
 
+      ParseNode* propVal = prop->right();
       if (propVal->isDirectRHSAnonFunction()) {
         // The following branches except for the last `else` clause emit the
         // cases handled in NameResolver::resolveFun (see NameFunctions.cpp)
@@ -8966,6 +8967,23 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
           return false;
         }
       }
+
+#ifdef ENABLE_DECORATORS
+      if (prop->is<ClassMethod>()) {
+        ClassMethod& method = prop->as<ClassMethod>();
+        if (method.decorators() && !method.decorators()->empty()) {
+          DecoratorEmitter de(this);
+          // The decorators are applied to the current value on the stack,
+          // possibly replacing it.
+          if (!de.emitApplyDecoratorsToElementDefinition(
+                  DecoratorEmitter::Method, key, method.decorators())) {
+            //        [stack] CTOR? OBJ CTOR? KEY? VAL
+            return false;
+          }
+        }
+      }
+#endif
+
       return true;
     };
 
