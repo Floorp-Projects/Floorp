@@ -1398,5 +1398,5 @@ def target_tasks_eslint_build(full_task_graph, parameters, graph_config):
     for name, task in full_task_graph.tasks.items():
         if task.kind != "source-test":
             continue
-        if name == "eslint-build":
+        if "eslint-build" in name:
             yield name

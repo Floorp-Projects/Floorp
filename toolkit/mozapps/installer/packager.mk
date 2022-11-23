@@ -114,7 +114,7 @@ ifndef MOZ_ARTIFACT_BUILDS
 else
 	@echo 'Packaging existing XPT artifacts from artifact build into archive ($(XPT_ARTIFACTS_ARCHIVE_BASENAME).zip)'
 	$(call py_action,zip,-C $(ABS_DIST)/xpt_artifacts '$(ABS_DIST)/$(PKG_PATH)$(XPT_ARTIFACTS_ARCHIVE_BASENAME).zip' '*.xpt')
-endif # COMPILE_ENVIRONMENT
+endif # MOZ_ARTIFACT_BUILDS
 
 prepare-package: stage-package
 
