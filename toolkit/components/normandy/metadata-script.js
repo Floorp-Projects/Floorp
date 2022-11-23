@@ -4,7 +4,6 @@
 
 /* eslint-env xpcshell */
 /* globals print, quit, arguments */
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { RecipeRunner } = ChromeUtils.import(
   "resource://normandy/lib/RecipeRunner.jsm"
 );
@@ -19,9 +18,18 @@ main(...arguments);
 function resolvePath(path) {
   let absPath = path;
 
+  if (Services.appinfo.OS === "WINNT") {
+    absPath = path = path.replace(/\//g, "\\");
+  }
+
   if (!PathUtils.isAbsolute(path)) {
-    const components = path.split(new RegExp("[/\\\\]")).filter(c => c.length);
     absPath = Services.dirsvc.get("CurWorkD", Ci.nsIFile).path;
+
+    const components = PathUtils.splitRelative(path, {
+      allowEmpty: true,
+      allowParentDir: true,
+      allowCurrentDir: true,
+    }).filter(c => c.length);
 
     for (const component of components) {
       switch (component) {
