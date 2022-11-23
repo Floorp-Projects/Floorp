@@ -11092,6 +11092,13 @@ var gCSSProperties = {
     alias_for: "animation-timing-function",
     subproperties: ["animation-timing-function"],
   },
+  "-webkit-clip-path": {
+    domProp: "webkitClipPath",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "clip-path",
+    subproperties: ["clip-path"],
+  },
   "-webkit-filter": {
     domProp: "webkitFilter",
     inherited: false,
