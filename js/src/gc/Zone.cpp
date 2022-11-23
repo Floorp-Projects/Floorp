@@ -483,6 +483,13 @@ void Zone::discardJitCode(JS::GCContext* gcx, const DiscardOptions& options) {
     jitScript->resetActive();
   }
 
+  // Also clear references to jit code from RegExpShared cells at this point.
+  // This avoid holding onto ExecutablePools.
+  for (auto regExp = cellIterUnsafe<RegExpShared>(); !regExp.done();
+       regExp.next()) {
+    regExp->discardJitCode();
+  }
+
   /*
    * When scripts contains pointers to nursery things, the store buffer
    * can contain entries that point into the optimized stub space. Since
