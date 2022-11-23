@@ -120,6 +120,7 @@ bool WeakMap<K, V>::markEntry(GCMarker* marker, K& key, V& value,
   CellColor markColor = marker->markColor();
   CellColor keyColor = gc::detail::GetEffectiveColor(marker, key);
   JSObject* delegate = gc::detail::GetDelegate(key);
+  JSTracer* trc = marker->tracer();
 
   if (delegate) {
     CellColor delegateColor = gc::detail::GetEffectiveColor(marker, delegate);
@@ -128,7 +129,7 @@ bool WeakMap<K, V>::markEntry(GCMarker* marker, K& key, V& value,
     if (keyColor < proxyPreserveColor) {
       MOZ_ASSERT(markColor >= proxyPreserveColor);
       if (markColor == proxyPreserveColor) {
-        TraceWeakMapKeyEdge(marker, zone(), &key,
+        TraceWeakMapKeyEdge(trc, zone(), &key,
                             "proxy-preserved WeakMap entry key");
         MOZ_ASSERT(key->color() >= proxyPreserveColor);
         marked = true;
@@ -145,7 +146,7 @@ bool WeakMap<K, V>::markEntry(GCMarker* marker, K& key, V& value,
       if (valueColor < targetColor) {
         MOZ_ASSERT(markColor >= targetColor);
         if (markColor == targetColor) {
-          TraceEdge(marker, &value, "WeakMap entry value");
+          TraceEdge(trc, &value, "WeakMap entry value");
           MOZ_ASSERT(cellValue->color() >= targetColor);
           marked = true;
         }
@@ -159,7 +160,7 @@ bool WeakMap<K, V>::markEntry(GCMarker* marker, K& key, V& value,
     // this.
 
     if (keyColor < mapColor) {
-      MOZ_ASSERT(marker->weakMapAction() == JS::WeakMapTraceAction::Expand);
+      MOZ_ASSERT(trc->weakMapAction() == JS::WeakMapTraceAction::Expand);
       // The final color of the key is not yet known. Record this weakmap and
       // the lookup key in the list of weak keys. If the key has a delegate,
       // then the lookup key is the delegate (because marking the key will end

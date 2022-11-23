@@ -307,7 +307,7 @@ bool JitcodeGlobalTable::markIteratively(GCMarker* marker) {
       continue;
     }
 
-    markedAny |= entry->trace(marker);
+    markedAny |= entry->trace(marker->tracer());
   }
 
   return markedAny;

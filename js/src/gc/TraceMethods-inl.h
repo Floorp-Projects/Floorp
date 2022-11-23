@@ -55,7 +55,7 @@ inline void js::GCMarker::eagerlyMarkChildren(Shape* shape) {
   BaseShape* base = shape->base();
   checkTraversedEdge(shape, base);
   if (mark(base)) {
-    base->traceChildren(this);
+    base->traceChildren(tracer());
   }
 
   if (PropMap* map = shape->propMap()) {

@@ -18,6 +18,7 @@ class JSRope;
 
 namespace js {
 
+class GCMarker;
 class SliceBudget;
 class WeakMapBase;
 
@@ -200,9 +201,20 @@ class MarkStack {
 #endif
 };
 
+class MarkingTracer final : public GenericTracerImpl<MarkingTracer> {
+ public:
+  explicit MarkingTracer(JSRuntime* runtime);
+
+  template <typename T>
+  void onEdge(T** thingp, const char* name);
+  friend class js::GenericTracerImpl<MarkingTracer>;
+
+  GCMarker* getMarker();
+};
+
 } /* namespace gc */
 
-class GCMarker final : public GenericTracerImpl<GCMarker> {
+class GCMarker {
   enum MarkingState : uint8_t {
     // Have not yet started marking.
     NotActive,
@@ -229,6 +241,9 @@ class GCMarker final : public GenericTracerImpl<GCMarker> {
   explicit GCMarker(JSRuntime* rt);
   [[nodiscard]] bool init();
 
+  JSRuntime* runtime() { return runtime_; }
+  JSTracer* tracer() { return &tracer_; }
+
 #ifdef JS_GC_ZEAL
   void setMaxCapacity(size_t maxCap) { stack.setMaxCapacity(maxCap); }
 #endif
@@ -238,10 +253,6 @@ class GCMarker final : public GenericTracerImpl<GCMarker> {
   void start();
   void stop();
   void reset();
-
-  template <typename T>
-  void onEdge(T** thingp, const char* name);
-  friend class js::GenericTracerImpl<GCMarker>;
 
   // If |thing| is unmarked, mark it and then traverse its children.
   template <typename T>
@@ -334,7 +345,10 @@ class GCMarker final : public GenericTracerImpl<GCMarker> {
 
   static GCMarker* fromTracer(JSTracer* trc) {
     MOZ_ASSERT(trc->isMarkingTracer());
-    return static_cast<GCMarker*>(trc);
+    auto* marker = reinterpret_cast<GCMarker*>(uintptr_t(trc) -
+                                               offsetof(GCMarker, tracer_));
+    MOZ_ASSERT(marker->tracer() == trc);
+    return marker;
   }
 
   template <typename T>
@@ -409,6 +423,11 @@ class GCMarker final : public GenericTracerImpl<GCMarker> {
 
   template <typename F>
   void forEachDelayedMarkingArena(F&& f);
+
+  /* The JSTracer used for marking, which calls back into this class. */
+  gc::MarkingTracer tracer_;
+
+  JSRuntime* const runtime_;
 
   /*
    * The mark stack. Pointers in this stack are "gray" in the GC sense, but

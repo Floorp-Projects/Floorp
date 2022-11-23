@@ -2729,7 +2729,7 @@ void GCRuntime::beginMarkPhase(AutoGCSession& session) {
     checkNoRuntimeRoots(session);
   } else {
     AutoUpdateLiveCompartments updateLive(this);
-    traceRuntimeForMajorGC(&marker, session);
+    traceRuntimeForMajorGC(marker.tracer(), session);
   }
 
   updateSchedulingStateOnGCStart();
@@ -3422,7 +3422,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
       if (mightSweepInThisSlice(budget.isUnlimited())) {
         // Trace wrapper rooters before marking if we might start sweeping in
         // this slice.
-        rt->mainContextFromOwnThread()->traceWrapperGCRooters(&marker);
+        rt->mainContextFromOwnThread()->traceWrapperGCRooters(marker.tracer());
       }
 
       {
@@ -3475,7 +3475,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
       }
 
       if (initialState == State::Sweep) {
-        rt->mainContextFromOwnThread()->traceWrapperGCRooters(&marker);
+        rt->mainContextFromOwnThread()->traceWrapperGCRooters(marker.tracer());
       }
 
       if (performSweepActions(budget) == NotFinished) {
