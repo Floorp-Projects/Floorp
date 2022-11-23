@@ -94,6 +94,10 @@ class NeqoHttp3Conn final {
     neqo_http3conn_reset_stream(this, aStreamId, aError);
   }
 
+  void StreamStopSending(uint64_t aStreamId, uint64_t aError) {
+    neqo_http3conn_stream_stop_sending(this, aStreamId, aError);
+  }
+
   void SetResumptionToken(nsTArray<uint8_t>& aToken) {
     neqo_http3conn_set_resumption_token(this, &aToken);
   }

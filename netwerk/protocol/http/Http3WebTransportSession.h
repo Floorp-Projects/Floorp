@@ -10,6 +10,7 @@
 #include "Http3StreamBase.h"
 #include "nsIWebTransport.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/net/NeqoHttp3Conn.h"
 
 namespace mozilla::net {
 
@@ -63,6 +64,9 @@ class Http3WebTransportSession final : public Http3StreamBase,
       std::function<void(Result<RefPtr<Http3WebTransportStream>, nsresult>&&)>&&
           aCallback);
   void RemoveWebTransportStream(Http3WebTransportStream* aStream);
+
+  already_AddRefed<Http3WebTransportStream> OnIncomingWebTransportStream(
+      WebTransportStreamType aType, uint64_t aId);
 
  private:
   virtual ~Http3WebTransportSession();

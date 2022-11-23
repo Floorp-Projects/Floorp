@@ -13,23 +13,32 @@ class TimeStamp;
 
 native TimeStamp(mozilla::TimeStamp);
 
-[builtinclass, scriptable, uuid(d461b235-6291-4817-adcc-a2a3b3dfc10b)]
-interface nsIWebTransportReceiveStream : nsISupports {
-  // Sends the STOP_SENDING on the stream.
-  void sendStopSending(in uint8_t aError);
-};
-
 [builtinclass, scriptable, uuid(ccc3e685-8411-48f0-8b3e-ff6d1fae4809)]
 interface nsIWebTransportSendStreamStats : nsISupports {
   [noscript] readonly attribute TimeStamp timestamp;
-  readonly attribute unsigned long long bytesWritten;
   readonly attribute unsigned long long bytesSent;
   readonly attribute unsigned long long bytesAcknowledged;
 };
 
+[builtinclass, scriptable, uuid(43ce1145-30ef-41a7-b97d-fa797f7f7d18)]
+interface nsIWebTransportReceiveStreamStats : nsISupports {
+  [noscript] readonly attribute TimeStamp timestamp;
+  readonly attribute unsigned long long bytesReceived;
+};
+
 [scriptable, uuid(9c1df3f5-bf04-46b6-9977-eb6389076db8)]
-interface nsIWebTransportSendStreamStatsCallback : nsISupports {
-  void onStatsAvailable(in nsIWebTransportSendStreamStats aStats);
+interface nsIWebTransportStreamStatsCallback : nsISupports {
+  void onSendStatsAvailable(in nsIWebTransportSendStreamStats aStats);
+  void onReceiveStatsAvailable(in nsIWebTransportReceiveStreamStats aStats);
+};
+
+[builtinclass, scriptable, uuid(d461b235-6291-4817-adcc-a2a3b3dfc10b)]
+interface nsIWebTransportReceiveStream : nsISupports {
+  // Sends the STOP_SENDING on the stream.
+  void sendStopSending(in uint8_t aError);
+
+  void getReceiveStreamStats(
+    in nsIWebTransportStreamStatsCallback aCallback);
 };
 
 [builtinclass, scriptable, uuid(804f245c-52ea-403c-8a78-f751533bdd70)]
@@ -40,7 +49,7 @@ interface nsIWebTransportSendStream : nsISupports {
   // Reset the stream with the specified error code.
   void reset(in uint8_t aErrorCode);
 
-  void getSendStreamStats(in nsIWebTransportSendStreamStatsCallback aCallback);
+  void getSendStreamStats(in nsIWebTransportStreamStatsCallback aCallback);
 };
 
 [builtinclass, scriptable, uuid(f9ecb509-36db-4689-97d6-137639a08750)]

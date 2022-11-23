@@ -613,6 +613,18 @@ pub extern "C" fn neqo_http3conn_reset_stream(
     }
 }
 
+#[no_mangle]
+pub extern "C" fn neqo_http3conn_stream_stop_sending(
+    conn: &mut NeqoHttp3Conn,
+    stream_id: u64,
+    error: u64,
+) -> nsresult {
+    match conn.conn.stream_stop_sending(StreamId::from(stream_id), error) {
+        Ok(()) => NS_OK,
+        Err(_) => NS_ERROR_INVALID_ARG,
+    }
+}
+
 // Close sending side of a stream with stream_id
 #[no_mangle]
 pub extern "C" fn neqo_http3conn_close_stream(

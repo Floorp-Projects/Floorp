@@ -13,7 +13,10 @@ use neqo_http3::{
     WebTransportRequest, WebTransportServerEvent,
 };
 use neqo_transport::server::Server;
-use neqo_transport::{ConnectionEvent, ConnectionParameters, Output, RandomConnectionIdGenerator};
+use neqo_transport::{
+    ConnectionEvent, ConnectionParameters, Output, RandomConnectionIdGenerator,
+    StreamType
+};
 use std::env;
 
 use std::cell::RefCell;
@@ -67,6 +70,7 @@ struct Http3TestServer {
     responses: HashMap<Http3OrWebTransportStream, Vec<u8>>,
     current_connection_hash: u64,
     sessions_to_close: HashMap<Instant, Vec<WebTransportRequest>>,
+    sessions_to_create_stream: Vec<WebTransportRequest>,
 }
 
 impl ::std::fmt::Display for Http3TestServer {
@@ -83,6 +87,7 @@ impl Http3TestServer {
             responses: HashMap::new(),
             current_connection_hash: 0,
             sessions_to_close: HashMap::new(),
+            sessions_to_create_stream: Vec::new(),
         }
     }
 
@@ -129,6 +134,16 @@ impl Http3TestServer {
         }
         self.sessions_to_close.retain(|expires, _| *expires >= now);
     }
+
+    fn maybe_create_wt_stream(&mut self) {
+        if self.sessions_to_create_stream.is_empty() {
+            return;
+        }
+        let mut session = self.sessions_to_create_stream.pop().unwrap();
+        let mut wt_server_stream = session.create_stream(StreamType::UniDi).unwrap();
+        let content = b"0123456789".to_vec();
+        wt_server_stream.send_data(&content).unwrap();
+    }
 }
 
 impl HttpServer for Http3TestServer {
@@ -138,6 +153,7 @@ impl HttpServer for Http3TestServer {
 
     fn process_events(&mut self) {
         self.maybe_close_session();
+        self.maybe_create_wt_stream();
 
         while let Some(event) = self.server.next_event() {
             qtrace!("Event: {:?}", event);
@@ -365,8 +381,16 @@ impl HttpServer for Http3TestServer {
                     }
                 }
                 Http3ServerEvent::PriorityUpdate { .. }
-                | Http3ServerEvent::StreamReset { .. }
-                | Http3ServerEvent::StreamStopSending { .. } => {}
+                | Http3ServerEvent::StreamReset { .. } => {}
+                Http3ServerEvent::StreamStopSending {
+                    stream,
+                    error
+                } => {
+                    qtrace!(
+                        "Http3ServerEvent::StreamStopSending {:?} {:?}",
+                        stream,
+                        error);
+                }
                 Http3ServerEvent::WebTransport(WebTransportServerEvent::NewSession {
                     mut session,
                     headers,
@@ -397,6 +421,9 @@ impl HttpServer for Http3TestServer {
                                     .get_mut(&expires)
                                     .unwrap()
                                     .push(session);
+                            } else if path == "/create_unidi_stream" {
+                                session.response(true).unwrap();
+                                self.sessions_to_create_stream.push(session);
                             } else {
                                 session.response(true).unwrap();
                             }

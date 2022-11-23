@@ -399,4 +399,31 @@ void Http3WebTransportSession::RemoveWebTransportStream(
   MOZ_ASSERT(existed);
 }
 
+already_AddRefed<Http3WebTransportStream>
+Http3WebTransportSession::OnIncomingWebTransportStream(
+    WebTransportStreamType aType, uint64_t aId) {
+  LOG(
+      ("Http3WebTransportSession::OnIncomingWebTransportStream "
+       "this=%p",
+       this));
+
+  if (mRecvState != ACTIVE) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(!mTransaction);
+  RefPtr<Http3WebTransportStream> stream =
+      new Http3WebTransportStream(mSession, mStreamId, aType, aId);
+  if (NS_FAILED(stream->InitInputPipe())) {
+    return nullptr;
+  }
+
+  if (!mListener) {
+    return nullptr;
+  }
+
+  mListener->OnIncomingStreamAvailableInternal(stream);
+  return stream.forget();
+}
+
 }  // namespace mozilla::net
