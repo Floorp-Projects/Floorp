@@ -816,10 +816,12 @@ void MacroAssembler::initTypedArraySlots(Register obj, Register temp,
       move32(Imm32(length), lengthReg);
     }
 
+    // Ensure volatile |obj| is saved across the call.
+    if (obj.volatile_()) {
+      liveRegs.addUnchecked(obj);
+    }
+
     // Allocate a buffer on the heap to store the data elements.
-    liveRegs.addUnchecked(temp);
-    liveRegs.addUnchecked(obj);
-    liveRegs.addUnchecked(lengthReg);
     PushRegsInMask(liveRegs);
     using Fn = void (*)(JSContext * cx, TypedArrayObject * obj, int32_t count);
     setupUnalignedABICall(temp);
