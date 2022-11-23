@@ -4,12 +4,12 @@
 import argparse
 import datetime
 import os
-import requests
 import shutil
 import subprocess
 import sys
 import tarfile
 
+import requests
 
 # If changing the list of unused files, please also update the egrep line
 # of the GIT_CHANGED variable in loop-ff.sh.

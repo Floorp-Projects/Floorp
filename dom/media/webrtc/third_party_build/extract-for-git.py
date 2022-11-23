@@ -6,7 +6,6 @@ import os
 import re
 import subprocess
 
-
 # This script extracts commits that touch third party webrtc code so they can
 # be imported into Git. It filters out commits that are not part of upstream
 # code and rewrites the paths to match upstream. Finally, the commits are

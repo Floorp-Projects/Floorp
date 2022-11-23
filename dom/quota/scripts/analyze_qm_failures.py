@@ -3,11 +3,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import sys
 import getopt
-import utils
-import stackanalysis
+import sys
+
 import fn_anchors
+import stackanalysis
+import utils
 
 """
 The analysis is based on stack frames of the following form:
