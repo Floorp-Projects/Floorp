@@ -756,6 +756,7 @@ class CrashReporterTest {
             context = testContext,
             services = listOf(mock()),
             maxBreadCrumbs = 5,
+            scope = scope,
         )
         repeat(15) {
             crashReporter.recordCrashBreadcrumb(Breadcrumb(testMessage, testData, testCategory, testLevel, testType))
