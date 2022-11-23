@@ -7480,7 +7480,6 @@ bool CacheIRCompiler::emitCallNumberToString(NumberOperandId inputId,
   LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(),
                                liveVolatileFloatRegs());
   volatileRegs.takeUnchecked(result);
-  volatileRegs.addUnchecked(floatScratch0);
   masm.PushRegsInMask(volatileRegs);
 
   using Fn = JSString* (*)(JSContext * cx, double d);
