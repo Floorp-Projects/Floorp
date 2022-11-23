@@ -1761,7 +1761,7 @@ GCMarker::GCMarker(JSRuntime* rt)
       markColor_(MarkColor::Black),
       delayedMarkingList(nullptr),
       delayedMarkingWorkAdded(false),
-      state(MarkingState::NotActive),
+      state(NotActive),
       incrementalWeakMapMarkingEnabled(
           TuningDefaults::IncrementalWeakMapMarkingEnabled)
 #ifdef DEBUG
@@ -1778,8 +1778,8 @@ bool GCMarker::init() { return stack.init(); }
 bool GCMarker::isDrained() { return isMarkStackEmpty() && !delayedMarkingList; }
 
 void GCMarker::start() {
-  MOZ_ASSERT(state == MarkingState::NotActive);
-  state = MarkingState::RegularMarking;
+  MOZ_ASSERT(state == NotActive);
+  state = RegularMarking;
   markColor_ = MarkColor::Black;
 
   MOZ_ASSERT(!delayedMarkingList);
@@ -1803,10 +1803,10 @@ void GCMarker::stop() {
   MOZ_ASSERT(!delayedMarkingList);
   MOZ_ASSERT(markLaterArenas == 0);
 
-  if (state == MarkingState::NotActive) {
+  if (state == NotActive) {
     return;
   }
-  state = MarkingState::NotActive;
+  state = NotActive;
 
   stack.clear();
   ClearEphemeronEdges(runtime());
@@ -1894,8 +1894,8 @@ void GCMarker::repush(JSObject* obj) {
 
 bool GCMarker::enterWeakMarkingMode() {
   MOZ_ASSERT(weakMapAction() == JS::WeakMapTraceAction::Expand);
-  MOZ_ASSERT(state != MarkingState::WeakMarking);
-  if (state == MarkingState::IterativeMarking) {
+  MOZ_ASSERT(state != WeakMarking);
+  if (state == IterativeMarking) {
     return false;
   }
 
@@ -1909,7 +1909,7 @@ bool GCMarker::enterWeakMarkingMode() {
   // Set state before doing anything else, so any new key that is marked
   // during the following gcEphemeronEdges scan will itself be looked up in
   // gcEphemeronEdges and marked according to ephemeron rules.
-  state = MarkingState::WeakMarking;
+  state = WeakMarking;
 
   return true;
 }
@@ -1965,11 +1965,10 @@ IncrementalProgress JS::Zone::enterWeakMarkingMode(GCMarker* marker,
 }
 
 void GCMarker::leaveWeakMarkingMode() {
-  MOZ_ASSERT(state == MarkingState::WeakMarking ||
-             state == MarkingState::IterativeMarking);
+  MOZ_ASSERT(state == WeakMarking || state == IterativeMarking);
 
-  if (state != MarkingState::IterativeMarking) {
-    state = MarkingState::RegularMarking;
+  if (state != IterativeMarking) {
+    state = RegularMarking;
   }
 
   // The gcEphemeronEdges table is still populated and may be used during a
@@ -2098,7 +2097,7 @@ inline void GCMarker::appendToDelayedMarkingList(Arena** listTail,
 
 #ifdef DEBUG
 void GCMarker::checkZone(void* p) {
-  MOZ_ASSERT(state != MarkingState::NotActive);
+  MOZ_ASSERT(state != NotActive);
   DebugOnly<Cell*> cell = static_cast<Cell*>(p);
   MOZ_ASSERT_IF(cell->isTenured(),
                 cell->asTenured().zone()->isCollectingFromAnyThread());
