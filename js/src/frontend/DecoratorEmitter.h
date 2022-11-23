@@ -23,14 +23,20 @@ class MOZ_STACK_CLASS DecoratorEmitter {
   explicit DecoratorEmitter(BytecodeEmitter* bce);
 
   [[nodiscard]] bool emitApplyDecoratorsToElementDefinition(
-      Kind kind, ParseNode* key, ListNode* decorators);
+      Kind kind, ParseNode* key, ListNode* decorators, bool isStatic);
 
  private:
   [[nodiscard]] bool emitDecorationState();
 
   [[nodiscard]] bool emitUpdateDecorationState();
 
-  [[nodiscard]] bool emitCreateDecoratorContextObject();
+  [[nodiscard]] bool emitCreateDecoratorAccessObject();
+
+  [[nodiscard]] bool emitCreateAddInitializerFunction();
+
+  [[nodiscard]] bool emitCreateDecoratorContextObject(Kind kind, ParseNode* key,
+                                                      bool isStatic,
+                                                      TokenPos pos);
 };
 
 } /* namespace js::frontend */

@@ -8,6 +8,8 @@
 #include "frontend/CallOrNewEmitter.h"
 #include "frontend/IfEmitter.h"
 #include "frontend/ObjectEmitter.h"
+#include "frontend/ParseNode.h"
+#include "frontend/ParserAtom.h"
 #include "vm/ThrowMsgKind.h"
 
 using namespace js;
@@ -16,7 +18,8 @@ using namespace js::frontend;
 DecoratorEmitter::DecoratorEmitter(BytecodeEmitter* bce) : bce_(bce) {}
 
 bool DecoratorEmitter::emitApplyDecoratorsToElementDefinition(
-    DecoratorEmitter::Kind kind, ParseNode* key, ListNode* decorators) {
+    DecoratorEmitter::Kind kind, ParseNode* key, ListNode* decorators,
+    bool isStatic) {
   // The DecoratorEmitter expects the value to be decorated to be at the top
   // of the stack prior to this call. It will apply the decorators to this
   // value, possibly replacing the value with a value returned by a decorator.
@@ -132,8 +135,10 @@ bool DecoratorEmitter::emitApplyDecoratorsToElementDefinition(
     // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1793961.
     //     5.b. Let context be CreateDecoratorContextObject(kind, key,
     //     extraInitializers, decorationState, isStatic).
-    if (!emitCreateDecoratorContextObject()) {
-      //          [stack] CTOR? OBJ CTOR? VAL CALLEE THIS VAL context
+    if (!emitCreateDecoratorContextObject(kind, key, isStatic,
+                                          decorator->pn_pos)) {
+      //          [stack] CTOR? OBJ CTOR? VAL CALLEE THIS VAL
+      //          context
       return false;
     }
 
@@ -273,12 +278,158 @@ bool DecoratorEmitter::emitUpdateDecorationState() {
   return true;
 }
 
-bool DecoratorEmitter::emitCreateDecoratorContextObject() {
-  // TODO! For now, just an empty object
+bool DecoratorEmitter::emitCreateDecoratorAccessObject() {
+  // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1800725.
   ObjectEmitter oe(bce_);
   if (!oe.emitObject(0)) {
-    //          [stack] CTOR? OBJ CTOR? VAL CALLEE THIS VAL context
     return false;
   }
+  return oe.emitEnd();
+}
+
+bool DecoratorEmitter::emitCreateAddInitializerFunction() {
+  // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1800724.
+  ObjectEmitter oe(bce_);
+  if (!oe.emitObject(0)) {
+    return false;
+  }
+  return oe.emitEnd();
+}
+
+bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
+                                                        ParseNode* key,
+                                                        bool isStatic,
+                                                        TokenPos pos) {
+  MOZ_ASSERT(key->is<NameNode>());
+
+  // 1. Let contextObj be OrdinaryObjectCreate(%Object.prototype%).
+  ObjectEmitter oe(bce_);
+  if (!oe.emitObject(/* propertyCount */ 6)) {
+    //          [stack] context
+    return false;
+  }
+  if (!oe.prepareForPropValue(pos.begin, PropertyEmitter::Kind::Prototype)) {
+    return false;
+  }
+
+  if (kind == Kind::Method) {
+    // 2. If kind is method, let kindStr be "method".
+    if (!bce_->emitStringOp(
+            JSOp::String,
+            frontend::TaggedParserAtomIndex::WellKnown::method())) {
+      //          [stack] context "method"
+      return false;
+    }
+  } else {
+    // clang-format off
+    // 3. Else if kind is getter, let kindStr be "getter".
+    // 4. Else if kind is setter, let kindStr be "setter".
+    // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1793960.
+    // 5. Else if kind is accessor, let kindStr be "accessor".
+    // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1793961.
+    // 6. Else if kind is field, let kindStr be "field".
+    // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1793962.
+    // 7. Else,
+    //     a. Assert: kind is class.
+    //     b. Let kindStr be "class".
+    // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1793963.
+    // clang-format on
+    return false;
+  }
+
+  // 8. Perform ! CreateDataPropertyOrThrow(contextObj, "kind", kindStr).
+  if (!oe.emitInit(frontend::AccessorType::None,
+                   frontend::TaggedParserAtomIndex::WellKnown::kind())) {
+    //          [stack] context
+    return false;
+  }
+  // 9. If kind is not class, then
+  if (kind != Kind::Class) {
+    //     9.a. Perform ! CreateDataPropertyOrThrow(contextObj, "access",
+    //     CreateDecoratorAccessObject(kind, name)).
+    if (!oe.prepareForPropValue(pos.begin, PropertyEmitter::Kind::Prototype)) {
+      return false;
+    }
+    if (!emitCreateDecoratorAccessObject()) {
+      return false;
+    }
+    if (!oe.emitInit(frontend::AccessorType::None,
+                     frontend::TaggedParserAtomIndex::WellKnown::access())) {
+      //          [stack] context
+      return false;
+    }
+    //     9.b. If isStatic is present, perform
+    //     ! CreateDataPropertyOrThrow(contextObj, "static", isStatic).
+    if (!oe.prepareForPropValue(pos.begin, PropertyEmitter::Kind::Prototype)) {
+      return false;
+    }
+    if (!bce_->emit1(isStatic ? JSOp::True : JSOp::False)) {
+      //          [stack] context isStatic
+      return false;
+    }
+    if (!oe.emitInit(frontend::AccessorType::None,
+                     frontend::TaggedParserAtomIndex::WellKnown::static_())) {
+      //          [stack] context
+      return false;
+    }
+    //     9.c. If name is a Private Name, then
+    //         9.c.i. Perform ! CreateDataPropertyOrThrow(contextObj, "private",
+    //         true).
+    //     9.d. Else,
+    //         9.d.i. Perform ! CreateDataPropertyOrThrow(contextObj, "private",
+    //         false).
+    if (!oe.prepareForPropValue(pos.begin, PropertyEmitter::Kind::Prototype)) {
+      return false;
+    }
+    if (!bce_->emit1(key->isKind(ParseNodeKind::PrivateName) ? JSOp::True
+                                                             : JSOp::False)) {
+      //          [stack] context private
+      return false;
+    }
+    if (!oe.emitInit(frontend::AccessorType::None,
+                     frontend::TaggedParserAtomIndex::WellKnown::private_())) {
+      //          [stack] context
+      return false;
+    }
+    //         9.c.ii. Perform ! CreateDataPropertyOrThrow(contextObj, "name",
+    //         name.[[Description]]).
+    //
+    //         9.d.ii. Perform
+    //         ! CreateDataPropertyOrThrow(contextObj, "name", name).)
+    if (!oe.prepareForPropValue(pos.begin, PropertyEmitter::Kind::Prototype)) {
+      return false;
+    }
+    if (!bce_->emitStringOp(JSOp::String, key->as<NameNode>().atom())) {
+      return false;
+    }
+    if (!oe.emitInit(frontend::AccessorType::None,
+                     frontend::TaggedParserAtomIndex::WellKnown::name())) {
+      //          [stack] context
+      return false;
+    }
+  } else {
+    // 10. Else,
+    //     10.a. Perform ! CreateDataPropertyOrThrow(contextObj, "name", name).
+    // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1793963
+    return false;
+  }
+  // 11. Let addInitializer be CreateAddInitializerFunction(initializers,
+  // decorationState).
+  if (!oe.prepareForPropValue(pos.begin, PropertyEmitter::Kind::Prototype)) {
+    return false;
+  }
+  if (!emitCreateAddInitializerFunction()) {
+    //          [stack] context addInitializer
+    return false;
+  }
+  // 12. Perform ! CreateDataPropertyOrThrow(contextObj, "addInitializer",
+  // addInitializer).
+  if (!oe.emitInit(
+          frontend::AccessorType::None,
+          frontend::TaggedParserAtomIndex::WellKnown::addInitializer())) {
+    //          [stack] context
+    return false;
+  }
+  // 13. Return contextObj.
   return oe.emitEnd();
 }

@@ -8976,7 +8976,8 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
           // The decorators are applied to the current value on the stack,
           // possibly replacing it.
           if (!de.emitApplyDecoratorsToElementDefinition(
-                  DecoratorEmitter::Method, key, method.decorators())) {
+                  DecoratorEmitter::Method, key, method.decorators(),
+                  method.isStatic())) {
             //        [stack] CTOR? OBJ CTOR? KEY? VAL
             return false;
           }
