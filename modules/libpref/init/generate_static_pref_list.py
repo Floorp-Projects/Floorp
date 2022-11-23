@@ -3,14 +3,16 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import print_function
-import buildconfig
-from collections import defaultdict
+
 import os
-from six import StringIO
 import sys
+from collections import defaultdict
+
+import buildconfig
 import yaml
 from mozbuild.preprocessor import Preprocessor
-from mozbuild.util import ensureParentDir, FileAvoidWrite
+from mozbuild.util import FileAvoidWrite, ensureParentDir
+from six import StringIO
 
 VALID_KEYS = {
     "name",
