@@ -33,6 +33,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTime)
   ASSERT_TRUE(formattedTime.Find(u"January") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1970") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"12:00:00 AM") != kNotFound ||
+              formattedTime.Find(u"12:00:00\u202FAM") != kNotFound ||
               formattedTime.Find(u"00:00:00") != kNotFound);
 
   prExplodedTime = {0, 0, 19, 0, 1, 0, 1970, 4, 0, {(19 * 60), 0}};
@@ -43,6 +44,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTime)
   ASSERT_TRUE(formattedTime.Find(u"January") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1970") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"12:19:00 AM") != kNotFound ||
+              formattedTime.Find(u"12:19:00\u202FAM") != kNotFound ||
               formattedTime.Find(u"00:19:00") != kNotFound);
 
   prExplodedTime = {0, 0,    0, 7, 1,
@@ -52,6 +54,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTime)
   ASSERT_TRUE(formattedTime.Find(u"January") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1970") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"7:00:00 AM") != kNotFound ||
+              formattedTime.Find(u"7:00:00\u202FAM") != kNotFound ||
               formattedTime.Find(u"07:00:00") != kNotFound);
 
   prExplodedTime = {
@@ -62,6 +65,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTime)
   ASSERT_TRUE(formattedTime.Find(u"January") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1970") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"11:29:00 AM") != kNotFound ||
+              formattedTime.Find(u"11:29:00\u202FAM") != kNotFound ||
               formattedTime.Find(u"11:29:00") != kNotFound);
 
   prExplodedTime = {0, 0, 37, 23, 31, 11, 1969, 3, 364, {-(23 * 60), 0}};
@@ -71,6 +75,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTime)
   ASSERT_TRUE(formattedTime.Find(u"31") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1969") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"11:37:00 PM") != kNotFound ||
+              formattedTime.Find(u"11:37:00\u202FPM") != kNotFound ||
               formattedTime.Find(u"23:37:00") != kNotFound);
 
   prExplodedTime = {0, 0, 0, 17, 31, 11, 1969, 3, 364, {-(7 * 60 * 60), 0}};
@@ -80,6 +85,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTime)
   ASSERT_TRUE(formattedTime.Find(u"31") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1969") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"5:00:00 PM") != kNotFound ||
+              formattedTime.Find(u"5:00:00\u202FPM") != kNotFound ||
               formattedTime.Find(u"17:00:00") != kNotFound);
 
   prExplodedTime = {
@@ -91,6 +97,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTime)
   ASSERT_TRUE(formattedTime.Find(u"31") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1969") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"2:47:00 PM") != kNotFound ||
+              formattedTime.Find(u"2:47:00\u202FPM") != kNotFound ||
               formattedTime.Find(u"14:47:00") != kNotFound);
 }
 
@@ -163,6 +170,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTimeForeign)
   ASSERT_TRUE(formattedTime.Find(u"Januar") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1970") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"12:00:00 AM") != kNotFound ||
+              formattedTime.Find(u"12:00:00\u202FAM") != kNotFound ||
               formattedTime.Find(u"00:00:00") != kNotFound);
 
   prExplodedTime = {0, 0, 19, 0, 1, 0, 1970, 4, 0, {(19 * 60), 0}};
@@ -172,6 +180,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTimeForeign)
   ASSERT_TRUE(formattedTime.Find(u"Januar") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1970") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"12:19:00 AM") != kNotFound ||
+              formattedTime.Find(u"12:19:00\u202FAM") != kNotFound ||
               formattedTime.Find(u"00:19:00") != kNotFound);
 
   prExplodedTime = {0, 0,    0, 7, 1,
@@ -182,6 +191,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTimeForeign)
   ASSERT_TRUE(formattedTime.Find(u"Januar") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1970") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"7:00:00 AM") != kNotFound ||
+              formattedTime.Find(u"7:00:00\u202FAM") != kNotFound ||
               formattedTime.Find(u"07:00:00") != kNotFound);
 
   prExplodedTime = {
@@ -193,6 +203,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTimeForeign)
   ASSERT_TRUE(formattedTime.Find(u"Januar") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1970") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"11:29:00 AM") != kNotFound ||
+              formattedTime.Find(u"11:29:00\u202FAM") != kNotFound ||
               formattedTime.Find(u"11:29:00") != kNotFound);
 
   prExplodedTime = {0, 0, 37, 23, 31, 11, 1969, 3, 364, {-(23 * 60), 0}};
@@ -202,6 +213,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTimeForeign)
   ASSERT_TRUE(formattedTime.Find(u"Dezember") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1969") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"11:37:00 PM") != kNotFound ||
+              formattedTime.Find(u"11:37:00\u202FPM") != kNotFound ||
               formattedTime.Find(u"23:37:00") != kNotFound);
 
   prExplodedTime = {0, 0, 0, 17, 31, 11, 1969, 3, 364, {-(7 * 60 * 60), 0}};
@@ -211,6 +223,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTimeForeign)
   ASSERT_TRUE(formattedTime.Find(u"Dezember") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1969") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"5:00:00 PM") != kNotFound ||
+              formattedTime.Find(u"5:00:00\u202FPM") != kNotFound ||
               formattedTime.Find(u"17:00:00") != kNotFound);
 
   prExplodedTime = {
@@ -222,6 +235,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTimeForeign)
   ASSERT_TRUE(formattedTime.Find(u"Dezember") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1969") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"2:47:00 PM") != kNotFound ||
+              formattedTime.Find(u"2:47:00\u202FPM") != kNotFound ||
               formattedTime.Find(u"14:47:00") != kNotFound);
 }
 
