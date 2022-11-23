@@ -1463,16 +1463,6 @@ bool nsCSPPolicy::allows(CSPDirective aDirective, enum CSPKeyword aKeyword,
     }
   }
 
-  // {nonce,hash}-source should not consult default-src:
-  //   * return false if default-src is specified
-  //   * but allow the load if default-src is *not* specified (Bug 1198422)
-  if (aKeyword == CSP_NONCE || aKeyword == CSP_HASH) {
-    if (!defaultDir) {
-      return true;
-    }
-    return false;
-  }
-
   // If the above loop runs through, we haven't found a matching directive.
   // Avoid relooping, just store the result of default-src while looping.
   if (defaultDir) {
