@@ -111,19 +111,25 @@ add_task(async function() {
     info(`Test keycode ${key} (${keyCodeValue})`);
 
     info("Enter fullscreen");
-    let state = await SpecialPowers.spawn(browser, [], () => {
-      return new Promise(resolve => {
-        content.document.addEventListener(
-          "fullscreenchange",
-          () => {
-            resolve(!!content.document.fullscreenElement);
-          },
-          { once: true }
-        );
-        content.document.body.requestFullscreen();
-      });
+    let state = new Promise(resolve => {
+      let removeFun = BrowserTestUtils.addContentEventListener(
+        browser,
+        "fullscreenchange",
+        async () => {
+          removeFun();
+          resolve(
+            await SpecialPowers.spawn(browser, [], () => {
+              return !!content.document.fullscreenElement;
+            })
+          );
+        }
+      );
     });
-    ok(state, "The content should have entered fullscreen");
+    // request fullscreen
+    SpecialPowers.spawn(browser, [], () => {
+      content.document.body.requestFullscreen();
+    });
+    ok(await state, "The content should have entered fullscreen");
     ok(document.fullscreenElement, "The chrome should also be in fullscreen");
 
     is(
@@ -156,16 +162,19 @@ add_task(async function() {
 
     info("Send trusted key events");
 
-    let fullScreenPromise = SpecialPowers.spawn(browser, [], () => {
-      return new Promise(resolve => {
-        content.document.addEventListener(
-          "fullscreenchange",
-          () => {
-            resolve(!!content.document.fullscreenElement);
-          },
-          { once: true }
-        );
-      });
+    state = new Promise(resolve => {
+      let removeFun = BrowserTestUtils.addContentEventListener(
+        browser,
+        "fullscreenchange",
+        async () => {
+          removeFun();
+          resolve(
+            await SpecialPowers.spawn(browser, [], () => {
+              return !!content.document.fullscreenElement;
+            })
+          );
+        }
+      );
     });
 
     promiseExpectedKeyEvents = suppressed
@@ -176,8 +185,7 @@ add_task(async function() {
     EventUtils.synthesizeKey("KEY_" + key);
     await promiseExpectedKeyEvents;
 
-    state = await fullScreenPromise;
-    ok(!state, "The content should have exited fullscreen");
+    ok(!(await state), "The content should have exited fullscreen");
     ok(
       !document.fullscreenElement,
       "The chrome should also have exited fullscreen"
