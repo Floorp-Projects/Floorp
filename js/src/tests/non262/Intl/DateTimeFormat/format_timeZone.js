@@ -22,24 +22,24 @@ const tzMapper = [
 const tests = [
     {
         timeZone: "UTC",
-        result: "12/6/2012, 12:00:00 PM",
+        result: "12/6/2012, 12:00:00\u202FPM",
     },
     {
         timeZone: "America/Los_Angeles",
-        result: "12/6/2012, 4:00:00 AM",
+        result: "12/6/2012, 4:00:00\u202FAM",
     },
     {
         timeZone: "America/New_York",
         options: tzNameFormatOptions,
-        result: "12/6/2012, 7:00:00 AM EST",
+        result: "12/6/2012, 7:00:00\u202FAM EST",
     },
     {
         timeZone: "America/Caracas",
-        result: "12/6/2012, 7:30:00 AM",
+        result: "12/6/2012, 7:30:00\u202FAM",
     },
     {
         timeZone: "Europe/London",
-        result: "12/6/2012, 12:00:00 PM",
+        result: "12/6/2012, 12:00:00\u202FPM",
     },
     {
         timeZone: "Africa/Casablanca",
@@ -53,12 +53,12 @@ const tests = [
     },
     {
         timeZone: "Asia/Kathmandu",
-        result: "12/6/2012, 5:45:00 PM",
+        result: "12/6/2012, 5:45:00\u202FPM",
     },
     {
         timeZone: "Asia/Bangkok",
         locale: "th-th-u-nu-thai", options: longFormatOptions,
-        result: "๖ ธันวาคม ๒๕๕๕ ๑๙:๐๐:๐๐",
+        result: "๖ ธันวาคม ๒๕๕๕ เวลา ๑๙:๐๐:๐๐",
     },
     {
         timeZone: "Asia/Tokyo",
@@ -67,27 +67,27 @@ const tests = [
     },
     {
         timeZone: "Australia/Lord_Howe",
-        result: "12/6/2012, 11:00:00 PM",
+        result: "12/6/2012, 11:00:00\u202FPM",
     },
     {
         timeZone: "Australia/Lord_Howe",
         date: Date.UTC(2012, 7-1, 6, 12, 0, 0),
-        result: "7/6/2012, 10:30:00 PM",
+        result: "7/6/2012, 10:30:00\u202FPM",
     },
     {
         timeZone: "Pacific/Kiritimati",
         date: Date.UTC(1978, 12-1, 6, 12, 0, 0),
-        result: "12/6/1978, 1:20:00 AM",
+        result: "12/6/1978, 1:20:00\u202FAM",
     },
     {
         timeZone: "Africa/Monrovia",
         date: Date.UTC(1971, 12-1, 6, 12, 0, 0),
-        result: "12/6/1971, 11:15:30 AM",
+        result: "12/6/1971, 11:15:30\u202FAM",
     },
     {
         timeZone: "Asia/Riyadh",
         date: Date.UTC(1946, 12-1, 6, 12, 0, 0),
-        result: "12/6/1946, 3:06:52 PM",
+        result: "12/6/1946, 3:06:52\u202FPM",
     },
 ];
 
