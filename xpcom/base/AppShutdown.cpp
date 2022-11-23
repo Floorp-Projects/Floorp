@@ -315,7 +315,6 @@ bool AppShutdown::IsRestarting() {
 
 #ifdef DEBUG
 static bool sNotifyingShutdownObservers = false;
-static bool sAdvancingShutdownPhase = false;
 
 bool AppShutdown::IsNoOrLegalShutdownTopic(const char* aTopic) {
   if (!XRE_IsParentProcess()) {
@@ -333,12 +332,6 @@ void AppShutdown::AdvanceShutdownPhaseInternal(
     ShutdownPhase aPhase, bool doNotify, const char16_t* aNotificationData,
     const nsCOMPtr<nsISupports>& aNotificationSubject) {
   AssertIsOnMainThread();
-#ifdef DEBUG
-  // Prevent us from re-entrance
-  MOZ_ASSERT(!sAdvancingShutdownPhase);
-  sAdvancingShutdownPhase = true;
-  auto exit = MakeScopeExit([] { sAdvancingShutdownPhase = false; });
-#endif
 
   // We ensure that we can move only forward. We cannot
   // MOZ_ASSERT here as there are some tests that fire
@@ -347,24 +340,14 @@ void AppShutdown::AdvanceShutdownPhaseInternal(
   if (sCurrentShutdownPhase >= aPhase) {
     return;
   }
-
-  nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
-  if (sCurrentShutdownPhase >= ShutdownPhase::AppShutdownConfirmed) {
-    // Give runnables dispatched between two calls to AdvanceShutdownPhase
-    // a chance to run before actually advancing the phase. We must do this
-    // only after we passed the point of no return and thus can expect a linear
-    // flow through our shutdown phases. This way the processing is also
-    // covered by the terminator's timer of the previous phase.
-    // Note that this affects only main thread runnables, such that the correct
-    // way of ensuring shutdown processing remains to have an async shutdown
-    // blocker.
-    if (thread) {
-      NS_ProcessPendingEvents(thread);
-    }
-  }
-
-  // From now on any IsInOrBeyond checks will find the new phase set.
   sCurrentShutdownPhase = aPhase;
+
+  // TODO: Bug 1768581
+  // We think it would be more logical to have the following order here:
+  //    AppShutdown::MaybeFastShutdown(aPhase);
+  //    sTerminator->AdvancePhase(aPhase);
+  //    obsService->NotifyObservers(...);
+  //    mozilla::KillClearOnShutdown(aPhase);
 
 #ifndef ANDROID
   if (sTerminator) {
@@ -372,18 +355,9 @@ void AppShutdown::AdvanceShutdownPhaseInternal(
   }
 #endif
 
-  AppShutdown::MaybeFastShutdown(aPhase);
-
-  // This will null out the gathered pointers for this phase synchronously.
-  // Note that we keep the old order here to avoid breakage, so be aware that
-  // the notifications fired below will find these already cleared in case
-  // you expected the opposite.
   mozilla::KillClearOnShutdown(aPhase);
 
-  // Empty our MT event queue to process any side effects thereof.
-  if (thread) {
-    NS_ProcessPendingEvents(thread);
-  }
+  AppShutdown::MaybeFastShutdown(aPhase);
 
   if (doNotify) {
     const char* aTopic = AppShutdown::GetObserverKey(aPhase);
@@ -397,10 +371,6 @@ void AppShutdown::AdvanceShutdownPhaseInternal(
 #endif
         obsService->NotifyObservers(aNotificationSubject, aTopic,
                                     aNotificationData);
-        // Empty our MT event queue again after the notification has finished
-        if (thread) {
-          NS_ProcessPendingEvents(thread);
-        }
       }
     }
   }
