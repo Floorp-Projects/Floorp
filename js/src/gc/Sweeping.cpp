@@ -562,12 +562,12 @@ IncrementalProgress GCRuntime::markGrayRoots(SliceBudget& budget,
 
   AutoUpdateLiveCompartments updateLive(this);
 
-  if (traceEmbeddingGrayRoots(&marker, budget) == NotFinished) {
+  if (traceEmbeddingGrayRoots(marker.tracer(), budget) == NotFinished) {
     return NotFinished;
   }
 
   Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(
-      &marker, Compartment::GrayEdges);
+      marker.tracer(), Compartment::GrayEdges);
 
   return Finished;
 }
@@ -929,7 +929,7 @@ void GCRuntime::markIncomingGrayCrossCompartmentPointers() {
                     dst->asTenured().isMarkedBlack());
 
       if (src->asTenured().isMarkedGray()) {
-        TraceManuallyBarrieredEdge(&marker, &dst,
+        TraceManuallyBarrieredEdge(marker.tracer(), &dst,
                                    "cross-compartment gray pointer");
       }
     }

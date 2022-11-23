@@ -587,7 +587,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
   {
     gcstats::AutoPhase ap(gc->stats(), gcstats::PhaseKind::MARK);
 
-    gc->traceRuntimeForMajorGC(gcmarker, session);
+    gc->traceRuntimeForMajorGC(gcmarker->tracer(), session);
 
     gc->incrementalState = State::Mark;
     gc->drainMarkStack();
