@@ -258,7 +258,10 @@
     <string name="search_settings_menu_item">Preferenze di ricerca</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Sta volta, ricercà cù :</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Sta volta, ricercà cù :</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Sta volta, ricercà cù :</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -334,6 +337,7 @@
     <string name="preferences_add_private_browsing_shortcut">Aghjunghje un accurtatoghju per a navigazione privata</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Modu solu HTTPS</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Tentativu autumaticu di cunnessione à i siti impieghendu u protocollu di cifratura HTTPS per aumentà a sicurità.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->

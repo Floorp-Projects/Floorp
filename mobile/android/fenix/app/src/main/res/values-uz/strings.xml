@@ -255,7 +255,10 @@
     <string name="search_settings_menu_item">Izlash sozlamalari</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Bu safar qidiramiz:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Bu safar qidiramiz:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Bu safar quyidagi bilan qidiramiz:</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -329,6 +332,7 @@
     <string name="preferences_add_private_browsing_shortcut">Maxfiy koʻrish tezkor buyrugʻini qoʻshish</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Faqat HTTPS rejimi</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Xavfsizlikni oshirish uchun HTTPS shifrlash protokoli yordamida saytlarga avtomatik ulanishga harakat qiladi.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->

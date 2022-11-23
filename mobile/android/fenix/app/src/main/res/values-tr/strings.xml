@@ -46,8 +46,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Son yer imleri</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">Son kaydedilenler</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Tüm kayıtlı yer imlerini göster</string>
@@ -259,40 +257,18 @@
     <string name="search_settings_menu_item">Arama ayarları</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Bununla ara:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Bununla ara:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Bununla ara:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">%1$s tarayıcınızdaki yenilikler</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Kaldığınız yerden devam etmek artık daha kolay.</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Size özel %1$s giriş sayfası</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Açık sekmelerinizi, yer imlerinizi ve gezinti geçmişinizi görün.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Düzenli sekmeler</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Yeni sekme düzeni ve kendiliğinden kapanan sekmelerle karmaşayı ortadan kaldırın.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Son aramalar</string>
-
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Son aramalarınıza giriş sayfasından ve sekmelerden tekrar ulaşın.</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Kişisel Firefox giriş sayfanız, kaldığınız yerden devam etmeyi kolaylaştırıyor. Son sekmeleriniz, yer imleriniz ve arama sonuçlarınız artık giriş sayfanızda.</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Size özel giriş sayfanızla tanışın. Son sekmeleriniz, yer imleriniz ve arama sonuçlarınız burada görünecek.</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Bağımsız bir internete hoş geldiniz</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">Daha kişisel bir internete hoş geldiniz</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Daha renkli. Daha gizli. Para için değil, insanlık için.</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Telefondan bilgisayara, bilgisayardan telefona geçin</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">Cihazdan cihaza geçmek artık daha kolay</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -359,6 +335,14 @@
     <string name="preferences_add_private_browsing_shortcut">Gizli gezinti kısayolu ekle</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Yalnızca HTTPS modu</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Çerez duyurularını azalt</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Çerez duyurularını azalt</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox, çerez duyurularındaki çerez isteklerini otomatik olarak reddetmeye çalışır. Reddetme seçeneği mevcut değilse Firefox, duyuruyu kapatmak için tüm çerezleri kabul edebilir.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Daha fazla güvenlik için sitelere otomatik olarak HTTPS şifreleme protokolüyle bağlanmaya çalışır.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1252,33 +1236,20 @@
     <string name="delete_history_group_snackbar">Grup silindi</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">%s’a hoş geldiniz!</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">Daha iyi bir internete hoş geldiniz</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">Para için değil, insanlık için geliştirilen bir tarayıcı.</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Firefox’u cihazlar arasında eşitleyin</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">Kaldığınız yerden devam edin</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Yer imlerinizi, geçmişinizi ve parolalarınız bu cihazdaki %1$s tarayıcınıza taşıyın.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">Cihazlarınız arasında sorunsuz geçiş için sekmelerinizi ve parolalarınızı senkronize edin.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Kaydol</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">Giriş yap</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync açık</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Sürekli gizlilik</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Gizlilik koruması hep açık</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s şirketlerin sizi web’de gizlice takip etmesini otomatik olarak engeller.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Komple çerez koruması, takip kodlarının sizi web’de takip etmek için çerezleri kullanmasını engeller.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1291,17 +1262,10 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">Sayfaların daha hızlı yüklenmesi için daha fazla takipçiyi engeller ancak bazı sayfa işlevleri bozulabilir.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Araç çubuğu konumunu seçin</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Araç çubuğunu kolayca erişilebileceğiniz bir yere koyun. Altta tutabilir veya en üste taşıyabilirsiniz.</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">Altta tutun veya en üste taşıyın.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Gizliliğiniz</string>
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">Verilerinizin kontrolü sizde</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">%s, internette başkalarıyla ve bizimle neleri paylaşacağınızın kontrolünü size verir.</string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">Firefox, internette başkalarıyla ve bizimle neleri paylaşacağınızın kontrolünü size verir.</string>
     <!-- Text for the button to read the privacy notice -->

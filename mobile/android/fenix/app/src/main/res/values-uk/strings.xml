@@ -45,8 +45,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Останні закладки</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">Недавно збережені</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Показати всі збережені закладки</string>
@@ -260,39 +258,18 @@
     <string name="search_settings_menu_item">Налаштування пошуку</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Шукати за допомогою:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Шукати за допомогою:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Шукати в:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Що нового у %1$s</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Тепер легше повернутися туди, де ви зупинилися.</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Персоналізована сторінка домівки %1$s</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Переходьте до відкритих вкладок, закладок та історії перегляду.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Чисті, упорядковані вкладки</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Приберіть безлад у вкладках із вдосконаленим виглядом та автозакриттям вкладок.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Недавні пошуки</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Перегляньте останні пошукові запити зі своєї сторінки домівки та вкладок.</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Відтепер ваша персоналізована сторінка домівки Firefox полегшує продовження роботи з місця, де ви зупинилися. Знайдіть останні вкладки, закладки та результати пошуку.</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Зустрічайте свою персоналізовану домівку. Тут з’являтимуться останні вкладки, закладки та результати пошуку.</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Вітаємо у незалежному інтернеті</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">Вітаємо у персоналізованому інтернеті</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Більше кольорів. Краща приватність. Та ж сама відданість людям, а не прибутку.</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Перемикайтеся між телефоном і комп’ютером</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">Перемикати екрани стало простіше, ніж будь-коли</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -360,6 +337,14 @@
     <string name="preferences_add_private_browsing_shortcut">Додати ярлик приватного перегляду</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">HTTPS-режим</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Зменшення кількості банерів кук</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Зменшити кількість банерів кук</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox автоматично намагається відхилити банери запитів на розміщення кук. Якщо параметр відхилення недоступний, Firefox може погодитися розмістити всі куки, щоб закрити банер.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Намагатися автоматично доступатися до сайтів за допомогою протоколу шифрування HTTPS для поліпшення безпеки.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1256,35 +1241,21 @@
     <string name="delete_history_group_snackbar">Групу видалено</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Вітаємо в %s!</string>
-
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">Ласкаво просимо до кращого інтернету</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">Браузер, створений для людей, а не для прибутку.</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Синхронізуйте Firefox між пристроями</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">Продовжуйте звідти, де зупинилися</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Перенесіть свої закладки, історію та паролі у %1$s на цьому пристрої.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">Синхронізуйте вкладки та паролі на всіх пристроях для плавного перемикання між ними.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Зареєструватись</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">Увійти</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Синхронізація увімкнена</string>
 
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Постійна приватність</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Типовий захист приватності</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s автоматично блокує таємне стеження компаній за вами в інтернеті.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Функція повний захист кук не дає змогу елементам стеження переслідувати вас на різних сайтах за допомогою кук.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1297,19 +1268,12 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">Блокує більше стеження, тому сторінки завантажуються швидше, однак можливі порушення їх роботи.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Оберіть розташування панелі інструментів</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Розташуйте панель для легкого доступу. Тримайте її внизу, або перемістіть вгору.</string>
 
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">Залиште її внизу або перемістіть угору.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Ваша приватність</string>
 
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">Ви контролюєте свої дані</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Ми створили %s, щоб надати вам контроль над тим, чим ви ділитесь в Інтернеті та з нами.</string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">Firefox надає вам контроль над тим, чим ви ділитесь в інтернеті та з нами.</string>
     <!-- Text for the button to read the privacy notice -->

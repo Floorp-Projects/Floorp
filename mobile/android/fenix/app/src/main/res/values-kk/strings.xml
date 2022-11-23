@@ -253,7 +253,10 @@
     <string name="search_settings_menu_item">Іздеу баптаулары</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Бұл жолы іздеу:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Бұл жолы іздеу:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Бұл жолы келесі жерде іздеу:</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -328,6 +331,14 @@
     <string name="preferences_add_private_browsing_shortcut">Жеке шолу жарлығын қосу</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Тек-HTTPS режимі</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Cookie баннерлерін азайту</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Cookie баннерлерін азайту</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox cookie баннерлеріндегі cookie сұрауларын автоматты түрде қабылдамау әрекетін жасайды. Қабылдамау опциясы қол жетімді болмаса, Firefox баннерді жабу үшін барлық cookie файлдарын қабылдауы мүмкін.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Қауіпсіздікті арттыру үшін сайттарға HTTPS шифрлеу хаттамасын пайдаланып автоматты түрде қосылу әрекетін жасайды.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->

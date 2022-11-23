@@ -258,7 +258,10 @@
     <string name="search_settings_menu_item">Танзимоти ҷустуҷӯ</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Ҷустуҷӯи ин дафъа:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Ҷустуҷӯ дар ин дафъа:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Ҷустуҷӯ дар ин дафъа дар:</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -333,6 +336,14 @@
     <string name="preferences_add_private_browsing_shortcut">Илова кардани миёнбури тамошокунии хусусӣ</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Реҷаи «Танҳо HTTPS»</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Маҳдудкунии баннери куки</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Маҳдуд кардани баннерҳои куки</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Браузери «Firefox» кӯшиш мекунад, ки дархостҳои кукиро дар баннерҳои куки ба таври худкор рад кунад. Агар имкони радкунӣ дастнорас аст, «Firefox» метавонад барои қатъ кардани баннер ҳамаи кукиҳоро қабул кунад.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Ба таври худкор кӯшиш мекунад, ки ба сомонаҳо бо истифода аз протоколи рамзгузории HTTPS барои баланд бардоштани амният пайваст шавад.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->

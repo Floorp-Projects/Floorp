@@ -45,9 +45,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">ที่คั่นหน้าล่าสุด</string>
-
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">บันทึกไว้ล่าสุด</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">แสดงที่คั่นหน้าทั้งหมดที่บันทึกไว้</string>
@@ -257,40 +254,15 @@
     <string name="search_settings_menu_item">ตั้งค่าการค้นหา</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">ครั้งนี้ค้นหา:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">ครั้งนี้ค้นหา:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">มีอะไรใหม่ใน %1$s</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">คุณสามารถกลับมาดูหน้าเว็บที่คุณดูค้างไว้ได้ง่ายขึ้นแล้ว</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">หน้าแรกของ %1$s ที่ปรับแต่งแบบส่วนตัว</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">ข้ามไปยังแท็บที่เปิดอยู่ ที่คั่นหน้า และประวัติการเรียกดู</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">แท็บที่สะอาดและเป็นระเบียบ</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">ขจัดความยุ่งเหยิงของแท็บด้วยเลย์เอาต์ที่ได้รับการปรับปรุงและแท็บที่ปิดอัตโนมัติ</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">ผลค้นหาล่าสุด</string>
-
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">เยี่ยมชมการค้นหาล่าสุดของคุณใหม่จากหน้าแรกและแท็บของคุณ</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">ขณะนี้หน้าแรกของ Firefox ที่ปรับแต่งแบบคุณได้รับการปรับปรุงให้คุณสามารถกลับมาดูหน้าเว็บที่คุณดูค้างไว้ได้ง่ายขึ้นแล้ว ค้นหาแท็บ ที่คั่นหน้า และผลการค้นหาล่าสุดของคุณ</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">พบกับโฮมเพจส่วนบุคคลของคุณ แท็บล่าสุด ที่คั่นหน้า และผลการค้นหาจะปรากฏที่นี่</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">ยินดีต้อนรับสู่อินเทอร์เน็ตที่เป็นอิสระ</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">ยินดีต้อนรับสู่อินเทอร์เน็ตที่เป็นส่วนตัวมากขึ้น</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">สีสันที่มากขึ้น ความเป็นส่วนตัวที่ดีขึ้น ให้ความมุ่งมั่นกับผู้คนมากกว่าผลกำไร</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">สับเปลี่ยนไปมาระหว่างโทรศัพท์กับแล็ปท็อป</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">สลับหน้าจอง่ายกว่าที่เคย</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -358,6 +330,7 @@
     <string name="preferences_add_private_browsing_shortcut">เพิ่มทางลัดการเรียกดูแบบส่วนตัว</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">โหมด HTTPS-Only</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">พยายามเชื่อมต่อกับเว็บไซต์โดยใช้โปรโตคอลการเข้ารหัส HTTPS โดยอัตโนมัติเพื่อเพิ่มความปลอดภัย</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -500,6 +473,10 @@
     <!-- Text for limited edition wallpapers title. -->
     <string name="wallpaper_limited_edition_title">เวลาจำกัด</string>
 
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">คอลเลกชันเสียงแห่งอิสระใหม่ %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">คอลเลกชันเสียงแห่งอิสระใหม่</string>
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">ลองเลือกสีสันที่คุณชอบ</string>
     <!-- Wallpaper onboarding dialog body text. -->
@@ -649,6 +626,9 @@
     <!-- Title to show in alert when a lot of tabs are to be opened
     %d is a placeholder for the number of tabs that will be opened -->
     <string name="open_all_warning_title">ต้องการเปิด %d แท็บหรือไม่?</string>
+    <!-- Message to warn users that a large number of tabs will be opened
+    %s will be replaced by app name. -->
+    <string name="open_all_warning_message">การเปิดแท็บจำนวนมากนี้อาจทำให้ %s ช้าลงขณะที่หน้ากำลังโหลด คุณแน่ใจหรือไม่ว่าต้องการดำเนินการต่อ?</string>
     <!-- Dialog button text for confirming open all tabs -->
     <string name="open_all_warning_confirm">แท็บที่เปิด</string>
     <!-- Dialog button text for canceling open all tabs -->
@@ -1242,31 +1222,22 @@
     <string name="delete_history_group_snackbar">ลบกลุ่มแล้ว</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">ยินดีต้อนรับสู่ %s!</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">ยินดีต้อนรับสู่อินเทอร์เน็ตที่ดีกว่า</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">เบราว์เซอร์ที่สร้างขึ้นสำหรับผู้คนเท่านั้น ไม่ใช่ผลกำไร</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">ซิงค์ Firefox ระหว่างอุปกรณ์</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">หยิบจากที่ที่คุณทำค้างไว้</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">นำที่คั่นหน้า ประวัติ และรหัสผ่านไปยัง %1$s บนอุปกรณ์นี้</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">ลงทะเบียน</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">ซิงค์แท็บและรหัสผ่านระหว่างอุปกรณ์เพื่อการสลับหน้าจอที่ราบรื่น</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">เข้าสู่ระบบ</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync เปิดอยู่</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">ความเป็นส่วนตัวตลอดเวลา</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">การปกป้องความเป็นส่วนตัวตามค่าเริ่มต้น</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s จะหยุดบริษัทต่าง ๆ ไม่ให้ติดตามคุณอย่างลับ ๆ ขณะที่คุณท่องเว็บโดยอัตโนมัติ</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">มีการป้องกันคุกกี้ทั้งหมดเพื่อหยุดตัวติดตามไม่ให้ใช้คุกกี้ตามรอยคุณในไซต์ต่าง ๆ</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">มาตรฐาน (ค่าเริ่มต้น)</string>
     <!-- text for standard blocking option button description -->
@@ -1277,17 +1248,12 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">ปิดกั้นตัวติดตามเพิ่มเติมเพื่อให้โหลดหน้าเว็บได้เร็วขึ้น แต่การทำงานบางอย่างในหน้าเว็บอาจพัง</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">เลือกตำแหน่งแถบเครื่องมือของคุณ</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">วางแถบเครื่องมือไว้ใกล้ ๆ เก็บไว้ที่ด้านล่างหรือย้ายไปด้านบน</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">เก็บไว้ด้านล่างหรือย้ายไปด้านบน</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">ความเป็นส่วนตัวของคุณ</string>
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">คุณควบคุมข้อมูลของคุณ</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">เราได้ออกแบบ %s เพื่อให้คุณสามารถควบคุมสิ่งที่คุณต้องการแบ่งปันออนไลน์และสิ่งที่คุณต้องการแบ่งปันกับเราได้</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">Firefox ให้คุณควบคุมสิ่งที่คุณแบ่งปันทางออนไลน์และสิ่งที่คุณแบ่งปันกับเรา</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">อ่านประกาศความเป็นส่วนตัวของเรา</string>
 
@@ -1946,6 +1912,8 @@
     <string name="a11y_action_label_collapse">ยุบ</string>
     <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
     <string name="a11y_action_label_expand">ขยาย</string>
+    <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
+    <string name="a11y_action_label_wallpaper_collection_learn_more">เปิดลิงก์เพื่อเรียนรู้เพิ่มเติมเกี่ยวกับคอลเลกชันนี้</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">อ่านบทความ</string>
 </resources>

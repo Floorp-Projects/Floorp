@@ -46,8 +46,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">סימניות אחרונות</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">נשמרו לאחרונה</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">הצגת כל הסימניות השמורות</string>
@@ -257,40 +255,18 @@
     <string name="search_settings_menu_item">הגדרות חיפוש</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">הפעם לחפש את:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">הפעם לחפש את:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">הפעם לחפש ב:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">מה חדש ב־%1$s</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">עכשיו קל יותר לחזור למקום שבו הפסקת.</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">מסך בית מותאם אישית של %1$s</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">ניתן לעבור ללשוניות הפתוחות שלך, לסימניות ולהיסטוריית הגלישה שלך.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">לשוניות נקיות ומאורגנות</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">ניקוי עומס הלשוניות עם פריסה משופרת ואפשרות לסגירה אוטומטית של לשוניות.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">חיפושים אחרונים</string>
-
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">ניתן לבקר שוב בחיפושים האחרונים שלך ממסך הבית והלשוניות שלך.</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">כעת קל יותר להמשיך מהמקום שבו הפסקת, במסך הבית של Firefox המותאם אישית שלך. ניתן למצוא את הלשוניות האחרונות, הסימניות ותוצאות החיפוש שלך.</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">הכירו את דף הבית המותאם אישית שלכם. לשוניות אחרונות, סימניות ותוצאות חיפוש יופיעו כאן.</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">ברוכים הבאים לאינטרנט עצמאי</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">ברוכים הבאים לאינטרנט אישי יותר</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">יותר צבעים. פרטיות טובה יותר. אותה המחויבות לאנשים על פני רווחים.</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">לקפוץ מהטלפון למחשב הנייד ובחזרה</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">מעבר בין מסכים קל מאי פעם</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -357,6 +333,7 @@
     <string name="preferences_add_private_browsing_shortcut">הוספת קיצור דרך לגלישה פרטית</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">מצב HTTPS בלבד</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">מנסה להתחבר באופן אוטומטי לאתרים באמצעות פרוטוקול ההצפנה HTTPS לצורך אבטחה מוגברת.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1241,33 +1218,20 @@
     <string name="delete_history_group_snackbar">הקבוצה נמחקה</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">ברוכים הבאים אל %s!</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">ברוכים הבאים לאינטרנט טוב יותר</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">דפדפן שנבנה לטובת בני אדם, לא למטרות רווח.</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">סנכרון Firefox בין מכשירים</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">להמשיך מאיפה שהפסקת</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">משיכת הסימניות, ההיסטוריה והססמאות ל־%1$s במכשיר הזה.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">סנכרון לשוניות וססמאות בין מכשירים למעבר חלק בין מסכים.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">הרשמה</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">כניסה</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">הסנכרון פעיל</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">פרטיות תמיד מופעלת</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">הגנה על הפרטיות כברירת מחדל</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">‏%1$s מונע באופן אוטומטי מחברות לעקוב אחריך בסתר ברחבי הרשת.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">הגנת עוגיות מלאה מונעת מרכיבי מעקב להשתמש בעוגיות כדי לעקוב אחריך בין אתרים.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1280,18 +1244,11 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">חוסם יותר רכיבי מעקב כדי שדפים ייטענו מהר יותר, אך ייתכן שפונקציונליות בדפים מסויימים לא תעבוד.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">בחירת מיקום סרגל הכלים שלך</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">לשים את סרגל הכלים בהישג יד. ניתן להשאיר אותו בתחתית, או להעביר אותו למעלה.</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">אפשר להשאיר אותו למטה, או להזיז אותו למעלה.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">הפרטיות שלך</string>
 
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">הנתונים שלך בשליטתך</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">עיצבנו את %s כדי להעניק לך שליטה במה שמעניין אותך לשתף ברשת ומה שמעניין אותך לשתף איתנו.</string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">‏Firefox מעניק לך שליטה במה שמעניין אותך לשתף ברשת ומה שמעניין אותך לשתף איתנו.</string>
     <!-- Text for the button to read the privacy notice -->
@@ -1952,4 +1909,6 @@
     <string name="a11y_action_label_expand">להרחיב</string>
     <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
     <string name="a11y_action_label_wallpaper_collection_learn_more">לפתוח קישור כדי ללמוד עוד על אוסף זה</string>
+    <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
+    <string name="a11y_action_label_read_article">לקרוא את המאמר</string>
 </resources>

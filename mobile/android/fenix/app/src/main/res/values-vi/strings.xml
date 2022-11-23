@@ -46,8 +46,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Dấu trang gần đây</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">Đã lưu gần đây</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Hiển thị tất cả các dấu trang đã lưu</string>
@@ -257,39 +255,18 @@
     <string name="search_settings_menu_item">Cài đặt tìm kiếm</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Lần này tìm kiếm:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Lần này tìm kiếm:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Lần này tìm kiếm trong:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Có gì mới trong %1$s</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Giờ đây, việc tiếp tục nơi bạn đã dừng lại sẽ trở nên dễ dàng hơn.</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Trang chủ %1$s được cá nhân hóa</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Chuyển đến các thẻ đang mở, dấu trang và lịch sử duyệt web của bạn.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Các thẻ gọn gàng, có tổ chức</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Xóa các thẻ lộn xộn với bố cục được cải thiện và tự động đóng các thẻ. </string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Tìm kiếm gần đây</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Xem lại các tìm kiếm mới nhất của bạn từ trang chủ và các thẻ của bạn.</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Trang chủ Firefox được cá nhân hóa của bạn giờ đây giúp bạn tiếp tục lại nơi bạn đã dừng lại dễ dàng hơn. Tìm các thẻ, dấu trang và kết quả tìm kiếm gần đây của bạn.</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Gặp gỡ trang chủ được cá nhân hóa của bạn. Các thẻ, dấu trang và kết quả tìm kiếm gần đây sẽ xuất hiện ở đây.</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Chào mừng bạn đến với internet độc lập</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">Chào mừng bạn đến với một Internet cá nhân hơn</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Màu sắc mới. Riêng tư hơn. Cùng cam kết với mọi người vì lợi nhuận.</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Chuyển từ điện thoại sang máy tính xách tay và ngược lại</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">Chuyển đổi màn hình dễ dàng hơn bao giờ hết</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -356,6 +333,14 @@
     <string name="preferences_add_private_browsing_shortcut">Thêm lối tắt duyệt web riêng tư</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Chế độ chỉ HTTPS</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Giảm biểu ngữ cookie</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Giảm biểu ngữ cookie</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox tự động cố gắng từ chối yêu cầu cookie trên biểu ngữ cookie. Nếu không có tùy chọn từ chối, Firefox có thể chấp nhận tất cả cookie để loại bỏ biểu ngữ.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Tự động cố gắng kết nối với các trang web bằng giao thức mã hóa HTTPS để tăng cường bảo mật.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1241,33 +1226,20 @@
     <string name="delete_history_group_snackbar">Đã xóa nhóm</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Chào mừng đến với %s!</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">Chào mừng bạn đến với một internet tốt hơn</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">Một trình duyệt được xây dựng cho mọi người, không vì lợi nhuận.</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Đồng bộ hóa Firefox giữa các thiết bị</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">Tiếp tục trang mà bạn vừa rời khỏi</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Mang dấu trang, lịch sử và mật khẩu vào %1$s trên thiết bị này.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">Đồng bộ hóa các thẻ và mật khẩu trên các thiết bị để chuyển đổi màn hình liền mạch.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Đăng ký</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">Đăng nhập</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Đồng bộ hóa được bật</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Luôn bảo vệ quyền riêng tư</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Bảo vệ quyền riêng tư theo mặc định</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s tự động ngăn các công ty bí mật theo dõi bạn trên web.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Trình chống cookie chung ngăn trình theo dõi sử dụng cookie để theo dõi bạn trên các trang web.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1280,17 +1252,10 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">Chặn nhiều trình theo dõi hơn để các trang tải nhanh hơn, nhưng một số trên trang có thể bị hỏng về mặt chức năng.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Chọn vị trí thanh công cụ của bạn</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Đặt thanh công cụ trong tầm với. Giữ nó ở dưới cùng hoặc di chuyển nó lên trên cùng.</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">Giữ nó ở dưới cùng hoặc di chuyển nó lên trên cùng.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Quyền riêng tư của bạn</string>
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">Bạn kiểm soát dữ liệu của mình</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Chúng tôi đã thiết kế %s để cung cấp cho bạn quyền kiểm soát những gì bạn chia sẻ trực tuyến và những gì bạn chia sẻ với chúng tôi.</string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">Firefox cho phép bạn kiểm soát những gì bạn chia sẻ trực tuyến và những gì bạn chia sẻ với chúng tôi.</string>
     <!-- Text for the button to read the privacy notice -->

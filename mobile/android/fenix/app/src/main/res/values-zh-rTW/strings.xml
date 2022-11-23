@@ -49,8 +49,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">最近加入的書籤</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">最近儲存</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">顯示所有儲存書籤</string>
@@ -262,39 +260,18 @@
     <string name="search_settings_menu_item">搜尋設定</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">這次搜尋使用:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">這次搜尋使用:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">這次搜尋:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">%1$s 有什麼新鮮事</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">更簡單就能回到上次中斷的地方繼續上網。</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">個人化的 %1$s 首頁</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">跳到您開啟的分頁、書籤、上網紀錄等。</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">精簡有條理的分頁標籤</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">透過改善過的版面設計與自動關閉閒置分頁功能，解決分頁雜亂的問題。</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">最近搜尋內容</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">從首頁與分頁快速重新造訪先前的搜尋結果。</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">現在起，有您的風格的 Firefox 首頁，可讓您更簡單就從上次結束瀏覽的地方繼續上網。快速找到您最近開啟的分頁、書籤、搜尋結果等分頁。</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">了解您的個人化首頁。這裡將顯示最近開啟過的分頁、書籤、搜尋結果。</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">歡迎來到一個更加獨立的網路環境</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">歡迎使用更加個人化的網頁瀏覽器</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">更多色彩、更加保護您的隱私，依然承諾把人們看得比利益更重要。</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">在手機與筆電間快速切換</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">切換畫面變得更容易</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -362,6 +339,14 @@
     <string name="preferences_add_private_browsing_shortcut">新增隱私瀏覽模式捷徑</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">純 HTTPS 模式</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">減少 Cookie 橫幅</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">減少 Cookie 橫幅</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox 會自動嘗試為您點擊 Cookie 橫幅上的「拒絕」按鈕。若網站未提供拒絕選向，可能還是會接受所有 Cookie 來讓橫幅消失。</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">自動嘗試使用加密過的 HTTPS 通訊協定連線到網站，以增加安全性。</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1282,34 +1267,21 @@
     <string name="delete_history_group_snackbar">已刪除群組</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">歡迎使用 %s！</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">歡迎來到更好的網路環境</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">一套為人們，而不為利益打造的瀏覽器。</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">在不同裝置間同步 Firefox</string>
 
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">從結束的地方繼續</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">將 %1$s 上的書籤、瀏覽紀錄、網站密碼帶到此裝置。</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">在不同裝置間同步分頁、密碼，讓您無縫切換裝置。</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">註冊</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">登入</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">已開啟 Sync</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">隨時都有隱私保護</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">預設開啟隱私保護</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s 會自動封鎖讓大企業在網路上偷偷跟蹤您的程式。</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">「全方位 Cookie 保護」功能可防止追蹤器透過 Cookie 在網路上追蹤您。</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1322,17 +1294,10 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">封鎖更多追蹤器，讓網頁可以更快載入，但頁面上的某些功能可能會故障。</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">挑選工具列要放置的位置</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">可以將工具列放在畫面底端或頂端，容易操作的地方。</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">放在畫面底部或頂端都沒問題。</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">您的隱私權</string>
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">自行控制自己的資料</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">我們將 %s 設計成讓您可以完整控制要在網路上分享哪些東西、以及與我們分享哪些東西。</string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">Firefox 讓您可自行控制要在網路上分享哪些東西、以及與我們分享哪些東西。</string>
     <!-- Text for the button to read the privacy notice -->

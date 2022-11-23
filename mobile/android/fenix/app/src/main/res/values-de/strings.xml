@@ -48,9 +48,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Neueste Lesezeichen</string>
-
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">Kürzlich gespeichert</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Alle gespeicherten Lesezeichen anzeigen</string>
@@ -264,39 +261,18 @@
     <string name="search_settings_menu_item">Sucheinstellungen</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Dieses Mal suchen:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Dieses Mal suchen:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Dieses Mal suchen in:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Was ist neu in %1$s</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Es ist jetzt einfacher, dort weiterzumachen, wo Sie aufgehört haben.</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Personalisierte %1$s-Startseite</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Wechseln Sie zu Ihren geöffneten Tabs, Lesezeichen und Ihrer Surf-Chronik.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Übersichtliche, organisierte Tabs</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Dank verbessertem Layout und automatisch schließenden Tabs ist Schluss mit Unordnung.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Letzte Suchanfragen</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Rufen Sie Ihre letzten Suchanfragen von Ihrer Startseite und Ihren Tabs aus erneut auf.</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Ihre personalisierte Firefox-Startseite macht es jetzt einfacher, dort weiterzumachen, wo Sie aufgehört haben. Finden Sie Ihre letzten Tabs, Lesezeichen und Suchergebnisse.</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Lernen Sie Ihre personalisierte Startseite kennen. Hier werden zuletzt verwendete Tabs, Lesezeichen und Suchergebnisse angezeigt.</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Willkommen in einem unabhängigen Internet</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">Willkommen in einem persönlicheren Internet</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Mehr Farben. Bessere Privatsphäre. Gleiches Engagement für Menschen über Gewinne.</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Wechseln Sie vom Handy zum Laptop und zurück</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">Das Wechseln zwischen Bildschirmen ist einfacher als je zuvor</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -364,6 +340,14 @@
     <string name="preferences_add_private_browsing_shortcut">Verknüpfung zum privaten Modus hinzufügen</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Nur-HTTPS-Modus</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Reduzierung von Cookie-Bannern</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Cookie-Banner reduzieren</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox versucht automatisch, Cookie-Anfragen auf Cookie-Bannern abzulehnen. Wenn keine Ablehnungsoption verfügbar ist, akzeptiert Firefox möglicherweise alle Cookies, um das Banner zu schließen.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automatisch versuchen, eine Verbindung zu Websites herzustellen, die das HTTPS-Verschlüsselungsprotokoll verwenden, um die Sicherheit zu erhöhen.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1284,33 +1268,20 @@
     <string name="delete_history_group_snackbar">Gruppe gelöscht</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Willkommen bei %s!</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">Willkommen in einem besseren Internet</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">Ein Browser für Menschen, nicht für Profit.</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Synchronisieren Sie Firefox zwischen Geräten</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">Machen Sie da weiter, wo Sie aufgehört haben</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Übertragen Sie Lesezeichen, Chronik und Passwörter zu %1$s auf diesem Gerät.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">Synchronisieren Sie Tabs und Passwörter geräteübergreifend für einen nahtlosen Bildschirmwechsel.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Registrieren</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">Anmelden</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync ist aktiviert</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Privatsphäre ab Werk</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Privatsphäre-Schutz als Standard</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s verhindert automatisch, dass Unternehmen heimlich Ihre Aktivitäten im Internet verfolgen.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Mit vollständigem Cookie-Schutz, um Tracker daran zu hindern, Cookies zu verwenden, um Sie über Websites hinweg zu verfolgen.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1323,17 +1294,10 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">Blockiert weitere Elemente zur Aktivitätenverfolgung, sodass Seiten schneller geladen werden, aber einige Seiten funktionieren dann eventuell nicht richtig.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Wählen Sie die Position für Ihre Symbolleiste</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Platzieren Sie die Symbolleiste in Reichweite. Behalten Sie sie unten oder verschieben Sie sie nach oben.</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">Unten lassen oder nach oben verschieben.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Ihre Privatsphäre</string>
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">Sie kontrollieren Ihre Daten</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Wir haben %s so konzipiert, dass Sie die Kontrolle darüber haben, was Sie im Internet und was Sie mit uns teilen.</string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">Firefox gibt Ihnen die Kontrolle darüber, was Sie im Internet preisgeben und was Sie mit uns teilen.</string>
     <!-- Text for the button to read the privacy notice -->
