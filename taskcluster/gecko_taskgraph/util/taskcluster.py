@@ -117,3 +117,13 @@ def list_task_group_incomplete_task_ids(task_group_id):
     for task in [t["status"] for t in list_task_group_tasks(task_group_id)]:
         if task["state"] in states:
             yield task["taskId"]
+
+
+def list_task_group_complete_tasks(task_group_id):
+    tasks = {}
+    for task in list_task_group_tasks(task_group_id):
+        if task.get("status", {}).get("state", "") == "completed":
+            tasks[task.get("task", {}).get("metadata", {}).get("name", "")] = task.get(
+                "status", {}
+            ).get("taskId", "")
+    return tasks
