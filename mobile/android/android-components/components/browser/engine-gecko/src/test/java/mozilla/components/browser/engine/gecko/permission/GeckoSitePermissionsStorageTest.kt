@@ -711,47 +711,6 @@ class GeckoSitePermissionsStorageTest {
         assertEquals(VALUE_ALLOW, AutoplayStatus.ALLOWED.toGeckoStatus())
     }
 
-    @Test
-    fun `GIVEN a private site WHEN findSitePermissionsBy THEN all no gecko permissions should be reset`() =
-        runTest {
-            val sitePermissions = SitePermissions(
-                origin = "mozilla.dev",
-                localStorage = ALLOWED,
-                crossOriginStorageAccess = ALLOWED,
-                location = ALLOWED,
-                notification = ALLOWED,
-                microphone = ALLOWED,
-                camera = ALLOWED,
-                bluetooth = ALLOWED,
-                mediaKeySystemAccess = ALLOWED,
-                autoplayAudible = AutoplayStatus.ALLOWED,
-                autoplayInaudible = AutoplayStatus.ALLOWED,
-                savedAt = 0,
-            )
-
-            doReturn(sitePermissions).`when`(onDiskStorage)
-                .findSitePermissionsBy(
-                    origin = "mozilla.dev",
-                    includeTemporary = false,
-                    private = true,
-                )
-            doReturn(null).`when`(geckoStorage)
-                .findGeckoContentPermissionBy(
-                    origin = "mozilla.dev",
-                    includeTemporary = false,
-                    private = true,
-                )
-
-            val foundPermissions = geckoStorage.findSitePermissionsBy(
-                origin = "mozilla.dev",
-                private = true,
-            )!!
-
-            assertEquals(NO_DECISION, foundPermissions.microphone)
-            assertEquals(NO_DECISION, foundPermissions.bluetooth)
-            assertEquals(NO_DECISION, foundPermissions.camera)
-        }
-
     private fun createNewSitePermission(): SitePermissions {
         return SitePermissions(
             origin = "mozilla.dev",

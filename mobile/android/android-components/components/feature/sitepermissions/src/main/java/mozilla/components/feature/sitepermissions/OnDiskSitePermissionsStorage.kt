@@ -89,7 +89,7 @@ class OnDiskSitePermissionsStorage(
         includeTemporary: Boolean,
         private: Boolean,
     ): SitePermissions? {
-        if (private) return SitePermissions(origin, savedAt = 0)
+        if (private) return null
         return database
             .sitePermissionsDao()
             .getSitePermissionsBy(origin)

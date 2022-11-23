@@ -33,6 +33,7 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -132,19 +133,9 @@ class OnDiskSitePermissionsStorageTest {
                 .getSitePermissionsBy(origin = dbPermission.origin)
 
             val foundPermissions =
-                storage.findSitePermissionsBy(dbPermission.origin, private = true)!!
+                storage.findSitePermissionsBy(dbPermission.origin, private = true)
 
-            assertEquals(dbPermission.origin, foundPermissions.origin)
-            assertEquals(NO_DECISION, foundPermissions.location)
-            assertEquals(NO_DECISION, foundPermissions.notification)
-            assertEquals(NO_DECISION, foundPermissions.microphone)
-            assertEquals(NO_DECISION, foundPermissions.bluetooth)
-            assertEquals(NO_DECISION, foundPermissions.localStorage)
-            assertEquals(AutoplayStatus.BLOCKED, foundPermissions.autoplayAudible)
-            assertEquals(AutoplayStatus.ALLOWED, foundPermissions.autoplayInaudible)
-            assertEquals(NO_DECISION, foundPermissions.mediaKeySystemAccess)
-            assertEquals(NO_DECISION, foundPermissions.crossOriginStorageAccess)
-            assertEquals(dbPermission.savedAt, foundPermissions.savedAt)
+            assertNull(foundPermissions)
         }
 
     @Test

@@ -97,26 +97,7 @@ class GeckoSitePermissionsStorage(
             onDiskStorage.findSitePermissionsBy(origin, private = private)
         val geckoPermissions = findGeckoContentPermissionBy(origin, includeTemporary, private).groupByType()
 
-        return mergePermissions(onDiskPermission, geckoPermissions)?.resetNoGeckoPermissionIfNeeded(
-            private,
-        )
-    }
-
-    @VisibleForTesting
-    internal fun SitePermissions?.resetNoGeckoPermissionIfNeeded(private: Boolean): SitePermissions? {
-        return if (private) {
-            /**
-             * As part of the GeckoView/AC site permissions migration,
-             * we ended up with a fragmented permissions storage in AC.
-             * Where some permissions are store directly by gecko and others
-             * store locally in AC as GeckoView doesn't offer storage support for them.
-             * The permissions below are stored and manged by AC.
-             * For more references see https://bugzilla.mozilla.org/show_bug.cgi?id=1796614
-             */
-            this?.copy(camera = NO_DECISION, microphone = NO_DECISION, bluetooth = NO_DECISION)
-        } else {
-            this
-        }
+        return mergePermissions(onDiskPermission, geckoPermissions)
     }
 
     override suspend fun getSitePermissionsPaged(): DataSource.Factory<Int, SitePermissions> {
