@@ -659,7 +659,7 @@ def update_git_tools(git: Optional[Path], root_state_dir: Path):
     exists = cinnabar_exe.exists()
     if exists:
         try:
-            subprocess.check_call([cinnabar_exe, "self-update"])
+            subprocess.check_call([str(cinnabar_exe), "self-update"])
         except subprocess.CalledProcessError as e:
             print(e)
 
