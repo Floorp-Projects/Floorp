@@ -1,0 +1,43 @@
+From e2fb71a850fda2d1f02a19d41a3db1cd7cf8618d Mon Sep 17 00:00:00 2001
+From: Mark Striemer <mstriemer@mozilla.com>
+Date: Wed, 16 Nov 2022 23:07:57 -0600
+Subject: [PATCH 2/2] use DOMParser not innerHTML=
+
+---
+ packages/lit-html/src/lit-html.ts | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/packages/lit-html/src/lit-html.ts b/packages/lit-html/src/lit-html.ts
+index 51941fdf..13914ca7 100644
+--- a/packages/lit-html/src/lit-html.ts
++++ b/packages/lit-html/src/lit-html.ts
+@@ -14,6 +14,8 @@ const NODE_MODE = false;
+ // Use window for browser builds because IE11 doesn't have globalThis.
+ const global = NODE_MODE ? globalThis : window;
+ 
++const __moz_domParser = new DOMParser();
++
+ /**
+  * Contains types that are part of the unstable debug API.
+  *
+@@ -1017,9 +1019,14 @@ class Template {
+   // Overridden via `litHtmlPolyfillSupport` to provide platform support.
+   /** @nocollapse */
+   static createElement(html: TrustedHTML, _options?: RenderOptions) {
+-    const el = d.createElement('template');
+-    el.innerHTML = html as unknown as string;
+-    return el;
++    const doc = __moz_domParser.parseFromString(
++      `<template>${html}</template>`,
++      'text/html'
++    );
++    return document.importNode(
++      doc.querySelector('template') as HTMLTemplateElement,
++      true
++    );
+   }
+ }
+ 
+-- 
+2.32.0 (Apple Git-132)
+
