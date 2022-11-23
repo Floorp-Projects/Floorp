@@ -2291,15 +2291,7 @@ bool PrivateScriptData::InitFromStencil(
 
 void PrivateScriptData::trace(JSTracer* trc) {
   for (JS::GCCellPtr& elem : gcthings()) {
-    gc::Cell* thing = elem.asCell();
-    TraceManuallyBarrieredGenericPointerEdge(trc, &thing, "script-gcthing");
-    if (MOZ_UNLIKELY(!thing)) {
-      // NOTE: If we are clearing edges, also erase the type. This can happen
-      // due to OOM triggering the ClearEdgesTracer.
-      elem = JS::GCCellPtr();
-    } else if (thing != elem.asCell()) {
-      elem = JS::GCCellPtr(thing, elem.kind());
-    }
+    TraceManuallyBarrieredGCCellPtr(trc, &elem, "script-gcthing");
   }
 }
 
