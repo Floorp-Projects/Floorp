@@ -80,7 +80,7 @@ with Files("ProcessHangMonitor.jsm"):
     BUG_COMPONENT = ("Core", "DOM: Content Processes")
 
 with Files("Sanitizer.sys.mjs"):
-    BUG_COMPONENT = ("Firefox", "Settings UI")
+    BUG_COMPONENT = ("Toolkit", "Data Sanitization")
 
 with Files("SelectionChangedMenulist.jsm"):
     BUG_COMPONENT = ("Firefox", "Settings UI")
