@@ -1,5 +1,0 @@
-<bindings xmlns="http://www.mozilla.org/xbl" xmlns:xlink="http://www.w3.org/1999/xlink">
-<binding id="a">
-<content><tbody xmlns="http://www.w3.org/1999/xhtml"><style>*::before { content:"b"; }</style></tbody></content>
-
-</binding></bindings>

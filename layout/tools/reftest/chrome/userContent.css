@@ -4,9 +4,6 @@
 .reftest-usercss {
   background: lime !important;
 }
-.reftest-userxbl {
-  -moz-binding: url("binding.xml#reftest-userxbl") !important;
-}
 .RefTest-upperCase {
   background: lime !important;
 }
