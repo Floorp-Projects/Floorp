@@ -101,8 +101,6 @@ class U_I18N_API AffixTokenMatcherWarehouse : public UMemory {
 
     NumberParseMatcher* nextCodePointMatcher(UChar32 cp, UErrorCode& status);
 
-    bool hasEmptyCurrencySymbol() const;
-
   private:
     // NOTE: The following field may be unsafe to access after construction is done!
     const AffixTokenMatcherSetupData* fSetupData;
@@ -206,12 +204,10 @@ class AffixMatcherWarehouse {
                              UErrorCode& status);
 
   private:
-    // 18 is the limit: positive, zero, and negative, each with prefix, suffix, and prefix+suffix,
-    // and doubled since there may be an empty currency symbol
-    AffixMatcher fAffixMatchers[18];
-    // 6 is the limit: positive, zero, and negative, a prefix and a suffix for each,
-    // and doubled since there may be an empty currency symbol
-    AffixPatternMatcher fAffixPatternMatchers[12];
+    // 9 is the limit: positive, zero, and negative, each with prefix, suffix, and prefix+suffix
+    AffixMatcher fAffixMatchers[9];
+    // 6 is the limit: positive, zero, and negative, a prefix and a suffix for each
+    AffixPatternMatcher fAffixPatternMatchers[6];
     // Reference to the warehouse for tokens used by the AffixPatternMatchers
     AffixTokenMatcherWarehouse* fTokenWarehouse;
 

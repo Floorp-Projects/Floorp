@@ -955,7 +955,7 @@ cs{
             ec{"Sydney"}
         }
         "Etc:UTC"{
-            ls{"koordinovaný světový čas"}
+            ls{"Koordinovaný světový čas"}
             ss{"UTC"}
         }
         "Etc:Unknown"{
@@ -1002,7 +1002,7 @@ cs{
         }
         "Europe:Dublin"{
             ec{"Dublin"}
-            ld{"irský letní čas"}
+            ld{"Irský letní čas"}
         }
         "Europe:Gibraltar"{
             ec{"Gibraltar"}
@@ -1039,7 +1039,7 @@ cs{
         }
         "Europe:London"{
             ec{"Londýn"}
-            ld{"britský letní čas"}
+            ld{"Britský letní čas"}
         }
         "Europe:Luxembourg"{
             ec{"Lucemburk"}
@@ -1305,26 +1305,26 @@ cs{
             ls{"Acrejský standardní čas"}
         }
         "meta:Afghanistan"{
-            ls{"afghánský čas"}
+            ls{"Afghánský čas"}
         }
         "meta:Africa_Central"{
-            ls{"středoafrický čas"}
+            ls{"Středoafrický čas"}
         }
         "meta:Africa_Eastern"{
-            ls{"východoafrický čas"}
+            ls{"Východoafrický čas"}
         }
         "meta:Africa_Southern"{
-            ls{"jihoafrický čas"}
+            ls{"Jihoafrický čas"}
         }
         "meta:Africa_Western"{
-            ld{"západoafrický letní čas"}
-            lg{"západoafrický čas"}
-            ls{"západoafrický standardní čas"}
+            ld{"Západoafrický letní čas"}
+            lg{"Západoafrický čas"}
+            ls{"Západoafrický standardní čas"}
         }
         "meta:Alaska"{
-            ld{"aljašský letní čas"}
-            lg{"aljašský čas"}
-            ls{"aljašský standardní čas"}
+            ld{"Aljašský letní čas"}
+            lg{"Aljašský čas"}
+            ls{"Aljašský standardní čas"}
             sd{"AKDT"}
             sg{"AKT"}
             ss{"AKST"}
@@ -1335,38 +1335,38 @@ cs{
             ls{"Almatský standardní čas"}
         }
         "meta:Amazon"{
-            ld{"amazonský letní čas"}
-            lg{"amazonský čas"}
-            ls{"amazonský standardní čas"}
+            ld{"Amazonský letní čas"}
+            lg{"Amazonský čas"}
+            ls{"Amazonský standardní čas"}
         }
         "meta:America_Central"{
-            ld{"severoamerický centrální letní čas"}
-            lg{"severoamerický centrální čas"}
-            ls{"severoamerický centrální standardní čas"}
+            ld{"Severoamerický centrální letní čas"}
+            lg{"Severoamerický centrální čas"}
+            ls{"Severoamerický centrální standardní čas"}
             sd{"CDT"}
             sg{"CT"}
             ss{"CST"}
         }
         "meta:America_Eastern"{
-            ld{"severoamerický východní letní čas"}
-            lg{"severoamerický východní čas"}
-            ls{"severoamerický východní standardní čas"}
+            ld{"Severoamerický východní letní čas"}
+            lg{"Severoamerický východní čas"}
+            ls{"Severoamerický východní standardní čas"}
             sd{"EDT"}
             sg{"ET"}
             ss{"EST"}
         }
         "meta:America_Mountain"{
-            ld{"severoamerický horský letní čas"}
-            lg{"severoamerický horský čas"}
-            ls{"severoamerický horský standardní čas"}
+            ld{"Severoamerický horský letní čas"}
+            lg{"Severoamerický horský čas"}
+            ls{"Severoamerický horský standardní čas"}
             sd{"MDT"}
             sg{"MT"}
             ss{"MST"}
         }
         "meta:America_Pacific"{
-            ld{"severoamerický pacifický letní čas"}
-            lg{"severoamerický pacifický čas"}
-            ls{"severoamerický pacifický standardní čas"}
+            ld{"Severoamerický pacifický letní čas"}
+            lg{"Severoamerický pacifický čas"}
+            ls{"Severoamerický pacifický standardní čas"}
             sd{"PDT"}
             sg{"PT"}
             ss{"PST"}
@@ -1377,9 +1377,9 @@ cs{
             ls{"Anadyrský standardní čas"}
         }
         "meta:Apia"{
-            ld{"apijský letní čas"}
-            lg{"apijský čas"}
-            ls{"apijský standardní čas"}
+            ld{"Apijský letní čas"}
+            lg{"Apijský čas"}
+            ls{"Apijský standardní čas"}
         }
         "meta:Aqtau"{
             ld{"Aktauský letní čas"}
@@ -1392,276 +1392,276 @@ cs{
             ls{"Aktobský standardní čas"}
         }
         "meta:Arabian"{
-            ld{"arabský letní čas"}
-            lg{"arabský čas"}
-            ls{"arabský standardní čas"}
+            ld{"Arabský letní čas"}
+            lg{"Arabský čas"}
+            ls{"Arabský standardní čas"}
         }
         "meta:Argentina"{
-            ld{"argentinský letní čas"}
-            lg{"argentinský čas"}
-            ls{"argentinský standardní čas"}
+            ld{"Argentinský letní čas"}
+            lg{"Argentinský čas"}
+            ls{"Argentinský standardní čas"}
         }
         "meta:Argentina_Western"{
-            ld{"západoargentinský letní čas"}
-            lg{"západoargentinský čas"}
-            ls{"západoargentinský standardní čas"}
+            ld{"Západoargentinský letní čas"}
+            lg{"Západoargentinský čas"}
+            ls{"Západoargentinský standardní čas"}
         }
         "meta:Armenia"{
-            ld{"arménský letní čas"}
-            lg{"arménský čas"}
-            ls{"arménský standardní čas"}
+            ld{"Arménský letní čas"}
+            lg{"Arménský čas"}
+            ls{"Arménský standardní čas"}
         }
         "meta:Atlantic"{
-            ld{"atlantický letní čas"}
-            lg{"atlantický čas"}
-            ls{"atlantický standardní čas"}
+            ld{"Atlantický letní čas"}
+            lg{"Atlantický čas"}
+            ls{"Atlantický standardní čas"}
             sd{"ADT"}
             sg{"AT"}
             ss{"AST"}
         }
         "meta:Australia_Central"{
-            ld{"středoaustralský letní čas"}
-            lg{"středoaustralský čas"}
-            ls{"středoaustralský standardní čas"}
+            ld{"Středoaustralský letní čas"}
+            lg{"Středoaustralský čas"}
+            ls{"Středoaustralský standardní čas"}
         }
         "meta:Australia_CentralWestern"{
-            ld{"středozápadní australský letní čas"}
-            lg{"středozápadní australský čas"}
-            ls{"středozápadní australský standardní čas"}
+            ld{"Středozápadní australský letní čas"}
+            lg{"Středozápadní australský čas"}
+            ls{"Středozápadní australský standardní čas"}
         }
         "meta:Australia_Eastern"{
-            ld{"východoaustralský letní čas"}
-            lg{"východoaustralský čas"}
-            ls{"východoaustralský standardní čas"}
+            ld{"Východoaustralský letní čas"}
+            lg{"Východoaustralský čas"}
+            ls{"Východoaustralský standardní čas"}
         }
         "meta:Australia_Western"{
-            ld{"západoaustralský letní čas"}
-            lg{"západoaustralský čas"}
-            ls{"západoaustralský standardní čas"}
+            ld{"Západoaustralský letní čas"}
+            lg{"Západoaustralský čas"}
+            ls{"Západoaustralský standardní čas"}
         }
         "meta:Azerbaijan"{
-            ld{"ázerbájdžánský letní čas"}
-            lg{"ázerbájdžánský čas"}
-            ls{"ázerbájdžánský standardní čas"}
+            ld{"Ázerbájdžánský letní čas"}
+            lg{"Ázerbájdžánský čas"}
+            ls{"Ázerbájdžánský standardní čas"}
         }
         "meta:Azores"{
-            ld{"azorský letní čas"}
-            lg{"azorský čas"}
-            ls{"azorský standardní čas"}
+            ld{"Azorský letní čas"}
+            lg{"Azorský čas"}
+            ls{"Azorský standardní čas"}
         }
         "meta:Bangladesh"{
-            ld{"bangladéšský letní čas"}
-            lg{"bangladéšský čas"}
-            ls{"bangladéšský standardní čas"}
+            ld{"Bangladéšský letní čas"}
+            lg{"Bangladéšský čas"}
+            ls{"Bangladéšský standardní čas"}
         }
         "meta:Bhutan"{
-            ls{"bhútánský čas"}
+            ls{"Bhútánský čas"}
         }
         "meta:Bolivia"{
-            ls{"bolivijský čas"}
+            ls{"Bolivijský čas"}
         }
         "meta:Brasilia"{
-            ld{"brasilijský letní čas"}
-            lg{"brasilijský čas"}
-            ls{"brasilijský standardní čas"}
+            ld{"Brasilijský letní čas"}
+            lg{"Brasilijský čas"}
+            ls{"Brasilijský standardní čas"}
         }
         "meta:Brunei"{
-            ls{"brunejský čas"}
+            ls{"Brunejský čas"}
         }
         "meta:Cape_Verde"{
-            ld{"kapverdský letní čas"}
-            lg{"kapverdský čas"}
-            ls{"kapverdský standardní čas"}
+            ld{"Kapverdský letní čas"}
+            lg{"Kapverdský čas"}
+            ls{"Kapverdský standardní čas"}
         }
         "meta:Casey"{
             ls{"Čas Caseyho stanice"}
         }
         "meta:Chamorro"{
-            ls{"chamorrský čas"}
+            ls{"Chamorrský čas"}
         }
         "meta:Chatham"{
-            ld{"chathamský letní čas"}
-            lg{"chathamský čas"}
-            ls{"chathamský standardní čas"}
+            ld{"Chathamský letní čas"}
+            lg{"Chathamský čas"}
+            ls{"Chathamský standardní čas"}
         }
         "meta:Chile"{
-            ld{"chilský letní čas"}
-            lg{"chilský čas"}
-            ls{"chilský standardní čas"}
+            ld{"Chilský letní čas"}
+            lg{"Chilský čas"}
+            ls{"Chilský standardní čas"}
         }
         "meta:China"{
-            ld{"čínský letní čas"}
-            lg{"čínský čas"}
-            ls{"čínský standardní čas"}
+            ld{"Čínský letní čas"}
+            lg{"Čínský čas"}
+            ls{"Čínský standardní čas"}
         }
         "meta:Choibalsan"{
-            ld{"čojbalsanský letní čas"}
-            lg{"čojbalsanský čas"}
-            ls{"čojbalsanský standardní čas"}
+            ld{"Čojbalsanský letní čas"}
+            lg{"Čojbalsanský čas"}
+            ls{"Čojbalsanský standardní čas"}
         }
         "meta:Christmas"{
-            ls{"čas Vánočního ostrova"}
+            ls{"Čas Vánočního ostrova"}
         }
         "meta:Cocos"{
-            ls{"čas Kokosových ostrovů"}
+            ls{"Čas Kokosových ostrovů"}
         }
         "meta:Colombia"{
-            ld{"kolumbijský letní čas"}
-            lg{"kolumbijský čas"}
-            ls{"kolumbijský standardní čas"}
+            ld{"Kolumbijský letní čas"}
+            lg{"Kolumbijský čas"}
+            ls{"Kolumbijský standardní čas"}
         }
         "meta:Cook"{
-            ld{"letní čas Cookových ostrovů"}
-            lg{"čas Cookových ostrovů"}
-            ls{"standardní čas Cookových ostrovů"}
+            ld{"Letní čas Cookových ostrovů"}
+            lg{"Čas Cookových ostrovů"}
+            ls{"Standardní čas Cookových ostrovů"}
         }
         "meta:Cuba"{
-            ld{"kubánský letní čas"}
-            lg{"kubánský čas"}
-            ls{"kubánský standardní čas"}
+            ld{"Kubánský letní čas"}
+            lg{"Kubánský čas"}
+            ls{"Kubánský standardní čas"}
         }
         "meta:Davis"{
-            ls{"čas Davisovy stanice"}
+            ls{"Čas Davisovy stanice"}
         }
         "meta:DumontDUrville"{
-            ls{"čas stanice Dumonta d’Urvilla"}
+            ls{"Čas stanice Dumonta d’Urvilla"}
         }
         "meta:East_Timor"{
-            ls{"východotimorský čas"}
+            ls{"Východotimorský čas"}
         }
         "meta:Easter"{
-            ld{"letní čas Velikonočního ostrova"}
-            lg{"čas Velikonočního ostrova"}
-            ls{"standardní čas Velikonočního ostrova"}
+            ld{"Letní čas Velikonočního ostrova"}
+            lg{"Čas Velikonočního ostrova"}
+            ls{"Standardní čas Velikonočního ostrova"}
         }
         "meta:Ecuador"{
-            ls{"ekvádorský čas"}
+            ls{"Ekvádorský čas"}
         }
         "meta:Europe_Central"{
-            ld{"středoevropský letní čas"}
-            lg{"středoevropský čas"}
-            ls{"středoevropský standardní čas"}
+            ld{"Středoevropský letní čas"}
+            lg{"Středoevropský čas"}
+            ls{"Středoevropský standardní čas"}
             sd{"SELČ"}
             sg{"SEČ"}
             ss{"SEČ"}
         }
         "meta:Europe_Eastern"{
-            ld{"východoevropský letní čas"}
-            lg{"východoevropský čas"}
-            ls{"východoevropský standardní čas"}
+            ld{"Východoevropský letní čas"}
+            lg{"Východoevropský čas"}
+            ls{"Východoevropský standardní čas"}
         }
         "meta:Europe_Further_Eastern"{
-            ls{"dálněvýchodoevropský čas"}
+            ls{"Dálněvýchodoevropský čas"}
         }
         "meta:Europe_Western"{
-            ld{"západoevropský letní čas"}
-            lg{"západoevropský čas"}
-            ls{"západoevropský standardní čas"}
+            ld{"Západoevropský letní čas"}
+            lg{"Západoevropský čas"}
+            ls{"Západoevropský standardní čas"}
         }
         "meta:Falkland"{
-            ld{"falklandský letní čas"}
-            lg{"falklandský čas"}
-            ls{"falklandský standardní čas"}
+            ld{"Falklandský letní čas"}
+            lg{"Falklandský čas"}
+            ls{"Falklandský standardní čas"}
         }
         "meta:Fiji"{
-            ld{"fidžijský letní čas"}
-            lg{"fidžijský čas"}
-            ls{"fidžijský standardní čas"}
+            ld{"Fidžijský letní čas"}
+            lg{"Fidžijský čas"}
+            ls{"Fidžijský standardní čas"}
         }
         "meta:French_Guiana"{
-            ls{"francouzskoguyanský čas"}
+            ls{"Francouzskoguyanský čas"}
         }
         "meta:French_Southern"{
-            ls{"čas Francouzských jižních a antarktických území"}
+            ls{"Čas Francouzských jižních a antarktických území"}
         }
         "meta:GMT"{
-            ls{"greenwichský střední čas"}
+            ls{"Greenwichský střední čas"}
         }
         "meta:Galapagos"{
-            ls{"galapážský čas"}
+            ls{"Galapážský čas"}
         }
         "meta:Gambier"{
-            ls{"gambierský čas"}
+            ls{"Gambierský čas"}
         }
         "meta:Georgia"{
-            ld{"gruzínský letní čas"}
-            lg{"gruzínský čas"}
-            ls{"gruzínský standardní čas"}
+            ld{"Gruzínský letní čas"}
+            lg{"Gruzínský čas"}
+            ls{"Gruzínský standardní čas"}
         }
         "meta:Gilbert_Islands"{
-            ls{"čas Gilbertových ostrovů"}
+            ls{"Čas Gilbertových ostrovů"}
         }
         "meta:Greenland_Eastern"{
-            ld{"východogrónský letní čas"}
-            lg{"východogrónský čas"}
-            ls{"východogrónský standardní čas"}
+            ld{"Východogrónský letní čas"}
+            lg{"Východogrónský čas"}
+            ls{"Východogrónský standardní čas"}
         }
         "meta:Greenland_Western"{
-            ld{"západogrónský letní čas"}
-            lg{"západogrónský čas"}
-            ls{"západogrónský standardní čas"}
+            ld{"Západogrónský letní čas"}
+            lg{"Západogrónský čas"}
+            ls{"Západogrónský standardní čas"}
         }
         "meta:Guam"{
             ls{"Guamský čas"}
         }
         "meta:Gulf"{
-            ls{"standardní čas Perského zálivu"}
+            ls{"Standardní čas Perského zálivu"}
         }
         "meta:Guyana"{
-            ls{"guyanský čas"}
+            ls{"Guyanský čas"}
         }
         "meta:Hawaii_Aleutian"{
-            ld{"havajsko-aleutský letní čas"}
-            lg{"havajsko-aleutský čas"}
-            ls{"havajsko-aleutský standardní čas"}
+            ld{"Havajsko-aleutský letní čas"}
+            lg{"Havajsko-aleutský čas"}
+            ls{"Havajsko-aleutský standardní čas"}
         }
         "meta:Hong_Kong"{
-            ld{"hongkongský letní čas"}
-            lg{"hongkongský čas"}
-            ls{"hongkongský standardní čas"}
+            ld{"Hongkongský letní čas"}
+            lg{"Hongkongský čas"}
+            ls{"Hongkongský standardní čas"}
         }
         "meta:Hovd"{
-            ld{"hovdský letní čas"}
-            lg{"hovdský čas"}
-            ls{"hovdský standardní čas"}
+            ld{"Hovdský letní čas"}
+            lg{"Hovdský čas"}
+            ls{"Hovdský standardní čas"}
         }
         "meta:India"{
-            ls{"indický čas"}
+            ls{"Indický čas"}
         }
         "meta:Indian_Ocean"{
-            ls{"indickooceánský čas"}
+            ls{"Indickooceánský čas"}
         }
         "meta:Indochina"{
-            ls{"indočínský čas"}
+            ls{"Indočínský čas"}
         }
         "meta:Indonesia_Central"{
-            ls{"středoindonéský čas"}
+            ls{"Středoindonéský čas"}
         }
         "meta:Indonesia_Eastern"{
-            ls{"východoindonéský čas"}
+            ls{"Východoindonéský čas"}
         }
         "meta:Indonesia_Western"{
-            ls{"západoindonéský čas"}
+            ls{"Západoindonéský čas"}
         }
         "meta:Iran"{
-            ld{"íránský letní čas"}
-            lg{"íránský čas"}
-            ls{"íránský standardní čas"}
+            ld{"Íránský letní čas"}
+            lg{"Íránský čas"}
+            ls{"Íránský standardní čas"}
         }
         "meta:Irkutsk"{
-            ld{"irkutský letní čas"}
-            lg{"irkutský čas"}
-            ls{"irkutský standardní čas"}
+            ld{"Irkutský letní čas"}
+            lg{"Irkutský čas"}
+            ls{"Irkutský standardní čas"}
         }
         "meta:Israel"{
-            ld{"izraelský letní čas"}
-            lg{"izraelský čas"}
-            ls{"izraelský standardní čas"}
+            ld{"Izraelský letní čas"}
+            lg{"Izraelský čas"}
+            ls{"Izraelský standardní čas"}
         }
         "meta:Japan"{
-            ld{"japonský letní čas"}
-            lg{"japonský čas"}
-            ls{"japonský standardní čas"}
+            ld{"Japonský letní čas"}
+            lg{"Japonský čas"}
+            ls{"Japonský standardní čas"}
         }
         "meta:Kamchatka"{
             ld{"Petropavlovsko-kamčatský letní čas"}
@@ -1669,37 +1669,37 @@ cs{
             ls{"Petropavlovsko-kamčatský standardní čas"}
         }
         "meta:Kazakhstan_Eastern"{
-            ls{"východokazachstánský čas"}
+            ls{"Východokazachstánský čas"}
         }
         "meta:Kazakhstan_Western"{
-            ls{"západokazachstánský čas"}
+            ls{"Západokazachstánský čas"}
         }
         "meta:Korea"{
-            ld{"korejský letní čas"}
-            lg{"korejský čas"}
-            ls{"korejský standardní čas"}
+            ld{"Korejský letní čas"}
+            lg{"Korejský čas"}
+            ls{"Korejský standardní čas"}
         }
         "meta:Kosrae"{
-            ls{"kosrajský čas"}
+            ls{"Kosrajský čas"}
         }
         "meta:Krasnoyarsk"{
-            ld{"krasnojarský letní čas"}
-            lg{"krasnojarský čas"}
-            ls{"krasnojarský standardní čas"}
+            ld{"Krasnojarský letní čas"}
+            lg{"Krasnojarský čas"}
+            ls{"Krasnojarský standardní čas"}
         }
         "meta:Kyrgystan"{
-            ls{"kyrgyzský čas"}
+            ls{"Kyrgyzský čas"}
         }
         "meta:Lanka"{
             ls{"Srílanský čas"}
         }
         "meta:Line_Islands"{
-            ls{"čas Rovníkových ostrovů"}
+            ls{"Čas Rovníkových ostrovů"}
         }
         "meta:Lord_Howe"{
-            ld{"letní čas ostrova lorda Howa"}
-            lg{"čas ostrova lorda Howa"}
-            ls{"standardní čas ostrova lorda Howa"}
+            ld{"Letní čas ostrova lorda Howa"}
+            lg{"Čas ostrova lorda Howa"}
+            ls{"Standardní čas ostrova lorda Howa"}
         }
         "meta:Macau"{
             ld{"Macajský letní čas"}
@@ -1707,145 +1707,145 @@ cs{
             ls{"Macajský standardní čas"}
         }
         "meta:Macquarie"{
-            ls{"čas ostrova Macquarie"}
+            ls{"Čas ostrova Macquarie"}
         }
         "meta:Magadan"{
-            ld{"magadanský letní čas"}
-            lg{"magadanský čas"}
-            ls{"magadanský standardní čas"}
+            ld{"Magadanský letní čas"}
+            lg{"Magadanský čas"}
+            ls{"Magadanský standardní čas"}
         }
         "meta:Malaysia"{
-            ls{"malajský čas"}
+            ls{"Malajský čas"}
         }
         "meta:Maldives"{
-            ls{"maledivský čas"}
+            ls{"Maledivský čas"}
         }
         "meta:Marquesas"{
-            ls{"markézský čas"}
+            ls{"Markézský čas"}
         }
         "meta:Marshall_Islands"{
-            ls{"čas Marshallových ostrovů"}
+            ls{"Čas Marshallových ostrovů"}
         }
         "meta:Mauritius"{
-            ld{"mauricijský letní čas"}
-            lg{"mauricijský čas"}
-            ls{"mauricijský standardní čas"}
+            ld{"Mauricijský letní čas"}
+            lg{"Mauricijský čas"}
+            ls{"Mauricijský standardní čas"}
         }
         "meta:Mawson"{
-            ls{"čas Mawsonovy stanice"}
+            ls{"Čas Mawsonovy stanice"}
         }
         "meta:Mexico_Northwest"{
-            ld{"severozápadní mexický letní čas"}
-            lg{"severozápadní mexický čas"}
-            ls{"severozápadní mexický standardní čas"}
+            ld{"Severozápadní mexický letní čas"}
+            lg{"Severozápadní mexický čas"}
+            ls{"Severozápadní mexický standardní čas"}
         }
         "meta:Mexico_Pacific"{
-            ld{"mexický pacifický letní čas"}
-            lg{"mexický pacifický čas"}
-            ls{"mexický pacifický standardní čas"}
+            ld{"Mexický pacifický letní čas"}
+            lg{"Mexický pacifický čas"}
+            ls{"Mexický pacifický standardní čas"}
         }
         "meta:Mongolia"{
-            ld{"ulánbátarský letní čas"}
-            lg{"ulánbátarský čas"}
-            ls{"ulánbátarský standardní čas"}
+            ld{"Ulánbátarský letní čas"}
+            lg{"Ulánbátarský čas"}
+            ls{"Ulánbátarský standardní čas"}
         }
         "meta:Moscow"{
-            ld{"moskevský letní čas"}
-            lg{"moskevský čas"}
-            ls{"moskevský standardní čas"}
+            ld{"Moskevský letní čas"}
+            lg{"Moskevský čas"}
+            ls{"Moskevský standardní čas"}
         }
         "meta:Myanmar"{
-            ls{"myanmarský čas"}
+            ls{"Myanmarský čas"}
         }
         "meta:Nauru"{
-            ls{"naurský čas"}
+            ls{"Naurský čas"}
         }
         "meta:Nepal"{
-            ls{"nepálský čas"}
+            ls{"Nepálský čas"}
         }
         "meta:New_Caledonia"{
-            ld{"novokaledonský letní čas"}
-            lg{"novokaledonský čas"}
-            ls{"novokaledonský standardní čas"}
+            ld{"Novokaledonský letní čas"}
+            lg{"Novokaledonský čas"}
+            ls{"Novokaledonský standardní čas"}
         }
         "meta:New_Zealand"{
-            ld{"novozélandský letní čas"}
-            lg{"novozélandský čas"}
-            ls{"novozélandský standardní čas"}
+            ld{"Novozélandský letní čas"}
+            lg{"Novozélandský čas"}
+            ls{"Novozélandský standardní čas"}
         }
         "meta:Newfoundland"{
-            ld{"newfoundlandský letní čas"}
-            lg{"newfoundlandský čas"}
-            ls{"newfoundlandský standardní čas"}
+            ld{"Newfoundlandský letní čas"}
+            lg{"Newfoundlandský čas"}
+            ls{"Newfoundlandský standardní čas"}
         }
         "meta:Niue"{
-            ls{"niuejský čas"}
+            ls{"Niuejský čas"}
         }
         "meta:Norfolk"{
-            ld{"norfolkský letní čas"}
-            lg{"norfolkský čas"}
-            ls{"norfolkský standardní čas"}
+            ld{"Norfolkský letní čas"}
+            lg{"Norfolkský čas"}
+            ls{"Norfolkský standardní čas"}
         }
         "meta:Noronha"{
-            ld{"letní čas souostroví Fernando de Noronha"}
-            lg{"čas souostroví Fernando de Noronha"}
-            ls{"standardní čas souostroví Fernando de Noronha"}
+            ld{"Letní čas souostroví Fernando de Noronha"}
+            lg{"Čas souostroví Fernando de Noronha"}
+            ls{"Standardní čas souostroví Fernando de Noronha"}
         }
         "meta:North_Mariana"{
             ls{"Severomariánský čas"}
         }
         "meta:Novosibirsk"{
-            ld{"novosibirský letní čas"}
-            lg{"novosibirský čas"}
-            ls{"novosibirský standardní čas"}
+            ld{"Novosibirský letní čas"}
+            lg{"Novosibirský čas"}
+            ls{"Novosibirský standardní čas"}
         }
         "meta:Omsk"{
-            ld{"omský letní čas"}
-            lg{"omský čas"}
-            ls{"omský standardní čas"}
+            ld{"Omský letní čas"}
+            lg{"Omský čas"}
+            ls{"Omský standardní čas"}
         }
         "meta:Pakistan"{
-            ld{"pákistánský letní čas"}
-            lg{"pákistánský čas"}
-            ls{"pákistánský standardní čas"}
+            ld{"Pákistánský letní čas"}
+            lg{"Pákistánský čas"}
+            ls{"Pákistánský standardní čas"}
         }
         "meta:Palau"{
-            ls{"palauský čas"}
+            ls{"Palauský čas"}
         }
         "meta:Papua_New_Guinea"{
-            ls{"čas Papuy-Nové Guiney"}
+            ls{"Čas Papuy-Nové Guiney"}
         }
         "meta:Paraguay"{
-            ld{"paraguayský letní čas"}
-            lg{"paraguayský čas"}
-            ls{"paraguayský standardní čas"}
+            ld{"Paraguayský letní čas"}
+            lg{"Paraguayský čas"}
+            ls{"Paraguayský standardní čas"}
         }
         "meta:Peru"{
-            ld{"peruánský letní čas"}
-            lg{"peruánský čas"}
-            ls{"peruánský standardní čas"}
+            ld{"Peruánský letní čas"}
+            lg{"Peruánský čas"}
+            ls{"Peruánský standardní čas"}
         }
         "meta:Philippines"{
-            ld{"filipínský letní čas"}
-            lg{"filipínský čas"}
-            ls{"filipínský standardní čas"}
+            ld{"Filipínský letní čas"}
+            lg{"Filipínský čas"}
+            ls{"Filipínský standardní čas"}
         }
         "meta:Phoenix_Islands"{
-            ls{"čas Fénixových ostrovů"}
+            ls{"Čas Fénixových ostrovů"}
         }
         "meta:Pierre_Miquelon"{
-            ld{"pierre-miquelonský letní čas"}
-            lg{"pierre-miquelonský čas"}
-            ls{"pierre-miquelonský standardní čas"}
+            ld{"Pierre-miquelonský letní čas"}
+            lg{"Pierre-miquelonský čas"}
+            ls{"Pierre-miquelonský standardní čas"}
         }
         "meta:Pitcairn"{
-            ls{"čas Pitcairnových ostrovů"}
+            ls{"Čas Pitcairnových ostrovů"}
         }
         "meta:Ponape"{
-            ls{"ponapský čas"}
+            ls{"Ponapský čas"}
         }
         "meta:Pyongyang"{
-            ls{"pchjongjangský čas"}
+            ls{"Pchjongjangský čas"}
         }
         "meta:Qyzylorda"{
             ld{"Kyzylordský letní čas"}
@@ -1853,15 +1853,15 @@ cs{
             ls{"Kyzylordský standardní čas"}
         }
         "meta:Reunion"{
-            ls{"réunionský čas"}
+            ls{"Réunionský čas"}
         }
         "meta:Rothera"{
-            ls{"čas Rotherovy stanice"}
+            ls{"Čas Rotherovy stanice"}
         }
         "meta:Sakhalin"{
-            ld{"sachalinský letní čas"}
-            lg{"sachalinský čas"}
-            ls{"sachalinský standardní čas"}
+            ld{"Sachalinský letní čas"}
+            lg{"Sachalinský čas"}
+            ls{"Sachalinský standardní čas"}
         }
         "meta:Samara"{
             ld{"Samarský letní čas"}
@@ -1869,113 +1869,113 @@ cs{
             ls{"Samarský standardní čas"}
         }
         "meta:Samoa"{
-            ld{"samojský letní čas"}
-            lg{"samojský čas"}
-            ls{"samojský standardní čas"}
+            ld{"Samojský letní čas"}
+            lg{"Samojský čas"}
+            ls{"Samojský standardní čas"}
         }
         "meta:Seychelles"{
-            ls{"seychelský čas"}
+            ls{"Seychelský čas"}
         }
         "meta:Singapore"{
-            ls{"singapurský čas"}
+            ls{"Singapurský čas"}
         }
         "meta:Solomon"{
-            ls{"čas Šalamounových ostrovů"}
+            ls{"Čas Šalamounových ostrovů"}
         }
         "meta:South_Georgia"{
-            ls{"čas Jižní Georgie"}
+            ls{"Čas Jižní Georgie"}
         }
         "meta:Suriname"{
-            ls{"surinamský čas"}
+            ls{"Surinamský čas"}
         }
         "meta:Syowa"{
-            ls{"čas stanice Šówa"}
+            ls{"Čas stanice Šówa"}
         }
         "meta:Tahiti"{
-            ls{"tahitský čas"}
+            ls{"Tahitský čas"}
         }
         "meta:Taipei"{
-            ld{"tchajpejský letní čas"}
-            lg{"tchajpejský čas"}
-            ls{"tchajpejský standardní čas"}
+            ld{"Tchajpejský letní čas"}
+            lg{"Tchajpejský čas"}
+            ls{"Tchajpejský standardní čas"}
         }
         "meta:Tajikistan"{
-            ls{"tádžický čas"}
+            ls{"Tádžický čas"}
         }
         "meta:Tokelau"{
-            ls{"tokelauský čas"}
+            ls{"Tokelauský čas"}
         }
         "meta:Tonga"{
-            ld{"tonžský letní čas"}
-            lg{"tonžský čas"}
-            ls{"tonžský standardní čas"}
+            ld{"Tonžský letní čas"}
+            lg{"Tonžský čas"}
+            ls{"Tonžský standardní čas"}
         }
         "meta:Truk"{
-            ls{"chuukský čas"}
+            ls{"Chuukský čas"}
         }
         "meta:Turkmenistan"{
-            ld{"turkmenský letní čas"}
-            lg{"turkmenský čas"}
-            ls{"turkmenský standardní čas"}
+            ld{"Turkmenský letní čas"}
+            lg{"Turkmenský čas"}
+            ls{"Turkmenský standardní čas"}
         }
         "meta:Tuvalu"{
-            ls{"tuvalský čas"}
+            ls{"Tuvalský čas"}
         }
         "meta:Uruguay"{
-            ld{"uruguayský letní čas"}
-            lg{"uruguayský čas"}
-            ls{"uruguayský standardní čas"}
+            ld{"Uruguayský letní čas"}
+            lg{"Uruguayský čas"}
+            ls{"Uruguayský standardní čas"}
         }
         "meta:Uzbekistan"{
-            ld{"uzbecký letní čas"}
-            lg{"uzbecký čas"}
-            ls{"uzbecký standardní čas"}
+            ld{"Uzbecký letní čas"}
+            lg{"Uzbecký čas"}
+            ls{"Uzbecký standardní čas"}
         }
         "meta:Vanuatu"{
-            ld{"vanuatský letní čas"}
-            lg{"vanuatský čas"}
-            ls{"vanuatský standardní čas"}
+            ld{"Vanuatský letní čas"}
+            lg{"Vanuatský čas"}
+            ls{"Vanuatský standardní čas"}
         }
         "meta:Venezuela"{
-            ls{"venezuelský čas"}
+            ls{"Venezuelský čas"}
         }
         "meta:Vladivostok"{
-            ld{"vladivostocký letní čas"}
-            lg{"vladivostocký čas"}
-            ls{"vladivostocký standardní čas"}
+            ld{"Vladivostocký letní čas"}
+            lg{"Vladivostocký čas"}
+            ls{"Vladivostocký standardní čas"}
         }
         "meta:Volgograd"{
-            ld{"volgogradský letní čas"}
-            lg{"volgogradský čas"}
-            ls{"volgogradský standardní čas"}
+            ld{"Volgogradský letní čas"}
+            lg{"Volgogradský čas"}
+            ls{"Volgogradský standardní čas"}
         }
         "meta:Vostok"{
-            ls{"čas stanice Vostok"}
+            ls{"Čas stanice Vostok"}
         }
         "meta:Wake"{
-            ls{"čas ostrova Wake"}
+            ls{"Čas ostrova Wake"}
         }
         "meta:Wallis"{
-            ls{"čas ostrovů Wallis a Futuna"}
+            ls{"Čas ostrovů Wallis a Futuna"}
         }
         "meta:Yakutsk"{
-            ld{"jakutský letní čas"}
-            lg{"jakutský čas"}
-            ls{"jakutský standardní čas"}
+            ld{"Jakutský letní čas"}
+            lg{"Jakutský čas"}
+            ls{"Jakutský standardní čas"}
         }
         "meta:Yekaterinburg"{
-            ld{"jekatěrinburský letní čas"}
-            lg{"jekatěrinburský čas"}
-            ls{"jekatěrinburský standardní čas"}
+            ld{"Jekatěrinburský letní čas"}
+            lg{"Jekatěrinburský čas"}
+            ls{"Jekatěrinburský standardní čas"}
         }
         "meta:Yukon"{
-            ls{"yukonský čas"}
+            ls{"Yukonský čas"}
         }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+H:mm;-H:mm"}
-        regionFormat{"časové pásmo {0}"}
+        regionFormat{"Časové pásmo {0}"}
         regionFormatDaylight{"{0} (+1)"}
         regionFormatStandard{"{0} (+0)"}
     }

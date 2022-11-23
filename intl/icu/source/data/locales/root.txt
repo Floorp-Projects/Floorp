@@ -35,7 +35,6 @@ root{
             patterns{
                 accountingFormat:alias{"/LOCALE/NumberElements/arab/patterns/currencyFormat"}
                 currencyFormat{"#,##0.00 ¤"}
-                currencyFormat%noCurrency{"#,##0.00"}
                 decimalFormat:alias{"/LOCALE/NumberElements/latn/patterns/decimalFormat"}
                 percentFormat{"#,##0%"}
                 scientificFormat:alias{"/LOCALE/NumberElements/latn/patterns/scientificFormat"}
@@ -367,8 +366,6 @@ root{
             patterns{
                 accountingFormat:alias{"/LOCALE/NumberElements/latn/patterns/currencyFormat"}
                 currencyFormat{"¤ #,##0.00"}
-                currencyFormat%noCurrency{"#,##0.00"}
-                currencyPatternAppendISO{"{0} ¤¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
@@ -800,7 +797,7 @@ root{
             symbols:alias{"/LOCALE/NumberElements/latn/symbols"}
         }
     }
-    Version{"42"}
+    Version{"41"}
     calendar{
         buddhist{
             AmPmMarkers:alias{"/LOCALE/calendar/gregorian/AmPmMarkers"}
@@ -1103,7 +1100,7 @@ root{
                 d{
                     d{"d–d"}
                 }
-                fallback{"{0} – {1}"}
+                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h–h a"}
@@ -1560,7 +1557,7 @@ root{
                 d{
                     d{"d–d"}
                 }
-                fallback{"{0} – {1}"}
+                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h–h a"}
@@ -1880,7 +1877,7 @@ root{
                 d{
                     d{"d–d"}
                 }
-                fallback{"{0} – {1}"}
+                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h–h a"}
@@ -3302,73 +3299,6 @@ root{
                 "[,٫⹁︐﹐，]",
                 "[.․﹒．｡]",
             }
-        }
-    }
-    personNames{
-        foreignSpaceReplacement{" "}
-        initialPattern{
-            initial{"{0}."}
-            initialSequence{"{0} {1}"}
-        }
-        nameOrderLocales{
-            givenFirst{"und"}
-            surnameFirst{
-                "ja",
-                "ko",
-                "vi",
-                "yue",
-                "zh",
-            }
-        }
-        namePattern{
-            givenFirst-long-addressing-formal:alias{"/LOCALE/personNames/namePattern/givenFirst-long-referring-formal"}
-            givenFirst-long-addressing-informal:alias{"/LOCALE/personNames/namePattern/givenFirst-long-referring-formal"}
-            givenFirst-long-monogram-formal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
-            givenFirst-long-monogram-informal:alias{"/LOCALE/personNames/namePattern/givenFirst-long-monogram-formal"}
-            givenFirst-long-referring-formal{"{prefix} {given} {given2} {surname} {surname2} {suffix}"}
-            givenFirst-long-referring-informal:alias{"/LOCALE/personNames/namePattern/givenFirst-long-referring-formal"}
-            givenFirst-medium-addressing-formal:alias{"/LOCALE/personNames/namePattern/givenFirst-long-referring-formal"}
-            givenFirst-medium-addressing-informal:alias{"/LOCALE/personNames/namePattern/givenFirst-long-referring-formal"}
-            givenFirst-medium-monogram-formal:alias{"/LOCALE/personNames/namePattern/givenFirst-long-monogram-formal"}
-            givenFirst-medium-monogram-informal:alias{"/LOCALE/personNames/namePattern/givenFirst-long-monogram-formal"}
-            givenFirst-medium-referring-formal:alias{"/LOCALE/personNames/namePattern/givenFirst-long-referring-formal"}
-            givenFirst-medium-referring-informal:alias{"/LOCALE/personNames/namePattern/givenFirst-long-referring-formal"}
-            givenFirst-short-addressing-formal:alias{"/LOCALE/personNames/namePattern/givenFirst-long-referring-formal"}
-            givenFirst-short-addressing-informal:alias{"/LOCALE/personNames/namePattern/givenFirst-long-referring-formal"}
-            givenFirst-short-monogram-formal:alias{"/LOCALE/personNames/namePattern/givenFirst-long-monogram-formal"}
-            givenFirst-short-monogram-informal:alias{"/LOCALE/personNames/namePattern/givenFirst-long-monogram-formal"}
-            givenFirst-short-referring-formal:alias{"/LOCALE/personNames/namePattern/givenFirst-long-referring-formal"}
-            givenFirst-short-referring-informal:alias{"/LOCALE/personNames/namePattern/givenFirst-long-referring-formal"}
-            sorting-long-referring-formal{"{surname} {surname2}, {prefix} {given} {given2} {suffix}"}
-            sorting-long-referring-informal:alias{"/LOCALE/personNames/namePattern/sorting-long-referring-formal"}
-            sorting-medium-referring-formal:alias{"/LOCALE/personNames/namePattern/sorting-long-referring-formal"}
-            sorting-medium-referring-informal:alias{"/LOCALE/personNames/namePattern/sorting-long-referring-formal"}
-            sorting-short-referring-formal:alias{"/LOCALE/personNames/namePattern/sorting-long-referring-formal"}
-            sorting-short-referring-informal:alias{"/LOCALE/personNames/namePattern/sorting-long-referring-formal"}
-            surnameFirst-long-addressing-formal:alias{"/LOCALE/personNames/namePattern/surnameFirst-long-referring-formal"}
-            surnameFirst-long-addressing-informal:alias{"/LOCALE/personNames/namePattern/surnameFirst-long-referring-formal"}
-            surnameFirst-long-monogram-formal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
-            surnameFirst-long-monogram-informal:alias{"/LOCALE/personNames/namePattern/surnameFirst-long-monogram-formal"}
-            surnameFirst-long-referring-formal{"{surname} {surname2} {prefix} {given} {given2} {suffix}"}
-            surnameFirst-long-referring-informal:alias{"/LOCALE/personNames/namePattern/surnameFirst-long-referring-formal"}
-            surnameFirst-medium-addressing-formal:alias{"/LOCALE/personNames/namePattern/surnameFirst-long-referring-formal"}
-            surnameFirst-medium-addressing-informal:alias{"/LOCALE/personNames/namePattern/surnameFirst-long-referring-formal"}
-            surnameFirst-medium-monogram-formal:alias{"/LOCALE/personNames/namePattern/surnameFirst-long-monogram-formal"}
-            surnameFirst-medium-monogram-informal:alias{"/LOCALE/personNames/namePattern/surnameFirst-long-monogram-formal"}
-            surnameFirst-medium-referring-formal:alias{"/LOCALE/personNames/namePattern/surnameFirst-long-referring-formal"}
-            surnameFirst-medium-referring-informal:alias{"/LOCALE/personNames/namePattern/surnameFirst-long-referring-formal"}
-            surnameFirst-short-addressing-formal:alias{"/LOCALE/personNames/namePattern/surnameFirst-long-referring-formal"}
-            surnameFirst-short-addressing-informal:alias{"/LOCALE/personNames/namePattern/surnameFirst-long-referring-formal"}
-            surnameFirst-short-monogram-formal:alias{"/LOCALE/personNames/namePattern/surnameFirst-long-monogram-formal"}
-            surnameFirst-short-monogram-informal:alias{"/LOCALE/personNames/namePattern/surnameFirst-long-monogram-formal"}
-            surnameFirst-short-referring-formal:alias{"/LOCALE/personNames/namePattern/surnameFirst-long-referring-formal"}
-            surnameFirst-short-referring-informal:alias{"/LOCALE/personNames/namePattern/surnameFirst-long-referring-formal"}
         }
     }
 }

@@ -84,9 +84,9 @@ T_FileStream_file_exists(const char* filename)
     FILE* temp = fopen(filename, "r");
     if (temp) {
         fclose(temp);
-        return true;
+        return TRUE;
     } else
-        return false;
+        return FALSE;
 }
 
 /*static const int32_t kEOF;

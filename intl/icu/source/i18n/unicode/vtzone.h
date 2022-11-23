@@ -382,6 +382,7 @@ private:
      * Default constructor.
      */
     VTimeZone();
+    static VTimeZone* createVTimeZone(VTZReader* reader);
     void write(VTZWriter& writer, UErrorCode& status) const;
     void write(UDate start, VTZWriter& writer, UErrorCode& status) const;
     void writeSimple(UDate time, VTZWriter& writer, UErrorCode& status) const;

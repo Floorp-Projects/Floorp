@@ -39,7 +39,7 @@
 #include "cstring.h"
 
 static icu::EraRules * gJapaneseEraRules = nullptr;
-static icu::UInitOnce gJapaneseEraRulesInitOnce {};
+static icu::UInitOnce gJapaneseEraRulesInitOnce = U_INITONCE_INITIALIZER;
 static int32_t gCurrentEra = 0;
 
 U_CDECL_BEGIN
@@ -50,7 +50,7 @@ static UBool japanese_calendar_cleanup(void) {
     }
     gCurrentEra = 0;
     gJapaneseEraRulesInitOnce.reset();
-    return true;
+    return TRUE;
 }
 U_CDECL_END
 
@@ -71,7 +71,7 @@ UBool JapaneseCalendar::enableTentativeEra() {
 
     // 1. Environment variable ICU_ENABLE_TENTATIVE_ERA=true or false
 
-    UBool includeTentativeEra = false;
+    UBool includeTentativeEra = FALSE;
 
 #if U_PLATFORM_HAS_WINUWP_API == 1
     // UWP doesn't allow access to getenv(), but we can call GetEnvironmentVariableW to do the same thing.
@@ -80,12 +80,12 @@ UBool JapaneseCalendar::enableTentativeEra() {
     WCHAR varValue[5] = {};
     DWORD ret = GetEnvironmentVariableW(reinterpret_cast<WCHAR*>(varName), varValue, UPRV_LENGTHOF(varValue));
     if ((ret == 4) && (_wcsicmp(varValue, L"true") == 0)) {
-        includeTentativeEra = true;
+        includeTentativeEra = TRUE;
     }
 #else
     char *envVarVal = getenv(TENTATIVE_ERA_VAR_NAME);
     if (envVarVal != NULL && uprv_stricmp(envVarVal, "true") == 0) {
-        includeTentativeEra = true;
+        includeTentativeEra = TRUE;
     }
 #endif
     return includeTentativeEra;
@@ -230,7 +230,7 @@ Disable pivoting
 */
 UBool JapaneseCalendar::haveDefaultCentury() const
 {
-    return false;
+    return FALSE;
 }
 
 UDate JapaneseCalendar::defaultCenturyStart() const

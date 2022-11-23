@@ -950,21 +950,23 @@ class U_I18N_API MeasureUnit: public UObject {
      */
     static MeasureUnit getSquareYard();
 
+#ifndef U_HIDE_DRAFT_API
     /**
      * Returns by pointer, unit of concentr: item.
      * Caller owns returned value and must free it.
      * Also see {@link #getItem()}.
      * @param status ICU error code.
-     * @stable ICU 70
+     * @draft ICU 70
      */
     static MeasureUnit *createItem(UErrorCode &status);
 
     /**
      * Returns by value, unit of concentr: item.
      * Also see {@link #createItem()}.
-     * @stable ICU 70
+     * @draft ICU 70
      */
     static MeasureUnit getItem();
+#endif /* U_HIDE_DRAFT_API */
 
     /**
      * Returns by pointer, unit of concentr: karat.
@@ -1526,24 +1528,6 @@ class U_I18N_API MeasureUnit: public UObject {
      */
     static MeasureUnit getNanosecond();
 
-#ifndef U_HIDE_DRAFT_API
-    /**
-     * Returns by pointer, unit of duration: quarter.
-     * Caller owns returned value and must free it.
-     * Also see {@link #getQuarter()}.
-     * @param status ICU error code.
-     * @draft ICU 72
-     */
-    static MeasureUnit *createQuarter(UErrorCode &status);
-
-    /**
-     * Returns by value, unit of duration: quarter.
-     * Also see {@link #createQuarter()}.
-     * @draft ICU 72
-     */
-    static MeasureUnit getQuarter();
-#endif /* U_HIDE_DRAFT_API */
-
     /**
      * Returns by pointer, unit of duration: second.
      * Caller owns returned value and must free it.
@@ -1832,21 +1816,23 @@ class U_I18N_API MeasureUnit: public UObject {
      */
     static MeasureUnit getThermUs();
 
+#ifndef U_HIDE_DRAFT_API
     /**
      * Returns by pointer, unit of force: kilowatt-hour-per-100-kilometer.
      * Caller owns returned value and must free it.
      * Also see {@link #getKilowattHourPer100Kilometer()}.
      * @param status ICU error code.
-     * @stable ICU 70
+     * @draft ICU 70
      */
     static MeasureUnit *createKilowattHourPer100Kilometer(UErrorCode &status);
 
     /**
      * Returns by value, unit of force: kilowatt-hour-per-100-kilometer.
      * Also see {@link #createKilowattHourPer100Kilometer()}.
-     * @stable ICU 70
+     * @draft ICU 70
      */
     static MeasureUnit getKilowattHourPer100Kilometer();
+#endif /* U_HIDE_DRAFT_API */
 
     /**
      * Returns by pointer, unit of force: newton.
@@ -2585,25 +2571,17 @@ class U_I18N_API MeasureUnit: public UObject {
     static MeasureUnit getKilogram();
 
     /**
-     * Returns by pointer, unit of mass: metric-ton
-     * (renamed to tonne in CLDR 42 / ICU 72).
+     * Returns by pointer, unit of mass: metric-ton.
      * Caller owns returned value and must free it.
-     * Note: In ICU 74 this will be deprecated in favor of
-     * createTonne(), which is currently draft but will
-     * become stable in ICU 74, and which uses the preferred naming.
-     * Also see {@link #getMetricTon()} and {@link #createTonne()}.
+     * Also see {@link #getMetricTon()}.
      * @param status ICU error code.
      * @stable ICU 54
      */
     static MeasureUnit *createMetricTon(UErrorCode &status);
 
     /**
-     * Returns by value, unit of mass: metric-ton
-     * (renamed to tonne in CLDR 42 / ICU 72).
-     * Note: In ICU 74 this will be deprecated in favor of
-     * getTonne(), which is currently draft but will
-     * become stable in ICU 74, and which uses the preferred naming.
-     * Also see {@link #createMetricTon()} and {@link #getTonne()}.
+     * Returns by value, unit of mass: metric-ton.
+     * Also see {@link #createMetricTon()}.
      * @stable ICU 64
      */
     static MeasureUnit getMetricTon();
@@ -2735,24 +2713,6 @@ class U_I18N_API MeasureUnit: public UObject {
      * @stable ICU 64
      */
     static MeasureUnit getTon();
-
-#ifndef U_HIDE_DRAFT_API
-    /**
-     * Returns by pointer, unit of mass: tonne.
-     * Caller owns returned value and must free it.
-     * Also see {@link #getTonne()}.
-     * @param status ICU error code.
-     * @draft ICU 72
-     */
-    static MeasureUnit *createTonne(UErrorCode &status);
-
-    /**
-     * Returns by value, unit of mass: tonne.
-     * Also see {@link #createTonne()}.
-     * @draft ICU 72
-     */
-    static MeasureUnit getTonne();
-#endif /* U_HIDE_DRAFT_API */
 
     /**
      * Returns by pointer, unit of power: gigawatt.

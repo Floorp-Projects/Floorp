@@ -522,6 +522,10 @@ kea{
                 other{"{0} kilograma"}
                 per{"{0} pur kilograma"}
             }
+            metric-ton{
+                dnam{"tonelada métriku"}
+                other{"{0} tonelada métriku"}
+            }
             microgram{
                 dnam{"mikrograma"}
                 other{"{0} mikrograma"}
@@ -551,10 +555,6 @@ kea{
             ton{
                 dnam{"tonelada"}
                 other{"{0} tonelada"}
-            }
-            tonne{
-                dnam{"tonelada métriku"}
-                other{"{0} tonelada métriku"}
             }
         }
         power{

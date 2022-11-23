@@ -24,8 +24,6 @@
 #include "collationsettings.h"
 #include "uhash.h"
 #include "umutex.h"
-#include "unifiedcache.h"
- 
 
 struct UDataMemory;
 struct UResourceBundle;
@@ -91,7 +89,7 @@ private:
      * No copy constructor: A CollationTailoring cannot be copied.
      * It is immutable, and the data trie cannot be copied either.
      */
-    CollationTailoring(const CollationTailoring &other) = delete;
+    CollationTailoring(const CollationTailoring &other);
 };
 
 struct U_I18N_API CollationCacheEntry : public SharedObject {
@@ -107,10 +105,6 @@ struct U_I18N_API CollationCacheEntry : public SharedObject {
     const CollationTailoring *tailoring;
 };
 
-template<> U_I18N_API
-const CollationCacheEntry *
-LocaleCacheKey<CollationCacheEntry>::createObject(const void *creationContext,
-                                                  UErrorCode &errorCode) const;
 U_NAMESPACE_END
 
 #endif  // !UCONFIG_NO_COLLATION

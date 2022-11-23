@@ -268,10 +268,14 @@ class U_I18N_API ListFormatter : public UObject{
 
     static void initializeHash(UErrorCode& errorCode);
     static const ListFormatInternal* getListFormatInternal(const Locale& locale, const char *style, UErrorCode& errorCode);
-    struct U_HIDDEN ListPatternsSink;
+    struct ListPatternsSink;
     static ListFormatInternal* loadListFormatInternal(const Locale& locale, const char* style, UErrorCode& errorCode);
 
-    ListFormatter() = delete;
+    UnicodeString& format_(
+        const UnicodeString items[], int32_t n_items, UnicodeString& appendTo,
+        int32_t index, int32_t &offset, FieldPositionHandler* handler, UErrorCode& errorCode) const;
+
+    ListFormatter();
 
     ListFormatInternal* owned;
     const ListFormatInternal* data;

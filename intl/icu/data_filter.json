@@ -202,8 +202,7 @@
                 "-/fields/sun",
                 "-/fields/sun-narrow",
                 "-/fields/sun-short",
-                "-/measurementSystemNames",
-                "-/personNames"
+                "-/measurementSystemNames"
             ]
         },
         {

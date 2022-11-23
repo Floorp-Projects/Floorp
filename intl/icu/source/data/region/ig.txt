@@ -309,6 +309,5 @@ ig{
         CZ{"Czech Republik"}
         SZ{"Swaziland"}
         TL{"East Timor"}
-        TR{"Turki"}
     }
 }

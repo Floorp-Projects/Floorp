@@ -570,6 +570,9 @@ fr{
         "America:Swift_Current"{
             ec{"Swift Current"}
         }
+        "America:Tegucigalpa"{
+            ec{"Tégucigalpa"}
+        }
         "America:Thule"{
             ec{"Thulé"}
         }
@@ -607,7 +610,7 @@ fr{
             ec{"Davis"}
         }
         "Antarctica:DumontDUrville"{
-            ec{"Dumont-d’Urville"}
+            ec{"Dumont d’Urville"}
         }
         "Antarctica:Macquarie"{
             ec{"Macquarie"}
@@ -1257,7 +1260,7 @@ fr{
             ec{"Pago Pago"}
         }
         "Pacific:Palau"{
-            ec{"Palaos"}
+            ec{"Palau"}
         }
         "Pacific:Pitcairn"{
             ec{"Pitcairn"}
@@ -1330,12 +1333,12 @@ fr{
             ls{"heure normale de l’Amazonie"}
         }
         "meta:America_Central"{
-            ld{"heure d’été du centre nord-américain"}
+            ld{"heure d’été du Centre"}
             lg{"heure du centre nord-américain"}
             ls{"heure normale du centre nord-américain"}
         }
         "meta:America_Eastern"{
-            ld{"heure d’été de l’Est nord-américain"}
+            ld{"heure d’été de l’Est"}
             lg{"heure de l’Est nord-américain"}
             ls{"heure normale de l’Est nord-américain"}
         }
@@ -1345,7 +1348,7 @@ fr{
             ls{"heure normale des Rocheuses"}
         }
         "meta:America_Pacific"{
-            ld{"heure d’été du Pacifique nord-américain"}
+            ld{"heure d’été du Pacifique"}
             lg{"heure du Pacifique nord-américain"}
             ls{"heure normale du Pacifique nord-américain"}
         }
@@ -1441,7 +1444,7 @@ fr{
             ls{"heure normale de Brasilia"}
         }
         "meta:Brunei"{
-            ls{"heure du Brunei"}
+            ls{"heure du Brunéi"}
         }
         "meta:Cape_Verde"{
             ld{"heure d’été du Cap-Vert"}
@@ -1580,9 +1583,9 @@ fr{
             ls{"heure du Guyana"}
         }
         "meta:Hawaii_Aleutian"{
-            ld{"heure d’été d’Hawaï - Aléoutiennes"}
-            lg{"heure d’Hawaï - Aléoutiennes"}
-            ls{"heure normale d’Hawaï - Aléoutiennes"}
+            ld{"heure d’été d’Hawaii - Aléoutiennes"}
+            lg{"heure d’Hawaii - Aléoutiennes"}
+            ls{"heure normale d’Hawaii - Aléoutiennes"}
         }
         "meta:Hong_Kong"{
             ld{"heure d’été de Hong Kong"}
@@ -1740,7 +1743,7 @@ fr{
             ls{"heure normale de Terre-Neuve"}
         }
         "meta:Niue"{
-            ls{"heure de Niue"}
+            ls{"heure de Nioué"}
         }
         "meta:Norfolk"{
             ld{"heure d’été de l’île Norfolk"}
