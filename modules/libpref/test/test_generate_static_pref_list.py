@@ -4,12 +4,13 @@
 
 from __future__ import absolute_import, print_function
 
-import mozpack.path as mozpath
-import mozunit
 import sys
 import unittest
-import yaml
 from os import path
+
+import mozpack.path as mozpath
+import mozunit
+import yaml
 
 try:
     from StringIO import StringIO
