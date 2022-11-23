@@ -23,6 +23,10 @@ class nsIPrefBranch;
 // nsIDNService
 //-----------------------------------------------------------------------------
 
+namespace mozilla::net {
+enum ScriptCombo : int32_t;
+}
+
 class nsIDNService final : public nsIIDNService {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -144,7 +148,8 @@ class nsIDNService final : public nsIIDNService {
    * For the "Moderately restrictive" profile, Latin is also allowed
    *  with other scripts except Cyrillic and Greek
    */
-  bool illegalScriptCombo(mozilla::intl::Script script, int32_t& savedScript)
+  bool illegalScriptCombo(mozilla::intl::Script script,
+                          mozilla::net::ScriptCombo& savedScript)
       MOZ_REQUIRES_SHARED(mLock);
 
   /**
