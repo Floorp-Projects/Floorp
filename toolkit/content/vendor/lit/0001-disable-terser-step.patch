@@ -1,0 +1,52 @@
+From 1f0db62374e62965f521c3a44c31c947f702d53d Mon Sep 17 00:00:00 2001
+From: Mark Striemer <mstriemer@mozilla.com>
+Date: Wed, 16 Nov 2022 22:54:20 -0600
+Subject: [PATCH 1/2] disable terser step
+
+---
+ rollup-common.js | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/rollup-common.js b/rollup-common.js
+index ebe4b406..6fcac21a 100644
+--- a/rollup-common.js
++++ b/rollup-common.js
+@@ -345,7 +345,7 @@ export function litProdConfig({
+         virtual({
+           [nameCacheSeederInfile]: nameCacheSeederContents,
+         }),
+-        terser(nameCacheSeederTerserOptions),
++        // terser(nameCacheSeederTerserOptions),
+         skipBundleOutput,
+       ],
+     },
+@@ -395,7 +395,7 @@ export function litProdConfig({
+         // This plugin automatically composes the existing TypeScript -> raw JS
+         // sourcemap with the raw JS -> minified JS one that we're generating here.
+         sourcemaps(),
+-        terser(terserOptions),
++        // terser(terserOptions),
+         summary({
+           showBrotliSize: true,
+           showGzippedSize: true,
+@@ -466,7 +466,7 @@ export function litProdConfig({
+               //    references properties from reactive-element which will
+               //    otherwise have different names. The default export that
+               //    lit-element will use is minified.
+-              terser(terserOptions),
++              // terser(terserOptions),
+               summary({
+                 showBrotliSize: true,
+                 showGzippedSize: true,
+@@ -533,7 +533,7 @@ const litMonoBundleConfig = ({
+     // This plugin automatically composes the existing TypeScript -> raw JS
+     // sourcemap with the raw JS -> minified JS one that we're generating here.
+     sourcemaps(),
+-    terser(terserOptions),
++    // terser(terserOptions),
+     summary({
+       showBrotliSize: true,
+       showGzippedSize: true,
+-- 
+2.32.0 (Apple Git-132)
+

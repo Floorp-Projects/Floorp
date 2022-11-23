@@ -21,11 +21,26 @@ import { classMap, LitElement } from "../vendor/lit.all.mjs";
 
 ## To update the lit bundle
 
-Using `mach`s `npm` you can update the bundle with:
+Vendoring runs off of the latest tag in the https://github.com/lit/lit repo. If
+the latest tag is a lit@ tag then running the vendor command will update to that
+version. If the latest tag isn't for lit@, you may need to bundle manually. See
+the moz.yaml file for instructions.
+
+### Using mach vendor
 
 ```
-cd toolkit/content/vendor/lit
-../../../../mach npm run vendor
+./mach vendor toolkit/content/vendor/lit/moz.yaml
+hg ci -m "Update to lit@<version>"
 ```
 
-Then commit the changes.
+### Manually updating the bundle
+
+To manually update, you'll need to checkout a copy of lit/lit, find the tag you
+want and manually run our import commands.
+
+  1. Clone https://github.com/lit/lit outside of moz-central
+  2. Copy *.patch from this directory into the lit repo
+  3. git apply *.patch
+  4. npm install && npm run build
+  5. Copy packages/lit/lit-all.min.js to toolkit/content/widgets/vendor/lit.all.mjs
+  6. hg ci -m "Update to lit@<version>"

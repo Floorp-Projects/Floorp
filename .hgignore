@@ -170,9 +170,6 @@ _OPT\.OBJ/
 ^tools/browsertime/node_modules/
 ^tools/lint/eslint/eslint-plugin-mozilla/node_modules/
 ^browser/components/newtab/node_modules/
-^toolkit/content/vendor/lit/node_modules/
-# Bug 1790483 Ignore lit - development only for now.
-^toolkit/content/widgets/vendor/lit.all.mjs
 ^tools/esmify/node_modules/
 
 # Ignore talos virtualenv and tp5n files.

@@ -112,6 +112,8 @@ toolkit.jar:
    content/global/elements/videocontrols.js    (widgets/videocontrols.js)
    content/global/elements/tree.js             (widgets/tree.js)
    content/global/elements/wizard.js           (widgets/wizard.js)
+   content/global/vendor/lit.all.mjs           (widgets/vendor/lit.all.mjs)
+   content/global/lit-utils.mjs                (widgets/lit-utils.mjs)
    content/global/neterror/aboutNetErrorCodes.js                    (neterror/aboutNetErrorCodes.js)
    content/global/neterror/supportpages/connection-not-secure.html  (neterror/supportpages/connection-not-secure.html)
    content/global/neterror/supportpages/time-errors.html            (neterror/supportpages/time-errors.html)

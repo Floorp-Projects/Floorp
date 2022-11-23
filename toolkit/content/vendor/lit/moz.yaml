@@ -10,5 +10,24 @@ origin:
     "Lit is a simple library for building fast, lightweight web components."
   url: "https://github.com/lit/lit"
   license: "BSD-3-Clause"
-  release: "2.4.0"
-  revision: "lit@2.4.0"
+  release: "lit@2.4.0"
+  revision: "1e1e2e00e3ff655e6f48a42b2e739f47dc681420"
+
+
+# Since this tracks the latest tag, it's possible that lit isn't the latest tag
+# in lit/lit. In that case we may need to manually update lit. See README.md for
+# more info.
+vendoring:
+  url: "https://github.com/lit/lit"
+  source-hosting: github
+  tracking: tag
+  # lit/lit is a monorepo that publishes multiple packages. The tags for lit
+  # are formatted as "lit@2.4.1".
+  # tag-prefix: 'lit@'
+
+  vendor-directory: toolkit/content/vendor/lit/lit
+
+  update-actions:
+    - action: run-script
+      script: '{yaml_dir}/bundle-lit.sh'
+      cwd: '{yaml_dir}'
