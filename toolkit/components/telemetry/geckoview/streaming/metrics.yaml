@@ -60,7 +60,7 @@ geckoview:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1625325#c2
     notification_emails:
-      - geckoview-team@mozilla.com
+      - android-probes@mozilla.com
       - asferro@mozilla.com
     expires: never
 
@@ -76,7 +76,7 @@ geckoview:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
     notification_emails:
-      - geckoview-team@mozilla.com
+      - android-probes@mozilla.com
       - esawin@mozilla.com
     expires: never
 
@@ -96,7 +96,7 @@ geckoview:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
     notification_emails:
-      - geckoview-team@mozilla.com
+      - android-probes@mozilla.com
       - esawin@mozilla.com
     expires: never
 
@@ -114,7 +114,7 @@ geckoview:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
     notification_emails:
-      - geckoview-team@mozilla.com
+      - android-probes@mozilla.com
       - sefeng@mozilla.com
       - perf-telemetry-alerts@mozilla.com
     expires: never
@@ -131,7 +131,7 @@ geckoview:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
     notification_emails:
-      - geckoview-team@mozilla.com
+      - android-probes@mozilla.com
       - esawin@mozilla.com
     expires: never
 
