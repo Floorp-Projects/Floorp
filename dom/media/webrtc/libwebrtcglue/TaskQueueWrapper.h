@@ -70,7 +70,7 @@ class TaskQueueWrapper : public webrtc::TaskQueueBase {
   }
 
   already_AddRefed<Runnable> CreateTaskRunner(
-      std::unique_ptr<webrtc::QueuedTask> aTask) {
+      absl::AnyInvocable<void() &&> aTask) {
     return NS_NewRunnableFunction(
         "TaskQueueWrapper::CreateTaskRunner",
         [this, task = std::move(aTask),
@@ -82,10 +82,7 @@ class TaskQueueWrapper : public webrtc::TaskQueueBase {
             return;
           }
           AUTO_PROFILE_FOLLOWING_RUNNABLE(name);
-          bool toDelete = task->Run();
-          if (!toDelete) {
-            task.release();
-          }
+          std::move(task)();
         });
   }
 
@@ -103,20 +100,25 @@ class TaskQueueWrapper : public webrtc::TaskQueueBase {
         });
   }
 
-  void PostTask(std::unique_ptr<webrtc::QueuedTask> aTask) override {
+  void PostTask(absl::AnyInvocable<void() &&> aTask) override {
     MOZ_ALWAYS_SUCCEEDS(
         mTaskQueue->Dispatch(CreateTaskRunner(std::move(aTask))));
   }
 
-  void PostDelayedTask(std::unique_ptr<webrtc::QueuedTask> aTask,
-                       uint32_t aMilliseconds) override {
-    if (aMilliseconds == 0) {
+  void PostDelayedTask(absl::AnyInvocable<void() &&> aTask,
+                       webrtc::TimeDelta aDelay) override {
+    if (aDelay.ms() == 0) {
       // AbstractThread::DelayedDispatch doesn't support delay 0
       PostTask(std::move(aTask));
       return;
     }
     MOZ_ALWAYS_SUCCEEDS(mTaskQueue->DelayedDispatch(
-        CreateTaskRunner(std::move(aTask)), aMilliseconds));
+        CreateTaskRunner(std::move(aTask)), aDelay.ms()));
+  }
+
+  void PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> aTask,
+                                    webrtc::TimeDelta aDelay) override {
+    PostDelayedTask(std::move(aTask), aDelay);
   }
 
   const RefPtr<TaskQueue> mTaskQueue;
