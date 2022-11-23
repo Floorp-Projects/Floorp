@@ -434,7 +434,7 @@ bool JSJitFrameIter::verifyReturnAddressUsingNativeToBytecodeMap() {
           resumePCinCurrentFrame_, entry->nativeStartAddr(),
           entry->nativeEndAddr());
 
-  JitcodeGlobalEntry::BytecodeLocationVector location;
+  BytecodeLocationVector location;
   uint32_t depth = UINT32_MAX;
   if (!entry->callStackAtAddr(rt, resumePCinCurrentFrame_, location, &depth)) {
     return false;

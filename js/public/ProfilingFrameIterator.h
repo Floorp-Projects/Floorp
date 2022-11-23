@@ -163,7 +163,7 @@ class MOZ_NON_PARAM JS_PUBLIC_API ProfilingFrameIterator {
 
  private:
   mozilla::Maybe<Frame> getPhysicalFrameAndEntry(
-      js::jit::JitcodeGlobalEntry* entry) const;
+      const js::jit::JitcodeGlobalEntry** entry) const;
 
   void iteratorConstruct(const RegisterState& state);
   void iteratorConstruct();
