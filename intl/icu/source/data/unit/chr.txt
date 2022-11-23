@@ -342,6 +342,11 @@ chr{
                 one{"{0} ᎾᏃᎠᏎᏢ"}
                 other{"{0} ᎾᏃᏗᏎᏢ"}
             }
+            quarter{
+                dnam{"ᎯᎸᏍᎩ ᎩᏄᏘᏗ"}
+                one{"{0} ᎩᏄᏘᏗ"}
+                other{"{0} ᎯᎸᏍᎩ ᎩᏄᏘᏗ"}
+            }
             second{
                 dnam{"ᏗᏎᏢ"}
                 one{"{0} ᎠᏎᏢ"}
@@ -676,11 +681,6 @@ chr{
                 other{"{0} ᎠᎦᏴᎵ ᎤᏍᏗ ᏂᏚᏓᎨᏒ"}
                 per{"{0} ᎠᎦᏴᎵ ᎤᏍᏗ ᎤᏓᎨᏒ ᎢᏳᏓᎵ"}
             }
-            metric-ton{
-                dnam{"ᎠᏂᎩᎸᏥ ᏂᏓᏳᏓᎴᏅᎯ ᏗᏎᏍᏗ ᏗᏈᏂ"}
-                one{"{0} ᎠᏂᎩᎸᏥ ᏂᏓᏳᏓᎴᏅᎯ ᏗᏎᏍᏗ ᏈᏂ"}
-                other{"{0} ᎠᏂᎩᎸᏥ ᏂᏓᏳᏓᎴᏅᎯ ᏗᏎᏍᏗ ᏗᏈᏂ"}
-            }
             microgram{
                 dnam{"ᏌᏉ ᎢᏳᏆᏗᏅᏛ ᎤᏍᏗ ᏂᏚᏓᎨᏒ"}
                 one{"{0} ᏌᏉ ᎢᏳᏆᏗᏅᏛ ᎤᏍᏗ ᎤᏓᎨᏒ"}
@@ -722,6 +722,11 @@ chr{
                 dnam{"ᏗᏈᏂ"}
                 one{"{0} ᏈᏂ"}
                 other{"{0} ᏗᏈᏂ"}
+            }
+            tonne{
+                dnam{"ᎠᏂᎩᎸᏥ ᏂᏓᏳᏓᎴᏅᎯ ᏗᏎᏍᏗ ᏗᏈᏂ"}
+                one{"{0} ᎠᏂᎩᎸᏥ ᏂᏓᏳᏓᎴᏅᎯ ᏗᏎᏍᏗ ᏈᏂ"}
+                other{"{0} ᎠᏂᎩᎸᏥ ᏂᏓᏳᏓᎴᏅᎯ ᏗᏎᏍᏗ ᏗᏈᏂ"}
             }
         }
         power{
@@ -1589,11 +1594,6 @@ chr{
                 other{"{0}kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0}t"}
-                other{"{0}t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0}μg"}
@@ -1634,6 +1634,11 @@ chr{
             ton{
                 one{"{0}tn"}
                 other{"{0}tn"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0}t"}
+                other{"{0}t"}
             }
         }
         power{
@@ -2488,11 +2493,6 @@ chr{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -2534,6 +2534,11 @@ chr{
                 dnam{"ᏗᏈᏂ"}
                 one{"{0} tn"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

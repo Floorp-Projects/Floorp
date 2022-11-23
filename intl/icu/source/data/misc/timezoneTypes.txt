@@ -87,6 +87,7 @@ timezoneTypes:table(nofallback){
             "Etc:Universal"{"Etc/UTC"}
             "Etc:Zulu"{"Etc/UTC"}
             "Europe:Belfast"{"Europe/London"}
+            "Europe:Kyiv"{"Europe/Kiev"}
             "Europe:Nicosia"{"Asia/Nicosia"}
             "Europe:Tiraspol"{"Europe/Chisinau"}
             "Mexico:BajaNorte"{"America/Tijuana"}

@@ -127,16 +127,16 @@ pt{
             1024p6{"exbi{0}"}
             1024p7{"zebi{0}"}
             1024p8{"yobi{0}"}
-            10p-1{"deci{0}"}
-            10p-12{"pico{0}"}
-            10p-15{"femto{0}"}
-            10p-18{"atto{0}"}
-            10p-2{"centi{0}"}
-            10p-21{"zepto{0}"}
-            10p-24{"iocto{0}"}
-            10p-3{"mili{0}"}
-            10p-6{"micro{0}"}
-            10p-9{"nano{0}"}
+            10p-1{"decí{0}"}
+            10p-12{"picô{0}"}
+            10p-15{"femtô{0}"}
+            10p-18{"attô{0}"}
+            10p-2{"centí{0}"}
+            10p-21{"zeptô{0}"}
+            10p-24{"ioctô{0}"}
+            10p-3{"milí{0}"}
+            10p-6{"micrô{0}"}
+            10p-9{"nanô{0}"}
             10p1{"deca{0}"}
             10p12{"tera{0}"}
             10p15{"peta{0}"}
@@ -144,7 +144,7 @@ pt{
             10p2{"hecto{0}"}
             10p21{"zeta{0}"}
             10p24{"iota{0}"}
-            10p3{"quilo{0}"}
+            10p3{"quilô{0}"}
             10p6{"mega{0}"}
             10p9{"giga{0}"}
             per{"{0} por {1}"}
@@ -402,6 +402,13 @@ pt{
                 gender{"masculine"}
                 one{"{0} nanossegundo"}
                 other{"{0} nanossegundos"}
+            }
+            quarter{
+                dnam{"trimestre"}
+                gender{"masculine"}
+                one{"{0} trimestre"}
+                other{"{0} trimestres"}
+                per{"{0}/trimestre"}
             }
             second{
                 dnam{"segundos"}
@@ -790,12 +797,6 @@ pt{
                 other{"{0} quilogramas"}
                 per{"{0} por quilograma"}
             }
-            metric-ton{
-                dnam{"toneladas métricas"}
-                gender{"feminine"}
-                one{"{0} tonelada métrica"}
-                other{"{0} toneladas métricas"}
-            }
             microgram{
                 dnam{"microgramas"}
                 gender{"masculine"}
@@ -842,6 +843,12 @@ pt{
                 dnam{"toneladas americanas"}
                 one{"{0} tonelada americana"}
                 other{"{0} toneladas americanas"}
+            }
+            tonne{
+                dnam{"toneladas métricas"}
+                gender{"feminine"}
+                one{"{0} tonelada métrica"}
+                other{"{0} toneladas métricas"}
             }
         }
         power{
@@ -1220,13 +1227,13 @@ pt{
         angle{
             arc-minute{
                 dnam{"arcmin"}
-                one{"{0}'"}
-                other{"{0}'"}
+                one{"{0}′"}
+                other{"{0}′"}
             }
             arc-second{
                 dnam{"arcseg"}
-                one{"{0}\u0022"}
-                other{"{0}\u0022"}
+                one{"{0}″"}
+                other{"{0}″"}
             }
             radian{
                 dnam{"rad"}
@@ -1371,11 +1378,16 @@ pt{
                 other{"{0} meses"}
                 per{"{0}/mês"}
             }
+            quarter{
+                dnam{"trim."}
+                one{"{0} trim."}
+                other{"{0} trim."}
+                per{"{0}/trim."}
+            }
             second{
-                dnam{"seg"}
+                dnam{"s"}
                 one{"{0} s"}
                 other{"{0} s"}
-                per{"{0}/seg"}
             }
             week{
                 dnam{"sem."}
@@ -1469,7 +1481,7 @@ pt{
                 dnam{"m"}
             }
             mile{
-                dnam{"mil"}
+                dnam{"mi"}
             }
             nautical-mile{
                 dnam{"mn"}
@@ -1821,10 +1833,16 @@ pt{
                 other{"{0} meses"}
                 per{"{0}/mês"}
             }
+            quarter{
+                dnam{"trim."}
+                one{"{0} trim."}
+                other{"{0} trim."}
+                per{"{0}/trim."}
+            }
             second{
-                dnam{"seg"}
-                one{"{0} seg"}
-                other{"{0} seg"}
+                dnam{"s"}
+                one{"{0} s"}
+                other{"{0} s"}
                 per{"{0}/s"}
             }
             week{
@@ -1987,11 +2005,6 @@ pt{
             gram{
                 dnam{"gramas"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             ounce-troy{
                 dnam{"oz troy"}
             }
@@ -2008,6 +2021,11 @@ pt{
                 dnam{"toneladas americanas"}
                 one{"{0} tn"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

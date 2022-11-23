@@ -16,6 +16,7 @@
 *   created by: Markus W. Scherer
 */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include "unicode/utypes.h"
 #include "unicode/ustring.h"
@@ -111,7 +112,7 @@ CnvExtIsValid(NewConverter *cnvData,
     (void)cnvData;
     (void)bytes;
     (void)length;
-    return FALSE;
+    return false;
 }
 
 static uint32_t
@@ -463,7 +464,7 @@ generateToUTable(CnvExtData *extData, UCMTable *table,
 
     if(count>=0x100) {
         fprintf(stderr, "error: toUnicode extension table section overflow: %ld section entries\n", (long)count);
-        return FALSE;
+        return false;
     }
 
     /* allocate the section: 1 entry for the header + count for the items */
@@ -523,7 +524,7 @@ generateToUTable(CnvExtData *extData, UCMTable *table,
                 fprintf(stderr, "error: multiple mappings from same bytes\n");
                 ucm_printMapping(table, m, stderr);
                 ucm_printMapping(table, mappings+map[subStart], stderr);
-                return FALSE;
+                return false;
             }
 
             defaultValue=getToUnicodeValue(extData, table, m);
@@ -538,11 +539,11 @@ generateToUTable(CnvExtData *extData, UCMTable *table,
 
             /* recurse */
             if(!generateToUTable(extData, table, subStart, subLimit, unitIndex+1, defaultValue)) {
-                return FALSE;
+                return false;
             }
         }
     }
-    return TRUE;
+    return true;
 }
 
 /*
@@ -796,7 +797,7 @@ generateFromUTable(CnvExtData *extData, UCMTable *table,
                 fprintf(stderr, "error: multiple mappings from same Unicode code points\n");
                 ucm_printMapping(table, m, stderr);
                 ucm_printMapping(table, mappings+map[subStart], stderr);
-                return FALSE;
+                return false;
             }
 
             defaultValue=getFromUBytesValue(extData, table, m);
@@ -811,11 +812,11 @@ generateFromUTable(CnvExtData *extData, UCMTable *table,
 
             /* recurse */
             if(!generateFromUTable(extData, table, subStart, subLimit, unitIndex+1, defaultValue)) {
-                return FALSE;
+                return false;
             }
         }
     }
-    return TRUE;
+    return true;
 }
 
 /*
@@ -941,7 +942,7 @@ generateFromUTrie(CnvExtData *extData, UCMTable *table, int32_t mapLength) {
     UChar32 c, next;
 
     if(mapLength==0) {
-        return TRUE;
+        return true;
     }
 
     mappings=table->mappings;
@@ -984,7 +985,7 @@ generateFromUTrie(CnvExtData *extData, UCMTable *table, int32_t mapLength) {
                 fprintf(stderr, "error: multiple mappings from same Unicode code points\n");
                 ucm_printMapping(table, m, stderr);
                 ucm_printMapping(table, mappings+map[subStart], stderr);
-                return FALSE;
+                return false;
             }
 
             value=getFromUBytesValue(extData, table, m);
@@ -999,11 +1000,11 @@ generateFromUTrie(CnvExtData *extData, UCMTable *table, int32_t mapLength) {
 
             /* recurse, starting from 16-bit-unit index 2, the first 16-bit unit after c */
             if(!generateFromUTable(extData, table, subStart, subLimit, 2, value)) {
-                return FALSE;
+                return false;
             }
         }
     }
-    return TRUE;
+    return true;
 }
 
 /*
@@ -1039,7 +1040,7 @@ makeFromUTable(CnvExtData *extData, UCMTable *table) {
     utm_alloc(extData->fromUTableValues);
 
     if(!generateFromUTrie(extData, table, fromUCount)) {
-        return FALSE;
+        return false;
     }
 
     /*
@@ -1052,7 +1053,7 @@ makeFromUTable(CnvExtData *extData, UCMTable *table) {
         stage1[i]=(uint16_t)(stage1[i]+stage1Top);
     }
 
-    return TRUE;
+    return true;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1063,7 +1064,7 @@ CnvExtAddTable(NewConverter *cnvData, UCMTable *table, UConverterStaticData *sta
 
     if(table->unicodeMask&UCNV_HAS_SURROGATES) {
         fprintf(stderr, "error: contains mappings for surrogate code points\n");
-        return FALSE;
+        return false;
     }
 
     staticData->conversionType=UCNV_MBCS;

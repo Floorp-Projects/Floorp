@@ -1200,7 +1200,7 @@ is{
             ec{"Fakaofo"}
         }
         "Pacific:Fiji"{
-            ec{"Fidjí"}
+            ec{"Fídjí"}
         }
         "Pacific:Funafuti"{
             ec{"Funafuti"}
@@ -1479,7 +1479,7 @@ is{
             ls{"Tími á Dumont-d’Urville"}
         }
         "meta:East_Timor"{
-            ls{"Tíminn á Tímor-Leste"}
+            ls{"Tími á Tímor-Leste"}
         }
         "meta:Easter"{
             ld{"Sumartími á Páskaeyju"}
@@ -1736,7 +1736,7 @@ is{
         }
         "meta:Omsk"{
             ld{"Sumartími í Omsk"}
-            lg{"Tíminn í Omsk"}
+            lg{"Tími í Omsk"}
             ls{"Staðaltími í Omsk"}
         }
         "meta:Pakistan"{
@@ -1890,7 +1890,7 @@ is{
         }
         "meta:Yakutsk"{
             ld{"Sumartími í Yakutsk"}
-            lg{"Tíminn í Yakutsk"}
+            lg{"Tími í Yakutsk"}
             ls{"Staðaltími í Yakutsk"}
         }
         "meta:Yekaterinburg"{

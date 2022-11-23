@@ -49,7 +49,7 @@ ca{
         AT{"Àustria"}
         AU{"Austràlia"}
         AW{"Aruba"}
-        AX{"Illes Aland"}
+        AX{"Illes Åland"}
         AZ{"Azerbaidjan"}
         BA{"Bòsnia i Hercegovina"}
         BB{"Barbados"}
@@ -64,7 +64,7 @@ ca{
         BM{"Bermudes"}
         BN{"Brunei"}
         BO{"Bolívia"}
-        BQ{"Antilles Neerlandeses"}
+        BQ{"Carib Neerlandès"}
         BR{"Brasil"}
         BS{"Bahames"}
         BT{"Bhutan"}
@@ -156,7 +156,7 @@ ca{
         JO{"Jordània"}
         JP{"Japó"}
         KE{"Kenya"}
-        KG{"Kirguizistan"}
+        KG{"Kirguizstan"}
         KH{"Cambodja"}
         KI{"Kiribati"}
         KM{"Comores"}
@@ -189,7 +189,7 @@ ca{
         MM{"Myanmar (Birmània)"}
         MN{"Mongòlia"}
         MO{"Macau (RAE Xina)"}
-        MP{"Illes Mariannes del Nord"}
+        MP{"Illes Mariannes Septentrionals"}
         MQ{"Martinica"}
         MR{"Mauritània"}
         MS{"Montserrat"}
@@ -254,7 +254,7 @@ ca{
         SV{"El Salvador"}
         SX{"Sint Maarten"}
         SY{"Síria"}
-        SZ{"eSwatini"}
+        SZ{"Eswatini"}
         TA{"Tristan da Cunha"}
         TC{"Illes Turks i Caicos"}
         TD{"Txad"}
@@ -263,7 +263,7 @@ ca{
         TH{"Tailàndia"}
         TJ{"Tadjikistan"}
         TK{"Tokelau"}
-        TL{"Timor Oriental"}
+        TL{"Timor-Leste"}
         TM{"Turkmenistan"}
         TN{"Tunísia"}
         TO{"Tonga"}
@@ -312,6 +312,8 @@ ca{
         CI{"Costa d’Ivori"}
         CZ{"República Txeca"}
         FK{"Illes Malvines (Illes Falkland)"}
+        NZ{"Aotearoa (Nova Zelanda)"}
         SZ{"Swazilàndia"}
+        TL{"Timor Oriental"}
     }
 }

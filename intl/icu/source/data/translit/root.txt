@@ -332,8 +332,8 @@ root:table(nofallback){
         }
         Ethi-Latn{
             file{
-                direction{"REVERSE"}
-                resource:process(transliterator){"Latn_Ethi.txt"}
+                direction{"FORWARD"}
+                resource:process(transliterator){"Ethi_Latn.txt"}
             }
         }
         Ethi-Latn/ALALOC{
@@ -378,10 +378,10 @@ root:table(nofallback){
                 resource:process(transliterator){"Ethi_Latn_SERA.txt"}
             }
         }
-        Ethi-Sarb{
+        Ethi-Latn/Williamson{
             file{
-                direction{"FORWARD"}
-                resource:process(transliterator){"Ethi_Sarb.txt"}
+                direction{"REVERSE"}
+                resource:process(transliterator){"Latn_Ethi_Williamson.txt"}
             }
         }
         Ethi-sgw_Ethi/Gurage_2013{
@@ -426,17 +426,23 @@ root:table(nofallback){
         Ethiopic-Latin/Tekie_Alibekit{
             alias{"byn_Ethi-byn_Latn/Tekie_Alibekit"}
         }
+        Ethiopic-Latin/Williamson{
+            alias{"Ethi-Latn/Williamson"}
+        }
         Ethiopic-Latin/Xaleget{
             alias{"byn_Ethi-byn_Latn/Xaleget"}
-        }
-        Ethiopic-Musnad{
-            alias{"Ethi-Sarb"}
         }
         Fullwidth-Halfwidth{
             file{
                 direction{"FORWARD"}
                 resource:process(transliterator){"Fullwidth_Halfwidth.txt"}
             }
+        }
+        Geez-Ethiopic{
+            alias{"Sarb-gz_Ethi"}
+        }
+        Geez-Musnad{
+            alias{"gz_Ethi-Sarb"}
         }
         Geor-Latn{
             file{
@@ -1029,6 +1035,9 @@ root:table(nofallback){
         Latin-Ethiopic/Tekie_Alibekit{
             alias{"byn_Latn-byn_Ethi/Tekie_Alibekit"}
         }
+        Latin-Ethiopic/Williamson{
+            alias{"Latn-Ethi/Williamson"}
+        }
         Latin-Georgian{
             alias{"Latn-Geor"}
         }
@@ -1148,8 +1157,8 @@ root:table(nofallback){
         }
         Latn-Ethi{
             file{
-                direction{"FORWARD"}
-                resource:process(transliterator){"Latn_Ethi.txt"}
+                direction{"REVERSE"}
+                resource:process(transliterator){"Ethi_Latn.txt"}
             }
         }
         Latn-Ethi/ALALOC{
@@ -1186,6 +1195,12 @@ root:table(nofallback){
             file{
                 direction{"REVERSE"}
                 resource:process(transliterator){"Ethi_Latn_SERA.txt"}
+            }
+        }
+        Latn-Ethi/Williamson{
+            file{
+                direction{"FORWARD"}
+                resource:process(transliterator){"Latn_Ethi_Williamson.txt"}
             }
         }
         Latn-Geor{
@@ -1407,9 +1422,6 @@ root:table(nofallback){
         Mongolian-Latin/BGN{
             alias{"mn-mn_Latn/BGN"}
         }
-        Musnad-Ethiopic{
-            alias{"Sarb-Ethi"}
-        }
         Myanmar-Latin{
             alias{"my-my_Latn"}
         }
@@ -1548,10 +1560,10 @@ root:table(nofallback){
         Russian-Latin/BGN{
             alias{"ru-ru_Latn/BGN"}
         }
-        Sarb-Ethi{
+        Sarb-gz_Ethi{
             file{
                 direction{"REVERSE"}
-                resource:process(transliterator){"Ethi_Sarb.txt"}
+                resource:process(transliterator){"gz_Ethi_Sarb.txt"}
             }
         }
         Serbian-Latin/BGN{
@@ -2625,6 +2637,15 @@ root:table(nofallback){
         fa-t-zu{
             alias{"zu-fa"}
         }
+        gz-Ethi-t-und-sarb{
+            alias{"Sarb-gz_Ethi"}
+        }
+        gz_Ethi-Sarb{
+            file{
+                direction{"FORWARD"}
+                resource:process(transliterator){"gz_Ethi_Sarb.txt"}
+            }
+        }
         ha-NE-t-ha{
             alias{"ha-ha_NE"}
         }
@@ -3588,7 +3609,7 @@ root:table(nofallback){
         und-Ethi-t-und-cyrl-m0-gutgarts{
             alias{"Cyrl-Ethi/Gutgarts"}
         }
-        und-Ethi-t-und-latn{
+        und-Ethi-t-und-lant{
             alias{"Latn-Ethi"}
         }
         und-Ethi-t-und-latn-m0-aethiopi{
@@ -3609,8 +3630,8 @@ root:table(nofallback){
         und-Ethi-t-und-latn-m0-sera{
             alias{"Latn-Ethi/SERA"}
         }
-        und-Ethi-t-und-sarb{
-            alias{"Sarb-Ethi"}
+        und-Ethi-t-und-latn-m0-williams{
+            alias{"Latn-Ethi/Williamson"}
         }
         und-Geor-t-und-latn{
             alias{"Latn-Geor"}
@@ -3777,6 +3798,9 @@ root:table(nofallback){
         und-Latn-t-und-ethi-m0-sera{
             alias{"Ethi-Latn/SERA"}
         }
+        und-Latn-t-und-ethi-m0-williams{
+            alias{"Ethi-Latn/Williamson"}
+        }
         und-Latn-t-und-geor{
             alias{"Geor-Latn"}
         }
@@ -3891,8 +3915,8 @@ root:table(nofallback){
         und-Orya-t-und-telu{
             alias{"Telu-Orya"}
         }
-        und-Sarb-t-und-ethi{
-            alias{"Ethi-Sarb"}
+        und-Sarb-t-gz-ethi{
+            alias{"gz_Ethi-Sarb"}
         }
         und-Syrc-t-und-latn{
             alias{"Latn-Syrc"}

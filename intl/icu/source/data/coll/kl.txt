@@ -8,7 +8,7 @@ kl{
                 "[import und-u-co-search]"
                 "[import kl-u-co-standard]"
             }
-            Version{"41"}
+            Version{"42"}
         }
         standard{
             Sequence{
@@ -19,7 +19,7 @@ kl{
                 "&Y<<ü<<<Ü<<ű<<<Ű"
                 "&[before 1]ǀ<æ<<<Æ<<ä<<<Ä<<ę<<<Ę<ø<<<Ø<<ö<<<Ö<<ő<<<Ő<<œ<<<Œ<å<<<Å"
             }
-            Version{"41"}
+            Version{"42"}
         }
     }
 }

@@ -257,8 +257,8 @@ length;	visiblty;	GB;	905256 / 625;	1448.4096;	meter;	4752;	4752.0;	foot
 length;	visiblty;	GB;	381 / 1250;	0.3048;	meter;	1;	1.0;	foot
 length;	visiblty;	GB;	3429 / 12500;	0.27432;	meter;	9 / 10;	0.9;	foot
 
-mass;	default;	001;	1100;	1100.0;	kilogram;	11 / 10;	1.1;	metric-ton
-mass;	default;	001;	1000;	1000.0;	kilogram;	1;	1.0;	metric-ton
+mass;	default;	001;	1100;	1100.0;	kilogram;	11 / 10;	1.1;	tonne
+mass;	default;	001;	1000;	1000.0;	kilogram;	1;	1.0;	tonne
 mass;	default;	001;	900;	900.0;	kilogram;	900;	900.0;	kilogram
 mass;	default;	001;	1;	1.0;	kilogram;	1;	1.0;	kilogram
 mass;	default;	001;	9 / 10;	0.9;	kilogram;	900;	900.0;	gram

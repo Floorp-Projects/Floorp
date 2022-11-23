@@ -2011,6 +2011,47 @@ sk{
                 one{"{0} nanosekunda"}
                 other{"{0} nanosekúnd"}
             }
+            quarter{
+                case{
+                    accusative{
+                        few{"{0} štvrťroky"}
+                        many{"{0} štvrťroka"}
+                        one{"{0} štvrťrok"}
+                        other{"{0} štvrťrokov"}
+                    }
+                    dative{
+                        few{"{0} štvrťrokom"}
+                        many{"{0} štvrťroka"}
+                        one{"{0} štvrťroku"}
+                        other{"{0} štvrťrokom"}
+                    }
+                    genitive{
+                        few{"{0} štvrťrokov"}
+                        many{"{0} štvrťroka"}
+                        one{"{0} štvrťroka"}
+                        other{"{0} štvrťrokov"}
+                    }
+                    instrumental{
+                        few{"{0} štvrťrokmi"}
+                        many{"{0} štvrťroka"}
+                        one{"{0} štvrťrokom"}
+                        other{"{0} štvrťrokmi"}
+                    }
+                    locative{
+                        few{"{0} štvrťrokoch"}
+                        many{"{0} štvrťroka"}
+                        one{"{0} štvrťroku"}
+                        other{"{0} štvrťrokoch"}
+                    }
+                }
+                dnam{"štvrťroky"}
+                few{"{0} štvrťroky"}
+                gender{"inanimate"}
+                many{"{0} štvrťroka"}
+                one{"{0} štvrťrok"}
+                other{"{0} štvrťrokov"}
+                per{"{0}/štvrťrok"}
+            }
             second{
                 case{
                     accusative{
@@ -3585,46 +3626,6 @@ sk{
                 other{"{0} kilogramov"}
                 per{"{0} na kilogram"}
             }
-            metric-ton{
-                case{
-                    accusative{
-                        few{"{0} tony"}
-                        many{"{0} tony"}
-                        one{"{0} tonu"}
-                        other{"{0} ton"}
-                    }
-                    dative{
-                        few{"{0} tonám"}
-                        many{"{0} tony"}
-                        one{"{0} tone"}
-                        other{"{0} tonám"}
-                    }
-                    genitive{
-                        few{"{0} ton"}
-                        many{"{0} tony"}
-                        one{"{0} tony"}
-                        other{"{0} ton"}
-                    }
-                    instrumental{
-                        few{"{0} tonami"}
-                        many{"{0} tony"}
-                        one{"{0} tonou"}
-                        other{"{0} tonami"}
-                    }
-                    locative{
-                        few{"{0} tonách"}
-                        many{"{0} tony"}
-                        one{"{0} tone"}
-                        other{"{0} tonách"}
-                    }
-                }
-                dnam{"tony"}
-                few{"{0} tony"}
-                gender{"feminine"}
-                many{"{0} tony"}
-                one{"{0} tona"}
-                other{"{0} ton"}
-            }
             microgram{
                 case{
                     accusative{
@@ -3748,6 +3749,46 @@ sk{
                 many{"{0} americkej tony"}
                 one{"{0} americká tona"}
                 other{"{0} amerických ton"}
+            }
+            tonne{
+                case{
+                    accusative{
+                        few{"{0} tony"}
+                        many{"{0} tony"}
+                        one{"{0} tonu"}
+                        other{"{0} ton"}
+                    }
+                    dative{
+                        few{"{0} tonám"}
+                        many{"{0} tony"}
+                        one{"{0} tone"}
+                        other{"{0} tonám"}
+                    }
+                    genitive{
+                        few{"{0} ton"}
+                        many{"{0} tony"}
+                        one{"{0} tony"}
+                        other{"{0} ton"}
+                    }
+                    instrumental{
+                        few{"{0} tonami"}
+                        many{"{0} tony"}
+                        one{"{0} tonou"}
+                        other{"{0} tonami"}
+                    }
+                    locative{
+                        few{"{0} tonách"}
+                        many{"{0} tony"}
+                        one{"{0} tone"}
+                        other{"{0} tonách"}
+                    }
+                }
+                dnam{"tony"}
+                few{"{0} tony"}
+                gender{"feminine"}
+                many{"{0} tony"}
+                one{"{0} tona"}
+                other{"{0} ton"}
             }
         }
         power{
@@ -5365,6 +5406,13 @@ sk{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
+            quarter{
+                few{"{0} štvrťroky"}
+                many{"{0} štvrťroka"}
+                one{"{0} štvrťrok"}
+                other{"{0} štvrťrokov"}
+                per{"{0}/štvrťrok"}
+            }
             second{
                 dnam{"s"}
                 few{"{0} s"}
@@ -5563,13 +5611,6 @@ sk{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                few{"{0} t"}
-                many{"{0} t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 few{"{0} μg"}
@@ -5620,6 +5661,13 @@ sk{
                 many{"{0} to"}
                 one{"{0} to"}
                 other{"{0} to"}
+            }
+            tonne{
+                dnam{"t"}
+                few{"{0} t"}
+                many{"{0} t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{
@@ -6240,6 +6288,14 @@ sk{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
+            quarter{
+                dnam{"štvrťrok"}
+                few{"{0} štvrťroky"}
+                many{"{0} štvrťroka"}
+                one{"{0} štvrťrok"}
+                other{"{0} štvrťrokov"}
+                per{"{0}/štvrťrok"}
+            }
             second{
                 dnam{"s"}
                 few{"{0} s"}
@@ -6693,13 +6749,6 @@ sk{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                few{"{0} t"}
-                many{"{0} t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 few{"{0} μg"}
@@ -6757,6 +6806,13 @@ sk{
                 many{"{0} to"}
                 one{"{0} to"}
                 other{"{0} to"}
+            }
+            tonne{
+                dnam{"t"}
+                few{"{0} t"}
+                many{"{0} t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

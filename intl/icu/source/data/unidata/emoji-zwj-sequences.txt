@@ -1,13 +1,13 @@
 # emoji-zwj-sequences.txt
-# Date: 2021-06-08, 05:19:16 GMT
-# © 2021 Unicode®, Inc.
+# Date: 2022-05-06, 16:14:52 GMT
+# © 2022 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
-# For terms of use, see http://www.unicode.org/terms_of_use.html
+# For terms of use, see https://www.unicode.org/terms_of_use.html
 #
 # Emoji ZWJ Sequences for UTS #51
-# Version: 14.0
+# Version: 15.0
 #
-# For documentation and usage, see http://www.unicode.org/reports/tr51
+# For documentation and usage, see https://www.unicode.org/reports/tr51
 #
 # Format:
 #   code_point(s) ; type_field ; description # comments 
@@ -1398,6 +1398,7 @@
 1F3F4 200D 2620 FE0F                        ; RGI_Emoji_ZWJ_Sequence  ; pirate flag                                                    # E11.0  [1] (🏴‍☠️)
 1F408 200D 2B1B                             ; RGI_Emoji_ZWJ_Sequence  ; black cat                                                      # E13.0  [1] (🐈‍⬛)
 1F415 200D 1F9BA                            ; RGI_Emoji_ZWJ_Sequence  ; service dog                                                    # E12.0  [1] (🐕‍🦺)
+1F426 200D 2B1B                             ; RGI_Emoji_ZWJ_Sequence  ; black bird                                                     # E15.0  [1] (🐦‍⬛)
 1F43B 200D 2744 FE0F                        ; RGI_Emoji_ZWJ_Sequence  ; polar bear                                                     # E13.0  [1] (🐻‍❄️)
 1F441 FE0F 200D 1F5E8 FE0F                  ; RGI_Emoji_ZWJ_Sequence  ; eye in speech bubble                                           # E2.0   [1] (👁️‍🗨️)
 1F62E 200D 1F4A8                            ; RGI_Emoji_ZWJ_Sequence  ; face exhaling                                                  # E13.1  [1] (😮‍💨)
@@ -1405,6 +1406,6 @@
 1F636 200D 1F32B FE0F                       ; RGI_Emoji_ZWJ_Sequence  ; face in clouds                                                 # E13.1  [1] (😶‍🌫️)
 1F9D1 200D 1F384                            ; RGI_Emoji_ZWJ_Sequence  ; mx claus                                                       # E13.0  [1] (🧑‍🎄)
 
-# Total elements: 13
+# Total elements: 14
 
 #EOF

@@ -12,14 +12,14 @@
 
 ##############################################################################
 # Keep the following in sync with the version - see common/unicode/uvernum.h
-U_ICUDATA_NAME=icudt71
+U_ICUDATA_NAME=icudt72
 ##############################################################################
 !IF "$(UWP)" == "UWP"
 # Optionally change the name of the data file for the UWP version.
-U_ICUDATA_NAME=icudt71
+U_ICUDATA_NAME=icudt72
 !ENDIF
 U_ICUDATA_ENDIAN_SUFFIX=l
-UNICODE_VERSION=14.0
+UNICODE_VERSION=15.0
 ICU_LIB_TARGET=$(DLL_OUTPUT)\$(U_ICUDATA_NAME).dll
 
 #  ICUMAKE
@@ -74,22 +74,22 @@ COREDATA_TS=$(ICUTMP)\coredata.timestamp
 ARM_CROSSBUILD_TS=
 
 #  ICUCOL
-#       The directory that contains colfiles.mk files along with *.txt collation data files
+#       The directory that contains *.txt collation data files
 #
 ICUCOL=coll
 
 #  ICURBNF
-#       The directory that contains rbnffiles.mk files along with *.txt RBNF data files
+#       The directory that contains *.txt RBNF data files
 #
 ICURBNF=rbnf
 
 #  ICUTRNS
-#       The directory that contains trfiles.mk files along with *.txt transliterator files
+#       The directory that contains *.txt transliterator files
 #
 ICUTRNS=translit
 
 #  ICUBRK
-#       The directory that contains resfiles.mk files along with *.txt break iterator files
+#       The directory that contains *.txt break iterator files
 #
 ICUBRK=brkitr
 

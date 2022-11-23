@@ -25,14 +25,11 @@ pt_PT{
         }
         compound{
             1024p8{"yobe{0}"}
-            10p-1{"decí{0}"}
             10p-12{"picó{0}"}
             10p-15{"fentó{0}"}
             10p-18{"ató{0}"}
-            10p-2{"centí{0}"}
             10p-21{"zeptó{0}"}
             10p-24{"ioctó{0}"}
-            10p-3{"milí{0}"}
             10p-6{"micró{0}"}
             10p-9{"nanó{0}"}
             10p1{"decâ{0}"}
@@ -260,14 +257,6 @@ pt_PT{
             }
         }
         angle{
-            arc-minute{
-                one{"{0}′"}
-                other{"{0}′"}
-            }
-            arc-second{
-                one{"{0}″"}
-                other{"{0}″"}
-            }
             degree{
                 one{"{0}°"}
                 other{"{0}°"}
@@ -335,7 +324,6 @@ pt_PT{
                 other{"{0} min"}
             }
             second{
-                dnam{"s"}
                 per{"{0}/s"}
             }
         }
@@ -685,11 +673,6 @@ pt_PT{
                 dnam{"ns"}
                 one{"{0} ns"}
                 other{"{0} ns"}
-            }
-            second{
-                dnam{"s"}
-                one{"{0} s"}
-                other{"{0} s"}
             }
         }
         electric{

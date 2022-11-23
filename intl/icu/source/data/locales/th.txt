@@ -35,6 +35,8 @@ th{
             }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                accountingFormat%alphaNextToNumber{"¤ #,##0.00;(¤ #,##0.00)"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
@@ -117,6 +119,44 @@ th{
                     }
                     100000000000000{
                         other{"¤000T"}
+                    }
+                }
+                currencyFormat%alphaNextToNumber{
+                    1000{
+                        other{"¤ 0K"}
+                    }
+                    10000{
+                        other{"¤ 00K"}
+                    }
+                    100000{
+                        other{"¤ 000K"}
+                    }
+                    1000000{
+                        other{"¤ 0M"}
+                    }
+                    10000000{
+                        other{"¤ 00M"}
+                    }
+                    100000000{
+                        other{"¤ 000M"}
+                    }
+                    1000000000{
+                        other{"¤ 0B"}
+                    }
+                    10000000000{
+                        other{"¤ 00B"}
+                    }
+                    100000000000{
+                        other{"¤ 000B"}
+                    }
+                    1000000000000{
+                        other{"¤ 0T"}
+                    }
+                    10000000000000{
+                        other{"¤ 00T"}
+                    }
+                    100000000000000{
+                        other{"¤ 000T"}
                     }
                 }
                 decimalFormat{
@@ -219,7 +259,7 @@ th{
                 GyMMMEEEEd{"EEEEที่ d MMM G y"}
                 GyMMMEd{"E d MMM G y"}
                 GyMMMd{"d MMM G y"}
-                GyMd{"d/M/y GGGGG"}
+                GyMd{"d/M/GGGGG y"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -1049,6 +1089,12 @@ th{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimePatterns%atTime{
+                "{1} เวลา {0}",
+                "{1} เวลา {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
             DateTimeSkeletons{
                 "Hmmsszzzz",
                 "Hmmssz",
@@ -1257,10 +1303,6 @@ th{
                 "ก่อนเที่ยง",
                 "หลังเที่ยง",
             }
-            AmPmMarkersAbbr{
-                "ก่อนเที่ยง",
-                "หลังเที่ยง",
-            }
             AmPmMarkersNarrow{
                 "a",
                 "p",
@@ -1277,6 +1319,12 @@ th{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
+                "{1} เวลา {0}",
+                "{1} เวลา {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -1343,10 +1391,10 @@ th{
                 yMMM{"MMM y"}
                 yMMMEEEEd{"EEEEที่ d MMM y"}
                 yMMMEd{"E d MMM y"}
-                yMMMM{"MMMM G y"}
-                yMMMMEEEEd{"EEEEที่ d MMMM G y"}
-                yMMMMEd{"E d MMMM G y"}
-                yMMMMd{"d MMMM G y"}
+                yMMMM{"MMMM y"}
+                yMMMMEEEEd{"EEEEที่ d MMMM y"}
+                yMMMMEd{"E d MMMM y"}
+                yMMMMd{"d MMMM y"}
                 yMMMd{"d MMM y"}
                 yMd{"d/M/y"}
                 yQQQ{"QQQ y"}
@@ -1671,14 +1719,14 @@ th{
                     y{"EEEEที่ d MMMM G y – EEEEที่ d MMMM y"}
                 }
                 yMMMMEd{
-                    M{"E d MMMM – E d MMMM G y"}
-                    d{"E d – E d MMMM G y"}
-                    y{"E d MMMM G y – E d MMMM G y"}
+                    M{"E d MMMM – E d MMMM y"}
+                    d{"E d – E d MMMM y"}
+                    y{"E d MMMM y – E d MMMM y"}
                 }
                 yMMMMd{
-                    M{"d MMMM – d MMMM G y"}
-                    d{"d–d MMMM G y"}
-                    y{"d MMMM G y – d MMMM G y"}
+                    M{"d MMMM – d MMMM y"}
+                    d{"d–d MMMM y"}
+                    y{"d MMMM y – d MMMM y"}
                 }
                 yMMMd{
                     M{"d MMM – d MMM y"}
@@ -3575,6 +3623,42 @@ th{
                 "[,٫︐﹐，]",
                 "[.․﹒．｡]",
             }
+        }
+    }
+    personNames{
+        nameOrderLocales{
+            givenFirst{
+                "und",
+                "th",
+            }
+            surnameFirst{
+                "ko",
+                "vi",
+                "yue",
+                "zh",
+            }
+        }
+        namePattern{
+            givenFirst-long-addressing-informal{"{given-informal}"}
+            givenFirst-long-monogram-formal{"{given-informal-monogram-allCaps}"}
+            givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-long-referring-informal{"{given}{given2}{surname}{surname2}{suffix}"}
+            givenFirst-medium-addressing-informal{"{given-informal}"}
+            givenFirst-medium-monogram-formal{"{given-informal-monogram-allCaps}"}
+            givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-medium-referring-informal{"{given-informal}{surname}"}
+            givenFirst-short-addressing-informal{"{given-informal}"}
+            givenFirst-short-referring-informal{"{given}{given2}{surname}{surname2}"}
+            sorting-long-referring-formal{"{surname-core}{given}{given2}{surname-prefix}"}
+            sorting-long-referring-informal{"{surname}{given-informal}"}
+            surnameFirst-long-addressing-informal{"{given-informal}"}
+            surnameFirst-long-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}"}
+            surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-short-addressing-informal{"{given-informal}"}
+            surnameFirst-short-monogram-formal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
         }
     }
 }

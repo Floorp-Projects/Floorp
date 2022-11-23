@@ -6,8 +6,8 @@ sr_Latn_XK{
         generic{
             intervalFormats{
                 MMMEd{
-                    M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d – E, d. MMM"}
+                    M{"E, d. MMM – E, d. MMM"}
+                    d{"E, d – E, d. MMM"}
                 }
             }
         }

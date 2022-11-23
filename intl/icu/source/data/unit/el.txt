@@ -856,6 +856,23 @@ el{
                 one{"{0} νανοδευτερόλεπτο"}
                 other{"{0} νανοδευτερόλεπτα"}
             }
+            quarter{
+                case{
+                    accusative{
+                        one{"{0} τέταρτο"}
+                        other{"{0} τέταρτα"}
+                    }
+                    genitive{
+                        one{"{0} τέταρτου"}
+                        other{"{0} τέταρτων"}
+                    }
+                }
+                dnam{"τέταρτα"}
+                gender{"neuter"}
+                one{"{0} τέταρτο"}
+                other{"{0} τέταρτα"}
+                per{"{0}/τέτ."}
+            }
             second{
                 case{
                     accusative{
@@ -1286,7 +1303,7 @@ el{
                         other{"{0} δεκατόμετρα"}
                     }
                     genitive{
-                        one{"{0} δεκατόμετρο"}
+                        one{"{0} δεκατομέτρου"}
                         other{"{0} δεκατόμετρων"}
                     }
                 }
@@ -1329,7 +1346,7 @@ el{
                         other{"{0} χιλιόμετρα"}
                     }
                     genitive{
-                        one{"{0} χιλιόμετρου"}
+                        one{"χιλιομέτρου"}
                         other{"{0} χιλιομέτρων"}
                     }
                 }
@@ -1368,8 +1385,8 @@ el{
                         other{"{0} μικρόμετρα"}
                     }
                     genitive{
-                        one{"{0} μικρόμετρο"}
-                        other{"{0} μικρόμετρων"}
+                        one{"{0} μικρομέτρου"}
+                        other{"{0} μικρομέτρων"}
                     }
                 }
                 gender{"neuter"}
@@ -1420,8 +1437,8 @@ el{
                         other{"{0} νανόμετρα"}
                     }
                     genitive{
-                        one{"{0} νανόμετρου"}
-                        other{"{0} νανόμετρων"}
+                        one{"{0} νανομέτρου"}
+                        other{"{0} νανομέτρων"}
                     }
                 }
                 dnam{"νανόμετρα"}
@@ -1590,22 +1607,6 @@ el{
                 other{"{0} χιλιόγραμμα"}
                 per{"{0} ανά χιλιόγραμμο"}
             }
-            metric-ton{
-                case{
-                    accusative{
-                        one{"{0} τόνο"}
-                        other{"{0} τόνους"}
-                    }
-                    genitive{
-                        one{"{0} τόνου"}
-                        other{"{0} τόνων"}
-                    }
-                }
-                dnam{"τόνοι"}
-                gender{"masculine"}
-                one{"{0} τόνος"}
-                other{"{0} τόνοι"}
-            }
             microgram{
                 case{
                     accusative{
@@ -1669,6 +1670,22 @@ el{
                 dnam{"τόνοι ΗΠΑ"}
                 one{"{0} τόνος ΗΠΑ"}
                 other{"{0} τόνοι ΗΠΑ"}
+            }
+            tonne{
+                case{
+                    accusative{
+                        one{"{0} τόνο"}
+                        other{"{0} τόνους"}
+                    }
+                    genitive{
+                        one{"{0} τόνου"}
+                        other{"{0} τόνων"}
+                    }
+                }
+                dnam{"τόνοι"}
+                gender{"masculine"}
+                one{"{0} τόνος"}
+                other{"{0} τόνοι"}
             }
         }
         power{
@@ -2075,7 +2092,7 @@ el{
                         other{"{0} κυβικά χιλιόμετρα"}
                     }
                     genitive{
-                        one{"{0} κυβικού χιλιόμετρου"}
+                        one{"{0} κυβικού χιλιομέτρου"}
                         other{"{0} κυβικών χιλιομέτρων"}
                     }
                 }
@@ -2488,6 +2505,11 @@ el{
             }
             nanosecond{
                 dnam{"ns"}
+            }
+            quarter{
+                one{"{0} τέτ."}
+                other{"{0} τέτ."}
+                per{"{0}/τέτ."}
             }
             second{
                 dnam{"δευτ."}
@@ -3104,6 +3126,12 @@ el{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
+            quarter{
+                dnam{"τετ."}
+                one{"{0} τέτ."}
+                other{"{0} τέτ/α"}
+                per{"{0}/τέτ."}
+            }
             second{
                 dnam{"δευτ."}
                 one{"{0} δευτ."}
@@ -3419,11 +3447,6 @@ el{
                 other{"{0} κιλά"}
                 per{"{0}/κιλό"}
             }
-            metric-ton{
-                dnam{"τ."}
-                one{"{0} τ."}
-                other{"{0} τ."}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -3464,6 +3487,11 @@ el{
                 dnam{"τόνοι ΗΠΑ"}
                 one{"{0} τ. ΗΠΑ"}
                 other{"{0} τ. ΗΠΑ"}
+            }
+            tonne{
+                dnam{"τ."}
+                one{"{0} τ."}
+                other{"{0} τ."}
             }
         }
         power{

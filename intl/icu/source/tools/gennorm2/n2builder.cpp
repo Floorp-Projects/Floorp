@@ -213,11 +213,11 @@ void Normalizer2DataBuilder::removeMapping(UChar32 c) {
 UBool Normalizer2DataBuilder::mappingHasCompBoundaryAfter(const BuilderReorderingBuffer &buffer,
                                                           Norm::MappingType mappingType) const {
     if(buffer.isEmpty()) {
-        return FALSE;  // Maps-to-empty-string is no boundary of any kind.
+        return false;  // Maps-to-empty-string is no boundary of any kind.
     }
     int32_t lastStarterIndex=buffer.lastStarterIndex();
     if(lastStarterIndex<0) {
-        return FALSE;  // no starter
+        return false;  // no starter
     }
     const int32_t lastIndex=buffer.length()-1;
     if(mappingType==Norm::ONE_WAY && lastStarterIndex<lastIndex && buffer.ccAt(lastIndex)>1) {
@@ -226,12 +226,12 @@ UBool Normalizer2DataBuilder::mappingHasCompBoundaryAfter(const BuilderReorderin
         // which means that another combining mark can reorder before it.
         // By contrast, in a round-trip mapping this does not prevent a boundary as long as
         // the starter or composite does not combine-forward with a following combining mark.
-        return FALSE;
+        return false;
     }
     UChar32 starter=buffer.charAt(lastStarterIndex);
     if(lastStarterIndex==0 && norms.combinesBack(starter)) {
         // The last starter is at the beginning of the mapping and combines backward.
-        return FALSE;
+        return false;
     }
     if(Hangul::isJamoL(starter) ||
             (Hangul::isJamoV(starter) &&
@@ -255,14 +255,14 @@ UBool Normalizer2DataBuilder::mappingHasCompBoundaryAfter(const BuilderReorderin
     const Norm *starterNorm=norms.getNorm(starter);
     if(i==lastStarterIndex &&
             (starterNorm==nullptr || starterNorm->compositions==nullptr)) {
-        return TRUE;  // The last starter does not combine forward.
+        return true;  // The last starter does not combine forward.
     }
     uint8_t prevCC=0;
     while(++i<buffer.length()) {
         uint8_t cc=buffer.ccAt(i);  // !=0 if after last starter
         if(i>lastStarterIndex && norms.combinesWithCCBetween(*starterNorm, prevCC, cc)) {
             // The starter combines with a mark that reorders before the current one.
-            return FALSE;
+            return false;
         }
         UChar32 c=buffer.charAt(i);
         if(starterNorm!=nullptr && (prevCC<cc || prevCC==0) &&
@@ -271,14 +271,14 @@ UBool Normalizer2DataBuilder::mappingHasCompBoundaryAfter(const BuilderReorderin
             starterNorm=norms.getNorm(starter);
             if(i>=lastStarterIndex &&
                     (starterNorm==nullptr || starterNorm->compositions==nullptr)) {
-                return TRUE;  // The composite does not combine further.
+                return true;  // The composite does not combine further.
             }
             // Keep prevCC because we "removed" the combining mark.
         } else if(cc==0) {
             starterNorm=norms.getNorm(c);
             if(i==lastStarterIndex &&
                     (starterNorm==nullptr || starterNorm->compositions==nullptr)) {
-                return TRUE;  // The new starter does not combine forward.
+                return true;  // The new starter does not combine forward.
             }
             prevCC=0;
         } else {
@@ -286,18 +286,18 @@ UBool Normalizer2DataBuilder::mappingHasCompBoundaryAfter(const BuilderReorderin
         }
     }
     if(prevCC==0) {
-        return FALSE;  // forward-combining starter at the very end
+        return false;  // forward-combining starter at the very end
     }
     if(norms.combinesWithCCBetween(*starterNorm, prevCC, 256)) {
         // The starter combines with another mark.
-        return FALSE;
+        return false;
     }
-    return TRUE;
+    return true;
 }
 
 UBool Normalizer2DataBuilder::mappingRecomposes(const BuilderReorderingBuffer &buffer) const {
     if(buffer.lastStarterIndex()<0) {
-        return FALSE;  // no starter
+        return false;  // no starter
     }
     const Norm *starterNorm=nullptr;
     uint8_t prevCC=0;
@@ -306,11 +306,11 @@ UBool Normalizer2DataBuilder::mappingRecomposes(const BuilderReorderingBuffer &b
         uint8_t cc=buffer.ccAt(i);
         if(starterNorm!=nullptr && (prevCC<cc || prevCC==0) &&
                 norms.getNormRef(c).combinesBack && starterNorm->combine(c)>=0) {
-            return TRUE;  // normal composite
+            return true;  // normal composite
         } else if(cc==0) {
             if(Hangul::isJamoL(c)) {
                 if((i+1)<buffer.length() && Hangul::isJamoV(buffer.charAt(i+1))) {
-                    return TRUE;  // Hangul syllable
+                    return true;  // Hangul syllable
                 }
                 starterNorm=nullptr;
             } else {
@@ -319,7 +319,7 @@ UBool Normalizer2DataBuilder::mappingRecomposes(const BuilderReorderingBuffer &b
         }
         prevCC=cc;
     }
-    return FALSE;
+    return false;
 }
 
 void Normalizer2DataBuilder::postProcess(Norm &norm) {
@@ -563,7 +563,7 @@ LocalUCPTriePointer Normalizer2DataBuilder::processData() {
     // Recursively decompose all mappings.
     Decomposer decomposer(norms);
     do {
-        decomposer.didDecompose=FALSE;
+        decomposer.didDecompose=false;
         norms.enumRanges(decomposer);
     } while(decomposer.didDecompose);
 

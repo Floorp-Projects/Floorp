@@ -1253,6 +1253,31 @@ hr{
                 one{"{0} nanosekunda"}
                 other{"{0} nanosekundi"}
             }
+            quarter{
+                case{
+                    accusative{
+                        few{"{0} četvrtine"}
+                        one{"{0} četvrtinu"}
+                        other{"{0} četvrtina"}
+                    }
+                    genitive{
+                        few{"{0} četvrtine"}
+                        one{"{0} četvrtine"}
+                        other{"{0} četvrtina"}
+                    }
+                    instrumental{
+                        few{"{0} četvrtine"}
+                        one{"{0} četvrtinom"}
+                        other{"{0} četvrtina"}
+                    }
+                }
+                dnam{"čevrtine"}
+                few{"{0} četvrtine"}
+                gender{"feminine"}
+                one{"{0} četvrtina"}
+                other{"{0} četvrtina"}
+                per{"{0}/čet."}
+            }
             second{
                 case{
                     accusative{
@@ -2305,30 +2330,6 @@ hr{
                 other{"{0} kilograma"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                case{
-                    accusative{
-                        few{"{0} tone"}
-                        one{"{0} tonu"}
-                        other{"{0} tona"}
-                    }
-                    genitive{
-                        few{"{0} tone"}
-                        one{"{0} tone"}
-                        other{"{0} tona"}
-                    }
-                    instrumental{
-                        few{"{0} tone"}
-                        one{"{0} tonom"}
-                        other{"{0} tona"}
-                    }
-                }
-                dnam{"tone"}
-                few{"{0} tone"}
-                gender{"feminine"}
-                one{"{0} tona"}
-                other{"{0} tona"}
-            }
             microgram{
                 case{
                     accusative{
@@ -2414,6 +2415,30 @@ hr{
                 few{"{0} kratke tone"}
                 one{"{0} kratka tona"}
                 other{"{0} kratkih tona"}
+            }
+            tonne{
+                case{
+                    accusative{
+                        few{"{0} tone"}
+                        one{"{0} tonu"}
+                        other{"{0} tona"}
+                    }
+                    genitive{
+                        few{"{0} tone"}
+                        one{"{0} tone"}
+                        other{"{0} tona"}
+                    }
+                    instrumental{
+                        few{"{0} tone"}
+                        one{"{0} tonom"}
+                        other{"{0} tona"}
+                    }
+                }
+                dnam{"tone"}
+                few{"{0} tone"}
+                gender{"feminine"}
+                one{"{0} tona"}
+                other{"{0} tona"}
             }
         }
         power{
@@ -3550,6 +3575,13 @@ hr{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
+            quarter{
+                dnam{"čet."}
+                few{"{0} čet."}
+                one{"{0} čet."}
+                other{"{0} čet."}
+                per{"{0}/čet."}
+            }
             second{
                 dnam{"s"}
                 few{"{0} s"}
@@ -3795,11 +3827,6 @@ hr{
                 one{"{0} kg"}
                 other{"{0} kg"}
             }
-            metric-ton{
-                few{"{0} t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 few{"{0} μg"}
                 one{"{0} μg"}
@@ -3835,6 +3862,11 @@ hr{
                 few{"{0} tn"}
                 one{"{0} tn"}
                 other{"{0} tn"}
+            }
+            tonne{
+                few{"{0} t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{
@@ -4398,6 +4430,13 @@ hr{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
+            quarter{
+                dnam{"čet."}
+                few{"{0} čet."}
+                one{"{0} čet."}
+                other{"{0} čet."}
+                per{"{0}/čet."}
+            }
             second{
                 dnam{"s"}
                 few{"{0} s"}
@@ -4751,12 +4790,6 @@ hr{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                few{"{0} t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 few{"{0} μg"}
@@ -4800,6 +4833,12 @@ hr{
                 few{"{0} tn"}
                 one{"{0} tn"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"t"}
+                few{"{0} t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

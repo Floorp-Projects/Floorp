@@ -87,9 +87,9 @@ compact-short measure-unit/length-furlong unit-width-full-name
 
 scientific/+ee/sign-always percent unit-width-narrow
   es-MX
-    0E+00 %
-    9.182736E+04 %
-    -2.2222E-01 %
+    0E+00%
+    9.182736E+04%
+    -2.2222E-01%
   zh-TW
     0E+00%
     9.182736E+04%
@@ -339,9 +339,9 @@ compact-short measure-unit/length-furlong @@
 
 scientific/+ee/sign-always percent precision-integer
   es-MX
-    0E+00 %
-    9E+04 %
-    -2E-01 %
+    0E+00%
+    9E+04%
+    -2E-01%
   zh-TW
     0E+00%
     9E+04%
@@ -353,9 +353,9 @@ scientific/+ee/sign-always percent precision-integer
 
 scientific/+ee/sign-always percent .000
   es-MX
-    0.000E+00 %
-    9.183E+04 %
-    -2.222E-01 %
+    0.000E+00%
+    9.183E+04%
+    -2.222E-01%
   zh-TW
     0.000E+00%
     9.183E+04%
@@ -367,9 +367,9 @@ scientific/+ee/sign-always percent .000
 
 scientific/+ee/sign-always percent .##/@@@+
   es-MX
-    0E+00 %
-    9.18E+04 %
-    -2.22E-01 %
+    0E+00%
+    9.18E+04%
+    -2.22E-01%
   zh-TW
     0E+00%
     9.18E+04%
@@ -381,9 +381,9 @@ scientific/+ee/sign-always percent .##/@@@+
 
 scientific/+ee/sign-always percent @@
   es-MX
-    0.0E+00 %
-    9.2E+04 %
-    -2.2E-01 %
+    0.0E+00%
+    9.2E+04%
+    -2.2E-01%
   zh-TW
     0.0E+00%
     9.2E+04%
@@ -549,9 +549,9 @@ compact-short measure-unit/length-furlong rounding-mode-floor
 
 scientific/+ee/sign-always percent rounding-mode-floor
   es-MX
-    0E+00 %
-    9.182736E+04 %
-    -2.2222E-01 %
+    0E+00%
+    9.182736E+04%
+    -2.2222E-01%
   zh-TW
     0E+00%
     9.182736E+04%
@@ -633,9 +633,9 @@ compact-short measure-unit/length-furlong integer-width/##00
 
 scientific/+ee/sign-always percent integer-width/##00
   es-MX
-    00E+00 %
-    09.182736E+04 %
-    -02.2222E-01 %
+    00E+00%
+    09.182736E+04%
+    -02.2222E-01%
   zh-TW
     00E+00%
     09.182736E+04%
@@ -717,9 +717,9 @@ compact-short measure-unit/length-furlong scale/0.5
 
 scientific/+ee/sign-always percent scale/0.5
   es-MX
-    0E+00 %
-    4.591368E+04 %
-    -1.1111E-01 %
+    0E+00%
+    4.591368E+04%
+    -1.1111E-01%
   zh-TW
     0E+00%
     4.591368E+04%
@@ -801,9 +801,9 @@ compact-short measure-unit/length-furlong group-on-aligned
 
 scientific/+ee/sign-always percent group-on-aligned
   es-MX
-    0E+00 %
-    9.182736E+04 %
-    -2.2222E-01 %
+    0E+00%
+    9.182736E+04%
+    -2.2222E-01%
   zh-TW
     0E+00%
     9.182736E+04%
@@ -885,9 +885,9 @@ compact-short measure-unit/length-furlong latin
 
 scientific/+ee/sign-always percent latin
   es-MX
-    0E+00 %
-    9.182736E+04 %
-    -2.2222E-01 %
+    0E+00%
+    9.182736E+04%
+    -2.2222E-01%
   zh-TW
     0E+00%
     9.182736E+04%
@@ -969,9 +969,9 @@ compact-short measure-unit/length-furlong sign-accounting-except-zero
 
 scientific/+ee/sign-always percent sign-accounting-except-zero
   es-MX
-    0E+00 %
-    +9.182736E+04 %
-    -2.2222E-01 %
+    0E+00%
+    +9.182736E+04%
+    -2.2222E-01%
   zh-TW
     0E+00%
     +9.182736E+04%
@@ -1053,9 +1053,9 @@ compact-short measure-unit/length-furlong decimal-always
 
 scientific/+ee/sign-always percent decimal-always
   es-MX
-    0.E+00 %
-    9.182736E+04 %
-    -2.2222E-01 %
+    0.E+00%
+    9.182736E+04%
+    -2.2222E-01%
   zh-TW
     0.E+00%
     9.182736E+04%
@@ -3083,9 +3083,9 @@ scientific/+ee/sign-always sign-accounting-except-zero decimal-always
 
 percent unit-width-narrow precision-integer
   es-MX
-    0 %
-    91,827 %
-    -0 %
+    0%
+    91,827%
+    -0%
   zh-TW
     0%
     91,827%
@@ -3097,9 +3097,9 @@ percent unit-width-narrow precision-integer
 
 percent unit-width-narrow .000
   es-MX
-    0.000 %
-    91,827.364 %
-    -0.222 %
+    0.000%
+    91,827.364%
+    -0.222%
   zh-TW
     0.000%
     91,827.364%
@@ -3111,9 +3111,9 @@ percent unit-width-narrow .000
 
 percent unit-width-narrow .##/@@@+
   es-MX
-    0 %
-    91,827.36 %
-    -0.222 %
+    0%
+    91,827.36%
+    -0.222%
   zh-TW
     0%
     91,827.36%
@@ -3125,9 +3125,9 @@ percent unit-width-narrow .##/@@@+
 
 percent unit-width-narrow @@
   es-MX
-    0.0 %
-    92,000 %
-    -0.22 %
+    0.0%
+    92,000%
+    -0.22%
   zh-TW
     0.0%
     92,000%
@@ -3419,9 +3419,9 @@ measure-unit/length-furlong unit-width-full-name @@
 
 percent unit-width-narrow rounding-mode-floor
   es-MX
-    0 %
-    91,827.3645 %
-    -0.22222 %
+    0%
+    91,827.3645%
+    -0.22222%
   zh-TW
     0%
     91,827.3645%
@@ -3503,9 +3503,9 @@ measure-unit/length-furlong unit-width-full-name rounding-mode-floor
 
 percent unit-width-narrow integer-width/##00
   es-MX
-    00 %
-    1,827.3645 %
-    -00.22222 %
+    00%
+    1,827.3645%
+    -00.22222%
   zh-TW
     00%
     1,827.3645%
@@ -3587,9 +3587,9 @@ measure-unit/length-furlong unit-width-full-name integer-width/##00
 
 percent unit-width-narrow scale/0.5
   es-MX
-    0 %
-    45,913.68225 %
-    -0.11111 %
+    0%
+    45,913.68225%
+    -0.11111%
   zh-TW
     0%
     45,913.68225%
@@ -3671,9 +3671,9 @@ measure-unit/length-furlong unit-width-full-name scale/0.5
 
 percent unit-width-narrow group-on-aligned
   es-MX
-    0 %
-    91,827.3645 %
-    -0.22222 %
+    0%
+    91,827.3645%
+    -0.22222%
   zh-TW
     0%
     91,827.3645%
@@ -3755,9 +3755,9 @@ measure-unit/length-furlong unit-width-full-name group-on-aligned
 
 percent unit-width-narrow latin
   es-MX
-    0 %
-    91,827.3645 %
-    -0.22222 %
+    0%
+    91,827.3645%
+    -0.22222%
   zh-TW
     0%
     91,827.3645%
@@ -3839,9 +3839,9 @@ measure-unit/length-furlong unit-width-full-name latin
 
 percent unit-width-narrow sign-accounting-except-zero
   es-MX
-    0 %
-    +91,827.3645 %
-    -0.22222 %
+    0%
+    +91,827.3645%
+    -0.22222%
   zh-TW
     0%
     +91,827.3645%
@@ -3923,9 +3923,9 @@ measure-unit/length-furlong unit-width-full-name sign-accounting-except-zero
 
 percent unit-width-narrow decimal-always
   es-MX
-    0. %
-    91,827.3645 %
-    -0.22222 %
+    0.%
+    91,827.3645%
+    -0.22222%
   zh-TW
     0.%
     91,827.3645%
@@ -4007,9 +4007,9 @@ measure-unit/length-furlong unit-width-full-name decimal-always
 
 percent precision-integer rounding-mode-floor
   es-MX
-    0 %
-    91,827 %
-    -1 %
+    0%
+    91,827%
+    -1%
   zh-TW
     0%
     91,827%
@@ -4021,9 +4021,9 @@ percent precision-integer rounding-mode-floor
 
 percent .000 rounding-mode-floor
   es-MX
-    0.000 %
-    91,827.364 %
-    -0.223 %
+    0.000%
+    91,827.364%
+    -0.223%
   zh-TW
     0.000%
     91,827.364%
@@ -4035,9 +4035,9 @@ percent .000 rounding-mode-floor
 
 percent .##/@@@+ rounding-mode-floor
   es-MX
-    0 %
-    91,827.36 %
-    -0.223 %
+    0%
+    91,827.36%
+    -0.223%
   zh-TW
     0%
     91,827.36%
@@ -4049,9 +4049,9 @@ percent .##/@@@+ rounding-mode-floor
 
 percent @@ rounding-mode-floor
   es-MX
-    0.0 %
-    91,000 %
-    -0.23 %
+    0.0%
+    91,000%
+    -0.23%
   zh-TW
     0.0%
     91,000%
@@ -4175,9 +4175,9 @@ measure-unit/length-furlong @@ rounding-mode-floor
 
 percent precision-integer integer-width/##00
   es-MX
-    00 %
-    1,827 %
-    -00 %
+    00%
+    1,827%
+    -00%
   zh-TW
     00%
     1,827%
@@ -4189,9 +4189,9 @@ percent precision-integer integer-width/##00
 
 percent .000 integer-width/##00
   es-MX
-    00.000 %
-    1,827.364 %
-    -00.222 %
+    00.000%
+    1,827.364%
+    -00.222%
   zh-TW
     00.000%
     1,827.364%
@@ -4203,9 +4203,9 @@ percent .000 integer-width/##00
 
 percent .##/@@@+ integer-width/##00
   es-MX
-    00 %
-    1,827.36 %
-    -00.222 %
+    00%
+    1,827.36%
+    -00.222%
   zh-TW
     00%
     1,827.36%
@@ -4217,9 +4217,9 @@ percent .##/@@@+ integer-width/##00
 
 percent @@ integer-width/##00
   es-MX
-    00.0 %
-    2,000 %
-    -00.22 %
+    00.0%
+    2,000%
+    -00.22%
   zh-TW
     00.0%
     2,000%
@@ -4343,9 +4343,9 @@ measure-unit/length-furlong @@ integer-width/##00
 
 percent precision-integer scale/0.5
   es-MX
-    0 %
-    45,914 %
-    -0 %
+    0%
+    45,914%
+    -0%
   zh-TW
     0%
     45,914%
@@ -4357,9 +4357,9 @@ percent precision-integer scale/0.5
 
 percent .000 scale/0.5
   es-MX
-    0.000 %
-    45,913.682 %
-    -0.111 %
+    0.000%
+    45,913.682%
+    -0.111%
   zh-TW
     0.000%
     45,913.682%
@@ -4371,9 +4371,9 @@ percent .000 scale/0.5
 
 percent .##/@@@+ scale/0.5
   es-MX
-    0 %
-    45,913.68 %
-    -0.111 %
+    0%
+    45,913.68%
+    -0.111%
   zh-TW
     0%
     45,913.68%
@@ -4385,9 +4385,9 @@ percent .##/@@@+ scale/0.5
 
 percent @@ scale/0.5
   es-MX
-    0.0 %
-    46,000 %
-    -0.11 %
+    0.0%
+    46,000%
+    -0.11%
   zh-TW
     0.0%
     46,000%
@@ -4511,9 +4511,9 @@ measure-unit/length-furlong @@ scale/0.5
 
 percent precision-integer group-on-aligned
   es-MX
-    0 %
-    91,827 %
-    -0 %
+    0%
+    91,827%
+    -0%
   zh-TW
     0%
     91,827%
@@ -4525,9 +4525,9 @@ percent precision-integer group-on-aligned
 
 percent .000 group-on-aligned
   es-MX
-    0.000 %
-    91,827.364 %
-    -0.222 %
+    0.000%
+    91,827.364%
+    -0.222%
   zh-TW
     0.000%
     91,827.364%
@@ -4539,9 +4539,9 @@ percent .000 group-on-aligned
 
 percent .##/@@@+ group-on-aligned
   es-MX
-    0 %
-    91,827.36 %
-    -0.222 %
+    0%
+    91,827.36%
+    -0.222%
   zh-TW
     0%
     91,827.36%
@@ -4553,9 +4553,9 @@ percent .##/@@@+ group-on-aligned
 
 percent @@ group-on-aligned
   es-MX
-    0.0 %
-    92,000 %
-    -0.22 %
+    0.0%
+    92,000%
+    -0.22%
   zh-TW
     0.0%
     92,000%
@@ -4679,9 +4679,9 @@ measure-unit/length-furlong @@ group-on-aligned
 
 percent precision-integer latin
   es-MX
-    0 %
-    91,827 %
-    -0 %
+    0%
+    91,827%
+    -0%
   zh-TW
     0%
     91,827%
@@ -4693,9 +4693,9 @@ percent precision-integer latin
 
 percent .000 latin
   es-MX
-    0.000 %
-    91,827.364 %
-    -0.222 %
+    0.000%
+    91,827.364%
+    -0.222%
   zh-TW
     0.000%
     91,827.364%
@@ -4707,9 +4707,9 @@ percent .000 latin
 
 percent .##/@@@+ latin
   es-MX
-    0 %
-    91,827.36 %
-    -0.222 %
+    0%
+    91,827.36%
+    -0.222%
   zh-TW
     0%
     91,827.36%
@@ -4721,9 +4721,9 @@ percent .##/@@@+ latin
 
 percent @@ latin
   es-MX
-    0.0 %
-    92,000 %
-    -0.22 %
+    0.0%
+    92,000%
+    -0.22%
   zh-TW
     0.0%
     92,000%
@@ -4847,9 +4847,9 @@ measure-unit/length-furlong @@ latin
 
 percent precision-integer sign-accounting-except-zero
   es-MX
-    0 %
-    +91,827 %
-    0 %
+    0%
+    +91,827%
+    0%
   zh-TW
     0%
     +91,827%
@@ -4861,9 +4861,9 @@ percent precision-integer sign-accounting-except-zero
 
 percent .000 sign-accounting-except-zero
   es-MX
-    0.000 %
-    +91,827.364 %
-    -0.222 %
+    0.000%
+    +91,827.364%
+    -0.222%
   zh-TW
     0.000%
     +91,827.364%
@@ -4875,9 +4875,9 @@ percent .000 sign-accounting-except-zero
 
 percent .##/@@@+ sign-accounting-except-zero
   es-MX
-    0 %
-    +91,827.36 %
-    -0.222 %
+    0%
+    +91,827.36%
+    -0.222%
   zh-TW
     0%
     +91,827.36%
@@ -4889,9 +4889,9 @@ percent .##/@@@+ sign-accounting-except-zero
 
 percent @@ sign-accounting-except-zero
   es-MX
-    0.0 %
-    +92,000 %
-    -0.22 %
+    0.0%
+    +92,000%
+    -0.22%
   zh-TW
     0.0%
     +92,000%
@@ -5015,9 +5015,9 @@ measure-unit/length-furlong @@ sign-accounting-except-zero
 
 percent precision-integer decimal-always
   es-MX
-    0. %
-    91,827. %
-    -0. %
+    0.%
+    91,827.%
+    -0.%
   zh-TW
     0.%
     91,827.%
@@ -5029,9 +5029,9 @@ percent precision-integer decimal-always
 
 percent .000 decimal-always
   es-MX
-    0.000 %
-    91,827.364 %
-    -0.222 %
+    0.000%
+    91,827.364%
+    -0.222%
   zh-TW
     0.000%
     91,827.364%
@@ -5043,9 +5043,9 @@ percent .000 decimal-always
 
 percent .##/@@@+ decimal-always
   es-MX
-    0. %
-    91,827.36 %
-    -0.222 %
+    0.%
+    91,827.36%
+    -0.222%
   zh-TW
     0.%
     91,827.36%
@@ -5057,9 +5057,9 @@ percent .##/@@@+ decimal-always
 
 percent @@ decimal-always
   es-MX
-    0.0 %
-    92,000. %
-    -0.22 %
+    0.0%
+    92,000.%
+    -0.22%
   zh-TW
     0.0%
     92,000.%
@@ -5183,9 +5183,9 @@ measure-unit/length-furlong @@ decimal-always
 
 percent rounding-mode-floor integer-width/##00
   es-MX
-    00 %
-    1,827.3645 %
-    -00.22222 %
+    00%
+    1,827.3645%
+    -00.22222%
   zh-TW
     00%
     1,827.3645%
@@ -5225,9 +5225,9 @@ measure-unit/length-furlong rounding-mode-floor integer-width/##00
 
 percent rounding-mode-floor scale/0.5
   es-MX
-    0 %
-    45,913.68225 %
-    -0.11111 %
+    0%
+    45,913.68225%
+    -0.11111%
   zh-TW
     0%
     45,913.68225%
@@ -5267,9 +5267,9 @@ measure-unit/length-furlong rounding-mode-floor scale/0.5
 
 percent rounding-mode-floor group-on-aligned
   es-MX
-    0 %
-    91,827.3645 %
-    -0.22222 %
+    0%
+    91,827.3645%
+    -0.22222%
   zh-TW
     0%
     91,827.3645%
@@ -5309,9 +5309,9 @@ measure-unit/length-furlong rounding-mode-floor group-on-aligned
 
 percent rounding-mode-floor latin
   es-MX
-    0 %
-    91,827.3645 %
-    -0.22222 %
+    0%
+    91,827.3645%
+    -0.22222%
   zh-TW
     0%
     91,827.3645%
@@ -5351,9 +5351,9 @@ measure-unit/length-furlong rounding-mode-floor latin
 
 percent rounding-mode-floor sign-accounting-except-zero
   es-MX
-    0 %
-    +91,827.3645 %
-    -0.22222 %
+    0%
+    +91,827.3645%
+    -0.22222%
   zh-TW
     0%
     +91,827.3645%
@@ -5393,9 +5393,9 @@ measure-unit/length-furlong rounding-mode-floor sign-accounting-except-zero
 
 percent rounding-mode-floor decimal-always
   es-MX
-    0. %
-    91,827.3645 %
-    -0.22222 %
+    0.%
+    91,827.3645%
+    -0.22222%
   zh-TW
     0.%
     91,827.3645%
@@ -5435,9 +5435,9 @@ measure-unit/length-furlong rounding-mode-floor decimal-always
 
 percent integer-width/##00 scale/0.5
   es-MX
-    00 %
-    5,913.68225 %
-    -00.11111 %
+    00%
+    5,913.68225%
+    -00.11111%
   zh-TW
     00%
     5,913.68225%
@@ -5477,9 +5477,9 @@ measure-unit/length-furlong integer-width/##00 scale/0.5
 
 percent integer-width/##00 group-on-aligned
   es-MX
-    00 %
-    1,827.3645 %
-    -00.22222 %
+    00%
+    1,827.3645%
+    -00.22222%
   zh-TW
     00%
     1,827.3645%
@@ -5519,9 +5519,9 @@ measure-unit/length-furlong integer-width/##00 group-on-aligned
 
 percent integer-width/##00 latin
   es-MX
-    00 %
-    1,827.3645 %
-    -00.22222 %
+    00%
+    1,827.3645%
+    -00.22222%
   zh-TW
     00%
     1,827.3645%
@@ -5561,9 +5561,9 @@ measure-unit/length-furlong integer-width/##00 latin
 
 percent integer-width/##00 sign-accounting-except-zero
   es-MX
-    00 %
-    +1,827.3645 %
-    -00.22222 %
+    00%
+    +1,827.3645%
+    -00.22222%
   zh-TW
     00%
     +1,827.3645%
@@ -5603,9 +5603,9 @@ measure-unit/length-furlong integer-width/##00 sign-accounting-except-zero
 
 percent integer-width/##00 decimal-always
   es-MX
-    00. %
-    1,827.3645 %
-    -00.22222 %
+    00.%
+    1,827.3645%
+    -00.22222%
   zh-TW
     00.%
     1,827.3645%
@@ -5645,9 +5645,9 @@ measure-unit/length-furlong integer-width/##00 decimal-always
 
 percent scale/0.5 group-on-aligned
   es-MX
-    0 %
-    45,913.68225 %
-    -0.11111 %
+    0%
+    45,913.68225%
+    -0.11111%
   zh-TW
     0%
     45,913.68225%
@@ -5687,9 +5687,9 @@ measure-unit/length-furlong scale/0.5 group-on-aligned
 
 percent scale/0.5 latin
   es-MX
-    0 %
-    45,913.68225 %
-    -0.11111 %
+    0%
+    45,913.68225%
+    -0.11111%
   zh-TW
     0%
     45,913.68225%
@@ -5729,9 +5729,9 @@ measure-unit/length-furlong scale/0.5 latin
 
 percent scale/0.5 sign-accounting-except-zero
   es-MX
-    0 %
-    +45,913.68225 %
-    -0.11111 %
+    0%
+    +45,913.68225%
+    -0.11111%
   zh-TW
     0%
     +45,913.68225%
@@ -5771,9 +5771,9 @@ measure-unit/length-furlong scale/0.5 sign-accounting-except-zero
 
 percent scale/0.5 decimal-always
   es-MX
-    0. %
-    45,913.68225 %
-    -0.11111 %
+    0.%
+    45,913.68225%
+    -0.11111%
   zh-TW
     0.%
     45,913.68225%
@@ -5813,9 +5813,9 @@ measure-unit/length-furlong scale/0.5 decimal-always
 
 percent group-on-aligned latin
   es-MX
-    0 %
-    91,827.3645 %
-    -0.22222 %
+    0%
+    91,827.3645%
+    -0.22222%
   zh-TW
     0%
     91,827.3645%
@@ -5855,9 +5855,9 @@ measure-unit/length-furlong group-on-aligned latin
 
 percent group-on-aligned sign-accounting-except-zero
   es-MX
-    0 %
-    +91,827.3645 %
-    -0.22222 %
+    0%
+    +91,827.3645%
+    -0.22222%
   zh-TW
     0%
     +91,827.3645%
@@ -5897,9 +5897,9 @@ measure-unit/length-furlong group-on-aligned sign-accounting-except-zero
 
 percent group-on-aligned decimal-always
   es-MX
-    0. %
-    91,827.3645 %
-    -0.22222 %
+    0.%
+    91,827.3645%
+    -0.22222%
   zh-TW
     0.%
     91,827.3645%
@@ -5939,9 +5939,9 @@ measure-unit/length-furlong group-on-aligned decimal-always
 
 percent latin sign-accounting-except-zero
   es-MX
-    0 %
-    +91,827.3645 %
-    -0.22222 %
+    0%
+    +91,827.3645%
+    -0.22222%
   zh-TW
     0%
     +91,827.3645%
@@ -5981,9 +5981,9 @@ measure-unit/length-furlong latin sign-accounting-except-zero
 
 percent latin decimal-always
   es-MX
-    0. %
-    91,827.3645 %
-    -0.22222 %
+    0.%
+    91,827.3645%
+    -0.22222%
   zh-TW
     0.%
     91,827.3645%
@@ -6023,9 +6023,9 @@ measure-unit/length-furlong latin decimal-always
 
 percent sign-accounting-except-zero decimal-always
   es-MX
-    0. %
-    +91,827.3645 %
-    -0.22222 %
+    0.%
+    +91,827.3645%
+    -0.22222%
   zh-TW
     0.%
     +91,827.3645%

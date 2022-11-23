@@ -242,6 +242,12 @@ ti{
                 "d MMM y G",
                 "dd/MM/yy GGGGG",
                 "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} ሰዓት {0}",
                 "{1} ሰዓት {0}",
                 "{1} {0}",
@@ -354,6 +360,12 @@ ti{
                 "d MMM y",
                 "dd/MM/yy",
                 "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} ሰዓት {0}",
                 "{1} ሰዓት {0}",
                 "{1} {0}",
@@ -822,9 +834,9 @@ ti{
         activities{"ንጥፈታት"}
         animal{"እንስሳታት"}
         animals_nature{"እንስሳታትን ተፈጥሮን"}
-        arrows{"ፍላጻታት"}
+        arrows{"ፍላጻ"}
         body{"ኣካላት"}
-        building{"ህንጻታት"}
+        building{"ህንጻ"}
         digits{"ኣሃዛት"}
         emoji{"ኢሞጂታት"}
         female{"ደቂ ኣንስትዮ"}
@@ -910,13 +922,13 @@ ti{
             dn{"መዓልቲ ናይ ዓ."}
         }
         dayperiod{
-            dn{"ቅ.ቀ./ድ.ቀ."}
+            dn{"AM/PM"}
         }
         dayperiod-narrow{
-            dn{"ቅ.ቀ./ድ.ቀ."}
+            dn{"AM/PM"}
         }
         dayperiod-short{
-            dn{"ቅ.ቀ./ድ.ቀ."}
+            dn{"AM/PM"}
         }
         era{
             dn{"ዘመን"}
@@ -1675,5 +1687,22 @@ ti{
         UK{"ብሪጣንያ"}
         US{"ኣመሪካ"}
         metric{"ሜትሪክ"}
+    }
+    personNames{
+        nameOrderLocales{
+            givenFirst{
+                "und",
+                "ti",
+            }
+            surnameFirst{
+                "ko",
+                "si",
+                "ta",
+                "te",
+                "vi",
+                "yue",
+                "zh",
+            }
+        }
     }
 }

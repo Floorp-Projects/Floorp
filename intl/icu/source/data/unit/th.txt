@@ -282,6 +282,11 @@ th{
                 dnam{"นาโนวินาที"}
                 other{"{0} นาโนวินาที"}
             }
+            quarter{
+                dnam{"ไตรมาส"}
+                other{"{0} ไตรมาส"}
+                per{"{0}/ไตรมาส"}
+            }
             second{
                 dnam{"วินาที"}
                 other{"{0} วินาที"}
@@ -555,10 +560,6 @@ th{
                 other{"{0} กิโลกรัม"}
                 per{"{0} ต่อกิโลกรัม"}
             }
-            metric-ton{
-                dnam{"เมตริกตัน"}
-                other{"{0} เมตริกตัน"}
-            }
             microgram{
                 dnam{"ไมโครกรัม"}
                 other{"{0} ไมโครกรัม"}
@@ -592,6 +593,10 @@ th{
             ton{
                 dnam{"ตัน"}
                 other{"{0} ตัน"}
+            }
+            tonne{
+                dnam{"เมตริกตัน"}
+                other{"{0} เมตริกตัน"}
             }
         }
         power{
@@ -788,8 +793,8 @@ th{
                 other{"{0} ฟลูอิดออนซ์"}
             }
             fluid-ounce-imperial{
-                dnam{"ออนซ์ของเหลวแบบอังกฤษ"}
-                other{"{0} ออนซ์ของเหลวแบบอังกฤษ"}
+                dnam{"ฟลูอิดออนซ์ระบบอิมพีเรียล"}
+                other{"{0} ฟลูอิดออนซ์ระบบอิมพีเรียล"}
             }
             gallon{
                 dnam{"แกลลอน"}
@@ -1066,6 +1071,11 @@ th{
                 dnam{"นาโนวิ"}
                 other{"{0}นาโนวิ"}
             }
+            quarter{
+                dnam{"ไตรมาส"}
+                other{"{0} ไตรมาส"}
+                per{"{0}/ไตรมาส"}
+            }
             second{
                 dnam{"วิ"}
                 other{"{0}วิ"}
@@ -1294,9 +1304,6 @@ th{
                 dnam{"กก."}
                 other{"{0}กก."}
             }
-            metric-ton{
-                other{"{0}ต."}
-            }
             microgram{
                 other{"{0}มคก."}
             }
@@ -1322,6 +1329,9 @@ th{
             }
             ton{
                 other{"{0}ตัน"}
+            }
+            tonne{
+                other{"{0}ต."}
             }
         }
         power{
@@ -1783,6 +1793,11 @@ th{
                 dnam{"นาโนวินาที"}
                 other{"{0} นาโนวิ"}
             }
+            quarter{
+                dnam{"ไตรมาส"}
+                other{"{0} ไตรมาส"}
+                per{"{0}/ไตรมาส"}
+            }
             second{
                 dnam{"วินาที"}
                 other{"{0} วิ"}
@@ -2018,10 +2033,6 @@ th{
                 other{"{0} กก."}
                 per{"{0}/กก."}
             }
-            metric-ton{
-                dnam{"ต."}
-                other{"{0} ต."}
-            }
             microgram{
                 dnam{"มคก."}
                 other{"{0} มคก."}
@@ -2053,6 +2064,10 @@ th{
             ton{
                 dnam{"ตัน"}
                 other{"{0} ตัน"}
+            }
+            tonne{
+                dnam{"ต."}
+                other{"{0} ต."}
             }
         }
         power{

@@ -8,31 +8,4 @@ en_GB{
         hms{"h:mm:ss"}
         ms{"m:ss"}
     }
-    units{
-        concentr{
-            karat{
-                dnam{"carats"}
-            }
-        }
-        volume{
-            fluid-ounce-imperial{
-                dnam{"fluid ounces"}
-                one{"{0} fluid ounce"}
-                other{"{0} fluid ounces"}
-            }
-        }
-    }
-    unitsShort{
-        volume{
-            fluid-ounce-imperial{
-                dnam{"fl oz"}
-                one{"{0} fl oz"}
-                other{"{0} fl oz"}
-            }
-            jigger{
-                one{"{0} jigger"}
-                other{"{0} jiggers"}
-            }
-        }
-    }
 }

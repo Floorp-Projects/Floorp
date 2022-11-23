@@ -189,7 +189,7 @@ ku{
                 Hv{
                     H{"HH–HH v"}
                 }
-                fallback{"{0} – {1}"}
+                fallback{"{0} – {1}"}
             }
             monthNames{
                 format{

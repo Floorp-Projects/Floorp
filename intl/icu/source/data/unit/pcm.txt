@@ -334,6 +334,11 @@ pcm{
                 one{"{0} Nánosẹ́kọn"}
                 other{"{0} Nánosẹ́kọn"}
             }
+            quarter{
+                dnam{"kwọ́ta"}
+                one{"{0} kwọ́ta"}
+                other{"{0} kwọ́ta"}
+            }
             second{
                 dnam{"Sẹ́kọn-dẹm"}
                 one{"{0} Sẹ́kọn"}
@@ -675,11 +680,6 @@ pcm{
                 other{"{0} Kílógram"}
                 per{"{0} Fọ Ích Kílógram"}
             }
-            metric-ton{
-                dnam{"Mẹ́trík Tọn-dẹm"}
-                one{"{0} Mẹ́trík Tọn"}
-                other{"{0} Mẹ́trík Tọn"}
-            }
             microgram{
                 dnam{"Maíkrógram-dẹm"}
                 one{"{0} Maíkrógram"}
@@ -721,6 +721,11 @@ pcm{
                 dnam{"Tọn-dẹm"}
                 one{"{0} Tọn"}
                 other{"{0} Tọn"}
+            }
+            tonne{
+                dnam{"Mẹ́trík Tọn-dẹm"}
+                one{"{0} Mẹ́trík Tọn"}
+                other{"{0} Mẹ́trík Tọn"}
             }
         }
         power{
@@ -1693,6 +1698,12 @@ pcm{
                 one{"{0} Nansẹk"}
                 other{"{0} Nansẹk"}
             }
+            quarter{
+                dnam{"kwt"}
+                one{"{0} kwt"}
+                other{"{0} kwtd"}
+                per{"{0}/kw"}
+            }
             second{
                 dnam{"Sẹ́kọns"}
                 one{"{0} Sẹ́kọn"}
@@ -2024,11 +2035,6 @@ pcm{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"T"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -2070,6 +2076,11 @@ pcm{
                 dnam{"Tọns"}
                 one{"{0} tn"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"T"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

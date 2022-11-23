@@ -456,6 +456,9 @@ zh_Hant_HK{
             nanosecond{
                 dnam{"納秒"}
             }
+            quarter{
+                other{"{0}刻"}
+            }
             second{
                 other{"{0}秒"}
             }

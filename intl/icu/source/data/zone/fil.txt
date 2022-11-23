@@ -1320,24 +1320,24 @@ fil{
             ls{"Standard na Oras sa Amazon"}
         }
         "meta:America_Central"{
-            ld{"Sentral na Daylight Time"}
-            lg{"Sentral na Oras"}
-            ls{"Sentral na Standard na Oras"}
+            ld{"Sentral na Daylight na Oras sa North America"}
+            lg{"Sentral na Oras sa North America"}
+            ls{"Sentral na Standard na Oras sa North America"}
         }
         "meta:America_Eastern"{
-            ld{"Eastern Daylight Time"}
-            lg{"Eastern Time"}
-            ls{"Eastern na Standard na Oras"}
+            ld{"Daylight na Oras sa Silangan ng Hilagang Amerika"}
+            lg{"Oras sa Silangan ng Hilagang Amerika"}
+            ls{"Standard na Oras sa Silangan ng Hilangang Amerika"}
         }
         "meta:America_Mountain"{
-            ld{"Daylight Time sa Bundok"}
-            lg{"Oras sa Bundok"}
-            ls{"Standard na Oras sa Bundok"}
+            ld{"Daylight na Oras sa Bundok sa Hilagang Amerika"}
+            lg{"Oras sa Bundok sa Hilagang Amerika"}
+            ls{"Standard na Oras sa Bundok sa Hilagang Amerika"}
         }
         "meta:America_Pacific"{
-            ld{"Daylight Time sa Pasipiko"}
-            lg{"Oras sa Pasipiko"}
-            ls{"Standard na Oras sa Pasipiko"}
+            ld{"Daylight na Oras sa Pasipiko sa Hilagang Amerika"}
+            lg{"Oras sa Pasipiko sa HIlagang Amerika"}
+            ls{"Standard na Oras sa Pasipiko sa Hilagang Amerika"}
         }
         "meta:Anadyr"{
             ld{"Summer Time sa Anadyr"}
@@ -1370,7 +1370,7 @@ fil{
             ls{"Standard na Oras sa Armenia"}
         }
         "meta:Atlantic"{
-            ld{"Daylight Time sa Atlantiko"}
+            ld{"Daylight na Oras sa Atlantiko"}
             lg{"Oras sa Atlantiko"}
             ls{"Standard na Oras sa Atlantiko"}
         }
@@ -1468,7 +1468,7 @@ fil{
             ls{"Standard na Oras sa Cook Islands"}
         }
         "meta:Cuba"{
-            ld{"Daylight Time sa Cuba"}
+            ld{"Daylight na Oras sa Cuba"}
             lg{"Oras sa Cuba"}
             ls{"Standard na Oras sa Cuba"}
         }
@@ -1673,12 +1673,12 @@ fil{
             ls{"Oras sa Mawson"}
         }
         "meta:Mexico_Northwest"{
-            ld{"Daylight Time sa Hilagang-kanlurang Mexico"}
+            ld{"Daylight na Oras sa Hilagang-kanlurang Mexico"}
             lg{"Oras sa Hilagang-kanlurang Mexico"}
             ls{"Standard na Oras sa Hilagang-kanlurang Mexico"}
         }
         "meta:Mexico_Pacific"{
-            ld{"Daylight Time sa Pasipiko ng Mexico"}
+            ld{"Daylight na Oras sa Pasipiko ng Mexico"}
             lg{"Oras sa Pasipiko ng Mexico"}
             ls{"Standard na Oras sa Pasipiko ng Mexico"}
         }
@@ -1712,7 +1712,7 @@ fil{
             ls{"Standard na Oras sa New Zealand"}
         }
         "meta:Newfoundland"{
-            ld{"Daylight Time sa Newfoundland"}
+            ld{"Daylight na Oras sa Newfoundland"}
             lg{"Oras sa Newfoundland"}
             ls{"Standard na Oras sa Newfoundland"}
         }
@@ -1769,7 +1769,7 @@ fil{
             ls{"Oras sa Phoenix Islands"}
         }
         "meta:Pierre_Miquelon"{
-            ld{"Daylight Time sa Saint Pierre & Miquelon"}
+            ld{"Daylight na Oras sa Saint Pierre & Miquelon"}
             lg{"Oras sa Saint Pierre & Miquelon"}
             ls{"Standard na Oras sa Saint Pierre & Miquelon"}
         }
@@ -1899,7 +1899,7 @@ fil{
             ls{"Standard na Oras sa Yekaterinburg"}
         }
         "meta:Yukon"{
-            ls{"Yukon Time"}
+            ls{"Oras sa Yukon"}
         }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}

@@ -565,17 +565,17 @@ dsb{
             ls{"Ekuadorski cas"}
         }
         "meta:Europe_Central"{
-            ld{"Srjejźoeuropski lěśojski cas"}
-            lg{"Srjejźoeuropski cas"}
-            ls{"Srjejźoeuropski standardny cas"}
+            ld{"Srjejźnoeuropejski lěśojski cas"}
+            lg{"Srjejźnoeuropejski cas"}
+            ls{"Srjejźnoeuropejski standardny cas"}
             sd{"MESZ"}
             sg{"MEZ"}
             ss{"MEZ"}
         }
         "meta:Europe_Eastern"{
-            ld{"Pódzajtšnoeuropski lěśojski cas"}
-            lg{"Pódzajtšnoeuropski cas"}
-            ls{"Pódzajtšnoeuropski standardny cas"}
+            ld{"Pódzajtšnoeuropejski lěśojski cas"}
+            lg{"Pódzajtšnoeuropejski cas"}
+            ls{"Pódzajtšnoeuropejski standardny cas"}
             sd{"OESZ"}
             sg{"OEZ"}
             ss{"OEZ"}
@@ -584,9 +584,9 @@ dsb{
             ls{"Kaliningradski cas"}
         }
         "meta:Europe_Western"{
-            ld{"Pódwjacornoeuropski lěśojski cas"}
-            lg{"Pódwjacornoeuropski cas"}
-            ls{"Pódwjacornoeuropski standardny cas"}
+            ld{"Pódwjacornoeuropejski lěśojski cas"}
+            lg{"Pódwjacornoeuropejski cas"}
+            ls{"Pódwjacornoeuropejski standardny cas"}
             sd{"WESZ"}
             sg{"WEZ"}
             ss{"WEZ"}

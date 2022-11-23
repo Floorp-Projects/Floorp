@@ -238,6 +238,8 @@ kea{
     }
     Languages%short{
         az{"azeri"}
+        en_GB{"ingles (R.U.)"}
+        en_US{"ingles (S.U.)"}
     }
     Scripts{
         Arab{"arábiku"}

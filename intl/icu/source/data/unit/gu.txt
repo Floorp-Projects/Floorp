@@ -367,6 +367,12 @@ gu{
                 one{"{0} નેનોસેકંડ"}
                 other{"{0} નેનોસેકંડ"}
             }
+            quarter{
+                dnam{"ત્રિમાસિક"}
+                one{"{0} ત્રિમાસિક"}
+                other{"{0} ત્રિમાસિક"}
+                per{"{0}/ત્રિ"}
+            }
             second{
                 dnam{"સેકંડ"}
                 gender{"masculine"}
@@ -716,12 +722,6 @@ gu{
                 other{"{0} કિલોગ્રામ"}
                 per{"{0} પ્રતિ કિલોગ્રામ"}
             }
-            metric-ton{
-                dnam{"મેટ્રિક ટન"}
-                gender{"masculine"}
-                one{"{0} મેટ્રિક ટન"}
-                other{"{0} મેટ્રિક ટન"}
-            }
             microgram{
                 dnam{"માઇક્રોગ્રામ"}
                 one{"{0} માઇક્રોગ્રામ"}
@@ -762,6 +762,12 @@ gu{
                 dnam{"ટન"}
                 one{"{0} ટન"}
                 other{"{0} ટન"}
+            }
+            tonne{
+                dnam{"મેટ્રિક ટન"}
+                gender{"masculine"}
+                one{"{0} મેટ્રિક ટન"}
+                other{"{0} મેટ્રિક ટન"}
             }
         }
         power{
@@ -1132,6 +1138,9 @@ gu{
                 one{"{0}ચો.મીટર"}
                 other{"{0}ચો.મીટર"}
             }
+            square-mile{
+                per{"{0} / ચોરસ માઇલ"}
+            }
         }
         compound{
             1024p1{"Ki{0}"}
@@ -1244,6 +1253,12 @@ gu{
             }
             nanosecond{
                 dnam{"ns"}
+            }
+            quarter{
+                dnam{"ત્રિમાસ"}
+                one{"{0}ત્રિ"}
+                other{"{0}ત્રિ"}
+                per{"{0}/ત્રિ"}
             }
             second{
                 dnam{"સેકંડ"}
@@ -1379,8 +1394,6 @@ gu{
             }
             ounce{
                 dnam{"ઔંસ"}
-                one{"{0} ઔંશ"}
-                other{"{0} ઔંશ"}
                 per{"{0}/ઔંસ"}
             }
             pound{
@@ -1422,7 +1435,7 @@ gu{
                 other{"{0} inHg"}
             }
             millibar{
-                one{"{0}મિલીબાર"}
+                one{"{0} મિલિબાર"}
                 other{"{0}મિલીબાર"}
             }
         }
@@ -1460,8 +1473,8 @@ gu{
                 other{"{0} પ્ર. ઔંસ"}
             }
             fluid-ounce-imperial{
-                one{"{0} પ્રવાહી ઔંસ ઈમ્પિ."}
-                other{"{0} પ્રવાહી ઔંસ ઈમ્પિ."}
+                one{"{0} પ્રવાહી ઔંસ ઈમ્પી."}
+                other{"{0} પ્રવાહી ઔંસ ઈમ્પી."}
             }
             gallon-imperial{
                 one{"{0} ગૅ. ઈમ્પિ."}
@@ -1563,7 +1576,7 @@ gu{
                 dnam{"ચોરસ માઇલ"}
                 one{"{0} ચોરસ માઇલ"}
                 other{"{0} ચોરસ માઇલ"}
-                per{"{0} / ચોરસ માઈલ"}
+                per{"{0} / ચોરસ માઇલ"}
             }
             square-yard{
                 dnam{"ચોરસ વાર"}
@@ -1783,6 +1796,12 @@ gu{
                 dnam{"નેનોસેકંડ"}
                 one{"{0} ns"}
                 other{"{0} ns"}
+            }
+            quarter{
+                dnam{"ત્રિમાસ"}
+                one{"{0}ત્રિ"}
+                other{"{0}ત્રિ"}
+                per{"{0}/ત્રિ"}
             }
             second{
                 dnam{"સેકંડ"}
@@ -2069,11 +2088,6 @@ gu{
                 other{"{0} કિગ્રા"}
                 per{"{0}/કિગ્રા"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μગ્રામ"}
                 one{"{0} μગ્રામ"}
@@ -2115,6 +2129,11 @@ gu{
                 dnam{"ટન"}
                 one{"{0} ટન"}
                 other{"{0} ટન"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

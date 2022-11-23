@@ -31,5 +31,6 @@ es_419{
     }
     Countries%variant{
         CD{"Congo (República Democrática del Congo)"}
+        TR{"Türkiye"}
     }
 }

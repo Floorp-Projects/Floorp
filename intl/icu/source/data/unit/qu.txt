@@ -71,37 +71,37 @@ qu{
             1024p7{"zebi{0}"}
             1024p8{"yobe{0}"}
             10p-1{"deci{0}"}
-            10p-12{"pico{0}"}
+            10p-12{"{0} picómetro"}
             10p-15{"femto{0}"}
             10p-18{"atto{0}"}
-            10p-2{"centi{0}"}
+            10p-2{"{0} centímetro"}
             10p-21{"zepto{0}"}
             10p-24{"yocto{0}"}
-            10p-3{"mili{0}"}
+            10p-3{"{0} mg"}
             10p-6{"micro{0}"}
             10p-9{"nano{0}"}
             10p1{"deka{0}"}
-            10p12{"tera{0}"}
-            10p15{"peta{0}"}
+            10p12{"{0} Tbyte"}
+            10p15{"{0} petabyte"}
             10p18{"exa{0}"}
-            10p2{"hecto{0}"}
+            10p2{"{0} hectopa"}
             10p21{"zetta{0}"}
             10p24{"yotta{0}"}
-            10p3{"kilo{0}"}
-            10p6{"mega{0}"}
-            10p9{"giga{0}"}
+            10p3{"{0} kilómetro"}
+            10p6{"{0} megabyte"}
+            10p9{"{0} gigahz"}
             per{"{0} sapa {1}"}
             power2{
                 other{
                     _{
-                        _{"metro cuadrado {0}"}
+                        _{"{0} metro cuadrado"}
                     }
                 }
             }
             power3{
                 other{
                     _{
-                        _{"metro cubico {0}"}
+                        _{"{0} metro cubico"}
                     }
                 }
             }
@@ -162,6 +162,9 @@ qu{
             nanosecond{
                 dnam{"nanosegundo"}
                 other{"{0} nanosegundo"}
+            }
+            quarter{
+                dnam{"sapa kimsa killa"}
             }
             second{
                 dnam{"segundo"}
@@ -499,6 +502,13 @@ qu{
         }
     }
     unitsNarrow{
+        compound{
+            10p-1{"{0} dL"}
+            10p12{"{0} TB"}
+            10p15{"{0} byte PB"}
+            10p3{"{0} km"}
+            10p6{"{0} byte MB"}
+        }
         duration{
             day{
                 dnam{"punchaw"}
@@ -559,6 +569,11 @@ qu{
             meter-per-square-second{
                 dnam{"metros/sec²"}
             }
+        }
+        compound{
+            10p-1{"{0} dl"}
+            10p15{"{0} PB"}
+            10p6{"{0} MB"}
         }
         concentr{
             item{

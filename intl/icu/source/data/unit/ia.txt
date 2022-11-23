@@ -518,11 +518,6 @@ ia{
                 other{"{0} kilogrammas"}
                 per{"{0} per kilogramma"}
             }
-            metric-ton{
-                dnam{"tonnas"}
-                one{"{0} tonna"}
-                other{"{0} tonnas"}
-            }
             microgram{
                 dnam{"microgrammas"}
                 one{"{0} microgramma"}
@@ -554,6 +549,11 @@ ia{
                 dnam{"tonnas curte"}
                 one{"{0} tonna curte"}
                 other{"{0} tonnas curte"}
+            }
+            tonne{
+                dnam{"tonnas"}
+                one{"{0} tonna"}
+                other{"{0} tonnas"}
             }
         }
         power{
@@ -1393,9 +1393,6 @@ ia{
                 dnam{"kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-            }
             microgram{
                 dnam{"μg"}
             }
@@ -1415,6 +1412,9 @@ ia{
             }
             ton{
                 dnam{"tn"}
+            }
+            tonne{
+                dnam{"t"}
             }
         }
         power{

@@ -30,6 +30,8 @@ bn{
         beng{
             patterns{
                 currencyFormat{"#,##,##0.00¤"}
+                currencyFormat%alphaNextToNumber{"#,##,##0.00 ¤"}
+                currencyFormat%noCurrency{"#,##,##0.00"}
                 decimalFormat{"#,##,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
@@ -58,7 +60,10 @@ bn{
             }
             patterns{
                 accountingFormat{"#,##,##0.00¤;(#,##,##0.00¤)"}
+                accountingFormat%alphaNextToNumber{"#,##,##0.00 ¤;(#,##,##0.00 ¤)"}
+                accountingFormat%noCurrency{"#,##,##0.00;(#,##,##0.00)"}
                 currencyFormat{"#,##,##0.00¤"}
+                currencyPatternAppendISO{"{0} ¤¤"}
                 decimalFormat{"#,##,##0.###"}
                 percentFormat{"#,##,##0%"}
                 scientificFormat{"#E0"}
@@ -164,6 +169,56 @@ bn{
                     100000000000000{
                         one{"000 লা'.'কো'.'¤"}
                         other{"000 লা'.'কো'.'¤"}
+                    }
+                }
+                currencyFormat%alphaNextToNumber{
+                    1000{
+                        one{"0 হা ¤"}
+                        other{"0 হা ¤"}
+                    }
+                    10000{
+                        one{"00 হা ¤"}
+                        other{"00 হা ¤"}
+                    }
+                    100000{
+                        one{"0 লা ¤"}
+                        other{"0 লা ¤"}
+                    }
+                    1000000{
+                        one{"00 লা ¤"}
+                        other{"00 লা ¤"}
+                    }
+                    10000000{
+                        one{"0 কো ¤"}
+                        other{"0 কো ¤"}
+                    }
+                    100000000{
+                        one{"00 কো ¤"}
+                        other{"00 কো ¤"}
+                    }
+                    1000000000{
+                        one{"000 কো ¤"}
+                        other{"000 কো ¤"}
+                    }
+                    10000000000{
+                        one{"0000 কো ¤"}
+                        other{"0000 কো ¤"}
+                    }
+                    100000000000{
+                        one{"00000 কো ¤"}
+                        other{"00000 কো ¤"}
+                    }
+                    1000000000000{
+                        one{"0 লা'.'কো'.' ¤"}
+                        other{"0 লা'.'কো'.' ¤"}
+                    }
+                    10000000000000{
+                        one{"00 লা'.'কো'.' ¤"}
+                        other{"00 লা'.'কো'.' ¤"}
+                    }
+                    100000000000000{
+                        one{"000 লা'.'কো'.' ¤"}
+                        other{"000 লা'.'কো'.' ¤"}
                     }
                 }
                 decimalFormat{
@@ -508,6 +563,12 @@ bn{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimePatterns%atTime{
+                "{1} এ {0}",
+                "{1} এ {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
             DateTimeSkeletons{
                 "ahmmsszzzz",
                 "ahmmssz",
@@ -727,6 +788,12 @@ bn{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimePatterns%atTime{
+                "{1} এ {0}",
+                "{1} এ {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
             DateTimeSkeletons{
                 "ahmmsszzzz",
                 "ahmmssz",
@@ -756,7 +823,7 @@ bn{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM, y G"}
                 GyMMMd{"d MMM, y G"}
-                GyMd{"GGGGG dd-MM-y"}
+                GyMd{"dd-MM-y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -895,12 +962,12 @@ bn{
                         night1{"রাত্রি"}
                     }
                     wide{
-                        afternoon1{"দুপুর"}
+                        afternoon1{"দুপুরবেলায়"}
                         afternoon2{"বিকাল"}
-                        evening1{"সন্ধ্যা"}
-                        morning1{"ভোর"}
-                        morning2{"সকাল"}
-                        night1{"রাত্রিতে"}
+                        evening1{"সন্ধ্যাবেলায়"}
+                        morning1{"ভোরবেলায়"}
+                        morning2{"সকালবেলায়"}
+                        night1{"রাত্রিবেলায়"}
                     }
                 }
                 stand-alone{
@@ -1093,15 +1160,15 @@ bn{
                         "জানু",
                         "ফেব",
                         "মার্চ",
-                        "এপ্রিল",
+                        "এপ্রি",
                         "মে",
                         "জুন",
-                        "জুলাই",
-                        "আগস্ট",
-                        "সেপ্টেম্বর",
-                        "অক্টোবর",
-                        "নভেম্বর",
-                        "ডিসেম্বর",
+                        "জুল",
+                        "আগ",
+                        "সেপ",
+                        "অক্টো",
+                        "নভে",
+                        "ডিসে",
                     }
                     narrow{
                         "জা",
@@ -1134,8 +1201,8 @@ bn{
                 }
                 stand-alone{
                     abbreviated{
-                        "জানুয়ারী",
-                        "ফেব্রুয়ারী",
+                        "জানু",
+                        "ফেব",
                         "মার্চ",
                         "এপ্রিল",
                         "মে",
@@ -2136,8 +2203,8 @@ bn{
             }
             relativeTime{
                 future{
-                    one{"{0} সোমবারেতে"}
-                    other{"{0} সোমবারেতে"}
+                    one{"{0} সোমবারে"}
+                    other{"{0} সোমবারে"}
                 }
                 past{
                     one{"{0} সোমবার আগে"}
@@ -2153,8 +2220,8 @@ bn{
             }
             relativeTime{
                 future{
-                    one{"{0} সোমবারেতে"}
-                    other{"{0} সোমবারেতে"}
+                    one{"{0} সোমবারে"}
+                    other{"{0} সোমবারে"}
                 }
                 past{
                     one{"{0} সোমবার আগে"}
@@ -2170,8 +2237,8 @@ bn{
             }
             relativeTime{
                 future{
-                    one{"{0} সোমবারেতে"}
-                    other{"{0} সোমবারেতে"}
+                    one{"{0} সোমবারে"}
+                    other{"{0} সোমবারে"}
                 }
                 past{
                     one{"{0} সোমবার আগে"}
@@ -2378,8 +2445,8 @@ bn{
             }
             relativeTime{
                 future{
-                    one{"{0} রবিবারেতে"}
-                    other{"{0} রবিবারেতে"}
+                    one{"{0} রবিবারে"}
+                    other{"{0} রবিবারে"}
                 }
                 past{
                     one{"{0} রবিবার আগে"}
@@ -2395,8 +2462,8 @@ bn{
             }
             relativeTime{
                 future{
-                    one{"{0} রবিবারেতে"}
-                    other{"{0} রবিবারেতে"}
+                    one{"{0} রবিবারে"}
+                    other{"{0} রবিবারে"}
                 }
                 past{
                     one{"{0} রবিবার আগে"}
@@ -2412,8 +2479,8 @@ bn{
             }
             relativeTime{
                 future{
-                    one{"{0} রবিবারেতে"}
-                    other{"{0} রবিবারেতে"}
+                    one{"{0} রবিবারে"}
+                    other{"{0} রবিবারে"}
                 }
                 past{
                     one{"{0} রবিবার আগে"}
@@ -2799,6 +2866,105 @@ bn{
                 "[,٫︐﹐，]",
                 "[.․﹒．｡]",
             }
+        }
+    }
+    personNames{
+        foreignSpaceReplacement{" "}
+        initialPattern{
+            initial{"{0}."}
+            initialSequence{"{0} {1}"}
+        }
+        nameOrderLocales{
+            givenFirst{
+                "und",
+                "bn",
+            }
+            surnameFirst{
+                "ko",
+                "vi",
+                "yue",
+                "zh",
+            }
+        }
+        namePattern{
+            givenFirst-long-addressing-formal{"{prefix} {given} {given2} {surname} {surname2} {suffix}"}
+            givenFirst-long-addressing-informal{"{given} {given2} {surname} {surname2}"}
+            givenFirst-long-monogram-formal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-long-monogram-informal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-long-referring-formal{"{prefix} {given} {given2} {surname} {surname2} {suffix}"}
+            givenFirst-long-referring-informal{"{given} {given2} {surname} {surname2}"}
+            givenFirst-medium-addressing-formal{"{prefix} {given} {given2} {surname} {surname2} {suffix}"}
+            givenFirst-medium-addressing-informal{"{given} {given2} {surname} {surname2}"}
+            givenFirst-medium-monogram-formal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-medium-monogram-informal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-medium-referring-formal{"{prefix} {given} {given2} {surname} {surname2} {suffix}"}
+            givenFirst-medium-referring-informal{"{given} {given2} {surname} {surname2}"}
+            givenFirst-short-addressing-formal{"{prefix} {given} {given2} {surname} {surname2} {suffix}"}
+            givenFirst-short-addressing-informal{"{given} {given2} {surname} {surname2}"}
+            givenFirst-short-monogram-formal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-short-monogram-informal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-short-referring-formal{"{prefix} {given} {given2} {surname} {surname2} {suffix}"}
+            givenFirst-short-referring-informal{"{given} {given2} {surname} {surname2}"}
+            sorting-long-referring-formal{"{surname} {surname2}, {prefix} {given} {given2} {suffix}"}
+            sorting-long-referring-informal{"{surname} {surname2}, {given} {given2}"}
+            sorting-medium-referring-formal{"{surname} {surname2}, {prefix} {given} {given2} {suffix}"}
+            sorting-medium-referring-informal{"{surname} {surname2}, {given} {given2}"}
+            sorting-short-referring-formal{"{surname} {surname2}, {prefix} {given} {given2} {suffix}"}
+            sorting-short-referring-informal{"{surname} {surname2}, {given} {given2}"}
+            surnameFirst-long-addressing-formal{"{surname} {surname2} {prefix} {given} {given2} {suffix}"}
+            surnameFirst-long-addressing-informal{"{surname} {surname2} {given} {given2}"}
+            surnameFirst-long-monogram-formal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-long-monogram-informal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-long-referring-formal{"{surname} {surname2} {prefix} {given} {given2} {suffix}"}
+            surnameFirst-long-referring-informal{"{surname} {surname2} {given} {given2}"}
+            surnameFirst-medium-addressing-formal{"{surname} {surname2} {prefix} {given} {given2} {suffix}"}
+            surnameFirst-medium-addressing-informal{"{surname} {surname2} {given} {given2}"}
+            surnameFirst-medium-monogram-formal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-medium-monogram-informal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-medium-referring-formal{"{surname} {surname2} {prefix} {given} {given2} {suffix}"}
+            surnameFirst-medium-referring-informal{"{surname} {surname2} {given} {given2}"}
+            surnameFirst-short-addressing-formal{"{surname} {surname2} {prefix} {given} {given2} {suffix}"}
+            surnameFirst-short-addressing-informal{"{surname} {surname2} {given} {given2}"}
+            surnameFirst-short-monogram-formal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-short-monogram-informal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-short-referring-formal{"{surname} {surname2} {prefix} {given} {given2} {suffix}"}
+            surnameFirst-short-referring-informal{"{surname} {surname2} {given} {given2}"}
         }
     }
 }

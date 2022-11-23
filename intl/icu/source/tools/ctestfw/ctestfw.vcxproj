@@ -53,7 +53,7 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\..\$(IcuBinOutputDir)\icutest71d.exe</OutputFile>
+      <OutputFile>..\..\..\$(IcuBinOutputDir)\icutest$(IcuMajorVersion)d.exe</OutputFile>
       <ProgramDatabaseFile>.\..\..\..\$(IcuLibOutputDir)\icutestd.pdb</ProgramDatabaseFile>
       <ImportLibrary>.\..\..\..\$(IcuLibOutputDir)\icutestd.lib</ImportLibrary>
       <AdditionalDependencies>icuucd.lib;icutud.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -66,7 +66,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\..\$(IcuBinOutputDir)\icutest71.exe</OutputFile>
+      <OutputFile>..\..\..\$(IcuBinOutputDir)\icutest$(IcuMajorVersion).exe</OutputFile>
       <ProgramDatabaseFile>.\..\..\..\$(IcuLibOutputDir)\icutest.pdb</ProgramDatabaseFile>
       <ImportLibrary>.\..\..\..\$(IcuLibOutputDir)\icutest.lib</ImportLibrary>
       <AdditionalDependencies>icuuc.lib;icutu.lib;%(AdditionalDependencies)</AdditionalDependencies>

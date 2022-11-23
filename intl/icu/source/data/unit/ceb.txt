@@ -660,11 +660,6 @@ ceb{
                 other{"{0} ka mga kilogramo"}
                 per{"{0} kada kilogramo"}
             }
-            metric-ton{
-                dnam{"mga metrikong tonelada"}
-                one{"{0} ka metrikong tonelada"}
-                other{"{0} ka mga metrikong tonelada"}
-            }
             microgram{
                 dnam{"mga microgram"}
                 one{"{0} ka microgram"}
@@ -701,6 +696,11 @@ ceb{
                 dnam{"mga tonelada"}
                 one{"{0} ka tonelada"}
                 other{"{0} ka mga tonelada"}
+            }
+            tonne{
+                dnam{"mga metrikong tonelada"}
+                one{"{0} ka metrikong tonelada"}
+                other{"{0} ka mga metrikong tonelada"}
             }
         }
         power{

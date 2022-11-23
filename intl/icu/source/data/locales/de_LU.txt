@@ -9,7 +9,7 @@ de_LU{
                 "nachm.",
             }
             availableFormats{
-                h{"h a"}
+                h{"h a"}
             }
         }
     }

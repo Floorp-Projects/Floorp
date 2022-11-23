@@ -94,6 +94,7 @@ sr_Latn_BA{
         }
         "meta:Alaska"{
             ld{"Aljaska, ljetnje vrijeme"}
+            lg{"Aljaska"}
             ls{"Aljaska, standardno vrijeme"}
         }
         "meta:Amazon"{
@@ -246,6 +247,7 @@ sr_Latn_BA{
         }
         "meta:Cuba"{
             ld{"Kuba, ljetnje vrijeme"}
+            lg{"Kuba"}
             ls{"Kuba, standardno vrijeme"}
         }
         "meta:Davis"{
@@ -315,10 +317,12 @@ sr_Latn_BA{
         }
         "meta:Greenland_Eastern"{
             ld{"Istočni Grenland, ljetnje vrijeme"}
+            lg{"Istočni Grenland"}
             ls{"Istočni Grenland, standardno vrijeme"}
         }
         "meta:Greenland_Western"{
             ld{"Zapadni Grenland, ljetnje vrijeme"}
+            lg{"Zapadni Grenland"}
             ls{"Zapadni Grenland, standardno vrijeme"}
         }
         "meta:Gulf"{
@@ -445,6 +449,7 @@ sr_Latn_BA{
         }
         "meta:Mexico_Pacific"{
             ld{"Meksički Pacifik, ljetnje vrijeme"}
+            lg{"Meksički Pacifik"}
             ls{"Meksički Pacifik, standardno vrijeme"}
         }
         "meta:Mongolia"{
@@ -478,6 +483,7 @@ sr_Latn_BA{
         }
         "meta:Newfoundland"{
             ld{"Njufaundlend, ljetnje vrijeme"}
+            lg{"Njufaundlend"}
             ls{"Njufaundlend, standardno vrijeme"}
         }
         "meta:Niue"{
@@ -534,6 +540,7 @@ sr_Latn_BA{
         }
         "meta:Pierre_Miquelon"{
             ld{"Sen Pjer i Mikelon, ljetnje vrijeme"}
+            lg{"Sen Pjer i Mikelon"}
             ls{"Sen Pjer i Mikelon, standardno vrijeme"}
         }
         "meta:Pitcairn"{

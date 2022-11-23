@@ -312,6 +312,7 @@ cs{
         CI{"Côte d’Ivoire"}
         CZ{"Česká republika"}
         FK{"Falklandské ostrovy (Malvíny)"}
+        NZ{"Aotearoa – Nový Zéland"}
         SZ{"Svazijsko"}
         TL{"Timor-Leste"}
     }

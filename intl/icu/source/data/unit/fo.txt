@@ -656,11 +656,6 @@ fo{
                 other{"{0} kilogramm"}
                 per{"{0} fyri hvørt kilogramm"}
             }
-            metric-ton{
-                dnam{"tons"}
-                one{"{0} tons"}
-                other{"{0} tons"}
-            }
             microgram{
                 dnam{"mikrogramm"}
                 one{"{0} mikrogramm"}
@@ -702,6 +697,11 @@ fo{
                 dnam{"stutt tons"}
                 one{"{0} stutt tons"}
                 other{"{0} stutt tons"}
+            }
+            tonne{
+                dnam{"tons"}
+                one{"{0} tons"}
+                other{"{0} tons"}
             }
         }
         power{
@@ -1743,11 +1743,6 @@ fo{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -1787,6 +1782,11 @@ fo{
                 dnam{"stutt t"}
                 one{"{0} stutt t"}
                 other{"{0} stutt t"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

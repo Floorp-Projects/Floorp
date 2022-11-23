@@ -261,7 +261,7 @@ is{
         }
         FJD{
             "FJD",
-            "fidjeyskur dalur",
+            "fídjískur dalur",
         }
         FKP{
             "FKP",
@@ -360,7 +360,7 @@ is{
             "íranskt ríal",
         }
         ISK{
-            "ISK",
+            "kr.",
             "íslensk króna",
         }
         ITL{
@@ -761,7 +761,7 @@ is{
         }
         TND{
             "TND",
-            "túnískur denari",
+            "túniskur denari",
         }
         TOP{
             "TOP",
@@ -928,6 +928,7 @@ is{
         COP{"$"}
         CRC{"₡"}
         CUP{"$"}
+        DKK{"kr."}
         DOP{"$"}
         EUR{"€"}
         FJD{"$"}
@@ -938,7 +939,7 @@ is{
         IDR{"Rp"}
         ILS{"₪"}
         INR{"₹"}
-        ISK{"kr"}
+        ISK{"kr."}
         JMD{"$"}
         JPY{"¥"}
         KHR{"៛"}
@@ -951,10 +952,12 @@ is{
         MXN{"$"}
         NAD{"$"}
         NGN{"₦"}
+        NOK{"kr."}
         NZD{"$"}
         PHP{"₱"}
         PYG{"₲"}
         SBD{"$"}
+        SEK{"kr."}
         SGD{"$"}
         SRD{"$"}
         SSP{"£"}
@@ -1091,7 +1094,7 @@ is{
         }
         CNH{
             one{"kínverskt júan (utan heimalands)"}
-            other{"kínverskt júan (utan heimalands)"}
+            other{"kínversk júön (utan heimalands)"}
         }
         CNY{
             one{"kínverskt júan"}
@@ -1158,8 +1161,8 @@ is{
             other{"evrur"}
         }
         FJD{
-            one{"fidjeyskur dalur"}
-            other{"fidjeyskir dalir"}
+            one{"fídjískur dalur"}
+            other{"fídjískir dalir"}
         }
         FKP{
             one{"falklenskt pund"}

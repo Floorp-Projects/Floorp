@@ -684,6 +684,7 @@ sq{
         DKK{"DKK"}
         DOP{"DOP"}
         EGP{"EGP"}
+        EUR{"€"}
         FJD{"FJD"}
         FKP{"FKP"}
         GBP{"GBP"}
