@@ -227,6 +227,7 @@ object Deps {
 
     const val junit = "junit:junit:${Versions.junit}"
     const val mockk = "io.mockk:mockk:${Versions.mockk}"
+    const val mockk_android = "io.mockk:mockk-android:${Versions.mockk}"
 
     // --- START AndroidX test dependencies --- //
     // N.B.: the versions of these dependencies appear to be pinned together. To avoid bugs, they

@@ -659,6 +659,7 @@ dependencies {
     testImplementation 'org.apache.maven:maven-ant-tasks:2.1.3'
     implementation Deps.mozilla_support_rusthttp
 
+    androidTestImplementation Deps.mockk_android
     testImplementation Deps.mockk
 
     // For the initial release of Glean 19, we require consumer applications to

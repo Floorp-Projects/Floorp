@@ -278,6 +278,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                 ?.let(::getIntentSource)
                 ?.also {
                     Events.appOpened.record(Events.AppOpenedExtra(it))
+                    // This will record an event in Nimbus' internal event store. Used for behavioral targeting
                     components.analytics.experiments.recordEvent("app_opened")
                 }
         }
