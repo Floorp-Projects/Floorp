@@ -68,11 +68,6 @@
   position: relative;
 }
 
-#browser-bottombox {
-  /* opaque for layers optimization */
-  background-color: -moz-Dialog;
-}
-
 /* Bookmark menus */
 menu.bookmark-item,
 menuitem.bookmark-item {
