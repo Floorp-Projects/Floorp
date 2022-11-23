@@ -133,7 +133,7 @@
               BrowserSearch.updateOpenSearchBadge();
             })
             .catch(status =>
-              Cu.reportError(
+              console.error(
                 "Cannot initialize search service, bailing out: " + status
               )
             );
@@ -408,7 +408,7 @@
           value: aData,
           source: engine.name,
         }).catch(error =>
-          Cu.reportError(
+          console.error(
             "Saving search to form history failed: " + error.message
           )
         );

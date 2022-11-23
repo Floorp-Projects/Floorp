@@ -1344,7 +1344,7 @@ export class SearchService {
       // See if we have a settings file so we don't have to parse a bunch of XML.
       let settings = await this._settings.get();
 
-      this.#setupRemoteSettings().catch(Cu.reportError);
+      this.#setupRemoteSettings().catch(console.error);
 
       await this.#loadEngines(settings);
 
@@ -1466,7 +1466,7 @@ export class SearchService {
     // reload the engines - it is possible the settings just had one engine in it,
     // and that is now empty, so we need to load from our main list.
     if (engineRemoved && !this._engines.size) {
-      this._maybeReloadEngines().catch(Cu.reportError);
+      this._maybeReloadEngines().catch(console.error);
     }
   }
 
@@ -1748,7 +1748,7 @@ export class SearchService {
           return;
         }
         this.#maybeReloadDebounce = false;
-        this._maybeReloadEngines(changeReason).catch(Cu.reportError);
+        this._maybeReloadEngines(changeReason).catch(console.error);
       }, 10000);
       lazy.logConsole.debug(
         "Post-poning maybeReloadEngines() as we're currently initializing."
@@ -3089,7 +3089,7 @@ export class SearchService {
       // The defaultEngine getter will throw if there's no engine at all,
       // which shouldn't happen unless an add-on or a test deleted all of them.
       // Our preferences UI doesn't let users do that.
-      Cu.reportError("getDefaultEngineInfo: No default engine");
+      console.error("getDefaultEngineInfo: No default engine");
       return ["NONE", { name: "NONE" }];
     }
 
@@ -3536,7 +3536,7 @@ export class SearchService {
         );
         this._maybeReloadEngines(
           Ci.nsISearchService.CHANGE_REASON_CONFIG
-        ).catch(Cu.reportError);
+        ).catch(console.error);
         break;
       }
 
@@ -3559,7 +3559,7 @@ export class SearchService {
           if (!Services.startup.shuttingDown) {
             this._maybeReloadEngines(
               Ci.nsISearchService.CHANGE_REASON_LOCALE
-            ).catch(Cu.reportError);
+            ).catch(console.error);
           }
         });
         break;
@@ -3567,7 +3567,7 @@ export class SearchService {
         lazy.logConsole.debug("Region updated:", lazy.Region.home);
         this._maybeReloadEngines(
           Ci.nsISearchService.CHANGE_REASON_REGION
-        ).catch(Cu.reportError);
+        ).catch(console.error);
         break;
     }
   }
@@ -3813,7 +3813,7 @@ class SearchDefaultOverrideAllowlistHandler {
     } catch (ex) {
       // Don't throw an error just log it, just continue with no data, and hopefully
       // a sync will fix things later on.
-      Cu.reportError(ex);
+      console.error(ex);
     }
     lazy.logConsole.debug("Allow list is:", result);
     return result;

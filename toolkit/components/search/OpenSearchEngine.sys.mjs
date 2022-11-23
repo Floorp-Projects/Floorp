@@ -242,7 +242,7 @@ export class OpenSearchEngine extends SearchEngine {
 
       this._parse();
     } else {
-      Cu.reportError("Invalid search plugin due to namespace not matching.");
+      console.error("Invalid search plugin due to namespace not matching.");
       throw Components.Exception(
         this._location + " is not a valid search plugin.",
         Cr.NS_ERROR_FILE_CORRUPTED

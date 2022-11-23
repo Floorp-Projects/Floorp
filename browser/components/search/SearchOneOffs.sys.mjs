@@ -397,7 +397,7 @@ export class SearchOneOffs {
     try {
       await this.__rebuild();
     } catch (ex) {
-      Cu.reportError("Search-one-offs::_rebuild() error: " + ex);
+      console.error("Search-one-offs::_rebuild() error: " + ex);
     } finally {
       this._rebuilding = false;
     }

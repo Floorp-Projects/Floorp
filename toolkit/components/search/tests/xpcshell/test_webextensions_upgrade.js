@@ -146,6 +146,8 @@ add_task(async function test_upgrade_changes_name() {
 });
 
 add_task(async function test_upgrade_to_existing_name_not_allowed() {
+  consoleAllowList.push("An engine with that name already exists");
+
   let extension = await SearchTestUtils.installSearchExtension(
     {
       name: "engine",

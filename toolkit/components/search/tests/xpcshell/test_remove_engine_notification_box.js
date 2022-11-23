@@ -172,6 +172,7 @@ add_task(async function test_default_engine_unchanged() {
 });
 
 add_task(async function test_new_current_engine_is_undefined() {
+  consoleAllowList.push("No default engine");
   let settings = structuredClone(userSettings);
   let getEngineDefaultStub = sinon.stub(
     await Services.search.wrappedJSObject,

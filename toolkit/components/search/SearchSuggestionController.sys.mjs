@@ -303,7 +303,7 @@ export class SearchSuggestionController {
         // Do nothing since this is normal.
         return null;
       }
-      Cu.reportError("SearchSuggestionController rejection: " + reason);
+      console.error("SearchSuggestionController rejection: " + reason);
       return null;
     }
     return Promise.all(promises).then(
@@ -645,7 +645,7 @@ export class SearchSuggestionController {
     for (let resultData of suggestResults) {
       if (typeof result === "string") {
         // Failure message
-        Cu.reportError(
+        console.error(
           "SearchSuggestionController found an unexpected string value: " +
             resultData
         );

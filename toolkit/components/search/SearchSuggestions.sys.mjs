@@ -148,7 +148,7 @@ class SuggestAutoComplete {
         );
       })
       .catch(result =>
-        Cu.reportError(
+        console.error(
           "Could not initialize search service, bailing out: " + result
         )
       );

@@ -1487,7 +1487,7 @@ export class SearchEngine {
     );
 
     if (submission.postData) {
-      Cu.reportError("searchUrlQueryParamName can't handle POST urls.");
+      console.error("searchUrlQueryParamName can't handle POST urls.");
       return (this._searchUrlQueryParamName = "");
     }
 
@@ -1643,7 +1643,7 @@ export class SearchEngine {
    */
   speculativeConnect(options) {
     if (!options || !options.window) {
-      Cu.reportError(
+      console.error(
         "invalid options arg passed to nsISearchEngine.speculativeConnect"
       );
       throw Components.Exception("", Cr.NS_ERROR_INVALID_ARG);
@@ -1672,7 +1672,7 @@ export class SearchEngine {
       connector.speculativeConnect(searchURI, principal, callbacks);
     } catch (e) {
       // Can't setup speculative connection for this url, just ignore it.
-      Cu.reportError(e);
+      console.error(e);
     }
 
     if (this.supportsResponseType(lazy.SearchUtils.URL_TYPE.SUGGEST_JSON)) {
@@ -1685,7 +1685,7 @@ export class SearchEngine {
           connector.speculativeConnect(suggestURI, principal, callbacks);
         } catch (e) {
           // Can't setup speculative connection for this url, just ignore it.
-          Cu.reportError(e);
+          console.error(e);
         }
       }
     }
