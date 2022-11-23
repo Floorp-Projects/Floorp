@@ -379,21 +379,21 @@ inTimeZone("Europe/Moscow", () => {
     assertDateTime(dt, "Mon May 14 2012 12:13:14 GMT+0400 (Moscow Standard Time)");
 
     let dtf = new Intl.DateTimeFormat("en-US", {hour: "numeric", minute: "numeric"});
-    assertEq(dtf.format(dt), "12:13\u202FPM");
+    assertEq(dtf.format(dt), "12:13 PM");
 });
 inTimeZone("Asia/Baku", () => {
     let dt = new Date(2012, Month.May, 14, 12, 13, 14);
     assertDateTime(dt, "Mon May 14 2012 12:13:14 GMT+0500 (Azerbaijan Summer Time)");
 
     let dtf = new Intl.DateTimeFormat("en-US", {hour: "numeric", minute: "numeric"});
-    assertEq(dtf.format(dt), "12:13\u202FPM");
+    assertEq(dtf.format(dt), "12:13 PM");
 });
 inTimeZone("Asia/Tbilisi", () => {
     let dt = new Date(2012, Month.May, 14, 12, 13, 14);
     assertDateTime(dt, "Mon May 14 2012 12:13:14 GMT+0400 (Georgia Standard Time)");
 
     let dtf = new Intl.DateTimeFormat("en-US", {hour: "numeric", minute: "numeric"});
-    assertEq(dtf.format(dt), "12:13\u202FPM");
+    assertEq(dtf.format(dt), "12:13 PM");
 });
 
 // bug 1335818

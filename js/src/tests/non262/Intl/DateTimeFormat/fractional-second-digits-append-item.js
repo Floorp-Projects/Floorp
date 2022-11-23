@@ -13,7 +13,7 @@ const tests = [
     options: {hour: "numeric", fractionalSecondDigits: 3},
     parts: [
       Hour("12"),
-      Literal("\u202F"),
+      Literal(" "),
       DayPeriod("AM"),
       Literal(" (Fractional Second: "),
       FractionalSecond("123"),
