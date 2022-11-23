@@ -38,7 +38,7 @@ pref("floorp.horizontal.tab.position.shift", false); //水平タブ位置移動
 pref("floorp.Tree-type.verticaltab.optimization", false); //ツリー型タブのフォーカスした際の挙動を変更
 pref("floorp.bookmarks.bar.focus.mode", false);//フォーカスした際にブックマークバーを展開
 pref("floorp.material.effect.enable", false);//マテリアルモードの実装
-pref("floorp.chrome.theme.mode", -1);
+pref("floorp.disable.fullscreen.notification", false);//フルスクリーン通知を無効化
 pref("floorp.navbar.bottom", false);
 
 pref("floorp.browser.user.interface", 3);// Floorp 10 系以降のインターフェーステーマ設定

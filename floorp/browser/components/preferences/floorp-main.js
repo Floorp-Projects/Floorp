@@ -36,6 +36,7 @@ Preferences.addAll([
     { id: "floorp.browser.restore.sidebar.panel", type : "bool"},
     { id: "floorp.browser.sidebar.useIconProvider", type: "string" },
     { id: "floorp.navbar.bottom", type : "bool"},
+    { id: "floorp.disable.fullscreen.notification", type : "bool"},
   ]);
 
 function floorpMain(){

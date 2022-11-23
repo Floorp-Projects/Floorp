@@ -86,6 +86,9 @@ allow-auto-restart =
 browser-rest-mode =
  .label = Enable Rest-mode hotkey (F9)
 
+disable-fullscreen-notification =
+ .label = Disable video fullscreen notification
+
 floorp-updater = { -brand-short-name } Updater Settings
 enable-floorp-updater = 
  .label = Check for { -brand-short-name } updates at startup

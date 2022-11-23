@@ -173,6 +173,16 @@ Services.prefs.addObserver("floorp.downloading.red.color", function(){
     }
   });
 
+  Services.prefs.addObserver("floorp.disable.fullscreen.notification", function(){
+    if (Services.prefs.getBoolPref("floorp.disable.fullscreen.notification", false)) {
+      var Tag = document.createElement("style");
+      Tag.innerText = `@import url(chrome://browser/skin/options/disableFullScreenNotification.css)`
+      document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
+      Tag.setAttribute("id", "DFSN");
+    }
+    else {
+      document.getElementById("DFSN").remove();
+  }});
 
  /*------------------------------------------- sidebar -------------------------------------------*/
 
