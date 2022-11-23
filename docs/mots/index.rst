@@ -3587,7 +3587,7 @@ The profile system and startup process before the front-end launches.
 
 Telemetry
 =========
-The core infrastructure in the Firefox client to send back Telemetry and FHR data. Includes the common mechanism to record, view and submit data like histograms, the Telemetry environment and custom pings. This module does ''not'' include responsibility for every piece of submitted Telemetry data. Each team/module is responsible for their own measurements (histograms, scalars, other ping submissions, etc.).
+The core infrastructure in the Firefox client to send back telemetry data. Includes the common mechanisms to record, view and submit data: Legacy Telemetry and Glean (via Firefox on Glean (FOG)). This module does ''not'' include responsibility for every piece of submitted Telemetry data. Each team/module is responsible for their own measurements (histograms, scalars, other ping submissions, etc.).
 
 
 .. list-table::
@@ -3601,10 +3601,13 @@ The core infrastructure in the Firefox client to send back Telemetry and FHR dat
       -
         | `aplacitelli <https://people.mozilla.org/s?query=aplacitelli>`__
         | `Jan-Erik Rediger (janerik) <https://people.mozilla.org/s?query=janerik>`__
+        | `Perry McManis (perrym) <https://people.mozilla.org/s?query=perrym>`__
+        | `Travis Long (travis_) <https://people.mozilla.org/s?query=travis_>`__
     * - Owner(s) Emeritus
       - Georg Fritzsche
     * - Includes
       -
+        | `toolkit/components/glean/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=toolkit/components/glean/\*\*/\*>`__
         | `toolkit/components/telemetry/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=toolkit/components/telemetry/\*\*/\*>`__
         | `toolkit/content/aboutTelemetry.\* <https://searchfox.org/mozilla-central/search?q=&path=toolkit/content/aboutTelemetry.\*>`__
     * - Group
