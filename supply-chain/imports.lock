@@ -91,6 +91,27 @@ criteria = "safe-to-deploy"
 version = "0.1.21"
 notes = "I am the author of this crate."
 
+[[audits.bytecodealliance.audits.unicode-bidi]]
+who = "Alex Crichton <alex@alexcrichton.com>"
+criteria = "safe-to-deploy"
+version = "0.3.8"
+notes = """
+This crate has no unsafe code and does not use `std::*`. Skimming the crate it
+does not attempt to out of the bounds of what it's already supposed to be doing.
+"""
+
+[[audits.bytecodealliance.audits.unicode-normalization]]
+who = "Alex Crichton <alex@alexcrichton.com>"
+criteria = "safe-to-deploy"
+version = "0.1.19"
+notes = """
+This crate contains one usage of `unsafe` which I have manually checked to see
+it as correct. This crate's size comes in large part due to the generated
+unicode tables that it contains. This crate is additionally widely used
+throughout the ecosystem and skimming the crate shows no usage of `std::*` APIs
+and nothing suspicious.
+"""
+
 [[audits.bytecodealliance.audits.wasm-encoder]]
 who = "Alex Crichton <alex@alexcrichton.com>"
 criteria = "safe-to-deploy"
@@ -248,23 +269,23 @@ version = "48.0.0"
 notes = "The Bytecode Alliance is the author of this crate."
 
 [[audits.embark.audits.anyhow]]
-who = "Johan Andersson <johan@embark-studios.com>"
+who = "Johan Andersson <opensource@embark-studios.com>"
 criteria = "safe-to-deploy"
 version = "1.0.58"
 
 [[audits.embark.audits.cty]]
-who = "Johan Andersson <johan@embark-studios.com>"
+who = "Johan Andersson <opensource@embark-studios.com>"
 criteria = "safe-to-deploy"
 version = "0.2.2"
 notes = "Inspected it and is a tiny crate with just type definitions"
 
 [[audits.embark.audits.serial_test]]
-who = "Johan Andersson <johan@embark-studios.com>"
+who = "Johan Andersson <opensource@embark-studios.com>"
 criteria = "safe-to-run"
 version = "0.6.0"
 
 [[audits.embark.audits.serial_test_derive]]
-who = "Johan Andersson <johan@embark-studios.com>"
+who = "Johan Andersson <opensource@embark-studios.com>"
 criteria = "safe-to-run"
 version = "0.6.0"
 
