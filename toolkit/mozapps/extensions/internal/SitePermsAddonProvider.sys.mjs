@@ -286,40 +286,12 @@ class SitePermsAddonInstalling extends SitePermsAddonWrapper {
    *                                         calling this constructor.
    */
   constructor(siteOriginNoSuffix, install) {
-    // SitePermsAddonWrapper expect an array of nsIPermission as its second parameter.
-    // Since we don't have a proper permission here, we pass an object with the properties
-    // being used in the class.
-    const permission = {
-      principal: install.principal,
-      type: install.newSitePerm,
-    };
-
-    super(siteOriginNoSuffix, [permission]);
+    super(siteOriginNoSuffix);
     this.#install = install;
   }
 
-  get existingAddon() {
-    return SitePermsAddonProvider.wrappersMapByOrigin.get(this.siteOrigin);
-  }
-
-  uninstall() {
-    // While about:addons tab is already open, new addon cards for newly installed
-    // addons are created from the `onInstalled` AOM events, for the `SitePermsAddonWrapper`
-    // the `onInstalling` and `onInstalled` events are emitted by `SitePermsAddonInstall`
-    // and the addon instance is going to be a `SitePermsAddonInstalling` instance if
-    // there wasn't an AddonCard for the same addon id yet.
-    //
-    // To make sure that all permissions will be uninstalled if a user uninstall the
-    // addon from an AddonCard created from a `SitePermsAddonInstalling` instance,
-    // we forward calls to the uninstall method of the existing `SitePermsAddonWrapper`
-    // instance being tracked by the `SitePermsAddonProvider`.
-    // If there isn't any then removing only the single permission added along with the
-    // `SitePremsAddonInstalling` is going to be enough.
-    if (this.existingAddon) {
-      return this.existingAddon.uninstall();
-    }
-
-    return super.uninstall();
+  get sitePermissions() {
+    return Array.from(new Set([this.#install.newSitePerm]));
   }
 
   validInstallOrigins() {

@@ -479,10 +479,6 @@ add_task(
       "Call installSitePermsAddonFromWebpage for authorized principal and gated permission"
     );
     expectAndHandleInstallPrompts();
-    const onAddonInstalled = AddonTestUtils.promiseInstallEvent(
-      "onInstallEnded"
-    ).then(installs => installs?.[0]?.addon);
-
     await AddonManager.installSitePermsAddonFromWebpage(
       null,
       PRINCIPAL_COM,
@@ -498,14 +494,6 @@ add_task(
       PermissionTestUtils.testExactPermission(PRINCIPAL_COM, GATED_SITE_PERM1),
       true,
       "...and set the permission"
-    );
-
-    // The addon we get here is a SitePermsAddonInstalling instance, and we want to assert
-    // that its permissions are correct as it may impact addon uninstall later on
-    Assert.deepEqual(
-      (await onAddonInstalled).sitePermissions,
-      [GATED_SITE_PERM1],
-      "Addon has expected sitePermissions"
     );
 
     info(
