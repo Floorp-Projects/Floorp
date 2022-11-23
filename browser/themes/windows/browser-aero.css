@@ -34,7 +34,7 @@
     }
 
     @media (-moz-windows-compositor) {
-      :root:is([sizemode="maximized"], [sizemode="fullscreen"]) .titlebar-buttonbox {
+      :root[sizemode="maximized"] .titlebar-buttonbox {
         appearance: auto;
         -moz-default-appearance: -moz-window-button-box-maximized;
       }
