@@ -68,7 +68,7 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
   VideoFrame(nsIGlobalObject* aParent, const RefPtr<layers::Image>& aImage,
              const VideoPixelFormat& aFormat, gfx::IntSize aCodedSize,
              gfx::IntRect aVisibleRect, gfx::IntSize aDisplaySize,
-             Maybe<uint64_t>&& aDuration, Maybe<int64_t>&& aTimestamp,
+             Maybe<uint64_t>&& aDuration, int64_t aTimestamp,
              const VideoColorSpaceInit& aColorSpace);
 
   VideoFrame(const VideoFrame& aOther);
@@ -128,7 +128,7 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
 
   Nullable<uint64_t> GetDuration() const;
 
-  Nullable<int64_t> GetTimestamp() const;
+  int64_t Timestamp() const;
 
   already_AddRefed<VideoColorSpace> ColorSpace() const;
 
@@ -206,7 +206,7 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
   gfx::IntSize mDisplaySize;
 
   Maybe<uint64_t> mDuration;  // Nothing() after `Close()`d
-  Maybe<int64_t> mTimestamp;  // Nothing() after `Close()`d
+  int64_t mTimestamp;
   VideoColorSpaceInit mColorSpace;
 };
 
