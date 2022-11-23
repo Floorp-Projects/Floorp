@@ -421,12 +421,6 @@ void nsThreadManager::ShutdownMainThread() {
   mMainThread->SetObserver(nullptr);
 
   mBackgroundEventTarget = nullptr;
-}
-
-void nsThreadManager::ReleaseMainThread() {
-  MOZ_ASSERT(!mInitialized, "Must have called BeginShutdown");
-  MOZ_ASSERT(!mBackgroundEventTarget, "Must have called ShutdownMainThread");
-  MOZ_ASSERT(mMainThread);
 
   // Release main thread object.
   mMainThread = nullptr;
