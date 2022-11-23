@@ -62,6 +62,27 @@ struct NativeToBytecode {
   jsbytecode* pc;
 };
 
+// Describes range [start, end) of JIT-generated code.
+class JitCodeRange {
+ protected:
+  void* nativeStartAddr_ = nullptr;
+  void* nativeEndAddr_ = nullptr;
+
+ public:
+  JitCodeRange() = default;
+  JitCodeRange(void* start, void* end)
+      : nativeStartAddr_(start), nativeEndAddr_(end) {
+    MOZ_ASSERT(start < end);
+  }
+
+  void* nativeStartAddr() const { return nativeStartAddr_; }
+  void* nativeEndAddr() const { return nativeEndAddr_; }
+
+  bool containsPointer(void* ptr) const {
+    return nativeStartAddr() <= ptr && ptr < nativeEndAddr();
+  }
+};
+
 class JitcodeSkiplistTower {
  public:
   static const unsigned MAX_HEIGHT = 32;
@@ -154,12 +175,10 @@ class JitcodeGlobalEntry {
 
   typedef Vector<BytecodeLocation, 0, SystemAllocPolicy> BytecodeLocationVector;
 
-  struct BaseEntry {
+  struct BaseEntry : public JitCodeRange {
     static const uint64_t kNoSampleInBuffer = UINT64_MAX;
 
     JitCode* jitcode_;
-    void* nativeStartAddr_;
-    void* nativeEndAddr_;
     // If this entry is referenced from the profiler buffer, this is the
     // position where the most recent sample that references it starts.
     // Otherwise set to kNoSampleInBuffer.
@@ -200,17 +219,12 @@ class JitcodeGlobalEntry {
 
     Kind kind() const { return kind_; }
     JitCode* jitcode() const { return jitcode_; }
-    void* nativeStartAddr() const { return nativeStartAddr_; }
-    void* nativeEndAddr() const { return nativeEndAddr_; }
 
     bool startsBelowPointer(void* ptr) const {
       return ((uint8_t*)nativeStartAddr()) <= ((uint8_t*)ptr);
     }
     bool endsAbovePointer(void* ptr) const {
       return ((uint8_t*)nativeEndAddr()) > ((uint8_t*)ptr);
-    }
-    bool containsPointer(void* ptr) const {
-      return startsBelowPointer(ptr) && endsAbovePointer(ptr);
     }
 
     bool traceJitcode(JSTracer* trc);
