@@ -17,10 +17,10 @@ es_CO{
     calendar{
         generic{
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
                 "EEEE, d 'de' MMMM 'de' y G",
                 "d 'de' MMMM 'de' y G",
                 "d/MM/y G",
@@ -110,10 +110,10 @@ es_CO{
         }
         gregorian{
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
                 "EEEE, d 'de' MMMM 'de' y",
                 "d 'de' MMMM 'de' y",
                 "d/MM/y",
@@ -231,22 +231,22 @@ es_CO{
                 }
                 fallback{"{0} ‘al’ {1}"}
                 h{
-                    a{"h a 'a' h a"}
-                    h{"h 'a' h a"}
+                    a{"h a 'a' h a"}
+                    h{"h 'a' h a"}
                 }
                 hm{
-                    a{"h:mm a 'a' h:mm a"}
-                    h{"h:mm 'a' h:mm a"}
-                    m{"h:mm 'a' h:mm a"}
+                    a{"h:mm a 'a' h:mm a"}
+                    h{"h:mm 'a' h:mm a"}
+                    m{"h:mm 'a' h:mm a"}
                 }
                 hmv{
-                    a{"h:mm a 'a' h:mm a v"}
-                    h{"h:mm 'a' h:mm a v"}
-                    m{"h:mm 'a' h:mm a v"}
+                    a{"h:mm a 'a' h:mm a v"}
+                    h{"h:mm 'a' h:mm a v"}
+                    m{"h:mm 'a' h:mm a v"}
                 }
                 hv{
-                    a{"h a 'a' h a v"}
-                    h{"h 'a' h a v"}
+                    a{"h a 'a' h a v"}
+                    h{"h 'a' h a v"}
                 }
                 y{
                     y{"y 'a' y"}
@@ -302,6 +302,11 @@ es_CO{
                     }
                 }
             }
+        }
+    }
+    fields{
+        dayperiod{
+            dn{"a. m./p. m."}
         }
     }
 }

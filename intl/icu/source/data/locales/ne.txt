@@ -4,7 +4,6 @@
 ne{
     AuxExemplarCharacters{"[\u200C\u200D \u0944]"}
     Ellipsis{
-        final{"{0}…"}
         initial{"…{0}"}
         medial{"{0}…{1}"}
         word-final{"{0} …"}
@@ -28,6 +27,7 @@ ne{
         deva{
             patterns{
                 currencyFormat{"¤ #,##,##0.00"}
+                currencyFormat%noCurrency{"#,##,##0.00"}
                 decimalFormat{"#,##,##0.###"}
                 percentFormat{"#,##,##0%"}
                 scientificFormat{"#E0"}
@@ -55,9 +55,11 @@ ne{
             }
             patterns{
                 accountingFormat{"¤ #,##,##0.00"}
+                accountingFormat%noCurrency{"#,##,##0.00"}
                 currencyFormat{"¤ #,##,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
                 decimalFormat{"#,##,##0.###"}
-                percentFormat{"#,##,##0%"}
+                percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
             patternsLong{
@@ -255,10 +257,16 @@ ne{
                 "G y MMM d",
                 "GGGGG y-MM-dd",
                 "{1},{0}",
-                "{1}{0}मा",
-                "{1}{0}मा",
+                "{1}, {0}",
+                "{1}, {0}",
                 "{1},{0}",
                 "{1},{0}",
+            }
+            DateTimePatterns%atTime{
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
             }
             DateTimeSkeletons{
                 "HHmmsszzzz",
@@ -403,6 +411,12 @@ ne{
                 "{1}, {0}",
                 "{1} {0}",
                 "{1} {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimePatterns%atTime{
+                "{1}: {0}",
+                "{1}: {0}",
                 "{1}, {0}",
                 "{1}, {0}",
             }
@@ -637,6 +651,13 @@ ne{
                 }
             }
             intervalFormats{
+                Gy{
+                    G{"y G – y G"}
+                    y{"y – y G"}
+                }
+                GyM{
+                    G{"M/y G – M/y G"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -865,9 +886,43 @@ ne{
             }
         }
         indian{
+            eras{
+                abbreviated{
+                    "साक",
+                }
+            }
             monthNames{
                 format{
+                    abbreviated{
+                        "चै",
+                        "बै",
+                        "जे",
+                        "अ",
+                        "श्रा",
+                        "भा",
+                        "अश्वि",
+                        "का",
+                        "मं",
+                        "पौ",
+                        "मा",
+                        "फा",
+                    }
+                    narrow{
+                        "१",
+                        "२",
+                        "३",
+                        "४",
+                        "५",
+                        "६",
+                        "७",
+                        "८",
+                        "९",
+                        "१०",
+                        "११",
+                        "१२",
+                    }
                     wide{
+                        "चैत",
                         "वैशाख",
                         "जेठ",
                         "असार",
@@ -879,7 +934,50 @@ ne{
                         "पुस",
                         "माघ",
                         "फागुन",
-                        "चैत",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "चै",
+                        "बै",
+                        "जे",
+                        "अ",
+                        "श्रा",
+                        "भा",
+                        "अश्वि",
+                        "का",
+                        "मं",
+                        "पौ",
+                        "मा",
+                        "फा",
+                    }
+                    narrow{
+                        "१",
+                        "२",
+                        "३",
+                        "४",
+                        "५",
+                        "६",
+                        "७",
+                        "८",
+                        "९",
+                        "१०",
+                        "११",
+                        "१२",
+                    }
+                    wide{
+                        "चेत्र",
+                        "वैसाख",
+                        "जेष्ठ",
+                        "आषाढ",
+                        "श्रावन",
+                        "भाद्र",
+                        "आश्विन",
+                        "कार्तिक",
+                        "मंसिर",
+                        "पौष",
+                        "माघ",
+                        "फाल्गुन",
                     }
                 }
             }
@@ -1850,6 +1948,78 @@ ne{
                 "[,٫︐﹐，]",
                 "[.․﹒．｡]",
             }
+        }
+    }
+    personNames{
+        foreignSpaceReplacement{" "}
+        initialPattern{
+            initial{"{0}."}
+            initialSequence{"{0} {1}"}
+        }
+        nameOrderLocales{
+            givenFirst{
+                "und",
+                "ne",
+            }
+            surnameFirst{
+                "ko",
+                "si",
+                "ta",
+                "te",
+                "vi",
+                "yue",
+                "zh",
+            }
+        }
+        namePattern{
+            givenFirst-long-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-addressing-informal{"{given-informal}"}
+            givenFirst-long-monogram-formal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
+            givenFirst-long-referring-formal{"{given} {given2} {surname} {suffix}"}
+            givenFirst-long-referring-informal{"{given-informal} {surname}"}
+            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-informal{"{given-informal}"}
+            givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {suffix}"}
+            givenFirst-medium-referring-informal{"{given-informal} {surname}"}
+            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-informal{"{given-informal}"}
+            givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
+            givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
+            sorting-long-referring-formal{"{surname-core}, {given} {given2} {surname-prefix}"}
+            sorting-long-referring-informal{"{surname}, {given-informal}"}
+            sorting-medium-referring-formal{"{surname-core}, {given} {given2-initial} {surname-prefix}"}
+            sorting-medium-referring-informal{"{surname}, {given-informal}"}
+            sorting-short-referring-formal{"{surname-core}, {given-initial} {given2-initial} {surname-prefix}"}
+            sorting-short-referring-informal{"{surname}, {given-informal}"}
+            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-addressing-informal{"{given-informal}"}
+            surnameFirst-long-monogram-formal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
+            surnameFirst-long-referring-formal{"{surname} {given} {given2} {suffix}"}
+            surnameFirst-long-referring-informal{"{surname} {given-informal}"}
+            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-medium-addressing-informal{"{given-informal}"}
+            surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {suffix}"}
+            surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
+            surnameFirst-short-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-short-addressing-informal{"{given-informal}"}
+            surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-short-referring-formal{"{surname} {given-initial} {given2-initial}"}
+            surnameFirst-short-referring-informal{"{surname} {given-initial}"}
         }
     }
 }

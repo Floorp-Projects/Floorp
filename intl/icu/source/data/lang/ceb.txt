@@ -6,15 +6,15 @@ ceb{
         ar{"Arabic"}
         ar_001{"Modernong Tamdanang Arabic"}
         bn{"Bangla"}
-        ceb{"Binisaya"}
-        de{"Aleman"}
-        de_AT{"Austriano nga Aleman"}
-        de_CH{"Taas nga Aleman sa Switzerland"}
-        en{"Ingles"}
-        en_AU{"Ingles sa Australia"}
-        en_CA{"Ingles sa Canada"}
-        en_GB{"Britanikong Ingles"}
-        en_US{"Ingles sa Amerika"}
+        ceb{"Cebuano"}
+        de{"German"}
+        de_AT{"Austrian German"}
+        de_CH{"Swiss High German"}
+        en{"English"}
+        en_AU{"English sa Australia"}
+        en_CA{"English sa Canada"}
+        en_GB{"Britanikong English"}
+        en_US{"English sa America"}
         es{"Espanyol"}
         es_419{"Espanyol sa Latin Amerika"}
         es_ES{"Espanyol sa Europe"}
@@ -33,31 +33,34 @@ ceb{
         pt{"Portuguese"}
         pt_BR{"Brazilyanong Portuguese"}
         pt_PT{"Portuguese sa Europe"}
-        ru{"Ruso"}
+        ru{"Russian"}
         th{"Thai"}
         tr{"Turkish"}
         und{"Wala Mailhing Lengguwahe"}
         zh{"Inintsik"}
-        zh_Hans{"Pinasimpleng Inintsik"}
-        zh_Hant{"Tradisyonal nga Ininstsik"}
+        zh_Hans{"Simplified Chinese"}
+        zh_Hant{"Traditional nga Chinese"}
     }
     Languages%long{
-        zh_Hans{"Pinasimpleng Mandarin nga Inintsik"}
-        zh_Hant{"Tradisyonal nga Mandarin nga Inintsik"}
+        zh_Hans{"Pinasimpleng Mandarin Chinese"}
+        zh_Hant{"Tradisyonal nga Mandarin Chinese"}
     }
     Languages%menu{
-        zh{"Inintsik, Mandarin"}
+        zh{"Chinese, Mandarin"}
     }
     Languages%short{
-        en_GB{"Ingles sa UK"}
-        en_US{"Ingles sa US"}
+        en_GB{"English sa UK"}
+        en_US{"English sa US"}
+    }
+    Languages%variant{
+        hi_Latn{"Hinglish"}
     }
     Scripts{
         Arab{"Arabo"}
         Cyrl{"Sirilisko"}
         Hans{"Pinasimple"}
         Hant{"Tradisyonal"}
-        Jpan{"Hinapon"}
+        Jpan{"Japanese"}
         Kore{"Korean"}
         Latn{"Latin"}
         Zxxx{"Dili Sinulat"}

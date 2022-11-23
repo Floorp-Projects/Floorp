@@ -31,6 +31,7 @@ yo_BJ{
         es_MX{"Èdè Sípáníìshì (orílɛ̀-èdè Mɛ́síkò)"}
         fr_CA{"Èdè Faransé (orílɛ̀-èdè Kánádà)"}
         fr_CH{"Èdè Faranshé (Súwísàlaǹdì)"}
+        gez{"Ede Gɛ́sì"}
         id{"Èdè Indonéshíà"}
         ii{"Shíkuán Yì"}
         jmc{"Máshámè"}
@@ -88,6 +89,9 @@ yo_BJ{
         en_GB{"Èdè Gɛ̀ɛ́sì (GB)"}
         en_US{"Èdè Gɛ̀ɛ́sì (US)"}
     }
+    Languages%variant{
+        hi_Latn{"Èdè Híńgílíshì"}
+    }
     Scripts{
         Armn{"Àmɛ́níà"}
         Cyrl{"èdè ilɛ̀ Rɔ́shíà"}
@@ -119,6 +123,8 @@ yo_BJ{
             gregorian{"Kàlɛ́ńdà Gregory"}
             hebrew{"Kàlɛ́ńdà Hébérù"}
             islamic{"Kàlɛ́ńdà Lárúbáwá"}
+            islamic-civil{"Kàlɛ́ńdà ti Musulumi"}
+            islamic-umalqura{"Kàlɛ́ńdà Musulumi"}
             iso8601{"Kàlɛ́ńdà ISO-8601"}
             japanese{"Kàlɛ́ńdà ti Jàpánù"}
             persian{"Kàlɛ́ńdà Pásíànù"}
@@ -143,6 +149,7 @@ yo_BJ{
             armn{"Àwɔn nɔ́ńbà Àmɛ́níà"}
             armnlow{"Àwɔn Nɔ́ńbà Kékèké ti Amɛ́ríkà"}
             beng{"Àwɔn díjíìtì Báńgílà"}
+            cakm{"Àwɔn díjíìtì Shakma"}
             deva{"Àwɔn díjììtì Defanagárì"}
             ethi{"Àwɔn nɔ́ńbà Ɛtiópíìkì"}
             fullwide{"Àwɔn Díjíìtì Fífɛ̀-Ɛ̀kún"}
@@ -157,6 +164,7 @@ yo_BJ{
             hant{"Àwɔn nɔ́ńbà Ìbílɛ̀ Sháìnà"}
             hantfin{"Àwɔn nɔ́ńbà Ìshúná Ìbílɛ̀ Sháìnà"}
             hebr{"Àwɔn nɔ́ńbà Hébérù"}
+            java{"Àwɔn díjíìtì Jafaniisi"}
             jpan{"Àwɔn nɔ́ńbà Jápànù"}
             jpanfin{"Àwɔn nɔ́ńbà Ìshúná Jàpáànù"}
             khmr{"Àwɔn díjíìtì Kɛ́mɛ̀"}
@@ -164,7 +172,9 @@ yo_BJ{
             laoo{"Àwɔn díjíìtì Láó"}
             latn{"Díjíítì Ìwɔ̀ Oòrùn"}
             mlym{"Àwɔn díjíìtì Málàyálámù"}
+            mtei{"Àwɔn díjíìtì Mete Mayeki"}
             mymr{"Àwɔn díjíìtì Myánmarí"}
+            olck{"Àwɔn díjíìtì Shiki"}
             orya{"Àwɔn díjíìtì Òdíà"}
             roman{"Àwɔn díjíìtì Rómánù"}
             romanlow{"Àwɔn díjíìtì Rómánù Kékeré"}
@@ -173,7 +183,11 @@ yo_BJ{
             telu{"Àwɔn díjíìtì Télúgù"}
             thai{"Àwɔn díjíìtì Thai"}
             tibt{"Àwɔn díjíìtì Tibetán"}
+            vaii{"Àwɔn díjíìtì Fai"}
         }
+    }
+    characterLabelPattern{
+        scripts{"àwɔ́n ìwé - {0}"}
     }
     codePatterns{
         script{"Ìshɔwɔ́kɔ̀wé: {0}"}

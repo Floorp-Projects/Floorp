@@ -32,7 +32,7 @@ en_AU{
             }
         }
         mass{
-            metric-ton{
+            tonne{
                 one{"tonne"}
                 other{"{0} tonnes"}
             }
@@ -47,6 +47,8 @@ en_AU{
         temperature{
             generic{
                 dnam{"degrees"}
+                one{"{0} degree"}
+                other{"{0} degrees"}
             }
         }
         volume{
@@ -54,6 +56,11 @@ en_AU{
                 dnam{"fluid ounces"}
                 one{"{0} fluid ounce"}
                 other{"{0} fluid ounces"}
+            }
+            fluid-ounce-imperial{
+                dnam{"Imp. fluid ounces"}
+                one{"{0} Imp. fluid ounce"}
+                other{"{0} Imp. fluid ounces"}
             }
         }
     }
@@ -144,18 +151,24 @@ en_AU{
                 other{"{0}dsp US"}
             }
             dessert-spoon-imperial{
-                dnam{"dsp Imp."}
-                one{"{0}dsp-Imp."}
-                other{"{0}dsp-Imp."}
+                dnam{"dsp Imp"}
+                one{"{0}dsp-Imp"}
+                other{"{0}dsp-Imp"}
+            }
+            fluid-ounce{
+                dnam{"fl oz"}
+                one{"{0}fl oz"}
+                other{"{0}fl oz"}
             }
             fluid-ounce-imperial{
-                dnam{"Imp. fl oz"}
+                dnam{"Imp fl oz"}
+                one{"{0}fl oz Im"}
+                other{"{0}fl oz Im"}
             }
             gallon{
-                dnam{"gal. US"}
-                one{"{0}gal. US"}
-                other{"{0}gal. US"}
-                per{"{0}/gal. US"}
+                dnam{"gal US"}
+                one{"{0} gal US"}
+                other{"{0} gal US"}
             }
             gallon-imperial{
                 dnam{"gal."}
@@ -188,9 +201,6 @@ en_AU{
                 one{"{0}qt US"}
                 other{"{0}qt US"}
             }
-            quart-imperial{
-                dnam{"qt Imp."}
-            }
         }
     }
     unitsShort{
@@ -204,10 +214,6 @@ en_AU{
                 dnam{"arcsec."}
                 one{"{0} arcsec."}
                 other{"{0} arcsec."}
-            }
-            degree{
-                one{"{0} deg."}
-                other{"{0} deg."}
             }
         }
         concentr{
@@ -289,10 +295,6 @@ en_AU{
                 one{"{0} AU"}
                 other{"{0} AU"}
             }
-            light-year{
-                one{"{0} l.y."}
-                other{"{0} l.y."}
-            }
         }
         mass{
             carat{
@@ -323,6 +325,12 @@ en_AU{
             }
         }
         temperature{
+            celsius{
+                dnam{"deg C"}
+            }
+            fahrenheit{
+                dnam{"deg F"}
+            }
             generic{
                 dnam{"deg."}
                 one{"{0}°"}
@@ -349,11 +357,16 @@ en_AU{
                 one{"{0} fl oz"}
                 other{"{0} fl oz"}
             }
+            fluid-ounce-imperial{
+                dnam{"Imp. fl oz"}
+                one{"{0} fl oz Imp."}
+                other{"{0} fl oz Imp."}
+            }
             gallon{
-                dnam{"US gal."}
-                one{"{0} gal. US"}
-                other{"{0} gal. US"}
-                per{"{0}/gal. US"}
+                dnam{"gal US"}
+                one{"{0} gal US"}
+                other{"{0} gal US"}
+                per{"{0}/gal US"}
             }
             gallon-imperial{
                 dnam{"gal."}

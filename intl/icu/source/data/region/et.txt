@@ -312,6 +312,7 @@ et{
         CI{"Elevandiluurannik"}
         CZ{"Tšehhi Vabariik"}
         FK{"Falklandi saared (Malviini saared)"}
+        NZ{"Aotearoa Uus-Meremaa"}
         SZ{"eSwatini"}
         TL{"Timor-Leste"}
     }

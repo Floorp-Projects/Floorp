@@ -52,8 +52,10 @@ sa{
         "meta:GMT"{
             ls{"ग्रीनविच मीन समयः"}
         }
+        gmtFormat{"जी.एम.टी. {0}"}
+        gmtZeroFormat{"जी.एम.टी."}
         regionFormat{"{0} समय:"}
-        regionFormatDaylight{"{0} डेलाइट समय:"}
-        regionFormatStandard{"{0} मानक समय:"}
+        regionFormatDaylight{"{0} अयामसमयः"}
+        regionFormatStandard{"{0} प्रमाणसमयः"}
     }
 }

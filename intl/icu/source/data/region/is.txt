@@ -15,7 +15,7 @@ is{
         017{"Mið-Afríka"}
         018{"Suðurhluti Afríku"}
         019{"Ameríka"}
-        021{"Ameríka norðan Mexikó"}
+        021{"Ameríka norðan Mexíkó"}
         029{"Karíbahafið"}
         030{"Austur-Asía"}
         034{"Suður-Asía"}
@@ -309,6 +309,7 @@ is{
         CD{"Kongó (Lýðstjórnarlýðveldið)"}
         CG{"Kongó (Lýðveldið)"}
         FK{"Falklandseyjar (Malvinas)"}
+        NZ{"Aotearoa, Nýja-Sjáland"}
         TL{"Austur-Tímor"}
     }
 }

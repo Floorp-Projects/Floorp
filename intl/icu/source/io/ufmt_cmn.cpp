@@ -243,7 +243,7 @@ ufmt_defaultCPToUnicode(const char *s, int32_t sSize,
         
         alias = target;
         ucnv_toUnicode(defConverter, &alias, alias + tSize, &s, s + sSize - 1, 
-            NULL, TRUE, &status);
+            NULL, true, &status);
         
         
         /* add the null terminator */

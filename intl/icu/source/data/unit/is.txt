@@ -119,7 +119,7 @@ is{
                     }
                     dative{
                         one{"{0} radíani"}
-                        other{"{0} radíani"}
+                        other{"{0} radíönum"}
                     }
                     genitive{
                         one{"{0} radíans"}
@@ -270,7 +270,7 @@ is{
             }
         }
         compound{
-            1024p1{"k´íbí{0}"}
+            1024p1{"kíbí{0}"}
             1024p2{"mebí{0}"}
             1024p3{"gíbí{0}"}
             1024p4{"tebí{0}"}
@@ -579,7 +579,7 @@ is{
                         other{"{0} lítra á kílómetra"}
                     }
                     dative{
-                        one{"{0} lítrum á kílómetra"}
+                        one{"{0} lítra á kílómetra"}
                         other{"{0} lítrum á kílómetra"}
                     }
                     genitive{
@@ -654,11 +654,11 @@ is{
             gigabit{
                 case{
                     accusative{
-                        one{"{0} gígabiti"}
+                        one{"{0} gígabita"}
                         other{"{0} gígabita"}
                     }
                     dative{
-                        one{"{0} gígabiti"}
+                        one{"{0} gígabita"}
                         other{"{0} gígabitum"}
                     }
                     genitive{
@@ -794,11 +794,11 @@ is{
             terabit{
                 case{
                     accusative{
-                        one{"{0} terabiti"}
-                        other{"{0} terabiti"}
+                        one{"{0} terabita"}
+                        other{"{0} terabita"}
                     }
                     dative{
-                        one{"{0} terabiti"}
+                        one{"{0} terabita"}
                         other{"{0} terabitum"}
                     }
                     genitive{
@@ -1035,6 +1035,27 @@ is{
                 one{"{0} nanósekúnda"}
                 other{"{0} nanósekúndur"}
             }
+            quarter{
+                case{
+                    accusative{
+                        one{"{0} ársfjórðung"}
+                        other{"{0} ársfjórðunga"}
+                    }
+                    dative{
+                        one{"{0} ársfjórðungi"}
+                        other{"{0} ársfjórðungum"}
+                    }
+                    genitive{
+                        one{"{0} ársfjórðungs"}
+                        other{"{0} ársfjórðunga"}
+                    }
+                }
+                dnam{"ársfjórðungar"}
+                gender{"masculine"}
+                one{"{0} ársfjórðungur"}
+                other{"{0} ársfjórðungar"}
+                per{"{0}/ársfjórðung"}
+            }
             second{
                 case{
                     accusative{
@@ -1127,8 +1148,8 @@ is{
                         other{"{0} milliamper"}
                     }
                     dative{
-                        one{"{0} milliamperum"}
-                        other{"{0} milliamper"}
+                        one{"{0} milliamperi"}
+                        other{"{0} milliamperum"}
                     }
                     genitive{
                         one{"{0} milliampers"}
@@ -1158,7 +1179,7 @@ is{
                 dnam{"óm"}
                 gender{"neuter"}
                 one{"{0} óm"}
-                other{"{0} ohm"}
+                other{"{0} óm"}
             }
             volt{
                 case{
@@ -1249,12 +1270,12 @@ is{
                         other{"{0} kílójúl"}
                     }
                     dative{
-                        one{"{0} kílójúl"}
-                        other{"{0} kílójúl"}
+                        one{"{0} kílójúli"}
+                        other{"{0} kílójúlum"}
                     }
                     genitive{
-                        one{"{0} kílójúl"}
-                        other{"{0} kílójúl"}
+                        one{"{0} kílójúls"}
+                        other{"{0} kílójúla"}
                     }
                 }
                 dnam{"kílójúl"}
@@ -1297,11 +1318,11 @@ is{
                     }
                     dative{
                         one{"{0} kílóvatti á 100 kílómetra"}
-                        other{"{0} kílóvött á 100 kílómetra"}
+                        other{"{0} kílóvöttum á 100 kílómetra"}
                     }
                     genitive{
-                        one{"{0} kílóvatt á 100 kílómetra"}
-                        other{"{0} kílóvöttum á 100 kílómetra"}
+                        one{"{0} kílóvatts á 100 kílómetra"}
+                        other{"{0} kílóvatta á 100 kílómetra"}
                     }
                 }
                 gender{"neuter"}
@@ -1418,7 +1439,7 @@ is{
         }
         graphics{
             dot{
-                dnam{"punktur"}
+                dnam{"punktar"}
                 one{"{0} punktur"}
                 other{"{0} punktar"}
             }
@@ -1827,12 +1848,12 @@ is{
                         other{"{0} karöt"}
                     }
                     dative{
-                        one{"{0} karat"}
-                        other{"{0} karöt"}
+                        one{"{0} karati"}
+                        other{"{0} karötum"}
                     }
                     genitive{
-                        one{"{0} karat"}
-                        other{"{0} karöt"}
+                        one{"{0} karats"}
+                        other{"{0} karata"}
                     }
                 }
                 dnam{"karöt"}
@@ -1896,26 +1917,6 @@ is{
                 one{"{0} kílógramm"}
                 other{"{0} kílógrömm"}
                 per{"{0} á kílógramm"}
-            }
-            metric-ton{
-                case{
-                    accusative{
-                        one{"{0} tonn"}
-                        other{"{0} tonn"}
-                    }
-                    dative{
-                        one{"{0} tonni"}
-                        other{"{0} tonnum"}
-                    }
-                    genitive{
-                        one{"{0} tonns"}
-                        other{"{0} tonna"}
-                    }
-                }
-                dnam{"tonn"}
-                gender{"neuter"}
-                one{"{0} tonn"}
-                other{"{0} tonn"}
             }
             microgram{
                 case{
@@ -1989,6 +1990,26 @@ is{
                 one{"{0} bandarískt tonn"}
                 other{"{0} bandarísk tonn"}
             }
+            tonne{
+                case{
+                    accusative{
+                        one{"{0} tonn"}
+                        other{"{0} tonn"}
+                    }
+                    dative{
+                        one{"{0} tonni"}
+                        other{"{0} tonnum"}
+                    }
+                    genitive{
+                        one{"{0} tonns"}
+                        other{"{0} tonna"}
+                    }
+                }
+                dnam{"tonn"}
+                gender{"neuter"}
+                one{"{0} tonn"}
+                other{"{0} tonn"}
+            }
         }
         power{
             gigawatt{
@@ -2024,7 +2045,7 @@ is{
                     }
                     dative{
                         one{"{0} kílóvatt"}
-                        other{"{0} kílóvött"}
+                        other{"{0} kílóvöttum"}
                     }
                     genitive{
                         one{"{0} kílóvatts"}
@@ -2194,7 +2215,7 @@ is{
                         other{"{0} megapaskölum"}
                     }
                     genitive{
-                        one{"{0} megapskals"}
+                        one{"{0} megapaskals"}
                         other{"{0} megapaskala"}
                     }
                 }
@@ -2349,8 +2370,8 @@ is{
                 }
                 dnam{"°"}
                 gender{"feminine"}
-                one{"{0}°"}
-                other{"{0}°"}
+                one{"{0} gráða"}
+                other{"{0} gráður"}
             }
             kelvin{
                 case{
@@ -2396,7 +2417,7 @@ is{
             }
             pound-force-foot{
                 dnam{"pundfet"}
-                one{"{0} pund-kraftur-fet"}
+                one{"{0} pundfet"}
                 other{"{0} pundfet"}
             }
         }
@@ -2573,12 +2594,12 @@ is{
                 other{"{0} bresk ábætisskeið"}
             }
             dram{
-                dnam{"dramm"}
+                dnam{"drömm"}
                 one{"{0} dramm"}
                 other{"{0} drömm"}
             }
             drop{
-                dnam{"dropi"}
+                dnam{"dropar"}
                 one{"{0} dropi"}
                 other{"{0} dropar"}
             }
@@ -2625,7 +2646,7 @@ is{
                 other{"{0} hektólítrar"}
             }
             jigger{
-                dnam{"sjúss"}
+                dnam{"sjússar"}
                 one{"{0} sjúss"}
                 other{"{0} sjússar"}
             }
@@ -2691,7 +2712,7 @@ is{
                 other{"{0} millilítrar"}
             }
             pinch{
-                dnam{"klípa"}
+                dnam{"klípur"}
                 one{"{0} klípa"}
                 other{"{0} klípur"}
             }
@@ -2819,14 +2840,16 @@ is{
                 other{"{0} atriði"}
             }
             milligram-ofglucose-per-deciliter{
-                dnam{"mg/dL"}
-                one{"{0}mg/dL"}
-                other{"{0}mg/dL"}
+                one{"{0}mg/dl"}
+                other{"{0}mg/dl"}
             }
             millimole-per-liter{
-                dnam{"mmol/L"}
-                one{"{0}mmol/L"}
-                other{"{0}mmol/L"}
+                dnam{"mmól/l"}
+                one{"{0}mmól/l"}
+                other{"{0}mmól/l"}
+            }
+            mole{
+                dnam{"mól"}
             }
             percent{
                 dnam{"%"}
@@ -2855,6 +2878,13 @@ is{
             north{"{0}N"}
             south{"{0}S"}
             west{"{0}V"}
+        }
+        digital{
+            petabyte{
+                dnam{"PB"}
+                one{"{0}PB"}
+                other{"{0}PB"}
+            }
         }
         duration{
             century{
@@ -2888,7 +2918,6 @@ is{
                 dnam{"mín."}
                 one{"{0} mín."}
                 other{"{0} mín."}
-                per{"{0}/min"}
             }
             month{
                 dnam{"mánuður"}
@@ -2900,6 +2929,12 @@ is{
                 dnam{"nanósek."}
                 one{"{0} ns"}
                 other{"{0} ns"}
+            }
+            quarter{
+                dnam{"ársfj."}
+                one{"{0} ársfj."}
+                other{"{0} ársfj."}
+                per{"{0}/ársfj."}
             }
             second{
                 dnam{"sek."}
@@ -2918,6 +2953,19 @@ is{
                 one{"{0}á"}
                 other{"{0}á"}
                 per{"{0}/ár"}
+            }
+        }
+        electric{
+            ohm{
+                dnam{"óm"}
+            }
+        }
+        energy{
+            electronvolt{
+                dnam{"eV"}
+            }
+            kilojoule{
+                dnam{"kJ"}
             }
         }
         force{
@@ -3055,11 +3103,6 @@ is{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -3096,6 +3139,11 @@ is{
                 dnam{"BNA tonn"}
                 one{"{0}tn"}
                 other{"{0}tn"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{
@@ -3183,6 +3231,12 @@ is{
                 other{"{0} K"}
             }
         }
+        torque{
+            pound-force-foot{
+                one{"{0}lbf⋅ft"}
+                other{"{0}lbf⋅ft"}
+            }
+        }
         volume{
             bushel{
                 dnam{"skeppa"}
@@ -3200,6 +3254,9 @@ is{
             cubic-mile{
                 one{"{0}mi³"}
                 other{"{0}mi³"}
+            }
+            cup{
+                dnam{"bolli"}
             }
             dessert-spoon{
                 dnam{"áb.skeið"}
@@ -3344,11 +3401,11 @@ is{
             }
             millimole-per-liter{
                 dnam{"millimól/lítri"}
-                one{"{0} m.mól/l"}
-                other{"{0} m.mól/l"}
+                one{"{0} mmól/l"}
+                other{"{0} mmól/l"}
             }
             mole{
-                dnam{"m´ól"}
+                dnam{"mól"}
                 one{"{0} mól"}
                 other{"{0} mól"}
             }
@@ -3507,6 +3564,12 @@ is{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
+            quarter{
+                dnam{"ársfj."}
+                one{"{0} ársfj."}
+                other{"{0} ársfj."}
+                per{"{0}/ársfj."}
+            }
             second{
                 dnam{"sek."}
                 one{"{0} sek."}
@@ -3538,7 +3601,7 @@ is{
                 other{"{0} mA"}
             }
             ohm{
-                dnam{"ohm"}
+                dnam{"óm"}
                 one{"{0} Ω"}
                 other{"{0} Ω"}
             }
@@ -3622,11 +3685,6 @@ is{
             }
         }
         graphics{
-            dot{
-                dnam{"punktur"}
-                one{"{0} punktur"}
-                other{"{0} punktur"}
-            }
             dot-per-centimeter{
                 dnam{"dpcm"}
                 one{"{0} dpcm"}
@@ -3816,11 +3874,6 @@ is{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"tn"}
-                one{"{0} tn"}
-                other{"{0} tn"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -3862,6 +3915,11 @@ is{
                 dnam{"BNA tonn"}
                 one{"{0} BNA tn"}
                 other{"{0} BNA tn"}
+            }
+            tonne{
+                dnam{"tn"}
+                one{"{0} tn"}
+                other{"{0} tn"}
             }
         }
         power{
@@ -4082,7 +4140,7 @@ is{
             fluid-ounce-imperial{
                 dnam{"breskar fl oz"}
                 one{"{0} bresk fl oz"}
-                other{"{0} bresk fl oz"}
+                other{"{0} breskar fl oz"}
             }
             gallon{
                 dnam{"gal"}

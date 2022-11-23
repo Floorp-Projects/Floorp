@@ -2,8 +2,23 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ii{
+    AuxExemplarCharacters{
+        "[꒐ ꒑ ꒒ ꒓ ꒔ ꒕ ꒖ ꒗ ꒘ ꒙ ꒚ ꒛ ꒜ ꒝ ꒞ ꒟ ꒠ ꒡ ꒢ ꒣ ꒤ ꒥ ꒦ ꒧ ꒨ ꒩ ꒪ ꒫ ꒬ ꒭ ꒮ ꒯ ꒰ ꒱ ꒲ ꒳ ꒴ ꒵"
+        " ꒶ ꒷ ꒸ ꒹ ꒺ ꒻ ꒼ ꒽ ꒾ ꒿ ꓀ ꓁ ꓂ ꓃ ꓄ ꓅ ꓆]"
+    }
     ExemplarCharacters{"[ꀀ-ꒌ]"}
+    ExemplarCharactersIndex{
+        "[A B {BB} C {CH} D {DD} E F G {GG} H {HL} {HM} {HN} {HX} I {IE} J {JJ} K L M"
+        " {MG} N {NB} {ND} {NG} {NJ} {NR} {NY} {NZ} O P Q R {RR} S {SH} {SS} T {UO} V"
+        " W X Y Z {ZH} {ZZ}]"
+    }
     ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersPunctuation{
+        "[﹉﹊﹋﹌ _ ＿ ﹍﹎﹏ ︳︴ \\- － ﹣ ‐ ‑ – — ︱ ― , ， ﹐ 、 ﹑ ; ； ﹔ \\: ： ﹕ ! ！ ﹗ ? ？ ﹖ . ．"
+        " ﹒ ‥ ︰ … 。 · ＇ ‘ ’ ＂ “ ” 〝 〞 ( （ ﹙ ︵ ) ） ﹚ ︶ \\[ ［ \\] ］ \\{ ｛ ﹛ ︷ \\} ｝ ﹜ ︸"
+        " 〈 ︿ 〉 ﹀ 《 ︽ 》 ︾ 「 ﹁ 」 ﹂ 『 ﹃ 』 ﹄ 【 ︻ 】 ︼ 〔 ﹝ ︹ 〕 ﹞ ︺ 〖 〗 ‖ § @ ＠ ﹫ * ＊ ﹡ / ／"
+        " \\\\ ＼ ﹨ \\& ＆ ﹠ # ＃ ﹟ % ％ ﹪ ‰ ′ ″ ‵ 〃 ※]"
+    }
     NumberElements{
         latn{
             patterns{

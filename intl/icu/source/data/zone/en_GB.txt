@@ -853,9 +853,6 @@ en_GB{
         "Australia:Broken_Hill"{
             ec{"Broken Hill"}
         }
-        "Australia:Currie"{
-            ec{"Currie"}
-        }
         "Australia:Darwin"{
             ec{"Darwin"}
         }
@@ -939,9 +936,6 @@ en_GB{
         }
         "Europe:Kaliningrad"{
             ec{"Kaliningrad"}
-        }
-        "Europe:Kiev"{
-            ec{"Kiev"}
         }
         "Europe:Lisbon"{
             ec{"Lisbon"}
@@ -1088,9 +1082,6 @@ en_GB{
         "Pacific:Efate"{
             ec{"Efate"}
         }
-        "Pacific:Enderbury"{
-            ec{"Enderbury"}
-        }
         "Pacific:Fakaofo"{
             ec{"Fakaofo"}
         }
@@ -1195,6 +1186,9 @@ en_GB{
             sd{"WEST"}
             sg{"WET"}
             ss{"WET"}
+        }
+        "meta:Gulf"{
+            ss{"GTS"}
         }
         gmtZeroFormat{"GMT"}
     }

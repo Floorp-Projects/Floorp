@@ -9,12 +9,6 @@ es_MX{
                 dnam{"miligramos por decilitro"}
             }
         }
-        coordinate{
-            east{"{0} este"}
-            north{"{0} norte"}
-            south{"{0} sur"}
-            west{"{0} oeste"}
-        }
         electric{
             ohm{
                 dnam{"ohmios"}
@@ -75,6 +69,12 @@ es_MX{
         }
     }
     unitsNarrow{
+        concentr{
+            karat{
+                one{"{0}kt"}
+                other{"{0}ct"}
+            }
+        }
         duration{
             day{
                 dnam{"días"}
@@ -97,12 +97,6 @@ es_MX{
                 other{"{0}a"}
             }
         }
-        temperature{
-            celsius{
-                one{"{0} °C"}
-                other{"{0} °C"}
-            }
-        }
     }
     unitsShort{
         acceleration{
@@ -113,6 +107,8 @@ es_MX{
         angle{
             degree{
                 dnam{"º"}
+                one{"{0}°"}
+                other{"{0} grados"}
             }
         }
         concentr{

@@ -38,6 +38,7 @@ The following names can be supplied as the argument for platform:
 
     AIX                 Use the IBM XL xlclang/xlclang compilers on AIX
     AIX/GCC             Use the GNU gcc/g++ compilers on AIX
+    AIX/OpenXL          Use the IBM Open XL ibm-clang_r/ibm-clang++_r compilers on AIX
     Cygwin              Use the GNU gcc/g++ compilers on Cygwin
     Cygwin/MSVC         Use the Microsoft Visual C++ compiler on Cygwin
     Cygwin/MSVC2005     Use the Microsoft Visual C++ 2005 compiler on Cygwin
@@ -154,6 +155,20 @@ case $platform in
         DEBUG_CFLAGS='-g -O0'
         DEBUG_CXXFLAGS='-g -O0'
         ;;
+    AIX/OpenXL)
+        THE_OS=AIX
+        THE_COMP="ibm-clang_r"
+        CC=`which ibm-clang_r`; export CC
+        if [ ! -x $CC ]; then
+           echo "ERROR: ibm-clang_r was not found, please check the PATH to make sure it is correct."; exit 1
+        fi
+        CXX=`which ibm-clang++_r`; export CXX
+        if [ ! -x $CXX ]; then
+           echo "ERROR: ibm-clang++_r was not found, please check the PATH to make sure it is correct."; exit 1
+        fi
+        RELEASE_CFLAGS="-O3"
+        RELEASE_CXXFLAGS="-O3"
+	;;
     Solaris)
         THE_OS=SOLARIS
         THE_COMP="Sun's CC"

@@ -36,6 +36,10 @@ metadata:table(nofallback){
                 reason{"deprecated"}
                 replacement{"ami"}
             }
+            ajt{
+                reason{"deprecated"}
+                replacement{"aeb"}
+            }
             aju{
                 reason{"macrolanguage"}
                 replacement{"jrb"}
@@ -924,6 +928,10 @@ metadata:table(nofallback){
                 reason{"deprecated"}
                 replacement{"dtp"}
             }
+            lak{
+                reason{"deprecated"}
+                replacement{"ksp"}
+            }
             lao{
                 reason{"overlong"}
                 replacement{"lo"}
@@ -1484,6 +1492,10 @@ metadata:table(nofallback){
                 reason{"overlong"}
                 replacement{"sl"}
             }
+            smd{
+                reason{"deprecated"}
+                replacement{"kmb"}
+            }
             sme{
                 reason{"overlong"}
                 replacement{"se"}
@@ -1495,6 +1507,10 @@ metadata:table(nofallback){
             sna{
                 reason{"overlong"}
                 replacement{"sn"}
+            }
+            snb{
+                reason{"deprecated"}
+                replacement{"iba"}
             }
             snd{
                 reason{"overlong"}
@@ -5100,6 +5116,10 @@ metadata:table(nofallback){
                 reason{"deprecated"}
                 replacement{"meter-per-square-second"}
             }
+            metric-ton{
+                reason{"deprecated"}
+                replacement{"tonne"}
+            }
             milligram-per-deciliter{
                 reason{"deprecated"}
                 replacement{"milligram-ofglucose-per-deciliter"}
@@ -5150,6 +5170,7 @@ metadata:table(nofallback){
         "ak_GH",
         "am_ET",
         "an_ES",
+        "ann_NG",
         "ar_001",
         "arn_CL",
         "as_IN",
@@ -5168,7 +5189,9 @@ metadata:table(nofallback){
         "bem_ZM",
         "bez_TZ",
         "bg_BG",
+        "bgc_IN",
         "bgn_PK",
+        "bho_IN",
         "blt_VN",
         "bm_ML",
         "bm_Nkoo_ML",
@@ -5210,6 +5233,7 @@ metadata:table(nofallback){
         "ee_GH",
         "el_GR",
         "en_Dsrt_US",
+        "en_Shaw_GB",
         "en_US",
         "eo_001",
         "es_ES",
@@ -5224,6 +5248,7 @@ metadata:table(nofallback){
         "fil_PH",
         "fo_FO",
         "fr_FR",
+        "frr_DE",
         "fur_IT",
         "fy_NL",
         "ga_IE",
@@ -5308,6 +5333,7 @@ metadata:table(nofallback){
         "lv_LV",
         "mai_IN",
         "mas_KE",
+        "mdf_RU",
         "mer_KE",
         "mfe_MU",
         "mg_MG",
@@ -5357,12 +5383,14 @@ metadata:table(nofallback){
         "pa_Guru",
         "pa_Guru_IN",
         "pcm_NG",
+        "pis_SB",
         "pl_PL",
         "prg_001",
         "ps_AF",
         "pt_BR",
         "qu_PE",
         "quc_GT",
+        "raj_IN",
         "rhg_Rohg",
         "rhg_Rohg_MM",
         "rm_CH",
@@ -5392,6 +5420,7 @@ metadata:table(nofallback){
         "shi_Latn_MA",
         "shi_Tfng",
         "shi_Tfng_MA",
+        "shn_MM",
         "si_LK",
         "sid_ET",
         "sk_SK",
@@ -5425,6 +5454,7 @@ metadata:table(nofallback){
         "tk_TM",
         "tn_ZA",
         "to_TO",
+        "tok_001",
         "tpi_PG",
         "tr_TR",
         "trv_TW",
@@ -5444,6 +5474,7 @@ metadata:table(nofallback){
         "vai_Vaii",
         "vai_Vaii_LR",
         "ve_ZA",
+        "vec_IT",
         "vi_VN",
         "vo_001",
         "vun_TZ",

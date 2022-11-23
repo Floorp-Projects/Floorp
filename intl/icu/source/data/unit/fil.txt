@@ -54,7 +54,7 @@ fil{
                 other{"{0} acres"}
             }
             hectare{
-                dnam{"hektarya"}
+                dnam{"ektarya"}
                 one{"{0} hektarya"}
                 other{"{0} na hektarya"}
             }
@@ -336,6 +336,11 @@ fil{
                 dnam{"nanosegundo"}
                 one{"{0} nanosegundo"}
                 other{"{0} nanosegundo"}
+            }
+            quarter{
+                dnam{"mga quarter"}
+                one{"{0} qtr"}
+                other{"{0} qaurter"}
             }
             second{
                 dnam{"mga segundo"}
@@ -671,11 +676,6 @@ fil{
                 other{"{0} kilo"}
                 per{"{0} kada kilo"}
             }
-            metric-ton{
-                dnam{"toneladang metriko"}
-                one{"{0} toneladang metriko"}
-                other{"{0} na toneladang metriko"}
-            }
             microgram{
                 dnam{"micrograms"}
                 one{"{0} microgram"}
@@ -717,6 +717,11 @@ fil{
                 dnam{"tonelada"}
                 one{"{0} tonelada"}
                 other{"{0} tonelada"}
+            }
+            tonne{
+                dnam{"toneladang metriko"}
+                one{"{0} toneladang metriko"}
+                other{"{0} na toneladang metriko"}
             }
         }
         power{
@@ -1055,6 +1060,7 @@ fil{
         }
         area{
             acre{
+                dnam{"ektarya"}
                 one{"{0}ac"}
                 other{"{0}ac"}
             }
@@ -1062,9 +1068,17 @@ fil{
                 one{"{0}ha"}
                 other{"{0}ha"}
             }
+            square-centimeter{
+                per{"{0}/cm²"}
+            }
             square-foot{
+                dnam{"ft²"}
                 one{"{0}ft²"}
                 other{"{0}ft²"}
+            }
+            square-inch{
+                dnam{"in²"}
+                per{"{0}/in²"}
             }
             square-kilometer{
                 one{"{0}km²"}
@@ -1075,8 +1089,12 @@ fil{
                 other{"{0} m²"}
             }
             square-mile{
+                dnam{"mi²"}
                 one{"{0}mi²"}
                 other{"{0}mi²"}
+            }
+            square-yard{
+                dnam{"yd²"}
             }
         }
         compound{
@@ -1137,6 +1155,7 @@ fil{
                 other{"{0}mpg"}
             }
             mile-per-gallon-imperial{
+                dnam{"mpg UK"}
                 one{"{0}mpg"}
                 other{"{0}mpg"}
             }
@@ -1148,6 +1167,19 @@ fil{
             south{"{0}T"}
             west{"{0}K"}
         }
+        digital{
+            byte{
+                dnam{"B"}
+                one{"{0} B"}
+                other{"{0} B"}
+            }
+            kilobit{
+                dnam{"kb"}
+            }
+            kilobyte{
+                dnam{"kB"}
+            }
+        }
         duration{
             day{
                 dnam{"araw"}
@@ -1158,6 +1190,7 @@ fil{
                 dnam{"oras"}
                 one{"{0} oras"}
                 other{"{0} oras"}
+                per{"{0}/oras"}
             }
             microsecond{
                 dnam{"μseg"}
@@ -1216,6 +1249,15 @@ fil{
                 dnam{"lbf"}
             }
         }
+        graphics{
+            dot{
+                one{"{0}dot"}
+                other{"{0}dot"}
+            }
+            pixel{
+                dnam{"px"}
+            }
+        }
         length{
             astronomical-unit{
                 dnam{"au"}
@@ -1249,6 +1291,7 @@ fil{
                 other{"{0}fur"}
             }
             inch{
+                dnam{"in"}
                 one{"{0}″"}
                 other{"{0}″"}
                 per{"{0}/in"}
@@ -1260,6 +1303,7 @@ fil{
                 per{"{0}/km"}
             }
             light-year{
+                dnam{"ly"}
                 one{"{0}ly"}
                 other{"{0}ly"}
             }
@@ -1275,6 +1319,7 @@ fil{
                 other{"{0} μm"}
             }
             mile{
+                dnam{"mi"}
                 one{"{0}mi"}
                 other{"{0}mi"}
             }
@@ -1314,6 +1359,7 @@ fil{
                 other{"{0}pt"}
             }
             yard{
+                dnam{"yd"}
                 one{"{0}yd"}
                 other{"{0}yd"}
             }
@@ -1335,11 +1381,6 @@ fil{
                 one{"{0}kg"}
                 other{"{0}kg"}
                 per{"{0}/kg"}
-            }
-            metric-ton{
-                dnam{"t"}
-                one{"{0}t"}
-                other{"{0}t"}
             }
             microgram{
                 dnam{"μg"}
@@ -1375,6 +1416,11 @@ fil{
                 dnam{"ton"}
                 one{"{0}tn"}
                 other{"{0}tn"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0}t"}
+                other{"{0}t"}
             }
         }
         power{
@@ -1461,6 +1507,18 @@ fil{
             }
         }
         volume{
+            barrel{
+                dnam{"bbl"}
+            }
+            bushel{
+                dnam{"bushel"}
+            }
+            cubic-foot{
+                dnam{"ft³"}
+            }
+            cubic-inch{
+                dnam{"in³"}
+            }
             cubic-kilometer{
                 one{"{0}km³"}
                 other{"{0}km³"}
@@ -1468,6 +1526,14 @@ fil{
             cubic-mile{
                 one{"{0}mi³"}
                 other{"{0}mi³"}
+            }
+            cubic-yard{
+                dnam{"yd³"}
+            }
+            dessert-spoon{
+                dnam{"kutsaritang panghimagas"}
+                one{"{0} dsp"}
+                other{"{0} dsp"}
             }
             dessert-spoon-imperial{
                 dnam{"dsp lmp"}
@@ -1492,11 +1558,32 @@ fil{
                 dnam{"litro"}
                 one{"{0}L"}
                 other{"{0}L"}
+                per{"{0}/L"}
+            }
+            pinch{
+                dnam{"kurot"}
+                one{"{0} kurot"}
+                other{"{0} kurot"}
+            }
+            pint-metric{
+                dnam{"pt"}
+                one{"{0} mpt"}
+                other{"{0} mpt"}
             }
             quart-imperial{
                 dnam{"qt Imp"}
                 one{"{0} qt Imp."}
                 other{"{0}qt-Imp."}
+            }
+            tablespoon{
+                dnam{"kutsara"}
+                one{"{0} kutsara"}
+                other{"{0} kutsara"}
+            }
+            teaspoon{
+                dnam{"kutsarita"}
+                one{"{0} kutsarita"}
+                other{"{0} kutsarita"}
             }
         }
     }
@@ -1791,6 +1878,10 @@ fil{
                 dnam{"nanoseg"}
                 one{"{0} ns"}
                 other{"{0} ns"}
+            }
+            quarter{
+                one{"{0} qtr"}
+                other{"{0} qtrs"}
             }
             second{
                 dnam{"seg."}
@@ -2099,11 +2190,6 @@ fil{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -2145,6 +2231,11 @@ fil{
                 dnam{"tonelada"}
                 one{"{0} tn"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

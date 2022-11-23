@@ -589,11 +589,6 @@ kgp{
                 other{"{0} kirogrỹmỹ ag"}
                 per{"{0} kirogrỹmỹ ki"}
             }
-            metric-ton{
-                dnam{"tãnẽrada mẽtirika ag"}
-                one{"{0} tãnẽrada mẽtirika"}
-                other{"{0} tãnẽrada mẽtirika ag"}
-            }
             microgram{
                 dnam{"mĩkrugrỹmỹ ag"}
                 one{"{0} mĩkrugrỹmỹ"}
@@ -635,6 +630,11 @@ kgp{
                 dnam{"tãnẽrada ag"}
                 one{"{0} tãnẽrada"}
                 other{"{0} tãnẽrada ag"}
+            }
+            tonne{
+                dnam{"tãnẽrada mẽtirika ag"}
+                one{"{0} tãnẽrada mẽtirika"}
+                other{"{0} tãnẽrada mẽtirika ag"}
             }
         }
         power{
@@ -1545,11 +1545,6 @@ kgp{
             gram{
                 dnam{"grỹmỹ ag"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             ounce-troy{
                 dnam{"oz troy"}
             }
@@ -1566,6 +1561,11 @@ kgp{
                 dnam{"tãnẽrana"}
                 one{"{0} tn"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

@@ -306,7 +306,9 @@ yo{
     Countries%variant{
         CD{"Kóńgò (Tiwantiwa)"}
         CG{"Kóńgò (Olómìnira)"}
+        NZ{"Sílándì Titun ti Atìríà"}
         SZ{"Síwásìlandì"}
         TL{"Ìlà Òòrùn Tímọ̀"}
+        TR{"Èdè Tọọki"}
     }
 }

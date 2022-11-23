@@ -311,6 +311,7 @@ sc{
         CI{"Côte d’Ivoire"}
         CZ{"Repùblica Tzeca"}
         FK{"Ìsulas Falkland (Ìsulas Malvinas)"}
+        NZ{"Aotearoa Zelanda Noa"}
         SZ{"Swàziland"}
         TL{"Timor Orientale"}
     }

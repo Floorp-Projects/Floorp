@@ -825,7 +825,7 @@ en{
         }
         QAR{
             "QAR",
-            "Qatari Rial",
+            "Qatari Riyal",
         }
         RHD{
             "RHD",
@@ -901,11 +901,11 @@ en{
         }
         SLE{
             "SLE",
-            "Sierra Leonean New Leone",
+            "Sierra Leonean Leone",
         }
         SLL{
             "SLL",
-            "Sierra Leonean Leone",
+            "Sierra Leonean Leone (1964—2022)",
         }
         SOS{
             "SOS",
@@ -2046,8 +2046,8 @@ en{
             other{"Paraguayan guaranis"}
         }
         QAR{
-            one{"Qatari rial"}
-            other{"Qatari rials"}
+            one{"Qatari riyal"}
+            other{"Qatari riyals"}
         }
         RHD{
             one{"Rhodesian dollar"}
@@ -2122,12 +2122,12 @@ en{
             other{"Slovak korunas"}
         }
         SLE{
-            one{"Sierra Leonean new leone"}
-            other{"Sierra Leonean new leones"}
-        }
-        SLL{
             one{"Sierra Leonean leone"}
             other{"Sierra Leonean leones"}
+        }
+        SLL{
+            one{"Sierra Leonean leone (1964—2022)"}
+            other{"Sierra Leonean leones (1964—2022)"}
         }
         SOS{
             one{"Somali shilling"}

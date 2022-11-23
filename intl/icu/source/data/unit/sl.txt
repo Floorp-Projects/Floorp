@@ -1981,6 +1981,47 @@ sl{
                 other{"{0} nanosekund"}
                 two{"{0} nanosekundi"}
             }
+            quarter{
+                case{
+                    accusative{
+                        few{"{0} četrtletja"}
+                        one{"{0} četrtletje"}
+                        other{"{0} četrtletij"}
+                        two{"{0} četrtletji"}
+                    }
+                    dative{
+                        few{"{0} četrtletjem"}
+                        one{"{0} četrtletju"}
+                        other{"{0} četrtletjem"}
+                        two{"{0} četrtletjem"}
+                    }
+                    genitive{
+                        few{"{0} četrtletij"}
+                        one{"{0} četrtletja"}
+                        other{"{0} četrtletij"}
+                        two{"{0} četrtletij"}
+                    }
+                    instrumental{
+                        few{"{0} četrtletji"}
+                        one{"{0} četrtletjem"}
+                        other{"{0} četrtletji"}
+                        two{"{0} četrtletjema"}
+                    }
+                    locative{
+                        few{"{0} četrtletjih"}
+                        one{"{0} četrtletju"}
+                        other{"{0} četrtletjih"}
+                        two{"{0} četrtletjih"}
+                    }
+                }
+                dnam{"četrtletje"}
+                few{"{0} četrtletja"}
+                gender{"neuter"}
+                one{"{0} četrtletje"}
+                other{"{0} četrtletij"}
+                per{"{0}/četrtletje"}
+                two{"{0} četrtletji"}
+            }
             second{
                 case{
                     accusative{
@@ -3619,46 +3660,6 @@ sl{
                 per{"{0} na kilogram"}
                 two{"{0} kilograma"}
             }
-            metric-ton{
-                case{
-                    accusative{
-                        few{"{0} metrične tone"}
-                        one{"{0} metrično tono"}
-                        other{"{0} metričnih ton"}
-                        two{"{0} metrični toni"}
-                    }
-                    dative{
-                        few{"{0} metričnim tonam"}
-                        one{"{0} metrični toni"}
-                        other{"{0} metričnim tonam"}
-                        two{"{0} metričnima tonama"}
-                    }
-                    genitive{
-                        few{"{0} metričnih ton"}
-                        one{"{0} metrične tone"}
-                        other{"{0} metričnih ton"}
-                        two{"{0} metričnih ton"}
-                    }
-                    instrumental{
-                        few{"{0} metričnimi tonami"}
-                        one{"{0} metrično tono"}
-                        other{"{0} metričnimi tonami"}
-                        two{"{0} metričnima tonama"}
-                    }
-                    locative{
-                        few{"{0} metričnih tonah"}
-                        one{"{0} metrični toni"}
-                        other{"{0} metričnih tonah"}
-                        two{"{0} metričnih tonah"}
-                    }
-                }
-                dnam{"metrične tone"}
-                few{"{0} metrične tone"}
-                gender{"feminine"}
-                one{"{0} metrična tona"}
-                other{"{0} metričnih ton"}
-                two{"{0} metrični toni"}
-            }
             microgram{
                 case{
                     accusative{
@@ -3782,6 +3783,46 @@ sl{
                 one{"{0} ameriška tona"}
                 other{"{0} ameriških ton"}
                 two{"{0} ameriški toni"}
+            }
+            tonne{
+                case{
+                    accusative{
+                        few{"{0} metrične tone"}
+                        one{"{0} metrično tono"}
+                        other{"{0} metričnih ton"}
+                        two{"{0} metrični toni"}
+                    }
+                    dative{
+                        few{"{0} metričnim tonam"}
+                        one{"{0} metrični toni"}
+                        other{"{0} metričnim tonam"}
+                        two{"{0} metričnima tonama"}
+                    }
+                    genitive{
+                        few{"{0} metričnih ton"}
+                        one{"{0} metrične tone"}
+                        other{"{0} metričnih ton"}
+                        two{"{0} metričnih ton"}
+                    }
+                    instrumental{
+                        few{"{0} metričnimi tonami"}
+                        one{"{0} metrično tono"}
+                        other{"{0} metričnimi tonami"}
+                        two{"{0} metričnima tonama"}
+                    }
+                    locative{
+                        few{"{0} metričnih tonah"}
+                        one{"{0} metrični toni"}
+                        other{"{0} metričnih tonah"}
+                        two{"{0} metričnih tonah"}
+                    }
+                }
+                dnam{"metrične tone"}
+                few{"{0} metrične tone"}
+                gender{"feminine"}
+                one{"{0} metrična tona"}
+                other{"{0} metričnih ton"}
+                two{"{0} metrični toni"}
             }
         }
         power{
@@ -5264,6 +5305,14 @@ sl{
             south{"{0} J"}
             west{"{0} Z"}
         }
+        digital{
+            byte{
+                few{"{0} bajti"}
+                one{"{0} bajt"}
+                other{"{0} B"}
+                two{"{0} bajta"}
+            }
+        }
         duration{
             century{
                 dnam{"st."}
@@ -5313,6 +5362,14 @@ sl{
                 one{"{0} m"}
                 other{"{0} m"}
                 two{"{0} m"}
+            }
+            quarter{
+                dnam{"četrt"}
+                few{"{0} čl."}
+                one{"{0} čl."}
+                other{"{0} čl."}
+                per{"{0}/četrt"}
+                two{"{0} čl."}
             }
             second{
                 dnam{"s"}
@@ -5948,6 +6005,14 @@ sl{
                 other{"{0} ns"}
                 two{"{0} ns"}
             }
+            quarter{
+                dnam{"četrt"}
+                few{"{0} četrtl."}
+                one{"{0} četrtl."}
+                other{"{0} četrtl."}
+                per{"{0}/četrt"}
+                two{"{0} četrtl."}
+            }
             second{
                 dnam{"sek."}
                 few{"{0} sek."}
@@ -6394,13 +6459,6 @@ sl{
                 per{"{0}/kg"}
                 two{"{0} kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                few{"{0} t"}
-                one{"{0} t"}
-                other{"{0} t"}
-                two{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 few{"{0} μg"}
@@ -6458,6 +6516,13 @@ sl{
                 one{"{0} sh tn"}
                 other{"{0} sh tn"}
                 two{"{0} sh tn"}
+            }
+            tonne{
+                dnam{"t"}
+                few{"{0} t"}
+                one{"{0} t"}
+                other{"{0} t"}
+                two{"{0} t"}
             }
         }
         power{

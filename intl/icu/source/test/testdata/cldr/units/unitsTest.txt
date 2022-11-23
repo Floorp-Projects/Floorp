@@ -120,7 +120,7 @@ mass	;	pound	;	kilogram	;	0.45359237 * x	;	453.5924
 mass	;	kilogram	;	kilogram	;	1 * x	;	1,000.00
 mass	;	stone	;	kilogram	;	6.35029318 * x	;	6350.293
 mass	;	ton	;	kilogram	;	907.18474 * x	;	907184.7
-mass	;	metric-ton	;	kilogram	;	1,000 * x	;	1000000.0
+mass	;	tonne	;	kilogram	;	1,000 * x	;	1000000.0
 mass	;	earth-mass	;	kilogram	;	5,972,200,000,000,000,000,000,000 * x	;	5.9722E27
 mass	;	solar-mass	;	kilogram	;	1,988,470,000,000,000,000,000,000,000,000 * x	;	1.98847E33
 portion	;	permillion	;	portion	;	0.000001 * x	;	0.001

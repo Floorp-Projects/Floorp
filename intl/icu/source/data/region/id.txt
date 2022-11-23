@@ -311,6 +311,8 @@ id{
         CG{"Kongo (Republik)"}
         CZ{"Republik Ceko"}
         FK{"Kepulauan Falkland (Malvinas)"}
+        NZ{"Aotearoa (Selandia Baru)"}
         TL{"Timor Timur"}
+        TR{"Turkiye"}
     }
 }

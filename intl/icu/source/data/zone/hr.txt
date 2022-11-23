@@ -1436,9 +1436,9 @@ hr{
             ls{"bolivijsko vrijeme"}
         }
         "meta:Brasilia"{
-            ld{"brazilijsko ljetno vrijeme"}
-            lg{"brazilijsko vrijeme"}
-            ls{"brazilijsko standardno vrijeme"}
+            ld{"brazilsko ljetno vrijeme"}
+            lg{"brazilsko vrijeme"}
+            ls{"brazilsko standardno vrijeme"}
         }
         "meta:Brunei"{
             ls{"vrijeme za Brunej Darussalam"}

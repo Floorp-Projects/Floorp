@@ -561,10 +561,6 @@ kok{
                 other{"{0} किलोग्राम"}
                 per{"{0}/किलोग्राम"}
             }
-            metric-ton{
-                dnam{"मॅट्रिक टन"}
-                other{"{0} मॅट्रिक टन"}
-            }
             milligram{
                 dnam{"मिलिग्राम"}
                 other{"{0} मिलिग्राम"}
@@ -594,6 +590,10 @@ kok{
             ton{
                 dnam{"टन"}
                 other{"{0} टन"}
+            }
+            tonne{
+                dnam{"मॅट्रिक टन"}
+                other{"{0} मॅट्रिक टन"}
             }
         }
         power{
@@ -1400,10 +1400,6 @@ kok{
                 other{"{0}किग्रा"}
                 per{"{0}/किग्रा"}
             }
-            metric-ton{
-                dnam{"t"}
-                other{"{0}t"}
-            }
             microgram{
                 dnam{"μg"}
                 other{"{0}μg"}
@@ -1437,6 +1433,10 @@ kok{
             ton{
                 dnam{"टन"}
                 other{"{0}टन"}
+            }
+            tonne{
+                dnam{"t"}
+                other{"{0}t"}
             }
         }
         power{
@@ -2250,10 +2250,6 @@ kok{
                 other{"{0} किग्रा"}
                 per{"{0}/किग्रा"}
             }
-            metric-ton{
-                dnam{"t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 other{"{0} μg"}
@@ -2287,6 +2283,10 @@ kok{
             ton{
                 dnam{"टन"}
                 other{"{0} टन"}
+            }
+            tonne{
+                dnam{"t"}
+                other{"{0} t"}
             }
         }
         power{

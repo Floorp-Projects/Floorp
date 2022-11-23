@@ -37,15 +37,18 @@ af{
         alt{"Suid-Altai"}
         am{"Amharies"}
         an{"Aragonees"}
+        ann{"Obolo"}
         anp{"Angika"}
         ar{"Arabies"}
         ar_001{"Moderne Standaardarabies"}
         arc{"Aramees"}
         arn{"Mapuche"}
         arp{"Arapaho"}
+        ars{"Najdi-Arabies"}
         as{"Assamees"}
         asa{"Asu"}
         ast{"Asturies"}
+        atj{"Atikamekw"}
         av{"Avaries"}
         awa{"Awadhi"}
         ay{"Aymara"}
@@ -71,6 +74,7 @@ af{
         bug{"Buginees"}
         byn{"Blin"}
         ca{"Katalaans"}
+        cay{"Cayuga"}
         ccp{"Tsjaakma"}
         ce{"Tsjetsjeens"}
         ceb{"Cebuano"}
@@ -79,13 +83,22 @@ af{
         chk{"Chuukees"}
         chm{"Mari"}
         cho{"Choctaw"}
+        chp{"Chipewyan"}
         chr{"Cherokees"}
         chy{"Cheyennees"}
         ckb{"Sorani"}
+        clc{"Tzilkotin"}
         co{"Korsikaans"}
         cop{"Kopties"}
+        crg{"Michif"}
+        crj{"Suidoos-Cree"}
+        crk{"Laagvlakte-Cree"}
+        crl{"Noordoos-Cree"}
+        crm{"Moose Cree"}
+        crr{"Carolina-Algonkin"}
         crs{"Seselwa Franskreools"}
         cs{"Tsjeggies"}
+        csw{"Swampy Cree"}
         cu{"Kerkslawies"}
         cv{"Chuvash"}
         cy{"Wallies"}
@@ -126,6 +139,8 @@ af{
         fo{"Faroëes"}
         fon{"Fon"}
         fr{"Frans"}
+        frc{"Cajun"}
+        frr{"Noord-Fries"}
         fur{"Friuliaans"}
         fy{"Fries"}
         ga{"Iers"}
@@ -146,8 +161,10 @@ af{
         gv{"Manx"}
         gwi{"Gwichʼin"}
         ha{"Hausa"}
+        hai{"Haida"}
         hak{"Hakka-Sjinees"}
         haw{"Hawais"}
+        hax{"Suid-Haida"}
         he{"Hebreeus"}
         hi{"Hindi"}
         hil{"Hiligaynon"}
@@ -159,6 +176,7 @@ af{
         ht{"Haïtiaans"}
         hu{"Hongaars"}
         hup{"Hupa"}
+        hur{"Halkomelem"}
         hy{"Armeens"}
         hz{"Herero"}
         ia{"Interlingua"}
@@ -168,6 +186,7 @@ af{
         ie{"Interlingue"}
         ig{"Igbo"}
         ii{"Sichuan Yi"}
+        ikt{"Wes-Kanadese Inoektitoet"}
         ilo{"Iloko"}
         inh{"Ingush"}
         io{"Ido"}
@@ -190,6 +209,7 @@ af{
         kea{"Kabuverdianu"}
         kfo{"Koro"}
         kg{"Kongolees"}
+        kgp{"Kaingang"}
         kha{"Khasi"}
         khq{"Koyra Chiini"}
         ki{"Kikuyu"}
@@ -217,6 +237,7 @@ af{
         kum{"Kumyk"}
         kv{"Komi"}
         kw{"Kornies"}
+        kwk{"Kwak’wala"}
         ky{"Kirgisies"}
         la{"Latyn"}
         lad{"Ladino"}
@@ -225,11 +246,14 @@ af{
         lez{"Lezghies"}
         lg{"Ganda"}
         li{"Limburgs"}
+        lil{"Lillooet"}
         lkt{"Lakota"}
         ln{"Lingaals"}
         lo{"Lao"}
+        lou{"Louisiana Kreool"}
         loz{"Lozi"}
         lrc{"Noord-Luri"}
+        lsm{"Saamia"}
         lt{"Litaus"}
         lu{"Luba-Katanga"}
         lua{"Luba-Lulua"}
@@ -258,6 +282,7 @@ af{
         ml{"Malabaars"}
         mn{"Mongools"}
         mni{"Manipuri"}
+        moe{"Innu-aimun"}
         moh{"Mohawk"}
         mos{"Mossi"}
         mr{"Marathi"}
@@ -298,6 +323,11 @@ af{
         ny{"Nyanja"}
         nyn{"Nyankole"}
         oc{"Oksitaans"}
+        ojb{"Noordwes-Ojibwa"}
+        ojc{"Sentraal-Ojibwa"}
+        ojs{"Oji-Cree"}
+        ojw{"Wes-Ojibwa"}
+        oka{"Okanagan"}
         om{"Oromo"}
         or{"Oriya"}
         os{"Osseties"}
@@ -308,7 +338,9 @@ af{
         pau{"Palauaans"}
         pcm{"Nigeriese Pidgin"}
         phn{"Fenisies"}
+        pis{"Pijin"}
         pl{"Pools"}
+        pqm{"Maliseet-Passamaquoddy"}
         prg{"Pruisies"}
         ps{"Pasjto"}
         pt{"Portugees"}
@@ -347,6 +379,7 @@ af{
         si{"Sinhala"}
         sk{"Slowaaks"}
         sl{"Sloweens"}
+        slh{"Suid-Lushootseed"}
         sm{"Samoaans"}
         sma{"Suid-Sami"}
         smj{"Lule Sami"}
@@ -361,6 +394,7 @@ af{
         ss{"Swazi"}
         ssy{"Saho"}
         st{"Suid-Sotho"}
+        str{"Straits Salish"}
         su{"Sundanees"}
         suk{"Sukuma"}
         sv{"Sweeds"}
@@ -368,23 +402,29 @@ af{
         swb{"Comoraans"}
         syr{"Siries"}
         ta{"Tamil"}
+        tce{"Suid-Tutchone"}
         te{"Teloegoe"}
         tem{"Timne"}
         teo{"Teso"}
         tet{"Tetoem"}
         tg{"Tadjiks"}
+        tgx{"Tagish"}
         th{"Thai"}
+        tht{"Tahltan"}
         ti{"Tigrinya"}
         tig{"Tigre"}
         tk{"Turkmeens"}
         tlh{"Klingon"}
+        tli{"Tlingit"}
         tn{"Tswana"}
         to{"Tongaans"}
+        tok{"Toki Pona"}
         tpi{"Tok Pisin"}
         tr{"Turks"}
         trv{"Taroko"}
         ts{"Tsonga"}
         tt{"Tataars"}
+        ttm{"Noord-Tutchone"}
         tum{"Toemboeka"}
         tvl{"Tuvalu"}
         tw{"Twi"}
@@ -418,6 +458,7 @@ af{
         ybb{"Yemba"}
         yi{"Jiddisj"}
         yo{"Yoruba"}
+        yrl{"Nheengatu"}
         yue{"Kantonees"}
         zgh{"Standaard Marokkaanse Tamazight"}
         zh{"Chinees"}
@@ -439,14 +480,18 @@ af{
     }
     Languages%variant{
         ckb{"Koerdies Sorani"}
-        ps{"Pushto"}
     }
     Scripts{
+        Adlm{"Adlam"}
         Arab{"Arabies"}
+        Aran{"Nastaliq"}
         Armn{"Armeens"}
         Beng{"Bengaals"}
         Bopo{"Bopomofo"}
         Brai{"Braille"}
+        Cakm{"Chakma"}
+        Cans{"Verenigde Kanadese Inheemse Lettergreepskrif"}
+        Cher{"Cherokee"}
         Cyrl{"Sirillies"}
         Deva{"Devanagari"}
         Ethi{"Etiopies"}
@@ -472,14 +517,23 @@ af{
         Latn{"Latyn"}
         Mlym{"Malabaars"}
         Mong{"Mongools"}
+        Mtei{"Meitei-Majek"}
         Mymr{"Mianmar"}
+        Nkoo{"N’Ko"}
+        Olck{"Ol Chiki"}
         Orya{"Oriya"}
+        Rohg{"Hanifi"}
         Sinh{"Sinhala"}
+        Sund{"Soendanees"}
+        Syrc{"Siries"}
         Taml{"Tamil"}
         Telu{"Teloegoe"}
+        Tfng{"Tifinagh"}
         Thaa{"Thaana"}
         Thai{"Thai"}
         Tibt{"Tibettaans"}
+        Vaii{"Vai"}
+        Yiii{"Yi"}
         Zmth{"Wiskundige notasie"}
         Zsye{"Emoji"}
         Zsym{"Simbole"}
@@ -497,7 +551,7 @@ af{
     Types{
         calendar{
             buddhist{"Boeddhistiese kalender"}
-            chinese{"Sjinese kalender"}
+            chinese{"Chinese kalender"}
             coptic{"Koptiese kalender"}
             dangi{"Dangi-kalender"}
             ethiopic{"Etiopiese kalender"}
@@ -507,6 +561,7 @@ af{
             indian{"Indiese nasionale kalender"}
             islamic{"Islamitiese kalender"}
             islamic-civil{"Islamitiese siviele kalender"}
+            islamic-umalqura{"Islamitiese kalender (Umm al-Qura)"}
             iso8601{"ISO-8601-kalender"}
             japanese{"Japannese kalender"}
             persian{"Persiese kalender"}
@@ -595,6 +650,7 @@ af{
             armn{"Armeense syfers"}
             armnlow{"Armeense kleinletter-syfers"}
             beng{"Bengaalse syfers"}
+            cakm{"Chakma-syfers"}
             deva{"Devanagari-syfers"}
             ethi{"Etiopiese syfers"}
             finance{"Finansiële syfers"}
@@ -610,6 +666,7 @@ af{
             hant{"Tradisionele Sjinese syfers"}
             hantfin{"Tradisionele Sjinese finansiële syfers"}
             hebr{"Hebreeuse syfers"}
+            java{"Javaanse syfers"}
             jpan{"Japannese syfers"}
             jpanfin{"Japannese finansiële syfers"}
             khmr{"Khmer-syfers"}
@@ -618,8 +675,10 @@ af{
             latn{"Westerse syfers"}
             mlym{"Malabaarse syfers"}
             mong{"Mongoliese syfers"}
+            mtei{"Meetei Mayak-syfers"}
             mymr{"Mianmar-syfers"}
             native{"Inheemse syfers"}
+            olck{"Ol Chiki-syfers"}
             orya{"Odia-syfers"}
             roman{"Romeinse syfers"}
             romanlow{"Romeinse kleinletter-syfers"}

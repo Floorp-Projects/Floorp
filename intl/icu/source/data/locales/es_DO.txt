@@ -13,10 +13,10 @@ es_DO{
     calendar{
         generic{
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
                 "EEEE, d 'de' MMMM 'de' y G",
                 "d 'de' MMMM 'de' y G",
                 "dd/MM/y G",
@@ -40,10 +40,10 @@ es_DO{
         }
         gregorian{
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
                 "EEEE, d 'de' MMMM 'de' y",
                 "d 'de' MMMM 'de' y",
                 "d MMM y",
@@ -125,6 +125,9 @@ es_DO{
     fields{
         day{
             dn{"Día"}
+        }
+        dayperiod{
+            dn{"a. m./p. m."}
         }
         era{
             dn{"Era"}

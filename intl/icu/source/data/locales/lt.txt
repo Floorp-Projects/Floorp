@@ -33,6 +33,7 @@ lt{
             }
             patterns{
                 accountingFormat{"#,##0.00 ¤"}
+                accountingFormat%noCurrency{"#,##0.00"}
                 currencyFormat{"#,##0.00 ¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0 %"}
@@ -1300,12 +1301,13 @@ lt{
                 EHm{"HH:mm, E"}
                 EHms{"HH:mm:ss, E"}
                 Ed{"d, E"}
-                Ehm{"h:mm a, E"}
-                Ehms{"h:mm:ss a, E"}
+                Ehm{"h:mm a, E"}
+                Ehms{"h:mm:ss a, E"}
                 Gy{"y G"}
                 GyMMM{"y MMM G"}
                 GyMMMEd{"y MMM d G, E"}
                 GyMMMd{"y MMM d G"}
+                GyMd{"y-MM-dd G"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -1318,9 +1320,9 @@ lt{
                 MMdd{"MM.dd"}
                 Md{"MM-dd"}
                 d{"d"}
-                h{"h a"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
                 ms{"mm:ss"}
                 y{"y G"}
                 yyyy{"y G"}
@@ -1353,15 +1355,15 @@ lt{
                     M{"M–M"}
                 }
                 MEd{
-                    M{"MM-dd, E – MM-dd, E"}
-                    d{"MM-dd, E – MM-dd, E"}
+                    M{"MM-dd, E – MM-dd, E"}
+                    d{"MM-dd, E – MM-dd, E"}
                 }
                 MMM{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
-                    M{"MMM d, E – MMM d, E"}
-                    d{"MMM d, E – MMM d, E"}
+                    M{"MMM d, E – MMM d, E"}
+                    d{"MMM d, E – MMM d, E"}
                 }
                 MMMd{
                     M{"MMM d–MMM d"}
@@ -1374,59 +1376,59 @@ lt{
                 d{
                     d{"d–d"}
                 }
-                fallback{"{0} – {1}"}
+                fallback{"{0} – {1}"}
                 h{
-                    a{"h a–h a"}
-                    h{"h–h a"}
+                    a{"h a–h a"}
+                    h{"h–h a"}
                 }
                 hm{
-                    a{"hh:mm a–hh:mm a"}
-                    h{"h:mm–h:mm a"}
-                    m{"h:mm–h:mm a"}
+                    a{"hh:mm a–hh:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
                 }
                 hmv{
-                    a{"hh:mm a–hh:mm a v"}
-                    h{"h:mm–h:mm a v"}
-                    m{"h:mm–h:mm a v"}
+                    a{"hh:mm a–hh:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
                 }
                 hv{
-                    a{"h a–h a v"}
-                    h{"h–h a v"}
+                    a{"h a–h a v"}
+                    h{"h–h a v"}
                 }
                 y{
                     y{"y–y G"}
                 }
                 yM{
-                    M{"y-MM – y-MM G"}
-                    y{"y-MM – y-MM G"}
+                    M{"y-MM – y-MM G"}
+                    y{"y-MM – y-MM G"}
                 }
                 yMEd{
-                    M{"y-MM-dd G, E – y-MM-dd G, E"}
-                    d{"y-MM-dd G, E – y-MM-dd G, E"}
-                    y{"y-MM-dd G, E – y-MM-dd G, E"}
+                    M{"y-MM-dd G, E – y-MM-dd G, E"}
+                    d{"y-MM-dd G, E – y-MM-dd G, E"}
+                    y{"y-MM-dd G, E – y-MM-dd G, E"}
                 }
                 yMMM{
                     M{"y MMM–MMM G"}
-                    y{"y-MM – y-MM G"}
+                    y{"y-MM – y-MM G"}
                 }
                 yMMMEd{
-                    M{"y-MM-dd G, E – y-MM-dd G, E"}
-                    d{"y-MM-dd G, E – y-MM-dd G, E"}
-                    y{"y-MM-dd G, E – y-MM-dd G, E"}
+                    M{"y-MM-dd G, E – y-MM-dd G, E"}
+                    d{"y-MM-dd G, E – y-MM-dd G, E"}
+                    y{"y-MM-dd G, E – y-MM-dd G, E"}
                 }
                 yMMMM{
-                    M{"y LLLL – y LLLL G"}
-                    y{"y LLLL – y LLLL G"}
+                    M{"y LLLL – y LLLL G"}
+                    y{"y LLLL – y LLLL G"}
                 }
                 yMMMd{
-                    M{"y-MM-dd – MM-d G"}
+                    M{"y-MM-dd – MM-d G"}
                     d{"y 'm'. MMM d 'd'.–d 'd'. G"}
-                    y{"y-MM-dd – y-MM-dd G"}
+                    y{"y-MM-dd – y-MM-dd G"}
                 }
                 yMd{
                     M{"y-MM-dd– y-MM-dd G"}
                     d{"y-MM-dd–y-MM-dd G"}
-                    y{"y-MM-dd – y-MM-dd G"}
+                    y{"y-MM-dd – y-MM-dd G"}
                 }
             }
         }
@@ -1440,7 +1442,7 @@ lt{
                 "popiet",
             }
             AmPmMarkersNarrow{
-                "pr. p.",
+                "pr. p.",
                 "pop.",
             }
             DateTimePatterns{
@@ -1481,8 +1483,8 @@ lt{
                 EHm{"HH:mm, E"}
                 EHms{"HH:mm:ss, E"}
                 Ed{"d, E"}
-                Ehm{"hh:mm a, E"}
-                Ehms{"hh:mm:ss a, E"}
+                Ehm{"hh:mm a, E"}
+                Ehms{"hh:mm:ss a, E"}
                 Gy{"y 'm'. G"}
                 GyMMM{"y-MM G"}
                 GyMMMEd{"y-MM-dd G, E"}
@@ -1490,6 +1492,7 @@ lt{
                 GyMMMMEd{"y 'm'. G MMMM d 'd'., E"}
                 GyMMMMd{"y 'm'. G MMMM d 'd'."}
                 GyMMMd{"y-MM-dd G"}
+                GyMd{"y-MM-dd G"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -1512,11 +1515,11 @@ lt{
                 MMdd{"MM-dd"}
                 Md{"MM-d"}
                 d{"dd"}
-                h{"hh a"}
-                hm{"hh:mm a"}
-                hms{"hh:mm:ss a"}
-                hmsv{"hh:mm:ss a; v"}
-                hmv{"hh:mm a; v"}
+                h{"hh a"}
+                hm{"hh:mm a"}
+                hms{"hh:mm:ss a"}
+                hmsv{"hh:mm:ss a; v"}
+                hmv{"hh:mm a; v"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"y-MM"}
@@ -1655,7 +1658,7 @@ lt{
                     }
                     narrow{
                         afternoon1{"diena"}
-                        am{"pr. p."}
+                        am{"pr. p."}
                         evening1{"vakaras"}
                         midnight{"vidurnaktis"}
                         morning1{"rytas"}
@@ -1699,7 +1702,7 @@ lt{
             }
             intervalFormats{
                 Bh{
-                    B{"h B – h B"}
+                    B{"h B – h B"}
                     h{"hh–hh B"}
                 }
                 Bhm{
@@ -1708,42 +1711,42 @@ lt{
                     m{"hh:mm–hh:mm B"}
                 }
                 Gy{
-                    G{"G y – G y"}
+                    G{"G y – G y"}
                     y{"G y–y"}
                 }
                 GyM{
-                    G{"GGGGG y-MM – GGGGG y-MM"}
-                    M{"GGGGG y-MM – y-MM"}
-                    y{"GGGGG y-MM – y-MM"}
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
                 }
                 GyMEd{
-                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
-                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
                 }
                 GyMMM{
-                    G{"G y MMM – G y MMM"}
+                    G{"G y MMM – G y MMM"}
                     M{"G y MMM–MMM"}
-                    y{"G y MMM – y MMM"}
+                    y{"G y MMM – y MMM"}
                 }
                 GyMMMEd{
-                    G{"G y MMM d, E – G y MMM d, E"}
-                    M{"G y MMM d, E – MMM d, E"}
-                    d{"G y MMM d, E – MMM d, E"}
-                    y{"G y MMM d, E – y MMM d, E"}
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
                 }
                 GyMMMd{
-                    G{"G y MMM d – G y MMM d"}
-                    M{"G y MMM d – MMM d"}
+                    G{"G y MMM d – G y MMM d"}
+                    M{"G y MMM d – MMM d"}
                     d{"G y MMM d–d"}
-                    y{"G y MMM d – y MMM d"}
+                    y{"G y MMM d – y MMM d"}
                 }
                 GyMd{
-                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
-                    M{"GGGGG y-MM-dd – y-MM-dd"}
-                    d{"GGGGG y-MM-dd – y-MM-dd"}
-                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
                 }
                 H{
                     H{"HH–HH"}
@@ -1763,101 +1766,101 @@ lt{
                     M{"MM–MM"}
                 }
                 MEd{
-                    M{"MM-dd, E – MM-dd, E"}
-                    d{"MM-dd, E – MM-dd, E"}
+                    M{"MM-dd, E – MM-dd, E"}
+                    d{"MM-dd, E – MM-dd, E"}
                 }
                 MMM{
                     M{"LLL–LLL"}
                 }
                 MMMEd{
-                    M{"MMM d, E – MMM d, E"}
-                    d{"MMM d, E – MMM d, E"}
+                    M{"MMM d, E – MMM d, E"}
+                    d{"MMM d, E – MMM d, E"}
                 }
                 MMMM{
                     M{"LLLL–LLLL"}
                 }
                 MMMMEd{
-                    M{"MMMM d, E – MMMM d, E"}
-                    d{"MMMM d, E – MMMM d, E"}
+                    M{"MMMM d, E – MMMM d, E"}
+                    d{"MMMM d, E – MMMM d, E"}
                 }
                 MMMMd{
-                    M{"MMMM d – MMMM d"}
+                    M{"MMMM d – MMMM d"}
                     d{"MMMM d–d"}
                 }
                 MMMd{
-                    M{"MMM d – MMM d"}
+                    M{"MMM d – MMM d"}
                     d{"MMM d–d"}
                 }
                 Md{
-                    M{"MM-dd – MM-dd"}
-                    d{"MM-dd – MM-dd"}
+                    M{"MM-dd – MM-dd"}
+                    d{"MM-dd – MM-dd"}
                 }
                 d{
                     d{"dd–dd"}
                 }
-                fallback{"{0} – {1}"}
+                fallback{"{0} – {1}"}
                 h{
-                    a{"h a – h a"}
-                    h{"hh–hh a"}
+                    a{"h a – h a"}
+                    h{"hh–hh a"}
                 }
                 hm{
-                    a{"hh:mm a–hh:mm a"}
-                    h{"hh:mm–hh:mm a"}
-                    m{"hh:mm–hh:mm a"}
+                    a{"hh:mm a–hh:mm a"}
+                    h{"hh:mm–hh:mm a"}
+                    m{"hh:mm–hh:mm a"}
                 }
                 hmv{
-                    a{"hh:mm a–hh:mm a v"}
-                    h{"hh:mm–hh:mm a v"}
-                    m{"h:mm–h:mm a v"}
+                    a{"hh:mm a–hh:mm a v"}
+                    h{"hh:mm–hh:mm a v"}
+                    m{"h:mm–h:mm a v"}
                 }
                 hv{
-                    a{"h a – h a v"}
-                    h{"hh–hh a v"}
+                    a{"h a – h a v"}
+                    h{"hh–hh a v"}
                 }
                 y{
                     y{"y–y"}
                 }
                 yM{
-                    M{"y-MM – y-MM"}
-                    y{"y-MM – y-MM"}
+                    M{"y-MM – y-MM"}
+                    y{"y-MM – y-MM"}
                 }
                 yMEd{
-                    M{"y-MM-dd, E – y-MM-dd, E"}
-                    d{"y-MM-dd, E – y-MM-dd, E"}
-                    y{"y-MM-dd, E – y-MM-dd, E"}
+                    M{"y-MM-dd, E – y-MM-dd, E"}
+                    d{"y-MM-dd, E – y-MM-dd, E"}
+                    y{"y-MM-dd, E – y-MM-dd, E"}
                 }
                 yMMM{
                     M{"y MMM–MMM"}
-                    y{"y MMM – y MMM"}
+                    y{"y MMM – y MMM"}
                 }
                 yMMMEd{
-                    M{"y MMM d, E – MMM d, E"}
-                    d{"y MMM d, E – MMM d, E"}
-                    y{"y MMM d, E – y MMM d, E"}
+                    M{"y MMM d, E – MMM d, E"}
+                    d{"y MMM d, E – MMM d, E"}
+                    y{"y MMM d, E – y MMM d, E"}
                 }
                 yMMMM{
                     M{"y LLLL–LLLL"}
-                    y{"y LLLL – y LLLL"}
+                    y{"y LLLL – y LLLL"}
                 }
                 yMMMMEd{
                     M{"y MMMM d, E. – MMMM d, E."}
-                    d{"y MMMM d, E – MMMM d, E"}
+                    d{"y MMMM d, E – MMMM d, E"}
                     y{"y MMMM d, E. – y MMMM d, E."}
                 }
                 yMMMMd{
-                    M{"y MMMM d – MMMM d"}
+                    M{"y MMMM d – MMMM d"}
                     d{"y MMMM d–d"}
-                    y{"y MMMM d – y MMMM d"}
+                    y{"y MMMM d – y MMMM d"}
                 }
                 yMMMd{
-                    M{"y MMM d – MMM d"}
+                    M{"y MMM d – MMM d"}
                     d{"y MMM d–d"}
-                    y{"y MMM d – y MMM d"}
+                    y{"y MMM d – y MMM d"}
                 }
                 yMd{
-                    M{"y-MM-dd – y-MM-dd"}
-                    d{"y-MM-dd – y-MM-dd"}
-                    y{"y-MM-dd – y-MM-dd"}
+                    M{"y-MM-dd – y-MM-dd"}
+                    d{"y-MM-dd – y-MM-dd"}
+                    y{"y-MM-dd – y-MM-dd"}
                 }
             }
             monthNames{
@@ -3866,6 +3869,49 @@ lt{
                 "[,٫︐﹐，]",
                 "[.․﹒．｡]",
             }
+        }
+    }
+    personNames{
+        nameOrderLocales{
+            givenFirst{
+                "und",
+                "lt",
+            }
+            surnameFirst{
+                "ko",
+                "vi",
+                "yue",
+                "zh",
+            }
+        }
+        namePattern{
+            givenFirst-long-addressing-informal{"{given} {given2} {surname} {surname2}"}
+            givenFirst-long-referring-formal{"{suffix} {prefix} {given} {given2} {surname} {surname2}"}
+            givenFirst-long-referring-informal{"{given} {given2} {surname} {surname2}"}
+            givenFirst-medium-addressing-informal{"{given} {given2} {surname} {surname2}"}
+            givenFirst-medium-referring-informal{"{given} {given2} {surname} {surname2}"}
+            givenFirst-short-addressing-formal{"{prefix} {given} {given2} {surname} {surname2}"}
+            givenFirst-short-addressing-informal{"{given} {given2} {surname} {surname2}"}
+            givenFirst-short-referring-formal{"{prefix} {given} {given2} {surname} {surname2}"}
+            givenFirst-short-referring-informal{"{given} {given2} {surname} {surname2}"}
+            sorting-long-referring-formal{"{prefix} {surname} {surname2}, {given} {given2}"}
+            sorting-long-referring-informal{"{surname} {surname2}, {given} {given2}"}
+            sorting-medium-referring-formal{"{prefix} {surname} {surname2}, {given} {given2}"}
+            sorting-medium-referring-informal{"{surname} {surname2}, {given} {given2}"}
+            sorting-short-referring-formal{"{prefix} {surname} {surname2}, {given} {given2}"}
+            sorting-short-referring-informal{"{surname} {surname2}, {given} {given2}"}
+            surnameFirst-long-addressing-formal{"{prefix} {surname} {surname2}, {given} {given2}"}
+            surnameFirst-long-addressing-informal{"{surname} {surname2}, {given} {given2}"}
+            surnameFirst-long-referring-formal{"{prefix} {surname} {surname2}, {given} {given2}"}
+            surnameFirst-long-referring-informal{"{surname} {surname2}, {given} {given2}"}
+            surnameFirst-medium-addressing-formal{"{prefix} {surname} {surname2}, {given} {given2}"}
+            surnameFirst-medium-addressing-informal{"{surname} {surname2}, {given} {given2}"}
+            surnameFirst-medium-referring-formal{"{prefix} {surname} {surname2}, {given} {given2}"}
+            surnameFirst-medium-referring-informal{"{surname} {surname2}, {given} {given2}"}
+            surnameFirst-short-addressing-formal{"{surname} {surname2}, {given} {given2}"}
+            surnameFirst-short-addressing-informal{"{surname} {surname2}, {given} {given2}"}
+            surnameFirst-short-referring-formal{"{surname} {surname2}, {given} {given2}"}
+            surnameFirst-short-referring-informal{"{surname} {surname2}, {given} {given2}"}
         }
     }
 }

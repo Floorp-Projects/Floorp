@@ -24,6 +24,11 @@ de_CH{
                 other{"{0} Quadratfuss"}
             }
         }
+        duration{
+            quarter{
+                dnam{"Quartal"}
+            }
+        }
         length{
             foot{
                 case{
@@ -73,7 +78,19 @@ de_CH{
             }
         }
     }
+    unitsNarrow{
+        volume{
+            jigger{
+                dnam{"Jigger"}
+            }
+        }
+    }
     unitsShort{
+        duration{
+            quarter{
+                dnam{"Quartal"}
+            }
+        }
         length{
             foot{
                 dnam{"Fuss"}

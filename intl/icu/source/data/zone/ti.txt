@@ -1220,6 +1220,9 @@ ti{
         "Pacific:Johnston"{
             ec{"ጆንስተን"}
         }
+        "Pacific:Kanton"{
+            ec{"ካንቶን"}
+        }
         "Pacific:Kiritimati"{
             ec{"ኪሪቲማቲ"}
         }
@@ -1379,6 +1382,9 @@ ti{
         }
         "meta:French_Southern"{
             ls{"ግዜ ፈረንሳዊ ደቡባዊ ግዝኣታትን ኣንታርቲክን"}
+        }
+        "meta:GMT"{
+            ls{"GMT"}
         }
         "meta:Galapagos"{
             ls{"ግዜ ጋላፓጎስ"}

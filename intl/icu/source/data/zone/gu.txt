@@ -1223,6 +1223,9 @@ gu{
         "Pacific:Johnston"{
             ec{"જોહ્નસ્ટોન"}
         }
+        "Pacific:Kanton"{
+            ec{"કેન્ટન"}
+        }
         "Pacific:Kiritimati"{
             ec{"કિરિતિમાતી"}
         }

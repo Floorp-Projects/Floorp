@@ -3,14 +3,6 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ti_ER{
     Languages{
-        ar_001{"ዘመናዊ ምዱብ ዓረብ"}
-        nds_NL{"ትሑት ሳክሰን"}
-        nl_BE{"ፍላሚሽ"}
-        zh_Hans{"ቀሊል ቻይንኛ"}
-        zh_Hant{"ባህላዊ ቻይንኛ"}
-    }
-    Languages%long{
-        zh_Hans{"ቀሊል ማንዳሪን ቻይንኛ"}
-        zh_Hant{"ባህላዊ ማንዳሪን ቻይንኛ"}
+        sr{"ሰርብኛ"}
     }
 }

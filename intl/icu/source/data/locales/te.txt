@@ -34,6 +34,8 @@ te{
             }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                accountingFormat%alphaNextToNumber{"¤ #,##0.00;(¤ #,##0.00)"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
                 currencyFormat{"¤#,##,##0.00"}
                 decimalFormat{"#,##,##0.###"}
                 percentFormat{"#,##0%"}
@@ -142,6 +144,56 @@ te{
                         other{"¤000ట్రి"}
                     }
                 }
+                currencyFormat%alphaNextToNumber{
+                    1000{
+                        one{"¤ 0వే"}
+                        other{"¤ 0వే"}
+                    }
+                    10000{
+                        one{"¤ 00వే"}
+                        other{"¤ 00వే"}
+                    }
+                    100000{
+                        one{"¤ 000వే"}
+                        other{"¤ 000వే"}
+                    }
+                    1000000{
+                        one{"¤ 0మి"}
+                        other{"¤ 0మి"}
+                    }
+                    10000000{
+                        one{"¤ 00మి"}
+                        other{"¤ 00మి"}
+                    }
+                    100000000{
+                        one{"¤ 000మి"}
+                        other{"¤ 000మి"}
+                    }
+                    1000000000{
+                        one{"¤ 0బి"}
+                        other{"¤ 0బి"}
+                    }
+                    10000000000{
+                        one{"¤ 00బి"}
+                        other{"¤ 00బి"}
+                    }
+                    100000000000{
+                        one{"¤ 000బి"}
+                        other{"¤ 000బి"}
+                    }
+                    1000000000000{
+                        one{"¤ 0ట్రి"}
+                        other{"¤ 0ట్రి"}
+                    }
+                    10000000000000{
+                        one{"¤ 00ట్రి"}
+                        other{"¤ 00ట్రి"}
+                    }
+                    100000000000000{
+                        one{"¤ 000ట్రి"}
+                        other{"¤ 000ట్రి"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         one{"0వే"}
@@ -229,6 +281,8 @@ te{
         telu{
             patterns{
                 currencyFormat{"¤#,##,##0.00"}
+                currencyFormat%alphaNextToNumber{"¤ #,##,##0.00"}
+                currencyFormat%noCurrency{"#,##,##0.00"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
@@ -685,6 +739,12 @@ te{
                 "d MMM, y",
                 "dd-MM-yy",
                 "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} {0}కి",
                 "{1} {0}కి",
                 "{1} {0}",
@@ -1321,7 +1381,7 @@ te{
                         "మార్గశిరం",
                         "పుష్యం",
                         "మాఘం",
-                        "ఫల్గుణం",
+                        "ఫాల్గుణం",
                     }
                     narrow{
                         "1",
@@ -1349,7 +1409,7 @@ te{
                         "మార్గశిరం",
                         "పుష్యం",
                         "మాఘం",
-                        "ఫల్గుణం",
+                        "ఫాల్గుణం",
                     }
                 }
                 stand-alone{
@@ -1365,7 +1425,7 @@ te{
                         "మార్గశిరం",
                         "పుష్యం",
                         "మాఘం",
-                        "ఫల్గుణం",
+                        "ఫాల్గుణం",
                     }
                     narrow{
                         "1",
@@ -1393,7 +1453,7 @@ te{
                         "మార్గశిరం",
                         "పుష్యం",
                         "మాఘం",
-                        "ఫల్గుణం",
+                        "ఫాల్గుణం",
                     }
                 }
             }
@@ -2604,6 +2664,68 @@ te{
                 "[,٫︐﹐，]",
                 "[.․﹒．｡]",
             }
+        }
+    }
+    personNames{
+        foreignSpaceReplacement{" "}
+        initialPattern{
+            initial{"{0}."}
+            initialSequence{"{0} {1}"}
+        }
+        nameOrderLocales{
+            givenFirst{"und"}
+            surnameFirst{
+                "ko",
+                "si",
+                "ta",
+                "te",
+                "vi",
+                "yue",
+                "zh",
+            }
+        }
+        namePattern{
+            givenFirst-long-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-addressing-informal{"{given-informal}"}
+            givenFirst-long-monogram-formal{
+                "{given-monogram-allCaps}. {given2-monogram-allCaps}. {surname-monogr"
+                "am-allCaps}"
+            }
+            givenFirst-long-referring-formal{"{given} {given2} {surname} {suffix}"}
+            givenFirst-long-referring-informal{"{given-informal} {surname}"}
+            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-informal{"{given-informal}"}
+            givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {suffix}"}
+            givenFirst-medium-referring-informal{"{given-informal} {surname}"}
+            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-informal{"{given-informal}"}
+            givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
+            givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
+            sorting-long-referring-formal{"{surname-core}, {given} {given2} {surname-prefix}"}
+            sorting-long-referring-informal{"{surname}, {given-informal}"}
+            sorting-medium-referring-formal{"{surname-core}, {given} {given2-initial} {surname-prefix}"}
+            sorting-medium-referring-informal{"{surname}, {given-informal}"}
+            sorting-short-referring-formal{"{surname-core}, {given-initial} {given2-initial} {surname-prefix}"}
+            sorting-short-referring-informal{"{surname}, {given-informal}"}
+            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-addressing-informal{"{given-informal}"}
+            surnameFirst-long-referring-formal{"{surname} {given} {given2} {suffix}"}
+            surnameFirst-long-referring-informal{"{surname} {given-informal}"}
+            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-medium-addressing-informal{"{given-informal}"}
+            surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
+            surnameFirst-short-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-short-addressing-informal{"{given-informal}"}
+            surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-short-referring-formal{"{surname} {given-initial} {given2-initial}"}
+            surnameFirst-short-referring-informal{"{surname} {given-initial}"}
         }
     }
 }

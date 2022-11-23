@@ -5,7 +5,7 @@ ceb{
     collations{
         standard{
             Sequence{"&N<ñ<<<Ñ<ng<<<Ng<<<NG"}
-            Version{"41"}
+            Version{"42"}
         }
     }
 }

@@ -1223,6 +1223,9 @@ lo{
         "Pacific:Johnston"{
             ec{"ຈອນສະໂຕນ"}
         }
+        "Pacific:Kanton"{
+            ec{"ແຄນຕອນ"}
+        }
         "Pacific:Kiritimati"{
             ec{"ຄີຣິທີມາຕີ"}
         }

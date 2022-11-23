@@ -337,6 +337,12 @@ sc{
                 one{"{0} nanosegundu"}
                 other{"{0} nanosegundos"}
             }
+            quarter{
+                dnam{"cuartos"}
+                one{"{0} cuartu"}
+                other{"{0} cuartos"}
+                per{"{0}/crt"}
+            }
             second{
                 dnam{"segundos"}
                 one{"{0} segundu"}
@@ -678,11 +684,6 @@ sc{
                 other{"{0} chilogrammos"}
                 per{"{0} pro chilogrammu"}
             }
-            metric-ton{
-                dnam{"tonnelladas mètricas"}
-                one{"{0} tonnellada mètrica"}
-                other{"{0} tonnelladas mètricas"}
-            }
             microgram{
                 dnam{"microgrammos"}
                 one{"{0} microgrammu"}
@@ -724,6 +725,11 @@ sc{
                 dnam{"tonnelladas"}
                 one{"{0} tonnellada"}
                 other{"{0} tonnelladas"}
+            }
+            tonne{
+                dnam{"tonnelladas mètricas"}
+                one{"{0} tonnellada mètrica"}
+                other{"{0} tonnelladas mètricas"}
             }
         }
         power{
@@ -1264,6 +1270,12 @@ sc{
                 one{"{0}ns"}
                 other{"{0}ns"}
             }
+            quarter{
+                dnam{"crt"}
+                one{"{0}crt"}
+                other{"{0}crt"}
+                per{"{0}/crt"}
+            }
             second{
                 dnam{"seg"}
                 one{"{0}s"}
@@ -1551,10 +1563,6 @@ sc{
                 one{"{0}kg"}
                 other{"{0}kg"}
             }
-            metric-ton{
-                one{"{0}t"}
-                other{"{0}t"}
-            }
             microgram{
                 one{"{0}μg"}
                 other{"{0}μg"}
@@ -1586,6 +1594,10 @@ sc{
             ton{
                 one{"{0}tn"}
                 other{"{0}tn"}
+            }
+            tonne{
+                one{"{0}t"}
+                other{"{0}t"}
             }
         }
         power{
@@ -1974,6 +1986,12 @@ sc{
             nanosecond{
                 one{"{0}ns"}
                 other{"{0}ns"}
+            }
+            quarter{
+                dnam{"cuartos"}
+                one{"{0} crt"}
+                other{"{0} crt"}
+                per{"{0}/crt"}
             }
             second{
                 dnam{"seg"}

@@ -309,8 +309,10 @@ nl{
     Countries%variant{
         CD{"Congo (DRC)"}
         CG{"Congo (Republiek)"}
+        CI{"Côte d’Ivoire"}
         CZ{"Tsjechische Republiek"}
         FK{"Falklandeilanden (Islas Malvinas)"}
+        NZ{"Aotearoa Nieuw-Zeeland"}
         SZ{"Swaziland"}
         TL{"Democratische Republiek Oost-Timor"}
     }

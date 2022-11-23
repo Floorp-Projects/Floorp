@@ -15,10 +15,10 @@ naq{
     calendar{
         generic{
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
                 "EEEE, d MMMM y G",
                 "d MMMM y G",
                 "d MMM y G",
@@ -51,7 +51,7 @@ naq{
                 MMMd{"MMM d"}
                 Md{"M/d"}
                 d{"d"}
-                hm{"h:mm a"}
+                hm{"h:mm a"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M/y"}
@@ -73,10 +73,10 @@ naq{
                 "ǃuias",
             }
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
                 "EEEE, d MMMM y",
                 "d MMMM y",
                 "d MMM y",
@@ -109,7 +109,7 @@ naq{
                 MMMd{"MMM d"}
                 Md{"M/d"}
                 d{"d"}
-                hm{"h:mm a"}
+                hm{"h:mm a"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M/y"}

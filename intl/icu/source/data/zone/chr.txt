@@ -1223,6 +1223,9 @@ chr{
         "Pacific:Johnston"{
             ec{"ᏣᏂᏏᏂ"}
         }
+        "Pacific:Kanton"{
+            ec{"ᎧᏛᏂ"}
+        }
         "Pacific:Kiritimati"{
             ec{"ᎩᎵᏘᎹᏘ"}
         }

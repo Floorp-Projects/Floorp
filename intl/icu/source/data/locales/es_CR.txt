@@ -12,4 +12,9 @@ es_CR{
             }
         }
     }
+    fields{
+        dayperiod{
+            dn{"a. m./p. m."}
+        }
+    }
 }

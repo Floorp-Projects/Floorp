@@ -1096,6 +1096,30 @@ hu{
                 one{"{0} nanoszekundum"}
                 other{"{0} nanoszekundum"}
             }
+            quarter{
+                case{
+                    accusative{
+                        one{"{0} negyedévet"}
+                        other{"{0} negyedévet"}
+                    }
+                    instrumental{
+                        one{"{0} negyedévvel"}
+                        other{"{0} negyedévvel"}
+                    }
+                    terminative{
+                        one{"{0} negyedévig"}
+                        other{"{0} negyedévig"}
+                    }
+                    translative{
+                        one{"{0} negyedévvé"}
+                        other{"{0} negyedévvé"}
+                    }
+                }
+                dnam{"negyedév"}
+                one{"{0} negyedév"}
+                other{"{0} negyedév"}
+                per{"{0}/n.év"}
+            }
             second{
                 case{
                     accusative{
@@ -2085,29 +2109,6 @@ hu{
                 other{"{0} kilogramm"}
                 per{"{0}/kilogramm"}
             }
-            metric-ton{
-                case{
-                    accusative{
-                        one{"{0} metrikus tonnát"}
-                        other{"{0} metrikus tonnát"}
-                    }
-                    instrumental{
-                        one{"{0} metrikus tonnával"}
-                        other{"{0} metrikus tonnával"}
-                    }
-                    terminative{
-                        one{"{0} metrikus tonnáig"}
-                        other{"{0} metrikus tonnáig"}
-                    }
-                    translative{
-                        one{"{0} metrikus tonnává"}
-                        other{"{0} metrikus tonnává"}
-                    }
-                }
-                dnam{"metrikus tonna"}
-                one{"{0} metrikus tonna"}
-                other{"{0} metrikus tonna"}
-            }
             microgram{
                 case{
                     accusative{
@@ -2185,6 +2186,29 @@ hu{
                 dnam{"amerikai tonna"}
                 one{"{0} amerikai tonna"}
                 other{"{0} amerikai tonna"}
+            }
+            tonne{
+                case{
+                    accusative{
+                        one{"{0} metrikus tonnát"}
+                        other{"{0} metrikus tonnát"}
+                    }
+                    instrumental{
+                        one{"{0} metrikus tonnával"}
+                        other{"{0} metrikus tonnával"}
+                    }
+                    terminative{
+                        one{"{0} metrikus tonnáig"}
+                        other{"{0} metrikus tonnáig"}
+                    }
+                    translative{
+                        one{"{0} metrikus tonnává"}
+                        other{"{0} metrikus tonnává"}
+                    }
+                }
+                dnam{"metrikus tonna"}
+                one{"{0} metrikus tonna"}
+                other{"{0} metrikus tonna"}
             }
         }
         power{
@@ -3176,6 +3200,12 @@ hu{
                 one{"{0} h."}
                 other{"{0} h."}
             }
+            quarter{
+                dnam{"n.év"}
+                one{"{0} n.év"}
+                other{"{0} n.év"}
+                per{"{0}/n.év"}
+            }
             second{
                 dnam{"mp"}
                 one{"{0} mp"}
@@ -3689,6 +3719,12 @@ hu{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
+            quarter{
+                dnam{"n.év"}
+                one{"{0} n.év"}
+                other{"{0} n.év"}
+                per{"{0}/n.év"}
+            }
             second{
                 dnam{"mp"}
                 one{"{0} mp"}
@@ -3959,11 +3995,6 @@ hu{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -3995,6 +4026,11 @@ hu{
                 dnam{"tn"}
                 one{"{0} tn"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

@@ -261,14 +261,17 @@ yo_BJ{
                         "Kɛr",
                     }
                     wide{
-                        "Ìdámẹ́rin kíní",
-                        "Ìdámẹ́rin Kejì",
+                        "Ìdámɛ́rin kíní",
+                        "Ìdámɛ́rin Kejì",
                         "Ìdámɛ́rin Kɛta",
-                        "Ìdámẹ́rin Kẹrin",
+                        "Ìdámɛ́rin Kɛrin",
                     }
                 }
             }
         }
+    }
+    characterLabel{
+        weather{"ojú=ɔjɔ́"}
     }
     fields{
         day{
@@ -292,6 +295,25 @@ yo_BJ{
         dayperiod{
             dn{"Àárɔ̀/ɔ̀sán"}
         }
+        fri-narrow{
+            relativeTime{
+                past{
+                    other{"{0} F tɛ́lɛ̀"}
+                }
+            }
+        }
+        fri-short{
+            relative{
+                "-1"{"Etì àná"}
+                "0"{"Etì yì"}
+                "1"{"Et tónbɔ̀"}
+            }
+            relativeTime{
+                past{
+                    other{"{0} Et sɛ́yìn"}
+                }
+            }
+        }
         minute{
             dn{"Ìsɛ́jú"}
         }
@@ -310,6 +332,30 @@ yo_BJ{
         }
         quarter-narrow{
             dn{"Ìdá mɛ́rin"}
+        }
+        sat-narrow{
+            relative{
+                "-1"{"Ab sɛ́yìn"}
+                "0"{"Ab èyí"}
+                "1"{"Ab tónbò"}
+            }
+            relativeTime{
+                past{
+                    other{"{0} Ab ɛ̀yí"}
+                }
+            }
+        }
+        sat-short{
+            relative{
+                "-1"{"Aba tókojá"}
+                "0"{"Aba èyí"}
+                "1"{"Aba tónbɔ̀"}
+            }
+            relativeTime{
+                past{
+                    other{"{0} Aba. sɛ́yìn"}
+                }
+            }
         }
         second{
             dn{"Ìsɛ́jú Ààyá"}
@@ -331,6 +377,130 @@ yo_BJ{
             relativeTime{
                 future{
                     other{"Ɔjɔ́ Àíkú +{0}"}
+                }
+            }
+        }
+        thu{
+            relative{
+                "-1"{"Ojɔ́bɔ̀ kɛyìn"}
+                "0"{"Ojɔ́bɔ̀ eyì"}
+                "1"{"Ojɔ́bɔ̀ tónbɔ̀"}
+            }
+            relativeTime{
+                future{
+                    other{"+{0} Ojɔ́bɔ̀"}
+                }
+                past{
+                    other{"-{0} Àwɔn Ojɔ́bɔ̀"}
+                }
+            }
+        }
+        thu-narrow{
+            relativeTime{
+                future{
+                    other{"{0} Ojɔ́"}
+                }
+                past{
+                    other{"{0} Ojɔ́ sɛ́yìn"}
+                }
+            }
+        }
+        thu-short{
+            relative{
+                "-1"{"Ojɔ́ sɛ́yìn"}
+                "0"{"Ojɔ́ èyí"}
+                "1"{"Ojɔ́ tónbɔ̀"}
+            }
+            relativeTime{
+                future{
+                    other{"+ {0} Ojɔ́"}
+                }
+                past{
+                    other{"{0} Ojɔ́ èyìn"}
+                }
+            }
+        }
+        tue{
+            relative{
+                "-1"{"Ìshɛ́gun tókɔ́já"}
+                "0"{"Ìshɛ́gun èyí"}
+                "1"{"Ìshɛ́gun tóńbɔ̀"}
+            }
+            relativeTime{
+                future{
+                    other{"+{0} àwɔn ìsɛ́gun"}
+                }
+                past{
+                    other{"{0} àwɔn Ìshɛ́gun tɛ́lɛ̀"}
+                }
+            }
+        }
+        tue-narrow{
+            relative{
+                "-1"{"Ìshɛ́gun tɛ́lɛ̀"}
+                "0"{"Ìshɛ́gun yì"}
+                "1"{"Ìshɛ́gun tɔ́ńbɔ̀"}
+            }
+            relativeTime{
+                past{
+                    other{"{0} Ìs tɛ́lɛ̀"}
+                }
+            }
+        }
+        tue-short{
+            relative{
+                "-1"{"Ìshɛ́ tókɔ́já"}
+                "0"{"Ìshɛ́ èyí"}
+                "1"{"Ìshɛ́ tónbɔ̀"}
+            }
+            relativeTime{
+                future{
+                    other{"{0} Ìshɛ́"}
+                }
+                past{
+                    other{"{0} Ishɛ́. tɛ́lɛ̀"}
+                }
+            }
+        }
+        wed{
+            relative{
+                "-1"{"Ojɔ́rú àná"}
+                "0"{"Ojɔ́rú yì"}
+                "1"{"Ojɔ́rú tónbɔ̀"}
+            }
+            relativeTime{
+                future{
+                    other{"{0} Àwɔn Ojɔ́rú"}
+                }
+                past{
+                    other{"-{0} Àwɔn Ojɔ́rú tɛ́lɛ̀"}
+                }
+            }
+        }
+        wed-narrow{
+            relative{
+                "-1"{"O àná"}
+                "0"{"O yì"}
+                "1"{"O tóńbɔ̀"}
+            }
+            relativeTime{
+                past{
+                    other{"{0} W tɛ́lɛ̀"}
+                }
+            }
+        }
+        wed-short{
+            relative{
+                "-1"{"Ojɔ́rú àná"}
+                "0"{"Ojɔ́rú yì"}
+                "1"{"Ojɔ́rú tóńbɔ̀"}
+            }
+            relativeTime{
+                future{
+                    other{"ní {0} Ojɔ́"}
+                }
+                past{
+                    other{"{0} Ojɔ́ tɛ́lɛ̀"}
                 }
             }
         }
@@ -381,6 +551,11 @@ yo_BJ{
                 "0"{"Ɔdún yìí"}
                 "1"{"Ɔdún tó ńbɔ̀"}
             }
+        }
+    }
+    listPattern{
+        or{
+            start{"{0} pɛ̀lú {1}"}
         }
     }
     measurementSystemNames{

@@ -10,6 +10,8 @@
 
 /*LINTLIBRARY*/
 
+#include <stdbool.h>
+
 #include "private.h"
 #include "tzfile.h"
 #include "fcntl.h"
@@ -80,8 +82,8 @@ struct ttinfo {				/* time type information */
 	int_fast32_t	tt_gmtoff;	/* UT offset in seconds */
 	int		tt_isdst;	/* used to set tm_isdst */
 	int		tt_abbrind;	/* abbreviation list index */
-	int		tt_ttisstd;	/* TRUE if transition is std time */
-	int		tt_ttisgmt;	/* TRUE if transition is UT */
+	int		tt_ttisstd;	/* true if transition is std time */
+	int		tt_ttisgmt;	/* true if transition is UT */
 };
 
 struct lsinfo {				/* leap second information */
@@ -342,7 +344,7 @@ tzload(register const char *name, register struct state *const sp,
 	register u_t * const		up = &u;
 #endif /* !defined ALL_STATE */
 
-	sp->goback = sp->goahead = FALSE;
+	sp->goback = sp->goahead = false;
 
 	if (up == NULL)
 		return -1;
@@ -375,7 +377,7 @@ tzload(register const char *name, register struct state *const sp,
 			** Set doaccess if '.' (as in "../") shows up in name.
 			*/
 			if (strchr(name, '.') != NULL)
-				doaccess = TRUE;
+				doaccess = true;
 			name = fullname;
 		}
 		if (doaccess && access(name, R_OK) != 0)
@@ -477,11 +479,11 @@ tzload(register const char *name, register struct state *const sp,
 
 			ttisp = &sp->ttis[i];
 			if (ttisstdcnt == 0)
-				ttisp->tt_ttisstd = FALSE;
+				ttisp->tt_ttisstd = false;
 			else {
 				ttisp->tt_ttisstd = *p++;
-				if (ttisp->tt_ttisstd != TRUE &&
-					ttisp->tt_ttisstd != FALSE)
+				if (ttisp->tt_ttisstd != true &&
+					ttisp->tt_ttisstd != false)
 						goto oops;
 			}
 		}
@@ -490,11 +492,11 @@ tzload(register const char *name, register struct state *const sp,
 
 			ttisp = &sp->ttis[i];
 			if (ttisgmtcnt == 0)
-				ttisp->tt_ttisgmt = FALSE;
+				ttisp->tt_ttisgmt = false;
 			else {
 				ttisp->tt_ttisgmt = *p++;
-				if (ttisp->tt_ttisgmt != TRUE &&
-					ttisp->tt_ttisgmt != FALSE)
+				if (ttisp->tt_ttisgmt != true &&
+					ttisp->tt_ttisgmt != false)
 						goto oops;
 			}
 		}
@@ -519,7 +521,7 @@ tzload(register const char *name, register struct state *const sp,
 			register int	result;
 
 			up->buf[nread - 1] = '\0';
-			result = tzparse(&up->buf[1], &ts, FALSE);
+			result = tzparse(&up->buf[1], &ts, false);
 			if (result == 0 && ts.typecnt == 2 &&
 				sp->charcnt + ts.charcnt <= TZ_MAX_CHARS) {
 					for (i = 0; i < 2; ++i)
@@ -551,7 +553,7 @@ tzload(register const char *name, register struct state *const sp,
 		for (i = 1; i < sp->timecnt; ++i)
 			if (typesequiv(sp, sp->types[i], sp->types[0]) &&
 				differ_by_repeat(sp->ats[i], sp->ats[0])) {
-					sp->goback = TRUE;
+					sp->goback = true;
 					break;
 				}
 		for (i = sp->timecnt - 2; i >= 0; --i)
@@ -559,7 +561,7 @@ tzload(register const char *name, register struct state *const sp,
 				sp->types[i]) &&
 				differ_by_repeat(sp->ats[sp->timecnt - 1],
 				sp->ats[i])) {
-					sp->goahead = TRUE;
+					sp->goahead = true;
 					break;
 		}
 	}
@@ -616,7 +618,7 @@ typesequiv(const struct state *const sp, const int a, const int b)
 	if (sp == NULL ||
 		a < 0 || a >= sp->typecnt ||
 		b < 0 || b >= sp->typecnt)
-			result = FALSE;
+			result = false;
 	else {
 		register const struct ttinfo *	ap = &sp->ttis[a];
 		register const struct ttinfo *	bp = &sp->ttis[b];
@@ -959,7 +961,7 @@ tzparse(const char *name, register struct state *const sp,
 		if (name == NULL)
 			return -1;
 	}
-	load_result = tzload(TZDEFRULES, sp, FALSE);
+	load_result = tzload(TZDEFRULES, sp, false);
 	if (load_result != 0)
 		sp->leapcnt = 0;		/* so, we're off a little */
 	if (*name != '\0') {
@@ -1086,7 +1088,7 @@ tzparse(const char *name, register struct state *const sp,
 			/*
 			** Initially we're assumed to be in standard time.
 			*/
-			isdst = FALSE;
+			isdst = false;
 			theiroffset = theirstdoffset;
 			/*
 			** Now juggle transition times and types
@@ -1130,10 +1132,10 @@ tzparse(const char *name, register struct state *const sp,
 			*/
 			sp->ttis[0] = sp->ttis[1] = zttinfo;
 			sp->ttis[0].tt_gmtoff = -stdoffset;
-			sp->ttis[0].tt_isdst = FALSE;
+			sp->ttis[0].tt_isdst = false;
 			sp->ttis[0].tt_abbrind = 0;
 			sp->ttis[1].tt_gmtoff = -dstoffset;
-			sp->ttis[1].tt_isdst = TRUE;
+			sp->ttis[1].tt_isdst = true;
 			sp->ttis[1].tt_abbrind = stdlen + 1;
 			sp->typecnt = 2;
 			sp->defaulttype = 0;
@@ -1167,8 +1169,8 @@ tzparse(const char *name, register struct state *const sp,
 static void
 gmtload(struct state *const sp)
 {
-	if (tzload(gmt, sp, TRUE) != 0)
-		(void) tzparse(gmt, sp, TRUE);
+	if (tzload(gmt, sp, true) != 0)
+		(void) tzparse(gmt, sp, true);
 }
 
 #ifndef STD_INSPIRED
@@ -1194,7 +1196,7 @@ tzsetwall(void)
 		}
 	}
 #endif /* defined ALL_STATE */
-	if (tzload(NULL, lclptr, TRUE) != 0)
+	if (tzload(NULL, lclptr, true) != 0)
 		gmtload(lclptr);
 	settzname();
 }
@@ -1236,8 +1238,8 @@ tzset(void)
 		lclptr->ttis[0].tt_gmtoff = 0;
 		lclptr->ttis[0].tt_abbrind = 0;
 		(void) strcpy(lclptr->chars, gmt);
-	} else if (tzload(name, lclptr, TRUE) != 0)
-		if (name[0] == ':' || tzparse(name, lclptr, FALSE) != 0)
+	} else if (tzload(name, lclptr, true) != 0)
+		if (name[0] == ':' || tzparse(name, lclptr, false) != 0)
 			(void) gmtload(lclptr);
 	settzname();
 }
@@ -1356,7 +1358,7 @@ gmtsub(const time_t *const timep, const int_fast32_t offset,
 	register struct tm *	result;
 
 	if (!gmt_is_set) {
-		gmt_is_set = TRUE;
+		gmt_is_set = true;
 #ifdef ALL_STATE
 		gmtptr = malloc(sizeof *gmtptr);
 #endif /* defined ALL_STATE */
@@ -1590,9 +1592,9 @@ increment_overflow(int *const ip, int j)
 	** or if j < INT_MIN - i; given i < 0, INT_MIN - i cannot overflow.
 	*/
 	if ((i >= 0) ? (j > INT_MAX - i) : (j < INT_MIN - i))
-		return TRUE;
+		return true;
 	*ip += j;
-	return FALSE;
+	return false;
 }
 
 static int
@@ -1601,9 +1603,9 @@ increment_overflow32(int_fast32_t *const lp, int const m)
 	register int_fast32_t const	l = *lp;
 
 	if ((l >= 0) ? (m > INT_FAST32_MAX - l) : (m < INT_FAST32_MIN - l))
-		return TRUE;
+		return true;
 	*lp += m;
-	return FALSE;
+	return false;
 }
 
 static int
@@ -1617,9 +1619,9 @@ increment_overflow_time(time_t *tp, int_fast32_t j)
 	if (! (j < 0
 	       ? (TYPE_SIGNED(time_t) ? time_t_min - j <= *tp : -1 - j < *tp)
 	       : *tp <= time_t_max - j))
-		return TRUE;
+		return true;
 	*tp += j;
-	return FALSE;
+	return false;
 }
 
 static int
@@ -1682,7 +1684,7 @@ time2sub(struct tm *const tmp,
 	time_t				t;
 	struct tm			yourtm, mytm;
 
-	*okayp = FALSE;
+	*okayp = false;
 	yourtm = *tmp;
 	if (do_norm_secs) {
 		if (normalize_overflow(&yourtm.tm_min, &yourtm.tm_sec,
@@ -1835,7 +1837,7 @@ label:
 		return WRONG;
 	t = newt;
 	if ((*funcp)(&t, offset, tmp))
-		*okayp = TRUE;
+		*okayp = true;
 	return t;
 }
 
@@ -1852,8 +1854,8 @@ time2(struct tm * const	tmp,
 	** (in case tm_sec contains a value associated with a leap second).
 	** If that fails, try with normalization of seconds.
 	*/
-	t = time2sub(tmp, funcp, offset, okayp, FALSE);
-	return *okayp ? t : time2sub(tmp, funcp, offset, okayp, TRUE);
+	t = time2sub(tmp, funcp, offset, okayp, false);
+	return *okayp ? t : time2sub(tmp, funcp, offset, okayp, true);
 }
 
 static time_t
@@ -1899,11 +1901,11 @@ time1(struct tm *const tmp,
 	if (sp == NULL)
 		return WRONG;
 	for (i = 0; i < sp->typecnt; ++i)
-		seen[i] = FALSE;
+		seen[i] = false;
 	nseen = 0;
 	for (i = sp->timecnt - 1; i >= 0; --i)
 		if (!seen[sp->types[i]]) {
-			seen[sp->types[i]] = TRUE;
+			seen[sp->types[i]] = true;
 			types[nseen++] = sp->types[i];
 		}
 	for (sameind = 0; sameind < nseen; ++sameind) {

@@ -57,8 +57,8 @@ sbp{
                 MMMd{"MMM d"}
                 Md{"M/d"}
                 d{"d"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
                 ms{"m:ss"}
                 y{"y"}
                 yM{"M/y"}
@@ -116,8 +116,8 @@ sbp{
                 MMMd{"MMM d"}
                 Md{"M/d"}
                 d{"d"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
                 ms{"m:ss"}
                 y{"y"}
                 yM{"M/y"}

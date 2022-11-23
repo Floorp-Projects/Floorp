@@ -976,7 +976,7 @@ de{
                     }
                     dative{
                         one{"{0} Jahrzehnt"}
-                        other{"{0} Jahrzehnte"}
+                        other{"{0} Jahrzehnten"}
                     }
                     genitive{
                         one{"{0} Jahrzehnts"}
@@ -1110,6 +1110,27 @@ de{
                 gender{"feminine"}
                 one{"{0} Nanosekunde"}
                 other{"{0} Nanosekunden"}
+            }
+            quarter{
+                case{
+                    accusative{
+                        one{"{0} Quartal"}
+                        other{"{0} Quartale"}
+                    }
+                    dative{
+                        one{"{0} Quartal"}
+                        other{"{0} Quartalen"}
+                    }
+                    genitive{
+                        one{"{0} Quartals"}
+                        other{"{0} Quartale"}
+                    }
+                }
+                dnam{"Quartale"}
+                gender{"neuter"}
+                one{"{0} Quartal"}
+                other{"{0} Quartale"}
+                per{"{0}/Quartal"}
             }
             second{
                 case{
@@ -2155,26 +2176,6 @@ de{
                 other{"{0} Kilogramm"}
                 per{"{0} pro Kilogramm"}
             }
-            metric-ton{
-                case{
-                    accusative{
-                        one{"{0} Tonne"}
-                        other{"{0} Tonnen"}
-                    }
-                    dative{
-                        one{"{0} Tonne"}
-                        other{"{0} Tonnen"}
-                    }
-                    genitive{
-                        one{"{0} Tonne"}
-                        other{"{0} Tonnen"}
-                    }
-                }
-                dnam{"Tonnen"}
-                gender{"feminine"}
-                one{"{0} Tonne"}
-                other{"{0} Tonnen"}
-            }
             microgram{
                 case{
                     accusative{
@@ -2291,6 +2292,26 @@ de{
                 dnam{"Short Tons"}
                 one{"{0} Short Ton"}
                 other{"{0} Short Tons"}
+            }
+            tonne{
+                case{
+                    accusative{
+                        one{"{0} Tonne"}
+                        other{"{0} Tonnen"}
+                    }
+                    dative{
+                        one{"{0} Tonne"}
+                        other{"{0} Tonnen"}
+                    }
+                    genitive{
+                        one{"{0} Tonne"}
+                        other{"{0} Tonnen"}
+                    }
+                }
+                dnam{"Tonnen"}
+                gender{"feminine"}
+                one{"{0} Tonne"}
+                other{"{0} Tonnen"}
             }
         }
         power{
@@ -3581,6 +3602,12 @@ de{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
+            quarter{
+                dnam{"Q"}
+                one{"{0} Q"}
+                other{"{0} Q"}
+                per{"{0}/Q"}
+            }
             second{
                 dnam{"Sek."}
                 per{"{0}/s"}
@@ -3739,6 +3766,10 @@ de{
                 one{"{0} nm"}
                 other{"{0} nm"}
             }
+            nautical-mile{
+                one{"{0}sm"}
+                other{"{0}sm"}
+            }
             parsec{
                 one{"{0} pc"}
                 other{"{0} pc"}
@@ -3793,11 +3824,6 @@ de{
             kilogram{
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -3834,6 +3860,11 @@ de{
                 dnam{"Tons"}
                 one{"{0} tn"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{
@@ -4302,6 +4333,12 @@ de{
             nanosecond{
                 one{"{0} ns"}
                 other{"{0} ns"}
+            }
+            quarter{
+                dnam{"Quart."}
+                one{"{0} Quart."}
+                other{"{0} Quart."}
+                per{"{0}/Quart."}
             }
             second{
                 dnam{"Sek."}

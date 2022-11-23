@@ -282,6 +282,11 @@ lo{
                 dnam{"ນາ​ໂນ​ວິ​ນາ​ທີ"}
                 other{"{0} ນາ​ໂນ​ວິ​ນາ​ທີ"}
             }
+            quarter{
+                dnam{"ໄຕມາດ"}
+                other{"{0} ໄຕມາດ"}
+                per{"{0}/ໄຕມາດ"}
+            }
             second{
                 dnam{"ວິນາທີ"}
                 other{"{0} ວິນາທີ"}
@@ -520,10 +525,6 @@ lo{
                 other{"{0} ກິໂລກຣາມ"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 other{"{0} μg"}
@@ -557,6 +558,10 @@ lo{
             ton{
                 dnam{"ໂຕນ"}
                 other{"{0} ໂຕນ"}
+            }
+            tonne{
+                dnam{"t"}
+                other{"{0} t"}
             }
         }
         power{
@@ -1270,6 +1275,11 @@ lo{
                 dnam{"ນາ​ໂນ​ວິ​"}
                 other{"{0} ນນ​ວິ"}
             }
+            quarter{
+                dnam{"ໄຕມາດ"}
+                other{"{0} ໄຕມາດ"}
+                per{"{0}/ໄຕມາດ"}
+            }
             second{
                 dnam{"ວິ."}
                 other{"{0} ວິ"}
@@ -1462,10 +1472,6 @@ lo{
                 other{"{0} ກິໂລ"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 other{"{0} μg"}
@@ -1491,6 +1497,10 @@ lo{
             ton{
                 dnam{"ຕ"}
                 other{"{0} ຕ"}
+            }
+            tonne{
+                dnam{"t"}
+                other{"{0} t"}
             }
         }
         power{

@@ -311,6 +311,7 @@ sq{
         CI{"Bregu i Fildishtë"}
         CZ{"Republika Çeke"}
         FK{"Ishujt Falkland (Malvine)"}
+        NZ{"Zelanda e Re-Aotearoa"}
         SZ{"Suazilend"}
         TL{"Timori Lindor"}
     }
