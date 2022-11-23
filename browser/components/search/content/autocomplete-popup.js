@@ -39,7 +39,7 @@
         }
 
         // Show the current default engine in the top header of the panel.
-        this.updateHeader().catch(Cu.reportError);
+        this.updateHeader().catch(console.error);
 
         this._oneOffButtons.addEventListener(
           "SelectedOneOffButtonChanged",
@@ -275,7 +275,7 @@
       let engine =
         this.oneOffButtons.selectedButton &&
         this.oneOffButtons.selectedButton.engine;
-      this.updateHeader(engine).catch(Cu.reportError);
+      this.updateHeader(engine).catch(console.error);
     }
   }
 

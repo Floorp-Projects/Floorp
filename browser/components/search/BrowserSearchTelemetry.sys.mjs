@@ -269,7 +269,7 @@ class BrowserSearchTelemetryHandler {
   _recordSearch(browser, engine, url, source, action = null) {
     if (url) {
       lazy.PartnerLinkAttribution.makeSearchEngineRequest(engine, url).catch(
-        Cu.reportError
+        console.error
       );
     }
 

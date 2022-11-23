@@ -12,6 +12,7 @@ add_task(async function setup() {
 
   // This test purposely attempts to load an invalid engine.
   consoleAllowList.push("_onLoad: Failed to init engine!");
+  consoleAllowList.push("Invalid search plugin due to namespace not matching");
 });
 
 add_task(async function test_invalid_path_fails() {

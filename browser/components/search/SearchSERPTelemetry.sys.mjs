@@ -170,7 +170,7 @@ class TelemetryHandler {
    */
   handleEvent(event) {
     if (event.type != "TabClose") {
-      Cu.reportError(`Received unexpected event type ${event.type}`);
+      console.error(`Received unexpected event type ${event.type}`);
       return;
     }
 
@@ -783,7 +783,7 @@ class ContentHandler {
           });
         }
       } catch (e) {
-        Cu.reportError(e);
+        console.error(e);
       }
     });
   }

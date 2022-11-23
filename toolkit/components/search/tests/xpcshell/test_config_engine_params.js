@@ -34,7 +34,7 @@ add_task(async function test_get_extension() {
 
 add_task(async function test_post_extension() {
   let engine = Services.search.getEngineByName("Post Engine");
-  Assert.notEqual(engine, null, "Should have found an engine");
+  Assert.ok(!!engine, "Should have found an engine");
 
   let url = engine.wrappedJSObject._getURLOfType(SearchUtils.URL_TYPE.SEARCH);
   Assert.equal(url.method, "POST", "Search URLs method is POST");
