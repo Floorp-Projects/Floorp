@@ -2612,9 +2612,6 @@ bool CacheIRCompiler::emitDoubleAddResult(NumberOperandId lhsId,
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
 
-  // Float register must be preserved. The BinaryArith ICs use
-  // the fact that baseline has them available, as well as fixed temps on
-  // LBinaryCache.
   AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
   AutoAvailableFloatRegister floatScratch1(*this, FloatReg1);
 
@@ -6428,8 +6425,6 @@ bool CacheIRCompiler::emitCompareDoubleResult(JSOp op, NumberOperandId lhsId,
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
 
-  // Float register must be preserved. The Compare ICs use the fact that
-  // baseline has them available, as well as fixed temps on LBinaryBoolCache.
   AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
   AutoAvailableFloatRegister floatScratch1(*this, FloatReg1);
 
@@ -6536,8 +6531,6 @@ bool CacheIRCompiler::emitCompareBigIntNumberResult(JSOp op,
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
 
-  // Float register must be preserved. The Compare ICs use the fact that
-  // baseline has them available, as well as fixed temps on LBinaryBoolCache.
   AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
 
   Register lhs = allocator.useRegister(masm, lhsId);
@@ -7464,9 +7457,6 @@ bool CacheIRCompiler::emitCallNumberToString(NumberOperandId inputId,
                                              StringOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
-  // Float register must be preserved. The BinaryArith ICs use
-  // the fact that baseline has them available, as well as fixed temps on
-  // LBinaryCache.
   AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
 
   allocator.ensureDoubleRegister(masm, inputId, floatScratch0);
