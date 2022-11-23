@@ -47,6 +47,9 @@ void FileSystemManagerParent::AssertIsOnIOTarget() const {
 
 const RefPtr<fs::data::FileSystemDataManager>&
 FileSystemManagerParent::DataManagerStrongRef() const {
+  MOZ_ASSERT(!mActorDestroyed);
+  MOZ_ASSERT(mDataManager);
+
   return mDataManager;
 }
 
@@ -464,30 +467,13 @@ void FileSystemManagerParent::RequestAllowToClose() {
              });
 }
 
-void FileSystemManagerParent::OnChannelClose() {
+void FileSystemManagerParent::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnIOTarget();
+  MOZ_ASSERT(!mActorDestroyed);
 
-  if (!mAllowedToClose) {
-    AllowToClose();
-  }
-
-  PFileSystemManagerParent::OnChannelClose();
-}
-
-void FileSystemManagerParent::OnChannelError() {
-  AssertIsOnIOTarget();
-
-  if (!mAllowedToClose) {
-    AllowToClose();
-  }
-
-  PFileSystemManagerParent::OnChannelError();
-}
-
-void FileSystemManagerParent::AllowToClose() {
-  AssertIsOnIOTarget();
-
-  mAllowedToClose.Flip();
+#ifdef DEBUG
+  mActorDestroyed = true;
+#endif
 
   InvokeAsync(mDataManager->MutableBackgroundTargetPtr(), __func__,
               [self = RefPtr<FileSystemManagerParent>(this)]() {

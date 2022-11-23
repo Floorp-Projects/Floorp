@@ -27,6 +27,7 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
 
   void AssertIsOnIOTarget() const;
 
+  // Safe to call while the actor is live.
   const RefPtr<fs::data::FileSystemDataManager>& DataManagerStrongRef() const;
 
   mozilla::ipc::IPCResult RecvGetRootHandle(GetRootHandleResolver&& aResolver);
@@ -68,14 +69,10 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
 
   void RequestAllowToClose();
 
-  void OnChannelClose() override;
-
-  void OnChannelError() override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
  protected:
   virtual ~FileSystemManagerParent();
-
-  void AllowToClose();
 
  private:
   RefPtr<fs::data::FileSystemDataManager> mDataManager;
@@ -83,7 +80,10 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
   FileSystemGetHandleResponse mRootResponse;
 
   FlippedOnce<false> mRequestedAllowToClose;
-  FlippedOnce<false> mAllowedToClose;
+
+#ifdef DEBUG
+  bool mActorDestroyed = false;
+#endif
 };
 
 }  // namespace mozilla::dom
