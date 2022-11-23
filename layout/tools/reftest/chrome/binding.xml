@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<bindings xmlns="http://www.mozilla.org/xbl">
-<binding id="reftest-userxbl" bindToUntrustedContent="true">
-<implementation><constructor><![CDATA[
-this.style.backgroundColor = "lime";
-document.documentElement.removeAttribute("class");
-]]></constructor></implementation>
-</binding>
-</bindings>

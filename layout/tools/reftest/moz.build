@@ -28,7 +28,6 @@ TEST_HARNESS_FILES.reftest += [
 ]
 
 TEST_HARNESS_FILES.reftest.chrome += [
-    "chrome/binding.xml",
     "chrome/userContent-import.css",
     "chrome/userContent.css",
 ]
