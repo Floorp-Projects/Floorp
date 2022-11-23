@@ -394,118 +394,109 @@ void IonEntry::traceWeak(JSTracer* trc) {
     JSRuntime* rt, void* ptr, BytecodeLocationVector& results,
     uint32_t* depth) const {
   switch (kind()) {
-    case Ion:
+    case Kind::Ion:
       return ionEntry().callStackAtAddr(ptr, results, depth);
-    case Baseline:
+    case Kind::Baseline:
       return baselineEntry().callStackAtAddr(ptr, results, depth);
-    case BaselineInterpreter:
+    case Kind::BaselineInterpreter:
       return baselineInterpreterEntry().callStackAtAddr(ptr, results, depth);
-    case Dummy:
+    case Kind::Dummy:
       return dummyEntry().callStackAtAddr(rt, ptr, results, depth);
-    default:
-      MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
   }
-  return false;
+  MOZ_CRASH("Invalid kind");
 }
 
 uint32_t JitcodeGlobalEntry::callStackAtAddr(JSRuntime* rt, void* ptr,
                                              const char** results,
                                              uint32_t maxResults) const {
   switch (kind()) {
-    case Ion:
+    case Kind::Ion:
       return ionEntry().callStackAtAddr(ptr, results, maxResults);
-    case Baseline:
+    case Kind::Baseline:
       return baselineEntry().callStackAtAddr(ptr, results, maxResults);
-    case BaselineInterpreter:
+    case Kind::BaselineInterpreter:
       return baselineInterpreterEntry().callStackAtAddr(ptr, results,
                                                         maxResults);
-    case Dummy:
+    case Kind::Dummy:
       return dummyEntry().callStackAtAddr(rt, ptr, results, maxResults);
-    default:
-      MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
   }
-  return false;
+  MOZ_CRASH("Invalid kind");
 }
 
 uint64_t JitcodeGlobalEntry::lookupRealmID(JSRuntime* rt, void* ptr) const {
   switch (kind()) {
-    case Ion:
+    case Kind::Ion:
       return ionEntry().lookupRealmID(ptr);
-    case Baseline:
+    case Kind::Baseline:
       return baselineEntry().lookupRealmID();
-    case Dummy:
+    case Kind::Dummy:
       return dummyEntry().lookupRealmID();
-    default:
-      MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
+    case Kind::BaselineInterpreter:
+      break;
   }
+  MOZ_CRASH("Invalid kind");
 }
 
 bool JitcodeGlobalEntry::trace(JSTracer* trc) {
   bool tracedAny = traceJitcode(trc);
   switch (kind()) {
-    case Ion:
+    case Kind::Ion:
       tracedAny |= ionEntry().trace(trc);
       break;
-    case Baseline:
+    case Kind::Baseline:
       tracedAny |= baselineEntry().trace(trc);
       break;
-    case BaselineInterpreter:
-    case Dummy:
+    case Kind::BaselineInterpreter:
+    case Kind::Dummy:
       break;
-    default:
-      MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
   }
   return tracedAny;
 }
 
 void JitcodeGlobalEntry::traceWeak(JSTracer* trc) {
   switch (kind()) {
-    case Ion:
+    case Kind::Ion:
       ionEntry().traceWeak(trc);
       break;
-    case Baseline:
+    case Kind::Baseline:
       baselineEntry().traceWeak(trc);
       break;
-    case BaselineInterpreter:
-    case Dummy:
+    case Kind::BaselineInterpreter:
+    case Kind::Dummy:
       break;
-    default:
-      MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
   }
 }
 
 void* JitcodeGlobalEntry::canonicalNativeAddrFor(JSRuntime* rt,
                                                  void* ptr) const {
   switch (kind()) {
-    case Ion:
+    case Kind::Ion:
       return ionEntry().canonicalNativeAddrFor(ptr);
-    case Baseline:
+    case Kind::Baseline:
       return baselineEntry().canonicalNativeAddrFor(ptr);
-    case Dummy:
+    case Kind::Dummy:
       return dummyEntry().canonicalNativeAddrFor(rt, ptr);
-    default:
-      MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
+    case Kind::BaselineInterpreter:
+      break;
   }
-  return nullptr;
+  MOZ_CRASH("Invalid kind");
 }
 
 // static
 void JitcodeGlobalEntry::DestroyPolicy::operator()(JitcodeGlobalEntry* entry) {
   switch (entry->kind()) {
-    case JitcodeGlobalEntry::Ion:
+    case JitcodeGlobalEntry::Kind::Ion:
       js_delete(&entry->ionEntry());
       break;
-    case JitcodeGlobalEntry::Baseline:
+    case JitcodeGlobalEntry::Kind::Baseline:
       js_delete(&entry->baselineEntry());
       break;
-    case JitcodeGlobalEntry::BaselineInterpreter:
+    case JitcodeGlobalEntry::Kind::BaselineInterpreter:
       js_delete(&entry->baselineInterpreterEntry());
       break;
-    case JitcodeGlobalEntry::Dummy:
+    case JitcodeGlobalEntry::Kind::Dummy:
       js_delete(&entry->dummyEntry());
       break;
-    default:
-      MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
   }
 }
 

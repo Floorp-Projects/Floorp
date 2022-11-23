@@ -111,11 +111,10 @@ class JitcodeGlobalEntry : public JitCodeRange {
   uint64_t samplePositionInBuffer_ = kNoSampleInBuffer;
 
  public:
-  enum Kind { INVALID = 0, Ion, Baseline, BaselineInterpreter, Dummy, LIMIT };
+  enum class Kind : uint8_t { Ion, Baseline, BaselineInterpreter, Dummy };
 
  protected:
-  static_assert(LIMIT <= 8);
-  Kind kind_ : 7;
+  Kind kind_;
 
   JitcodeGlobalEntry(Kind kind, JitCode* code, void* nativeStartAddr,
                      void* nativeEndAddr)
@@ -125,7 +124,6 @@ class JitcodeGlobalEntry : public JitCodeRange {
     MOZ_ASSERT(code);
     MOZ_ASSERT(nativeStartAddr);
     MOZ_ASSERT(nativeEndAddr);
-    MOZ_ASSERT(kind > INVALID && kind < LIMIT);
   }
 
   // Protected destructor to ensure this is called through DestroyPolicy.
@@ -151,10 +149,12 @@ class JitcodeGlobalEntry : public JitCodeRange {
   }
 
   Kind kind() const { return kind_; }
-  bool isIon() const { return kind() == Ion; }
-  bool isBaseline() const { return kind() == Baseline; }
-  bool isBaselineInterpreter() const { return kind() == BaselineInterpreter; }
-  bool isDummy() const { return kind() == Dummy; }
+  bool isIon() const { return kind() == Kind::Ion; }
+  bool isBaseline() const { return kind() == Kind::Baseline; }
+  bool isBaselineInterpreter() const {
+    return kind() == Kind::BaselineInterpreter;
+  }
+  bool isDummy() const { return kind() == Kind::Dummy; }
 
   inline const IonEntry& ionEntry() const;
   inline const BaselineEntry& baselineEntry() const;
@@ -235,7 +235,7 @@ struct IonEntry : public JitcodeGlobalEntry {
   SizedScriptList* scriptList_ = nullptr;
 
   IonEntry(JitCode* code, void* nativeStartAddr, void* nativeEndAddr)
-      : JitcodeGlobalEntry(Ion, code, nativeStartAddr, nativeEndAddr) {}
+      : JitcodeGlobalEntry(Kind::Ion, code, nativeStartAddr, nativeEndAddr) {}
 
   void initScriptListAndTable(SizedScriptList* scriptList,
                               JitcodeIonTable* regionTable) {
@@ -284,7 +284,8 @@ struct BaselineEntry : public JitcodeGlobalEntry {
 
   BaselineEntry(JitCode* code, void* nativeStartAddr, void* nativeEndAddr,
                 JSScript* script, UniqueChars str)
-      : JitcodeGlobalEntry(Baseline, code, nativeStartAddr, nativeEndAddr),
+      : JitcodeGlobalEntry(Kind::Baseline, code, nativeStartAddr,
+                           nativeEndAddr),
         script_(script),
         str_(std::move(str)) {
     MOZ_ASSERT(script_);
@@ -312,7 +313,7 @@ struct BaselineEntry : public JitcodeGlobalEntry {
 struct BaselineInterpreterEntry : public JitcodeGlobalEntry {
   BaselineInterpreterEntry(JitCode* code, void* nativeStartAddr,
                            void* nativeEndAddr)
-      : JitcodeGlobalEntry(BaselineInterpreter, code, nativeStartAddr,
+      : JitcodeGlobalEntry(Kind::BaselineInterpreter, code, nativeStartAddr,
                            nativeEndAddr) {}
 
   void* canonicalNativeAddrFor(void* ptr) const;
@@ -331,7 +332,7 @@ struct BaselineInterpreterEntry : public JitcodeGlobalEntry {
 // on the stack when profiling is enabled.
 struct DummyEntry : public JitcodeGlobalEntry {
   DummyEntry(JitCode* code, void* nativeStartAddr, void* nativeEndAddr)
-      : JitcodeGlobalEntry(Dummy, code, nativeStartAddr, nativeEndAddr) {}
+      : JitcodeGlobalEntry(Kind::Dummy, code, nativeStartAddr, nativeEndAddr) {}
 
   void* canonicalNativeAddrFor(JSRuntime* rt, void* ptr) const {
     return nullptr;
