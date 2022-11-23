@@ -201,13 +201,13 @@ let testCases = [
   // The following three are detected by |dangerous_pattern| regex, but
   // can be regarded as an extension of blocking repeated diacritic marks.
   // i followed by U+0307 (combining dot above)
-  ["xn--pixel-8fd.com", "pi\u0307xel.com", kUnsafe, "DISABLED"],
+  ["xn--pixel-8fd.com", "pi\u0307xel.com", kUnsafe],
   // U+0131 (dotless i) followed by U+0307
   ["xn--pxel-lza43z.com", "p\u0131\u0307xel.com", kUnsafe],
   // j followed by U+0307 (combining dot above)
-  ["xn--jack-qwc.com", "j\u0307ack.com", kUnsafe, "DISABLED"],
+  ["xn--jack-qwc.com", "j\u0307ack.com", kUnsafe],
   // l followed by U+0307
-  ["xn--lace-qwc.com", "l\u0307ace.com", kUnsafe, "DISABLED"],
+  ["xn--lace-qwc.com", "l\u0307ace.com", kUnsafe],
 
   // Do not allow a combining mark after dotless i/j.
   ["xn--pxel-lza29y.com", "p\u0131\u0300xel.com", kUnsafe],
@@ -344,7 +344,7 @@ let testCases = [
   // mail.đigklmo68.co.uk:
   ["mail.xn--igklmo68-kcb.co.uk", "mail.\u0111igklmo68.co.uk", kUnsafe, "DISABLED"],
   // di̇gklmo68.com:
-  ["xn--digklmo68-6jf.com", "di\u0307gklmo68.com", kUnsafe, "DISABLED"],
+  ["xn--digklmo68-6jf.com", "di\u0307gklmo68.com", kUnsafe],
   // dig̱klmo68.com:
   ["xn--digklmo68-7vf.com", "dig\u0331klmo68.com", kUnsafe, "DISABLED"],
   // digĸlmo68.com:
