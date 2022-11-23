@@ -32,6 +32,7 @@ endif
 
 MOZ_MAKE = $(MAKE) $(MOZ_MAKE_FLAGS) -C $(OBJDIR)
 
+ifdef MOZBUILD_MANAGE_SCCACHE_DAEMON
 # In automation, manage an sccache daemon. The starting of the server
 # needs to be in a make file so sccache inherits the jobserver.
 SCCACHE_STOP = $(MOZBUILD_MANAGE_SCCACHE_DAEMON) --stop-server
@@ -42,6 +43,7 @@ SCCACHE_STOP = $(MOZBUILD_MANAGE_SCCACHE_DAEMON) --stop-server
 # However, we also need to preserve the command's exit code, thus the
 # gymnastics.
 SCCACHE_STOP_ON_FAILURE = || (x=$$?; $(SCCACHE_STOP) || true; exit $$x)
+endif
 
 # The default rule is build
 build:
