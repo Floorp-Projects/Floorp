@@ -279,7 +279,7 @@ class GCMarker {
   void reset();
 
   // If |thing| is unmarked, mark it and then traverse its children.
-  template <typename T>
+  template <uint32_t = gc::MarkingOptions::None, typename T>
   void markAndTraverse(T* thing);
 
   // Traverse a GC thing's children, using a strategy depending on the type.

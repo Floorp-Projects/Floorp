@@ -938,12 +938,7 @@ void MarkingTracerT<opts>::onEdge(T** thingp, const char* name) {
 #endif
 
   AutoClearTracingSource acts(this);
-  marker->markAndTraverse(thing);
-
-  if constexpr (opts == MarkingOptions::MarkRootCompartments) {
-    // Mark the compartment as live.
-    SetCompartmentHasMarkedCells(thing);
-  }
+  marker->markAndTraverse<opts>(thing);
 }
 
 #define INSTANTIATE_ONEDGE_METHOD(name, type, _1, _2)                 \
@@ -1047,7 +1042,7 @@ void js::gc::PerformIncrementalBarrierDuringFlattening(JSString* str) {
   PerformIncrementalPreWriteBarrier(cell);
 }
 
-template <typename T>
+template <uint32_t opts, typename T>
 void js::GCMarker::markAndTraverse(T* thing) {
   if (mark(thing)) {
     // We only mark permanent things during initialization.
@@ -1055,6 +1050,11 @@ void js::GCMarker::markAndTraverse(T* thing) {
                   !runtime()->permanentAtomsPopulated());
 
     traverse(thing);
+
+    if constexpr (opts & MarkingOptions::MarkRootCompartments) {
+      // Mark the compartment as live.
+      SetCompartmentHasMarkedCells(thing);
+    }
   }
 }
 
@@ -1147,7 +1147,10 @@ void GCMarker::traverse(BaseScript* thing) {
 }
 }  // namespace js
 
-template void js::GCMarker::markAndTraverse<JSObject>(JSObject* thing);
+template void js::GCMarker::markAndTraverse<MarkingOptions::None, JSObject>(
+    JSObject* thing);
+template void js::GCMarker::markAndTraverse<
+    MarkingOptions::MarkRootCompartments, JSObject>(JSObject* thing);
 
 #ifdef DEBUG
 void GCMarker::setCheckAtomMarking(bool check) {
