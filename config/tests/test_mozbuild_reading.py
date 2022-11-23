@@ -2,22 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
 import os
 import sys
 import unittest
 
-from mozunit import main
-
 from mozbuild.base import MozbuildObject
-from mozpack.files import FileFinder
 from mozbuild.frontend.context import Files
-from mozbuild.frontend.reader import (
-    BuildReader,
-    EmptyConfig,
-)
+from mozbuild.frontend.reader import BuildReader, EmptyConfig
+from mozpack.files import FileFinder
+from mozunit import main
 
 
 class TestMozbuildReading(unittest.TestCase):

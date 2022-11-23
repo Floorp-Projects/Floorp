@@ -16,7 +16,6 @@ import sys
 
 from mozversioncontrol import get_repository_from_env
 
-
 scriptname = os.path.basename(__file__)
 expected_encoding = "ascii"
 

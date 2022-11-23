@@ -9,15 +9,16 @@
 # a full build environment set up.
 # The basic limitation is, it doesn't even try to link and ignores
 # all related options.
-from __future__ import absolute_import
-from __future__ import print_function
-from optparse import OptionParser
-import mozfile
+from __future__ import absolute_import, print_function
+
 import os
 import os.path
-import six
-import sys
 import shutil
+import sys
+from optparse import OptionParser
+
+import mozfile
+import six
 
 
 def _nsinstall_internal(argv):

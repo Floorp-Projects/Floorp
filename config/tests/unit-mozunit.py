@@ -3,10 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
+
 import os
-from mozunit import main, MockedOpen
 import unittest
 from tempfile import mkstemp
+
+from mozunit import MockedOpen, main
 
 
 class TestMozUnit(unittest.TestCase):

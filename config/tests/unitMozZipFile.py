@@ -3,13 +3,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
-import unittest
 
-import shutil
-import os
-import sys
-import random
 import copy
+import os
+import random
+import shutil
+import sys
+import unittest
 from string import letters
 
 """
@@ -31,8 +31,9 @@ if not __file__:
     __file__ = sys.argv[0]
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from MozZipFile import ZipFile
 import zipfile
+
+from MozZipFile import ZipFile
 
 leafs = ("firstdir/oneleaf", "seconddir/twoleaf", "thirddir/with/sub/threeleaf")
 _lengths = map(lambda n: n * 64, [16, 64, 80])
