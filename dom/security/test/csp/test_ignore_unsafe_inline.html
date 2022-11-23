@@ -68,9 +68,9 @@ var tests = [
   {
     policy1: "default-src 'unsafe-inline' 'sha256-uJXAPKP5NZxnVMZMUkDofh6a9P3UMRc1CRTevVPS/rI=' 'nonce-FooNonce' ",
     policy2: "sandbox allow-scripts allow-same-origin",
-    description: "unsafe-inline should *not* be ignored within default-src even if hash or nonce is specified",
+    description: "unsafe-inline should be ignored within default-src when a hash or nonce is specified",
     file: "file_ignore_unsafe_inline.html",
-    result: "abcd",
+    result: "acd",
   },
 ];
 
