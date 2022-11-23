@@ -2,25 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { LitElement } from "./vendor/lit.all.mjs";
-
-/**
- * Helper for our replacement of @query. Used with `static queries` property.
- *
- * https://github.com/lit/lit/blob/main/packages/reactive-element/src/decorators/query.ts
- */
-function query(el, selector) {
-  return () => el.renderRoot.querySelector(selector);
-}
-
-/**
- * Helper for our replacement of @queryAll. Used with `static queries` property.
- *
- * https://github.com/lit/lit/blob/main/packages/reactive-element/src/decorators/query-all.ts
- */
-function queryAll(el, selector) {
-  return () => el.renderRoot.querySelectorAll(selector);
-}
+// Bug 1790483: Lit is not bundled yet, this is dev only.
+// eslint-disable-next-line import/no-unresolved
+import { query, queryAll, LitElement } from "./vendor/lit.all.mjs";
 
 /**
  * MozLitElement provides extensions to the lit-provided LitElement class.
@@ -88,13 +72,9 @@ export class MozLitElement extends LitElement {
     if (queries) {
       for (let [name, selector] of Object.entries(queries)) {
         if (selector.all) {
-          Object.defineProperty(this, name, {
-            get: queryAll(this, selector.all),
-          });
+          queryAll(selector.all)(this, name);
         } else {
-          Object.defineProperty(this, name, {
-            get: query(this, selector),
-          });
+          query(selector)(this, name);
         }
       }
     }
