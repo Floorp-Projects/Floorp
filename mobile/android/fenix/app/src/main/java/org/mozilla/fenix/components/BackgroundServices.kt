@@ -126,7 +126,7 @@ class BackgroundServices(
     }
 
     private val telemetryAccountObserver = TelemetryAccountObserver(
-        context
+        context,
     )
 
     val accountAbnormalities = AccountAbnormalities(context, crashReporter, strictMode)
@@ -218,7 +218,7 @@ private class AccountManagerReadyObserver(
 
 @VisibleForTesting(otherwise = PRIVATE)
 internal class TelemetryAccountObserver(
-    private val context: Context
+    private val context: Context,
 ) : AccountObserver {
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
         context.settings().signedInFxaAccount = true

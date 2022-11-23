@@ -3,14 +3,21 @@ package org.mozilla.fenix.ui
 import android.content.Intent
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
-import mozilla.components.concept.sync.*
+import io.mockk.mockk
+import mozilla.components.concept.sync.AuthType
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.*
+import org.junit.After
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
 import org.mozilla.fenix.components.TelemetryAccountObserver
-import org.mozilla.fenix.helpers.*
+import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.Experimentation
+import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.ui.robots.homeScreen
-import io.mockk.mockk
 
 class NimbusEventTest {
     private lateinit var mDevice: UiDevice
@@ -18,9 +25,11 @@ class NimbusEventTest {
 
     @get:Rule
     val homeActivityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
-        .withIntent(Intent().apply {
-            action = Intent.ACTION_VIEW
-        })
+        .withIntent(
+            Intent().apply {
+                action = Intent.ACTION_VIEW
+            },
+        )
 
     @Rule
     @JvmField
@@ -46,7 +55,7 @@ class NimbusEventTest {
         homeScreen { }.dismissOnboarding()
 
         Experimentation.withHelper {
-            Assert.assertTrue(evalJexl("'app_opened'|eventSum('Days', 28, 0) > 0"))
+            assertTrue(evalJexl("'app_opened'|eventSum('Days', 28, 0) > 0"))
         }
     }
 
@@ -56,7 +65,7 @@ class NimbusEventTest {
         observer.onAuthenticated(mockk(), AuthType.Signin)
 
         Experimentation.withHelper {
-            Assert.assertTrue(evalJexl("'sync_auth_sign_in'|eventSum('Days', 28, 0) > 0"))
+            assertTrue(evalJexl("'sync_auth_sign_in'|eventSum('Days', 28, 0) > 0"))
         }
     }
 }

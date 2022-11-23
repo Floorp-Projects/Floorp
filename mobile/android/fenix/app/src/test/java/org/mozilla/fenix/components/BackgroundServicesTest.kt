@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.components
 
+import android.content.Context
 import io.mockk.MockKAnnotations
 import io.mockk.Runs
 import io.mockk.confirmVerified
@@ -15,6 +16,7 @@ import io.mockk.verify
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.service.nimbus.NimbusApi
 import mozilla.components.support.base.observer.ObserverRegistry
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.telemetry.glean.testing.GleanTestRule
@@ -24,6 +26,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.SyncAuth
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
 
@@ -35,7 +38,13 @@ class BackgroundServicesTest {
     val gleanTestRule = GleanTestRule(testContext)
 
     @MockK
+    private lateinit var context: Context
+
+    @MockK
     private lateinit var settings: Settings
+
+    @MockK
+    private lateinit var nimbus: NimbusApi
 
     private lateinit var observer: TelemetryAccountObserver
     private lateinit var registry: ObserverRegistry<AccountObserver>
@@ -45,7 +54,15 @@ class BackgroundServicesTest {
         MockKAnnotations.init(this)
         every { settings.signedInFxaAccount = any() } just Runs
 
-        observer = TelemetryAccountObserver(settings)
+        val mockComponents: Components = mockk()
+        every { mockComponents.settings } returns settings
+        every { mockComponents.analytics } returns mockk {
+            every { experiments } returns nimbus
+        }
+        every { context.components } returns mockComponents
+        every { nimbus.recordEvent(any()) } returns Unit
+
+        observer = TelemetryAccountObserver(context)
         registry = ObserverRegistry<AccountObserver>().apply { register(observer) }
     }
 
@@ -122,5 +139,14 @@ class BackgroundServicesTest {
         assertEquals(null, SyncAuth.signOut.testGetValue()!!.single().extra)
         verify { settings.signedInFxaAccount = false }
         confirmVerified(settings)
+    }
+
+    @Test
+    fun `telemetry account observer records nimbus event for logins`() {
+        observer.onAuthenticated(mockk(), AuthType.Signin)
+        verify {
+            nimbus.recordEvent("sync_auth_sign_in")
+        }
+        confirmVerified(nimbus)
     }
 }

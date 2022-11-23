@@ -175,7 +175,7 @@ class HomeActivityIntentTestRule internal constructor(
     }
 
     override fun getActivityIntent(): Intent {
-        return if(this::intent.isInitialized) {
+        return if (this::intent.isInitialized) {
             this.intent
         } else {
             super.getActivityIntent()
