@@ -6706,6 +6706,7 @@ void CodeGenerator::visitNewArrayCallVM(LNewArray* lir) {
 
   masm.storeCallPointerResult(objReg);
 
+  MOZ_ASSERT(!lir->safepoint()->liveRegs().has(objReg));
   restoreLive(lir);
 }
 
@@ -6989,6 +6990,7 @@ void CodeGenerator::visitNewObjectVMCall(LNewObject* lir) {
 
   masm.storeCallPointerResult(objReg);
 
+  MOZ_ASSERT(!lir->safepoint()->liveRegs().has(objReg));
   restoreLive(lir);
 }
 
