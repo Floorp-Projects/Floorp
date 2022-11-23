@@ -693,13 +693,42 @@ nsresult Http3Session::ProcessEvents() {
             nsCString reason = ""_ns;
             wt->OnSessionClosed(0, reason);
           } break;
-          case WebTransportEventExternal::Tag::NewStream:
+          case WebTransportEventExternal::Tag::NewStream: {
             LOG(
                 ("Http3Session::ProcessEvents - WebTransport NewStream "
                  "streamId=0x%" PRIx64 " sessionId=0x%" PRIx64,
                  event.web_transport._0.new_stream.stream_id,
                  event.web_transport._0.new_stream.session_id));
-            break;
+            uint64_t sessionId = event.web_transport._0.new_stream.session_id;
+            RefPtr<Http3StreamBase> stream = mStreamIdHash.Get(sessionId);
+            if (!stream) {
+              LOG(
+                  ("Http3Session::ProcessEvents - WebTransport NewStream - "
+                   "session not found "
+                   "sessionId=0x%" PRIx64 " [this=%p].",
+                   sessionId, this));
+              break;
+            }
+
+            RefPtr<Http3WebTransportSession> wt =
+                stream->GetHttp3WebTransportSession();
+            if (!wt) {
+              break;
+            }
+
+            RefPtr<Http3WebTransportStream> wtStream =
+                wt->OnIncomingWebTransportStream(
+                    event.web_transport._0.new_stream.stream_type,
+                    event.web_transport._0.new_stream.stream_id);
+            if (!wtStream) {
+              break;
+            }
+
+            // WebTransportStream is managed by Http3Session now.
+            mWebTransportStreams.AppendElement(wtStream);
+            mStreamIdHash.InsertOrUpdate(wtStream->StreamId(),
+                                         std::move(wtStream));
+          } break;
         }
       } break;
       default:
@@ -1650,6 +1679,14 @@ void Http3Session::ResetWebTransportStream(Http3WebTransportStream* aStream,
   mHttp3Connection->ResetStream(aStream->StreamId(), aErrorCode);
 
   CloseStreamInternal(aStream, NS_ERROR_ABORT);
+}
+
+void Http3Session::StreamStopSending(Http3WebTransportStream* aStream,
+                                     uint8_t aErrorCode) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  LOG(("Http3Session::StreamStopSending %p %p 0x%" PRIx32, this, aStream,
+       static_cast<uint32_t>(aErrorCode)));
+  mHttp3Connection->StreamStopSending(aStream->StreamId(), aErrorCode);
 }
 
 nsresult Http3Session::TakeTransport(nsISocketTransport**,

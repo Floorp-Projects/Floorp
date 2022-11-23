@@ -202,6 +202,7 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   void StreamHasDataToWrite(Http3StreamBase* aStream);
   void ResetWebTransportStream(Http3WebTransportStream* aStream,
                                uint8_t aErrorCode);
+  void StreamStopSending(Http3WebTransportStream* aStream, uint8_t aErrorCode);
 
  private:
   ~Http3Session();

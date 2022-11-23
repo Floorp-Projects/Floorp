@@ -16,6 +16,7 @@
 #include "nsIAsyncOutputStream.h"
 
 class nsIWebTransportSendStreamStats;
+class nsIWebTransportReceiveStreamStats;
 
 namespace mozilla::net {
 
@@ -35,6 +36,9 @@ class Http3WebTransportStream final : public Http3StreamBase,
       Http3Session* aSession, uint64_t aSessionId, WebTransportStreamType aType,
       std::function<void(Result<RefPtr<Http3WebTransportStream>, nsresult>&&)>&&
           aCallback);
+  explicit Http3WebTransportStream(Http3Session* aSession, uint64_t aSessionId,
+                                   WebTransportStreamType aType,
+                                   uint64_t aStreamId);
 
   Http3WebTransportSession* GetHttp3WebTransportSession() override {
     return nullptr;
@@ -58,21 +62,34 @@ class Http3WebTransportStream final : public Http3StreamBase,
 
   void SendFin();
   void Reset(uint8_t aErrorCode);
+  void SendStopSending(uint8_t aErrorCode);
 
   already_AddRefed<nsIAsyncOutputStream> GetWriter();
   already_AddRefed<nsIWebTransportSendStreamStats> GetSendStreamStats();
 
+  already_AddRefed<nsIAsyncInputStream> GetReader();
+  already_AddRefed<nsIWebTransportReceiveStreamStats> GetReceiveStreamStats();
+
  private:
+  friend class Http3WebTransportSession;
   virtual ~Http3WebTransportStream();
 
   nsresult TryActivating();
   static nsresult ReadRequestSegment(nsIInputStream*, void*, const char*,
                                      uint32_t, uint32_t, uint32_t*);
+  static nsresult WritePipeSegment(nsIOutputStream*, void*, char*, uint32_t,
+                                   uint32_t, uint32_t*);
   nsresult InitOutputPipe();
+  nsresult InitInputPipe();
   void ResetInternal(bool aDispatch);
 
   uint64_t mSessionId{UINT64_MAX};
   WebTransportStreamType mStreamType{WebTransportStreamType::BiDi};
+
+  enum StreamRole {
+    INCOMING,
+    OUTGOING,
+  } mStreamRole{INCOMING};
 
   enum SendStreamState {
     WAITING_TO_ACTIVATE,
@@ -80,7 +97,15 @@ class Http3WebTransportStream final : public Http3StreamBase,
     SEND_DONE,
   } mSendState{WAITING_TO_ACTIVATE};
 
+  enum RecvStreamState {
+    BEFORE_READING,
+    READING,
+    RECEIVED_FIN,
+    RECV_DONE
+  } mRecvState{BEFORE_READING};
+
   nsresult mSocketOutCondition = NS_ERROR_NOT_INITIALIZED;
+  nsresult mSocketInCondition = NS_ERROR_NOT_INITIALIZED;
 
   std::function<void(Result<RefPtr<Http3WebTransportStream>, nsresult>&&)>
       mStreamReadyCallback;
@@ -89,13 +114,18 @@ class Http3WebTransportStream final : public Http3StreamBase,
   nsCOMPtr<nsIAsyncInputStream> mSendStreamPipeIn;
   nsCOMPtr<nsIAsyncOutputStream> mSendStreamPipeOut MOZ_GUARDED_BY(mMutex);
 
-  uint64_t mTotalWritten = 0;
+  nsCOMPtr<nsIAsyncInputStream> mReceiveStreamPipeIn MOZ_GUARDED_BY(mMutex);
+  nsCOMPtr<nsIAsyncOutputStream> mReceiveStreamPipeOut;
+
   uint64_t mTotalSent = 0;
+  uint64_t mTotalReceived = 0;
   // TODO: neqo doesn't expose this information for now.
   uint64_t mTotalAcknowledged = 0;
   bool mSendFin{false};
   // The error code used to reset the stream. Should be only set once.
   Maybe<uint8_t> mResetError;
+  // The error code used for STOP_SENDING. Should be only set once.
+  Maybe<uint8_t> mStopSendingError;
 };
 
 }  // namespace mozilla::net

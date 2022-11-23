@@ -11,14 +11,17 @@ interface WebTransportSessionEventListener;
 interface nsIWebTransportStreamCallback;
 interface nsIWebTransportBidirectionalStream;
 interface nsIWebTransportSendStream;
+interface nsIWebTransportReceiveStream;
 
 %{C++
 namespace mozilla::net {
 class Http3WebTransportSession;
+class Http3WebTransportStream;
 }
 %}
 
 [ptr] native Http3WebTransportSessionPtr(mozilla::net::Http3WebTransportSession);
+[ptr] native Http3WebTransportStreamPtr(mozilla::net::Http3WebTransportStream);
 
 [builtinclass, scriptable, uuid(c20d6e77-8cb1-4838-a88d-fff826080aa3)]
 interface nsIWebTransport : nsISupports {
@@ -39,8 +42,7 @@ interface nsIWebTransport : nsISupports {
   void closeSession(in uint32_t aErrorCode,
                     in ACString aReason);
 
-  // Create and open a new WebTransport stream. Returns a nsICancelable
-  // object, so the consumer can cancel this operation.
+  // Create and open a new WebTransport stream.
   void createOutgoingBidirectionalStream(in nsIWebTransportStreamCallback aListener);
   void createOutgoingUnidirectionalStream(in nsIWebTransportStreamCallback aListener);
 
@@ -60,12 +62,12 @@ interface WebTransportSessionEventListener : nsISupports {
                        in ACString aReason);
 
   // When a new stream has been received.
-  // void onIncomingBidirectionalStreamAvailable(in nsIWebTransportBidirectionalStream aStream);
-  // void onIncomingUnidirectionalStreamAvailable(in nsIWebTransportReceiveStream aStream);
+  void onIncomingBidirectionalStreamAvailable(in nsIWebTransportBidirectionalStream aStream);
+  void onIncomingUnidirectionalStreamAvailable(in nsIWebTransportReceiveStream aStream);
 
-  // When a new stream has been opened.
-  // void onOutgoingBidirectionalStreamAvailable(in nsIWebTransportBidirectionalStream aStream);
-  // void onOutgoingUnidirectionalStreamAvailable(in nsIWebTransportSendStream aStream);
+  // This is used internally to pass the reference of Http3WebTransportStream
+  // object to WebTransportSessionProxy.
+  void onIncomingStreamAvailableInternal(in Http3WebTransportStreamPtr aStream);
 
   // When a new datagram has been received.
   // void onDatagramReceived(in AUTF8String aDatagram);
