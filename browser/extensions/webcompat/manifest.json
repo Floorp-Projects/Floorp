@@ -2,8 +2,8 @@
   "manifest_version": 2,
   "name": "Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "107.0.0",
-  "applications": {
+  "version": "107.1.0",
+  "browser_specific_settings": {
     "gecko": {
       "id": "webcompat@mozilla.org",
       "strict_min_version": "59.0b5"
