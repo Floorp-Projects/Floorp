@@ -5,8 +5,9 @@
 # This script generates ProfilingCategoryList.h and profiling_categories.rs
 # files from profiling_categories.yaml.
 
-import yaml
 from collections import OrderedDict
+
+import yaml
 
 CPP_HEADER_TEMPLATE = """\
 /* This Source Code Form is subject to the terms of the Mozilla Public
