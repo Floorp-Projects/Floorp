@@ -76,6 +76,8 @@ menupopup > menu > menupopup {
   margin-top: var(--nested-margin);
 }
 
+#PlacesToolbar menupopup,
+#BMB_bookmarksPopup menupopup,
 :is(panel, menupopup)[type="arrow"] {
   appearance: none;
   background: transparent;
@@ -102,6 +104,8 @@ menupopup > menu > menupopup {
   -moz-box-orient: vertical;
 }
 
+#PlacesToolbar menupopup::part(content),
+#BMB_bookmarksPopup menupopup::part(content),
 :is(panel, menupopup)[type="arrow"]::part(content) {
   margin: 4px;
   box-shadow: var(--windows-panel-box-shadow);

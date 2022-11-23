@@ -207,6 +207,7 @@ toolbarseparator + .panel-subview-body {
   max-width: 30em;
 }
 
+#PlacesToolbar menupopup,
 #BMB_bookmarksPopup menupopup {
   appearance: none;
   background-color: transparent;
@@ -222,8 +223,6 @@ toolbarseparator + .panel-subview-body {
 }
 
 #PlacesToolbar menupopup {
-  appearance: none;
-  --panel-background: var(--arrowpanel-background);
   font: menu;
 }
 
