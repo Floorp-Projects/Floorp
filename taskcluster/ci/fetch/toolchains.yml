@@ -427,7 +427,7 @@ dump-syms:
     fetch:
         type: git
         repo: https://github.com/mozilla/dump_syms/
-        revision: c7df854b953b6ddc875afaa415ef1fb2f7bf01f6
+        revision: d9a62819fa9670bd2436c52fc26180318a67f237
 
 rust-minidump:
     description: rust-minidump 0.14.0 source code (for minidump-stackwalk)
