@@ -1821,6 +1821,13 @@ static MOZ_ALWAYS_INLINE int StringMatch(const TextChar* text, uint32_t textLen,
     return pos - text;
   }
 
+  // We use a fast two-character-wide search in Matcher below, so we need to
+  // validate that pat[1] isn't outside the latin1 range up front if the
+  // sizes are different.
+  if (sizeof(TextChar) == 1 && sizeof(PatChar) > 1 && pat[1] > 0xff) {
+    return -1;
+  }
+
   /*
    * If the text or pattern string is short, BMH will be more expensive than
    * the basic linear scan due to initialization cost and a more complex loop
