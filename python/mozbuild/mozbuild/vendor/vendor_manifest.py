@@ -25,7 +25,7 @@ from mozbuild.vendor.rewrite_mozbuild import (
     MozBuildRewriteException,
 )
 
-DEFAULT_EXCLUDE_FILES = [".git*"]
+DEFAULT_EXCLUDE_FILES = [".git*", ".git*/**"]
 DEFAULT_KEEP_FILES = ["**/moz.build", "**/moz.yaml"]
 DEFAULT_INCLUDE_FILES = []
 

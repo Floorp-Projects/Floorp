@@ -22,7 +22,6 @@ vendoring:
 
   exclude:
     # dirs
-    - .github
     - test
     # files
     - .clang-format

@@ -24,7 +24,6 @@ vendoring:
   # so just explicitly exclude what we don't want for now
   exclude:
     # dirs
-    - .github
     - cmake
     - docs
     - fuzz-in

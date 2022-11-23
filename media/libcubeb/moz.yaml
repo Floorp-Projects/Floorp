@@ -20,7 +20,6 @@ vendoring:
     - update-moz-build
   exclude:
     - .clang-format
-    - .github
     - CMakeLists.txt
     - Config.cmake.in
     - INSTALL.md

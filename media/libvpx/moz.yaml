@@ -49,8 +49,6 @@ vendoring:
   skip-vendoring-steps: ['update-moz-build']
 
   exclude:
-    - .gitattributes
-    - .gitignore
     - third_party/libwebm
     - tools/
 
