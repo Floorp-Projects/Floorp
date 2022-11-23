@@ -186,15 +186,13 @@ protected:
 
 #ifndef U_HIDE_INTERNAL_API
     /**
-     * A time type option bit mask used by getOffsetFromLocal.
+     * The time type option bit masks used by getOffsetFromLocal
      * @internal
      */
-    static constexpr int32_t kStdDstMask = kDaylight;
-    /**
-     * A time type option bit mask used by getOffsetFromLocal.
-     * @internal
-     */
-    static constexpr int32_t kFormerLatterMask = kLatter;
+    enum {
+        kStdDstMask = kDaylight,
+        kFormerLatterMask = kLatter
+    };
 #endif  /* U_HIDE_INTERNAL_API */
 
     /**

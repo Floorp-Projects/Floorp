@@ -333,7 +333,7 @@ ig{
         }
         LSL{
             "LSL",
-            "Ego loti obodo Lesotho",
+            "This is not a translation",
         }
         LYD{
             "LYD",
@@ -712,7 +712,7 @@ ig{
             other{"Ego Pound Obodo Lebanon"}
         }
         LSL{
-            other{"Ego loti obodo Lesotho"}
+            other{"This is not a translation"}
         }
         MDL{
             other{"Ego leu mba Moldova"}

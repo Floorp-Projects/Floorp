@@ -1161,26 +1161,6 @@ typedef enum UNumberFormatAttribute {
 
 } UNumberFormatAttribute;
 
-#ifndef U_HIDE_DRAFT_API
-/**
-* Returns true if the formatter supports the specified attribute and false if not.
-* @param fmt The formatter to query.
-* @param attr The attribute to query.  This can be any value of UNumberFormatterAttribute,
-* regardless of type.
-* @return True if the requested attribute is supported by the formatter; false if not.
-* @see unum_getAttribute
-* @see unum_setAttribute
-* @see unum_getDoubleAttribute
-* @see unum_setDoubleAttribute
-* @see unum_getTextAttribute
-* @see unum_setTextAttribute
-* @draft ICU 72
-*/
-U_CAPI bool U_EXPORT2
-unum_hasAttribute(const UNumberFormat*          fmt,
-          UNumberFormatAttribute  attr);
-#endif // U_HIDE_DRAFT_API
-
 /**
 * Get a numeric attribute associated with a UNumberFormat.
 * An example of a numeric attribute is the number of integer digits a formatter will produce.
@@ -1190,12 +1170,12 @@ unum_hasAttribute(const UNumberFormat*          fmt,
 * UNUM_MAX_FRACTION_DIGITS, UNUM_MIN_FRACTION_DIGITS, UNUM_FRACTION_DIGITS, UNUM_MULTIPLIER,
 * UNUM_GROUPING_SIZE, UNUM_ROUNDING_MODE, UNUM_FORMAT_WIDTH, UNUM_PADDING_POSITION, UNUM_SECONDARY_GROUPING_SIZE,
 * UNUM_SCALE, UNUM_MINIMUM_GROUPING_DIGITS.
-* @return The value of attr, or -1 if the formatter doesn't have the requested attribute.  The caller should use unum_hasAttribute() to tell if the attribute
-* is available, rather than relaying on this function returning -1.
-* @see unum_hasAttribute
+* @return The value of attr.
 * @see unum_setAttribute
 * @see unum_getDoubleAttribute
 * @see unum_setDoubleAttribute
+* @see unum_getTextAttribute
+* @see unum_setTextAttribute
 * @stable ICU 2.0
 */
 U_CAPI int32_t U_EXPORT2 
@@ -1206,7 +1186,7 @@ unum_getAttribute(const UNumberFormat*          fmt,
 * Set a numeric attribute associated with a UNumberFormat.
 * An example of a numeric attribute is the number of integer digits a formatter will produce.  If the
 * formatter does not understand the attribute, the call is ignored.  Rule-based formatters only understand
-* the lenient-parse attribute.  The caller can use unum_hasAttribute() to find out if the formatter supports the attribute.
+* the lenient-parse attribute.
 * @param fmt The formatter to set.
 * @param attr The attribute to set; one of UNUM_PARSE_INT_ONLY, UNUM_GROUPING_USED,
 * UNUM_DECIMAL_ALWAYS_SHOWN, UNUM_MAX_INTEGER_DIGITS, UNUM_MIN_INTEGER_DIGITS, UNUM_INTEGER_DIGITS,
@@ -1214,7 +1194,6 @@ unum_getAttribute(const UNumberFormat*          fmt,
 * UNUM_GROUPING_SIZE, UNUM_ROUNDING_MODE, UNUM_FORMAT_WIDTH, UNUM_PADDING_POSITION, UNUM_SECONDARY_GROUPING_SIZE,
 * UNUM_LENIENT_PARSE, UNUM_SCALE, UNUM_MINIMUM_GROUPING_DIGITS.
 * @param newValue The new value of attr.
-* @see unum_hasAttribute
 * @see unum_getAttribute
 * @see unum_getDoubleAttribute
 * @see unum_setDoubleAttribute
@@ -1231,12 +1210,10 @@ unum_setAttribute(    UNumberFormat*          fmt,
 /**
 * Get a numeric attribute associated with a UNumberFormat.
 * An example of a numeric attribute is the number of integer digits a formatter will produce.
-* If the formatter does not understand the attribute, -1 is returned.  The caller should use unum_hasAttribute()
-* to determine if the attribute is supported, rather than relying on this function returning -1.
+* If the formatter does not understand the attribute, -1 is returned.
 * @param fmt The formatter to query.
 * @param attr The attribute to query; e.g. UNUM_ROUNDING_INCREMENT.
-* @return The value of attr, or -1 if the formatter doesn't understand the attribute.
-* @see unum_hasAttribute
+* @return The value of attr.
 * @see unum_getAttribute
 * @see unum_setAttribute
 * @see unum_setDoubleAttribute
@@ -1251,12 +1228,10 @@ unum_getDoubleAttribute(const UNumberFormat*          fmt,
 /**
 * Set a numeric attribute associated with a UNumberFormat.
 * An example of a numeric attribute is the number of integer digits a formatter will produce.
-* If the formatter does not understand the attribute, this call is ignored.  The caller can use
-* unum_hasAttribute() to tell in advance whether the formatter understands the attribute.
+* If the formatter does not understand the attribute, this call is ignored.
 * @param fmt The formatter to set.
 * @param attr The attribute to set; e.g. UNUM_ROUNDING_INCREMENT.
 * @param newValue The new value of attr.
-* @see unum_hasAttribute
 * @see unum_getAttribute
 * @see unum_setAttribute
 * @see unum_getDoubleAttribute

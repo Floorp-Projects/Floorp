@@ -92,7 +92,7 @@ void FieldPositionIterator::setData(UVector32 *adopt, UErrorCode& status) {
 
 UBool FieldPositionIterator::next(FieldPosition& fp) {
   if (pos == -1) {
-    return false;
+    return FALSE;
   }
 
   // Ignore the first element of the tetrad: used for field category
@@ -105,7 +105,7 @@ UBool FieldPositionIterator::next(FieldPosition& fp) {
     pos = -1;
   }
 
-  return true;
+  return TRUE;
 }
 
 U_NAMESPACE_END

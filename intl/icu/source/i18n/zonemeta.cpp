@@ -34,21 +34,21 @@ static icu::UMutex gZoneMetaLock;
 
 // CLDR Canonical ID mapping table
 static UHashtable *gCanonicalIDCache = NULL;
-static icu::UInitOnce gCanonicalIDCacheInitOnce {};
+static icu::UInitOnce gCanonicalIDCacheInitOnce = U_INITONCE_INITIALIZER;
 
 // Metazone mapping table
 static UHashtable *gOlsonToMeta = NULL;
-static icu::UInitOnce gOlsonToMetaInitOnce {};
+static icu::UInitOnce gOlsonToMetaInitOnce = U_INITONCE_INITIALIZER;
 
 // Available metazone IDs vector and table
 static icu::UVector *gMetaZoneIDs = NULL;
 static UHashtable *gMetaZoneIDTable = NULL;
-static icu::UInitOnce gMetaZoneIDsInitOnce {};
+static icu::UInitOnce gMetaZoneIDsInitOnce = U_INITONCE_INITIALIZER;
 
 // Country info vectors
 static icu::UVector *gSingleZoneCountries = NULL;
 static icu::UVector *gMultiZonesCountries = NULL;
-static icu::UInitOnce gCountryInfoVectorsInitOnce {};
+static icu::UInitOnce gCountryInfoVectorsInitOnce = U_INITONCE_INITIALIZER;
 
 U_CDECL_BEGIN
 
@@ -85,7 +85,7 @@ static UBool U_CALLCONV zoneMeta_cleanup(void)
     gMultiZonesCountries = NULL;
     gCountryInfoVectorsInitOnce.reset();
 
-    return true;
+    return TRUE;
 }
 
 /**
@@ -266,7 +266,7 @@ ZoneMeta::getCanonicalCLDRID(const UnicodeString &tzid, UErrorCode& status) {
     }
 
     // If not, resolve CLDR canonical ID with resource data
-    UBool isInputCanonical = false;
+    UBool isInputCanonical = FALSE;
     char id[ZID_KEY_MAX + 1];
     tzid.extract(0, 0x7fffffff, id, UPRV_LENGTHOF(id), US_INV);
 
@@ -286,7 +286,7 @@ ZoneMeta::getCanonicalCLDRID(const UnicodeString &tzid, UErrorCode& status) {
         // type entry (canonical) found
         // the input is the canonical ID. resolve to const UChar*
         canonicalID = TimeZone::findID(tzid);
-        isInputCanonical = true;
+        isInputCanonical = TRUE;
     }
 
     if (canonicalID == NULL) {
@@ -328,7 +328,7 @@ ZoneMeta::getCanonicalCLDRID(const UnicodeString &tzid, UErrorCode& status) {
                     canonicalID = canonical;
                 } else {
                     canonicalID = derefer;
-                    isInputCanonical = true;
+                    isInputCanonical = TRUE;
                 }
             }
         }
@@ -373,7 +373,7 @@ ZoneMeta::getCanonicalCLDRID(const UnicodeString &tzid, UnicodeString &systemID,
         systemID.setToBogus();
         return systemID;
     }
-    systemID.setTo(true, canonicalID, -1);
+    systemID.setTo(TRUE, canonicalID, -1);
     return systemID;
 }
 
@@ -414,7 +414,7 @@ static void U_CALLCONV countryInfoVectorsInit(UErrorCode &status) {
 UnicodeString& U_EXPORT2
 ZoneMeta::getCanonicalCountry(const UnicodeString &tzid, UnicodeString &country, UBool *isPrimary /* = NULL */) {
     if (isPrimary != NULL) {
-        *isPrimary = false;
+        *isPrimary = FALSE;
     }
 
     const UChar *region = TimeZone::getRegion(tzid);
@@ -436,8 +436,8 @@ ZoneMeta::getCanonicalCountry(const UnicodeString &tzid, UnicodeString &country,
         }
 
         // Check if it was already cached
-        UBool cached = false;
-        UBool singleZone = false;
+        UBool cached = FALSE;
+        UBool singleZone = FALSE;
         umtx_lock(&gZoneMetaLock);
         {
             singleZone = cached = gSingleZoneCountries->contains((void*)region);
@@ -459,7 +459,7 @@ ZoneMeta::getCanonicalCountry(const UnicodeString &tzid, UnicodeString &country,
             int32_t idsLen = ids->count(status);
             if (U_SUCCESS(status) && idsLen == 1) {
                 // only the single zone is available for the region
-                singleZone = true;
+                singleZone = TRUE;
             }
             delete ids;
 
@@ -481,7 +481,7 @@ ZoneMeta::getCanonicalCountry(const UnicodeString &tzid, UnicodeString &country,
         }
 
         if (singleZone) {
-            *isPrimary = true;
+            *isPrimary = TRUE;
         } else {
             // Note: We may cache the primary zone map in future.
 
@@ -497,13 +497,13 @@ ZoneMeta::getCanonicalCountry(const UnicodeString &tzid, UnicodeString &country,
             const UChar *primaryZone = ures_getStringByKey(rb, regionBuf, &idLen, &status);
             if (U_SUCCESS(status)) {
                 if (tzid.compare(primaryZone, idLen) == 0) {
-                    *isPrimary = true;
+                    *isPrimary = TRUE;
                 } else {
                     // The given ID might not be a canonical ID
                     UnicodeString canonicalID;
                     TimeZone::getCanonicalID(tzid, canonicalID, status);
                     if (U_SUCCESS(status) && canonicalID.compare(primaryZone, idLen) == 0) {
-                        *isPrimary = true;
+                        *isPrimary = TRUE;
                     }
                 }
             }
@@ -516,14 +516,14 @@ ZoneMeta::getCanonicalCountry(const UnicodeString &tzid, UnicodeString &country,
 
 UnicodeString& U_EXPORT2
 ZoneMeta::getMetazoneID(const UnicodeString &tzid, UDate date, UnicodeString &result) {
-    UBool isSet = false;
+    UBool isSet = FALSE;
     const UVector *mappings = getMetazoneMappings(tzid);
     if (mappings != NULL) {
         for (int32_t i = 0; i < mappings->size(); i++) {
             OlsonToMetaMappingEntry *mzm = (OlsonToMetaMappingEntry*)mappings->elementAt(i);
             if (mzm->from <= date && mzm->to > date) {
                 result.setTo(mzm->mzid, -1);
-                isSet = true;
+                isSet = TRUE;
                 break;
             }
         }
@@ -828,10 +828,10 @@ ZoneMeta::findTimeZoneID(const UnicodeString& tzid) {
 
 TimeZone*
 ZoneMeta::createCustomTimeZone(int32_t offset) {
-    UBool negative = false;
+    UBool negative = FALSE;
     int32_t tmp = offset;
     if (offset < 0) {
-        negative = true;
+        negative = TRUE;
         tmp = -offset;
     }
     uint8_t hour, min, sec;

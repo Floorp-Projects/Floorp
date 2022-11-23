@@ -29,7 +29,7 @@ inTimeZone("America/Los_Angeles", () => {
         assertDateTime(dt, "Sat Jul 14 2018 00:00:00 GMT-0700 (Pacific Daylight Time)");
     });
     withLocale("fr", () => {
-        assertDateTime(dt, "Sat Jul 14 2018 00:00:00 GMT-0700 (heure d’été du Pacifique nord-américain)");
+        assertDateTime(dt, "Sat Jul 14 2018 00:00:00 GMT-0700 (heure d’été du Pacifique)");
     });
     withLocale("de", () => {
         assertDateTime(dt, "Sat Jul 14 2018 00:00:00 GMT-0700 (Nordamerikanische Westküsten-Sommerzeit)");

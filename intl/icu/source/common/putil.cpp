@@ -244,7 +244,7 @@ u_signBit(double d) {
  */
 UDate fakeClock_t0 = 0; /** Time to start the clock from **/
 UDate fakeClock_dt = 0; /** Offset (fake time - real time) **/
-UBool fakeClock_set = false; /** True if fake clock has spun up **/
+UBool fakeClock_set = FALSE; /** True if fake clock has spun up **/
 
 static UDate getUTCtime_real() {
     struct timeval posixTime;
@@ -269,7 +269,7 @@ static UDate getUTCtime_fake() {
             fprintf(stderr,"U_DEBUG_FAKETIME was set at compile time, but U_FAKETIME_START was not set.\n"
                     "Set U_FAKETIME_START to the number of milliseconds since 1/1/1970 to set the ICU clock.\n");
         }
-        fakeClock_set = true;
+        fakeClock_set = TRUE;
     }
     umtx_unlock(&fakeClockMutex);
 
@@ -905,7 +905,7 @@ static UBool compareBinaryFiles(const char* defaultTZFileName, const char* TZFil
     int32_t sizeFileRead;
     int32_t sizeFileToRead;
     char bufferFile[MAX_READ_SIZE];
-    UBool result = true;
+    UBool result = TRUE;
 
     if (tzInfo->defaultTZFilePtr == NULL) {
         tzInfo->defaultTZFilePtr = fopen(defaultTZFileName, "r");
@@ -925,7 +925,7 @@ static UBool compareBinaryFiles(const char* defaultTZFileName, const char* TZFil
         sizeFileLeft = sizeFile;
 
         if (sizeFile != tzInfo->defaultTZFileSize) {
-            result = false;
+            result = FALSE;
         } else {
             /* Store the data from the files in separate buffers and
              * compare each byte to determine equality.
@@ -942,7 +942,7 @@ static UBool compareBinaryFiles(const char* defaultTZFileName, const char* TZFil
 
                 sizeFileRead = fread(bufferFile, 1, sizeFileToRead, file);
                 if (memcmp(tzInfo->defaultTZBuffer + tzInfo->defaultTZPosition, bufferFile, sizeFileRead) != 0) {
-                    result = false;
+                    result = FALSE;
                     break;
                 }
                 sizeFileLeft -= sizeFileRead;
@@ -950,7 +950,7 @@ static UBool compareBinaryFiles(const char* defaultTZFileName, const char* TZFil
             }
         }
     } else {
-        result = false;
+        result = FALSE;
     }
 
     if (file != NULL) {
@@ -1189,7 +1189,7 @@ uprv_tzname(int n)
                 tzInfo->defaultTZBuffer = NULL;
                 tzInfo->defaultTZFileSize = 0;
                 tzInfo->defaultTZFilePtr = NULL;
-                tzInfo->defaultTZstatus = false;
+                tzInfo->defaultTZstatus = FALSE;
                 tzInfo->defaultTZPosition = 0;
 
                 gTimeZoneBufferPtr = searchForTZFile(TZZONEINFO, tzInfo);
@@ -1260,10 +1260,10 @@ uprv_tzname(int n)
 
 /* Get and set the ICU data directory --------------------------------------- */
 
-static icu::UInitOnce gDataDirInitOnce {};
+static icu::UInitOnce gDataDirInitOnce = U_INITONCE_INITIALIZER;
 static char *gDataDirectory = NULL;
 
-UInitOnce gTimeZoneFilesInitOnce {};
+UInitOnce gTimeZoneFilesInitOnce = U_INITONCE_INITIALIZER;
 static CharString *gTimeZoneFilesDirectory = NULL;
 
 #if U_POSIX_LOCALE || U_PLATFORM_USES_ONLY_WIN32_API
@@ -1295,7 +1295,7 @@ static UBool U_CALLCONV putil_cleanup(void)
         gCorrectedPOSIXLocaleHeapAllocated = false;
     }
 #endif
-    return true;
+    return TRUE;
 }
 
 /*
@@ -1344,16 +1344,16 @@ U_CAPI UBool U_EXPORT2
 uprv_pathIsAbsolute(const char *path)
 {
   if(!path || !*path) {
-    return false;
+    return FALSE;
   }
 
   if(*path == U_FILE_SEP_CHAR) {
-    return true;
+    return TRUE;
   }
 
 #if (U_FILE_SEP_CHAR != U_FILE_ALT_SEP_CHAR)
   if(*path == U_FILE_ALT_SEP_CHAR) {
-    return true;
+    return TRUE;
   }
 #endif
 
@@ -1361,11 +1361,11 @@ uprv_pathIsAbsolute(const char *path)
   if( (((path[0] >= 'A') && (path[0] <= 'Z')) ||
        ((path[0] >= 'a') && (path[0] <= 'z'))) &&
       path[1] == ':' ) {
-    return true;
+    return TRUE;
   }
 #endif
 
-  return false;
+  return FALSE;
 }
 
 /* Backup setting of ICU_DATA_DIR_PREFIX_ENV_VAR
@@ -1402,12 +1402,12 @@ static BOOL U_CALLCONV getIcuDataDirectoryUnderWindowsDirectory(char* directoryB
             if ((windowsPathUtf8Len + UPRV_LENGTHOF(ICU_DATA_DIR_WINDOWS)) < bufferLength) {
                 uprv_strcpy(directoryBuffer, windowsPathUtf8);
                 uprv_strcat(directoryBuffer, ICU_DATA_DIR_WINDOWS);
-                return true;
+                return TRUE;
             }
         }
     }
 
-    return false;
+    return FALSE;
 }
 #endif
 

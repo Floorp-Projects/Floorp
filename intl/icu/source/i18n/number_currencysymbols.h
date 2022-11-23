@@ -41,8 +41,6 @@ class U_I18N_API CurrencySymbols : public UMemory {
 
     UnicodeString getPluralName(StandardPlural::Form plural, UErrorCode& status) const;
 
-    bool hasEmptyCurrencySymbol() const;
-
   protected:
     // Required fields:
     CurrencyUnit fCurrency;

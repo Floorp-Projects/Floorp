@@ -278,11 +278,6 @@ my{
                 dnam{"နာနိုစက္ကန့်"}
                 other{"{0} နာနိုစက္ကန့်"}
             }
-            quarter{
-                dnam{"ကွာတား"}
-                other{"{0} ကွာတား"}
-                per{"{0}/ကွာတား"}
-            }
             second{
                 dnam{"စက္ကန့်"}
                 other{"{0} စက္ကန့်"}
@@ -387,34 +382,6 @@ my{
             dot{
                 dnam{"အစက်"}
                 other{"{0} အစက်"}
-            }
-            dot-per-centimeter{
-                dnam{"တစ်စင်တီမီတာပါ အစက်"}
-                other{"တစ်စင်တီမီတာလျှင် {0} စက်"}
-            }
-            dot-per-inch{
-                dnam{"တစ်လက်မပါ အစက်"}
-                other{"တစ်လက်မလျှင် {0} စက်"}
-            }
-            em{
-                dnam{"ပုံနှိပ်စာလုံး အရွယ်အစား"}
-                other{"{0} ems"}
-            }
-            megapixel{
-                dnam{"မီဂါပစ်ဆယ်"}
-                other{"{0} မီဂါပစ်ဆယ်"}
-            }
-            pixel{
-                dnam{"ပစ်ဆယ်"}
-                other{"{0} ပစ်ဆယ်"}
-            }
-            pixel-per-centimeter{
-                dnam{"တစ်စင်တီမီတာပါ ပစ်ဆယ်"}
-                other{"တစ်စင်တီမီတာလျှင် {0} ပစ်ဆယ်"}
-            }
-            pixel-per-inch{
-                dnam{"တစ်လက်မပါ ပစ်ဆယ်"}
-                other{"တစ်လက်မလျှင် {0} ပစ်ဆယ်"}
             }
         }
         length{
@@ -557,6 +524,10 @@ my{
                 other{"{0} ကီလိုဂရမ်"}
                 per{"တစ်ကီလိုဂရမ်လျှင် {0}"}
             }
+            metric-ton{
+                dnam{"မက်ထရစ်တန်"}
+                other{"{0} မက်ထရစ်တန်"}
+            }
             microgram{
                 dnam{"မိုက်ခရို ဂရမ်"}
                 other{"{0} မိုက်ခရို ဂရမ်"}
@@ -590,10 +561,6 @@ my{
             ton{
                 dnam{"တန်"}
                 other{"{0} တန်"}
-            }
-            tonne{
-                dnam{"မက်ထရစ်တန်"}
-                other{"{0} မက်ထရစ်တန်"}
             }
         }
         power{
@@ -967,19 +934,6 @@ my{
                 other{"{0}kWh/100km"}
             }
         }
-        graphics{
-            dot{
-                dnam{"အစက်"}
-                other{"{0} အစက်"}
-            }
-            dot-per-centimeter{
-                dnam{"dpcm"}
-            }
-            dot-per-inch{
-                dnam{"dpi"}
-                other{"{0} dpi"}
-            }
-        }
         length{
             centimeter{
                 dnam{"cm"}
@@ -989,58 +943,32 @@ my{
                 dnam{"R⊕"}
                 other{"{0}R⊕"}
             }
-            fathom{
-                other{"{0} fth"}
-            }
-            foot{
-                dnam{"ft"}
-                other{"{0}′"}
-            }
-            furlong{
-                other{"{0} fur"}
-            }
             inch{
-                dnam{"in"}
-                other{"{0}″"}
+                other{"{0} ″"}
             }
             kilometer{
                 dnam{"km"}
                 other{"{0}km"}
             }
             light-year{
-                dnam{"ly"}
-                other{"{0} ly"}
+                other{"{0} အလင်းနှစ်"}
             }
             meter{
                 dnam{"m"}
                 other{"{0} m"}
             }
-            micrometer{
-                dnam{"μm"}
-            }
             mile{
-                dnam{"mi"}
+                other{"{0}မိုင်"}
             }
             millimeter{
                 dnam{"mm"}
                 other{"{0} mm"}
             }
-            nautical-mile{
-                dnam{"nmi"}
-            }
             picometer{
                 other{"{0} pm"}
             }
-            point{
-                dnam{"pts"}
-                other{"{0} pt"}
-            }
-            solar-radius{
-                dnam{"R☉"}
-            }
             yard{
-                dnam{"yd"}
-                other{"{0} yd"}
+                other{"{0} ကိုက်"}
             }
         }
         mass{
@@ -1103,23 +1031,11 @@ my{
             }
         }
         volume{
-            cubic-centimeter{
-                dnam{"cm³"}
-            }
-            cubic-foot{
-                dnam{"ft³"}
-            }
-            cubic-inch{
-                dnam{"in³"}
-            }
             cubic-kilometer{
                 other{"{0} km³"}
             }
             cubic-mile{
                 other{"{0} mi³"}
-            }
-            cubic-yard{
-                dnam{"yd³"}
             }
             fluid-ounce-imperial{
                 other{"{0}fl oz Im"}
@@ -1470,26 +1386,13 @@ my{
         }
         graphics{
             dot{
-                dnam{"ပစ်ဆယ်"}
-                other{"{0} px"}
-            }
-            dot-per-centimeter{
-                dnam{"dpcm"}
-                other{"{0} dpcm"}
-            }
-            dot-per-inch{
-                dnam{"dpi"}
-                other{"{0} dpi"}
-            }
-            megapixel{
-                dnam{"မီဂါပစ်ဆယ်"}
-            }
-            pixel{
-                dnam{"ပစ်ဆယ်"}
+                dnam{"အစက်"}
+                other{"{0} အစက်"}
             }
         }
         length{
             astronomical-unit{
+                dnam{"နက်ခတ်တဗဒေယူနဈ"}
                 other{"{0} au"}
             }
             centimeter{
@@ -1507,17 +1410,21 @@ my{
             }
             fathom{
                 dnam{"ဖန်တမ်"}
-                other{"{0} fth"}
+                other{"{0} ဖန်တမ်"}
             }
             foot{
                 dnam{"ပေ"}
+                other{"{0} ပေ"}
+                per{"{0}/ပေ"}
             }
             furlong{
                 dnam{"ဖာလုံ"}
+                other{"{0} ဖာလုံ"}
             }
             inch{
                 dnam{"လက်မ"}
                 other{"{0} လက်မ"}
+                per{"{0}/လက်မ"}
             }
             kilometer{
                 dnam{"km"}
@@ -1534,11 +1441,12 @@ my{
                 per{"{0}/m"}
             }
             micrometer{
-                dnam{"μ မီတာ"}
+                dnam{"မိုက်ခရိုမီတာ"}
                 other{"{0} μm"}
             }
             mile{
                 dnam{"မိုင်"}
+                other{"{0} မိုင်"}
             }
             mile-scandinavian{
                 dnam{"smi"}
@@ -1553,6 +1461,7 @@ my{
                 other{"{0} nm"}
             }
             nautical-mile{
+                dnam{"ရေမိုင်"}
                 other{"{0} nmi"}
             }
             parsec{
@@ -1565,7 +1474,7 @@ my{
             }
             point{
                 dnam{"ပွိုင့်"}
-                other{"{0} pt"}
+                other{"{0} ပွိုင့်"}
             }
             solar-radius{
                 dnam{"ဆိုလာ ရာဒီ"}
@@ -1616,6 +1525,10 @@ my{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
+            metric-ton{
+                dnam{"မက်ထရစ်တန်"}
+                other{"{0} t"}
+            }
             microgram{
                 dnam{"μg"}
                 other{"{0} μg"}
@@ -1649,10 +1562,6 @@ my{
             ton{
                 dnam{"တန်"}
                 other{"{0} tn"}
-            }
-            tonne{
-                dnam{"မက်ထရစ်တန်"}
-                other{"{0} t"}
             }
         }
         power{
@@ -1805,6 +1714,7 @@ my{
                 per{"{0}/m³"}
             }
             cubic-mile{
+                dnam{"ကုဗမိုင်"}
                 other{"{0} mi³"}
             }
             cubic-yard{
@@ -1858,6 +1768,7 @@ my{
                 per{"{0}/gal Imp."}
             }
             hectoliter{
+                dnam{"ဟက်တိုလီတာ"}
                 other{"{0} hL"}
             }
             jigger{
@@ -1870,6 +1781,7 @@ my{
                 per{"{0}/l"}
             }
             megaliter{
+                dnam{"မီဂါလီတာ"}
                 other{"{0} ML"}
             }
             milliliter{

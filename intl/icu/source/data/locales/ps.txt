@@ -16,6 +16,11 @@ ps{
     ExemplarCharactersPunctuation{"[، ; \\: ! ۔ ' ‘ ( ) \\[ \\] \\{ \\} /]"}
     NumberElements{
         arabext{
+            patterns{
+                currencyFormat{"#,##0.00 ¤"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
             symbols{
                 exponential{"×۱۰^"}
                 infinity{"∞"}
@@ -35,7 +40,8 @@ ps{
             }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
-                currencyPatternAppendISO{"{0} ¤¤"}
+                currencyFormat{"#,##0.00 ¤"}
+                percentFormat{"#,##0%"}
             }
             patternsLong{
                 decimalFormat{
@@ -138,16 +144,6 @@ ps{
                     100000000000000{
                         one{"000T ¤"}
                         other{"000T ¤"}
-                    }
-                }
-                currencyFormat%alphaNextToNumber{
-                    10000000000{
-                        one{"¤ 00B"}
-                        other{"¤00B"}
-                    }
-                    100000000000{
-                        one{"¤ 000B"}
-                        other{"¤ 000B"}
                     }
                 }
                 decimalFormat{
@@ -594,7 +590,7 @@ ps{
                     "م.",
                 }
                 abbreviated%variant{
-                    "له میلاد وړاندې",
+                    "BCE",
                     "ع.پ",
                 }
                 narrow{
@@ -2157,20 +2153,6 @@ ps{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫⹁、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
-            }
-        }
-    }
-    personNames{
-        nameOrderLocales{
-            givenFirst{
-                "und",
-                "ps",
-            }
-            surnameFirst{
-                "ko",
-                "vi",
-                "yue",
-                "zh",
             }
         }
     }

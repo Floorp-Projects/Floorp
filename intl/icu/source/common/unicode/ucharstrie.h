@@ -409,7 +409,7 @@ private:
               pos_(uchars_), remainingMatchLength_(-1) {}
 
     // No assignment operator.
-    UCharsTrie &operator=(const UCharsTrie &other) = delete;
+    UCharsTrie &operator=(const UCharsTrie &other);
 
     inline void stop() {
         pos_=NULL;

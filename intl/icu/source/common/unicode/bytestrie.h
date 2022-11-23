@@ -394,7 +394,7 @@ private:
               pos_(bytes_), remainingMatchLength_(-1) {}
 
     // No assignment operator.
-    BytesTrie &operator=(const BytesTrie &other) = delete;
+    BytesTrie &operator=(const BytesTrie &other);
 
     inline void stop() {
         pos_=NULL;

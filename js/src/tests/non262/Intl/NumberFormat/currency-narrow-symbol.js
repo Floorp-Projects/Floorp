@@ -13,8 +13,8 @@ const testcases = [
             currencyDisplay: "narrowSymbol",
         },
         values: [
-            {value: 123, string: "US$123.00",
-             parts: [Currency("US$"), Integer("123"), Decimal("."), Fraction("00")]},
+            {value: 123, string: "$123.00",
+             parts: [Currency("$"), Integer("123"), Decimal("."), Fraction("00")]},
         ],
     },
 

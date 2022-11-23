@@ -9,12 +9,12 @@
  */
 
 /*
- * Created on Tue Oct 25 06:53:25 2022 from UCD data files with version info:
+ * Created on Thu Dec  2 15:20:26 2021 from UCD data files with version info:
  *
 
 # Unicode Character Database
-# Date: 2022-09-02
-# © 2022 Unicode®, Inc.
+# Date: 2021-09-10, 17:22:00 GMT [KW]
+# © 2021 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see https://www.unicode.org/terms_of_use.html
 #
@@ -24,17 +24,17 @@
 # UAX #44, "Unicode Character Database"
 # UTS #51, "Unicode Emoji"
 #
-# The UAXes and UTS #51 can be accessed at https://www.unicode.org/versions/Unicode15.0.0/
+# The UAXes and UTS #51 can be accessed at https://www.unicode.org/versions/Unicode14.0.0/
 
 This directory contains the final data files
-for the Unicode Character Database, for Version 15.0.0 of the Unicode Standard.
+for the Unicode Character Database, for Version 14.0.0 of the Unicode Standard.
 
 # IdentifierStatus.txt
-# Date: 2022-08-26, 16:49:09 GMT
+# Date: 2021-08-12, 01:13:34 GMT
 
 #
 # Unihan_Variants.txt
-# Date: 2022-08-01 16:36:07 GMT [JHJ]
+# Date: 2021-08-06 16:32:36 GMT [JHJ]
 
 # VerticalOrientation-17.txt
 # Date: 2016-10-20, 07:00:00 GMT [EM, KI, LI]
@@ -246,10 +246,8 @@ enum class Script : int16_t {
   TANGSA = 195,
   TOTO = 196,
   VITHKUQI = 197,
-  KAWI = 198,
-  NAG_MUNDARI = 199,
 
-  NUM_SCRIPT_CODES = 200,
+  NUM_SCRIPT_CODES = 198,
 
   INVALID = -1
 };

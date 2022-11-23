@@ -311,7 +311,6 @@ gd{
         CI{"An Costa Ìbhri"}
         CZ{"Poblachd na Seice"}
         FK{"Na h-Eileanan Fàclannach (Islas Malvinas)"}
-        NZ{"Aotearoa Sealainn Nuadh"}
         SZ{"Dùthaich nan Suasaidh"}
         TL{"Tìomor an Ear"}
     }
