@@ -395,13 +395,13 @@ void IonEntry::traceWeak(JSTracer* trc) {
     uint32_t* depth) const {
   switch (kind()) {
     case Kind::Ion:
-      return ionEntry().callStackAtAddr(ptr, results, depth);
+      return asIon().callStackAtAddr(ptr, results, depth);
     case Kind::Baseline:
-      return baselineEntry().callStackAtAddr(ptr, results, depth);
+      return asBaseline().callStackAtAddr(ptr, results, depth);
     case Kind::BaselineInterpreter:
-      return baselineInterpreterEntry().callStackAtAddr(ptr, results, depth);
+      return asBaselineInterpreter().callStackAtAddr(ptr, results, depth);
     case Kind::Dummy:
-      return dummyEntry().callStackAtAddr(rt, ptr, results, depth);
+      return asDummy().callStackAtAddr(rt, ptr, results, depth);
   }
   MOZ_CRASH("Invalid kind");
 }
@@ -411,14 +411,13 @@ uint32_t JitcodeGlobalEntry::callStackAtAddr(JSRuntime* rt, void* ptr,
                                              uint32_t maxResults) const {
   switch (kind()) {
     case Kind::Ion:
-      return ionEntry().callStackAtAddr(ptr, results, maxResults);
+      return asIon().callStackAtAddr(ptr, results, maxResults);
     case Kind::Baseline:
-      return baselineEntry().callStackAtAddr(ptr, results, maxResults);
+      return asBaseline().callStackAtAddr(ptr, results, maxResults);
     case Kind::BaselineInterpreter:
-      return baselineInterpreterEntry().callStackAtAddr(ptr, results,
-                                                        maxResults);
+      return asBaselineInterpreter().callStackAtAddr(ptr, results, maxResults);
     case Kind::Dummy:
-      return dummyEntry().callStackAtAddr(rt, ptr, results, maxResults);
+      return asDummy().callStackAtAddr(rt, ptr, results, maxResults);
   }
   MOZ_CRASH("Invalid kind");
 }
@@ -426,11 +425,11 @@ uint32_t JitcodeGlobalEntry::callStackAtAddr(JSRuntime* rt, void* ptr,
 uint64_t JitcodeGlobalEntry::lookupRealmID(JSRuntime* rt, void* ptr) const {
   switch (kind()) {
     case Kind::Ion:
-      return ionEntry().lookupRealmID(ptr);
+      return asIon().lookupRealmID(ptr);
     case Kind::Baseline:
-      return baselineEntry().lookupRealmID();
+      return asBaseline().lookupRealmID();
     case Kind::Dummy:
-      return dummyEntry().lookupRealmID();
+      return asDummy().lookupRealmID();
     case Kind::BaselineInterpreter:
       break;
   }
@@ -441,10 +440,10 @@ bool JitcodeGlobalEntry::trace(JSTracer* trc) {
   bool tracedAny = traceJitcode(trc);
   switch (kind()) {
     case Kind::Ion:
-      tracedAny |= ionEntry().trace(trc);
+      tracedAny |= asIon().trace(trc);
       break;
     case Kind::Baseline:
-      tracedAny |= baselineEntry().trace(trc);
+      tracedAny |= asBaseline().trace(trc);
       break;
     case Kind::BaselineInterpreter:
     case Kind::Dummy:
@@ -456,10 +455,10 @@ bool JitcodeGlobalEntry::trace(JSTracer* trc) {
 void JitcodeGlobalEntry::traceWeak(JSTracer* trc) {
   switch (kind()) {
     case Kind::Ion:
-      ionEntry().traceWeak(trc);
+      asIon().traceWeak(trc);
       break;
     case Kind::Baseline:
-      baselineEntry().traceWeak(trc);
+      asBaseline().traceWeak(trc);
       break;
     case Kind::BaselineInterpreter:
     case Kind::Dummy:
@@ -471,11 +470,11 @@ void* JitcodeGlobalEntry::canonicalNativeAddrFor(JSRuntime* rt,
                                                  void* ptr) const {
   switch (kind()) {
     case Kind::Ion:
-      return ionEntry().canonicalNativeAddrFor(ptr);
+      return asIon().canonicalNativeAddrFor(ptr);
     case Kind::Baseline:
-      return baselineEntry().canonicalNativeAddrFor(ptr);
+      return asBaseline().canonicalNativeAddrFor(ptr);
     case Kind::Dummy:
-      return dummyEntry().canonicalNativeAddrFor(rt, ptr);
+      return asDummy().canonicalNativeAddrFor(rt, ptr);
     case Kind::BaselineInterpreter:
       break;
   }
@@ -486,16 +485,16 @@ void* JitcodeGlobalEntry::canonicalNativeAddrFor(JSRuntime* rt,
 void JitcodeGlobalEntry::DestroyPolicy::operator()(JitcodeGlobalEntry* entry) {
   switch (entry->kind()) {
     case JitcodeGlobalEntry::Kind::Ion:
-      js_delete(&entry->ionEntry());
+      js_delete(&entry->asIon());
       break;
     case JitcodeGlobalEntry::Kind::Baseline:
-      js_delete(&entry->baselineEntry());
+      js_delete(&entry->asBaseline());
       break;
     case JitcodeGlobalEntry::Kind::BaselineInterpreter:
-      js_delete(&entry->baselineInterpreterEntry());
+      js_delete(&entry->asBaselineInterpreter());
       break;
     case JitcodeGlobalEntry::Kind::Dummy:
-      js_delete(&entry->dummyEntry());
+      js_delete(&entry->asDummy());
       break;
   }
 }
