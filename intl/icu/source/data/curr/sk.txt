@@ -689,7 +689,7 @@ sk{
         }
         MRU{
             "MRU",
-            "mauritánska ukija",
+            "mauritánska ouguiya",
         }
         MTL{
             "MTL",
@@ -941,7 +941,7 @@ sk{
         }
         SZL{
             "SZL",
-            "svazijské lilangeni",
+            "svazijský lilangeni",
         }
         THB{
             "THB",
@@ -2344,10 +2344,10 @@ sk{
             other{"mauritánskych ukijí (1973–2017)"}
         }
         MRU{
-            few{"mauritánske ukije"}
-            many{"mauritánskej ukije"}
-            one{"mauritánska ukija"}
-            other{"mauritánskych ukijí"}
+            few{"mauritánske ouguiye"}
+            many{"mauritánskej ouguiye"}
+            one{"mauritánska ouguiya"}
+            other{"mauritánskych ouguiyí"}
         }
         MTL{
             few{"maltské líry"}
@@ -2724,7 +2724,7 @@ sk{
         SZL{
             few{"svazijské lilangeni"}
             many{"svazijského lilangeni"}
-            one{"svazijské lilangeni"}
+            one{"svazijský lilangeni"}
             other{"svazijských lilangeni"}
         }
         THB{

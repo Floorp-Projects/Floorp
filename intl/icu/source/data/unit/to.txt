@@ -133,6 +133,10 @@ to{
             }
         }
         concentr{
+            item{
+                dnam{"kongokonga"}
+                other{"kongokonga ʻe {0}"}
+            }
             karat{
                 dnam{"kalati"}
                 other{"kalati ʻe {0}"}
@@ -278,6 +282,11 @@ to{
                 dnam{"nanosekoni"}
                 other{"nanosekoni ʻe {0}"}
             }
+            quarter{
+                dnam{"kuata"}
+                other{"kuata ʻe {0}"}
+                per{"{0} he kuata"}
+            }
             second{
                 dnam{"sekoni"}
                 other{"sekoni ʻe {0}"}
@@ -351,6 +360,9 @@ to{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kilouate-houa he kilomita ʻe 100"}
+            }
             newton{
                 dnam{"Niutoni"}
                 other{"Niutoni ʻe {0}"}
@@ -552,10 +564,6 @@ to{
                 other{"kilokalami ʻe {0}"}
                 per{"{0} he kilokalami"}
             }
-            metric-ton{
-                dnam{"toni"}
-                other{"toni ʻe {0}"}
-            }
             microgram{
                 dnam{"maikolokalami"}
                 other{"maikolokalami ʻe {0}"}
@@ -589,6 +597,10 @@ to{
             ton{
                 dnam{"toni nounou"}
                 other{"toni nounou ʻe {0}"}
+            }
+            tonne{
+                dnam{"toni"}
+                other{"toni ʻe {0}"}
             }
         }
         power{
@@ -917,6 +929,7 @@ to{
             square-meter{
                 dnam{"m²"}
                 other{"{0} m²"}
+                per{"{0}/m²"}
             }
             square-mile{
                 dnam{"mi²"}
@@ -937,6 +950,10 @@ to{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"kk"}
+                other{"kk ʻe {0}"}
+            }
             karat{
                 dnam{"kt"}
                 other{"{0} kt"}
@@ -1080,6 +1097,11 @@ to{
             nanosecond{
                 dnam{"ns"}
                 other{"{0} ns"}
+            }
+            quarter{
+                dnam{"kt"}
+                other{"{0} kt"}
+                per{"{0}/kt"}
             }
             second{
                 dnam{"s"}
@@ -1237,6 +1259,7 @@ to{
             foot{
                 dnam{"ft"}
                 other{"{0} ft"}
+                per{"{0}/ft"}
             }
             furlong{
                 dnam{"fāl"}
@@ -1346,10 +1369,6 @@ to{
                 other{"{0} kk"}
                 per{"{0}/kk"}
             }
-            metric-ton{
-                dnam{"to"}
-                other{"{0} to"}
-            }
             microgram{
                 dnam{"μk"}
                 other{"{0} μk"}
@@ -1383,6 +1402,10 @@ to{
             ton{
                 dnam{"tn"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"to"}
+                other{"{0} to"}
             }
         }
         power{
@@ -1728,6 +1751,10 @@ to{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"kkonga"}
+                other{"kkonga ʻe {0}"}
+            }
             karat{
                 dnam{"kt"}
                 other{"kt ʻe {0}"}
@@ -1871,6 +1898,11 @@ to{
             nanosecond{
                 dnam{"ns"}
                 other{"ns ʻe {0}"}
+            }
+            quarter{
+                dnam{"kuata"}
+                other{"kuata ʻe {0}"}
+                per{"{0} /kt"}
             }
             second{
                 dnam{"s"}
@@ -2144,10 +2176,6 @@ to{
                 other{"kk ʻe {0}"}
                 per{"{0}/kk"}
             }
-            metric-ton{
-                dnam{"to"}
-                other{"to ʻe {0}"}
-            }
             microgram{
                 dnam{"μk"}
                 other{"μk ʻe {0}"}
@@ -2181,6 +2209,10 @@ to{
             ton{
                 dnam{"tn"}
                 other{"tn ʻe {0}"}
+            }
+            tonne{
+                dnam{"to"}
+                other{"to ʻe {0}"}
             }
         }
         power{

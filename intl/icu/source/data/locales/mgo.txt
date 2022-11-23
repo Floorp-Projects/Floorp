@@ -71,7 +71,7 @@ mgo{
                 d{"d"}
             }
             intervalFormats{
-                fallback{"{0} – {1}"}
+                fallback{"{0} – {1}"}
             }
         }
         gregorian{
@@ -196,7 +196,7 @@ mgo{
                 }
             }
             intervalFormats{
-                fallback{"{0} – {1}"}
+                fallback{"{0} – {1}"}
             }
             monthNames{
                 format{

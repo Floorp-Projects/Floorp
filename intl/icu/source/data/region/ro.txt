@@ -311,7 +311,9 @@ ro{
         CI{"Coasta de Fildeș"}
         CZ{"Republica Cehă"}
         FK{"Insulele Falkland (Insulele Malvine)"}
+        NZ{"Aotearoa Noua Zeelandă"}
         SZ{"Swaziland"}
         TL{"Timorul de Est"}
+        TR{"Türkiye"}
     }
 }

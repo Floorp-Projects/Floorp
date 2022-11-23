@@ -39,14 +39,8 @@
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="brkitr\brkfiles.mk" />
-    <None Include="coll\colfiles.mk" />
     <None Include="makedata.mak" />
-    <None Include="misc\miscfiles.mk" />
-    <None Include="rbnf\rbnffiles.mk" />
-    <None Include="locales\resfiles.mk" />
     <None Include="..\test\testdata\testdata.mak" />
-    <None Include="translit\trnsfiles.mk" />
     <None Include="mappings\ucmcore.mk" />
     <None Include="mappings\ucmebcdic.mk" />
     <None Include="mappings\ucmfiles.mk" />

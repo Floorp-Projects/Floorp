@@ -1,11 +1,11 @@
-# DerivedNormalizationProps-14.0.0.txt
-# Date: 2021-06-04, 02:19:20 GMT
-# © 2021 Unicode®, Inc.
+# DerivedNormalizationProps-15.0.0.txt
+# Date: 2022-04-02, 01:29:03 GMT
+# © 2022 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
-# For terms of use, see http://www.unicode.org/terms_of_use.html
+# For terms of use, see https://www.unicode.org/terms_of_use.html
 #
 # Unicode Character Database
-#   For documentation, see http://www.unicode.org/reports/tr44/
+#   For documentation, see https://www.unicode.org/reports/tr44/
 
 # ================================================
 
@@ -1652,6 +1652,7 @@ FFED..FFEE    ; NFKD_QC; N
 1D7C3         ; NFKD_QC; N
 1D7C4..1D7CB  ; NFKD_QC; N
 1D7CE..1D7FF  ; NFKD_QC; N
+1E030..1E06D  ; NFKD_QC; N
 1EE00..1EE03  ; NFKD_QC; N
 1EE05..1EE1F  ; NFKD_QC; N
 1EE21..1EE22  ; NFKD_QC; N
@@ -1697,7 +1698,7 @@ FFED..FFEE    ; NFKD_QC; N
 1FBF0..1FBF9  ; NFKD_QC; N
 2F800..2FA1D  ; NFKD_QC; N
 
-# Total code points: 16967
+# Total code points: 17029
 
 # ================================================
 
@@ -2060,6 +2061,7 @@ FFED..FFEE    ; NFKC_QC; N
 1D7C3         ; NFKC_QC; N
 1D7C4..1D7CB  ; NFKC_QC; N
 1D7CE..1D7FF  ; NFKC_QC; N
+1E030..1E06D  ; NFKC_QC; N
 1EE00..1EE03  ; NFKC_QC; N
 1EE05..1EE1F  ; NFKC_QC; N
 1EE21..1EE22  ; NFKC_QC; N
@@ -2105,7 +2107,7 @@ FFED..FFEE    ; NFKC_QC; N
 1FBF0..1FBF9  ; NFKC_QC; N
 2F800..2FA1D  ; NFKC_QC; N
 
-# Total code points: 4866
+# Total code points: 4928
 
 # ================================================
 
@@ -8076,6 +8078,68 @@ FFF0..FFF8    ; NFKC_CF;
 1D7FD         ; NFKC_CF; 0037
 1D7FE         ; NFKC_CF; 0038
 1D7FF         ; NFKC_CF; 0039
+1E030         ; NFKC_CF; 0430
+1E031         ; NFKC_CF; 0431
+1E032         ; NFKC_CF; 0432
+1E033         ; NFKC_CF; 0433
+1E034         ; NFKC_CF; 0434
+1E035         ; NFKC_CF; 0435
+1E036         ; NFKC_CF; 0436
+1E037         ; NFKC_CF; 0437
+1E038         ; NFKC_CF; 0438
+1E039         ; NFKC_CF; 043A
+1E03A         ; NFKC_CF; 043B
+1E03B         ; NFKC_CF; 043C
+1E03C         ; NFKC_CF; 043E
+1E03D         ; NFKC_CF; 043F
+1E03E         ; NFKC_CF; 0440
+1E03F         ; NFKC_CF; 0441
+1E040         ; NFKC_CF; 0442
+1E041         ; NFKC_CF; 0443
+1E042         ; NFKC_CF; 0444
+1E043         ; NFKC_CF; 0445
+1E044         ; NFKC_CF; 0446
+1E045         ; NFKC_CF; 0447
+1E046         ; NFKC_CF; 0448
+1E047         ; NFKC_CF; 044B
+1E048         ; NFKC_CF; 044D
+1E049         ; NFKC_CF; 044E
+1E04A         ; NFKC_CF; A689
+1E04B         ; NFKC_CF; 04D9
+1E04C         ; NFKC_CF; 0456
+1E04D         ; NFKC_CF; 0458
+1E04E         ; NFKC_CF; 04E9
+1E04F         ; NFKC_CF; 04AF
+1E050         ; NFKC_CF; 04CF
+1E051         ; NFKC_CF; 0430
+1E052         ; NFKC_CF; 0431
+1E053         ; NFKC_CF; 0432
+1E054         ; NFKC_CF; 0433
+1E055         ; NFKC_CF; 0434
+1E056         ; NFKC_CF; 0435
+1E057         ; NFKC_CF; 0436
+1E058         ; NFKC_CF; 0437
+1E059         ; NFKC_CF; 0438
+1E05A         ; NFKC_CF; 043A
+1E05B         ; NFKC_CF; 043B
+1E05C         ; NFKC_CF; 043E
+1E05D         ; NFKC_CF; 043F
+1E05E         ; NFKC_CF; 0441
+1E05F         ; NFKC_CF; 0443
+1E060         ; NFKC_CF; 0444
+1E061         ; NFKC_CF; 0445
+1E062         ; NFKC_CF; 0446
+1E063         ; NFKC_CF; 0447
+1E064         ; NFKC_CF; 0448
+1E065         ; NFKC_CF; 044A
+1E066         ; NFKC_CF; 044B
+1E067         ; NFKC_CF; 0491
+1E068         ; NFKC_CF; 0456
+1E069         ; NFKC_CF; 0455
+1E06A         ; NFKC_CF; 045F
+1E06B         ; NFKC_CF; 04AB
+1E06C         ; NFKC_CF; A651
+1E06D         ; NFKC_CF; 04B1
 1E900         ; NFKC_CF; 1E922
 1E901         ; NFKC_CF; 1E923
 1E902         ; NFKC_CF; 1E924
@@ -8937,7 +9001,7 @@ E0080..E00FF  ; NFKC_CF;
 E0100..E01EF  ; NFKC_CF;
 E01F0..E0FFF  ; NFKC_CF;
 
-# Total code points: 10429
+# Total code points: 10491
 
 # ================================================
 
@@ -9895,6 +9959,7 @@ FFF0..FFF8    ; Changes_When_NFKC_Casefolded
 1D7C3         ; Changes_When_NFKC_Casefolded
 1D7C4..1D7CB  ; Changes_When_NFKC_Casefolded
 1D7CE..1D7FF  ; Changes_When_NFKC_Casefolded
+1E030..1E06D  ; Changes_When_NFKC_Casefolded
 1E900..1E921  ; Changes_When_NFKC_Casefolded
 1EE00..1EE03  ; Changes_When_NFKC_Casefolded
 1EE05..1EE1F  ; Changes_When_NFKC_Casefolded
@@ -9948,6 +10013,6 @@ E0080..E00FF  ; Changes_When_NFKC_Casefolded
 E0100..E01EF  ; Changes_When_NFKC_Casefolded
 E01F0..E0FFF  ; Changes_When_NFKC_Casefolded
 
-# Total code points: 10429
+# Total code points: 10491
 
 # EOF

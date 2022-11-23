@@ -1540,6 +1540,10 @@ hu{
             one{"algériai dínár"}
             other{"algériai dínár"}
         }
+        EEK{
+            one{"észt korona"}
+            other{"észt korona"}
+        }
         EGP{
             one{"egyiptomi font"}
             other{"egyiptomi font"}
@@ -1812,6 +1816,14 @@ hu{
             one{"mexikói peso"}
             other{"mexikói peso"}
         }
+        MXP{
+            one{"mexikói ezüst peso (1861–1992)"}
+            other{"mexikói ezüst peso (1861–1992)"}
+        }
+        MXV{
+            one{"mexikói befektetési egység (UDI)"}
+            other{"mexikói befektetési egység (UDI)"}
+        }
         MYR{
             one{"malajziai ringgit"}
             other{"malajziai ringgit"}
@@ -1827,6 +1839,10 @@ hu{
         NGN{
             one{"nigériai naira"}
             other{"nigériai naira"}
+        }
+        NIC{
+            one{"nicaraguai córdoba (1988–1911)"}
+            other{"nicaraguai córdoba (1988–1911)"}
         }
         NIO{
             one{"nicaraguai córdoba"}
@@ -1988,6 +2004,10 @@ hu{
             one{"szovjet rubel"}
             other{"szovjet rubel"}
         }
+        SVC{
+            one{"salvadori colón"}
+            other{"salvadori colón"}
+        }
         SYP{
             one{"szíriai font"}
             other{"szíriai font"}
@@ -2063,6 +2083,14 @@ hu{
         USD{
             one{"USA-dollár"}
             other{"USA-dollár"}
+        }
+        USN{
+            one{"USA-dollár (következő napi)"}
+            other{"USA-dollár (következő napi)"}
+        }
+        USS{
+            one{"USA-dollár (aznapi)"}
+            other{"USA-dollár (aznapi)"}
         }
         UYI{
             one{"Uruguayi peso en unidades indexadas"}

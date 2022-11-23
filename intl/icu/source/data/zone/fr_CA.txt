@@ -33,6 +33,12 @@ fr_CA{
         "America:St_Thomas"{
             ec{"Saint Thomas"}
         }
+        "America:Tegucigalpa"{
+            ec{"Tégucigalpa"}
+        }
+        "Antarctica:DumontDUrville"{
+            ec{"Dumont d’Urville"}
+        }
         "Asia:Dhaka"{
             ec{"Dacca"}
         }
@@ -56,6 +62,9 @@ fr_CA{
         }
         "Pacific:Easter"{
             ec{"île de Pâques"}
+        }
+        "Pacific:Palau"{
+            ec{"Palau"}
         }
         "meta:Acre"{
             ld{"heure avancée de l’Acre"}
@@ -207,6 +216,9 @@ fr_CA{
             ld{"heure avancée de Brasilia"}
             lg{"heure de Brasilia"}
             ls{"heure normale de Brasilia"}
+        }
+        "meta:Brunei"{
+            ls{"heure du Brunéi"}
         }
         "meta:Cape_Verde"{
             ld{"heure avancée du Cap-Vert"}
@@ -393,6 +405,9 @@ fr_CA{
             sd{"HAT"}
             sg{"HT"}
             ss{"HNT"}
+        }
+        "meta:Niue"{
+            ls{"heure de Nioué"}
         }
         "meta:Norfolk"{
             ld{"heure avancée de l’île Norfolk"}

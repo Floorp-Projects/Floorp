@@ -1882,6 +1882,47 @@ lt{
                 one{"{0} nanosekundė"}
                 other{"{0} nanosekundžių"}
             }
+            quarter{
+                case{
+                    accusative{
+                        few{"{0} ketvirčius"}
+                        many{"{0} ketvirčio"}
+                        one{"{0} ketvirtį"}
+                        other{"{0} ketvirčių"}
+                    }
+                    dative{
+                        few{"{0} ketvirčiams"}
+                        many{"{0} ketvirčio"}
+                        one{"{0} ketvirčiui"}
+                        other{"{0} ketvirčių"}
+                    }
+                    genitive{
+                        few{"{0} ketvirčių"}
+                        many{"{0} ketvirčio"}
+                        one{"{0} ketvirčio"}
+                        other{"{0} ketvirčių"}
+                    }
+                    instrumental{
+                        few{"{0} ketvirčiais"}
+                        many{"{0} ketvirčio"}
+                        one{"{0} ketvirčiu"}
+                        other{"{0} ketvirčių"}
+                    }
+                    locative{
+                        few{"{0} ketvirčiuose"}
+                        many{"{0} ketvirčio"}
+                        one{"{0} ketvirtyje"}
+                        other{"{0} ketvirčių"}
+                    }
+                }
+                dnam{"ketvirtis"}
+                few{"{0} ketvirčiai"}
+                gender{"masculine"}
+                many{"{0} ketvirčio"}
+                one{"{0} ketvirtis"}
+                other{"{0} ketvirčių"}
+                per{"{0}/ketv."}
+            }
             second{
                 case{
                     accusative{
@@ -3521,46 +3562,6 @@ lt{
                 other{"{0} kilogramų"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                case{
-                    accusative{
-                        few{"{0} metrines tonas"}
-                        many{"{0} metrinės tonos"}
-                        one{"{0} metrinę toną"}
-                        other{"{0} metrinių tonų"}
-                    }
-                    dative{
-                        few{"{0} metrinėms tonoms"}
-                        many{"{0} metrinės tonos"}
-                        one{"{0} metrinei tonai"}
-                        other{"{0} metrinių tonų"}
-                    }
-                    genitive{
-                        few{"{0} metrinių tonų"}
-                        many{"{0} metrinės tonos"}
-                        one{"{0} metrinės tonos"}
-                        other{"{0} metrinių tonų"}
-                    }
-                    instrumental{
-                        few{"{0} metrinėmis tonomis"}
-                        many{"{0} metrinės tonos"}
-                        one{"{0} metrine tona"}
-                        other{"{0} metrinių tonų"}
-                    }
-                    locative{
-                        few{"{0} metrinėse tonose"}
-                        many{"{0} metrinės tonos"}
-                        one{"{0} metrinėje tonoje"}
-                        other{"{0} metrinių tonų"}
-                    }
-                }
-                dnam{"metrinės tonos"}
-                few{"{0} metrinės tonos"}
-                gender{"feminine"}
-                many{"{0} metrinės tonos"}
-                one{"{0} metrinė tona"}
-                other{"{0} metrinių tonų"}
-            }
             microgram{
                 case{
                     accusative{
@@ -3680,6 +3681,46 @@ lt{
                 many{"{0} tonos"}
                 one{"{0} tona"}
                 other{"{0} tonų"}
+            }
+            tonne{
+                case{
+                    accusative{
+                        few{"{0} metrines tonas"}
+                        many{"{0} metrinės tonos"}
+                        one{"{0} metrinę toną"}
+                        other{"{0} metrinių tonų"}
+                    }
+                    dative{
+                        few{"{0} metrinėms tonoms"}
+                        many{"{0} metrinės tonos"}
+                        one{"{0} metrinei tonai"}
+                        other{"{0} metrinių tonų"}
+                    }
+                    genitive{
+                        few{"{0} metrinių tonų"}
+                        many{"{0} metrinės tonos"}
+                        one{"{0} metrinės tonos"}
+                        other{"{0} metrinių tonų"}
+                    }
+                    instrumental{
+                        few{"{0} metrinėmis tonomis"}
+                        many{"{0} metrinės tonos"}
+                        one{"{0} metrine tona"}
+                        other{"{0} metrinių tonų"}
+                    }
+                    locative{
+                        few{"{0} metrinėse tonose"}
+                        many{"{0} metrinės tonos"}
+                        one{"{0} metrinėje tonoje"}
+                        other{"{0} metrinių tonų"}
+                    }
+                }
+                dnam{"metrinės tonos"}
+                few{"{0} metrinės tonos"}
+                gender{"feminine"}
+                many{"{0} metrinės tonos"}
+                one{"{0} metrinė tona"}
+                other{"{0} metrinių tonų"}
             }
         }
         power{
@@ -5253,6 +5294,13 @@ lt{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
+            quarter{
+                few{"{0} ketv."}
+                many{"{0} ketv."}
+                one{"{0} ketv."}
+                other{"{0} ketv."}
+                per{"{0}/ketv."}
+            }
             second{
                 dnam{"sek."}
                 few{"{0} s"}
@@ -5964,6 +6012,14 @@ lt{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
+            quarter{
+                dnam{"ketv."}
+                few{"{0} ketv."}
+                many{"{0} ketv."}
+                one{"{0} ketv."}
+                other{"{0} ketv."}
+                per{"{0}/ketv."}
+            }
             second{
                 dnam{"sek."}
                 few{"{0} sek."}
@@ -6354,13 +6410,6 @@ lt{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"mt"}
-                few{"{0} mt"}
-                many{"{0} mt"}
-                one{"{0} mt"}
-                other{"{0} mt"}
-            }
             microgram{
                 dnam{"μg"}
                 few{"{0} μg"}
@@ -6411,6 +6460,13 @@ lt{
                 many{"{0} t"}
                 one{"{0} t"}
                 other{"{0} t"}
+            }
+            tonne{
+                dnam{"mt"}
+                few{"{0} mt"}
+                many{"{0} mt"}
+                one{"{0} mt"}
+                other{"{0} mt"}
             }
         }
         power{

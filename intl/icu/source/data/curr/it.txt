@@ -730,7 +730,7 @@ it{
         }
         PLN{
             "PLN",
-            "złoty polacco",
+            "zloty polacco",
         }
         PLZ{
             "PLZ",
@@ -1677,8 +1677,8 @@ it{
             other{"rupie pakistane"}
         }
         PLN{
-            one{"złoty polacco"}
-            other{"złoty polacchi"}
+            one{"zloty polacco"}
+            other{"zloty polacchi"}
         }
         PLZ{
             one{"złoty polacco (1950–1995)"}

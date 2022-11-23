@@ -6,9 +6,9 @@ hy{
         standard{
             Sequence{
                 "[reorder Armn]"
-                "&ք<և<<<Եւ"
+                "&եվ<<<և"
             }
-            Version{"41"}
+            Version{"42"}
         }
     }
 }

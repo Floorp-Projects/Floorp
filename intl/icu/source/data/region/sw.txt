@@ -310,6 +310,7 @@ sw{
         CI{"Ivory Coast"}
         CZ{"Jamhuri ya Cheki"}
         FK{"Visiwa vya Falkland (Islas Malvinas)"}
+        NZ{"Aotearoa Nyuzilandi"}
         SZ{"Uswazi"}
         TL{"Timor ya Mashariki"}
     }

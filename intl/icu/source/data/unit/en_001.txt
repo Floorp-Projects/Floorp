@@ -35,7 +35,7 @@ en_001{
         }
         concentr{
             karat{
-                dnam{"carat"}
+                dnam{"carats"}
                 one{"{0} carat"}
                 other{"{0} carats"}
             }
@@ -168,15 +168,15 @@ en_001{
             }
         }
         mass{
-            metric-ton{
-                dnam{"tonnes"}
-                one{"{0} tonne"}
-                other{"{0} tonnes"}
-            }
             stone{
                 dnam{"stone"}
                 one{"{0} stone"}
                 other{"{0} stone"}
+            }
+            tonne{
+                dnam{"tonnes"}
+                one{"{0} tonne"}
+                other{"{0} tonnes"}
             }
         }
         pressure{
@@ -257,6 +257,11 @@ en_001{
                 dnam{"US fluid ounces"}
                 one{"{0} US fluid ounce"}
                 other{"{0} US fluid ounces"}
+            }
+            fluid-ounce-imperial{
+                dnam{"fluid ounces"}
+                one{"{0} fluid ounce"}
+                other{"{0} fluid ounces"}
             }
             gallon{
                 dnam{"US gallons"}
@@ -397,6 +402,11 @@ en_001{
                 dnam{"dsp"}
                 one{"{0}dsp"}
                 other{"{0}dsp"}
+            }
+            fluid-ounce{
+                dnam{"US fl oz"}
+                one{"{0}US fl oz"}
+                other{"{0}US fl oz"}
             }
             fluid-ounce-imperial{
                 dnam{"fl oz"}
@@ -588,6 +598,11 @@ en_001{
                 one{"{0} US fl oz"}
                 other{"{0} US fl oz"}
             }
+            fluid-ounce-imperial{
+                dnam{"fl oz"}
+                one{"{0} fl oz"}
+                other{"{0} fl oz"}
+            }
             gallon{
                 dnam{"US gal"}
                 one{"{0} US gal"}
@@ -606,6 +621,7 @@ en_001{
                 other{"{0} hl"}
             }
             jigger{
+                one{"{0} jigger"}
                 other{"{0} jiggers"}
             }
             liter{

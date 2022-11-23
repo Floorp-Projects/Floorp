@@ -246,10 +246,6 @@ mzn{
                 other{"{0} کیلوگرم"}
                 per{"{0} هر کیلوگرم دله"}
             }
-            metric-ton{
-                dnam{"متریک تُن"}
-                other{"{0} متریک تُن"}
-            }
             microgram{
                 dnam{"میکروگرم"}
                 other{"{0} میکروگرم"}
@@ -275,6 +271,10 @@ mzn{
             ton{
                 dnam{"تُن"}
                 other{"{0} تُن"}
+            }
+            tonne{
+                dnam{"متریک تُن"}
+                other{"{0} متریک تُن"}
             }
         }
         power{
@@ -756,10 +756,6 @@ mzn{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"میکروگرم"}
                 other{"{0} μg"}
@@ -785,6 +781,10 @@ mzn{
             ton{
                 dnam{"تُن"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"t"}
+                other{"{0} t"}
             }
         }
         power{

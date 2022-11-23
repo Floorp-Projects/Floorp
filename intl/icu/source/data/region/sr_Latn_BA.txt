@@ -10,31 +10,36 @@ sr_Latn_BA{
         021{"Sjeverna Amerika"}
         154{"Sjeverna Evropa"}
         AC{"ostrvo Asension"}
+        AX{"Olandska ostrva"}
+        BL{"Sen Bartelemi"}
+        BN{"Bruneji"}
+        BV{"ostrvo Buve"}
         BY{"Bjelorusija"}
         CC{"Kokosova (Kiling) ostrva"}
-        CG{"Kongo"}
         CP{"ostrvo Kliperton"}
-        CV{"Kabo Verde"}
         CZ{"Češka Republika"}
         DE{"Njemačka"}
+        FK{"Foklandska ostrva"}
+        FO{"Farska ostrva"}
         GS{"Južna Džordžija i Južna Sendvička ostrva"}
         GU{"Gvam"}
+        GW{"Gvineja Bisao"}
         HK{"Hongkong (SAO Kine)"}
         HM{"ostrvo Herd i ostrva Makdonald"}
-        KN{"Sveti Kits i Nevis"}
+        KM{"Komori"}
         KP{"Sjeverna Koreja"}
         MK{"Sjeverna Makedonija"}
-        MO{"SAR Makao"}
+        MM{"Mjanmar (Burma)"}
         MP{"Sjeverna Marijanska ostrva"}
         NF{"ostrvo Norfok"}
         NU{"Nijue"}
-        PM{"Sveti Pjer i Mikelon"}
         PS{"palestinske teritorije"}
         RE{"Reunion"}
+        TF{"Francuske južne teritorije"}
         UM{"Spoljna ostrva SAD"}
         VC{"Sveti Vinsent i Grenadini"}
-        VG{"Britanska Djevičanska Ostrva"}
-        VI{"Američka Djevičanska Ostrva"}
+        VG{"Britanska Djevičanska ostrva"}
+        VI{"Američka Djevičanska ostrva"}
     }
     Countries%variant{
         FK{"Folklandska (Malvinska) ostrva"}

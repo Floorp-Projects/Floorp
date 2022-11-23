@@ -49,7 +49,7 @@ es{
             ec{"Ceuta"}
         }
         "Africa:Conakry"{
-            ec{"Conakry"}
+            ec{"Conakri"}
         }
         "Africa:Dakar"{
             ec{"Dakar"}
@@ -754,7 +754,7 @@ es{
             ec{"Katmandú"}
         }
         "Asia:Khandyga"{
-            ec{"Khandyga"}
+            ec{"Khandiga"}
         }
         "Asia:Krasnoyarsk"{
             ec{"Krasnoyarsk"}

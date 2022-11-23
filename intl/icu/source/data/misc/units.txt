@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 units:table(nofallback){
-    cldrVersion{"41"}
+    cldrVersion{"42"}
     convertUnits{
         100-kilometer{
             factor{"100000"}
@@ -25,7 +25,7 @@ units:table(nofallback){
             target{"revolution"}
         }
         astronomical-unit{
-            factor{"149597900000"}
+            factor{"meters_per_AU"}
             target{"meter"}
         }
         atmosphere{
@@ -243,7 +243,7 @@ units:table(nofallback){
             target{"meter-per-second"}
         }
         light-year{
-            factor{"9460730000000000"}
+            factor{"speed_of_light_meters_per_second*sec_per_julian_year"}
             target{"meter"}
         }
         liter{
@@ -261,10 +261,6 @@ units:table(nofallback){
         meter{
             factor{"1"}
             target{"meter"}
-        }
-        metric-ton{
-            factor{"1000"}
-            target{"kilogram"}
         }
         mile{
             factor{"ft_to_m*5280"}
@@ -319,7 +315,7 @@ units:table(nofallback){
             target{"kilogram"}
         }
         parsec{
-            factor{"30856780000000000"}
+            factor{"meters_per_AU*60*60*180/PI"}
             target{"meter"}
         }
         pascal{
@@ -382,6 +378,10 @@ units:table(nofallback){
             factor{"gal_imp_to_m3/4"}
             target{"cubic-meter"}
         }
+        quarter{
+            factor{"1/4"}
+            target{"year"}
+        }
         radian{
             factor{"1/2*PI"}
             target{"revolution"}
@@ -426,6 +426,10 @@ units:table(nofallback){
             factor{"lb_to_kg*2000"}
             target{"kilogram"}
         }
+        tonne{
+            factor{"1000"}
+            target{"kilogram"}
+        }
         volt{
             factor{"1"}
             target{"kilogram-square-meter-per-cubic-second-ampere"}
@@ -468,6 +472,9 @@ units:table(nofallback){
         in3_to_m3{"ft3_to_m3/12*12*12"}
         item_per_mole{"6.02214076E+23"}
         lb_to_kg{"0.45359237"}
+        meters_per_AU{"149597870700"}
+        sec_per_julian_year{"31557600"}
+        speed_of_light_meters_per_second{"299792458"}
     }
     unitPreferenceData{
         "area"{
@@ -1405,7 +1412,7 @@ units:table(nofallback){
             "default"{
                 001{
                     {
-                        unit{"metric-ton"}
+                        unit{"tonne"}
                     }
                     {
                         unit{"kilogram"}

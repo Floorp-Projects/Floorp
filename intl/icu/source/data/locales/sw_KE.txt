@@ -5,6 +5,10 @@ sw_KE{
     ExemplarCharacters{"[a b c d e f g h i j k l m n o p q r s t u v w x y z]"}
     NumberElements{
         latn{
+            patterns{
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
+                currencyPatternAppendISO{"{0} ¤¤"}
+            }
             patternsLong{
                 decimalFormat{
                     1000{
@@ -161,10 +165,42 @@ sw_KE{
                 "d MMM y G",
                 "dd/MM/y GGGGG",
                 "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} 'saa' {0}",
                 "{1} 'saa' {0}",
                 "{1}, {0}",
                 "{1}, {0}",
+            }
+        }
+        gregorian{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM y",
+                "d MMMM y",
+                "d MMM y",
+                "dd/MM/y",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
+                "{1} 'saa' {0}",
+                "{1} 'saa' {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                GyMd{"d/M/y G"}
             }
         }
     }

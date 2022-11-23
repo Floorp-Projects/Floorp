@@ -15,4 +15,395 @@ en_CH{
             }
         }
     }
+    calendar{
+        buddhist{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd.MM.y GGGGG",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                GyMd{"dd.MM.y GGGGG"}
+                MEd{"E, dd.MM"}
+                Md{"dd.MM"}
+                yyyyM{"MM.y GGGGG"}
+                yyyyMEd{"E, dd.MM.y GGGGG"}
+                yyyyMd{"dd.MM.y GGGGG"}
+            }
+        }
+        chinese{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM r(U)",
+                "d MMMM r(U)",
+                "d MMM r",
+                "dd.MM.r",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                MEd{"E, dd.MM"}
+                UM{"M.U"}
+                UMd{"dd.MM.U"}
+                yyyyM{"MM.r"}
+                yyyyMEd{"E, dd.MM.r"}
+                yyyyMd{"dd.MM.r"}
+            }
+        }
+        coptic{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd.MM.y GGGGG",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                GyMd{"dd.MM.y GGGGG"}
+                MEd{"E, dd.MM"}
+                Md{"dd.MM"}
+                yyyyM{"MM.y GGGGG"}
+                yyyyMEd{"E, dd.MM.y GGGGG"}
+                yyyyMd{"dd.MM.y GGGGG"}
+            }
+        }
+        dangi{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM r(U)",
+                "d MMMM r(U)",
+                "d MMM r",
+                "dd.MM.r",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                MEd{"E, dd.MM"}
+                Md{"dd.MM"}
+                UM{"M.U"}
+                UMd{"dd.MM.U"}
+                yyyyM{"MM.r"}
+                yyyyMEd{"E, dd.MM.r"}
+                yyyyMd{"dd.MM.r"}
+            }
+        }
+        ethiopic{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd.MM.y GGGGG",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                GyMd{"dd.MM.y GGGGG"}
+                MEd{"E, dd.MM"}
+                Md{"dd.MM"}
+                yyyyM{"MM.y GGGGG"}
+                yyyyMEd{"E, dd.MM.y GGGGG"}
+                yyyyMd{"dd.MM.y GGGGG"}
+            }
+        }
+        ethiopic-amete-alem{
+            availableFormats{
+                GyMd{"dd.MM.y GGGGG"}
+                MEd{"E, dd.MM"}
+                Md{"dd.MM"}
+                yyyyM{"MM.y GGGGG"}
+                yyyyMEd{"E, dd.MM.y GGGGG"}
+                yyyyMd{"dd.MM.y GGGGG"}
+            }
+        }
+        generic{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd.MM.y GGGGG",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                GyMd{"dd.MM.y GGGGG"}
+                MEd{"E, dd.MM"}
+                Md{"dd.MM"}
+                yyyyM{"MM.y GGGGG"}
+                yyyyMEd{"E, dd.MM.y GGGGG"}
+                yyyyMd{"dd.MM.y GGGGG"}
+            }
+        }
+        gregorian{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM y",
+                "d MMMM y",
+                "d MMM y",
+                "dd.MM.y",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                GyMd{"d.M.y G"}
+                MEd{"E, dd.MM"}
+                MMdd{"dd.MM"}
+                Md{"dd.MM"}
+                yM{"MM.y"}
+                yMEd{"E, dd.MM.y"}
+                yMd{"dd.MM.y"}
+            }
+        }
+        hebrew{
+            availableFormats{
+                yyyyM{"MM.y GGGGG"}
+                yyyyMEd{"E, dd.MM.y GGGGG"}
+                yyyyMd{"dd.MM.y GGGGG"}
+            }
+        }
+        indian{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd.MM.y GGGGG",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                GyMd{"dd.MM.y GGGGG"}
+                MEd{"E, dd.MM"}
+                Md{"dd.MM"}
+                yyyyM{"MM.y GGGGG"}
+                yyyyMEd{"E, dd.MM.y GGGGG"}
+                yyyyMd{"dd.MM.y GGGGG"}
+            }
+        }
+        islamic{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd.MM.y GGGGG",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                GyMd{"dd.MM.y GGGGG"}
+                MEd{"E dd.MM"}
+                Md{"dd.MM"}
+                yyyyM{"MM.y GGGGG"}
+                yyyyMEd{"E, dd.MM.y GGGGG"}
+                yyyyMd{"dd.MM.y GGGGG"}
+            }
+        }
+        islamic-civil{
+            availableFormats{
+                GyMd{"dd.MM.y GGGGG"}
+                MEd{"E dd.MM"}
+                Md{"dd.MM"}
+                yyyyM{"MM.y GGGGG"}
+                yyyyMEd{"E, dd.MM.y GGGGG"}
+                yyyyMd{"dd.MM.y GGGGG"}
+            }
+        }
+        islamic-rgsa{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd.MM.y GGGGG",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                GyMd{"dd.MM.y GGGGG"}
+                MEd{"E dd.MM"}
+                Md{"dd.MM"}
+                yyyyM{"MM.y GGGGG"}
+                yyyyMEd{"E, dd.MM.y GGGGG"}
+                yyyyMd{"dd.MM.y GGGGG"}
+            }
+        }
+        islamic-tbla{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd.MM.y GGGGG",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                GyMd{"dd.MM.y GGGGG"}
+                MEd{"E dd.MM"}
+                Md{"dd.MM"}
+                yyyyM{"MM.y GGGGG"}
+                yyyyMEd{"E, dd.MM.y GGGGG"}
+                yyyyMd{"dd.MM.y GGGGG"}
+            }
+        }
+        islamic-umalqura{
+            availableFormats{
+                GyMd{"dd.MM.y GGGGG"}
+                MEd{"E dd.MM"}
+                Md{"dd.MM"}
+                yyyyM{"MM.y GGGGG"}
+                yyyyMEd{"E, dd.MM.y GGGGG"}
+                yyyyMd{"dd.MM.y GGGGG"}
+            }
+        }
+        japanese{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, MMMM d, y G",
+                "MMMM d, y G",
+                "MMM d, y G",
+                "M.d.y GGGGG",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                GyMd{"dd.MM.y GGGGG"}
+                MEd{"E, dd.MM"}
+                Md{"dd.MM"}
+                yyyyM{"MM.y GGGGG"}
+                yyyyMEd{"E, dd.MM.y GGGGG"}
+                yyyyMd{"dd.MM.y GGGGG"}
+            }
+        }
+        persian{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd.MM.y GGGGG",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                GyMd{"dd.MM.y GGGGG"}
+                MEd{"E, dd.MM"}
+                Md{"dd.MM"}
+                yyyyM{"MM.y GGGGG"}
+                yyyyMEd{"E, dd.MM.y GGGGG"}
+                yyyyMd{"dd.MM.y GGGGG"}
+            }
+        }
+        roc{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd.MM.y GGGGG",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                GyMd{"dd.MM.y GGGGG"}
+                MEd{"E, dd.MM"}
+                Md{"dd.MM"}
+                yyyyM{"MM.y GGGGG"}
+                yyyyMEd{"E, dd.MM.y GGGGG"}
+                yyyyMd{"dd.MM.y GGGGG"}
+            }
+        }
+    }
 }

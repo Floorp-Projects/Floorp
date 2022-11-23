@@ -483,9 +483,6 @@ it{
         "America:Ojinaga"{
             ec{"Ojinaga"}
         }
-        "America:Panama"{
-            ec{"Panamá"}
-        }
         "America:Pangnirtung"{
             ec{"Pangnirtung"}
         }
@@ -862,7 +859,7 @@ it{
             ec{"Tomsk"}
         }
         "Asia:Ulaanbaatar"{
-            ec{"Ulaanbaatar"}
+            ec{"Ulan Bator"}
         }
         "Asia:Urumqi"{
             ec{"Urumqi"}
@@ -1145,9 +1142,6 @@ it{
         "Indian:Chagos"{
             ec{"Chagos"}
         }
-        "Indian:Christmas"{
-            ec{"Natale"}
-        }
         "Indian:Cocos"{
             ec{"Cocos"}
         }
@@ -1219,6 +1213,9 @@ it{
         }
         "Pacific:Johnston"{
             ec{"Johnston"}
+        }
+        "Pacific:Kanton"{
+            ec{"Canton"}
         }
         "Pacific:Kiritimati"{
             ec{"Kiritimati"}
@@ -1649,6 +1646,11 @@ it{
             ld{"Ora legale di Lord Howe"}
             lg{"Ora di Lord Howe"}
             ls{"Ora standard di Lord Howe"}
+        }
+        "meta:Macau"{
+            ld{"Ora legale di Macao"}
+            lg{"Ora di Macao"}
+            ls{"Ora standard di Macao"}
         }
         "meta:Macquarie"{
             ls{"Ora dell’Isola Macquarie"}

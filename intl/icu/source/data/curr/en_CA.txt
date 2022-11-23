@@ -41,7 +41,7 @@ en_CA{
         }
         SHP{
             "SHP",
-            "St Helena Pound",
+            "Saint Helena Pound",
         }
         STN{
             "STN",
@@ -57,14 +57,17 @@ en_CA{
         }
         USD{
             "US$",
-            "U.S. Dollar",
+            "US Dollar",
+        }
+        XXX{
+            "¤",
+            "unknown currency",
         }
     }
+    Currencies%narrow{
+        USD{"US$"}
+    }
     CurrencyPlurals{
-        AED{
-            one{"U.A.E. dirham"}
-            other{"U.A.E. dirhams"}
-        }
         AFN{
             one{"Afghan afghani"}
             other{"Afghan afghanis"}
@@ -85,21 +88,9 @@ en_CA{
             one{"Belarusian rouble (2000–2016)"}
             other{"Belarusian roubles (2000–2016)"}
         }
-        ETB{
-            other{"Ethiopian birr"}
-        }
-        LSL{
-            other{"Lesotho maloti"}
-        }
         LVR{
             one{"Latvian rouble"}
             other{"Latvian roubles"}
-        }
-        MGA{
-            other{"Malagasy ariary"}
-        }
-        MVR{
-            other{"Maldivian rufiyaa"}
         }
         RUB{
             one{"Russian rouble"}
@@ -110,8 +101,8 @@ en_CA{
             other{"Russian roubles (1991–1998)"}
         }
         SHP{
-            one{"St Helena pound"}
-            other{"St Helena pounds"}
+            one{"Saint Helena pound"}
+            other{"Saint Helena pounds"}
         }
         STN{
             one{"São Tomé and Príncipe dobra"}
@@ -124,13 +115,6 @@ en_CA{
         TTD{
             one{"Trinidad and Tobago dollar"}
             other{"Trinidad and Tobago dollars"}
-        }
-        USD{
-            one{"U.S. dollar"}
-            other{"U.S. dollars"}
-        }
-        VUV{
-            other{"Vanuatu vatu"}
         }
     }
 }

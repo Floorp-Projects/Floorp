@@ -3,6 +3,28 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ig{
     units{
+        compound{
+            power2{
+                other{
+                    _{
+                        _{"{0} square"}
+                    }
+                }
+            }
+            power3{
+                other{
+                    _{
+                        _{"{0} cubic"}
+                    }
+                }
+            }
+        }
+        concentr{
+            item{
+                dnam{"ihe"}
+                other{"{0} ihe"}
+            }
+        }
         duration{
             century{
                 dnam{"Ọtụtụ nari afọ"}
@@ -15,6 +37,11 @@ ig{
             }
             month{
                 dnam{"Ọtụtụ Ọnwa"}
+            }
+            quarter{
+                dnam{"Nkeji Nkeano"}
+                other{"{0}/q"}
+                per{"{0}/q"}
             }
             week{
                 dnam{"Ọtụtụ Izu"}
@@ -37,7 +64,80 @@ ig{
             }
         }
     }
+    unitsNarrow{
+        concentr{
+            item{
+                dnam{"ihe"}
+                other{"{0}ihe"}
+            }
+            millimole-per-liter{
+                other{"{0}mmol/L"}
+            }
+            permille{
+                dnam{"‰"}
+                other{"{0}‰"}
+            }
+            permillion{
+                dnam{"ppm"}
+                other{"{0}ppm"}
+            }
+            permyriad{
+                dnam{"‱"}
+            }
+        }
+        duration{
+            day{
+                per{"{0}/d"}
+            }
+            hour{
+                per{"{0}/h"}
+            }
+            microsecond{
+                dnam{"μsec"}
+                other{"{0}μs"}
+            }
+            minute{
+                per{"{0}/min"}
+            }
+            month{
+                per{"{0}/m"}
+            }
+            nanosecond{
+                dnam{"ns"}
+                other{"{0}ns"}
+            }
+            quarter{
+                dnam{"qtr"}
+                other{"{0}q"}
+                per{"{0}/q"}
+            }
+            second{
+                per{"{0}/s"}
+            }
+            week{
+                per{"{0}/w"}
+            }
+        }
+        force{
+            newton{
+                other{"{0}N"}
+            }
+        }
+    }
     unitsShort{
+        concentr{
+            item{
+                dnam{"ihe"}
+                other{"{0} ihe"}
+            }
+        }
+        duration{
+            quarter{
+                dnam{"qtr"}
+                other{"{0} qtrs"}
+                per{"{0}/q"}
+            }
+        }
         volume{
             drop{
                 dnam{"dobé"}

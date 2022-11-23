@@ -337,6 +337,12 @@ tk{
                 one{"{0} nanosekunt"}
                 other{"{0} nanosekunt"}
             }
+            quarter{
+                dnam{"çärýek"}
+                one{"{0} çärýek"}
+                other{"{0} çärýek"}
+                per{"{0}/ç"}
+            }
             second{
                 dnam{"sekunt"}
                 one{"{0} sekunt"}
@@ -678,11 +684,6 @@ tk{
                 other{"{0} kilogram"}
                 per{"{0}/kilogram"}
             }
-            metric-ton{
-                dnam{"metrik tonna"}
-                one{"{0} metrik tonna"}
-                other{"{0} metrik tonna"}
-            }
             microgram{
                 dnam{"mikrogram"}
                 one{"{0} mikrogram"}
@@ -724,6 +725,11 @@ tk{
                 dnam{"tonna"}
                 one{"{0} tonna"}
                 other{"{0} tonna"}
+            }
+            tonne{
+                dnam{"metrik tonna"}
+                one{"{0} metrik tonna"}
+                other{"{0} metrik tonna"}
             }
         }
         power{
@@ -1119,6 +1125,12 @@ tk{
                 dnam{"a"}
                 one{"{0}a"}
                 other{"{0}a"}
+            }
+            quarter{
+                dnam{"çär"}
+                one{"{0}ç"}
+                other{"{0}ç"}
+                per{"{0}/ç"}
             }
             second{
                 dnam{"se"}
@@ -1541,6 +1553,12 @@ tk{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
+            quarter{
+                dnam{"çär"}
+                one{"{0} çär"}
+                other{"{0} çär"}
+                per{"{0}/ç"}
+            }
             second{
                 dnam{"sek"}
                 one{"{0} sek"}
@@ -1875,11 +1893,6 @@ tk{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -1921,6 +1934,11 @@ tk{
                 dnam{"tonna"}
                 one{"{0} tn"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

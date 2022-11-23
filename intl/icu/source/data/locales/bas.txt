@@ -63,8 +63,8 @@ bas{
                 MMMd{"d MMM"}
                 Md{"d/M"}
                 d{"d"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
                 ms{"m:ss"}
                 y{"y"}
                 yM{"M/y"}
@@ -83,8 +83,8 @@ bas{
                 "I ɓugajɔp",
             }
             AmPmMarkersAbbr{
-                "I bikɛ̂glà",
-                "I ɓugajɔp",
+                "I bikɛ̂glà",
+                "I ɓugajɔp",
             }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -122,8 +122,8 @@ bas{
                 MMMd{"d MMM"}
                 Md{"d/M"}
                 d{"d"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
                 ms{"m:ss"}
                 y{"y"}
                 yM{"M/y"}

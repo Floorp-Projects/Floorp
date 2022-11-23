@@ -41,7 +41,6 @@ fr_CA{
         VN{"Vietnam"}
     }
     Countries%variant{
-        CI{"République de Côte d’Ivoire"}
         FK{"îles Falkland (Malouines)"}
         TL{"Timor oriental"}
     }

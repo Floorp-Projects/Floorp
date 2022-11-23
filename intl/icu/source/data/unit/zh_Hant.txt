@@ -279,6 +279,11 @@ zh_Hant{
                 dnam{"奈秒"}
                 other{"{0} 奈秒"}
             }
+            quarter{
+                dnam{"刻"}
+                other{"{0} 刻"}
+                per{"{0}/刻"}
+            }
             second{
                 dnam{"秒"}
                 other{"{0} 秒"}
@@ -534,10 +539,6 @@ zh_Hant{
                 other{"{0} 公斤"}
                 per{"每公斤 {0}"}
             }
-            metric-ton{
-                dnam{"公噸"}
-                other{"{0} 公噸"}
-            }
             microgram{
                 dnam{"微克"}
                 other{"{0} 微克"}
@@ -571,6 +572,10 @@ zh_Hant{
             ton{
                 dnam{"美噸"}
                 other{"{0} 美噸"}
+            }
+            tonne{
+                dnam{"公噸"}
+                other{"{0} 公噸"}
             }
         }
         power{
@@ -852,7 +857,7 @@ zh_Hant{
             }
             degree{
                 dnam{"角度"}
-                other{"{0}度"}
+                other{"{0}°"}
             }
             radian{
                 dnam{"弧度"}
@@ -1058,6 +1063,11 @@ zh_Hant{
             nanosecond{
                 dnam{"奈秒"}
                 other{"{0}ns"}
+            }
+            quarter{
+                dnam{"刻"}
+                other{"{0} 刻"}
+                per{"{0}/刻"}
             }
             second{
                 dnam{"秒"}
@@ -1315,10 +1325,6 @@ zh_Hant{
                 dnam{"公斤"}
                 other{"{0} 公斤"}
             }
-            metric-ton{
-                dnam{"公噸"}
-                other{"{0}t"}
-            }
             microgram{
                 dnam{"微克"}
                 other{"{0}μg"}
@@ -1350,6 +1356,10 @@ zh_Hant{
             ton{
                 dnam{"英噸"}
                 other{"{0}tn"}
+            }
+            tonne{
+                dnam{"公噸"}
+                other{"{0}t"}
             }
         }
         power{
@@ -1844,6 +1854,11 @@ zh_Hant{
                 dnam{"奈秒"}
                 other{"{0} 奈秒"}
             }
+            quarter{
+                dnam{"刻"}
+                other{"{0} 刻"}
+                per{"{0}/刻"}
+            }
             second{
                 dnam{"秒"}
                 other{"{0} 秒"}
@@ -2086,10 +2101,6 @@ zh_Hant{
                 other{"{0} 公斤"}
                 per{"{0}/公斤"}
             }
-            metric-ton{
-                dnam{"公噸"}
-                other{"{0} 公噸"}
-            }
             microgram{
                 dnam{"微克"}
                 other{"{0} 微克"}
@@ -2123,6 +2134,10 @@ zh_Hant{
             ton{
                 dnam{"美噸"}
                 other{"{0} 美噸"}
+            }
+            tonne{
+                dnam{"公噸"}
+                other{"{0} 公噸"}
             }
         }
         power{

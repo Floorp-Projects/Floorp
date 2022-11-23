@@ -394,6 +394,7 @@ az_Cyrl{
     }
     Languages%short{
         en_GB{"инҝилис (Б.К.)"}
+        en_US{"инҝилис (АБШ)"}
     }
     Scripts{
         Cyrl{"Кирил"}

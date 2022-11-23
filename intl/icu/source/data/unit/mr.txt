@@ -1547,6 +1547,39 @@ mr{
                 one{"{0} नॅनोसेकंद"}
                 other{"{0} नॅनोसेकंद"}
             }
+            quarter{
+                case{
+                    ablative{
+                        one{"{0} तिमाहीपासून"}
+                        other{"{0} तिमाहींपासून"}
+                    }
+                    accusative{
+                        one{"{0} तिमाहीस"}
+                        other{"{0} तिमाहींनी"}
+                    }
+                    dative{
+                        one{"{0} तिमाहीला"}
+                        other{"{0} तिमाहींसाठी"}
+                    }
+                    ergative{
+                        one{"{0} तिमाहीने"}
+                        other{"{0} तिमाहींनी"}
+                    }
+                    genitive{
+                        one{"{0} तिमाहीचा"}
+                        other{"{0} तिमाहींचा"}
+                    }
+                    locative{
+                        one{"{0} तिमाहीत"}
+                        other{"{0} तिमाहींचे"}
+                    }
+                }
+                dnam{"तिमाही"}
+                gender{"feminine"}
+                one{"{0} तिमाही"}
+                other{"{0} तिमाही"}
+                per{"{0} दर तिमाही"}
+            }
             second{
                 case{
                     ablative{
@@ -2858,38 +2891,6 @@ mr{
                 other{"{0} किलोग्रॅम"}
                 per{"{0} दर किलोग्रॅम"}
             }
-            metric-ton{
-                case{
-                    ablative{
-                        one{"{0} मेट्रिक टनपासून"}
-                        other{"{0} मेट्रिक टनहून"}
-                    }
-                    accusative{
-                        one{"{0} मेट्रिक टनला"}
-                        other{"{0} मेट्रिक टनना"}
-                    }
-                    dative{
-                        one{"{0} मेट्रिक टनला"}
-                        other{"{0} मेट्रिक टनना"}
-                    }
-                    ergative{
-                        one{"{0} मेट्रिक टनने"}
-                        other{"{0} मेट्रिक टनसाठी"}
-                    }
-                    genitive{
-                        one{"{0} मेट्रिक टनचा"}
-                        other{"{0} मेट्रिक टननी"}
-                    }
-                    locative{
-                        one{"{0} मेट्रिक टनशी"}
-                        other{"{0} मेट्रिक टनचे"}
-                    }
-                }
-                dnam{"मेट्रिक टन"}
-                gender{"neuter"}
-                one{"{0} मेट्रिक टन"}
-                other{"{0} मेट्रिक टन"}
-            }
             microgram{
                 case{
                     ablative{
@@ -2985,6 +2986,38 @@ mr{
                 dnam{"टन"}
                 one{"{0} टन"}
                 other{"{0} टन"}
+            }
+            tonne{
+                case{
+                    ablative{
+                        one{"{0} मेट्रिक टनपासून"}
+                        other{"{0} मेट्रिक टनहून"}
+                    }
+                    accusative{
+                        one{"{0} मेट्रिक टनला"}
+                        other{"{0} मेट्रिक टनना"}
+                    }
+                    dative{
+                        one{"{0} मेट्रिक टनला"}
+                        other{"{0} मेट्रिक टनना"}
+                    }
+                    ergative{
+                        one{"{0} मेट्रिक टनने"}
+                        other{"{0} मेट्रिक टनसाठी"}
+                    }
+                    genitive{
+                        one{"{0} मेट्रिक टनचा"}
+                        other{"{0} मेट्रिक टननी"}
+                    }
+                    locative{
+                        one{"{0} मेट्रिक टनशी"}
+                        other{"{0} मेट्रिक टनचे"}
+                    }
+                }
+                dnam{"मेट्रिक टन"}
+                gender{"neuter"}
+                one{"{0} मेट्रिक टन"}
+                other{"{0} मेट्रिक टन"}
             }
         }
         power{
@@ -4226,6 +4259,15 @@ mr{
                 one{"{0} ली/100किमी"}
                 other{"{0} ली/100किमी"}
             }
+            mile-per-gallon{
+                one{"{0}mpg"}
+                other{"{0}mpg"}
+            }
+            mile-per-gallon-imperial{
+                dnam{"mpg UK"}
+                one{"{0}m/gUK"}
+                other{"{0}m/gUK"}
+            }
         }
         coordinate{
             dnam{"दिशा"}
@@ -4233,6 +4275,58 @@ mr{
             north{"{0}उ"}
             south{"{0}द"}
             west{"{0}प"}
+        }
+        digital{
+            byte{
+                dnam{"B"}
+                one{"{0}B"}
+                other{"{0}B"}
+            }
+            gigabit{
+                dnam{"Gb"}
+                one{"{0}Gb"}
+                other{"{0}Gb"}
+            }
+            gigabyte{
+                dnam{"GB"}
+                one{"{0}GB"}
+                other{"{0}GB"}
+            }
+            kilobit{
+                dnam{"kb"}
+                one{"{0}kb"}
+                other{"{0}kb"}
+            }
+            kilobyte{
+                dnam{"kB"}
+                one{"{0}kB"}
+                other{"{0}kB"}
+            }
+            megabit{
+                dnam{"Mb"}
+                one{"{0}Mb"}
+                other{"{0}Mb"}
+            }
+            megabyte{
+                dnam{"MB"}
+                one{"{0}MB"}
+                other{"{0}MB"}
+            }
+            petabyte{
+                dnam{"PB"}
+                one{"{0}PB"}
+                other{"{0}PB"}
+            }
+            terabit{
+                dnam{"Tb"}
+                one{"{0}Tb"}
+                other{"{0}Tb"}
+            }
+            terabyte{
+                dnam{"TB"}
+                one{"{0}TB"}
+                other{"{0}TB"}
+            }
         }
         duration{
             century{
@@ -4279,6 +4373,12 @@ mr{
                 one{"{0} नॅसे"}
                 other{"{0} नॅसे"}
             }
+            quarter{
+                dnam{"तिमाही"}
+                one{"{0}ति"}
+                other{"{0}ति"}
+                per{"{0}/तिमाही"}
+            }
             second{
                 dnam{"सेकंद"}
                 one{"{0}से"}
@@ -4312,6 +4412,11 @@ mr{
             }
             newton{
                 dnam{"N"}
+            }
+            pound-force{
+                dnam{"lbf"}
+                one{"{0}lbf"}
+                other{"{0}lbf"}
             }
         }
         graphics{
@@ -4683,7 +4788,7 @@ mr{
             10p15{"पे{0}"}
             10p18{"ए{0}"}
             10p2{"हे{0}"}
-            10p21{"झेटा.{0}"}
+            10p21{"झेटा{0}"}
             10p24{"योट{0}"}
             10p3{"कि{0}"}
             10p6{"मे{0}"}
@@ -4776,7 +4881,7 @@ mr{
                 other{"{0} mpg"}
             }
             mile-per-gallon-imperial{
-                dnam{"mpg Imp."}
+                dnam{"मैल/गॅलन इम्पि."}
                 one{"{0} mpg Imp."}
                 other{"{0} mpg Imp."}
             }
@@ -4894,6 +4999,12 @@ mr{
                 dnam{"नॅनोसेक"}
                 one{"{0} नॅसे"}
                 other{"{0} नॅसे"}
+            }
+            quarter{
+                dnam{"तिमाही"}
+                one{"{0} तिमाही"}
+                other{"{0} तिमाही"}
+                per{"{0}/तिमाही"}
             }
             second{
                 dnam{"सेकंद"}
@@ -5207,11 +5318,6 @@ mr{
                 other{"{0} किग्रॅ"}
                 per{"{0}/किग्रॅ"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -5251,6 +5357,11 @@ mr{
                 dnam{"टन"}
                 one{"{0} टन"}
                 other{"{0} टन"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

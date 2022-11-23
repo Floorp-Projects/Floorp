@@ -291,4 +291,18 @@ ff{
             dn{"Diiwaan waktu"}
         }
     }
+    personNames{
+        nameOrderLocales{
+            givenFirst{
+                "und",
+                "ff",
+            }
+            surnameFirst{
+                "ko",
+                "vi",
+                "yue",
+                "zh",
+            }
+        }
+    }
 }

@@ -74,7 +74,7 @@ jgo{
                 yyyyMd{"M.d.y G"}
             }
             intervalFormats{
-                fallback{"{0} – {1}"}
+                fallback{"{0} – {1}"}
             }
         }
         gregorian{
@@ -84,7 +84,7 @@ jgo{
             }
             AmPmMarkersAbbr{
                 "mbaꞌmbaꞌ",
-                "ŋka mbɔ́t nji",
+                "ŋka mbɔ́t nji",
             }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -188,7 +188,7 @@ jgo{
                 }
             }
             intervalFormats{
-                fallback{"{0} – {1}"}
+                fallback{"{0} – {1}"}
             }
             monthNames{
                 format{

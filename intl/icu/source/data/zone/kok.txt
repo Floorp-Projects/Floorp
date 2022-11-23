@@ -1217,6 +1217,9 @@ kok{
         "Pacific:Johnston"{
             ec{"जॉन्स्टन"}
         }
+        "Pacific:Kanton"{
+            ec{"कांटोन"}
+        }
         "Pacific:Kiritimati"{
             ec{"किरितिमाती"}
         }

@@ -331,8 +331,8 @@ uz_Cyrl{
                 EHm{"E, HH:mm"}
                 EHms{"E, HH:mm:ss"}
                 Ed{"d, E"}
-                Ehm{"E, h:mm a"}
-                Ehms{"E, h:mm:ss a"}
+                Ehm{"E, h:mm a"}
+                Ehms{"E, h:mm:ss a"}
                 Gy{"G y"}
                 GyMMM{"MMM, G y"}
                 GyMMMEd{"E, d-MMM, G y"}
@@ -354,11 +354,11 @@ uz_Cyrl{
                 MMMd{"d MMM"}
                 Md{"dd/MM"}
                 d{"d"}
-                h{"h a"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
-                hmsv{"h:mm:ss a (v)"}
-                hmv{"h:mm a (v)"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                hmsv{"h:mm:ss a (v)"}
+                hmv{"h:mm a (v)"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"MM/y"}
@@ -573,22 +573,22 @@ uz_Cyrl{
                 }
                 fallback{"{0} – {1}"}
                 h{
-                    a{"h a – h a"}
-                    h{"h–h a"}
+                    a{"h a – h a"}
+                    h{"h–h a"}
                 }
                 hm{
-                    a{"h:mm a – h:mm a"}
-                    h{"h:mm–h:mm a"}
-                    m{"h:mm–h:mm a"}
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
                 }
                 hmv{
-                    a{"h:mm a – h:mm a (v)"}
-                    h{"h:mm–h:mm a (v)"}
-                    m{"h:mm–h:mm a (v)"}
+                    a{"h:mm a – h:mm a (v)"}
+                    h{"h:mm–h:mm a (v)"}
+                    m{"h:mm–h:mm a (v)"}
                 }
                 hv{
-                    a{"h a – h a (v)"}
-                    h{"h–h a (v)"}
+                    a{"h a – h a (v)"}
+                    h{"h–h a (v)"}
                 }
                 y{
                     y{"y–y"}

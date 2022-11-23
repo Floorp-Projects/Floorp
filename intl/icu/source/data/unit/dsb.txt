@@ -463,6 +463,14 @@ dsb{
                 other{"{0} nanosekundow"}
                 two{"{0} nanosekunźe"}
             }
+            quarter{
+                dnam{"kwartale"}
+                few{"{0} kwartale"}
+                one{"{0} kwartal"}
+                other{"{0} kwartalow"}
+                per{"{0}/kwartal"}
+                two{"{0} kwartala"}
+            }
             second{
                 dnam{"sekundy"}
                 few{"{0} sekundy"}
@@ -909,13 +917,6 @@ dsb{
                 per{"{0} na kilogram"}
                 two{"{0} kilograma"}
             }
-            metric-ton{
-                dnam{"tony"}
-                few{"{0} tony"}
-                one{"{0} tona"}
-                other{"{0} tonow"}
-                two{"{0} tonje"}
-            }
             microgram{
                 dnam{"mikrogramy"}
                 few{"{0} mikrogramy"}
@@ -973,6 +974,13 @@ dsb{
                 one{"{0} ameriska tona"}
                 other{"{0} ameriskich tonow"}
                 two{"{0} ameriskej tonje"}
+            }
+            tonne{
+                dnam{"tony"}
+                few{"{0} tony"}
+                one{"{0} tona"}
+                other{"{0} tonow"}
+                two{"{0} tonje"}
             }
         }
         power{
@@ -1523,6 +1531,14 @@ dsb{
                 one{"{0} mjas."}
                 other{"{0} mjas."}
                 two{"{0} mjas."}
+            }
+            quarter{
+                dnam{"kw."}
+                few{"{0} kw."}
+                one{"{0} kw."}
+                other{"{0} kw."}
+                per{"{0}/kw."}
+                two{"{0} kw."}
             }
             second{
                 dnam{"s"}
@@ -2162,6 +2178,14 @@ dsb{
                 other{"{0} ns"}
                 two{"{0} ns"}
             }
+            quarter{
+                dnam{"kwart."}
+                few{"{0} kwart."}
+                one{"{0} kwart."}
+                other{"{0} kwart."}
+                per{"{0}/kwart."}
+                two{"{0} kwart."}
+            }
             second{
                 dnam{"sek."}
                 few{"{0} sek."}
@@ -2607,13 +2631,6 @@ dsb{
                 per{"{0}/kg"}
                 two{"{0} kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                few{"{0} t"}
-                one{"{0} t"}
-                other{"{0} t"}
-                two{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 few{"{0} μg"}
@@ -2671,6 +2688,13 @@ dsb{
                 one{"{0} tn"}
                 other{"{0} tn"}
                 two{"{0} tn"}
+            }
+            tonne{
+                dnam{"t"}
+                few{"{0} t"}
+                one{"{0} t"}
+                other{"{0} t"}
+                two{"{0} t"}
             }
         }
         power{

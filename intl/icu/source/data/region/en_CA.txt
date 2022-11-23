@@ -3,6 +3,7 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 en_CA{
     Countries{
+        057{"Micronesian region"}
         AG{"Antigua and Barbuda"}
         BA{"Bosnia and Herzegovina"}
         BL{"Saint-Barthélemy"}
@@ -13,16 +14,21 @@ en_CA{
         LC{"Saint Lucia"}
         MF{"Saint Martin"}
         PM{"Saint-Pierre-et-Miquelon"}
+        PS{"Palestinian territories"}
         SH{"Saint Helena"}
         SJ{"Svalbard and Jan Mayen"}
         ST{"São Tomé and Príncipe"}
         TC{"Turks and Caicos Islands"}
         TT{"Trinidad and Tobago"}
+        UM{"US Outlying Islands"}
         VC{"Saint Vincent and the Grenadines"}
+        VI{"US Virgin Islands"}
         WF{"Wallis and Futuna"}
+        XA{"pseudo-accents"}
+        XB{"pseudo-bidi"}
+        ZZ{"unknown region"}
     }
     Countries%short{
-        GB{"U.K."}
-        US{"U.S."}
+        MO{"Macau"}
     }
 }

@@ -59,6 +59,8 @@ ko{
             }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                accountingFormat%alphaNextToNumber{"¤ #,##0.00;(¤ #,##0.00)"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
@@ -141,6 +143,44 @@ ko{
                     }
                     100000000000000{
                         other{"¤000조"}
+                    }
+                }
+                currencyFormat%alphaNextToNumber{
+                    1000{
+                        other{"¤ 0천"}
+                    }
+                    10000{
+                        other{"¤ 0만"}
+                    }
+                    100000{
+                        other{"¤ 00만"}
+                    }
+                    1000000{
+                        other{"¤ 000만"}
+                    }
+                    10000000{
+                        other{"¤ 0000만"}
+                    }
+                    100000000{
+                        other{"¤ 0억"}
+                    }
+                    1000000000{
+                        other{"¤ 00억"}
+                    }
+                    10000000000{
+                        other{"¤ 000억"}
+                    }
+                    100000000000{
+                        other{"¤ 0000억"}
+                    }
+                    1000000000000{
+                        other{"¤ 0조"}
+                    }
+                    10000000000000{
+                        other{"¤ 00조"}
+                    }
+                    100000000000000{
+                        other{"¤ 000조"}
                     }
                 }
                 decimalFormat{
@@ -1468,8 +1508,8 @@ ko{
                     "서기",
                 }
                 wide%variant{
-                    "BCE",
-                    "CE",
+                    "기원전",
+                    "서기",
                 }
             }
             intervalFormats{
@@ -3085,6 +3125,62 @@ ko{
                 "[,٫︐﹐，]",
                 "[.․﹒．｡]",
             }
+        }
+    }
+    personNames{
+        nameOrderLocales{
+            surnameFirst{
+                "hu",
+                "ja",
+                "ko",
+                "vi",
+                "yue",
+                "zh",
+            }
+        }
+        namePattern{
+            givenFirst-long-addressing-formal{"{surname} {suffix}"}
+            givenFirst-long-addressing-informal{"{given-informal}"}
+            givenFirst-long-monogram-formal{"{given-monogram-allCaps}"}
+            givenFirst-long-monogram-informal{"{given-monogram-allCaps}"}
+            givenFirst-long-referring-formal{"{given} {given2} {surname} {suffix}"}
+            givenFirst-long-referring-informal{"{given-informal} {surname}"}
+            givenFirst-medium-addressing-formal{"{surname} {suffix}"}
+            givenFirst-medium-addressing-informal{"{given-informal}"}
+            givenFirst-medium-monogram-formal{"{given-monogram-allCaps}"}
+            givenFirst-medium-monogram-informal{"{given-monogram-allCaps}"}
+            givenFirst-medium-referring-formal{"{given} {surname} {suffix}"}
+            givenFirst-medium-referring-informal{"{given-informal} {surname}"}
+            givenFirst-short-addressing-formal{"{surname} {suffix}"}
+            givenFirst-short-addressing-informal{"{given-informal}"}
+            givenFirst-short-monogram-formal{"{given-monogram-allCaps}"}
+            givenFirst-short-monogram-informal{"{given-monogram-allCaps}"}
+            givenFirst-short-referring-formal{"{given} {surname}"}
+            givenFirst-short-referring-informal{"{given-informal} {surname}"}
+            sorting-long-referring-formal{"{surname-core}{given} {given2} {surname-prefix}"}
+            sorting-long-referring-informal{"{surname}{given-informal}"}
+            sorting-medium-referring-formal{"{surname-core}{given} {given2} {surname-prefix}"}
+            sorting-medium-referring-informal{"{surname}{given-informal}"}
+            sorting-short-referring-formal{"{surname}{given}"}
+            sorting-short-referring-informal{"{surname}{given-informal}"}
+            surnameFirst-long-addressing-formal{"{surname} {suffix}"}
+            surnameFirst-long-addressing-informal{"{given-informal}"}
+            surnameFirst-long-monogram-formal{"{given-monogram-allCaps}"}
+            surnameFirst-long-monogram-informal{"{given-monogram-allCaps}"}
+            surnameFirst-long-referring-formal{"{surname}{given} {given2} {suffix}"}
+            surnameFirst-long-referring-informal{"{surname}{given-informal}"}
+            surnameFirst-medium-addressing-formal{"{surname} {suffix}"}
+            surnameFirst-medium-addressing-informal{"{given-informal}"}
+            surnameFirst-medium-monogram-formal{"{given-monogram-allCaps}"}
+            surnameFirst-medium-monogram-informal{"{given-monogram-allCaps}"}
+            surnameFirst-medium-referring-formal{"{surname}{given} {suffix}"}
+            surnameFirst-medium-referring-informal{"{surname}{given-informal}"}
+            surnameFirst-short-addressing-formal{"{surname} {suffix}"}
+            surnameFirst-short-addressing-informal{"{given-informal}"}
+            surnameFirst-short-monogram-formal{"{given-monogram-allCaps}"}
+            surnameFirst-short-monogram-informal{"{given-monogram-allCaps}"}
+            surnameFirst-short-referring-formal{"{surname}{given}"}
+            surnameFirst-short-referring-informal{"{surname}{given-informal}"}
         }
     }
 }

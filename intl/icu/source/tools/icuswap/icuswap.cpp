@@ -141,23 +141,23 @@ main(int argc, char *argv[]) {
     data=(char *)options[OPT_OUT_TYPE].value;
     if(data[0]==0 || data[1]!=0) {
         /* the type must be exactly one letter */
-        return printUsage(pname, FALSE);
+        return printUsage(pname, false);
     }
     switch(data[0]) {
     case 'l':
-        outIsBigEndian=FALSE;
+        outIsBigEndian=false;
         outCharset=U_ASCII_FAMILY;
         break;
     case 'b':
-        outIsBigEndian=TRUE;
+        outIsBigEndian=true;
         outCharset=U_ASCII_FAMILY;
         break;
     case 'e':
-        outIsBigEndian=TRUE;
+        outIsBigEndian=true;
         outCharset=U_EBCDIC_FAMILY;
         break;
     default:
-        return printUsage(pname, FALSE);
+        return printUsage(pname, false);
     }
 
     in=out=NULL;
@@ -475,7 +475,7 @@ udata_swapPackage(const char *inFilename, const char *outFilename,
         /* swap the package names into the output charset */
         if(ds->outCharset!=U_CHARSET_FAMILY) {
             UDataSwapper *ds2;
-            ds2=udata_openSwapper(TRUE, U_CHARSET_FAMILY, TRUE, ds->outCharset, pErrorCode);
+            ds2=udata_openSwapper(true, U_CHARSET_FAMILY, true, ds->outCharset, pErrorCode);
             ds2->swapInvChars(ds2, inPkgName, inPkgNameLength, inPkgName, pErrorCode);
             ds2->swapInvChars(ds2, outPkgName, outPkgNameLength, outPkgName, pErrorCode);
             udata_closeSwapper(ds2);
@@ -581,7 +581,7 @@ udata_swapPackage(const char *inFilename, const char *outFilename,
             offset=table[0].inOffset;
             /* sort the TOC entries */
             uprv_sortArray(table, (int32_t)itemCount, (int32_t)sizeof(ToCEntry),
-                           compareToCEntries, outBytes, FALSE, pErrorCode);
+                           compareToCEntries, outBytes, false, pErrorCode);
 
             /*
              * Note: Before sorting, the inOffset values were in order.

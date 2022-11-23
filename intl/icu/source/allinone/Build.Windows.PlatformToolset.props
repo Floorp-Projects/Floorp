@@ -9,14 +9,16 @@
     <BuildToolVersion>$(VisualStudioVersion)</BuildToolVersion>
     <!-- Only use the MSBuildToolsVersion if we don't have the VisualStudioVersion and MSBuildToolsVersion is set to something other than Current. -->
     <BuildToolVersion Condition="'$(BuildToolVersion)'=='' and '$(MSBuildToolsVersion)' != 'Current'">$(MSBuildToolsVersion)</BuildToolVersion>
-    <!-- Note:
+    <!-- Version Note:
       v140 is the Visual Studio 2015 toolset. (14.0)
       v141 is the Visual Studio 2017 toolset. (15.0)
       v142 is the Visual Studio 2019 toolset. (16.0)
+      v143 is the Visual Studio 2022 toolset. (17.0)
     -->
     <AutoDetectedPlatformToolset Condition="'$(BuildToolVersion)'=='14.0'">v140</AutoDetectedPlatformToolset>
     <AutoDetectedPlatformToolset Condition="'$(BuildToolVersion)'=='15.0'">v141</AutoDetectedPlatformToolset>
     <AutoDetectedPlatformToolset Condition="'$(BuildToolVersion)'=='16.0'">v142</AutoDetectedPlatformToolset>
+    <AutoDetectedPlatformToolset Condition="'$(BuildToolVersion)'=='17.0'">v143</AutoDetectedPlatformToolset>
   </PropertyGroup>
   <PropertyGroup Label="EmptyDefaultPlatformToolset">
     <DefaultPlatformToolset Condition=" '$(DefaultPlatformToolset)' == '' ">$(AutoDetectedPlatformToolset)</DefaultPlatformToolset>
@@ -30,11 +32,11 @@
     If not already set, use the latest installed version of the Windows 10 SDK.
     The Windows 10 SDK is backwards compatible to Windows 7, as long as WINVER and _WIN32_WINNT are set before compiling.
     Note:
-      - With VS2019, using a value of "10.0" means that it will use the latest installed version.
+      - With VS2019, VS2022 using a value of "10.0" means that it will use the latest installed version.
       - With VS2017, we need to manually detect the latest SDK version from the registry.
       - With VS2015, use the Windows 8.1 SDK.
   -->
-  <PropertyGroup Condition="'$(WindowsTargetPlatformVersion)'=='' and '$(PlatformToolset)'=='v142'">
+  <PropertyGroup Condition="'$(WindowsTargetPlatformVersion)'=='' and ('$(PlatformToolset)'=='v142' or '$(PlatformToolset)'=='v143')">
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(WindowsTargetPlatformVersion)'=='' and ('$(PlatformToolset)'=='v141' or '$(AutodetectWin10SDK)'=='true')">

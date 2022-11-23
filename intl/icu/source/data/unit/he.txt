@@ -184,9 +184,6 @@ he{
                     _{
                         _{"{0} בריבוע"}
                     }
-                    feminine{
-                        _{"{0} בריבוע"}
-                    }
                 }
                 one{
                     _{
@@ -216,9 +213,6 @@ he{
             power3{
                 many{
                     _{
-                        _{"{0} מעוקב"}
-                    }
-                    feminine{
                         _{"{0} מעוקב"}
                     }
                 }
@@ -364,10 +358,10 @@ he{
             bit{
                 dnam{"ביט"}
                 gender{"masculine"}
-                many{"ביט {0}"}
-                one{"ביט {0}"}
-                other{"ביט {0}"}
-                two{"ביט {0}"}
+                many{"{0} ביט"}
+                one{"{0} ביט"}
+                other{"{0} ביט"}
+                two{"{0} ביט"}
             }
             byte{
                 dnam{"בייט"}
@@ -412,10 +406,10 @@ he{
             megabit{
                 dnam{"מגה-ביט"}
                 gender{"masculine"}
-                many{"מגה-ביט {0}"}
-                one{"מגה-ביט {0}"}
-                other{"מגה-ביט {0}"}
-                two{"מגה-ביט {0}"}
+                many{"{0} מגה-ביט"}
+                one{"{0} מגה-ביט"}
+                other{"{0} מגה-ביט"}
+                two{"{0} מגה-ביט"}
             }
             megabyte{
                 dnam{"מגה-בייט"}
@@ -436,10 +430,10 @@ he{
             terabit{
                 dnam{"טרה-ביט"}
                 gender{"masculine"}
-                many{"טרה-ביט {0}"}
-                one{"טרה-ביט {0}"}
-                other{"טרה-ביט {0}"}
-                two{"טרה-ביט {0}"}
+                many{"{0} טרה-ביט"}
+                one{"{0} טרה-ביט"}
+                other{"{0} טרה-ביט"}
+                two{"{0} טרה-ביט"}
             }
             terabyte{
                 dnam{"טרה-בייט"}
@@ -529,6 +523,14 @@ he{
                 one{"{0} ננו שנייה"}
                 other{"{0} ננו שניות"}
                 two{"{0} ננו שניות"}
+            }
+            quarter{
+                dnam{"רבעונים"}
+                gender{"masculine"}
+                many{"{0} רבעונים"}
+                one{"{0} רבעון"}
+                other{"{0} רבעונים"}
+                two{"{0} רבעונים"}
             }
             second{
                 dnam{"שניות"}
@@ -1025,14 +1027,6 @@ he{
                 per{"{0}/קילוגרם"}
                 two{"{0} קילוגרם"}
             }
-            metric-ton{
-                dnam{"טון מטרי"}
-                gender{"masculine"}
-                many{"{0} טון מטרי"}
-                one{"טון מטרי אחד"}
-                other{"{0} טון מטרי"}
-                two{"שני טון מטרי"}
-            }
             microgram{
                 dnam{"מיקרוגרם"}
                 gender{"masculine"}
@@ -1089,9 +1083,17 @@ he{
             ton{
                 dnam{"טונות"}
                 many{"{0} טונות"}
-                one{"טון אחד"}
+                one{"טונה אחת"}
                 other{"{0} טונות"}
-                two{"שני טונות"}
+                two{"שתי טונות"}
+            }
+            tonne{
+                dnam{"טון מטרי"}
+                gender{"masculine"}
+                many{"{0} טון מטרי"}
+                one{"טון מטרי אחד"}
+                other{"{0} טון מטרי"}
+                two{"שני טון מטרי"}
             }
         }
         power{
@@ -1694,6 +1696,12 @@ he{
             west{"{0} מע׳"}
         }
         digital{
+            bit{
+                many{"{0} ביט"}
+                one{"{0} ביט"}
+                other{"{0} ביט"}
+                two{"{0} ביט"}
+            }
             gigabyte{
                 dnam{"ג״ב"}
                 many{"{0} ג״ב"}
@@ -1774,6 +1782,9 @@ he{
                 one{"{0} ns"}
                 other{"{0} ns"}
                 two{"{0} ns"}
+            }
+            quarter{
+                dnam{"רבעונים"}
             }
             second{
                 dnam{"שנ׳"}
@@ -1975,13 +1986,6 @@ he{
                 per{"{0}/ק״ג"}
                 two{"{0}kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                many{"{0} t"}
-                one{"{0} t"}
-                other{"{0} t"}
-                two{"{0} t"}
-            }
             microgram{
                 dnam{"מק״ג"}
                 many{"{0} מק״ג"}
@@ -2012,11 +2016,18 @@ he{
                 per{"{0}/lb"}
             }
             ton{
-                dnam{"טון"}
+                dnam{"טונה"}
                 many{"{0} ט׳"}
                 one{"ט׳ {0}"}
                 other{"{0} ט׳"}
                 two{"{0} ט׳"}
+            }
+            tonne{
+                dnam{"t"}
+                many{"{0} t"}
+                one{"{0} t"}
+                other{"{0} t"}
+                two{"{0} t"}
             }
         }
         power{
@@ -2416,10 +2427,10 @@ he{
         digital{
             bit{
                 dnam{"ביט"}
-                many{"ביט {0}"}
-                one{"ביט {0}"}
-                other{"ביט {0}"}
-                two{"ביט {0}"}
+                many{"{0} ביט"}
+                one{"{0} ביט"}
+                other{"{0} ביט"}
+                two{"{0} ביט"}
             }
             byte{
                 dnam{"בייט"}
@@ -2559,6 +2570,9 @@ he{
                 one{"{0} ns"}
                 other{"{0} ns"}
                 two{"{0} ns"}
+            }
+            quarter{
+                dnam{"רבעונים"}
             }
             second{
                 dnam{"שנ׳"}
@@ -2931,13 +2945,6 @@ he{
                 per{"{0}/ק״ג"}
                 two{"{0} ק״ג"}
             }
-            metric-ton{
-                dnam{"t"}
-                many{"{0} t"}
-                one{"{0} t"}
-                other{"{0} t"}
-                two{"{0} t"}
-            }
             microgram{
                 dnam{"מק״ג"}
                 many{"{0} מק״ג"}
@@ -2983,11 +2990,18 @@ he{
                 two{"{0} סטון"}
             }
             ton{
-                dnam{"טון"}
+                dnam{"טונה"}
                 many{"{0} ט׳"}
                 one{"ט׳ {0}"}
                 other{"{0} ט׳"}
                 two{"{0} ט׳"}
+            }
+            tonne{
+                dnam{"t"}
+                many{"{0} t"}
+                one{"{0} t"}
+                other{"{0} t"}
+                two{"{0} t"}
             }
         }
         power{

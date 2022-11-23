@@ -382,6 +382,13 @@ bs{
                 one{"{0} nanosekunda"}
                 other{"{0} nanosekundi"}
             }
+            quarter{
+                dnam{"četvrtine"}
+                few{"{0} četvrtine"}
+                one{"{0} četvrtina"}
+                other{"{0} četvrtina"}
+                per{"{0}/čet."}
+            }
             second{
                 dnam{"sekunde"}
                 few{"{0} sekunde"}
@@ -738,12 +745,6 @@ bs{
                 other{"{0} kilograma"}
                 per{"{0} po kilogramu"}
             }
-            metric-ton{
-                dnam{"metričke tone"}
-                few{"{0} metričke tone"}
-                one{"{0} metrička tona"}
-                other{"{0} metričkih tona"}
-            }
             microgram{
                 dnam{"mikrogrami"}
                 few{"{0} mikrograma"}
@@ -793,6 +794,12 @@ bs{
                 few{"{0} tone"}
                 one{"{0} tona"}
                 other{"{0} tona"}
+            }
+            tonne{
+                dnam{"metričke tone"}
+                few{"{0} metričke tone"}
+                one{"{0} metrička tona"}
+                other{"{0} metričkih tona"}
             }
         }
         power{
@@ -1260,6 +1267,18 @@ bs{
             north{"{0}S"}
             south{"{0}J"}
             west{"{0}Z"}
+        }
+        digital{
+            bit{
+                few{"{0} bita"}
+                one{"{0} bit"}
+                other{"{0} bita"}
+            }
+            byte{
+                few{"{0} B"}
+                one{"{0} B"}
+                other{"{0} B"}
+            }
         }
         duration{
             day{
@@ -1797,6 +1816,13 @@ bs{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
+            quarter{
+                dnam{"čet."}
+                few{"{0} čet."}
+                one{"{0} čet."}
+                other{"{0} čet."}
+                per{"{0}/čet."}
+            }
             second{
                 dnam{"sekunde"}
                 few{"{0} sek."}
@@ -2171,12 +2197,6 @@ bs{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                few{"{0} t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 few{"{0} μg"}
@@ -2220,6 +2240,12 @@ bs{
                 few{"{0} tn"}
                 one{"{0} tn"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"t"}
+                few{"{0} t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

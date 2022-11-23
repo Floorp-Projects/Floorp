@@ -338,6 +338,11 @@ en{
                 one{"{0} nanosecond"}
                 other{"{0} nanoseconds"}
             }
+            quarter{
+                dnam{"quarters"}
+                one{"{0} quarter"}
+                other{"{0} quarters"}
+            }
             second{
                 dnam{"seconds"}
                 one{"{0} second"}
@@ -679,11 +684,6 @@ en{
                 other{"{0} kilograms"}
                 per{"{0} per kilogram"}
             }
-            metric-ton{
-                dnam{"metric tons"}
-                one{"{0} metric ton"}
-                other{"{0} metric tons"}
-            }
             microgram{
                 dnam{"micrograms"}
                 one{"{0} microgram"}
@@ -725,6 +725,11 @@ en{
                 dnam{"tons"}
                 one{"{0} ton"}
                 other{"{0} tons"}
+            }
+            tonne{
+                dnam{"metric tons"}
+                one{"{0} metric ton"}
+                other{"{0} metric tons"}
             }
         }
         power{
@@ -843,6 +848,11 @@ en{
                 dnam{"degrees Fahrenheit"}
                 one{"{0} degree Fahrenheit"}
                 other{"{0} degrees Fahrenheit"}
+            }
+            generic{
+                dnam{"degrees temperature"}
+                one{"{0} degree temperature"}
+                other{"{0} degrees temperature"}
             }
             kelvin{
                 dnam{"kelvins"}
@@ -1313,6 +1323,11 @@ en{
                 one{"{0}ns"}
                 other{"{0}ns"}
             }
+            quarter{
+                dnam{"qtr"}
+                one{"{0}q"}
+                other{"{0}q"}
+            }
             second{
                 dnam{"sec"}
                 one{"{0}s"}
@@ -1644,11 +1659,6 @@ en{
                 one{"{0}kg"}
                 other{"{0}kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0}t"}
-                other{"{0}t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0}μg"}
@@ -1688,6 +1698,11 @@ en{
                 dnam{"ton"}
                 one{"{0}tn"}
                 other{"{0}tn"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0}t"}
+                other{"{0}t"}
             }
         }
         power{
@@ -2286,6 +2301,11 @@ en{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
+            quarter{
+                dnam{"qtr"}
+                one{"{0} qtr"}
+                other{"{0} qtrs"}
+            }
             second{
                 dnam{"secs"}
                 one{"{0} sec"}
@@ -2602,11 +2622,6 @@ en{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -2648,6 +2663,11 @@ en{
                 dnam{"tons"}
                 one{"{0} tn"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

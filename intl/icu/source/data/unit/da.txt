@@ -643,6 +643,19 @@ da{
                 one{"{0} nanosekund"}
                 other{"{0} nanosekunder"}
             }
+            quarter{
+                case{
+                    genitive{
+                        one{"{0} kvartals"}
+                        other{"{0} kvartalers"}
+                    }
+                }
+                dnam{"kvartaler"}
+                gender{"neuter"}
+                one{"{0} kvartal"}
+                other{"{0} kvartaler"}
+                per{"{0}/pr. kvartal"}
+            }
             second{
                 case{
                     genitive{
@@ -1227,18 +1240,6 @@ da{
                 other{"{0} kilogram"}
                 per{"{0} pr. kg"}
             }
-            metric-ton{
-                case{
-                    genitive{
-                        one{"{0} tons"}
-                        other{"{0} tons"}
-                    }
-                }
-                dnam{"tons"}
-                gender{"neuter"}
-                one{"{0} ton"}
-                other{"{0} tons"}
-            }
             microgram{
                 case{
                     genitive{
@@ -1297,6 +1298,18 @@ da{
                 dnam{"short ton"}
                 one{"{0} short ton"}
                 other{"{0} short ton"}
+            }
+            tonne{
+                case{
+                    genitive{
+                        one{"{0} tons"}
+                        other{"{0} tons"}
+                    }
+                }
+                dnam{"tons"}
+                gender{"neuter"}
+                one{"{0} ton"}
+                other{"{0} tons"}
             }
         }
         power{
@@ -2009,6 +2022,12 @@ da{
                 one{"{0}ns"}
                 other{"{0}ns"}
             }
+            quarter{
+                dnam{"kvartal"}
+                one{"{0} kvt."}
+                other{"{0} kvt."}
+                per{"{0}/kvt."}
+            }
             second{
                 dnam{"sek"}
                 one{"{0} s"}
@@ -2297,10 +2316,6 @@ da{
                 one{"{0}fl oz Im"}
                 other{"{0}fl oz Im"}
             }
-            hectoliter{
-                one{"{0}hL"}
-                other{"{0}hL"}
-            }
             liter{
                 dnam{"liter"}
                 one{"{0} l"}
@@ -2309,10 +2324,6 @@ da{
             megaliter{
                 one{"{0}ML"}
                 other{"{0}ML"}
-            }
-            milliliter{
-                one{"{0}mL"}
-                other{"{0}mL"}
             }
             pint-metric{
                 one{"{0} mpt"}
@@ -2597,6 +2608,12 @@ da{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
+            quarter{
+                dnam{"kvartaler"}
+                one{"{0} kvt."}
+                other{"{0} kvt."}
+                per{"{0}/pr. kvt."}
+            }
             second{
                 dnam{"sekunder"}
                 one{"{0} sek."}
@@ -2842,11 +2859,6 @@ da{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -2881,6 +2893,11 @@ da{
                 dnam{"tn"}
                 one{"{0} tn"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

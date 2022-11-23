@@ -65,7 +65,7 @@ int main(int argc, const char *argv[]) {
     UnicodeString pattern;
     UnicodeSet set(*unsafeBackwardSet);
     set.compact();
-    set.toPattern(pattern, FALSE);
+    set.toPattern(pattern, false);
 
     if(U_SUCCESS(errorCode)) {
       // This fails (bug# ?) - which is why this method was abandoned.
@@ -87,7 +87,7 @@ int main(int argc, const char *argv[]) {
       fprintf(stderr,"===\n%s\n===\n", buf2);
     }
 
-    const UnicodeString unsafeBackwardPattern(FALSE, buf, needed);
+    const UnicodeString unsafeBackwardPattern(false, buf, needed);
   if(U_SUCCESS(errorCode)) {
     //UnicodeSet us(unsafeBackwardPattern, errorCode);
     //    fprintf(stderr, "\n%s:%d: err creating set %s\n", __FILE__, __LINE__, u_errorName(errorCode));

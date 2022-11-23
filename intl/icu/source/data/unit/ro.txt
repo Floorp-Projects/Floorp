@@ -286,7 +286,7 @@ ro{
             power3{
                 few{
                     _{
-                        _{"{0} cubi"}
+                        _{"{0} cubice"}
                         genitive{"{0} cubice"}
                     }
                     feminine{
@@ -295,7 +295,7 @@ ro{
                     }
                     masculine{
                         _{"{0} cubi"}
-                        genitive{"{0} cubice"}
+                        genitive{"{0} cubi"}
                     }
                 }
                 one{
@@ -322,8 +322,8 @@ ro{
                         genitive{"{0} cubice"}
                     }
                     masculine{
-                        _{"{0} cubice"}
-                        genitive{"{0} cubice"}
+                        _{"{0} cubi"}
+                        genitive{"{0} cubi"}
                     }
                 }
             }
@@ -341,7 +341,7 @@ ro{
                 few{"{0} itemi"}
                 gender{"masculine"}
                 one{"{0} de itemi"}
-                other{"{0} itemi"}
+                other{"{0} de itemi"}
             }
             karat{
                 case{
@@ -783,6 +783,21 @@ ro{
                 one{"{0} nanosecundă"}
                 other{"{0} de nanosecunde"}
             }
+            quarter{
+                case{
+                    genitive{
+                        few{"{0} trimestre"}
+                        one{"unui trimestru"}
+                        other{"{0} de trimestre"}
+                    }
+                }
+                dnam{"trimestre"}
+                few{"{0} trimestre"}
+                gender{"neuter"}
+                one{"{0} trimestru"}
+                other{"{0} de trimestre"}
+                per{"{0}/trim."}
+            }
             second{
                 case{
                     genitive{
@@ -980,7 +995,7 @@ ro{
                 case{
                     genitive{
                         few{"{0} kilowați-oră per 100 kilometri"}
-                        one{"{0} kilowatt-oră per 100 kilometri"}
+                        one{"unui kilowatt-oră per 100 de kilometri"}
                         other{"{0} kilowați-oră per 100 kilometri"}
                     }
                 }
@@ -1465,20 +1480,6 @@ ro{
                 other{"{0} de kilograme"}
                 per{"{0} per kilogram"}
             }
-            metric-ton{
-                case{
-                    genitive{
-                        few{"{0} tone"}
-                        one{"{0} tonă"}
-                        other{"{0} de tone"}
-                    }
-                }
-                dnam{"tone"}
-                few{"{0} tone"}
-                gender{"feminine"}
-                one{"{0} tonă"}
-                other{"{0} de tone"}
-            }
             microgram{
                 case{
                     genitive{
@@ -1544,6 +1545,20 @@ ro{
                 few{"{0} tone scurte"}
                 one{"{0} tonă scurtă"}
                 other{"{0} de tone scurte"}
+            }
+            tonne{
+                case{
+                    genitive{
+                        few{"{0} tone"}
+                        one{"{0} tonă"}
+                        other{"{0} de tone"}
+                    }
+                }
+                dnam{"tone"}
+                few{"{0} tone"}
+                gender{"feminine"}
+                one{"{0} tonă"}
+                other{"{0} de tone"}
             }
         }
         power{
@@ -2081,14 +2096,14 @@ ro{
                     genitive{
                         few{"{0} megalitri"}
                         one{"unui megalitru"}
-                        other{"{0} megalitri"}
+                        other{"{0} de megalitri"}
                     }
                 }
                 dnam{"megalitri"}
                 few{"{0} megalitri"}
                 gender{"masculine"}
                 one{"{0} megalitru"}
-                other{"{0} megalitri"}
+                other{"{0} de megalitri"}
             }
             milliliter{
                 case{
@@ -2353,6 +2368,12 @@ ro{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
+            quarter{
+                few{"{0} trim."}
+                one{"{0} trim."}
+                other{"{0} trim."}
+                per{"{0}/trim."}
+            }
             second{
                 dnam{"s"}
                 few{"{0} s"}
@@ -2539,12 +2560,6 @@ ro{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                few{"{0} t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 few{"{0} μg"}
@@ -2588,6 +2603,12 @@ ro{
                 few{"{0} t.s."}
                 one{"{0} t.s."}
                 other{"{0} t.s."}
+            }
+            tonne{
+                dnam{"t"}
+                few{"{0} t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{
@@ -3106,6 +3127,13 @@ ro{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
+            quarter{
+                dnam{"trim."}
+                few{"{0} trim."}
+                one{"{0} trim."}
+                other{"{0} trim."}
+                per{"{0}/trim."}
+            }
             second{
                 dnam{"s"}
                 few{"{0} s"}
@@ -3456,12 +3484,6 @@ ro{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                few{"{0} t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 few{"{0} μg"}
@@ -3505,6 +3527,12 @@ ro{
                 few{"{0} t.s."}
                 one{"{0} t.s."}
                 other{"{0} t.s."}
+            }
+            tonne{
+                dnam{"t"}
+                few{"{0} t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

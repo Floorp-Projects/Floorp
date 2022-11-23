@@ -18,6 +18,8 @@
 # include "private.h"
 #endif
 
+#include <stdbool.h>
+
 #include "stdio.h"	/* for stdout, stderr, perror */
 #include "string.h"	/* for strcpy */
 #include "sys/types.h"	/* for time_t */
@@ -95,14 +97,6 @@ typedef long intmax_t;
 #ifndef MAX_STRING_LENGTH
 #define MAX_STRING_LENGTH	1024
 #endif /* !defined MAX_STRING_LENGTH */
-
-#ifndef TRUE
-#define TRUE		1
-#endif /* !defined TRUE */
-
-#ifndef FALSE
-#define FALSE		0
-#endif /* !defined FALSE */
 
 #ifndef EXIT_SUCCESS
 #define EXIT_SUCCESS	0
@@ -318,7 +312,7 @@ abbrok(const char *const abbrp, const char *const zone)
 	(void) fprintf(stderr,
 		_("%s: warning: zone \"%s\" abbreviation \"%s\" %s\n"),
 		progname, zone, abbrp, wp);
-	warned = TRUE;
+	warned = true;
 }
 
 static void
@@ -543,7 +537,7 @@ main(int argc, char *argv[])
 
 		(void) strcpy(&fakeenv[0][3], argv[i]);
 		if (! (vflag | Vflag)) {
-			show(argv[i], now, FALSE);
+			show(argv[i], now, false);
 			continue;
 		}
 #ifdef ICU
@@ -575,7 +569,7 @@ main(int argc, char *argv[])
 			}
 		}
 #endif
-		warned = FALSE;
+		warned = false;
 		t = absolute_min_time;
 #ifdef ICU
 		/* skip displaying info for the lowest time, which is actually not
@@ -583,9 +577,9 @@ main(int argc, char *argv[])
 		if (!iflag) {
 #endif
 		if (!Vflag) {
-			show(argv[i], t, TRUE);
+			show(argv[i], t, true);
 			t += SECSPERDAY;
-			show(argv[i], t, TRUE);
+			show(argv[i], t, true);
 		}
 #ifdef ICU
 		}
@@ -652,9 +646,9 @@ main(int argc, char *argv[])
 		if (!Vflag) {
 			t = absolute_max_time;
 			t -= SECSPERDAY;
-			show(argv[i], t, TRUE);
+			show(argv[i], t, true);
 			t += SECSPERDAY;
-			show(argv[i], t, TRUE);
+			show(argv[i], t, true);
 		}
 #ifdef ICU
 		}
@@ -766,8 +760,8 @@ hunt(char *name, time_t lot, time_t hit)
 				lotmp = tmp;
 		} else	hit = t;
 	}
-	show(name, lot, TRUE);
-	show(name, hit, TRUE);
+	show(name, lot, true);
+	show(name, hit, true);
 	return hit;
 }
 

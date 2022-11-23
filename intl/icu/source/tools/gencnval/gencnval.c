@@ -37,9 +37,10 @@
 #include "unewdata.h"
 #include "uoptions.h"
 
+#include <ctype.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
 
 /* TODO: Need to check alias name length is less than UCNV_MAX_CONVERTER_NAME_LENGTH */
 
@@ -136,9 +137,9 @@ static uint16_t aliasLists[MAX_LIST_SIZE];
 static uint16_t aliasListsSize = 0;
 
 /* Were the standard tags declared before the aliases. */
-static UBool standardTagsUsed = FALSE;
-static UBool verbose = FALSE;
-static UBool quiet = FALSE;
+static UBool standardTagsUsed = false;
+static UBool verbose = false;
+static UBool quiet = false;
 static int lineNum = 1;
 
 static UConverterAliasOptions tableOptions = {
@@ -257,11 +258,11 @@ main(int argc, char* argv[]) {
     }
 
     if(options[VERBOSE].doesOccur) {
-        verbose = TRUE;
+        verbose = true;
     }
 
     if(options[QUIET].doesOccur) {
-        quiet = TRUE;
+        quiet = true;
     }
 
     if (argc >= 2) {
@@ -334,7 +335,7 @@ parseFile(FileStream *in) {
     char lastLine[MAX_LINE_SIZE];
     int32_t lineSize = 0;
     int32_t lastLineSize = 0;
-    UBool validParse = TRUE;
+    UBool validParse = true;
 
     lineNum = 0;
 
@@ -345,7 +346,7 @@ parseFile(FileStream *in) {
 
     /* read the list of aliases */
     while (validParse) {
-        validParse = FALSE;
+        validParse = false;
 
         /* Read non-empty lines that don't start with a space character. */
         while (T_FileStream_readLine(in, lastLine, MAX_LINE_SIZE) != NULL) {
@@ -354,7 +355,7 @@ parseFile(FileStream *in) {
                 uprv_strcpy(line + lineSize, lastLine);
                 lineSize += lastLineSize;
             } else if (lineSize > 0) {
-                validParse = TRUE;
+                validParse = true;
                 break;
             }
             lineNum++;
@@ -370,7 +371,7 @@ parseFile(FileStream *in) {
                     exit(U_PARSE_ERROR);
                 }
                 addOfficialTaggedStandards(line, lineSize);
-                standardTagsUsed = TRUE;
+                standardTagsUsed = true;
             } else {
                 if (standardTagsUsed) {
                     parseLine(line);
@@ -477,16 +478,16 @@ parseLine(const char *line) {
         if (start == 0) {
             /* add the converter as its own alias to the alias table */
             alias = converter;
-            addAlias(alias, ALL_TAG_NUM, cnv, TRUE);
+            addAlias(alias, ALL_TAG_NUM, cnv, true);
         }
         else {
             alias=allocString(&stringBlock, line+start, length);
-            addAlias(alias, ALL_TAG_NUM, cnv, FALSE);
+            addAlias(alias, ALL_TAG_NUM, cnv, false);
         }
         addToKnownAliases(alias);
 
         /* add the alias/converter pair to the alias table */
-        /* addAlias(alias, 0, cnv, FALSE);*/
+        /* addAlias(alias, 0, cnv, false);*/
 
         /* skip whitespace */
         while (line[pos] && isspace((int)line[pos])) {
@@ -530,7 +531,7 @@ static uint16_t
 getTagNumber(const char *tag, uint16_t tagLen) {
     char *atag;
     uint16_t t;
-    UBool preferredName = ((tagLen > 0) ? (tag[tagLen - 1] == '*') : (FALSE));
+    UBool preferredName = ((tagLen > 0) ? (tag[tagLen - 1] == '*') : (false));
 
     if (tagCount >= MAX_TAG_COUNT) {
         fprintf(stderr, "%s:%d: too many tags\n", path, lineNum);
@@ -665,7 +666,7 @@ addToKnownAliases(const char *alias) {
 static uint16_t
 addAlias(const char *alias, uint16_t standard, uint16_t converter, UBool defaultName) {
     uint32_t idx, idx2;
-    UBool startEmptyWithoutDefault = FALSE;
+    UBool startEmptyWithoutDefault = false;
     AliasList *aliasList;
 
     if(standard>=MAX_TAG_COUNT) {
@@ -758,7 +759,7 @@ addAlias(const char *alias, uint16_t standard, uint16_t converter, UBool default
 
     if (aliasList->aliasCount <= 0) {
         aliasList->aliasCount++;
-        startEmptyWithoutDefault = TRUE;
+        startEmptyWithoutDefault = true;
     }
     aliasList->aliases = (uint16_t *)uprv_realloc(aliasList->aliases, (aliasList->aliasCount + 1) * sizeof(aliasList->aliases[0]));
     if (startEmptyWithoutDefault) {

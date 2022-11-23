@@ -9,5 +9,8 @@ es_SV{
                 "-2"{"antier"}
             }
         }
+        dayperiod{
+            dn{"a. m./p. m."}
+        }
     }
 }

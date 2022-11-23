@@ -1636,6 +1636,29 @@ pl{
                 one{"{0} nanosekunda"}
                 other{"{0} nanosekundy"}
             }
+            quarter{
+                case{
+                    accusative{
+                        few{"{0} kwartały"}
+                        many{"{0} kwartałów"}
+                        one{"{0} kwartał"}
+                        other{"{0} kwartału"}
+                    }
+                    genitive{
+                        few{"{0} kwartałów"}
+                        many{"{0} kwartałów"}
+                        one{"{0} kwartału"}
+                        other{"{0} kwartału"}
+                    }
+                }
+                dnam{"kwartały"}
+                few{"{0} kwartały"}
+                gender{"inanimate"}
+                many{"{0} kwartałów"}
+                one{"{0} kwartał"}
+                other{"{0} kwartału"}
+                per{"{0}/kw."}
+            }
             second{
                 case{
                     accusative{
@@ -2020,7 +2043,7 @@ pl{
                     accusative{
                         few{"{0} kilowatogodziny"}
                         many{"{0} kilowatogodzin"}
-                        one{"{0} kilowatogodzina"}
+                        one{"{0} kilowatogodzinę"}
                         other{"{0} kilowatogodziny"}
                     }
                     genitive{
@@ -3206,28 +3229,6 @@ pl{
                 other{"{0} kilograma"}
                 per{"{0} na kilogram"}
             }
-            metric-ton{
-                case{
-                    accusative{
-                        few{"{0} tony"}
-                        many{"{0} ton"}
-                        one{"{0} tonę"}
-                        other{"{0} tony"}
-                    }
-                    genitive{
-                        few{"{0} ton"}
-                        many{"{0} ton"}
-                        one{"{0} tony"}
-                        other{"{0} tony"}
-                    }
-                }
-                dnam{"tony"}
-                few{"{0} tony"}
-                gender{"feminine"}
-                many{"{0} ton"}
-                one{"{0} tona"}
-                other{"{0} tony"}
-            }
             microgram{
                 case{
                     accusative{
@@ -3436,6 +3437,28 @@ pl{
                 many{"{0} krótkich ton"}
                 one{"{0} krótka tona"}
                 other{"{0} krótkiej tony"}
+            }
+            tonne{
+                case{
+                    accusative{
+                        few{"{0} tony"}
+                        many{"{0} ton"}
+                        one{"{0} tonę"}
+                        other{"{0} tony"}
+                    }
+                    genitive{
+                        few{"{0} ton"}
+                        many{"{0} ton"}
+                        one{"{0} tony"}
+                        other{"{0} tony"}
+                    }
+                }
+                dnam{"tony"}
+                few{"{0} tony"}
+                gender{"feminine"}
+                many{"{0} ton"}
+                one{"{0} tona"}
+                other{"{0} tony"}
             }
         }
         power{
@@ -5376,6 +5399,14 @@ pl{
                 other{"{0} m-ca"}
                 per{"{0}/m-c"}
             }
+            quarter{
+                dnam{"kw."}
+                few{"{0} kw."}
+                many{"{0} kw."}
+                one{"{0} kw."}
+                other{"{0} kw."}
+                per{"{0}/kw."}
+            }
             second{
                 dnam{"s"}
                 few{"{0} s"}
@@ -5432,6 +5463,9 @@ pl{
             }
         }
         mass{
+            carat{
+                dnam{"kt"}
+            }
             dalton{
                 few{"{0} u"}
                 many{"{0} u"}
@@ -5439,7 +5473,7 @@ pl{
                 other{"{0} u"}
             }
             pound{
-                dnam{"funty"}
+                dnam{"lb"}
             }
         }
         power{
@@ -5717,6 +5751,14 @@ pl{
                 one{"{0} mies."}
                 other{"{0} mies."}
                 per{"{0}/mies."}
+            }
+            quarter{
+                dnam{"kw."}
+                few{"{0} kw."}
+                many{"{0} kw."}
+                one{"{0} kw."}
+                other{"{0} kw."}
+                per{"{0}/kw."}
             }
             second{
                 dnam{"sek."}

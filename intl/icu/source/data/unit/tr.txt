@@ -337,6 +337,12 @@ tr{
                 one{"{0} nanosaniye"}
                 other{"{0} nanosaniye"}
             }
+            quarter{
+                dnam{"çeyrek"}
+                one{"{0} çeyrek"}
+                other{"{0} çeyrek"}
+                per{"{0}/çeyrek"}
+            }
             second{
                 dnam{"saniye"}
                 one{"{0} saniye"}
@@ -676,11 +682,6 @@ tr{
                 other{"{0} kilogram"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"ton"}
-                one{"{0} ton"}
-                other{"{0} ton"}
-            }
             microgram{
                 dnam{"mikrogram"}
                 one{"{0} mikrogram"}
@@ -722,6 +723,11 @@ tr{
                 dnam{"Amerikan tonu"}
                 one{"{0} Amerikan tonu"}
                 other{"{0} Amerikan tonu"}
+            }
+            tonne{
+                dnam{"ton"}
+                one{"{0} ton"}
+                other{"{0} ton"}
             }
         }
         power{
@@ -1284,6 +1290,12 @@ tr{
                 one{"{0} nsn"}
                 other{"{0} nsn"}
             }
+            quarter{
+                dnam{"çey."}
+                one{"{0} çey."}
+                other{"{0} çey."}
+                per{"{0}/çey."}
+            }
             second{
                 dnam{"sn"}
                 one{"{0}sn"}
@@ -1537,11 +1549,6 @@ tr{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -1582,6 +1589,11 @@ tr{
                 one{"{0} kısa ton"}
                 other{"{0} kısa ton"}
             }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
+            }
         }
         power{
             gigawatt{
@@ -1617,8 +1629,6 @@ tr{
             }
             inch-ofhg{
                 dnam{"inHg"}
-                one{"{0}\u0022 Hg"}
-                other{"{0}\u0022 Hg"}
             }
             millibar{
                 dnam{"mbar"}
@@ -1728,9 +1738,9 @@ tr{
                 other{"{0} dl"}
             }
             dessert-spoon{
-                dnam{"tat. kaş."}
-                one{"{0} tat. kaş."}
-                other{"{0} tat. kaş."}
+                dnam{"tk"}
+                one{"{0} tk"}
+                other{"{0} tk"}
             }
             dessert-spoon-imperial{
                 dnam{"İng. tk"}
@@ -2076,6 +2086,12 @@ tr{
                 one{"{0} nsn"}
                 other{"{0} nsn"}
             }
+            quarter{
+                dnam{"çeyrek"}
+                one{"{0} çey."}
+                other{"{0} çey."}
+                per{"{0}/çeyrek"}
+            }
             second{
                 dnam{"saniye"}
                 one{"{0} sn."}
@@ -2371,11 +2387,6 @@ tr{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -2417,6 +2428,11 @@ tr{
                 dnam{"Amerikan tonu"}
                 one{"{0} kısa ton"}
                 other{"{0} kısa ton"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

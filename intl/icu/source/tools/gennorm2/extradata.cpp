@@ -118,10 +118,10 @@ UBool ExtraData::setNoNoDelta(UChar32 c, Norm &norm) const {
         if(-Normalizer2Impl::MAX_DELTA<=delta && delta<=Normalizer2Impl::MAX_DELTA) {
             norm.type=Norm::NO_NO_DELTA;
             norm.offset=delta;
-            return TRUE;
+            return true;
         }
     }
-    return FALSE;
+    return false;
 }
 
 void ExtraData::writeCompositions(UChar32 c, const Norm &norm, UnicodeString &dataString) {

@@ -85,8 +85,8 @@ es_AR{
                     H{"HH–HH v"}
                 }
                 MEd{
-                    M{"E dd/MM – E dd/MM"}
-                    d{"E dd/MM – E dd/MM"}
+                    M{"E dd/MM – E dd/MM"}
+                    d{"E dd/MM – E dd/MM"}
                 }
                 MMMEd{
                     M{"E d 'de' MMM 'al' E d 'de' MMM"}
@@ -94,34 +94,34 @@ es_AR{
                 }
                 MMMd{
                     M{"d 'de' MMM 'al' d 'de' MMM"}
-                    d{"dd – dd 'de' MM"}
+                    d{"dd – dd 'de' MM"}
                 }
                 Md{
-                    M{"dd/MM – dd/MM"}
-                    d{"dd/MM – dd/MM"}
+                    M{"dd/MM – dd/MM"}
+                    d{"dd/MM – dd/MM"}
                 }
                 fallback{"{0} a el {1}"}
                 h{
-                    a{"h a – h a"}
+                    a{"h a – h a"}
                 }
                 hm{
-                    h{"h:mm–h:mm a"}
-                    m{"h:mm–h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
                 }
                 hmv{
-                    a{"h:mm a – h:mm a v"}
+                    a{"h:mm a – h:mm a v"}
                 }
                 hv{
-                    a{"h a – h a v"}
+                    a{"h a – h a v"}
                 }
                 yM{
-                    M{"MM/y – MM/y"}
-                    y{"MM/y – MM/y"}
+                    M{"MM/y – MM/y"}
+                    y{"MM/y – MM/y"}
                 }
                 yMEd{
-                    M{"E, dd/MM/y – E, dd/MM/y"}
-                    d{"E, dd/MM/y – E, dd/MM/y"}
-                    y{"E, dd/MM/y – E, dd/MM/y"}
+                    M{"E, dd/MM/y – E, dd/MM/y"}
+                    d{"E, dd/MM/y – E, dd/MM/y"}
+                    y{"E, dd/MM/y – E, dd/MM/y"}
                 }
                 yMMM{
                     y{"MMM 'de' y 'a' MMM 'de' y"}
@@ -140,9 +140,9 @@ es_AR{
                     y{"d 'de' MMM 'de' y 'al' d 'de' MMM 'de' y"}
                 }
                 yMd{
-                    M{"dd/MM/y – dd/MM/y"}
-                    d{"dd/MM/y – dd/MM/y"}
-                    y{"dd/MM/y – dd/MM/y"}
+                    M{"dd/MM/y – dd/MM/y"}
+                    d{"dd/MM/y – dd/MM/y"}
+                    y{"dd/MM/y – dd/MM/y"}
                 }
             }
             quarters{
@@ -189,6 +189,9 @@ es_AR{
                     other{"hace {0} días"}
                 }
             }
+        }
+        dayperiod{
+            dn{"a. m./p. m."}
         }
         second-narrow{
             dn{"seg."}

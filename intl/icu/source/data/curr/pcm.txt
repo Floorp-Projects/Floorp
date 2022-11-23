@@ -617,7 +617,7 @@ pcm{
         }
         XXX{
             "¤",
-            "Mọní Wé Pípol Nọ No",
+            "Mọní Wé Pípul Nọ́ No",
         }
         YER{
             "YER",
@@ -1345,7 +1345,7 @@ pcm{
         }
         XXX{
             one{"mọní wé pípul nọ́ no"}
-            other{"(mọní wé pípol nọ no)"}
+            other{"(mọní wé pípul nọ́ no)"}
         }
         YER{
             one{"Yẹ́mẹ́n rial"}

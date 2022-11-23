@@ -4,6 +4,12 @@
 en_IN{
     %%Parent{"en_001"}
     units{
+        length{
+            earth-radius{
+                one{"{0} earth radius"}
+                other{"{0} earth radius"}
+            }
+        }
         temperature{
             generic{
                 dnam{"°"}

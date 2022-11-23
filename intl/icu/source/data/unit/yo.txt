@@ -17,8 +17,26 @@ yo{
             1024p6{"ẹ́síbì {0}"}
             1024p7{"sẹ́bì {0}"}
             1024p8{"yóòbù {0}"}
+            power2{
+                other{
+                    _{
+                        _{"{0} sikuwe"}
+                    }
+                }
+            }
+            power3{
+                other{
+                    _{
+                        _{"kubiki {0}"}
+                    }
+                }
+            }
         }
         concentr{
+            item{
+                dnam{"àwọ́n ohun"}
+                other{"{0} àwon ohun"}
+            }
             permille{
                 other{"{0} ìdákan nínú ẹgbẹ̀rún"}
             }
@@ -88,6 +106,9 @@ yo{
                 other{"{0} wkt"}
                 per{"{0}/wkt"}
             }
+            microsecond{
+                dnam{"iseju aya kekere"}
+            }
             minute{
                 dnam{"ìṣ"}
                 other{"{0} ìṣ"}
@@ -97,6 +118,11 @@ yo{
                 dnam{"oṣù"}
                 other{"{0} oṣù"}
                 per{"{0}/oṣù"}
+            }
+            quarter{
+                dnam{"idamerin"}
+                other{"{0} idamerin"}
+                per{"{0}/ida"}
             }
             second{
                 dnam{"ìṣ àáy"}
@@ -114,6 +140,12 @@ yo{
                 per{"{0} ọd"}
             }
         }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"àwọ́n wákàtí kílówáàtì ní kìlómítà ọgọ́rùn"}
+                other{"{0} àwọ́n wákàtí kílówáàtì ní kìlómítà ọgọ́rùn"}
+            }
+        }
         graphics{
             dot{
                 dnam{"dọ́ọ̀tì"}
@@ -124,6 +156,14 @@ yo{
             earth-radius{
                 dnam{"ìdinwọ̀n ayé"}
                 other{"{0} ìdinwọ̀n ayé"}
+            }
+            fathom{
+                dnam{"fátọ́ọ̀mu"}
+                other{"{0} fátọ́ọ̀mù"}
+            }
+            furlong{
+                dnam{"àwọn fọ́lọ́ọ̀ngì"}
+                other{"{0} àwọn fọ́lọ́ọ̀ngì"}
             }
         }
         light{
@@ -141,8 +181,16 @@ yo{
                 dnam{"giréènì"}
                 other{"{0} gíréènì"}
             }
+            stone{
+                dnam{"àwon okùta"}
+                other{"{0} àwon okùta"}
+            }
         }
         volume{
+            bushel{
+                dnam{"búsẹ́ẹ̀li"}
+                other{"{0} búsẹ́ẹ̀li"}
+            }
             dessert-spoon{
                 dnam{"àmì ṣíbí oúnjẹ́ kékeré"}
                 other{"{0} àmì ṣíbí oúnjẹ́ kékeré"}
@@ -184,6 +232,12 @@ yo{
             1024p7{"àmì Sí {0}"}
             1024p8{"àmì Yí {0}"}
         }
+        concentr{
+            item{
+                dnam{"ohun"}
+                other{"{0}ohun"}
+            }
+        }
         duration{
             day{
                 dnam{"ọjọ́"}
@@ -201,6 +255,11 @@ yo{
                 dnam{"oṣù"}
                 other{"{0} oṣù"}
             }
+            quarter{
+                dnam{"idame"}
+                other{"{0} i"}
+                per{"{0}/id"}
+            }
             second{
                 dnam{"ìṣ àáy"}
                 other{"{0} ìṣ àáy"}
@@ -214,9 +273,40 @@ yo{
                 other{"{0} ọd"}
             }
         }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"KWh ní 100km"}
+                other{"{0} kWh ní 100km"}
+            }
+        }
+        length{
+            fathom{
+                dnam{"fatọ́"}
+                other{"{0}fth"}
+            }
+            furlong{
+                dnam{"fọ́lọ́ọ̀ngì"}
+                other{"{0}fur"}
+            }
+        }
         light{
             lumen{
                 other{"{0} Lúmẹ́nì"}
+            }
+            lux{
+                dnam{"lọ́s"}
+            }
+        }
+        mass{
+            stone{
+                dnam{"okùta"}
+                other{"{0}st"}
+            }
+        }
+        volume{
+            bushel{
+                dnam{"búsẹ́li"}
+                other{"{0}búsẹ́ẹ̀li"}
             }
         }
     }
@@ -232,8 +322,17 @@ yo{
             1024p8{"àmì {0}"}
         }
         concentr{
+            item{
+                dnam{"ohun"}
+                other{"{0} ohun"}
+            }
             permille{
                 dnam{"ìdákan nínú ẹgbẹ̀rún"}
+                other{"{0} pasenti"}
+            }
+            permillion{
+                dnam{"ara/milíọ̀nù"}
+                other{"{0} ppm"}
             }
         }
         digital{
@@ -302,6 +401,11 @@ yo{
                 other{"{0} oṣù"}
                 per{"{0}/oṣù"}
             }
+            quarter{
+                dnam{"idame"}
+                other{"{0} idame"}
+                per{"{0}/id"}
+            }
             second{
                 dnam{"ìṣ àáy"}
                 other{"{0} ìṣ àáy"}
@@ -318,6 +422,12 @@ yo{
                 per{"{0}/ọd"}
             }
         }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"KWh lọ́rí 100km"}
+                other{"{0} KWh lọ́rí 100km"}
+            }
+        }
         graphics{
             dot{
                 dnam{"dọ́ọ̀tì"}
@@ -328,6 +438,14 @@ yo{
             earth-radius{
                 dnam{"àmì ìdínwọ̀n ayé"}
                 other{"{0} àmì ìdínwọ̀n ayé"}
+            }
+            fathom{
+                dnam{"fátọ́mù"}
+                other{"{0} fth"}
+            }
+            furlong{
+                dnam{"fọ́lọ́ọ̀ngì"}
+                other{"{0} fọ́"}
             }
         }
         light{
@@ -345,8 +463,16 @@ yo{
                 dnam{"gíréènì"}
                 other{"{0} gíréènì"}
             }
+            stone{
+                dnam{"àwon okùta"}
+                other{"{0} st"}
+            }
         }
         volume{
+            bushel{
+                dnam{"Búsẹ́ẹ̀li"}
+                other{"{0} bu"}
+            }
             dessert-spoon{
                 dnam{"ṣíbí oúnjẹ́ kékeré"}
                 other{"{0} ṣíbí oúnjẹ́ kékeré"}

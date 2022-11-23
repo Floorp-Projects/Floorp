@@ -5,7 +5,6 @@ en_IN{
     %%Parent{"en_001"}
     Languages{
         bn{"Bengali"}
-        ro_MD{"Moldavian"}
     }
     Scripts{
         Beng{"Bengali"}

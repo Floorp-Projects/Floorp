@@ -311,6 +311,7 @@ bs{
         CG{"Republika Kongo"}
         CZ{"Češka Republika"}
         FK{"Folklandska (Malvinska) ostrva"}
+        NZ{"Novi Zeland Aotearoa"}
         SZ{"Svazilend"}
     }
 }

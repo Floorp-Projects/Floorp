@@ -3,7 +3,7 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 
 {
-    "cldrVersion": "41",
+    "cldrVersion": "42",
     "aliases": {
         "ars": "ar_SA",
         "az_AZ": "az_Latn_AZ",
@@ -26,6 +26,7 @@
         "pa_IN": "pa_Guru_IN",
         "pa_PK": "pa_Arab_PK",
         "sat_IN": "sat_Olck_IN",
+        "sd_IN": "sd_Deva_IN",
         "sd_PK": "sd_Arab_PK",
         "sh": "sr_Latn",
         "sh_BA": "sr_Latn_BA",

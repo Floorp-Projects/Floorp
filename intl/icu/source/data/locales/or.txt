@@ -37,6 +37,8 @@ or{
             }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                accountingFormat%alphaNextToNumber{"¤ #,##0.00;(¤ #,##0.00)"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
                 decimalFormat{"#,##,##0.###"}
                 percentFormat{"#,##0%"}
@@ -143,6 +145,56 @@ or{
                     100000000000000{
                         one{"¤000ଟ୍ରି"}
                         other{"¤000ଟ୍ରି"}
+                    }
+                }
+                currencyFormat%alphaNextToNumber{
+                    1000{
+                        one{"¤ 0ହ"}
+                        other{"¤ 0ହ"}
+                    }
+                    10000{
+                        one{"¤ 00ହ"}
+                        other{"¤ 00ହ"}
+                    }
+                    100000{
+                        one{"¤ 000ହ"}
+                        other{"¤ 000ହ"}
+                    }
+                    1000000{
+                        one{"¤ 0ନି"}
+                        other{"¤ 0ନି"}
+                    }
+                    10000000{
+                        one{"¤ 00ନି"}
+                        other{"¤ 00ନି"}
+                    }
+                    100000000{
+                        one{"¤ 000ନି"}
+                        other{"¤ 000ନି"}
+                    }
+                    1000000000{
+                        one{"¤ 0ବି"}
+                        other{"¤ 0ବି"}
+                    }
+                    10000000000{
+                        one{"¤ 00ବି"}
+                        other{"¤ 00ବି"}
+                    }
+                    100000000000{
+                        one{"¤ 000ବି"}
+                        other{"¤ 000ବି"}
+                    }
+                    1000000000000{
+                        one{"¤ 0T"}
+                        other{"¤ 0T"}
+                    }
+                    10000000000000{
+                        one{"¤ 00T"}
+                        other{"¤ 00T"}
+                    }
+                    100000000000000{
+                        one{"¤ 000T"}
+                        other{"¤ 000T"}
                     }
                 }
                 decimalFormat{
@@ -253,6 +305,12 @@ or{
                 "MMM d, y G",
                 "M/d/y GGGGG",
                 "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} ରେ {0}",
                 "{1} ରେ {0}",
                 "{1}, {0}",
@@ -405,6 +463,12 @@ or{
                 "MMM d, y",
                 "M/d/yy",
                 "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimePatterns%atTime{
                 "{0} ଠାରେ {1}",
                 "{0} ଠାରେ {1}",
                 "{1}, {0}",
@@ -613,7 +677,6 @@ or{
                     M{"LLL–LLL"}
                 }
                 MMMEd{
-                    M{"MMM d, E – MMM d, E"}
                     d{"MMM d, E – MMM d, E"}
                 }
                 MMMd{
@@ -811,6 +874,103 @@ or{
                         "2ୟ ତ୍ରୟମାସ",
                         "3ୟ ତ୍ରୟମାସ",
                         "4ର୍ଥ ତ୍ରୟମାସ",
+                    }
+                }
+            }
+        }
+        indian{
+            eras{
+                abbreviated{
+                    "ସାକା",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "ଚୈତ୍ର",
+                        "ବୈଶାଖ",
+                        "ଜ୍ୟୋଷ୍ଠ",
+                        "ଆଷାଢ଼",
+                        "ଶ୍ରାବଣ",
+                        "ଭାଦ୍ରବ",
+                        "ଆଶ୍ଵିନ",
+                        "କାର୍ତ୍ତିକ",
+                        "ଆଗ୍ରାହୟଣ",
+                        "ପୌଷ",
+                        "ମାଘ",
+                        "ଫାଲଗୁନ",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "ଚୈତ୍ର",
+                        "ବୈଶାଖ",
+                        "ଜ୍ୟୋଷ୍ଠ",
+                        "ଆଷାଢ଼",
+                        "ଶ୍ରାବଣ",
+                        "ଭାଦ୍ରବ",
+                        "ଆଶ୍ଵିନ",
+                        "କାର୍ତ୍ତିକ",
+                        "ଆଗ୍ରାହୟଣ",
+                        "ପୌଷ",
+                        "ମାଘ",
+                        "ଫାଲଗୁନ",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "ଚୈତ୍ର",
+                        "ବୈଶାଖ",
+                        "ଜ୍ୟୋଷ୍ଠ",
+                        "ଆଷାଢ଼",
+                        "ଶ୍ରାବଣ",
+                        "ଭାଦ୍ରବ",
+                        "ଆଶ୍ଵିନ",
+                        "କାର୍ତ୍ତିକ",
+                        "ଆଗ୍ରାହୟଣ",
+                        "ପୌଷ",
+                        "ମାଘ",
+                        "ଫାଲଗୁନ",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "ଚୈତ୍ର",
+                        "ବୈଶାଖ",
+                        "ଜ୍ୟୋଷ୍ଠ",
+                        "ଆଷାଢ଼",
+                        "ଶ୍ରାବଣ",
+                        "ଭାଦ୍ରବ",
+                        "ଆଶ୍ଵିନ",
+                        "କାର୍ତ୍ତିକ",
+                        "ଆଗ୍ରାହୟଣ",
+                        "ପୌଷ",
+                        "ମାଘ",
+                        "ଫାଲଗୁନ",
                     }
                 }
             }
@@ -1577,7 +1737,7 @@ or{
                     other{"{0} ସପ୍ତାହରେ"}
                 }
                 past{
-                    one{"{0} ସପ୍ତାହରେ"}
+                    one{"{0} ସପ୍ତାହ ପୂର୍ବେ"}
                     other{"{0} ସପ୍ତାହ ପୂର୍ବେ"}
                 }
             }
@@ -1732,12 +1892,6 @@ or{
         metric{"ମେଟ୍ରିକ୍‌"}
     }
     parse{
-        date{
-            lenient{
-                "[\\--/]",
-                "[\\:∶]",
-            }
-        }
         general{
             lenient{
                 "[.․。︒﹒．｡]",
@@ -1757,10 +1911,73 @@ or{
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
             }
-            stricter{
-                "[,٫︐﹐，]",
-                "[.․﹒．｡]",
+        }
+    }
+    personNames{
+        nameOrderLocales{
+            givenFirst{
+                "und",
+                "or",
             }
+            surnameFirst{
+                "ko",
+                "si",
+                "ta",
+                "te",
+                "vi",
+                "yue",
+                "zh",
+            }
+        }
+        namePattern{
+            givenFirst-long-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-addressing-informal{"{given-informal}"}
+            givenFirst-long-monogram-formal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
+            givenFirst-long-referring-formal{"{given} {given2} {surname} {suffix}"}
+            givenFirst-long-referring-informal{"{given-informal} {surname}"}
+            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-informal{"{given-informal}"}
+            givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {suffix}"}
+            givenFirst-medium-referring-informal{"{given-informal} {surname}"}
+            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-informal{"{given-informal}"}
+            givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
+            givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
+            sorting-long-referring-formal{"{surname-core}, {given} {given2} {surname-prefix}"}
+            sorting-long-referring-informal{"{surname}, {given-informal}"}
+            sorting-medium-referring-formal{"{surname-core}, {given} {given2-initial} {surname-prefix}"}
+            sorting-medium-referring-informal{"{surname}, {given-informal}"}
+            sorting-short-referring-formal{"{surname-core}, {given-initial} {given2-initial} {surname-prefix}"}
+            sorting-short-referring-informal{"{surname}, {given-informal}"}
+            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-addressing-informal{"{given-informal}"}
+            surnameFirst-long-monogram-formal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
+            surnameFirst-long-referring-formal{"{surname} {given} {given2} {suffix}"}
+            surnameFirst-long-referring-informal{"{surname} {given-informal}"}
+            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-medium-addressing-informal{"{given-informal}"}
+            surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {suffix}"}
+            surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
+            surnameFirst-short-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-short-addressing-informal{"{given-informal}"}
+            surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-short-referring-formal{"{surname} {given-initial} {given2-initial}"}
+            surnameFirst-short-referring-informal{"{surname} {given-initial}"}
         }
     }
 }

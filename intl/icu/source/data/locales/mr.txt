@@ -28,6 +28,8 @@ mr{
         deva{
             patterns{
                 currencyFormat{"¤#,##0.00"}
+                currencyFormat%alphaNextToNumber{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
                 decimalFormat{"#,##,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"[#E0]"}
@@ -55,6 +57,8 @@ mr{
             }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                accountingFormat%alphaNextToNumber{"¤ #,##0.00;(¤ #,##0.00)"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
                 decimalFormat{"#,##,##0.###"}
                 percentFormat{"#,##0%"}
@@ -161,6 +165,56 @@ mr{
                     100000000000000{
                         one{"¤00 पद्म"}
                         other{"¤00 पद्म"}
+                    }
+                }
+                currencyFormat%alphaNextToNumber{
+                    1000{
+                        one{"¤ 0 ह"}
+                        other{"¤ 0 ह"}
+                    }
+                    10000{
+                        one{"¤ 00 ह"}
+                        other{"¤ 00 ह"}
+                    }
+                    100000{
+                        one{"¤ 0 लाख"}
+                        other{"¤ 0 लाख"}
+                    }
+                    1000000{
+                        one{"¤ 00 लाख"}
+                        other{"¤ 00 लाख"}
+                    }
+                    10000000{
+                        one{"¤ 0 कोटी"}
+                        other{"¤ 0 कोटी"}
+                    }
+                    100000000{
+                        one{"¤ 00 कोटी"}
+                        other{"¤ 00 कोटी"}
+                    }
+                    1000000000{
+                        one{"¤ 0 अब्ज"}
+                        other{"¤ 0 अब्ज"}
+                    }
+                    10000000000{
+                        one{"¤ 00 अब्ज"}
+                        other{"¤ 00 अब्ज"}
+                    }
+                    100000000000{
+                        one{"¤ 0 खर्व"}
+                        other{"¤ 0 खर्व"}
+                    }
+                    1000000000000{
+                        one{"¤ 00 खर्व"}
+                        other{"¤ 00 खर्व"}
+                    }
+                    10000000000000{
+                        one{"¤ 0 पद्म"}
+                        other{"¤ 0 पद्म"}
+                    }
+                    100000000000000{
+                        one{"¤ 00 पद्म"}
+                        other{"¤ 00 पद्म"}
                     }
                 }
                 decimalFormat{
@@ -507,6 +561,12 @@ mr{
                 "d MMM, y G",
                 "d/M/y GGGGG",
                 "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} {0} वाजता",
                 "{1} {0} वाजता",
                 "{1}, {0}",
@@ -683,6 +743,12 @@ mr{
                 "d MMM, y",
                 "d/M/yy",
                 "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} रोजी {0}",
                 "{1} रोजी {0}",
                 "{1}, {0}",
@@ -717,7 +783,7 @@ mr{
                 GyMMM{"MMM G y"}
                 GyMMMEd{"E, d MMM, G y"}
                 GyMMMd{"d MMM, G y"}
-                GyMd{"d/M/y GGGGG"}
+                GyMd{"GGGGG d/M/y"}
                 H{"HH"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
@@ -841,7 +907,6 @@ mr{
                     abbreviated{
                         afternoon1{"दुपार"}
                         evening1{"संध्याकाळ"}
-                        evening2{"सायंकाळ"}
                         midnight{"मध्यरात्र"}
                         morning1{"पहाट"}
                         morning2{"सकाळ"}
@@ -851,7 +916,6 @@ mr{
                     narrow{
                         afternoon1{"दु"}
                         evening1{"सं"}
-                        evening2{"सा"}
                         midnight{"म.रा."}
                         morning1{"प"}
                         morning2{"स"}
@@ -861,7 +925,6 @@ mr{
                     wide{
                         afternoon1{"दुपार"}
                         evening1{"संध्याकाळ"}
-                        evening2{"सायंकाळ"}
                         midnight{"मध्यरात्र"}
                         morning1{"पहाट"}
                         morning2{"सकाळ"}
@@ -874,7 +937,6 @@ mr{
                         afternoon1{"दुपार"}
                         am{"AM"}
                         evening1{"संध्याकाळ"}
-                        evening2{"सायंकाळ"}
                         midnight{"मध्यरात्र"}
                         morning1{"पहाट"}
                         morning2{"सकाळ"}
@@ -886,7 +948,6 @@ mr{
                         afternoon1{"दु"}
                         am{"AM"}
                         evening1{"सं"}
-                        evening2{"सा"}
                         midnight{"म.रा."}
                         morning1{"प"}
                         morning2{"स"}
@@ -898,7 +959,6 @@ mr{
                         afternoon1{"दुपार"}
                         am{"AM"}
                         evening1{"संध्याकाळ"}
-                        evening2{"सायंकाळ"}
                         midnight{"मध्यरात्र"}
                         morning1{"पहाट"}
                         morning2{"सकाळ"}
@@ -910,11 +970,11 @@ mr{
             }
             eras{
                 abbreviated{
-                    "इ. स. पू.",
+                    "ई. स. पू.",
                     "इ. स.",
                 }
                 abbreviated%variant{
-                    "इ. स. पू. युग",
+                    "ई. स. पू. युग",
                     "ख्रि. यु.",
                 }
                 wide{
@@ -927,6 +987,15 @@ mr{
                 }
             }
             intervalFormats{
+                GyMEd{
+                    G{"GGGGG dd-MM-y, E – GGGGG dd-MM-y, E"}
+                    M{"GGGGG dd-MM-y, E – dd-MM-y, E"}
+                    d{"GGGGG dd-MM-y, E – dd-MM-y, E"}
+                    y{"GGGGG dd-MM-y, E – dd-MM-y, E"}
+                }
+                GyMd{
+                    y{"GGGGG dd-MM-y – dd-MM-y"}
+                }
                 H{
                     H{"HH – HH"}
                 }
@@ -2576,6 +2645,73 @@ mr{
                 "[,٫︐﹐，]",
                 "[.․﹒．｡]",
             }
+        }
+    }
+    personNames{
+        nameOrderLocales{
+            givenFirst{
+                "und",
+                "mr",
+            }
+            surnameFirst{
+                "ko",
+                "si",
+                "ta",
+                "te",
+                "vi",
+                "yue",
+                "zh",
+            }
+        }
+        namePattern{
+            givenFirst-long-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-addressing-informal{"{given-informal}"}
+            givenFirst-long-monogram-formal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
+            givenFirst-long-referring-formal{"{given} {given2} {surname} {suffix}"}
+            givenFirst-long-referring-informal{"{given-informal} {surname}"}
+            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-informal{"{given-informal}"}
+            givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {suffix}"}
+            givenFirst-medium-referring-informal{"{given-informal} {surname}"}
+            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-informal{"{given-informal}"}
+            givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
+            givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
+            sorting-long-referring-formal{"{surname-core}, {given} {given2} {surname-prefix}"}
+            sorting-long-referring-informal{"{surname}, {given-informal}"}
+            sorting-medium-referring-formal{"{surname-core}, {given} {given2-initial} {surname-prefix}"}
+            sorting-medium-referring-informal{"{surname}, {given-informal}"}
+            sorting-short-referring-formal{"{surname-core}, {given-initial} {given2-initial} {surname-prefix}"}
+            sorting-short-referring-informal{"{surname}, {given-informal}"}
+            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-addressing-informal{"{given-informal}"}
+            surnameFirst-long-monogram-formal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
+            surnameFirst-long-referring-formal{"{surname} {given} {given2} {suffix}"}
+            surnameFirst-long-referring-informal{"{surname} {given-informal}"}
+            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-medium-addressing-informal{"{given-informal}"}
+            surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {suffix}"}
+            surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
+            surnameFirst-short-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-short-addressing-informal{"{given-informal}"}
+            surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-short-referring-formal{"{surname} {given-initial} {given2-initial}"}
+            surnameFirst-short-referring-informal{"{surname} {given-initial}"}
         }
     }
 }

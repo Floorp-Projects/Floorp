@@ -43,22 +43,22 @@ fr_CM{
             }
             intervalFormats{
                 h{
-                    a{"h – h"}
-                    h{"h – h"}
+                    a{"h – h"}
+                    h{"h – h"}
                 }
                 hm{
-                    a{"h:mm – h:mm"}
-                    h{"h:mm – h:mm"}
-                    m{"h:mm – h:mm"}
+                    a{"h:mm – h:mm"}
+                    h{"h:mm – h:mm"}
+                    m{"h:mm – h:mm"}
                 }
                 hmv{
-                    a{"h:mm – h:mm v"}
-                    h{"h:mm – h:mm v"}
-                    m{"h:mm – h:mm v"}
+                    a{"h:mm – h:mm v"}
+                    h{"h:mm – h:mm v"}
+                    m{"h:mm – h:mm v"}
                 }
                 hv{
-                    a{"h – h v"}
-                    h{"h – h v"}
+                    a{"h – h v"}
+                    h{"h – h v"}
                 }
             }
         }

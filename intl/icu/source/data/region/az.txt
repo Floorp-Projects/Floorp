@@ -312,6 +312,7 @@ az{
         CI{"Fil Dişi Sahili"}
         CZ{"Çex Respublikası"}
         FK{"Folklend adaları (Malvin adaları)"}
+        NZ{"Aotearoa Yeni Zelandiya"}
         SZ{"Svazilend"}
     }
 }

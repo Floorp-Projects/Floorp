@@ -44,3 +44,6 @@ bazelisk run //tools/unicode/c/genprops $ICU_SRC/icu4c
 # We run it twice for different versions of the CLDR root sort order.
 bazelisk run //tools/unicode/c/genuca -- --hanOrder implicit $ICU_SRC/icu4c
 bazelisk run //tools/unicode/c/genuca -- --hanOrder radical-stroke $ICU_SRC/icu4c
+# Also generate the ICU4X versions
+bazelisk run //tools/unicode/c/genuca -- --icu4x --hanOrder implicit $ICU_SRC/icu4c
+bazelisk run //tools/unicode/c/genuca -- --icu4x --hanOrder radical-stroke $ICU_SRC/icu4c

@@ -68,7 +68,7 @@ public:
    *  @param settings a DataMap pointer provided by the user. Will be NULL if 
    *                  no more settings are available.
    *  @param status for reporting unexpected errors.
-   *  @return A boolean, TRUE if there are settings, FALSE if there is no more 
+   *  @return A boolean, true if there are settings, false if there is no more 
    *          settings. 
    */
   virtual UBool nextSettings(const DataMap *& settings, UErrorCode &status) = 0;
@@ -78,7 +78,7 @@ public:
    *  @param data a DataMap pointer provided by the user. Will be NULL if 
    *                  no more cases are available.
    *  @param status for reporting unexpected errors.
-   *  @return A boolean, TRUE if there are cases, FALSE if there is no more 
+   *  @return A boolean, true if there are cases, false if there is no more 
    *          cases. 
    */
   virtual UBool nextCase(const DataMap *& data, UErrorCode &status) = 0;

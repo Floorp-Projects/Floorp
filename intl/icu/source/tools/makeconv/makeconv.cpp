@@ -78,10 +78,10 @@ U_CAPI const UConverterStaticData * ucnv_converterStaticData[UCNV_NUMBER_OF_SUPP
 /*
  * Global - verbosity
  */
-UBool VERBOSE = FALSE;
-UBool QUIET = FALSE;
-UBool SMALL = FALSE;
-UBool IGNORE_SISO_CHECK = FALSE;
+UBool VERBOSE = false;
+UBool QUIET = false;
+UBool SMALL = false;
+UBool IGNORE_SISO_CHECK = false;
 
 static void
 createConverter(ConvData *data, const char* converterName, UErrorCode *pErrorCode);
@@ -92,7 +92,7 @@ createConverter(ConvData *data, const char* converterName, UErrorCode *pErrorCod
 static void
 writeConverterData(ConvData *data, const char *cnvName, const char *cnvDir, UErrorCode *status);
 
-UBool haveCopyright=TRUE;
+UBool haveCopyright=true;
 
 static UDataInfo dataInfo={
     sizeof(UDataInfo),
@@ -259,7 +259,7 @@ int main(int argc, char* argv[])
     SMALL = options[OPT_SMALL].doesOccur;
 
     if (options[OPT_IGNORE_SISO_CHECK].doesOccur) {
-        IGNORE_SISO_CHECK = TRUE;
+        IGNORE_SISO_CHECK = true;
     }
 
     icu::CharString outFileName;
@@ -560,7 +560,7 @@ readHeader(ConvData *data,
     }
 }
 
-/* return TRUE if a base table was read, FALSE for an extension table */
+/* return true if a base table was read, false for an extension table */
 static UBool
 readFile(ConvData *data, const char* converterName,
          UErrorCode *pErrorCode) {
@@ -572,7 +572,7 @@ readFile(ConvData *data, const char* converterName,
     UBool dataIsBase;
 
     if(U_FAILURE(*pErrorCode)) {
-        return FALSE;
+        return false;
     }
 
     data->ucm=ucm_open();
@@ -580,27 +580,27 @@ readFile(ConvData *data, const char* converterName,
     convFile=T_FileStream_open(converterName, "r");
     if(convFile==NULL) {
         *pErrorCode=U_FILE_ACCESS_ERROR;
-        return FALSE;
+        return false;
     }
 
     readHeader(data, convFile, pErrorCode);
     if(U_FAILURE(*pErrorCode)) {
-        return FALSE;
+        return false;
     }
 
     if(data->ucm->baseName[0]==0) {
-        dataIsBase=TRUE;
+        dataIsBase=true;
         baseStates=&data->ucm->states;
         ucm_processStates(baseStates, IGNORE_SISO_CHECK);
     } else {
-        dataIsBase=FALSE;
+        dataIsBase=false;
         baseStates=NULL;
     }
 
     /* read the base table */
     ucm_readTable(data->ucm, convFile, dataIsBase, baseStates, pErrorCode);
     if(U_FAILURE(*pErrorCode)) {
-        return FALSE;
+        return false;
     }
 
     /* read an extension table if there is one */
@@ -618,7 +618,7 @@ readFile(ConvData *data, const char* converterName,
 
         if(0==uprv_strcmp(line, "CHARMAP")) {
             /* read the extension table */
-            ucm_readTable(data->ucm, convFile, FALSE, baseStates, pErrorCode);
+            ucm_readTable(data->ucm, convFile, false, baseStates, pErrorCode);
         } else {
             fprintf(stderr, "unexpected text after the base mapping table\n");
         }
@@ -680,7 +680,7 @@ createConverter(ConvData *data, const char *converterName, UErrorCode *pErrorCod
 
         } else if(
             data->ucm->ext->mappingsLength>0 &&
-            !ucm_checkBaseExt(states, data->ucm->base, data->ucm->ext, data->ucm->ext, FALSE)
+            !ucm_checkBaseExt(states, data->ucm->base, data->ucm->ext, data->ucm->ext, false)
         ) {
             *pErrorCode=U_INVALID_TABLE_FORMAT;
         } else if(data->ucm->base->flagsType&UCM_FLAGS_EXPLICIT) {
@@ -784,10 +784,10 @@ createConverter(ConvData *data, const char *converterName, UErrorCode *pErrorCod
                 }
 
                 if(fallbackFlags&1) {
-                    staticData->hasFromUnicodeFallback=TRUE;
+                    staticData->hasFromUnicodeFallback=true;
                 }
                 if(fallbackFlags&2) {
-                    staticData->hasToUnicodeFallback=TRUE;
+                    staticData->hasToUnicodeFallback=true;
                 }
 
                 if(1!=ucm_countChars(baseStates, staticData->subChar, staticData->subCharLen)) {
@@ -800,7 +800,7 @@ createConverter(ConvData *data, const char *converterName, UErrorCode *pErrorCod
 
                 } else if(
                     !ucm_checkValidity(data->ucm->ext, baseStates) ||
-                    !ucm_checkBaseExt(baseStates, baseData.ucm->base, data->ucm->ext, data->ucm->ext, FALSE)
+                    !ucm_checkBaseExt(baseStates, baseData.ucm->base, data->ucm->ext, data->ucm->ext, false)
                 ) {
                     *pErrorCode=U_INVALID_TABLE_FORMAT;
                 } else {
