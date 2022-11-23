@@ -95,10 +95,10 @@ class JitCodeRange {
 
 typedef Vector<BytecodeLocation, 0, SystemAllocPolicy> BytecodeLocationVector;
 
-struct IonEntry;
-struct BaselineEntry;
-struct BaselineInterpreterEntry;
-struct DummyEntry;
+class IonEntry;
+class BaselineEntry;
+class BaselineInterpreterEntry;
+class DummyEntry;
 
 // Base class for all entries.
 class JitcodeGlobalEntry : public JitCodeRange {
@@ -203,7 +203,7 @@ inline UniqueJitcodeGlobalEntry MakeJitcodeGlobalEntry(JSContext* cx,
   return res;
 }
 
-struct IonEntry : public JitcodeGlobalEntry {
+class IonEntry : public JitcodeGlobalEntry {
   // regionTable_ points to the start of the region table within the
   // packed map for compile represented by this entry.  Since the
   // region table occurs at the tail of the memory region, this pointer
@@ -211,6 +211,7 @@ struct IonEntry : public JitcodeGlobalEntry {
   // of the memory space.
   JitcodeIonTable* regionTable_ = nullptr;
 
+ public:
   struct ScriptNamePair {
     JSScript* script;
     char* str;
@@ -232,8 +233,10 @@ struct IonEntry : public JitcodeGlobalEntry {
     }
   };
 
+ private:
   SizedScriptList* scriptList_ = nullptr;
 
+ public:
   IonEntry(JitCode* code, void* nativeStartAddr, void* nativeEndAddr)
       : JitcodeGlobalEntry(Kind::Ion, code, nativeStartAddr, nativeEndAddr) {}
 
@@ -278,10 +281,11 @@ struct IonEntry : public JitcodeGlobalEntry {
   void traceWeak(JSTracer* trc);
 };
 
-struct BaselineEntry : public JitcodeGlobalEntry {
+class BaselineEntry : public JitcodeGlobalEntry {
   JSScript* script_;
   UniqueChars str_;
 
+ public:
   BaselineEntry(JitCode* code, void* nativeStartAddr, void* nativeEndAddr,
                 JSScript* script, UniqueChars str)
       : JitcodeGlobalEntry(Kind::Baseline, code, nativeStartAddr,
@@ -310,7 +314,8 @@ struct BaselineEntry : public JitcodeGlobalEntry {
   void traceWeak(JSTracer* trc);
 };
 
-struct BaselineInterpreterEntry : public JitcodeGlobalEntry {
+class BaselineInterpreterEntry : public JitcodeGlobalEntry {
+ public:
   BaselineInterpreterEntry(JitCode* code, void* nativeStartAddr,
                            void* nativeEndAddr)
       : JitcodeGlobalEntry(Kind::BaselineInterpreter, code, nativeStartAddr,
@@ -330,7 +335,8 @@ struct BaselineInterpreterEntry : public JitcodeGlobalEntry {
 // Dummy entries are created for jitcode generated when profiling is not
 // turned on, so that they have representation in the global table if they are
 // on the stack when profiling is enabled.
-struct DummyEntry : public JitcodeGlobalEntry {
+class DummyEntry : public JitcodeGlobalEntry {
+ public:
   DummyEntry(JitCode* code, void* nativeStartAddr, void* nativeEndAddr)
       : JitcodeGlobalEntry(Kind::Dummy, code, nativeStartAddr, nativeEndAddr) {}
 
