@@ -747,9 +747,6 @@ mozilla::Maybe<nsUXThemeClass> nsNativeThemeWin::GetThemeClass(
       return Some(eUXMenu);
     case StyleAppearance::MozWindowTitlebar:
     case StyleAppearance::MozWindowTitlebarMaximized:
-    case StyleAppearance::MozWindowFrameLeft:
-    case StyleAppearance::MozWindowFrameRight:
-    case StyleAppearance::MozWindowFrameBottom:
     case StyleAppearance::MozWindowButtonClose:
     case StyleAppearance::MozWindowButtonMinimize:
     case StyleAppearance::MozWindowButtonMaximize:
@@ -1323,18 +1320,6 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
       aPart = mozilla::widget::themeconst::WP_MAXCAPTION;
       aState = GetTopLevelWindowActiveState(aFrame);
       return NS_OK;
-    case StyleAppearance::MozWindowFrameLeft:
-      aPart = mozilla::widget::themeconst::WP_FRAMELEFT;
-      aState = GetTopLevelWindowActiveState(aFrame);
-      return NS_OK;
-    case StyleAppearance::MozWindowFrameRight:
-      aPart = mozilla::widget::themeconst::WP_FRAMERIGHT;
-      aState = GetTopLevelWindowActiveState(aFrame);
-      return NS_OK;
-    case StyleAppearance::MozWindowFrameBottom:
-      aPart = mozilla::widget::themeconst::WP_FRAMEBOTTOM;
-      aState = GetTopLevelWindowActiveState(aFrame);
-      return NS_OK;
     case StyleAppearance::MozWindowButtonClose:
       aPart = mozilla::widget::themeconst::WP_CLOSEBUTTON;
       aState = GetWindowFrameButtonState(aFrame,
@@ -1418,9 +1403,6 @@ nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
     switch (aAppearance) {
       case StyleAppearance::MozWindowTitlebar:
       case StyleAppearance::MozWindowTitlebarMaximized:
-      case StyleAppearance::MozWindowFrameLeft:
-      case StyleAppearance::MozWindowFrameRight:
-      case StyleAppearance::MozWindowFrameBottom:
         // Nothing to draw, these areas are glass. Minimum dimensions
         // should be set, so xul content should be layed out correctly.
         return NS_OK;
@@ -2233,11 +2215,6 @@ LayoutDeviceIntSize nsNativeThemeWin::GetMinimumWidgetSize(
       break;
     }
 
-    case StyleAppearance::MozWindowFrameLeft:
-    case StyleAppearance::MozWindowFrameRight:
-    case StyleAppearance::MozWindowFrameBottom:
-      return {GetSystemMetrics(SM_CXFRAME), GetSystemMetrics(SM_CYFRAME)};
-
     default:
       break;
   }
@@ -2281,9 +2258,6 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame,
 
   if (aAppearance == StyleAppearance::MozWindowTitlebar ||
       aAppearance == StyleAppearance::MozWindowTitlebarMaximized ||
-      aAppearance == StyleAppearance::MozWindowFrameLeft ||
-      aAppearance == StyleAppearance::MozWindowFrameRight ||
-      aAppearance == StyleAppearance::MozWindowFrameBottom ||
       aAppearance == StyleAppearance::MozWindowButtonClose ||
       aAppearance == StyleAppearance::MozWindowButtonMinimize ||
       aAppearance == StyleAppearance::MozWindowButtonMaximize ||
@@ -2395,9 +2369,6 @@ bool nsNativeThemeWin::WidgetAppearanceDependsOnWindowFocus(
   switch (aAppearance) {
     case StyleAppearance::MozWindowTitlebar:
     case StyleAppearance::MozWindowTitlebarMaximized:
-    case StyleAppearance::MozWindowFrameLeft:
-    case StyleAppearance::MozWindowFrameRight:
-    case StyleAppearance::MozWindowFrameBottom:
     case StyleAppearance::MozWindowButtonClose:
     case StyleAppearance::MozWindowButtonMinimize:
     case StyleAppearance::MozWindowButtonMaximize:
@@ -2512,9 +2483,6 @@ bool nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
     case StyleAppearance::Menuitemtext:
     case StyleAppearance::MozWindowTitlebar:
     case StyleAppearance::MozWindowTitlebarMaximized:
-    case StyleAppearance::MozWindowFrameLeft:
-    case StyleAppearance::MozWindowFrameRight:
-    case StyleAppearance::MozWindowFrameBottom:
     case StyleAppearance::MozWindowButtonClose:
     case StyleAppearance::MozWindowButtonMinimize:
     case StyleAppearance::MozWindowButtonMaximize:
@@ -2678,15 +2646,6 @@ LayoutDeviceIntSize nsNativeThemeWin::ClassicGetMinimumWidgetSize(
       result.height =
           GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYFRAME);
       break;
-    case StyleAppearance::MozWindowFrameLeft:
-    case StyleAppearance::MozWindowFrameRight:
-      result.width = GetSystemMetrics(SM_CXFRAME);
-      break;
-
-    case StyleAppearance::MozWindowFrameBottom:
-      result.height = GetSystemMetrics(SM_CYFRAME);
-      break;
-
     case StyleAppearance::MozWindowButtonClose:
     case StyleAppearance::MozWindowButtonMinimize:
     case StyleAppearance::MozWindowButtonMaximize:
@@ -2946,18 +2905,6 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
       return NS_OK;
     case StyleAppearance::MozWindowTitlebarMaximized:
       aPart = mozilla::widget::themeconst::WP_MAXCAPTION;
-      aState = GetTopLevelWindowActiveState(aFrame);
-      return NS_OK;
-    case StyleAppearance::MozWindowFrameLeft:
-      aPart = mozilla::widget::themeconst::WP_FRAMELEFT;
-      aState = GetTopLevelWindowActiveState(aFrame);
-      return NS_OK;
-    case StyleAppearance::MozWindowFrameRight:
-      aPart = mozilla::widget::themeconst::WP_FRAMERIGHT;
-      aState = GetTopLevelWindowActiveState(aFrame);
-      return NS_OK;
-    case StyleAppearance::MozWindowFrameBottom:
-      aPart = mozilla::widget::themeconst::WP_FRAMEBOTTOM;
       aState = GetTopLevelWindowActiveState(aFrame);
       return NS_OK;
     case StyleAppearance::MozWindowButtonClose:
@@ -3474,18 +3421,6 @@ RENDER_AGAIN:
       }
       break;
     }
-
-    case StyleAppearance::MozWindowFrameLeft:
-      DrawEdge(hdc, &widgetRect, EDGE_RAISED, BF_LEFT);
-      break;
-
-    case StyleAppearance::MozWindowFrameRight:
-      DrawEdge(hdc, &widgetRect, EDGE_RAISED, BF_RIGHT);
-      break;
-
-    case StyleAppearance::MozWindowFrameBottom:
-      DrawEdge(hdc, &widgetRect, EDGE_RAISED, BF_BOTTOM);
-      break;
 
     case StyleAppearance::MozWindowButtonClose:
     case StyleAppearance::MozWindowButtonMinimize:
