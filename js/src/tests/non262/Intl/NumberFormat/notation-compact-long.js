@@ -123,7 +123,12 @@ const testcases = [
             {value: 1000e11, string: "100\u5146", parts: [Integer("100"), Compact("\u5146")]},
             {value: 10000e11, string: "1000\u5146", parts: [Integer("1000"), Compact("\u5146")]},
 
-            {value: 100000e11, string: "10,000\u5146", parts: [Integer("10"), Group(","), Integer("000"), Compact("\u5146")]},
+            {value: 10e15, string: "1\u4EAC", parts: [Integer("1"), Compact("\u4EAC")]},
+            {value: 100e15, string: "10\u4EAC", parts: [Integer("10"), Compact("\u4EAC")]},
+            {value: 1000e15, string: "100\u4EAC", parts: [Integer("100"), Compact("\u4EAC")]},
+            {value: 10000e15, string: "1000\u4EAC", parts: [Integer("1000"), Compact("\u4EAC")]},
+
+            {value: 100000e15, string: "10,000\u4EAC", parts: [Integer("10"), Group(","), Integer("000"), Compact("\u4EAC")]},
         ],
     },
 ];
