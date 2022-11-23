@@ -14,10 +14,3 @@ menupopup::part(drop-indicator) {
 toolbarbutton menupopup[placespopup] {
   --nested-margin: calc(-1 * (var(--arrowpanel-menuitem-padding-inline) + var(--panel-shadow-margin)));
 }
-
-/* Add border-radius on Windows 7 */
-@media (-moz-platform: windows-win7) {
-  toolbarbutton menupopup[placespopup]::part(content) {
-    border-radius: 3.5px;
-  }
-}
