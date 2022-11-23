@@ -232,9 +232,9 @@ def main():
                 timeout=(300, 300),
                 **zip_arg
             )
-            # 429 or any 5XX is likely to be a transient failure.
+            # 408, 429 or any 5XX is likely to be a transient failure.
             # Break out for success or other error codes.
-            if r.ok or (r.status_code < 500 and r.status_code != 429):
+            if r.ok or (r.status_code < 500 and (r.status_code not in (408, 429))):
                 break
             print_error(r)
         except requests.exceptions.RequestException as e:
