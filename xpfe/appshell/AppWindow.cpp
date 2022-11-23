@@ -1210,6 +1210,22 @@ void AppWindow::RemoveTooltipSupport() {
   listener->RemoveTooltipSupport(docShellElement);
 }
 
+static Maybe<int32_t> ReadIntAttribute(const Element& aElement,
+                                       nsAtom* aPrimary,
+                                       nsAtom* aSecondary = nullptr) {
+  nsAutoString attrString;
+  if (!aElement.GetAttr(aPrimary, attrString)) {
+    if (aSecondary) {
+      return ReadIntAttribute(aElement, aSecondary);
+    }
+    return Nothing();
+  }
+
+  nsresult res = NS_OK;
+  int32_t ret = attrString.ToInteger(&res);
+  return NS_SUCCEEDED(res) ? Some(ret) : Nothing();
+}
+
 // If aSpecWidth and/or aSpecHeight are > 0, we will use these CSS px sizes
 // to fit to the screen when staggering windows; if they're negative,
 // we use the window's current size instead.
@@ -1222,8 +1238,8 @@ bool AppWindow::LoadPositionFromXUL(int32_t aSpecWidth, int32_t aSpecHeight) {
     return false;
   }
 
-  nsCOMPtr<dom::Element> windowElement = GetWindowDOMElement();
-  NS_ENSURE_TRUE(windowElement, false);
+  RefPtr<dom::Element> root = GetWindowDOMElement();
+  NS_ENSURE_TRUE(root, false);
 
   const LayoutDeviceIntRect devRect = GetPositionAndSize();
 
@@ -1246,19 +1262,23 @@ bool AppWindow::LoadPositionFromXUL(int32_t aSpecWidth, int32_t aSpecHeight) {
   }
 
   // Obtain the position information from the <xul:window> element.
-  nsAutoString posString;
   DesktopIntPoint specPoint = curPoint;
-  nsresult errorCode;
-  windowElement->GetAttr(nsGkAtoms::screenX, posString);
-  int32_t temp = posString.ToInteger(&errorCode);
-  if (NS_SUCCEEDED(errorCode)) {
-    specPoint.x = temp;
+
+  // Also read lowercase screenx/y because the front-end sometimes sets these
+  // via setAttribute on HTML documents like about:blank, and stuff gets
+  // lowercased.
+  //
+  // TODO(emilio): We should probably rename screenX/Y to screen-x/y to
+  // prevent this impedance mismatch.
+  if (auto attr =
+          ReadIntAttribute(*root, nsGkAtoms::screenX, nsGkAtoms::screenx)) {
+    specPoint.x = *attr;
     gotPosition = true;
   }
-  windowElement->GetAttr(nsGkAtoms::screenY, posString);
-  temp = posString.ToInteger(&errorCode);
-  if (NS_SUCCEEDED(errorCode)) {
-    specPoint.y = temp;
+
+  if (auto attr =
+          ReadIntAttribute(*root, nsGkAtoms::screenY, nsGkAtoms::screeny)) {
+    specPoint.y = *attr;
     gotPosition = true;
   }
 
@@ -1280,17 +1300,6 @@ bool AppWindow::LoadPositionFromXUL(int32_t aSpecWidth, int32_t aSpecHeight) {
   }
 
   return gotPosition;
-}
-
-static Maybe<int32_t> ReadIntAttribute(const Element& aElement, nsAtom* aAtom) {
-  nsAutoString attrString;
-  if (!aElement.GetAttr(aAtom, attrString)) {
-    return Nothing();
-  }
-
-  nsresult res = NS_OK;
-  int32_t ret = attrString.ToInteger(&res);
-  return NS_SUCCEEDED(res) ? Some(ret) : Nothing();
 }
 
 static Maybe<int32_t> ReadSize(const Element& aElement, nsAtom* aAttr,
