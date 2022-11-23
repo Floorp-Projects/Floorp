@@ -282,8 +282,8 @@ class ReactiveElement extends HTMLElement {
      */
     static addInitializer(initializer) {
         var _a;
-        (_a = this._initializers) !== null && _a !== void 0 ? _a : (this._initializers = []);
-        this._initializers.push(initializer);
+        this.finalize();
+        ((_a = this._initializers) !== null && _a !== void 0 ? _a : (this._initializers = [])).push(initializer);
     }
     /**
      * Returns a list of attributes corresponding to the registered properties.
@@ -427,6 +427,12 @@ class ReactiveElement extends HTMLElement {
         // finalize any superclasses
         const superCtor = Object.getPrototypeOf(this);
         superCtor.finalize();
+        // Create own set of initializers for this class if any exist on the
+        // superclass and copy them down. Note, for a small perf boost, avoid
+        // creating initializers unless needed.
+        if (superCtor._initializers !== undefined) {
+            this._initializers = [...superCtor._initializers];
+        }
         this.elementProperties = new Map(superCtor.elementProperties);
         // initialize Map populated in observedAttributes
         this.__attributeToPropertyMap = new Map();
@@ -1009,7 +1015,7 @@ ReactiveElement.shadowRootOptions = { mode: 'open' };
 polyfillSupport$2 === null || polyfillSupport$2 === void 0 ? void 0 : polyfillSupport$2({ ReactiveElement });
 // IMPORTANT: do not change the property name or the assignment expression.
 // This line will be used in regexes to search for ReactiveElement usage.
-((_d$1 = global$1.reactiveElementVersions) !== null && _d$1 !== void 0 ? _d$1 : (global$1.reactiveElementVersions = [])).push('1.4.1');
+((_d$1 = global$1.reactiveElementVersions) !== null && _d$1 !== void 0 ? _d$1 : (global$1.reactiveElementVersions = [])).push('1.4.2');
 
 /**
  * @license
