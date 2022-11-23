@@ -282,15 +282,17 @@ index 8d76b3f..c1a58db 100644
  
  
 diff --git a/intl/icu/source/common/unifiedcache.cpp b/intl/icu/source/common/unifiedcache.cpp
-index 493ab79..a13eed8 100644
 --- a/intl/icu/source/common/unifiedcache.cpp
 +++ b/intl/icu/source/common/unifiedcache.cpp
-@@ -13,15 +13,19 @@
+@@ -11,19 +11,23 @@
+ */
+ 
  #include "unifiedcache.h"
  
  #include <algorithm>      // For std::max()
+-#include <mutex>
 +#ifndef __wasi__
- #include <mutex>
++ #include <mutex>
 +#endif
  
  #include "uassert.h"
@@ -302,10 +304,14 @@ index 493ab79..a13eed8 100644
  static std::mutex *gCacheMutex = nullptr;
  static std::condition_variable *gInProgressValueAddedCond;
 +#endif
- static icu::UInitOnce gCacheInitOnce = U_INITONCE_INITIALIZER;
+ static icu::UInitOnce gCacheInitOnce {};
  
  static const int32_t MAX_EVICT_ITERATIONS = 10;
-@@ -34,10 +38,12 @@ static UBool U_CALLCONV unifiedcache_cleanup() {
+ static const int32_t DEFAULT_MAX_UNUSED = 1000;
+ static const int32_t DEFAULT_PERCENTAGE_OF_IN_USE = 100;
+@@ -32,14 +36,16 @@ static const int32_t DEFAULT_PERCENTAGE_OF_IN_USE = 100;
+ U_CDECL_BEGIN
+ static UBool U_CALLCONV unifiedcache_cleanup() {
      gCacheInitOnce.reset();
      delete gCache;
      gCache = nullptr;
@@ -315,10 +321,14 @@ index 493ab79..a13eed8 100644
      gInProgressValueAddedCond->~condition_variable();
      gInProgressValueAddedCond = nullptr;
 +#endif
-     return TRUE;
+     return true;
  }
  U_CDECL_END
-@@ -72,8 +78,10 @@ static void U_CALLCONV cacheInit(UErrorCode &status) {
+ 
+ 
+@@ -70,12 +76,14 @@ CacheKeyBase::~CacheKeyBase() {
+ static void U_CALLCONV cacheInit(UErrorCode &status) {
+     U_ASSERT(gCache == NULL);
      ucln_common_registerCleanup(
              UCLN_COMMON_UNIFIED_CACHE, unifiedcache_cleanup);
  
@@ -329,7 +339,11 @@ index 493ab79..a13eed8 100644
      gCache = new UnifiedCache(status);
      if (gCache == NULL) {
          status = U_MEMORY_ALLOCATION_ERROR;
-@@ -135,28 +143,38 @@ void UnifiedCache::setEvictionPolicy(
+     }
+     if (U_FAILURE(status)) {
+@@ -133,41 +141,53 @@ void UnifiedCache::setEvictionPolicy(
+     }
+     if (count < 0 || percentageOfInUseItems < 0) {
          status = U_ILLEGAL_ARGUMENT_ERROR;
          return;
      }
@@ -368,7 +382,8 @@ index 493ab79..a13eed8 100644
  
      // Use a loop in case cache items that are flushed held hard references to
      // other cache items making those additional cache items eligible for
-@@ -165,7 +183,9 @@ void UnifiedCache::flush() const {
+     // flushing.
+     while (_flush(false));
  }
  
  void UnifiedCache::handleUnreferencedObject() const {
@@ -378,7 +393,11 @@ index 493ab79..a13eed8 100644
      --fNumValuesInUse;
      _runEvictionSlice();
  }
-@@ -184,7 +204,9 @@ void UnifiedCache::dump() {
+ 
+ #ifdef UNIFIED_CACHE_DEBUG
+@@ -182,11 +202,13 @@ void UnifiedCache::dump() {
+     }
+     cache->dumpContents();
  }
  
  void UnifiedCache::dumpContents() const {
@@ -388,17 +407,25 @@ index 493ab79..a13eed8 100644
      _dumpContents();
  }
  
-@@ -224,7 +246,9 @@ UnifiedCache::~UnifiedCache() {
+ // Dumps content of cache.
+ // On entry, gCacheMutex must be held.
+@@ -222,11 +244,13 @@ UnifiedCache::~UnifiedCache() {
+     flush();
+     {
          // Now all that should be left in the cache are entries that refer to
          // each other and entries with hard references from outside the cache.
          // Nothing we can do about these so proceed to wipe out the cache.
 +#ifndef __wasi__
          std::lock_guard<std::mutex> lock(*gCacheMutex);
 +#endif
-         _flush(TRUE);
+         _flush(true);
      }
      uhash_close(fHashtable);
-@@ -325,7 +349,9 @@ void UnifiedCache::_putIfAbsentAndGet(
+     fHashtable = nullptr;
+     delete fNoValue;
+@@ -323,11 +347,13 @@ void UnifiedCache::_putNew(
+ 
+ void UnifiedCache::_putIfAbsentAndGet(
          const CacheKeyBase &key,
          const SharedObject *&value,
          UErrorCode &status) const {
@@ -408,7 +435,11 @@ index 493ab79..a13eed8 100644
      const UHashElement *element = uhash_find(fHashtable, &key);
      if (element != NULL && !_inProgress(element)) {
          _fetch(element, value, status);
-@@ -350,14 +376,18 @@ UBool UnifiedCache::_poll(
+         return;
+     }
+@@ -348,18 +374,22 @@ UBool UnifiedCache::_poll(
+         const CacheKeyBase &key,
+         const SharedObject *&value,
          UErrorCode &status) const {
      U_ASSERT(value == NULL);
      U_ASSERT(status == U_ZERO_ERROR);
@@ -427,7 +458,11 @@ index 493ab79..a13eed8 100644
           element = uhash_find(fHashtable, &key);
      }
  
-@@ -428,9 +458,11 @@ void UnifiedCache::_put(
+     // If the hash table contains an entry for the key,
+     // fetch out the contents and return them.
+@@ -426,13 +456,15 @@ void UnifiedCache::_put(
+     UHashElement *ptr = const_cast<UHashElement *>(element);
+     ptr->value.pointer = (void *) value;
      U_ASSERT(oldValue == fNoValue);
      removeSoftRef(oldValue);
  
@@ -439,6 +474,8 @@ index 493ab79..a13eed8 100644
  }
  
  void UnifiedCache::_fetch(
+         const UHashElement *element,
+         const SharedObject *&value,
 diff --git a/intl/icu/source/i18n/decContext.h b/intl/icu/source/i18n/decContext.h
 index 59ab65e..20f3526 100644
 --- a/intl/icu/source/i18n/decContext.h
