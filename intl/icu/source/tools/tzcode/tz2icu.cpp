@@ -774,16 +774,16 @@ struct FinalRulePart {
     // wall time, local standard time, and GMT standard time.
     // Here is how the isstd & isgmt flags are set by zic:
     //| case 's':       /* Standard */
-    //|         rp->r_todisstd = true;
-    //|         rp->r_todisgmt = false;
+    //|         rp->r_todisstd = TRUE;
+    //|         rp->r_todisgmt = FALSE;
     //| case 'w':       /* Wall */
-    //|         rp->r_todisstd = false;
-    //|         rp->r_todisgmt = false;
+    //|         rp->r_todisstd = FALSE;
+    //|         rp->r_todisgmt = FALSE;
     //| case 'g':       /* Greenwich */
     //| case 'u':       /* Universal */
     //| case 'z':       /* Zulu */
-    //|         rp->r_todisstd = true;
-    //|         rp->r_todisgmt = true;
+    //|         rp->r_todisstd = TRUE;
+    //|         rp->r_todisgmt = TRUE;
     bool isstd;
     bool isgmt;
 

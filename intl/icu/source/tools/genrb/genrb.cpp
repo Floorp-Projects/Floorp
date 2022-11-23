@@ -33,7 +33,6 @@
 #include "filterrb.h"
 #include "reslist.h"
 #include "ucmndata.h"  /* TODO: for reading the pool bundle */
-#include "collationroot.h"
 
 U_NAMESPACE_USE
 
@@ -85,9 +84,7 @@ enum
     WRITE_POOL_BUNDLE,
     USE_POOL_BUNDLE,
     INCLUDE_UNIHAN_COLL,
-    FILTERDIR,
-    ICU4X_MODE,
-    UCADATA
+    FILTERDIR
 };
 
 UOption options[]={
@@ -114,12 +111,10 @@ UOption options[]={
                       UOPTION_DEF("usePoolBundle", '\x01', UOPT_OPTIONAL_ARG),/* 20 */
                       UOPTION_DEF("includeUnihanColl", '\x01', UOPT_NO_ARG),/* 21 */ /* temporary, don't display in usage info */
                       UOPTION_DEF("filterDir", '\x01', UOPT_OPTIONAL_ARG), /* 22 */
-                      UOPTION_DEF("icu4xMode", 'X', UOPT_NO_ARG),/* 23 */
-                      UOPTION_DEF("ucadata", '\x01', UOPT_REQUIRES_ARG),/* 24 */
                   };
 
-static     UBool       write_java = false;
-static     UBool       write_xliff = false;
+static     UBool       write_java = FALSE;
+static     UBool       write_xliff = FALSE;
 static     const char* outputEnc ="";
 
 static ResFile poolBundle;
@@ -138,7 +133,7 @@ main(int argc,
     const char *filterDir = NULL;
     const char *encoding  = "";
     int         i;
-    UBool illegalArg = false;
+    UBool illegalArg = FALSE;
 
     U_MAIN_INIT_ARGS(argc, argv);
 
@@ -149,28 +144,24 @@ main(int argc,
     /* error handling, printing usage message */
     if(argc<0) {
         fprintf(stderr, "%s: error in command line argument \"%s\"\n", argv[0], argv[-argc]);
-        illegalArg = true;
+        illegalArg = TRUE;
     } else if(argc<2) {
-        illegalArg = true;
+        illegalArg = TRUE;
     }
     if(options[WRITE_POOL_BUNDLE].doesOccur && options[USE_POOL_BUNDLE].doesOccur) {
         fprintf(stderr, "%s: cannot combine --writePoolBundle and --usePoolBundle\n", argv[0]);
-        illegalArg = true;
-    }
-    if (options[ICU4X_MODE].doesOccur && !options[UCADATA].doesOccur) {
-        fprintf(stderr, "%s: --icu4xMode requires --ucadata\n", argv[0]);
-        illegalArg = true;
+        illegalArg = TRUE;
     }
     if(options[FORMAT_VERSION].doesOccur) {
         const char *s = options[FORMAT_VERSION].value;
         if(uprv_strlen(s) != 1 || (s[0] < '1' && '3' < s[0])) {
             fprintf(stderr, "%s: unsupported --formatVersion %s\n", argv[0], s);
-            illegalArg = true;
+            illegalArg = TRUE;
         } else if(s[0] == '1' &&
                   (options[WRITE_POOL_BUNDLE].doesOccur || options[USE_POOL_BUNDLE].doesOccur)
         ) {
             fprintf(stderr, "%s: cannot combine --formatVersion 1 with --writePoolBundle or --usePoolBundle\n", argv[0]);
-            illegalArg = true;
+            illegalArg = TRUE;
         } else {
             setFormatVersion(s[0] - '0');
         }
@@ -182,7 +173,7 @@ main(int argc,
                 "%s error: command line argument --java-package or --bundle-name "
                 "without --write-java\n",
                 argv[0]);
-        illegalArg = true;
+        illegalArg = TRUE;
     }
 
     if(options[VERSION].doesOccur) {
@@ -255,17 +246,17 @@ main(int argc,
     }
 
     if(options[VERBOSE].doesOccur) {
-        setVerbose(true);
+        setVerbose(TRUE);
     }
 
     if(options[QUIET].doesOccur) {
-        setShowWarning(false);
+        setShowWarning(FALSE);
     }
     if(options[STRICT].doesOccur) {
-        setStrict(true);
+        setStrict(TRUE);
     }
     if(options[COPYRIGHT].doesOccur){
-        setIncludeCopyright(true);
+        setIncludeCopyright(TRUE);
     }
 
     if(options[SOURCEDIR].doesOccur) {
@@ -300,24 +291,15 @@ main(int argc,
     }
     status = U_ZERO_ERROR;
     if(options[WRITE_JAVA].doesOccur) {
-        write_java = true;
+        write_java = TRUE;
         outputEnc = options[WRITE_JAVA].value;
     }
 
     if(options[WRITE_XLIFF].doesOccur) {
-        write_xliff = true;
+        write_xliff = TRUE;
         if(options[WRITE_XLIFF].value != NULL){
             xliffOutputFileName = options[WRITE_XLIFF].value;
         }
-    }
-
-    if (options[UCADATA].doesOccur) {
-#if !UCONFIG_NO_COLLATION
-        CollationRoot::forceLoadFromFile(options[UCADATA].value, status);
-#else
-        fprintf(stderr, "--ucadata was used with UCONFIG_NO_COLLATION\n");
-        return status;
-#endif
     }
 
     initParser();
@@ -329,7 +311,7 @@ main(int argc,
 
     LocalPointer<SRBRoot> newPoolBundle;
     if(options[WRITE_POOL_BUNDLE].doesOccur) {
-        newPoolBundle.adoptInsteadAndCheckErrorCode(new SRBRoot(NULL, true, status), status);
+        newPoolBundle.adoptInsteadAndCheckErrorCode(new SRBRoot(NULL, TRUE, status), status);
         if(U_FAILURE(status)) {
             fprintf(stderr, "unable to create an empty bundle for the pool keys: %s\n", u_errorName(status));
             return status;
@@ -512,7 +494,7 @@ main(int argc,
         }
 
         T_FileStream_close(poolFile);
-        setUsePoolBundle(true);
+        setUsePoolBundle(TRUE);
         if (isVerbose() && poolBundle.fStrings != NULL) {
             printf("number of shared strings: %d\n", (int)poolBundle.fStrings->fCount);
             int32_t length = poolBundle.fStringIndexLimit + 1;  // incl. last NUL
@@ -657,7 +639,7 @@ processFile(const char *filename, const char *cp,
         return;
     }
 
-    ucbuf.adoptInstead(ucbuf_open(openFileName.data(), &cp,getShowWarning(),true, &status));
+    ucbuf.adoptInstead(ucbuf_open(openFileName.data(), &cp,getShowWarning(),TRUE, &status));
     if(status == U_FILE_ACCESS_ERROR) {
 
         fprintf(stderr, "couldn't open file %s\n", openFileName.data());
@@ -674,7 +656,7 @@ processFile(const char *filename, const char *cp,
     }
     /* Parse the data into an SRBRoot */
     data.adoptInstead(parse(ucbuf.getAlias(), inputDir, outputDir, filename,
-            !omitBinaryCollation, options[NO_COLLATION_RULES].doesOccur, options[ICU4X_MODE].doesOccur, &status));
+            !omitBinaryCollation, options[NO_COLLATION_RULES].doesOccur, &status));
 
     if (data.isNull() || U_FAILURE(status)) {
         fprintf(stderr, "couldn't parse the file %s. Error:%s\n", filename, u_errorName(status));
@@ -748,11 +730,11 @@ processFile(const char *filename, const char *cp,
                 filename, u_errorName(status));
         return;
     }
-    if(write_java== true){
+    if(write_java== TRUE){
         bundle_write_java(data.getAlias(), outputDir, outputEnc,
                           outputFileName, sizeof(outputFileName),
                           options[JAVA_PACKAGE].value, options[BUNDLE_NAME].value, &status);
-    }else if(write_xliff ==true){
+    }else if(write_xliff ==TRUE){
         bundle_write_xml(data.getAlias(), outputDir, outputEnc,
                          filename, outputFileName, sizeof(outputFileName),
                          language, xliffOutputFileName, &status);

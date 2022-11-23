@@ -131,7 +131,7 @@ private:
     /** 
      * Default constructor, not implemented.
      */
-    DateInterval() = delete;
+    DateInterval();
 
     UDate fromDate;
     UDate toDate;

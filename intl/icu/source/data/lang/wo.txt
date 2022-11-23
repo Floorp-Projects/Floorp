@@ -166,6 +166,10 @@ wo{
         zh_Hans{"Sinuwaa buñ woyofal"}
         zh_Hant{"Sinuwaa bu cosaan"}
     }
+    Languages%long{
+        zh_Hans{"Sinuwaa buñ woyofal"}
+        zh_Hant{"Sinuwaa bu cosaan"}
+    }
     Languages%short{
         en_GB{"Àngale (RI)"}
         en_US{"Àngale (ES)"}

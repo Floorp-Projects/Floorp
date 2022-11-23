@@ -17,7 +17,6 @@
 *
 */
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "unicode/utypes.h"
@@ -204,7 +203,7 @@ init() {
     sprepTrie = (UNewTrie *)uprv_calloc(1, sizeof(UNewTrie));
 
     /* initialize the two tries */
-    if(NULL==utrie_open(sprepTrie, NULL, MAX_DATA_LENGTH, 0, 0, false)) {
+    if(NULL==utrie_open(sprepTrie, NULL, MAX_DATA_LENGTH, 0, 0, FALSE)) {
         fprintf(stderr, "error: failed to initialize tries\n");
         exit(U_MEMORY_ALLOCATION_ERROR);
     }
@@ -518,7 +517,7 @@ storeRange(uint32_t start, uint32_t end, UStringPrepType type, UErrorCode* statu
             exit(U_ILLEGAL_ARGUMENT_ERROR);
         }
     }else{
-        if(!utrie_setRange32(sprepTrie, start, end+1, trieWord, false)){
+        if(!utrie_setRange32(sprepTrie, start, end+1, trieWord, FALSE)){
             fprintf(stderr,"Value for certain codepoint already set.\n");
             exit(U_ILLEGAL_CHAR_FOUND);
         }
@@ -570,7 +569,7 @@ generateData(const char *dataDir, const char* bundleName) {
     /* sort and add mapping data */
     storeMappingData();
 
-    sprepTrieSize=utrie_serialize(sprepTrie, sprepTrieBlock, sizeof(sprepTrieBlock), getFoldedValue, true, &errorCode);
+    sprepTrieSize=utrie_serialize(sprepTrie, sprepTrieBlock, sizeof(sprepTrieBlock), getFoldedValue, TRUE, &errorCode);
     if(U_FAILURE(errorCode)) {
         fprintf(stderr, "error: utrie_serialize(sprep trie) failed, %s\n", u_errorName(errorCode));
         exit(errorCode);

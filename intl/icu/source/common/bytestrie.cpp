@@ -337,13 +337,13 @@ BytesTrie::findUniqueValueFromBranch(const uint8_t *pos, int32_t length,
                 }
             } else {
                 uniqueValue=value;
-                haveUniqueValue=true;
+                haveUniqueValue=TRUE;
             }
         } else {
             if(!findUniqueValue(pos+value, haveUniqueValue, uniqueValue)) {
                 return NULL;
             }
-            haveUniqueValue=true;
+            haveUniqueValue=TRUE;
         }
     } while(--length>1);
     return pos+1;  // ignore the last comparison byte
@@ -359,9 +359,9 @@ BytesTrie::findUniqueValue(const uint8_t *pos, UBool haveUniqueValue, int32_t &u
             }
             pos=findUniqueValueFromBranch(pos, node+1, haveUniqueValue, uniqueValue);
             if(pos==NULL) {
-                return false;
+                return FALSE;
             }
-            haveUniqueValue=true;
+            haveUniqueValue=TRUE;
         } else if(node<kMinValueLead) {
             // linear-match node
             pos+=node-kMinLinearMatch+1;  // Ignore the match bytes.
@@ -370,14 +370,14 @@ BytesTrie::findUniqueValue(const uint8_t *pos, UBool haveUniqueValue, int32_t &u
             int32_t value=readValue(pos, node>>1);
             if(haveUniqueValue) {
                 if(value!=uniqueValue) {
-                    return false;
+                    return FALSE;
                 }
             } else {
                 uniqueValue=value;
-                haveUniqueValue=true;
+                haveUniqueValue=TRUE;
             }
             if(isFinal) {
-                return true;
+                return TRUE;
             }
             pos=skipValue(pos, node);
         }

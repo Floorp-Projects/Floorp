@@ -57,9 +57,8 @@ for patch in \
  bug-1636984-display-name-fractional-seconds.diff \
  bug-1636984-append-item-dayperiod-fractional-seconds.diff \
  bug-1706949-wasi-workaround.diff \
+ bug-1766220-ICU-21994.diff \
  bug-1790071-ICU-22132-standardize-vtzone-output.diff \
- bug-1792775-ICU-22198.diff \
- bug-1792775-ICU-22206.diff \
 ; do
   echo "Applying local patch $patch"
   patch -d ${icu_dir}/../../ -p1 --no-backup-if-mismatch < ${icu_dir}/../icu-patches/$patch

@@ -37,7 +37,7 @@ U_NAMESPACE_BEGIN
 
 static icu::Locale*  availableLocaleList = NULL;
 static int32_t  availableLocaleListCount;
-static icu::UInitOnce gInitOnceLocale {};
+static icu::UInitOnce gInitOnceLocale = U_INITONCE_INITIALIZER;
 
 U_NAMESPACE_END
 
@@ -54,7 +54,7 @@ static UBool U_CALLCONV locale_available_cleanup(void)
     availableLocaleListCount = 0;
     gInitOnceLocale.reset();
 
-    return true;
+    return TRUE;
 }
 
 U_CDECL_END
@@ -102,7 +102,7 @@ namespace {
 // Enough capacity for the two lists in the res_index.res file
 const char** gAvailableLocaleNames[2] = {};
 int32_t gAvailableLocaleCounts[2] = {};
-icu::UInitOnce ginstalledLocalesInitOnce {};
+icu::UInitOnce ginstalledLocalesInitOnce = U_INITONCE_INITIALIZER;
 
 class AvailableLocalesSink : public ResourceSink {
   public:
@@ -203,7 +203,7 @@ static UBool U_CALLCONV uloc_cleanup(void) {
         gAvailableLocaleCounts[i] = 0;
     }
     ginstalledLocalesInitOnce.reset();
-    return true;
+    return TRUE;
 }
 
 // Load Installed Locales. This function will be called exactly once

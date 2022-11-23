@@ -377,7 +377,7 @@ class U_I18N_API IslamicCalendar : public Calendar {
   virtual const char * getType() const override;
 
  private:
-  IslamicCalendar() = delete; // default constructor not implemented
+  IslamicCalendar(); // default constructor not implemented
 
   // Default century.
  protected:

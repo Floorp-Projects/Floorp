@@ -76,7 +76,7 @@ static int32_t pkg_executeOptions(UPKGOptions *o);
 #ifdef WINDOWS_WITH_MSVC
 static int32_t pkg_createWindowsDLL(const char mode, const char *gencFilePath, UPKGOptions *o);
 #endif
-static int32_t pkg_createSymLinks(const char *targetDir, UBool specialHandling=false);
+static int32_t pkg_createSymLinks(const char *targetDir, UBool specialHandling=FALSE);
 static int32_t pkg_installLibrary(const char *installDir, const char *dir, UBool noVersion);
 static int32_t pkg_installFileMode(const char *installDir, const char *srcDir, const char *fileListName);
 static int32_t pkg_installCommonMode(const char *installDir, const char *fileName);
@@ -91,13 +91,13 @@ static void pkg_destroyOptMatchArch(char *optMatchArch);
 #endif
 
 static int32_t pkg_createWithAssemblyCode(const char *targetDir, const char mode, const char *gencFilePath);
-static int32_t pkg_generateLibraryFile(const char *targetDir, const char mode, const char *objectFile, char *command = NULL, UBool specialHandling=false);
+static int32_t pkg_generateLibraryFile(const char *targetDir, const char mode, const char *objectFile, char *command = NULL, UBool specialHandling=FALSE);
 static int32_t pkg_archiveLibrary(const char *targetDir, const char *version, UBool reverseExt);
 static void createFileNames(UPKGOptions *o, const char mode, const char *version_major, const char *version, const char *libName, const UBool reverseExt, UBool noVersion);
 static int32_t initializePkgDataFlags(UPKGOptions *o);
 
 static int32_t pkg_getPkgDataPath(UBool verbose, UOption *option);
-static int runCommand(const char* command, UBool specialHandling=false);
+static int runCommand(const char* command, UBool specialHandling=FALSE);
 
 #define IN_COMMON_MODE(mode) (mode == 'a' || mode == 'c')
 #define IN_DLL_MODE(mode)    (mode == 'd' || mode == 'l')
@@ -275,7 +275,7 @@ main(int argc, char* argv[]) {
     /* FileStream  *out; */
     UPKGOptions  o;
     CharList    *tail;
-    UBool        needsHelp = false;
+    UBool        needsHelp = FALSE;
     UErrorCode   status = U_ZERO_ERROR;
     /* char         tmp[1024]; */
     uint32_t i;
@@ -295,7 +295,7 @@ main(int argc, char* argv[]) {
     many options to just display them all of the time. */
 
     if(options[HELP].doesOccur || options[HELP_QUESTION_MARK].doesOccur) {
-        needsHelp = true;
+        needsHelp = TRUE;
     }
     else {
         if(!needsHelp && argc<0) {
@@ -399,21 +399,21 @@ main(int argc, char* argv[]) {
     }
 
     if(options[QUIET].doesOccur) {
-      o.quiet = true;
+      o.quiet = TRUE;
     } else {
-      o.quiet = false;
+      o.quiet = FALSE;
     }
 
     if(options[PDS_BUILD].doesOccur) {
 #if U_PLATFORM == U_PF_OS390
-      o.pdsbuild = true;
+      o.pdsbuild = TRUE;
 #else
-      o.pdsbuild = false;
+      o.pdsbuild = FALSE;
       fprintf(stdout, "Warning: You are using the -z option which only works on z/OS.\n");
 
 #endif
     } else {
-      o.pdsbuild = false;
+      o.pdsbuild = FALSE;
     }
 
     o.verbose   = options[VERBOSE].doesOccur;
@@ -464,13 +464,13 @@ main(int argc, char* argv[]) {
         o.entryName = o.cShortName;
     }
 
-    o.withoutAssembly = false;
+    o.withoutAssembly = FALSE;
     if (options[WITHOUT_ASSEMBLY].doesOccur) {
 #ifndef BUILD_DATA_WITHOUT_ASSEMBLY
         fprintf(stdout, "Warning: You are using the option to build without assembly code which is not supported on this platform.\n");
         fprintf(stdout, "Warning: This option will be ignored.\n");
 #else
-        o.withoutAssembly = true;
+        o.withoutAssembly = TRUE;
 #endif
     }
 
@@ -594,7 +594,7 @@ static int32_t pkg_executeOptions(UPKGOptions *o) {
         }
         return result;
     } else /* if (IN_COMMON_MODE(mode) || IN_DLL_MODE(mode) || IN_STATIC_MODE(mode)) */ {
-        UBool noVersion = false;
+        UBool noVersion = FALSE;
 
         uprv_strcpy(targetDir, o->targetDir);
         uprv_strcat(targetDir, PKGDATA_FILE_SEP_STRING);
@@ -657,7 +657,7 @@ static int32_t pkg_executeOptions(UPKGOptions *o) {
         } else /* if (IN_STATIC_MODE(mode) || IN_DLL_MODE(mode)) */ {
             char gencFilePath[SMALL_BUFFER_MAX_SIZE] = "";
             char version_major[10] = "";
-            UBool reverseExt = false;
+            UBool reverseExt = FALSE;
 
 #if !defined(WINDOWS_WITH_MSVC) || defined(USING_CYGWIN)
             /* Get the version major number. */
@@ -670,7 +670,7 @@ static int32_t pkg_executeOptions(UPKGOptions *o) {
                     version_major[i] = o->version[i];
                 }
             } else {
-                noVersion = true;
+                noVersion = TRUE;
                 if (IN_DLL_MODE(mode)) {
                     fprintf(stdout, "Warning: Providing a revision number with the -r option is recommended when packaging data in the current mode.\n");
                 }
@@ -678,20 +678,20 @@ static int32_t pkg_executeOptions(UPKGOptions *o) {
 
 #if U_PLATFORM != U_PF_OS400
             /* Certain platforms have different library extension ordering. (e.g. libicudata.##.so vs libicudata.so.##)
-             * reverseExt is false if the suffix should be the version number.
+             * reverseExt is FALSE if the suffix should be the version number.
              */
             if (pkgDataFlags[LIB_EXT_ORDER][uprv_strlen(pkgDataFlags[LIB_EXT_ORDER])-1] == pkgDataFlags[SO_EXT][uprv_strlen(pkgDataFlags[SO_EXT])-1]) {
-                reverseExt = true;
+                reverseExt = TRUE;
             }
 #endif
             /* Using the base libName and version number, generate the library file names. */
             createFileNames(o, mode, version_major, o->version == NULL ? "" : o->version, o->libName, reverseExt, noVersion);
 
-            if ((o->version!=NULL || IN_STATIC_MODE(mode)) && o->rebuild == false && o->pdsbuild == false) {
+            if ((o->version!=NULL || IN_STATIC_MODE(mode)) && o->rebuild == FALSE && o->pdsbuild == FALSE) {
                 /* Check to see if a previous built data library file exists and check if it is the latest. */
                 sprintf(checkLibFile, "%s%s", targetDir, libFileNames[LIB_FILE_VERSION]);
                 if (T_FileStream_file_exists(checkLibFile)) {
-                    if (isFileModTimeLater(checkLibFile, o->srcDir, true) && isFileModTimeLater(checkLibFile, o->options)) {
+                    if (isFileModTimeLater(checkLibFile, o->srcDir, TRUE) && isFileModTimeLater(checkLibFile, o->options)) {
                         if (o->install != NULL) {
                           if(o->verbose) {
                             fprintf(stdout, "# Installing already-built library into %s\n", o->install);
@@ -777,7 +777,7 @@ static int32_t pkg_executeOptions(UPKGOptions *o) {
                         NULL,
                         gencFilePath,
                         sizeof(gencFilePath),
-                        true);
+                        TRUE);
                     pkg_destroyOptMatchArch(optMatchArch);
 #if U_PLATFORM_IS_LINUX_BASED
                     result = pkg_generateLibraryFile(targetDir, mode, gencFilePath);
@@ -1196,7 +1196,7 @@ static int32_t pkg_installLibrary(const char *installDir, const char *targetDir,
     if (noVersion) {
         return result;
     } else {
-        return pkg_createSymLinks(installDir, true);
+        return pkg_createSymLinks(installDir, TRUE);
     }
 }
 
@@ -1365,7 +1365,7 @@ static int32_t pkg_archiveLibrary(const char *targetDir, const char *version, UB
 static int32_t pkg_generateLibraryFile(const char *targetDir, const char mode, const char *objectFile, char *command, UBool specialHandling) {
     int32_t result = 0;
     char *cmd = NULL;
-    UBool freeCmd = false;
+    UBool freeCmd = FALSE;
     int32_t length = 0;
 
     (void)specialHandling;  // Suppress unused variable compiler warnings on platforms where all usage
@@ -1387,7 +1387,7 @@ static int32_t pkg_generateLibraryFile(const char *targetDir, const char mode, c
                 fprintf(stderr, "Unable to allocate memory for command.\n");
                 return -1;
             }
-            freeCmd = true;
+            freeCmd = TRUE;
         }
         sprintf(cmd, "%s %s %s%s %s",
                 pkgDataFlags[AR],
@@ -1421,7 +1421,7 @@ static int32_t pkg_generateLibraryFile(const char *targetDir, const char mode, c
                 fprintf(stderr, "Unable to allocate memory for command.\n");
                 return -1;
             }
-            freeCmd = true;
+            freeCmd = TRUE;
         }
 #if U_PLATFORM == U_PF_MINGW
         sprintf(cmd, "%s%s%s %s -o %s%s %s %s%s %s %s",
@@ -1652,7 +1652,7 @@ static int32_t pkg_createWithoutAssemblyCode(UPKGOptions *o, const char *targetD
 
         if (i == 0) {
             /* The first iteration calls the gencmn function and initializes the buffer. */
-            createCommonDataFile(o->tmpDir, o->shortName, o->entryName, NULL, o->srcDir, o->comment, o->fileListFiles->str, 0, true, o->verbose, gencmnFile);
+            createCommonDataFile(o->tmpDir, o->shortName, o->entryName, NULL, o->srcDir, o->comment, o->fileListFiles->str, 0, TRUE, o->verbose, gencmnFile);
             buffer[0] = 0;
 #ifdef USE_SINGLE_CCODE_FILE
             uprv_strcpy(tempObjectFile, gencmnFile);
@@ -1915,7 +1915,7 @@ static int32_t pkg_createWindowsDLL(const char mode, const char *gencFilePath, U
         );
     }
 
-    result = runCommand(cmd, true);
+    result = runCommand(cmd, TRUE);
     if (result != 0) {
         fprintf(stderr, "Error creating Windows DLL library. Failed command: %s\n", cmd);
     }
@@ -2192,10 +2192,10 @@ static UBool getPkgDataPath(const char *cmd, UBool verbose, char *buf, size_t it
     if (p.isNull() || (n = fread(buf, 1, items-1, p.getAlias())) <= 0) {
         fprintf(stderr, "%s: Error calling '%s'\n", progname, cmd);
         *buf = 0;
-        return false;
+        return FALSE;
     }
 
-    return true;
+    return TRUE;
 }
 #endif
 
@@ -2203,7 +2203,7 @@ static UBool getPkgDataPath(const char *cmd, UBool verbose, char *buf, size_t it
 static int32_t pkg_getPkgDataPath(UBool verbose, UOption *option) {
 #if U_HAVE_POPEN
     static char buf[512] = "";
-    UBool pkgconfigIsValid = true;
+    UBool pkgconfigIsValid = TRUE;
     const char *pkgconfigCmd = "pkg-config --variable=pkglibdir icu-uc";
     const char *icuconfigCmd = "icu-config --incpkgdatafile";
     const char *pkgdata = "pkgdata.inc";
@@ -2214,7 +2214,7 @@ static int32_t pkg_getPkgDataPath(UBool verbose, UOption *option) {
             return -1;
         }
 
-        pkgconfigIsValid = false;
+        pkgconfigIsValid = FALSE;
     }
 
     for (int32_t length = strlen(buf) - 1; length >= 0; length--) {
@@ -2238,7 +2238,7 @@ static int32_t pkg_getPkgDataPath(UBool verbose, UOption *option) {
     buf[strlen(buf)] = 0;
 
     option->value = buf;
-    option->doesOccur = true;
+    option->doesOccur = TRUE;
 
     return 0;
 #else

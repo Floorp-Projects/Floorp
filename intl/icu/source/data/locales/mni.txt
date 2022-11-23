@@ -37,12 +37,6 @@ mni{
                 "MMM d, y G",
                 "M/d/y GGGGG",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1}, {0}",
-            }
-            DateTimePatterns%atTime{
                 "{1} গী {0} দা",
                 "{1} গী {0} দা",
                 "{1} {0}",
@@ -81,12 +75,6 @@ mni{
                 "MMM d, y",
                 "d/M/yy",
                 "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-            }
-            DateTimePatterns%atTime{
                 "{1} গী {0} দা",
                 "{1} গী {0} দা",
                 "{1}, {0}",
@@ -386,22 +374,5 @@ mni{
         UK{"য়ু কে"}
         US{"য়ু এস"}
         metric{"মেত্রিক"}
-    }
-    personNames{
-        nameOrderLocales{
-            givenFirst{
-                "und",
-                "mni",
-            }
-            surnameFirst{
-                "ko",
-                "si",
-                "ta",
-                "te",
-                "vi",
-                "yue",
-                "zh",
-            }
-        }
     }
 }

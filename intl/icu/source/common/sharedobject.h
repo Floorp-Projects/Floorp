@@ -38,8 +38,8 @@ public:
 
     virtual ~UnifiedCacheBase();
 private:
-    UnifiedCacheBase(const UnifiedCacheBase &) = delete;
-    UnifiedCacheBase &operator=(const UnifiedCacheBase &) = delete;
+    UnifiedCacheBase(const UnifiedCacheBase &);
+    UnifiedCacheBase &operator=(const UnifiedCacheBase &);
 };
 
 /**

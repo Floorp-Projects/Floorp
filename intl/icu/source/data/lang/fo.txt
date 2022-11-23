@@ -424,8 +424,6 @@ fo{
     }
     Languages%short{
         az{"azeri"}
-        en_GB{"enskt (UK)"}
-        en_US{"enskt (USA)"}
     }
     Languages%variant{
         ckb{"kurdiskt, sorani"}

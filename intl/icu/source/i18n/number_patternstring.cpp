@@ -1056,9 +1056,7 @@ void PatternStringUtils::patternInfoToStringBuilder(const AffixPatternProvider& 
                                                     PatternSignType patternSignType,
                                                     bool approximately,
                                                     StandardPlural::Form plural,
-                                                    bool perMilleReplacesPercent,
-                                                    bool dropCurrencySymbols,
-                                                    UnicodeString& output) {
+                                                    bool perMilleReplacesPercent, UnicodeString& output) {
 
     // Should the output render '+' where '-' would normally appear in the pattern?
     bool plusReplacesMinusSign = (patternSignType == PATTERN_SIGN_TYPE_POS_SIGN)
@@ -1131,9 +1129,6 @@ void PatternStringUtils::patternInfoToStringBuilder(const AffixPatternProvider& 
         }
         if (perMilleReplacesPercent && candidate == u'%') {
             candidate = u'‰';
-        }
-        if (dropCurrencySymbols && candidate == u'\u00A4') {
-            continue;
         }
         output.append(candidate);
     }

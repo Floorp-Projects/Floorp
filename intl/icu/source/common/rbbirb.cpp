@@ -65,9 +65,9 @@ RBBIRuleBuilder::RBBIRuleBuilder(const UnicodeString   &rules,
     fDefaultTree        = &fForwardTree;
     fForwardTable       = NULL;
     fRuleStatusVals     = NULL;
-    fChainRules         = false;
-    fLBCMNoChain        = false;
-    fLookAheadHardBreak = false;
+    fChainRules         = FALSE;
+    fLBCMNoChain        = FALSE;
+    fLookAheadHardBreak = FALSE;
     fUSetNodes          = NULL;
     fRuleStatusVals     = NULL;
     fScanner            = NULL;

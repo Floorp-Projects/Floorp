@@ -249,7 +249,7 @@ private:
     static uint32_t getQuaternaries(uint32_t variableTop, uint32_t pair);
 
 private:
-    CollationFastLatin() = delete;  // no constructor
+    CollationFastLatin();  // no constructor
 };
 
 /*

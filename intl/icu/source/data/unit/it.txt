@@ -404,13 +404,6 @@ it{
                 one{"{0} nanosecondo"}
                 other{"{0} nanosecondi"}
             }
-            quarter{
-                dnam{"trimestri"}
-                gender{"masculine"}
-                one{"{0} trimestre"}
-                other{"{0} trimestri"}
-                per{"{0} al trimestre"}
-            }
             second{
                 dnam{"secondi"}
                 gender{"masculine"}
@@ -798,6 +791,12 @@ it{
                 other{"{0} chilogrammi"}
                 per{"{0} per chilogrammo"}
             }
+            metric-ton{
+                dnam{"tonnellate metriche"}
+                gender{"feminine"}
+                one{"{0} tonnellata metrica"}
+                other{"{0} tonnellate metriche"}
+            }
             microgram{
                 dnam{"microgrammi"}
                 gender{"masculine"}
@@ -844,12 +843,6 @@ it{
                 dnam{"tonnellate"}
                 one{"{0} tonnellata"}
                 other{"{0} tonnellate"}
-            }
-            tonne{
-                dnam{"tonnellate metriche"}
-                gender{"feminine"}
-                one{"{0} tonnellata metrica"}
-                other{"{0} tonnellate metriche"}
             }
         }
         power{
@@ -1121,7 +1114,7 @@ it{
             fluid-ounce{
                 dnam{"once liquide"}
                 gender{"feminine"}
-                one{"{0} oncia liquida"}
+                one{"oncia liquida"}
                 other{"{0} once liquide"}
             }
             fluid-ounce-imperial{
@@ -1389,7 +1382,6 @@ it{
                 other{"{0}Tb"}
             }
             terabyte{
-                dnam{"TB"}
                 one{"{0}TB"}
                 other{"{0}TB"}
             }
@@ -1401,7 +1393,7 @@ it{
             }
             day{
                 dnam{"giorno"}
-                one{"{0}g"}
+                one{"{0} g"}
                 other{"{0}gg"}
                 per{"{0}/g"}
             }
@@ -1436,11 +1428,6 @@ it{
             nanosecond{
                 one{"{0}ns"}
                 other{"{0}ns"}
-            }
-            quarter{
-                one{"{0} trim."}
-                other{"{0} trim."}
-                per{"{0}/trim."}
             }
             second{
                 dnam{"s"}
@@ -1724,6 +1711,10 @@ it{
                 one{"{0}kg"}
                 other{"{0}kg"}
             }
+            metric-ton{
+                one{"{0}t"}
+                other{"{0}t"}
+            }
             microgram{
                 one{"{0}μg"}
                 other{"{0}μg"}
@@ -1755,10 +1746,6 @@ it{
             ton{
                 one{"{0}tn"}
                 other{"{0}tn"}
-            }
-            tonne{
-                one{"{0}t"}
-                other{"{0}t"}
             }
         }
         power{
@@ -1851,12 +1838,8 @@ it{
         temperature{
             celsius{
                 dnam{"°C"}
-                one{"{0}°C"}
-                other{"{0}°C"}
-            }
-            fahrenheit{
-                one{"{0}°F"}
-                other{"{0}°F"}
+                one{"{0} °C"}
+                other{"{0} °C"}
             }
             kelvin{
                 one{"{0}K"}
@@ -2201,47 +2184,47 @@ it{
                 other{"{0} byte"}
             }
             gigabit{
-                dnam{"Gbit"}
+                dnam{"Gb"}
                 one{"{0} Gb"}
                 other{"{0} Gb"}
             }
             gigabyte{
-                dnam{"Gbyte"}
+                dnam{"GB"}
                 one{"{0} GB"}
                 other{"{0} GB"}
             }
             kilobit{
-                dnam{"kbit"}
+                dnam{"kb"}
                 one{"{0} kb"}
                 other{"{0} kb"}
             }
             kilobyte{
-                dnam{"kbyte"}
+                dnam{"kB"}
                 one{"{0} kB"}
                 other{"{0} kB"}
             }
             megabit{
-                dnam{"Mbit"}
+                dnam{"Mb"}
                 one{"{0} Mb"}
                 other{"{0} Mb"}
             }
             megabyte{
-                dnam{"Mbyte"}
+                dnam{"MB"}
                 one{"{0} MB"}
                 other{"{0} MB"}
             }
             petabyte{
-                dnam{"Pbyte"}
+                dnam{"PB"}
                 one{"{0} PB"}
                 other{"{0} PB"}
             }
             terabit{
-                dnam{"Tbit"}
+                dnam{"Tb"}
                 one{"{0} Tb"}
                 other{"{0} Tb"}
             }
             terabyte{
-                dnam{"Tbyte"}
+                dnam{"TB"}
                 one{"{0} TB"}
                 other{"{0} TB"}
             }
@@ -2296,12 +2279,6 @@ it{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
-            quarter{
-                dnam{"trim."}
-                one{"{0} trim."}
-                other{"{0} trim."}
-                per{"{0}/trimestre"}
-            }
             second{
                 dnam{"s"}
                 one{"{0} s"}
@@ -2310,8 +2287,8 @@ it{
             }
             week{
                 dnam{"settimane"}
-                one{"{0} sett."}
-                other{"{0} sett."}
+                one{"{0} settimana"}
+                other{"{0} settimane"}
                 per{"{0}/settimana"}
             }
             year{
@@ -2555,6 +2532,11 @@ it{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
+            metric-ton{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
+            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -2586,11 +2568,6 @@ it{
                 dnam{"tn"}
                 one{"{0} tn"}
                 other{"{0} tn"}
-            }
-            tonne{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
             }
         }
         power{

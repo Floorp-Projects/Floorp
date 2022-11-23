@@ -310,7 +310,6 @@ tk{
         CI{"Şirmaýy kenar"}
         CZ{"Çeh Respublikasy"}
         FK{"Folklend (Malwina) adalary"}
-        NZ{"Aotearoa Täze Zelandiýa"}
         SZ{"Swazilend"}
         TL{"Gündogar Timor"}
     }

@@ -39,7 +39,6 @@ ms{
         alt{"Altai Selatan"}
         am{"Amharic"}
         an{"Aragon"}
-        ann{"Obolo"}
         anp{"Angika"}
         ar{"Arab"}
         ar_001{"Arab Standard Moden"}
@@ -52,7 +51,6 @@ ms{
         as{"Assam"}
         asa{"Asu"}
         ast{"Asturia"}
-        atj{"Atikamekw"}
         av{"Avaric"}
         awa{"Awadhi"}
         ay{"Aymara"}
@@ -99,23 +97,14 @@ ms{
         chk{"Chukese"}
         chm{"Mari"}
         cho{"Choctaw"}
-        chp{"Chipewyan"}
         chr{"Cherokee"}
         chy{"Cheyenne"}
         ckb{"Kurdi Tengah"}
-        clc{"Chilcotin"}
         co{"Corsica"}
         cop{"Coptic"}
-        crg{"Michif"}
         crh{"Turki Krimea"}
-        crj{"Cree Tenggara"}
-        crk{"Plains Cree"}
-        crl{"Timur Laut Cree"}
-        crm{"Moose Cree"}
-        crr{"Carolina Algonquian"}
         crs{"Perancis Seselwa Creole"}
         cs{"Czech"}
-        csw{"Swampy Cree"}
         cu{"Slavik Gereja"}
         cv{"Chuvash"}
         cy{"Wales"}
@@ -165,7 +154,6 @@ ms{
         fr_CA{"Perancis Kanada"}
         fr_CH{"Perancis Switzerland"}
         frc{"Perancis Cajun"}
-        frr{"Frisian Utara"}
         fur{"Friulian"}
         fy{"Frisian Barat"}
         ga{"Ireland"}
@@ -188,10 +176,8 @@ ms{
         gv{"Manx"}
         gwi{"Gwichʼin"}
         ha{"Hausa"}
-        hai{"Haida"}
         hak{"Cina Hakka"}
         haw{"Hawaii"}
-        hax{"Haida Selatan"}
         he{"Ibrani"}
         hi{"Hindi"}
         hil{"Hiligaynon"}
@@ -199,10 +185,9 @@ ms{
         hr{"Croatia"}
         hsb{"Sorbian Atas"}
         hsn{"Cina Xiang"}
-        ht{"Kreol Haiti"}
+        ht{"Haiti"}
         hu{"Hungary"}
         hup{"Hupa"}
-        hur{"Halkomelem"}
         hy{"Armenia"}
         hz{"Herero"}
         ia{"Interlingua"}
@@ -212,7 +197,6 @@ ms{
         ie{"Interlingue"}
         ig{"Igbo"}
         ii{"Sichuan Yi"}
-        ikt{"Inuktitut Kanada Barat"}
         ilo{"Iloko"}
         inh{"Ingush"}
         io{"Ido"}
@@ -236,7 +220,6 @@ ms{
         kea{"Kabuverdianu"}
         kfo{"Koro"}
         kg{"Kongo"}
-        kgp{"Kaingang"}
         kha{"Khasi"}
         khq{"Koyra Chiini"}
         khw{"Khowar"}
@@ -265,7 +248,6 @@ ms{
         kum{"Kumyk"}
         kv{"Komi"}
         kw{"Cornish"}
-        kwk{"Kwak’wala"}
         ky{"Kirghiz"}
         la{"Latin"}
         lad{"Ladino"}
@@ -275,14 +257,12 @@ ms{
         lez{"Lezghian"}
         lg{"Ganda"}
         li{"Limburgish"}
-        lil{"Lillooet"}
         lkt{"Lakota"}
         ln{"Lingala"}
         lo{"Laos"}
         lou{"Kreol Louisiana"}
         loz{"Lozi"}
         lrc{"Luri Utara"}
-        lsm{"Saamia"}
         lt{"Lithuania"}
         lu{"Luba-Katanga"}
         lua{"Luba-Lulua"}
@@ -313,7 +293,6 @@ ms{
         ml{"Malayalam"}
         mn{"Mongolia"}
         mni{"Manipuri"}
-        moe{"Innu-aimun"}
         moh{"Mohawk"}
         mos{"Mossi"}
         mr{"Marathi"}
@@ -331,7 +310,7 @@ ms{
         nan{"Cina Min Nan"}
         nap{"Neapolitan"}
         naq{"Nama"}
-        nb{"Bokmal Norway"}
+        nb{"Bokmål Norway"}
         nd{"Ndebele Utara"}
         nds{"Jerman Rendah"}
         nds_NL{"Saxon Rendah"}
@@ -355,11 +334,6 @@ ms{
         ny{"Nyanja"}
         nyn{"Nyankole"}
         oc{"Occitania"}
-        ojb{"Ojibwa Barat Laut"}
-        ojc{"Ojibwa Tengah"}
-        ojs{"Oji-Cree"}
-        ojw{"Ojibwa Barat"}
-        oka{"Okanagan"}
         om{"Oromo"}
         or{"Odia"}
         os{"Ossete"}
@@ -369,9 +343,7 @@ ms{
         pap{"Papiamento"}
         pau{"Palauan"}
         pcm{"Nigerian Pidgin"}
-        pis{"Pijin"}
         pl{"Poland"}
-        pqm{"Maliseet-Passamaquoddy"}
         prg{"Prusia"}
         ps{"Pashto"}
         pt{"Portugis"}
@@ -415,7 +387,6 @@ ms{
         si{"Sinhala"}
         sk{"Slovak"}
         sl{"Slovenia"}
-        slh{"Lushootseed Selatan"}
         sm{"Samoa"}
         sma{"Sami Selatan"}
         smj{"Lule Sami"}
@@ -430,7 +401,6 @@ ms{
         ss{"Swati"}
         ssy{"Saho"}
         st{"Sotho Selatan"}
-        str{"Straits Salish"}
         su{"Sunda"}
         suk{"Sukuma"}
         sv{"Sweden"}
@@ -439,30 +409,24 @@ ms{
         swb{"Comoria"}
         syr{"Syriac"}
         ta{"Tamil"}
-        tce{"Tutchone Selatan"}
         te{"Telugu"}
         tem{"Timne"}
         teo{"Teso"}
         tet{"Tetum"}
         tg{"Tajik"}
-        tgx{"Tagish"}
         th{"Thai"}
-        tht{"Tahltan"}
         ti{"Tigrinya"}
         tig{"Tigre"}
         tk{"Turkmen"}
         tlh{"Klingon"}
-        tli{"Tlingit"}
         tly{"Talysh"}
         tn{"Tswana"}
         to{"Tonga"}
-        tok{"Toki Pona"}
         tpi{"Tok Pisin"}
         tr{"Turki"}
         trv{"Taroko"}
         ts{"Tsonga"}
         tt{"Tatar"}
-        ttm{"Tutchone Utara"}
         tum{"Tumbuka"}
         tvl{"Tuvalu"}
         tw{"Twi"}
@@ -496,7 +460,6 @@ ms{
         ybb{"Yemba"}
         yi{"Yiddish"}
         yo{"Yoruba"}
-        yrl{"Nheengatu"}
         yue{"Kantonis"}
         zgh{"Tamazight Maghribi Standard"}
         zh{"Cina"}
@@ -523,7 +486,6 @@ ms{
     }
     Languages%variant{
         ckb{"Kurdi, Sorani"}
-        hi_Latn{"Hinglish"}
         ps{"Pushto"}
         ug{"Uighur"}
     }

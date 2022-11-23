@@ -187,10 +187,10 @@ private:
     void _init(int32_t initialCapacity, UErrorCode &status);
 
     // Disallow
-    UVector32(const UVector32&) = delete;
+    UVector32(const UVector32&);
 
     // Disallow
-    UVector32& operator=(const UVector32&) = delete;
+    UVector32& operator=(const UVector32&);
 
 
     //  API Functions for Stack operations.

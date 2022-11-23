@@ -193,40 +193,40 @@ int32_t UVector::elementAti(int32_t index) const {
 UBool UVector::containsAll(const UVector& other) const {
     for (int32_t i=0; i<other.size(); ++i) {
         if (indexOf(other.elements[i]) < 0) {
-            return false;
+            return FALSE;
         }
     }
-    return true;
+    return TRUE;
 }
 
 UBool UVector::containsNone(const UVector& other) const {
     for (int32_t i=0; i<other.size(); ++i) {
         if (indexOf(other.elements[i]) >= 0) {
-            return false;
+            return FALSE;
         }
     }
-    return true;
+    return TRUE;
 }
 
 UBool UVector::removeAll(const UVector& other) {
-    UBool changed = false;
+    UBool changed = FALSE;
     for (int32_t i=0; i<other.size(); ++i) {
         int32_t j = indexOf(other.elements[i]);
         if (j >= 0) {
             removeElementAt(j);
-            changed = true;
+            changed = TRUE;
         }
     }
     return changed;
 }
 
 UBool UVector::retainAll(const UVector& other) {
-    UBool changed = false;
+    UBool changed = FALSE;
     for (int32_t j=size()-1; j>=0; --j) {
         int32_t i = other.indexOf(elements[j]);
         if (i < 0) {
             removeElementAt(j);
-            changed = true;
+            changed = TRUE;
         }
     }
     return changed;
@@ -243,9 +243,9 @@ UBool UVector::removeElement(void* obj) {
     int32_t i = indexOf(obj);
     if (i >= 0) {
         removeElementAt(i);
-        return true;
+        return TRUE;
     }
-    return false;
+    return FALSE;
 }
 
 void UVector::removeAllElements(void) {
@@ -263,12 +263,12 @@ UBool   UVector::equals(const UVector &other) const {
     int      i;
 
     if (this->count != other.count) {
-        return false;
+        return FALSE;
     }
     if (comparer == nullptr) {
         for (i=0; i<count; i++) {
             if (elements[i].pointer != other.elements[i].pointer) {
-                return false;
+                return FALSE;
             }
         }
     } else {
@@ -276,11 +276,11 @@ UBool   UVector::equals(const UVector &other) const {
         for (i=0; i<count; i++) {
             key.pointer = &other.elements[i];
             if (!(*comparer)(key, elements[i])) {
-                return false;
+                return FALSE;
             }
         }
     }
-    return true;
+    return TRUE;
 }
 
 
@@ -525,7 +525,7 @@ sortiComparator(const void * /*context */, const void *left, const void *right) 
 void UVector::sorti(UErrorCode &ec) {
     if (U_SUCCESS(ec)) {
         uprv_sortArray(elements, count, sizeof(UElement),
-                       sortiComparator, nullptr,  false, &ec);
+                       sortiComparator, nullptr,  FALSE, &ec);
     }
 }
 
@@ -547,7 +547,7 @@ void UVector::sorti(UErrorCode &ec) {
 void UVector::sort(UElementComparator *compare, UErrorCode &ec) {
     if (U_SUCCESS(ec)) {
         uprv_sortArray(elements, count, sizeof(UElement),
-                       sortComparator, &compare, false, &ec);
+                       sortComparator, &compare, FALSE, &ec);
     }
 }
 
@@ -558,7 +558,7 @@ void UVector::sort(UElementComparator *compare, UErrorCode &ec) {
 void UVector::sortWithUComparator(UComparator *compare, const void *context, UErrorCode &ec) {
     if (U_SUCCESS(ec)) {
         uprv_sortArray(elements, count, sizeof(UElement),
-                       compare, context, true, &ec);
+                       compare, context, TRUE, &ec);
     }
 }
 

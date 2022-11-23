@@ -140,7 +140,7 @@ U_CDECL_BEGIN
 static UBool calendar_hebrew_cleanup(void) {
     delete gCache;
     gCache = NULL;
-    return true;
+    return TRUE;
 }
 U_CDECL_END
 
@@ -239,7 +239,7 @@ void HebrewCalendar::add(UCalendarDateFields field, int32_t amount, UErrorCode& 
                   }
                   month -= ELUL+1;
                   ++year;
-                  acrossAdar1 = true;
+                  acrossAdar1 = TRUE;
               }
           } else {
               acrossAdar1 = (month > ADAR_1); // started after ADAR_1?
@@ -253,7 +253,7 @@ void HebrewCalendar::add(UCalendarDateFields field, int32_t amount, UErrorCode& 
                   }
                   month += ELUL+1;
                   --year;
-                  acrossAdar1 = true;
+                  acrossAdar1 = TRUE;
               }
           }
           set(UCAL_MONTH, month);
@@ -671,12 +671,12 @@ HebrewCalendar::inDaylightTime(UErrorCode& status) const
 {
     // copied from GregorianCalendar
     if (U_FAILURE(status) || !getTimeZone().useDaylightTime()) 
-        return false;
+        return FALSE;
 
     // Force an update of the state of the Calendar.
     ((HebrewCalendar*)this)->complete(status); // cast away const
 
-    return (UBool)(U_SUCCESS(status) ? (internalGet(UCAL_DST_OFFSET) != 0) : false);
+    return (UBool)(U_SUCCESS(status) ? (internalGet(UCAL_DST_OFFSET) != 0) : FALSE);
 }
 
 /**
@@ -686,11 +686,11 @@ HebrewCalendar::inDaylightTime(UErrorCode& status) const
  */
 static UDate           gSystemDefaultCenturyStart       = DBL_MIN;
 static int32_t         gSystemDefaultCenturyStartYear   = -1;
-static icu::UInitOnce  gSystemDefaultCenturyInit        {};
+static icu::UInitOnce  gSystemDefaultCenturyInit        = U_INITONCE_INITIALIZER;
 
 UBool HebrewCalendar::haveDefaultCentury() const
 {
-    return true;
+    return TRUE;
 }
 
 static void U_CALLCONV initializeSystemDefaultCentury()

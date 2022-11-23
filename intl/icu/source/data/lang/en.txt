@@ -28,7 +28,6 @@ en{
         lw{"Line Breaks In Words Setting"}
         m0{"Transform Rules"}
         ms{"Measurement System"}
-        mu{"Measurement Unit"}
         numbers{"Numbers"}
         rg{"Region For Supplemental Data"}
         s0{"Transform Source"}
@@ -63,7 +62,6 @@ en{
         am{"Amharic"}
         an{"Aragonese"}
         ang{"Old English"}
-        ann{"Obolo"}
         anp{"Angika"}
         ar{"Arabic"}
         ar_001{"Modern Standard Arabic"}
@@ -102,7 +100,6 @@ en{
         bfd{"Bafut"}
         bfq{"Badaga"}
         bg{"Bulgarian"}
-        bgc{"Haryanvi"}
         bgn{"Western Balochi"}
         bho{"Bhojpuri"}
         bi{"Bislama"}
@@ -110,7 +107,7 @@ en{
         bin{"Bini"}
         bjn{"Banjar"}
         bkm{"Kom"}
-        bla{"Siksiká"}
+        bla{"Siksika"}
         blt{"Tai Dam"}
         bm{"Bambara"}
         bn{"Bangla"}
@@ -219,7 +216,7 @@ en{
         fa_AF{"Dari"}
         fan{"Fang"}
         fat{"Fanti"}
-        ff{"Fula"}
+        ff{"Fulah"}
         fi{"Finnish"}
         fil{"Filipino"}
         fit{"Tornedalen Finnish"}
@@ -369,7 +366,7 @@ en{
         la{"Latin"}
         lad{"Ladino"}
         lag{"Langi"}
-        lah{"Western Panjabi"}
+        lah{"Lahnda"}
         lam{"Lamba"}
         lb{"Luxembourgish"}
         lez{"Lezghian"}
@@ -387,7 +384,6 @@ en{
         lou{"Louisiana Creole"}
         loz{"Lozi"}
         lrc{"Northern Luri"}
-        lsm{"Saamia"}
         lt{"Lithuanian"}
         ltg{"Latgalian"}
         lu{"Luba-Katanga"}
@@ -504,12 +500,11 @@ en{
         pfl{"Palatine German"}
         phn{"Phoenician"}
         pi{"Pali"}
-        pis{"Pijin"}
         pl{"Polish"}
         pms{"Piedmontese"}
         pnt{"Pontic"}
         pon{"Pohnpeian"}
-        pqm{"Maliseet-Passamaquoddy"}
+        pqm{"Malecite"}
         prg{"Prussian"}
         pro{"Old Provençal"}
         ps{"Pashto"}
@@ -540,7 +535,7 @@ en{
         rwk{"Rwa"}
         sa{"Sanskrit"}
         sad{"Sandawe"}
-        sah{"Yakut"}
+        sah{"Sakha"}
         sam{"Samaritan Aramaic"}
         saq{"Samburu"}
         sas{"Sasak"}
@@ -630,7 +625,6 @@ en{
         tn{"Tswana"}
         to{"Tongan"}
         tog{"Nyasa Tonga"}
-        tok{"Toki Pona"}
         tpi{"Tok Pisin"}
         tr{"Turkish"}
         tru{"Turoyo"}
@@ -725,7 +719,6 @@ en{
     }
     Languages%variant{
         ckb{"Kurdish, Sorani"}
-        hi_Latn{"Hinglish"}
         ky{"Kirghiz"}
         my{"Myanmar Language"}
         ps{"Pushto"}
@@ -1175,11 +1168,6 @@ en{
             uksystem{"Imperial Measurement System"}
             ussystem{"US Measurement System"}
         }
-        mu{
-            celsius{"Celsius"}
-            fahrenhe{"Fahrenheit"}
-            kelvin{"Kelvin"}
-        }
         numbers{
             adlm{"Adlam Digits"}
             ahom{"Ahom Digits"}
@@ -1220,7 +1208,6 @@ en{
             jpanfin{"Japanese Financial Numerals"}
             jpanyear{"Japanese Calendar Gannen Year Numerals"}
             kali{"Kayah Li Digits"}
-            kawi{"Kawi Digits"}
             khmr{"Khmer Digits"}
             knda{"Kannada Digits"}
             lana{"Tai Tham Hora Digits"}
@@ -1242,7 +1229,6 @@ en{
             mymr{"Myanmar Digits"}
             mymrshan{"Myanmar Shan Digits"}
             mymrtlng{"Myanmar Tai Laing Digits"}
-            nagm{"Nag Mundari Digits"}
             native{"Native Digits"}
             newa{"Newa Digits"}
             nkoo{"N’Ko Digits"}

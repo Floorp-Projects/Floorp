@@ -91,12 +91,12 @@ private:
      * Copy constructor. One object per locale invariant. Clients
      * must never copy GenderInfo objects.
      */
-    GenderInfo(const GenderInfo& other) = delete;
+    GenderInfo(const GenderInfo& other);
 
     /**
       * Assignment operator. Not applicable to immutable objects.
       */
-    GenderInfo& operator=(const GenderInfo&) = delete;
+    GenderInfo& operator=(const GenderInfo&);
 
     GenderInfo();
 

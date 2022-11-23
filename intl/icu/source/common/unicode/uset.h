@@ -850,13 +850,15 @@ uset_removeAllStrings(USet* set);
 U_CAPI UBool U_EXPORT2
 uset_isEmpty(const USet* set);
 
+#ifndef U_HIDE_DRAFT_API
 /**
  * @param set the set
  * @return true if this set contains multi-character strings or the empty string.
- * @stable ICU 70
+ * @draft ICU 70
  */
 U_CAPI UBool U_EXPORT2
 uset_hasStrings(const USet *set);
+#endif  // U_HIDE_DRAFT_API
 
 /**
  * Returns true if the given USet contains the given character.
@@ -939,16 +941,18 @@ uset_charAt(const USet* set, int32_t charIndex);
 U_CAPI int32_t U_EXPORT2
 uset_size(const USet* set);
 
+#ifndef U_HIDE_DRAFT_API
 /**
  * @param set the set
  * @return the number of ranges in this set.
- * @stable ICU 70
+ * @draft ICU 70
  * @see uset_getItemCount
  * @see uset_getItem
  * @see uset_size
  */
 U_CAPI int32_t U_EXPORT2
 uset_getRangeCount(const USet *set);
+#endif  // U_HIDE_DRAFT_API
 
 /**
  * Returns the number of items in this set.  An item is either a range

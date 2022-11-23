@@ -37,17 +37,14 @@ zu{
         alt{"isi-Southern Altai"}
         am{"isi-Amharic"}
         an{"isi-Aragonese"}
-        ann{"isi-Obolo"}
         anp{"isi-Angika"}
         ar{"isi-Arabic"}
         ar_001{"isi-Arabic esivamile sesimanje"}
         arn{"isi-Mapuche"}
         arp{"isi-Arapaho"}
-        ars{"isi-Najdi Arabic"}
         as{"isi-Assamese"}
         asa{"isi-Asu"}
         ast{"isi-Asturian"}
-        atj{"isi-Atikamekw"}
         av{"isi-Avaric"}
         awa{"isi-Awadhi"}
         ay{"isi-Aymara"}
@@ -73,7 +70,6 @@ zu{
         bug{"isi-Buginese"}
         byn{"isi-Blin"}
         ca{"isi-Catalan"}
-        cay{"isi-Cayuga"}
         ccp{"i-Chakma"}
         ce{"isi-Chechen"}
         ceb{"isi-Cebuano"}
@@ -82,21 +78,12 @@ zu{
         chk{"isi-Chuukese"}
         chm{"isi-Mari"}
         cho{"isi-Choctaw"}
-        chp{"isi-Chipewyan"}
         chr{"isi-Cherokee"}
         chy{"isi-Cheyenne"}
         ckb{"isi-Central Kurdish"}
-        clc{"isi-Chilcotin"}
         co{"isi-Corsican"}
-        crg{"isi-Michif"}
-        crj{"Southern East Cree"}
-        crk{"Plains Cree"}
-        crl{"isi-Northern East Cree"}
-        crm{"isi-Moose Cree"}
-        crr{"isi-Carolina Algonquian"}
         crs{"i-Seselwa Creole French"}
         cs{"isi-Czech"}
-        csw{"Swampy Cree"}
         cu{"isi-Church Slavic"}
         cv{"isi-Chuvash"}
         cy{"isi-Welsh"}
@@ -146,7 +133,6 @@ zu{
         fr_CA{"isi-Canadian French"}
         fr_CH{"isi-Swiss French"}
         frc{"isi-Cajun French"}
-        frr{"isi-Northern Frisian"}
         fur{"isi-Friulian"}
         fy{"isi-Western Frisian"}
         ga{"isi-Irish"}
@@ -165,10 +151,8 @@ zu{
         gv{"isi-Manx"}
         gwi{"isi-Gwichʼin"}
         ha{"isi-Hausa"}
-        hai{"isi-Haida"}
         hak{"isi-Hakka Chinese"}
         haw{"isi-Hawaiian"}
-        hax{"Southern Haida"}
         he{"isi-Hebrew"}
         hi{"isi-Hindi"}
         hil{"isi-Hiligaynon"}
@@ -179,7 +163,6 @@ zu{
         ht{"isi-Haitian"}
         hu{"isi-Hungarian"}
         hup{"isi-Hupa"}
-        hur{"isi-Halkomelem"}
         hy{"isi-Armenia"}
         hz{"isi-Herero"}
         ia{"izilimi ezihlangene"}
@@ -189,7 +172,6 @@ zu{
         ie{"izimili"}
         ig{"isi-Igbo"}
         ii{"isi-Sichuan Yi"}
-        ikt{"Western Canadian Inuktitut"}
         ilo{"isi-Iloko"}
         inh{"isi-Ingush"}
         io{"isi-Ido"}
@@ -212,7 +194,6 @@ zu{
         kea{"isi-Kabuverdianu"}
         kfo{"isi-Koro"}
         kg{"isi-Kongo"}
-        kgp{"isi-Kaingang"}
         kha{"isi-Khasi"}
         khq{"isi-Koyra Chiini"}
         ki{"isi-Kikuyu"}
@@ -240,7 +221,6 @@ zu{
         kum{"isi-Kumyk"}
         kv{"isi-Komi"}
         kw{"isi-Cornish"}
-        kwk{"Kwakʼwala"}
         ky{"isi-Kyrgyz"}
         la{"isi-Latin"}
         lad{"isi-Ladino"}
@@ -249,14 +229,12 @@ zu{
         lez{"isi-Lezghian"}
         lg{"isi-Ganda"}
         li{"isi-Limburgish"}
-        lil{"isi-Lillooet"}
         lkt{"isi-Lakota"}
         ln{"isi-Lingala"}
         lo{"isi-Lao"}
         lou{"isi-Louisiana Creole"}
         loz{"isi-Lozi"}
         lrc{"isi-Northern Luri"}
-        lsm{"isi-Saamia"}
         lt{"isi-Lithuanian"}
         lu{"isi-Luba-Katanga"}
         lua{"isi-Luba-Lulua"}
@@ -285,7 +263,6 @@ zu{
         ml{"isi-Malayalam"}
         mn{"isi-Mongolian"}
         mni{"isi-Manipuri"}
-        moe{"isi-Innu-aimun"}
         moh{"isi-Mohawk"}
         mos{"isi-Mossi"}
         mr{"isi-Marathi"}
@@ -326,11 +303,6 @@ zu{
         ny{"isi-Nyanja"}
         nyn{"isi-Nyankole"}
         oc{"isi-Occitan"}
-        ojb{"Northwestern Ojibwa"}
-        ojc{"isi-Central Ojibwa"}
-        ojs{"isi-Oji-Cree"}
-        ojw{"Western Ojibwa"}
-        oka{"isi-Okanagan"}
         om{"isi-Oromo"}
         or{"isi-Odia"}
         os{"isi-Ossetic"}
@@ -340,9 +312,7 @@ zu{
         pap{"isi-Papiamento"}
         pau{"isi-Palauan"}
         pcm{"isi-Nigerian Pidgin"}
-        pis{"Pijin"}
         pl{"isi-Polish"}
-        pqm{"Maliseet-Passamaquoddy"}
         prg{"isi-Prussian"}
         ps{"isi-Pashto"}
         pt{"isi-Portuguese"}
@@ -384,7 +354,6 @@ zu{
         si{"isi-Sinhala"}
         sk{"isi-Slovak"}
         sl{"isi-Slovenian"}
-        slh{"Southern Lushootseed"}
         sm{"isi-Samoan"}
         sma{"isi-Southern Sami"}
         smj{"isi-Lule Sami"}
@@ -399,7 +368,6 @@ zu{
         ss{"isiSwati"}
         ssy{"isi-Saho"}
         st{"isi-Southern Sotho"}
-        str{"Straits Salish"}
         su{"isi-Sundanese"}
         suk{"isi-Sukuma"}
         sv{"isi-Swedish"}
@@ -408,29 +376,23 @@ zu{
         swb{"isi-Comorian"}
         syr{"isi-Syriac"}
         ta{"isi-Tamil"}
-        tce{"Southern Tutchone"}
         te{"isi-Telugu"}
         tem{"isi-Timne"}
         teo{"isi-Teso"}
         tet{"isi-Tetum"}
         tg{"isi-Tajik"}
-        tgx{"isi-Tagish"}
         th{"isi-Thai"}
-        tht{"Tahltan"}
         ti{"isi-Tigrinya"}
         tig{"isi-Tigre"}
         tk{"isi-Turkmen"}
         tlh{"isi-Klingon"}
-        tli{"Tlingit"}
         tn{"isi-Tswana"}
         to{"isi-Tongan"}
-        tok{"Toki Pona"}
         tpi{"isi-Tok Pisin"}
         tr{"isi-Turkish"}
         trv{"isi-Taroko"}
         ts{"isi-Tsonga"}
         tt{"isi-Tatar"}
-        ttm{"Northern Tutchone"}
         tum{"isi-Tumbuka"}
         tvl{"isi-Tuvalu"}
         tw{"isi-Twi"}
@@ -464,7 +426,6 @@ zu{
         ybb{"isi-Yemba"}
         yi{"isi-Yiddish"}
         yo{"isi-Yoruba"}
-        yrl{"isi-Nheengatu"}
         yue{"isi-Cantonese"}
         zgh{"isi-Moroccan Tamazight esivamile"}
         zh{"isi-Chinese"}
