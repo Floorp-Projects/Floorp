@@ -6,9 +6,9 @@
 
 assert __name__ == "__main__"
 
-from pathlib import Path
 import shutil
 import sys
+from pathlib import Path
 
 REL_PATH = "/dom/canvas/test/webgl-conf"
 REPO_DIR = Path.cwd()

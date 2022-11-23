@@ -2,10 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from pyasn1.codec.der import decoder
-from pyasn1_modules import pem
-from pyasn1.type import univ
 import sys
+
+from pyasn1.codec.der import decoder
+from pyasn1.type import univ
+from pyasn1_modules import pem
 
 
 def public_key_to_string(file, name):
