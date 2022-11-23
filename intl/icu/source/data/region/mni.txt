@@ -3,6 +3,10 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 mni{
     Countries{
+        001{"মালেম"}
+        002{"অফ্রিকা"}
+        019{"অমেরিকাশিং"}
+        150{"য়ুরোপ"}
         BR{"ব্রাজিল"}
         CN{"চিনা"}
         DE{"জর্মনি"}

@@ -312,6 +312,7 @@ fi{
         CI{"Côte d’Ivoire"}
         CZ{"Tšekin tasavalta"}
         FK{"Falklandinsaaret (Malvinassaaret)"}
+        NZ{"Aotearoa"}
         SZ{"Swazimaa"}
         TL{"Timor-Leste"}
     }

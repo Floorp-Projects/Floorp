@@ -694,12 +694,14 @@ mt{
             many{"ewro"}
             one{"ewro"}
             other{"ewro"}
+            two{"ewro"}
         }
         XXX{
             few{"Munita Mhix Magħrufa jew Mhix Valida"}
             many{"Munita Mhix Magħrufa jew Mhix Valida"}
             one{"Munita mhix magħrufa jew mhix valida"}
             other{"Munita Mhix Magħrufa jew Mhix Valida"}
+            two{"Munita Mhix Magħrufa jew Mhix Valida"}
         }
     }
     CurrencyUnitPatterns{
@@ -707,5 +709,6 @@ mt{
         many{"{0} {1}"}
         one{"{0} {1}"}
         other{"{0} {1}"}
+        two{"{0} {1}"}
     }
 }

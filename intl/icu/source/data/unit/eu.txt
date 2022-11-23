@@ -42,7 +42,7 @@ eu{
                 other{"{0} radian"}
             }
             revolution{
-                dnam{"bira"}
+                dnam{"birak"}
                 one{"{0} bira"}
                 other{"{0} bira"}
             }
@@ -157,6 +157,7 @@ eu{
         }
         concentr{
             item{
+                dnam{"elementuak"}
                 one{"{0} elementu"}
                 other{"{0} elementu"}
             }
@@ -174,6 +175,9 @@ eu{
                 dnam{"milimole litro bakoitzeko"}
                 one{"{0} milimole litro bakoitzeko"}
                 other{"{0} milimole litro bakoitzeko"}
+            }
+            mole{
+                dnam{"molak"}
             }
             percent{
                 dnam{"ehuneko"}
@@ -331,6 +335,12 @@ eu{
                 one{"{0} nanosegundo"}
                 other{"{0} nanosegundo"}
             }
+            quarter{
+                dnam{"laurdenak"}
+                one{"{0} laurden"}
+                other{"{0} laurden"}
+                per{"{0} laurden bakoitzeko"}
+            }
             second{
                 dnam{"segundoak"}
                 one{"{0} segundo"}
@@ -410,8 +420,13 @@ eu{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kilowatt-ordu 100 kilometroko"}
+                one{"{0} kilowatt-ordu 100 kilometroko"}
+                other{"{0} kilowatt-ordu 100 kilometroko"}
+            }
             newton{
-                dnam{"newton"}
+                dnam{"newtonak"}
                 one{"{0} newton"}
                 other{"{0} newton"}
             }
@@ -654,11 +669,6 @@ eu{
                 other{"{0} kilogramo"}
                 per{"{0} kilogramo bakoitzeko"}
             }
-            metric-ton{
-                dnam{"tona metrikoak"}
-                one{"{0} tona metriko"}
-                other{"{0} tona metriko"}
-            }
             microgram{
                 dnam{"mikrogramoak"}
                 one{"{0} mikrogramo"}
@@ -699,6 +709,11 @@ eu{
                 dnam{"AEBko tonak"}
                 one{"{0} AEBko tona"}
                 other{"{0} AEBko tona"}
+            }
+            tonne{
+                dnam{"tona metrikoak"}
+                one{"{0} tona metriko"}
+                other{"{0} tona metriko"}
             }
         }
         power{
@@ -1029,6 +1044,7 @@ eu{
                 other{"{0}′"}
             }
             arc-second{
+                dnam{"arku-seg."}
                 one{"{0}″"}
                 other{"{0}″"}
             }
@@ -1076,6 +1092,9 @@ eu{
             times{"{0}-{1}"}
         }
         concentr{
+            millimole-per-liter{
+                dnam{"mmol/l"}
+            }
             percent{
                 dnam{"%"}
                 one{"% {0}"}
@@ -1087,6 +1106,10 @@ eu{
                 dnam{"l/100 km"}
                 one{"{0} l/100 km"}
                 other{"{0} l/100 km"}
+            }
+            mile-per-gallon-imperial{
+                one{"{0} m/g brit."}
+                other{"{0} m/g brit."}
             }
         }
         coordinate{
@@ -1131,6 +1154,12 @@ eu{
                 one{"{0} hil"}
                 other{"{0} hil"}
             }
+            quarter{
+                dnam{"laurden"}
+                one{"{0} laur."}
+                other{"{0} laur."}
+                per{"{0}/laurden"}
+            }
             second{
                 dnam{"s"}
                 one{"{0} s"}
@@ -1151,6 +1180,13 @@ eu{
             therm-us{
                 one{"{0} US therm"}
                 other{"{0} US therms"}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh / 100 km"}
+                one{"{0} kWh / 100 km"}
+                other{"{0} kWh / 100 km"}
             }
         }
         length{
@@ -1197,6 +1233,11 @@ eu{
             yard{
                 one{"{0} yd"}
                 other{"{0} yd"}
+            }
+        }
+        light{
+            solar-luminosity{
+                dnam{"L☉"}
             }
         }
         mass{
@@ -1298,6 +1339,11 @@ eu{
             }
         }
         torque{
+            newton-meter{
+                dnam{"N·m"}
+                one{"{0} N·m"}
+                other{"{0} N·m"}
+            }
             pound-force-foot{
                 one{"{0} lbf⋅ft"}
                 other{"{0} lbf⋅ft"}
@@ -1383,9 +1429,9 @@ eu{
                 other{"{0} arku-min"}
             }
             arc-second{
-                dnam{"arku-seg"}
-                one{"{0} arku-seg"}
-                other{"{0} arku-seg"}
+                dnam{"arku-seg."}
+                one{"{0} arku-seg."}
+                other{"{0} arku-seg."}
             }
             degree{
                 dnam{"gradu"}
@@ -1487,6 +1533,9 @@ eu{
                 dnam{"milimole/litro"}
                 one{"{0} mmol/l"}
                 other{"{0} mmol/l"}
+            }
+            mole{
+                dnam{"mola"}
             }
             percent{
                 dnam{"%"}
@@ -1642,6 +1691,12 @@ eu{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
+            quarter{
+                dnam{"laurden"}
+                one{"{0} laur."}
+                other{"{0} laur."}
+                per{"{0}/laurden"}
+            }
             second{
                 dnam{"segundo"}
                 one{"{0} s"}
@@ -1721,8 +1776,13 @@ eu{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh / 100 km"}
+                one{"{0} kWh / 100 km"}
+                other{"{0} kWh / 100 km"}
+            }
             newton{
-                dnam{"newton"}
+                dnam{"newtona"}
             }
             pound-force{
                 dnam{"libra indar"}
@@ -1953,11 +2013,6 @@ eu{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -1998,6 +2053,11 @@ eu{
                 dnam{"AEBko tona"}
                 one{"{0} AEBko tona"}
                 other{"{0} AEBko tona"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{
@@ -2130,9 +2190,8 @@ eu{
         }
         torque{
             newton-meter{
-                dnam{"newton-metro"}
-                one{"{0} Nm"}
-                other{"{0} Nm"}
+                one{"{0} N·m"}
+                other{"{0} N·m"}
             }
             pound-force-foot{
                 dnam{"oin-libra"}

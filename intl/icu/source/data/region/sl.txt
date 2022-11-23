@@ -312,7 +312,9 @@ sl{
         CI{"Côte d’Ivoire"}
         CZ{"Češka republika"}
         FK{"Falklandski otoki (Malvini)"}
+        NZ{"Aotearoa Nova Zelandija"}
         SZ{"Svazi"}
         TL{"Vzhodni Timor"}
+        TR{"Türkiye"}
     }
 }

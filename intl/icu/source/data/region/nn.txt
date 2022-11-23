@@ -14,7 +14,6 @@ nn{
         151{"Aust-Europa"}
         AE{"Dei sameinte arabiske emirata"}
         AT{"Austerrike"}
-        BL{"Saint Barthélemy"}
         BY{"Kviterussland"}
         CC{"Kokosøyane"}
         CD{"Kongo-Kinshasa"}

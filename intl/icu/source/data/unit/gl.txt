@@ -342,6 +342,12 @@ gl{
                 one{"{0} nanosegundo"}
                 other{"{0} nanosegundos"}
             }
+            quarter{
+                dnam{"trimestres"}
+                one{"{0} trimestre"}
+                other{"{0} trimestres"}
+                per{"{0}/trimestre"}
+            }
             second{
                 dnam{"segundos"}
                 one{"{0} segundo"}
@@ -683,11 +689,6 @@ gl{
                 other{"{0} quilogramos"}
                 per{"{0} por quilogramo"}
             }
-            metric-ton{
-                dnam{"toneladas métricas"}
-                one{"{0} tonelada métrica"}
-                other{"{0} toneladas métricas"}
-            }
             microgram{
                 dnam{"microgramos"}
                 one{"{0} microgramo"}
@@ -729,6 +730,11 @@ gl{
                 dnam{"toneladas estadounidenses"}
                 one{"{0} tonelada estadounidense"}
                 other{"{0} toneladas estadounidenses"}
+            }
+            tonne{
+                dnam{"toneladas métricas"}
+                one{"{0} tonelada métrica"}
+                other{"{0} toneladas métricas"}
             }
         }
         power{
@@ -945,22 +951,22 @@ gl{
                 other{"{0} decilitros"}
             }
             dessert-spoon{
-                dnam{"cullerada de sobremesa"}
+                dnam{"culleradas de sobremesa"}
                 one{"{0} cullerada de sobremesa"}
                 other{"{0} culleradas de sobremesa"}
             }
             dessert-spoon-imperial{
-                dnam{"cullerada de sobremesa imperial"}
+                dnam{"culleradas de sobremesa imperial"}
                 one{"{0} cullerada de sobremesa imperial"}
                 other{"{0} culleradas de sobremesa imperiais"}
             }
             dram{
-                dnam{"dracma líquida"}
+                dnam{"dracmas líquidas"}
                 one{"{0} dracma líquida"}
                 other{"{0} dracmas líquidas"}
             }
             drop{
-                dnam{"gota"}
+                dnam{"gotas"}
                 one{"{0} gota"}
                 other{"{0} gotas"}
             }
@@ -992,7 +998,7 @@ gl{
                 other{"{0} hectolitros"}
             }
             jigger{
-                dnam{"medidor de cóctel"}
+                dnam{"medidores de cóctel"}
                 one{"{0} medidor de cóctel"}
                 other{"{0} medidores de cóctel"}
             }
@@ -1013,7 +1019,7 @@ gl{
                 other{"{0} mililitros"}
             }
             pinch{
-                dnam{"chisco"}
+                dnam{"chiscos"}
                 one{"{0} chisco"}
                 other{"{0} chiscos"}
             }
@@ -1033,7 +1039,7 @@ gl{
                 other{"{0} cuartos"}
             }
             quart-imperial{
-                dnam{"cuarto imperial"}
+                dnam{"cuartos imperiais"}
                 one{"{0} cuarto imperial"}
                 other{"{0} cuartos imperiais"}
             }
@@ -1071,6 +1077,9 @@ gl{
         area{
             acre{
                 dnam{"ac"}
+            }
+            dunam{
+                dnam{"dunam"}
             }
             hectare{
                 dnam{"ha"}
@@ -1165,6 +1174,16 @@ gl{
             south{"{0} S"}
             west{"{0} O"}
         }
+        digital{
+            bit{
+                dnam{"b"}
+            }
+            byte{
+                dnam{"B"}
+                one{"{0} B"}
+                other{"{0} B"}
+            }
+        }
         duration{
             day{
                 dnam{"día"}
@@ -1192,6 +1211,12 @@ gl{
                 one{"{0} m."}
                 other{"{0} m."}
                 per{"{0}/m."}
+            }
+            quarter{
+                dnam{"trim."}
+                one{"{0} tr."}
+                other{"{0} tr."}
+                per{"{0}/tr."}
             }
             second{
                 dnam{"s"}
@@ -1444,8 +1469,8 @@ gl{
         area{
             acre{
                 dnam{"acres"}
-                one{"{0} ac"}
-                other{"{0} ac"}
+                one{"{0} acre"}
+                other{"{0} acres"}
             }
             dunam{
                 dnam{"dunams"}
@@ -1597,14 +1622,14 @@ gl{
         }
         digital{
             bit{
-                dnam{"bit"}
+                dnam{"b"}
                 one{"{0} b"}
                 other{"{0} b"}
             }
             byte{
-                dnam{"byte"}
-                one{"{0} byte"}
-                other{"{0} byte"}
+                dnam{"B"}
+                one{"{0} B"}
+                other{"{0} B"}
             }
             gigabit{
                 dnam{"Gb"}
@@ -1701,6 +1726,12 @@ gl{
                 dnam{"ns"}
                 one{"{0} ns"}
                 other{"{0} ns"}
+            }
+            quarter{
+                dnam{"trim."}
+                one{"{0} trim."}
+                other{"{0} trim."}
+                per{"{0}/trim."}
             }
             second{
                 dnam{"s"}
@@ -2000,11 +2031,6 @@ gl{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -2039,6 +2065,11 @@ gl{
                 dnam{"tn EUA"}
                 one{"{0} tn EUA"}
                 other{"{0} tn EUA"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{
@@ -2223,7 +2254,7 @@ gl{
                 other{"{0} c"}
             }
             cup-metric{
-                dnam{"cuncas métr."}
+                dnam{"mc"}
                 one{"{0} mc"}
                 other{"{0} mc"}
             }

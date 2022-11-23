@@ -5,7 +5,7 @@ ceb{
     Countries{
         001{"kalibutan"}
         002{"Africa"}
-        003{"Amihanang Amerika"}
+        003{"North America"}
         005{"South America"}
         009{"Oceania"}
         011{"Western Africa"}
@@ -14,7 +14,7 @@ ceb{
         015{"Northern Africa"}
         017{"Middle Africa"}
         018{"Southern Africa"}
-        019{"Mga Amerika"}
+        019{"Americas"}
         021{"Northern America"}
         029{"Caribbean"}
         030{"Eastern Asia"}
@@ -25,7 +25,7 @@ ceb{
         054{"Melanesia"}
         057{"Micronesian Region"}
         061{"Polynesia"}
-        142{"Asya"}
+        142{"Asia"}
         143{"Central Asia"}
         145{"Western Asia"}
         150{"Europe"}
@@ -82,7 +82,7 @@ ceb{
         CK{"Cook Islands"}
         CL{"Chile"}
         CM{"Cameroon"}
-        CN{"Tsina"}
+        CN{"China"}
         CO{"Colombia"}
         CP{"Clipperton Island"}
         CR{"Costa Rica"}
@@ -92,7 +92,7 @@ ceb{
         CX{"Christmas Island"}
         CY{"Cyprus"}
         CZ{"Czechia"}
-        DE{"Alemanya"}
+        DE{"Germany"}
         DG{"Diego Garcia"}
         DJ{"Djibouti"}
         DK{"Denmark"}
@@ -114,7 +114,7 @@ ceb{
         FK{"Falkland Islands"}
         FM{"Micronesia"}
         FO{"Faroe Islands"}
-        FR{"Pransya"}
+        FR{"France"}
         GA{"Gabon"}
         GB{"United Kingdom"}
         GD{"Grenada"}
@@ -311,6 +311,7 @@ ceb{
         CI{"Ivory Coast"}
         CZ{"Czech Republic"}
         FK{"Falkland Islands (Islas Malvinas)"}
+        NZ{"Aotearoa New Zealand"}
         SZ{"Swaziland"}
         TL{"East Timor"}
     }

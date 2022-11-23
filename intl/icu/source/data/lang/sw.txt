@@ -38,6 +38,7 @@ sw{
         am{"Kiamhari"}
         an{"Kiaragoni"}
         ang{"Kiingereza cha Kale"}
+        ann{"Kiobolo"}
         anp{"Kiangika"}
         ar{"Kiarabu"}
         ar_001{"Kiarabu sanifu"}
@@ -45,10 +46,12 @@ sw{
         arn{"Kimapuche"}
         arp{"Kiarapaho"}
         arq{"Kiarabu cha Algeria"}
+        ars{"Kiarabu cha Najdi"}
         arz{"Kiarabu cha Misri"}
         as{"Kiassam"}
         asa{"Kiasu"}
         ast{"Kiasturia"}
+        atj{"Kiatikamekw"}
         av{"Kiavari"}
         awa{"Kiawadhi"}
         ay{"Kiaymara"}
@@ -81,6 +84,7 @@ sw{
         byn{"Kiblin"}
         byv{"Kimedumba"}
         ca{"Kikatalani"}
+        cay{"Kikayuga"}
         ccp{"Kichakma"}
         ce{"Kichechenia"}
         ceb{"Kichebuano"}
@@ -89,13 +93,22 @@ sw{
         chk{"Kichukisi"}
         chm{"Kimari"}
         cho{"Kichoktao"}
+        chp{"Kichipewyani"}
         chr{"Kicherokee"}
         chy{"Kicheyeni"}
         ckb{"Kikurdi cha Sorani"}
+        clc{"Kichikotini"}
         co{"Kikosikani"}
         cop{"Kikhufti"}
+        crg{"Kimichifu"}
+        crj{"Kikrii cha Kusini Mashariki"}
+        crk{"Kikri (Maeneo Tambarare)"}
+        crl{"Kikrii cha Kaskazini Mashariki"}
+        crm{"Kikrii cha Moose"}
+        crr{"Kipamliko cha Carolina"}
         crs{"Krioli ya Shelisheli"}
         cs{"Kicheki"}
+        csw{"Kiomushkego"}
         cu{"Kislovakia cha Kanisa"}
         cv{"Kichuvash"}
         cy{"Kiwelisi"}
@@ -140,6 +153,7 @@ sw{
         fon{"Kifon"}
         fr{"Kifaransa"}
         fr_CA{"Kifaransa (Canada)"}
+        frc{"Kifaransa cha Kajuni"}
         fro{"Kifaransa cha Kale"}
         frr{"Kifrisia cha Kaskazini"}
         frs{"Kifrisia cha Mashariki"}
@@ -162,7 +176,9 @@ sw{
         gv{"Kimanx"}
         gwi{"Gwichʼin"}
         ha{"Kihausa"}
+        hai{"Kihaida"}
         haw{"Kihawai"}
+        hax{"Kihaida cha Kusini"}
         he{"Kiebrania"}
         hi{"Kihindi"}
         hil{"Kihiligaynon"}
@@ -173,6 +189,7 @@ sw{
         ht{"Kihaiti"}
         hu{"Kihungaria"}
         hup{"Hupa"}
+        hur{"Kihalkomelemi"}
         hy{"Kiarmenia"}
         hz{"Kiherero"}
         ia{"Kiintalingua"}
@@ -182,6 +199,7 @@ sw{
         ie{"lugha ya kisayansi"}
         ig{"Kiigbo"}
         ii{"Kiyi cha Sichuan"}
+        ikt{"Kiinuktituti cha Kanada Magharibi"}
         ilo{"Kiilocano"}
         inh{"Kiingush"}
         io{"Kiido"}
@@ -205,6 +223,7 @@ sw{
         kea{"Kikabuverdianu"}
         kfo{"Kikoro"}
         kg{"Kikongo"}
+        kgp{"Kikaingang"}
         kha{"Kikhasi"}
         khq{"Kikoyra Chiini"}
         ki{"Kikikuyu"}
@@ -232,6 +251,7 @@ sw{
         kum{"Kumyk"}
         kv{"Kikomi"}
         kw{"Kikorni"}
+        kwk{"Kikwakʼwala"}
         ky{"Kikyrgyz"}
         la{"Kilatini"}
         lad{"Kiladino"}
@@ -241,12 +261,15 @@ sw{
         lez{"Kilezighian"}
         lg{"Kiganda"}
         li{"Limburgish"}
+        lil{"Kilillooet"}
         lkt{"Kilakota"}
         ln{"Kilingala"}
         lo{"Kilaosi"}
         lol{"Kimongo"}
+        lou{"Kikrioli cha Louisiana"}
         loz{"Kilozi"}
         lrc{"Kiluri cha Kaskazini"}
+        lsm{"Kisaamia"}
         lt{"Kilithuania"}
         lu{"Kiluba-Katanga"}
         lua{"Kiluba-Lulua"}
@@ -277,6 +300,7 @@ sw{
         ml{"Kimalayalamu"}
         mn{"Kimongolia"}
         mni{"Kimanipuri"}
+        moe{"Kiinnu-aimun"}
         moh{"Lugha ya Mohawk"}
         mos{"Kimoore"}
         mr{"Kimarathi"}
@@ -319,6 +343,11 @@ sw{
         nyo{"Kinyoro"}
         nzi{"Kinzema"}
         oc{"Kiokitani"}
+        ojb{"Kiojibwa cha Kaskazini Magharibi"}
+        ojc{"Kiojibwa cha kati"}
+        ojs{"Kikrii cha Oji"}
+        ojw{"Kiojibwa cha Magharibi"}
+        oka{"Kiokanagani"}
         om{"Kioromo"}
         or{"Kioriya"}
         os{"Kiosetia"}
@@ -329,7 +358,9 @@ sw{
         pau{"Kipalau"}
         pcm{"Pijini ya Nigeria"}
         peo{"Kiajemi cha Kale"}
+        pis{"Kipijini"}
         pl{"Kipolandi"}
+        pqm{"Kimaliseet-Passamaquoddy"}
         prg{"Kiprussia"}
         ps{"Kipashto"}
         pt{"Kireno"}
@@ -373,6 +404,7 @@ sw{
         si{"Kisinhala"}
         sk{"Kislovakia"}
         sl{"Kislovenia"}
+        slh{"Lugha ya Lushootseed ya Kusini"}
         sm{"Kisamoa"}
         sma{"Kisami cha Kusini"}
         smj{"Kisami cha Lule"}
@@ -387,6 +419,7 @@ sw{
         ss{"Kiswati"}
         ssy{"Kisaho"}
         st{"Kisotho"}
+        str{"Kisalishi cha Straiti"}
         su{"Kisunda"}
         suk{"Kisukuma"}
         sus{"Kisusu"}
@@ -395,23 +428,29 @@ sw{
         swb{"Shikomor"}
         syr{"Lugha ya Syriac"}
         ta{"Kitamili"}
+        tce{"Kitutchone cha Kusini"}
         te{"Kitelugu"}
         tem{"Kitemne"}
         teo{"Kiteso"}
         tet{"Kitetum"}
         tg{"Kitajiki"}
+        tgx{"Kitagishi"}
         th{"Kithai"}
+        tht{"Kitahltani"}
         ti{"Kitigrinya"}
         tig{"Kitigre"}
         tk{"Kiturukimeni"}
         tlh{"Kiklingoni"}
+        tli{"Kitlingiti"}
         tn{"Kitswana"}
         to{"Kitonga"}
+        tok{"Kitoki Pona"}
         tpi{"Kitokpisin"}
         tr{"Kituruki"}
         trv{"Kitaroko"}
         ts{"Kitsonga"}
         tt{"Kitatari"}
+        ttm{"Kitutchone cha Kaskazini"}
         tum{"Kitumbuka"}
         tvl{"Kituvalu"}
         tw{"Twi"}
@@ -437,6 +476,7 @@ sw{
         war{"Kiwaray"}
         wbp{"Kiwarlpiri"}
         wo{"Kiwolofu"}
+        wuu{"Kichina cha Wu"}
         xal{"Kikalmyk"}
         xh{"Kixhosa"}
         xog{"Kisoga"}
@@ -445,6 +485,7 @@ sw{
         ybb{"Kiyemba"}
         yi{"Kiyiddi"}
         yo{"Kiyoruba"}
+        yrl{"Kinheengatu"}
         yue{"Kikantoni"}
         zgh{"Kiberber Sanifu cha Moroko"}
         zh{"Kichina"}
@@ -456,7 +497,6 @@ sw{
         zza{"Kizaza"}
     }
     Languages%long{
-        zh_Hans{"Kichina (Kilichorahisishwa)"}
         zh_Hant{"Kichina (cha jadi)"}
     }
     Languages%menu{
@@ -468,14 +508,20 @@ sw{
         en_GB{"Kiingereza (UK)"}
     }
     Languages%variant{
+        hi_Latn{"Kihindi chenye Kiingereza"}
         ps{"Kipushto"}
     }
     Scripts{
+        Adlm{"Kiadlamu"}
         Arab{"Kiarabu"}
+        Aran{"Kinastaliki"}
         Armn{"Kiarmenia"}
         Beng{"Kibengali"}
         Bopo{"Kibopomofo"}
         Brai{"Nukta nundu"}
+        Cakm{"Kichakma"}
+        Cans{"Silabi Zilizounganishwa za Wakazi Asili wa Kanada"}
+        Cher{"Kicherokee"}
         Cyrl{"Kisiriliki"}
         Deva{"Kidevanagari"}
         Ethi{"Kiethiopia"}
@@ -501,14 +547,23 @@ sw{
         Latn{"Kilatini"}
         Mlym{"Kimalayalam"}
         Mong{"Kimongolia"}
+        Mtei{"Meitei Mayek"}
         Mymr{"Myama"}
+        Nkoo{"N’Ko"}
+        Olck{"Kiol Chiki"}
         Orya{"Kioriya"}
+        Rohg{"Kihanifi"}
         Sinh{"Kisinhala"}
+        Sund{"Kisunda"}
+        Syrc{"Kisiriaki"}
         Taml{"Kitamil"}
         Telu{"Kitelugu"}
+        Tfng{"Kitifinagh"}
         Thaa{"Kithaana"}
         Thai{"Kithai"}
         Tibt{"Kitibeti"}
+        Vaii{"Kivai"}
+        Yiii{"Kiyii"}
         Zmth{"Hati za kihisabati"}
         Zsye{"Emoji"}
         Zsym{"Alama"}
@@ -536,6 +591,7 @@ sw{
             indian{"Kalenda ya Taifa ya India"}
             islamic{"Kalenda ya Kiislamu"}
             islamic-civil{"Kalenda ya Kiislamu/Rasmi"}
+            islamic-umalqura{"Kalenda ya kiislamu (Umm al-Qura)"}
             iso8601{"Kalenda ya ISO-8601"}
             japanese{"Kalenda ya Kijapani"}
             persian{"Kalenda ya Kiajemi"}
@@ -624,6 +680,7 @@ sw{
             armn{"Nambari za Kiarmenia"}
             armnlow{"Nambari Ndogo za Kiarmenia"}
             beng{"Nambari za Kibengali"}
+            cakm{"Nambari za Kichakma"}
             deva{"Nambari za Kidevanagari"}
             ethi{"Nambari za Kiethiopia"}
             finance{"Tarakimu za Kifedha"}
@@ -639,6 +696,7 @@ sw{
             hant{"Nambari za Kichina cha Jadi"}
             hantfin{"Nambari za Kifedha za Kichina cha Jadi"}
             hebr{"Nambari za Kiebrania"}
+            java{"Nambari za Kijava"}
             jpan{"Nambari za Kijapani"}
             jpanfin{"Nambari za Kifedha za Kijapani"}
             khmr{"Nambari za Kikambodia"}
@@ -647,8 +705,10 @@ sw{
             latn{"Nambari za Nchi za Magharibi"}
             mlym{"Nambari za Malayalam"}
             mong{"Nambari za Kimongolia"}
+            mtei{"Nambari za Meetei Mayek"}
             mymr{"Nambari za Myanmar"}
-            native{"Digiti Asili"}
+            native{"Nambari Asili"}
+            olck{"Nambari za Kiol Chiki"}
             orya{"Nambari za Kioriya"}
             roman{"Nambari za Kirumi"}
             romanlow{"Nambari Ndogo za Kirumi"}
@@ -658,7 +718,7 @@ sw{
             thai{"Nambari za Kithai"}
             tibt{"Nambari za Kitibeti"}
             traditional{"Tarakimu za Jadi"}
-            vaii{"Dijiti za Vai"}
+            vaii{"Nambari za Kivai"}
         }
     }
     characterLabelPattern{

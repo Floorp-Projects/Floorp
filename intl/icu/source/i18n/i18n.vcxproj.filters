@@ -672,6 +672,9 @@
     <ClCompile Include="units_router.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
+    <ClCompile Include="displayoptions.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bocsu.cpp">

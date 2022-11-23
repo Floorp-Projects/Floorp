@@ -29,6 +29,28 @@ es_US{
                         other{"¤000 T"}
                     }
                 }
+                currencyFormat%alphaNextToNumber{
+                    10000000000{
+                        one{"¤ 00 B"}
+                        other{"¤ 00 B"}
+                    }
+                    100000000000{
+                        one{"¤ 000 B"}
+                        other{"¤ 000 B"}
+                    }
+                    1000000000000{
+                        one{"¤ 0 T"}
+                        other{"¤ 0 T"}
+                    }
+                    10000000000000{
+                        one{"¤ 00 T"}
+                        other{"¤ 00 T"}
+                    }
+                    100000000000000{
+                        one{"¤ 000 T"}
+                        other{"¤ 000 T"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         one{"0 K"}
@@ -59,27 +81,27 @@ es_US{
             }
             intervalFormats{
                 GyMEd{
-                    G{"E, dd/MM/y GGGGG – E, dd/MM/y GGGGG"}
-                    M{"E, dd/MM/y – E, dd/MM/y GGGGG"}
-                    d{"E, dd/MM/y – E, dd/MM/y GGGGG"}
-                    y{"E, dd/MM/y – E, dd/MM/y GGGGG"}
+                    G{"E, dd/MM/y GGGGG – E, dd/MM/y GGGGG"}
+                    M{"E, dd/MM/y – E, dd/MM/y GGGGG"}
+                    d{"E, dd/MM/y – E, dd/MM/y GGGGG"}
+                    y{"E, dd/MM/y – E, dd/MM/y GGGGG"}
                 }
                 Md{
-                    M{"d/M – d/M"}
-                    d{"d/M – d/M"}
+                    M{"d/M – d/M"}
+                    d{"d/M – d/M"}
                 }
                 fallback{"{0}-{1}"}
                 yMMMd{
-                    M{"d 'de' MMM – d 'de' MMM 'de' y G"}
+                    M{"d 'de' MMM – d 'de' MMM 'de' y G"}
                 }
             }
         }
         gregorian{
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
                 "EEEE, d 'de' MMMM 'de' y",
                 "d 'de' MMMM 'de' y",
                 "d MMM y",
@@ -103,8 +125,8 @@ es_US{
             availableFormats{
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
-                Ehm{"E h:mm a"}
-                Ehms{"E h:mm:ss a"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
                 GyMMMd{"d MMM y G"}
                 Hmsvvvv{"HH:mm:ss (vvvv)"}
                 MMMEd{"E, d 'de' MMM"}
@@ -144,40 +166,58 @@ es_US{
                     H{"HH–HH v"}
                 }
                 MEd{
-                    M{"E, d/M – E, d/M"}
-                    d{"E, d/M – E, d/M"}
+                    M{"E, d/M – E, d/M"}
+                    d{"E, d/M – E, d/M"}
                 }
                 MMMd{
                     d{"d–d 'de' MMM"}
                 }
-                fallback{"{0} – {1}"}
+                fallback{"{0} – {1}"}
                 h{
-                    a{"h a – h a"}
+                    a{"h a – h a"}
                 }
                 hm{
-                    h{"h:mm–h:mm a"}
-                    m{"h:mm–h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
                 }
                 hmv{
-                    a{"h:mm a – h:mm a v"}
+                    a{"h:mm a – h:mm a v"}
                 }
                 hv{
-                    a{"h a – h a v"}
+                    a{"h a – h a v"}
                 }
                 yMEd{
-                    M{"E, d/M/y – E, d/M/y"}
-                    d{"E, d/M/y – E, d/M/y"}
-                    y{"E, d/M/y – E, d/M/y"}
+                    M{"E, d/M/y – E, d/M/y"}
+                    d{"E, d/M/y – E, d/M/y"}
+                    y{"E, d/M/y – E, d/M/y"}
                 }
                 yMMM{
                     M{"MMM–MMM 'de' y"}
                 }
                 yMMMM{
-                    y{"MMMM 'de' y – MMMM 'de' y"}
+                    y{"MMMM 'de' y – MMMM 'de' y"}
                 }
                 yMMMd{
-                    M{"d 'de' MMM – d 'de' MMM y"}
+                    M{"d 'de' MMM – d 'de' MMM y"}
                     d{"d–d 'de' MMM 'de' y"}
+                }
+            }
+            quarters{
+                format{
+                    wide{
+                        "1er trimestre",
+                        "2.º trimestre",
+                        "3.º trimestre",
+                        "4.º trimestre",
+                    }
+                }
+                stand-alone{
+                    wide{
+                        "1er trimestre",
+                        "2.º trimestre",
+                        "3.º trimestre",
+                        "4.º trimestre",
+                    }
                 }
             }
         }
@@ -223,6 +263,9 @@ es_US{
         }
         dayOfYear-short{
             dn{"día del a"}
+        }
+        dayperiod{
+            dn{"a. m./p. m."}
         }
         dayperiod-narrow{
             dn{"a. m./p. m."}
@@ -306,5 +349,33 @@ es_US{
     }
     measurementSystemNames{
         UK{"imperial"}
+    }
+    personNames{
+        namePattern{
+            sorting-long-referring-formal{
+                "{surname}, {prefix} {given} {given2}",
+                "{surname} {surname2}, {given} {given2}",
+            }
+            sorting-long-referring-informal{
+                "{surname} {surname2}, {given-informal}",
+                "{surname} {surname2}, {given} {given2}",
+            }
+            sorting-medium-referring-formal{
+                "{surname}, {prefix} {given} {given2-initial}",
+                "{surname} {surname2}, {given} {given2}",
+            }
+            sorting-medium-referring-informal{
+                "{surname}, {given-informal}",
+                "{surname} {surname2}, {given} {given2}",
+            }
+            sorting-short-referring-formal{
+                "{surname}, {prefix} {given-initial} {given2-initial} {suffix}",
+                "{surname} {surname2}, {given} {given2}",
+            }
+            sorting-short-referring-informal{
+                "{surname}, {given-informal}",
+                "{surname} {surname2}, {given} {given2}",
+            }
+        }
     }
 }

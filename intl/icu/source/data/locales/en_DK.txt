@@ -21,16 +21,16 @@ en_DK{
             availableFormats{
                 EHm{"E HH.mm"}
                 EHms{"E HH.mm.ss"}
-                Ehm{"E h.mm a"}
-                Ehms{"E h.mm.ss a"}
+                Ehm{"E h.mm a"}
+                Ehms{"E h.mm.ss a"}
                 Hm{"HH.mm"}
                 Hms{"HH.mm.ss"}
                 Hmsv{"HH.mm.ss v"}
                 Hmv{"HH.mm v"}
-                hm{"h.mm a"}
-                hms{"h.mm.ss a"}
-                hmsv{"h.mm.ss a v"}
-                hmv{"h.mm a v"}
+                hm{"h.mm a"}
+                hms{"h.mm.ss a"}
+                hmsv{"h.mm.ss a v"}
+                hmv{"h.mm a v"}
                 ms{"mm.ss"}
             }
         }
@@ -45,24 +45,24 @@ en_DK{
                 "d MMM y",
                 "dd/MM/y",
                 "{1}, {0}",
-                "{1} 'at' {0}",
-                "{1} 'at' {0}",
+                "{1}, {0}",
+                "{1}, {0}",
                 "{1}, {0}",
                 "{1}, {0}",
             }
             availableFormats{
                 EHm{"E HH.mm"}
                 EHms{"E HH.mm.ss"}
-                Ehm{"E h.mm a"}
-                Ehms{"E h.mm.ss a"}
+                Ehm{"E h.mm a"}
+                Ehms{"E h.mm.ss a"}
                 Hm{"HH.mm"}
                 Hms{"HH.mm.ss"}
                 Hmsv{"HH.mm.ss v"}
                 Hmv{"HH.mm v"}
-                hm{"h.mm a"}
-                hms{"h.mm.ss a"}
-                hmsv{"h.mm.ss a v"}
-                hmv{"h.mm a v"}
+                hm{"h.mm a"}
+                hms{"h.mm.ss a"}
+                hmsv{"h.mm.ss a v"}
+                hmv{"h.mm a v"}
                 ms{"mm.ss"}
             }
         }

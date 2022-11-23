@@ -397,7 +397,7 @@ nl{
         }
         GBP{
             "£",
-            "Brits pond",
+            "Britse pond",
         }
         GEK{
             "GEK",
@@ -1714,8 +1714,8 @@ nl{
             other{"Franse franc"}
         }
         GBP{
-            one{"Brits pond"}
-            other{"Brits pond"}
+            one{"Britse pond"}
+            other{"Britse pond"}
         }
         GEK{
             one{"Georgische kupon larit"}

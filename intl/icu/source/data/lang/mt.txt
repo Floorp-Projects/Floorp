@@ -511,6 +511,8 @@ mt{
     }
     Languages%short{
         az{"Ażeri"}
+        en_GB{"Ingliż (UK)"}
+        en_US{"Ingliż (US)"}
     }
     Scripts{
         Arab{"Għarbi"}

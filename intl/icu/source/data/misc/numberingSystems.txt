@@ -193,6 +193,11 @@ numberingSystems:table(nofallback){
             desc{"꤀꤁꤂꤃꤄꤅꤆꤇꤈꤉"}
             radix:int{10}
         }
+        kawi{
+            algorithmic:int{0}
+            desc{"𑽐𑽑𑽒𑽓𑽔𑽕𑽖𑽗𑽘𑽙"}
+            radix:int{10}
+        }
         khmr{
             algorithmic:int{0}
             desc{"០១២៣៤៥៦៧៨៩"}
@@ -296,6 +301,11 @@ numberingSystems:table(nofallback){
         mymrtlng{
             algorithmic:int{0}
             desc{"꧰꧱꧲꧳꧴꧵꧶꧷꧸꧹"}
+            radix:int{10}
+        }
+        nagm{
+            algorithmic:int{0}
+            desc{"𞓰𞓱𞓲𞓳𞓴𞓵𞓶𞓷𞓸𞓹"}
             radix:int{10}
         }
         newa{

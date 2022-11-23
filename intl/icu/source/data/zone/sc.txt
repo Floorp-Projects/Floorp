@@ -265,7 +265,7 @@ sc{
             ec{"Teheràn"}
         }
         "Asia:Tokyo"{
-            ec{"Tòkyo"}
+            ec{"Tokyo"}
         }
         "Asia:Ulaanbaatar"{
             ec{"Ulàn Bator"}
@@ -412,6 +412,9 @@ sc{
             sd{"OLH"}
             sg{"OIH"}
             ss{"OIH"}
+        }
+        "Pacific:Kanton"{
+            ec{"Canton"}
         }
         "Pacific:Marquesas"{
             ec{"Marchesas"}

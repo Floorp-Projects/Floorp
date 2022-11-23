@@ -275,6 +275,11 @@ jv{
                 dnam{"nanodetik"}
                 other{"{0} nanodetik"}
             }
+            quarter{
+                dnam{"seprapat"}
+                other{"{0} seprapat"}
+                per{"{0}/seprapat"}
+            }
             second{
                 dnam{"detik"}
                 other{"{0} detik"}
@@ -544,10 +549,6 @@ jv{
                 other{"{0} kilogram"}
                 per{"{0} saben kilogram"}
             }
-            metric-ton{
-                dnam{"metrik ton"}
-                other{"{0} metrik ton"}
-            }
             microgram{
                 dnam{"mikrogram"}
                 other{"{0} mikrogram"}
@@ -581,6 +582,10 @@ jv{
             ton{
                 dnam{"ton"}
                 other{"{0} ton"}
+            }
+            tonne{
+                dnam{"metrik ton"}
+                other{"{0} metrik ton"}
             }
         }
         power{
@@ -906,6 +911,11 @@ jv{
                 dnam{"sasi"}
                 other{"{0} sasi"}
             }
+            quarter{
+                dnam{"seprapat"}
+                other{"{0}seprapat"}
+                per{"{0}/seprapat"}
+            }
             second{
                 dnam{"dtk"}
                 other{"{0} dtk"}
@@ -956,7 +966,7 @@ jv{
                 dnam{"kg"}
                 other{"{0} kg"}
             }
-            metric-ton{
+            tonne{
                 other{"{0}t"}
             }
         }
@@ -1249,6 +1259,11 @@ jv{
                 dnam{"nanodtk"}
                 other{"{0} nd"}
             }
+            quarter{
+                dnam{"seprapat"}
+                other{"{0} seprapat"}
+                per{"{0}/seprapat"}
+            }
             second{
                 dnam{"dtk"}
                 other{"{0} dtk"}
@@ -1479,10 +1494,6 @@ jv{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"metrik ton"}
-                other{"{0} metrik ton"}
-            }
             microgram{
                 dnam{"mikrogram"}
             }
@@ -1514,6 +1525,10 @@ jv{
             ton{
                 dnam{"ton"}
                 other{"{0} ton"}
+            }
+            tonne{
+                dnam{"metrik ton"}
+                other{"{0} metrik ton"}
             }
         }
         power{

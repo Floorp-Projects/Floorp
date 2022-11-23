@@ -166,6 +166,10 @@ tt{
     Languages%menu{
         zh{"мандарин кытайчасы"}
     }
+    Languages%short{
+        en_GB{"инглиз (Берләшкән Корольлек)"}
+        en_US{"инглиз (АКШ)"}
+    }
     Scripts{
         Arab{"гарәп"}
         Cyrl{"кирилл"}

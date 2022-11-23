@@ -1226,6 +1226,9 @@ eu{
         "Pacific:Johnston"{
             ec{"Johnston"}
         }
+        "Pacific:Kanton"{
+            ec{"Kanton"}
+        }
         "Pacific:Kiritimati"{
             ec{"Kiritimati"}
         }
@@ -1696,6 +1699,9 @@ eu{
         "meta:Kyrgystan"{
             ls{"Kirgizistango ordua"}
         }
+        "meta:Lanka"{
+            ls{"Lankako ordua"}
+        }
         "meta:Line_Islands"{
             ls{"Line uharteetako ordua"}
         }
@@ -1703,6 +1709,11 @@ eu{
             ld{"Lord Howeko udako ordua"}
             lg{"Lord Howeko ordua"}
             ls{"Lord Howeko ordu estandarra"}
+        }
+        "meta:Macau"{
+            ld{"Macaoko udako ordua"}
+            lg{"Macaoko ordua"}
+            ls{"Macaoko ordu estandarra"}
         }
         "meta:Macquarie"{
             ls{"Macquarie uharteko ordua"}

@@ -270,6 +270,10 @@ ms{
                 dnam{"nanosaat"}
                 other{"{0} nanosaat"}
             }
+            quarter{
+                dnam{"suku"}
+                other{"{0} suku"}
+            }
             second{
                 dnam{"saat"}
                 other{"{0} saat"}
@@ -471,7 +475,7 @@ ms{
                 other{"{0} milimeter"}
             }
             nanometer{
-                dnam{"nm"}
+                dnam{"nanometer"}
                 other{"{0} nanometer"}
             }
             nautical-mile{
@@ -540,10 +544,6 @@ ms{
                 other{"{0} kilogram"}
                 per{"{0} setiap kilogram"}
             }
-            metric-ton{
-                dnam{"metrik tan"}
-                other{"{0} metrik tan"}
-            }
             microgram{
                 dnam{"mikrogram"}
                 other{"{0} mikrogram"}
@@ -577,6 +577,10 @@ ms{
             ton{
                 dnam{"tan"}
                 other{"{0} tan"}
+            }
+            tonne{
+                dnam{"metrik tan"}
+                other{"{0} metrik tan"}
             }
         }
         power{
@@ -989,6 +993,11 @@ ms{
             nanosecond{
                 other{"{0} ns"}
             }
+            quarter{
+                dnam{"sk"}
+                other{"{0}q"}
+                per{"{0}/q"}
+            }
             second{
                 dnam{"saat"}
                 other{"{0} s"}
@@ -1181,10 +1190,6 @@ ms{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 other{"{0} μg"}
@@ -1214,6 +1219,10 @@ ms{
             ton{
                 dnam{"tan"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"t"}
+                other{"{0} t"}
             }
         }
         power{
@@ -1568,6 +1577,11 @@ ms{
                 dnam{"nanosaat"}
                 other{"{0} ns"}
             }
+            quarter{
+                dnam{"sk"}
+                other{"{0} sk"}
+                per{"{0}/q"}
+            }
             second{
                 dnam{"saat"}
                 other{"{0} saat"}
@@ -1799,10 +1813,6 @@ ms{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 other{"{0} μg"}
@@ -1832,6 +1842,10 @@ ms{
             ton{
                 dnam{"tan"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"t"}
+                other{"{0} t"}
             }
         }
         power{

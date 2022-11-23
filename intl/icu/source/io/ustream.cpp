@@ -53,7 +53,7 @@ operator<<(STD_OSTREAM& stream, const UnicodeString& str)
             do {
                 errorCode = U_ZERO_ERROR;
                 s = buffer;
-                ucnv_fromUnicode(converter, &s, sLimit, &us, uLimit, 0, FALSE, &errorCode);
+                ucnv_fromUnicode(converter, &s, sLimit, &us, uLimit, 0, false, &errorCode);
                 *s = 0;
 
                 // write this chunk
@@ -92,8 +92,8 @@ operator>>(STD_ISTREAM& stream, UnicodeString& str)
         const char *s, *sLimit;
         char ch;
         UChar ch32;
-        UBool initialWhitespace = TRUE;
-        UBool continueReading = TRUE;
+        UBool initialWhitespace = true;
+        UBool continueReading = true;
 
         /* We need to consume one byte at a time to see what is considered whitespace. */
         while (continueReading) {
@@ -103,7 +103,7 @@ operator>>(STD_ISTREAM& stream, UnicodeString& str)
                 if (!initialWhitespace) {
                     stream.clear(stream.eofbit);
                 }
-                continueReading = FALSE;
+                continueReading = false;
             }
             sLimit = &ch + (int)continueReading;
             us = uBuffer;
@@ -140,13 +140,13 @@ operator>>(STD_ISTREAM& stream, UnicodeString& str)
                     else {
                         if (initialWhitespace) {
                             /*
-                            When initialWhitespace is TRUE, we haven't appended any
+                            When initialWhitespace is true, we haven't appended any
                             character yet.  This is where we truncate the string,
                             to avoid modifying the string before we know if we can
                             actually read from the stream.
                             */
                             str.truncate(0);
-                            initialWhitespace = FALSE;
+                            initialWhitespace = false;
                         }
                         str.append(ch32);
                     }

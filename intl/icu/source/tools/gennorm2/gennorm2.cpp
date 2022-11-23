@@ -44,7 +44,7 @@
 
 U_NAMESPACE_BEGIN
 
-UBool beVerbose=FALSE, haveCopyright=TRUE;
+UBool beVerbose=false, haveCopyright=true;
 
 #if !UCONFIG_NO_NORMALIZATION
 void parseFile(std::ifstream &f, Normalizer2DataBuilder &builder);
@@ -302,7 +302,7 @@ void parseFile(std::ifstream &f, Normalizer2DataBuilder &builder) {
                 fprintf(stderr, "gennorm2 error: parsing mapping string from %s\n", line);
                 exit(errorCode.reset());
             }
-            UnicodeString mapping(FALSE, uchars, length);
+            UnicodeString mapping(false, uchars, length);
             if(*delimiter=='=') {
                 if(rangeLength!=1) {
                     fprintf(stderr,

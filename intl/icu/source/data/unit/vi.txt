@@ -123,8 +123,8 @@ vi{
                 other{"{0} mục"}
             }
             karat{
-                dnam{"karat"}
-                other{"{0} karat"}
+                dnam{"carat"}
+                other{"{0} carat"}
             }
             mole{
                 dnam{"mol"}
@@ -244,6 +244,11 @@ vi{
                 dnam{"nano giây"}
                 other{"{0} nano giây"}
             }
+            quarter{
+                dnam{"quý"}
+                other{"{0} quý"}
+                per{"{0}/quý"}
+            }
             second{
                 dnam{"giây"}
                 other{"{0} giây"}
@@ -270,8 +275,8 @@ vi{
                 other{"{0} mili ampe"}
             }
             ohm{
-                dnam{"ohm"}
-                other{"{0} ohm"}
+                dnam{"ôm"}
+                other{"{0} ôm"}
             }
             volt{
                 dnam{"vôn"}
@@ -483,13 +488,9 @@ vi{
                 dnam{"kilôgam"}
                 other{"{0} kilôgam"}
             }
-            metric-ton{
-                dnam{"tấn hệ mét"}
-                other{"{0} tấn hệ mét"}
-            }
             microgram{
                 dnam{"micrôgam"}
-                other{"{0} micrô gam"}
+                other{"{0} micrôgam"}
             }
             milligram{
                 dnam{"miligam"}
@@ -501,8 +502,8 @@ vi{
                 per{"{0}/aoxơ"}
             }
             ounce-troy{
-                dnam{"troi ao-xơ"}
-                other{"{0} troi ao-xơ"}
+                dnam{"troi aoxơ"}
+                other{"{0} troi aoxơ"}
             }
             pound{
                 dnam{"pao"}
@@ -515,6 +516,10 @@ vi{
             ton{
                 dnam{"tấn"}
                 other{"{0} tấn"}
+            }
+            tonne{
+                dnam{"tấn hệ mét"}
+                other{"{0} tấn hệ mét"}
             }
         }
         power{
@@ -545,6 +550,7 @@ vi{
         }
         pressure{
             atmosphere{
+                dnam{"átmốtphe"}
                 other{"{0} átmốtphe"}
             }
             hectopascal{
@@ -574,8 +580,8 @@ vi{
                 other{"{0} kilômét/giờ"}
             }
             knot{
-                dnam{"nút"}
-                other{"{0} nút"}
+                dnam{"hải lý/giờ"}
+                other{"{0} hải lý/giờ"}
             }
             meter-per-second{
                 dnam{"mét/giây"}
@@ -693,8 +699,8 @@ vi{
                 per{"{0}/gal Anh"}
             }
             hectoliter{
-                dnam{"hectolit"}
-                other{"{0} hectolit"}
+                dnam{"hectôlít"}
+                other{"{0} hectôlít"}
             }
             jigger{
                 dnam{"jigger"}
@@ -1131,6 +1137,11 @@ vi{
                 dnam{"nano giây"}
                 other{"{0} nano giây"}
             }
+            quarter{
+                dnam{"quý"}
+                other{"{0} qúy"}
+                per{"{0}/quý"}
+            }
             second{
                 dnam{"giây"}
                 other{"{0} giây"}
@@ -1304,9 +1315,6 @@ vi{
             kilogram{
                 dnam{"kg"}
             }
-            metric-ton{
-                dnam{"t"}
-            }
             microgram{
                 dnam{"μg"}
             }
@@ -1326,6 +1334,9 @@ vi{
             }
             solar-mass{
                 dnam{"trọng lượng mặt trời"}
+            }
+            tonne{
+                dnam{"t"}
             }
         }
         power{

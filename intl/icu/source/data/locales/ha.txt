@@ -114,6 +114,32 @@ ha{
                         other{"¤000T"}
                     }
                 }
+                currencyFormat%alphaNextToNumber{
+                    1000000000{
+                        one{"¤0B"}
+                        other{"¤ 0B"}
+                    }
+                    10000000000{
+                        one{"¤ 00B"}
+                        other{"¤ 00B"}
+                    }
+                    100000000000{
+                        one{"¤ 000B"}
+                        other{"¤ 000B"}
+                    }
+                    1000000000000{
+                        one{"¤ 0T"}
+                        other{"¤ 0T"}
+                    }
+                    10000000000000{
+                        one{"¤ 00T"}
+                        other{"¤ 00T"}
+                    }
+                    100000000000000{
+                        one{"¤ 000T"}
+                        other{"¤ 000T"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         one{"0D"}
@@ -185,6 +211,12 @@ ha{
                 "d MMM, y G",
                 "d/M/yy GGGGG",
                 "{0}, {1}",
+                "{0}, {1}",
+                "{0}, {1}",
+                "{0}, {1}",
+                "{0}, {1}",
+            }
+            DateTimePatterns%atTime{
                 "{0} 'da' {1}",
                 "{0} 'da' {1}",
                 "{0}, {1}",
@@ -235,6 +267,12 @@ ha{
                 "d/M/yy",
                 "{1}, {0}",
                 "{1} {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimePatterns%atTime{
+                "{1} 'da' {0}",
                 "{1} 'da' {0}",
                 "{1}, {0}",
                 "{1}, {0}",
@@ -266,8 +304,8 @@ ha{
                 MMMd{"MMM d"}
                 Md{"M/d"}
                 d{"d"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M/y"}
@@ -405,37 +443,37 @@ ha{
                     m{"HH:mm–HH:mm"}
                 }
                 MEd{
-                    d{"E, dd/M – E, dd/M"}
+                    d{"E, dd/M – E, dd/M"}
                 }
                 h{
-                    a{"h a – h a"}
+                    a{"h a – h a"}
                 }
                 hm{
-                    a{"h:mm a – h:mm a"}
+                    a{"h:mm a – h:mm a"}
                 }
                 yM{
-                    M{"MM/y – MM/y"}
-                    y{"MM/y – MM/y"}
+                    M{"MM/y – MM/y"}
+                    y{"MM/y – MM/y"}
                 }
                 yMEd{
-                    M{"y-MM-dd, E – y-MM-dd, E"}
-                    y{"y-MM-dd, E – y-MM-dd, E"}
+                    M{"y-MM-dd, E – y-MM-dd, E"}
+                    y{"y-MM-dd, E – y-MM-dd, E"}
                 }
                 yMMM{
-                    y{"y MMM – y MMM"}
+                    y{"y MMM – y MMM"}
                 }
                 yMMMEd{
-                    y{"y MMM d, E – y MMM d, E"}
+                    y{"y MMM d, E – y MMM d, E"}
                 }
                 yMMMM{
-                    y{"y MMMM – y MMMM"}
+                    y{"y MMMM – y MMMM"}
                 }
                 yMMMd{
-                    y{"y MMM d – y MMM d"}
+                    y{"y MMM d – y MMM d"}
                 }
                 yMd{
-                    M{"dd/MM/y – dd/MM/y"}
-                    d{"dd/MM/y – dd/MM/y"}
+                    M{"dd/MM/y – dd/MM/y"}
+                    d{"dd/MM/y – dd/MM/y"}
                 }
             }
             monthNames{
@@ -571,6 +609,58 @@ ha{
                 }
             }
         }
+        islamic{
+            availableFormats{
+                Ed{"d E"}
+                Gy{"y G"}
+                GyMMM{"G MMM y"}
+                GyMMMEd{"G d MMM y, E"}
+                GyMMMd{"G d MMM y"}
+                GyMd{"GGGGG dd-MM-y"}
+                M{"L"}
+                MEd{"E, d/M"}
+                MMMEd{"E, d MMM"}
+                MMMMEd{"E d MMM"}
+                MMMMd{"d MMMM"}
+                MMMd{"d MMM"}
+                Md{"d/M"}
+                yM{"yM"}
+                yMEd{"E, d M y"}
+                yMMM{"y MMM"}
+                yMMMEd{"E, d MMM, y"}
+                yMMMM{"MMMM y"}
+                yQQQ{"y QQQ"}
+                yQQQQ{"y QQQQ"}
+                yyyy{"y G"}
+                yyyyM{"y/M GGGGG"}
+                yyyyMEd{"E, d/M/y GGGGG"}
+                yyyyMMM{"y G MMM"}
+                yyyyMMMEd{"y G d MMM, E"}
+                yyyyMMMM{"y G MMMM"}
+                yyyyMMMd{"y G d MMM"}
+                yyyyMd{"d/M/y GGGGG"}
+                yyyyQQQ{"y G QQQ"}
+                yyyyQQQQ{"y G QQQQ"}
+            }
+            monthNames{
+                format{
+                    wide{
+                        "Muharram",
+                        "Safar",
+                        "Rabiʻ I",
+                        "Rabiʻ II",
+                        "Jumada I",
+                        "Jumada II",
+                        "Rajab",
+                        "Shaʼaban",
+                        "Ramadan",
+                        "Shawwal",
+                        "Dhuʻl-Qiʻdah",
+                        "Dhuʻl-Hijjah",
+                    }
+                }
+            }
+        }
     }
     characterLabel{
         activities{"aiki"}
@@ -682,10 +772,6 @@ ha{
         day-narrow{
             dn{"kwana"}
             relativeTime{
-                future{
-                    one{"a cikin rana {0}"}
-                    other{"a cikin kwanaki {0}"}
-                }
                 past{
                     one{"rana da ya gabata {0}"}
                     other{"kwanaki da suka gabata {0}"}
@@ -698,10 +784,6 @@ ha{
                 future{
                     one{"a cikin rana {0}"}
                     other{"a cikin kwanaki {0}"}
-                }
-                past{
-                    one{"rana da ya gabata {0}"}
-                    other{"kwanaki da suka gabata {0}"}
                 }
             }
         }
@@ -761,10 +843,6 @@ ha{
                 "1"{"Jumaʼa mai zuwa"}
             }
             relativeTime{
-                future{
-                    one{"cikin {0} Jumaʼa"}
-                    other{"cikin {0} Jumaʼa"}
-                }
                 past{
                     one{"{0} Jumaʼa da ta wuce"}
                     other{"{0} Jumaʼa da ta wuce"}
@@ -790,10 +868,6 @@ ha{
         hour-narrow{
             dn{"awa"}
             relativeTime{
-                future{
-                    one{"cikin {0} awa"}
-                    other{"cikin {0} awa"}
-                }
                 past{
                     one{"{0} awa da ya gabata"}
                     other{"{0} awa da ya gabata"}
@@ -1242,10 +1316,6 @@ ha{
                     one{"cikin {0} Talata"}
                     other{"cikin {0} Talata"}
                 }
-                past{
-                    one{"{0} Talatar da ta gabata"}
-                    other{"{0} Talatar da ta gabata"}
-                }
             }
         }
         wed{
@@ -1344,7 +1414,6 @@ ha{
                 "0"{"wannan satin"}
                 "1"{"sati na gaba"}
             }
-            relativePeriod{"sati na {0}"}
             relativeTime{
                 future{
                     one{"a cikin mako {0}"}
@@ -1359,13 +1428,16 @@ ha{
         weekOfMonth{
             dn{"Makon Wata"}
         }
+        weekOfMonth-narrow{
+            dn{"Mk. wt."}
+        }
+        weekOfMonth-short{
+            dn{"Mk. wt."}
+        }
         weekday{
             dn{"ranar mako"}
         }
         weekdayOfMonth{
-            dn{"Ranar Aikin Wata"}
-        }
-        weekdayOfMonth-narrow{
             dn{"Ranar Aikin Wata"}
         }
         weekdayOfMonth-short{
@@ -1390,7 +1462,6 @@ ha{
             }
         }
         year-narrow{
-            dn{"shekara"}
             relative{
                 "-1"{"bara"}
                 "0"{"bana"}
@@ -1409,12 +1480,6 @@ ha{
                 "-1"{"bara"}
                 "0"{"bana"}
                 "1"{"badi"}
-            }
-            relativeTime{
-                past{
-                    one{"shekara da suka gabata {0}"}
-                    other{"shekara da suka gabata {0}"}
-                }
             }
         }
         zone{
@@ -1453,7 +1518,21 @@ ha{
     }
     measurementSystemNames{
         UK{"Tsarin awo kasar Ingila"}
-        US{"Tsarin awo kasar Amirka"}
+        US{"Amurka"}
         metric{"Tsarin awo"}
+    }
+    personNames{
+        nameOrderLocales{
+            givenFirst{
+                "und",
+                "ha",
+            }
+            surnameFirst{
+                "ko",
+                "vi",
+                "yue",
+                "zh",
+            }
+        }
     }
 }

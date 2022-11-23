@@ -32,11 +32,6 @@ se_FI{
         th{"thaigiella"}
         vi{"vietnamagiella"}
         zh_Hans{"álkes kiinnágiella"}
-        zh_Hant{"árbevirolaš kiinnágiella"}
-    }
-    Languages%short{
-        en_GB{"brihttalaš eaŋgalsgiella"}
-        en_US{"amerihkálaš eaŋgalsgiella"}
     }
     Scripts{
         Arab{"arábalaš"}

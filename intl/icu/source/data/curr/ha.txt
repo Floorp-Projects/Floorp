@@ -353,7 +353,7 @@ ha{
         }
         MDL{
             "MDL",
-            "kuɗaɗen Moldova",
+            "Kuɗaɗen Moldova",
         }
         MGA{
             "MGA",
@@ -700,10 +700,6 @@ ha{
             one{"Kuɗaɗen Bosnia da Herzegovina"}
             other{"Kuɗaɗen Bosnia da Herzegovina"}
         }
-        BBD{
-            one{"Dalar Barbados"}
-            other{"Dalar ƙasar Barbados"}
-        }
         BDT{
             one{"taka na ƙasar Bangladesh"}
             other{"Taka na ƙasar Bangladesh"}
@@ -712,12 +708,8 @@ ha{
             one{"Kuɗin Bulgeria"}
             other{"Kuɗin Bulgeria"}
         }
-        BMD{
-            one{"Dalar Bermuda"}
-            other{"Dalar ƙasar Bermuda"}
-        }
         BND{
-            one{"Dalar Brunei"}
+            one{"Dalolin Brunei"}
             other{"Dalolin Brunei"}
         }
         BOB{
@@ -789,12 +781,8 @@ ha{
             other{"Fam na Masar"}
         }
         FJD{
-            one{"Dalar Fiji"}
+            one{"Dalolin Fiji"}
             other{"Dalolin Fiji"}
-        }
-        FKP{
-            one{"Fam na Tsibirai na Falkland"}
-            other{"Fam na ƙasar Tsibirai na Falkland"}
         }
         GBP{
             one{"Fam na Ingila"}
@@ -981,7 +969,7 @@ ha{
             other{"Rupee na Nepal"}
         }
         NZD{
-            one{"Dalar New Zealand"}
+            one{"Dalolin New Zealand"}
             other{"Dalolin New Zealand"}
         }
         OMR{
@@ -1037,7 +1025,7 @@ ha{
             other{"Riyal"}
         }
         SBD{
-            one{"Dalar Tsibirai na Solomon"}
+            one{"Dalolin Tsibirai na Solomon"}
             other{"Dalolin Tsibirai na Solomon"}
         }
         SDG{
@@ -1049,12 +1037,12 @@ ha{
             other{"Krona na ƙasar Sweden"}
         }
         SGD{
-            one{"dalar Singapore"}
+            one{"Dalolin Singapore"}
             other{"Dalolin Singapore"}
         }
         SHP{
             one{"Fam na San Helena"}
-            other{"Fam na San Helena"}
+            other{"fam na San Helena"}
         }
         SLL{
             one{"Kuɗin Saliyo"}
@@ -1093,7 +1081,7 @@ ha{
             other{"Paʻanga na ƙasar Tonga"}
         }
         TRY{
-            one{"kudin Turkish"}
+            one{"Kuɗin Turkiyya"}
             other{"Kuɗin Turkiyya"}
         }
         TTD{
@@ -1109,7 +1097,7 @@ ha{
             other{"Kuɗin Ukrain"}
         }
         UGX{
-            one{"Sulen Yuganda"}
+            one{"Sulallan Yuganda"}
             other{"Sulallan Yuganda"}
         }
         USD{

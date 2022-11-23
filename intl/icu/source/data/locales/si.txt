@@ -42,7 +42,10 @@ si{
             }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                accountingFormat%alphaNextToNumber{"¤ #,##0.00;(¤ #,##0.00)"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
+                currencyPatternAppendISO{"{0} ¤¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#"}
@@ -150,6 +153,56 @@ si{
                         other{"¤ට්‍රි000"}
                     }
                 }
+                currencyFormat%alphaNextToNumber{
+                    1000{
+                        one{"¤ ද0"}
+                        other{"¤ ද0"}
+                    }
+                    10000{
+                        one{"¤ ද00"}
+                        other{"¤ ද00"}
+                    }
+                    100000{
+                        one{"¤ ද000"}
+                        other{"¤ ද000"}
+                    }
+                    1000000{
+                        one{"¤ මි0"}
+                        other{"¤ මි0"}
+                    }
+                    10000000{
+                        one{"¤ මි00"}
+                        other{"¤ මි00"}
+                    }
+                    100000000{
+                        one{"¤ මි000"}
+                        other{"¤ මි000"}
+                    }
+                    1000000000{
+                        one{"¤ බි0"}
+                        other{"¤ බි0"}
+                    }
+                    10000000000{
+                        one{"¤ බි00"}
+                        other{"¤ බි00"}
+                    }
+                    100000000000{
+                        one{"¤ බි000"}
+                        other{"¤ බි000"}
+                    }
+                    1000000000000{
+                        one{"¤ ට්‍රි0"}
+                        other{"¤ ට්‍රි0"}
+                    }
+                    10000000000000{
+                        one{"¤ ට්‍රි00"}
+                        other{"¤ ට්‍රි00"}
+                    }
+                    100000000000000{
+                        one{"¤ ට්‍රි000"}
+                        other{"¤ ට්‍රි000"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         one{"ද0"}
@@ -244,6 +297,12 @@ si{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimePatterns%atTime{
+                "{1} දින {0}",
+                "{1} දින {0}",
+                "{1}, {0}",
+                "{1}, {0}",
             }
             DateTimeSkeletons{
                 "HHmmsszzzz",
@@ -469,6 +528,12 @@ si{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimePatterns%atTime{
+                "{1} දින {0}",
+                "{1} දින {0}",
+                "{1}, {0}",
+                "{1}, {0}",
             }
             DateTimeSkeletons{
                 "HHmmsszzzz",
@@ -1962,6 +2027,78 @@ si{
                 "[,٫︐﹐，]",
                 "[.․﹒．｡]",
             }
+        }
+    }
+    personNames{
+        foreignSpaceReplacement{" "}
+        initialPattern{
+            initial{"{0}."}
+            initialSequence{"{0} {1}"}
+        }
+        nameOrderLocales{
+            givenFirst{"und"}
+            surnameFirst{
+                "ko",
+                "si",
+                "ta",
+                "te",
+                "vi",
+                "yue",
+                "zh",
+            }
+        }
+        namePattern{
+            givenFirst-long-addressing-formal{"{prefix} {given} {surname}"}
+            givenFirst-long-addressing-informal{"{given-informal}"}
+            givenFirst-long-monogram-formal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-long-monogram-informal{
+                "{given-informal-monogram-allCaps}{given2-monogram-allCaps}{surname-m"
+                "onogram-allCaps}"
+            }
+            givenFirst-long-referring-formal{"{given} {given2} {surname} {surname2} {suffix}"}
+            givenFirst-long-referring-informal{"{given-informal} {surname}"}
+            givenFirst-medium-addressing-formal{"{prefix} {given-initial} {surname}"}
+            givenFirst-medium-addressing-informal{"{given-informal}"}
+            givenFirst-medium-monogram-formal{"{given-monogram-allCaps}{surname-monogram-allCaps}"}
+            givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {suffix}"}
+            givenFirst-medium-referring-informal{"{given-informal} {surname}"}
+            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-informal{"{given-informal}"}
+            givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
+            givenFirst-short-referring-informal{"{given-informal}"}
+            sorting-long-referring-formal{"{given} {given2}, {surname}"}
+            sorting-long-referring-informal{"{given-informal} {given2}, {surname}"}
+            sorting-medium-referring-formal{"{given} {given2}, {surname-initial}"}
+            sorting-medium-referring-informal{"{given-informal} {given2}, {surname-initial}"}
+            sorting-short-referring-formal{"{given} {given2-initial}, {surname-initial}"}
+            sorting-short-referring-informal{"{given-informal} {given2-initial}, {surname-initial}"}
+            surnameFirst-long-addressing-formal{"{prefix} {surname-initial} {given}"}
+            surnameFirst-long-addressing-informal{"{given-informal}"}
+            surnameFirst-long-monogram-formal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
+            surnameFirst-long-referring-formal{"{prefix} {surname} {given} {given2} {suffix}"}
+            surnameFirst-long-referring-informal{"{surname} {given-informal}"}
+            surnameFirst-medium-addressing-formal{"{prefix} {surname-initial} {given}"}
+            surnameFirst-medium-addressing-informal{"{given-informal}"}
+            surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}{given-monogram-allCaps}"}
+            surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-medium-referring-formal{"{surname-initial} {given} {given2} {suffix}"}
+            surnameFirst-medium-referring-informal{"{surname-initial} {given-informal}"}
+            surnameFirst-short-addressing-formal{"{prefix} {given}"}
+            surnameFirst-short-addressing-informal{"{given-informal}"}
+            surnameFirst-short-monogram-formal{"{given-monogram-allCaps}"}
+            surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-short-referring-formal{"{surname-initial} {given}"}
+            surnameFirst-short-referring-informal{"{given-informal}"}
         }
     }
 }

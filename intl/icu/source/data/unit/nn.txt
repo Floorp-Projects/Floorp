@@ -81,7 +81,10 @@ nn{
                 other{"{0} kvadrattommar"}
             }
             square-mile{
+                dnam{"engelske kvadratmil"}
                 gender{"feminine"}
+                one{"{0} engelsk kvadratmil"}
+                other{"{0} engelske kvadratmil"}
                 per{"{0} per engelske kvadratmil"}
             }
         }
@@ -92,7 +95,7 @@ nn{
             item{
                 case{
                     genitive{
-                        one{"{0} elements"}
+                        one{"{0} items"}
                         other{"{0} elements"}
                     }
                 }
@@ -192,7 +195,7 @@ nn{
                 case{
                     genitive{
                         one{"{0} månads"}
-                        other{"{0} månaders"}
+                        other{"{0} månadars"}
                     }
                 }
                 dnam{"månadar"}
@@ -393,7 +396,7 @@ nn{
                         other{"{0} nanometers"}
                     }
                 }
-                one{"{0} nm"}
+                one{"{0} nanometer"}
                 other{"{0} nm"}
             }
             point{
@@ -463,6 +466,7 @@ nn{
         }
         speed{
             mile-per-hour{
+                dnam{"engelske mil per time"}
                 gender{"feminine"}
             }
         }
@@ -480,16 +484,6 @@ nn{
             }
         }
         torque{
-            newton-meter{
-                case{
-                    genitive{
-                        one{"{0} newtonmeters"}
-                        other{"{0} newtonmeters"}
-                    }
-                }
-                one{"{0} newtonmeter"}
-                other{"{0} newtonmeter"}
-            }
             pound-force-foot{
                 dnam{"pound-feet"}
                 one{"{0} pound-force-foot"}
@@ -497,14 +491,19 @@ nn{
             }
         }
         volume{
+            bushel{
+                one{"{0} bushel"}
+                other{"{0} bushels"}
+            }
             cubic-inch{
                 dnam{"kubikktommar"}
                 one{"{0} kubikktomme"}
                 other{"{0} kubikktommar"}
             }
             cubic-mile{
+                dnam{"engelske kubikkmil"}
                 gender{"feminine"}
-                one{"{0} engelske kubikkmil"}
+                one{"{0} kubikkmile"}
                 other{"{0} engelske kubikkmil"}
             }
             cubic-yard{
@@ -638,6 +637,12 @@ nn{
                 dnam{"nm"}
             }
         }
+        mass{
+            ounce{
+                one{"{0} unse"}
+                other{"{0} unser"}
+            }
+        }
         pressure{
             inch-ofhg{
                 one{"{0} inHg"}
@@ -660,6 +665,10 @@ nn{
                 dnam{"brit. barneskei"}
                 one{"{0} imp. bs"}
                 other{"{0} imp. bs"}
+            }
+            drop{
+                one{"{0} dr"}
+                other{"{0} drope"}
             }
             fluid-ounce-imperial{
                 one{"{0} imp. fl oz"}
@@ -897,7 +906,10 @@ nn{
             drop{
                 dnam{"drope"}
                 one{"{0} drope"}
-                other{"{0} dråpe"}
+                other{"{0} drope"}
+            }
+            fluid-ounce{
+                dnam{"væskeunse"}
             }
             fluid-ounce-imperial{
                 dnam{"britisk væskeunse"}

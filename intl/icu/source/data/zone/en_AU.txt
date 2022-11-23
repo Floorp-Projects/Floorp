@@ -54,6 +54,9 @@ en_AU{
             lg{"Cook Island Time"}
             ls{"Cook Island Standard Time"}
         }
+        "meta:Gulf"{
+            ss{"Gulf ST"}
+        }
         "meta:Japan"{
             ld{"Japan Summer Time"}
             lg{"Japan Time"}

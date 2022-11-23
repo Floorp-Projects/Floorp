@@ -3,28 +3,26 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sr_Cyrl_BA{
     calendar{
-        generic{
-            intervalFormats{
-                MMMEd{
-                    M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. MMM – E, d. MMM"}
-                }
-                yMd{
-                    M{"d.M.y. – d.M.y. GGGGG"}
-                }
-            }
-        }
         gregorian{
             AmPmMarkers{
                 "прије подне",
                 "по подне",
             }
             AmPmMarkersAbbr{
-                "прије подне",
-                "по подне",
+                "прије подне",
+                "по подне",
             }
             dayNames{
                 format{
+                    abbreviated{
+                        "нед",
+                        "пон",
+                        "уто",
+                        "сри",
+                        "чет",
+                        "пет",
+                        "суб",
+                    }
                     wide{
                         "недјеља",
                         "понедјељак",
@@ -58,27 +56,19 @@ sr_Cyrl_BA{
             }
             dayPeriod{
                 format{
-                    abbreviated{
-                        afternoon1{"по под."}
-                        evening1{"вече"}
-                        midnight{"поноћ"}
-                        morning1{"јутро"}
-                        night1{"ноћу"}
-                        noon{"подне"}
-                    }
                     narrow{
-                        afternoon1{"по под."}
-                        evening1{"вече"}
+                        afternoon1{"по подне"}
+                        evening1{"увече"}
                         midnight{"поноћ"}
-                        morning1{"јутро"}
-                        night1{"ноћ"}
+                        morning1{"ујутро"}
+                        night1{"ноћу"}
                         noon{"подне"}
                     }
                 }
                 stand-alone{
                     abbreviated{
-                        am{"прије подне"}
-                        pm{"по подне"}
+                        am{"прије подне"}
+                        pm{"по подне"}
                     }
                     narrow{
                         am{"а"}
@@ -98,30 +88,6 @@ sr_Cyrl_BA{
                 wide%variant{
                     "пре наше ере",
                     "нове ере",
-                }
-            }
-            intervalFormats{
-                MEd{
-                    M{"E, MM-dd – E, MM-dd"}
-                    d{"E, MM-dd – E, MM-dd"}
-                }
-                Md{
-                    M{"MM-dd – MM-dd"}
-                    d{"MM-dd – MM-dd"}
-                }
-                yM{
-                    M{"y-MM – y-MM"}
-                    y{"y-MM – y-MM"}
-                }
-                yMEd{
-                    M{"E, y-MM-dd – E, y-MM-dd"}
-                    d{"E, y-MM-dd – E, y-MM-dd"}
-                    y{"E, y-MM-dd – E, y-MM-dd"}
-                }
-                yMd{
-                    M{"y-MM-dd – y-MM-dd"}
-                    d{"y-MM-dd – y-MM-dd"}
-                    y{"y-MM-dd – y-MM-dd"}
                 }
             }
         }
@@ -681,68 +647,84 @@ sr_Cyrl_BA{
             }
         }
         week{
-            dn{"недјеља"}
+            dn{"седмица"}
             relative{
-                "-1"{"претходне недеље"}
-                "0"{"ове недјеље"}
-                "1"{"наредне недеље"}
+                "-1"{"прошле седмице"}
+                "0"{"ове седмице"}
+                "1"{"сљедеће седмице"}
             }
-            relativePeriod{"недјеља која почиње {0}."}
+            relativePeriod{"седмица која почиње {0}."}
             relativeTime{
                 future{
-                    few{"за {0} недјеље"}
-                    one{"за {0} недјељу"}
-                    other{"за {0} недјеља"}
+                    few{"за {0} седмице"}
+                    one{"за {0} седмицу"}
+                    other{"за {0} седмица"}
                 }
                 past{
-                    few{"прије {0} недјеље"}
-                    one{"прије {0} недјеље"}
-                    other{"прије {0} недјеља"}
+                    few{"прије {0} седмице"}
+                    one{"прије {0} седмице"}
+                    other{"прије {0} седмица"}
                 }
             }
         }
         week-narrow{
             relative{
-                "-1"{"прошле н."}
-                "0"{"ове н."}
-                "1"{"сљедеће н."}
+                "-1"{"прошле с."}
+                "0"{"ове с."}
+                "1"{"сљедеће с."}
             }
-            relativePeriod{"недјеља која почиње {0}."}
+            relativePeriod{"седмица која почиње {0}."}
             relativeTime{
+                future{
+                    few{"за {0} с."}
+                    one{"за {0} с."}
+                    other{"за {0} с."}
+                }
                 past{
-                    few{"прије {0} н."}
-                    one{"прије {0} н."}
-                    other{"прије {0} н."}
+                    few{"прије {0} с."}
+                    one{"прије {0} с."}
+                    other{"прије {0} с."}
                 }
             }
         }
         week-short{
-            relativePeriod{"недјеља која почиње {0}."}
+            dn{"седм."}
+            relative{
+                "-1"{"прошле седм."}
+                "0"{"ове седм."}
+                "1"{"сљедеће седм."}
+            }
+            relativePeriod{"седмица која почиње {0}."}
             relativeTime{
+                future{
+                    few{"за {0} седм."}
+                    one{"за {0} седм."}
+                    other{"за {0} седм."}
+                }
                 past{
-                    few{"прије {0} нед."}
-                    one{"прије {0} нед."}
-                    other{"прије {0} нед."}
+                    few{"прије {0} седм."}
+                    one{"прије {0} седм."}
+                    other{"прије {0} седм."}
                 }
             }
         }
         weekOfMonth{
-            dn{"недјеља у мјесецу"}
+            dn{"седмица у мјесецу"}
         }
         weekOfMonth-narrow{
-            dn{"нед. у мјес."}
+            dn{"седм. у мјес."}
         }
         weekOfMonth-short{
-            dn{"нед. у мјес."}
+            dn{"седм. у мјес."}
         }
         weekday{
-            dn{"дан у недјељи"}
+            dn{"дан у седмици"}
         }
         weekday-narrow{
-            dn{"дан у недјељи"}
+            dn{"дан у седм."}
         }
         weekday-short{
-            dn{"дан у недјељи"}
+            dn{"дан у седм."}
         }
         weekdayOfMonth{
             dn{"дан у мјесецу"}

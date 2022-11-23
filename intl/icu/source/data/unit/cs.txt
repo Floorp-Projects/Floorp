@@ -2011,6 +2011,47 @@ cs{
                 one{"{0} nanosekunda"}
                 other{"{0} nanosekund"}
             }
+            quarter{
+                case{
+                    accusative{
+                        few{"{0} čtvrtletí"}
+                        many{"{0} čtvrtletí"}
+                        one{"{0} čtvrtletí"}
+                        other{"{0} čtvrtletí"}
+                    }
+                    dative{
+                        few{"{0} čtvrtletím"}
+                        many{"{0} čtvrtletí"}
+                        one{"{0} čtvrtletí"}
+                        other{"{0} čtvrtletím"}
+                    }
+                    genitive{
+                        few{"{0} čtvrtletí"}
+                        many{"{0} čtvrtletí"}
+                        one{"{0} čtvrtletí"}
+                        other{"{0} čtvrtletí"}
+                    }
+                    instrumental{
+                        few{"{0} čtvrtletími"}
+                        many{"{0} čtvrtletí"}
+                        one{"{0} čtvrtletím"}
+                        other{"{0} čtvrtletími"}
+                    }
+                    locative{
+                        few{"{0} čtvrtletích"}
+                        many{"{0} čtvrtletí"}
+                        one{"{0} čtvrtletí"}
+                        other{"{0} čtvrtletích"}
+                    }
+                }
+                dnam{"čtvrtletí"}
+                few{"{0} čtvrtletí"}
+                gender{"neuter"}
+                many{"{0} čtvrtletí"}
+                one{"{0} čtvrtletí"}
+                other{"{0} čtvrtletí"}
+                per{"{0} za čtvrtletí"}
+            }
             second{
                 case{
                     accusative{
@@ -3666,46 +3707,6 @@ cs{
                 other{"{0} kilogramů"}
                 per{"{0} na kilogram"}
             }
-            metric-ton{
-                case{
-                    accusative{
-                        few{"{0} tuny"}
-                        many{"{0} tuny"}
-                        one{"{0} tunu"}
-                        other{"{0} tun"}
-                    }
-                    dative{
-                        few{"{0} tunám"}
-                        many{"{0} tuny"}
-                        one{"{0} tuně"}
-                        other{"{0} tunám"}
-                    }
-                    genitive{
-                        few{"{0} tun"}
-                        many{"{0} tuny"}
-                        one{"{0} tuny"}
-                        other{"{0} tun"}
-                    }
-                    instrumental{
-                        few{"{0} tunami"}
-                        many{"{0} tuny"}
-                        one{"{0} tunou"}
-                        other{"{0} tunami"}
-                    }
-                    locative{
-                        few{"{0} tunách"}
-                        many{"{0} tuny"}
-                        one{"{0} tuně"}
-                        other{"{0} tunách"}
-                    }
-                }
-                dnam{"tuny"}
-                few{"{0} tuny"}
-                gender{"feminine"}
-                many{"{0} tuny"}
-                one{"{0} tuna"}
-                other{"{0} tun"}
-            }
             microgram{
                 case{
                     accusative{
@@ -3829,6 +3830,46 @@ cs{
                 many{"{0} americké tuny"}
                 one{"{0} americká tuna"}
                 other{"{0} amerických tun"}
+            }
+            tonne{
+                case{
+                    accusative{
+                        few{"{0} tuny"}
+                        many{"{0} tuny"}
+                        one{"{0} tunu"}
+                        other{"{0} tun"}
+                    }
+                    dative{
+                        few{"{0} tunám"}
+                        many{"{0} tuny"}
+                        one{"{0} tuně"}
+                        other{"{0} tunám"}
+                    }
+                    genitive{
+                        few{"{0} tun"}
+                        many{"{0} tuny"}
+                        one{"{0} tuny"}
+                        other{"{0} tun"}
+                    }
+                    instrumental{
+                        few{"{0} tunami"}
+                        many{"{0} tuny"}
+                        one{"{0} tunou"}
+                        other{"{0} tunami"}
+                    }
+                    locative{
+                        few{"{0} tunách"}
+                        many{"{0} tuny"}
+                        one{"{0} tuně"}
+                        other{"{0} tunách"}
+                    }
+                }
+                dnam{"tuny"}
+                few{"{0} tuny"}
+                gender{"feminine"}
+                many{"{0} tuny"}
+                one{"{0} tuna"}
+                other{"{0} tun"}
             }
         }
         power{
@@ -3983,13 +4024,13 @@ cs{
                         few{"{0} miliwatty"}
                         many{"{0} miliwattu"}
                         one{"{0} miliwattem"}
-                        other{"{0} miliwattů"}
+                        other{"{0} miliwatty"}
                     }
                     locative{
                         few{"{0} miliwattech"}
                         many{"{0} miliwattu"}
                         one{"{0} miliwattu"}
-                        other{"{0} miliwattů"}
+                        other{"{0} miliwattech"}
                     }
                 }
                 dnam{"miliwatty"}
@@ -5623,19 +5664,19 @@ cs{
                 other{"{0} stol."}
             }
             day{
-                dnam{"d"}
-                few{"{0} d"}
-                many{"{0} d"}
-                one{"{0} d"}
-                other{"{0} d"}
-                per{"{0}/d"}
+                dnam{"d."}
+                few{"{0} d."}
+                many{"{0} d."}
+                one{"{0} d."}
+                other{"{0} d."}
+                per{"{0}/d."}
             }
             decade{
-                dnam{"desetil."}
-                few{"{0} desetil."}
-                many{"{0} desetil."}
-                one{"{0} desetil."}
-                other{"{0} desetil."}
+                dnam{"dek."}
+                few{"{0} dek."}
+                many{"{0} dek."}
+                one{"{0} dek."}
+                other{"{0} dek."}
             }
             hour{
                 dnam{"h"}
@@ -5668,12 +5709,12 @@ cs{
                 per{"{0}/m"}
             }
             month{
-                dnam{"m"}
-                few{"{0} m"}
-                many{"{0} m"}
-                one{"{0} m"}
-                other{"{0} m"}
-                per{"{0}/měs."}
+                dnam{"m."}
+                few{"{0} m."}
+                many{"{0} m."}
+                one{"{0} m."}
+                other{"{0} m."}
+                per{"{0}/m."}
             }
             nanosecond{
                 dnam{"ns"}
@@ -5681,6 +5722,14 @@ cs{
                 many{"{0} ns"}
                 one{"{0} ns"}
                 other{"{0} ns"}
+            }
+            quarter{
+                dnam{"kv."}
+                few{"{0} kv."}
+                many{"{0} kv."}
+                one{"{0} kv."}
+                other{"{0} kv."}
+                per{"{0}/kv."}
             }
             second{
                 dnam{"s"}
@@ -5691,20 +5740,20 @@ cs{
                 per{"{0}/s"}
             }
             week{
-                dnam{"t"}
-                few{"{0} t"}
-                many{"{0} t"}
-                one{"{0} t"}
-                other{"{0} t"}
-                per{"{0}/týd."}
+                dnam{"t."}
+                few{"{0} t."}
+                many{"{0} t."}
+                one{"{0} t."}
+                other{"{0} t."}
+                per{"{0}/t."}
             }
             year{
-                dnam{"r"}
-                few{"{0} r"}
-                many{"{0} r"}
-                one{"{0} r"}
-                other{"{0} r"}
-                per{"{0}/r"}
+                dnam{"r."}
+                few{"{0} r."}
+                many{"{0} r."}
+                one{"{0} r."}
+                other{"{0} l."}
+                per{"{0}/r."}
             }
         }
         electric{
@@ -5751,6 +5800,13 @@ cs{
                 many{"{0} cal"}
                 one{"{0} cal"}
                 other{"{0} cal"}
+            }
+            electronvolt{
+                dnam{"eV"}
+                few{"{0} eV"}
+                many{"{0} eV"}
+                one{"{0} eV"}
+                other{"{0} eV"}
             }
             foodcalorie{
                 dnam{"kcal"}
@@ -6142,13 +6198,6 @@ cs{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                few{"{0} t"}
-                many{"{0} t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 few{"{0} μg"}
@@ -6207,6 +6256,13 @@ cs{
                 one{"{0} sht"}
                 other{"{0} sht"}
             }
+            tonne{
+                dnam{"t"}
+                few{"{0} t"}
+                many{"{0} t"}
+                one{"{0} t"}
+                other{"{0} t"}
+            }
         }
         power{
             gigawatt{
@@ -6253,6 +6309,19 @@ cs{
             }
         }
         pressure{
+            atmosphere{
+                dnam{"atm"}
+                few{"{0} atm"}
+                many{"{0} atm"}
+                one{"{0} atm"}
+                other{"{0} atm"}
+            }
+            bar{
+                few{"{0} bar"}
+                many{"{0} bar"}
+                one{"{0} bar"}
+                other{"{0} bar"}
+            }
             hectopascal{
                 dnam{"hPa"}
                 few{"{0} hPa"}
@@ -6294,6 +6363,13 @@ cs{
                 many{"{0} mmHg"}
                 one{"{0} mmHg"}
                 other{"{0} mmHg"}
+            }
+            pascal{
+                dnam{"Pa"}
+                few{"{0} Pa"}
+                many{"{0} Pa"}
+                one{"{0} Pa"}
+                other{"{0} Pa"}
             }
             pound-force-per-square-inch{
                 dnam{"psi"}
@@ -6387,6 +6463,13 @@ cs{
                 one{"{0} ac ft"}
                 other{"{0} ac ft"}
             }
+            barrel{
+                dnam{"bbl"}
+                few{"{0} bbl"}
+                many{"{0} bbl"}
+                one{"{0} bbl"}
+                other{"{0} bbl"}
+            }
             bushel{
                 dnam{"bu"}
                 few{"{0} bu"}
@@ -6473,6 +6556,13 @@ cs{
                 one{"{0} dl"}
                 other{"{0} dl"}
             }
+            dessert-spoon{
+                dnam{"dstspn"}
+                few{"{0} dstspn"}
+                many{"{0} dstspn"}
+                one{"{0} dstspn"}
+                other{"{0} dstspn"}
+            }
             dessert-spoon-imperial{
                 dnam{"dspIm"}
                 few{"{0} dspIm"}
@@ -6486,6 +6576,13 @@ cs{
                 many{"{0} fl dr"}
                 one{"{0} fl dr"}
                 other{"{0} fl dr"}
+            }
+            drop{
+                dnam{"kapky"}
+                few{"{0} kapky"}
+                many{"{0} kapky"}
+                one{"{0} kapka"}
+                other{"{0} kapek"}
             }
             fluid-ounce{
                 dnam{"fl oz"}
@@ -7060,6 +7157,14 @@ cs{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
+            quarter{
+                dnam{"čtvrtl."}
+                few{"{0} čtvrtl."}
+                many{"{0} čtvrtl."}
+                one{"{0} čtvrtl."}
+                other{"{0} čtvrtl."}
+                per{"{0}/čtvrtl."}
+            }
             second{
                 dnam{"s"}
                 few{"{0} s"}
@@ -7082,7 +7187,7 @@ cs{
                 many{"{0} roku"}
                 one{"{0} rok"}
                 other{"{0} let"}
-                per{"{0}/r"}
+                per{"{0}/rok"}
             }
         }
         electric{
@@ -7527,13 +7632,6 @@ cs{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                few{"{0} t"}
-                many{"{0} t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 few{"{0} μg"}
@@ -7591,6 +7689,13 @@ cs{
                 many{"{0} sht"}
                 one{"{0} sht"}
                 other{"{0} sht"}
+            }
+            tonne{
+                dnam{"t"}
+                few{"{0} t"}
+                many{"{0} t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

@@ -254,7 +254,7 @@ qu{
         SV{"El Salvador"}
         SX{"Sint Maarten"}
         SY{"Siria"}
-        SZ{"Suazilandia"}
+        SZ{"Esuatini"}
         TA{"Tristán de Acuña"}
         TC{"Islas Turcas y Caicos"}
         TD{"Chad"}
@@ -305,5 +305,7 @@ qu{
     }
     Countries%variant{
         CZ{"República Checa"}
+        NZ{"Aotearoa Nueva Zelanda"}
+        SZ{"Suazilandia"}
     }
 }

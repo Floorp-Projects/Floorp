@@ -899,6 +899,10 @@ sc{
             "SKK",
             "corona islovaca",
         }
+        SLE{
+            "SLE",
+            "leone nou de sa Sierra Leone",
+        }
         SLL{
             "SLL",
             "leone de sa Sierra Leone",
@@ -1046,6 +1050,10 @@ sc{
         VEB{
             "VEB",
             "bolivar venezuelanu (1871–2008)",
+        }
+        VED{
+            "VED",
+            "bolivar soberanu",
         }
         VEF{
             "VEF",
@@ -2113,6 +2121,10 @@ sc{
             one{"corona islovaca"}
             other{"coronas islovacas"}
         }
+        SLE{
+            one{"leone nou de sa Sierra Leone"}
+            other{"leones noos de sa Sierra Leone"}
+        }
         SLL{
             one{"leone de sa Sierra Leone"}
             other{"leones de sa Sierra Leone"}
@@ -2260,6 +2272,10 @@ sc{
         VEB{
             one{"bolivar venezuelanu (1871–2008)"}
             other{"bolivares venezuelanos (1871–2008)"}
+        }
+        VED{
+            one{"bolivar soberanu"}
+            other{"bolivares soberanos"}
         }
         VEF{
             one{"bolivar venezuelanu (2008–2018)"}

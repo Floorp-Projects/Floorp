@@ -398,6 +398,13 @@ ur{
                 one{"{0} نینو سیکنڈ"}
                 other{"{0} نینو سیکنڈ"}
             }
+            quarter{
+                dnam{"کوارٹرز"}
+                gender{"masculine"}
+                one{"{0} کوارٹر"}
+                other{"{0} کوارٹرز"}
+                per{"{0}/کوارٹر"}
+            }
             second{
                 dnam{"سیکنڈ"}
                 gender{"masculine"}
@@ -773,12 +780,6 @@ ur{
                 other{"{0} کلو گرام"}
                 per{"{0} فی کلو گرام"}
             }
-            metric-ton{
-                dnam{"میٹرک ٹن"}
-                gender{"masculine"}
-                one{"{0} میٹرک ٹن"}
-                other{"{0} میٹرک ٹن"}
-            }
             microgram{
                 dnam{"مائکرو گرام"}
                 gender{"masculine"}
@@ -822,6 +823,12 @@ ur{
                 dnam{"ٹن"}
                 one{"{0} ٹن"}
                 other{"{0} ٹن"}
+            }
+            tonne{
+                dnam{"میٹرک ٹن"}
+                gender{"masculine"}
+                one{"{0} میٹرک ٹن"}
+                other{"{0} میٹرک ٹن"}
             }
         }
         power{
@@ -1327,6 +1334,12 @@ ur{
                 one{"{0} مہینہ"}
                 other{"{0} مہینے"}
                 per{"{0}/مہینہ"}
+            }
+            quarter{
+                dnam{"کوارٹر"}
+                one{"{0}q"}
+                other{"{0}q"}
+                per{"{0}/q"}
             }
             second{
                 dnam{"سیکنڈ"}
@@ -1949,6 +1962,12 @@ ur{
                 one{"{0} نینو سیکنڈ"}
                 other{"{0} نینو سیکنڈ"}
             }
+            quarter{
+                dnam{"کوارٹر"}
+                one{"{0} کوارٹر"}
+                other{"{0} کوارٹرز"}
+                per{"{0}/کوارٹر"}
+            }
             second{
                 dnam{"سیکنڈ"}
                 one{"{0} سیکنڈ"}
@@ -2254,11 +2273,6 @@ ur{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -2300,6 +2314,11 @@ ur{
                 dnam{"ٹن"}
                 one{"{0} tn"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

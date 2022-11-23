@@ -105,7 +105,7 @@ u_vsscanf_u(const UChar *buffer,
 
     inStr.fConverter = NULL;
     inStr.fFile = NULL;
-    inStr.fOwnFile = FALSE;
+    inStr.fOwnFile = false;
 #if !UCONFIG_NO_TRANSLITERATION
     inStr.fTranslit = NULL;
 #endif

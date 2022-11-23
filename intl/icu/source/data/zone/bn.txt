@@ -160,7 +160,7 @@ bn{
             ec{"উইনধোক"}
         }
         "America:Adak"{
-            ec{"আডাক"}
+            ec{"আডক"}
         }
         "America:Anchorage"{
             ec{"এনকোরেজ"}
@@ -205,7 +205,7 @@ bn{
             ec{"বাহিয়া"}
         }
         "America:Bahia_Banderas"{
-            ec{"বাহিয়া বানড্রাস"}
+            ec{"বাহিয়া বান্দেরাস"}
         }
         "America:Barbados"{
             ec{"বার্বাডোজ"}
@@ -505,7 +505,7 @@ bn{
             ec{"পোর্তো ভেল্‌হো"}
         }
         "America:Puerto_Rico"{
-            ec{"পুয়েরতো রিকো"}
+            ec{"পুয়ের্তো রিকো"}
         }
         "America:Punta_Arenas"{
             ec{"পুন্টা আরেনাস"}
@@ -514,7 +514,7 @@ bn{
             ec{"রেইনি রিভার"}
         }
         "America:Rankin_Inlet"{
-            ec{"র‌্যাঙ্কিন ইনলেট"}
+            ec{"র‍্যাঙ্কিন ইনলেট"}
         }
         "America:Recife"{
             ec{"রেসিফে"}
@@ -544,7 +544,7 @@ bn{
             ec{"সাও পাউলো"}
         }
         "America:Scoresbysund"{
-            ec{"ইটকুয়োরটুরমিট"}
+            ec{"ইট্টকুয়োরটুরমিট"}
         }
         "America:Sitka"{
             ec{"শিটকা"}
@@ -1223,6 +1223,9 @@ bn{
         "Pacific:Johnston"{
             ec{"জনস্টন"}
         }
+        "Pacific:Kanton"{
+            ec{"ক্যান্টন"}
+        }
         "Pacific:Kiritimati"{
             ec{"কিরিতিমাতি"}
         }
@@ -1320,8 +1323,8 @@ bn{
             ls{"আলাস্কা মানক সময়"}
         }
         "meta:Amazon"{
-            ld{"অ্যামাজন গ্রীষ্মকালীন সময়"}
-            lg{"অ্যামাজন সময়"}
+            ld{"আমাজন গ্রীষ্মকালীন সময়"}
+            lg{"আমাজন সময়"}
             ls{"আমাজন মানক সময়"}
         }
         "meta:America_Central"{
@@ -1563,7 +1566,7 @@ bn{
         }
         "meta:Hawaii_Aleutian"{
             ld{"হাওয়াই-আলেউত দিবালোক সময়"}
-            lg{"হাওয়াই অ্যালিউটিয়ান সময়"}
+            lg{"হাওয়াই-আলেউত সময়"}
             ls{"হাওয়াই-আলেউত মানক সময়"}
         }
         "meta:Hong_Kong"{

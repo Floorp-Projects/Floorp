@@ -591,11 +591,6 @@ yrl{
                 other{"{0} pusesawa-ita"}
                 per{"{0} pusesawa rupi"}
             }
-            metric-ton{
-                dnam{"tonerada metirika-ita"}
-                one{"{0} tonerada metirika-ita"}
-                other{"{0} tonerada metirika-ita"}
-            }
             microgram{
                 dnam{"mikrugrama-ita"}
                 one{"{0} mikrugrama"}
@@ -637,6 +632,11 @@ yrl{
                 dnam{"tonerada-ita"}
                 one{"{0} tonerada"}
                 other{"{0} tonerada-ita"}
+            }
+            tonne{
+                dnam{"tonerada metirika-ita"}
+                one{"{0} tonerada metirika-ita"}
+                other{"{0} tonerada metirika-ita"}
             }
         }
         power{
@@ -1546,11 +1546,6 @@ yrl{
             gram{
                 dnam{"grama"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             ounce-troy{
                 dnam{"oz troy"}
             }
@@ -1567,6 +1562,11 @@ yrl{
                 dnam{"tonerada"}
                 one{"{0} tn"}
                 other{"{0} tn"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{
