@@ -11,7 +11,7 @@
 #      These rules are based on UAX #29 Revision 34 for Unicode Version 12.0
 #
 # Note:  Updates to word.txt will usually need to be merged into
-#        word_POSIX.txt also.
+#        word_POSIX.txt and word_fi_sv.txt also.
 
 ##############################################################################
 #
@@ -38,11 +38,11 @@ $Regional_Indicator = [\p{Word_Break = Regional_Indicator}];
 $Format             = [\p{Word_Break = Format}];
 $Katakana           = [\p{Word_Break = Katakana}];
 $Hebrew_Letter      = [\p{Word_Break = Hebrew_Letter}];
-$ALetter            = [\p{Word_Break = ALetter}];
+$ALetter            = [\p{Word_Break = ALetter} @];
 $Single_Quote       = [\p{Word_Break = Single_Quote}];
 $Double_Quote       = [\p{Word_Break = Double_Quote}];
 $MidNumLet          = [\p{Word_Break = MidNumLet}];
-$MidLetter          = [\p{Word_Break = MidLetter}];
+$MidLetter          = [\p{Word_Break = MidLetter} - [\: \uFE55 \uFF1A]];
 $MidNum             = [\p{Word_Break = MidNum}];
 $Numeric            = [\p{Word_Break = Numeric}];
 $ExtendNumLet       = [\p{Word_Break = ExtendNumLet}];

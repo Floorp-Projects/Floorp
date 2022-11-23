@@ -569,6 +569,18 @@ am{
                 one{"{0} ናኖሰከንድ"}
                 other{"{0} ናኖሰከንድ"}
             }
+            quarter{
+                case{
+                    accusative{
+                        one{"{0} ሩ"}
+                        other{"{0} ሩ"}
+                    }
+                }
+                dnam{"ሩቦች"}
+                one{"{0} ሩ"}
+                other{"{0} ሩ"}
+                per{"{0}/ሩ"}
+            }
             second{
                 case{
                     accusative{
@@ -1101,17 +1113,6 @@ am{
                 other{"{0} ኪሎግራም"}
                 per{"{0}/ኪሎግራም"}
             }
-            metric-ton{
-                case{
-                    accusative{
-                        one{"{0} ሜትሪክ ቶን"}
-                        other{"{0} ሜትሪክ ቶኖች"}
-                    }
-                }
-                dnam{"t"}
-                one{"{0} ሜትሪክ ቶን"}
-                other{"{0} ሜትሪክ ቶኖች"}
-            }
             microgram{
                 case{
                     accusative{
@@ -1165,6 +1166,17 @@ am{
                 dnam{"ቶን"}
                 one{"{0} ቶን"}
                 other{"{0} ቶን"}
+            }
+            tonne{
+                case{
+                    accusative{
+                        one{"{0} ሜትሪክ ቶን"}
+                        other{"{0} ሜትሪክ ቶኖች"}
+                    }
+                }
+                dnam{"t"}
+                one{"{0} ሜትሪክ ቶን"}
+                other{"{0} ሜትሪክ ቶኖች"}
             }
         }
         power{
@@ -1796,6 +1808,10 @@ am{
                 one{"{0} ወር"}
                 other{"{0} ወር"}
             }
+            quarter{
+                one{"{0} ሩብ"}
+                other{"{0} ሩ"}
+            }
             second{
                 dnam{"ሰከንድ"}
                 one{"{0} ሰ"}
@@ -1903,11 +1919,6 @@ am{
                 one{"{0} ኪግ"}
                 other{"{0} ኪግ"}
             }
-            metric-ton{
-                dnam{"ቶ"}
-                one{"{0} ቶ"}
-                other{"{0} ቶ"}
-            }
             milligram{
                 dnam{"ሚሊግራም"}
                 one{"{0} ሚሊግራም"}
@@ -1920,6 +1931,11 @@ am{
             pound{
                 one{"{0} ፓውንድ"}
                 other{"{0} ፓውንድ"}
+            }
+            tonne{
+                dnam{"ቶ"}
+                one{"{0} ቶ"}
+                other{"{0} ቶ"}
             }
         }
         power{
@@ -2333,6 +2349,12 @@ am{
                 one{"{0} ናኖሰከንድ"}
                 other{"{0} ናኖሰከንድ"}
             }
+            quarter{
+                dnam{"ሩብ"}
+                one{"{0} ሩብ"}
+                other{"{0} ሩብ"}
+                per{"{0}/ሩ"}
+            }
             second{
                 dnam{"ሰከንዶች"}
                 one{"{0} ሰከ"}
@@ -2633,11 +2655,6 @@ am{
                 other{"{0} ኪግ"}
                 per{"{0}/ኪሎግራም"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -2677,6 +2694,11 @@ am{
                 dnam{"ቶን"}
                 one{"{0} ቶን"}
                 other{"{0} ቶን"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

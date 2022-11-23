@@ -484,13 +484,13 @@ sah{
                 other{"{0} кг"}
                 per{"{0}/кг"}
             }
-            metric-ton{
-                dnam{"т"}
-                other{"{0} т"}
-            }
             milligram{
                 dnam{"мг"}
                 other{"{0} мг"}
+            }
+            tonne{
+                dnam{"т"}
+                other{"{0} т"}
             }
         }
         temperature{

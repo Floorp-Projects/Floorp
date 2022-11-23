@@ -1217,6 +1217,9 @@ tk{
         "Pacific:Johnston"{
             ec{"Jonston"}
         }
+        "Pacific:Kanton"{
+            ec{"Kanton"}
+        }
         "Pacific:Kiritimati"{
             ec{"Kiritimati"}
         }

@@ -299,12 +299,10 @@ am{
         ZZ{"ያልታወቀ ክልል"}
     }
     Countries%short{
-        GB{"ዩኬ"}
         HK{"ሆንግ ኮንግ"}
         MO{"ማካኦ"}
         PS{"ፍልስጥኤም"}
         UN{"የተመ"}
-        US{"ዩ ኤስ"}
     }
     Countries%variant{
         CD{"ኮንጎ (የዲሞክራቲክ ሪፐብሊክ ኮንጎ)"}

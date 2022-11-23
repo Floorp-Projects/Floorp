@@ -20,10 +20,10 @@ kab{
     calendar{
         generic{
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
                 "EEEE d MMMM y G",
                 "d MMMM y G",
                 "d MMM, y G",
@@ -73,14 +73,14 @@ kab{
                 "n tmeddit",
             }
             AmPmMarkersAbbr{
-                "n tufat",
-                "n tmeddit",
+                "n tufat",
+                "n tmeddit",
             }
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
                 "EEEE d MMMM y",
                 "d MMMM y",
                 "d MMM, y",

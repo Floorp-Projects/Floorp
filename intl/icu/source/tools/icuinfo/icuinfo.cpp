@@ -49,19 +49,19 @@ static UOption options[]={
 };
 
 static UErrorCode initStatus = U_ZERO_ERROR;
-static UBool icuInitted = FALSE;
+static UBool icuInitted = false;
 
 static void do_init() {
     if(!icuInitted) {
       u_init(&initStatus);
-      icuInitted = TRUE;
+      icuInitted = true;
     }
 }
 
 static void do_cleanup() {
   if (icuInitted) {
     u_cleanup();
-    icuInitted = FALSE;
+    icuInitted = false;
   }
 }
 
@@ -232,7 +232,7 @@ void cmd_listplugins() {
 extern int
 main(int argc, char* argv[]) {
     UErrorCode errorCode = U_ZERO_ERROR;
-    UBool didSomething = FALSE;
+    UBool didSomething = false;
     
     /* preset then read command line options */
     argc=u_parseArgs(argc, argv, UPRV_LENGTHOF(options), options);
@@ -267,16 +267,16 @@ main(int argc, char* argv[]) {
 
     if(options[5].doesOccur) {
       cmd_millis();
-      didSomething=TRUE;
+      didSomething=true;
     } 
     if(options[4].doesOccur) {
       cmd_listplugins();
-      didSomething = TRUE;
+      didSomething = true;
     }
 
     if(options[3].doesOccur) {
-      cmd_version(FALSE, errorCode);
-      didSomething = TRUE;
+      cmd_version(false, errorCode);
+      didSomething = true;
     }
 
     if(options[7].doesOccur) {  /* 2nd part of version: cleanup */
@@ -289,16 +289,16 @@ main(int argc, char* argv[]) {
       fprintf(out, "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
       udbg_writeIcuInfo(out);
       fclose(out);
-      didSomething = TRUE;
+      didSomething = true;
     }
 
     if(options[6].doesOccur) {  /* 2nd part of version: cleanup */
       cmd_cleanup();
-      didSomething = TRUE;
+      didSomething = true;
     }
 
     if(!didSomething) {
-      cmd_version(FALSE, errorCode);  /* at least print the version # */
+      cmd_version(false, errorCode);  /* at least print the version # */
     }
 
     do_cleanup();

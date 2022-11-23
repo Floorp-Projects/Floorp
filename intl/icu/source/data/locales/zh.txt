@@ -344,6 +344,8 @@ zh{
             }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                accountingFormat%alphaNextToNumber{"¤ #,##0.00;(¤ #,##0.00)"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
@@ -5067,6 +5069,10 @@ zh{
             middle{"{0}、{1}"}
             start{"{0}、{1}"}
         }
+        standard-narrow{
+            2{"{0}、{1}"}
+            end{"{0}、{1}"}
+        }
         standard-short{
             2{"{0}和{1}"}
             end{"{0}和{1}"}
@@ -5127,6 +5133,72 @@ zh{
                 "[,٫︐﹐，]",
                 "[.․﹒．｡]",
             }
+        }
+    }
+    personNames{
+        foreignSpaceReplacement{"·"}
+        initialPattern{
+            initial{"{0}"}
+        }
+        nameOrderLocales{
+            surnameFirst{
+                "hu",
+                "ja",
+                "ko",
+                "vi",
+                "yue",
+                "zh",
+            }
+        }
+        namePattern{
+            givenFirst-long-addressing-formal{"{surname} {suffix}"}
+            givenFirst-long-addressing-informal{"{given-informal}"}
+            givenFirst-long-monogram-formal{
+                "{given-monogram-allCaps} {given2-monogram-allCaps} {surname-monogram"
+                "-allCaps}"
+            }
+            givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps} {surname-monogram-allCaps}"}
+            givenFirst-long-referring-formal{"{given} {given2} {surname} {suffix}"}
+            givenFirst-long-referring-informal{"{given-informal} {surname}"}
+            givenFirst-medium-addressing-formal{"{surname} {suffix}"}
+            givenFirst-medium-addressing-informal{"{given-informal}"}
+            givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {suffix}"}
+            givenFirst-medium-referring-informal{"{given-informal} {surname}"}
+            givenFirst-short-addressing-formal{"{surname} {suffix}"}
+            givenFirst-short-addressing-informal{"{given-informal}"}
+            givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
+            givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
+            sorting-long-referring-formal{"{surname-core}{given}{given2}{surname-prefix}"}
+            sorting-long-referring-informal{"{surname}{given-informal}"}
+            sorting-medium-referring-formal{"{surname-core}{given}{given2}{surname-prefix}"}
+            sorting-medium-referring-informal{"{surname}{given-informal}"}
+            sorting-short-referring-formal{"{surname-core}{given}{given2}{surname-prefix}"}
+            sorting-short-referring-informal{"{surname}{given-informal}"}
+            surnameFirst-long-addressing-formal{"{surname}{suffix}"}
+            surnameFirst-long-addressing-informal{"{given-informal}"}
+            surnameFirst-long-monogram-formal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
+            surnameFirst-long-referring-formal{"{surname}{given}{given2}{suffix}"}
+            surnameFirst-long-referring-informal{"{surname}{given-informal}"}
+            surnameFirst-medium-addressing-formal{"{surname}{suffix}"}
+            surnameFirst-medium-addressing-informal{"{given-informal}"}
+            surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-medium-referring-formal{"{surname}{given}{given2}{suffix}"}
+            surnameFirst-medium-referring-informal{"{surname}{given-informal}"}
+            surnameFirst-short-addressing-formal{"{surname}{suffix}"}
+            surnameFirst-short-addressing-informal{"{given-informal}"}
+            surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-short-referring-formal{"{surname}{given}{given2}"}
+            surnameFirst-short-referring-informal{"{surname}{given}"}
         }
     }
 }

@@ -53,6 +53,7 @@ dcfmtsym.cpp
 decContext.cpp
 decNumber.cpp
 decimfmt.cpp
+displayoptions.cpp
 double-conversion-bignum-dtoa.cpp
 double-conversion-bignum.cpp
 double-conversion-cached-powers.cpp

@@ -311,6 +311,7 @@ es{
         CI{"Costa de Marfil"}
         CZ{"República Checa"}
         FK{"Islas Malvinas (Islas Falkland)"}
+        NZ{"Aotearoa (Nueva Zelanda)"}
         SZ{"Suazilandia"}
         TL{"Timor Oriental"}
     }

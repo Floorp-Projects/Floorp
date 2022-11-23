@@ -899,6 +899,10 @@ gd{
             "SKK",
             "Koruna Slòbhacach",
         }
+        SLE{
+            "SLE",
+            "Leone Siarra Leòmhannach ùr",
+        }
         SLL{
             "SLL",
             "Leone Siarra Leòmhannach",
@@ -1046,6 +1050,10 @@ gd{
         VEB{
             "VEB",
             "Bolívar Bheinisealach (1871–2008)",
+        }
+        VED{
+            "VED",
+            "Bolívar Soberano",
         }
         VEF{
             "VEF",
@@ -2664,6 +2672,12 @@ gd{
             other{"koruna Slòbhacach"}
             two{"koruna Slòbhacach"}
         }
+        SLE{
+            few{"leone Siarra Leòmhannach ùr"}
+            one{"leone Siarra Leòmhannach ùr"}
+            other{"leone Siarra Leòmhannach ùr"}
+            two{"leone Siarra Leòmhannach ùr"}
+        }
         SLL{
             few{"leone Siarra Leòmhannach"}
             one{"leone Siarra Leòmhannach"}
@@ -2885,6 +2899,12 @@ gd{
             one{"bholívar Bheinisealach (1871–2008)"}
             other{"bolívar Bheinisealach (1871–2008)"}
             two{"bholívar Bheinisealach (1871–2008)"}
+        }
+        VED{
+            few{"bolívar Soberano"}
+            one{"bholívar Soberano"}
+            other{"bolívar Soberano"}
+            two{"bholívar Soberano"}
         }
         VEF{
             few{"bolívar Bheinisealach (2008–2018)"}

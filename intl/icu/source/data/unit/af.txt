@@ -330,6 +330,12 @@ af{
                 one{"{0} nanosekonde"}
                 other{"{0} nanosekondes"}
             }
+            quarter{
+                dnam{"kwartale"}
+                one{"{0} kwartaal"}
+                other{"{0} kwartale"}
+                per{"{0}/kwartaal"}
+            }
             second{
                 dnam{"sekondes"}
                 one{"{0} sekonde"}
@@ -663,11 +669,6 @@ af{
                 other{"{0} kilogram"}
                 per{"{0} per kilogram"}
             }
-            metric-ton{
-                dnam{"metrieke ton"}
-                one{"{0} metrieke ton"}
-                other{"{0} metrieke ton"}
-            }
             microgram{
                 dnam{"mikrogram"}
                 one{"{0} mikrogram"}
@@ -709,6 +710,11 @@ af{
                 dnam{"VSA-ton"}
                 one{"{0} VSA-ton"}
                 other{"{0} VSA-ton"}
+            }
+            tonne{
+                dnam{"metrieke ton"}
+                one{"{0} metrieke ton"}
+                other{"{0} metrieke ton"}
             }
         }
         power{
@@ -1264,6 +1270,12 @@ af{
                 one{"{0}ns."}
                 other{"{0}ns."}
             }
+            quarter{
+                dnam{"kw."}
+                one{"{0} kw."}
+                other{"{0} kwe."}
+                per{"{0}/kw."}
+            }
             second{
                 dnam{"s."}
                 one{"{0} s."}
@@ -1550,10 +1562,6 @@ af{
                 one{"{0}kg"}
                 other{"{0}kg"}
             }
-            metric-ton{
-                one{"{0}t"}
-                other{"{0}t"}
-            }
             microgram{
                 one{"{0}μg"}
                 other{"{0}μg"}
@@ -1590,6 +1598,10 @@ af{
             ton{
                 one{"{0}VSA-t."}
                 other{"{0}VSA-t."}
+            }
+            tonne{
+                one{"{0}t"}
+                other{"{0}t"}
             }
         }
         power{
@@ -2139,6 +2151,12 @@ af{
                 one{"{0} ns."}
                 other{"{0} ns."}
             }
+            quarter{
+                dnam{"kw."}
+                one{"{0} kw."}
+                other{"{0} kwe."}
+                per{"{0}/kw."}
+            }
             second{
                 dnam{"s."}
                 one{"{0} s."}
@@ -2458,11 +2476,6 @@ af{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -2504,6 +2517,11 @@ af{
                 dnam{"VSA-ton"}
                 one{"{0} VSA-t."}
                 other{"{0} VSA-t."}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

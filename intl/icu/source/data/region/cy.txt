@@ -312,7 +312,9 @@ cy{
         CI{"Arfordir Ifori"}
         CZ{"Gweriniaeth Tsiec"}
         FK{"Ynysoedd y Falkland (Ynysoedd y Malfinas)"}
+        NZ{"Aotearoa Seland Newydd"}
         SZ{"Gwlad Swazi"}
         TL{"Dwyrain Timor"}
+        TR{"Türkiye"}
     }
 }

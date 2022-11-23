@@ -160,6 +160,11 @@ sd{
             times{"{0}⋅{1}"}
         }
         concentr{
+            item{
+                dnam{"آئٽم"}
+                one{"{0} آئٽم"}
+                other{"{0} آئٽم"}
+            }
             karat{
                 dnam{"قيراط"}
                 one{"{0} قيراط"}
@@ -337,6 +342,12 @@ sd{
                 one{"{0} نينو سيڪنڊ"}
                 other{"{0} نينو سيڪنڊ"}
             }
+            quarter{
+                dnam{"ٽه ماهي"}
+                one{"{0} ٽه ماهي"}
+                other{"{0} ٽه ماهي"}
+                per{"{0} في ٽه ماهي"}
+            }
             second{
                 dnam{"سيڪنڊ"}
                 one{"{0} في سيڪنڊ"}
@@ -425,6 +436,11 @@ sd{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"ڪلو واٽ آورز في 100 ڪلوميٽر"}
+                one{"{0} ڪلو واٽ آور في 100 ڪلوميٽر"}
+                other{"{0} ڪلو واٽ آور في 100 ڪلوميٽر"}
+            }
             newton{
                 dnam{"نيوٽنز"}
                 one{"{0} نيوٽن"}
@@ -459,6 +475,10 @@ sd{
             }
         }
         graphics{
+            dot{
+                one{"{0} dot"}
+                other{"{0} dots"}
+            }
             dot-per-centimeter{
                 dnam{"في سينٽي ميٽر ڊاٽس"}
                 one{"{0} في سينٽي ميٽر ڊاٽ"}
@@ -476,23 +496,23 @@ sd{
             }
             megapixel{
                 dnam{"ميگا پڪسلز"}
-                one{"{0} ميگا پگزل"}
-                other{"{0} ميگا پگزلس"}
+                one{"{0} ميگا پڪسل"}
+                other{"{0} ميگا پڪسلز"}
             }
             pixel{
-                dnam{"پگزلس"}
-                one{"{0} پگزل"}
-                other{"{0} پگزلس"}
+                dnam{"پڪسلز"}
+                one{"{0} پڪسل"}
+                other{"{0} پڪسلز"}
             }
             pixel-per-centimeter{
-                dnam{"پگزلس في سينٽي ميٽر"}
+                dnam{"پڪسلز في سينٽي ميٽر"}
                 one{"{0} پگزل في سينٽي ميٽر"}
                 other{"{0} پگزلس في سينٽي ميٽر"}
             }
             pixel-per-inch{
-                dnam{"پگزلس في انچ"}
-                one{"{0} پگزل في انچ"}
-                other{"{0} پگزلس في انچ"}
+                dnam{"پڪسلز في انچ"}
+                one{"{0} پڪسل في انچ"}
+                other{"{0} پڪسلز في انچ"}
             }
         }
         length{
@@ -652,11 +672,6 @@ sd{
                 other{"{0}ڪلوگرامَ"}
                 per{"{0} في ڪلوگرام"}
             }
-            metric-ton{
-                dnam{"ميٽرڪ ٽَنَ"}
-                one{"{0} ميٽرڪ ٽَنُ"}
-                other{"{0} ميٽرڪ ٽَنَ"}
-            }
             microgram{
                 dnam{"مائڪروگرامَ"}
                 one{"{0} مائڪروگرام"}
@@ -693,6 +708,11 @@ sd{
                 dnam{"ٽن"}
                 one{"{0} ٽن"}
                 other{"{0} ٽن"}
+            }
+            tonne{
+                dnam{"ميٽرڪ ٽَنَ"}
+                one{"{0} ميٽرڪ ٽَنُ"}
+                other{"{0} ميٽرڪ ٽَنَ"}
             }
         }
         power{
@@ -1010,6 +1030,9 @@ sd{
             times{"{0}⋅{1}"}
         }
         concentr{
+            item{
+                dnam{"آئٽم"}
+            }
             percent{
                 dnam{"%"}
                 one{"{0}%"}
@@ -1056,6 +1079,12 @@ sd{
                 one{"{0} مهينا"}
                 other{"{0} مهينا"}
             }
+            quarter{
+                dnam{"ٽه ماهي"}
+                one{"{0} ٽه ماهي"}
+                other{"{0} ٽه ماهي"}
+                per{"{0} في ٽه ماهي"}
+            }
             second{
                 dnam{"سيڪنڊ"}
                 one{"{0} s"}
@@ -1072,11 +1101,58 @@ sd{
                 other{"{0} سال"}
             }
         }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                one{"{0}ڪ و آ/100 ڪ م"}
+                other{"{0}ڪ و آ/100 ڪ م"}
+            }
+        }
+        graphics{
+            dot{
+                one{"{0}dot"}
+                other{"{0}dot"}
+            }
+            dot-per-centimeter{
+                dnam{"dpcm"}
+                one{"{0}dpcm"}
+                other{"{0}dpcm"}
+            }
+            dot-per-inch{
+                dnam{"dpi"}
+                one{"{0}dpi"}
+                other{"{0}dpi"}
+            }
+            em{
+                one{"{0}em"}
+                other{"{0}em"}
+            }
+            megapixel{
+                dnam{"MP"}
+                one{"{0}MP"}
+                other{"{0}MP"}
+            }
+            pixel{
+                dnam{"px"}
+                one{"{0}px"}
+                other{"{0}px"}
+            }
+            pixel-per-centimeter{
+                one{"{0}ppcm"}
+                other{"{0}ppcm"}
+            }
+            pixel-per-inch{
+                one{"{0}ppi"}
+                other{"{0}ppi"}
+            }
+        }
         length{
             centimeter{
                 dnam{"سينٽي ميٽر"}
                 one{"{0} cm"}
                 other{"{0} cm"}
+            }
+            earth-radius{
+                dnam{"R⊕"}
             }
             kilometer{
                 dnam{"ڪلوميٽر"}
@@ -1107,15 +1183,15 @@ sd{
                 other{"{0} kg"}
                 per{"{0}/ڪ.گـ."}
             }
-            metric-ton{
-                dnam{"ٽَـ"}
-                one{"{0}ٽَـ"}
-                other{"{0}ٽَـ"}
-            }
             milligram{
                 dnam{"مـ.گـ."}
                 one{"{0}مـ.گـ."}
                 other{"{0}مـ.گـ."}
+            }
+            tonne{
+                dnam{"ٽَـ"}
+                one{"{0}ٽَـ"}
+                other{"{0}ٽَـ"}
             }
         }
         speed{
@@ -1285,6 +1361,11 @@ sd{
             times{"{0}⋅{1}"}
         }
         concentr{
+            item{
+                dnam{"آئٽم"}
+                one{"{0} آئٽم"}
+                other{"{0} آئٽم"}
+            }
             karat{
                 dnam{"قيراط"}
                 one{"{0} قيراط"}
@@ -1455,6 +1536,12 @@ sd{
                 one{"{0} نينو سيڪنڊ"}
                 other{"{0} نينو سيڪنڊ"}
             }
+            quarter{
+                dnam{"ٽه ماهي"}
+                one{"{0} ٽه ماهي"}
+                other{"{0} ٽه ماهي"}
+                per{"{0} في ٽه ماهي"}
+            }
             second{
                 dnam{"سيڪنڊ"}
                 one{"{0} سيڪنڊ"}
@@ -1544,6 +1631,11 @@ sd{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"ڪ و آ / 100 ڪ م"}
+                one{"{0} ڪ و آ / 100 ڪ م"}
+                other{"{0} ڪ و آ / 100 ڪ م"}
+            }
             newton{
                 dnam{"نيوٽن"}
                 one{"{0} N"}
@@ -1578,11 +1670,21 @@ sd{
             }
         }
         graphics{
+            dot-per-centimeter{
+                dnam{"dpcm"}
+                one{"{0} dpcm"}
+                other{"{0} dpcm"}
+            }
+            dot-per-inch{
+                dnam{"dpi"}
+                one{"{0} dpi"}
+                other{"{0} dpi"}
+            }
             megapixel{
-                dnam{"megapixels"}
+                dnam{"ميگا پڪسلز"}
             }
             pixel{
-                dnam{"پگزل"}
+                dnam{"پڪسلز"}
             }
         }
         length{
@@ -1730,10 +1832,6 @@ sd{
                 one{"{0} ڪلو گرام"}
                 other{"{0} kg"}
             }
-            metric-ton{
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             microgram{
                 one{"{0} μg"}
                 other{"{0} μg"}
@@ -1768,6 +1866,10 @@ sd{
                 dnam{"ٽن"}
                 one{"{0} ٽن"}
                 other{"{0} ٽن"}
+            }
+            tonne{
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

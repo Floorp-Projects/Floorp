@@ -1410,6 +1410,36 @@ lv{
                 other{"{0} nanosekundes"}
                 zero{"{0} nanosekunžu"}
             }
+            quarter{
+                case{
+                    accusative{
+                        one{"{0} ceturksni"}
+                        other{"{0} ceturkšņus"}
+                        zero{"{0} cet."}
+                    }
+                    dative{
+                        one{"{0} ceturksnim"}
+                        other{"{0} ceturkšņiem"}
+                        zero{"{0} cet."}
+                    }
+                    genitive{
+                        one{"{0} ceturkšņa"}
+                        other{"{0} ceturkšņu"}
+                        zero{"{0} cet."}
+                    }
+                    locative{
+                        one{"{0} ceturksnī"}
+                        other{"{0} ceturkšņos"}
+                        zero{"{0} cet."}
+                    }
+                }
+                dnam{"ceturkšņi"}
+                gender{"masculine"}
+                one{"{0} ceturksnis"}
+                other{"{0} ceturkšņi"}
+                per{"{0}/c."}
+                zero{"{0} cet."}
+            }
             second{
                 case{
                     accusative{
@@ -2613,35 +2643,6 @@ lv{
                 per{"{0} uz kilogramu"}
                 zero{"{0} kilogramu"}
             }
-            metric-ton{
-                case{
-                    accusative{
-                        one{"{0} metrisko tonnu"}
-                        other{"{0} metriskās tonnas"}
-                        zero{"{0} metrisko tonnu"}
-                    }
-                    dative{
-                        one{"{0} metriskajai tonnai"}
-                        other{"{0} metriskajām tonnām"}
-                        zero{"{0} metrisko tonnu"}
-                    }
-                    genitive{
-                        one{"{0} metriskās tonnas"}
-                        other{"{0} metrisko tonnu"}
-                        zero{"{0} metrisko tonnu"}
-                    }
-                    locative{
-                        one{"{0} metriskajā tonnā"}
-                        other{"{0} metriskajās tonnās"}
-                        zero{"{0} metrisko tonnu"}
-                    }
-                }
-                dnam{"metriskās tonnas"}
-                gender{"feminine"}
-                one{"{0} metriskā tonna"}
-                other{"{0} metriskās tonnas"}
-                zero{"{0} metrisko tonnu"}
-            }
             microgram{
                 case{
                     accusative{
@@ -2737,6 +2738,35 @@ lv{
                 one{"{0} tonna"}
                 other{"{0} tonnas"}
                 zero{"{0} tonnu"}
+            }
+            tonne{
+                case{
+                    accusative{
+                        one{"{0} metrisko tonnu"}
+                        other{"{0} metriskās tonnas"}
+                        zero{"{0} metrisko tonnu"}
+                    }
+                    dative{
+                        one{"{0} metriskajai tonnai"}
+                        other{"{0} metriskajām tonnām"}
+                        zero{"{0} metrisko tonnu"}
+                    }
+                    genitive{
+                        one{"{0} metriskās tonnas"}
+                        other{"{0} metrisko tonnu"}
+                        zero{"{0} metrisko tonnu"}
+                    }
+                    locative{
+                        one{"{0} metriskajā tonnā"}
+                        other{"{0} metriskajās tonnās"}
+                        zero{"{0} metrisko tonnu"}
+                    }
+                }
+                dnam{"metriskās tonnas"}
+                gender{"feminine"}
+                one{"{0} metriskā tonna"}
+                other{"{0} metriskās tonnas"}
+                zero{"{0} metrisko tonnu"}
             }
         }
         power{
@@ -3914,6 +3944,13 @@ lv{
                 per{"{0}/m."}
                 zero{"{0} m."}
             }
+            quarter{
+                dnam{"cet."}
+                one{"{0} c."}
+                other{"{0} c."}
+                per{"{0}/c."}
+                zero{"{0} cet."}
+            }
             second{
                 dnam{"s"}
                 one{"{0} s"}
@@ -4499,6 +4536,13 @@ lv{
                 other{"{0} ns"}
                 zero{"{0} ns"}
             }
+            quarter{
+                dnam{"cet."}
+                one{"{0} cet."}
+                other{"{0} cet."}
+                per{"{0}/c."}
+                zero{"{0} cet."}
+            }
             second{
                 dnam{"sek."}
                 one{"{0} sek."}
@@ -4841,12 +4885,6 @@ lv{
                 per{"{0}/kg"}
                 zero{"{0} kg"}
             }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-                zero{"{0} t"}
-            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -4895,6 +4933,12 @@ lv{
                 one{"{0} tonna"}
                 other{"{0} tonnas"}
                 zero{"{0} tonnas"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
+                zero{"{0} t"}
             }
         }
         power{

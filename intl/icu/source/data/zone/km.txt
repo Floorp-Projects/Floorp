@@ -1223,6 +1223,9 @@ km{
         "Pacific:Johnston"{
             ec{"ចនស្តុន"}
         }
+        "Pacific:Kanton"{
+            ec{"កាន់តុន"}
+        }
         "Pacific:Kiritimati"{
             ec{"គិរីទីម៉ាទិ"}
         }

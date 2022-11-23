@@ -62,8 +62,8 @@ ewo{
                 MMMd{"d MMM"}
                 Md{"d/M"}
                 d{"d"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
                 ms{"m:ss"}
                 y{"y"}
                 yM{"M/y"}
@@ -121,8 +121,8 @@ ewo{
                 MMMd{"d MMM"}
                 Md{"d/M"}
                 d{"d"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
                 ms{"m:ss"}
                 y{"y"}
                 yM{"M/y"}

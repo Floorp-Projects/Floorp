@@ -55,15 +55,15 @@ es_419{
             }
         }
         mass{
-            metric-ton{
-                dnam{"toneladas métricas"}
-                one{"{0} tonelada métrica"}
-                other{"{0} toneladas métricas"}
-            }
             ton{
                 dnam{"toneladas"}
                 one{"{0} tonelada"}
                 other{"{0} toneladas"}
+            }
+            tonne{
+                dnam{"toneladas métricas"}
+                one{"{0} tonelada métrica"}
+                other{"{0} toneladas métricas"}
             }
         }
         power{
@@ -111,6 +111,14 @@ es_419{
                 dnam{"metros²"}
             }
         }
+        concentr{
+            permille{
+                dnam{"‰"}
+            }
+            permyriad{
+                dnam{"‱"}
+            }
+        }
         duration{
             day{
                 dnam{"d."}
@@ -128,6 +136,10 @@ es_419{
                 other{"{0}mm."}
                 per{"{0}/m."}
             }
+            quarter{
+                one{"{0}/trim"}
+                other{"{0}/trim"}
+            }
             week{
                 dnam{"sem."}
                 one{"{0}sem."}
@@ -140,6 +152,12 @@ es_419{
                 other{"{0}aa."}
             }
         }
+        energy{
+            therm-us{
+                one{"{0}thm EE.UU."}
+                other{"{0}thm EE.UU."}
+            }
+        }
         force{
             kilowatt-hour-per-100-kilometer{
                 one{"{0} kWh/100km"}
@@ -148,9 +166,7 @@ es_419{
         }
         graphics{
             dot{
-                dnam{"p"}
-                one{"{0}p"}
-                other{"{0}pt"}
+                dnam{"pt"}
             }
             dot-per-centimeter{
                 dnam{"ppcm"}
@@ -174,6 +190,7 @@ es_419{
             }
             nautical-mile{
                 one{"{0}nmi"}
+                other{"{0}nmi"}
             }
             parsec{
                 dnam{"parsec"}
@@ -182,9 +199,6 @@ es_419{
         mass{
             carat{
                 dnam{"ct"}
-            }
-            metric-ton{
-                dnam{"t"}
             }
             microgram{
                 dnam{"μg"}
@@ -202,6 +216,15 @@ es_419{
                 one{"{0}ton"}
                 other{"{0}ton"}
             }
+            tonne{
+                dnam{"t"}
+            }
+        }
+        power{
+            horsepower{
+                one{"{0}hp"}
+                other{"{0}hp"}
+            }
         }
         speed{
             knot{
@@ -213,8 +236,14 @@ es_419{
                 one{"{0}bbl"}
                 other{"{0}bbl"}
             }
+            milliliter{
+                one{"{0}ml"}
+                other{"{0}ml"}
+            }
             pint{
                 dnam{"pt"}
+                one{"{0}pt"}
+                other{"{0}pt"}
             }
         }
     }
@@ -295,11 +324,6 @@ es_419{
             }
         }
         mass{
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
-            }
             ounce-troy{
                 dnam{"ozt"}
                 one{"{0} ozt"}
@@ -312,6 +336,11 @@ es_419{
                 dnam{"ton"}
                 one{"{0} ton"}
                 other{"{0} ton"}
+            }
+            tonne{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
             }
         }
         power{

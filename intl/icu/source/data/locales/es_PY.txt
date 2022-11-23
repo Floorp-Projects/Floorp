@@ -53,13 +53,13 @@ es_PY{
                     d{"d/M 'al' d/M"}
                 }
                 h{
-                    a{"h a 'a' h a"}
-                    h{"h 'a' h a"}
+                    a{"h a 'a' h a"}
+                    h{"h 'a' h a"}
                 }
                 hm{
-                    a{"h:mm a 'a' h:mm a"}
-                    h{"h:mm 'a' h:mm a"}
-                    m{"h:mm 'a' h:mm a"}
+                    a{"h:mm a 'a' h:mm a"}
+                    h{"h:mm 'a' h:mm a"}
+                    m{"h:mm 'a' h:mm a"}
                 }
                 yMMM{
                     M{"MMM 'a' MMM y"}

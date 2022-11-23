@@ -7,41 +7,33 @@ sr_Latn_BA{
         ms{"sistem mjernih jedinica"}
     }
     Languages{
-        ar_001{"savremeni standardni arapski"}
-        arn{"mapudungun"}
         be{"bjeloruski"}
         bm{"bamanankan"}
         bn{"bangla"}
+        crl{"sjeveroistočni kri"}
         de{"njemački"}
         de_CH{"švajcarski visoki njemački"}
-        en_GB{"engleski (Velika Britanija)"}
-        es_ES{"španski (Evropa)"}
-        fa_AF{"dari"}
+        frr{"sjevernofrizijski"}
         gsw{"njemački (Švajcarska)"}
         ht{"haićanski kreolski"}
-        lo{"laoški"}
         lrc{"sjeverni luri"}
-        moh{"mohok"}
         nd{"sjeverni ndebele"}
         nds{"niskonjemački"}
-        nqo{"n’ko"}
-        pt_PT{"portugalski (Portugal)"}
+        nso{"sjeverni soto"}
+        ojb{"sjeverozapadni odžibva"}
         se{"sjeverni sami"}
-        shi{"južni šilha"}
-        si{"sinhalski"}
-        sw_CD{"kisvahili"}
-        tzm{"centralnoatlaski tamašek"}
-        xh{"isikosa"}
-        zgh{"standardni marokanski tamašek"}
-        zh_Hans{"pojednostavljeni kineski"}
-        zh_Hant{"tradicionalni kineski"}
-        zu{"isizulu"}
+        ttm{"sjeverni tučon"}
     }
     Types{
         collation{
+            compat{"prethodni redoslijed sortiranja, zbog kompatibilnosti"}
+            dictionary{"redoslijed sortiranja u rječniku"}
             ducet{"podrazumijevani Unicode redoslijed sortiranja"}
+            phonetic{"fonetski redoslijed sortiranja"}
+            reformed{"reformisani redoslijed sortiranja"}
             search{"pretraga opšte namjene"}
             standard{"standardni redoslijed sortiranja"}
+            unihan{"redoslijed sortiranja radikalnih poteza"}
         }
         numbers{
             mymr{"mjanmarske cifre"}

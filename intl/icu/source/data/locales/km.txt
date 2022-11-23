@@ -34,6 +34,8 @@ km{
             }
             patterns{
                 accountingFormat{"#,##0.00¤;(#,##0.00¤)"}
+                accountingFormat%alphaNextToNumber{"#,##0.00 ¤;(#,##0.00 ¤)"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
                 currencyFormat{"#,##0.00¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
@@ -118,6 +120,44 @@ km{
                         other{"¤000 ទ្រីលាន"}
                     }
                 }
+                currencyFormat%alphaNextToNumber{
+                    1000{
+                        other{"¤ 0 ពាន់"}
+                    }
+                    10000{
+                        other{"¤ 00 ពាន់"}
+                    }
+                    100000{
+                        other{"¤ 000 ពាន់"}
+                    }
+                    1000000{
+                        other{"¤ 0 លាន"}
+                    }
+                    10000000{
+                        other{"¤ 00 លាន"}
+                    }
+                    100000000{
+                        other{"¤ 000 លាន"}
+                    }
+                    1000000000{
+                        other{"¤ 0 ប៊ីលាន"}
+                    }
+                    10000000000{
+                        other{"¤ 00 ប៊ីលាន"}
+                    }
+                    100000000000{
+                        other{"¤ 000 ប៊ីលាន"}
+                    }
+                    1000000000000{
+                        other{"¤ 0 ទ្រីលាន"}
+                    }
+                    10000000000000{
+                        other{"¤ 00 ទ្រីលាន"}
+                    }
+                    100000000000000{
+                        other{"¤ 000 ទ្រីលាន"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         other{"0ពាន់"}
@@ -195,6 +235,12 @@ km{
                 "d MMM y G",
                 "d/M/y GGGGG",
                 "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} នៅ​ម៉ោង {0}",
                 "{1} នៅ​ម៉ោង {0}",
                 "{1}, {0}",
@@ -417,6 +463,12 @@ km{
                 "d MMM y",
                 "d/M/yy",
                 "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} នៅ​ម៉ោង {0}",
                 "{1} នៅ​ម៉ោង {0}",
                 "{1}, {0}",
@@ -1791,5 +1843,17 @@ km{
         UK{"ចក្រភព​អង់គ្លេស"}
         US{"សហរដ្ឋអាមេរិក"}
         metric{"រង្វាស់​ប្រវែង"}
+    }
+    personNames{
+        nameOrderLocales{
+            givenFirst{"und"}
+            surnameFirst{
+                "km",
+                "ko",
+                "vi",
+                "yue",
+                "zh",
+            }
+        }
     }
 }

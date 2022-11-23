@@ -37,6 +37,8 @@ am{
             }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                accountingFormat%alphaNextToNumber{"¤ #,##0.00;(¤ #,##0.00)"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
@@ -143,6 +145,56 @@ am{
                     100000000000000{
                         one{"¤000 ት"}
                         other{"¤000 ት"}
+                    }
+                }
+                currencyFormat%alphaNextToNumber{
+                    1000{
+                        one{"¤ 0 ሺ"}
+                        other{"¤ 0 ሺ"}
+                    }
+                    10000{
+                        one{"¤ 00 ሺ"}
+                        other{"¤ 00 ሺ"}
+                    }
+                    100000{
+                        one{"¤ 000 ሺ"}
+                        other{"¤ 000 ሺ"}
+                    }
+                    1000000{
+                        one{"¤ 0 ሚ"}
+                        other{"¤ 0 ሚ"}
+                    }
+                    10000000{
+                        one{"¤ 00 ሚ"}
+                        other{"¤ 00 ሚ"}
+                    }
+                    100000000{
+                        one{"¤ 000 ሚ"}
+                        other{"¤ 000 ሚ"}
+                    }
+                    1000000000{
+                        one{"¤ 0 ቢ"}
+                        other{"¤ 0 ቢ"}
+                    }
+                    10000000000{
+                        one{"¤ 00 ቢ"}
+                        other{"¤ 00 ቢ"}
+                    }
+                    100000000000{
+                        one{"¤ 000 ቢ"}
+                        other{"¤ 000 ቢ"}
+                    }
+                    1000000000000{
+                        one{"¤ 0 ት"}
+                        other{"¤ 0 ት"}
+                    }
+                    10000000000000{
+                        one{"¤ 00 ት"}
+                        other{"¤ 00 ት"}
+                    }
+                    100000000000000{
+                        one{"¤ 000 ት"}
+                        other{"¤ 000 ት"}
                     }
                 }
                 decimalFormat{
@@ -1096,11 +1148,15 @@ am{
                 }
                 abbreviated%variant{
                     "ዓ/ዓ",
-                    "CE",
+                    "መዓ",
                 }
                 narrow{
                     "ዓ/ዓ",
                     "ዓ/ም",
+                }
+                narrow%variant{
+                    "ዓ/ዓ",
+                    "መዓ",
                 }
                 wide{
                     "ዓመተ ዓለም",
@@ -1373,6 +1429,26 @@ am{
                         "2ኛው ሩብ",
                         "3ኛው ሩብ",
                         "4ኛው ሩብ",
+                    }
+                }
+            }
+        }
+        islamic{
+            monthNames{
+                format{
+                    wide{
+                        "ሙሀረም",
+                        "ሳፈር",
+                        "ረቢዑል አወል",
+                        "ረቢዑል አኺር",
+                        "ጀማደል አወል",
+                        "ጀማደል አኺር",
+                        "ረጀብ",
+                        "ሻእባን",
+                        "ረመዳን",
+                        "ሸዋል",
+                        "ዙልቂዳህ",
+                        "ዙልሂጃህ",
                     }
                 }
             }
@@ -2383,6 +2459,20 @@ am{
             stricter{
                 "[,٫︐﹐，]",
                 "[.․﹒．｡]",
+            }
+        }
+    }
+    personNames{
+        nameOrderLocales{
+            givenFirst{
+                "und",
+                "am",
+            }
+            surnameFirst{
+                "ko",
+                "vi",
+                "yue",
+                "zh",
             }
         }
     }

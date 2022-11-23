@@ -60,7 +60,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>icuucd.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>..\..\$(IcuBinOutputDir)\icuin71d.dll</OutputFile>
+      <OutputFile>..\..\$(IcuBinOutputDir)\icuin$(IcuMajorVersion)d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\$(IcuLibOutputDir)\icuind.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\$(IcuLibOutputDir)\icuind.lib</ImportLibrary>
     </Link>
@@ -73,7 +73,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>..\..\$(IcuBinOutputDir)\icuin71.dll</OutputFile>
+      <OutputFile>..\..\$(IcuBinOutputDir)\icuin$(IcuMajorVersion).dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\$(IcuLibOutputDir)\icuin.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\$(IcuLibOutputDir)\icuin.lib</ImportLibrary>
     </Link>
@@ -257,6 +257,7 @@
     <ClCompile Include="units_converter.cpp" />
     <ClCompile Include="units_data.cpp" />
     <ClCompile Include="units_router.cpp" />
+    <ClCompile Include="displayoptions.cpp" />
     <ClCompile Include="unum.cpp" />
     <ClCompile Include="unumsys.cpp" />
     <ClCompile Include="upluralrules.cpp" />

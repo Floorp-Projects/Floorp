@@ -18,14 +18,12 @@ es_MX{
         155{"Europa Occidental"}
         BA{"Bosnia y Herzegovina"}
         CI{"Côte d’Ivoire"}
-        EZ{"zona euro"}
         GG{"Guernsey"}
         RO{"Rumania"}
         SA{"Arabia Saudita"}
         SZ{"Eswatini"}
         TA{"Tristán de Acuña"}
         UM{"Islas menores alejadas de EE. UU."}
-        UN{"ONU"}
     }
     Countries%short{
         GB{"RU"}

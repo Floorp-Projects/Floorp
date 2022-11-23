@@ -684,6 +684,19 @@ hi{
                 one{"{0} नैनो सेकंड"}
                 other{"{0} नैनो सेकंड"}
             }
+            quarter{
+                case{
+                    oblique{
+                        one{"{0} तिमाही"}
+                        other{"{0} तिमाहियां"}
+                    }
+                }
+                dnam{"तिमाही"}
+                gender{"feminine"}
+                one{"{0} तिमाही"}
+                other{"{0} तिमाहियां"}
+                per{"{0}/ति"}
+            }
             second{
                 case{
                     oblique{
@@ -1342,18 +1355,6 @@ hi{
                 other{"{0} किलोग्राम"}
                 per{"{0}/किलोग्राम"}
             }
-            metric-ton{
-                case{
-                    oblique{
-                        one{"{0} मीट्रिक टन"}
-                        other{"{0} मीट्रिक टन"}
-                    }
-                }
-                dnam{"मीट्रिक टन"}
-                gender{"masculine"}
-                one{"{0} मीट्रिक टन"}
-                other{"{0} मीट्रिक टन"}
-            }
             microgram{
                 case{
                     oblique{
@@ -1430,6 +1431,18 @@ hi{
                 dnam{"टन"}
                 one{"{0} टन"}
                 other{"{0} टन"}
+            }
+            tonne{
+                case{
+                    oblique{
+                        one{"{0} मीट्रिक टन"}
+                        other{"{0} मीट्रिक टन"}
+                    }
+                }
+                dnam{"मीट्रिक टन"}
+                gender{"masculine"}
+                one{"{0} मीट्रिक टन"}
+                other{"{0} मीट्रिक टन"}
             }
         }
         power{
@@ -2096,8 +2109,8 @@ hi{
         acceleration{
             g-force{
                 dnam{"गु–बल"}
-                one{"{0}गु॰"}
-                other{"{0}गु॰"}
+                one{"{0} गु"}
+                other{"{0} गु"}
             }
         }
         angle{
@@ -2125,14 +2138,8 @@ hi{
             }
         }
         area{
-            acre{
-                one{"{0}एकड़"}
-                other{"{0}एकड़"}
-            }
             hectare{
                 dnam{"हे"}
-                one{"{0}हे॰"}
-                other{"{0}हे॰"}
             }
             square-centimeter{
                 dnam{"वर्ग सेंमी"}
@@ -2142,35 +2149,31 @@ hi{
             }
             square-foot{
                 dnam{"वर्ग फ़ीट"}
-                one{"{0}ft²"}
-                other{"{0}ft²"}
+                one{"{0} व फ़ी"}
+                other{"{0} व फ़ी"}
             }
             square-inch{
                 dnam{"वर्ग इंच"}
-                one{"{0} वर्ग इंच"}
-                other{"{0} वर्ग इंच"}
+                one{"{0} व इं"}
+                other{"{0} व इं"}
             }
             square-kilometer{
                 dnam{"वर्ग किमी"}
-                one{"{0} km²"}
-                other{"{0} km²"}
                 per{"{0}/वर्ग किमी"}
             }
             square-meter{
                 dnam{"वर्ग मी"}
-                one{"{0} वर्ग मी॰"}
-                other{"{0} वर्ग मी॰"}
                 per{"{0}/वर्ग मी"}
             }
             square-mile{
-                one{"{0}वर्ग मील"}
-                other{"{0}वर्ग मील"}
+                one{"{0} वर्ग मील"}
+                other{"{0} व मी"}
                 per{"{0}/वर्ग मील"}
             }
             square-yard{
                 dnam{"वर्ग गज़"}
                 one{"{0} वर्ग गज़"}
-                other{"{0} वर्ग गज़"}
+                other{"{0} व ग"}
             }
         }
         compound{
@@ -2237,8 +2240,8 @@ hi{
         consumption{
             liter-per-100-kilometer{
                 dnam{"ली॰/100 कि॰मी॰"}
-                one{"{0}ली/100कि"}
-                other{"{0}ली/100कि"}
+                one{"{0} ली/100 किमी"}
+                other{"{0} ली/100 किमी"}
             }
         }
         coordinate{
@@ -2261,14 +2264,14 @@ hi{
             }
             day{
                 dnam{"दिन"}
-                one{"{0}दिन"}
-                other{"{0}दिन"}
+                one{"{0} दि"}
+                other{"{0} दि"}
                 per{"{0}/दि"}
             }
             hour{
                 dnam{"घंटा"}
                 one{"{0}घं॰"}
-                other{"{0}घं॰"}
+                other{"{0} घं"}
                 per{"{0}/घं"}
             }
             microsecond{
@@ -2281,8 +2284,8 @@ hi{
             }
             minute{
                 dnam{"मिनट"}
-                one{"{0}मि॰"}
-                other{"{0}मि॰"}
+                one{"{0} मि"}
+                other{"{0} मि"}
                 per{"{0}/मि"}
             }
             month{
@@ -2292,13 +2295,16 @@ hi{
             }
             nanosecond{
                 dnam{"ns"}
-                one{"{0} ns"}
-                other{"{0} ns"}
+                one{"{0} नैनो से"}
+                other{"{0} नैनो से"}
+            }
+            quarter{
+                per{"{0}/ति"}
             }
             second{
                 dnam{"सेकंड"}
-                one{"{0}से॰"}
-                other{"{0}से॰"}
+                one{"{0} से"}
+                other{"{0} से"}
                 per{"{0}/से"}
             }
             week{
@@ -2312,6 +2318,25 @@ hi{
                 one{"{0}वर्ष"}
                 other{"{0}वर्ष"}
                 per{"{0}/व"}
+            }
+        }
+        energy{
+            calorie{
+                one{"{0} कै"}
+                other{"{0} कै"}
+            }
+            foodcalorie{
+                dnam{"कैलोरी"}
+                one{"{0} कै"}
+                other{"{0} कै"}
+            }
+            joule{
+                one{"{0} जू"}
+                other{"{0} जू"}
+            }
+            kilojoule{
+                one{"{0} किजू"}
+                other{"{0} किजू"}
             }
         }
         graphics{
@@ -2339,8 +2364,6 @@ hi{
         length{
             centimeter{
                 dnam{"सें॰मी॰"}
-                one{"{0} सें॰मी॰"}
-                other{"{0} सें॰मी॰"}
                 per{"{0}/सेंमी"}
             }
             decimeter{
@@ -2362,38 +2385,32 @@ hi{
             }
             kilometer{
                 dnam{"कि॰मी॰"}
-                one{"{0} कि॰मी॰"}
-                other{"{0} कि॰मी॰"}
+                one{"{0} किमी"}
+                other{"{0} किमी"}
                 per{"{0}/किमी"}
             }
             light-year{
                 dnam{"प्रव"}
-                one{"{0}प्र॰व॰"}
-                other{"{0}प्र॰व॰"}
+                one{"{0} प्रव"}
+                other{"{0} प्रव"}
             }
             meter{
                 dnam{"मीटर"}
-                one{"{0}मी"}
-                other{"{0}मी"}
             }
             micrometer{
                 dnam{"μm"}
                 one{"{0} μm"}
                 other{"{0} μm"}
             }
-            mile{
-                one{"{0}मील"}
-                other{"{0}मील"}
-            }
             millimeter{
                 dnam{"मि॰मी॰"}
-                one{"{0} मि॰मी॰"}
-                other{"{0} मि॰मी॰"}
+                one{"{0} मिमी"}
+                other{"{0} मिमी"}
             }
             nanometer{
                 dnam{"nm"}
-                one{"{0} nm"}
-                other{"{0} nm"}
+                one{"{0} नैमी"}
+                other{"{0} नैमी"}
             }
             nautical-mile{
                 dnam{"nmi"}
@@ -2409,11 +2426,6 @@ hi{
                 one{"{0}पि॰मी॰"}
                 other{"{0}पि॰मी॰"}
             }
-            yard{
-                dnam{"गज़"}
-                one{"{0}गज"}
-                other{"{0}गज"}
-            }
         }
         mass{
             gram{
@@ -2423,12 +2435,16 @@ hi{
             }
             kilogram{
                 dnam{"कि॰ग्रा॰"}
-                one{"{0}कि॰ग्रा॰"}
-                other{"{0} कि॰ग्रा॰"}
+                one{"{0} किग्रा"}
+                other{"{0} किग्रा"}
+            }
+            milligram{
+                one{"{0} मिग्रा"}
+                other{"{0} मिग्रा"}
             }
             ounce{
-                one{"{0}औं॰"}
-                other{"{0}औं॰"}
+                one{"{0} औं॰"}
+                other{"{0} औं॰"}
             }
             pound{
                 one{"{0}#"}
@@ -2438,25 +2454,33 @@ hi{
                 one{"{0} ला"}
                 other{"{0}st"}
             }
+            tonne{
+                one{"{0} ट"}
+                other{"{0} ट"}
+            }
         }
         power{
             horsepower{
-                one{"{0}एचपी"}
-                other{"{0}एचपी"}
+                one{"{0} एचपी"}
+                other{"{0} एचपी"}
             }
             kilowatt{
-                one{"{0}कि॰वॉ॰"}
-                other{"{0}कि॰वॉ॰"}
+                one{"{0} किवॉ"}
+                other{"{0} किवॉ"}
+            }
+            milliwatt{
+                one{"{0} मिवॉ"}
+                other{"{0} मिवॉ"}
             }
             watt{
-                one{"{0}वॉ"}
-                other{"{0}वॉ"}
+                one{"{0} वॉ"}
+                other{"{0} वॉ"}
             }
         }
         pressure{
             hectopascal{
                 one{"{0}hPa"}
-                other{"{0}hPa"}
+                other{"{0} hPa"}
             }
             inch-ofhg{
                 one{"{0}\u0022 Hg"}
@@ -2470,16 +2494,16 @@ hi{
         speed{
             kilometer-per-hour{
                 dnam{"कि॰मी॰/घं॰"}
-                one{"{0}किमी/घं"}
-                other{"{0}किमी/घं"}
+                one{"{0} किमी/घं"}
+                other{"{0} किमी/घं"}
             }
             meter-per-second{
-                one{"{0}मी॰/से॰"}
+                one{"{0} मी/से"}
                 other{"{0}मी॰/से॰"}
             }
             mile-per-hour{
-                one{"{0}mph"}
-                other{"{0}mph"}
+                one{"{0} मीप्रघं"}
+                other{"{0} मीप्रघं"}
             }
         }
         temperature{
@@ -2516,22 +2540,16 @@ hi{
             }
             cubic-foot{
                 dnam{"घन फ़ीट"}
-                one{"{0} घन फ़ीट"}
-                other{"{0} घन फ़ीट"}
             }
             cubic-kilometer{
-                one{"{0}घन किमी"}
-                other{"{0}घन किमी"}
+                one{"{0} घन किमी"}
+                other{"{0} घन किमी"}
             }
             cubic-meter{
                 dnam{"घन मी"}
                 one{"{0} घन मी"}
                 other{"{0} घन मी"}
                 per{"{0}/घन मी"}
-            }
-            cubic-mile{
-                one{"{0}घन मील"}
-                other{"{0}घन मील"}
             }
             deciliter{
                 dnam{"डेली"}
@@ -2575,10 +2593,14 @@ hi{
                 other{"{0} इम्पी गैलन"}
                 per{"{0}/इम्पी गैलन"}
             }
+            hectoliter{
+                one{"{0} हेली"}
+                other{"{0} हेली"}
+            }
             liter{
                 dnam{"लीटर"}
-                one{"{0}ली॰"}
-                other{"{0}ली॰"}
+                one{"{0} ली"}
+                other{"{0} ली"}
                 per{"{0}/ली"}
             }
             megaliter{
@@ -2617,8 +2639,8 @@ hi{
         acceleration{
             g-force{
                 dnam{"गुरुत्व बल"}
-                one{"{0} G"}
-                other{"{0} G"}
+                one{"{0} गु॰"}
+                other{"{0} गु॰"}
             }
             meter-per-square-second{
                 dnam{"मीटर/से²"}
@@ -2711,6 +2733,10 @@ hi{
             }
         }
         compound{
+            1024p1{"कि.बी.{0}"}
+            1024p2{"मे.बी.{0}"}
+            1024p3{"जी.बी.{0}"}
+            1024p4{"टे.बी.{0}"}
             1024p5{"पे.बी.{0}"}
             1024p6{"एक्ज़.बी.{0}"}
             1024p7{"ज़े.बी.{0}"}
@@ -2933,6 +2959,12 @@ hi{
                 one{"{0} नैनो से॰"}
                 other{"{0} नैनो से॰"}
             }
+            quarter{
+                dnam{"तिमा"}
+                one{"{0} तिमा"}
+                other{"{0} तिमा"}
+                per{"{0}/ति"}
+            }
             second{
                 dnam{"सेकंड"}
                 one{"{0} से॰"}
@@ -2981,14 +3013,14 @@ hi{
                 other{"{0} cal"}
             }
             foodcalorie{
-                dnam{"Cal"}
+                dnam{"कैलोरी"}
                 one{"{0} Cal"}
                 other{"{0} Cal"}
             }
             joule{
                 dnam{"जूल"}
-                one{"{0} J"}
-                other{"{0} J"}
+                one{"{0} जू॰"}
+                other{"{0} जू॰"}
             }
             kilocalorie{
                 dnam{"kcal"}
@@ -2997,8 +3029,8 @@ hi{
             }
             kilojoule{
                 dnam{"किलो जूल"}
-                one{"{0} kJ"}
-                other{"{0} kJ"}
+                one{"{0} कि॰जू॰"}
+                other{"{0} कि॰जू॰"}
             }
             kilowatt-hour{
                 dnam{"kWh"}
@@ -3199,11 +3231,6 @@ hi{
                 other{"{0} कि॰ग्रा॰"}
                 per{"{0}/कि॰ग्रा॰"}
             }
-            metric-ton{
-                dnam{"मीट्रिक टन"}
-                one{"{0} मीट्रिक टन"}
-                other{"{0} मीट्रिक टन"}
-            }
             microgram{
                 dnam{"मा॰ग्रा॰"}
                 one{"{0} मा॰ग्रा॰"}
@@ -3240,6 +3267,11 @@ hi{
                 dnam{"टन"}
                 one{"{0} टन"}
                 other{"{0} टन"}
+            }
+            tonne{
+                dnam{"मीट्रिक टन"}
+                one{"{0} मीट्रिक टन"}
+                other{"{0} मी टन"}
             }
         }
         power{
@@ -3390,8 +3422,8 @@ hi{
             }
             bushel{
                 dnam{"बुशल"}
-                one{"{0} बुश."}
-                other{"{0} बुश."}
+                one{"{0} बुश॰"}
+                other{"{0} बुश॰"}
             }
             centiliter{
                 dnam{"सें॰ली॰"}
@@ -3489,8 +3521,8 @@ hi{
             }
             hectoliter{
                 dnam{"है॰ली॰"}
-                one{"{0} है॰ली॰"}
-                other{"{0} है॰ली॰"}
+                one{"{0} हे॰ली॰"}
+                other{"{0} हे॰ली॰"}
             }
             jigger{
                 dnam{"जिगर"}

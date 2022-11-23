@@ -1223,6 +1223,9 @@ sq{
         "Pacific:Johnston"{
             ec{"Xhonston"}
         }
+        "Pacific:Kanton"{
+            ec{"Kanton"}
+        }
         "Pacific:Kiritimati"{
             ec{"Kiritimat"}
         }

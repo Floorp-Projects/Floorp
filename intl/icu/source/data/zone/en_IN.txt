@@ -7,6 +7,9 @@ en_IN{
         "Asia:Rangoon"{
             ec{"Rangoon"}
         }
+        "meta:Gulf"{
+            ss{"GST"}
+        }
         "meta:India"{
             ss{"IST"}
         }

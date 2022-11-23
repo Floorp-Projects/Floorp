@@ -1224,6 +1224,9 @@ zh_Hant{
         "Pacific:Johnston"{
             ec{"強斯頓"}
         }
+        "Pacific:Kanton"{
+            ec{"坎頓島"}
+        }
         "Pacific:Kiritimati"{
             ec{"基里地馬地島"}
         }

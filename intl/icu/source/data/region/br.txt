@@ -311,6 +311,7 @@ br{
         CI{"Aod Olifant"}
         CZ{"Republik Tchek"}
         FK{"Inizi Falkland (Inizi Maloù)"}
+        NZ{"Aotearoa Zeland-Nevez"}
         SZ{"Swaziland"}
         TL{"Timor ar Reter"}
     }

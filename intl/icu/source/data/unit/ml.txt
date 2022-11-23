@@ -798,6 +798,12 @@ ml{
                 one{"{0} നാനോസെക്കൻഡ്"}
                 other{"{0} നാനോസെക്കൻഡ്"}
             }
+            quarter{
+                dnam{"പാദങ്ങൾ"}
+                one{"{0} പാദം"}
+                other{"{0} പാദങ്ങൾ"}
+                per{"{0}/പാദം"}
+            }
             second{
                 dnam{"സെക്കൻഡ്"}
                 gender{"neuter"}
@@ -815,7 +821,7 @@ ml{
             year{
                 case{
                     accusative{
-                        one{"{0} വർഷത്തിനെ"}
+                        one{"{0} വർഷത്തെ"}
                         other{"{0} വർഷം"}
                     }
                     dative{
@@ -1455,38 +1461,6 @@ ml{
                 other{"{0} കിലോഗ്രാം"}
                 per{"{0}/കിലോഗ്രാം"}
             }
-            metric-ton{
-                case{
-                    accusative{
-                        one{"{0} മെട്രിക് ടണ്ണിനെ"}
-                        other{"{0} മെട്രിക് ടണ്ണിനെ"}
-                    }
-                    dative{
-                        one{"{0} മെട്രിക് ടണ്ണിന്"}
-                        other{"{0} മെട്രിക് ടണ്ണിന്"}
-                    }
-                    genitive{
-                        one{"{0} മെട്രിക് ടണ്ണിന്റെ"}
-                        other{"{0} മെട്രിക് ടണ്ണിന്റെ"}
-                    }
-                    instrumental{
-                        one{"{0} മെട്രിക് ടണ്ണിനാൽ"}
-                        other{"{0} മെട്രിക് ടണ്ണിനാൽ"}
-                    }
-                    locative{
-                        one{"{0} മെട്രിക് ടണ്ണിൽ"}
-                        other{"{0} മെട്രിക് ടണ്ണിൽ"}
-                    }
-                    sociative{
-                        one{"{0} മെട്രിക് ടണ്ണിനോട്"}
-                        other{"{0} മെട്രിക് ടണ്ണിനോട്"}
-                    }
-                }
-                dnam{"മെട്രിക് ടൺ"}
-                gender{"neuter"}
-                one{"{0} മെട്രിക് ടൺ"}
-                other{"{0} മെട്രിക് ടൺ"}
-            }
             microgram{
                 dnam{"മൈക്രോഗ്രാം"}
                 one{"{0} മൈക്രോഗ്രാം"}
@@ -1528,6 +1502,38 @@ ml{
                 dnam{"ടൺ"}
                 one{"{0} ടൺ"}
                 other{"{0} ടൺ"}
+            }
+            tonne{
+                case{
+                    accusative{
+                        one{"{0} മെട്രിക് ടണ്ണിനെ"}
+                        other{"{0} മെട്രിക് ടണ്ണിനെ"}
+                    }
+                    dative{
+                        one{"{0} മെട്രിക് ടണ്ണിന്"}
+                        other{"{0} മെട്രിക് ടണ്ണിന്"}
+                    }
+                    genitive{
+                        one{"{0} മെട്രിക് ടണ്ണിന്റെ"}
+                        other{"{0} മെട്രിക് ടണ്ണിന്റെ"}
+                    }
+                    instrumental{
+                        one{"{0} മെട്രിക് ടണ്ണിനാൽ"}
+                        other{"{0} മെട്രിക് ടണ്ണിനാൽ"}
+                    }
+                    locative{
+                        one{"{0} മെട്രിക് ടണ്ണിൽ"}
+                        other{"{0} മെട്രിക് ടണ്ണിൽ"}
+                    }
+                    sociative{
+                        one{"{0} മെട്രിക് ടണ്ണിനോട്"}
+                        other{"{0} മെട്രിക് ടണ്ണിനോട്"}
+                    }
+                }
+                dnam{"മെട്രിക് ടൺ"}
+                gender{"neuter"}
+                one{"{0} മെട്രിക് ടൺ"}
+                other{"{0} മെട്രിക് ടൺ"}
             }
         }
         power{
@@ -1933,6 +1939,11 @@ ml{
                 one{"{0} dram"}
                 other{"{0} dram"}
             }
+            drop{
+                dnam{"തുള്ളികൾ"}
+                one{"{0} തുള്ളി"}
+                other{"{0} തുള്ളികൾ"}
+            }
             fluid-ounce{
                 dnam{"ഫ്ലൂയിഡ് ഔൺസ്"}
                 one{"{0} ഫ്ലൂയിഡ് ഔൺസ്"}
@@ -2077,8 +2088,8 @@ ml{
         consumption{
             liter-per-100-kilometer{
                 dnam{"ലി./100 കി.മീ."}
-                one{"{0}ലി/100കിമി"}
-                other{"{0}ലി/100കിമി"}
+                one{"{0}ലി/100കി.മീ."}
+                other{"{0}ലി/100കി.മീ"}
             }
         }
         coordinate{
@@ -2172,6 +2183,12 @@ ml{
                 dnam{"US തേം"}
                 one{"{0} US തേം"}
                 other{"{0} US തേം"}
+            }
+        }
+        graphics{
+            dot{
+                one{"{0} ഡോട്ട്"}
+                other{"{0} ഡോട്ട്"}
             }
         }
         length{
@@ -2302,11 +2319,6 @@ ml{
                 other{"{0}കി.ഗ്രാം"}
                 per{"{0}/കി.ഗ്രാം"}
             }
-            metric-ton{
-                dnam{"ട."}
-                one{"{0}ട."}
-                other{"{0}ട."}
-            }
             microgram{
                 dnam{"μ.ഗ്രാം."}
                 one{"{0}μ.ഗ്രാം."}
@@ -2341,6 +2353,11 @@ ml{
                 dnam{"ടൺ"}
                 one{"{0}ടൺ"}
                 other{"{0}ടൺ"}
+            }
+            tonne{
+                dnam{"ട."}
+                one{"{0}ട."}
+                other{"{0}ട."}
             }
         }
         power{
@@ -2442,6 +2459,11 @@ ml{
             dessert-spoon-imperial{
                 one{"{0}dsp-Imp"}
                 other{"{0}dsp-Imp"}
+            }
+            drop{
+                dnam{"തു"}
+                one{"{0}തു"}
+                other{"{0}തു"}
             }
             fluid-ounce-imperial{
                 one{"{0}fl oz Im"}
@@ -2737,6 +2759,12 @@ ml{
                 dnam{"നാനോസെക്കൻഡ്"}
                 one{"{0} നാ.സെ."}
                 other{"{0} നാ.സെ."}
+            }
+            quarter{
+                dnam{"പാദം"}
+                one{"{0} പാദം"}
+                other{"{0} പാദങ്ങൾ"}
+                per{"{0}/പാദം"}
             }
             second{
                 dnam{"സെക്കൻഡ്"}
@@ -3037,11 +3065,6 @@ ml{
                 other{"{0} കി.ഗ്രാം"}
                 per{"{0}/കി.ഗ്രാം"}
             }
-            metric-ton{
-                dnam{"ട."}
-                one{"{0} ട."}
-                other{"{0} ട."}
-            }
             microgram{
                 dnam{"μ.ഗ്രാം."}
                 one{"{0} μ.ഗ്രാം."}
@@ -3081,6 +3104,11 @@ ml{
                 dnam{"ടൺ"}
                 one{"{0} ടൺ"}
                 other{"{0} ടൺ"}
+            }
+            tonne{
+                dnam{"ട."}
+                one{"{0} ട."}
+                other{"{0} ട."}
             }
         }
         power{
@@ -3266,6 +3294,11 @@ ml{
                 dnam{"ഡെ.ലി."}
                 one{"{0} ഡെ.ലി."}
                 other{"{0} ഡെ.ലി."}
+            }
+            drop{
+                dnam{"തുള്ളി"}
+                one{"{0} തുള്ളി"}
+                other{"{0} തുള്ളി"}
             }
             fluid-ounce{
                 dnam{"ഫ്ലൂ. ഔ."}

@@ -47,6 +47,15 @@ ks{
                 plusSign{"+"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"{0}th دیچھُن گٔژھیو"}
+            }
+            plural{
+                one{"{0} دۅہ"}
+                other{"{0} دوہٕ"}
+            }
+        }
         native{"arabext"}
     }
     calendar{
@@ -61,6 +70,12 @@ ks{
                 "MMM d, y G",
                 "M/d/y GGGGG",
                 "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimePatterns%atTime{
                 "{0} پٮ۪ٹھۍ {1}",
                 "{0} پٮ۪ٹھۍ {1}",
                 "{1}, {0}",
@@ -79,8 +94,9 @@ ks{
             availableFormats{
                 Gy{"Gy"}
                 GyMMM{"MMM Gy"}
-                GyMMMEd{"EEE, MMM d, Gy"}
-                GyMMMd{"MMM d, Gy"}
+                GyMMMEd{"E, MMM d, y G"}
+                GyMMMd{"MMM d, y G"}
+                GyMd{"M/d/y GGGGG"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
                 M{"L"}
@@ -89,24 +105,130 @@ ks{
                 MMMEd{"E, MMM d"}
                 MMMMEd{"E, MMMM d"}
                 MMMMd{"MMMM d"}
-                MMMd{"d-MMM"}
+                MMMd{"MMM d"}
                 Md{"M/d"}
                 d{"d"}
                 hm{"h:mm a"}
                 ms{"mm:ss"}
-                y{"Gy"}
-                yyyy{"Gy"}
-                yyyyM{"M/Gy"}
-                yyyyMEd{"EEE, M/d/Gy"}
-                yyyyMMM{"MMM Gy"}
-                yyyyMMMEd{"EEE, MMM d, Gy"}
-                yyyyMMMM{"MMMM Gy"}
-                yyyyMMMd{"MMM d, Gy"}
-                yyyyQQQ{"QQQ Gy"}
-                yyyyQQQQ{"QQQQ Gy"}
+                y{"y G"}
+                yyyy{"y G"}
+                yyyyM{"M/y GGGGG"}
+                yyyyMEd{"E, M/d/y GGGGG"}
+                yyyyMMM{"MMM y G"}
+                yyyyMMMEd{"E, MMM d, y G"}
+                yyyyMMMM{"MMMM y G"}
+                yyyyMMMd{"MMM d, y G"}
+                yyyyMd{"M/d/y GGGGG"}
+                yyyyQQQ{"QQQ y G"}
+                yyyyQQQQ{"QQQQ y G"}
+            }
+            intervalFormats{
+                Gy{
+                    G{"y G – y G"}
+                    y{"y – y G"}
+                }
+                GyM{
+                    G{"M/y GGGGG – M/y GGGGG"}
+                    M{"M/y – M/y GGGGG"}
+                    y{"M/y – M/y GGGGG"}
+                }
+                GyMEd{
+                    G{"E, M/d/y GGGGG – E, M/d/y GGGGG"}
+                    M{"E, M/d/y – E, M/d/y GGGGG"}
+                    d{"E, M/d/y – E, M/d/y GGGGG"}
+                    y{"E, M/d/y – E, M/d/y GGGGG"}
+                }
+                GyMMM{
+                    G{"MMM y G – MMM y G"}
+                    M{"MMM – MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                GyMMMEd{
+                    G{"E, MMM d, y G – E, MMM d, y G"}
+                    M{"E, MMM d – E, MMM d, y G"}
+                    d{"E, MMM d – E, MMM d, y G"}
+                    y{"E, MMM d, y – E, MMM d, y G"}
+                }
+                GyMMMd{
+                    G{"MMM d, y G – MMM d, y G"}
+                    M{"MMM d – MMM d, y G"}
+                    d{"MMM d – d, y G"}
+                    y{"MMM d, y – MMM d, y G"}
+                }
+                GyMd{
+                    G{"M/d/y GGGGG – M/d/y GGGGG"}
+                    M{"M/d/y – M/d/y GGGGG"}
+                    d{"M/d/y – M/d/y GGGGG"}
+                    y{"M/d/y – M/d/y GGGGG"}
+                }
+                M{
+                    M{"M – M"}
+                }
+                MEd{
+                    M{"E, M/d – E, M/d"}
+                    d{"E, M/d – E, M/d"}
+                }
+                MMM{
+                    M{"MMM – MMM"}
+                }
+                MMMEd{
+                    M{"E, MMM d – E, MMM d"}
+                    d{"E, MMM d – E, MMM d"}
+                }
+                MMMd{
+                    M{"MMM d – MMM d"}
+                    d{"MMM d – d"}
+                }
+                Md{
+                    M{"M/d – M/d"}
+                    d{"M/d – M/d"}
+                }
+                y{
+                    y{"y – y G"}
+                }
+                yM{
+                    M{"M/y – M/y GGGGG"}
+                    y{"M/y – M/y GGGGG"}
+                }
+                yMEd{
+                    M{"E, M/d/y – E, M/d/y GGGGG"}
+                    d{"E, M/d/y – E, M/d/y GGGGG"}
+                    y{"E, M/d/y – E, M/d/y GGGGG"}
+                }
+                yMMM{
+                    M{"MMM – MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                yMMMEd{
+                    M{"E, MMM d – E, MMM d, y G"}
+                    d{"E, MMM d – E, MMM d, y G"}
+                    y{"E, MMM d, y – E, MMM d, y G"}
+                }
+                yMMMM{
+                    M{"MMMM – MMMM y G"}
+                    y{"MMMM y – MMMM y G"}
+                }
+                yMMMd{
+                    M{"MMM d – MMM d, y G"}
+                    d{"MMM d – d, y G"}
+                    y{"MMM d, y – MMM d, y G"}
+                }
+                yMd{
+                    M{"M/d/y – M/d/y GGGGG"}
+                    d{"M/d/y – M/d/y GGGGG"}
+                    y{"M/d/y – M/d/y GGGGG"}
+                }
             }
         }
         gregorian{
+            AmPmMarkers{
+                "اے ایم",
+                "پی ایم",
+            }
+            AmPmMarkersNarrow{
+                "a",
+                "p",
+            }
             DateTimePatterns{
                 "h:mm:ss a zzzz",
                 "h:mm:ss a z",
@@ -117,6 +239,12 @@ ks{
                 "MMM d, y",
                 "M/d/yy",
                 "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimePatterns%atTime{
                 "{0} پٮ۪ٹھۍ {1}",
                 "{0} پٮ۪ٹھۍ {1}",
                 "{1}, {0}",
@@ -146,6 +274,10 @@ ks{
                 MMM{"LLL"}
                 MMMEd{"E, MMM d"}
                 MMMMEd{"E, MMMM d"}
+                MMMMW{
+                    one{"ہفتہ W از MMMM"}
+                    other{"ہفتہ W از MMMM"}
+                }
                 MMMMd{"MMMM d"}
                 MMMd{"MMM d"}
                 Md{"M/d"}
@@ -162,6 +294,10 @@ ks{
                 yMd{"M/d/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    one{"ہفتہ w از Y"}
+                    other{"ہفتہ w از Y"}
+                }
             }
             dayNames{
                 format{
@@ -207,7 +343,108 @@ ks{
                 }
                 wide{
                     "قبٕل مسیٖح",
-                    "عیٖسوی سنہٕ",
+                    "اینو ڈومنی",
+                }
+                wide%variant{
+                    "عام دورٕ برونٹھ",
+                    "عام دور",
+                }
+            }
+            intervalFormats{
+                GyM{
+                    G{"M/y G – M/y G"}
+                    M{"M/y – M/y G"}
+                    y{"M/y – M/y G"}
+                }
+                GyMEd{
+                    G{"E, M/d/y G – E, M/d/y G"}
+                    M{"E, M/d/y – E, M/d/y G"}
+                    d{"E, M/d/y – E, M/d/y G"}
+                    y{"E, M/d/y – E, M/d/y G"}
+                }
+                GyMMM{
+                    G{"MMM y G – MMM y G"}
+                    M{"MMM – MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                GyMMMEd{
+                    G{"E, MMM d, y G – E, MMM d, y G"}
+                    M{"E, MMM d – E, MMM d, y G"}
+                    d{"E, MMM d – E, MMM d, y G"}
+                    y{"E, MMM d, y – E, MMM d, y G"}
+                }
+                GyMMMd{
+                    G{"MMM d, y G – MMM d, y G"}
+                    M{"MMM d – MMM d, y G"}
+                    d{"MMM d – d, y G"}
+                    y{"MMM d, y – MMM d, y G"}
+                }
+                GyMd{
+                    G{"M/d/y G – M/d/y G"}
+                    M{"M/d/y – M/d/y G"}
+                    d{"M/d/y – M/d/y G"}
+                    y{"M/d/y – M/d/y G"}
+                }
+                M{
+                    M{"M – M"}
+                }
+                MEd{
+                    M{"E, M/d – E, M/d"}
+                    d{"E, M/d – E, M/d"}
+                }
+                MMM{
+                    M{"MMM – MMM"}
+                }
+                MMMEd{
+                    M{"E, MMM d – E, MMM d"}
+                    d{"E, MMM d – E, MMM d"}
+                }
+                MMMd{
+                    M{"MMM d – MMM d"}
+                    d{"MMM d – d"}
+                }
+                Md{
+                    M{"M/d – M/d"}
+                    d{"M/d – M/d"}
+                }
+                h{
+                    a{"h a – h a"}
+                    h{"h – h a"}
+                }
+                y{
+                    y{"y – y"}
+                }
+                yM{
+                    M{"M/y – M/y"}
+                    y{"M/y – M/y"}
+                }
+                yMEd{
+                    M{"E, M/d/y – E, M/d/y"}
+                    d{"E, M/d/y – E, M/d/y"}
+                    y{"E, M/d/y – E, M/d/y"}
+                }
+                yMMM{
+                    M{"MMM – MMM y"}
+                    y{"MMM y – MMM y"}
+                }
+                yMMMEd{
+                    M{"E, MMM d – E, MMM d, y"}
+                    d{"E, MMM d – E, MMM d, y"}
+                    y{"E, MMM d, y – E, MMM d, y"}
+                }
+                yMMMM{
+                    M{"MMMM – MMMM y"}
+                    y{"MMMM y – MMMM y"}
+                }
+                yMMMd{
+                    M{"MMM d – MMM d, y"}
+                    d{"MMM d – d, y"}
+                    y{"MMM d, y – MMM d, y"}
+                }
+                yMd{
+                    M{"M/d/y – M/d/y"}
+                    d{"M/d/y – M/d/y"}
+                    y{"M/d/y – M/d/y"}
                 }
             }
             monthNames{
@@ -312,6 +549,11 @@ ks{
             }
         }
         indian{
+            eras{
+                abbreviated{
+                    "ساکا",
+                }
+            }
             monthNames{
                 format{
                     wide{
@@ -325,7 +567,7 @@ ks{
                         "شعبان",
                         "رمضان",
                         "شوال",
-                        "ذِی القد",
+                        "ذِی القعدہ",
                         "ذِی الحج",
                     }
                 }
@@ -355,6 +597,25 @@ ks{
         }
         month{
             dn{"رؠتھ"}
+            relative{
+                "-1"{"پٔتِم ریتھۍ"}
+                "0"{"یٕہ ریتھۍ"}
+                "1"{"نو ریتھۍ"}
+            }
+        }
+        month-narrow{
+            relative{
+                "-1"{"پٔتِم ریتھۍ"}
+                "0"{"یٕہ ریتھۍ"}
+                "1"{"نو ریتھۍ"}
+            }
+        }
+        month-short{
+            relative{
+                "-1"{"پٔتِم ریتھۍ"}
+                "0"{"یٕہ ریتھۍ"}
+                "1"{"نو ریتھۍ"}
+            }
         }
         quarter{
             dn{"کوارٹر"}
@@ -376,12 +637,53 @@ ks{
         }
         week{
             dn{"ہفتہٕ"}
+            relative{
+                "-1"{"پٔتِم ہفتہ"}
+                "0"{"یٕہ ہفتہ"}
+                "1"{"نو ہفتہ"}
+            }
+            relativePeriod{"{0} ہُک ہفتہ"}
+        }
+        week-narrow{
+            relative{
+                "-1"{"پٔتِم ہفتہ"}
+                "0"{"یٕہ ہفتہ"}
+                "1"{"نو ہفتہ"}
+            }
+            relativePeriod{"{0} ہُک ہفتہ"}
+        }
+        week-short{
+            relative{
+                "-1"{"پٔتِم ہفتہ"}
+                "0"{"یٕہ ہفتہ"}
+                "1"{"نو ہفتہ"}
+            }
+            relativePeriod{"{0} ہُک ہفتہ"}
         }
         weekday{
             dn{"ہفتُک دۄہ"}
         }
         year{
             dn{"ؤری"}
+            relative{
+                "-1"{"پٔتِم ؤری"}
+                "0"{"یٕہ ؤری"}
+                "1"{"نو ؤری"}
+            }
+        }
+        year-narrow{
+            relative{
+                "-1"{"پٔتِم ؤری"}
+                "0"{"یٕہ ؤری"}
+                "1"{"نو ؤری"}
+            }
+        }
+        year-short{
+            relative{
+                "-1"{"پٔتِم ؤری"}
+                "0"{"یٕہ ؤری"}
+                "1"{"نو ؤری"}
+            }
         }
         zone{
             dn{"وَکھ زون"}
@@ -399,7 +701,25 @@ ks{
         }
     }
     measurementSystemNames{
-        US{"US"}
+        UK{"یو کے"}
+        US{"یو ایس"}
         metric{"میٖٹرِک"}
+    }
+    personNames{
+        nameOrderLocales{
+            givenFirst{
+                "und",
+                "ks",
+            }
+            surnameFirst{
+                "ko",
+                "si",
+                "ta",
+                "te",
+                "vi",
+                "yue",
+                "zh",
+            }
+        }
     }
 }

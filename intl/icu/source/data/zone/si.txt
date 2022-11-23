@@ -1223,6 +1223,9 @@ si{
         "Pacific:Johnston"{
             ec{"ජොන්ස්ටන්"}
         }
+        "Pacific:Kanton"{
+            ec{"කැන්ටන්"}
+        }
         "Pacific:Kiritimati"{
             ec{"කිරිමටි"}
         }

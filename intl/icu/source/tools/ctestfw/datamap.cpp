@@ -44,7 +44,7 @@ RBDataMap::~RBDataMap()
 RBDataMap::RBDataMap()
 {
   UErrorCode status = U_ZERO_ERROR;
-  fData = new Hashtable(TRUE, status);
+  fData = new Hashtable(true, status);
   fData->setValueDeleter(deleteResBund);
 }
 
@@ -53,7 +53,7 @@ RBDataMap::RBDataMap()
 // keys.
 RBDataMap::RBDataMap(UResourceBundle *data, UErrorCode &status)
 {
-  fData = new Hashtable(TRUE, status);
+  fData = new Hashtable(true, status);
   fData->setValueDeleter(deleteResBund);
   init(data, status);
 }
@@ -63,7 +63,7 @@ RBDataMap::RBDataMap(UResourceBundle *data, UErrorCode &status)
 // header size
 RBDataMap::RBDataMap(UResourceBundle *headers, UResourceBundle *data, UErrorCode &status) 
 {
-  fData = new Hashtable(TRUE, status);
+  fData = new Hashtable(true, status);
   fData->setValueDeleter(deleteResBund);
   init(headers, data, status);
 }

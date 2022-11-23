@@ -41,16 +41,19 @@ is{
         am{"amharíska"}
         an{"aragonska"}
         ang{"fornenska"}
+        ann{"obolo"}
         anp{"angíka"}
         ar{"arabíska"}
         ar_001{"stöðluð nútímaarabíska"}
         arc{"arameíska"}
         arn{"mapuche"}
         arp{"arapahó"}
+        ars{"najdi-arabíska"}
         arw{"aravakska"}
         as{"assamska"}
         asa{"asu"}
         ast{"astúríska"}
+        atj{"atikamekw"}
         av{"avaríska"}
         awa{"avadí"}
         ay{"aímara"}
@@ -102,13 +105,21 @@ is{
         chr{"Cherokee-mál"}
         chy{"sjeyen"}
         ckb{"miðkúrdíska"}
+        clc{"chilcotin"}
         co{"korsíska"}
         cop{"koptíska"}
         cr{"krí"}
+        crg{"michif"}
         crh{"krímtyrkneska"}
+        crj{"suðaustur-cree"}
+        crk{"nehiyawak"}
+        crl{"norðaustur-cree"}
+        crm{"moose cree"}
+        crr{"Karólínu-algonkvínska"}
         crs{"seychelles-kreólska"}
         cs{"tékkneska"}
         csb{"kasúbíska"}
+        csw{"maskekon"}
         cu{"kirkjuslavneska"}
         cv{"sjúvas"}
         cy{"velska"}
@@ -200,6 +211,7 @@ is{
         ha{"hása"}
         hai{"haída"}
         haw{"havaíska"}
+        hax{"suður-haída"}
         he{"hebreska"}
         hi{"hindí"}
         hil{"híligaínon"}
@@ -211,6 +223,7 @@ is{
         ht{"haítíska"}
         hu{"ungverska"}
         hup{"húpa"}
+        hur{"halkomelem"}
         hy{"armenska"}
         hz{"hereró"}
         ia{"interlingua"}
@@ -221,6 +234,7 @@ is{
         ig{"ígbó"}
         ii{"sísúanjí"}
         ik{"ínúpíak"}
+        ikt{"vestur-kanadískt inúktitút"}
         ilo{"ílokó"}
         inh{"ingús"}
         io{"ídó"}
@@ -247,6 +261,7 @@ is{
         kea{"grænhöfðeyska"}
         kfo{"koro"}
         kg{"kongóska"}
+        kgp{"kaingang"}
         kha{"kasí"}
         kho{"kotaska"}
         khq{"koyra chiini"}
@@ -277,6 +292,7 @@ is{
         kut{"kútenaí"}
         kv{"komíska"}
         kw{"kornbreska"}
+        kwk{"kwakʼwala"}
         ky{"kirgiska"}
         la{"latína"}
         lad{"ladínska"}
@@ -287,6 +303,7 @@ is{
         lez{"lesgíska"}
         lg{"ganda"}
         li{"limbúrgíska"}
+        lil{"lillooet"}
         lkt{"lakóta"}
         ln{"lingala"}
         lo{"laó"}
@@ -294,6 +311,7 @@ is{
         lou{"kreólska (Louisiana)"}
         loz{"lozi"}
         lrc{"norðurlúrí"}
+        lsm{"saamia"}
         lt{"litháíska"}
         lu{"lúbakatanga"}
         lua{"luba-lulua"}
@@ -327,13 +345,14 @@ is{
         mn{"mongólska"}
         mnc{"mansjú"}
         mni{"manípúrí"}
+        moe{"innu-aimun"}
         moh{"móhíska"}
         mos{"mossí"}
         mr{"maratí"}
         ms{"malaíska"}
         mt{"maltneska"}
         mua{"mundang"}
-        mul{"margvísleg mál"}
+        mul{"mörg tungumál"}
         mus{"krík"}
         mwl{"mirandesíska"}
         mwr{"marvarí"}
@@ -373,6 +392,11 @@ is{
         nzi{"nsíma"}
         oc{"oksítaníska"}
         oj{"ojibva"}
+        ojb{"norðvestur-ojibwa"}
+        ojc{"ojibwa"}
+        ojs{"oji-cree"}
+        ojw{"vestur-ojibwa"}
+        oka{"okanagan"}
         om{"oromo"}
         or{"óría"}
         os{"ossetíska"}
@@ -388,8 +412,10 @@ is{
         peo{"fornpersneska"}
         phn{"fönikíska"}
         pi{"palí"}
+        pis{"pijin"}
         pl{"pólska"}
         pon{"ponpeiska"}
+        pqm{"maliseet-passamaquoddy"}
         prg{"prússneska"}
         pro{"fornpróvensalska"}
         ps{"pastú"}
@@ -439,6 +465,7 @@ is{
         sid{"sídamó"}
         sk{"slóvakíska"}
         sl{"slóvenska"}
+        slh{"suður-lushootseed"}
         sm{"samóska"}
         sma{"suðursamíska"}
         smj{"lúlesamíska"}
@@ -455,6 +482,7 @@ is{
         ss{"svatí"}
         ssy{"saho"}
         st{"suðursótó"}
+        str{"Straits-salisíanska"}
         su{"súndanska"}
         suk{"súkúma"}
         sus{"súsú"}
@@ -466,13 +494,16 @@ is{
         syc{"klassísk sýrlenska"}
         syr{"sýrlenska"}
         ta{"tamílska"}
+        tce{"suður-tutchone"}
         te{"telúgú"}
         tem{"tímne"}
         teo{"tesó"}
         ter{"terenó"}
         tet{"tetúm"}
         tg{"tadsjikska"}
+        tgx{"tagíska"}
         th{"taílenska"}
+        tht{"tahltan"}
         ti{"tígrinja"}
         tig{"tígre"}
         tiv{"tív"}
@@ -485,12 +516,14 @@ is{
         tn{"tsúana"}
         to{"tongverska"}
         tog{"tongverska (nyasa)"}
+        tok{"toki pona"}
         tpi{"tokpisin"}
         tr{"tyrkneska"}
         trv{"tarókó"}
         ts{"tsonga"}
         tsi{"tsimsíska"}
         tt{"tatarska"}
+        ttm{"norður-tutchone"}
         tum{"túmbúka"}
         tvl{"túvalúska"}
         tw{"tví"}
@@ -519,6 +552,7 @@ is{
         was{"vasjó"}
         wbp{"varlpiri"}
         wo{"volof"}
+        wuu{"wu-kínverska"}
         xal{"kalmúkska"}
         xh{"sósa"}
         xog{"sóga"}
@@ -528,6 +562,7 @@ is{
         ybb{"yemba"}
         yi{"jiddíska"}
         yo{"jórúba"}
+        yrl{"nheengatu"}
         yue{"kantónska"}
         za{"súang"}
         zap{"sapótek"}
@@ -552,9 +587,15 @@ is{
     }
     Languages%short{
         en_GB{"enska (bresk)"}
+        en_US{"enska (BNA)"}
+    }
+    Languages%variant{
+        hi_Latn{"hinglish"}
     }
     Scripts{
+        Adlm{"adlam"}
         Arab{"arabískt"}
+        Aran{"nastaliq"}
         Armn{"armenskt"}
         Bali{"balinesíska"}
         Batk{"batakíska"}
@@ -562,6 +603,9 @@ is{
         Bopo{"bopomofo"}
         Brah{"brahmíska"}
         Brai{"blindraletur"}
+        Cakm{"chakma"}
+        Cans{"samræmt kanadískt samstöfuletur frumbyggja"}
+        Cher{"cherokí"}
         Copt{"koptíska"}
         Cyrl{"kyrillískt"}
         Deva{"devanagari"}
@@ -590,16 +634,23 @@ is{
         Mand{"mandaíska"}
         Mlym{"malalajam"}
         Mong{"mongólskt"}
+        Mtei{"meitei mayek"}
         Mymr{"mjanmarskt"}
         Nkoo{"n-kó"}
+        Olck{"ol chiki"}
         Orya{"oriya"}
+        Rohg{"hanifi"}
         Sinh{"sinhala"}
         Sund{"sundanesíska"}
+        Syrc{"syriakíska"}
         Taml{"tamílskt"}
         Telu{"telúgú"}
+        Tfng{"tifinagh"}
         Thaa{"thaana"}
         Thai{"taílenskt"}
         Tibt{"tíbeskt"}
+        Vaii{"vai"}
+        Yiii{"yí"}
         Zmth{"stærðfræðitákn"}
         Zsye{"emoji-tákn"}
         Zsym{"tákn"}
@@ -719,6 +770,7 @@ is{
             armn{"Armenskir tölustafir"}
             armnlow{"Armenskar lágstafatölur"}
             beng{"Bengalskar tölur"}
+            cakm{"Chakma-tölur"}
             deva{"Devanagari tölur"}
             ethi{"Eþíópískir tölustafir"}
             finance{"Viðskiptafræðileg töluorð"}
@@ -734,6 +786,7 @@ is{
             hant{"Hefðbundnir kínverskir tölustafir"}
             hantfin{"Hefðbundnar kínverskar fjármálatölur"}
             hebr{"Hebreskir tölustafir"}
+            java{"Javanskar tölur"}
             jpan{"Japanskir tölustafir"}
             jpanfin{"Japanskar fjármálatölur"}
             khmr{"Kmerískar tölur"}
@@ -742,8 +795,10 @@ is{
             latn{"Vestrænar tölur"}
             mlym{"Malayalam-tölur"}
             mong{"Mongólskar tölur"}
+            mtei{"Meetei mayek-tölur"}
             mymr{"Mjanmarskar tölur"}
             native{"Upprunalegir tölustafir"}
+            olck{"Ol chiki-tölur"}
             orya{"Odia-tölur"}
             roman{"Rómverskir tölustafir"}
             romanlow{"Rómverskar lágstafatölur"}

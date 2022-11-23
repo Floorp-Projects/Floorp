@@ -205,7 +205,7 @@ ro{
         }
         CVE{
             "CVE",
-            "escudo din Capul Verde",
+            "escudo caboverdian",
         }
         CYP{
             "CYP",
@@ -373,7 +373,7 @@ ro{
         }
         ILS{
             "ILS",
-            "șechel israelian nou",
+            "shekel israelian nou",
         }
         INR{
             "INR",
@@ -693,7 +693,7 @@ ro{
         }
         SCR{
             "SCR",
-            "rupie din Seychelles",
+            "rupie seychelleză",
         }
         SDD{
             "SDD",
@@ -717,7 +717,7 @@ ro{
         }
         SHP{
             "SHP",
-            "liră Insula Sf. Elena",
+            "liră din Sfânta Elena (Sfânta Elena și Ascension)",
         }
         SIT{
             "SIT",
@@ -753,7 +753,7 @@ ro{
         }
         STN{
             "STN",
-            "dobra Sao Tome și Principe",
+            "dobra din São Tomé și Príncipe",
         }
         SUR{
             "SUR",
@@ -1334,9 +1334,9 @@ ro{
             other{"pesos cubanezi"}
         }
         CVE{
-            few{"escudo din Capul Verde"}
-            one{"escudo din Capul Verde"}
-            other{"escudo din Capul Verde"}
+            few{"escudo caboverdieni"}
+            one{"escudo caboverdian"}
+            other{"escudo caboverdieni"}
         }
         CYP{
             few{"lire cipriote"}
@@ -1524,9 +1524,9 @@ ro{
             other{"lire israeliene"}
         }
         ILS{
-            few{"șecheli israelieni noi"}
-            one{"șechel israelian nou"}
-            other{"șecheli israelieni noi"}
+            few{"shekeli israelieni noi"}
+            one{"shekel israelian nou"}
+            other{"shekeli israelieni noi"}
         }
         INR{
             few{"rupii indiene"}
@@ -1769,9 +1769,9 @@ ro{
             other{"ringgit malaiezieni"}
         }
         MZN{
-            few{"metical mozambicani"}
+            few{"meticali mozambicani"}
             one{"metical mozambican"}
-            other{"metical mozambicani"}
+            other{"meticali mozambicani"}
         }
         NAD{
             few{"dolari namibieni"}
@@ -1904,9 +1904,9 @@ ro{
             other{"dolari din Insulele Solomon"}
         }
         SCR{
-            few{"rupii din Seychelles"}
-            one{"rupie din Seychelles"}
-            other{"rupii din Seychelles"}
+            few{"rupii seychelleze"}
+            one{"rupie seychelleză"}
+            other{"rupii seychelleze"}
         }
         SDD{
             few{"dinari sudanezi"}
@@ -1934,9 +1934,9 @@ ro{
             other{"dolari singaporezi"}
         }
         SHP{
-            few{"lire Insula Sf. Elena"}
-            one{"liră Insula Sf. Elena"}
-            other{"lire Insula Sf. Elena"}
+            few{"lire din Sfânta Elena (Sfânta Elena și Ascension)"}
+            one{"liră din Sfânta Elena (Sfânta Elena și Ascension)"}
+            other{"lire din Sfânta Elena (Sfânta Elena și Ascension)"}
         }
         SIT{
             few{"tolari sloveni"}
@@ -1979,9 +1979,9 @@ ro{
             other{"dobre Sao Tome și Principe (1977–2017)"}
         }
         STN{
-            few{"dobre Sao Tome și Principe"}
-            one{"dobra Sao Tome și Principe"}
-            other{"dobre Sao Tome și Principe"}
+            few{"dobre din São Tomé și Príncipe"}
+            one{"dobra din São Tomé și Príncipe"}
+            other{"dobre din São Tomé și Príncipe"}
         }
         SUR{
             few{"ruble sovietice"}

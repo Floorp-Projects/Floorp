@@ -27,6 +27,12 @@ en_001{
         "Atlantic:St_Helena"{
             ec{"St Helena"}
         }
+        "Australia:Currie"{
+            ec{"Currie"}
+        }
+        "Pacific:Enderbury"{
+            ec{"Enderbury"}
+        }
         "Pacific:Honolulu"{
             sd{"∅∅∅"}
             sg{"∅∅∅"}

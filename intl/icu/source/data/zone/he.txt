@@ -94,7 +94,7 @@ he{
             ec{"קינשסה"}
         }
         "Africa:Lagos"{
-            ec{"לגוס"}
+            ec{"לאגוס"}
         }
         "Africa:Libreville"{
             ec{"ליברוויל"}
@@ -472,13 +472,13 @@ he{
             ec{"נורוניה"}
         }
         "America:North_Dakota:Beulah"{
-            ec{"ביולה, צפון דקוטה"}
+            ec{"ביולה, דקוטה הצפונית"}
         }
         "America:North_Dakota:Center"{
-            ec{"סנטר, צפון דקוטה"}
+            ec{"סנטר, דקוטה הצפונית"}
         }
         "America:North_Dakota:New_Salem"{
-            ec{"ניו סיילם, צפון דקוטה"}
+            ec{"ניו סיילם, דקוטה הצפונית"}
         }
         "America:Ojinaga"{
             ec{"אוג׳ינאגה"}
@@ -604,7 +604,7 @@ he{
             ec{"ילונייף"}
         }
         "Antarctica:Casey"{
-            ec{"קאסיי"}
+            ec{"קייסי"}
         }
         "Antarctica:Davis"{
             ec{"דיוויס"}

@@ -55,29 +55,29 @@ yue{
         " 盜 盟 盡 監-盥 盧 目 盲 直 相 盼 盾 省 眉 看 真 眠 眼 眾 睏 睛 睡 督 瞇 瞌 瞧 瞪 瞭 矛 矣 知 短 石 砂 砍 研 砲 破"
         " 硬 碎 碗 碟 碧 碩 碰 確 碼 磁 磚 磨 磯 礎 礙 礫 示 社 祈 祕 祖 祚 祛 祝 神 祥 票 祿 禁 禍-福 禪 禮 禱 禿-私 秋 科"
         " 秒 秘 租 秤 秦 移 稅 程 稍 種 稱 稻 稿 穀 穆 穌 積 穩 究 穹 空 穿 突 窄 窗 窩 窮 窶 立 站 竟 章 童 端 競 竹 竿 笑"
-        " 笛 符 笨 第 筆 等 筋 答 策 筷 简 箏 箔 算 管 箭 箱 節 範 篇 築 篷 簡 簫 簽 簿 籃 籌 籍 籠 籤 米 粉 粗 粵 精 糊 糕"
-        " 糖 糟 糥 系 糾 紀 約 紅 紉 納 紐 純 紙-紛 素 索 紫 紮-細 紳 紹 終 組 結 絕 絡 給 統 絲 經 綜 綠 維 綱 網 綽 綿 緊"
-        " 緒 線 緣 編 緩 緬 緯 練 縛 縣 縫 縮 縱 總 績 繁 繃 繆 織 繞 繡 繩 繪 繳 繼 續 纖 缸 缺 罈 罐 罕 罩 罪 置 罰 署 罵"
-        " 罷 羅 羊 美 羞 群 義 羽 翁 習 翔 翰 翹 翻 翼 耀 老 考 者 而 耍 耐 耗 耳 耶 聊 聖 聚 聞 聯 聰 聲 職 聽 聾 肉 肌 肚"
-        " 股 肥 肩 肯 育 肺 背 胎 胖 胞 胡 胸 能 脆 脈 脖 脫 腐 腓 腔 腦 腰 腳 腹 腿 膚 膠 膽 臂 臉 臘 臟 臣 臥 臨 自 臭 至"
-        " 致 臺 與-舊 舌 舍 舒 舞 舟 航 般 船 艦 良 色 艾 芙 芝 芬 芭 花 芳 芽 苣 若 苦 英 茄 茅 茫 茲 茵 茶 茸 草 荒 荷 荼"
-        " 莉 莊 莎 莓 莖 莫 菇 菌 菜 菩 華 菲 萄 萊 萎 萬 萵 落 葉 著 葛 葡 葵 蒂 蒙 蒜 蒲 蒸 蒼 蓄 蓉 蓋 蓮 蔔 蔕 蔡 蔣 蔥"
-        " 蔬 蕉 蕭 蕾 薄 薑 薦 薩 薪 薯 藉 藍 藏 藝 藤 藥 蘆 蘇 蘋 蘑 蘭 蘿 虎 處 虛 號 虧 蚊 蚓 蚯 蛇 蛋 蛙 蜂 蜜 蜥 蜴 蝙"
-        " 蝟 蝠 蝦 蝶 螂 螃 融 螞 螢 螺 蟀 蟄 蟋 蟑 蟲 蟳 蟹 蟻 蠅 蠍 蠕 蠣 蠻 血 行 術 街 衛 衝 衡 衣 表 衫 袋 袍 被 裁 裂"
-        " 裏 裕 補 裝 裡 裱 裹 製 複 褐 褲 襪 襯 西 要 覆 見 規 視 親 覺 覽 觀 角 解 觸 言 訂 計 訊 討 訓 託 記 訝 訥 訪 設"
-        " 許 訴 診-証 評 詞 詢 試 詩 話-詳 誇 誌 認 誓 誕 語 誠 誤 說 誰 課 誼 調 談 請 諒 論 諸 諺 諾 謀 謂 謎 講 謝 證 識"
-        " 譜 警 譯 議 護 譽 讀 變 讓 讚 谷 豆 豈 豎 豐 豔 象 豪 豬 豹 貌 貓 貝 貞 負-貢 貨 貪-責 貴 買 費 貼 賀 資 賈 賓 賜"
-        " 賞 賢-賤 賦 質 賭 賴 賺 購 賽 贈 贊 贏 贛 赤 赫 走 起 超 越 趕 趙 趣 趨 足 跆 跌 跎 跑 距 跟 跡 跪 路 跳 踏 踢 踩"
-        " 蹟 蹤 躍 身 躲 車 軌 軍 軒 軟 軸 較 載 輔 輕 輛 輝 輩 輪 輯 輸 轉 轎 轟 辛 辜 辣 辦 辨 辭 辯-農 迅 迎 近 返 迦 迪"
-        " 迫 述 迴 迷 追 退 送 逃 逆 透 逐 途 這-逛 逝 速 造 逢 連 週 進 逸 逼 遇 遊 運 遍 過 道-違 遙 遜 遠 適 遭 遮 遲 遷"
-        " 選 遺 避-邁 還 邊 邏 那 邦 邪 邱 郎 部 郭 郵 都 鄂 鄉 鄙 鄭 鄰 酉 配 酒 酪 酷 酸 醉 醒 醜 醫 醬 采 釋-量 金 針 釣"
-        " 鈴 鉅 鉢 鉤 銀 銅 銖 銘 銳 銷 鋁 鋒 鋼 錄 錢 錦 錨 錫 錯 錶 鍊 鍋 鍵 鍾 鎊 鎖 鎮 鏈 鏡 鏢 鐘 鐡 鐵 鑑 鑿 長 門 閃"
-        " 閉 開 閏 閒 間 閣 閩 閱 闆 闊 闍 闐 關 闡 阱 防 阻 阿 陀 附 降 限 院-除 陪 陰 陳 陵-陸 陽 隆 隊 階 隔 際 障 隨 險"
-        " 隱 隻 雄-集 雉 雌 雖 雙 雜 雞 離 難 雨 雪 雲 零 雷 電 需 震 霍 霜 霧 露 霸 霹 靂 靈 青 靖 静 靜 非 靠 面 革 靴 靼"
-        " 鞋 鞭 韃 韋 韓 音 韻 響 頁 頂 項 順 須 頌 預 頑 頓 頗 領 頞 頭 頸 頻 顆 題 額 顏 願 顛 類 顧 顯 風 颱 飄 飆 飛 食"
-        " 飪 飯 飲 飽 飾 餃 餅 養 餌 餐 餘 餚 館 餾 首 香 馬 駐 駕 駛 駝 駱 騎 騙 騷 驅 驕 驗 驚 骨 體 高 髮 鬆 鬍 鬥 鬧 鬱"
-        " 鬼 魁 魂 魅 魔 魚 魯 魷 鮑 鮮 鯊 鯨 鱷 鳥 鳩 鳳 鳴 鴨 鴻 鵝 鵡 鶴 鷹 鸚 鹽 鹿 麗 麥 麵 麻 麼 黃 黎 黑 默 黛 點 黨"
-        " 鼓 鼠 鼬 鼻 齊 齋 齒 齡 龍 龐 龜]"
+        " 笛 符 笨 第 筆 等 筋 答 策 筷 箏 箔 算 管 箭 箱 節 範 篇 築 篷 簡 簫 簽 簿 籃 籌 籍 籠 籤 米 粉 粗 粵 精 糊 糕 糖"
+        " 糟 糥 系 糾 紀 約 紅 紉 納 紐 純 紙-紛 素 索 紫 紮-細 紳 紹 終 組 結 絕 絡 給 統 絲 經 綜 綠 維 綱 網 綽 綿 緊 緒"
+        " 線 緣 編 緩 緬 緯 練 縛 縣 縫 縮 縱 總 績 繁 繃 繆 織 繞 繡 繩 繪 繳 繼 續 纖 缸 缺 罈 罐 罕 罩 罪 置 罰 署 罵 罷"
+        " 羅 羊 美 羞 群 義 羽 翁 習 翔 翰 翹 翻 翼 耀 老 考 者 而 耍 耐 耗 耳 耶 聊 聖 聚 聞 聯 聰 聲 職 聽 聾 肉 肌 肚 股"
+        " 肥 肩 肯 育 肺 背 胎 胖 胞 胡 胸 能 脆 脈 脖 脫 腐 腓 腔 腦 腰 腳 腹 腿 膚 膠 膽 臂 臉 臘 臟 臣 臥 臨 自 臭 至 致"
+        " 臺 與-舊 舌 舍 舒 舞 舟 航 般 船 艦 良 色 艾 芙 芝 芬 芭 花 芳 芽 苣 若 苦 英 茄 茅 茫 茲 茵 茶 茸 草 荒 荷 荼 莉"
+        " 莊 莎 莓 莖 莫 菇 菌 菜 菩 華 菲 萄 萊 萎 萬 萵 落 葉 著 葛 葡 葵 蒂 蒙 蒜 蒲 蒸 蒼 蓄 蓉 蓋 蓮 蔔 蔕 蔡 蔣 蔥 蔬"
+        " 蕉 蕭 蕾 薄 薑 薦 薩 薪 薯 藉 藍 藏 藝 藤 藥 蘆 蘇 蘋 蘑 蘭 蘿 虎 處 虛 號 虧 蚊 蚓 蚯 蛇 蛋 蛙 蜂 蜜 蜥 蜴 蝙 蝟"
+        " 蝠 蝦 蝶 螂 螃 融 螞 螢 螺 蟀 蟄 蟋 蟑 蟲 蟳 蟹 蟻 蠅 蠍 蠕 蠣 蠻 血 行 術 街 衛 衝 衡 衣 表 衫 袋 袍 被 裁 裂 裏"
+        " 裕 補 裝 裡 裱 裹 製 複 褐 褲 襪 襯 西 要 覆 見 規 視 親 覺 覽 觀 角 解 觸 言 訂 計 訊 討 訓 託 記 訝 訥 訪 設 許"
+        " 訴 診-証 評 詞 詢 試 詩 話-詳 誇 誌 認 誓 誕 語 誠 誤 說 誰 課 誼 調 談 請 諒 論 諸 諺 諾 謀 謂 謎 講 謝 證 識 譜"
+        " 警 譯 議 護 譽 讀 變 讓 讚 谷 豆 豈 豎 豐 豔 象 豪 豬 豹 貌 貓 貝 貞 負-貢 貨 貪-責 貴 買 費 貼 賀 資 賈 賓 賜 賞"
+        " 賢-賤 賦 質 賭 賴 賺 購 賽 贈 贊 贏 贛 赤 赫 走 起 超 越 趕 趙 趣 趨 足 跆 跌 跎 跑 距 跟 跡 跪 路 跳 踏 踢 踩 蹟"
+        " 蹤 躍 身 躲 車 軌 軍 軒 軟 軸 較 載 輔 輕 輛 輝 輩 輪 輯 輸 轉 轎 轟 辛 辜 辣 辦 辨 辭 辯-農 迅 迎 近 返 迦 迪 迫"
+        " 述 迴 迷 追 退 送 逃 逆 透 逐 途 這-逛 逝 速 造 逢 連 週 進 逸 逼 遇 遊 運 遍 過 道-違 遙 遜 遠 適 遭 遮 遲 遷 選"
+        " 遺 避-邁 還 邊 邏 那 邦 邪 邱 郎 部 郭 郵 都 鄂 鄉 鄙 鄭 鄰 酉 配 酒 酪 酷 酸 醉 醒 醜 醫 醬 采 釋-量 金 針 釣 鈴"
+        " 鉅 鉢 鉤 銀 銅 銖 銘 銳 銷 鋁 鋒 鋼 錄 錢 錦 錨 錫 錯 錶 鍊 鍋 鍵 鍾 鎊 鎖 鎮 鏈 鏡 鏢 鐘 鐡 鐵 鑑 鑿 長 門 閃 閉"
+        " 開 閏 閒 間 閣 閩 閱 闆 闊 闍 闐 關 闡 阱 防 阻 阿 陀 附 降 限 院-除 陪 陰 陳 陵-陸 陽 隆 隊 階 隔 際 障 隨 險 隱"
+        " 隻 雄-集 雉 雌 雖 雙 雜 雞 離 難 雨 雪 雲 零 雷 電 需 震 霍 霜 霧 露 霸 霹 靂 靈 青 靖 静 靜 非 靠 面 革 靴 靼 鞋"
+        " 鞭 韃 韋 韓 音 韻 響 頁 頂 項 順 須 頌 預 頑 頓 頗 領 頞 頭 頸 頻 顆 題 額 顏 願 顛 類 顧 顯 風 颱 飄 飆 飛 食 飪"
+        " 飯 飲 飽 飾 餃 餅 養 餌 餐 餘 餚 館 餾 首 香 馬 駐 駕 駛 駝 駱 騎 騙 騷 驅 驕 驗 驚 骨 體 高 髮 鬆 鬍 鬥 鬧 鬱 鬼"
+        " 魁 魂 魅 魔 魚 魯 魷 鮑 鮮 鯊 鯨 鱷 鳥 鳩 鳳 鳴 鴨 鴻 鵝 鵡 鶴 鷹 鸚 鹽 鹿 麗 麥 麵 麻 麼 黃 黎 黑 默 黛 點 黨 鼓"
+        " 鼠 鼬 鼻 齊 齋 齒 齡 龍 龐 龜]"
     }
     ExemplarCharactersIndex{"[一 丁 丈 不 且 丞 並 串 乘 乾 亂 亭 傀 僎 僵 儐 償 儳 儷 儻 叢 嚴 囌 囑 廳]"}
     ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9 〇 一 七 三 九 二 五 八 六 四]"}
@@ -120,6 +120,8 @@ yue{
             }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                accountingFormat%alphaNextToNumber{"¤ #,##0.00;(¤ #,##0.00)"}
+                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
@@ -1169,6 +1171,12 @@ yue{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimePatterns%atTime{
+                "{1}{0}",
+                "{1}{0}",
+                "{1}{0}",
+                "{1} {0}",
+            }
             DateTimeSkeletons{
                 "ahmmsszzzz",
                 "ahmmssz",
@@ -1393,6 +1401,12 @@ yue{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
+                "{1}{0}",
+                "{1}{0}",
+                "{1}{0}",
                 "{1} {0}",
             }
             DateTimeSkeletons{
@@ -3580,5 +3594,42 @@ yue{
         UK{"英制"}
         US{"美制"}
         metric{"公制"}
+    }
+    personNames{
+        foreignSpaceReplacement{"·"}
+        initialPattern{
+            initial{"{0}"}
+        }
+        namePattern{
+            givenFirst-long-addressing-formal{"{surname}{prefix}"}
+            givenFirst-long-addressing-informal{"{given-informal}"}
+            givenFirst-medium-addressing-formal{"{surname}{prefix}"}
+            givenFirst-medium-addressing-informal{"{given-informal}"}
+            givenFirst-short-addressing-formal{"{surname}{prefix}"}
+            givenFirst-short-addressing-informal{"{given-informal}"}
+            sorting-long-referring-formal{"{surname}{given}{suffix}{given2}"}
+            sorting-long-referring-informal{"{surname}{given-informal}"}
+            sorting-medium-referring-formal{"{surname}{given}{suffix}{given2-initial}"}
+            sorting-medium-referring-informal{"{surname}{given-informal}"}
+            sorting-short-referring-formal{"{surname}{given}{given2-initial}"}
+            sorting-short-referring-informal{"{surname}{given-informal}"}
+            surnameFirst-long-addressing-formal{"{surname}{prefix}"}
+            surnameFirst-long-addressing-informal{"{given-informal}"}
+            surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-monogram-allCaps}"}
+            surnameFirst-long-referring-formal{"{surname}{given}{suffix}{given2}"}
+            surnameFirst-long-referring-informal{"{surname}{given-informal}"}
+            surnameFirst-medium-addressing-formal{"{surname}{prefix}"}
+            surnameFirst-medium-addressing-informal{"{given-informal}"}
+            surnameFirst-medium-monogram-formal{"{surname-monogram}"}
+            surnameFirst-medium-monogram-informal{"{given-informal-monogram}"}
+            surnameFirst-medium-referring-formal{"{surname}{given}{suffix}{given2-initial}"}
+            surnameFirst-medium-referring-informal{"{surname}{given-informal}"}
+            surnameFirst-short-addressing-formal{"{surname}{prefix}"}
+            surnameFirst-short-addressing-informal{"{given-informal}"}
+            surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-short-referring-formal{"{surname}{given}{given2-initial}"}
+            surnameFirst-short-referring-informal{"{surname}{given}"}
+        }
     }
 }
