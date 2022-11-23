@@ -864,6 +864,7 @@ class OrderedHashMap {
   Impl impl;
 
  public:
+  using Lookup = typename Impl::Lookup;
   using Range = typename Impl::Range;
   using MutableRange = typename Impl::MutableRange;
 
@@ -871,23 +872,25 @@ class OrderedHashMap {
       : impl(std::move(ap), hcs) {}
   [[nodiscard]] bool init() { return impl.init(); }
   uint32_t count() const { return impl.count(); }
-  bool has(const Key& key) const { return impl.has(key); }
+  bool has(const Lookup& key) const { return impl.has(key); }
   Range all() const { return impl.all(); }
   MutableRange mutableAll() { return impl.mutableAll(); }
-  const Entry* get(const Key& key) const { return impl.get(key); }
-  Entry* get(const Key& key) { return impl.get(key); }
-  bool remove(const Key& key, bool* foundp) { return impl.remove(key, foundp); }
+  const Entry* get(const Lookup& key) const { return impl.get(key); }
+  Entry* get(const Lookup& key) { return impl.get(key); }
+  bool remove(const Lookup& key, bool* foundp) {
+    return impl.remove(key, foundp);
+  }
   [[nodiscard]] bool clear() { return impl.clear(); }
 
-  template <typename V>
-  [[nodiscard]] bool put(const Key& key, V&& value) {
-    return impl.put(Entry(key, std::forward<V>(value)));
+  template <typename K, typename V>
+  [[nodiscard]] bool put(K&& key, V&& value) {
+    return impl.put(Entry(std::forward<K>(key), std::forward<V>(value)));
   }
 
-  HashNumber hash(const Key& key) const { return impl.prepareHash(key); }
+  HashNumber hash(const Lookup& key) const { return impl.prepareHash(key); }
 
   template <typename GetNewKey>
-  void rekeyOneEntry(const Key& current, const GetNewKey& getNewKey) {
+  void rekeyOneEntry(const Lookup& current, const GetNewKey& getNewKey) {
     const Entry* e = get(current);
     if (!e) {
       return;
@@ -946,6 +949,7 @@ class OrderedHashSet {
   Impl impl;
 
  public:
+  using Lookup = typename Impl::Lookup;
   using Range = typename Impl::Range;
   using MutableRange = typename Impl::MutableRange;
 
@@ -953,19 +957,22 @@ class OrderedHashSet {
       : impl(std::move(ap), hcs) {}
   [[nodiscard]] bool init() { return impl.init(); }
   uint32_t count() const { return impl.count(); }
-  bool has(const T& value) const { return impl.has(value); }
+  bool has(const Lookup& value) const { return impl.has(value); }
   Range all() const { return impl.all(); }
   MutableRange mutableAll() { return impl.mutableAll(); }
-  [[nodiscard]] bool put(const T& value) { return impl.put(value); }
-  bool remove(const T& value, bool* foundp) {
+  template <typename Input>
+  [[nodiscard]] bool put(Input&& value) {
+    return impl.put(std::forward<Input>(value));
+  }
+  bool remove(const Lookup& value, bool* foundp) {
     return impl.remove(value, foundp);
   }
   [[nodiscard]] bool clear() { return impl.clear(); }
 
-  HashNumber hash(const T& value) const { return impl.prepareHash(value); }
+  HashNumber hash(const Lookup& value) const { return impl.prepareHash(value); }
 
   template <typename GetNewKey>
-  void rekeyOneEntry(const T& current, const GetNewKey& getNewKey) {
+  void rekeyOneEntry(const Lookup& current, const GetNewKey& getNewKey) {
     if (!has(current)) {
       return;
     }
