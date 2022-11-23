@@ -10,8 +10,7 @@
 # This script expects to be run from `update-icu.sh` after the in-tree
 # copy of ICU has been updated.
 
-from __future__ import absolute_import
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
 import glob
 import multiprocessing
