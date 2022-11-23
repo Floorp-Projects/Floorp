@@ -49,7 +49,7 @@ def get_upstream_deps_for_components(components):
     for configuration in CONFIGURATIONS_WITH_DEPENDENCIES:
         logger.info("Looking for dependencies in '%s' configuration" % configuration)
 
-        cmd = ["./gradlew"]
+        cmd = ["./gradlew", "--console=plain", "--parallel"]
         # This is eventually going to fail if there's ever enough components to make the command line
         # too long. If that happens, we'll need to split this list up and run gradle more than once.
         for c in sorted(components):
