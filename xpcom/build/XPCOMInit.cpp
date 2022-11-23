@@ -619,8 +619,8 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
     // that will be processed inside AdvanceShutdownPhase.
     AppShutdown::AdvanceShutdownPhase(ShutdownPhase::XPCOMShutdownFinal);
 
-    // Shutdown the main thread, processing our last round of events, and then
-    // mark that we've finished main thread event processing.
+    // Shutdown the main thread, processing our very last round of events, and
+    // then mark that we've finished main thread event processing.
     nsThreadManager::get().ShutdownMainThread();
     gXPCOMMainThreadEventsAreDoomed = true;
 
@@ -628,8 +628,6 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
 
     mozilla::dom::JSExecutionManager::Shutdown();
   }
-
-  AbstractThread::ShutdownMainThread();
 
   // XPCOM is officially in shutdown mode NOW
   // Set this only after the observers have been notified as this
@@ -644,6 +642,10 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
   if (nsComponentManagerImpl::gComponentManager) {
     nsComponentManagerImpl::gComponentManager->FreeServices();
   }
+
+  // Remove the remaining main thread representations
+  nsThreadManager::get().ReleaseMainThread();
+  AbstractThread::ShutdownMainThread();
 
   // Release the directory service
   nsDirectoryService::gService = nullptr;
