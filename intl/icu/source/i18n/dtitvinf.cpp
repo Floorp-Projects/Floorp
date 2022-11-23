@@ -401,7 +401,7 @@ DateIntervalInfo::initializeData(const Locale& locale, UErrorCode& status)
     char         localeWithCalendarKey[ULOC_LOCALE_IDENTIFIER_CAPACITY];
     // obtain a locale that always has the calendar key value that should be used
     (void)ures_getFunctionalEquivalent(localeWithCalendarKey, ULOC_LOCALE_IDENTIFIER_CAPACITY, nullptr,
-                                     "calendar", "calendar", locName, nullptr, false, &status);
+                                     "calendar", "calendar", locName, nullptr, FALSE, &status);
     localeWithCalendarKey[ULOC_LOCALE_IDENTIFIER_CAPACITY-1] = 0; // ensure null termination
     // now get the calendar key value from that locale
     int32_t calendarTypeLen = uloc_getKeywordValue(localeWithCalendarKey, "calendar", calendarType,
@@ -437,7 +437,7 @@ DateIntervalInfo::initializeData(const Locale& locale, UErrorCode& status)
         }
 
         if ( U_SUCCESS(status) && (resStr != nullptr)) {
-            UnicodeString pattern = UnicodeString(true, resStr, resStrLen);
+            UnicodeString pattern = UnicodeString(TRUE, resStr, resStrLen);
             setFallbackIntervalPattern(pattern, status);
         }
         ures_close(itvDtPtnResource);
@@ -449,7 +449,7 @@ DateIntervalInfo::initializeData(const Locale& locale, UErrorCode& status)
         const UnicodeString &calendarTypeToUseUString = sink.getNextCalendarType();
 
         // Already loaded calendar types
-        Hashtable loadedCalendarTypes(false, status);
+        Hashtable loadedCalendarTypes(FALSE, status);
 
         if (U_SUCCESS(status)) {
             while (!calendarTypeToUseUString.isBogus()) {
@@ -504,7 +504,7 @@ DateIntervalInfo::setIntervalPatternInternally(const UnicodeString& skeleton,
     }
 
     patternsOfOneSkeleton[index] = intervalPattern;
-    if ( emptyHash ) {
+    if ( emptyHash == TRUE ) {
         fIntervalPatterns->put(skeleton, patternsOfOneSkeleton, status);
     }
 }
@@ -738,7 +738,7 @@ U_CDECL_BEGIN
  *
  * @param val1  one value in comparison
  * @param val2  the other value in comparison
- * @return      true if 2 values are the same, false otherwise
+ * @return      TRUE if 2 values are the same, FALSE otherwise
  */
 static UBool U_CALLCONV dtitvinfHashTableValueComparator(UHashTok val1, UHashTok val2);
 
@@ -746,9 +746,9 @@ static UBool
 U_CALLCONV dtitvinfHashTableValueComparator(UHashTok val1, UHashTok val2) {
     const UnicodeString* pattern1 = (UnicodeString*)val1.pointer;
     const UnicodeString* pattern2 = (UnicodeString*)val2.pointer;
-    UBool ret = true;
+    UBool ret = TRUE;
     int8_t i;
-    for ( i = 0; i < DateIntervalInfo::kMaxIntervalPatternIndex && ret ; ++i ) {
+    for ( i = 0; i < DateIntervalInfo::kMaxIntervalPatternIndex && ret == TRUE; ++i ) {
         ret = (pattern1[i] == pattern2[i]);
     }
     return ret;
@@ -763,7 +763,7 @@ DateIntervalInfo::initHash(UErrorCode& status) {
         return nullptr;
     }
     Hashtable* hTable;
-    if ( (hTable = new Hashtable(false, status)) == nullptr ) {
+    if ( (hTable = new Hashtable(FALSE, status)) == nullptr ) {
         status = U_MEMORY_ALLOCATION_ERROR;
         return nullptr;
     }

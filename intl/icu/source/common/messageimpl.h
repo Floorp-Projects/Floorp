@@ -55,7 +55,7 @@ public:
                                                             UnicodeString &result);
 
 private:
-    MessageImpl() = delete;  // no constructor: all static methods
+    MessageImpl();  // no constructor: all static methods
 };
 
 U_NAMESPACE_END

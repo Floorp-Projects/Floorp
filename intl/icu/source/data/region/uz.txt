@@ -312,7 +312,6 @@ uz{
         CI{"Fil suyagi qirg‘og‘i"}
         CZ{"Chexiya Respublikasi"}
         FK{"Folklend (Malvin) orollari"}
-        NZ{"Aotearoa Yangi Zelandiya"}
         TL{"Sharqiy Timor"}
     }
 }

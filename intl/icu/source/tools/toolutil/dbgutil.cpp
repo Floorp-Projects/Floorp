@@ -47,7 +47,7 @@ static void udbg_cleanup(void) {
 static UBool tu_cleanup(void)
 {
     udbg_cleanup();
-    return true;
+    return TRUE;
 }
 
 static void udbg_register_cleanup(void) {

@@ -27,14 +27,13 @@
 #include "ucln_in.h"
 #include "udatamem.h"
 #include "umutex.h"
-#include "umapfile.h"
 
 U_NAMESPACE_BEGIN
 
 namespace {
 
 static const CollationCacheEntry *rootSingleton = NULL;
-static UInitOnce initOnce {};
+static UInitOnce initOnce = U_INITONCE_INITIALIZER;
 
 }  // namespace
 
@@ -43,51 +42,22 @@ U_CDECL_BEGIN
 static UBool U_CALLCONV uprv_collation_root_cleanup() {
     SharedObject::clearPtr(rootSingleton);
     initOnce.reset();
-    return true;
+    return TRUE;
 }
 
 U_CDECL_END
 
-UDataMemory*
-CollationRoot::loadFromFile(const char* ucadataPath, UErrorCode &errorCode) {
-    UDataMemory dataMemory;
-    UDataMemory  *rDataMem = NULL;
-    if (U_FAILURE(errorCode)) {
-        return NULL;
-    }
-    if (uprv_mapFile(&dataMemory, ucadataPath, &errorCode)) {
-        if (dataMemory.pHeader->dataHeader.magic1 == 0xda &&
-            dataMemory.pHeader->dataHeader.magic2 == 0x27 &&
-            CollationDataReader::isAcceptable(NULL, "icu", "ucadata", &dataMemory.pHeader->info)) {
-            rDataMem = UDataMemory_createNewInstance(&errorCode);
-            if (U_FAILURE(errorCode)) {
-                return NULL;
-            }
-            rDataMem->pHeader = dataMemory.pHeader;
-            rDataMem->mapAddr = dataMemory.mapAddr;
-            rDataMem->map = dataMemory.map;
-            return rDataMem;
-        }
-        errorCode = U_INVALID_FORMAT_ERROR;
-        return NULL;
-    }
-    errorCode = U_MISSING_RESOURCE_ERROR;
-    return NULL;
-}
-
 void U_CALLCONV
-CollationRoot::load(const char* ucadataPath, UErrorCode &errorCode) {
+CollationRoot::load(UErrorCode &errorCode) {
     if(U_FAILURE(errorCode)) { return; }
     LocalPointer<CollationTailoring> t(new CollationTailoring(NULL));
     if(t.isNull() || t->isBogus()) {
         errorCode = U_MEMORY_ALLOCATION_ERROR;
         return;
     }
-    t->memory = ucadataPath ? CollationRoot::loadFromFile(ucadataPath, errorCode) :
-                              udata_openChoice(U_ICUDATA_NAME U_TREE_SEPARATOR_STRING "coll",
-                                               "icu", "ucadata",
-                                               CollationDataReader::isAcceptable,
-                                               t->version, &errorCode);
+    t->memory = udata_openChoice(U_ICUDATA_NAME U_TREE_SEPARATOR_STRING "coll",
+                                 "icu", "ucadata",
+                                 CollationDataReader::isAcceptable, t->version, &errorCode);
     if(U_FAILURE(errorCode)) { return; }
     const uint8_t *inBytes = static_cast<const uint8_t *>(udata_getMemory(t->memory));
     CollationDataReader::read(NULL, inBytes, udata_getLength(t->memory), *t, errorCode);
@@ -103,14 +73,14 @@ CollationRoot::load(const char* ucadataPath, UErrorCode &errorCode) {
 
 const CollationCacheEntry *
 CollationRoot::getRootCacheEntry(UErrorCode &errorCode) {
-    umtx_initOnce(initOnce, CollationRoot::load, static_cast<const char*>(NULL), errorCode);
+    umtx_initOnce(initOnce, CollationRoot::load, errorCode);
     if(U_FAILURE(errorCode)) { return NULL; }
     return rootSingleton;
 }
 
 const CollationTailoring *
 CollationRoot::getRoot(UErrorCode &errorCode) {
-    umtx_initOnce(initOnce, CollationRoot::load, static_cast<const char*>(NULL), errorCode);
+    umtx_initOnce(initOnce, CollationRoot::load, errorCode);
     if(U_FAILURE(errorCode)) { return NULL; }
     return rootSingleton->tailoring;
 }
@@ -128,12 +98,6 @@ CollationRoot::getSettings(UErrorCode &errorCode) {
     if(U_FAILURE(errorCode)) { return NULL; }
     return root->settings;
 }
-
-void
-CollationRoot::forceLoadFromFile(const char* ucadataPath, UErrorCode &errorCode) {
-    umtx_initOnce(initOnce, CollationRoot::load, ucadataPath, errorCode);
-}
-
 
 U_NAMESPACE_END
 

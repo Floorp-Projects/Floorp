@@ -3,9 +3,6 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es_419{
     zoneStrings{
-        "Africa:Conakry"{
-            ec{"Conakry"}
-        }
         "America:Fort_Nelson"{
             ec{"Fuerte Nelson"}
         }
@@ -17,9 +14,6 @@ es_419{
         }
         "America:St_Thomas"{
             ec{"Santo Tomás"}
-        }
-        "Asia:Khandyga"{
-            ec{"Khandyga"}
         }
         "Atlantic:Canary"{
             ec{"Islas Canarias"}
@@ -38,9 +32,6 @@ es_419{
         }
         "Europe:Guernsey"{
             ec{"Guernsey"}
-        }
-        "Pacific:Kanton"{
-            ec{"Kanton"}
         }
         "Pacific:Wake"{
             ec{"Isla Wake"}

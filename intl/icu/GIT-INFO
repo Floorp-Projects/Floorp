@@ -1,5 +1,5 @@
-commit ff3514f257ea10afe7e710e9f946f68d256704b1
-Author: Peter Edberg <pedberg@unicode.org>
-Date:   Thu Oct 13 13:44:35 2022 -0700
+commit c205e7ee49a7086a28b9c275fcfdac9ca3dc815d
+Author: yumaoka <y.umaoka@gmail.com>
+Date:   Wed Mar 30 14:47:46 2022 -0400
 
-    ICU-21958 integrate CLDR release-42-beta5 to ICU main for 72
+    ICU-21971 Added a new numeric currecny code SLE/695 for Sierra Leone Leone.

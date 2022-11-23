@@ -800,7 +800,7 @@ private:
         DOW_LE_DOM_MODE
     };
 
-    SimpleTimeZone() = delete; // default constructor not implemented
+    SimpleTimeZone(); // default constructor not implemented
 
     /**
      * Internal construction method.

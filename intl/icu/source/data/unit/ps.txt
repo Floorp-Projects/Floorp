@@ -320,9 +320,6 @@ ps{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
-            quarter{
-                dnam{"ربعه"}
-            }
             second{
                 dnam{"ثانيې"}
             }
@@ -597,6 +594,11 @@ ps{
                 other{"{0} کيلو ګرامز"}
                 per{"{0} في کيلو ګرام"}
             }
+            metric-ton{
+                dnam{"ميټرک ټنز"}
+                one{"{0} ميټرک ټن"}
+                other{"{0} ميټرک ټنز"}
+            }
             microgram{
                 dnam{"مايکرو ګرامز"}
                 one{"{0} مايکرو ګرام"}
@@ -633,11 +635,6 @@ ps{
                 dnam{"ټنز"}
                 one{"{0} ټن"}
                 other{"{0} ټنز"}
-            }
-            tonne{
-                dnam{"ميټرک ټنز"}
-                one{"{0} ميټرک ټن"}
-                other{"{0} ميټرک ټنز"}
             }
         }
         power{
@@ -997,10 +994,6 @@ ps{
                 dnam{"مياشت"}
                 one{"{0} m"}
                 other{"{0} m"}
-                per{"{0}/m"}
-            }
-            quarter{
-                dnam{"qtr"}
             }
             second{
                 dnam{"sec"}
@@ -1412,9 +1405,6 @@ ps{
                 one{"{0} ns"}
                 other{"{0} ns"}
             }
-            quarter{
-                dnam{"qtr"}
-            }
             second{
                 dnam{"ثانيې"}
                 one{"{0} s"}
@@ -1691,6 +1681,11 @@ ps{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
+            metric-ton{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
+            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -1725,11 +1720,6 @@ ps{
                 dnam{"ټنز"}
                 one{"{0} tn"}
                 other{"{0} tn"}
-            }
-            tonne{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
             }
         }
         power{

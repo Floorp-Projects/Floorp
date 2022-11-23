@@ -260,7 +260,7 @@ nl{
             }
         }
         coordinate{
-            dnam{"hoofdwindstreek"}
+            dnam{"windstreek"}
             east{"{0} oosterlengte"}
             north{"{0} noorderbreedte"}
             south{"{0} zuiderbreedte"}
@@ -395,13 +395,6 @@ nl{
                 gender{"common"}
                 one{"{0} nanoseconde"}
                 other{"{0} nanoseconden"}
-            }
-            quarter{
-                dnam{"kwartaal"}
-                gender{"neuter"}
-                one{"{0} kwartaal"}
-                other{"{0} kwartalen"}
-                per{"{0}/kw."}
             }
             second{
                 dnam{"seconden"}
@@ -614,11 +607,6 @@ nl{
                 one{"{0} decimeter"}
                 other{"{0} decimeter"}
             }
-            earth-radius{
-                dnam{"aardstraal"}
-                one{"{0} aardstraal"}
-                other{"{0} aardstralen"}
-            }
             fathom{
                 dnam{"vadem"}
                 one{"{0} vadem"}
@@ -715,7 +703,7 @@ nl{
                 other{"{0} punten"}
             }
             solar-radius{
-                dnam{"zonneradius"}
+                dnam{"solar radii"}
                 gender{"common"}
                 one{"{0} solar radius"}
                 other{"{0} solar radii"}
@@ -792,6 +780,12 @@ nl{
                 other{"{0} kilogram"}
                 per{"{0} per kilogram"}
             }
+            metric-ton{
+                dnam{"metrische ton"}
+                gender{"common"}
+                one{"{0} metrische ton"}
+                other{"{0} metrische ton"}
+            }
             microgram{
                 dnam{"microgram"}
                 gender{"neuter"}
@@ -838,12 +832,6 @@ nl{
                 dnam{"ton"}
                 one{"{0} ton"}
                 other{"{0} ton"}
-            }
-            tonne{
-                dnam{"metrische ton"}
-                gender{"common"}
-                one{"{0} metrische ton"}
-                other{"{0} metrische ton"}
             }
         }
         power{
@@ -1444,7 +1432,6 @@ nl{
                 per{"{0}/d"}
             }
             decade{
-                dnam{"dec."}
                 one{"{0} dec."}
                 other{"{0} dec."}
             }
@@ -1480,11 +1467,6 @@ nl{
                 dnam{"ns"}
                 one{"{0} ns"}
                 other{"{0} ns"}
-            }
-            quarter{
-                dnam{"kw."}
-                one{"{0} kw."}
-                other{"{0} kw."}
             }
             second{
                 dnam{"s"}
@@ -1635,8 +1617,8 @@ nl{
             }
             inch{
                 dnam{"in"}
-                one{"{0}″"}
-                other{"{0}″"}
+                one{"{0}\u0022"}
+                other{"{0}\u0022"}
                 per{"{0}/in"}
             }
             kilometer{
@@ -1737,6 +1719,11 @@ nl{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
+            metric-ton{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
+            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -1773,11 +1760,6 @@ nl{
                 dnam{"ton"}
                 one{"{0} ton"}
                 other{"{0} ton"}
-            }
-            tonne{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
             }
         }
         power{
@@ -2275,9 +2257,9 @@ nl{
                 per{"{0}/dag"}
             }
             decade{
-                dnam{"dec."}
+                dnam{"decennia"}
                 one{"{0} dec."}
-                other{"{0} dec."}
+                other{"{0} decennia"}
             }
             hour{
                 dnam{"uur"}
@@ -2311,12 +2293,6 @@ nl{
                 dnam{"ns"}
                 one{"{0} ns"}
                 other{"{0} ns"}
-            }
-            quarter{
-                dnam{"kwart."}
-                one{"{0} kwart."}
-                other{"{0} kwart."}
-                per{"{0}/kw."}
             }
             second{
                 dnam{"sec"}
@@ -2592,6 +2568,11 @@ nl{
                 other{"{0} kg"}
                 per{"{0}/kg"}
             }
+            metric-ton{
+                dnam{"t"}
+                one{"{0} t"}
+                other{"{0} t"}
+            }
             microgram{
                 dnam{"μg"}
                 one{"{0} μg"}
@@ -2628,11 +2609,6 @@ nl{
                 dnam{"ton"}
                 one{"{0} ton"}
                 other{"{0} ton"}
-            }
-            tonne{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
             }
         }
         power{

@@ -21,7 +21,8 @@ U_CDECL_BEGIN
 
 /**
  * \file
- * \brief C API: This file defines a mutable Unicode code point trie.
+ *
+ * This file defines a mutable Unicode code point trie.
  *
  * @see UCPTrie
  * @see UMutableCPTrie

@@ -478,7 +478,7 @@ private:
      */
     static UnicodeString& dtos(double value, UnicodeString& string);
 
-    ChoiceFormat() = delete; // default constructor not implemented
+    ChoiceFormat(); // default constructor not implemented
 
     /**
      * Construct a new ChoiceFormat with the limits and the corresponding formats

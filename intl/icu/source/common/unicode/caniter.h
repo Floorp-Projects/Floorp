@@ -150,20 +150,20 @@ public:
 private:
     // ===================== PRIVATES ==============================
     // private default constructor
-    CanonicalIterator() = delete;
+    CanonicalIterator();
 
 
     /**
      * Copy constructor. Private for now.
      * @internal (private)
      */
-    CanonicalIterator(const CanonicalIterator& other) = delete;
+    CanonicalIterator(const CanonicalIterator& other);
 
     /**
      * Assignment operator. Private for now.
      * @internal (private)
      */
-    CanonicalIterator& operator=(const CanonicalIterator& other) = delete;
+    CanonicalIterator& operator=(const CanonicalIterator& other);
 
     // fields
     UnicodeString source;

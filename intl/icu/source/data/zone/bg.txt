@@ -259,7 +259,7 @@ bg{
             ec{"Чиуауа"}
         }
         "America:Coral_Harbour"{
-            ec{"Атикокан"}
+            ec{"Корал Харбър"}
         }
         "America:Cordoba"{
             ec{"Кордоба"}
@@ -1222,9 +1222,6 @@ bg{
         }
         "Pacific:Johnston"{
             ec{"Джонстън"}
-        }
-        "Pacific:Kanton"{
-            ec{"Кантон"}
         }
         "Pacific:Kiritimati"{
             ec{"Киритимати"}

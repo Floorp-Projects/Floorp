@@ -388,6 +388,7 @@ ckb{
     }
     Languages%short{
         en_GB{"ئینگلیزی (GB)"}
+        en_US{"ئینگلیزیی ئەمەریکایی"}
     }
     Scripts{
         Arab{"عەرەبی"}

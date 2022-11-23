@@ -1941,21 +1941,10 @@ supplementalData:table(nofallback){
         HR{
             {
                 from:intvector{
-                    389,
-                    1788921856,
-                }
-                id{"EUR"}
-            }
-            {
-                from:intvector{
                     179,
                     1456854016,
                 }
                 id{"HRK"}
-                to:intvector{
-                    389,
-                    -1210045441,
-                }
             }
             {
                 from:intvector{
@@ -3772,10 +3761,11 @@ supplementalData:table(nofallback){
         SL{
             {
                 from:intvector{
-                    385,
-                    -1223776256,
+                    383,
+                    -496241664,
                 }
                 id{"SLE"}
+                tender{"false"}
             }
             {
                 from:intvector{
@@ -3783,10 +3773,6 @@ supplementalData:table(nofallback){
                     1072291840,
                 }
                 id{"SLL"}
-                to:intvector{
-                    391,
-                    974987263,
-                }
             }
             {
                 from:intvector{

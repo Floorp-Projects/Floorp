@@ -1217,9 +1217,6 @@ pcm{
         "Pacific:Johnston"{
             ec{"Jọ́nstun"}
         }
-        "Pacific:Kanton"{
-            ec{"Kanton"}
-        }
         "Pacific:Kiritimati"{
             ec{"Kritímáti"}
         }

@@ -41,12 +41,16 @@ struct U_I18N_API CollationData : public UMemory {
     // Note: The ucadata.icu loader could discover the reserved ranges by setting an array
     // parallel with the ranges, and resetting ranges that are indexed.
     // The reordering builder code could clone the resulting template array.
-    static constexpr int32_t REORDER_RESERVED_BEFORE_LATIN = UCOL_REORDER_CODE_FIRST + 14;
-    static constexpr int32_t REORDER_RESERVED_AFTER_LATIN = REORDER_RESERVED_BEFORE_LATIN + 1;
+    enum {
+        REORDER_RESERVED_BEFORE_LATIN = UCOL_REORDER_CODE_FIRST + 14,
+        REORDER_RESERVED_AFTER_LATIN
+    };
 
-    static constexpr int32_t MAX_NUM_SPECIAL_REORDER_CODES = 8;
-    /** C++ only, data reader check scriptStartsLength. */
-    static constexpr int32_t MAX_NUM_SCRIPT_RANGES = 256;
+    enum {
+        MAX_NUM_SPECIAL_REORDER_CODES = 8,
+        /** C++ only, data reader check scriptStartsLength. */
+        MAX_NUM_SCRIPT_RANGES = 256
+    };
 
     CollationData(const Normalizer2Impl &nfc)
             : trie(NULL),

@@ -312,7 +312,6 @@ gl{
         CI{"Costa do Marfil"}
         CZ{"República Checa"}
         FK{"Illas Malvinas (Falkland)"}
-        NZ{"Aotearoa (Nova Zelandia)"}
         SZ{"Swazilandia"}
     }
 }

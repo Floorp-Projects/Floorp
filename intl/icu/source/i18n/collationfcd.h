@@ -123,7 +123,7 @@ public:
     }
 
 private:
-    CollationFCD() = delete;  // No instantiation.
+    CollationFCD();  // No instantiation.
 
     static const uint8_t lcccIndex[2048];
     static const uint8_t tcccIndex[2048];

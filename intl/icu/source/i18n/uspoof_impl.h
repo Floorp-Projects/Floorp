@@ -28,7 +28,6 @@
 #ifdef __cplusplus
 
 #include "capi_helper.h"
-#include "umutex.h"
 
 U_NAMESPACE_BEGIN
 

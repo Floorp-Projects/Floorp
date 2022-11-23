@@ -1287,7 +1287,7 @@ ml{
             ec{"ടോംഗാടാപു"}
         }
         "Pacific:Truk"{
-            ec{"ചക്"}
+            ec{"ട്രക്"}
         }
         "Pacific:Wake"{
             ec{"വെയ്ക്"}
