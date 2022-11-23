@@ -31,6 +31,7 @@
   "hmnp", \
   "java", \
   "kali", \
+  "kawi", \
   "khmr", \
   "knda", \
   "lana", \
@@ -52,6 +53,7 @@
   "mymr", \
   "mymrshan", \
   "mymrtlng", \
+  "nagm", \
   "newa", \
   "nkoo", \
   "olck", \
