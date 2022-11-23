@@ -61,7 +61,6 @@ geckoview:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1625325#c2
     notification_emails:
       - android-probes@mozilla.com
-      - asferro@mozilla.com
     expires: never
 
   page_load_progress_time:
@@ -77,7 +76,6 @@ geckoview:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
     notification_emails:
       - android-probes@mozilla.com
-      - esawin@mozilla.com
     expires: never
 
   page_load_time:
@@ -97,7 +95,6 @@ geckoview:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
     notification_emails:
       - android-probes@mozilla.com
-      - esawin@mozilla.com
     expires: never
 
   page_reload_time:
@@ -132,7 +129,6 @@ geckoview:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
     notification_emails:
       - android-probes@mozilla.com
-      - esawin@mozilla.com
     expires: never
 
   document_site_origins:
@@ -337,8 +333,6 @@ gfx.content:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
-      - mwoodrow@mozilla.com
-      - dbolter@mozilla.com
     expires: never
 
   full_paint_time:
@@ -359,7 +353,6 @@ gfx.content:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - jmuizelaar@mozilla.com
-      - dbolter@mozilla.com
     expires: never
 
 gfx.content.frame_time:
@@ -403,7 +396,6 @@ gfx.content.frame_time:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
-      - mwoodrow@mozilla.com
     expires: never
 
   with_svg:
@@ -425,7 +417,6 @@ gfx.content.frame_time:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
-      - mwoodrow@mozilla.com
     expires: never
 
   without_resource_upload:
@@ -446,7 +437,6 @@ gfx.content.frame_time:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
-      - mwoodrow@mozilla.com
     expires: never
 
   without_upload:
@@ -467,7 +457,6 @@ gfx.content.frame_time:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
-      - mwoodrow@mozilla.com
     expires: never
 
   reason:
@@ -492,7 +481,6 @@ gfx.content.frame_time:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109#c1
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
-      - mwoodrow@mozilla.com
     expires: never
 
 gfx.webrender:
@@ -1285,8 +1273,7 @@ network:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
     notification_emails:
-      - hbambas@mozilla.com
-      - mnovotny@mozilla.com
+      - necko@mozilla.com
     expires: never
 
   tls_handshake:
@@ -1383,7 +1370,6 @@ network:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
     notification_emails:
       - necko@mozilla.com
-      - mnovotny@mozilla.com
     expires: never
 
 performance.pageload:
@@ -1556,7 +1542,6 @@ performance.time:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
     notification_emails:
-      - hbambas@mozilla.com
       - vgosu@mozilla.com
       - perf-telemetry-alerts@mozilla.com
     expires: never
@@ -1610,7 +1595,6 @@ performance.time:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1580077#c10
     notification_emails:
-      - hbambas@mozilla.com
       - vgosu@mozilla.com
       - perf-telemetry-alerts@mozilla.com
     expires: never
