@@ -851,27 +851,6 @@ void nsBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                            nsGkAtoms::layer)) {
       forceLayer = true;
     }
-    nsStaticAtom* windowButtonTypes[] = {nsGkAtoms::min, nsGkAtoms::max,
-                                         nsGkAtoms::close, nullptr};
-    int32_t buttonTypeIndex = mContent->AsElement()->FindAttrValueIn(
-        kNameSpaceID_None, nsGkAtoms::titlebar_button, windowButtonTypes,
-        eCaseMatters);
-
-    if (buttonTypeIndex >= 0) {
-      MOZ_ASSERT(buttonTypeIndex < 3);
-
-      if (auto* widget = GetNearestWidget()) {
-        using ButtonType = nsIWidget::WindowButtonType;
-        auto buttonType = buttonTypeIndex == 0
-                              ? ButtonType::Minimize
-                              : (buttonTypeIndex == 1 ? ButtonType::Maximize
-                                                      : ButtonType::Close);
-        auto rect = LayoutDevicePixel::FromAppUnitsToNearest(
-            nsRect(aBuilder->ToReferenceFrame(this), GetSize()),
-            PresContext()->AppUnitsPerDevPixel());
-        widget->SetWindowButtonRect(buttonType, rect);
-      }
-    }
   }
 
   nsDisplayListCollection tempLists(aBuilder);

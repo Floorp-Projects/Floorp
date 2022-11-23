@@ -18,6 +18,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/ServoStyleConstsInlines.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WindowButtonType.h"
 #include "nsColor.h"
 #include "nsCoord.h"
 #include "nsMargin.h"
@@ -1359,6 +1360,23 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::NonNegativeLengthPercentage mShapeMargin;
 
   mozilla::StyleShapeOutside mShapeOutside;
+
+  mozilla::Maybe<mozilla::WindowButtonType> GetWindowButtonType() const {
+    if (MOZ_LIKELY(mDefaultAppearance == mozilla::StyleAppearance::None)) {
+      return mozilla::Nothing();
+    }
+    switch (mDefaultAppearance) {
+      case mozilla::StyleAppearance::MozWindowButtonMaximize:
+      case mozilla::StyleAppearance::MozWindowButtonRestore:
+        return Some(mozilla::WindowButtonType::Maximize);
+      case mozilla::StyleAppearance::MozWindowButtonMinimize:
+        return Some(mozilla::WindowButtonType::Minimize);
+      case mozilla::StyleAppearance::MozWindowButtonClose:
+        return Some(mozilla::WindowButtonType::Close);
+      default:
+        return mozilla::Nothing();
+    }
+  }
 
   bool HasAppearance() const {
     return EffectiveAppearance() != mozilla::StyleAppearance::None;
