@@ -1258,22 +1258,22 @@ bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
     if (mScriptLoader->CleanedUp()) {
       return true;
     }
-  }
 
-  // We must be on the same worker as we started on.
-  MOZ_ASSERT(
-      mScriptLoader->mSyncLoopTarget == mSyncLoopTarget,
-      "Unexpected SyncLoopTarget. Check if the sync loop was closed early");
+    // We must be on the same worker as we started on.
+    MOZ_ASSERT(
+        mScriptLoader->mSyncLoopTarget == mSyncLoopTarget,
+        "Unexpected SyncLoopTarget. Check if the sync loop was closed early");
 
-  for (const auto& requestHandle : mLoadedRequests) {
-    // The request must be valid.
-    MOZ_ASSERT(!requestHandle->IsEmpty());
+    for (const auto& requestHandle : mLoadedRequests) {
+      // The request must be valid.
+      MOZ_ASSERT(!requestHandle->IsEmpty());
 
-    // Release the request to the worker. From this point on, the Request Handle
-    // is empty.
-    RefPtr<ScriptLoadRequest> request = requestHandle->ReleaseRequest();
+      // Release the request to the worker. From this point on, the Request
+      // Handle is empty.
+      RefPtr<ScriptLoadRequest> request = requestHandle->ReleaseRequest();
 
-    mScriptLoader->MaybeMoveToLoadedList(request);
+      mScriptLoader->MaybeMoveToLoadedList(request);
+    }
   }
   return mScriptLoader->ProcessPendingRequests(aCx);
 }
