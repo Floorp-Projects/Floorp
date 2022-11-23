@@ -23,7 +23,6 @@
 #include "nsIObserverService.h"
 #include "nsISizeOf.h"
 #include "mozilla/net/MozURL.h"
-#include "mozilla/BackgroundTasksRunner.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Services.h"
@@ -36,6 +35,10 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
 #include "nsNetUtil.h"
+
+#ifdef MOZ_BACKGROUNDTASKS
+#  include "mozilla/BackgroundTasksRunner.h"
+#endif
 
 // include files for ftruncate (or equivalent)
 #if defined(XP_UNIX)
@@ -4077,15 +4080,12 @@ nsresult CacheFileIOManager::SyncRemoveDir(nsIFile* aFile, const char* aDir) {
 nsresult CacheFileIOManager::DispatchPurgeTask(
     const nsCString& aCacheDirName, const nsCString& aSecondsToWait,
     const nsCString& aPurgeExtension) {
-  nsresult rv;
-
 #if !defined(MOZ_BACKGROUNDTASKS)
   // If background tasks are disabled, then we should just bail out early.
   return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-
+#else
   nsCOMPtr<nsIFile> cacheDir;
-  rv = mCacheDirectory->Clone(getter_AddRefs(cacheDir));
+  nsresult rv = mCacheDirectory->Clone(getter_AddRefs(cacheDir));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIFile> profileDir;
@@ -4097,15 +4097,16 @@ nsresult CacheFileIOManager::DispatchPurgeTask(
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString path;
-#if !defined(XP_WIN)
+#  if !defined(XP_WIN)
   rv = profileDir->GetNativePath(path);
-#else
+#  else
   rv = profileDir->GetNativeTarget(path);
-#endif
+#  endif
   NS_ENSURE_SUCCESS(rv, rv);
 
   return BackgroundTasksRunner::RemoveDirectoryInDetachedProcess(
       path, aCacheDirName, aSecondsToWait, aPurgeExtension);
+#endif
 }
 
 void CacheFileIOManager::SyncRemoveAllCacheFiles() {
