@@ -25,46 +25,38 @@ namespace js {
  * All values except ropes are hashable as-is.
  */
 class HashableValue {
-  // This is used for map and set keys. We use OrderedHashTableRef to update all
-  // nursery keys on minor GC, so a post barrier is not required here.
-  PreBarriered<Value> value;
+  Value value;
 
  public:
-  struct Hasher {
-    using Lookup = HashableValue;
-    static HashNumber hash(const Lookup& v,
-                           const mozilla::HashCodeScrambler& hcs) {
-      return v.hash(hcs);
-    }
-    static bool match(const HashableValue& k, const Lookup& l) {
-      return k == l;
-    }
-    static bool isEmpty(const HashableValue& v) {
-      return v.value.isMagic(JS_HASH_KEY_EMPTY);
-    }
-    static void makeEmpty(HashableValue* vp) {
-      vp->value = MagicValue(JS_HASH_KEY_EMPTY);
-    }
-  };
-
   HashableValue() : value(UndefinedValue()) {}
+  explicit HashableValue(JSWhyMagic whyMagic) : value(MagicValue(whyMagic)) {}
 
   [[nodiscard]] bool setValue(JSContext* cx, HandleValue v);
   HashNumber hash(const mozilla::HashCodeScrambler& hcs) const;
-  bool operator==(const HashableValue& other) const;
-  HashableValue trace(JSTracer* trc) const;
-  Value get() const { return value.get(); }
 
-  void trace(JSTracer* trc) { TraceEdge(trc, &value, "HashableValue"); }
+  // Value equality. Separate BigInt instances may compare equal.
+  bool equals(const HashableValue& other) const;
 
-  // Clear the value without invoking the pre-barrier.
-  void unbarrieredClear() { value.unbarrieredSet(UndefinedValue()); }
+  // Bitwise equality.
+  bool operator==(const HashableValue& other) const {
+    return value == other.value;
+  }
+  bool operator!=(const HashableValue& other) const {
+    return !(*this == other);
+  }
+
+  const Value& get() const { return value; }
+  operator Value() const { return get(); }
+
+  void trace(JSTracer* trc) {
+    TraceManuallyBarrieredEdge(trc, &value, "HashableValue");
+  }
 };
 
 template <typename Wrapper>
 class WrappedPtrOperations<HashableValue, Wrapper> {
  public:
-  Value value() const { return static_cast<const Wrapper*>(this)->get().get(); }
+  Value get() const { return static_cast<const Wrapper*>(this)->get().get(); }
 };
 
 template <typename Wrapper>
@@ -76,18 +68,43 @@ class MutableWrappedPtrOperations<HashableValue, Wrapper>
   }
 };
 
-template <class Key, class Value, class OrderedHashPolicy, class AllocPolicy>
-class OrderedHashMap;
+template <>
+struct InternalBarrierMethods<HashableValue> {
+  static bool isMarkable(const HashableValue& v) { return v.get().isGCThing(); }
 
-template <class T, class OrderedHashPolicy, class AllocPolicy>
-class OrderedHashSet;
+  static void preBarrier(const HashableValue& v) {
+    if (isMarkable(v)) {
+      gc::ValuePreWriteBarrier(v.get());
+    }
+  }
 
-typedef OrderedHashMap<HashableValue, HeapPtr<Value>, HashableValue::Hasher,
-                       CellAllocPolicy>
-    ValueMap;
+#ifdef DEBUG
+  static void assertThingIsNotGray(const HashableValue& v) {
+    JS::AssertValueIsNotGray(v.get());
+  }
+#endif
+};
 
-typedef OrderedHashSet<HashableValue, HashableValue::Hasher, CellAllocPolicy>
-    ValueSet;
+struct HashableValueHasher {
+  using Key = PreBarriered<HashableValue>;
+  using Lookup = HashableValue;
+
+  static HashNumber hash(const Lookup& v,
+                         const mozilla::HashCodeScrambler& hcs) {
+    return v.hash(hcs);
+  }
+  static bool match(const Key& k, const Lookup& l) { return k.get().equals(l); }
+  static bool isEmpty(const Key& v) {
+    return v.get().get().isMagic(JS_HASH_KEY_EMPTY);
+  }
+  static void makeEmpty(Key* vp) { vp->set(HashableValue(JS_HASH_KEY_EMPTY)); }
+};
+
+using ValueMap = OrderedHashMap<PreBarriered<HashableValue>, HeapPtr<Value>,
+                                HashableValueHasher, CellAllocPolicy>;
+
+using ValueSet = OrderedHashSet<PreBarriered<HashableValue>,
+                                HashableValueHasher, CellAllocPolicy>;
 
 template <typename ObjectT>
 class OrderedHashTableRef;
@@ -141,8 +158,8 @@ class MapObject : public NativeObject {
   // that perform post barriers. Used when the owning JS object is in the
   // nursery.
   using PreBarrieredTable =
-      OrderedHashMap<HashableValue, PreBarriered<Value>, HashableValue::Hasher,
-                     CellAllocPolicy>;
+      OrderedHashMap<PreBarriered<HashableValue>, PreBarriered<Value>,
+                     HashableValueHasher, CellAllocPolicy>;
 
   // OrderedHashMap with the same memory layout as ValueMap but without any
   // wrappers that perform barriers. Used when updating the nursery allocated
