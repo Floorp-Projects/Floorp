@@ -282,6 +282,7 @@
          "InterpretGeneratorResume")                                           \
   MACRO_(InvalidDate, InvalidDate, "Invalid Date")                             \
   MACRO_(isBreakpoint, isBreakpoint, "isBreakpoint")                           \
+  IF_DECORATORS(MACRO_(IsCallable, IsCallable, "IsCallable"))                  \
   MACRO_(isDisjointFrom, isDisjointFrom, "isDisjointFrom")                     \
   MACRO_(isEntryPoint, isEntryPoint, "isEntryPoint")                           \
   MACRO_(isExtensible, isExtensible, "isExtensible")                           \

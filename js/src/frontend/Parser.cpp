@@ -7725,7 +7725,7 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
   }
 
 #ifdef ENABLE_DECORATORS
-  ListNodeType decorators;
+  ListNodeType decorators = null();
   if (tt == TokenKind::At) {
     decorators = decoratorList(yieldHandling);
     if (!decorators) {
