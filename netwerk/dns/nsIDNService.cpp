@@ -695,6 +695,12 @@ bool nsIDNService::isLabelSafe(const nsAString& label) {
       }
     }
 
+    // U+30FC should be preceded by a Hiragana/Katakana.
+    if (ch == 0x30fc && lastScript != Script::HIRAGANA &&
+        lastScript != Script::KATAKANA) {
+      return false;
+    }
+
     // Check for mixed numbering systems
     auto genCat = GetGeneralCategory(ch);
     if (genCat == HB_UNICODE_GENERAL_CATEGORY_DECIMAL_NUMBER) {
