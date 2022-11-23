@@ -538,7 +538,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     var shouldUseCookieBanner by lazyFeatureFlagPreference(
-        appContext.getPreferenceKey(R.string.pref_key_cookie_banner),
+        appContext.getPreferenceKey(R.string.pref_key_cookie_banner_v1),
         featureFlag = true,
         default = { cookieBannersSection[CookieBannersSection.FEATURE_SETTING_VALUE] == true },
     )

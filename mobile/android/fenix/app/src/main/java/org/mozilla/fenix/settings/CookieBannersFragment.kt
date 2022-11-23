@@ -37,7 +37,7 @@ class CookieBannersFragment : PreferenceFragmentCompat() {
     }
 
     private fun setupPreferences() {
-        requirePreference<SwitchPreference>(R.string.pref_key_cookie_banner).apply {
+        requirePreference<SwitchPreference>(R.string.pref_key_cookie_banner_v1).apply {
             onPreferenceChangeListener = object : SharedPreferenceUpdater() {
                 override fun onPreferenceChange(
                     preference: Preference,

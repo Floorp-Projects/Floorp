@@ -223,14 +223,14 @@ features:
         value: {
           "sections-enabled": {
             "feature-ui": true,
-            "feature-setting-value": true,
+            "feature-setting-value": false,
           }
         }
       - channel: nightly
         value: {
           "sections-enabled": {
             "feature-ui": true,
-            "feature-setting-value": true,
+            "feature-setting-value": false,
           }
         }
   unified-search:

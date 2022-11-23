@@ -3,8 +3,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <SwitchPreference
-        android:defaultValue="true"
-        android:key="@string/pref_key_cookie_banner"
+        android:defaultValue="false"
+        android:key="@string/pref_key_cookie_banner_v1"
         android:summary="@string/reduce_cookie_banner_summary"
         android:title="@string/reduce_cookie_banner_option" />
 </androidx.preference.PreferenceScreen>
