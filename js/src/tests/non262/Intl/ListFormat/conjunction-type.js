@@ -49,7 +49,10 @@ const styles = ["long", "short", "narrow"];
         "ja": { long: [Element("A"), Literal("、"), Element("B")] },
         "nl": { long: [Element("A"), Literal(" en "), Element("B")] },
         "th": { long: [Element("A"), Literal("และ"), Element("B")] },
-        "zh": { long: [Element("A"), Literal("和"), Element("B")] },
+        "zh": {
+          long: [Element("A"), Literal("和"), Element("B")],
+          narrow: [Element("A"), Literal("、"), Element("B")],
+        },
     };
 
     for (let [locale, localeData] of Object.entries(testData)) {
@@ -96,6 +99,7 @@ const styles = ["long", "short", "narrow"];
         },
         "zh": {
             long: [Element("A"), Literal("、"), Element("B"), Literal("、"), Element("C"), Literal("和"), Element("D")],
+            narrow: [Element("A"), Literal("、"), Element("B"), Literal("、"), Element("C"), Literal("、"), Element("D")],
         },
     };
 
