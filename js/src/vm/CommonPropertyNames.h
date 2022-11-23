@@ -22,8 +22,10 @@
 //   * MACRO_: other text
 #define FOR_EACH_COMMON_PROPERTYNAME_(MACRO0, MACRO1, MACRO2, MACRO_)          \
   MACRO_(abort, abort, "abort")                                                \
+  IF_DECORATORS(MACRO_(access, access, "access"))                              \
   IF_DECORATORS(MACRO_(accessor, accessor, "accessor"))                        \
   MACRO_(add, add, "add")                                                      \
+  IF_DECORATORS(MACRO_(addInitializer, addInitializer, "addInitializer"))      \
   MACRO_(allowContentIter, allowContentIter, "allowContentIter")               \
   MACRO_(allowContentIterWith, allowContentIterWith, "allowContentIterWith")   \
   MACRO_(ambiguous, ambiguous, "ambiguous")                                    \
@@ -297,6 +299,7 @@
   MACRO_(join, join, "join")                                                   \
   MACRO2(js, js, "js")                                                         \
   MACRO_(keys, keys, "keys")                                                   \
+  IF_DECORATORS(MACRO_(kind, kind, "kind"))                                    \
   MACRO_(label, label, "label")                                                \
   MACRO_(language, language, "language")                                       \
   MACRO_(lastIndex, lastIndex, "lastIndex")                                    \
@@ -321,6 +324,7 @@
   MACRO_(maxLine, maxLine, "maxLine")                                          \
   MACRO_(maxOffset, maxOffset, "maxOffset")                                    \
   MACRO_(message, message, "message")                                          \
+  IF_DECORATORS(MACRO_(method, method, "method"))                              \
   MACRO_(meta, meta, "meta")                                                   \
   MACRO_(minColumn, minColumn, "minColumn")                                    \
   MACRO_(minDays, minDays, "minDays")                                          \

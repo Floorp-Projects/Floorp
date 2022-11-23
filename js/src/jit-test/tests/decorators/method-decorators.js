@@ -38,6 +38,18 @@ let decorators = {
   }
 };
 
+function checkDecoratorContext(kind, isPrivate, isStatic, name) {
+  return (value, context) => {
+    assertEq(typeof(value.call), "function");
+    assertEq(context.kind, kind);
+    assertEq(typeof(context.access), "object");
+    assertEq(context.private, isPrivate);
+    assertEq(context.static, isStatic);
+    assertEq(context.name, name);
+    assertEq(typeof(context.addInitializer), "object");
+  }
+}
+
 class C {
   @dec1 f1(x) { return "called with: " + x; }
   @dec2 f2(x) { return "called with: " + x; }
@@ -48,6 +60,10 @@ class C {
   @(() => {}) f7(x) { return "called with: " + x; }
   @((value, context) => { return (x) => "decorated: " + x; }) f8(x) { return "called with: " + x; }
   @dec4("hello!") f9(x) { return "called with: " + x; }
+
+  @checkDecoratorContext("method", false, false, "f10") f10(x) { return x; }
+  @checkDecoratorContext("method", false, true, "f11") static f11(x) { return x; }
+  @checkDecoratorContext("method", true, false, "#f12") #f12(x) { return x; }
 }
 
 let c = new C();
