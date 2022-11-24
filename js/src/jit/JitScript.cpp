@@ -405,8 +405,6 @@ void ICScript::purgeOptimizedStubs(Zone* zone) {
       prev = stub->toCacheIRStub();
       stub = stub->toCacheIRStub()->next();
     }
-
-    lastStub->toFallbackStub()->clearHasFoldedStub();
   }
 
 #ifdef DEBUG
