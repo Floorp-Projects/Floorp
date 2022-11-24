@@ -115,16 +115,7 @@ async function withWindowOverflowed(
   doc.documentElement.removeAttribute("persist");
   const navbar = doc.getElementById(CustomizableUI.AREA_NAVBAR);
 
-  win.moveTo(0, 0);
-
-  const widthDiff = win.screen.availWidth - win.outerWidth;
-  const heightDiff = win.screen.availHeight - win.outerHeight;
-
-  if (widthDiff || heightDiff) {
-    let resizeDone = BrowserTestUtils.waitForEvent(win, "resize", false);
-    win.resizeBy(widthDiff, heightDiff);
-    await resizeDone;
-  }
+  await ensureMaximizedWindow(win);
 
   // The OverflowableToolbar operates asynchronously at times, so we will
   // poll a widget's overflowedItem attribute to detect whether or not the
