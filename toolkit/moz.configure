@@ -2643,7 +2643,7 @@ set_define("MOZ_ENABLE_FORKSERVER", forkserver_flag, forkserver_flag)
 # Crash Reporter
 # ==============================================================
 
-with only_when(compile_environment & target_is_linux):
+with only_when(compile_environment & target_has_linux_kernel):
     # Check if we need to use the breakpad_getcontext fallback.
     getcontext = check_symbol("getcontext")
     set_config("HAVE_GETCONTEXT", getcontext)
@@ -3148,7 +3148,7 @@ with only_when(compile_environment):
 
 # Custom dynamic linker for Android
 # ==============================================================
-with only_when(target_is_linux & compile_environment):
+with only_when(target_has_linux_kernel & compile_environment):
     option(
         env="MOZ_LINKER",
         default=depends(target.os, when="--enable-jemalloc")(
@@ -3166,7 +3166,7 @@ with only_when(target_is_linux & compile_environment):
 
 # 32-bits ethtool_cmd.speed
 # ==============================================================
-with only_when(target_is_linux & compile_environment):
+with only_when(target_has_linux_kernel & compile_environment):
     set_config(
         "MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI",
         c_compiler.try_compile(
@@ -3184,7 +3184,7 @@ check_header(
         "Can't find header linux/joystick.h, needed for gamepad support."
         " Please install Linux kernel headers."
     ),
-    when=target_is_linux & compile_environment,
+    when=target_has_linux_kernel & compile_environment,
 )
 
 # Smart card support
