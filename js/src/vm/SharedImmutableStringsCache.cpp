@@ -7,12 +7,8 @@
 #include "vm/SharedImmutableStringsCache-inl.h"
 
 #include "util/Text.h"
-#include "vm/MutexIDs.h"  // js::mutexid
 
 namespace js {
-
-/* static */
-SharedImmutableStringsCache SharedImmutableStringsCache::singleton_;
 
 SharedImmutableString::SharedImmutableString(
     SharedImmutableStringsCache::StringBox* box)
@@ -97,36 +93,6 @@ SharedImmutableTwoByteString SharedImmutableTwoByteString::clone() const {
     const char* chars, size_t length) {
   return getOrCreate(chars, length,
                      [&]() { return DuplicateString(chars, length); });
-}
-
-bool SharedImmutableStringsCache::init() {
-  MOZ_ASSERT(!inner_);
-
-  auto* inner =
-      js_new<ExclusiveData<Inner>>(mutexid::SharedImmutableStringsCache);
-  if (!inner) {
-    return false;
-  }
-
-  auto locked = inner->lock();
-  inner_ = locked.parent();
-
-  return true;
-}
-
-void SharedImmutableStringsCache::free() {
-  if (inner_) {
-    js_delete(inner_);
-    inner_ = nullptr;
-  }
-}
-
-bool SharedImmutableStringsCache::initSingleton() { return singleton_.init(); }
-
-void SharedImmutableStringsCache::freeSingleton() {
-  if (!JSRuntime::hasLiveRuntimes()) {
-    singleton_.free();
-  }
 }
 
 [[nodiscard]] SharedImmutableTwoByteString

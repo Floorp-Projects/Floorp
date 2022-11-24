@@ -648,9 +648,11 @@ void ParseTask::scheduleDelazifyTask(AutoLockHelperThreadState& lock) {
   {
     AutoSetHelperThreadContext usesContext(contextOptions, lock);
     AutoUnlockHelperThreadState unlock(lock);
+    JSContext* cx = TlsContext.get();
     AutoSetContextRuntime ascr(runtime);
 
-    task = DelazifyTask::Create(runtime, contextOptions, options, *stencil_);
+    task =
+        DelazifyTask::Create(cx, runtime, contextOptions, options, *stencil_);
     if (!task) {
       return;
     }
@@ -871,7 +873,7 @@ void js::StartOffThreadDelazification(
 
   JSRuntime* runtime = cx->runtime();
   UniquePtr<DelazifyTask> task;
-  task = DelazifyTask::Create(runtime, cx->options(), options, stencil);
+  task = DelazifyTask::Create(cx, runtime, cx->options(), options, stencil);
   if (!task) {
     return;
   }
@@ -999,7 +1001,7 @@ bool LargeFirstDelazification::insert(ScriptIndex index,
 }
 
 UniquePtr<DelazifyTask> DelazifyTask::Create(
-    JSRuntime* runtime, const JS::ContextOptions& contextOptions,
+    JSContext* cx, JSRuntime* runtime, const JS::ContextOptions& contextOptions,
     const JS::ReadOnlyCompileOptions& options,
     const frontend::CompilationStencil& stencil) {
   UniquePtr<DelazifyTask> task;
@@ -1018,7 +1020,7 @@ UniquePtr<DelazifyTask> DelazifyTask::Create(
   // Clone the extensible stencil to be used for eager delazification.
   auto initial = task->ec_.getAllocator()
                      ->make_unique<frontend::ExtensibleCompilationStencil>(
-                         options, stencil.source);
+                         cx, options, stencil.source);
   if (!initial || !initial->cloneFrom(&task->ec_, stencil)) {
     // In case of errors, skip this and delazify on-demand.
     return nullptr;

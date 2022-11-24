@@ -190,9 +190,6 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
   RETURN_IF_FAIL(js::gcstats::Statistics::initialize());
   RETURN_IF_FAIL(js::InitTestingFunctions());
 
-  RETURN_IF_FAIL(js::SharedImmutableStringsCache::initSingleton());
-  RETURN_IF_FAIL(js::frontend::WellKnownParserAtoms::initSingleton());
-
 #ifdef JS_SIMULATOR
   RETURN_IF_FAIL(js::jit::SimulatorProcess::initialize());
 #endif
@@ -216,6 +213,10 @@ JS_PUBLIC_API bool JS::InitSelfHostedCode(JSContext* cx, SelfHostedCache cache,
   js::AutoNoteSingleThreadedRegion anstr;
 
   JSRuntime* rt = cx->runtime();
+
+  if (!rt->initializeParserAtoms(cx)) {
+    return false;
+  }
 
   if (!rt->initSelfHostingStencil(cx, cache, writer)) {
     return false;
@@ -251,9 +252,6 @@ JS_PUBLIC_API void JS_ShutDown(void) {
             "TIME.  FIX THIS!\n");
   }
 #endif
-
-  js::frontend::WellKnownParserAtoms::freeSingleton();
-  js::SharedImmutableStringsCache::freeSingleton();
 
   FutexThread::destroy();
 
