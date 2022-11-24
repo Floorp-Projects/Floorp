@@ -214,6 +214,8 @@ class WorkerGlobalScope : public WorkerGlobalScopeBase {
 
   void NoteTerminating();
 
+  void NoteShuttingDown();
+
   // nsIGlobalObject implementation
   RefPtr<ServiceWorkerRegistration> GetServiceWorkerRegistration(
       const ServiceWorkerRegistrationDescriptor& aDescriptor) const final;

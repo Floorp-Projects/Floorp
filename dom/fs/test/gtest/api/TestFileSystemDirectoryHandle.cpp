@@ -29,6 +29,12 @@ class TestFileSystemDirectoryHandle : public ::testing::Test {
     mManager = MakeAndAddRef<FileSystemManager>(mGlobal, nullptr);
   }
 
+  void TearDown() override {
+    if (!mManager->IsShutdown()) {
+      mManager->Shutdown();
+    }
+  }
+
   nsIGlobalObject* mGlobal = GetGlobal();
   const IterableIteratorBase::IteratorType mIteratorType =
       IterableIteratorBase::IteratorType::Keys;

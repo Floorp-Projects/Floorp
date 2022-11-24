@@ -1,0 +1,3 @@
+defaults pref(dom.fs.enabled,true)
+
+load 1798773.html
