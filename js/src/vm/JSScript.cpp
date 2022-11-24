@@ -1326,7 +1326,7 @@ template <typename Unit>
 [[nodiscard]] bool ScriptSource::setUncompressedSourceHelper(
     JSContext* cx, EntryUnits<Unit>&& source, size_t length,
     SourceRetrievable retrievable) {
-  auto& cache = cx->runtime()->sharedImmutableStrings();
+  auto& cache = SharedImmutableStringsCache::getSingleton();
 
   auto uniqueChars = SourceTypeTraits<Unit>::toCacheable(std::move(source));
   auto deduped = cache.getOrCreate(std::move(uniqueChars), length);
@@ -1444,7 +1444,7 @@ template <typename Unit>
   MOZ_ASSERT(data.is<Missing>(), "shouldn't be double-initializing");
   MOZ_ASSERT(compressed != nullptr);
 
-  auto& cache = cx->runtime()->sharedImmutableStrings();
+  auto& cache = SharedImmutableStringsCache::getSingleton();
   auto deduped = cache.getOrCreate(std::move(compressed), rawLength);
   if (!deduped) {
     ReportOutOfMemory(cx);
@@ -1494,8 +1494,7 @@ bool ScriptSource::assignSource(JSContext* cx, ErrorContext* ec,
     return true;
   }
 
-  JSRuntime* runtime = cx->runtime();
-  auto& cache = runtime->sharedImmutableStrings();
+  auto& cache = SharedImmutableStringsCache::getSingleton();
   auto deduped = cache.getOrCreate(srcBuf.get(), srcBuf.length(), [&srcBuf]() {
     using CharT = typename SourceTypeTraits<Unit>::CharT;
     return srcBuf.ownsUnits()
@@ -1599,7 +1598,7 @@ void SourceCompressionTask::workEncodingSpecific() {
     return;
   }
 
-  auto& strings = runtime_->sharedImmutableStrings();
+  auto& strings = SharedImmutableStringsCache::getSingleton();
   resultString_ = strings.getOrCreate(std::move(compressed), totalBytes);
 }
 
@@ -1897,10 +1896,9 @@ bool ScriptSource::initFromOptions(JSContext* cx, ErrorContext* ec,
 template <typename SharedT, typename CharT>
 static SharedT GetOrCreateStringZ(JSContext* cx, ErrorContext* ec,
                                   UniquePtr<CharT[], JS::FreePolicy>&& str) {
-  JSRuntime* rt = cx->runtime();
   size_t lengthWithNull = std::char_traits<CharT>::length(str.get()) + 1;
-  auto res =
-      rt->sharedImmutableStrings().getOrCreate(std::move(str), lengthWithNull);
+  auto res = SharedImmutableStringsCache::getSingleton().getOrCreate(
+      std::move(str), lengthWithNull);
   if (!res) {
     ReportOutOfMemory(ec);
   }
