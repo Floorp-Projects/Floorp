@@ -415,7 +415,6 @@ class AssertNoRootsTracer final : public JS::CallbackTracer {
 void js::gc::GCRuntime::finishRoots() {
   AutoNoteSingleThreadedRegion anstr;
 
-  rt->finishParserAtoms();
   rt->finishAtoms();
   restoreSharedAtomsZone();
 
