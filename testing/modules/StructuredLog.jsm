@@ -16,19 +16,19 @@ var EXPORTED_SYMBOLS = ["StructuredLogger", "StructuredFormatter"];
  *        An underlying function to be used to log raw messages. This function
  *        will receive the complete serialized json string to log.
  */
-var StructuredLogger = function(name, dumpFun = dump) {
-  this.name = name;
-  this._dumpFun = dumpFun;
-};
+class StructuredLogger {
+  name = null;
+  #dumpFun = null;
 
-/**
- * Log functions producing messages in the format specified by mozlog
- */
-StructuredLogger.prototype = {
+  constructor(name, dumpFun = dump) {
+    this.name = name;
+    this.#dumpFun = dumpFun;
+  }
+
   testStart(test) {
-    var data = { test: this._testId(test) };
-    this._logData("test_start", data);
-  },
+    var data = { test: this.#testId(test) };
+    this.logData("test_start", data);
+  }
 
   testStatus(
     test,
@@ -45,7 +45,7 @@ StructuredLogger.prototype = {
     }
 
     var data = {
-      test: this._testId(test),
+      test: this.#testId(test),
       subtest,
       status,
     };
@@ -63,8 +63,8 @@ StructuredLogger.prototype = {
       data.extra = extra;
     }
 
-    this._logData("test_status", data);
-  },
+    this.logData("test_status", data);
+  }
 
   testEnd(
     test,
@@ -74,7 +74,7 @@ StructuredLogger.prototype = {
     stack = null,
     extra = null
   ) {
-    var data = { test: this._testId(test), status };
+    var data = { test: this.#testId(test), status };
 
     if (expected != status && status != "SKIP") {
       data.expected = expected;
@@ -89,19 +89,19 @@ StructuredLogger.prototype = {
       data.extra = extra;
     }
 
-    this._logData("test_end", data);
-  },
+    this.logData("test_end", data);
+  }
 
   assertionCount(test, count, minExpected = 0, maxExpected = 0) {
     var data = {
-      test: this._testId(test),
+      test: this.#testId(test),
       min_expected: minExpected,
       max_expected: maxExpected,
       count,
     };
 
-    this._logData("assertion_count", data);
-  },
+    this.logData("assertion_count", data);
+  }
 
   suiteStart(
     ids,
@@ -112,7 +112,7 @@ StructuredLogger.prototype = {
     extra = null
   ) {
     Object.keys(ids).map(function(manifest) {
-      ids[manifest] = ids[manifest].map(x => this._testId(x));
+      ids[manifest] = ids[manifest].map(x => this.#testId(x));
     }, this);
     var data = { tests: ids };
 
@@ -136,8 +136,8 @@ StructuredLogger.prototype = {
       data.extra = extra;
     }
 
-    this._logData("suite_start", data);
-  },
+    this.logData("suite_start", data);
+  }
 
   suiteEnd(extra = null) {
     var data = {};
@@ -146,8 +146,8 @@ StructuredLogger.prototype = {
       data.extra = extra;
     }
 
-    this._logData("suite_end", data);
-  },
+    this.logData("suite_end", data);
+  }
 
   /**
    * Unstructured logging functions. The "extra" parameter can always by used to
@@ -167,37 +167,37 @@ StructuredLogger.prototype = {
       }
     }
 
-    this._logData("log", data);
-  },
+    this.logData("log", data);
+  }
 
   debug(message, extra = null) {
     this.log("DEBUG", message, extra);
-  },
+  }
 
   info(message, extra = null) {
     this.log("INFO", message, extra);
-  },
+  }
 
   warning(message, extra = null) {
     this.log("WARNING", message, extra);
-  },
+  }
 
   error(message, extra = null) {
     this.log("ERROR", message, extra);
-  },
+  }
 
   critical(message, extra = null) {
     this.log("CRITICAL", message, extra);
-  },
+  }
 
   processOutput(thread, message) {
-    this._logData("process_output", {
+    this.logData("process_output", {
       message,
       thread,
     });
-  },
+  }
 
-  _logData(action, data = {}) {
+  logData(action, data = {}) {
     var allData = {
       action,
       time: Date.now(),
@@ -210,39 +210,40 @@ StructuredLogger.prototype = {
       allData[field] = data[field];
     }
 
-    this._dumpFun(allData);
-  },
+    this.#dumpFun(allData);
+  }
 
-  _testId(test) {
+  #testId(test) {
     if (Array.isArray(test)) {
       return test.join(" ");
     }
     return test;
-  },
-};
+  }
+}
 
 /**
  * StructuredFormatter: Formatter class turning structured messages
  * into human-readable messages.
  */
-var StructuredFormatter = function() {
-  this.testStartTimes = {};
-};
+class StructuredFormatter {
+  // The time at which the whole suite of tests started.
+  #suiteStartTime = null;
 
-StructuredFormatter.prototype = {
+  #testStartTimes = new Map();
+
   log(message) {
     return message.message;
-  },
+  }
 
   suite_start(message) {
-    this.suiteStartTime = message.time;
+    this.#suiteStartTime = message.time;
     return "SUITE-START | Running " + message.tests.length + " tests";
-  },
+  }
 
   test_start(message) {
-    this.testStartTimes[message.test] = new Date().getTime();
+    this.#testStartTimes.set(message.test, new Date().getTime());
     return "TEST-START | " + message.test;
-  },
+  }
 
   test_status(message) {
     var statusInfo =
@@ -261,11 +262,11 @@ StructuredFormatter.prototype = {
       );
     }
     return "TEST-" + message.status + " | " + statusInfo;
-  },
+  }
 
   test_end(message) {
-    var startTime = this.testStartTimes[message.test];
-    delete this.testStartTimes[message.test];
+    var startTime = this.#testStartTimes.get(message.test);
+    this.#testStartTimes.delete(message.test);
     var statusInfo =
       message.test + (message.message ? " | " + String(message.message) : "");
     var result;
@@ -282,9 +283,9 @@ StructuredFormatter.prototype = {
     }
     result = result + " | took " + message.time - startTime + "ms";
     return result;
-  },
+  }
 
   suite_end(message) {
-    return "SUITE-END | took " + message.time - this.suiteStartTime + "ms";
-  },
-};
+    return "SUITE-END | took " + message.time - this.#suiteStartTime + "ms";
+  }
+}
