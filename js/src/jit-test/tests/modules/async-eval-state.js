@@ -34,7 +34,7 @@ const StatusEvaluated = 5;
   drainJobQueue();
   assertEq(m.isAsyncEvaluating, true);
   assertEq(m.status, StatusEvaluated);
-  assertEq(m.asyncEvaluatingPostOrder, 0);
+  assertEq(m.asyncEvaluatingPostOrder, undefined);
 }
 
 {
@@ -50,7 +50,7 @@ const StatusEvaluated = 5;
   assertEq(m.isAsyncEvaluating, true);
   assertEq(m.status, StatusEvaluated);
   assertEq(m.evaluationError, 2);
-  assertEq(m.asyncEvaluatingPostOrder, 0);
+  assertEq(m.asyncEvaluatingPostOrder, undefined);
 }
 
 {
@@ -65,7 +65,7 @@ const StatusEvaluated = 5;
   assertEq(m.isAsyncEvaluating, true);
   assertEq(m.status, StatusEvaluated);
   assertEq(m.evaluationError, 1);
-  assertEq(m.asyncEvaluatingPostOrder, 0);
+  assertEq(m.asyncEvaluatingPostOrder, undefined);
 }
 
 {
@@ -86,7 +86,7 @@ const StatusEvaluated = 5;
   assertEq(a.status, StatusEvaluated);
   assertEq(b.isAsyncEvaluating, true);
   assertEq(b.status, StatusEvaluated);
-  assertEq(b.asyncEvaluatingPostOrder, 0);
+  assertEq(b.asyncEvaluatingPostOrder, undefined);
 }
 
 {
@@ -106,10 +106,10 @@ const StatusEvaluated = 5;
   drainJobQueue();
   assertEq(a.isAsyncEvaluating, true);
   assertEq(a.status, StatusEvaluated);
-  assertEq(a.asyncEvaluatingPostOrder, 0);
+  assertEq(a.asyncEvaluatingPostOrder, undefined);
   assertEq(b.isAsyncEvaluating, true);
   assertEq(b.status, StatusEvaluated);
-  assertEq(b.asyncEvaluatingPostOrder, 0);
+  assertEq(b.asyncEvaluatingPostOrder, undefined);
 }
 
 {
@@ -136,13 +136,13 @@ const StatusEvaluated = 5;
   drainJobQueue();
   assertEq(a.isAsyncEvaluating, true);
   assertEq(a.status, StatusEvaluated);
-  assertEq(a.asyncEvaluatingPostOrder, 0);
+  assertEq(a.asyncEvaluatingPostOrder, undefined);
   assertEq(b.isAsyncEvaluating, true);
   assertEq(b.status, StatusEvaluated);
-  assertEq(b.asyncEvaluatingPostOrder, 0);
+  assertEq(b.asyncEvaluatingPostOrder, undefined);
   assertEq(c.isAsyncEvaluating, true);
   assertEq(c.status, StatusEvaluated);
-  assertEq(c.asyncEvaluatingPostOrder, 0);
+  assertEq(c.asyncEvaluatingPostOrder, undefined);
 }
 
 {
@@ -176,11 +176,11 @@ const StatusEvaluated = 5;
   assertEq(a.isAsyncEvaluating, true);
   assertEq(a.status, StatusEvaluated);
   assertEq(a.evaluationError, 1);
-  assertEq(a.asyncEvaluatingPostOrder, 0);
+  assertEq(a.asyncEvaluatingPostOrder, undefined);
   assertEq(b.isAsyncEvaluating, true);
   assertEq(b.status, StatusEvaluated);
   assertEq(b.evaluationError, 1);
-  assertEq(b.asyncEvaluatingPostOrder, 0);
+  assertEq(b.asyncEvaluatingPostOrder, undefined);
 }
 
 {
@@ -199,9 +199,9 @@ const StatusEvaluated = 5;
   assertEq(a.isAsyncEvaluating, true);
   assertEq(a.status, StatusEvaluated);
   assertEq(a.evaluationError, 2);
-  assertEq(a.asyncEvaluatingPostOrder, 0);
+  assertEq(a.asyncEvaluatingPostOrder, undefined);
   assertEq(b.isAsyncEvaluating, true);
   assertEq(b.status, StatusEvaluated);
   assertEq(b.evaluationError, 2);
-  assertEq(b.asyncEvaluatingPostOrder, 0);
+  assertEq(b.asyncEvaluatingPostOrder, undefined);
 }
