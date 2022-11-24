@@ -124,6 +124,38 @@ class HomeScreenTest {
     }
 
     @Test
+    fun verifyJumpBackInSectionTest() {
+        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 4)
+        val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstWebPage.url) {
+        }.goToHomescreen {
+            verifyJumpBackInSectionIsDisplayed()
+            verifyJumpBackInItemTitle(firstWebPage.title)
+            verifyJumpBackInItemWithUrl(firstWebPage.url.toString())
+            verifyJumpBackInShowAllButton()
+        }.clickJumpBackInShowAllButton {
+            verifyExistingOpenTabs(firstWebPage.title)
+        }.closeTabDrawer() {
+        }
+        homeScreen {
+        }.clickJumpBackInItemWithTitle(firstWebPage.title) {
+            verifyUrl(firstWebPage.url.toString())
+            clickLinkMatchingText("Link 1")
+        }.goToHomescreen {
+            verifyJumpBackInSectionIsDisplayed()
+            verifyJumpBackInItemTitle(secondWebPage.title)
+            verifyJumpBackInItemWithUrl(secondWebPage.url.toString())
+        }.openTabDrawer {
+            closeTab()
+        }
+        homeScreen {
+            verifyJumpBackInSectionIsNotDisplayed()
+        }
+    }
+
+    @Test
     fun dismissOnboardingUsingSettingsTest() {
         homeScreen {
             verifyWelcomeHeader()

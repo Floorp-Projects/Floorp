@@ -185,6 +185,9 @@ class HomeScreenRobot {
 
     fun verifyJumpBackInSectionIsDisplayed() = assertJumpBackInSectionIsDisplayed()
     fun verifyJumpBackInSectionIsNotDisplayed() = assertJumpBackInSectionIsNotDisplayed()
+    fun verifyJumpBackInItemTitle(itemTitle: String) = assertJumpBackInItemTitle(itemTitle)
+    fun verifyJumpBackInItemWithUrl(itemUrl: String) = assertJumpBackInItemWithUrl(itemUrl)
+    fun verifyJumpBackInShowAllButton() = assertJumpBackInShowAllButton()
     fun verifyRecentlyVisitedSectionIsDisplayed() = assertRecentlyVisitedSectionIsDisplayed()
     fun verifyRecentlyVisitedSectionIsNotDisplayed() = assertRecentlyVisitedSectionIsNotDisplayed()
     fun verifyRecentBookmarksSectionIsDisplayed() = assertRecentBookmarksSectionIsDisplayed()
@@ -627,6 +630,29 @@ class HomeScreenRobot {
             SettingsSubMenuHomepageRobot().interact()
             return SettingsSubMenuHomepageRobot.Transition()
         }
+
+        fun clickJumpBackInShowAllButton(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
+            mDevice
+                .findObject(
+                    UiSelector()
+                        .textContains(getStringResource(R.string.recent_tabs_show_all)),
+                ).clickAndWaitForNewWindow(waitingTime)
+
+            TabDrawerRobot().interact()
+            return TabDrawerRobot.Transition()
+        }
+
+        fun clickJumpBackInItemWithTitle(itemTitle: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            mDevice
+                .findObject(
+                    UiSelector()
+                        .resourceId("recent.tab.title")
+                        .textContains(itemTitle),
+                ).clickAndWaitForNewWindow(waitingTime)
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
     }
 }
 
@@ -942,6 +968,35 @@ private fun assertTopSiteContextMenuItems() {
 private fun assertJumpBackInSectionIsDisplayed() = assertTrue(jumpBackInSection().waitForExists(waitingTime))
 
 private fun assertJumpBackInSectionIsNotDisplayed() = assertFalse(jumpBackInSection().waitForExists(waitingTimeShort))
+
+private fun assertJumpBackInItemTitle(itemTitle: String) =
+    assertTrue(
+        mDevice
+            .findObject(
+                UiSelector()
+                    .resourceId("recent.tab.title")
+                    .textContains(itemTitle),
+            ).waitForExists(waitingTime),
+    )
+
+private fun assertJumpBackInItemWithUrl(itemUrl: String) =
+    assertTrue(
+        mDevice
+            .findObject(
+                UiSelector()
+                    .resourceId("recent.tab.url")
+                    .textContains(itemUrl),
+            ).waitForExists(waitingTime),
+    )
+
+private fun assertJumpBackInShowAllButton() =
+    assertTrue(
+        mDevice
+            .findObject(
+                UiSelector()
+                    .textContains(getStringResource(R.string.recent_tabs_show_all)),
+            ).waitForExists(waitingTime),
+    )
 
 private fun assertRecentlyVisitedSectionIsDisplayed() = assertTrue(recentlyVisitedSection().waitForExists(waitingTime))
 
