@@ -151,6 +151,17 @@ int MM21ToI420(const uint8_t* src_y,
                int width,
                int height);
 
+// Convert MM21 to YUY2
+LIBYUV_API
+int MM21ToYUY2(const uint8_t* src_y,
+               int src_stride_y,
+               const uint8_t* src_uv,
+               int src_stride_uv,
+               uint8_t* dst_yuy2,
+               int dst_stride_yuy2,
+               int width,
+               int height);
+
 // Convert I422 to NV21.
 LIBYUV_API
 int I422ToNV21(const uint8_t* src_y,

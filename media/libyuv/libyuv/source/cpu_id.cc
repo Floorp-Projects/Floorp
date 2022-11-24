@@ -108,14 +108,14 @@ void CpuId(int eax, int ecx, int* cpu_info) {
 //  }
 // For VS2013 and earlier 32 bit, the _xgetbv(0) optimizer produces bad code.
 // https://code.google.com/p/libyuv/issues/detail?id=529
-#if defined(_M_IX86) && (_MSC_VER < 1900)
+#if defined(_M_IX86) && defined(_MSC_VER) && (_MSC_VER < 1900)
 #pragma optimize("g", off)
 #endif
 #if (defined(_M_IX86) || defined(_M_X64) || defined(__i386__) || \
      defined(__x86_64__)) &&                                     \
     !defined(__pnacl__) && !defined(__CLR_VER) && !defined(__native_client__)
 // X86 CPUs have xgetbv to detect OS saves high parts of ymm registers.
-int GetXCR0() {
+static int GetXCR0() {
   int xcr0 = 0;
 #if defined(_MSC_FULL_VER) && (_MSC_FULL_VER >= 160040219)
   xcr0 = (int)_xgetbv(0);  // VS2010 SP1 required.  NOLINT
@@ -129,7 +129,7 @@ int GetXCR0() {
 #define GetXCR0() 0
 #endif  // defined(_M_IX86) || defined(_M_X64) ..
 // Return optimization to previous setting.
-#if defined(_M_IX86) && (_MSC_VER < 1900)
+#if defined(_M_IX86) && defined(_MSC_VER) && (_MSC_VER < 1900)
 #pragma optimize("g", on)
 #endif
 

@@ -79,9 +79,7 @@ MJpegDecoder::MJpegDecoder()
   decompress_struct_->err = jpeg_std_error(&error_mgr_->base);
   // Override standard exit()-based error handler.
   error_mgr_->base.error_exit = &ErrorHandler;
-#ifndef DEBUG_MJPEG
   error_mgr_->base.output_message = &OutputHandler;
-#endif
 #endif
   decompress_struct_->client_data = NULL;
   source_mgr_->init_source = &init_source;
@@ -465,12 +463,11 @@ void ErrorHandler(j_common_ptr cinfo) {
   longjmp(mgr->setjmp_buffer, 1);
 }
 
-#ifndef DEBUG_MJPEG
 // Suppress fprintf warnings.
 void OutputHandler(j_common_ptr cinfo) {
   (void)cinfo;
 }
-#endif
+
 #endif  // HAVE_SETJMP
 
 void MJpegDecoder::AllocOutputBuffers(int num_outbufs) {
