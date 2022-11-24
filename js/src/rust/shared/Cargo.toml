@@ -22,3 +22,6 @@ simd-accel = ['encoding_c/simd-accel']
 # Uncomment this to enable perf support in release mode.
 #[profile.release]
 #debug = true
+
+[package.metadata.cargo-udeps.ignore]
+normal = ["mozilla-central-workspace-hack"]
