@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>DNR with upgradeScheme action</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+"use strict";
+
+// This test is not a xpcshell test, because we want to test upgrades to https,
+// and HttpServer helper does not support https (bug 1742061).
+
+add_setup(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["extensions.manifestV3.enabled", true],
+      ["extensions.dnr.enabled", true],
+    ],
+  });
+});
+
+// Tests that the upgradeScheme action works as expected:
+// - http should be upgraded to https
+// - after the https upgrade the request should happen instead of being stuck
+//   in a upgrade redirect loop.
+add_task(async function upgradeScheme_with_dnr() {
+  let extension = ExtensionTestUtils.loadExtension({
+    async background() {
+      await browser.declarativeNetRequest.updateSessionRules({
+        addRules: [{ id: 1, condition: {}, action: { type: "upgradeScheme" } }],
+      });
+
+      let res = await fetch(
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+        "http://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.txt"
+      );
+      browser.test.assertEq(
+        "https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.txt",
+        res.url,
+        "upgradeScheme should have upgraded to https"
+      );
+      // Server adds "Access-Control-Allow-Origin: *" to file_sample.txt, so
+      // we should be able to read the response despite no host_permissions.
+      browser.test.assertEq("Sample", await res.text(), "read body with CORS");
+
+      browser.test.sendMessage("dnr_registered");
+    },
+    manifest: {
+      manifest_version: 3,
+      // Note: host_permissions missing. upgradeScheme should not need it.
+      permissions: ["declarativeNetRequest"],
+    },
+  });
+  await extension.startup();
+  await extension.awaitMessage("dnr_registered");
+
+  let otherExtension = ExtensionTestUtils.loadExtension({
+    async background() {
+      let firstRequestPromise = new Promise(resolve => {
+        let count = 0;
+        browser.webRequest.onBeforeRequest.addListener(
+          ({ url }) => {
+            ++count;
+            browser.test.assertTrue(
+              count <= 2,
+              `Expected at most two requests; got ${count} to ${url}`
+            );
+            resolve(url);
+          },
+          { urls: ["*://example.com/?test_dnr_upgradeScheme"] }
+        );
+      });
+      // Round-trip through ext-webRequest.js implementation to ensure that the
+      // listener has been registered (workaround for bug 1300234).
+      await browser.webRequest.handlerBehaviorChanged();
+
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+      const insecureInitialUrl = "http://example.com/?test_dnr_upgradeScheme";
+      browser.test.log(`Requesting insecure URL: ${insecureInitialUrl}`);
+
+      let req = await fetch(insecureInitialUrl);
+      browser.test.assertEq(
+        "https://example.com/?test_dnr_upgradeScheme",
+        req.url,
+        "upgradeScheme action upgraded http to https"
+      );
+      browser.test.assertEq(200, req.status, "Correct HTTP status");
+
+      await req.text(); // Verify that the body can be read, just in case.
+
+      // Sanity check that the test did not pass trivially due to an automatic
+      // https upgrade of the extension / test environment.
+      browser.test.assertEq(
+        insecureInitialUrl,
+        await firstRequestPromise,
+        "Initial URL should be http"
+      );
+
+      browser.test.sendMessage("tested_dnr_upgradeScheme");
+    },
+    manifest: {
+      host_permissions: ["*://example.com/*"],
+      permissions: ["webRequest"],
+    },
+  });
+  await otherExtension.startup();
+  await otherExtension.awaitMessage("tested_dnr_upgradeScheme");
+  await otherExtension.unload();
+
+  await extension.unload();
+});
+
+</script>
+</body>
+</html>
