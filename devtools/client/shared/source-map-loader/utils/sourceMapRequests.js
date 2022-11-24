@@ -28,19 +28,47 @@ function clearSourceMaps() {
   sourceMapRequests.clear();
 }
 
+/**
+ * For a given generated source, retrieve an object with many attributes:
+ * @param {String} generatedSourceId
+ *        The id of the generated source
+ *
+ * @return {Object} Meta data object with many attributes
+ *     - map: The SourceMapConsumer or WasmRemap instance
+ *     - urlsById Map of Original Source ID (string) to Source URL (string)
+ *     - sources: Array of object with the two following attributes:
+ *       - id: Original Source ID (string)
+ *       - url: Original Source URL (string)
+ */
 function getSourceMapWithMetadata(generatedSourceId) {
   return sourceMapRequests.get(generatedSourceId);
 }
 
+/**
+ * Retrieve the SourceMapConsumer or WasmRemap instance for a given generated source.
+ *
+ * @param {String} generatedSourceId
+ *        The id of the generated source
+ *
+ * @return null | Promise<SourceMapConsumer | WasmRemap>
+ */
 function getSourceMap(generatedSourceId) {
   const request = getSourceMapWithMetadata(generatedSourceId);
   if (!request) {
     return null;
   }
 
-  return request.then(result => (result ? result.map : null));
+  return request.then(result => result?.map);
 }
 
+/**
+ * Record the SourceMapConsumer or WasmRemap instance for a given generated source.
+ *
+ * @param {String} generatedId
+ *        The generated source ID.
+ * @param {Promise<SourceMapConsumer or WasmRemap>} request
+ *        A promise which should resolve to either a SourceMapConsume or WasmRemap instance.
+ */
 function setSourceMap(generatedId, request) {
   sourceMapRequests.set(
     generatedId,
