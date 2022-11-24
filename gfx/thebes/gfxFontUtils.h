@@ -1093,6 +1093,14 @@ class gfxFontUtils {
            aCh <= kUnicodeRegionalIndicatorZ;
   }
 
+  static inline bool IsEmojiFlagAndTag(uint32_t aCh, uint32_t aNext) {
+    constexpr uint32_t kBlackFlag = 0x1F3F4;
+    constexpr uint32_t kTagLetterA = 0xE0061;
+    constexpr uint32_t kTagLetterZ = 0xE007A;
+
+    return aCh == kBlackFlag && aNext >= kTagLetterA && aNext <= kTagLetterZ;
+  }
+
   static inline bool IsInvalid(uint32_t ch) { return (ch == 0xFFFD); }
 
   // Font code may want to know if there is the potential for bidi behavior
