@@ -6,7 +6,6 @@
 
 DevToolsModules(
     "assert.js",
-    "assetRoot.js",
     "createConsumer.js",
     "fetchSourceMap.js",
     "getOriginalStackFrames.js",

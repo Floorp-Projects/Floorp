@@ -38,10 +38,6 @@ module.exports = {
   isGeneratedId,
   isOriginalId,
 
-  setAssetRootURL() {
-    return dispatcher.invoke("setAssetRootURL");
-  },
-
   getOriginalURLs(generatedSource) {
     return dispatcher.invoke("getOriginalURLs", generatedSource);
   },
@@ -110,7 +106,6 @@ module.exports = {
 
   startSourceMapWorker(url) {
     dispatcher.start(url);
-    module.exports.setAssetRootURL();
   },
 
   stopSourceMapWorker: dispatcher.stop.bind(dispatcher),
