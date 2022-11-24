@@ -92,3 +92,10 @@ pref("extensions.formautofill.addresses.capture.enabled", true);
 // Debug prefs.
 pref("browser.formfill.debug", false);
 pref("extensions.formautofill.loglevel", "Warn");
+
+// PDF.js
+// Try to convert PDFs sent as octet-stream
+pref("pdfjs.handleOctetStream", true);
+pref("browser.download.open_pdf_attachments_inline", true);
+pref("pdfjs.annotationEditorMode", -1);
+pref("pdfjs.disabled", true);

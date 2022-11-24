@@ -114,6 +114,8 @@
 @BINPATH@/actors/*
 
 ; [Browser Chrome Files]
+@BINPATH@/chrome/pdfjs.manifest
+@BINPATH@/chrome/pdfjs/*
 @BINPATH@/chrome/toolkit@JAREXT@
 @BINPATH@/chrome/toolkit.manifest
 
