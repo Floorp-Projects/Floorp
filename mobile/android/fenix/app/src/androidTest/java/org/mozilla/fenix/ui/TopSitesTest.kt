@@ -9,6 +9,7 @@ import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -275,6 +276,7 @@ class TopSitesTest {
         }
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/25926")
     @Test
     fun verifySponsoredShortcutsSponsorsAndPrivacyOptionTest() {
         var sponsoredShortcutTitle = ""
