@@ -56,7 +56,7 @@ def apply_patches(base):
     for patch in patches:
         print('\nApplying patch %s' % patch)
         with open(os.path.join(base, patch)) as f:
-            Popen(["patch", "-p3"], stdin=f, cwd=base).wait()
+            Popen(["patch", "-p1"], stdin=f, cwd=os.path.join(base, 'libyuv')).wait()
 
 
 def update_moz_yaml(base, commit, commitdate):

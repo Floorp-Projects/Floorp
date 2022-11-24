@@ -2,9 +2,9 @@
 # User Randell Jesup <rjesup@jesup.org>
 # Parent  5d4d728adccff4539e44f697b8011fb2eb1a1ad5
 
-diff --git a/media/libyuv/libyuv/source/mjpeg_decoder.cc b/media/libyuv/libyuv/source/mjpeg_decoder.cc
---- a/media/libyuv/libyuv/source/mjpeg_decoder.cc
-+++ b/media/libyuv/libyuv/source/mjpeg_decoder.cc
+diff --git a/source/mjpeg_decoder.cc b/source/mjpeg_decoder.cc
+--- a/source/mjpeg_decoder.cc
++++ b/source/mjpeg_decoder.cc
 @@ -73,18 +73,20 @@ MJpegDecoder::MJpegDecoder()
        databuf_strides_(NULL) {
    decompress_struct_ = new jpeg_decompress_struct;
