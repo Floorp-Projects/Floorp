@@ -15,15 +15,10 @@ var EXPORTED_SYMBOLS = ["StructuredLogger", "StructuredFormatter"];
  * @param dumpFun
  *        An underlying function to be used to log raw messages. This function
  *        will receive the complete serialized json string to log.
- * @param mutators
- *        An array of functions used to add global context to log messages.
- *        These will each be called with the complete object to log as an
- *        argument.
  */
-var StructuredLogger = function(name, dumpFun = dump, mutators = []) {
+var StructuredLogger = function(name, dumpFun = dump) {
   this.name = name;
   this._dumpFun = dumpFun;
-  this._mutatorFuns = mutators;
 };
 
 /**
@@ -213,10 +208,6 @@ StructuredLogger.prototype = {
 
     for (var field in data) {
       allData[field] = data[field];
-    }
-
-    for (var fun of this._mutatorFuns) {
-      fun(allData);
     }
 
     this._dumpFun(allData);
