@@ -16,7 +16,7 @@ TESTING_JS_MODULES += [
     "MockRegistrar.sys.mjs",
     "sinon-7.2.7.js",
     "Sinon.jsm",
-    "StructuredLog.jsm",
+    "StructuredLog.sys.mjs",
     "TestUtils.sys.mjs",
     "XPCShellContentUtils.sys.mjs",
 ]
@@ -27,7 +27,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     ]
 
 
-TEST_HARNESS_FILES.testing.mochitest.tests.SimpleTest += ["StructuredLog.jsm"]
+TEST_HARNESS_FILES.testing.mochitest.tests.SimpleTest += ["StructuredLog.sys.mjs"]
 
 with Files("**"):
     BUG_COMPONENT = ("Testing", "General")

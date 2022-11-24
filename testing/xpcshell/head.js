@@ -90,8 +90,8 @@ var _dumpLog = function(raw_msg) {
   dump("\n" + JSON.stringify(raw_msg) + "\n");
 };
 
-var { StructuredLogger: _LoggerClass } = ChromeUtils.import(
-  "resource://testing-common/StructuredLog.jsm"
+var { StructuredLogger: _LoggerClass } = ChromeUtils.importESModule(
+  "resource://testing-common/StructuredLog.sys.mjs"
 );
 var _testLogger = new _LoggerClass("xpcshell/head.js", _dumpLog, [_add_params]);
 
