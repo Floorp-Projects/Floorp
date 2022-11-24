@@ -80,14 +80,12 @@ class nsInputStreamPump final : public nsIInputStreamPump,
   nsresult CreateBufferedStreamIfNeeded() REQUIRES(mMutex);
 
   // This should optimize away in non-DEBUG builds
-  MOZ_ALWAYS_INLINE void AssertOnThread() const {
-    PUSH_IGNORE_THREAD_SAFETY
+  MOZ_ALWAYS_INLINE void AssertOnThread() const MOZ_REQUIRES(mMutex) {
     if (mOffMainThread) {
       MOZ_ASSERT(mTargetThread->IsOnCurrentThread());
     } else {
       MOZ_ASSERT(NS_IsMainThread());
     }
-    POP_THREAD_SAFETY
   }
 
   uint32_t mState GUARDED_BY(mMutex){STATE_IDLE};

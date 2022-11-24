@@ -478,15 +478,15 @@ uint32_t nsInputStreamPump::OnStateStart() {
   }
 
   {
+    nsCOMPtr<nsIStreamListener> listener = mListener;
+    // We're on the writing thread
+    AssertOnThread();
+
     // Note: Must exit mutex for call to OnStartRequest to avoid
     // deadlocks when calls to RetargetDeliveryTo for multiple
     // nsInputStreamPumps are needed (e.g. nsHttpChannel).
     RecursiveMutexAutoUnlock unlock(mMutex);
-    // We're on the writing thread
-    PUSH_IGNORE_THREAD_SAFETY
-    AssertOnThread();
-    rv = mListener->OnStartRequest(this);
-    POP_THREAD_SAFETY
+    rv = listener->OnStartRequest(this);
   }
 
   // an error returned from OnStartRequest should cause us to abort; however,
@@ -549,6 +549,15 @@ uint32_t nsInputStreamPump::OnStateTransfer() {
          mStreamOffset, avail, odaAvail));
 
     {
+      // We may be called on non-MainThread even if mOffMainThread is
+      // false, due to RetargetDeliveryTo(), so don't use AssertOnThread()
+      if (mTargetThread) {
+        MOZ_ASSERT(mTargetThread->IsOnCurrentThread());
+      } else {
+        MOZ_ASSERT(NS_IsMainThread());
+      }
+
+      nsCOMPtr<nsIStreamListener> listener = mListener;
       // Note: Must exit mutex for call to OnStartRequest to avoid
       // deadlocks when calls to RetargetDeliveryTo for multiple
       // nsInputStreamPumps are needed (e.g. nsHttpChannel).
@@ -557,16 +566,9 @@ uint32_t nsInputStreamPump::OnStateTransfer() {
       // mStreamOffset is only touched in OnStateTransfer, and AsyncRead
       // shouldn't be called during OnDataAvailable()
 
-      // We may be called on non-MainThread even if mOffMainThread is
-      // false, due to RetargetDeliveryTo(), so don't use AssertOnThread()
       PUSH_IGNORE_THREAD_SAFETY
-      if (mTargetThread) {
-        MOZ_ASSERT(mTargetThread->IsOnCurrentThread());
-      } else {
-        MOZ_ASSERT(NS_IsMainThread());
-      }
-      rv = mListener->OnDataAvailable(this, mAsyncStream, mStreamOffset,
-                                      odaAvail);
+      rv = listener->OnDataAvailable(this, mAsyncStream, mStreamOffset,
+                                     odaAvail);
       POP_THREAD_SAFETY
     }
 
@@ -665,16 +667,18 @@ uint32_t nsInputStreamPump::OnStateStop() {
   mAsyncStream = nullptr;
   mIsPending = false;
   {
+    // We're on the writing thread.
+    // We believe that mStatus can't be changed on us here.
+    AssertOnThread();
+
+    nsCOMPtr<nsIStreamListener> listener = mListener;
+    nsresult status = mStatus;
     // Note: Must exit mutex for call to OnStartRequest to avoid
     // deadlocks when calls to RetargetDeliveryTo for multiple
     // nsInputStreamPumps are needed (e.g. nsHttpChannel).
     RecursiveMutexAutoUnlock unlock(mMutex);
-    // We're on the writing thread.
-    // We believe that mStatus can't be changed on us here.
-    PUSH_IGNORE_THREAD_SAFETY
-    AssertOnThread();
-    mListener->OnStopRequest(this, mStatus);
-    POP_THREAD_SAFETY
+
+    listener->OnStopRequest(this, status);
   }
   mTargetThread = nullptr;
   mListener = nullptr;
