@@ -702,7 +702,7 @@ static bool ParseZealModeName(CharRange text, uint32_t* modeOut) {
   };
 
   static const ModeInfo zealModes[] = {{"None", 0},
-#  define ZEAL_MODE(name, value) {#name, strlen(#name), value},
+#  define ZEAL_MODE(name, value) {#  name, strlen(#  name), value},
                                        JS_FOR_EACH_ZEAL_MODE(ZEAL_MODE)
 #  undef ZEAL_MODE
   };
@@ -781,7 +781,7 @@ bool GCRuntime::parseAndSetZeal(const char* str) {
 
 const char* js::gc::AllocKindName(AllocKind kind) {
   static const char* const names[] = {
-#  define EXPAND_THING_NAME(allocKind, _1, _2, _3, _4, _5, _6) #allocKind,
+#  define EXPAND_THING_NAME(allocKind, _1, _2, _3, _4, _5, _6) #  allocKind,
       FOR_EACH_ALLOCKIND(EXPAND_THING_NAME)
 #  undef EXPAND_THING_NAME
   };
@@ -2126,8 +2126,8 @@ void GCRuntime::purgeRuntime() {
 
   rt->caches().purge();
 
-  if (rt->isMainRuntime()) {
-    SharedImmutableStringsCache::getSingleton().purge();
+  if (auto cache = rt->maybeThisRuntimeSharedImmutableStrings()) {
+    cache->purge();
   }
 
   MOZ_ASSERT(unmarkGrayStack.empty());
