@@ -756,6 +756,11 @@ bool TrialInliner::tryInlining() {
   for (uint32_t icIndex = 0; icIndex < numICEntries; icIndex++) {
     ICEntry& entry = icScript_->icEntry(icIndex);
     ICFallbackStub* fallback = icScript_->fallbackStub(icIndex);
+
+    if (!TryFoldingStubs(cx(), fallback, script_, icScript_)) {
+      return false;
+    }
+
     BytecodeLocation loc =
         startLoc + BytecodeLocationOffset(fallback->pcOffset());
     JSOp op = loc.getOp();

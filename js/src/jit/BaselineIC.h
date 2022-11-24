@@ -268,6 +268,10 @@ class ICCacheIRStub final : public ICStub {
   ICStub* next() const { return next_; }
   void setNext(ICStub* stub) { next_ = stub; }
 
+  ICCacheIRStub* nextCacheIR() const {
+    return next_->isFallback() ? nullptr : next_->toCacheIRStub();
+  }
+
   const CacheIRStubInfo* stubInfo() const { return stubInfo_; }
   uint8_t* stubDataStart();
 
