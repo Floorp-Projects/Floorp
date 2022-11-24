@@ -9,6 +9,7 @@
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/VideoBridgeUtils.h"
+#include "mozilla/StaticMutex.h"
 
 namespace mozilla {
 namespace layers {
@@ -16,6 +17,7 @@ namespace layers {
 using namespace mozilla::ipc;
 using namespace mozilla::gfx;
 
+StaticMutex sVideoBridgeMutex;
 static VideoBridgeParent* sVideoBridgeFromRddProcess;
 static VideoBridgeParent* sVideoBridgeFromGpuProcess;
 
@@ -23,6 +25,7 @@ VideoBridgeParent::VideoBridgeParent(VideoBridgeSource aSource)
     : mCompositorThreadHolder(CompositorThreadHolder::GetSingleton()),
       mClosed(false) {
   mSelfRef = this;
+  StaticMutexAutoLock lock(sVideoBridgeMutex);
   switch (aSource) {
     default:
       MOZ_CRASH("Unhandled case");
@@ -36,6 +39,7 @@ VideoBridgeParent::VideoBridgeParent(VideoBridgeSource aSource)
 }
 
 VideoBridgeParent::~VideoBridgeParent() {
+  StaticMutexAutoLock lock(sVideoBridgeMutex);
   if (sVideoBridgeFromRddProcess == this) {
     sVideoBridgeFromRddProcess = nullptr;
   }
@@ -66,6 +70,7 @@ void VideoBridgeParent::Bind(Endpoint<PVideoBridgeParent>&& aEndpoint) {
 VideoBridgeParent* VideoBridgeParent::GetSingleton(
     const Maybe<VideoBridgeSource>& aSource) {
   MOZ_ASSERT(aSource.isSome());
+  StaticMutexAutoLock lock(sVideoBridgeMutex);
   switch (aSource.value()) {
     default:
       MOZ_CRASH("Unhandled case");
@@ -91,6 +96,7 @@ void VideoBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
 
 /* static */
 void VideoBridgeParent::Shutdown() {
+  StaticMutexAutoLock lock(sVideoBridgeMutex);
   if (sVideoBridgeFromRddProcess) {
     sVideoBridgeFromRddProcess->ReleaseCompositorThread();
   } else if (sVideoBridgeFromGpuProcess) {
