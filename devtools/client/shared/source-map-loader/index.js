@@ -10,17 +10,6 @@ const {
 
 const dispatcher = new WorkerDispatcher();
 
-const _getGeneratedRanges = dispatcher.task("getGeneratedRanges", {
-  queue: true,
-});
-
-const _getGeneratedLocation = dispatcher.task("getGeneratedLocation", {
-  queue: true,
-});
-const _getOriginalLocation = dispatcher.task("getOriginalLocation", {
-  queue: true,
-});
-
 const {
   originalToGeneratedId,
   generatedToOriginalId,
@@ -34,71 +23,30 @@ module.exports = {
   isGeneratedId,
   isOriginalId,
 
-  getOriginalURLs(generatedSource) {
-    return dispatcher.invoke("getOriginalURLs", generatedSource);
-  },
+  getOriginalURLs: dispatcher.task("getOriginalURLs"),
+  hasOriginalURL: dispatcher.task("hasOriginalURL"),
+  getOriginalRanges: dispatcher.task("getOriginalRanges"),
 
-  hasOriginalURL(url) {
-    return dispatcher.invoke("hasOriginalURL", url);
-  },
+  getGeneratedRanges: dispatcher.task("getGeneratedRanges", {
+    queue: true,
+  }),
+  getGeneratedLocation: dispatcher.task("getGeneratedLocation", {
+    queue: true,
+  }),
+  getOriginalLocation: dispatcher.task("getOriginalLocation", {
+    queue: true,
+  }),
 
-  getOriginalRanges(sourceId) {
-    return dispatcher.invoke("getOriginalRanges", sourceId);
-  },
+  getOriginalLocations: dispatcher.task("getOriginalLocations"),
+  getGeneratedRangesForOriginal: dispatcher.task(
+    "getGeneratedRangesForOriginal"
+  ),
+  getFileGeneratedRange: dispatcher.task("getFileGeneratedRange"),
+  getOriginalSourceText: dispatcher.task("getOriginalSourceText"),
+  applySourceMap: dispatcher.task("applySourceMap"),
+  clearSourceMaps: dispatcher.task("clearSourceMaps"),
+  getOriginalStackFrames: dispatcher.task("getOriginalStackFrames"),
 
-  getGeneratedRanges(location) {
-    return _getGeneratedRanges(location);
-  },
-
-  getGeneratedLocation(location) {
-    return _getGeneratedLocation(location);
-  },
-
-  getOriginalLocation(location, options = {}) {
-    return _getOriginalLocation(location, options);
-  },
-
-  getOriginalLocations(locations, options = {}) {
-    return dispatcher.invoke("getOriginalLocations", locations, options);
-  },
-
-  getGeneratedRangesForOriginal(sourceId, mergeUnmappedRegions) {
-    return dispatcher.invoke(
-      "getGeneratedRangesForOriginal",
-      sourceId,
-      mergeUnmappedRegions
-    );
-  },
-
-  getFileGeneratedRange(originalSourceId) {
-    return dispatcher.invoke("getFileGeneratedRange", originalSourceId);
-  },
-
-  getOriginalSourceText(originalSourceId) {
-    return dispatcher.invoke("getOriginalSourceText", originalSourceId);
-  },
-
-  applySourceMap(generatedId, url, code, mappings) {
-    return dispatcher.invoke(
-      "applySourceMap",
-      generatedId,
-      url,
-      code,
-      mappings
-    );
-  },
-
-  clearSourceMaps() {
-    return dispatcher.invoke("clearSourceMaps");
-  },
-
-  getOriginalStackFrames(generatedLocation) {
-    return dispatcher.invoke("getOriginalStackFrames", generatedLocation);
-  },
-
-  startSourceMapWorker(url) {
-    dispatcher.start(url);
-  },
-
+  startSourceMapWorker: dispatcher.start.bind(dispatcher),
   stopSourceMapWorker: dispatcher.stop.bind(dispatcher),
 };
