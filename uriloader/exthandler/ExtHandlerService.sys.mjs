@@ -373,7 +373,7 @@ HandlerService.prototype = {
       Services.prefs.getBoolPref(
         "browser.download.improvements_to_download_panel"
       ) &&
-      !Services.policies.getActivePolicies()?.Handlers &&
+      !Services.policies?.getActivePolicies()?.Handlers &&
       !this._store.data.isDownloadsImprovementsAlreadyMigrated &&
       AppConstants.MOZ_APP_NAME != "thunderbird"
     ) {
@@ -409,7 +409,7 @@ HandlerService.prototype = {
       Services.prefs.getBoolPref(
         "browser.download.improvements_to_download_panel"
       ) &&
-      !Services.policies.getActivePolicies()?.Handlers &&
+      !Services.policies?.getActivePolicies()?.Handlers &&
       !this._store.data.isSVGXMLAlreadyMigrated
     ) {
       for (let type of this._noInternalHandlingDefault) {

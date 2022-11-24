@@ -139,7 +139,9 @@ function getDOMWindow(aChannel, aPrincipal) {
 
 function getActor(window) {
   try {
-    return window.windowGlobalChild.getActor("Pdfjs");
+    const actorName =
+      AppConstants.platform === "android" ? "GeckoViewPdfjs" : "Pdfjs";
+    return window.windowGlobalChild.getActor(actorName);
   } catch (ex) {
     return null;
   }
@@ -391,6 +393,10 @@ class ChromeActions {
 
   isInAutomation() {
     return Cu.isInAutomation;
+  }
+
+  isMobile() {
+    return AppConstants.platform === "android";
   }
 
   reportTelemetry(data) {
