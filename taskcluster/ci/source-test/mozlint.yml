@@ -120,6 +120,10 @@ eslint:
 
 eslint-build:
     description: ESLint checks with build data
+    always-target: false
+    run-on-projects: []
+    attributes:
+        code-review: false
     treeherder:
         symbol: js(ES-B)
         tier: 3
