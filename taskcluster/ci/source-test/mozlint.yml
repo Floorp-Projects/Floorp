@@ -20,6 +20,11 @@ job-defaults:
               path: /builds/worker/mozlint.json
     run:
         using: mach
+    when:
+        files-changed:
+            # Other misc lint related files.
+            - 'python/mozlint/**'
+            - 'tools/lint/**'
 
 codespell:
     description: Checks for misspellings in text files
@@ -48,9 +53,6 @@ codespell:
             - '**/*.rst'
             - '**/*.ftl'
             - 'tools/lint/codespell.yml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 
 rejected-words:
@@ -84,9 +86,6 @@ rejected-words:
             - '**/*.java'
             - '**/*.kt'
             - 'tools/lint/rejected-words.yml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 eslint:
     description: JS lint check
@@ -118,12 +117,8 @@ eslint:
             # The plugin implementing custom checks.
             - 'tools/lint/eslint/eslint-plugin-mozilla/**'
             - 'tools/lint/eslint/eslint-plugin-spidermonkey-js/**'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 eslint-build:
-    always-target: false
     description: ESLint checks with build data
     treeherder:
         symbol: js(ES-B)
@@ -179,9 +174,6 @@ license:
             - '**/*.xml'
             - '**/*.xul'
             - 'tools/lint/license.yml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 lintpref:
     description: Check for duplicates between all.js and StaticPrefList.yaml.
@@ -219,9 +211,6 @@ mingw-cap:
             - '**/*.c'
             - '**/*.h'
             - 'tools/lint/mingw-capitalization.yml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 updatebot:
     description: Ensure moz.yaml files are valid per schema
@@ -232,9 +221,6 @@ updatebot:
     when:
         files-changed:
             - '**/moz.yaml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 mscom-init:
     description: Lint for Microsoft COM initialization
@@ -249,9 +235,6 @@ mscom-init:
             - '**/*.c'
             - '**/*.h'
             - 'tools/lint/mscom-init.yml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 py-flake8:
     description: flake8 run over the gecko codebase
@@ -266,9 +249,6 @@ py-flake8:
             - 'tools/lint/flake8.yml'
             # moz.configure files are also Python files.
             - '**/*.configure'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 py-black:
     description: black run over the gecko codebase
@@ -285,9 +265,6 @@ py-black:
             - '**/*.mozbuild'
             - 'pyproject.toml'
             - 'tools/lint/flake8.yml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 py-pylint:
     description: pylint run over the gecko codebase
@@ -301,9 +278,6 @@ py-pylint:
             - 'tools/lint/pylint.yml'
             # moz.configure files are also Python files
             # However, pylint has some hard time dealing with it
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 test-manifest:
     description: lint test manifests
@@ -317,9 +291,6 @@ test-manifest:
             - 'python/mozlint/**'
             - 'tools/lint/**'
             - 'tools/lint/test-disable.yml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 wptlint-gecko:
     description: web-platform-tests linter
@@ -332,9 +303,6 @@ wptlint-gecko:
             - 'testing/web-platform/tests/**'
             - 'testing/web-platform/mozilla/tests/**'
             - 'tools/lint/wpt.yml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 yaml:
     description: yamllint run over the gecko codebase
@@ -347,9 +315,6 @@ yaml:
             - '**/*.yml'
             - '**/*.yaml'
             - '**/.ymllint'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 rst:
     description: rst lint run over the gecko codebase
@@ -361,9 +326,6 @@ rst:
         files-changed:
             - '**/*.rst'
             - 'tools/lint/rst.yml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 shellcheck:
     description: shellcheck run over the gecko codebase
@@ -375,9 +337,6 @@ shellcheck:
         files-changed:
             - '**/*.sh'
             - 'tools/lint/shellcheck.yml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 
 localization:
@@ -395,9 +354,6 @@ localization:
             - 'third_party/python/compare-locales/**'
             - 'third_party/python/fluent/**'
             - 'tools/lint/l10n.yml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 
 l10n-conflicts:
@@ -415,9 +371,6 @@ l10n-conflicts:
             - 'third_party/python/compare-locales/**'
             - 'third_party/python/fluent/**'
             - 'tools/lint/l10n.yml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 
 clang-format:
@@ -435,9 +388,6 @@ clang-format:
             - '**/*.m'
             - '**/*.mm'
             - 'tools/lint/clang-format.yml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
     dependencies:
         linux64-clang-tidy: toolchain-linux64-clang-tidy
     fetches:
@@ -456,9 +406,6 @@ rustfmt:
         files-changed:
             - '**/*.rs'
             - 'tools/lint/rustfmt.yml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
     fetches:
         toolchain:
             - linux64-rust
@@ -475,9 +422,6 @@ clippy:
             - '**/*.rs'
             - '**/Cargo.toml'
             - 'tools/lint/clippy.yml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
     fetches:
         toolchain:
             - linux64-rust
@@ -508,9 +452,6 @@ file-whitespace:
             - '**/*.rs'
             - '**/*.xhtml'
             - 'tools/lint/file-whitespace.yml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 
 file-perm:
@@ -541,9 +482,6 @@ file-perm:
             - '**/*.xml'
             - '**/*.xul'
             - 'tools/lint/file-perm.yml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 
 perfdocs-verify:
@@ -569,9 +507,6 @@ perfdocs-verify:
             - 'testing/**/*.yml'
             - 'testing/**/*.rst'
             - 'tools/lint/perfdocs.yml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 
 fluent-lint:
@@ -586,9 +521,6 @@ fluent-lint:
             - '**/*.ftl'
             - 'tools/lint/fluent-lint.yml'
             - 'tools/lint/fluent-lint/exclusions.yml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
 
 trojan-source:
     description: Trojan Source attack - CVE-2021-42572
@@ -606,6 +538,3 @@ trojan-source:
             - '**/*.py'
             - '**/*.rs'
             - 'tools/lint/trojan-source.yml'
-            # Common files.
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
