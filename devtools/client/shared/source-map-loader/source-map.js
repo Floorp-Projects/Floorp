@@ -10,16 +10,19 @@
  */
 
 const {
-  networkRequest,
-} = require("resource://devtools/client/shared/source-map-loader/utils/network-request.js");
-const {
   SourceMapConsumer,
   SourceMapGenerator,
 } = require("resource://devtools/client/shared/vendor/source-map/source-map.js");
 
+// Initialize the source-map library right away so that all other code can use it.
+SourceMapConsumer.initialize({
+  "lib/mappings.wasm":
+    "resource://devtools/client/shared/vendor/source-map/lib/mappings.wasm",
+});
+
 const {
-  createConsumer,
-} = require("resource://devtools/client/shared/source-map-loader/utils/createConsumer.js");
+  networkRequest,
+} = require("resource://devtools/client/shared/source-map-loader/utils/network-request.js");
 const assert = require("resource://devtools/client/shared/source-map-loader/utils/assert.js");
 const {
   fetchSourceMap,
@@ -486,7 +489,7 @@ function applySourceMap(generatedId, url, code, mappings) {
   mappings.forEach(mapping => generator.addMapping(mapping));
   generator.setSourceContent(url, code);
 
-  const map = createConsumer(generator.toJSON());
+  const map = new SourceMapConsumer(generator.toJSON());
   setSourceMap(generatedId, Promise.resolve(map));
 }
 

@@ -9,9 +9,6 @@
 const { WasmRemap } = browserRequire(
   "resource://devtools/client/shared/source-map-loader/utils/wasmRemap.js"
 );
-const { createConsumer } = browserRequire(
-  "resource://devtools/client/shared/source-map-loader/utils/createConsumer.js"
-);
 const { SourceMapConsumer } = browserRequire(
   "resource://devtools/client/shared/vendor/source-map/source-map.js"
 );
@@ -37,7 +34,7 @@ add_task(async function smokeTest() {
     { offset: 17, line: 2, column: 18 },
   ];
 
-  const map1 = await createConsumer(testMap1);
+  const map1 = await new SourceMapConsumer(testMap1);
 
   const remap1 = new WasmRemap(map1);
 
@@ -81,6 +78,8 @@ add_task(async function smokeTest() {
   is(pos3[0].line, 14);
   is(pos3[0].column, 0);
   is(pos3[0].lastColumn, 0);
+
+  map1.destroy();
 });
 
 add_task(async function contentPresents() {
@@ -93,11 +92,13 @@ add_task(async function contentPresents() {
     sourcesContent: ["//test"],
   };
 
-  const map2 = await createConsumer(testMap2);
+  const map2 = await new SourceMapConsumer(testMap2);
   const remap2 = new WasmRemap(map2);
   is(remap2.file, "none.js");
   ok(remap2.hasContentsOfAllSources());
   is(remap2.sourceContentFor("zero.js"), "//test");
+
+  map2.destroy();
 });
 
 add_task(async function readAndTransposeWasmMap() {

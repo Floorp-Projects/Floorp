@@ -9,6 +9,9 @@ const {
 } = require("resource://devtools/client/shared/source-map-loader/utils/network-request");
 
 const {
+  SourceMapConsumer,
+} = require("resource://devtools/client/shared/vendor/source-map/source-map.js");
+const {
   getSourceMap,
   setSourceMap,
 } = require("resource://devtools/client/shared/source-map-loader/utils/sourceMapRequests");
@@ -18,9 +21,6 @@ const {
 const {
   convertToJSON,
 } = require("resource://devtools/client/shared/source-map-loader/wasm-dwarf/convertToJSON");
-const {
-  createConsumer,
-} = require("resource://devtools/client/shared/source-map-loader/utils/createConsumer");
 
 // URLs which have been seen in a completed source map request.
 const originalURLs = new Set();
@@ -80,7 +80,7 @@ async function _resolveAndFetch(generatedSource) {
   }
 
   // Create the source map and fix it up.
-  let map = await createConsumer(fetched.content, baseURL);
+  let map = await new SourceMapConsumer(fetched.content, baseURL);
 
   if (generatedSource.isWasm) {
     map = new WasmRemap(map);
