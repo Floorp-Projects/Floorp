@@ -2839,10 +2839,7 @@ BrowserGlue.prototype = {
       },
 
       {
-        condition: Services.prefs.getBoolPref(
-          "toolkit.telemetry.dap_enabled",
-          false
-        ),
+        condition: lazy.NimbusFeatures.dapTelemetry.getVariable("enabled"),
         task: () => {
           lazy.DAPTelemetrySender.startup();
         },

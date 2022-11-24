@@ -802,3 +802,18 @@ echPrefs:
       description: Probability of GREASEing a TLS connection with ECH (0-100).
       type: int
       setPref: "security.tls.ech.grease_probability"
+
+dapTelemetry:
+  description: DAP Telemetry
+  owner: simon@mozilla.com
+  hasExposure: false
+  isEarlyStartup: true # Data is sent on startup with a trigger in BrowserGlue.jsm
+  variables:
+    enabled:
+      type: boolean
+      fallbackPref: toolkit.telemetry.dap_enabled
+      description: Whether to automatically send DAP measurements.
+    task1Enabled:
+      type: boolean
+      fallbackPref: toolkit.telemetry.dap_task1_enabled
+      description: Whether to send fake measurements for verification task 1.
