@@ -1266,6 +1266,31 @@ bool CacheIRWriter::stubDataEquals(const uint8_t* stubData) const {
   return true;
 }
 
+bool CacheIRWriter::stubDataEqualsIgnoring(const uint8_t* stubData,
+                                           uint32_t ignoreOffset) const {
+  MOZ_ASSERT(!failed());
+
+  uint32_t offset = 0;
+  for (const StubField& field : stubFields_) {
+    if (offset != ignoreOffset) {
+      if (field.sizeIsWord()) {
+        uintptr_t raw = *reinterpret_cast<const uintptr_t*>(stubData + offset);
+        if (field.asWord() != raw) {
+          return false;
+        }
+      } else {
+        uint64_t raw = *reinterpret_cast<const uint64_t*>(stubData + offset);
+        if (field.asInt64() != raw) {
+          return false;
+        }
+      }
+    }
+    offset += StubField::sizeInBytes(field.type());
+  }
+
+  return true;
+}
+
 HashNumber CacheIRStubKey::hash(const CacheIRStubKey::Lookup& l) {
   HashNumber hash = mozilla::HashBytes(l.code, l.length);
   hash = mozilla::AddToHash(hash, uint32_t(l.kind));

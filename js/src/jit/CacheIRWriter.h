@@ -352,6 +352,8 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   size_t stubDataSize() const { return stubDataSize_; }
   void copyStubData(uint8_t* dest) const;
   bool stubDataEquals(const uint8_t* stubData) const;
+  bool stubDataEqualsIgnoring(const uint8_t* stubData,
+                              uint32_t ignoreOffset) const;
 
   bool operandIsDead(uint32_t operandId, uint32_t currentInstruction) const {
     if (operandId >= operandLastUsed_.length()) {
