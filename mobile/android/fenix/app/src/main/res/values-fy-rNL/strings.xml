@@ -258,7 +258,10 @@
     <string name="search_settings_menu_item">Sykynstellingen</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Diskear sykje yn:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Diskear sykje yn:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Diskear sykje yn:</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -333,6 +336,7 @@
     <string name="preferences_add_private_browsing_shortcut">Fluchkeppeling nei priveenavigaasje tafoegje</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Allinnich-HTTPS-modus</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Probearret foar in bettere befeiliging automatysk mei it HTTPS-fersiferingsprotokol ferbining te meitsjen mei websites.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->

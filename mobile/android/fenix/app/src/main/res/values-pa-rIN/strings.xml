@@ -48,8 +48,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">ਸੱਜਰੇ ਬੁੱਕਮਾਰਕ</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">ਤਾਜ਼ਾ ਸੰਭਾਲੇ</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">ਸਾਰੇ ਸੰਭਾਲੇ ਬੁੱਕਮਾਰਕਾਂ ਨੂੰ ਵੇਖੋ</string>
@@ -265,39 +263,18 @@
     <string name="search_settings_menu_item">ਖੋਜ ਸੈਟਿੰਗਾਂ</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">ਇਹ ਸਮਾਂ ਖੋਜ:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">ਇਹ ਸਮਾਂ ਖੋਜ:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">ਇਸ ਵਾਰ ਇਸ ਵਿੱਚ ਖੋਜੋ:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">%1$s ਵਿੱਚ ਨਵਾਂ ਕੀ ਹੈ</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">ਜਿੱਥੇ ਤੁਸੀਂ ਛੱਡ ਕੇ ਗਈ ਸੀ, ਉਥੋਂ ਹੀ ਮੁੜ ਸ਼ੁਰੂ ਕਰਨਾ ਸੌਖਾ ਹੈ।</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">ਆਪਣੇ ਮੁਤਾਬਕ ਢਾਲਿਆ %1$s ਦਾ ਮੁੱਖ-ਸਫ਼ਾ</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">ਆਪਣੀਆਂ ਖੋਲ੍ਹੀਆ ਟੈਬਾਂ, ਬੁੱਕਮਾਰਕਾਂ ਅਤੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਅਤੀਤ ਉੱਤੇ ਜਾਓ।</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">ਸਾਫ਼, ਸਜਾਈਆਂ ਟੈਬਾਂ</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">ਸੁਧਾਰੇ ਖਾਕੇ ਤੇ ਆਪਣੇ-ਬੰਦ ਹੋਣ ਵਾਲੀਆਂ ਟੈਬਾਂ ਨਾਲ ਟੈਬਾਂ ਦੇ ਖਿਲਾਰੇ ਨੂੰ ਸਾਫ਼ ਕਰੋ।</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">ਸੱਜਰੀਆਂ ਖੋਜਾਂ</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">ਆਪਣੇ ਮੁੱਖ-ਸਫ਼ੇ ਅਤੇ ਟੈਬਾਂ ਤੋਂ ਆਪਣੀਆਂ ਸੱਜਰੀਆਂ ਖੋਜਾਂ ਨੂੰ ਮੁੜ-ਖੋਲ੍ਹੋ।</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">ਤੁਹਾਡੇ ਆਪਣੇ ਬਣਾਏ Firefox ਮੁੱਖ-ਸਫ਼ੇ ਨੇ ਹੁਣ ਜਿੱਥੇ ਤੁਸੀਂ ਛੱਡ ਕੇ ਗਏ ਸੀ, ਉਥੋਂ ਹੀ ਸ਼ੁਰੂ ਕਰਨਾ ਸੌਖਾ ਬਣਾ ਦਿੱਤਾ ਹੈ। ਆਪਣੀਆਂ ਸੱਜਰੀਆਂ ਟੈਬਾਂ, ਬੁੱਕਮਾਰਕ ਅਤੇ ਖੋਜ ਨਤੀਜੇ ਲੱਭੋ।</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">ਤੁਹਾਡੇ ਆਪਣੇ ਬਣਾਏ ਮੁੱਖ-ਸਫ਼ੇ ਨੂੰ ਸਮਝੋ। ਸੱਜਰੀਆਂ ਟੈਬਾਂ, ਬੁੱਕਮਾਰਕ ਅਤੇ ਖੋਜ ਨਤੀਜੇ ਇੱਥੇ ਦਿਖਾਈ ਦੇਣਗੇ।</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">ਆਜ਼ਾਦ ਇੰਟਰਨੈੱਟ ਲਈ ਜੀ ਆਇਆਂ ਨੂੰ</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">ਵੱਧ ਨਿੱਜੀ ਇੰਟਰਨੈੱਟ ਲਈ ਜੀ ਆਇਆਂ ਨੂੰ</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">ਵੱਧ ਰੰਗ। ਵੱਧ ਪਰਦੇਦਾਰੀ। ਫਾਇਦੇ ਨਾਲੋਂ ਲੋਕਾਂ ਨੂੰ ਪਹਿਲ ਦੇਣ ਦਾ ਉਹੀ ਵਾਅਦਾ।</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">ਫ਼ੋਨ ਤੋਂ ਲੈਪਟਾਪ ਉੱਤੇ ਜਾਓ ਤੇ ਵਾਪਸ ਆਓ</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">ਸਕਰੀਨਾਂ ਵਿਚਾਲੇ ਬਦਲਣਾ ਪਹਿਲਾਂ ਤੋਂ ਵੱਧ ਸੌਖਾਲਾ ਹੋਇਆ</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -364,6 +341,12 @@
     <string name="preferences_add_private_browsing_shortcut">ਨਿੱਜੀ ਬਰਾਊਜ਼ਿੰਗ ਸ਼ਾਰਟਕੱਟ ਜੋੜੋ</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">ਸਿਰਫ਼-HTTPS ਢੰਗ</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">ਕੂਕੀਜ਼ ਬੈਨਰ ਘਟਾਉਣਾ</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">ਕੂਕੀਜ਼ ਬੈਨਰ ਘਟਾਓ</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">ਵਾਧਾ ਕੀਤੀ ਸੁਰੱਖਿਆ ਲਈ HTTPS ਇੰਕ੍ਰਿਪਸ਼ਨ ਪਰੋਟੋਕਾਲ ਵਰਤ ਕੇ ਸਾਈਟਾਂ ਨਾਲ ਕਨੈਕਟ ਕਰਨ ਦੀ ਆਪਣੇ-ਆਪ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1268,34 +1251,21 @@
     <string name="delete_history_group_snackbar">ਗਰੁੱਪ ਹਟਾਇਆ</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">%s ਵਲੋਂ ਜੀ ਆਇਆਂ ਨੂੰ!</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">ਬੇਹਤਰ ਇੰਟਰਨੈੱਟ ਲਈ ਜੀ ਆਇਆਂ ਨੂੰ</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">ਲੋਕਾਂ ਲਈ, ਨਾ ਕਿ ਫਾਇਦੇ ਲਈ ਬਣਾਇਆ ਬਰਾਊਜ਼ਰ।</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ Firefox ਸਿੰਕ ਕਰੋ</string>
 
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">ਜਿੱਥੇ ਤੁਸੀਂ ਛੱਡਿਆ ਸੀ, ਉੱਥੋਂ ਸ਼ੁਰੂ ਕਰੋ</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ %1$s ਵਿੱਚ ਬੁੱਕਮਾਰਕ, ਅਤੀਤ ਅਤੇ ਪਾਸਵਰਡ ਲਿਆਓ।</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">ਸਹਿਜ ਨਾਲ ਸਕਰੀਨਾਂ ਬਦਲਣ ਵਾਸਤੇ ਵੱਖ-ਵੱਖ ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ ਟੈਬਾਂ ਤੇ ਪਾਸਵਰਡਾਂ ਨੂੰ ਸਿੰਕ ਕਰੋ।</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">ਸਾਈਨ ਅੱਪ ਕਰੋ</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">ਸਾਇਨ ਇਨ</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">ਸਿੰਕ ਚਾਲੂ ਹੈ</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">ਪਰਦੇਦਾਰੀ ਹਮੇਸ਼ਾਂ ਚਾਲੂ</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">ਮੂਲ ਰੂਪ ਵਿੱਚ ਪਰਦੇਦਾਰੀ ਸੁਰੱਖਿਆ</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">ਤੁਹਾਡੇ ਵਲੋਂ ਵੈਬ ਵਰਤਣ ਦੇ ਦੌਰਾਨ ਕੰਪਨੀਆਂ ਨੂੰ ਚੋਰੀ-ਛੁਪੇ ਤੁਹਾਡਾ ਪਿੱਛਾ ਕਰਨ ਤੋਂ %1$s ਆਪਣੇ-ਆਪ ਰੋਕਦਾ ਹੈ।</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">ਪੇਸ਼ ਕੀਤੀ ਪੂਰੀ ਕੂਕੀਜ਼ ਸੁਰੱਖਿਆ ਨਾਲ ਤੁਹਾਡੇ ਵਲੋਂ ਖੋਲ੍ਹੀਆਂ ਸਾਈਟਾਂ ਵਿਚਾਲੇ ਟਰੈਕਰਾਂ ਨੂੰ ਕੂਕੀਜ਼ ਵਰਤਣ ਤੋਂ ਰੋਕੋ।</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1308,18 +1278,10 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">ਹੋਰ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਉਂਦਾ ਹੈ, ਜਿਸ ਨਾਲ ਸਫ਼ੇ ਤੇਜ਼ੀ ਨਾਲ ਲੋਡ ਹੁੰਦੇ ਹਨ, ਪਰ ਕੁਝ ਸਫ਼ੇ ਸ਼ਾਇਦ ਠੀਕ ਤਰ੍ਹਾਂ ਕੰਮ ਨਾ ਕਰਨ।</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">ਆਪਣੇ ਟੂਲਬਾਰ ਦੀ ਥਾਂ ਚੁਣੋ</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">ਸੌਖੀ ਪਹੁੰਚ ਲਈ ਟੂਲਬਾਰ ਨੂੰ ਰੱਖੋ। ਹੇਠਾਂ ਰੱਖੋ ਜਾਂ ਇਸ ਨੂੰ ਉੱਤੇ ਰੱਖੋ।</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">ਇਸ ਨੂੰ ਹੇਠਾਂ ਰੱਕੋ ਜਾਂ ਉੱਤੇ ਲੈ ਜਾਓ।</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">ਤੁਹਾਡੀ ਪਰਦੇਦਾਰੀ</string>
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">ਆਪਣੇ ਡਾਟਾ ਨੂੰ ਕੰਟਰੋਲ ਕਰੋ</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">ਅਸੀਂ %s ਨੂੰ ਇੰਝ ਬਣਾਇਆ ਹੈ ਕਿ ਤੁਹਾਡੇ ਕੋਲ ਪੂਰਾ ਕੰਟਰੋਲ ਹੋਵੇ ਕਿ ਤੁਸੀਂ
-ਆਨਲਾਈਨ ਕੀ ਸਾਂਝਾ ਕਰਦੇ ਹੋ ਅਤੇ ਸਾਡੇ ਨਾਲ ਕੀ ਸਾਂਝਾ ਕਰਦੇ ਹੋ।</string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">Firefox ਤੁਹਾਡੇ ਹੱਥ ਕੰਟਰੋਲ ਦਿੰਦਾ ਹੈ ਕਿ ਤੁਸੀਂ ਆਨਲਾਈਨ ਕੀ ਸਾਂਝਾ ਕਰਨਾ ਹੈ ਅਤੇ ਕੀ ਸਾਡੇ ਨਾਲ ਸਾਂਝਾ ਕਰਨਾ ਹੈ।</string>
     <!-- Text for the button to read the privacy notice -->
