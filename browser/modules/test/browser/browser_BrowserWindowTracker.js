@@ -164,3 +164,78 @@ add_task(async function test_orderedWindows() {
     );
   });
 });
+
+add_task(async function test_pendingWindows() {
+  Assert.equal(
+    BrowserWindowTracker.windowCount,
+    1,
+    "Number of tracked windows, including the test window"
+  );
+
+  let pending = BrowserWindowTracker.getPendingWindow();
+  Assert.equal(pending, null, "Should be no pending window");
+
+  let expectedWin = BrowserWindowTracker.openWindow();
+  pending = BrowserWindowTracker.getPendingWindow();
+  Assert.ok(pending, "Should be a pending window now.");
+  Assert.ok(
+    !BrowserWindowTracker.getPendingWindow({ private: true }),
+    "Should not be a pending private window"
+  );
+  Assert.equal(
+    pending,
+    BrowserWindowTracker.getPendingWindow({ private: false }),
+    "Should be the same non-private window pending"
+  );
+
+  let foundWin = await pending;
+  Assert.equal(foundWin, expectedWin, "Should have found the right window");
+  Assert.ok(
+    !BrowserWindowTracker.getPendingWindow(),
+    "Should be no pending window now."
+  );
+
+  await BrowserTestUtils.closeWindow(foundWin);
+
+  expectedWin = BrowserWindowTracker.openWindow({ private: true });
+  pending = BrowserWindowTracker.getPendingWindow();
+  Assert.ok(pending, "Should be a pending window now.");
+  Assert.ok(
+    !BrowserWindowTracker.getPendingWindow({ private: false }),
+    "Should not be a pending non-private window"
+  );
+  Assert.equal(
+    pending,
+    BrowserWindowTracker.getPendingWindow({ private: true }),
+    "Should be the same private window pending"
+  );
+
+  foundWin = await pending;
+  Assert.equal(foundWin, expectedWin, "Should have found the right window");
+  Assert.ok(
+    !BrowserWindowTracker.getPendingWindow(),
+    "Should be no pending window now."
+  );
+
+  await BrowserTestUtils.closeWindow(foundWin);
+
+  expectedWin = Services.ww.openWindow(
+    null,
+    AppConstants.BROWSER_CHROME_URL,
+    "_blank",
+    "chrome,dialog=no,all",
+    null
+  );
+  BrowserWindowTracker.registerOpeningWindow(expectedWin, false);
+  pending = BrowserWindowTracker.getPendingWindow();
+  Assert.ok(pending, "Should be a pending window now.");
+
+  foundWin = await pending;
+  Assert.equal(foundWin, expectedWin, "Should have found the right window");
+  Assert.ok(
+    !BrowserWindowTracker.getPendingWindow(),
+    "Should be no pending window now."
+  );
+
+  await BrowserTestUtils.closeWindow(foundWin);
+});
