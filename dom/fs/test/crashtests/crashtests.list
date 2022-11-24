@@ -1,3 +1,5 @@
-defaults pref(dom.fs.enabled,true)
+# StorageManager isn't enabled on Android
+defaults skip-if(Android) pref(dom.fs.enabled,true)
 
 load 1798773.html
+load 1800470.html

@@ -116,7 +116,7 @@ FileSystemWritableFileStream::FileSystemWritableFileStream(
     RefPtr<FileSystemWritableFileStreamChild> aActor,
     const ::mozilla::ipc::FileDescriptor& aFileDescriptor,
     const fs::FileSystemEntryMetadata& aMetadata)
-    : WritableStream(aGlobal),
+    : WritableStream(aGlobal, HoldDropJSObjectsCaller::Explicit),
       mManager(aManager),
       mActor(std::move(aActor)),
       mFileDesc(nullptr),
@@ -125,12 +125,16 @@ FileSystemWritableFileStream::FileSystemWritableFileStream(
   auto rawFD = aFileDescriptor.ClonePlatformHandle();
   mFileDesc = PR_ImportFile(PROsfd(rawFD.release()));
 
+  mozilla::HoldJSObjects(this);
+
   LOG(("Created WritableFileStream %p for fd %p", this, mFileDesc));
 }
 
 FileSystemWritableFileStream::~FileSystemWritableFileStream() {
   MOZ_ASSERT(!mActor);
   MOZ_ASSERT(mClosed);
+
+  mozilla::DropJSObjects(this);
 }
 
 // https://streams.spec.whatwg.org/#writablestream-set-up
