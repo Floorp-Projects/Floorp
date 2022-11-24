@@ -51,7 +51,6 @@
 #include "vm/GeckoProfiler.h"
 #include "vm/JSScript.h"
 #include "vm/OffThreadPromiseRuntimeState.h"  // js::OffThreadPromiseRuntimeState
-#include "vm/SharedImmutableStringsCache.h"
 #include "vm/SharedStencil.h"  // js::SharedImmutableScriptDataTable
 #include "vm/Stack.h"
 #include "wasm/WasmTypeDecls.h"
@@ -784,26 +783,6 @@ struct JSRuntime {
   js::WriteOnceData<const char*> decimalSeparator;
   js::WriteOnceData<const char*> numGrouping;
 #endif
-
- private:
-  mozilla::Maybe<js::SharedImmutableStringsCache> sharedImmutableStrings_;
-
- public:
-  // If this particular JSRuntime has a SharedImmutableStringsCache, return a
-  // pointer to it, otherwise return nullptr.
-  js::SharedImmutableStringsCache* maybeThisRuntimeSharedImmutableStrings() {
-    return sharedImmutableStrings_.isSome() ? &*sharedImmutableStrings_
-                                            : nullptr;
-  }
-
-  // Get a reference to this JSRuntime's or its parent's
-  // SharedImmutableStringsCache.
-  js::SharedImmutableStringsCache& sharedImmutableStrings() {
-    MOZ_ASSERT_IF(parentRuntime, !sharedImmutableStrings_);
-    MOZ_ASSERT_IF(!parentRuntime, sharedImmutableStrings_);
-    return parentRuntime ? parentRuntime->sharedImmutableStrings()
-                         : *sharedImmutableStrings_;
-  }
 
  private:
   js::WriteOnceData<bool> beingDestroyed_;
