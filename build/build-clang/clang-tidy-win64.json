@@ -5,7 +5,6 @@
     "cxx": "cl.exe",
     "ml": "ml64.exe",
     "patches": [
-        "clang_include_cleaner.patch",
         "clang-tidy-ci.patch"
     ]
 }
