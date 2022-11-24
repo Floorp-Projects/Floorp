@@ -138,6 +138,8 @@ skip-if(gtkWidget||/^Windows\x20NT\x206\.1/.test(http.oscpu)) == emoji-fallback-
 == emoji-fallback-3.html emoji-fallback-3-ref.html
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) != emoji-keycap.html emoji-keycap-notref.html
 == emoji-skintone.html emoji-skintone-ref.html
+# Random on Android because font availability varies depending on the version/device.
+random-if(Android) != emoji-subregion-flag.html emoji-subregion-flag-notref.html
 
 # system font generic per-language tests, only works under OSX currently
 # Bug 1212731 - initial implementation caused startup regression and
