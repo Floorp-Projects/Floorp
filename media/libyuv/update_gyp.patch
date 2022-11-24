@@ -2,9 +2,9 @@
 # Parent  034c99a4c2010c8d60ff52daf0a183ac1fd05777
 Bug 1341543: Update libyuv gyp file with mozilla changes r=sotaro
 
-diff --git a/media/libyuv/libyuv/libyuv.gyp b/media/libyuv/libyuv/libyuv.gyp
---- a/media/libyuv/libyuv/libyuv.gyp
-+++ b/media/libyuv/libyuv/libyuv.gyp
+diff --git a/libyuv.gyp b/libyuv.gyp
+--- a/libyuv.gyp
++++ b/libyuv.gyp
 @@ -47,17 +47,17 @@
      {
        'target_name': 'libyuv',
