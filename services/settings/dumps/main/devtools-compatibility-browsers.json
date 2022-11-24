@@ -1,6 +1,15 @@
 {
   "data": [
     {
+      "name": "Samsung Internet",
+      "schema": 1669209850168,
+      "status": "current",
+      "version": "19.1",
+      "browserid": "samsunginternet_android",
+      "id": "0b8dd4c5-f0c2-49b0-9fa2-8bdfdd181f40",
+      "last_modified": 1669210981397
+    },
+    {
       "name": "Firefox for Android",
       "schema": 1668864319523,
       "status": "nightly",
@@ -496,15 +505,6 @@
       "last_modified": 1661426998144
     },
     {
-      "name": "Samsung Internet",
-      "schema": 1661424931735,
-      "status": "current",
-      "version": "18.0",
-      "browserid": "samsunginternet_android",
-      "id": "36d4b20e-19d0-422b-898f-c5b522f65b14",
-      "last_modified": 1661426998131
-    },
-    {
       "name": "WebView Android",
       "schema": 1661424937825,
       "status": "planned",
@@ -532,5 +532,5 @@
       "last_modified": 1645448267500
     }
   ],
-  "timestamp": 1669024641920
+  "timestamp": 1669210981397
 }
