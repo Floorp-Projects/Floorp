@@ -9120,7 +9120,7 @@ const SafeBrowsingNotificationBox = {
  */
 class TabDialogBox {
   static _containerFor(browser) {
-    return browser.closest(".browserContainer, .webextension-popup-stack");
+    return browser.closest(".browserStack, .webextension-popup-stack");
   }
 
   constructor(browser) {
