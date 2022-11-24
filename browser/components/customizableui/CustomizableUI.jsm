@@ -5308,11 +5308,12 @@ class OverflowableToolbar {
   /**
    * A reference to the the element that overflowed extension browser action
    * toolbar items will be appended to as children upon overflow if the
-   * Unified Extension UI is enabled.
+   * Unified Extension UI is enabled. This is created lazily and might be null,
+   * so you should use the #webExtList memoizing getter instead to get this.
    *
-   * @type {Element}
+   * @type {Element|null}
    */
-  #webExtList = null;
+  #webExtListRef = null;
 
   /**
    * An empty object that is created in #checkOverflow to identify individual
@@ -5665,7 +5666,7 @@ class OverflowableToolbar {
       return;
     }
 
-    let webExtList = this.#getWebExtList();
+    let webExtList = this.#webExtList;
 
     let child = this.#target.lastElementChild;
     while (child && isOverflowing) {
@@ -6011,16 +6012,20 @@ class OverflowableToolbar {
    *   buttons should go to if the Unified Extensions UI is enabled, or null
    *   if no such list exists.
    */
-  #getWebExtList() {
-    if (!this.#webExtList) {
+  get #webExtList() {
+    if (!this.#webExtListRef) {
       let targetID = this.#toolbar.getAttribute("addon-webext-overflowtarget");
-      if (targetID) {
-        let win = this.#toolbar.ownerGlobal;
-        let { panel } = win.gUnifiedExtensions;
-        this.#webExtList = panel.querySelector(`#${targetID}`);
+      if (!targetID) {
+        throw new Error(
+          "addon-webext-overflowtarget was not defined on the " +
+            `overflowable toolbar with id: ${this.#toolbar.id}`
+        );
       }
+      let win = this.#toolbar.ownerGlobal;
+      let { panel } = win.gUnifiedExtensions;
+      this.#webExtListRef = panel.querySelector(`#${targetID}`);
     }
-    return this.#webExtList;
+    return this.#webExtListRef;
   }
 
   /**
@@ -6031,7 +6036,7 @@ class OverflowableToolbar {
    * @returns {boolean}
    */
   #isOverflowList(aNode) {
-    return aNode && (aNode == this.#defaultList || aNode == this.#webExtList);
+    return aNode == this.#defaultList || aNode == this.#webExtList;
   }
 
   /**

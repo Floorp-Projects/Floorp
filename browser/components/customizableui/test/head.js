@@ -94,6 +94,8 @@ function createOverflowableToolbarWithPlacements(id, placements) {
   tb.setAttribute("default-overflowpanel", overflowPanel.id);
   tb.setAttribute("default-overflowtarget", overflowList.id);
   tb.setAttribute("default-overflowbutton", chevron.id);
+  tb.setAttribute("addon-webext-overflowbutton", "unified-extensions-button");
+  tb.setAttribute("addon-webext-overflowtarget", "overflowed-extensions-list");
 
   gNavToolbox.appendChild(tb);
   CustomizableUI.registerToolbarNode(tb);
