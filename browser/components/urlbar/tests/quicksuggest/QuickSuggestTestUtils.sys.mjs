@@ -8,8 +8,6 @@ const {
   PartnerLinkAttribution,
 } = ChromeUtils.import("resource:///modules/PartnerLinkAttribution.jsm");
 
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -43,12 +41,6 @@ XPCOMUtils.defineLazyGetter(lazy, "UrlbarTestUtils", () => {
   return module;
 });
 
-// The default value of `quicksuggest.dataCollection.enabled` in the offline
-// scenario.
-const DATA_COLLECTION_OFFLINE =
-  AppConstants.MOZ_UPDATE_CHANNEL == "beta" ||
-  AppConstants.isReleaseCandidateOnBeta;
-
 const DEFAULT_CONFIG = {
   best_match: {
     blocked_suggestion_ids: [],
@@ -62,7 +54,7 @@ const DEFAULT_PING_PAYLOADS = {
     block_id: 1,
     context_id: () => actual => !!actual,
     iab_category: "22 - Shopping",
-    improve_suggest_experience_checked: DATA_COLLECTION_OFFLINE,
+    improve_suggest_experience_checked: false,
     match_type: "firefox-suggest",
     request_id: null,
   },
@@ -70,7 +62,7 @@ const DEFAULT_PING_PAYLOADS = {
     advertiser: "testadvertiser",
     block_id: 1,
     context_id: () => actual => !!actual,
-    improve_suggest_experience_checked: DATA_COLLECTION_OFFLINE,
+    improve_suggest_experience_checked: false,
     match_type: "firefox-suggest",
     reporting_url: "http://example.com/click",
     request_id: null,
@@ -79,7 +71,7 @@ const DEFAULT_PING_PAYLOADS = {
     advertiser: "testadvertiser",
     block_id: 1,
     context_id: () => actual => !!actual,
-    improve_suggest_experience_checked: DATA_COLLECTION_OFFLINE,
+    improve_suggest_experience_checked: false,
     is_clicked: false,
     match_type: "firefox-suggest",
     reporting_url: "http://example.com/impression",
@@ -136,21 +128,6 @@ export class QuickSuggestTestUtils {
     Services.telemetry.clearScalars();
   }
 
-  /**
-   * @returns {boolean}
-   *   The default value of the `quicksuggest.dataCollection.enabled` pref in
-   *   the offline scenario. This is the pref whose value is sent in the
-   *   contextual services pings as `improve_suggest_experience_checked`.
-   */
-  get DATA_COLLECTION_OFFLINE() {
-    return DATA_COLLECTION_OFFLINE;
-  }
-
-  /**
-   * @returns {object}
-   *   The default quick suggest configuration object as stored in remote
-   *   settings.
-   */
   get DEFAULT_CONFIG() {
     // Return a clone so callers can modify it.
     return Cu.cloneInto(DEFAULT_CONFIG, this);
