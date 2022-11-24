@@ -211,31 +211,6 @@ async function getGeneratedLocation(location) {
   };
 }
 
-async function getAllGeneratedLocations(location) {
-  if (!isOriginalId(location.sourceId)) {
-    return [];
-  }
-
-  const generatedSourceId = originalToGeneratedId(location.sourceId);
-  const data = await getSourceMapWithMetadata(generatedSourceId);
-  if (!data) {
-    return [];
-  }
-  const { urlsById, map } = data;
-
-  const positions = map.allGeneratedPositionsFor({
-    source: urlsById.get(location.sourceId),
-    line: location.line,
-    column: location.column == null ? 0 : location.column,
-  });
-
-  return positions.map(({ line, column }) => ({
-    sourceId: generatedSourceId,
-    line,
-    column,
-  }));
-}
-
 async function getOriginalLocations(locations, options = {}) {
   const maps = {};
 
@@ -527,7 +502,6 @@ module.exports = {
   getOriginalRanges,
   getGeneratedRanges,
   getGeneratedLocation,
-  getAllGeneratedLocations,
   getOriginalLocation,
   getOriginalLocations,
   getOriginalSourceText,
