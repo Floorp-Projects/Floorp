@@ -683,6 +683,17 @@ class HomeScreenRobot {
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
+
+        fun clickPocketDiscoverMoreButton(composeTestRule: ComposeTestRule, position: Int, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            composeTestRule.onNodeWithTag("pocket.stories")
+                .assertIsDisplayed()
+                .onChildAt(position - 1)
+                .assert(hasTestTag("pocket.discover.more.story"))
+                .performClick()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
     }
 }
 
@@ -1075,17 +1086,6 @@ private fun sponsoredShortcut(sponsoredShortcutTitle: String) =
             .res("$packageName:id/top_site_title")
             .textContains(sponsoredShortcutTitle),
     )
-
-private fun discoverMoreStoriesButton(position: Int) =
-    mDevice
-        .findObject(
-            UiSelector()
-                .resourceId("pocket.stories"),
-        ).getChild(
-            UiSelector()
-                .resourceId("pocket.discover.more.story")
-                .index(position - 1),
-        )
 
 val deleteFromHistory =
     onView(

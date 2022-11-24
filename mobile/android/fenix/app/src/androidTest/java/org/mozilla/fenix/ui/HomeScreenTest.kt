@@ -259,6 +259,25 @@ class HomeScreenTest {
     }
 
     @Test
+    fun openPocketDiscoverMoreTest() {
+        activityTestRule.activityRule.applySettingsExceptions {
+            it.isRecentTabsFeatureEnabled = false
+            it.isRecentlyVisitedFeatureEnabled = false
+        }
+
+        homeScreen {
+        }.dismissOnboarding()
+
+        homeScreen {
+            scrollToPocketProvokingStories()
+            swipePocketProvokingStories()
+            verifyDiscoverMoreStoriesButton(activityTestRule, 9)
+        }.clickPocketDiscoverMoreButton(activityTestRule, 9) {
+            verifyUrl("getpocket.com/explore")
+        }
+    }
+
+    @Test
     fun verifyCustomizeHomepageTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
