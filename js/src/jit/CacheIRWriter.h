@@ -37,6 +37,7 @@
 #include "util/Memory.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
+#include "vm/List.h"
 #include "vm/Opcodes.h"
 #include "vm/Shape.h"
 #include "wasm/WasmConstants.h"
@@ -618,6 +619,12 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void metaScriptedThisShape(Shape* thisShape) {
     metaScriptedThisShape_(thisShape);
   }
+
+  void guardMultipleShapes(ObjOperandId obj, ListObject* shapes) {
+    MOZ_ASSERT(shapes->length() > 0);
+    guardMultipleShapes_(obj, shapes);
+  }
+
   friend class CacheIRCloner;
 
   CACHE_IR_WRITER_GENERATED

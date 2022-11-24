@@ -239,6 +239,15 @@
     obj: ObjId
     shape: ShapeField
 
+- name: GuardMultipleShapes
+  shared: true
+  transpile: false
+  cost_estimate: 2
+  custom_writer: true
+  args:
+    obj: ObjId
+    shapes: ObjectField
+
 - name: GuardProto
   shared: false
   transpile: true
