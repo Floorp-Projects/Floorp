@@ -139,7 +139,7 @@ NS_IMPL_ISUPPORTS(TestFileOutputStream::RequestResolver, nsIQuotaCallback)
 
 nsCOMPtr<nsISerialEventTarget> TestFileOutputStream::sBackgroundTarget;
 
-TEST_F(TestFileOutputStream, DISABLED_extendFileStreamWithSetEOF) {
+TEST_F(TestFileOutputStream, extendFileStreamWithSetEOF) {
   auto ioTask = []() {
     quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
 

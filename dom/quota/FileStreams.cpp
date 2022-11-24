@@ -24,16 +24,18 @@ namespace mozilla::dom::quota {
 
 template <class FileStreamBase>
 NS_IMETHODIMP FileQuotaStream<FileStreamBase>::SetEOF() {
-  QM_TRY(MOZ_TO_RESULT(FileStreamBase::SetEOF()));
-
+  // If the stream is not quota tracked, or on an early or late stage in the
+  // lifecycle, mQuotaObject is null. Under these circumstances,
+  // we don't check the quota limit in order to avoid breakage.
   if (mQuotaObject) {
-    int64_t offset;
+    int64_t offset = 0;
     QM_TRY(MOZ_TO_RESULT(FileStreamBase::Tell(&offset)));
 
-    DebugOnly<bool> res =
-        mQuotaObject->MaybeUpdateSize(offset, /* aTruncate */ true);
-    MOZ_ASSERT(res);
+    QM_TRY(OkIf(mQuotaObject->MaybeUpdateSize(offset, /* aTruncate */ true)),
+           NS_ERROR_FILE_NO_DEVICE_SPACE);
   }
+
+  QM_TRY(MOZ_TO_RESULT(FileStreamBase::SetEOF()));
 
   return NS_OK;
 }
