@@ -23,8 +23,6 @@ package_version: "15.0.5"
 clang_checkers:
   - name: -*
     publish: !!bool no
-  - name: alpha-unused-includes
-    reliability: medium
   - name: bugprone-argument-comment
     reliability: high
   - name: bugprone-assert-side-effect
