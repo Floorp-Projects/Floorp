@@ -9,11 +9,16 @@
 
 var EXPORTED_SYMBOLS = ["BrowserWindowTracker"];
 
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
+
 const lazy = {};
 
 // Lazy getters
 ChromeUtils.defineESModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
 // Constants
@@ -145,6 +150,8 @@ var WindowHelper = {
 };
 
 const BrowserWindowTracker = {
+  pendingWindows: new Map(),
+
   /**
    * Get the most recent browser window.
    *
@@ -167,6 +174,90 @@ const BrowserWindowTracker = {
       }
     }
     return null;
+  },
+
+  /**
+   * Get a window that is in the process of loading. Only supports windows
+   * opened via the `openWindow` function in this module or that have been
+   * registered with the `registerOpeningWindow` function.
+   *
+   * @param {Object} options
+   *   Options for the search.
+   * @param {boolean} [options.private]
+   *   true to restrict the search to private windows only, false to restrict
+   *   the search to non-private only. Omit the property to search in both
+   *   groups.
+   *
+   * @returns {Promise<Window> | null}
+   */
+  getPendingWindow(options = {}) {
+    for (let pending of this.pendingWindows.values()) {
+      if (
+        !("private" in options) ||
+        lazy.PrivateBrowsingUtils.permanentPrivateBrowsing ||
+        pending.isPrivate == options.private
+      ) {
+        return pending.deferred.promise;
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Registers a browser window that is in the process of opening. Normally it
+   * would be preferable to use the standard method for opening the window from
+   * this module.
+   *
+   * @param {Window} window
+   *   The opening window.
+   * @param {boolean} isPrivate
+   *   Whether the opening window is a private browsing window.
+   */
+  registerOpeningWindow(window, isPrivate) {
+    let deferred = lazy.PromiseUtils.defer();
+
+    this.pendingWindows.set(window, {
+      isPrivate,
+      deferred,
+    });
+  },
+
+  /**
+   * A standard function for opening a new browser window.
+   *
+   * @param {Object} [options]
+   *   Options for the new window.
+   * @param {boolean} [options.private]
+   *   True to make the window a private browsing window.
+   * @param {String} [options.features]
+   *   Additional window features to give the new window.
+   * @param {nsIArray | nsISupportsString} [options.args]
+   *   Arguments to pass to the new window.
+   *
+   * @returns {Window}
+   */
+  openWindow({
+    private: isPrivate = false,
+    features = undefined,
+    args = null,
+  } = {}) {
+    let windowFeatures = "chrome,dialog=no,all";
+    if (features) {
+      windowFeatures += `,${features}`;
+    }
+    if (isPrivate) {
+      windowFeatures += ",private";
+    }
+
+    let win = Services.ww.openWindow(
+      null,
+      AppConstants.BROWSER_CHROME_URL,
+      "_blank",
+      windowFeatures,
+      args
+    );
+    this.registerOpeningWindow(win, isPrivate);
+    return win;
   },
 
   windowCreated(browser) {
@@ -207,6 +298,14 @@ const BrowserWindowTracker = {
   },
 
   track(window) {
+    let pending = this.pendingWindows.get(window);
+    if (pending) {
+      this.pendingWindows.delete(window);
+      // Waiting for delayed startup to complete ensures that this new window
+      // has started loading its initial urls.
+      window.delayedStartupPromise.then(() => pending.deferred.resolve(window));
+    }
+
     return WindowHelper.addWindow(window);
   },
 
