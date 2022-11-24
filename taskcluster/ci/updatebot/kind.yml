@@ -22,7 +22,7 @@ jobs:
             platform: updatebot/all
             symbol: cron
             tier: 1
-        worker-type: b-linux
+        worker-type: b-linux-gcp
         worker:
             docker-image: {in-tree: updatebot}
             max-run-time: 3600
