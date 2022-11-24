@@ -145,6 +145,21 @@ async function testOriginControls(
     "Expected attention badge before clicking."
   );
 
+  Assert.deepEqual(
+    win.document.l10n.getAttributes(
+      buttonOrWidget.querySelector(".unified-extensions-item-action")
+    ),
+    {
+      id: attention
+        ? "origin-controls-toolbar-button-permission-needed"
+        : "origin-controls-toolbar-button",
+      args: {
+        extensionTitle: "Generated extension",
+      },
+    },
+    "Correct l10n message."
+  );
+
   let itemToClick;
   if (click) {
     itemToClick = visibleOriginItems[click];
@@ -261,6 +276,12 @@ const originControlsInContextMenu = async options => {
     args: null,
   };
 
+  const UNIFIED_NO_ATTENTION = { id: "unified-extensions-button", args: null };
+  const UNIFIED_ATTENTION = {
+    id: "unified-extensions-button-permissions-needed",
+    args: null,
+  };
+
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     await testOriginControls(ext1, options, { items: [NO_ACCESS] });
     await testOriginControls(ext2, options, { items: [NO_ACCESS] });
@@ -272,6 +293,11 @@ const originControlsInContextMenu = async options => {
       ok(
         !unifiedButton.hasAttribute("attention"),
         "No extension will have attention indicator on about:blank."
+      );
+      Assert.deepEqual(
+        options.win.document.l10n.getAttributes(unifiedButton),
+        UNIFIED_NO_ATTENTION,
+        "Unified button has no permissions needed tooltip."
       );
     }
   });
@@ -312,6 +338,11 @@ const originControlsInContextMenu = async options => {
         unifiedButton.hasAttribute("attention"),
         "Both ext2 and ext3 are WHEN_CLICKED for example.com, so show attention indicator."
       );
+      Assert.deepEqual(
+        options.win.document.l10n.getAttributes(unifiedButton),
+        UNIFIED_ATTENTION,
+        "UEB has permissions needed tooltip."
+      );
     }
   });
 
@@ -350,6 +381,11 @@ const originControlsInContextMenu = async options => {
         unifiedButton.hasAttribute("attention"),
         "ext2 is WHEN_CLICKED for example.com, show attention indicator."
       );
+      Assert.deepEqual(
+        options.win.document.l10n.getAttributes(unifiedButton),
+        UNIFIED_ATTENTION,
+        "UEB attention for only one extension."
+      );
     }
 
     // Click the other option, expect example.com permission granted/revoked.
@@ -365,6 +401,11 @@ const originControlsInContextMenu = async options => {
         !unifiedButton.hasAttribute("attention"),
         "Bot ext2 and ext3 are ALWAYS_ON for example.com, so no attention indicator."
       );
+      Assert.deepEqual(
+        options.win.document.l10n.getAttributes(unifiedButton),
+        UNIFIED_NO_ATTENTION,
+        "Unified button has no permissions needed tooltip."
+      );
     }
 
     await testOriginControls(ext3, options, {
@@ -378,6 +419,11 @@ const originControlsInContextMenu = async options => {
       ok(
         unifiedButton.hasAttribute("attention"),
         "ext3 is now WHEN_CLICKED for example.com, show attention indicator."
+      );
+      Assert.deepEqual(
+        options.win.document.l10n.getAttributes(unifiedButton),
+        UNIFIED_ATTENTION,
+        "UEB attention for only one extension."
       );
     }
 
@@ -397,6 +443,11 @@ const originControlsInContextMenu = async options => {
       ok(
         unifiedButton.hasAttribute("attention"),
         "Still showing the attention indicator."
+      );
+      Assert.deepEqual(
+        options.win.document.l10n.getAttributes(unifiedButton),
+        UNIFIED_ATTENTION,
+        "UEB attention for only one extension."
       );
     }
   });
