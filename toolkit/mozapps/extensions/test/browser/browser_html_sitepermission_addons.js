@@ -25,13 +25,6 @@ async function uninstallAllSitePermissionAddons() {
 }
 
 add_setup(async () => {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["midi.prompt.testing", false],
-      ["midi.testing", true],
-    ],
-  });
-
   registerCleanupFunction(uninstallAllSitePermissionAddons);
 });
 
