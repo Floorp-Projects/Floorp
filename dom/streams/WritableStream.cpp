@@ -49,16 +49,28 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WritableStream)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-WritableStream::WritableStream(nsIGlobalObject* aGlobal) : mGlobal(aGlobal) {
-  mozilla::HoldJSObjects(this);
+WritableStream::WritableStream(nsIGlobalObject* aGlobal,
+                               HoldDropJSObjectsCaller aHoldDropCaller)
+    : mGlobal(aGlobal), mHoldDropCaller(aHoldDropCaller) {
+  if (mHoldDropCaller == HoldDropJSObjectsCaller::Implicit) {
+    mozilla::HoldJSObjects(this);
+  }
 }
 
-WritableStream::WritableStream(const GlobalObject& aGlobal)
-    : mGlobal(do_QueryInterface(aGlobal.GetAsSupports())) {
-  mozilla::HoldJSObjects(this);
+WritableStream::WritableStream(const GlobalObject& aGlobal,
+                               HoldDropJSObjectsCaller aHoldDropCaller)
+    : mGlobal(do_QueryInterface(aGlobal.GetAsSupports())),
+      mHoldDropCaller(aHoldDropCaller) {
+  if (mHoldDropCaller == HoldDropJSObjectsCaller::Implicit) {
+    mozilla::HoldJSObjects(this);
+  }
 }
 
-WritableStream::~WritableStream() { mozilla::DropJSObjects(this); }
+WritableStream::~WritableStream() {
+  if (mHoldDropCaller == HoldDropJSObjectsCaller::Implicit) {
+    mozilla::DropJSObjects(this);
+  }
+}
 
 JSObject* WritableStream::WrapObject(JSContext* aCx,
                                      JS::Handle<JSObject*> aGivenProto) {
@@ -458,7 +470,8 @@ already_AddRefed<WritableStream> WritableStream::Constructor(
   }
 
   // Step 4. Perform ! InitializeWritableStream(this).
-  RefPtr<WritableStream> writableStream = new WritableStream(aGlobal);
+  RefPtr<WritableStream> writableStream =
+      new WritableStream(aGlobal, HoldDropJSObjectsCaller::Implicit);
 
   // Step 5. Let sizeAlgorithm be ! ExtractSizeAlgorithm(strategy).
   //
@@ -693,7 +706,8 @@ already_AddRefed<WritableStream> CreateWritableStream(
 
   // Step 2: Let stream be a new WritableStream.
   // Step 3: Perform ! InitializeWritableStream(stream).
-  auto stream = MakeRefPtr<WritableStream>(aGlobal);
+  auto stream = MakeRefPtr<WritableStream>(
+      aGlobal, WritableStream::HoldDropJSObjectsCaller::Implicit);
 
   // Step 4: Let controller be a new WritableStreamDefaultController.
   auto controller =

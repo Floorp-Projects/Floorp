@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <script id="worker1" type="javascript/worker">
+    self.onmessage = async function (e) {
+      const directory = await navigator.storage.getDirectory();
+      const file = await directory.getFileHandle("500014c3-f683-4551-bb26-08025c9be332", {
+        create: true,
+      });
+      const stream = await file.createWritable({});
+      const regex = new RegExp(".*");
+      await stream.abort(regex);
+      self.postMessage("done");
+      self.close();
+    }
+  </script>
+  <script>
+    var worker;
+    document.addEventListener('DOMContentLoaded', () => {
+      const buffer = new ArrayBuffer(1);
+      const blob = new Blob([document.querySelector('#worker1').textContent], { type: 'text/javascript' });
+      worker = new Worker(window.URL.createObjectURL(blob));
+      worker.postMessage([buffer], [buffer]);
+      worker.onmessage = function() {document.documentElement.removeAttribute("class"); }
+    });
+  </script>
+</head>
+</html>
