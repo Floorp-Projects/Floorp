@@ -674,6 +674,8 @@ pref("toolkit.telemetry.unified", true);
 
 // DAP related preferences
 pref("toolkit.telemetry.dap_enabled", false);
+// Verification tasks
+pref("toolkit.telemetry.dap_task1_enabled", false);
 // Leader endpoint for the DAP protocol
 pref("toolkit.telemetry.dap_leader", "https://interop-00.api.divviup.org");
 // Not used for anything. Just additional information.

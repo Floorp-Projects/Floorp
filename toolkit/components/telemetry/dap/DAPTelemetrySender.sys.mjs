@@ -12,6 +12,9 @@ XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
     maxLogLevelPref: "toolkit.telemetry.dap.logLevel",
   });
 });
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+});
 
 const PREF_LEADER = "toolkit.telemetry.dap_leader";
 const PREF_HELPER = "toolkit.telemetry.dap_helper";
@@ -29,14 +32,22 @@ XPCOMUtils.defineLazyPreferenceGetter(lazy, "HELPER", PREF_HELPER, undefined);
 
 export const DAPTelemetrySender = new (class {
   startup() {
-    this.sendVerificationTaskReport();
+    lazy.logConsole.info("Performing DAP startup");
+
+    if (lazy.NimbusFeatures.dapTelemetry.getVariable("task1Enabled")) {
+      // For now we are sending a constant value because it simplifies verification.
+      let measurement = 3;
+      this.sendVerificationTaskReport(measurement);
+    }
   }
 
   /**
    * For testing: sends a hard coded report for a hard coded task.
+   *
+   * @param {number} measurement
    */
-  async sendVerificationTaskReport() {
-    lazy.logConsole.info("send_verification_task_report");
+  async sendVerificationTaskReport(measurement) {
+    lazy.logConsole.info("Trying to send verification task.");
 
     // For now there is only a single task which is hardcoded here.
     /**
@@ -68,9 +79,6 @@ export const DAPTelemetrySender = new (class {
       lazy.logConsole.error('Preference "' + PREF_HELPER + '" not set');
       return;
     }
-
-    // For now we are sending a constant value because it simplifies verification.
-    let measurement = 3;
 
     try {
       let report = await this.generateReport(task, measurement);
@@ -152,9 +160,11 @@ export const DAPTelemetrySender = new (class {
       });
 
       if (response.status != 200) {
+        let error = await response.json();
         lazy.logConsole.error(
-          `Sending failed with status: ${response.status} ${response.statusText}`
+          `Sending failed. HTTP response: ${response.status} ${response.statusText}. Error: ${error.type} ${error.title}`
         );
+
         Glean.dap.uploadStatus.failure.add(1);
       } else {
         lazy.logConsole.info("DAP report sent");
