@@ -10,14 +10,14 @@ They are added to 'try_task_config.json' and processed by the transforms.
 
 import json
 import os
-import six
 import subprocess
 import sys
 from abc import ABCMeta, abstractmethod, abstractproperty
-from argparse import Action, SUPPRESS
+from argparse import SUPPRESS, Action
 from textwrap import dedent
 
 import mozpack.path as mozpath
+import six
 from mozbuild.base import BuildEnvironmentNotFoundException, MozbuildObject
 
 from .tasks import resolve_tests_by_suite

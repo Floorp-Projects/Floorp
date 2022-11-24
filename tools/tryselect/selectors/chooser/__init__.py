@@ -8,6 +8,7 @@ import os
 import webbrowser
 from threading import Timer
 
+from gecko_taskgraph.target_tasks import filter_by_uncommon_try_tasks
 from tryselect.cli import BaseTryParser
 from tryselect.push import (
     check_working_directory,
@@ -15,8 +16,6 @@ from tryselect.push import (
     push_to_try,
 )
 from tryselect.tasks import generate_tasks
-
-from gecko_taskgraph.target_tasks import filter_by_uncommon_try_tasks
 
 here = os.path.abspath(os.path.dirname(__file__))
 

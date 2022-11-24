@@ -1,12 +1,11 @@
-from subprocess import check_call
 import os
 import os.path
 import sys
+from subprocess import check_call
 
-from moztest.selftest import fixtures
 import mozunit
 import pytest
-
+from moztest.selftest import fixtures
 
 MOZ_AUTOMATION = bool(os.getenv("MOZ_AUTOMATION", "0") == "1")
 

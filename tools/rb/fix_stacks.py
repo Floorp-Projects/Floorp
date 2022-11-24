@@ -8,12 +8,13 @@
 # MozFormatCodeAddress().
 
 from __future__ import absolute_import, print_function
-from subprocess import Popen, PIPE
+
 import atexit
 import os
 import platform
 import re
 import sys
+from subprocess import PIPE, Popen
 
 # Matches lines produced by MozFormatCodeAddress(), e.g.
 # `#01: ???[tests/example +0x43a0]`.
@@ -23,8 +24,8 @@ fix_stacks = None
 
 
 def autobootstrap():
-    from mozbuild.configure import ConfigureSandbox
     import buildconfig
+    from mozbuild.configure import ConfigureSandbox
 
     sandbox = ConfigureSandbox(
         {},

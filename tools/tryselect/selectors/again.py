@@ -7,7 +7,7 @@ import json
 import os
 
 from ..cli import BaseTryParser
-from ..push import push_to_try, history_path
+from ..push import history_path, push_to_try
 
 
 class AgainParser(BaseTryParser):

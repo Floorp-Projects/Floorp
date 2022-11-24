@@ -3,19 +3,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-import signal
-import six
 import re
+import signal
 import subprocess
 from collections import namedtuple
-from packaging.version import Version
 
+import six
 from mozboot.util import get_tools_dir
 from mozfile import which
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
 from mozprocess import ProcessHandler
-
+from packaging.version import Version
 
 RUSTFMT_NOT_FOUND = """
 Could not find rustfmt! Install rustfmt and try again.

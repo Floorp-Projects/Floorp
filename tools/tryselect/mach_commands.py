@@ -8,15 +8,10 @@ import importlib
 import os
 import sys
 
-from mach.decorators import (
-    Command,
-    SettingsProvider,
-    SubCommand,
-)
+from mach.decorators import Command, SettingsProvider, SubCommand
 from mach.util import get_state_dir
 from mozbuild.base import BuildEnvironmentNotFoundException
 from mozbuild.util import memoize
-
 
 CONFIG_ENVIRONMENT_NOT_FOUND = """
 No config environment detected. This means we are unable to properly

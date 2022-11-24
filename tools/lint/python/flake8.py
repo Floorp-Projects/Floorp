@@ -10,7 +10,6 @@ import sys
 
 import mozfile
 import mozpack.path as mozpath
-
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
 
@@ -127,8 +126,8 @@ def lint(paths, config, **lintargs):
 
 
 def run(paths, config, **lintargs):
-    from flake8.main.application import Application
     from flake8 import __version__ as flake8_version
+    from flake8.main.application import Application
 
     log = lintargs["log"]
     root = lintargs["root"]

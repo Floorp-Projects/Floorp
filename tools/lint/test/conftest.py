@@ -6,14 +6,13 @@ import pathlib
 import sys
 from collections import defaultdict
 
+import pytest
 from mozbuild.base import MozbuildObject
-from mozlint.pathutils import findobject
 from mozlint.parser import Parser
+from mozlint.pathutils import findobject
 from mozlint.result import ResultSummary
 from mozlog.structuredlog import StructuredLogger
 from mozpack import path
-
-import pytest
 
 here = path.abspath(path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here, virtualenv_name="python-test")
@@ -256,10 +255,10 @@ def structured_logger():
 @pytest.fixture
 def perfdocs_sample():
     from test_perfdocs import (
-        SAMPLE_TEST,
-        SAMPLE_CONFIG,
         DYNAMIC_SAMPLE_CONFIG,
+        SAMPLE_CONFIG,
         SAMPLE_INI,
+        SAMPLE_TEST,
         temp_dir,
         temp_file,
     )

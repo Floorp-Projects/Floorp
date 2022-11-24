@@ -4,17 +4,16 @@
 
 
 import collections
-import json
+import datetime
 import hashlib
+import json
 import os
 import shutil
-import six
 import sqlite3
 import subprocess
+
 import requests
-import datetime
-
-
+import six
 from mach.util import get_state_dir
 from mozbuild.base import MozbuildObject
 from mozpack.files import FileFinder
@@ -22,8 +21,8 @@ from moztest.resolve import TestResolver
 from mozversioncontrol import get_repository_object
 
 from ..cli import BaseTryParser
-from ..tasks import generate_tasks, filter_tasks_by_paths, resolve_tests_by_suite
-from ..push import push_to_try, generate_try_task_config
+from ..push import generate_try_task_config, push_to_try
+from ..tasks import filter_tasks_by_paths, generate_tasks, resolve_tests_by_suite
 
 here = os.path.abspath(os.path.dirname(__file__))
 build = None

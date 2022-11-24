@@ -6,15 +6,15 @@ from __future__ import absolute_import
 import os
 import pathlib
 
-from perfdocs.logger import PerfDocLogger
-from perfdocs.utils import read_yaml
 from perfdocs.framework_gatherers import (
+    AwsyGatherer,
     MozperftestGatherer,
     RaptorGatherer,
     StaticGatherer,
     TalosGatherer,
-    AwsyGatherer,
 )
+from perfdocs.logger import PerfDocLogger
+from perfdocs.utils import read_yaml
 
 logger = PerfDocLogger()
 

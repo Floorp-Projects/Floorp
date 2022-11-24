@@ -28,13 +28,13 @@ import concurrent.futures
 import logging
 import os
 import re
-import requests
 import shutil
 import subprocess
 import tempfile
-import urlparse
 
-from PackageSymbolDumper import process_packages, find_packages
+import requests
+import urlparse
+from PackageSymbolDumper import find_packages, process_packages
 
 OSX_RE = re.compile(r"10\.[0-9]+\.[0-9]+")
 

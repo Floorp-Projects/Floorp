@@ -4,20 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import glob
 import itertools
 import json
-import glob
 import os
 import re
-import six
 import subprocess
 import sys
-
 import xml.etree.ElementTree as ET
 
-from mozpack.files import FileFinder
 import mozpack.path as mozpath
+import six
 from mozlint import result
+from mozpack.files import FileFinder
 
 # The Gradle target invocations are serialized with a simple locking file scheme.  It's fine for
 # them to take a while, since the first will compile all the Java, etc, and then perform

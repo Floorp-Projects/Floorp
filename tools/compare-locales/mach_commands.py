@@ -4,20 +4,18 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from appdirs import user_config_dir
-from hglib.error import CommandError
-from mach.decorators import (
-    CommandArgument,
-    Command,
-)
-from mach.base import FailedCommandError
-from mozrelease.scriptworker_canary import get_secret
-from pathlib import Path
-from redo import retry
 import argparse
 import logging
 import os
 import tempfile
+from pathlib import Path
+
+from appdirs import user_config_dir
+from hglib.error import CommandError
+from mach.base import FailedCommandError
+from mach.decorators import Command, CommandArgument
+from mozrelease.scriptworker_canary import get_secret
+from redo import retry
 
 
 @Command(

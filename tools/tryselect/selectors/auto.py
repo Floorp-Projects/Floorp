@@ -8,7 +8,6 @@ from taskgraph.util.python_path import find_object
 from ..cli import BaseTryParser
 from ..push import push_to_try
 
-
 TRY_AUTO_PARAMETERS = {
     "optimize_strategies": "gecko_taskgraph.optimize:tryselect.bugbug_reduced_manifests_config_selection_medium",  # noqa
     "optimize_target_tasks": True,

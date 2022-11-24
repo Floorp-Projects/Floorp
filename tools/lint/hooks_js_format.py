@@ -5,8 +5,8 @@
 
 import os
 import subprocess
-from subprocess import check_output, CalledProcessError
 import sys
+from subprocess import CalledProcessError, check_output
 
 here = os.path.dirname(os.path.realpath(__file__))
 topsrcdir = os.path.join(here, os.pardir, os.pardir)
@@ -20,7 +20,7 @@ EXTRA_PATHS = (
 )
 sys.path[:0] = [os.path.join(topsrcdir, p) for p in EXTRA_PATHS]
 
-from mozversioncontrol import get_repository_object, InvalidRepoPath
+from mozversioncontrol import InvalidRepoPath, get_repository_object
 
 
 def run_js_format(hooktype, changedFiles):

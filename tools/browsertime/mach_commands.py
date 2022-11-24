@@ -43,12 +43,11 @@ import subprocess
 import sys
 import time
 
-from six import StringIO
-from mach.decorators import CommandArgument, Command
-from mozbuild.base import MachCommandBase, BinaryNotFoundException
-from mozbuild.util import mkdir
 import mozpack.path as mozpath
-
+from mach.decorators import Command, CommandArgument
+from mozbuild.base import BinaryNotFoundException, MachCommandBase
+from mozbuild.util import mkdir
+from six import StringIO
 
 AUTOMATION = "MOZ_AUTOMATION" in os.environ
 BROWSERTIME_ROOT = os.path.dirname(__file__)
@@ -83,9 +82,10 @@ def silence():
 
 
 def node_path(command_context):
-    from mozbuild.nodeutil import find_node_executable
-    from distutils.version import StrictVersion
     import platform
+    from distutils.version import StrictVersion
+
+    from mozbuild.nodeutil import find_node_executable
 
     state_dir = command_context._mach_context.state_dir
     cache_path = os.path.join(state_dir, "browsertime", "node-16")

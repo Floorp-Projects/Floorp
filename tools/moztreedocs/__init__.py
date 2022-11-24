@@ -2,23 +2,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, unicode_literals, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import tempfile
-import yaml
+from pathlib import PurePath
 
+import frontmatter
+import sphinx
+import sphinx.ext.apidoc
+import yaml
 from mozbuild.base import MozbuildObject
 from mozbuild.frontend.reader import BuildReader
 from mozbuild.util import memoize
 from mozpack.copier import FileCopier
 from mozpack.files import FileFinder
 from mozpack.manifests import InstallManifest
-from pathlib import PurePath
-
-import frontmatter
-import sphinx
-import sphinx.ext.apidoc
 
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)

@@ -7,9 +7,9 @@ import os
 from mozbuild.base import MozbuildObject
 from mozversioncontrol import get_repository_object
 from tryselect.cli import BaseTryParser
-from .fuzzy import run as fuzzy_run
-from .again import run as again_run
 
+from .again import run as again_run
+from .fuzzy import run as fuzzy_run
 
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)

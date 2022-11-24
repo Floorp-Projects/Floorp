@@ -1,6 +1,6 @@
-from unittest import mock
 import os
 import pathlib
+from unittest import mock
 
 import mozunit
 
@@ -14,10 +14,10 @@ def setup_sample_logger(logger, structured_logger, top_dir):
     PerfDocLogger.PATHS = ["perfdocs"]
     PerfDocLogger.TOP_DIR = top_dir
 
-    import perfdocs.verifier as vf
     import perfdocs.gatherer as gt
     import perfdocs.generator as gn
     import perfdocs.utils as utils
+    import perfdocs.verifier as vf
 
     gt.logger = logger
     vf.logger = logger

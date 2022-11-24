@@ -14,11 +14,10 @@ import taskgraph
 from mach.util import get_state_dir
 from mozbuild.base import MozbuildObject
 from mozpack.files import FileFinder
-from moztest.resolve import TestResolver, TestManifestLoader, get_suite_definition
+from moztest.resolve import TestManifestLoader, TestResolver, get_suite_definition
 from taskgraph.generator import TaskGraphGenerator
 from taskgraph.parameters import ParameterMismatch, parameters_loader
 from taskgraph.taskgraph import TaskGraph
-
 
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)

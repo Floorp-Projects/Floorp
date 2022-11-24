@@ -9,8 +9,8 @@ import re
 import subprocess
 import sys
 
-import pygit2
 import hglib
+import pygit2
 
 DEBUG = False
 

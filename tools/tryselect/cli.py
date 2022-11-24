@@ -10,7 +10,6 @@ from argparse import ArgumentParser
 
 from .task_config import all_task_configs
 
-
 COMMON_ARGUMENT_GROUPS = {
     "push": [
         [

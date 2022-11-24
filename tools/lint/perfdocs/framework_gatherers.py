@@ -8,12 +8,12 @@ import os
 import pathlib
 import re
 
+from gecko_taskgraph.util.attributes import match_run_on_projects
 from manifestparser import TestManifest
 from mozperftest.script import ScriptInfo
-from perfdocs.utils import read_yaml
-from perfdocs.logger import PerfDocLogger
 from perfdocs.doc_helpers import TableBuilder
-from gecko_taskgraph.util.attributes import match_run_on_projects
+from perfdocs.logger import PerfDocLogger
+from perfdocs.utils import read_yaml
 
 logger = PerfDocLogger()
 

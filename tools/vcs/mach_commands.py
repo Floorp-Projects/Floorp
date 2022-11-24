@@ -4,21 +4,15 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import json
+import logging
 import os
 import re
 import subprocess
 import sys
 
-import logging
-
-from mach.decorators import (
-    CommandArgument,
-    Command,
-)
-
 import mozpack.path as mozpath
-
-import json
+from mach.decorators import Command, CommandArgument
 
 GITHUB_ROOT = "https://github.com/"
 PR_REPOSITORIES = {
@@ -213,10 +207,7 @@ def _split_patches(patchfile, bug_number, pull_request, reviewer):
 
 def _parse_patch(patch, bug_number, pull_request, reviewer):
     import email
-    from email import (
-        header,
-        policy,
-    )
+    from email import header, policy
 
     parse_policy = policy.compat32.clone(max_line_length=None)
     parsed_mail = email.message_from_bytes(patch, policy=parse_policy)

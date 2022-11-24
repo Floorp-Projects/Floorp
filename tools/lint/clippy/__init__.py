@@ -6,15 +6,14 @@ import json
 import os
 import re
 import signal
-import six
 
-from packaging.version import Version
+import six
 from mozboot.util import get_tools_dir
 from mozfile import which
 from mozlint import result
 from mozlint.pathutils import get_ancestors_by_name
 from mozprocess import ProcessHandler
-
+from packaging.version import Version
 
 CLIPPY_WRONG_VERSION = """
 Clippy is not installed or an older version was detected. Please make sure

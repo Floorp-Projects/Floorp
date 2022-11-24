@@ -6,7 +6,6 @@ import os
 
 import mozunit
 import pytest
-
 from tryselect.tasks import cache_key, filter_tasks_by_paths, resolve_tests_by_suite
 
 

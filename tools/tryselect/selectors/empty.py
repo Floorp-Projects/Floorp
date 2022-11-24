@@ -4,7 +4,7 @@
 
 
 from ..cli import BaseTryParser
-from ..push import push_to_try, generate_try_task_config
+from ..push import generate_try_task_config, push_to_try
 
 
 class EmptyParser(BaseTryParser):

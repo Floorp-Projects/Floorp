@@ -2,26 +2,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
 import itertools
+import os
 import re
 import sys
-
 from contextlib import redirect_stdout
 
 from mozbuild.base import MozbuildObject
 from mozversioncontrol import get_repository_object
 
-from .compare import CompareParser
-from ..push import push_to_try, generate_try_task_config
+from ..push import generate_try_task_config, push_to_try
 from ..util.fzf import (
+    FZF_NOT_FOUND,
     build_base_cmd,
     fzf_bootstrap,
-    FZF_NOT_FOUND,
-    setup_tasks_for_fzf,
     run_fzf,
+    setup_tasks_for_fzf,
 )
-
+from .compare import CompareParser
 
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)

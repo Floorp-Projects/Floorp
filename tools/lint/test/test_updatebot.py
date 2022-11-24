@@ -1,4 +1,5 @@
 import os
+
 import mozunit
 
 LINTER = "updatebot"

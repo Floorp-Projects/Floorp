@@ -1,12 +1,12 @@
 import contextlib
-from unittest import mock
 import os
 import pathlib
-import pytest
 import shutil
 import tempfile
+from unittest import mock
 
 import mozunit
+import pytest
 
 LINTER = "perfdocs"
 
@@ -148,9 +148,9 @@ def setup_sample_logger(logger, structured_logger, top_dir):
     PerfDocLogger.PATHS = ["perfdocs"]
     PerfDocLogger.TOP_DIR = top_dir
 
-    import perfdocs.verifier as vf
     import perfdocs.gatherer as gt
     import perfdocs.generator as gn
+    import perfdocs.verifier as vf
 
     gt.logger = logger
     vf.logger = logger
@@ -775,9 +775,9 @@ def test_perfdocs_framework_gatherers_urls(logger, structured_logger, perfdocs_s
     setup_sample_logger(logger, structured_logger, top_dir)
 
     from perfdocs.gatherer import frameworks
-    from perfdocs.verifier import Verifier
     from perfdocs.generator import Generator
     from perfdocs.utils import read_yaml
+    from perfdocs.verifier import Verifier
 
     # This test is only for raptor
     gatherer = frameworks["raptor"]

@@ -12,7 +12,6 @@ import logging
 import os
 import sys
 
-
 """ Define the transformations needed to make source + update == target
 
 Required:

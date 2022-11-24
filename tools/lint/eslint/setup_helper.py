@@ -10,17 +10,16 @@ import platform
 import re
 import subprocess
 import sys
-from packaging.version import Version
 from filecmp import dircmp
 
 from mozbuild.nodeutil import (
+    NODE_MIN_VERSION,
+    NPM_MIN_VERSION,
     find_node_executable,
     find_npm_executable,
-    NPM_MIN_VERSION,
-    NODE_MIN_VERSION,
 )
 from mozfile.mozfile import remove as mozfileremove
-
+from packaging.version import Version
 
 NODE_MACHING_VERSION_NOT_FOUND_MESSAGE = """
 Could not find Node.js executable later than %s.

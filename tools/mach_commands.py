@@ -5,18 +5,13 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
-import subprocess
-from datetime import datetime, timedelta
 import logging
-from operator import itemgetter
+import subprocess
 import sys
+from datetime import datetime, timedelta
+from operator import itemgetter
 
-from mach.decorators import (
-    CommandArgument,
-    Command,
-    SubCommand,
-)
-
+from mach.decorators import Command, CommandArgument, SubCommand
 from mozbuild.base import MozbuildObject
 
 
@@ -90,6 +85,7 @@ def busted_file(command_context, against):
         component = "General"
     else:
         import inspect
+
         import mozpack.path as mozpath
 
         # Look up the file implementing that command, then cross-refernce

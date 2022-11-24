@@ -10,7 +10,6 @@ import os
 
 import mozunit
 import pytest
-
 from tryselect.tasks import build, resolve_tests_by_suite
 
 MOZHARNESS_SCRIPTS = {

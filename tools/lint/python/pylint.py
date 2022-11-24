@@ -4,15 +4,13 @@
 
 import json
 import os
+import signal
 import subprocess
 
-import signal
-
-from mozprocess import ProcessHandler
-
+from mach.site import InstallPipRequirementsException
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
-from mach.site import InstallPipRequirementsException
+from mozprocess import ProcessHandler
 
 here = os.path.abspath(os.path.dirname(__file__))
 PYLINT_REQUIREMENTS_PATH = os.path.join(here, "pylint_requirements.txt")

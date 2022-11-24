@@ -1,5 +1,5 @@
-import pytest
 import mozunit
+import pytest
 from mozfile import which
 
 LINTER = "rst"
