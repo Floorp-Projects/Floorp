@@ -9,8 +9,8 @@
 #include <utility>  // std::initializer_list
 #include <vector>   // std::vector
 
-#include "frontend/ParserAtom.h"  // js::frontend::ParserAtomsTable
-#include "js/TypeDecls.h"         // JS::Latin1Char
+#include "frontend/ParserAtom.h"  // js::frontend::ParserAtomsTable, js::frontend::WellKnownParserAtoms
+#include "js/TypeDecls.h"  // JS::Latin1Char
 #include "jsapi-tests/tests.h"
 #include "vm/ErrorContext.h"  // AutoReportFrontendContext
 
@@ -23,7 +23,7 @@ BEGIN_TEST(testParserAtom_empty) {
 
   js::AutoReportFrontendContext ec(cx);
   js::LifoAlloc alloc(512);
-  ParserAtomsTable atomTable(cx->runtime(), alloc);
+  ParserAtomsTable atomTable(alloc);
 
   const char ascii[] = {};
   const JS::Latin1Char latin1[] = {};
@@ -46,10 +46,11 @@ BEGIN_TEST(testParserAtom_tiny1_ASCII) {
   using js::frontend::ParserAtom;
   using js::frontend::ParserAtomsTable;
   using js::frontend::ParserAtomVector;
+  using js::frontend::WellKnownParserAtoms;
 
   js::AutoReportFrontendContext ec(cx);
   js::LifoAlloc alloc(512);
-  ParserAtomsTable atomTable(cx->runtime(), alloc);
+  ParserAtomsTable atomTable(alloc);
 
   char16_t a = 'a';
   const char ascii[] = {'a'};
@@ -57,7 +58,7 @@ BEGIN_TEST(testParserAtom_tiny1_ASCII) {
   const mozilla::Utf8Unit utf8[] = {mozilla::Utf8Unit('a')};
   char16_t char16[] = {'a'};
 
-  auto refIndex = cx->runtime()->commonParserNames->lookupTinyIndex(&a, 1);
+  auto refIndex = WellKnownParserAtoms::getSingleton().lookupTinyIndex(&a, 1);
   CHECK(refIndex);
   CHECK(atomTable.internAscii(&ec, ascii, 1) == refIndex);
   CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
@@ -73,10 +74,11 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
   using js::frontend::ParserAtom;
   using js::frontend::ParserAtomsTable;
   using js::frontend::ParserAtomVector;
+  using js::frontend::WellKnownParserAtoms;
 
   js::AutoReportFrontendContext ec(cx);
   js::LifoAlloc alloc(512);
-  ParserAtomsTable atomTable(cx->runtime(), alloc);
+  ParserAtomsTable atomTable(alloc);
 
   {
     char16_t euro = 0x0080;
@@ -86,7 +88,8 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
         mozilla::Utf8Unit(static_cast<unsigned char>(0x80))};
     char16_t char16[] = {0x0080};
 
-    auto refIndex = cx->runtime()->commonParserNames->lookupTinyIndex(&euro, 1);
+    auto refIndex =
+        WellKnownParserAtoms::getSingleton().lookupTinyIndex(&euro, 1);
     CHECK(refIndex);
     CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
     CHECK(atomTable.internUtf8(&ec, utf8, 2) == refIndex);
@@ -102,7 +105,7 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
     char16_t char16[] = {0x00BD};
 
     auto refIndex =
-        cx->runtime()->commonParserNames->lookupTinyIndex(&frac12, 1);
+        WellKnownParserAtoms::getSingleton().lookupTinyIndex(&frac12, 1);
     CHECK(refIndex);
     CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
     CHECK(atomTable.internUtf8(&ec, utf8, 2) == refIndex);
@@ -118,7 +121,7 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
     char16_t char16[] = {0x00BF};
 
     auto refIndex =
-        cx->runtime()->commonParserNames->lookupTinyIndex(&iquest, 1);
+        WellKnownParserAtoms::getSingleton().lookupTinyIndex(&iquest, 1);
     CHECK(refIndex);
     CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
     CHECK(atomTable.internUtf8(&ec, utf8, 2) == refIndex);
@@ -134,7 +137,7 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
     char16_t char16[] = {0x00C0};
 
     auto refIndex =
-        cx->runtime()->commonParserNames->lookupTinyIndex(&agrave, 1);
+        WellKnownParserAtoms::getSingleton().lookupTinyIndex(&agrave, 1);
     CHECK(refIndex);
     CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
     CHECK(atomTable.internUtf8(&ec, utf8, 2) == refIndex);
@@ -149,7 +152,8 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
         mozilla::Utf8Unit(static_cast<unsigned char>(0xA6))};
     char16_t char16[] = {0x00E6};
 
-    auto refIndex = cx->runtime()->commonParserNames->lookupTinyIndex(&ae, 1);
+    auto refIndex =
+        WellKnownParserAtoms::getSingleton().lookupTinyIndex(&ae, 1);
     CHECK(refIndex);
     CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
     CHECK(atomTable.internUtf8(&ec, utf8, 2) == refIndex);
@@ -164,7 +168,8 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
         mozilla::Utf8Unit(static_cast<unsigned char>(0xBF))};
     char16_t char16[] = {0x00FF};
 
-    auto refIndex = cx->runtime()->commonParserNames->lookupTinyIndex(&yuml, 1);
+    auto refIndex =
+        WellKnownParserAtoms::getSingleton().lookupTinyIndex(&yuml, 1);
     CHECK(refIndex);
     CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
     CHECK(atomTable.internUtf8(&ec, utf8, 2) == refIndex);
@@ -183,17 +188,18 @@ END_TEST(testParserAtom_tiny1_nonASCII)
 BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
   using js::frontend::ParserAtom;
   using js::frontend::ParserAtomsTable;
+  using js::frontend::WellKnownParserAtoms;
 
   js::AutoReportFrontendContext ec(cx);
   js::LifoAlloc alloc(512);
-  ParserAtomsTable atomTable(cx->runtime(), alloc);
+  ParserAtomsTable atomTable(alloc);
 
   {
     const mozilla::Utf8Unit utf8[] = {
         mozilla::Utf8Unit(static_cast<unsigned char>(0xC1)),
         mozilla::Utf8Unit(static_cast<unsigned char>(0x80))};
 
-    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndexUTF8(utf8, 2));
+    CHECK(!WellKnownParserAtoms::getSingleton().lookupTinyIndexUTF8(utf8, 2));
   }
 
   {
@@ -201,7 +207,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
         mozilla::Utf8Unit(static_cast<unsigned char>(0xC2)),
         mozilla::Utf8Unit(static_cast<unsigned char>(0x7F))};
 
-    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndexUTF8(utf8, 2));
+    CHECK(!WellKnownParserAtoms::getSingleton().lookupTinyIndexUTF8(utf8, 2));
   }
 
   {
@@ -211,7 +217,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
         mozilla::Utf8Unit(static_cast<unsigned char>(0x80))};
 
     auto refIndex =
-        cx->runtime()->commonParserNames->lookupTinyIndexUTF8(utf8, 2);
+        WellKnownParserAtoms::getSingleton().lookupTinyIndexUTF8(utf8, 2);
     CHECK(refIndex);
     CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
   }
@@ -223,7 +229,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
         mozilla::Utf8Unit(static_cast<unsigned char>(0xBF))};
 
     auto refIndex =
-        cx->runtime()->commonParserNames->lookupTinyIndexUTF8(utf8, 2);
+        WellKnownParserAtoms::getSingleton().lookupTinyIndexUTF8(utf8, 2);
     CHECK(refIndex);
     CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
   }
@@ -233,7 +239,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
         mozilla::Utf8Unit(static_cast<unsigned char>(0xC2)),
         mozilla::Utf8Unit(static_cast<unsigned char>(0xC0))};
 
-    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndexUTF8(utf8, 2));
+    CHECK(!WellKnownParserAtoms::getSingleton().lookupTinyIndexUTF8(utf8, 2));
   }
 
   {
@@ -241,7 +247,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
         mozilla::Utf8Unit(static_cast<unsigned char>(0xC3)),
         mozilla::Utf8Unit(static_cast<unsigned char>(0x7F))};
 
-    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndexUTF8(utf8, 2));
+    CHECK(!WellKnownParserAtoms::getSingleton().lookupTinyIndexUTF8(utf8, 2));
   }
 
   {
@@ -251,7 +257,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
         mozilla::Utf8Unit(static_cast<unsigned char>(0x80))};
 
     auto refIndex =
-        cx->runtime()->commonParserNames->lookupTinyIndexUTF8(utf8, 2);
+        WellKnownParserAtoms::getSingleton().lookupTinyIndexUTF8(utf8, 2);
     CHECK(refIndex);
     CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
   }
@@ -263,7 +269,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
         mozilla::Utf8Unit(static_cast<unsigned char>(0xBF))};
 
     auto refIndex =
-        cx->runtime()->commonParserNames->lookupTinyIndexUTF8(utf8, 2);
+        WellKnownParserAtoms::getSingleton().lookupTinyIndexUTF8(utf8, 2);
     CHECK(refIndex);
     CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
   }
@@ -273,7 +279,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
         mozilla::Utf8Unit(static_cast<unsigned char>(0xC3)),
         mozilla::Utf8Unit(static_cast<unsigned char>(0xC0))};
 
-    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndexUTF8(utf8, 2));
+    CHECK(!WellKnownParserAtoms::getSingleton().lookupTinyIndexUTF8(utf8, 2));
   }
 
   {
@@ -281,7 +287,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
         mozilla::Utf8Unit(static_cast<unsigned char>(0xC4)),
         mozilla::Utf8Unit(static_cast<unsigned char>(0x7F))};
 
-    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndexUTF8(utf8, 2));
+    CHECK(!WellKnownParserAtoms::getSingleton().lookupTinyIndexUTF8(utf8, 2));
   }
 
   {
@@ -289,7 +295,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
         mozilla::Utf8Unit(static_cast<unsigned char>(0xC4)),
         mozilla::Utf8Unit(static_cast<unsigned char>(0x80))};
 
-    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndexUTF8(utf8, 2));
+    CHECK(!WellKnownParserAtoms::getSingleton().lookupTinyIndexUTF8(utf8, 2));
   }
 
   {
@@ -297,7 +303,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
         mozilla::Utf8Unit(static_cast<unsigned char>(0xC4)),
         mozilla::Utf8Unit(static_cast<unsigned char>(0xBF))};
 
-    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndexUTF8(utf8, 2));
+    CHECK(!WellKnownParserAtoms::getSingleton().lookupTinyIndexUTF8(utf8, 2));
   }
 
   {
@@ -305,7 +311,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
         mozilla::Utf8Unit(static_cast<unsigned char>(0xC4)),
         mozilla::Utf8Unit(static_cast<unsigned char>(0xC0))};
 
-    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndexUTF8(utf8, 2));
+    CHECK(!WellKnownParserAtoms::getSingleton().lookupTinyIndexUTF8(utf8, 2));
   }
 
   return true;
@@ -317,10 +323,11 @@ BEGIN_TEST(testParserAtom_tiny2) {
   using js::frontend::ParserAtom;
   using js::frontend::ParserAtomsTable;
   using js::frontend::ParserAtomVector;
+  using js::frontend::WellKnownParserAtoms;
 
   js::AutoReportFrontendContext ec(cx);
   js::LifoAlloc alloc(512);
-  ParserAtomsTable atomTable(cx->runtime(), alloc);
+  ParserAtomsTable atomTable(alloc);
 
   const char ascii[] = {'a', '0'};
   JS::Latin1Char latin1[] = {'a', '0'};
@@ -328,7 +335,8 @@ BEGIN_TEST(testParserAtom_tiny2) {
                                     mozilla::Utf8Unit('0')};
   char16_t char16[] = {'a', '0'};
 
-  auto refIndex = cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 2);
+  auto refIndex =
+      WellKnownParserAtoms::getSingleton().lookupTinyIndex(ascii, 2);
   CHECK(refIndex);
   CHECK(atomTable.internAscii(&ec, ascii, 2) == refIndex);
   CHECK(atomTable.internLatin1(&ec, latin1, 2) == refIndex);
@@ -338,7 +346,7 @@ BEGIN_TEST(testParserAtom_tiny2) {
   // Note: If Latin1-Extended characters become supported, then UTF-8 behaviour
   // should be tested.
   char16_t ae0[] = {0x00E6, '0'};
-  CHECK(!cx->runtime()->commonParserNames->lookupTinyIndex(ae0, 2));
+  CHECK(!WellKnownParserAtoms::getSingleton().lookupTinyIndex(ae0, 2));
 
   return true;
 }
@@ -349,10 +357,11 @@ BEGIN_TEST(testParserAtom_int) {
   using js::frontend::ParserAtom;
   using js::frontend::ParserAtomsTable;
   using js::frontend::ParserAtomVector;
+  using js::frontend::WellKnownParserAtoms;
 
   js::AutoReportFrontendContext ec(cx);
   js::LifoAlloc alloc(512);
-  ParserAtomsTable atomTable(cx->runtime(), alloc);
+  ParserAtomsTable atomTable(alloc);
 
   {
     const char ascii[] = {'1', '0', '0'};
@@ -361,7 +370,8 @@ BEGIN_TEST(testParserAtom_int) {
         mozilla::Utf8Unit('1'), mozilla::Utf8Unit('0'), mozilla::Utf8Unit('0')};
     char16_t char16[] = {'1', '0', '0'};
 
-    auto refIndex = cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 3);
+    auto refIndex =
+        WellKnownParserAtoms::getSingleton().lookupTinyIndex(ascii, 3);
     CHECK(refIndex);
     CHECK(atomTable.internAscii(&ec, ascii, 3) == refIndex);
     CHECK(atomTable.internLatin1(&ec, latin1, 3) == refIndex);
@@ -376,7 +386,8 @@ BEGIN_TEST(testParserAtom_int) {
         mozilla::Utf8Unit('2'), mozilla::Utf8Unit('5'), mozilla::Utf8Unit('5')};
     char16_t char16[] = {'2', '5', '5'};
 
-    auto refIndex = cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 3);
+    auto refIndex =
+        WellKnownParserAtoms::getSingleton().lookupTinyIndex(ascii, 3);
     CHECK(refIndex);
     CHECK(atomTable.internAscii(&ec, ascii, 3) == refIndex);
     CHECK(atomTable.internLatin1(&ec, latin1, 3) == refIndex);
@@ -387,37 +398,37 @@ BEGIN_TEST(testParserAtom_int) {
   {
     const char ascii[] = {'0', '9', '9'};
 
-    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 3));
+    CHECK(!WellKnownParserAtoms::getSingleton().lookupTinyIndex(ascii, 3));
   }
 
   {
     const char ascii[] = {'0', 'F', 'F'};
 
-    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 3));
+    CHECK(!WellKnownParserAtoms::getSingleton().lookupTinyIndex(ascii, 3));
   }
 
   {
     const char ascii[] = {'1', '0', 'A'};
 
-    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 3));
+    CHECK(!WellKnownParserAtoms::getSingleton().lookupTinyIndex(ascii, 3));
   }
 
   {
     const char ascii[] = {'1', '0', 'a'};
 
-    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 3));
+    CHECK(!WellKnownParserAtoms::getSingleton().lookupTinyIndex(ascii, 3));
   }
 
   {
     const char ascii[] = {'2', '5', '6'};
 
-    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 3));
+    CHECK(!WellKnownParserAtoms::getSingleton().lookupTinyIndex(ascii, 3));
   }
 
   {
     const char ascii[] = {'3', '0', '0'};
 
-    CHECK(!cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 3));
+    CHECK(!WellKnownParserAtoms::getSingleton().lookupTinyIndex(ascii, 3));
   }
 
   return true;
