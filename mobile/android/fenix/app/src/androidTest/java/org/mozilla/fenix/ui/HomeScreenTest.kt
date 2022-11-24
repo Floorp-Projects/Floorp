@@ -35,6 +35,7 @@ class HomeScreenTest {
 
     private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
+    private lateinit var firstPocketStoryPublisher: String
 
     @get:Rule(order = 0)
     val activityTestRule =
@@ -235,6 +236,25 @@ class HomeScreenTest {
         }.goBack {
             verifyThoughtProvokingStories(false)
             verifyStoriesByTopic(false)
+        }
+    }
+
+    @Test
+    fun openPocketStoryItemTest() {
+        activityTestRule.activityRule.applySettingsExceptions {
+            it.isRecentTabsFeatureEnabled = false
+            it.isRecentlyVisitedFeatureEnabled = false
+        }
+
+        homeScreen {
+        }.dismissOnboarding()
+
+        homeScreen {
+            verifyThoughtProvokingStories(true)
+            scrollToPocketProvokingStories()
+            firstPocketStoryPublisher = getProvokingStoryPublisher(1)
+        }.clickPocketStoryItem(firstPocketStoryPublisher, 1) {
+            verifyUrl(firstPocketStoryPublisher)
         }
     }
 

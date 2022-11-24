@@ -382,6 +382,20 @@ class HomeScreenRobot {
         )
     }
 
+    fun getProvokingStoryPublisher(position: Int): String {
+        val publisher = mDevice.findObject(
+            UiSelector()
+                .className("android.view.View")
+                .index(position - 1),
+        ).getChild(
+            UiSelector()
+                .className("android.widget.TextView")
+                .index(1),
+        ).text
+
+        return publisher
+    }
+
     class Transition {
 
         fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
@@ -649,6 +663,22 @@ class HomeScreenRobot {
                         .resourceId("recent.tab.title")
                         .textContains(itemTitle),
                 ).clickAndWaitForNewWindow(waitingTime)
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun clickPocketStoryItem(publisher: String, position: Int, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            mDevice.findObject(
+                UiSelector()
+                    .className("android.view.View")
+                    .index(position - 1),
+            ).getChild(
+                UiSelector()
+                    .className("android.widget.TextView")
+                    .index(1)
+                    .textContains(publisher),
+            ).clickAndWaitForNewWindow(waitingTime)
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
