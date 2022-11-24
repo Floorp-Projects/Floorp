@@ -1707,7 +1707,7 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 }
 
 /* Hide tab-modal dialogs when a window-modal one is up. */
-:root[window-modal-open] .browserContainer > .dialogStack {
+:root[window-modal-open] .browserStack > .dialogStack {
   visibility: hidden;
 }
 
