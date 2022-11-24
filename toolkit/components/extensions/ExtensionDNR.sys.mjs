@@ -572,9 +572,6 @@ class RequestEvaluator {
       return;
     }
 
-    // TODO bug 1745761: when the channel/originAttributes is chosen, use
-    // ruleManager.extension to exclude private requests if needed.
-
     this.#collectMatchInRuleset(this.ruleManager.sessionRules);
     this.#collectMatchInRuleset(this.ruleManager.dynamicRules);
     for (let ruleset of this.ruleManager.enabledStaticRules) {
@@ -802,6 +799,11 @@ const NetworkIntegration = {
     let ruleManagers = gRuleManagers;
     if (!channel.canModify) {
       ruleManagers = [];
+    }
+    if (channel.loadInfo.originAttributes.privateBrowsingId > 0) {
+      ruleManagers = ruleManagers.filter(
+        rm => rm.extension.privateBrowsingAllowed
+      );
     }
     let matchedRules;
     if (ruleManagers.length) {
