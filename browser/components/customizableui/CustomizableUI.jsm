@@ -5611,9 +5611,13 @@ class OverflowableToolbar {
       }
     }
 
+    let overflowList = CustomizableUI.isWebExtensionWidget(aNode.id)
+      ? this.#webExtList
+      : this.#defaultList;
+
     let containerForAppending =
       this.#overflowedInfo.size && newNodeCanOverflow
-        ? this.#defaultList
+        ? overflowList
         : this.#target;
     return [containerForAppending, null];
   }
