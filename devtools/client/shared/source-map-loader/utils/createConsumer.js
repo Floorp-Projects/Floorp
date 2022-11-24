@@ -8,6 +8,11 @@ const {
   SourceMapConsumer,
 } = require("resource://devtools/client/shared/vendor/source-map/source-map.js");
 
+SourceMapConsumer.initialize({
+  "lib/mappings.wasm":
+    "resource://devtools/client/shared/vendor/source-map/lib/mappings.wasm",
+});
+
 async function createConsumer(map, sourceMapUrl) {
   return new SourceMapConsumer(map, sourceMapUrl);
 }
