@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-11-23T10:37:48.042080'
+updated_at: '2022-11-24T10:10:43.504958'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -1336,6 +1336,7 @@ modules:
       - *emilio
       - *asuth
       - *edgar
+      - *saschanaz
     machine_name: core_document_object_model
 
   - name: 'Core: DOM File'
@@ -3648,5 +3649,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 11f27e1d35b17db064d66f47954fb8a7e0a11187
-  export: 38491a307805f150c2be79e7c286daf81e80de8f
+  config: f44776f9d947cb103f6575c97782e98e6044816b
+  export: 42cc831813bee50c369828c927f25d3be816f5f8

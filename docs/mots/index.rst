@@ -550,6 +550,7 @@ Core: Document Object Model
         | `Emilio Cobos Álvarez (emilio) <https://people.mozilla.org/s?query=emilio>`__
         | `Andrew Sutherland (asuth) <https://people.mozilla.org/s?query=asuth>`__
         | `Edgar Chen (edgar) <https://people.mozilla.org/s?query=edgar>`__
+        | `Kagami (saschanaz) <https://people.mozilla.org/s?query=saschanaz>`__
     * - Owner(s) Emeritus
       - Johnny Stenback
     * - Peer(s) Emeritus
