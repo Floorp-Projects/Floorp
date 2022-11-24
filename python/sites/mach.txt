@@ -45,7 +45,6 @@ pth:testing/mozbase/mozversion
 pth:testing/raptor
 pth:testing/talos
 pth:testing/web-platform
-vendored:testing/web-platform/tests/tools/third_party/funcsigs
 vendored:testing/web-platform/tests/tools/third_party/h2
 vendored:testing/web-platform/tests/tools/third_party/hpack
 vendored:testing/web-platform/tests/tools/third_party/html5lib
