@@ -165,4 +165,18 @@ Screen::GetIsPseudoDisplay(bool* aIsPseudoDisplay) {
   return NS_OK;
 }
 
+hal::ScreenOrientation Screen::GetDefaultOrientationType() const {
+  if (mRect.Width() >= mRect.Height()) {
+    if (mOrientationAngle == 0 || mOrientationAngle == 180) {
+      return hal::ScreenOrientation::LandscapePrimary;
+    }
+    return hal::ScreenOrientation::PortraitPrimary;
+  }
+
+  if (mOrientationAngle == 0 || mOrientationAngle == 180) {
+    return hal::ScreenOrientation::PortraitPrimary;
+  }
+  return hal::ScreenOrientation::LandscapePrimary;
+}
+
 }  // namespace mozilla::widget
