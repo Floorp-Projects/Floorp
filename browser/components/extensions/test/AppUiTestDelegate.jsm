@@ -218,6 +218,7 @@ async function removeTab(tab) {
 var AppUiTestInternals = {
   awaitBrowserLoaded,
   getBrowserActionWidget,
+  getBrowserActionWidgetId,
   getPageActionButton,
   getPageActionPopup,
   getPanelForNode,
