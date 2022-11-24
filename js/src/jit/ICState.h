@@ -97,9 +97,7 @@ class ICState {
     return true;
   }
 
-  // If this returns true, we transitioned to a new mode and the caller
-  // should discard all stubs.
-  [[nodiscard]] MOZ_ALWAYS_INLINE bool maybeTransition() {
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool shouldTransition() {
     // Note: we cannot assert that numOptimizedStubs_ <= MaxOptimizedStubs
     // because old-style baseline ICs may attach more stubs than
     // MaxOptimizedStubs allows.
@@ -108,6 +106,15 @@ class ICState {
     }
     if (numOptimizedStubs_ < MaxOptimizedStubs &&
         numFailures_ < maxFailures()) {
+      return false;
+    }
+    return true;
+  }
+
+  // If this returns true, we transitioned to a new mode and the caller
+  // should discard all stubs.
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool maybeTransition() {
+    if (!shouldTransition()) {
       return false;
     }
     if (numFailures_ == maxFailures() || mode() == Mode::Megamorphic) {

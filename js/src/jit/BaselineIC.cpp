@@ -404,17 +404,23 @@ void ICCacheIRStub::trace(JSTracer* trc) {
 
 static void MaybeTransition(JSContext* cx, BaselineFrame* frame,
                             ICFallbackStub* stub) {
-  if (stub->state().maybeTransition()) {
-    ICEntry* icEntry = frame->icScript()->icEntryForStub(stub);
-#ifdef JS_CACHEIR_SPEW
-    if (cx->spewer().enabled(cx, frame->script(),
-                             SpewChannel::CacheIRHealthReport)) {
-      CacheIRHealth cih;
-      RootedScript script(cx, frame->script());
-      cih.healthReportForIC(cx, icEntry, stub, script, SpewContext::Transition);
+  if (stub->state().shouldTransition()) {
+    if (!TryFoldingStubs(cx, stub, frame->script(), frame->icScript())) {
+      cx->recoverFromOutOfMemory();
     }
+    if (stub->state().maybeTransition()) {
+      ICEntry* icEntry = frame->icScript()->icEntryForStub(stub);
+#ifdef JS_CACHEIR_SPEW
+      if (cx->spewer().enabled(cx, frame->script(),
+                               SpewChannel::CacheIRHealthReport)) {
+        CacheIRHealth cih;
+        RootedScript script(cx, frame->script());
+        cih.healthReportForIC(cx, icEntry, stub, script,
+                              SpewContext::Transition);
+      }
 #endif
-    stub->discardStubs(cx, icEntry);
+      stub->discardStubs(cx, icEntry);
+    }
   }
 }
 
