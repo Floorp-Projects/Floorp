@@ -10419,10 +10419,14 @@ bool BytecodeEmitter::emitUnary(UnaryNode* unaryNode) {
   if (!updateSourceCoordNotes(unaryNode->pn_pos.begin)) {
     return false;
   }
-  if (!emitTree(unaryNode->kid())) {
+
+  JSOp op = UnaryOpParseNodeKindToJSOp(unaryNode->getKind());
+  ValueUsage valueUsage =
+      op == JSOp::Void ? ValueUsage::IgnoreValue : ValueUsage::WantValue;
+  if (!emitTree(unaryNode->kid(), valueUsage)) {
     return false;
   }
-  return emit1(UnaryOpParseNodeKindToJSOp(unaryNode->getKind()));
+  return emit1(op);
 }
 
 bool BytecodeEmitter::emitTypeof(UnaryNode* typeofNode, JSOp op) {
