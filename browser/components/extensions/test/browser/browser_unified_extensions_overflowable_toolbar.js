@@ -947,3 +947,51 @@ add_task(async function test_action_button() {
 
   await BrowserTestUtils.closeWindow(win);
 });
+
+/**
+ * Tests that if we pin a browser action button listed in the addons panel
+ * to the toolbar when that button would immediately overflow, that the
+ * button is put into the addons panel overflow list.
+ */
+add_task(async function test_pinning_to_toolbar_when_overflowed() {
+  let win = await promiseEnableUnifiedExtensions();
+  let movedNode;
+  let extensionWidgetID;
+
+  await withWindowOverflowed(win, {
+    beforeOverflowed: async extensionIDs => {
+      // Before we overflow the toolbar, let's move the last item to the addons
+      // panel.
+      extensionWidgetID = AppUiTestInternals.getBrowserActionWidgetId(
+        extensionIDs.at(-1)
+      );
+
+      movedNode = CustomizableUI.getWidget(extensionWidgetID).forWindow(win)
+        .node;
+
+      CustomizableUI.addWidgetToArea(
+        extensionWidgetID,
+        CustomizableUI.AREA_ADDONS
+      );
+    },
+    whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
+      // Now that the window is overflowed, let's move the widget in the addons
+      // panel back to the navbar. This should cause the widget to overflow back
+      // into the addons panel.
+      CustomizableUI.addWidgetToArea(
+        extensionWidgetID,
+        CustomizableUI.AREA_NAVBAR
+      );
+      await TestUtils.waitForCondition(() => {
+        return movedNode.hasAttribute("overflowedItem");
+      });
+      Assert.equal(
+        movedNode.parentElement,
+        unifiedExtensionList,
+        "Should have overflowed the extension button to the right list."
+      );
+    },
+  });
+
+  await BrowserTestUtils.closeWindow(win);
+});
