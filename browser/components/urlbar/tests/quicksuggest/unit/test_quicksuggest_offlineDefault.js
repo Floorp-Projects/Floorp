@@ -23,13 +23,6 @@ const PREFS = [
     expectedOtherValue: false,
   },
   {
-    name: "browser.urlbar.quicksuggest.dataCollection.enabled",
-    get: "getBoolPref",
-    set: "setBoolPref",
-    expectedOfflineValue: QuickSuggestTestUtils.DATA_COLLECTION_OFFLINE,
-    expectedOtherValue: false,
-  },
-  {
     name: "browser.urlbar.quicksuggest.shouldShowOnboardingDialog",
     get: "getBoolPref",
     set: "setBoolPref",
@@ -72,27 +65,6 @@ add_task(async function test() {
   }
 });
 
-add_task(async function forceBeta() {
-  for (let isBeta of [true, false]) {
-    UrlbarPrefs._test_isBeta = isBeta;
-    await doTest({
-      locale: "en-US",
-      home: "US",
-      expectedOfflineDefault: true,
-      prefs: [
-        {
-          name: "browser.urlbar.quicksuggest.dataCollection.enabled",
-          get: "getBoolPref",
-          set: "setBoolPref",
-          expectedOfflineValue: isBeta,
-          expectedOtherValue: false,
-        },
-      ],
-    });
-  }
-  delete UrlbarPrefs._test_isBeta;
-});
-
 /**
  * Sets the app's locale and region, calls
  * `UrlbarPrefs.updateFirefoxSuggestScenario`, and asserts that the pref values
@@ -107,14 +79,10 @@ add_task(async function forceBeta() {
  * @param {boolean} options.expectedOfflineDefault
  *   The expected value of whether offline should be enabled by default given
  *   the locale and region.
- * @param {Array} options.prefs
- *   All the prefs that `updateFirefoxSuggestScenario` sets along with the
- *   expected default-branch values when offline is enabled and when it's not
- *   enabled. See `PREFS` for an example.
  */
-async function doTest({ locale, home, expectedOfflineDefault, prefs = PREFS }) {
+async function doTest({ locale, home, expectedOfflineDefault }) {
   // Setup: Clear any user values and save original default-branch values.
-  for (let pref of prefs) {
+  for (let pref of PREFS) {
     Services.prefs.clearUserPref(pref.name);
     pref.originalDefault = Services.prefs
       .getDefaultBranch(pref.name)
@@ -122,16 +90,10 @@ async function doTest({ locale, home, expectedOfflineDefault, prefs = PREFS }) {
   }
 
   // Set the region and locale, call the function, check the pref values.
-  info(`Checking home region ${home} and locale ${locale}`);
   Region._setHomeRegion(home, false);
   await QuickSuggestTestUtils.withLocales([locale], async () => {
     await UrlbarPrefs.updateFirefoxSuggestScenario();
-    for (let { name, get, expectedOfflineValue, expectedOtherValue } of prefs) {
-      info(
-        "Checking pref: " +
-          JSON.stringify({ name, expectedOfflineValue, expectedOtherValue })
-      );
-
+    for (let { name, get, expectedOfflineValue, expectedOtherValue } of PREFS) {
       let expectedValue = expectedOfflineDefault
         ? expectedOfflineValue
         : expectedOtherValue;
@@ -146,8 +108,8 @@ async function doTest({ locale, home, expectedOfflineDefault, prefs = PREFS }) {
       // For good measure, also check the return value of `UrlbarPrefs.get`
       // since we use it everywhere. The value should be the same as the
       // default-branch value.
-      Assert.strictEqual(
-        UrlbarPrefs.get(name.replace("browser.urlbar.", "")),
+      UrlbarPrefs.get(
+        name.replace("browser.urlbar.", ""),
         expectedValue,
         `UrlbarPrefs.get() value for ${name}, locale ${locale}, home ${home}`
       );
@@ -155,7 +117,7 @@ async function doTest({ locale, home, expectedOfflineDefault, prefs = PREFS }) {
   });
 
   // Teardown: Restore original default-branch values for the next task.
-  for (let { name, originalDefault, set } of prefs) {
+  for (let { name, originalDefault, set } of PREFS) {
     if (originalDefault === undefined) {
       Services.prefs.deleteBranch(name);
     } else {

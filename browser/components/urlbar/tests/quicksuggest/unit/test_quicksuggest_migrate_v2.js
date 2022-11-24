@@ -18,8 +18,7 @@ const DEFAULT_PREFS = {
   },
   offline: {
     "quicksuggest.enabled": true,
-    "quicksuggest.dataCollection.enabled":
-      QuickSuggestTestUtils.DATA_COLLECTION_OFFLINE,
+    "quicksuggest.dataCollection.enabled": false,
     "quicksuggest.shouldShowOnboardingDialog": false,
     "suggest.quicksuggest.nonsponsored": true,
     "suggest.quicksuggest.sponsored": true,

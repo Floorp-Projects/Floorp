@@ -10,8 +10,6 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -929,33 +927,19 @@ class Preferences {
     //
     // Prefs not listed here for any scenario keep their values set in
     // firefox.js.
-
-    let isBeta;
-    if (typeof this._test_isBeta == "boolean") {
-      isBeta = this._test_isBeta;
-    } else {
-      isBeta =
-        AppConstants.MOZ_UPDATE_CHANNEL == "beta" ||
-        AppConstants.isReleaseCandidateOnBeta;
-    }
-
     return {
       history: {
         "quicksuggest.enabled": false,
       },
       offline: {
         "quicksuggest.enabled": true,
-        // Merino (`quicksuggest.dataCollection.enabled`) is opt out on Beta in
-        // the offline scenario.
-        "quicksuggest.dataCollection.enabled": isBeta,
+        "quicksuggest.dataCollection.enabled": false,
         "quicksuggest.shouldShowOnboardingDialog": false,
         "suggest.quicksuggest.nonsponsored": true,
         "suggest.quicksuggest.sponsored": true,
       },
       online: {
         "quicksuggest.enabled": true,
-        // The whole point of the online scenario is to prompt users to opt in
-        // to Merino, so it's disabled by default for online.
         "quicksuggest.dataCollection.enabled": false,
         "quicksuggest.shouldShowOnboardingDialog": true,
         "suggest.quicksuggest.nonsponsored": true,
