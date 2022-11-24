@@ -3,17 +3,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from vsdownload import (
-    downloadPackages,
-    extractPackages,
-)
-from pathlib import Path
-from tempfile import TemporaryDirectory
-from zstandard import ZstdCompressor
 import argparse
 import os
 import tarfile
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
 import yaml
+from vsdownload import downloadPackages, extractPackages
+from zstandard import ZstdCompressor
 
 
 def tzstd_path(path):

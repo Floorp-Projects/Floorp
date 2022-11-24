@@ -3,12 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import print_function
+
+import os
+import subprocess
+
 import buildconfig
 import mozpack.path as mozpath
-import os
-import six
-import subprocess
 import pytoml
+import six
 
 
 # Try to read the package name or otherwise assume same name as the crate path.

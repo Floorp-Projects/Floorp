@@ -27,7 +27,6 @@
 import os
 import sys
 
-
 SANITIZERS = {
     "asan": "address",
     "hwasan": "hwaddress",

@@ -15,9 +15,9 @@
 # to indicate that files should be uploaded including their paths relative
 # to the base path.
 
-import sys
 import os
 import shutil
+import sys
 from optparse import OptionParser
 
 

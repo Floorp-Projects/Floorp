@@ -5,10 +5,10 @@
 
 from __future__ import with_statement
 
-from optparse import OptionParser
 import hashlib
 import logging
 import os
+from optparse import OptionParser
 
 logger = logging.getLogger("checksums.py")
 
