@@ -1282,11 +1282,10 @@ struct ExtensibleCompilationStencil {
 
   RefPtr<StencilAsmJSContainer> asmJS;
 
-  explicit ExtensibleCompilationStencil(JSContext* cx, ScriptSource* source);
+  explicit ExtensibleCompilationStencil(ScriptSource* source);
 
-  ExtensibleCompilationStencil(JSContext* cx, CompilationInput& input);
-  ExtensibleCompilationStencil(JSContext* cx,
-                               const JS::ReadOnlyCompileOptions& options,
+  explicit ExtensibleCompilationStencil(CompilationInput& input);
+  ExtensibleCompilationStencil(const JS::ReadOnlyCompileOptions& options,
                                RefPtr<ScriptSource> source);
 
   ExtensibleCompilationStencil(ExtensibleCompilationStencil&& other) noexcept
