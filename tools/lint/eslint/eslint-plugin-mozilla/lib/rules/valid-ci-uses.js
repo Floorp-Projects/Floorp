@@ -16,6 +16,7 @@ const helpers = require("../helpers");
 // on all platforms.
 const platformSpecificInterfaces = new Map([
   ["nsIAboutThirdParty", "windows"],
+  ["nsIAboutWindowsMessages", "windows"],
   ["nsIJumpListItem", "windows"],
   ["nsIJumpListLink", "windows"],
   ["nsIJumpListSeparator", "windows"],
