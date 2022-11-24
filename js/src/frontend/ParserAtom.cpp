@@ -1238,8 +1238,7 @@ TaggedParserAtomIndex WellKnownParserAtoms::lookupTinyIndexUTF8(
   return lookupTinyIndex(reinterpret_cast<const Latin1Char*>(utf8Ptr), nbyte);
 }
 
-bool WellKnownParserAtoms::initSingle(JSContext* cx,
-                                      const WellKnownAtomInfo& info,
+bool WellKnownParserAtoms::initSingle(const WellKnownAtomInfo& info,
                                       TaggedParserAtomIndex index) {
   unsigned int len = info.length;
   const Latin1Char* str = reinterpret_cast<const Latin1Char*>(info.content);
@@ -1259,34 +1258,33 @@ bool WellKnownParserAtoms::initSingle(JSContext* cx,
 
   // Save name for returning after moving entry into set.
   if (!wellKnownMap_.putNew(lookup, &info, index)) {
-    js::ReportOutOfMemory(cx);
     return false;
   }
 
   return true;
 }
 
-bool WellKnownParserAtoms::init(JSContext* cx) {
+bool WellKnownParserAtoms::init() {
   // Add well-known strings to the HashMap. The HashMap is used for dynamic
   // lookups later and does not change once this init method is complete.
-#define COMMON_NAME_INIT_(_, NAME, _2)                             \
-  if (!initSingle(cx, GetWellKnownAtomInfo(WellKnownAtomId::NAME), \
-                  TaggedParserAtomIndex::WellKnown::NAME())) {     \
-    return false;                                                  \
+#define COMMON_NAME_INIT_(_, NAME, _2)                         \
+  if (!initSingle(GetWellKnownAtomInfo(WellKnownAtomId::NAME), \
+                  TaggedParserAtomIndex::WellKnown::NAME())) { \
+    return false;                                              \
   }
   FOR_EACH_NONTINY_COMMON_PROPERTYNAME(COMMON_NAME_INIT_)
 #undef COMMON_NAME_INIT_
-#define COMMON_NAME_INIT_(NAME, _)                                 \
-  if (!initSingle(cx, GetWellKnownAtomInfo(WellKnownAtomId::NAME), \
-                  TaggedParserAtomIndex::WellKnown::NAME())) {     \
-    return false;                                                  \
+#define COMMON_NAME_INIT_(NAME, _)                             \
+  if (!initSingle(GetWellKnownAtomInfo(WellKnownAtomId::NAME), \
+                  TaggedParserAtomIndex::WellKnown::NAME())) { \
+    return false;                                              \
   }
   JS_FOR_EACH_PROTOTYPE(COMMON_NAME_INIT_)
 #undef COMMON_NAME_INIT_
-#define COMMON_NAME_INIT_(NAME)                                    \
-  if (!initSingle(cx, GetWellKnownAtomInfo(WellKnownAtomId::NAME), \
-                  TaggedParserAtomIndex::WellKnown::NAME())) {     \
-    return false;                                                  \
+#define COMMON_NAME_INIT_(NAME)                                \
+  if (!initSingle(GetWellKnownAtomInfo(WellKnownAtomId::NAME), \
+                  TaggedParserAtomIndex::WellKnown::NAME())) { \
+    return false;                                              \
   }
   JS_FOR_EACH_WELL_KNOWN_SYMBOL(COMMON_NAME_INIT_)
 #undef COMMON_NAME_INIT_
@@ -1307,7 +1305,8 @@ bool JSRuntime::initializeParserAtoms(JSContext* cx) {
 
   UniquePtr<js::frontend::WellKnownParserAtoms> names(
       js_new<js::frontend::WellKnownParserAtoms>());
-  if (!names || !names->init(cx)) {
+  if (!names || !names->init()) {
+    js::ReportOutOfMemory(cx);
     return false;
   }
 
