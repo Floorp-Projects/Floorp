@@ -50,6 +50,11 @@ let win;
 add_setup(async function() {
   win = await promiseEnableUnifiedExtensions();
 
+  // Make sure extension buttons added to the navbar will not overflow in the
+  // panel, which could happen when a previous test file resizes the current
+  // window.
+  await ensureMaximizedWindow(win);
+
   registerCleanupFunction(async () => {
     await BrowserTestUtils.closeWindow(win);
   });
