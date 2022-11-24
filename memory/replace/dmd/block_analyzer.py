@@ -11,12 +11,11 @@
 
 from __future__ import absolute_import, print_function
 
-import json
-import gzip
-import sys
 import argparse
+import gzip
+import json
 import re
-
+import sys
 
 # The DMD output version this script handles.
 outputVersion = 5
