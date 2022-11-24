@@ -5,18 +5,13 @@
 package org.mozilla.focus.experiments
 
 import android.content.Context
-import androidx.core.net.toUri
-import kotlinx.coroutines.runBlocking
-import mozilla.components.service.nimbus.Nimbus
 import mozilla.components.service.nimbus.NimbusApi
 import mozilla.components.service.nimbus.NimbusAppInfo
-import mozilla.components.service.nimbus.NimbusDisabled
-import mozilla.components.service.nimbus.NimbusServerSettings
+import mozilla.components.service.nimbus.NimbusBuilder
 import mozilla.components.support.base.log.logger.Logger
+import org.json.JSONObject
 import org.mozilla.experiments.nimbus.NimbusInterface
-import org.mozilla.experiments.nimbus.internal.EnrolledExperiment
 import org.mozilla.experiments.nimbus.internal.NimbusException
-import org.mozilla.experiments.nimbus.joinOrTimeout
 import org.mozilla.focus.BuildConfig
 import org.mozilla.focus.GleanMetrics.NimbusExperiments
 import org.mozilla.focus.R
@@ -24,33 +19,29 @@ import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.nimbus.FocusNimbus
 
+/**
+ * The maximum amount of time the app launch will be blocked to load experiments from disk.
+ *
+ * ⚠️ This value was decided from analyzing the Focus metrics (nimbus_initial_fetch) for the ideal
+ * timeout. We should NOT change this value without collecting more metrics first.
+ */
 private const val TIME_OUT_LOADING_EXPERIMENT_FROM_DISK_MS = 200L
 
-@Suppress("TooGenericExceptionCaught")
-fun createNimbus(context: Context, url: String?): NimbusApi {
-    val errorReporter: ((String, Throwable) -> Unit) = reporter@{ message, e ->
-        Logger.error("Nimbus error: $message", e)
+/**
+ * Create the Nimbus singleton object for the Focus/Klar apps.
+ */
+fun createNimbus(context: Context, urlString: String?): NimbusApi {
+    val isAppFirstRun = context.settings.isFirstRun
 
-        if (e is NimbusException && !e.isReportableError()) {
-            return@reporter
-        }
+    // These values can be used in the JEXL expressions when targeting experiments.
+    val customTargetingAttributes = JSONObject().apply {
+        // By convention, we should use snake case.
+        put("is_first_run", isAppFirstRun)
 
-        context.components.crashReporter.submitCaughtException(e)
+        // This camelCase attribute is a boolean value represented as a string.
+        // This is left for backwards compatibility.
+        put("isFirstRun", isAppFirstRun.toString())
     }
-
-    // Eventually we'll want to use `NimbusDisabled` when we have no NIMBUS_ENDPOINT.
-    // but we keep this here to not mix feature flags and how we configure Nimbus.
-    val serverSettings = if (!url.isNullOrBlank()) {
-        if (context.settings.shouldUseNimbusPreview) {
-            NimbusServerSettings(url = url.toUri(), collection = "nimbus-preview")
-        } else {
-            NimbusServerSettings(url = url.toUri())
-        }
-    } else {
-        null
-    }
-
-    val isTheFirstLaunch = context.settings.getAppLaunchCount() == 0
 
     // The name "focus-android" or "klar-android" here corresponds to the app_name defined
     // for the family of apps that encompasses all of the channels for the Focus app.
@@ -65,33 +56,34 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
         // passed into Glean. `Config.channel.toString()` turned out to be non-deterministic
         // and would mostly produce the value `Beta` and rarely would produce `beta`.
         channel = BuildConfig.BUILD_TYPE,
+        customTargetingAttributes = customTargetingAttributes,
     )
-    return try {
-        Nimbus(context, appInfo, serverSettings, errorReporter).apply {
-            register(EventsObserver)
 
-            val job = if (isTheFirstLaunch || url.isNullOrBlank()) {
-                applyLocalExperiments(R.raw.initial_experiments)
-            } else {
-                applyPendingExperiments()
-            }
-
-            runBlocking {
-                job.joinOrTimeout(TIME_OUT_LOADING_EXPERIMENT_FROM_DISK_MS)
+    return NimbusBuilder(context).apply {
+        url = urlString
+        errorReporter = { message, e ->
+            Logger.error("Nimbus error: $message", e)
+            if (e !is NimbusException || e.isReportableError()) {
+                context.components.crashReporter.submitCaughtException(e)
             }
         }
-    } catch (e: Throwable) {
-        // Something went wrong. We'd like not to, but stability of the app is more important than
-        // failing fast here.
-        errorReporter("Failed to initialize Nimbus", e)
-        NimbusDisabled(context = context)
-    }
+        initialExperiments = R.raw.initial_experiments
+        timeoutLoadingExperiment = TIME_OUT_LOADING_EXPERIMENT_FROM_DISK_MS
+        usePreviewCollection = context.settings.shouldUseNimbusPreview
+        isFirstRun = isAppFirstRun
+        onCreateCallback = { nimbus ->
+            FocusNimbus.initialize { nimbus }
+        }
+        onApplyCallback = {
+            FocusNimbus.invalidateCachedValues()
+        }
+    }.build(appInfo)
 }
 
 internal fun finishNimbusInitialization(experiments: NimbusApi) =
     experiments.run {
         // We fetch experiments in all cases,
-        if (context.settings.getAppLaunchCount() == 0) {
+        if (context.settings.isFirstRun) {
             // … however on first run, we immediately apply pending experiments.
             // We also want to measure how long this will take, with Glean.
             register(
@@ -129,17 +121,5 @@ fun NimbusException.isReportableError(): Boolean {
         is NimbusException.ResponseException,
         -> false
         else -> true
-    }
-}
-
-/**
- * Focus specific observer of Nimbus events.
- *
- * The generated code `FocusNimbus` provides a cache which should be invalidated
- * when the experiments recipes are updated.
- */
-private object EventsObserver : NimbusInterface.Observer {
-    override fun onUpdatesApplied(updated: List<EnrolledExperiment>) {
-        FocusNimbus.invalidateCachedValues()
     }
 }
