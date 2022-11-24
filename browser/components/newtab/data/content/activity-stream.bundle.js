@@ -13660,8 +13660,8 @@ class TopSites_TopSites_TopSites extends (external_React_default()).PureComponen
     const link = {
       customScreenshotURL: topSiteSpoc.image_src,
       type: "SPOC",
-      label: topSiteSpoc.sponsor,
-      title: topSiteSpoc.sponsor,
+      label: topSiteSpoc.title || topSiteSpoc.sponsor,
+      title: topSiteSpoc.title || topSiteSpoc.sponsor,
       url: topSiteSpoc.url,
       flightId: topSiteSpoc.flight_id,
       id: topSiteSpoc.id,
