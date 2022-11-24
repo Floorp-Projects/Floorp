@@ -325,7 +325,8 @@ void ParserAtomsTable::dumpCharsNoQuote(js::GenericPrinter& out,
 }
 #endif
 
-ParserAtomsTable::ParserAtomsTable(LifoAlloc& alloc) : alloc_(&alloc) {}
+ParserAtomsTable::ParserAtomsTable(JSRuntime* rt, LifoAlloc& alloc)
+    : wellKnownTable_(*rt->commonParserNames), alloc_(&alloc) {}
 
 TaggedParserAtomIndex ParserAtomsTable::addEntry(ErrorContext* ec,
                                                  EntryMap::AddPtr& addPtr,
@@ -375,15 +376,14 @@ TaggedParserAtomIndex ParserAtomsTable::internAscii(ErrorContext* ec,
 TaggedParserAtomIndex ParserAtomsTable::internLatin1(
     ErrorContext* ec, const Latin1Char* latin1Ptr, uint32_t length) {
   // Check for tiny strings which are abundant in minified code.
-  if (auto tiny = WellKnownParserAtoms::getSingleton().lookupTinyIndex(
-          latin1Ptr, length)) {
+  if (auto tiny = wellKnownTable_.lookupTinyIndex(latin1Ptr, length)) {
     return tiny;
   }
 
   // Check for well-known atom.
   InflatedChar16Sequence<Latin1Char> seq(latin1Ptr, length);
   SpecificParserAtomLookup<Latin1Char> lookup(seq);
-  if (auto wk = WellKnownParserAtoms::getSingleton().lookupChar16Seq(lookup)) {
+  if (auto wk = wellKnownTable_.lookupChar16Seq(lookup)) {
     return wk;
   }
 
@@ -541,8 +541,7 @@ static inline bool IsLatin1(mozilla::Utf8Unit c1, mozilla::Utf8Unit c2) {
 
 TaggedParserAtomIndex ParserAtomsTable::internUtf8(
     ErrorContext* ec, const mozilla::Utf8Unit* utf8Ptr, uint32_t nbyte) {
-  if (auto tiny = WellKnownParserAtoms::getSingleton().lookupTinyIndexUTF8(
-          utf8Ptr, nbyte)) {
+  if (auto tiny = wellKnownTable_.lookupTinyIndexUTF8(utf8Ptr, nbyte)) {
     return tiny;
   }
 
@@ -563,7 +562,7 @@ TaggedParserAtomIndex ParserAtomsTable::internUtf8(
   // NOTE: Well-known are all ASCII so have been handled above.
   InflatedChar16Sequence<mozilla::Utf8Unit> seq(utf8Ptr, nbyte);
   SpecificParserAtomLookup<mozilla::Utf8Unit> lookup(seq);
-  MOZ_ASSERT(!WellKnownParserAtoms::getSingleton().lookupChar16Seq(lookup));
+  MOZ_ASSERT(!wellKnownTable_.lookupChar16Seq(lookup));
   EntryMap::AddPtr addPtr = entryMap_.lookupForAdd(lookup);
   if (addPtr) {
     return addPtr->value();
@@ -589,15 +588,14 @@ TaggedParserAtomIndex ParserAtomsTable::internChar16(ErrorContext* ec,
                                                      const char16_t* char16Ptr,
                                                      uint32_t length) {
   // Check for tiny strings which are abundant in minified code.
-  if (auto tiny = WellKnownParserAtoms::getSingleton().lookupTinyIndex(
-          char16Ptr, length)) {
+  if (auto tiny = wellKnownTable_.lookupTinyIndex(char16Ptr, length)) {
     return tiny;
   }
 
   // Check against well-known.
   InflatedChar16Sequence<char16_t> seq(char16Ptr, length);
   SpecificParserAtomLookup<char16_t> lookup(seq);
-  if (auto wk = WellKnownParserAtoms::getSingleton().lookupChar16Seq(lookup)) {
+  if (auto wk = wellKnownTable_.lookupChar16Seq(lookup)) {
     return wk;
   }
 
@@ -1210,9 +1208,6 @@ bool InstantiateMarkedAtomsAsPermanent(JSContext* cx, ErrorContext* ec,
   return true;
 }
 
-/* static */
-WellKnownParserAtoms WellKnownParserAtoms::singleton_;
-
 template <typename CharT>
 TaggedParserAtomIndex WellKnownParserAtoms::lookupChar16Seq(
     const SpecificParserAtomLookup<CharT>& lookup) const {
@@ -1243,7 +1238,8 @@ TaggedParserAtomIndex WellKnownParserAtoms::lookupTinyIndexUTF8(
   return lookupTinyIndex(reinterpret_cast<const Latin1Char*>(utf8Ptr), nbyte);
 }
 
-bool WellKnownParserAtoms::initSingle(const WellKnownAtomInfo& info,
+bool WellKnownParserAtoms::initSingle(JSContext* cx,
+                                      const WellKnownAtomInfo& info,
                                       TaggedParserAtomIndex index) {
   unsigned int len = info.length;
   const Latin1Char* str = reinterpret_cast<const Latin1Char*>(info.content);
@@ -1263,35 +1259,34 @@ bool WellKnownParserAtoms::initSingle(const WellKnownAtomInfo& info,
 
   // Save name for returning after moving entry into set.
   if (!wellKnownMap_.putNew(lookup, &info, index)) {
+    js::ReportOutOfMemory(cx);
     return false;
   }
 
   return true;
 }
 
-bool WellKnownParserAtoms::init() {
-  MOZ_ASSERT(wellKnownMap_.empty());
-
+bool WellKnownParserAtoms::init(JSContext* cx) {
   // Add well-known strings to the HashMap. The HashMap is used for dynamic
   // lookups later and does not change once this init method is complete.
-#define COMMON_NAME_INIT_(_, NAME, _2)                         \
-  if (!initSingle(GetWellKnownAtomInfo(WellKnownAtomId::NAME), \
-                  TaggedParserAtomIndex::WellKnown::NAME())) { \
-    return false;                                              \
+#define COMMON_NAME_INIT_(_, NAME, _2)                             \
+  if (!initSingle(cx, GetWellKnownAtomInfo(WellKnownAtomId::NAME), \
+                  TaggedParserAtomIndex::WellKnown::NAME())) {     \
+    return false;                                                  \
   }
   FOR_EACH_NONTINY_COMMON_PROPERTYNAME(COMMON_NAME_INIT_)
 #undef COMMON_NAME_INIT_
-#define COMMON_NAME_INIT_(NAME, _)                             \
-  if (!initSingle(GetWellKnownAtomInfo(WellKnownAtomId::NAME), \
-                  TaggedParserAtomIndex::WellKnown::NAME())) { \
-    return false;                                              \
+#define COMMON_NAME_INIT_(NAME, _)                                 \
+  if (!initSingle(cx, GetWellKnownAtomInfo(WellKnownAtomId::NAME), \
+                  TaggedParserAtomIndex::WellKnown::NAME())) {     \
+    return false;                                                  \
   }
   JS_FOR_EACH_PROTOTYPE(COMMON_NAME_INIT_)
 #undef COMMON_NAME_INIT_
-#define COMMON_NAME_INIT_(NAME)                                \
-  if (!initSingle(GetWellKnownAtomInfo(WellKnownAtomId::NAME), \
-                  TaggedParserAtomIndex::WellKnown::NAME())) { \
-    return false;                                              \
+#define COMMON_NAME_INIT_(NAME)                                    \
+  if (!initSingle(cx, GetWellKnownAtomInfo(WellKnownAtomId::NAME), \
+                  TaggedParserAtomIndex::WellKnown::NAME())) {     \
+    return false;                                                  \
   }
   JS_FOR_EACH_WELL_KNOWN_SYMBOL(COMMON_NAME_INIT_)
 #undef COMMON_NAME_INIT_
@@ -1299,13 +1294,29 @@ bool WellKnownParserAtoms::init() {
   return true;
 }
 
-void WellKnownParserAtoms::free() { wellKnownMap_.clear(); }
-
-/* static */ bool WellKnownParserAtoms::initSingleton() {
-  return singleton_.init();
-}
-
-/* static */ void WellKnownParserAtoms::freeSingleton() { singleton_.free(); }
-
 } /* namespace frontend */
 } /* namespace js */
+
+bool JSRuntime::initializeParserAtoms(JSContext* cx) {
+  MOZ_ASSERT(!commonParserNames);
+
+  if (parentRuntime) {
+    commonParserNames = parentRuntime->commonParserNames;
+    return true;
+  }
+
+  UniquePtr<js::frontend::WellKnownParserAtoms> names(
+      js_new<js::frontend::WellKnownParserAtoms>());
+  if (!names || !names->init(cx)) {
+    return false;
+  }
+
+  commonParserNames = names.release();
+  return true;
+}
+
+void JSRuntime::finishParserAtoms() {
+  if (!parentRuntime) {
+    js_delete(commonParserNames.ref());
+  }
+}

@@ -25,13 +25,13 @@
 #include "js/TypeDecls.h"         // Latin1Char
 #include "js/Utility.h"           // UniqueChars
 #include "js/Vector.h"            // Vector
-#include "threading/Mutex.h"      // Mutex
 #include "util/Text.h"            // InflatedChar16Sequence
 #include "vm/CommonPropertyNames.h"
 #include "vm/StaticStrings.h"
 #include "vm/WellKnownAtom.h"  // WellKnownAtomId, WellKnownAtomInfo
 
 struct JS_PUBLIC_API JSContext;
+struct JSRuntime;
 
 class JSAtom;
 class JSString;
@@ -572,27 +572,18 @@ using ParserAtomSpan = mozilla::Span<ParserAtom*>;
  * constant time.
  */
 class WellKnownParserAtoms {
-  static WellKnownParserAtoms singleton_;
-
+ public:
   // Common property and prototype names are tracked in a hash table. This table
   // does not key for any items already in a direct-indexing tiny atom table.
   using EntryMap = HashMap<const WellKnownAtomInfo*, TaggedParserAtomIndex,
                            WellKnownAtomInfoHasher, js::SystemAllocPolicy>;
   EntryMap wellKnownMap_;
 
-  bool initSingle(const WellKnownAtomInfo& info, TaggedParserAtomIndex index);
-
-  bool init();
-  void free();
+  bool initSingle(JSContext* cx, const WellKnownAtomInfo& info,
+                  TaggedParserAtomIndex index);
 
  public:
-  static bool initSingleton();
-  static void freeSingleton();
-
-  static WellKnownParserAtoms& getSingleton() {
-    MOZ_ASSERT(!singleton_.wellKnownMap_.empty());
-    return singleton_;
-  }
+  bool init(JSContext* cx);
 
   // Maximum length of any well known atoms. This can be increased if needed.
   static constexpr size_t MaxWellKnownLength = 32;
@@ -668,6 +659,8 @@ class ParserAtomsTable {
   friend struct CompilationStencil;
 
  private:
+  const WellKnownParserAtoms& wellKnownTable_;
+
   LifoAlloc* alloc_;
 
   // The ParserAtom are owned by the LifoAlloc.
@@ -677,7 +670,7 @@ class ParserAtomsTable {
   ParserAtomVector entries_;
 
  public:
-  explicit ParserAtomsTable(LifoAlloc& alloc);
+  ParserAtomsTable(JSRuntime* rt, LifoAlloc& alloc);
   ParserAtomsTable(ParserAtomsTable&&) = default;
   ParserAtomsTable& operator=(ParserAtomsTable&& other) noexcept {
     entryMap_ = std::move(other.entryMap_);
