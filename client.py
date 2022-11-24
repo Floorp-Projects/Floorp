@@ -7,10 +7,10 @@ from __future__ import absolute_import, print_function
 
 HG_EXCLUSIONS = [".hg", ".hgignore", ".hgtags"]
 
-import os
-import sys
-import shutil
 import glob
+import os
+import shutil
+import sys
 from optparse import OptionParser
 from subprocess import check_call
 
