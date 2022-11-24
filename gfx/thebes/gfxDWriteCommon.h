@@ -35,9 +35,6 @@
 
 #define ENHANCED_CONTRAST_VALUE_NAME L"EnhancedContrastLevel"
 
-#define CONTROL_PANEL_REGISTRY_KEY HKEY_CURRENT_USER, L"Control Panel\\Desktop"
-#define FONT_SMOOTHING_GAMMA_VALUE L"FontSmoothingGamma"
-
 // FIXME: This shouldn't look at constants probably.
 static inline DWRITE_FONT_STRETCH DWriteFontStretchFromStretch(
     mozilla::FontStretch aStretch) {
