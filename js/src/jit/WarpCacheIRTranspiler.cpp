@@ -421,6 +421,18 @@ bool WarpCacheIRTranspiler::emitGuardShape(ObjOperandId objId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardMultipleShapes(ObjOperandId objId,
+                                                    uint32_t shapesOffset) {
+  MDefinition* def = getOperand(objId);
+  MInstruction* shapeList = objectStubField(shapesOffset);
+
+  auto* ins = MGuardMultipleShapes::New(alloc(), def, shapeList);
+  add(ins);
+
+  setOperand(objId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardNullProto(ObjOperandId objId) {
   MDefinition* def = getOperand(objId);
 

@@ -1382,6 +1382,16 @@
   alias_set: custom
   might_alias: custom
 
+- name: GuardMultipleShapes
+  operands:
+    object: Object
+    shapeList: Object
+  result_type: Object
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+
 - name: GuardProto
   gen_boilerplate: false
 

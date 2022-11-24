@@ -241,7 +241,7 @@
 
 - name: GuardMultipleShapes
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 2
   custom_writer: true
   args:
