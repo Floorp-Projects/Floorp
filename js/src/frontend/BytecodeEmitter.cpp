@@ -8510,7 +8510,7 @@ bool BytecodeEmitter::emitOptionalPrivateExpression(
   return true;
 }
 
-bool BytecodeEmitter::emitShortCircuit(ListNode* node) {
+bool BytecodeEmitter::emitShortCircuit(ListNode* node, ValueUsage valueUsage) {
   MOZ_ASSERT(node->isKind(ParseNodeKind::OrExpr) ||
              node->isKind(ParseNodeKind::CoalesceExpr) ||
              node->isKind(ParseNodeKind::AndExpr));
@@ -8560,7 +8560,7 @@ bool BytecodeEmitter::emitShortCircuit(ListNode* node) {
   }
 
   // Emit the last node
-  if (!emitTree(node->last())) {
+  if (!emitTree(node->last(), valueUsage)) {
     return false;
   }
 
@@ -11218,7 +11218,7 @@ bool BytecodeEmitter::emitTree(
     case ParseNodeKind::OrExpr:
     case ParseNodeKind::CoalesceExpr:
     case ParseNodeKind::AndExpr:
-      if (!emitShortCircuit(&pn->as<ListNode>())) {
+      if (!emitShortCircuit(&pn->as<ListNode>(), valueUsage)) {
         return false;
       }
       break;
