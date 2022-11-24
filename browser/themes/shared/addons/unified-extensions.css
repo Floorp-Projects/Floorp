@@ -5,45 +5,79 @@
 :root {
   /* uei = unified extensions item */
   --uei-icon-size: 32px;
-  --uei-dot-position: calc(var(--uei-icon-size) / 2 + var(--arrowpanel-menuitem-margin-inline) + var(--arrowpanel-menuitem-padding-inline) - 4px);
+  --uei-attention-dot-size: 8px;
   --uei-button-hover-bgcolor: var(--panel-item-hover-bgcolor);
   --uei-button-hover-color: inherit;
   --uei-button-active-bgcolor: var(--panel-item-active-bgcolor);
   --uei-button-active-color: inherit;
+  --uei-button-attention-dot-color: var(--tab-attention-icon-color);
 }
 
 :root[uidensity="compact"] {
   --uei-icon-size: 24px;
 }
 
-/* Align extensions rendered with custom elements. */
-unified-extensions-item {
-  align-items: center;
-  display: flex;
+#unified-extensions-panel {
+  --uei-dot-horizontal-position-in-panel: calc(var(--uei-icon-size) / 2 + var(--arrowpanel-menuitem-padding-inline) - var(--uei-attention-dot-size) / 2);
+  --uei-dot-vertical-position-in-panel: max(0px, calc(var(--arrowpanel-menuitem-padding-block) / 2 - var(--uei-attention-dot-size) / 2));
 }
 
-.unified-extensions-item {
+/* Align extensions rendered with custom elements. */
+unified-extensions-item {
+  display: flex;
+  align-items: center;
+}
+
+#unified-extensions-panel .unified-extensions-item {
+  /* Have some spacing between items in the panel; mainly useful for when HCM is enabled. */
   padding-block: 2px;
 }
 
-/* This is based on the attention UI defined in:
+/* The "attention UI" for the unified extensions is based on:
  * https://searchfox.org/mozilla-central/rev/560b7b1b17/browser/themes/shared/tabs.css#624 */
-#unified-extensions-button[attention],
-.unified-extensions-item[attention] {
-  background-image: radial-gradient(circle, var(--tab-attention-icon-color), var(--tab-attention-icon-color) 2px, transparent 2px);
-  background-position: center bottom max(0px, calc(var(--arrowpanel-menuitem-padding-block) - 4px));
-  background-size: 8px 8px;
+
+/* On the main unified extensions button, we draw the attention on the icon element. */
+#unified-extensions-button[attention] > .toolbarbutton-icon,
+/* For extension widgets placed in a toolbar, we use the stack element (containing the icon)
+ * of the action button to draw the attention dot.
+ * Otherwise (in the extensions panel), we use the action button itself. */
+toolbar .unified-extensions-item[attention] > .unified-extensions-item-action > .toolbarbutton-badge-stack,
+#unified-extensions-panel .unified-extensions-item[attention] > .unified-extensions-item-action,
+.widget-overflow-list .unified-extensions-item[attention][unified-extensions="false"] > .unified-extensions-item-action {
+  background-image: radial-gradient(circle, var(--uei-button-attention-dot-color), var(--uei-button-attention-dot-color) 2px, transparent 2px);
+  background-size: var(--uei-attention-dot-size) var(--uei-attention-dot-size);
   background-repeat: no-repeat;
 }
 
-/* Adjust attention dots for the custom elements. */
-.unified-extensions-list > unified-extensions-item[attention] {
-  background-position: left var(--uei-dot-position) bottom 0px;
+/* Adjust attention dots position in the toolbar. */
+#unified-extensions-button[attention] > .toolbarbutton-icon,
+toolbar .unified-extensions-item[attention] > .unified-extensions-item-action > .toolbarbutton-badge-stack {
+  background-position: center bottom calc(var(--toolbarbutton-inner-padding) / 2 - var(--uei-attention-dot-size) / 2);
 }
 
-/* Adjust attention dots for the custom elements. */
-.unified-extensions-list > unified-extensions-item[attention]:-moz-locale-dir(rtl) {
-  background-position-x: right var(--uei-dot-position);
+/* Adjust attention dots position in the unified extensions panel. */
+#unified-extensions-panel .unified-extensions-item[attention] > .unified-extensions-item-action {
+  background-position: left var(--uei-dot-horizontal-position-in-panel) bottom var(--uei-dot-vertical-position-in-panel);
+}
+
+/* Adjust attention dots position in the unified extensions panel for RTL. */
+#unified-extensions-panel .unified-extensions-item[attention] > .unified-extensions-item-action:-moz-locale-dir(rtl) {
+  background-position-x: right var(--uei-dot-horizontal-position-in-panel);
+}
+
+/* Adjust attention dots position in the overflow panel. */
+.widget-overflow-list .unified-extensions-item[attention][unified-extensions="false"] > .unified-extensions-item-action {
+  background-position-x: left calc(16px / 2 + var(--arrowpanel-menuitem-padding-inline) - var(--uei-attention-dot-size) / 2);
+  background-position-y: bottom calc(var(--arrowpanel-menuitem-padding-block) / 2 - var(--uei-attention-dot-size) / 2);
+}
+
+:root[uidensity="compact"] .widget-overflow-list .unified-extensions-item[attention][unified-extensions="false"] > .unified-extensions-item-action {
+  background-position-y: bottom -2px;
+}
+
+/* Adjust attention dots position in the overflow panel for RTL. */
+.widget-overflow-list toolbaritem.unified-extensions-item[attention][unified-extensions="false"] > .unified-extensions-item-action:-moz-locale-dir(rtl) {
+  background-position-x: right calc(16px / 2 + var(--arrowpanel-menuitem-padding-inline) - var(--uei-attention-dot-size) / 2);
 }
 
 .unified-extensions-item-action {
@@ -165,25 +199,9 @@ toolbaritem.unified-extensions-item[unified-extensions="true"] .unified-extensio
   display: block;
 }
 
-:is(#unified-extensions-panel, .widget-overflow-list) toolbaritem.unified-extensions-item[attention] {
-  background-position: left calc(12px + var(--arrowpanel-menuitem-margin-inline)) bottom;
-}
-
-:is(#unified-extensions-panel, .widget-overflow-list) toolbaritem.unified-extensions-item[attention]:-moz-locale-dir(rtl) {
-  background-position-x: right calc(12px + var(--arrowpanel-menuitem-margin-inline));
-}
-
-.widget-overflow-list toolbaritem.unified-extensions-item[attention][unified-extensions="false"] {
-  background-position-x: left 12px;
-}
-
-.widget-overflow-list toolbaritem.unified-extensions-item[attention][unified-extensions="false"]:-moz-locale-dir(rtl) {
-  background-position-x: right 12px;
-}
-
 @media (prefers-contrast) {
-  .unified-extensions-item[attention] {
-    background-image: radial-gradient(circle, ButtonText, ButtonText 2px, transparent 2px);
+  :root {
+    --uei-button-attention-dot-color: ButtonText;
   }
 
   .unified-extensions-item-action:not([disabled]).subviewbutton,
