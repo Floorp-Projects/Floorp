@@ -181,13 +181,6 @@ describe("TelemetryFeed", () => {
       assert.calledWithExactly(stub, "unload", instance.handleEvent);
       assert.calledWithExactly(stub, "TabPinned", instance.handleEvent);
     });
-    it("should send a 'newtab' ping", () => {
-      instance._prefs.set(TELEMETRY_PREF, true);
-      sandbox.spy(GleanPings.newtab, "submit");
-      instance.init();
-      assert.calledOnce(GleanPings.newtab.submit);
-      assert.calledWithExactly(GleanPings.newtab.submit, "component_init");
-    });
     describe("telemetry pref changes from false to true", () => {
       beforeEach(() => {
         FakePrefs.prototype.prefs = {};
@@ -1724,6 +1717,13 @@ describe("TelemetryFeed", () => {
       await instance.sendPageTakeoverData();
       assert.calledOnce(Glean.newtab.homepageCategory.set);
       assert.calledWith(Glean.newtab.homepageCategory.set, "disabled");
+    });
+    it("should send a 'newtab' ping", async () => {
+      instance._prefs.set(TELEMETRY_PREF, true);
+      sandbox.spy(GleanPings.newtab, "submit");
+      await instance.sendPageTakeoverData();
+      assert.calledOnce(GleanPings.newtab.submit);
+      assert.calledWithExactly(GleanPings.newtab.submit, "component_init");
     });
   });
   describe("#sendDiscoveryStreamImpressions", () => {
