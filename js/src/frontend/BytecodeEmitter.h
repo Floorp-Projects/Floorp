@@ -916,15 +916,13 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool emitLeftAssociative(ListNode* node);
   [[nodiscard]] bool emitPrivateInExpr(ListNode* node);
   [[nodiscard]] bool emitShortCircuit(ListNode* node, ValueUsage valueUsage);
-  [[nodiscard]] bool emitSequenceExpr(
-      ListNode* node, ValueUsage valueUsage = ValueUsage::WantValue);
+  [[nodiscard]] bool emitSequenceExpr(ListNode* node, ValueUsage valueUsage);
 
   [[nodiscard]] MOZ_NEVER_INLINE bool emitIncOrDec(UnaryNode* incDec,
                                                    ValueUsage valueUsage);
 
   [[nodiscard]] bool emitConditionalExpression(
-      ConditionalExpression& conditional,
-      ValueUsage valueUsage = ValueUsage::WantValue);
+      ConditionalExpression& conditional, ValueUsage valueUsage);
 
   [[nodiscard]] ParseNode* getCoordNode(ParseNode* callNode,
                                         ParseNode* calleeNode, JSOp op,
@@ -932,8 +930,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   [[nodiscard]] bool emitArguments(ListNode* argsList, bool isCall,
                                    bool isSpread, CallOrNewEmitter& cone);
-  [[nodiscard]] bool emitCallOrNew(
-      CallNode* callNode, ValueUsage valueUsage = ValueUsage::WantValue);
+  [[nodiscard]] bool emitCallOrNew(CallNode* callNode, ValueUsage valueUsage);
   [[nodiscard]] bool emitDebugCheckSelfHosted();
   [[nodiscard]] bool emitSelfHostedCallFunction(CallNode* callNode, JSOp op);
   [[nodiscard]] bool emitSelfHostedResumeGenerator(CallNode* callNode);
