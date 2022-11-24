@@ -223,6 +223,11 @@ class HomeScreenTest {
 
         homeScreen {
             verifyThoughtProvokingStories(true)
+            scrollToPocketProvokingStories()
+            swipePocketProvokingStories()
+            verifyPocketRecommendedStoriesItems(activityTestRule, 1, 3, 4, 5, 6, 7)
+            verifyPocketSponsoredStoriesItems(activityTestRule, 2, 8)
+            verifyDiscoverMoreStoriesButton(activityTestRule, 9)
             verifyStoriesByTopic(true)
         }.openThreeDotMenu {
         }.openCustomizeHome {
