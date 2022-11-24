@@ -7,6 +7,7 @@
 # jit_test.py -- Python harness for JavaScript trace tests.
 
 from __future__ import print_function
+
 import os
 import re
 import sys
@@ -18,7 +19,7 @@ if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
 else:
     from .tasks_win import run_all_tests
 
-from .progressbar import ProgressBar, NullProgressBar
+from .progressbar import NullProgressBar, ProgressBar
 from .results import escape_cmdline
 from .structuredlog import TestLogger
 from .tempfile import TemporaryDirectory
@@ -799,8 +800,9 @@ def run_tests_local(tests, num_tests, prefix, options, slog):
 
 def run_tests_remote(tests, num_tests, prefix, options, slog):
     # Setup device with everything needed to run our tests.
-    from .tasks_adb_remote import get_remote_results
     from mozdevice import ADBError, ADBTimeoutError
+
+    from .tasks_adb_remote import get_remote_results
 
     # Run all tests.
     pb = create_progressbar(num_tests, options)

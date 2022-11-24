@@ -39,11 +39,11 @@
 from __future__ import with_statement
 
 import errno
-import re
-import sys
 import os
-import subprocess
+import re
 import shlex
+import subprocess
+import sys
 
 import buildconfig
 import mozpack.path as mozpath

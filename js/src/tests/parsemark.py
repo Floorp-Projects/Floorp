@@ -23,12 +23,12 @@ Arguments:
 
 from __future__ import print_function
 
+import json
 import math
 import optparse
 import os
 import subprocess as subp
 import sys
-import json
 from string import Template
 
 try:

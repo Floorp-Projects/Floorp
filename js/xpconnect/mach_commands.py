@@ -6,10 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from mach.decorators import (
-    Command,
-    CommandArgument,
-)
+from mach.decorators import Command, CommandArgument
 
 
 @Command("xpcshell", category="misc", description="Run the xpcshell binary")

@@ -5,8 +5,8 @@
 # Pretty-printer for SpiderMonkey symbols.
 
 import mozilla.prettyprinters
-from mozilla.prettyprinters import ptr_pretty_printer
 from mozilla.CellHeader import get_header_ptr
+from mozilla.prettyprinters import ptr_pretty_printer
 
 # Forget any printers from previous loads of this module.
 mozilla.prettyprinters.clear_module_printers(__name__)

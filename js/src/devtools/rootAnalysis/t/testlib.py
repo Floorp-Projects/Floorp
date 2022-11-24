@@ -3,9 +3,9 @@ import os
 import re
 import subprocess
 import sys
+from collections import defaultdict, namedtuple
 
 from sixgill import Body
-from collections import defaultdict, namedtuple
 
 scriptdir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 

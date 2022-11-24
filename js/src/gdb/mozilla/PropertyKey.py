@@ -6,7 +6,6 @@
 
 import mozilla.prettyprinters
 import mozilla.Root
-
 from mozilla.prettyprinters import pretty_printer
 
 # Forget any printers from previous loads of this module.

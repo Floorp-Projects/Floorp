@@ -13,31 +13,30 @@ from __future__ import print_function
 
 import math
 import os
+import platform
 import posixpath
 import re
 import shlex
 import sys
 import tempfile
-import platform
-
-from os.path import abspath, dirname, isfile, realpath
 from contextlib import contextmanager
 from copy import copy
 from datetime import datetime
 from itertools import chain
-from subprocess import list2cmdline, call
+from os.path import abspath, dirname, isfile, realpath
+from subprocess import call, list2cmdline
 
+from lib.adaptor import xdr_annotate
+from lib.progressbar import ProgressBar
+from lib.results import ResultsSink, TestOutput
+from lib.tempfile import TemporaryDirectory
 from lib.tests import (
     RefTestCase,
-    get_jitflags,
+    change_env,
     get_cpu_count,
     get_environment_overlay,
-    change_env,
+    get_jitflags,
 )
-from lib.results import ResultsSink, TestOutput
-from lib.progressbar import ProgressBar
-from lib.adaptor import xdr_annotate
-from lib.tempfile import TemporaryDirectory
 
 if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
     from lib.tasks_unix import run_all_tests
@@ -539,7 +538,7 @@ def load_wpt_tests(xul_tester, requested_paths, excluded_paths, update_manifest=
     sys.path[0:0] = abs_sys_paths
 
     import manifestupdate
-    from wptrunner import products, testloader, wptcommandline, wpttest, wptlogging
+    from wptrunner import products, testloader, wptcommandline, wptlogging, wpttest
 
     manifest_root = tempfile.gettempdir()
     (maybe_dist, maybe_bin) = os.path.split(os.path.dirname(xul_tester.js_bin))
@@ -799,7 +798,7 @@ def main():
     if options.remote:
         results = ResultsSink("jstests", options, test_count)
         try:
-            from lib.remote import init_remote_dir, init_device
+            from lib.remote import init_device, init_remote_dir
 
             device = init_device(options)
             tempdir = posixpath.join(options.remote_test_root, "tmp")

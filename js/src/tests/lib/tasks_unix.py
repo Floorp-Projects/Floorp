@@ -7,16 +7,11 @@ import os
 import select
 import signal
 import sys
-
 from datetime import datetime, timedelta
 
-from .progressbar import ProgressBar
-from .results import (
-    NullTestOutput,
-    TestOutput,
-    escape_cmdline,
-)
 from .adaptor import xdr_annotate
+from .progressbar import ProgressBar
+from .results import NullTestOutput, TestOutput, escape_cmdline
 
 
 class Task(object):

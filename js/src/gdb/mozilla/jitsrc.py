@@ -10,8 +10,9 @@
 #  => 0x240e954ac13a:	pushq  (%rbx)
 #  (rr) jitsrc 0x240e954ac13a
 
-import gdb
 import re
+
+import gdb
 
 # (base_name, hops, func_name, source_var, dest_var) tuples, such that :
 #   - `base_name`: a regex matching the name of the function that implements

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # Adapted from https://github.com/tc39/test262/blob/main/tools/generation/test/run.py
 
+import contextlib
+import os
 import shutil
 import subprocess
-import contextlib
 import tempfile
-import os
 import unittest
 
 testDir = os.path.dirname(os.path.relpath(__file__))

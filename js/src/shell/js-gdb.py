@@ -7,11 +7,11 @@
 # This script will be installed into $objdir/dist/bin. Add $objdir to gdb's
 # source search path and load in the Gecko+JS init file.
 
-import gdb
 import os
 import re
-
 from os.path import abspath, dirname
+
+import gdb
 
 devel_objdir = abspath(os.path.join(dirname(__file__), "..", ".."))
 m = re.search(r"[\w ]+: (.*)", gdb.execute("show dir", False, True))

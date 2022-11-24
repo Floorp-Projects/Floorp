@@ -5,11 +5,10 @@
 
 from __future__ import print_function
 
+import argparse
 import os
 import site
 import subprocess
-import argparse
-
 from glob import glob
 
 scriptdir = os.path.abspath(os.path.dirname(__file__))

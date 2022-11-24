@@ -13,21 +13,15 @@ import os
 import sys
 import textwrap
 
-from mach.base import FailedCommandError, MachError
-from mach.decorators import (
-    CommandArgument,
-    Command,
-    SubCommand,
-)
-from mach.registrar import Registrar
-
-from mozbuild.mozconfig import MozconfigLoader
-
 # Command files like this are listed in build/mach_initialize.py in alphabetical
 # order, but we need to access commands earlier in the sorted order to grab
 # their arguments. Force them to load now.
 import mozbuild.artifact_commands  # NOQA: F401
 import mozbuild.build_commands  # NOQA: F401
+from mach.base import FailedCommandError, MachError
+from mach.decorators import Command, CommandArgument, SubCommand
+from mach.registrar import Registrar
+from mozbuild.mozconfig import MozconfigLoader
 
 
 # Use a decorator to copy command arguments off of the named command. Instead

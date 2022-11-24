@@ -8,9 +8,10 @@ import io
 import os
 import posixpath
 import re
-import six
 import sys
-from subprocess import Popen, PIPE
+from subprocess import PIPE, Popen
+
+import six
 
 from .remote import init_device
 from .tests import RefTestCase

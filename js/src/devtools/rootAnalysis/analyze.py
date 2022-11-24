@@ -9,11 +9,11 @@
 Runs the static rooting analysis
 """
 
-from subprocess import Popen
 import argparse
 import os
 import subprocess
 import sys
+from subprocess import Popen
 
 try:
     from shlex import quote

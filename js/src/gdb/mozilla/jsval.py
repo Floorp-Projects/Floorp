@@ -4,9 +4,10 @@
 
 # Pretty-printers for SpiderMonkey's JS::Value.
 
+import struct
+
 import gdb
 import gdb.types
-import struct
 import mozilla.prettyprinters
 from mozilla.prettyprinters import pretty_printer
 

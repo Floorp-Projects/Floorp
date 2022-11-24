@@ -23,8 +23,8 @@ from __future__ import print_function, unicode_literals
 
 import csv
 import io
-import re
 import os
+import re
 import sys
 from contextlib import closing
 from functools import partial
@@ -33,7 +33,10 @@ from operator import is_not, itemgetter
 from zipfile import ZipFile
 
 if sys.version_info.major == 2:
-    from itertools import ifilter as filter, imap as map, izip_longest as zip_longest
+    from itertools import ifilter as filter
+    from itertools import imap as map
+    from itertools import izip_longest as zip_longest
+
     from urllib2 import urlopen
 
     range = xrange
