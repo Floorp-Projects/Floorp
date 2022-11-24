@@ -203,7 +203,9 @@ enum class CacheKind : uint8_t {
 
 extern const char* const CacheKindNames[];
 
+#ifdef DEBUG
 extern size_t NumInputsForCacheKind(CacheKind kind);
+#endif
 
 enum class CacheOp {
 #define DEFINE_OP(op, ...) op,

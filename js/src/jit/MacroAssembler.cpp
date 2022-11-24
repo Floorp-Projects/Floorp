@@ -3834,48 +3834,6 @@ void MacroAssembler::branchTestType(Condition cond, Register tag,
   }
 }
 
-void MacroAssembler::branchTestObjShapeList(
-    Condition cond, Register obj, Register shapeElements, Register shapeScratch,
-    Register endScratch, Register spectreScratch, Label* label) {
-  MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-
-  bool needSpectreMitigations = spectreScratch != InvalidReg;
-
-  Label done;
-  Label* onMatch = cond == Assembler::Equal ? label : &done;
-
-  // Compute end pointer.
-  Address lengthAddr(shapeElements,
-                     ObjectElements::offsetOfInitializedLength());
-  load32(lengthAddr, endScratch);
-  BaseObjectElementIndex endPtrAddr(shapeElements, endScratch);
-  computeEffectiveAddress(endPtrAddr, endScratch);
-
-  Label loop;
-  bind(&loop);
-
-  // Load a shape from the list into shapeScratch and compare against
-  // the object's shape.
-  unboxNonDouble(Address(shapeElements, 0), shapeScratch,
-                 JSVAL_TYPE_PRIVATE_GCTHING);
-  if (needSpectreMitigations) {
-    branchTestObjShape(Assembler::Equal, obj, shapeScratch, spectreScratch, obj,
-                       onMatch);
-  } else {
-    branchTestObjShapeNoSpectreMitigations(Assembler::Equal, obj, shapeScratch,
-                                           onMatch);
-  }
-
-  // Advance to next shape and loop if not finished.
-  addPtr(Imm32(sizeof(Value)), shapeElements);
-  branchPtr(Assembler::Below, shapeElements, endScratch, &loop);
-
-  if (cond == Assembler::NotEqual) {
-    jump(label);
-    bind(&done);
-  }
-}
-
 void MacroAssembler::branchTestObjCompartment(Condition cond, Register obj,
                                               const Address& compartment,
                                               Register scratch, Label* label) {

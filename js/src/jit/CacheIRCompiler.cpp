@@ -1266,31 +1266,6 @@ bool CacheIRWriter::stubDataEquals(const uint8_t* stubData) const {
   return true;
 }
 
-bool CacheIRWriter::stubDataEqualsIgnoring(const uint8_t* stubData,
-                                           uint32_t ignoreOffset) const {
-  MOZ_ASSERT(!failed());
-
-  uint32_t offset = 0;
-  for (const StubField& field : stubFields_) {
-    if (offset != ignoreOffset) {
-      if (field.sizeIsWord()) {
-        uintptr_t raw = *reinterpret_cast<const uintptr_t*>(stubData + offset);
-        if (field.asWord() != raw) {
-          return false;
-        }
-      } else {
-        uint64_t raw = *reinterpret_cast<const uint64_t*>(stubData + offset);
-        if (field.asInt64() != raw) {
-          return false;
-        }
-      }
-    }
-    offset += StubField::sizeInBytes(field.type());
-  }
-
-  return true;
-}
-
 HashNumber CacheIRStubKey::hash(const CacheIRStubKey::Lookup& l) {
   HashNumber hash = mozilla::HashBytes(l.code, l.length);
   hash = mozilla::AddToHash(hash, uint32_t(l.kind));
@@ -7389,38 +7364,6 @@ bool CacheIRCompiler::emitGuardWasmArg(ValOperandId argId,
   }
   masm.bind(&done);
 
-  return true;
-}
-
-bool CacheIRCompiler::emitGuardMultipleShapes(ObjOperandId objId,
-                                              uint32_t shapesOffset) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, objId);
-  AutoScratchRegister shapes(allocator, masm);
-  AutoScratchRegister scratch(allocator, masm);
-  AutoScratchRegister scratch2(allocator, masm);
-
-  bool needSpectreMitigations = objectGuardNeedsSpectreMitigations(objId);
-
-  Register spectreScratch = InvalidReg;
-  Maybe<AutoScratchRegister> maybeSpectreScratch;
-  if (needSpectreMitigations) {
-    maybeSpectreScratch.emplace(allocator, masm);
-    spectreScratch = *maybeSpectreScratch;
-  }
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  // The stub field contains a ListObject. Load its elements.
-  StubFieldOffset shapeArray(shapesOffset, StubField::Type::JSObject);
-  emitLoadStubField(shapeArray, shapes);
-  masm.loadPtr(Address(shapes, NativeObject::offsetOfElements()), shapes);
-
-  masm.branchTestObjShapeList(Assembler::NotEqual, obj, shapes, scratch,
-                              scratch2, spectreScratch, failure->label());
   return true;
 }
 
