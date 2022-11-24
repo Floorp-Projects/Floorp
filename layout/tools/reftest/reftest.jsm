@@ -915,7 +915,7 @@ function DoneTests()
             g.suiteStarted = false
             logger.suiteEnd({'results': g.testResults});
         } else {
-            logger._logData('results', {results: g.testResults});
+            logger.logData('results', {results: g.testResults});
         }
         logger.info("Slowest test took " + g.slowestTestTime + "ms (" + g.slowestTestURL + ")");
         logger.info("Total canvas count = " + g.recycledCanvases.length);

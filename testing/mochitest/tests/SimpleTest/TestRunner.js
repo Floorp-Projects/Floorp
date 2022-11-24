@@ -340,10 +340,10 @@ TestRunner.structuredLogger = new StructuredLogger(
   TestRunner._dumpMessage
 );
 TestRunner.structuredLogger.deactivateBuffering = function() {
-  TestRunner.structuredLogger._logData("buffering_off");
+  TestRunner.structuredLogger.logData("buffering_off");
 };
 TestRunner.structuredLogger.activateBuffering = function() {
-  TestRunner.structuredLogger._logData("buffering_on");
+  TestRunner.structuredLogger.logData("buffering_on");
 };
 
 TestRunner.log = function(msg) {
