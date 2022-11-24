@@ -236,6 +236,10 @@ class ICFallbackStub final : public ICStub {
   void clearUsedByTranspiler() { state_.clearUsedByTranspiler(); }
   void setUsedByTranspiler() { state_.setUsedByTranspiler(); }
 
+  void clearHasFoldedStub() { state_.clearHasFoldedStub(); }
+  void setHasFoldedStub() { state_.setHasFoldedStub(); }
+  bool hasFoldedStub() const { return state_.hasFoldedStub(); }
+
   TrialInliningState trialInliningState() const {
     return state_.trialInliningState();
   }
