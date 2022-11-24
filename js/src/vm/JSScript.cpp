@@ -1326,7 +1326,7 @@ template <typename Unit>
 [[nodiscard]] bool ScriptSource::setUncompressedSourceHelper(
     JSContext* cx, EntryUnits<Unit>&& source, size_t length,
     SourceRetrievable retrievable) {
-  auto& cache = SharedImmutableStringsCache::getSingleton();
+  auto& cache = cx->runtime()->sharedImmutableStrings();
 
   auto uniqueChars = SourceTypeTraits<Unit>::toCacheable(std::move(source));
   auto deduped = cache.getOrCreate(std::move(uniqueChars), length);
@@ -1444,7 +1444,7 @@ template <typename Unit>
   MOZ_ASSERT(data.is<Missing>(), "shouldn't be double-initializing");
   MOZ_ASSERT(compressed != nullptr);
 
-  auto& cache = SharedImmutableStringsCache::getSingleton();
+  auto& cache = cx->runtime()->sharedImmutableStrings();
   auto deduped = cache.getOrCreate(std::move(compressed), rawLength);
   if (!deduped) {
     ReportOutOfMemory(cx);
@@ -1476,7 +1476,7 @@ template bool ScriptSource::initializeWithUnretrievableCompressedSource<
               size_t sourceLength);
 
 template <typename Unit>
-bool ScriptSource::assignSource(ErrorContext* ec,
+bool ScriptSource::assignSource(JSContext* cx, ErrorContext* ec,
                                 const ReadOnlyCompileOptions& options,
                                 SourceText<Unit>& srcBuf) {
   MOZ_ASSERT(data.is<Missing>(),
@@ -1494,7 +1494,8 @@ bool ScriptSource::assignSource(ErrorContext* ec,
     return true;
   }
 
-  auto& cache = SharedImmutableStringsCache::getSingleton();
+  JSRuntime* runtime = cx->runtime();
+  auto& cache = runtime->sharedImmutableStrings();
   auto deduped = cache.getOrCreate(srcBuf.get(), srcBuf.length(), [&srcBuf]() {
     using CharT = typename SourceTypeTraits<Unit>::CharT;
     return srcBuf.ownsUnits()
@@ -1511,10 +1512,10 @@ bool ScriptSource::assignSource(ErrorContext* ec,
   return true;
 }
 
-template bool ScriptSource::assignSource(ErrorContext* ec,
+template bool ScriptSource::assignSource(JSContext* cx, ErrorContext* ec,
                                          const ReadOnlyCompileOptions& options,
                                          SourceText<char16_t>& srcBuf);
-template bool ScriptSource::assignSource(ErrorContext* ec,
+template bool ScriptSource::assignSource(JSContext* cx, ErrorContext* ec,
                                          const ReadOnlyCompileOptions& options,
                                          SourceText<Utf8Unit>& srcBuf);
 
@@ -1598,7 +1599,7 @@ void SourceCompressionTask::workEncodingSpecific() {
     return;
   }
 
-  auto& strings = SharedImmutableStringsCache::getSingleton();
+  auto& strings = runtime_->sharedImmutableStrings();
   resultString_ = strings.getOrCreate(std::move(compressed), totalBytes);
 }
 
@@ -1873,7 +1874,7 @@ bool ScriptSource::initFromOptions(JSContext* cx, ErrorContext* ec,
     if (!formatted) {
       return false;
     }
-    if (!setFilename(ec, std::move(formatted))) {
+    if (!setFilename(cx, ec, std::move(formatted))) {
       return false;
     }
   } else if (options.filename()) {
@@ -1894,25 +1895,28 @@ bool ScriptSource::initFromOptions(JSContext* cx, ErrorContext* ec,
 // Use the SharedImmutableString map to deduplicate input string. The input
 // string must be null-terminated.
 template <typename SharedT, typename CharT>
-static SharedT GetOrCreateStringZ(ErrorContext* ec,
+static SharedT GetOrCreateStringZ(JSContext* cx, ErrorContext* ec,
                                   UniquePtr<CharT[], JS::FreePolicy>&& str) {
+  JSRuntime* rt = cx->runtime();
   size_t lengthWithNull = std::char_traits<CharT>::length(str.get()) + 1;
-  auto res = SharedImmutableStringsCache::getSingleton().getOrCreate(
-      std::move(str), lengthWithNull);
+  auto res =
+      rt->sharedImmutableStrings().getOrCreate(std::move(str), lengthWithNull);
   if (!res) {
     ReportOutOfMemory(ec);
   }
   return res;
 }
 
-SharedImmutableString ScriptSource::getOrCreateStringZ(ErrorContext* ec,
+SharedImmutableString ScriptSource::getOrCreateStringZ(JSContext* cx,
+                                                       ErrorContext* ec,
                                                        UniqueChars&& str) {
-  return GetOrCreateStringZ<SharedImmutableString>(ec, std::move(str));
+  return GetOrCreateStringZ<SharedImmutableString>(cx, ec, std::move(str));
 }
 
 SharedImmutableTwoByteString ScriptSource::getOrCreateStringZ(
-    ErrorContext* ec, UniqueTwoByteChars&& str) {
-  return GetOrCreateStringZ<SharedImmutableTwoByteString>(ec, std::move(str));
+    JSContext* cx, ErrorContext* ec, UniqueTwoByteChars&& str) {
+  return GetOrCreateStringZ<SharedImmutableTwoByteString>(cx, ec,
+                                                          std::move(str));
 }
 
 bool ScriptSource::setFilename(JSContext* cx, ErrorContext* ec,
@@ -1921,12 +1925,13 @@ bool ScriptSource::setFilename(JSContext* cx, ErrorContext* ec,
   if (!owned) {
     return false;
   }
-  return setFilename(ec, std::move(owned));
+  return setFilename(cx, ec, std::move(owned));
 }
 
-bool ScriptSource::setFilename(ErrorContext* ec, UniqueChars&& filename) {
+bool ScriptSource::setFilename(JSContext* cx, ErrorContext* ec,
+                               UniqueChars&& filename) {
   MOZ_ASSERT(!filename_);
-  filename_ = getOrCreateStringZ(ec, std::move(filename));
+  filename_ = getOrCreateStringZ(cx, ec, std::move(filename));
   return bool(filename_);
 }
 
@@ -1936,13 +1941,13 @@ bool ScriptSource::setIntroducerFilename(JSContext* cx, ErrorContext* ec,
   if (!owned) {
     return false;
   }
-  return setIntroducerFilename(ec, std::move(owned));
+  return setIntroducerFilename(cx, ec, std::move(owned));
 }
 
-bool ScriptSource::setIntroducerFilename(ErrorContext* ec,
+bool ScriptSource::setIntroducerFilename(JSContext* cx, ErrorContext* ec,
                                          UniqueChars&& filename) {
   MOZ_ASSERT(!introducerFilename_);
-  introducerFilename_ = getOrCreateStringZ(ec, std::move(filename));
+  introducerFilename_ = getOrCreateStringZ(cx, ec, std::move(filename));
   return bool(introducerFilename_);
 }
 
@@ -1971,7 +1976,7 @@ bool ScriptSource::setDisplayURL(JSContext* cx, ErrorContext* ec,
     return true;
   }
 
-  displayURL_ = getOrCreateStringZ(ec, std::move(url));
+  displayURL_ = getOrCreateStringZ(cx, ec, std::move(url));
   return bool(displayURL_);
 }
 
@@ -1981,16 +1986,17 @@ bool ScriptSource::setSourceMapURL(JSContext* cx, ErrorContext* ec,
   if (!owned) {
     return false;
   }
-  return setSourceMapURL(ec, std::move(owned));
+  return setSourceMapURL(cx, ec, std::move(owned));
 }
 
-bool ScriptSource::setSourceMapURL(ErrorContext* ec, UniqueTwoByteChars&& url) {
+bool ScriptSource::setSourceMapURL(JSContext* cx, ErrorContext* ec,
+                                   UniqueTwoByteChars&& url) {
   MOZ_ASSERT(url);
   if (url[0] == '\0') {
     return true;
   }
 
-  sourceMapURL_ = getOrCreateStringZ(ec, std::move(url));
+  sourceMapURL_ = getOrCreateStringZ(cx, ec, std::move(url));
   return bool(sourceMapURL_);
 }
 

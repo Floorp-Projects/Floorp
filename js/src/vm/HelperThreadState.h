@@ -673,7 +673,8 @@ struct DelazifyTask : public mozilla::LinkedListElement<DelazifyTask>,
   // optimization and the VM should remain working even without this
   // optimization in place.
   static UniquePtr<DelazifyTask> Create(
-      JSRuntime* runtime, const JS::ContextOptions& contextOptions,
+      JSContext* cx, JSRuntime* runtime,
+      const JS::ContextOptions& contextOptions,
       const JS::ReadOnlyCompileOptions& options,
       const frontend::CompilationStencil& stencil);
 
