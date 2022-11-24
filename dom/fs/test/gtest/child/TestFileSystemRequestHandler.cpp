@@ -32,6 +32,18 @@ namespace mozilla::dom::fs::test {
 
 class TestFileSystemRequestHandler : public ::testing::Test {
  protected:
+  struct FileSystemManagerChildShutdown {
+    explicit FileSystemManagerChildShutdown(
+        TestFileSystemManagerChild* aFileSystemManagerChild)
+        : mFileSystemManagerChild(aFileSystemManagerChild) {}
+
+    void operator()() const {
+      mFileSystemManagerChild->FileSystemManagerChild::Shutdown();
+    }
+
+    TestFileSystemManagerChild* mFileSystemManagerChild;
+  };
+
   void SetUp() override {
     mListener = MakeAndAddRef<ExpectResolveCalled>();
 
@@ -44,6 +56,18 @@ class TestFileSystemRequestHandler : public ::testing::Test {
         mGlobal, nullptr,
         MakeRefPtr<FileSystemBackgroundRequestHandler>(
             mFileSystemManagerChild));
+  }
+
+  void TearDown() override {
+    if (!mManager->IsShutdown()) {
+      EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
+          .WillOnce(FileSystemManagerChildShutdown(mFileSystemManagerChild));
+
+      mManager->Shutdown();
+    }
+
+    EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
+        .WillOnce(FileSystemManagerChildShutdown(mFileSystemManagerChild));
   }
 
   already_AddRefed<Promise> GetDefaultPromise() {
@@ -86,12 +110,6 @@ TEST_F(TestFileSystemRequestHandler, isGetRootHandleSuccessful) {
   EXPECT_CALL(mListener->GetSuccessHandler(), InvokeMe());
   EXPECT_CALL(*mFileSystemManagerChild, SendGetRootHandle(_, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
-      .WillOnce([fileSystemManagerChild =
-                     static_cast<void*>(mFileSystemManagerChild.get())]() {
-        static_cast<TestFileSystemManagerChild*>(fileSystemManagerChild)
-            ->FileSystemManagerChild::Shutdown();
-      });
 
   RefPtr<Promise> promise = GetDefaultPromise();
   auto testable = GetFileSystemRequestHandler();
@@ -101,6 +119,9 @@ TEST_F(TestFileSystemRequestHandler, isGetRootHandleSuccessful) {
 }
 
 TEST_F(TestFileSystemRequestHandler, isGetRootHandleBlockedAfterShutdown) {
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
+      .WillOnce(FileSystemManagerChildShutdown(mFileSystemManagerChild));
+
   mManager->Shutdown();
 
   IgnoredErrorResult error;
@@ -122,12 +143,6 @@ TEST_F(TestFileSystemRequestHandler, isGetDirectoryHandleSuccessful) {
   EXPECT_CALL(mListener->GetSuccessHandler(), InvokeMe());
   EXPECT_CALL(*mFileSystemManagerChild, SendGetDirectoryHandle(_, _, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
-      .WillOnce([fileSystemManagerChild =
-                     static_cast<void*>(mFileSystemManagerChild.get())]() {
-        static_cast<TestFileSystemManagerChild*>(fileSystemManagerChild)
-            ->FileSystemManagerChild::Shutdown();
-      });
 
   RefPtr<Promise> promise = GetDefaultPromise();
   auto testable = GetFileSystemRequestHandler();
@@ -139,6 +154,9 @@ TEST_F(TestFileSystemRequestHandler, isGetDirectoryHandleSuccessful) {
 }
 
 TEST_F(TestFileSystemRequestHandler, isGetDirectoryHandleBlockedAfterShutdown) {
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
+      .WillOnce(FileSystemManagerChildShutdown(mFileSystemManagerChild));
+
   mManager->Shutdown();
 
   IgnoredErrorResult error;
@@ -160,12 +178,6 @@ TEST_F(TestFileSystemRequestHandler, isGetFileHandleSuccessful) {
   EXPECT_CALL(mListener->GetSuccessHandler(), InvokeMe());
   EXPECT_CALL(*mFileSystemManagerChild, SendGetFileHandle(_, _, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
-      .WillOnce([fileSystemManagerChild =
-                     static_cast<void*>(mFileSystemManagerChild.get())]() {
-        static_cast<TestFileSystemManagerChild*>(fileSystemManagerChild)
-            ->FileSystemManagerChild::Shutdown();
-      });
 
   RefPtr<Promise> promise = GetDefaultPromise();
   auto testable = GetFileSystemRequestHandler();
@@ -176,6 +188,9 @@ TEST_F(TestFileSystemRequestHandler, isGetFileHandleSuccessful) {
 }
 
 TEST_F(TestFileSystemRequestHandler, isGetFileHandleBlockedAfterShutdown) {
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
+      .WillOnce(FileSystemManagerChildShutdown(mFileSystemManagerChild));
+
   mManager->Shutdown();
 
   IgnoredErrorResult error;
@@ -220,12 +235,6 @@ TEST_F(TestFileSystemRequestHandler, isGetFileSuccessful) {
   EXPECT_CALL(mListener->GetSuccessHandler(), InvokeMe());
   EXPECT_CALL(*mFileSystemManagerChild, SendGetFile(_, _, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
-      .WillOnce([fileSystemManagerChild =
-                     static_cast<void*>(mFileSystemManagerChild.get())]() {
-        static_cast<TestFileSystemManagerChild*>(fileSystemManagerChild)
-            ->FileSystemManagerChild::Shutdown();
-      });
 
   RefPtr<Promise> promise = GetDefaultPromise();
   auto testable = GetFileSystemRequestHandler();
@@ -235,6 +244,9 @@ TEST_F(TestFileSystemRequestHandler, isGetFileSuccessful) {
 }
 
 TEST_F(TestFileSystemRequestHandler, isGetFileBlockedAfterShutdown) {
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
+      .WillOnce(FileSystemManagerChildShutdown(mFileSystemManagerChild));
+
   mManager->Shutdown();
 
   IgnoredErrorResult error;
@@ -246,6 +258,9 @@ TEST_F(TestFileSystemRequestHandler, isGetFileBlockedAfterShutdown) {
 }
 
 TEST_F(TestFileSystemRequestHandler, isGetAccessHandleBlockedAfterShutdown) {
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
+      .WillOnce(FileSystemManagerChildShutdown(mFileSystemManagerChild));
+
   mManager->Shutdown();
 
   IgnoredErrorResult error;
@@ -257,6 +272,9 @@ TEST_F(TestFileSystemRequestHandler, isGetAccessHandleBlockedAfterShutdown) {
 }
 
 TEST_F(TestFileSystemRequestHandler, isGetWritableBlockedAfterShutdown) {
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
+      .WillOnce(FileSystemManagerChildShutdown(mFileSystemManagerChild));
+
   mManager->Shutdown();
 
   IgnoredErrorResult error;
@@ -293,12 +311,6 @@ TEST_F(TestFileSystemRequestHandler, isGetEntriesSuccessful) {
 
   EXPECT_CALL(*mFileSystemManagerChild, SendGetEntries(_, _, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
-      .WillOnce([fileSystemManagerChild =
-                     static_cast<void*>(mFileSystemManagerChild.get())]() {
-        static_cast<TestFileSystemManagerChild*>(fileSystemManagerChild)
-            ->FileSystemManagerChild::Shutdown();
-      });
 
   auto testable = GetFileSystemRequestHandler();
   RefPtr<FileSystemEntryMetadataArray> sink;
@@ -310,6 +322,9 @@ TEST_F(TestFileSystemRequestHandler, isGetEntriesSuccessful) {
 }
 
 TEST_F(TestFileSystemRequestHandler, isGetEntriesBlockedAfterShutdown) {
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
+      .WillOnce(FileSystemManagerChildShutdown(mFileSystemManagerChild));
+
   mManager->Shutdown();
 
   RefPtr<FileSystemEntryMetadataArray> sink;
@@ -333,12 +348,6 @@ TEST_F(TestFileSystemRequestHandler, isRemoveEntrySuccessful) {
   EXPECT_CALL(mListener->GetSuccessHandler(), InvokeMe());
   EXPECT_CALL(*mFileSystemManagerChild, SendRemoveEntry(_, _, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
-      .WillOnce([fileSystemManagerChild =
-                     static_cast<void*>(mFileSystemManagerChild.get())]() {
-        static_cast<TestFileSystemManagerChild*>(fileSystemManagerChild)
-            ->FileSystemManagerChild::Shutdown();
-      });
 
   auto testable = GetFileSystemRequestHandler();
   RefPtr<Promise> promise = GetDefaultPromise();
@@ -349,6 +358,9 @@ TEST_F(TestFileSystemRequestHandler, isRemoveEntrySuccessful) {
 }
 
 TEST_F(TestFileSystemRequestHandler, isRemoveEntryBlockedAfterShutdown) {
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
+      .WillOnce(FileSystemManagerChildShutdown(mFileSystemManagerChild));
+
   mManager->Shutdown();
 
   IgnoredErrorResult error;

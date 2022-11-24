@@ -278,6 +278,11 @@ already_AddRefed<FileSystemFileHandle> FileSystemHandle::ConstructFileHandle(
     return nullptr;
   }
 
+  // We used to create a FileSystemManager which is not connected to the chain
+  // of Navigator->StorageManager->FileSystemManager. That isn't possible
+  // anymore because FileSystemManager must always be properly shutdown before
+  // it's destroyed.
+#if 0
   // XXX Get the manager from Navigator!
   // Note that the actor may not exist or may not be connected yet.
   auto fileSystemManager = MakeRefPtr<FileSystemManager>(aGlobal, nullptr);
@@ -286,6 +291,9 @@ already_AddRefed<FileSystemFileHandle> FileSystemHandle::ConstructFileHandle(
       new FileSystemFileHandle(aGlobal, fileSystemManager, metadata);
 
   return fsHandle.forget();
+#else
+  return nullptr;
+#endif
 }
 
 // static
@@ -301,6 +309,11 @@ FileSystemHandle::ConstructDirectoryHandle(JSContext* aCx,
     return nullptr;
   }
 
+  // We used to create a FileSystemManager which is not connected to the chain
+  // of Navigator->StorageManager->FileSystemManager. That isn't possible
+  // anymore because FileSystemManager must always be properly shutdown before
+  // it's destroyed.
+#if 0
   // XXX Get the manager from Navigator!
   // Note that the actor may not exist or may not be connected yet.
   auto fileSystemManager = MakeRefPtr<FileSystemManager>(aGlobal, nullptr);
@@ -309,6 +322,9 @@ FileSystemHandle::ConstructDirectoryHandle(JSContext* aCx,
       new FileSystemDirectoryHandle(aGlobal, fileSystemManager, metadata);
 
   return fsHandle.forget();
+#else
+  return nullptr;
+#endif
 }
 
 }  // namespace mozilla::dom

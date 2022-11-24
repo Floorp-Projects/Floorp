@@ -1,0 +1,19 @@
+<script id="worker1" type="javascript/worker">
+self.onmessage = async function () {
+  const xhr = new XMLHttpRequest()
+  self.onerror = () => {
+    xhr.open("POST", "FOOBAR", false)
+    xhr.send()
+  }
+  self.reportError(undefined)
+  self.dir = await self.navigator.storage.getDirectory()
+}
+</script>
+<script>
+window.addEventListener('load', async () => {
+  const blob = new Blob([document.querySelector('#worker1').textContent], { type: "text/javascript" })
+  let worker = new Worker(window.URL.createObjectURL(blob))
+  worker.postMessage([], [])
+  setTimeout(() => {window.location.reload(true)})
+})
+</script>

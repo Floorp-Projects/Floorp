@@ -28,6 +28,12 @@ class TestFileSystemFileHandle : public ::testing::Test {
     mManager = MakeAndAddRef<FileSystemManager>(mGlobal, nullptr);
   }
 
+  void TearDown() override {
+    if (!mManager->IsShutdown()) {
+      mManager->Shutdown();
+    }
+  }
+
   nsIGlobalObject* mGlobal = GetGlobal();
   UniquePtr<MockFileSystemRequestHandler> mRequestHandler;
   FileSystemEntryMetadata mMetadata;

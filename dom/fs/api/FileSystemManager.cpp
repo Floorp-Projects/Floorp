@@ -30,7 +30,7 @@ FileSystemManager::FileSystemManager(nsIGlobalObject* aGlobal,
     : FileSystemManager(aGlobal, std::move(aStorageManager),
                         MakeRefPtr<FileSystemBackgroundRequestHandler>()) {}
 
-FileSystemManager::~FileSystemManager() = default;
+FileSystemManager::~FileSystemManager() { MOZ_ASSERT(mShutdown); }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileSystemManager)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
