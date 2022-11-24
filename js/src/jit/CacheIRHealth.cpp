@@ -321,7 +321,7 @@ static bool addScriptToFinalWarmUpCountMap(JSContext* cx, HandleScript script) {
   }
 
   SharedImmutableString sfilename =
-      cx->runtime()->sharedImmutableStrings().getOrCreate(
+      SharedImmutableStringsCache::getSingleton().getOrCreate(
           script->filename(), strlen(script->filename()));
   if (!sfilename) {
     ReportOutOfMemory(cx);
