@@ -2538,6 +2538,21 @@ bool gfxFont::HasColorGlyphFor(uint32_t aCh, uint32_t aNextCh) {
   if (!gid) {
     return false;
   }
+
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1801521:
+  // Emoji special-case: flag sequences NOT based on Regional Indicator pairs
+  // use the BLACK FLAG character plus a series of plane-14 TAG LETTERs, e.g.
+  //   England = <black-flag, tag-G, tag-B, tag-E, tag-N, tag-G, tag-cancel>
+  // Here, we don't check for support of the entire sequence (too much
+  // expensive lookahead), but we check that the font at least supports the
+  // first of the tag letter codes, because if it doesn't, we're at risk of
+  // just getting an undifferentiated black flag glyph.
+  if (gfxFontUtils::IsEmojiFlagAndTag(aCh, aNextCh)) {
+    if (!shaper->GetNominalGlyph(aNextCh)) {
+      return false;
+    }
+  }
+
   // Check if there is a COLR/CPAL or SVG glyph for this ID.
   if (fe->TryGetColorGlyphs() &&
       (COLRFonts::GetGlyphPaintGraph(fe->GetCOLR(), gid) ||
