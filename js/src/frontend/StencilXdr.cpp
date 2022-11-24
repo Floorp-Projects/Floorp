@@ -1238,7 +1238,7 @@ XDRResult StencilXDR::codeSource(XDRState<mode>* xdr,
     }
     MOZ_TRY(xdr->codeCharsZ(chars));
     if (mode == XDR_DECODE) {
-      if (!source->setFilename(cx, ec, std::move(chars.ref<UniqueChars>()))) {
+      if (!source->setFilename(ec, std::move(chars.ref<UniqueChars>()))) {
         return xdr->fail(JS::TranscodeResult::Throw);
       }
     }
@@ -1268,7 +1268,7 @@ XDRResult StencilXDR::codeSource(XDRState<mode>* xdr,
     MOZ_TRY(xdr->codeCharsZ(chars));
     if (mode == XDR_DECODE) {
       if (!source->setSourceMapURL(
-              cx, ec, std::move(chars.ref<UniqueTwoByteChars>()))) {
+              ec, std::move(chars.ref<UniqueTwoByteChars>()))) {
         return xdr->fail(JS::TranscodeResult::Throw);
       }
     }
