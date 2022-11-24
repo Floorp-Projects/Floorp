@@ -4,12 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import os
 import sys
-import tempfile
-import subprocess
-
-from pathlib import Path
 
 from mozboot.base import BaseBootstrapper
 from mozboot.linux_common import LinuxBootstrapper
@@ -19,9 +14,6 @@ from mozboot.linux_common import LinuxBootstrapper
 # the six module.
 if sys.version_info < (3,):
     input = raw_input  # noqa
-
-
-AUR_URL_TEMPLATE = "https://aur.archlinux.org/cgit/aur.git/snapshot/{}.tar.gz"
 
 
 class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
@@ -100,17 +92,6 @@ class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     def upgrade_mercurial(self, current):
         self.pacman_install("mercurial")
 
-    def pacman_is_installed(self, package):
-        command = ["pacman", "-Q", package]
-        return (
-            subprocess.run(
-                command,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            ).returncode
-            == 0
-        )
-
     def pacman_install(self, *packages):
         command = ["pacman", "-S", "--needed"]
         if self.no_interactive:
@@ -119,71 +100,3 @@ class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         command.extend(packages)
 
         self.run_as_root(command)
-
-    def run(self, command, env=None):
-        subprocess.check_call(command, stdin=sys.stdin, env=env)
-
-    def download(self, uri):
-        command = ["curl", "-L", "-O", uri]
-        self.run(command)
-
-    def unpack(self, path: Path, name, ext):
-        if ext == ".gz":
-            compression = "-z"
-        else:
-            print(f"unsupported compression extension: {ext}", file=sys.stderr)
-            sys.exit(1)
-
-        name = path / (name + ".tar" + ext)
-        command = ["tar", "-x", compression, "-f", str(name), "-C", str(path)]
-        self.run(command)
-
-    def makepkg(self, name):
-        command = ["makepkg", "-sri"]
-        if self.no_interactive:
-            command.append("--noconfirm")
-        makepkg_env = os.environ.copy()
-        makepkg_env["PKGDEST"] = "."
-        self.run(command, env=makepkg_env)
-
-    def aur_install(self, *packages):
-        needed = []
-
-        for package in packages:
-            if self.pacman_is_installed(package):
-                print(
-                    f"warning: AUR package {package} is installed -- skipping",
-                    file=sys.stderr,
-                )
-            else:
-                needed.append(package)
-
-        # all required AUR packages are already installed!
-        if not needed:
-            return
-
-        path = Path(tempfile.mkdtemp(prefix="mozboot-"))
-        if not self.no_interactive:
-            print(
-                "WARNING! This script requires to install packages from the AUR "
-                "This is potentially insecure so I recommend that you carefully "
-                "read each package description and check the sources."
-                f"These packages will be built in {path}: " + ", ".join(needed),
-                file=sys.stderr,
-            )
-            choice = input("Do you want to continue? (yes/no) [no]")
-            if choice != "yes":
-                sys.exit(1)
-
-        base_dir = Path.cwd()
-        os.chdir(path)
-        for name in needed:
-            url = AUR_URL_TEMPLATE.format(package)
-            ext = Path(url).suffix
-            directory = path / name
-            self.download(url)
-            self.unpack(path, name, ext)
-            os.chdir(directory)
-            self.makepkg(name)
-
-        os.chdir(base_dir)
