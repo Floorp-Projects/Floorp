@@ -51,9 +51,7 @@ static void getString(CacheAndIndex* cacheAndIndex) {
 }
 
 BEGIN_TEST(testSharedImmutableStringsCache) {
-  auto maybeCache = js::SharedImmutableStringsCache::Create();
-  CHECK(maybeCache.isSome());
-  auto& cache = *maybeCache;
+  auto& cache = js::SharedImmutableStringsCache::getSingleton();
 
   js::Vector<js::Thread> threads(cx);
   CHECK(threads.reserve(NUM_THREADS));

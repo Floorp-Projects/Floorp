@@ -190,6 +190,8 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
   RETURN_IF_FAIL(js::gcstats::Statistics::initialize());
   RETURN_IF_FAIL(js::InitTestingFunctions());
 
+  RETURN_IF_FAIL(js::SharedImmutableStringsCache::initSingleton());
+
 #ifdef JS_SIMULATOR
   RETURN_IF_FAIL(js::jit::SimulatorProcess::initialize());
 #endif
@@ -252,6 +254,8 @@ JS_PUBLIC_API void JS_ShutDown(void) {
             "TIME.  FIX THIS!\n");
   }
 #endif
+
+  js::SharedImmutableStringsCache::freeSingleton();
 
   FutexThread::destroy();
 
