@@ -6,7 +6,7 @@
 
 """Testing for the JSON file emitted by DMD heap scan mode when running SmokeDMD."""
 
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, division, print_function
 
 import argparse
 import gzip
