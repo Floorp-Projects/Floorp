@@ -9,6 +9,8 @@ import re
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 
+from mozilla_version.mobile import MobileVersion
+
 from ..build_config import get_version, get_path, get_extensions
 
 
@@ -73,21 +75,8 @@ def _get_buildid(config):
 
 def get_nightly_version(config, version):
     buildid = _get_buildid(config)
-    # TODO: to replace here with mozilla-version sanity check and parsing
-    pattern = re.compile(r"""
-        (?P<major_number>\d+)\.(?P<minor_number>\d+)\.(?P<patch_number>\d+)
-        """, re.VERBOSE)
-    match = pattern.search(version)
-    try:
-        _ = match.group()
-    except AttributeError:
-        raise Exception(f'version {version} does not follow semver')
-    version_dict = match.groupdict()
-    return '{}.{}.{}'.format(
-            version_dict['major_number'],
-            version_dict['minor_number'],
-            buildid
-    )
+    parsed_version = MobileVersion.parse(version)
+    return f"{parsed_version.major_number}.{parsed_version.minor_number}.{buildid}"
 
 
 def craft_path_version(version, build_type, nightly_version):
