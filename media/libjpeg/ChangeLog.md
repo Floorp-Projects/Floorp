@@ -1,3 +1,38 @@
+2.1.4
+=====
+
+### Significant changes relative to 2.1.3
+
+1. Fixed a regression introduced in 2.1.3 that caused build failures with
+Visual Studio 2010.
+
+2. The `tjDecompressHeader3()` function in the TurboJPEG C API and the
+`TJDecompressor.setSourceImage()` method in the TurboJPEG Java API now accept
+"abbreviated table specification" (AKA "tables-only") datastreams, which can be
+used to prime the decompressor with quantization and Huffman tables that can be
+used when decompressing subsequent "abbreviated image" datastreams.
+
+3. libjpeg-turbo now performs run-time detection of AltiVec instructions on
+OS X/PowerPC systems if AltiVec instructions are not enabled at compile time.
+This allows both AltiVec-equipped (PowerPC G4 and G5) and non-AltiVec-equipped
+(PowerPC G3) CPUs to be supported using the same build of libjpeg-turbo.
+
+4. Fixed an error ("Bogus virtual array access") that occurred when attempting
+to decompress a progressive JPEG image with a height less than or equal to one
+iMCU (8 * the vertical sampling factor) using buffered-image mode with
+interblock smoothing enabled.  This was a regression introduced by
+2.1 beta1[6(b)].
+
+5. Fixed two issues that prevented partial image decompression from working
+properly with buffered-image mode:
+
+     - Attempting to call `jpeg_crop_scanline()` after
+`jpeg_start_decompress()` but before `jpeg_start_output()` resulted in an error
+("Improper call to JPEG library in state 207".)
+     - Attempting to use `jpeg_skip_scanlines()` resulted in an error ("Bogus
+virtual array access") under certain circumstances.
+
+
 2.1.3
 =====
 

@@ -45,6 +45,18 @@
  */
 
 
+#ifdef _MSC_VER
+
+#define SNPRINTF(str, n, format, ...) \
+  _snprintf_s(str, n, _TRUNCATE, format, ##__VA_ARGS__)
+
+#else
+
+#define SNPRINTF  snprintf
+
+#endif
+
+
 #ifndef NO_GETENV
 
 #ifdef _MSC_VER
