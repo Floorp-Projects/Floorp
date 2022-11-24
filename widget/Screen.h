@@ -43,6 +43,12 @@ class Screen final : public nsIScreen {
     return mScreenOrientation;
   }
 
+  /**
+   * Return default orientation type that angle is 0.
+   * This returns LandscapePrimary or PortraitPrimary.
+   */
+  hal::ScreenOrientation GetDefaultOrientationType() const;
+
   float GetDPI() const { return mDPI; }
 
   const LayoutDeviceIntRect& GetRect() const { return mRect; }

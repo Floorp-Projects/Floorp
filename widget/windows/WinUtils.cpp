@@ -1525,7 +1525,8 @@ WinUtils::GetPowerPlatformRole() {
   return power_determine_platform_role(POWER_PLATFORM_ROLE_V2);
 }
 
-static bool CallGetAutoRotationState(AR_STATE* aRotationState) {
+// static
+bool WinUtils::GetAutoRotationState(AR_STATE* aRotationState) {
   typedef BOOL(WINAPI * GetAutoRotationStateFunc)(PAR_STATE pState);
   static GetAutoRotationStateFunc get_auto_rotation_state_func =
       reinterpret_cast<GetAutoRotationStateFunc>(::GetProcAddress(
@@ -1564,7 +1565,7 @@ static bool IsTabletDevice() {
   // a convertible or a detachable. See:
   // https://msdn.microsoft.com/en-us/library/windows/desktop/dn629263(v=vs.85).aspx
   AR_STATE rotation_state;
-  if (CallGetAutoRotationState(&rotation_state) &&
+  if (WinUtils::GetAutoRotationState(&rotation_state) &&
       (rotation_state & (AR_NOT_SUPPORTED | AR_LAPTOP | AR_NOSENSOR))) {
     return false;
   }

@@ -63,8 +63,8 @@ elif CONFIG["OS_TARGET"] == "Linux":
 elif CONFIG["OS_TARGET"] == "WINNT":
     REQUIRES_UNIFIED_BUILD = True
     UNIFIED_SOURCES += [
-        "fallback/FallbackScreenConfiguration.cpp",
         "fallback/FallbackVibration.cpp",
+        "windows/WindowsScreenConfiguration.cpp",
         "windows/WindowsSensor.cpp",
     ]
     # WindowsBattery.cpp cannot be built in unified mode because it relies on HalImpl.h.

@@ -608,6 +608,8 @@ class WinUtils {
   static nsresult RestoreHiDPIMode();
 #endif
 
+  static bool GetAutoRotationState(AR_STATE* aRotationState);
+
  private:
   static WhitelistVec BuildWhitelist();
 
