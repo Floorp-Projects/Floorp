@@ -56,7 +56,7 @@ enum class StyleFontDisplay : uint8_t;
 }  // namespace mozilla
 class nsFontFaceLoader;
 
-//#define DEBUG_USERFONT_CACHE
+// #define DEBUG_USERFONT_CACHE
 
 class gfxFontFaceBufferSource {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(gfxFontFaceBufferSource)
@@ -561,7 +561,6 @@ class gfxUserFontEntry : public gfxFontEntry {
   };
 
   gfxUserFontEntry(
-      gfxUserFontSet* aFontSet,
       const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList, WeightRange aWeight,
       StretchRange aStretch, SlantStyleRange aStyle,
       const nsTArray<gfxFontFeature>& aFeatureSettings,
@@ -603,6 +602,8 @@ class gfxUserFontEntry : public gfxFontEntry {
   UserFontLoadState LoadState() const { return mUserFontLoadState; }
 
   void LoadCanceled() {
+    MOZ_ASSERT(NS_IsMainThread());
+
     mUserFontLoadState = STATUS_NOT_LOADED;
     mFontDataLoadingState = NOT_LOADING;
     mLoader = nullptr;
@@ -647,8 +648,16 @@ class gfxUserFontEntry : public gfxFontEntry {
 
   // methods to expose some information to FontFaceSet::UserFontSet
   // since we can't make that class a friend
-  void SetLoader(nsFontFaceLoader* aLoader) { mLoader = aLoader; }
-  nsFontFaceLoader* GetLoader() const { return mLoader; }
+  void SetLoader(nsFontFaceLoader* aLoader) {
+    MOZ_ASSERT(NS_IsMainThread());
+    mLoader = aLoader;
+  }
+
+  nsFontFaceLoader* GetLoader() const {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mLoader;
+  }
+
   gfxFontSrcPrincipal* GetPrincipal() const { return mPrincipal; }
   void GetFamilyNameAndURIForLogging(uint32_t aSrcIndex,
                                      nsACString& aFamilyName, nsACString& aURI);
@@ -658,9 +667,7 @@ class gfxUserFontEntry : public gfxFontEntry {
     return nullptr;
   }
 
-#ifdef DEBUG
-  gfxUserFontSet* GetUserFontSet() const { return mFontSet; }
-#endif
+  virtual already_AddRefed<gfxUserFontSet> GetUserFontSet() const = 0;
 
   const nsTArray<gfxFontFaceSrc>& SourceList() const { return mSrcList; }
 
@@ -752,8 +759,8 @@ class gfxUserFontEntry : public gfxFontEntry {
                          uint32_t aMetaOrigLen, uint8_t aCompression);
 
   // Clears and then adds to aResult all of the user font sets that this user
-  // font entry has been added to.  This will at least include mFontSet, the
-  // owner of this user font entry.
+  // font entry has been added to.  This will at least include the owner of this
+  // user font entry.
   virtual void GetUserFontSets(nsTArray<RefPtr<gfxUserFontSet>>& aResult);
 
   // Calls IncrementGeneration() on all user font sets that contain this
@@ -789,8 +796,7 @@ class gfxUserFontEntry : public gfxFontEntry {
   // Cancel() methods of nsFontFaceLoader this reference is nulled out.
   nsFontFaceLoader* MOZ_NON_OWNING_REF
       mLoader;  // current loader for this entry, if any
-  gfxUserFontSet* MOZ_NON_OWNING_REF
-      mFontSet;  // font-set which owns this userfont entry
+  RefPtr<gfxUserFontSet> mLoadingFontSet;
   RefPtr<gfxFontSrcPrincipal> mPrincipal;
 };
 

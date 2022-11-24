@@ -519,14 +519,12 @@ void FontFaceImpl::SetUserFontEntry(gfxUserFontEntry* aEntry) {
   }
 
   if (mUserFontEntry) {
-    MutexAutoLock lock(mUserFontEntry->mMutex);
-    mUserFontEntry->mFontFaces.RemoveElement(this);
+    mUserFontEntry->RemoveFontFace(this);
   }
 
   auto* entry = static_cast<Entry*>(aEntry);
   if (entry) {
-    MutexAutoLock lock(entry->mMutex);
-    entry->mFontFaces.AppendElement(this);
+    entry->AddFontFace(this);
   }
 
   mUserFontEntry = entry;
@@ -535,7 +533,7 @@ void FontFaceImpl::SetUserFontEntry(gfxUserFontEntry* aEntry) {
     return;
   }
 
-  MOZ_ASSERT(mUserFontEntry->GetUserFontSet() == mFontFaceSet,
+  MOZ_ASSERT(mUserFontEntry->HasUserFontSet(mFontFaceSet),
              "user font entry must be associated with the same user font set "
              "as the FontFace");
 
@@ -700,6 +698,11 @@ void FontFaceImpl::RemoveFontFaceSet(FontFaceSetImpl* aFontFaceSet) {
   } else {
     mOtherFontFaceSets.RemoveElement(aFontFaceSet);
   }
+
+  // The caller should be holding a strong reference to the FontFaceSetImpl.
+  if (mUserFontEntry) {
+    mUserFontEntry->CheckUserFontSet();
+  }
 }
 
 gfxCharacterMap* FontFaceImpl::GetUnicodeRangeAsCharacterMap() {
@@ -766,6 +769,11 @@ void FontFaceImpl::Entry::GetUserFontSets(
   MutexAutoLock lock(mMutex);
 
   aResult.Clear();
+
+  if (mFontSet) {
+    aResult.AppendElement(mFontSet);
+  }
+
   for (FontFaceImpl* f : mFontFaces) {
     if (f->mInFontFaceSet) {
       aResult.AppendElement(f->mFontFaceSet);
@@ -781,6 +789,40 @@ void FontFaceImpl::Entry::GetUserFontSets(
   aResult.TruncateLength(it - aResult.begin());
 }
 
+/* virtual */ already_AddRefed<gfxUserFontSet>
+FontFaceImpl::Entry::GetUserFontSet() const {
+  MutexAutoLock lock(mMutex);
+  if (mFontSet) {
+    return do_AddRef(mFontSet);
+  }
+  if (NS_IsMainThread() && mLoadingFontSet) {
+    return do_AddRef(mLoadingFontSet);
+  }
+  return nullptr;
+}
+
+void FontFaceImpl::Entry::CheckUserFontSetLocked() {
+  // If this is the last font containing a strong reference to the set, we need
+  // to clear the reference as there is no longer anything guaranteeing the set
+  // will be kept alive.
+  if (mFontSet) {
+    auto* set = static_cast<FontFaceSetImpl*>(mFontSet);
+    for (FontFaceImpl* f : mFontFaces) {
+      if (f->mFontFaceSet == set || f->mOtherFontFaceSets.Contains(set)) {
+        return;
+      }
+    }
+  }
+
+  // If possible, promote the most recently added FontFace and its owning
+  // FontFaceSetImpl as the primary set.
+  if (!mFontFaces.IsEmpty()) {
+    mFontSet = mFontFaces.LastElement()->mFontFaceSet;
+  } else {
+    mFontSet = nullptr;
+  }
+}
+
 void FontFaceImpl::Entry::FindFontFaceOwners(nsTHashSet<FontFace*>& aOwners) {
   MutexAutoLock lock(mMutex);
   for (FontFaceImpl* f : mFontFaces) {
@@ -788,6 +830,18 @@ void FontFaceImpl::Entry::FindFontFaceOwners(nsTHashSet<FontFace*>& aOwners) {
       aOwners.Insert(owner);
     }
   }
+}
+
+void FontFaceImpl::Entry::AddFontFace(FontFaceImpl* aFontFace) {
+  MutexAutoLock lock(mMutex);
+  mFontFaces.AppendElement(aFontFace);
+  CheckUserFontSetLocked();
+}
+
+void FontFaceImpl::Entry::RemoveFontFace(FontFaceImpl* aFontFace) {
+  MutexAutoLock lock(mMutex);
+  mFontFaces.RemoveElement(aFontFace);
+  CheckUserFontSetLocked();
 }
 
 }  // namespace dom
