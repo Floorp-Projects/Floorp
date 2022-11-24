@@ -14,6 +14,7 @@ $tags:
 legacy.telemetry:
   client_id:
     type: uuid
+    lifetime: application
     description: |
       The client_id according to Telemetry.
       Might not always have a value due to being too early for it to have
