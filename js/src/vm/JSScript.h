@@ -652,10 +652,8 @@ class ScriptSource {
    */
   static constexpr size_t MinimumCompressibleLength = 256;
 
-  SharedImmutableString getOrCreateStringZ(JSContext* cx, ErrorContext* ec,
-                                           UniqueChars&& str);
-  SharedImmutableTwoByteString getOrCreateStringZ(JSContext* cx,
-                                                  ErrorContext* ec,
+  SharedImmutableString getOrCreateStringZ(ErrorContext* ec, UniqueChars&& str);
+  SharedImmutableTwoByteString getOrCreateStringZ(ErrorContext* ec,
                                                   UniqueTwoByteChars&& str);
 
  private:
@@ -670,7 +668,7 @@ class ScriptSource {
 
   // Assign source data from |srcBuf| to this recently-created |ScriptSource|.
   template <typename Unit>
-  [[nodiscard]] bool assignSource(JSContext* cx, ErrorContext* ec,
+  [[nodiscard]] bool assignSource(ErrorContext* ec,
                                   const JS::ReadOnlyCompileOptions& options,
                                   JS::SourceText<Unit>& srcBuf);
 
@@ -996,15 +994,14 @@ class ScriptSource {
   }
   [[nodiscard]] bool setFilename(JSContext* cx, ErrorContext* ec,
                                  const char* filename);
-  [[nodiscard]] bool setFilename(JSContext* cx, ErrorContext* ec,
-                                 UniqueChars&& filename);
+  [[nodiscard]] bool setFilename(ErrorContext* ec, UniqueChars&& filename);
 
   const char* introducerFilename() const {
     return introducerFilename_ ? introducerFilename_.chars() : filename();
   }
   [[nodiscard]] bool setIntroducerFilename(JSContext* cx, ErrorContext* ec,
                                            const char* filename);
-  [[nodiscard]] bool setIntroducerFilename(JSContext* cx, ErrorContext* ec,
+  [[nodiscard]] bool setIntroducerFilename(ErrorContext* ec,
                                            UniqueChars&& filename);
 
   bool hasIntroductionType() const { return introductionType_; }
@@ -1026,7 +1023,7 @@ class ScriptSource {
   // Source maps
   [[nodiscard]] bool setSourceMapURL(JSContext* cx, ErrorContext* ec,
                                      const char16_t* url);
-  [[nodiscard]] bool setSourceMapURL(JSContext* cx, ErrorContext* ec,
+  [[nodiscard]] bool setSourceMapURL(ErrorContext* ec,
                                      UniqueTwoByteChars&& url);
   bool hasSourceMapURL() const { return bool(sourceMapURL_); }
   const char16_t* sourceMapURL() { return sourceMapURL_.chars(); }
