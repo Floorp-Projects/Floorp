@@ -21,6 +21,7 @@
 #include "jsmath.h"
 
 #include "frontend/CompilationStencil.h"
+#include "frontend/ParserAtom.h"  // frontend::WellKnownParserAtoms
 #include "gc/GC.h"
 #include "gc/PublicIterators.h"
 #include "jit/IonCompileTask.h"
@@ -320,8 +321,6 @@ void JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
     rtSizes->atomsTable += mallocSizeOf(staticStrings);
     rtSizes->atomsTable += mallocSizeOf(commonNames);
     rtSizes->atomsTable += permanentAtoms()->sizeOfIncludingThis(mallocSizeOf);
-    rtSizes->atomsTable +=
-        commonParserNames.ref()->sizeOfIncludingThis(mallocSizeOf);
 
     rtSizes->selfHostStencil =
         selfHostStencilInput_->sizeOfIncludingThis(mallocSizeOf) +
@@ -345,6 +344,9 @@ void JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
   if (isMainRuntime()) {
     rtSizes->sharedImmutableStringsCache +=
         js::SharedImmutableStringsCache::getSingleton().sizeOfExcludingThis(
+            mallocSizeOf);
+    rtSizes->atomsTable +=
+        js::frontend::WellKnownParserAtoms::getSingleton().sizeOfIncludingThis(
             mallocSizeOf);
   }
 
