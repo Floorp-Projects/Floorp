@@ -16,14 +16,12 @@ import time
 import traceback
 from contextlib import closing
 
-from six.moves.urllib_request import urlopen
-
-from mozdevice import ADBDeviceFactory, RemoteProcessMonitor
 import mozcrash
-
+import reftestcommandline
+from mozdevice import ADBDeviceFactory, RemoteProcessMonitor
 from output import OutputHandler
 from runreftest import RefTest, ReftestResolver, build_obj
-import reftestcommandline
+from six.moves.urllib_request import urlopen
 
 # We need to know our current directory so that we can serve our test files from it.
 SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
