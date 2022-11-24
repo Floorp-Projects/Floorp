@@ -116,7 +116,7 @@ add_setup(async function setup_tests() {
 add_task(async function no_collection_test() {
   gCollectionEnabled = false;
   try {
-    await withFirefoxView({}, async browser => {
+    await withFirefoxView({ win: window }, async browser => {
       const { document } = browser.contentWindow;
       const { container } = getTestElements(document);
       ok(!BrowserTestUtils.is_visible(container), "Colorways card is hidden");
@@ -131,7 +131,7 @@ add_task(async function colorway_closet_disabled() {
     set: [["browser.theme.colorway-closet", false]],
   });
   try {
-    await withFirefoxView({}, async browser => {
+    await withFirefoxView({ win: window }, async browser => {
       const { document } = browser.contentWindow;
       const { container } = getTestElements(document);
       ok(
@@ -150,7 +150,7 @@ add_task(async function no_active_colorway_test() {
   await theme.enable();
   try {
     await clearAllParentTelemetryEvents();
-    await withFirefoxView({}, async browser => {
+    await withFirefoxView({ win: window }, async browser => {
       const { document } = browser.contentWindow;
       const el = getTestElements(document);
       ok(
@@ -225,7 +225,7 @@ add_task(async function active_colorway_test() {
   await theme.enable();
   try {
     await clearAllParentTelemetryEvents();
-    await withFirefoxView({}, async browser => {
+    await withFirefoxView({ win: window }, async browser => {
       const { document } = browser.contentWindow;
       const el = getTestElements(document);
       ok(
@@ -293,7 +293,7 @@ add_task(async function active_colorway_without_intensity_test() {
   const theme = await AddonManager.getAddonByID(NO_INTENSITY_COLORWAY_THEME_ID);
   await theme.enable();
   try {
-    await withFirefoxView({}, async browser => {
+    await withFirefoxView({ win: window }, async browser => {
       const { document } = browser.contentWindow;
       const el = getTestElements(document);
       ok(
@@ -326,7 +326,7 @@ add_task(async function active_colorway_is_outdated_test() {
   const theme = await AddonManager.getAddonByID(OUTDATED_COLORWAY_THEME_ID);
   await theme.enable();
   try {
-    await withFirefoxView({}, async browser => {
+    await withFirefoxView({ win: window }, async browser => {
       const { document } = browser.contentWindow;
       const el = getTestElements(document);
       ok(
