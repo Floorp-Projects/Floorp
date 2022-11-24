@@ -663,6 +663,58 @@ class CommandSiteManager:
             stderr=subprocess.STDOUT,
             universal_newlines=True,
         )
+
+        if not check_result.returncode:
+            return
+
+        """
+        Some commands may use the "setup.py" script of first-party modules. This causes
+        a "*.egg-info" dir to be created for that module (which pip can then detect as
+        a package). Since we add all first-party module directories to the .pthfile for
+        the "mach" venv, these first-party modules are then detected by all venvs after
+        they are created. The problem is that these .egg-info directories can become
+        stale (since if the first-party module is updated it's not guaranteed that the
+        command that runs the "setup.py" was ran afterwards). This can cause
+        incompatibilities with the pip check (since the dependencies can change between
+        different versions).
+
+        These .egg-info dirs are in our VCS ignore lists (eg: ".hgignore") because they
+        are necessary to run some commands, so we don't want to always purge them, and we
+        also don't want to accidentally commit them. Given this, we can leverage our VCS
+        to find all the current first-party .egg-info dirs.
+
+        If we're in the case where 'pip check' fails, then we can try purging the
+        first-party .egg-info dirs, then run the 'pip check' again afterwards. If it's
+        still failing, then we know the .egg-info dirs weren't the problem. If that's
+        the case we can just raise the error encountered, which is the same as before.
+        """
+
+        def _delete_ignored_egg_info_dirs():
+            from pathlib import Path
+
+            from mozversioncontrol import get_repository_from_env
+
+            with get_repository_from_env() as repo:
+                ignored_file_finder = repo.get_ignored_files_finder().find(
+                    "**/*.egg-info"
+                )
+
+                unique_egg_info_dirs = {
+                    Path(found[0]).parent for found in ignored_file_finder
+                }
+
+                for egg_info_dir in unique_egg_info_dirs:
+                    shutil.rmtree(egg_info_dir)
+
+        _delete_ignored_egg_info_dirs()
+
+        check_result = subprocess.run(
+            [self.python_path, "-m", "pip", "check"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+        )
+
         if check_result.returncode:
             if quiet:
                 # If "quiet" was specified, then the "pip install" output wasn't printed

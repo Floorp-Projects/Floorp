@@ -222,6 +222,16 @@ class Repository(object):
         """
 
     @abc.abstractmethod
+    def get_ignored_files_finder(self):
+        """Obtain a mozpack.files.BaseFinder of ignored files in the working
+        directory.
+
+        The Finder will have its list of all files in the repo cached for its
+        entire lifetime, so operations on the Finder will not track with, for
+        example, changes to the repo during the Finder's lifetime.
+        """
+
+    @abc.abstractmethod
     def working_directory_clean(self, untracked=False, ignored=False):
         """Determine if the working directory is free of modifications.
 
@@ -501,6 +511,15 @@ class HgRepository(Repository):
         )
         return FileListFinder(files)
 
+    def get_ignored_files_finder(self):
+        # Can return backslashes on Windows. Normalize to forward slashes.
+        files = list(
+            p.replace("\\", "/").split(" ")[-1]
+            for p in self._run("status", "-i").split("\n")
+            if p
+        )
+        return FileListFinder(files)
+
     def working_directory_clean(self, untracked=False, ignored=False):
         args = ["status", "--modified", "--added", "--removed", "--deleted"]
         if untracked:
@@ -673,6 +692,16 @@ class GitRepository(Repository):
 
     def get_tracked_files_finder(self):
         files = [p for p in self._run("ls-files", "-z").split("\0") if p]
+        return FileListFinder(files)
+
+    def get_ignored_files_finder(self):
+        files = [
+            p
+            for p in self._run(
+                "ls-files", "-i", "-o", "-z", "--exclude-standard"
+            ).split("\0")
+            if p
+        ]
         return FileListFinder(files)
 
     def working_directory_clean(self, untracked=False, ignored=False):
