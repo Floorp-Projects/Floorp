@@ -8,7 +8,7 @@ import fcntl
 import os
 import select
 import time
-from subprocess import Popen, PIPE
+from subprocess import PIPE, Popen
 
 
 class TaskPool(object):

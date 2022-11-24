@@ -4,10 +4,11 @@
 
 # flake8: noqa: F821
 
-import gdb
 import re
 import sys
 import traceback
+
+import gdb
 
 # testlibdir is set on the GDB command line, via --eval-command python testlibdir=...
 sys.path[0:0] = [testlibdir]

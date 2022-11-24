@@ -14,7 +14,6 @@ import subprocess
 import sys
 import traceback
 
-
 read_input = input
 if sys.version_info.major == 2:
     read_input = raw_input
@@ -31,14 +30,14 @@ def add_tests_dir_to_path():
 add_tests_dir_to_path()
 
 from lib import jittests
+from lib.tempfile import TemporaryDirectory
 from lib.tests import (
-    get_jitflags,
-    valid_jitflags,
+    change_env,
     get_cpu_count,
     get_environment_overlay,
-    change_env,
+    get_jitflags,
+    valid_jitflags,
 )
-from lib.tempfile import TemporaryDirectory
 
 
 def which(name):

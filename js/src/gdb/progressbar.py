@@ -4,8 +4,8 @@
 
 # Text progress bar library, like curl or scp.
 
-import sys
 import datetime
+import sys
 import time
 
 

@@ -42,33 +42,36 @@
 """
 
 from __future__ import print_function
-import os
-import re
+
 import io
 import json
+import os
+import re
 import sys
 import tarfile
 import tempfile
-import yaml
 from contextlib import closing
 from functools import partial, total_ordering
 from itertools import chain, groupby, tee
 from operator import attrgetter, itemgetter
 from zipfile import ZipFile
 
+import yaml
+
 if sys.version_info.major == 2:
-    from itertools import (
-        ifilter as filter,
-        ifilterfalse as filterfalse,
-        imap as map,
-        izip_longest as zip_longest,
-    )
-    from urllib2 import urlopen, Request as UrlRequest
+    from itertools import ifilter as filter
+    from itertools import ifilterfalse as filterfalse
+    from itertools import imap as map
+    from itertools import izip_longest as zip_longest
+
+    from urllib2 import Request as UrlRequest
+    from urllib2 import urlopen
     from urlparse import urlsplit
 else:
     from itertools import filterfalse, zip_longest
-    from urllib.request import urlopen, Request as UrlRequest
     from urllib.parse import urlsplit
+    from urllib.request import Request as UrlRequest
+    from urllib.request import urlopen
 
 
 # From https://docs.python.org/3/library/itertools.html

@@ -8,7 +8,6 @@ from __future__ import print_function
 
 import argparse
 import re
-
 from collections import defaultdict
 
 parser = argparse.ArgumentParser(description="Process some integers.")

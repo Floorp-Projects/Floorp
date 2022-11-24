@@ -5,10 +5,11 @@
 # This script generates jit/LIROpsGenerated.h (list of LIR instructions)
 # from LIROps.yaml.
 
-import buildconfig
-import yaml
-import six
 from collections import OrderedDict
+
+import buildconfig
+import six
+import yaml
 from mozbuild.preprocessor import Preprocessor
 
 HEADER_TEMPLATE = """\

@@ -54,8 +54,8 @@
 # NOTE: If you add new phases here the current next phase kind number can be
 # found at the end of js/src/gc/StatsPhasesGenerated.inc
 
-import re
 import collections
+import re
 
 
 class PhaseKind:

@@ -4,8 +4,9 @@
 
 # mozilla/prettyprinters.py --- infrastructure for SpiderMonkey's auto-loaded pretty-printers.
 
-import gdb
 import re
+
+import gdb
 
 # Decorators for declaring pretty-printers.
 #

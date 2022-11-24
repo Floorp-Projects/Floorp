@@ -10,10 +10,9 @@ from __future__ import print_function
 import contextlib
 import io
 import os
-import tempfile
 import shutil
 import sys
-
+import tempfile
 from functools import partial
 from itertools import chain
 from operator import itemgetter
@@ -565,7 +564,6 @@ def fetch_local_changes(inDir, outDir, srcDir, strictTests):
     import subprocess
 
     # TODO: fail if it's in the default branch? or require a branch name?
-
     # Checks for unstaged or non committed files. A clean branch provides a clean status.
     status = subprocess.check_output(
         ("git -C %s status --porcelain" % srcDir).split(" ")

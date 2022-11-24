@@ -9,7 +9,7 @@ GetConsoleScreenBufferInfo.
 $Id: color_console.py 534 2009-05-10 04:00:59Z andre $
 """
 
-from ctypes import windll, Structure, c_short, c_ushort, byref
+from ctypes import Structure, byref, c_short, c_ushort, windll
 
 SHORT = c_short
 WORD = c_ushort

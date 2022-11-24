@@ -11,11 +11,12 @@ This python script should be sourced within GDB after loading the python scripts
 provided with SpiderMonkey.
 """
 
-import gdb
 import os
 import subprocess
 import tempfile
 import time
+
+import gdb
 import mozilla.prettyprinters
 from mozilla.prettyprinters import pretty_printer
 

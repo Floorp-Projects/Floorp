@@ -6,7 +6,6 @@
 
 import gdb
 import mozilla.prettyprinters
-
 from mozilla.prettyprinters import pretty_printer
 
 # Forget any printers from previous loads of this module.

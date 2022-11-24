@@ -8,15 +8,14 @@ import argparse
 import json
 import logging
 import multiprocessing
-import re
 import os
 import platform
 import posixpath
+import re
 import shlex
 import shutil
 import subprocess
 import sys
-
 from collections import Counter, namedtuple
 from logging import info
 from os import environ as env
