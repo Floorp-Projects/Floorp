@@ -93,7 +93,6 @@ const uint32_t js::jit::CacheIROpHealth[] = {
 #undef OPHEALTH
 };
 
-#ifdef DEBUG
 size_t js::jit::NumInputsForCacheKind(CacheKind kind) {
   switch (kind) {
     case CacheKind::NewArray:
@@ -128,7 +127,6 @@ size_t js::jit::NumInputsForCacheKind(CacheKind kind) {
   }
   MOZ_CRASH("Invalid kind");
 }
-#endif
 
 #ifdef DEBUG
 void CacheIRWriter::assertSameCompartment(JSObject* obj) {
@@ -139,8 +137,8 @@ void CacheIRWriter::assertSameZone(Shape* shape) {
 }
 #endif
 
-StubField CacheIRWriter::readStubFieldForIon(uint32_t offset,
-                                             StubField::Type type) const {
+StubField CacheIRWriter::readStubField(uint32_t offset,
+                                       StubField::Type type) const {
   size_t index = 0;
   size_t currentOffset = 0;
 
