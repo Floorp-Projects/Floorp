@@ -10,6 +10,8 @@ import android.graphics.Bitmap
 import android.widget.EditText
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
@@ -332,6 +334,21 @@ class HomeScreenRobot {
 
     fun verifyStoriesByTopicItems() =
         assertTrue(mDevice.findObject(UiSelector().resourceId("pocket.categories")).childCount > 1)
+
+    fun verifyStoriesByTopicItemState(composeTestRule: ComposeTestRule, isSelected: Boolean, position: Int) {
+        homeScreenList().scrollIntoView(mDevice.findObject(UiSelector().resourceId("pocket.header")))
+
+        if (isSelected) {
+            composeTestRule.onNodeWithTag("pocket.categories").assertIsDisplayed()
+            storyByTopicItem(composeTestRule, position).assertIsSelected()
+        } else {
+            composeTestRule.onNodeWithTag("pocket.categories").assertIsDisplayed()
+            storyByTopicItem(composeTestRule, position).assertIsNotSelected()
+        }
+    }
+
+    fun clickStoriesByTopicItem(composeTestRule: ComposeTestRule, position: Int) =
+        storyByTopicItem(composeTestRule, position).performClick()
 
     fun verifyPoweredByPocket(rule: ComposeTestRule) {
         homeScreenList().scrollIntoView(mDevice.findObject(UiSelector().resourceId("pocket.header")))
@@ -1086,6 +1103,9 @@ private fun sponsoredShortcut(sponsoredShortcutTitle: String) =
             .res("$packageName:id/top_site_title")
             .textContains(sponsoredShortcutTitle),
     )
+
+private fun storyByTopicItem(composeTestRule: ComposeTestRule, position: Int) =
+    composeTestRule.onNodeWithTag("pocket.categories").onChildAt(position - 1)
 
 val deleteFromHistory =
     onView(

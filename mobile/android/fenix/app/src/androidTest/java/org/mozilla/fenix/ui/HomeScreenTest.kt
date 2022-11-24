@@ -278,6 +278,23 @@ class HomeScreenTest {
     }
 
     @Test
+    fun selectStoriesByTopicItemTest() {
+        activityTestRule.activityRule.applySettingsExceptions {
+            it.isRecentTabsFeatureEnabled = false
+            it.isRecentlyVisitedFeatureEnabled = false
+        }
+
+        homeScreen {
+        }.dismissOnboarding()
+
+        homeScreen {
+            verifyStoriesByTopicItemState(activityTestRule, false, 1)
+            clickStoriesByTopicItem(activityTestRule, 1)
+            verifyStoriesByTopicItemState(activityTestRule, true, 1)
+        }
+    }
+
+    @Test
     fun verifyCustomizeHomepageTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
