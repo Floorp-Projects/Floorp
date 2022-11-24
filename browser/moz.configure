@@ -11,7 +11,7 @@ imply_option("MOZ_DEDICATED_PROFILES", True)
 imply_option("MOZ_BLOCK_PROFILE_DOWNGRADE", True)
 imply_option("MOZ_NORMANDY", True)
 
-with only_when(target_is_linux & compile_environment):
+with only_when(target_has_linux_kernel & compile_environment):
     option(env="MOZ_NO_PIE_COMPAT", help="Enable non-PIE wrapper")
 
     set_config("MOZ_NO_PIE_COMPAT", depends_if("MOZ_NO_PIE_COMPAT")(lambda _: True))

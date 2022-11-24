@@ -827,17 +827,17 @@ set_define("XP_MACOSX", target_is_osx)
 
 
 @depends(target)
-def target_is_linux(target):
+def target_has_linux_kernel(target):
     if target.kernel == "Linux":
         return True
 
 
-set_define("XP_LINUX", target_is_linux)
+set_define("XP_LINUX", target_has_linux_kernel)
 
 
 @depends(target)
 def target_is_linux_or_wasi(target):
-    if target.kernel in ("Linux", "WASI"):
+    if (target.kernel == "Linux" and target.os == "GNU") or target.kernel == "WASI":
         return True
 
 

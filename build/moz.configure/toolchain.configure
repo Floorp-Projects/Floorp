@@ -2902,7 +2902,7 @@ def nm_names(toolchain_prefix, c_compiler):
     return names
 
 
-check_prog("NM", nm_names, paths=clang_search_path, when=target_is_linux)
+check_prog("NM", nm_names, paths=clang_search_path, when=target_has_linux_kernel)
 
 
 option("--enable-cpp-rtti", help="Enable C++ RTTI")
