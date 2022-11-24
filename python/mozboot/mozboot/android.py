@@ -161,18 +161,19 @@ def download(
     download_file_path: Path,
 ):
     with requests.Session() as session:
-        request = session.head(url)
+        request = session.head(url, allow_redirects=True)
+        request.raise_for_status()
         remote_file_size = int(request.headers["content-length"])
 
         if download_file_path.is_file():
             local_file_size = download_file_path.stat().st_size
 
             if local_file_size == remote_file_size:
-                print(f"{download_file_path} already downloaded. Skipping download...")
-            else:
                 print(
-                    f"Partial download detected. Resuming download of {download_file_path}..."
+                    f"{download_file_path.name} already downloaded. Skipping download..."
                 )
+            else:
+                print(f"Partial download detected. Resuming download of {url}...")
                 download_internal(
                     download_file_path,
                     session,
@@ -181,7 +182,7 @@ def download(
                     local_file_size,
                 )
         else:
-            print(f"Downloading {download_file_path}...")
+            print(f"Downloading {url}...")
             download_internal(download_file_path, session, url, remote_file_size)
 
 
