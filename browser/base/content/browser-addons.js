@@ -1266,6 +1266,7 @@ var gUnifiedExtensions = {
 
   // Update the attention indicator for the whole unified extensions button.
   async updateAttention() {
+    let attention = false;
     for (let addon of await this.getActiveExtensions()) {
       let policy = WebExtensionPolicy.getByID(addon.id);
       let widget = this.browserActionFor(policy)?.widget;
@@ -1273,12 +1274,18 @@ var gUnifiedExtensions = {
       // Only show for extensions which are not already visible in the toolbar.
       if (!widget || widget.areaType !== CustomizableUI.TYPE_TOOLBAR) {
         if (lazy.OriginControls.getAttention(policy, window)) {
-          this.button.toggleAttribute("attention", true);
-          return;
+          attention = true;
+          break;
         }
       }
     }
-    this.button.toggleAttribute("attention", false);
+    this.button.toggleAttribute("attention", attention);
+    this.button.ownerDocument.l10n.setAttributes(
+      this.button,
+      attention
+        ? "unified-extensions-button-permissions-needed"
+        : "unified-extensions-button"
+    );
   },
 
   getPopupAnchorID(aBrowser, aWindow) {

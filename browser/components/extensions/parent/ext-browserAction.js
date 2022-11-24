@@ -858,11 +858,18 @@ this.browserAction = class extends ExtensionAPIPersistent {
     }
 
     let callback = () => {
-      button.setAttribute("tooltiptext", title);
       button.setAttribute("label", title);
 
       // This is set on the node so that it looks good in the toolbar.
       node.toggleAttribute("attention", attention);
+
+      node.ownerDocument.l10n.setAttributes(
+        button,
+        attention
+          ? "origin-controls-toolbar-button-permission-needed"
+          : "origin-controls-toolbar-button",
+        { extensionTitle: title }
+      );
 
       if (gUnifiedExtensionsEnabled) {
         button.querySelector(
