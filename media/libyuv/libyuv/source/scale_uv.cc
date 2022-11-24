@@ -193,8 +193,8 @@ static void ScaleUVDown4Box(int src_width,
                             int dy) {
   int j;
   // Allocate 2 rows of UV.
-  const int kRowSize = (dst_width * 2 * 2 + 15) & ~15;
-  align_buffer_64(row, kRowSize * 2);
+  const int row_size = (dst_width * 2 * 2 + 15) & ~15;
+  align_buffer_64(row, row_size * 2);
   int row_stride = src_stride * (dy >> 16);
   void (*ScaleUVRowDown2)(const uint8_t* src_uv, ptrdiff_t src_stride,
                           uint8_t* dst_uv, int dst_width) =
@@ -234,9 +234,9 @@ static void ScaleUVDown4Box(int src_width,
 
   for (j = 0; j < dst_height; ++j) {
     ScaleUVRowDown2(src_uv, src_stride, row, dst_width * 2);
-    ScaleUVRowDown2(src_uv + src_stride * 2, src_stride, row + kRowSize,
+    ScaleUVRowDown2(src_uv + src_stride * 2, src_stride, row + row_size,
                     dst_width * 2);
-    ScaleUVRowDown2(row, kRowSize, dst_uv, dst_width);
+    ScaleUVRowDown2(row, row_size, dst_uv, dst_width);
     src_uv += row_stride;
     dst_uv += dst_stride;
   }
@@ -574,11 +574,11 @@ static void ScaleUVBilinearUp(int src_width,
     const uint8_t* src = src_uv + yi * (int64_t)src_stride;
 
     // Allocate 2 rows of UV.
-    const int kRowSize = (dst_width * 2 + 15) & ~15;
-    align_buffer_64(row, kRowSize * 2);
+    const int row_size = (dst_width * 2 + 15) & ~15;
+    align_buffer_64(row, row_size * 2);
 
     uint8_t* rowptr = row;
-    int rowstride = kRowSize;
+    int rowstride = row_size;
     int lasty = yi;
 
     ScaleUVFilterCols(rowptr, src, dst_width, x, dx);

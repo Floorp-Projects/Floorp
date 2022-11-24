@@ -1605,6 +1605,12 @@ void ScalePlaneVertical_16(int src_height,
   }
 }
 
+// Use scale to convert lsb formats to msb, depending how many bits there are:
+// 32768 = 9 bits
+// 16384 = 10 bits
+// 4096 = 12 bits
+// 256 = 16 bits
+// TODO(fbarchard): change scale to bits
 void ScalePlaneVertical_16To8(int src_height,
                               int dst_width,
                               int dst_height,
@@ -1620,7 +1626,7 @@ void ScalePlaneVertical_16To8(int src_height,
                               enum FilterMode filtering) {
   // TODO(fbarchard): Allow higher wpp.
   int dst_width_words = dst_width * wpp;
-  // TODO(https://crbug.com/libyuv/931): Add NEON and AVX2 versions.
+  // TODO(https://crbug.com/libyuv/931): Add NEON 32 bit and AVX2 versions.
   void (*InterpolateRow_16To8)(uint8_t * dst_argb, const uint16_t* src_argb,
                                ptrdiff_t src_stride, int scale, int dst_width,
                                int source_y_fraction) = InterpolateRow_16To8_C;
@@ -1632,6 +1638,22 @@ void ScalePlaneVertical_16To8(int src_height,
   assert(dst_height > 0);
   src_argb += (x >> 16) * wpp;
 
+#if defined(HAS_INTERPOLATEROW_16TO8_NEON)
+  if (TestCpuFlag(kCpuHasNEON)) {
+    InterpolateRow_16To8 = InterpolateRow_16To8_Any_NEON;
+    if (IS_ALIGNED(dst_width, 8)) {
+      InterpolateRow_16To8 = InterpolateRow_16To8_NEON;
+    }
+  }
+#endif
+#if defined(HAS_INTERPOLATEROW_16TO8_AVX2)
+  if (TestCpuFlag(kCpuHasAVX2)) {
+    InterpolateRow_16To8 = InterpolateRow_16To8_Any_AVX2;
+    if (IS_ALIGNED(dst_width, 32)) {
+      InterpolateRow_16To8 = InterpolateRow_16To8_AVX2;
+    }
+  }
+#endif
   for (j = 0; j < dst_height; ++j) {
     int yi;
     int yf;

@@ -439,10 +439,14 @@ void ARGBToAR30Row_C(const uint8_t* src_argb, uint8_t* dst_ar30, int width) {
 void ARGBToAR64Row_C(const uint8_t* src_argb, uint16_t* dst_ar64, int width) {
   int x;
   for (x = 0; x < width; ++x) {
-    dst_ar64[0] = src_argb[0] * 0x0101;
-    dst_ar64[1] = src_argb[1] * 0x0101;
-    dst_ar64[2] = src_argb[2] * 0x0101;
-    dst_ar64[3] = src_argb[3] * 0x0101;
+    uint16_t b = src_argb[0] * 0x0101;
+    uint16_t g = src_argb[1] * 0x0101;
+    uint16_t r = src_argb[2] * 0x0101;
+    uint16_t a = src_argb[3] * 0x0101;
+    dst_ar64[0] = b;
+    dst_ar64[1] = g;
+    dst_ar64[2] = r;
+    dst_ar64[3] = a;
     dst_ar64 += 4;
     src_argb += 4;
   }
@@ -451,10 +455,14 @@ void ARGBToAR64Row_C(const uint8_t* src_argb, uint16_t* dst_ar64, int width) {
 void ARGBToAB64Row_C(const uint8_t* src_argb, uint16_t* dst_ab64, int width) {
   int x;
   for (x = 0; x < width; ++x) {
-    dst_ab64[0] = src_argb[2] * 0x0101;
-    dst_ab64[1] = src_argb[1] * 0x0101;
-    dst_ab64[2] = src_argb[0] * 0x0101;
-    dst_ab64[3] = src_argb[3] * 0x0101;
+    uint16_t b = src_argb[0] * 0x0101;
+    uint16_t g = src_argb[1] * 0x0101;
+    uint16_t r = src_argb[2] * 0x0101;
+    uint16_t a = src_argb[3] * 0x0101;
+    dst_ab64[0] = r;
+    dst_ab64[1] = g;
+    dst_ab64[2] = b;
+    dst_ab64[3] = a;
     dst_ab64 += 4;
     src_argb += 4;
   }
@@ -463,10 +471,14 @@ void ARGBToAB64Row_C(const uint8_t* src_argb, uint16_t* dst_ab64, int width) {
 void AR64ToARGBRow_C(const uint16_t* src_ar64, uint8_t* dst_argb, int width) {
   int x;
   for (x = 0; x < width; ++x) {
-    dst_argb[0] = src_ar64[0] >> 8;
-    dst_argb[1] = src_ar64[1] >> 8;
-    dst_argb[2] = src_ar64[2] >> 8;
-    dst_argb[3] = src_ar64[3] >> 8;
+    uint8_t b = src_ar64[0] >> 8;
+    uint8_t g = src_ar64[1] >> 8;
+    uint8_t r = src_ar64[2] >> 8;
+    uint8_t a = src_ar64[3] >> 8;
+    dst_argb[0] = b;
+    dst_argb[1] = g;
+    dst_argb[2] = r;
+    dst_argb[3] = a;
     dst_argb += 4;
     src_ar64 += 4;
   }
@@ -475,10 +487,14 @@ void AR64ToARGBRow_C(const uint16_t* src_ar64, uint8_t* dst_argb, int width) {
 void AB64ToARGBRow_C(const uint16_t* src_ab64, uint8_t* dst_argb, int width) {
   int x;
   for (x = 0; x < width; ++x) {
-    dst_argb[0] = src_ab64[2] >> 8;
-    dst_argb[1] = src_ab64[1] >> 8;
-    dst_argb[2] = src_ab64[0] >> 8;
-    dst_argb[3] = src_ab64[3] >> 8;
+    uint8_t r = src_ab64[0] >> 8;
+    uint8_t g = src_ab64[1] >> 8;
+    uint8_t b = src_ab64[2] >> 8;
+    uint8_t a = src_ab64[3] >> 8;
+    dst_argb[0] = b;
+    dst_argb[1] = g;
+    dst_argb[2] = r;
+    dst_argb[3] = a;
     dst_argb += 4;
     src_ab64 += 4;
   }
@@ -782,6 +798,7 @@ static __inline int RGB2xToVJ(uint16_t r, uint16_t g, uint16_t b) {
 #endif
 
 MAKEROWYJ(ARGB, 2, 1, 0, 4)
+MAKEROWYJ(ABGR, 0, 1, 2, 4)
 MAKEROWYJ(RGBA, 3, 2, 1, 4)
 MAKEROWYJ(RGB24, 2, 1, 0, 3)
 MAKEROWYJ(RAW, 0, 1, 2, 3)
@@ -1654,8 +1671,8 @@ MAKEYUVCONSTANTS(V2020, YG, YB, UB, UG, VG, VR)
 
 #define CALC_RGB16                                \
   int32_t y1 = ((uint32_t)(y32 * yg) >> 16) + yb; \
-  int8_t ui = u;                                  \
-  int8_t vi = v;                                  \
+  int8_t ui = (int8_t)u;                          \
+  int8_t vi = (int8_t)v;                          \
   ui -= 0x80;                                     \
   vi -= 0x80;                                     \
   int b16 = y1 + (ui * ub);                       \
@@ -1706,7 +1723,7 @@ static __inline void YuvPixel10_16(uint16_t y,
                                    int* r,
                                    const struct YuvConstants* yuvconstants) {
   LOAD_YUV_CONSTANTS;
-  uint32_t y32 = y << 6;
+  uint32_t y32 = (y << 6) | (y >> 4);
   u = clamp255(u >> 2);
   v = clamp255(v >> 2);
   CALC_RGB16;
@@ -1725,7 +1742,7 @@ static __inline void YuvPixel12_16(int16_t y,
                                    int* r,
                                    const struct YuvConstants* yuvconstants) {
   LOAD_YUV_CONSTANTS;
-  uint32_t y32 = y << 4;
+  uint32_t y32 = (y << 4) | (y >> 8);
   u = clamp255(u >> 4);
   v = clamp255(v >> 4);
   CALC_RGB16;
@@ -1843,6 +1860,23 @@ void I444ToARGBRow_C(const uint8_t* src_y,
     src_u += 1;
     src_v += 1;
     rgb_buf += 4;  // Advance 1 pixel.
+  }
+}
+
+void I444ToRGB24Row_C(const uint8_t* src_y,
+                      const uint8_t* src_u,
+                      const uint8_t* src_v,
+                      uint8_t* rgb_buf,
+                      const struct YuvConstants* yuvconstants,
+                      int width) {
+  int x;
+  for (x = 0; x < width; ++x) {
+    YuvPixel(src_y[0], src_u[0], src_v[0], rgb_buf + 0, rgb_buf + 1,
+             rgb_buf + 2, yuvconstants);
+    src_y += 1;
+    src_u += 1;
+    src_v += 1;
+    rgb_buf += 3;  // Advance 1 pixel.
   }
 }
 
@@ -2663,45 +2697,6 @@ void RGB24MirrorRow_C(const uint8_t* src_rgb24, uint8_t* dst_rgb24, int width) {
   }
 }
 
-void DetileRow_C(const uint8_t* src,
-                 ptrdiff_t src_tile_stride,
-                 uint8_t* dst,
-                 int width) {
-  int x;
-  for (x = 0; x < width - 15; x += 16) {
-    memcpy(dst, src, 16);
-    dst += 16;
-    src += src_tile_stride;
-  }
-  if (width & 15) {
-    memcpy(dst, src, width & 15);
-  }
-}
-
-void DetileSplitUVRow_C(const uint8_t* src_uv,
-                        ptrdiff_t src_tile_stride,
-                        uint8_t* dst_u,
-                        uint8_t* dst_v,
-                        int width) {
-  int tile;
-  for (tile = 0; tile < width / 16; tile++) {
-    for (int x = 0; x < 8; x++) {
-      *dst_u++ = src_uv[0];
-      *dst_v++ = src_uv[1];
-      src_uv += 2;
-    }
-    src_uv += src_tile_stride - 16;
-  }
-  for (int x = 0; x < (width & 0xF) / 2; ++x) {
-    *dst_u = *src_uv;
-    dst_u++;
-    src_uv++;
-    *dst_v = *src_uv;
-    dst_v++;
-    src_uv++;
-  }
-}
-
 void SplitUVRow_C(const uint8_t* src_uv,
                   uint8_t* dst_u,
                   uint8_t* dst_v,
@@ -2735,6 +2730,74 @@ void MergeUVRow_C(const uint8_t* src_u,
   if (width & 1) {
     dst_uv[0] = src_u[width - 1];
     dst_uv[1] = src_v[width - 1];
+  }
+}
+
+void DetileRow_C(const uint8_t* src,
+                 ptrdiff_t src_tile_stride,
+                 uint8_t* dst,
+                 int width) {
+  int x;
+  for (x = 0; x < width - 15; x += 16) {
+    memcpy(dst, src, 16);
+    dst += 16;
+    src += src_tile_stride;
+  }
+  if (width & 15) {
+    memcpy(dst, src, width & 15);
+  }
+}
+
+void DetileRow_16_C(const uint16_t* src,
+                    ptrdiff_t src_tile_stride,
+                    uint16_t* dst,
+                    int width) {
+  int x;
+  for (x = 0; x < width - 15; x += 16) {
+    memcpy(dst, src, 16 * sizeof(uint16_t));
+    dst += 16;
+    src += src_tile_stride;
+  }
+  if (width & 15) {
+    memcpy(dst, src, (width & 15) * sizeof(uint16_t));
+  }
+}
+
+void DetileSplitUVRow_C(const uint8_t* src_uv,
+                        ptrdiff_t src_tile_stride,
+                        uint8_t* dst_u,
+                        uint8_t* dst_v,
+                        int width) {
+  int x;
+  for (x = 0; x < width - 15; x += 16) {
+    SplitUVRow_C(src_uv, dst_u, dst_v, 8);
+    dst_u += 8;
+    dst_v += 8;
+    src_uv += src_tile_stride;
+  }
+  if (width & 15) {
+    SplitUVRow_C(src_uv, dst_u, dst_v, ((width & 15) + 1) / 2);
+  }
+}
+
+void DetileToYUY2_C(const uint8_t* src_y,
+                    ptrdiff_t src_y_tile_stride,
+                    const uint8_t* src_uv,
+                    ptrdiff_t src_uv_tile_stride,
+                    uint8_t* dst_yuy2,
+                    int width) {
+  for (int x = 0; x < width - 15; x += 16) {
+    for (int i = 0; i < 8; i++) {
+      dst_yuy2[0] = src_y[0];
+      dst_yuy2[1] = src_uv[0];
+      dst_yuy2[2] = src_y[1];
+      dst_yuy2[3] = src_uv[1];
+      dst_yuy2 += 4;
+      src_y += 2;
+      src_uv += 2;
+    }
+    src_y += src_y_tile_stride - 16;
+    src_uv += src_uv_tile_stride - 16;
   }
 }
 
@@ -2985,6 +3048,9 @@ void DivideRow_16_C(const uint16_t* src_y,
 // 16384 = 10 bits
 // 4096 = 12 bits
 // 256 = 16 bits
+// TODO(fbarchard): change scale to bits
+#define C16TO8(v, scale) clamp255(((v) * (scale)) >> 16)
+
 void Convert16To8Row_C(const uint16_t* src_y,
                        uint8_t* dst_y,
                        int scale,
@@ -2994,7 +3060,7 @@ void Convert16To8Row_C(const uint16_t* src_y,
   assert(scale <= 32768);
 
   for (x = 0; x < width; ++x) {
-    dst_y[x] = clamp255((src_y[x] * scale) >> 16);
+    dst_y[x] = C16TO8(src_y[x], scale);
   }
 }
 
@@ -3044,6 +3110,21 @@ void YUY2ToUVRow_C(const uint8_t* src_yuy2,
     src_yuy2 += 4;
     dst_u += 1;
     dst_v += 1;
+  }
+}
+
+// Filter 2 rows of YUY2 UV's (422) into UV (NV12).
+void YUY2ToNVUVRow_C(const uint8_t* src_yuy2,
+                     int src_stride_yuy2,
+                     uint8_t* dst_uv,
+                     int width) {
+  // Output a row of UV values, filtering 2 rows of YUY2.
+  int x;
+  for (x = 0; x < width; x += 2) {
+    dst_uv[0] = (src_yuy2[1] + src_yuy2[src_stride_yuy2 + 1] + 1) >> 1;
+    dst_uv[1] = (src_yuy2[3] + src_yuy2[src_stride_yuy2 + 3] + 1) >> 1;
+    src_yuy2 += 4;
+    dst_uv += 2;
   }
 }
 
@@ -3411,8 +3492,7 @@ static void HalfRow_16To8_C(const uint16_t* src_uv,
                             int width) {
   int x;
   for (x = 0; x < width; ++x) {
-    dst_uv[x] = clamp255(
-        (((src_uv[x] + src_uv[src_uv_stride + x] + 1) >> 1) * scale) >> 16);
+    dst_uv[x] = C16TO8((src_uv[x] + src_uv[src_uv_stride + x] + 1) >> 1, scale);
   }
 }
 
@@ -3426,6 +3506,9 @@ void InterpolateRow_C(uint8_t* dst_ptr,
   int y0_fraction = 256 - y1_fraction;
   const uint8_t* src_ptr1 = src_ptr + src_stride;
   int x;
+  assert(source_y_fraction >= 0);
+  assert(source_y_fraction < 256);
+
   if (y1_fraction == 0) {
     memcpy(dst_ptr, src_ptr, width);
     return;
@@ -3434,18 +3517,42 @@ void InterpolateRow_C(uint8_t* dst_ptr,
     HalfRow_C(src_ptr, src_stride, dst_ptr, width);
     return;
   }
-  for (x = 0; x < width - 1; x += 2) {
+  for (x = 0; x < width; ++x) {
     dst_ptr[0] =
         (src_ptr[0] * y0_fraction + src_ptr1[0] * y1_fraction + 128) >> 8;
-    dst_ptr[1] =
-        (src_ptr[1] * y0_fraction + src_ptr1[1] * y1_fraction + 128) >> 8;
-    src_ptr += 2;
-    src_ptr1 += 2;
-    dst_ptr += 2;
+    ++src_ptr;
+    ++src_ptr1;
+    ++dst_ptr;
   }
-  if (width & 1) {
+}
+
+// C version 2x2 -> 2x1.
+void InterpolateRow_16_C(uint16_t* dst_ptr,
+                         const uint16_t* src_ptr,
+                         ptrdiff_t src_stride,
+                         int width,
+                         int source_y_fraction) {
+  int y1_fraction = source_y_fraction;
+  int y0_fraction = 256 - y1_fraction;
+  const uint16_t* src_ptr1 = src_ptr + src_stride;
+  int x;
+  assert(source_y_fraction >= 0);
+  assert(source_y_fraction < 256);
+
+  if (y1_fraction == 0) {
+    memcpy(dst_ptr, src_ptr, width * 2);
+    return;
+  }
+  if (y1_fraction == 128) {
+    HalfRow_16_C(src_ptr, src_stride, dst_ptr, width);
+    return;
+  }
+  for (x = 0; x < width; ++x) {
     dst_ptr[0] =
         (src_ptr[0] * y0_fraction + src_ptr1[0] * y1_fraction + 128) >> 8;
+    ++src_ptr;
+    ++src_ptr1;
+    ++dst_ptr;
   }
 }
 
@@ -3455,6 +3562,8 @@ void InterpolateRow_C(uint8_t* dst_ptr,
 // 16384 = 10 bits
 // 4096 = 12 bits
 // 256 = 16 bits
+// TODO(fbarchard): change scale to bits
+
 void InterpolateRow_16To8_C(uint8_t* dst_ptr,
                             const uint16_t* src_ptr,
                             ptrdiff_t src_stride,
@@ -3465,6 +3574,9 @@ void InterpolateRow_16To8_C(uint8_t* dst_ptr,
   int y0_fraction = 256 - y1_fraction;
   const uint16_t* src_ptr1 = src_ptr + src_stride;
   int x;
+  assert(source_y_fraction >= 0);
+  assert(source_y_fraction < 256);
+
   if (source_y_fraction == 0) {
     Convert16To8Row_C(src_ptr, dst_ptr, scale, width);
     return;
@@ -3473,53 +3585,13 @@ void InterpolateRow_16To8_C(uint8_t* dst_ptr,
     HalfRow_16To8_C(src_ptr, src_stride, dst_ptr, scale, width);
     return;
   }
-  for (x = 0; x < width - 1; x += 2) {
-    dst_ptr[0] = clamp255(
-        (((src_ptr[0] * y0_fraction + src_ptr1[0] * y1_fraction) >> 8) *
-         scale) >>
-        16);
-    dst_ptr[1] = clamp255(
-        (((src_ptr[1] * y0_fraction + src_ptr1[1] * y1_fraction) >> 8) *
-         scale) >>
-        16);
-    src_ptr += 2;
-    src_ptr1 += 2;
-    dst_ptr += 2;
-  }
-  if (width & 1) {
-    dst_ptr[0] = clamp255(
-        (((src_ptr[0] * y0_fraction + src_ptr1[0] * y1_fraction) >> 8) *
-         scale) >>
-        16);
-  }
-}
-
-void InterpolateRow_16_C(uint16_t* dst_ptr,
-                         const uint16_t* src_ptr,
-                         ptrdiff_t src_stride,
-                         int width,
-                         int source_y_fraction) {
-  int y1_fraction = source_y_fraction;
-  int y0_fraction = 256 - y1_fraction;
-  const uint16_t* src_ptr1 = src_ptr + src_stride;
-  int x;
-  if (source_y_fraction == 0) {
-    memcpy(dst_ptr, src_ptr, width * 2);
-    return;
-  }
-  if (source_y_fraction == 128) {
-    HalfRow_16_C(src_ptr, src_stride, dst_ptr, width);
-    return;
-  }
-  for (x = 0; x < width - 1; x += 2) {
-    dst_ptr[0] = (src_ptr[0] * y0_fraction + src_ptr1[0] * y1_fraction) >> 8;
-    dst_ptr[1] = (src_ptr[1] * y0_fraction + src_ptr1[1] * y1_fraction) >> 8;
-    src_ptr += 2;
-    src_ptr1 += 2;
-    dst_ptr += 2;
-  }
-  if (width & 1) {
-    dst_ptr[0] = (src_ptr[0] * y0_fraction + src_ptr1[0] * y1_fraction) >> 8;
+  for (x = 0; x < width; ++x) {
+    dst_ptr[0] = C16TO8(
+        (src_ptr[0] * y0_fraction + src_ptr1[0] * y1_fraction + 128) >> 8,
+        scale);
+    src_ptr += 1;
+    src_ptr1 += 1;
+    dst_ptr += 1;
   }
 }
 
@@ -4036,6 +4108,32 @@ void I422ToRGB24Row_AVX2(const uint8_t* src_y,
 }
 #endif
 
+#if defined(HAS_I444TORGB24ROW_AVX2)
+void I444ToRGB24Row_AVX2(const uint8_t* src_y,
+                         const uint8_t* src_u,
+                         const uint8_t* src_v,
+                         uint8_t* dst_rgb24,
+                         const struct YuvConstants* yuvconstants,
+                         int width) {
+  // Row buffer for intermediate ARGB pixels.
+  SIMD_ALIGNED(uint8_t row[MAXTWIDTH * 4]);
+  while (width > 0) {
+    int twidth = width > MAXTWIDTH ? MAXTWIDTH : width;
+    I444ToARGBRow_AVX2(src_y, src_u, src_v, row, yuvconstants, twidth);
+#if defined(HAS_ARGBTORGB24ROW_AVX2)
+    ARGBToRGB24Row_AVX2(row, dst_rgb24, twidth);
+#else
+    ARGBToRGB24Row_SSSE3(row, dst_rgb24, twidth);
+#endif
+    src_y += twidth;
+    src_u += twidth;
+    src_v += twidth;
+    dst_rgb24 += twidth * 3;
+    width -= twidth;
+  }
+}
+#endif
+
 #if defined(HAS_NV12TORGB565ROW_AVX2)
 void NV12ToRGB565Row_AVX2(const uint8_t* src_y,
                           const uint8_t* src_uv,
@@ -4123,6 +4221,26 @@ void RAWToYJRow_SSSE3(const uint8_t* src_raw, uint8_t* dst_yj, int width) {
   }
 }
 #endif  // HAS_RAWTOYJROW_SSSE3
+
+#ifdef HAS_INTERPOLATEROW_16TO8_AVX2
+void InterpolateRow_16To8_AVX2(uint8_t* dst_ptr,
+                               const uint16_t* src_ptr,
+                               ptrdiff_t src_stride,
+                               int scale,
+                               int width,
+                               int source_y_fraction) {
+  // Row buffer for intermediate 16 bit pixels.
+  SIMD_ALIGNED(uint16_t row[MAXTWIDTH]);
+  while (width > 0) {
+    int twidth = width > MAXTWIDTH ? MAXTWIDTH : width;
+    InterpolateRow_16_C(row, src_ptr, src_stride, twidth, source_y_fraction);
+    Convert16To8Row_AVX2(row, dst_ptr, scale, twidth);
+    src_ptr += twidth;
+    dst_ptr += twidth;
+    width -= twidth;
+  }
+}
+#endif  // HAS_INTERPOLATEROW_16TO8_AVX2
 
 float ScaleSumSamples_C(const float* src, float* dst, float scale, int width) {
   float fsum = 0.f;

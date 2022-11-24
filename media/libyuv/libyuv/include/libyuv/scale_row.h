@@ -76,18 +76,18 @@ extern "C" {
 // TODO(fbarchard): Port to Visual C
 #if !defined(LIBYUV_DISABLE_X86) && (defined(__x86_64__) || defined(__i386__))
 #define HAS_SCALEUVROWDOWN2BOX_SSSE3
-#define HAS_SCALEROWUP2LINEAR_SSE2
-#define HAS_SCALEROWUP2LINEAR_SSSE3
-#define HAS_SCALEROWUP2BILINEAR_SSE2
-#define HAS_SCALEROWUP2BILINEAR_SSSE3
-#define HAS_SCALEROWUP2LINEAR_12_SSSE3
-#define HAS_SCALEROWUP2BILINEAR_12_SSSE3
-#define HAS_SCALEROWUP2LINEAR_16_SSE2
-#define HAS_SCALEROWUP2BILINEAR_16_SSE2
-#define HAS_SCALEUVROWUP2LINEAR_SSSE3
-#define HAS_SCALEUVROWUP2BILINEAR_SSSE3
-#define HAS_SCALEUVROWUP2LINEAR_16_SSE41
-#define HAS_SCALEUVROWUP2BILINEAR_16_SSE41
+#define HAS_SCALEROWUP2_LINEAR_SSE2
+#define HAS_SCALEROWUP2_LINEAR_SSSE3
+#define HAS_SCALEROWUP2_BILINEAR_SSE2
+#define HAS_SCALEROWUP2_BILINEAR_SSSE3
+#define HAS_SCALEROWUP2_LINEAR_12_SSSE3
+#define HAS_SCALEROWUP2_BILINEAR_12_SSSE3
+#define HAS_SCALEROWUP2_LINEAR_16_SSE2
+#define HAS_SCALEROWUP2_BILINEAR_16_SSE2
+#define HAS_SCALEUVROWUP2_LINEAR_SSSE3
+#define HAS_SCALEUVROWUP2_BILINEAR_SSSE3
+#define HAS_SCALEUVROWUP2_LINEAR_16_SSE41
+#define HAS_SCALEUVROWUP2_BILINEAR_16_SSE41
 #endif
 
 // The following are available for gcc/clang x86 platforms, but
@@ -97,16 +97,16 @@ extern "C" {
     (defined(__x86_64__) || defined(__i386__)) && \
     (defined(CLANG_HAS_AVX2) || defined(GCC_HAS_AVX2))
 #define HAS_SCALEUVROWDOWN2BOX_AVX2
-#define HAS_SCALEROWUP2LINEAR_AVX2
-#define HAS_SCALEROWUP2BILINEAR_AVX2
-#define HAS_SCALEROWUP2LINEAR_12_AVX2
-#define HAS_SCALEROWUP2BILINEAR_12_AVX2
-#define HAS_SCALEROWUP2LINEAR_16_AVX2
-#define HAS_SCALEROWUP2BILINEAR_16_AVX2
-#define HAS_SCALEUVROWUP2LINEAR_AVX2
-#define HAS_SCALEUVROWUP2BILINEAR_AVX2
-#define HAS_SCALEUVROWUP2LINEAR_16_AVX2
-#define HAS_SCALEUVROWUP2BILINEAR_16_AVX2
+#define HAS_SCALEROWUP2_LINEAR_AVX2
+#define HAS_SCALEROWUP2_BILINEAR_AVX2
+#define HAS_SCALEROWUP2_LINEAR_12_AVX2
+#define HAS_SCALEROWUP2_BILINEAR_12_AVX2
+#define HAS_SCALEROWUP2_LINEAR_16_AVX2
+#define HAS_SCALEROWUP2_BILINEAR_16_AVX2
+#define HAS_SCALEUVROWUP2_LINEAR_AVX2
+#define HAS_SCALEUVROWUP2_BILINEAR_AVX2
+#define HAS_SCALEUVROWUP2_LINEAR_16_AVX2
+#define HAS_SCALEUVROWUP2_BILINEAR_16_AVX2
 #endif
 
 // The following are available on all x86 platforms, but
@@ -135,16 +135,16 @@ extern "C" {
 #define HAS_SCALEROWDOWN4_NEON
 #define HAS_SCALEUVROWDOWN2BOX_NEON
 #define HAS_SCALEUVROWDOWNEVEN_NEON
-#define HAS_SCALEROWUP2LINEAR_NEON
-#define HAS_SCALEROWUP2BILINEAR_NEON
-#define HAS_SCALEROWUP2LINEAR_12_NEON
-#define HAS_SCALEROWUP2BILINEAR_12_NEON
-#define HAS_SCALEROWUP2LINEAR_16_NEON
-#define HAS_SCALEROWUP2BILINEAR_16_NEON
-#define HAS_SCALEUVROWUP2LINEAR_NEON
-#define HAS_SCALEUVROWUP2BILINEAR_NEON
-#define HAS_SCALEUVROWUP2LINEAR_16_NEON
-#define HAS_SCALEUVROWUP2BILINEAR_16_NEON
+#define HAS_SCALEROWUP2_LINEAR_NEON
+#define HAS_SCALEROWUP2_BILINEAR_NEON
+#define HAS_SCALEROWUP2_LINEAR_12_NEON
+#define HAS_SCALEROWUP2_BILINEAR_12_NEON
+#define HAS_SCALEROWUP2_LINEAR_16_NEON
+#define HAS_SCALEROWUP2_BILINEAR_16_NEON
+#define HAS_SCALEUVROWUP2_LINEAR_NEON
+#define HAS_SCALEUVROWUP2_BILINEAR_NEON
+#define HAS_SCALEUVROWUP2_LINEAR_16_NEON
+#define HAS_SCALEUVROWUP2_BILINEAR_16_NEON
 #endif
 
 #if !defined(LIBYUV_DISABLE_MSA) && defined(__mips_msa)
@@ -692,11 +692,11 @@ void ScaleRowUp2_Bilinear_12_Any_SSSE3(const uint16_t* src_ptr,
 void ScaleRowUp2_Linear_16_Any_SSE2(const uint16_t* src_ptr,
                                     uint16_t* dst_ptr,
                                     int dst_width);
-void ScaleRowUp2_Bilinear_16_Any_SSSE3(const uint16_t* src_ptr,
-                                       ptrdiff_t src_stride,
-                                       uint16_t* dst_ptr,
-                                       ptrdiff_t dst_stride,
-                                       int dst_width);
+void ScaleRowUp2_Bilinear_16_Any_SSE2(const uint16_t* src_ptr,
+                                      ptrdiff_t src_stride,
+                                      uint16_t* dst_ptr,
+                                      ptrdiff_t dst_stride,
+                                      int dst_width);
 void ScaleRowUp2_Linear_Any_SSSE3(const uint8_t* src_ptr,
                                   uint8_t* dst_ptr,
                                   int dst_width);
