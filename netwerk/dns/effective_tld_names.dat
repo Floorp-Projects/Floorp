@@ -10658,6 +10658,10 @@ graphox.us
 // Submitted by Craig Jellick <domains@acorn.io>
 *.on-acorn.io
 
+// ActiveTrail: https://www.activetrail.biz/
+// Submitted by Ofer Kalaora <postmaster@activetrail.com>
+activetrail.biz
+
 // Adobe : https://www.adobe.com/
 // Submitted by Ian Boston <boston@adobe.com> and Lars Trieloff <trieloff@adobe.com>
 adobeaemcloud.com
@@ -11182,8 +11186,11 @@ cloudcontrolapp.com
 
 // Cloudflare, Inc. : https://www.cloudflare.com/
 // Submitted by Cloudflare Team <publicsuffixlist@cloudflare.com>
-pages.dev
+cf-ipfs.com
+cloudflare-ipfs.com
 trycloudflare.com
+pages.dev
+r2.dev
 workers.dev
 
 // Clovyr : https://clovyr.io
@@ -13812,6 +13819,8 @@ direct.quickconnect.to
 // Tabit Technologies Ltd. : https://tabit.cloud/
 // Submitted by Oren Agiv <oren@tabit.cloud>
 tabitorder.co.il
+mytabit.co.il
+mytabit.com
 
 // TAIFUN Software AG : http://taifun-software.de
 // Submitted by Bjoern Henke <dev-server@taifun-software.de>
