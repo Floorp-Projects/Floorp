@@ -295,6 +295,23 @@ class HomeScreenTest {
     }
 
     @Test
+    fun verifyPocketLearnMoreLinkTest() {
+        activityTestRule.activityRule.applySettingsExceptions {
+            it.isRecentTabsFeatureEnabled = false
+            it.isRecentlyVisitedFeatureEnabled = false
+        }
+
+        homeScreen {
+        }.dismissOnboarding()
+
+        homeScreen {
+            verifyPoweredByPocket(activityTestRule)
+        }.clickPocketLearnMoreLink(activityTestRule) {
+            verifyUrl("mozilla.org/en-US/firefox/pocket")
+        }
+    }
+
+    @Test
     fun verifyCustomizeHomepageTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 

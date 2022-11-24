@@ -711,6 +711,13 @@ class HomeScreenRobot {
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
+
+        fun clickPocketLearnMoreLink(composeTestRule: ComposeTestRule, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            composeTestRule.onNodeWithTag("pocket.header.subtitle", true).performClick()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
     }
 }
 
