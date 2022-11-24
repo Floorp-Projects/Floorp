@@ -20,10 +20,10 @@ import csv
 import json
 import logging
 import os
-import requests
 import sys
-import urlparse
 
+import requests
+import urlparse
 
 log = logging.getLogger()
 

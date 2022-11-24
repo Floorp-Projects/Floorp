@@ -7,11 +7,7 @@ from __future__ import absolute_import, print_function
 from abc import ABCMeta, abstractproperty
 from collections import defaultdict
 
-from flask import (
-    Flask,
-    render_template,
-    request,
-)
+from flask import Flask, render_template, request
 
 SECTIONS = []
 SUPPORTED_KINDS = set()

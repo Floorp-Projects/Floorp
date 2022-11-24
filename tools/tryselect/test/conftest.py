@@ -5,15 +5,14 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+from unittest.mock import MagicMock
 
 import pytest
 import yaml
-from unittest.mock import MagicMock
 from moztest.resolve import TestResolver
 from taskgraph.graph import Graph
 from taskgraph.task import Task
 from taskgraph.taskgraph import TaskGraph
-
 from tryselect import push
 
 

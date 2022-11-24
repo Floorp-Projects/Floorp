@@ -1,5 +1,4 @@
 import mozunit
-
 from conftest import build
 
 LINTER = "clang-format"

@@ -6,9 +6,9 @@ import os
 import re
 import subprocess
 
+from mozfile import which
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
-from mozfile import which
 
 # Error Levels
 # (0, 'debug')

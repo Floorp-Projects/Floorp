@@ -6,8 +6,8 @@
 import os
 
 import attr
-from mozilla_version.gecko import FirefoxVersion
 import yaml
+from mozilla_version.gecko import FirefoxVersion
 
 from ..cli import BaseTryParser
 from ..push import push_to_try, vcs

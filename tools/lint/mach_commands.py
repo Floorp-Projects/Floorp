@@ -6,17 +6,9 @@ import argparse
 import copy
 import os
 
-from mozbuild.base import (
-    BuildEnvironmentNotFoundException,
-    MachCommandConditions as conditions,
-)
-
-
-from mach.decorators import (
-    CommandArgument,
-    Command,
-)
-
+from mach.decorators import Command, CommandArgument
+from mozbuild.base import BuildEnvironmentNotFoundException
+from mozbuild.base import MachCommandConditions as conditions
 
 here = os.path.abspath(os.path.dirname(__file__))
 EXCLUSION_FILES = [

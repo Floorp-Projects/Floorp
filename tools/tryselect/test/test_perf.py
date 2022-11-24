@@ -7,7 +7,6 @@ from unittest import mock
 
 import mozunit
 import pytest
-
 import tryselect.selectors.perf as ps
 
 TASKS = [

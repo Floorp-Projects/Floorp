@@ -115,8 +115,7 @@ def test_table_builder_invalid_attributes(testdata):
 
 
 def test_table_builder_mismatched_columns():
-    from perfdocs.doc_helpers import TableBuilder
-    from perfdocs.doc_helpers import MismatchedRowLengthsException
+    from perfdocs.doc_helpers import MismatchedRowLengthsException, TableBuilder
 
     table_specifications = {
         "title": "I've got a lovely bunch of coconuts",
@@ -141,8 +140,7 @@ def test_table_builder_mismatched_columns():
 
 
 def test_table_builder_add_row_too_long():
-    from perfdocs.doc_helpers import TableBuilder
-    from perfdocs.doc_helpers import MismatchedRowLengthsException
+    from perfdocs.doc_helpers import MismatchedRowLengthsException, TableBuilder
 
     table = TableBuilder(
         table_specifications["title"],

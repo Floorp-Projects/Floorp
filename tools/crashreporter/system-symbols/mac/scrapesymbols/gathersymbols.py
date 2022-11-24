@@ -2,18 +2,18 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function
 
 import argparse
 import concurrent.futures
 import datetime
 import os
-import requests
 import subprocess
 import sys
 import urllib
 import zipfile
 
+import requests
 
 if sys.platform == "darwin":
     SYSTEM_DIRS = [

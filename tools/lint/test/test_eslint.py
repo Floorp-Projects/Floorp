@@ -1,6 +1,5 @@
 import mozunit
 import pytest
-
 from conftest import build
 
 LINTER = "eslint"

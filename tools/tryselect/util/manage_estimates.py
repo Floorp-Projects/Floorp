@@ -3,12 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import os
-import requests
 import json
+import os
 from datetime import datetime, timedelta
-import six
 
+import requests
+import six
 
 TASK_DURATION_URL = (
     "https://storage.googleapis.com/mozilla-mach-data/task_duration_history.json"
@@ -16,7 +16,7 @@ TASK_DURATION_URL = (
 GRAPH_QUANTILES_URL = (
     "https://storage.googleapis.com/mozilla-mach-data/machtry_quantiles.csv"
 )
-from .estimates import TASK_DURATION_CACHE, GRAPH_QUANTILE_CACHE, TASK_DURATION_TAG_FILE
+from .estimates import GRAPH_QUANTILE_CACHE, TASK_DURATION_CACHE, TASK_DURATION_TAG_FILE
 
 
 def check_downloaded_history(tag_file, duration_cache, quantile_cache):

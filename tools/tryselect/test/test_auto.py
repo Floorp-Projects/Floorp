@@ -6,7 +6,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import mozunit
 import pytest
-
 from tryselect.selectors.auto import AutoParser
 
 

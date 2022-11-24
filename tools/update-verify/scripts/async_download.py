@@ -3,14 +3,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import aiohttp
 import asyncio
+import glob
 import logging
 import os
-from os import path
-import glob
 import sys
 import xml.etree.ElementTree as ET
+from os import path
+
+import aiohttp
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
 log = logging.getLogger(__name__)

@@ -11,12 +11,13 @@ import traceback
 import six
 from mach.util import get_state_dir
 from mozbuild.base import MozbuildObject
-from mozversioncontrol import get_repository_object, MissingVCSExtension
+from mozversioncontrol import MissingVCSExtension, get_repository_object
+
+from .util.estimates import duration_summary
 from .util.manage_estimates import (
     download_task_history_data,
     make_trimmed_taskgraph_cache,
 )
-from .util.estimates import duration_summary
 
 GIT_CINNABAR_NOT_FOUND = """
 Could not detect `git-cinnabar`.

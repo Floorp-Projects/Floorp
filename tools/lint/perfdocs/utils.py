@@ -7,6 +7,7 @@ import difflib
 import filecmp
 import os
 import pathlib
+
 import yaml
 from perfdocs.logger import PerfDocLogger
 

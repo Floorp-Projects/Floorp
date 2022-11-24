@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import os
 import json
+import os
 from datetime import datetime, timedelta
 
 TASK_DURATION_CACHE = "task_duration_history.json"

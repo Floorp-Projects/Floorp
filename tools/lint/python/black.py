@@ -11,10 +11,10 @@ import signal
 import subprocess
 import sys
 
+import mozpack.path as mozpath
 from mozfile import which
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
-import mozpack.path as mozpath
 from mozprocess import ProcessHandler
 
 here = os.path.abspath(os.path.dirname(__file__))

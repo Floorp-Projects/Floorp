@@ -54,9 +54,9 @@
 
 from __future__ import absolute_import, print_function
 
-import sys
-import subprocess
 import os.path
+import subprocess
+import sys
 
 if len(sys.argv) < 5:
     sys.stderr.write("Expected arguments: <jprof> <split-file> <program> <jprof-log>\n")

@@ -5,28 +5,26 @@
 
 import os
 import platform
-import subprocess
 import shutil
-import six
+import subprocess
 import sys
 from distutils.spawn import find_executable
-from packaging.version import Version
-
-from mozbuild.base import MozbuildObject
-from mach.util import get_state_dir
-from mozterm import Terminal
 
 import mozfile
+import six
+from gecko_taskgraph.target_tasks import filter_by_uncommon_try_tasks
+from mach.util import get_state_dir
 from mozboot.util import http_download_and_save
+from mozbuild.base import MozbuildObject
+from mozterm import Terminal
+from packaging.version import Version
 
-from ..tasks import generate_tasks
 from ..push import check_working_directory
+from ..tasks import generate_tasks
 from ..util.manage_estimates import (
     download_task_history_data,
     make_trimmed_taskgraph_cache,
 )
-
-from gecko_taskgraph.target_tasks import filter_by_uncommon_try_tasks
 
 terminal = Terminal()
 

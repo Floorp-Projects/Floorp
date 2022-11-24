@@ -13,7 +13,6 @@ except ImportError:
     JSONDecodeError = ValueError
 
 from mozfile import which
-
 from mozlint import result
 from mozlint.util.implementation import LintProcess
 

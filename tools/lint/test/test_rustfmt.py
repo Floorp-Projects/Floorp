@@ -1,6 +1,5 @@
 import mozunit
 
-
 LINTER = "rustfmt"
 fixed = 0
 

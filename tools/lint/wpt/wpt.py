@@ -8,9 +8,8 @@ import json
 import os
 import sys
 
-from mozprocess import ProcessHandler
-
 from mozlint import result
+from mozprocess import ProcessHandler
 
 results = []
 
