@@ -44,13 +44,14 @@ class AdsTelemetry : BaseSearchTelemetry() {
         cachedCookies = message.getJSONArray(ADS_MESSAGE_COOKIES_KEY).toList()
 
         val urls = message.getJSONArray(ADS_MESSAGE_DOCUMENT_URLS_KEY).toList<String>()
+        val uri = Uri.parse(message.getString(ADS_MESSAGE_SESSION_URL_KEY))
         val provider = getProviderForUrl(message.getString(ADS_MESSAGE_SESSION_URL_KEY))
 
         provider?.let {
             if (it.containsAdLinks(urls)) {
                 emitFact(
                     SERP_SHOWN_WITH_ADDS,
-                    it.name,
+                    getTrackKey(it, uri, cachedCookies),
                 )
             }
         }

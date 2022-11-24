@@ -139,7 +139,7 @@ class AdsTelemetryTest {
         assertEquals(Component.FEATURE_SEARCH, facts[0].component)
         assertEquals(Action.INTERACTION, facts[0].action)
         assertEquals(AdsTelemetry.SERP_SHOWN_WITH_ADDS, facts[0].item)
-        assertEquals(telemetry.providerList[0].name, facts[0].value)
+        assertEquals("google.in-content.organic.none", facts[0].value)
     }
 
     @Test
