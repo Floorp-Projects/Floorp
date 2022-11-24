@@ -579,11 +579,10 @@ class WellKnownParserAtoms {
                            WellKnownAtomInfoHasher, js::SystemAllocPolicy>;
   EntryMap wellKnownMap_;
 
-  bool initSingle(JSContext* cx, const WellKnownAtomInfo& info,
-                  TaggedParserAtomIndex index);
+  bool initSingle(const WellKnownAtomInfo& info, TaggedParserAtomIndex index);
 
  public:
-  bool init(JSContext* cx);
+  bool init();
 
   // Maximum length of any well known atoms. This can be increased if needed.
   static constexpr size_t MaxWellKnownLength = 32;
