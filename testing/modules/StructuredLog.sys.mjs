@@ -2,27 +2,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["StructuredLogger", "StructuredFormatter"];
-
 /**
  * TestLogger: Logger class generating messages compliant with the
  * structured logging protocol for tests exposed by mozlog
  *
- * @param name
+ * @param {string} name
  *        The name of the logger to instantiate.
- * @param dumpFun
+ * @param {function} [dumpFun]
  *        An underlying function to be used to log raw messages. This function
  *        will receive the complete serialized json string to log.
+ * @param {object} [scope]
+ *        The scope that the dumpFun is loaded in, so that messages are cloned
+ *        into that scope before passing them.
  */
-class StructuredLogger {
+export class StructuredLogger {
   name = null;
   #dumpFun = null;
+  #dumpScope = null;
 
-  constructor(name, dumpFun = dump) {
+  constructor(name, dumpFun = dump, scope = null) {
     this.name = name;
     this.#dumpFun = dumpFun;
+    this.#dumpScope = scope;
   }
 
   testStart(test) {
@@ -210,7 +211,11 @@ class StructuredLogger {
       allData[field] = data[field];
     }
 
-    this.#dumpFun(allData);
+    if (this.#dumpScope) {
+      this.#dumpFun(Cu.cloneInto(allData, this.#dumpScope));
+    } else {
+      this.#dumpFun(allData);
+    }
   }
 
   #testId(test) {
@@ -225,7 +230,7 @@ class StructuredLogger {
  * StructuredFormatter: Formatter class turning structured messages
  * into human-readable messages.
  */
-class StructuredFormatter {
+export class StructuredFormatter {
   // The time at which the whole suite of tests started.
   #suiteStartTime = null;
 

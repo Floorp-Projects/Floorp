@@ -48,8 +48,8 @@ const { HttpServer } = ChromeUtils.import("resource://reftest/httpd.jsm");
 const { ReadTopManifest, CreateUrls } = ChromeUtils.import(
     "resource://reftest/manifest.jsm"
 );
-const { StructuredLogger } = ChromeUtils.import(
-    "resource://reftest/StructuredLog.jsm"
+const { StructuredLogger } = ChromeUtils.importESModule(
+    "resource://reftest/StructuredLog.sys.mjs"
 );
 const { PerTestCoverageUtils } = ChromeUtils.import(
     "resource://reftest/PerTestCoverageUtils.jsm"
