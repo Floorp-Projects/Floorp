@@ -484,6 +484,7 @@ class MOZ_RAII AutoClearTracingSource {
  public:
   explicit AutoClearTracingSource(GCMarker* marker) {}
   explicit AutoClearTracingSource(JSTracer* trc) {}
+  ~AutoClearTracingSource() {}
 #else
   GCMarker* marker = nullptr;
   JS::Zone* prevZone = nullptr;
