@@ -178,6 +178,9 @@ const COMMON_PREFERENCES = new Map([
   ["dom.max_chrome_script_run_time", 0],
   ["dom.max_script_run_time", 0],
 
+  // Disable location change rate limitation
+  ["dom.navigation.locationChangeRateLimit.count", 0],
+
   // DOM Push
   ["dom.push.connection.enabled", false],
 
