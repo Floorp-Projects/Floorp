@@ -191,7 +191,7 @@ bool js::SetSourceOptions(JSContext* cx, ErrorContext* ec, ScriptSource* source,
     if (!chars) {
       return false;
     }
-    if (!source->setSourceMapURL(cx, ec, std::move(chars))) {
+    if (!source->setSourceMapURL(ec, std::move(chars))) {
       return false;
     }
   }
