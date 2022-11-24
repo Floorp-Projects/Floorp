@@ -16,8 +16,42 @@ origin:
   description: "YUV-format image scaling and conversion library"
 
   url: "https://chromium.googlesource.com/libyuv/libyuv"
-  license: "BSD-3-Clause-Clear"
 
-  # update.sh will update this value
+  # Human-readable identifier for this version/release
+  # Generally "version NNN", "tag SSS", "bookmark SSS"
   release: "master (2022-06-22 00:11:49)"
 
+  # Revision to pull in
+  # Must be a long or short commit SHA (long preferred)
+  revision: 6900494d90ae095d44405cd4cc3f346971fa69c9
+
+  # The package's license, where possible using the mnemonic from
+  # https://spdx.org/licenses/
+  # Multiple licenses can be specified (as a YAML list)
+  # A "LICENSE" file must exist containing the full license text
+  license: "BSD-3-Clause-Clear"
+
+  license-file: LICENSE
+
+updatebot:
+    maintainer-phab: chew
+    maintainer-bz: ngrunbaum@mozilla.com
+    tasks:
+      - type: vendoring
+        enabled: true
+        frequency: release
+
+vendoring:
+  url: https://chromium.googlesource.com/libyuv/libyuv/
+  source-hosting: googlesource
+  vendor-directory: media/libyuv/libyuv/
+  skip-vendoring-steps: ['update-moz-build']
+
+  exclude:
+    - .gitattributes
+    - .gitignore
+
+  patches:
+    - fix_build_errors.patch
+    - make_mjpeg_printfs_optional.patch
+    - update_gyp.patch
