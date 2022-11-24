@@ -19,7 +19,6 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ExtensionDNR: "resource://gre/modules/ExtensionDNR.jsm",
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
   WebRequestUpload: "resource://gre/modules/WebRequestUpload.jsm",
@@ -620,9 +619,6 @@ HttpObserverManager = {
     onErrorOccurred: new Map(),
     onCompleted: new Map(),
   },
-  // Whether there are any registered declarativeNetRequest rules. These DNR
-  // rules may match new requests and result in request modifications.
-  dnrActive: false,
 
   openingInitialized: false,
   beforeConnectInitialized: false,
@@ -664,11 +660,10 @@ HttpObserverManager = {
   // webRequest listeners and removing those that are no longer needed if
   // there are no more listeners for corresponding webRequest events.
   addOrRemove() {
-    let needOpening = this.listeners.onBeforeRequest.size || this.dnrActive;
+    let needOpening = this.listeners.onBeforeRequest.size;
     let needBeforeConnect =
       this.listeners.onBeforeSendHeaders.size ||
-      this.listeners.onSendHeaders.size ||
-      this.dnrActive;
+      this.listeners.onSendHeaders.size;
     if (needOpening && !this.openingInitialized) {
       this.openingInitialized = true;
       Services.obs.addObserver(this, "http-on-modify-request");
@@ -697,8 +692,7 @@ HttpObserverManager = {
     let needExamine =
       this.needTracing ||
       this.listeners.onHeadersReceived.size ||
-      this.listeners.onAuthRequired.size ||
-      this.dnrActive;
+      this.listeners.onAuthRequired.size;
 
     if (needExamine && !this.examineInitialized) {
       this.examineInitialized = true;
@@ -743,11 +737,6 @@ HttpObserverManager = {
 
   removeListener(kind, callback) {
     this.listeners[kind].delete(callback);
-    this.addOrRemove();
-  },
-
-  setDNRHandlingEnabled(dnrActive) {
-    this.dnrActive = dnrActive;
     this.addOrRemove();
   },
 
@@ -928,10 +917,6 @@ HttpObserverManager = {
       if (kind !== "onErrorOccurred" && channel.errorString) {
         return;
       }
-      if (this.dnrActive) {
-        // DNR may modify (but not cancel) the request at this stage.
-        lazy.ExtensionDNR.beforeWebRequestEvent(channel, kind);
-      }
 
       let registerFilter = this.FILTER_TYPES.has(kind);
       let commonData = null;
@@ -1025,10 +1010,6 @@ HttpObserverManager = {
       });
     } catch (e) {
       Cu.reportError(e);
-    }
-
-    if (this.dnrActive && lazy.ExtensionDNR.handleRequest(channel, kind)) {
-      return;
     }
 
     return this.applyChanges(
@@ -1306,10 +1287,6 @@ var onCompleted = new HttpEvent("onCompleted", ["responseHeaders"]);
 var onErrorOccurred = new HttpEvent("onErrorOccurred");
 
 var WebRequest = {
-  setDNRHandlingEnabled: dnrActive => {
-    HttpObserverManager.setDNRHandlingEnabled(dnrActive);
-  },
-
   onBeforeRequest,
   onBeforeSendHeaders,
   onSendHeaders,
