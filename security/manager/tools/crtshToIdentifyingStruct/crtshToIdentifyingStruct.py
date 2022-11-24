@@ -13,20 +13,17 @@ duplicates.
 Requires Python 3.
 """
 import argparse
-import re
-import requests
-import sys
 import io
+import re
+import sys
 
-from pyasn1.codec.der import decoder
-from pyasn1.codec.der import encoder
-from pyasn1_modules import pem
-from pyasn1_modules import rfc5280
-
+import requests
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.x509.oid import NameOID
+from pyasn1.codec.der import decoder, encoder
+from pyasn1_modules import pem, rfc5280
 
 assert sys.version_info >= (3, 2), "Requires Python 3.2 or later"
 

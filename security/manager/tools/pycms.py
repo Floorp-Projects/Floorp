@@ -26,15 +26,15 @@ information).
 The certificate specification must come last.
 """
 
-from pyasn1.codec.der import decoder
-from pyasn1.codec.der import encoder
-from pyasn1.type import tag, univ
-from pyasn1_modules import rfc2315, rfc2459
 import base64
+import sys
 from io import StringIO
+
 import pycert
 import pykey
-import sys
+from pyasn1.codec.der import decoder, encoder
+from pyasn1.type import tag, univ
+from pyasn1_modules import rfc2315, rfc2459
 
 
 class Error(Exception):

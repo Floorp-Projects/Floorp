@@ -4,15 +4,10 @@
 
 import os
 
+from mach.decorators import Command, CommandArgument
 from mach.util import UserError
 from mozpack.files import FileFinder
 from mozpack.path import basedir
-
-
-from mach.decorators import (
-    CommandArgument,
-    Command,
-)
 
 
 def run_module_main_on(module, input_filename):

@@ -24,11 +24,11 @@ hash: The name of a hash algorithm to use when signing. Optional.
       Defaults to 'sha256'.
 """
 
-from pyasn1.codec.der import encoder
 import binascii
-
 import os
 import sys
+
+from pyasn1.codec.der import encoder
 
 sys.path.append(
     os.path.join(os.path.dirname(__file__), "..", "..", "..", "manager", "tools")

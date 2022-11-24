@@ -7,9 +7,10 @@
 # This exists to paper over differences between gyp's `action` definitions
 # and moz.build `GENERATED_FILES` semantics.
 
-import buildconfig
 import os
 import subprocess
+
+import buildconfig
 
 
 def main(output, *inputs):
