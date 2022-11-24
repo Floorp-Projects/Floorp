@@ -17,10 +17,6 @@ const _getGeneratedRanges = dispatcher.task("getGeneratedRanges", {
 const _getGeneratedLocation = dispatcher.task("getGeneratedLocation", {
   queue: true,
 });
-const _getAllGeneratedLocations = dispatcher.task("getAllGeneratedLocations", {
-  queue: true,
-});
-
 const _getOriginalLocation = dispatcher.task("getOriginalLocation", {
   queue: true,
 });
@@ -56,10 +52,6 @@ module.exports = {
 
   getGeneratedLocation(location) {
     return _getGeneratedLocation(location);
-  },
-
-  getAllGeneratedLocations(location) {
-    return _getAllGeneratedLocations(location);
   },
 
   getOriginalLocation(location, options = {}) {
