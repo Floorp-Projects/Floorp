@@ -1014,12 +1014,22 @@ set_define(
 
 # ECMAScript Internationalization API Support (uses ICU)
 # ======================================================
-system_lib_option("--with-system-icu", help="Use system ICU")
+system_lib_option(
+    "--with-system-icu",
+    help="Use system ICU",
+    when=use_pkg_config,
+)
+
+
+@depends("--with-system-icu", when=use_pkg_config)
+def enable_system_icu_option(enable_system_icu):
+    return enable_system_icu
+
 
 system_icu = pkg_check_modules("MOZ_ICU", "icu-i18n >= 72.1", when="--with-system-icu")
 
 
-@depends("--with-system-icu")
+@depends(enable_system_icu_option)
 def in_tree_icu(system_icu):
     return not system_icu
 
