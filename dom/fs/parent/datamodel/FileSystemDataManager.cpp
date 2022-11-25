@@ -10,7 +10,6 @@
 #include "FileSystemDatabaseManagerVersion001.h"
 #include "FileSystemFileManager.h"
 #include "FileSystemHashSource.h"
-#include "GetDirectoryForOrigin.h"
 #include "SchemaVersion001.h"
 #include "fs/FileSystemConstants.h"
 #include "mozIStorageService.h"
@@ -29,6 +28,7 @@
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"
 #include "nsIFile.h"
+#include "nsIFileURL.h"
 #include "nsNetCID.h"
 #include "nsProxyRelease.h"
 #include "nsServiceManagerUtils.h"
@@ -108,71 +108,20 @@ void RemoveFileSystemDataManager(const Origin& aOrigin) {
   }
 }
 
-nsresult GetOrCreateEntry(const nsAString& aDesiredFilePath, bool& aExists,
-                          nsCOMPtr<nsIFile>& aFile,
-                          decltype(nsIFile::NORMAL_FILE_TYPE) aKind,
-                          uint32_t aPermissions) {
-  MOZ_ASSERT(!aDesiredFilePath.IsEmpty());
+/**
+ * TODO: Maybe this and CreateStorageConnection from IndexedDB could be united?
+ */
+Result<ResultConnection, QMResult> GetStorageConnection(
+    const Origin& aOrigin, const int64_t aDirectoryLockId) {
+  MOZ_ASSERT(aDirectoryLockId >= 0);
 
-  QM_TRY(MOZ_TO_RESULT(NS_NewLocalFile(aDesiredFilePath,
-                                       /* aFollowLinks */ false,
-                                       getter_AddRefs(aFile))));
-
-  QM_TRY(MOZ_TO_RESULT(aFile->Exists(&aExists)));
-  if (aExists) {
-    return NS_OK;
-  }
-
-  QM_TRY(MOZ_TO_RESULT(aFile->Create(aKind, aPermissions)));
-
-  return NS_OK;
-}
-
-nsresult GetFileSystemDirectory(const Origin& aOrigin,
-                                nsCOMPtr<nsIFile>& aDirectory) {
-  quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
-
-#if 0
-  QM_TRY_UNWRAP(aDirectory, quotaManager->GetDirectoryForOrigin(
-                                quota::PERSISTENCE_TYPE_DEFAULT, aOrigin));
-#else
-  QM_TRY_UNWRAP(aDirectory, GetDirectoryForOrigin(*quotaManager, aOrigin));
-#endif
-
-  QM_TRY(MOZ_TO_RESULT(aDirectory->AppendRelativePath(u"fs"_ns)));
-
-  return NS_OK;
-}
-
-nsresult GetFileSystemDatabaseFile(const Origin& aOrigin,
-                                   nsString& aDatabaseFile) {
-  nsCOMPtr<nsIFile> directoryPath;
-  QM_TRY(MOZ_TO_RESULT(GetFileSystemDirectory(aOrigin, directoryPath)));
-
-  QM_TRY(
-      MOZ_TO_RESULT(directoryPath->AppendRelativePath(u"metadata.sqlite"_ns)));
-
-  QM_TRY(MOZ_TO_RESULT(directoryPath->GetPath(aDatabaseFile)));
-
-  return NS_OK;
-}
-
-nsresult GetDatabasePath(const Origin& aOrigin, bool& aExists,
-                         nsCOMPtr<nsIFile>& aFile) {
-  nsString databaseFilePath;
-  QM_TRY(MOZ_TO_RESULT(GetFileSystemDatabaseFile(aOrigin, databaseFilePath)));
-
-  MOZ_ASSERT(!databaseFilePath.IsEmpty());
-
-  return GetOrCreateEntry(databaseFilePath, aExists, aFile,
-                          nsIFile::NORMAL_FILE_TYPE, 0644);
-}
-
-Result<ResultConnection, QMResult> GetStorageConnection(const Origin& aOrigin) {
   bool exists = false;
-  nsCOMPtr<nsIFile> databaseFile;
-  QM_TRY(QM_TO_RESULT(GetDatabasePath(aOrigin, exists, databaseFile)));
+  QM_TRY_INSPECT(const nsCOMPtr<nsIFile>& databaseFile,
+                 GetDatabasePath(aOrigin, exists));
+  Unused << exists;
+
+  QM_TRY_INSPECT(const auto& dbFileUrl,
+                 GetDatabaseFileURL(databaseFile, aDirectoryLockId));
 
   QM_TRY_INSPECT(
       const auto& storageService,
@@ -180,12 +129,15 @@ Result<ResultConnection, QMResult> GetStorageConnection(const Origin& aOrigin) {
           nsCOMPtr<mozIStorageService>, MOZ_SELECT_OVERLOAD(do_GetService),
           MOZ_STORAGE_SERVICE_CONTRACTID)));
 
-  const auto flags = mozIStorageService::CONNECTION_DEFAULT;
-  ResultConnection connection;
-  QM_TRY(QM_TO_RESULT(storageService->OpenDatabase(
-      databaseFile, flags, getter_AddRefs(connection))));
+  QM_TRY_UNWRAP(auto connection,
+                QM_TO_RESULT_TRANSFORM(MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
+                    nsCOMPtr<mozIStorageConnection>, storageService,
+                    OpenDatabaseWithFileURL, dbFileUrl, ""_ns,
+                    mozIStorageService::CONNECTION_DEFAULT)));
 
-  return connection;
+  ResultConnection result(connection);
+
+  return result;
 }
 
 }  // namespace
@@ -481,53 +433,54 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
 
                return BoolPromise::CreateAndResolve(true, __func__);
              })
-      ->Then(
-          MutableIOTargetPtr(), __func__,
-          [self = RefPtr<FileSystemDataManager>(this)](
-              const BoolPromise::ResolveOrRejectValue& value) mutable {
-            auto autoProxyReleaseManager = MakeScopeExit([&self] {
-              nsCOMPtr<nsISerialEventTarget> target =
-                  self->MutableBackgroundTargetPtr();
+      ->Then(MutableIOTargetPtr(), __func__,
+             [self = RefPtr<FileSystemDataManager>(this)](
+                 const BoolPromise::ResolveOrRejectValue& value) mutable {
+               auto autoProxyReleaseManager = MakeScopeExit([&self] {
+                 nsCOMPtr<nsISerialEventTarget> target =
+                     self->MutableBackgroundTargetPtr();
 
-              NS_ProxyRelease("ReleaseFileSystemDataManager", target,
-                              self.forget());
-            });
+                 NS_ProxyRelease("ReleaseFileSystemDataManager", target,
+                                 self.forget());
+               });
 
-            if (value.IsReject()) {
-              return BoolPromise::CreateAndReject(value.RejectValue(),
-                                                  __func__);
-            }
+               if (value.IsReject()) {
+                 return BoolPromise::CreateAndReject(value.RejectValue(),
+                                                     __func__);
+               }
 
-            QM_TRY_UNWRAP(
-                auto connection,
-                fs::data::GetStorageConnection(self->mOriginMetadata.mOrigin),
-                CreateAndRejectBoolPromiseFromQMResult);
+               QM_TRY_UNWRAP(
+                   auto connection,
+                   fs::data::GetStorageConnection(self->mOriginMetadata.mOrigin,
+                                                  self->mDirectoryLock->Id()),
+                   CreateAndRejectBoolPromiseFromQMResult);
 
-            QM_TRY_UNWRAP(DatabaseVersion version,
-                          SchemaVersion001::InitializeConnection(
-                              connection, self->mOriginMetadata.mOrigin),
-                          CreateAndRejectBoolPromiseFromQMResult);
+               QM_TRY_UNWRAP(DatabaseVersion version,
+                             SchemaVersion001::InitializeConnection(
+                                 connection, self->mOriginMetadata.mOrigin),
+                             CreateAndRejectBoolPromiseFromQMResult);
 
-            if (1 == version) {
-              QM_TRY_UNWRAP(FileSystemFileManager fmRes,
-                            FileSystemFileManager::CreateFileSystemFileManager(
-                                self->mOriginMetadata.mOrigin),
-                            CreateAndRejectBoolPromiseFromQMResult);
+               if (1 == version) {
+                 QM_TRY_UNWRAP(
+                     FileSystemFileManager fmRes,
+                     FileSystemFileManager::CreateFileSystemFileManager(
+                         self->mOriginMetadata.mOrigin),
+                     CreateAndRejectBoolPromiseFromQMResult);
 
-              QM_TRY_UNWRAP(
-                  EntryId rootId,
-                  fs::data::GetRootHandle(self->mOriginMetadata.mOrigin),
-                  CreateAndRejectBoolPromiseFromQMResult);
+                 QM_TRY_UNWRAP(
+                     EntryId rootId,
+                     fs::data::GetRootHandle(self->mOriginMetadata.mOrigin),
+                     CreateAndRejectBoolPromiseFromQMResult);
 
-              self->mDatabaseManager =
-                  MakeUnique<FileSystemDatabaseManagerVersion001>(
-                      self, std::move(connection),
-                      MakeUnique<FileSystemFileManager>(std::move(fmRes)),
-                      rootId);
-            }
+                 self->mDatabaseManager =
+                     MakeUnique<FileSystemDatabaseManagerVersion001>(
+                         self, std::move(connection),
+                         MakeUnique<FileSystemFileManager>(std::move(fmRes)),
+                         rootId);
+               }
 
-            return BoolPromise::CreateAndResolve(true, __func__);
-          })
+               return BoolPromise::CreateAndResolve(true, __func__);
+             })
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [self = RefPtr<FileSystemDataManager>(this)](
                  const BoolPromise::ResolveOrRejectValue& value) {
