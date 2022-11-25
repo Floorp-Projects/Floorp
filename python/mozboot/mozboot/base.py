@@ -349,18 +349,6 @@ class BaseBootstrapper(object):
         """
         pass
 
-    def ensure_fix_stacks_packages(self):
-        """
-        Install fix-stacks.
-        """
-        pass
-
-    def ensure_minidump_stackwalk_packages(self):
-        """
-        Install minidump-stackwalk.
-        """
-        pass
-
     def install_toolchain_static_analysis(self, toolchain_job):
         clang_tools_path = self.state_dir / "clang-tools"
         if not clang_tools_path.exists():

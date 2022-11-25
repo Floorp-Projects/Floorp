@@ -251,8 +251,8 @@ class Bootstrapper(object):
         # The best place to install our packages is in the state directory
         # we have.  We should have created one above in non-interactive mode.
         self.instance.auto_bootstrap(application)
-        self.instance.ensure_fix_stacks_packages()
-        self.instance.ensure_minidump_stackwalk_packages()
+        self.instance.install_toolchain_artifact("fix-stacks")
+        self.instance.install_toolchain_artifact("minidump-stackwalk")
         if not self.instance.artifact_mode:
             self.instance.ensure_clang_static_analysis_package()
             self.instance.ensure_sccache_packages()

@@ -168,9 +168,6 @@ class OSXBootstrapperLight(OSXAndroidBootstrapper, BaseBootstrapper):
     def ensure_clang_static_analysis_package(self):
         pass
 
-    def ensure_minidump_stackwalk_packages(self):
-        self.install_toolchain_artifact("minidump-stackwalk")
-
 
 class OSXBootstrapper(OSXAndroidBootstrapper, BaseBootstrapper):
     def __init__(self, version, **kwargs):
@@ -291,12 +288,6 @@ class OSXBootstrapper(OSXAndroidBootstrapper, BaseBootstrapper):
 
         self.install_toolchain_artifact(sccache.RUSTC_DIST_TOOLCHAIN, no_unpack=True)
         self.install_toolchain_artifact(sccache.CLANG_DIST_TOOLCHAIN, no_unpack=True)
-
-    def ensure_fix_stacks_packages(self):
-        self.install_toolchain_artifact("fix-stacks")
-
-    def ensure_minidump_stackwalk_packages(self):
-        self.install_toolchain_artifact("minidump-stackwalk")
 
     def install_homebrew(self):
         print(BREW_INSTALL)

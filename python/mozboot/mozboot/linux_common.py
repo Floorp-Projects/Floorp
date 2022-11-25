@@ -15,14 +15,6 @@ def is_non_x86_64():
     return platform.machine() != "x86_64"
 
 
-class FixStacksInstall(object):
-    def __init__(self, **kwargs):
-        pass
-
-    def ensure_fix_stacks_packages(self):
-        self.install_toolchain_artifact("fix-stacks")
-
-
 class ClangStaticAnalysisInstall(object):
     def __init__(self, **kwargs):
         pass
@@ -38,14 +30,6 @@ class ClangStaticAnalysisInstall(object):
         from mozboot import static_analysis
 
         self.install_toolchain_static_analysis(static_analysis.LINUX_CLANG_TIDY)
-
-
-class MinidumpStackwalkInstall(object):
-    def __init__(self, **kwargs):
-        pass
-
-    def ensure_minidump_stackwalk_packages(self):
-        self.install_toolchain_artifact("minidump-stackwalk")
 
 
 class MobileAndroidBootstrapper(object):
@@ -100,8 +84,6 @@ class MobileAndroidBootstrapper(object):
 
 class LinuxBootstrapper(
     ClangStaticAnalysisInstall,
-    FixStacksInstall,
-    MinidumpStackwalkInstall,
     MobileAndroidBootstrapper,
 ):
     def __init__(self, **kwargs):
