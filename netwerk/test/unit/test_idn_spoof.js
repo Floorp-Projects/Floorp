@@ -81,18 +81,18 @@ let testCases = [
   ["xn---123-kbjl2j0bl2k.in", "\u0939\u093f\u0928\u094d\u0926\u0940-123.in", kSafe],
 
   // Block mixed numeric + numeric lookalike (12.com, using U+0577).
-  ["xn--1-xcc.com", "1\u0577.com", kUnsafe],
+  ["xn--1-xcc.com", "1\u0577.com", kUnsafe, "DISABLED"],
 
   // Block mixed numeric lookalike + numeric (੨0.com, uses U+0A68).
   ["xn--0-6ee.com", "\u0a680.com", kUnsafe],
   // Block fully numeric lookalikes (৪੨.com using U+09EA and U+0A68).
   ["xn--47b6w.com", "\u09ea\u0a68.com", kUnsafe],
   // Block single script digit lookalikes (using three U+0A68 characters).
-  ["xn--qccaa.com", "\u0a68\u0a68\u0a68.com", kUnsafe],
+  ["xn--qccaa.com", "\u0a68\u0a68\u0a68.com", kUnsafe, "DISABLED"],
 
   // URL test with mostly numbers and one confusable character
   // Georgian 'd' 4000.com
-  ["xn--4000-pfr.com", "\u10eb4000.com", kUnsafe],
+  ["xn--4000-pfr.com", "\u10eb4000.com", kUnsafe, "DISABLED"],
 
   // What used to be 5 Aspirational scripts in the earlier versions of UAX 31.
   // UAX 31 does not define aspirational scripts any more.
@@ -126,7 +126,7 @@ let testCases = [
   // google.ru with Cyrillic o
   ["xn--ggl-tdd6ba.r", "g\u043e\u043egl\u0435.r", kUnsafe],
   // h<e with acute>llo<China in Han>.cn
-  ["xn--hllo-bpa7979ih5m.cn", "h\u00e9llo\u4e2d\u56fd.cn", kUnsafe],
+  ["xn--hllo-bpa7979ih5m.cn", "h\u00e9llo\u4e2d\u56fd.cn", kUnsafe, "DISABLED"],
   // <Greek rho><Cyrillic a><Cyrillic u>.ru
   ["xn--2xa6t2b.r", "\u03c1\u0430\u0443.r", kUnsafe],
   // Georgian + Latin
@@ -136,7 +136,7 @@ let testCases = [
   // Hangul + Latin + Han with IDN ccTLD
   ["xn--han-or0kq92gkm3c.xn--3e0b707e", "\ud55c\uae00han\u97d3.\ud55c\uad6d", kSafe],
   // non-ASCII Latin + Hangul
-  ["xn--caf-dma9024xvpg.kr", "caf\u00e9\uce74\ud398.kr", kUnsafe],
+  ["xn--caf-dma9024xvpg.kr", "caf\u00e9\uce74\ud398.kr", kUnsafe, "DISABLED"],
   // Hangul + Hiragana
   ["xn--y9j3b9855e.kr", "\ud55c\u3072\u3089.kr", kUnsafe],
   // <Hiragana>.<Hangul> is allowed because script mixing check is per label.
@@ -194,20 +194,20 @@ let testCases = [
   // Accute accent repeated
   ["xn--a-xbba.com", "a\u0301\u0301.com", kInvalid],
   // 'a' with acuted accent + another acute accent
-  ["xn--1ca20i.com", "\u00e1\u0301.com", kUnsafe],
+  ["xn--1ca20i.com", "\u00e1\u0301.com", kUnsafe, "DISABLED"],
   // Combining mark at the beginning
   ["xn--abc-fdc.jp", "\u0300abc.jp", kInvalid],
 
   // The following three are detected by |dangerous_pattern| regex, but
   // can be regarded as an extension of blocking repeated diacritic marks.
   // i followed by U+0307 (combining dot above)
-  ["xn--pixel-8fd.com", "pi\u0307xel.com", kUnsafe],
+  ["xn--pixel-8fd.com", "pi\u0307xel.com", kUnsafe, "DISABLED"],
   // U+0131 (dotless i) followed by U+0307
   ["xn--pxel-lza43z.com", "p\u0131\u0307xel.com", kUnsafe],
   // j followed by U+0307 (combining dot above)
-  ["xn--jack-qwc.com", "j\u0307ack.com", kUnsafe],
+  ["xn--jack-qwc.com", "j\u0307ack.com", kUnsafe, "DISABLED"],
   // l followed by U+0307
-  ["xn--lace-qwc.com", "l\u0307ace.com", kUnsafe],
+  ["xn--lace-qwc.com", "l\u0307ace.com", kUnsafe, "DISABLED"],
 
   // Do not allow a combining mark after dotless i/j.
   ["xn--pxel-lza29y.com", "p\u0131\u0300xel.com", kUnsafe],
@@ -221,7 +221,7 @@ let testCases = [
   // Latin 'o' in Armenian.
   ["xn--o-ybcg0cu0cq.com", "o\u0580\u0574\u0578\u0582\u0566\u0568.com", kUnsafe],
   // Hiragana HE(U+3078) mixed with Katakana
-  ["xn--49jxi3as0d0fpc.com", "\u30e2\u30d2\u30fc\u30c8\u3078\u30d6\u30f3.com", kUnsafe],
+  ["xn--49jxi3as0d0fpc.com", "\u30e2\u30d2\u30fc\u30c8\u3078\u30d6\u30f3.com", kUnsafe, "DISABLED"],
 
   // U+30FC should be preceded by a Hiragana/Katakana.
   // Katakana + U+30FC + Han
@@ -229,13 +229,13 @@ let testCases = [
   // Hiragana + U+30FC + Han
   ["xn--u8j5tr47nw5ya.jp", "\u304b\u30fc\u91ce\u7403.jp", kSafe],
   // U+30FC + Han
-  ["xn--weka801xo02a.com", "\u30fc\u52d5\u753b\u30fc.com", kUnsafe],
+  ["xn--weka801xo02a.com", "\u30fc\u52d5\u753b\u30fc.com", kUnsafe, "DISABLED"],
   // Han + U+30FC + Han
-  ["xn--wekz60nb2ay85atj0b.jp", "\u65e5\u672c\u30fc\u91ce\u7403.jp", kUnsafe],
+  ["xn--wekz60nb2ay85atj0b.jp", "\u65e5\u672c\u30fc\u91ce\u7403.jp", kUnsafe, "DISABLED"],
   // U+30FC at the beginning
-  ["xn--wek060nb2a.jp", "\u30fc\u65e5\u672c.jp", kUnsafe],
+  ["xn--wek060nb2a.jp", "\u30fc\u65e5\u672c.jp", kUnsafe, "DISABLED"],
   // Latin + U+30FC + Latin
-  ["xn--abcdef-r64e.jp", "abc\u30fcdef.jp", kUnsafe],
+  ["xn--abcdef-r64e.jp", "abc\u30fcdef.jp", kUnsafe, "DISABLED"],
 
   // U+30FB (・) is not allowed next to Latin, but allowed otherwise.
   // U+30FB + Han
@@ -243,40 +243,40 @@ let testCases = [
   // Han + U+30FB + Han
   ["xn--vek160nb2ay85atj0b.jp", "\u65e5\u672c\u30fb\u91ce\u7403.jp", kSafe],
   // Latin + U+30FB + Latin
-  ["xn--abcdef-k64e.jp", "abc\u30fbdef.jp", kUnsafe],
+  ["xn--abcdef-k64e.jp", "abc\u30fbdef.jp", kUnsafe, "DISABLED"],
   // U+30FB + Latin
-  ["xn--abc-os4b.jp", "\u30fbabc.jp", kUnsafe],
+  ["xn--abc-os4b.jp", "\u30fbabc.jp", kUnsafe, "DISABLED"],
 
   // U+30FD (ヽ) is allowed only after Katakana.
   // Katakana + U+30FD
   ["xn--lck2i.jp", "\u30ab\u30fd.jp", kSafe],
   // Hiragana + U+30FD
-  ["xn--u8j7t.jp", "\u304b\u30fd.jp", kUnsafe],
+  ["xn--u8j7t.jp", "\u304b\u30fd.jp", kUnsafe, "DISABLED"],
   // Han + U+30FD
-  ["xn--xek368f.jp", "\u4e00\u30fd.jp", kUnsafe],
-  ["xn--a-mju.jp", "a\u30fd.jp", kUnsafe],
-  ["xn--a1-bo4a.jp", "a1\u30fd.jp", kUnsafe],
+  ["xn--xek368f.jp", "\u4e00\u30fd.jp", kUnsafe, "DISABLED"],
+  ["xn--a-mju.jp", "a\u30fd.jp", kUnsafe, "DISABLED"],
+  ["xn--a1-bo4a.jp", "a1\u30fd.jp", kUnsafe, "DISABLED"],
 
   // U+30FE (ヾ) is allowed only after Katakana.
   // Katakana + U+30FE
   ["xn--lck4i.jp", "\u30ab\u30fe.jp", kSafe],
   // Hiragana + U+30FE
-  ["xn--u8j9t.jp", "\u304b\u30fe.jp", kUnsafe],
+  ["xn--u8j9t.jp", "\u304b\u30fe.jp", kUnsafe, "DISABLED"],
   // Han + U+30FE
-  ["xn--yek168f.jp", "\u4e00\u30fe.jp", kUnsafe],
-  ["xn--a-oju.jp", "a\u30fe.jp", kUnsafe],
-  ["xn--a1-eo4a.jp", "a1\u30fe.jp", kUnsafe],
+  ["xn--yek168f.jp", "\u4e00\u30fe.jp", kUnsafe, "DISABLED"],
+  ["xn--a-oju.jp", "a\u30fe.jp", kUnsafe, "DISABLED"],
+  ["xn--a1-eo4a.jp", "a1\u30fe.jp", kUnsafe, "DISABLED"],
 
   // Cyrillic labels made of Latin-look-alike Cyrillic letters.
   // 1) ѕсоре.com with ѕсоре in Cyrillic.
-  ["xn--e1argc3h.com", "\u0455\u0441\u043e\u0440\u0435.com", kUnsafe],
+  ["xn--e1argc3h.com", "\u0455\u0441\u043e\u0440\u0435.com", kUnsafe, "DISABLED"],
   // 2) ѕсоре123.com with ѕсоре in Cyrillic.
-  ["xn--123-qdd8bmf3n.com", "\u0455\u0441\u043e\u0440\u0435123.com", kUnsafe],
+  ["xn--123-qdd8bmf3n.com", "\u0455\u0441\u043e\u0440\u0435123.com", kUnsafe, "DISABLED"],
   // 3) ѕсоре-рау.com with ѕсоре and рау in Cyrillic.
-  ["xn----8sbn9akccw8m.com",     "\u0455\u0441\u043e\u0440\u0435-\u0440\u0430\u0443.com", kUnsafe],
+  ["xn----8sbn9akccw8m.com",     "\u0455\u0441\u043e\u0440\u0435-\u0440\u0430\u0443.com", kUnsafe, "DISABLED"],
   // 4) ѕсоре1рау.com with scope and pay in Cyrillic and a non-letter between
   // them.
-  ["xn--1-8sbn9akccw8m.com",     "\u0455\u0441\u043e\u0440\u0435\u0031\u0440\u0430\u0443.com", kUnsafe],
+  ["xn--1-8sbn9akccw8m.com",     "\u0455\u0441\u043e\u0440\u0435\u0031\u0440\u0430\u0443.com", kUnsafe, "DISABLED"],
 
   // The same as above three, but in IDN TLD (рф).
   // 1) ѕсоре.рф with ѕсоре in Cyrillic.
@@ -302,23 +302,23 @@ let testCases = [
 
   // ѕсоре-рау.한국 with ѕсоре and рау in Cyrillic. The label will remain
   // punycode while the TLD will be decoded.
-  ["xn----8sbn9akccw8m.xn--3e0b707e", "xn----8sbn9akccw8m.\ud55c\uad6d", kSafe],
+  ["xn----8sbn9akccw8m.xn--3e0b707e", "xn----8sbn9akccw8m.\ud55c\uad6d", kSafe, "DISABLED"],
 
   // музей (museum in Russian) has characters without a Latin-look-alike.
   ["xn--e1adhj9a.com", "\u043c\u0443\u0437\u0435\u0439.com", kSafe],
 
   // ѕсоԗе.com is Cyrillic with Latin lookalikes.
-  ["xn--e1ari3f61c.com", "\u0455\u0441\u043e\u0517\u0435.com", kUnsafe],
+  ["xn--e1ari3f61c.com", "\u0455\u0441\u043e\u0517\u0435.com", kUnsafe, "DISABLED"],
 
   // ыоԍ.com is Cyrillic with Latin lookalikes.
   ["xn--n1az74c.com", "\u044b\u043e\u050d.com", kUnsafe],
 
   // сю.com is Cyrillic with Latin lookalikes.
-  ["xn--q1a0a.com", "\u0441\u044e.com", kUnsafe],
+  ["xn--q1a0a.com", "\u0441\u044e.com", kUnsafe, "DISABLED"],
 
   // Regression test for lowercase letters in whole script confusable
   // lookalike character lists.
-  ["xn--80a8a6a.com", "\u0430\u044c\u0441.com", kUnsafe],
+  ["xn--80a8a6a.com", "\u0430\u044c\u0441.com", kUnsafe, "DISABLED"],
 
   // googlе.한국 where е is Cyrillic. This tests the generic case when one
   // label is not allowed but  other labels in the domain name are still
@@ -326,35 +326,35 @@ let testCases = [
   ["xn--googl-3we.xn--3e0b707e", "xn--googl-3we.\ud55c\uad6d", kSafe],
 
   // Combining Diacritic marks after a script other than Latin-Greek-Cyrillic
-  ["xn--rsa2568fvxya.com", "\ud55c\u0307\uae00.com", kUnsafe],  // 한́글.com
-  ["xn--rsa0336bjom.com", "\u6f22\u0307\u5b57.com", kUnsafe],  // 漢̇字.com
+  ["xn--rsa2568fvxya.com", "\ud55c\u0307\uae00.com", kUnsafe, "DISABLED"],  // 한́글.com
+  ["xn--rsa0336bjom.com", "\u6f22\u0307\u5b57.com", kUnsafe, "DISABLED"],  // 漢̇字.com
   // नागरी́.com
-  ["xn--lsa922apb7a6do.com", "\u0928\u093e\u0917\u0930\u0940\u0301.com", kUnsafe],
+  ["xn--lsa922apb7a6do.com", "\u0928\u093e\u0917\u0930\u0940\u0301.com", kUnsafe, "DISABLED"],
 
   // Similarity checks against the list of top domains. "digklmo68.com" and
   // 'digklmo68.co.uk" are listed for unittest in the top domain list.
   // đigklmo68.com:
-  ["xn--igklmo68-kcb.com", "\u0111igklmo68.com", kUnsafe],
+  ["xn--igklmo68-kcb.com", "\u0111igklmo68.com", kUnsafe, "DISABLED"],
   // www.đigklmo68.com:
-  ["www.xn--igklmo68-kcb.com", "www.\u0111igklmo68.com", kUnsafe],
+  ["www.xn--igklmo68-kcb.com", "www.\u0111igklmo68.com", kUnsafe, "DISABLED"],
   // foo.bar.đigklmo68.com:
-  ["foo.bar.xn--igklmo68-kcb.com", "foo.bar.\u0111igklmo68.com", kUnsafe],
+  ["foo.bar.xn--igklmo68-kcb.com", "foo.bar.\u0111igklmo68.com", kUnsafe, "DISABLED"],
   // đigklmo68.co.uk:
-  ["xn--igklmo68-kcb.co.uk", "\u0111igklmo68.co.uk", kUnsafe],
+  ["xn--igklmo68-kcb.co.uk", "\u0111igklmo68.co.uk", kUnsafe, "DISABLED"],
   // mail.đigklmo68.co.uk:
-  ["mail.xn--igklmo68-kcb.co.uk", "mail.\u0111igklmo68.co.uk", kUnsafe],
+  ["mail.xn--igklmo68-kcb.co.uk", "mail.\u0111igklmo68.co.uk", kUnsafe, "DISABLED"],
   // di̇gklmo68.com:
-  ["xn--digklmo68-6jf.com", "di\u0307gklmo68.com", kUnsafe],
+  ["xn--digklmo68-6jf.com", "di\u0307gklmo68.com", kUnsafe, "DISABLED"],
   // dig̱klmo68.com:
-  ["xn--digklmo68-7vf.com", "dig\u0331klmo68.com", kUnsafe],
+  ["xn--digklmo68-7vf.com", "dig\u0331klmo68.com", kUnsafe, "DISABLED"],
   // digĸlmo68.com:
   ["xn--diglmo68-omb.com", "dig\u0138lmo68.com", kUnsafe],
   // digkłmo68.com:
-  ["xn--digkmo68-9ob.com", "digk\u0142mo68.com", kUnsafe],
+  ["xn--digkmo68-9ob.com", "digk\u0142mo68.com", kUnsafe, "DISABLED"],
   // digklṃo68.com:
-  ["xn--digklo68-l89c.com", "digkl\u1e43o68.com", kUnsafe],
+  ["xn--digklo68-l89c.com", "digkl\u1e43o68.com", kUnsafe, "DISABLED"],
   // digklmø68.com:
-  ["xn--digklm68-b5a.com", "digklm\u00f868.com", kUnsafe],
+  ["xn--digklm68-b5a.com", "digklm\u00f868.com", kUnsafe, "DISABLED"],
   // digklmoб8.com:
   ["xn--digklmo8-h7g.com", "digklmo\u04318.com", kUnsafe],
   // digklmo6৪.com:
@@ -362,7 +362,7 @@ let testCases = [
 
   // 'islkpx123.com' is in the test domain list.
   // 'іѕӏкрх123' can look like 'islkpx123' in some fonts.
-  ["xn--123-bed4a4a6hh40i.com",     "\u0456\u0455\u04cf\u043a\u0440\u0445123.com", kUnsafe],
+  ["xn--123-bed4a4a6hh40i.com",     "\u0456\u0455\u04cf\u043a\u0440\u0445123.com", kUnsafe, "DISABLED"],
 
   // 'o2.com', '28.com', '39.com', '43.com', '89.com', 'oo.com' and 'qq.com'
   // are all explicitly added to the test domain list to aid testing of
@@ -370,117 +370,117 @@ let testCases = [
   // edge cases.
   //
   // Bengali:
-  ["xn--07be.com", "\u09e6\u09e8.com", kUnsafe],
-  ["xn--27be.com", "\u09e8\u09ea.com", kUnsafe],
-  ["xn--77ba.com", "\u09ed\u09ed.com", kUnsafe],
+  ["xn--07be.com", "\u09e6\u09e8.com", kUnsafe, "DISABLED"],
+  ["xn--27be.com", "\u09e8\u09ea.com", kUnsafe, "DISABLED"],
+  ["xn--77ba.com", "\u09ed\u09ed.com", kUnsafe, "DISABLED"],
   // Gurmukhi:
-  ["xn--qcce.com", "\u0a68\u0a6a.com", kUnsafe],
-  ["xn--occe.com", "\u0a66\u0a68.com", kUnsafe],
-  ["xn--rccd.com", "\u0a6b\u0a69.com", kUnsafe],
-  ["xn--pcca.com", "\u0a67\u0a67.com", kUnsafe],
+  ["xn--qcce.com", "\u0a68\u0a6a.com", kUnsafe, "DISABLED"],
+  ["xn--occe.com", "\u0a66\u0a68.com", kUnsafe, "DISABLED"],
+  ["xn--rccd.com", "\u0a6b\u0a69.com", kUnsafe, "DISABLED"],
+  ["xn--pcca.com", "\u0a67\u0a67.com", kUnsafe, "DISABLED"],
   // Telugu:
-  ["xn--drcb.com", "\u0c69\u0c68.com", kUnsafe],
+  ["xn--drcb.com", "\u0c69\u0c68.com", kUnsafe, "DISABLED"],
   // Devanagari:
-  ["xn--d4be.com", "\u0966\u0968.com", kUnsafe],
+  ["xn--d4be.com", "\u0966\u0968.com", kUnsafe, "DISABLED"],
   // Kannada:
-  ["xn--yucg.com", "\u0ce6\u0ce9.com", kUnsafe],
-  ["xn--yuco.com", "\u0ce6\u0ced.com", kUnsafe],
+  ["xn--yucg.com", "\u0ce6\u0ce9.com", kUnsafe, "DISABLED"],
+  ["xn--yuco.com", "\u0ce6\u0ced.com", kUnsafe, "DISABLED"],
   // Oriya:
-  ["xn--1jcf.com", "\u0b6b\u0b68.com", kUnsafe],
-  ["xn--zjca.com", "\u0b66\u0b66.com", kUnsafe],
+  ["xn--1jcf.com", "\u0b6b\u0b68.com", kUnsafe, "DISABLED"],
+  ["xn--zjca.com", "\u0b66\u0b66.com", kUnsafe, "DISABLED"],
   // Gujarati:
-  ["xn--cgce.com", "\u0ae6\u0ae8.com", kUnsafe],
-  ["xn--fgci.com", "\u0ae9\u0aed.com", kUnsafe],
-  ["xn--dgca.com", "\u0ae7\u0ae7.com", kUnsafe],
+  ["xn--cgce.com", "\u0ae6\u0ae8.com", kUnsafe, "DISABLED"],
+  ["xn--fgci.com", "\u0ae9\u0aed.com", kUnsafe, "DISABLED"],
+  ["xn--dgca.com", "\u0ae7\u0ae7.com", kUnsafe, "DISABLED"],
 
   // wmhtb.com
-  ["xn--l1acpvx.com", "\u0448\u043c\u043d\u0442\u044c.com", kUnsafe],
+  ["xn--l1acpvx.com", "\u0448\u043c\u043d\u0442\u044c.com", kUnsafe, "DISABLED"],
   // щмнть.com
-  ["xn--l1acpzs.com", "\u0449\u043c\u043d\u0442\u044c.com", kUnsafe],
+  ["xn--l1acpzs.com", "\u0449\u043c\u043d\u0442\u044c.com", kUnsafe, "DISABLED"],
   // шмнтв.com
-  ["xn--b1atdu1a.com", "\u0448\u043c\u043d\u0442\u0432.com", kUnsafe],
+  ["xn--b1atdu1a.com", "\u0448\u043c\u043d\u0442\u0432.com", kUnsafe, "DISABLED"],
   // шмԋтв.com
   ["xn--b1atsw09g.com", "\u0448\u043c\u050b\u0442\u0432.com", kUnsafe],
   // шмԧтв.com
-  ["xn--b1atsw03i.com", "\u0448\u043c\u0527\u0442\u0432.com", kUnsafe],
+  ["xn--b1atsw03i.com", "\u0448\u043c\u0527\u0442\u0432.com", kUnsafe, "DISABLED"],
   // шмԋԏв.com
   ["xn--b1at9a12dua.com", "\u0448\u043c\u050b\u050f\u0432.com", kUnsafe],
   // ഠട345.com
-  ["xn--345-jtke.com", "\u0d20\u0d1f345.com", kUnsafe],
+  ["xn--345-jtke.com", "\u0d20\u0d1f345.com", kUnsafe, "DISABLED"],
 
   // Test additional confusable LGC characters (most of them without
   // decomposition into base + diacritc mark). The corresponding ASCII
   // domain names are in the test top domain list.
   // ϼκαωχ.com
-  ["xn--mxar4bh6w.com", "\u03fc\u03ba\u03b1\u03c9\u03c7.com", kUnsafe],
+  ["xn--mxar4bh6w.com", "\u03fc\u03ba\u03b1\u03c9\u03c7.com", kUnsafe, "DISABLED"],
   // þħĸŧƅ.com
   ["xn--vda6f3b2kpf.com", "\u00fe\u0127\u0138\u0167\u0185.com", kUnsafe],
   // þhktb.com
-  ["xn--hktb-9ra.com", "\u00fehktb.com", kUnsafe],
+  ["xn--hktb-9ra.com", "\u00fehktb.com", kUnsafe, "DISABLED"],
   // pħktb.com
-  ["xn--pktb-5xa.com", "p\u0127ktb.com", kUnsafe],
+  ["xn--pktb-5xa.com", "p\u0127ktb.com", kUnsafe, "DISABLED"],
   // phĸtb.com
   ["xn--phtb-m0a.com", "ph\u0138tb.com", kUnsafe],
   // phkŧb.com
-  ["xn--phkb-d7a.com", "phk\u0167b.com", kUnsafe],
+  ["xn--phkb-d7a.com", "phk\u0167b.com", kUnsafe, "DISABLED"],
   // phktƅ.com
   ["xn--phkt-ocb.com", "phkt\u0185.com", kUnsafe],
   // ҏнкть.com
-  ["xn--j1afq4bxw.com", "\u048f\u043d\u043a\u0442\u044c.com", kUnsafe],
+  ["xn--j1afq4bxw.com", "\u048f\u043d\u043a\u0442\u044c.com", kUnsafe, "DISABLED"],
   // ҏћкть.com
-  ["xn--j1aq4a7cvo.com", "\u048f\u045b\u043a\u0442\u044c.com", kUnsafe],
+  ["xn--j1aq4a7cvo.com", "\u048f\u045b\u043a\u0442\u044c.com", kUnsafe, "DISABLED"],
   // ҏңкть.com
-  ["xn--j1aq4azund.com", "\u048f\u04a3\u043a\u0442\u044c.com", kUnsafe],
+  ["xn--j1aq4azund.com", "\u048f\u04a3\u043a\u0442\u044c.com", kUnsafe, "DISABLED"],
   // ҏҥкть.com
-  ["xn--j1aq4azuxd.com", "\u048f\u04a5\u043a\u0442\u044c.com", kUnsafe],
+  ["xn--j1aq4azuxd.com", "\u048f\u04a5\u043a\u0442\u044c.com", kUnsafe, "DISABLED"],
   // ҏӈкть.com
-  ["xn--j1aq4azuyj.com", "\u048f\u04c8\u043a\u0442\u044c.com", kUnsafe],
+  ["xn--j1aq4azuyj.com", "\u048f\u04c8\u043a\u0442\u044c.com", kUnsafe, "DISABLED"],
   // ҏԧкть.com
-  ["xn--j1aq4azu9z.com", "\u048f\u0527\u043a\u0442\u044c.com", kUnsafe],
+  ["xn--j1aq4azu9z.com", "\u048f\u0527\u043a\u0442\u044c.com", kUnsafe, "DISABLED"],
   // ҏԩкть.com
-  ["xn--j1aq4azuq0a.com", "\u048f\u0529\u043a\u0442\u044c.com", kUnsafe],
+  ["xn--j1aq4azuq0a.com", "\u048f\u0529\u043a\u0442\u044c.com", kUnsafe, "DISABLED"],
   // ҏнқть.com
-  ["xn--m1ak4azu6b.com", "\u048f\u043d\u049b\u0442\u044c.com", kUnsafe],
+  ["xn--m1ak4azu6b.com", "\u048f\u043d\u049b\u0442\u044c.com", kUnsafe, "DISABLED"],
   // ҏнҝть.com
-  ["xn--m1ak4azunc.com", "\u048f\u043d\u049d\u0442\u044c.com", kUnsafe],
+  ["xn--m1ak4azunc.com", "\u048f\u043d\u049d\u0442\u044c.com", kUnsafe, "DISABLED"],
   // ҏнҟть.com
-  ["xn--m1ak4azuxc.com", "\u048f\u043d\u049f\u0442\u044c.com", kUnsafe],
+  ["xn--m1ak4azuxc.com", "\u048f\u043d\u049f\u0442\u044c.com", kUnsafe, "DISABLED"],
   // ҏнҡть.com
-  ["xn--m1ak4azu7c.com", "\u048f\u043d\u04a1\u0442\u044c.com", kUnsafe],
+  ["xn--m1ak4azu7c.com", "\u048f\u043d\u04a1\u0442\u044c.com", kUnsafe, "DISABLED"],
   // ҏнӄть.com
-  ["xn--m1ak4azu8i.com", "\u048f\u043d\u04c4\u0442\u044c.com", kUnsafe],
+  ["xn--m1ak4azu8i.com", "\u048f\u043d\u04c4\u0442\u044c.com", kUnsafe, "DISABLED"],
   // ҏнԟть.com
-  ["xn--m1ak4azuzy.com", "\u048f\u043d\u051f\u0442\u044c.com", kUnsafe],
+  ["xn--m1ak4azuzy.com", "\u048f\u043d\u051f\u0442\u044c.com", kUnsafe, "DISABLED"],
   // ҏнԟҭь.com
-  ["xn--m1a4a4nnery.com", "\u048f\u043d\u051f\u04ad\u044c.com", kUnsafe],
+  ["xn--m1a4a4nnery.com", "\u048f\u043d\u051f\u04ad\u044c.com", kUnsafe, "DISABLED"],
   // ҏнԟҭҍ.com
-  ["xn--m1a4ne5jry.com", "\u048f\u043d\u051f\u04ad\u048d.com", kUnsafe],
+  ["xn--m1a4ne5jry.com", "\u048f\u043d\u051f\u04ad\u048d.com", kUnsafe, "DISABLED"],
   // ҏнԟҭв.com
-  ["xn--b1av9v8dry.com", "\u048f\u043d\u051f\u04ad\u0432.com", kUnsafe],
+  ["xn--b1av9v8dry.com", "\u048f\u043d\u051f\u04ad\u0432.com", kUnsafe, "DISABLED"],
   // ҏӊԟҭв.com
-  ["xn--b1a9p8c1e8r.com", "\u048f\u04ca\u051f\u04ad\u0432.com", kUnsafe],
+  ["xn--b1a9p8c1e8r.com", "\u048f\u04ca\u051f\u04ad\u0432.com", kUnsafe, "DISABLED"],
   // wmŋr.com
-  ["xn--wmr-jxa.com", "wm\u014br.com", kUnsafe],
+  ["xn--wmr-jxa.com", "wm\u014br.com", kUnsafe, "DISABLED"],
   // шмпґ.com
-  ["xn--l1agz80a.com", "\u0448\u043c\u043f\u0491.com", kUnsafe],
+  ["xn--l1agz80a.com", "\u0448\u043c\u043f\u0491.com", kUnsafe, "DISABLED"],
   // щмпґ.com
-  ["xn--l1ag2a0y.com", "\u0449\u043c\u043f\u0491.com", kUnsafe],
+  ["xn--l1ag2a0y.com", "\u0449\u043c\u043f\u0491.com", kUnsafe, "DISABLED"],
   // щӎпґ.com
-  ["xn--o1at1tsi.com", "\u0449\u04ce\u043f\u0491.com", kUnsafe],
+  ["xn--o1at1tsi.com", "\u0449\u04ce\u043f\u0491.com", kUnsafe, "DISABLED"],
   // ґғ.com
-  ["xn--03ae.com", "\u0491\u0493.com", kUnsafe],
+  ["xn--03ae.com", "\u0491\u0493.com", kUnsafe, "DISABLED"],
   // ґӻ.com
-  ["xn--03a6s.com", "\u0491\u04fb.com", kUnsafe],
+  ["xn--03a6s.com", "\u0491\u04fb.com", kUnsafe, "DISABLED"],
   // ҫұҳҽ.com
-  ["xn--r4amg4b.com", "\u04ab\u04b1\u04b3\u04bd.com", kUnsafe],
+  ["xn--r4amg4b.com", "\u04ab\u04b1\u04b3\u04bd.com", kUnsafe, "DISABLED"],
   // ҫұӽҽ.com
-  ["xn--r4am0b8r.com", "\u04ab\u04b1\u04fd\u04bd.com", kUnsafe],
+  ["xn--r4am0b8r.com", "\u04ab\u04b1\u04fd\u04bd.com", kUnsafe, "DISABLED"],
   // ҫұӿҽ.com
-  ["xn--r4am0b3s.com", "\u04ab\u04b1\u04ff\u04bd.com", kUnsafe],
+  ["xn--r4am0b3s.com", "\u04ab\u04b1\u04ff\u04bd.com", kUnsafe, "DISABLED"],
   // ҫұӿҿ.com
-  ["xn--r4am6b4p.com", "\u04ab\u04b1\u04ff\u04bf.com", kUnsafe],
+  ["xn--r4am6b4p.com", "\u04ab\u04b1\u04ff\u04bf.com", kUnsafe, "DISABLED"],
   // ҫұӿє.com
-  ["xn--91a7osa62a.com", "\u04ab\u04b1\u04ff\u0454.com", kUnsafe],
+  ["xn--91a7osa62a.com", "\u04ab\u04b1\u04ff\u0454.com", kUnsafe, "DISABLED"],
   // ӏԃԍ.com
   ["xn--s5a8h4a.com", "\u04cf\u0503\u050d.com", kUnsafe],
 
@@ -495,83 +495,83 @@ let testCases = [
   ["xn--s5a8h3a.com", "\u04cf\u050d\u0503.com", kUnsafe],
 
   // 1շ34567890.com
-  ["xn--134567890-gnk.com", "1\u057734567890.com", kUnsafe],
+  ["xn--134567890-gnk.com", "1\u057734567890.com", kUnsafe, "DISABLED"],
   // ꓲ2345б7890.com
   ["xn--23457890-e7g93622b.com", "\ua4f22345\u04317890.com", kUnsafe],
   // 1ᒿ345б7890.com
   ["xn--13457890-e7g0943b.com", "1\u14bf345\u04317890.com", kUnsafe],
   // 12з4567890.com
-  ["xn--124567890-10h.com", "12\u04374567890.com", kUnsafe],
+  ["xn--124567890-10h.com", "12\u04374567890.com", kUnsafe, "DISABLED"],
   // 12ҙ4567890.com
-  ["xn--124567890-1ti.com", "12\u04994567890.com", kUnsafe],
+  ["xn--124567890-1ti.com", "12\u04994567890.com", kUnsafe, "DISABLED"],
   // 12ӡ4567890.com
-  ["xn--124567890-mfj.com", "12\u04e14567890.com", kUnsafe],
+  ["xn--124567890-mfj.com", "12\u04e14567890.com", kUnsafe, "DISABLED"],
   // 12उ4567890.com
-  ["xn--124567890-m3r.com", "12\u09094567890.com", kUnsafe],
+  ["xn--124567890-m3r.com", "12\u09094567890.com", kUnsafe, "DISABLED"],
   // 12ও4567890.com
-  ["xn--124567890-17s.com", "12\u09934567890.com", kUnsafe],
+  ["xn--124567890-17s.com", "12\u09934567890.com", kUnsafe, "DISABLED"],
   // 12ਤ4567890.com
-  ["xn--124567890-hfu.com", "12\u0a244567890.com", kUnsafe],
+  ["xn--124567890-hfu.com", "12\u0a244567890.com", kUnsafe, "DISABLED"],
   // 12ဒ4567890.com
-  ["xn--124567890-6s6a.com", "12\u10124567890.com", kUnsafe],
+  ["xn--124567890-6s6a.com", "12\u10124567890.com", kUnsafe, "DISABLED"],
   // 12ვ4567890.com
-  ["xn--124567890-we8a.com", "12\u10D54567890.com", kUnsafe],
+  ["xn--124567890-we8a.com", "12\u10D54567890.com", kUnsafe, "DISABLED"],
   // 12პ4567890.com
-  ["xn--124567890-hh8a.com", "12\u10DE4567890.com", kUnsafe],
+  ["xn--124567890-hh8a.com", "12\u10DE4567890.com", kUnsafe, "DISABLED"],
   // 123ㄐ567890.com
-  ["xn--123567890-dr5h.com", "123ㄐ567890.com", kUnsafe],
+  ["xn--123567890-dr5h.com", "123ㄐ567890.com", kUnsafe, "DISABLED"],
   // 123Ꮞ567890.com
   ["xn--123567890-dm4b.com", "123\u13ce567890.com", kUnsafe],
   // 12345б7890.com
-  ["xn--123457890-fzh.com", "12345\u04317890.com", kUnsafe],
+  ["xn--123457890-fzh.com", "12345\u04317890.com", kUnsafe, "DISABLED"],
   // 12345ճ7890.com
-  ["xn--123457890-fmk.com", "12345ճ7890.com", kUnsafe],
+  ["xn--123457890-fmk.com", "12345ճ7890.com", kUnsafe, "DISABLED"],
   // 1234567ȣ90.com
   ["xn--123456790-6od.com", "1234567\u022390.com", kUnsafe],
   // 12345678୨0.com
   ["xn--123456780-71w.com", "12345678\u0b680.com", kUnsafe],
   // 123456789ଠ.com
-  ["xn--123456789-ohw.com", "123456789\u0b20.com", kUnsafe],
+  ["xn--123456789-ohw.com", "123456789\u0b20.com", kUnsafe, "DISABLED"],
   // 123456789ꓳ.com
   ["xn--123456789-tx75a.com", "123456789\ua4f3.com", kUnsafe],
 
   // aeœ.com
-  ["xn--ae-fsa.com", "ae\u0153.com", kUnsafe],
+  ["xn--ae-fsa.com", "ae\u0153.com", kUnsafe, "DISABLED"],
   // æce.com
-  ["xn--ce-0ia.com", "\u00e6ce.com", kUnsafe],
+  ["xn--ce-0ia.com", "\u00e6ce.com", kUnsafe, "DISABLED"],
   // æœ.com
-  ["xn--6ca2t.com", "\u00e6\u0153.com", kUnsafe],
+  ["xn--6ca2t.com", "\u00e6\u0153.com", kUnsafe, "DISABLED"],
   // ӕԥ.com
-  ["xn--y5a4n.com", "\u04d5\u0525.com", kUnsafe],
+  ["xn--y5a4n.com", "\u04d5\u0525.com", kUnsafe, "DISABLED"],
 
   // ငၔဌ၂ဝ.com (entirely made of Myanmar characters)
-  ["xn--ridq5c9hnd.com", "\u1004\u1054\u100c\u1042\u101d.com", kUnsafe],
+  ["xn--ridq5c9hnd.com", "\u1004\u1054\u100c\u1042\u101d.com", kUnsafe, "DISABLED"],
 
   // ฟรฟร.com (made of two Thai characters. similar to wsws.com in
   // some fonts)
-  ["xn--w3calb.com", "\u0e1f\u0e23\u0e1f\u0e23.com", kUnsafe],
+  ["xn--w3calb.com", "\u0e1f\u0e23\u0e1f\u0e23.com", kUnsafe, "DISABLED"],
   // พรบ.com
-  ["xn--r3chp.com", "\u0e1e\u0e23\u0e1a.com", kUnsafe],
+  ["xn--r3chp.com", "\u0e1e\u0e23\u0e1a.com", kUnsafe, "DISABLED"],
   // ฟรบ.com
-  ["xn--r3cjm.com", "\u0e1f\u0e23\u0e1a.com", kUnsafe],
+  ["xn--r3cjm.com", "\u0e1f\u0e23\u0e1a.com", kUnsafe, "DISABLED"],
 
   // Lao characters that look like w, s, o, and u.
   // ພຣບ.com
-  ["xn--f7chp.com", "\u0e9e\u0ea3\u0e9a.com", kUnsafe],
+  ["xn--f7chp.com", "\u0e9e\u0ea3\u0e9a.com", kUnsafe, "DISABLED"],
   // ຟຣບ.com
-  ["xn--f7cjm.com", "\u0e9f\u0ea3\u0e9a.com", kUnsafe],
+  ["xn--f7cjm.com", "\u0e9f\u0ea3\u0e9a.com", kUnsafe, "DISABLED"],
   // ຟຮບ.com
-  ["xn--f7cj9b.com", "\u0e9f\u0eae\u0e9a.com", kUnsafe],
+  ["xn--f7cj9b.com", "\u0e9f\u0eae\u0e9a.com", kUnsafe, "DISABLED"],
   // ຟຮ໐ບ.com
-  ["xn--f7cj9b5h.com", "\u0e9f\u0eae\u0ed0\u0e9a.com", kUnsafe],
+  ["xn--f7cj9b5h.com", "\u0e9f\u0eae\u0ed0\u0e9a.com", kUnsafe, "DISABLED"],
 
   // Lao character that looks like n.
   // ก11.com
-  ["xn--11-lqi.com", "\u0e0111.com", kUnsafe],
+  ["xn--11-lqi.com", "\u0e0111.com", kUnsafe, "DISABLED"],
 
   // At one point the skeleton of 'w' was 'vv', ensure that
   // that it's treated as 'w'.
-  ["xn--wder-qqa.com", "w\u00f3der.com", kUnsafe],
+  ["xn--wder-qqa.com", "w\u00f3der.com", kUnsafe, "DISABLED"],
 
   // Mixed digits: the first two will also fail mixed script test
   // Latin + ASCII digit + Deva digit
@@ -584,7 +584,7 @@ let testCases = [
   ["xn--e4b0x.co.in", "\u0967\u09e7.co.in", kUnsafe],
   // U+4E00 (CJK Ideograph One) is not a digit, but it's not allowed next to
   // non-Kana scripts including numbers.
-  ["xn--d12-s18d.cn", "d12\u4e00.cn", kUnsafe],
+  ["xn--d12-s18d.cn", "d12\u4e00.cn", kUnsafe, "DISABLED"],
   // One that's really long that will force a buffer realloc
   ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", kSafe],
 
@@ -644,7 +644,7 @@ let testCases = [
   // Hyphenation Point instead of Katakana Middle dot
   ["xn--svgy16dha.jp", "\u30a1\u2027\u30a3.jp", kUnsafe],
   // Gershayim with other Hebrew characters is allowed.
-  ["xn--5db6bh9b.il", "\u05e9\u05d1\u05f4\u05e6.il", kSafe],
+  ["xn--5db6bh9b.il", "\u05e9\u05d1\u05f4\u05e6.il", kSafe, "DISABLED"],
   // Hebrew Gershayim with Latin is invalid according to Python's idna
   // package.
   ["xn--ab-yod.com", "a\u05f4b.com", kInvalid],
@@ -655,7 +655,7 @@ let testCases = [
   // Tibetan transliteration characters.
   ["xn--com-lum.test.pl", "com\u0f8c.test.pl", kUnsafe],
   // Arabic letter KASHMIRI YEH
-  ["xn--fgb.com", "\u0620.com", kUnsafe],
+  ["xn--fgb.com", "\u0620.com", kUnsafe, "DISABLED"],
 // #endif
 
   // Hyphens (http://unicode.org/cldr/utility/confusables.jsp?a=-)
@@ -708,9 +708,9 @@ let testCases = [
 
   // Block single/double-quote-like characters.
   // U+02BB (ʻ)
-  ["xn--ab-8nb.com", "a\u02bbb.com", kUnsafe],
+  ["xn--ab-8nb.com", "a\u02bbb.com", kUnsafe, "DISABLED"],
   // U+02BC (ʼ)
-  ["xn--ab-cob.com", "a\u02bcb.com", kUnsafe],
+  ["xn--ab-cob.com", "a\u02bcb.com", kUnsafe, "DISABLED"],
   // U+144A: Not allowed to mix with scripts other than Canadian Syllabics.
   ["xn--ab-jom.com", "a\u144ab.com", kUnsafe],
   ["xn--xcec9s.com", "\u1401\u144a\u1402.com", kUnsafe],
@@ -719,12 +719,12 @@ let testCases = [
   // Two Katakana-Hiragana combining mark in a row
   ["google.xn--com-oh4ba.evil.jp", "google.com\u309a\u309a.evil.jp", kUnsafe],
   // Katakana Letter No not enclosed by {Han,Hiragana,Katakana}.
-  ["google.xn--comevil-v04f.jp", "google.com\u30ceevil.jp", kUnsafe],
+  ["google.xn--comevil-v04f.jp", "google.com\u30ceevil.jp", kUnsafe, "DISABLED"],
   // TODO(jshin): Review the danger of allowing the following two.
   // Hiragana 'No' by itself is allowed.
   ["xn--ldk.jp", "\u30ce.jp", kSafe],
   // Hebrew Gershayim used by itself is allowed.
-  ["xn--5eb.il", "\u05f4.il", kSafe],
+  ["xn--5eb.il", "\u05f4.il", kSafe, "DISABLED"],
 
   // Block RTL nonspacing marks (NSM) after unrelated scripts.
   ["xn--foog-ycg.com", "foog\u0650.com", kUnsafe],    // Latin + Arabic N]M
@@ -738,9 +738,9 @@ let testCases = [
   // and the latter two are mapped away. However, the punycode form should
   // remain in punycode.
   // U+00DF(sharp-s)
-  ["xn--fu-hia.de", "fu\u00df.de", kUnsafe],
+  ["xn--fu-hia.de", "fu\u00df.de", kUnsafe, "DISABLED"],
   // U+03C2(final-sigma)
-  ["xn--mxac2c.gr", "\u03b1\u03b2\u03c2.gr", kUnsafe],
+  ["xn--mxac2c.gr", "\u03b1\u03b2\u03c2.gr", kUnsafe, "DISABLED"],
   // U+200C(ZWNJ)
   ["xn--h2by8byc123p.in", "\u0924\u094d\u200c\u0930\u093f.in", kUnsafe],
   // U+200C(ZWJ)
@@ -782,13 +782,13 @@ let testCases = [
 
   // Extremely rare Latin letters
   // Latin Ext B - Pinyin: ǔnion.com
-  ["xn--nion-unb.com", "\u01d4nion.com", kUnsafe],
+  ["xn--nion-unb.com", "\u01d4nion.com", kUnsafe, "DISABLED"],
   // Latin Ext C: ⱴase.com
   ["xn--ase-7z0b.com", "\u2c74ase.com", kUnsafe],
   // Latin Ext D: ꝴode.com
   ["xn--ode-ut3l.com", "\ua774ode.com", kUnsafe],
   // Latin Ext Additional: ḷily.com
-  ["xn--ily-n3y.com", "\u1e37ily.com", kUnsafe],
+  ["xn--ily-n3y.com", "\u1e37ily.com", kUnsafe, "DISABLED"],
   // Latin Ext E: ꬺove.com
   ["xn--ove-8y6l.com", "\uab3aove.com", kUnsafe],
   // Greek Ext: ᾳβγ.com
@@ -807,10 +807,10 @@ let testCases = [
   // Test that top domains whose skeletons are the same as the domain name are
   // handled properly. In this case, tést.net should match test.net top
   // domain and not be converted to unicode.
-  ["xn--tst-bma.net", "t\u00e9st.net", kUnsafe],
+  ["xn--tst-bma.net", "t\u00e9st.net", kUnsafe, "DISABLED"],
   // Variations of the above, for testing crbug.com/925199.
   // some.tést.net should match test.net.
-  ["some.xn--tst-bma.net", "some.t\u00e9st.net", kUnsafe],
+  ["some.xn--tst-bma.net", "some.t\u00e9st.net", kUnsafe, "DISABLED"],
   // The following should not match test.net, so should be converted to
   // unicode.
   // ést.net (a suffix of tést.net).
@@ -823,19 +823,19 @@ let testCases = [
   ["some.xn--atst-cpa.net", "some.at\u00e9st.net", kSafe],
 
   // Modifier-letter-voicing should be blocked (wwwˬtest.com).
-  ["xn--wwwtest-2be.com", "www\u02ectest.com", kUnsafe],
+  ["xn--wwwtest-2be.com", "www\u02ectest.com", kUnsafe, "DISABLED"],
 
   // oĸ.com: Not a top domain, should be blocked because of Kra.
   ["xn--o-tka.com", "o\u0138.com", kUnsafe],
 
   // U+4E00 and U+3127 should be blocked when next to non-CJK.
-  ["xn--ipaddress-w75n.com", "ip\u4e00address.com", kUnsafe],
-  ["xn--ipaddress-wx5h.com", "ip\u3127address.com", kUnsafe],
+  ["xn--ipaddress-w75n.com", "ip\u4e00address.com", kUnsafe, "DISABLED"],
+  ["xn--ipaddress-wx5h.com", "ip\u3127address.com", kUnsafe, "DISABLED"],
   // U+4E00 and U+3127 at the beginning and end of a string.
-  ["xn--google-gg5e.com", "google\u3127.com", kUnsafe],
-  ["xn--google-9f5e.com", "\u3127google.com", kUnsafe],
-  ["xn--google-gn7i.com", "google\u4e00.com", kUnsafe],
-  ["xn--google-9m7i.com", "\u4e00google.com", kUnsafe],
+  ["xn--google-gg5e.com", "google\u3127.com", kUnsafe, "DISABLED"],
+  ["xn--google-9f5e.com", "\u3127google.com", kUnsafe, "DISABLED"],
+  ["xn--google-gn7i.com", "google\u4e00.com", kUnsafe, "DISABLED"],
+  ["xn--google-9m7i.com", "\u4e00google.com", kUnsafe, "DISABLED"],
   // These are allowed because U+4E00 and U+3127 are not immediately next to
   // non-CJK.
   ["xn--gamer-fg1hz05u.com", "\u4e00\u751fgamer.com", kSafe],
@@ -849,10 +849,10 @@ let testCases = [
 
   // CJK ideographs looking like slashes should be blocked when next to
   // non-CJK.
-  ["example.xn--comtest-k63k", "example.com\u4e36test", kUnsafe],
-  ["example.xn--comtest-u83k", "example.com\u4e40test", kUnsafe],
-  ["example.xn--comtest-283k", "example.com\u4e41test", kUnsafe],
-  ["example.xn--comtest-m83k", "example.com\u4e3ftest", kUnsafe],
+  ["example.xn--comtest-k63k", "example.com\u4e36test", kUnsafe, "DISABLED"],
+  ["example.xn--comtest-u83k", "example.com\u4e40test", kUnsafe, "DISABLED"],
+  ["example.xn--comtest-283k", "example.com\u4e41test", kUnsafe, "DISABLED"],
+  ["example.xn--comtest-m83k", "example.com\u4e3ftest", kUnsafe, "DISABLED"],
   // This is allowed because the ideographs are not immediately next to
   // non-CJK.
   ["xn--oiqsace.com", "\u4e36\u4e40\u4e41\u4e3f.com", kSafe],
@@ -862,132 +862,132 @@ let testCases = [
   ["xn--google-8m4e.com", "google\u309A.com", kUnsafe],
 
   // Small letter theta looks like a zero.
-  ["xn--123456789-yzg.com", "123456789\u03b8.com", kUnsafe],
+  ["xn--123456789-yzg.com", "123456789\u03b8.com", kUnsafe, "DISABLED"],
 
-  ["xn--est-118d.net", "\u4e03est.net", kUnsafe],
-  ["xn--est-918d.net", "\u4e05est.net", kUnsafe],
-  ["xn--est-e28d.net", "\u4e06est.net", kUnsafe],
-  ["xn--est-t18d.net", "\u4e01est.net", kUnsafe],
-  ["xn--3-cq6a.com", "\u4e293.com", kUnsafe],
-  ["xn--cxe-n68d.com", "c\u4e2bxe.com", kUnsafe],
-  ["xn--cye-b98d.com", "cy\u4e42e.com", kUnsafe],
+  ["xn--est-118d.net", "\u4e03est.net", kUnsafe, "DISABLED"],
+  ["xn--est-918d.net", "\u4e05est.net", kUnsafe, "DISABLED"],
+  ["xn--est-e28d.net", "\u4e06est.net", kUnsafe, "DISABLED"],
+  ["xn--est-t18d.net", "\u4e01est.net", kUnsafe, "DISABLED"],
+  ["xn--3-cq6a.com", "\u4e293.com", kUnsafe, "DISABLED"],
+  ["xn--cxe-n68d.com", "c\u4e2bxe.com", kUnsafe, "DISABLED"],
+  ["xn--cye-b98d.com", "cy\u4e42e.com", kUnsafe, "DISABLED"],
 
   // U+05D7 can look like Latin n in many fonts.
-  ["xn--ceba.com", "\u05d7\u05d7.com", kUnsafe],
+  ["xn--ceba.com", "\u05d7\u05d7.com", kUnsafe, "DISABLED"],
 
   // U+00FE (þ) and U+00F0 (ð) are only allowed under the .is TLD.
-  ["xn--acdef-wva.com", "a\u00fecdef.com", kUnsafe],
-  ["xn--mnpqr-jta.com", "mn\u00f0pqr.com", kUnsafe],
+  ["xn--acdef-wva.com", "a\u00fecdef.com", kUnsafe, "DISABLED"],
+  ["xn--mnpqr-jta.com", "mn\u00f0pqr.com", kUnsafe, "DISABLED"],
   ["xn--acdef-wva.is", "a\u00fecdef.is", kSafe],
   ["xn--mnpqr-jta.is", "mn\u00f0pqr.is", kSafe],
 
   // U+0259 (ə) is only allowed under the .az TLD.
-  ["xn--xample-vyc.com", "\u0259xample.com", kUnsafe],
+  ["xn--xample-vyc.com", "\u0259xample.com", kUnsafe, "DISABLED"],
   ["xn--xample-vyc.az", "\u0259xample.az", kSafe],
 
   // U+00B7 is only allowed on Catalan domains between two l's.
-  ["xn--googlecom-5pa.com", "google\u00b7com.com", kUnsafe],
-  ["xn--ll-0ea.com", "l\u00b7l.com", kUnsafe],
+  ["xn--googlecom-5pa.com", "google\u00b7com.com", kUnsafe, "DISABLED"],
+  ["xn--ll-0ea.com", "l\u00b7l.com", kUnsafe, "DISABLED"],
   ["xn--ll-0ea.cat", "l\u00b7l.cat", kSafe],
-  ["xn--al-0ea.cat", "a\u00b7l.cat", kUnsafe],
-  ["xn--la-0ea.cat", "l\u00b7a.cat", kUnsafe],
-  ["xn--l-fda.cat", "\u00b7l.cat", kUnsafe],
-  ["xn--l-gda.cat", "l\u00b7.cat", kUnsafe],
+  ["xn--al-0ea.cat", "a\u00b7l.cat", kUnsafe, "DISABLED"],
+  ["xn--la-0ea.cat", "l\u00b7a.cat", kUnsafe, "DISABLED"],
+  ["xn--l-fda.cat", "\u00b7l.cat", kUnsafe, "DISABLED"],
+  ["xn--l-gda.cat", "l\u00b7.cat", kUnsafe, "DISABLED"],
 
-  ["xn--googlecom-gk6n.com", "google\u4e28com.com", kUnsafe],
-  ["xn--googlecom-0y6n.com", "google\u4e5bcom.com", kUnsafe],
-  ["xn--googlecom-v85n.com", "google\u4e03com.com", kUnsafe],
-  ["xn--googlecom-g95n.com", "google\u4e05com.com", kUnsafe],
-  ["xn--googlecom-go6n.com", "google\u4e36com.com", kUnsafe],
-  ["xn--googlecom-b76o.com", "google\u5341com.com", kUnsafe],
-  ["xn--googlecom-ql3h.com", "google\u3007com.com", kUnsafe],
-  ["xn--googlecom-0r5h.com", "google\u3112com.com", kUnsafe],
-  ["xn--googlecom-bu5h.com", "google\u311acom.com", kUnsafe],
-  ["xn--googlecom-qv5h.com", "google\u311fcom.com", kUnsafe],
-  ["xn--googlecom-0x5h.com", "google\u3127com.com", kUnsafe],
-  ["xn--googlecom-by5h.com", "google\u3128com.com", kUnsafe],
-  ["xn--googlecom-ly5h.com", "google\u3129com.com", kUnsafe],
-  ["xn--googlecom-5o5h.com", "google\u3108com.com", kUnsafe],
-  ["xn--googlecom-075n.com", "google\u4e00com.com", kUnsafe],
-  ["xn--googlecom-046h.com", "google\u31bacom.com", kUnsafe],
-  ["xn--googlecom-026h.com", "google\u31b3com.com", kUnsafe],
-  ["xn--googlecom-lg9q.com", "google\u5de5com.com", kUnsafe],
-  ["xn--googlecom-g040a.com", "google\u8ba0com.com", kUnsafe],
-  ["xn--googlecom-b85n.com", "google\u4e01com.com", kUnsafe],
+  ["xn--googlecom-gk6n.com", "google\u4e28com.com", kUnsafe, "DISABLED"],
+  ["xn--googlecom-0y6n.com", "google\u4e5bcom.com", kUnsafe, "DISABLED"],
+  ["xn--googlecom-v85n.com", "google\u4e03com.com", kUnsafe, "DISABLED"],
+  ["xn--googlecom-g95n.com", "google\u4e05com.com", kUnsafe, "DISABLED"],
+  ["xn--googlecom-go6n.com", "google\u4e36com.com", kUnsafe, "DISABLED"],
+  ["xn--googlecom-b76o.com", "google\u5341com.com", kUnsafe, "DISABLED"],
+  ["xn--googlecom-ql3h.com", "google\u3007com.com", kUnsafe, "DISABLED"],
+  ["xn--googlecom-0r5h.com", "google\u3112com.com", kUnsafe, "DISABLED"],
+  ["xn--googlecom-bu5h.com", "google\u311acom.com", kUnsafe, "DISABLED"],
+  ["xn--googlecom-qv5h.com", "google\u311fcom.com", kUnsafe, "DISABLED"],
+  ["xn--googlecom-0x5h.com", "google\u3127com.com", kUnsafe, "DISABLED"],
+  ["xn--googlecom-by5h.com", "google\u3128com.com", kUnsafe, "DISABLED"],
+  ["xn--googlecom-ly5h.com", "google\u3129com.com", kUnsafe, "DISABLED"],
+  ["xn--googlecom-5o5h.com", "google\u3108com.com", kUnsafe, "DISABLED"],
+  ["xn--googlecom-075n.com", "google\u4e00com.com", kUnsafe, "DISABLED"],
+  ["xn--googlecom-046h.com", "google\u31bacom.com", kUnsafe, "DISABLED"],
+  ["xn--googlecom-026h.com", "google\u31b3com.com", kUnsafe, "DISABLED"],
+  ["xn--googlecom-lg9q.com", "google\u5de5com.com", kUnsafe, "DISABLED"],
+  ["xn--googlecom-g040a.com", "google\u8ba0com.com", kUnsafe, "DISABLED"],
+  ["xn--googlecom-b85n.com", "google\u4e01com.com", kUnsafe, "DISABLED"],
 
   // Whole-script-confusables. Cyrillic is sufficiently handled in cases above
   // so it's not included here.
   // Armenian:
-  ["xn--mbbkpm.com", "\u0578\u057d\u0582\u0585.com", kUnsafe],
+  ["xn--mbbkpm.com", "\u0578\u057d\u0582\u0585.com", kUnsafe, "DISABLED"],
   ["xn--mbbkpm.am", "\u0578\u057d\u0582\u0585.am", kSafe],
   ["xn--mbbkpm.xn--y9a3aq", "\u0578\u057d\u0582\u0585.\u0570\u0561\u0575", kSafe],
   // Ethiopic:
-  ["xn--6xd66aa62c.com", "\u1220\u12d0\u12d0\u1350.com", kUnsafe],
+  ["xn--6xd66aa62c.com", "\u1220\u12d0\u12d0\u1350.com", kUnsafe, "DISABLED"],
   ["xn--6xd66aa62c.et", "\u1220\u12d0\u12d0\u1350.et", kSafe],
   ["xn--6xd66aa62c.xn--m0d3gwjla96a",     "\u1220\u12d0\u12d0\u1350.\u12a2\u1275\u12ee\u1335\u12eb", kSafe],
   // Greek:
-  ["xn--mxapd.com", "\u03b9\u03ba\u03b1.com", kUnsafe],
+  ["xn--mxapd.com", "\u03b9\u03ba\u03b1.com", kUnsafe, "DISABLED"],
   ["xn--mxapd.gr", "\u03b9\u03ba\u03b1.gr", kSafe],
   ["xn--mxapd.xn--qxam", "\u03b9\u03ba\u03b1.\u03b5\u03bb", kSafe],
   // Georgian:
-  ["xn--gpd3ag.com", "\u10fd\u10ff\u10ee.com", kUnsafe],
+  ["xn--gpd3ag.com", "\u10fd\u10ff\u10ee.com", kUnsafe, "DISABLED"],
   ["xn--gpd3ag.ge", "\u10fd\u10ff\u10ee.ge", kSafe],
   ["xn--gpd3ag.xn--node", "\u10fd\u10ff\u10ee.\u10d2\u10d4", kSafe],
   // Hebrew:
-  ["xn--7dbh4a.com", "\u05d7\u05e1\u05d3.com", kUnsafe],
+  ["xn--7dbh4a.com", "\u05d7\u05e1\u05d3.com", kUnsafe, "DISABLED"],
   ["xn--7dbh4a.il", "\u05d7\u05e1\u05d3.il", kSafe],
   ["xn--9dbq2a.xn--7dbh4a", "\u05e7\u05d5\u05dd.\u05d7\u05e1\u05d3", kSafe],
   // Myanmar:
-  ["xn--oidbbf41a.com", "\u1004\u1040\u1002\u1001\u1002.com", kUnsafe],
+  ["xn--oidbbf41a.com", "\u1004\u1040\u1002\u1001\u1002.com", kUnsafe, "DISABLED"],
   ["xn--oidbbf41a.mm", "\u1004\u1040\u1002\u1001\u1002.mm", kSafe],
   ["xn--oidbbf41a.xn--7idjb0f4ck",     "\u1004\u1040\u1002\u1001\u1002.\u1019\u103c\u1014\u103a\u1019\u102c", kSafe],
   // Myanmar Shan digits:
-  ["xn--rmdcmef.com", "\u1090\u1091\u1095\u1096\u1097.com", kUnsafe],
+  ["xn--rmdcmef.com", "\u1090\u1091\u1095\u1096\u1097.com", kUnsafe, "DISABLED"],
   ["xn--rmdcmef.mm", "\u1090\u1091\u1095\u1096\u1097.mm", kSafe],
   ["xn--rmdcmef.xn--7idjb0f4ck",     "\u1090\u1091\u1095\u1096\u1097.\u1019\u103c\u1014\u103a\u1019\u102c", kSafe],
 // Thai:
 // #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
-  ["xn--o3cedqz2c.com", "\u0e17\u0e19\u0e1a\u0e1e\u0e23\u0e2b.com", kUnsafe],
+  ["xn--o3cedqz2c.com", "\u0e17\u0e19\u0e1a\u0e1e\u0e23\u0e2b.com", kUnsafe, "DISABLED"],
   ["xn--o3cedqz2c.th", "\u0e17\u0e19\u0e1a\u0e1e\u0e23\u0e2b.th", kSafe],
   ["xn--o3cedqz2c.xn--o3cw4h",     "\u0e17\u0e19\u0e1a\u0e1e\u0e23\u0e2b.\u0e44\u0e17\u0e22", kSafe],
 // #else
-  ["xn--r3ch7hsc.com", "\u0e1e\u0e1a\u0e40\u0e50.com", kUnsafe],
+  ["xn--r3ch7hsc.com", "\u0e1e\u0e1a\u0e40\u0e50.com", kUnsafe, "DISABLED"],
   ["xn--r3ch7hsc.th", "\u0e1e\u0e1a\u0e40\u0e50.th", kSafe],
   ["xn--r3ch7hsc.xn--o3cw4h", "\u0e1e\u0e1a\u0e40\u0e50.\u0e44\u0e17\u0e22", kSafe],
 // #endif
 
   // Indic scripts:
   // Bengali:
-  ["xn--07baub.com", "\u09e6\u09ed\u09e6\u09ed.com", kUnsafe],
+  ["xn--07baub.com", "\u09e6\u09ed\u09e6\u09ed.com", kUnsafe, "DISABLED"],
   // Devanagari:
-  ["xn--62ba6j.com", "\u093d\u0966\u093d.com", kUnsafe],
+  ["xn--62ba6j.com", "\u093d\u0966\u093d.com", kUnsafe, "DISABLED"],
   // Gujarati:
-  ["xn--becd.com", "\u0aa1\u0a9f.com", kUnsafe],
+  ["xn--becd.com", "\u0aa1\u0a9f.com", kUnsafe, "DISABLED"],
   // Gurmukhi:
-  ["xn--occacb.com", "\u0a66\u0a67\u0a66\u0a67.com", kUnsafe],
+  ["xn--occacb.com", "\u0a66\u0a67\u0a66\u0a67.com", kUnsafe, "DISABLED"],
   // Kannada:
-  ["xn--stca6jf.com", "\u0cbd\u0ce6\u0cbd\u0ce7.com", kUnsafe],
+  ["xn--stca6jf.com", "\u0cbd\u0ce6\u0cbd\u0ce7.com", kUnsafe, "DISABLED"],
   // Malayalam:
-  ["xn--lwccv.com", "\u0d1f\u0d20\u0d27.com", kUnsafe],
+  ["xn--lwccv.com", "\u0d1f\u0d20\u0d27.com", kUnsafe, "DISABLED"],
   // Oriya:
-  ["xn--zhca6ub.com", "\u0b6e\u0b20\u0b6e\u0b20.com", kUnsafe],
+  ["xn--zhca6ub.com", "\u0b6e\u0b20\u0b6e\u0b20.com", kUnsafe, "DISABLED"],
   // Tamil:
-  ["xn--mlca6ab.com", "\u0b9f\u0baa\u0b9f\u0baa.com", kUnsafe],
+  ["xn--mlca6ab.com", "\u0b9f\u0baa\u0b9f\u0baa.com", kUnsafe, "DISABLED"],
   // Telugu:
-  ["xn--brcaabbb.com", "\u0c67\u0c66\u0c67\u0c66\u0c67\u0c66.com", kUnsafe],
+  ["xn--brcaabbb.com", "\u0c67\u0c66\u0c67\u0c66\u0c67\u0c66.com", kUnsafe, "DISABLED"],
 
   // IDN domain matching an IDN top-domain (f\u00f3\u00f3.com)
-  ["xn--fo-5ja.com", "f\u00f3o.com", kUnsafe],
+  ["xn--fo-5ja.com", "f\u00f3o.com", kUnsafe, "DISABLED"],
 
   // crbug.com/769547: Subdomains of top domains should be allowed.
   ["xn--xample-9ua.test.net", "\u00e9xample.test.net", kSafe],
   // Skeleton of the eTLD+1 matches a top domain, but the eTLD+1 itself is
   // not a top domain. Should not be decoded to unicode.
-  ["xn--xample-9ua.test.xn--nt-bja", "\u00e9xample.test.n\u00e9t", kUnsafe],
+  ["xn--xample-9ua.test.xn--nt-bja", "\u00e9xample.test.n\u00e9t", kUnsafe, "DISABLED"],
 
   // Digit lookalike check of 16კ.com with character “კ” (U+10D9)
   // Test case for https://crbug.com/1156531
-  ["xn--16-1ik.com", "16\u10d9.com", kUnsafe],
+  ["xn--16-1ik.com", "16\u10d9.com", kUnsafe, "DISABLED"],
 
   // Skeleton generator check of officeკ65.com with character “კ” (U+10D9)
   // Test case for https://crbug.com/1156531
@@ -995,7 +995,7 @@ let testCases = [
 
   // Digit lookalike check of 16ੜ.com with character “ੜ” (U+0A5C)
   // Test case for https://crbug.com/1156531 (missed skeleton map)
-  ["xn--16-ogg.com", "16\u0a5c.com", kUnsafe],
+  ["xn--16-ogg.com", "16\u0a5c.com", kUnsafe, "DISABLED"],
 
   // Skeleton generator check of officeੜ65.com with character “ੜ” (U+0A5C)
   // Test case for https://crbug.com/1156531 (missed skeleton map)
