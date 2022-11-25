@@ -86,10 +86,7 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
   },
 
   get isXpcshell() {
-    const env = Cc["@mozilla.org/process/environment;1"].getService(
-      Ci.nsIEnvironment
-    );
-    return env.exists("XPCSHELL_TEST_PROFILE_DIR");
+    return Services.env.exists("XPCSHELL_TEST_PROFILE_DIR");
   },
 
   get isBackgroundTaskMode() {
@@ -236,10 +233,7 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
     Services.obs.notifyObservers(null, "startupcache-invalidate");
 
     // Avoid safemode popup from appearing on restart
-    const env = Cc["@mozilla.org/process/environment;1"].getService(
-      Ci.nsIEnvironment
-    );
-    env.set("MOZ_DISABLE_SAFE_MODE_KEY", "1");
+    Services.env.set("MOZ_DISABLE_SAFE_MODE_KEY", "1");
 
     Services.startup.quit(
       Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart

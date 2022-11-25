@@ -903,13 +903,10 @@ DevToolsStartup.prototype = {
     const { BrowserToolboxLauncher } = ChromeUtils.importESModule(
       "resource://devtools/client/framework/browser-toolbox/Launcher.sys.mjs"
     );
-    const env = Cc["@mozilla.org/process/environment;1"].getService(
-      Ci.nsIEnvironment
-    );
     // --jsdebugger $binaryPath is an helper alias to set MOZ_BROWSER_TOOLBOX_BINARY=$binaryPath
     // See comment within BrowserToolboxLauncher.
     // Setting it as an environment variable helps it being reused if we restart the browser via CmdOrCtrl+R
-    env.set("MOZ_BROWSER_TOOLBOX_BINARY", binaryPath);
+    Services.env.set("MOZ_BROWSER_TOOLBOX_BINARY", binaryPath);
 
     const browserToolboxLauncherConfig = {};
 

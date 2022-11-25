@@ -15,22 +15,15 @@ add_task(async function() {
   // Running devtools should prevent processing updates.  By setting this
   // environment variable and then inspecting it from the launched devtools
   // process, we can witness update processing being skipped.
-  const env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-  env.set("MOZ_TEST_PROCESS_UPDATES", "1");
+  Services.env.set("MOZ_TEST_PROCESS_UPDATES", "1");
 
   const ToolboxTask = await initBrowserToolboxTask();
   await ToolboxTask.importFunctions({});
 
   let result = await ToolboxTask.spawn(null, async () => {
-    const env = Cc["@mozilla.org/process/environment;1"].getService(
-      Ci.nsIEnvironment
-    );
-
     const result = {
-      exists: env.exists("MOZ_TEST_PROCESS_UPDATES"),
-      get: env.get("MOZ_TEST_PROCESS_UPDATES"),
+      exists: Services.env.exists("MOZ_TEST_PROCESS_UPDATES"),
+      get: Services.env.get("MOZ_TEST_PROCESS_UPDATES"),
     };
     // Log so that we have a hope of debugging.
     console.log("result", result);
