@@ -6,7 +6,7 @@
 // eslint-disable-next-line import/no-unresolved
 import { html, ifDefined } from "../vendor/lit.all.mjs";
 // eslint-disable-next-line import/no-unassigned-import
-import "./fx-toggle.mjs";
+import "./moz-toggle.mjs";
 
 const fxToggleConfig = {
   title: "Design System/Experiments/FxToggle",
@@ -14,13 +14,13 @@ const fxToggleConfig = {
 
 const Template = ({ checked, disabled, label, description, ariaLabel }) => html`
   <div style="max-width: 400px">
-    <fx-toggle
+    <moz-toggle
       ?checked=${checked}
       ?disabled=${disabled}
       label=${ifDefined(label)}
       description=${ifDefined(description)}
       aria-label=${ifDefined(ariaLabel)}
-    ></fx-toggle>
+    ></moz-toggle>
   </div>
 `;
 
