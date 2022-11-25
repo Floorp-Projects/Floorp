@@ -322,7 +322,6 @@ class alignas(8) IonScript final : public TrailingArray {
   }
 
   void incNumFixableBailouts() { numFixableBailouts_++; }
-  void resetNumFixableBailouts() { numFixableBailouts_ = 0; }
   void incNumUnfixableBailouts() { numUnfixableBailouts_++; }
 
   bool shouldInvalidate() const {
