@@ -46,12 +46,11 @@ const SITEPERMS_ADDON_ID_SUFFIX = "@siteperms.mozilla.org";
 // used outside of tests.
 let SALT;
 export function generateSalt() {
-  //TODO: Use Services.env (See Bug 1541508).
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
   // Throw if we're not in test and SALT is already defined
-  if (typeof SALT !== "undefined" && !env.exists("XPCSHELL_TEST_PROFILE_DIR")) {
+  if (
+    typeof SALT !== "undefined" &&
+    !Services.env.exists("XPCSHELL_TEST_PROFILE_DIR")
+  ) {
     throw new Error("This should only be called from XPCShell tests");
   }
   SALT = crypto.getRandomValues(new Uint8Array(12)).join("");

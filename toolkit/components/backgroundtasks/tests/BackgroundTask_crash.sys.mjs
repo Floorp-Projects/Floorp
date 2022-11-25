@@ -20,11 +20,8 @@ export async function runBackgroundTask(commandLine) {
   );
 
   // Get the temp dir.
-  var env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
   var tmpd = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-  tmpd.initWithPath(env.get("XPCSHELL_TEST_TEMP_DIR"));
+  tmpd.initWithPath(Services.env.get("XPCSHELL_TEST_TEMP_DIR"));
 
   // We need to call this or crash events go in an undefined location.
   Services.appinfo.UpdateCrashEventsDir();

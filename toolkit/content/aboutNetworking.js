@@ -7,9 +7,6 @@
 const FileUtils = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 ).FileUtils;
-const gEnv = Cc["@mozilla.org/process/environment;1"].getService(
-  Ci.nsIEnvironment
-);
 const gDashboard = Cc["@mozilla.org/network/dashboard;1"].getService(
   Ci.nsIDashboard
 );

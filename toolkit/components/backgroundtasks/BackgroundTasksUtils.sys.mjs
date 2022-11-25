@@ -54,13 +54,12 @@ export var BackgroundTasksUtils = {
     if (!this._defaultProfileInitialized) {
       this._defaultProfileInitialized = true;
       // This is all test-only.
-      const env = Cc["@mozilla.org/process/environment;1"].getService(
-        Ci.nsIEnvironment
-      );
-      let defaultProfilePath = env.get(
+      let defaultProfilePath = Services.env.get(
         "MOZ_BACKGROUNDTASKS_DEFAULT_PROFILE_PATH"
       );
-      let noDefaultProfile = env.get("MOZ_BACKGROUNDTASKS_NO_DEFAULT_PROFILE");
+      let noDefaultProfile = Services.env.get(
+        "MOZ_BACKGROUNDTASKS_NO_DEFAULT_PROFILE"
+      );
       if (defaultProfilePath) {
         lazy.log.info(
           `getDefaultProfile: using default profile path ${defaultProfilePath}`

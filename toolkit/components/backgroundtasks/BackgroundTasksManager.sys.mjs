@@ -29,10 +29,10 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
 // a transliteration of `register_modules_protocol_handler` from
 // https://searchfox.org/mozilla-central/rev/f081504642a115cb8236bea4d8250e5cb0f39b02/testing/xpcshell/head.js#358-389.
 function registerModulesProtocolHandler() {
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
+  let _TESTING_MODULES_URI = Services.env.get(
+    "XPCSHELL_TESTING_MODULES_URI",
+    ""
   );
-  let _TESTING_MODULES_URI = env.get("XPCSHELL_TESTING_MODULES_URI", "");
   if (!_TESTING_MODULES_URI) {
     return false;
   }

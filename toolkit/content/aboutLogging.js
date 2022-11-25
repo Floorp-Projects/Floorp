@@ -3,9 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-const gEnv = Cc["@mozilla.org/process/environment;1"].getService(
-  Ci.nsIEnvironment
-);
 const gDashboard = Cc["@mozilla.org/network/dashboard;1"].getService(
   Ci.nsIDashboard
 );
@@ -66,7 +63,8 @@ function updateLogFile() {
   let logPath = "";
 
   // Try to get the environment variable for the log file
-  logPath = gEnv.get("MOZ_LOG_FILE") || gEnv.get("NSPR_LOG_FILE");
+  logPath =
+    Services.env.get("MOZ_LOG_FILE") || Services.env.get("NSPR_LOG_FILE");
   let currentLogFile = document.getElementById("current-log-file");
   let setLogFileButton = document.getElementById("set-log-file-button");
 
@@ -109,9 +107,9 @@ function updateLogFile() {
 function updateLogModules() {
   // Try to get the environment variable for the log file
   let logModules =
-    gEnv.get("MOZ_LOG") ||
-    gEnv.get("MOZ_LOG_MODULES") ||
-    gEnv.get("NSPR_LOG_MODULES");
+    Services.env.get("MOZ_LOG") ||
+    Services.env.get("MOZ_LOG_MODULES") ||
+    Services.env.get("NSPR_LOG_MODULES");
   let currentLogModules = document.getElementById("current-log-modules");
   let setLogModulesButton = document.getElementById("set-log-modules-button");
   if (logModules.length) {

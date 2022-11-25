@@ -2018,7 +2018,7 @@ function runUpdate(
   let pid = 0;
   if (gPIDPersistProcess) {
     pid = gPIDPersistProcess.pid;
-    gEnv.set("MOZ_TEST_SHORTER_WAIT_PID", "1");
+    Services.env.set("MOZ_TEST_SHORTER_WAIT_PID", "1");
   }
 
   let updateBin = copyTestUpdaterToBinDir();
@@ -2074,7 +2074,7 @@ function runUpdate(
   resetEnvironment();
 
   if (gPIDPersistProcess) {
-    gEnv.set("MOZ_TEST_SHORTER_WAIT_PID", "");
+    Services.env.set("MOZ_TEST_SHORTER_WAIT_PID", "");
   }
 
   let status = readStatusFile();
@@ -4706,7 +4706,7 @@ function setEnvironment() {
     // set an environment variable and have the test updater set the current
     // working directory than it is to set the current working directory in the
     // test itself.
-    gEnv.set("CURWORKDIRPATH", getApplyDirFile().path);
+    Services.env.set("CURWORKDIRPATH", getApplyDirFile().path);
   }
 
   // Prevent setting the environment more than once.
@@ -4718,28 +4718,28 @@ function setEnvironment() {
 
   if (
     AppConstants.platform == "win" &&
-    !gEnv.exists("XRE_NO_WINDOWS_CRASH_DIALOG")
+    !Services.env.exists("XRE_NO_WINDOWS_CRASH_DIALOG")
   ) {
     gAddedEnvXRENoWindowsCrashDialog = true;
     debugDump(
       "setting the XRE_NO_WINDOWS_CRASH_DIALOG environment " +
         "variable to 1... previously it didn't exist"
     );
-    gEnv.set("XRE_NO_WINDOWS_CRASH_DIALOG", "1");
+    Services.env.set("XRE_NO_WINDOWS_CRASH_DIALOG", "1");
   }
 
-  if (gEnv.exists("XPCOM_MEM_LEAK_LOG")) {
-    gEnvXPCOMMemLeakLog = gEnv.get("XPCOM_MEM_LEAK_LOG");
+  if (Services.env.exists("XPCOM_MEM_LEAK_LOG")) {
+    gEnvXPCOMMemLeakLog = Services.env.get("XPCOM_MEM_LEAK_LOG");
     debugDump(
       "removing the XPCOM_MEM_LEAK_LOG environment variable... " +
         "previous value " +
         gEnvXPCOMMemLeakLog
     );
-    gEnv.set("XPCOM_MEM_LEAK_LOG", "");
+    Services.env.set("XPCOM_MEM_LEAK_LOG", "");
   }
 
-  if (gEnv.exists("XPCOM_DEBUG_BREAK")) {
-    gEnvXPCOMDebugBreak = gEnv.get("XPCOM_DEBUG_BREAK");
+  if (Services.env.exists("XPCOM_DEBUG_BREAK")) {
+    gEnvXPCOMDebugBreak = Services.env.get("XPCOM_DEBUG_BREAK");
     debugDump(
       "setting the XPCOM_DEBUG_BREAK environment variable to " +
         "warn... previous value " +
@@ -4752,16 +4752,16 @@ function setEnvironment() {
     );
   }
 
-  gEnv.set("XPCOM_DEBUG_BREAK", "warn");
+  Services.env.set("XPCOM_DEBUG_BREAK", "warn");
 
   if (gEnvForceServiceFallback) {
     // This env variable forces the updater to use the service in an invalid
     // way, so that it has to fall back to updating without the service.
     debugDump("setting MOZ_FORCE_SERVICE_FALLBACK environment variable to 1");
-    gEnv.set("MOZ_FORCE_SERVICE_FALLBACK", "1");
+    Services.env.set("MOZ_FORCE_SERVICE_FALLBACK", "1");
   } else if (gIsServiceTest) {
     debugDump("setting MOZ_NO_SERVICE_FALLBACK environment variable to 1");
-    gEnv.set("MOZ_NO_SERVICE_FALLBACK", "1");
+    Services.env.set("MOZ_NO_SERVICE_FALLBACK", "1");
   }
 }
 
@@ -4782,7 +4782,7 @@ function resetEnvironment() {
       "setting the XPCOM_MEM_LEAK_LOG environment variable back to " +
         gEnvXPCOMMemLeakLog
     );
-    gEnv.set("XPCOM_MEM_LEAK_LOG", gEnvXPCOMMemLeakLog);
+    Services.env.set("XPCOM_MEM_LEAK_LOG", gEnvXPCOMMemLeakLog);
   }
 
   if (gEnvXPCOMDebugBreak) {
@@ -4790,22 +4790,22 @@ function resetEnvironment() {
       "setting the XPCOM_DEBUG_BREAK environment variable back to " +
         gEnvXPCOMDebugBreak
     );
-    gEnv.set("XPCOM_DEBUG_BREAK", gEnvXPCOMDebugBreak);
-  } else if (gEnv.exists("XPCOM_DEBUG_BREAK")) {
+    Services.env.set("XPCOM_DEBUG_BREAK", gEnvXPCOMDebugBreak);
+  } else if (Services.env.exists("XPCOM_DEBUG_BREAK")) {
     debugDump("clearing the XPCOM_DEBUG_BREAK environment variable");
-    gEnv.set("XPCOM_DEBUG_BREAK", "");
+    Services.env.set("XPCOM_DEBUG_BREAK", "");
   }
 
   if (AppConstants.platform == "win" && gAddedEnvXRENoWindowsCrashDialog) {
     debugDump("removing the XRE_NO_WINDOWS_CRASH_DIALOG environment variable");
-    gEnv.set("XRE_NO_WINDOWS_CRASH_DIALOG", "");
+    Services.env.set("XRE_NO_WINDOWS_CRASH_DIALOG", "");
   }
 
   if (gEnvForceServiceFallback) {
     debugDump("removing MOZ_FORCE_SERVICE_FALLBACK environment variable");
-    gEnv.set("MOZ_FORCE_SERVICE_FALLBACK", "");
+    Services.env.set("MOZ_FORCE_SERVICE_FALLBACK", "");
   } else if (gIsServiceTest) {
     debugDump("removing MOZ_NO_SERVICE_FALLBACK environment variable");
-    gEnv.set("MOZ_NO_SERVICE_FALLBACK", "");
+    Services.env.set("MOZ_NO_SERVICE_FALLBACK", "");
   }
 }

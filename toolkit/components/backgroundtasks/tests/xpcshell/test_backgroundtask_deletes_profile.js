@@ -102,11 +102,8 @@ add_task(c, async function test_backgroundtask_cleans_up_stale_profiles() {
 
   // Display logging for ease of debugging.
   let moz_log = "BackgroundTasks:5";
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-  if (env.exists("MOZ_LOG")) {
-    moz_log += `,${env.get("MOZ_LOG")}`;
+  if (Services.env.exists("MOZ_LOG")) {
+    moz_log += `,${Services.env.get("MOZ_LOG")}`;
   }
 
   // Invoke the task.
