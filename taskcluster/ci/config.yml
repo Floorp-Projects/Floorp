@@ -202,6 +202,7 @@ treeherder:
         'l10n': 'Localization checks'
         'fxrec': 'Desktop startup recorder (fxrecord)'
         'wc': 'webcompat'
+        'Boot': 'Bootstrap'
 
 index:
     products:

@@ -53,6 +53,11 @@ This kind performs an artifact build: one based on precompiled binaries
 discovered via the TaskCluster index.  This task verifies that such builds
 continue to work correctly.
 
+bootstrap
+---------
+
+This kind performs a standalone bootstrap of a Firefox build from various system environments.
+
 hazard
 ------
 
