@@ -3933,10 +3933,10 @@ class HTMLEditor final : public EditorBase,
       Element& aElement, nsTArray<OwningNonNull<Text>>& aLeafTextNodes) const;
 
   /**
-   * IsRemovableParentStyleWithNewSpanElement() checks whether
-   * aProperty/aAttribute of parent block can be removed from aContent with
-   * creating `<span>` element.  Note that this does NOT check whether the
-   * specified style comes from parent block or not.
+   * IsRemovableParentStyleWithNewSpanElement() checks whether aStyle of parent
+   * block can be removed from aContent with creating `<span>` element.  Note
+   * that this does NOT check whether the specified style comes from parent
+   * block or not.
    * XXX This may destroy the editor, but using `Result<bool, nsresult>`
    *     is not reasonable because code for accessing the result becomes
    *     messy.  However, anybody must forget to check `Destroyed()` after
@@ -3944,9 +3944,8 @@ class HTMLEditor final : public EditorBase,
    *     must check the editor state?
    */
   MOZ_CAN_RUN_SCRIPT Result<bool, nsresult>
-  IsRemovableParentStyleWithNewSpanElement(nsIContent& aContent,
-                                           nsAtom* aHTMLProperty,
-                                           nsAtom* aAttribute) const;
+  IsRemovableParentStyleWithNewSpanElement(
+      nsIContent& aContent, const EditorInlineStyle& aStyle) const;
 
   /**
    * XXX These methods seem odd and except the only caller,
