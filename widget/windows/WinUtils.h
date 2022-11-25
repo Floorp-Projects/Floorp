@@ -45,6 +45,28 @@
 #include "mozilla/WindowsProcessMitigations.h"
 #include "mozilla/gfx/2D.h"
 
+// Starting with version 10.0.22621.0 of the Windows SDK the AR_STATE enum and
+// types are only defined when building for Windows 8 instead of Windows 7.
+#if (WDK_NTDDI_VERSION >= 0x0A00000C) && (WINVER < 0x0602)
+
+enum tagAR_STATE {
+  AR_ENABLED = 0x0,
+  AR_DISABLED = 0x1,
+  AR_SUPPRESSED = 0x2,
+  AR_REMOTESESSION = 0x4,
+  AR_MULTIMON = 0x8,
+  AR_NOSENSOR = 0x10,
+  AR_NOT_SUPPORTED = 0x20,
+  AR_DOCKED = 0x40,
+  AR_LAPTOP = 0x80
+};
+
+typedef enum tagAR_STATE AR_STATE;
+
+using PAR_STATE = enum tagAR_STATE*;
+
+#endif  // (WDK_NTDDI_VERSION >= 0x0A00000C) && (WINVER < 0x0602)
+
 /**
  * NS_INLINE_DECL_IUNKNOWN_REFCOUNTING should be used for defining and
  * implementing AddRef() and Release() of IUnknown interface.
