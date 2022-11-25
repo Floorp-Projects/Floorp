@@ -54,14 +54,11 @@ function run_test() {
   });
 
   // Append a single quote and non-ASCII characters to the profile path.
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-  let profd = env.get("XPCSHELL_TEST_PROFILE_DIR");
+  let profd = Services.env.get("XPCSHELL_TEST_PROFILE_DIR");
   let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   file.initWithPath(profd);
   file.append("'÷1");
-  env.set("XPCSHELL_TEST_PROFILE_DIR", file.path);
+  Services.env.set("XPCSHELL_TEST_PROFILE_DIR", file.path);
 
   let profile = do_get_profile(); // must be called before getting nsIX509CertDB
   Assert.ok(

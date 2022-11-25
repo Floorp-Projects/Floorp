@@ -17,7 +17,7 @@ Services.scriptloader.loadSubScript(
 
 add_task(async function() {
   // Ensure that XDG_CONFIG_HOME is there
-  const xdgConfigHome = GetEnvironmentVariable("XDG_CONFIG_HOME");
+  const xdgConfigHome = Services.env.get("XDG_CONFIG_HOME");
   ok(xdgConfigHome.length > 1, "XDG_CONFIG_HOME is defined");
 
   // If it is there, do actual testing
