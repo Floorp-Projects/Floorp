@@ -13,11 +13,17 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultVariant.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
+#include "nsIFileProtocolHandler.h"
+#include "nsIFileURL.h"
+#include "nsIURIMutator.h"
 #include "nsXPCOM.h"
+
+#define FS_QUOTA_MANAGEMENT_ENABLED 0
 
 namespace mozilla::dom::fs::data {
 
@@ -72,7 +78,7 @@ Result<nsCOMPtr<nsIFile>, QMResult> GetFileSystemDirectory(
   quota::QuotaManager* qm = quota::QuotaManager::Get();
   MOZ_ASSERT(qm);
 
-#if 0
+#if FS_QUOTA_MANAGEMENT_ENABLED
   QM_TRY_UNWRAP(nsCOMPtr<nsIFile> fileSystemDirectory,
                 QM_TO_RESULT_TRANSFORM(qm->GetDirectoryForOrigin(
                     quota::PERSISTENCE_TYPE_DEFAULT, aOrigin)));
@@ -109,6 +115,43 @@ Result<nsCOMPtr<nsIFile>, QMResult> GetDatabasePath(const Origin& aOrigin,
 
   return GetOrCreateEntry(databaseFilePath, aExists, nsIFile::NORMAL_FILE_TYPE,
                           0644);
+}
+
+/**
+ * TODO: This is almost identical to the corresponding function of IndexedDB
+ */
+Result<nsCOMPtr<nsIFileURL>, QMResult> GetDatabaseFileURL(
+    const nsCOMPtr<nsIFile>& aDatabaseFile, const int64_t aDirectoryLockId) {
+  MOZ_ASSERT(aDirectoryLockId >= 0);
+
+  QM_TRY_INSPECT(
+      const auto& protocolHandler,
+      QM_TO_RESULT_TRANSFORM(MOZ_TO_RESULT_GET_TYPED(
+          nsCOMPtr<nsIProtocolHandler>, MOZ_SELECT_OVERLOAD(do_GetService),
+          NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "file")));
+
+  QM_TRY_INSPECT(const auto& fileHandler,
+                 QM_TO_RESULT_TRANSFORM(MOZ_TO_RESULT_GET_TYPED(
+                     nsCOMPtr<nsIFileProtocolHandler>,
+                     MOZ_SELECT_OVERLOAD(do_QueryInterface), protocolHandler)));
+
+  QM_TRY_INSPECT(const auto& mutator,
+                 QM_TO_RESULT_TRANSFORM(MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
+                     nsCOMPtr<nsIURIMutator>, fileHandler, NewFileURIMutator,
+                     aDatabaseFile)));
+
+#if FS_QUOTA_MANAGEMENT_ENABLED
+  nsCString directoryLockIdClause = "&directoryLockId="_ns;
+  directoryLockIdClause.AppendInt(aDirectoryLockId);
+#else
+  nsCString directoryLockIdClause;
+#endif
+
+  nsCOMPtr<nsIFileURL> result;
+  QM_TRY(QM_TO_RESULT(
+      NS_MutateURI(mutator).SetQuery(directoryLockIdClause).Finalize(result)));
+
+  return result;
 }
 
 Result<FileSystemFileManager, QMResult>
