@@ -6,12 +6,17 @@ package org.mozilla.fenix.home.intent
 
 import android.content.Intent
 import androidx.navigation.NavController
+import mozilla.components.concept.engine.EngineSession
 import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.onboarding.DefaultBrowserNotificationWorker.Companion.isDefaultBrowserNotificationIntent
+import org.mozilla.fenix.onboarding.ReEngagementNotificationWorker
+import org.mozilla.fenix.onboarding.ReEngagementNotificationWorker.Companion.isReEngagementNotificationIntent
 
 /**
  * When the default browser notification is tapped we need to launch [openSetDefaultBrowserOption]
@@ -24,12 +29,26 @@ class DefaultBrowserIntentProcessor(
 ) : HomeIntentProcessor {
 
     override fun process(intent: Intent, navController: NavController, out: Intent): Boolean {
-        return if (isDefaultBrowserNotificationIntent(intent)) {
-            activity.openSetDefaultBrowserOption()
-            Events.defaultBrowserNotifTapped.record(NoExtras())
-            true
-        } else {
-            false
+        return when {
+            isDefaultBrowserNotificationIntent(intent) -> {
+                Events.defaultBrowserNotifTapped.record(NoExtras())
+
+                activity.openSetDefaultBrowserOption()
+                true
+            }
+            isReEngagementNotificationIntent(intent) -> {
+                Events.reEngagementNotifTapped.record(NoExtras())
+
+                activity.browsingModeManager.mode = BrowsingMode.Private
+                activity.openToBrowserAndLoad(
+                    ReEngagementNotificationWorker.NOTIFICATION_TARGET_URL,
+                    newTab = true,
+                    from = BrowserDirection.FromGlobal,
+                    flags = EngineSession.LoadUrlFlags.external(),
+                )
+                true
+            }
+            else -> false
         }
     }
 }

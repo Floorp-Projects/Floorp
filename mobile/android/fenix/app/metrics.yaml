@@ -207,6 +207,32 @@ events:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/27780
     data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 122
+  re_engagement_notif_tapped:
+    type: event
+    description: |
+      User tapped on the re-engagement notification
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/27949
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/27978
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 122
+  re_engagement_notif_shown:
+    type: event
+    description: |
+      Re-engagement notification was shown to the user
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/27949
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/27978
+    data_sensitivity:
       - technical
     notification_emails:
       - android-probes@mozilla.com

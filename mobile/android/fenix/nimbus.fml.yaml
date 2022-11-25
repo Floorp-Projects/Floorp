@@ -257,6 +257,14 @@ features:
         value:
           enabled: true
 
+  re-engagement-notification:
+    description: A feature that shows the re-enagement notification if the user is inactive.
+    variables:
+      enabled:
+        description: If true, the re-engagement notification is shown to the inactive user.
+        type: Boolean
+        default: true
+
 types:
   objects:
     MessageData:

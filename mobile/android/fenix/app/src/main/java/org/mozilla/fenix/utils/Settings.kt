@@ -77,6 +77,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
         const val FOUR_HOURS_MS = 60 * 60 * 4 * 1000L
         const val ONE_DAY_MS = 60 * 60 * 24 * 1000L
+        const val TWO_DAYS_MS = 2 * ONE_DAY_MS
         const val THREE_DAYS_MS = 3 * ONE_DAY_MS
         const val ONE_WEEK_MS = 60 * 60 * 24 * 7 * 1000L
         const val ONE_MONTH_MS = (60 * 60 * 24 * 365 * 1000L) / 12
@@ -405,10 +406,13 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      * Indicates the last time when the user was interacting with the [BrowserFragment],
      * This is useful to determine if the user has to start on the [HomeFragment]
      * or it should go directly to the [BrowserFragment].
+     *
+     * This value defaults to 0L because we want to know if the user never had any interaction
+     * with the [BrowserFragment]
      */
     var lastBrowseActivity by longPreference(
         appContext.getPreferenceKey(R.string.pref_key_last_browse_activity_time),
-        default = timeNowInMillis(),
+        default = 0L,
     )
 
     /**
@@ -578,6 +582,34 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     fun shouldShowDefaultBrowserNotification(): Boolean {
         return !defaultBrowserNotificationDisplayed && !isDefaultBrowserBlocking()
     }
+
+    var reEngagementNotificationShown by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_re_engagement_notification_shown),
+        default = false,
+    )
+
+    /**
+     * Check if we should set the re-engagement notification.
+     */
+    fun shouldSetReEngagementNotification(): Boolean {
+        return numberOfAppLaunches <= 1 && !reEngagementNotificationShown
+    }
+
+    /**
+     * Check if we should show the re-engagement notification.
+     */
+    fun shouldShowReEngagementNotification(): Boolean {
+        return !reEngagementNotificationShown && reEngagementNotificationEnabled && !isDefaultBrowserBlocking()
+    }
+
+    /**
+     * Indicates if the re-engagement notification feature is enabled
+     */
+    var reEngagementNotificationEnabled by lazyFeatureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_re_engagement_notification_enabled),
+        default = { FxNimbus.features.reEngagementNotification.value(appContext).enabled },
+        featureFlag = true,
+    )
 
     val shouldUseAutoBatteryTheme by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_auto_battery_theme),
