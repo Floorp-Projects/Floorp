@@ -147,6 +147,11 @@ declare namespace MockedExports {
   }
 
   type Services = {
+    env: {
+      set: (name: string, value: string) => void;
+      get: (name: string) => string;
+      exists: (name: string) => boolean;
+    },
     prefs: nsIPrefBranch;
     profiler: {
       StartProfiler: (
@@ -242,20 +247,7 @@ declare namespace MockedExports {
     };
   }
 
-  // This class is needed by the Cc importing mechanism. e.g.
-  // Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-  class nsIEnvironment {}
-
-  interface Environment {
-    exists(envName: string): boolean;
-    get(envName: string): string;
-    set(envName: string, value: string): void;
-  }
-
   interface Cc {
-    "@mozilla.org/process/environment;1": {
-      getService(service: nsIEnvironment): Environment;
-    };
     "@mozilla.org/filepicker;1": {
       createInstance(instance: nsIFilePicker): FilePicker;
     };
@@ -263,7 +255,6 @@ declare namespace MockedExports {
 
   interface Ci {
     nsIFilePicker: nsIFilePicker;
-    nsIEnvironment: nsIEnvironment;
   }
 
   interface Cu {

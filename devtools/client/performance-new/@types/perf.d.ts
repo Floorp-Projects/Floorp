@@ -199,12 +199,6 @@ export type RestartBrowserWithEnvironmentVariable = (
 export type OnProfileReceived = (profile: MinimallyTypedGeckoProfile) => void;
 
 /**
- * This is the type signature for a function to query the browser for an
- * environment variable. Currently only implemented for the popup.
- */
-export type GetEnvironmentVariable = (envName: string) => string;
-
-/**
  * This is the type signature for a function to query the browser for the
  * ID of the active tab.
  */
