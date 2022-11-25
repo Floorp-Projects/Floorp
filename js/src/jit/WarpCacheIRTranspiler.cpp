@@ -160,6 +160,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   const wasm::FuncExport* wasmFuncExportField(uint32_t offset) {
     return reinterpret_cast<const wasm::FuncExport*>(readStubWord(offset));
   }
+  NativeIterator** nativeIteratorStubField(uint32_t offset) {
+    return reinterpret_cast<NativeIterator**>(readStubWord(offset));
+  }
   gc::InitialHeap allocSiteInitialHeapField(uint32_t offset) {
     uintptr_t word = readStubWord(offset);
     MOZ_ASSERT(word == uintptr_t(gc::DefaultHeap) ||
@@ -713,6 +716,25 @@ bool WarpCacheIRTranspiler::emitMegamorphicSetElement(ObjOperandId objId,
   addEffectful(ins);
 
   return resumeAfter(ins);
+}
+
+bool WarpCacheIRTranspiler::emitObjectToIteratorResult(
+    ObjOperandId objId, uint32_t enumeratorsAddrOffset) {
+  MDefinition* obj = getOperand(objId);
+  NativeIterator** enumeratorsAddr =
+      nativeIteratorStubField(enumeratorsAddrOffset);
+
+  auto* ins = MObjectToIterator::New(alloc(), obj, enumeratorsAddr);
+  addEffectful(ins);
+  pushResult(ins);
+  if (!resumeAfter(ins)) {
+    return false;
+  }
+
+  auto* barrier = MPostWriteBarrier::New(alloc(), ins, obj);
+  add(barrier);
+
+  return true;
 }
 
 bool WarpCacheIRTranspiler::emitValueToIteratorResult(ValOperandId valId) {

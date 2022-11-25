@@ -1797,6 +1797,14 @@
 - name: GetDOMMember
   gen_boilerplate: false
 
+- name: ObjectToIterator
+  operands:
+    object: Object
+  arguments:
+    enumeratorsAddr: NativeIterator**
+  result_type:
+    Object
+
 - name: ValueToIterator
   operands:
     value: Value

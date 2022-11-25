@@ -808,9 +808,6 @@ class MOZ_RAII CacheIRCompiler {
            !allocator.isDeadAfterInstruction(objId);
   }
 
-  void emitRegisterEnumerator(Register enumeratorsList, Register iter,
-                              Register scratch);
-
  private:
   void emitPostBarrierShared(Register obj, const ConstantOrRegister& val,
                              Register scratch, Register maybeIndex);
