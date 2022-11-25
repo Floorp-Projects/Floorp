@@ -6260,6 +6260,13 @@ MDefinition::AliasType MGuardShape::mightAlias(const MDefinition* store) const {
   return MInstruction::mightAlias(store);
 }
 
+AliasSet MGuardMultipleShapes::getAliasSet() const {
+  // Note: This instruction loads the elements of the ListObject used to
+  // store the list of shapes, but that object is internal and not exposed
+  // to script, so it doesn't have to be in the alias set.
+  return AliasSet::Load(AliasSet::ObjectFields);
+}
+
 MDefinition* MGuardIsNotProxy::foldsTo(TempAllocator& alloc) {
   KnownClass known = GetObjectKnownClass(object());
   if (known == KnownClass::None) {
