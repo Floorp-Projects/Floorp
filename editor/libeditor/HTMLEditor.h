@@ -928,10 +928,7 @@ class HTMLEditor final : public EditorBase,
    * from the point and returns DOM point to put caret.
    *
    * @param aPoint      The point to clear style at.
-   * @param aProperty   An HTML tag name which represents a style.
-   *                    Set nullptr if you want to clear all styles.
-   * @param aAttribute  Attribute name if aProperty has some styles like
-   *                    nsGkAtoms::font.
+   * @param aStyleToRemove   The style which you want to clear.
    * @param aSpecifiedStyle  Whether the class and style attributes should
    *                         be preserved or discarded.
    * @return            A candidate position to put caret.  If there is
@@ -939,8 +936,9 @@ class HTMLEditor final : public EditorBase,
    *                    suggesting caret point only in some cases.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
-  ClearStyleAt(const EditorDOMPoint& aPoint, nsAtom* aProperty,
-               nsAtom* aAttribute, SpecifiedStyle aSpecifiedStyle);
+  ClearStyleAt(const EditorDOMPoint& aPoint,
+               const EditorInlineStyle& aStyleToRemove,
+               SpecifiedStyle aSpecifiedStyle);
 
   MOZ_CAN_RUN_SCRIPT nsresult SetPositionToAbsolute(Element& aElement);
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
