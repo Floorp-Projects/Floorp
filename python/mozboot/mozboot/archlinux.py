@@ -2,18 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import sys
 
 from mozboot.base import BaseBootstrapper
 from mozboot.linux_common import LinuxBootstrapper
-
-# NOTE: This script is intended to be run with a vanilla Python install.  We
-# have to rely on the standard library instead of Python 2+3 helpers like
-# the six module.
-if sys.version_info < (3,):
-    input = raw_input  # noqa
 
 
 class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):

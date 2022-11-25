@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this,
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import errno
 import json
 import os
@@ -11,15 +9,16 @@ import stat
 import subprocess
 import sys
 import time
-import requests
-from typing import Optional, Union
 from pathlib import Path
-from tqdm import tqdm
+from typing import Optional, Union
+
+import requests
 
 # We need the NDK version in multiple different places, and it's inconvenient
 # to pass down the NDK version to all relevant places, so we have this global
 # variable.
 from mozboot.bootstrap import MOZCONFIG_SUGGESTION_TEMPLATE
+from tqdm import tqdm
 
 NDK_VERSION = "r21d"
 CMDLINE_TOOLS_VERSION_STRING = "7.0"

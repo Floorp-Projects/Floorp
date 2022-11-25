@@ -11,8 +11,6 @@
 # Python environment (except that it's run with a sufficiently recent version of
 # Python 3), so we are restricted to stdlib modules.
 
-from __future__ import absolute_import, print_function, unicode_literals
-
 import sys
 
 major, minor = sys.version_info[:2]
@@ -23,14 +21,13 @@ if (major < 3) or (major == 3 and minor < 6):
     )
     sys.exit(1)
 
+import ctypes
 import os
 import shutil
 import subprocess
 import tempfile
-import ctypes
-
-from pathlib import Path
 from optparse import OptionParser
+from pathlib import Path
 
 CLONE_MERCURIAL_PULL_FAIL = """
 Failed to pull from hg.mozilla.org.
