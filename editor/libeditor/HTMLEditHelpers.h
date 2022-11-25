@@ -924,6 +924,8 @@ struct MOZ_STACK_CLASS EditorInlineStyle {
    */
   static EditorInlineStyle RemoveAllStyles() { return EditorInlineStyle(); }
 
+  PendingStyleCache ToPendingStyleCache(nsAString&& aValue) const;
+
   bool operator==(const EditorInlineStyle& aOther) const {
     return mHTMLProperty == aOther.mHTMLProperty &&
            mAttribute == aOther.mAttribute;
