@@ -276,10 +276,7 @@ nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
         Result<SplitRangeOffFromNodeResult, nsresult>
             wrapTextInStyledElementResult = SetInlinePropertyOnTextNode(
                 MOZ_KnownLive(*range.StartRef().ContainerAs<Text>()),
-                range.StartRef().Offset(), range.EndRef().Offset(),
-                MOZ_KnownLive(styleToSet.HTMLPropertyRef()),
-                MOZ_KnownLive(styleToSet.mAttribute),
-                styleToSet.mAttributeValue);
+                range.StartRef().Offset(), range.EndRef().Offset(), styleToSet);
         if (MOZ_UNLIKELY(wrapTextInStyledElementResult.isErr())) {
           NS_WARNING("HTMLEditor::SetInlinePropertyOnTextNode() failed");
           return wrapTextInStyledElementResult.unwrapErr();
@@ -325,9 +322,7 @@ nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
                 MOZ_KnownLive(*range.StartRef().ContainerAs<Text>()),
                 range.StartRef().Offset(),
                 range.StartRef().ContainerAs<Text>()->TextDataLength(),
-                MOZ_KnownLive(styleToSet.HTMLPropertyRef()),
-                MOZ_KnownLive(styleToSet.mAttribute),
-                styleToSet.mAttributeValue);
+                styleToSet);
         if (MOZ_UNLIKELY(wrapTextInStyledElementResult.isErr())) {
           NS_WARNING("HTMLEditor::SetInlinePropertyOnTextNode() failed");
           return wrapTextInStyledElementResult.unwrapErr();
@@ -362,10 +357,7 @@ nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
         Result<SplitRangeOffFromNodeResult, nsresult>
             wrapTextInStyledElementResult = SetInlinePropertyOnTextNode(
                 MOZ_KnownLive(*range.EndRef().ContainerAs<Text>()), 0,
-                range.EndRef().Offset(),
-                MOZ_KnownLive(styleToSet.HTMLPropertyRef()),
-                MOZ_KnownLive(styleToSet.mAttribute),
-                styleToSet.mAttributeValue);
+                range.EndRef().Offset(), styleToSet);
         if (MOZ_UNLIKELY(wrapTextInStyledElementResult.isErr())) {
           NS_WARNING("HTMLEditor::SetInlinePropertyOnTextNode() failed");
           return wrapTextInStyledElementResult.unwrapErr();
@@ -473,12 +465,12 @@ Result<bool, nsresult> HTMLEditor::ElementIsGoodContainerForTheStyle(
 }
 
 Result<SplitRangeOffFromNodeResult, nsresult>
-HTMLEditor::SetInlinePropertyOnTextNode(Text& aText, uint32_t aStartOffset,
-                                        uint32_t aEndOffset, nsAtom& aProperty,
-                                        nsAtom* aAttribute,
-                                        const nsAString& aValue) {
+HTMLEditor::SetInlinePropertyOnTextNode(
+    Text& aText, uint32_t aStartOffset, uint32_t aEndOffset,
+    const EditorInlineStyleAndValue& aStyleToSet) {
   if (!aText.GetParentNode() ||
-      !HTMLEditUtils::CanNodeContain(*aText.GetParentNode(), aProperty)) {
+      !HTMLEditUtils::CanNodeContain(*aText.GetParentNode(),
+                                     aStyleToSet.HTMLPropertyRef())) {
     return SplitRangeOffFromNodeResult(nullptr, &aText, nullptr);
   }
 
@@ -488,13 +480,15 @@ HTMLEditor::SetInlinePropertyOnTextNode(Text& aText, uint32_t aStartOffset,
   }
 
   // Don't need to do anything if property already set on node
-  if (CSSEditUtils::IsCSSEditableProperty(&aText, &aProperty, aAttribute)) {
-    // The HTML styles defined by aProperty/aAttribute have a CSS equivalence
-    // for node; let's check if it carries those CSS styles
-    nsAutoString value(aValue);
+  if (CSSEditUtils::IsCSSEditableProperty(
+          &aText, &aStyleToSet.HTMLPropertyRef(), aStyleToSet.mAttribute)) {
+    // The HTML styles defined by aStyleToSet have a CSS equivalence for node;
+    // let's check if it carries those CSS styles
+    nsAutoString value(aStyleToSet.mAttributeValue);
     Result<bool, nsresult> isComputedCSSEquivalentToHTMLInlineStyleOrError =
         CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet(
-            *this, aText, &aProperty, aAttribute, value);
+            *this, aText, MOZ_KnownLive(&aStyleToSet.HTMLPropertyRef()),
+            aStyleToSet.mAttribute, value);
     if (MOZ_UNLIKELY(isComputedCSSEquivalentToHTMLInlineStyleOrError.isErr())) {
       NS_WARNING(
           "CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet() failed");
@@ -503,8 +497,9 @@ HTMLEditor::SetInlinePropertyOnTextNode(Text& aText, uint32_t aStartOffset,
     if (isComputedCSSEquivalentToHTMLInlineStyleOrError.unwrap()) {
       return SplitRangeOffFromNodeResult(nullptr, &aText, nullptr);
     }
-  } else if (HTMLEditUtils::IsInlineStyleSetByElement(aText, aProperty,
-                                                      aAttribute, &aValue)) {
+  } else if (HTMLEditUtils::IsInlineStyleSetByElement(
+                 aText, aStyleToSet.HTMLPropertyRef(), aStyleToSet.mAttribute,
+                 &aStyleToSet.mAttributeValue)) {
     return SplitRangeOffFromNodeResult(nullptr, &aText, nullptr);
   }
 
@@ -592,14 +587,15 @@ HTMLEditor::SetInlinePropertyOnTextNode(Text& aText, uint32_t aStartOffset,
       unwrappedSplitAtEndResult.DidSplit()
           ? unwrappedSplitAtEndResult.GetNextContentAs<Text>()
           : nullptr;
-  if (aAttribute) {
+  if (aStyleToSet.mAttribute) {
     // Look for siblings that are correct type of node
     nsIContent* sibling = HTMLEditUtils::GetPreviousSibling(
         *middleTextNode, {WalkTreeOption::IgnoreNonEditableNode});
     if (sibling && sibling->IsElement()) {
       OwningNonNull<Element> element(*sibling->AsElement());
       Result<bool, nsresult> result = ElementIsGoodContainerForTheStyle(
-          element, &aProperty, aAttribute, &aValue);
+          element, MOZ_KnownLive(&aStyleToSet.HTMLPropertyRef()),
+          aStyleToSet.mAttribute, &aStyleToSet.mAttributeValue);
       if (MOZ_UNLIKELY(result.isErr())) {
         NS_WARNING("HTMLEditor::ElementIsGoodContainerForTheStyle() failed");
         return result.propagateErr();
@@ -627,7 +623,8 @@ HTMLEditor::SetInlinePropertyOnTextNode(Text& aText, uint32_t aStartOffset,
     if (sibling && sibling->IsElement()) {
       OwningNonNull<Element> element(*sibling->AsElement());
       Result<bool, nsresult> result = ElementIsGoodContainerForTheStyle(
-          element, &aProperty, aAttribute, &aValue);
+          element, MOZ_KnownLive(&aStyleToSet.HTMLPropertyRef()),
+          aStyleToSet.mAttribute, &aStyleToSet.mAttributeValue);
       if (MOZ_UNLIKELY(result.isErr())) {
         NS_WARNING("HTMLEditor::ElementIsGoodContainerForTheStyle() failed");
         return result.propagateErr();
@@ -654,7 +651,9 @@ HTMLEditor::SetInlinePropertyOnTextNode(Text& aText, uint32_t aStartOffset,
 
   // Wrap the node inside inline node with appropriate {attribute,value}
   Result<EditorDOMPoint, nsresult> setStyleResult = SetInlinePropertyOnNode(
-      MOZ_KnownLive(*middleTextNode), aProperty, aAttribute, aValue);
+      MOZ_KnownLive(*middleTextNode),
+      MOZ_KnownLive(aStyleToSet.HTMLPropertyRef()), aStyleToSet.mAttribute,
+      aStyleToSet.mAttributeValue);
   if (MOZ_UNLIKELY(setStyleResult.isErr())) {
     NS_WARNING("HTMLEditor::SetInlinePropertyOnNode() failed");
     return setStyleResult.propagateErr();
@@ -2485,12 +2484,11 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
           Result<SplitRangeOffFromNodeResult, nsresult>
               wrapTextInStyledElementResult = SetInlinePropertyOnTextNode(
                   MOZ_KnownLive(*content->AsText()), startOffset, endOffset,
-                  *styleToRemove.mHTMLProperty, styleToRemove.mAttribute,
-                  u"-moz-editor-invert-value"_ns);
+                  EditorInlineStyleAndValue::ToInvert(styleToRemove));
           if (MOZ_UNLIKELY(wrapTextInStyledElementResult.isErr())) {
             NS_WARNING(
-                "HTMLEditor::SetInlinePropertyOnTextNode(-moz-editor-invert-"
-                "value) failed");
+                "HTMLEditor::SetInlinePropertyOnTextNode("
+                "EditorInlineStyleAndValue::ToInvert()) failed");
             return wrapTextInStyledElementResult.unwrapErr();
           }
           SplitRangeOffFromNodeResult unwrappedWrapTextInStyledElementResult =
@@ -2550,8 +2548,7 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
         Result<SplitRangeOffFromNodeResult, nsresult>
             wrapTextInStyledElementResult = SetInlinePropertyOnTextNode(
                 MOZ_KnownLive(textNode), 0, textNode->TextLength(),
-                *styleToRemove.mHTMLProperty, styleToRemove.mAttribute,
-                u"-moz-editor-invert-value"_ns);
+                EditorInlineStyleAndValue::ToInvert(styleToRemove));
         if (MOZ_UNLIKELY(wrapTextInStyledElementResult.isErr())) {
           NS_WARNING(
               "HTMLEditor::SetInlinePropertyOnTextNode(-moz-editor-invert-"

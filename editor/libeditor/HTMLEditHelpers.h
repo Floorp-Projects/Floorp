@@ -966,6 +966,12 @@ struct MOZ_STACK_CLASS EditorInlineStyleAndValue : public EditorInlineStyle {
       : EditorInlineStyle(aHTMLProperty, std::move(aAttribute)),
         mAttributeValue(aValue) {}
 
+  [[nodiscard]] static EditorInlineStyleAndValue ToInvert(
+      const EditorInlineStyle& aStyle) {
+    MOZ_ASSERT(aStyle.IsInvertibleWithCSS());
+    return EditorInlineStyleAndValue(aStyle, u"-moz-editor-invert-value"_ns);
+  }
+
   // mHTMLProperty is never nullptr since all constructors guarantee it.
   // Therefore, hide it and expose its reference instead.
   MOZ_KNOWN_LIVE nsStaticAtom& HTMLPropertyRef() const {
@@ -975,6 +981,10 @@ struct MOZ_STACK_CLASS EditorInlineStyleAndValue : public EditorInlineStyle {
 
  private:
   using EditorInlineStyle::mHTMLProperty;
+
+  EditorInlineStyleAndValue(const EditorInlineStyle& aStyle,
+                            const nsAString& aValue)
+      : EditorInlineStyle(aStyle), mAttributeValue(aValue) {}
 };
 
 }  // namespace mozilla
