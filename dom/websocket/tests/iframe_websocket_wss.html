@@ -18,6 +18,7 @@ try{
       close();
     };
     socket.onopen = function(event) {
+      socket.close();
       parent.postMessage('WS onopen', '*');
       close();
     };

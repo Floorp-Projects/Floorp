@@ -13,10 +13,11 @@
 <iframe id="frame" sandbox="allow-scripts"></iframe>
 <script class="testbody" type="text/javascript">
 
-let iFrameTests = [testSameOriginSandboxInsecure, testSameOriginSandboxSecure, testCrossOriginSandboxInsecure, testCrossOriginSandboxSecure];
+let iFrameTests = [testWebSocketSecure, testWebSocketInsecure, testSameOriginSandboxInsecure, testSameOriginSandboxSecure, testCrossOriginSandboxInsecure, testCrossOriginSandboxSecure];
 
 function nextIFrameTest() {
   if(!iFrameTests.length) {
+    document.getElementById("frame").removeAttribute("src");
     document.getElementById("frame").remove();
     SimpleTest.finish();
   }
@@ -27,9 +28,6 @@ function nextIFrameTest() {
 }
 
 function testWebSockets () {
-  testWebSocketSecure();
-  testWebSocketInsecure();
-
   nextIFrameTest();
 }
 
@@ -41,6 +39,7 @@ function testWebSocketSecure () {
   ws.onmessage = function(e) {
     is(e.data, "Hello world!", "Wrong data");
     ws.close();
+    nextIFrameTest();
   }
 }
 
@@ -51,6 +50,7 @@ function testWebSocketInsecure () {
     ok(false, "Should throw DOMException");
   } catch (e) {
     ok(e instanceof DOMException, "DOMException thrown ");
+    nextIFrameTest();
   }
 }
 

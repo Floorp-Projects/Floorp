@@ -3,12 +3,19 @@ Creating WebSocket
 <iframe id="frame" sandbox="allow-scripts"></iframe>
 <script type="application/javascript">
 
+function cleanup() {
+  window.document.getElementById("frame").removeAttribute("src");
+  window.document.getElementById("frame").remove();
+}
+
 onmessage = function(e) {
+  cleanup();
   window.opener.postMessage(e.data, '*');
 }
 
 // Mixed content blocker will prevent loading iframes via http, so in that case pass back the error
 window.document.getElementById("frame").onerror = function(e) {
+  cleanup();
   window.opener.postMessage("Error - iframe not loaded", '*');
 }
 
@@ -34,16 +41,21 @@ else {
       socket = new WebSocket('wss://example.com/tests/dom/websocket/tests/file_websocket_hello');
     }
     socket.onerror = function(e) {
+      cleanup();
       window.opener.postMessage("WS onerror", "*");
     };
     socket.onopen = function(event) {
+      socket.close();
+      cleanup();
       window.opener.postMessage("WS onopen", "*");
     };
   }
   catch(e) {
     if (e.name == 'SecurityError') {
+      cleanup();
       window.opener.postMessage("SecurityError", "*");
     } else {
+      cleanup();
       window.opener.postMessage("Test Throws", "*");
     }
   }
