@@ -64,7 +64,7 @@ android-x86_64-asan-fuzzing/opt:
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
-        custom-build-variant-cfg: x86_64-fuzzing-asan
+        custom-build-variant-cfg: fuzzing-asan-tc
     use-sccache: true
     fetches:
         toolchain:

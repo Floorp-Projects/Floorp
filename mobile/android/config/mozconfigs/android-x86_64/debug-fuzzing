@@ -1,4 +1,4 @@
-. "$topsrcdir/mobile/android/config/mozconfigs/android-x86/debug"
+. "$topsrcdir/mobile/android/config/mozconfigs/android-x86_64/debug"
 
 # Disable Telemetry
 ac_add_options MOZ_TELEMETRY_REPORTING=
