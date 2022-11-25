@@ -38,6 +38,10 @@ RUST_TESTS = [
 # altogether.
 if not CONFIG["MOZ_CODE_COVERAGE"]:
     RUST_TESTS += ["stylo_tests"]
+    # Same happens for the style tests, except the windows linker is not great
+    # at eliminating dead code, so we end up with some missing symbols too.
+    if CONFIG["OS_TARGET"] != "WINNT":
+        RUST_TESTS += ["style"]
 
 if CONFIG["CPU_ARCH"] != "x86":
     # malloc_size_of_derive is a build dependency, so if we are doing

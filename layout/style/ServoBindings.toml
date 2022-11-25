@@ -51,8 +51,7 @@ hide-types = [
     # https://github.com/rust-lang/rust-bindgen/issues/1503
     "mozilla::StyleTimingFunction.*",
     # https://github.com/rust-lang/rust-bindgen/issues/1559
-    "mozilla::StyleGenericTransformOperation_.*",
-    "mozilla::StyleGenericColor_.*",
+    "mozilla::StyleGeneric.*",
 ]
 bitfield-enums = [
     "nsChangeHint",
@@ -402,6 +401,8 @@ opaque-types = [
                       #    generate it conditionally.
     "JS::Rooted",
     "mozilla::Maybe",
+    "mozilla::Variant",
+    "mozilla::dom::TreeOrderedArray", # AutoTArray<>
     "gfxSize",  # <- union { struct { T width; T height; }; T components[2] };
     "gfxSize_Super",  # Ditto.
     "mozilla::StyleAnimationValue",
@@ -409,6 +410,7 @@ opaque-types = [
     "mozilla::dom::.*Callback", # Pulls in ErrorResult and other things that
                                 # don't align properly on Linux 32-bit
     "mozilla::SchedulerGroup", # Non-standard-layout packing of field into superclass
+    "mozilla::Widget.*Event", # As above
     "mozilla::detail::GkAtoms", # https://bugzilla.mozilla.org/show_bug.cgi?id=1517685
     "mozilla::detail::ThreadLocal.*",
 ]
@@ -523,6 +525,12 @@ cbindgen-types = [
     { gecko = "StyleOwnedOrNull", servo = "crate::gecko_bindings::sugar::ownership::OwnedOrNull" },
     { gecko = "StyleStrong", servo = "crate::gecko_bindings::sugar::ownership::Strong" },
     { gecko = "StyleGenericFontFamily", servo = "crate::values::computed::font::GenericFontFamily" },
+    { gecko = "StyleGenericPosition", servo = "crate::values::generics::position::GenericPosition" },
+    { gecko = "StyleGenericMozImageRect", servo = "crate::values::generics::image::GenericMozImageRect" },
+    { gecko = "StyleGenericCounterPair", servo = "crate::values::generics::counters::GenericCounterPair" },
+    { gecko = "StyleGenericShapeRadius", servo = "crate::values::generics::basic_shape::GenericShapeRadius" },
+    { gecko = "StyleGenericClipRect", servo = "crate::values::generics::GenericClipRect" },
+    { gecko = "StyleGenericCursorImage", servo = "crate::values::generics::ui::GenericCursorImage" },
     { gecko = "StyleFontFamily", servo = "crate::values::computed::font::FontFamily" },
     { gecko = "StyleGenericFontSizeAdjust", servo = "crate::values::generics::font::GenericFontSizeAdjust" },
     { gecko = "StyleFontFamilyNameSyntax", servo = "crate::values::computed::font::FontFamilyNameSyntax" },
@@ -552,6 +560,7 @@ cbindgen-types = [
     { gecko = "StyleAngle", servo = "crate::values::computed::Angle" },
     { gecko = "StyleGenericBorderImageSideWidth", servo = "crate::values::generics::border::BorderImageSideWidth" },
     { gecko = "StyleGenericUrlOrNone", servo = "crate::values::generics::url::UrlOrNone" },
+    { gecko = "StyleGenericCalcNode", servo = "crate::values::generics::calc::GenericCalcNode" },
     { gecko = "StyleCssUrl", servo = "crate::gecko::url::CssUrl" },
     { gecko = "StyleSpecifiedUrl", servo = "crate::gecko::url::SpecifiedUrl" },
     { gecko = "StyleSpecifiedImageUrl", servo = "crate::gecko::url::SpecifiedImageUrl" },
