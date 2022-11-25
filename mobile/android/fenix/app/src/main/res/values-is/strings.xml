@@ -46,8 +46,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Nýleg bókamerki</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">Nýlega vistað</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Sýna öll vistuð bókamerki</string>
@@ -257,40 +255,18 @@
     <string name="search_settings_menu_item">Leitarstillingar</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Leita núna með:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Leita núna með:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Leita núna í:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Hvað er nýtt í %1$s</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Nú er auðveldara að halda áfram þar sem frá var horfið.</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Persónuleg %1$s upphafssíða</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Hoppaðu í opna flipa, bókamerki og vafraferil.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Hreinlegir, skipulagðir flipar</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Hreinsaðu flipaóreiðuna með bættu skipulagi og sjálfvirkri lokun flipa.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Nýlegar leitir</string>
-
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Skoðaðu nýjustu leitirnar þínar af upphafssíðunni þinni og flipum.</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Sérsniðin Firefox-upphafssíða þín gerir það nú auðveldara að halda áfram þar sem frá var horfið. Finndu nýlega flipa, bókamerki og leitarniðurstöður.</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Kynntu þér persónulegu upphafssíðuna þína. Nýlegir flipar, bókamerki og leitarniðurstöður munu birtast hér.</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Velkomin á sjálfstætt internet</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">Velkomin á persónulegra internet</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Fleiri litir. Betri persónuvarnir. Sama skuldbindingin sem setur fólk fram yfir hagnað.</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Hoppaðu úr síma yfir í fartölvu og svo aftur til baka</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">Það er auðveldara en nokkru sinni að skipta á milli skjáa</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -357,6 +333,14 @@
     <string name="preferences_add_private_browsing_shortcut">Bæta við flýtileið fyrir huliðsglugga</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Einungis-HTTPS-hamur</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Fækkun vefkökuborða</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Fækka vefkökuborðum</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox reynir sjálfkrafa að hafna vefkökubeiðnum á vefkökuborðum. Ef ekki er boðið upp á að hafna vefkökum getur Firefox samþykkt allar vefkökur til að hafna borðanum.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Reynir sjálfkrafa að tengjast vefsvæðum með HTTPS dulritunareglum til að auka öryggi.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1243,34 +1227,20 @@
     <string name="delete_history_group_snackbar">Hópi eytt</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Velkomin í %s!</string>
-
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">Velkomin á betra internet</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">Vafri hannaður fyrir fólk, ekki gróða.</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Samstilla Firefox á milli tækja</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">Halda áfram þar sem frá var horfið</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Komdu með bókamerki, feril og lykilorð yfir í %1$s á þessu tæki.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">Samstilltu flipa og lykilorð á milli tækja til að skipta óaðfinnanlega um skjái.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Skráðu þig</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">Skrá inn</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Kveikt er á samstillingu</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Sívökul friðhelgi</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Sjálfgefin persónuvernd</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s kemur sjálfkrafa í veg fyrir að fyrirtæki fylgi þér í laumi um vefinn.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Er með allsherjar-vefkökuvörn sem kemur í veg fyrir að rekjarar geti notað vafrakökur til að rekja slóð þína á milli vefsvæða.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1284,17 +1254,10 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">Lokar fyrir fleiri rekjara svo síður hlaðast hraðar, en einhver virkni á síðunni gæti rofnað.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Veldu staðsetningu verkfærastikunnar</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Settu verkfærastikuna innan seilingar. Haltu henni neðst eða færðu hana efst.</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">Haltu því neðst eða færðu það efst.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Persónuvernd þín</string>
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">Þú stjórnar gögnunum þínum</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Við hönnuðum %s til að gefa þér stjórn yfir því hverju þú deilir á netinu og því sem þú deilir með okkur.</string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">Firefox gefur þér stjórn yfir því hverju þú deilir á netinu og því sem þú deilir með okkur.</string>
     <!-- Text for the button to read the privacy notice -->

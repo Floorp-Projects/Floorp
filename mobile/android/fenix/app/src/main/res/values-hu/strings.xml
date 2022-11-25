@@ -46,8 +46,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Friss könyvjelzők</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">Nemrég mentett</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Összes mentett könyvjelző megjelenítése</string>
@@ -260,40 +258,18 @@
     <string name="search_settings_menu_item">Keresési beállítások</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Ezúttal keresés ezzel:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Ezúttal keresés ezzel:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Ezúttal keresés ebben:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">A %s újdonságai</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Mostantól könnyebb ott folytatni, ahol abbahagyta.</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Személyre szabott %1$s kezdőoldal</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Ugrás a megnyitott lapokra, könyvjelzőkre és az előzményekre.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Tiszta, rendszerezett lapok</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Számoljon le a lapok rendezetlenségével a jobb elrendezés és az automatikusan bezáródó lapok segítségével.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Legutóbbi keresések</string>
-
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Tekintse meg újra a legutóbbi kereséseit a kezdőlapról és a lapokról.</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">A személyre szabott Firefox kezdőlapja megkönnyíti, hogy ott folytassa, ahol abbahagyta. Találja meg a legutóbbi lapjait, könyvjelzőit és keresési találatait.</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Ismerje meg személyre szabott kezdőlapját. Itt jelennek meg a legutóbbi lapok, könyvjelzők és keresési találatok.</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Üdvözöljük egy független interneten</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">Üdvözöljük egy személyesebb interneten</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Több szín. Jobb adatvédelem. Ugyanaz az elkötelezettség: az emberek a profit előtt.</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Váltson át a telefonról a laptopra és vissza</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">A képernyők közötti váltás egyszerűbb, mint valaha</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -360,6 +336,7 @@
     <string name="preferences_add_private_browsing_shortcut">Privát böngészési indítóikon hozzáadása</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Csak HTTPS mód</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automatikusan HTTPS titkosítási protokoll használatával próbál meg csatlakozni a webhelyekhez a fokozott biztonság érdekében.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1259,33 +1236,20 @@
     <string name="delete_history_group_snackbar">Csoport törölve</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Üdvözli a %s!</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">Üdvözöljük egy jobb interneten</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">Egy böngésző az emberekért, nem a haszonért.</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">A Firefox szinkronizálása az eszközök közt</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">Folytassa ott, ahol abbahagyta</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Adjon hozzá könyvjelzőket, előzményeket és jelszavakat a %1$shoz ezen az eszközön.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">Szinkronizálja a lapokat és a jelszavakat az eszközök között a zökkenőmentes képernyőváltás érdekében.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Regisztráció</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">Bejelentkezés</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">A Sync be van kapcsolva</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Mindig bekapcsolt adatvédelem</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Adatvédelem alapértelmezetten</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">A %1$s automatikusan megakadályozza, hogy a cégek titokban kövessék Önt a weben.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Bemutatkozik a Teljes sütivédelem, amely megakadályozza, hogy a nyomkövetők arra használhassák a sütiket, hogy kövessék a webhelyek között.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1298,18 +1262,10 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">Több nyomkövetőt blokkol, így az oldalak gyorsabban töltenek be, de egyes oldalfunkciók meghibásodhatnak.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Válassza ki az eszköztár elhelyezését</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Helyezze az eszköztárat könnyen elérhető helyre. Tartsa az alján, vagy mozgassa a tetejére.</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">Tartsa továbbra is lent, vagy vigye a tetejére.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Adatvédelem</string>
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">Ön irányítja az adatait</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Úgy terveztük a %s böngészőt, hogy irányítást adjunk afelett, hogy mit oszt meg online, és mit oszt meg velünk.
-    </string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">A Firefox irányítást ad afelett, hogy mit oszt meg online, és mit oszt meg velünk.</string>
     <!-- Text for the button to read the privacy notice -->

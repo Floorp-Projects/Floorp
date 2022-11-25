@@ -264,7 +264,10 @@
     <string name="search_settings_menu_item">搜索设置</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">这次搜索：</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">这次搜索：</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">此次搜索：</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -340,6 +343,14 @@
     <string name="preferences_add_private_browsing_shortcut">添加隐私浏览快捷方式</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">HTTPS-Only 模式</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">减少 Cookie 横幅</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">减少 Cookie 横幅</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox 会自动尝试点击 Cookie 横幅上的“拒绝”按钮。若网站未提供拒绝选项，则可能会接受所有 Cookie 以关闭横幅。</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">自动尝试使用 HTTPS 加密协议连接至网站，增强安全性。</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->

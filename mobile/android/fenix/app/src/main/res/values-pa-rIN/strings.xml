@@ -347,6 +347,9 @@
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">ਕੂਕੀਜ਼ ਬੈਨਰ ਘਟਾਓ</string>
 
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox ਆਪਣੇ-ਆਪ ਕੂਕੀਜ਼ ਬੈਨਰ ਲਈ ਕੂਕੀਜ਼ ਬੇਨਤੀਆਂ ਨੂੰ ਇਨਕਾਰ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ ਕਰਦਾ ਹੈ। ਜੇ ਇਨਕਾਰ ਕਰਨ ਦੀ ਚੋਣ ਨਹੀਂ ਮੌਜੂਦ ਹੁੰਦੀ ਤਾਂ Firefox ਬੈਨਰ ਨੂੰ ਖਾਰਜ ਕਰਨ ਵਾਸਤੇ ਸਾਰੇ ਕੂਕੀਜ਼ ਨੂੰ ਮਨਜ਼ੂਰ ਵੀ ਕਰ ਸਕਦਾ ਹੈ।</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">ਵਾਧਾ ਕੀਤੀ ਸੁਰੱਖਿਆ ਲਈ HTTPS ਇੰਕ੍ਰਿਪਸ਼ਨ ਪਰੋਟੋਕਾਲ ਵਰਤ ਕੇ ਸਾਈਟਾਂ ਨਾਲ ਕਨੈਕਟ ਕਰਨ ਦੀ ਆਪਣੇ-ਆਪ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
