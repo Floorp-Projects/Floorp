@@ -879,17 +879,20 @@ Result<int32_t, nsresult> CSSEditUtils::SetCSSEquivalentToStyle(
   return count;
 }
 
-// Remove from aNode the CSS inline style equivalent to
-// HTMLProperty/aAttribute/aValue for the node
-
 // static
-nsresult CSSEditUtils::RemoveCSSEquivalentToHTMLStyleInternal(
-    HTMLEditor& aHTMLEditor, nsStyledElement& aStyledElement,
-    nsAtom* aHTMLProperty, nsAtom* aAttribute, const nsAString* aValue,
-    bool aSuppressTransaction) {
-  if (!IsCSSEditableProperty(&aStyledElement, aHTMLProperty, aAttribute)) {
-    return NS_OK;
-  }
+nsresult CSSEditUtils::RemoveCSSEquivalentToStyle(
+    WithTransaction aWithTransaction, HTMLEditor& aHTMLEditor,
+    nsStyledElement& aStyledElement, const EditorElementStyle& aStyleToRemove,
+    const nsAString* aValue) {
+  nsStaticAtom* const htmlProperty =
+      aStyleToRemove.IsInlineStyle()
+          ? aStyleToRemove.AsInlineStyle().mHTMLProperty
+          : nullptr;
+  const RefPtr<nsAtom> attributeOrStyle =
+      aStyleToRemove.IsInlineStyle() ? aStyleToRemove.AsInlineStyle().mAttribute
+                                     : aStyleToRemove.Style();
+  MOZ_DIAGNOSTIC_ASSERT(
+      IsCSSEditableProperty(&aStyledElement, htmlProperty, attributeOrStyle));
 
   // we can apply the styles only if the node is an element and if we have
   // an equivalence for the requested HTML style in this implementation
@@ -897,9 +900,9 @@ nsresult CSSEditUtils::RemoveCSSEquivalentToHTMLStyleInternal(
   // Find the CSS equivalence to the HTML style
   nsTArray<nsStaticAtom*> cssPropertyArray;
   nsTArray<nsString> cssValueArray;
-  GenerateCSSDeclarationsFromHTMLStyle(aStyledElement, aHTMLProperty,
-                                       aAttribute, aValue, cssPropertyArray,
-                                       cssValueArray, true);
+  GenerateCSSDeclarationsFromHTMLStyle(aStyledElement, htmlProperty,
+                                       attributeOrStyle, aValue,
+                                       cssPropertyArray, cssValueArray, true);
 
   // remove the individual CSS inline styles
   const size_t count = cssPropertyArray.Length();
@@ -909,7 +912,7 @@ nsresult CSSEditUtils::RemoveCSSEquivalentToHTMLStyleInternal(
   for (size_t index = 0; index < count; index++) {
     nsresult rv = RemoveCSSPropertyInternal(
         aHTMLEditor, aStyledElement, MOZ_KnownLive(*cssPropertyArray[index]),
-        cssValueArray[index], aSuppressTransaction);
+        cssValueArray[index], aWithTransaction == WithTransaction::No);
     if (NS_FAILED(rv)) {
       NS_WARNING("CSSEditUtils::RemoveCSSPropertyWithoutTransaction() failed");
       return rv;

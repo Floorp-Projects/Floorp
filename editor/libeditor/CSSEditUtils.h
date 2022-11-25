@@ -254,27 +254,15 @@ class CSSEditUtils final {
    *
    * @param aHTMLEditor    [IN} An HTMLEditor instance
    * @param aStyledElement [IN] A DOM Element (must not be null).
-   * @param aHTMLProperty  [IN] An atom containing an HTML property.
+   * @param aStyleToRemove [IN] The style to remove.  Can be EditorInlineStyle.
    * @param aAttribute     [IN] An atom to an attribute name or nullptr if
    *                            irrelevant.
    * @param aValue         [IN] The attribute value.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
-  RemoveCSSEquivalentToHTMLStyleWithTransaction(HTMLEditor& aHTMLEditor,
-                                                nsStyledElement& aStyledElement,
-                                                nsAtom* aHTMLProperty,
-                                                nsAtom* aAttribute,
-                                                const nsAString* aValue) {
-    return RemoveCSSEquivalentToHTMLStyleInternal(
-        aHTMLEditor, aStyledElement, aHTMLProperty, aAttribute, aValue, false);
-  }
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
-  RemoveCSSEquivalentToHTMLStyleWithoutTransaction(
-      HTMLEditor& aHTMLEditor, nsStyledElement& aStyledElement,
-      nsAtom* aHTMLProperty, nsAtom* aAttribute, const nsAString* aValue) {
-    return RemoveCSSEquivalentToHTMLStyleInternal(
-        aHTMLEditor, aStyledElement, aHTMLProperty, aAttribute, aValue, true);
-  }
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult RemoveCSSEquivalentToStyle(
+      WithTransaction aWithTransaction, HTMLEditor& aHTMLEditor,
+      nsStyledElement& aStyledElement, const EditorElementStyle& aStyleToRemove,
+      const nsAString* aValue);
 
   /**
    * Parses a "xxxx.xxxxxuuu" string where x is a digit and u an alpha char.
@@ -397,13 +385,6 @@ class CSSEditUtils final {
       HTMLEditor& aHTMLEditor, nsStyledElement& aStyledElement,
       nsAtom& aProperty, const nsAString& aPropertyValue,
       bool aSuppressTxn = false);
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
-  RemoveCSSEquivalentToHTMLStyleInternal(HTMLEditor& aHTMLEditor,
-                                         nsStyledElement& aStyledElement,
-                                         nsAtom* aHTMLProperty,
-                                         nsAtom* aAttribute,
-                                         const nsAString* aValue,
-                                         bool aSuppressTransaction);
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult SetCSSPropertyInternal(
       HTMLEditor& aHTMLEditor, nsStyledElement& aStyledElement,
       nsAtom& aProperty, const nsAString& aValue, bool aSuppressTxn = false);

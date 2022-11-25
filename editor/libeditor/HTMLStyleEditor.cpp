@@ -1556,21 +1556,15 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveStyleInside(
         // If aElement has CSS declaration of the given style, remove it.
         // MOZ_KnownLive(*styledElement): It's aElement and its lifetime must be
         // guaranteed by the caller because of MOZ_CAN_RUN_SCRIPT method.
-        nsresult rv =
-            CSSEditUtils::RemoveCSSEquivalentToHTMLStyleWithTransaction(
-                *this, MOZ_KnownLive(*styledElement),
-                aStyleToRemove.mHTMLProperty, aStyleToRemove.mAttribute,
-                nullptr);
-        if (rv == NS_ERROR_EDITOR_DESTROYED) {
-          NS_WARNING(
-              "CSSEditUtils::RemoveCSSEquivalentToHTMLStyleWithTransaction() "
-              "destroyed the editor");
+        nsresult rv = CSSEditUtils::RemoveCSSEquivalentToStyle(
+            WithTransaction::Yes, *this, MOZ_KnownLive(*styledElement),
+            aStyleToRemove, nullptr);
+        if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
           return Err(NS_ERROR_EDITOR_DESTROYED);
         }
         NS_WARNING_ASSERTION(
             NS_SUCCEEDED(rv),
-            "CSSEditUtils::RemoveCSSEquivalentToHTMLStyleWithTransaction() "
-            "failed, but ignored");
+            "CSSEditUtils::RemoveCSSEquivalentToStyle() failed, but ignored");
       }
       // Additionally, remove aElement itself if it's a `<span>` or `<font>`
       // and it does not have non-empty `style`, `id` nor `class` attribute.
