@@ -171,20 +171,13 @@ class CSSEditUtils final {
    * Returns the list of values for the CSS equivalences to
    * the passed HTML style for the passed node.
    *
-   * @param aContent       [IN] A DOM node.
-   * @param aHTMLProperty  [IN] An atom containing an HTML property.
-   * @param aAttribute     [IN] An atom of attribute name or nullptr if
-   *                            irrelevant.
+   * @param aElement       [IN] A DOM node.
+   * @param aStyle         [IN] The style to get the values.
    * @param aValueString   [OUT] The list of CSS values.
    */
-  MOZ_CAN_RUN_SCRIPT static nsresult
-  GetComputedCSSEquivalentToHTMLInlineStyleSet(nsIContent& aContent,
-                                               nsAtom* aHTMLProperty,
-                                               nsAtom* aAttribute,
-                                               nsAString& aValue) {
-    return GetCSSEquivalentToHTMLInlineStyleSetInternal(
-        aContent, aHTMLProperty, aAttribute, aValue, StyleType::Computed);
-  }
+  MOZ_CAN_RUN_SCRIPT static nsresult GetComputedCSSEquivalentTo(
+      dom::Element& aElement, const EditorElementStyle& aStyle,
+      nsAString& aOutValue);
 
   /**
    * Does the node aNode (or his parent if it is not an element node) carries
@@ -287,7 +280,6 @@ class CSSEditUtils final {
   static bool DoStyledElementsHaveSameStyle(
       nsStyledElement& aStyledElement, nsStyledElement& aOtherStyledElement);
 
- public:
   /**
    * Gets the computed style for a given element.  Can return null.
    */
@@ -366,12 +358,9 @@ class CSSEditUtils final {
    * you want to use one of them in this class.
    * Note that these methods may run scrip only when StyleType is Computed.
    */
-  MOZ_CAN_RUN_SCRIPT static nsresult
-  GetCSSEquivalentToHTMLInlineStyleSetInternal(nsIContent& aContent,
-                                               nsAtom* aHTMLProperty,
-                                               nsAtom* aAttribute,
-                                               nsAString& aValue,
-                                               StyleType aStyleType);
+  MOZ_CAN_RUN_SCRIPT static nsresult GetCSSEquivalentTo(
+      dom::Element& aElement, const EditorElementStyle& aStyle,
+      nsAString& aOutValue, StyleType aStyleType);
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<bool, nsresult>
   IsCSSEquivalentTo(const HTMLEditor& aHTMLEditor, nsIContent& aContent,
                     const EditorInlineStyle& aStyle, nsAString& aInOutValue,

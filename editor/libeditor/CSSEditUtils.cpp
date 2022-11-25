@@ -921,34 +921,35 @@ nsresult CSSEditUtils::RemoveCSSEquivalentToStyle(
   return NS_OK;
 }
 
-// returns in aValue the list of values for the CSS equivalences to
-// the HTML style aHTMLProperty/aAttribute/aValue for the node aNode;
-// the value of aStyleType controls the styles we retrieve : specified or
-// computed.
+// static
+nsresult CSSEditUtils::GetComputedCSSEquivalentTo(
+    Element& aElement, const EditorElementStyle& aStyle, nsAString& aOutValue) {
+  return GetCSSEquivalentTo(aElement, aStyle, aOutValue, StyleType::Computed);
+}
 
 // static
-nsresult CSSEditUtils::GetCSSEquivalentToHTMLInlineStyleSetInternal(
-    nsIContent& aContent, nsAtom* aHTMLProperty, nsAtom* aAttribute,
-    nsAString& aValue, StyleType aStyleType) {
-  MOZ_ASSERT(aHTMLProperty || aAttribute);
+nsresult CSSEditUtils::GetCSSEquivalentTo(Element& aElement,
+                                          const EditorElementStyle& aStyle,
+                                          nsAString& aOutValue,
+                                          StyleType aStyleType) {
+  MOZ_ASSERT_IF(aStyle.IsInlineStyle(),
+                !aStyle.AsInlineStyle().IsStyleToClearAllInlineStyles());
 
-  aValue.Truncate();
-  RefPtr<Element> theElement = aContent.GetAsElementOrParentElement();
-  if (NS_WARN_IF(!theElement)) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  nsStaticAtom* const htmlProperty =
+      aStyle.IsInlineStyle() ? aStyle.AsInlineStyle().mHTMLProperty : nullptr;
+  const RefPtr<nsAtom> attributeOrStyle =
+      aStyle.IsInlineStyle() ? aStyle.AsInlineStyle().mAttribute
+                             : aStyle.Style();
+  MOZ_DIAGNOSTIC_ASSERT(
+      IsCSSEditableProperty(&aElement, htmlProperty, attributeOrStyle));
 
-  if (!theElement ||
-      !IsCSSEditableProperty(theElement, aHTMLProperty, aAttribute)) {
-    return NS_OK;
-  }
-
+  aOutValue.Truncate();
   // Yes, the requested HTML style has a CSS equivalence in this implementation
   nsTArray<nsStaticAtom*> cssPropertyArray;
   nsTArray<nsString> cssValueArray;
   // get the CSS equivalence with last param true indicating we want only the
   // "gettable" properties
-  GenerateCSSDeclarationsFromHTMLStyle(*theElement, aHTMLProperty, aAttribute,
+  GenerateCSSDeclarationsFromHTMLStyle(aElement, htmlProperty, attributeOrStyle,
                                        nullptr, cssPropertyArray, cssValueArray,
                                        true);
   int32_t count = cssPropertyArray.Length();
@@ -957,24 +958,24 @@ nsresult CSSEditUtils::GetCSSEquivalentToHTMLInlineStyleSetInternal(
     // retrieve the specified/computed value of the property
     if (aStyleType == StyleType::Computed) {
       nsresult rv = GetComputedCSSInlinePropertyBase(
-          *theElement, MOZ_KnownLive(*cssPropertyArray[index]), valueString);
+          aElement, MOZ_KnownLive(*cssPropertyArray[index]), valueString);
       if (NS_FAILED(rv)) {
         NS_WARNING("CSSEditUtils::GetComputedCSSInlinePropertyBase() failed");
         return rv;
       }
     } else {
       nsresult rv = GetSpecifiedCSSInlinePropertyBase(
-          *theElement, *cssPropertyArray[index], valueString);
+          aElement, *cssPropertyArray[index], valueString);
       if (NS_FAILED(rv)) {
         NS_WARNING("CSSEditUtils::GetSpecifiedCSSInlinePropertyBase() failed");
         return rv;
       }
     }
-    // append the value to aValue (possibly with a leading white-space)
+    // append the value to aOutValue (possibly with a leading white-space)
     if (index) {
-      aValue.Append(HTMLEditUtils::kSpace);
+      aOutValue.Append(HTMLEditUtils::kSpace);
     }
-    aValue.Append(valueString);
+    aOutValue.Append(valueString);
   }
   return NS_OK;
 }
@@ -1014,16 +1015,13 @@ Result<bool, nsresult> CSSEditUtils::IsCSSEquivalentTo(
   nsAutoString htmlValueString(aInOutValue);
   bool isSet = false;
   // FYI: Cannot use InclusiveAncestorsOfType here because
-  //      GetCSSEquivalentToHTMLInlineStyleSetInternal() may flush pending
-  //      notifications.
-  for (nsCOMPtr<nsIContent> content = &aContent; content;
-       content = content->GetParentElement()) {
-    nsCOMPtr<nsINode> parentNode = content->GetParentNode();
+  //      GetCSSEquivalentTo() may flush pending notifications.
+  for (RefPtr<Element> element = aContent.GetAsElementOrParentElement();
+       element; element = element->GetParentElement()) {
+    nsCOMPtr<nsINode> parentNode = element->GetParentNode();
     aInOutValue.Assign(htmlValueString);
     // get the value of the CSS equivalent styles
-    nsresult rv = GetCSSEquivalentToHTMLInlineStyleSetInternal(
-        *content, aStyle.mHTMLProperty, aStyle.mAttribute, aInOutValue,
-        aStyleType);
+    nsresult rv = GetCSSEquivalentTo(*element, aStyle, aInOutValue, aStyleType);
     if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
       return Err(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -1033,7 +1031,7 @@ Result<bool, nsresult> CSSEditUtils::IsCSSEquivalentTo(
           "failed");
       return Err(rv);
     }
-    if (NS_WARN_IF(parentNode != content->GetParentNode())) {
+    if (NS_WARN_IF(parentNode != element->GetParentNode())) {
       return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
     }
 
@@ -1192,16 +1190,13 @@ Result<bool, nsresult> CSSEditUtils::HaveCSSEquivalentStyles(
   MOZ_ASSERT(!aStyle.IsStyleToClearAllInlineStyles());
 
   // FYI: Unfortunately, we cannot use InclusiveAncestorsOfType here
-  //      because GetCSSEquivalentToHTMLInlineStyleSetInternal() may flush
-  //      pending notifications.
+  //      because GetCSSEquivalentTo() may flush pending notifications.
   nsAutoString valueString;
-  for (nsCOMPtr<nsIContent> content = &aContent; content;
-       content = content->GetParentElement()) {
-    nsCOMPtr<nsINode> parentNode = content->GetParentNode();
+  for (RefPtr<Element> element = aContent.GetAsElementOrParentElement();
+       element; element = element->GetParentElement()) {
+    nsCOMPtr<nsINode> parentNode = element->GetParentNode();
     // get the value of the CSS equivalent styles
-    nsresult rv = GetCSSEquivalentToHTMLInlineStyleSetInternal(
-        *content, aStyle.mHTMLProperty, aStyle.mAttribute, valueString,
-        aStyleType);
+    nsresult rv = GetCSSEquivalentTo(*element, aStyle, valueString, aStyleType);
     if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
       return Err(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -1211,7 +1206,7 @@ Result<bool, nsresult> CSSEditUtils::HaveCSSEquivalentStyles(
           "failed");
       return Err(rv);
     }
-    if (NS_WARN_IF(parentNode != content->GetParentNode())) {
+    if (NS_WARN_IF(parentNode != element->GetParentNode())) {
       return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
     }
 
