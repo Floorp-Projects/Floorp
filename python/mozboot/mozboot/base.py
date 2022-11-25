@@ -8,19 +8,18 @@ import os
 import re
 import subprocess
 import sys
-
 from pathlib import Path
 
-from packaging.version import Version
+from mach.util import to_optional_path, win_to_msys_path
 from mozboot import rust
 from mozboot.util import (
-    get_mach_virtualenv_binary,
     MINIMUM_RUST_VERSION,
+    get_mach_virtualenv_binary,
     http_download_and_save,
 )
+from mozbuild.bootstrap import bootstrap_all_toolchains_for, bootstrap_toolchain
 from mozfile import which
-from mozbuild.bootstrap import bootstrap_toolchain
-from mach.util import to_optional_path, win_to_msys_path
+from packaging.version import Version
 
 NO_MERCURIAL = """
 Could not find Mercurial (hg) in the current shell's path. Try starting a new
@@ -344,34 +343,11 @@ class BaseBootstrapper(object):
             % __name__
         )
 
-    def ensure_stylo_packages(self):
-        """
-        Install any necessary packages needed for Stylo development.
-        """
-        raise NotImplementedError(
-            "%s does not yet implement ensure_stylo_packages()" % __name__
-        )
-
-    def ensure_nasm_packages(self):
-        """
-        Install nasm.
-        """
-        raise NotImplementedError(
-            "%s does not yet implement ensure_nasm_packages()" % __name__
-        )
-
     def ensure_sccache_packages(self):
         """
         Install sccache.
         """
         pass
-
-    def ensure_node_packages(self):
-        """
-        Install any necessary packages needed to supply NodeJS"""
-        raise NotImplementedError(
-            "%s does not yet implement ensure_node_packages()" % __name__
-        )
 
     def ensure_fix_stacks_packages(self):
         """
@@ -427,6 +403,14 @@ class BaseBootstrapper(object):
             cmd += ["--no-unpack"]
 
         subprocess.check_call(cmd, cwd=str(install_dir))
+
+    def auto_bootstrap(self, application):
+        args = ["--with-ccache=sccache"]
+        if application.endswith("_artifact_mode"):
+            args.append("--enable-artifact-builds")
+            application = application[: -len("_artifact_mode")]
+        args.append("--enable-project={}".format(application.replace("_", "/")))
+        bootstrap_all_toolchains_for(args)
 
     def run_as_root(self, command):
         if os.geteuid() != 0:

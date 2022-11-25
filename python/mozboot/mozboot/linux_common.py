@@ -15,66 +15,12 @@ def is_non_x86_64():
     return platform.machine() != "x86_64"
 
 
-class SccacheInstall(object):
-    def __init__(self, **kwargs):
-        pass
-
-    def ensure_sccache_packages(self):
-        self.install_toolchain_artifact("sccache")
-
-
 class FixStacksInstall(object):
     def __init__(self, **kwargs):
         pass
 
     def ensure_fix_stacks_packages(self):
         self.install_toolchain_artifact("fix-stacks")
-
-
-class StyloInstall(object):
-    def __init__(self, **kwargs):
-        pass
-
-    def ensure_stylo_packages(self):
-        if is_non_x86_64():
-            print(
-                "Cannot install bindgen clang and cbindgen packages from taskcluster.\n"
-                "Please install these packages manually."
-            )
-            return
-
-        self.install_toolchain_artifact("clang")
-        self.install_toolchain_artifact("cbindgen")
-
-
-class NasmInstall(object):
-    def __init__(self, **kwargs):
-        pass
-
-    def ensure_nasm_packages(self):
-        if is_non_x86_64():
-            print(
-                "Cannot install nasm from taskcluster.\n"
-                "Please install this package manually."
-            )
-            return
-
-        self.install_toolchain_artifact("nasm")
-
-
-class NodeInstall(object):
-    def __init__(self, **kwargs):
-        pass
-
-    def ensure_node_packages(self):
-        if is_non_x86_64():
-            print(
-                "Cannot install node package from taskcluster.\n"
-                "Please install this package manually."
-            )
-            return
-
-        self.install_toolchain_artifact("node")
 
 
 class ClangStaticAnalysisInstall(object):
@@ -157,10 +103,9 @@ class LinuxBootstrapper(
     FixStacksInstall,
     MinidumpStackwalkInstall,
     MobileAndroidBootstrapper,
-    NasmInstall,
-    NodeInstall,
-    SccacheInstall,
-    StyloInstall,
 ):
     def __init__(self, **kwargs):
+        pass
+
+    def ensure_sccache_packages(self):
         pass

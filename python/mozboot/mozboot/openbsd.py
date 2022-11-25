@@ -13,7 +13,15 @@ class OpenBSDBootstrapper(BaseBootstrapper):
 
         self.packages = ["gmake", "gtar", "rust", "unzip"]
 
-        self.browser_packages = ["llvm", "nasm", "gtk+3", "dbus-glib", "pulseaudio"]
+        self.browser_packages = [
+            "llvm",
+            "cbindgen",
+            "nasm",
+            "node",
+            "gtk+3",
+            "dbus-glib",
+            "pulseaudio",
+        ]
 
     def install_system_packages(self):
         # we use -z because there's no other way to say "any autoconf-2.13"
@@ -30,14 +38,3 @@ class OpenBSDBootstrapper(BaseBootstrapper):
     def ensure_clang_static_analysis_package(self):
         # TODO: we don't ship clang base static analysis for this platform
         pass
-
-    def ensure_stylo_packages(self):
-        # Clang / llvm already installed as browser package
-        self.run_as_root(["pkg_add", "cbindgen"])
-
-    def ensure_nasm_packages(self):
-        # installed via install_browser_packages
-        pass
-
-    def ensure_node_packages(self):
-        self.run_as_root(["pkg_add", "node"])

@@ -4,47 +4,46 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from collections import OrderedDict
-
 import os
 import platform
 import re
 import shutil
 import stat
-import sys
 import subprocess
+import sys
 import time
-from typing import Optional
+from collections import OrderedDict
 from pathlib import Path
-from packaging.version import Version
+from typing import Optional
+
+# Use distro package to retrieve linux platform information
+import distro
+from mach.site import MachSiteManager
+from mach.telemetry import initialize_telemetry_setting
 from mach.util import (
-    get_state_dir,
     UserError,
+    get_state_dir,
     to_optional_path,
     to_optional_str,
     win_to_msys_path,
 )
-from mach.telemetry import initialize_telemetry_setting
-from mach.site import MachSiteManager
+from mozboot.archlinux import ArchlinuxBootstrapper
 from mozboot.base import MODERN_RUST_VERSION
 from mozboot.centosfedora import CentOSFedoraBootstrapper
-from mozboot.opensuse import OpenSUSEBootstrapper
 from mozboot.debian import DebianBootstrapper
 from mozboot.freebsd import FreeBSDBootstrapper
 from mozboot.gentoo import GentooBootstrapper
-from mozboot.osx import OSXBootstrapper, OSXBootstrapperLight
+from mozboot.mozconfig import MozconfigBuilder
+from mozboot.mozillabuild import MozillaBuildBootstrapper
 from mozboot.openbsd import OpenBSDBootstrapper
-from mozboot.archlinux import ArchlinuxBootstrapper
+from mozboot.opensuse import OpenSUSEBootstrapper
+from mozboot.osx import OSXBootstrapper, OSXBootstrapperLight
 from mozboot.solus import SolusBootstrapper
 from mozboot.void import VoidBootstrapper
 from mozboot.windows import WindowsBootstrapper
-from mozboot.mozillabuild import MozillaBuildBootstrapper
-from mozboot.mozconfig import MozconfigBuilder
-from mozfile import which
 from mozbuild.base import MozbuildObject
-
-# Use distro package to retrieve linux platform information
-import distro
+from mozfile import which
+from packaging.version import Version
 
 APPLICATION_CHOICE = """
 Note on Artifact Mode:
@@ -251,13 +250,11 @@ class Bootstrapper(object):
         # Also install the clang static-analysis package by default
         # The best place to install our packages is in the state directory
         # we have.  We should have created one above in non-interactive mode.
-        self.instance.ensure_node_packages()
+        self.instance.auto_bootstrap(application)
         self.instance.ensure_fix_stacks_packages()
         self.instance.ensure_minidump_stackwalk_packages()
         if not self.instance.artifact_mode:
-            self.instance.ensure_stylo_packages()
             self.instance.ensure_clang_static_analysis_package()
-            self.instance.ensure_nasm_packages()
             self.instance.ensure_sccache_packages()
         # Like 'ensure_browser_packages' or 'ensure_mobile_android_packages'
         getattr(self.instance, "ensure_%s_packages" % application)()
@@ -489,8 +486,8 @@ class Bootstrapper(object):
             # distutils is singled out here because some distros (namely Ubuntu)
             # include it in a separate package outside of the main Python
             # installation.
-            import distutils.sysconfig
             import distutils.spawn
+            import distutils.sysconfig
 
             assert distutils.sysconfig is not None and distutils.spawn is not None
         except ImportError as e:
