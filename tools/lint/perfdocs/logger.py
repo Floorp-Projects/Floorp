@@ -37,7 +37,7 @@ class PerfDocLogger(object):
         """
         self.logger.info(msg)
 
-    def warning(self, msg, files):
+    def warning(self, msg, files, restricted=True):
         """
         Logs a validation warning message. The warning message is
         used as the error message that is output in the reviewbot.
@@ -45,6 +45,7 @@ class PerfDocLogger(object):
         :param str msg: Message to log, it's also used as the error message
             for the issue that is output by the reviewbot.
         :param list/str files: The file(s) that this warning is about.
+        :param boolean restricted: If the param is False, the lint error can be used anywhere.
         """
         if type(files) != list:
             files = [files]
@@ -57,7 +58,7 @@ class PerfDocLogger(object):
             # Filter out any issues that do not relate to the paths
             # that are being linted
             for path in PerfDocLogger.PATHS:
-                if str(path) not in str(file):
+                if restricted and str(path) not in str(file):
                     continue
 
                 # Output error entry

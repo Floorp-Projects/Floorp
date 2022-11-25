@@ -9,6 +9,7 @@ import os
 import pathlib
 
 import yaml
+from mozversioncontrol import get_repository_object
 from perfdocs.logger import PerfDocLogger
 
 logger = PerfDocLogger()
@@ -147,3 +148,11 @@ def are_dirs_equal(dir_1, dir_2):
             return False
 
     return True
+
+
+def get_changed_files(top_dir):
+    """
+    Returns the changed files found with duplicates removed.
+    """
+    repo = get_repository_object(top_dir)
+    return list(set(repo.get_changed_files() + repo.get_outgoing_files()))
