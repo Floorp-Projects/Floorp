@@ -204,13 +204,6 @@ inline UniqueJitcodeGlobalEntry MakeJitcodeGlobalEntry(JSContext* cx,
 }
 
 class IonEntry : public JitcodeGlobalEntry {
-  // regionTable_ points to the start of the region table within the
-  // packed map for compile represented by this entry.  Since the
-  // region table occurs at the tail of the memory region, this pointer
-  // points somewhere inside the region memory space, and not to the start
-  // of the memory space.
-  JitcodeIonTable* regionTable_ = nullptr;
-
  public:
   struct ScriptNamePair {
     JSScript* script;
@@ -223,17 +216,22 @@ class IonEntry : public JitcodeGlobalEntry {
  private:
   ScriptList scriptList_;
 
+  // regionTable_ points to the start of the region table within the
+  // packed map for compile represented by this entry.  Since the
+  // region table occurs at the tail of the memory region, this pointer
+  // points somewhere inside the region memory space, and not to the start
+  // of the memory space.
+  const JitcodeIonTable* regionTable_;
+
  public:
   IonEntry(JitCode* code, void* nativeStartAddr, void* nativeEndAddr,
-           ScriptList&& scriptList)
+           ScriptList&& scriptList, JitcodeIonTable* regionTable)
       : JitcodeGlobalEntry(Kind::Ion, code, nativeStartAddr, nativeEndAddr),
-        scriptList_(std::move(scriptList)) {}
-
-  void initTable(JitcodeIonTable* regionTable) {
-    MOZ_ASSERT(!regionTable_);
+        scriptList_(std::move(scriptList)),
+        regionTable_(regionTable) {
     MOZ_ASSERT(regionTable);
-    regionTable_ = regionTable;
   }
+
   ~IonEntry();
 
   ScriptList& scriptList() { return scriptList_; }
@@ -250,7 +248,7 @@ class IonEntry : public JitcodeGlobalEntry {
     return scriptList_[idx].str.get();
   }
 
-  JitcodeIonTable* regionTable() const { return regionTable_; }
+  const JitcodeIonTable* regionTable() const { return regionTable_; }
 
   void* canonicalNativeAddrFor(void* ptr) const;
 
@@ -723,8 +721,6 @@ class JitcodeIonTable {
 
  public:
   JitcodeIonTable() = delete;
-
-  [[nodiscard]] bool finishIonEntry(JSContext* cx, IonEntry& out);
 
   uint32_t numRegions() const { return numRegions_; }
 

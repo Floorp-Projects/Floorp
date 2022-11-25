@@ -117,10 +117,9 @@ IonEntry::~IonEntry() {
   // the _middle_ of the memory space allocated for it.
   //
   // When freeing it, obtain the payload start pointer first.
-  if (regionTable_) {
-    js_free((void*)(regionTable_->payloadStart()));
-    regionTable_ = nullptr;
-  }
+  MOZ_ASSERT(regionTable_);
+  js_free((void*)(regionTable_->payloadStart()));
+  regionTable_ = nullptr;
 }
 
 void* BaselineEntry::canonicalNativeAddrFor(void* ptr) const {
@@ -875,11 +874,6 @@ uint32_t JitcodeRegionEntry::findPcOffset(uint32_t queryNativeOffset,
     curPcOffset += pcDelta;
   }
   return curPcOffset;
-}
-
-bool JitcodeIonTable::finishIonEntry(JSContext* cx, IonEntry& out) {
-  out.initTable(this);
-  return true;
 }
 
 uint32_t JitcodeIonTable::findRegionEntry(uint32_t nativeOffset) const {
