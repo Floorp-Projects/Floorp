@@ -1,10 +1,12 @@
 import time
+
 import pytest
 from helpers import Css, await_element, find_element
 
 URL = "https://www.bankofamerica.com/"
 
 
+@pytest.mark.skip_platforms("windows")
 @pytest.mark.with_interventions
 def test_enabled(session):
     session.get(URL)
@@ -12,6 +14,7 @@ def test_enabled(session):
     assert find_element(session, Css("#browserUpgradeNoticeBar"), default=None) is None
 
 
+@pytest.mark.skip_platforms("windows")
 @pytest.mark.without_interventions
 def test_disabled(session):
     session.get(URL)

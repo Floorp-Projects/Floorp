@@ -3,22 +3,24 @@ from helpers import (
     Css,
     Text,
     Xpath,
+    assert_not_element,
     await_element,
     await_first_element_of,
     await_getUserMedia_call_on_click,
     find_element,
-    assert_not_element,
 )
-
 
 URL = "https://steamcommunity.com/chat"
 
 
-USERID_CSS = Css("input#input_username")
-PASSWORD_CSS = Css("input#input_password")
-SIGNIN_CSS = Css("#login_btn_signin button")
-GEAR_CSS = Css(".friendSettingsButton")
-AUTH_CSS = Css("input#authcode")
+USERID_CSS = Css("input[type='text'][class*='newlogindialog']")
+PASSWORD_CSS = Css("input[type='password'][class*='newlogindialog']")
+SIGNIN_CSS = Css("button[type='submit'][class*='newlogindialog']")
+GEAR_CSS = Css(".friendListButton")
+LOGIN_FAIL_XPATH = Xpath(
+    "//*[contains(text(), 'try again') and " "contains(@class, 'FormError')]"
+)
+AUTH_CSS = Css("[class*='newlogindialog_ProtectingAccount']")
 RATE_TEXT = Text("too many login failures")
 VOICE_XPATH = Xpath(
     "//*[contains(text(), 'Voice') and "
@@ -31,7 +33,7 @@ UNSUPPORTED_TEXT = Text("currently unsupported in Firefox")
 def load_mic_test(session, credentials):
     session.get(URL)
 
-    userid = find_element(session, USERID_CSS)
+    userid = await_element(session, USERID_CSS)
     password = find_element(session, PASSWORD_CSS)
     submit = find_element(session, SIGNIN_CSS)
     assert userid.is_displayed()
@@ -43,8 +45,11 @@ def load_mic_test(session, credentials):
     submit.click()
 
     while True:
-        [gear, auth, rate] = await_first_element_of(
-            session, [GEAR_CSS, AUTH_CSS, RATE_TEXT], is_displayed=True, timeout=20
+        [gear, fail, auth, rate] = await_first_element_of(
+            session,
+            [GEAR_CSS, LOGIN_FAIL_XPATH, AUTH_CSS, RATE_TEXT],
+            is_displayed=True,
+            timeout=20,
         )
         if rate:
             pytest.skip(
@@ -53,6 +58,9 @@ def load_mic_test(session, credentials):
             return None
         elif auth:
             pytest.skip("Two-factor authentication requested; disable Steam Guard.")
+            return None
+        elif fail:
+            pytest.skip("Invalid login provided.")
             return None
         else:
             break
