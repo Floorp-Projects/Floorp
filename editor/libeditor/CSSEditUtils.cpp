@@ -593,14 +593,6 @@ CSSEditUtils::RemoveCSSInlineStyleWithTransaction(
   return unwrapStyledElementResult;
 }
 
-// Answers true if the property can be removed by setting a "none" CSS value
-// on a node
-
-// static
-bool CSSEditUtils::IsCSSInvertible(nsAtom& aProperty, nsAtom* aAttribute) {
-  return nsGkAtoms::b == &aProperty;
-}
-
 // Get the default browser background color if we need it for
 // GetCSSBackgroundColorState
 
