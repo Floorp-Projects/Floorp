@@ -19,22 +19,6 @@ if sys.version_info < (3,):
 class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     """Archlinux experimental bootstrapper."""
 
-    BROWSER_PACKAGES = [
-        "alsa-lib",
-        "dbus-glib",
-        "gtk3",
-        "libevent",
-        "libvpx",
-        "libxt",
-        "mime-types",
-        "startup-notification",
-        "gst-plugins-base-libs",
-        "libpulse",
-        "xorg-server-xvfb",
-        "gst-libav",
-        "gst-plugins-good",
-    ]
-
     def __init__(self, version, dist_id, **kwargs):
         print("Using an experimental bootstrapper for Archlinux.", file=sys.stderr)
         BaseBootstrapper.__init__(self, **kwargs)
@@ -43,13 +27,6 @@ class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         # watchman is not available via pacman
         packages = [p for p in packages if p != "watchman"]
         self.pacman_install(*packages)
-
-    def install_browser_packages(self, mozconfig_builder, artifact_mode=False):
-        # TODO: Figure out what not to install for artifact mode
-        self.pacman_install(*self.BROWSER_PACKAGES)
-
-    def install_browser_artifact_mode_packages(self, mozconfig_builder):
-        self.install_browser_packages(mozconfig_builder, artifact_mode=True)
 
     def upgrade_mercurial(self, current):
         self.pacman_install("mercurial")

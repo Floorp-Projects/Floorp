@@ -13,26 +13,12 @@ from mozboot.linux_common import LinuxBootstrapper
 
 
 class VoidBootstrapper(LinuxBootstrapper, BaseBootstrapper):
-
-    BROWSER_PACKAGES = [
-        "dbus-devel",
-        "dbus-glib-devel",
-        "gtk+3-devel",
-        "pulseaudio",
-        "pulseaudio-devel",
-        "libcurl-devel",
-        "libxcb-devel",
-        "libXt-devel",
-    ]
-
     def __init__(self, version, dist_id, **kwargs):
         BaseBootstrapper.__init__(self, **kwargs)
 
         self.distro = "void"
         self.version = version
         self.dist_id = dist_id
-
-        self.browser_packages = self.BROWSER_PACKAGES
 
     def run_as_root(self, command):
         # VoidLinux doesn't support users sudo'ing most commands by default because of the group
@@ -61,12 +47,6 @@ class VoidBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
     def install_packages(self, packages):
         self.xbps_install(*packages)
-
-    def install_browser_packages(self, mozconfig_builder, artifact_mode=False):
-        self.xbps_install(*self.browser_packages)
-
-    def install_browser_artifact_mode_packages(self, mozconfig_builder):
-        self.install_browser_packages(mozconfig_builder, artifact_mode=True)
 
     def _update_package_manager(self):
         self.xbps_update()
