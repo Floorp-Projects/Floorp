@@ -4764,8 +4764,8 @@ void LIRGenerator::visitDeleteElement(MDeleteElement* ins) {
 }
 
 void LIRGenerator::visitObjectToIterator(MObjectToIterator* ins) {
-  auto* lir = new (alloc()) LObjectToIterator(useRegister(ins->object()),
-                                              temp(), temp(), temp());
+  auto* lir = new (alloc())
+      LObjectToIterator(useRegister(ins->object()), temp(), temp(), temp());
   define(lir, ins);
   assignSafepoint(lir, ins);
 }
