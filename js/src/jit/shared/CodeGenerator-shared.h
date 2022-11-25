@@ -86,9 +86,6 @@ class CodeGeneratorShared : public LElementVisitor {
   uint32_t nativeToBytecodeTableOffset_;
   uint32_t nativeToBytecodeNumRegions_;
 
-  JSScript** nativeToBytecodeScriptList_;
-  uint32_t nativeToBytecodeScriptListLength_;
-
   bool isProfilerInstrumentationEnabled() {
     return gen->isProfilerInstrumentationEnabled();
   }
@@ -211,9 +208,12 @@ class CodeGeneratorShared : public LElementVisitor {
   bool encodeSafepoints();
 
   // Fixup offsets of native-to-bytecode map.
-  bool createNativeToBytecodeScriptList(JSContext* cx);
-  bool generateCompactNativeToBytecodeMap(JSContext* cx, JitCode* code);
-  void verifyCompactNativeToBytecodeMap(JitCode* code);
+  bool createNativeToBytecodeScriptList(JSContext* cx,
+                                        IonEntry::ScriptList& scripts);
+  bool generateCompactNativeToBytecodeMap(JSContext* cx, JitCode* code,
+                                          IonEntry::ScriptList& scripts);
+  void verifyCompactNativeToBytecodeMap(JitCode* code,
+                                        const IonEntry::ScriptList& scripts);
 
   // Mark the safepoint on |ins| as corresponding to the current assembler
   // location. The location should be just after a call.

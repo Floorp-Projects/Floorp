@@ -121,17 +121,6 @@ IonEntry::~IonEntry() {
     js_free((void*)(regionTable_->payloadStart()));
     regionTable_ = nullptr;
   }
-
-  // Free the script list.
-  if (scriptList_) {
-    for (uint32_t i = 0; i < scriptList_->size; i++) {
-      js_free(scriptList_->pairs[i].str);
-      scriptList_->pairs[i].str = nullptr;
-    }
-
-    js_free(scriptList_);
-    scriptList_ = nullptr;
-  }
 }
 
 void* BaselineEntry::canonicalNativeAddrFor(void* ptr) const {
@@ -371,9 +360,9 @@ bool IonEntry::trace(JSTracer* trc) {
   bool tracedAny = false;
 
   JSRuntime* rt = trc->runtime();
-  for (unsigned i = 0; i < numScripts(); i++) {
-    if (!IsMarkedUnbarriered(rt, sizedScriptList()->pairs[i].script)) {
-      TraceManuallyBarrieredEdge(trc, &sizedScriptList()->pairs[i].script,
+  for (auto& pair : scriptList_) {
+    if (!IsMarkedUnbarriered(rt, pair.script)) {
+      TraceManuallyBarrieredEdge(trc, &pair.script,
                                  "jitcodeglobaltable-ionentry-script");
       tracedAny = true;
     }
@@ -383,8 +372,8 @@ bool IonEntry::trace(JSTracer* trc) {
 }
 
 void IonEntry::traceWeak(JSTracer* trc) {
-  for (unsigned i = 0; i < numScripts(); i++) {
-    JSScript** scriptp = &sizedScriptList()->pairs[i].script;
+  for (auto& pair : scriptList_) {
+    JSScript** scriptp = &pair.script;
     MOZ_ALWAYS_TRUE(
         TraceManuallyBarrieredWeakEdge(trc, scriptp, "IonEntry script"));
   }
@@ -747,8 +736,8 @@ struct JitcodeMapBufferWriteSpewer {
 // buffer writer.
 /* static */
 bool JitcodeRegionEntry::WriteRun(CompactBufferWriter& writer,
-                                  JSScript** scriptList,
-                                  uint32_t scriptListSize, uint32_t runLength,
+                                  const IonEntry::ScriptList& scriptList,
+                                  uint32_t runLength,
                                   const NativeToBytecode* entry) {
   MOZ_ASSERT(runLength > 0);
   MOZ_ASSERT(runLength <= MAX_RUN_LENGTH);
@@ -774,12 +763,12 @@ bool JitcodeRegionEntry::WriteRun(CompactBufferWriter& writer,
       // Find the index of the script within the list.
       // NB: scriptList is guaranteed to contain curTree->script()
       uint32_t scriptIdx = 0;
-      for (; scriptIdx < scriptListSize; scriptIdx++) {
-        if (scriptList[scriptIdx] == curTree->script()) {
+      for (; scriptIdx < scriptList.length(); scriptIdx++) {
+        if (scriptList[scriptIdx].script == curTree->script()) {
           break;
         }
       }
-      MOZ_ASSERT(scriptIdx < scriptListSize);
+      MOZ_ASSERT(scriptIdx < scriptList.length());
 
       uint32_t pcOffset = curTree->script()->pcToOffset(curPc);
 
@@ -888,50 +877,8 @@ uint32_t JitcodeRegionEntry::findPcOffset(uint32_t queryNativeOffset,
   return curPcOffset;
 }
 
-bool JitcodeIonTable::finishIonEntry(JSContext* cx, uint32_t numScripts,
-                                     JSScript** scripts, IonEntry& out) {
-  using SizedScriptList = IonEntry::SizedScriptList;
-
-  MOZ_ASSERT(numScripts > 0);
-
-  // Create profiling strings for script, within vector.
-  typedef js::Vector<char*, 32, SystemAllocPolicy> ProfilingStringVector;
-
-  ProfilingStringVector profilingStrings;
-  if (!profilingStrings.reserve(numScripts)) {
-    return false;
-  }
-
-  // Cleanup allocations on failure.q
-  auto autoFreeProfilingStrings = mozilla::MakeScopeExit([&] {
-    for (auto elem : profilingStrings) {
-      js_free(elem);
-    }
-  });
-
-  for (uint32_t i = 0; i < numScripts; i++) {
-    UniqueChars str = GeckoProfilerRuntime::allocProfileString(cx, scripts[i]);
-    if (!str) {
-      return false;
-    }
-    if (!profilingStrings.append(str.release())) {
-      return false;
-    }
-  }
-
-  // Create SizedScriptList
-  void* mem =
-      (void*)cx->pod_malloc<uint8_t>(SizedScriptList::AllocSizeFor(numScripts));
-  if (!mem) {
-    return false;
-  }
-
-  // Keep allocated profiling strings.
-  autoFreeProfilingStrings.release();
-
-  SizedScriptList* scriptList =
-      new (mem) SizedScriptList(numScripts, scripts, &profilingStrings[0]);
-  out.initScriptListAndTable(scriptList, this);
+bool JitcodeIonTable::finishIonEntry(JSContext* cx, IonEntry& out) {
+  out.initTable(this);
   return true;
 }
 
@@ -989,25 +936,29 @@ uint32_t JitcodeIonTable::findRegionEntry(uint32_t nativeOffset) const {
 }
 
 /* static */
-bool JitcodeIonTable::WriteIonTable(
-    CompactBufferWriter& writer, JSScript** scriptList, uint32_t scriptListSize,
-    const NativeToBytecode* start, const NativeToBytecode* end,
-    uint32_t* tableOffsetOut, uint32_t* numRegionsOut) {
+bool JitcodeIonTable::WriteIonTable(CompactBufferWriter& writer,
+                                    const IonEntry::ScriptList& scriptList,
+                                    const NativeToBytecode* start,
+                                    const NativeToBytecode* end,
+                                    uint32_t* tableOffsetOut,
+                                    uint32_t* numRegionsOut) {
   MOZ_ASSERT(tableOffsetOut != nullptr);
   MOZ_ASSERT(numRegionsOut != nullptr);
   MOZ_ASSERT(writer.length() == 0);
-  MOZ_ASSERT(scriptListSize > 0);
+  MOZ_ASSERT(scriptList.length() > 0);
 
   JitSpew(JitSpew_Profiling,
           "Writing native to bytecode map for %s:%u:%u (%zu entries)",
-          scriptList[0]->filename(), scriptList[0]->lineno(),
-          scriptList[0]->column(), mozilla::PointerRangeSize(start, end));
+          scriptList[0].script->filename(), scriptList[0].script->lineno(),
+          scriptList[0].script->column(),
+          mozilla::PointerRangeSize(start, end));
 
-  JitSpew(JitSpew_Profiling, "  ScriptList of size %d", int(scriptListSize));
-  for (uint32_t i = 0; i < scriptListSize; i++) {
-    JitSpew(JitSpew_Profiling, "  Script %d - %s:%u:%u", int(i),
-            scriptList[i]->filename(), scriptList[i]->lineno(),
-            scriptList[i]->column());
+  JitSpew(JitSpew_Profiling, "  ScriptList of size %u",
+          unsigned(scriptList.length()));
+  for (uint32_t i = 0; i < scriptList.length(); i++) {
+    JitSpew(JitSpew_Profiling, "  Script %u - %s:%u:%u", i,
+            scriptList[i].script->filename(), scriptList[i].script->lineno(),
+            scriptList[i].script->column());
   }
 
   // Write out runs first.  Keep a vector tracking the positive offsets from
@@ -1029,8 +980,8 @@ bool JitcodeIonTable::WriteIonTable(
     }
 
     // Encode the run.
-    if (!JitcodeRegionEntry::WriteRun(writer, scriptList, scriptListSize,
-                                      runLength, curEntry)) {
+    if (!JitcodeRegionEntry::WriteRun(writer, scriptList, runLength,
+                                      curEntry)) {
       return false;
     }
 
