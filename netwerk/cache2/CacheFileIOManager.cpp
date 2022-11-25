@@ -4102,7 +4102,10 @@ nsresult CacheFileIOManager::DispatchPurgeTask(
 #  endif
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return BackgroundTasksRunner::RemoveDirectoryInDetachedProcess(
+  nsCOMPtr<nsIBackgroundTasksRunner> runner =
+      do_GetService("@mozilla.org/backgroundtasksrunner;1");
+
+  return runner->RemoveDirectoryInDetachedProcess(
       path, aCacheDirName, aSecondsToWait, aPurgeExtension);
 #endif
 }

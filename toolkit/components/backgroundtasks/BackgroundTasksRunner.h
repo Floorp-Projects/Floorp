@@ -7,35 +7,16 @@
 #define TOOLKIT_COMPONENTS_BACKGROUNDTASKS_BACKGROUNDTASKSRUNNER_H_
 
 #include "nsString.h"
+#include "nsIBackgroundTasksRunner.h"
 
 namespace mozilla {
 
-class BackgroundTasksRunner final {
+class BackgroundTasksRunner final : public nsIBackgroundTasksRunner {
  public:
-  /**
-   * Runs a background process in an independent detached process. Any process
-   * opened by this function can outlive the main process.
-   *
-   * This function is thread-safe.
-   *
-   * @param aTaskName The name of the background task.
-   *                  (BackgroundTask_{name}.sys.mjs)
-   * @param aArgs The arguments that will be passed to the task process. Any
-   *              needed escape will happen automatically.
-   */
-  static nsresult RunInDetachedProcess(const nsACString& aTaskName,
-                                       const nsTArray<nsCString>& aArgs);
-
-  /**
-   * Runs removeDirectory background task.
-   * `toolkit.background_tasks.remove_directory.testing.sleep_ms` can be set to
-   * make it wait for the given milliseconds for testing purpose.
-   *
-   * See BackgroundTask_removeDirectory.sys.mjs for details about the arguments.
-   */
-  static nsresult RemoveDirectoryInDetachedProcess(
-      const nsCString& aParentDirPath, const nsCString& aChildDirName,
-      const nsCString& aSecondsToWait, const nsCString& aOtherFoldersSuffix);
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIBACKGROUNDTASKSRUNNER
+ protected:
+  ~BackgroundTasksRunner() = default;
 };
 
 }  // namespace mozilla

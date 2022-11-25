@@ -14,7 +14,9 @@
 
 namespace mozilla {
 
-nsresult BackgroundTasksRunner::RunInDetachedProcess(
+NS_IMPL_ISUPPORTS(BackgroundTasksRunner, nsIBackgroundTasksRunner);
+
+NS_IMETHODIMP BackgroundTasksRunner::RunInDetachedProcess(
     const nsACString& aTaskName, const nsTArray<nsCString>& aArgs) {
   nsCOMPtr<nsIFile> lf;
   nsresult rv = XRE_GetBinaryPath(getter_AddRefs(lf));
@@ -62,11 +64,12 @@ nsresult BackgroundTasksRunner::RunInDetachedProcess(
   return NS_OK;
 }
 
-nsresult BackgroundTasksRunner::RemoveDirectoryInDetachedProcess(
-    const nsCString& aParentDirPath, const nsCString& aChildDirName,
-    const nsCString& aSecondsToWait, const nsCString& aOtherFoldersSuffix) {
-  nsTArray<nsCString> argv = {aParentDirPath, aChildDirName, aSecondsToWait,
-                              aOtherFoldersSuffix};
+NS_IMETHODIMP BackgroundTasksRunner::RemoveDirectoryInDetachedProcess(
+    const nsACString& aParentDirPath, const nsACString& aChildDirName,
+    const nsACString& aSecondsToWait, const nsACString& aOtherFoldersSuffix) {
+  nsTArray<nsCString> argv = {aParentDirPath + ""_ns, aChildDirName + ""_ns,
+                              aSecondsToWait + ""_ns,
+                              aOtherFoldersSuffix + ""_ns};
 
   uint32_t testingSleepMs =
       StaticPrefs::toolkit_background_tasks_remove_directory_testing_sleep_ms();

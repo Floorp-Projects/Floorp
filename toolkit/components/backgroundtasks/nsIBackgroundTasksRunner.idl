@@ -1,0 +1,39 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(8cd92fce-1ec3-470a-ad09-c0de9d98497e)]
+interface nsIBackgroundTasksRunner : nsISupports
+{
+  /**
+   * Runs a background process in an independent detached process. Any process
+   * opened by this function can outlive the main process.
+   *
+   * This function is thread-safe.
+   *
+   * XXX: The use of base::LaunchApp can make a zombie process on Unix.
+   * See bug 1802559.
+   *
+   * @param aTaskName The name of the background task.
+   *                  (BackgroundTask_{name}.sys.mjs)
+   * @param aArgs The arguments that will be passed to the task process. Any
+   *              needed escape will happen automatically.
+   */
+  void runInDetachedProcess(in ACString aTaskName,
+                            in Array<ACString> aCommandLine);
+
+  /**
+   * Runs removeDirectory background task.
+   * `toolkit.background_tasks.remove_directory.testing.sleep_ms` can be set to
+   * make it wait for the given milliseconds for testing purpose.
+   *
+   * See BackgroundTask_removeDirectory.sys.mjs for details about the arguments.
+   */
+  void removeDirectoryInDetachedProcess(in ACString aParentDirPath,
+                                        in ACString aChildDirName,
+                                        in ACString aSecondsToWait,
+                                        in ACString aOtherFoldersSuffix);
+};
