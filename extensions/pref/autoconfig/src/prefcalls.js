@@ -195,10 +195,7 @@ function displayError(funcname, message) {
 
 function getenv(name) {
   try {
-    var environment = Cc["@mozilla.org/process/environment;1"].getService(
-      Ci.nsIEnvironment
-    );
-    return environment.get(name);
+    return Services.env.get(name);
   } catch (e) {
     displayError("getEnvironment", e);
   }

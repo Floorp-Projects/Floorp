@@ -6,12 +6,8 @@ const { updateAppInfo } = ChromeUtils.importESModule(
 );
 
 function run_test() {
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-
   let testDirName = do_get_cwd().clone();
-  env.set("MOZ_SYSTEM_CONFIG_DIR", testDirName.path);
+  Services.env.set("MOZ_SYSTEM_CONFIG_DIR", testDirName.path);
 
   updateAppInfo();
 
