@@ -61,8 +61,6 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
             if self.version >= 33:
                 self.packages.append("perl-FindBin")
 
-        self.packages += ["python3-devel"]
-
     def install_system_packages(self):
         self.dnf_groupinstall(*self.group_packages)
         self.dnf_install(*self.packages)
