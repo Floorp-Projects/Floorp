@@ -2145,6 +2145,13 @@
   call_instruction: true
   mir_op: DeleteElement
 
+- name: ObjectToIterator
+  result_type: WordSized
+  operands:
+    object: WordSized
+  num_temps: 3
+  mir_op: true
+
 - name: ValueToIterator
   result_type: WordSized
   operands:

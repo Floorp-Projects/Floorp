@@ -4786,6 +4786,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void iteratorMore(Register obj, ValueOperand output, Register temp);
   void iteratorClose(Register obj, Register temp1, Register temp2,
                      Register temp3);
+  void registerIterator(Register enumeratorsList, Register iter, Register temp);
 
   void toHashableNonGCThing(ValueOperand value, ValueOperand result,
                             FloatRegister tempFloat);

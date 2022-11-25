@@ -4437,7 +4437,7 @@ void CacheIRCompiler::emitActivateIterator(Register objBeingIterated,
                                   StubField::Type::RawPointer);
   emitLoadStubField(enumeratorsAddr, scratch);
   masm.loadPtr(Address(scratch, 0), scratch);
-  emitRegisterEnumerator(scratch, nativeIter, scratch2);
+  masm.registerIterator(scratch, nativeIter, scratch2);
 }
 
 bool CacheIRCompiler::emitGuardAndGetIterator(ObjOperandId objId,
@@ -6872,24 +6872,6 @@ bool CacheIRCompiler::emitBreakpoint() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   masm.breakpoint();
   return true;
-}
-
-void CacheIRCompiler::emitRegisterEnumerator(Register enumeratorsList,
-                                             Register iter, Register scratch) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  // iter->next = list
-  masm.storePtr(enumeratorsList, Address(iter, NativeIterator::offsetOfNext()));
-
-  // iter->prev = list->prev
-  masm.loadPtr(Address(enumeratorsList, NativeIterator::offsetOfPrev()),
-               scratch);
-  masm.storePtr(scratch, Address(iter, NativeIterator::offsetOfPrev()));
-
-  // list->prev->next = iter
-  masm.storePtr(iter, Address(scratch, NativeIterator::offsetOfNext()));
-
-  // list->prev = ni
-  masm.storePtr(iter, Address(enumeratorsList, NativeIterator::offsetOfPrev()));
 }
 
 void CacheIRCompiler::emitPostBarrierShared(Register obj,
