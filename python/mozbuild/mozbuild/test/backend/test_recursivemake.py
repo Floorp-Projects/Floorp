@@ -6,21 +6,18 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import io
 import os
-import six.moves.cPickle as pickle
-import six
 import unittest
 
-from mozpack.manifests import InstallManifest
-from mozunit import main
-
+import mozpack.path as mozpath
+import six
+import six.moves.cPickle as pickle
 from mozbuild.backend.recursivemake import RecursiveMakeBackend, RecursiveMakeTraversal
 from mozbuild.backend.test_manifest import TestManifestBackend
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader
-
 from mozbuild.test.backend.common import BackendTester
-
-import mozpack.path as mozpath
+from mozpack.manifests import InstallManifest
+from mozunit import main
 
 
 class TestRecursiveMakeTraversal(unittest.TestCase):
@@ -1014,7 +1011,6 @@ class TestRecursiveMakeBackend(BackendTester):
             "CARGO_TARGET_DIR := %s" % env.topobjdir,
             "RUST_PROGRAMS += $(DEPTH)/i686-pc-windows-msvc/release/target.exe",
             "RUST_CARGO_PROGRAMS += target",
-            "CARGO_TARGET_DIR := %s" % env.topobjdir,
             "HOST_RUST_PROGRAMS += $(DEPTH)/i686-pc-windows-msvc/release/host.exe",
             "HOST_RUST_CARGO_PROGRAMS += host",
         ]

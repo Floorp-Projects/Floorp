@@ -1198,7 +1198,7 @@ class RecursiveMakeBackend(MakeBackend):
     ):
         backend_file.write_once("CARGO_FILE := %s\n" % obj.cargo_file)
         target_dir = mozpath.normpath(backend_file.environment.topobjdir)
-        backend_file.write("CARGO_TARGET_DIR := %s\n" % target_dir)
+        backend_file.write_once("CARGO_TARGET_DIR := %s\n" % target_dir)
         backend_file.write("%s += $(DEPTH)/%s\n" % (target_variable, obj.location))
         backend_file.write("%s += %s\n" % (target_cargo_variable, obj.name))
 
