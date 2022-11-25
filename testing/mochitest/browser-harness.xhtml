@@ -333,9 +333,7 @@
         ) {
           let filename =
             Services.profiler.IsActive() &&
-            Cc["@mozilla.org/process/environment;1"]
-              .getService(Ci.nsIEnvironment)
-              .get("MOZ_PROFILER_SHUTDOWN");
+            Services.env.get("MOZ_PROFILER_SHUTDOWN");
           if (!filename) {
             Cu.exitIfInAutomation();
           }

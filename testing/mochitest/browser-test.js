@@ -262,12 +262,8 @@ function Tester(aTests, structuredLogger, aCallback) {
     ),
   });
 
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-
   // ensure the mouse is reset before each test run
-  if (env.exists("MOZ_AUTOMATION")) {
+  if (Services.env.exists("MOZ_AUTOMATION")) {
     this.EventUtils.synthesizeNativeMouseEvent({
       type: "mousemove",
       screenX: 1000,
@@ -578,10 +574,7 @@ Tester.prototype = {
   async ensureVsyncDisabled() {
     // The WebExtension process keeps vsync enabled forever in headless mode.
     // See bug 1782541.
-    let env = Cc["@mozilla.org/process/environment;1"].getService(
-      Ci.nsIEnvironment
-    );
-    if (env.get("MOZ_HEADLESS")) {
+    if (Services.env.get("MOZ_HEADLESS")) {
       return;
     }
 
@@ -857,18 +850,15 @@ Tester.prototype = {
 
       // See if we should upload a profile of a failing test.
       if (this.currentTest.failCount) {
-        let env = Cc["@mozilla.org/process/environment;1"].getService(
-          Ci.nsIEnvironment
-        );
         // If MOZ_PROFILER_SHUTDOWN is set, the profiler got started from --profiler
         // and a profile will be shown even if there's no test failure.
         if (
-          env.exists("MOZ_UPLOAD_DIR") &&
-          !env.exists("MOZ_PROFILER_SHUTDOWN") &&
+          Services.env.exists("MOZ_UPLOAD_DIR") &&
+          !Services.env.exists("MOZ_PROFILER_SHUTDOWN") &&
           Services.profiler.IsActive()
         ) {
           let filename = `profile_${name}.json`;
-          let path = env.get("MOZ_UPLOAD_DIR");
+          let path = Services.env.get("MOZ_UPLOAD_DIR");
           let profilePath = PathUtils.join(path, filename);
           try {
             let profileData = await Services.profiler.getProfileDataAsGzippedArrayBuffer();
