@@ -56,7 +56,7 @@
 //   To avoid hash table lookups on the hot addProperty path, shapes have a
 //   ShapeCachePtr that's used as cache for this. This cache is purged on GC.
 //   The shape cache is also used as cache for prototype shapes, to point to the
-//   initial shape for objects using that shape.
+//   initial shape for objects using that shape, and for cached iterators.
 //
 // * Dictionary shapes. Used only for native objects. An object with a
 //   dictionary shape is "in dictionary mode". Certain property operations
@@ -91,6 +91,7 @@ MOZ_ALWAYS_INLINE size_t JSSLOT_FREE(const JSClass* clasp) {
 namespace js {
 
 class Shape;
+class PropertyIteratorObject;
 
 // Hash policy for ShapeCachePtr's ShapeSetForAdd. Maps the new property key and
 // flags to the new shape.
@@ -116,6 +117,7 @@ using ShapeSetForAdd = HashSet<Shape*, ShapeForAddHasher, SystemAllocPolicy>;
 // * For shared shapes, a set of shapes used to speed up addProperty.
 // * For prototype shapes, the most recently used initial shape allocated for a
 //   prototype object with this shape.
+// * For any shape, a PropertyIteratorObject used to speed up GetIterator.
 //
 // The cache is purely an optimization and is purged on GC (all shapes with a
 // non-None ShapeCachePtr are added to a vector in the Zone).
@@ -124,6 +126,7 @@ class ShapeCachePtr {
     SINGLE_SHAPE_FOR_ADD = 0,
     SHAPE_SET_FOR_ADD = 1,
     SHAPE_WITH_PROTO = 2,
+    ITERATOR = 3,
     MASK = 3
   };
 
@@ -158,6 +161,8 @@ class ShapeCachePtr {
     bits = uintptr_t(hash) | SHAPE_SET_FOR_ADD;
   }
 
+  bool isForAdd() const { return isSingleShapeForAdd() || isShapeSetForAdd(); }
+
   bool isShapeWithProto() const { return (bits & MASK) == SHAPE_WITH_PROTO; }
   Shape* toShapeWithProto() const {
     MOZ_ASSERT(isShapeWithProto());
@@ -168,6 +173,18 @@ class ShapeCachePtr {
     MOZ_ASSERT((uintptr_t(shape) & MASK) == 0);
     MOZ_ASSERT(!isShapeSetForAdd());  // Don't leak the ShapeSet.
     bits = uintptr_t(shape) | SHAPE_WITH_PROTO;
+  }
+
+  bool isIterator() const { return (bits & MASK) == ITERATOR; }
+  PropertyIteratorObject* toIterator() const {
+    MOZ_ASSERT(isIterator());
+    return reinterpret_cast<PropertyIteratorObject*>(bits & ~uintptr_t(MASK));
+  }
+  void setIterator(PropertyIteratorObject* iter) {
+    MOZ_ASSERT(iter);
+    MOZ_ASSERT((uintptr_t(iter) & MASK) == 0);
+    MOZ_ASSERT(!isShapeSetForAdd());  // Don't leak the ShapeSet.
+    bits = uintptr_t(iter) | ITERATOR;
   }
 } JS_HAZ_GC_POINTER;
 
@@ -322,6 +339,8 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
 
   ShapeCachePtr& cacheRef() { return cache_; }
   ShapeCachePtr cache() const { return cache_; }
+
+  void maybeCacheIterator(JSContext* cx, PropertyIteratorObject* iter);
 
   SharedPropMap* sharedPropMap() const {
     MOZ_ASSERT(!isDictionary());
