@@ -6171,6 +6171,7 @@ dependencies = [
  "num_cpus",
  "objc",
  "rayon",
+ "remove_dir_all",
  "swgl",
  "thin-vec",
  "tracy-rs",
@@ -6178,7 +6179,6 @@ dependencies = [
  "webrender",
  "winapi",
  "wr_malloc_size_of",
- "remove_dir_all",
 ]
 
 [[package]]
