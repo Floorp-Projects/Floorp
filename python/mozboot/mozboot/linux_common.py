@@ -91,3 +91,19 @@ class LinuxBootstrapper(
 
     def ensure_sccache_packages(self):
         pass
+
+    def install_system_packages(self):
+        self.install_packages(
+            [
+                "bash",
+                "findutils",  # contains xargs
+                "gzip",
+                "libxml2",  # used by bootstrapped clang
+                "m4",
+                "make",
+                "perl",
+                "tar",
+                "unzip",
+                "watchman",
+            ]
+        )

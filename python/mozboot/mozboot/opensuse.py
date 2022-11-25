@@ -14,14 +14,6 @@ from mozboot.linux_common import LinuxBootstrapper
 class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     """openSUSE experimental bootstrapper."""
 
-    SYSTEM_PACKAGES = [
-        "libcurl-devel",
-        "libpulse-devel",
-        "rpmconf",
-        "which",
-        "unzip",
-    ]
-
     BROWSER_PACKAGES = [
         "alsa-devel",
         "gcc-c++",
@@ -45,8 +37,13 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         print("Using an experimental bootstrapper for openSUSE.")
         BaseBootstrapper.__init__(self, **kwargs)
 
-    def install_system_packages(self):
-        self.zypper_install(*self.SYSTEM_PACKAGES)
+    def install_packages(self, packages):
+        ALTERNATIVE_NAMES = {
+            "libxml2": "libxml2-2",
+        }
+        # watchman is not available
+        packages = [ALTERNATIVE_NAMES.get(p, p) for p in packages if p != "watchman"]
+        self.zypper_install(*packages)
 
     def install_browser_packages(self, mozconfig_builder, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode
