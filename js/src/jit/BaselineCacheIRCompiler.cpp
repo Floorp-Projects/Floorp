@@ -2062,6 +2062,8 @@ static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* script,
   return script->zone()->jitZone()->optimizedStubSpace();
 }
 
+static const uint32_t MaxFoldedShapes = 16;
+
 bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
                               JSScript* script, ICScript* icScript) {
   ICEntry* icEntry = icScript->icEntryForStub(fallback);
@@ -2229,6 +2231,104 @@ bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
     return false;
   }
   MOZ_ASSERT(result == ICAttachResult::Attached);
+
+  fallback->setHasFoldedStub();
+  return true;
+}
+
+static bool AddToFoldedStub(JSContext* cx, const CacheIRWriter& writer,
+                            ICScript* icScript, ICFallbackStub* fallback) {
+  ICEntry* icEntry = icScript->icEntryForStub(fallback);
+  ICStub* entryStub = icEntry->firstStub();
+
+  // We only update folded stubs if they're the only stub in the IC.
+  if (entryStub == fallback) {
+    return false;
+  }
+  ICCacheIRStub* stub = entryStub->toCacheIRStub();
+  if (!stub->next()->isFallback()) {
+    return false;
+  }
+
+  const CacheIRStubInfo* stubInfo = stub->stubInfo();
+  const uint8_t* stubData = stub->stubDataStart();
+
+  Maybe<uint32_t> shapeFieldOffset;
+  RootedValue newShape(cx);
+  Rooted<ListObject*> foldedShapes(cx);
+
+  CacheIRReader stubReader(stubInfo);
+  CacheIRReader newReader(writer);
+  while (newReader.more() && stubReader.more()) {
+    CacheOp newOp = newReader.readOp();
+    CacheOp stubOp = stubReader.readOp();
+    switch (stubOp) {
+      case CacheOp::GuardMultipleShapes: {
+        // Check that the new stub has a corresponding GuardShape.
+        if (newOp != CacheOp::GuardShape) {
+          return false;
+        }
+
+        // Check that the object being guarded is the same.
+        if (newReader.objOperandId() != stubReader.objOperandId()) {
+          return false;
+        }
+
+        // Check that the field offset is the same.
+        uint32_t newShapeOffset = newReader.stubOffset();
+        uint32_t stubShapesOffset = stubReader.stubOffset();
+        if (newShapeOffset != stubShapesOffset) {
+          return false;
+        }
+        MOZ_ASSERT(shapeFieldOffset.isNothing());
+        shapeFieldOffset.emplace(newShapeOffset);
+
+        // Get the shape from the new stub
+        StubField shapeField =
+            writer.readStubField(newShapeOffset, StubField::Type::Shape);
+        newShape =
+            PrivateGCThingValue(reinterpret_cast<Shape*>(shapeField.asWord()));
+
+        // Get the shape array from the old stub.
+        JSObject* shapeList =
+            stubInfo->getStubField<JSObject*>(stub, stubShapesOffset);
+        foldedShapes = &shapeList->as<ListObject>();
+        break;
+      }
+      default: {
+        // Check that the op is the same.
+        if (newOp != stubOp) {
+          return false;
+        }
+
+        // Check that the arguments are the same.
+        uint32_t argLength = CacheIROpInfos[size_t(newOp)].argLength;
+        for (uint32_t i = 0; i < argLength; i++) {
+          if (newReader.readByte() != stubReader.readByte()) {
+            return false;
+          }
+        }
+      }
+    }
+  }
+
+  MOZ_ASSERT(shapeFieldOffset.isSome());
+
+  // Check to verify that all the other stub fields are the same.
+  if (!writer.stubDataEqualsIgnoring(stubData, *shapeFieldOffset)) {
+    return false;
+  }
+
+  // Limit the maximum number of shapes we will add before giving up.
+  if (foldedShapes->length() == MaxFoldedShapes) {
+    return false;
+  }
+
+  if (!foldedShapes->append(cx, newShape)) {
+    cx->recoverFromOutOfMemory();
+    return false;
+  }
+
   return true;
 }
 
@@ -2327,6 +2427,18 @@ ICAttachResult js::jit::AttachBaselineCacheIRStub(
             outerScript->filename(), outerScript->lineno(),
             outerScript->column());
     return ICAttachResult::DuplicateStub;
+  }
+
+  // Try including this case in an existing folded stub.
+  if (stub->hasFoldedStub() && AddToFoldedStub(cx, writer, icScript, stub)) {
+    // Instead of adding a new stub, we have added a new case to an
+    // existing folded stub. We do not have to invalidate Warp,
+    // because the ListObject that stores the cases is shared between
+    // baseline and Warp. Reset the entered count for the fallback
+    // stub so that we can still transpile.
+    // TODO: Update this for the new bailout strategy
+    stub->resetEnteredCount();
+    return ICAttachResult::Attached;
   }
 
   // Time to allocate and attach a new stub.
