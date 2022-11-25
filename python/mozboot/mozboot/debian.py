@@ -66,3 +66,18 @@ class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         # pip.
         assert res == 1
         self.run_as_root(["pip3", "install", "--upgrade", "Mercurial"])
+
+    def apt_install(self, *packages):
+        command = ["apt-get", "install"]
+        if self.no_interactive:
+            command.append("-y")
+        command.extend(packages)
+
+        self.run_as_root(command)
+
+    def apt_update(self):
+        command = ["apt-get", "update"]
+        if self.no_interactive:
+            command.append("-y")
+
+        self.run_as_root(command)
