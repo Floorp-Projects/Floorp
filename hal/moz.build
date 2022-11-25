@@ -64,14 +64,15 @@ elif CONFIG["OS_TARGET"] == "WINNT":
     REQUIRES_UNIFIED_BUILD = True
     UNIFIED_SOURCES += [
         "fallback/FallbackVibration.cpp",
-        "windows/WindowsScreenConfiguration.cpp",
         "windows/WindowsSensor.cpp",
     ]
     # WindowsBattery.cpp cannot be built in unified mode because it relies on HalImpl.h.
     # WindowsProcessPriority.cpp needs to set _WIN32_WINNT to Windows 8
+    # WindowsScreenConfiguration.cpp needs to set WINVER to 0x0602.
     SOURCES += [
         "windows/WindowsBattery.cpp",
         "windows/WindowsProcessPriority.cpp",
+        "windows/WindowsScreenConfiguration.cpp",
     ]
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     UNIFIED_SOURCES += [
