@@ -6,20 +6,18 @@
 
 from __future__ import absolute_import, print_function
 
-import mozinfo
 import os
 import pprint
 import re
 import shutil
-import six
 import sys
 import tempfile
 import unittest
 
+import mozinfo
+import six
 from mozlog import structured
-
 from runxpcshelltests import XPCShellTests
-
 
 TEST_PASS_STRING = "TEST-PASS"
 TEST_FAIL_STRING = "TEST-UNEXPECTED-FAIL"
