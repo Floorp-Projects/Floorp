@@ -1564,6 +1564,7 @@ def select_linker_tmpl(host_or_target):
             developer_options,
             dependable(None),
             host,
+            when=is_linker_option_enabled,
         )
         host_or_target_str = "host"
 
