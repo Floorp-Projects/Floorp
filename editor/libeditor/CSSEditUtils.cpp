@@ -281,31 +281,28 @@ const CSSEditUtils::CSSEquivTable hrAlignEquivTable[] = {
 
 #undef CSS_EQUIV_TABLE_NONE
 
-// Answers true if we have some CSS equivalence for the HTML style defined
-// by aProperty and/or aAttribute for the node aNode
-
 // static
-bool CSSEditUtils::IsCSSEditableProperty(nsINode* aNode, nsAtom* aProperty,
-                                         nsAtom* aAttribute) {
-  MOZ_ASSERT(aNode);
-
-  Element* element = aNode->GetAsElementOrParentElement();
-  if (NS_WARN_IF(!element)) {
-    return false;
-  }
+bool CSSEditUtils::IsCSSEditableStyle(const Element& aElement,
+                                      const EditorElementStyle& aStyle) {
+  nsStaticAtom* const htmlProperty =
+      aStyle.IsInlineStyle() ? aStyle.AsInlineStyle().mHTMLProperty : nullptr;
+  nsAtom* const attributeOrStyle = aStyle.IsInlineStyle()
+                                       ? aStyle.AsInlineStyle().mAttribute.get()
+                                       : aStyle.Style();
 
   // html inline styles B I TT U STRIKE and COLOR/FACE on FONT
-  if (nsGkAtoms::b == aProperty || nsGkAtoms::i == aProperty ||
-      nsGkAtoms::tt == aProperty || nsGkAtoms::u == aProperty ||
-      nsGkAtoms::strike == aProperty ||
-      (nsGkAtoms::font == aProperty && aAttribute &&
-       (aAttribute == nsGkAtoms::color || aAttribute == nsGkAtoms::face))) {
+  if (nsGkAtoms::b == htmlProperty || nsGkAtoms::i == htmlProperty ||
+      nsGkAtoms::tt == htmlProperty || nsGkAtoms::u == htmlProperty ||
+      nsGkAtoms::strike == htmlProperty ||
+      (nsGkAtoms::font == htmlProperty &&
+       (attributeOrStyle == nsGkAtoms::color ||
+        attributeOrStyle == nsGkAtoms::face))) {
     return true;
   }
 
   // ALIGN attribute on elements supporting it
-  if (aAttribute == nsGkAtoms::align &&
-      element->IsAnyOfHTMLElements(
+  if (attributeOrStyle == nsGkAtoms::align &&
+      aElement.IsAnyOfHTMLElements(
           nsGkAtoms::div, nsGkAtoms::p, nsGkAtoms::h1, nsGkAtoms::h2,
           nsGkAtoms::h3, nsGkAtoms::h4, nsGkAtoms::h5, nsGkAtoms::h6,
           nsGkAtoms::td, nsGkAtoms::th, nsGkAtoms::table, nsGkAtoms::hr,
@@ -318,61 +315,66 @@ bool CSSEditUtils::IsCSSEditableProperty(nsINode* aNode, nsAtom* aProperty,
     return true;
   }
 
-  if (aAttribute == nsGkAtoms::valign &&
-      element->IsAnyOfHTMLElements(
+  if (attributeOrStyle == nsGkAtoms::valign &&
+      aElement.IsAnyOfHTMLElements(
           nsGkAtoms::col, nsGkAtoms::colgroup, nsGkAtoms::tbody, nsGkAtoms::td,
           nsGkAtoms::th, nsGkAtoms::tfoot, nsGkAtoms::thead, nsGkAtoms::tr)) {
     return true;
   }
 
   // attributes TEXT, BACKGROUND and BGCOLOR on BODY
-  if (element->IsHTMLElement(nsGkAtoms::body) &&
-      (aAttribute == nsGkAtoms::text || aAttribute == nsGkAtoms::background ||
-       aAttribute == nsGkAtoms::bgcolor)) {
+  if (aElement.IsHTMLElement(nsGkAtoms::body) &&
+      (attributeOrStyle == nsGkAtoms::text ||
+       attributeOrStyle == nsGkAtoms::background ||
+       attributeOrStyle == nsGkAtoms::bgcolor)) {
     return true;
   }
 
   // attribute BGCOLOR on other elements
-  if (aAttribute == nsGkAtoms::bgcolor) {
+  if (attributeOrStyle == nsGkAtoms::bgcolor) {
     return true;
   }
 
   // attributes HEIGHT, WIDTH and NOWRAP on TD and TH
-  if (element->IsAnyOfHTMLElements(nsGkAtoms::td, nsGkAtoms::th) &&
-      (aAttribute == nsGkAtoms::height || aAttribute == nsGkAtoms::width ||
-       aAttribute == nsGkAtoms::nowrap)) {
+  if (aElement.IsAnyOfHTMLElements(nsGkAtoms::td, nsGkAtoms::th) &&
+      (attributeOrStyle == nsGkAtoms::height ||
+       attributeOrStyle == nsGkAtoms::width ||
+       attributeOrStyle == nsGkAtoms::nowrap)) {
     return true;
   }
 
   // attributes HEIGHT and WIDTH on TABLE
-  if (element->IsHTMLElement(nsGkAtoms::table) &&
-      (aAttribute == nsGkAtoms::height || aAttribute == nsGkAtoms::width)) {
+  if (aElement.IsHTMLElement(nsGkAtoms::table) &&
+      (attributeOrStyle == nsGkAtoms::height ||
+       attributeOrStyle == nsGkAtoms::width)) {
     return true;
   }
 
   // attributes SIZE and WIDTH on HR
-  if (element->IsHTMLElement(nsGkAtoms::hr) &&
-      (aAttribute == nsGkAtoms::size || aAttribute == nsGkAtoms::width)) {
+  if (aElement.IsHTMLElement(nsGkAtoms::hr) &&
+      (attributeOrStyle == nsGkAtoms::size ||
+       attributeOrStyle == nsGkAtoms::width)) {
     return true;
   }
 
   // attribute TYPE on OL UL LI
-  if (element->IsAnyOfHTMLElements(nsGkAtoms::ol, nsGkAtoms::ul,
+  if (aElement.IsAnyOfHTMLElements(nsGkAtoms::ol, nsGkAtoms::ul,
                                    nsGkAtoms::li) &&
-      aAttribute == nsGkAtoms::type) {
+      attributeOrStyle == nsGkAtoms::type) {
     return true;
   }
 
-  if (element->IsHTMLElement(nsGkAtoms::img) &&
-      (aAttribute == nsGkAtoms::border || aAttribute == nsGkAtoms::width ||
-       aAttribute == nsGkAtoms::height)) {
+  if (aElement.IsHTMLElement(nsGkAtoms::img) &&
+      (attributeOrStyle == nsGkAtoms::border ||
+       attributeOrStyle == nsGkAtoms::width ||
+       attributeOrStyle == nsGkAtoms::height)) {
     return true;
   }
 
   // other elements that we can align using CSS even if they
   // can't carry the html ALIGN attribute
-  if (aAttribute == nsGkAtoms::align &&
-      element->IsAnyOfHTMLElements(nsGkAtoms::ul, nsGkAtoms::ol, nsGkAtoms::dl,
+  if (attributeOrStyle == nsGkAtoms::align &&
+      aElement.IsAnyOfHTMLElements(nsGkAtoms::ul, nsGkAtoms::ol, nsGkAtoms::dl,
                                    nsGkAtoms::li, nsGkAtoms::dd, nsGkAtoms::dt,
                                    nsGkAtoms::address, nsGkAtoms::pre)) {
     return true;
@@ -852,8 +854,7 @@ Result<int32_t, nsresult> CSSEditUtils::SetCSSEquivalentToStyle(
   const RefPtr<nsAtom> attributeOrStyle =
       aStyleToSet.IsInlineStyle() ? aStyleToSet.AsInlineStyle().mAttribute
                                   : aStyleToSet.Style();
-  MOZ_DIAGNOSTIC_ASSERT(
-      IsCSSEditableProperty(&aStyledElement, htmlProperty, attributeOrStyle));
+  MOZ_DIAGNOSTIC_ASSERT(aStyleToSet.IsCSSEditable(aStyledElement));
 
   // we can apply the styles only if the node is an element and if we have
   // an equivalence for the requested HTML style in this implementation
@@ -891,8 +892,7 @@ nsresult CSSEditUtils::RemoveCSSEquivalentToStyle(
   const RefPtr<nsAtom> attributeOrStyle =
       aStyleToRemove.IsInlineStyle() ? aStyleToRemove.AsInlineStyle().mAttribute
                                      : aStyleToRemove.Style();
-  MOZ_DIAGNOSTIC_ASSERT(
-      IsCSSEditableProperty(&aStyledElement, htmlProperty, attributeOrStyle));
+  MOZ_DIAGNOSTIC_ASSERT(aStyleToRemove.IsCSSEditable(aStyledElement));
 
   // we can apply the styles only if the node is an element and if we have
   // an equivalence for the requested HTML style in this implementation
@@ -940,8 +940,7 @@ nsresult CSSEditUtils::GetCSSEquivalentTo(Element& aElement,
   const RefPtr<nsAtom> attributeOrStyle =
       aStyle.IsInlineStyle() ? aStyle.AsInlineStyle().mAttribute
                              : aStyle.Style();
-  MOZ_DIAGNOSTIC_ASSERT(
-      IsCSSEditableProperty(&aElement, htmlProperty, attributeOrStyle));
+  MOZ_DIAGNOSTIC_ASSERT(aStyle.IsCSSEditable(aElement));
 
   aOutValue.Truncate();
   // Yes, the requested HTML style has a CSS equivalence in this implementation

@@ -72,20 +72,6 @@ class CSSEditUtils final {
   };
 
   /**
-   * Answers true if the given combination element_name/attribute_name
-   * has a CSS equivalence in this implementation.
-   *
-   * @param aNode          [IN] A DOM node.
-   * @param aProperty      [IN] An atom containing a HTML tag name.
-   * @param aAttribute     [IN] An atom containing a HTML
-   *                            attribute carried by the element above.
-   * @return               A boolean saying if the tag/attribute has a CSS
-   *                       equiv.
-   */
-  static bool IsCSSEditableProperty(nsINode* aNode, nsAtom* aProperty,
-                                    nsAtom* aAttribute);
-
-  /**
    * Adds/remove a CSS declaration to the STYLE attribute carried by a given
    * element.
    *
@@ -377,6 +363,20 @@ class CSSEditUtils final {
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult SetCSSPropertyInternal(
       HTMLEditor& aHTMLEditor, nsStyledElement& aStyledElement,
       nsAtom& aProperty, const nsAString& aValue, bool aSuppressTxn = false);
+
+  /**
+   * Answers true if the given aStyle on aElement has a CSS equivalence in this
+   * implementation.
+   *
+   * @param aElement       [IN] An element.
+   * @param aStyle         [IN] The style you want to check.
+   * @return               A boolean saying if the tag/attribute has a CSS
+   *                       equiv.
+   */
+  [[nodiscard]] static bool IsCSSEditableStyle(
+      const dom::Element& aElement, const EditorElementStyle& aStyle);
+
+  friend class EditorElementStyle;  // for IsCSSEditableStyle
 };
 
 #define NS_EDITOR_INDENT_INCREMENT_IN 0.4134f

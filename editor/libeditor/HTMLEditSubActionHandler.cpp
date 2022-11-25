@@ -259,7 +259,7 @@ void HTMLEditor::OnStartToHandleTopLevelEditSubAction(
       break;
   }
   if (cacheInlineStyles) {
-    nsCOMPtr<nsIContent> containerContent = nsIContent::FromNodeOrNull(
+    nsIContent* const containerContent = nsIContent::FromNodeOrNull(
         aDirectionOfTopLevelEditSubAction == nsIEditor::eNext
             ? TopLevelEditSubActionDataRef().mSelectedRange->mEndContainer
             : TopLevelEditSubActionDataRef().mSelectedRange->mStartContainer);
@@ -267,11 +267,14 @@ void HTMLEditor::OnStartToHandleTopLevelEditSubAction(
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
-    nsresult rv = CacheInlineStyles(*containerContent);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::CacheInlineStyles() failed");
-      aRv.Throw(rv);
-      return;
+    if (const RefPtr<Element> element =
+            containerContent->GetAsElementOrParentElement()) {
+      nsresult rv = CacheInlineStyles(*element);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("HTMLEditor::CacheInlineStyles() failed");
+        aRv.Throw(rv);
+        return;
+      }
     }
   }
 
@@ -6619,27 +6622,25 @@ Result<CreateElementResult, nsresult> HTMLEditor::AlignNodesAndDescendants(
       }
 
       if (useCSS) {
-        if (nsStyledElement* styledListOrListItemElement =
-                nsStyledElement::FromNode(listOrListItemElement)) {
-          if (CSSEditUtils::IsCSSEditableProperty(
-                  styledListOrListItemElement, nullptr,
-                  EditorElementStyle::Align().Style())) {
-            // MOZ_KnownLive(*styledListOrListItemElement): An element of
-            // aArrayOfContents which is array of OwningNonNull.
-            Result<int32_t, nsresult> result =
-                CSSEditUtils::SetCSSEquivalentToStyle(
-                    WithTransaction::Yes, *this,
-                    MOZ_KnownLive(*styledListOrListItemElement),
-                    EditorElementStyle::Align(), &aAlignType);
-            if (MOZ_UNLIKELY(result.isErr())) {
-              if (NS_WARN_IF(result.inspectErr() ==
-                             NS_ERROR_EDITOR_DESTROYED)) {
-                return result.propagateErr();
-              }
-              NS_WARNING(
-                  "CSSEditUtils::SetCSSEquivalentToStyle(EditorElementStyle::"
-                  "Align()) failed, but ignored");
+        nsStyledElement* styledListOrListItemElement =
+            nsStyledElement::FromNode(listOrListItemElement);
+        if (styledListOrListItemElement &&
+            EditorElementStyle::Align().IsCSSEditable(
+                *styledListOrListItemElement)) {
+          // MOZ_KnownLive(*styledListOrListItemElement): An element of
+          // aArrayOfContents which is array of OwningNonNull.
+          Result<int32_t, nsresult> result =
+              CSSEditUtils::SetCSSEquivalentToStyle(
+                  WithTransaction::Yes, *this,
+                  MOZ_KnownLive(*styledListOrListItemElement),
+                  EditorElementStyle::Align(), &aAlignType);
+          if (MOZ_UNLIKELY(result.isErr())) {
+            if (NS_WARN_IF(result.inspectErr() == NS_ERROR_EDITOR_DESTROYED)) {
+              return result.propagateErr();
             }
+            NS_WARNING(
+                "CSSEditUtils::SetCSSEquivalentToStyle(EditorElementStyle::"
+                "Align()) failed, but ignored");
           }
         }
         createdDivElement = nullptr;
@@ -9007,18 +9008,18 @@ Element* HTMLEditor::GetMostDistantAncestorMailCiteElement(
   return mailCiteElement;
 }
 
-nsresult HTMLEditor::CacheInlineStyles(nsIContent& aContent) {
+nsresult HTMLEditor::CacheInlineStyles(Element& Element) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
   nsresult rv = GetInlineStyles(
-      aContent, *TopLevelEditSubActionDataRef().mCachedPendingStyles);
+      Element, *TopLevelEditSubActionDataRef().mCachedPendingStyles);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::GetInlineStyles() failed");
   return rv;
 }
 
 nsresult HTMLEditor::GetInlineStyles(
-    nsIContent& aContent, AutoPendingStyleCacheArray& aPendingStyleCacheArray) {
+    Element& aElement, AutoPendingStyleCacheArray& aPendingStyleCacheArray) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aPendingStyleCacheArray.IsEmpty());
 
@@ -9062,12 +9063,11 @@ nsresult HTMLEditor::GetInlineStyles(
                      // at creating new PendingStyleCache instance.
     // Don't use CSS for <font size>, we don't support it usefully (bug 780035)
     if (!useCSS || (property == nsGkAtoms::size)) {
-      isSet = HTMLEditUtils::IsInlineStyleSetByElement(aContent, style, nullptr,
+      isSet = HTMLEditUtils::IsInlineStyleSetByElement(aElement, style, nullptr,
                                                        &value);
-    } else if (CSSEditUtils::IsCSSEditableProperty(
-                   &aContent, style.mHTMLProperty, style.mAttribute)) {
+    } else if (style.IsCSSEditable(aElement)) {
       Result<bool, nsresult> isComputedCSSEquivalentToStyleOrError =
-          CSSEditUtils::IsComputedCSSEquivalentTo(*this, aContent, style,
+          CSSEditUtils::IsComputedCSSEquivalentTo(*this, aElement, style,
                                                   value);
       if (MOZ_UNLIKELY(isComputedCSSEquivalentToStyleOrError.isErr())) {
         NS_WARNING("CSSEditUtils::IsComputedCSSEquivalentTo() failed");
@@ -9096,22 +9096,22 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
   }
 
   // remember if we are in css mode
-  bool useCSS = IsCSSEnabled();
+  const bool useCSS = IsCSSEnabled();
 
   const RangeBoundary& atStartOfSelection =
       SelectionRef().GetRangeAt(0)->StartRef();
-  nsCOMPtr<nsIContent> startContainerContent =
+  const RefPtr<Element> startContainerElement =
       atStartOfSelection.Container() &&
               atStartOfSelection.Container()->IsContent()
-          ? atStartOfSelection.Container()->AsContent()
+          ? atStartOfSelection.Container()->GetAsElementOrParentElement()
           : nullptr;
-  if (NS_WARN_IF(!startContainerContent)) {
+  if (NS_WARN_IF(!startContainerElement)) {
     return NS_OK;
   }
 
   AutoPendingStyleCacheArray styleCacheArrayAtInsertionPoint;
   nsresult rv =
-      GetInlineStyles(*startContainerContent, styleCacheArrayAtInsertionPoint);
+      GetInlineStyles(*startContainerElement, styleCacheArrayAtInsertionPoint);
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -9124,16 +9124,14 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
        *TopLevelEditSubActionDataRef().mCachedPendingStyles) {
     bool isFirst = false, isAny = false, isAll = false;
     nsAutoString currentValue;
-    if (useCSS && CSSEditUtils::IsCSSEditableProperty(
-                      startContainerContent, &styleCacheBeforeEdit.TagRef(),
-                      styleCacheBeforeEdit.GetAttribute())) {
+    const EditorInlineStyle inlineStyle = styleCacheBeforeEdit.ToInlineStyle();
+    if (useCSS && inlineStyle.IsCSSEditable(*startContainerElement)) {
       // check computed style first in css case
       // MOZ_KnownLive(styleCacheBeforeEdit.*) because they are nsStaticAtom
       // and its instances are alive until shutting down.
       Result<bool, nsresult> isComputedCSSEquivalentToStyleOrError =
-          CSSEditUtils::IsComputedCSSEquivalentTo(
-              *this, *startContainerContent,
-              styleCacheBeforeEdit.ToInlineStyle(), currentValue);
+          CSSEditUtils::IsComputedCSSEquivalentTo(*this, *startContainerElement,
+                                                  inlineStyle, currentValue);
       if (MOZ_UNLIKELY(isComputedCSSEquivalentToStyleOrError.isErr())) {
         NS_WARNING("CSSEditUtils::IsComputedCSSEquivalentTo() failed");
         return isComputedCSSEquivalentToStyleOrError.unwrapErr();
@@ -9143,9 +9141,8 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
     if (!isAny) {
       // then check typeinstate and html style
       nsresult rv = GetInlinePropertyBase(
-          styleCacheBeforeEdit.ToInlineStyle(),
-          &styleCacheBeforeEdit.AttributeValueOrCSSValueRef(), &isFirst, &isAny,
-          &isAll, &currentValue);
+          inlineStyle, &styleCacheBeforeEdit.AttributeValueOrCSSValueRef(),
+          &isFirst, &isAny, &isAll, &currentValue);
       if (NS_FAILED(rv)) {
         NS_WARNING("HTMLEditor::GetInlinePropertyBase() failed");
         return rv;

@@ -921,6 +921,8 @@ class MOZ_STACK_CLASS EditorElementStyle {
            aAttribute == nsGkAtoms::valign || aAttribute == nsGkAtoms::width;
   }
 
+  [[nodiscard]] bool IsCSSEditable(const dom::Element& aElement) const;
+
   nsStaticAtom* Style() const { return mStyle; }
 
   [[nodiscard]] bool IsInlineStyle() const { return !mStyle; }
