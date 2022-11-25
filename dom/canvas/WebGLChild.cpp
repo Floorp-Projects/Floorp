@@ -25,28 +25,29 @@ void WebGLChild::ActorDestroy(ActorDestroyReason why) {
 
 Maybe<Range<uint8_t>> WebGLChild::AllocPendingCmdBytes(
     const size_t size, const size_t fyiAlignmentOverhead) {
-  if (!mPendingCmdsShmem.Size()) {
+  if (!mPendingCmdsShmem) {
     size_t capacity = mDefaultCmdsShmemSize;
     if (capacity < size) {
       capacity = size;
     }
 
-    mPendingCmdsShmem = mozilla::ipc::BigBuffer::TryAlloc(capacity);
-    if (!mPendingCmdsShmem.Size()) {
+    auto shmem = webgl::RaiiShmem::Alloc(this, capacity);
+    if (!shmem) {
       NS_WARNING("Failed to alloc shmem for AllocPendingCmdBytes.");
       return {};
     }
+    mPendingCmdsShmem = std::move(shmem);
     mPendingCmdsPos = 0;
     mPendingCmdsAlignmentOverhead = 0;
 
     if (kIsDebug) {
-      const auto ptr = mPendingCmdsShmem.Data();
-      const auto initialOffset = AlignmentOffset(kUniversalAlignment, ptr);
+      const auto range = mPendingCmdsShmem.ByteRange();
+      const auto initialOffset =
+          AlignmentOffset(kUniversalAlignment, range.begin().get());
       MOZ_ALWAYS_TRUE(!initialOffset);
     }
   }
-
-  const auto range = Range{mPendingCmdsShmem.AsSpan()};
+  const auto range = mPendingCmdsShmem.ByteRange();
 
   auto itr = range.begin() + mPendingCmdsPos;
   const auto offset = AlignmentOffset(kUniversalAlignment, itr.get());
@@ -65,11 +66,10 @@ Maybe<Range<uint8_t>> WebGLChild::AllocPendingCmdBytes(
 }
 
 void WebGLChild::FlushPendingCmds() {
-  if (!mPendingCmdsShmem.Size()) return;
+  if (!mPendingCmdsShmem) return;
 
   const auto byteSize = mPendingCmdsPos;
-  SendDispatchCommands(std::move(mPendingCmdsShmem), byteSize);
-  mPendingCmdsShmem = {};
+  SendDispatchCommands(mPendingCmdsShmem.Extract(), byteSize);
 
   mFlushedCmdInfo.flushes += 1;
   mFlushedCmdInfo.flushedCmdBytes += byteSize;
