@@ -1412,18 +1412,20 @@
           }
         };
 
-        if (!window.fullScreen) {
-          selectURL();
-          return;
-        }
-
-        if (newTab.isEmpty) {
-          // Wait until fullscreen has exited since it will
-          // change the selection.
+        // This inDOMFullscreen attribute indicates that the page has something
+        // such as a video in fullscreen mode. Opening a new tab will cancel
+        // fullscreen mode, so we need to wait for that to happen and then
+        // select the url field.
+        if (window.document.documentElement.hasAttribute("inDOMFullscreen")) {
           window.addEventListener("MozDOMFullscreen:Exited", selectURL, {
             once: true,
             wantsUntrusted: false,
           });
+          return;
+        }
+
+        if (!window.fullScreen || newTab.isEmpty) {
+          selectURL();
           return;
         }
       }
