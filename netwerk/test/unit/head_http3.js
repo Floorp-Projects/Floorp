@@ -6,11 +6,7 @@
 /* import-globals-from head_cookies.js */
 
 async function http3_setup_tests(http3version) {
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-
-  let h3Port = env.get("MOZHTTP3_PORT");
+  let h3Port = Services.env.get("MOZHTTP3_PORT");
   Assert.notEqual(h3Port, null);
   Assert.notEqual(h3Port, "");
   let h3Route = "foo.example.com:" + h3Port;

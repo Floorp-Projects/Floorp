@@ -356,10 +356,7 @@ add_task(async function setup() {
   );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
 
-  const env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-  let server_port = env.get("MOZHTTP2_PORT");
+  let server_port = Services.env.get("MOZHTTP2_PORT");
   Assert.notEqual(server_port, null);
   processId = await NodeServer.fork();
   await NodeServer.execute(processId, `serverPort = ${server_port}`);

@@ -12,10 +12,6 @@ const certOverrideService = Cc[
   "@mozilla.org/security/certoverride;1"
 ].getService(Ci.nsICertOverrideService);
 
-const env = Cc["@mozilla.org/process/environment;1"].getService(
-  Ci.nsIEnvironment
-);
-
 function setup() {
   // Allow telemetry probes which may otherwise be disabled for some
   // applications (e.g. Thunderbird).
@@ -34,7 +30,7 @@ function setup() {
   Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRONLY);
 
   // Set the server to always select http/1.1
-  env.set("MOZ_TLS_ECH_ALPN_FLAG", 1);
+  Services.env.set("MOZ_TLS_ECH_ALPN_FLAG", 1);
 
   add_tls_server_setup(
     "EncryptedClientHelloServer",
@@ -54,7 +50,7 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.dns.echconfig.fallback_to_origin");
   Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
   Services.prefs.clearUserPref("network.dns.port_prefixed_qname_https_rr");
-  env.set("MOZ_TLS_ECH_ALPN_FLAG", "");
+  Services.env.set("MOZ_TLS_ECH_ALPN_FLAG", "");
   if (trrServer) {
     await trrServer.stop();
   }

@@ -10,11 +10,7 @@ registerCleanupFunction(async () => {
 let httpsUri;
 
 add_task(async function setup() {
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-
-  let h2Port = env.get("MOZHTTP2_PORT");
+  let h2Port = Services.env.get("MOZHTTP2_PORT");
   Assert.notEqual(h2Port, null);
   Assert.notEqual(h2Port, "");
   httpsUri = "https://foo.example.com:" + h2Port + "/";

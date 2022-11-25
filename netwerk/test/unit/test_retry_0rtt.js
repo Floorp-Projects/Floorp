@@ -27,11 +27,11 @@ function setup() {
     await httpServer.stop();
   });
 
-  let envSvc = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
+  Services.env.set(
+    "FAULTY_SERVER_CALLBACK_PORT",
+    httpServer.identity.primaryPort
   );
-  envSvc.set("FAULTY_SERVER_CALLBACK_PORT", httpServer.identity.primaryPort);
-  envSvc.set("MOZ_TLS_SERVER_0RTT", "1");
+  Services.env.set("MOZ_TLS_SERVER_0RTT", "1");
   add_tls_server_setup(
     "FaultyServer",
     "../../../security/manager/ssl/tests/unit/test_faulty_server"
