@@ -1,4 +1,10 @@
-import { EventEmitter, FakePrefs, GlobalOverrider } from "test/unit/utils";
+import {
+  EventEmitter,
+  FakePrefs,
+  GlobalOverrider,
+  FakeConsoleAPI,
+  FakeLogger,
+} from "test/unit/utils";
 import Adapter from "enzyme-adapter-react-16";
 import { chaiAssertions } from "test/schemas/pings";
 import chaiJsonSchema from "chai-json-schema";
@@ -67,22 +73,6 @@ class JSWindowActorChild {
   }
 }
 
-class Logger {
-  constructor(name) {
-    this.name = name;
-  }
-
-  warn() {}
-}
-
-function ConsoleAPI() {}
-ConsoleAPI.prototype.debug = () => {};
-ConsoleAPI.prototype.trace = () => {};
-// Comment out the above prototype assignments and uncomment the ones below to get more
-// ASRouter logging in tests:
-//ConsoleAPI.prototype.debug = console.debug;
-//ConsoleAPI.prototype.trace = console.trace;
-
 // Detect plain object passed to lazy getter APIs, and set its prototype to
 // global object, and return the global object for further modification.
 // Returns the object if it's not plain object.
@@ -130,7 +120,10 @@ const TEST_GLOBAL = {
     platform: "win",
   },
   ASRouterPreferences: {
-    console: new ConsoleAPI(),
+    console: new FakeConsoleAPI({
+      maxLogLevel: "off", // set this to "debug" or "all" to get more ASRouter logging in tests
+      prefix: "ASRouter",
+    }),
   },
   BrowserUtils: {
     sendToDeviceEmailsSupported() {
@@ -183,7 +176,7 @@ const TEST_GLOBAL = {
     },
     isSuccessCode: () => true,
   },
-  ConsoleAPI,
+  ConsoleAPI: FakeConsoleAPI,
   // NB: These are functions/constructors
   // eslint-disable-next-line object-shorthand
   ContentSearchUIController: function() {},
@@ -609,7 +602,7 @@ const TEST_GLOBAL = {
     addExpirationFilter() {},
     removeExpirationFilter() {},
   },
-  Logger,
+  Logger: FakeLogger,
   getFxAccountsSingleton() {},
   AboutNewTab: {},
   Glean: {
