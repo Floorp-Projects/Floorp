@@ -39,6 +39,14 @@ class nsISimpleEnumerator;
 
 namespace mozilla {
 
+enum class WithTransaction { No, Yes };
+inline std::ostream& operator<<(std::ostream& aStream,
+                                WithTransaction aWithTransaction) {
+  aStream << "WithTransaction::"
+          << (aWithTransaction == WithTransaction::Yes ? "Yes" : "No");
+  return aStream;
+}
+
 /*****************************************************************************
  * MoveNodeResult is a simple class for MoveSomething() methods.
  * This stores whether it's handled or not, and next insertion point and a
@@ -871,10 +879,70 @@ class MOZ_STACK_CLASS ReplaceRangeDataBase final {
 };
 
 /******************************************************************************
+ * EditorElementStyle represents a generic style of element
+ ******************************************************************************/
+
+class MOZ_STACK_CLASS EditorElementStyle {
+ public:
+#define DEFINE_FACTORY(aName, aAttr)            \
+  constexpr static EditorElementStyle aName() { \
+    return EditorElementStyle(*(aAttr));        \
+  }
+
+  // text-align, caption-side, a pair of margin-left and margin-right
+  DEFINE_FACTORY(Align, nsGkAtoms::align)
+  // background-color
+  DEFINE_FACTORY(BGColor, nsGkAtoms::bgcolor)
+  // background-image
+  DEFINE_FACTORY(Background, nsGkAtoms::background)
+  // border
+  DEFINE_FACTORY(Border, nsGkAtoms::border)
+  // height
+  DEFINE_FACTORY(Height, nsGkAtoms::height)
+  // color
+  DEFINE_FACTORY(Text, nsGkAtoms::text)
+  // list-style-type
+  DEFINE_FACTORY(Type, nsGkAtoms::type)
+  // vertical-align
+  DEFINE_FACTORY(VAlign, nsGkAtoms::valign)
+  // width
+  DEFINE_FACTORY(Width, nsGkAtoms::width)
+
+  static EditorElementStyle Create(const nsAtom& aAttribute) {
+    MOZ_DIAGNOSTIC_ASSERT(IsHTMLStyle(&aAttribute));
+    return EditorElementStyle(*aAttribute.AsStatic());
+  }
+
+  [[nodiscard]] static bool IsHTMLStyle(const nsAtom* aAttribute) {
+    return aAttribute == nsGkAtoms::align || aAttribute == nsGkAtoms::bgcolor ||
+           aAttribute == nsGkAtoms::background ||
+           aAttribute == nsGkAtoms::border || aAttribute == nsGkAtoms::height ||
+           aAttribute == nsGkAtoms::text || aAttribute == nsGkAtoms::type ||
+           aAttribute == nsGkAtoms::valign || aAttribute == nsGkAtoms::width;
+  }
+
+  nsStaticAtom* Style() const { return mStyle; }
+
+  [[nodiscard]] bool IsInlineStyle() const { return !mStyle; }
+  inline EditorInlineStyle& AsInlineStyle();
+  inline const EditorInlineStyle& AsInlineStyle() const;
+
+ protected:
+  MOZ_KNOWN_LIVE nsStaticAtom* mStyle = nullptr;
+  EditorElementStyle() = default;
+
+ private:
+  constexpr explicit EditorElementStyle(const nsStaticAtom& aStyle)
+      // Needs const_cast hack here because the this class users may want
+      // non-const nsStaticAtom pointer due to bug 1794954
+      : mStyle(const_cast<nsStaticAtom*>(&aStyle)) {}
+};
+
+/******************************************************************************
  * EditorInlineStyle represents an inline style.
  ******************************************************************************/
 
-struct MOZ_STACK_CLASS EditorInlineStyle {
+struct MOZ_STACK_CLASS EditorInlineStyle : public EditorElementStyle {
   // nullptr if you want to remove all inline styles.
   // Otherwise, one of the presentation tag names which we support in style
   // editor, and there special cases: nsGkAtoms::href means <a href="...">,
@@ -933,7 +1001,19 @@ struct MOZ_STACK_CLASS EditorInlineStyle {
 
  private:
   EditorInlineStyle() = default;
+
+  using EditorElementStyle::AsInlineStyle;
+  using EditorElementStyle::IsInlineStyle;
+  using EditorElementStyle::Style;
 };
+
+inline EditorInlineStyle& EditorElementStyle::AsInlineStyle() {
+  return reinterpret_cast<EditorInlineStyle&>(*this);
+}
+
+inline const EditorInlineStyle& EditorElementStyle::AsInlineStyle() const {
+  return reinterpret_cast<const EditorInlineStyle&>(*this);
+}
 
 /******************************************************************************
  * EditorInlineStyleAndValue represents an inline style and stores its value.

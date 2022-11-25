@@ -48,6 +48,7 @@ enum class ParagraphSeparator;                 // mozilla/HTMLEditor.h
 enum class SpecifiedStyle : uint8_t;           // mozilla/PendingStyles.h
 enum class SplitNodeDirection;                 // JoinSplitNodeDirection.h
 enum class SuggestCaret;                       // EditorUtils.h
+enum class WithTransaction;                    // HTMLEditHelpers.h
 
 /******************************************************************************
  * enum sets
@@ -121,6 +122,7 @@ class WSScanResult;                 // WSRunObject.h
  * structs
  ******************************************************************************/
 
+class EditorElementStyle;          // HTMLEditHelpers.h
 struct EditorInlineStyle;          // HTMLEditHelpers.h
 struct EditorInlineStyleAndValue;  // HTMLEditHelpers.h
 struct RangeItem;                  // mozilla/SelectionState.h

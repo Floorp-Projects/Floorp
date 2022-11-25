@@ -8,6 +8,7 @@
 
 #include "CSSEditUtils.h"
 #include "EditAction.h"
+#include "HTMLEditHelpers.h"
 #include "HTMLEditorEventListener.h"
 #include "HTMLEditUtils.h"
 

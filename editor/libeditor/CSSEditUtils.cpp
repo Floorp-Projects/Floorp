@@ -842,13 +842,18 @@ void CSSEditUtils::GenerateCSSDeclarationsFromHTMLStyle(
 // Add to aNode the CSS inline style equivalent to HTMLProperty/aAttribute/
 // aValue for the node, and return in aCount the number of CSS properties set
 // by the call.  The Element version returns aCount instead.
-Result<int32_t, nsresult> CSSEditUtils::SetCSSEquivalentToHTMLStyleInternal(
-    HTMLEditor& aHTMLEditor, nsStyledElement& aStyledElement,
-    nsAtom* aHTMLProperty, nsAtom* aAttribute, const nsAString* aValue,
-    bool aSuppressTransaction) {
-  if (!IsCSSEditableProperty(&aStyledElement, aHTMLProperty, aAttribute)) {
-    return 0;
-  }
+Result<int32_t, nsresult> CSSEditUtils::SetCSSEquivalentToStyle(
+    WithTransaction aWithTransaction, HTMLEditor& aHTMLEditor,
+    nsStyledElement& aStyledElement, const EditorElementStyle& aStyleToSet,
+    const nsAString* aValue) {
+  nsStaticAtom* const htmlProperty =
+      aStyleToSet.IsInlineStyle() ? aStyleToSet.AsInlineStyle().mHTMLProperty
+                                  : nullptr;
+  const RefPtr<nsAtom> attributeOrStyle =
+      aStyleToSet.IsInlineStyle() ? aStyleToSet.AsInlineStyle().mAttribute
+                                  : aStyleToSet.Style();
+  MOZ_DIAGNOSTIC_ASSERT(
+      IsCSSEditableProperty(&aStyledElement, htmlProperty, attributeOrStyle));
 
   // we can apply the styles only if the node is an element and if we have
   // an equivalence for the requested HTML style in this implementation
@@ -856,16 +861,16 @@ Result<int32_t, nsresult> CSSEditUtils::SetCSSEquivalentToHTMLStyleInternal(
   // Find the CSS equivalence to the HTML style
   nsTArray<nsStaticAtom*> cssPropertyArray;
   nsTArray<nsString> cssValueArray;
-  GenerateCSSDeclarationsFromHTMLStyle(aStyledElement, aHTMLProperty,
-                                       aAttribute, aValue, cssPropertyArray,
-                                       cssValueArray, false);
+  GenerateCSSDeclarationsFromHTMLStyle(aStyledElement, htmlProperty,
+                                       attributeOrStyle, aValue,
+                                       cssPropertyArray, cssValueArray, false);
 
   // set the individual CSS inline styles
   const size_t count = cssPropertyArray.Length();
   for (size_t index = 0; index < count; index++) {
     nsresult rv = SetCSSPropertyInternal(
         aHTMLEditor, aStyledElement, MOZ_KnownLive(*cssPropertyArray[index]),
-        cssValueArray[index], aSuppressTransaction);
+        cssValueArray[index], aWithTransaction == WithTransaction::No);
     if (NS_FAILED(rv)) {
       NS_WARNING("CSSEditUtils::SetCSSPropertyInternal() failed");
       return Err(rv);

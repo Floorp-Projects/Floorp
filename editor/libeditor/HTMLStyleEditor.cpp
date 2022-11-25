@@ -438,21 +438,23 @@ Result<bool, nsresult> HTMLEditor::ElementIsGoodContainerForTheStyle(
   if (!styledNewSpanElement) {
     return false;
   }
-  // MOZ_KnownLive(*styledNewSpanElement): It's newSpanElement whose type is
-  // RefPtr.
-  Result<int32_t, nsresult> result =
-      CSSEditUtils::SetCSSEquivalentToHTMLStyleWithoutTransaction(
-          *this, MOZ_KnownLive(*styledNewSpanElement),
-          MOZ_KnownLive(&aStyleAndValue.HTMLPropertyRef()),
-          aStyleAndValue.mAttribute, &aStyleAndValue.mAttributeValue);
-  if (result.isErr()) {
-    // The call shouldn't return destroyed error because it must be
-    // impossible to run script with modifying the new orphan node.
-    MOZ_ASSERT_UNREACHABLE("How did you destroy this editor?");
-    if (NS_WARN_IF(result.inspectErr() == NS_ERROR_EDITOR_DESTROYED)) {
-      return Err(NS_ERROR_EDITOR_DESTROYED);
+  if (CSSEditUtils::IsCSSEditableProperty(styledNewSpanElement,
+                                          &aStyleAndValue.HTMLPropertyRef(),
+                                          aStyleAndValue.mAttribute)) {
+    // MOZ_KnownLive(*styledNewSpanElement): It's newSpanElement whose type is
+    // RefPtr.
+    Result<int32_t, nsresult> result = CSSEditUtils::SetCSSEquivalentToStyle(
+        WithTransaction::No, *this, MOZ_KnownLive(*styledNewSpanElement),
+        aStyleAndValue, &aStyleAndValue.mAttributeValue);
+    if (MOZ_UNLIKELY(result.isErr())) {
+      // The call shouldn't return destroyed error because it must be
+      // impossible to run script with modifying the new orphan node.
+      MOZ_ASSERT_UNREACHABLE("How did you destroy this editor?");
+      if (NS_WARN_IF(result.inspectErr() == NS_ERROR_EDITOR_DESTROYED)) {
+        return Err(NS_ERROR_EDITOR_DESTROYED);
+      }
+      return false;
     }
-    return false;
   }
   nsStyledElement* styledElement = nsStyledElement::FromNode(&aElement);
   if (!styledElement) {
@@ -819,23 +821,22 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
     // Add the CSS styles corresponding to the HTML style request
     if (nsStyledElement* spanStyledElement =
             nsStyledElement::FromNode(spanElement)) {
-      // MOZ_KnownLive(*spanStyledElement): It's spanElement whose type is
-      // RefPtr.
-      Result<int32_t, nsresult> result =
-          CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction(
-              *this, MOZ_KnownLive(*spanStyledElement),
-              MOZ_KnownLive(&aStyleToSet.HTMLPropertyRef()),
-              aStyleToSet.mAttribute, &aStyleToSet.mAttributeValue);
-      if (result.isErr()) {
-        if (result.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
+      if (CSSEditUtils::IsCSSEditableProperty(spanStyledElement,
+                                              &aStyleToSet.HTMLPropertyRef(),
+                                              aStyleToSet.mAttribute)) {
+        // MOZ_KnownLive(*spanStyledElement): It's spanElement whose type is
+        // RefPtr.
+        Result<int32_t, nsresult> result =
+            CSSEditUtils::SetCSSEquivalentToStyle(
+                WithTransaction::Yes, *this, MOZ_KnownLive(*spanStyledElement),
+                aStyleToSet, &aStyleToSet.mAttributeValue);
+        if (MOZ_UNLIKELY(result.isErr())) {
+          if (NS_WARN_IF(result.inspectErr() == NS_ERROR_EDITOR_DESTROYED)) {
+            return Err(NS_ERROR_EDITOR_DESTROYED);
+          }
           NS_WARNING(
-              "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction() "
-              "failed");
-          return Err(NS_ERROR_EDITOR_DESTROYED);
+              "CSSEditUtils::SetCSSEquivalentToStyle() failed, but ignored");
         }
-        NS_WARNING(
-            "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction() "
-            "failed, but ignored");
       }
     }
     return pointToPutCaret;
