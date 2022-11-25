@@ -160,8 +160,8 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   const wasm::FuncExport* wasmFuncExportField(uint32_t offset) {
     return reinterpret_cast<const wasm::FuncExport*>(readStubWord(offset));
   }
-  NativeIterator* nativeIteratorStubField(uint32_t offset) {
-    return reinterpret_cast<NativeIterator*>(readStubWord(offset));
+  NativeIteratorListHead* nativeIteratorListHeadStubField(uint32_t offset) {
+    return reinterpret_cast<NativeIteratorListHead*>(readStubWord(offset));
   }
   gc::InitialHeap allocSiteInitialHeapField(uint32_t offset) {
     uintptr_t word = readStubWord(offset);
@@ -721,8 +721,8 @@ bool WarpCacheIRTranspiler::emitMegamorphicSetElement(ObjOperandId objId,
 bool WarpCacheIRTranspiler::emitObjectToIteratorResult(
     ObjOperandId objId, uint32_t enumeratorsAddrOffset) {
   MDefinition* obj = getOperand(objId);
-  NativeIterator* enumeratorsAddr =
-      nativeIteratorStubField(enumeratorsAddrOffset);
+  NativeIteratorListHead* enumeratorsAddr =
+      nativeIteratorListHeadStubField(enumeratorsAddrOffset);
 
   auto* ins = MObjectToIterator::New(alloc(), obj, enumeratorsAddr);
   addEffectful(ins);

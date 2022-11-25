@@ -78,7 +78,6 @@ const uint8_t JS_LIFO_UNDEFINED_PATTERN = 0xcd;
 const uint8_t JS_LIFO_UNINITIALIZED_PATTERN = 0xce;
 
 // Even ones
-const uint8_t JS_NEW_NATIVE_ITERATOR_PATTERN = 0xCC;
 const uint8_t JS_SCOPE_DATA_TRAILING_NAMES_PATTERN = 0xCC;
 
 /*

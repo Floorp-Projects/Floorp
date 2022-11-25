@@ -24,7 +24,64 @@ class ArrayObject;
 class PlainObject;
 class PropertyIteratorObject;
 
-struct NativeIterator {
+struct NativeIterator;
+
+class NativeIteratorListNode {
+ protected:
+  // While in compartment->enumerators, these form a doubly linked list.
+  NativeIteratorListNode* prev_ = nullptr;
+  NativeIteratorListNode* next_ = nullptr;
+
+ public:
+  NativeIteratorListNode* prev() { return prev_; }
+  NativeIteratorListNode* next() { return next_; }
+
+  void setPrev(NativeIteratorListNode* prev) { prev_ = prev; }
+  void setNext(NativeIteratorListNode* next) { next_ = next; }
+
+  static constexpr size_t offsetOfNext() {
+    return offsetof(NativeIteratorListNode, next_);
+  }
+
+  static constexpr size_t offsetOfPrev() {
+    return offsetof(NativeIteratorListNode, prev_);
+  }
+
+ private:
+  NativeIterator* asNativeIterator() {
+    return reinterpret_cast<NativeIterator*>(this);
+  }
+
+  friend class NativeIteratorListIter;
+};
+
+class NativeIteratorListHead : public NativeIteratorListNode {
+ private:
+  // Initialize a |Compartment::enumerators| sentinel.
+  NativeIteratorListHead() { prev_ = next_ = this; }
+  friend class JS::Compartment;
+};
+
+class NativeIteratorListIter {
+ private:
+  NativeIteratorListHead* head_;
+  NativeIteratorListNode* curr_;
+
+ public:
+  explicit NativeIteratorListIter(NativeIteratorListHead* head)
+      : head_(head), curr_(head->next()) {}
+
+  bool done() const { return curr_ == head_; }
+
+  NativeIterator* next() {
+    MOZ_ASSERT(!done());
+    NativeIterator* result = curr_->asNativeIterator();
+    curr_ = curr_->next();
+    return result;
+  }
+};
+
+struct NativeIterator : public NativeIteratorListNode {
  private:
   // Object being iterated.  Non-null except in NativeIterator sentinels,
   // the empty iterator singleton (for iterating |null| or |undefined|), and
@@ -100,10 +157,6 @@ struct NativeIterator {
   static constexpr uint32_t PropCountLimit = 1 << (32 - FlagsBits);
 
  private:
-  // While in compartment->enumerators, these form a doubly linked list.
-  NativeIterator* next_ = nullptr;
-  NativeIterator* prev_ = nullptr;
-
   // Stores Flags bits in the lower bits and the initial property count above
   // them.
   uint32_t flagsAndCount_ = 0;
@@ -133,9 +186,6 @@ struct NativeIterator {
   NativeIterator(JSContext* cx, Handle<PropertyIteratorObject*> propIter,
                  Handle<JSObject*> objBeingIterated, HandleIdVector props,
                  uint32_t numShapes, HashNumber shapesHash, bool* hadError);
-
-  /** Initialize a |Compartment::enumerators| sentinel. */
-  NativeIterator();
 
   JSObject* objectBeingIterated() const { return objectBeingIterated_; }
 
@@ -243,8 +293,6 @@ struct NativeIterator {
     return propertyCursor_;
   }
 
-  NativeIterator* next() { return next_; }
-
   void incCursor() {
     MOZ_ASSERT(isInitialized());
     propertyCursor_++;
@@ -347,10 +395,7 @@ struct NativeIterator {
     flagsAndCount_ |= Flags::HasUnvisitedPropertyDeletion;
   }
 
-  void link(NativeIterator* other) {
-    // The NativeIterator sentinel doesn't have to be linked, because it's
-    // the start of the list.  Anything else added should have been
-    // initialized.
+  void link(NativeIteratorListNode* other) {
     MOZ_ASSERT(isInitialized());
 
     // The shared iterator used for for-in with null/undefined is immutable and
@@ -360,19 +405,20 @@ struct NativeIterator {
     // A NativeIterator cannot appear in the enumerator list twice.
     MOZ_ASSERT(isUnlinked());
 
-    this->next_ = other;
-    this->prev_ = other->prev_;
-    other->prev_->next_ = this;
-    other->prev_ = this;
+    setNext(other);
+    setPrev(other->prev());
+
+    other->prev()->setNext(this);
+    other->setPrev(this);
   }
   void unlink() {
     MOZ_ASSERT(isInitialized());
     MOZ_ASSERT(!isEmptyIteratorSingleton());
 
-    next_->prev_ = prev_;
-    prev_->next_ = next_;
-    next_ = nullptr;
-    prev_ = nullptr;
+    next()->setPrev(prev());
+    prev()->setNext(next());
+    setNext(nullptr);
+    setPrev(nullptr);
   }
 
   void trace(JSTracer* trc);
@@ -395,14 +441,6 @@ struct NativeIterator {
 
   static constexpr size_t offsetOfFlagsAndCount() {
     return offsetof(NativeIterator, flagsAndCount_);
-  }
-
-  static constexpr size_t offsetOfNext() {
-    return offsetof(NativeIterator, next_);
-  }
-
-  static constexpr size_t offsetOfPrev() {
-    return offsetof(NativeIterator, prev_);
   }
 
   static constexpr size_t offsetOfFirstShape() {
