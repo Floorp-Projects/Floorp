@@ -6,6 +6,7 @@
 #include "CSSEditUtils.h"
 
 #include "ChangeStyleTransaction.h"
+#include "HTMLEditHelpers.h"
 #include "HTMLEditor.h"
 #include "HTMLEditUtils.h"
 
@@ -980,13 +981,29 @@ nsresult CSSEditUtils::GetCSSEquivalentToHTMLInlineStyleSetInternal(
 // does not modify aValue.
 
 // static
-Result<bool, nsresult>
-CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSetInternal(
-    const HTMLEditor& aHTMLEditor, nsIContent& aContent, nsAtom* aHTMLProperty,
-    nsAtom* aAttribute, nsAString& aValue, StyleType aStyleType) {
-  MOZ_ASSERT(aHTMLProperty || aAttribute);
+Result<bool, nsresult> CSSEditUtils::IsComputedCSSEquivalentTo(
+    const HTMLEditor& aHTMLEditor, nsIContent& aContent,
+    const EditorInlineStyle& aStyle, nsAString& aInOutValue) {
+  return IsCSSEquivalentTo(aHTMLEditor, aContent, aStyle, aInOutValue,
+                           StyleType::Computed);
+}
 
-  nsAutoString htmlValueString(aValue);
+// static
+Result<bool, nsresult> CSSEditUtils::IsSpecifiedCSSEquivalentTo(
+    const HTMLEditor& aHTMLEditor, nsIContent& aContent,
+    const EditorInlineStyle& aStyle, nsAString& aInOutValue) {
+  return IsCSSEquivalentTo(aHTMLEditor, aContent, aStyle, aInOutValue,
+                           StyleType::Specified);
+}
+
+// static
+Result<bool, nsresult> CSSEditUtils::IsCSSEquivalentTo(
+    const HTMLEditor& aHTMLEditor, nsIContent& aContent,
+    const EditorInlineStyle& aStyle, nsAString& aInOutValue,
+    StyleType aStyleType) {
+  MOZ_ASSERT(!aStyle.IsStyleToClearAllInlineStyles());
+
+  nsAutoString htmlValueString(aInOutValue);
   bool isSet = false;
   // FYI: Cannot use InclusiveAncestorsOfType here because
   //      GetCSSEquivalentToHTMLInlineStyleSetInternal() may flush pending
@@ -994,10 +1011,11 @@ CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSetInternal(
   for (nsCOMPtr<nsIContent> content = &aContent; content;
        content = content->GetParentElement()) {
     nsCOMPtr<nsINode> parentNode = content->GetParentNode();
-    aValue.Assign(htmlValueString);
+    aInOutValue.Assign(htmlValueString);
     // get the value of the CSS equivalent styles
     nsresult rv = GetCSSEquivalentToHTMLInlineStyleSetInternal(
-        *content, aHTMLProperty, aAttribute, aValue, aStyleType);
+        *content, aStyle.mHTMLProperty, aStyle.mAttribute, aInOutValue,
+        aStyleType);
     if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
       return Err(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -1012,46 +1030,47 @@ CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSetInternal(
     }
 
     // early way out if we can
-    if (aValue.IsEmpty()) {
+    if (aInOutValue.IsEmpty()) {
       return isSet;
     }
 
-    if (nsGkAtoms::b == aHTMLProperty) {
-      if (aValue.EqualsLiteral("bold")) {
+    if (nsGkAtoms::b == aStyle.mHTMLProperty) {
+      if (aInOutValue.EqualsLiteral("bold")) {
         isSet = true;
-      } else if (aValue.EqualsLiteral("normal")) {
+      } else if (aInOutValue.EqualsLiteral("normal")) {
         isSet = false;
-      } else if (aValue.EqualsLiteral("bolder")) {
+      } else if (aInOutValue.EqualsLiteral("bolder")) {
         isSet = true;
-        aValue.AssignLiteral("bold");
+        aInOutValue.AssignLiteral("bold");
       } else {
         int32_t weight = 0;
         nsresult rvIgnored;
-        nsAutoString value(aValue);
+        nsAutoString value(aInOutValue);
         weight = value.ToInteger(&rvIgnored);
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                              "nsAString::ToInteger() failed, but ignored");
         if (400 < weight) {
           isSet = true;
-          aValue.AssignLiteral("bold");
+          aInOutValue.AssignLiteral(u"bold");
         } else {
           isSet = false;
-          aValue.AssignLiteral("normal");
+          aInOutValue.AssignLiteral(u"normal");
         }
       }
-    } else if (nsGkAtoms::i == aHTMLProperty) {
-      if (aValue.EqualsLiteral("italic") || aValue.EqualsLiteral("oblique")) {
+    } else if (nsGkAtoms::i == aStyle.mHTMLProperty) {
+      if (aInOutValue.EqualsLiteral(u"italic") ||
+          aInOutValue.EqualsLiteral(u"oblique")) {
         isSet = true;
       }
-    } else if (nsGkAtoms::u == aHTMLProperty) {
+    } else if (nsGkAtoms::u == aStyle.mHTMLProperty) {
       isSet = ChangeStyleTransaction::ValueIncludes(
-          NS_ConvertUTF16toUTF8(aValue), "underline"_ns);
-    } else if (nsGkAtoms::strike == aHTMLProperty) {
+          NS_ConvertUTF16toUTF8(aInOutValue), "underline"_ns);
+    } else if (nsGkAtoms::strike == aStyle.mHTMLProperty) {
       isSet = ChangeStyleTransaction::ValueIncludes(
-          NS_ConvertUTF16toUTF8(aValue), "line-through"_ns);
-    } else if ((nsGkAtoms::font == aHTMLProperty &&
-                aAttribute == nsGkAtoms::color) ||
-               aAttribute == nsGkAtoms::bgcolor) {
+          NS_ConvertUTF16toUTF8(aInOutValue), "line-through"_ns);
+    } else if ((nsGkAtoms::font == aStyle.mHTMLProperty &&
+                aStyle.mAttribute == nsGkAtoms::color) ||
+               aStyle.mAttribute == nsGkAtoms::bgcolor) {
       if (htmlValueString.IsEmpty()) {
         isSet = true;
       } else {
@@ -1067,9 +1086,9 @@ CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSetInternal(
             // currently serializes to "transparent" (not "rgba(0, 0, 0, 0)").
             MOZ_ASSERT(NS_GET_R(rgba) == 0 && NS_GET_G(rgba) == 0 &&
                        NS_GET_B(rgba) == 0 && NS_GET_A(rgba) == 0);
-            htmlColor.AppendLiteral("transparent");
+            htmlColor.AppendLiteral(u"transparent");
           } else {
-            htmlColor.AppendLiteral("rgb(");
+            htmlColor.AppendLiteral(u"rgb(");
 
             constexpr auto comma = u", "_ns;
 
@@ -1084,24 +1103,25 @@ CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSetInternal(
             tmpStr.AppendInt(NS_GET_B(rgba), 10);
             htmlColor.Append(tmpStr);
 
-            htmlColor.Append(char16_t(')'));
+            htmlColor.AppendLiteral(u")");
           }
 
-          isSet = htmlColor.Equals(aValue, nsCaseInsensitiveStringComparator);
-        } else {
           isSet =
-              htmlValueString.Equals(aValue, nsCaseInsensitiveStringComparator);
+              htmlColor.Equals(aInOutValue, nsCaseInsensitiveStringComparator);
+        } else {
+          isSet = htmlValueString.Equals(aInOutValue,
+                                         nsCaseInsensitiveStringComparator);
         }
       }
-    } else if (nsGkAtoms::tt == aHTMLProperty) {
-      isSet = StringBeginsWith(aValue, u"monospace"_ns);
-    } else if (nsGkAtoms::font == aHTMLProperty && aAttribute &&
-               aAttribute == nsGkAtoms::face) {
+    } else if (nsGkAtoms::tt == aStyle.mHTMLProperty) {
+      isSet = StringBeginsWith(aInOutValue, u"monospace"_ns);
+    } else if (nsGkAtoms::font == aStyle.mHTMLProperty &&
+               aStyle.mAttribute == nsGkAtoms::face) {
       if (!htmlValueString.IsEmpty()) {
         const char16_t commaSpace[] = {char16_t(','), HTMLEditUtils::kSpace, 0};
         const char16_t comma[] = {char16_t(','), 0};
         htmlValueString.ReplaceSubstring(commaSpace, comma);
-        nsAutoString valueStringNorm(aValue);
+        nsAutoString valueStringNorm(aInOutValue);
         valueStringNorm.ReplaceSubstring(commaSpace, comma);
         isSet = htmlValueString.Equals(valueStringNorm,
                                        nsCaseInsensitiveStringComparator);
@@ -1109,18 +1129,19 @@ CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSetInternal(
         isSet = true;
       }
       return isSet;
-    } else if (aAttribute == nsGkAtoms::align) {
+    } else if (aStyle.mAttribute == nsGkAtoms::align) {
       isSet = true;
     } else {
       return false;
     }
 
     if (!htmlValueString.IsEmpty() &&
-        htmlValueString.Equals(aValue, nsCaseInsensitiveStringComparator)) {
+        htmlValueString.Equals(aInOutValue,
+                               nsCaseInsensitiveStringComparator)) {
       isSet = true;
     }
 
-    if (htmlValueString.EqualsLiteral("-moz-editor-invert-value")) {
+    if (htmlValueString.EqualsLiteral(u"-moz-editor-invert-value")) {
       isSet = !isSet;
     }
 
@@ -1128,7 +1149,8 @@ CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSetInternal(
       return true;
     }
 
-    if (nsGkAtoms::u != aHTMLProperty && nsGkAtoms::strike != aHTMLProperty) {
+    if (!aStyle.IsStyleOfTextDecoration(
+            EditorInlineStyle::IgnoreSElement::Yes)) {
       return isSet;
     }
 

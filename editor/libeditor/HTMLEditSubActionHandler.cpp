@@ -9042,18 +9042,15 @@ nsresult HTMLEditor::GetInlineStyles(
                                  nsGkAtoms::backgroundColor,
                                  nsGkAtoms::sub,
                                  nsGkAtoms::sup}) {
-    nsStaticAtom *tag, *attribute;
-    if (property == nsGkAtoms::face || property == nsGkAtoms::size ||
-        property == nsGkAtoms::color) {
-      tag = nsGkAtoms::font;
-      attribute = property;
-    } else {
-      tag = property;
-      attribute = nullptr;
-    }
+    const EditorInlineStyle style =
+        property == nsGkAtoms::face || property == nsGkAtoms::size ||
+                property == nsGkAtoms::color
+            ? EditorInlineStyle(*nsGkAtoms::font, property)
+            : EditorInlineStyle(*property);
     // If type-in state is set, don't intervene
     const PendingStyleState styleState =
-        mPendingStylesToApplyToNewContent->GetStyleState(*tag, attribute);
+        mPendingStylesToApplyToNewContent->GetStyleState(*style.mHTMLProperty,
+                                                         style.mAttribute);
     if (styleState != PendingStyleState::NotUpdated) {
       continue;
     }
@@ -9063,22 +9060,20 @@ nsresult HTMLEditor::GetInlineStyles(
     // Don't use CSS for <font size>, we don't support it usefully (bug 780035)
     if (!useCSS || (property == nsGkAtoms::size)) {
       isSet = HTMLEditUtils::IsInlineStyleSetByElement(
-          aContent, *tag, attribute, nullptr, &value);
+          aContent, *style.mHTMLProperty, style.mAttribute, nullptr, &value);
     } else {
-      Result<bool, nsresult> isComputedCSSEquivalentToHTMLInlineStyleOrError =
-          CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet(
-              *this, aContent, MOZ_KnownLive(tag), MOZ_KnownLive(attribute),
-              value);
-      if (isComputedCSSEquivalentToHTMLInlineStyleOrError.isErr()) {
-        NS_WARNING(
-            "CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet failed");
-        return isComputedCSSEquivalentToHTMLInlineStyleOrError.unwrapErr();
+      Result<bool, nsresult> isComputedCSSEquivalentToStyleOrError =
+          CSSEditUtils::IsComputedCSSEquivalentTo(*this, aContent, style,
+                                                  value);
+      if (MOZ_UNLIKELY(isComputedCSSEquivalentToStyleOrError.isErr())) {
+        NS_WARNING("CSSEditUtils::IsComputedCSSEquivalentTo() failed");
+        return isComputedCSSEquivalentToStyleOrError.unwrapErr();
       }
-      isSet = isComputedCSSEquivalentToHTMLInlineStyleOrError.unwrap();
+      isSet = isComputedCSSEquivalentToStyleOrError.unwrap();
     }
     if (isSet) {
       aPendingStyleCacheArray.AppendElement(
-          PendingStyleCache(*tag, attribute, value));
+          style.ToPendingStyleCache(std::move(value)));
     }
   }
   return NS_OK;
@@ -9129,18 +9124,15 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
       // check computed style first in css case
       // MOZ_KnownLive(styleCacheBeforeEdit.*) because they are nsStaticAtom
       // and its instances are alive until shutting down.
-      Result<bool, nsresult> isComputedCSSEquivalentToHTMLInlineStyleOrError =
-          CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet(
+      Result<bool, nsresult> isComputedCSSEquivalentToStyleOrError =
+          CSSEditUtils::IsComputedCSSEquivalentTo(
               *this, *startContainerContent,
-              MOZ_KnownLive(&styleCacheBeforeEdit.TagRef()),
-              MOZ_KnownLive(styleCacheBeforeEdit.GetAttribute()), currentValue);
-      if (isComputedCSSEquivalentToHTMLInlineStyleOrError.isErr()) {
-        NS_WARNING(
-            "CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet() "
-            "failed");
-        return isComputedCSSEquivalentToHTMLInlineStyleOrError.unwrapErr();
+              styleCacheBeforeEdit.ToInlineStyle(), currentValue);
+      if (MOZ_UNLIKELY(isComputedCSSEquivalentToStyleOrError.isErr())) {
+        NS_WARNING("CSSEditUtils::IsComputedCSSEquivalentTo() failed");
+        return isComputedCSSEquivalentToStyleOrError.unwrapErr();
       }
-      isAny = isComputedCSSEquivalentToHTMLInlineStyleOrError.unwrap();
+      isAny = isComputedCSSEquivalentToStyleOrError.unwrap();
     }
     if (!isAny) {
       // then check typeinstate and html style
