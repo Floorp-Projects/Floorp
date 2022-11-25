@@ -19,7 +19,6 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
  * depending on whether a private tab is opened.
  *
  * @param browserStore Browser store reference used to observe the number of private tabs.
- * @param sessionNotificationServiceClass The service sub-class that creates and controls the notification.
  */
 class PrivateNotificationFeature(
     context: Context,

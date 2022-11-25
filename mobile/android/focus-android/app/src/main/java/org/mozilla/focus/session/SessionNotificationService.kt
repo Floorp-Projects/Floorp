@@ -13,9 +13,11 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.os.RemoteException
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import mozilla.components.service.glean.private.NoExtras
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.ThreadUtils
 import mozilla.components.support.utils.ext.stopForegroundCompat
 import org.mozilla.focus.GleanMetrics.Notifications
@@ -33,13 +35,34 @@ class SessionNotificationService : Service() {
 
     private var shouldSendTaskRemovedTelemetry = true
 
+    private val notificationManager: NotificationManager by lazy {
+        applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    }
+
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         val action = intent.action ?: return START_NOT_STICKY
 
         when (action) {
             ACTION_START -> {
-                createNotificationChannelIfNeeded()
-                startForeground(NOTIFICATION_ID, buildNotification())
+                // Notifications permission is only needed on Android 13 devices and later.
+                val areNotificationsEnabled =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        try {
+                            notificationManager.areNotificationsEnabled()
+                        } catch (e: RemoteException) {
+                            Logger.warn("Failed to check notifications state", e)
+                            false
+                        }
+                    } else {
+                        true
+                    }
+
+                if (areNotificationsEnabled) {
+                    createNotificationChannelIfNeeded()
+                    startForeground(NOTIFICATION_ID, buildNotification())
+                } else {
+                    permissionHandler?.invoke()
+                }
             }
 
             ACTION_ERASE -> {
@@ -110,7 +133,8 @@ class SessionNotificationService : Service() {
     }
 
     private fun createNotificationIntent(): PendingIntent {
-        val notificationIntentFlags = IntentUtils.defaultIntentPendingFlags or PendingIntent.FLAG_ONE_SHOT
+        val notificationIntentFlags =
+            IntentUtils.defaultIntentPendingFlags or PendingIntent.FLAG_ONE_SHOT
         val intent = Intent(this, SessionNotificationService::class.java)
         intent.action = ACTION_ERASE
 
@@ -118,7 +142,8 @@ class SessionNotificationService : Service() {
     }
 
     private fun createOpenActionIntent(): PendingIntent {
-        val openActionIntentFlags = IntentUtils.defaultIntentPendingFlags or PendingIntent.FLAG_UPDATE_CURRENT
+        val openActionIntentFlags =
+            IntentUtils.defaultIntentPendingFlags or PendingIntent.FLAG_UPDATE_CURRENT
         val intent = Intent(this, MainActivity::class.java)
         intent.action = MainActivity.ACTION_OPEN
 
@@ -126,7 +151,8 @@ class SessionNotificationService : Service() {
     }
 
     private fun createOpenAndEraseActionIntent(): PendingIntent {
-        val openAndEraseActionIntentFlags = IntentUtils.defaultIntentPendingFlags or PendingIntent.FLAG_UPDATE_CURRENT
+        val openAndEraseActionIntentFlags =
+            IntentUtils.defaultIntentPendingFlags or PendingIntent.FLAG_UPDATE_CURRENT
         val intent = Intent(this, MainActivity::class.java)
 
         intent.action = MainActivity.ACTION_ERASE
@@ -141,8 +167,6 @@ class SessionNotificationService : Service() {
             // Notification channels are only available on Android O or higher.
             return
         }
-
-        val notificationManager = getSystemService(NotificationManager::class.java) ?: return
 
         val notificationChannelName = getString(R.string.notification_browsing_session_channel_name)
         val notificationChannelDescription = getString(
@@ -169,15 +193,17 @@ class SessionNotificationService : Service() {
     }
 
     companion object {
+        private var permissionHandler: (() -> Unit)? = null
         private const val NOTIFICATION_ID = 83
         private const val NOTIFICATION_CHANNEL_ID = "browsing-session"
 
         private const val ACTION_START = "start"
         private const val ACTION_ERASE = "erase"
 
-        internal fun start(context: Context) {
+        internal fun start(context: Context, permissionHandler: (() -> Unit)) {
             val intent = Intent(context, SessionNotificationService::class.java)
             intent.action = ACTION_START
+            this.permissionHandler = permissionHandler
 
             // For #2901: The application is crashing due to the service not calling `startForeground`
             // before it times out. so this is a speculative fix to decrease the time between these two

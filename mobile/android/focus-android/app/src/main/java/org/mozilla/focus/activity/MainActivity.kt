@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.activity
 
+import android.Manifest.permission.POST_NOTIFICATIONS
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
