@@ -619,7 +619,7 @@ cargo-vet:
     fetch:
         type: git
         repo: https://github.com/mozilla/cargo-vet
-        revision: 12e3593437263bd17b5c3d2626ea8346799bf4b1
+        revision: 56ebfded2d27d6c28a56832aaae1dc99b41c4311
 
 symbol-scrapers:
     description: Linux distribution symbol scraper source
