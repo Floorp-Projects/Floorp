@@ -649,6 +649,13 @@ void MainThreadFetchResolver::OnResponseAvailableInternal(
     }
 
     mResponse = new Response(go, std::move(aResponse), mSignalImpl);
+    // response headers received from the network should be immutable
+    // all response header settings must be done before this point
+    // see Bug 1574174
+    ErrorResult result;
+    mResponse->Headers_()->SetGuard(HeadersGuardEnum::Immutable, result);
+    MOZ_ASSERT(!result.Failed());
+
     BrowsingContext* bc = inner ? inner->GetBrowsingContext() : nullptr;
     bc = bc ? bc->Top() : nullptr;
     if (bc && bc->IsLoading()) {
@@ -725,6 +732,14 @@ class WorkerFetchResponseRunnable final : public MainThreadWorkerRunnable {
       RefPtr<Response> response =
           new Response(global, mInternalResponse.clonePtr(),
                        mResolver->GetAbortSignalForTargetThread());
+
+      // response headers received from the network should be immutable,
+      // all response header settings must be done before this point
+      // see Bug 1574174
+      ErrorResult result;
+      response->Headers_()->SetGuard(HeadersGuardEnum::Immutable, result);
+      MOZ_ASSERT(!result.Failed());
+
       promise->MaybeResolve(response);
     } else {
       if (fetchObserver) {
