@@ -6018,7 +6018,15 @@ void nsHttpChannel::MaybeResolveProxyAndBeginConnect() {
     return;
   }
 
-  rv = BeginConnect();
+  if (!gHttpHandler->Active()) {
+    LOG(
+        ("nsHttpChannel::MaybeResolveProxyAndBeginConnect [this=%p] "
+         "Handler no longer active.\n",
+         this));
+    rv = NS_ERROR_NOT_AVAILABLE;
+  } else {
+    rv = BeginConnect();
+  }
   if (NS_FAILED(rv)) {
     CloseCacheEntry(false);
     Unused << AsyncAbort(rv);
@@ -6068,6 +6076,9 @@ uint16_t nsHttpChannel::GetProxyDNSStrategy() {
 nsresult nsHttpChannel::BeginConnect() {
   LOG(("nsHttpChannel::BeginConnect [this=%p]\n", this));
   nsresult rv;
+
+  // It is the caller's responsibility to not call us late in shutdown.
+  MOZ_ASSERT(gHttpHandler->Active());
 
   // Construct connection info object
   nsAutoCString host;
