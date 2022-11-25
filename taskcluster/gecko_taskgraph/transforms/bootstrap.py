@@ -5,12 +5,7 @@
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import Schema
-
-from voluptuous import (
-    Any,
-    Optional,
-    Required,
-)
+from voluptuous import Any, Optional, Required
 
 transforms = TransformSequence()
 
