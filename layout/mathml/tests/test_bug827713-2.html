@@ -18,10 +18,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
       
       var g_errorInfo = {
         InvalidChild: {
-          status : [false, false, false, false, false, false],
+          status : [false, false, false],
           args : [["mprescripts", "msubsup"], ["mprescripts", "msubsup"],
-                 ["mprescripts", "msub"], ["none", "msub"], ["none","msup"],
-                 ["none","msubsup"]]
+                 ["mprescripts", "msub"]]
         },
 
         MMultiscriptsErrors: {
@@ -105,34 +104,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
       </msub>
     </math>
 
-    <math>
-      <msub>
-        <mtext>a</mtext>
-        <none/>
-      </msub>
-    </math>
-
-    <math>
-      <msup>
-        <mtext>a</mtext>
-        <none/>
-      </msup>
-    </math>
-
-    <math>
-      <msubsup>
-        <mtext>a</mtext>
-        <mtext>b</mtext>
-        <none/>
-      </msubsup>
-    </math>
-
     <!-- NoBase -->
     <math>
       <mmultiscripts>
-        <none/>
-        <mtext>b</mtext>
-        <mtext>c</mtext>
       </mmultiscripts>
     </math>
 
