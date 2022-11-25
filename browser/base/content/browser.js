@@ -698,7 +698,7 @@ var gScreenshots = {
   shouldScreenshotsButtonBeDisabled() {
     // About pages other than about:reader are not currently supported by
     // the screenshots extension (see Bug 1620992).
-    let uri = gBrowser.currentURI;
+    let uri = gBrowser.selectedBrowser.currentURI;
     let shouldBeDisabled =
       gScreenshotsDisabled ||
       (!gScreenshotsComponentEnabled &&
