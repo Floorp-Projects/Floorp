@@ -1162,10 +1162,26 @@ Result<bool, nsresult> CSSEditUtils::IsCSSEquivalentTo(
 }
 
 // static
-Result<bool, nsresult> CSSEditUtils::HaveCSSEquivalentStylesInternal(
-    const HTMLEditor& aHTMLEditor, nsIContent& aContent, nsAtom* aHTMLProperty,
-    nsAtom* aAttribute, StyleType aStyleType) {
-  MOZ_ASSERT(aHTMLProperty || aAttribute);
+Result<bool, nsresult> CSSEditUtils::HaveComputedCSSEquivalentStyles(
+    const HTMLEditor& aHTMLEditor, nsIContent& aContent,
+    const EditorInlineStyle& aStyle) {
+  return HaveCSSEquivalentStyles(aHTMLEditor, aContent, aStyle,
+                                 StyleType::Computed);
+}
+
+// static
+Result<bool, nsresult> CSSEditUtils::HaveSpecifiedCSSEquivalentStyles(
+    const HTMLEditor& aHTMLEditor, nsIContent& aContent,
+    const EditorInlineStyle& aStyle) {
+  return HaveCSSEquivalentStyles(aHTMLEditor, aContent, aStyle,
+                                 StyleType::Specified);
+}
+
+// static
+Result<bool, nsresult> CSSEditUtils::HaveCSSEquivalentStyles(
+    const HTMLEditor& aHTMLEditor, nsIContent& aContent,
+    const EditorInlineStyle& aStyle, StyleType aStyleType) {
+  MOZ_ASSERT(!aStyle.IsStyleToClearAllInlineStyles());
 
   // FYI: Unfortunately, we cannot use InclusiveAncestorsOfType here
   //      because GetCSSEquivalentToHTMLInlineStyleSetInternal() may flush
@@ -1176,7 +1192,8 @@ Result<bool, nsresult> CSSEditUtils::HaveCSSEquivalentStylesInternal(
     nsCOMPtr<nsINode> parentNode = content->GetParentNode();
     // get the value of the CSS equivalent styles
     nsresult rv = GetCSSEquivalentToHTMLInlineStyleSetInternal(
-        *content, aHTMLProperty, aAttribute, valueString, aStyleType);
+        *content, aStyle.mHTMLProperty, aStyle.mAttribute, valueString,
+        aStyleType);
     if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
       return Err(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -1194,11 +1211,12 @@ Result<bool, nsresult> CSSEditUtils::HaveCSSEquivalentStylesInternal(
       return true;
     }
 
-    if (nsGkAtoms::u != aHTMLProperty && nsGkAtoms::strike != aHTMLProperty) {
+    if (!aStyle.IsStyleOfTextDecoration(
+            EditorInlineStyle::IgnoreSElement::Yes)) {
       return false;
     }
 
-    // 'nfortunately, the value of the text-decoration property is not
+    // Unfortunately, the value of the text-decoration property is not
     // inherited.
     // that means that we have to look at ancestors of node to see if they
     // are underlined.
