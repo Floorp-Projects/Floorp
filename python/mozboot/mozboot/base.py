@@ -400,9 +400,9 @@ class BaseBootstrapper(object):
         args.append("--enable-project={}".format(application.replace("_", "/")))
         bootstrap_all_toolchains_for(args)
 
-    def run_as_root(self, command):
+    def run_as_root(self, command, may_use_sudo=True):
         if os.geteuid() != 0:
-            if which("sudo"):
+            if may_use_sudo and which("sudo"):
                 command.insert(0, "sudo")
             else:
                 command = ["su", "root", "-c", " ".join(command)]

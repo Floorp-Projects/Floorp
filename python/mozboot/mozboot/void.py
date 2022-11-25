@@ -4,10 +4,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import os
-import subprocess
-import sys
-
 from mozboot.base import BaseBootstrapper
 from mozboot.linux_common import LinuxBootstrapper
 
@@ -23,12 +19,7 @@ class VoidBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     def run_as_root(self, command):
         # VoidLinux doesn't support users sudo'ing most commands by default because of the group
         # configuration.
-        if os.geteuid() != 0:
-            command = ["su", "root", "-c", " ".join(command)]
-
-        print("Executing as root:", subprocess.list2cmdline(command))
-
-        subprocess.check_call(command, stdin=sys.stdin)
+        super().run_as_root(command, may_use_sudo=False)
 
     def xbps_install(self, *packages):
         command = ["xbps-install"]
