@@ -295,6 +295,13 @@ var FullScreen = {
     }
   },
 
+  get fullScreenToggler() {
+    delete this.fullScreenToggler;
+    return (this.fullScreenToggler = document.getElementById(
+      "fullscr-toggler"
+    ));
+  },
+
   toggle() {
     var enterFS = window.fullScreen;
 
@@ -314,14 +321,12 @@ var FullScreen = {
       this.shiftMacToolbarDown(0);
     }
 
-    if (!this._fullScrToggler) {
-      this._fullScrToggler = document.getElementById("fullscr-toggler");
-      this._fullScrToggler.addEventListener("mouseover", this._expandCallback);
-      this._fullScrToggler.addEventListener("dragenter", this._expandCallback);
-      this._fullScrToggler.addEventListener("touchmove", this._expandCallback, {
-        passive: true,
-      });
-    }
+    let fstoggler = this.fullScreenToggler;
+    fstoggler.addEventListener("mouseover", this._expandCallback);
+    fstoggler.addEventListener("dragenter", this._expandCallback);
+    fstoggler.addEventListener("touchmove", this._expandCallback, {
+      passive: true,
+    });
 
     if (enterFS) {
       gNavToolbox.setAttribute("inFullscreen", true);
@@ -788,7 +793,7 @@ var FullScreen = {
     if (BrowserHandler.kiosk) {
       return;
     }
-    this._fullScrToggler.hidden = true;
+    this.fullScreenToggler.hidden = true;
     gNavToolbox.removeAttribute("fullscreenShouldAnimate");
     gNavToolbox.style.marginTop = "";
 
@@ -859,7 +864,7 @@ var FullScreen = {
     }
 
     if (!BrowserHandler.kiosk) {
-      this._fullScrToggler.hidden = false;
+      this.fullScreenToggler.hidden = false;
     }
 
     if (
