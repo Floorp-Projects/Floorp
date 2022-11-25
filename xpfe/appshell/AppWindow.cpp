@@ -2090,12 +2090,7 @@ void AppWindow::SavePersistentAttributes(
     return;
   }
 
-  bool isFullscreen = false;
-  if (nsPIDOMWindowOuter* domWindow = mDocShell->GetWindow()) {
-    isFullscreen = domWindow->GetFullScreen();
-  }
-  bool shouldPersist = !isFullscreen;
-
+  bool shouldPersist = mWindow->SizeMode() != nsSizeMode_Fullscreen;
   MaybeSavePersistentPositionAndSize(aAttributes, *docShellElement,
                                      persistString, shouldPersist);
   MaybeSavePersistentMiscAttributes(aAttributes, *docShellElement,
