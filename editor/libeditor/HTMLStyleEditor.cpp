@@ -1796,11 +1796,11 @@ bool HTMLEditor::IsEndOfContainerOrEqualsOrAfterLastEditableChild(
   return EditorRawDOMPoint(lastEditableChild).Offset() < aPoint.Offset();
 }
 
-nsresult HTMLEditor::GetInlinePropertyBase(nsStaticAtom& aHTMLProperty,
-                                           nsAtom* aAttribute,
+nsresult HTMLEditor::GetInlinePropertyBase(const EditorInlineStyle& aStyle,
                                            const nsAString* aValue,
                                            bool* aFirst, bool* aAny, bool* aAll,
                                            nsAString* outValue) const {
+  MOZ_ASSERT(!aStyle.IsStyleToClearAllInlineStyles());
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   *aAny = false;
@@ -1808,7 +1808,7 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsStaticAtom& aHTMLProperty,
   *aFirst = false;
   bool first = true;
 
-  bool isCollapsed = SelectionRef().IsCollapsed();
+  const bool isCollapsed = SelectionRef().IsCollapsed();
   RefPtr<nsRange> range = SelectionRef().GetRangeAt(0);
   // XXX: Should be a while loop, to get each separate range
   // XXX: ERROR_HANDLING can currentItem be null?
@@ -1817,21 +1817,22 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsStaticAtom& aHTMLProperty,
     bool firstNodeInRange = true;
 
     if (isCollapsed) {
-      nsCOMPtr<nsINode> collapsedNode = range->GetStartContainer();
+      const nsCOMPtr<nsINode> collapsedNode = range->GetStartContainer();
       if (NS_WARN_IF(!collapsedNode)) {
         return NS_ERROR_FAILURE;
       }
       nsString tOutString;
       const PendingStyleState styleState = [&]() {
-        if (aAttribute) {
+        if (aStyle.mAttribute) {
           auto state = mPendingStylesToApplyToNewContent->GetStyleState(
-              aHTMLProperty, aAttribute, &tOutString);
+              *aStyle.mHTMLProperty, aStyle.mAttribute, &tOutString);
           if (outValue) {
             outValue->Assign(tOutString);
           }
           return state;
         }
-        return mPendingStylesToApplyToNewContent->GetStyleState(aHTMLProperty);
+        return mPendingStylesToApplyToNewContent->GetStyleState(
+            *aStyle.mHTMLProperty);
       }();
       if (styleState != PendingStyleState::NotUpdated) {
         *aFirst = *aAny = *aAll =
@@ -1840,15 +1841,15 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsStaticAtom& aHTMLProperty,
       }
 
       if (collapsedNode->IsContent() &&
-          CSSEditUtils::IsCSSEditableProperty(collapsedNode, &aHTMLProperty,
-                                              aAttribute)) {
+          CSSEditUtils::IsCSSEditableProperty(
+              collapsedNode, aStyle.mHTMLProperty, aStyle.mAttribute)) {
         if (aValue) {
           tOutString.Assign(*aValue);
         }
         Result<bool, nsresult> isComputedCSSEquivalentToHTMLInlineStyleOrError =
             CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet(
                 *this, MOZ_KnownLive(*collapsedNode->AsContent()),
-                &aHTMLProperty, aAttribute, tOutString);
+                aStyle.mHTMLProperty, aStyle.mAttribute, tOutString);
         if (isComputedCSSEquivalentToHTMLInlineStyleOrError.isErr()) {
           NS_WARNING(
               "CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet() "
@@ -1863,10 +1864,11 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsStaticAtom& aHTMLProperty,
         return NS_OK;
       }
 
-      *aFirst = *aAny = *aAll = collapsedNode->IsContent() &&
-                                HTMLEditUtils::IsInlineStyleSetByElement(
-                                    *collapsedNode->AsContent(), aHTMLProperty,
-                                    aAttribute, aValue, outValue);
+      *aFirst = *aAny = *aAll =
+          collapsedNode->IsContent() &&
+          HTMLEditUtils::IsInlineStyleSetByElement(
+              *collapsedNode->AsContent(), *aStyle.mHTMLProperty,
+              aStyle.mAttribute, aValue, outValue);
       return NS_OK;
     }
 
@@ -1913,11 +1915,9 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsStaticAtom& aHTMLProperty,
       }
 
       bool isSet = false;
-      bool useTextDecoration =
-          &aHTMLProperty == nsGkAtoms::u || &aHTMLProperty == nsGkAtoms::strike;
       if (first) {
-        if (CSSEditUtils::IsCSSEditableProperty(content, &aHTMLProperty,
-                                                aAttribute)) {
+        if (CSSEditUtils::IsCSSEditableProperty(content, aStyle.mHTMLProperty,
+                                                aStyle.mAttribute)) {
           // The HTML styles defined by aHTMLProperty/aAttribute have a CSS
           // equivalence in this implementation for node; let's check if it
           // carries those CSS styles
@@ -1927,7 +1927,8 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsStaticAtom& aHTMLProperty,
           Result<bool, nsresult>
               isComputedCSSEquivalentToHTMLInlineStyleOrError =
                   CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet(
-                      *this, *content, &aHTMLProperty, aAttribute, firstValue);
+                      *this, *content, aStyle.mHTMLProperty, aStyle.mAttribute,
+                      firstValue);
           if (isComputedCSSEquivalentToHTMLInlineStyleOrError.isErr()) {
             NS_WARNING(
                 "CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet() "
@@ -1937,7 +1938,8 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsStaticAtom& aHTMLProperty,
           isSet = isComputedCSSEquivalentToHTMLInlineStyleOrError.unwrap();
         } else {
           isSet = HTMLEditUtils::IsInlineStyleSetByElement(
-              *content, aHTMLProperty, aAttribute, aValue, &firstValue);
+              *content, *aStyle.mHTMLProperty, aStyle.mAttribute, aValue,
+              &firstValue);
         }
         *aFirst = isSet;
         first = false;
@@ -1945,8 +1947,8 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsStaticAtom& aHTMLProperty,
           *outValue = firstValue;
         }
       } else {
-        if (CSSEditUtils::IsCSSEditableProperty(content, &aHTMLProperty,
-                                                aAttribute)) {
+        if (CSSEditUtils::IsCSSEditableProperty(content, aStyle.mHTMLProperty,
+                                                aStyle.mAttribute)) {
           // The HTML styles defined by aHTMLProperty/aAttribute have a CSS
           // equivalence in this implementation for node; let's check if it
           // carries those CSS styles
@@ -1956,7 +1958,8 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsStaticAtom& aHTMLProperty,
           Result<bool, nsresult>
               isComputedCSSEquivalentToHTMLInlineStyleOrError =
                   CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet(
-                      *this, *content, &aHTMLProperty, aAttribute, theValue);
+                      *this, *content, aStyle.mHTMLProperty, aStyle.mAttribute,
+                      theValue);
           if (isComputedCSSEquivalentToHTMLInlineStyleOrError.isErr()) {
             NS_WARNING(
                 "CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet() "
@@ -1966,7 +1969,8 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsStaticAtom& aHTMLProperty,
           isSet = isComputedCSSEquivalentToHTMLInlineStyleOrError.unwrap();
         } else {
           isSet = HTMLEditUtils::IsInlineStyleSetByElement(
-              *content, aHTMLProperty, aAttribute, aValue, &theValue);
+              *content, *aStyle.mHTMLProperty, aStyle.mAttribute, aValue,
+              &theValue);
         }
 
         if (firstValue != theValue &&
@@ -1985,7 +1989,9 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsStaticAtom& aHTMLProperty,
             // The spec issue: https://github.com/w3c/editing/issues/241.
             // Once this spec issue is resolved, we could drop this work-around
             // check.
-            (!useTextDecoration || *aFirst != isSet)) {
+            (!aStyle.IsStyleOfTextDecoration(
+                 EditorInlineStyle::IgnoreSElement::Yes) ||
+             *aFirst != isSet)) {
           *aAll = false;
         }
       }
@@ -2019,8 +2025,9 @@ nsresult HTMLEditor::GetInlineProperty(nsStaticAtom& aHTMLProperty,
   }
 
   const nsAString* val = !aValue.IsEmpty() ? &aValue : nullptr;
-  nsresult rv = GetInlinePropertyBase(aHTMLProperty, aAttribute, val, aFirst,
-                                      aAny, aAll, nullptr);
+  nsresult rv =
+      GetInlinePropertyBase(EditorInlineStyle(aHTMLProperty, aAttribute), val,
+                            aFirst, aAny, aAll, nullptr);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::GetInlinePropertyBase() failed");
   return EditorBase::ToGenericNSResult(rv);
@@ -2057,8 +2064,9 @@ nsresult HTMLEditor::GetInlinePropertyWithAttrValue(
   }
 
   const nsAString* val = !aValue.IsEmpty() ? &aValue : nullptr;
-  nsresult rv = GetInlinePropertyBase(aHTMLProperty, aAttribute, val, aFirst,
-                                      aAny, aAll, &outValue);
+  nsresult rv =
+      GetInlinePropertyBase(EditorInlineStyle(aHTMLProperty, aAttribute), val,
+                            aFirst, aAny, aAll, &outValue);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::GetInlinePropertyBase() failed");
   return EditorBase::ToGenericNSResult(rv);
@@ -3161,8 +3169,9 @@ NS_IMETHODIMP HTMLEditor::GetFontFaceState(bool* aMixed, nsAString& outFace) {
 
   bool first, any, all;
 
-  nsresult rv = GetInlinePropertyBase(*nsGkAtoms::font, nsGkAtoms::face,
-                                      nullptr, &first, &any, &all, &outFace);
+  nsresult rv = GetInlinePropertyBase(
+      EditorInlineStyle(*nsGkAtoms::font, nsGkAtoms::face), nullptr, &first,
+      &any, &all, &outFace);
   if (NS_FAILED(rv)) {
     NS_WARNING(
         "HTMLEditor::GetInlinePropertyBase(nsGkAtoms::font, nsGkAtoms::face) "
@@ -3178,8 +3187,8 @@ NS_IMETHODIMP HTMLEditor::GetFontFaceState(bool* aMixed, nsAString& outFace) {
   }
 
   // if there is no font face, check for tt
-  rv = GetInlinePropertyBase(*nsGkAtoms::tt, nullptr, nullptr, &first, &any,
-                             &all, nullptr);
+  rv = GetInlinePropertyBase(EditorInlineStyle(*nsGkAtoms::tt), nullptr, &first,
+                             &any, &all, nullptr);
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::GetInlinePropertyBase(nsGkAtoms::tt) failed");
     return EditorBase::ToGenericNSResult(rv);
@@ -3214,8 +3223,9 @@ nsresult HTMLEditor::GetFontColorState(bool* aMixed, nsAString& aOutColor) {
   }
 
   bool first, any, all;
-  nsresult rv = GetInlinePropertyBase(*nsGkAtoms::font, nsGkAtoms::color,
-                                      nullptr, &first, &any, &all, &aOutColor);
+  nsresult rv = GetInlinePropertyBase(
+      EditorInlineStyle(*nsGkAtoms::font, nsGkAtoms::color), nullptr, &first,
+      &any, &all, &aOutColor);
   if (NS_FAILED(rv)) {
     NS_WARNING(
         "HTMLEditor::GetInlinePropertyBase(nsGkAtoms::font, nsGkAtoms::color) "

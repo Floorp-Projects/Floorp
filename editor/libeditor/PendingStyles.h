@@ -80,6 +80,8 @@ class PendingStyleCache final {
     return mAttributeValueOrCSSValue;
   }
 
+  EditorInlineStyle ToInlineStyle() const;
+
  private:
   MOZ_KNOWN_LIVE nsStaticAtom& mTag;
   MOZ_KNOWN_LIVE nsStaticAtom* const mAttribute;

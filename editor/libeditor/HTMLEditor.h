@@ -918,8 +918,8 @@ class HTMLEditor final : public EditorBase,
                                       SplitAtEdges aSplitAtEdges);
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult GetInlinePropertyBase(
-      nsStaticAtom& aHTMLProperty, nsAtom* aAttribute, const nsAString* aValue,
-      bool* aFirst, bool* aAny, bool* aAll, nsAString* outValue) const;
+      const EditorInlineStyle& aStyle, const nsAString* aValue, bool* aFirst,
+      bool* aAny, bool* aAll, nsAString* outValue) const;
 
   /**
    * ClearStyleAt() splits parent elements to remove the specified style.
