@@ -696,7 +696,7 @@ bool CodeGeneratorShared::generateCompactNativeToBytecodeMap(
   }
 
   memcpy(data, writer.buffer(), writer.length());
-  nativeToBytecodeMap_ = data;
+  nativeToBytecodeMap_.reset(data);
   nativeToBytecodeMapSize_ = writer.length();
   nativeToBytecodeTableOffset_ = tableOffset;
 
@@ -717,7 +717,8 @@ void CodeGeneratorShared::verifyCompactNativeToBytecodeMap(
   MOZ_ASSERT(numRegions > 0);
 
   // The pointer to the table must be 4-byte aligned
-  const uint8_t* tablePtr = nativeToBytecodeMap_ + nativeToBytecodeTableOffset_;
+  const uint8_t* tablePtr =
+      nativeToBytecodeMap_.get() + nativeToBytecodeTableOffset_;
   MOZ_ASSERT(uintptr_t(tablePtr) % sizeof(uint32_t) == 0);
 
   // Verify that numRegions was encoded correctly.

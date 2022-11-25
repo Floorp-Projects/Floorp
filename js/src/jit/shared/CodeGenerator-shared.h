@@ -81,7 +81,7 @@ class CodeGeneratorShared : public LElementVisitor {
 
  protected:
   js::Vector<NativeToBytecode, 0, SystemAllocPolicy> nativeToBytecodeList_;
-  uint8_t* nativeToBytecodeMap_;
+  UniquePtr<uint8_t> nativeToBytecodeMap_;
   uint32_t nativeToBytecodeMapSize_;
   uint32_t nativeToBytecodeTableOffset_;
 
