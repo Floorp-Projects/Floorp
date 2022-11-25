@@ -38,8 +38,9 @@
 #  include <unistd.h>
 #endif
 
-// NB: Initial amount determined by auditing the codebase for the total amount
-//     of unique module names and padding up to the next power of 2.
+// NB: Amount determined by performing a typical browsing session and finding
+//     the maximum number of modules instantiated, and padding up to the next
+//     power of 2.
 const uint32_t kInitialModuleCount = 256;
 // When rotate option is added to the modules list, this is the hardcoded
 // number of files we create and rotate.  When there is rotate:40,
@@ -307,6 +308,9 @@ class LogModuleManager {
   LogModuleManager()
       : mModulesLock("logmodules"),
         mModules(kInitialModuleCount),
+#ifdef DEBUG
+        mLoggingModuleRegistered(0),
+#endif
         mPrintEntryCount(0),
         mOutFile(nullptr),
         mToReleaseFile(nullptr),
@@ -319,7 +323,8 @@ class LogModuleManager {
         mIsRaw(false),
         mIsSync(false),
         mRotate(0),
-        mInitialized(false) {}
+        mInitialized(false) {
+  }
 
   ~LogModuleManager() {
     detail::LogFile* logFile = mOutFile.exchange(nullptr);
@@ -559,11 +564,19 @@ class LogModuleManager {
   LogModule* CreateOrGetModule(const char* aName) {
     OffTheBooksMutexAutoLock guard(mModulesLock);
     return mModules
-        .LookupOrInsertWith(aName,
-                            [&] {
-                              return UniquePtr<LogModule>(
-                                  new LogModule{aName, LogLevel::Disabled});
-                            })
+        .LookupOrInsertWith(
+            aName,
+            [&] {
+#ifdef DEBUG
+              if (++mLoggingModuleRegistered > kInitialModuleCount) {
+                NS_WARNING(
+                    "kInitialModuleCount too low, consider increasing its "
+                    "value");
+              }
+#endif
+              return UniquePtr<LogModule>(
+                  new LogModule{aName, LogLevel::Disabled});
+            })
         .get();
   }
 
@@ -761,6 +774,9 @@ class LogModuleManager {
   OffTheBooksMutex mModulesLock;
   nsClassHashtable<nsCharPtrHashKey, LogModule> mModules;
 
+#ifdef DEBUG
+  Atomic<uint32_t, ReleaseAcquire> mLoggingModuleRegistered;
+#endif
   // Print() entry counter, actually reflects concurrent use of the current
   // output file.  ReleaseAcquire ensures that manipulation with mOutFile
   // and mToReleaseFile is synchronized by manipulation with this value.
