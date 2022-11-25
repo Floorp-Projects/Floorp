@@ -117,10 +117,7 @@ function findServiceWorkerThreads(profile) {
     allThreads.forEach(logInformationForThread.bind(null, ""));
 
     // Let's write the profile on disk if MOZ_UPLOAD_DIR is present
-    const env = Cc["@mozilla.org/process/environment;1"].getService(
-      Ci.nsIEnvironment
-    );
-    const path = env.get("MOZ_UPLOAD_DIR");
+    const path = Services.env.get("MOZ_UPLOAD_DIR");
     if (path) {
       const profileName = `profile_${Date.now()}.json`;
       const profilePath = PathUtils.join(path, profileName);
