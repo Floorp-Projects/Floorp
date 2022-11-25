@@ -111,6 +111,9 @@ class DataTransferItem final : public nsISupports, public nsWrapperCache {
  private:
   ~DataTransferItem() = default;
   already_AddRefed<File> CreateFileFromInputStream(nsIInputStream* aStream);
+  already_AddRefed<File> CreateFileFromInputStream(
+      nsIInputStream* aStream, const char* aFileNameKey,
+      const nsAString& aContentType);
 
   already_AddRefed<nsIGlobalObject> GetGlobalFromDataTransfer();
 

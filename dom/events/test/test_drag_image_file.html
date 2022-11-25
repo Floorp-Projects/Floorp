@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test that dragging an image produces a File</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<img id="green-png" src="green.png">
+
+<script>
+async function runTest() {
+  let dt = await synthesizePlainDragAndCancel({
+      srcElement: document.getElementById('green-png'),
+      finalY: 20,
+  }, null);
+
+  ok(dt.types.includes("Files"), "types should contains 'Files'");
+  is(dt.files.length, 1, "files contains one File");
+
+  let fileItem = null;
+  for (let item of dt.items) {
+    if (item.kind === "file") {
+      fileItem = item;
+      break;
+    }
+  }
+
+  is(fileItem.kind, "file", "Is a file");
+  is(fileItem.type, "image/png", "Is a PNG file");
+
+  let file = fileItem.getAsFile();
+  is(file.name, "image.png", "Has generic image name")
+  ok(file.size > 100, "Is not empty");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTest);
+</script>
+</body>
+</html>
