@@ -721,9 +721,7 @@ export class SpecialPowersParent extends JSWindowActorParent {
             !AppConstants.TSAN
           ) {
             if (Services.profiler.IsActive()) {
-              let filename = Cc["@mozilla.org/process/environment;1"]
-                .getService(Ci.nsIEnvironment)
-                .get("MOZ_PROFILER_SHUTDOWN");
+              let filename = Services.env.get("MOZ_PROFILER_SHUTDOWN");
               if (filename) {
                 await Services.profiler.dumpProfileToFileAsync(filename);
                 await Services.profiler.StopProfiler();
