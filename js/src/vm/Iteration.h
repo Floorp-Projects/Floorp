@@ -406,6 +406,11 @@ struct NativeIterator {
   static constexpr size_t offsetOfPrev() {
     return offsetof(NativeIterator, prev_);
   }
+
+  static constexpr size_t offsetOfFirstShape() {
+    // Shapes are stored directly after |this|.
+    return sizeof(NativeIterator);
+  }
 };
 
 class PropertyIteratorObject : public NativeObject {
@@ -462,6 +467,8 @@ RegExpStringIteratorObject* NewRegExpStringIterator(JSContext* cx);
                                        MutableHandleIdVector props);
 
 PropertyIteratorObject* LookupInIteratorCache(JSContext* cx, HandleObject obj);
+
+JSObject* GetIterator(JSContext* cx, HandleObject obj);
 
 JSObject* ValueToIterator(JSContext* cx, HandleValue vp);
 

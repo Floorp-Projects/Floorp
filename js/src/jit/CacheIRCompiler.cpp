@@ -4474,6 +4474,42 @@ bool CacheIRCompiler::emitGuardAndGetIterator(ObjOperandId objId,
   return true;
 }
 
+bool CacheIRCompiler::emitObjectToIteratorResult(
+    ObjOperandId objId, uint32_t enumeratorsAddrOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+  Register obj = allocator.useRegister(masm, objId);
+
+  AutoScratchRegister iterObj(allocator, masm);
+  AutoScratchRegister scratch(allocator, masm);
+  AutoScratchRegisterMaybeOutput scratch2(allocator, masm, callvm.output());
+  AutoScratchRegisterMaybeOutputType scratch3(allocator, masm, callvm.output());
+
+  Label callVM, done;
+  masm.maybeLoadIteratorFromShape(obj, iterObj, scratch, scratch2, scratch3,
+                                  &callVM);
+
+  masm.loadPrivate(
+      Address(iterObj, PropertyIteratorObject::offsetOfIteratorSlot()),
+      scratch);
+
+  emitActivateIterator(obj, iterObj, scratch, scratch2, scratch3,
+                       enumeratorsAddrOffset);
+  masm.jump(&done);
+
+  masm.bind(&callVM);
+  callvm.prepare();
+  masm.Push(obj);
+  using Fn = JSObject* (*)(JSContext*, HandleObject);
+  callvm.call<Fn, GetIterator>();
+  masm.storeCallPointerResult(iterObj);
+
+  masm.bind(&done);
+  EmitStoreResult(masm, iterObj, JSVAL_TYPE_OBJECT, callvm.output());
+  return true;
+}
+
 bool CacheIRCompiler::emitValueToIteratorResult(ValOperandId valId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
