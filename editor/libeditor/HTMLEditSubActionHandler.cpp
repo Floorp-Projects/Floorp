@@ -9064,7 +9064,8 @@ nsresult HTMLEditor::GetInlineStyles(
     if (!useCSS || (property == nsGkAtoms::size)) {
       isSet = HTMLEditUtils::IsInlineStyleSetByElement(aContent, style, nullptr,
                                                        &value);
-    } else {
+    } else if (CSSEditUtils::IsCSSEditableProperty(
+                   &aContent, style.mHTMLProperty, style.mAttribute)) {
       Result<bool, nsresult> isComputedCSSEquivalentToStyleOrError =
           CSSEditUtils::IsComputedCSSEquivalentTo(*this, aContent, style,
                                                   value);
@@ -9123,7 +9124,9 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
        *TopLevelEditSubActionDataRef().mCachedPendingStyles) {
     bool isFirst = false, isAny = false, isAll = false;
     nsAutoString currentValue;
-    if (useCSS) {
+    if (useCSS && CSSEditUtils::IsCSSEditableProperty(
+                      startContainerContent, &styleCacheBeforeEdit.TagRef(),
+                      styleCacheBeforeEdit.GetAttribute())) {
       // check computed style first in css case
       // MOZ_KnownLive(styleCacheBeforeEdit.*) because they are nsStaticAtom
       // and its instances are alive until shutting down.
