@@ -250,7 +250,7 @@ class ModuleNamespaceObject : public ProxyObject {
 
 // Value types of [[Status]] in a Cyclic Module Record
 // https://tc39.es/ecma262/#table-cyclic-module-fields
-enum class ModuleStatus : int32_t {
+enum class ModuleStatus : int8_t {
   Unlinked,
   Linking,
   Linked,
@@ -265,29 +265,25 @@ enum class ModuleStatus : int32_t {
   Evaluated_Error
 };
 
-// Special values for ModuleObject's AsyncEvaluatingPostOrderSlot slot, which is
-// used to implement the AsyncEvaluation field of cyclic module records.
+// Special values for CyclicModuleFields' asyncEvaluatingPostOrderSlot field,
+// which is used as part of the implementation of the AsyncEvaluation field of
+// cyclic module records.
 //
-// The spec requires us to distinguish true, false, and 'never previously set to
-// true', as well as the order in which the field was set to true for async
-// evaluating modules.
+// The spec requires us to be able to tell the order in which the field was set
+// to true for async evaluating modules.
 //
-// This is arranged by using an integer to record the order. Undefined is used
-// to mean false and any integer value true. While a module is async evaluating
-// the integer value gives the order that the field was set to true. After
-// evaluation is complete the value is set to ASYNC_EVALUATING_POST_ORDER_TRUE,
-// which still signifies true but loses the order information.
+// This is arranged by using an integer to record the order. After evaluation is
+// complete the value is set to ASYNC_EVALUATING_POST_ORDER_CLEARED.
 //
 // See https://tc39.es/ecma262/#sec-cyclic-module-records for field defintion.
 // See https://tc39.es/ecma262/#sec-async-module-execution-fulfilled for sort
 // requirement.
 
-// True value that also indicates that the field was previously true.
-constexpr uint32_t ASYNC_EVALUATING_POST_ORDER_TRUE = 0;
-
-// Initial value for the runtime's counter used to generate these values; the
-// first non-false value.
+// Initial value for the runtime's counter used to generate these values.
 constexpr uint32_t ASYNC_EVALUATING_POST_ORDER_INIT = 1;
+
+// Value that the field is set to after being cleared.
+constexpr uint32_t ASYNC_EVALUATING_POST_ORDER_CLEARED = 0;
 
 class ModuleObject : public NativeObject {
  public:
@@ -365,7 +361,6 @@ class ModuleObject : public NativeObject {
   ListObject* asyncParentModules() const;
   mozilla::Maybe<uint32_t> maybePendingAsyncDependencies() const;
   uint32_t pendingAsyncDependencies() const;
-  bool hasAsyncEvaluatingPostOrder() const;
   mozilla::Maybe<uint32_t> maybeAsyncEvaluatingPostOrder() const;
   uint32_t getAsyncEvaluatingPostOrder() const;
   void clearAsyncEvaluatingPostOrder();

@@ -25,8 +25,6 @@
 #include "../../jsimd.h"
 #include "jconfigint.h"
 
-#include <stdio.h>
-#include <string.h>
 #include <ctype.h>
 
 #define JSIMD_FASTLD3  1

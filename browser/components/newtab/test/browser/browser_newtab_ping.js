@@ -199,7 +199,7 @@ add_task(async function test_newtab_doesnt_send_nimbus() {
   await SpecialPowers.popPrefEnv();
 });
 
-add_task(async function test_newtab_init_sends_ping() {
+add_task(async function test_newtab_categorization_sends_ping() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.newtabpage.activity-stream.telemetry", true]],
   });
@@ -214,7 +214,7 @@ add_task(async function test_newtab_init_sends_ping() {
     pingSent = true;
     Assert.equal(reason, "component_init");
   });
-  TelemetryFeed.init(); // INIT action doesn't happen by default.
+  await TelemetryFeed.sendPageTakeoverData();
   Assert.ok(pingSent, "ping was sent");
 
   await SpecialPowers.popPrefEnv();

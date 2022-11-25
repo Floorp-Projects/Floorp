@@ -6,21 +6,20 @@
 # Only necessary for flake8 to be happy...
 from __future__ import print_function
 
-import os
-import os.path
-import shutil
-import subprocess
-import platform
-import json
 import argparse
+import errno
 import fnmatch
 import glob
-import errno
+import json
+import os
+import os.path
+import platform
 import re
+import shutil
+import subprocess
 import sys
 import tarfile
 from contextlib import contextmanager
-
 from shutil import which
 
 import zstandard

@@ -3,8 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import sys
-from mozbuild.base import MozbuildObject
+
 from mozbuild.backend.configenvironment import PartialConfigEnvironment
+from mozbuild.base import MozbuildObject
 
 config = MozbuildObject.from_environment()
 partial_config = PartialConfigEnvironment(config.topobjdir)

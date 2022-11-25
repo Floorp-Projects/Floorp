@@ -28,7 +28,6 @@ ChromeUtils.defineModuleGetter(
   "SessionMigration",
   "resource:///modules/sessionstore/SessionMigration.jsm"
 );
-ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 
 export function FirefoxProfileMigrator() {
   this.wrappedJSObject = this; // for testing...
@@ -243,32 +242,28 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(
       // if we can, copy it to the new profile and set sync's username pref
       // (which acts as a de-facto flag to indicate if sync is configured)
       try {
-        let oldPath = lazy.OS.Path.join(
+        let oldPath = PathUtils.join(
           sourceProfileDir.path,
           "signedInUser.json"
         );
-        let exists = await lazy.OS.File.exists(oldPath);
+        let exists = await IOUtils.exists(oldPath);
         if (exists) {
-          let raw = await lazy.OS.File.read(oldPath, { encoding: "utf-8" });
-          let data = JSON.parse(raw);
+          let data = await IOUtils.readJSON(oldPath);
           if (data && data.accountData && data.accountData.email) {
             let username = data.accountData.email;
             // copy the file itself.
-            await lazy.OS.File.copy(
+            await IOUtils.copy(
               oldPath,
-              lazy.OS.Path.join(currentProfileDir.path, "signedInUser.json")
+              PathUtils.join(currentProfileDir.path, "signedInUser.json")
             );
             // Now we need to know whether Sync is actually configured for this
             // user. The only way we know is by looking at the prefs file from
             // the old profile. We avoid trying to do a full parse of the prefs
             // file and even avoid parsing the single string value we care
             // about.
-            let prefsPath = lazy.OS.Path.join(
-              sourceProfileDir.path,
-              "prefs.js"
-            );
-            if (await lazy.OS.File.exists(oldPath)) {
-              let rawPrefs = await lazy.OS.File.read(prefsPath, {
+            let prefsPath = PathUtils.join(sourceProfileDir.path, "prefs.js");
+            if (await IOUtils.exists(oldPath)) {
+              let rawPrefs = await IOUtils.readUTF8(prefsPath, {
                 encoding: "utf-8",
               });
               if (/^user_pref\("services\.sync\.username"/m.test(rawPrefs)) {

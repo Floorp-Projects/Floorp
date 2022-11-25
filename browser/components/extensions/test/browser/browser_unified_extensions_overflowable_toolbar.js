@@ -77,8 +77,18 @@ function getVisibleMenuItems(popup) {
  * 5. Unloads all of the test WebExtensions
  *
  * @param {DOMWindow} win The browser window to perform the test on.
- * @param {Function} taskFn The async function to run once the window is in
- *   the overflow state. The function is called with the following arguments:
+ * @param {object} options Additional options when running this test.
+ * @param {Function} options.beforeOverflowed This optional async function will
+ *     be run after the extensions are created and added to the toolbar, but
+ *     before the toolbar overflows. The function is called with the following
+ *     arguments:
+ *
+ *     {string[]} extensionIDs: The IDs of the test WebExtensions.
+ *
+ *     The return value of the function is ignored.
+ * @param {Function} options.whenOverflowed This optional async function will
+ *     run once the window is in the overflow state. The function is called
+ *     with the following arguments:
  *
  *     {Element} defaultList: The DOM element that holds overflowed default
  *       items.
@@ -86,24 +96,26 @@ function getVisibleMenuItems(popup) {
  *       WebExtension browser_actions when Unified Extensions is enabled.
  *     {string[]} extensionIDs: The IDs of the test WebExtensions.
  *
- *   The function is expected to return a Promise that does not resolve
- *   with anything.
+ *     The return value of the function is ignored.
+ * @param {Function} options.afterUnderflowed This optional async function will
+ *     be run after the window is expanded and the toolbar has underflowed, but
+ *     before the extensions are removed. This function is not passed any
+ *     arguments. The return value of the function is ignored.
+ *
  */
-async function withWindowOverflowed(win, taskFn) {
+async function withWindowOverflowed(
+  win,
+  {
+    beforeOverflowed = async () => {},
+    whenOverflowed = async () => {},
+    afterUnderflowed = async () => {},
+  } = {}
+) {
   const doc = win.document;
   doc.documentElement.removeAttribute("persist");
   const navbar = doc.getElementById(CustomizableUI.AREA_NAVBAR);
 
-  win.moveTo(0, 0);
-
-  const widthDiff = win.screen.availWidth - win.outerWidth;
-  const heightDiff = win.screen.availHeight - win.outerHeight;
-
-  if (widthDiff || heightDiff) {
-    let resizeDone = BrowserTestUtils.waitForEvent(win, "resize", false);
-    win.resizeBy(widthDiff, heightDiff);
-    await resizeDone;
-  }
+  await ensureMaximizedWindow(win);
 
   // The OverflowableToolbar operates asynchronously at times, so we will
   // poll a widget's overflowedItem attribute to detect whether or not the
@@ -223,61 +235,83 @@ async function withWindowOverflowed(win, taskFn) {
   await listener.promise;
   CustomizableUI.removeListener(listener);
 
-  const originalWindowWidth = win.outerWidth;
-
-  let widgetOverflowListener = {
-    _remainingOverflowables: NUM_EXTENSIONS + DEFAULT_WIDGET_IDS.length,
-    _deferred: PromiseUtils.defer(),
-
-    get promise() {
-      return this._deferred.promise;
-    },
-
-    onWidgetOverflow(widgetNode, areaNode) {
-      this._remainingOverflowables--;
-      if (!this._remainingOverflowables) {
-        this._deferred.resolve();
-      }
-    },
-  };
-  CustomizableUI.addListener(widgetOverflowListener);
-
-  win.resizeTo(OVERFLOW_WINDOW_WIDTH_PX, win.outerHeight);
-  await widgetOverflowListener.promise;
-  CustomizableUI.removeListener(widgetOverflowListener);
-
-  Assert.ok(
-    navbar.hasAttribute("overflowing"),
-    "Should have an overflowing toolbar."
-  );
-
-  const defaultList = doc.getElementById(
-    navbar.getAttribute("default-overflowtarget")
-  );
-
-  const unifiedExtensionList = doc.getElementById(
-    navbar.getAttribute("addon-webext-overflowtarget")
-  );
-
   const extensionIDs = extensions.map(extension => extension.id);
 
   try {
-    await taskFn(defaultList, unifiedExtensionList, extensionIDs);
+    info("Running beforeOverflowed task");
+    await beforeOverflowed(extensionIDs);
   } finally {
-    win.resizeTo(originalWindowWidth, win.outerHeight);
-    await BrowserTestUtils.waitForEvent(win, "resize");
+    const originalWindowWidth = win.outerWidth;
 
-    // Notably, we don't wait for the nav-bar to not have the "overflowing"
-    // attribute. This is because we might be running in an environment
-    // where the nav-bar was overflowing to begin with. Let's just hope that
-    // our sign-post widget has stopped overflowing.
-    await TestUtils.waitForCondition(() => {
-      return !doc
-        .getElementById(signpostWidgetID)
-        .hasAttribute("overflowedItem");
+    // The beforeOverflowed task may have moved some items out from the navbar,
+    // so only listen for overflows for items still in there.
+    const browserActionIDs = extensionIDs.map(id =>
+      AppUiTestInternals.getBrowserActionWidgetId(id)
+    );
+    const browserActionsInNavBar = browserActionIDs.filter(widgetID => {
+      let placement = CustomizableUI.getPlacementOfWidget(widgetID);
+      return placement.area == CustomizableUI.AREA_NAVBAR;
     });
 
-    await Promise.all(extensions.map(extension => extension.unload()));
+    let widgetOverflowListener = {
+      _remainingOverflowables:
+        browserActionsInNavBar.length + DEFAULT_WIDGET_IDS.length,
+      _deferred: PromiseUtils.defer(),
+
+      get promise() {
+        return this._deferred.promise;
+      },
+
+      onWidgetOverflow(widgetNode, areaNode) {
+        this._remainingOverflowables--;
+        if (!this._remainingOverflowables) {
+          this._deferred.resolve();
+        }
+      },
+    };
+    CustomizableUI.addListener(widgetOverflowListener);
+
+    win.resizeTo(OVERFLOW_WINDOW_WIDTH_PX, win.outerHeight);
+    await widgetOverflowListener.promise;
+    CustomizableUI.removeListener(widgetOverflowListener);
+
+    Assert.ok(
+      navbar.hasAttribute("overflowing"),
+      "Should have an overflowing toolbar."
+    );
+
+    const defaultList = doc.getElementById(
+      navbar.getAttribute("default-overflowtarget")
+    );
+
+    const unifiedExtensionList = doc.getElementById(
+      navbar.getAttribute("addon-webext-overflowtarget")
+    );
+
+    try {
+      info("Running whenOverflowed task");
+      await whenOverflowed(defaultList, unifiedExtensionList, extensionIDs);
+    } finally {
+      win.resizeTo(originalWindowWidth, win.outerHeight);
+      await BrowserTestUtils.waitForEvent(win, "resize");
+
+      // Notably, we don't wait for the nav-bar to not have the "overflowing"
+      // attribute. This is because we might be running in an environment
+      // where the nav-bar was overflowing to begin with. Let's just hope that
+      // our sign-post widget has stopped overflowing.
+      await TestUtils.waitForCondition(() => {
+        return !doc
+          .getElementById(signpostWidgetID)
+          .hasAttribute("overflowedItem");
+      });
+
+      try {
+        info("Running afterUnderflowed task");
+        await afterUnderflowed();
+      } finally {
+        await Promise.all(extensions.map(extension => extension.unload()));
+      }
+    }
   }
 }
 
@@ -394,10 +428,10 @@ async function verifyExtensionWidget(win, widget, unifiedExtensionsEnabled) {
  */
 add_task(async function test_overflowable_toolbar() {
   let win = await promiseEnableUnifiedExtensions();
+  let movedNode;
 
-  await withWindowOverflowed(
-    win,
-    async (defaultList, unifiedExtensionList, extensionIDs) => {
+  await withWindowOverflowed(win, {
+    whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
       // Ensure that there are 5 items in the Unified Extensions overflow
       // list, and the default widgets should all be in the default overflow
       // list (though there might be more items from the nav-bar in there that
@@ -423,8 +457,35 @@ add_task(async function test_overflowable_toolbar() {
         );
         await verifyExtensionWidget(win, child, true);
       }
-    }
-  );
+
+      let extensionWidgetID = AppUiTestInternals.getBrowserActionWidgetId(
+        extensionIDs.at(-1)
+      );
+      movedNode = CustomizableUI.getWidget(extensionWidgetID).forWindow(win)
+        .node;
+      Assert.equal(movedNode.getAttribute("cui-areatype"), "toolbar");
+
+      CustomizableUI.addWidgetToArea(
+        extensionWidgetID,
+        CustomizableUI.AREA_ADDONS
+      );
+
+      Assert.equal(
+        movedNode.getAttribute("cui-areatype"),
+        "panel",
+        "The moved browser action button should have the right cui-areatype set."
+      );
+    },
+    afterUnderflowed: async () => {
+      // Ensure that the moved node's parent is still the add-ons panel.
+      Assert.equal(
+        movedNode.parentElement.id,
+        CustomizableUI.AREA_ADDONS,
+        "The browser action should still be in the addons panel"
+      );
+      CustomizableUI.addWidgetToArea(movedNode.id, CustomizableUI.AREA_NAVBAR);
+    },
+  });
 
   await BrowserTestUtils.closeWindow(win);
 });
@@ -436,9 +497,8 @@ add_task(async function test_overflowable_toolbar() {
 add_task(async function test_overflowable_toolbar_legacy() {
   let win = await promiseDisableUnifiedExtensions();
 
-  await withWindowOverflowed(
-    win,
-    async (defaultList, unifiedExtensionList, extensionIDs) => {
+  await withWindowOverflowed(win, {
+    whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
       // First, ensure that all default items are in the default overflow list.
       // (though there might be more items from the nav-bar in there that
       // already existed in the nav-bar before we put the default widgets in
@@ -465,8 +525,8 @@ add_task(async function test_overflowable_toolbar_legacy() {
         0,
         "Unified Extension overflow list should be empty."
       );
-    }
-  );
+    },
+  });
 
   await BrowserTestUtils.closeWindow(win);
   await SpecialPowers.popPrefEnv();
@@ -475,9 +535,8 @@ add_task(async function test_overflowable_toolbar_legacy() {
 add_task(async function test_menu_button() {
   let win = await promiseEnableUnifiedExtensions();
 
-  await withWindowOverflowed(
-    win,
-    async (defaultList, unifiedExtensionList, extensionIDs) => {
+  await withWindowOverflowed(win, {
+    whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
       Assert.ok(
         unifiedExtensionList.children.length,
         "Should have items in the Unified Extension list."
@@ -631,8 +690,8 @@ add_task(async function test_menu_button() {
       );
 
       await closeExtensionsPanel(win);
-    }
-  );
+    },
+  });
 
   await BrowserTestUtils.closeWindow(win);
 });
@@ -640,9 +699,8 @@ add_task(async function test_menu_button() {
 add_task(async function test_context_menu() {
   let win = await promiseEnableUnifiedExtensions();
 
-  await withWindowOverflowed(
-    win,
-    async (defaultList, unifiedExtensionList, extensionIDs) => {
+  await withWindowOverflowed(win, {
+    whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
       Assert.ok(
         unifiedExtensionList.children.length,
         "Should have items in the Unified Extension list."
@@ -730,8 +788,8 @@ add_task(async function test_context_menu() {
 
       // We can close the unified extensions panel now.
       await closeExtensionsPanel(win);
-    }
-  );
+    },
+  });
 
   await BrowserTestUtils.closeWindow(win);
 });
@@ -739,9 +797,8 @@ add_task(async function test_context_menu() {
 add_task(async function test_action_button() {
   let win = await promiseEnableUnifiedExtensions();
 
-  await withWindowOverflowed(
-    win,
-    async (defaultList, unifiedExtensionList, extensionIDs) => {
+  await withWindowOverflowed(win, {
+    whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
       Assert.ok(
         unifiedExtensionList.children.length,
         "Should have items in the Unified Extension list."
@@ -876,8 +933,56 @@ add_task(async function test_action_button() {
           await closeExtensionsPanel(win);
         }
       );
-    }
-  );
+    },
+  });
+
+  await BrowserTestUtils.closeWindow(win);
+});
+
+/**
+ * Tests that if we pin a browser action button listed in the addons panel
+ * to the toolbar when that button would immediately overflow, that the
+ * button is put into the addons panel overflow list.
+ */
+add_task(async function test_pinning_to_toolbar_when_overflowed() {
+  let win = await promiseEnableUnifiedExtensions();
+  let movedNode;
+  let extensionWidgetID;
+
+  await withWindowOverflowed(win, {
+    beforeOverflowed: async extensionIDs => {
+      // Before we overflow the toolbar, let's move the last item to the addons
+      // panel.
+      extensionWidgetID = AppUiTestInternals.getBrowserActionWidgetId(
+        extensionIDs.at(-1)
+      );
+
+      movedNode = CustomizableUI.getWidget(extensionWidgetID).forWindow(win)
+        .node;
+
+      CustomizableUI.addWidgetToArea(
+        extensionWidgetID,
+        CustomizableUI.AREA_ADDONS
+      );
+    },
+    whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
+      // Now that the window is overflowed, let's move the widget in the addons
+      // panel back to the navbar. This should cause the widget to overflow back
+      // into the addons panel.
+      CustomizableUI.addWidgetToArea(
+        extensionWidgetID,
+        CustomizableUI.AREA_NAVBAR
+      );
+      await TestUtils.waitForCondition(() => {
+        return movedNode.hasAttribute("overflowedItem");
+      });
+      Assert.equal(
+        movedNode.parentElement,
+        unifiedExtensionList,
+        "Should have overflowed the extension button to the right list."
+      );
+    },
+  });
 
   await BrowserTestUtils.closeWindow(win);
 });

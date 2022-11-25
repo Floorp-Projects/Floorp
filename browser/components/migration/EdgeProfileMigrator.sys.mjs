@@ -4,7 +4,6 @@
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import {
@@ -506,7 +505,7 @@ EdgeProfileMigrator.prototype.getLastUsedDate = async function() {
   if (sourceProfiles !== null || !lazy.gEdgeDatabase) {
     return Promise.resolve(new Date(0));
   }
-  let logFilePath = OS.Path.join(
+  let logFilePath = PathUtils.join(
     lazy.gEdgeDatabase.parent.path,
     "LogFiles",
     "edb.log"
@@ -517,11 +516,9 @@ EdgeProfileMigrator.prototype.getLastUsedDate = async function() {
   );
   let cookiePaths = cookieMigrator._cookiesFolders.map(f => f.path);
   let datePromises = [logFilePath, dbPath, ...cookiePaths].map(path => {
-    return OS.File.stat(path)
-      .catch(() => null)
-      .then(info => {
-        return info ? info.lastModificationDate : 0;
-      });
+    return IOUtils.stat(path)
+      .then(info => info.lastModified)
+      .catch(() => 0);
   });
   datePromises.push(
     new Promise(resolve => {

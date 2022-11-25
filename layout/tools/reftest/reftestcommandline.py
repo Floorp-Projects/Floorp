@@ -4,9 +4,9 @@ import argparse
 import os
 import sys
 from collections import OrderedDict
+
 import mozinfo
 import mozlog
-
 from six.moves.urllib.parse import urlparse
 
 here = os.path.abspath(os.path.dirname(__file__))

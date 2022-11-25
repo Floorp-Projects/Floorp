@@ -7,7 +7,6 @@
  */
 
 // This file expects the following files to be loaded.
-/* import-globals-from ../../../modules/StructuredLog.jsm */
 /* import-globals-from LogController.js */
 /* import-globals-from MemoryStats.js */
 /* import-globals-from MozillaLogger.js */
@@ -15,6 +14,13 @@
 /* eslint-disable no-unsanitized/property */
 
 "use strict";
+
+const {
+  StructuredLogger,
+  StructuredFormatter,
+} = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/StructuredLog.sys.mjs"
+);
 
 function getElement(id) {
   return typeof id == "string" ? document.getElementById(id) : id;
@@ -337,13 +343,15 @@ TestRunner._dumpMessage = function(message) {
 // From https://searchfox.org/mozilla-central/source/testing/modules/StructuredLog.jsm
 TestRunner.structuredLogger = new StructuredLogger(
   "mochitest",
-  TestRunner._dumpMessage
+  TestRunner._dumpMessage,
+  [],
+  TestRunner
 );
 TestRunner.structuredLogger.deactivateBuffering = function() {
-  TestRunner.structuredLogger._logData("buffering_off");
+  TestRunner.structuredLogger.logData("buffering_off");
 };
 TestRunner.structuredLogger.activateBuffering = function() {
-  TestRunner.structuredLogger._logData("buffering_on");
+  TestRunner.structuredLogger.logData("buffering_on");
 };
 
 TestRunner.log = function(msg) {

@@ -4,23 +4,21 @@
 
 
 import copy
-from datetime import datetime, timedelta
 import os
 import re
+from datetime import datetime, timedelta
 
+from gecko_taskgraph import GECKO, try_option_syntax
+from gecko_taskgraph.util.attributes import (
+    match_run_on_hg_branches,
+    match_run_on_projects,
+)
+from gecko_taskgraph.util.hg import find_hg_revision_push_info, get_hg_commit_message
+from gecko_taskgraph.util.platforms import platform_family
 from redo import retry
 from taskgraph.parameters import Parameters
 from taskgraph.target_tasks import _target_task, get_method
 from taskgraph.util.taskcluster import find_task_id
-
-from gecko_taskgraph import try_option_syntax, GECKO
-from gecko_taskgraph.util.attributes import (
-    match_run_on_projects,
-    match_run_on_hg_branches,
-)
-from gecko_taskgraph.util.platforms import platform_family
-from gecko_taskgraph.util.hg import find_hg_revision_push_info, get_hg_commit_message
-
 
 # Some tasks show up in the target task set, but are possibly special cases,
 # uncommon tasks, or tasks running against limited hardware set that they
@@ -1256,10 +1254,7 @@ def target_tasks_backfill_all_browsertime(full_task_graph, parameters, graph_con
     and landed the day before the cron is running. Trigger backfill-all-browsertime action
     task on each of them.
     """
-    from gecko_taskgraph.actions.util import (
-        get_decision_task_id,
-        get_pushes,
-    )
+    from gecko_taskgraph.actions.util import get_decision_task_id, get_pushes
 
     def date_is_yesterday(date):
         yesterday = datetime.today() - timedelta(days=1)
@@ -1398,5 +1393,5 @@ def target_tasks_eslint_build(full_task_graph, parameters, graph_config):
     for name, task in full_task_graph.tasks.items():
         if task.kind != "source-test":
             continue
-        if name == "eslint-build":
+        if "eslint-build" in name:
             yield name
