@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import copy
 import itertools
 import os
 import re
@@ -165,35 +166,136 @@ class PerfParser(CompareParser):
             "platforms": ["desktop", "android"],
             "apps": ["firefox", "geckoview", "fenix"],
         },
+        "swr": {
+            "query": "'swr",
+            "negation": "!swr",
+            "platforms": ["desktop"],
+            "apps": ["firefox"],
+        },
     }
 
-    # The tasks field can be used to hardcode tasks to run,
-    # otherwise we run the query selector combined with the platform
-    # and variants queries
+    """
+    Here you can find the base categories that are defined for the perf
+    selector. The following fields are available:
+        * query: Set the queries to use for each suite you need.
+        * suites: The suites that are needed for this category.
+        * tasks: A hard-coded list of tasks to select.
+        * platforms: The platforms that it can run on.
+        * app-restrictions: A list of apps that the category can run.
+        * variant-restrictions: A list of variants available for each suite.
+
+    Note that setting the App/Variant-Restriction fields should be used to
+    restrict the available apps and variants, not expand them.
+    """
     categories = {
         "Pageload": {
-            "query": "'browsertime 'tp6",
+            "query": {
+                "raptor": ["'browsertime 'tp6"],
+            },
+            "suites": ["raptor"],
             "tasks": [],
         },
         "Pageload (essential)": {
-            "query": "'browsertime 'tp6 'essential",
+            "query": {
+                "raptor": ["'browsertime 'tp6 'essential"],
+            },
+            "suites": ["raptor"],
             "tasks": [],
         },
         "Pageload (live)": {
-            "query": "'browsertime 'tp6 'live",
+            "query": {
+                "raptor": ["'browsertime 'tp6 'live"],
+            },
+            "suites": ["raptor"],
             "tasks": [],
         },
         "Bytecode Cached": {
-            "query": "'browsertime 'bytecode",
+            "query": {
+                "raptor": ["'browsertime 'bytecode"],
+            },
+            "suites": ["raptor"],
             "tasks": [],
         },
         "Responsiveness": {
-            "query": "'browsertime 'responsive",
+            "query": {
+                "raptor": ["'browsertime 'responsive"],
+            },
+            "suites": ["raptor"],
             "tasks": [],
         },
         "Benchmarks": {
-            "query": "'browsertime 'benchmark",
+            "query": {
+                "raptor": ["'browsertime 'benchmark"],
+            },
+            "suites": ["raptor"],
             "tasks": [],
+        },
+        "DAMP (Devtools)": {
+            "query": {
+                "talos": ["'talos 'damp"],
+            },
+            "suites": ["talos"],
+            "tasks": [],
+        },
+        "Talos PerfTests": {
+            "query": {
+                "talos": ["'talos"],
+            },
+            "suites": ["talos"],
+            "tasks": [],
+        },
+        "Resource Usage": {
+            "query": {
+                "talos": ["'talos 'xperf | 'tp5"],
+                "raptor": ["'power 'osx"],
+                "awsy": ["'awsy"],
+            },
+            "suites": ["talos", "raptor", "awsy"],
+            "platform-restrictions": ["desktop"],
+            "variant-restrictions": {
+                "raptor": [],
+                "talos": [],
+            },
+            "app-restrictions": {
+                "raptor": ["firefox"],
+                "talos": ["firefox"],
+            },
+            "tasks": [],
+        },
+        "Graphics, & Media Playback": {
+            "query": {
+                # XXX This might not be an exhaustive list for talos atm
+                "talos": ["'talos 'svgr | 'bcv | 'webgl"],
+                "raptor": ["'browsertime 'youtube-playback"],
+            },
+            "suites": ["talos", "raptor"],
+            "tasks": [],
+        },
+    }
+
+    suites = {
+        "raptor": {
+            "apps": list(apps.keys()),
+            "platforms": list(platforms.keys()),
+            "variants": [
+                "no-fission",
+                "live-sites",
+                "profiling",
+                "bytecode-cached",
+            ],
+        },
+        "talos": {
+            "apps": ["firefox"],
+            "platforms": ["desktop"],
+            "variants": [
+                "profiling",
+                "swr",
+            ],
+        },
+        "awsy": {
+            "apps": ["firefox"],
+            "platforms": ["desktop"],
+            "variants": [],
         },
     }
 
@@ -306,28 +408,38 @@ class PerfParser(CompareParser):
                 continue
             print("Gathering tasks for %s category" % category)
 
-            # Either perform a query to get the tasks (recommended), or
-            # use a hardcoded task list
             category_tasks = set()
-            if category_info["queries"]:
-                print("Executing queries: %s" % ", ".join(category_info["queries"]))
+            for suite in PerfParser.suites:
+                # Either perform a query to get the tasks (recommended), or
+                # use a hardcoded task list
+                suite_queries = category_info["queries"].get(suite)
 
-                for perf_query in category_info["queries"]:
-                    if not category_tasks:
-                        # Get all tasks selected with the first query
-                        category_tasks |= PerfParser.get_tasks(
-                            base_cmd, queries, perf_query, all_tg_tasks
-                        )
-                    else:
-                        # Keep only those tasks that matched in all previous queries
-                        category_tasks &= PerfParser.get_tasks(
-                            base_cmd, queries, perf_query, category_tasks
-                        )
+                category_suite_tasks = set()
+                if suite_queries:
+                    print(
+                        "Executing %s queries: %s" % (suite, ", ".join(suite_queries))
+                    )
 
-                    if len(category_tasks) == 0:
-                        print("Failed to find any tasks for query: %s" % perf_query)
-                        break
-            else:
+                    for perf_query in suite_queries:
+                        if not category_suite_tasks:
+                            # Get all tasks selected with the first query
+                            category_suite_tasks |= PerfParser.get_tasks(
+                                base_cmd, queries, perf_query, all_tg_tasks
+                            )
+                        else:
+                            # Keep only those tasks that matched in all previous queries
+                            category_suite_tasks &= PerfParser.get_tasks(
+                                base_cmd, queries, perf_query, category_suite_tasks
+                            )
+
+                        if len(category_suite_tasks) == 0:
+                            print("Failed to find any tasks for query: %s" % perf_query)
+                            break
+
+                    if category_suite_tasks:
+                        category_tasks |= category_suite_tasks
+
+            if category_info["tasks"]:
                 category_tasks = set(category_info["tasks"]) & all_tg_tasks
                 if category_tasks != set(category_info["tasks"]):
                     print(
@@ -350,6 +462,82 @@ class PerfParser(CompareParser):
             return [], [], []
 
         return selected_tasks, selected_categories, queries
+
+    def _accept_variant(suite, category_info, variant):
+        """Checks if the variant can run in the given suite."""
+        variant_restrictions = PerfParser.suites[suite]["variants"]
+        if (
+            category_info.get("original", {})
+            .get("variant-restrictions", {})
+            .get(suite, None)
+            is not None
+        ):
+            # The category itself might have restricted variants
+            variant_restrictions = category_info["original"]["variant-restrictions"][
+                suite
+            ]
+        if variant in variant_restrictions:
+            return True
+        return False
+
+    def _accept_variants(suite, category_info, variants):
+        """Checks if some part of the variant combination can run in the suite."""
+        for variant in variants:
+            if PerfParser._accept_variant(suite, category_info, variant):
+                return True
+        return False
+
+    def _maybe_add_variant_queries(
+        suite,
+        category_info,
+        current_queries,
+        variants,
+    ):
+        """Used to add variant queries to any suite that needs them."""
+        modified_queries = copy.deepcopy(current_queries)
+        if variants is not None:
+            # We might not be able to add all of them to this suite,
+            # so we go through them one by one
+            for variant in variants:
+                if PerfParser._accept_variant(suite, category_info, variant):
+                    modified_queries.append(PerfParser.variants[variant]["query"])
+        return modified_queries
+
+    def _accept_category(
+        suite,
+        category_info,
+        platforms=None,
+        app=None,
+    ):
+        """Used for accepting categories based on the suite."""
+        if platforms is not None and not any(
+            platform in PerfParser.suites[suite]["platforms"] for platform in platforms
+        ):
+            return False
+        app_restrictions = (
+            PerfParser.suites[suite]["apps"]
+            if category_info.get("app-restrictions", None) is None
+            else category_info["app-restrictions"]
+        )
+        if app is not None and app not in app_restrictions:
+            return False
+        return True
+
+    def _maybe_add_queries(
+        suite,
+        category_info,
+        current_queries,
+        new_queries,
+        platforms=None,
+        app=None,
+    ):
+        """This is a helper method to apply suite-based restrictions."""
+        modified_queries = copy.deepcopy(current_queries)
+        if PerfParser._accept_category(
+            suite, category_info, platforms=platforms, app=app
+        ):
+            modified_queries.extend(new_queries)
+        return modified_queries
 
     def expand_categories(
         android=False,
@@ -384,21 +572,25 @@ class PerfParser(CompareParser):
         # These global queries get applied to all of the categories. They make it
         # simpler to prevent, for example, chrome tests running in the
         # "Pageload desktop" category
-        global_queries = []
+        global_queries = {suite: [] for suite in PerfParser.suites}
 
         # Rather than dealing with these flags below, simply add the
         # variants related to them here
         if live_sites:
             requested_variants.append("live-sites")
         else:
-            global_queries.append(PerfParser.variants["live-sites"]["negation"])
+            global_queries["raptor"].append(
+                PerfParser.variants["live-sites"]["negation"]
+            )
         if profile:
             requested_variants.append("profiling")
         else:
-            global_queries.append(PerfParser.variants["profiling"]["negation"])
+            global_queries["raptor"].append(
+                PerfParser.variants["profiling"]["negation"]
+            )
 
         if not chrome:
-            global_queries.append("!chrom")
+            global_queries["raptor"].append("!chrom")
 
         # Start by expanding the variants the variants to include combinatorial
         # options, searching for these tasks is "best-effort" and we can't
@@ -427,17 +619,50 @@ class PerfParser(CompareParser):
                     # Skip android if it wasn't requested
                     continue
 
+                # Skip category if it can't use this platform
+                if (
+                    category_info.get("platform-restrictions", None)
+                    and platform_type not in category_info["platform-restrictions"]
+                ):
+                    continue
+
+                if not any(
+                    PerfParser._accept_category(
+                        suite,
+                        category_info,
+                        platforms=(
+                            [platform_type]
+                            + category_info.get("platforms", {}).get(suite, [])
+                        ),
+                    )
+                    for suite in category_info["suites"]
+                ):
+                    continue
+
                 # The queries field will hold all the queries needed to run
                 # (in any order). Combinations of queries are used to make the
                 # selected tests increasingly more specific.
                 new_category = category + " %s" % platform
                 cur_cat = {
-                    "queries": [category_info["query"]]
-                    + [platform_info["query"]]
-                    + global_queries,
+                    "queries": {},
                     "tasks": category_info["tasks"],
                     "platform": platform_type,
+                    "suites": category_info["suites"],
+                    "original": category_info,
                 }
+
+                for suite, query in category_info["query"].items():
+                    cur_cat["queries"][suite] = PerfParser._maybe_add_queries(
+                        suite,
+                        category_info,
+                        category_info["query"][suite],
+                        [platform_info["query"]] + global_queries[suite],
+                        platforms=(
+                            [platform_type]
+                            + category_info.get("platforms", {}).get(suite, [])
+                        ),
+                    )
+
                 # If we didn't request apps, add the global category
                 if len(requested_apps) == 0:
                     expanded_categories[new_category] = cur_cat
@@ -453,12 +678,28 @@ class PerfParser(CompareParser):
                     if platform_type not in app_info["platforms"]:
                         # Ensure this app can run on this platform
                         continue
+                    if not any(
+                        PerfParser._accept_category(suite, category_info, app=app)
+                        for suite in category_info["suites"]
+                    ):
+                        continue
 
                     new_app_category = new_category + " %s" % app
                     expanded_categories[new_app_category] = {
-                        "queries": cur_cat["queries"] + [app_info["query"]],
+                        "queries": {
+                            suite: PerfParser._maybe_add_queries(
+                                suite,
+                                category_info,
+                                query,
+                                [app_info["query"]],
+                                app=app,
+                            )
+                            for suite, query in cur_cat["queries"].items()
+                        },
                         "tasks": category_info["tasks"],
                         "platform": platform_type,
+                        "suites": category_info["suites"],
+                        "original": category_info,
                     }
 
         # Finally, handle expanding the variants. This needs to be done
@@ -486,7 +727,26 @@ class PerfParser(CompareParser):
                         ):
                             runnable = False
                             break
+                        if (
+                            len(info["suites"]) == 1
+                            and variant
+                            not in PerfParser.suites[info["suites"][0]]["variants"]
+                        ):
+                            # This section differs from below because we're handling
+                            # single-suite categories and a single variant being
+                            # non-existent prevents the entire category from existing but
+                            # this isn't the case with more than 1 suite.
+                            runnable = False
+                            break
                     if not runnable:
+                        continue
+
+                    # Prevent running this variant combination when none of the suites
+                    # specified can run it
+                    if len(info["suites"]) > 1 and not any(
+                        PerfParser._accept_variants(suite, info, variant_combination)
+                        for suite in info["suites"]
+                    ):
                         continue
 
                     # Build the category name, and setup the queries/tasks
@@ -494,31 +754,38 @@ class PerfParser(CompareParser):
                     new_variant_category = expanded_category + " %s" % "+".join(
                         variant_combination
                     )
-                    variant_queries = [
-                        v_info["query"]
-                        for v, v_info in PerfParser.variants.items()
-                        if v in variant_combination
-                    ]
                     new_categories[new_variant_category] = {
-                        "queries": info["queries"] + variant_queries,
+                        "queries": {
+                            suite: PerfParser._maybe_add_variant_queries(
+                                suite,
+                                info,
+                                suite_queries,
+                                variant_combination,
+                            )
+                            for suite, suite_queries in info["queries"].items()
+                        },
                         "tasks": info["tasks"],
                     }
 
                     # Now ensure that the queries for this new category
                     # don't contain negations for the variant which could
                     # come from the global queries
-                    new_queries = []
-                    for query in new_categories[new_variant_category]["queries"]:
-                        if any(
-                            [
-                                query == PerfParser.variants.get(variant)["negation"]
-                                for variant in variant_combination
-                            ]
-                        ):
-                            # This query is a negation of one of the variants,
-                            # exclude it
-                            continue
-                        new_queries.append(query)
+                    new_queries = {}
+                    for suite, suite_queries in new_categories[new_variant_category][
+                        "queries"
+                    ].items():
+                        for query in suite_queries:
+                            if any(
+                                [
+                                    query
+                                    == PerfParser.variants.get(variant)["negation"]
+                                    for variant in variant_combination
+                                ]
+                            ):
+                                # This query is a negation of one of the variants,
+                                # exclude it
+                                continue
+                            new_queries.setdefault(suite, []).append(query)
                     new_categories[new_variant_category]["queries"] = new_queries
 
             expanded_categories.update(new_categories)
