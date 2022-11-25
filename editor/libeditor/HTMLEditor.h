@@ -4203,15 +4203,13 @@ class HTMLEditor final : public EditorBase,
 
   /**
    * ElementIsGoodContainerForTheStyle() returns true if aElement is a
-   * good container for applying the style (aProperty/aAttribute/aValue)
-   * to a node.  I.e., if this returns true, moving nodes into aElement
-   * is enough to apply the style to them.  Otherwise, you need to create
-   * new element for the style.
+   * good container for applying the style to a node.  I.e., if this returns
+   * true, moving nodes into aElement is enough to apply the style to them.
+   * Otherwise, you need to create new element for the style.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<bool, nsresult>
-  ElementIsGoodContainerForTheStyle(Element& aElement, nsAtom* aProperty,
-                                    nsAtom* aAttribute,
-                                    const nsAString* aValue);
+  ElementIsGoodContainerForTheStyle(
+      Element& aElement, const EditorInlineStyleAndValue& aStyleAndValue);
 
   /**
    * @return            A suggest point to put caret.
