@@ -221,7 +221,7 @@ class CSSEditUtils final {
    *
    * @return               The number of CSS properties set by the call.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<int32_t, nsresult>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<size_t, nsresult>
   SetCSSEquivalentToStyle(WithTransaction aWithTransaction,
                           HTMLEditor& aHTMLEditor,
                           nsStyledElement& aStyledElement,
@@ -283,47 +283,47 @@ class CSSEditUtils final {
    */
   static nsStaticAtom* GetCSSPropertyAtom(nsCSSEditableProperty aProperty);
 
-  /**
-   * Retrieves the CSS declarations equivalent to a HTML style value for
-   * a given equivalence table.
-   *
-   * @param aOutArrayOfCSSProperty  [OUT] The array of css properties.
-   * @param aOutArrayOfCSSValue     [OUT] The array of values for the CSS
-   *                                      properties above.
-   * @param aEquivTable             The equivalence table.
-   * @param aValue                  The HTML style value.
-   * @param aGetOrRemoveRequest     A boolean value being true if the call to
-   *                                the current method is made for
-   *                                Get*CSSEquivalentToHTMLInlineStyleSet()
-   *                                or
-   *                                RemoveCSSEquivalentToHTMLInlineStyleSet().
-   */
-  static void BuildCSSDeclarations(
-      nsTArray<nsStaticAtom*>& aOutArrayOfCSSProperty,
-      nsTArray<nsString>& aOutArrayOfCSSValue, const CSSEquivTable* aEquivTable,
-      const nsAString* aValue, bool aGetOrRemoveRequest);
+  struct CSSDeclaration {
+    nsStaticAtom& mProperty;
+    nsString const mValue;
+  };
 
   /**
-   * Retrieves the CSS declarations equivalent to the given HTML
-   * property/attribute/value for a given node.
+   * Retrieves the CSS declarations for aEquivTable.
    *
-   * @param aElement                The DOM node.
-   * @param aHTMLProperty           An atom containing an HTML property.
-   * @param aAttribute              An atom to an attribute name or nullptr
-   *                                if irrelevant
-   * @param aValue                  The attribute value.
-   * @param aOutArrayOfCSSProperty  [OUT] The array of CSS properties.
-   * @param aOutArrayOfCSSValue     [OUT] The array of values for the CSS
-   *                                      properties above.
-   * @param aGetOrRemoveRequest     A boolean value being true if the call to
-   *                                the current method is made for
-   *                                Get*CSSEquivalentToHTMLInlineStyleSet() or
-   *                                RemoveCSSEquivalentToHTMLInlineStyleSet().
+   * @param aEquivTable         The equivalence table.
+   * @param aValue              Optional.  If specified, may return only
+   *                            matching declarations to this value (depends on
+   *                            the style, check how is aInputString of
+   *                            nsProcessValueFunc for the details).
+   * @param aHandlingFor        What's the purpose of calling this.
+   * @param aOutCSSDeclarations [OUT] The array of CSS declarations.
    */
-  static void GenerateCSSDeclarationsFromHTMLStyle(
-      dom::Element& aElement, nsAtom* aHTMLProperty, nsAtom* aAttribute,
-      const nsAString* aValue, nsTArray<nsStaticAtom*>& aOutArrayOfCSSProperty,
-      nsTArray<nsString>& aOutArrayOfCSSValue, bool aGetOrRemoveRequest);
+  enum class HandlingFor { GettingStyle, SettingStyle, RemovingStyle };
+  static void GetCSSDeclarations(const CSSEquivTable* aEquivTable,
+                                 const nsAString* aValue,
+                                 HandlingFor aHandlingFor,
+                                 nsTArray<CSSDeclaration>& aOutCSSDeclarations);
+
+  /**
+   * Retrieves the CSS declarations equivalent to the given aStyle/aValue on
+   * aElement.
+   *
+   * @param aElement            The DOM node.
+   * @param aStyle              The style to get equivelent CSS properties and
+   *                            values.
+   * @param aValue              Optional.  If specified, may return only
+   *                            matching declarations to this value (depends on
+   *                            the style, check how is aInputString of
+   *                            nsProcessValueFunc for the details).
+   * @param aHandlingFor        What's the purpose of calling this.
+   * @param aOutCSSDeclarations [OUT] The array of CSS declarations.
+   */
+  static void GetCSSDeclarations(dom::Element& aElement,
+                                 const EditorElementStyle& aStyle,
+                                 const nsAString* aValue,
+                                 HandlingFor aHandlingFor,
+                                 nsTArray<CSSDeclaration>& aOutCSSDeclarations);
 
   /**
    * Back-end for GetSpecifiedProperty and GetComputedProperty.
