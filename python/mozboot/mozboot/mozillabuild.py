@@ -234,12 +234,6 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
         self.install_toolchain_artifact(sccache.RUSTC_DIST_TOOLCHAIN, no_unpack=True)
         self.install_toolchain_artifact(sccache.CLANG_DIST_TOOLCHAIN, no_unpack=True)
 
-    def ensure_fix_stacks_packages(self):
-        self.install_toolchain_artifact("fix-stacks")
-
-    def ensure_minidump_stackwalk_packages(self):
-        self.install_toolchain_artifact("minidump-stackwalk")
-
     def _update_package_manager(self):
         pass
 
