@@ -293,6 +293,10 @@ export var TabManager = {
    *     Tab to remove.
    */
   async removeTab(tab) {
+    if (!tab) {
+      return;
+    }
+
     const ownerWindow = this._getWindowForTab(tab);
     const tabBrowser = this.getTabBrowser(ownerWindow);
     await tabBrowser.removeTab(tab);
@@ -308,6 +312,10 @@ export var TabManager = {
    *     Promise that resolves when the given tab has been selected.
    */
   selectTab(tab) {
+    if (!tab) {
+      return Promise.resolve();
+    }
+
     const ownerWindow = this._getWindowForTab(tab);
     const tabBrowser = this.getTabBrowser(ownerWindow);
 

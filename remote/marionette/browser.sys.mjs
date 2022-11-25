@@ -295,7 +295,7 @@ browser.Context = class {
       this.tabBrowser = lazy.TabManager.getTabBrowser(this.window);
     }
 
-    if (!this.tabBrowser) {
+    if (!this.tabBrowser || this.driver.isReftestBrowser(this.tabBrowser)) {
       return null;
     }
 
