@@ -214,55 +214,40 @@ class IonEntry : public JitcodeGlobalEntry {
  public:
   struct ScriptNamePair {
     JSScript* script;
-    char* str;
+    UniqueChars str;
+    ScriptNamePair(JSScript* script, UniqueChars str)
+        : script(script), str(std::move(str)) {}
   };
-
-  struct SizedScriptList {
-    uint32_t size;
-    ScriptNamePair pairs[1];
-    SizedScriptList(uint32_t sz, JSScript** scrs, char** strs) : size(sz) {
-      for (uint32_t i = 0; i < size; i++) {
-        pairs[i].script = scrs[i];
-        pairs[i].str = strs[i];
-      }
-    }
-
-    static uint32_t AllocSizeFor(uint32_t nscripts) {
-      return sizeof(SizedScriptList) +
-             ((nscripts - 1) * sizeof(ScriptNamePair));
-    }
-  };
+  using ScriptList = Vector<ScriptNamePair, 2, SystemAllocPolicy>;
 
  private:
-  SizedScriptList* scriptList_ = nullptr;
+  ScriptList scriptList_;
 
  public:
-  IonEntry(JitCode* code, void* nativeStartAddr, void* nativeEndAddr)
-      : JitcodeGlobalEntry(Kind::Ion, code, nativeStartAddr, nativeEndAddr) {}
+  IonEntry(JitCode* code, void* nativeStartAddr, void* nativeEndAddr,
+           ScriptList&& scriptList)
+      : JitcodeGlobalEntry(Kind::Ion, code, nativeStartAddr, nativeEndAddr),
+        scriptList_(std::move(scriptList)) {}
 
-  void initScriptListAndTable(SizedScriptList* scriptList,
-                              JitcodeIonTable* regionTable) {
-    MOZ_ASSERT(!scriptList_);
-    MOZ_ASSERT(scriptList);
+  void initTable(JitcodeIonTable* regionTable) {
     MOZ_ASSERT(!regionTable_);
     MOZ_ASSERT(regionTable);
     regionTable_ = regionTable;
-    scriptList_ = scriptList;
   }
   ~IonEntry();
 
-  SizedScriptList* sizedScriptList() const { return scriptList_; }
+  ScriptList& scriptList() { return scriptList_; }
 
-  unsigned numScripts() const { return scriptList_->size; }
+  size_t numScripts() const { return scriptList_.length(); }
 
   JSScript* getScript(unsigned idx) const {
     MOZ_ASSERT(idx < numScripts());
-    return sizedScriptList()->pairs[idx].script;
+    return scriptList_[idx].script;
   }
 
   const char* getStr(unsigned idx) const {
     MOZ_ASSERT(idx < numScripts());
-    return sizedScriptList()->pairs[idx].str;
+    return scriptList_[idx].str.get();
   }
 
   JitcodeIonTable* regionTable() const { return regionTable_; }
@@ -539,8 +524,7 @@ class JitcodeRegionEntry {
   // Write a run, starting at the given NativeToBytecode entry, into the given
   // buffer writer.
   [[nodiscard]] static bool WriteRun(CompactBufferWriter& writer,
-                                     JSScript** scriptList,
-                                     uint32_t scriptListSize,
+                                     const IonEntry::ScriptList& scriptList,
                                      uint32_t runLength,
                                      const NativeToBytecode* entry);
 
@@ -740,8 +724,7 @@ class JitcodeIonTable {
  public:
   JitcodeIonTable() = delete;
 
-  [[nodiscard]] bool finishIonEntry(JSContext* cx, uint32_t numScripts,
-                                    JSScript** scripts, IonEntry& out);
+  [[nodiscard]] bool finishIonEntry(JSContext* cx, IonEntry& out);
 
   uint32_t numRegions() const { return numRegions_; }
 
@@ -767,13 +750,10 @@ class JitcodeIonTable {
     return payloadEnd() - regionOffset(0);
   }
 
-  [[nodiscard]] static bool WriteIonTable(CompactBufferWriter& writer,
-                                          JSScript** scriptList,
-                                          uint32_t scriptListSize,
-                                          const NativeToBytecode* start,
-                                          const NativeToBytecode* end,
-                                          uint32_t* tableOffsetOut,
-                                          uint32_t* numRegionsOut);
+  [[nodiscard]] static bool WriteIonTable(
+      CompactBufferWriter& writer, const IonEntry::ScriptList& scriptList,
+      const NativeToBytecode* start, const NativeToBytecode* end,
+      uint32_t* tableOffsetOut, uint32_t* numRegionsOut);
 };
 
 }  // namespace jit
