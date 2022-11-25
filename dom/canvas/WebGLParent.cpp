@@ -31,20 +31,18 @@ WebGLParent::~WebGLParent() = default;
 
 using IPCResult = mozilla::ipc::IPCResult;
 
-IPCResult WebGLParent::RecvDispatchCommands(Shmem&& rawShmem,
+IPCResult WebGLParent::RecvDispatchCommands(BigBuffer&& shmem,
                                             const uint64_t cmdsByteSize) {
   AUTO_PROFILER_LABEL("WebGLParent::RecvDispatchCommands", GRAPHICS);
   if (!mHost) {
     return IPC_FAIL(this, "HostWebGLContext is not initialized.");
   }
 
-  auto shmem = webgl::RaiiShmem(this, std::move(rawShmem));
-
   const auto& gl = mHost->mContext->GL();
   const gl::GLContext::TlsScope tlsIsCurrent(gl);
 
   MOZ_ASSERT(cmdsByteSize);
-  const auto shmemBytes = shmem.ByteRange();
+  const auto shmemBytes = Range<uint8_t>{shmem.AsSpan()};
   const auto byteSize = std::min<uint64_t>(shmemBytes.length(), cmdsByteSize);
   const auto cmdsBytes =
       Range<const uint8_t>{shmemBytes.begin(), shmemBytes.begin() + byteSize};
