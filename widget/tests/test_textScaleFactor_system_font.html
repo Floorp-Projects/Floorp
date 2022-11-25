@@ -59,10 +59,7 @@ add_task(async () => {
   // MOZ_HEADLESS is set in content processes with GTK regardless of the
   // headless state of the parent process.  Check the parent state.
   const headless = await SpecialPowers.spawnChrome([], function get_headless() {
-    const env = Cc["@mozilla.org/process/environment;1"].getService(
-      Ci.nsIEnvironment
-    );
-    return env.get("MOZ_HEADLESS");
+    return Services.env.get("MOZ_HEADLESS");
   });
   // LookAndFeel::TextScaleFactor::FloatID is implemented only for WINNT and
   // GTK.  ui.textScaleFactor happens to scale CSS pixels on other platforms
