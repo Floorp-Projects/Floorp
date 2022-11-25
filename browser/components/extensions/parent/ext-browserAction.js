@@ -897,9 +897,9 @@ this.browserAction = class extends ExtensionAPIPersistent {
       }
 
       if (tabData.enabled) {
-        node.removeAttribute("disabled");
+        button.removeAttribute("disabled");
       } else {
-        node.setAttribute("disabled", "true");
+        button.setAttribute("disabled", "true");
       }
 
       let serializeColor = ([r, g, b, a]) =>
