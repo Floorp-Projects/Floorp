@@ -9147,11 +9147,8 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
     }
     if (!isAny) {
       // then check typeinstate and html style
-      // MOZ_KnownLive(styleCacheBeforeEdit.*) because they are nsStaticAtom
-      // and its instances are alive until shutting down.
       nsresult rv = GetInlinePropertyBase(
-          MOZ_KnownLive(styleCacheBeforeEdit.TagRef()),
-          MOZ_KnownLive(styleCacheBeforeEdit.GetAttribute()),
+          styleCacheBeforeEdit.ToInlineStyle(),
           &styleCacheBeforeEdit.AttributeValueOrCSSValueRef(), &isFirst, &isAny,
           &isAll, &currentValue);
       if (NS_FAILED(rv)) {

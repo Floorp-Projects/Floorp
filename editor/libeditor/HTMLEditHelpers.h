@@ -901,6 +901,18 @@ struct MOZ_STACK_CLASS EditorInlineStyle {
     return mHTMLProperty == nsGkAtoms::b;
   }
 
+  /**
+   * Returns true if the style can be specified with text-decoration.
+   */
+  enum class IgnoreSElement { No, Yes };
+  [[nodiscard]] bool IsStyleOfTextDecoration(
+      IgnoreSElement aIgnoreSElement) const {
+    return mHTMLProperty == nsGkAtoms::u ||
+           mHTMLProperty == nsGkAtoms::strike ||
+           (aIgnoreSElement == IgnoreSElement::No &&
+            mHTMLProperty == nsGkAtoms::s);
+  }
+
   explicit EditorInlineStyle(nsStaticAtom& aHTMLProperty,
                              nsAtom* aAttribute = nullptr)
       : mHTMLProperty(&aHTMLProperty), mAttribute(aAttribute) {}

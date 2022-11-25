@@ -33,6 +33,14 @@ namespace mozilla {
 using namespace dom;
 
 /********************************************************************
+ * mozilla::PendingStyleCache
+ *******************************************************************/
+
+EditorInlineStyle PendingStyleCache::ToInlineStyle() const {
+  return EditorInlineStyle(mTag, mAttribute);
+}
+
+/********************************************************************
  * mozilla::PendingStyles
  *******************************************************************/
 
