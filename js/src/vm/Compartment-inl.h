@@ -423,14 +423,16 @@ template <class T>
 MOZ_ALWAYS_INLINE bool JS::Compartment::objectMaybeInIteration(JSObject* obj) {
   MOZ_ASSERT(obj->compartment() == this);
 
-  // If the list is empty we're not iterating any objects.
-  js::NativeIterator* next = enumerators_.next();
-  if (next == &enumerators_) {
+  js::NativeIteratorListIter iter(&enumerators_);
+
+  // If the list is empty, we're not iterating any objects.
+  if (iter.done()) {
     return false;
   }
 
   // If the list contains a single object, check if it's |obj|.
-  if (next->next() == &enumerators_) {
+  js::NativeIterator* next = iter.next();
+  if (iter.done()) {
     return next->objectBeingIterated() == obj;
   }
 

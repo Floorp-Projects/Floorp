@@ -1801,7 +1801,7 @@
   operands:
     object: Object
   arguments:
-    enumeratorsAddr: NativeIterator*
+    enumeratorsAddr: NativeIteratorListHead*
   result_type:
     Object
 
