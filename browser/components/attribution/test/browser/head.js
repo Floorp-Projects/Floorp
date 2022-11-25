@@ -15,12 +15,9 @@ const INDEX_QUARANTINE_ERROR = 3;
 
 add_setup(function() {
   // AttributionCode._clearCache is only possible in a testing environment
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-  env.set("XPCSHELL_TEST_PROFILE_DIR", "testing");
+  Services.env.set("XPCSHELL_TEST_PROFILE_DIR", "testing");
 
   registerCleanupFunction(() => {
-    env.set("XPCSHELL_TEST_PROFILE_DIR", null);
+    Services.env.set("XPCSHELL_TEST_PROFILE_DIR", null);
   });
 });

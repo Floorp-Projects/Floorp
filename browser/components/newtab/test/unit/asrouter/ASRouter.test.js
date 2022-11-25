@@ -1962,9 +1962,8 @@ describe("ASRouter", () => {
       global.Cc["@mozilla.org/mac-attribution;1"] = {
         getService: () => ({ setReferrerUrl }),
       };
-      global.Cc["@mozilla.org/process/environment;1"] = {
-        getService: () => ({ set: sandbox.stub() }),
-      };
+
+      sandbox.stub(global.Services.env, "set");
     });
     it("should double encode on windows", async () => {
       sandbox.stub(fakeAttributionCode, "writeAttributionFile");

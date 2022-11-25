@@ -212,11 +212,8 @@ add_setup(async function() {
     notification.close();
   }
 
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-  let oldServerURL = env.get("MOZ_CRASHREPORTER_URL");
-  env.set("MOZ_CRASHREPORTER_URL", SERVER_URL);
+  let oldServerURL = Services.env.get("MOZ_CRASHREPORTER_URL");
+  Services.env.set("MOZ_CRASHREPORTER_URL", SERVER_URL);
 
   // nsBrowserGlue starts up UnsubmittedCrashHandler automatically
   // on a timer, so at this point, it can be in one of several states:
@@ -255,7 +252,7 @@ add_setup(async function() {
 
   registerCleanupFunction(function() {
     clearPendingCrashReports();
-    env.set("MOZ_CRASHREPORTER_URL", oldServerURL);
+    Services.env.set("MOZ_CRASHREPORTER_URL", oldServerURL);
   });
 });
 

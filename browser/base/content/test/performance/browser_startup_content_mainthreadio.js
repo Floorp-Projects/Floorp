@@ -426,9 +426,7 @@ add_task(async function() {
     ok(shouldPass, "No unexpected main thread I/O during startup");
   } else {
     const filename = "profile_startup_content_mainthreadio.json";
-    let path = Cc["@mozilla.org/process/environment;1"]
-      .getService(Ci.nsIEnvironment)
-      .get("MOZ_UPLOAD_DIR");
+    let path = Services.env.get("MOZ_UPLOAD_DIR");
     let profilePath = PathUtils.join(path, filename);
     await IOUtils.writeJSON(profilePath, startupRecorder.data.profile);
     ok(

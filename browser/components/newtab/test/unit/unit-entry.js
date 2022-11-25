@@ -374,6 +374,9 @@ const TEST_GLOBAL = {
     dirsvc: {
       get: () => ({ parent: { parent: { path: "appPath" } } }),
     },
+    env: {
+      set: () => undefined,
+    },
     locale: {
       get appLocaleAsBCP47() {
         return "en-US";

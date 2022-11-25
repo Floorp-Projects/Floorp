@@ -22,10 +22,7 @@ const permissionError =
 
 const notFoundError = "error: NotFoundError: The object can not be found here.";
 
-let env = Cc["@mozilla.org/process/environment;1"].getService(
-  Ci.nsIEnvironment
-);
-const isHeadless = env.get("MOZ_HEADLESS");
+const isHeadless = Services.env.get("MOZ_HEADLESS");
 
 var gTests = [
   {

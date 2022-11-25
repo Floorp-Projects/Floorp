@@ -117,17 +117,14 @@ async function setupLocalCrashReportServer() {
   // report server, and fortunately one is already set up by toolkit/
   // crashreporter/test/Makefile.in.  Assign its URL to MOZ_CRASHREPORTER_URL,
   // which CrashSubmit.jsm uses as a server override.
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-  let noReport = env.get("MOZ_CRASHREPORTER_NO_REPORT");
-  let serverUrl = env.get("MOZ_CRASHREPORTER_URL");
-  env.set("MOZ_CRASHREPORTER_NO_REPORT", "");
-  env.set("MOZ_CRASHREPORTER_URL", SERVER_URL);
+  let noReport = Services.env.get("MOZ_CRASHREPORTER_NO_REPORT");
+  let serverUrl = Services.env.get("MOZ_CRASHREPORTER_URL");
+  Services.env.set("MOZ_CRASHREPORTER_NO_REPORT", "");
+  Services.env.set("MOZ_CRASHREPORTER_URL", SERVER_URL);
 
   registerCleanupFunction(function() {
-    env.set("MOZ_CRASHREPORTER_NO_REPORT", noReport);
-    env.set("MOZ_CRASHREPORTER_URL", serverUrl);
+    Services.env.set("MOZ_CRASHREPORTER_NO_REPORT", noReport);
+    Services.env.set("MOZ_CRASHREPORTER_URL", serverUrl);
   });
 }
 
@@ -146,18 +143,15 @@ function prepareNoDump() {
 }
 
 const kBuildidMatchEnv = "MOZ_BUILDID_MATCH_DONTSEND";
-const envService = Cc["@mozilla.org/process/environment;1"].getService(
-  Ci.nsIEnvironment
-);
 
 function setBuildidMatchDontSendEnv() {
   info("Setting " + kBuildidMatchEnv + "=1");
-  envService.set(kBuildidMatchEnv, "1");
+  Services.env.set(kBuildidMatchEnv, "1");
 }
 
 function unsetBuildidMatchDontSendEnv() {
   info("Setting " + kBuildidMatchEnv + "=0");
-  envService.set(kBuildidMatchEnv, "0");
+  Services.env.set(kBuildidMatchEnv, "0");
 }
 
 function getEventPromise(eventName, eventKind) {
