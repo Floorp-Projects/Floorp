@@ -5,6 +5,7 @@
 
 #include "HTMLEditHelpers.h"
 
+#include "CSSEditUtils.h"
 #include "EditorDOMPoint.h"
 #include "HTMLEditor.h"
 #include "PendingStyles.h"
@@ -84,6 +85,14 @@ DOMSubtreeIterator::DOMSubtreeIterator() : DOMIterator() {
 
 nsresult DOMSubtreeIterator::Init(nsRange& aRange) {
   return mIter->Init(&aRange);
+}
+
+/******************************************************************************
+ * mozilla::EditorElementStyle
+ *****************************************************************************/
+
+bool EditorElementStyle::IsCSSEditable(const Element& aElement) const {
+  return CSSEditUtils::IsCSSEditableStyle(aElement, *this);
 }
 
 /******************************************************************************

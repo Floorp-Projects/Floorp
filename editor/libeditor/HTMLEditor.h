@@ -1059,21 +1059,20 @@ class HTMLEditor final : public EditorBase,
       nsIPrincipal* aSourcePrincipal) final;
 
   /**
-   * GetInlineStyles() retrieves the style of aNode and modifies each item of
+   * GetInlineStyles() retrieves the style of aElement and modifies each item of
    * aPendingStyleCacheArray.  This might cause flushing layout at retrieving
    * computed values of CSS properties.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  GetInlineStyles(nsIContent& aContent,
-                  AutoPendingStyleCacheArray& aPendingStyleCacheArray);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult GetInlineStyles(
+      Element& aElement, AutoPendingStyleCacheArray& aPendingStyleCacheArray);
 
   /**
-   * CacheInlineStyles() caches style of aContent into mCachedPendingStyles of
+   * CacheInlineStyles() caches style of aElement into mCachedPendingStyles of
    * TopLevelEditSubAction.  This may cause flushing layout at retrieving
    * computed value of CSS properties.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  CacheInlineStyles(nsIContent& aContent);
+  CacheInlineStyles(Element& aElement);
 
   /**
    * ReapplyCachedStyles() restores some styles which are disappeared during

@@ -336,9 +336,8 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
     return;
   }
 
-  if (aHTMLEditor.IsCSSEnabled() &&
-      CSSEditUtils::IsCSSEditableProperty(maybeNonEditableBlockElement, nullptr,
-                                          nsGkAtoms::align)) {
+  if (aHTMLEditor.IsCSSEnabled() && EditorElementStyle::Align().IsCSSEditable(
+                                        *maybeNonEditableBlockElement)) {
     // We are in CSS mode and we know how to align this element with CSS
     nsAutoString value;
     // Let's get the value(s) of text-align or margin-left/margin-right
@@ -370,21 +369,20 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
     return;
   }
 
-  for (nsIContent* containerContent :
-       editTargetContent->InclusiveAncestorsOfType<nsIContent>()) {
+  for (Element* const containerElement :
+       editTargetContent->InclusiveAncestorsOfType<Element>()) {
     // If the node is a parent `<table>` element of edit target, let's break
     // here to materialize the 'inline-block' behaviour of html tables
     // regarding to text alignment.
-    if (containerContent != editTargetContent &&
-        containerContent->IsHTMLElement(nsGkAtoms::table)) {
+    if (containerElement != editTargetContent &&
+        containerElement->IsHTMLElement(nsGkAtoms::table)) {
       return;
     }
 
-    if (CSSEditUtils::IsCSSEditableProperty(containerContent, nullptr,
-                                            nsGkAtoms::align)) {
+    if (EditorElementStyle::Align().IsCSSEditable(*containerElement)) {
       nsAutoString value;
       DebugOnly<nsresult> rvIgnored = CSSEditUtils::GetSpecifiedProperty(
-          *containerContent, *nsGkAtoms::textAlign, value);
+          *containerElement, *nsGkAtoms::textAlign, value);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                            "CSSEditUtils::GetSpecifiedProperty(nsGkAtoms::"
                            "textAlign) failed, but ignored");
@@ -410,13 +408,13 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
       }
     }
 
-    if (!HTMLEditUtils::SupportsAlignAttr(*containerContent)) {
+    if (!HTMLEditUtils::SupportsAlignAttr(*containerElement)) {
       continue;
     }
 
     nsAutoString alignAttributeValue;
-    containerContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::align,
-                                           alignAttributeValue);
+    containerElement->GetAttr(kNameSpaceID_None, nsGkAtoms::align,
+                              alignAttributeValue);
     if (alignAttributeValue.IsEmpty()) {
       continue;
     }
