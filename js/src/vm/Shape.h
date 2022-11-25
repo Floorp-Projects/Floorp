@@ -186,6 +186,7 @@ class ShapeCachePtr {
     MOZ_ASSERT(!isShapeSetForAdd());  // Don't leak the ShapeSet.
     bits = uintptr_t(iter) | ITERATOR;
   }
+  friend class js::jit::MacroAssembler;
 } JS_HAZ_GC_POINTER;
 
 class TenuringTracer;
@@ -485,6 +486,8 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   }
   static inline uint32_t fixedSlotsMask() { return FIXED_SLOTS_MASK; }
   static inline uint32_t fixedSlotsShift() { return FIXED_SLOTS_SHIFT; }
+
+  static constexpr size_t offsetOfCachePtr() { return offsetof(Shape, cache_); }
 
  private:
   void updateNewDictionaryShape(ObjectFlags flags, DictionaryPropMap* map,

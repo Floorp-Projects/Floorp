@@ -4779,6 +4779,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void branchIfNativeIteratorNotReusable(Register ni, Label* notReusable);
 
+  void maybeLoadIteratorFromShape(Register obj, Register dest, Register temp,
+                                  Register temp2, Register temp3,
+                                  Label* failure);
+
   void iteratorMore(Register obj, ValueOperand output, Register temp);
   void iteratorClose(Register obj, Register temp1, Register temp2,
                      Register temp3);

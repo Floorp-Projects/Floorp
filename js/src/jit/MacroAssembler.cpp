@@ -4904,6 +4904,108 @@ static void LoadNativeIterator(MacroAssembler& masm, Register obj,
   masm.loadPrivate(slotAddr, dest);
 }
 
+// The ShapeCachePtr may be used to cache an iterator for for-in. Return that
+// iterator in |dest| if:
+// - the shape cache pointer exists and stores a native iterator
+// - the iterator is reusable
+// - the iterated object has no dense elements
+// - the shapes of each object on the proto chain of |obj| match the cached
+//   shapes
+// - the proto chain has no dense elements
+// Otherwise, jump to |failure|.
+void MacroAssembler::maybeLoadIteratorFromShape(Register obj, Register dest,
+                                                Register temp, Register temp2,
+                                                Register temp3,
+                                                Label* failure) {
+  // Register usage:
+  // obj: always contains the input object
+  // temp: walks the obj->shape->baseshape->proto->shape->... chain
+  // temp2: points to the native iterator. Incremented to walk the shapes array.
+  // temp3: scratch space
+  // dest: stores the resulting PropertyIteratorObject on success
+
+  Label success;
+  Register shapeAndProto = temp;
+  Register nativeIterator = temp2;
+
+  // Load ShapeCache from shape.
+  loadPtr(Address(obj, JSObject::offsetOfShape()), shapeAndProto);
+  loadPtr(Address(shapeAndProto, Shape::offsetOfCachePtr()), dest);
+
+  // Check if it's an iterator.
+  movePtr(dest, temp3);
+  andPtr(Imm32(ShapeCachePtr::MASK), temp3);
+  branch32(Assembler::NotEqual, temp3, Imm32(ShapeCachePtr::ITERATOR), failure);
+
+  // If we've cached an iterator, |obj| must be a native object.
+#ifdef DEBUG
+  Label nonNative;
+  branchIfNonNativeObj(obj, temp3, &nonNative);
+#endif
+
+  // Verify that |obj| has no dense elements.
+  loadPtr(Address(obj, NativeObject::offsetOfElements()), temp3);
+  branch32(Assembler::NotEqual,
+           Address(temp3, ObjectElements::offsetOfInitializedLength()),
+           Imm32(0), failure);
+
+  // Clear tag bits from iterator object. |dest| is now valid.
+  // Load the native iterator and verify that it's reusable.
+  andPtr(Imm32(~ShapeCachePtr::MASK), dest);
+  LoadNativeIterator(*this, dest, nativeIterator);
+  branchIfNativeIteratorNotReusable(nativeIterator, failure);
+
+  // We have to compare the shapes in the native iterator with the shapes on the
+  // proto chain to ensure the cached iterator is still valid. The shape array
+  // always starts at a fixed offset from the base of the NativeIterator, so
+  // instead of using an instruction outside the loop to initialize a pointer to
+  // the shapes array, we can bake it into the offset and reuse the pointer to
+  // the NativeIterator. We add |sizeof(Shape*)| to start at the second shape.
+  // (The first shape corresponds to the object itself. We don't have to check
+  // it, because we got the iterator via the shape.)
+  size_t nativeIteratorProtoShapeOffset =
+      NativeIterator::offsetOfFirstShape() + sizeof(Shape*);
+
+  // Loop over the proto chain. At the head of the loop, |shape| is the shape of
+  // the current object, and |iteratorShapes| points to the expected shape of
+  // its proto.
+  Label protoLoop;
+  bind(&protoLoop);
+
+  // Load the proto. If the proto is null, then we're done.
+  loadPtr(Address(shapeAndProto, Shape::offsetOfBaseShape()), shapeAndProto);
+  loadPtr(Address(shapeAndProto, BaseShape::offsetOfProto()), shapeAndProto);
+  branchPtr(Assembler::Equal, shapeAndProto, ImmPtr(nullptr), &success);
+
+#ifdef DEBUG
+  // We have guarded every shape up until this point, so we know that the proto
+  // is a native object.
+  branchIfNonNativeObj(shapeAndProto, temp3, &nonNative);
+#endif
+
+  // Verify that the proto has no dense elements.
+  loadPtr(Address(shapeAndProto, NativeObject::offsetOfElements()), temp3);
+  branch32(Assembler::NotEqual,
+           Address(temp3, ObjectElements::offsetOfInitializedLength()),
+           Imm32(0), failure);
+
+  // Compare the shape of the proto to the expected shape.
+  loadPtr(Address(shapeAndProto, JSObject::offsetOfShape()), shapeAndProto);
+  loadPtr(Address(nativeIterator, nativeIteratorProtoShapeOffset), temp3);
+  branchPtr(Assembler::NotEqual, shapeAndProto, temp3, failure);
+
+  // Increment |iteratorShapes| and jump back to the top of the loop.
+  addPtr(Imm32(sizeof(Shape*)), nativeIterator);
+  jump(&protoLoop);
+
+#ifdef DEBUG
+  bind(&nonNative);
+  assumeUnreachable("Expected NativeObject in maybeLoadIteratorFromShape");
+#endif
+
+  bind(&success);
+}
+
 void MacroAssembler::iteratorMore(Register obj, ValueOperand output,
                                   Register temp) {
   Label done;

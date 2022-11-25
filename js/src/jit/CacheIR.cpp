@@ -5282,10 +5282,19 @@ AttachDecision GetIteratorIRGenerator::tryAttachMegamorphic(
     ValOperandId valId) {
   MOZ_ASSERT(JSOp(*pc_) == JSOp::Iter);
 
-  writer.valueToIteratorResult(valId);
+  if (val_.isObject()) {
+    ObjOperandId objId = writer.guardToObject(valId);
+    // TODO: this is wrong; we need to load the enumerator by hand, guard the
+    // realm, or share the enumerators list more widely.
+    writer.objectToIteratorResult(
+        objId, &ObjectRealm::get(&val_.toObject()).enumerators);
+    trackAttached("MegamorphicObject");
+  } else {
+    writer.valueToIteratorResult(valId);
+    trackAttached("MegamorphicValue");
+  }
   writer.returnFromIC();
 
-  trackAttached("Megamorphic");
   return AttachDecision::Attach;
 }
 

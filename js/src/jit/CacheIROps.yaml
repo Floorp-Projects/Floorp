@@ -802,6 +802,14 @@
     id: ValId
     hasOwn: BoolImm
 
+- name: ObjectToIteratorResult
+  shared: true
+  transpile: false
+  cost_estimate: 5
+  args:
+    obj: ObjId
+    enumeratorsAddr: RawPointerField
+
 - name: ValueToIteratorResult
   shared: true
   transpile: true
