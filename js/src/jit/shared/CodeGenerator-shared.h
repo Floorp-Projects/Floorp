@@ -84,7 +84,6 @@ class CodeGeneratorShared : public LElementVisitor {
   uint8_t* nativeToBytecodeMap_;
   uint32_t nativeToBytecodeMapSize_;
   uint32_t nativeToBytecodeTableOffset_;
-  uint32_t nativeToBytecodeNumRegions_;
 
   bool isProfilerInstrumentationEnabled() {
     return gen->isProfilerInstrumentationEnabled();
@@ -213,7 +212,8 @@ class CodeGeneratorShared : public LElementVisitor {
   bool generateCompactNativeToBytecodeMap(JSContext* cx, JitCode* code,
                                           IonEntry::ScriptList& scripts);
   void verifyCompactNativeToBytecodeMap(JitCode* code,
-                                        const IonEntry::ScriptList& scripts);
+                                        const IonEntry::ScriptList& scripts,
+                                        uint32_t numRegions);
 
   // Mark the safepoint on |ins| as corresponding to the current assembler
   // location. The location should be just after a call.

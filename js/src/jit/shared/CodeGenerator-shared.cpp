@@ -65,7 +65,6 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
       nativeToBytecodeMap_(nullptr),
       nativeToBytecodeMapSize_(0),
       nativeToBytecodeTableOffset_(0),
-      nativeToBytecodeNumRegions_(0),
 #ifdef CHECK_OSIPOINT_REGISTERS
       checkOsiPointRegisters(JitOptions.checkOsiPointRegisters),
 #endif
@@ -671,7 +670,6 @@ bool CodeGeneratorShared::generateCompactNativeToBytecodeMap(
   MOZ_ASSERT(nativeToBytecodeMap_ == nullptr);
   MOZ_ASSERT(nativeToBytecodeMapSize_ == 0);
   MOZ_ASSERT(nativeToBytecodeTableOffset_ == 0);
-  MOZ_ASSERT(nativeToBytecodeNumRegions_ == 0);
 
   if (!createNativeToBytecodeScriptList(cx, scripts)) {
     return false;
@@ -701,9 +699,8 @@ bool CodeGeneratorShared::generateCompactNativeToBytecodeMap(
   nativeToBytecodeMap_ = data;
   nativeToBytecodeMapSize_ = writer.length();
   nativeToBytecodeTableOffset_ = tableOffset;
-  nativeToBytecodeNumRegions_ = numRegions;
 
-  verifyCompactNativeToBytecodeMap(code, scripts);
+  verifyCompactNativeToBytecodeMap(code, scripts, numRegions);
 
   JitSpew(JitSpew_Profiling, "Compact Native To Bytecode Map [%p-%p]", data,
           data + nativeToBytecodeMapSize_);
@@ -712,12 +709,12 @@ bool CodeGeneratorShared::generateCompactNativeToBytecodeMap(
 }
 
 void CodeGeneratorShared::verifyCompactNativeToBytecodeMap(
-    JitCode* code, const IonEntry::ScriptList& scripts) {
+    JitCode* code, const IonEntry::ScriptList& scripts, uint32_t numRegions) {
 #ifdef DEBUG
   MOZ_ASSERT(nativeToBytecodeMap_ != nullptr);
   MOZ_ASSERT(nativeToBytecodeMapSize_ > 0);
   MOZ_ASSERT(nativeToBytecodeTableOffset_ > 0);
-  MOZ_ASSERT(nativeToBytecodeNumRegions_ > 0);
+  MOZ_ASSERT(numRegions > 0);
 
   // The pointer to the table must be 4-byte aligned
   const uint8_t* tablePtr = nativeToBytecodeMap_ + nativeToBytecodeTableOffset_;
@@ -726,7 +723,7 @@ void CodeGeneratorShared::verifyCompactNativeToBytecodeMap(
   // Verify that numRegions was encoded correctly.
   const JitcodeIonTable* ionTable =
       reinterpret_cast<const JitcodeIonTable*>(tablePtr);
-  MOZ_ASSERT(ionTable->numRegions() == nativeToBytecodeNumRegions_);
+  MOZ_ASSERT(ionTable->numRegions() == numRegions);
 
   // Region offset for first region should be at the start of the payload
   // region. Since the offsets are backward from the start of the table, the
