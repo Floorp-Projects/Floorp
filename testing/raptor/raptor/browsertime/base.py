@@ -6,19 +6,18 @@
 
 from __future__ import absolute_import, division
 
+import json
+import os
+import re
+import sys
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 
-import os
-import json
-import re
-import six
-import sys
-
 import mozprocess
-from manifestparser.util import evaluate_list_from_string
+import six
 from benchmark import Benchmark
 from logger.logger import RaptorLogger
+from manifestparser.util import evaluate_list_from_string
 from perftest import Perftest
 from results import BrowsertimeResultsHandler
 
@@ -443,7 +442,7 @@ class Browsertime(Perftest):
                 (
                     "gecko_profile_features",
                     "--firefox.geckoProfilerParams.features",
-                    "js,leaf,stackwalk,cpu,screenshots",
+                    "js,stackwalk,cpu,screenshots",
                 ),
                 (
                     "gecko_profile_threads",
