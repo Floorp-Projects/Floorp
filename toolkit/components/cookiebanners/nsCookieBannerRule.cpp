@@ -104,11 +104,12 @@ nsCookieBannerRule::GetClickRule(nsIClickRule** aClickRule) {
 NS_IMETHODIMP
 nsCookieBannerRule::AddClickRule(const nsACString& aPresence,
                                  const bool aSkipPresenceVisibilityCheck,
+                                 const nsIClickRule::RunContext aRunContext,
                                  const nsACString& aHide,
                                  const nsACString& aOptOut,
                                  const nsACString& aOptIn) {
   mClickRule = MakeRefPtr<nsClickRule>(aPresence, aSkipPresenceVisibilityCheck,
-                                       aHide, aOptOut, aOptIn);
+                                       aRunContext, aHide, aOptOut, aOptIn);
   return NS_OK;
 }
 

@@ -11,6 +11,20 @@
 [builtinclass, scriptable, uuid(7e104b32-b6db-43f3-b887-573c01acef39)]
 interface nsIClickRule : nsISupports {
   /**
+  * Where the click rule may be executed.
+  * RUN_TOP: Only run in the top window.
+  * RUN_CHILD: Only run in child frames (including nested frames). Not in the top
+  * window.
+  * RUN_ALL: Run in both the top window and any child frames (including nested
+  * frames).
+  */
+  cenum RunContext : 8 {
+    RUN_TOP,
+    RUN_CHILD,
+    RUN_ALL,
+  };
+
+  /**
    * The CSS selector for detecting the presence of the cookie banner.
    */
   [must_use] readonly attribute ACString presence;
@@ -19,6 +33,13 @@ interface nsIClickRule : nsISupports {
    * Whether to skip checking if the banner is visible before clicking it.
    */
   [must_use] readonly attribute boolean skipPresenceVisibilityCheck;
+
+
+  /**
+  * Where the click rule should be executed. See RunContext enum. Defaults to
+  * RUN_TOP.
+  */
+  [must_use] readonly attribute nsIClickRule_RunContext runContext;
 
   /**
    * The CSS selector for hiding the presence of the cookie banner. If this is
