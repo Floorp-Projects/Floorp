@@ -67,6 +67,7 @@ import mozilla.components.feature.session.middleware.undo.UndoMiddleware
 import mozilla.components.feature.sitepermissions.OnDiskSitePermissionsStorage
 import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.feature.webnotifications.WebNotificationFeature
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
@@ -170,7 +171,16 @@ open class DefaultComponents(private val applicationContext: Context) {
                 PromptMiddleware(),
                 SessionPrioritizationMiddleware(),
             ) + EngineMiddleware.create(engine),
-        )
+        ).apply {
+            WebNotificationFeature(
+                applicationContext,
+                engine,
+                icons,
+                R.mipmap.ic_launcher_foreground,
+                permissionStorage,
+                IntentReceiverActivity::class.java,
+            )
+        }
     }
 
     val customTabsStore by lazy { CustomTabsServiceStore() }
