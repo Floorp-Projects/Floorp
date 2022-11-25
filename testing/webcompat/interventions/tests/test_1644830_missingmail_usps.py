@@ -25,7 +25,7 @@ TIMEOUT_MESSAGE = "USPS website is too slow, skipping test"
 def are_checkboxes_clickable(session, credentials):
     session.get(URL)
 
-    username = find_element(session, USERNAME_CSS)
+    username = await_element(session, USERNAME_CSS)
     password = find_element(session, PASSWORD_CSS)
     sign_in = find_element(session, SIGN_IN_CSS)
     assert username.is_displayed()

@@ -3,17 +3,18 @@ from helpers import Css, Text, await_first_element_of
 
 URL = "https://www.directv.com.co/"
 INCOMPATIBLE_CSS = Css(".browser-compatible.compatible.incompatible")
+BLOCKED_TEXT = Text("request was blocked by the security rules")
 DENIED_TEXT = Text("not available in your region")
 
 
 def check_unsupported_visibility(session, should_show):
     session.get(URL)
 
-    [denied, incompatible] = await_first_element_of(
-        session, [DENIED_TEXT, INCOMPATIBLE_CSS]
+    [denied, blocked, incompatible] = await_first_element_of(
+        session, [DENIED_TEXT, BLOCKED_TEXT, INCOMPATIBLE_CSS]
     )
 
-    if denied:
+    if denied or blocked:
         pytest.skip("Region-locked, cannot test. Try using a VPN set to USA.")
         return
 
