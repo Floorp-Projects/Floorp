@@ -1653,64 +1653,6 @@ bool IonCacheIRCompiler::emitReturnFromIC() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitGuardAndGetIterator(ObjOperandId objId,
-                                                 uint32_t iterOffset,
-                                                 uint32_t enumeratorsAddrOffset,
-                                                 ObjOperandId resultId) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, objId);
-
-  AutoScratchRegister scratch1(allocator, masm);
-  AutoScratchRegister scratch2(allocator, masm);
-  AutoScratchRegister niScratch(allocator, masm);
-
-  PropertyIteratorObject* iterobj =
-      &objectStubField(iterOffset)->as<PropertyIteratorObject>();
-  NativeIterator** enumerators =
-      rawPointerStubField<NativeIterator**>(enumeratorsAddrOffset);
-
-  Register output = allocator.defineRegister(masm, resultId);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  // Load our PropertyIteratorObject* and its NativeIterator.
-  masm.movePtr(ImmGCPtr(iterobj), output);
-
-  Address slotAddr(output, PropertyIteratorObject::offsetOfIteratorSlot());
-  masm.loadPrivate(slotAddr, niScratch);
-
-  // Ensure the iterator is reusable: see NativeIterator::isReusable.
-  masm.branchIfNativeIteratorNotReusable(niScratch, failure->label());
-
-  // 'objectBeingIterated_' must be nullptr, so we don't need a pre-barrier.
-  Address iterObjAddr(niScratch, NativeIterator::offsetOfObjectBeingIterated());
-#ifdef DEBUG
-  Label ok;
-  masm.branchPtr(Assembler::Equal, iterObjAddr, ImmPtr(nullptr), &ok);
-  masm.assumeUnreachable("iterator with non-null object");
-  masm.bind(&ok);
-#endif
-
-  // Mark iterator as active.
-  Address iterFlagsAddr(niScratch, NativeIterator::offsetOfFlagsAndCount());
-  masm.storePtr(obj, iterObjAddr);
-  masm.or32(Imm32(NativeIterator::Flags::Active), iterFlagsAddr);
-
-  // Post-write barrier for stores to 'objectBeingIterated_'.
-  emitPostBarrierSlot(output,
-                      TypedOrValueRegister(MIRType::Object, AnyRegister(obj)),
-                      scratch1);
-
-  // Chain onto the active iterator stack.
-  masm.loadPtr(AbsoluteAddress(enumerators), scratch1);
-  emitRegisterEnumerator(scratch1, niScratch, scratch2);
-
-  return true;
-}
-
 bool IonCacheIRCompiler::emitGuardDOMExpandoMissingOrGuardShape(
     ValOperandId expandoId, uint32_t shapeOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
