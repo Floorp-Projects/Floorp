@@ -73,6 +73,7 @@ def test_perfdocs_generator_needed_regeneration(
     assert args[0] == expected
 
 
+@mock.patch("perfdocs.generator.get_changed_files", new=lambda x: [])
 @mock.patch("perfdocs.generator.ON_TRY", new=True)
 @mock.patch("perfdocs.logger.PerfDocLogger")
 def test_perfdocs_generator_needed_update(logger, structured_logger, perfdocs_sample):

@@ -9,7 +9,14 @@ import shutil
 import tempfile
 
 from perfdocs.logger import PerfDocLogger
-from perfdocs.utils import ON_TRY, are_dirs_equal, read_file, read_yaml, save_file
+from perfdocs.utils import (
+    ON_TRY,
+    are_dirs_equal,
+    get_changed_files,
+    read_file,
+    read_yaml,
+    save_file,
+)
 
 logger = PerfDocLogger()
 
@@ -253,5 +260,6 @@ class Generator(object):
                     + f"{'perfdocs.diff' if ON_TRY else 'diff.txt'} patch file "
                     + f"{'produced from this reviewbot test ' if ON_TRY else ''}"
                     + "to fix the issue.",
-                    files=get_possibly_changed_files(),
+                    files=get_changed_files(self._workspace),
+                    restricted=False,
                 )
