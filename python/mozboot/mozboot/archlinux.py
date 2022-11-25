@@ -37,13 +37,6 @@ class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         "gst-plugins-good",
     ]
 
-    MOBILE_ANDROID_COMMON_PACKAGES = [
-        # See comment about 32 bit binaries and multilib below.
-        "multilib/lib32-ncurses",
-        "multilib/lib32-readline",
-        "multilib/lib32-zlib",
-    ]
-
     def __init__(self, version, dist_id, **kwargs):
         print("Using an experimental bootstrapper for Archlinux.", file=sys.stderr)
         BaseBootstrapper.__init__(self, **kwargs)
@@ -57,33 +50,6 @@ class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
         self.install_browser_packages(mozconfig_builder, artifact_mode=True)
-
-    def install_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
-        # Multi-part process:
-        # 1. System packages.
-        # 2. Android SDK. Android NDK only if we are not in artifact mode. Android packages.
-
-        # 1. This is hard to believe, but the Android SDK binaries are 32-bit
-        # and that conflicts with 64-bit Arch installations out of the box.  The
-        # solution is to add the multilibs repository; unfortunately, this
-        # requires manual intervention.
-        try:
-            self.pacman_install(*self.MOBILE_ANDROID_COMMON_PACKAGES)
-        except Exception as e:
-            print(
-                "Failed to install all packages.  The Android developer "
-                "toolchain requires 32 bit binaries be enabled (see "
-                "https://wiki.archlinux.org/index.php/Android).  You may need to "
-                "manually enable the multilib repository following the instructions "
-                "at https://wiki.archlinux.org/index.php/Multilib.",
-                file=sys.stderr,
-            )
-            raise e
-
-        # 2. Android pieces.
-        super().install_mobile_android_packages(
-            mozconfig_builder, artifact_mode=artifact_mode
-        )
 
     def upgrade_mercurial(self, current):
         self.pacman_install("mercurial")

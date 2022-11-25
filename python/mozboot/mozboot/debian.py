@@ -4,10 +4,10 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from mozboot.base import BaseBootstrapper, MERCURIAL_INSTALL_PROMPT
-from mozboot.linux_common import LinuxBootstrapper
-
 import sys
+
+from mozboot.base import MERCURIAL_INSTALL_PROMPT, BaseBootstrapper
+from mozboot.linux_common import LinuxBootstrapper
 
 
 class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
@@ -34,12 +34,6 @@ class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         "libx11-xcb-dev",
         "libxt-dev",
         "xvfb",
-    ]
-
-    # These are common packages for building Firefox for Android
-    # (mobile/android) for all Debian-derived distros (such as Ubuntu).
-    MOBILE_ANDROID_COMMON_PACKAGES = [
-        "libncurses5",  # For native debugging in Android Studio
     ]
 
     def __init__(self, distro, version, dist_id, codename, **kwargs):
@@ -82,17 +76,6 @@ class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
         self.install_browser_packages(mozconfig_builder, artifact_mode=True)
-
-    def install_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
-        # Multi-part process:
-        # 1. System packages.
-        # 2. Android SDK. Android NDK only if we are not in artifact mode. Android packages.
-        self.apt_install(*self.MOBILE_ANDROID_COMMON_PACKAGES)
-
-        # 2. Android pieces.
-        super().install_mobile_android_packages(
-            mozconfig_builder, artifact_mode=artifact_mode
-        )
 
     def _update_package_manager(self):
         self.apt_update()

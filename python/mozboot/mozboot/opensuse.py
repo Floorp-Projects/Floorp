@@ -4,11 +4,11 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from mozboot.base import BaseBootstrapper, MERCURIAL_INSTALL_PROMPT
-from mozboot.linux_common import LinuxBootstrapper
+import subprocess
 
 import distro
-import subprocess
+from mozboot.base import MERCURIAL_INSTALL_PROMPT, BaseBootstrapper
+from mozboot.linux_common import LinuxBootstrapper
 
 
 class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
@@ -40,8 +40,6 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     ]
 
     BROWSER_GROUP_PACKAGES = ["devel_C_C++", "devel_gnome"]
-
-    MOBILE_ANDROID_COMMON_PACKAGES = ["java-1_8_0-openjdk"]
 
     def __init__(self, version, dist_id, **kwargs):
         print("Using an experimental bootstrapper for openSUSE.")
@@ -79,29 +77,6 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     def ensure_browser_group_packages(self, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode
         self.zypper_patterninstall(*self.BROWSER_GROUP_PACKAGES)
-
-    def install_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
-        # Multi-part process:
-        # 1. System packages.
-        # 2. Android SDK. Android NDK only if we are not in artifact mode. Android packages.
-
-        # 1. This is hard to believe, but the Android SDK binaries are 32-bit
-        # and that conflicts with 64-bit Arch installations out of the box.  The
-        # solution is to add the multilibs repository; unfortunately, this
-        # requires manual intervention.
-        try:
-            self.zypper_install(*self.MOBILE_ANDROID_COMMON_PACKAGES)
-        except Exception as e:
-            print(
-                "Failed to install all packages.  The Android developer "
-                "toolchain requires 32 bit binaries be enabled"
-            )
-            raise e
-
-        # 2. Android pieces.
-        super().install_mobile_android_packages(
-            mozconfig_builder, artifact_mode=artifact_mode
-        )
 
     def _update_package_manager(self):
         self.zypper_update()

@@ -33,8 +33,6 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
             "gcc-c++",
         ]
 
-        self.mobile_android_packages = []
-
         if self.distro in ("centos", "rocky"):
             self.group_packages += ["Development Tools"]
 
@@ -63,8 +61,6 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
             if self.version >= 33:
                 self.packages.append("perl-FindBin")
 
-            self.mobile_android_packages += ["ncurses-compat-libs"]
-
         self.packages += ["python3-devel"]
 
     def install_system_packages(self):
@@ -78,14 +74,6 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
         self.install_browser_packages(mozconfig_builder, artifact_mode=True)
-
-    def install_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
-        # Install Android specific packages.
-        self.dnf_install(*self.mobile_android_packages)
-
-        super().install_mobile_android_packages(
-            mozconfig_builder, artifact_mode=artifact_mode
-        )
 
     def upgrade_mercurial(self, current):
         if current is None:
