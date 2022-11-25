@@ -2096,9 +2096,16 @@ bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
   RootedValue shape(cx);
   RootedValueVector shapeList(cx);
 
-  auto addShape = [&shapeList](uintptr_t rawShape) -> bool {
-    Value v = PrivateGCThingValue(reinterpret_cast<Shape*>(rawShape));
-    return shapeList.append(v);
+  auto addShape = [&shapeList, cx](uintptr_t rawShape) -> bool {
+    Shape* shape = reinterpret_cast<Shape*>(rawShape);
+    if (cx->compartment() != shape->compartment()) {
+      return false;
+    }
+    if (!shapeList.append(PrivateGCThingValue(shape))) {
+      cx->recoverFromOutOfMemory();
+      return false;
+    }
+    return true;
   };
 
   for (ICCacheIRStub* other = firstStub->nextCacheIR(); other;
@@ -2132,12 +2139,12 @@ bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
             // Case 2: this is the first field where the stub data differs.
             foldableFieldOffset.emplace(offset);
             if (!addShape(firstRaw) || !addShape(otherRaw)) {
-              return false;
+              return true;
             }
           } else if (*foldableFieldOffset == offset) {
             // Case 3: this is the corresponding offset in a different stub.
             if (!addShape(otherRaw)) {
-              return false;
+              return true;
             }
           } else {
             // Case 4: we have found more than one field that differs.
@@ -2286,13 +2293,14 @@ static bool AddToFoldedStub(JSContext* cx, const CacheIRWriter& writer,
         // Get the shape from the new stub
         StubField shapeField =
             writer.readStubField(newShapeOffset, StubField::Type::Shape);
-        newShape =
-            PrivateGCThingValue(reinterpret_cast<Shape*>(shapeField.asWord()));
+        Shape* shape = reinterpret_cast<Shape*>(shapeField.asWord());
+        newShape = PrivateGCThingValue(shape);
 
         // Get the shape array from the old stub.
         JSObject* shapeList =
             stubInfo->getStubField<JSObject*>(stub, stubShapesOffset);
         foldedShapes = &shapeList->as<ListObject>();
+        MOZ_ASSERT(foldedShapes->compartment() == shape->compartment());
         break;
       }
       default: {
