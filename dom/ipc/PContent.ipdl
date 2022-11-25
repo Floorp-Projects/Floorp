@@ -453,11 +453,6 @@ struct IPCImage {
     ImageIntSize size;
 };
 
-union IPCDataTransferOrError {
-    IPCDataTransfer;
-    nsresult;
-};
-
 /**
  * The PContent protocol is a top-level protocol between the UI process
  * and a content process. There is exactly one PContentParent/PContentChild pair
@@ -1221,7 +1216,7 @@ parent:
 
     // Given a list of supported types, returns the clipboard data for the
     // first type that matches.
-    async GetClipboardAsync(nsCString[] aTypes, int32_t aWhichClipboard) returns (IPCDataTransferOrError dataTransfer);
+    async GetClipboardAsync(nsCString[] aTypes, int32_t aWhichClipboard) returns (IPCDataTransfer dataTransfer);
 
     // Clears the clipboard.
     async EmptyClipboard(int32_t aWhichClipboard);

@@ -135,17 +135,9 @@ RefPtr<GenericPromise> nsClipboardProxy::AsyncGetData(
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           /* resolve */
-          [promise,
-           transferable](const IPCDataTransferOrError& ipcDataTransferOrError) {
-            if (ipcDataTransferOrError.type() ==
-                IPCDataTransferOrError::Tnsresult) {
-              promise->Reject(ipcDataTransferOrError.get_nsresult(), __func__);
-              return;
-            }
-
+          [promise, transferable](const IPCDataTransfer& ipcDataTransfer) {
             nsresult rv = nsContentUtils::IPCTransferableToTransferable(
-                ipcDataTransferOrError.get_IPCDataTransfer(),
-                false /* aAddDataFlavor */, transferable,
+                ipcDataTransfer, false /* aAddDataFlavor */, transferable,
                 false /* aFilterUnknownFlavors */);
             if (NS_FAILED(rv)) {
               promise->Reject(rv, __func__);
