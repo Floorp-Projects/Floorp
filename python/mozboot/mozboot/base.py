@@ -741,14 +741,10 @@ class BaseBootstrapper(object):
         if modern:
             print("Your version of Rust (%s) is new enough." % version)
 
-            if rustup:
-                self.ensure_rust_targets(rustup, version)
-            return
-
-        if version:
+        elif version:
             print("Your version of Rust (%s) is too old." % version)
 
-        if rustup:
+        if rustup and not modern:
             rustup_version = self._parse_version(rustup)
             if not rustup_version:
                 print(RUSTUP_OLD)
@@ -760,10 +756,16 @@ class BaseBootstrapper(object):
             if not modern:
                 print(RUST_UPGRADE_FAILED % (MODERN_RUST_VERSION, after))
                 sys.exit(1)
-        else:
+        elif not rustup:
             # No rustup. Download and run the installer.
             print("Will try to install Rust.")
             self.install_rust()
+            modern, version = self.is_rust_modern(cargo_bin)
+            rustup = to_optional_path(
+                which("rustup", extra_search_dirs=[str(cargo_bin)])
+            )
+
+        self.ensure_rust_targets(rustup, version)
 
     def ensure_rust_targets(self, rustup: Path, rust_version):
         """Make sure appropriate cross target libraries are installed."""
