@@ -218,28 +218,18 @@ class CSSEditUtils final {
    *
    * @param aHTMLEditor    [IN] An HTMLEditor instance
    * @param aContent       [IN] A DOM node.
-   * @param aHTMLProperty  [IN] An atom containing an HTML property.
-   * @param aAttribute     [IN] An atom to an attribute name or nullptr
-   *                            if irrelevant.
+   * @param aStyle         [IN] The style to check.
    * @return               A boolean being true if the css properties are
    *                       not set.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<bool, nsresult>
   HaveComputedCSSEquivalentStyles(const HTMLEditor& aHTMLEditor,
-                                  nsIContent& aContent, nsAtom* aHTMLProperty,
-                                  nsAtom* aAttribute) {
-    MOZ_ASSERT(aHTMLProperty || aAttribute);
-    return HaveCSSEquivalentStylesInternal(aHTMLEditor, aContent, aHTMLProperty,
-                                           aAttribute, StyleType::Computed);
-  }
+                                  nsIContent& aContent,
+                                  const EditorInlineStyle& aStyle);
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT_BOUNDARY static Result<bool, nsresult>
   HaveSpecifiedCSSEquivalentStyles(const HTMLEditor& aHTMLEditor,
-                                   nsIContent& aContent, nsAtom* aHTMLProperty,
-                                   nsAtom* aAttribute) {
-    MOZ_ASSERT(aHTMLProperty || aAttribute);
-    return HaveCSSEquivalentStylesInternal(aHTMLEditor, aContent, aHTMLProperty,
-                                           aAttribute, StyleType::Specified);
-  }
+                                   nsIContent& aContent,
+                                   const EditorInlineStyle& aStyle);
 
   /**
    * Adds to the node the CSS inline styles equivalent to the HTML style
@@ -413,9 +403,9 @@ class CSSEditUtils final {
                     const EditorInlineStyle& aStyle, nsAString& aInOutValue,
                     StyleType aStyleType);
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<bool, nsresult>
-  HaveCSSEquivalentStylesInternal(const HTMLEditor& aHTMLEditor,
-                                  nsIContent& aContent, nsAtom* aHTMLProperty,
-                                  nsAtom* aAttribute, StyleType aStyleType);
+  HaveCSSEquivalentStyles(const HTMLEditor& aHTMLEditor, nsIContent& aContent,
+                          const EditorInlineStyle& aStyle,
+                          StyleType aStyleType);
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult RemoveCSSPropertyInternal(
       HTMLEditor& aHTMLEditor, nsStyledElement& aStyledElement,

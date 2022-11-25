@@ -1545,10 +1545,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveStyleInside(
   if (CSSEditUtils::IsCSSEditableProperty(
           &aElement, aStyleToRemove.mHTMLProperty, aStyleToRemove.mAttribute)) {
     Result<bool, nsresult> elementHasSpecifiedCSSEquivalentStylesOrError =
-        CSSEditUtils::HaveSpecifiedCSSEquivalentStyles(
-            *this, aElement, aStyleToRemove.mHTMLProperty,
-            aStyleToRemove.mAttribute);
-    if (elementHasSpecifiedCSSEquivalentStylesOrError.isErr()) {
+        CSSEditUtils::HaveSpecifiedCSSEquivalentStyles(*this, aElement,
+                                                       aStyleToRemove);
+    if (MOZ_UNLIKELY(elementHasSpecifiedCSSEquivalentStylesOrError.isErr())) {
       NS_WARNING("CSSEditUtils::HaveSpecifiedCSSEquivalentStyles() failed");
       return elementHasSpecifiedCSSEquivalentStylesOrError.propagateErr();
     }
