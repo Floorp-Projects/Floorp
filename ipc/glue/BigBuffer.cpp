@@ -32,18 +32,20 @@ const uint8_t* BigBuffer::Data() const {
              : reinterpret_cast<const uint8_t*>(mData.as<1>()->memory());
 }
 
-auto BigBuffer::AllocBuffer(size_t aSize) -> Storage {
+auto BigBuffer::TryAllocBuffer(size_t aSize) -> Maybe<Storage> {
   if (aSize <= kShmemThreshold) {
-    return AsVariant(UniqueFreePtr<uint8_t[]>{
-        reinterpret_cast<uint8_t*>(moz_xmalloc(aSize))});
+    auto mem = UniqueFreePtr<uint8_t[]>{
+        reinterpret_cast<uint8_t*>(malloc(aSize))};  // Fallible!
+    if (!mem) return {};
+    return Some(AsVariant(std::move(mem)));
   }
 
   RefPtr<SharedMemory> shmem = new SharedMemoryBasic();
   size_t capacity = SharedMemory::PageAlignedSize(aSize);
   if (!shmem->Create(capacity) || !shmem->Map(capacity)) {
-    NS_ABORT_OOM(capacity);
+    return {};
   }
-  return AsVariant(shmem);
+  return Some(AsVariant(shmem));
 }
 
 }  // namespace mozilla::ipc
