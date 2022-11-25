@@ -6,9 +6,6 @@
  * http://eslint.org/docs/rules/no-unsafe-finally  */
 
 function run_test() {
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
   let prefs = Services.prefs.getBranch(null);
   let defPrefs = Services.prefs.getDefaultBranch(null);
 
@@ -29,7 +26,7 @@ function run_test() {
     autoConfigCfg.append("autoconfig-all.cfg");
     autoConfigCfg.copyTo(greD, "autoconfig.cfg");
 
-    env.set("AUTOCONFIG_TEST_GETENV", "getenv");
+    Services.env.set("AUTOCONFIG_TEST_GETENV", "getenv");
 
     Services.obs.notifyObservers(
       Services.prefs,
