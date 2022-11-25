@@ -245,7 +245,7 @@ static MOZ_ALWAYS_INLINE Shape* LookupShapeForAdd(Shape* shape, PropertyKey key,
     return nullptr;
   }
 
-  MOZ_ASSERT(cache.isNone() || cache.isShapeWithProto());
+  MOZ_ASSERT(!cache.isForAdd());
   return nullptr;
 }
 
@@ -355,7 +355,7 @@ bool NativeObject::addProperty(JSContext* cx, Handle<NativeObject*> obj,
   }
 
   ShapeCachePtr& cache = oldShape->cacheRef();
-  if (cache.isNone() || cache.isShapeWithProto()) {
+  if (!cache.isForAdd()) {
     cache.setSingleShapeForAdd(newShape);
   } else if (cache.isSingleShapeForAdd()) {
     Shape* prevShape = cache.toSingleShapeForAdd();
@@ -370,6 +370,18 @@ bool NativeObject::addProperty(JSContext* cx, Handle<NativeObject*> obj,
   }
 
   return true;
+}
+
+void Shape::maybeCacheIterator(JSContext* cx, PropertyIteratorObject* iter) {
+  if (!cache().isNone() && !cache().isIterator()) {
+    // If we're already caching other shape data, skip caching the iterator.
+    return;
+  }
+  if (MOZ_UNLIKELY(!RegisterShapeCache(cx, this))) {
+    // Ignore OOM. The cache is just an optimization.
+    return;
+  }
+  cacheRef().setIterator(iter);
 }
 
 /* static */
@@ -1187,8 +1199,7 @@ Shape* SharedShape::getInitialShape(JSContext* cx, const JSClass* clasp,
     if (proto.isObject()) {
       JSObject* protoObj = proto.toObject();
       Shape* protoShape = protoObj->shape();
-      if ((protoShape->cache().isShapeWithProto() ||
-           protoShape->cache().isNone()) &&
+      if (!protoShape->cache().isForAdd() &&
           RegisterShapeCache(cx, protoShape)) {
         protoShape->cacheRef().setShapeWithProto(*ptr);
       }

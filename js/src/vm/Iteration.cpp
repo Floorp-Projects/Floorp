@@ -923,9 +923,50 @@ static inline bool CanCompareIterableObjectToCache(JSObject* obj) {
   return false;
 }
 
+static bool CanStoreInIteratorCache(JSObject* obj) {
+  do {
+    MOZ_ASSERT(obj->as<NativeObject>().getDenseInitializedLength() == 0);
+
+    // Typed arrays have indexed properties not captured by the Shape guard.
+    // Enumerate hooks may add extra properties.
+    if (MOZ_UNLIKELY(ClassCanHaveExtraEnumeratedProperties(obj->getClass()))) {
+      return false;
+    }
+
+    obj = obj->staticPrototype();
+  } while (obj);
+
+  return true;
+}
+
 static MOZ_ALWAYS_INLINE PropertyIteratorObject* LookupInIteratorCache(
     JSContext* cx, JSObject* obj, uint32_t* numShapes) {
   MOZ_ASSERT(*numShapes == 0);
+
+  if (obj->shape()->cache().isIterator() &&
+      CanCompareIterableObjectToCache(obj)) {
+    PropertyIteratorObject* iterobj = obj->shape()->cache().toIterator();
+    NativeIterator* ni = iterobj->getNativeIterator();
+    MOZ_ASSERT(*ni->shapesBegin() == obj->shape());
+    if (!ni->isReusable()) {
+      return nullptr;
+    }
+
+    // Verify shapes of proto chain.
+    JSObject* pobj = obj;
+    for (GCPtr<Shape*>* s = ni->shapesBegin() + 1; s != ni->shapesEnd(); s++) {
+      Shape* shape = *s;
+      pobj = pobj->staticPrototype();
+      if (pobj->shape() != shape) {
+        return nullptr;
+      }
+      if (!CanCompareIterableObjectToCache(pobj)) {
+        return nullptr;
+      }
+    }
+    MOZ_ASSERT(CanStoreInIteratorCache(obj));
+    return iterobj;
+  }
 
   Vector<Shape*, 8> shapes(cx);
   HashNumber shapesHash = 0;
@@ -968,28 +1009,14 @@ static MOZ_ALWAYS_INLINE PropertyIteratorObject* LookupInIteratorCache(
   return iterobj;
 }
 
-static bool CanStoreInIteratorCache(JSObject* obj) {
-  do {
-    MOZ_ASSERT(obj->as<NativeObject>().getDenseInitializedLength() == 0);
-
-    // Typed arrays have indexed properties not captured by the Shape guard.
-    // Enumerate hooks may add extra properties.
-    if (MOZ_UNLIKELY(ClassCanHaveExtraEnumeratedProperties(obj->getClass()))) {
-      return false;
-    }
-
-    obj = obj->staticPrototype();
-  } while (obj);
-
-  return true;
-}
-
 [[nodiscard]] static bool StoreInIteratorCache(
     JSContext* cx, JSObject* obj, PropertyIteratorObject* iterobj) {
   MOZ_ASSERT(CanStoreInIteratorCache(obj));
 
   NativeIterator* ni = iterobj->getNativeIterator();
   MOZ_ASSERT(ni->shapeCount() > 0);
+
+  obj->shape()->maybeCacheIterator(cx, iterobj);
 
   IteratorHashPolicy::Lookup lookup(
       reinterpret_cast<Shape**>(ni->shapesBegin()), ni->shapeCount(),
