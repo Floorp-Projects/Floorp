@@ -378,35 +378,33 @@ nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
 }
 
 Result<bool, nsresult> HTMLEditor::ElementIsGoodContainerForTheStyle(
-    Element& aElement, nsAtom* aProperty, nsAtom* aAttribute,
-    const nsAString* aValue) {
-  // aContent can be null, in which case we'll return false in a few lines
-  MOZ_ASSERT(aProperty);
-  MOZ_ASSERT_IF(aAttribute, aValue);
-
+    Element& aElement, const EditorInlineStyleAndValue& aStyleAndValue) {
   // First check for <b>, <i>, etc.
-  if (aElement.IsHTMLElement(aProperty) && !aElement.GetAttrCount() &&
-      !aAttribute) {
+  if (aElement.IsHTMLElement(&aStyleAndValue.HTMLPropertyRef()) &&
+      !aElement.GetAttrCount() && !aStyleAndValue.mAttribute) {
     return true;
   }
 
   // Special cases for various equivalencies: <strong>, <em>, <s>
   if (!aElement.GetAttrCount() &&
-      ((aProperty == nsGkAtoms::b &&
+      ((&aStyleAndValue.HTMLPropertyRef() == nsGkAtoms::b &&
         aElement.IsHTMLElement(nsGkAtoms::strong)) ||
-       (aProperty == nsGkAtoms::i && aElement.IsHTMLElement(nsGkAtoms::em)) ||
-       (aProperty == nsGkAtoms::strike &&
+       (&aStyleAndValue.HTMLPropertyRef() == nsGkAtoms::i &&
+        aElement.IsHTMLElement(nsGkAtoms::em)) ||
+       (&aStyleAndValue.HTMLPropertyRef() == nsGkAtoms::strike &&
         aElement.IsHTMLElement(nsGkAtoms::s)))) {
     return true;
   }
 
   // Now look for things like <font>
-  if (aAttribute) {
+  if (aStyleAndValue.mAttribute) {
     nsString attrValue;
-    if (aElement.IsHTMLElement(aProperty) &&
-        IsOnlyAttribute(&aElement, aAttribute) &&
-        aElement.GetAttr(kNameSpaceID_None, aAttribute, attrValue) &&
-        attrValue.Equals(*aValue, nsCaseInsensitiveStringComparator)) {
+    if (aElement.IsHTMLElement(&aStyleAndValue.HTMLPropertyRef()) &&
+        IsOnlyAttribute(&aElement, aStyleAndValue.mAttribute) &&
+        aElement.GetAttr(kNameSpaceID_None, aStyleAndValue.mAttribute,
+                         attrValue) &&
+        attrValue.Equals(aStyleAndValue.mAttributeValue,
+                         nsCaseInsensitiveStringComparator)) {
       // This is not quite correct, because it excludes cases like
       // <font face=000> being the same as <font face=#000000>.
       // Property-specific handling is needed (bug 760211).
@@ -417,7 +415,9 @@ Result<bool, nsresult> HTMLEditor::ElementIsGoodContainerForTheStyle(
   // No luck so far.  Now we check for a <span> with a single style=""
   // attribute that sets only the style we're looking for, if this type of
   // style supports it
-  if (!CSSEditUtils::IsCSSEditableProperty(&aElement, aProperty, aAttribute) ||
+  if (!CSSEditUtils::IsCSSEditableProperty(&aElement,
+                                           &aStyleAndValue.HTMLPropertyRef(),
+                                           aStyleAndValue.mAttribute) ||
       !aElement.IsHTMLElement(nsGkAtoms::span) ||
       aElement.GetAttrCount() != 1 ||
       !aElement.HasAttr(kNameSpaceID_None, nsGkAtoms::style)) {
@@ -442,8 +442,9 @@ Result<bool, nsresult> HTMLEditor::ElementIsGoodContainerForTheStyle(
   // RefPtr.
   Result<int32_t, nsresult> result =
       CSSEditUtils::SetCSSEquivalentToHTMLStyleWithoutTransaction(
-          *this, MOZ_KnownLive(*styledNewSpanElement), aProperty, aAttribute,
-          aValue);
+          *this, MOZ_KnownLive(*styledNewSpanElement),
+          MOZ_KnownLive(&aStyleAndValue.HTMLPropertyRef()),
+          aStyleAndValue.mAttribute, &aStyleAndValue.mAttributeValue);
   if (result.isErr()) {
     // The call shouldn't return destroyed error because it must be
     // impossible to run script with modifying the new orphan node.
@@ -590,9 +591,8 @@ HTMLEditor::SetInlinePropertyOnTextNode(
         *middleTextNode, {WalkTreeOption::IgnoreNonEditableNode});
     if (sibling && sibling->IsElement()) {
       OwningNonNull<Element> element(*sibling->AsElement());
-      Result<bool, nsresult> result = ElementIsGoodContainerForTheStyle(
-          element, MOZ_KnownLive(&aStyleToSet.HTMLPropertyRef()),
-          aStyleToSet.mAttribute, &aStyleToSet.mAttributeValue);
+      Result<bool, nsresult> result =
+          ElementIsGoodContainerForTheStyle(element, aStyleToSet);
       if (MOZ_UNLIKELY(result.isErr())) {
         NS_WARNING("HTMLEditor::ElementIsGoodContainerForTheStyle() failed");
         return result.propagateErr();
@@ -619,9 +619,8 @@ HTMLEditor::SetInlinePropertyOnTextNode(
         *middleTextNode, {WalkTreeOption::IgnoreNonEditableNode});
     if (sibling && sibling->IsElement()) {
       OwningNonNull<Element> element(*sibling->AsElement());
-      Result<bool, nsresult> result = ElementIsGoodContainerForTheStyle(
-          element, MOZ_KnownLive(&aStyleToSet.HTMLPropertyRef()),
-          aStyleToSet.mAttribute, &aStyleToSet.mAttributeValue);
+      Result<bool, nsresult> result =
+          ElementIsGoodContainerForTheStyle(element, aStyleToSet);
       if (MOZ_UNLIKELY(result.isErr())) {
         NS_WARNING("HTMLEditor::ElementIsGoodContainerForTheStyle() failed");
         return result.propagateErr();
@@ -703,9 +702,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
   if (previousSibling && previousSibling->IsElement()) {
     OwningNonNull<Element> previousElement(*previousSibling->AsElement());
     Result<bool, nsresult> canMoveIntoPreviousSibling =
-        ElementIsGoodContainerForTheStyle(
-            previousElement, MOZ_KnownLive(&aStyleToSet.HTMLPropertyRef()),
-            aStyleToSet.mAttribute, &aStyleToSet.mAttributeValue);
+        ElementIsGoodContainerForTheStyle(previousElement, aStyleToSet);
     if (canMoveIntoPreviousSibling.isErr()) {
       NS_WARNING("HTMLEditor::ElementIsGoodContainerForTheStyle() failed");
       return canMoveIntoPreviousSibling.propagateErr();
@@ -723,9 +720,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
       }
       OwningNonNull<Element> nextElement(*nextSibling->AsElement());
       Result<bool, nsresult> canMoveIntoNextSibling =
-          ElementIsGoodContainerForTheStyle(
-              nextElement, MOZ_KnownLive(&aStyleToSet.HTMLPropertyRef()),
-              aStyleToSet.mAttribute, &aStyleToSet.mAttributeValue);
+          ElementIsGoodContainerForTheStyle(nextElement, aStyleToSet);
       if (canMoveIntoNextSibling.isErr()) {
         NS_WARNING("HTMLEditor::ElementIsGoodContainerForTheStyle() failed");
         unwrappedMoveNodeResult.IgnoreCaretPointSuggestion();
@@ -753,9 +748,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
   if (nextSibling && nextSibling->IsElement()) {
     OwningNonNull<Element> nextElement(*nextSibling->AsElement());
     Result<bool, nsresult> canMoveIntoNextSibling =
-        ElementIsGoodContainerForTheStyle(
-            nextElement, MOZ_KnownLive(&aStyleToSet.HTMLPropertyRef()),
-            aStyleToSet.mAttribute, &aStyleToSet.mAttributeValue);
+        ElementIsGoodContainerForTheStyle(nextElement, aStyleToSet);
     if (canMoveIntoNextSibling.isErr()) {
       NS_WARNING("HTMLEditor::ElementIsGoodContainerForTheStyle() failed");
       return canMoveIntoNextSibling.propagateErr();
