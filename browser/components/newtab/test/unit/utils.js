@@ -261,3 +261,60 @@ FakePerformance.prototype = {
 export function addNumberReducer(prevState = 0, action) {
   return action.type === "ADD" ? prevState + action.data : prevState;
 }
+
+export class FakeConsoleAPI {
+  static LOG_LEVELS = {
+    all: Number.MIN_VALUE,
+    debug: 2,
+    log: 3,
+    info: 3,
+    clear: 3,
+    trace: 3,
+    timeEnd: 3,
+    time: 3,
+    assert: 3,
+    group: 3,
+    groupEnd: 3,
+    profile: 3,
+    profileEnd: 3,
+    dir: 3,
+    dirxml: 3,
+    warn: 4,
+    error: 5,
+    off: Number.MAX_VALUE,
+  };
+
+  constructor({ prefix = "", maxLogLevel = "all" } = {}) {
+    this.prefix = prefix;
+    this.prefixStr = prefix ? `${prefix}: ` : "";
+    this.maxLogLevel = maxLogLevel;
+
+    for (const level of Object.keys(FakeConsoleAPI.LOG_LEVELS)) {
+      // eslint-disable-next-line no-console
+      if (typeof console[level] === "function") {
+        this[level] = this.shouldLog(level)
+          ? this._log.bind(this, level)
+          : () => {};
+      }
+    }
+  }
+  shouldLog(level) {
+    return (
+      FakeConsoleAPI.LOG_LEVELS[this.maxLogLevel] <=
+      FakeConsoleAPI.LOG_LEVELS[level]
+    );
+  }
+  _log(level, ...args) {
+    console[level](this.prefixStr, ...args); // eslint-disable-line no-console
+  }
+}
+
+export class FakeLogger extends FakeConsoleAPI {
+  constructor() {
+    super({
+      // Don't use a prefix because the first instance gets cached and reused by
+      // other consumers that would otherwise pass their own identifying prefix.
+      maxLogLevel: "off", // Change this to "debug" or "all" to get more logging in tests
+    });
+  }
+}
