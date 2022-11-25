@@ -28,10 +28,7 @@ async function get_response(channel, fromCache) {
 
 add_task(async function() {
   do_get_profile();
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-  const PORT = env.get("MOZHTTP2_PORT");
+  const PORT = Services.env.get("MOZHTTP2_PORT");
   const URI = `https://localhost:${PORT}/stale-while-revalidate-loop-test`;
 
   let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(

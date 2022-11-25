@@ -12,10 +12,7 @@ var serverPort;
 var proxy;
 
 add_setup(async function setup() {
-  var env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-  serverPort = env.get("MOZHTTP2_PORT");
+  serverPort = Services.env.get("MOZHTTP2_PORT");
   Assert.notEqual(serverPort, null);
   dump("using port " + serverPort + "\n");
 

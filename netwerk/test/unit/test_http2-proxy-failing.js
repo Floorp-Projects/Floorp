@@ -100,10 +100,7 @@ add_task(async function setup() {
   );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
 
-  const env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-  let proxy_port = env.get("MOZHTTP2_PORT");
+  let proxy_port = Services.env.get("MOZHTTP2_PORT");
   Assert.notEqual(proxy_port, null);
 
   Services.prefs.setBoolPref("network.http.http2.enabled", true);
