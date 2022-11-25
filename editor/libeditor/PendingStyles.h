@@ -54,6 +54,7 @@ class PendingStyle final {
   SpecifiedStyle GetSpecifiedStyle() const { return mSpecifiedStyle; }
 
   EditorInlineStyle ToInlineStyle() const;
+  EditorInlineStyleAndValue ToInlineStyleAndValue() const;
 
  private:
   MOZ_KNOWN_LIVE nsStaticAtom* const mTag = nullptr;

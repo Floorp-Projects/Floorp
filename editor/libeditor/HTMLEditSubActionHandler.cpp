@@ -6164,9 +6164,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
       // guarantees the lifetime of its members.
       Result<EditorDOMPoint, nsresult> setStyleResult = SetInlinePropertyOnNode(
           MOZ_KnownLive(*pointToPutCaret.ContainerAs<nsIContent>()),
-          MOZ_KnownLive(*pendingStyle->GetTag()),
-          MOZ_KnownLive(pendingStyle->GetAttribute()),
-          pendingStyle->AttributeValueOrCSSValueRef());
+          pendingStyle->ToInlineStyleAndValue());
       if (MOZ_UNLIKELY(setStyleResult.isErr())) {
         NS_WARNING("HTMLEditor::SetInlinePropertyOnNode() failed");
         return Err(setStyleResult.unwrapErr());

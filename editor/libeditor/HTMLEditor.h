@@ -864,8 +864,8 @@ class HTMLEditor final : public EditorBase,
    * @return            A suggest point to put caret.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
-  SetInlinePropertyOnNode(nsIContent& aContent, nsAtom& aProperty,
-                          nsAtom* aAttribute, const nsAString& aValue);
+  SetInlinePropertyOnNode(nsIContent& aContent,
+                          const EditorInlineStyleAndValue& aStyleToSet);
 
   enum class SplitAtEdges {
     // SplitNodeDeepWithTransaction() won't split container element
@@ -4217,8 +4217,8 @@ class HTMLEditor final : public EditorBase,
    * @return            A suggest point to put caret.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
-  SetInlinePropertyOnNodeImpl(nsIContent& aContent, nsAtom& aProperty,
-                              nsAtom* aAttribute, const nsAString& aValue);
+  SetInlinePropertyOnNodeImpl(nsIContent& aContent,
+                              const EditorInlineStyleAndValue& aStyleToSet);
 
   typedef enum { eInserted, eAppended } InsertedOrAppended;
   MOZ_CAN_RUN_SCRIPT void DoContentInserted(
