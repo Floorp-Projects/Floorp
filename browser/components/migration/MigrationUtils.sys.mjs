@@ -202,15 +202,6 @@ export var MigratorPrototype = {
   get startupOnlyMigrator() {
     return false;
   },
-
-  /**
-   * Override if the data to migrate is locked/in-use and the user should
-   * probably shutdown the source browser.
-   */
-  get sourceLocked() {
-    return false;
-  },
-
   /**
    * Returns true if the migrator is configured to be enabled. This is
    * controlled by the `browser.migrate.<BROWSER_KEY>.enabled` boolean

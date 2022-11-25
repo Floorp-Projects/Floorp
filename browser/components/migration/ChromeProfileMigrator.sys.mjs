@@ -204,13 +204,6 @@ ChromeProfileMigrator.prototype.getSourceProfiles = async function Chrome_getSou
   return this.__sourceProfiles;
 };
 
-Object.defineProperty(ChromeProfileMigrator.prototype, "sourceLocked", {
-  get: function Chrome_sourceLocked() {
-    // There is an exclusive lock on some SQLite databases. Assume they are locked for now.
-    return true;
-  },
-});
-
 async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
   let bookmarksPath = lazy.OS.Path.join(aProfileFolder, "Bookmarks");
 

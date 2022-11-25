@@ -64,13 +64,6 @@ interface nsIBrowserProfileMigrator : nsISupports
    */
   jsval getSourceProfiles();
 
-
-  /**
-   * Whether the source browser data is locked/in-use meaning migration likely
-   * won't succeed and the user should be warned.
-   */
-  readonly attribute boolean          sourceLocked;
-
   /**
    * Returns true if the migrator is configured to be enabled. This is
    * controlled via the `browser.migrate.<BROWSER_KEY>.enabled` boolean
