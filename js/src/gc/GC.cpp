@@ -4549,9 +4549,10 @@ Realm* js::NewRealm(JSContext* cx, JSPrincipals* principals,
   }
 
   UniquePtr<Realm> realm(cx->new_<Realm>(comp, options));
-  if (!realm || !realm->init(cx, principals)) {
+  if (!realm) {
     return nullptr;
   }
+  realm->init(cx, principals);
 
   // Make sure we don't put system and non-system realms in the same
   // compartment.
