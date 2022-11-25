@@ -101,7 +101,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   // instruction.
   TrialInliningState trialInliningState_ = TrialInliningState::Failure;
 
-  // Basic caching to avoid quadatic lookup behaviour in readStubFieldForIon.
+  // Basic caching to avoid quadatic lookup behaviour in readStubField.
   mutable uint32_t lastOffset_;
   mutable uint32_t lastIndex_;
 
@@ -377,7 +377,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
 
   // This should not be used when compiling Baseline code, as Baseline code
   // shouldn't bake in stub values.
-  StubField readStubFieldForIon(uint32_t offset, StubField::Type type) const;
+  StubField readStubField(uint32_t offset, StubField::Type type) const;
 
   ObjOperandId guardToObject(ValOperandId input) {
     guardToObject_(input);
