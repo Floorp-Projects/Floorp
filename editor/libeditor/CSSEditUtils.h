@@ -237,31 +237,17 @@ class CSSEditUtils final {
    *
    * @param aHTMLEditor    [IN} An HTMLEditor instance
    * @param aNode          [IN] A DOM node.
-   * @param aHTMLProperty  [IN] An atom containing an HTML property.
-   * @param aAttribute     [IN] An atom to an attribute name or nullptr
-   *                            if irrelevant.
-   * @param aValue         [IN] The attribute value.
+   * @param aStyleToSet    [IN] The style to set.  Can be EditorInlineStyle.
+   * @param aValue         [IN] The attribute or style value of aStyleToSet.
    *
    * @return               The number of CSS properties set by the call.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<int32_t, nsresult>
-  SetCSSEquivalentToHTMLStyleWithTransaction(HTMLEditor& aHTMLEditor,
-                                             nsStyledElement& aStyledElement,
-                                             nsAtom* aProperty,
-                                             nsAtom* aAttribute,
-                                             const nsAString* aValue) {
-    return SetCSSEquivalentToHTMLStyleInternal(
-        aHTMLEditor, aStyledElement, aProperty, aAttribute, aValue, false);
-  }
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<int32_t, nsresult>
-  SetCSSEquivalentToHTMLStyleWithoutTransaction(HTMLEditor& aHTMLEditor,
-                                                nsStyledElement& aStyledElement,
-                                                nsAtom* aProperty,
-                                                nsAtom* aAttribute,
-                                                const nsAString* aValue) {
-    return SetCSSEquivalentToHTMLStyleInternal(
-        aHTMLEditor, aStyledElement, aProperty, aAttribute, aValue, true);
-  }
+  SetCSSEquivalentToStyle(WithTransaction aWithTransaction,
+                          HTMLEditor& aHTMLEditor,
+                          nsStyledElement& aStyledElement,
+                          const EditorElementStyle& aStyleToSet,
+                          const nsAString* aValue);
 
   /**
    * Removes from the node the CSS inline styles equivalent to the HTML style.
@@ -421,12 +407,6 @@ class CSSEditUtils final {
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult SetCSSPropertyInternal(
       HTMLEditor& aHTMLEditor, nsStyledElement& aStyledElement,
       nsAtom& aProperty, const nsAString& aValue, bool aSuppressTxn = false);
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<int32_t, nsresult>
-  SetCSSEquivalentToHTMLStyleInternal(HTMLEditor& aHTMLEditor,
-                                      nsStyledElement& aStyledElement,
-                                      nsAtom* aProperty, nsAtom* aAttribute,
-                                      const nsAString* aValue,
-                                      bool aSuppressTransaction);
 };
 
 #define NS_EDITOR_INDENT_INCREMENT_IN 0.4134f

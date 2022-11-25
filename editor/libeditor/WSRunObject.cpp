@@ -937,8 +937,7 @@ WhiteSpaceVisibilityKeeper::InsertBRElement(
   }
 
   Result<CreateElementResult, nsresult> insertBRElementResult =
-      aHTMLEditor.InsertBRElement(HTMLEditor::WithTransaction::Yes,
-                                  pointToInsert);
+      aHTMLEditor.InsertBRElement(WithTransaction::Yes, pointToInsert);
   NS_WARNING_ASSERTION(
       insertBRElementResult.isOk(),
       "HTMLEditor::InsertBRElement(WithTransaction::Yes, eNone) failed");
@@ -3186,7 +3185,7 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
           // when they type 2 spaces.
 
           Result<CreateElementResult, nsresult> insertBRElementResult =
-              aHTMLEditor.InsertBRElement(HTMLEditor::WithTransaction::Yes,
+              aHTMLEditor.InsertBRElement(WithTransaction::Yes,
                                           atEndOfVisibleWhiteSpaces);
           if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
             NS_WARNING(

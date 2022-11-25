@@ -6621,22 +6621,25 @@ Result<CreateElementResult, nsresult> HTMLEditor::AlignNodesAndDescendants(
       if (useCSS) {
         if (nsStyledElement* styledListOrListItemElement =
                 nsStyledElement::FromNode(listOrListItemElement)) {
-          // MOZ_KnownLive(*styledListOrListItemElement): An element of
-          // aArrayOfContents which is array of OwningNonNull.
-          Result<int32_t, nsresult> result =
-              CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction(
-                  *this, MOZ_KnownLive(*styledListOrListItemElement), nullptr,
-                  nsGkAtoms::align, &aAlignType);
-          if (result.isErr()) {
-            if (result.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
+          if (CSSEditUtils::IsCSSEditableProperty(
+                  styledListOrListItemElement, nullptr,
+                  EditorElementStyle::Align().Style())) {
+            // MOZ_KnownLive(*styledListOrListItemElement): An element of
+            // aArrayOfContents which is array of OwningNonNull.
+            Result<int32_t, nsresult> result =
+                CSSEditUtils::SetCSSEquivalentToStyle(
+                    WithTransaction::Yes, *this,
+                    MOZ_KnownLive(*styledListOrListItemElement),
+                    EditorElementStyle::Align(), &aAlignType);
+            if (MOZ_UNLIKELY(result.isErr())) {
+              if (NS_WARN_IF(result.inspectErr() ==
+                             NS_ERROR_EDITOR_DESTROYED)) {
+                return result.propagateErr();
+              }
               NS_WARNING(
-                  "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
-                  "nsGkAtoms::align) destroyed the editor");
-              return result.propagateErr();
+                  "CSSEditUtils::SetCSSEquivalentToStyle(EditorElementStyle::"
+                  "Align()) failed, but ignored");
             }
-            NS_WARNING(
-                "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
-                "nsGkAtoms::align) failed, but ignored");
           }
         }
         createdDivElement = nullptr;

@@ -706,14 +706,6 @@ class HTMLEditor final : public EditorBase,
    * to make sure that AutoEditActionDataSetter is created.
    ****************************************************************************/
 
-  enum class WithTransaction { No, Yes };
-  friend std::ostream& operator<<(std::ostream& aStream,
-                                  WithTransaction aWithTransaction) {
-    aStream << "WithTransaction::"
-            << (aWithTransaction == WithTransaction::Yes ? "Yes" : "No");
-    return aStream;
-  }
-
   /**
    * InsertBRElement() creates a <br> element and inserts it before
    * aPointToInsert.
