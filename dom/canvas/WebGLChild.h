@@ -7,7 +7,6 @@
 #define WEBGLCHILD_H_
 
 #include "mozilla/dom/PWebGLChild.h"
-#include "mozilla/ipc/BigBuffer.h"
 #include "mozilla/WeakPtr.h"
 
 #include <string>
@@ -27,7 +26,7 @@ struct FlushedCmdInfo final {
 class WebGLChild final : public PWebGLChild, public SupportsWeakPtr {
   const WeakPtr<ClientWebGLContext> mContext;
   const size_t mDefaultCmdsShmemSize;
-  mozilla::ipc::BigBuffer mPendingCmdsShmem;
+  webgl::RaiiShmem mPendingCmdsShmem;
   size_t mPendingCmdsPos = 0;
   size_t mPendingCmdsAlignmentOverhead = 0;
   FlushedCmdInfo mFlushedCmdInfo;
