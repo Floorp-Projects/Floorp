@@ -162,7 +162,7 @@ rust_host_cc_env_name := $(subst -,_,$(RUST_HOST_TARGET))
 # moment.
 export CC_$(rust_host_cc_env_name)=$(filter-out $(HOST_CC_BASE_FLAGS),$(HOST_CC))
 export CXX_$(rust_host_cc_env_name)=$(filter-out $(HOST_CXX_BASE_FLAGS),$(HOST_CXX))
-# We don't have a HOST_AR. If rust needs one, assume it's going to pick an appropriate one.
+export AR_$(rust_host_cc_env_name)=$(HOST_AR)
 
 rust_cc_env_name := $(subst -,_,$(RUST_TARGET))
 
