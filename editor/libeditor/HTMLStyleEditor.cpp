@@ -954,7 +954,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNode(
 
 Result<SplitRangeOffResult, nsresult>
 HTMLEditor::SplitAncestorStyledInlineElementsAtRangeEdges(
-    const EditorDOMRange& aRange, nsAtom* aProperty, nsAtom* aAttribute) {
+    const EditorDOMRange& aRange, const EditorInlineStyle& aStyle) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (NS_WARN_IF(!aRange.IsPositioned())) {
@@ -969,7 +969,7 @@ HTMLEditor::SplitAncestorStyledInlineElementsAtRangeEdges(
     AutoTrackDOMRange tracker(RangeUpdaterRef(), &range);
     Result<SplitNodeResult, nsresult> result =
         SplitAncestorStyledInlineElementsAt(
-            range.StartRef(), aProperty, aAttribute,
+            range.StartRef(), aStyle.mHTMLProperty, aStyle.mAttribute,
             SplitAtEdges::eAllowToCreateEmptyContainer);
     if (MOZ_UNLIKELY(result.isErr())) {
       NS_WARNING("HTMLEditor::SplitAncestorStyledInlineElementsAt() failed");
@@ -1000,7 +1000,7 @@ HTMLEditor::SplitAncestorStyledInlineElementsAtRangeEdges(
     AutoTrackDOMRange tracker(RangeUpdaterRef(), &range);
     Result<SplitNodeResult, nsresult> result =
         SplitAncestorStyledInlineElementsAt(
-            range.EndRef(), aProperty, aAttribute,
+            range.EndRef(), aStyle.mHTMLProperty, aStyle.mAttribute,
             SplitAtEdges::eAllowToCreateEmptyContainer);
     if (MOZ_UNLIKELY(result.isErr())) {
       NS_WARNING("HTMLEditor::SplitAncestorStyledInlineElementsAt() failed");
@@ -2311,9 +2311,8 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
       // Remove this style from ancestors of our range endpoints, splitting
       // them as appropriate
       Result<SplitRangeOffResult, nsresult> splitRangeOffResult =
-          SplitAncestorStyledInlineElementsAtRangeEdges(
-              EditorDOMRange(range), styleToRemove.mHTMLProperty,
-              styleToRemove.mAttribute);
+          SplitAncestorStyledInlineElementsAtRangeEdges(EditorDOMRange(range),
+                                                        styleToRemove);
       if (MOZ_UNLIKELY(splitRangeOffResult.isErr())) {
         NS_WARNING(
             "HTMLEditor::SplitAncestorStyledInlineElementsAtRangeEdges() "
