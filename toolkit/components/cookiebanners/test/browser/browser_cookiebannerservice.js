@@ -89,7 +89,7 @@ add_task(async function test_enabled_pref() {
   );
   Assert.throws(
     () => {
-      Services.cookieBanners.getClickRulesForDomain("example.com");
+      Services.cookieBanners.getClickRulesForDomain("example.com", true);
     },
     /NS_ERROR_NOT_AVAILABLE/,
     "Should have thrown NS_ERROR_NOT_AVAILABLE for rules getClickRuleForDomain."
@@ -321,6 +321,7 @@ add_task(async function test_insertAndGetRule() {
   rule.addClickRule(
     "div#presence",
     false,
+    Ci.nsIClickRule.RUN_TOP,
     "div#hide",
     "div#optOut",
     "div#optIn"
@@ -361,7 +362,14 @@ add_task(async function test_insertAndGetRule() {
   );
 
   info("Adding a click rule to the rule for example.org.");
-  rule2.addClickRule("div#presence", false, null, null, "div#optIn");
+  rule2.addClickRule(
+    "div#presence",
+    false,
+    Ci.nsIClickRule.RUN_TOP,
+    null,
+    null,
+    "div#optIn"
+  );
 
   is(
     Services.cookieBanners.rules.length,
@@ -390,7 +398,10 @@ add_task(async function test_insertAndGetRule() {
   is(rule.cookiesOptIn.length, 0, "Should have no opt-in cookies.");
 
   info("Getting the click rule for example.com.");
-  let clickRules = Services.cookieBanners.getClickRulesForDomain("example.com");
+  let clickRules = Services.cookieBanners.getClickRulesForDomain(
+    "example.com",
+    true
+  );
   is(
     clickRules.length,
     1,
@@ -428,7 +439,8 @@ add_task(async function test_insertAndGetRule() {
 
   info("Getting the click rule for example.org.");
   let clickRules2 = Services.cookieBanners.getClickRulesForDomain(
-    "example.org"
+    "example.org",
+    true
   );
   is(
     clickRules2.length,
@@ -693,7 +705,13 @@ add_task(async function test_globalRules() {
     0,
     0
   );
-  rule.addClickRule("#cookieBannerExample", false, "#btnOptOut", "#btnOptIn");
+  rule.addClickRule(
+    "#cookieBannerExample",
+    false,
+    Ci.nsIClickRule.RUN_TOP,
+    "#btnOptOut",
+    "#btnOptIn"
+  );
   Services.cookieBanners.insertRule(rule);
 
   info(
@@ -721,6 +739,7 @@ add_task(async function test_globalRules() {
   ruleGlobalA.addClickRule(
     "#globalCookieBanner",
     false,
+    Ci.nsIClickRule.RUN_TOP,
     "#btnOptOut",
     "#btnOptIn"
   );
@@ -735,6 +754,7 @@ add_task(async function test_globalRules() {
   ruleGlobalB.addClickRule(
     "#globalCookieBannerB",
     false,
+    Ci.nsIClickRule.RUN_TOP,
     "#btnOptOutB",
     "#btnOptIn"
   );
@@ -756,7 +776,7 @@ add_task(async function test_globalRules() {
   );
 
   is(
-    Services.cookieBanners.getClickRulesForDomain("example.com").length,
+    Services.cookieBanners.getClickRulesForDomain("example.com", true).length,
     1,
     "There should be a a click rule for example.com"
   );
@@ -771,7 +791,8 @@ add_task(async function test_globalRules() {
   );
 
   let clickRules = Services.cookieBanners.getClickRulesForDomain(
-    Services.io.newURI("http://thishasnorule.com")
+    Services.io.newURI("http://thishasnorule.com"),
+    true
   );
   is(
     clickRules.length,
@@ -811,7 +832,8 @@ add_task(async function test_globalRules() {
 
   is(
     Services.cookieBanners.getClickRulesForDomain(
-      Services.io.newURI("http://thishasnorule.com")
+      Services.io.newURI("http://thishasnorule.com"),
+      true
     ).length,
     0,
     "There should be no click rules for thishasnorule.com since global rules are disabled"

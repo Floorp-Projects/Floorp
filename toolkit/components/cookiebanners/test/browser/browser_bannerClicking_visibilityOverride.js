@@ -32,6 +32,7 @@ function insertVisibilityTestRules(skipPresenceVisibilityCheck) {
   ruleA.addClickRule(
     "div#banner",
     skipPresenceVisibilityCheck,
+    Ci.nsIClickRule.RUN_TOP,
     null,
     "button#optOut",
     "button#optIn"

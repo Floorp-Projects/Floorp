@@ -32,6 +32,7 @@ add_task(async function test_clicking_global_rules() {
   ruleA.addClickRule(
     "div#banner",
     false,
+    Ci.nsIClickRule.RUN_TOP,
     null,
     "button#optOut",
     "button#optIn"
@@ -49,6 +50,7 @@ add_task(async function test_clicking_global_rules() {
   ruleC.addClickRule(
     "div#banner",
     false,
+    Ci.nsIClickRule.RUN_TOP,
     null,
     "button#nonExistingOptOut",
     "button#nonExistingOptIn"
@@ -64,6 +66,7 @@ add_task(async function test_clicking_global_rules() {
   ruleD.addClickRule(
     "div#nonExistingBanner",
     false,
+    Ci.nsIClickRule.RUN_TOP,
     null,
     null,
     "button#optIn"
@@ -168,7 +171,14 @@ add_task(async function test_clicking_global_rules_precedence() {
   );
   ruleGlobal.id = genUUID();
   ruleGlobal.domain = "*";
-  ruleGlobal.addClickRule("div#banner", false, null, "button#optOut", null);
+  ruleGlobal.addClickRule(
+    "div#banner",
+    false,
+    Ci.nsIClickRule.RUN_TOP,
+    null,
+    "button#optOut",
+    null
+  );
   Services.cookieBanners.insertRule(ruleGlobal);
 
   info("Add domain specific rule which also targets the existing banner.");
@@ -177,7 +187,14 @@ add_task(async function test_clicking_global_rules_precedence() {
   );
   ruleDomain.id = genUUID();
   ruleDomain.domain = TEST_DOMAIN_A;
-  ruleDomain.addClickRule("div#banner", false, null, null, "button#optIn");
+  ruleDomain.addClickRule(
+    "div#banner",
+    false,
+    Ci.nsIClickRule.RUN_TOP,
+    null,
+    null,
+    "button#optIn"
+  );
   Services.cookieBanners.insertRule(ruleDomain);
 
   await testClickResultTelemetry({});

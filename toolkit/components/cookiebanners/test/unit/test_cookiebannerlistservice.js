@@ -437,6 +437,114 @@ add_task(async function test_rule_test_pref() {
 });
 
 /**
+ * Tests that runContext string values get properly translated into nsIClickRule::RunContext.
+ */
+add_task(async function test_runContext_conversion() {
+  info("Initializing RemoteSettings collection " + COLLECTION_NAME);
+
+  let ruleA = {
+    id: genUUID(),
+    click: {
+      presence: "#foobar",
+      runContext: "child",
+    },
+    domain: "a.com",
+  };
+  let ruleB = {
+    id: genUUID(),
+    click: {
+      presence: "#foobar",
+    },
+    domain: "b.com",
+  };
+  let ruleC = {
+    id: genUUID(),
+    click: {
+      presence: "#foobar",
+      runContext: "all",
+    },
+    domain: "c.com",
+  };
+  let ruleD = {
+    id: genUUID(),
+    click: {
+      presence: "#foobar",
+      runContext: "top",
+    },
+    domain: "d.com",
+  };
+  let ruleE = {
+    id: genUUID(),
+    click: {
+      presence: "#foobar",
+      runContext: "thisIsNotValid",
+    },
+    domain: "e.com",
+  };
+
+  let db = RemoteSettings(COLLECTION_NAME).db;
+  db.clear();
+  await db.create(ruleA);
+  await db.create(ruleB);
+  await db.create(ruleC);
+  await db.create(ruleD);
+  await db.create(ruleE);
+  await db.importChanges({}, Date.now());
+
+  let insertPromise = waitForInsert(() => rulesInserted.length >= 4);
+
+  info(
+    "Initializing the cookie banner list service which triggers a collection get call"
+  );
+  let cookieBannerListService = Cc[
+    "@mozilla.org/cookie-banner-list-service;1"
+  ].getService(Ci.nsICookieBannerListService);
+  await cookieBannerListService.initForTest();
+
+  await insertPromise;
+
+  let resultA = rulesInserted.find(rule => rule.domain == "a.com").clickRule;
+  let resultB = rulesInserted.find(rule => rule.domain == "b.com").clickRule;
+  let resultC = rulesInserted.find(rule => rule.domain == "c.com").clickRule;
+  let resultD = rulesInserted.find(rule => rule.domain == "d.com").clickRule;
+  let resultE = rulesInserted.find(rule => rule.domain == "e.com").clickRule;
+
+  Assert.equal(
+    resultA.runContext,
+    Ci.nsIClickRule.RUN_CHILD,
+    "Rule A should have been imported with the correct runContext"
+  );
+  Assert.equal(
+    resultB.runContext,
+    Ci.nsIClickRule.RUN_TOP,
+    "Rule B should have fallen back to default runContext"
+  );
+  Assert.equal(
+    resultC.runContext,
+    Ci.nsIClickRule.RUN_ALL,
+    "Rule C should have been imported with the correct runContext"
+  );
+  Assert.equal(
+    resultD.runContext,
+    Ci.nsIClickRule.RUN_TOP,
+    "Rule D should have been imported with the correct runContext"
+  );
+  Assert.equal(
+    resultE.runContext,
+    Ci.nsIClickRule.RUN_TOP,
+    "Rule E should have fallen back to default runContext"
+  );
+
+  // Cleanup
+  cookieBannerListService.shutdown();
+  rulesInserted = [];
+  rulesRemoved = [];
+
+  db.clear();
+  await db.importChanges({}, Date.now());
+});
+
+/**
  * Tests empty click rules don't get imported.
  */
 add_task(async function test_empty_click_rule() {
