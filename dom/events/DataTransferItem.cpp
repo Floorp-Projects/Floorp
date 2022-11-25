@@ -18,6 +18,8 @@
 #include "mozilla/dom/FileSystem.h"
 #include "mozilla/dom/FileSystemDirectoryEntry.h"
 #include "mozilla/dom/FileSystemFileEntry.h"
+#include "imgIContainer.h"
+#include "imgITools.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIClipboard.h"
 #include "nsIFile.h"
@@ -86,6 +88,8 @@ void DataTransferItem::SetData(nsIVariant* aData) {
     // These are provided by the system, and have guaranteed properties about
     // their kind based on their type.
     MOZ_ASSERT(!mType.IsEmpty());
+    // This type should not be provided by the OS.
+    MOZ_ASSERT(!mType.EqualsASCII(kNativeImageMime));
 
     mKind = KIND_STRING;
     for (uint32_t i = 0; i < ArrayLength(kFileMimeNameMap); ++i) {
@@ -112,6 +116,12 @@ void DataTransferItem::SetData(nsIVariant* aData) {
     if (RefPtr<Blob>(do_QueryObject(supports)) ||
         nsCOMPtr<BlobImpl>(do_QueryInterface(supports)) ||
         nsCOMPtr<nsIFile>(do_QueryInterface(supports))) {
+      return KIND_FILE;
+    }
+
+    // Firefox internally uses imgIContainer to represent images being
+    // copied/dragged. These need to be encoded to PNG files.
+    if (nsCOMPtr<imgIContainer>(do_QueryInterface(supports))) {
       return KIND_FILE;
     }
   }
@@ -201,7 +211,6 @@ void DataTransferItem::FillInExternalData() {
       }
       data = do_QueryObject(file);
     }
-
     variant->SetAsISupports(data);
   } else {
     // We have an external piece of string data. Extract it and store it in the
@@ -308,6 +317,22 @@ already_AddRefed<File> DataTransferItem::GetAsFile(
         if (NS_WARN_IF(!mCachedFile)) {
           return nullptr;
         }
+      } else if (nsCOMPtr<imgIContainer> img = do_QueryInterface(supports)) {
+        nsCOMPtr<imgITools> imgTools =
+            do_CreateInstance("@mozilla.org/image/tools;1");
+
+        nsCOMPtr<nsIInputStream> inputStream;
+        nsresult rv = imgTools->EncodeImage(img, "image/png"_ns, u""_ns,
+                                            getter_AddRefs(inputStream));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return nullptr;
+        }
+
+        mCachedFile = CreateFileFromInputStream(
+            inputStream, "GenericImageNamePNG", u"image/png"_ns);
+        if (NS_WARN_IF(!mCachedFile)) {
+          return nullptr;
+        }
       } else {
         MOZ_ASSERT(false, "One of the above code paths should be taken");
         return nullptr;
@@ -382,9 +407,15 @@ already_AddRefed<File> DataTransferItem::CreateFileFromInputStream(
     key = "GenericFileName";
   }
 
+  return CreateFileFromInputStream(aStream, key, mType);
+}
+
+already_AddRefed<File> DataTransferItem::CreateFileFromInputStream(
+    nsIInputStream* aStream, const char* aFileNameKey,
+    const nsAString& aContentType) {
   nsAutoString fileName;
   nsresult rv = nsContentUtils::GetLocalizedString(
-      nsContentUtils::eDOM_PROPERTIES, key, fileName);
+      nsContentUtils::eDOM_PROPERTIES, aFileNameKey, fileName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
@@ -402,7 +433,7 @@ already_AddRefed<File> DataTransferItem::CreateFileFromInputStream(
   }
 
   return File::CreateMemoryFileWithLastModifiedNow(global, data, available,
-                                                   fileName, mType);
+                                                   fileName, aContentType);
 }
 
 void DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
