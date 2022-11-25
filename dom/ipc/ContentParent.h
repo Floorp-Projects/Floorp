@@ -1085,6 +1085,12 @@ class ContentParent final : public PContentParent,
       const bool& aIsFromChromeContext, const ClonedMessageData& aStack);
 
  private:
+  // Gets the clipboard data for the first type of aTypes that matches and
+  // fills out aDataTransfer.
+  nsresult GetDataFromClipboard(const nsTArray<nsCString>& aTypes,
+                                int32_t aWhichClipboard, bool aInSyncMessage,
+                                IPCDataTransfer* aDataTransfer);
+
   mozilla::ipc::IPCResult RecvScriptErrorInternal(
       const nsAString& aMessage, const nsAString& aSourceName,
       const nsAString& aSourceLine, const uint32_t& aLineNumber,
