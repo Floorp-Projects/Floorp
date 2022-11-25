@@ -716,6 +716,24 @@ class MediaDecoderStateMachine::DecodingState
     }
   }
 
+  bool ShouldRequestNextKeyFrame() const {
+    if (!mVideoFirstLateTime) {
+      return false;
+    }
+    const double elapsedTimeMs =
+        (TimeStamp::Now() - *mVideoFirstLateTime).ToMilliseconds();
+    const bool rv = elapsedTimeMs >=
+                    StaticPrefs::media_decoder_skip_when_video_too_slow_ms();
+    if (rv) {
+      PROFILER_MARKER_UNTYPED("Skipping to next keyframe", MEDIA_PLAYBACK);
+      SLOG(
+          "video has been late behind media time for %f ms, should skip to "
+          "next key frame",
+          elapsedTimeMs);
+    }
+    return rv;
+  }
+
  private:
   void DispatchDecodeTasksIfNeeded();
   void MaybeStartBuffering();
@@ -785,24 +803,6 @@ class MediaDecoderStateMachine::DecodingState
           SetState<DormantState>();
         },
         [this]() { mDormantTimer.CompleteRequest(); });
-  }
-
-  bool ShouldRequestNextKeyFrame() const {
-    if (!mVideoFirstLateTime) {
-      return false;
-    }
-    const double elapsedTimeMs =
-        (TimeStamp::Now() - *mVideoFirstLateTime).ToMilliseconds();
-    const bool rv = elapsedTimeMs >=
-                    StaticPrefs::media_decoder_skip_when_video_too_slow_ms();
-    if (rv) {
-      PROFILER_MARKER_UNTYPED("Skipping to next keyframe", MEDIA_PLAYBACK);
-      SLOG(
-          "video has been late behind media time for %f ms, should skip to "
-          "next key frame",
-          elapsedTimeMs);
-    }
-    return rv;
   }
 
   // Time at which we started decoding.
@@ -1199,17 +1199,57 @@ class MediaDecoderStateMachine::LoopingDecodingState
 
   void HandleError(const MediaResult& aError, bool aIsAudio);
 
+  bool ShouldRequestData(MediaData::Type aType) const {
+    MOZ_DIAGNOSTIC_ASSERT(aType == MediaData::Type::AUDIO_DATA ||
+                          aType == MediaData::Type::VIDEO_DATA);
+    if (aType == MediaData::Type::AUDIO_DATA &&
+        (mAudioSeekRequest.Exists() || mAudioDataRequest.Exists() ||
+         IsDataWaitingForTimestampAdjustment(MediaData::Type::AUDIO_DATA))) {
+      return false;
+    }
+    if (aType == MediaData::Type::VIDEO_DATA &&
+        (mVideoSeekRequest.Exists() || mVideoDataRequest.Exists() ||
+         IsDataWaitingForTimestampAdjustment(MediaData::Type::VIDEO_DATA))) {
+      return false;
+    }
+    return true;
+  }
+
+  void HandleAudioCanceled() override {
+    if (ShouldRequestData(MediaData::Type::AUDIO_DATA)) {
+      mMaster->RequestAudioData();
+    }
+  }
+
+  void HandleAudioWaited(MediaData::Type aType) override {
+    if (ShouldRequestData(MediaData::Type::AUDIO_DATA)) {
+      mMaster->RequestAudioData();
+    }
+  }
+
+  void HandleVideoCanceled() override {
+    if (ShouldRequestData(MediaData::Type::VIDEO_DATA)) {
+      mMaster->RequestVideoData(mMaster->GetMediaTime(),
+                                ShouldRequestNextKeyFrame());
+    };
+  }
+
+  void HandleVideoWaited(MediaData::Type aType) override {
+    if (ShouldRequestData(MediaData::Type::VIDEO_DATA)) {
+      mMaster->RequestVideoData(mMaster->GetMediaTime(),
+                                ShouldRequestNextKeyFrame());
+    };
+  }
+
   void EnsureAudioDecodeTaskQueued() override {
-    if (mAudioSeekRequest.Exists() || mAudioDataRequest.Exists() ||
-        IsDataWaitingForTimestampAdjustment(MediaData::Type::AUDIO_DATA)) {
+    if (!ShouldRequestData(MediaData::Type::AUDIO_DATA)) {
       return;
     }
     DecodingState::EnsureAudioDecodeTaskQueued();
   }
 
   void EnsureVideoDecodeTaskQueued() override {
-    if (mVideoSeekRequest.Exists() || mVideoDataRequest.Exists() ||
-        IsDataWaitingForTimestampAdjustment(MediaData::Type::VIDEO_DATA)) {
+    if (!ShouldRequestData(MediaData::Type::VIDEO_DATA)) {
       return;
     }
     DecodingState::EnsureVideoDecodeTaskQueued();
