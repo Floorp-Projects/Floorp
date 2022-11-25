@@ -9059,8 +9059,8 @@ nsresult HTMLEditor::GetInlineStyles(
                      // at creating new PendingStyleCache instance.
     // Don't use CSS for <font size>, we don't support it usefully (bug 780035)
     if (!useCSS || (property == nsGkAtoms::size)) {
-      isSet = HTMLEditUtils::IsInlineStyleSetByElement(
-          aContent, *style.mHTMLProperty, style.mAttribute, nullptr, &value);
+      isSet = HTMLEditUtils::IsInlineStyleSetByElement(aContent, style, nullptr,
+                                                       &value);
     } else {
       Result<bool, nsresult> isComputedCSSEquivalentToStyleOrError =
           CSSEditUtils::IsComputedCSSEquivalentTo(*this, aContent, style,
