@@ -7,8 +7,8 @@
 import { html, ifDefined } from "../vendor/lit.all.mjs";
 import { MozLitElement } from "../lit-utils.mjs";
 
-export default class FxToggle extends MozLitElement {
-  static LOCAL_NAME = "fx-toggle";
+export default class MozToggle extends MozLitElement {
+  static LOCAL_NAME = "moz-toggle";
 
   static properties = {
     checked: { type: Boolean, reflect: true },
@@ -20,9 +20,9 @@ export default class FxToggle extends MozLitElement {
 
   static get queries() {
     return {
-      inputEl: "#fx-toggle-input",
-      labelEl: "#fx-toggle-label",
-      descriptionEl: "#fx-toggle-description",
+      inputEl: "#moz-toggle-input",
+      labelEl: "#moz-toggle-label",
+      descriptionEl: "#moz-toggle-description",
     };
   }
 
@@ -45,7 +45,7 @@ export default class FxToggle extends MozLitElement {
   labelTemplate() {
     if (this.label) {
       return html`
-        <label id="fx-toggle-label" part="label" for="fx-toggle-input">
+        <label id="moz-toggle-label" part="label" for="moz-toggle-input">
           ${this.label}
         </label>
       `;
@@ -56,7 +56,7 @@ export default class FxToggle extends MozLitElement {
   descriptionTemplate() {
     if (this.description) {
       return html`
-        <p id="fx-toggle-description" part="description">
+        <p id="moz-toggle-description" part="description">
           ${this.description}
         </p>
       `;
@@ -70,7 +70,7 @@ export default class FxToggle extends MozLitElement {
       <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
       ${this.labelTemplate()} ${this.descriptionTemplate()}
       <input
-        id="fx-toggle-input"
+        id="moz-toggle-input"
         part="input"
         type="checkbox"
         role="switch"
@@ -80,11 +80,11 @@ export default class FxToggle extends MozLitElement {
         aria-checked=${checked}
         aria-label=${ifDefined(ariaLabel ?? undefined)}
         aria-describedby=${ifDefined(
-          description ? "fx-toggle-description" : undefined
+          description ? "moz-toggle-description" : undefined
         )}
         @change=${handleChange}
       />
     `;
   }
 }
-customElements.define("fx-toggle", FxToggle);
+customElements.define("moz-toggle", MozToggle);
