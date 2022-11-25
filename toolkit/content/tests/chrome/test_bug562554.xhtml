@@ -9,7 +9,7 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
-  <toolbarbutton type="menu" id="toolbarmenu" height="200">
+  <toolbarbutton type="menu" id="toolbarmenu" height="200" style="-moz-box-pack: start; -moz-box-align: start">
     <menupopup id="menupopup" onpopupshowing="eventReceived('popupshowing'); return false;"/>
     <stack>
       <button style="width: 100px; height: 30px; margin-left: 0; margin-top: 0;" allowevents="true"

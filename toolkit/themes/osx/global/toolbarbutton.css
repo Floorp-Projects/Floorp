@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 toolbarbutton {
-  -moz-box-align: center;
-  -moz-box-pack: center;
   margin: 0 2px;
   padding: 3px 2px;
   background-color: transparent;
@@ -13,7 +11,6 @@ toolbarbutton {
 .toolbarbutton-text {
   margin: 0;
   padding: 0;
-  text-align: center;
   vertical-align: middle;
 }
 
@@ -59,8 +56,4 @@ toolbarbutton:where([disabled="true"]) {
 
 toolbar[mode="icons"] > *|* > .toolbarbutton-badge {
   margin-inline-end: -10px !important;
-}
-
-toolbarbutton.tabbable {
-  -moz-user-focus: normal !important;
 }
