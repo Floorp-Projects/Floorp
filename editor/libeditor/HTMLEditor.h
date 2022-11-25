@@ -3905,7 +3905,7 @@ class HTMLEditor final : public EditorBase,
   nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange);
 
   /**
-   * RemoveStyleInside() removes elements which represent aProperty/aAttribute
+   * RemoveStyleInside() removes elements which represent aStyleToRemove
    * and removes CSS style.  This handles aElement and all its descendants
    * (including leaf text nodes) recursively.
    * TODO: Rename this to explain that this maybe remove aElement from the DOM
@@ -3916,7 +3916,7 @@ class HTMLEditor final : public EditorBase,
    * @return                 A suggest point to put caret.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
-  RemoveStyleInside(Element& aElement, nsAtom* aProperty, nsAtom* aAttribute,
+  RemoveStyleInside(Element& aElement, const EditorInlineStyle& aStyleToRemove,
                     SpecifiedStyle aSpecifiedStyle);
 
   /**
