@@ -165,7 +165,6 @@ description[value]::before {
    * accesskey if needed */
   content: -moz-label-content;
   display: block;
-  -moz-box-flex: 1;
 }
 
 label[value=""]::before {
@@ -198,8 +197,22 @@ description[value]:is([crop="left"], [crop="start"]):-moz-locale-dir(rtl)::befor
 
 /********** toolbarbutton **********/
 
+toolbarbutton {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+}
+
+toolbarbutton.tabbable {
+  -moz-user-focus: normal !important;
+}
+
 toolbarbutton[crop] {
   min-width: 0;
+}
+
+.toolbarbutton-text {
+  display: block;
+  text-align: center;
 }
 
 toolbar[mode="icons"] .toolbarbutton-text,
