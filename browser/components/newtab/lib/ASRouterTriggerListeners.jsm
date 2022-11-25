@@ -21,13 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   EveryWindow: "resource:///modules/EveryWindow.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "log", () => {
-  const { Logger } = ChromeUtils.import(
-    "resource://messaging-system/lib/Logger.jsm"
-  );
-  return new Logger("ASRouterTriggerListeners");
-});
-
 const FEW_MINUTES = 15 * 60 * 1000; // 15 mins
 
 function isPrivateWindow(win) {
@@ -820,22 +813,10 @@ const ASRouterTriggerListeners = new Map([
             this._quietSince = Date.now();
           }
           this._initialized = true;
-          this.log("Initialized: ", {
-            idleTime: this._idleService.idleTime,
-            quietSince: this._quietSince,
-          });
         }
       },
       observe(subject, topic, data) {
         if (this._initialized) {
-          this.log("Heard observer notification: ", {
-            subject,
-            topic,
-            data,
-            idleTime: this._idleService.idleTime,
-            idleSince: this._idleSince,
-            quietSince: this._quietSince,
-          });
           switch (topic) {
             case "idle":
               this._idleSince = Date.now() - subject.idleTime;
@@ -874,12 +855,6 @@ const ASRouterTriggerListeners = new Map([
               }
             // fall through
             case "TabClose":
-              this.log("Tab sound changed: ", {
-                event,
-                idleTime: this._idleService.idleTime,
-                idleSince: this._idleSince,
-                quietSince: this._quietSince,
-              });
               // Maybe update time if a tab closes with sound playing.
               if (this._soundPlaying) {
                 this._quietSince = null;
@@ -890,11 +865,6 @@ const ASRouterTriggerListeners = new Map([
         }
       },
       _onActive() {
-        this.log("User is active: ", {
-          idleTime: this._idleService.idleTime,
-          idleSince: this._idleSince,
-          quietSince: this._quietSince,
-        });
         if (this._idleSince && this._quietSince) {
           const win = Services.wm.getMostRecentBrowserWindow();
           if (win && !isPrivateWindow(win) && !this._triggerTimeout) {
@@ -924,11 +894,7 @@ const ASRouterTriggerListeners = new Map([
           this._triggerHandler = null;
           this._idleSince = null;
           this._quietSince = null;
-          this.log("Uninitialized");
         }
-      },
-      log(...args) {
-        lazy.log.debug("Idle trigger :>>", ...args);
       },
 
       QueryInterface: ChromeUtils.generateQI([
