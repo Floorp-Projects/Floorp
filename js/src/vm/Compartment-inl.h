@@ -17,6 +17,7 @@
 #include "js/CallArgs.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Wrapper.h"
+#include "vm/Iteration.h"
 #include "vm/JSObject.h"
 
 #include "vm/JSContext-inl.h"
@@ -418,5 +419,22 @@ template <class T>
 }
 
 }  // namespace js
+
+MOZ_ALWAYS_INLINE bool JS::Compartment::objectMaybeInIteration(JSObject* obj) {
+  MOZ_ASSERT(obj->compartment() == this);
+
+  // If the list is empty we're not iterating any objects.
+  js::NativeIterator* next = enumerators_.next();
+  if (next == &enumerators_) {
+    return false;
+  }
+
+  // If the list contains a single object, check if it's |obj|.
+  if (next->next() == &enumerators_) {
+    return next->objectBeingIterated() == obj;
+  }
+
+  return true;
+}
 
 #endif /* vm_Compartment_inl_h */

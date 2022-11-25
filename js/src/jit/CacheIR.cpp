@@ -5270,7 +5270,7 @@ AttachDecision GetIteratorIRGenerator::tryAttachNativeIterator(
                               /* alwaysGuardFirstProto = */ false);
 
   ObjOperandId iterId = writer.guardAndGetIterator(
-      objId, iterobj, &ObjectRealm::get(obj).enumerators);
+      objId, iterobj, cx_->compartment()->enumeratorsAddr());
   writer.loadObjectResult(iterId);
   writer.returnFromIC();
 
@@ -5284,10 +5284,7 @@ AttachDecision GetIteratorIRGenerator::tryAttachMegamorphic(
 
   if (val_.isObject()) {
     ObjOperandId objId = writer.guardToObject(valId);
-    // TODO: this is wrong; we need to load the enumerator by hand, guard the
-    // realm, or share the enumerators list more widely.
-    writer.objectToIteratorResult(
-        objId, &ObjectRealm::get(&val_.toObject()).enumerators);
+    writer.objectToIteratorResult(objId, cx_->compartment()->enumeratorsAddr());
     trackAttached("MegamorphicObject");
   } else {
     writer.valueToIteratorResult(valId);

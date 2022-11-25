@@ -134,7 +134,7 @@ struct NativeIterator {
                  Handle<JSObject*> objBeingIterated, HandleIdVector props,
                  uint32_t numShapes, HashNumber shapesHash, bool* hadError);
 
-  /** Initialize an |ObjectRealm::enumerators| sentinel. */
+  /** Initialize a |Compartment::enumerators| sentinel. */
   NativeIterator();
 
   JSObject* objectBeingIterated() const { return objectBeingIterated_; }
@@ -374,8 +374,6 @@ struct NativeIterator {
     next_ = nullptr;
     prev_ = nullptr;
   }
-
-  static NativeIterator* allocateSentinel(JSContext* cx);
 
   void trace(JSTracer* trc);
 

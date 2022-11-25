@@ -15,6 +15,7 @@
 
 #include "gc/NurseryAwareHashMap.h"
 #include "gc/ZoneAllocator.h"
+#include "vm/Iteration.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
 
@@ -431,6 +432,17 @@ class JS::Compartment {
   void fixupAfterMovingGC(JSTracer* trc);
 
   [[nodiscard]] bool findSweepGroupEdges();
+
+ private:
+  // Head node of list of active iterators that may need deleted property
+  // suppression.
+  js::NativeIterator enumerators_;
+
+ public:
+  js::NativeIterator* enumeratorsAddr() { return &enumerators_; }
+  MOZ_ALWAYS_INLINE bool objectMaybeInIteration(JSObject* obj);
+
+  void traceWeakNativeIterators(JSTracer* trc);
 };
 
 namespace js {

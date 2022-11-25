@@ -601,3 +601,18 @@ JS_PUBLIC_API bool js::CompartmentHasLiveGlobal(JS::Compartment* comp) {
   }
   return false;
 }
+
+void Compartment::traceWeakNativeIterators(JSTracer* trc) {
+  /* Sweep list of native iterators. */
+  NativeIterator* ni = enumerators_.next();
+  while (ni != &enumerators_) {
+    JSObject* iterObj = ni->iterObj();
+    NativeIterator* next = ni->next();
+    if (!TraceManuallyBarrieredWeakEdge(trc, &iterObj,
+                                        "Compartment::enumerators_")) {
+      ni->unlink();
+    }
+    MOZ_ASSERT(ni->objectBeingIterated()->compartment() == this);
+    ni = next;
+  }
+}

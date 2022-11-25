@@ -4436,7 +4436,6 @@ void CacheIRCompiler::emitActivateIterator(Register objBeingIterated,
   StubFieldOffset enumeratorsAddr(enumeratorsAddrOffset,
                                   StubField::Type::RawPointer);
   emitLoadStubField(enumeratorsAddr, scratch);
-  masm.loadPtr(Address(scratch, 0), scratch);
   masm.registerIterator(scratch, nativeIter, scratch2);
 }
 

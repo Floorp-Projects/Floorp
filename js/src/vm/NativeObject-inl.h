@@ -17,6 +17,7 @@
 #include "gc/GCProbes.h"
 #include "gc/MaybeRooted.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "vm/Compartment.h"
 #include "vm/Iteration.h"
 #include "vm/JSContext.h"
 #include "vm/PlainObject.h"
@@ -26,6 +27,7 @@
 #include "gc/Heap-inl.h"
 #include "gc/Marking-inl.h"
 #include "gc/ObjectKind-inl.h"
+#include "vm/Compartment-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/Realm-inl.h"
 #include "vm/Shape-inl.h"
@@ -587,7 +589,7 @@ inline bool NativeObject::denseElementsMaybeInIteration() {
   if (!denseElementsHaveMaybeInIterationFlag()) {
     return false;
   }
-  return ObjectRealm::get(this).objectMaybeInIteration(this);
+  return compartment()->objectMaybeInIteration(this);
 }
 
 /*

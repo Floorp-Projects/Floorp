@@ -13807,7 +13807,7 @@ void CodeGenerator::visitObjectToIterator(LObjectToIterator* lir) {
   // transpiler.
 
   Register enumeratorsAddr = temp2;
-  masm.loadPtr(AbsoluteAddress(lir->mir()->enumeratorsAddr()), enumeratorsAddr);
+  masm.movePtr(ImmPtr(lir->mir()->enumeratorsAddr()), enumeratorsAddr);
   masm.registerIterator(enumeratorsAddr, nativeIter, temp3);
 
   masm.bind(ool->rejoin());
