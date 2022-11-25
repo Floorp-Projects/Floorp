@@ -794,6 +794,12 @@ def target_is_windows(target):
         return True
 
 
+@depends(host)
+def host_is_windows(host):
+    if host.kernel == "WINNT":
+        return True
+
+
 set_define("_WINDOWS", target_is_windows)
 set_define("WIN32", target_is_windows)
 set_define("XP_WIN", target_is_windows)
@@ -820,6 +826,12 @@ set_define("XP_DARWIN", target_is_darwin)
 @depends(target)
 def target_is_osx(target):
     if target.kernel == "Darwin" and target.os == "OSX":
+        return True
+
+
+@depends(host)
+def host_is_osx(host):
+    if host.os == "OSX":
         return True
 
 
@@ -1118,6 +1130,23 @@ def mozbuild_state_path(path, _):
     if path:
         return normalize_path(path[0])
     return normalize_path(os.path.expanduser(os.path.join("~", ".mozbuild")))
+
+
+@depends("MOZILLABUILD", shell, when=host_is_windows)
+@imports(_from="pathlib", _import="Path")
+def mozillabuild_bin_paths(mozillabuild, shell):
+    paths = []
+    if not mozillabuild:
+        return paths
+    paths.append(os.path.dirname(shell))
+    paths.append(str(Path(mozillabuild[0]) / "bin"))
+    return paths
+
+
+@depends(mozillabuild_bin_paths)
+@imports("os")
+def prefer_mozillabuild_path(mozillabuild_bin_paths):
+    return mozillabuild_bin_paths + os.environ["PATH"].split(os.pathsep)
 
 
 # A template providing a shorthand for setting a variable. The created
