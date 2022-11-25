@@ -1145,6 +1145,13 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
   // <meta http-equiv="Content-Security-Policy" content="default-src chrome:;
   // object-src 'none'"/>
 
+  // This is a data document, created using DOMParser or
+  // document.implementation.createDocument() or such, not an about: page which
+  // is loaded as a web page.
+  if (aDocument->IsLoadedAsData()) {
+    return;
+  }
+
   // Check if we should skip the assertion
   if (StaticPrefs::dom_security_skip_about_page_has_csp_assert()) {
     return;
