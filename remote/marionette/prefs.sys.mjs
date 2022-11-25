@@ -2,17 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
-const lazy = {};
-
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "env",
-  "@mozilla.org/process/environment;1",
-  "nsIEnvironment"
-);
-
 const { PREF_BOOL, PREF_INT, PREF_INVALID, PREF_STRING } = Ci.nsIPrefBranch;
 
 export class Branch {
@@ -169,13 +158,13 @@ export class EnvironmentPrefs {
    * @return {Iterable.<string, (string|boolean|number)>
    */
   static *from(key) {
-    if (!lazy.env.exists(key)) {
+    if (!Services.env.exists(key)) {
       return;
     }
 
     let prefs;
     try {
-      prefs = JSON.parse(lazy.env.get(key));
+      prefs = JSON.parse(Services.env.get(key));
     } catch (e) {
       throw new TypeError(`Unable to parse prefs from ${key}`, e);
     }
