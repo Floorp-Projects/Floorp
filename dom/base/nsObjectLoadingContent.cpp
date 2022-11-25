@@ -2023,6 +2023,9 @@ void nsObjectLoadingContent::UnloadObject(bool aResetState) {
 
   // This call should be last as it may re-enter
   StopPluginInstance();
+
+  mSubdocumentIntrinsicSize.reset();
+  mSubdocumentIntrinsicRatio.reset();
 }
 
 void nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
