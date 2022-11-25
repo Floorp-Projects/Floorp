@@ -5,14 +5,15 @@
 
 #include "HTMLEditUtils.h"
 
-#include "AutoRangeArray.h"  // for AutoRangeArray
-#include "CSSEditUtils.h"    // for CSSEditUtils
-#include "EditAction.h"      // for EditAction
-#include "EditorBase.h"      // for EditorBase, EditorType
-#include "EditorDOMPoint.h"  // for EditorDOMPoint, etc.
-#include "EditorForwards.h"  // for CollectChildrenOptions
-#include "EditorUtils.h"     // for EditorUtils
-#include "WSRunObject.h"     // for WSRunScanner
+#include "AutoRangeArray.h"   // for AutoRangeArray
+#include "CSSEditUtils.h"     // for CSSEditUtils
+#include "EditAction.h"       // for EditAction
+#include "EditorBase.h"       // for EditorBase, EditorType
+#include "EditorDOMPoint.h"   // for EditorDOMPoint, etc.
+#include "EditorForwards.h"   // for CollectChildrenOptions
+#include "EditorUtils.h"      // for EditorUtils
+#include "HTMLEditHelpers.h"  // for EditorInlineStyle
+#include "WSRunObject.h"      // for WSRunScanner
 
 #include "mozilla/ArrayUtils.h"   // for ArrayLength
 #include "mozilla/Assertions.h"   // for MOZ_ASSERT, etc.
@@ -2043,6 +2044,36 @@ HTMLEditUtils::ComputePointToPutCaretInElementIfOutside(
   }
   // XXX And shouldn't this be EditorDOMPointType(firstEditableContent)?
   return EditorDOMPointType(firstEditableContent, 0u);
+}
+
+// static
+bool HTMLEditUtils::IsInlineStyleSetByElement(
+    const nsIContent& aContent, const EditorInlineStyle& aStyle,
+    const nsAString* aValue, nsAString* aOutValue /* = nullptr */) {
+  for (Element* element : aContent.InclusiveAncestorsOfType<Element>()) {
+    if (aStyle.mHTMLProperty != element->NodeInfo()->NameAtom()) {
+      continue;
+    }
+    if (!aStyle.mAttribute) {
+      return true;
+    }
+    nsAutoString value;
+    element->GetAttr(kNameSpaceID_None, aStyle.mAttribute, value);
+    if (aOutValue) {
+      *aOutValue = value;
+    }
+    if (!value.IsEmpty()) {
+      if (!aValue) {
+        return true;
+      }
+      if (aValue->Equals(value, nsCaseInsensitiveStringComparator)) {
+        return true;
+      }
+      // We found the prop with the attribute, but the value doesn't match.
+      return false;
+    }
+  }
+  return false;
 }
 
 // static

@@ -494,8 +494,7 @@ HTMLEditor::SetInlinePropertyOnTextNode(
       return SplitRangeOffFromNodeResult(nullptr, &aText, nullptr);
     }
   } else if (HTMLEditUtils::IsInlineStyleSetByElement(
-                 aText, aStyleToSet.HTMLPropertyRef(), aStyleToSet.mAttribute,
-                 &aStyleToSet.mAttributeValue)) {
+                 aText, aStyleToSet, &aStyleToSet.mAttributeValue)) {
     return SplitRangeOffFromNodeResult(nullptr, &aText, nullptr);
   }
 
@@ -777,8 +776,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
       return EditorDOMPoint();
     }
   } else if (HTMLEditUtils::IsInlineStyleSetByElement(
-                 aContent, aStyleToSet.HTMLPropertyRef(),
-                 aStyleToSet.mAttribute, &aStyleToSet.mAttributeValue)) {
+                 aContent, aStyleToSet, &aStyleToSet.mAttributeValue)) {
     return EditorDOMPoint();
   }
 
@@ -1852,9 +1850,8 @@ nsresult HTMLEditor::GetInlinePropertyBase(const EditorInlineStyle& aStyle,
 
       *aFirst = *aAny = *aAll =
           collapsedNode->IsContent() &&
-          HTMLEditUtils::IsInlineStyleSetByElement(
-              *collapsedNode->AsContent(), *aStyle.mHTMLProperty,
-              aStyle.mAttribute, aValue, outValue);
+          HTMLEditUtils::IsInlineStyleSetByElement(*collapsedNode->AsContent(),
+                                                   aStyle, aValue, outValue);
       return NS_OK;
     }
 
@@ -1919,9 +1916,8 @@ nsresult HTMLEditor::GetInlinePropertyBase(const EditorInlineStyle& aStyle,
           }
           isSet = isComputedCSSEquivalentToStyleOrError.unwrap();
         } else {
-          isSet = HTMLEditUtils::IsInlineStyleSetByElement(
-              *content, *aStyle.mHTMLProperty, aStyle.mAttribute, aValue,
-              &firstValue);
+          isSet = HTMLEditUtils::IsInlineStyleSetByElement(*content, aStyle,
+                                                           aValue, &firstValue);
         }
         *aFirst = isSet;
         first = false;
@@ -1946,9 +1942,8 @@ nsresult HTMLEditor::GetInlinePropertyBase(const EditorInlineStyle& aStyle,
           }
           isSet = isComputedCSSEquivalentToStyleOrError.unwrap();
         } else {
-          isSet = HTMLEditUtils::IsInlineStyleSetByElement(
-              *content, *aStyle.mHTMLProperty, aStyle.mAttribute, aValue,
-              &theValue);
+          isSet = HTMLEditUtils::IsInlineStyleSetByElement(*content, aStyle,
+                                                           aValue, &theValue);
         }
 
         if (firstValue != theValue &&
