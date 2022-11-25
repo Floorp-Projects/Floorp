@@ -514,7 +514,7 @@
     result: NumberId
 
 - name: GuardAndGetIterator
-  shared: false
+  shared: true
   transpile: false
   cost_estimate: 4
   args:
