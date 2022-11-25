@@ -8,17 +8,14 @@
 
 var EXPORTED_SYMBOLS = ["PerTestCoverageUtils"];
 
-const env = Cc["@mozilla.org/process/environment;1"].getService(
-  Ci.nsIEnvironment
-);
 // This is the directory where gcov is emitting the gcda files.
-const gcovPrefixPath = env.get("GCOV_PREFIX");
+const gcovPrefixPath = Services.env.get("GCOV_PREFIX");
 // This is the directory where codecoverage.py is expecting to see the gcda files.
-const gcovResultsPath = env.get("GCOV_RESULTS_DIR");
+const gcovResultsPath = Services.env.get("GCOV_RESULTS_DIR");
 // This is the directory where the JS engine is emitting the lcov files.
-const jsvmPrefixPath = env.get("JS_CODE_COVERAGE_OUTPUT_DIR");
+const jsvmPrefixPath = Services.env.get("JS_CODE_COVERAGE_OUTPUT_DIR");
 // This is the directory where codecoverage.py is expecting to see the lcov files.
-const jsvmResultsPath = env.get("JSVM_RESULTS_DIR");
+const jsvmResultsPath = Services.env.get("JSVM_RESULTS_DIR");
 
 const gcovPrefixDir = Cc["@mozilla.org/file/local;1"].createInstance(
   Ci.nsIFile
