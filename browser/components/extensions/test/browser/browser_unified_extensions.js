@@ -212,6 +212,22 @@ add_task(async function test_clicks_on_unified_extension_button() {
   ok(!panel.hasAttribute("panelopen"), "expected panel to remain hidden");
   await closeChromeContextMenu(contextMenu.id, null, win);
 
+  // On MacOS, ctrl-click shouldn't open the panel because this normally opens
+  // the context menu. We can't test anything on MacOS...
+  if (AppConstants.platform !== "macosx") {
+    info("open panel with ctrl-click");
+    const listView = getListView(win);
+    const viewShown = BrowserTestUtils.waitForEvent(listView, "ViewShown");
+    EventUtils.synthesizeMouseAtCenter(button, { ctrlKey: true }, win);
+    await viewShown;
+    ok(
+      panel.getAttribute("panelopen") === "true",
+      "expected panel to be visible"
+    );
+    await closeExtensionsPanel(win);
+    ok(!panel.hasAttribute("panelopen"), "expected panel to be hidden");
+  }
+
   await Promise.all(extensions.map(extension => extension.unload()));
 });
 

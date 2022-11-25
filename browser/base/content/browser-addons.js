@@ -1433,7 +1433,17 @@ var gUnifiedExtensions = {
   async togglePanel(aEvent) {
     if (!CustomizationHandler.isCustomizing()) {
       if (aEvent) {
-        if (aEvent.button !== 0) {
+        if (
+          // On MacOS, ctrl-click will send a context menu event from the
+          // widget, so we don't want to bring up the panel when ctrl key is
+          // pressed.
+          (aEvent.type == "mousedown" &&
+            (aEvent.button !== 0 ||
+              (AppConstants.platform === "macosx" && aEvent.ctrlKey))) ||
+          (aEvent.type === "keypress" &&
+            aEvent.charCode !== KeyEvent.DOM_VK_SPACE &&
+            aEvent.keyCode !== KeyEvent.DOM_VK_RETURN)
+        ) {
           return;
         }
 

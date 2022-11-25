@@ -192,3 +192,37 @@ add_task(async function test_keyboard_navigation_opens_menu() {
   await extension1.unload();
   await extension2.unload();
 });
+
+add_task(async function test_open_panel_with_keyboard_navigation() {
+  const { button, panel } = win.gUnifiedExtensions;
+  ok(button, "expected button");
+  ok(panel, "expected panel");
+
+  const listView = getListView(win);
+  ok(listView, "expected list view");
+
+  // Force focus on the unified extensions button.
+  const forceFocusUnifiedExtensionsButton = () => {
+    button.setAttribute("tabindex", "-1");
+    button.focus();
+    button.removeAttribute("tabindex");
+  };
+  forceFocusUnifiedExtensionsButton();
+
+  // Use the "space" key to open the panel.
+  let viewShown = BrowserTestUtils.waitForEvent(listView, "ViewShown");
+  EventUtils.synthesizeKey(" ", {}, win);
+  await viewShown;
+
+  await closeExtensionsPanel(win);
+
+  // Force focus on the unified extensions button again.
+  forceFocusUnifiedExtensionsButton();
+
+  // Use the "return" key to open the panel.
+  viewShown = BrowserTestUtils.waitForEvent(listView, "ViewShown");
+  EventUtils.synthesizeKey("KEY_Enter", {}, win);
+  await viewShown;
+
+  await closeExtensionsPanel(win);
+});
