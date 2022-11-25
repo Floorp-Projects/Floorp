@@ -11,12 +11,7 @@ add_task(async function detach() {
   // editor or selection code in Gecko. Since this has only been observed on Mac
   // in chaos mode and doesn't seem to be a problem in urlbar code, skip the
   // test in that case.
-  if (
-    AppConstants.platform == "macosx" &&
-    Cc["@mozilla.org/process/environment;1"]
-      .getService(SpecialPowers.Ci.nsIEnvironment)
-      .get("MOZ_CHAOSMODE")
-  ) {
+  if (AppConstants.platform == "macosx" && Services.env.get("MOZ_CHAOSMODE")) {
     Assert.ok(true, "Skipping test in chaos mode on Mac");
     return;
   }

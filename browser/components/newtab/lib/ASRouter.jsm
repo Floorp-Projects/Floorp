@@ -1743,10 +1743,7 @@ class _ASRouter {
     }
 
     // Clear cache call is only possible in a testing environment
-    let env = Cc["@mozilla.org/process/environment;1"].getService(
-      Ci.nsIEnvironment
-    );
-    env.set("XPCSHELL_TEST_PROFILE_DIR", "testing");
+    Services.env.set("XPCSHELL_TEST_PROFILE_DIR", "testing");
 
     // Clear and refresh Attribution, and then fetch the messages again to update
     AttributionCode._clearCache();
