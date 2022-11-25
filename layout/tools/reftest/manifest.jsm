@@ -472,8 +472,6 @@ function BuildConditionSandbox(aURL) {
     sandbox.isCoverageBuild = g.isCoverageBuild;
     var prefs = Cc["@mozilla.org/preferences-service;1"].
                 getService(Ci.nsIPrefBranch);
-    var env = Cc["@mozilla.org/process/environment;1"].
-                getService(Ci.nsIEnvironment);
 
     sandbox.xulRuntime = Cu.cloneInto({widgetToolkit: xr.widgetToolkit, OS: xr.OS, XPCOMABI: xr.XPCOMABI}, sandbox);
 

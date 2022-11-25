@@ -8,7 +8,6 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 const DEBUG_CONTRACTID = "@mozilla.org/xpcom/debug;1";
 const PRINTSETTINGS_CONTRACTID = "@mozilla.org/gfx/printsettings-service;1";
-const ENVIRONMENT_CONTRACTID = "@mozilla.org/process/environment;1";
 const NS_OBSERVER_SERVICE_CONTRACTID = "@mozilla.org/observer-service;1";
 const NS_GFXINFO_CONTRACTID = "@mozilla.org/gfx/info;1";
 const IO_SERVICE_CONTRACTID = "@mozilla.org/network/io-service;1"
@@ -108,8 +107,7 @@ function OnInitialLoad()
     if (gDebug.isDebugBuild) {
         gAssertionCount = gDebug.assertionCount;
     }
-    var env = Cc[ENVIRONMENT_CONTRACTID].getService(Ci.nsIEnvironment);
-    gVerbose = !!env.get("MOZ_REFTEST_VERBOSE");
+    gVerbose = !!Services.env.get("MOZ_REFTEST_VERBOSE");
 
     RegisterMessageListeners();
 
