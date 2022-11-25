@@ -63,7 +63,6 @@ import org.mozilla.focus.experiments.createNimbus
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.media.MediaSessionService
-import org.mozilla.focus.notification.PrivateNotificationMiddleware
 import org.mozilla.focus.search.SearchFilterMiddleware
 import org.mozilla.focus.search.SearchMigration
 import org.mozilla.focus.state.AppState
@@ -144,7 +143,6 @@ class Components(
     val store by lazy {
         BrowserStore(
             middleware = listOf(
-                PrivateNotificationMiddleware(context),
                 TelemetryMiddleware(),
                 DownloadMiddleware(context, DownloadService::class.java),
                 SanityCheckMiddleware(),
