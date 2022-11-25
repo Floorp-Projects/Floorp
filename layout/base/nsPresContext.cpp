@@ -2707,6 +2707,23 @@ void nsPresContext::NotifyContentfulPaint() {
       RefPtr<PerformancePaintTiming> paintTiming = new PerformancePaintTiming(
           perf, u"first-contentful-paint"_ns, nowTime);
       perf->SetFCPTimingEntry(paintTiming);
+
+      if (profiler_thread_is_being_profiled_for_markers()) {
+        RefPtr<nsDOMNavigationTiming> timing = mDocument->GetNavigationTiming();
+        if (timing) {
+          TimeStamp navigationStart = timing->GetNavigationStartTimeStamp();
+          TimeDuration elapsed = nowTime - navigationStart;
+          nsIURI* docURI = Document()->GetDocumentURI();
+          nsPrintfCString marker("Contentful paint after %dms for URL %s",
+                                 int(elapsed.ToMilliseconds()),
+                                 docURI->GetSpecOrDefault().get());
+          PROFILER_MARKER_TEXT(
+              "FirstContentfulPaint", DOM,
+              MarkerOptions(MarkerTiming::Interval(navigationStart, nowTime),
+                            MarkerInnerWindowId(innerWindow->WindowID())),
+              marker);
+        }
+      }
     }
   }
 }

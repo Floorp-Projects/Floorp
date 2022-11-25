@@ -458,7 +458,7 @@ void nsDOMNavigationTiming::NotifyContentfulCompositeForRootContentDocument(
       mLoadedURI->GetSpec(spec);
     }
     nsPrintfCString marker(
-        "Contentful paint after %dms for URL %s, %s",
+        "Contentful composite after %dms for URL %s, %s",
         int(elapsed.ToMilliseconds()), spec.get(),
         mDocShellHasBeenActiveSinceNavigationStart
             ? "foreground tab"
