@@ -88,11 +88,8 @@ let PYTHON;
 add_task(async function setup() {
   await Schemas.load(BASE_SCHEMA);
 
-  const env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
   try {
-    PYTHON = await Subprocess.pathSearch(env.get("PYTHON"));
+    PYTHON = await Subprocess.pathSearch(Services.env.get("PYTHON"));
   } catch (e) {
     notEqual(
       PYTHON,

@@ -128,9 +128,9 @@ add_setup(async function setupTestCommon() {
  */
 registerCleanupFunction(async () => {
   AppMenuNotifications.removeNotification(/.*/);
-  gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "");
-  gEnv.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "");
-  gEnv.set("MOZ_TEST_STAGING_ERROR", "");
+  Services.env.set("MOZ_TEST_SKIP_UPDATE_STAGE", "");
+  Services.env.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "");
+  Services.env.set("MOZ_TEST_STAGING_ERROR", "");
   UpdateListener.reset();
   AppMenuNotifications.removeNotification(/.*/);
   reloadUpdateManagerData(true);
@@ -611,9 +611,9 @@ function runDoorhangerUpdateTest(params, steps) {
 
   return (async function() {
     if (params.slowStaging) {
-      gEnv.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
+      Services.env.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
     } else {
-      gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
+      Services.env.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
     }
     await SpecialPowers.pushPrefEnv({
       set: [
@@ -856,7 +856,7 @@ function runAboutDialogUpdateTest(params, steps) {
   }
 
   return (async function() {
-    gEnv.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
+    Services.env.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
     await SpecialPowers.pushPrefEnv({
       set: [
         [PREF_APP_UPDATE_DISABLEDFORTESTING, false],
@@ -1145,7 +1145,7 @@ function runAboutPrefsUpdateTest(params, steps) {
   }
 
   return (async function() {
-    gEnv.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
+    Services.env.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
     await SpecialPowers.pushPrefEnv({
       set: [
         [PREF_APP_UPDATE_DISABLEDFORTESTING, false],
@@ -1251,7 +1251,7 @@ function removeUpdateSettingsIni() {
 function runTelemetryUpdateTest(updateParams, event, stageFailure = false) {
   return (async function() {
     Services.telemetry.clearScalars();
-    gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
+    Services.env.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
     await SpecialPowers.pushPrefEnv({
       set: [[PREF_APP_UPDATE_DISABLEDFORTESTING, false]],
     });

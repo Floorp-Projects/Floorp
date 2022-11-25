@@ -26,14 +26,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   sinon: "resource://testing-common/Sinon.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetters(this, {
-  gEnvironment: ["@mozilla.org/process/environment;1", "nsIEnvironment"],
-});
-
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 const GLOBAL_SCOPE = this;
-const TEST_DEBUG = gEnvironment.get("TEST_DEBUG");
+const TEST_DEBUG = Services.env.get("TEST_DEBUG");
 
 const URLTYPE_SUGGEST_JSON = "application/x-suggestions+json";
 const URLTYPE_SEARCH_HTML = "text/html";
@@ -53,7 +49,7 @@ let engineSelector;
  * against a remote server.
  */
 async function maybeSetupConfig() {
-  const SEARCH_CONFIG = gEnvironment.get("SEARCH_CONFIG");
+  const SEARCH_CONFIG = Services.env.get("SEARCH_CONFIG");
   if (SEARCH_CONFIG) {
     if (!(SEARCH_CONFIG in SearchUtils.ENGINES_URLS)) {
       throw new Error(`Invalid value for SEARCH_CONFIG`);

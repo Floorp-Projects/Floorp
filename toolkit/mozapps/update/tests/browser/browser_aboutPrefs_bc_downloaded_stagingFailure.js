@@ -7,7 +7,7 @@
 // with the update downloaded and staging has failed when the about:preferences
 // is opened.
 add_task(async function aboutPrefs_backgroundCheck_downloaded_stagingFailure() {
-  gEnv.set("MOZ_TEST_STAGING_ERROR", "1");
+  Services.env.set("MOZ_TEST_STAGING_ERROR", "1");
   await SpecialPowers.pushPrefEnv({
     set: [[PREF_APP_UPDATE_STAGING_ENABLED, true]],
   });
