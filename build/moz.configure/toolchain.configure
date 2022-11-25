@@ -68,12 +68,6 @@ with only_when(target_is_osx):
         return value[0]
 
 
-@depends(host)
-def host_is_osx(host):
-    if host.os == "OSX":
-        return True
-
-
 with only_when(host_is_osx | target_is_osx):
     # MacOS SDK
     # =========
@@ -531,12 +525,6 @@ def get_vc_paths(topsrcdir):
         yield (Version(install["installationVersion"]), tools_path)
 
 
-@depends(host)
-def host_is_windows(host):
-    if host.kernel == "WINNT":
-        return True
-
-
 option(
     "--with-visual-studio-version",
     nargs=1,
@@ -662,13 +650,17 @@ def rust_search_path(rust_path, search_order, original_path):
 
 # As a workaround until bug 1516228 and bug 1516253 are fixed, set the PATH
 # variable for the build to contain the toolchain search path.
-@depends(vc_toolchain_search_path)
+#
+# FIXME(bug 1802573): The two bugs above are fixed, do we still need that?
+#
+# Prepend the mozilla-build msys2 path, since otherwise we can get mismatched
+# cygwin dll errors during configure if we get called from another msys2
+# environment, see bug 1801826.
+@depends(mozillabuild_bin_paths, vc_toolchain_search_path)
 @imports("os")
-@imports(_from="os", _import="environ")
-def altered_path(vc_toolchain_search_path):
-    path = environ["PATH"].split(os.pathsep)
-    altered_path = list(vc_toolchain_search_path)
-    for p in path:
+def altered_path(mozillabuild_bin_paths, vc_toolchain_search_path):
+    altered_path = mozillabuild_bin_paths + list(vc_toolchain_search_path)
+    for p in os.environ["PATH"].split(os.pathsep):
         if p not in altered_path:
             altered_path.append(p)
     return os.pathsep.join(altered_path)
