@@ -152,18 +152,6 @@ class CSSEditUtils final {
                                       const nsAString& aPropertyValue);
 
   /**
-   * Answers true is the property can be removed by setting a "none" CSS value
-   * on a node.
-   *
-   * @param aProperty     [IN] An atom containing a CSS property.
-   * @param aAttribute    [IN] Pointer to an attribute name or null if this
-   *                           information is irrelevant.
-   * @return              A boolean saying if the property can be remove by
-   *                      setting a "none" value.
-   */
-  static bool IsCSSInvertible(nsAtom& aProperty, nsAtom* aAttribute);
-
-  /**
    * Get the default browser background color if we need it for
    * GetCSSBackgroundColorState().
    *
