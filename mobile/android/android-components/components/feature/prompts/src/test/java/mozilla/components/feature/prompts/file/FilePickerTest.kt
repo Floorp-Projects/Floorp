@@ -284,7 +284,7 @@ class FilePickerTest {
 
     @Test
     fun `askAndroidPermissionsForRequest should cache the current request and then ask for permissions`() {
-        val permissions = listOf("PermissionA")
+        val permissions = setOf("PermissionA")
         var permissionsRequested = emptyArray<String>()
         filePicker = spy(
             FilePicker(fragment, store, null) { requested ->

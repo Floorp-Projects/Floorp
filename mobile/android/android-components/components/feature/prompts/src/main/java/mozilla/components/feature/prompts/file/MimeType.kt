@@ -6,6 +6,9 @@ package mozilla.components.feature.prompts.file
 
 import android.Manifest.permission.CAMERA
 import android.Manifest.permission.READ_EXTERNAL_STORAGE
+import android.Manifest.permission.READ_MEDIA_AUDIO
+import android.Manifest.permission.READ_MEDIA_IMAGES
+import android.Manifest.permission.READ_MEDIA_VIDEO
 import android.Manifest.permission.RECORD_AUDIO
 import android.annotation.SuppressLint
 import android.content.Context
@@ -16,6 +19,7 @@ import android.content.Intent.EXTRA_ALLOW_MULTIPLE
 import android.content.Intent.EXTRA_LOCAL_ONLY
 import android.content.Intent.EXTRA_MIME_TYPES
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore.ACTION_IMAGE_CAPTURE
 import android.provider.MediaStore.ACTION_VIDEO_CAPTURE
 import android.provider.MediaStore.Audio.Media.RECORD_SOUND_ACTION
@@ -30,14 +34,21 @@ import java.util.Locale.US
 
 internal sealed class MimeType(
     private val type: String,
-    val permission: String,
+    val permission: List<String>,
 ) {
 
     data class Image(
         private val getUri: (Context, String, java.io.File) -> Uri = { context, authority, file ->
             getUriForFile(context, authority, file)
         },
-    ) : MimeType("image/", CAMERA) {
+    ) : MimeType(
+        "image/",
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            listOf(CAMERA, READ_MEDIA_IMAGES)
+        } else {
+            listOf(CAMERA)
+        },
+    ) {
         /**
          * Build an image capture intent using the application FileProvider.
          * A FileProvider must be defined in your AndroidManifest.xml, see
@@ -59,17 +70,38 @@ internal sealed class MimeType(
         }
     }
 
-    object Video : MimeType("video/", CAMERA) {
+    object Video : MimeType(
+        "video/",
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            listOf(CAMERA, READ_MEDIA_VIDEO)
+        } else {
+            listOf(CAMERA)
+        },
+    ) {
         override fun buildIntent(context: Context, request: File) =
             Intent(ACTION_VIDEO_CAPTURE).withDeviceSupport(context)?.addCaptureHint(request.captureMode)
     }
 
-    object Audio : MimeType("audio/", RECORD_AUDIO) {
+    object Audio : MimeType(
+        "audio/",
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            listOf(RECORD_AUDIO, READ_MEDIA_AUDIO)
+        } else {
+            listOf(RECORD_AUDIO)
+        },
+    ) {
         override fun buildIntent(context: Context, request: File) =
             Intent(RECORD_SOUND_ACTION).withDeviceSupport(context)
     }
 
-    object Wildcard : MimeType("*/", READ_EXTERNAL_STORAGE) {
+    object Wildcard : MimeType(
+        "*/",
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            listOf(READ_MEDIA_IMAGES, READ_MEDIA_AUDIO, READ_MEDIA_VIDEO)
+        } else {
+            listOf(READ_EXTERNAL_STORAGE)
+        },
+    ) {
         private val mimeTypeMap = MimeTypeMap.getSingleton()
 
         override fun matches(mimeTypes: Array<out String>) = true

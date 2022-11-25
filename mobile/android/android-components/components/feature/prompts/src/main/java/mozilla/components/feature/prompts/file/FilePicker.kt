@@ -62,7 +62,7 @@ internal class FilePicker(
     @Suppress("ComplexMethod")
     fun handleFileRequest(promptRequest: File, requestPermissions: Boolean = true) {
         // Track which permissions are needed.
-        val neededPermissions = mutableListOf<String>()
+        val neededPermissions = mutableSetOf<String>()
         // Build a list of intents for capturing media and opening the file picker to combine later.
         val intents = mutableListOf<Intent>()
         captureUri = null
@@ -87,7 +87,7 @@ internal class FilePicker(
                         intents.add(it)
                     }
                 } else {
-                    neededPermissions.add(type.permission)
+                    neededPermissions.addAll(type.permission)
                 }
             }
         }
@@ -216,7 +216,7 @@ internal class FilePicker(
         intent.getParcelableExtraCompat(EXTRA_OUTPUT, Uri::class.java)?.let { captureUri = it }
 
     @VisibleForTesting
-    fun askAndroidPermissionsForRequest(permissions: List<String>, request: File) {
+    fun askAndroidPermissionsForRequest(permissions: Set<String>, request: File) {
         currentRequest = request
         onNeedToRequestPermissions(permissions.toTypedArray())
     }

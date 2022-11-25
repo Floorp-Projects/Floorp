@@ -3,6 +3,12 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="mozilla.components.feature.prompts">
+
+    <!-- Needed for uploading media files on devices with Android 13 and later. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+
     <application>
         <provider
             android:name="mozilla.components.feature.prompts.provider.FileProvider"
