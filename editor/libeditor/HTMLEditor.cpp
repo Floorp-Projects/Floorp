@@ -5746,27 +5746,20 @@ nsresult HTMLEditor::SetAttributeOrEquivalent(Element* aElement,
   nsStyledElement* styledElement = nsStyledElement::FromNodeOrNull(aElement);
   if (!IsCSSEnabled()) {
     // we are not in an HTML+CSS editor; let's set the attribute the HTML way
-    if (styledElement) {
+    if (styledElement && CSSEditUtils::IsCSSEditableProperty(
+                             styledElement, nullptr, aAttribute)) {
       // MOZ_KnownLive(*styledElement): It's aElement and its lifetime must
       // be guaranteed by the caller because of MOZ_CAN_RUN_SCRIPT method.
-      nsresult rv =
-          aSuppressTransaction
-              ? CSSEditUtils::RemoveCSSEquivalentToHTMLStyleWithoutTransaction(
-                    *this, MOZ_KnownLive(*styledElement), nullptr, aAttribute,
-                    nullptr)
-              : CSSEditUtils::RemoveCSSEquivalentToHTMLStyleWithTransaction(
-                    *this, MOZ_KnownLive(*styledElement), nullptr, aAttribute,
-                    nullptr);
-      if (rv == NS_ERROR_EDITOR_DESTROYED) {
-        NS_WARNING(
-            "CSSEditUtils::RemoveCSSEquivalentToHTMLStyle*Transaction() "
-            "destroyed the editor");
+      nsresult rv = CSSEditUtils::RemoveCSSEquivalentToStyle(
+          aSuppressTransaction ? WithTransaction::No : WithTransaction::Yes,
+          *this, MOZ_KnownLive(*styledElement),
+          EditorElementStyle::Create(*aAttribute), nullptr);
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
-          "CSSEditUtils::RemoveCSSEquivalentToHTMLStyle*Transaction() "
-          "failed, but ignored");
+          "CSSEditUtils::RemoveCSSEquivalentToStyle() failed, but ignored");
     }
     if (aSuppressTransaction) {
       nsresult rv =
@@ -5870,17 +5863,12 @@ nsresult HTMLEditor::RemoveAttributeOrEquivalent(Element* aElement,
     }
     // MOZ_KnownLive(*styledElement): It's aElement and its lifetime must
     // be guaranteed by the caller because of MOZ_CAN_RUN_SCRIPT method.
-    nsresult rv =
-        aSuppressTransaction
-            ? CSSEditUtils::RemoveCSSEquivalentToHTMLStyleWithoutTransaction(
-                  *this, MOZ_KnownLive(*styledElement), nullptr, aAttribute,
-                  nullptr)
-            : CSSEditUtils::RemoveCSSEquivalentToHTMLStyleWithTransaction(
-                  *this, MOZ_KnownLive(*styledElement), nullptr, aAttribute,
-                  nullptr);
+    nsresult rv = CSSEditUtils::RemoveCSSEquivalentToStyle(
+        aSuppressTransaction ? WithTransaction::No : WithTransaction::Yes,
+        *this, MOZ_KnownLive(*styledElement),
+        EditorElementStyle::Create(*aAttribute), nullptr);
     if (NS_FAILED(rv)) {
-      NS_WARNING(
-          "CSSEditUtils::RemoveCSSEquivalentToHTMLStyle*Transaction() failed");
+      NS_WARNING("CSSEditUtils::RemoveCSSEquivalentToStyle() failed");
       return rv;
     }
   }
