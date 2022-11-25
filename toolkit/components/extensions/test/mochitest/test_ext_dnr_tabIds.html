@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>DNR with tabIds condition</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+"use strict";
+
+// While most DNR tests are xpcshell tests, this one is a mochitest because it
+// is not possible to create a tab and get a tabId in a xpcshell test.
+
+// toolkit/components/extensions/test/xpcshell/test_ext_dnr_tabIds.js does
+// exist, as an isolated xpcshell is needed to verify that the internals are
+// working as expected. A mochitest is not a good fit for that because it has
+// built-in add-ons that may affect the observed behavior.
+
+add_setup(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["extensions.manifestV3.enabled", true],
+      ["extensions.dnr.enabled", true],
+    ],
+  });
+});
+
+add_task(async function match_by_tabIds() {
+  let extension = ExtensionTestUtils.loadExtension({
+    async background() {
+      async function createTabAndPort() {
+        let portPromise = new Promise(resolve => {
+          browser.runtime.onConnect.addListener(function listener(port) {
+            browser.runtime.onConnect.removeListener(listener);
+            browser.test.assertEq("port_from_tab", port.name, "Got port");
+            resolve(port);
+          });
+        });
+        const tab = await browser.tabs.create({ url: "tab.html" });
+        const port = await portPromise;
+        browser.test.assertEq(tab.id, port.sender.tab.id, "Got port from tab");
+        browser.test.assertTrue(tab.id > 0, `tabId must be valid: ${tab.id}`);
+        tab.port = port;
+        return tab;
+      }
+      async function getFinalUrlForFetchInTab(tabWithPort, url) {
+        const port = tabWithPort.port; // from createTabAndPort.
+        return new Promise(resolve => {
+          port.onMessage.addListener(function listener(responseUrl) {
+            port.onMessage.removeListener(listener);
+            resolve(responseUrl);
+          });
+          port.postMessage(url);
+        });
+      }
+      let tab1 = await createTabAndPort();
+      let tab2 = await createTabAndPort();
+
+      const URL_PREFIX = "https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.txt";
+
+      function makeRedirect(id, condition, url) {
+        return {
+          id,
+          // The test sends a request to example.net and expects a redirect to
+          // URL_PREFIX (example.com).
+          condition: { requestDomains: ["example.net"], ...condition },
+          action: { type: "redirect", redirect: { url }},
+        };
+      }
+      await browser.declarativeNetRequest.updateSessionRules({
+        addRules: [
+          makeRedirect(1, { tabIds: [-1] }, `${URL_PREFIX}?tabId/-1`),
+          makeRedirect(2, { tabIds: [tab1.id] }, `${URL_PREFIX}?tabId/tab1`),
+          makeRedirect(
+            3,
+            { excludedTabIds: [-1, tab1.id] },
+            `${URL_PREFIX}?tabId/not-1,not-tab1`
+          ),
+        ],
+      });
+
+      browser.test.assertEq(
+        `${URL_PREFIX}?tabId/-1`,
+        (await fetch("https://example.net/?pre-redirect-bg")).url,
+        "Request from background should match tabIds: [-1]"
+      );
+      browser.test.assertEq(
+        `${URL_PREFIX}?tabId/tab1`,
+        await getFinalUrlForFetchInTab(tab1, "https://example.net/?pre-tab1"),
+        "Request from tab1 should match tabIds: [tab1]"
+      );
+      browser.test.assertEq(
+        `${URL_PREFIX}?tabId/not-1,not-tab1`,
+        await getFinalUrlForFetchInTab(tab2, "https://example.net/?pre-tab2"),
+        "Request from tab2 should match excludedTabIds: [-1, tab1]"
+      );
+
+      await browser.tabs.remove(tab1.id);
+      await browser.tabs.remove(tab2.id);
+
+      browser.test.sendMessage("done");
+    },
+    temporarilyInstalled: true, // Needed for granted_host_permissions
+    manifest: {
+      manifest_version: 3,
+      host_permissions: ["*://example.com/*", "*://example.net/*"],
+      permissions: ["declarativeNetRequest"],
+      granted_host_permissions: true,
+    },
+    files: {
+      "tab.html": `<!DOCTYPE html><script src="tab.js"><\/script>`,
+      "tab.js": () => {
+        let port = browser.runtime.connect({ name: "port_from_tab" });
+        port.onMessage.addListener(async url => {
+          try {
+            let res = await fetch(url);
+            port.postMessage(res.url);
+          } catch (e) {
+            port.postMessage(e.message);
+          }
+        });
+      },
+    },
+  });
+  await extension.startup();
+  await extension.awaitMessage("done");
+
+  await extension.unload();
+});
+
+</script>
+</body>
+</html>

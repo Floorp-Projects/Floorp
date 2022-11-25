@@ -424,6 +424,13 @@ class MatchedRule {
   }
 }
 
+// tabId computation is currently not free, and depends on the initialization of
+// ExtensionParent.apiManager.global (see WebRequest.getTabIdForChannelWrapper).
+// Fortunately, DNR only supports tabIds in session rules, so by keeping track
+// of session rules with tabIds/excludedTabIds conditions, we can find tabId
+// exactly and only when necessary.
+let gHasAnyTabIdConditions = false;
+
 class RequestDetails {
   /**
    * @param {object} options
@@ -447,13 +454,17 @@ class RequestDetails {
   }
 
   static fromChannelWrapper(channel) {
+    let tabId = -1;
+    if (gHasAnyTabIdConditions) {
+      tabId = lazy.WebRequest.getTabIdForChannelWrapper(channel);
+    }
     return new RequestDetails({
       requestURI: channel.finalURI,
       // Note: originURI may be null, if missing or null principal, as desired.
       initiatorURI: channel.originURI,
       type: channel.type,
       method: channel.method.toLowerCase(),
-      tabId: null, // TODO: use getBrowserData to populate.
+      tabId,
     });
   }
 
@@ -794,6 +805,9 @@ const NetworkIntegration = {
   unregister() {
     lazy.WebRequest.setDNRHandlingEnabled(false);
   },
+  maybeUpdateTabIdChecker() {
+    gHasAnyTabIdConditions = gRuleManagers.some(rm => rm.hasRulesWithTabIds);
+  },
 
   startDNREvaluation(channel) {
     let ruleManagers = gRuleManagers;
@@ -919,6 +933,7 @@ class RuleManager {
     this.enabledStaticRules = [];
 
     this.hasBlockPermission = extension.hasPermission("declarativeNetRequest");
+    this.hasRulesWithTabIds = false;
   }
 
   makeRuleset(rulesetId, rulesetPrecedence, rules = []) {
@@ -927,6 +942,10 @@ class RuleManager {
 
   setSessionRules(validatedSessionRules) {
     this.sessionRules.rules = validatedSessionRules;
+    this.hasRulesWithTabIds = !!this.sessionRules.rules.find(rule => {
+      return rule.condition.tabIds || rule.condition.excludedTabIds;
+    });
+    NetworkIntegration.maybeUpdateTabIdChecker();
   }
 
   getSessionRules() {
@@ -956,6 +975,7 @@ function clearRuleManager(extension) {
   let i = gRuleManagers.findIndex(rm => rm.extension === extension);
   if (i !== -1) {
     gRuleManagers.splice(i, 1);
+    NetworkIntegration.maybeUpdateTabIdChecker();
     if (gRuleManagers.length === 0) {
       // The last DNR registration.
       NetworkIntegration.unregister();
