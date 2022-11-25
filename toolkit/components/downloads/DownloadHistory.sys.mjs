@@ -111,7 +111,13 @@ export var DownloadHistory = {
    *        represents a private download, the call has no effect.
    */
   async updateMetaData(download) {
-    if (download.source.isPrivate || !download.stopped) {
+    if (
+      download.source.isPrivate ||
+      !download.stopped ||
+      !lazy.PlacesUtils.history.canAddURI(
+        lazy.PlacesUtils.toURI(download.source.url)
+      )
+    ) {
       return;
     }
 
