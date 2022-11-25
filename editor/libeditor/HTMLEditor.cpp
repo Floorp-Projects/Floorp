@@ -5782,7 +5782,7 @@ nsresult HTMLEditor::SetAttributeOrEquivalent(Element* aElement,
     if (styledElement && elementStyle.IsCSSEditable(*styledElement)) {
       // MOZ_KnownLive(*styledElement): It's aElement and its lifetime must
       // be guaranteed by the caller because of MOZ_CAN_RUN_SCRIPT method.
-      Result<int32_t, nsresult> count = CSSEditUtils::SetCSSEquivalentToStyle(
+      Result<size_t, nsresult> count = CSSEditUtils::SetCSSEquivalentToStyle(
           aSuppressTransaction ? WithTransaction::No : WithTransaction::Yes,
           *this, MOZ_KnownLive(*styledElement), elementStyle, &aValue);
       if (MOZ_UNLIKELY(count.isErr())) {
@@ -5974,10 +5974,9 @@ nsresult HTMLEditor::SetBlockBackgroundColorWithCSSAsSubAction(
                 *editableBlockStyledElement)) {
           continue;
         }
-        Result<int32_t, nsresult> result =
-            CSSEditUtils::SetCSSEquivalentToStyle(
-                WithTransaction::Yes, *this, *editableBlockStyledElement,
-                EditorElementStyle::BGColor(), &aColor);
+        Result<size_t, nsresult> result = CSSEditUtils::SetCSSEquivalentToStyle(
+            WithTransaction::Yes, *this, *editableBlockStyledElement,
+            EditorElementStyle::BGColor(), &aColor);
         if (MOZ_UNLIKELY(result.isErr())) {
           if (NS_WARN_IF(result.inspectErr() == NS_ERROR_EDITOR_DESTROYED)) {
             return NS_ERROR_EDITOR_DESTROYED;
@@ -5999,10 +5998,9 @@ nsresult HTMLEditor::SetBlockBackgroundColorWithCSSAsSubAction(
             !EditorElementStyle::BGColor().IsCSSEditable(*styledElement)) {
           continue;
         }
-        Result<int32_t, nsresult> result =
-            CSSEditUtils::SetCSSEquivalentToStyle(
-                WithTransaction::Yes, *this, *styledElement,
-                EditorElementStyle::BGColor(), &aColor);
+        Result<size_t, nsresult> result = CSSEditUtils::SetCSSEquivalentToStyle(
+            WithTransaction::Yes, *this, *styledElement,
+            EditorElementStyle::BGColor(), &aColor);
         if (MOZ_UNLIKELY(result.isErr())) {
           if (NS_WARN_IF(result.inspectErr() == NS_ERROR_EDITOR_DESTROYED)) {
             return NS_ERROR_EDITOR_DESTROYED;
@@ -6032,10 +6030,9 @@ nsresult HTMLEditor::SetBlockBackgroundColorWithCSSAsSubAction(
                 *editableBlockStyledElement)) {
           continue;
         }
-        Result<int32_t, nsresult> result =
-            CSSEditUtils::SetCSSEquivalentToStyle(
-                WithTransaction::Yes, *this, *editableBlockStyledElement,
-                EditorElementStyle::BGColor(), &aColor);
+        Result<size_t, nsresult> result = CSSEditUtils::SetCSSEquivalentToStyle(
+            WithTransaction::Yes, *this, *editableBlockStyledElement,
+            EditorElementStyle::BGColor(), &aColor);
         if (MOZ_UNLIKELY(result.isErr())) {
           if (NS_WARN_IF(result.inspectErr() == NS_ERROR_EDITOR_DESTROYED)) {
             return NS_ERROR_EDITOR_DESTROYED;
@@ -6093,7 +6090,7 @@ nsresult HTMLEditor::SetBlockBackgroundColorWithCSSAsSubAction(
             EditorElementStyle::BGColor().IsCSSEditable(*blockStyledElement)) {
           // MOZ_KnownLive(*blockStyledElement): It's handledBlockParent
           // whose type is RefPtr.
-          Result<int32_t, nsresult> result =
+          Result<size_t, nsresult> result =
               CSSEditUtils::SetCSSEquivalentToStyle(
                   WithTransaction::Yes, *this,
                   MOZ_KnownLive(*blockStyledElement),
@@ -6124,7 +6121,7 @@ nsresult HTMLEditor::SetBlockBackgroundColorWithCSSAsSubAction(
             EditorElementStyle::BGColor().IsCSSEditable(*blockStyledElement)) {
           // MOZ_KnownLive(*blockStyledElement): It's handledBlockParent whose
           // type is RefPtr.
-          Result<int32_t, nsresult> result =
+          Result<size_t, nsresult> result =
               CSSEditUtils::SetCSSEquivalentToStyle(
                   WithTransaction::Yes, *this,
                   MOZ_KnownLive(*blockStyledElement),
@@ -6154,7 +6151,7 @@ nsresult HTMLEditor::SetBlockBackgroundColorWithCSSAsSubAction(
             nsStyledElement::FromNode(editableBlockElement);
         if (blockStyledElement &&
             EditorElementStyle::BGColor().IsCSSEditable(*blockStyledElement)) {
-          Result<int32_t, nsresult> result =
+          Result<size_t, nsresult> result =
               CSSEditUtils::SetCSSEquivalentToStyle(
                   WithTransaction::Yes, *this, *blockStyledElement,
                   EditorElementStyle::BGColor(), &aColor);

@@ -732,18 +732,12 @@ nsStaticAtom* CSSEditUtils::GetCSSPropertyAtom(
   return nullptr;
 }
 
-// Populate aOutArrayOfCSSProperty and aOutArrayOfCSSValue with the CSS
-// declarations equivalent to the value aValue according to the equivalence
-// table aEquivTable
-
 // static
-void CSSEditUtils::BuildCSSDeclarations(
-    nsTArray<nsStaticAtom*>& aOutArrayOfCSSProperty,
-    nsTArray<nsString>& aOutArrayOfCSSValue, const CSSEquivTable* aEquivTable,
-    const nsAString* aValue, bool aGetOrRemoveRequest) {
+void CSSEditUtils::GetCSSDeclarations(
+    const CSSEquivTable* aEquivTable, const nsAString* aValue,
+    HandlingFor aHandlingFor, nsTArray<CSSDeclaration>& aOutCSSDeclarations) {
   // clear arrays
-  aOutArrayOfCSSProperty.Clear();
-  aOutArrayOfCSSValue.Clear();
+  aOutCSSDeclarations.Clear();
 
   // if we have an input value, let's use it
   nsAutoString value, lowerCasedValue;
@@ -753,131 +747,148 @@ void CSSEditUtils::BuildCSSDeclarations(
     ToLowerCase(lowerCasedValue);
   }
 
-  int8_t index = 0;
-  nsCSSEditableProperty cssProperty = aEquivTable[index].cssProperty;
-  while (cssProperty) {
-    if (!aGetOrRemoveRequest || aEquivTable[index].gettable) {
+  for (size_t index = 0;; index++) {
+    const nsCSSEditableProperty cssProperty = aEquivTable[index].cssProperty;
+    if (!cssProperty) {
+      break;
+    }
+    if (aHandlingFor == HandlingFor::SettingStyle ||
+        aEquivTable[index].gettable) {
       nsAutoString cssValue, cssPropertyString;
       // find the equivalent css value for the index-th property in
       // the equivalence table
       (*aEquivTable[index].processValueFunctor)(
-          (!aGetOrRemoveRequest || aEquivTable[index].caseSensitiveValue)
+          (aHandlingFor == HandlingFor::SettingStyle ||
+           aEquivTable[index].caseSensitiveValue)
               ? &value
               : &lowerCasedValue,
           cssValue, aEquivTable[index].defaultValue,
           aEquivTable[index].prependValue, aEquivTable[index].appendValue);
-      aOutArrayOfCSSProperty.AppendElement(GetCSSPropertyAtom(cssProperty));
-      aOutArrayOfCSSValue.AppendElement(cssValue);
+      nsStaticAtom* const propertyAtom = GetCSSPropertyAtom(cssProperty);
+      if (MOZ_LIKELY(propertyAtom)) {
+        aOutCSSDeclarations.AppendElement(
+            CSSDeclaration{*propertyAtom, cssValue});
+      }
     }
-    index++;
-    cssProperty = aEquivTable[index].cssProperty;
   }
 }
 
-// Populate aOutArrayOfCSSProperty and aOutArrayOfCSSValue with the declarations
-// equivalent to aHTMLProperty/aAttribute/aValue for the node aNode
-
 // static
-void CSSEditUtils::GenerateCSSDeclarationsFromHTMLStyle(
-    Element& aElement, nsAtom* aHTMLProperty, nsAtom* aAttribute,
-    const nsAString* aValue, nsTArray<nsStaticAtom*>& aOutArrayOfCSSProperty,
-    nsTArray<nsString>& aOutArrayOfCSSValue, bool aGetOrRemoveRequest) {
-  const CSSEditUtils::CSSEquivTable* equivTable = nullptr;
+void CSSEditUtils::GetCSSDeclarations(
+    Element& aElement, const EditorElementStyle& aStyle,
+    const nsAString* aValue, HandlingFor aHandlingFor,
+    nsTArray<CSSDeclaration>& aOutCSSDeclarations) {
+  nsStaticAtom* const htmlProperty =
+      aStyle.IsInlineStyle() ? aStyle.AsInlineStyle().mHTMLProperty : nullptr;
+  const RefPtr<nsAtom> attributeOrStyle =
+      aStyle.IsInlineStyle() ? aStyle.AsInlineStyle().mAttribute
+                             : aStyle.Style();
 
-  if (nsGkAtoms::b == aHTMLProperty) {
-    equivTable = boldEquivTable;
-  } else if (nsGkAtoms::i == aHTMLProperty) {
-    equivTable = italicEquivTable;
-  } else if (nsGkAtoms::u == aHTMLProperty) {
-    equivTable = underlineEquivTable;
-  } else if (nsGkAtoms::strike == aHTMLProperty) {
-    equivTable = strikeEquivTable;
-  } else if (nsGkAtoms::tt == aHTMLProperty) {
-    equivTable = ttEquivTable;
-  } else if (aAttribute) {
-    if (nsGkAtoms::font == aHTMLProperty && aAttribute == nsGkAtoms::color) {
-      equivTable = fontColorEquivTable;
-    } else if (nsGkAtoms::font == aHTMLProperty &&
-               aAttribute == nsGkAtoms::face) {
-      equivTable = fontFaceEquivTable;
-    } else if (aAttribute == nsGkAtoms::bgcolor) {
-      equivTable = bgcolorEquivTable;
-    } else if (aAttribute == nsGkAtoms::background) {
-      equivTable = backgroundImageEquivTable;
-    } else if (aAttribute == nsGkAtoms::text) {
-      equivTable = textColorEquivTable;
-    } else if (aAttribute == nsGkAtoms::border) {
-      equivTable = borderEquivTable;
-    } else if (aAttribute == nsGkAtoms::align) {
-      if (aElement.IsHTMLElement(nsGkAtoms::table)) {
-        equivTable = tableAlignEquivTable;
-      } else if (aElement.IsHTMLElement(nsGkAtoms::hr)) {
-        equivTable = hrAlignEquivTable;
-      } else if (aElement.IsAnyOfHTMLElements(nsGkAtoms::legend,
-                                              nsGkAtoms::caption)) {
-        equivTable = captionAlignEquivTable;
-      } else {
-        equivTable = textAlignEquivTable;
-      }
-    } else if (aAttribute == nsGkAtoms::valign) {
-      equivTable = verticalAlignEquivTable;
-    } else if (aAttribute == nsGkAtoms::nowrap) {
-      equivTable = nowrapEquivTable;
-    } else if (aAttribute == nsGkAtoms::width) {
-      equivTable = widthEquivTable;
-    } else if (aAttribute == nsGkAtoms::height ||
-               (aElement.IsHTMLElement(nsGkAtoms::hr) &&
-                aAttribute == nsGkAtoms::size)) {
-      equivTable = heightEquivTable;
-    } else if (aAttribute == nsGkAtoms::type &&
-               aElement.IsAnyOfHTMLElements(nsGkAtoms::ol, nsGkAtoms::ul,
-                                            nsGkAtoms::li)) {
-      equivTable = listStyleTypeEquivTable;
+  const auto* equivTable = [&]() -> const CSSEditUtils::CSSEquivTable* {
+    if (nsGkAtoms::b == htmlProperty) {
+      return boldEquivTable;
     }
-  }
+    if (nsGkAtoms::i == htmlProperty) {
+      return italicEquivTable;
+    }
+    if (nsGkAtoms::u == htmlProperty) {
+      return underlineEquivTable;
+    }
+    if (nsGkAtoms::strike == htmlProperty) {
+      return strikeEquivTable;
+    }
+    if (nsGkAtoms::tt == htmlProperty) {
+      return ttEquivTable;
+    }
+    if (!attributeOrStyle) {
+      return nullptr;
+    }
+    if (nsGkAtoms::font == htmlProperty &&
+        attributeOrStyle == nsGkAtoms::color) {
+      return fontColorEquivTable;
+    }
+    if (nsGkAtoms::font == htmlProperty &&
+        attributeOrStyle == nsGkAtoms::face) {
+      return fontFaceEquivTable;
+    }
+    if (attributeOrStyle == nsGkAtoms::bgcolor) {
+      return bgcolorEquivTable;
+    }
+    if (attributeOrStyle == nsGkAtoms::background) {
+      return backgroundImageEquivTable;
+    }
+    if (attributeOrStyle == nsGkAtoms::text) {
+      return textColorEquivTable;
+    }
+    if (attributeOrStyle == nsGkAtoms::border) {
+      return borderEquivTable;
+    }
+    if (attributeOrStyle == nsGkAtoms::align) {
+      if (aElement.IsHTMLElement(nsGkAtoms::table)) {
+        return tableAlignEquivTable;
+      }
+      if (aElement.IsHTMLElement(nsGkAtoms::hr)) {
+        return hrAlignEquivTable;
+      }
+      if (aElement.IsAnyOfHTMLElements(nsGkAtoms::legend, nsGkAtoms::caption)) {
+        return captionAlignEquivTable;
+      }
+      return textAlignEquivTable;
+    }
+    if (attributeOrStyle == nsGkAtoms::valign) {
+      return verticalAlignEquivTable;
+    }
+    if (attributeOrStyle == nsGkAtoms::nowrap) {
+      return nowrapEquivTable;
+    }
+    if (attributeOrStyle == nsGkAtoms::width) {
+      return widthEquivTable;
+    }
+    if (attributeOrStyle == nsGkAtoms::height ||
+        (aElement.IsHTMLElement(nsGkAtoms::hr) &&
+         attributeOrStyle == nsGkAtoms::size)) {
+      return heightEquivTable;
+    }
+    if (attributeOrStyle == nsGkAtoms::type &&
+        aElement.IsAnyOfHTMLElements(nsGkAtoms::ol, nsGkAtoms::ul,
+                                     nsGkAtoms::li)) {
+      return listStyleTypeEquivTable;
+    }
+    return nullptr;
+  }();
   if (equivTable) {
-    BuildCSSDeclarations(aOutArrayOfCSSProperty, aOutArrayOfCSSValue,
-                         equivTable, aValue, aGetOrRemoveRequest);
+    GetCSSDeclarations(equivTable, aValue, aHandlingFor, aOutCSSDeclarations);
   }
 }
 
 // Add to aNode the CSS inline style equivalent to HTMLProperty/aAttribute/
 // aValue for the node, and return in aCount the number of CSS properties set
 // by the call.  The Element version returns aCount instead.
-Result<int32_t, nsresult> CSSEditUtils::SetCSSEquivalentToStyle(
+Result<size_t, nsresult> CSSEditUtils::SetCSSEquivalentToStyle(
     WithTransaction aWithTransaction, HTMLEditor& aHTMLEditor,
     nsStyledElement& aStyledElement, const EditorElementStyle& aStyleToSet,
     const nsAString* aValue) {
-  nsStaticAtom* const htmlProperty =
-      aStyleToSet.IsInlineStyle() ? aStyleToSet.AsInlineStyle().mHTMLProperty
-                                  : nullptr;
-  const RefPtr<nsAtom> attributeOrStyle =
-      aStyleToSet.IsInlineStyle() ? aStyleToSet.AsInlineStyle().mAttribute
-                                  : aStyleToSet.Style();
   MOZ_DIAGNOSTIC_ASSERT(aStyleToSet.IsCSSEditable(aStyledElement));
 
   // we can apply the styles only if the node is an element and if we have
   // an equivalence for the requested HTML style in this implementation
 
   // Find the CSS equivalence to the HTML style
-  nsTArray<nsStaticAtom*> cssPropertyArray;
-  nsTArray<nsString> cssValueArray;
-  GenerateCSSDeclarationsFromHTMLStyle(aStyledElement, htmlProperty,
-                                       attributeOrStyle, aValue,
-                                       cssPropertyArray, cssValueArray, false);
+  AutoTArray<CSSDeclaration, 4> cssDeclarations;
+  GetCSSDeclarations(aStyledElement, aStyleToSet, aValue,
+                     HandlingFor::SettingStyle, cssDeclarations);
 
   // set the individual CSS inline styles
-  const size_t count = cssPropertyArray.Length();
-  for (size_t index = 0; index < count; index++) {
+  for (const CSSDeclaration& cssDeclaration : cssDeclarations) {
     nsresult rv = SetCSSPropertyInternal(
-        aHTMLEditor, aStyledElement, MOZ_KnownLive(*cssPropertyArray[index]),
-        cssValueArray[index], aWithTransaction == WithTransaction::No);
+        aHTMLEditor, aStyledElement, MOZ_KnownLive(cssDeclaration.mProperty),
+        cssDeclaration.mValue, aWithTransaction == WithTransaction::No);
     if (NS_FAILED(rv)) {
       NS_WARNING("CSSEditUtils::SetCSSPropertyInternal() failed");
       return Err(rv);
     }
   }
-  return count;
+  return cssDeclarations.Length();
 }
 
 // static
@@ -885,34 +896,21 @@ nsresult CSSEditUtils::RemoveCSSEquivalentToStyle(
     WithTransaction aWithTransaction, HTMLEditor& aHTMLEditor,
     nsStyledElement& aStyledElement, const EditorElementStyle& aStyleToRemove,
     const nsAString* aValue) {
-  nsStaticAtom* const htmlProperty =
-      aStyleToRemove.IsInlineStyle()
-          ? aStyleToRemove.AsInlineStyle().mHTMLProperty
-          : nullptr;
-  const RefPtr<nsAtom> attributeOrStyle =
-      aStyleToRemove.IsInlineStyle() ? aStyleToRemove.AsInlineStyle().mAttribute
-                                     : aStyleToRemove.Style();
   MOZ_DIAGNOSTIC_ASSERT(aStyleToRemove.IsCSSEditable(aStyledElement));
 
   // we can apply the styles only if the node is an element and if we have
   // an equivalence for the requested HTML style in this implementation
 
   // Find the CSS equivalence to the HTML style
-  nsTArray<nsStaticAtom*> cssPropertyArray;
-  nsTArray<nsString> cssValueArray;
-  GenerateCSSDeclarationsFromHTMLStyle(aStyledElement, htmlProperty,
-                                       attributeOrStyle, aValue,
-                                       cssPropertyArray, cssValueArray, true);
+  AutoTArray<CSSDeclaration, 4> cssDeclarations;
+  GetCSSDeclarations(aStyledElement, aStyleToRemove, aValue,
+                     HandlingFor::RemovingStyle, cssDeclarations);
 
   // remove the individual CSS inline styles
-  const size_t count = cssPropertyArray.Length();
-  if (!count) {
-    return NS_OK;
-  }
-  for (size_t index = 0; index < count; index++) {
+  for (const CSSDeclaration& cssDeclaration : cssDeclarations) {
     nsresult rv = RemoveCSSPropertyInternal(
-        aHTMLEditor, aStyledElement, MOZ_KnownLive(*cssPropertyArray[index]),
-        cssValueArray[index], aWithTransaction == WithTransaction::No);
+        aHTMLEditor, aStyledElement, MOZ_KnownLive(cssDeclaration.mProperty),
+        cssDeclaration.mValue, aWithTransaction == WithTransaction::No);
     if (NS_FAILED(rv)) {
       NS_WARNING("CSSEditUtils::RemoveCSSPropertyWithoutTransaction() failed");
       return rv;
@@ -934,44 +932,33 @@ nsresult CSSEditUtils::GetCSSEquivalentTo(Element& aElement,
                                           StyleType aStyleType) {
   MOZ_ASSERT_IF(aStyle.IsInlineStyle(),
                 !aStyle.AsInlineStyle().IsStyleToClearAllInlineStyles());
-
-  nsStaticAtom* const htmlProperty =
-      aStyle.IsInlineStyle() ? aStyle.AsInlineStyle().mHTMLProperty : nullptr;
-  const RefPtr<nsAtom> attributeOrStyle =
-      aStyle.IsInlineStyle() ? aStyle.AsInlineStyle().mAttribute
-                             : aStyle.Style();
   MOZ_DIAGNOSTIC_ASSERT(aStyle.IsCSSEditable(aElement));
 
   aOutValue.Truncate();
-  // Yes, the requested HTML style has a CSS equivalence in this implementation
-  nsTArray<nsStaticAtom*> cssPropertyArray;
-  nsTArray<nsString> cssValueArray;
-  // get the CSS equivalence with last param true indicating we want only the
-  // "gettable" properties
-  GenerateCSSDeclarationsFromHTMLStyle(aElement, htmlProperty, attributeOrStyle,
-                                       nullptr, cssPropertyArray, cssValueArray,
-                                       true);
-  int32_t count = cssPropertyArray.Length();
-  for (int32_t index = 0; index < count; index++) {
-    nsAutoString valueString;
+  AutoTArray<CSSDeclaration, 4> cssDeclarations;
+  GetCSSDeclarations(aElement, aStyle, nullptr, HandlingFor::GettingStyle,
+                     cssDeclarations);
+  nsAutoString valueString;
+  for (const CSSDeclaration& cssDeclaration : cssDeclarations) {
+    valueString.Truncate();
     // retrieve the specified/computed value of the property
     if (aStyleType == StyleType::Computed) {
       nsresult rv = GetComputedCSSInlinePropertyBase(
-          aElement, MOZ_KnownLive(*cssPropertyArray[index]), valueString);
+          aElement, MOZ_KnownLive(cssDeclaration.mProperty), valueString);
       if (NS_FAILED(rv)) {
         NS_WARNING("CSSEditUtils::GetComputedCSSInlinePropertyBase() failed");
         return rv;
       }
     } else {
       nsresult rv = GetSpecifiedCSSInlinePropertyBase(
-          aElement, *cssPropertyArray[index], valueString);
+          aElement, cssDeclaration.mProperty, valueString);
       if (NS_FAILED(rv)) {
         NS_WARNING("CSSEditUtils::GetSpecifiedCSSInlinePropertyBase() failed");
         return rv;
       }
     }
     // append the value to aOutValue (possibly with a leading white-space)
-    if (index) {
+    if (!aOutValue.IsEmpty()) {
       aOutValue.Append(HTMLEditUtils::kSpace);
     }
     aOutValue.Append(valueString);

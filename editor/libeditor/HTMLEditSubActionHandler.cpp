@@ -6629,7 +6629,7 @@ Result<CreateElementResult, nsresult> HTMLEditor::AlignNodesAndDescendants(
                 *styledListOrListItemElement)) {
           // MOZ_KnownLive(*styledListOrListItemElement): An element of
           // aArrayOfContents which is array of OwningNonNull.
-          Result<int32_t, nsresult> result =
+          Result<size_t, nsresult> result =
               CSSEditUtils::SetCSSEquivalentToStyle(
                   WithTransaction::Yes, *this,
                   MOZ_KnownLive(*styledListOrListItemElement),
