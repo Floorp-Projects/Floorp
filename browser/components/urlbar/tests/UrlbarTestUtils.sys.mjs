@@ -260,6 +260,8 @@ export var UrlbarTestUtils = {
       };
     } else if (details.type == UrlbarUtils.RESULT_TYPE.KEYWORD) {
       details.keyword = result.payload.keyword;
+    } else if (details.type == UrlbarUtils.RESULT_TYPE.DYNAMIC) {
+      details.dynamicType = result.payload.dynamicType;
     }
     return details;
   },

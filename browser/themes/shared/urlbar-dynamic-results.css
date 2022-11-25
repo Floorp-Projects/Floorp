@@ -215,3 +215,27 @@
 .urlbarView-row[dynamicType=quickactions] .urlbarView-title {
   display: flex;
 }
+
+/**
+ * UrlbarProviderContextualSearch
+ */
+
+.urlbarView-row[dynamicType=contextualSearch] .urlbarView-title[overflow] {
+  mask-image: linear-gradient(to left, transparent, black 2em);
+}
+
+.urlbarView-row[dynamicType=contextualSearch] .urlbarView-title[overflow]:-moz-locale-dir(rtl) {
+  mask-image: linear-gradient(to right, transparent, black 2em);
+}
+
+.urlbarView-row[dynamicType=contextualSearch] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator.urlbarView-dynamic-contextualSearch-separator {
+  visibility: visible;
+}
+
+.urlbarView-row[dynamicType=contextualSearch] .urlbarView-dynamic-contextualSearch-description {
+  font-size: 0.85em;
+}
+
+.urlbarView-row[dynamicType=contextualSearch]:hover > .urlbarView-row-inner {
+  background-color: var(--autocomplete-popup-hover-background);
+}

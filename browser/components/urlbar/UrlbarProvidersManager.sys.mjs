@@ -42,6 +42,8 @@ var localProviderModules = {
     "resource:///modules/UrlbarProviderBookmarkKeywords.sys.mjs",
   UrlbarProviderCalculator:
     "resource:///modules/UrlbarProviderCalculator.sys.mjs",
+  UrlbarProviderContextualSearch:
+    "resource:///modules/UrlbarProviderContextualSearch.sys.mjs",
   UrlbarProviderHeuristicFallback:
     "resource:///modules/UrlbarProviderHeuristicFallback.sys.mjs",
   UrlbarProviderInputHistory:
