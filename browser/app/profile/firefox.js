@@ -574,6 +574,9 @@ pref("browser.urlbar.bestMatch.enabled", false);
 // Nimbus variable `bestMatchBlockingEnabled`.
 pref("browser.urlbar.bestMatch.blockingEnabled", false);
 
+// Enable site specific search result.
+pref("browser.urlbar.contextualSearch.enabled", false);
+
 pref("browser.altClickSave", false);
 
 // Enable logging downloads operations to the Console.
