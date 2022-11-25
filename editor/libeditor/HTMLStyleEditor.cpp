@@ -336,10 +336,7 @@ nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
       for (auto& content : arrayOfContentsAroundRange) {
         // MOZ_KnownLive due to bug 1622253.
         Result<EditorDOMPoint, nsresult> setStyleResult =
-            SetInlinePropertyOnNode(MOZ_KnownLive(*content),
-                                    MOZ_KnownLive(styleToSet.HTMLPropertyRef()),
-                                    MOZ_KnownLive(styleToSet.mAttribute),
-                                    styleToSet.mAttributeValue);
+            SetInlinePropertyOnNode(MOZ_KnownLive(*content), styleToSet);
         if (MOZ_UNLIKELY(setStyleResult.isErr())) {
           NS_WARNING("HTMLEditor::SetInlinePropertyOnNode() failed");
           return setStyleResult.unwrapErr();
@@ -650,10 +647,8 @@ HTMLEditor::SetInlinePropertyOnTextNode(
   }
 
   // Wrap the node inside inline node with appropriate {attribute,value}
-  Result<EditorDOMPoint, nsresult> setStyleResult = SetInlinePropertyOnNode(
-      MOZ_KnownLive(*middleTextNode),
-      MOZ_KnownLive(aStyleToSet.HTMLPropertyRef()), aStyleToSet.mAttribute,
-      aStyleToSet.mAttributeValue);
+  Result<EditorDOMPoint, nsresult> setStyleResult =
+      SetInlinePropertyOnNode(MOZ_KnownLive(*middleTextNode), aStyleToSet);
   if (MOZ_UNLIKELY(setStyleResult.isErr())) {
     NS_WARNING("HTMLEditor::SetInlinePropertyOnNode() failed");
     return setStyleResult.propagateErr();
@@ -663,8 +658,7 @@ HTMLEditor::SetInlinePropertyOnTextNode(
 }
 
 Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
-    nsIContent& aContent, nsAtom& aProperty, nsAtom* aAttribute,
-    const nsAString& aValue) {
+    nsIContent& aContent, const EditorInlineStyleAndValue& aStyleToSet) {
   // If this is an element that can't be contained in a span, we have to
   // recurse to its children.
   if (!HTMLEditUtils::CanNodeContain(*nsGkAtoms::span, aContent)) {
@@ -689,8 +683,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
       // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
       // keep it alive.
       Result<EditorDOMPoint, nsresult> setInlinePropertyResult =
-          SetInlinePropertyOnNode(MOZ_KnownLive(content), aProperty, aAttribute,
-                                  aValue);
+          SetInlinePropertyOnNode(MOZ_KnownLive(content), aStyleToSet);
       if (MOZ_UNLIKELY(setInlinePropertyResult.isErr())) {
         NS_WARNING("HTMLEditor::SetInlinePropertyOnNode() failed");
         return setInlinePropertyResult;
@@ -710,8 +703,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
   if (previousSibling && previousSibling->IsElement()) {
     OwningNonNull<Element> previousElement(*previousSibling->AsElement());
     Result<bool, nsresult> canMoveIntoPreviousSibling =
-        ElementIsGoodContainerForTheStyle(previousElement, &aProperty,
-                                          aAttribute, &aValue);
+        ElementIsGoodContainerForTheStyle(
+            previousElement, MOZ_KnownLive(&aStyleToSet.HTMLPropertyRef()),
+            aStyleToSet.mAttribute, &aStyleToSet.mAttributeValue);
     if (canMoveIntoPreviousSibling.isErr()) {
       NS_WARNING("HTMLEditor::ElementIsGoodContainerForTheStyle() failed");
       return canMoveIntoPreviousSibling.propagateErr();
@@ -729,8 +723,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
       }
       OwningNonNull<Element> nextElement(*nextSibling->AsElement());
       Result<bool, nsresult> canMoveIntoNextSibling =
-          ElementIsGoodContainerForTheStyle(nextElement, &aProperty, aAttribute,
-                                            &aValue);
+          ElementIsGoodContainerForTheStyle(
+              nextElement, MOZ_KnownLive(&aStyleToSet.HTMLPropertyRef()),
+              aStyleToSet.mAttribute, &aStyleToSet.mAttributeValue);
       if (canMoveIntoNextSibling.isErr()) {
         NS_WARNING("HTMLEditor::ElementIsGoodContainerForTheStyle() failed");
         unwrappedMoveNodeResult.IgnoreCaretPointSuggestion();
@@ -758,8 +753,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
   if (nextSibling && nextSibling->IsElement()) {
     OwningNonNull<Element> nextElement(*nextSibling->AsElement());
     Result<bool, nsresult> canMoveIntoNextSibling =
-        ElementIsGoodContainerForTheStyle(nextElement, &aProperty, aAttribute,
-                                          &aValue);
+        ElementIsGoodContainerForTheStyle(
+            nextElement, MOZ_KnownLive(&aStyleToSet.HTMLPropertyRef()),
+            aStyleToSet.mAttribute, &aStyleToSet.mAttributeValue);
     if (canMoveIntoNextSibling.isErr()) {
       NS_WARNING("HTMLEditor::ElementIsGoodContainerForTheStyle() failed");
       return canMoveIntoNextSibling.propagateErr();
@@ -776,11 +772,13 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
   }
 
   // Don't need to do anything if property already set on node
-  if (CSSEditUtils::IsCSSEditableProperty(&aContent, &aProperty, aAttribute)) {
-    nsAutoString value(aValue);
+  if (CSSEditUtils::IsCSSEditableProperty(
+          &aContent, &aStyleToSet.HTMLPropertyRef(), aStyleToSet.mAttribute)) {
+    nsAutoString value(aStyleToSet.mAttributeValue);
     Result<bool, nsresult> isComputedCSSEquivalentToHTMLInlineStyleOrError =
         CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet(
-            *this, aContent, &aProperty, aAttribute, value);
+            *this, aContent, MOZ_KnownLive(&aStyleToSet.HTMLPropertyRef()),
+            aStyleToSet.mAttribute, value);
     if (isComputedCSSEquivalentToHTMLInlineStyleOrError.isErr()) {
       NS_WARNING(
           "CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet() failed");
@@ -789,19 +787,21 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
     if (isComputedCSSEquivalentToHTMLInlineStyleOrError.unwrap()) {
       return EditorDOMPoint();
     }
-  } else if (HTMLEditUtils::IsInlineStyleSetByElement(aContent, aProperty,
-                                                      aAttribute, &aValue)) {
+  } else if (HTMLEditUtils::IsInlineStyleSetByElement(
+                 aContent, aStyleToSet.HTMLPropertyRef(),
+                 aStyleToSet.mAttribute, &aStyleToSet.mAttributeValue)) {
     return EditorDOMPoint();
   }
 
   auto ShouldUseCSS = [&]() {
     return (IsCSSEnabled() && CSSEditUtils::IsCSSEditableProperty(
-                                  &aContent, &aProperty, aAttribute)) ||
+                                  &aContent, &aStyleToSet.HTMLPropertyRef(),
+                                  aStyleToSet.mAttribute)) ||
            // bgcolor is always done using CSS
-           aAttribute == nsGkAtoms::bgcolor ||
+           aStyleToSet.mAttribute == nsGkAtoms::bgcolor ||
            // called for removing parent style, we should use CSS with
            // `<span>` element.
-           aValue.EqualsLiteral("-moz-editor-invert-value");
+           aStyleToSet.IsStyleToInvert();
   };
 
   if (ShouldUseCSS()) {
@@ -836,8 +836,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
       // RefPtr.
       Result<int32_t, nsresult> result =
           CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction(
-              *this, MOZ_KnownLive(*spanStyledElement), &aProperty, aAttribute,
-              &aValue);
+              *this, MOZ_KnownLive(*spanStyledElement),
+              MOZ_KnownLive(&aStyleToSet.HTMLPropertyRef()),
+              aStyleToSet.mAttribute, &aStyleToSet.mAttributeValue);
       if (result.isErr()) {
         if (result.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
           NS_WARNING(
@@ -854,13 +855,14 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
   }
 
   // is it already the right kind of node, but with wrong attribute?
-  if (aContent.IsHTMLElement(&aProperty)) {
-    if (NS_WARN_IF(!aAttribute)) {
+  if (aContent.IsHTMLElement(&aStyleToSet.HTMLPropertyRef())) {
+    if (NS_WARN_IF(!aStyleToSet.mAttribute)) {
       return Err(NS_ERROR_INVALID_ARG);
     }
     // Just set the attribute on it.
     nsresult rv = SetAttributeWithTransaction(
-        MOZ_KnownLive(*aContent.AsElement()), *aAttribute, aValue);
+        MOZ_KnownLive(*aContent.AsElement()), *aStyleToSet.mAttribute,
+        aStyleToSet.mAttributeValue);
     if (NS_WARN_IF(Destroyed())) {
       return Err(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -874,8 +876,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
   // ok, chuck it in its very own container
   Result<CreateElementResult, nsresult> wrapWithNewElementToFormatResult =
       InsertContainerWithTransaction(
-          aContent, aProperty, aAttribute ? *aAttribute : *nsGkAtoms::_empty,
-          aValue);
+          aContent, MOZ_KnownLive(aStyleToSet.HTMLPropertyRef()),
+          aStyleToSet.mAttribute ? *aStyleToSet.mAttribute : *nsGkAtoms::_empty,
+          aStyleToSet.mAttributeValue);
   if (MOZ_UNLIKELY(wrapWithNewElementToFormatResult.isErr())) {
     NS_WARNING("HTMLEditor::InsertContainerWithTransaction() failed");
     return wrapWithNewElementToFormatResult.propagateErr();
@@ -885,8 +888,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
 }
 
 Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNode(
-    nsIContent& aContent, nsAtom& aProperty, nsAtom* aAttribute,
-    const nsAString& aValue) {
+    nsIContent& aContent, const EditorInlineStyleAndValue& aStyleToSet) {
   if (NS_WARN_IF(!aContent.GetParentNode())) {
     return Err(NS_ERROR_FAILURE);
   }
@@ -896,8 +898,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNode(
   EditorDOMPoint pointToPutCaret;
   if (aContent.IsElement()) {
     Result<EditorDOMPoint, nsresult> removeStyleResult =
-        RemoveStyleInside(MOZ_KnownLive(*aContent.AsElement()), &aProperty,
-                          aAttribute, SpecifiedStyle::Preserve);
+        RemoveStyleInside(MOZ_KnownLive(*aContent.AsElement()),
+                          MOZ_KnownLive(&aStyleToSet.HTMLPropertyRef()),
+                          aStyleToSet.mAttribute, SpecifiedStyle::Preserve);
     if (MOZ_UNLIKELY(removeStyleResult.isErr())) {
       NS_WARNING("HTMLEditor::RemoveStyleInside() failed");
       return removeStyleResult.propagateErr();
@@ -910,7 +913,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNode(
   if (aContent.GetParentNode()) {
     // The node is still where it was
     Result<EditorDOMPoint, nsresult> setStyleResult =
-        SetInlinePropertyOnNodeImpl(aContent, aProperty, aAttribute, aValue);
+        SetInlinePropertyOnNodeImpl(aContent, aStyleToSet);
     NS_WARNING_ASSERTION(setStyleResult.isOk(),
                          "HTMLEditor::SetInlinePropertyOnNodeImpl() failed");
     return setStyleResult;
@@ -934,11 +937,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNode(
   }
 
   for (OwningNonNull<nsIContent>& content : nodesToSet) {
-    // MOZ_KnownLive because 'nodesToSet' is guaranteed to
-    // keep it alive.
+    // MOZ_KnownLive because 'nodesToSet' guarantees keeping it alive.
     Result<EditorDOMPoint, nsresult> setStyleResult =
-        SetInlinePropertyOnNodeImpl(MOZ_KnownLive(content), aProperty,
-                                    aAttribute, aValue);
+        SetInlinePropertyOnNodeImpl(MOZ_KnownLive(content), aStyleToSet);
     if (MOZ_UNLIKELY(setStyleResult.isErr())) {
       NS_WARNING("HTMLEditor::SetInlinePropertyOnNodeImpl() failed");
       return setStyleResult;
@@ -2451,19 +2452,19 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
             // keep it alive.
             Result<EditorDOMPoint, nsresult> setStyleResult =
                 SetInlinePropertyOnNode(
-                    MOZ_KnownLive(content), *styleToRemove.mHTMLProperty,
-                    styleToRemove.mAttribute, u"-moz-editor-invert-value"_ns);
+                    MOZ_KnownLive(content),
+                    EditorInlineStyleAndValue::ToInvert(styleToRemove));
             if (MOZ_UNLIKELY(setStyleResult.isErr())) {
               if (NS_WARN_IF(setStyleResult.unwrapErr() ==
                              NS_ERROR_EDITOR_DESTROYED)) {
                 NS_WARNING(
-                    "HTMLEditor::SetInlinePropertyOnNode(-moz-editor-invert-"
-                    "value) failed");
+                    "HTMLEditor::SetInlinePropertyOnNode("
+                    "EditorInlineStyleAndValue::ToInvert()) failed");
                 return NS_ERROR_EDITOR_DESTROYED;
               }
               NS_WARNING(
-                  "HTMLEditor::SetInlinePropertyOnNode(-moz-editor-invert-"
-                  "value) failed, but ignored");
+                  "HTMLEditor::SetInlinePropertyOnNode("
+                  "EditorInlineStyleAndValue::ToInvert()) failed, but ignored");
             }
             // There is AutoTransactionsConserveSelection, so we don't need to
             // update selection here.

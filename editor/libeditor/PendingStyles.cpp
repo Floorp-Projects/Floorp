@@ -41,6 +41,13 @@ EditorInlineStyle PendingStyle::ToInlineStyle() const {
               : EditorInlineStyle::RemoveAllStyles();
 }
 
+EditorInlineStyleAndValue PendingStyle::ToInlineStyleAndValue() const {
+  MOZ_ASSERT(mTag);
+  return mAttribute ? EditorInlineStyleAndValue(*mTag, *mAttribute,
+                                                mAttributeValueOrCSSValue)
+                    : EditorInlineStyleAndValue(*mTag);
+}
+
 /********************************************************************
  * mozilla::PendingStyleCache
  *******************************************************************/

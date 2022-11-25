@@ -979,6 +979,10 @@ struct MOZ_STACK_CLASS EditorInlineStyleAndValue : public EditorInlineStyle {
     return *mHTMLProperty;
   }
 
+  [[nodiscard]] bool IsStyleToInvert() const {
+    return mAttributeValue.EqualsLiteral(u"-moz-editor-invert-value");
+  }
+
  private:
   using EditorInlineStyle::mHTMLProperty;
 
