@@ -69,6 +69,13 @@ const gRuleManagers = [];
  *  - allow / allowAllRequests
  */
 
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "WebRequest",
+  "resource://gre/modules/WebRequest.jsm"
+);
+
 // The RuleCondition class represents a rule's "condition" type as described in
 // schemas/declarative_net_request.json. This class exists to allow the JS
 // engine to use one Shape for all Rule instances.
@@ -307,8 +314,8 @@ class RuleValidator {
     // http(s) URLs can (regardless of extension permissions).
     // data:-URLs are currently blocked due to bug 1622986.
 
-    // TODO bug 1745761: With the redirect action, add schema definitions +
-    // implement rule.action.redirect.transform / regexSubstitution.
+    // TODO bug 1801870: Implement rule.action.redirect.transform.
+    // TODO bug 1745760: With regexFilter support, implement regexSubstitution.
     return true;
   }
 
@@ -437,6 +444,17 @@ class RequestDetails {
     this.initiatorDomain = initiatorURI
       ? this.#domainFromURI(initiatorURI)
       : null;
+  }
+
+  static fromChannelWrapper(channel) {
+    return new RequestDetails({
+      requestURI: channel.finalURI,
+      // Note: originURI may be null, if missing or null principal, as desired.
+      initiatorURI: channel.originURI,
+      type: channel.type,
+      method: channel.method.toLowerCase(),
+      tabId: null, // TODO: use getBrowserData to populate.
+    });
   }
 
   canExtensionModify(extension) {
@@ -646,7 +664,15 @@ class RequestEvaluator {
 
     // Check this.req.requestURI:
     if (cond.urlFilter) {
-      // TODO bug 1745759: Check cond.urlFilter + isUrlFilterCaseSensitive
+      if (
+        !this.#matchesUrlFilter(
+          this.req.requestURI,
+          cond.urlFilter,
+          cond.isUrlFilterCaseSensitive
+        )
+      ) {
+        return false;
+      }
     } else if (cond.regexFilter) {
       // TODO bug 1745760: check cond.regexFilter + isUrlFilterCaseSensitive
     }
@@ -704,6 +730,22 @@ class RequestEvaluator {
   }
 
   /**
+   * @param {nsIURI} uri - The request URI.
+   * @param {string} urlFilter
+   * @param {boolean} [isUrlFilterCaseSensitive]
+   * @returns {boolean} Whether urlFilter matches the given uri.
+   */
+  #matchesUrlFilter(uri, urlFilter, isUrlFilterCaseSensitive) {
+    // TODO bug 1745759: Check cond.urlFilter + isUrlFilterCaseSensitive
+    // Placeholder for unit test until we have a complete implementation.
+    if (urlFilter === "|https:*") {
+      return uri.schemeIs("https");
+    }
+    throw new Error(`urlFilter not implemented yet: ${urlFilter}`);
+    // return true; after all other checks passed.
+  }
+
+  /**
    * @param {string[]} domains - A list of canonicalized domain patterns.
    *   Canonical means punycode, no ports, and IPv6 without brackets, and not
    *   starting with a dot. May end with a dot if it is a FQDN.
@@ -746,6 +788,125 @@ class RequestEvaluator {
   }
 }
 
+const NetworkIntegration = {
+  register() {
+    // We register via WebRequest.jsm to ensure predictable ordering of DNR and
+    // WebRequest behavior.
+    lazy.WebRequest.setDNRHandlingEnabled(true);
+  },
+  unregister() {
+    lazy.WebRequest.setDNRHandlingEnabled(false);
+  },
+
+  startDNREvaluation(channel) {
+    let ruleManagers = gRuleManagers;
+    if (!channel.canModify) {
+      ruleManagers = [];
+    }
+    let matchedRules;
+    if (ruleManagers.length) {
+      const request = RequestDetails.fromChannelWrapper(channel);
+      matchedRules = RequestEvaluator.evaluateRequest(request, ruleManagers);
+    }
+    // Cache for later. In case of redirects, _dnrMatchedRules may exist for
+    // the pre-redirect HTTP channel, and is overwritten here again.
+    channel._dnrMatchedRules = matchedRules;
+  },
+
+  /**
+   * Applies the actions of the DNR rules.
+   *
+   * @param {ChannelWrapper} channel
+   * @returns {boolean} Whether to ignore any responses from the webRequest API.
+   */
+  onBeforeRequest(channel) {
+    let matchedRules = channel._dnrMatchedRules;
+    if (!matchedRules?.length) {
+      return false;
+    }
+    // If a matched rule closes the channel, it is the sole match.
+    const finalMatch = matchedRules[0];
+    switch (finalMatch.rule.action.type) {
+      case "block":
+        this.applyBlock(channel, finalMatch);
+        return true;
+      case "redirect":
+        this.applyRedirect(channel, finalMatch);
+        return true;
+      case "upgradeScheme":
+        this.applyUpgradeScheme(channel, finalMatch);
+        return true;
+    }
+    // If there are multiple rules, then it may be a combination of allow,
+    // allowAllRequests and/or modifyHeaders.
+
+    // TODO bug 1797403: Apply allowAllRequests actions.
+
+    return false;
+  },
+
+  onBeforeSendHeaders(channel) {
+    // TODO bug 1797404: apply modifyHeaders actions (requestHeaders).
+  },
+
+  onHeadersReceived(channel) {
+    // TODO bug 1797404: apply modifyHeaders actions (responseHeaders).
+  },
+
+  applyBlock(channel, matchedRule) {
+    // TODO bug 1802259: Consider a DNR-specific reason.
+    channel.cancel(
+      Cr.NS_ERROR_ABORT,
+      Ci.nsILoadInfo.BLOCKING_REASON_EXTENSION_WEBREQUEST
+    );
+    const addonId = matchedRule.ruleManager.extension.id;
+    let properties = channel.channel.QueryInterface(Ci.nsIWritablePropertyBag);
+    properties.setProperty("cancelledByExtension", addonId);
+  },
+
+  applyUpgradeScheme(channel, matchedRule) {
+    // Request upgrade. No-op if already secure (i.e. https).
+    channel.upgradeToSecure();
+  },
+
+  applyRedirect(channel, matchedRule) {
+    // Ambiguity resolution order of redirect dict keys, consistent with Chrome:
+    // - url > extensionPath > transform > regexSubstitution
+    const redirect = matchedRule.rule.action.redirect;
+    const extension = matchedRule.ruleManager.extension;
+    let redirectUri;
+    if (redirect.url) {
+      // redirect.url already validated by checkActionRedirect.
+      redirectUri = Services.io.newURI(redirect.url);
+    } else if (redirect.extensionPath) {
+      redirectUri = extension.baseURI
+        .mutate()
+        .setPathQueryRef(redirect.extensionPath)
+        .finalize();
+    } else if (redirect.transform) {
+      // TODO bug 1801870: Implement transform.
+      throw new Error("transform not implemented");
+    } else if (redirect.regexSubstitution) {
+      // TODO bug 1745760: Implement along with regexFilter support.
+      throw new Error("regexSubstitution not implemented");
+    } else {
+      // #checkActionRedirect ensures that the redirect action is non-empty.
+    }
+
+    channel.redirectTo(redirectUri);
+
+    let properties = channel.channel.QueryInterface(Ci.nsIWritablePropertyBag);
+    properties.setProperty("redirectedByExtension", extension.id);
+
+    let origin = channel.getRequestHeader("Origin");
+    if (origin) {
+      channel.setResponseHeader("Access-Control-Allow-Origin", origin);
+      channel.setResponseHeader("Access-Control-Allow-Credentials", "true");
+      channel.setResponseHeader("Access-Control-Max-Age", "0");
+    }
+  },
+};
+
 class RuleManager {
   constructor(extension) {
     this.extension = extension;
@@ -781,6 +942,10 @@ function getRuleManager(extension, createIfMissing = true) {
     // instantiate a RuleManager claims the highest priority.
     // TODO bug 1786059: order extensions by "installation time".
     gRuleManagers.unshift(ruleManager);
+    if (gRuleManagers.length === 1) {
+      // The first DNR registration.
+      NetworkIntegration.register();
+    }
   }
   return ruleManager;
 }
@@ -789,6 +954,10 @@ function clearRuleManager(extension) {
   let i = gRuleManagers.findIndex(rm => rm.extension === extension);
   if (i !== -1) {
     gRuleManagers.splice(i, 1);
+    if (gRuleManagers.length === 0) {
+      // The last DNR registration.
+      NetworkIntegration.unregister();
+    }
   }
 }
 
@@ -809,9 +978,55 @@ function getMatchedRulesForRequest(request, extension) {
   return RequestEvaluator.evaluateRequest(requestDetails, ruleManagers);
 }
 
+/**
+ * Runs before any webRequest event is notified. Headers may be modified, but
+ * the request should not be canceled (see handleRequest instead).
+ *
+ * @param {ChannelWrapper} channel
+ * @param {string} kind - The name of the webRequest event.
+ */
+function beforeWebRequestEvent(channel, kind) {
+  try {
+    switch (kind) {
+      case "onBeforeRequest":
+        NetworkIntegration.startDNREvaluation(channel);
+        break;
+      case "onBeforeSendHeaders":
+        NetworkIntegration.onBeforeSendHeaders(channel);
+        break;
+      case "onHeadersReceived":
+        NetworkIntegration.onHeadersReceived(channel);
+        break;
+    }
+  } catch (e) {
+    Cu.reportError(e);
+  }
+}
+
+/**
+ * Applies matching DNR rules, some of which may potentially cancel the request.
+ *
+ * @param {ChannelWrapper} channel
+ * @param {string} kind - The name of the webRequest event.
+ * @returns {boolean} Whether to ignore any responses from the webRequest API.
+ */
+function handleRequest(channel, kind) {
+  try {
+    if (kind === "onBeforeRequest") {
+      return NetworkIntegration.onBeforeRequest(channel);
+    }
+  } catch (e) {
+    Cu.reportError(e);
+  }
+  return false;
+}
+
 export const ExtensionDNR = {
   RuleValidator,
   getRuleManager,
   clearRuleManager,
   getMatchedRulesForRequest,
+
+  beforeWebRequestEvent,
+  handleRequest,
 };
