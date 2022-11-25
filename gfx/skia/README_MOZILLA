@@ -1,12 +1,33 @@
 This is an import of Skia. See skia/include/core/SkMilestone.h for the milestone number.
 
+Current upstream hash: 4655534302e6a3601c77eae70cc65b202609ab66 (milestone 79)
+
+How to update
+=============
+
 To update to a new version of Skia:
 
 - Clone Skia from upstream using the instructions here: https://skia.org/user/download
+  Usually: `git clone https://skia.googlesource.com/skia`
+- Checkout the wanted revision (`git checkout -b <hash>`). See below for the current
+  hash.
 - Copy the entire source tree from a Skia clone to mozilla-central/gfx/skia/skia
+  (make sure that . files are also copied as .gn is mandatory).
+- Download gn: cd gfx/skia/skia/bin && python fetch-gn && cd -
+  Note that these scripts might need Python 2.7. Please use a virtualenv if needed.
 - cd gfx/skia && ./generate_mozbuild.py
 
 Once that's done, use git status to view the files that have changed. Keep an eye on GrUserConfig.h
 and SkUserConfig.h as those probably don't want to be overwritten by upstream versions.
 
 This process will be made more automatic in the future.
+
+Debug
+=====
+
+In case of issues when updating, run the command manually.
+For example, if the following error occurs:
+`subprocess.CalledProcessError: Command 'cd skia && bin/gn gen out/linux --args='target_os="linux" ' > /dev/null && bin/gn desc out/linux :skia sources' returned non-zero exit status 1`
+Run:
+`cd skia && bin/gn gen out/linux --args='target_os="linux"'`
+and look at the errors.
