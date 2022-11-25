@@ -193,6 +193,8 @@ include("build/moz.configure/bootstrap.configure")
 # check_prog to use bootstrap_search_path directly because check_prog
 # comes first, so we use a trick to allow it. Uses of check_prog
 # happening before here won't allow bootstrap.
+
+
 @template
 def check_prog(*args, **kwargs):
     kwargs["bootstrap_search_path"] = bootstrap_search_path
@@ -983,12 +985,18 @@ option(
     nargs="?",
     default=system_zlib_default,
     help="{Use|Do not use} system libz",
+    when=use_pkg_config,
 )
 
 
-@depends("--with-system-zlib")
+@depends("--with-system-zlib", when=use_pkg_config)
+def with_system_zlib_option(with_system_zlib):
+    return with_system_zlib
+
+
+@depends(with_system_zlib_option)
 def deprecated_system_zlib_path(value):
-    if len(value) == 1:
+    if value and len(value) == 1:
         die(
             "--with-system-zlib=PATH is not supported anymore. Please use "
             "--with-system-zlib and set any necessary pkg-config environment variable."
@@ -1000,7 +1008,7 @@ pkg_check_modules("MOZ_ZLIB", "zlib >= 1.2.3", when="--with-system-zlib")
 set_config("MOZ_SYSTEM_ZLIB", True, when="--with-system-zlib")
 
 
-@depends("--with-system-zlib", js_shared, moz_linker, target.os)
+@depends(with_system_zlib_option, js_shared, moz_linker, target.os)
 def zlib_in_mozglue(system_zlib, js_shared, linker, os):
     if not system_zlib and (js_shared or linker or os == "Android"):
         return True
