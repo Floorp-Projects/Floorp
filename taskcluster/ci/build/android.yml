@@ -132,30 +132,6 @@ android-x86-lite/opt:
             - linux64-sccache
             - android-gradle-dependencies-lite
 
-android-x86-fuzzing/debug:
-    description: "Android x86 Fuzzing Debug"
-    index:
-        job-name: android-x86-fuzzing-debug
-    treeherder:
-        platform: android-4-1-x86/debug
-        symbol: Bf
-    worker-type: b-linux-gcp
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
-    run:
-        actions: [get-secrets, build]
-        config: ["builds/releng_base_android_64_builds.py"]
-        custom-build-variant-cfg: x86-fuzzing-debug
-    use-sccache: true
-    fetches:
-        toolchain:
-            - linux64-clang
-            - linux64-sccache
-            - android-gradle-dependencies
-    optimization:
-        skip-unless-expanded: null
-
 android-x86-shippable/opt:
     description: "Android 5.0 x86 Shippable"
     use-pgo: true
@@ -523,6 +499,31 @@ android-x86_64-lite/opt:
             - linux64-clang
             - linux64-sccache
             - android-gradle-dependencies-lite
+
+android-x86_64-fuzzing/debug:
+    description: "Android x86_64 Fuzzing Debug"
+    index:
+        job-name: android-x86_64-fuzzing-debug
+    treeherder:
+        platform: android-5-0-x86_64/debug
+        symbol: Bf
+    worker-type: b-linux-gcp
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
+            PERFHERDER_EXTRA_OPTIONS: fuzzing
+    run:
+        actions: [get-secrets, build]
+        config: ["builds/releng_base_android_64_builds.py"]
+        custom-build-variant-cfg: fuzzing-debug
+    use-sccache: true
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-sccache
+            - android-gradle-dependencies
+    optimization:
+        skip-unless-expanded: null
 
 android-x86_64-shippable/opt:
     description: "Android 5.0 x86-64 Shippable"

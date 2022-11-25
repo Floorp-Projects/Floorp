@@ -1,0 +1,5 @@
+. "$topsrcdir/mobile/android/config/mozconfigs/android-x86_64/debug-lite"
+
+. "$topsrcdir/mobile/android/config/mozconfigs/android-x86_64/debug-fuzzing"
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common.override"

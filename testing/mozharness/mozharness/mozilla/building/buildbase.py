@@ -11,6 +11,7 @@ author: Jordan Lund
 
 """
 from __future__ import absolute_import
+
 import copy
 import json
 import os
@@ -21,7 +22,6 @@ import uuid
 from datetime import datetime
 
 import six
-
 from mozharness.base.config import DEFAULT_CONFIG_PATH, BaseConfig, parse_config_file
 from mozharness.base.errors import MakefileErrorList
 from mozharness.base.log import ERROR, FATAL, OutputParser
@@ -311,7 +311,6 @@ class BuildOptionParser(object):
         "x86-beta-debug": path_base + "%s_x86_beta_debug.py",
         "x86-debug": path_base + "%s_x86_debug.py",
         "x86-lite-debug": path_base + "%s_x86_debug_lite.py",
-        "x86-fuzzing-debug": path_base + "%s_x86_fuzzing_debug.py",
         "x86-profile-generate": path_base + "%s_x86_profile_generate.py",
         "x86_64": path_base + "%s_x86_64.py",
         "x86_64-lite": path_base + "%s_x86_64_lite.py",
@@ -321,7 +320,6 @@ class BuildOptionParser(object):
         "x86_64-lite-debug": path_base + "%s_x86_64_debug_lite.py",
         "x86_64-debug-isolated-process": path_base
         + "%s_x86_64_debug_isolated_process.py",
-        "x86_64-fuzzing-asan": path_base + "%s_x86_64_fuzzing_asan.py",
         "x86_64-profile-generate": path_base + "%s_x86_64_profile_generate.py",
         "arm-partner-sample1": path_base + "%s_arm_partner_sample1.py",
         "aarch64": path_base + "%s_aarch64.py",
