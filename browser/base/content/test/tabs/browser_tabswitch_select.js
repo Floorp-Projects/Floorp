@@ -30,6 +30,34 @@ add_task(async function() {
   is(gURLBar.selectionStart, 0, "url is selected");
   is(gURLBar.selectionEnd, 22, "url is selected");
 
+  // Now check that the url bar is focused when a new tab is opened while in fullscreen.
+
+  let fullScreenEntered = TestUtils.waitForCondition(
+    () => document.documentElement.getAttribute("sizemode") == "fullscreen"
+  );
+  BrowserFullScreen();
+  await fullScreenEntered;
+
+  tab2.linkedBrowser.focus();
+
+  // Open a new tab
+  focusPromise = BrowserTestUtils.waitForEvent(
+    gURLBar.inputField,
+    "focus",
+    true
+  );
+  EventUtils.synthesizeKey("T", { accelKey: true });
+  await focusPromise;
+
+  is(document.activeElement, gURLBar.inputField, "urlbar is focused");
+
+  let fullScreenExited = TestUtils.waitForCondition(
+    () => document.documentElement.getAttribute("sizemode") != "fullscreen"
+  );
+  BrowserFullScreen();
+  await fullScreenExited;
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
 });
