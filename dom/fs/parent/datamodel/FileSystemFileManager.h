@@ -16,10 +16,15 @@
 template <class T>
 class nsCOMPtr;
 
+class nsIFileURL;
+
 namespace mozilla::dom::fs::data {
 
 Result<nsCOMPtr<nsIFile>, QMResult> GetDatabasePath(const Origin& aOrigin,
                                                     bool& aExists);
+
+Result<nsCOMPtr<nsIFileURL>, QMResult> GetDatabaseFileURL(
+    const nsCOMPtr<nsIFile>& aDatabaseFile, const int64_t aDirectoryLockId);
 
 class FileSystemFileManager {
  public:
