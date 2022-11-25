@@ -670,8 +670,8 @@ Result<EditActionResult, nsresult> HTMLEditor::HTMLWithContextInserter::Run(
       // pasting does not inherit local inline styles
       Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
           mHTMLEditor.ClearStyleAt(
-              EditorDOMPoint(mHTMLEditor.SelectionRef().AnchorRef()), nullptr,
-              nullptr, SpecifiedStyle::Preserve);
+              EditorDOMPoint(mHTMLEditor.SelectionRef().AnchorRef()),
+              EditorInlineStyle::RemoveAllStyles(), SpecifiedStyle::Preserve);
       if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
         NS_WARNING("HTMLEditor::ClearStyleAt() failed");
         return pointToPutCaretOrError.propagateErr();

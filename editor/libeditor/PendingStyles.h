@@ -53,6 +53,8 @@ class PendingStyle final {
   }
   SpecifiedStyle GetSpecifiedStyle() const { return mSpecifiedStyle; }
 
+  EditorInlineStyle ToInlineStyle() const;
+
  private:
   MOZ_KNOWN_LIVE nsStaticAtom* const mTag = nullptr;
   // TODO: Once we stop using `HTMLEditor::SetInlinePropertiesAsSubAction` to
