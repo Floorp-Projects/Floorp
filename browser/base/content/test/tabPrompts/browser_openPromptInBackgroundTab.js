@@ -53,7 +53,7 @@ add_task(async function test_old_modal_ui() {
   // switch tab back, and check the checkbox is displayed:
   await BrowserTestUtils.switchTab(gBrowser, openedTab);
   // check the prompt is there, and the extra row is present
-  let promptElements = openedTab.linkedBrowser.parentNode.parentNode.querySelectorAll(
+  let promptElements = openedTab.linkedBrowser.parentNode.querySelectorAll(
     "tabmodalprompt"
   );
   is(promptElements.length, 1, "There should be 1 prompt");
@@ -164,7 +164,7 @@ add_task(async function test_new_modal_ui() {
   // switch tab back, and check the checkbox is displayed:
   await BrowserTestUtils.switchTab(gBrowser, openedTab);
   // check the prompt is there
-  let promptElements = openedTab.linkedBrowser.parentNode.parentNode.querySelectorAll(
+  let promptElements = openedTab.linkedBrowser.parentNode.querySelectorAll(
     ".content-prompt-dialog"
   );
 

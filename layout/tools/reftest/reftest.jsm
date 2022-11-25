@@ -48,8 +48,8 @@ const { HttpServer } = ChromeUtils.import("resource://reftest/httpd.jsm");
 const { ReadTopManifest, CreateUrls } = ChromeUtils.import(
     "resource://reftest/manifest.jsm"
 );
-const { StructuredLogger } = ChromeUtils.import(
-    "resource://reftest/StructuredLog.jsm"
+const { StructuredLogger } = ChromeUtils.importESModule(
+    "resource://reftest/StructuredLog.sys.mjs"
 );
 const { PerTestCoverageUtils } = ChromeUtils.import(
     "resource://reftest/PerTestCoverageUtils.jsm"
@@ -915,7 +915,7 @@ function DoneTests()
             g.suiteStarted = false
             logger.suiteEnd({'results': g.testResults});
         } else {
-            logger._logData('results', {results: g.testResults});
+            logger.logData('results', {results: g.testResults});
         }
         logger.info("Slowest test took " + g.slowestTestTime + "ms (" + g.slowestTestURL + ")");
         logger.info("Total canvas count = " + g.recycledCanvases.length);

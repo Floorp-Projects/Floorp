@@ -5,8 +5,6 @@
 """
 Runs the reftest test harness.
 """
-from __future__ import print_function
-
 from __future__ import absolute_import, print_function
 
 import json
@@ -37,9 +35,10 @@ import mozlog
 import mozprocess
 import mozprofile
 import mozrunner
-from manifestparser import TestManifest, filters as mpf
+from manifestparser import TestManifest
+from manifestparser import filters as mpf
 from mozrunner.utils import get_stack_fixer_function, test_environment
-from mozscreenshot import printstatus, dump_screen
+from mozscreenshot import dump_screen, printstatus
 from six import reraise, string_types
 from six.moves import range
 
@@ -57,8 +56,8 @@ except ImportError as e:  # noqa
 
     Marionette = reraise_
 
-from output import OutputHandler, ReftestFormatter
 import reftestcommandline
+from output import OutputHandler, ReftestFormatter
 
 here = os.path.abspath(os.path.dirname(__file__))
 

@@ -768,10 +768,6 @@ function testListing(metadata, response) {
         }),
         SCRIPT({
           type: "text/javascript",
-          src: "/tests/SimpleTest/StructuredLog.jsm",
-        }),
-        SCRIPT({
-          type: "text/javascript",
           src: "/tests/SimpleTest/LogController.js",
         }),
         SCRIPT({

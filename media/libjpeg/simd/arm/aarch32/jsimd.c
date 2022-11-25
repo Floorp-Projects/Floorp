@@ -25,8 +25,6 @@
 #include "../../../jsimddct.h"
 #include "../../jsimd.h"
 
-#include <stdio.h>
-#include <string.h>
 #include <ctype.h>
 
 static unsigned int simd_support = ~0;

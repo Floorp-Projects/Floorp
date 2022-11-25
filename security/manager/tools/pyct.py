@@ -10,13 +10,13 @@ details of a signing key, when to sign, and the certificate data to
 sign. Currently only supports precert_entry types. See RFC 6962.
 """
 
-from pyasn1.codec.der import encoder
-from struct import pack
 import binascii
 import calendar
 import hashlib
+from struct import pack
 
 import pykey
+from pyasn1.codec.der import encoder
 
 
 class InvalidKeyError(Exception):

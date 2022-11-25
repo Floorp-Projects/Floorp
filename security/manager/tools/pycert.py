@@ -84,21 +84,20 @@ If a serial number is not explicitly specified, it is automatically
 generated based on the contents of the certificate.
 """
 
-from pyasn1.codec.der import decoder
-from pyasn1.codec.der import encoder
-from pyasn1.type import constraint, tag, univ, useful
-from pyasn1_modules import rfc2459
-from struct import pack
 import base64
 import datetime
 import hashlib
 import re
 import socket
-import six
 import sys
+from struct import pack
 
 import pyct
 import pykey
+import six
+from pyasn1.codec.der import decoder, encoder
+from pyasn1.type import constraint, tag, univ, useful
+from pyasn1_modules import rfc2459
 
 
 class Error(Exception):

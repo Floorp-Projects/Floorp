@@ -5268,6 +5268,11 @@ class OverflowableToolbar {
   #overflowedInfo = new Map();
 
   /**
+   * The set of overflowed DOM nodes that were hidden at the time of overflowing.
+   */
+  #hiddenOverflowedNodes = new WeakSet();
+
+  /**
    * True if the overflowable toolbar is actively handling overflows and
    * underflows. This value is set internally by the private #enable() and
    * #disable() methods.
@@ -5303,11 +5308,12 @@ class OverflowableToolbar {
   /**
    * A reference to the the element that overflowed extension browser action
    * toolbar items will be appended to as children upon overflow if the
-   * Unified Extension UI is enabled.
+   * Unified Extension UI is enabled. This is created lazily and might be null,
+   * so you should use the #webExtList memoizing getter instead to get this.
    *
-   * @type {Element}
+   * @type {Element|null}
    */
-  #webExtList = null;
+  #webExtListRef = null;
 
   /**
    * An empty object that is created in #checkOverflow to identify individual
@@ -5605,16 +5611,21 @@ class OverflowableToolbar {
       }
     }
 
+    let overflowList = CustomizableUI.isWebExtensionWidget(aNode.id)
+      ? this.#webExtList
+      : this.#defaultList;
+
     let containerForAppending =
       this.#overflowedInfo.size && newNodeCanOverflow
-        ? this.#defaultList
+        ? overflowList
         : this.#target;
     return [containerForAppending, null];
   }
 
   /**
    * Allows callers to query for the current parent of a toolbar item that may
-   * or may not be overflowed. That parent will either be #defaultList or #target.
+   * or may not be overflowed. That parent will either be #defaultList,
+   * #webExtList (if it's an extension button) or #target.
    *
    * Note: It is assumed that the caller has verified that aNode is placed
    * within the toolbar customizable area according to CustomizableUI.
@@ -5625,7 +5636,9 @@ class OverflowableToolbar {
    */
   getContainerFor(aNode) {
     if (aNode.getAttribute("overflowedItem") == "true") {
-      return this.#defaultList;
+      return CustomizableUI.isWebExtensionWidget(aNode.id)
+        ? this.#webExtList
+        : this.#defaultList;
     }
     return this.#target;
   }
@@ -5657,7 +5670,7 @@ class OverflowableToolbar {
       return;
     }
 
-    let webExtList = this.#getWebExtList();
+    let webExtList = this.#webExtList;
 
     let child = this.#target.lastElementChild;
     while (child && isOverflowing) {
@@ -5665,6 +5678,13 @@ class OverflowableToolbar {
 
       if (child.getAttribute("overflows") != "false") {
         this.#overflowedInfo.set(child.id, targetContentWidth);
+        let { width: childWidth } = win.windowUtils.getBoundsWithoutFlushing(
+          child
+        );
+        if (!childWidth) {
+          this.#hiddenOverflowedNodes.add(child);
+        }
+
         child.setAttribute("overflowedItem", true);
         CustomizableUIInternal.ensureButtonContextMenu(
           child,
@@ -5690,7 +5710,7 @@ class OverflowableToolbar {
             child,
             this.#defaultList.firstElementChild
           );
-          if (!CustomizableUI.isSpecialWidget(child.id)) {
+          if (!CustomizableUI.isSpecialWidget(child.id) && childWidth) {
             this.#toolbar.setAttribute("overflowing", "true");
           }
         }
@@ -5886,8 +5906,13 @@ class OverflowableToolbar {
     win.UpdateUrlbarSearchSplitterState();
 
     let defaultListItems = Array.from(this.#defaultList.children);
-    let collapsedWidgetIds = defaultListItems.map(item => item.id);
-    if (collapsedWidgetIds.every(w => CustomizableUI.isSpecialWidget(w))) {
+    if (
+      defaultListItems.every(
+        item =>
+          CustomizableUI.isSpecialWidget(item.id) ||
+          this.#hiddenOverflowedNodes.has(item)
+      )
+    ) {
       this.#toolbar.removeAttribute("overflowing");
     }
   }
@@ -5991,16 +6016,31 @@ class OverflowableToolbar {
    *   buttons should go to if the Unified Extensions UI is enabled, or null
    *   if no such list exists.
    */
-  #getWebExtList() {
-    if (!this.#webExtList) {
+  get #webExtList() {
+    if (!this.#webExtListRef) {
       let targetID = this.#toolbar.getAttribute("addon-webext-overflowtarget");
-      if (targetID) {
-        let win = this.#toolbar.ownerGlobal;
-        let { panel } = win.gUnifiedExtensions;
-        this.#webExtList = panel.querySelector(`#${targetID}`);
+      if (!targetID) {
+        throw new Error(
+          "addon-webext-overflowtarget was not defined on the " +
+            `overflowable toolbar with id: ${this.#toolbar.id}`
+        );
       }
+      let win = this.#toolbar.ownerGlobal;
+      let { panel } = win.gUnifiedExtensions;
+      this.#webExtListRef = panel.querySelector(`#${targetID}`);
     }
-    return this.#webExtList;
+    return this.#webExtListRef;
+  }
+
+  /**
+   * Returns true if aNode is not null and is one of either this.#webExtList or
+   * this.#defaultList.
+   *
+   * @param {DOMElement} aNode The node to test.
+   * @returns {boolean}
+   */
+  #isOverflowList(aNode) {
+    return aNode == this.#defaultList || aNode == this.#webExtList;
   }
 
   /**
@@ -6075,30 +6115,25 @@ class OverflowableToolbar {
     // moved or removed from an area via the CustomizableUI API while
     // overflowed. It reorganizes the internal state of this OverflowableToolbar
     // to handle that change.
-    if (
-      !this.#enabled ||
-      (aContainer != this.#target && aContainer != this.#defaultList)
-    ) {
+    if (!this.#enabled || !this.#isOverflowList(aContainer)) {
       return;
     }
     // When we (re)move an item, update all the items that come after it in the list
     // with the minsize *of the item before the to-be-removed node*. This way, we
     // ensure that we try to move items back as soon as that's possible.
-    if (aNode.parentNode == this.#defaultList) {
-      let updatedMinSize;
-      if (aNode.previousElementSibling) {
-        updatedMinSize = this.#overflowedInfo.get(
-          aNode.previousElementSibling.id
-        );
-      } else {
-        // Force (these) items to try to flow back into the bar:
-        updatedMinSize = 1;
-      }
-      let nextItem = aNode.nextElementSibling;
-      while (nextItem) {
-        this.#overflowedInfo.set(nextItem.id, updatedMinSize);
-        nextItem = nextItem.nextElementSibling;
-      }
+    let updatedMinSize;
+    if (aNode.previousElementSibling) {
+      updatedMinSize = this.#overflowedInfo.get(
+        aNode.previousElementSibling.id
+      );
+    } else {
+      // Force (these) items to try to flow back into the bar:
+      updatedMinSize = 1;
+    }
+    let nextItem = aNode.nextElementSibling;
+    while (nextItem) {
+      this.#overflowedInfo.set(nextItem.id, updatedMinSize);
+      nextItem = nextItem.nextElementSibling;
     }
   }
 
@@ -6109,12 +6144,12 @@ class OverflowableToolbar {
     // causes overflow or underflow of the toolbar.
     if (
       !this.#enabled ||
-      (aContainer != this.#target && aContainer != this.#defaultList)
+      (aContainer != this.#target && !this.#isOverflowList(aContainer))
     ) {
       return;
     }
 
-    let nowOverflowed = aNode.parentNode == this.#defaultList;
+    let nowOverflowed = this.#isOverflowList(aNode.parentNode);
     let wasOverflowed = this.#overflowedInfo.has(aNode.id);
 
     // If this wasn't overflowed before...

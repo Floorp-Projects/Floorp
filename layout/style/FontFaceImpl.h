@@ -56,19 +56,41 @@ class FontFaceImpl final {
           StyleFontDisplay aFontDisplay, RangeFlags aRangeFlags,
           float aAscentOverride, float aDescentOverride, float aLineGapOverride,
           float aSizeAdjust)
-        : gfxUserFontEntry(aFontSet, aFontFaceSrcList, aWeight, aStretch,
-                           aStyle, aFeatureSettings, aVariationSettings,
+        : gfxUserFontEntry(aFontFaceSrcList, aWeight, aStretch, aStyle,
+                           aFeatureSettings, aVariationSettings,
                            aLanguageOverride, aUnicodeRanges, aFontDisplay,
                            aRangeFlags, aAscentOverride, aDescentOverride,
                            aLineGapOverride, aSizeAdjust),
-          mMutex("FontFaceImpl::Entry::mMutex") {}
+          mMutex("FontFaceImpl::Entry::mMutex"),
+          mFontSet(aFontSet) {}
 
     void SetLoadState(UserFontLoadState aLoadState) override;
     void GetUserFontSets(nsTArray<RefPtr<gfxUserFontSet>>& aResult) override;
+    already_AddRefed<gfxUserFontSet> GetUserFontSet() const override;
+
+    void CheckUserFontSet() {
+      MutexAutoLock lock(mMutex);
+      CheckUserFontSetLocked();
+    }
+
+#ifdef DEBUG
+    bool HasUserFontSet(gfxUserFontSet* aFontSet) const {
+      MutexAutoLock lock(mMutex);
+      return mFontSet == aFontSet;
+    }
+#endif
+
+    void AddFontFace(FontFaceImpl* aOwner);
+    void RemoveFontFace(FontFaceImpl* aOwner);
     void FindFontFaceOwners(nsTHashSet<FontFace*>& aOwners);
 
    protected:
-    Mutex mMutex;
+    void CheckUserFontSetLocked() MOZ_REQUIRES(mMutex);
+
+    mutable Mutex mMutex;
+
+    // Font set which owns this entry;
+    gfxUserFontSet* MOZ_NON_OWNING_REF mFontSet;
 
     // The FontFace objects that use this user font entry.  We need to store
     // an array of these, not just a single pointer, since the user font

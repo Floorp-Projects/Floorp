@@ -6,6 +6,7 @@
 /* exported clickUnifiedExtensionsItem,
             closeExtensionsPanel,
             createExtensions,
+            ensureMaximizedWindow,
             getUnifiedExtensionsItem,
             openExtensionsPanel,
             openUnifiedExtensionsContextMenu,
@@ -138,4 +139,25 @@ const createExtensions = (
       incognitoOverride,
     })
   );
+};
+
+/**
+ * Given a window, this test helper resizes it so that the window takes most of
+ * the available screen size (unless the window is already maximized).
+ */
+const ensureMaximizedWindow = async win => {
+  let resizeDone = Promise.resolve();
+
+  win.moveTo(0, 0);
+
+  const widthDiff = win.screen.availWidth - win.outerWidth;
+  const heightDiff = win.screen.availHeight - win.outerHeight;
+
+  if (widthDiff || heightDiff) {
+    resizeDone = BrowserTestUtils.waitForEvent(win, "resize", false);
+    win.windowUtils.ensureDirtyRootFrame();
+    win.resizeBy(widthDiff, heightDiff);
+  }
+
+  return resizeDone;
 };

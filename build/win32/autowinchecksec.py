@@ -7,10 +7,11 @@
 # run the Winchecksec tool (https://github.com/trailofbits/winchecksec)
 # against a given Windows binary.
 
-import buildconfig
 import json
 import subprocess
 import sys
+
+import buildconfig
 
 # usage
 if len(sys.argv) != 2:

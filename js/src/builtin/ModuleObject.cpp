@@ -670,6 +670,23 @@ void ModuleNamespaceObject::ProxyHandler::finalize(JS::GCContext* gcx,
 class js::CyclicModuleFields {
  public:
   ModuleStatus status = ModuleStatus::Unlinked;
+
+  bool hasTopLevelAwait : 1;
+
+ private:
+  // Flag bits that determine whether other fields are present.
+  bool hasDfsIndex : 1;
+  bool hasDfsAncestorIndex : 1;
+  bool isAsyncEvaluating : 1;
+  bool hasPendingAsyncDependencies : 1;
+
+  // Fields whose presence is conditional on the flag bits above.
+  uint32_t dfsIndex = 0;
+  uint32_t dfsAncestorIndex = 0;
+  uint32_t asyncEvaluatingPostOrder = 0;
+  uint32_t pendingAsyncDependencies = 0;
+
+ public:
   HeapPtr<Value> evaluationError;
   HeapPtr<JSObject*> metaObject;
   HeapPtr<ScriptSourceObject*> scriptSourceObject;
@@ -680,17 +697,36 @@ class js::CyclicModuleFields {
   HeapPtr<ArrayObject*> starExportEntries;
   IndirectBindingMap importBindings;
   UniquePtr<FunctionDeclarationVector> functionDeclarations;
-  Maybe<uint32_t> dfsIndex;
-  Maybe<uint32_t> dfsAncestorIndex;
-  bool hasTopLevelAwait = false;
-  Maybe<uint32_t> asyncEvaluatingPostOrder;
   HeapPtr<PromiseObject*> topLevelCapability;
   HeapPtr<ListObject*> asyncParentModules;
-  Maybe<uint32_t> pendingAsyncDependencies;
   HeapPtr<ModuleObject*> cycleRoot;
 
+ public:
+  CyclicModuleFields();
+
   void trace(JSTracer* trc);
+
+  void setDfsIndex(uint32_t index);
+  Maybe<uint32_t> maybeDfsIndex() const;
+  void setDfsAncestorIndex(uint32_t index);
+  Maybe<uint32_t> maybeDfsAncestorIndex() const;
+  void clearDfsIndexes();
+
+  void setAsyncEvaluating(uint32_t postOrder);
+  bool getIsAsyncEvaluating() const;
+  Maybe<uint32_t> maybeAsyncEvaluatingPostOrder() const;
+  void clearAsyncEvaluatingPostOrder();
+
+  void setPendingAsyncDependencies(uint32_t newValue);
+  Maybe<uint32_t> maybePendingAsyncDependencies() const;
 };
+
+CyclicModuleFields::CyclicModuleFields()
+    : hasTopLevelAwait(false),
+      hasDfsIndex(false),
+      hasDfsAncestorIndex(false),
+      isAsyncEvaluating(false),
+      hasPendingAsyncDependencies(false) {}
 
 void CyclicModuleFields::trace(JSTracer* trc) {
   TraceEdge(trc, &evaluationError, "CyclicModuleFields::evaluationError");
@@ -706,12 +742,69 @@ void CyclicModuleFields::trace(JSTracer* trc) {
                     "CyclicModuleFields::indirectExportEntries");
   TraceNullableEdge(trc, &starExportEntries,
                     "CyclicModuleFields::starExportEntries");
+  importBindings.trace(trc);
   TraceNullableEdge(trc, &topLevelCapability,
                     "CyclicModuleFields::topLevelCapability");
   TraceNullableEdge(trc, &asyncParentModules,
                     "CyclicModuleFields::asyncParentModules");
   TraceNullableEdge(trc, &cycleRoot, "CyclicModuleFields::cycleRoot");
-  importBindings.trace(trc);
+}
+
+void CyclicModuleFields::setDfsIndex(uint32_t index) {
+  dfsIndex = index;
+  hasDfsIndex = true;
+}
+
+Maybe<uint32_t> CyclicModuleFields::maybeDfsIndex() const {
+  return hasDfsIndex ? Some(dfsIndex) : Nothing();
+}
+
+void CyclicModuleFields::setDfsAncestorIndex(uint32_t index) {
+  dfsAncestorIndex = index;
+  hasDfsAncestorIndex = true;
+}
+
+Maybe<uint32_t> CyclicModuleFields::maybeDfsAncestorIndex() const {
+  return hasDfsAncestorIndex ? Some(dfsAncestorIndex) : Nothing();
+}
+
+void CyclicModuleFields::clearDfsIndexes() {
+  dfsIndex = 0;
+  hasDfsIndex = false;
+  dfsAncestorIndex = 0;
+  hasDfsAncestorIndex = false;
+}
+
+void CyclicModuleFields::setAsyncEvaluating(uint32_t postOrder) {
+  isAsyncEvaluating = true;
+  asyncEvaluatingPostOrder = postOrder;
+}
+
+bool CyclicModuleFields::getIsAsyncEvaluating() const {
+  return isAsyncEvaluating;
+}
+
+Maybe<uint32_t> CyclicModuleFields::maybeAsyncEvaluatingPostOrder() const {
+  if (!isAsyncEvaluating ||
+      asyncEvaluatingPostOrder == ASYNC_EVALUATING_POST_ORDER_CLEARED) {
+    return Nothing();
+  }
+
+  return Some(asyncEvaluatingPostOrder);
+}
+
+void CyclicModuleFields::clearAsyncEvaluatingPostOrder() {
+  asyncEvaluatingPostOrder = ASYNC_EVALUATING_POST_ORDER_CLEARED;
+}
+
+void CyclicModuleFields::setPendingAsyncDependencies(uint32_t newValue) {
+  pendingAsyncDependencies = newValue;
+  hasPendingAsyncDependencies = true;
+}
+
+Maybe<uint32_t> CyclicModuleFields::maybePendingAsyncDependencies() const {
+  return hasPendingAsyncDependencies ? Some(pendingAsyncDependencies)
+                                     : Nothing();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -851,7 +944,7 @@ void ModuleObject::initAsyncSlots(JSContext* cx, bool hasTopLevelAwait,
 
 static uint32_t NextPostOrder(JSRuntime* rt) {
   uint32_t ordinal = rt->moduleAsyncEvaluatingPostOrder;
-  MOZ_ASSERT(ordinal != ASYNC_EVALUATING_POST_ORDER_TRUE);
+  MOZ_ASSERT(ordinal != ASYNC_EVALUATING_POST_ORDER_CLEARED);
   MOZ_ASSERT(ordinal < MAX_UINT32);
   rt->moduleAsyncEvaluatingPostOrder++;
   return ordinal;
@@ -870,8 +963,9 @@ static void MaybeResetPostOrderCounter(JSRuntime* rt,
 }
 
 void ModuleObject::setAsyncEvaluating() {
-  cyclicModuleFields()->asyncEvaluatingPostOrder =
-      Some(NextPostOrder(runtimeFromMainThread()));
+  MOZ_ASSERT(!isAsyncEvaluating());
+  uint32_t postOrder = NextPostOrder(runtimeFromMainThread());
+  cyclicModuleFields()->setAsyncEvaluating(postOrder);
 }
 
 void ModuleObject::initScriptSlots(HandleScript script) {
@@ -1017,21 +1111,21 @@ bool ModuleObject::hasTopLevelAwait() const {
 }
 
 bool ModuleObject::isAsyncEvaluating() const {
-  return cyclicModuleFields()->asyncEvaluatingPostOrder.isSome();
+  return cyclicModuleFields()->getIsAsyncEvaluating();
 }
 
 Maybe<uint32_t> ModuleObject::maybeDfsIndex() const {
-  return cyclicModuleFields()->dfsIndex;
+  return cyclicModuleFields()->maybeDfsIndex();
 }
 
 uint32_t ModuleObject::dfsIndex() const { return maybeDfsIndex().value(); }
 
 void ModuleObject::setDfsIndex(uint32_t index) {
-  cyclicModuleFields()->dfsIndex = Some(index);
+  cyclicModuleFields()->setDfsIndex(index);
 }
 
 Maybe<uint32_t> ModuleObject::maybeDfsAncestorIndex() const {
-  return cyclicModuleFields()->dfsAncestorIndex;
+  return cyclicModuleFields()->maybeDfsAncestorIndex();
 }
 
 uint32_t ModuleObject::dfsAncestorIndex() const {
@@ -1039,12 +1133,11 @@ uint32_t ModuleObject::dfsAncestorIndex() const {
 }
 
 void ModuleObject::setDfsAncestorIndex(uint32_t index) {
-  cyclicModuleFields()->dfsAncestorIndex = Some(index);
+  cyclicModuleFields()->setDfsAncestorIndex(index);
 }
 
 void ModuleObject::clearDfsIndexes() {
-  cyclicModuleFields()->dfsIndex = Nothing();
-  cyclicModuleFields()->dfsAncestorIndex = Nothing();
+  cyclicModuleFields()->clearDfsIndexes();
 }
 
 PromiseObject* ModuleObject::maybeTopLevelCapability() const {
@@ -1088,25 +1181,19 @@ bool ModuleObject::appendAsyncParentModule(JSContext* cx,
 }
 
 Maybe<uint32_t> ModuleObject::maybePendingAsyncDependencies() const {
-  return cyclicModuleFields()->pendingAsyncDependencies;
+  return cyclicModuleFields()->maybePendingAsyncDependencies();
 }
 
 uint32_t ModuleObject::pendingAsyncDependencies() const {
   return maybePendingAsyncDependencies().value();
 }
 
-bool ModuleObject::hasAsyncEvaluatingPostOrder() const {
-  Maybe<uint32_t> value = cyclicModuleFields()->asyncEvaluatingPostOrder;
-  return value.isSome() && *value != ASYNC_EVALUATING_POST_ORDER_TRUE;
-}
-
 Maybe<uint32_t> ModuleObject::maybeAsyncEvaluatingPostOrder() const {
-  return cyclicModuleFields()->asyncEvaluatingPostOrder;
+  return cyclicModuleFields()->maybeAsyncEvaluatingPostOrder();
 }
 
 uint32_t ModuleObject::getAsyncEvaluatingPostOrder() const {
-  MOZ_ASSERT(hasAsyncEvaluatingPostOrder());
-  return maybeAsyncEvaluatingPostOrder().value();
+  return cyclicModuleFields()->maybeAsyncEvaluatingPostOrder().value();
 }
 
 void ModuleObject::clearAsyncEvaluatingPostOrder() {
@@ -1115,12 +1202,11 @@ void ModuleObject::clearAsyncEvaluatingPostOrder() {
   JSRuntime* rt = runtimeFromMainThread();
   MaybeResetPostOrderCounter(rt, getAsyncEvaluatingPostOrder());
 
-  cyclicModuleFields()->asyncEvaluatingPostOrder =
-      Some(ASYNC_EVALUATING_POST_ORDER_TRUE);
+  cyclicModuleFields()->clearAsyncEvaluatingPostOrder();
 }
 
 void ModuleObject::setPendingAsyncDependencies(uint32_t newValue) {
-  cyclicModuleFields()->pendingAsyncDependencies = Some(newValue);
+  cyclicModuleFields()->setPendingAsyncDependencies(newValue);
 }
 
 void ModuleObject::setCycleRoot(ModuleObject* cycleRoot) {
