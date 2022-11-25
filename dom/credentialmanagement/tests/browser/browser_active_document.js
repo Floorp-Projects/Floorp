@@ -109,11 +109,8 @@ add_task(async function test_background_window() {
 });
 
 add_task(async function test_minimized() {
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
   // Minimizing windows doesn't supported in headless mode.
-  if (env.get("MOZ_HEADLESS")) {
+  if (Services.env.get("MOZ_HEADLESS")) {
     return;
   }
 
