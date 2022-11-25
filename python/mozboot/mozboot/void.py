@@ -14,8 +14,6 @@ from mozboot.linux_common import LinuxBootstrapper
 
 class VoidBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
-    PACKAGES = ["clang", "make", "mercurial", "watchman", "unzip"]
-
     BROWSER_PACKAGES = [
         "dbus-devel",
         "dbus-glib-devel",
@@ -34,7 +32,6 @@ class VoidBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         self.version = version
         self.dist_id = dist_id
 
-        self.packages = self.PACKAGES
         self.browser_packages = self.BROWSER_PACKAGES
 
     def run_as_root(self, command):
@@ -62,8 +59,8 @@ class VoidBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
         self.run_as_root(command)
 
-    def install_system_packages(self):
-        self.xbps_install(*self.packages)
+    def install_packages(self, packages):
+        self.xbps_install(*packages)
 
     def install_browser_packages(self, mozconfig_builder, artifact_mode=False):
         self.xbps_install(*self.browser_packages)

@@ -19,8 +19,6 @@ if sys.version_info < (3,):
 class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     """Archlinux experimental bootstrapper."""
 
-    SYSTEM_PACKAGES = ["base-devel", "unzip"]
-
     BROWSER_PACKAGES = [
         "alsa-lib",
         "dbus-glib",
@@ -41,8 +39,10 @@ class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         print("Using an experimental bootstrapper for Archlinux.", file=sys.stderr)
         BaseBootstrapper.__init__(self, **kwargs)
 
-    def install_system_packages(self):
-        self.pacman_install(*self.SYSTEM_PACKAGES)
+    def install_packages(self, packages):
+        # watchman is not available via pacman
+        packages = [p for p in packages if p != "watchman"]
+        self.pacman_install(*packages)
 
     def install_browser_packages(self, mozconfig_builder, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode

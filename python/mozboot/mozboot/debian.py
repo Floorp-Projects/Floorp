@@ -12,14 +12,6 @@ from mozboot.linux_common import LinuxBootstrapper
 
 class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
-    # These are common packages for all Debian-derived distros (such as
-    # Ubuntu).
-    COMMON_PACKAGES = [
-        "build-essential",
-        "m4",
-        "unzip",
-    ]
-
     # These are common packages for building Firefox for Desktop
     # (browser) for all Debian-derived distros (such as Ubuntu).
     BROWSER_COMMON_PACKAGES = [
@@ -43,16 +35,6 @@ class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         self.dist_id = dist_id
         self.codename = codename
 
-        self.packages = list(self.COMMON_PACKAGES)
-
-        try:
-            version_number = int(version)
-        except ValueError:
-            version_number = None
-
-        if (version_number and (version_number >= 11)) or version == "unstable":
-            self.packages += ["watchman"]
-
     def suggest_install_distutils(self):
         print(
             "HINT: Try installing distutils with "
@@ -66,8 +48,15 @@ class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
             file=sys.stderr,
         )
 
-    def install_system_packages(self):
-        self.apt_install(*self.packages)
+    def install_packages(self, packages):
+        try:
+            if int(self.version) < 11:
+                # watchman is only available starting from Debian 11.
+                packages = [p for p in packages if p != "watchman"]
+        except ValueError:
+            pass
+
+        self.apt_install(*packages)
 
     def install_browser_packages(self, mozconfig_builder, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode

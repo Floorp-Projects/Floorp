@@ -16,10 +16,6 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         self.version = int(version.split(".")[0])
         self.dist_id = dist_id
 
-        self.group_packages = []
-
-        self.packages = ["which"]
-
         self.browser_group_packages = ["GNOME Software Development"]
 
         self.browser_packages = [
@@ -34,36 +30,18 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         ]
 
         if self.distro in ("centos", "rocky"):
-            self.group_packages += ["Development Tools"]
-
-            self.packages += ["curl-devel"]
-
             self.browser_packages += ["gtk3-devel"]
 
-            if self.version == 6:
-                self.group_packages += [
-                    "Development Libraries",
-                    "GNOME Software Development",
-                ]
-
-            else:
-                self.packages += ["redhat-rpm-config"]
-
+            if self.version != 6:
                 self.browser_group_packages = ["Development Tools"]
 
-        elif self.distro == "fedora":
-            self.group_packages += ["C Development Tools and Libraries"]
-
-            self.packages += [
-                "redhat-rpm-config",
-                "watchman",
-            ]
-            if self.version >= 33:
-                self.packages.append("perl-FindBin")
-
-    def install_system_packages(self):
-        self.dnf_groupinstall(*self.group_packages)
-        self.dnf_install(*self.packages)
+    def install_packages(self, packages):
+        if self.version >= 33 and "perl" in packages:
+            packages.append("perl-FindBin")
+        # watchman is not available on centos/rocky
+        if self.distro in ("centos", "rocky"):
+            packages = [p for p in packages if p != "watchman"]
+        self.dnf_install(*packages)
 
     def install_browser_packages(self, mozconfig_builder, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode

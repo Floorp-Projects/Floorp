@@ -15,11 +15,13 @@ class GentooBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         self.version = version
         self.dist_id = dist_id
 
-    def install_system_packages(self):
-        self.ensure_system_packages()
-
-    def ensure_system_packages(self):
-        self.run_as_root(["emerge", "--noreplace", "--quiet", "dev-util/watchman"])
+    def install_packages(self, packages):
+        DISAMBIGUATE = {
+            "tar": "app-arch/tar",
+        }
+        # watchman is available but requires messing with USEs.
+        packages = [DISAMBIGUATE.get(p, p) for p in packages if p != "watchman"]
+        self.run_as_root(["emerge", "--noreplace"] + packages)
 
     def install_browser_packages(self, mozconfig_builder, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode

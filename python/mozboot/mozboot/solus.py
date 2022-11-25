@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import subprocess
 import sys
 
 from mozboot.base import BaseBootstrapper
@@ -19,9 +18,6 @@ if sys.version_info < (3,):
 
 class SolusBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     """Solus experimental bootstrapper."""
-
-    SYSTEM_PACKAGES = ["unzip"]
-    SYSTEM_COMPONENTS = ["system.devel"]
 
     BROWSER_PACKAGES = [
         "alsa-lib",
@@ -41,9 +37,8 @@ class SolusBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         print("Using an experimental bootstrapper for Solus.")
         BaseBootstrapper.__init__(self, **kwargs)
 
-    def install_system_packages(self):
-        self.package_install(*self.SYSTEM_PACKAGES)
-        self.component_install(*self.SYSTEM_COMPONENTS)
+    def install_packages(self, packages):
+        self.package_install(*packages)
 
     def install_browser_packages(self, mozconfig_builder, artifact_mode=False):
         self.package_install(*self.BROWSER_PACKAGES)
@@ -65,15 +60,3 @@ class SolusBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         command.extend(packages)
 
         self.run_as_root(command)
-
-    def component_install(self, *components):
-        command = ["eopkg", "install", "-c"]
-        if self.no_interactive:
-            command.append("--yes-all")
-
-        command.extend(components)
-
-        self.run_as_root(command)
-
-    def run(self, command, env=None):
-        subprocess.check_call(command, stdin=sys.stdin, env=env)
