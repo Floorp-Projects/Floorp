@@ -2426,9 +2426,8 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
           // If the style is specified in parent block and we can remove the
           // style with inserting new <span> element, we should do it.
           Result<bool, nsresult> isRemovableParentStyleOrError =
-              IsRemovableParentStyleWithNewSpanElement(
-                  MOZ_KnownLive(content), styleToRemove.mHTMLProperty,
-                  styleToRemove.mAttribute);
+              IsRemovableParentStyleWithNewSpanElement(MOZ_KnownLive(content),
+                                                       styleToRemove);
           if (MOZ_UNLIKELY(isRemovableParentStyleOrError.isErr())) {
             NS_WARNING(
                 "HTMLEditor::IsRemovableParentStyleWithNewSpanElement() "
@@ -2533,9 +2532,8 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
       }
       for (const OwningNonNull<Text>& textNode : leafTextNodes) {
         Result<bool, nsresult> isRemovableParentStyleOrError =
-            IsRemovableParentStyleWithNewSpanElement(
-                MOZ_KnownLive(textNode), styleToRemove.mHTMLProperty,
-                styleToRemove.mAttribute);
+            IsRemovableParentStyleWithNewSpanElement(MOZ_KnownLive(textNode),
+                                                     styleToRemove);
         if (isRemovableParentStyleOrError.isErr()) {
           NS_WARNING(
               "HTMLEditor::IsRemovableParentStyleWithNewSpanElement() "
@@ -2577,22 +2575,23 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
 }
 
 Result<bool, nsresult> HTMLEditor::IsRemovableParentStyleWithNewSpanElement(
-    nsIContent& aContent, nsAtom* aHTMLProperty, nsAtom* aAttribute) const {
+    nsIContent& aContent, const EditorInlineStyle& aStyle) const {
   // We don't support to remove all inline styles with this path.
-  if (!aHTMLProperty) {
+  if (aStyle.IsStyleToClearAllInlineStyles()) {
     return false;
   }
 
   // First check whether the style is invertible since this is the fastest
   // check.
-  if (!CSSEditUtils::IsCSSInvertible(*aHTMLProperty, aAttribute)) {
+  if (!CSSEditUtils::IsCSSInvertible(*aStyle.mHTMLProperty,
+                                     aStyle.mAttribute)) {
     return false;
   }
 
   // If parent block has the removing style, we should create `<span>`
   // element to remove the style even in HTML mode since Chrome does it.
-  if (!CSSEditUtils::IsCSSEditableProperty(&aContent, aHTMLProperty,
-                                           aAttribute)) {
+  if (!CSSEditUtils::IsCSSEditableProperty(&aContent, aStyle.mHTMLProperty,
+                                           aStyle.mAttribute)) {
     return false;
   }
 
@@ -2604,7 +2603,8 @@ Result<bool, nsresult> HTMLEditor::IsRemovableParentStyleWithNewSpanElement(
   nsAutoString emptyString;
   Result<bool, nsresult> isComputedCSSEquivalentToHTMLInlineStyleOrError =
       CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet(
-          *this, aContent, aHTMLProperty, aAttribute, emptyString);
+          *this, aContent, aStyle.mHTMLProperty, aStyle.mAttribute,
+          emptyString);
   NS_WARNING_ASSERTION(
       isComputedCSSEquivalentToHTMLInlineStyleOrError.isOk(),
       "CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet() "
