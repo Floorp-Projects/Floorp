@@ -897,11 +897,9 @@ class HTMLEditor final : public EditorBase,
    * aPointToSplit if specified style matches with them.
    *
    * @param aPointToSplit       The point to split style at.
-   * @param aProperty           The style tag name which you want to split.
-   *                            Set nullptr if you want to split any styled
-   *                            elements.
-   * @param aAttribute          Attribute name if aProperty has some styles
-   *                            like nsGkAtoms::font.
+   * @param aStyle              The style which you want to split.
+   *                            RemoveAllStyles instance is allowed to split any
+   *                            inline elements.
    * @param aSplitAtEdges       Whether this should split elements at start or
    *                            end of inline elements or not.
    * @return                    The result of SplitNodeDeepWithTransaction()
@@ -911,7 +909,7 @@ class HTMLEditor final : public EditorBase,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<SplitNodeResult, nsresult>
   SplitAncestorStyledInlineElementsAt(const EditorDOMPoint& aPointToSplit,
-                                      nsAtom* aProperty, nsAtom* aAttribute,
+                                      const EditorInlineStyle& aStyle,
                                       SplitAtEdges aSplitAtEdges);
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult GetInlinePropertyBase(

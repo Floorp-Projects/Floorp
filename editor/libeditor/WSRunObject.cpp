@@ -538,7 +538,7 @@ Result<EditActionResult, nsresult> WhiteSpaceVisibilityKeeper::
     if (&aLeftContentInBlock != &aEditingHost) {
       Result<SplitNodeResult, nsresult> splitNodeResult =
           aHTMLEditor.SplitAncestorStyledInlineElementsAt(
-              pointToMoveFirstLineContent, nullptr, nullptr,
+              pointToMoveFirstLineContent, EditorInlineStyle::RemoveAllStyles(),
               HTMLEditor::SplitAtEdges::eDoNotCreateEmptyContainer);
       if (MOZ_UNLIKELY(splitNodeResult.isErr())) {
         NS_WARNING("HTMLEditor::SplitAncestorStyledInlineElementsAt() failed");
