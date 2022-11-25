@@ -23,25 +23,6 @@ class GentooBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         packages = [DISAMBIGUATE.get(p, p) for p in packages if p != "watchman"]
         self.run_as_root(["emerge", "--noreplace"] + packages)
 
-    def install_browser_packages(self, mozconfig_builder, artifact_mode=False):
-        # TODO: Figure out what not to install for artifact mode
-        self.run_as_root(
-            [
-                "emerge",
-                "--oneshot",
-                "--noreplace",
-                "--quiet",
-                "--newuse",
-                "dev-libs/dbus-glib",
-                "media-sound/pulseaudio",
-                "x11-libs/gtk+:3",
-                "x11-libs/libXt",
-            ]
-        )
-
-    def install_browser_artifact_mode_packages(self, mozconfig_builder):
-        self.install_browser_packages(mozconfig_builder, artifact_mode=True)
-
     def _update_package_manager(self):
         self.run_as_root(["emerge", "--sync"])
 

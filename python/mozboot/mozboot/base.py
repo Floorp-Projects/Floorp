@@ -446,39 +446,6 @@ class BaseBootstrapper(object):
 
         self.run_as_root(command)
 
-    def dnf_groupinstall(self, *packages):
-        if which("dnf"):
-            installed = subprocess.run(
-                # Ideally we'd invoke dnf with '--cacheonly', but there's:
-                # https://bugzilla.redhat.com/show_bug.cgi?id=2030255
-                # Ideally we'd use `--installed` instead of the undocumented
-                # `installed` subcommand, but that doesn't currently work:
-                # https://bugzilla.redhat.com/show_bug.cgi?id=1884616#c0
-                ["dnf", "group", "list", "installed", "--hidden"],
-                universal_newlines=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-            )
-            if installed.returncode != 0:
-                raise Exception(
-                    f'Failed to determine currently-installed package groups: "{installed.stdout}"'
-                )
-            installed_packages = (pkg.strip() for pkg in installed.stdout.split("\n"))
-            packages = list(filter(lambda p: p not in installed_packages, packages))
-            if len(packages) == 0:
-                # avoid sudo prompt (support unattended re-bootstrapping)
-                return
-
-            command = ["dnf", "groupinstall"]
-        else:
-            command = ["yum", "groupinstall"]
-
-        if self.no_interactive:
-            command.append("-y")
-        command.extend(packages)
-
-        self.run_as_root(command)
-
     def dnf_update(self, *packages):
         if which("dnf"):
             command = ["dnf", "update"]

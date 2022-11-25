@@ -11,22 +11,6 @@ from mozboot.linux_common import LinuxBootstrapper
 
 
 class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
-
-    # These are common packages for building Firefox for Desktop
-    # (browser) for all Debian-derived distros (such as Ubuntu).
-    BROWSER_COMMON_PACKAGES = [
-        "libasound2-dev",
-        "libcurl4-openssl-dev",
-        "libdbus-1-dev",
-        "libdbus-glib-1-dev",
-        "libdrm-dev",
-        "libgtk-3-dev",
-        "libpulse-dev",
-        "libx11-xcb-dev",
-        "libxt-dev",
-        "xvfb",
-    ]
-
     def __init__(self, distro, version, dist_id, codename, **kwargs):
         BaseBootstrapper.__init__(self, **kwargs)
 
@@ -57,13 +41,6 @@ class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
             pass
 
         self.apt_install(*packages)
-
-    def install_browser_packages(self, mozconfig_builder, artifact_mode=False):
-        # TODO: Figure out what not to install for artifact mode
-        self.apt_install(*self.BROWSER_COMMON_PACKAGES)
-
-    def install_browser_artifact_mode_packages(self, mozconfig_builder):
-        self.install_browser_packages(mozconfig_builder, artifact_mode=True)
 
     def _update_package_manager(self):
         self.apt_update()
