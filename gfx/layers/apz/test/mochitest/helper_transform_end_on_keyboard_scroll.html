@@ -42,7 +42,12 @@ async function test() {
 }
 
 function isOnChaosMode() {
-  return SpecialPowers.Services.env.get("MOZ_CHAOSMODE");
+  // TODO (barret): bug 1802605 - Using SpecialPowers.Services.env causes test
+  // time outs on macOS.
+  // eslint-disable-next-line mozilla/use-services
+  const env = SpecialPowers.Cc["@mozilla.org/process/environment;1"]
+                           .getService(SpecialPowers.Ci.nsIEnvironment);
+  return env.get("MOZ_CHAOSMODE");
 }
 
 if ((getPlatform() == "mac" || getPlatform() == "windows") &&
