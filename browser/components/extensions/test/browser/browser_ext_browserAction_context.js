@@ -164,7 +164,7 @@ async function runTests(options) {
     is(button.getAttribute("label"), title, "image label is correct");
     is(button.getAttribute("badge"), details.badge, "badge text is correct");
     is(
-      node.getAttribute("disabled") == "true",
+      button.getAttribute("disabled") == "true",
       !details.enabled,
       "disabled state is correct"
     );
