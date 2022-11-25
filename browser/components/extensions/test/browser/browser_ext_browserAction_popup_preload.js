@@ -190,8 +190,9 @@ add_task(async function testBrowserActionDisabled() {
   let browserAction = browserActionFor(ext);
 
   let widget = getBrowserActionWidget(extension).forWindow(window);
+  let button = widget.node.firstElementChild;
 
-  is(widget.node.getAttribute("disabled"), "true", "Button is disabled");
+  is(button.getAttribute("disabled"), "true", "Button is disabled");
   is(browserAction.pendingPopup, null, "Have no pending popup prior to click");
 
   // Test canceled click.
