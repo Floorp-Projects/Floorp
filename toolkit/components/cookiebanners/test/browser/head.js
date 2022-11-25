@@ -211,6 +211,7 @@ function insertTestClickRules() {
   ruleA.addClickRule(
     "div#banner",
     false,
+    Ci.nsIClickRule.RUN_ALL,
     null,
     "button#optOut",
     "button#optIn"
@@ -224,7 +225,14 @@ function insertTestClickRules() {
   ruleB.id = genUUID();
   ruleB.domain = TEST_DOMAIN_B;
 
-  ruleB.addClickRule("div#banner", false, null, null, "button#optIn");
+  ruleB.addClickRule(
+    "div#banner",
+    false,
+    Ci.nsIClickRule.RUN_ALL,
+    null,
+    null,
+    "button#optIn"
+  );
   Services.cookieBanners.insertRule(ruleB);
 
   info("Add global ruleC which targets a non-existing banner (presence).");
@@ -236,6 +244,7 @@ function insertTestClickRules() {
   ruleC.addClickRule(
     "div#nonExistingBanner",
     false,
+    Ci.nsIClickRule.RUN_ALL,
     null,
     null,
     "button#optIn"
@@ -251,6 +260,7 @@ function insertTestClickRules() {
   ruleD.addClickRule(
     "div#nonExistingBanner2",
     false,
+    Ci.nsIClickRule.RUN_ALL,
     null,
     "button#optOut",
     "button#optIn"
