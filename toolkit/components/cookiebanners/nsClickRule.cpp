@@ -4,6 +4,7 @@
 
 #include "nsClickRule.h"
 
+#include "nsCookieBannerRule.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -22,6 +23,15 @@ nsClickRule::GetSkipPresenceVisibilityCheck(
   NS_ENSURE_ARG_POINTER(aSkipPresenceVisibilityCheck);
 
   *aSkipPresenceVisibilityCheck = mSkipPresenceVisibilityCheck;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsClickRule::GetRunContext(nsIClickRule::RunContext* aRunContext) {
+  NS_ENSURE_ARG_POINTER(aRunContext);
+
+  *aRunContext = mRunContext;
 
   return NS_OK;
 }

@@ -150,9 +150,10 @@ class CookieBannerChild extends JSWindowActorChild {
       return;
     }
 
-    lazy.logConsole.debug(
-      `Send message to get rule for ${principal.baseDomain}`
-    );
+    lazy.logConsole.debug("Send message to get rule", {
+      baseDomain: principal.baseDomain,
+      isTopLevel: this.browsingContext == this.browsingContext?.top,
+    });
     let rules;
 
     try {

@@ -277,6 +277,22 @@ class CookieBannerListService {
     }
   }
 
+  /**
+   * Converts runContext string field to nsIClickRule::RunContext
+   * @param {('top'|'child'|'all')} runContextStr - Run context as string.
+   * @returns nsIClickRule::RunContext representation.
+   */
+  #runContextStrToNative(runContextStr) {
+    let strToNative = {
+      top: Ci.nsIClickRule.RUN_TOP,
+      child: Ci.nsIClickRule.RUN_CHILD,
+      all: Ci.nsIClickRule.RUN_ALL,
+    };
+
+    // Default to RUN_TOP;
+    return strToNative[runContextStr] ?? Ci.nsIClickRule.RUN_TOP;
+  }
+
   #importClickRule(rule, click) {
     // Skip importing the rule if there is no click object or the click rule is
     // empty - it doesn't have the mandatory presence attribute.
@@ -287,6 +303,7 @@ class CookieBannerListService {
     rule.addClickRule(
       click.presence,
       click.skipPresenceVisibilityCheck,
+      this.#runContextStrToNative(click.runContext),
       click.hide,
       click.optOut,
       click.optIn

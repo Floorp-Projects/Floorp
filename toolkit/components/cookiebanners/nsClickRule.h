@@ -16,10 +16,12 @@ class nsClickRule final : public nsIClickRule {
 
   explicit nsClickRule(const nsACString& aPresence,
                        const bool aSkipPresenceVisibilityCheck,
+                       const nsIClickRule::RunContext aRunContext,
                        const nsACString& aHide, const nsACString& aOptOut,
                        const nsACString& aOptIn)
       : mPresence(aPresence),
         mSkipPresenceVisibilityCheck(aSkipPresenceVisibilityCheck),
+        mRunContext(aRunContext),
         mHide(aHide),
         mOptOut(aOptOut),
         mOptIn(aOptIn) {}
@@ -29,6 +31,7 @@ class nsClickRule final : public nsIClickRule {
 
   nsCString mPresence;
   bool mSkipPresenceVisibilityCheck;
+  nsIClickRule::RunContext mRunContext;
   nsCString mHide;
   nsCString mOptOut;
   nsCString mOptIn;

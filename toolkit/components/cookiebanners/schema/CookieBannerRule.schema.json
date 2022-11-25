@@ -127,6 +127,16 @@
           "type": "boolean",
           "description": "Whether to skip checking if the banner is visible before clicking it."
         },
+        "runContext": {
+          "title": "Run Context",
+          "type": "string",
+          "enum": [
+            "top",
+            "child",
+            "all"
+          ],
+          "description": "Where the click rule should be executed. Defaults to only top window. top: Only in the top window; child: Only in child frames; all: Both top window and child frames."
+        },
         "hide": {
           "title": "Hide Selector",
           "type": "string",
