@@ -189,6 +189,7 @@ set_config("ENABLE_UNIFIED_BUILD", True, when="--disable-unified-build")
 
 include("build/moz.configure/bootstrap.configure")
 
+
 # The execution model of the configure sandbox doesn't allow for
 # check_prog to use bootstrap_search_path directly because check_prog
 # comes first, so we use a trick to allow it. Uses of check_prog
@@ -516,7 +517,7 @@ add_old_configure_assignment("CLANG_PLUGIN", clang_plugin_path)
 
 # Awk detection
 # ==============================================================
-awk = check_prog("AWK", ("gawk", "mawk", "nawk", "awk"))
+awk = check_prog("AWK", ("gawk", "mawk", "nawk", "awk"), paths=prefer_mozillabuild_path)
 
 # Until the AWK variable is not necessary in old-configure
 
