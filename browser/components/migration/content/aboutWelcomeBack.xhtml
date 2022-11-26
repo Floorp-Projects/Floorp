@@ -24,43 +24,44 @@
 
   <body>
 
-    <div class="container">
+    <div class="container tab-list-tree-container">
+      <div class="description-wrapper">
 
-      <div class="title">
-        <h1 class="title-text" data-l10n-id="welcome-back-page-title"></h1>
-      </div>
-
-      <div class="description">
-
-        <p data-l10n-id="welcome-back-page-info"></p>
-        <!-- Note a href in the anchor below is added by JS -->
-        <p data-l10n-id="welcome-back-page-info-link"><a id="linkMoreTroubleshooting" target="_blank" data-l10n-name="link-more"></a></p>
-
-        <div>
-          <label class="radioRestoreContainer radio-container-with-text">
-            <input class="radioRestoreButton" id="radioRestoreAll" type="radio"
-                   name="restore" checked="checked"/>
-            <span class="radioRestoreLabel" data-l10n-id="welcome-back-restore-all-label"></span>
-          </label>
-
-          <label class="radioRestoreContainer radio-container-with-text">
-            <input class="radioRestoreButton" id="radioRestoreChoose" type="radio"
-                   name="restore"/>
-            <span class="radioRestoreLabel" data-l10n-id="welcome-back-restore-some-label"></span>
-          </label>
+        <div class="title">
+          <h1 class="title-text" data-l10n-id="welcome-back-page-title"></h1>
         </div>
+
+        <div class="description">
+
+          <p data-l10n-id="welcome-back-page-info"></p>
+          <!-- Note a href in the anchor below is added by JS -->
+          <p data-l10n-id="welcome-back-page-info-link"><a id="linkMoreTroubleshooting" target="_blank" data-l10n-name="link-more"></a></p>
+
+          <div>
+            <label class="radioRestoreContainer radio-container-with-text">
+              <input class="radioRestoreButton" id="radioRestoreAll" type="radio"
+                     name="restore" checked="checked"/>
+              <span class="radioRestoreLabel" data-l10n-id="welcome-back-restore-all-label"></span>
+            </label>
+
+            <label class="radioRestoreContainer radio-container-with-text">
+              <input class="radioRestoreButton" id="radioRestoreChoose" type="radio"
+                     name="restore"/>
+              <span class="radioRestoreLabel" data-l10n-id="welcome-back-restore-some-label"></span>
+            </label>
+          </div>
+        </div>
+
       </div>
 
-      <div class="tree-container">
-        <xul:tree id="tabList" flex="1" seltype="single" hidecolumnpicker="true">
-          <xul:treecols>
-            <xul:treecol cycler="true" id="restore" type="checkbox" data-l10n-id="restore-page-restore-header"/>
-            <xul:splitter class="tree-splitter"/>
-            <xul:treecol primary="true" id="title" data-l10n-id="restore-page-list-header" flex="1"/>
-          </xul:treecols>
-          <xul:treechildren flex="1"/>
-        </xul:tree>
-      </div>
+      <xul:tree id="tabList" flex="1" seltype="single" hidecolumnpicker="true" hidden="true">
+        <xul:treecols>
+          <xul:treecol cycler="true" id="restore" type="checkbox" data-l10n-id="restore-page-restore-header"/>
+          <xul:splitter class="tree-splitter"/>
+          <xul:treecol primary="true" id="title" data-l10n-id="restore-page-list-header" flex="1"/>
+        </xul:treecols>
+        <xul:treechildren flex="1"/>
+      </xul:tree>
 
       <div class="button-container">
         <xul:button class="primary"

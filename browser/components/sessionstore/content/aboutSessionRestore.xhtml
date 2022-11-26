@@ -22,35 +22,30 @@
     <script src="chrome://browser/content/aboutSessionRestore.js"/>
   </head>
 
-  <body class="illustrated">
+  <body>
 
-    <div class="container restore-chosen">
+    <div class="container tab-list-tree-container">
       <div class="description-wrapper">
         <div class="title">
           <h1 class="title-text" data-l10n-id="restore-page-error-title"></h1>
         </div>
         <div class="description">
           <p data-l10n-id="restore-page-problem-desc"></p>
-
-          <div id="errorLongDesc">
-            <p data-l10n-id="restore-page-try-this"></p>
-          </div>
+          <p data-l10n-id="restore-page-try-this"></p>
         </div>
-        <button id="tabsToggle" class="show-tabs">
+        <button id="tabsToggle" class="tabs-hidden">
           <span id="showTabs" data-l10n-id="restore-page-show-tabs"></span>
           <span id="hideTabs" data-l10n-id="restore-page-hide-tabs"></span>
         </button>
       </div>
-      <div class="tree-container" available="true">
-        <xul:tree id="tabList" seltype="single" hidecolumnpicker="true">
-          <xul:treecols>
-            <xul:treecol cycler="true" id="restore" type="checkbox" data-l10n-id="restore-page-restore-header"/>
-            <xul:splitter class="tree-splitter"/>
-            <xul:treecol primary="true" id="title" data-l10n-id="restore-page-list-header" flex="1"/>
-          </xul:treecols>
-          <xul:treechildren flex="1"/>
-        </xul:tree>
-      </div>
+      <xul:tree id="tabList" seltype="single" hidecolumnpicker="true" hidden="true">
+        <xul:treecols>
+          <xul:treecol cycler="true" id="restore" type="checkbox" data-l10n-id="restore-page-restore-header"/>
+          <xul:splitter class="tree-splitter"/>
+          <xul:treecol primary="true" id="title" data-l10n-id="restore-page-list-header" flex="1"/>
+        </xul:treecols>
+        <xul:treechildren flex="1"/>
+      </xul:tree>
       <div class="button-container">
 #ifdef XP_UNIX
         <xul:button id="errorCancel"
