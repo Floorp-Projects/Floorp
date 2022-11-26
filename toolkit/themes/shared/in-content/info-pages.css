@@ -109,22 +109,18 @@ button {
   margin-inline-start: 0;
 }
 
-/* Trees */
-.tree-container {
-  margin-top: 1.2em;
-  flex: 1 0px;
-  min-height: 12em;
+.button-container > button:last-child {
+  margin-inline-end: 0;
 }
 
-.tree-container > tree {
-  height: 100%;
-}
+/* Trees */
 
 tree {
   width: 100%;
 }
 
 /* Tables */
+
 table {
   background-color: var(--in-content-table-background);
   color: var(--in-content-text-color);
