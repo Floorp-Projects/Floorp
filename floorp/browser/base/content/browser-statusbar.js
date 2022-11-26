@@ -6,10 +6,9 @@ var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const toolbarElem = window.MozXULElement.parseXULToFragment(
     `
-    <toolbar id="statusBar" toolbarname="Status bar" customizable="true"
+    <toolbar id="statusBar" toolbarname="Status bar" customizable="true" style="border-top: 1px solid var(--chrome-content-separator-color)"
              class="browser-toolbar customization-target" mode="icons" context="toolbar-context-menu" accesskey="A">
-            <hbox id="status-text" align="center" flex="1" class="statusbar-padding">
-            </hbox>
+             <hbox id="status-text" align="center" flex="1" class="statusbar-padding"/>
     </toolbar>
     `
  );

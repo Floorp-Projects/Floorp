@@ -229,7 +229,3 @@
   #bsb-context-add, #bsb-context-link-add {
     --menuitem-image: url("chrome://browser/skin/lepton/movetowindow-16.svg");
   }
-
-  #statusBar {
-    border-top: 1px solid var(--chrome-content-separator-color);
-  }
