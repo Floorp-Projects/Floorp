@@ -141,6 +141,8 @@ class nsNativeThemeWin : public Theme {
                                       THEMESIZE aSizeReq,
                                       LayoutDeviceIntSize* aResult);
 
+  SIZE GetCachedGutterSize(HANDLE theme);
+
  private:
   TimeStamp mProgressDeterminateTimeStamp;
   TimeStamp mProgressIndeterminateTimeStamp;
@@ -163,6 +165,9 @@ class nsNativeThemeWin : public Theme {
       [(eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT + 7) / 8];
   LayoutDeviceIntSize
       mMinimumWidgetSizeCache[eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT];
+
+  bool mGutterSizeCacheValid;
+  SIZE mGutterSizeCache;
 };
 
 }  // namespace mozilla::widget
