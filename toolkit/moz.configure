@@ -320,20 +320,10 @@ set_config("MOZ_WASAPI", imply_wasapi, when="--enable-audio-backends")
 
 # ALSA cubeb backend
 # ==============================================================
-option(
-    "--enable-alsa",
-    env="MOZ_ALSA",
-    help="Enable ALSA audio backend.",
-    when=use_pkg_config,
-)
+option("--enable-alsa", env="MOZ_ALSA", help="Enable ALSA audio backend.")
 
 
-@depends("--enable-alsa", when=use_pkg_config)
-def enable_alsa_option(enable_alsa):
-    return enable_alsa
-
-
-@depends(enable_alsa_option, midir_linux_support)
+@depends("--enable-alsa", midir_linux_support)
 def enable_alsa_or_midir_linux_support(alsa_enabled, midir_linux_support):
     return alsa_enabled or midir_linux_support
 
@@ -344,12 +334,7 @@ set_config("MOZ_ALSA", True, when="--enable-alsa")
 
 # JACK cubeb backend
 # ==============================================================
-system_lib_option(
-    "--enable-jack",
-    env="MOZ_JACK",
-    help="Enable JACK audio backend.",
-    when=use_pkg_config,
-)
+system_lib_option("--enable-jack", env="MOZ_JACK", help="Enable JACK audio backend.")
 
 jack = pkg_check_modules("MOZ_JACK", "jack", when="--enable-jack")
 
@@ -361,7 +346,6 @@ option(
     "--enable-pulseaudio",
     env="MOZ_PULSEAUDIO",
     help="{Enable|Disable} PulseAudio audio backend.",
-    when=use_pkg_config,
 )
 
 pulseaudio = pkg_check_modules("MOZ_PULSEAUDIO", "libpulse", when="--enable-pulseaudio")
@@ -370,12 +354,7 @@ set_config("MOZ_PULSEAUDIO", depends_if(pulseaudio)(lambda _: True))
 
 # sndio cubeb backend
 # ==============================================================
-system_lib_option(
-    "--enable-sndio",
-    env="MOZ_SNDIO",
-    help="Enable sndio audio backend.",
-    when=use_pkg_config,
-)
+system_lib_option("--enable-sndio", env="MOZ_SNDIO", help="Enable sndio audio backend.")
 
 sndio = pkg_check_modules("MOZ_SNDIO", "sndio", when="--enable-sndio")
 
@@ -999,15 +978,10 @@ set_define("MOZ_TELEMETRY_ON_BY_DEFAULT", True, when=telemetry_on_by_default)
 
 # gpsd support
 # ==============================================================
-system_lib_option(
-    "--enable-gpsd",
-    env="MOZ_GPSD",
-    help="Enable gpsd support",
-    when=use_pkg_config,
-)
+system_lib_option("--enable-gpsd", env="MOZ_GPSD", help="Enable gpsd support")
 
 
-@depends("--enable-gpsd", when=use_pkg_config)
+@depends("--enable-gpsd")
 def gpsd(value):
     return bool(value)
 
@@ -1155,9 +1129,7 @@ set_config(
 )
 
 system_lib_option(
-    "--with-system-webp",
-    help="Use system libwebp (located with pkgconfig)",
-    when=use_pkg_config,
+    "--with-system-webp", help="Use system libwebp (located with pkgconfig)"
 )
 
 system_webp = pkg_check_modules(
@@ -1901,14 +1873,8 @@ with only_when(compile_environment):
 
 with only_when(compile_environment):
     system_lib_option(
-        "--with-system-libvpx",
-        help="Use system libvpx (located with pkgconfig)",
-        when=use_pkg_config,
+        "--with-system-libvpx", help="Use system libvpx (located with pkgconfig)"
     )
-
-    @depends("--with-system-libvpx", when=use_pkg_config)
-    def with_system_libvpx_option(with_system_libvpx):
-        return with_system_libvpx
 
     with only_when("--with-system-libvpx"):
         vpx = pkg_check_modules("MOZ_LIBVPX", "vpx >= 1.10.0")
@@ -1934,7 +1900,7 @@ with only_when(compile_environment):
 
         set_config("MOZ_SYSTEM_LIBVPX", True)
 
-    @depends(with_system_libvpx_option, target)
+    @depends("--with-system-libvpx", target)
     def in_tree_vpx(system_libvpx, target):
         if system_libvpx:
             return
@@ -2145,10 +2111,9 @@ with only_when(compile_environment):
         "--with-system-png",
         nargs="?",
         help="Use system libpng",
-        when=use_pkg_config,
     )
 
-    @depends("--with-system-png", when=use_pkg_config)
+    @depends("--with-system-png")
     def deprecated_system_png_path(value):
         if len(value) == 1:
             die(
@@ -2842,10 +2807,9 @@ with only_when(compile_environment):
         "--with-system-libevent",
         nargs="?",
         help="Use system libevent",
-        when=use_pkg_config,
     )
 
-    @depends("--with-system-libevent", when=use_pkg_config)
+    @depends("--with-system-libevent")
     def deprecated_system_libevent_path(value):
         if len(value) == 1:
             die(
@@ -2922,13 +2886,9 @@ with only_when(toolkit_gtk):
 # DBus
 # ==============================================================
 with only_when(toolkit_gtk):
-    option("--disable-dbus", help="Disable dbus support", when=use_pkg_config)
+    option("--disable-dbus", help="Disable dbus support")
 
-    @depends("--enable-dbus", when=use_pkg_config)
-    def enable_dbus_option(enable_dbus):
-        return enable_dbus
-
-    with only_when(enable_dbus_option):
+    with only_when("--enable-dbus"):
         pkg_check_modules("MOZ_DBUS", "dbus-1 >= 0.60")
         pkg_check_modules("MOZ_DBUS_GLIB", "dbus-glib-1 >= 0.60")
 
@@ -2953,7 +2913,7 @@ set_define("NECKO_WIFI", True, when="--enable-necko-wifi")
 
 @depends(
     depends("--enable-necko-wifi", when=necko_wifi_when)(lambda x: x),
-    depends(enable_dbus_option, when=toolkit_gtk)(lambda x: x),
+    depends("--enable-dbus", when=toolkit_gtk)(lambda x: x),
     when=depends(target)(lambda t: t.os == "GNU" and t.kernel == "Linux"),
 )
 def necko_wifi_dbus(necko_wifi, dbus):
@@ -2992,11 +2952,7 @@ set_define("MOZ_LAYERS_HAVE_LOG", True, when="--enable-dump-painting")
 # libproxy support
 # ==============================================================
 with only_when(toolkit_gtk):
-    system_lib_option(
-        "--enable-libproxy",
-        help="Enable libproxy support",
-        when=use_pkg_config,
-    )
+    system_lib_option("--enable-libproxy", help="Enable libproxy support")
 
     with only_when("--enable-libproxy"):
         pkg_check_modules("MOZ_LIBPROXY", "libproxy-1.0")
@@ -3087,16 +3043,10 @@ set_define("ENABLE_SYSTEM_EXTENSION_DIRS", True, when="--enable-system-extension
 # ==============================================================
 with only_when(compile_environment):
     system_lib_option(
-        "--enable-system-pixman",
-        help="Use system pixman (located with pkgconfig)",
-        when=use_pkg_config,
+        "--enable-system-pixman", help="Use system pixman (located with pkgconfig)"
     )
 
-    @depends("--enable-system-pixman", when=use_pkg_config)
-    def enable_system_pixman_option(enable_system_pixman):
-        return enable_system_pixman
-
-    @depends(enable_system_pixman_option)
+    @depends("--enable-system-pixman")
     def in_tree_pixman(pixman):
         return not pixman
 
