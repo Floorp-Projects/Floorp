@@ -546,3 +546,9 @@ dual-theme-enabled-heading = Enabled (Sub Theme)
 import-from-vivaldi =
     .label = Vivaldi
     .accesskey = V
+
+##################################################################### toolbar ###############################################################
+
+status-bar =
+    .label = Status Bar
+     .accesskey = S

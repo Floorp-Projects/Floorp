@@ -1,0 +1,95 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+const toolbarElem = window.MozXULElement.parseXULToFragment(
+    `
+    <toolbar id="statusBar" toolbarname="Status bar" customizable="true"
+             class="browser-toolbar customization-target" mode="icons" context="toolbar-context-menu" accesskey="A">
+            <hbox id="status-text" align="center" flex="1" class="statusbar-padding">
+            </hbox>
+    </toolbar>
+    `
+ );
+
+ //If the status bar is hidden, we need to add this CSS
+const hideedStatusBar = `
+    #statusBar {
+        display: none;
+    }
+    :root[customizing] #statusBar {
+        display: inherit !important;
+    }
+`;
+
+const displayStatusbar = `
+        background: var(--toolbar-bgcolor);
+        border: none !important;
+`
+
+document.getElementById("navigator-toolbox").appendChild(toolbarElem);
+CustomizableUI.registerArea("statusBar", {
+    type: CustomizableUI.TYPE_TOOLBAR,
+    defaultPlacements: [
+         "screenshot-button",
+         "zoom-controls",
+         "fullscreen-button",
+        ],
+});
+CustomizableUI.registerToolbarNode(document.getElementById("statusBar"));
+
+//move elem to bottom of window
+document.body.appendChild(document.getElementById("statusBar"));
+
+//menuitem for status bar
+let contextMenu = document.createXULElement("menuitem");
+contextMenu.setAttribute("data-l10n-id", "status-bar");
+contextMenu.setAttribute("type", "checkbox");
+contextMenu.id = "toggle_statusBar";
+contextMenu.setAttribute("checked", Services.prefs.getBoolPref("browser.display.statusbar"));
+contextMenu.setAttribute("oncommand", "changeStatusbarVisibility();");
+document.getElementById("toolbarItemsMenuSeparator").after(contextMenu);
+
+
+//observe menuitem
+function changeStatusbarVisibility() {
+    window.setTimeout(function() {
+        if(document.getElementById("toggle_statusBar").getAttribute("checked") == "true") {
+            Services.prefs.setBoolPref("browser.display.statusbar", true);
+            //remove CSS
+            document.getElementById("statusBarCSS").remove();
+
+            //move statustext to statusbar
+            document.getElementById("status-text").appendChild(document.getElementById("statuspanel-label"));
+
+             //add CSS
+            document.getElementById("statuspanel-label").setAttribute("style", displayStatusbar);
+        } else {
+            Services.prefs.setBoolPref("browser.display.statusbar", false);
+            //add CSS
+            var Tag = document.createElement("style");
+            Tag.setAttribute("id", "statusBarCSS");
+            Tag.innerText = hideedStatusBar;
+            document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend", Tag);
+
+            //revert statustext to statuspanel
+            document.getElementById("statuspanel-inner").appendChild(document.getElementById("statuspanel-label"));
+
+            //remove CSS
+            document.getElementById("statuspanel-label").removeAttribute("style");
+   }}, 50);
+}
+
+//startup
+if (!Services.prefs.getBoolPref("browser.display.statusbar", false)) {
+    var Tag = document.createElement("style");
+    Tag.setAttribute("id", "statusBarCSS");
+    Tag.innerText = hideedStatusBar;
+    document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend", Tag);
+} else {
+    document.getElementById("toggle_statusBar").setAttribute("checked", true);
+    document.getElementById("status-text").appendChild(document.getElementById("statuspanel-label"));
+    document.getElementById("statuspanel-label").setAttribute("style", displayStatusbar);
+}

@@ -15,6 +15,7 @@ Services.scriptloader.loadSubScript("chrome://browser/content/browser-UI-custom.
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-manager-sidebar.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-design.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-startup.js", this);
+Services.scriptloader.loadSubScript("chrome://browser/content/browser-statusbar.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-tabbar.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-userChrome.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-preferences.js", this);

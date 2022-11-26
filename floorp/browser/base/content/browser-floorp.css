@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#sidebar-button2 {
+  #sidebar-button2 {
     list-style-image: url("chrome://browser/skin/sidebars.svg");
     fill: rgb(0, 192, 209) !important;
   }
@@ -228,4 +228,8 @@
 
   #bsb-context-add, #bsb-context-link-add {
     --menuitem-image: url("chrome://browser/skin/lepton/movetowindow-16.svg");
+  }
+
+  #statusBar {
+    border-top: 1px solid var(--chrome-content-separator-color);
   }

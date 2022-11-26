@@ -683,22 +683,23 @@ function setBrowserDesign() {
 
 /*---------------------------------------------------------------- Context Menu ----------------------------------------------------------------*/
 function addContextBox(id,l10n,insert,runFunction){
-let contextMenu = document.createXULElement("menuitem");
-contextMenu.setAttribute("data-l10n-id",l10n)
-contextMenu.id = id
-contextMenu.setAttribute("oncommand",runFunction)
-document.getElementById("contentAreaContextMenu").insertBefore(contextMenu,document.getElementById(insert))
-contextMenuObserverFunc()
+  let contextMenu = document.createXULElement("menuitem");
+  contextMenu.setAttribute("data-l10n-id",l10n);
+  contextMenu.id = id;
+  contextMenu.setAttribute("oncommand",runFunction);
+  document.getElementById("contentAreaContextMenu").insertBefore(contextMenu,document.getElementById(insert));
+  contextMenuObserverFunc();
 }
 
 function contextMenuObserverFunc(){
-if(document.getElementById("bsb-context-add") != null) document.getElementById("bsb-context-add").hidden = document.getElementById("context-viewsource").hidden || !document.getElementById("context-viewimage").hidden
-if(document.getElementById("bsb-context-link-add") != null) document.getElementById("bsb-context-link-add").hidden = document.getElementById("context-openlink").hidden
+  if(document.getElementById("bsb-context-add") != null) document.getElementById("bsb-context-add").hidden = document.getElementById("context-viewsource").hidden || !document.getElementById("context-viewimage").hidden
+  if(document.getElementById("bsb-context-link-add") != null) document.getElementById("bsb-context-link-add").hidden = document.getElementById("context-openlink").hidden
+  if(document.getElementById("bsb-context-link-add") != null) document.getElementById("bsb-context-link-add").hidden = document.getElementById("context-openlink").hidden
 }
 
 function contextMenuObserverAdd(id){
-contextMenuObserver.observe(document.getElementById(id), {attributes:true})
-contextMenuObserverFunc()
+  contextMenuObserver.observe(document.getElementById(id), {attributes:true})
+  contextMenuObserverFunc()
 }
 
 /*---------------------------------------------------------------- URLbar recalculation ----------------------------------------------------------------*/

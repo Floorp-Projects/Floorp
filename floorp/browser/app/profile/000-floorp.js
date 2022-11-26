@@ -68,12 +68,12 @@ pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", fal
 //新しいタブの背景の設定
 pref("browser.newtabpage.activity-stream.floorp.background.type", 1);
 
-pref("floorp.memory.free.button", true);
 pref("floorp.entable.deepl.translate", false);
 pref("floorp.multitab.bottommode", false);
 
+pref("browser.display.statusbar", false);
 
-//max is 20
+
 pref("floorp.browser.sidebar.right", true);// サイドバーの右側を表示
 pref("floorp.browser.sidebar.enable", true);// サイドバーを表示
 pref("floorp.browser.sidebar2.page", "");//サイドバーで開いているページ
