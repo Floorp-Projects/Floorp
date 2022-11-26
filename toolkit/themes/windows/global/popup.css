@@ -17,12 +17,11 @@ panel {
   --panel-border-color: ThreeDShadow;
   --panel-width: initial;
 
+  --panel-shadow: 0 0 var(--panel-shadow-margin) hsla(0,0%,0%,.2);
   --panel-shadow-margin: 4px;
   -moz-window-input-region-margin: var(--panel-shadow-margin);
-  --windows-panel-box-shadow: 0 0 var(--panel-shadow-margin) hsla(0,0%,0%,.2);
   margin: calc(-1 * var(--panel-shadow-margin));
 }
-
 
 @media not (-moz-windows-non-native-menus) {
   menupopup {
@@ -63,11 +62,6 @@ panel {
     padding-block: 0.5em;
     padding-inline-start: 1em;
   }
-
-  menupopup::part(content) {
-    box-shadow: var(--windows-panel-box-shadow);
-    margin: var(--panel-shadow-margin);
-  }
 }
 
 menupopup > menu > menupopup {
@@ -80,14 +74,14 @@ menupopup > menu > menupopup {
   appearance: none;
   background: transparent;
   border: none;
-  /* To account for the box-shadow below */
-  --panel-shadow-margin: 4px;
 }
 
 :is(panel, menupopup)::part(content) {
   display: -moz-box;
   -moz-box-flex: 1;
   padding: var(--panel-padding);
+  margin: var(--panel-shadow-margin);
+  box-shadow: var(--panel-shadow);
   color: var(--panel-color);
   background: var(--panel-background);
   border-radius: var(--panel-border-radius);
@@ -99,11 +93,6 @@ menupopup > menu > menupopup {
 
 :is(panel, menupopup)[orient=vertical]::part(content) {
   -moz-box-orient: vertical;
-}
-
-:is(panel, menupopup)[type="arrow"]::part(content) {
-  margin: var(--panel-shadow-margin);
-  box-shadow: var(--windows-panel-box-shadow);
 }
 
 panel[type="arrow"].panel-no-padding::part(content) {

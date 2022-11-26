@@ -14,3 +14,13 @@ menupopup::part(drop-indicator) {
 toolbarbutton menupopup[placespopup] {
   --nested-margin: calc(-1 * (var(--arrowpanel-menuitem-padding-inline) + var(--panel-shadow-margin)));
 }
+
+@media not (-moz-windows-non-native-menus) {
+  toolbarbutton menupopup[placespopup] {
+    --panel-shadow-margin: 4px;
+  }
+
+  toolbarbutton menupopup[placespopup] menupopup[placespopup] {
+    margin-inline-start: var(--nested-margin);
+  }
+}

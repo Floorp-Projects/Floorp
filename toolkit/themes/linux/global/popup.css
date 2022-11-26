@@ -17,6 +17,7 @@ panel {
   --panel-border-radius: env(-moz-gtk-csd-menu-radius);
   --panel-border-color: ThreeDShadow;
   --panel-width: initial;
+  --panel-shadow: 0 0 var(--panel-shadow-margin) hsla(0,0%,0%,.2);
   /* To account for the box-shadow below */
   --panel-shadow-margin: 4px;
   margin: calc(-1 * var(--panel-shadow-margin));
@@ -47,7 +48,7 @@ menupopup > menu > menupopup {
   min-width: 0;
   min-height: 0;
 
-  box-shadow: 0 0 var(--panel-shadow-margin) hsla(0,0%,0%,.2);
+  box-shadow: var(--panel-shadow);
   margin: var(--panel-shadow-margin);
 }
 
