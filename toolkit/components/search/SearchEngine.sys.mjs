@@ -1557,9 +1557,7 @@ export class SearchEngine {
       return null;
     }
 
-    let templateUrl = Services.io
-      .newURI(url.template)
-      .QueryInterface(Ci.nsIURL);
+    let templateUrl = Services.io.newURI(url.template);
     return {
       mainDomain: templateUrl.host,
       path: templateUrl.filePath.toLowerCase(),

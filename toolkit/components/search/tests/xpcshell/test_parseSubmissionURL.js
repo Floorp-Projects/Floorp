@@ -59,12 +59,12 @@ add_task(async function test_parseSubmissionURL() {
   }
 
   // Test the first engine, whose URLs use UTF-8 encoding.
+  // This also tests the query parameter in a different position not being the
+  // first parameter.
   let url = "https://www.google.com/search?foo=bar&q=caff%C3%A8";
   let result = Services.search.parseSubmissionURL(url);
   Assert.equal(result.engine.wrappedJSObject, engine1);
   Assert.equal(result.terms, "caff\u00E8");
-  Assert.ok(url.slice(result.termsOffset).startsWith("caff%C3%A8"));
-  Assert.equal(result.termsLength, "caff%C3%A8".length);
 
   // The second engine uses a locale-specific domain that is an alternate domain
   // of the first one, but the second engine should get priority when matching.
@@ -73,8 +73,6 @@ add_task(async function test_parseSubmissionURL() {
   result = Services.search.parseSubmissionURL(url);
   Assert.equal(result.engine.wrappedJSObject, engine2);
   Assert.equal(result.terms, "caff\u00E8");
-  Assert.ok(url.slice(result.termsOffset).startsWith("caff%E8"));
-  Assert.equal(result.termsLength, "caff%E8".length);
 
   // Test a domain that is an alternate domain of those defined.  In this case,
   // the first matching engine from the ordered list should be returned.
@@ -82,40 +80,30 @@ add_task(async function test_parseSubmissionURL() {
   result = Services.search.parseSubmissionURL(url);
   Assert.equal(result.engine.wrappedJSObject, engine1);
   Assert.equal(result.terms, "caff\u00E8");
-  Assert.ok(url.slice(result.termsOffset).startsWith("caff%C3%A8"));
-  Assert.equal(result.termsLength, "caff%C3%A8".length);
 
   // We support parsing URLs from a dynamically added engine.
   url = "https://www.bacon.test/find?q=caff%E8";
   result = Services.search.parseSubmissionURL(url);
   Assert.equal(result.engine, engine3);
   Assert.equal(result.terms, "caff\u00E8");
-  Assert.ok(url.slice(result.termsOffset).startsWith("caff%E8"));
-  Assert.equal(result.termsLength, "caff%E8".length);
 
   // Test URLs with unescaped unicode characters.
   url = "https://www.google.com/search?q=foo+b\u00E4r";
   result = Services.search.parseSubmissionURL(url);
   Assert.equal(result.engine.wrappedJSObject, engine1);
   Assert.equal(result.terms, "foo b\u00E4r");
-  Assert.ok(url.slice(result.termsOffset).startsWith("foo+b\u00E4r"));
-  Assert.equal(result.termsLength, "foo+b\u00E4r".length);
 
   // Test search engines with unescaped IDNs.
   url = "https://www.b\u00FCcher.ch/search?q=foo+bar";
   result = Services.search.parseSubmissionURL(url);
   Assert.equal(result.engine, engine4);
   Assert.equal(result.terms, "foo bar");
-  Assert.ok(url.slice(result.termsOffset).startsWith("foo+bar"));
-  Assert.equal(result.termsLength, "foo+bar".length);
 
   // Test search engines with escaped IDNs.
   url = "https://www.xn--bcher-kva.ch/search?q=foo+bar";
   result = Services.search.parseSubmissionURL(url);
   Assert.equal(result.engine, engine4);
   Assert.equal(result.terms, "foo bar");
-  Assert.ok(url.slice(result.termsOffset).startsWith("foo+bar"));
-  Assert.equal(result.termsLength, "foo+bar".length);
 
   // Parsing of parameters from an engine template URL is not supported
   // if no matching parameter value template is provided.
@@ -131,8 +119,6 @@ add_task(async function test_parseSubmissionURL() {
   result = Services.search.parseSubmissionURL(url);
   Assert.equal(result.engine.wrappedJSObject, engine5);
   Assert.equal(result.terms, "caff\u00E8");
-  Assert.ok(url.slice(result.termsOffset).startsWith("caff%C3%A8"));
-  Assert.equal(result.termsLength, "caff%C3%A8".length);
 
   // If the search params are in the template, the query parameter
   // doesn't need to be separated from the host by a slash, only by
@@ -141,15 +127,12 @@ add_task(async function test_parseSubmissionURL() {
   result = Services.search.parseSubmissionURL(url);
   Assert.equal(result.engine.wrappedJSObject, engine5);
   Assert.equal(result.terms, "caff\u00E8");
-  Assert.ok(url.slice(result.termsOffset).startsWith("caff%C3%A8"));
-  Assert.equal(result.termsLength, "caff%C3%A8".length);
 
   // HTTP and HTTPS schemes are interchangeable.
   url = "https://www.google.com/search?q=caff%C3%A8";
   result = Services.search.parseSubmissionURL(url);
   Assert.equal(result.engine.wrappedJSObject, engine1);
   Assert.equal(result.terms, "caff\u00E8");
-  Assert.ok(url.slice(result.termsOffset).startsWith("caff%C3%A8"));
 
   // Decoding search terms with multiple spaces should work.
   result = Services.search.parseSubmissionURL(
@@ -158,12 +141,25 @@ add_task(async function test_parseSubmissionURL() {
   Assert.equal(result.engine.wrappedJSObject, engine1);
   Assert.equal(result.terms, " with  spaces ");
 
+  // Parsing search terms with ampersands should work.
+  result = Services.search.parseSubmissionURL(
+    "https://www.google.com/search?q=with%26ampersand"
+  );
+  Assert.equal(result.engine.wrappedJSObject, engine1);
+  Assert.equal(result.terms, "with&ampersand");
+
+  // Capitals in the path should work
+  result = Services.search.parseSubmissionURL(
+    "https://www.google.com/SEARCH?q=caps"
+  );
+  Assert.equal(result.engine.wrappedJSObject, engine1);
+  Assert.equal(result.terms, "caps");
+
   // An empty query parameter should work the same.
   url = "https://www.google.com/search?q=";
   result = Services.search.parseSubmissionURL(url);
   Assert.equal(result.engine.wrappedJSObject, engine1);
   Assert.equal(result.terms, "");
-  Assert.equal(result.termsOffset, url.length);
 
   // There should be no match when the path is different.
   result = Services.search.parseSubmissionURL(
@@ -171,7 +167,6 @@ add_task(async function test_parseSubmissionURL() {
   );
   Assert.equal(result.engine, null);
   Assert.equal(result.terms, "");
-  Assert.equal(result.termsOffset, -1);
 
   // There should be no match when the argument is different.
   result = Services.search.parseSubmissionURL(
@@ -179,11 +174,9 @@ add_task(async function test_parseSubmissionURL() {
   );
   Assert.equal(result.engine, null);
   Assert.equal(result.terms, "");
-  Assert.equal(result.termsOffset, -1);
 
   // There should be no match for URIs that are not HTTP or HTTPS.
   result = Services.search.parseSubmissionURL("file://localhost/search?q=test");
   Assert.equal(result.engine, null);
   Assert.equal(result.terms, "");
-  Assert.equal(result.termsOffset, -1);
 });

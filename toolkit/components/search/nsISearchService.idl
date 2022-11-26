@@ -227,20 +227,6 @@ interface nsISearchParseSubmissionResult : nsISupports
    * The name of the query parameter used by `engine` for queries. E.g. "q".
    */
   readonly attribute AString termsParameterName;
-
-  /**
-   * The offset of the string |terms| in the URL passed in to
-   * nsISearchEngine::parseSubmissionURL, or -1 if the URL does not represent
-   * a search submission.
-   */
-  readonly attribute long termsOffset;
-
-  /**
-   * The length of the |terms| in the original encoding of the URL passed in to
-   * nsISearchEngine::parseSubmissionURL. If the search term in the original
-   * URL is encoded then this will be bigger than |terms.length|.
-   */
-  readonly attribute long termsLength;
 };
 
 [scriptable, uuid(0301834b-2630-440e-8b98-db8dc55f34b9)]
