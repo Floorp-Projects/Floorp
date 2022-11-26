@@ -126,7 +126,7 @@ eslint-build:
         code-review: false
     treeherder:
         symbol: js(ES-B)
-        tier: 3
+        tier: 2
     run:
         using: run-task
         cwd: '{checkout}'
