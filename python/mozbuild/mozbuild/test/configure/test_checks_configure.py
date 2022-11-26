@@ -4,19 +4,21 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from six import StringIO
 import os
 import sys
 import textwrap
 import unittest
 
+from mozunit import main, MockedOpen
+
+from mozbuild.configure import ConfigureError, ConfigureSandbox
+from mozbuild.util import exec_
+from mozbuild.shellutil import quote as shell_quote
+from mozpack import path as mozpath
+
 from buildconfig import topsrcdir
 from common import ConfigureTestSandbox, ensure_exe_extension, fake_short_path
-from mozbuild.configure import ConfigureError, ConfigureSandbox
-from mozbuild.shellutil import quote as shell_quote
-from mozbuild.util import exec_
-from mozpack import path as mozpath
-from mozunit import MockedOpen, main
-from six import StringIO
 
 
 class TestChecksConfigure(unittest.TestCase):
@@ -732,7 +734,7 @@ class TestChecksConfigure(unittest.TestCase):
                 toolchain_prefix = depends(when=True)(lambda: None)
                 target_multiarch_dir = depends(when=True)(lambda: None)
                 target_sysroot = depends(when=True)(lambda: %(sysroot)s)
-                target = depends(when=True)(lambda: namespace(os="unknown"))
+                target = depends(when=True)(lambda: None)
                 include('%(topsrcdir)s/build/moz.configure/util.configure')
                 include('%(topsrcdir)s/build/moz.configure/checks.configure')
                 # Skip bootstrapping.
