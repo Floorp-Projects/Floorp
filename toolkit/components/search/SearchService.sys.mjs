@@ -98,12 +98,10 @@ const REASON_CHANGE_MAP = new Map([
  * @implements {nsIParseSubmissionResult}
  */
 class ParseSubmissionResult {
-  constructor(engine, terms, termsParameterName, termsOffset, termsLength) {
+  constructor(engine, terms, termsParameterName) {
     this.#engine = engine;
     this.#terms = terms;
     this.#termsParameterName = termsParameterName;
-    this.#termsOffset = termsOffset;
-    this.#termsLength = termsLength;
   }
 
   get engine() {
@@ -116,14 +114,6 @@ class ParseSubmissionResult {
 
   get termsParameterName() {
     return this.#termsParameterName;
-  }
-
-  get termsOffset() {
-    return this.#termsOffset;
-  }
-
-  get termsLength() {
-    return this.#termsLength;
   }
 
   /**
@@ -150,29 +140,11 @@ class ParseSubmissionResult {
    */
   #termsParameterName;
 
-  /**
-   * The offset of the string #terms in the URL passed in to
-   * nsISearchEngine::parseSubmissionURL, or -1 if the URL does not represent
-   * a search submission.
-   *
-   * @type {number}
-   */
-  #termsOffset;
-
-  /**
-   * The length of the #terms in the original encoding of the URL passed in to
-   * nsISearchEngine::parseSubmissionURL. If the search term in the original
-   * URL is encoded then this will be bigger than #terms.length
-   *
-   * @type {number}
-   */
-  #termsLength;
-
   QueryInterface = ChromeUtils.generateQI(["nsISearchParseSubmissionResult"]);
 }
 
 const gEmptyParseSubmissionResult = Object.freeze(
-  new ParseSubmissionResult(null, "", "", -1, 0)
+  new ParseSubmissionResult(null, "", "")
 );
 
 /**
@@ -867,10 +839,10 @@ export class SearchService {
     // Extract the elements of the provided URL first.
     let soughtKey, soughtQuery;
     try {
-      let soughtUrl = Services.io.newURI(url).QueryInterface(Ci.nsIURL);
+      let soughtUrl = Services.io.newURI(url);
 
       // Exclude any URL that is not HTTP or HTTPS from the beginning.
-      if (soughtUrl.scheme != "http" && soughtUrl.scheme != "https") {
+      if (soughtUrl.schemeIs("http") && soughtUrl.schemeIs("https")) {
         return gEmptyParseSubmissionResult;
       }
 
@@ -890,6 +862,8 @@ export class SearchService {
 
     // Extract the search terms from the parameter, for example "caff%C3%A8"
     // from the URL "https://www.google.com/search?q=caff%C3%A8&client=firefox".
+    // We cannot use `URLSearchParams` here as the terms might not be
+    // encoded in UTF-8.
     let encodedTerms = null;
     for (let param of soughtQuery.split("&")) {
       let equalPos = param.indexOf("=");
@@ -906,25 +880,6 @@ export class SearchService {
       return gEmptyParseSubmissionResult;
     }
 
-    let length = 0;
-    let offset = url.indexOf("?") + 1;
-    let query = url.slice(offset);
-    // Iterate a second time over the original input string to determine the
-    // correct search term offset and length in the original encoding.
-    for (let param of query.split("&")) {
-      let equalPos = param.indexOf("=");
-      if (
-        equalPos != -1 &&
-        param.substr(0, equalPos) == mapEntry.termsParameterName
-      ) {
-        // This is the parameter we are looking for.
-        offset += equalPos + 1;
-        length = param.length - equalPos - 1;
-        break;
-      }
-      offset += param.length + 1;
-    }
-
     // Decode the terms using the charset defined in the search engine.
     let terms;
     try {
@@ -937,14 +892,11 @@ export class SearchService {
       return gEmptyParseSubmissionResult;
     }
 
-    let submission = new ParseSubmissionResult(
+    return new ParseSubmissionResult(
       mapEntry.engine,
       terms,
-      mapEntry.termsParameterName,
-      offset,
-      length
+      mapEntry.termsParameterName
     );
-    return submission;
   }
 
   // nsITimerCallbactk
