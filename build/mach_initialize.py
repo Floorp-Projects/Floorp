@@ -116,11 +116,9 @@ def _maybe_activate_mozillabuild_environment():
 
     paths_to_add = [mozillabuild_msys_tools_path, mozillabuild / "bin"]
     existing_paths = [Path(p) for p in os.environ.get("PATH", "").split(os.pathsep)]
-    # It's important that we prepend to the path rather than append,
-    # in case mach is getting called from another msys2 environment.
     for new_path in paths_to_add:
         if new_path not in existing_paths:
-            os.environ["PATH"] = f"{new_path}{os.pathsep}" + os.environ["PATH"]
+            os.environ["PATH"] += f"{os.pathsep}{new_path}"
 
 
 def initialize(topsrcdir):

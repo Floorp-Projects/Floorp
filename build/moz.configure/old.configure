@@ -11,6 +11,7 @@ m4 = check_prog(
         "gm4",
         "m4",
     ),
+    paths=prefer_mozillabuild_path,
 )
 
 
@@ -121,11 +122,11 @@ def old_configure_for(old_configure_path, extra_env=None):
     @depends(
         prepare_configure,
         prepare_configure_options,
+        prefer_mozillabuild_path,
         altered_path,
         extra_env,
         build_environment,
         old_configure_path,
-        "MOZILLABUILD",
         awk,
         m4,
         shell,
@@ -147,17 +148,23 @@ def old_configure_for(old_configure_path, extra_env=None):
     def old_configure(
         prepare_configure,
         prepare_configure_options,
+        prefer_mozillabuild_path,
         altered_path,
         extra_env,
         build_env,
         old_configure,
-        mozillabuild,
         awk,
         m4,
         shell,
     ):
         # Use prepare_configure to make lint happy
         prepare_configure
+
+        if altered_path:
+            path = altered_path
+        else:
+            path = os.pathsep.join(prefer_mozillabuild_path)
+
         refresh = True
         if os.path.exists(old_configure):
             mtime = os.path.getmtime(old_configure)
@@ -183,6 +190,7 @@ def old_configure_for(old_configure_path, extra_env=None):
             env["M4"] = m4
             env["AWK"] = awk
             env["AC_MACRODIR"] = os.path.join(build_env.topsrcdir, "build", "autoconf")
+            env["PATH"] = path
 
             try:
                 script = subprocess.check_output(
@@ -199,17 +207,6 @@ def old_configure_for(old_configure_path, extra_env=None):
                     env=env,
                 )
             except CalledProcessError as exc:
-                # Autoconf on win32 may break due to a bad $PATH.  Let the user know
-                # their $PATH is suspect.
-                if mozillabuild:
-                    mozillabuild_path = normsep(mozillabuild[0])
-                    sh_path = normsep(find_program("sh"))
-                    if mozillabuild_path not in sh_path:
-                        log.warning(
-                            "The '{}msys/bin' directory is not first in $PATH. "
-                            "This may cause autoconf to fail. ($PATH is currently "
-                            "set to: {})".format(mozillabuild_path, os.environ["PATH"])
-                        )
                 die("autoconf exited with return code {}".format(exc.returncode))
 
             if not script:
@@ -259,8 +256,7 @@ def old_configure_for(old_configure_path, extra_env=None):
                 log_size = os.path.getsize(config_log.baseFilename)
                 break
 
-        if altered_path:
-            env["PATH"] = altered_path
+        env["PATH"] = path
 
         if extra_env:
             env.update(extra_env)
