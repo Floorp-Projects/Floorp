@@ -51,8 +51,8 @@ jobs:
 
     - name: Create environment
       run: |
-        sudo apt install xvfb
         sudo apt update
+        sudo apt install xvfb
         sudo apt install gzip gpg dpkg-dev
         export WORKDIR=`pwd`
         echo "Current Workdir: $WORKDIR"

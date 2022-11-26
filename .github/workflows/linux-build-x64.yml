@@ -46,6 +46,7 @@ jobs:
 
     - name: Create environment 🌲
       run: |
+        sudo apt update
         sudo apt install xvfb
         git clone https://github.com/floorp-projects/l10n-central.git
         ./mach bootstrap
