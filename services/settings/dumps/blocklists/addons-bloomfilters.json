@@ -3,6 +3,82 @@
     {
       "stash": {
         "blocked": [
+          "addon@programmer.org:1.0.0",
+          "programmer@gmail.com:1.0.0",
+          "programmer2@gmail.com:1.0.0",
+          "programmer1@gmail.com:1.0.0",
+          "{c8476e35-1a52-831c-487c-86db836cf38c}:3.1",
+          "programmer3@gmail.com:1.0.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1668515834341,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1669055708041,
+      "id": "023a94e4-61dc-4219-8c37-aeecf06fb9d1",
+      "last_modified": 1669055838363
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{8495333d-58a6-4a75-8d63-0487dcd7b0e5}:0.0.173"
+        ],
+        "unblocked": []
+      },
+      "schema": 1668472632428,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1668515706300,
+      "id": "d2a930eb-7ac4-4a2b-a65d-ba3e29b3b798",
+      "last_modified": 1668515834263
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{6a5c6950-e2ff-4613-a986-6aecde89cd57}:3.22.2",
+          "{6cc55401-303b-4a96-b06a-3813533444f5}:2.32.1",
+          "{6a5c6950-e2ff-4613-a986-6aecde89cd57}:3.22.3",
+          "{6a5c6950-e2ff-4613-a986-6aecde89cd57}:3.22.5",
+          "{6cc55401-303b-4a96-b06a-3813533444f5}:3.22.1",
+          "{6a5c6950-e2ff-4613-a986-6aecde89cd57}:3.22.4"
+        ],
+        "unblocked": []
+      },
+      "schema": 1667932641106,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1668472507451,
+      "id": "a2301d4a-bd0d-41f5-bc24-533aa689f53c",
+      "last_modified": 1668472632345
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": []
+      },
+      "schema": 1667846237709,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1667932508001,
+      "id": "44993fed-0783-4eb0-ba89-938fe2d61dd8",
+      "last_modified": 1667932641019
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{b07936b0-623a-449c-b14a-2a37bd6e0987}:0.0.119",
+          "{a898ef7e-ae79-478e-93af-1234a55995d0}:5.3.0",
+          "{b07936b0-623a-449c-b14a-2a37bd6e0987}:0.0.117",
+          "{b07936b0-623a-449c-b14a-2a37bd6e0987}:0.0.118"
+        ],
+        "unblocked": []
+      },
+      "schema": 1667479036645,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1667846108058,
+      "id": "e51a228f-ff0c-4781-9ff0-a4c1d63d3be4",
+      "last_modified": 1667846237618
+    },
+    {
+      "stash": {
+        "blocked": [
           "{c5685c6c-295b-4cfa-af10-161c92f98e71}:1.0.3"
         ],
         "unblocked": []
@@ -2455,5 +2531,5 @@
       "last_modified": 1656333551168
     }
   ],
-  "timestamp": 1667479036565
+  "timestamp": 1669055838363
 }

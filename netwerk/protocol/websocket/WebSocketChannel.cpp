@@ -1225,14 +1225,7 @@ WebSocketChannel::~WebSocketChannel() {
 
   mListenerMT = nullptr;
 
-  NS_ReleaseOnMainThread("WebSocketChannel::mLoadGroup", mLoadGroup.forget());
   NS_ReleaseOnMainThread("WebSocketChannel::mService", mService.forget());
-  nsCOMPtr<nsIEventTarget> target;
-  {
-    auto lock = mTargetThread.Lock();
-    target.swap(*lock);
-  }
-  NS_ReleaseOnMainThread("WebSocketChannel::mTargetThread", target.forget());
 }
 
 NS_IMETHODIMP

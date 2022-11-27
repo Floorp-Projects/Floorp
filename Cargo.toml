@@ -121,3 +121,7 @@ minidump_writer_linux = { git = "https://github.com/rust-minidump/minidump-write
 # There is not going to be new version of mio 0.6, mio now being >= 0.7.11.
 [patch.crates-io.mio]
 path = "third_party/rust/mio-0.6.23"
+
+# Patch fallible_collections for issues with rustc 1.65.
+[patch.crates-io.fallible_collections]
+path = "third_party/rust/fallible_collections"

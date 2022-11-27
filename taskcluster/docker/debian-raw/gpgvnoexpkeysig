@@ -1,0 +1,52 @@
+#!/bin/sh
+#
+# Downloaded from https://gitlab.mister-muffin.de/josch/mmdebstrap/raw/branch/main/gpgvnoexpkeysig
+#
+# This script is in the public domain
+#
+# Author: Johannes Schauer Marin Rodrigues <josch@mister-muffin.de>
+#
+# This is a wrapper around gpgv as invoked by apt. It turns EXPKEYSIG results
+# from gpgv into GOODSIG results. This is necessary for apt to access very old
+# timestamps from snapshot.debian.org for which the GPG key is already expired:
+#
+#     Get:1 http://snapshot.debian.org/archive/debian/20150106T000000Z unstable InRelease [242 kB]
+#     Err:1 http://snapshot.debian.org/archive/debian/20150106T000000Z unstable InRelease
+#       The following signatures were invalid: EXPKEYSIG 8B48AD6246925553 Debian Archive Automatic Signing Key (7.0/wheezy) <ftpmaster@debian.org>
+#     Reading package lists...
+#     W: GPG error: http://snapshot.debian.org/archive/debian/20150106T000000Z unstable InRelease: The following signatures were invalid: EXPKEYSIG 8B48AD6246925553 Debian Archive Automatic Signing Key (7.0/wheezy) <ftpmaster@debian.org>
+#     E: The repository 'http://snapshot.debian.org/archive/debian/20150106T000000Z unstable InRelease' is not signed.
+#
+# To use this script, call apt with
+#
+#    -o Apt::Key::gpgvcommand=/usr/libexec/mmdebstrap/gpgvnoexpkeysig
+#
+# Scripts doing similar things can be found here:
+#
+#  * debuerreotype as /usr/share/debuerreotype/scripts/.gpgv-ignore-expiration.sh
+#  * derivative census: salsa.d.o/deriv-team/census/-/blob/master/bin/fakegpgv
+
+set -eu
+
+find_gpgv_status_fd() {
+	while [ "$#" -gt 0 ]; do
+		if [ "$1" = '--status-fd' ]; then
+			echo "$2"
+			return 0
+		fi
+		shift
+	done
+	# default fd is stdout
+	echo 1
+}
+GPGSTATUSFD="$(find_gpgv_status_fd "$@")"
+
+case $GPGSTATUSFD in
+	''|*[!0-9]*)
+		echo "invalid --status-fd argument" >&2
+		exit 1
+		;;
+esac
+
+# we need eval because we cannot redirect a variable fd
+eval 'exec gpgv "$@" '"$GPGSTATUSFD"'>&1 | sed "s/^\[GNUPG:\] EXPKEYSIG /[GNUPG:] GOODSIG /" >&'"$GPGSTATUSFD"

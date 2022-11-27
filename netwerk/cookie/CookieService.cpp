@@ -1232,7 +1232,7 @@ bool CookieService::CanSetCookie(
     return newCookie;
   }
 
-  if (aFromHttp && !CookieCommons::CheckHttpValue(aCookieData)) {
+  if (!CookieCommons::CheckValue(aCookieData)) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
                       "invalid value character");
     CookieLogging::LogMessageToConsole(
@@ -2464,7 +2464,7 @@ bool CookieService::SetCookiesFromIPC(const nsACString& aBaseDomain,
       return false;
     }
 
-    if (aFromHttp && !CookieCommons::CheckHttpValue(cookieData)) {
+    if (!CookieCommons::CheckValue(cookieData)) {
       return false;
     }
 

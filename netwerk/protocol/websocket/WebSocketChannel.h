@@ -139,7 +139,7 @@ class WebSocketChannel : public BaseWebSocketChannel,
   const static uint8_t kPayloadLengthBitsMask = 0x7F;
 
  protected:
-  virtual ~WebSocketChannel();
+  ~WebSocketChannel() override;
 
  private:
   friend class OutboundEnqueuer;

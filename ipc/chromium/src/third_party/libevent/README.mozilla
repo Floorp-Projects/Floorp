@@ -22,6 +22,10 @@ distinguish the two cases. If you get something wrong, the CHECK_EVENT_SIZEOF
 static assertions in message_pump_libevent.cc will fail. If a new constant is
 added, also add a static assertion for it to message_pump_libevent.cc.
 
+You also need to modify the EVENT__HAVE_ARC4RANDOM and EVENT__HAVE_ARC4RANDOM_BUF
+constants in the generated Linux header to account for the results of the arc4random
+and arc4random_buf configure checks.
+
 2. No additional patches are needed at this time, but be careful to avoid
 clobbering changes to the various event-config.h files which have been customized
 over time to avoid various build bustages.
