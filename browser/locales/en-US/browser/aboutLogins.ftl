@@ -8,7 +8,8 @@ about-logins-page-title = Logins & Passwords
 login-filter =
   .placeholder = Search Logins
 
-create-login-button = Create New Login
+create-new-login-button =
+  .title = Create new login
 
 fxaccounts-sign-in-text = Get your passwords on your other devices
 fxaccounts-sign-in-sync-button = Sign in to sync
