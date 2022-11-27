@@ -8,10 +8,17 @@
 import sys
 import re
 
+# These files are not used, ignore them.
+ignore_list = [
+]
+
+def should_ignore(value):
+    return any(item in value for item in ignore_list)
+
 def add_value(values, text):
     text = text.replace('\\', '')
     text = text.strip()
-    if text:
+    if text and not should_ignore(text):
         values.append(text)
 
 def write_values(output, values):
