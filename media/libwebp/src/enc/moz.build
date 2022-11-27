@@ -18,7 +18,7 @@ SOURCES += [
     'near_lossless_enc.c',
     'picture_csp_enc.c',
     'picture_enc.c',
-    'picture_psnr_enc.c',
+    # 'picture_psnr_enc.c', # Unused file.
     'picture_rescale_enc.c',
     'picture_tools_enc.c',
     'predictor_enc.c',
