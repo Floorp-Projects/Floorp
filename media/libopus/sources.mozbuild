@@ -245,7 +245,6 @@ silk_sources_float = [
     'silk/float/noise_shape_analysis_FLP.c',
     'silk/float/pitch_analysis_core_FLP.c',
     'silk/float/process_gains_FLP.c',
-    'silk/float/regularize_correlations_FLP.c',
     'silk/float/residual_energy_FLP.c',
     'silk/float/scale_copy_vector_FLP.c',
     'silk/float/scale_vector_FLP.c',
