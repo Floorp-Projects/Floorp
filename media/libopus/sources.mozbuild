@@ -79,7 +79,6 @@ opus_sources = [
     'src/opus_multistream_decoder.c',
     'src/opus_multistream_encoder.c',
     'src/opus_projection_decoder.c',
-    'src/opus_projection_encoder.c',
     'src/repacketizer.c',
 ]
 
