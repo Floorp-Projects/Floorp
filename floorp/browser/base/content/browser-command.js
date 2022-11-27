@@ -9,7 +9,7 @@ prefBranch.setStringPref(
   "floorp.browser.sidebar.useIconProvider",
   os_languages.includes("zh-CN") ?
     "yandex" :
-    "google"
+    "duckduckgo"
 );
 
 function enableRestMode() {
