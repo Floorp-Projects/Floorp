@@ -30,7 +30,7 @@ function getOutOfScopeLines(outOfScopeLocations) {
 
 async function getInScopeLines(cx, location, { dispatch, getState, parser }) {
   const source = getLocationSource(getState(), location);
-  const sourceTextContent = getSourceTextContent(getState(), source.id);
+  const sourceTextContent = getSourceTextContent(getState(), location);
 
   let locations = null;
   if (location.line && source && !source.isWasm) {
@@ -74,10 +74,7 @@ export function setInScopeLines(cx) {
     }
 
     const { location } = visibleFrame;
-    const sourceTextContent = getSourceTextContent(
-      getState(),
-      location.sourceId
-    );
+    const sourceTextContent = getSourceTextContent(getState(), location);
 
     if (hasInScopeLines(getState(), location) || !sourceTextContent) {
       return;

@@ -709,8 +709,10 @@ function findSourceContent(dbg, url, opts) {
   if (!source) {
     return null;
   }
-
-  const content = dbg.selectors.getSourceContent(source.id);
+  const content = dbg.selectors.getSettledSourceTextContent({
+    sourceId: source.id,
+    sourceActorId: null,
+  });
 
   if (!content) {
     return null;
@@ -732,7 +734,13 @@ function waitForLoadedSource(dbg, url) {
     dbg,
     state => {
       const source = findSource(dbg, url, { silent: true });
-      return source && dbg.selectors.getSourceContent(source.id);
+      return (
+        source &&
+        dbg.selectors.getSettledSourceTextContent({
+          sourceId: source.id,
+          sourceActorId: null,
+        })
+      );
     },
     "loaded source"
   );

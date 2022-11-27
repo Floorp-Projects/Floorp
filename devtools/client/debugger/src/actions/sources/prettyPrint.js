@@ -15,7 +15,8 @@ import {
   isGenerated,
   isJavaScript,
 } from "../../utils/source";
-import { loadSourceText } from "./loadSourceText";
+import { isFulfilled } from "../../utils/async-value";
+import { loadGeneratedSourceText } from "./loadSourceText";
 import { mapFrames } from "../pause";
 import { selectSpecificLocation } from "../sources";
 import { createPrettyPrintOriginalSource } from "../../client/firefox/create";
@@ -41,13 +42,21 @@ export async function prettyPrintSource(
   content,
   actors
 ) {
-  if (!isJavaScript(generatedSource, content) || content.type !== "text") {
+  if (!content || !isFulfilled(content)) {
+    throw new Error("Cannot pretty-print a file that has not loaded");
+  }
+
+  const contentValue = content.value;
+  if (
+    !isJavaScript(generatedSource, contentValue) ||
+    contentValue.type !== "text"
+  ) {
     throw new Error("Can't prettify non-javascript files.");
   }
 
   const url = getPrettyOriginalSourceURL(generatedSource);
   const { code, mappings } = await prettyPrint({
-    text: content.value,
+    text: contentValue.value,
     url,
   });
   await sourceMaps.applySourceMap(generatedSource.id, url, code, mappings);
@@ -122,15 +131,18 @@ export function togglePrettyPrint(cx, sourceId) {
     if (!source.isPrettyPrinted) {
       recordEvent("pretty_print");
     }
-    const sourceActor = getFirstSourceActorForGeneratedSource(
-      getState(),
-      source.id
-    );
-    await dispatch(loadSourceText({ cx, source, sourceActor }));
+
     assert(
       isGenerated(source),
       "Pretty-printing only allowed on generated sources"
     );
+
+    const sourceActor = getFirstSourceActorForGeneratedSource(
+      getState(),
+      source.id
+    );
+
+    await dispatch(loadGeneratedSourceText({ cx, sourceActor }));
 
     const url = getPrettySourceURL(source.url);
     const prettySource = getSourceByURL(getState(), url);
@@ -141,7 +153,7 @@ export function togglePrettyPrint(cx, sourceId) {
 
     const selectedLocation = getSelectedLocation(getState());
     const newPrettySource = await dispatch(createPrettySource(cx, sourceId));
-    dispatch(selectPrettyLocation(cx, newPrettySource, selectedLocation));
+    await dispatch(selectPrettyLocation(cx, newPrettySource, selectedLocation));
 
     const threadcx = getThreadContext(getState());
     await dispatch(mapFrames(threadcx));

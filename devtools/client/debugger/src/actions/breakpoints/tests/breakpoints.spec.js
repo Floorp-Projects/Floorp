@@ -180,7 +180,10 @@ describe("breakpoints", () => {
     );
 
     await dispatch(
-      actions.loadSourceText({ cx, source: bSource, sourceActor: bSourceActor })
+      actions.loadGeneratedSourceText({
+        cx,
+        sourceActor: bSourceActor,
+      })
     );
 
     await dispatch(
@@ -228,7 +231,10 @@ describe("breakpoints", () => {
       aSource.id
     );
     await dispatch(
-      actions.loadSourceText({ cx, source: aSource, sourceActor: aSourceActor })
+      actions.loadGeneratedSourceText({
+        cx,
+        sourceActor: aSourceActor,
+      })
     );
 
     const bSource = await dispatch(actions.newGeneratedSource(makeSource("b")));
@@ -237,7 +243,10 @@ describe("breakpoints", () => {
       bSource.id
     );
     await dispatch(
-      actions.loadSourceText({ cx, source: bSource, sourceActor: bSourceActor })
+      actions.loadGeneratedSourceText({
+        cx,
+        sourceActor: bSourceActor,
+      })
     );
 
     await dispatch(actions.addBreakpoint(cx, loc1));
@@ -271,7 +280,10 @@ describe("breakpoints", () => {
       aSource.id
     );
     await dispatch(
-      actions.loadSourceText({ cx, source: aSource, sourceActor: aSourceActor })
+      actions.loadGeneratedSourceText({
+        cx,
+        sourceActor: aSourceActor,
+      })
     );
 
     await dispatch(actions.addBreakpoint(cx, loc));
@@ -320,7 +332,10 @@ describe("breakpoints", () => {
       aSource.id
     );
     await dispatch(
-      actions.loadSourceText({ cx, source: aSource, sourceActor: aSourceActor })
+      actions.loadGeneratedSourceText({
+        cx,
+        sourceActor: aSourceActor,
+      })
     );
 
     const bSource = await dispatch(actions.newGeneratedSource(makeSource("b")));
@@ -329,7 +344,10 @@ describe("breakpoints", () => {
       bSource.id
     );
     await dispatch(
-      actions.loadSourceText({ cx, source: bSource, sourceActor: bSourceActor })
+      actions.loadGeneratedSourceText({
+        cx,
+        sourceActor: bSourceActor,
+      })
     );
 
     await dispatch(actions.addBreakpoint(cx, loc1));
@@ -403,7 +421,10 @@ describe("breakpoints", () => {
       aSource.id
     );
     await dispatch(
-      actions.loadSourceText({ cx, source: aSource, sourceActor: aSourceActor })
+      actions.loadGeneratedSourceText({
+        cx,
+        sourceActor: aSourceActor,
+      })
     );
 
     const bSource = await dispatch(actions.newGeneratedSource(makeSource("b")));
@@ -412,7 +433,10 @@ describe("breakpoints", () => {
       bSource.id
     );
     await dispatch(
-      actions.loadSourceText({ cx, source: bSource, sourceActor: bSourceActor })
+      actions.loadGeneratedSourceText({
+        cx,
+        sourceActor: bSourceActor,
+      })
     );
 
     expect(selectors.getBreakpointsList(getState())).toHaveLength(0);
@@ -488,7 +512,7 @@ describe("breakpoints", () => {
       getState(),
       source.id
     );
-    await dispatch(actions.loadSourceText({ cx, source, sourceActor }));
+    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
 
     await dispatch(actions.addBreakpoint(cx, loc));
 
@@ -521,7 +545,7 @@ describe("breakpoints", () => {
       getState(),
       source.id
     );
-    await dispatch(actions.loadSourceText({ cx, source, sourceActor }));
+    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
 
     await dispatch(actions.addBreakpoint(cx, loc));
     let bp = selectors.getBreakpoint(getState(), loc);
@@ -564,7 +588,7 @@ describe("breakpoints", () => {
       getState(),
       source.id
     );
-    await dispatch(actions.loadSourceText({ cx, source, sourceActor }));
+    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
 
     await dispatch(actions.addBreakpoint(cx, loc));
     await dispatch(actions.togglePrettyPrint(cx, "a.js"));
@@ -595,7 +619,7 @@ describe("breakpoints", () => {
       getState(),
       source.id
     );
-    await dispatch(actions.loadSourceText({ cx, source, sourceActor }));
+    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
 
     await dispatch(actions.addBreakpoint(cx, loc));
     await dispatch(actions.togglePrettyPrint(cx, "a.js"));

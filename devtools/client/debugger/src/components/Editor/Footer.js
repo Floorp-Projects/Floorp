@@ -9,6 +9,7 @@ import classnames from "classnames";
 import actions from "../../actions";
 import {
   getSelectedSource,
+  getSelectedLocation,
   getSelectedSourceTextContent,
   getPrettySource,
   getPaneCollapse,
@@ -260,6 +261,7 @@ class SourceFooter extends PureComponent {
 
 const mapStateToProps = state => {
   const selectedSource = getSelectedSource(state);
+  const selectedLocation = getSelectedLocation(state);
   const sourceTextContent = getSelectedSourceTextContent(state);
 
   return {
@@ -275,10 +277,12 @@ const mapStateToProps = state => {
       selectedSource ? selectedSource.id : null
     ),
     endPanelCollapsed: getPaneCollapse(state, "end"),
-    canPrettyPrint: selectedSource
-      ? canPrettyPrintSource(state, selectedSource.id)
+    canPrettyPrint: selectedLocation
+      ? canPrettyPrintSource(state, selectedLocation)
       : false,
-    prettyPrintMessage: getPrettyPrintMessage(state, selectedSource),
+    prettyPrintMessage: selectedLocation
+      ? getPrettyPrintMessage(state, selectedLocation)
+      : null,
   };
 };
 

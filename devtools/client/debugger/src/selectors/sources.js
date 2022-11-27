@@ -217,18 +217,19 @@ export function isSourceWithMap(state, id) {
   );
 }
 
-export function canPrettyPrintSource(state, id) {
-  const source = getSource(state, id);
+export function canPrettyPrintSource(state, location) {
+  const { sourceId } = location;
+  const source = getSource(state, sourceId);
   if (
     !source ||
     isPretty(source) ||
     source.isOriginal ||
-    (prefs.clientSourceMapsEnabled && isSourceWithMap(state, id))
+    (prefs.clientSourceMapsEnabled && isSourceWithMap(state, sourceId))
   ) {
     return false;
   }
 
-  const content = getSourceTextContent(state, id);
+  const content = getSourceTextContent(state, location);
   const sourceContent = content && isFulfilled(content) ? content.value : null;
 
   if (!sourceContent || !isJavaScript(source, sourceContent)) {
@@ -238,7 +239,8 @@ export function canPrettyPrintSource(state, id) {
   return true;
 }
 
-export function getPrettyPrintMessage(state, source) {
+export function getPrettyPrintMessage(state, location) {
+  const source = getSource(state, location.sourceId);
   if (!source) {
     return L10N.getStr("sourceTabs.prettyPrint");
   }
@@ -255,9 +257,9 @@ export function getPrettyPrintMessage(state, source) {
     return L10N.getStr("sourceFooter.prettyPrint.hasSourceMapMessage");
   }
 
-  const content = getSourceTextContent(state, source.id);
-  const sourceContent = content && isFulfilled(content) ? content.value : null;
+  const content = getSourceTextContent(state, location);
 
+  const sourceContent = content && isFulfilled(content) ? content.value : null;
   if (!sourceContent) {
     return L10N.getStr("sourceFooter.prettyPrint.noContentMessage");
   }

@@ -180,7 +180,9 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
     }
 
     dispatch(setSelectedLocation(cx, source, location));
-    await dispatch(loadSourceText({ cx, source, sourceActor }));
+
+    await dispatch(loadSourceText(cx, source, sourceActor));
+
     await dispatch(setBreakableLines(cx, source.id));
 
     const loadedSource = getSource(getState(), source.id);
@@ -190,13 +192,13 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
       return;
     }
 
-    const sourceTextContent = getSourceTextContent(getState(), source.id);
+    const sourceTextContent = getSourceTextContent(getState(), location);
 
     if (
       keepContext &&
       prefs.autoPrettyPrint &&
       !getPrettySource(getState(), loadedSource.id) &&
-      canPrettyPrintSource(getState(), loadedSource.id) &&
+      canPrettyPrintSource(getState(), location) &&
       isMinified(source, sourceTextContent)
     ) {
       await dispatch(togglePrettyPrint(cx, loadedSource.id));
