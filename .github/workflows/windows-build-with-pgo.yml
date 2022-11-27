@@ -17,6 +17,17 @@ jobs:
         export RUNNER_USERDIR=`echo ~`
         echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
 
+    - name: Clean up (Self-hosted only)
+      if: contains(matrix.runs-on, 'self-hosted')
+      run: |
+        rm -rf $RUNNER_USERDIR/output
+        rm -rf $RUNNER_USERDIR/win-crosstool
+        rm -rf $RUNNER_USERDIR/.mozbuild
+        rm -rf $RUNNER_USERDIR/.cargo
+        rm -rf $RUNNER_USERDIR/l10n-central
+        rm -rf $GITHUB_WORKSPACE
+        mkdir $GITHUB_WORKSPACE
+
     - name: Setup Disk & Swap Space 💿
       if: matrix.runs-on == 'ubuntu-20.04'
       run: |
@@ -58,6 +69,7 @@ jobs:
         cp ./.github/mozconfig_win_pgo_base mozconfig
         echo -e "\nac_add_options --enable-profile-generate=cross\n" >> mozconfig
         sudo apt update
+        sudo apt install zstd p7zip-full
         python3 ./.github/setup-buildtool-windows-pgo.py
         chmod -R +x "$RUNNER_USERDIR/win-crosstool/vs2017/dia sdk"
         chmod -R +x $RUNNER_USERDIR/win-crosstool/vs2017/vc
@@ -99,6 +111,17 @@ jobs:
       with:
         name: floorp-windows-x86_64-build-with-enable-profile-generate
         path: ${{ env.RUNNER_USERDIR }}/output
+
+    - name: Clean up (Self-hosted only)
+      if: contains(matrix.runs-on, 'self-hosted')
+      run: |
+        rm -rf $RUNNER_USERDIR/output
+        rm -rf $RUNNER_USERDIR/win-crosstool
+        rm -rf $RUNNER_USERDIR/.mozbuild
+        rm -rf $RUNNER_USERDIR/.cargo
+        rm -rf $RUNNER_USERDIR/l10n-central
+        rm -rf $GITHUB_WORKSPACE
+        mkdir $GITHUB_WORKSPACE
 
   generate-profdata-and-jarlog:
     name: Generate profdata and jarlog
@@ -154,6 +177,17 @@ jobs:
         export RUNNER_USERDIR=`echo ~`
         echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
 
+    - name: Clean up (Self-hosted only)
+      if: contains(matrix.runs-on, 'self-hosted')
+      run: |
+        rm -rf $RUNNER_USERDIR/output
+        rm -rf $RUNNER_USERDIR/win-crosstool
+        rm -rf $RUNNER_USERDIR/.mozbuild
+        rm -rf $RUNNER_USERDIR/.cargo
+        rm -rf $RUNNER_USERDIR/l10n-central
+        rm -rf $GITHUB_WORKSPACE
+        mkdir $GITHUB_WORKSPACE
+
     - name: Setup Disk & Swap Space 💿
       if: matrix.runs-on == 'ubuntu-20.04'
       run: |
@@ -206,6 +240,7 @@ jobs:
         echo -e "\nac_add_options --with-l10n-base=$RUNNER_USERDIR/l10n-central/l10n-central\n" >> mozconfig
         echo -e "\nac_add_options --enable-profile-use=cross\nac_add_options --with-pgo-profile-path=$RUNNER_USERDIR/artifact/merged.profdata\nac_add_options --with-pgo-jarlog=$RUNNER_USERDIR/artifact/en-US.log\n" >> mozconfig
         sudo apt update
+        sudo apt install zstd p7zip-full
         python3 ./.github/setup-buildtool-windows-pgo.py
         chmod -R +x "$RUNNER_USERDIR/win-crosstool/vs2017/dia sdk"
         chmod -R +x $RUNNER_USERDIR/win-crosstool/vs2017/vc
@@ -250,3 +285,14 @@ jobs:
       with:
         name: floorp-windows-x86_64-package-build-with-profdata-and-jarlog
         path: ${{ env.RUNNER_USERDIR }}/output
+
+    - name: Clean up (Self-hosted only)
+      if: contains(matrix.runs-on, 'self-hosted')
+      run: |
+        rm -rf $RUNNER_USERDIR/output
+        rm -rf $RUNNER_USERDIR/win-crosstool
+        rm -rf $RUNNER_USERDIR/.mozbuild
+        rm -rf $RUNNER_USERDIR/.cargo
+        rm -rf $RUNNER_USERDIR/l10n-central
+        rm -rf $GITHUB_WORKSPACE
+        mkdir $GITHUB_WORKSPACE
