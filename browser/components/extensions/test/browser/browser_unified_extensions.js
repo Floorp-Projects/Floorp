@@ -713,8 +713,6 @@ add_task(async function test_messages_origin_controls() {
       expectedDefaultMessage: ALWAYS_ON,
       expectedHoverMessage: HOVER_RUNNABLE_RUN_EXT,
       expectedActionButtonDisabled: false,
-      // TODO: Bug 1799694 - remove this when we set minHeight on CUI widgets
-      skipMinHeightCheck: true,
     },
     {
       title: "MV2 - browser action - popup - always on",
@@ -728,8 +726,6 @@ add_task(async function test_messages_origin_controls() {
       expectedDefaultMessage: ALWAYS_ON,
       expectedHoverMessage: HOVER_RUNNABLE_OPEN_EXT,
       expectedActionButtonDisabled: false,
-      // TODO: Bug 1799694 - remove this when we set minHeight on CUI widgets
-      skipMinHeightCheck: true,
     },
     {
       title: "MV2 - browser action - click event - content script",
@@ -746,8 +742,6 @@ add_task(async function test_messages_origin_controls() {
       expectedDefaultMessage: ALWAYS_ON,
       expectedHoverMessage: HOVER_RUNNABLE_RUN_EXT,
       expectedActionButtonDisabled: false,
-      // TODO: Bug 1799694 - remove this when we set minHeight on CUI widgets
-      skipMinHeightCheck: true,
     },
     {
       title: "MV2 - browser action - popup - content script",
@@ -766,8 +760,6 @@ add_task(async function test_messages_origin_controls() {
       expectedDefaultMessage: ALWAYS_ON,
       expectedHoverMessage: HOVER_RUNNABLE_OPEN_EXT,
       expectedActionButtonDisabled: false,
-      // TODO: Bug 1799694 - remove this when we set minHeight on CUI widgets
-      skipMinHeightCheck: true,
     },
     {
       title: "no access",
@@ -862,8 +854,6 @@ add_task(async function test_messages_origin_controls() {
       expectedDefaultMessage: NO_ACCESS,
       expectedHoverMessage: HOVER_RUNNABLE_RUN_EXT,
       expectedActionButtonDisabled: false,
-      // TODO: Bug 1799694 - remove this when we set minHeight on CUI widgets
-      skipMinHeightCheck: true,
     },
     {
       title: "browser action - popup - no access",
@@ -876,8 +866,6 @@ add_task(async function test_messages_origin_controls() {
       expectedDefaultMessage: NO_ACCESS,
       expectedHoverMessage: HOVER_RUNNABLE_OPEN_EXT,
       expectedActionButtonDisabled: false,
-      // TODO: Bug 1799694 - remove this when we set minHeight on CUI widgets
-      skipMinHeightCheck: true,
     },
     {
       title: "browser action - click event - when clicked",
@@ -889,8 +877,6 @@ add_task(async function test_messages_origin_controls() {
       expectedDefaultMessage: WHEN_CLICKED,
       expectedHoverMessage: HOVER_RUN_VISIT_ONLY,
       expectedActionButtonDisabled: false,
-      // TODO: Bug 1799694 - remove this when we set minHeight on CUI widgets
-      skipMinHeightCheck: true,
     },
     {
       title: "browser action - popup - when clicked",
@@ -904,8 +890,6 @@ add_task(async function test_messages_origin_controls() {
       expectedDefaultMessage: WHEN_CLICKED,
       expectedHoverMessage: HOVER_RUN_VISIT_ONLY,
       expectedActionButtonDisabled: false,
-      // TODO: Bug 1799694 - remove this when we set minHeight on CUI widgets
-      skipMinHeightCheck: true,
     },
     {
       title:
@@ -919,8 +903,6 @@ add_task(async function test_messages_origin_controls() {
       expectedHoverMessage: HOVER_RUNNABLE_RUN_EXT,
       expectedActionButtonDisabled: false,
       grantHostPermissions: true,
-      // TODO: Bug 1799694 - remove this when we set minHeight on CUI widgets
-      skipMinHeightCheck: true,
     },
     {
       title:
@@ -936,8 +918,6 @@ add_task(async function test_messages_origin_controls() {
       expectedHoverMessage: HOVER_RUNNABLE_OPEN_EXT,
       expectedActionButtonDisabled: false,
       grantHostPermissions: true,
-      // TODO: Bug 1799694 - remove this when we set minHeight on CUI widgets
-      skipMinHeightCheck: true,
     },
   ];
 
@@ -953,8 +933,6 @@ add_task(async function test_messages_origin_controls() {
         expectedHoverMessage,
         expectedActionButtonDisabled,
         grantHostPermissions,
-        // TODO: Bug 1799694 - remove this when we set minHeight on CUI widgets
-        skipMinHeightCheck,
       } of TEST_CASES) {
         info(`case: ${title}`);
 
@@ -988,30 +966,30 @@ add_task(async function test_messages_origin_controls() {
         const item = getUnifiedExtensionsItem(win, extension.id);
         ok(item, `expected item for ${extension.id}`);
 
+        const messageDeck = item.querySelector(
+          ".unified-extensions-item-message-deck"
+        );
+        ok(messageDeck, "expected a message deck element");
+
         // 1. Verify the default message displayed below the extension's name.
-        const message = item.querySelector(
+        const defaultMessage = item.querySelector(
           ".unified-extensions-item-message-default"
         );
-        ok(message, "expected a default message element");
+        ok(defaultMessage, "expected a default message element");
 
         Assert.deepEqual(
-          win.document.l10n.getAttributes(message),
+          win.document.l10n.getAttributes(defaultMessage),
           expectedDefaultMessage,
           "expected l10n attributes for the default message"
         );
 
-        const minHeight = item.querySelector(
-          ".unified-extensions-item-contents"
-        )?.style?.minHeight;
+        is(
+          messageDeck.selectedIndex,
+          win.gUnifiedExtensions.MESSAGE_DECK_INDEX_DEFAULT,
+          "expected selected message in the deck to be the default message"
+        );
 
-        // TODO: Bug 1799694 - remove this when we set minHeight on CUI widgets
-        if (!skipMinHeightCheck) {
-          // 2. Verify that a min-height has been set on the message's parent
-          // element.
-          ok(!!minHeight, "expected min-height to be set");
-        }
-
-        // 3. Verify the action button state.
+        // 2. Verify the action button state.
         const actionButton = item.querySelector(
           ".unified-extensions-item-action-button"
         );
@@ -1024,7 +1002,7 @@ add_task(async function test_messages_origin_controls() {
           }`
         );
 
-        // 4. Verify the message displayed on hover but only when the action
+        // 3. Verify the message displayed on hover but only when the action
         // button isn't disabled to avoid some test failures.
         if (!expectedActionButtonDisabled) {
           const hovered = BrowserTestUtils.waitForEvent(
@@ -1038,21 +1016,21 @@ add_task(async function test_messages_origin_controls() {
           );
           await hovered;
 
+          const hoverMessage = item.querySelector(
+            ".unified-extensions-item-message-hover"
+          );
+          ok(hoverMessage, "expected a hover message element");
+
           Assert.deepEqual(
-            win.document.l10n.getAttributes(message),
+            win.document.l10n.getAttributes(hoverMessage),
             expectedHoverMessage,
             "expected l10n attributes for the message on hover"
           );
-        }
 
-        // TODO: Bug 1799694 - remove this when we set minHeight on CUI widgets
-        if (!skipMinHeightCheck) {
-          // 5. Min-height shouldn't change
           is(
-            item.querySelector(".unified-extensions-item-contents")?.style
-              ?.minHeight,
-            minHeight,
-            "expected same min-height as earlier"
+            messageDeck.selectedIndex,
+            win.gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER,
+            "expected selected message in the deck to be the hover message"
           );
         }
 
@@ -1118,52 +1096,47 @@ add_task(async function test_hover_message_when_button_updates_itself() {
   EventUtils.synthesizeMouseAtCenter(actionButton, { type: "mouseover" }, win);
   await hovered;
 
-  is(
-    item.dataset.showsHoverMessage,
-    "true",
-    "Got the expected dataset attribute set on hover"
+  const messageDeck = item.querySelector(
+    ".unified-extensions-item-message-deck"
   );
+  ok(messageDeck, "expected a message deck element");
 
-  const message = item.querySelector(
-    ".unified-extensions-item-message-default"
+  const hoverMessage = item.querySelector(
+    ".unified-extensions-item-message-hover"
   );
-  ok(message, "expected a default message element");
+  ok(hoverMessage, "expected a hover message element");
 
   const expectedL10nAttributes = {
     id: "origin-controls-state-runnable-hover-run",
     args: null,
   };
   Assert.deepEqual(
-    win.document.l10n.getAttributes(message),
+    win.document.l10n.getAttributes(hoverMessage),
     expectedL10nAttributes,
-    "expected l10n attributes for the default message"
+    "expected l10n attributes for the hover message"
+  );
+
+  is(
+    messageDeck.selectedIndex,
+    win.gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER,
+    "expected selected message in the deck to be the hover message"
   );
 
   extension.sendMessage("update-button");
   await extension.awaitMessage("update-button-done");
 
-  await new Promise(resolve =>
-    message.ownerGlobal.requestAnimationFrame(resolve)
+  is(
+    messageDeck.selectedIndex,
+    win.gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER,
+    "expected selected message in the deck to remain the same"
   );
 
-  Assert.deepEqual(
-    win.document.l10n.getAttributes(message),
-    expectedL10nAttributes,
-    "expected l10n attributes for the default message to remain the same as before"
-  );
-
-  const hoveredGearButton = BrowserTestUtils.waitForEvent(
+  const menuButtonHovered = BrowserTestUtils.waitForEvent(
     menuButton,
     "mouseover"
   );
   EventUtils.synthesizeMouseAtCenter(menuButton, { type: "mouseover" }, win);
-  await hoveredGearButton;
-
-  is(
-    item.dataset.showsHoverMessage,
-    undefined,
-    "dataset attribute cleared when action button is not focused"
-  );
+  await menuButtonHovered;
 
   await closeExtensionsPanel(win);
 

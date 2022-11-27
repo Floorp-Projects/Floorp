@@ -100,10 +100,6 @@ toolbar .unified-extensions-item[attention] > .unified-extensions-item-action-bu
   opacity: 0.5;
 }
 
-.unified-extensions-item[secondary-button-hovered="true"] .unified-extensions-item-action-button.subviewbutton {
-  color: inherit;
-}
-
 .unified-extensions-item-icon,
 /* When the unified extensions pref is enabled, we also want to increase the
  * size of the icons in the extension CUI widgets. */
@@ -128,11 +124,6 @@ panel .unified-extensions-item[unified-extensions="true"] .webextension-browser-
 
 .unified-extensions-item-message {
   color: var(--panel-description-color);
-}
-
-.unified-extensions-item[secondary-button-hovered="true"] .unified-extensions-item-message:not(.unified-extensions-item-message-hover),
-.unified-extensions-item:not([secondary-button-hovered="true"]) .unified-extensions-item-message-hover {
-  display: none;
 }
 
 .unified-extensions-item-menu-button.subviewbutton {
@@ -222,8 +213,7 @@ toolbaritem.unified-extensions-item[unified-extensions="true"] .unified-extensio
     color: GrayText;
   }
 
-  .unified-extensions-item-action-button[disabled] .unified-extensions-item-message,
-  .unified-extensions-item[secondary-button-hovered="true"] .unified-extensions-item-action-button[disabled].subviewbutton {
+  .unified-extensions-item-action-button[disabled] .unified-extensions-item-message {
     color: GrayText;
   }
 

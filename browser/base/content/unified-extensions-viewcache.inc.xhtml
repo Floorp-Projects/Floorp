@@ -9,17 +9,26 @@
 <html:template id="unified-extensions-item-template">
   <toolbarbutton class="unified-extensions-item-action-button subviewbutton">
     <image class="unified-extensions-item-icon"
-          role="presentation"
-          src="chrome://mozapps/skin/extensions/extensionGeneric.svg" />
+           role="presentation"
+           src="chrome://mozapps/skin/extensions/extensionGeneric.svg" />
 
     <vbox class="unified-extensions-item-contents">
       <label class="unified-extensions-item-name" />
-      <label class="unified-extensions-item-message unified-extensions-item-message-default">
-        <!-- A notification could be printed here -->
-      </label>
-      <label class="unified-extensions-item-message unified-extensions-item-message-hover"
-             data-l10n-id="unified-extensions-item-message-manage">
-      </label>
+      <!--
+        IMPORTANT: if you change the order of the labels in the deck,
+        please update the indexes in `browser/base/content/browser-addons.js`.
+      -->
+      <deck class="unified-extensions-item-message-deck">
+        <label class="unified-extensions-item-message unified-extensions-item-message-default">
+          <!-- A message describing the current Origin Controls state -->
+        </label>
+        <label class="unified-extensions-item-message unified-extensions-item-message-hover">
+          <!-- A message indicating what a user can do when clicking the action button -->
+        </label>
+        <label class="unified-extensions-item-message unified-extensions-item-message-hover-menu-button"
+               data-l10n-id="unified-extensions-item-message-manage">
+        </label>
+      </deck>
     </vbox>
   </toolbarbutton>
 
