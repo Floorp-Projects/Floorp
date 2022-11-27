@@ -22,9 +22,6 @@ FormHistoryStartup.prototype = {
 
   observe(subject, topic, data) {
     switch (topic) {
-      case "nsPref:changed":
-        lazy.FormHistory.updatePrefs();
-        break;
       case "idle-daily":
       case "formhistory-expire-now":
         lazy.FormHistory.expireOldEntries().catch(Cu.reportError);
@@ -42,8 +39,6 @@ FormHistoryStartup.prototype = {
       return;
     }
     this.inited = true;
-
-    Services.prefs.addObserver("browser.formfill.", this, true);
 
     // triggers needed service cleanup and db shutdown
     Services.obs.addObserver(this, "idle-daily", true);
