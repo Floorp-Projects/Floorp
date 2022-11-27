@@ -239,7 +239,6 @@ silk_sources_float = [
     'silk/float/inner_product_FLP.c',
     'silk/float/k2a_FLP.c',
     'silk/float/LPC_analysis_filter_FLP.c',
-    'silk/float/LPC_inv_pred_gain_FLP.c',
     'silk/float/LTP_analysis_filter_FLP.c',
     'silk/float/LTP_scale_ctrl_FLP.c',
     'silk/float/noise_shape_analysis_FLP.c',
