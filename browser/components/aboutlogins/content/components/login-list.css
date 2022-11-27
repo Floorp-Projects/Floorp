@@ -13,7 +13,7 @@
 .meta {
   display: flex;
   align-items: center;
-  padding: 9px 16px;
+  padding: 0 16px 16px;
   border-bottom: 1px solid var(--in-content-border-color);
   background-color: var(--in-content-box-background);
   color: var(--in-content-deemphasized-text);
@@ -50,6 +50,14 @@
 
 .container {
   display: contents;
+}
+
+.listHeader {
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  gap: 16px;
+  padding: 16px;
 }
 
 :host(.no-logins) .empty-search-message,
@@ -90,14 +98,15 @@ ol {
 }
 
 .create-login-button {
-  margin: 16px;
+  margin: 0;
+  min-width: auto;
+  background-repeat: no-repeat;
+  background-image: url("chrome://global/skin/icons/plus.svg");
+  background-position: center;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
-.create-login-button-container {
-  border-top: 1px solid var(--in-content-border-color);
-  display: flex;
-  flex-direction: column;
-}
 
 .login-list-item {
   display: flex;
