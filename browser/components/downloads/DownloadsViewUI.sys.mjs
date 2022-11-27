@@ -566,7 +566,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       d.removeAttribute("data-l10n-id");
       d.removeAttribute("value");
       d.removeAttribute("tooltiptext");
-      d.innerText = "";
+      d.textContent = "";
     }
     resetDescription(this._downloadDetailsNormal);
     if (status?.l10n) {
