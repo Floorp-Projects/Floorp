@@ -100,7 +100,6 @@ silk_sources = [
     'silk/control_audio_bandwidth.c',
     'silk/control_codec.c',
     'silk/control_SNR.c',
-    'silk/debug.c',
     'silk/dec_API.c',
     'silk/decode_core.c',
     'silk/decode_frame.c',
