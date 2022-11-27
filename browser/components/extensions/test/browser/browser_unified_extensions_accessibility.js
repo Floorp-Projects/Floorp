@@ -74,7 +74,9 @@ add_task(async function test_keyboard_navigation_activeScript() {
   ok(item, `expected item for ${extension1.id}`);
 
   info("moving focus to first item in the unified extensions panel");
-  let actionButton = item.querySelector(".unified-extensions-item-action");
+  let actionButton = item.querySelector(
+    ".unified-extensions-item-action-button"
+  );
   let focused = BrowserTestUtils.waitForEvent(actionButton, "focus");
   EventUtils.synthesizeKey("VK_TAB", {}, win);
   await focused;
@@ -88,7 +90,7 @@ add_task(async function test_keyboard_navigation_activeScript() {
   ok(item, `expected item for ${extension2.id}`);
 
   info("moving focus to second item in the unified extensions panel");
-  actionButton = item.querySelector(".unified-extensions-item-action");
+  actionButton = item.querySelector(".unified-extensions-item-action-button");
   focused = BrowserTestUtils.waitForEvent(actionButton, "focus");
   EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
   await focused;
@@ -136,7 +138,9 @@ add_task(async function test_keyboard_navigation_opens_menu() {
   ok(item, `expected item for ${extension1.id}`);
 
   info("moving focus to first item in the unified extensions panel");
-  let actionButton = item.querySelector(".unified-extensions-item-action");
+  let actionButton = item.querySelector(
+    ".unified-extensions-item-action-button"
+  );
   let focused = BrowserTestUtils.waitForEvent(actionButton, "focus");
   EventUtils.synthesizeKey("VK_TAB", {}, win);
   await focused;
@@ -151,9 +155,9 @@ add_task(async function test_keyboard_navigation_opens_menu() {
   );
 
   info("moving focus to first menu button in the unified extensions panel");
-  const menuButton = item.querySelector(".unified-extensions-item-open-menu");
+  const menuButton = item.querySelector(".unified-extensions-item-menu-button");
   focused = BrowserTestUtils.waitForEvent(menuButton, "focus");
-  ok(menuButton, "expected 'open menu' button");
+  ok(menuButton, "expected menu button");
   EventUtils.synthesizeKey("KEY_Tab", {}, win);
   await focused;
   is(

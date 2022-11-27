@@ -75,8 +75,8 @@ const getUnifiedExtensionsItem = (win, extensionId) => {
 const openUnifiedExtensionsContextMenu = async (win, extensionId) => {
   const item = getUnifiedExtensionsItem(win, extensionId);
   ok(item, `expected item for extensionId=${extensionId}`);
-  const button = item.querySelector(".unified-extensions-item-open-menu");
-  ok(button, "expected 'open menu' button");
+  const button = item.querySelector(".unified-extensions-item-menu-button");
+  ok(button, "expected menu button");
   // Make sure the button is visible before clicking on it (below) since the
   // list of extensions can have a scrollbar (when there are many extensions
   // and/or the window is small-ish).
@@ -107,7 +107,9 @@ const clickUnifiedExtensionsItem = async (
   // The action button should be disabled when users aren't supposed to click
   // on it but it might still be useful to re-enable it for testing purposes.
   if (forceEnableButton) {
-    let actionButton = item.querySelector(".unified-extensions-item-action");
+    let actionButton = item.querySelector(
+      ".unified-extensions-item-action-button"
+    );
     actionButton.disabled = false;
     ok(!actionButton.disabled, "action button was force-enabled");
   }

@@ -118,7 +118,7 @@ add_task(async function test_open_panel_on_button_click() {
   );
   Assert.deepEqual(
     win.document.l10n.getAttributes(
-      item.querySelector(".unified-extensions-item-open-menu")
+      item.querySelector(".unified-extensions-item-menu-button")
     ),
     {
       id: "unified-extensions-item-open-menu",
@@ -141,7 +141,7 @@ add_task(async function test_open_panel_on_button_click() {
   );
   Assert.deepEqual(
     win.document.l10n.getAttributes(
-      item.querySelector(".unified-extensions-item-open-menu")
+      item.querySelector(".unified-extensions-item-menu-button")
     ),
     {
       id: "unified-extensions-item-open-menu",
@@ -164,7 +164,7 @@ add_task(async function test_open_panel_on_button_click() {
   );
   Assert.deepEqual(
     win.document.l10n.getAttributes(
-      item.querySelector(".unified-extensions-item-open-menu")
+      item.querySelector(".unified-extensions-item-menu-button")
     ),
     {
       id: "unified-extensions-item-open-menu",
@@ -1013,7 +1013,7 @@ add_task(async function test_messages_origin_controls() {
 
         // 3. Verify the action button state.
         const actionButton = item.querySelector(
-          ".unified-extensions-item-action"
+          ".unified-extensions-item-action-button"
         );
         ok(actionButton, "expected an action button");
         is(
@@ -1106,11 +1106,13 @@ add_task(async function test_hover_message_when_button_updates_itself() {
   const item = getUnifiedExtensionsItem(win, extension.id);
   ok(item, "expected item in the panel");
 
-  const actionButton = item.querySelector(".unified-extensions-item-action");
+  const actionButton = item.querySelector(
+    ".unified-extensions-item-action-button"
+  );
   ok(actionButton, "expected an action button");
 
-  const menuButton = item.querySelector(".unified-extensions-item-open-menu");
-  ok(menuButton, "expected a open menu button");
+  const menuButton = item.querySelector(".unified-extensions-item-menu-button");
+  ok(menuButton, "expected a menu button");
 
   const hovered = BrowserTestUtils.waitForEvent(actionButton, "mouseover");
   EventUtils.synthesizeMouseAtCenter(actionButton, { type: "mouseover" }, win);

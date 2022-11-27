@@ -231,7 +231,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
         button.setAttribute("data-extensionid", extension.id);
         button.classList.add(
           "toolbarbutton-1",
-          "unified-extensions-item-action",
+          "unified-extensions-item-action-button",
           "subviewbutton"
         );
 
@@ -267,7 +267,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
 
         let menuButton = document.createXULElement("toolbarbutton");
         menuButton.classList.add(
-          "unified-extensions-item-open-menu",
+          "unified-extensions-item-menu-button",
           "subviewbutton",
           "subviewbutton-iconic"
         );
@@ -333,7 +333,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
 
       onCreated: node => {
         let actionButton = node.querySelector(
-          ".unified-extensions-item-action"
+          ".unified-extensions-item-action-button"
         );
         actionButton.classList.add("panel-no-padding");
         actionButton.classList.add("webextension-browser-action");
@@ -348,7 +348,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
 
         if (gUnifiedExtensionsEnabled) {
           const menuButton = node.querySelector(
-            ".unified-extensions-item-open-menu"
+            ".unified-extensions-item-menu-button"
           );
           menuButton.setAttribute(
             "data-l10n-args",
@@ -377,10 +377,14 @@ this.browserAction = class extends ExtensionAPIPersistent {
         this.openPopupWithoutUserInteraction =
           event.detail?.openPopupWithoutUserInteraction === true;
 
-        if (event.target.classList.contains("unified-extensions-item-action")) {
+        if (
+          event.target.classList.contains(
+            "unified-extensions-item-action-button"
+          )
+        ) {
           return "view";
         } else if (
-          event.target.classList.contains("unified-extensions-item-open-menu")
+          event.target.classList.contains("unified-extensions-item-menu-button")
         ) {
           return "command";
         }
@@ -843,7 +847,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
   // in |tabData|.
   updateButton(node, tabData, sync = false, attention = false) {
     // This is the primary/action button in the custom widget.
-    let button = node.querySelector(".unified-extensions-item-action");
+    let button = node.querySelector(".unified-extensions-item-action-button");
     let title = tabData.title || this.extension.name;
 
     let messages;

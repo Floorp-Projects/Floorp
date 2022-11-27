@@ -147,7 +147,7 @@ async function testOriginControls(
 
   Assert.deepEqual(
     win.document.l10n.getAttributes(
-      buttonOrWidget.querySelector(".unified-extensions-item-action")
+      buttonOrWidget.querySelector(".unified-extensions-item-action-button")
     ),
     {
       id: attention

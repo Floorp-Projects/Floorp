@@ -39,7 +39,7 @@ customElements.define(
     }
 
     connectedCallback() {
-      if (this._openMenuButton) {
+      if (this._menuButton) {
         return;
       }
 
@@ -49,14 +49,14 @@ customElements.define(
       this.appendChild(template.content.cloneNode(true));
 
       this._actionButton = this.querySelector(
-        ".unified-extensions-item-action"
+        ".unified-extensions-item-action-button"
       );
-      this._openMenuButton = this.querySelector(
-        ".unified-extensions-item-open-menu"
+      this._menuButton = this.querySelector(
+        ".unified-extensions-item-menu-button"
       );
 
-      this._openMenuButton.addEventListener("blur", this);
-      this._openMenuButton.addEventListener("focus", this);
+      this._menuButton.addEventListener("blur", this);
+      this._menuButton.addEventListener("focus", this);
 
       this.addEventListener("command", this);
       this.addEventListener("mouseout", this);
@@ -70,7 +70,7 @@ customElements.define(
 
       switch (event.type) {
         case "command":
-          if (target === this._openMenuButton) {
+          if (target === this._menuButton) {
             const popup = target.ownerDocument.getElementById(
               "unified-extensions-context-menu"
             );
@@ -100,7 +100,7 @@ customElements.define(
 
         case "blur":
         case "mouseout":
-          if (target === this._openMenuButton) {
+          if (target === this._menuButton) {
             this.removeAttribute("secondary-button-hovered");
           } else if (target === this._actionButton) {
             this._updateStateMessage();
@@ -109,7 +109,7 @@ customElements.define(
 
         case "focus":
         case "mouseover":
-          if (target === this._openMenuButton) {
+          if (target === this._menuButton) {
             this.setAttribute("secondary-button-hovered", true);
           } else if (target === this._actionButton) {
             this._updateStateMessage({ hover: true });
@@ -201,8 +201,8 @@ customElements.define(
 
       // Note that the data-extensionid attribute is used by context menu handlers
       // to identify the extension being manipulated by the context menu.
-      this._openMenuButton.dataset.extensionid = this.addon.id;
-      this._openMenuButton.setAttribute(
+      this._menuButton.dataset.extensionid = this.addon.id;
+      this._menuButton.setAttribute(
         "data-l10n-args",
         JSON.stringify({ extensionName: this.addon.name })
       );
