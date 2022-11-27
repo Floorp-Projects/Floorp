@@ -103,38 +103,84 @@ const DB_FILENAME = "formhistory.sqlite";
 var supportsDeletedTable = AppConstants.platform == "android";
 
 var Prefs = {
-  initialized: false,
+  _initialized: false,
 
-  get debug() {
+  get(name) {
     this.ensureInitialized();
-    return this._debug;
-  },
-  get enabled() {
-    this.ensureInitialized();
-    return this._enabled;
-  },
-  get expireDays() {
-    this.ensureInitialized();
-    return this._expireDays;
+    return this[`_${name}`];
   },
 
   ensureInitialized() {
-    if (this.initialized) {
+    if (this._initialized) {
       return;
     }
 
-    this.initialized = true;
+    this._initialized = true;
 
-    this._debug = Services.prefs.getBoolPref("browser.formfill.debug");
-    this._enabled = Services.prefs.getBoolPref("browser.formfill.enable");
-    this._expireDays = Services.prefs.getIntPref(
-      "browser.formfill.expire_days"
-    );
+    this._prefBranch = Services.prefs.getBranch("browser.formfill.");
+    this._prefBranch.addObserver("", this, true);
+
+    this._agedWeight = this._prefBranch.getIntPref("agedWeight");
+    this._boundaryWeight = this._prefBranch.getIntPref("boundaryWeight");
+    this._bucketSize = this._prefBranch.getIntPref("bucketSize");
+    this._debug = this._prefBranch.getBoolPref("debug");
+    this._enabled = this._prefBranch.getBoolPref("enable");
+    this._expireDays = this._prefBranch.getIntPref("expire_days");
+    this._maxTimeGroupings = this._prefBranch.getIntPref("maxTimeGroupings");
+    this._prefixWeight = this._prefBranch.getIntPref("prefixWeight");
+    this._timeGroupingSize =
+      this._prefBranch.getIntPref("timeGroupingSize") * 1000 * 1000;
   },
+
+  observe(subject, topic, data) {
+    if (topic == "nsPref:changed") {
+      let prefName = data;
+      log("got change to " + prefName + " preference");
+
+      switch (prefName) {
+        case "agedWeight":
+          this._agedWeight = this._prefBranch.getIntPref(prefName);
+          break;
+        case "boundaryWeight":
+          this._boundaryWeight = this._prefBranch.getIntPref(prefName);
+          break;
+        case "bucketSize":
+          this._bucketSize = this._prefBranch.getIntPref(prefName);
+          break;
+        case "debug":
+          this._debug = this._prefBranch.getBoolPref(prefName);
+          break;
+        case "enable":
+          this._enabled = this._prefBranch.getBoolPref(prefName);
+          break;
+        case "expire_days":
+          this._expireDays = this._prefBranch.getIntPref("expire_days");
+          break;
+        case "maxTimeGroupings":
+          this._maxTimeGroupings = this._prefBranch.getIntPref(prefName);
+          break;
+        case "prefixWeight":
+          this._prefixWeight = this._prefBranch.getIntPref(prefName);
+          break;
+        case "timeGroupingSize":
+          this._timeGroupingSize =
+            this._prefBranch.getIntPref(prefName) * 1000 * 1000;
+          break;
+        default:
+          log(`Oops! Pref ${prefName} not handled, change ignored.`);
+          break;
+      }
+    }
+  },
+
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIObserver",
+    "nsISupportsWeakReference",
+  ]),
 };
 
 function log(aMessage) {
-  if (Prefs.debug) {
+  if (Prefs.get("debug")) {
     Services.console.logStringMessage("FormHistory: " + aMessage);
   }
 }
@@ -978,7 +1024,7 @@ FormHistory = {
   },
 
   get enabled() {
-    return Prefs.enabled;
+    return Prefs.get("enabled");
   },
 
   async search(aSelectTerms, aSearchData, aRowFunc) {
@@ -1041,7 +1087,7 @@ FormHistory = {
     let isRemoveOperation = aChanges.every(
       change => change && change.op && change.op == "remove"
     );
-    if (!Prefs.enabled && !isRemoveOperation) {
+    if (!this.enabled && !isRemoveOperation) {
       throw new Error(
         "Form history is disabled, only remove operations are allowed"
       );
@@ -1119,13 +1165,6 @@ FormHistory = {
    * @param {string} searchString The string to search for.
    * @param {object} params zero or more filter properties:
    *   - fieldname
-   *   - agedWeight
-   *   - bucketSize
-   *   - expiryDate
-   *   - maxTimeGroundings
-   *   - timeGroupingSize
-   *   - prefixWeight
-   *   - boundaryWeight
    *   - source
    * @param {Function} [callback] if provided, it is invoked for each result.
    *   the first argument is the result with four properties (text,
@@ -1139,6 +1178,18 @@ FormHistory = {
     let searchTokens;
     let where = "";
     let boundaryCalc = "";
+
+    params = {
+      agedWeight: Prefs.get("agedWeight"),
+      bucketSize: Prefs.get("bucketSize"),
+      expiryDate:
+        1000 * (Date.now() - Prefs.get("expireDays") * 24 * 60 * 60 * 1000),
+      maxTimeGroupings: Prefs.get("maxTimeGroupings"),
+      timeGroupingSize: Prefs.get("timeGroupingSize"),
+      prefixWeight: Prefs.get("prefixWeight"),
+      boundaryWeight: Prefs.get("boundaryWeight"),
+      ...params,
+    };
 
     if (searchString.length >= 1) {
       params.valuePrefix = searchString.replaceAll("/", "//") + "%";
@@ -1264,16 +1315,12 @@ FormHistory = {
   },
 
   // The remaining methods are called by FormHistoryStartup.js
-  updatePrefs() {
-    Prefs.initialized = false;
-  },
-
   async expireOldEntries() {
     log("expireOldEntries");
 
     // Determine how many days of history we're supposed to keep.
     // Calculate expireTime in microseconds
-    let expireTime = (Date.now() - Prefs.expireDays * DAY_IN_MS) * 1000;
+    let expireTime = (Date.now() - Prefs.get("expireDays") * DAY_IN_MS) * 1000;
 
     sendNotification("formhistory-beforeexpireoldentries", expireTime);
 
