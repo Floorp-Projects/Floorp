@@ -532,170 +532,6 @@ add_task(async function test_overflowable_toolbar_legacy() {
   await SpecialPowers.popPrefEnv();
 });
 
-add_task(async function test_menu_button() {
-  let win = await promiseEnableUnifiedExtensions();
-
-  await withWindowOverflowed(win, {
-    whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
-      Assert.ok(
-        unifiedExtensionList.children.length,
-        "Should have items in the Unified Extension list."
-      );
-
-      const firstExtensionWidget = unifiedExtensionList.children[0];
-      Assert.ok(firstExtensionWidget, "expected extension widget");
-
-      // Open the extension panel.
-      await openExtensionsPanel(win);
-
-      // When hovering the cog/menu button, we should change the message below
-      // the extension name. Let's verify this on the first extension.
-      info("verifying message when hovering the menu button");
-      const item = getUnifiedExtensionsItem(
-        win,
-        firstExtensionWidget.dataset.extensionid
-      );
-      Assert.ok(item, "expected an item for the extension");
-
-      const actionButton = item.querySelector(
-        ".unified-extensions-item-action-button"
-      );
-      Assert.ok(actionButton, "expected action button");
-
-      const menuButton = item.querySelector(
-        ".unified-extensions-item-menu-button"
-      );
-      Assert.ok(menuButton, "expected menu button");
-
-      const message = item.querySelector(
-        ".unified-extensions-item-message-default"
-      );
-      const messageHover = item.querySelector(
-        ".unified-extensions-item-message-hover"
-      );
-      Assert.ok(
-        BrowserTestUtils.is_visible(message),
-        "expected message to be visible"
-      );
-      Assert.ok(
-        message.textContent !== "",
-        "expected message on hover to not be empty"
-      );
-      Assert.ok(
-        BrowserTestUtils.is_hidden(messageHover),
-        "expected 'hover message' to be hidden"
-      );
-
-      let hovered = BrowserTestUtils.waitForEvent(menuButton, "mouseover");
-      EventUtils.synthesizeMouseAtCenter(
-        menuButton,
-        { type: "mouseover" },
-        win
-      );
-      await hovered;
-      is(
-        item.getAttribute("secondary-button-hovered"),
-        "true",
-        "expected secondary-button-hovered attr on the item"
-      );
-      Assert.ok(
-        BrowserTestUtils.is_hidden(
-          item.querySelector(".unified-extensions-item-message-default")
-        ),
-        "expected message to be hidden"
-      );
-      Assert.ok(
-        BrowserTestUtils.is_visible(messageHover),
-        "expected 'hover message' to be visible"
-      );
-      Assert.deepEqual(
-        win.document.l10n.getAttributes(messageHover),
-        { id: "unified-extensions-item-message-manage", args: null },
-        "expected correct l10n attributes for the message displayed on secondary button hovered"
-      );
-      Assert.ok(
-        messageHover.textContent !== "",
-        "expected message on hover to not be empty"
-      );
-
-      let notHovered = BrowserTestUtils.waitForEvent(menuButton, "mouseout");
-      // Move mouse somewhere else...
-      EventUtils.synthesizeMouseAtCenter(item, { type: "mouseover" }, win);
-      await notHovered;
-      Assert.ok(
-        !item.hasAttribute("secondary-button-hovered"),
-        "expected no secondary-button-hovered attr on the item"
-      );
-      Assert.ok(
-        BrowserTestUtils.is_visible(
-          item.querySelector(".unified-extensions-item-message-default")
-        ),
-        "expected message to be visible"
-      );
-      Assert.ok(
-        BrowserTestUtils.is_hidden(messageHover),
-        "expected 'hover message' to be hidden"
-      );
-
-      // Close and re-open the extension panel to switch to keyboard navigation.
-      await closeExtensionsPanel(win);
-      await openExtensionsPanel(win);
-
-      info("moving focus to first extension with keyboard navigation");
-      let focused = BrowserTestUtils.waitForEvent(actionButton, "focus");
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-      await focused;
-      is(
-        actionButton,
-        win.document.activeElement,
-        "expected action button of the first extension item to be focused"
-      );
-      Assert.ok(
-        !item.hasAttribute("secondary-button-hovered"),
-        "expected no secondary-button-hovered attr on the item"
-      );
-      Assert.ok(
-        BrowserTestUtils.is_visible(
-          item.querySelector(".unified-extensions-item-message-default")
-        ),
-        "expected message to be visible"
-      );
-      Assert.ok(
-        BrowserTestUtils.is_hidden(messageHover),
-        "expected 'hover message' to be hidden"
-      );
-
-      info("moving focus to menu button");
-      focused = BrowserTestUtils.waitForEvent(menuButton, "focus");
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-      await focused;
-      is(
-        menuButton,
-        win.document.activeElement,
-        "expected menu button of the first extension to be focused"
-      );
-      Assert.ok(
-        item.hasAttribute("secondary-button-hovered"),
-        "expected secondary-button-hovered attr on the item"
-      );
-      Assert.ok(
-        BrowserTestUtils.is_hidden(
-          item.querySelector(".unified-extensions-item-message-default")
-        ),
-        "expected message to be hidden"
-      );
-      Assert.ok(
-        BrowserTestUtils.is_visible(messageHover),
-        "expected 'hover message' to be visible"
-      );
-
-      await closeExtensionsPanel(win);
-    },
-  });
-
-  await BrowserTestUtils.closeWindow(win);
-});
-
 add_task(async function test_context_menu() {
   let win = await promiseEnableUnifiedExtensions();
 
@@ -794,7 +630,7 @@ add_task(async function test_context_menu() {
   await BrowserTestUtils.closeWindow(win);
 });
 
-add_task(async function test_action_button() {
+add_task(async function test_message_deck() {
   let win = await promiseEnableUnifiedExtensions();
 
   await withWindowOverflowed(win, {
@@ -835,17 +671,53 @@ add_task(async function test_action_button() {
           );
           Assert.ok(menuButton, "expected menu button");
 
-          const message = item.querySelector(
+          const messageDeck = item.querySelector(
+            ".unified-extensions-item-message-deck"
+          );
+          Assert.ok(messageDeck, "expected message deck");
+          is(
+            messageDeck.selectedIndex,
+            win.gUnifiedExtensions.MESSAGE_DECK_INDEX_DEFAULT,
+            "expected selected message in the deck to be the default message"
+          );
+
+          const defaultMessage = item.querySelector(
             ".unified-extensions-item-message-default"
           );
           Assert.deepEqual(
-            win.document.l10n.getAttributes(message),
+            win.document.l10n.getAttributes(defaultMessage),
             { id: "origin-controls-state-when-clicked", args: null },
-            "expected correct l10n attributes for the message displayed by default"
+            "expected correct l10n attributes for the default message"
           );
           Assert.ok(
-            message.textContent !== "",
-            "expected message to not be empty"
+            defaultMessage.textContent !== "",
+            "expected default message to not be empty"
+          );
+
+          const hoverMessage = item.querySelector(
+            ".unified-extensions-item-message-hover"
+          );
+          Assert.deepEqual(
+            win.document.l10n.getAttributes(hoverMessage),
+            { id: "origin-controls-state-hover-run-visit-only", args: null },
+            "expected correct l10n attributes for the hover message"
+          );
+          Assert.ok(
+            hoverMessage.textContent !== "",
+            "expected hover message to not be empty"
+          );
+
+          const hoverMenuButtonMessage = item.querySelector(
+            ".unified-extensions-item-message-hover-menu-button"
+          );
+          Assert.deepEqual(
+            win.document.l10n.getAttributes(hoverMenuButtonMessage),
+            { id: "unified-extensions-item-message-manage", args: null },
+            "expected correct l10n attributes for the message when hovering the menu button"
+          );
+          Assert.ok(
+            hoverMenuButtonMessage.textContent !== "",
+            "expected message for when the menu button is hovered to not be empty"
           );
 
           // 1. Focus the action button of the first extension in the panel.
@@ -857,16 +729,10 @@ add_task(async function test_action_button() {
             win.document.activeElement,
             "expected action button of the first extension item to be focused"
           );
-          // Since this first extension has `activeTab` we expect a different
-          // message on hover/focus.
-          Assert.deepEqual(
-            win.document.l10n.getAttributes(message),
-            { id: "origin-controls-state-hover-run-visit-only", args: null },
-            "expected correct l10n attributes for the message displayed when focusing the action button"
-          );
-          Assert.ok(
-            message.textContent !== "",
-            "expected message to not be empty"
+          is(
+            messageDeck.selectedIndex,
+            win.gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER,
+            "expected selected message in the deck to be the hover message"
           );
 
           // 2. Focus the menu button, causing the action button to lose focus.
@@ -878,22 +744,21 @@ add_task(async function test_action_button() {
             win.document.activeElement,
             "expected menu button of the first extension item to be focused"
           );
-          // When focusing a different button like the menu button, we expect
-          // the default message to be the initial one.
-          Assert.deepEqual(
-            win.document.l10n.getAttributes(message),
-            { id: "origin-controls-state-when-clicked", args: null },
-            "expected correct l10n attributes for the message displayed by default"
+          is(
+            messageDeck.selectedIndex,
+            win.gUnifiedExtensions.MESSAGE_DECK_INDEX_MENU_HOVER,
+            "expected selected message in the deck to be the message when focusing the menu button"
           );
 
           await closeExtensionsPanel(win);
 
           info("verify message when hovering the action button");
           await openExtensionsPanel(win);
-          Assert.deepEqual(
-            win.document.l10n.getAttributes(message),
-            { id: "origin-controls-state-when-clicked", args: null },
-            "expected correct l10n attributes for the message displayed by default"
+
+          is(
+            messageDeck.selectedIndex,
+            win.gUnifiedExtensions.MESSAGE_DECK_INDEX_DEFAULT,
+            "expected selected message in the deck to be the default message"
           );
 
           // 1. Hover the action button of the first extension in the panel.
@@ -907,12 +772,10 @@ add_task(async function test_action_button() {
             win
           );
           await hovered;
-          // Since this first extension has `activeTab` we expect a different
-          // message on hover/focus.
-          Assert.deepEqual(
-            win.document.l10n.getAttributes(message),
-            { id: "origin-controls-state-hover-run-visit-only", args: null },
-            "expected correct l10n attributes for the message displayed when hovering the action button"
+          is(
+            messageDeck.selectedIndex,
+            win.gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER,
+            "expected selected message in the deck to be the hover message"
           );
 
           // 2. Hover the menu button, causing the action button to no longer
@@ -924,10 +787,10 @@ add_task(async function test_action_button() {
             win
           );
           await hovered;
-          Assert.deepEqual(
-            win.document.l10n.getAttributes(message),
-            { id: "origin-controls-state-when-clicked", args: null },
-            "expected correct l10n attributes for the message displayed by default"
+          is(
+            messageDeck.selectedIndex,
+            win.gUnifiedExtensions.MESSAGE_DECK_INDEX_MENU_HOVER,
+            "expected selected message in the deck to be the message when hovering the menu button"
           );
 
           await closeExtensionsPanel(win);

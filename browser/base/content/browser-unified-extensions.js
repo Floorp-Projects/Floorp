@@ -54,7 +54,13 @@ customElements.define(
       this._menuButton = this.querySelector(
         ".unified-extensions-item-menu-button"
       );
+      this._messageDeck = this.querySelector(
+        ".unified-extensions-item-message-deck"
+      );
 
+      // Focus/blur events are fired on specific elements only.
+      this._actionButton.addEventListener("blur", this);
+      this._actionButton.addEventListener("focus", this);
       this._menuButton.addEventListener("blur", this);
       this._menuButton.addEventListener("focus", this);
 
@@ -100,25 +106,24 @@ customElements.define(
 
         case "blur":
         case "mouseout":
-          if (target === this._menuButton) {
-            this.removeAttribute("secondary-button-hovered");
-          } else if (target === this._actionButton) {
-            this._updateStateMessage();
-          }
+          this._messageDeck.selectedIndex =
+            gUnifiedExtensions.MESSAGE_DECK_INDEX_DEFAULT;
           break;
 
         case "focus":
         case "mouseover":
           if (target === this._menuButton) {
-            this.setAttribute("secondary-button-hovered", true);
+            this._messageDeck.selectedIndex =
+              gUnifiedExtensions.MESSAGE_DECK_INDEX_MENU_HOVER;
           } else if (target === this._actionButton) {
-            this._updateStateMessage({ hover: true });
+            this._messageDeck.selectedIndex =
+              gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER;
           }
           break;
       }
     }
 
-    async _updateStateMessage({ hover = false } = {}) {
+    #setStateMessage() {
       const messages = OriginControls.getStateMessageIDs({
         policy: WebExtensionPolicy.getByID(this.addon.id),
         uri: this.ownerGlobal.gBrowser.currentURI,
@@ -128,34 +133,24 @@ customElements.define(
         return;
       }
 
-      const messageElement = this.querySelector(
+      const messageDefaultElement = this.querySelector(
         ".unified-extensions-item-message-default"
       );
+      this.ownerDocument.l10n.setAttributes(
+        messageDefaultElement,
+        messages.default
+      );
 
-      // We only want to adjust the height of an item in the panel when we
-      // first draw it, and not on hover (even if the hover message is longer,
-      // which shouldn't happen in practice but even if it was, we don't want
-      // to change the height on hover).
-      let adjustMinHeight = false;
-      if (hover && messages.onHover) {
-        this.ownerDocument.l10n.setAttributes(messageElement, messages.onHover);
-      } else if (messages.default) {
-        this.ownerDocument.l10n.setAttributes(messageElement, messages.default);
-        adjustMinHeight = true;
-      }
-
-      await document.l10n.translateElements([messageElement]);
-
-      if (adjustMinHeight) {
-        const contentsElement = this.querySelector(
-          ".unified-extensions-item-contents"
-        );
-        const { height } = getComputedStyle(contentsElement);
-        contentsElement.style.minHeight = height;
-      }
+      const messageHoverElement = this.querySelector(
+        ".unified-extensions-item-message-hover"
+      );
+      this.ownerDocument.l10n.setAttributes(
+        messageHoverElement,
+        messages.onHover || messages.default
+      );
     }
 
-    _hasAction() {
+    #hasAction() {
       const policy = WebExtensionPolicy.getByID(this.addon.id);
       const state = OriginControls.getState(
         policy,
@@ -197,7 +192,7 @@ customElements.define(
         );
       }
 
-      this._actionButton.disabled = !this._hasAction();
+      this._actionButton.disabled = !this.#hasAction();
 
       // Note that the data-extensionid attribute is used by context menu handlers
       // to identify the extension being manipulated by the context menu.
@@ -207,7 +202,7 @@ customElements.define(
         JSON.stringify({ extensionName: this.addon.name })
       );
 
-      this._updateStateMessage();
+      this.#setStateMessage();
     }
   }
 );
