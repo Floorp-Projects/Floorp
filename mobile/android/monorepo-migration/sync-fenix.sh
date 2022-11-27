@@ -5,26 +5,25 @@ set -ex
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 CURRENT_REPO_PATH="$(dirname -- "$SCRIPT_DIR")"
 
-REPO_NAME_TO_SYNC='focus-android'
+REPO_NAME_TO_SYNC='fenix'
 MAIN_BRANCH_NAME='main'
 
 CURRENT_MAJOR_VERSION="$(git show "$MAIN_BRANCH_NAME":version.txt | cut -d'.' -f1)"
 CURRENT_BETA_VERSION="$(( CURRENT_MAJOR_VERSION - 1 ))"
 CURRENT_RELEASE_VERSION="$(( CURRENT_BETA_VERSION - 1 ))"
 BRANCHES_TO_SYNC_ON_CURRENT_REPO=("$MAIN_BRANCH_NAME" "releases_v$CURRENT_BETA_VERSION" "releases_v$CURRENT_RELEASE_VERSION")
-BRANCHES_TO_SYNC_ON_TMP_REPO=("$MAIN_BRANCH_NAME" "releases_v$CURRENT_BETA_VERSION.0" "releases_v$CURRENT_RELEASE_VERSION.0")
-PREP_BRANCHES=('focus-prep' "focus-prep-$CURRENT_BETA_VERSION" "focus-prep-$CURRENT_RELEASE_VERSION")
+BRANCHES_TO_SYNC_ON_TMP_REPO=("$MAIN_BRANCH_NAME" "releases_v$CURRENT_BETA_VERSION.0.0" "releases_v$CURRENT_RELEASE_VERSION.0.0")
+PREP_BRANCHES=("$REPO_NAME_TO_SYNC-prep" "$REPO_NAME_TO_SYNC-prep-$CURRENT_BETA_VERSION" "$REPO_NAME_TO_SYNC-prep-$CURRENT_RELEASE_VERSION")
 
 TMP_REPO_PATH="/tmp/git/$REPO_NAME_TO_SYNC"
 TMP_REPO_BRANCH_NAME='firefox-android'
-MONOREPO_URL='git@github.com:mozilla-mobile/firefox-android.git'
 MERGE_COMMIT_MESSAGE=$(cat <<EOF
 Merge https://github.com/mozilla-mobile/$REPO_NAME_TO_SYNC repository
 
 The history was slightly altered before merging it:
   * All files from $REPO_NAME_TO_SYNC are now under its own subdirectory
   * All commits messages were rewritten to link issues and pull requests to the former repository
-  * All commits messages were prefixed with [focus]
+  * All commits messages were prefixed with [$REPO_NAME_TO_SYNC]
 EOF
 )
 
