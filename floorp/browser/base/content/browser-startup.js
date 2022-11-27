@@ -30,8 +30,7 @@ function getSystemLocale() {
   //Windows, this is generally "%APPDATA%\Local\temp\%PROFILENAME%"\chrome
   
   let uccpth = OS.Path.join(userChromecssPath, 'userChrome.css')
-  OS.File.open(uccpth, {write: true, append: true}).then(valOpen => {
-      var txtToAppend = `
+  IOUtils.writeUTF8(uccpth,`
       /*************************************************************************************************************************************************************************************************************************************************************
   
       userChrome.cssは、スタイルシートであり、Floorp のユーザーインターフェースに適用され、デフォルトの Floorp のスタイルルールをオーバーライドできます。 残念ながら、userChrome.cssを使用して Floorp の機能操作を変更することはできません。
@@ -62,16 +61,10 @@ function getSystemLocale() {
   
   
       }
-      `;
-  
-      var txtEncoded = new TextEncoder().encode(txtToAppend);
-      valOpen.write(txtEncoded)
-      valOpen.close()
-  });
+      `);
   
   let ucconpth = OS.Path.join(userChromecssPath, 'userContent.css')
-  OS.File.open(ucconpth, {write: true, append: true}).then(valOpen => {
-    var txtToAppend = `
+  IOUtils.writeUTF8(ucconpth,`
     /*************************************************************************************************************************************************************************************************************************************************************
      
     userContent.css は userChrome.css と同じく、chrome 特権を用いてブラウザーに対して CSS スタイルルールを指定できる特殊なCSSファイルです。
@@ -95,11 +88,7 @@ function getSystemLocale() {
   
     @charset "UTF-8";
   
-    `;
-    var txtEncoded = new TextEncoder().encode(txtToAppend);
-    valOpen.write(txtEncoded)
-    valOpen.close()
-  });
+    `);
   
   window.setTimeout(() => {
     Services.prefs.setStringPref("browser.contentblocking.category", "strict")
