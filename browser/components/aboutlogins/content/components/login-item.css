@@ -31,7 +31,7 @@
 
 .container {
   overflow: auto;
-  padding: 0 40px;
+  padding: 40px;
   box-sizing: border-box;
   height: 100%;
 }
@@ -104,6 +104,7 @@ input[type="url"]:read-only {
 .header {
   display: flex;
   align-items: center;
+  border-bottom: 1px solid var(--in-content-border-color);
   margin-bottom: 40px;
 }
 

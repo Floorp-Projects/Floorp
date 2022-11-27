@@ -14,9 +14,7 @@ const gElements = {
   loginList: document.querySelector("login-list"),
   loginIntro: document.querySelector("login-intro"),
   loginItem: document.querySelector("login-item"),
-  loginFilter: document
-    .querySelector("login-list")
-    .shadowRoot.querySelector("login-filter"),
+  loginFilter: document.querySelector("login-filter"),
   menuButton: document.querySelector("menu-button"),
   // removeAllLogins button is nested inside of menuButton
   get removeAllButton() {
