@@ -89,8 +89,8 @@ add_task(async function test_context_menu() {
   // (combined with some CSS).
   const item = getUnifiedExtensionsItem(win, extension.id);
   ok(item, "expected an item for the extension");
-  const menuButton = item.querySelector(".unified-extensions-item-open-menu");
-  ok(menuButton, "expected 'open menu' button");
+  const menuButton = item.querySelector(".unified-extensions-item-menu-button");
+  ok(menuButton, "expected menu button");
 
   let messageHover = item.querySelector(
     ".unified-extensions-item-message-hover"
@@ -485,9 +485,9 @@ add_task(async function test_open_context_menu_on_click() {
   await openExtensionsPanel(win);
 
   const button = getUnifiedExtensionsItem(win, extension.id).querySelector(
-    ".unified-extensions-item-open-menu"
+    ".unified-extensions-item-menu-button"
   );
-  ok(button, "expected 'open menu' button");
+  ok(button, "expected menu button");
 
   const contextMenu = win.document.getElementById(
     "unified-extensions-context-menu"
@@ -513,9 +513,9 @@ add_task(async function test_open_context_menu_with_keyboard() {
   await openExtensionsPanel(win);
 
   const button = getUnifiedExtensionsItem(win, extension.id).querySelector(
-    ".unified-extensions-item-open-menu"
+    ".unified-extensions-item-menu-button"
   );
-  ok(button, "expected 'open menu' button");
+  ok(button, "expected menu button");
   // Make this button focusable because those (toolbar) buttons are only made
   // focusable when a user is navigating with the keyboard, which isn't exactly
   // what we are doing in this test.

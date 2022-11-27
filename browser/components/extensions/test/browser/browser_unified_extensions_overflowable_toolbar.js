@@ -328,14 +328,14 @@ async function verifyExtensionWidget(win, widget, unifiedExtensionsEnabled) {
 
   let actionButton = widget.firstElementChild;
   Assert.ok(
-    actionButton.classList.contains("unified-extensions-item-action"),
+    actionButton.classList.contains("unified-extensions-item-action-button"),
     "expected action class on the button"
   );
 
   let menuButton = widget.lastElementChild;
   Assert.ok(
-    menuButton.classList.contains("unified-extensions-item-open-menu"),
-    "expected open-menu class on the button"
+    menuButton.classList.contains("unified-extensions-item-menu-button"),
+    "expected class on the button"
   );
 
   let contents = actionButton.querySelector(
@@ -558,14 +558,14 @@ add_task(async function test_menu_button() {
       Assert.ok(item, "expected an item for the extension");
 
       const actionButton = item.querySelector(
-        ".unified-extensions-item-action"
+        ".unified-extensions-item-action-button"
       );
       Assert.ok(actionButton, "expected action button");
 
       const menuButton = item.querySelector(
-        ".unified-extensions-item-open-menu"
+        ".unified-extensions-item-menu-button"
       );
-      Assert.ok(menuButton, "expected 'open menu' button");
+      Assert.ok(menuButton, "expected menu button");
 
       const message = item.querySelector(
         ".unified-extensions-item-message-default"
@@ -826,12 +826,12 @@ add_task(async function test_action_button() {
           Assert.ok(item, "expected an item for the extension");
 
           const actionButton = item.querySelector(
-            ".unified-extensions-item-action"
+            ".unified-extensions-item-action-button"
           );
           Assert.ok(actionButton, "expected action button");
 
           const menuButton = item.querySelector(
-            ".unified-extensions-item-open-menu"
+            ".unified-extensions-item-menu-button"
           );
           Assert.ok(menuButton, "expected menu button");
 
