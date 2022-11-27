@@ -13,6 +13,7 @@ ignore_list = [
     'silk/float/regularize_correlations_FLP.c',
     'silk/float/LPC_inv_pred_gain_FLP.c',
     'src/opus_projection_encoder.c',
+    'silk/debug.c',
 ]
 
 def should_ignore(value):
