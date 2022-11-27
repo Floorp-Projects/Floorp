@@ -26,7 +26,7 @@ import {
 import { getTabMenuItems } from "../../utils/tabs";
 
 import {
-  getSelectedSource,
+  getSelectedLocation,
   getActiveSearch,
   getSourcesForTabs,
   isSourceBlackBoxed,
@@ -47,7 +47,7 @@ class Tab extends PureComponent {
       onDragOver: PropTypes.func.isRequired,
       onDragStart: PropTypes.func.isRequired,
       selectSource: PropTypes.func.isRequired,
-      selectedSource: PropTypes.object,
+      selectedLocation: PropTypes.object,
       showSource: PropTypes.func.isRequired,
       source: PropTypes.object.isRequired,
       tabSources: PropTypes.array.isRequired,
@@ -71,7 +71,7 @@ class Tab extends PureComponent {
       showSource,
       toggleBlackBox,
       togglePrettyPrint,
-      selectedSource,
+      selectedLocation,
       source,
       isBlackBoxed,
     } = this.props;
@@ -82,7 +82,7 @@ class Tab extends PureComponent {
     const tabURLs = tabSources.map(t => t.url);
     const otherTabURLs = otherTabs.map(t => t.url);
 
-    if (!sourceTab || !selectedSource) {
+    if (!sourceTab || !selectedLocation || !selectedLocation.sourceId) {
       return;
     }
 
@@ -126,21 +126,21 @@ class Tab extends PureComponent {
       {
         item: {
           ...tabMenuItems.copySource,
-          disabled: selectedSource.id !== tab,
+          disabled: selectedLocation.sourceId !== tab,
           click: () => copyToClipboard(sourceTab),
         },
       },
       {
         item: {
           ...tabMenuItems.copySourceUri2,
-          disabled: !selectedSource.url,
+          disabled: !selectedLocation.sourceUrl,
           click: () => copyToTheClipboard(getRawSourceURL(sourceTab.url)),
         },
       },
       {
         item: {
           ...tabMenuItems.showSource,
-          disabled: !selectedSource.url,
+          disabled: !selectedLocation.sourceUrl,
           click: () => showSource(cx, tab),
         },
       },
@@ -177,7 +177,7 @@ class Tab extends PureComponent {
   render() {
     const {
       cx,
-      selectedSource,
+      selectedLocation,
       selectSource,
       closeTab,
       source,
@@ -188,8 +188,8 @@ class Tab extends PureComponent {
     } = this.props;
     const sourceId = source.id;
     const active =
-      selectedSource &&
-      sourceId == selectedSource.id &&
+      selectedLocation &&
+      sourceId == selectedLocation.sourceId &&
       !this.isProjectSearchEnabled() &&
       !this.isSourceSearchEnabled();
     const isPrettyCode = isPretty(source);
@@ -247,12 +247,10 @@ class Tab extends PureComponent {
 }
 
 const mapStateToProps = (state, { source }) => {
-  const selectedSource = getSelectedSource(state);
-
   return {
     cx: getContext(state),
     tabSources: getSourcesForTabs(state),
-    selectedSource,
+    selectedLocation: getSelectedLocation(state),
     isBlackBoxed: isSourceBlackBoxed(state, source),
     activeSearch: getActiveSearch(state),
   };
