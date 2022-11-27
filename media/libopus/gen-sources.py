@@ -14,6 +14,8 @@ ignore_list = [
     'silk/float/LPC_inv_pred_gain_FLP.c',
     'src/opus_projection_encoder.c',
     'silk/debug.c',
+    'src/mapping_matrix.c',
+    'src/opus_projection_decoder.c',
 ]
 
 def should_ignore(value):
