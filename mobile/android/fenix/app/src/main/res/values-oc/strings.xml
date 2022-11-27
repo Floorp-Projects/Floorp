@@ -255,7 +255,10 @@
     <string name="search_settings_menu_item">Paramètres de recèrca</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Aqueste còp cercar :</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Aqueste còp cercar :</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Aqueste còp cercar amb :</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -331,6 +334,14 @@
     <string name="preferences_add_private_browsing_shortcut">Ajustar un acorchi per la navegacion privada</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Mòde HTTPS solament</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Reduccion de las bandièras de cookies</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Reduire las bandièras de cookies</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox ensaja automaticament de regetar las demandas de cookies de las bandièras de cookies. Se l’opcion de refús es pas disponibla, Firefox accèpta totes las cookies per tampar la bandièra.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Ensaja automaticament de se connectar als sites amb lo chiframent HTTPS per una seguretat melhorada.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->

@@ -340,6 +340,13 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Modalità solo HTTPS</string>
 
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Riduzione banner per i cookie</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Riduci i banner per i cookie</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox cerca automaticamente di rifiutare le richieste di cookie quando viene visualizzato un banner per i cookie. Se l’opzione per rifiutarli non è disponibile, Firefox potrebbe accettare tutti i cookie per chiudere il banner.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Tenta automaticamente la connessione ai siti utilizzando il protocollo di crittografia HTTPS per una maggiore sicurezza.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
