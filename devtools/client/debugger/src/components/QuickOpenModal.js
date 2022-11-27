@@ -17,7 +17,8 @@ import {
   getQuickOpenQuery,
   getQuickOpenType,
   getSelectedSource,
-  getSourceContent,
+  getSelectedLocation,
+  getSettledSourceTextContent,
   getSymbols,
   getTabs,
   getContext,
@@ -489,6 +490,7 @@ function mapStateToProps(state) {
   const tabs = getTabs(state);
   const tabUrls = [...new Set(tabs.map(tab => tab.url))];
   const symbols = getSymbols(state, selectedSource);
+  const location = getSelectedLocation(state);
 
   return {
     cx: getContext(state),
@@ -497,8 +499,8 @@ function mapStateToProps(state) {
     blackBoxRanges: getBlackBoxRanges(state),
     projectDirectoryRoot: getProjectDirectoryRoot(state),
     selectedSource,
-    selectedContentLoaded: selectedSource
-      ? !!getSourceContent(state, selectedSource.id)
+    selectedContentLoaded: location
+      ? !!getSettledSourceTextContent(state, location)
       : undefined,
     symbols: formatSymbols(symbols, maxResults),
     symbolsLoading: !symbols,

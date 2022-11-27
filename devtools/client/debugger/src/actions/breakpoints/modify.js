@@ -12,7 +12,7 @@ import {
   getBreakpointPositionsForLocation,
   getFirstBreakpointPosition,
   getLocationSource,
-  getSourceContent,
+  getSettledSourceTextContent,
   getBreakpointsList,
   getPendingBreakpointList,
   isMapScopesEnabled,
@@ -133,14 +133,14 @@ export function addBreakpoint(
       return null;
     }
 
-    const originalContent = getSourceContent(getState(), source.id);
+    const originalContent = getSettledSourceTextContent(getState(), location);
     const originalText = getTextAtPosition(
       source.id,
       originalContent,
       location
     );
 
-    const content = getSourceContent(getState(), generatedSource.id);
+    const content = getSettledSourceTextContent(getState(), generatedLocation);
     const text = getTextAtPosition(
       generatedSource.id,
       content,

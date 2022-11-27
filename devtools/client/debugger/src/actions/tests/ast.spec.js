@@ -55,9 +55,8 @@ describe("ast", () => {
         );
 
         await dispatch(
-          actions.loadSourceText({
+          actions.loadGeneratedSourceText({
             cx,
-            source: base,
             sourceActor: baseSourceActor,
           })
         );

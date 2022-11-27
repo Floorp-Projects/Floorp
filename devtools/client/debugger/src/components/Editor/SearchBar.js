@@ -11,7 +11,8 @@ import actions from "../../actions";
 import {
   getActiveSearch,
   getSelectedSource,
-  getSourceContent,
+  getSelectedLocation,
+  getSettledSourceTextContent,
   getFileSearchQuery,
   getFileSearchModifiers,
   getFileSearchResults,
@@ -327,13 +328,14 @@ SearchBar.contextTypes = {
 
 const mapStateToProps = (state, p) => {
   const selectedSource = getSelectedSource(state);
+  const selectedLocation = getSelectedLocation(state);
 
   return {
     cx: getContext(state),
     searchOn: getActiveSearch(state) === "file",
     selectedSource,
-    selectedContentLoaded: selectedSource
-      ? !!getSourceContent(state, selectedSource.id)
+    selectedContentLoaded: selectedLocation
+      ? !!getSettledSourceTextContent(state, selectedLocation)
       : false,
     query: getFileSearchQuery(state),
     modifiers: getFileSearchModifiers(state),

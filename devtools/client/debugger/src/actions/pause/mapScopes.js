@@ -6,7 +6,7 @@ import {
   getSelectedFrameId,
   getSource,
   getLocationSource,
-  getSourceContent,
+  getSettledSourceTextContent,
   isMapScopesEnabled,
   getSelectedFrame,
   getSelectedGeneratedScope,
@@ -14,7 +14,10 @@ import {
   getThreadContext,
   getFirstSourceActorForGeneratedSource,
 } from "../../selectors";
-import { loadSourceText } from "../sources/loadSourceText";
+import {
+  loadOriginalSourceText,
+  loadGeneratedSourceText,
+} from "../sources/loadSourceText";
 import { PROMISE } from "../utils/middleware/promise";
 import assert from "../../utils/assert";
 
@@ -151,7 +154,7 @@ export function getMappedScopes(cx, scopes, frame) {
     }
 
     // Load source text for the original source
-    await dispatch(loadSourceText({ cx, source, sourceActor: null }));
+    await dispatch(loadOriginalSourceText({ cx, source }));
 
     const generatedSourceActor = getFirstSourceActorForGeneratedSource(
       getState(),
@@ -160,9 +163,8 @@ export function getMappedScopes(cx, scopes, frame) {
 
     // Also load source text for its corresponding generated source
     await dispatch(
-      loadSourceText({
+      loadGeneratedSourceText({
         cx,
-        source: generatedSource,
         sourceActor: generatedSourceActor,
       })
     );
@@ -170,7 +172,8 @@ export function getMappedScopes(cx, scopes, frame) {
     try {
       const content =
         getSource(getState(), source.id) &&
-        getSourceContent(getState(), source.id);
+        // load original source text content
+        getSettledSourceTextContent(getState(), frame.location);
 
       return await buildMappedScopes(
         source,

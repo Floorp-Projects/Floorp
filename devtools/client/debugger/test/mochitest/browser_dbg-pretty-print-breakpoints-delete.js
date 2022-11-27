@@ -67,6 +67,11 @@ add_task(async function() {
 
   await waitForBreakpointCount(dbg, 0);
 
+  info(
+    `Close the pretty-printed source, so it is not automatically reopened on reload`
+  );
+  await closeTab(dbg, "pretty.js:formatted");
+
   await reloadAndCheckNoBreakpointExists(dbg);
 });
 
@@ -83,13 +88,11 @@ async function reloadAndCheckNoBreakpointExists(dbg) {
   await reload(dbg, "pretty.js");
   await selectSource(dbg, "pretty.js");
   await prettyPrint(dbg);
-
   info("Check that we do not pause on the removed breakpoint");
   invokeInTab("stuff");
   await waitForPaused(dbg);
 
   const sourcePretty = findSource(dbg, "pretty.js:formatted");
-
   info(
     "Assert pause at the debugger statement in pretty.js:formatted (original source) and not the removed breakpoint"
   );

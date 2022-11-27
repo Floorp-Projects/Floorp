@@ -125,7 +125,7 @@ const mapStateToProps = state => {
   if (!location) {
     return {};
   }
-  const sourceTextContent = getSourceTextContent(state, location.sourceId);
+  const sourceTextContent = getSourceTextContent(state, location);
   if (!isDocumentReady(location, sourceTextContent)) {
     return {};
   }

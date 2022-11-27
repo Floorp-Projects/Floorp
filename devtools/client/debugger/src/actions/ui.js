@@ -225,9 +225,9 @@ export function setOrientation(orientation) {
   return { type: "SET_ORIENTATION", orientation };
 }
 
-export function copyToClipboard(source) {
+export function copyToClipboard(location) {
   return ({ dispatch, getState }) => {
-    const content = getSourceContent(getState(), source.id);
+    const content = getSourceContent(getState(), location);
     if (content && isFulfilled(content) && content.value.type === "text") {
       copyToTheClipboard(content.value.value);
     }

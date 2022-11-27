@@ -4,26 +4,47 @@
 
 import { asSettled } from "../utils/async-value";
 
-import { getSelectedSource } from "../selectors/sources";
+import {
+  getSelectedLocation,
+  getSource,
+  getFirstSourceActorForGeneratedSource,
+} from "../selectors/sources";
 
-export function getSourceTextContent(state, id) {
-  return state.sourcesContent.mutableTextContentMap.get(id);
+export function getSourceTextContent(state, location) {
+  let { sourceId, sourceActorId } = location;
+
+  const source = getSource(state, sourceId);
+  if (!source) {
+    return null;
+  }
+
+  if (source.isOriginal) {
+    return state.sourcesContent.mutableOriginalSourceTextContentMap.get(
+      sourceId
+    );
+  }
+  if (!sourceActorId) {
+    const sourceActor = getFirstSourceActorForGeneratedSource(state, sourceId);
+    sourceActorId = sourceActor.actor;
+  }
+  return state.sourcesContent.mutableGeneratedSourceTextContentMap.get(
+    sourceActorId
+  );
 }
 
-export function getSourceContent(state, id) {
-  const content = getSourceTextContent(state, id);
+export function getSettledSourceTextContent(state, location) {
+  const content = getSourceTextContent(state, location);
   return asSettled(content);
 }
 
 export function getSelectedSourceTextContent(state) {
-  const source = getSelectedSource(state);
-  if (!source) return null;
-  return getSourceTextContent(state, source.id);
-}
+  const location = getSelectedLocation(state);
 
-export function isSourceLoadingOrLoaded(state, sourceId) {
-  const content = getSourceTextContent(state, sourceId);
-  return content != null;
+  if (!location) {
+    return null;
+  }
+
+  return getSourceTextContent(state, location);
 }
 
 export function getSourcesEpoch(state) {

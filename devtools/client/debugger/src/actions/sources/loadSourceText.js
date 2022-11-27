@@ -6,11 +6,12 @@ import { PROMISE } from "../utils/middleware/promise";
 import {
   getSource,
   getSourceTextContent,
-  getSourceContent,
+  getSettledSourceTextContent,
   getGeneratedSource,
   getSourcesEpoch,
   getBreakpointsForSource,
   getSourceActorsForSource,
+  getFirstSourceActorForGeneratedSource,
 } from "../../selectors";
 import { addBreakpoint } from "../breakpoints";
 
@@ -18,108 +19,131 @@ import { prettyPrintSource } from "./prettyPrint";
 import { isFulfilled, fulfilled } from "../../utils/async-value";
 
 import { isPretty } from "../../utils/source";
+import { createLocation } from "../../utils/location";
 import { memoizeableAction } from "../../utils/memoizableAction";
 
-const Telemetry = require("devtools/client/shared/telemetry");
-
-// Measures the time it takes for a source to load
-const loadSourceHistogram = "DEVTOOLS_DEBUGGER_LOAD_SOURCE_MS";
-const telemetry = new Telemetry();
-
-async function loadSource(
-  state,
-  source,
-  sourceActor,
-  { dispatch, sourceMaps, client, getState }
-) {
-  if (isPretty(source) && source.isOriginal) {
-    const generatedSource = getGeneratedSource(state, source);
-    if (!generatedSource) {
-      throw new Error("Unable to find minified original.");
-    }
-    const content = getSourceContent(state, generatedSource.id);
-    if (!content || !isFulfilled(content)) {
-      throw new Error("Cannot pretty-print a file that has not loaded");
-    }
-
-    return prettyPrintSource(
-      sourceMaps,
-      generatedSource,
-      content.value,
-      getSourceActorsForSource(state, generatedSource.id)
-    );
-  }
-
-  if (source.isOriginal) {
-    const result = await sourceMaps.getOriginalSourceText(source.id);
-    if (!result) {
-      // The way we currently try to load and select a pending
-      // selected location, it is possible that we will try to fetch the
-      // original source text right after the source map has been cleared
-      // after a navigation event.
-      throw new Error("Original source text unavailable");
-    }
-    return result;
-  }
-
+async function loadGeneratedSource(state, sourceActor, client) {
   // If no source actor can be found then the text for the
   // source cannot be loaded.
   if (!sourceActor) {
-    throw new Error("Unknown source");
+    throw new Error("Source actor is null or not defined");
   }
 
   let response;
   try {
-    telemetry.start(loadSourceHistogram, source);
     response = await client.sourceContents(sourceActor);
-    telemetry.finish(loadSourceHistogram, source);
   } catch (e) {
     throw new Error(`sourceContents failed: ${e}`);
   }
 
   return {
-    actorId: sourceActor.actor,
     text: response.source,
     contentType: response.contentType || "text/javascript",
   };
 }
 
-async function loadSourceTextPromise(
+async function loadOriginalSource(state, source, client, sourceMaps) {
+  if (isPretty(source)) {
+    const generatedSource = getGeneratedSource(state, source);
+    if (!generatedSource) {
+      throw new Error("Unable to find minified original.");
+    }
+
+    const content = getSettledSourceTextContent(
+      state,
+      createLocation({
+        sourceId: generatedSource.id,
+      })
+    );
+
+    return prettyPrintSource(
+      sourceMaps,
+      generatedSource,
+      content,
+      getSourceActorsForSource(state, generatedSource.id)
+    );
+  }
+
+  const result = await sourceMaps.getOriginalSourceText(source.id);
+  if (!result) {
+    // The way we currently try to load and select a pending
+    // selected location, it is possible that we will try to fetch the
+    // original source text right after the source map has been cleared
+    // after a navigation event.
+    throw new Error("Original source text unavailable");
+  }
+  return result;
+}
+
+async function loadGeneratedSourceTextPromise(
+  cx,
+  sourceActor,
+  { dispatch, getState, client, parser }
+) {
+  const epoch = getSourcesEpoch(getState());
+
+  await dispatch({
+    type: "LOAD_GENERATED_SOURCE_TEXT",
+    sourceActorId: sourceActor.actor,
+    epoch,
+    [PROMISE]: loadGeneratedSource(getState(), sourceActor, client),
+  });
+
+  await setParserAndBreakpointsTextContent(cx, sourceActor.source, {
+    state: getState(),
+    parser,
+    dispatch,
+  });
+}
+
+async function loadOriginalSourceTextPromise(
   cx,
   source,
-  sourceActor,
   { dispatch, getState, client, sourceMaps, parser }
 ) {
   const epoch = getSourcesEpoch(getState());
 
   await dispatch({
-    type: "LOAD_SOURCE_TEXT",
+    type: "LOAD_ORIGINAL_SOURCE_TEXT",
     sourceId: source.id,
     epoch,
-    [PROMISE]: loadSource(getState(), source, sourceActor, {
-      sourceMaps,
-      client,
-      getState,
-    }),
+    [PROMISE]: loadOriginalSource(getState(), source, client, sourceMaps),
   });
 
-  const newSource = getSource(getState(), source.id);
+  await setParserAndBreakpointsTextContent(cx, source.id, {
+    state: getState(),
+    parser,
+    dispatch,
+  });
+}
 
-  if (!newSource) {
+async function setParserAndBreakpointsTextContent(
+  cx,
+  sourceId,
+  { dispatch, state, parser }
+) {
+  const source = getSource(state, sourceId);
+
+  if (!source) {
     return;
   }
-  const content = getSourceContent(getState(), newSource.id);
+  const content = getSettledSourceTextContent(
+    state,
+    createLocation({
+      sourceId: source.id,
+    })
+  );
 
-  if (!newSource.isWasm && content) {
+  if (!source.isWasm && content) {
     parser.setSource(
-      newSource.id,
+      source.id,
       isFulfilled(content)
         ? content.value
         : { type: "text", value: "", contentType: undefined }
     );
 
     // Update the text in any breakpoints for this source by re-adding them.
-    const breakpoints = getBreakpointsForSource(getState(), source.id);
+    const breakpoints = getBreakpointsForSource(state, source.id);
     for (const { location, options, disabled } of breakpoints) {
       await dispatch(addBreakpoint(cx, location, options, disabled));
     }
@@ -127,46 +151,99 @@ async function loadSourceTextPromise(
 }
 
 /**
- * Loads the source text for a source and source actor
- * @param {Object} source
- *                 The source to load the source text
- * @param {Object|null} sourceActor
+ * Loads the source text for the generated source based of the source actor
+ * @param {Object} sourceActor
  *                 There can be more than one source actor per source
  *                 so the source actor needs to be specified. This is
  *                 required for generated sources but will be null for
  *                 original/pretty printed sources.
  */
-export const loadSourceText = memoizeableAction("loadSourceText", {
-  getValue: ({ source, sourceActor }, { getState }) => {
+export const loadGeneratedSourceText = memoizeableAction(
+  "loadGeneratedSourceText",
+  {
+    getValue: ({ sourceActor }, { getState }) => {
+      if (!sourceActor) {
+        return null;
+      }
+
+      const sourceTextContent = getSourceTextContent(
+        getState(),
+        createLocation({
+          sourceId: sourceActor.source,
+          sourceActorId: sourceActor.actor,
+        })
+      );
+
+      if (!sourceTextContent || sourceTextContent.state === "pending") {
+        return sourceTextContent;
+      }
+
+      // This currently swallows source-load-failure since we return fulfilled
+      // here when content.state === "rejected". In an ideal world we should
+      // propagate that error upward.
+      return fulfilled(sourceTextContent);
+    },
+    createKey: ({ sourceActor }, { getState }) => {
+      const epoch = getSourcesEpoch(getState());
+      return `${epoch}:${sourceActor.actor}`;
+    },
+    action: ({ cx, sourceActor }, thunkArgs) =>
+      loadGeneratedSourceTextPromise(cx, sourceActor, thunkArgs),
+  }
+);
+
+/**
+ * Loads the source text for an original source and source actor
+ * @param {Object} source
+ *                 The original source to load the source text
+ */
+export const loadOriginalSourceText = memoizeableAction(
+  "loadOriginalSourceText",
+  {
+    getValue: ({ source }, { getState }) => {
+      if (!source) {
+        return null;
+      }
+
+      const sourceTextContent = getSourceTextContent(
+        getState(),
+        createLocation({
+          sourceId: source.id,
+        })
+      );
+      if (!sourceTextContent || sourceTextContent.state === "pending") {
+        return sourceTextContent;
+      }
+
+      // This currently swallows source-load-failure since we return fulfilled
+      // here when content.state === "rejected". In an ideal world we should
+      // propagate that error upward.
+      return fulfilled(sourceTextContent);
+    },
+    createKey: ({ source }, { getState }) => {
+      const epoch = getSourcesEpoch(getState());
+      return `${epoch}:${source.id}`;
+    },
+    action: ({ cx, source }, thunkArgs) =>
+      loadOriginalSourceTextPromise(cx, source, thunkArgs),
+  }
+);
+
+export function loadSourceText(cx, source, sourceActor) {
+  return async ({ dispatch, getState }) => {
     if (!source) {
       return null;
     }
-
-    const sourceTextContent = getSourceTextContent(getState(), source.id);
-    if (!sourceTextContent || sourceTextContent.state === "pending") {
-      return sourceTextContent;
+    if (source.isOriginal) {
+      return dispatch(loadOriginalSourceText({ cx, source }));
     }
-
-    // if a source actor is specified,lets also check that the source actor for the
-    // currently loaded text.
-    if (sourceActor && sourceTextContent && isFulfilled(sourceTextContent)) {
-      if (
-        sourceTextContent.value.actorId &&
-        sourceTextContent.value.actorId !== sourceActor?.actor
-      ) {
-        return null;
-      }
+    if (!sourceActor) {
+      sourceActor = getFirstSourceActorForGeneratedSource(
+        getState(),
+        source.id,
+        source.thread
+      );
     }
-
-    // This currently swallows source-load-failure since we return fulfilled
-    // here when content.state === "rejected". In an ideal world we should
-    // propagate that error upward.
-    return fulfilled(source);
-  },
-  createKey: ({ source }, { getState }) => {
-    const epoch = getSourcesEpoch(getState());
-    return `${epoch}:${source.id}`;
-  },
-  action: ({ cx, source, sourceActor }, thunkArgs) =>
-    loadSourceTextPromise(cx, source, sourceActor, thunkArgs),
-});
+    return dispatch(loadGeneratedSourceText({ cx, sourceActor }));
+  };
+}

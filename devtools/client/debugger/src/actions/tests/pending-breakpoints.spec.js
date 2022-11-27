@@ -80,8 +80,12 @@ describe("when adding breakpoints", () => {
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("foo.js"))
     );
-    await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
-    await dispatch(actions.loadSourceText({ cx, source }));
+    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
+      getState(),
+      source.id
+    );
+
+    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
 
     const bp = generateBreakpoint("foo.js", 5, 1);
     const id = makePendingLocationId(bp.location);
@@ -113,18 +117,30 @@ describe("when adding breakpoints", () => {
         mockSourceMaps()
       );
 
-      await dispatch(actions.newGeneratedSource(makeSource("foo")));
-      await dispatch(actions.newGeneratedSource(makeSource("foo2")));
-
       const source1 = await dispatch(
         actions.newGeneratedSource(makeSource("foo"))
       );
+
+      const sourceActor1 = selectors.getFirstSourceActorForGeneratedSource(
+        getState(),
+        source1.id
+      );
+
       const source2 = await dispatch(
         actions.newGeneratedSource(makeSource("foo2"))
       );
 
-      await dispatch(actions.loadSourceText({ cx, source: source1 }));
-      await dispatch(actions.loadSourceText({ cx, source: source2 }));
+      const sourceActor2 = selectors.getFirstSourceActorForGeneratedSource(
+        getState(),
+        source2.id
+      );
+
+      await dispatch(
+        actions.loadGeneratedSourceText({ cx, sourceActor: sourceActor1 })
+      );
+      await dispatch(
+        actions.loadGeneratedSourceText({ cx, sourceActor: sourceActor2 })
+      );
 
       await dispatch(actions.addBreakpoint(cx, breakpoint1.location));
       await dispatch(actions.addBreakpoint(cx, breakpoint2.location));
@@ -145,11 +161,16 @@ describe("when adding breakpoints", () => {
         mockSourceMaps()
       );
 
-      await dispatch(actions.newGeneratedSource(makeSource("foo")));
       const source = await dispatch(
         actions.newGeneratedSource(makeSource("foo"))
       );
-      await dispatch(actions.loadSourceText({ cx, source }));
+
+      const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
+        getState(),
+        source.id
+      );
+
+      await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
 
       await dispatch(
         actions.addBreakpoint(cx, breakpoint1.location, { hidden: true })
@@ -166,18 +187,28 @@ describe("when adding breakpoints", () => {
         mockSourceMaps()
       );
 
-      await dispatch(actions.newGeneratedSource(makeSource("foo")));
-      await dispatch(actions.newGeneratedSource(makeSource("foo2")));
-
       const source1 = await dispatch(
         actions.newGeneratedSource(makeSource("foo"))
       );
+      const sourceActor1 = selectors.getFirstSourceActorForGeneratedSource(
+        getState(),
+        source1.id
+      );
+
       const source2 = await dispatch(
         actions.newGeneratedSource(makeSource("foo2"))
       );
+      const sourceActor2 = selectors.getFirstSourceActorForGeneratedSource(
+        getState(),
+        source2.id
+      );
 
-      await dispatch(actions.loadSourceText({ cx, source: source1 }));
-      await dispatch(actions.loadSourceText({ cx, source: source2 }));
+      await dispatch(
+        actions.loadGeneratedSourceText({ cx, sourceActor: sourceActor1 })
+      );
+      await dispatch(
+        actions.loadGeneratedSourceText({ cx, sourceActor: sourceActor2 })
+      );
 
       await dispatch(actions.addBreakpoint(cx, breakpoint1.location));
       await dispatch(actions.addBreakpoint(cx, breakpoint2.location));
@@ -203,8 +234,12 @@ describe("when changing an existing breakpoint", () => {
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("foo"))
     );
-    await dispatch(actions.newGeneratedSource(makeSource("foo")));
-    await dispatch(actions.loadSourceText({ cx, source }));
+    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
+      getState(),
+      source.id
+    );
+
+    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
 
     await dispatch(actions.addBreakpoint(cx, bp.location));
     await dispatch(
@@ -224,12 +259,15 @@ describe("when changing an existing breakpoint", () => {
     const bp = generateBreakpoint("foo");
     const id = makePendingLocationId(bp.location);
 
-    await dispatch(actions.newGeneratedSource(makeSource("foo")));
-
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("foo"))
     );
-    await dispatch(actions.loadSourceText({ cx, source }));
+    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
+      getState(),
+      source.id
+    );
+
+    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
 
     await dispatch(actions.addBreakpoint(cx, bp.location));
     await dispatch(actions.disableBreakpoint(cx, bp));
@@ -249,8 +287,12 @@ describe("when changing an existing breakpoint", () => {
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("foo.js"))
     );
-    await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
-    await dispatch(actions.loadSourceText({ cx, source }));
+    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
+      getState(),
+      source.id
+    );
+
+    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
 
     const id = makePendingLocationId(bp.location);
 
@@ -283,12 +325,15 @@ describe("initializing when pending breakpoints exist in prefs", () => {
     );
     const bar = generateBreakpoint("bar.js", 5, 1);
 
-    await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
-
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("bar.js"))
     );
-    await dispatch(actions.loadSourceText({ cx, source }));
+    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
+      getState(),
+      source.id
+    );
+
+    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
     await dispatch(actions.addBreakpoint(cx, bar.location));
 
     const bps = selectors.getPendingBreakpointList(getState());
@@ -306,8 +351,12 @@ describe("initializing when pending breakpoints exist in prefs", () => {
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("foo.js"))
     );
-    await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
-    await dispatch(actions.loadSourceText({ cx, source }));
+    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
+      getState(),
+      source.id
+    );
+
+    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
 
     await dispatch(actions.addBreakpoint(cx, bp.location));
 
@@ -326,11 +375,15 @@ describe("initializing with disabled pending breakpoints in prefs", () => {
 
     const { getState, dispatch, cx } = store;
 
-    await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("bar.js"))
     );
-    await dispatch(actions.loadSourceText({ cx, source }));
+    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
+      getState(),
+      source.id
+    );
+
+    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
 
     await waitForState(store, state => {
       const bps = selectors.getBreakpointsForSource(state, source.id);
@@ -364,11 +417,15 @@ describe("adding sources", () => {
 
     expect(selectors.getBreakpointCount(getState())).toEqual(0);
 
-    await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("bar.js"))
     );
-    await dispatch(actions.loadSourceText({ cx, source }));
+    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
+      getState(),
+      source.id
+    );
+
+    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
 
     await waitForState(store, state => selectors.getBreakpointCount(state) > 0);
 
@@ -405,7 +462,6 @@ describe("adding sources", () => {
 
     expect(selectors.getBreakpointCount(getState())).toEqual(0);
 
-    await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
     await dispatch(
       actions.newGeneratedSource(makeSource("bar.js", { sourceMapURL: "foo" }))
     );
@@ -425,13 +481,24 @@ describe("adding sources", () => {
 
     expect(selectors.getBreakpointCount(getState())).toEqual(0);
 
-    await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
-    await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
     const [source1, source2] = await dispatch(
       actions.newGeneratedSources([makeSource("bar.js"), makeSource("foo.js")])
     );
-    await dispatch(actions.loadSourceText({ cx, source: source1 }));
-    await dispatch(actions.loadSourceText({ cx, source: source2 }));
+    const sourceActor1 = selectors.getFirstSourceActorForGeneratedSource(
+      getState(),
+      source1.id
+    );
+    const sourceActor2 = selectors.getFirstSourceActorForGeneratedSource(
+      getState(),
+      source2.id
+    );
+
+    await dispatch(
+      actions.loadGeneratedSourceText({ cx, sourceActor: sourceActor1 })
+    );
+    await dispatch(
+      actions.loadGeneratedSourceText({ cx, sourceActor: sourceActor2 })
+    );
 
     await waitForState(store, state => selectors.getBreakpointCount(state) > 0);
     expect(selectors.getBreakpointCount(getState())).toEqual(1);

@@ -22,14 +22,16 @@ describe("sources - pretty print", () => {
       getState(),
       source.id
     );
-    await dispatch(actions.loadSourceText({ cx, source, sourceActor }));
+    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
 
     await dispatch(createPrettySource(cx, source.id));
 
     const prettyURL = `${source.url}:formatted`;
     const pretty = selectors.getSourceByURL(getState(), prettyURL);
     const content = pretty
-      ? selectors.getSourceContent(getState(), pretty.id)
+      ? selectors.getSettledSourceTextContent(getState(), {
+          sourceId: pretty.id,
+        })
       : null;
     expect(pretty && pretty.url.includes(prettyURL)).toEqual(true);
     expect(pretty).toMatchSnapshot();
@@ -54,7 +56,7 @@ describe("sources - pretty print", () => {
       source.id
     );
 
-    await dispatch(actions.loadSourceText({ cx, source, sourceActor }));
+    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
 
     await dispatch(actions.togglePrettyPrint(cx, source.id));
     expect(selectors.getSourceCount(getState())).toEqual(2);
@@ -66,7 +68,13 @@ describe("sources - pretty print", () => {
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("foobar.js"))
     );
-    await dispatch(actions.loadSourceText({ cx, source }));
+
+    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
+      getState(),
+      source.id
+    );
+
+    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
 
     await dispatch(actions.togglePrettyPrint(cx, source.id));
     expect(selectors.getSourceCount(getState())).toEqual(2);
