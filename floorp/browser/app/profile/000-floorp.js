@@ -30,6 +30,8 @@ pref("update.id.floorp", "linux");
 // userAgent
 pref("floorp.browser.UserAgent", 0);
 
+pref("floorp.chrome.theme.mode", -1);
+
 //ブラウザーUIのカスタマイズ設定
 pref("floorp.hide.tabbrowser-tab.enable", false); //水平タブ削除
 pref("floorp.optimized.msbutton.ope", false); //サイドボタン付きマウス操作にブラウザーを最適化
