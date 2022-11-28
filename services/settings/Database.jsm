@@ -486,7 +486,7 @@ Database._shutdownHandler = () => {
       // to remove the item from the set. We don't care about that.
       if (ex.result != NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR) {
         // Report any other errors:
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
   }

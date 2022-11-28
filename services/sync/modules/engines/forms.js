@@ -55,7 +55,7 @@ var FormWrapper = {
     if (!lazy.FormHistory.enabled) {
       return; // update isn't going to do anything.
     }
-    await lazy.FormHistory.update(changes).catch(Cu.reportError);
+    await lazy.FormHistory.update(changes).catch(console.error);
   },
 
   async getEntry(guid) {

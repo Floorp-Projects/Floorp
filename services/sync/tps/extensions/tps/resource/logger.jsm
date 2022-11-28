@@ -56,7 +56,7 @@ var Logger = {
 
   write(data) {
     if (this._converter == null) {
-      Cu.reportError("TPS Logger.write called with _converter == null!");
+      console.error("TPS Logger.write called with _converter == null!");
       return;
     }
     this._converter.writeString(data);

@@ -320,7 +320,7 @@ RESTRequest.prototype = {
           // If someone handed us an object but also a custom content-type
           // it's probably confused. We could go to even further lengths to
           // respect it, but this shouldn't happen in practice.
-          Cu.reportError(
+          console.error(
             "rest.js found an object to JSON.stringify but also a " +
               "content-type header with a charset specification. " +
               "This probably isn't going to do what you expect"
