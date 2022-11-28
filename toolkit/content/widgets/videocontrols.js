@@ -591,9 +591,12 @@ this.VideoControlsImplWidget = class {
           return;
         }
 
+        // We only want to show the toggle when the closed captions menu
+        // is closed, in order to avoid visual overlap.
         if (
           this.pipToggleEnabled &&
           !this.isShowingPictureInPictureMessage &&
+          this.textTrackListContainer.hidden &&
           VideoControlsWidget.shouldShowPictureInPictureToggle(
             this.prefs,
             this.video,
@@ -2171,11 +2174,13 @@ this.VideoControlsImplWidget = class {
       hideClosedCaptionMenu() {
         this.textTrackListContainer.hidden = true;
         this.closedCaptionButton.setAttribute("aria-expanded", "false");
+        this.updatePictureInPictureToggleDisplay();
       },
 
       showClosedCaptionMenu() {
         this.textTrackListContainer.hidden = false;
         this.closedCaptionButton.setAttribute("aria-expanded", "true");
+        this.updatePictureInPictureToggleDisplay();
       },
 
       toggleClosedCaption() {
