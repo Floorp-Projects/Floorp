@@ -418,3 +418,15 @@ XXX</pre>`,
     iframe: !isWinNoCache,
   }
 );
+
+/**
+ * Test text bounds with an invalid end offset.
+ */
+addAccessibleTask(
+  `<p id="p">a</p>`,
+  async function(browser, docAcc) {
+    const p = findAccessibleChildByID(docAcc, "p");
+    testTextBounds(p, 0, 2, [0, 0, 0, 0], COORDTYPE_SCREEN_RELATIVE);
+  },
+  { chrome: true, topLevel: !isWinNoCache }
+);
