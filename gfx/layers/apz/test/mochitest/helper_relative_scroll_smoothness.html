@@ -121,7 +121,7 @@ async function test() {
 }
 
 function isOnChaosMode() {
-  return Services.env.get("MOZ_CHAOSMODE");
+  return SpecialPowers.Services.env.get("MOZ_CHAOSMODE");
 }
 
 if (searchParams.get("input-type") == "native-key" &&
