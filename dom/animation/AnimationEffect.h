@@ -106,9 +106,6 @@ class AnimationEffect : public nsISupports, public nsWrapperCache {
   RefPtr<Animation> mAnimation;
   TimingParams mTiming;
   Maybe<TimingParams> mNormalizedTiming;
-
-  // Whether the Animation is System, ResistFingerprinting, or neither
-  enum RTPCallerType mRTPCallerType;
 };
 
 }  // namespace dom

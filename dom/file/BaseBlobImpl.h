@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_BaseBlobImpl_h
 #define mozilla_dom_BaseBlobImpl_h
 
-#include "nsIGlobalObject.h"
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/ErrorResult.h"
 
@@ -127,7 +126,7 @@ class BaseBlobImpl : public BlobImpl {
    */
   static uint64_t NextSerialNumber();
 
-  void SetLastModificationDate(RTPCallerType aRTPCallerType, int64_t aDate);
+  void SetLastModificationDate(bool aCrossOriginIsolated, int64_t aDate);
   void SetLastModificationDatePrecisely(int64_t aDate);
 
 #ifdef DEBUG

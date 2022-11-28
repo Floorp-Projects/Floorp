@@ -83,9 +83,7 @@ class MOZ_RAII AutoMutationBatchForAnimation {
 // ---------------------------------------------------------------------------
 
 Animation::Animation(nsIGlobalObject* aGlobal)
-    : DOMEventTargetHelper(aGlobal),
-      mAnimationIndex(sNextAnimationIndex++),
-      mRTPCallerType(aGlobal->RTPCallerType()) {}
+    : DOMEventTargetHelper(aGlobal), mAnimationIndex(sNextAnimationIndex++) {}
 
 Animation::~Animation() = default;
 
@@ -142,14 +140,14 @@ already_AddRefed<Animation> Animation::Constructor(
     const GlobalObject& aGlobal, AnimationEffect* aEffect,
     const Optional<AnimationTimeline*>& aTimeline, ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  RefPtr<Animation> animation = new Animation(global);
 
   AnimationTimeline* timeline;
-  Document* document =
-      AnimationUtils::GetCurrentRealmDocument(aGlobal.Context());
-
   if (aTimeline.WasPassed()) {
     timeline = aTimeline.Value();
   } else {
+    Document* document =
+        AnimationUtils::GetCurrentRealmDocument(aGlobal.Context());
     if (!document) {
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
@@ -157,7 +155,6 @@ already_AddRefed<Animation> Animation::Constructor(
     timeline = document->Timeline();
   }
 
-  RefPtr<Animation> animation = new Animation(global);
   animation->SetTimelineNoUpdate(timeline);
   animation->SetEffectNoUpdate(aEffect);
 
@@ -875,7 +872,7 @@ void Animation::CommitStyles(ErrorResult& aRv) {
 // ---------------------------------------------------------------------------
 
 Nullable<double> Animation::GetStartTimeAsDouble() const {
-  return AnimationUtils::TimeDurationToDouble(mStartTime, mRTPCallerType);
+  return AnimationUtils::TimeDurationToDouble(mStartTime);
 }
 
 void Animation::SetStartTimeAsDouble(const Nullable<double>& aStartTime) {
@@ -883,8 +880,7 @@ void Animation::SetStartTimeAsDouble(const Nullable<double>& aStartTime) {
 }
 
 Nullable<double> Animation::GetCurrentTimeAsDouble() const {
-  return AnimationUtils::TimeDurationToDouble(GetCurrentTimeAsDuration(),
-                                              mRTPCallerType);
+  return AnimationUtils::TimeDurationToDouble(GetCurrentTimeAsDuration());
 }
 
 void Animation::SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,

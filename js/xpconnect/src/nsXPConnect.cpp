@@ -477,22 +477,23 @@ JSObject* CreateGlobalObject(JSContext* cx, const JSClass* clasp,
 }
 
 void InitGlobalObjectOptions(JS::RealmOptions& aOptions,
-                             bool aIsSystemPrincipal,
-                             bool aShouldResistFingerprinting) {
+                             nsIPrincipal* aPrincipal) {
   bool shouldDiscardSystemSource = ShouldDiscardSystemSource();
 
-  if (aIsSystemPrincipal) {
+  bool isSystem = aPrincipal->IsSystemPrincipal();
+
+  if (isSystem) {
     // Make toSource functions [ChromeOnly]
     aOptions.creationOptions().setToSourceEnabled(true);
     // Make sure [SecureContext] APIs are visible:
     aOptions.creationOptions().setSecureContext(true);
     aOptions.behaviors().setClampAndJitterTime(false);
   }
-  aOptions.behaviors().setShouldResistFingerprinting(
-      aShouldResistFingerprinting);
 
   if (shouldDiscardSystemSource) {
-    aOptions.behaviors().setDiscardSource(aIsSystemPrincipal);
+    bool discardSource = isSystem;
+
+    aOptions.behaviors().setDiscardSource(discardSource);
   }
 }
 
@@ -536,13 +537,8 @@ nsresult InitClassesWithNewWrappedGlobal(JSContext* aJSContext,
   // We pass null for the 'extra' pointer during global object creation, so
   // we need to have a principal.
   MOZ_ASSERT(aPrincipal);
-  // All uses (at time of writing) were System Principal, meaning
-  // aShouldResistFingerprinting can be hardcoded to false.
-  // If this changes, ShouldRFP needs to be updated accordingly.
-  MOZ_RELEASE_ASSERT(aPrincipal->IsSystemPrincipal());
 
-  InitGlobalObjectOptions(aOptions, /* aSystemPrincipal */ true,
-                          /* aShouldResistFingerprinting */ false);
+  InitGlobalObjectOptions(aOptions, aPrincipal);
 
   // Call into XPCWrappedNative to make a new global object, scope, and global
   // prototype.

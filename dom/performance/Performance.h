@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsCOMPtr.h"
-#include "nsContentUtils.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsTObserverArray.h"
 
@@ -120,7 +119,7 @@ class Performance : public DOMEventTargetHelper {
 
   virtual TimeStamp CreationTimeStamp() const = 0;
 
-  RTPCallerType RTPCallerType() const { return mRTPCallerType; }
+  bool IsSystemPrincipal() const { return mSystemPrincipal; }
 
   DOMHighResTimeStamp TimeStampToDOMHighResForRendering(TimeStamp) const;
 
@@ -158,8 +157,8 @@ class Performance : public DOMEventTargetHelper {
   virtual bool IsGlobalObjectWindow() const { return false; };
 
  protected:
-  Performance(nsIGlobalObject* aGlobal);
-  Performance(nsPIDOMWindowInner* aWindow);
+  Performance(nsIGlobalObject* aGlobal, bool aSystemPrincipal);
+  Performance(nsPIDOMWindowInner* aWindow, bool aSystemPrincipal);
 
   virtual ~Performance();
 
@@ -205,7 +204,7 @@ class Performance : public DOMEventTargetHelper {
 
   RefPtr<PerformanceService> mPerformanceService;
 
-  enum RTPCallerType mRTPCallerType;
+  bool mSystemPrincipal;
 
  private:
   MOZ_ALWAYS_INLINE bool CanAddResourceTimingEntry();
