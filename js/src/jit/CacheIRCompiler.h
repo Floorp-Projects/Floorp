@@ -877,12 +877,12 @@ class MOZ_RAII CacheIRCompiler {
   uintptr_t readStubWord(uint32_t offset, StubField::Type type) {
     MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
     MOZ_ASSERT((offset % sizeof(uintptr_t)) == 0);
-    return writer_.readStubFieldForIon(offset, type).asWord();
+    return writer_.readStubField(offset, type).asWord();
   }
   uint64_t readStubInt64(uint32_t offset, StubField::Type type) {
     MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
     MOZ_ASSERT((offset % sizeof(uintptr_t)) == 0);
-    return writer_.readStubFieldForIon(offset, type).asInt64();
+    return writer_.readStubField(offset, type).asInt64();
   }
   int32_t int32StubField(uint32_t offset) {
     MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);

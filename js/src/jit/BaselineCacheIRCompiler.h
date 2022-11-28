@@ -41,6 +41,9 @@ enum class TailCallVMFunctionId;
 
 enum class ICAttachResult { Attached, DuplicateStub, TooLarge, OOM };
 
+bool TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback, JSScript* script,
+                     ICScript* icScript);
+
 ICAttachResult AttachBaselineCacheIRStub(JSContext* cx,
                                          const CacheIRWriter& writer,
                                          CacheKind kind, JSScript* outerScript,

@@ -6,7 +6,9 @@
 
 #include "jit/BaselineCacheIRCompiler.h"
 
+#include "gc/GC.h"
 #include "jit/CacheIR.h"
+#include "jit/CacheIRCloner.h"
 #include "jit/CacheIRWriter.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
@@ -22,9 +24,11 @@
 #include "vm/JSAtom.h"
 #include "vm/StaticStrings.h"
 
+#include "jit/JitScript-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"
 #include "jit/VMFunctionList-inl.h"
+#include "vm/List-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -1998,6 +2002,176 @@ static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* script,
     return icScript->jitScriptStubSpace();
   }
   return script->zone()->jitZone()->optimizedStubSpace();
+}
+
+bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
+                              JSScript* script, ICScript* icScript) {
+  ICEntry* icEntry = icScript->icEntryForStub(fallback);
+  ICStub* entryStub = icEntry->firstStub();
+
+  // Don't fold unless there are at least two stubs.
+  if (entryStub == fallback) {
+    return true;
+  }
+  ICCacheIRStub* firstStub = entryStub->toCacheIRStub();
+  if (firstStub->next()->isFallback()) {
+    return true;
+  }
+
+  const uint8_t* firstStubData = firstStub->stubDataStart();
+  const CacheIRStubInfo* stubInfo = firstStub->stubInfo();
+
+  // Check to see if:
+  //   a) all of the stubs in this chain have the exact same code.
+  //   b) all of the stubs have the same stub field data, except
+  //      for a single GuardShape where they differ.
+  //   c) at least one stub after the first has a non-zero entry count.
+  //
+  // If all of these conditions hold, then we generate a single stub
+  // that covers all the existing cases by replacing GuardShape with
+  // GuardMultipleShapes.
+
+  uint32_t numActive = 0;
+  Maybe<uint32_t> foldableFieldOffset;
+  RootedValue shape(cx);
+  RootedValueVector shapeList(cx);
+
+  auto addShape = [&shapeList](uintptr_t rawShape) -> bool {
+    Value v = PrivateGCThingValue(reinterpret_cast<Shape*>(rawShape));
+    return shapeList.append(v);
+  };
+
+  for (ICCacheIRStub* other = firstStub->nextCacheIR(); other;
+       other = other->nextCacheIR()) {
+    // Verify that the stubs share the same code.
+    if (other->stubInfo() != stubInfo) {
+      return true;
+    }
+    const uint8_t* otherStubData = other->stubDataStart();
+
+    if (other->enteredCount() > 0) {
+      numActive++;
+    }
+
+    uint32_t fieldIndex = 0;
+    size_t offset = 0;
+    while (stubInfo->fieldType(fieldIndex) != StubField::Type::Limit) {
+      StubField::Type fieldType = stubInfo->fieldType(fieldIndex);
+
+      if (StubField::sizeIsWord(fieldType)) {
+        uintptr_t firstRaw = stubInfo->getStubRawWord(firstStubData, offset);
+        uintptr_t otherRaw = stubInfo->getStubRawWord(otherStubData, offset);
+
+        if (firstRaw != otherRaw) {
+          if (fieldType != StubField::Type::Shape) {
+            // Case 1: a field differs that is not a Shape. We only support
+            // folding GuardShape to GuardMultipleShapes.
+            return true;
+          }
+          if (foldableFieldOffset.isNothing()) {
+            // Case 2: this is the first field where the stub data differs.
+            foldableFieldOffset.emplace(offset);
+            if (!addShape(firstRaw) || !addShape(otherRaw)) {
+              return false;
+            }
+          } else if (*foldableFieldOffset == offset) {
+            // Case 3: this is the corresponding offset in a different stub.
+            if (!addShape(otherRaw)) {
+              return false;
+            }
+          } else {
+            // Case 4: we have found more than one field that differs.
+            return true;
+          }
+        }
+      } else {
+        MOZ_ASSERT(StubField::sizeIsInt64(fieldType));
+
+        // We do not support folding any ops with int64-sized fields.
+        if (stubInfo->getStubRawInt64(firstStubData, offset) !=
+            stubInfo->getStubRawInt64(otherStubData, offset)) {
+          return true;
+        }
+      }
+
+      offset += StubField::sizeInBytes(fieldType);
+      fieldIndex++;
+    }
+
+    // We should never attach two completely identical stubs.
+    MOZ_ASSERT(foldableFieldOffset.isSome());
+  }
+
+  if (numActive == 0) {
+    return true;
+  }
+
+  // Clone the CacheIR, replacing GuardShape with GuardMultipleShapes.
+  CacheIRWriter writer(cx);
+  CacheIRReader reader(stubInfo);
+  CacheIRCloner cloner(firstStub);
+
+  // Initialize the operands.
+  CacheKind cacheKind = stubInfo->kind();
+  for (uint32_t i = 0; i < NumInputsForCacheKind(cacheKind); i++) {
+    writer.setInputOperandId(i);
+  }
+
+  bool success = false;
+  while (reader.more()) {
+    CacheOp op = reader.readOp();
+    switch (op) {
+      case CacheOp::GuardShape: {
+        ObjOperandId objId = reader.objOperandId();
+        uint32_t shapeOffset = reader.stubOffset();
+        if (shapeOffset == *foldableFieldOffset) {
+          // Ensure that the allocation of the ListObject doesn't trigger a GC
+          // and free the stubInfo we're currently reading. Note that
+          // AutoKeepJitScripts isn't sufficient, because optimized stubs can be
+          // discarded even if the JitScript is preserved.
+          gc::AutoSuppressGC suppressGC(cx);
+
+          Rooted<ListObject*> shapeObj(cx, ListObject::create(cx));
+          if (!shapeObj) {
+            return false;
+          }
+          for (uint32_t i = 0; i < shapeList.length(); i++) {
+            if (!shapeObj->append(cx, shapeList[i])) {
+              cx->recoverFromOutOfMemory();
+              return false;
+            }
+          }
+
+          writer.guardMultipleShapes(objId, shapeObj);
+          success = true;
+        } else {
+          Shape* shape = stubInfo->getStubField<Shape*>(firstStub, shapeOffset);
+          writer.guardShape(objId, shape);
+        }
+        break;
+      }
+      default:
+        cloner.cloneOp(op, reader, writer);
+        break;
+    }
+  }
+  if (!success) {
+    // If the shape field that differed was not part of a GuardShape,
+    // we can't fold these stubs together.
+    return true;
+  }
+
+  // Replace the existing stubs with the new folded stub.
+  fallback->discardStubs(cx, icEntry);
+
+  ICAttachResult result = AttachBaselineCacheIRStub(
+      cx, writer, cacheKind, script, icScript, fallback, "StubFold");
+  if (result == ICAttachResult::OOM) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  MOZ_ASSERT(result == ICAttachResult::Attached);
+  return true;
 }
 
 ICAttachResult js::jit::AttachBaselineCacheIRStub(
