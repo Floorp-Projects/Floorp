@@ -638,7 +638,7 @@ class SyncRecord {
     }
     if (shouldBeCurrent) {
       if (!this.currentEngine || engineName != this.currentEngine.name) {
-        log.error(`Notification for engine ${engineName} but it isn't current`);
+        log.info(`Notification for engine ${engineName} but it isn't current`);
         return true;
       }
     }
