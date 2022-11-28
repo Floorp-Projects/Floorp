@@ -59,7 +59,6 @@ namespace JS::loader {
 class ModuleLoaderBase;
 }  // namespace JS::loader
 
-
 // Reduce Timer Precision (RTP) Caller Type
 // This lives here because anything dealing with RTPCallerType determines it
 // through this object.
