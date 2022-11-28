@@ -2046,9 +2046,8 @@ static nsresult CreateNativeGlobalForInner(
   creationOptions.setDefineSharedArrayBufferConstructor(
       aDefineSharedArrayBufferConstructor);
 
-  xpc::InitGlobalObjectOptions(
-      options, principal->IsSystemPrincipal(),
-      aDocument->ShouldResistFingerprinting());
+  xpc::InitGlobalObjectOptions(options, principal->IsSystemPrincipal(),
+                               aDocument->ShouldResistFingerprinting());
 
   // Determine if we need the Components object.
   bool needComponents = principal->IsSystemPrincipal();
@@ -5471,9 +5470,9 @@ void nsGlobalWindowOuter::ResizeByOuter(int32_t aWidthDif, int32_t aHeightDif,
   CheckForDPIChange();
 }
 
-void nsGlobalWindowOuter::SizeToContentOuter(CallerType aCallerType,
-                                             const SizeToContentConstraints& aConstraints,
-                                             ErrorResult& aError) {
+void nsGlobalWindowOuter::SizeToContentOuter(
+    CallerType aCallerType, const SizeToContentConstraints& aConstraints,
+    ErrorResult& aError) {
   if (!mDocShell) {
     return;
   }
@@ -5495,7 +5494,8 @@ void nsGlobalWindowOuter::SizeToContentOuter(CallerType aCallerType,
     return aError.Throw(NS_ERROR_FAILURE);
   }
 
-  auto contentSize = cv->GetContentSize(aConstraints.mMaxWidth, aConstraints.mMaxHeight, aConstraints.mPrefWidth);
+  auto contentSize = cv->GetContentSize(
+      aConstraints.mMaxWidth, aConstraints.mMaxHeight, aConstraints.mPrefWidth);
   if (!contentSize) {
     return aError.Throw(NS_ERROR_FAILURE);
   }
