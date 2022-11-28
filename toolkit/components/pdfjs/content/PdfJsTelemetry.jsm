@@ -20,64 +20,10 @@ var EXPORTED_SYMBOLS = ["PdfJsTelemetry"];
 
 var PdfJsTelemetry = {
   onViewerIsUsed() {
-    Services.telemetry.scalarAdd("pdf.viewer.used", 1);
-  },
-  onFallbackError(featureId) {
-    let histogram = Services.telemetry.getHistogramById(
-      "PDF_VIEWER_FALLBACK_ERROR"
-    );
-    histogram.add(featureId ?? "unknown");
-  },
-  onDocumentSize(size) {
-    let histogram = Services.telemetry.getHistogramById(
-      "PDF_VIEWER_DOCUMENT_SIZE_KB"
-    );
-    histogram.add(size / 1024);
-  },
-  onDocumentVersion(versionId) {
-    let histogram = Services.telemetry.getHistogramById(
-      "PDF_VIEWER_DOCUMENT_VERSION_2"
-    );
-    histogram.add(versionId);
-  },
-  onDocumentGenerator(generatorId) {
-    let histogram = Services.telemetry.getHistogramById(
-      "PDF_VIEWER_DOCUMENT_GENERATOR_2"
-    );
-    histogram.add(generatorId);
-  },
-  onEmbed(isObject) {
-    let histogram = Services.telemetry.getHistogramById("PDF_VIEWER_EMBED_2");
-    histogram.add(isObject ? "object_embed" : "iframe");
-  },
-  onFontType(fontTypeId) {
-    let histogram = Services.telemetry.getHistogramById(
-      "PDF_VIEWER_FONT_TYPES_2"
-    );
-    histogram.add(fontTypeId);
-  },
-  onForm(formType) {
-    let histogram = Services.telemetry.getHistogramById("PDF_VIEWER_FORM_2");
-    histogram.add(formType);
-  },
-  onPrint() {
-    Services.telemetry.scalarAdd("pdf.viewer.print", 1);
-  },
-  onStreamType(streamTypeId) {
-    let histogram = Services.telemetry.getHistogramById(
-      "PDF_VIEWER_STREAM_TYPES_2"
-    );
-    histogram.add(streamTypeId);
+    Glean.pdfjs.used.add(1);
   },
   onTimeToView(ms) {
-    let histogram = Services.telemetry.getHistogramById(
-      "PDF_VIEWER_TIME_TO_VIEW_MS"
-    );
-    histogram.add(ms);
-  },
-  onTagged(tagged) {
-    let histogram = Services.telemetry.getHistogramById("PDF_VIEWER_TAGGED");
-    histogram.add(tagged);
+    Glean.pdfjs.timeToView.accumulateSamples([ms]);
   },
   onEditing(type) {
     if (["ink", "freetext", "print", "save"].includes(type)) {
