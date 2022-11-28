@@ -1244,6 +1244,8 @@ var gUnifiedExtensions = {
 
       this.permListener = () => this.updateAttention();
       lazy.ExtensionPermissions.addListener(this.permListener);
+
+      gNavToolbox.addEventListener("customizationstarting", this);
     }
 
     this._initialized = true;
@@ -1254,6 +1256,7 @@ var gUnifiedExtensions = {
       lazy.ExtensionPermissions.removeListener(this.permListener);
       this.permListener = null;
     }
+    gNavToolbox.removeEventListener("customizationstarting", this);
   },
 
   get isEnabled() {
@@ -1394,6 +1397,10 @@ var gUnifiedExtensions = {
 
       case "ViewHiding":
         this.onPanelViewHiding(event.target);
+        break;
+
+      case "customizationstarting":
+        this.panel.hidePopup();
         break;
     }
   },
