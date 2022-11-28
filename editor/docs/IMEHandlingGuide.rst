@@ -767,7 +767,7 @@ The composition is not committed synchronously but later
 
 This is the only case in a remote process in e10s mode or occurs on Linux even
 in non-e10s mode if the native IME is iBus. The callers of
-``NotifyIME(REQUEST_TOCOMMIT_COMPOSITION)`` may expect that composition string
+``NotifyIME(REQUEST_TO_COMMIT_COMPOSITION)`` may expect that composition string
 is committed immediately for their next job. For such a case,
 ``TextComposition::RequestToCommit()`` synthesizes DOM composition events and a
 DOM text event for emulating to commit composition synchronously. Additionally,
@@ -1005,9 +1005,9 @@ __ https://searchfox.org/mozilla-central/source/widget/windows/WinIMEHandler.cpp
 `mozilla::widget::IMMHandler`__
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This class is used when TSF mode is disabled by pref (``"intl.tsf.enable"``),
-focused content is a windowless plugin or active IME is for IMM (i.e., not TIP
-for TSF).
+This class is used when TSF mode is disabled by pref (``"intl.tsf.enabled"``
+since 108, formerly named ``"intl.tsf.enable"``), focused content is a
+windowless plugin or active IME is for IMM (i.e., not TIP for TSF).
 
 This class handles ``WM_IME_*`` messages and uses ``Imm*()`` API. This is a
 singleton class since Gecko supports only on IM context in a process.
