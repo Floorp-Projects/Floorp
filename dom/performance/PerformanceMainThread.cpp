@@ -361,8 +361,7 @@ DOMHighResTimeStamp PerformanceMainThread::GetPerformanceTimingFromString(
         "of sync");
   }
   return nsRFPService::ReduceTimePrecisionAsMSecs(
-      retValue, GetRandomTimelineSeed(), /* aIsSystemPrinciapl */ false,
-      CrossOriginIsolated());
+      retValue, GetRandomTimelineSeed(), mRTPCallerType);
 }
 
 void PerformanceMainThread::InsertUserEntry(PerformanceEntry* aEntry) {
