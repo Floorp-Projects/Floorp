@@ -6,9 +6,7 @@ import platform as platform_mod
 import sys
 
 # Base url for pulling the rustup installer.
-# Use the no-CNAME host for compatibilty with Python 2.7
-# which doesn't support SNI.
-RUSTUP_URL_BASE = "https://static-rust-lang-org.s3.amazonaws.com/rustup"
+RUSTUP_URL_BASE = "https://static.rust-lang.org/rustup"
 
 # Pull this to get the lastest stable version number.
 RUSTUP_MANIFEST = RUSTUP_URL_BASE + "/release-stable.toml"
