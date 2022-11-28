@@ -5622,6 +5622,12 @@
   value: 4000
   mirror: always
 
+# Whether to accelerate stroked paths.
+- name: gfx.canvas.accelerated.gpu-path-stroke
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # 0x7fff is the maximum supported xlib surface size and is more than enough for canvases.
 - name: gfx.canvas.max-size
   type: RelaxedAtomicInt32
