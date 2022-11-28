@@ -6,7 +6,7 @@
  * Site Data - Settings dialog
  */
 #sitesList {
-  min-height: 20em;
+  height: 20em;
 }
 
 /* Show selected items in high contrast mode. */
