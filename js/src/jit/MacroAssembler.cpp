@@ -3844,6 +3844,16 @@ void MacroAssembler::branchTestObjShapeList(
   Label done;
   Label* onMatch = cond == Assembler::Equal ? label : &done;
 
+  // Load the object's shape pointer into shapeScratch, and prepare to compare
+  // it with the shapes in the list. On 64-bit, we box the shape. On 32-bit,
+  // we only have to compare the 32-bit payload.
+#ifdef JS_PUNBOX64
+  loadPtr(Address(obj, JSObject::offsetOfShape()), endScratch);
+  tagValue(JSVAL_TYPE_PRIVATE_GCTHING, endScratch, ValueOperand(shapeScratch));
+#else
+  loadPtr(Address(obj, JSObject::offsetOfShape()), shapeScratch);
+#endif
+
   // Compute end pointer.
   Address lengthAddr(shapeElements,
                      ObjectElements::offsetOfInitializedLength());
@@ -3854,16 +3864,16 @@ void MacroAssembler::branchTestObjShapeList(
   Label loop;
   bind(&loop);
 
-  // Load a shape from the list into shapeScratch and compare against
-  // the object's shape.
-  unboxNonDouble(Address(shapeElements, 0), shapeScratch,
-                 JSVAL_TYPE_PRIVATE_GCTHING);
+  // Compare the object's shape with a shape from the list. Note that on 64-bit
+  // this includes the tag bits, but on 32-bit we only compare the low word of
+  // the value. This is fine because the list of shapes is never exposed and the
+  // tag is guaranteed to be PrivateGCThing.
   if (needSpectreMitigations) {
-    branchTestObjShape(Assembler::Equal, obj, shapeScratch, spectreScratch, obj,
-                       onMatch);
-  } else {
-    branchTestObjShapeNoSpectreMitigations(Assembler::Equal, obj, shapeScratch,
-                                           onMatch);
+    move32(Imm32(0), spectreScratch);
+  }
+  branchPtr(Assembler::Equal, Address(shapeElements, 0), shapeScratch, onMatch);
+  if (needSpectreMitigations) {
+    spectreMovePtr(Assembler::Equal, spectreScratch, obj);
   }
 
   // Advance to next shape and loop if not finished.
