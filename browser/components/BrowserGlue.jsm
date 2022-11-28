@@ -2766,7 +2766,7 @@ BrowserGlue.prototype = {
 
       {
         condition: AppConstants.MOZ_UPDATE_AGENT,
-        task: async () => {
+        task: () => {
           // Never in automation!  This is close to
           // `UpdateService.disabledForTesting`, but without creating the
           // service, which can perform a good deal of I/O in order to log its
@@ -2778,14 +2778,14 @@ BrowserGlue.prototype = {
             Services.prefs.getBoolPref("app.update.disabledForTesting", false);
           if (!disabledForTesting) {
             try {
-              await lazy.BackgroundUpdate.scheduleFirefoxMessagingSystemTargetingSnapshotting();
+              lazy.BackgroundUpdate.scheduleFirefoxMessagingSystemTargetingSnapshotting();
             } catch (e) {
               Cu.reportError(
                 "There was an error scheduling Firefox Messaging System targeting snapshotting: " +
                   e
               );
             }
-            await lazy.BackgroundUpdate.maybeScheduleBackgroundUpdateTask();
+            lazy.BackgroundUpdate.maybeScheduleBackgroundUpdateTask();
           }
         },
       },
