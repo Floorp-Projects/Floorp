@@ -9,6 +9,8 @@ add_task(async function test_startupCleanup() {
     "network.cache.shutdown_purge_in_background_task",
     true
   );
+  Services.prefs.setBoolPref("privacy.clearOnShutdown.cache", true);
+  Services.prefs.setBoolPref("privacy.sanitize.sanitizeOnShutdown", true);
   let dir = Services.dirsvc.get("ProfD", Ci.nsIFile);
   dir.append("cache2.2021-11-25-08-47-04.purge.bg_rm");
   Assert.equal(dir.exists(), false, `Folder ${dir.path} should not exist`);
@@ -33,4 +35,6 @@ add_task(async function test_startupCleanup() {
   Services.prefs.clearUserPref(
     "network.cache.shutdown_purge_in_background_task"
   );
+  Services.prefs.clearUserPref("privacy.clearOnShutdown.cache");
+  Services.prefs.clearUserPref("privacy.sanitize.sanitizeOnShutdown");
 });
