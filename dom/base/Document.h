@@ -3768,10 +3768,6 @@ class Document : public nsINode,
   }
   DOMIntersectionObserver& EnsureLazyLoadImageObserver();
 
-  DOMIntersectionObserver& EnsureContentVisibilityObserver();
-  void ObserveForContentVisibility(Element&);
-  void UnobserveForContentVisibility(Element&);
-
   ResizeObserver* GetLastRememberedSizeObserver() {
     return mLastRememberedSizeObserver;
   }
@@ -5139,10 +5135,6 @@ class Document : public nsINode,
   RefPtr<DOMIntersectionObserver> mLazyLoadImageObserver;
   // Used to measure how effective the lazyload thresholds are.
   RefPtr<DOMIntersectionObserver> mLazyLoadImageObserverViewport;
-
-  // Used for detecting when `content-visibility: auto` elements are near
-  // or far from the viewport.
-  RefPtr<DOMIntersectionObserver> mContentVisibilityObserver;
 
   // ResizeObserver for storing and removing the last remembered size.
   // @see {@link https://drafts.csswg.org/css-sizing-4/#last-remembered}

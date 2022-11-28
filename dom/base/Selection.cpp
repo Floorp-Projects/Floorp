@@ -9,8 +9,6 @@
  */
 
 #include "mozilla/dom/Selection.h"
-
-#include "LayoutConstants.h"
 #include "mozilla/intl/BidiEmbeddingLevel.h"
 
 #include "mozilla/AccessibleCaretEventHub.h"
@@ -3202,7 +3200,6 @@ void Selection::NotifySelectionListeners() {
   PresShell* presShell = GetPresShell();
   if (presShell) {
     doc = presShell->GetDocument();
-    presShell->ScheduleContentRelevancyUpdate(ContentRelevancyReason::Selected);
   }
 
   // We've notified all selection listeners even when some of them are removed

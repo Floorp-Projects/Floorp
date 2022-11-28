@@ -13,7 +13,6 @@
 
 #include <stdio.h>  // for FILE definition
 #include "FrameMetrics.h"
-#include "LayoutConstants.h"
 #include "TouchManager.h"
 #include "Units.h"
 #include "Visibility.h"
@@ -1750,13 +1749,6 @@ class PresShell final : public nsStubDocumentObserver,
    */
   bool IsForcingLayoutForHiddenContent(const nsIFrame*) const;
 
-  void RegisterContentVisibilityAutoFrame(nsIFrame* aFrame) {
-    mContentVisibilityAutoFrames.Insert(aFrame);
-  }
-
-  void UpdateRelevancyOfContentVisibilityAutoFrames();
-  void ScheduleContentRelevancyUpdate(ContentRelevancyReason aReason);
-
  private:
   ~PresShell();
 
@@ -3016,12 +3008,6 @@ class PresShell final : public nsStubDocumentObserver,
   nsTHashSet<nsIScrollableFrame*> mPendingScrollResnap;
 
   nsTHashSet<nsIContent*> mHiddenContentInForcedLayout;
-
-  nsTHashSet<nsIFrame*> mContentVisibilityAutoFrames;
-
-  // The type of content relevancy to update the next time content relevancy
-  // updates are triggered for `content-visibility: auto` frames.
-  ContentRelevancy mContentVisibilityRelevancyToUpdate;
 
   nsCallbackEventRequest* mFirstCallbackEventRequest = nullptr;
   nsCallbackEventRequest* mLastCallbackEventRequest = nullptr;
