@@ -786,11 +786,19 @@ bool mozTXTToHTMLConv::GlyphHit(const char16_t* aInString, int32_t aInLength,
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ">:o",
-                                 u"😄"_ns,  // yell, U+1F620
+                                 u"🤬"_ns,  // swearing, U+1F92C
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ">:-o",
-                                 u"😠"_ns,  // yell, U+1F620
+                                 u"🤬"_ns,  // swearing, U+1F92C
+                                 outputHTML, glyphTextLen) ||
+
+                        SmilyHit(aInString, aInLength, bArg, ">:(",
+                                 u"😠"_ns,  // angry, U+1F620
+                                 outputHTML, glyphTextLen) ||
+
+                        SmilyHit(aInString, aInLength, bArg, ">:-(",
+                                 u"😠"_ns,  // angry, U+1F620
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, "8-)",
@@ -814,7 +822,7 @@ bool mozTXTToHTMLConv::GlyphHit(const char16_t* aInString, int32_t aInLength,
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ":-X",
-                                 u"😷"_ns,  // sealed, U+1F637
+                                 u"🤐"_ns,  // sealed, U+1F910
                                  outputHTML, glyphTextLen))) {
       aOutputString.Append(outputHTML);
       return true;
