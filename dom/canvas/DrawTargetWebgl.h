@@ -102,9 +102,14 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     Matrix mTransform;
     Rect mRect;
     RefPtr<const Path> mPath;
+
+    bool operator==(const ClipStack& aOther) const;
   };
 
   std::vector<ClipStack> mClipStack;
+
+  // The previous state of the clip stack when a mask was generated.
+  std::vector<ClipStack> mCachedClipStack;
 
   // UsageProfile stores per-frame counters for significant profiling events
   // that assist in determining whether acceleration should still be used for

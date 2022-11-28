@@ -550,12 +550,35 @@ bool DrawTargetWebgl::SharedContext::SetNoClipMask() {
   return true;
 }
 
+inline bool DrawTargetWebgl::ClipStack::operator==(
+    const DrawTargetWebgl::ClipStack& aOther) const {
+  // Verify the transform and bounds match.
+  if (!mTransform.FuzzyEquals(aOther.mTransform) ||
+      !mRect.IsEqualInterior(aOther.mRect)) {
+    return false;
+  }
+  // Verify the paths match.
+  if (!mPath) {
+    return !aOther.mPath;
+  }
+  if (!aOther.mPath ||
+      mPath->GetBackendType() != aOther.mPath->GetBackendType()) {
+    return false;
+  }
+  if (mPath->GetBackendType() != BackendType::SKIA) {
+    return mPath == aOther.mPath;
+  }
+  return static_cast<const PathSkia*>(mPath.get())->GetPath() ==
+         static_cast<const PathSkia*>(aOther.mPath.get())->GetPath();
+}
+
 // If the clip region can't be approximated by a simple clip rect, then we need
 // to generate a clip mask that can represent the clip region per-pixel. We
 // render to the Skia target temporarily, transparent outside the clip region,
 // opaque inside, and upload this to a texture that can be used by the shaders.
 bool DrawTargetWebgl::GenerateComplexClipMask() {
-  if (!mClipChanged) {
+  if (!mClipChanged || (mClipMask && mCachedClipStack == mClipStack)) {
+    mClipChanged = false;
     // If the clip mask was already generated, use the cached mask and bounds.
     mSharedContext->SetClipMask(mClipMask);
     mSharedContext->SetClipRect(mClipBounds);
@@ -594,7 +617,10 @@ bool DrawTargetWebgl::GenerateComplexClipMask() {
   }
   // Set the clip region and fill the entire inside of it
   // with opaque white.
+  mCachedClipStack.clear();
   for (auto& clipStack : mClipStack) {
+    // Record the current state of the clip stack for this mask.
+    mCachedClipStack.push_back(clipStack);
     dt->SetTransform(
         Matrix(clipStack.mTransform).PostTranslate(-mClipBounds.TopLeft()));
     if (clipStack.mPath) {
@@ -1300,6 +1326,17 @@ void DrawTargetWebgl::CopySurface(SourceSurface* aSurface,
 }
 
 void DrawTargetWebgl::PushClip(const Path* aPath) {
+  if (aPath && aPath->GetBackendType() == BackendType::SKIA) {
+    // Detect if the path is really just a rect to simplify caching.
+    const PathSkia* pathSkia = static_cast<const PathSkia*>(aPath);
+    const SkPath& skPath = pathSkia->GetPath();
+    SkRect rect;
+    if (skPath.isRect(&rect)) {
+      PushClipRect(SkRectToRect(rect));
+      return;
+    }
+  }
+
   mClipChanged = true;
   mRefreshClipState = true;
   mSkia->PushClip(aPath);
