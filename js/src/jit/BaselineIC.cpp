@@ -488,6 +488,7 @@ void ICFallbackStub::discardStubs(JSContext* cx, ICEntry* icEntry) {
                stub->toCacheIRStub());
     stub = stub->toCacheIRStub()->next();
   }
+  clearHasFoldedStub();
 }
 
 static void InitMacroAssemblerForICStub(StackMacroAssembler& masm) {
