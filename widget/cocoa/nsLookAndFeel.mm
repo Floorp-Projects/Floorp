@@ -484,13 +484,13 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::UseAccessibilityTheme:
       aResult = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldIncreaseContrast;
       break;
-    case IntID::VideoDynamicRange: {
-      // If the platform says it supports HDR, then we claim to support video-dynamic-range.
-      gfxPlatform* platform = gfxPlatform::GetPlatform();
-      MOZ_ASSERT(platform);
-      aResult = platform->SupportsHDR();
+    case IntID::VideoDynamicRange:
+#ifdef EARLY_BETA_OR_EARLIER
+      aResult = nsCocoaFeatures::OnCatalinaOrLater();
+#else
+      aResult = nsCocoaFeatures::OnBigSurOrLater();
+#endif
       break;
-    }
     case IntID::PanelAnimations:
       aResult = 1;
       break;
@@ -687,8 +687,8 @@ void nsLookAndFeel::RecordAccessibilityTelemetry() {
 }
 
 - (void)cachedValuesChanged {
-  // We only need to re-cache (and broadcast) updated LookAndFeel values, so that they're
-  // up-to-date the next time they're queried. No further change handling is needed.
+  // We only need to re-cache (and broadcast) updated LookAndFeel values, so that they're up-to-date
+  // the next time they're queried. No further change handling is needed.
   // TODO: Add a change hint for this which avoids the unnecessary media query invalidation.
   LookAndFeel::NotifyChangedAllWindows(widget::ThemeChangeKind::MediaQueriesOnly);
 }

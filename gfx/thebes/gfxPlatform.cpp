@@ -1109,10 +1109,6 @@ void gfxPlatform::ReportTelemetry() {
                        adapterDriverDate);
 
   Telemetry::ScalarSet(Telemetry::ScalarID::GFX_HEADLESS, IsHeadless());
-
-  MOZ_ASSERT(gPlatform, "Need gPlatform to generate some telemetry.");
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_SUPPORTS_HDR,
-                       gPlatform->SupportsHDR());
 }
 
 static bool IsFeatureSupported(long aFeature, bool aDefault) {
