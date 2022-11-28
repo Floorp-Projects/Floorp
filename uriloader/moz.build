@@ -6,6 +6,9 @@
 
 SPHINX_TREES["/uriloader"] = "docs"
 
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "File Handling")
+
 DIRS += [
     "base",
     "exthandler",
