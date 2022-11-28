@@ -204,6 +204,10 @@ LayoutDeviceIntRect HyperTextAccessibleBase::TextBounds(int32_t aStartOffset,
   TextLeafPoint currPoint = ToTextLeafPoint(aStartOffset, false);
   TextLeafPoint endPoint =
       ToTextLeafPoint(ConvertMagicOffset(aEndOffset), true);
+  if (!endPoint) {
+    // The caller provided an invalid offset.
+    return LayoutDeviceIntRect();
+  }
 
   // Step backwards from the point returned by ToTextLeafPoint above.
   // For our purposes, `endPoint` should be inclusive.
