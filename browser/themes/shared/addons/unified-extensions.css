@@ -195,10 +195,12 @@ toolbaritem.unified-extensions-item[unified-extensions="true"] .unified-extensio
     --uei-button-attention-dot-color: ButtonText;
   }
 
-  .unified-extensions-item-action-button:not([disabled]).subviewbutton,
-  .unified-extensions-item-menu-button.subviewbutton,
-  toolbaritem.unified-extensions-item .unified-extensions-item-action-button:not([disabled]).subviewbutton,
-  toolbaritem.unified-extensions-item .unified-extensions-item-menu-button.subviewbutton {
+  #unified-extensions-panel :is(
+    .unified-extensions-item-action-button:not([disabled]).subviewbutton,
+    .unified-extensions-item-menu-button.subviewbutton,
+    toolbaritem.unified-extensions-item .unified-extensions-item-action-button:not([disabled]).subviewbutton,
+    toolbaritem.unified-extensions-item .unified-extensions-item-menu-button.subviewbutton
+  ) {
     border-color: currentColor;
     background-color: ButtonFace;
     color: ButtonText;
@@ -208,7 +210,7 @@ toolbaritem.unified-extensions-item[unified-extensions="true"] .unified-extensio
     --uei-button-active-color: ButtonText;
   }
 
-  .unified-extensions-item-action-button[disabled].subviewbutton {
+  #unified-extensions-panel .unified-extensions-item-action-button[disabled].subviewbutton {
     background-color: Canvas;
     color: GrayText;
   }
@@ -224,25 +226,25 @@ toolbaritem.unified-extensions-item[unified-extensions="true"] .unified-extensio
   .unified-extensions-item-action-button:not([disabled]):hover .unified-extensions-item-message {
     color: inherit;
   }
-}
 
-:is(
-  .unified-extensions-item-action-button:not([disabled]).subviewbutton,
-  .unified-extensions-item-menu-button.subviewbutton,
-  toolbaritem.unified-extensions-item .unified-extensions-item-action-button:not([disabled]).subviewbutton,
-  toolbaritem.unified-extensions-item .unified-extensions-item-menu-button.subviewbutton
-):hover:not(:active) {
-  background-color: var(--uei-button-hover-bgcolor);
-  color: var(--uei-button-hover-color);
-  border-color: var(--uei-button-hover-bgcolor);
-}
+  #unified-extensions-panel :is(
+    .unified-extensions-item-action-button:not([disabled]).subviewbutton,
+    .unified-extensions-item-menu-button.subviewbutton,
+    toolbaritem.unified-extensions-item .unified-extensions-item-action-button:not([disabled]).subviewbutton,
+    toolbaritem.unified-extensions-item .unified-extensions-item-menu-button.subviewbutton
+  ):hover:not(:active) {
+    background-color: var(--uei-button-hover-bgcolor);
+    color: var(--uei-button-hover-color);
+    border-color: var(--uei-button-hover-bgcolor);
+  }
 
-:is(
-  .unified-extensions-item-action-button:not([disabled]).subviewbutton,
-  .unified-extensions-item-menu-button.subviewbutton,
-  toolbaritem.unified-extensions-item .unified-extensions-item-action-button:not([disabled]).subviewbutton,
-  toolbaritem.unified-extensions-item .unified-extensions-item-menu-button.subviewbutton
-):hover:active {
-  background-color: var(--uei-button-active-bgcolor);
-  color: var(--uei-button-active-color);
+  #unified-extensions-panel :is(
+    .unified-extensions-item-action-button:not([disabled]).subviewbutton,
+    .unified-extensions-item-menu-button.subviewbutton,
+    toolbaritem.unified-extensions-item .unified-extensions-item-action-button:not([disabled]).subviewbutton,
+    toolbaritem.unified-extensions-item .unified-extensions-item-menu-button.subviewbutton
+  ):hover:active {
+    background-color: var(--uei-button-active-bgcolor);
+    color: var(--uei-button-active-color);
+  }
 }
