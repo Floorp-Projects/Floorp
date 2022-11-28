@@ -353,6 +353,18 @@ class nsRange final : public mozilla::dom::AbstractRange,
    */
   MOZ_CAN_RUN_SCRIPT void NotifySelectionListenersAfterRangeSet();
 
+  /**
+   * For a range for which IsInSelection() is true, return the closest common
+   * inclusive ancestor
+   * (https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor)
+   * for the range, which we had to compute when the common ancestor changed or
+   * IsInSelection became true, so we could register with it. That is, it's a
+   * faster version of GetClosestCommonInclusiveAncestor that only works for
+   * ranges in a Selection. The method will assert and the behavior is undefined
+   * if called on a range where IsInSelection() is false.
+   */
+  nsINode* GetRegisteredClosestCommonInclusiveAncestor();
+
  protected:
   /**
    * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor
@@ -385,18 +397,6 @@ class nsRange final : public mozilla::dom::AbstractRange,
       const mozilla::RangeBoundaryBase<SPT, SRT>& aStartBoundary,
       const mozilla::RangeBoundaryBase<EPT, ERT>& aEndBoundary,
       nsINode* aRootNode, bool aNotInsertedYet = false);
-
-  /**
-   * For a range for which IsInSelection() is true, return the closest common
-   * inclusive ancestor
-   * (https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor)
-   * for the range, which we had to compute when the common ancestor changed or
-   * IsInSelection became true, so we could register with it. That is, it's a
-   * faster version of GetClosestCommonInclusiveAncestor that only works for
-   * ranges in a Selection. The method will assert and the behavior is undefined
-   * if called on a range where IsInSelection() is false.
-   */
-  nsINode* GetRegisteredClosestCommonInclusiveAncestor();
 
   // Assume that this is guaranteed that this is held by the caller when
   // this is used.  (Note that we cannot use AutoRestore for mCalledByJS

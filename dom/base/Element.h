@@ -1333,6 +1333,29 @@ class Element : public FragmentOrElement {
     return GetLastRememberedISize().isSome();
   }
 
+  const Maybe<ContentRelevancy> GetContentRelevancy() const {
+    const auto* slots = GetExistingExtendedDOMSlots();
+    return slots ? slots->mContentRelevancy : Nothing();
+  }
+  void SetContentRelevancy(ContentRelevancy relevancy) {
+    ExtendedDOMSlots()->mContentRelevancy = Some(relevancy);
+  }
+
+  const Maybe<bool> GetVisibleForContentVisibility() const {
+    const auto* slots = GetExistingExtendedDOMSlots();
+    return slots ? slots->mVisibleForContentVisibility : Nothing();
+  }
+  void SetVisibleForContentVisibility(bool visible) {
+    ExtendedDOMSlots()->mVisibleForContentVisibility = Some(visible);
+  }
+
+  void ClearContentRelevancy() {
+    if (auto* slots = GetExistingExtendedDOMSlots()) {
+      slots->mContentRelevancy.reset();
+      slots->mVisibleForContentVisibility.reset();
+    }
+  }
+
   // https://drafts.csswg.org/cssom-view-1/#dom-element-checkvisibility
   MOZ_CAN_RUN_SCRIPT bool CheckVisibility(const CheckVisibilityOptions&);
 

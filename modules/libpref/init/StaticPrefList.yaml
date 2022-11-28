@@ -8642,6 +8642,12 @@
   value: true
   mirror: always
 
+# The margin used for detecting relevancy for `content-visibility: auto`.
+- name: layout.css.content-visibility-relevant-content-margin
+  type: float
+  value: 50 # 50%
+  mirror: always
+
 # Whether to block large cursors intersecting UI.
 - name: layout.cursor.block.enabled
   type: bool

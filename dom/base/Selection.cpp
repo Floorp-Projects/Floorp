@@ -9,6 +9,8 @@
  */
 
 #include "mozilla/dom/Selection.h"
+
+#include "LayoutConstants.h"
 #include "mozilla/intl/BidiEmbeddingLevel.h"
 
 #include "mozilla/AccessibleCaretEventHub.h"
@@ -82,7 +84,7 @@ using namespace mozilla::dom;
 
 static LazyLogModule sSelectionLog("Selection");
 
-//#define DEBUG_TABLE 1
+// #define DEBUG_TABLE 1
 
 #ifdef PRINT_RANGE
 static void printRange(nsRange* aDomRange);
@@ -177,10 +179,10 @@ nsCString SelectionChangeReasonsToCString(int16_t aReasons) {
 
 }  // namespace mozilla
 
-//#define DEBUG_SELECTION // uncomment for printf describing every collapse and
-// extend. #define DEBUG_NAVIGATION
+// #define DEBUG_SELECTION // uncomment for printf describing every collapse and
+//  extend. #define DEBUG_NAVIGATION
 
-//#define DEBUG_TABLE_SELECTION 1
+// #define DEBUG_TABLE_SELECTION 1
 
 struct CachedOffsetForFrame {
   CachedOffsetForFrame()
@@ -3200,6 +3202,7 @@ void Selection::NotifySelectionListeners() {
   PresShell* presShell = GetPresShell();
   if (presShell) {
     doc = presShell->GetDocument();
+    presShell->ScheduleContentRelevancyUpdate(ContentRelevancyReason::Selected);
   }
 
   // We've notified all selection listeners even when some of them are removed
