@@ -170,8 +170,8 @@ const DEFAULT_HARDWARE_CONCURRENCY = navigator.hardwareConcurrency;
 // =============================================================================================
 // =============================================================================================
 
-async function testNavigator(result, expectedResults) {
-  let testDesc = expectedResults.testDesc;
+async function testNavigator(result, expectedResults, extraData) {
+  let testDesc = extraData.testDesc;
 
   is(
     result.appVersion,
@@ -348,7 +348,6 @@ const uri = `https://${framer_domain}/browser/browser/components/resistfingerpri
 let expectedResults = {};
 
 expectedResults = JSON.parse(JSON.stringify(allNotSpoofed));
-expectedResults.testDesc = "default";
 add_task(
   partial(
     defaultsTest,
@@ -361,7 +360,6 @@ add_task(
 );
 
 expectedResults = JSON.parse(JSON.stringify(allSpoofed));
-expectedResults.testDesc = "simple RFP enabled";
 add_task(
   partial(
     simpleRFPTest,
@@ -375,7 +373,6 @@ add_task(
 
 // (A) RFP is exempted on the framer and framee and each contacts an exempted cross-origin resource
 expectedResults = JSON.parse(JSON.stringify(allNotSpoofed));
-expectedResults.testDesc = "test (A)";
 add_task(
   partial(
     testA,
@@ -389,7 +386,6 @@ add_task(
 
 // (B) RFP is exempted on the framer and framee and each contacts a non-exempted cross-origin resource
 expectedResults = JSON.parse(JSON.stringify(allNotSpoofed));
-expectedResults.testDesc = "test (B)";
 add_task(
   partial(
     testB,
@@ -403,7 +399,6 @@ add_task(
 
 // (C) RFP is exempted on the framer but not the framee and each contacts an exempted cross-origin resource
 expectedResults = JSON.parse(JSON.stringify(allSpoofed));
-expectedResults.testDesc = "test (C)";
 expectedResults.framer_crossOrigin_userAgentHTTPHeader = defaultUserAgent;
 expectedResults.framee_crossOrigin_userAgentHTTPHeader = spoofedUserAgentHeader;
 add_task(
@@ -419,7 +414,6 @@ add_task(
 
 // (D) RFP is exempted on the framer but not the framee and each contacts a non-exempted cross-origin resource
 expectedResults = JSON.parse(JSON.stringify(allSpoofed));
-expectedResults.testDesc = "test (D)";
 expectedResults.framer_crossOrigin_userAgentHTTPHeader = defaultUserAgent;
 expectedResults.framee_crossOrigin_userAgentHTTPHeader = spoofedUserAgentHeader;
 add_task(
@@ -435,7 +429,6 @@ add_task(
 
 // (E) RFP is not exempted on the framer nor the framee and each contacts an exempted cross-origin resource
 expectedResults = JSON.parse(JSON.stringify(allSpoofed));
-expectedResults.testDesc = "test (E)";
 add_task(
   partial(
     testE,
@@ -449,7 +442,6 @@ add_task(
 
 // (F) RFP is not exempted on the framer nor the framee and each contacts a non-exempted cross-origin resource
 expectedResults = JSON.parse(JSON.stringify(allSpoofed));
-expectedResults.testDesc = "test (F)";
 add_task(
   partial(
     testF,
@@ -463,7 +455,6 @@ add_task(
 
 // (G) RFP is not exempted on the framer but is on the framee and each contacts an exempted cross-origin resource
 expectedResults = JSON.parse(JSON.stringify(allSpoofed));
-expectedResults.testDesc = "test (G)";
 add_task(
   partial(
     testG,
@@ -477,7 +468,6 @@ add_task(
 
 // (H) RFP is not exempted on the framer but is on the framee and each contacts a non-exempted cross-origin resource
 expectedResults = JSON.parse(JSON.stringify(allSpoofed));
-expectedResults.testDesc = "test (H)";
 add_task(
   partial(
     testH,
