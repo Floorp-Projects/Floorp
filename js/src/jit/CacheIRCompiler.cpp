@@ -7452,6 +7452,38 @@ bool CacheIRCompiler::emitGuardWasmArg(ValOperandId argId,
   return true;
 }
 
+bool CacheIRCompiler::emitGuardMultipleShapes(ObjOperandId objId,
+                                              uint32_t shapesOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegister shapes(allocator, masm);
+  AutoScratchRegister scratch(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+
+  bool needSpectreMitigations = objectGuardNeedsSpectreMitigations(objId);
+
+  Register spectreScratch = InvalidReg;
+  Maybe<AutoScratchRegister> maybeSpectreScratch;
+  if (needSpectreMitigations) {
+    maybeSpectreScratch.emplace(allocator, masm);
+    spectreScratch = *maybeSpectreScratch;
+  }
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // The stub field contains a ListObject. Load its elements.
+  StubFieldOffset shapeArray(shapesOffset, StubField::Type::JSObject);
+  emitLoadStubField(shapeArray, shapes);
+  masm.loadPtr(Address(shapes, NativeObject::offsetOfElements()), shapes);
+
+  masm.branchTestObjShapeList(Assembler::NotEqual, obj, shapes, scratch,
+                              scratch2, spectreScratch, failure->label());
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadObject(ObjOperandId resultId,
                                      uint32_t objOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
