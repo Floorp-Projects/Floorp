@@ -82,6 +82,7 @@ class WorkletImpl {
   const Maybe<nsID>& GetAgentClusterId() const { return mAgentClusterId; }
 
   bool IsSharedMemoryAllowed() const { return mSharedMemoryAllowed; }
+  bool IsSystemPrincipal() const { return mIsSystemPrincipal; }
   bool ShouldResistFingerprinting() const {
     return mShouldResistFingerprinting;
   }
@@ -106,6 +107,8 @@ class WorkletImpl {
   ipc::PrincipalInfo mPrincipalInfo;
   // Accessed on only worklet parent thread.
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  // For off-main-thread checks
+  bool mIsSystemPrincipal;
 
   const WorkletLoadInfo mWorkletLoadInfo;
 
