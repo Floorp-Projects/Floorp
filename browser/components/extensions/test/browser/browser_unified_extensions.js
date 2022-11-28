@@ -448,6 +448,10 @@ add_task(async function test_list_active_extensions_only() {
       }`
     );
     const aWin = await promiseEnableUnifiedExtensions({ private: isPrivate });
+    // Make sure extension buttons added to the navbar will not overflow in the
+    // panel, which could happen when a previous test file resizes the current
+    // window.
+    await ensureMaximizedWindow(aWin);
 
     await openExtensionsPanel(aWin);
 
