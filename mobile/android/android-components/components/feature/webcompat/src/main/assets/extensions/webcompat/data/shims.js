@@ -189,7 +189,7 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
-    id: "AdvertisingDotCom",
+    id: "AdvertisingCom",
     platform: "all",
     name: "advertising.com",
     bug: "1701685",
@@ -213,7 +213,7 @@ const AVAILABLE_SHIMS = [
         onlyIfBlockedByETP: true,
       },
       {
-        patterns: ["https://redirect.firefox.etp/adsafeprotected_pixel"],
+        patterns: ["https://redirect.firefox.etp/advertisingdotcom_pixel"],
         target: "tracking-pixel.png",
         types: ["image", "imageset", "xmlhttprequest"],
       },
