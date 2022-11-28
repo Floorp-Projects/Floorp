@@ -68,7 +68,7 @@ nsIGlobalObject::~nsIGlobalObject() {
   MOZ_DIAGNOSTIC_ASSERT(mEventTargetObjects.isEmpty());
 }
 
-nsIPrincipal* nsIGlobalObject::PrincipalOrNull() {
+nsIPrincipal* nsIGlobalObject::PrincipalOrNull() const {
   if (!NS_IsMainThread()) {
     return nullptr;
   }
@@ -395,4 +395,27 @@ mozilla::Result<bool, nsresult> nsIGlobalObject::HasEqualStorageKey(
   const auto& storageKey = result.inspect();
 
   return mozilla::ipc::StorageKeysEqual(storageKey, aStorageKey);
+}
+
+bool nsIGlobalObject::IsSystemPrincipal() const {
+  MOZ_ASSERT(NS_IsMainThread(),
+             "Cannot ask nsIGlobalObject IsSystemPrincipal off-main-thread");
+
+  return PrincipalOrNull()->IsSystemPrincipal();
+}
+
+RTPCallerType nsIGlobalObject::RTPCallerType() const {
+  if (IsSystemPrincipal()) {
+    return RTPCallerType::SystemPrincipal;
+  }
+
+  if (ShouldResistFingerprinting()) {
+    return RTPCallerType::ResistFingerprinting;
+  }
+
+  if (CrossOriginIsolated()) {
+    return RTPCallerType::CrossOriginIsolated;
+  }
+
+  return RTPCallerType::Normal;
 }
