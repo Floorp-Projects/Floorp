@@ -8,7 +8,6 @@
 #define BackstagePass_h__
 
 #include "js/loader/ModuleLoaderBase.h"
-#include "mozilla/BasePrincipal.h"
 #include "mozilla/StorageAccess.h"
 #include "nsISupports.h"
 #include "nsWeakReference.h"
@@ -66,12 +65,6 @@ class BackstagePass final : public nsIGlobalObject,
   void InitModuleLoader(ModuleLoaderBase* aModuleLoader) {
     MOZ_ASSERT(!mModuleLoader);
     mModuleLoader = aModuleLoader;
-  }
-
-  bool ShouldResistFingerprinting() const override {
-    // BackstagePass is always the System Principal
-    MOZ_RELEASE_ASSERT(mPrincipal->IsSystemPrincipal());
-    return false;
   }
 
  private:

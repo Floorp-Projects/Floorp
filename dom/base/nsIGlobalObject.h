@@ -13,7 +13,6 @@
 #include "mozilla/dom/DispatcherTrait.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/OriginTrials.h"
-#include "nsContentUtils.h"
 #include "nsHashKeys.h"
 #include "nsISupports.h"
 #include "nsStringFwd.h"
@@ -58,16 +57,6 @@ class PrincipalInfo;
 namespace JS::loader {
 class ModuleLoaderBase;
 }  // namespace JS::loader
-
-// Reduce Timer Precision (RTP) Caller Type
-// This lives here because anything dealing with RTPCallerType determines it
-// through this object.
-enum class RTPCallerType : uint8_t {
-  Normal = 0,
-  SystemPrincipal = (1 << 0),
-  ResistFingerprinting = (1 << 1),
-  CrossOriginIsolated = (1 << 2)
-};
 
 /**
  * See <https://developer.mozilla.org/en-US/docs/Glossary/Global_object>.
@@ -145,7 +134,7 @@ class nsIGlobalObject : public nsISupports,
   bool HasJSGlobal() const { return GetGlobalJSObjectPreserveColor(); }
 
   // This method is not meant to be overridden.
-  nsIPrincipal* PrincipalOrNull() const;
+  nsIPrincipal* PrincipalOrNull();
 
   void RegisterHostObjectURI(const nsACString& aURI);
 
@@ -253,9 +242,7 @@ class nsIGlobalObject : public nsISupports,
    * Check whether we should avoid leaking distinguishing information to JS/CSS.
    * https://w3c.github.io/fingerprinting-guidance/
    */
-  virtual bool ShouldResistFingerprinting() const = 0;
-
-  RTPCallerType RTPCallerType() const;
+  virtual bool ShouldResistFingerprinting() const;
 
   /**
    * Threadsafe way to get nsIPrincipal::GetHashValue for the associated
@@ -280,8 +267,6 @@ class nsIGlobalObject : public nsISupports,
 
  protected:
   virtual ~nsIGlobalObject();
-
-  virtual bool IsSystemPrincipal() const;
 
   void StartDying() { mIsDying = true; }
 

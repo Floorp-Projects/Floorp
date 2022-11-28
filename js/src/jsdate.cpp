@@ -1536,11 +1536,8 @@ static ClippedTime NowAsMillis(JSContext* cx) {
 
   double now = PRMJ_Now();
   bool clampAndJitter = cx->realm()->behaviors().clampAndJitterTime();
-  bool shouldResistFingerprinting =
-      cx->realm()->behaviors().shouldResistFingerprinting();
   if (clampAndJitter && sReduceMicrosecondTimePrecisionCallback) {
-    now = sReduceMicrosecondTimePrecisionCallback(
-        now, shouldResistFingerprinting, cx);
+    now = sReduceMicrosecondTimePrecisionCallback(now, cx);
   } else if (clampAndJitter && sResolutionUsec) {
     double clamped = floor(now / sResolutionUsec) * sResolutionUsec;
 

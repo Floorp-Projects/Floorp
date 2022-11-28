@@ -39,7 +39,6 @@ WorkletLoadInfo::WorkletLoadInfo(nsPIDOMWindowInner* aWindow)
 
 WorkletImpl::WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
     : mPrincipal(NullPrincipal::CreateWithInheritedAttributes(aPrincipal)),
-      mIsSystemPrincipal(mPrincipal->IsSystemPrincipal()),
       mWorkletLoadInfo(aWindow),
       mTerminated(false),
       mFinishedOnExecutionThread(false),
@@ -53,9 +52,6 @@ WorkletImpl::WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
 
   mSharedMemoryAllowed =
       nsGlobalWindowInner::Cast(aWindow)->IsSharedMemoryAllowed();
-
-  mShouldResistFingerprinting =
-      aWindow->AsGlobal()->ShouldResistFingerprinting();
 }
 
 WorkletImpl::~WorkletImpl() {

@@ -232,12 +232,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkerGlobalScopeBase)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 WorkerGlobalScopeBase::WorkerGlobalScopeBase(
-    WorkerPrivate* aWorkerPrivate, UniquePtr<ClientSource> aClientSource,
-    bool aShouldResistFingerprinting)
+    WorkerPrivate* aWorkerPrivate, UniquePtr<ClientSource> aClientSource)
     : mWorkerPrivate(aWorkerPrivate),
       mClientSource(std::move(aClientSource)),
-      mSerialEventTarget(aWorkerPrivate->HybridEventTarget()),
-      mShouldResistFingerprinting(aShouldResistFingerprinting) {
+      mSerialEventTarget(aWorkerPrivate->HybridEventTarget()) {
   MOZ_ASSERT(mWorkerPrivate);
 #ifdef DEBUG
   mWorkerPrivate->AssertIsOnWorkerThread();
@@ -273,11 +271,7 @@ bool WorkerGlobalScopeBase::IsSharedMemoryAllowed() const {
 
 bool WorkerGlobalScopeBase::ShouldResistFingerprinting() const {
   AssertIsOnWorkerThread();
-  return mShouldResistFingerprinting;
-}
-
-bool WorkerGlobalScopeBase::IsSystemPrincipal() const {
-  return mWorkerPrivate->UsesSystemPrincipal();
+  return mWorkerPrivate->ShouldResistFingerprinting();
 }
 
 uint32_t WorkerGlobalScopeBase::GetPrincipalHashValue() const {
@@ -878,9 +872,8 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(DedicatedWorkerGlobalScope,
 
 DedicatedWorkerGlobalScope::DedicatedWorkerGlobalScope(
     WorkerPrivate* aWorkerPrivate, UniquePtr<ClientSource> aClientSource,
-    const nsString& aName, bool aShouldResistFingerprinting)
-    : WorkerGlobalScope(std::move(aWorkerPrivate), std::move(aClientSource),
-                        aShouldResistFingerprinting),
+    const nsString& aName)
+    : WorkerGlobalScope(std::move(aWorkerPrivate), std::move(aClientSource)),
       NamedWorkerGlobalScopeMixin(aName) {}
 
 bool DedicatedWorkerGlobalScope::WrapGlobalObject(
@@ -1035,8 +1028,7 @@ void DedicatedWorkerGlobalScope::OnVsync(const VsyncEvent& aVsync) {
     // needs to have it's Time Reduction Logic refactored, so it's currently
     // only clamping for RFP mode. RFP mode gives a much lower time precision,
     // so we accept the security leak here for now.
-    timeStamp = nsRFPService::ReduceTimePrecisionAsMSecsRFPOnly(
-        timeStamp, 0, this->RTPCallerType());
+    timeStamp = nsRFPService::ReduceTimePrecisionAsMSecsRFPOnly(timeStamp, 0);
   }
 
   for (auto& callback : callbacks) {
@@ -1054,9 +1046,8 @@ void DedicatedWorkerGlobalScope::OnVsync(const VsyncEvent& aVsync) {
 
 SharedWorkerGlobalScope::SharedWorkerGlobalScope(
     WorkerPrivate* aWorkerPrivate, UniquePtr<ClientSource> aClientSource,
-    const nsString& aName, bool aShouldResistFingerprinting)
-    : WorkerGlobalScope(std::move(aWorkerPrivate), std::move(aClientSource),
-                        aShouldResistFingerprinting),
+    const nsString& aName)
+    : WorkerGlobalScope(std::move(aWorkerPrivate), std::move(aClientSource)),
       NamedWorkerGlobalScopeMixin(aName) {}
 
 bool SharedWorkerGlobalScope::WrapGlobalObject(
@@ -1089,10 +1080,8 @@ NS_IMPL_RELEASE_INHERITED(ServiceWorkerGlobalScope, WorkerGlobalScope)
 
 ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(
     WorkerPrivate* aWorkerPrivate, UniquePtr<ClientSource> aClientSource,
-    const ServiceWorkerRegistrationDescriptor& aRegistrationDescriptor,
-    bool aShouldResistFingerprinting)
-    : WorkerGlobalScope(std::move(aWorkerPrivate), std::move(aClientSource),
-                        aShouldResistFingerprinting),
+    const ServiceWorkerRegistrationDescriptor& aRegistrationDescriptor)
+    : WorkerGlobalScope(std::move(aWorkerPrivate), std::move(aClientSource)),
       mScope(NS_ConvertUTF8toUTF16(aRegistrationDescriptor.Scope()))
 
       // Eagerly create the registration because we will need to receive
