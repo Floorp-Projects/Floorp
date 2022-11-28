@@ -86,6 +86,19 @@ extern mozilla::LazyLogModule gWidgetDragLog;
 #  define LOGDRAGSERVICE(...)
 #endif
 
+// Helper class to block native events processing.
+class MOZ_STACK_CLASS AutoSuspendNativeEvents {
+ public:
+  AutoSuspendNativeEvents() {
+    mAppShell = do_GetService(NS_APPSHELL_CID);
+    mAppShell->SuspendNative();
+  }
+  ~AutoSuspendNativeEvents() { mAppShell->ResumeNative(); }
+
+ private:
+  nsCOMPtr<nsIAppShell> mAppShell;
+};
+
 // data used for synthetic periodic motion events sent to the source widget
 // grabbing real events for the drag.
 static guint sMotionEventTimerID;
@@ -1672,15 +1685,6 @@ nsresult nsDragService::CreateTempFile(nsITransferable* aItem,
     return rv;
   }
 
-  // Stream Read()/Write() runs event loop which process system event
-  // so during Read()/Write() we can get another D&D event.
-  // Such event is handled before we finish our write here and
-  // it leads to cancelled D&D operation.
-  // So suspend native event processing temporary.
-  nsCOMPtr<nsIAppShell> appShell = do_GetService(NS_APPSHELL_CID);
-  appShell->SuspendNative();
-  auto resumeEvents = MakeScopeExit([&] { appShell->ResumeNative(); });
-
   char buffer[8192];
   uint32_t readCount = 0;
   uint32_t writeCount = 0;
@@ -1806,6 +1810,11 @@ void nsDragService::SourceDataGetUriList(GdkDragContext* aContext,
 
   LOGDRAGSERVICE("nsDragService::SourceDataGetUriLists() len %d external %d",
                  aDragItems, isExternalDrop);
+
+  // Disable processing of native events until we store all files to /tmp.
+  // Otherwise user can quit drop before we have all files saved
+  // and that cancels whole D&D.
+  AutoSuspendNativeEvents suspend;
 
   nsAutoCString uriList;
   for (uint32_t i = 0; i < aDragItems; i++) {
