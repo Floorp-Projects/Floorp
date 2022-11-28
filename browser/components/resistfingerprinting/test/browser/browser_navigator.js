@@ -153,7 +153,7 @@ const SPOOFED_UA_GECKO_TRAIL = {
 async function testUserAgentHeader() {
   const BASE =
     "http://mochi.test:8888/browser/browser/components/resistfingerprinting/test/browser/";
-  const TEST_TARGET_URL = `${BASE}browser_navigator_header.sjs?`;
+  const TEST_TARGET_URL = `${BASE}file_navigator_header.sjs?`;
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     TEST_TARGET_URL
