@@ -626,7 +626,7 @@ class nsWindow final : public nsBaseWidget {
   mozilla::Atomic<bool, mozilla::Relaxed> mDrawInTitlebar{false};
 
   // Has this widget been destroyed yet?
-  bool mIsDestroyed : 1;
+  mozilla::Atomic<bool> mIsDestroyed;
   // mIsShown tracks requested visible status from browser perspective, i.e.
   // if the window should be visible or now.
   bool mIsShown : 1;
