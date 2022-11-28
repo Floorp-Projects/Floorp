@@ -2279,6 +2279,8 @@ void PresShell::NotifyDestroyingFrame(nsIFrame* aFrame) {
       mPendingScrollAnchorAdjustment.Remove(scrollableFrame);
       mPendingScrollResnap.Remove(scrollableFrame);
     }
+
+    mContentVisibilityAutoFrames.Remove(aFrame);
   }
 }
 
@@ -3662,6 +3664,18 @@ nsresult PresShell::ScrollContentIntoView(nsIContent* aContent,
     mContentToScrollTo = nullptr;
   }
 
+  // If the target frame is an ancestor of a `content-visibility: auto`
+  // element ensure that it is laid out, so that the boundary rectangle is
+  // correct.
+  if (mContentToScrollTo) {
+    if (nsIFrame* frame = mContentToScrollTo->GetPrimaryFrame()) {
+      if (frame->IsHiddenByContentVisibilityOnAnyAncestor(
+              nsIFrame::IncludeContentVisibility::Auto)) {
+        frame->PresShell()->EnsureReflowIfFrameHasHiddenContent(frame);
+      }
+    }
+  }
+
   // Flush layout and attempt to scroll in the process.
   if (PresShell* presShell = composedDoc->GetPresShell()) {
     presShell->SetNeedLayoutFlush();
@@ -3704,7 +3718,9 @@ void PresShell::DoScrollContentIntoView() {
   NS_ASSERTION(mDidInitialize, "should have done initial reflow by now");
 
   nsIFrame* frame = mContentToScrollTo->GetPrimaryFrame();
-  if (!frame || frame->IsHiddenByContentVisibilityOnAnyAncestor()) {
+
+  if (!frame || frame->IsHiddenByContentVisibilityOnAnyAncestor(
+                    nsIFrame::IncludeContentVisibility::Hidden)) {
     mContentToScrollTo->RemoveProperty(nsGkAtoms::scrolling);
     mContentToScrollTo = nullptr;
     return;
@@ -3731,10 +3747,6 @@ void PresShell::DoScrollContentIntoView() {
 bool PresShell::ScrollFrameIntoView(
     nsIFrame* aTargetFrame, const Maybe<nsRect>& aKnownRectRelativeToTarget,
     ScrollAxis aVertical, ScrollAxis aHorizontal, ScrollFlags aScrollFlags) {
-  if (aTargetFrame->IsHiddenByContentVisibilityOnAnyAncestor()) {
-    return false;
-  }
-
   // The scroll margin only applies to the whole bounds of the element, so don't
   // apply it if we get an arbitrary rect / point to scroll to.
   const nsMargin scrollMargin =
@@ -4271,6 +4283,13 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
    * SetNeedStyleFlush calls on the shell.
    */
   FlushType flushType = aFlush.mFlushType;
+
+  // If this is a layout flush, first update the relevancy of any content
+  // of elements with `content-visibility: auto` so that the values
+  // returned from script queries are up-to-date.
+  if (flushType >= mozilla::FlushType::Layout) {
+    UpdateRelevancyOfContentVisibilityAutoFrames();
+  }
 
   MOZ_ASSERT(NeedFlush(flushType), "Why did we get called?");
 
@@ -11898,4 +11917,29 @@ void PresShell::EnsureReflowIfFrameHasHiddenContent(nsIFrame* aFrame) {
 
 bool PresShell::IsForcingLayoutForHiddenContent(const nsIFrame* aFrame) const {
   return mHiddenContentInForcedLayout.Contains(aFrame->GetContent());
+}
+
+void PresShell::UpdateRelevancyOfContentVisibilityAutoFrames() {
+  if (mContentVisibilityRelevancyToUpdate.isEmpty()) {
+    return;
+  }
+
+  for (nsIFrame* frame : mContentVisibilityAutoFrames) {
+    frame->UpdateIsRelevantContent(mContentVisibilityRelevancyToUpdate);
+  }
+
+  mContentVisibilityRelevancyToUpdate.clear();
+}
+
+void PresShell::ScheduleContentRelevancyUpdate(ContentRelevancyReason aReason) {
+  if (MOZ_UNLIKELY(mIsDestroying)) {
+    return;
+  }
+
+  mContentVisibilityRelevancyToUpdate += aReason;
+
+  SetNeedLayoutFlush();
+  if (nsPresContext* presContext = GetPresContext()) {
+    presContext->RefreshDriver()->EnsureContentRelevancyUpdateHappens();
+  }
 }

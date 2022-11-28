@@ -14,6 +14,7 @@
 #include "nsRefreshDriver.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowsingContext.h"
@@ -150,6 +151,20 @@ static void LazyLoadCallback(
   }
 }
 
+static void ContentVisibilityCallback(
+    const Sequence<OwningNonNull<DOMIntersectionObserverEntry>>& aEntries) {
+  for (const auto& entry : aEntries) {
+    entry->Target()->SetVisibleForContentVisibility(entry->IsIntersecting());
+
+    if (RefPtr<Document> doc = entry->Target()->GetComposedDoc()) {
+      if (RefPtr<PresShell> presShell = doc->GetPresShell()) {
+        presShell->ScheduleContentRelevancyUpdate(
+            ContentRelevancyReason::Visible);
+      }
+    }
+  }
+}
+
 static LengthPercentage PrefMargin(float aValue, bool aIsPercentage) {
   return aIsPercentage ? LengthPercentage::FromPercentage(aValue / 100.0f)
                        : LengthPercentage::FromPixels(aValue);
@@ -178,6 +193,25 @@ DOMIntersectionObserver::CreateLazyLoadObserver(Document& aDocument) {
   SET_MARGIN(Bottom, bottom);
   SET_MARGIN(Left, left);
 #undef SET_MARGIN
+
+  return observer.forget();
+}
+
+already_AddRefed<DOMIntersectionObserver>
+DOMIntersectionObserver::CreateContentVisibilityObserver(Document& aDocument) {
+  RefPtr<DOMIntersectionObserver> observer =
+      new DOMIntersectionObserver(aDocument, ContentVisibilityCallback);
+
+  observer->mThresholds.AppendElement(0.0f);
+
+  auto margin = LengthPercentage::FromPercentage(
+      StaticPrefs::layout_css_content_visibility_relevant_content_margin() /
+      100.0f);
+
+  observer->mRootMargin.Get(eSideTop) = margin;
+  observer->mRootMargin.Get(eSideRight) = margin;
+  observer->mRootMargin.Get(eSideBottom) = margin;
+  observer->mRootMargin.Get(eSideLeft) = margin;
 
   return observer.forget();
 }
