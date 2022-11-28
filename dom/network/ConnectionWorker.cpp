@@ -10,7 +10,6 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
-#include "mozilla/dom/WorkerScope.h"
 
 namespace mozilla::dom::network {
 
@@ -142,7 +141,7 @@ class NotifyRunnable : public WorkerRunnable {
 already_AddRefed<ConnectionWorker> ConnectionWorker::Create(
     WorkerPrivate* aWorkerPrivate, ErrorResult& aRv) {
   bool shouldResistFingerprinting =
-      aWorkerPrivate->GlobalScope()->ShouldResistFingerprinting();
+      aWorkerPrivate->ShouldResistFingerprinting();
   RefPtr<ConnectionWorker> c = new ConnectionWorker(shouldResistFingerprinting);
   c->mProxy = ConnectionProxy::Create(aWorkerPrivate, c);
   if (!c->mProxy) {

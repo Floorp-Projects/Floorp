@@ -1629,9 +1629,7 @@ bool nsGlobalWindowInner::ShouldResistFingerprinting() const {
   if (mDoc) {
     return mDoc->ShouldResistFingerprinting();
   }
-  return nsContentUtils::ShouldResistFingerprinting(
-      "If we do not have a document then we do not have any context"
-      "to make an informed RFP choice, so we fall back to the global pref");
+  return nsIScriptGlobalObject::ShouldResistFingerprinting();
 }
 
 OriginTrials nsGlobalWindowInner::Trials() const {

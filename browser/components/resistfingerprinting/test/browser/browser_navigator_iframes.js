@@ -170,8 +170,8 @@ const DEFAULT_HARDWARE_CONCURRENCY = navigator.hardwareConcurrency;
 // =============================================================================================
 // =============================================================================================
 
-async function testNavigator(result, expectedResults, extraData) {
-  let testDesc = extraData.testDesc;
+async function testNavigator(result, expectedResults) {
+  let testDesc = expectedResults.testDesc;
 
   is(
     result.appVersion,
@@ -345,138 +345,372 @@ const iframe_domain = "example.org";
 const cross_origin_domain = "example.net";
 const uri = `https://${framer_domain}/browser/browser/components/resistfingerprinting/test/browser/file_navigator_iframer.html`;
 
-requestLongerTimeout(2);
+add_task(async function defaultsTest() {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: uri,
+    },
+    async function(browser) {
+      let result = await SpecialPowers.spawn(
+        browser,
+        [iframe_domain, cross_origin_domain],
+        async function(iframe_domain_, cross_origin_domain_) {
+          return content.wrappedJSObject.runTheTest(
+            iframe_domain_,
+            cross_origin_domain_
+          );
+        }
+      );
 
-let expectedResults = {};
+      let expectedResults = JSON.parse(JSON.stringify(allNotSpoofed));
+      expectedResults.testDesc = "default";
 
-expectedResults = JSON.parse(JSON.stringify(allNotSpoofed));
-add_task(
-  partial(
-    defaultsTest,
-    uri,
-    iframe_domain,
-    cross_origin_domain,
-    testNavigator,
-    expectedResults
-  )
-);
+      testNavigator(result, expectedResults);
+    }
+  );
+});
 
-expectedResults = JSON.parse(JSON.stringify(allSpoofed));
-add_task(
-  partial(
-    simpleRFPTest,
-    uri,
-    iframe_domain,
-    cross_origin_domain,
-    testNavigator,
-    expectedResults
-  )
-);
+add_task(async function simpleRFPTest() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.resistFingerprinting", true]],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: uri,
+    },
+    async function(browser) {
+      let result = await SpecialPowers.spawn(
+        browser,
+        [iframe_domain, cross_origin_domain],
+        async function(iframe_domain_, cross_origin_domain_) {
+          return content.wrappedJSObject.runTheTest(
+            iframe_domain_,
+            cross_origin_domain_
+          );
+        }
+      );
+
+      let expectedResults = JSON.parse(JSON.stringify(allSpoofed));
+      expectedResults.testDesc = "simple RFP enabled";
+
+      testNavigator(result, expectedResults);
+    }
+  );
+
+  await SpecialPowers.popPrefEnv();
+});
 
 // (A) RFP is exempted on the framer and framee and each contacts an exempted cross-origin resource
-expectedResults = JSON.parse(JSON.stringify(allNotSpoofed));
-add_task(
-  partial(
-    testA,
-    uri,
-    iframe_domain,
-    cross_origin_domain,
-    testNavigator,
-    expectedResults
-  )
-);
+add_task(async function testA() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", true],
+      ["privacy.resistFingerprinting.testGranularityMask", 4],
+      [
+        "privacy.resistFingerprinting.exemptedDomains",
+        "example.com, example.org, example.net",
+      ],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: uri,
+    },
+    async function(browser) {
+      let result = await SpecialPowers.spawn(
+        browser,
+        [iframe_domain, cross_origin_domain],
+        async function(iframe_domain_, cross_origin_domain_) {
+          return content.wrappedJSObject.runTheTest(
+            iframe_domain_,
+            cross_origin_domain_
+          );
+        }
+      );
+
+      let expectedResults = JSON.parse(JSON.stringify(allNotSpoofed));
+      expectedResults.testDesc = "test (A)";
+
+      testNavigator(result, expectedResults);
+    }
+  );
+
+  await SpecialPowers.popPrefEnv();
+});
 
 // (B) RFP is exempted on the framer and framee and each contacts a non-exempted cross-origin resource
-expectedResults = JSON.parse(JSON.stringify(allNotSpoofed));
-add_task(
-  partial(
-    testB,
-    uri,
-    iframe_domain,
-    cross_origin_domain,
-    testNavigator,
-    expectedResults
-  )
-);
+add_task(async function testB() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", true],
+      ["privacy.resistFingerprinting.testGranularityMask", 4],
+      [
+        "privacy.resistFingerprinting.exemptedDomains",
+        "example.com, example.org",
+      ],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: uri,
+    },
+    async function(browser) {
+      let result = await SpecialPowers.spawn(
+        browser,
+        [iframe_domain, cross_origin_domain],
+        async function(iframe_domain_, cross_origin_domain_) {
+          return content.wrappedJSObject.runTheTest(
+            iframe_domain_,
+            cross_origin_domain_
+          );
+        }
+      );
+
+      let expectedResults = JSON.parse(JSON.stringify(allNotSpoofed));
+      expectedResults.testDesc = "test (B)";
+
+      testNavigator(result, expectedResults);
+    }
+  );
+
+  await SpecialPowers.popPrefEnv();
+});
 
 // (C) RFP is exempted on the framer but not the framee and each contacts an exempted cross-origin resource
-expectedResults = JSON.parse(JSON.stringify(allSpoofed));
-expectedResults.framer_crossOrigin_userAgentHTTPHeader = defaultUserAgent;
-expectedResults.framee_crossOrigin_userAgentHTTPHeader = spoofedUserAgentHeader;
-add_task(
-  partial(
-    testC,
-    uri,
-    iframe_domain,
-    cross_origin_domain,
-    testNavigator,
-    expectedResults
-  )
-);
+add_task(async function testC() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", true],
+      ["privacy.resistFingerprinting.testGranularityMask", 4],
+      [
+        "privacy.resistFingerprinting.exemptedDomains",
+        "example.com, example.net",
+      ],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: uri,
+    },
+    async function(browser) {
+      let result = await SpecialPowers.spawn(
+        browser,
+        [iframe_domain, cross_origin_domain],
+        async function(iframe_domain_, cross_origin_domain_) {
+          return content.wrappedJSObject.runTheTest(
+            iframe_domain_,
+            cross_origin_domain_
+          );
+        }
+      );
+
+      let expectedResults = JSON.parse(JSON.stringify(allSpoofed));
+      expectedResults.testDesc = "test (C)";
+      expectedResults.framer_crossOrigin_userAgentHTTPHeader = defaultUserAgent;
+      expectedResults.framee_crossOrigin_userAgentHTTPHeader = spoofedUserAgentHeader;
+
+      testNavigator(result, expectedResults);
+    }
+  );
+
+  await SpecialPowers.popPrefEnv();
+});
 
 // (D) RFP is exempted on the framer but not the framee and each contacts a non-exempted cross-origin resource
-expectedResults = JSON.parse(JSON.stringify(allSpoofed));
-expectedResults.framer_crossOrigin_userAgentHTTPHeader = defaultUserAgent;
-expectedResults.framee_crossOrigin_userAgentHTTPHeader = spoofedUserAgentHeader;
-add_task(
-  partial(
-    testD,
-    uri,
-    iframe_domain,
-    cross_origin_domain,
-    testNavigator,
-    expectedResults
-  )
-);
+add_task(async function testD() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", true],
+      ["privacy.resistFingerprinting.testGranularityMask", 4],
+      ["privacy.resistFingerprinting.exemptedDomains", "example.com"],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: uri,
+    },
+    async function(browser) {
+      let result = await SpecialPowers.spawn(
+        browser,
+        [iframe_domain, cross_origin_domain],
+        async function(iframe_domain_, cross_origin_domain_) {
+          return content.wrappedJSObject.runTheTest(
+            iframe_domain_,
+            cross_origin_domain_
+          );
+        }
+      );
+
+      let expectedResults = JSON.parse(JSON.stringify(allSpoofed));
+      expectedResults.testDesc = "test (D)";
+      expectedResults.framer_crossOrigin_userAgentHTTPHeader = defaultUserAgent;
+      expectedResults.framee_crossOrigin_userAgentHTTPHeader = spoofedUserAgentHeader;
+
+      testNavigator(result, expectedResults);
+    }
+  );
+
+  await SpecialPowers.popPrefEnv();
+});
 
 // (E) RFP is not exempted on the framer nor the framee and each contacts an exempted cross-origin resource
-expectedResults = JSON.parse(JSON.stringify(allSpoofed));
-add_task(
-  partial(
-    testE,
-    uri,
-    iframe_domain,
-    cross_origin_domain,
-    testNavigator,
-    expectedResults
-  )
-);
+add_task(async function testE() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", true],
+      ["privacy.resistFingerprinting.testGranularityMask", 4],
+      ["privacy.resistFingerprinting.exemptedDomains", "example.net"],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: uri,
+    },
+    async function(browser) {
+      let result = await SpecialPowers.spawn(
+        browser,
+        [iframe_domain, cross_origin_domain],
+        async function(iframe_domain_, cross_origin_domain_) {
+          return content.wrappedJSObject.runTheTest(
+            iframe_domain_,
+            cross_origin_domain_
+          );
+        }
+      );
+
+      let expectedResults = JSON.parse(JSON.stringify(allSpoofed));
+      expectedResults.testDesc = "test (E)";
+
+      testNavigator(result, expectedResults);
+    }
+  );
+
+  await SpecialPowers.popPrefEnv();
+});
 
 // (F) RFP is not exempted on the framer nor the framee and each contacts a non-exempted cross-origin resource
-expectedResults = JSON.parse(JSON.stringify(allSpoofed));
-add_task(
-  partial(
-    testF,
-    uri,
-    iframe_domain,
-    cross_origin_domain,
-    testNavigator,
-    expectedResults
-  )
-);
+add_task(async function testF() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", true],
+      ["privacy.resistFingerprinting.testGranularityMask", 4],
+      ["privacy.resistFingerprinting.exemptedDomains", ""],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: uri,
+    },
+    async function(browser) {
+      let result = await SpecialPowers.spawn(
+        browser,
+        [iframe_domain, cross_origin_domain],
+        async function(iframe_domain_, cross_origin_domain_) {
+          return content.wrappedJSObject.runTheTest(
+            iframe_domain_,
+            cross_origin_domain_
+          );
+        }
+      );
+
+      let expectedResults = JSON.parse(JSON.stringify(allSpoofed));
+      expectedResults.testDesc = "test (F)";
+
+      testNavigator(result, expectedResults);
+    }
+  );
+
+  await SpecialPowers.popPrefEnv();
+});
 
 // (G) RFP is not exempted on the framer but is on the framee and each contacts an exempted cross-origin resource
-expectedResults = JSON.parse(JSON.stringify(allSpoofed));
-add_task(
-  partial(
-    testG,
-    uri,
-    iframe_domain,
-    cross_origin_domain,
-    testNavigator,
-    expectedResults
-  )
-);
+add_task(async function testG() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", true],
+      ["privacy.resistFingerprinting.testGranularityMask", 4],
+      [
+        "privacy.resistFingerprinting.exemptedDomains",
+        "example.org, example.net",
+      ],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: uri,
+    },
+    async function(browser) {
+      let result = await SpecialPowers.spawn(
+        browser,
+        [iframe_domain, cross_origin_domain],
+        async function(iframe_domain_, cross_origin_domain_) {
+          return content.wrappedJSObject.runTheTest(
+            iframe_domain_,
+            cross_origin_domain_
+          );
+        }
+      );
+
+      let expectedResults = JSON.parse(JSON.stringify(allSpoofed));
+      expectedResults.testDesc = "test (G)";
+
+      testNavigator(result, expectedResults);
+    }
+  );
+
+  await SpecialPowers.popPrefEnv();
+});
 
 // (H) RFP is not exempted on the framer but is on the framee and each contacts a non-exempted cross-origin resource
-expectedResults = JSON.parse(JSON.stringify(allSpoofed));
-add_task(
-  partial(
-    testH,
-    uri,
-    iframe_domain,
-    cross_origin_domain,
-    testNavigator,
-    expectedResults
-  )
-);
+add_task(async function testH() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", true],
+      ["privacy.resistFingerprinting.testGranularityMask", 4],
+      ["privacy.resistFingerprinting.exemptedDomains", "example.org"],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: uri,
+    },
+    async function(browser) {
+      let result = await SpecialPowers.spawn(
+        browser,
+        [iframe_domain, cross_origin_domain],
+        async function(iframe_domain_, cross_origin_domain_) {
+          return content.wrappedJSObject.runTheTest(
+            iframe_domain_,
+            cross_origin_domain_
+          );
+        }
+      );
+
+      let expectedResults = JSON.parse(JSON.stringify(allSpoofed));
+      expectedResults.testDesc = "test (H)";
+
+      testNavigator(result, expectedResults);
+    }
+  );
+
+  await SpecialPowers.popPrefEnv();
+});

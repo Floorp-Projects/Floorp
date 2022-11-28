@@ -68,12 +68,9 @@ class WorkletGlobalScope : public nsIGlobalObject, public nsWrapperCache {
   OriginTrials Trials() const override;
   Maybe<nsID> GetAgentClusterId() const override;
   bool IsSharedMemoryAllowed() const override;
-  bool ShouldResistFingerprinting() const override;
 
  protected:
   ~WorkletGlobalScope();
-
-  bool IsSystemPrincipal() const override;
 
   const RefPtr<WorkletImpl> mImpl;
 

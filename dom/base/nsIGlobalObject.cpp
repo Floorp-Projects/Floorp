@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIGlobalObject.h"
-#include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/Result.h"
 #include "mozilla/StorageAccess.h"
@@ -69,7 +68,7 @@ nsIGlobalObject::~nsIGlobalObject() {
   MOZ_DIAGNOSTIC_ASSERT(mEventTargetObjects.isEmpty());
 }
 
-nsIPrincipal* nsIGlobalObject::PrincipalOrNull() const {
+nsIPrincipal* nsIGlobalObject::PrincipalOrNull() {
   if (!NS_IsMainThread()) {
     return nullptr;
   }
@@ -396,27 +395,4 @@ mozilla::Result<bool, nsresult> nsIGlobalObject::HasEqualStorageKey(
   const auto& storageKey = result.inspect();
 
   return mozilla::ipc::StorageKeysEqual(storageKey, aStorageKey);
-}
-
-bool nsIGlobalObject::IsSystemPrincipal() const {
-  MOZ_ASSERT(NS_IsMainThread(),
-             "Cannot ask nsIGlobalObject IsSystemPrincipal off-main-thread");
-
-  return PrincipalOrNull()->IsSystemPrincipal();
-}
-
-RTPCallerType nsIGlobalObject::RTPCallerType() const {
-  if (IsSystemPrincipal()) {
-    return RTPCallerType::SystemPrincipal;
-  }
-
-  if (ShouldResistFingerprinting()) {
-    return RTPCallerType::ResistFingerprinting;
-  }
-
-  if (CrossOriginIsolated()) {
-    return RTPCallerType::CrossOriginIsolated;
-  }
-
-  return RTPCallerType::Normal;
 }

@@ -84,7 +84,8 @@ PerformanceTiming::PerformanceTiming(Performance* aPerformance,
       aChannel, aHttpChannel,
       nsRFPService::ReduceTimePrecisionAsMSecs(
           aZeroTime, aPerformance->GetRandomTimelineSeed(),
-          aPerformance->RTPCallerType())));
+          aPerformance->IsSystemPrincipal(),
+          aPerformance->CrossOriginIsolated())));
 
   // Non-null aHttpChannel implies that this PerformanceTiming object is being
   // used for subresources, which is irrelevant to this probe.
@@ -310,7 +311,7 @@ DOMHighResTimeStamp PerformanceTimingData::FetchStartHighRes(
   }
   return nsRFPService::ReduceTimePrecisionAsMSecs(
       mFetchStart, aPerformance->GetRandomTimelineSeed(),
-      aPerformance->RTPCallerType());
+      aPerformance->IsSystemPrincipal(), aPerformance->CrossOriginIsolated());
 }
 
 DOMTimeMilliSec PerformanceTiming::FetchStart() {
@@ -381,7 +382,7 @@ DOMHighResTimeStamp PerformanceTimingData::AsyncOpenHighRes(
       TimeStampToDOMHighRes(aPerformance, mAsyncOpen);
   return nsRFPService::ReduceTimePrecisionAsMSecs(
       rawValue, aPerformance->GetRandomTimelineSeed(),
-      aPerformance->RTPCallerType());
+      aPerformance->IsSystemPrincipal(), aPerformance->CrossOriginIsolated());
 }
 
 DOMHighResTimeStamp PerformanceTimingData::WorkerStartHighRes(
@@ -396,7 +397,7 @@ DOMHighResTimeStamp PerformanceTimingData::WorkerStartHighRes(
       TimeStampToDOMHighRes(aPerformance, mWorkerStart);
   return nsRFPService::ReduceTimePrecisionAsMSecs(
       rawValue, aPerformance->GetRandomTimelineSeed(),
-      aPerformance->RTPCallerType());
+      aPerformance->IsSystemPrincipal(), aPerformance->CrossOriginIsolated());
 }
 
 /**
@@ -505,7 +506,7 @@ DOMHighResTimeStamp PerformanceTimingData::DomainLookupEndHighRes(
       TimeStampToDOMHighRes(aPerformance, mDomainLookupEnd);
   return nsRFPService::ReduceTimePrecisionAsMSecs(
       rawValue, aPerformance->GetRandomTimelineSeed(),
-      aPerformance->RTPCallerType());
+      aPerformance->IsSystemPrincipal(), aPerformance->CrossOriginIsolated());
 }
 
 DOMTimeMilliSec PerformanceTiming::DomainLookupEnd() {
@@ -527,7 +528,7 @@ DOMHighResTimeStamp PerformanceTimingData::ConnectStartHighRes(
       TimeStampToDOMHighRes(aPerformance, mConnectStart);
   return nsRFPService::ReduceTimePrecisionAsMSecs(
       rawValue, aPerformance->GetRandomTimelineSeed(),
-      aPerformance->RTPCallerType());
+      aPerformance->IsSystemPrincipal(), aPerformance->CrossOriginIsolated());
 }
 
 DOMTimeMilliSec PerformanceTiming::ConnectStart() {
@@ -552,7 +553,7 @@ DOMHighResTimeStamp PerformanceTimingData::SecureConnectionStartHighRes(
       TimeStampToDOMHighRes(aPerformance, mSecureConnectionStart);
   return nsRFPService::ReduceTimePrecisionAsMSecs(
       rawValue, aPerformance->GetRandomTimelineSeed(),
-      aPerformance->RTPCallerType());
+      aPerformance->IsSystemPrincipal(), aPerformance->CrossOriginIsolated());
 }
 
 DOMTimeMilliSec PerformanceTiming::SecureConnectionStart() {
@@ -575,7 +576,7 @@ DOMHighResTimeStamp PerformanceTimingData::ConnectEndHighRes(
       TimeStampToDOMHighRes(aPerformance, mConnectEnd);
   return nsRFPService::ReduceTimePrecisionAsMSecs(
       rawValue, aPerformance->GetRandomTimelineSeed(),
-      aPerformance->RTPCallerType());
+      aPerformance->IsSystemPrincipal(), aPerformance->CrossOriginIsolated());
 }
 
 DOMTimeMilliSec PerformanceTiming::ConnectEnd() {
@@ -646,7 +647,7 @@ DOMHighResTimeStamp PerformanceTimingData::ResponseEndHighRes(
       TimeStampToDOMHighRes(aPerformance, mResponseEnd);
   return nsRFPService::ReduceTimePrecisionAsMSecs(
       rawValue, aPerformance->GetRandomTimelineSeed(),
-      aPerformance->RTPCallerType());
+      aPerformance->IsSystemPrincipal(), aPerformance->CrossOriginIsolated());
 }
 
 DOMTimeMilliSec PerformanceTiming::ResponseEnd() {

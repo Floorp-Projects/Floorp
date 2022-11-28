@@ -10,7 +10,6 @@
 #include <utility>
 
 #include "Blob.h"
-#include "nsContentUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/BaseBlobImpl.h"
@@ -32,7 +31,7 @@ class MultipartBlobImpl final : public BaseBlobImpl {
   // Create as a file
   static already_AddRefed<MultipartBlobImpl> Create(
       nsTArray<RefPtr<BlobImpl>>&& aBlobImpls, const nsAString& aName,
-      const nsAString& aContentType, RTPCallerType aRTPCallerType,
+      const nsAString& aContentType, bool aCrossOriginIsolated,
       ErrorResult& aRv);
 
   // Create as a blob
@@ -49,11 +48,11 @@ class MultipartBlobImpl final : public BaseBlobImpl {
   MultipartBlobImpl()
       : BaseBlobImpl(u""_ns, MULTIPARTBLOBIMPL_UNKNOWN_LENGTH) {}
 
-  void InitializeBlob(RTPCallerType aRTPCallerType, ErrorResult& aRv);
+  void InitializeBlob(bool aCrossOriginIsolated, ErrorResult& aRv);
 
   void InitializeBlob(const Sequence<Blob::BlobPart>& aData,
                       const nsAString& aContentType, bool aNativeEOL,
-                      RTPCallerType aRTPCallerType, ErrorResult& aRv);
+                      bool aCrossOriginIsolated, ErrorResult& aRv);
 
   already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart, uint64_t aLength,
                                          const nsAString& aContentType,
@@ -94,7 +93,7 @@ class MultipartBlobImpl final : public BaseBlobImpl {
 
   ~MultipartBlobImpl() override = default;
 
-  void SetLengthAndModifiedDate(const Maybe<RTPCallerType>& aRTPCallerType,
+  void SetLengthAndModifiedDate(const Maybe<bool>& aCrossOriginIsolated,
                                 ErrorResult& aRv);
 
   nsTArray<RefPtr<BlobImpl>> mBlobImpls;

@@ -739,15 +739,12 @@ double AudioContext::CurrentTime() {
 
   double rawTime = track->TrackTimeToSeconds(track->GetCurrentTime());
 
-  RTPCallerType callerType = GetParentObject()->AsGlobal()->RTPCallerType();
-
   // CurrentTime increments in intervals of 128/sampleRate. If the Timer
   // Precision Reduction is smaller than this interval, the jittered time
   // can always be reversed to the raw step of the interval. In that case
   // we can simply return the un-reduced time; and avoid breaking tests.
   // We have to convert each variable into a common magnitude, we choose ms.
-  if ((128 / mSampleRate) * 1000.0 >
-      nsRFPService::TimerResolution(callerType) / 1000.0) {
+  if ((128 / mSampleRate) * 1000.0 > nsRFPService::TimerResolution() / 1000.0) {
     return rawTime;
   }
 
@@ -756,7 +753,9 @@ double AudioContext::CurrentTime() {
   // will never reset (even if one rewinds a video.) Therefore we can use a
   // single Random Seed initialized at the same time as the object.
   return nsRFPService::ReduceTimePrecisionAsSecs(
-      rawTime, GetRandomTimelineSeed(), callerType);
+      rawTime, GetRandomTimelineSeed(),
+      /* aIsSystemPrincipal */ false,
+      GetParentObject()->AsGlobal()->CrossOriginIsolated());
 }
 
 nsISerialEventTarget* AudioContext::GetMainThread() const {
