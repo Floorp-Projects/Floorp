@@ -95,10 +95,10 @@ const BASE_MESSAGES = () => [
       icon_dark_theme: "chrome://browser/content/cfr-lightning-dark.svg",
       icon_class: "cfr-doorhanger-small-icon",
       heading_text: {
-        string_id: "firefoxview-cfr-header",
+        string_id: "firefoxview-cfr-header-v2",
       },
       text: {
-        string_id: "firefoxview-cfr-body",
+        string_id: "firefoxview-cfr-body-v2",
       },
       buttons: {
         primary: {
