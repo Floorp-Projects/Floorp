@@ -37,9 +37,9 @@ json-e==4.4.3 \
     --hash=sha256:604cc506746ece244e5f4c66ce1b77887b0340749f9f10f58f311caf5701315f \
     --hash=sha256:8ed3974faa887ca96a7987298f6550cf2ad35472419a980766b3abe48258de0a
     # via taskcluster-taskgraph
-mozilla-repo-urls==0.1.0 \
-    --hash=sha256:5978abd796ae2b51a66e571754f0c559050cb4a024f2bf401471fa7ac4afd54e \
-    --hash=sha256:aa43ebcc4744b4cf20bf27f8dff885e82efee21a0219ba20f6bd99931cabd7b9
+mozilla-repo-urls==0.1.1 \
+    --hash=sha256:30510d3519479aa70211145d0ac9cf6e2fadcb8d30fa3b196bb957bd773502ba \
+    --hash=sha256:7364da790751db2a060eb45adbf1d7db89a145ed279ba235f3425db9dd255915
     # via taskcluster-taskgraph
 mozilla-version==1.1.0 \
     --hash=sha256:1a56c1ea668ec10e18c0a2e394a79373b5ec0ea25a33d204ac6382f337cb9f8a \
@@ -106,18 +106,18 @@ slugid==2.0.0 \
     --hash=sha256:a950d98b72691178bdd4d6c52743c4a2aa039207cf7a97d71060a111ff9ba297 \
     --hash=sha256:aec8b0e01c4ad32e38e12d609eab3ec912fd129aaf6b2ded0199b56a5f8fd67c
     # via taskcluster-taskgraph
-taskcluster-taskgraph==3.5.1 \
-    --hash=sha256:dc56b87228fb8eb1ef611750202344817a8cf5d825c0dc7e2dcc0f8b2795cbcd \
-    --hash=sha256:e08b935175349ef8728ff5f19c7e9866a562256180f5580b291da3217cb5016c
+taskcluster-taskgraph==3.7.0 \
+    --hash=sha256:1d30045b1ff537245f77222ee323734098e5b3327623024027f3348abca81e00 \
+    --hash=sha256:4ef7a36e3c873c024c6d415d52342509ee07b0686d98fc1db8e01cdcaee5e377
     # via -r requirements.in
 taskcluster-urls==13.0.1 \
     --hash=sha256:5e25e7e6818e8877178b175ff43d2e6548afad72694aa125f404a7329ece0973 \
     --hash=sha256:b25e122ecec249c4299ac7b20b08db76e3e2025bdaeb699a9d444556de5fd367 \
     --hash=sha256:f66dcbd6572a6216ab65949f0fa0b91f2df647918028436c384e6af5cd12ae2b
     # via taskcluster-taskgraph
-urllib3==1.26.12 \
-    --hash=sha256:3fa96cf423e6987997fc326ae8df396db2a8b7c667747d47ddd8ecba91f4a74e \
-    --hash=sha256:b930dd878d5a8afb066a637fbb35144fe7901e3b209d1cd4f524bd0e9deee997
+urllib3==1.26.13 \
+    --hash=sha256:47cc05d99aaa09c9e72ed5809b60e7ba354e64b59c9c173ac3018642d8bb41fc \
+    --hash=sha256:c083dd0dce68dbfbe1129d5271cb90f9447dea7d52097c6e0126120c521ddea8
     # via requests
 voluptuous==0.13.1 \
     --hash=sha256:4b838b185f5951f2d6e8752b68fcf18bd7a9c26ded8f143f92d6d28f3921a3e6 \
