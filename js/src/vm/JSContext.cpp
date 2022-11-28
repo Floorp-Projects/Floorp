@@ -1181,19 +1181,24 @@ void JSContext::setPendingException(HandleValue value,
 
 bool JSContext::getPendingException(MutableHandleValue rval) {
   MOZ_ASSERT(isExceptionPending());
-  rval.set(unwrappedException());
+
+  RootedValue exception(this, unwrappedException());
   if (zone()->isAtomsZone()) {
+    rval.set(exception);
     return true;
   }
+
   Rooted<SavedFrame*> stack(this, unwrappedExceptionStack());
   JS::ExceptionStatus prevStatus = status;
   clearPendingException();
-  if (!compartment()->wrap(this, rval)) {
+  if (!compartment()->wrap(this, &exception)) {
     return false;
   }
-  this->check(rval);
-  setPendingException(rval, stack);
+  this->check(exception);
+  setPendingException(exception, stack);
   status = prevStatus;
+
+  rval.set(exception);
   return true;
 }
 
