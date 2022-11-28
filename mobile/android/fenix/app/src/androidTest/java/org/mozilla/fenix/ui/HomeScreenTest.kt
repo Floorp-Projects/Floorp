@@ -200,6 +200,25 @@ class HomeScreenTest {
     }
 
     @Test
+    fun dismissOnboardingWithPageLoadTest() {
+        activityTestRule.activityRule.applySettingsExceptions {
+            it.isJumpBackInCFREnabled = false
+            it.isWallpaperOnboardingEnabled = false
+        }
+
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+            verifyWelcomeHeader()
+        }
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.goToHomescreen {
+            verifyExistingTopSitesList()
+        }
+    }
+
+    @Test
     fun toolbarTapDoesntDismissOnboardingTest() {
         homeScreen {
             verifyWelcomeHeader()
