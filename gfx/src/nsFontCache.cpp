@@ -7,7 +7,6 @@
 
 #include "gfxTextRun.h"
 #include "mozilla/Services.h"
-#include "mozilla/ServoUtils.h"
 #include "nsCRT.h"
 
 using mozilla::services::GetObserverService;
@@ -18,7 +17,6 @@ NS_IMPL_ISUPPORTS(nsFontCache, nsIObserver)
 // safe to call AddObserver from a constructor or RemoveObserver
 // from a destructor.  That should be fixed.
 void nsFontCache::Init(nsPresContext* aContext) {
-  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   mContext = aContext;
   // register as a memory-pressure observer to free font resources
   // in low-memory situations.
@@ -34,7 +32,6 @@ void nsFontCache::Init(nsPresContext* aContext) {
 }
 
 void nsFontCache::Destroy() {
-  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIObserverService> obs = GetObserverService();
   if (obs) {
     obs->RemoveObserver(this, "memory-pressure");
@@ -44,7 +41,6 @@ void nsFontCache::Destroy() {
 
 NS_IMETHODIMP
 nsFontCache::Observe(nsISupports*, const char* aTopic, const char16_t*) {
-  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   if (!nsCRT::strcmp(aTopic, "memory-pressure")) {
     Compact();
   }
@@ -53,10 +49,6 @@ nsFontCache::Observe(nsISupports*, const char* aTopic, const char16_t*) {
 
 already_AddRefed<nsFontMetrics> nsFontCache::GetMetricsFor(
     const nsFont& aFont, const nsFontMetrics::Params& aParams) {
-  // We may eventually want to put an nsFontCache on canvas2d workers, but for
-  // now it is only used by the main-thread layout code and stylo.
-  AssertIsMainThreadOrServoFontMetricsLocked();
-
   nsAtom* language = aParams.language && !aParams.language->IsEmpty()
                          ? aParams.language
                          : mLocaleLanguage.get();
@@ -105,7 +97,6 @@ already_AddRefed<nsFontMetrics> nsFontCache::GetMetricsFor(
 }
 
 void nsFontCache::UpdateUserFonts(gfxUserFontSet* aUserFontSet) {
-  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   for (nsFontMetrics* fm : mFontMetrics) {
     gfxFontGroup* fg = fm->GetThebesFontGroup();
     if (fg->GetUserFontSet() == aUserFontSet) {
@@ -115,12 +106,10 @@ void nsFontCache::UpdateUserFonts(gfxUserFontSet* aUserFontSet) {
 }
 
 void nsFontCache::FontMetricsDeleted(const nsFontMetrics* aFontMetrics) {
-  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   mFontMetrics.RemoveElement(aFontMetrics);
 }
 
 void nsFontCache::Compact() {
-  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   // Need to loop backward because the running element can be removed on
   // the way
   for (int32_t i = mFontMetrics.Length() - 1; i >= 0; --i) {
@@ -140,7 +129,6 @@ void nsFontCache::Compact() {
 
 // Flush the aFlushCount oldest entries, or all if (aFlushCount < 0)
 void nsFontCache::Flush(int32_t aFlushCount) {
-  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   int32_t n = aFlushCount < 0
                   ? mFontMetrics.Length()
                   : std::min<int32_t>(aFlushCount, mFontMetrics.Length());
