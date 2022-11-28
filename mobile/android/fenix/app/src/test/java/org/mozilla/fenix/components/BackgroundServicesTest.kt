@@ -145,7 +145,7 @@ class BackgroundServicesTest {
     fun `telemetry account observer records nimbus event for logins`() {
         observer.onAuthenticated(mockk(), AuthType.Signin)
         verify {
-            nimbus.recordEvent("sync_auth_sign_in")
+            nimbus.recordEvent("sync_auth.sign_in")
         }
         confirmVerified(nimbus)
     }

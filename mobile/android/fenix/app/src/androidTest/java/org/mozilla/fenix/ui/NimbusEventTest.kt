@@ -68,7 +68,7 @@ class NimbusEventTest {
         observer.onAuthenticated(mockk(), AuthType.Signin)
 
         Experimentation.withHelper {
-            assertTrue(evalJexl("'sync_auth_sign_in'|eventSum('Days', 28, 0) > 0"))
+            assertTrue(evalJexl("'sync_auth.sign_in'|eventSum('Days', 28, 0) > 0"))
         }
     }
 }
