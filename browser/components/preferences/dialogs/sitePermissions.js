@@ -349,7 +349,7 @@ var gSitePermissionsManager = {
   },
 
   _createPermissionListItem(permission) {
-    let width = "75";
+    let width = "75px";
     let richlistitem = document.createXULElement("richlistitem");
     richlistitem.setAttribute("origin", permission.origin);
     let row = document.createXULElement("hbox");
@@ -358,14 +358,14 @@ var gSitePermissionsManager = {
     let hbox = document.createXULElement("hbox");
     let website = document.createXULElement("label");
     website.setAttribute("value", permission.origin);
-    website.setAttribute("width", width);
+    // TODO(bug 1802993): Seems this could be on the hbox instead or something?
+    website.setAttribute("style", `width: ${width}`);
     hbox.setAttribute("class", "website-name");
-    hbox.setAttribute("style", "-moz-box-flex: 3");
+    hbox.setAttribute("style", `-moz-box-flex: 3`);
     hbox.appendChild(website);
 
     let menulist = document.createXULElement("menulist");
-    menulist.setAttribute("style", "-moz-box-flex: 1");
-    menulist.setAttribute("width", width);
+    menulist.setAttribute("style", `-moz-box-flex: 1; width: ${width}`);
     menulist.setAttribute("class", "website-status");
     let states = SitePermissions.getAvailableStates(permission.type);
     for (let state of states) {
