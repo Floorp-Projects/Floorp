@@ -640,7 +640,7 @@ var BackgroundUpdate = {
           // the regular log apparatus is not available, so use `dump`.
           if (lazy.log.shouldLog("debug")) {
             dump(
-              `${SLUG}: shutting down, so not updating Firefox Messaging System targeting information\n`
+              `${SLUG}: shutting down, so not updating Firefox Messaging System targeting information from beforeSave\n`
             );
           }
           return;
@@ -656,7 +656,7 @@ var BackgroundUpdate = {
 
     // We don't `load`, since we don't care about reading existing (now stale)
     // data.
-    snapshot.data = lazy.ASRouterTargeting.getEnvironmentSnapshot();
+    snapshot.data = await lazy.ASRouterTargeting.getEnvironmentSnapshot();
 
     // Persist.
     snapshot.saveSoon();
@@ -670,6 +670,18 @@ var BackgroundUpdate = {
     // Hold a reference to prevent GC.
     this._targetingSnapshottingTimer.initWithCallback(
       () => {
+        if (Services.startup.shuttingDown) {
+          // Collecting targeting information can be slow and cause shutdown
+          // crashes, so if we're shutting down, don't try to collect.  During
+          // shutdown, the regular log apparatus is not available, so use `dump`.
+          if (lazy.log.shouldLog("debug")) {
+            dump(
+              `${SLUG}: shutting down, so not updating Firefox Messaging System targeting information from timer\n`
+            );
+          }
+          return;
+        }
+
         snapshot.saveSoon();
       },
       // By default, snapshot Firefox Messaging System targeting for use by the
