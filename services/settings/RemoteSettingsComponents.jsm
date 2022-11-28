@@ -22,7 +22,7 @@ RemoteSettingsTimer.prototype = {
   // By default, this timer fires once every 24 hours. See the "services.settings.poll_interval" pref.
   notify(timer) {
     lazy.RemoteSettings.pollChanges({ trigger: "timer" }).catch(e =>
-      Cu.reportError(e)
+      console.error(e)
     );
   },
 };

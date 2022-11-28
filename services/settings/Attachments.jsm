@@ -178,7 +178,7 @@ class Downloader {
           return { ...(await dumpInfo.getResult()), _source: "dump_match" };
         } catch (e) {
           // Failed to read dump: record found but attachment file is missing.
-          Cu.reportError(e);
+          console.error(e);
         }
       }
     }
@@ -190,7 +190,7 @@ class Downloader {
           return { ...(await cacheInfo.getResult()), _source: "cache_match" };
         } catch (e) {
           // Failed to read cache, e.g. IndexedDB unusable.
-          Cu.reportError(e);
+          console.error(e);
         }
       }
     }
@@ -209,7 +209,7 @@ class Downloader {
         // Store in cache but don't wait for it before returning.
         this.cacheImpl
           .set(attachmentId, { record, blob })
-          .catch(e => Cu.reportError(e));
+          .catch(e => console.error(e));
         return { buffer: newBuffer, record, _source: "remote_match" };
       } catch (e) {
         // No network, corrupted content, etc.
@@ -232,7 +232,7 @@ class Downloader {
           return { ...(await dumpInfo.getResult()), _source: "dump_fallback" };
         } catch (e) {
           // Failed to read dump: record found but attachment file is missing.
-          Cu.reportError(e);
+          console.error(e);
         }
       }
 
@@ -240,7 +240,7 @@ class Downloader {
         return { ...(await cacheInfo.getResult()), _source: "cache_fallback" };
       } catch (e) {
         // Failed to read from cache, e.g. IndexedDB unusable.
-        Cu.reportError(e);
+        console.error(e);
       }
     }
 

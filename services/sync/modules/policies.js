@@ -979,7 +979,7 @@ ErrorHandler.prototype = {
     }
     const logType = await logManager.resetFileLog();
     if (logType == logManager.ERROR_LOG_WRITTEN) {
-      Cu.reportError(
+      console.error(
         "Sync encountered an error - see about:sync-log for the log file."
       );
     }

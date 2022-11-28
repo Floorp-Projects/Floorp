@@ -495,7 +495,7 @@ class RemoteSettingsClient extends EventEmitter {
           }
           // Report error, but continue because there could have been data
           // loaded from a parallel call.
-          Cu.reportError(e);
+          console.error(e);
         } finally {
           // then delete this promise again, as now we should have local data:
           delete this._importingPromise;
@@ -510,7 +510,7 @@ class RemoteSettingsClient extends EventEmitter {
       if (!dumpFallback) {
         throw e;
       }
-      Cu.reportError(e);
+      console.error(e);
       let { data } = await lazy.SharedUtils.loadJSONDump(
         this.bucketName,
         this.collectionName
@@ -675,7 +675,7 @@ class RemoteSettingsClient extends EventEmitter {
           collectionLastModified = await this.db.getLastModified();
         } catch (e) {
           // Report but go-on.
-          Cu.reportError(e);
+          console.error(e);
         }
       }
       let syncResult;

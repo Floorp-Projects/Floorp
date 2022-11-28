@@ -247,7 +247,7 @@ add_task(async function hmac_error_during_node_reassignment() {
           };
 
           Service.sync();
-        })().catch(Cu.reportError);
+        })().catch(console.error);
       };
     };
   });

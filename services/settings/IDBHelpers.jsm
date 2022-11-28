@@ -97,7 +97,7 @@ function executeIDB(db, storeNames, mode, callback, desc) {
       try {
         transaction.abort();
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     };
     // Add all the handlers before using the stores.

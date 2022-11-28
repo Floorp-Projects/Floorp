@@ -122,7 +122,7 @@ class FxAccountsDevice {
         Ci.nsIDNSService
       ).myHostName;
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
     let system =
       // 'device' is defined on unix systems

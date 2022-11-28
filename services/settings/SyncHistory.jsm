@@ -85,7 +85,7 @@ class SyncHistory {
         entries.push({ ...stored, datetime: new Date(stored.timestamp) });
       } catch (e) {
         // Ignore malformed entries.
-        Cu.reportError(e);
+        console.error(e);
       }
     }
     // Sort entries by `timestamp` descending.

@@ -80,7 +80,7 @@ const UIStateInternal = {
     // that time, so we refresh the state after the browser has settled.
     Services.tm.idleDispatchToMainThread(() => {
       this.refreshState().catch(e => {
-        Cu.reportError(e);
+        console.error(e);
       });
     }, 2000);
   },
@@ -103,7 +103,7 @@ const UIStateInternal = {
         break;
       default:
         this.refreshState().catch(e => {
-          Cu.reportError(e);
+          console.error(e);
         });
         break;
     }
@@ -190,7 +190,7 @@ const UIStateInternal = {
       // The most likely scenario is a user logged out, so reflect that.
       // Bug 995134 calls for better errors so we could retry if we were
       // sure this was the failure reason.
-      Cu.reportError("Error updating FxA account info: " + e);
+      console.error("Error updating FxA account info: " + e);
       return null;
     }
   },
