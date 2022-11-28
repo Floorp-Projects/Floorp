@@ -451,23 +451,6 @@ const clickPrimaryButton = async doc => {
 };
 
 /**
- * Closes a feature callout via a click to the dismiss button.
- *
- * @param {Document} doc The document where the callout appears.
- */
-const closeCallout = async doc => {
-  // close the callout dialog
-  const dismissBtn = doc.querySelector(`${calloutSelector} .dismiss-button`);
-  if (!dismissBtn) {
-    return;
-  }
-  doc.querySelector(`${calloutSelector} .dismiss-button`).click();
-  await BrowserTestUtils.waitForCondition(() => {
-    return !document.querySelector(calloutSelector);
-  });
-};
-
-/**
  * Helper function to open and close a tab so the recently
  * closed tabs list can have data.
  *

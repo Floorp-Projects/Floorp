@@ -17,7 +17,7 @@ const ROOT_PATH = getRootDirectory(gTestPath).replace(
 );
 
 // Testing multiple protocol / origin combinations takes long on debug.
-requestLongerTimeout(7);
+requestLongerTimeout(3);
 
 const DIALOG_URL_APP_CHOOSER =
   "chrome://mozapps/content/handling/appChooser.xhtml";
