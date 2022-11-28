@@ -121,7 +121,9 @@ eslint:
 eslint-build:
     description: ESLint checks with build data
     always-target: false
+    # Triggered by cron task, don't run on any projects and disable optimization.
     run-on-projects: []
+    when: null
     attributes:
         code-review: false
     treeherder:
