@@ -12,6 +12,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"  // for Event
+#include "mozilla/dom/HTMLDataListElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
@@ -395,7 +396,8 @@ nsFormFillController::SetPopupOpen(bool aPopupOpen) {
       RefPtr<PresShell> presShell = docShell->GetPresShell();
       NS_ENSURE_STATE(presShell);
       presShell->ScrollContentIntoView(
-          content, ScrollAxis(WhereToScroll::Nearest, WhenToScroll::IfNotVisible),
+          content,
+          ScrollAxis(WhereToScroll::Nearest, WhenToScroll::IfNotVisible),
           ScrollAxis(WhereToScroll::Nearest, WhenToScroll::IfNotVisible),
           ScrollFlags::ScrollOverflowHidden);
       // mFocusedPopup can be destroyed after ScrollContentIntoView, see bug

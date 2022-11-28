@@ -6,6 +6,7 @@
 
 #include "nsRangeFrame.h"
 
+#include "mozilla/Assertions.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TouchEvents.h"
 
@@ -19,13 +20,16 @@
 #include "mozilla/dom/Document.h"
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
+#include "mozilla/dom/HTMLDataListElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/dom/HTMLOptionElement.h"
 #include "nsPresContext.h"
 #include "nsPresContextInlines.h"
 #include "nsNodeInfoManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/ServoStyleSet.h"
 #include "nsStyleConsts.h"
+#include "nsTArray.h"
 
 #ifdef ACCESSIBILITY
 #  include "nsAccessibilityService.h"
@@ -307,28 +311,29 @@ a11y::AccType nsRangeFrame::AccessibleType() { return a11y::eHTMLRangeType; }
 #endif
 
 double nsRangeFrame::GetValueAsFractionOfRange() {
-  MOZ_ASSERT(mContent->IsHTMLElement(nsGkAtoms::input), "bad cast");
-  auto* input = static_cast<dom::HTMLInputElement*>(GetContent());
-  MOZ_ASSERT(input->ControlType() == FormControlType::InputRange);
+  return GetDoubleAsFractionOfRange(InputElement().GetValueAsDecimal());
+}
 
-  Decimal value = input->GetValueAsDecimal();
-  Decimal minimum = input->GetMinimum();
-  Decimal maximum = input->GetMaximum();
+double nsRangeFrame::GetDoubleAsFractionOfRange(const Decimal& aValue) {
+  auto& input = InputElement();
 
-  MOZ_ASSERT(value.isFinite() && minimum.isFinite() && maximum.isFinite(),
+  Decimal minimum = input.GetMinimum();
+  Decimal maximum = input.GetMaximum();
+
+  MOZ_ASSERT(aValue.isFinite() && minimum.isFinite() && maximum.isFinite(),
              "type=range should have a default maximum/minimum");
 
   if (maximum <= minimum) {
     // Avoid rounding triggering the assert by checking against an epsilon.
-    MOZ_ASSERT((value - minimum).abs().toDouble() <
+    MOZ_ASSERT((aValue - minimum).abs().toDouble() <
                    std::numeric_limits<float>::epsilon(),
                "Unsanitized value");
     return 0.0;
   }
 
-  MOZ_ASSERT(value >= minimum && value <= maximum, "Unsanitized value");
+  MOZ_ASSERT(aValue >= minimum && aValue <= maximum, "Unsanitized value");
 
-  return ((value - minimum) / (maximum - minimum)).toDouble();
+  return ((aValue - minimum) / (maximum - minimum)).toDouble();
 }
 
 Decimal nsRangeFrame::GetValueAtEventPoint(WidgetGUIEvent* aEvent) {
@@ -452,6 +457,44 @@ void nsRangeFrame::UpdateForValueChange() {
 #endif
 
   SchedulePaint();
+}
+
+nsTArray<double> nsRangeFrame::TickMarks() {
+  nsTArray<double> tickMarks;
+  auto& input = InputElement();
+  auto* list = input.GetList();
+  if (!list) {
+    return tickMarks;
+  }
+  auto min = input.GetMinimumAsDouble();
+  auto max = input.GetMaximumAsDouble();
+  auto* options = list->Options();
+  nsAutoString label;
+  for (uint32_t i = 0; i < options->Length(); ++i) {
+    auto* item = options->Item(i);
+    auto* option = HTMLOptionElement::FromNode(item);
+    MOZ_ASSERT(option);
+    if (option->Disabled()) {
+      continue;
+    }
+    nsAutoString str;
+    option->GetValue(str);
+    nsresult rv;
+    double tickMark = str.ToDouble(&rv);
+    if (NS_FAILED(rv) || tickMark < min || tickMark > max) {
+      continue;
+    }
+    tickMarks.AppendElement(tickMark);
+  }
+  tickMarks.Sort();
+  return tickMarks;
+}
+
+mozilla::dom::HTMLInputElement& nsRangeFrame::InputElement() const {
+  MOZ_ASSERT(mContent->IsHTMLElement(nsGkAtoms::input), "bad cast");
+  auto& input = *static_cast<dom::HTMLInputElement*>(GetContent());
+  MOZ_ASSERT(input.ControlType() == FormControlType::InputRange);
+  return input;
 }
 
 void nsRangeFrame::DoUpdateThumbPosition(nsIFrame* aThumbFrame,

@@ -4,8 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Theme.h"
+#include <utility>
 #include "ThemeCocoa.h"
 
+#include "ThemeDrawing.h"
+#include "Units.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/Document.h"
@@ -831,6 +834,7 @@ void Theme::PaintRange(nsIFrame* aFrame, PaintBackendData& aPaintData,
     return;
   }
 
+  nsTArray<double> tickMarks = rangeFrame->TickMarks();
   double progress = rangeFrame->GetValueAsFractionOfRange();
   auto rect = aRect;
   LayoutDeviceRect thumbRect(0, 0, kMinimumRangeThumbSize * aDpiRatio,
@@ -838,18 +842,31 @@ void Theme::PaintRange(nsIFrame* aFrame, PaintBackendData& aPaintData,
   LayoutDeviceRect progressClipRect(aRect);
   LayoutDeviceRect trackClipRect(aRect);
   const LayoutDeviceCoord verticalSize = kRangeHeight * aDpiRatio;
+  const LayoutDeviceCoord tickMarkWidth(
+      ThemeDrawing::SnapBorderWidth(1.0f, aDpiRatio));
+  const LayoutDeviceCoord tickMarkHeight(
+      ThemeDrawing::SnapBorderWidth(5.0f, aDpiRatio));
+  LayoutDevicePoint tickMarkOrigin, tickMarkDirection;
+  LayoutDeviceSize tickMarkSize;
   if (aHorizontal) {
     rect.height = verticalSize;
     rect.y = aRect.y + (aRect.height - rect.height) / 2;
+    tickMarkSize = LayoutDeviceSize(tickMarkWidth, tickMarkHeight);
     thumbRect.y = aRect.y + (aRect.height - thumbRect.height) / 2;
 
     if (IsFrameRTL(aFrame)) {
+      tickMarkOrigin =
+          LayoutDevicePoint(aRect.XMost() - thumbRect.width / 2, aRect.YMost());
+      tickMarkDirection = LayoutDevicePoint(-1.0f, 0.0f);
       thumbRect.x =
           aRect.x + (aRect.width - thumbRect.width) * (1.0 - progress);
       float midPoint = thumbRect.Center().X();
       trackClipRect.SetBoxX(aRect.X(), midPoint);
       progressClipRect.SetBoxX(midPoint, aRect.XMost());
     } else {
+      tickMarkOrigin =
+          LayoutDevicePoint(aRect.x + thumbRect.width / 2, aRect.YMost());
+      tickMarkDirection = LayoutDevicePoint(1.0, 0.0f);
       thumbRect.x = aRect.x + (aRect.width - thumbRect.width) * progress;
       float midPoint = thumbRect.Center().X();
       progressClipRect.SetBoxX(aRect.X(), midPoint);
@@ -858,6 +875,10 @@ void Theme::PaintRange(nsIFrame* aFrame, PaintBackendData& aPaintData,
   } else {
     rect.width = verticalSize;
     rect.x = aRect.x + (aRect.width - rect.width) / 2;
+    tickMarkOrigin = LayoutDevicePoint(aRect.XMost() - tickMarkHeight / 4,
+                                       aRect.YMost() - thumbRect.width / 2);
+    tickMarkDirection = LayoutDevicePoint(0.0f, -1.0f);
+    tickMarkSize = LayoutDeviceSize(tickMarkHeight, tickMarkWidth);
     thumbRect.x = aRect.x + (aRect.width - thumbRect.width) / 2;
 
     thumbRect.y =
@@ -874,6 +895,7 @@ void Theme::PaintRange(nsIFrame* aFrame, PaintBackendData& aPaintData,
       ComputeRangeProgressColors(aState, aColors);
   auto [trackColor, trackBorderColor] =
       ComputeRangeTrackColors(aState, aColors);
+  auto tickMarkColor = trackBorderColor;
 
   ThemeDrawing::PaintRoundedRectWithRadius(aPaintData, rect, progressClipRect,
                                            progressColor, progressBorderColor,
@@ -891,6 +913,19 @@ void Theme::PaintRange(nsIFrame* aFrame, PaintBackendData& aPaintData,
     // Thumb shadow
     PaintCircleShadow(aPaintData, thumbRect, overflowRect, 0.3f,
                       CSSPoint(0.0f, 2.0f), 2.0f, aDpiRatio);
+  }
+
+  tickMarkDirection.x *= aRect.width - thumbRect.width;
+  tickMarkDirection.y *= aRect.height - thumbRect.height;
+  tickMarkOrigin -=
+      LayoutDevicePoint(tickMarkSize.width, tickMarkSize.height) / 2;
+  auto tickMarkRect = LayoutDeviceRect(tickMarkOrigin, tickMarkSize);
+  for (auto tickMark : tickMarks) {
+    auto tickMarkOffset =
+        tickMarkDirection * float(rangeFrame->GetDoubleAsFractionOfRange(
+                                Decimal::fromDouble(tickMark)));
+    ThemeDrawing::FillRect(aPaintData, tickMarkRect + tickMarkOffset,
+                           tickMarkColor);
   }
 
   // Draw the thumb on top.

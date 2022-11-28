@@ -14,6 +14,7 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsIDOMEventListener.h"
 #include "nsCOMPtr.h"
+#include "nsTArray.h"
 
 class nsDisplayRangeFocusRing;
 
@@ -21,6 +22,7 @@ namespace mozilla {
 class PresShell;
 namespace dom {
 class Event;
+class HTMLInputElement;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -122,6 +124,14 @@ class nsRangeFrame final : public nsContainerFrame,
   double GetValueAsFractionOfRange();
 
   /**
+   * Returns the given value as a fraction of the difference between the input's
+   * minimum and its maximum (i.e. returns 0.0 when the value is the same as the
+   * input's minimum, and returns 1.0 when the value is the same as the input's
+   * maximum).
+   */
+  double GetDoubleAsFractionOfRange(const mozilla::Decimal& value);
+
+  /**
    * Returns whether the frame and its child should use the native style.
    */
   bool ShouldUseNativeStyle() const;
@@ -136,6 +146,11 @@ class nsRangeFrame final : public nsContainerFrame,
    * frames.)
    */
   void UpdateForValueChange();
+
+  nsTArray<double> TickMarks();
+
+ protected:
+  mozilla::dom::HTMLInputElement& InputElement() const;
 
  private:
   // Return our preferred size in the cross-axis (the axis perpendicular
