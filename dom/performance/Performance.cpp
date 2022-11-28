@@ -129,9 +129,11 @@ DOMHighResTimeStamp Performance::TimeStampToDOMHighResForRendering(
 DOMHighResTimeStamp Performance::Now() {
   DOMHighResTimeStamp rawTime = NowUnclamped();
 
-  // XXX: Remove this would cause functions in pkcs11f.h to fail.
-  // Bug 1628021 will find out the root cause.
-  if (mSystemPrincipal) {
+  // XXX: Removing this caused functions in pkcs11f.h to fail.
+  // Bug 1628021 investigates the root cause - it involves initializing
+  // the RNG service (part of GetRandomTimelineSeed()) off-main-thread
+  // but the underlying cause hasn't been identified yet.
+  if (mRTPCallerType == RTPCallerType::SystemPrincipal) {
     return rawTime;
   }
 
