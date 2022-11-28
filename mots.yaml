@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-11-24T10:10:43.504958'
+updated_at: '2022-11-25T15:09:17.773034'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -1276,7 +1276,7 @@ modules:
     description: ''
     includes:
       - docshell/**/*
-      - uriloader/**/*
+      - uriloader/base/**/*
     meta:
       owners_emeritus:
         - Boris Zbarsky
@@ -2020,6 +2020,8 @@ modules:
       - dom/xhr/**/*
       - dom/network/**/*
       - dom/websocket/**/*
+      - uriloader/prefetch/**/*
+      - uriloader/preload/**/*
     meta:
       owners_emeritus:
         - Dragana Damjanovic
@@ -3051,6 +3053,7 @@ modules:
         includes:
           - browser/components/downloads/**/*
           - toolkit/mozapps/downloads/**/*
+          - uriloader/exthandler/**/*
         meta:
           peers_emeritus:
             - Micah Tigley
@@ -3649,5 +3652,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: f44776f9d947cb103f6575c97782e98e6044816b
-  export: 42cc831813bee50c369828c927f25d3be816f5f8
+  config: 153a286c9bba144273342ae039dd7d2e6fe5cf27
+  export: e5897888bdf56e2fbce132ed4fadf7e1dfe0f7e5

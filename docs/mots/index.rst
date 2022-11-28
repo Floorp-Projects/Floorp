@@ -521,7 +521,7 @@ Core: docshell
     * - Includes
       -
         | `docshell/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=docshell/\*\*/\*>`__
-        | `uriloader/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=uriloader/\*\*/\*>`__
+        | `uriloader/base/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=uriloader/base/\*\*/\*>`__
     * - Group
       - dev-platform
     * - Bugzilla Components
@@ -1428,6 +1428,8 @@ The Mozilla Networking Library
         | `dom/xhr/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=dom/xhr/\*\*/\*>`__
         | `dom/network/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=dom/network/\*\*/\*>`__
         | `dom/websocket/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=dom/websocket/\*\*/\*>`__
+        | `uriloader/prefetch/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=uriloader/prefetch/\*\*/\*>`__
+        | `uriloader/preload/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=uriloader/preload/\*\*/\*>`__
     * - Group
       - dev-tech-network
     * - URL
@@ -2779,6 +2781,7 @@ The downloads UI and service.
       -
         | `browser/components/downloads/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=browser/components/downloads/\*\*/\*>`__
         | `toolkit/mozapps/downloads/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=toolkit/mozapps/downloads/\*\*/\*>`__
+        | `uriloader/exthandler/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=uriloader/exthandler/\*\*/\*>`__
 
 
 Enterprise Policies
