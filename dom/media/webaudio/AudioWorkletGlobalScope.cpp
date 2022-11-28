@@ -49,6 +49,9 @@ bool AudioWorkletGlobalScope::WrapGlobalObject(
 
   JS::RealmOptions options;
 
+  options.behaviors().setShouldResistFingerprinting(
+      ShouldResistFingerprinting());
+
   // The SharedArrayBuffer global constructor property should not be present in
   // a fresh global object when shared memory objects aren't allowed (because
   // COOP/COEP support isn't enabled, or because COOP/COEP don't act to isolate
