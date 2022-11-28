@@ -971,8 +971,8 @@ The value is a string representing the focused editor.
     ``true`` or document whose ``designMode`` is ``"on"``) gets focus, the
     value is empty. And also, when the other elements get focus.
 
-mHTMLInputInputMode
-^^^^^^^^^^^^^^^^^^^
+mHTMLInputMode
+^^^^^^^^^^^^^^
 
 The value is ``inputmode`` attribute value of the focused editor. This is set
 only when ``"dom.forms.inputmode"`` pref is true.
