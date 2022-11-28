@@ -46,7 +46,6 @@
 #include "nsCOMPtr.h"
 #include "nsFieldSetFrame.h"
 #include "nsFlexContainerFrame.h"
-#include "nsFocusManager.h"
 #include "nsFrameList.h"
 #include "nsPlaceholderFrame.h"
 #include "nsIBaseWindow.h"
@@ -382,12 +381,7 @@ bool nsIFrame::IsVisibleConsideringAncestors(uint32_t aFlags) const {
       return false;
     }
 
-    // This method is used to determine if a frame is focusable, because it's
-    // called by nsIFrame::IsFocusable. `content-visibility: auto` should not
-    // force this frame to be unfocusable, so we only take into account
-    // `content-visibility: hidden` here.
-    if (this != frame &&
-        frame->HidesContent(IncludeContentVisibility::Hidden)) {
+    if (this != frame && frame->HidesContent()) {
       return false;
     }
 
@@ -786,16 +780,6 @@ void nsIFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     UpdateVisibleDescendantsState();
   }
 
-  if (disp->IsContentVisibilityAuto() &&
-      IsContentVisibilityPropertyApplicable()) {
-    PresShell()->RegisterContentVisibilityAutoFrame(this);
-    auto* element = Element::FromNodeOrNull(GetContent());
-    MOZ_ASSERT(element);
-    PresContext()->Document()->ObserveForContentVisibility(*element);
-  } else if (auto* element = Element::FromNodeOrNull(GetContent())) {
-    element->ClearContentRelevancy();
-  }
-
   // TODO(mrobinson): Once bug 1765615 is fixed, this should be called on
   // layout changes. In addition, when `content-visibility: auto` is implemented
   // this should also be called when scrolling or focus causes content to be
@@ -868,13 +852,6 @@ void nsIFrame::DestroyFrom(nsIFrame* aDestructRoot,
     // AnimationsWithDestroyedFrame only lives during the restyling process.
     if (adf) {
       adf->Put(mContent, mComputedStyle);
-    }
-  }
-
-  if (disp->IsContentVisibilityAuto() &&
-      IsContentVisibilityPropertyApplicable()) {
-    if (auto* element = Element::FromNodeOrNull(GetContent())) {
-      PresContext()->Document()->UnobserveForContentVisibility(*element);
     }
   }
 
@@ -6864,53 +6841,12 @@ bool nsIFrame::IsContentDisabled() const {
   return element && element->IsDisabled();
 }
 
-bool nsIFrame::IsContentVisibilityPropertyApplicable() const {
-  return GetContent() && GetContent()->IsElement() &&
-         (!StyleDisplay()->IsInlineFlow() ||
-          IsFrameOfType(nsIFrame::eReplaced));
-}
-
-bool nsIFrame::IsContentRelevant() const {
-  MOZ_ASSERT(IsContentVisibilityPropertyApplicable());
-  MOZ_ASSERT(StyleDisplay()->IsContentVisibilityAuto());
-
-  auto* element = Element::FromNodeOrNull(GetContent());
-  MOZ_ASSERT(element);
-
-  Maybe<ContentRelevancy> relevancy = element->GetContentRelevancy();
-  if (relevancy.isSome()) {
-    return !relevancy->isEmpty();
-  }
-
-  // If there is no relevancy set, then this frame still has not received had
-  // the initial visibility callback call. In that case, only rely on whether
-  // or not it is inside a top layer element which will never change for this
-  // frame and allows proper rendering of the top layer.
-  return IsDescendantOfTopLayerElement();
-}
-
-bool nsIFrame::HidesContent(
-    const EnumSet<IncludeContentVisibility>& aInclude) const {
-  const auto& disp = *StyleDisplay();
-  if (disp.IsContentVisibilityVisible()) {
-    return false;
-  };
-
-  if (!IsContentVisibilityPropertyApplicable()) {
+bool nsIFrame::HidesContent() const {
+  if (!StyleDisplay()->IsContentVisibilityHidden()) {
     return false;
   }
 
-  if (aInclude.contains(IncludeContentVisibility::Hidden) &&
-      disp.IsContentVisibilityHidden()) {
-    return true;
-  }
-
-  if (aInclude.contains(IncludeContentVisibility::Auto) &&
-      disp.IsContentVisibilityAuto()) {
-    return !IsContentRelevant();
-  }
-
-  return false;
+  return IsFrameOfType(nsIFrame::eReplaced) || !StyleDisplay()->IsInlineFlow();
 }
 
 bool nsIFrame::HidesContentForLayout() const {
@@ -6923,8 +6859,7 @@ bool nsIFrame::IsHiddenByContentVisibilityOfInFlowParentForLayout() const {
          !(Style()->IsAnonBox() && !IsFrameOfType(nsIFrame::eLineParticipant));
 }
 
-bool nsIFrame::IsHiddenByContentVisibilityOnAnyAncestor(
-    const EnumSet<IncludeContentVisibility>& aInclude) const {
+bool nsIFrame::IsHiddenByContentVisibilityOnAnyAncestor() const {
   if (!StaticPrefs::layout_css_content_visibility_enabled()) {
     return false;
   }
@@ -6932,7 +6867,7 @@ bool nsIFrame::IsHiddenByContentVisibilityOnAnyAncestor(
   bool isAnonymousBlock =
       Style()->IsAnonBox() && !IsFrameOfType(nsIFrame::eLineParticipant);
   for (nsIFrame* cur = GetInFlowParent(); cur; cur = cur->GetInFlowParent()) {
-    if (!isAnonymousBlock && cur->HidesContent(aInclude)) {
+    if (!isAnonymousBlock && cur->HidesContent()) {
       return true;
     }
 
@@ -6943,110 +6878,6 @@ bool nsIFrame::IsHiddenByContentVisibilityOnAnyAncestor(
   }
 
   return false;
-}
-
-bool nsIFrame::HasSelectionInSubtree() {
-  if (IsSelected()) {
-    return true;
-  }
-
-  RefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
-  const Selection* selection =
-      frameSelection->GetSelection(SelectionType::eNormal);
-  if (!selection) {
-    return false;
-  }
-
-  for (uint32_t i = 0; i < selection->RangeCount(); i++) {
-    auto* range = selection->GetRangeAt(i);
-    MOZ_ASSERT(range);
-
-    const auto* commonAncestorNode =
-        range->GetRegisteredClosestCommonInclusiveAncestor();
-    if (commonAncestorNode->IsInclusiveDescendantOf(GetContent())) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-bool nsIFrame::IsDescendantOfTopLayerElement() const {
-  if (!GetContent()) {
-    return false;
-  }
-
-  nsTArray<dom::Element*> topLayer = PresContext()->Document()->GetTopLayer();
-  for (auto* element : topLayer) {
-    if (GetContent()->IsInclusiveFlatTreeDescendantOf(element)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-void nsIFrame::UpdateIsRelevantContent(
-    const ContentRelevancy& aRelevancyToUpdate) {
-  MOZ_ASSERT(IsContentVisibilityPropertyApplicable());
-  MOZ_ASSERT(StyleDisplay()->IsContentVisibilityAuto());
-
-  auto* element = Element::FromNodeOrNull(GetContent());
-  MOZ_ASSERT(element);
-
-  ContentRelevancy newRelevancy;
-  Maybe<ContentRelevancy> oldRelevancy = element->GetContentRelevancy();
-  if (oldRelevancy.isSome()) {
-    newRelevancy = *oldRelevancy;
-  }
-
-  auto setRelevancyValue = [&](ContentRelevancyReason reason, bool value) {
-    if (value) {
-      newRelevancy += reason;
-    } else {
-      newRelevancy -= reason;
-    }
-  };
-
-  if (!oldRelevancy ||
-      aRelevancyToUpdate.contains(ContentRelevancyReason::Visible)) {
-    Maybe<bool> visible = element->GetVisibleForContentVisibility();
-    if (visible.isSome()) {
-      setRelevancyValue(ContentRelevancyReason::Visible, *visible);
-    }
-  }
-
-  if (!oldRelevancy ||
-      aRelevancyToUpdate.contains(ContentRelevancyReason::FocusInSubtree)) {
-    setRelevancyValue(ContentRelevancyReason::FocusInSubtree,
-                      element->State().HasAtLeastOneOfStates(
-                          ElementState::FOCUS_WITHIN | ElementState::FOCUS));
-  }
-
-  if (!oldRelevancy ||
-      aRelevancyToUpdate.contains(ContentRelevancyReason::Selected)) {
-    setRelevancyValue(ContentRelevancyReason::Selected,
-                      HasSelectionInSubtree());
-  }
-
-  if (!oldRelevancy ||
-      aRelevancyToUpdate.contains(
-          ContentRelevancyReason::DescendantOfTopLayerElement)) {
-    setRelevancyValue(ContentRelevancyReason::DescendantOfTopLayerElement,
-                      IsDescendantOfTopLayerElement());
-  }
-
-  bool overallRelevancyChanged =
-      !oldRelevancy || oldRelevancy->isEmpty() != newRelevancy.isEmpty();
-  if (!oldRelevancy || *oldRelevancy != newRelevancy) {
-    element->SetContentRelevancy(newRelevancy);
-  }
-
-  if (overallRelevancyChanged) {
-    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::Resize,
-                                  NS_FRAME_IS_DIRTY);
-    InvalidateFrame();
-  }
 }
 
 nsresult nsIFrame::CharacterDataChanged(const CharacterDataChangeInfo&) {

@@ -1612,10 +1612,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     return mContentVisibility == StyleContentVisibility::Hidden;
   }
 
-  bool IsContentVisibilityAuto() const {
-    return mContentVisibility == StyleContentVisibility::Auto;
-  }
-
   /* Returns whether the element has the transform property or a related
    * property. */
   bool HasTransformStyle() const {
