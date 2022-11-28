@@ -6,6 +6,12 @@
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Document Navigation")
+
+with Files("nsITransfer.idl"):
+    BUG_COMPONENT = ("Firefox", "File Handling")
+
 XPIDL_SOURCES += [
     "nsCURILoader.idl",
     "nsIContentHandler.idl",
