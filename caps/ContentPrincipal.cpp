@@ -254,8 +254,8 @@ bool ContentPrincipal::SubsumesInternal(
     }
   }
 
-  // Compare uris.
-  return aOther->IsSameOrigin(mURI);
+  // Do a fast check (including origin attributes) or a slow uri comparison.
+  return FastEquals(aOther) || aOther->IsSameOrigin(mURI);
 }
 
 NS_IMETHODIMP
