@@ -39,6 +39,7 @@ WorkletLoadInfo::WorkletLoadInfo(nsPIDOMWindowInner* aWindow)
 
 WorkletImpl::WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
     : mPrincipal(NullPrincipal::CreateWithInheritedAttributes(aPrincipal)),
+      mIsSystemPrincipal(mPrincipal->IsSystemPrincipal()),
       mWorkletLoadInfo(aWindow),
       mTerminated(false),
       mFinishedOnExecutionThread(false),
