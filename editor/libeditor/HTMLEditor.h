@@ -852,13 +852,6 @@ class HTMLEditor final : public EditorBase,
   SetFontSizeOnTextNode(Text& aTextNode, uint32_t aStartOffset,
                         uint32_t aEndOffset, FontSize aIncrementOrDecrement);
 
-  /**
-   * @return            A suggest point to put caret.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
-  SetInlinePropertyOnNode(nsIContent& aContent,
-                          const EditorInlineStyleAndValue& aStyleToSet);
-
   enum class SplitAtEdges {
     // SplitNodeDeepWithTransaction() won't split container element
     // nodes at their edges.  I.e., when split point is start or end of
@@ -3878,22 +3871,11 @@ class HTMLEditor final : public EditorBase,
   SetFontSizeOfFontElementChildren(nsIContent& aContent,
                                    FontSize aIncrementOrDecrement);
 
-  /**
-   * SetInlinePropertyOnTextNode() splits aText if aStartOffset and/or
-   * aEndOffset are not start/end of aText.  Then, the text node which was
-   * contained in the range is wrapped into an element which applies the style.
-   *
-   * @return            The result of splitting aText.  Note that middle text
-   *                    node may be moved in an element, so left/middle/right
-   *                    nodes may not be siblings.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<SplitRangeOffFromNodeResult, nsresult>
-  SetInlinePropertyOnTextNode(Text& aText, uint32_t aStartOffset,
-                              uint32_t aEndOffset,
-                              const EditorInlineStyleAndValue& aStyleToSet);
-
   nsresult PromoteInlineRange(nsRange& aRange);
   nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange);
+
+  // Declared in HTMLEditorNestedClasses.h and defined in HTMLStyleEditor.cpp
+  class AutoInlineStyleSetter;
 
   /**
    * RemoveStyleInside() removes elements which represent aStyleToRemove
@@ -3939,8 +3921,6 @@ class HTMLEditor final : public EditorBase,
       const EditorRawDOMPoint& aPoint) const;
   bool IsEndOfContainerOrEqualsOrAfterLastEditableChild(
       const EditorRawDOMPoint& aPoint) const;
-
-  bool IsOnlyAttribute(const Element* aElement, nsAtom* aAttribute);
 
   /**
    * HasStyleOrIdOrClassAttribute() returns true when at least one of
@@ -4191,23 +4171,6 @@ class HTMLEditor final : public EditorBase,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   RefreshInlineTableEditingUIInternal();
-
-  /**
-   * ElementIsGoodContainerForTheStyle() returns true if aElement is a
-   * good container for applying the style to a node.  I.e., if this returns
-   * true, moving nodes into aElement is enough to apply the style to them.
-   * Otherwise, you need to create new element for the style.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<bool, nsresult>
-  ElementIsGoodContainerForTheStyle(
-      Element& aElement, const EditorInlineStyleAndValue& aStyleAndValue);
-
-  /**
-   * @return            A suggest point to put caret.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
-  SetInlinePropertyOnNodeImpl(nsIContent& aContent,
-                              const EditorInlineStyleAndValue& aStyleToSet);
 
   typedef enum { eInserted, eAppended } InsertedOrAppended;
   MOZ_CAN_RUN_SCRIPT void DoContentInserted(

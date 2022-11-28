@@ -43,6 +43,8 @@ namespace mozilla {
 enum class CollectChildrenOption {
   // Ignore non-editable nodes
   IgnoreNonEditableChildren,
+  // Ignore invisible text nodes
+  IgnoreInvisibleTextNodes,
   // Collect list children too.
   CollectListChildren,
   // Collect table children too.
@@ -2055,7 +2057,15 @@ class HTMLEditUtils final {
    * @return                    Number of found children.
    */
   static size_t CollectChildren(
-      nsINode& aNode, nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
+      const nsINode& aNode,
+      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
+      const CollectChildrenOptions& aOptions) {
+    return HTMLEditUtils::CollectChildren(aNode, aOutArrayOfContents, 0u,
+                                          aOptions);
+  }
+  static size_t CollectChildren(
+      const nsINode& aNode,
+      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
       size_t aIndexToInsertChildren, const CollectChildrenOptions& aOptions);
 
   /**
@@ -2075,6 +2085,13 @@ class HTMLEditUtils final {
       const nsINode& aNode,
       nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
       const EmptyCheckOptions& aOptions);
+
+  /**
+   * Check whether aElement has attributes except the name aAttribute and
+   * "_moz_*" attributes.
+   */
+  [[nodiscard]] static bool ElementHasAttributeExcept(const Element& aElement,
+                                                      const nsAtom& aAttribute);
 
  private:
   static bool CanNodeContain(nsHTMLTag aParentTagId, nsHTMLTag aChildTagId);
