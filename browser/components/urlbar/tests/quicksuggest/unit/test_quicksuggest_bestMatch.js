@@ -29,6 +29,7 @@ const SUGGESTIONS = [
       "fullkeywo",
       "fullkeywor",
       "fullkeyword",
+      "example",
     ],
     click_url: "http://example.com/click",
     impression_url: "http://example.com/impression",
@@ -407,4 +408,34 @@ add_task(async function noConfig() {
       });
     },
   });
+});
+
+// Test that bestMatch results are not shown when there is a heuristic
+// result for the same domain.
+add_task(async function hueristicDeduplication() {
+  let scenarios = [
+    ["http://example.com/", false],
+    ["http://www.example.com/", false],
+    ["http://exampledomain.com/", true],
+  ];
+
+  for (let [url, expectBestMatch] of scenarios) {
+    await PlacesTestUtils.addVisits(url);
+    let context = createContext("example", {
+      providers: [UrlbarProviderQuickSuggest.name, UrlbarProviderAutofill.name],
+      isPrivate: false,
+    });
+    const EXPECTED_AUTOFILL_RESULT = makeVisitResult(context, {
+      uri: url,
+      title: `test visit for ${url}`,
+      heuristic: true,
+    });
+    await check_results({
+      context,
+      matches: expectBestMatch
+        ? [EXPECTED_AUTOFILL_RESULT, EXPECTED_BEST_MATCH_RESULT]
+        : [EXPECTED_AUTOFILL_RESULT],
+    });
+    await PlacesUtils.history.clear();
+  }
 });
