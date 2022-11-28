@@ -82,6 +82,9 @@ class WorkletImpl {
   const Maybe<nsID>& GetAgentClusterId() const { return mAgentClusterId; }
 
   bool IsSharedMemoryAllowed() const { return mSharedMemoryAllowed; }
+  bool ShouldResistFingerprinting() const {
+    return mShouldResistFingerprinting;
+  }
 
   virtual void OnAddModuleStarted() const {
     MOZ_ASSERT(NS_IsMainThread());
@@ -117,6 +120,7 @@ class WorkletImpl {
   Maybe<nsID> mAgentClusterId;
 
   bool mSharedMemoryAllowed;
+  bool mShouldResistFingerprinting;
 
   const OriginTrials mTrials;
 };

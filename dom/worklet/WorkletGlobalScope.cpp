@@ -72,6 +72,10 @@ bool WorkletGlobalScope::IsSharedMemoryAllowed() const {
   return mImpl->IsSharedMemoryAllowed();
 }
 
+bool WorkletGlobalScope::ShouldResistFingerprinting() const {
+  return mImpl->ShouldResistFingerprinting();
+}
+
 void WorkletGlobalScope::Dump(const Optional<nsAString>& aString) const {
   WorkletThread::AssertIsOnWorkletThread();
 
