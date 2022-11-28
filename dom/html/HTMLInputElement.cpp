@@ -36,6 +36,7 @@
 
 #include "nsIRadioVisitor.h"
 
+#include "HTMLDataListElement.h"
 #include "HTMLFormSubmissionConstants.h"
 #include "mozilla/Telemetry.h"
 #include "nsBaseCommandController.h"
@@ -1644,7 +1645,7 @@ void HTMLInputElement::SetValue(const nsAString& aValue, CallerType aCallerType,
   }
 }
 
-nsGenericHTMLElement* HTMLInputElement::GetList() const {
+HTMLDataListElement* HTMLInputElement::GetList() const {
   nsAutoString dataListId;
   GetAttr(kNameSpaceID_None, nsGkAtoms::list_, dataListId);
   if (dataListId.IsEmpty()) {
@@ -1656,12 +1657,8 @@ nsGenericHTMLElement* HTMLInputElement::GetList() const {
     return nullptr;
   }
 
-  Element* element = docOrShadow->GetElementById(dataListId);
-  if (!element || !element->IsHTMLElement(nsGkAtoms::datalist)) {
-    return nullptr;
-  }
-
-  return static_cast<nsGenericHTMLElement*>(element);
+  return HTMLDataListElement::FromNodeOrNull(
+      docOrShadow->GetElementById(dataListId));
 }
 
 void HTMLInputElement::SetValue(Decimal aValue, CallerType aCallerType) {

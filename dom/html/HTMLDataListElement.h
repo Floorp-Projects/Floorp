@@ -20,6 +20,8 @@ class HTMLDataListElement final : public nsGenericHTMLElement {
     SetFlags(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR);
   }
 
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLDataListElement, datalist)
+
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
