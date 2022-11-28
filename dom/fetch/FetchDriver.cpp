@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "js/Value.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/FetchDriver.h"
 
@@ -458,7 +459,7 @@ nsresult FetchDriver::Fetch(AbortSignalImpl* aSignalImpl,
   // the operation.
   if (aSignalImpl) {
     if (aSignalImpl->Aborted()) {
-      RunAbortAlgorithm();
+      FetchDriverAbortActions(aSignalImpl);
       return NS_OK;
     }
 
@@ -588,7 +589,7 @@ nsresult FetchDriver::HttpFetch(
     secFlags |= nsILoadInfo::SEC_DONT_FOLLOW_REDIRECTS;
   }
 
-  // This is handles the use credentials flag in "HTTP
+  // This handles the use credentials flag in "HTTP
   // network or cache fetch" in the spec and decides whether to transmit
   // cookies and other identifying information.
   if (mRequest->GetCredentialsMode() == RequestCredentials::Include) {
@@ -931,7 +932,8 @@ void FetchDriver::FailWithNetworkError(nsresult rv) {
 
   // mObserver could be null after OnResponseAvailable().
   if (mObserver) {
-    mObserver->OnResponseEnd(FetchDriverObserver::eByNetworking);
+    mObserver->OnResponseEnd(FetchDriverObserver::eByNetworking,
+                             JS::UndefinedHandleValue);
     mObserver = nullptr;
   }
 
@@ -1460,7 +1462,8 @@ void FetchDriver::FinishOnStopRequest(
   }
 
   if (mObserver) {
-    mObserver->OnResponseEnd(FetchDriverObserver::eByNetworking);
+    mObserver->OnResponseEnd(FetchDriverObserver::eByNetworking,
+                             JS::UndefinedHandleValue);
     mObserver = nullptr;
   }
 
@@ -1627,14 +1630,20 @@ void FetchDriver::SetRequestHeaders(nsIHttpChannel* aChannel,
   }
 }
 
-void FetchDriver::RunAbortAlgorithm() {
+void FetchDriver::RunAbortAlgorithm() { FetchDriverAbortActions(Signal()); }
+
+void FetchDriver::FetchDriverAbortActions(AbortSignalImpl* aSignalImpl) {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
 
   if (mObserver) {
 #ifdef DEBUG
     mResponseAvailableCalled = true;
 #endif
-    mObserver->OnResponseEnd(FetchDriverObserver::eAborted);
+    JS::Rooted<JS::Value> reason(RootingCx());
+    if (aSignalImpl) {
+      reason.set(aSignalImpl->RawReason());
+    }
+    mObserver->OnResponseEnd(FetchDriverObserver::eAborted, reason);
     mObserver = nullptr;
   }
 
