@@ -382,9 +382,6 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
                    const IntPoint& aDestination) override;
   void FillRect(const Rect& aRect, const Pattern& aPattern,
                 const DrawOptions& aOptions = DrawOptions()) override;
-  bool StrokeRectAccel(const Rect& aRect, const Pattern& aPattern,
-                       const StrokeOptions& aStrokeOptions,
-                       const DrawOptions& aOptions);
   void StrokeRect(const Rect& aRect, const Pattern& aPattern,
                   const StrokeOptions& aStrokeOptions = StrokeOptions(),
                   const DrawOptions& aOptions = DrawOptions()) override;
