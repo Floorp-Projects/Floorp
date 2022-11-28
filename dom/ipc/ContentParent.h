@@ -860,7 +860,7 @@ class ContentParent final : public PContentParent,
    * rather than vanilla Close().  CloseWithError() indicates to IPC that this
    * is an abnormal shutdown (e.g. a crash).
    */
-  void ShutDownProcess(ShutDownMethod aMethod);
+  bool ShutDownProcess(ShutDownMethod aMethod);
 
   // Perform any steps necesssary to gracefully shtudown the message
   // manager and null out mMessageManager.
