@@ -1,24 +1,6 @@
 {
   "data": [
     {
-      "schema": 1668703692740,
-      "derHash": "Jk3xRY+17x/J358TRehKbMGkcc9HWudZj/UrhnE1Gfs=",
-      "subject": "CN=SHECA OV Server CA G6,O=UniTrust,C=CN",
-      "subjectDN": "MEAxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDEeMBwGA1UEAwwVU0hFQ0EgT1YgU2VydmVyIENBIEc2",
-      "whitelist": false,
-      "attachment": {
-        "hash": "c5cc446526bddaf1a804aa3514d41f7bb9acd5d20bc373bb1b5c8dda91163adf",
-        "size": 2003,
-        "filename": "TVu2cg_z0GgoU6VFycG8xi71BHVnrqMBxVlovl_W8Ok=.pem",
-        "location": "security-state-staging/intermediates/2359474e-c40f-4c83-8ea9-7298b5ec66f0.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "TVu2cg/z0GgoU6VFycG8xi71BHVnrqMBxVlovl/W8Ok=",
-      "crlite_enrolled": false,
-      "id": "16b383c7-a13d-4faa-b0f5-912422a45f5e",
-      "last_modified": 1668704223146
-    },
-    {
       "schema": 1668674893607,
       "derHash": "AEgjQbEEoN5uDx1QjbhMtRT3SU/gSYITOlx1ATbFXcg=",
       "subject": "CN=Hongkong Post Root CA 3,O=Hongkong Post,L=Hong Kong,ST=Hong Kong,C=HK",
@@ -26839,5 +26821,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1668704223146
+  "timestamp": 1669366623074
 }
