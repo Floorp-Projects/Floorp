@@ -42,6 +42,11 @@ async function testTimePrecision(results, expectedResults, extraData) {
   }
 
   for (let result of results) {
+    if ("error" in result) {
+      ok(false, result.error);
+      continue;
+    }
+
     let isRounded = isTimeValueRounded(result.value, precision);
 
     ok(
@@ -212,3 +217,47 @@ function addAllTests(extraData_, extraPrefs_) {
     )
   );
 }
+
+// ========================================================================================================================
+// First we run through all the tests with RTP's precision set to 100 ms and 133 ms.
+// Animation does _not_ obey RTP's timestamp, instead it falls back to the unconditional
+// rounding which is 20 microseconds.
+extraData = {
+  RFP_Precision: 100,
+  Unconditional_Precision: 0.02,
+};
+
+extraPrefs = [
+  [
+    "privacy.resistFingerprinting.reduceTimerPrecision.microseconds",
+    extraData.RFP_Precision * 1000,
+  ],
+  ["dom.animations-api.timelines.enabled", true],
+];
+
+addAllTests(extraData, extraPrefs);
+
+extraData = {
+  RFP_Precision: 133,
+  Unconditional_Precision: 0.02,
+};
+
+extraPrefs = [
+  [
+    "privacy.resistFingerprinting.reduceTimerPrecision.microseconds",
+    extraData.RFP_Precision * 1000,
+  ],
+  ["dom.animations-api.timelines.enabled", true],
+];
+
+addAllTests(extraData, extraPrefs);
+
+// ========================================================================================================================
+// Then we run through all the tests with the precision set to its normal value.
+// This will mean that in some cases we expect RFP to apply and in some we don't.
+extraData = {
+  RFP_Precision: RFP_TIME_ATOM_MS,
+  Unconditional_Precision: 0.02,
+};
+extraPrefs = [["dom.animations-api.timelines.enabled", true]];
+addAllTests(extraData, extraPrefs);
