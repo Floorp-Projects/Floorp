@@ -57,8 +57,8 @@ already_AddRefed<Performance> Performance::CreateForMainThread(
   MOZ_ASSERT(NS_IsMainThread());
 
   MOZ_ASSERT(aWindow->AsGlobal());
-  RefPtr<Performance> performance =
-      new PerformanceMainThread(aWindow, aDOMTiming, aChannel);
+  RefPtr<Performance> performance = new PerformanceMainThread(
+      aWindow, aDOMTiming, aChannel, aPrincipal->IsSystemPrincipal());
   return performance.forget();
 }
 
@@ -93,23 +93,21 @@ already_AddRefed<Performance> Performance::Get(JSContext* aCx,
   return performance.forget();
 }
 
-Performance::Performance(nsIGlobalObject* aGlobal)
+Performance::Performance(nsIGlobalObject* aGlobal, bool aSystemPrincipal)
     : DOMEventTargetHelper(aGlobal),
       mResourceTimingBufferSize(kDefaultResourceTimingBufferSize),
       mPendingNotificationObserversTask(false),
       mPendingResourceTimingBufferFullEvent(false),
-      mRTPCallerType(
-          RTPCallerType::Normal /* to be updated in CreateForFoo */) {
+      mSystemPrincipal(aSystemPrincipal) {
   MOZ_ASSERT(!NS_IsMainThread());
 }
 
-Performance::Performance(nsPIDOMWindowInner* aWindow)
+Performance::Performance(nsPIDOMWindowInner* aWindow, bool aSystemPrincipal)
     : DOMEventTargetHelper(aWindow),
       mResourceTimingBufferSize(kDefaultResourceTimingBufferSize),
       mPendingNotificationObserversTask(false),
       mPendingResourceTimingBufferFullEvent(false),
-      mRTPCallerType(
-          RTPCallerType::Normal /* to be updated in CreateForFoo */) {
+      mSystemPrincipal(aSystemPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
@@ -118,27 +116,28 @@ Performance::~Performance() = default;
 DOMHighResTimeStamp Performance::TimeStampToDOMHighResForRendering(
     TimeStamp aTimeStamp) const {
   DOMHighResTimeStamp stamp = GetDOMTiming()->TimeStampToDOMHighRes(aTimeStamp);
-  // 0 is an inappropriate mixin for this this area; however CSS Animations
-  // needs to have it's Time Reduction Logic refactored, so it's currently
-  // only clamping for RFP mode. RFP mode gives a much lower time precision,
-  // so we accept the security leak here for now.
-  return nsRFPService::ReduceTimePrecisionAsMSecsRFPOnly(stamp, 0,
-                                                         mRTPCallerType);
+  if (!IsSystemPrincipal()) {
+    // 0 is an inappropriate mixin for this this area; however CSS Animations
+    // needs to have it's Time Reduction Logic refactored, so it's currently
+    // only clamping for RFP mode. RFP mode gives a much lower time precision,
+    // so we accept the security leak here for now.
+    return nsRFPService::ReduceTimePrecisionAsMSecsRFPOnly(stamp, 0);
+  }
+  return stamp;
 }
 
 DOMHighResTimeStamp Performance::Now() {
   DOMHighResTimeStamp rawTime = NowUnclamped();
 
-  // XXX: Removing this caused functions in pkcs11f.h to fail.
-  // Bug 1628021 investigates the root cause - it involves initializing
-  // the RNG service (part of GetRandomTimelineSeed()) off-main-thread
-  // but the underlying cause hasn't been identified yet.
-  if (mRTPCallerType == RTPCallerType::SystemPrincipal) {
+  // XXX: Remove this would cause functions in pkcs11f.h to fail.
+  // Bug 1628021 will find out the root cause.
+  if (mSystemPrincipal) {
     return rawTime;
   }
 
   return nsRFPService::ReduceTimePrecisionAsMSecs(
-      rawTime, GetRandomTimelineSeed(), mRTPCallerType);
+      rawTime, GetRandomTimelineSeed(), mSystemPrincipal,
+      CrossOriginIsolated());
 }
 
 DOMHighResTimeStamp Performance::NowUnclamped() const {
@@ -155,8 +154,8 @@ DOMHighResTimeStamp Performance::TimeOrigin() {
   DOMHighResTimeStamp rawTimeOrigin =
       mPerformanceService->TimeOrigin(CreationTimeStamp());
   // Time Origin is an absolute timestamp, so we supply a 0 context mix-in
-  return nsRFPService::ReduceTimePrecisionAsMSecs(rawTimeOrigin, 0,
-                                                  mRTPCallerType);
+  return nsRFPService::ReduceTimePrecisionAsMSecs(
+      rawTimeOrigin, 0, mSystemPrincipal, CrossOriginIsolated());
 }
 
 JSObject* Performance::WrapObject(JSContext* aCx,

@@ -28,7 +28,6 @@
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ShadowRoot.h"
-#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/SVGUtils.h"
 #include "mozilla/SVGOuterSVGFrame.h"
@@ -762,7 +761,9 @@ double Event::TimeStamp() {
     MOZ_ASSERT(mOwner->PrincipalOrNull());
 
     return nsRFPService::ReduceTimePrecisionAsMSecs(
-        ret, perf->GetRandomTimelineSeed(), perf->RTPCallerType());
+        ret, perf->GetRandomTimelineSeed(),
+        mOwner->PrincipalOrNull()->IsSystemPrincipal(),
+        mOwner->CrossOriginIsolated());
   }
 
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
@@ -772,7 +773,8 @@ double Event::TimeStamp() {
 
   return nsRFPService::ReduceTimePrecisionAsMSecs(
       ret, workerPrivate->GetRandomTimelineSeed(),
-      workerPrivate->GlobalScope()->RTPCallerType());
+      workerPrivate->UsesSystemPrincipal(),
+      workerPrivate->CrossOriginIsolated());
 }
 
 void Event::Serialize(IPC::MessageWriter* aWriter,

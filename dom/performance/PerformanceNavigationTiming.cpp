@@ -26,7 +26,7 @@ JSObject* PerformanceNavigationTiming::WrapObject(
 #define REDUCE_TIME_PRECISION                          \
   return nsRFPService::ReduceTimePrecisionAsMSecs(     \
       rawValue, mPerformance->GetRandomTimelineSeed(), \
-      mPerformance->RTPCallerType())
+      mPerformance->IsSystemPrincipal(), mPerformance->CrossOriginIsolated())
 
 DOMHighResTimeStamp PerformanceNavigationTiming::UnloadEventStart() const {
   DOMHighResTimeStamp rawValue = 0;

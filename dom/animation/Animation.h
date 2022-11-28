@@ -11,7 +11,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/AnimationPerformanceWarning.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/BasePrincipal.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EffectCompositor.h"  // For EffectCompositor::CascadeLevel
 #include "mozilla/LinkedList.h"
@@ -675,9 +674,6 @@ class Animation : public DOMEventTargetHelper,
   nsString mId;
 
   bool mResetCurrentTimeOnResume = false;
-
-  // Whether the Animation is System, ResistFingerprinting, or neither
-  RTPCallerType mRTPCallerType;
 
  private:
   // The id for this animaiton on the compositor.

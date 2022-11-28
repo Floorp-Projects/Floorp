@@ -90,13 +90,13 @@ NS_INTERFACE_MAP_END_INHERITING(Performance)
 
 PerformanceMainThread::PerformanceMainThread(nsPIDOMWindowInner* aWindow,
                                              nsDOMNavigationTiming* aDOMTiming,
-                                             nsITimedChannel* aChannel)
-    : Performance(aWindow),
+                                             nsITimedChannel* aChannel,
+                                             bool aPrincipal)
+    : Performance(aWindow, aPrincipal),
       mDOMTiming(aDOMTiming),
       mChannel(aChannel),
       mCrossOriginIsolated(aWindow->AsGlobal()->CrossOriginIsolated()) {
   MOZ_ASSERT(aWindow, "Parent window object should be provided");
-  mRTPCallerType = aWindow->AsGlobal()->RTPCallerType();
   if (StaticPrefs::dom_enable_event_timing()) {
     mEventCounts = new class EventCounts(GetParentObject());
   }
@@ -361,7 +361,8 @@ DOMHighResTimeStamp PerformanceMainThread::GetPerformanceTimingFromString(
         "of sync");
   }
   return nsRFPService::ReduceTimePrecisionAsMSecs(
-      retValue, GetRandomTimelineSeed(), mRTPCallerType);
+      retValue, GetRandomTimelineSeed(), /* aIsSystemPrinciapl */ false,
+      CrossOriginIsolated());
 }
 
 void PerformanceMainThread::InsertUserEntry(PerformanceEntry* aEntry) {

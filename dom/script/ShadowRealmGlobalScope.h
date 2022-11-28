@@ -12,7 +12,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/OriginTrials.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "nsContentUtils.h"
 #include "nsIGlobalObject.h"
 #include "nsWrapperCache.h"
 
@@ -54,12 +53,6 @@ class ShadowRealmGlobalScope : public nsIGlobalObject, public nsWrapperCache {
   }
 
   JS::loader::ModuleLoaderBase* GetModuleLoader(JSContext* aCx) override;
-
-  bool ShouldResistFingerprinting() const override {
-    return nsContentUtils::ShouldResistFingerprinting(
-        "Presently we don't have enough context to make an informed decision"
-        "on JS Sandboxes. See 1782853");
-  }
 
  private:
   virtual ~ShadowRealmGlobalScope() = default;

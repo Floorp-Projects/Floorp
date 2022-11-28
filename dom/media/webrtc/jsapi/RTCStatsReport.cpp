@@ -15,7 +15,7 @@ namespace mozilla::dom {
 RTCStatsTimestampMaker::RTCStatsTimestampMaker()
     : mRandomTimelineSeed(0),
       mStartRealtime(WebrtcSystemTimeBase()),
-      mRTPCallerType(RTPCallerType::Normal),
+      mCrossOriginIsolated(false),
       mStartWallClockRaw(
           PerformanceService::GetOrCreate()->TimeOrigin(mStartRealtime)) {}
 
@@ -27,9 +27,8 @@ RTCStatsTimestampMaker::RTCStatsTimestampMaker(nsPIDOMWindowInner* aWindow)
       mStartRealtime(aWindow && aWindow->GetPerformance()
                          ? aWindow->GetPerformance()->CreationTimeStamp()
                          : WebrtcSystemTimeBase()),
-      mRTPCallerType(aWindow && aWindow->GetPerformance()
-                         ? aWindow->GetPerformance()->RTPCallerType()
-                         : RTPCallerType::Normal),
+      mCrossOriginIsolated(aWindow ? aWindow->AsGlobal()->CrossOriginIsolated()
+                                   : false),
       mStartWallClockRaw(
           PerformanceService::GetOrCreate()->TimeOrigin(mStartRealtime)) {}
 
@@ -47,7 +46,8 @@ DOMHighResTimeStamp RTCStatsTimestampMaker::ReduceRealtimePrecision(
   // mRandomTimelineSeed is not set in the unit-tests.
   if (mRandomTimelineSeed) {
     realtime = nsRFPService::ReduceTimePrecisionAsMSecs(
-        realtime, mRandomTimelineSeed, mRTPCallerType);
+        realtime, mRandomTimelineSeed,
+        /* aIsSystemPrincipal */ false, mCrossOriginIsolated);
   }
 
   // Ugh. Performance::TimeOrigin is not constant, which means we need to
@@ -56,7 +56,8 @@ DOMHighResTimeStamp RTCStatsTimestampMaker::ReduceRealtimePrecision(
   // https://searchfox.org/mozilla-central/rev/
   // 053826b10f838f77c27507e5efecc96e34718541/dom/performance/Performance.cpp#111-117
   DOMHighResTimeStamp start = nsRFPService::ReduceTimePrecisionAsMSecs(
-      mStartWallClockRaw, 0, mRTPCallerType);
+      mStartWallClockRaw, 0, /* aIsSystemPrincipal = */ false,
+      mCrossOriginIsolated);
 
   return start + realtime;
 }

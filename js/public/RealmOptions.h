@@ -313,14 +313,6 @@ class JS_PUBLIC_API RealmBehaviors {
     return *this;
   }
 
-  bool shouldResistFingerprinting() const {
-    return shouldResistFingerprinting_;
-  }
-  RealmBehaviors& setShouldResistFingerprinting(bool flag) {
-    shouldResistFingerprinting_ = flag;
-    return *this;
-  }
-
   class Override {
    public:
     Override() : mode_(Default) {}
@@ -356,7 +348,6 @@ class JS_PUBLIC_API RealmBehaviors {
  private:
   bool discardSource_ = false;
   bool clampAndJitterTime_ = true;
-  bool shouldResistFingerprinting_ = false;
   bool isNonLive_ = false;
 };
 
