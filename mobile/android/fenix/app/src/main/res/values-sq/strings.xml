@@ -45,9 +45,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Faqerojtës së fundi</string>
-
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">Ruajtur së fundi</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Shfaqi krejt faqerojtësit e ruajtur</string>
@@ -257,39 +254,18 @@
     <string name="search_settings_menu_item">Rregullime mbi kërkimin</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Kërkimi këtë herë:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Kërkimi këtë herë:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Këtë herë kërko te:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Ç’ka të re në %1$s</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Tani është më e lehtë t’ia rifilloni atje ku e latë.</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Faqe hyrëse e personalizuar %1$s</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Kaloni te skeda tuajat të hapura, faqerojtës dhe historik shfletimesh.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Skeda të qëruara, të sistemuara</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Spastroni rrëmujën e skedave, me skemë të përmirësuar dhe skeda me vetëmbyllje.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Kërkime së fundi</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Rivizitoni kërkimet tuaja më të reja prej faqes tuaj hyrëse dhe skedash.</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Faqja juaj hyrëse në Firefox, e personalizuar, tani e bën më të lehtë të riktheheni atje ku e latë. Gjeni skedat, faqerojtësit dhe përfundime kërkimi tuajat më të freskëta.</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Njihuni me faqen tuaj hyrëse të personalizuar. Këtu do të shfaqen skeda të hapura së fundi, faqerojtës dhe përfundime kërkimi.</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Mirë se vini te një internet i pavarur</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">Mirë se vini te një internet më personal</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Më tepër ngjyra. Privatësi më e mirë. I njëjti përkushtim ndaj njerëzve, jo ndaj fitimeve.</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Kaloni nga telefoni në portativ, ose anasjelltas</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">Ndërrimi i ekraneve është më i lehtë se kurrë</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -355,6 +331,14 @@
     <string name="preferences_add_private_browsing_shortcut">Shtoni shkurtore shfletimi privat</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Mënyra Vetëm-HTTPS</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Reduktim Banderolash Për Cookie-t</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Redukto banderola për cookie-t</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox-i provon automatikisht të hedhë tej kërkesa për “cookie” nga banderola cookie-shbanners. Nëse s’ka mundësi hedhjeje tej, Firefox-i mund të pranojë krejt cookie-t, për të hequr qafe banderolën.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Përpiqet automatikisht të lidhet me sajtet duke përdorur protokollin HTTPS të fshehtëzimit, për më tepër siguri.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1244,33 +1228,20 @@
     <string name="delete_history_group_snackbar">Grupi u fshi</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Mirë se vini te %s!</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">Mirë se vini në një internet më të mirë</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">Një shfletues i ndërtuar për njerëzit, jo për fitime.</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Njëkohësoni Firefox-in mes pajisjesh</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">Vazhdoni atje ku e latë</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Sillni faqerojtës, historik dhe fjalëkalime te %1$s në këtë pajisje.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">Njëkohësoni skeda dhe fjalëkalime përmes pajisjesh, për ndërrim të pacen ekranesh.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Regjistrohuni</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">Hyni</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Njëkohësimi është aktiv</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Privatësi gjithnjë në punë</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Mbrojtje privatësie, si parazgjedhje</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s i pengon vetvetiu shoqëritë t’ju ndjekin ju fshehtas nëpër internet.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Me Mbrojtj Tërësore Nga Cookie-t, për të ndalur gjurmuesit të përdorin “cookies” për t’ju ndjekur nëpër sajte.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1283,17 +1254,10 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">Bllokon më shumë gjurmues, ndaj faqet ngarkohen më shpejt, por disa anë, pjesë e faqes, mund të mos punojnë.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Zgjidhni vendosjen e panelit tuaj</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Vendoseni panelin diku ku e përdorni kollaj. Mbajeni në fund, ose kalojeni në krye.</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">Mbajeni në fund, ose shpjereni në krye.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Privatësia juaj</string>
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">Të dhënat tuaja i kontrolloni ju</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">E kemi hartuar %s për t’ju dhënë kontroll mbi ç’ndani me të tjerë në internet dhe ç’ndani me ne.</string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">Firefox-i ju lejon kontroll mbi ç’ndani me të tjerë në internet dhe ç’ndani me ne.</string>
     <!-- Text for the button to read the privacy notice -->

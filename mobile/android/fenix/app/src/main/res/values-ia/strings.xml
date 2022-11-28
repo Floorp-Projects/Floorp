@@ -338,6 +338,11 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Modo solo HTTPS</string>
 
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Reduction de banner pro le cookie </string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Reducer banners pro le cookie</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automaticamente tenta de connecter se al sitos per le protocollo de cryptation HTTPS pro major securitate.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->

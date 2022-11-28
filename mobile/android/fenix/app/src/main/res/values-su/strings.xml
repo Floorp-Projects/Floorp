@@ -335,6 +335,13 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Mode HTTPS-Hungkul</string>
 
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Kurangan Spanduk Réréméh</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Kurangan spanduk réréméh</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox otomatis nyoba nampik pamundut réréméh dina spanduk réréméh. Upama teu aya pilihan nampik, Firefox bisa nampa sadaya réréméh pikeun ngaleungitkeun spandukna.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Otomatis nyoba nyambung ka loka maké protokol énkripsi HTTPS pikeun ngaronjatkeun kaamanan.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->

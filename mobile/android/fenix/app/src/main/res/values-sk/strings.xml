@@ -341,6 +341,13 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Režim &quot;Len HTTPS&quot;</string>
 
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Zníženie počtu bannerov súborov cookie</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Znižovať počet bannerov súborov cookie</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox sa automaticky pokúša odmietnuť žiadosti o uloženie súborov cookie na informačných banneroch súborov cookie. Ak možnosť odmietnutia nie je k dispozícii, Firefox môže akceptovať všetky súbory cookie, aby oznámenie zavrel.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automaticky sa pokúša pripojiť k stránkam pomocou šifrovacieho protokolu HTTPS na zvýšenie bezpečnosti.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
