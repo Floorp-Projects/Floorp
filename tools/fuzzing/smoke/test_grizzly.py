@@ -28,7 +28,7 @@ def test_grizzly_smoke():
             "grizzly",
             ffbin,
             "no-op",
-            "--xvfb",
+            "--headless",
             "--smoke-test",
             "--limit",
             "10",
