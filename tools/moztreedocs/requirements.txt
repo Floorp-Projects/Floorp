@@ -118,9 +118,9 @@ jsonschema==3.2.0 \
 livereload==2.6.3 \
     --hash=sha256:776f2f865e59fde56490a56bcc6773b6917366bce0c267c60ee8aaf1a0959869
     # via -r requirements.in
-markdown==3.3.4 \
-    --hash=sha256:31b5b491868dcc87d6c24b7e3d19a0d730d59d3e46f4eea6430a321bed387a49 \
-    --hash=sha256:96c3ba1261de2f7547b46a00ea8463832c921d3f9d6aba3f255a6f71386db20c
+markdown==3.4.1 \
+    --hash=sha256:08fb8465cffd03d10b9dd34a5c3fea908e20391a2a90b88d66362cb05beed186 \
+    --hash=sha256:3b809086bb6efad416156e00a0da66fe47618a5d6918dd688f53f40c8e4cfeff
     # via
     #   -r requirements.in
     #   sphinx-markdown-tables
@@ -375,9 +375,9 @@ sphinx-js==3.0.1 \
     --hash=sha256:00d8d8bb4fe0e4c8cf940c7412af257c7fb83eaedc69d79765f9a012d719ce20 \
     --hash=sha256:6dd8e79c5ad09fef389af5021d7a672066f6e12a51130497f6c611544d62734b
     # via -r requirements.in
-sphinx-markdown-tables==0.0.15 \
-    --hash=sha256:24a37662d86ee8bceb7d4f7003df0b25bc52401369d1ddc40d13ae7b58697031 \
-    --hash=sha256:722b70a3a14156b6777cf04920d015215eb65b9dfde5cc72f430763ff5e84173
+sphinx-markdown-tables==0.0.17 \
+    --hash=sha256:2bd0c30779653e4dd120300cbd9ca412c480738cc2241f6dea477a883f299e04 \
+    --hash=sha256:6bc6d3d400eaccfeebd288446bc08dd83083367c58b85d40fe6c12d77ef592f1
     # via -r requirements.in
 sphinx-panels==0.6.0 \
     --hash=sha256:bd64afaf85c07f8096d21c8247fc6fd757e339d1be97832c8832d6ae5ed2e61d \
