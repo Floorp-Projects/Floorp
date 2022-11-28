@@ -32,8 +32,25 @@ ChromeUtils.defineModuleGetter(
 // =============================================================================================
 
 async function testTimePrecision(results, expectedResults, extraData) {
-  // let testDesc = extraData.testDesc;
-  // let precision = extraData.precision;
+  let testDesc = extraData.testDesc;
+  let precision = extraData.precision;
+
+  for (let result of results) {
+    let isRounded = isTimeValueRounded(result.value, precision);
+
+    ok(
+      isRounded,
+      "Test: " +
+        testDesc +
+        " - '" +
+        "'" +
+        result.name +
+        "' should be rounded to nearest " +
+        precision +
+        " ms; saw " +
+        result.value
+    );
+  }
 }
 
 const framer_domain = "example.com";
