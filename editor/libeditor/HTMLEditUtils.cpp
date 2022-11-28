@@ -2078,7 +2078,8 @@ bool HTMLEditUtils::IsInlineStyleSetByElement(
 
 // static
 size_t HTMLEditUtils::CollectChildren(
-    nsINode& aNode, nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
+    const nsINode& aNode,
+    nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
     size_t aIndexToInsertChildren, const CollectChildrenOptions& aOptions) {
   // FYI: This was moved from
   // https://searchfox.org/mozilla-central/rev/4bce7d85ba4796dd03c5dcc7cfe8eee0e4c07b3b/editor/libeditor/HTMLEditSubActionHandler.cpp#6261
@@ -2095,12 +2096,20 @@ size_t HTMLEditUtils::CollectChildren(
       numberOfFoundChildren += HTMLEditUtils::CollectChildren(
           *content, aOutArrayOfContents,
           aIndexToInsertChildren + numberOfFoundChildren, aOptions);
-    } else if (!aOptions.contains(
-                   CollectChildrenOption::IgnoreNonEditableChildren) ||
-               EditorUtils::IsEditableContent(*content, EditorType::HTML)) {
-      aOutArrayOfContents.InsertElementAt(
-          aIndexToInsertChildren + numberOfFoundChildren++, *content);
+      continue;
     }
+
+    if (aOptions.contains(CollectChildrenOption::IgnoreNonEditableChildren) &&
+        !EditorUtils::IsEditableContent(*content, EditorType::HTML)) {
+      continue;
+    }
+    if (aOptions.contains(CollectChildrenOption::IgnoreInvisibleTextNodes) &&
+        content->IsText() &&
+        !HTMLEditUtils::IsVisibleTextNode(*content->AsText())) {
+      continue;
+    }
+    aOutArrayOfContents.InsertElementAt(
+        aIndexToInsertChildren + numberOfFoundChildren++, *content);
   }
   return numberOfFoundChildren;
 }
@@ -2136,6 +2145,33 @@ size_t HTMLEditUtils::CollectEmptyInlineContainerDescendants(
     }
   }
   return numberOfFoundElements;
+}
+
+// static
+bool HTMLEditUtils::ElementHasAttributeExcept(const Element& aElement,
+                                              const nsAtom& aAttribute) {
+  // FYI: This was moved from
+  // https://searchfox.org/mozilla-central/rev/0b1543e85d13c30a13c57e959ce9815a3f0fa1d3/editor/libeditor/HTMLStyleEditor.cpp#1626
+  for (auto i : IntegerRange<uint32_t>(aElement.GetAttrCount())) {
+    const nsAttrName* name = aElement.GetAttrNameAt(i);
+    if (!name->NamespaceEquals(kNameSpaceID_None)) {
+      return true;
+    }
+
+    if (name->LocalName() == &aAttribute) {
+      continue;  // Ignore the given attribute
+    }
+
+    // Ignore special _moz attributes
+    nsAutoString attrString;
+    name->LocalName()->ToString(attrString);
+    if (!StringBeginsWith(attrString, u"_moz"_ns)) {
+      return true;
+    }
+  }
+  // if we made it through all of them without finding a real attribute
+  // other than aAttribute, then return true
+  return false;
 }
 
 /******************************************************************************
