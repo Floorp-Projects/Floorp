@@ -2377,9 +2377,12 @@ ICAttachResult js::jit::AttachBaselineCacheIRStub(
     // existing folded stub. We do not have to invalidate Warp,
     // because the ListObject that stores the cases is shared between
     // baseline and Warp. Reset the entered count for the fallback
-    // stub so that we can still transpile.
-    // TODO: Update this for the new bailout strategy
+    // stub so that we can still transpile, and reset the bailout
+    // counter if we have already been transpiled.
     stub->resetEnteredCount();
+    if (stub->usedByTranspiler() && outerScript->hasIonScript()) {
+      outerScript->ionScript()->resetNumFixableBailouts();
+    }
     return ICAttachResult::Attached;
   }
 
