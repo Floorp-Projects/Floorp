@@ -10,7 +10,9 @@
 #include "ErrorList.h"
 #include "PLDHashTable.h"
 #include "mozilla/BasicEvents.h"
+#include "nsContentUtils.h"
 #include "nsHashtablesFwd.h"
+#include "nsIGlobalObject.h"
 #include "nsIObserver.h"
 #include "nsISupports.h"
 #include "nsStringFwd.h"
@@ -134,27 +136,27 @@ class nsRFPService final : public nsIObserver {
   NS_DECL_NSIOBSERVER
 
   static nsRFPService* GetOrCreate();
-  static double TimerResolution();
+  static double TimerResolution(RTPCallerType aRTPCallerType);
 
   enum TimeScale { Seconds = 1, MilliSeconds = 1000, MicroSeconds = 1000000 };
 
   // The following Reduce methods can be called off main thread.
   static double ReduceTimePrecisionAsUSecs(double aTime, int64_t aContextMixin,
-                                           bool aIsSystemPrincipal,
-                                           bool aCrossOriginIsolated);
+                                           RTPCallerType aRTPCallerType);
   static double ReduceTimePrecisionAsMSecs(double aTime, int64_t aContextMixin,
-                                           bool aIsSystemPrincipal,
-                                           bool aCrossOriginIsolated);
+                                           RTPCallerType aRTPCallerType);
   static double ReduceTimePrecisionAsMSecsRFPOnly(double aTime,
-                                                  int64_t aContextMixin);
+                                                  int64_t aContextMixin,
+                                                  RTPCallerType aRTPCallerType);
   static double ReduceTimePrecisionAsSecs(double aTime, int64_t aContextMixin,
-                                          bool aIsSystemPrincipal,
-                                          bool aCrossOriginIsolated);
+                                          RTPCallerType aRTPCallerType);
   static double ReduceTimePrecisionAsSecsRFPOnly(double aTime,
-                                                 int64_t aContextMixin);
+                                                 int64_t aContextMixin,
+                                                 RTPCallerType aRTPCallerType);
 
   // Used by the JS Engine, as it doesn't know about the TimerPrecisionType enum
-  static double ReduceTimePrecisionAsUSecsWrapper(double aTime, JSContext* aCx);
+  static double ReduceTimePrecisionAsUSecsWrapper(
+      double aTime, bool aShouldResistFingerprinting, JSContext* aCx);
 
   // Public only for testing purposes
   static double ReduceTimePrecisionImpl(double aTime, TimeScale aTimeScale,
@@ -232,7 +234,6 @@ class nsRFPService final : public nsIObserver {
 
   ~nsRFPService() = default;
 
-  void UpdateTimers();
   void UpdateRFPPref();
   void StartShutdown();
 
@@ -253,10 +254,10 @@ class nsRFPService final : public nsIObserver {
   static nsTHashMap<KeyboardHashKey, const SpoofingKeyboardCode*>*
       sSpoofingKeyboardCodes;
 
-  static TimerPrecisionType GetTimerPrecisionType(bool aIsSystemPrincipal,
-                                                  bool aCrossOriginIsolated);
+  static TimerPrecisionType GetTimerPrecisionType(RTPCallerType aRTPCallerType);
 
-  static TimerPrecisionType GetTimerPrecisionTypeRFPOnly();
+  static TimerPrecisionType GetTimerPrecisionTypeRFPOnly(
+      RTPCallerType aRTPCallerType);
 
   static void TypeToText(TimerPrecisionType aType, nsACString& aText);
 
