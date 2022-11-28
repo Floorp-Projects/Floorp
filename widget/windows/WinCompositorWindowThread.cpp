@@ -21,6 +21,42 @@ namespace widget {
 
 static StaticRefPtr<WinCompositorWindowThread> sWinCompositorWindowThread;
 
+/// A window procedure that logs when an input event is received to the gfx
+/// error log
+///
+/// This is done because this window is supposed to be WM_DISABLED, but
+/// malfunctioning software may still end up targetting this window. If that
+/// happens, it's almost-certainly a bug and should be brought to the attention
+/// of the developers that are debugging the issue.
+static LRESULT CALLBACK InputEventRejectingWindowProc(HWND window, UINT msg,
+                                                      WPARAM wparam,
+                                                      LPARAM lparam) {
+  switch (msg) {
+    case WM_LBUTTONDOWN:
+    case WM_LBUTTONUP:
+    case WM_RBUTTONDOWN:
+    case WM_RBUTTONUP:
+    case WM_MBUTTONDOWN:
+    case WM_MBUTTONUP:
+    case WM_MOUSEWHEEL:
+    case WM_MOUSEHWHEEL:
+    case WM_MOUSEMOVE:
+    case WM_KEYDOWN:
+    case WM_KEYUP:
+    case WM_SYSKEYDOWN:
+    case WM_SYSKEYUP:
+      gfxCriticalNoteOnce
+          << "The compositor window received an input event even though it's "
+             "disabled. There is likely malfunctioning "
+             "software on the user's machine.";
+
+      break;
+    default:
+      break;
+  }
+  return ::DefWindowProcW(window, msg, wparam, lparam);
+}
+
 WinCompositorWindowThread::WinCompositorWindowThread(base::Thread* aThread)
     : mThread(aThread) {}
 
@@ -128,7 +164,7 @@ void InitializeWindowClass() {
 
   WNDCLASSW wc;
   wc.style = CS_OWNDC;
-  wc.lpfnWndProc = ::DefWindowProcW;
+  wc.lpfnWndProc = InputEventRejectingWindowProc;
   wc.cbClsExtra = 0;
   wc.cbWndExtra = 0;
   wc.hInstance = GetModuleHandle(nullptr);
