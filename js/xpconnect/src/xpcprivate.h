@@ -2424,7 +2424,8 @@ JSObject* CreateGlobalObject(JSContext* cx, const JSClass* clasp,
 // you can't get a *mutable* JS::RealmOptions& from an existing global
 // object.)
 void InitGlobalObjectOptions(JS::RealmOptions& aOptions,
-                             nsIPrincipal* aPrincipal);
+                             bool aIsSystemPrincipal,
+                             bool aShouldResistFingerprinting);
 
 // Finish initializing an already-created, not-yet-exposed-to-script global
 // object.  This will attach a Components object (if necessary) and call
