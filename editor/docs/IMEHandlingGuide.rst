@@ -305,28 +305,29 @@ nsTextFrame
 mozilla::IMEContentObserver
 ---------------------------
 
-``IMEContentObserver`` observes various changes of a focused editor. When an
-editor or a windowless plugin gets focus, an instance is created, starts to
-observe and notifies widget of IME getting focus. When the editor or windowless
-plugin loses focus, it notifies widget of IME losing focus, stops observing
-everything and is released.
+``IMEContentObserver`` observes various changes of a focused editor. When a
+corresponding element of a ``TextEditor`` or ``HTMLEditor`` instance gets
+focus, an instance is created by ``IMEStateManager``, then, starts to observe
+and notifies ``widget`` of IME getting focus. When the editor loses focus, it
+notifies ``widget`` of IME losing focus and stops observing everything.
+Finally, it's destroyed by ``IMEStateManager``.
 
 This class observes selection changes (caret position changes), text changes of
 a focused editor and layout changes (by reflow or scroll) of everything in the
 document. It depends on the result of ``nsIWidget::GetIMEUpdatePreference()``
 what is observed.
 
-When this notifies something of widget and/or IME, it needs to be safe to run
+When this notifies ``widget`` of something, it needs to be safe to run
 script because notifying something may cause dispatching one or more DOM events
 and/or new reflow. Therefore, ``IMEContentObserver`` only stores which
-notification should be sent to widget and/or IME. Then,
+notification should be sent to ``widget``. Then,
 ``mozilla::IMEContentObserver::IMENotificationSender`` tries to send the
 pending notifications when it might become safe to do that. Currently, it's
 tried:
 
 * after a native event is dispatched from ``PresShell::HandleEventInternal()``
-* at changing focus from a windowless plugin
-* when new focused editor receives DOM "focus" event
+* when new focused editor receives DOM ``focus`` event
+* when next refresh driver tick
 
 .. note::
 
@@ -880,17 +881,6 @@ field has focus. This state is set only when
 ``<input type="text" style="ime-mode: disabled;">`` or
 ``<textarea style="ime-mode: disabled;">``.
 
-PLUGIN
-""""""
-
-This is set only when a windowless plugin has focus.
-
-.. note::
-
-   Be careful, even if a password field has focus, ``mIMEState`` may be
-   ``ENABLED``. When you need to check if a password field has focus for
-   security reasons, you should use ``InputContext::IsPasswordEditor()``.
-
 The other is IME open state:
 
 DONT_CHANGE_OPEN_STATE
@@ -997,8 +987,8 @@ Windows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This class manages input method context of each window and makes ``IMMHandler``
-or ``TSFTextStore`` work with active IME and focused editor or windowless
-plugin. This class has only static members, i.e., never created its instance.
+or ``TSFTextStore`` work with active IME and focused editor. This class has
+only static members, i.e., never created its instance.
 
 __ https://searchfox.org/mozilla-central/source/widget/windows/WinIMEHandler.cpp
 
@@ -1006,16 +996,14 @@ __ https://searchfox.org/mozilla-central/source/widget/windows/WinIMEHandler.cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This class is used when TSF mode is disabled by pref (``"intl.tsf.enabled"``
-since 108, formerly named ``"intl.tsf.enable"``), focused content is a
-windowless plugin or active IME is for IMM (i.e., not TIP for TSF).
+since 108, formerly named ``"intl.tsf.enable"``) or active IME is for IMM
+(i.e., not TIP for TSF).
 
 This class handles ``WM_IME_*`` messages and uses ``Imm*()`` API. This is a
 singleton class since Gecko supports only on IM context in a process.
 Typically, a process creates windows with default IM context. Therefore, this
 design is enough (ideally, an instance should be created per IM context,
-though). The singleton instance is created when it becomes necessary. So, if
-user doesn't meet a windowless plugin nor use IME on it, this instance is never
-created.
+though). The singleton instance is created when it becomes necessary.
 
 __ https://searchfox.org/mozilla-central/source/widget/windows/IMMHandler.cpp
 
@@ -1084,8 +1072,6 @@ Both IME and key events are handled in
 `TextInputHandler.mm <https://searchfox.org/mozilla-central/source/widget/cocoa/TextInputHandler.mm>`__.
 
 ``mozilla::widget::TextInputHandlerBase`` is the most base class.
-``mozilla::widget::PluginTextInputHandler`` inherits ``TextInputHandlerBase``
-and handles key events and IME events on focused plugin.
 ``mozilla::widget::IMEInputHandler`` inherits ``TextInputHandlerBase`` and
 handles IME related events. ``mozilla::widget::TextInputHandler`` inherits
 ``TextInputHandlerBase`` and implements ``NSTextInput`` protocol of Cocoa. Its
