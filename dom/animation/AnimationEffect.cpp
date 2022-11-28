@@ -35,7 +35,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AnimationEffect)
 NS_INTERFACE_MAP_END
 
 AnimationEffect::AnimationEffect(Document* aDocument, TimingParams&& aTiming)
-    : mDocument(aDocument), mTiming(std::move(aTiming)) {}
+    : mDocument(aDocument), mTiming(std::move(aTiming)) {
+  mRTPCallerType = mDocument->GetScopeObject()->RTPCallerType();
+}
 
 AnimationEffect::~AnimationEffect() = default;
 
@@ -316,9 +318,8 @@ void AnimationEffect::GetComputedTimingAsDict(
   aRetVal.mFill = computedTiming.mFill;
   aRetVal.mActiveDuration = computedTiming.mActiveDuration.ToMilliseconds();
   aRetVal.mEndTime = computedTiming.mEndTime.ToMilliseconds();
-  aRetVal.mLocalTime = AnimationUtils::TimeDurationToDouble(
-      currentTime,
-      RTPCallerType::Normal /* dummy RTP Caller Type to be replaced */);
+  aRetVal.mLocalTime =
+      AnimationUtils::TimeDurationToDouble(currentTime, mRTPCallerType);
   aRetVal.mProgress = computedTiming.mProgress;
 
   if (!aRetVal.mProgress.IsNull()) {
