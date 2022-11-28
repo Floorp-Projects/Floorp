@@ -1373,6 +1373,12 @@ nsresult CacheFileIOManager::OnProfile() {
 
 // static
 nsresult CacheFileIOManager::OnDelayedStartupFinished() {
+  // If we don't clear the cache at shutdown, or we don't use a
+  // background task then there's no need to dispatch a cleanup task
+  // at startup
+  if (!CacheObserver::ClearCacheOnShutdown()) {
+    return NS_OK;
+  }
   if (!StaticPrefs::network_cache_shutdown_purge_in_background_task()) {
     return NS_OK;
   }
