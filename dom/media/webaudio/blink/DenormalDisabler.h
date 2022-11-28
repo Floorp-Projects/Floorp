@@ -26,6 +26,7 @@
 #define DenormalDisabler_h
 
 #include <cmath>
+#include <cinttypes>
 #include <float.h>
 
 namespace WebCore {
@@ -39,8 +40,7 @@ namespace WebCore {
 #  define HAVE_DENORMAL 1
 #endif
 
-#if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
-// X86 chips can flush denormals
+#if defined(__GNUC__) && defined(__SSE__)
 #  define HAVE_DENORMAL 1
 #endif
 
@@ -61,10 +61,35 @@ class DenormalDisabler {
  private:
   unsigned m_savedCSR;
 
-#  if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
+#  if defined(__GNUC__) && defined(__SSE__)
+  static inline bool isDAZSupported() {
+#    if defined(__x86_64__)
+    return true;
+#    else
+    static bool s_isInited = false;
+    static bool s_isSupported = false;
+    if (s_isInited) {
+      return s_isSupported;
+    }
+
+    struct fxsaveResult {
+      uint8_t before[28];
+      uint32_t CSRMask;
+      uint8_t after[480];
+    } __attribute__((aligned(16)));
+
+    fxsaveResult registerData;
+    memset(&registerData, 0, sizeof(fxsaveResult));
+    asm volatile("fxsave %0" : "=m"(registerData));
+    s_isSupported = registerData.CSRMask & 0x0040;
+    s_isInited = true;
+    return s_isSupported;
+#    endif
+  }
+
   inline void disableDenormals() {
     m_savedCSR = getCSR();
-    setCSR(m_savedCSR | 0x8040);
+    setCSR(m_savedCSR | (isDAZSupported() ? 0x8040 : 0x8000));
   }
 
   inline void restoreState() { setCSR(m_savedCSR); }
