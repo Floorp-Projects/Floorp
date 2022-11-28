@@ -58,6 +58,8 @@ add_task(async function test_hasPersistedScripts_startup_cache() {
   await assertHasPersistedScriptsCachedFlag(extension1);
   await assertIsPersistentScriptsCachedFlag(extension1, false);
 
+  const store = ExtensionScriptingStore._getStoreForTesting();
+
   extension1.sendMessage("registerContentScripts", [
     {
       id: "some-script-id",
@@ -68,6 +70,14 @@ add_task(async function test_hasPersistedScripts_startup_cache() {
   ]);
   await extension1.awaitMessage("registerContentScripts:done");
 
+  // `registerContentScripts()` calls `ExtensionScriptingStore.persistAll()`
+  // without await it, which isn't a problem in practice but this becomes a
+  // problem in this test given that we should make sure the startup cache
+  // is updated before checking it.
+  await TestUtils.waitForCondition(async () => {
+    const scripts = await store.getAll(extension1.id);
+    return !!scripts.length;
+  }, "Wait for stored scripts list to not be empty");
   await assertIsPersistentScriptsCachedFlag(extension1, true);
 
   extension1.sendMessage("unregisterContentScripts", {
@@ -75,16 +85,10 @@ add_task(async function test_hasPersistedScripts_startup_cache() {
   });
   await extension1.awaitMessage("unregisterContentScripts:done");
 
-  const store = ExtensionScriptingStore._getStoreForTesting();
-
-  // Wait for the scripts to be cleared from the store
-  // to prevent a race that would trigger intermittent
-  // failure on the startupCache assertion that follows.
   await TestUtils.waitForCondition(async () => {
     const scripts = await store.getAll(extension1.id);
     return !scripts.length;
   }, "Wait for stored scripts list to be empty");
-
   await assertIsPersistentScriptsCachedFlag(extension1, false);
 
   const storeGetAllSpy = sinon.spy(store, "getAll");
@@ -113,7 +117,6 @@ add_task(async function test_hasPersistedScripts_startup_cache() {
 
   await ExtensionScriptingStore.initExtension(extension1.extension);
   equal(storeGetAllSpy.callCount, 1, "Expect store.getAll to be called once");
-  storeGetAllSpy.resetHistory();
 
   extension1.sendMessage("registerContentScripts", [
     {
@@ -124,10 +127,16 @@ add_task(async function test_hasPersistedScripts_startup_cache() {
     },
   ]);
   await extension1.awaitMessage("registerContentScripts:done");
+
+  await TestUtils.waitForCondition(async () => {
+    const scripts = await store.getAll(extension1.id);
+    return !!scripts.length;
+  }, "Wait for stored scripts list to not be empty");
   await assertIsPersistentScriptsCachedFlag(extension1, true);
 
   // Make sure getAll is only called once when we don't have
   // scripting.hasPersistedScripts flag cached.
+  storeGetAllSpy.resetHistory();
   Services.obs.notifyObservers(null, "startupcache-invalidate");
   await ExtensionScriptingStore.initExtension(extension1.extension);
   equal(storeGetAllSpy.callCount, 1, "Expect store.getAll to be called once");
