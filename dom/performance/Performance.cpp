@@ -57,8 +57,8 @@ already_AddRefed<Performance> Performance::CreateForMainThread(
   MOZ_ASSERT(NS_IsMainThread());
 
   MOZ_ASSERT(aWindow->AsGlobal());
-  RefPtr<Performance> performance = new PerformanceMainThread(
-      aWindow, aDOMTiming, aChannel, aPrincipal->IsSystemPrincipal());
+  RefPtr<Performance> performance =
+      new PerformanceMainThread(aWindow, aDOMTiming, aChannel);
   return performance.forget();
 }
 
@@ -93,21 +93,23 @@ already_AddRefed<Performance> Performance::Get(JSContext* aCx,
   return performance.forget();
 }
 
-Performance::Performance(nsIGlobalObject* aGlobal, bool aSystemPrincipal)
+Performance::Performance(nsIGlobalObject* aGlobal)
     : DOMEventTargetHelper(aGlobal),
       mResourceTimingBufferSize(kDefaultResourceTimingBufferSize),
       mPendingNotificationObserversTask(false),
       mPendingResourceTimingBufferFullEvent(false),
-      mSystemPrincipal(aSystemPrincipal) {
+      mRTPCallerType(
+          RTPCallerType::Normal /* to be updated in CreateForFoo */) {
   MOZ_ASSERT(!NS_IsMainThread());
 }
 
-Performance::Performance(nsPIDOMWindowInner* aWindow, bool aSystemPrincipal)
+Performance::Performance(nsPIDOMWindowInner* aWindow)
     : DOMEventTargetHelper(aWindow),
       mResourceTimingBufferSize(kDefaultResourceTimingBufferSize),
       mPendingNotificationObserversTask(false),
       mPendingResourceTimingBufferFullEvent(false),
-      mSystemPrincipal(aSystemPrincipal) {
+      mRTPCallerType(
+          RTPCallerType::Normal /* to be updated in CreateForFoo */) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
