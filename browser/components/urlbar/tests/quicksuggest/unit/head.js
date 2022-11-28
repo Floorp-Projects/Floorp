@@ -7,6 +7,7 @@ ChromeUtils.defineESModuleGetters(this, {
   RemoteSettingsClient:
     "resource:///modules/urlbar/private/RemoteSettingsClient.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
+  UrlbarProviderAutofill: "resource:///modules/UrlbarProviderAutofill.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
 });

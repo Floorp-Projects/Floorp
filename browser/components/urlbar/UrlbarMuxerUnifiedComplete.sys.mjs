@@ -639,9 +639,26 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
   // error or increase the complexity threshold.
   // eslint-disable-next-line complexity
   _canAddResult(result, state) {
-    // Never discard quick suggest results. We may want to change this logic at
-    // some point, but for all current use cases, they should always be shown.
+    // QuickSuggest results are shown unless they are best matches
+    // that duplicate heuristic results.
     if (result.providerName == lazy.UrlbarProviderQuickSuggest.name) {
+      let heuristicUrl = state.context.heuristicResult?.payload.url;
+      if (
+        heuristicUrl &&
+        !lazy.UrlbarPrefs.get("experimental.hideHeuristic") &&
+        result.isBestMatch
+      ) {
+        let opts = {
+          stripHttp: true,
+          stripHttps: true,
+          stripWww: true,
+          trimSlash: true,
+        };
+        return (
+          UrlbarUtils.stripPrefixAndTrim(heuristicUrl, opts)[0] !=
+          UrlbarUtils.stripPrefixAndTrim(result.payload.url, opts)[0]
+        );
+      }
       return true;
     }
 
