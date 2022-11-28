@@ -91,15 +91,6 @@ def cbindgen(cbindgen_override, bootstrap_search_path, rust_search_path):
 
 set_config("CBINDGEN", cbindgen)
 
-set_define(
-    "CBINDGEN_0_24",
-    True,
-    when=depends(cbindgen)(
-        lambda c: Version(check_cmd_output(c, "--version").strip().split(" ")[1])
-        >= "0.24.0"
-    ),
-)
-
 # Bindgen can use rustfmt to format Rust file, but it's not required.
 option(env="RUSTFMT", nargs=1, help="Path to the rustfmt program")
 
