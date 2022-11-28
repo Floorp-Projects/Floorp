@@ -173,6 +173,8 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
  protected:
   ~WorkerGlobalScopeBase();
 
+  bool IsSystemPrincipal() const final;
+
   CheckedUnsafePtr<WorkerPrivate> mWorkerPrivate;
 
   void AssertIsOnWorkerThread() const {
