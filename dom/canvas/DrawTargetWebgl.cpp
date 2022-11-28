@@ -2534,8 +2534,11 @@ void PathCache::ClearVertexRanges() {
   }
 }
 
-inline bool DrawTargetWebgl::ShouldAccelPath(const DrawOptions& aOptions) {
-  return mWebglValid && SupportsDrawOptions(aOptions) && PrepareContext();
+inline bool DrawTargetWebgl::ShouldAccelPath(
+    const DrawOptions& aOptions, const StrokeOptions* aStrokeOptions) {
+  return mWebglValid && SupportsDrawOptions(aOptions) &&
+         (!aStrokeOptions || mSharedContext->mPathAccelStroke) &&
+         PrepareContext();
 }
 
 bool DrawTargetWebgl::SharedContext::DrawPathAccel(
@@ -2795,7 +2798,7 @@ void DrawTargetWebgl::DrawPath(const Path* aPath, const Pattern& aPattern,
                                const StrokeOptions* aStrokeOptions) {
   // If there is a WebGL context, then try to cache the path to avoid slow
   // fallbacks.
-  if (ShouldAccelPath(aOptions) &&
+  if (ShouldAccelPath(aOptions, aStrokeOptions) &&
       mSharedContext->DrawPathAccel(aPath, aPattern, aOptions,
                                     aStrokeOptions)) {
     return;
@@ -2890,7 +2893,7 @@ void DrawTargetWebgl::DrawShadow(const Path* aPath, const Pattern& aPattern,
                                  const StrokeOptions* aStrokeOptions) {
   // If there is a WebGL context, then try to cache the path to avoid slow
   // fallbacks.
-  if (ShouldAccelPath(aOptions) &&
+  if (ShouldAccelPath(aOptions, aStrokeOptions) &&
       mSharedContext->DrawPathAccel(aPath, aPattern, aOptions, aStrokeOptions,
                                     &aShadow)) {
     return;
@@ -2907,7 +2910,7 @@ void DrawTargetWebgl::DrawSurfaceWithShadow(SourceSurface* aSurface,
                                             const ShadowOptions& aShadow,
                                             CompositionOp aOperator) {
   DrawOptions options(1.0f, aOperator);
-  if (ShouldAccelPath(options)) {
+  if (ShouldAccelPath(options, nullptr)) {
     SurfacePattern pattern(aSurface, ExtendMode::CLAMP,
                            Matrix::Translation(aDest));
     SkPath skiaPath;
@@ -3733,6 +3736,8 @@ void DrawTargetWebgl::SharedContext::CachePrefs() {
 
   mPathMaxComplexity =
       StaticPrefs::gfx_canvas_accelerated_gpu_path_complexity();
+
+  mPathAccelStroke = StaticPrefs::gfx_canvas_accelerated_gpu_path_stroke();
 }
 
 // For use within CanvasRenderingContext2D, called on BorrowDrawTarget.
