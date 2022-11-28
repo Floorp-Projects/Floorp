@@ -33,7 +33,13 @@ ChromeUtils.defineModuleGetter(
 
 async function testTimePrecision(results, expectedResults, extraData) {
   let testDesc = extraData.testDesc;
-  let precision = extraData.precision;
+  let precision = undefined;
+
+  if (!expectedResults.shouldRFPApply) {
+    precision = extraData.RTP_Precision;
+  } else {
+    precision = extraData.RFP_Precision;
+  }
 
   for (let result of results) {
     let isRounded = isTimeValueRounded(result.value, precision);
@@ -53,6 +59,7 @@ async function testTimePrecision(results, expectedResults, extraData) {
   }
 }
 
+const RFP_TIME_ATOM_MS = 16.667;
 const framer_domain = "example.com";
 const iframe_domain = "example.org";
 const cross_origin_domain = "example.net";
@@ -212,7 +219,8 @@ function addAllTests(extraData_, extraPrefs_) {
 // be rounded.
 precision = 100;
 extraData = {
-  precision,
+  RFP_Precision: precision,
+  RTP_Precision: precision,
 };
 extraPrefs = [
   [
@@ -220,11 +228,12 @@ extraPrefs = [
     precision * 1000,
   ],
 ];
-addAllTests(precision, extraData, extraPrefs);
+addAllTests(extraData, extraPrefs);
 
 precision = 133;
 extraData = {
-  precision,
+  RFP_Precision: precision,
+  RTP_Precision: precision,
 };
 extraPrefs = [
   [
@@ -232,4 +241,30 @@ extraPrefs = [
     precision * 1000,
   ],
 ];
-addAllTests(precision, extraData, extraPrefs);
+addAllTests(extraData, extraPrefs);
+
+// ========================================================================================================================
+// Then we run through all the tests with the precision set to its normal value.
+// This will mean that in some cases we expect RFP to apply and in some we don't.
+
+precision = RFP_TIME_ATOM_MS;
+extraData = {
+  RFP_Precision: precision,
+  RTP_Precision: 1,
+};
+extraPrefs = [];
+addAllTests(extraData, extraPrefs);
+
+// ========================================================================================================================
+// Finally we run through all the tests with the precision set to an unusual value
+// This will mean that in some cases we expect RFP to apply and in some we don't.
+
+precision = RFP_TIME_ATOM_MS;
+extraData = {
+  RFP_Precision: RFP_TIME_ATOM_MS,
+  RTP_Precision: 7,
+};
+extraPrefs = [
+  ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", 7 * 1000],
+];
+addAllTests(extraData, extraPrefs);
