@@ -179,7 +179,10 @@ browser.Context = class {
    *     A promise which is resolved when the current window has been focused.
    */
   async focusWindow() {
-    return lazy.windowManager.focusWindow(this.window);
+    await lazy.windowManager.focusWindow(this.window);
+
+    // Also focus the currently selected tab if present.
+    this.contentBrowser?.focus();
   }
 
   /**
@@ -260,7 +263,7 @@ browser.Context = class {
       // The new tab is always selected by default. If focus is not wanted,
       // the previously tab needs to be selected again.
       if (!focus) {
-        this.tabBrowser.selectedTab = this.tab;
+        await lazy.TabManager.selectTab(this.tab);
       }
     } else {
       throw new lazy.error.UnsupportedOperationError(
