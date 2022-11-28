@@ -97,9 +97,6 @@ const TELEMETRY_BASENAMES = new Set(["logins", "autofillprofiles"]);
  */
 export function JSONFile(config) {
   this.path = config.path;
-  this.sanitizedBasename = PathUtils.filename(this.path)
-    .replace(/\.json(.lz4)?$/, "")
-    .replaceAll(/[^a-zA-Z0-9_.]/g, "");
 
   if (typeof config.dataPostProcessor === "function") {
     this._dataPostProcessor = config.dataPostProcessor;
@@ -125,9 +122,8 @@ export function JSONFile(config) {
   this._finalizeAt = config.finalizeAt || IOUtils.profileBeforeChange;
   this._finalizeInternalBound = this._finalizeInternal.bind(this);
   this._finalizeAt.addBlocker(
-    `JSON store: writing data for '${this.sanitizedBasename}'`,
-    this._finalizeInternalBound,
-    () => ({ sanitizedBasename: this.sanitizedBasename })
+    "JSON store: writing data",
+    this._finalizeInternalBound
   );
 
   Services.telemetry.setEventRecordingEnabled("jsonfile", true);
@@ -219,8 +215,15 @@ JSONFile.prototype = {
       // In the event that the file exists, but an exception is thrown because it cannot be read,
       // we store it as a .corrupt file for debugging purposes.
 
+      let cleansedBasename = PathUtils.filename(this.path)
+        .replace(/\.json$/, "")
+        .replaceAll(/[^a-zA-Z0-9_.]/g, "");
       let errorNo = ex.winLastError || ex.unixErrno;
-      this._recordTelemetry("load", errorNo ? errorNo.toString() : "");
+      this._recordTelemetry(
+        "load",
+        cleansedBasename,
+        errorNo ? errorNo.toString() : ""
+      );
       if (!(DOMException.isInstance(ex) && ex.name == "NotFoundError")) {
         Cu.reportError(ex);
 
@@ -232,7 +235,7 @@ JSONFile.prototype = {
             0o600
           );
           await IOUtils.move(this.path, uniquePath);
-          this._recordTelemetry("load", "invalid_json");
+          this._recordTelemetry("load", cleansedBasename, "invalid_json");
         } catch (e2) {
           Cu.reportError(e2);
         }
@@ -262,7 +265,7 @@ JSONFile.prototype = {
           if (this.dataReady) {
             return;
           }
-          this._recordTelemetry("load", "used_backup");
+          this._recordTelemetry("load", cleansedBasename, "used_backup");
         } catch (e3) {
           if (!(DOMException.isInstance(e3) && e3.name == "NotFoundError")) {
             Cu.reportError(e3);
@@ -441,18 +444,13 @@ JSONFile.prototype = {
     this.data = this._dataPostProcessor ? this._dataPostProcessor(data) : data;
   },
 
-  _recordTelemetry(method, value) {
-    if (!TELEMETRY_BASENAMES.has(this.sanitizedBasename)) {
+  _recordTelemetry(method, cleansedBasename, value) {
+    if (!TELEMETRY_BASENAMES.has(cleansedBasename)) {
       // Avoid recording so we don't log an error in the console.
       return;
     }
 
-    Services.telemetry.recordEvent(
-      "jsonfile",
-      method,
-      this.sanitizedBasename,
-      value
-    );
+    Services.telemetry.recordEvent("jsonfile", method, cleansedBasename, value);
   },
 
   /**
