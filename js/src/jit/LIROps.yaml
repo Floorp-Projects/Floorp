@@ -2421,6 +2421,14 @@
   num_temps: 1
   mir_op: true
 
+- name: GuardMultipleShapes
+  result_type: WordSized
+  operands:
+    object: WordSized
+    shapeList: WordSized
+  num_temps: 4
+  mir_op: true
+
 - name: GuardProto
   operands:
     object: WordSized
