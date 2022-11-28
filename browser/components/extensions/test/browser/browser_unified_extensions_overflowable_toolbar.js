@@ -849,3 +849,99 @@ add_task(async function test_pinning_to_toolbar_when_overflowed() {
 
   await BrowserTestUtils.closeWindow(win);
 });
+
+/**
+ * This test verifies that, when an extension placed in the toolbar is
+ * overflowed into the addons panel and context-clicked, it shows the "Pin to
+ * Toolbar" item as checked, and that unchecking this menu item inserts the
+ * extension into the dedicated addons area of the panel, and that the item
+ * then does not underflow.
+ */
+add_task(async function test_() {
+  let win = await promiseEnableUnifiedExtensions();
+  let extensionID;
+
+  await withWindowOverflowed(win, {
+    whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
+      const firstExtensionWidget = unifiedExtensionList.children[0];
+      Assert.ok(firstExtensionWidget, "expected an extension widget");
+      extensionID = firstExtensionWidget.dataset.extensionid;
+
+      let movedNode = CustomizableUI.getWidget(
+        firstExtensionWidget.id
+      ).forWindow(win).node;
+      Assert.equal(
+        movedNode.getAttribute("cui-areatype"),
+        "toolbar",
+        "expected extension widget to be in the toolbar"
+      );
+      Assert.ok(
+        movedNode.hasAttribute("overflowedItem"),
+        "expected extension widget to be overflowed"
+      );
+
+      // Open the panel, then the context menu of the extension widget, verify
+      // the 'Pin to Toolbar' menu item, then click on this menu item to
+      // uncheck it (i.e. unpin the extension).
+      await openExtensionsPanel(win);
+      const contextMenu = await openUnifiedExtensionsContextMenu(
+        win,
+        extensionID
+      );
+      Assert.ok(contextMenu, "expected a context menu");
+
+      const pinToToolbar = contextMenu.querySelector(
+        ".unified-extensions-context-menu-pin-to-toolbar"
+      );
+      Assert.ok(pinToToolbar, "expected a 'Pin to Toolbar' menu item");
+      Assert.ok(
+        !pinToToolbar.hidden,
+        "expected 'Pin to Toolbar' to be visible"
+      );
+      Assert.equal(
+        pinToToolbar.getAttribute("checked"),
+        "true",
+        "expected 'Pin to Toolbar' to be checked"
+      );
+
+      // Uncheck "Pin to Toolbar" menu item. Clicking a menu item in the
+      // context menu closes the unified extensions panel automatically.
+      const hidden = BrowserTestUtils.waitForEvent(
+        win.gUnifiedExtensions.panel,
+        "popuphidden",
+        true
+      );
+      contextMenu.activateItem(pinToToolbar);
+      await hidden;
+
+      // We expect the widget to no longer be overflowed.
+      await TestUtils.waitForCondition(() => {
+        return !movedNode.hasAttribute("overflowedItem");
+      });
+
+      Assert.equal(
+        movedNode.parentElement.id,
+        CustomizableUI.AREA_ADDONS,
+        "expected extension widget to have been unpinned and placed in the addons area"
+      );
+      Assert.equal(
+        movedNode.getAttribute("cui-areatype"),
+        "panel",
+        "expected extension widget to be in the unified extensions panel"
+      );
+    },
+    afterUnderflowed: async () => {
+      await openExtensionsPanel(win);
+
+      const item = getUnifiedExtensionsItem(win, extensionID);
+      Assert.ok(
+        item,
+        "expected extension widget to be listed in the unified extensions panel"
+      );
+
+      await closeExtensionsPanel(win);
+    },
+  });
+
+  await BrowserTestUtils.closeWindow(win);
+});
