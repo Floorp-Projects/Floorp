@@ -10,12 +10,14 @@
 
 @media not print {
   :root {
-    /* The colors here were chosen to be readable over the corresponding
+    /* The font color here was chosen to be readable over the corresponding
        backgrounds. This is important in case this ImageDocument is for an
        image that happens to be corrupt, in which case we'll display a textual
        error message over the background, instead of the image itself. */
     color: #eee;
-    background-image: url("chrome://global/skin/media/imagedoc-darknoise.png");
+    /* The background-attachment is fixed to stop an ugly white gutter
+       from appearing when the document is overscrolled. */
+    background: url("chrome://global/skin/media/imagedoc-darknoise.png") fixed;
   }
 
   img.transparent {
