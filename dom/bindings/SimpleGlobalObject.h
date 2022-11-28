@@ -13,6 +13,7 @@
 #ifndef mozilla_dom_SimpleGlobalObject_h__
 #define mozilla_dom_SimpleGlobalObject_h__
 
+#include "nsContentUtils.h"
 #include "nsIGlobalObject.h"
 #include "nsWrapperCache.h"
 #include "js/TypeDecls.h"
@@ -70,6 +71,12 @@ class SimpleGlobalObject : public nsIGlobalObject, public nsWrapperCache {
   JSObject* WrapObject(JSContext* cx,
                        JS::Handle<JSObject*> aGivenProto) override {
     MOZ_CRASH("SimpleGlobalObject doesn't use DOM bindings!");
+  }
+
+  bool ShouldResistFingerprinting() const override {
+    return nsContentUtils::ShouldResistFingerprinting(
+        "Presently we don't have enough context to make an informed decision"
+        "on JS Sandboxes. See 1782853");
   }
 
  private:
