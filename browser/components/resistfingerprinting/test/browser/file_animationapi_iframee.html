@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf8">
+<script>
+window.onload = async () => {
+  parent.postMessage("ready", "*");
+}
+
+var result = [];
+
+window.addEventListener("message", async function listener(event) {
+  if (event.data[0] == "gimme") {
+          parent.postMessage(result, "*")
+</script>
+</head>
+<body>
+<div id="testDiv">test</div>
+</body>
+</html>
