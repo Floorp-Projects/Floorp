@@ -29,6 +29,20 @@ function waitForScroll() {
   return waitToClearOutAnyPotentialScrolls(window);
 }
 
+async function synthesizeKeyInEachEventLoop(aKey, aEvent, aCount) {
+  for (let i = 0; i < aCount; i++) {
+    synthesizeKey(aKey, aEvent);
+    await new Promise(resolve => SimpleTest.executeSoon(resolve));
+  }
+}
+
+async function sendStringOneByOne(aString) {
+  for (const ch of aString) {
+    sendString(ch);
+    await new Promise(resolve => SimpleTest.executeSoon(resolve));
+  }
+}
+
 async function doKeyEventTest(aSelector) {
   const element = document.querySelector(aSelector);
   if (element.value !== undefined) {
@@ -40,25 +54,25 @@ async function doKeyEventTest(aSelector) {
   element.scrollTop = 0;
   await waitForScroll();
   is(element.scrollTop, 0, `${aSelector}.scrollTop should be 0`);
-  synthesizeKey("KEY_Enter", {shiftKey: true, repeat: 6});
+  await synthesizeKeyInEachEventLoop("KEY_Enter", {shiftKey: true}, 6);
   await waitForScroll();
   isnot(element.scrollTop, 0, `${aSelector} should be scrolled by inserting line breaks`);
   const oldScrollTop = element.scrollTop;
-  synthesizeKey("KEY_ArrowUp", {repeat: 5});
+  await synthesizeKeyInEachEventLoop("KEY_ArrowUp", {}, 5);
   await waitForScroll();
   isnot(element.scrollTop, oldScrollTop, `${aSelector} should be scrolled by up key events`);
-  synthesizeKey("KEY_ArrowDown", {repeat: 5});
+  await synthesizeKeyInEachEventLoop("KEY_ArrowDown", {}, 5);
   await waitForScroll();
   is(element.scrollTop, oldScrollTop, `${aSelector} should be scrolled by down key events`);
   const longWord = "aaaaaaaaaaaaaaaaaaaa";
-  sendString(longWord);
+  await sendStringOneByOne(longWord);
   await waitForScroll();
   isnot(element.scrollLeft, 0, `${aSelector} should be scrolled by typing long word`);
   const oldScrollLeft = element.scrollLeft;
-  synthesizeKey("KEY_ArrowLeft", {repeat: longWord.length});
+  await synthesizeKeyInEachEventLoop("KEY_ArrowLeft", {}, longWord.length);
   await waitForScroll();
   isnot(element.scrollLeft, oldScrollLeft, `${aSelector} should be scrolled by left key events`);
-  synthesizeKey("KEY_ArrowRight", {repeat: longWord.length});
+  await synthesizeKeyInEachEventLoop("KEY_ArrowRight", {}, longWord.length);
   await waitForScroll();
   is(element.scrollLeft, oldScrollLeft, `${aSelector} should be scrolled by right key events`);
 }
