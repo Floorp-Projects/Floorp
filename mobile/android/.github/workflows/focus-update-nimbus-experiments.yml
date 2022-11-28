@@ -25,7 +25,7 @@ jobs:
         uses: mozilla-mobile/update-experiments@v2
         with:
           repo-path: focus-android
-          output-path: app/src/main/res/raw/initial_experiments.json
+          output-path: focus-android/app/src/main/res/raw/initial_experiments.json
           experimenter-url: https://experimenter.services.mozilla.com/api/v6/experiments-first-run/
           app-name: focus_android
           branch: automation/update-nimbus-experiments
@@ -35,8 +35,8 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: focus-android
-          branch: automation/update-nimbus-experiments
+          branch: automation/update-focus-nimbus-experiments
           commit-message: "Automated: update initial_experiments.json based on the current first-run experiments in experimenter"
-          title: "Update initial experiments JSON for Nimbus"
+          title: "Update Focus initial experiments JSON for Nimbus"
           body: "This (automated) PR updates the initial_experiments.json on the `main` branch"
           delete-branch: true

@@ -34,7 +34,7 @@ jobs:
     steps:
       - name: "Update GV (On Main)"
         uses: mozilla-mobile/relbot@5.0.1
-        if: github.repository == 'mozilla-mobile/firefox-android' || github.repository == 'mozilla-releng/staging-firefox-android'
+        if: github.repository == 'mozilla-mobile/firefox-android'
         with:
           project: android-components
           command: update-main
@@ -42,7 +42,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: "Update GV (On Releases)"
         uses: mozilla-mobile/relbot@5.0.1
-        if: github.repository == 'mozilla-mobile/firefox-android' || github.repository == 'mozilla-releng/staging-firefox-android'
+        if: github.repository == 'mozilla-mobile/firefox-android'
         with:
           project: android-components
           command: update-releases

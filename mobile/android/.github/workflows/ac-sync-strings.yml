@@ -31,8 +31,9 @@ jobs:
           path: work
           ref: "releases_v${{ steps.ac-version-for-fenix-beta.outputs.major-ac-version }}"
       - name: "Sync Strings"
-        uses: mozilla-mobile/sync-strings-action@1.0.3
+        uses: mozilla-mobile/sync-strings-action@2.0.0
         with:
+          project: android-components
           src: main
           dst: work
       - name: Create Pull Request
@@ -40,6 +41,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: work
-          branch: automation/sync-strings-${{ steps.ac-version-for-fenix-beta.outputs.major-ac-version }}
-          title: "Uplift Strings from main to releases_v${{steps.ac-version-for-fenix-beta.outputs.major-ac-version}}"
+          branch: automation/sync-ac-strings-${{ steps.ac-version-for-fenix-beta.outputs.major-ac-version }}
+          title: "Uplift AC Strings from main to releases_v${{steps.ac-version-for-fenix-beta.outputs.major-ac-version}}"
           body: "This (automated) PR sync strings from `main` to `releases_v${{steps.ac-version-for-fenix-beta.outputs.major-ac-version}}`"
