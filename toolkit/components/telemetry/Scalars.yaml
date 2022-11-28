@@ -4285,58 +4285,6 @@ idb.failure:
     record_in_processes:
       - 'content'
 
-# The following section contains scalars for the PDF viewer.
-pdf.viewer:
-  used:
-    bug_numbers:
-      - 1566882
-    description: >
-      How many times PDF Viewer was used.
-    expires: never
-    kind: uint
-    notification_emails:
-      - bdahl@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
-      - 'content'
-  fallback_shown:
-    bug_numbers:
-      - 1566882
-      - 1666979
-      - 1689264
-    description: >
-      How many times PDF Viewer fallback bar was shown.
-    expires: "92"
-    kind: uint
-    notification_emails:
-      - bdahl@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
-      - 'content'
-  print:
-    bug_numbers:
-      - 1566882
-      - 1666979
-      - 1689264
-    description: >
-      How many times PDF Viewer print functionality was used.
-    expires: "92"
-    kind: uint
-    notification_emails:
-      - bdahl@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
-      - 'content'
-
 # The following section contains scalars for printing.
 printing:
   paper_size:

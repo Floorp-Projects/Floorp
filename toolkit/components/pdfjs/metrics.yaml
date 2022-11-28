@@ -63,3 +63,34 @@ pdfjs:
       - cdenizet@mozilla.com
       - mcastelluccio@mozilla.com
     expires: 113
+  used:
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1566882
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1566882#c2
+    description: >
+      How many times PDF Viewer was used.
+    expires: never
+    type: counter
+    notification_emails:
+      - cdenizet@mozilla.com
+      - mcastelluccio@mozilla.com
+  time_to_view:
+    type: custom_distribution
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1566882
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1566882#c2
+    description: >
+      Time spent to display first page in PDF Viewer (ms).
+    expires: never
+    range_min: 1
+    range_max: 10000
+    bucket_count: 50
+    histogram_type: exponential
+    unit: ms
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - cdenizet@mozilla.com
+      - mcastelluccio@mozilla.com
