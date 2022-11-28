@@ -1975,6 +1975,11 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
     case CacheKind::CloseIter:
       MOZ_ASSERT(numInputs == 1);
       allocator.initInputLocation(0, R0.scratchReg(), JSVAL_TYPE_OBJECT);
+#if defined(JS_NUNBOX32)
+      // availableGeneralRegs can't know that CloseIter is only using
+      // the payloadReg and not typeReg on x86.
+      available.add(R0.typeReg());
+#endif
       break;
   }
 
