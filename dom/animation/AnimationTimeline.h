@@ -48,7 +48,8 @@ class AnimationTimeline : public nsISupports, public nsWrapperCache {
   // Wrapper functions for AnimationTimeline DOM methods when called from
   // script.
   Nullable<double> GetCurrentTimeAsDouble() const {
-    return AnimationUtils::TimeDurationToDouble(GetCurrentTimeAsDuration());
+    return AnimationUtils::TimeDurationToDouble(GetCurrentTimeAsDuration(),
+                                                mRTPCallerType);
   }
 
   TimeStamp GetCurrentTimeAsTimeStamp() const {
