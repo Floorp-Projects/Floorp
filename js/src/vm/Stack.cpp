@@ -678,7 +678,7 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(
   } else if ((*entry)->isBaseline()) {
     frame.kind = Frame_Baseline;
   } else {
-    MOZ_ASSERT((*entry)->isIon());
+    MOZ_ASSERT((*entry)->isIon() || (*entry)->isIonIC());
     frame.kind = Frame_Ion;
   }
   frame.stackAddress = stackAddr;

@@ -122,6 +122,36 @@ IonEntry::~IonEntry() {
   regionTable_ = nullptr;
 }
 
+static IonEntry& IonEntryForIonIC(JSRuntime* rt, const IonICEntry* icEntry) {
+  // The table must have an IonEntry for the IC's rejoin address.
+  auto* table = rt->jitRuntime()->getJitcodeGlobalTable();
+  auto* entry = table->lookup(icEntry->rejoinAddr());
+  MOZ_ASSERT(entry);
+  MOZ_RELEASE_ASSERT(entry->isIon());
+  return entry->asIon();
+}
+
+void* IonICEntry::canonicalNativeAddrFor(void* ptr) const { return ptr; }
+
+bool IonICEntry::callStackAtAddr(JSRuntime* rt, void* ptr,
+                                 BytecodeLocationVector& results,
+                                 uint32_t* depth) const {
+  const IonEntry& entry = IonEntryForIonIC(rt, this);
+  return entry.callStackAtAddr(rejoinAddr(), results, depth);
+}
+
+uint32_t IonICEntry::callStackAtAddr(JSRuntime* rt, void* ptr,
+                                     const char** results,
+                                     uint32_t maxResults) const {
+  const IonEntry& entry = IonEntryForIonIC(rt, this);
+  return entry.callStackAtAddr(rejoinAddr(), results, maxResults);
+}
+
+uint64_t IonICEntry::lookupRealmID(JSRuntime* rt, void* ptr) const {
+  const IonEntry& entry = IonEntryForIonIC(rt, this);
+  return entry.lookupRealmID(rejoinAddr());
+}
+
 void* BaselineEntry::canonicalNativeAddrFor(void* ptr) const {
   // TODO: We can't yet normalize Baseline addresses until we unify
   // BaselineScript's PCMappingEntries with JitcodeGlobalTable.
@@ -187,6 +217,12 @@ const JitcodeGlobalEntry* JitcodeGlobalTable::lookupForSampler(
 
   entry->setSamplePositionInBuffer(samplePosInBuffer);
 
+  // IonIC entries must keep their corresponding Ion entries alive.
+  if (entry->isIonIC()) {
+    IonEntry& ionEntry = IonEntryForIonIC(rt, &entry->asIonIC());
+    ionEntry.setSamplePositionInBuffer(samplePosInBuffer);
+  }
+
   // JitcodeGlobalEntries are marked at the end of the mark phase. A read
   // barrier is not needed. Any JS frames sampled during the sweep phase of
   // the GC must be on stack, and on-stack frames must already be marked at
@@ -209,7 +245,7 @@ JitcodeGlobalEntry* JitcodeGlobalTable::lookupInternal(void* ptr) {
 }
 
 bool JitcodeGlobalTable::addEntry(UniqueJitcodeGlobalEntry entry) {
-  MOZ_ASSERT(entry->isIon() || entry->isBaseline() ||
+  MOZ_ASSERT(entry->isIon() || entry->isIonIC() || entry->isBaseline() ||
              entry->isBaselineInterpreter() || entry->isDummy());
 
   // Assert the new entry does not have a code range that's equal to (or
@@ -378,12 +414,24 @@ void IonEntry::traceWeak(JSTracer* trc) {
   }
 }
 
+bool IonICEntry::trace(JSTracer* trc) {
+  IonEntry& entry = IonEntryForIonIC(trc->runtime(), this);
+  return entry.trace(trc);
+}
+
+void IonICEntry::traceWeak(JSTracer* trc) {
+  IonEntry& entry = IonEntryForIonIC(trc->runtime(), this);
+  entry.traceWeak(trc);
+}
+
 [[nodiscard]] bool JitcodeGlobalEntry::callStackAtAddr(
     JSRuntime* rt, void* ptr, BytecodeLocationVector& results,
     uint32_t* depth) const {
   switch (kind()) {
     case Kind::Ion:
       return asIon().callStackAtAddr(ptr, results, depth);
+    case Kind::IonIC:
+      return asIonIC().callStackAtAddr(rt, ptr, results, depth);
     case Kind::Baseline:
       return asBaseline().callStackAtAddr(ptr, results, depth);
     case Kind::BaselineInterpreter:
@@ -400,6 +448,8 @@ uint32_t JitcodeGlobalEntry::callStackAtAddr(JSRuntime* rt, void* ptr,
   switch (kind()) {
     case Kind::Ion:
       return asIon().callStackAtAddr(ptr, results, maxResults);
+    case Kind::IonIC:
+      return asIonIC().callStackAtAddr(rt, ptr, results, maxResults);
     case Kind::Baseline:
       return asBaseline().callStackAtAddr(ptr, results, maxResults);
     case Kind::BaselineInterpreter:
@@ -414,6 +464,8 @@ uint64_t JitcodeGlobalEntry::lookupRealmID(JSRuntime* rt, void* ptr) const {
   switch (kind()) {
     case Kind::Ion:
       return asIon().lookupRealmID(ptr);
+    case Kind::IonIC:
+      return asIonIC().lookupRealmID(rt, ptr);
     case Kind::Baseline:
       return asBaseline().lookupRealmID();
     case Kind::Dummy:
@@ -430,6 +482,9 @@ bool JitcodeGlobalEntry::trace(JSTracer* trc) {
     case Kind::Ion:
       tracedAny |= asIon().trace(trc);
       break;
+    case Kind::IonIC:
+      tracedAny |= asIonIC().trace(trc);
+      break;
     case Kind::Baseline:
       tracedAny |= asBaseline().trace(trc);
       break;
@@ -445,6 +500,9 @@ void JitcodeGlobalEntry::traceWeak(JSTracer* trc) {
     case Kind::Ion:
       asIon().traceWeak(trc);
       break;
+    case Kind::IonIC:
+      asIonIC().traceWeak(trc);
+      break;
     case Kind::Baseline:
       asBaseline().traceWeak(trc);
       break;
@@ -459,6 +517,8 @@ void* JitcodeGlobalEntry::canonicalNativeAddrFor(JSRuntime* rt,
   switch (kind()) {
     case Kind::Ion:
       return asIon().canonicalNativeAddrFor(ptr);
+    case Kind::IonIC:
+      return asIonIC().canonicalNativeAddrFor(ptr);
     case Kind::Baseline:
       return asBaseline().canonicalNativeAddrFor(ptr);
     case Kind::Dummy:
@@ -474,6 +534,9 @@ void JitcodeGlobalEntry::DestroyPolicy::operator()(JitcodeGlobalEntry* entry) {
   switch (entry->kind()) {
     case JitcodeGlobalEntry::Kind::Ion:
       js_delete(&entry->asIon());
+      break;
+    case JitcodeGlobalEntry::Kind::IonIC:
+      js_delete(&entry->asIonIC());
       break;
     case JitcodeGlobalEntry::Kind::Baseline:
       js_delete(&entry->asBaseline());

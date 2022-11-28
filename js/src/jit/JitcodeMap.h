@@ -96,6 +96,7 @@ class JitCodeRange {
 typedef Vector<BytecodeLocation, 0, SystemAllocPolicy> BytecodeLocationVector;
 
 class IonEntry;
+class IonICEntry;
 class BaselineEntry;
 class BaselineInterpreterEntry;
 class DummyEntry;
@@ -111,7 +112,13 @@ class JitcodeGlobalEntry : public JitCodeRange {
   uint64_t samplePositionInBuffer_ = kNoSampleInBuffer;
 
  public:
-  enum class Kind : uint8_t { Ion, Baseline, BaselineInterpreter, Dummy };
+  enum class Kind : uint8_t {
+    Ion,
+    IonIC,
+    Baseline,
+    BaselineInterpreter,
+    Dummy
+  };
 
  protected:
   Kind kind_;
@@ -150,6 +157,7 @@ class JitcodeGlobalEntry : public JitCodeRange {
 
   Kind kind() const { return kind_; }
   bool isIon() const { return kind() == Kind::Ion; }
+  bool isIonIC() const { return kind() == Kind::IonIC; }
   bool isBaseline() const { return kind() == Kind::Baseline; }
   bool isBaselineInterpreter() const {
     return kind() == Kind::BaselineInterpreter;
@@ -157,11 +165,13 @@ class JitcodeGlobalEntry : public JitCodeRange {
   bool isDummy() const { return kind() == Kind::Dummy; }
 
   inline const IonEntry& asIon() const;
+  inline const IonICEntry& asIonIC() const;
   inline const BaselineEntry& asBaseline() const;
   inline const BaselineInterpreterEntry& asBaselineInterpreter() const;
   inline const DummyEntry& asDummy() const;
 
   inline IonEntry& asIon();
+  inline IonICEntry& asIonIC();
   inline BaselineEntry& asBaseline();
   inline BaselineInterpreterEntry& asBaselineInterpreter();
   inline DummyEntry& asDummy();
@@ -264,6 +274,36 @@ class IonEntry : public JitcodeGlobalEntry {
   void traceWeak(JSTracer* trc);
 };
 
+class IonICEntry : public JitcodeGlobalEntry {
+  // Address for this IC in the IonScript code. Most operations on IonICEntry
+  // use this to forward to the IonEntry.
+  void* rejoinAddr_;
+
+ public:
+  IonICEntry(JitCode* code, void* nativeStartAddr, void* nativeEndAddr,
+             void* rejoinAddr)
+      : JitcodeGlobalEntry(Kind::IonIC, code, nativeStartAddr, nativeEndAddr),
+        rejoinAddr_(rejoinAddr) {
+    MOZ_ASSERT(rejoinAddr_);
+  }
+
+  void* rejoinAddr() const { return rejoinAddr_; }
+
+  void* canonicalNativeAddrFor(void* ptr) const;
+
+  [[nodiscard]] bool callStackAtAddr(JSRuntime* rt, void* ptr,
+                                     BytecodeLocationVector& results,
+                                     uint32_t* depth) const;
+
+  uint32_t callStackAtAddr(JSRuntime* rt, void* ptr, const char** results,
+                           uint32_t maxResults) const;
+
+  uint64_t lookupRealmID(JSRuntime* rt, void* ptr) const;
+
+  bool trace(JSTracer* trc);
+  void traceWeak(JSTracer* trc);
+};
+
 class BaselineEntry : public JitcodeGlobalEntry {
   JSScript* script_;
   UniqueChars str_;
@@ -346,6 +386,11 @@ inline const IonEntry& JitcodeGlobalEntry::asIon() const {
   return *static_cast<const IonEntry*>(this);
 }
 
+inline const IonICEntry& JitcodeGlobalEntry::asIonIC() const {
+  MOZ_ASSERT(isIonIC());
+  return *static_cast<const IonICEntry*>(this);
+}
+
 inline const BaselineEntry& JitcodeGlobalEntry::asBaseline() const {
   MOZ_ASSERT(isBaseline());
   return *static_cast<const BaselineEntry*>(this);
@@ -365,6 +410,11 @@ inline const DummyEntry& JitcodeGlobalEntry::asDummy() const {
 inline IonEntry& JitcodeGlobalEntry::asIon() {
   MOZ_ASSERT(isIon());
   return *static_cast<IonEntry*>(this);
+}
+
+inline IonICEntry& JitcodeGlobalEntry::asIonIC() {
+  MOZ_ASSERT(isIonIC());
+  return *static_cast<IonICEntry*>(this);
 }
 
 inline BaselineEntry& JitcodeGlobalEntry::asBaseline() {

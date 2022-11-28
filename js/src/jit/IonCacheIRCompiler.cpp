@@ -12,7 +12,9 @@
 #include "jit/CacheIRCompiler.h"
 #include "jit/CacheIRWriter.h"
 #include "jit/IonIC.h"
+#include "jit/JitcodeMap.h"
 #include "jit/JitFrames.h"
+#include "jit/JitRuntime.h"
 #include "jit/JitZone.h"
 #include "jit/JSJitFrameIter.h"
 #include "jit/Linker.h"
@@ -1789,6 +1791,23 @@ void IonIC::attachCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
   JitCode* code = compiler.compile(newStub);
   if (!code) {
     return;
+  }
+
+  // Add an entry to the profiler's code table, so that the profiler can
+  // identify this as Ion code.
+  if (ionScript->hasProfilingInstrumentation()) {
+    uint8_t* addr = rejoinAddr(ionScript);
+    auto entry = MakeJitcodeGlobalEntry<IonICEntry>(cx, code, code->raw(),
+                                                    code->rawEnd(), addr);
+    if (!entry) {
+      cx->recoverFromOutOfMemory();
+      return;
+    }
+
+    auto* globalTable = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
+    if (!globalTable->addEntry(std::move(entry))) {
+      return;
+    }
   }
 
   attachStub(newStub, code);
