@@ -81,6 +81,8 @@
     <string name="mozac_feature_prompts_nov">Lis</string>
     <!-- December month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_dec">Pro</string>
+    <!-- Title of the time picker dialog. -->
+    <string name="mozac_feature_prompts_set_time">Nastavit čas</string>
     <!-- Option in expanded select login prompt that links to login settings -->
     <string name="mozac_feature_prompts_manage_logins">Správa přihlašovacích údajů</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
