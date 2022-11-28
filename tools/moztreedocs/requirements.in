@@ -19,7 +19,7 @@ Jinja2==2.11.2
 jmespath==0.10.0
 jsonschema==3.2.0
 livereload==2.6.3
-Markdown==3.3.4
+Markdown==3.4.1
 MarkupSafe==1.1.1
 mock==4.0.2
 myst-parser==0.16.1
@@ -46,7 +46,7 @@ snowballstemmer==2.0.0
 Sphinx==4.3.2
 sphinx-copybutton==0.5.1
 sphinx-js==3.0.1
-sphinx-markdown-tables==0.0.15
+sphinx-markdown-tables==0.0.17
 sphinx-panels==0.6.0
 sphinx-rtd-theme==1.1.1
 sphinxcontrib-applehelp==1.0.2
