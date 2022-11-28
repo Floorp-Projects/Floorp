@@ -42,7 +42,6 @@ class NimbusEventTest {
     @Before
     fun setUp() {
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()
