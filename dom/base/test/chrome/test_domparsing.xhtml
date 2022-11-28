@@ -6,9 +6,11 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
   <!-- test results are displayed in the html:body -->
-  <body xmlns="http://www.w3.org/1999/xhtml">
+  <body xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=816410"
      target="_blank">Mozilla Bug 816410</a>
+  <xul:browser id="test1" type="content" src="data:text/html,content" />
   </body>
 
   <!-- test code goes here -->
@@ -29,28 +31,45 @@ function throws(fn, type, message) {
   }
 }
 
-// DOMParser constructor should not throw for extra arguments
-new DOMParser(undefined);
-new DOMParser(null);
-new DOMParser(false);
-new DOMParser(0);
-new DOMParser("");
-new DOMParser({});
+add_task(function dom_parser_extra_args() {
+  // DOMParser constructor should not throw for extra arguments
+  new DOMParser(undefined);
+  new DOMParser(null);
+  new DOMParser(false);
+  new DOMParser(0);
+  new DOMParser("");
+  new DOMParser({});
+});
 
-// XMLSerializer constructor should not throw for extra arguments
-new XMLSerializer(undefined);
-new XMLSerializer(null);
-new XMLSerializer(false);
-new XMLSerializer(0);
-new XMLSerializer("");
-new XMLSerializer({});
+add_task(function xml_serializer_extra_args() {
+  // XMLSerializer constructor should not throw for extra arguments
+  new XMLSerializer(undefined);
+  new XMLSerializer(null);
+  new XMLSerializer(false);
+  new XMLSerializer(0);
+  new XMLSerializer("");
+  new XMLSerializer({});
+});
 
-runTest(new DOMParser(), new XMLSerializer());
+add_task(function chrome_window() {
+  runTest(window, true);
+});
 
-function runTest(parser, serializer) {
+add_task(function content_window() {
+  runTest(document.getElementById("test1").contentWindow, false);
+});
+
+function runTest(win, expectSystem) {
+  let parser = new win.DOMParser();
+  let serializer = new win.XMLSerializer();
+  let principal = win.document.nodePrincipal;
+  is(principal.isSystemPrincipal, expectSystem,
+     `expected ${expectSystem ? "system" : "content"} principal`);
+
   is(typeof parser.parseFromString, "function", "parseFromString should exist");
   is(typeof parser.parseFromBuffer, "function", "parseFromBuffer should exist");
   is(typeof parser.parseFromStream, "function", "parseFromStream should exist");
+  is(typeof parser.parseFromSafeString, "function", "parseFromSafeString should exist");
 
   is(typeof serializer.serializeToString, "function", "serializeToString should exist");
   is(typeof serializer.serializeToStream, "function", "serializeToStream should exist");
@@ -64,6 +83,19 @@ function runTest(parser, serializer) {
     {input: "<svg></svg>", type: "image/svg+xml", expected: "<svg/>"},
   ];
   for (let t of tests) {
+    const fromNormalString = parser.parseFromString(t.input, t.type);
+    if (principal.isSystemPrincipal) {
+      ok(fromNormalString.nodePrincipal.isNullPrincipal,
+         "system principal DOMParser produces a null principal document");
+    } else {
+      ok(fromNormalString.nodePrincipal === principal,
+         "content principal DOMParser produces a document with an object-identical principal");
+    }
+
+    const fromSafeString = parser.parseFromSafeString(t.input, t.type);
+    ok(fromSafeString.nodePrincipal === principal,
+       "DOMParser with parseFromSafeString always produces a document with an object-identical principal");
+
     is(serializer.serializeToString(parser.parseFromString(t.input, t.type)), t.expected,
        "parseFromString test for " + t.type);
 
