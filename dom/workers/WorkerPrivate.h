@@ -891,11 +891,7 @@ class WorkerPrivate final
     return mLoadInfo.mServiceWorkersTestingInWindow;
   }
 
-  bool ShouldResistFingerprinting() const {
-    return mLoadInfo.mShouldResistFingerprinting;
-  }
-
-  // Determin if the worker was created under a third-party context.
+  // Determine if the worker was created under a third-party context.
   bool IsThirdPartyContextToTopWindow() const {
     return mLoadInfo.mIsThirdPartyContextToTopWindow;
   }
