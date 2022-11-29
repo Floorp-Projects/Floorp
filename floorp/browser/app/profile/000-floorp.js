@@ -234,6 +234,10 @@ pref("font.name-list.monospace.ja", "Noto Sans JP, MS Gothic, MS Mincho, Meiryo,
 // Windows ネイティブ通知を使用する
 pref("alerts.useSystemBackend", true);
 
+// 多少のパフォーマンス改善
+pref("gfx.canvas.accelerated", true);
+pref("gfx.webrender.all", true);
+
 /*-----------------------------------------------------------------------------------all.js の設定-----------------------------------------------------------------------------------*/
 
 pref("extensions.htmlaboutaddons.recommendations.enabled", false, locked);
