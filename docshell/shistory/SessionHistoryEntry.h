@@ -65,6 +65,7 @@ class SessionHistoryInfo {
   nsIURI* GetURI() const { return mURI; }
   void SetURI(nsIURI* aURI) { mURI = aURI; }
 
+  nsIURI* GetOriginalURI() const { return mOriginalURI; }
   void SetOriginalURI(nsIURI* aOriginalURI) { mOriginalURI = aOriginalURI; }
 
   nsIURI* GetUnstrippedURI() const { return mUnstrippedURI; }
@@ -72,6 +73,7 @@ class SessionHistoryInfo {
     mUnstrippedURI = aUnstrippedURI;
   }
 
+  nsIURI* GetResultPrincipalURI() const { return mResultPrincipalURI; }
   void SetResultPrincipalURI(nsIURI* aResultPrincipalURI) {
     mResultPrincipalURI = aResultPrincipalURI;
   }
@@ -409,6 +411,8 @@ class SessionHistoryEntry : public nsISHEntry {
   // Get an entry based on LoadingSessionHistoryInfo's mLoadId. Parent process
   // only.
   static SessionHistoryEntry* GetByLoadId(uint64_t aLoadId);
+  static const SessionHistoryInfo* GetInfoSnapshotForValidationByLoadId(
+      uint64_t aLoadId);
   static void SetByLoadId(uint64_t aLoadId, SessionHistoryEntry* aEntry);
   static void RemoveLoadId(uint64_t aLoadId);
 
@@ -428,7 +432,16 @@ class SessionHistoryEntry : public nsISHEntry {
 
   HistoryEntryCounterForBrowsingContext mBCHistoryLength;
 
-  static nsTHashMap<nsUint64HashKey, SessionHistoryEntry*>* sLoadIdToEntry;
+  struct LoadingEntry {
+    // A pointer to the entry being loaded. Will be cleared by the
+    // SessionHistoryEntry destructor, at latest.
+    SessionHistoryEntry* mEntry;
+    // Snapshot of the entry's SessionHistoryInfo when the load started, to be
+    // used for validation purposes only.
+    UniquePtr<SessionHistoryInfo> mInfoSnapshotForValidation;
+  };
+
+  static nsTHashMap<nsUint64HashKey, LoadingEntry>* sLoadIdToEntry;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(SessionHistoryEntry, NS_SESSIONHISTORYENTRY_IID)

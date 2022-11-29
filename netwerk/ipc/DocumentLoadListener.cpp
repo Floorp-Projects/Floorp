@@ -520,6 +520,73 @@ bool CheckRecursiveLoad(CanonicalBrowsingContext* aLoadingContext,
   return true;
 }
 
+// Check that the load state, potentially received from a child process, appears
+// to be performing a load of the specified LoadingSessionHistoryInfo.
+// Returns a static (telemetry-safe) string naming what did not match, or
+// nullptr if it succeeds.
+static const char* ValidateHistoryLoad(
+    CanonicalBrowsingContext* aLoadingContext,
+    nsDocShellLoadState* aLoadState) {
+  MOZ_ASSERT(SessionHistoryInParent());
+  MOZ_ASSERT(aLoadState->LoadIsFromSessionHistory());
+
+  if (!aLoadState->GetLoadingSessionHistoryInfo()) {
+    return "Missing LoadingSessionHistoryInfo";
+  }
+
+  const SessionHistoryInfo* snapshot =
+      SessionHistoryEntry::GetInfoSnapshotForValidationByLoadId(
+          aLoadState->GetLoadingSessionHistoryInfo()->mLoadId);
+  if (!snapshot) {
+    return "Invalid LoadId";
+  }
+
+  // History loads do not inherit principal.
+  if (aLoadState->HasInternalLoadFlags(
+          nsDocShell::INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL)) {
+    return "LOAD_FLAGS_INHERIT_PRINCIPAL";
+  }
+
+  auto uriEq = [](nsIURI* a, nsIURI* b) -> bool {
+    bool eq = false;
+    return a == b || (a && b && NS_SUCCEEDED(a->Equals(b, &eq)) && eq);
+  };
+  auto principalEq = [](nsIPrincipal* a, nsIPrincipal* b) -> bool {
+    return a == b || (a && b && a->Equals(b));
+  };
+
+  // XXX: Needing to do all of this validation manually is kinda gross.
+  if (!uriEq(snapshot->GetURI(), aLoadState->URI())) {
+    return "URI";
+  }
+  if (!uriEq(snapshot->GetOriginalURI(), aLoadState->OriginalURI())) {
+    return "OriginalURI";
+  }
+  if (!aLoadState->ResultPrincipalURIIsSome() ||
+      !uriEq(snapshot->GetResultPrincipalURI(),
+             aLoadState->ResultPrincipalURI())) {
+    return "ResultPrincipalURI";
+  }
+  if (!uriEq(snapshot->GetUnstrippedURI(), aLoadState->GetUnstrippedURI())) {
+    return "UnstrippedURI";
+  }
+  if (!principalEq(snapshot->GetTriggeringPrincipal(),
+                   aLoadState->TriggeringPrincipal())) {
+    return "TriggeringPrincipal";
+  }
+  if (!principalEq(snapshot->GetPrincipalToInherit(),
+                   aLoadState->PrincipalToInherit())) {
+    return "PrincipalToInherit";
+  }
+  if (!principalEq(snapshot->GetPartitionedPrincipalToInherit(),
+                   aLoadState->PartitionedPrincipalToInherit())) {
+    return "PartitionedPrincipalToInherit";
+  }
+
+  // Everything matches!
+  return nullptr;
+}
+
 auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
                                 LoadInfo* aLoadInfo, nsLoadFlags aLoadFlags,
                                 uint32_t aCacheKey,
@@ -547,6 +614,28 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
     if (!CheckRecursiveLoad(loadingContext, aLoadState, this, mIsDocumentLoad,
                             aLoadInfo)) {
       *aRv = NS_ERROR_RECURSIVE_DOCUMENT_LOAD;
+      mParentChannelListener = nullptr;
+      return nullptr;
+    }
+  }
+
+  // If we are using SHIP and this load is from session history, validate that
+  // the load matches our local copy of the loading history entry.
+  if (SessionHistoryInParent() && aLoadState->LoadIsFromSessionHistory() &&
+      aLoadState->LoadType() != LOAD_ERROR_PAGE) {
+    if (const char* mismatch =
+            ValidateHistoryLoad(loadingContext, aLoadState)) {
+      LOG(
+          ("DocumentLoadListener::Open with invalid loading history entry "
+           "[this=%p, mismatch=%s]",
+           this, mismatch));
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      MOZ_CRASH_UNSAFE_PRINTF(
+          "DocumentLoadListener::Open for invalid history entry due to "
+          "mismatch of '%s'",
+          mismatch);
+#endif
+      *aRv = NS_ERROR_DOM_SECURITY_ERR;
       mParentChannelListener = nullptr;
       return nullptr;
     }
