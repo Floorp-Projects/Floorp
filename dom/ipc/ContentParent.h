@@ -32,6 +32,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 
+#include "MainThreadUtils.h"
 #include "nsClassHashtable.h"
 #include "nsTHashMap.h"
 #include "nsTHashSet.h"
@@ -98,6 +99,7 @@ class TabContext;
 class GetFilesHelper;
 class MemoryReportRequestHost;
 class RemoteWorkerManager;
+class ThreadsafeContentParentHandle;
 struct CancelContentJSOptions;
 
 #define NS_CONTENTPARENT_IID                         \
@@ -1465,6 +1467,10 @@ class ContentParent final : public PContentParent,
   bool IsBlockingShutdown() { return mBlockShutdownCalled; }
 #endif
 
+  ThreadsafeContentParentHandle* ThreadsafeHandle() const {
+    return mThreadsafeHandle;
+  }
+
  private:
   // Return an existing ContentParent if possible. Otherwise, `nullptr`.
   static already_AddRefed<ContentParent> GetUsedBrowserProcess(
@@ -1522,24 +1528,10 @@ class ContentParent final : public PContentParent,
   // timer.
   nsCOMPtr<nsITimer> mForceKillTimer;
 
-  // `mCount` is increased when a RemoteWorkerParent actor is created for this
-  // ContentProcess and it is decreased when the actor is destroyed.
-  //
-  // `mShutdownStarted` is flipped to `true` when a runnable that calls
-  // `ShutDownProcess` is dispatched; it's needed because the corresponding
-  // Content Process may be shutdown if there's no remote worker actors, and
-  // decrementing `mCount` and the call to `ShutDownProcess` are async. So,
-  // when a worker is going to be spawned and we see that `mCount` is 0,
-  // we can decide whether or not to use that process based on the value of
-  // `mShutdownStarted.`
-  //
-  // It's touched on PBackground thread and on main-thread.
-  struct RemoteWorkerActorData {
-    uint32_t mCount = 0;
-    bool mShutdownStarted = false;
-  };
-
-  DataMutex<RemoteWorkerActorData> mRemoteWorkerActorData;
+  // Threadsafe handle object which can be used by actors like PBackground to
+  // track the identity and other relevant information about the content process
+  // they're attached to.
+  const RefPtr<ThreadsafeContentParentHandle> mThreadsafeHandle;
 
   // How many tabs we're waiting to finish their destruction
   // sequence.  Precisely, how many BrowserParents have called
@@ -1669,6 +1661,61 @@ class ContentParent final : public PContentParent,
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ContentParent, NS_CONTENTPARENT_IID)
+
+// Threadsafe handle object allowing off-main-thread code to get some
+// information and maintain a weak reference to a ContentParent.
+class ThreadsafeContentParentHandle final {
+  friend class ContentParent;
+
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ThreadsafeContentParentHandle);
+
+  // Get the ChildID of this process. Safe to call from any thread.
+  ContentParentId ChildID() const { return mChildID; }
+
+  // Get the current RemoteType of this ContentParent. Safe to call from any
+  // thread. If the returned RemoteType is PREALLOC_REMOTE_TYPE, it may change
+  // again in the future.
+  nsCString GetRemoteType() MOZ_EXCLUDES(mMutex);
+
+  // Try to get a reference to the real `ContentParent` object from this weak
+  // reference. This may only be called on the main thread.
+  already_AddRefed<ContentParent> GetContentParent()
+      MOZ_REQUIRES(sMainThreadCapability) {
+    return do_AddRef(mWeakActor);
+  }
+
+  // Calls `aCallback` with the current remote worker count and whether or not
+  // shutdown has been started. If the callback returns `true`, registers a new
+  // actor, and returns `true`, otherwise returns `false`.
+  //
+  // NOTE: The internal mutex is held while evaluating `aCallback`.
+  bool MaybeRegisterRemoteWorkerActor(
+      MoveOnlyFunction<bool(uint32_t, bool)> aCallback) MOZ_EXCLUDES(mMutex);
+
+  // Like `MaybeRegisterRemoteWorkerActor`, but unconditional.
+  void RegisterRemoteWorkerActor() MOZ_EXCLUDES(mMutex) {
+    MaybeRegisterRemoteWorkerActor([](uint32_t, bool) { return true; });
+  }
+
+ private:
+  ThreadsafeContentParentHandle(ContentParent* aActor, ContentParentId aChildID,
+                                const nsACString& aRemoteType)
+      : mChildID(aChildID), mRemoteType(aRemoteType), mWeakActor(aActor) {}
+  ~ThreadsafeContentParentHandle() { MOZ_ASSERT(!mWeakActor); }
+
+  mozilla::Mutex mMutex{"ContentParentIdentity"};
+
+  const ContentParentId mChildID;
+
+  nsCString mRemoteType MOZ_GUARDED_BY(mMutex);
+  uint32_t mRemoteWorkerActorCount MOZ_GUARDED_BY(mMutex) = 0;
+  bool mShutdownStarted MOZ_GUARDED_BY(mMutex) = false;
+
+  // Weak reference to the actual ContentParent actor. Only touched on the main
+  // thread to read or clear.
+  ContentParent* mWeakActor MOZ_GUARDED_BY(sMainThreadCapability);
+};
 
 // This is the C++ version of remoteTypePrefix in E10SUtils.sys.mjs.
 const nsDependentCSubstring RemoteTypePrefix(

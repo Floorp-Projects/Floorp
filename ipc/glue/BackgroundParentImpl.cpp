@@ -115,6 +115,7 @@ namespace mozilla::ipc {
 
 using mozilla::dom::BroadcastChannelParent;
 using mozilla::dom::ContentParent;
+using mozilla::dom::ThreadsafeContentParentHandle;
 
 BackgroundParentImpl::BackgroundParentImpl() {
   AssertIsInMainOrSocketProcess();
@@ -554,13 +555,13 @@ IPCResult BackgroundParentImpl::RecvPRemoteWorkerServiceConstructor(
   mozilla::dom::RemoteWorkerServiceParent* actor =
       static_cast<mozilla::dom::RemoteWorkerServiceParent*>(aActor);
 
-  RefPtr<ContentParent> parent = BackgroundParent::GetContentParent(this);
+  RefPtr<ThreadsafeContentParentHandle> parent =
+      BackgroundParent::GetContentParentHandle(this);
   // If the ContentParent is null we are dealing with a same-process actor.
   if (!parent) {
     actor->Initialize(NOT_REMOTE_TYPE);
   } else {
     actor->Initialize(parent->GetRemoteType());
-    NS_ReleaseOnMainThread("ContentParent release", parent.forget());
   }
   return IPC_OK();
 }
@@ -612,13 +613,14 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvPFileCreatorConstructor(
     const bool& aIsFromNsIFile) {
   bool isFileRemoteType = false;
 
-  // If the ContentParent is null we are dealing with a same-process actor.
-  RefPtr<ContentParent> parent = BackgroundParent::GetContentParent(this);
+  // If the ContentParentHandle is null we are dealing with a same-process
+  // actor.
+  RefPtr<ThreadsafeContentParentHandle> parent =
+      BackgroundParent::GetContentParentHandle(this);
   if (!parent) {
     isFileRemoteType = true;
   } else {
     isFileRemoteType = parent->GetRemoteType() == FILE_REMOTE_TYPE;
-    NS_ReleaseOnMainThread("ContentParent release", parent.forget());
   }
 
   dom::FileCreatorParent* actor = static_cast<dom::FileCreatorParent*>(aActor);
@@ -836,20 +838,11 @@ BackgroundParentImpl::AllocPBroadcastChannelParent(
 
 namespace {
 
-struct MOZ_STACK_CLASS NullifyContentParentRAII {
-  explicit NullifyContentParentRAII(RefPtr<ContentParent>& aContentParent)
-      : mContentParent(aContentParent) {}
-
-  ~NullifyContentParentRAII() { mContentParent = nullptr; }
-
-  RefPtr<ContentParent>& mContentParent;
-};
-
 class CheckPrincipalRunnable final : public Runnable {
  public:
-  CheckPrincipalRunnable(already_AddRefed<ContentParent> aParent,
-                         const PrincipalInfo& aPrincipalInfo,
-                         const nsACString& aOrigin)
+  CheckPrincipalRunnable(
+      already_AddRefed<ThreadsafeContentParentHandle> aParent,
+      const PrincipalInfo& aPrincipalInfo, const nsACString& aOrigin)
       : Runnable("ipc::CheckPrincipalRunnable"),
         mContentParent(aParent),
         mPrincipalInfo(aPrincipalInfo),
@@ -861,13 +854,15 @@ class CheckPrincipalRunnable final : public Runnable {
   }
 
   NS_IMETHOD Run() override {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    NullifyContentParentRAII raii(mContentParent);
+    AssertIsOnMainThread();
+    RefPtr<ContentParent> contentParent = mContentParent->GetContentParent();
+    if (!contentParent) {
+      return NS_OK;
+    }
 
     auto principalOrErr = PrincipalInfoToPrincipal(mPrincipalInfo);
     if (NS_WARN_IF(principalOrErr.isErr())) {
-      mContentParent->KillHard(
+      contentParent->KillHard(
           "BroadcastChannel killed: PrincipalInfoToPrincipal failed.");
       return NS_OK;
     }
@@ -875,14 +870,13 @@ class CheckPrincipalRunnable final : public Runnable {
     nsAutoCString origin;
     nsresult rv = principalOrErr.unwrap()->GetOrigin(origin);
     if (NS_FAILED(rv)) {
-      mContentParent->KillHard(
+      contentParent->KillHard(
           "BroadcastChannel killed: principal::GetOrigin failed.");
       return NS_OK;
     }
 
     if (NS_WARN_IF(!mOrigin.Equals(origin))) {
-      mContentParent->KillHard(
-          "BroadcastChannel killed: origins do not match.");
+      contentParent->KillHard("BroadcastChannel killed: origins do not match.");
       return NS_OK;
     }
 
@@ -890,7 +884,7 @@ class CheckPrincipalRunnable final : public Runnable {
   }
 
  private:
-  RefPtr<ContentParent> mContentParent;
+  RefPtr<ThreadsafeContentParentHandle> mContentParent;
   PrincipalInfo mPrincipalInfo;
   nsCString mOrigin;
 };
@@ -903,7 +897,8 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvPBroadcastChannelConstructor(
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
-  RefPtr<ContentParent> parent = BackgroundParent::GetContentParent(this);
+  RefPtr<ThreadsafeContentParentHandle> parent =
+      BackgroundParent::GetContentParentHandle(this);
 
   // If the ContentParent is null we are dealing with a same-process actor.
   if (!parent) {

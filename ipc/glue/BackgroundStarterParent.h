@@ -19,7 +19,7 @@ class BackgroundStarterParent final : public PBackgroundStarterParent {
       BackgroundStarterParent, override)
 
   // Implemented in BackgroundImpl.cpp
-  BackgroundStarterParent(mozilla::dom::ContentParent* aContent,
+  BackgroundStarterParent(mozilla::dom::ThreadsafeContentParentHandle* aContent,
                           bool aCrossProcess);
 
   void SetLiveActorArray(nsTArray<IToplevelProtocol*>* aLiveActorArray);
@@ -36,7 +36,7 @@ class BackgroundStarterParent final : public PBackgroundStarterParent {
 
   const bool mCrossProcess;
 
-  RefPtr<mozilla::dom::ContentParent> mContent;
+  const RefPtr<mozilla::dom::ThreadsafeContentParentHandle> mContent;
 
   // Set when the actor is opened successfully and used to handle shutdown
   // hangs. Only touched on the background thread.

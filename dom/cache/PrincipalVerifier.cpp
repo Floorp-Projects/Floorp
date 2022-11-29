@@ -60,7 +60,7 @@ PrincipalVerifier::PrincipalVerifier(Listener& aListener,
                                      PBackgroundParent* aActor,
                                      const PrincipalInfo& aPrincipalInfo)
     : Runnable("dom::cache::PrincipalVerifier"),
-      mActor(BackgroundParent::GetContentParent(aActor)),
+      mHandle(BackgroundParent::GetContentParentHandle(aActor)),
       mPrincipalInfo(aPrincipalInfo),
       mInitiatingEventTarget(GetCurrentSerialEventTarget()),
       mResult(NS_OK) {
@@ -76,10 +76,6 @@ PrincipalVerifier::~PrincipalVerifier() {
   // we cannot guarantee which thread we destruct on.
 
   MOZ_DIAGNOSTIC_ASSERT(mListenerList.IsEmpty());
-
-  // We should always be able to explicitly release the actor on the main
-  // thread.
-  MOZ_DIAGNOSTIC_ASSERT(!mActor);
 }
 
 NS_IMETHODIMP
@@ -99,10 +95,6 @@ PrincipalVerifier::Run() {
 void PrincipalVerifier::VerifyOnMainThread() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // No matter what happens, we need to release the actor before leaving
-  // this method.
-  RefPtr<ContentParent> actor = std::move(mActor);
-
   QM_TRY_INSPECT(
       const auto& principal, PrincipalInfoToPrincipal(mPrincipalInfo), QM_VOID,
       [this](const nsresult result) { DispatchToInitiatingThread(result); });
@@ -115,12 +107,10 @@ void PrincipalVerifier::VerifyOnMainThread() {
 
   // Verify if a child process uses system principal, which is not allowed
   // to prevent system principal is spoofed.
-  if (NS_WARN_IF(actor && principal->IsSystemPrincipal())) {
+  if (NS_WARN_IF(mHandle && principal->IsSystemPrincipal())) {
     DispatchToInitiatingThread(NS_ERROR_FAILURE);
     return;
   }
-
-  actor = nullptr;
 
 #ifdef DEBUG
   nsresult rv = NS_OK;

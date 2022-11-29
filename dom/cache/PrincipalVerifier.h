@@ -20,7 +20,7 @@ class PBackgroundParent;
 
 namespace dom {
 
-class ContentParent;
+class ThreadsafeContentParentHandle;
 
 namespace cache {
 
@@ -62,9 +62,7 @@ class PrincipalVerifier final : public Runnable {
   // Weak reference cleared by RemoveListener()
   nsTObserverArray<NotNull<Listener*>> mListenerList;
 
-  // set in originating thread at construction, but must be accessed and
-  // released on main thread
-  RefPtr<ContentParent> mActor;
+  RefPtr<ThreadsafeContentParentHandle> mHandle;
 
   const mozilla::ipc::PrincipalInfo mPrincipalInfo;
   nsCOMPtr<nsIEventTarget> mInitiatingEventTarget;
