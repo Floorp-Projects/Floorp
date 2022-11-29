@@ -50,11 +50,14 @@ async function middleClickTest(win) {
     { button: 0 },
     browser.contentWindow
   );
-  let tree = browser.contentDocument.getElementById("tabList");
-  await BrowserTestUtils.waitForCondition(() => !tree.hasAttribute("hidden"));
+  let treeContainer = browser.contentDocument.querySelector(".tree-container");
+  await BrowserTestUtils.waitForCondition(
+    () => win.getComputedStyle(treeContainer).visibility == "visible"
+  );
   // Force a layout flush before accessing coordinates.
-  tree.getBoundingClientRect();
+  treeContainer.getBoundingClientRect();
 
+  let tree = browser.contentDocument.getElementById("tabList");
   is(tree.view.rowCount, 3, "There should be three items");
 
   // click on the first tab item
