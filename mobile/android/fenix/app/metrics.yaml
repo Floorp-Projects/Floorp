@@ -6231,18 +6231,28 @@ browser.search:
     type: labeled_counter
     description: |
       Records counts of SERP pages with adverts displayed.
-      The key format is `<provider-name>`.
+      The key format is
+      `<provider-name>.in-content.[sap|sap-follow-on|organic].[code|none](.[channel])?`,
+      where:
+
+      * `provider-name` is the name of the provider,
+      * `sap|sap-follow-on|organic` is the search access point,
+      * `code` is set when the url matches any of the provider's code prefixes,
+      * `channel` is set to the url "channel" query parameter.
     send_in_pings:
       - metrics
       - baseline
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6558
+      - https://github.com/mozilla-mobile/fenix/issues/28010
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1799049
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10112
       - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
       - https://github.com/mozilla-mobile/fenix/pull/20230#issuecomment-879244938
       - https://github.com/mozilla-mobile/fenix/pull/21038#issuecomment-906757301
+      - https://github.com/mozilla-mobile/fenix/pull/28012#issuecomment-1330822281
     data_sensitivity:
       - interaction
     notification_emails:
@@ -6255,18 +6265,27 @@ browser.search:
     type: labeled_counter
     description: |
       Records clicks of adverts on SERP pages.
-      The key format is `<provider-name>`.
+      The key format is
+      `<provider-name>.in-content.[sap|sap-follow-on|organic].[code|none](.[channel])?`,
+      where:
+
+      * `provider-name` is the name of the provider,
+      * `sap|sap-follow-on|organic` is the search access point,
+      * `code` is set when the url matches any of the provider's code prefixes,
+      * `channel` is set to the url "channel" query parameter.
     send_in_pings:
       - metrics
       - baseline
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6558
+      - https://github.com/mozilla-mobile/fenix/issues/28010
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/10112
       - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
       - https://github.com/mozilla-mobile/fenix/pull/20230#issuecomment-879244938
       - https://github.com/mozilla-mobile/fenix/pull/21038#issuecomment-906757301
+      - https://github.com/mozilla-mobile/fenix/pull/28012#issuecomment-1330822281
     data_sensitivity:
       - interaction
     notification_emails:
