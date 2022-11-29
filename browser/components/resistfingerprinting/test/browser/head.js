@@ -633,6 +633,7 @@ async function defaultsTest(
     extraData = {};
   }
   extraData.testDesc = "default";
+  expectedResults.shouldRFPApply = false;
   if (extraPrefs != undefined) {
     await SpecialPowers.pushPrefEnv({
       set: extraPrefs,
@@ -664,6 +665,7 @@ async function simpleRFPTest(
     extraData = {};
   }
   extraData.testDesc = "simple RFP enabled";
+  expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.resistFingerprinting", true]].concat(extraPrefs || []),
   });
@@ -694,6 +696,7 @@ async function testA(
     extraData = {};
   }
   extraData.testDesc = "test (A)";
+  expectedResults.shouldRFPApply = false;
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
@@ -731,6 +734,7 @@ async function testB(
     extraData = {};
   }
   extraData.testDesc = "test (B)";
+  expectedResults.shouldRFPApply = false;
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
@@ -768,6 +772,7 @@ async function testC(
     extraData = {};
   }
   extraData.testDesc = "test (C)";
+  expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
@@ -805,6 +810,7 @@ async function testD(
     extraData = {};
   }
   extraData.testDesc = "test (D)";
+  expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
@@ -839,6 +845,7 @@ async function testE(
     extraData = {};
   }
   extraData.testDesc = "test (E)";
+  expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
@@ -873,6 +880,7 @@ async function testF(
     extraData = {};
   }
   extraData.testDesc = "test (F)";
+  expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
@@ -907,6 +915,7 @@ async function testG(
     extraData = {};
   }
   extraData.testDesc = "test (G)";
+  expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
@@ -944,6 +953,7 @@ async function testH(
     extraData = {};
   }
   extraData.testDesc = "test (H)";
+  expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
