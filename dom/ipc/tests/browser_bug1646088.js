@@ -23,13 +23,14 @@ add_task(async function() {
     };
 
     // Begin a process switch, which should cause `prepareToChangeRemoteness` to
-    // be called. We do this from the content process to make sure the frontend
-    // has no chance to trigger an eager process switch.
+    // be called.
+    // NOTE: This used to avoid BrowserTestUtils.loadURI, as that call would
+    // previously eagerly perform a process switch meaning that the interesting
+    // codepath wouldn't be triggered. Nowadays the process switch codepath
+    // always happens during navigation as required by this test.
     info("Beginning process switch into file URI process");
     let browserLoaded = BrowserTestUtils.browserLoaded(browser);
-    await SpecialPowers.spawn(browser, [uriString], uri => {
-      content.location = uri;
-    });
+    BrowserTestUtils.loadURI(browser, uriString);
     await prepareToChangeCalled.promise;
 
     // The tab we opened is now midway through process switching. Open another

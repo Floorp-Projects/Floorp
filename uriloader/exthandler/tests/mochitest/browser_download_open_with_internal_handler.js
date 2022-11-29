@@ -46,9 +46,7 @@ async function waitForPdfJS(browser, url) {
     null,
     true
   );
-  await SpecialPowers.spawn(browser, [url], contentUrl => {
-    content.location = contentUrl;
-  });
+  BrowserTestUtils.loadURI(browser, url);
   return loadPromise;
 }
 
