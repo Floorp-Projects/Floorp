@@ -2397,6 +2397,11 @@
     symbol: WordSized
   mir_op: true
 
+- name: GuardSpecificInt32
+  operands:
+    num: WordSized
+  mir_op: true
+
 - name: GuardStringToIndex
   result_type: WordSized
   operands:
