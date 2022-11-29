@@ -410,7 +410,7 @@ def esmify(command_context, path=None, convert=False, imports=False, prefix=""):
         else:
             jss = vcs_utils.find_all_jss(path)
 
-        info(f"Found {len(jss)} file(s). Rewriting imports...")
+        info(f"Checking {len(jss)} JS file(s). Rewriting any matching imports...")
 
         result = rewrite_imports(jss, prefix, summary)
         if result is None:
