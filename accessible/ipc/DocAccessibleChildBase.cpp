@@ -109,7 +109,11 @@ void DocAccessibleChildBase::InsertIntoIpcTree(LocalAccessible* aParent,
         cache.AppendElement(CacheData(id, fields));
       }
     }
-    Unused << SendCache(CacheUpdateType::Initial, cache, !aSuppressShowEvent);
+    // The cache array might be empty if there were only moved Accessibles or if
+    // no Accessibles generated any cache data.
+    if (!cache.IsEmpty()) {
+      Unused << SendCache(CacheUpdateType::Initial, cache, !aSuppressShowEvent);
+    }
   }
 }
 
