@@ -44,7 +44,7 @@ jobs:
             platform: linux64/opt
             symbol: pfu
             tier: 1
-        worker-type: b-linux
+        worker-type: b-linux-gcp
         worker:
             implementation: docker-worker
             os: linux
