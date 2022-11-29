@@ -34,6 +34,10 @@ class WellKnownParserAtoms;
 struct CompilationAtomCache;
 }  // namespace frontend
 
+namespace jit {
+class MacroAssembler;
+}  // namespace jit
+
 class StaticStrings {
   // NOTE: The WellKnownParserAtoms rely on these tables and may need to be
   //       update if these tables are changed.
@@ -41,6 +45,8 @@ class StaticStrings {
   friend class js::frontend::TaggedParserAtomIndex;
   friend class js::frontend::WellKnownParserAtoms;
   friend struct js::frontend::CompilationAtomCache;
+
+  friend class js::jit::MacroAssembler;
 
  private:
   // Strings matches `[A-Za-z0-9$_]{2}` pattern.
