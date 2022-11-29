@@ -79,6 +79,8 @@ class SystemEngineSession(
         flags: LoadUrlFlags,
         additionalHeaders: Map<String, String>?,
     ) {
+        notifyObservers { onLoadUrl() }
+
         val headers =
             if (additionalHeaders == null) {
                 xRequestHeader
@@ -97,6 +99,7 @@ class SystemEngineSession(
      */
     override fun loadData(data: String, mimeType: String, encoding: String) {
         webView.loadData(data, mimeType, encoding)
+        notifyObservers { onLoadData() }
     }
 
     override fun requestPdfToDownload() {
@@ -133,6 +136,9 @@ class SystemEngineSession(
      */
     override fun goForward(userInteraction: Boolean) {
         webView.goForward()
+        if (webView.canGoForward()) {
+            notifyObservers { onNavigateForward() }
+        }
     }
 
     /**
@@ -141,6 +147,7 @@ class SystemEngineSession(
     override fun goToHistoryIndex(index: Int) {
         val historyList = webView.copyBackForwardList()
         webView.goBackOrForward(index - historyList.currentIndex)
+        notifyObservers { onGotoHistoryIndex() }
     }
 
     /**

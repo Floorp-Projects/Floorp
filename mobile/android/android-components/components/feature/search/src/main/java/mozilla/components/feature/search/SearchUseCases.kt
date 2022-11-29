@@ -5,6 +5,7 @@
 package mozilla.components.feature.search
 
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.selector.findTabOrCustomTab
@@ -77,16 +78,17 @@ class SearchUseCases(
 
             val id = if (sessionId == null) {
                 // If no `sessionId` was passed in then create a new tab
-                tabsUseCases.addTab(searchUrl)
+                tabsUseCases.addTab(searchUrl, isSearch = true)
             } else {
                 // If we got a `sessionId` then try to find the tab and load the search URL in it
                 val existingTab = store.state.findTabOrCustomTab(sessionId)
                 if (existingTab != null) {
-                    sessionUseCases.loadUrl(searchUrl, sessionId = existingTab.id)
+                    store.dispatch(ContentAction.UpdateIsSearchAction(existingTab.id, true))
+                    store.dispatch(EngineAction.LoadUrlAction(existingTab.id, searchUrl))
                     existingTab.id
                 } else {
                     // If the tab with the provided id was not found then create a new tab
-                    tabsUseCases.addTab(searchUrl)
+                    tabsUseCases.addTab(searchUrl, isSearch = true)
                 }
             }
 
@@ -150,6 +152,7 @@ class SearchUseCases(
                 source = source,
                 selectTab = selected,
                 private = private,
+                isSearch = true,
             )
 
             store.dispatch(ContentAction.UpdateSearchTermsAction(id, searchTerms))
