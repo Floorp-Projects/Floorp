@@ -40,6 +40,7 @@ The plugin implements the following rules:
    eslint-plugin-mozilla/no-addtask-setup
    eslint-plugin-mozilla/no-arbitrary-setTimeout
    eslint-plugin-mozilla/no-compare-against-boolean-literals
+   eslint-plugin-mozilla/no-cu-reportError
    eslint-plugin-mozilla/no-define-cc-etc
    eslint-plugin-mozilla/no-throw-cr-literal
    eslint-plugin-mozilla/no-useless-parameters
