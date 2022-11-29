@@ -6,18 +6,17 @@ const { AppConstants } = ChromeUtils.importESModule(
 const { ChromeMigrationUtils } = ChromeUtils.importESModule(
   "resource:///modules/ChromeMigrationUtils.sys.mjs"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 function getRootPath() {
   let dirKey;
   if (AppConstants.platform == "win") {
-    dirKey = "winLocalAppDataDir";
+    dirKey = "LocalAppData";
   } else if (AppConstants.platform == "macosx") {
-    dirKey = "macUserLibDir";
+    dirKey = "ULibDir";
   } else {
-    dirKey = "homeDir";
+    dirKey = "Home";
   }
-  return OS.Constants.Path[dirKey];
+  return Services.dirsvc.get(dirKey, Ci.nsIFile).path;
 }
 
 add_task(async function test_getDataPath_function() {
@@ -27,33 +26,33 @@ add_task(async function test_getDataPath_function() {
   if (AppConstants.platform == "win") {
     Assert.equal(
       chromeUserDataPath,
-      OS.Path.join(getRootPath(), "Google", "Chrome", "User Data"),
+      PathUtils.join(getRootPath(), "Google", "Chrome", "User Data"),
       "Should get the path of Chrome data directory."
     );
     Assert.equal(
       chromiumUserDataPath,
-      OS.Path.join(getRootPath(), "Chromium", "User Data"),
+      PathUtils.join(getRootPath(), "Chromium", "User Data"),
       "Should get the path of Chromium data directory."
     );
     Assert.equal(
       canaryUserDataPath,
-      OS.Path.join(getRootPath(), "Google", "Chrome SxS", "User Data"),
+      PathUtils.join(getRootPath(), "Google", "Chrome SxS", "User Data"),
       "Should get the path of Canary data directory."
     );
   } else if (AppConstants.platform == "macosx") {
     Assert.equal(
       chromeUserDataPath,
-      OS.Path.join(getRootPath(), "Application Support", "Google", "Chrome"),
+      PathUtils.join(getRootPath(), "Application Support", "Google", "Chrome"),
       "Should get the path of Chrome data directory."
     );
     Assert.equal(
       chromiumUserDataPath,
-      OS.Path.join(getRootPath(), "Application Support", "Chromium"),
+      PathUtils.join(getRootPath(), "Application Support", "Chromium"),
       "Should get the path of Chromium data directory."
     );
     Assert.equal(
       canaryUserDataPath,
-      OS.Path.join(
+      PathUtils.join(
         getRootPath(),
         "Application Support",
         "Google",
@@ -64,12 +63,12 @@ add_task(async function test_getDataPath_function() {
   } else {
     Assert.equal(
       chromeUserDataPath,
-      OS.Path.join(getRootPath(), ".config", "google-chrome"),
+      PathUtils.join(getRootPath(), ".config", "google-chrome"),
       "Should get the path of Chrome data directory."
     );
     Assert.equal(
       chromiumUserDataPath,
-      OS.Path.join(getRootPath(), ".config", "chromium"),
+      PathUtils.join(getRootPath(), ".config", "chromium"),
       "Should get the path of Chromium data directory."
     );
     Assert.equal(canaryUserDataPath, null, "Should get null for Canary.");
@@ -80,7 +79,7 @@ add_task(async function test_getExtensionPath_function() {
   let extensionPath = ChromeMigrationUtils.getExtensionPath("Default");
   let expectedPath;
   if (AppConstants.platform == "win") {
-    expectedPath = OS.Path.join(
+    expectedPath = PathUtils.join(
       getRootPath(),
       "Google",
       "Chrome",
@@ -89,7 +88,7 @@ add_task(async function test_getExtensionPath_function() {
       "Extensions"
     );
   } else if (AppConstants.platform == "macosx") {
-    expectedPath = OS.Path.join(
+    expectedPath = PathUtils.join(
       getRootPath(),
       "Application Support",
       "Google",
@@ -98,7 +97,7 @@ add_task(async function test_getExtensionPath_function() {
       "Extensions"
     );
   } else {
-    expectedPath = OS.Path.join(
+    expectedPath = PathUtils.join(
       getRootPath(),
       ".config",
       "google-chrome",
