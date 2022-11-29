@@ -1868,6 +1868,10 @@ JSLinearString* js::IndexToString(JSContext* cx, uint32_t index) {
   return str;
 }
 
+JSString* js::Int32ToStringWithBase(JSContext* cx, int32_t i, int32_t base) {
+  return NumberToStringWithBase<CanGC>(cx, double(i), base);
+}
+
 bool js::NumberValueToStringBuffer(const Value& v, StringBuffer& sb) {
   /* Convert to C-string. */
   ToCStringBuf cbuf;

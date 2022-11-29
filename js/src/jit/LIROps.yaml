@@ -1074,6 +1074,14 @@
 - name: BigIntBitNot
   gen_boilerplate: false
 
+- name: Int32ToStringWithBase
+  result_type: WordSized
+  operands:
+    input: WordSized
+    base: WordSized
+  num_temps: 2
+  mir_op: true
+
 - name: NumberParseInt
   result_type: BoxedValue
   operands:
@@ -3188,6 +3196,11 @@
 - name: GuardInt32IsNonNegative
   operands:
     index: WordSized
+
+- name: GuardInt32Range
+  operands:
+    input: WordSized
+  mir_op: true
 
 - name: GuardIndexIsNotDenseElement
   operands:

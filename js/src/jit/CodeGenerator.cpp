@@ -9563,6 +9563,35 @@ void CodeGenerator::visitBigIntBitNot(LBigIntBitNot* ins) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitInt32ToStringWithBase(LInt32ToStringWithBase* lir) {
+  Register input = ToRegister(lir->input());
+  RegisterOrInt32 base = ToRegisterOrInt32(lir->base());
+  Register output = ToRegister(lir->output());
+  Register temp0 = ToRegister(lir->temp0());
+  Register temp1 = ToRegister(lir->temp1());
+
+  using Fn = JSString* (*)(JSContext*, int32_t, int32_t);
+  if (base.is<Register>()) {
+    auto* ool = oolCallVM<Fn, js::Int32ToStringWithBase>(
+        lir, ArgList(input, base.as<Register>()), StoreRegisterTo(output));
+
+    LiveRegisterSet liveRegs = liveVolatileRegs(lir);
+    masm.loadInt32ToStringWithBase(input, base.as<Register>(), output, temp0,
+                                   temp1, gen->runtime->staticStrings(),
+                                   liveRegs, ool->entry());
+    masm.bind(ool->rejoin());
+  } else {
+    auto* ool = oolCallVM<Fn, js::Int32ToStringWithBase>(
+        lir, ArgList(input, Imm32(base.as<int32_t>())),
+        StoreRegisterTo(output));
+
+    masm.loadInt32ToStringWithBase(input, base.as<int32_t>(), output, temp0,
+                                   temp1, gen->runtime->staticStrings(),
+                                   ool->entry());
+    masm.bind(ool->rejoin());
+  }
+}
+
 void CodeGenerator::visitNumberParseInt(LNumberParseInt* lir) {
   Register string = ToRegister(lir->string());
   Register radix = ToRegister(lir->radix());
@@ -16903,6 +16932,15 @@ void CodeGenerator::visitGuardInt32IsNonNegative(
   Register index = ToRegister(lir->index());
 
   bailoutCmp32(Assembler::LessThan, index, Imm32(0), lir->snapshot());
+}
+
+void CodeGenerator::visitGuardInt32Range(LGuardInt32Range* lir) {
+  Register input = ToRegister(lir->input());
+
+  bailoutCmp32(Assembler::LessThan, input, Imm32(lir->mir()->minimum()),
+               lir->snapshot());
+  bailoutCmp32(Assembler::GreaterThan, input, Imm32(lir->mir()->maximum()),
+               lir->snapshot());
 }
 
 void CodeGenerator::visitGuardIndexIsNotDenseElement(
