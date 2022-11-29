@@ -14,7 +14,6 @@
         "win64-ret-null-on-commitment-limit_clang_14.patch",
         "llvmorg-16-init-7778-g232e0a011e8c.patch",
         "llvmorg-16-init-10850-gff111a997f1b.patch",
-        "compiler-rt-rss-limit-heap-profile.patch",
-        "profdata-compat.patch"
+        "compiler-rt-rss-limit-heap-profile.patch"
     ]
 }
