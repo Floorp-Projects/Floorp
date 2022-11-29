@@ -119,6 +119,18 @@ extern char* Uint32ToHexCString(Int32ToCStringBuf* cbuf, uint32_t value,
 constexpr double DOUBLE_INTEGRAL_PRECISION_LIMIT = uint64_t(1) << 53;
 
 /*
+ * The smallest positive double such that all positive doubles larger or equal
+ * than it have an exact decimal representation without exponential form.
+ */
+constexpr double DOUBLE_DECIMAL_IN_SHORTEST_LOW = 1.0e-6;
+
+/*
+ * The largest positive double such that all positive doubles less than it
+ * have an exact decimal representation without exponential form.
+ */
+constexpr double DOUBLE_DECIMAL_IN_SHORTEST_HIGH = 1.0e21;
+
+/*
  * Parse a decimal number encoded in |chars|.  The decimal number must be
  * sufficiently small that it will not overflow the integrally-precise range of
  * the double type -- that is, the number will be smaller than

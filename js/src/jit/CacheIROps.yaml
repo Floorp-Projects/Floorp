@@ -1442,6 +1442,13 @@
     str: StringId
     radix: Int32Id
 
+- name: DoubleParseIntResult
+  shared: true
+  transpile: true
+  cost_estimate: 2
+  args:
+    num: NumberId
+
 - name: ObjectToStringResult
   shared: true
   transpile: true
