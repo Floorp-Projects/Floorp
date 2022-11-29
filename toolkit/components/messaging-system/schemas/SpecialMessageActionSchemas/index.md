@@ -247,16 +247,7 @@ Action for pinning Firefox to the user's taskbar.
 
 Action for configuring the default browser to Firefox on the user's system.
 
-* args: (none)
-
-### `ENABLE_TOTAL_COOKIE_PROTECTION`
-
-Action for enabling the Total Cookie Protection feature.
-
-### `ENABLE_TOTAL_COOKIE_PROTECTION_SECTION_AND_OPT_OUT`
-
-Action for disabling the Total Cookie Protection feature and enabling an
-additional privacy section in about:preferences.
+- args: (none)
 
 ### `SHOW_SPOTLIGHT`
 
