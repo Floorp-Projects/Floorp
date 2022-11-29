@@ -2,10 +2,14 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /* exported testVisibility */
-
+const { ASRouter } = ChromeUtils.import(
+  "resource://activity-stream/lib/ASRouter.jsm"
+);
 const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
-
+const { FeatureCalloutMessages } = ChromeUtils.import(
+  "resource://activity-stream/lib/FeatureCalloutMessages.jsm"
+);
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
@@ -448,6 +452,52 @@ const waitForCalloutRemoved = async doc => {
  */
 const clickPrimaryButton = async doc => {
   doc.querySelector(primaryButtonSelector).click();
+};
+
+/**
+ * Closes a feature callout via a click to the dismiss button.
+ *
+ * @param {Document} doc The document where the callout appears.
+ */
+const closeCallout = async doc => {
+  // close the callout dialog
+  const dismissBtn = doc.querySelector(`${calloutSelector} .dismiss-button`);
+  if (!dismissBtn) {
+    return;
+  }
+  doc.querySelector(`${calloutSelector} .dismiss-button`).click();
+  await BrowserTestUtils.waitForCondition(() => {
+    return !document.querySelector(calloutSelector);
+  });
+};
+
+/**
+ * Get a Feature Callout message by id.
+ *
+ * @param {string} Message id
+ */
+const getCalloutMessageById = id => {
+  return {
+    message: FeatureCalloutMessages.getMessages().find(m => m.id === id),
+  };
+};
+
+/**
+ * Create a sinon sandbox with `sendTriggerMessage` stubbed
+ * to return a specified test message for featureCalloutCheck.
+ *
+ * @param {object} Test message
+ */
+const createSandboxWithCalloutTriggerStub = testMessage => {
+  const firefoxViewMatch = sinon.match({
+    id: "featureCalloutCheck",
+    context: { source: "firefoxview" },
+  });
+  const sandbox = sinon.createSandbox();
+  const sendTriggerStub = sandbox.stub(ASRouter, "sendTriggerMessage");
+  sendTriggerStub.withArgs(firefoxViewMatch).resolves(testMessage);
+  sendTriggerStub.callThrough();
+  return sandbox;
 };
 
 /**
