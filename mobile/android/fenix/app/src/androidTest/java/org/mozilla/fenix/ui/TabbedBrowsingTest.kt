@@ -122,7 +122,7 @@ class TabbedBrowsingTest {
             verifyShareTabButton()
             verifySelectTabs()
         }.closeAllTabs {
-            verifyNoTabsOpened()
+            verifyTabCounter("0")
         }
 
         // Repeat for Private Tabs
@@ -137,7 +137,7 @@ class TabbedBrowsingTest {
         }.openTabsListThreeDotMenu {
             verifyCloseAllTabsButton()
         }.closeAllTabs {
-            verifyNoTabsOpened()
+            verifyTabCounter("0")
         }
     }
 
@@ -153,7 +153,7 @@ class TabbedBrowsingTest {
             closeTab()
         }
         homeScreen {
-            verifyNoTabsOpened()
+            verifyTabCounter("0")
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
         }.openTabDrawer {
@@ -161,7 +161,7 @@ class TabbedBrowsingTest {
             swipeTabRight("Test_Page_1")
         }
         homeScreen {
-            verifyNoTabsOpened()
+            verifyTabCounter("0")
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
         }.openTabDrawer {
@@ -169,7 +169,7 @@ class TabbedBrowsingTest {
             swipeTabLeft("Test_Page_1")
         }
         homeScreen {
-            verifyNoTabsOpened()
+            verifyTabCounter("0")
         }
     }
 
@@ -213,7 +213,7 @@ class TabbedBrowsingTest {
             closeTab()
         }
         homeScreen {
-            verifyNoTabsOpened()
+            verifyTabCounter("0")
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
         }.openTabDrawer {
@@ -221,7 +221,7 @@ class TabbedBrowsingTest {
             swipeTabRight("Test_Page_1")
         }
         homeScreen {
-            verifyNoTabsOpened()
+            verifyTabCounter("0")
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
         }.openTabDrawer {
@@ -229,7 +229,7 @@ class TabbedBrowsingTest {
             swipeTabLeft("Test_Page_1")
         }
         homeScreen {
-            verifyNoTabsOpened()
+            verifyTabCounter("0")
         }
     }
 

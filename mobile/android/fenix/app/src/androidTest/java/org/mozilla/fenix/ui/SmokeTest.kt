@@ -37,7 +37,6 @@ import org.mozilla.fenix.helpers.TestHelper.assertNativeAppOpens
 import org.mozilla.fenix.helpers.TestHelper.createCustomTabIntent
 import org.mozilla.fenix.helpers.TestHelper.generateRandomString
 import org.mozilla.fenix.helpers.TestHelper.registerAndCleanupIdlingResources
-import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.customTabScreen
@@ -46,7 +45,6 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.notificationShade
 import org.mozilla.fenix.ui.robots.openEditURLView
 import org.mozilla.fenix.ui.robots.searchScreen
-import org.mozilla.fenix.ui.util.STRING_ONBOARDING_TRACKING_PROTECTION_HEADER
 
 /**
  * Test Suite that contains a part of the Smoke and Sanity tests defined in TestRail:
@@ -112,41 +110,19 @@ class SmokeTest {
     @Test
     fun firstRunScreenTest() {
         homeScreen {
-            verifyHomeScreen()
-            verifyNavigationToolbar()
-            verifyHomePrivateBrowsingButton()
-            verifyHomeMenuButton()
-            verifyHomeWordmark()
-
-            verifyWelcomeHeader()
-            // Sign in to Firefox
-            verifyStartSyncHeader()
-            verifyAccountsSignInButton()
-
-            // Always-on privacy
-            scrollToElementByText(STRING_ONBOARDING_TRACKING_PROTECTION_HEADER)
-            verifyAutomaticPrivacyHeader()
-            verifyAutomaticPrivacyText()
-
-            // Choose your theme
-            verifyChooseThemeHeader()
-            verifyChooseThemeText()
-            verifyDarkThemeDescription()
-            verifyDarkThemeToggle()
-            verifyLightThemeDescription()
-            verifyLightThemeToggle()
-
-            // Pick your toolbar placement
-            verifyTakePositionHeader()
-            verifyTakePositionElements()
-
-            // Your privacy
-            verifyYourPrivacyHeader()
-            verifyYourPrivacyText()
-            verifyPrivacyNoticeButton()
-
-            // Start Browsing
-            verifyStartBrowsingButton()
+            verifyHomeScreenAppBarItems()
+            verifyHomeScreenWelcomeItems()
+            verifyChooseYourThemeCard(
+                isDarkThemeChecked = false,
+                isLightThemeChecked = false,
+                isAutomaticThemeChecked = true,
+            )
+            verifyToolbarPlacementCard(isBottomChecked = true, isTopChecked = false)
+            verifySignInToSyncCard()
+            verifyPrivacyProtectionCard(isStandardChecked = true, isStrictChecked = false)
+            verifyPrivacyNoticeCard()
+            verifyStartBrowsingSection()
+            verifyNavigationToolbarItems("0")
         }
     }
 
