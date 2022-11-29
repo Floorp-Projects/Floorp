@@ -34,11 +34,12 @@ import sys
 import textwrap
 import time
 from optparse import OptionParser
+from pathlib import Path
 
 import buildconfig
 from mozbuild.generated_sources import (
+    GENERATED_SOURCE_EXTS,
     get_filename_with_digest,
-    get_generated_sources,
     get_s3_region_and_bucket,
 )
 from mozbuild.util import memoize
@@ -482,7 +483,6 @@ class Dumper:
         copy_debug=False,
         vcsinfo=False,
         srcsrv=False,
-        generated_files=None,
         s3_bucket=None,
         file_mapping=None,
     ):
@@ -499,7 +499,6 @@ class Dumper:
         self.copy_debug = copy_debug
         self.vcsinfo = vcsinfo
         self.srcsrv = srcsrv
-        self.generated_files = generated_files or {}
         self.s3_bucket = s3_bucket
         self.file_mapping = file_mapping or {}
         # Add a static mapping for Rust sources. Since Rust 1.30 official Rust builds map
@@ -607,10 +606,19 @@ class Dumper:
                         if filename in self.file_mapping:
                             filename = self.file_mapping[filename]
                         if self.vcsinfo:
-                            gen_path = self.generated_files.get(filename)
-                            if gen_path and self.s3_bucket:
+                            try:
+                                rel_path = str(
+                                    Path(filename).relative_to(buildconfig.topobjdir)
+                                )
+                            except ValueError:
+                                rel_path = None
+                            if (
+                                rel_path
+                                and rel_path.endswith(GENERATED_SOURCE_EXTS)
+                                and self.s3_bucket
+                            ):
                                 filename = get_generated_file_s3_path(
-                                    filename, gen_path, self.s3_bucket
+                                    filename, rel_path, self.s3_bucket
                                 )
                                 rootname = ""
                             else:
@@ -1079,11 +1087,6 @@ to canonical locations in the source repository. Specify
         parser.error(str(e))
         exit(1)
     file_mapping = make_file_mapping(manifests)
-    # Any paths that get compared to source file names need to go through realpath.
-    generated_files = {
-        realpath(os.path.join(buildconfig.topobjdir, f)): f
-        for (f, _) in get_generated_sources()
-    }
     _, bucket = get_s3_region_and_bucket()
     dumper = GetPlatformSpecificDumper(
         dump_syms=args[0],
@@ -1093,7 +1096,6 @@ to canonical locations in the source repository. Specify
         srcdirs=options.srcdir,
         vcsinfo=options.vcsinfo,
         srcsrv=options.srcsrv,
-        generated_files=generated_files,
         s3_bucket=bucket,
         file_mapping=file_mapping,
     )
