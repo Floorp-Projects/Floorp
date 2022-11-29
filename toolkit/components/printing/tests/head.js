@@ -253,7 +253,7 @@ class PrintHelper {
 
     // Mock PrintEventHandler with our Promises.
     this.win.PrintEventHandler._showPrintDialog = (
-      window,
+      dialogSvc,
       haveSelection,
       settings
     ) => {
