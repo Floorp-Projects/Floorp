@@ -1969,8 +1969,8 @@ export class SpecialPowersChild extends JSWindowActorChild {
         sp.sendAsyncMessage("SPExtensionGrantActiveTab", { id, tabId });
       },
 
-      terminateBackground() {
-        return sp.sendQuery("SPExtensionTerminateBackground", { id });
+      terminateBackground(...args) {
+        return sp.sendQuery("SPExtensionTerminateBackground", { id, args });
       },
 
       wakeupBackground() {
