@@ -8015,6 +8015,13 @@
   mirror: always
   rust: true
 
+# Whether the mod() / rem() functions are enabled in calc().
+- name: layout.css.mod-rem.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Whether infinity / nan constants are enabled in calc().
 - name: layout.css.nan-inf.enabled
   type: RelaxedAtomicBool

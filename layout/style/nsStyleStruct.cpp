@@ -3544,6 +3544,12 @@ void StyleCalcNode::ScaleLengthsBy(float aScale) {
       ScaleNode(*round.step);
       break;
     }
+    case Tag::ModRem: {
+      const auto& mod_rem = AsModRem();
+      ScaleNode(*mod_rem.dividend);
+      ScaleNode(*mod_rem.divisor);
+      break;
+    }
     case Tag::MinMax: {
       for (auto& child : AsMinMax()._0.AsSpan()) {
         ScaleNode(child);
@@ -3625,6 +3631,35 @@ ResultT StyleCalcNode::ResolveInternal(ResultT aPercentageBasis,
         MOZ_ASSERT_UNREACHABLE("Unknown rounding strategy");
         return CSSCoord(0);
       }();
+
+      if constexpr (std::is_same_v<ResultT, CSSCoord>) {
+        return result;
+      } else {
+        return CSSPixel::ToAppUnits(result);
+      }
+    }
+    case Tag::ModRem: {
+      const auto& mod_rem = AsModRem();
+
+      // Make sure to do the math in CSS pixels, so that floor() and trunc()
+      // below round to an integer number of CSS pixels, not app units.
+      CSSCoord dividend, divisor;
+      if constexpr (std::is_same_v<ResultT, CSSCoord>) {
+        dividend =
+            mod_rem.dividend->ResolveInternal(aPercentageBasis, aConverter);
+        divisor =
+            mod_rem.divisor->ResolveInternal(aPercentageBasis, aConverter);
+      } else {
+        dividend = CSSPixel::FromAppUnits(
+            mod_rem.dividend->ResolveInternal(aPercentageBasis, aConverter));
+        divisor = CSSPixel::FromAppUnits(
+            mod_rem.divisor->ResolveInternal(aPercentageBasis, aConverter));
+      }
+
+      const CSSCoord result =
+          mod_rem.op == StyleModRemOp::Mod
+              ? dividend - divisor * std::floor(dividend / divisor)
+              : dividend - divisor * std::trunc(dividend / divisor);
 
       if constexpr (std::is_same_v<ResultT, CSSCoord>) {
         return result;
