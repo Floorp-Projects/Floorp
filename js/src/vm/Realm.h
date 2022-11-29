@@ -393,6 +393,7 @@ class JS::Realm : public JS::shadow::Realm {
 
   bool isSystem_ = false;
   bool allocatedDuringIncrementalGC_;
+  bool initializingGlobal_ = true;
 
   js::UniquePtr<js::coverage::LCovRealm> lcovRealm_ = nullptr;
 
@@ -510,6 +511,7 @@ class JS::Realm : public JS::shadow::Realm {
   inline bool hasLiveGlobal() const;
 
   inline void initGlobal(js::GlobalObject& global);
+  void clearInitializingGlobal() { initializingGlobal_ = false; }
 
   /*
    * This method traces data that is live iff we know that this realm's
