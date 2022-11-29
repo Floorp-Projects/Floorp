@@ -27,6 +27,7 @@
 
 #include <cmath>
 #include <cinttypes>
+#include <cstring>
 #include <float.h>
 
 namespace WebCore {
