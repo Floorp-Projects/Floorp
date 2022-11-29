@@ -76,7 +76,6 @@ class AnimationInfo final {
   void ClearAnimations();
   void ClearAnimationsForNextTransaction();
   bool StartPendingAnimations(const TimeStamp& aReadyTime);
-  void TransferMutatedFlagToLayer(Layer* aLayer);
 
   uint64_t GetCompositorAnimationsId() { return mCompositorAnimationsId; }
   // Note: We don't set mAnimations on the compositor thread, so this will
