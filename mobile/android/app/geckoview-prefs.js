@@ -100,4 +100,7 @@ pref("pdfjs.handleOctetStream", true);
 pref("browser.download.open_pdf_attachments_inline", true);
 pref("pdfjs.annotationEditorMode", -1);
 pref("pdfjs.disabled", true);
+
+// set isolating strategy for Fission to isolateNothing
+pref("fission.webContentIsolationStrategy", 0);
 #endif
