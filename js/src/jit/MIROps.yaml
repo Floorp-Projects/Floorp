@@ -793,6 +793,14 @@
   alias_set: none
   possibly_calls: true
 
+- name: DoubleParseInt
+  operands:
+    number: Double
+  result_type: Int32
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+
 - name: Concat
   gen_boilerplate: false
 

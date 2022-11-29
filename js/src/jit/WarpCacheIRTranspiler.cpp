@@ -3256,6 +3256,16 @@ bool WarpCacheIRTranspiler::emitNumberParseIntResult(StringOperandId strId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitDoubleParseIntResult(NumberOperandId numId) {
+  MDefinition* num = getOperand(numId);
+
+  auto* ins = MDoubleParseInt::New(alloc(), num);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitObjectToStringResult(ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 
