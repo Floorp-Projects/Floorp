@@ -90,7 +90,7 @@ function createMatchPatternSet(patterns, flags) {
   try {
     return new MatchPatternSet(new Set(patterns), flags);
   } catch (e) {
-    Cu.reportError(e);
+    console.error(e);
   }
   return new MatchPatternSet([]);
 }

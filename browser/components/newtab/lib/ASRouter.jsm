@@ -121,7 +121,7 @@ const MessageLoaderUtils = {
   _errors: [],
 
   reportError(e) {
-    Cu.reportError(e);
+    console.error(e);
     this._errors.push({
       timestamp: new Date(),
       error: { message: e.toString(), stack: e.stack },
@@ -1129,7 +1129,7 @@ class _ASRouter {
   }
 
   _handleTargetingError(error, message) {
-    Cu.reportError(error);
+    console.error(error);
     this.dispatchCFRAction(
       ac.ASRouterUserEvent({
         message_id: message.id,
@@ -1614,12 +1614,12 @@ class _ASRouter {
     try {
       const endpoint = new URL(url);
       if (!this.ALLOWLIST_HOSTS[endpoint.host]) {
-        Cu.reportError(
+        console.error(
           `The preview URL host ${endpoint.host} is not in the list of allowed hosts.`
         );
       }
       if (endpoint.protocol !== "https:") {
-        Cu.reportError("The URL protocol is not https.");
+        console.error("The URL protocol is not https.");
       }
       return (
         endpoint.protocol === "https:" && this.ALLOWLIST_HOSTS[endpoint.host]
@@ -1650,7 +1650,7 @@ class _ASRouter {
       additionalHosts = JSON.parse(allowPrefValue);
     } catch (e) {
       if (allowPrefValue) {
-        Cu.reportError(
+        console.error(
           `Pref ${SNIPPETS_ENDPOINT_ALLOWLIST} value is not valid JSON`
         );
       }

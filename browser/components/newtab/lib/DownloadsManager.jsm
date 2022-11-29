@@ -158,7 +158,7 @@ class DownloadsManager {
         break;
       case at.REMOVE_DOWNLOAD_FILE:
         doDownloadAction(download => {
-          lazy.DownloadsCommon.deleteDownload(download).catch(Cu.reportError);
+          lazy.DownloadsCommon.deleteDownload(download).catch(console.error);
         });
         break;
       case at.SHOW_DOWNLOAD_FILE:

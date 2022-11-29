@@ -303,7 +303,7 @@ class PlacesFeed {
         );
       }
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
       return;
     }
 
@@ -379,7 +379,7 @@ class PlacesFeed {
         );
       }
     } catch (err) {
-      Cu.reportError(err);
+      console.error(err);
     }
   }
 
@@ -393,7 +393,7 @@ class PlacesFeed {
       await lazy.NewTabUtils.activityStreamLinks.deletePocketEntry(itemID);
       this.store.dispatch({ type: at.POCKET_LINK_DELETED_OR_ARCHIVED });
     } catch (err) {
-      Cu.reportError(err);
+      console.error(err);
     }
   }
 
@@ -407,7 +407,7 @@ class PlacesFeed {
       await lazy.NewTabUtils.activityStreamLinks.archivePocketEntry(itemID);
       this.store.dispatch({ type: at.POCKET_LINK_DELETED_OR_ARCHIVED });
     } catch (err) {
-      Cu.reportError(err);
+      console.error(err);
     }
   }
 

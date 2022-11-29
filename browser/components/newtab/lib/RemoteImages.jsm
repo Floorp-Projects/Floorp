@@ -206,7 +206,7 @@ class _RemoteImages {
           try {
             urls.set(imageId, await this.#loadImpl(db, imageId));
           } catch (e) {
-            Cu.reportError(`Could not load image ID ${imageId}: ${e}`);
+            console.error(`Could not load image ID ${imageId}: ${e}`);
             urls.delete(imageId);
           }
         })
@@ -307,7 +307,7 @@ class _RemoteImages {
           delete db.data.images[entry.recordId];
 
           return IOUtils.remove(path).catch(e => {
-            Cu.reportError(
+            console.error(
               `Could not remove remote image ${entry.recordId}: ${e}`
             );
           });
@@ -579,7 +579,7 @@ class _RemoteImages {
           try {
             await IOUtils.remove(path);
           } catch (e) {
-            Cu.reportError(`RemoteImages could not delete ${path}: ${e}`);
+            console.error(`RemoteImages could not delete ${path}: ${e}`);
           }
         })
       );
