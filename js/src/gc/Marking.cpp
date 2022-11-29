@@ -1807,6 +1807,7 @@ bool GCMarker::isDrained() { return isMarkStackEmpty() && !delayedMarkingList; }
 void GCMarker::start() {
   MOZ_ASSERT(state == NotActive);
   state = RegularMarking;
+  haveAllImplicitEdges = true;
   markColor_ = MarkColor::Black;
 
   MOZ_ASSERT(!delayedMarkingList);
@@ -1933,8 +1934,8 @@ void GCMarker::setRootMarkingMode(bool newState) {
 
 bool GCMarker::enterWeakMarkingMode() {
   MOZ_ASSERT(tracer()->weakMapAction() == JS::WeakMapTraceAction::Expand);
-  MOZ_ASSERT(state != WeakMarking);
-  if (state == IterativeMarking) {
+  MOZ_ASSERT(state == RegularMarking);
+  if (!haveAllImplicitEdges) {
     return false;
   }
 
@@ -2004,21 +2005,18 @@ IncrementalProgress JS::Zone::enterWeakMarkingMode(GCMarker* marker,
 }
 
 void GCMarker::leaveWeakMarkingMode() {
-  MOZ_ASSERT(state == WeakMarking || state == IterativeMarking);
-
-  if (state != IterativeMarking) {
-    state = RegularMarking;
-  }
+  MOZ_ASSERT(state == WeakMarking || state == RegularMarking);
+  state = RegularMarking;
 
   // The gcEphemeronEdges table is still populated and may be used during a
   // future weak marking mode within this GC.
 }
 
 void GCMarker::abortLinearWeakMarking() {
+  haveAllImplicitEdges = false;
   if (state == WeakMarking) {
     leaveWeakMarkingMode();
   }
-  state = IterativeMarking;
 }
 
 MOZ_NEVER_INLINE void GCMarker::delayMarkingChildrenOnOOM(Cell* cell) {
