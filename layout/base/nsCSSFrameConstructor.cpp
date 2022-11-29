@@ -8476,6 +8476,37 @@ static nsIContent* GetTopmostMathMLElement(nsIContent* aMathMLContent) {
   return root;
 }
 
+// We don't know how to re-insert an anonymous subtree root, so recreate the
+// closest non-generated ancestor instead, except for a few special cases...
+static bool ShouldRecreateContainerForNativeAnonymousContentRoot(
+    nsIContent* aContent) {
+  if (!aContent->IsRootOfNativeAnonymousSubtree()) {
+    return false;
+  }
+  if (ManualNACPtr::IsManualNAC(aContent)) {
+    // Editor NAC, would enter an infinite loop, and we sorta get away with it
+    // because it's all abspos.
+    return false;
+  }
+  if (auto* el = Element::FromNode(aContent)) {
+    if (auto* classes = el->GetClasses()) {
+      if (classes->Contains(nsGkAtoms::mozCustomContentContainer,
+                            eCaseMatters)) {
+        // Canvas anonymous content (like the custom content container) is also
+        // fine, because its only sibling is a tooltip which is also abspos, so
+        // relative insertion order doesn't really matter.
+        //
+        // This is important because the inspector uses it, and we don't want
+        // inspecting the page to change behavior heavily (and reframing
+        // unfortunately has side-effects sometimes, even though they're bugs).
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 void nsCSSFrameConstructor::RecreateFramesForContent(
     nsIContent* aContent, InsertionKind aInsertionKind) {
   MOZ_ASSERT(aContent);
@@ -8489,20 +8520,19 @@ void nsCSSFrameConstructor::RecreateFramesForContent(
     return;
   }
 
-  // We don't know how to re-insert an anonymous subtree root, so recreate the
-  // closest non-generated ancestor instead... Except for editor NAC, which
-  // would enter an infinite loop, and we sorta get away with it because it's
-  // all abspos.
-  //
   // TODO(emilio): We technically can find the right insertion point nowadays
   // using StyleChildrenIterator rather than FlattenedTreeIterator. But we'd
   // need to tweak the setup to insert into replaced elements to filter which
   // anonymous roots can be allowed, and which can't.
-  if (aContent->IsRootOfNativeAnonymousSubtree() &&
-      !ManualNACPtr::IsManualNAC(aContent)) {
+  //
+  // TODO(emilio, 2022): Is this true? If we have a replaced element we wouldn't
+  // have generated e.g., a ::before/::after pseudo-element to begin with (which
+  // is what this code is about, so maybe we can just remove this piece of code
+  // altogether).
+  if (ShouldRecreateContainerForNativeAnonymousContentRoot(aContent)) {
     do {
       aContent = aContent->GetParent();
-    } while (aContent->IsRootOfNativeAnonymousSubtree());
+    } while (ShouldRecreateContainerForNativeAnonymousContentRoot(aContent));
     return RecreateFramesForContent(aContent, InsertionKind::Async);
   }
 
