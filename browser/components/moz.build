@@ -39,6 +39,7 @@ DIRS += [
     "extensions",
     "firefoxview",
     "ion",
+    "messagepreview",
     "migration",
     "newtab",
     "originattributes",

@@ -249,6 +249,19 @@ let JSWINDOWACTORS = {
     remoteTypes: ["privilegedabout"],
   },
 
+  AboutMessagePreview: {
+    parent: {
+      esModuleURI: "resource:///actors/AboutMessagePreviewParent.sys.mjs",
+    },
+    child: {
+      esModuleURI: "resource:///actors/AboutMessagePreviewChild.sys.mjs",
+      events: {
+        DOMDocElementInserted: { capture: true },
+      },
+    },
+    matches: ["about:messagepreview", "about:messagepreview?*"],
+  },
+
   AboutNewTab: {
     parent: {
       esModuleURI: "resource:///actors/AboutNewTabParent.sys.mjs",
