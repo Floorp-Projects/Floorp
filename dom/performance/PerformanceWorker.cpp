@@ -11,10 +11,10 @@
 namespace mozilla::dom {
 
 PerformanceWorker::PerformanceWorker(WorkerPrivate* aWorkerPrivate)
-    : Performance(aWorkerPrivate->GlobalScope(),
-                  aWorkerPrivate->UsesSystemPrincipal()),
+    : Performance(aWorkerPrivate->GlobalScope()),
       mWorkerPrivate(aWorkerPrivate) {
   mWorkerPrivate->AssertIsOnWorkerThread();
+  mRTPCallerType = aWorkerPrivate->GlobalScope()->GetRTPCallerType();
 }
 
 PerformanceWorker::~PerformanceWorker() {
