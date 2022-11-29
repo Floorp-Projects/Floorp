@@ -60,13 +60,6 @@ typedef ScrollableLayerGuid::ViewID ViewID;
 using namespace mozilla::gfx;
 using namespace mozilla::Compression;
 
-#ifdef MOZ_DUMP_PAINTING
-#endif
-
-IntRect ToOutsideIntRect(const gfxRect& aRect) {
-  return IntRect::RoundOut(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
-}
-
 void RecordCompositionPayloadsPresented(
     const TimeStamp& aCompositionEndTime,
     const nsTArray<CompositionPayload>& aPayloads) {

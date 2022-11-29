@@ -68,9 +68,6 @@ class Compositor;
 class TransformData;
 struct PropertyAnimationGroup;
 
-// A utility function used by different LayerManager implementations.
-gfx::IntRect ToOutsideIntRect(const gfxRect& aRect);
-
 void RecordCompositionPayloadsPresented(
     const TimeStamp& aCompositionEndTime,
     const nsTArray<CompositionPayload>& aPayloads);
