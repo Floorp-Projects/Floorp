@@ -11,7 +11,6 @@
 #include "GLContextProvider.h"  // for GLContextProvider
 #include "GLContext.h"          // for GLContext
 #include "GLUploadHelpers.h"
-#include "Layers.h"                 // for WriteSnapshotToDumpFile
 #include "gfxCrashReporterUtils.h"  // for ScopedGfxFeatureReporter
 #include "gfxEnv.h"                 // for gfxEnv
 #include "gfxPlatform.h"            // for gfxPlatform
@@ -1436,6 +1435,29 @@ void CompositorOGL::InitializeVAO(const GLuint aAttrib, const GLint aComponents,
                                    reinterpret_cast<GLvoid*>(aOffset));
   mGLContext->fEnableVertexAttribArray(aAttrib);
 }
+
+#ifdef MOZ_DUMP_PAINTING
+template <typename T>
+void WriteSnapshotToDumpFile_internal(T* aObj, DataSourceSurface* aSurf) {
+  nsCString string(aObj->Name());
+  string.Append('-');
+  string.AppendInt((uint64_t)aObj);
+  if (gfxUtils::sDumpPaintFile != stderr) {
+    fprintf_stderr(gfxUtils::sDumpPaintFile, R"(array["%s"]=")",
+                   string.BeginReading());
+  }
+  gfxUtils::DumpAsDataURI(aSurf, gfxUtils::sDumpPaintFile);
+  if (gfxUtils::sDumpPaintFile != stderr) {
+    fprintf_stderr(gfxUtils::sDumpPaintFile, R"(";)");
+  }
+}
+
+void WriteSnapshotToDumpFile(Compositor* aCompositor, DrawTarget* aTarget) {
+  RefPtr<SourceSurface> surf = aTarget->Snapshot();
+  RefPtr<DataSourceSurface> dSurf = surf->GetDataSurface();
+  WriteSnapshotToDumpFile_internal(aCompositor, dSurf);
+}
+#endif
 
 void CompositorOGL::EndFrame() {
   AUTO_PROFILER_LABEL("CompositorOGL::EndFrame", GRAPHICS);
