@@ -585,3 +585,301 @@ class OpenTest extends RoundedWindowTest {
     );
   }
 }
+
+// ============================================================
+const partial = (func, ...args) => (...rest) => func(...args, ...rest);
+
+async function runActualTest(
+  uri,
+  iframe_domain,
+  cross_origin_domain,
+  testFunction,
+  expectedResults
+) {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: uri,
+    },
+    async function(browser) {
+      let result = await SpecialPowers.spawn(
+        browser,
+        [iframe_domain, cross_origin_domain],
+        async function(iframe_domain_, cross_origin_domain_) {
+          return content.wrappedJSObject.runTheTest(
+            iframe_domain_,
+            cross_origin_domain_
+          );
+        }
+      );
+
+      testFunction(result, expectedResults);
+    }
+  );
+}
+
+async function defaultsTest(
+  uri,
+  iframe_domain,
+  cross_origin_domain,
+  testFunction,
+  expectedResults
+) {
+  await runActualTest(
+    uri,
+    iframe_domain,
+    cross_origin_domain,
+    testFunction,
+    expectedResults
+  );
+}
+
+async function simpleRFPTest(
+  uri,
+  iframe_domain,
+  cross_origin_domain,
+  testFunction,
+  expectedResults
+) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.resistFingerprinting", true]],
+  });
+
+  await runActualTest(
+    uri,
+    iframe_domain,
+    cross_origin_domain,
+    testFunction,
+    expectedResults
+  );
+
+  await SpecialPowers.popPrefEnv();
+}
+
+// (A) RFP is exempted on the framer and framee and each contacts an exempted cross-origin resource
+async function testA(
+  uri,
+  iframe_domain,
+  cross_origin_domain,
+  testFunction,
+  expectedResults
+) {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", true],
+      ["privacy.resistFingerprinting.testGranularityMask", 4],
+      [
+        "privacy.resistFingerprinting.exemptedDomains",
+        "example.com, example.org, example.net",
+      ],
+    ],
+  });
+
+  await runActualTest(
+    uri,
+    iframe_domain,
+    cross_origin_domain,
+    testFunction,
+    expectedResults
+  );
+
+  await SpecialPowers.popPrefEnv();
+}
+
+// (B) RFP is exempted on the framer and framee and each contacts a non-exempted cross-origin resource
+async function testB(
+  uri,
+  iframe_domain,
+  cross_origin_domain,
+  testFunction,
+  expectedResults
+) {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", true],
+      ["privacy.resistFingerprinting.testGranularityMask", 4],
+      [
+        "privacy.resistFingerprinting.exemptedDomains",
+        "example.com, example.org",
+      ],
+    ],
+  });
+
+  await runActualTest(
+    uri,
+    iframe_domain,
+    cross_origin_domain,
+    testFunction,
+    expectedResults
+  );
+
+  await SpecialPowers.popPrefEnv();
+}
+
+// (C) RFP is exempted on the framer but not the framee and each contacts an exempted cross-origin resource
+async function testC(
+  uri,
+  iframe_domain,
+  cross_origin_domain,
+  testFunction,
+  expectedResults
+) {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", true],
+      ["privacy.resistFingerprinting.testGranularityMask", 4],
+      [
+        "privacy.resistFingerprinting.exemptedDomains",
+        "example.com, example.net",
+      ],
+    ],
+  });
+
+  await runActualTest(
+    uri,
+    iframe_domain,
+    cross_origin_domain,
+    testFunction,
+    expectedResults
+  );
+
+  await SpecialPowers.popPrefEnv();
+}
+
+// (D) RFP is exempted on the framer but not the framee and each contacts a non-exempted cross-origin resource
+async function testD(
+  uri,
+  iframe_domain,
+  cross_origin_domain,
+  testFunction,
+  expectedResults
+) {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", true],
+      ["privacy.resistFingerprinting.testGranularityMask", 4],
+      ["privacy.resistFingerprinting.exemptedDomains", "example.com"],
+    ],
+  });
+
+  await runActualTest(
+    uri,
+    iframe_domain,
+    cross_origin_domain,
+    testFunction,
+    expectedResults
+  );
+
+  await SpecialPowers.popPrefEnv();
+}
+
+// (E) RFP is not exempted on the framer nor the framee and each contacts an exempted cross-origin resource
+async function testE(
+  uri,
+  iframe_domain,
+  cross_origin_domain,
+  testFunction,
+  expectedResults
+) {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", true],
+      ["privacy.resistFingerprinting.testGranularityMask", 4],
+      ["privacy.resistFingerprinting.exemptedDomains", "example.net"],
+    ],
+  });
+
+  await runActualTest(
+    uri,
+    iframe_domain,
+    cross_origin_domain,
+    testFunction,
+    expectedResults
+  );
+
+  await SpecialPowers.popPrefEnv();
+}
+
+// (F) RFP is not exempted on the framer nor the framee and each contacts a non-exempted cross-origin resource
+async function testF(
+  uri,
+  iframe_domain,
+  cross_origin_domain,
+  testFunction,
+  expectedResults
+) {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", true],
+      ["privacy.resistFingerprinting.testGranularityMask", 4],
+      ["privacy.resistFingerprinting.exemptedDomains", ""],
+    ],
+  });
+
+  await runActualTest(
+    uri,
+    iframe_domain,
+    cross_origin_domain,
+    testFunction,
+    expectedResults
+  );
+
+  await SpecialPowers.popPrefEnv();
+}
+
+// (G) RFP is not exempted on the framer but is on the framee and each contacts an exempted cross-origin resource
+async function testG(
+  uri,
+  iframe_domain,
+  cross_origin_domain,
+  testFunction,
+  expectedResults
+) {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", true],
+      ["privacy.resistFingerprinting.testGranularityMask", 4],
+      [
+        "privacy.resistFingerprinting.exemptedDomains",
+        "example.org, example.net",
+      ],
+    ],
+  });
+
+  await runActualTest(
+    uri,
+    iframe_domain,
+    cross_origin_domain,
+    testFunction,
+    expectedResults
+  );
+
+  await SpecialPowers.popPrefEnv();
+}
+
+// (H) RFP is not exempted on the framer but is on the framee and each contacts a non-exempted cross-origin resource
+async function testH(
+  uri,
+  iframe_domain,
+  cross_origin_domain,
+  testFunction,
+  expectedResults
+) {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting", true],
+      ["privacy.resistFingerprinting.testGranularityMask", 4],
+      ["privacy.resistFingerprinting.exemptedDomains", "example.org"],
+    ],
+  });
+
+  await runActualTest(
+    uri,
+    iframe_domain,
+    cross_origin_domain,
+    testFunction,
+    expectedResults
+  );
+
+  await SpecialPowers.popPrefEnv();
+}
