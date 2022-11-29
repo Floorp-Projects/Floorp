@@ -21,13 +21,13 @@ namespace {
 
 static void RunTest(std::deque<MozPolygon> aPolygons,
                     std::deque<MozPolygon> aExpected) {
-  std::list<LayerPolygon> layers;
+  std::list<TestPolygon> layers;
   for (MozPolygon& polygon : aPolygons) {
-    layers.push_back(LayerPolygon(nullptr, std::move(polygon)));
+    layers.push_back(TestPolygon(nullptr, std::move(polygon)));
   }
 
   const BSPTree tree(layers);
-  const nsTArray<LayerPolygon> order = tree.GetDrawOrder();
+  const nsTArray<TestPolygon> order = tree.GetDrawOrder();
 
   EXPECT_EQ(aExpected.size(), order.Length());
 
