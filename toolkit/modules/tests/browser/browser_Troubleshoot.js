@@ -576,6 +576,12 @@ const SNAPSHOT_SCHEMA = {
           required: true,
           type: "number",
         },
+        graphicsDevicePixelRatios: {
+          type: "array",
+          items: {
+            type: "number",
+          },
+        },
         windowLayerManagerType: {
           type: "string",
         },

@@ -564,6 +564,9 @@ var dataProviders = {
 
     data.numTotalWindows = 0;
     data.numAcceleratedWindows = 0;
+
+    let devicePixelRatios = [];
+
     for (let win of Services.ww.getWindowEnumerator()) {
       let winUtils = win.windowUtils;
       try {
@@ -574,6 +577,8 @@ var dataProviders = {
         ) {
           continue;
         }
+        devicePixelRatios.push(win.devicePixelRatio);
+
         data.numTotalWindows++;
         data.windowLayerManagerType = winUtils.layerManagerType;
         data.windowLayerManagerRemote = winUtils.layerManagerRemote;
@@ -584,6 +589,7 @@ var dataProviders = {
         data.numAcceleratedWindows++;
       }
     }
+    data.graphicsDevicePixelRatios = devicePixelRatios;
 
     // If we had no OMTC windows, report back Basic Layers.
     if (!data.windowLayerManagerType) {
