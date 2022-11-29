@@ -29,7 +29,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   NetUtil: "resource://gre/modules/NetUtil.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
 });
 
 /**
@@ -89,7 +88,7 @@ ChromeProfileMigrator.prototype._getChromeUserDataPathIfExists = async function(
   let path = lazy.ChromeMigrationUtils.getDataPath(
     this._chromeUserDataPathSuffix
   );
-  let exists = await lazy.OS.File.exists(path);
+  let exists = await IOUtils.exists(path);
   if (exists) {
     this._chromeUserDataPath = path;
   } else {
@@ -107,7 +106,7 @@ ChromeProfileMigrator.prototype.getResources = async function Chrome_getResource
     if (aProfile) {
       profileFolder = PathUtils.join(chromeUserDataPath, aProfile.id);
     }
-    if (await lazy.OS.File.exists(profileFolder)) {
+    if (await IOUtils.exists(profileFolder)) {
       let possibleResourcePromises = [
         GetBookmarksResource(profileFolder, this.getBrowserKey()),
         GetHistoryResource(profileFolder),
@@ -132,11 +131,11 @@ ChromeProfileMigrator.prototype.getLastUsedDate = async function Chrome_getLastU
     return new Date(0);
   }
   let datePromises = sourceProfiles.map(async profile => {
-    let basePath = lazy.OS.Path.join(chromeUserDataPath, profile.id);
+    let basePath = PathUtils.join(chromeUserDataPath, profile.id);
     let fileDatePromises = ["Bookmarks", "History", "Cookies"].map(
       async leafName => {
-        let path = lazy.OS.Path.join(basePath, leafName);
-        let info = await lazy.OS.File.stat(path).catch(() => null);
+        let path = PathUtils.join(basePath, leafName);
+        let info = await IOUtils.stat(path).catch(() => null);
         return info ? info.lastModificationDate : 0;
       }
     );
@@ -205,7 +204,7 @@ ChromeProfileMigrator.prototype.getSourceProfiles = async function Chrome_getSou
 };
 
 async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
-  let bookmarksPath = lazy.OS.Path.join(aProfileFolder, "Bookmarks");
+  let bookmarksPath = PathUtils.join(aProfileFolder, "Bookmarks");
 
   if (aBrowserKey === "chromium-360se") {
     let localState = {};
@@ -225,7 +224,7 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
     bookmarksPath = alternativeBookmarks.path;
   }
 
-  if (!(await lazy.OS.File.exists(bookmarksPath))) {
+  if (!(await IOUtils.exists(bookmarksPath))) {
     return null;
   }
 
@@ -239,10 +238,8 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
           gotErrors = true;
         };
         // Parse Chrome bookmark file that is JSON format
-        let bookmarkJSON = await lazy.OS.File.read(bookmarksPath, {
-          encoding: "UTF-8",
-        });
-        let roots = JSON.parse(bookmarkJSON).roots;
+        let bookmarkJSON = await IOUtils.readJSON(bookmarksPath);
+        let roots = bookmarkJSON.roots;
 
         // Importing bookmark bar items
         if (roots.bookmark_bar.children && roots.bookmark_bar.children.length) {
@@ -280,8 +277,8 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
 }
 
 async function GetHistoryResource(aProfileFolder) {
-  let historyPath = lazy.OS.Path.join(aProfileFolder, "History");
-  if (!(await lazy.OS.File.exists(historyPath))) {
+  let historyPath = PathUtils.join(aProfileFolder, "History");
+  if (!(await IOUtils.exists(historyPath))) {
     return null;
   }
 
@@ -359,8 +356,8 @@ async function GetHistoryResource(aProfileFolder) {
 }
 
 async function GetCookiesResource(aProfileFolder) {
-  let cookiesPath = lazy.OS.Path.join(aProfileFolder, "Cookies");
-  if (!(await lazy.OS.File.exists(cookiesPath))) {
+  let cookiesPath = PathUtils.join(aProfileFolder, "Cookies");
+  if (!(await IOUtils.exists(cookiesPath))) {
     return null;
   }
 
@@ -464,8 +461,8 @@ async function GetCookiesResource(aProfileFolder) {
 ChromeProfileMigrator.prototype._GetPasswordsResource = async function(
   aProfileFolder
 ) {
-  let loginPath = lazy.OS.Path.join(aProfileFolder, "Login Data");
-  if (!(await lazy.OS.File.exists(loginPath))) {
+  let loginPath = PathUtils.join(aProfileFolder, "Login Data");
+  if (!(await IOUtils.exists(loginPath))) {
     return null;
   }
 
