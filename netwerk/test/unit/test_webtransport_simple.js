@@ -64,8 +64,8 @@ add_task(async function test_connect_wt() {
     listener.ready = resolve;
 
     webTransport.asyncConnect(
-      NetUtil.newURI("https://" + host + "/success"),
-      Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal),
+      NetUtil.newURI(`https://${host}/success`),
+      Services.scriptSecurityManager.getSystemPrincipal(),
       Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       listener
     );
@@ -84,8 +84,8 @@ add_task(async function test_reject() {
     listener.closed = resolve;
 
     webTransport.asyncConnect(
-      NetUtil.newURI("https://" + host + "/reject"),
-      Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal),
+      NetUtil.newURI(`https://${host}/reject`),
+      Services.scriptSecurityManager.getSystemPrincipal(),
       Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       listener
     );
@@ -106,8 +106,8 @@ async function test_closed(path) {
     listener.closed = resolve;
   });
   webTransport.asyncConnect(
-    NetUtil.newURI("https://" + host + path),
-    Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal),
+    NetUtil.newURI(`https://${host}${path}`),
+    Services.scriptSecurityManager.getSystemPrincipal(),
     Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
     listener
   );
@@ -172,8 +172,8 @@ add_task(async function test_wt_stream_create() {
     listener.ready = resolve;
 
     webTransport.asyncConnect(
-      NetUtil.newURI("https://" + host + "/success"),
-      Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal),
+      NetUtil.newURI(`https://${host}/success`),
+      Services.scriptSecurityManager.getSystemPrincipal(),
       Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       listener
     );
@@ -238,8 +238,8 @@ add_task(async function test_wt_stream_send_and_stats() {
     listener.ready = resolve;
 
     webTransport.asyncConnect(
-      NetUtil.newURI("https://" + host + "/success"),
-      Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal),
+      NetUtil.newURI(`https://${host}/success`),
+      Services.scriptSecurityManager.getSystemPrincipal(),
       Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       listener
     );
@@ -288,8 +288,8 @@ add_task(async function test_wt_receive_stream_and_stats() {
     listener.streamAvailable = resolve;
   });
   webTransport.asyncConnect(
-    NetUtil.newURI("https://" + host + "/create_unidi_stream"),
-    Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal),
+    NetUtil.newURI(`https://${host}/create_unidi_stream`),
+    Services.scriptSecurityManager.getSystemPrincipal(),
     Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
     listener
   );
@@ -313,6 +313,103 @@ add_task(async function test_wt_receive_stream_and_stats() {
   Assert.equal(stats.bytesReceived, data.length);
 
   stream.sendStopSending(0);
+
+  webTransport.closeSession(0, "");
+});
+
+add_task(async function test_wt_outgoing_bidi_stream() {
+  let webTransport = NetUtil.newWebTransport().QueryInterface(
+    Ci.nsIWebTransport
+  );
+
+  await new Promise(resolve => {
+    let listener = new WebTransportListener().QueryInterface(
+      Ci.WebTransportSessionEventListener
+    );
+    listener.ready = resolve;
+
+    webTransport.asyncConnect(
+      NetUtil.newURI(`https://${host}/success`),
+      Services.scriptSecurityManager.getSystemPrincipal(),
+      Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+      listener
+    );
+  });
+
+  let stream = await streamCreatePromise(webTransport, true);
+  stream.QueryInterface(Ci.nsIAsyncOutputStream);
+
+  let data = "1234567";
+  stream.write(data, data.length);
+
+  let received = await new Promise(resolve => {
+    let handler = new inputStreamReader().QueryInterface(
+      Ci.nsIInputStreamCallback
+    );
+    handler.finish = resolve;
+    stream.QueryInterface(Ci.nsIAsyncInputStream);
+    stream.asyncWaitForRead(handler, 0, 0, Services.tm.currentThread);
+  });
+
+  info("received: " + received);
+  Assert.equal(received, data);
+
+  let stats = await sendStreamStatsPromise(stream);
+  Assert.equal(stats.bytesSent, data.length);
+
+  stats = await receiveStreamStatsPromise(stream);
+  Assert.equal(stats.bytesReceived, data.length);
+
+  webTransport.closeSession(0, "");
+});
+
+add_task(async function test_wt_incoming_bidi_stream() {
+  let webTransport = NetUtil.newWebTransport().QueryInterface(
+    Ci.nsIWebTransport
+  );
+
+  let listener = new WebTransportListener().QueryInterface(
+    Ci.WebTransportSessionEventListener
+  );
+
+  let pReady = new Promise(resolve => {
+    listener.ready = resolve;
+  });
+  let pStreamReady = new Promise(resolve => {
+    listener.streamAvailable = resolve;
+  });
+  webTransport.asyncConnect(
+    NetUtil.newURI(`https://${host}/create_bidi_stream`),
+    Services.scriptSecurityManager.getSystemPrincipal(),
+    Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+    listener
+  );
+
+  await pReady;
+  let stream = await pStreamReady;
+
+  stream.QueryInterface(Ci.nsIAsyncOutputStream);
+
+  let data = "12345678";
+  stream.write(data, data.length);
+
+  let received = await new Promise(resolve => {
+    let handler = new inputStreamReader().QueryInterface(
+      Ci.nsIInputStreamCallback
+    );
+    handler.finish = resolve;
+    stream.QueryInterface(Ci.nsIAsyncInputStream);
+    stream.asyncWaitForRead(handler, 0, 0, Services.tm.currentThread);
+  });
+
+  info("received: " + received);
+  Assert.equal(received, data);
+
+  let stats = await sendStreamStatsPromise(stream);
+  Assert.equal(stats.bytesSent, data.length);
+
+  stats = await receiveStreamStatsPromise(stream);
+  Assert.equal(stats.bytesReceived, data.length);
 
   webTransport.closeSession(0, "");
 });

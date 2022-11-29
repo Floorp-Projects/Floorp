@@ -221,6 +221,12 @@ NS_IMETHODIMP WebTransportStreamProxy::AsyncWait(
   return mReader->AsyncWait(aCallback, aFlags, aRequestedCount, aEventTarget);
 }
 
+NS_IMETHODIMP WebTransportStreamProxy::AsyncWaitForRead(
+    nsIInputStreamCallback* aCallback, uint32_t aFlags,
+    uint32_t aRequestedCount, nsIEventTarget* aTarget) {
+  return AsyncWait(aCallback, aFlags, aRequestedCount, aTarget);
+}
+
 NS_IMETHODIMP WebTransportStreamProxy::Flush() {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
