@@ -220,7 +220,6 @@ struct ExpandoAndGeneration;
 
 namespace js {
 
-class StaticStrings;
 class TypedArrayObject;
 
 namespace wasm {
@@ -1110,10 +1109,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void mul32(Register src1, Register src2, Register dest, Label* onOver)
       DEFINED_ON(arm64);
-
-  // Return the high word of the unsigned multiplication into |dest|.
-  inline void mulHighUnsigned32(Imm32 imm, Register src,
-                                Register dest) PER_ARCH;
 
   inline void mulPtr(Register rhs, Register srcDest) PER_ARCH;
 
@@ -4457,27 +4452,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
    * Add |index| to |chars| so that |chars| now points at |chars[index]|.
    */
   void addToCharPtr(Register chars, Register index, CharEncoding encoding);
-
- private:
-  void loadStringFromUnit(Register unit, Register dest,
-                          const StaticStrings& staticStrings);
-  void loadLengthTwoString(Register c1, Register c2, Register dest,
-                           const StaticStrings& staticStrings);
-
- public:
-  /**
-   * Load the string representation of |input| in base |base|. Jumps to |fail|
-   * when the string representation needs to be allocated dynamically.
-   */
-  void loadInt32ToStringWithBase(Register input, Register base, Register dest,
-                                 Register scratch1, Register scratch2,
-                                 const StaticStrings& staticStrings,
-                                 const LiveRegisterSet& volatileRegs,
-                                 Label* fail);
-  void loadInt32ToStringWithBase(Register input, int32_t base, Register dest,
-                                 Register scratch1, Register scratch2,
-                                 const StaticStrings& staticStrings,
-                                 Label* fail);
 
   /**
    * Load the BigInt digits from |bigInt| into |digits|.

@@ -6232,13 +6232,6 @@ MDefinition* MGuardSpecificSymbol::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
-MDefinition* MGuardSpecificInt32::foldsTo(TempAllocator& alloc) {
-  if (num()->isConstant() && num()->toConstant()->isInt32(expected())) {
-    return num();
-  }
-  return this;
-}
-
 bool MCallBindVar::congruentTo(const MDefinition* ins) const {
   if (!ins->isCallBindVar()) {
     return false;
@@ -6751,21 +6744,6 @@ MDefinition* MGuardInt32IsNonNegative::foldsTo(TempAllocator& alloc) {
     return this;
   }
   return input;
-}
-
-MDefinition* MGuardInt32Range::foldsTo(TempAllocator& alloc) {
-  MOZ_ASSERT(input()->type() == MIRType::Int32);
-  MOZ_ASSERT(minimum() <= maximum());
-
-  MDefinition* in = input();
-  if (!in->isConstant()) {
-    return this;
-  }
-  int32_t cst = in->toConstant()->toInt32();
-  if (cst < minimum() || cst > maximum()) {
-    return this;
-  }
-  return in;
 }
 
 MDefinition* MGuardNonGCThing::foldsTo(TempAllocator& alloc) {

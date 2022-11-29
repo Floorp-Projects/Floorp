@@ -253,10 +253,6 @@ void MacroAssembler::mul32(Register rhs, Register srcDest) { MOZ_CRASH(); }
 
 void MacroAssembler::mul32(Imm32 imm, Register srcDest) { MOZ_CRASH(); }
 
-void MacroAssembler::mulHighUnsigned32(Imm32 imm, Register src, Register dest) {
-  MOZ_CRASH();
-}
-
 void MacroAssembler::mulFloat32(FloatRegister src, FloatRegister dest) {
   MOZ_CRASH();
 }

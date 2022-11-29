@@ -1074,30 +1074,6 @@
 - name: BigIntBitNot
   gen_boilerplate: false
 
-- name: Int32ToStringWithBase
-  result_type: WordSized
-  operands:
-    input: WordSized
-    base: WordSized
-  num_temps: 2
-  mir_op: true
-
-- name: NumberParseInt
-  result_type: BoxedValue
-  operands:
-    string: WordSized
-    radix: WordSized
-  num_temps: 1
-  call_instruction: true
-  mir_op: true
-
-- name: DoubleParseInt
-  result_type: WordSized
-  operands:
-    number: WordSized
-  num_temps: 1
-  mir_op: true
-
 # Adds two string, returning a string.
 - name: Concat
   result_type: WordSized
@@ -2421,11 +2397,6 @@
     symbol: WordSized
   mir_op: true
 
-- name: GuardSpecificInt32
-  operands:
-    num: WordSized
-  mir_op: true
-
 - name: GuardStringToIndex
   result_type: WordSized
   operands:
@@ -3196,11 +3167,6 @@
 - name: GuardInt32IsNonNegative
   operands:
     index: WordSized
-
-- name: GuardInt32Range
-  operands:
-    input: WordSized
-  mir_op: true
 
 - name: GuardIndexIsNotDenseElement
   operands:

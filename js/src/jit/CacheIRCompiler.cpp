@@ -2312,20 +2312,6 @@ bool CacheIRCompiler::emitGuardNoDenseElements(ObjOperandId objId) {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardSpecificInt32(Int32OperandId numId,
-                                             int32_t expected) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register num = allocator.useRegister(masm, numId);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  masm.branch32(Assembler::NotEqual, num, Imm32(expected), failure->label());
-  return true;
-}
-
 bool CacheIRCompiler::emitGuardStringToInt32(StringOperandId strId,
                                              Int32OperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
@@ -2409,84 +2395,6 @@ bool CacheIRCompiler::emitGuardStringToNumber(StringOperandId strId,
     masm.freeStack(sizeof(double));
   }
   masm.bind(&done);
-  return true;
-}
-
-bool CacheIRCompiler::emitNumberParseIntResult(StringOperandId strId,
-                                               Int32OperandId radixId) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-
-  AutoCallVM callvm(masm, this, allocator);
-
-  Register str = allocator.useRegister(masm, strId);
-  Register radix = allocator.useRegister(masm, radixId);
-  AutoScratchRegisterMaybeOutput scratch(allocator, masm, callvm.output());
-
-#ifdef DEBUG
-  Label ok;
-  masm.branch32(Assembler::Equal, radix, Imm32(0), &ok);
-  masm.branch32(Assembler::Equal, radix, Imm32(10), &ok);
-  masm.assumeUnreachable("radix must be 0 or 10 for indexed value fast path");
-  masm.bind(&ok);
-#endif
-
-  // Discard the stack to ensure it's balanced when we skip the vm-call.
-  allocator.discardStack(masm);
-
-  // Use indexed value as fast path if possible.
-  Label vmCall, done;
-  masm.loadStringIndexValue(str, scratch, &vmCall);
-  masm.tagValue(JSVAL_TYPE_INT32, scratch, callvm.outputValueReg());
-  masm.jump(&done);
-  {
-    masm.bind(&vmCall);
-
-    callvm.prepare();
-    masm.Push(radix);
-    masm.Push(str);
-
-    using Fn = bool (*)(JSContext*, HandleString, int32_t, MutableHandleValue);
-    callvm.call<Fn, js::NumberParseInt>();
-  }
-  masm.bind(&done);
-  return true;
-}
-
-bool CacheIRCompiler::emitDoubleParseIntResult(NumberOperandId numId) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-
-  AutoOutputRegister output(*this);
-  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
-  AutoAvailableFloatRegister floatScratch1(*this, FloatReg0);
-  AutoAvailableFloatRegister floatScratch2(*this, FloatReg1);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  allocator.ensureDoubleRegister(masm, numId, floatScratch1);
-
-  masm.branchDouble(Assembler::DoubleUnordered, floatScratch1, floatScratch1,
-                    failure->label());
-  masm.branchTruncateDoubleToInt32(floatScratch1, scratch, failure->label());
-
-  Label ok;
-  masm.branch32(Assembler::NotEqual, scratch, Imm32(0), &ok);
-  {
-    // Accept both +0 and -0 and return 0.
-    masm.loadConstantDouble(0.0, floatScratch2);
-    masm.branchDouble(Assembler::DoubleEqual, floatScratch1, floatScratch2,
-                      &ok);
-
-    // Fail if a non-zero input is in the exclusive range (-1, 1.0e-6).
-    masm.loadConstantDouble(DOUBLE_DECIMAL_IN_SHORTEST_LOW, floatScratch2);
-    masm.branchDouble(Assembler::DoubleLessThan, floatScratch1, floatScratch2,
-                      failure->label());
-  }
-  masm.bind(&ok);
-
-  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
 
@@ -7717,37 +7625,6 @@ bool CacheIRCompiler::emitCallNumberToString(NumberOperandId inputId,
   masm.PopRegsInMask(volatileRegs);
 
   masm.branchPtr(Assembler::Equal, result, ImmPtr(0), failure->label());
-  return true;
-}
-
-bool CacheIRCompiler::emitInt32ToStringWithBaseResult(Int32OperandId inputId,
-                                                      Int32OperandId baseId) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-
-  AutoCallVM callvm(masm, this, allocator);
-  Register input = allocator.useRegister(masm, inputId);
-  Register base = allocator.useRegister(masm, baseId);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  // AutoCallVM's AutoSaveLiveRegisters aren't accounted for in FailurePath, so
-  // we can't use both at the same time. This isn't an issue here, because Ion
-  // doesn't support CallICs. If that ever changes, this code must be updated.
-  MOZ_ASSERT(isBaseline(), "Can't use FailurePath with AutoCallVM in Ion ICs");
-
-  masm.branch32(Assembler::LessThan, base, Imm32(2), failure->label());
-  masm.branch32(Assembler::GreaterThan, base, Imm32(36), failure->label());
-
-  callvm.prepare();
-
-  masm.Push(base);
-  masm.Push(input);
-
-  using Fn = JSString* (*)(JSContext*, int32_t, int32_t);
-  callvm.call<Fn, js::Int32ToStringWithBase>();
   return true;
 }
 

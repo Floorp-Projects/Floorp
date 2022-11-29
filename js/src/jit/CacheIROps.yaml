@@ -483,14 +483,6 @@
     sym: SymbolId
     expected: SymbolField
 
-- name: GuardSpecificInt32
-  shared: true
-  transpile: true
-  cost_estimate: 1
-  args:
-    num: Int32Id
-    expected: Int32Imm
-
 - name: GuardNoDenseElements
   shared: true
   transpile: true
@@ -1434,21 +1426,6 @@
     input: NumberId
     fun: UnaryMathFunctionImm
 
-- name: NumberParseIntResult
-  shared: true
-  transpile: true
-  cost_estimate: 5
-  args:
-    str: StringId
-    radix: Int32Id
-
-- name: DoubleParseIntResult
-  shared: true
-  transpile: true
-  cost_estimate: 2
-  args:
-    num: NumberId
-
 - name: ObjectToStringResult
   shared: true
   transpile: true
@@ -1676,14 +1653,6 @@
   args:
     input: NumberId
     result: StringId
-
-- name: Int32ToStringWithBaseResult
-  shared: true
-  transpile: true
-  cost_estimate: 3
-  args:
-    input: Int32Id
-    base: Int32Id
 
 - name: BooleanToString
   shared: true

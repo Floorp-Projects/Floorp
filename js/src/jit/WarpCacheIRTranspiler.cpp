@@ -909,17 +909,6 @@ bool WarpCacheIRTranspiler::emitGuardSpecificSymbol(SymbolOperandId symId,
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitGuardSpecificInt32(Int32OperandId numId,
-                                                   int32_t expected) {
-  MDefinition* num = getOperand(numId);
-
-  auto* ins = MGuardSpecificInt32::New(alloc(), num, expected);
-  add(ins);
-
-  setOperand(numId, ins);
-  return true;
-}
-
 bool WarpCacheIRTranspiler::emitGuardSpecificObject(ObjOperandId objId,
                                                     uint32_t expectedOffset) {
   MDefinition* obj = getOperand(objId);
@@ -1363,21 +1352,6 @@ bool WarpCacheIRTranspiler::emitCallInt32ToString(Int32OperandId inputId,
 bool WarpCacheIRTranspiler::emitCallNumberToString(NumberOperandId inputId,
                                                    StringOperandId resultId) {
   return emitToString(inputId, resultId);
-}
-
-bool WarpCacheIRTranspiler::emitInt32ToStringWithBaseResult(
-    Int32OperandId inputId, Int32OperandId baseId) {
-  MDefinition* input = getOperand(inputId);
-  MDefinition* base = getOperand(baseId);
-
-  auto* guardedBase = MGuardInt32Range::New(alloc(), base, 2, 36);
-  add(guardedBase);
-
-  auto* ins = MInt32ToStringWithBase::New(alloc(), input, guardedBase);
-  add(ins);
-
-  pushResult(ins);
-  return true;
 }
 
 bool WarpCacheIRTranspiler::emitBooleanToString(BooleanOperandId inputId,
@@ -3253,28 +3227,6 @@ bool WarpCacheIRTranspiler::emitMathTruncNumberResult(NumberOperandId inputId) {
   } else {
     ins = MMathFunction::New(alloc(), input, UnaryMathFunction::Trunc);
   }
-  add(ins);
-
-  pushResult(ins);
-  return true;
-}
-
-bool WarpCacheIRTranspiler::emitNumberParseIntResult(StringOperandId strId,
-                                                     Int32OperandId radixId) {
-  MDefinition* str = getOperand(strId);
-  MDefinition* radix = getOperand(radixId);
-
-  auto* ins = MNumberParseInt::New(alloc(), str, radix);
-  add(ins);
-
-  pushResult(ins);
-  return true;
-}
-
-bool WarpCacheIRTranspiler::emitDoubleParseIntResult(NumberOperandId numId) {
-  MDefinition* num = getOperand(numId);
-
-  auto* ins = MDoubleParseInt::New(alloc(), num);
   add(ins);
 
   pushResult(ins);

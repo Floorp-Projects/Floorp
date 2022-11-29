@@ -108,8 +108,6 @@
   _(MathTrunc)                                     \
   _(MathCbrt)                                      \
                                                    \
-  _(Number)                                        \
-  _(NumberParseInt)                                \
   _(NumberToString)                                \
                                                    \
   _(ReflectGetPrototypeOf)                         \

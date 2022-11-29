@@ -783,33 +783,6 @@
 - name: BigIntBitNot
   gen_boilerplate: false
 
-- name: Int32ToStringWithBase
-  operands:
-    input: Int32
-    base: Int32
-  result_type: String
-  movable: true
-  congruent_to: if_operands_equal
-  alias_set: none
-
-- name: NumberParseInt
-  operands:
-    string: String
-    radix: Int32
-  result_type: Value
-  movable: true
-  congruent_to: if_operands_equal
-  alias_set: none
-  possibly_calls: true
-
-- name: DoubleParseInt
-  operands:
-    number: Double
-  result_type: Int32
-  movable: true
-  congruent_to: if_operands_equal
-  alias_set: none
-
 - name: Concat
   gen_boilerplate: false
 
@@ -1678,17 +1651,6 @@
 - name: GuardSpecificSymbol
   gen_boilerplate: false
 
-- name: GuardSpecificInt32
-  operands:
-    num: Int32
-  arguments:
-    expected: int32_t
-  result_type: Int32
-  guard: true
-  movable: true
-  folds_to: custom
-  alias_set: none
-
 - name: GuardStringToIndex
   operands:
     string: String
@@ -2359,19 +2321,6 @@
 - name: GuardInt32IsNonNegative
   operands:
     index: Int32
-  result_type: Int32
-  guard: true
-  movable: true
-  congruent_to: if_operands_equal
-  folds_to: custom
-  alias_set: none
-
-- name: GuardInt32Range
-  operands:
-    input: Int32
-  arguments:
-    minimum: int32_t
-    maximum: int32_t
   result_type: Int32
   guard: true
   movable: true

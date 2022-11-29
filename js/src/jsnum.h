@@ -55,8 +55,6 @@ extern JSLinearString* Int32ToString(JSContext* cx, int32_t i);
 
 extern JSLinearString* Int32ToStringPure(JSContext* cx, int32_t i);
 
-extern JSString* Int32ToStringWithBase(JSContext* cx, int32_t i, int32_t base);
-
 extern JSAtom* Int32ToAtom(JSContext* cx, int32_t si);
 
 frontend::TaggedParserAtomIndex Int32ToParserAtom(
@@ -119,18 +117,6 @@ extern char* Uint32ToHexCString(Int32ToCStringBuf* cbuf, uint32_t value,
  * may be precisely represented using the IEEE-754 double-precision format.
  */
 constexpr double DOUBLE_INTEGRAL_PRECISION_LIMIT = uint64_t(1) << 53;
-
-/*
- * The smallest positive double such that all positive doubles larger or equal
- * than it have an exact decimal representation without exponential form.
- */
-constexpr double DOUBLE_DECIMAL_IN_SHORTEST_LOW = 1.0e-6;
-
-/*
- * The largest positive double such that all positive doubles less than it
- * have an exact decimal representation without exponential form.
- */
-constexpr double DOUBLE_DECIMAL_IN_SHORTEST_HIGH = 1.0e21;
 
 /*
  * Parse a decimal number encoded in |chars|.  The decimal number must be
@@ -222,10 +208,6 @@ double CharsToNumber(const CharT* chars, size_t length);
 
 // Infallible version of StringToNumber for linear strings.
 extern double LinearStringToNumber(JSLinearString* str);
-
-// Parse the input string as if Number.parseInt had been called.
-extern bool NumberParseInt(JSContext* cx, JS::HandleString str, int32_t radix,
-                           JS::MutableHandleValue result);
 
 /* ES5 9.3 ToNumber, overwriting *vp with the appropriate number value. */
 [[nodiscard]] MOZ_ALWAYS_INLINE bool ToNumber(JSContext* cx,
