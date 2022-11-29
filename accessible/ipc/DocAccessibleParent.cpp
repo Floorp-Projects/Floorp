@@ -622,7 +622,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvScrollingEvent(
 
 mozilla::ipc::IPCResult DocAccessibleParent::RecvCache(
     const mozilla::a11y::CacheUpdateType& aUpdateType,
-    nsTArray<CacheData>&& aData, const bool& aFinal) {
+    nsTArray<CacheData>&& aData, const bool& aDispatchShowEvent) {
   ACQUIRE_ANDROID_LOCK
   if (mShutdown) {
     return IPC_OK();
@@ -638,12 +638,17 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvCache(
     remote->ApplyCache(aUpdateType, entry.Fields());
   }
 
-  if (aUpdateType == CacheUpdateType::Initial && !aData.IsEmpty()) {
+  if (aDispatchShowEvent && !aData.IsEmpty()) {
+    // We might need to dispatch a show event for an initial cache push. We
+    // should never dispatch a show event for a (non-initial) cache update.
+    MOZ_ASSERT(aUpdateType == CacheUpdateType::Initial);
     RemoteAccessible* target = GetAccessible(aData.ElementAt(0).ID());
     if (!target) {
       MOZ_ASSERT_UNREACHABLE("No remote found for initial cache push!");
       return IPC_OK();
     }
+    // We never dispatch a show event for the doc itself.
+    MOZ_ASSERT(!target->IsDoc() && target->RemoteParent());
 
     ProxyShowHideEvent(target, target->RemoteParent(), true, false);
 

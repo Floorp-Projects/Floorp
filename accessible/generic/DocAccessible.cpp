@@ -1501,7 +1501,7 @@ void DocAccessible::ProcessQueuedCacheUpdates() {
   }
 
   if (data.Length()) {
-    IPCDoc()->SendCache(CacheUpdateType::Update, data, true);
+    IPCDoc()->SendCache(CacheUpdateType::Update, data, false);
   }
 }
 

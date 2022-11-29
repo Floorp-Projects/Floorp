@@ -449,7 +449,7 @@ void nsAccessibilityService::NotifyOfResolutionChange(
       RefPtr<AccAttributes> fields = new AccAttributes();
       fields->SetAttribute(nsGkAtoms::resolution, aResolution);
       data.AppendElement(mozilla::a11y::CacheData(0, fields));
-      document->IPCDoc()->SendCache(CacheUpdateType::Update, data, true);
+      document->IPCDoc()->SendCache(CacheUpdateType::Update, data, false);
     }
   }
 }
@@ -464,7 +464,7 @@ void nsAccessibilityService::NotifyOfDevPixelRatioChange(
       fields->SetAttribute(nsGkAtoms::_moz_device_pixel_ratio,
                            aAppUnitsPerDevPixel);
       data.AppendElement(mozilla::a11y::CacheData(0, fields));
-      document->IPCDoc()->SendCache(CacheUpdateType::Update, data, true);
+      document->IPCDoc()->SendCache(CacheUpdateType::Update, data, false);
     }
   }
 }
