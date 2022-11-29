@@ -6664,9 +6664,13 @@ AttachDecision InlinableNativeIRGenerator::tryAttachObjectHasPrototype() {
   return AttachDecision::Attach;
 }
 
+static bool CanConvertToString(const Value& v) {
+  return v.isString() || v.isNumber() || v.isBoolean() || v.isNullOrUndefined();
+}
+
 AttachDecision InlinableNativeIRGenerator::tryAttachString() {
   // Need a single argument that is or can be converted to a string.
-  if (argc_ != 1 || !(args_[0].isString() || args_[0].isNumber())) {
+  if (argc_ != 1 || !CanConvertToString(args_[0])) {
     return AttachDecision::NoAction;
   }
 
@@ -6690,7 +6694,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachString() {
 
 AttachDecision InlinableNativeIRGenerator::tryAttachStringConstructor() {
   // Need a single argument that is or can be converted to a string.
-  if (argc_ != 1 || !(args_[0].isString() || args_[0].isNumber())) {
+  if (argc_ != 1 || !CanConvertToString(args_[0])) {
     return AttachDecision::NoAction;
   }
 
@@ -7784,6 +7788,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachNumberParseInt() {
 
 StringOperandId IRGenerator::emitToStringGuard(ValOperandId id,
                                                const Value& v) {
+  MOZ_ASSERT(CanConvertToString(v));
   if (v.isString()) {
     return writer.guardToString(id);
   }
@@ -12078,12 +12083,8 @@ AttachDecision BinaryArithIRGenerator::tryAttachStringConcat() {
 
   // One side must be a string, the other side a primitive value we can easily
   // convert to a string.
-  auto canConvertToString = [](const Value& v) {
-    return v.isString() || v.isNumber() || v.isBoolean() ||
-           v.isNullOrUndefined();
-  };
-  if (!(lhs_.isString() && canConvertToString(rhs_)) &&
-      !(canConvertToString(lhs_) && rhs_.isString())) {
+  if (!(lhs_.isString() && CanConvertToString(rhs_)) &&
+      !(CanConvertToString(lhs_) && rhs_.isString())) {
     return AttachDecision::NoAction;
   }
 
