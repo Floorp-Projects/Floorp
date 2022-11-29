@@ -1642,9 +1642,11 @@ class TokenStreamCharsBase : public TokenStreamCharsShared {
 
   void ungetCodeUnit(int32_t c) {
     if (c == EOF) {
+      MOZ_ASSERT(sourceUnits.atEnd());
       return;
     }
 
+    MOZ_ASSERT(sourceUnits.previousCodeUnit() == toUnit(c));
     sourceUnits.ungetCodeUnit();
   }
 
