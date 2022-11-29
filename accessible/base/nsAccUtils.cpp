@@ -194,10 +194,13 @@ Accessible* nsAccUtils::GetSelectableContainer(const Accessible* aAccessible,
   if (!aAccessible) return nullptr;
 
   if (!(aState & states::SELECTABLE)) return nullptr;
+  MOZ_ASSERT(!aAccessible->IsDoc());
 
   const Accessible* parent = aAccessible;
   while ((parent = parent->Parent()) && !parent->IsSelect()) {
-    if (parent->Role() == roles::PANE) return nullptr;
+    if (parent->IsDoc() || parent->Role() == roles::PANE) {
+      return nullptr;
+    }
   }
   return const_cast<Accessible*>(parent);
 }
