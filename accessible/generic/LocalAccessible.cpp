@@ -3086,6 +3086,9 @@ void LocalAccessible::SendCache(uint64_t aCacheDomain,
 
   RefPtr<AccAttributes> fields =
       BundleFieldsForCache(aCacheDomain, aUpdateType);
+  if (!fields->Count()) {
+    return;
+  }
   nsTArray<CacheData> data;
   data.AppendElement(CacheData(ID(), fields));
   ipcDoc->SendCache(aUpdateType, data, false);
