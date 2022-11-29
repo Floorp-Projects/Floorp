@@ -29,9 +29,16 @@ class MOZ_STACK_CLASS SynchronousTask {
 
     // For finite timeouts, we only check once for completion, and otherwise
     // rely on the ReentrantMonitor to manage the interval. If the monitor
-    // returns too early, we'll never know.
+    // returns too early, we'll never know, but we can check if the mDone
+    // flag was set to true, indicating that the task finished successfully.
     if (!mDone) {
-      return mMonitor.Wait(aInterval);
+      // We ignore the return value from ReentrantMonitor::Wait, because it's
+      // always NS_OK, even in the case of timeout.
+      mMonitor.Wait(aInterval);
+
+      if (!mDone) {
+        return NS_ERROR_ABORT;
+      }
     }
 
     return NS_OK;
