@@ -2,50 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@import url("chrome://browser/skin/tab-list-tree.css");
+
 .radioRestoreContainer:not(:last-child) {
   margin-bottom: 0.3em;
 }
 
-/* tablist starts out hidden, but JS may make it visible in response to
-   clicks on the radio buttons by setting an "available" attribute.
-*/
-.tree-container:not([available]) {
-  display: none;
-}
-
-treechildren::-moz-tree-image(icon),
-treechildren::-moz-tree-image(noicon) {
-  padding-inline-end: 2px;
-  margin: 0 2px;
-  width: 16px;
-  height: 16px;
-}
-
-treechildren::-moz-tree-image(noicon) {
-  list-style-image: url("chrome://global/skin/icons/defaultFavicon.svg");
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-treechildren::-moz-tree-image(container, noicon) {
-  list-style-image: url("chrome://browser/skin/window.svg");
-}
-
-treechildren::-moz-tree-image(checked),
-treechildren::-moz-tree-image(partial) {
-  -moz-context-properties: fill, stroke;
-  fill: var(--in-content-accent-color);
-}
-
-treechildren::-moz-tree-image(checked, selected),
-treechildren::-moz-tree-image(partial, selected) {
-  fill: var(--in-content-item-selected-text);
-  stroke: var(--in-content-item-selected);
-}
-
-treechildren::-moz-tree-image(checked) {
-  list-style-image: url("chrome://global/skin/icons/check.svg");
-}
-
-treechildren::-moz-tree-image(partial) {
-  list-style-image: url("chrome://global/skin/icons/check-partial.svg");
+#tabList {
+  flex: 1;
+  min-height: 12em;
+  margin-top: 1.2em;
 }
