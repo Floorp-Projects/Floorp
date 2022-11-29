@@ -943,6 +943,18 @@ class AccessibilityTest : BaseSessionTest() {
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_SELECT, null)
         waitUntilSelect(false)
+
+        // Ensure that querying an option outside of a selectable container
+        // doesn't crash (bug 1801879).
+        mainSession.evaluateJS("document.getElementById('outsideSelectable').focus()")
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Focused outsideSelectable", node.text.toString(), equalTo("outside selectable"))
+            }
+        })
     }
 
     @Test fun testMutation() {
