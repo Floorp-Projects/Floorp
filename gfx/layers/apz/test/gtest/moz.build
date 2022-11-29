@@ -33,7 +33,6 @@ LOCAL_INCLUDES += [
     "/gfx/2d",
     "/gfx/cairo/cairo/src",
     "/gfx/layers",
-    "/gfx/tests/gtest",  # for TestLayers.h, which is shared with the gfx gtests
 ]
 
 FINAL_LIBRARY = "xul-gtest"
