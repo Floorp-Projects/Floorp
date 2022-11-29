@@ -481,25 +481,27 @@ static bool num_parseFloat(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+// ES2023 draft rev 053d34c87b14d9234d6f7f45bd61074b72ca9d69
+// 19.2.5 parseInt ( string, radix )
 template <typename CharT>
 static bool ParseIntImpl(JSContext* cx, const CharT* chars, size_t length,
                          bool stripPrefix, int32_t radix, double* res) {
-  /* Step 2. */
+  // Step 2.
   const CharT* end = chars + length;
   const CharT* s = SkipSpace(chars, end);
 
   MOZ_ASSERT(chars <= s);
   MOZ_ASSERT(s <= end);
 
-  /* Steps 3-4. */
+  // Steps 3-4.
   bool negative = (s != end && s[0] == '-');
 
-  /* Step 5. */
+  // Step 5. */
   if (s != end && (s[0] == '-' || s[0] == '+')) {
     s++;
   }
 
-  /* Step 10. */
+  // Step 10.
   if (stripPrefix) {
     if (end - s >= 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
       s += 2;
@@ -507,7 +509,7 @@ static bool ParseIntImpl(JSContext* cx, const CharT* chars, size_t length,
     }
   }
 
-  /* Steps 11-15. */
+  // Steps 11-15.
   const CharT* actualEnd;
   double d;
   if (!GetPrefixInteger(cx, s, end, radix, IntegerSeparatorHandling::None,
@@ -523,7 +525,55 @@ static bool ParseIntImpl(JSContext* cx, const CharT* chars, size_t length,
   return true;
 }
 
-/* ES5 15.1.2.2. */
+// ES2023 draft rev 053d34c87b14d9234d6f7f45bd61074b72ca9d69
+// 19.2.5 parseInt ( string, radix )
+bool js::NumberParseInt(JSContext* cx, HandleString str, int32_t radix,
+                        MutableHandleValue result) {
+  // Step 7.
+  bool stripPrefix = true;
+
+  // Steps 8-9.
+  if (radix != 0) {
+    if (radix < 2 || radix > 36) {
+      result.setNaN();
+      return true;
+    }
+
+    if (radix != 16) {
+      stripPrefix = false;
+    }
+  } else {
+    radix = 10;
+  }
+  MOZ_ASSERT(2 <= radix && radix <= 36);
+
+  JSLinearString* linear = str->ensureLinear(cx);
+  if (!linear) {
+    return false;
+  }
+
+  // Steps 2-5, 10-16.
+  AutoCheckCannotGC nogc;
+  size_t length = linear->length();
+  double number;
+  if (linear->hasLatin1Chars()) {
+    if (!ParseIntImpl(cx, linear->latin1Chars(nogc), length, stripPrefix, radix,
+                      &number)) {
+      return false;
+    }
+  } else {
+    if (!ParseIntImpl(cx, linear->twoByteChars(nogc), length, stripPrefix,
+                      radix, &number)) {
+      return false;
+    }
+  }
+
+  result.setNumber(number);
+  return true;
+}
+
+// ES2023 draft rev 053d34c87b14d9234d6f7f45bd61074b72ca9d69
+// 19.2.5 parseInt ( string, radix )
 static bool num_parseInt(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -576,57 +626,22 @@ static bool num_parseInt(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  /* Step 1. */
+  // Step 1.
   RootedString inputString(cx, ToString<CanGC>(cx, args[0]));
   if (!inputString) {
     return false;
   }
-  args[0].setString(inputString);
 
-  /* Steps 6-9. */
-  bool stripPrefix = true;
-  int32_t radix;
-  if (!args.hasDefined(1)) {
-    radix = 10;
-  } else {
+  // Step 6.
+  int32_t radix = 0;
+  if (args.hasDefined(1)) {
     if (!ToInt32(cx, args[1], &radix)) {
       return false;
     }
-    if (radix == 0) {
-      radix = 10;
-    } else {
-      if (radix < 2 || radix > 36) {
-        args.rval().setNaN();
-        return true;
-      }
-      if (radix != 16) {
-        stripPrefix = false;
-      }
-    }
   }
 
-  JSLinearString* linear = inputString->ensureLinear(cx);
-  if (!linear) {
-    return false;
-  }
-
-  AutoCheckCannotGC nogc;
-  size_t length = inputString->length();
-  double number;
-  if (linear->hasLatin1Chars()) {
-    if (!ParseIntImpl(cx, linear->latin1Chars(nogc), length, stripPrefix, radix,
-                      &number)) {
-      return false;
-    }
-  } else {
-    if (!ParseIntImpl(cx, linear->twoByteChars(nogc), length, stripPrefix,
-                      radix, &number)) {
-      return false;
-    }
-  }
-
-  args.rval().setNumber(number);
-  return true;
+  // Steps 2-5, 7-16.
+  return NumberParseInt(cx, inputString, radix, args.rval());
 }
 
 static const JSFunctionSpec number_functions[] = {
