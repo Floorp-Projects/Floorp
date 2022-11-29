@@ -265,7 +265,18 @@ bool AccessibleWrap::DoAction(uint8_t aIndex) const {
 Accessible* AccessibleWrap::DoPivot(Accessible* aAccessible,
                                     int32_t aGranularity, bool aForward,
                                     bool aInclusive) {
-  a11y::Pivot pivot(nullptr);
+  Accessible* pivotRoot = nullptr;
+  if (aAccessible->IsRemote()) {
+    // If this is a remote accessible provide the top level
+    // remote doc as the pivot root for thread safety reasons.
+    DocAccessibleParent* doc = aAccessible->AsRemote()->Document();
+    while (doc && !doc->IsTopLevel()) {
+      doc = doc->ParentDoc();
+    }
+    MOZ_ASSERT(doc, "Failed to get top level DocAccessibleParent");
+    pivotRoot = doc;
+  }
+  a11y::Pivot pivot(pivotRoot);
   // Depending on the start accessible, the pivot rule will either traverse
   // local or remote accessibles exclusively.
   TraversalRule rule(aGranularity, aAccessible->IsLocal());
