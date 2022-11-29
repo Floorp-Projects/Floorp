@@ -12,56 +12,12 @@ use std::path::PathBuf;
 struct PKCS11TypesParseCallbacks;
 
 impl ParseCallbacks for PKCS11TypesParseCallbacks {
-    fn will_parse_macro(&self, _name: &str) -> MacroParsingBehavior {
-        MacroParsingBehavior::Default
-    }
-
     fn int_macro(&self, name: &str, _value: i64) -> Option<IntKind> {
         if name == "CK_TRUE" || name == "CK_FALSE" {
             Some(IntKind::U8)
         } else {
             Some(IntKind::ULong)
         }
-    }
-
-    fn str_macro(&self, _name: &str, _value: &[u8]) {}
-
-    fn func_macro(&self, _name: &str, _value: &[&[u8]]) {}
-
-    fn enum_variant_behavior(
-        &self,
-        _enum_name: Option<&str>,
-        _original_variant_name: &str,
-        _variant_value: EnumVariantValue,
-    ) -> Option<EnumVariantCustomBehavior> {
-        None
-    }
-
-    fn enum_variant_name(
-        &self,
-        _enum_name: Option<&str>,
-        _original_variant_name: &str,
-        _variant_value: EnumVariantValue,
-    ) -> Option<String> {
-        None
-    }
-
-    fn item_name(&self, _original_item_name: &str) -> Option<String> {
-        None
-    }
-
-    fn include_file(&self, _filename: &str) {}
-
-    fn blocklisted_type_implements_trait(
-        &self,
-        _name: &str,
-        _derive_trait: DeriveTrait,
-    ) -> Option<ImplementsTrait> {
-        None
-    }
-
-    fn add_derives(&self, _name: &str) -> Vec<String> {
-        Vec::new()
     }
 }
 
@@ -78,8 +34,11 @@ fn main() {
         .allowlist_var("CK_TRUE")
         .allowlist_var("CK_FALSE")
         .allowlist_var("CK_UNAVAILABLE_INFORMATION")
+        .allowlist_var("CK_EFFECTIVELY_INFINITE")
+        .allowlist_var("CK_INVALID_HANDLE")
         .allowlist_var("CKA_.*")
         .allowlist_var("CKC_.*")
+        .allowlist_var("CKD_.*")
         .allowlist_var("CKF_.*")
         .allowlist_var("CKK_.*")
         .allowlist_var("CKM_.*")

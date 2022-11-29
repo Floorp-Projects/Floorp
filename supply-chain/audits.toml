@@ -946,6 +946,11 @@ who = "John M. Schanck <jmschanck@gmail.com>"
 criteria = "safe-to-deploy"
 version = "0.1.1"
 
+[[audits.pkcs11-bindings]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.1.1 -> 0.1.4"
+
 [[audits.plane-split]]
 who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"

@@ -4093,9 +4093,9 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "pkcs11-bindings"
-version = "0.1.1"
+version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "780bf71a814823f87d50b5bfbfd4ba5f2af46819a01f0ac31238f650693eb592"
+checksum = "c20556de5b64f5d7213b8ea103b92261cac789b59978652d9cd831ba9f477c53"
 dependencies = [
  "bindgen",
 ]
