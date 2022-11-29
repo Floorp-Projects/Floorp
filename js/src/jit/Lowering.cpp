@@ -2249,6 +2249,17 @@ void LIRGenerator::visitBigIntBitNot(MBigIntBitNot* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitNumberParseInt(MNumberParseInt* ins) {
+  MOZ_ASSERT(ins->string()->type() == MIRType::String);
+  MOZ_ASSERT(ins->radix()->type() == MIRType::Int32);
+
+  auto* lir = new (alloc()) LNumberParseInt(useRegisterAtStart(ins->string()),
+                                            useRegisterAtStart(ins->radix()),
+                                            tempFixed(CallTempReg0));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitConcat(MConcat* ins) {
   MDefinition* lhs = ins->getOperand(0);
   MDefinition* rhs = ins->getOperand(1);

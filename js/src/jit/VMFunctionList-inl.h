@@ -224,6 +224,7 @@ namespace jit {
   _(NewTypedArrayWithTemplateAndLength,                                        \
     js::NewTypedArrayWithTemplateAndLength)                                    \
   _(NormalSuspend, js::jit::NormalSuspend)                                     \
+  _(NumberParseInt, js::NumberParseInt)                                        \
   _(NumberToString, js::NumberToString<CanGC>)                                 \
   _(ObjectCreateWithTemplate, js::ObjectCreateWithTemplate)                    \
   _(ObjectWithProtoOperation, js::ObjectWithProtoOperation)                    \

@@ -1074,6 +1074,15 @@
 - name: BigIntBitNot
   gen_boilerplate: false
 
+- name: NumberParseInt
+  result_type: BoxedValue
+  operands:
+    string: WordSized
+    radix: WordSized
+  num_temps: 1
+  call_instruction: true
+  mir_op: true
+
 # Adds two string, returning a string.
 - name: Concat
   result_type: WordSized
