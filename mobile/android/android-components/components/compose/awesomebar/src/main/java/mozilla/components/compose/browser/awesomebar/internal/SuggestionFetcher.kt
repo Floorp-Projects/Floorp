@@ -98,7 +98,8 @@ internal class SuggestionFetcher(
      * Updates [state] to include the [suggestions] from [provider].
      */
     @Synchronized
-    private fun processResultFrom(
+    @VisibleForTesting
+    internal fun processResultFrom(
         group: AwesomeBar.SuggestionProviderGroup,
         provider: AwesomeBar.SuggestionProvider,
         suggestions: List<AwesomeBar.Suggestion>,
@@ -113,14 +114,25 @@ internal class SuggestionFetcher(
         updatedSuggestions.addAll(suggestions)
         updatedSuggestions.sortByDescending { suggestion -> suggestion.score }
 
+        if (updatedSuggestions.isNotEmpty()) {
+            group.priority = updatedSuggestions[0].score
+        }
+
         val updatedSuggestionMap = suggestionMap.toMutableMap()
         updatedSuggestionMap[group] = updatedSuggestions
         state.value = updatedSuggestionMap
         val profilerEndTime = profiler?.getProfilerTime() // THIS MUST OCCUR RIGHT AFTER STATE UPDATE.
 
         // Markers can only be added on the main thread right now.
-        ThreadUtils.postToMainThread {
-            profiler?.addMarker("Suggestion update", profilerStartTime, profilerEndTime, provider::class.simpleName)
+        profiler?.let {
+            ThreadUtils.postToMainThread {
+                profiler.addMarker(
+                    "Suggestion update",
+                    profilerStartTime,
+                    profilerEndTime,
+                    provider::class.simpleName,
+                )
+            }
         }
     }
 

@@ -190,6 +190,8 @@ interface AwesomeBar {
      * A group of [SuggestionProvider]s.
      *
      * @property providers The list of [SuggestionProvider]s in this group.
+     * @property priority An optional priority for this group. Decides the order of this group
+     * in the AwesomeBar suggestions. Group having the highest integer value will have the highest priority.
      * @property title An optional title for this group. The title may be rendered by an AwesomeBar
      * implementation.
      * @property limit The maximum number of suggestions that will be shown in this group.
@@ -197,6 +199,7 @@ interface AwesomeBar {
      */
     data class SuggestionProviderGroup(
         val providers: List<SuggestionProvider>,
+        var priority: Int = 0,
         val title: String? = null,
         val limit: Int = Integer.MAX_VALUE,
         val id: String = UUID.randomUUID().toString(),
