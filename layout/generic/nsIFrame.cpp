@@ -3766,15 +3766,6 @@ void nsIFrame::BuildDisplayListForStackingContext(
     createdContainer = true;
   }
 
-  bool createdOwnLayer = false;
-  CreateOwnLayerIfNeeded(aBuilder, &resultList,
-                         nsDisplayOwnLayer::OwnLayerForStackingContext,
-                         &createdOwnLayer);
-
-  if (createdOwnLayer) {
-    createdContainer = true;
-  }
-
   if (aBuilder->IsReusingStackingContextItems()) {
     if (resultList.IsEmpty()) {
       return;
@@ -11110,21 +11101,6 @@ void nsIFrame::SetParent(nsContainerFrame* aParent) {
     InvalidateFrame();
   } else {
     SchedulePaint();
-  }
-}
-
-void nsIFrame::CreateOwnLayerIfNeeded(nsDisplayListBuilder* aBuilder,
-                                      nsDisplayList* aList, uint16_t aType,
-                                      bool* aCreatedContainerItem) {
-  if (GetContent() && GetContent()->IsXULElement() &&
-      GetContent()->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::layer)) {
-    aList->AppendNewToTopWithIndex<nsDisplayOwnLayer>(
-        aBuilder, this, /* aIndex = */ aType, aList,
-        aBuilder->CurrentActiveScrolledRoot(), nsDisplayOwnLayerFlags::None,
-        ScrollbarData{}, true, false);
-    if (aCreatedContainerItem) {
-      *aCreatedContainerItem = true;
-    }
   }
 }
 

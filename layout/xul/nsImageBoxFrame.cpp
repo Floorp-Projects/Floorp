@@ -316,13 +316,7 @@ void nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   DisplayListClipState::AutoClipContainingBlockDescendantsToContentBox clip(
       aBuilder, this, clipFlags);
 
-  nsDisplayList list(aBuilder);
-  list.AppendNewToTop<nsDisplayXULImage>(aBuilder, this);
-
-  CreateOwnLayerIfNeeded(aBuilder, &list,
-                         nsDisplayOwnLayer::OwnLayerForImageBoxFrame);
-
-  aLists.Content()->AppendToTop(&list);
+  aLists.Content()->AppendNewToTop<nsDisplayXULImage>(aBuilder, this);
 }
 
 already_AddRefed<imgIContainer> nsImageBoxFrame::GetImageContainerForPainting(
