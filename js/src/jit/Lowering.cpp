@@ -2249,37 +2249,6 @@ void LIRGenerator::visitBigIntBitNot(MBigIntBitNot* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitInt32ToStringWithBase(MInt32ToStringWithBase* ins) {
-  MOZ_ASSERT(ins->input()->type() == MIRType::Int32);
-  MOZ_ASSERT(ins->base()->type() == MIRType::Int32);
-
-  auto* lir = new (alloc()) LInt32ToStringWithBase(
-      useRegister(ins->input()), useRegisterOrConstant(ins->base()), temp(),
-      temp());
-  define(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
-void LIRGenerator::visitNumberParseInt(MNumberParseInt* ins) {
-  MOZ_ASSERT(ins->string()->type() == MIRType::String);
-  MOZ_ASSERT(ins->radix()->type() == MIRType::Int32);
-
-  auto* lir = new (alloc()) LNumberParseInt(useRegisterAtStart(ins->string()),
-                                            useRegisterAtStart(ins->radix()),
-                                            tempFixed(CallTempReg0));
-  defineReturn(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
-void LIRGenerator::visitDoubleParseInt(MDoubleParseInt* ins) {
-  MOZ_ASSERT(ins->number()->type() == MIRType::Double);
-
-  auto* lir =
-      new (alloc()) LDoubleParseInt(useRegister(ins->number()), tempDouble());
-  assignSnapshot(lir, ins->bailoutKind());
-  define(lir, ins);
-}
-
 void LIRGenerator::visitConcat(MConcat* ins) {
   MDefinition* lhs = ins->getOperand(0);
   MDefinition* rhs = ins->getOperand(1);
@@ -4436,13 +4405,6 @@ void LIRGenerator::visitGuardSpecificSymbol(MGuardSpecificSymbol* ins) {
   redefine(ins, ins->symbol());
 }
 
-void LIRGenerator::visitGuardSpecificInt32(MGuardSpecificInt32* ins) {
-  auto* guard = new (alloc()) LGuardSpecificInt32(useRegister(ins->num()));
-  assignSnapshot(guard, ins->bailoutKind());
-  add(guard, ins);
-  redefine(ins, ins->num());
-}
-
 void LIRGenerator::visitGuardStringToIndex(MGuardStringToIndex* ins) {
   MOZ_ASSERT(ins->string()->type() == MIRType::String);
   auto* guard = new (alloc()) LGuardStringToIndex(useRegister(ins->string()));
@@ -6073,16 +6035,6 @@ void LIRGenerator::visitGuardInt32IsNonNegative(MGuardInt32IsNonNegative* ins) {
   assignSnapshot(guard, ins->bailoutKind());
   add(guard, ins);
   redefine(ins, index);
-}
-
-void LIRGenerator::visitGuardInt32Range(MGuardInt32Range* ins) {
-  MDefinition* input = ins->input();
-  MOZ_ASSERT(input->type() == MIRType::Int32);
-
-  auto* guard = new (alloc()) LGuardInt32Range(useRegister(input));
-  assignSnapshot(guard, ins->bailoutKind());
-  add(guard, ins);
-  redefine(ins, input);
 }
 
 void LIRGenerator::visitGuardIndexIsNotDenseElement(

@@ -13,7 +13,6 @@
 #include "jit/InlineScriptTree.h"
 #include "jit/JitRuntime.h"
 #include "jit/RangeAnalysis.h"
-#include "jit/ReciprocalMulConstants.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "util/DifferentialTesting.h"
 
@@ -1047,7 +1046,7 @@ void CodeGenerator::visitUDivOrModConstant(LUDivOrModConstant* ins) {
   // The denominator isn't a power of 2 (see LDivPowTwoI and LModPowTwoI).
   MOZ_ASSERT((d & (d - 1)) != 0);
 
-  auto rmc = ReciprocalMulConstants::computeUnsignedDivisionConstants(d);
+  ReciprocalMulConstants rmc = computeDivisionConstants(d, /* maxLog = */ 32);
 
   // We first compute (M * n) >> 32, where M = rmc.multiplier.
   masm.movl(Imm32(rmc.multiplier), eax);
@@ -1212,7 +1211,8 @@ void CodeGenerator::visitDivOrModConstantI(LDivOrModConstantI* ins) {
 
   // We will first divide by Abs(d), and negate the answer if d is negative.
   // If desired, this can be avoided by generalizing computeDivisionConstants.
-  auto rmc = ReciprocalMulConstants::computeSignedDivisionConstants(Abs(d));
+  ReciprocalMulConstants rmc =
+      computeDivisionConstants(Abs(d), /* maxLog = */ 31);
 
   // We first compute (M * n) >> 32, where M = rmc.multiplier.
   masm.movl(Imm32(rmc.multiplier), eax);

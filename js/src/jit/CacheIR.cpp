@@ -6664,13 +6664,9 @@ AttachDecision InlinableNativeIRGenerator::tryAttachObjectHasPrototype() {
   return AttachDecision::Attach;
 }
 
-static bool CanConvertToString(const Value& v) {
-  return v.isString() || v.isNumber() || v.isBoolean() || v.isNullOrUndefined();
-}
-
 AttachDecision InlinableNativeIRGenerator::tryAttachString() {
   // Need a single argument that is or can be converted to a string.
-  if (argc_ != 1 || !CanConvertToString(args_[0])) {
+  if (argc_ != 1 || !(args_[0].isString() || args_[0].isNumber())) {
     return AttachDecision::NoAction;
   }
 
@@ -6694,7 +6690,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachString() {
 
 AttachDecision InlinableNativeIRGenerator::tryAttachStringConstructor() {
   // Need a single argument that is or can be converted to a string.
-  if (argc_ != 1 || !CanConvertToString(args_[0])) {
+  if (argc_ != 1 || !(args_[0].isString() || args_[0].isNumber())) {
     return AttachDecision::NoAction;
   }
 
@@ -7712,120 +7708,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathFunction(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachNumber() {
-  // Expect a single string argument.
-  if (argc_ != 1 || !args_[0].isString()) {
-    return AttachDecision::NoAction;
-  }
-
-  double num;
-  if (!StringToNumber(cx_, args_[0].toString(), &num)) {
-    cx_->recoverFromOutOfMemory();
-    return AttachDecision::NoAction;
-  }
-
-  // Initialize the input operand.
-  initializeInputOperand();
-
-  // Guard callee is the `Number` function.
-  emitNativeCalleeGuard();
-
-  // Guard that the argument is a string.
-  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
-  StringOperandId strId = writer.guardToString(argId);
-
-  // Return either an Int32 or Double result.
-  int32_t unused;
-  if (mozilla::NumberIsInt32(num, &unused)) {
-    Int32OperandId resultId = writer.guardStringToInt32(strId);
-    writer.loadInt32Result(resultId);
-  } else {
-    NumberOperandId resultId = writer.guardStringToNumber(strId);
-    writer.loadDoubleResult(resultId);
-  }
-  writer.returnFromIC();
-
-  trackAttached("Number");
-  return AttachDecision::Attach;
-}
-
-AttachDecision InlinableNativeIRGenerator::tryAttachNumberParseInt() {
-  // Expected arguments: input (string or number), optional radix (int32).
-  if (argc_ < 1 || argc_ > 2) {
-    return AttachDecision::NoAction;
-  }
-  if (!args_[0].isString() && !args_[0].isNumber()) {
-    return AttachDecision::NoAction;
-  }
-  if (args_[0].isDouble()) {
-    double d = args_[0].toDouble();
-
-    // See num_parseInt for why we have to reject numbers smaller than 1.0e-6.
-    // Negative numbers in the exclusive range (-1, -0) return -0.
-    bool canTruncateToInt32 =
-        (DOUBLE_DECIMAL_IN_SHORTEST_LOW <= d && d <= double(INT32_MAX)) ||
-        (double(INT32_MIN) <= d && d <= -1.0) || (d == 0.0);
-    if (!canTruncateToInt32) {
-      return AttachDecision::NoAction;
-    }
-  }
-  if (argc_ > 1 && !args_[1].isInt32(10)) {
-    return AttachDecision::NoAction;
-  }
-
-  // Initialize the input operand.
-  initializeInputOperand();
-
-  // Guard callee is the 'parseInt' native function.
-  emitNativeCalleeGuard();
-
-  auto guardRadix = [&]() {
-    ValOperandId radixId =
-        writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
-    Int32OperandId intRadixId = writer.guardToInt32(radixId);
-    writer.guardSpecificInt32(intRadixId, 10);
-    return intRadixId;
-  };
-
-  ValOperandId inputId =
-      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
-
-  if (args_[0].isString()) {
-    StringOperandId strId = writer.guardToString(inputId);
-
-    Int32OperandId intRadixId;
-    if (argc_ > 1) {
-      intRadixId = guardRadix();
-    } else {
-      intRadixId = writer.loadInt32Constant(0);
-    }
-
-    writer.numberParseIntResult(strId, intRadixId);
-  } else if (args_[0].isInt32()) {
-    Int32OperandId intId = writer.guardToInt32(inputId);
-    if (argc_ > 1) {
-      guardRadix();
-    }
-    writer.loadInt32Result(intId);
-  } else {
-    MOZ_ASSERT(args_[0].isDouble());
-
-    NumberOperandId numId = writer.guardIsNumber(inputId);
-    if (argc_ > 1) {
-      guardRadix();
-    }
-    writer.doubleParseIntResult(numId);
-  }
-
-  writer.returnFromIC();
-
-  trackAttached("NumberParseInt");
-  return AttachDecision::Attach;
-}
-
 StringOperandId IRGenerator::emitToStringGuard(ValOperandId id,
                                                const Value& v) {
-  MOZ_ASSERT(CanConvertToString(v));
   if (v.isString()) {
     return writer.guardToString(id);
   }
@@ -7853,11 +7737,8 @@ StringOperandId IRGenerator::emitToStringGuard(ValOperandId id,
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachNumberToString() {
-  // Expecting no arguments or a single int32 argument.
-  if (argc_ > 1) {
-    return AttachDecision::NoAction;
-  }
-  if (argc_ == 1 && !args_[0].isInt32()) {
+  // Expecting no arguments, which means base 10.
+  if (argc_ != 0) {
     return AttachDecision::NoAction;
   }
 
@@ -7865,21 +7746,6 @@ AttachDecision InlinableNativeIRGenerator::tryAttachNumberToString() {
   if (!thisval_.isNumber()) {
     return AttachDecision::NoAction;
   }
-
-  // No arguments means base 10.
-  int32_t base = 10;
-  if (argc_ > 0) {
-    base = args_[0].toInt32();
-    if (base < 2 || base > 36) {
-      return AttachDecision::NoAction;
-    }
-
-    // Non-decimal bases currently only support int32 inputs.
-    if (base != 10 && !thisval_.isInt32()) {
-      return AttachDecision::NoAction;
-    }
-  }
-  MOZ_ASSERT(2 <= base && base <= 36);
 
   // Initialize the input operand.
   initializeInputOperand();
@@ -7892,37 +7758,10 @@ AttachDecision InlinableNativeIRGenerator::tryAttachNumberToString() {
       writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
 
   // Guard on number and convert to string.
-  if (base == 10) {
-    // If an explicit base was passed, guard its value.
-    if (argc_ > 0) {
-      // Guard the `base` argument is an int32.
-      ValOperandId baseId =
-          writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
-      Int32OperandId intBaseId = writer.guardToInt32(baseId);
+  StringOperandId strId = emitToStringGuard(thisValId, thisval_);
 
-      // Guard `base` is 10 for decimal toString representation.
-      writer.guardSpecificInt32(intBaseId, 10);
-    }
-
-    StringOperandId strId = emitToStringGuard(thisValId, thisval_);
-
-    // Return the string.
-    writer.loadStringResult(strId);
-  } else {
-    MOZ_ASSERT(argc_ > 0);
-
-    // Guard the |this| value is an int32.
-    Int32OperandId thisIntId = writer.guardToInt32(thisValId);
-
-    // Guard the `base` argument is an int32.
-    ValOperandId baseId =
-        writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
-    Int32OperandId intBaseId = writer.guardToInt32(baseId);
-
-    // Return the string.
-    writer.int32ToStringWithBaseResult(thisIntId, intBaseId);
-  }
-
+  // Return the string.
+  writer.loadStringResult(strId);
   writer.returnFromIC();
 
   trackAttached("NumberToString");
@@ -10308,10 +10147,6 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
       return tryAttachGetNextMapSetEntryForIterator(/* isMap = */ true);
 
     // Number natives.
-    case InlinableNative::Number:
-      return tryAttachNumber();
-    case InlinableNative::NumberParseInt:
-      return tryAttachNumberParseInt();
     case InlinableNative::NumberToString:
       return tryAttachNumberToString();
 
@@ -12167,8 +12002,12 @@ AttachDecision BinaryArithIRGenerator::tryAttachStringConcat() {
 
   // One side must be a string, the other side a primitive value we can easily
   // convert to a string.
-  if (!(lhs_.isString() && CanConvertToString(rhs_)) &&
-      !(CanConvertToString(lhs_) && rhs_.isString())) {
+  auto canConvertToString = [](const Value& v) {
+    return v.isString() || v.isNumber() || v.isBoolean() ||
+           v.isNullOrUndefined();
+  };
+  if (!(lhs_.isString() && canConvertToString(rhs_)) &&
+      !(canConvertToString(lhs_) && rhs_.isString())) {
     return AttachDecision::NoAction;
   }
 

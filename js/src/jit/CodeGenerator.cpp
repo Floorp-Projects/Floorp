@@ -4449,13 +4449,6 @@ void CodeGenerator::visitGuardSpecificSymbol(LGuardSpecificSymbol* guard) {
                 guard->snapshot());
 }
 
-void CodeGenerator::visitGuardSpecificInt32(LGuardSpecificInt32* guard) {
-  Register num = ToRegister(guard->num());
-
-  bailoutCmp32(Assembler::NotEqual, num, Imm32(guard->mir()->expected()),
-               guard->snapshot());
-}
-
 void CodeGenerator::visitGuardStringToIndex(LGuardStringToIndex* lir) {
   Register str = ToRegister(lir->string());
   Register output = ToRegister(lir->output());
@@ -9561,91 +9554,6 @@ void CodeGenerator::visitBigIntBitNot(LBigIntBitNot* ins) {
             Address(output, BigInt::offsetOfFlags()));
 
   masm.bind(ool->rejoin());
-}
-
-void CodeGenerator::visitInt32ToStringWithBase(LInt32ToStringWithBase* lir) {
-  Register input = ToRegister(lir->input());
-  RegisterOrInt32 base = ToRegisterOrInt32(lir->base());
-  Register output = ToRegister(lir->output());
-  Register temp0 = ToRegister(lir->temp0());
-  Register temp1 = ToRegister(lir->temp1());
-
-  using Fn = JSString* (*)(JSContext*, int32_t, int32_t);
-  if (base.is<Register>()) {
-    auto* ool = oolCallVM<Fn, js::Int32ToStringWithBase>(
-        lir, ArgList(input, base.as<Register>()), StoreRegisterTo(output));
-
-    LiveRegisterSet liveRegs = liveVolatileRegs(lir);
-    masm.loadInt32ToStringWithBase(input, base.as<Register>(), output, temp0,
-                                   temp1, gen->runtime->staticStrings(),
-                                   liveRegs, ool->entry());
-    masm.bind(ool->rejoin());
-  } else {
-    auto* ool = oolCallVM<Fn, js::Int32ToStringWithBase>(
-        lir, ArgList(input, Imm32(base.as<int32_t>())),
-        StoreRegisterTo(output));
-
-    masm.loadInt32ToStringWithBase(input, base.as<int32_t>(), output, temp0,
-                                   temp1, gen->runtime->staticStrings(),
-                                   ool->entry());
-    masm.bind(ool->rejoin());
-  }
-}
-
-void CodeGenerator::visitNumberParseInt(LNumberParseInt* lir) {
-  Register string = ToRegister(lir->string());
-  Register radix = ToRegister(lir->radix());
-  ValueOperand output = ToOutValue(lir);
-  Register temp = ToRegister(lir->temp0());
-
-#ifdef DEBUG
-  Label ok;
-  masm.branch32(Assembler::Equal, radix, Imm32(0), &ok);
-  masm.branch32(Assembler::Equal, radix, Imm32(10), &ok);
-  masm.assumeUnreachable("radix must be 0 or 10 for indexed value fast path");
-  masm.bind(&ok);
-#endif
-
-  // Use indexed value as fast path if possible.
-  Label vmCall, done;
-  masm.loadStringIndexValue(string, temp, &vmCall);
-  masm.tagValue(JSVAL_TYPE_INT32, temp, output);
-  masm.jump(&done);
-  {
-    masm.bind(&vmCall);
-
-    pushArg(radix);
-    pushArg(string);
-
-    using Fn = bool (*)(JSContext*, HandleString, int32_t, MutableHandleValue);
-    callVM<Fn, js::NumberParseInt>(lir);
-  }
-  masm.bind(&done);
-}
-
-void CodeGenerator::visitDoubleParseInt(LDoubleParseInt* lir) {
-  FloatRegister number = ToFloatRegister(lir->number());
-  Register output = ToRegister(lir->output());
-  FloatRegister temp = ToFloatRegister(lir->temp0());
-
-  Label bail;
-  masm.branchDouble(Assembler::DoubleUnordered, number, number, &bail);
-  masm.branchTruncateDoubleToInt32(number, output, &bail);
-
-  Label ok;
-  masm.branch32(Assembler::NotEqual, output, Imm32(0), &ok);
-  {
-    // Accept both +0 and -0 and return 0.
-    masm.loadConstantDouble(0.0, temp);
-    masm.branchDouble(Assembler::DoubleEqual, number, temp, &ok);
-
-    // Fail if a non-zero input is in the exclusive range (-1, 1.0e-6).
-    masm.loadConstantDouble(DOUBLE_DECIMAL_IN_SHORTEST_LOW, temp);
-    masm.branchDouble(Assembler::DoubleLessThan, number, temp, &bail);
-  }
-  masm.bind(&ok);
-
-  bailoutFrom(&bail, lir->snapshot());
 }
 
 void CodeGenerator::visitFloor(LFloor* lir) {
@@ -16932,15 +16840,6 @@ void CodeGenerator::visitGuardInt32IsNonNegative(
   Register index = ToRegister(lir->index());
 
   bailoutCmp32(Assembler::LessThan, index, Imm32(0), lir->snapshot());
-}
-
-void CodeGenerator::visitGuardInt32Range(LGuardInt32Range* lir) {
-  Register input = ToRegister(lir->input());
-
-  bailoutCmp32(Assembler::LessThan, input, Imm32(lir->mir()->minimum()),
-               lir->snapshot());
-  bailoutCmp32(Assembler::GreaterThan, input, Imm32(lir->mir()->maximum()),
-               lir->snapshot());
 }
 
 void CodeGenerator::visitGuardIndexIsNotDenseElement(
