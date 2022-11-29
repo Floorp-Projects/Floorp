@@ -14,19 +14,14 @@
 #include "mozilla/ScrollbarPreferences.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 
-namespace mozilla::ipc {
+namespace IPC {
 
 template <>
-struct IPDLParamTraits<nsDocShellLoadState*> {
-  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
-                    nsDocShellLoadState* aParam);
-  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
+struct ParamTraits<nsDocShellLoadState*> {
+  static void Write(IPC::MessageWriter* aWriter, nsDocShellLoadState* aParam);
+  static bool Read(IPC::MessageReader* aReader,
                    RefPtr<nsDocShellLoadState>* aResult);
 };
-
-}  // namespace mozilla::ipc
-
-namespace IPC {
 
 template <>
 struct ParamTraits<mozilla::ScrollbarPreference>

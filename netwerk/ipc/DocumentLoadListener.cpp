@@ -138,15 +138,17 @@ static auto CreateDocumentLoadInfo(CanonicalBrowsingContext* aBrowsingContext,
   auto securityFlags = SecurityFlagsForLoadInfo(aLoadState);
 
   if (aBrowsingContext->GetParent()) {
-    loadInfo = LoadInfo::CreateForFrame(aBrowsingContext,
-                                        aLoadState->TriggeringPrincipal(),
-                                        securityFlags, sandboxFlags);
+    loadInfo = LoadInfo::CreateForFrame(
+        aBrowsingContext, aLoadState->TriggeringPrincipal(),
+        aLoadState->GetEffectiveTriggeringRemoteType(), securityFlags,
+        sandboxFlags);
   } else {
     OriginAttributes attrs;
     aBrowsingContext->GetOriginAttributes(attrs);
-    loadInfo = LoadInfo::CreateForDocument(aBrowsingContext, aLoadState->URI(),
-                                           aLoadState->TriggeringPrincipal(),
-                                           attrs, securityFlags, sandboxFlags);
+    loadInfo = LoadInfo::CreateForDocument(
+        aBrowsingContext, aLoadState->URI(), aLoadState->TriggeringPrincipal(),
+        aLoadState->GetEffectiveTriggeringRemoteType(), attrs, securityFlags,
+        sandboxFlags);
   }
 
   if (aLoadState->IsExemptFromHTTPSOnlyMode()) {
@@ -621,6 +623,9 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
 
   // If we are using SHIP and this load is from session history, validate that
   // the load matches our local copy of the loading history entry.
+  //
+  // NOTE: Keep this check in-sync with the check in
+  // `nsDocShellLoadState::GetEffectiveTriggeringRemoteType()`!
   if (SessionHistoryInParent() && aLoadState->LoadIsFromSessionHistory() &&
       aLoadState->LoadType() != LOAD_ERROR_PAGE) {
     if (const char* mismatch =

@@ -741,7 +741,9 @@ mozilla::ipc::IPCResult NeckoParent::RecvPClassifierDummyChannelConstructor(
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo;
-  nsresult rv = LoadInfoArgsToLoadInfo(aLoadInfo, getter_AddRefs(loadInfo));
+  nsresult rv = LoadInfoArgsToLoadInfo(
+      aLoadInfo, ContentParent::Cast(Manager())->GetRemoteType(),
+      getter_AddRefs(loadInfo));
   if (NS_WARN_IF(NS_FAILED(rv)) || !loadInfo) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -874,14 +876,16 @@ mozilla::ipc::IPCResult NeckoParent::RecvGetPageIconStream(
     nsIURI* aURI, const Maybe<LoadInfoArgs>& aLoadInfoArgs,
     GetPageIconStreamResolver&& aResolver) {
 #ifdef MOZ_PLACES
+  const nsACString& remoteType =
+      ContentParent::Cast(Manager())->GetRemoteType();
+
   // Only the privileged about content process is allowed to access
   // things over the page-icon protocol. Any other content process
   // that tries to send this should have been blocked via the
   // ScriptSecurityManager, but if somehow the process has been tricked into
   // sending this message, we send IPC_FAIL in order to crash that
   // likely-compromised content process.
-  if (static_cast<ContentParent*>(Manager())->GetRemoteType() !=
-      PRIVILEGEDABOUT_REMOTE_TYPE) {
+  if (remoteType != PRIVILEGEDABOUT_REMOTE_TYPE) {
     return IPC_FAIL(this, "Wrong process type");
   }
 
@@ -890,7 +894,7 @@ mozilla::ipc::IPCResult NeckoParent::RecvGetPageIconStream(
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo;
-  nsresult rv = mozilla::ipc::LoadInfoArgsToLoadInfo(aLoadInfoArgs,
+  nsresult rv = mozilla::ipc::LoadInfoArgsToLoadInfo(aLoadInfoArgs, remoteType,
                                                      getter_AddRefs(loadInfo));
   if (NS_FAILED(rv)) {
     return IPC_FAIL(this, "Page-icon request must include loadInfo");

@@ -18,6 +18,8 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Components.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_fission.h"
@@ -40,10 +42,17 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI)
     : nsDocShellLoadState(aURI, nsContentUtils::GenerateLoadIdentifier()) {}
 
 nsDocShellLoadState::nsDocShellLoadState(
-    const DocShellLoadStateInit& aLoadState)
+    const DocShellLoadStateInit& aLoadState, mozilla::ipc::IProtocol* aActor,
+    bool* aReadSuccess)
     : mNotifiedBeforeUnloadListeners(false),
       mLoadIdentifier(aLoadState.LoadIdentifier()) {
-  MOZ_ASSERT(aLoadState.URI(), "Cannot create a LoadState with a null URI!");
+  // If we return early, we failed to read in the data.
+  *aReadSuccess = false;
+  if (!aLoadState.URI()) {
+    MOZ_ASSERT_UNREACHABLE("Cannot create a LoadState with a null URI!");
+    return;
+  }
+
   mResultPrincipalURI = aLoadState.ResultPrincipalURI();
   mResultPrincipalURIIsSome = aLoadState.ResultPrincipalURIIsSome();
   mKeepResultPrincipalURIIfSet = aLoadState.KeepResultPrincipalURIIfSet();
@@ -75,6 +84,7 @@ nsDocShellLoadState::nsDocShellLoadState(
   mPrincipalToInherit = aLoadState.PrincipalToInherit();
   mPartitionedPrincipalToInherit = aLoadState.PartitionedPrincipalToInherit();
   mTriggeringSandboxFlags = aLoadState.TriggeringSandboxFlags();
+  mTriggeringRemoteType = aLoadState.TriggeringRemoteType();
   mCsp = aLoadState.Csp();
   mOriginalURIString = aLoadState.OriginalURIString();
   mCancelContentJSEpoch = aLoadState.CancelContentJSEpoch();
@@ -89,6 +99,45 @@ nsDocShellLoadState::nsDocShellLoadState(
   }
   mUnstrippedURI = aLoadState.UnstrippedURI();
   mRemoteTypeOverride = aLoadState.RemoteTypeOverride();
+
+  // We know this was created remotely, as we just received it over IPC.
+  mWasCreatedRemotely = true;
+
+  // If we're in the parent process, potentially validate against a LoadState
+  // which we sent to the source content process.
+  if (XRE_IsParentProcess()) {
+    mozilla::ipc::IToplevelProtocol* top = aActor->ToplevelProtocol();
+    if (!top ||
+        top->GetProtocolId() != mozilla::ipc::ProtocolId::PContentMsgStart ||
+        top->GetSide() != mozilla::ipc::ParentSide) {
+      aActor->FatalError("nsDocShellLoadState must be received over PContent");
+      return;
+    }
+    ContentParent* cp = static_cast<ContentParent*>(top);
+
+    // If this load was sent down to the content process as a navigation
+    // request, ensure it still matches the one we sent down.
+    if (RefPtr<nsDocShellLoadState> originalState =
+            cp->TakePendingLoadStateForId(mLoadIdentifier)) {
+      if (const char* mismatch = ValidateWithOriginalState(originalState)) {
+        aActor->FatalError(
+            nsPrintfCString(
+                "nsDocShellLoadState %s changed while in content process",
+                mismatch)
+                .get());
+        return;
+      }
+    } else if (mTriggeringRemoteType != cp->GetRemoteType()) {
+      // If we don't have a previous load to compare to, the content process
+      // must be the triggering process.
+      aActor->FatalError(
+          "nsDocShellLoadState with invalid triggering remote type");
+      return;
+    }
+  }
+
+  // We successfully read in the data - return a success value.
+  *aReadSuccess = true;
 }
 
 nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
@@ -134,8 +183,15 @@ nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
       mLoadIdentifier(aOther.mLoadIdentifier),
       mChannelInitialized(aOther.mChannelInitialized),
       mIsMetaRefresh(aOther.mIsMetaRefresh),
+      mWasCreatedRemotely(aOther.mWasCreatedRemotely),
       mUnstrippedURI(aOther.mUnstrippedURI),
-      mRemoteTypeOverride(aOther.mRemoteTypeOverride) {
+      mRemoteTypeOverride(aOther.mRemoteTypeOverride),
+      mTriggeringRemoteType(aOther.mTriggeringRemoteType) {
+  MOZ_DIAGNOSTIC_ASSERT(
+      XRE_IsParentProcess(),
+      "Cloning a nsDocShellLoadState with the same load identifier is only "
+      "allowed in the parent process, as it could break triggering remote type "
+      "tracking in content.");
   if (aOther.mLoadingSessionHistoryInfo) {
     mLoadingSessionHistoryInfo = MakeUnique<LoadingSessionHistoryInfo>(
         *aOther.mLoadingSessionHistoryInfo);
@@ -168,11 +224,19 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI, uint64_t aLoadIdentifier)
       mIsFromProcessingFrameAttributes(false),
       mLoadIdentifier(aLoadIdentifier),
       mChannelInitialized(false),
-      mIsMetaRefresh(false) {
+      mIsMetaRefresh(false),
+      mWasCreatedRemotely(false),
+      mTriggeringRemoteType(XRE_IsContentProcess()
+                                ? ContentChild::GetSingleton()->GetRemoteType()
+                                : NOT_REMOTE_TYPE) {
   MOZ_ASSERT(aURI, "Cannot create a LoadState with a null URI!");
 }
 
-nsDocShellLoadState::~nsDocShellLoadState() {}
+nsDocShellLoadState::~nsDocShellLoadState() {
+  if (mWasCreatedRemotely && XRE_IsContentProcess()) {
+    ContentChild::GetSingleton()->SendCleanupPendingLoadState(mLoadIdentifier);
+  }
+}
 
 nsresult nsDocShellLoadState::CreateFromPendingChannel(
     nsIChannel* aPendingChannel, uint64_t aLoadIdentifier,
@@ -769,6 +833,24 @@ void nsDocShellLoadState::SetFileName(const nsAString& aFileName) {
   mFileName = aFileName;
 }
 
+const nsCString& nsDocShellLoadState::GetEffectiveTriggeringRemoteType() const {
+  // Consider non-errorpage loads from session history as being triggred by the
+  // parent process, as we'll validate them against the history entry.
+  //
+  // NOTE: Keep this check in-sync with the session-history validation check in
+  // `DocumentLoadListener::Open`!
+  if (LoadIsFromSessionHistory() && LoadType() != LOAD_ERROR_PAGE) {
+    return NOT_REMOTE_TYPE;
+  }
+  return mTriggeringRemoteType;
+}
+
+void nsDocShellLoadState::SetTriggeringRemoteType(
+    const nsACString& aTriggeringRemoteType) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(), "only settable in parent");
+  mTriggeringRemoteType = aTriggeringRemoteType;
+}
+
 nsresult nsDocShellLoadState::SetupInheritingPrincipal(
     BrowsingContext::Type aType,
     const mozilla::OriginAttributes& aOriginAttributes) {
@@ -1021,7 +1103,63 @@ nsLoadFlags nsDocShellLoadState::CalculateChannelLoadFlags(
   return loadFlags;
 }
 
-DocShellLoadStateInit nsDocShellLoadState::Serialize() {
+const char* nsDocShellLoadState::ValidateWithOriginalState(
+    nsDocShellLoadState* aOriginalState) {
+  MOZ_ASSERT(mLoadIdentifier == aOriginalState->mLoadIdentifier);
+
+  // Check that `aOriginalState` is sufficiently similar to this state that
+  // they're performing the same load.
+  auto uriEq = [](nsIURI* a, nsIURI* b) -> bool {
+    bool eq = false;
+    return a == b || (a && b && NS_SUCCEEDED(a->Equals(b, &eq)) && eq);
+  };
+  if (!uriEq(mURI, aOriginalState->mURI)) {
+    return "URI";
+  }
+  if (!uriEq(mUnstrippedURI, aOriginalState->mUnstrippedURI)) {
+    return "UnstrippedURI";
+  }
+  if (!uriEq(mOriginalURI, aOriginalState->mOriginalURI)) {
+    return "OriginalURI";
+  }
+  if (!uriEq(mBaseURI, aOriginalState->mBaseURI)) {
+    return "BaseURI";
+  }
+
+  if (!mTriggeringPrincipal->Equals(aOriginalState->mTriggeringPrincipal)) {
+    return "TriggeringPrincipal";
+  }
+  if (mTriggeringSandboxFlags != aOriginalState->mTriggeringSandboxFlags) {
+    return "TriggeringSandboxFlags";
+  }
+  if (mTriggeringRemoteType != aOriginalState->mTriggeringRemoteType) {
+    return "TriggeringRemoteType";
+  }
+
+  if (mOriginalURIString != aOriginalState->mOriginalURIString) {
+    return "OriginalURIString";
+  }
+
+  if (mRemoteTypeOverride != aOriginalState->mRemoteTypeOverride) {
+    return "RemoteTypeOverride";
+  }
+
+  if (mSourceBrowsingContext.ContextId() !=
+      aOriginalState->mSourceBrowsingContext.ContextId()) {
+    return "SourceBrowsingContext";
+  }
+
+  // FIXME: Consider calculating less information in the target process so that
+  // we can validate more properties more easily.
+  // FIXME: Identify what other flags will not change when sent through a
+  // content process.
+
+  return nullptr;
+}
+
+DocShellLoadStateInit nsDocShellLoadState::Serialize(
+    mozilla::ipc::IProtocol* aActor) {
+  MOZ_ASSERT(aActor);
   DocShellLoadStateInit loadState;
   loadState.ResultPrincipalURI() = mResultPrincipalURI;
   loadState.ResultPrincipalURIIsSome() = mResultPrincipalURIIsSome;
@@ -1053,6 +1191,7 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.PrincipalToInherit() = mPrincipalToInherit;
   loadState.PartitionedPrincipalToInherit() = mPartitionedPrincipalToInherit;
   loadState.TriggeringSandboxFlags() = mTriggeringSandboxFlags;
+  loadState.TriggeringRemoteType() = mTriggeringRemoteType;
   loadState.Csp() = mCsp;
   loadState.OriginalURIString() = mOriginalURIString;
   loadState.CancelContentJSEpoch() = mCancelContentJSEpoch;
@@ -1069,6 +1208,18 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   }
   loadState.UnstrippedURI() = mUnstrippedURI;
   loadState.RemoteTypeOverride() = mRemoteTypeOverride;
+
+  if (XRE_IsParentProcess()) {
+    mozilla::ipc::IToplevelProtocol* top = aActor->ToplevelProtocol();
+    MOZ_RELEASE_ASSERT(top &&
+                           top->GetProtocolId() ==
+                               mozilla::ipc::ProtocolId::PContentMsgStart &&
+                           top->GetSide() == mozilla::ipc::ParentSide,
+                       "nsDocShellLoadState must be sent over PContent");
+    ContentParent* cp = static_cast<ContentParent*>(top);
+    cp->StorePendingLoadState(this);
+  }
+
   return loadState;
 }
 

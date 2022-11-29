@@ -7,6 +7,7 @@
 #include "WebSocketLog.h"
 #include "WebSocketChannelParent.h"
 #include "nsIAuthPromptProvider.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/ipc/BackgroundUtils.h"
@@ -64,7 +65,10 @@ mozilla::ipc::IPCResult WebSocketChannelParent::RecvAsyncOpen(
   nsCOMPtr<nsILoadInfo> loadInfo;
   nsCOMPtr<nsIURI> uri;
 
-  rv = LoadInfoArgsToLoadInfo(aLoadInfoArgs, getter_AddRefs(loadInfo));
+  rv = LoadInfoArgsToLoadInfo(
+      aLoadInfoArgs,
+      mozilla::dom::ContentParent::Cast(Manager()->Manager())->GetRemoteType(),
+      getter_AddRefs(loadInfo));
   if (NS_FAILED(rv)) {
     goto fail;
   }
