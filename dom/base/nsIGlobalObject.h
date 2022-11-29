@@ -242,7 +242,7 @@ class nsIGlobalObject : public nsISupports,
    * Check whether we should avoid leaking distinguishing information to JS/CSS.
    * https://w3c.github.io/fingerprinting-guidance/
    */
-  virtual bool ShouldResistFingerprinting() const;
+  virtual bool ShouldResistFingerprinting() const = 0;
 
   /**
    * Threadsafe way to get nsIPrincipal::GetHashValue for the associated
