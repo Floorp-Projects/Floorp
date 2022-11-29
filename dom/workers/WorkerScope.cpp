@@ -1035,7 +1035,8 @@ void DedicatedWorkerGlobalScope::OnVsync(const VsyncEvent& aVsync) {
     // needs to have it's Time Reduction Logic refactored, so it's currently
     // only clamping for RFP mode. RFP mode gives a much lower time precision,
     // so we accept the security leak here for now.
-    timeStamp = nsRFPService::ReduceTimePrecisionAsMSecsRFPOnly(timeStamp, 0);
+    timeStamp = nsRFPService::ReduceTimePrecisionAsMSecsRFPOnly(
+        timeStamp, 0, this->GetRTPCallerType());
   }
 
   for (auto& callback : callbacks) {
