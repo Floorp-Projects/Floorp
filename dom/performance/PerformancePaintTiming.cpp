@@ -41,8 +41,7 @@ DOMHighResTimeStamp PerformancePaintTiming::StartTime() const {
         mPerformance->GetDOMTiming()->TimeStampToDOMHighRes(mRawStartTime);
     mCachedStartTime.emplace(nsRFPService::ReduceTimePrecisionAsMSecs(
         rawValue, mPerformance->GetRandomTimelineSeed(),
-        mPerformance->IsSystemPrincipal(),
-        mPerformance->CrossOriginIsolated()));
+        mPerformance->GetRTPCallerType()));
   }
   return mCachedStartTime.value();
 }

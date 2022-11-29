@@ -118,14 +118,12 @@ Performance::~Performance() = default;
 DOMHighResTimeStamp Performance::TimeStampToDOMHighResForRendering(
     TimeStamp aTimeStamp) const {
   DOMHighResTimeStamp stamp = GetDOMTiming()->TimeStampToDOMHighRes(aTimeStamp);
-  if (!IsSystemPrincipal()) {
-    // 0 is an inappropriate mixin for this this area; however CSS Animations
-    // needs to have it's Time Reduction Logic refactored, so it's currently
-    // only clamping for RFP mode. RFP mode gives a much lower time precision,
-    // so we accept the security leak here for now.
-    return nsRFPService::ReduceTimePrecisionAsMSecsRFPOnly(stamp, 0);
-  }
-  return stamp;
+  // 0 is an inappropriate mixin for this this area; however CSS Animations
+  // needs to have it's Time Reduction Logic refactored, so it's currently
+  // only clamping for RFP mode. RFP mode gives a much lower time precision,
+  // so we accept the security leak here for now.
+  return nsRFPService::ReduceTimePrecisionAsMSecsRFPOnly(stamp, 0,
+                                                         mRTPCallerType);
 }
 
 DOMHighResTimeStamp Performance::Now() {
@@ -138,8 +136,7 @@ DOMHighResTimeStamp Performance::Now() {
   }
 
   return nsRFPService::ReduceTimePrecisionAsMSecs(
-      rawTime, GetRandomTimelineSeed(), mSystemPrincipal,
-      CrossOriginIsolated());
+      rawTime, GetRandomTimelineSeed(), mRTPCallerType);
 }
 
 DOMHighResTimeStamp Performance::NowUnclamped() const {
@@ -156,8 +153,8 @@ DOMHighResTimeStamp Performance::TimeOrigin() {
   DOMHighResTimeStamp rawTimeOrigin =
       mPerformanceService->TimeOrigin(CreationTimeStamp());
   // Time Origin is an absolute timestamp, so we supply a 0 context mix-in
-  return nsRFPService::ReduceTimePrecisionAsMSecs(
-      rawTimeOrigin, 0, mSystemPrincipal, CrossOriginIsolated());
+  return nsRFPService::ReduceTimePrecisionAsMSecs(rawTimeOrigin, 0,
+                                                  mRTPCallerType);
 }
 
 JSObject* Performance::WrapObject(JSContext* aCx,

@@ -84,7 +84,7 @@ class PerformanceTimingData final {
 
     return nsRFPService::ReduceTimePrecisionAsMSecs(
         rawTimestamp, aPerformance->GetRandomTimelineSeed(),
-        aPerformance->IsSystemPrincipal(), aPerformance->CrossOriginIsolated());
+        aPerformance->GetRTPCallerType());
   }
 
   /**
@@ -262,8 +262,7 @@ class PerformanceTiming final : public nsWrapperCache {
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
         GetDOMTiming()->GetNavigationStart(),
-        mPerformance->GetRandomTimelineSeed(),
-        mPerformance->IsSystemPrincipal(), mPerformance->CrossOriginIsolated());
+        mPerformance->GetRandomTimelineSeed(), mPerformance->GetRTPCallerType());
   }
 
   DOMTimeMilliSec UnloadEventStart() {
@@ -272,8 +271,7 @@ class PerformanceTiming final : public nsWrapperCache {
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
         GetDOMTiming()->GetUnloadEventStart(),
-        mPerformance->GetRandomTimelineSeed(),
-        mPerformance->IsSystemPrincipal(), mPerformance->CrossOriginIsolated());
+        mPerformance->GetRandomTimelineSeed(), mPerformance->GetRTPCallerType());
   }
 
   DOMTimeMilliSec UnloadEventEnd() {
@@ -282,8 +280,7 @@ class PerformanceTiming final : public nsWrapperCache {
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
         GetDOMTiming()->GetUnloadEventEnd(),
-        mPerformance->GetRandomTimelineSeed(),
-        mPerformance->IsSystemPrincipal(), mPerformance->CrossOriginIsolated());
+        mPerformance->GetRandomTimelineSeed(), mPerformance->GetRTPCallerType());
   }
 
   // Low resolution (used by navigation timing)
@@ -305,7 +302,7 @@ class PerformanceTiming final : public nsWrapperCache {
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
         GetDOMTiming()->GetDomLoading(), mPerformance->GetRandomTimelineSeed(),
-        mPerformance->IsSystemPrincipal(), mPerformance->CrossOriginIsolated());
+        mPerformance->GetRTPCallerType());
   }
 
   DOMTimeMilliSec DomInteractive() const {
@@ -314,8 +311,7 @@ class PerformanceTiming final : public nsWrapperCache {
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
         GetDOMTiming()->GetDomInteractive(),
-        mPerformance->GetRandomTimelineSeed(),
-        mPerformance->IsSystemPrincipal(), mPerformance->CrossOriginIsolated());
+        mPerformance->GetRandomTimelineSeed(), mPerformance->GetRTPCallerType());
   }
 
   DOMTimeMilliSec DomContentLoadedEventStart() const {
@@ -324,8 +320,7 @@ class PerformanceTiming final : public nsWrapperCache {
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
         GetDOMTiming()->GetDomContentLoadedEventStart(),
-        mPerformance->GetRandomTimelineSeed(),
-        mPerformance->IsSystemPrincipal(), mPerformance->CrossOriginIsolated());
+        mPerformance->GetRandomTimelineSeed(), mPerformance->GetRTPCallerType());
   }
 
   DOMTimeMilliSec DomContentLoadedEventEnd() const {
@@ -334,8 +329,7 @@ class PerformanceTiming final : public nsWrapperCache {
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
         GetDOMTiming()->GetDomContentLoadedEventEnd(),
-        mPerformance->GetRandomTimelineSeed(),
-        mPerformance->IsSystemPrincipal(), mPerformance->CrossOriginIsolated());
+        mPerformance->GetRandomTimelineSeed(), mPerformance->GetRTPCallerType());
   }
 
   DOMTimeMilliSec DomComplete() const {
@@ -344,7 +338,7 @@ class PerformanceTiming final : public nsWrapperCache {
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
         GetDOMTiming()->GetDomComplete(), mPerformance->GetRandomTimelineSeed(),
-        mPerformance->IsSystemPrincipal(), mPerformance->CrossOriginIsolated());
+        mPerformance->GetRTPCallerType());
   }
 
   DOMTimeMilliSec LoadEventStart() const {
@@ -353,8 +347,7 @@ class PerformanceTiming final : public nsWrapperCache {
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
         GetDOMTiming()->GetLoadEventStart(),
-        mPerformance->GetRandomTimelineSeed(),
-        mPerformance->IsSystemPrincipal(), mPerformance->CrossOriginIsolated());
+        mPerformance->GetRandomTimelineSeed(), mPerformance->GetRTPCallerType());
   }
 
   DOMTimeMilliSec LoadEventEnd() const {
@@ -363,8 +356,7 @@ class PerformanceTiming final : public nsWrapperCache {
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
         GetDOMTiming()->GetLoadEventEnd(),
-        mPerformance->GetRandomTimelineSeed(),
-        mPerformance->IsSystemPrincipal(), mPerformance->CrossOriginIsolated());
+        mPerformance->GetRandomTimelineSeed(), mPerformance->GetRTPCallerType());
   }
 
   DOMTimeMilliSec TimeToNonBlankPaint() const {
@@ -373,8 +365,7 @@ class PerformanceTiming final : public nsWrapperCache {
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
         GetDOMTiming()->GetTimeToNonBlankPaint(),
-        mPerformance->GetRandomTimelineSeed(),
-        mPerformance->IsSystemPrincipal(), mPerformance->CrossOriginIsolated());
+        mPerformance->GetRandomTimelineSeed(), mPerformance->GetRTPCallerType());
   }
 
   DOMTimeMilliSec TimeToContentfulPaint() const {
@@ -383,8 +374,7 @@ class PerformanceTiming final : public nsWrapperCache {
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
         GetDOMTiming()->GetTimeToContentfulComposite(),
-        mPerformance->GetRandomTimelineSeed(),
-        mPerformance->IsSystemPrincipal(), mPerformance->CrossOriginIsolated());
+        mPerformance->GetRandomTimelineSeed(), mPerformance->GetRTPCallerType());
   }
 
   DOMTimeMilliSec TimeToDOMContentFlushed() const {
@@ -393,8 +383,7 @@ class PerformanceTiming final : public nsWrapperCache {
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
         GetDOMTiming()->GetTimeToDOMContentFlushed(),
-        mPerformance->GetRandomTimelineSeed(),
-        mPerformance->IsSystemPrincipal(), mPerformance->CrossOriginIsolated());
+        mPerformance->GetRandomTimelineSeed(), mPerformance->GetRTPCallerType());
   }
 
   DOMTimeMilliSec TimeToFirstInteractive() const {
@@ -403,7 +392,7 @@ class PerformanceTiming final : public nsWrapperCache {
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
         GetDOMTiming()->GetTimeToTTFI(), mPerformance->GetRandomTimelineSeed(),
-        mPerformance->IsSystemPrincipal(), mPerformance->CrossOriginIsolated());
+        mPerformance->GetRTPCallerType());
   }
 
   PerformanceTimingData* Data() const { return mTimingData.get(); }
