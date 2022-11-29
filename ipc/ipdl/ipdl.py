@@ -3,9 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import print_function
 
-import re
 import optparse
 import os
+import re
 import sys
 from configparser import RawConfigParser
 from io import StringIO
