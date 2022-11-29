@@ -481,6 +481,10 @@ void MacroAssembler::mul32(Imm32 imm, Register srcDest) {
   mul32(scratch, srcDest);
 }
 
+void MacroAssembler::mulHighUnsigned32(Imm32 imm, Register src, Register dest) {
+  MOZ_CRASH("NYI");
+}
+
 void MacroAssembler::mulFloat32(FloatRegister src, FloatRegister dest) {
   as_fmul_s(dest, dest, src);
 }

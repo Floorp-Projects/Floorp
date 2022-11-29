@@ -1110,6 +1110,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void mul32(Register src1, Register src2, Register dest, Label* onOver)
       DEFINED_ON(arm64);
 
+  // Return the high word of the unsigned multiplication into |dest|.
+  inline void mulHighUnsigned32(Imm32 imm, Register src,
+                                Register dest) PER_ARCH;
+
   inline void mulPtr(Register rhs, Register srcDest) PER_ARCH;
 
   inline void mul64(const Operand& src, const Register64& dest) DEFINED_ON(x64);
