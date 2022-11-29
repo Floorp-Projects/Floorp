@@ -147,78 +147,6 @@ const MESSAGES = () => {
        )}`,
     },
     {
-      id: "FIREFOX_VIEW_FEATURE_TOUR_1",
-      template: "feature_callout",
-      content: {
-        id: "FIREFOX_VIEW_FEATURE_TOUR",
-        template: "multistage",
-        backdrop: "transparent",
-        transitions: false,
-        disableHistoryUpdates: true,
-        screens: [
-          {
-            id: "FEATURE_CALLOUT_1",
-            parent_selector: "#tab-pickup-container",
-            content: {
-              position: "callout",
-              arrow_position: "top",
-              title: {
-                string_id: "callout-firefox-view-tab-pickup-title",
-              },
-              subtitle: {
-                string_id: "callout-firefox-view-tab-pickup-subtitle",
-              },
-              logo: {
-                imageURL: "chrome://browser/content/callout-tab-pickup.svg",
-                darkModeImageURL:
-                  "chrome://browser/content/callout-tab-pickup-dark.svg",
-                height: "128px",
-              },
-              primary_button: {
-                label: {
-                  string_id: "callout-primary-advance-button-label",
-                },
-                action: {
-                  type: "SET_PREF",
-                  data: {
-                    pref: {
-                      name: FIREFOX_VIEW_PREF,
-                      value: JSON.stringify({
-                        screen: "FEATURE_CALLOUT_2",
-                        complete: false,
-                      }),
-                    },
-                  },
-                },
-              },
-              dismiss_button: {
-                action: {
-                  type: "SET_PREF",
-                  data: {
-                    pref: {
-                      name: FIREFOX_VIEW_PREF,
-                      value: JSON.stringify({
-                        screen: "",
-                        complete: true,
-                      }),
-                    },
-                  },
-                },
-              },
-            },
-          },
-          EMPTY_SCREEN,
-          EMPTY_SCREEN,
-        ],
-      },
-      priority: 3,
-      targeting: `!inMr2022Holdback && source == "firefoxview" && colorwaysActive && ${matchCurrentScreenTargeting(
-        FIREFOX_VIEW_PREF,
-        "FEATURE_CALLOUT_1"
-      )}`,
-      trigger: { id: "featureCalloutCheck" },
-    },
-    {
       id: "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS",
       template: "feature_callout",
       content: {
@@ -283,76 +211,9 @@ const MESSAGES = () => {
         ],
       },
       priority: 3,
-      targeting: `!inMr2022Holdback && source == "firefoxview" && !colorwaysActive && ${matchCurrentScreenTargeting(
+      targeting: `!inMr2022Holdback && source == "firefoxview" && ${matchCurrentScreenTargeting(
         FIREFOX_VIEW_PREF,
         "FEATURE_CALLOUT_1"
-      )}`,
-      trigger: { id: "featureCalloutCheck" },
-    },
-    {
-      id: "FIREFOX_VIEW_FEATURE_TOUR_2",
-      template: "feature_callout",
-      content: {
-        id: "FIREFOX_VIEW_FEATURE_TOUR",
-        startScreen: 1,
-        template: "multistage",
-        backdrop: "transparent",
-        transitions: false,
-        disableHistoryUpdates: true,
-        screens: [
-          EMPTY_SCREEN,
-          {
-            id: "FEATURE_CALLOUT_2",
-            parent_selector: "#recently-closed-tabs-container",
-            content: {
-              position: "callout",
-              arrow_position: "bottom",
-              title: {
-                string_id: "callout-firefox-view-recently-closed-title",
-              },
-              subtitle: {
-                string_id: "callout-firefox-view-recently-closed-subtitle",
-              },
-              primary_button: {
-                label: {
-                  string_id: "callout-primary-advance-button-label",
-                },
-                action: {
-                  type: "SET_PREF",
-                  data: {
-                    pref: {
-                      name: FIREFOX_VIEW_PREF,
-                      value: JSON.stringify({
-                        screen: "FEATURE_CALLOUT_3",
-                        complete: false,
-                      }),
-                    },
-                  },
-                },
-              },
-              dismiss_button: {
-                action: {
-                  type: "SET_PREF",
-                  data: {
-                    pref: {
-                      name: FIREFOX_VIEW_PREF,
-                      value: JSON.stringify({
-                        screen: "",
-                        complete: true,
-                      }),
-                    },
-                  },
-                },
-              },
-            },
-          },
-          EMPTY_SCREEN,
-        ],
-      },
-      priority: 3,
-      targeting: `!inMr2022Holdback && source == "firefoxview" && colorwaysActive && ${matchCurrentScreenTargeting(
-        FIREFOX_VIEW_PREF,
-        "FEATURE_CALLOUT_2"
       )}`,
       trigger: { id: "featureCalloutCheck" },
     },
@@ -390,8 +251,8 @@ const MESSAGES = () => {
                     pref: {
                       name: FIREFOX_VIEW_PREF,
                       value: JSON.stringify({
-                        screen: "FEATURE_CALLOUT_3",
-                        complete: false,
+                        screen: "",
+                        complete: true,
                       }),
                     },
                   },
@@ -416,82 +277,9 @@ const MESSAGES = () => {
         ],
       },
       priority: 3,
-      targeting: `!inMr2022Holdback && source == "firefoxview" && !colorwaysActive && ${matchCurrentScreenTargeting(
+      targeting: `!inMr2022Holdback && source == "firefoxview" && ${matchCurrentScreenTargeting(
         FIREFOX_VIEW_PREF,
         "FEATURE_CALLOUT_2"
-      )}`,
-      trigger: { id: "featureCalloutCheck" },
-    },
-    {
-      id: "FIREFOX_VIEW_FEATURE_TOUR_3",
-      template: "feature_callout",
-      content: {
-        id: "FIREFOX_VIEW_FEATURE_TOUR",
-        startScreen: 2,
-        template: "multistage",
-        backdrop: "transparent",
-        transitions: false,
-        disableHistoryUpdates: true,
-        screens: [
-          EMPTY_SCREEN,
-          EMPTY_SCREEN,
-          {
-            id: "FEATURE_CALLOUT_3",
-            parent_selector: "#colorways",
-            content: {
-              position: "callout",
-              arrow_position: "end",
-              title: {
-                string_id: "callout-firefox-view-colorways-title",
-              },
-              subtitle: {
-                string_id: "callout-firefox-view-colorways-subtitle",
-              },
-              logo: {
-                imageURL: "chrome://browser/content/callout-colorways.svg",
-                darkModeImageURL:
-                  "chrome://browser/content/callout-colorways-dark.svg",
-                height: "128px",
-              },
-              primary_button: {
-                label: {
-                  string_id: "callout-primary-complete-button-label",
-                },
-                action: {
-                  type: "SET_PREF",
-                  data: {
-                    pref: {
-                      name: FIREFOX_VIEW_PREF,
-                      value: JSON.stringify({
-                        screen: "",
-                        complete: true,
-                      }),
-                    },
-                  },
-                },
-              },
-              dismiss_button: {
-                action: {
-                  type: "SET_PREF",
-                  data: {
-                    pref: {
-                      name: FIREFOX_VIEW_PREF,
-                      value: JSON.stringify({
-                        screen: "",
-                        complete: true,
-                      }),
-                    },
-                  },
-                },
-              },
-            },
-          },
-        ],
-      },
-      priority: 3,
-      targeting: `!inMr2022Holdback && source == "firefoxview" && colorwaysActive && ${matchCurrentScreenTargeting(
-        FIREFOX_VIEW_PREF,
-        "FEATURE_CALLOUT_3"
       )}`,
       trigger: { id: "featureCalloutCheck" },
     },
