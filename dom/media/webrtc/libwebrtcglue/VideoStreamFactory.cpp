@@ -281,6 +281,13 @@ gfx::IntSize VideoStreamFactory::CalculateScaledResolution(
     }
   }
 
+  // Dont scale below our minimum value to prevent problems.
+  const int minSize = 1;
+  if (width < minSize || height < minSize) {
+    width = minSize;
+    height = minSize;
+  }
+
   return gfx::IntSize(width, height);
 }
 
