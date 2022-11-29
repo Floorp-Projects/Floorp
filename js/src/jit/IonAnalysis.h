@@ -179,8 +179,9 @@ bool IsDiscardable(const MDefinition* def);
 bool IsDiscardableAllowEffectful(const MDefinition* def);
 
 class CompileInfo;
-void DumpMIRExpressions(MIRGraph& graph, const CompileInfo& info,
-                        const char* phase);
+void DumpMIRExpressions(GenericPrinter& out, MIRGraph& graph,
+                        const CompileInfo& info, const char* phase);
+void DumpMIRDefinition(GenericPrinter& out, MDefinition* def);
 
 }  // namespace jit
 }  // namespace js
