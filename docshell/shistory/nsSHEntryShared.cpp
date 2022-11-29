@@ -73,7 +73,7 @@ SHEntrySharedParentState::~SHEntrySharedParentState() {
   RefPtr<nsFrameLoader> loader = mFrameLoader;
   SetFrameLoader(nullptr);
   if (loader) {
-    loader->Destroy();
+    loader->AsyncDestroy();
   }
 
   sIdToSharedState->Remove(mId);

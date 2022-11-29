@@ -213,6 +213,11 @@ class nsFrameLoader final : public nsStubMutationObserver,
    */
   void Destroy(bool aForProcessSwitch = false);
 
+  void AsyncDestroy() {
+    mNeedsAsyncDestroy = true;
+    Destroy();
+  }
+
   void RequestUpdatePosition(mozilla::ErrorResult& aRv);
 
   already_AddRefed<Promise> RequestTabStateFlush(mozilla::ErrorResult& aRv);
