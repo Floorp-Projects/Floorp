@@ -440,6 +440,16 @@ void MacroAssembler::mul32(Register src1, Register src2, Register dest,
   }
 }
 
+void MacroAssembler::mulHighUnsigned32(Imm32 imm, Register src, Register dest) {
+  vixl::UseScratchRegisterScope temps(this);
+  const ARMRegister scratch32 = temps.AcquireW();
+
+  Mov(scratch32, int32_t(imm.value));
+  Umull(ARMRegister(dest, 64), scratch32, ARMRegister(src, 32));
+
+  Lsr(ARMRegister(dest, 64), ARMRegister(dest, 64), 32);
+}
+
 void MacroAssembler::mulPtr(Register rhs, Register srcDest) {
   Mul(ARMRegister(srcDest, 64), ARMRegister(srcDest, 64), ARMRegister(rhs, 64));
 }
