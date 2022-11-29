@@ -7708,6 +7708,62 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathFunction(
   return AttachDecision::Attach;
 }
 
+AttachDecision InlinableNativeIRGenerator::tryAttachNumberParseInt() {
+  // Expected arguments: input (string or int32), optional radix (int32).
+  if (argc_ < 1 || argc_ > 2) {
+    return AttachDecision::NoAction;
+  }
+  if (!args_[0].isString() && !args_[0].isInt32()) {
+    return AttachDecision::NoAction;
+  }
+  if (argc_ > 1 && !args_[1].isInt32(10)) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  initializeInputOperand();
+
+  // Guard callee is the 'parseInt' native function.
+  emitNativeCalleeGuard();
+
+  auto guardRadix = [&]() {
+    ValOperandId radixId =
+        writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+    Int32OperandId intRadixId = writer.guardToInt32(radixId);
+    writer.guardSpecificInt32(intRadixId, 10);
+    return intRadixId;
+  };
+
+  ValOperandId inputId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+
+  if (args_[0].isString()) {
+    StringOperandId strId = writer.guardToString(inputId);
+
+    Int32OperandId intRadixId;
+    if (argc_ > 1) {
+      intRadixId = guardRadix();
+    } else {
+      intRadixId = writer.loadInt32Constant(0);
+    }
+
+    writer.numberParseIntResult(strId, intRadixId);
+  } else {
+    MOZ_ASSERT(args_[0].isInt32());
+
+    Int32OperandId intId = writer.guardToInt32(inputId);
+    if (argc_ > 1) {
+      guardRadix();
+    }
+    writer.loadInt32Result(intId);
+  }
+
+  writer.returnFromIC();
+
+  trackAttached("NumberParseInt");
+  return AttachDecision::Attach;
+}
+
 StringOperandId IRGenerator::emitToStringGuard(ValOperandId id,
                                                const Value& v) {
   if (v.isString()) {
@@ -10147,6 +10203,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
       return tryAttachGetNextMapSetEntryForIterator(/* isMap = */ true);
 
     // Number natives.
+    case InlinableNative::NumberParseInt:
+      return tryAttachNumberParseInt();
     case InlinableNative::NumberToString:
       return tryAttachNumberToString();
 

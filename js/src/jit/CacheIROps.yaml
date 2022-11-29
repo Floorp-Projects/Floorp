@@ -1434,6 +1434,14 @@
     input: NumberId
     fun: UnaryMathFunctionImm
 
+- name: NumberParseIntResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    str: StringId
+    radix: Int32Id
+
 - name: ObjectToStringResult
   shared: true
   transpile: true
