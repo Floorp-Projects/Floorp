@@ -11,7 +11,6 @@
 #include <sstream>  // for std::ostringstream
 
 #include "GLContext.h"
-#include "Layers.h"
 #include "gfxEnv.h"
 #include "gfxRect.h"  // for gfxRect
 #include "gfxUtils.h"

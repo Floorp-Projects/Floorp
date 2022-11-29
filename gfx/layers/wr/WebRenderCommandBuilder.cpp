@@ -6,7 +6,6 @@
 
 #include "WebRenderCommandBuilder.h"
 
-#include "Layers.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EffectCompositor.h"

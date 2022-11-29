@@ -28,7 +28,6 @@
 #include "apz/src/HitTestingTreeNode.h"
 #include "base/task.h"
 #include "gfxPlatform.h"
-#include "Layers.h"
 #include "TestLayers.h"
 #include "TestWRScrollData.h"
 #include "UnitTransforms.h"

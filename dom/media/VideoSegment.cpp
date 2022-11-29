@@ -7,7 +7,6 @@
 
 #include "gfx2DGlue.h"
 #include "ImageContainer.h"
-#include "Layers.h"
 #include "VideoUtils.h"
 #include "mozilla/UniquePtr.h"
 

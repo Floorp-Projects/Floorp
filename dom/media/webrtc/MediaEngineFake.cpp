@@ -8,7 +8,6 @@
 #include "DOMMediaStream.h"
 #include "ImageContainer.h"
 #include "ImageTypes.h"
-#include "Layers.h"
 #include "MediaEnginePrefs.h"
 #include "MediaEngineSource.h"
 #include "MediaTrackGraph.h"

@@ -16,7 +16,6 @@
 #include "DOMMediaStream.h"
 #include "ImageContainer.h"
 #include "ImageTypes.h"
-#include "Layers.h"
 #include "MediaEngine.h"
 #include "MediaSegment.h"
 #include "MediaTrackGraphImpl.h"

@@ -6,8 +6,6 @@
 
 #include "WebRenderLayerManager.h"
 
-#include "Layers.h"
-
 #include "GeckoProfiler.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_layers.h"

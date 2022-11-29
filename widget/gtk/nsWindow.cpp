@@ -25,7 +25,6 @@
 #include "gtkdrawing.h"
 #include "imgIContainer.h"
 #include "InputData.h"
-#include "Layers.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Components.h"

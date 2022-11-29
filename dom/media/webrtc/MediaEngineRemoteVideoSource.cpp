@@ -6,7 +6,6 @@
 #include "MediaEngineRemoteVideoSource.h"
 
 #include "CamerasChild.h"
-#include "Layers.h"
 #include "MediaManager.h"
 #include "MediaTrackConstraints.h"
 #include "mozilla/dom/MediaTrackSettingsBinding.h"

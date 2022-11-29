@@ -128,7 +128,6 @@
 #include "nsWindowGfx.h"
 #include "gfxWindowsPlatform.h"
 #include "gfxDWriteFonts.h"
-#include "Layers.h"
 #include "nsPrintfCString.h"
 #include "mozilla/Preferences.h"
 #include "SystemTimeConverter.h"

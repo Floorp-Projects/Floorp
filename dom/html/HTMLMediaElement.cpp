@@ -29,7 +29,6 @@
 #endif
 #include "HTMLMediaElement.h"
 #include "ImageContainer.h"
-#include "Layers.h"
 #include "MP4Decoder.h"
 #include "MediaContainerType.h"
 #include "MediaError.h"

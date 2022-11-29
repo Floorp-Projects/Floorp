@@ -22,7 +22,6 @@
 #include "HTMLSplitOnSpacesTokenizer.h"
 #include "ImageOps.h"
 #include "InProcessBrowserChildMessageManager.h"
-#include "Layers.h"
 #include "MainThreadUtils.h"
 #include "PLDHashTable.h"
 #include "ReferrerInfo.h"

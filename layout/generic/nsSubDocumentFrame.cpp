@@ -46,7 +46,6 @@
 #include "RetainedDisplayListBuilder.h"
 #include "nsObjectLoadingContent.h"
 
-#include "Layers.h"
 #include "mozilla/layers/WebRenderUserData.h"
 #include "mozilla/layers/WebRenderScrollData.h"
 #include "mozilla/layers/RenderRootStateManager.h"

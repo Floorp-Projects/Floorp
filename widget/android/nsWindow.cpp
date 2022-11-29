@@ -30,7 +30,6 @@
 #include "JavaBuiltins.h"
 #include "JavaExceptions.h"
 #include "KeyEvent.h"
-#include "Layers.h"
 #include "MotionEvent.h"
 #include "ScopedGLHelpers.h"
 #include "ScreenHelperAndroid.h"

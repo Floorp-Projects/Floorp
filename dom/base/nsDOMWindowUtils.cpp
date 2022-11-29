@@ -80,10 +80,9 @@
 #  include <gdk/gdk.h>
 #  if defined(MOZ_X11)
 #    include <gdk/gdkx.h>
+#    include "X11UndefineNone.h"
 #  endif
 #endif
-
-#include "Layers.h"
 
 #include "mozilla/dom/AudioDeviceInfo.h"
 #include "mozilla/dom/Element.h"
@@ -101,7 +100,7 @@
 #include "nsPrintfCString.h"
 #include "nsViewportInfo.h"
 #include "nsIFormControl.h"
-//#include "nsWidgetsCID.h"
+// #include "nsWidgetsCID.h"
 #include "nsDisplayList.h"
 #include "nsROCSSPrimitiveValue.h"
 #include "nsIBaseWindow.h"

@@ -69,8 +69,6 @@
 #include "nsIDOMChromeWindow.h"
 #include "InProcessBrowserChildMessageManager.h"
 
-#include "Layers.h"
-
 #include "ContentParent.h"
 #include "BrowserParent.h"
 #include "mozilla/AsyncEventDispatcher.h"

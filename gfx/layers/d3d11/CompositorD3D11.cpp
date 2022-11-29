@@ -10,7 +10,6 @@
 
 #include "gfxWindowsPlatform.h"
 #include "nsIWidget.h"
-#include "Layers.h"
 #include "mozilla/gfx/D3D11Checks.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/gfx/GPUParent.h"

@@ -9,7 +9,6 @@
 #include <utility>    // for pair
 #include "Effects.h"  // for EffectMask, Effect, etc
 #include "gfxUtils.h"
-#include "Layers.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/layers/TextureHost.h"     // for TextureHost, etc
