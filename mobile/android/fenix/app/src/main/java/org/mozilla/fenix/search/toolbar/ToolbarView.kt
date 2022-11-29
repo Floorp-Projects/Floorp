@@ -149,6 +149,13 @@ class ToolbarView(
                     Core.TABS_SEARCH_ENGINE_ID -> context.getString(R.string.tab_search_hint)
                     else -> context.getString(R.string.application_search_hint)
                 }
+            SearchEngine.Type.BUNDLED -> {
+                if (!searchEngine.isGeneral) {
+                    context.getString(R.string.application_search_hint)
+                } else {
+                    context.getString(R.string.search_hint)
+                }
+            }
             else ->
                 context.getString(R.string.search_hint)
         }
