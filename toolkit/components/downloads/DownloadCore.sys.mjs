@@ -101,7 +101,10 @@ async function isPlaceholder(path) {
       return true;
     }
   } catch (ex) {
-    console.error(ex);
+    // Canceling the download may have removed the placeholder already.
+    if (ex.name != "NotFoundError") {
+      console.error(ex);
+    }
   }
   return false;
 }
