@@ -1,5 +1,5 @@
-Asert module
-============
+Assert module
+=============
 
 For XPCShell tests and mochitests, ``Assert`` is already present as an
 instantiated global to which you can refer - you don't need to construct it
