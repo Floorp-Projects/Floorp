@@ -32,13 +32,12 @@
 const { KeyValueService } = ChromeUtils.import(
   "resource://gre/modules/kvstore.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 (async function() {
-  const currentDir = await OS.File.getCurrentDirectory();
+  const currentDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile).path;
   const testEnvDir = Services.appinfo.is64Bit ? "test-env-64" : "test-env-32";
-  const testEnvPath = OS.Path.join(currentDir, testEnvDir);
-  await OS.File.makeDir(testEnvPath, { from: currentDir });
+  const testEnvPath = PathUtils.join(currentDir, testEnvDir);
+  await IOUtils.makeDirectory(testEnvPath);
 
   const database = await KeyValueService.getOrCreate(testEnvPath, "db");
   await database.put("int-key", 1234);

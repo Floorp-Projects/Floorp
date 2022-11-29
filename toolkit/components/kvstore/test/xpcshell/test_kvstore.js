@@ -6,7 +6,6 @@
 const { KeyValueService } = ChromeUtils.import(
   "resource://gre/modules/kvstore.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 function run_test() {
   do_get_profile();
@@ -14,8 +13,8 @@ function run_test() {
 }
 
 async function makeDatabaseDir(name) {
-  const databaseDir = OS.Path.join(OS.Constants.Path.profileDir, name);
-  await OS.File.makeDir(databaseDir, { from: OS.Constants.Path.profileDir });
+  const databaseDir = PathUtils.join(PathUtils.profileDir, name);
+  await IOUtils.makeDirectory(databaseDir);
   return databaseDir;
 }
 
@@ -33,10 +32,7 @@ add_task(async function getOrCreate() {
   Assert.ok(database);
 
   // Test creating a database with a nonexistent path.
-  const nonexistentDir = OS.Path.join(
-    OS.Constants.Path.profileDir,
-    "nonexistent"
-  );
+  const nonexistentDir = PathUtils.join(PathUtils.profileDir, "nonexistent");
   await Assert.rejects(
     KeyValueService.getOrCreate(nonexistentDir, "db"),
     /UnsuitableEnvironmentPath/
@@ -44,11 +40,8 @@ add_task(async function getOrCreate() {
 
   // Test creating a database with a non-normalized but fully-qualified path.
   let nonNormalizedDir = await makeDatabaseDir("non-normalized");
-  nonNormalizedDir = OS.Path.join(
-    nonNormalizedDir,
-    "..",
-    ".",
-    "non-normalized"
+  nonNormalizedDir = [nonNormalizedDir, "..", ".", "non-normalized"].join(
+    Services.appinfo.os === "WINNT" ? "\\" : "/"
   );
   Assert.ok(await KeyValueService.getOrCreate(nonNormalizedDir, "db"));
 });
