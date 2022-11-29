@@ -610,7 +610,14 @@ ExtensionTestCommon = class ExtensionTestCommon {
       // In mochitests, tests are run in an actual browser, so the AddonManager
       // is always enabled and hence useAddonManager is always set by default.
       if (AppConstants.platform === "android") {
-        data.useAddonManager = "permanent";
+        // Many MV3 tests set temporarilyInstalled for granted_host_permissions.
+        // The granted_host_permissions flag is only effective for temporarily
+        // installed extensions, so make sure to use "temporary" in this case.
+        if (data.temporarilyInstalled) {
+          data.useAddonManager = "temporary";
+        } else {
+          data.useAddonManager = "permanent";
+        }
         // MockExtension requires data.manifest.applications.gecko.id to be set.
         // The AddonManager requires an ID in the manifest for unsigned XPIs.
         this.setExtensionID(data);
