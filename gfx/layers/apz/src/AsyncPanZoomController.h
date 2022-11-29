@@ -8,9 +8,9 @@
 #define mozilla_layers_AsyncPanZoomController_h
 
 #include "mozilla/layers/GeckoContentController.h"
-#include "mozilla/layers/LayerAttributes.h"
 #include "mozilla/layers/RepaintRequest.h"
 #include "mozilla/layers/SampleTime.h"
+#include "mozilla/layers/ScrollbarData.h"
 #include "mozilla/layers/ZoomConstraints.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
