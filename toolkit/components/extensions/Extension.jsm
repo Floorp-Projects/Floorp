@@ -2448,7 +2448,7 @@ class Extension extends ExtensionData {
       updateReason ||
       ["ADDON_UPGRADE", "ADDON_DOWNGRADE"].includes(startupReason)
     ) {
-      this.startupClearCachePromise = StartupCache.clearAddonData(addonData.id);
+      StartupCache.clearAddonData(addonData.id);
     }
 
     this.remote = !WebExtensionPolicy.isExtensionProcess;
@@ -2685,8 +2685,7 @@ class Extension extends ExtensionData {
     lazy.AddonManagerPrivate.setAddonStartupData(this.id, this.startupData);
   }
 
-  async parseManifest() {
-    await this.startupClearCachePromise;
+  parseManifest() {
     return StartupCache.manifests.get(this.manifestCacheKey, () =>
       super.parseManifest()
     );
