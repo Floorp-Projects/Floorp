@@ -8,9 +8,8 @@ import hashlib
 import json
 import os
 
-from mozpack.files import FileFinder
 import mozpack.path as mozpath
-
+from mozpack.files import FileFinder
 
 GENERATED_SOURCE_EXTS = (".rs", ".c", ".h", ".cc", ".cpp")
 
