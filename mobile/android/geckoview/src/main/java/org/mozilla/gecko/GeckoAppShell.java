@@ -189,6 +189,7 @@ public class GeckoAppShell {
   private static Float sDensity;
   private static int sScreenDepth;
   private static boolean sUseMaxScreenDepth;
+  private static Float sScreenRefreshRate;
 
   /* Is the value in sVibrationEndTime valid? */
   private static boolean sVibrationMaybePlaying;
@@ -882,6 +883,24 @@ public class GeckoAppShell {
     }
 
     return sScreenDepth;
+  }
+
+  @WrapForJNI(calledFrom = "gecko")
+  public static synchronized float getScreenRefreshRate() {
+    if (sScreenRefreshRate != null) {
+      return sScreenRefreshRate;
+    }
+
+    final WindowManager wm =
+        (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
+    final float refreshRate = wm.getDefaultDisplay().getRefreshRate();
+    // Android 11+ supports multiple refresh rate. So we have to get refresh rate per call.
+    // https://source.android.com/docs/core/graphics/multiple-refresh-rate
+    if (Build.VERSION.SDK_INT < 30) {
+      // Until Android 10, refresh rate is fixed, so we can cache it.
+      sScreenRefreshRate = Float.valueOf(refreshRate);
+    }
+    return refreshRate;
   }
 
   @WrapForJNI(calledFrom = "gecko")

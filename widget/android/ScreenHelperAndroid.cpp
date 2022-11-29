@@ -40,7 +40,8 @@ static already_AddRefed<Screen> MakePrimaryScreen() {
   auto orientation =
       hal::ScreenOrientation(java::GeckoAppShell::GetScreenOrientation());
   uint16_t angle = java::GeckoAppShell::GetScreenAngle();
-  return MakeAndAddRef<Screen>(bounds, bounds, depth, depth, 0,
+  float refreshRate = java::GeckoAppShell::GetScreenRefreshRate();
+  return MakeAndAddRef<Screen>(bounds, bounds, depth, depth, refreshRate,
                                DesktopToLayoutDeviceScale(density),
                                CSSToLayoutDeviceScale(1.0f), dpi,
                                Screen::IsPseudoDisplay::No, orientation, angle);
