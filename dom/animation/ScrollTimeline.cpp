@@ -43,7 +43,8 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(ScrollTimeline,
 
 ScrollTimeline::ScrollTimeline(Document* aDocument, const Scroller& aScroller,
                                StyleScrollAxis aAxis)
-    : AnimationTimeline(aDocument->GetParentObject()),
+    : AnimationTimeline(aDocument->GetParentObject(),
+                        aDocument->GetScopeObject()->GetRTPCallerType()),
       mDocument(aDocument),
       mSource(aScroller),
       mAxis(aAxis) {

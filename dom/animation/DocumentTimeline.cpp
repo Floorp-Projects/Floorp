@@ -42,7 +42,8 @@ NS_IMPL_RELEASE_INHERITED(DocumentTimeline, AnimationTimeline)
 
 DocumentTimeline::DocumentTimeline(Document* aDocument,
                                    const TimeDuration& aOriginTime)
-    : AnimationTimeline(aDocument->GetParentObject()),
+    : AnimationTimeline(aDocument->GetParentObject(),
+                        aDocument->GetScopeObject()->GetRTPCallerType()),
       mDocument(aDocument),
       mIsObservingRefreshDriver(false),
       mOriginTime(aOriginTime) {
