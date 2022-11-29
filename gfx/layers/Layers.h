@@ -68,56 +68,7 @@ class Compositor;
 class TransformData;
 struct PropertyAnimationGroup;
 
-class Layer {
- public:
-  enum {
-    /**
-     * If this is set, the caller is promising that by the end of this
-     * transaction the entire visible region (as specified by
-     * SetVisibleRegion) will be filled with opaque content.
-     */
-    CONTENT_OPAQUE = 0x01,
-    /**
-     * If this is set, the caller is notifying that the contents of this layer
-     * require per-component alpha for optimal fidelity. However, there is no
-     * guarantee that component alpha will be supported for this layer at
-     * paint time.
-     * This should never be set at the same time as CONTENT_OPAQUE.
-     */
-    CONTENT_COMPONENT_ALPHA = 0x02,
-
-    /**
-     * If this is set then this layer is part of a preserve-3d group, and should
-     * be sorted with sibling layers that are also part of the same group.
-     */
-    CONTENT_EXTEND_3D_CONTEXT = 0x08,
-
-    /**
-     * Disable subpixel AA for this layer. This is used if the display isn't
-     * suited for subpixel AA like hidpi or rotated content.
-     */
-    CONTENT_DISABLE_SUBPIXEL_AA = 0x20,
-
-    /**
-     * If this is set then the layer contains content that may look
-     * objectionable if not handled as an active layer (such as text with an
-     * animated transform). This is for internal layout/FrameLayerBuilder usage
-     * only until flattening code is obsoleted. See bug 633097
-     */
-    CONTENT_DISABLE_FLATTENING = 0x40,
-
-    /**
-     * This layer is hidden if the backface of the layer is visible
-     * to user.
-     */
-    CONTENT_BACKFACE_HIDDEN = 0x80,
-
-    /**
-     * This layer should be snapped to the pixel grid.
-     */
-    CONTENT_SNAP_TO_GRID = 0x100
-  };
-};
+class Layer {};
 
 #ifdef MOZ_DUMP_PAINTING
 void WriteSnapshotToDumpFile(Layer* aLayer, gfx::DataSourceSurface* aSurf);
