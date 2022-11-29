@@ -113,8 +113,6 @@ bool AnimationInfo::StartPendingAnimations(const TimeStamp& aReadyTime) {
   return updated;
 }
 
-void AnimationInfo::TransferMutatedFlagToLayer(Layer* aLayer) {}
-
 bool AnimationInfo::ApplyPendingUpdatesForThisTransaction() {
   if (mPendingAnimations) {
     mAnimations = std::move(*mPendingAnimations);
