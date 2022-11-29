@@ -2061,7 +2061,6 @@ MOZ_ALWAYS_INLINE T* MakeDisplayItem(nsDisplayListBuilder* aBuilder, F* aFrame,
  */
 class nsDisplayItem {
  public:
-  using Layer = layers::Layer;
   using LayerManager = layers::LayerManager;
   using WebRenderLayerManager = layers::WebRenderLayerManager;
   using StackingContextHelper = layers::StackingContextHelper;

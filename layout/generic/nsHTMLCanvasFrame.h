@@ -31,7 +31,6 @@ nsIFrame* NS_NewHTMLCanvasFrame(mozilla::PresShell* aPresShell,
 class nsHTMLCanvasFrame final : public nsContainerFrame {
  public:
   typedef mozilla::layers::CanvasRenderer CanvasRenderer;
-  typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::WebRenderCanvasData WebRenderCanvasData;
 
