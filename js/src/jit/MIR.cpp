@@ -6753,6 +6753,21 @@ MDefinition* MGuardInt32IsNonNegative::foldsTo(TempAllocator& alloc) {
   return input;
 }
 
+MDefinition* MGuardInt32Range::foldsTo(TempAllocator& alloc) {
+  MOZ_ASSERT(input()->type() == MIRType::Int32);
+  MOZ_ASSERT(minimum() <= maximum());
+
+  MDefinition* in = input();
+  if (!in->isConstant()) {
+    return this;
+  }
+  int32_t cst = in->toConstant()->toInt32();
+  if (cst < minimum() || cst > maximum()) {
+    return this;
+  }
+  return in;
+}
+
 MDefinition* MGuardNonGCThing::foldsTo(TempAllocator& alloc) {
   if (!input()->isBox()) {
     return this;

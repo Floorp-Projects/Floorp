@@ -7853,8 +7853,11 @@ StringOperandId IRGenerator::emitToStringGuard(ValOperandId id,
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachNumberToString() {
-  // Expecting no arguments, which means base 10.
-  if (argc_ != 0) {
+  // Expecting no arguments or a single int32 argument.
+  if (argc_ > 1) {
+    return AttachDecision::NoAction;
+  }
+  if (argc_ == 1 && !args_[0].isInt32()) {
     return AttachDecision::NoAction;
   }
 
@@ -7862,6 +7865,21 @@ AttachDecision InlinableNativeIRGenerator::tryAttachNumberToString() {
   if (!thisval_.isNumber()) {
     return AttachDecision::NoAction;
   }
+
+  // No arguments means base 10.
+  int32_t base = 10;
+  if (argc_ > 0) {
+    base = args_[0].toInt32();
+    if (base < 2 || base > 36) {
+      return AttachDecision::NoAction;
+    }
+
+    // Non-decimal bases currently only support int32 inputs.
+    if (base != 10 && !thisval_.isInt32()) {
+      return AttachDecision::NoAction;
+    }
+  }
+  MOZ_ASSERT(2 <= base && base <= 36);
 
   // Initialize the input operand.
   initializeInputOperand();
@@ -7874,10 +7892,37 @@ AttachDecision InlinableNativeIRGenerator::tryAttachNumberToString() {
       writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
 
   // Guard on number and convert to string.
-  StringOperandId strId = emitToStringGuard(thisValId, thisval_);
+  if (base == 10) {
+    // If an explicit base was passed, guard its value.
+    if (argc_ > 0) {
+      // Guard the `base` argument is an int32.
+      ValOperandId baseId =
+          writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+      Int32OperandId intBaseId = writer.guardToInt32(baseId);
 
-  // Return the string.
-  writer.loadStringResult(strId);
+      // Guard `base` is 10 for decimal toString representation.
+      writer.guardSpecificInt32(intBaseId, 10);
+    }
+
+    StringOperandId strId = emitToStringGuard(thisValId, thisval_);
+
+    // Return the string.
+    writer.loadStringResult(strId);
+  } else {
+    MOZ_ASSERT(argc_ > 0);
+
+    // Guard the |this| value is an int32.
+    Int32OperandId thisIntId = writer.guardToInt32(thisValId);
+
+    // Guard the `base` argument is an int32.
+    ValOperandId baseId =
+        writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+    Int32OperandId intBaseId = writer.guardToInt32(baseId);
+
+    // Return the string.
+    writer.int32ToStringWithBaseResult(thisIntId, intBaseId);
+  }
+
   writer.returnFromIC();
 
   trackAttached("NumberToString");

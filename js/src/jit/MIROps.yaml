@@ -783,6 +783,15 @@
 - name: BigIntBitNot
   gen_boilerplate: false
 
+- name: Int32ToStringWithBase
+  operands:
+    input: Int32
+    base: Int32
+  result_type: String
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+
 - name: NumberParseInt
   operands:
     string: String
@@ -2350,6 +2359,19 @@
 - name: GuardInt32IsNonNegative
   operands:
     index: Int32
+  result_type: Int32
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  folds_to: custom
+  alias_set: none
+
+- name: GuardInt32Range
+  operands:
+    input: Int32
+  arguments:
+    minimum: int32_t
+    maximum: int32_t
   result_type: Int32
   guard: true
   movable: true
