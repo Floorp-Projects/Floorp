@@ -783,6 +783,16 @@
 - name: BigIntBitNot
   gen_boilerplate: false
 
+- name: NumberParseInt
+  operands:
+    string: String
+    radix: Int32
+  result_type: Value
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+  possibly_calls: true
+
 - name: Concat
   gen_boilerplate: false
 

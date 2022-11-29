@@ -2412,6 +2412,46 @@ bool CacheIRCompiler::emitGuardStringToNumber(StringOperandId strId,
   return true;
 }
 
+bool CacheIRCompiler::emitNumberParseIntResult(StringOperandId strId,
+                                               Int32OperandId radixId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register str = allocator.useRegister(masm, strId);
+  Register radix = allocator.useRegister(masm, radixId);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, callvm.output());
+
+#ifdef DEBUG
+  Label ok;
+  masm.branch32(Assembler::Equal, radix, Imm32(0), &ok);
+  masm.branch32(Assembler::Equal, radix, Imm32(10), &ok);
+  masm.assumeUnreachable("radix must be 0 or 10 for indexed value fast path");
+  masm.bind(&ok);
+#endif
+
+  // Discard the stack to ensure it's balanced when we skip the vm-call.
+  allocator.discardStack(masm);
+
+  // Use indexed value as fast path if possible.
+  Label vmCall, done;
+  masm.loadStringIndexValue(str, scratch, &vmCall);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, callvm.outputValueReg());
+  masm.jump(&done);
+  {
+    masm.bind(&vmCall);
+
+    callvm.prepare();
+    masm.Push(radix);
+    masm.Push(str);
+
+    using Fn = bool (*)(JSContext*, HandleString, int32_t, MutableHandleValue);
+    callvm.call<Fn, js::NumberParseInt>();
+  }
+  masm.bind(&done);
+  return true;
+}
+
 bool CacheIRCompiler::emitBooleanToNumber(BooleanOperandId booleanId,
                                           NumberOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
