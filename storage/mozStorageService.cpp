@@ -310,6 +310,8 @@ const char* GetTelemetryVFSName(bool);
 
 UniquePtr<sqlite3_vfs> ConstructObfuscatingVFS(const char* aBaseVFSName);
 
+UniquePtr<sqlite3_vfs> ConstructReadOnlyNoLockVFS();
+
 static const char* sObserverTopics[] = {"memory-pressure",
                                         "xpcom-shutdown-threads"};
 
@@ -333,6 +335,11 @@ nsresult Service::initialize() {
 
   rc = mObfuscatingSqliteVFS.Init(ConstructObfuscatingVFS(GetTelemetryVFSName(
       StaticPrefs::storage_sqlite_exclusiveLock_enabled())));
+  if (rc != SQLITE_OK) {
+    return convertResultCode(rc);
+  }
+
+  rc = mReadOnlyNoLockSqliteVFS.Init(ConstructReadOnlyNoLockVFS());
   if (rc != SQLITE_OK) {
     return convertResultCode(rc);
   }

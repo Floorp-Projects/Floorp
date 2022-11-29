@@ -717,18 +717,12 @@ nsresult Connection::initialize(nsIFile* aDatabaseFile) {
   nsresult rv = aDatabaseFile->GetPath(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef XP_WIN
-  static const char* sIgnoreLockingVFS = "win32-none";
-#else
-  static const char* sIgnoreLockingVFS = "unix-none";
-#endif
-
   bool exclusive = StaticPrefs::storage_sqlite_exclusiveLock_enabled();
   int srv;
   if (mIgnoreLockingMode) {
     exclusive = false;
     srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn, mFlags,
-                            sIgnoreLockingVFS);
+                            "readonly-immutable-nolock");
   } else {
     srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn, mFlags,
                             GetTelemetryVFSName(exclusive));

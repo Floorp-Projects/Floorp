@@ -9,6 +9,10 @@ var { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 
+ChromeUtils.defineESModuleGetters(this, {
+  Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
+});
+
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
