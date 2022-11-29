@@ -2427,8 +2427,11 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::matchIntegerAfterFirstDigit(
     unit = getCodeUnit();
     if (!isIntegerUnit(unit)) {
       if (unit == '_') {
+        ungetCodeUnit(unit);
         error(JSMSG_NUMBER_MULTIPLE_ADJACENT_UNDERSCORES);
       } else {
+        ungetCodeUnit(unit);
+        ungetCodeUnit('_');
         error(JSMSG_NUMBER_END_WITH_UNDERSCORE);
       }
       return false;
@@ -2954,11 +2957,13 @@ template <typename Unit, class AnyCharsAccess>
         } while (IsAsciiDigit(unit));
 
         if (unit == '_') {
+          ungetCodeUnit(unit);
           error(JSMSG_SEPARATOR_IN_ZERO_PREFIXED_NUMBER);
           return badToken();
         }
 
         if (unit == 'n') {
+          ungetCodeUnit(unit);
           error(JSMSG_BIGINT_INVALID_SYNTAX);
           return badToken();
         }
@@ -2969,6 +2974,7 @@ template <typename Unit, class AnyCharsAccess>
         }
       } else if (unit == '_') {
         // Give a more explicit error message when '_' is used after '0'.
+        ungetCodeUnit(unit);
         error(JSMSG_SEPARATOR_IN_ZERO_PREFIXED_NUMBER);
         return badToken();
       } else {
