@@ -3920,6 +3920,21 @@ gfx:
     record_in_processes:
       - 'main'
     release_channel_collection: opt-out
+  supports_hdr:
+    bug_numbers:
+      - 1798067
+    description: >
+      Does the hardware support accurate display of HDR content
+    expires: never
+    kind: boolean
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - bwerth@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
 
 # The following section contains the form autofill related scalars.
 formautofill:
