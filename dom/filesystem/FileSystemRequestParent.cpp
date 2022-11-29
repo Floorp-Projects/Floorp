@@ -75,12 +75,12 @@ namespace {
 
 class CheckPermissionRunnable final : public Runnable {
  public:
-  CheckPermissionRunnable(already_AddRefed<ContentParent> aParent,
-                          FileSystemRequestParent* aActor,
-                          FileSystemTaskParentBase* aTask,
-                          const nsAString& aPath)
+  CheckPermissionRunnable(
+      already_AddRefed<ThreadsafeContentParentHandle> aParent,
+      FileSystemRequestParent* aActor, FileSystemTaskParentBase* aTask,
+      const nsAString& aPath)
       : Runnable("dom::CheckPermissionRunnable"),
-        mContentParent(aParent),
+        mContentHandle(aParent),
         mActor(aActor),
         mTask(aTask),
         mPath(aPath),
@@ -88,7 +88,7 @@ class CheckPermissionRunnable final : public Runnable {
     AssertIsInMainProcess();
     AssertIsOnBackgroundThread();
 
-    MOZ_ASSERT(mContentParent);
+    MOZ_ASSERT(mContentHandle);
     MOZ_ASSERT(mActor);
     MOZ_ASSERT(mTask);
     MOZ_ASSERT(mBackgroundEventTarget);
@@ -97,14 +97,16 @@ class CheckPermissionRunnable final : public Runnable {
   NS_IMETHOD
   Run() override {
     if (NS_IsMainThread()) {
-      auto raii = mozilla::MakeScopeExit([&] { mContentParent = nullptr; });
-
       if (!mozilla::Preferences::GetBool("dom.filesystem.pathcheck.disabled",
                                          false)) {
         RefPtr<FileSystemSecurity> fss = FileSystemSecurity::Get();
         if (NS_WARN_IF(!fss || !fss->ContentProcessHasAccessTo(
-                                   mContentParent->ChildID(), mPath))) {
-          mContentParent->KillHard("This path is not allowed.");
+                                   mContentHandle->ChildID(), mPath))) {
+          AssertIsOnMainThread();
+          if (RefPtr<ContentParent> contentParent =
+                  mContentHandle->GetContentParent()) {
+            contentParent->KillHard("This path is not allowed.");
+          }
           return NS_OK;
         }
       }
@@ -129,7 +131,7 @@ class CheckPermissionRunnable final : public Runnable {
                     mActor.forget());
   }
 
-  RefPtr<ContentParent> mContentParent;
+  RefPtr<ThreadsafeContentParentHandle> mContentHandle;
   RefPtr<FileSystemRequestParent> mActor;
   RefPtr<FileSystemTaskParentBase> mTask;
   const nsString mPath;
@@ -154,9 +156,11 @@ void FileSystemRequestParent::Start() {
     return;
   }
 
-  RefPtr<ContentParent> parent = BackgroundParent::GetContentParent(Manager());
+  RefPtr<ThreadsafeContentParentHandle> parent =
+      BackgroundParent::GetContentParentHandle(Manager());
 
-  // If the ContentParent is null we are dealing with a same-process actor.
+  // If the ThreadsafeContentParentHandle is null we are dealing with a
+  // same-process actor.
   if (!parent) {
     mTask->Start();
     return;

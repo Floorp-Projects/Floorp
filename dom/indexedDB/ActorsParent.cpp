@@ -3159,8 +3159,7 @@ class FactoryOp
   // Must be released on the background thread!
   SafeRefPtr<Factory> mFactory;
 
-  // Must be released on the main thread!
-  RefPtr<ContentParent> mContentParent;
+  RefPtr<ThreadsafeContentParentHandle> mContentHandle;
 
   // Must be released on the main thread!
   RefPtr<DirectoryLock> mDirectoryLock;
@@ -3214,7 +3213,8 @@ class FactoryOp
   void Stringify(nsACString& aResult) const;
 
  protected:
-  FactoryOp(SafeRefPtr<Factory> aFactory, RefPtr<ContentParent> aContentParent,
+  FactoryOp(SafeRefPtr<Factory> aFactory,
+            RefPtr<ThreadsafeContentParentHandle> aContentHandle,
             const CommonFactoryRequestParams& aCommonParams, bool aDeleting);
 
   ~FactoryOp() override {
@@ -3292,8 +3292,6 @@ class OpenDatabaseOp final : public FactoryOp {
 
   class VersionChangeOp;
 
-  Maybe<ContentParentId> mOptionalContentParentId;
-
   SafeRefPtr<FullDatabaseMetadata> mMetadata;
 
   uint64_t mRequestedVersion;
@@ -3311,7 +3309,7 @@ class OpenDatabaseOp final : public FactoryOp {
 
  public:
   OpenDatabaseOp(SafeRefPtr<Factory> aFactory,
-                 RefPtr<ContentParent> aContentParent,
+                 RefPtr<ThreadsafeContentParentHandle> aContentHandle,
                  const CommonFactoryRequestParams& aParams);
 
  private:
@@ -3399,9 +3397,9 @@ class DeleteDatabaseOp final : public FactoryOp {
 
  public:
   DeleteDatabaseOp(SafeRefPtr<Factory> aFactory,
-                   RefPtr<ContentParent> aContentParent,
+                   RefPtr<ThreadsafeContentParentHandle> aContentHandle,
                    const CommonFactoryRequestParams& aParams)
-      : FactoryOp(std::move(aFactory), std::move(aContentParent), aParams,
+      : FactoryOp(std::move(aFactory), std::move(aContentHandle), aParams,
                   /* aDeleting */ true),
         mPreviousVersion(0) {}
 
@@ -9357,16 +9355,16 @@ Factory::AllocPBackgroundIDBFactoryRequestParent(
     return nullptr;
   }
 
-  RefPtr<ContentParent> contentParent =
-      BackgroundParent::GetContentParent(Manager());
+  RefPtr<ThreadsafeContentParentHandle> contentHandle =
+      BackgroundParent::GetContentParentHandle(Manager());
 
   auto actor = [&]() -> RefPtr<FactoryOp> {
     if (aParams.type() == FactoryRequestParams::TOpenDatabaseRequestParams) {
       return MakeRefPtr<OpenDatabaseOp>(
-          SafeRefPtrFromThis(), std::move(contentParent), *commonParams);
+          SafeRefPtrFromThis(), std::move(contentHandle), *commonParams);
     } else {
       return MakeRefPtr<DeleteDatabaseOp>(
-          SafeRefPtrFromThis(), std::move(contentParent), *commonParams);
+          SafeRefPtrFromThis(), std::move(contentHandle), *commonParams);
     }
   }();
 
@@ -15070,13 +15068,13 @@ mozilla::ipc::IPCResult MutableFile::RecvGetFileId(int64_t* aFileId) {
 }
 
 FactoryOp::FactoryOp(SafeRefPtr<Factory> aFactory,
-                     RefPtr<ContentParent> aContentParent,
+                     RefPtr<ThreadsafeContentParentHandle> aContentHandle,
                      const CommonFactoryRequestParams& aCommonParams,
                      bool aDeleting)
     : DatabaseOperationBase(aFactory->GetLoggingInfo()->Id(),
                             aFactory->GetLoggingInfo()->NextRequestSN()),
       mFactory(std::move(aFactory)),
-      mContentParent(std::move(aContentParent)),
+      mContentHandle(std::move(aContentHandle)),
       mCommonParams(aCommonParams),
       mDirectoryLockId(-1),
       mState(State::Initial),
@@ -15230,11 +15228,11 @@ void FactoryOp::Stringify(nsACString& aResult) const {
 }
 
 nsresult FactoryOp::Open() {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnMainThread();
   MOZ_ASSERT(mState == State::Initial);
 
-  // Move this to the stack now to ensure that we release it on this thread.
-  const RefPtr<ContentParent> contentParent = std::move(mContentParent);
+  RefPtr<ContentParent> contentParent =
+      mContentHandle ? mContentHandle->GetContentParent() : nullptr;
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
       !OperationMayProceed()) {
@@ -15582,7 +15580,6 @@ bool FactoryOp::CheckAtLeastOneAppHasPermission(
 nsresult FactoryOp::FinishOpen() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::FinishOpen);
-  MOZ_ASSERT(!mContentParent);
   MOZ_ASSERT(!mOriginMetadata.mOrigin.IsEmpty());
   MOZ_ASSERT(!mDirectoryLock);
 
@@ -15750,21 +15747,16 @@ void FactoryOp::ActorDestroy(ActorDestroyReason aWhy) {
   NoteActorDestroyed();
 }
 
-OpenDatabaseOp::OpenDatabaseOp(SafeRefPtr<Factory> aFactory,
-                               RefPtr<ContentParent> aContentParent,
-                               const CommonFactoryRequestParams& aParams)
-    : FactoryOp(std::move(aFactory), std::move(aContentParent), aParams,
+OpenDatabaseOp::OpenDatabaseOp(
+    SafeRefPtr<Factory> aFactory,
+    RefPtr<ThreadsafeContentParentHandle> aContentHandle,
+    const CommonFactoryRequestParams& aParams)
+    : FactoryOp(std::move(aFactory), std::move(aContentHandle), aParams,
                 /* aDeleting */ false),
       mMetadata(MakeSafeRefPtr<FullDatabaseMetadata>(aParams.metadata())),
       mRequestedVersion(aParams.metadata().version()),
       mVersionChangeOp(nullptr),
-      mTelemetryId(0) {
-  if (mContentParent) {
-    // This is a little scary but it looks safe to call this off the main thread
-    // for now.
-    mOptionalContentParentId = Some(mContentParent->ChildID());
-  }
-}
+      mTelemetryId(0) {}
 
 void OpenDatabaseOp::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnOwningThread();
@@ -16605,10 +16597,11 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
   mDatabase = MakeSafeRefPtr<Database>(
       SafeRefPtr{static_cast<Factory*>(Manager()),
                  AcquireStrongRefFromRawPtr{}},
-      mCommonParams.principalInfo(), mOptionalContentParentId, mOriginMetadata,
-      mTelemetryId, mMetadata.clonePtr(), mFileManager.clonePtr(),
-      std::move(mDirectoryLock), mFileHandleDisabled, mChromeWriteAccessAllowed,
-      mInPrivateBrowsing, maybeKey);
+      mCommonParams.principalInfo(),
+      mContentHandle ? Some(mContentHandle->ChildID()) : Nothing(),
+      mOriginMetadata, mTelemetryId, mMetadata.clonePtr(),
+      mFileManager.clonePtr(), std::move(mDirectoryLock), mFileHandleDisabled,
+      mChromeWriteAccessAllowed, mInPrivateBrowsing, maybeKey);
 
   if (info) {
     info->mLiveDatabases.AppendElement(
@@ -16955,11 +16948,6 @@ void DeleteDatabaseOp::LoadPreviousVersion(nsIFile& aDatabaseFile) {
 nsresult DeleteDatabaseOp::DatabaseOpen() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::DatabaseOpenPending);
-
-  // The content parent must be kept alive until SendToIOThread completed.
-  // Move this to the stack now to ensure that we release it on this thread.
-  const RefPtr<ContentParent> contentParent = std::move(mContentParent);
-  Unused << contentParent;  // XXX see Bug 1605075
 
   nsresult rv = SendToIOThread();
   if (NS_WARN_IF(NS_FAILED(rv))) {

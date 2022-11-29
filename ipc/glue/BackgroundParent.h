@@ -9,6 +9,8 @@
 
 #include "base/process.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/ContentParent.h"
+#include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
 
 #ifdef DEBUG
@@ -51,9 +53,11 @@ class BackgroundParent final {
   friend class mozilla::net::SocketProcessBridgeParent;
   friend class mozilla::net::SocketProcessParent;
 
-  typedef base::ProcessId ProcessId;
-  typedef mozilla::dom::BlobImpl BlobImpl;
-  typedef mozilla::dom::ContentParent ContentParent;
+  using ProcessId = base::ProcessId;
+  using BlobImpl = mozilla::dom::BlobImpl;
+  using ContentParent = mozilla::dom::ContentParent;
+  using ThreadsafeContentParentHandle =
+      mozilla::dom::ThreadsafeContentParentHandle;
 
  public:
   // This function allows the caller to determine if the given parent actor
@@ -62,22 +66,13 @@ class BackgroundParent final {
   // This function may only be called on the background thread.
   static bool IsOtherProcessActor(PBackgroundParent* aBackgroundActor);
 
-  // This function returns the ContentParent associated with the parent actor if
-  // the parent actor corresponds to a child actor from another process. If the
-  // parent actor corresponds to a child actor from a different thread in the
-  // same process then this function returns null.
-  // This function may only be called on the background thread. However,
-  // ContentParent is not threadsafe and the returned pointer may not be used on
-  // any thread other than the main thread. Callers must take care to use (and
-  // release) the returned pointer appropriately.
-  static already_AddRefed<ContentParent> GetContentParent(
-      PBackgroundParent* aBackgroundActor);
-
-  // Get a value that represents the ContentParent associated with the parent
-  // actor for comparison. The value is not guaranteed to uniquely identify the
-  // ContentParent after the ContentParent has died. This function may only be
-  // called on the background thread.
-  static intptr_t GetRawContentParentForComparison(
+  // This function returns a handle to the ContentParent associated with the
+  // parent actor if the parent actor corresponds to a child actor from another
+  // content process. If the parent actor corresponds to a child actor from a
+  // different thread in the same process then this function returns null.
+  //
+  // This function may only be called on the background thread.
+  static ThreadsafeContentParentHandle* GetContentParentHandle(
       PBackgroundParent* aBackgroundActor);
 
   static uint64_t GetChildID(PBackgroundParent* aBackgroundActor);
