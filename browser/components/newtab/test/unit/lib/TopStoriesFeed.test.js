@@ -376,7 +376,7 @@ describe("Top Stories Feed", () => {
       instance.init();
 
       assert.calledWith(
-        Cu.reportError,
+        console.error,
         "Problem initializing top stories feed: An API key was specified but none configured: https://invalid.com/?apiKey=$apiKey"
       );
     });
@@ -390,7 +390,7 @@ describe("Top Stories Feed", () => {
       });
       instance.init();
 
-      assert.called(Cu.reportError);
+      assert.called(console.error);
     });
     it("should load data from cache on init", async () => {
       instance.loadCachedData = sinon.spy();
@@ -608,7 +608,7 @@ describe("Top Stories Feed", () => {
         credentials: "omit",
       });
       assert.equal(instance.storiesLastUpdated, 0);
-      assert.called(Cu.reportError);
+      assert.called(console.error);
     });
     it("should exclude blocked (dismissed) URLs", async () => {
       let fetchStub = globals.sandbox.stub();
@@ -748,7 +748,7 @@ describe("Top Stories Feed", () => {
         credentials: "omit",
       });
       assert.notCalled(instance.store.dispatch);
-      assert.called(Cu.reportError);
+      assert.called(console.error);
     });
   });
   describe("#personalization", () => {

@@ -78,7 +78,7 @@ class _ASRouterPreferences {
     try {
       result = JSON.parse(value);
     } catch (e) {
-      Cu.reportError(e);
+      console.error(e);
     }
     return result;
   }
@@ -90,7 +90,7 @@ class _ASRouterPreferences {
       try {
         value = JSON.parse(Services.prefs.getStringPref(pref, ""));
       } catch (e) {
-        Cu.reportError(
+        console.error(
           `Could not parse ASRouter preference. Try resetting ${pref} in about:config.`
         );
       }
@@ -118,7 +118,7 @@ class _ASRouterPreferences {
     const providers = this._getProviderConfig();
     const config = providers.find(p => p.id === id);
     if (!config) {
-      Cu.reportError(
+      console.error(
         `Cannot set enabled state for '${id}' because the pref ${this._providerPrefBranch}${id} does not exist or is not correctly formatted.`
       );
       return;

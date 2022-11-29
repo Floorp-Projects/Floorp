@@ -735,7 +735,7 @@ describe("Top Sites Feed", () => {
         assert.fails();
       }
 
-      assert.calledOnce(Cu.reportError);
+      assert.calledOnce(console.error);
     });
   });
   describe("#updateSectionPrefs", () => {

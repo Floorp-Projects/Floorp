@@ -115,7 +115,7 @@ describe("SectionsManager", () => {
         undefined
       );
 
-      assert.notCalled(Cu.reportError);
+      assert.notCalled(console.error);
     });
     it("should report an error if options is malformed", async () => {
       globals.sandbox.spy(global.Cu, "reportError");
@@ -125,7 +125,7 @@ describe("SectionsManager", () => {
         "invalid"
       );
 
-      assert.calledOnce(Cu.reportError);
+      assert.calledOnce(console.error);
     });
     it("should not throw if the indexedDB operation fails", async () => {
       globals.sandbox.spy(global.Cu, "reportError");
@@ -139,7 +139,7 @@ describe("SectionsManager", () => {
       }
 
       assert.calledOnce(storage.get);
-      assert.calledOnce(Cu.reportError);
+      assert.calledOnce(console.error);
     });
   });
   describe("#updateSectionPrefs", () => {
@@ -352,7 +352,7 @@ describe("SectionsManager", () => {
         false
       );
       const highlights = SectionsManager.sections.get("highlights").rows;
-      assert.calledOnce(Cu.reportError);
+      assert.calledOnce(console.error);
       assert.equal(highlights[0].contextMenuOptions, undefined);
     });
     it("should filter out context menu options that are in CONTEXT_MENU_PREFS", () => {

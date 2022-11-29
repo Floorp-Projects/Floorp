@@ -232,7 +232,7 @@ class PrefsFeed {
     try {
       await this._storage.set(name, value);
     } catch (e) {
-      Cu.reportError("Could not set section preferences.");
+      console.error("Could not set section preferences.");
     }
   }
 
