@@ -341,7 +341,7 @@ void ImageBridgeChild::UpdateImageClient(RefPtr<ImageContainer> aContainer) {
   }
 
   BeginTransaction();
-  client->UpdateImage(aContainer, Layer::CONTENT_OPAQUE);
+  client->UpdateImage(aContainer);
   EndTransaction();
 }
 

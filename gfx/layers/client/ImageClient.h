@@ -51,8 +51,7 @@ class ImageClient : public CompositableClient {
    * returns false if this is the wrong kind of ImageClient for aContainer.
    * Note that returning true does not necessarily imply success
    */
-  virtual bool UpdateImage(ImageContainer* aContainer,
-                           uint32_t aContentFlags) = 0;
+  virtual bool UpdateImage(ImageContainer* aContainer) = 0;
 
   /**
    * asynchronously remove all the textures used by the image client.
@@ -89,7 +88,7 @@ class ImageClientSingle : public ImageClient {
   ImageClientSingle(CompositableForwarder* aFwd, TextureFlags aFlags,
                     CompositableType aType);
 
-  bool UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag) override;
+  bool UpdateImage(ImageContainer* aContainer) override;
 
   void OnDetach() override;
 
