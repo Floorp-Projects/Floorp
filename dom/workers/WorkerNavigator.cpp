@@ -157,13 +157,21 @@ void WorkerNavigator::GetPlatform(nsString& aPlatform, CallerType aCallerType,
 
 namespace {
 
+/*
+ * This Worker Runnable needs to check RFP; but our standard way of doing so
+ * relies on accessing GlobalScope() - which can only be accessed on the worker
+ * thread. So we need to pass it in.
+ */
 class GetUserAgentRunnable final : public WorkerMainThreadRunnable {
   nsString& mUA;
+  bool mShouldResistFingerprinting;
 
  public:
-  GetUserAgentRunnable(WorkerPrivate* aWorkerPrivate, nsString& aUA)
+  GetUserAgentRunnable(WorkerPrivate* aWorkerPrivate, nsString& aUA,
+                       bool aShouldResistFingerprinting)
       : WorkerMainThreadRunnable(aWorkerPrivate, "UserAgent getter"_ns),
-        mUA(aUA) {
+        mUA(aUA),
+        mShouldResistFingerprinting(aShouldResistFingerprinting) {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
   }
@@ -173,11 +181,9 @@ class GetUserAgentRunnable final : public WorkerMainThreadRunnable {
 
     nsCOMPtr<nsPIDOMWindowInner> window = mWorkerPrivate->GetWindow();
 
-    bool shouldResistFingerprinting =
-        mWorkerPrivate->ShouldResistFingerprinting();
     nsresult rv =
         dom::Navigator::GetUserAgent(window, mWorkerPrivate->GetDocument(),
-                                     Some(shouldResistFingerprinting), mUA);
+                                     Some(mShouldResistFingerprinting), mUA);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to retrieve user-agent from the worker thread.");
     }
@@ -193,8 +199,9 @@ void WorkerNavigator::GetUserAgent(nsString& aUserAgent, CallerType aCallerType,
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
 
-  RefPtr<GetUserAgentRunnable> runnable =
-      new GetUserAgentRunnable(workerPrivate, aUserAgent);
+  RefPtr<GetUserAgentRunnable> runnable = new GetUserAgentRunnable(
+      workerPrivate, aUserAgent,
+      workerPrivate->GlobalScope()->ShouldResistFingerprinting());
 
   runnable->Dispatch(Canceling, aRv);
 }
@@ -204,7 +211,7 @@ uint64_t WorkerNavigator::HardwareConcurrency() const {
   MOZ_ASSERT(rts);
 
   WorkerPrivate* aWorkerPrivate = GetCurrentThreadWorkerPrivate();
-  bool rfp = aWorkerPrivate->ShouldResistFingerprinting();
+  bool rfp = aWorkerPrivate->GlobalScope()->ShouldResistFingerprinting();
 
   return rts->ClampedHardwareConcurrency(rfp);
 }
