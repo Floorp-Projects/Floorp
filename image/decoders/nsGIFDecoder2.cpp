@@ -150,6 +150,22 @@ bool nsGIFDecoder2::CheckForTransparency(const OrientedIntRect& aFrameRect) {
     return true;
   }
 
+  // This is a bit of a hack. Some sites will use a 1x1 gif that includes no
+  // header information indicating it is transparent, no palette, and no image
+  // data at all (so no pixels get written) to represent a transparent pixel
+  // using the absolute least number of bytes. Generally things are setup to
+  // detect transparency without decoding the image data. So to detect this kind
+  // of transparency without decoing the image data we would have to assume
+  // every gif is transparent, which we would like to avoid. Changing things so
+  // that we can detect transparency at any point of decoding is a bigger change
+  // and not worth it for one questionable 1x1 gif. Using this "trick" for
+  // anything but 1x1 transparent spacer gifs doesn't make sense, so it's
+  // reasonable to target 1x1 gifs just for this.
+  if (mGIFStruct.screen_width == 1 && mGIFStruct.screen_height == 1) {
+    PostHasTransparency();
+    return true;
+  }
+
   if (mGIFStruct.images_decoded > 0) {
     return false;  // We only care about first frame padding below.
   }
