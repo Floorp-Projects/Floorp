@@ -11,10 +11,13 @@
 
 namespace mozilla::dom {
 
+class ThreadsafeContentParentHandle;
+
 using BrowsingContextCallbackReceivedPromise =
     MozPromise<RefPtr<BrowsingContext>, CopyableErrorResult, false>;
 
 [[nodiscard]] RefPtr<ClientOpPromise> ClientOpenWindow(
+    ThreadsafeContentParentHandle* aOriginContent,
     const ClientOpenWindowArgs& aArgs);
 
 }  // namespace mozilla::dom

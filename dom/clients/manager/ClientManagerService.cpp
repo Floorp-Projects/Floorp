@@ -406,6 +406,7 @@ void ClientManagerService::RemoveManager(ClientManagerParent* aManager) {
 }
 
 RefPtr<ClientOpPromise> ClientManagerService::Navigate(
+    ThreadsafeContentParentHandle* aOriginContent,
     const ClientNavigateArgs& aArgs) {
   ClientSourceParent* source =
       FindExistingSource(aArgs.target().id(), aArgs.target().principalInfo());
@@ -526,6 +527,7 @@ class PromiseListHolder final {
 }  // anonymous namespace
 
 RefPtr<ClientOpPromise> ClientManagerService::MatchAll(
+    ThreadsafeContentParentHandle* aOriginContent,
     const ClientMatchAllArgs& aArgs) {
   AssertIsOnBackgroundThread();
 
@@ -621,6 +623,7 @@ RefPtr<ClientOpPromise> ClaimOnMainThread(
 }  // anonymous namespace
 
 RefPtr<ClientOpPromise> ClientManagerService::Claim(
+    ThreadsafeContentParentHandle* aOriginContent,
     const ClientClaimArgs& aArgs) {
   AssertIsOnBackgroundThread();
 
@@ -674,6 +677,7 @@ RefPtr<ClientOpPromise> ClientManagerService::Claim(
 }
 
 RefPtr<ClientOpPromise> ClientManagerService::GetInfoAndState(
+    ThreadsafeContentParentHandle* aOriginContent,
     const ClientGetInfoAndStateArgs& aArgs) {
   ClientSourceParent* source =
       FindExistingSource(aArgs.id(), aArgs.principalInfo());
@@ -708,9 +712,12 @@ RefPtr<ClientOpPromise> ClientManagerService::GetInfoAndState(
 }
 
 RefPtr<ClientOpPromise> ClientManagerService::OpenWindow(
+    ThreadsafeContentParentHandle* aOriginContent,
     const ClientOpenWindowArgs& aArgs) {
   return InvokeAsync(GetMainThreadSerialEventTarget(), __func__,
-                     [aArgs]() { return ClientOpenWindow(aArgs); });
+                     [originContent = RefPtr{aOriginContent}, aArgs]() {
+                       return ClientOpenWindow(originContent, aArgs);
+                     });
 }
 
 bool ClientManagerService::HasWindow(
