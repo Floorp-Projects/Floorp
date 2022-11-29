@@ -2364,8 +2364,10 @@ WorkerPrivate::WorkerPrivate(
       // Make timing imprecise in unprivileged code to blunt Spectre timing
       // attacks.
       bool clampAndJitterTime = !usesSystemPrincipal;
-      chromeRealmBehaviors.setClampAndJitterTime(clampAndJitterTime);
-      contentRealmBehaviors.setClampAndJitterTime(clampAndJitterTime);
+      chromeRealmBehaviors.setClampAndJitterTime(clampAndJitterTime)
+          .setShouldResistFingerprinting(false);
+      contentRealmBehaviors.setClampAndJitterTime(clampAndJitterTime)
+          .setShouldResistFingerprinting(mLoadInfo.mShouldResistFingerprinting);
 
       JS::RealmCreationOptions& chromeCreationOptions =
           chromeRealmOptions.creationOptions();
