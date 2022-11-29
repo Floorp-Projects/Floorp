@@ -678,6 +678,11 @@ var snapshotFormatters = {
     }
 
     // graphics-features-tbody
+    let devicePixelRatios = data.graphicsDevicePixelRatios;
+    addRow("features", "graphicsDevicePixelRatios", [
+      new Text(devicePixelRatios),
+    ]);
+
     let compositor = "";
     if (data.windowLayerManagerRemote) {
       compositor = data.windowLayerManagerType;
@@ -691,6 +696,7 @@ var snapshotFormatters = {
     delete data.numTotalWindows;
     delete data.numAcceleratedWindows;
     delete data.numAcceleratedWindowsMessage;
+    delete data.graphicsDevicePixelRatios;
 
     addRow(
       "features",
