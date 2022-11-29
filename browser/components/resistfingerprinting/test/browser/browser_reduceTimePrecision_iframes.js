@@ -64,7 +64,159 @@ let extraPrefs = {};
 let precision = 100;
 let expectedResults = {}; // In this test, we don't have explicit expected values, but rather we expect them to be rounded
 
+// ========================================================================================================================
+// First we run through all the tests with RTP's precision set to 100 ms and 133 ms.
+// Because 100ms and 133ms are >= RFP's precision of 100ms, _all_ tests results should
+// be rounded.
 precision = 100;
+extraData = {
+  precision,
+};
+extraPrefs = [
+  [
+    "privacy.resistFingerprinting.reduceTimerPrecision.microseconds",
+    precision * 1000,
+  ],
+];
+add_task(
+  partial(
+    defaultsTest,
+    uri,
+    iframe_domain,
+    cross_origin_domain,
+    testTimePrecision,
+    expectedResults,
+    extraData,
+    extraPrefs
+  )
+);
+
+add_task(
+  partial(
+    simpleRFPTest,
+    uri,
+    iframe_domain,
+    cross_origin_domain,
+    testTimePrecision,
+    expectedResults,
+    extraData,
+    extraPrefs
+  )
+);
+
+// (A) RFP is exempted on the framer and framee and each contacts an exempted cross-origin resource
+add_task(
+  partial(
+    testA,
+    uri,
+    iframe_domain,
+    cross_origin_domain,
+    testTimePrecision,
+    expectedResults,
+    extraData,
+    extraPrefs
+  )
+);
+
+// (B) RFP is exempted on the framer and framee and each contacts a non-exempted cross-origin resource
+add_task(
+  partial(
+    testB,
+    uri,
+    iframe_domain,
+    cross_origin_domain,
+    testTimePrecision,
+    expectedResults,
+    extraData,
+    extraPrefs
+  )
+);
+
+// (C) RFP is exempted on the framer but not the framee and each contacts an exempted cross-origin resource
+add_task(
+  partial(
+    testC,
+    uri,
+    iframe_domain,
+    cross_origin_domain,
+    testTimePrecision,
+    expectedResults,
+    extraData,
+    extraPrefs
+  )
+);
+
+// (D) RFP is exempted on the framer but not the framee and each contacts a non-exempted cross-origin resource
+add_task(
+  partial(
+    testD,
+    uri,
+    iframe_domain,
+    cross_origin_domain,
+    testTimePrecision,
+    expectedResults,
+    extraData,
+    extraPrefs
+  )
+);
+
+// (E) RFP is not exempted on the framer nor the framee and each contacts an exempted cross-origin resource
+add_task(
+  partial(
+    testE,
+    uri,
+    iframe_domain,
+    cross_origin_domain,
+    testTimePrecision,
+    expectedResults,
+    extraData,
+    extraPrefs
+  )
+);
+
+// (F) RFP is not exempted on the framer nor the framee and each contacts a non-exempted cross-origin resource
+add_task(
+  partial(
+    testF,
+    uri,
+    iframe_domain,
+    cross_origin_domain,
+    testTimePrecision,
+    expectedResults,
+    extraData,
+    extraPrefs
+  )
+);
+
+// (G) RFP is not exempted on the framer but is on the framee and each contacts an exempted cross-origin resource
+add_task(
+  partial(
+    testG,
+    uri,
+    iframe_domain,
+    cross_origin_domain,
+    testTimePrecision,
+    expectedResults,
+    extraData,
+    extraPrefs
+  )
+);
+
+// (H) RFP is not exempted on the framer but is on the framee and each contacts a non-exempted cross-origin resource
+add_task(
+  partial(
+    testH,
+    uri,
+    iframe_domain,
+    cross_origin_domain,
+    testTimePrecision,
+    expectedResults,
+    extraData,
+    extraPrefs
+  )
+);
+
+precision = 133;
 extraData = {
   precision,
 };
