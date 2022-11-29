@@ -74,6 +74,16 @@ dictionary LoadURIOptions {
   * responsible for causing the load.
   */
   unsigned long triggeringSandboxFlags = 0;
+
+  /**
+   * The RemoteType of the entity that's responsible for the load. Defaults to
+   * the current process.
+   *
+   * When starting a load in a content process, `triggeringRemoteType` must be
+   * either unset, or match the current remote type.
+   */
+  UTF8String? triggeringRemoteType;
+
   /**
    * If non-0, a value to pass to nsIDocShell::setCancelContentJSEpoch
    * when initiating the load.

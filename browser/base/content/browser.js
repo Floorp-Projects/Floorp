@@ -2290,6 +2290,7 @@ var gBrowserInit = {
         let hasValidUserGestureActivation = undefined;
         let fromExternal = undefined;
         let globalHistoryOptions = undefined;
+        let triggeringRemoteType = undefined;
         if (window.arguments[1]) {
           if (!(window.arguments[1] instanceof Ci.nsIPropertyBag2)) {
             throw new Error(
@@ -2318,6 +2319,11 @@ var gBrowserInit = {
               );
             }
           }
+          if (extraOptions.hasKey("triggeringRemoteType")) {
+            triggeringRemoteType = extraOptions.getPropertyAsACString(
+              "triggeringRemoteType"
+            );
+          }
         }
 
         try {
@@ -2339,6 +2345,7 @@ var gBrowserInit = {
             hasValidUserGestureActivation,
             fromExternal,
             globalHistoryOptions,
+            triggeringRemoteType,
           });
         } catch (e) {
           Cu.reportError(e);
