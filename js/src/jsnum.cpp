@@ -1540,6 +1540,8 @@ static bool NumberClassFinish(JSContext* cx, HandleObject ctor,
   if (!parseInt) {
     return false;
   }
+  parseInt->setJitInfo(&jit::JitInfo_NumberParseInt);
+
   RootedValue parseIntValue(cx, ObjectValue(*parseInt));
   if (!DefineDataProperty(cx, ctor, parseIntId, parseIntValue, 0)) {
     return false;

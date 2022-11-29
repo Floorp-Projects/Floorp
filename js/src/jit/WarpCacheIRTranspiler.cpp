@@ -3244,6 +3244,18 @@ bool WarpCacheIRTranspiler::emitMathTruncNumberResult(NumberOperandId inputId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitNumberParseIntResult(StringOperandId strId,
+                                                     Int32OperandId radixId) {
+  MDefinition* str = getOperand(strId);
+  MDefinition* radix = getOperand(radixId);
+
+  auto* ins = MNumberParseInt::New(alloc(), str, radix);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitObjectToStringResult(ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 
