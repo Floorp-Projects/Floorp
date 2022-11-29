@@ -2452,6 +2452,44 @@ bool CacheIRCompiler::emitNumberParseIntResult(StringOperandId strId,
   return true;
 }
 
+bool CacheIRCompiler::emitDoubleParseIntResult(NumberOperandId numId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  AutoAvailableFloatRegister floatScratch1(*this, FloatReg0);
+  AutoAvailableFloatRegister floatScratch2(*this, FloatReg1);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  allocator.ensureDoubleRegister(masm, numId, floatScratch1);
+
+  masm.branchDouble(Assembler::DoubleUnordered, floatScratch1, floatScratch1,
+                    failure->label());
+  masm.branchTruncateDoubleToInt32(floatScratch1, scratch, failure->label());
+
+  Label ok;
+  masm.branch32(Assembler::NotEqual, scratch, Imm32(0), &ok);
+  {
+    // Accept both +0 and -0 and return 0.
+    masm.loadConstantDouble(0.0, floatScratch2);
+    masm.branchDouble(Assembler::DoubleEqual, floatScratch1, floatScratch2,
+                      &ok);
+
+    // Fail if a non-zero input is in the exclusive range (-1, 1.0e-6).
+    masm.loadConstantDouble(DOUBLE_DECIMAL_IN_SHORTEST_LOW, floatScratch2);
+    masm.branchDouble(Assembler::DoubleLessThan, floatScratch1, floatScratch2,
+                      failure->label());
+  }
+  masm.bind(&ok);
+
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
+  return true;
+}
+
 bool CacheIRCompiler::emitBooleanToNumber(BooleanOperandId booleanId,
                                           NumberOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

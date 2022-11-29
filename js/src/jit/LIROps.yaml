@@ -1083,6 +1083,13 @@
   call_instruction: true
   mir_op: true
 
+- name: DoubleParseInt
+  result_type: WordSized
+  operands:
+    number: WordSized
+  num_temps: 1
+  mir_op: true
+
 # Adds two string, returning a string.
 - name: Concat
   result_type: WordSized
