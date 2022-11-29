@@ -400,6 +400,9 @@ void ConfigureHugeMemory() {
 bool wasm::Init() {
   MOZ_RELEASE_ASSERT(!sProcessCodeSegmentMap);
 
+  uintptr_t pageSize = gc::SystemPageSize();
+  MOZ_RELEASE_ASSERT(wasm::NullPtrGuardSize <= pageSize);
+
   ConfigureHugeMemory();
 
   AutoEnterOOMUnsafeRegion oomUnsafe;

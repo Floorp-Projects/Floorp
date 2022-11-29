@@ -4430,13 +4430,18 @@ void MacroAssembler::wasmCallRef(const wasm::CallSiteDesc& desc,
   const Register calleeFnObj = WasmCallRefReg;
 
   // Load from the function's WASM_INSTANCE_SLOT extended slot, and decide
-  // whether to take the fast path or the slow path.
+  // whether to take the fast path or the slow path. Register this load
+  // instruction to be source of a trap -- null pointer check.
 
   Label fastCall;
   Label done;
   const Register newInstanceTemp = WasmCallRefCallScratchReg1;
   size_t instanceSlotOffset = FunctionExtended::offsetOfExtendedSlot(
       FunctionExtended::WASM_INSTANCE_SLOT);
+  static_assert(FunctionExtended::WASM_INSTANCE_SLOT < wasm::NullPtrGuardSize);
+  wasm::BytecodeOffset trapOffset(desc.lineOrBytecode());
+  append(wasm::Trap::NullPointerDereference,
+         wasm::TrapSite(currentOffset(), trapOffset));
   loadPtr(Address(calleeFnObj, instanceSlotOffset), newInstanceTemp);
   branchPtr(Assembler::Equal, InstanceReg, newInstanceTemp, &fastCall);
 
