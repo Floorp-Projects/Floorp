@@ -16,17 +16,19 @@ import {
 describe("Discovery Stream <TopSites>", () => {
   let wrapper;
   let store;
-  const defaultTopSiteRows = [
-    { label: "facebook" },
-    { label: "amazon" },
-    { label: "google" },
-    { label: "apple" },
-  ];
-  const defaultTopSites = {
-    rows: defaultTopSiteRows,
-  };
+  let defaultTopSiteRows;
+  let defaultTopSites;
 
   beforeEach(() => {
+    defaultTopSiteRows = [
+      { label: "facebook" },
+      { label: "amazon" },
+      { label: "google" },
+      { label: "apple" },
+    ];
+    defaultTopSites = {
+      rows: defaultTopSiteRows,
+    };
     INITIAL_STATE.Prefs.values.topSitesRows = TOP_SITES_DEFAULT_ROWS;
     store = createStore(combineReducers(reducers), INITIAL_STATE);
     wrapper = mount(
@@ -188,7 +190,7 @@ describe("Discovery Stream <TopSites>", () => {
     it("should add to first position", () => {
       const result = insertSpocContent(defaultTopSites, data, 0);
       assert.deepEqual(result, {
-        rows: [resultSpocFirst, ...defaultTopSiteRows],
+        rows: [resultSpocFirst, ...defaultTopSiteRows.slice(1)],
       });
     });
 
@@ -202,7 +204,7 @@ describe("Discovery Stream <TopSites>", () => {
       const result = insertSpocContent({ rows: topSiteRowsWithPins }, data, 0);
 
       assert.deepEqual(result, {
-        rows: [resultSpocFirst, pinnedSite, pinnedSite, ...defaultTopSiteRows],
+        rows: [resultSpocFirst, pinnedSite, ...defaultTopSiteRows],
       });
     });
   });

@@ -65,8 +65,7 @@ export class _TopSites extends React.PureComponent {
       pos: promoPosition,
     };
 
-    const replaceCount = topSites[promoPosition]?.show_sponsored_label ? 1 : 0;
-    topSites.splice(promoPosition, replaceCount, link);
+    topSites.splice(promoPosition, 1, link);
 
     return { ...TopSites, rows: topSites };
   }

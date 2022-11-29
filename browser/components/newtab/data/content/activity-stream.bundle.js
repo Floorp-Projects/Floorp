@@ -13644,8 +13644,6 @@ class TopSites_TopSites_TopSites extends (external_React_default()).PureComponen
 
 
   insertSpocContent(TopSites, data, promoPosition) {
-    var _topSites$promoPositi;
-
     if (!TopSites.rows || TopSites.rows.length === 0 || !data.spocs || data.spocs.length === 0) {
       return null;
     }
@@ -13673,8 +13671,7 @@ class TopSites_TopSites_TopSites extends (external_React_default()).PureComponen
       // We send the intended position in the ping.
       pos: promoPosition
     };
-    const replaceCount = (_topSites$promoPositi = topSites[promoPosition]) !== null && _topSites$promoPositi !== void 0 && _topSites$promoPositi.show_sponsored_label ? 1 : 0;
-    topSites.splice(promoPosition, replaceCount, link);
+    topSites.splice(promoPosition, 1, link);
     return { ...TopSites,
       rows: topSites
     };
