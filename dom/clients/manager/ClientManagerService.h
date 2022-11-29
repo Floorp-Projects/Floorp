@@ -36,6 +36,7 @@ namespace dom {
 class ClientManagerParent;
 class ClientSourceParent;
 class ClientHandleParent;
+class ThreadsafeContentParentHandle;
 
 // Define a singleton service to manage client activity throughout the
 // browser.  This service runs on the PBackground thread.  To interact
@@ -133,16 +134,24 @@ class ClientManagerService final {
 
   void RemoveManager(ClientManagerParent* aManager);
 
-  RefPtr<ClientOpPromise> Navigate(const ClientNavigateArgs& aArgs);
+  RefPtr<ClientOpPromise> Navigate(
+      ThreadsafeContentParentHandle* aOriginContent,
+      const ClientNavigateArgs& aArgs);
 
-  RefPtr<ClientOpPromise> MatchAll(const ClientMatchAllArgs& aArgs);
+  RefPtr<ClientOpPromise> MatchAll(
+      ThreadsafeContentParentHandle* aOriginContent,
+      const ClientMatchAllArgs& aArgs);
 
-  RefPtr<ClientOpPromise> Claim(const ClientClaimArgs& aArgs);
+  RefPtr<ClientOpPromise> Claim(ThreadsafeContentParentHandle* aOriginContent,
+                                const ClientClaimArgs& aArgs);
 
   RefPtr<ClientOpPromise> GetInfoAndState(
+      ThreadsafeContentParentHandle* aOriginContent,
       const ClientGetInfoAndStateArgs& aArgs);
 
-  RefPtr<ClientOpPromise> OpenWindow(const ClientOpenWindowArgs& aArgs);
+  RefPtr<ClientOpPromise> OpenWindow(
+      ThreadsafeContentParentHandle* aOriginContent,
+      const ClientOpenWindowArgs& aArgs);
 
   bool HasWindow(const Maybe<ContentParentId>& aContentParentId,
                  const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
