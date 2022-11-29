@@ -119,7 +119,7 @@
             tools:targetApi="n" />
 
         <activity android:name=".activity.TextActionActivity"
-            android:label="@string/text_selection_search_action2"
+            android:label="${textSelectionSearchAction}"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.PROCESS_TEXT" />

@@ -73,10 +73,14 @@ android {
         beta {
             initWith release
             applicationIdSuffix ".beta"
+            // This is used when the user selects text in other third-party apps. See https://github.com/mozilla-mobile/focus-android/issues/6478
+            manifestPlaceholders = [textSelectionSearchAction: "@string/text_selection_search_action_focus_beta"]
         }
         nightly {
             initWith release
             applicationIdSuffix ".nightly"
+            // This is used when the user selects text in other third-party apps. See https://github.com/mozilla-mobile/focus-android/issues/6478
+            manifestPlaceholders = [textSelectionSearchAction: "@string/text_selection_search_action_focus_nightly"]
         }
     }
     testOptions {
@@ -104,11 +108,17 @@ android {
             dimension "product"
 
             applicationIdSuffix ".focus"
+
+            // This is used when the user selects text in other third-party apps. See https://github.com/mozilla-mobile/focus-android/issues/6478
+            manifestPlaceholders = [textSelectionSearchAction: "@string/text_selection_search_action_focus"]
         }
         klar {
             dimension "product"
 
             applicationIdSuffix ".klar"
+
+            // This is used when the user selects text in other third-party apps. See https://github.com/mozilla-mobile/focus-android/issues/6478
+            manifestPlaceholders = [textSelectionSearchAction: "@string/text_selection_search_action_klar"]
         }
     }
 
