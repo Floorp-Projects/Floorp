@@ -23,6 +23,7 @@
 #include "jit/JitRuntime.h"
 #include "jit/JitScript.h"
 #include "jit/MoveEmitter.h"
+#include "jit/ReciprocalMulConstants.h"
 #include "jit/SharedICHelpers.h"
 #include "jit/SharedICRegisters.h"
 #include "jit/Simulator.h"
@@ -1267,6 +1268,196 @@ void MacroAssembler::addToCharPtr(Register chars, Register index,
   } else {
     computeEffectiveAddress(BaseIndex(chars, index, TimesTwo), chars);
   }
+}
+
+void MacroAssembler::loadStringFromUnit(Register unit, Register dest,
+                                        const StaticStrings& staticStrings) {
+  movePtr(ImmPtr(&staticStrings.unitStaticTable), dest);
+  loadPtr(BaseIndex(dest, unit, ScalePointer), dest);
+}
+
+void MacroAssembler::loadLengthTwoString(Register c1, Register c2,
+                                         Register dest,
+                                         const StaticStrings& staticStrings) {
+  // Compute (toSmallCharTable[c1] << SMALL_CHAR_BITS) + toSmallCharTable[c2]
+  // to obtain the index into `StaticStrings::length2StaticTable`.
+  static_assert(sizeof(StaticStrings::SmallChar) == 1);
+
+  movePtr(ImmPtr(&StaticStrings::toSmallCharTable.storage), dest);
+  load8ZeroExtend(BaseIndex(dest, c1, Scale::TimesOne), c1);
+  load8ZeroExtend(BaseIndex(dest, c2, Scale::TimesOne), c2);
+
+  lshift32(Imm32(StaticStrings::SMALL_CHAR_BITS), c1);
+  add32(c2, c1);
+
+  // Look up the string from the computed index.
+  movePtr(ImmPtr(&staticStrings.length2StaticTable), dest);
+  loadPtr(BaseIndex(dest, c1, ScalePointer), dest);
+}
+
+void MacroAssembler::loadInt32ToStringWithBase(
+    Register input, Register base, Register dest, Register scratch1,
+    Register scratch2, const StaticStrings& staticStrings,
+    const LiveRegisterSet& volatileRegs, Label* fail) {
+#ifdef DEBUG
+  Label baseBad, baseOk;
+  branch32(Assembler::LessThan, base, Imm32(2), &baseBad);
+  branch32(Assembler::LessThanOrEqual, base, Imm32(36), &baseOk);
+  bind(&baseBad);
+  assumeUnreachable("base must be in range [2, 36]");
+  bind(&baseOk);
+#endif
+
+  // Compute |"0123456789abcdefghijklmnopqrstuvwxyz"[r]|.
+  auto toChar = [this, base](Register r) {
+#ifdef DEBUG
+    Label ok;
+    branch32(Assembler::Below, r, base, &ok);
+    assumeUnreachable("bad digit");
+    bind(&ok);
+#else
+    // Silence unused lambda capture warning.
+    (void)base;
+#endif
+
+    Label done;
+    add32(Imm32('0'), r);
+    branch32(Assembler::BelowOrEqual, r, Imm32('9'), &done);
+    add32(Imm32('a' - '0' - 10), r);
+    bind(&done);
+  };
+
+  // Perform a "unit" lookup when |unsigned(input) < unsigned(base)|.
+  Label lengthTwo, done;
+  branch32(Assembler::AboveOrEqual, input, base, &lengthTwo);
+  {
+    move32(input, scratch1);
+    toChar(scratch1);
+
+    loadStringFromUnit(scratch1, dest, staticStrings);
+
+    jump(&done);
+  }
+  bind(&lengthTwo);
+
+  // Compute |base * base|.
+  move32(base, scratch1);
+  mul32(scratch1, scratch1);
+
+  // Perform a "length2" lookup when |unsigned(input) < unsigned(base * base)|.
+  branch32(Assembler::AboveOrEqual, input, scratch1, fail);
+  {
+    // Compute |scratch1 = input / base| and |scratch2 = input % base|.
+    move32(input, scratch1);
+    flexibleDivMod32(base, scratch1, scratch2, true, volatileRegs);
+
+    // Compute the digits of the divisor and remainder.
+    toChar(scratch1);
+    toChar(scratch2);
+
+    // Look up the 2-character digit string in the small-char table.
+    loadLengthTwoString(scratch1, scratch2, dest, staticStrings);
+  }
+  bind(&done);
+}
+
+void MacroAssembler::loadInt32ToStringWithBase(
+    Register input, int32_t base, Register dest, Register scratch1,
+    Register scratch2, const StaticStrings& staticStrings, Label* fail) {
+  MOZ_ASSERT(2 <= base && base <= 36, "base must be in range [2, 36]");
+
+  // Compute |"0123456789abcdefghijklmnopqrstuvwxyz"[r]|.
+  auto toChar = [this, base](Register r) {
+#ifdef DEBUG
+    Label ok;
+    branch32(Assembler::Below, r, Imm32(base), &ok);
+    assumeUnreachable("bad digit");
+    bind(&ok);
+#endif
+
+    if (base <= 10) {
+      add32(Imm32('0'), r);
+    } else {
+      Label done;
+      add32(Imm32('0'), r);
+      branch32(Assembler::BelowOrEqual, r, Imm32('9'), &done);
+      add32(Imm32('a' - '0' - 10), r);
+      bind(&done);
+    }
+  };
+
+  // Perform a "unit" lookup when |unsigned(input) < unsigned(base)|.
+  Label lengthTwo, done;
+  branch32(Assembler::AboveOrEqual, input, Imm32(base), &lengthTwo);
+  {
+    move32(input, scratch1);
+    toChar(scratch1);
+
+    loadStringFromUnit(scratch1, dest, staticStrings);
+
+    jump(&done);
+  }
+  bind(&lengthTwo);
+
+  // Perform a "length2" lookup when |unsigned(input) < unsigned(base * base)|.
+  branch32(Assembler::AboveOrEqual, input, Imm32(base * base), fail);
+  {
+    // Compute |scratch1 = input / base| and |scratch2 = input % base|.
+    if (mozilla::IsPowerOfTwo(uint32_t(base))) {
+      uint32_t shift = mozilla::FloorLog2(base);
+
+      move32(input, scratch1);
+      rshift32(Imm32(shift), scratch1);
+
+      move32(input, scratch2);
+      and32(Imm32((uint32_t(1) << shift) - 1), scratch2);
+    } else {
+      // The following code matches CodeGenerator::visitUDivOrModConstant()
+      // for x86-shared. Also see Hacker's Delight 2nd edition, chapter 10-8
+      // "Unsigned Division by 7" for the case when |rmc.multiplier| exceeds
+      // UINT32_MAX and we need to adjust the shift amount.
+
+      auto rmc = ReciprocalMulConstants::computeUnsignedDivisionConstants(base);
+
+      // We first compute |q = (M * n) >> 32), where M = rmc.multiplier.
+      mulHighUnsigned32(Imm32(rmc.multiplier), input, scratch1);
+
+      if (rmc.multiplier > UINT32_MAX) {
+        // M >= 2^32 and shift == 0 is impossible, as d >= 2 implies that
+        // ((M * n) >> (32 + shift)) >= n > floor(n/d) whenever n >= d,
+        // contradicting the proof of correctness in computeDivisionConstants.
+        MOZ_ASSERT(rmc.shiftAmount > 0);
+        MOZ_ASSERT(rmc.multiplier < (int64_t(1) << 33));
+
+        // Compute |t = (n - q) / 2|.
+        move32(input, scratch2);
+        sub32(scratch1, scratch2);
+        rshift32(Imm32(1), scratch2);
+
+        // Compute |t = (n - q) / 2 + q = (n + q) / 2|.
+        add32(scratch2, scratch1);
+
+        // Finish the computation |q = floor(n / d)|.
+        rshift32(Imm32(rmc.shiftAmount - 1), scratch1);
+      } else {
+        rshift32(Imm32(rmc.shiftAmount), scratch1);
+      }
+
+      // Compute the remainder from |r = n - q * d|.
+      move32(scratch1, dest);
+      mul32(Imm32(base), dest);
+      move32(input, scratch2);
+      sub32(dest, scratch2);
+    }
+
+    // Compute the digits of the divisor and remainder.
+    toChar(scratch1);
+    toChar(scratch2);
+
+    // Look up the 2-character digit string in the small-char table.
+    loadLengthTwoString(scratch1, scratch2, dest, staticStrings);
+  }
+  bind(&done);
 }
 
 void MacroAssembler::loadBigIntDigits(Register bigInt, Register digits) {
