@@ -47,8 +47,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Seneste bogmærker</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">Gemt for nylig</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Vis alle gemte bogmærker</string>
@@ -257,39 +255,18 @@
     <string name="search_settings_menu_item">Søgeindstillinger</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Søg denne gang med:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Søg denne gang med:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Søg denne gang i:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Nyheder i %1$s</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Det er blevet lettere at fortsætte, hvor du slap.</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Tilpasset startside i %1$s</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Hop til dine åbne faneblade, bogmærker og browserhistorik.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Overskuelige faneblade</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Fjern distraherende faneblade med forbedret layout og automatisk lukning af faneblade.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Seneste søgninger</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Besøg dine seneste søgninger igen fra din startside og faneblade.</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Din personlige startside i Firefox gør det nu lettere at fortsætte, hvor du slap. Find dine seneste faneblade, bogmærker og søgeresultater.</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Mød din tilpassede startside. Seneste faneblade, bogmærker og søgeresultater vises her.</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Velkommen til et uafhængigt internet</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">Velkommen til et mere personligt internet</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Flere farver. Bedre beskyttelse af dit privatliv. Samme forpligtelse til mennesker frem for profit.</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Hop fra telefonen til computeren og tilbage</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">Det er nemmere end nogensinde før at skifte mellem skærme</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -355,6 +332,12 @@
     <string name="preferences_add_private_browsing_shortcut">Tilføj genvej til privat browsing</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Tilstanden Kun-HTTPS</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Reduktion af cookie-bannere</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Reducer cookie-bannere</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Forsøger automatisk at oprette forbindelse til websteder ved hjælp af krypteringsprotokollen HTTPS for øget sikkerhed.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1239,34 +1222,20 @@
     <string name="delete_history_group_snackbar">Gruppe slettet</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Velkommen til %s!</string>
-
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">Velkommen til et bedre internet</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">En browser lavet for mennesker, ikke profit.</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Synkroniser Firefox mellem enheder</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">Fortsæt hvor du slap</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Synkroniser bogmærker, historik og adgangskoder med %1$s på denne enhed.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">Synkroniser faneblade og adgangskoder på tværs af enheder for problemfri skift mellem skærme.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Tilmeld dig</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">Log ind</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Synkronisering er slået til</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Altid aktiveret privatlivsbeskyttelse</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Privatlivsbeskyttelse som standard</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s forhindrer automatisk virksomheder i at følge dig i smug på nettet.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Med Komplet Cookiebeskyttelse, der forhindrer sporings-tjenester i at følge dig på tværs af websteder.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1279,17 +1248,10 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">Blokerer flere sporings-mekanismer. Sider indlæses hurtigere, men noget funktionalitet virker måske ikke.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Vælg placeringen af din værktøjslinje</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Placer værktøjslinjen indenfor rækkevidde. Behold den nederst, eller flyt den til toppen.</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">Behold den nederst, eller flyt den til toppen.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Bedre beskyttelse af dit privatliv</string>
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">Du styrer dine data</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Vi har designet %s til at give dig kontrol over, hvad du deler på nettet - og hvad du deler med os.</string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">Firefox giver dig kontrol over, hvad du deler på nettet - og hvad du deler med os.</string>
     <!-- Text for the button to read the privacy notice -->

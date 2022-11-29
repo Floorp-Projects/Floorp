@@ -49,9 +49,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">最近追加したブックマーク</string>
-
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">最近保存</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">保存したブックマークをすべて表示します</string>
@@ -265,40 +262,19 @@
     <string name="search_settings_menu_item">検索設定</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">今回の検索:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">今回の検索:</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">今回だけ使う検索エンジン:</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">%1$s の新機能</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">前回のページから再開するのが簡単になりました。</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">個人に合わせた %1$s ホームページ</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">開いているタブ、ブックマーク、閲覧履歴にジャンプします。</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">きれいに整理されたタブ</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">改善されたレイアウトとタブを自動的に閉じる機能で散らかったタブを片付けます。</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">最近の検索</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">ホームページとタブから最近の検索を確認できます。</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">個人に合わせた Firefox ホームページにより、前回のページから簡単に再開できるようになりました。最近のタブ、ブックマーク、検索結果を見つけられます。</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">パーソナライズされたホームページをご覧ください。最近使ったタブ、ブックマーク、検索結果がここに表示されます。</string>
 
     <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">誰のものでもない自由なインターネットへようこそ</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">あなただけのインターネットへようこそ</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">多様なカラー、より優れたプライバシー保護、利益を超えて人々への平等なコミットメント。</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">スマートフォンとラップトップの間を行ったり来たり</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">画面の切り替えがこれまで以上に簡単に</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -365,6 +341,15 @@
     <string name="preferences_add_private_browsing_shortcut">プライベートブラウジングショートカットを追加する</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">HTTPS-Only モード</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Cookie バナーの削減</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Cookie バナーを減らす</string>
+
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">Firefox が自動的に Cookie バナーによる Cookie 要求を拒否しようとします。拒否オプションが利用できない場合、すべての Cookie を受け入れてバナーを閉じることがあります。</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">セキュリティ強化のため、自動的に HTTPS 暗号化プロトコルを使用してサイトへの接続を試行します。</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1268,33 +1253,20 @@
     <string name="delete_history_group_snackbar">グループを削除しました</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">%s へようこそ！</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">より良いインターネットへようこそ</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">利益ではなく、ユーザーのために作られているブラウザー。</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">端末間で Firefox を同期</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">やめたところから再開できます</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">この端末の %1$s とブックマーク、履歴、パスワードを同期します。</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">端末間でタブとパスワードを同期して、シームレスに画面を切り替えられます。</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">アカウント登録</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">ログイン</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync が有効です</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">プライバシー重視</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">初期設定でプライバシー保護</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s はウェブ上であなたを密かに追跡する組織を自動的に遮断します。</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">包括的 Cookie 保護機能が、Cookie を利用してサイト間であなたを追跡するトラッカーを遮断します。</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1307,17 +1279,10 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">より多くのトラッカーをブロックするとページの読み込みが速くなりますが、一部のページは正しく機能しなくなる可能性があります。</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">ツールバーの配置を選べます</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">ツールバーを簡単に手の届く位置に置きましょう。画面下または上に移動できます。</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">画面下または上に移動できます。</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">あなたのプライバシー</string>
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">あなたのデータはあなたのもの</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">%s は、あなたがオンラインで共有するものと、私たちと共有するものをコントロールできるように設計されています。</string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">Firefox は、あなたがオンラインで共有するものと、私たちと共有するものをコントロールできます。</string>
     <!-- Text for the button to read the privacy notice -->
