@@ -20,8 +20,6 @@ LOCAL_INCLUDES += [
     "/dom/media",
 ]
 
-DEFINES["TRACING"] = True
-
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"

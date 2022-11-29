@@ -761,6 +761,14 @@ set_config("MOZ_VORBIS", sample_type_is_float)
 set_define("MOZ_TREMOR", sample_type_is_s16)
 set_config("MOZ_TREMOR", sample_type_is_s16)
 
+option(
+    "--disable-real-time-tracing",
+    help="Disable tracing of real-time audio callbacks",
+)
+
+set_config("MOZ_REAL_TIME_TRACING", True, when="--enable-real-time-tracing")
+set_define("MOZ_REAL_TIME_TRACING", True, when="--enable-real-time-tracing")
+
 # OpenMAX IL Decoding Support
 # ==============================================================
 option("--enable-openmax", help="Enable OpenMAX IL for video/audio decoding")

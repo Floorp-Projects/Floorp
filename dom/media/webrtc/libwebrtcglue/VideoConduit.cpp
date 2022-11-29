@@ -1324,6 +1324,7 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
   MOZ_ASSERT(!aFrame.color_space(), "Unexpected use of color space");
   MOZ_ASSERT(!aFrame.has_update_rect(), "Unexpected use of update rect");
 
+#ifdef MOZ_REAL_TIME_TRACING
   if (profiler_is_active()) {
     MutexAutoLock lock(mMutex);
     nsAutoCStringN<256> ssrcsCommaSeparated;
@@ -1345,6 +1346,7 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
     TRACE_COMMENT("VideoConduit::SendVideoFrame", "t-delta=%.1fms, ssrcs=%s",
                   timestampDelta / 1000.f, ssrcsCommaSeparated.get());
   }
+#endif
 
   mVideoBroadcaster.OnFrame(aFrame);
 
@@ -1661,6 +1663,7 @@ void WebrtcVideoConduit::OnFrame(const webrtc::VideoFrame& video_frame) {
       VideoLatencyUpdate(now - timestamp);
     }
   }
+#ifdef MOZ_REAL_TIME_TRACING
   if (profiler_is_active()) {
     MutexAutoLock lock(mMutex);
     // The first frame has a delta of zero.
@@ -1674,6 +1677,7 @@ void WebrtcVideoConduit::OnFrame(const webrtc::VideoFrame& video_frame) {
                   timestampDelta * 1000.f / webrtc::kVideoPayloadTypeFrequency,
                   localRecvSsrc);
   }
+#endif
 
   mRenderer->RenderVideoFrame(*video_frame.video_frame_buffer(),
                               video_frame.timestamp(),

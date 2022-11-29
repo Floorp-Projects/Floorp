@@ -30,7 +30,7 @@ extern mozilla::AsyncLogger gAudioCallbackTraceLogger;
 void StartAudioCallbackTracing();
 void StopAudioCallbackTracing();
 
-#ifdef TRACING
+#ifdef MOZ_REAL_TIME_TRACING
 #  define TRACE(aName) AutoTracer trace(gAudioCallbackTraceLogger, aName);
 #  define TRACE_COMMENT(aName, aFmt, ...)              \
     AutoTracer trace(gAudioCallbackTraceLogger, aName, \
