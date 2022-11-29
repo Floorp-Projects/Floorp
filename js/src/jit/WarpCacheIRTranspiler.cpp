@@ -909,6 +909,17 @@ bool WarpCacheIRTranspiler::emitGuardSpecificSymbol(SymbolOperandId symId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardSpecificInt32(Int32OperandId numId,
+                                                   int32_t expected) {
+  MDefinition* num = getOperand(numId);
+
+  auto* ins = MGuardSpecificInt32::New(alloc(), num, expected);
+  add(ins);
+
+  setOperand(numId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardSpecificObject(ObjOperandId objId,
                                                     uint32_t expectedOffset) {
   MDefinition* obj = getOperand(objId);

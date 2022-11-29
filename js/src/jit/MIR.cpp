@@ -6236,6 +6236,13 @@ MDefinition* MGuardSpecificSymbol::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+MDefinition* MGuardSpecificInt32::foldsTo(TempAllocator& alloc) {
+  if (num()->isConstant() && num()->toConstant()->isInt32(expected())) {
+    return num();
+  }
+  return this;
+}
+
 bool MCallBindVar::congruentTo(const MDefinition* ins) const {
   if (!ins->isCallBindVar()) {
     return false;
