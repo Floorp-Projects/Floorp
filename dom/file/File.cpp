@@ -14,6 +14,7 @@
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "nsIFile.h"
+#include "nsContentUtils.h"
 #include "nsXULAppAPI.h"
 
 namespace mozilla::dom {
@@ -58,8 +59,7 @@ already_AddRefed<File> File::CreateMemoryFileWithLastModifiedNow(
   MOZ_ASSERT(aGlobal);
 
   RefPtr<MemoryBlobImpl> blobImpl = MemoryBlobImpl::CreateWithLastModifiedNow(
-      aMemoryBuffer, aLength, aName, aContentType,
-      aGlobal->CrossOriginIsolated());
+      aMemoryBuffer, aLength, aName, aContentType, aGlobal->GetRTPCallerType());
   MOZ_ASSERT(blobImpl);
 
   RefPtr<File> file = File::Create(aGlobal, blobImpl);
@@ -143,7 +143,7 @@ already_AddRefed<File> File::Constructor(const GlobalObject& aGlobal,
   nsAutoString type(aBag.mType);
   MakeValidBlobType(type);
   impl->InitializeBlob(aData, type, aBag.mEndings == EndingType::Native,
-                       global->CrossOriginIsolated(), aRv);
+                       global->GetRTPCallerType(), aRv);
   if (aRv.Failed()) {
     return nullptr;
   }

@@ -28,10 +28,9 @@ already_AddRefed<MemoryBlobImpl> MemoryBlobImpl::CreateWithCustomLastModified(
 // static
 already_AddRefed<MemoryBlobImpl> MemoryBlobImpl::CreateWithLastModifiedNow(
     void* aMemoryBuffer, uint64_t aLength, const nsAString& aName,
-    const nsAString& aContentType, bool aCrossOriginIsolated) {
-  int64_t lastModificationDate = nsRFPService::ReduceTimePrecisionAsUSecs(
-      PR_Now(), 0,
-      /* aIsSystemPrincipal */ false, aCrossOriginIsolated);
+    const nsAString& aContentType, RTPCallerType aRTPCallerType) {
+  int64_t lastModificationDate =
+      nsRFPService::ReduceTimePrecisionAsUSecs(PR_Now(), 0, aRTPCallerType);
   return CreateWithCustomLastModified(aMemoryBuffer, aLength, aName,
                                       aContentType, lastModificationDate);
 }
