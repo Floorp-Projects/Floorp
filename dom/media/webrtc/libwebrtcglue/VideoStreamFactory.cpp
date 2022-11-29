@@ -354,10 +354,29 @@ unsigned int VideoStreamFactory::SelectFrameRate(
   return new_framerate;
 }
 
-bool VideoStreamFactory::ShouldDropFrame(int64_t aTimestamp) {
+bool VideoStreamFactory::ShouldDropFrame(const webrtc::VideoFrame& aFrame) {
+  bool hasNonZeroLayer = false;
+  {
+    const size_t streamCount =
+        mCodecMode == webrtc::VideoCodecMode::kScreensharing
+            ? 1
+            : mCodecConfig.mEncodings.size();
+    for (int idx = streamCount - 1; idx >= 0; --idx) {
+      const auto& encoding = mCodecConfig.mEncodings[idx];
+      if (aFrame.width() / encoding.constraints.scaleDownBy >= 1.0 &&
+          aFrame.height() / encoding.constraints.scaleDownBy >= 1.0) {
+        hasNonZeroLayer = true;
+        break;
+      }
+    }
+  }
+  if (!hasNonZeroLayer) {
+    return true;
+  }
+
   auto frameRateController = mFramerateController.Lock();
-  return frameRateController->ShouldDropFrame(
-      (aTimestamp * rtc::kNumNanosecsPerMicrosec));
+  return frameRateController->ShouldDropFrame(aFrame.timestamp_us() *
+                                              rtc::kNumNanosecsPerMicrosec);
 }
 
 }  // namespace mozilla
