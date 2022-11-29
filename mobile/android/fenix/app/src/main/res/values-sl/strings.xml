@@ -256,7 +256,7 @@
     <string name="search_settings_menu_item">Nastavitve iskanja</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Tokrat išči:</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">Tokrat išči:</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -332,6 +332,7 @@
     <string name="preferences_add_private_browsing_shortcut">Dodaj bližnjico zasebnega brskanja</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Način &quot;samo HTTPS&quot;</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Za večjo varnost poskuša samodejno vzpostaviti povezavo s šifrirnim protokolom HTTPS.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1109,6 +1110,12 @@
     <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">Nastavi %1$s kot privzeti brskalnik</string>
+
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Preizkusite zasebno brskanje</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Brskajte brez shranjevanja piškotkov ali zgodovine v %1$s</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->

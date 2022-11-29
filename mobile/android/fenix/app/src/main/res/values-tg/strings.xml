@@ -1116,6 +1116,12 @@
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">Гузоштани %1$s ҳамчун браузери пешфарз</string>
 
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Тамошокунии хусусиро озмоед</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Сомонаҳоро бе ягон куки ё таърихи нигоҳдошташуда дар «%1$s» тамошо кунед</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Маҷмӯа нест карда шуд</string>

@@ -337,6 +337,13 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Csak HTTPS mód</string>
 
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Sütibannerek számának csökkentése</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">A sütibannerek számának csökkentése</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">A Firefox automatikusan megpróbálja elutasítani a sütibannereken megjelenő sütikéréseket. Ha nem áll rendelkezésre elutasítási lehetőség, akkor a Firefox minden sütit elfogadhat a banner elrejtéséhez.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automatikusan HTTPS titkosítási protokoll használatával próbál meg csatlakozni a webhelyekhez a fokozott biztonság érdekében.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1112,6 +1119,12 @@
     <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">A %1$s alapértelmezett böngészővé tétele</string>
+
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Próbálja ki a privát böngészést</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Böngésszen mentett sütik vagy előzmények nélkül a %1$sban</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->

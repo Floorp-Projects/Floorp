@@ -43,9 +43,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜᱼᱟᱜ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
-
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">ᱱᱤᱛ ᱥᱟᱺᱪᱟᱣᱟᱜ</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">ᱡᱷᱚᱛᱚ ᱥᱟᱺᱪᱟᱣ ᱠᱟᱱ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
@@ -260,40 +257,18 @@
     <string name="search_settings_menu_item">ᱥᱮᱸᱫᱽᱨᱟ ᱥᱟᱡᱟᱣ ᱠᱚ</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">ᱱᱤᱭᱟᱹ ᱚᱠᱛᱚ ᱥᱮᱸᱫᱽᱨᱟ :</string>
+    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">ᱱᱤᱭᱟᱹ ᱚᱠᱛᱚ ᱥᱮᱸᱫᱽᱨᱟ :</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">ᱱᱤᱛᱚᱜ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ :</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">%1$s ᱨᱮ ᱪᱮᱫ ᱱᱟᱶᱟ ᱢᱮᱱᱟ-ᱟ</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜ ᱫᱚ ᱡᱟᱦᱟᱸ ᱨᱮ ᱢᱟᱲᱟᱝ ᱛᱟᱦᱮᱸ ᱠᱟᱱᱟᱢ ᱱᱚᱰᱮ ᱠᱷᱚᱱ ᱥᱟᱵ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱢ᱾</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">ᱱᱤᱡᱮ ᱛᱮ ᱛᱮᱭᱟᱨ %1$s ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">ᱠᱷᱩᱞᱟᱹ ᱠᱟᱱ ᱴᱮᱵᱽ, ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ, ᱟᱨ ᱦᱤᱛᱟᱹᱞ ᱵᱽᱨᱟᱣᱩᱡᱽ ᱛᱮ ᱪᱟᱞᱟᱜ ᱢᱮ᱾</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">ᱥᱟᱯᱷᱟ, ᱴᱮᱵᱽ ᱠᱚ ᱵᱮᱵᱚᱥᱛᱷᱟᱭ ᱢᱮ</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">ᱴᱮᱵᱽ ᱵᱷᱤᱲ ᱠᱚ ᱥᱩᱫᱷᱨᱟᱹᱣ ᱠᱟᱱ ᱞᱮᱭᱟᱩᱴ ᱟᱨ ᱟᱡ ᱛᱮ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ ᱢᱮᱴᱟᱣᱟᱭ᱾</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜᱟᱜ ᱥᱮᱸᱫᱽᱨᱟ ᱠᱚ</string>
-
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ ᱟᱨ ᱴᱮᱵᱽ ᱠᱷᱚᱱ ᱱᱤᱛᱚᱜᱟᱜ ᱥᱮᱸᱫᱽᱨᱟ ᱛᱮ ᱫᱩᱦᱲᱟᱹ ᱪᱟᱞᱟᱜ ᱞᱟᱹᱜᱤᱫ ᱾</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱢᱚᱱᱮᱛᱮᱭᱟᱜ Firefox ᱚᱲᱟᱜᱥᱟᱦᱴᱟ ᱫᱚ ᱱᱤᱛᱚᱜ ᱡᱟᱦᱟᱸ ᱨᱮ ᱟᱲᱟᱜ ᱠᱟᱜᱼᱟᱢ ᱚᱱᱰᱮ ᱜᱮ ᱤᱫᱤ ᱢᱮᱭᱟᱭ ᱾ ᱟᱢᱟᱜ ᱱᱤᱛᱚᱜᱟᱜ ᱴᱮᱵᱽ ᱠᱚ, ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ ᱟᱨ ᱥᱮᱸᱫᱽᱨᱟ ᱠᱚ ᱯᱟᱱᱛᱮ ᱛᱟᱢ ᱾</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">ᱟᱢᱟᱜ ᱠᱩᱥᱤ ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ ᱧᱮᱞ ᱛᱟᱢ ᱾ ᱱᱤᱛᱚᱜᱟᱜ ᱴᱮᱵᱽ ᱠᱚ, ᱵᱩᱩᱠᱢᱟᱨᱠ ᱠᱚ ᱟᱨ ᱥᱮᱱᱫᱽᱨᱟ ᱛᱮᱞᱟ ᱫᱚ ᱱᱚᱰᱮ ᱫᱮᱠᱷᱟᱣᱜᱼᱟ ᱾</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">ᱥᱟᱹᱫᱷᱤᱱ ᱤᱱᱴᱚᱨᱱᱮᱴ ᱨᱮ ᱟᱢᱟᱜ ᱥᱟᱹᱜᱩᱱ ᱫᱟᱨᱟᱢ</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">ᱱᱤᱡᱚᱨᱟᱜ ᱞᱮᱠᱷᱟ ᱤᱱᱴᱚᱨᱱᱮᱴ ᱨᱮ ᱟᱢᱟᱜ ᱥᱟᱹᱜᱩᱱ ᱫᱟᱨᱟᱢ</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">ᱰᱷᱮᱨ ᱨᱚᱝ ᱠᱚ ᱾ ᱵᱮᱥ ᱱᱤᱥᱚᱱ ᱾ ᱞᱟᱵᱷ ᱨᱮ ᱚᱱᱟ ᱥᱚᱯᱚᱛᱷ ᱜᱮ ᱡᱷᱚᱛᱚ ᱦᱚᱲ ᱾</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">ᱯᱷᱚᱱ ᱠᱷᱚᱱ ᱞᱮᱯᱴᱚᱯ ᱛᱮ ᱩᱪᱟᱹᱲ ᱢᱮ ᱵᱟᱨ ᱯᱟᱦᱴᱮ ᱞᱮᱠᱟᱛᱮ</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">ᱯᱚᱨᱫᱟ ᱵᱚᱫᱚᱞ ᱫᱚ ᱱᱤᱛᱚᱜ ᱟᱹᱰᱤ ᱤᱫᱤᱜ ᱠᱟᱱᱟ</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -358,6 +333,14 @@
     <string name="preferences_add_private_browsing_shortcut">ᱱᱤᱡᱮᱨᱟᱜ ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">ᱠᱷᱟᱹᱞᱤᱼHTTPS ᱢᱳᱰ</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱠᱷᱟᱴᱚ</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱠᱷᱟᱴᱚᱭ ᱢᱮ</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
+    <string name="reduce_cookie_banner_summary">ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱨᱮ Firefox ᱫᱚ ᱟᱡ ᱛᱮᱜᱮ ᱠᱩᱠᱤ ᱱᱮᱦᱚᱨ ᱠᱚ ᱵᱟᱫ ᱜᱤᱰᱤ ᱠᱟᱜᱼᱟᱭ ᱾ ᱡᱩᱫᱤ ᱵᱟᱫ ᱜᱤᱫᱤ ᱚᱯᱥᱚᱱ ᱨᱮ ᱵᱟᱹᱱᱩᱜ ᱠᱷᱟᱱ, Firefox ᱫᱚ ᱵᱮᱱᱚᱨ ᱢᱮᱴᱟᱣ ᱞᱟᱹᱜᱤᱫ ᱡᱷᱚᱛᱚ ᱠᱩᱠᱤ ᱦᱮᱥᱤᱭᱟᱹᱨ ᱩᱛᱟᱹᱨ ᱟᱭ ᱾</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">ᱵᱮᱰᱷᱟᱣ ᱠᱟᱱᱟ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱛᱮ HTTPS ᱫᱟᱱᱟᱝ ᱵᱮᱵᱷᱟᱨ ᱛᱮ ᱥᱟᱭᱤᱴ ᱠᱚ ᱥᱟᱞᱟᱜ ᱟᱡ ᱛᱮ ᱡᱩᱲᱟᱹᱣ ᱵᱤᱲᱟᱹᱣ ᱾</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -1132,6 +1115,13 @@
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">%1$s ᱫᱚ ᱟᱢᱟᱜ ᱢᱩᱞ ᱯᱷᱮᱲᱟᱛ ᱵᱽᱨᱟᱩᱡᱚᱨ ᱥᱮᱴ ᱢᱮ</string>
 
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">ᱱᱤᱡᱚᱨᱟᱜ ᱵᱽᱨᱟᱣᱡᱤᱝ ᱠᱩᱨᱩᱢᱩᱴᱩ ᱞᱮᱢ</string>
+
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">%1$s ᱨᱮ ᱵᱟᱝ ᱥᱟᱧᱪᱟᱣ ᱠᱟᱱ ᱠᱩᱠᱤ ᱟᱨᱵᱟᱝ ᱦᱤᱛᱟᱹᱞ ᱠᱚ ᱵᱽᱨᱟᱣᱩᱡᱽ ᱢᱮ</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">ᱛᱩᱢᱟᱹᱞ ᱢᱮᱴᱟᱣᱮᱱᱟ</string>
@@ -1254,33 +1244,20 @@
     <string name="delete_history_group_snackbar">ᱫᱳᱞ ᱢᱮᱴᱟᱣ ᱦᱩᱭ</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">%s ᱨᱮ ᱥᱟᱹᱜᱩᱱ ᱫᱟᱨᱟᱢ!</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">ᱢᱤᱫᱴᱟᱹᱝ ᱵᱮᱥ ᱤᱱᱴᱚᱨᱱᱮᱴ ᱨᱮ ᱟᱢᱟᱜ ᱥᱟᱹᱜᱩᱱ ᱫᱟᱨᱟᱢ</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">ᱦᱚᱲ ᱠᱚ ᱞᱟᱹᱜᱤᱫ, ᱵᱤᱱ ᱞᱟᱵᱷ ᱨᱮᱭᱟᱜ ᱢᱤᱫᱴᱟᱹᱝ ᱵᱽᱨᱟᱣᱡᱚᱨ ᱾</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">ᱥᱟᱫᱷᱚᱱ ᱵᱷᱤᱛᱨᱤ ᱨᱮ Firefox ᱥᱭᱝᱠ ᱢᱮ</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">ᱪᱟᱞᱟᱜ ᱢᱮ ᱡᱟᱦᱟᱸ ᱨᱮ ᱢᱟᱲᱟᱝ ᱛᱟᱦᱮᱸ ᱠᱟᱱᱟᱢ</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">%1$s ᱨᱮ ᱵᱩᱠᱢᱟᱨᱠᱥ, ᱦᱤᱛᱟᱹᱞ, ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱨᱮ ᱟᱹᱜᱩ ᱪᱷᱚᱭ ᱢᱮ ᱾</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">ᱟᱨᱟᱢ ᱛᱮ ᱯᱚᱨᱫᱟ ᱠᱚ ᱩᱪᱟᱹᱲ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱫᱷᱚᱱ ᱥᱟᱨᱟ ᱨᱮ ᱴᱮᱵᱽ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱠᱚᱨᱮ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱢᱮ ᱾</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">ᱥᱩᱦᱤ ᱮᱡ ᱪᱷᱚ</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">ᱥᱭᱝᱠ ᱪᱟᱹᱞᱩ ᱢᱮᱱᱟᱜ-ᱟ</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">ᱯᱨᱟᱭᱣᱮᱥᱭ ᱡᱷᱚᱛᱚ ᱵᱮᱲᱟ ᱮᱢ ᱪᱷᱚᱭ ᱢᱮ</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">ᱢᱩᱞ ᱞᱮᱠᱷᱟᱛᱮ ᱱᱤᱥᱚᱱ ᱨᱩᱠᱷᱤᱭᱟᱹᱭ ᱢᱮ</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s ᱫᱚ ᱵᱟᱦᱨᱮ ᱠᱚᱢᱯᱟᱱᱤ ᱠᱚ ᱣᱮᱵᱽ ᱨᱮ ᱟᱢ ᱯᱟᱸᱡᱟ ᱠᱚ ᱵᱚᱸᱫᱚᱜᱼᱟ ᱾</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">ᱡᱷᱚᱛᱚ ᱥᱟᱭᱤᱴ ᱠᱚᱨᱮ ᱠᱩᱠᱤ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱵᱟᱹᱲ ᱪᱷᱚ ᱞᱟᱹᱜᱤᱫ ᱢᱩᱴ ᱠᱩᱠᱤ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱫᱮᱠᱷᱟᱣᱜ ᱠᱟᱱᱟ ᱾</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1293,18 +1270,11 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">ᱥᱟᱦᱴᱟ ᱞᱚᱜᱚᱱ ᱞᱳᱰ ᱞᱟᱹᱜᱤᱫ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱵᱞᱚᱠ ᱠᱚᱟᱭ, ᱦᱮᱞᱮ ᱥᱟᱦᱴᱟ ᱞᱳᱰ ᱨᱮ ᱰᱤᱜᱟᱹᱣ ᱦᱩᱭ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱾</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">ᱟᱢᱟᱜ ᱴᱩᱞᱵᱟᱨ ᱯᱞᱮᱥᱢᱮᱱᱴ ᱨᱟᱠᱟᱵᱽ ᱛᱟᱢ</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">ᱴᱩᱞᱵᱟᱨ ᱫᱚ ᱥᱮᱴᱮᱨᱚᱜ ᱴᱷᱮᱱ ᱫᱚᱦᱚᱭ ᱢᱮ ᱾ ᱞᱟᱛᱟᱨ ᱨᱮ ᱫᱚᱦᱚᱭ ᱢᱮ, ᱟᱨ ᱵᱟᱝ ᱪᱮᱛᱟᱱ ᱥᱮᱫ ᱩᱪᱟᱹᱲ ᱢᱮ ᱾</string>
 
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">ᱞᱟᱛᱟᱨ ᱨᱮ ᱫᱚᱦᱚᱭ ᱢᱮ, ᱵᱟᱝᱠᱷᱟᱱ ᱪᱮᱛᱟᱱ ᱥᱮᱫ ᱩᱪᱟᱹᱲ ᱢᱮ ᱾</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱱᱤᱥᱚᱱ</string>
     <!-- Text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header_1">ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱟᱢᱟᱜ ᱠᱚᱵᱚᱡᱽ ᱨᱮ ᱛᱟᱦᱮᱱ ᱟ</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">ᱟᱞᱮ  %s ᱞᱮ ᱰᱤᱡᱟᱭᱤᱱ ᱟᱠᱟᱫᱼᱟ ᱚᱠᱟ ᱫᱚ ᱡᱟᱦᱟᱱᱟᱜ ᱠᱚ ᱚᱱᱞᱟᱭᱤᱱ ᱦᱟᱹᱴᱤᱧ ᱨᱮ ᱟᱨ ᱚᱠᱟ ᱠᱚ ᱟᱞᱮ ᱦᱟᱹᱤᱧ ᱟᱞᱮᱭᱟᱢ, ᱜᱚᱲᱚ ᱮᱢᱟᱭ ᱾</string>
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">Firefox ᱴᱷᱮᱱ ᱡᱟᱦᱱᱟᱜ ᱜᱮ ᱟᱢ ᱚᱱᱞᱟᱭᱤᱱ ᱦᱟᱹᱴᱤᱧ ᱮᱫᱟᱢ ᱟᱨ ᱟᱢ ᱟᱞᱮ ᱥᱟᱶ ᱪᱮᱫ ᱮᱢ ᱦᱟᱹᱴᱤᱧ ᱮᱫᱟᱢ ᱚᱱᱟ ᱨᱮᱭᱟᱜ ᱠᱚᱵᱚᱡᱽ ᱮᱢᱟᱢ ᱠᱟᱱᱟᱭ ᱾</string>
     <!-- Text for the button to read the privacy notice -->

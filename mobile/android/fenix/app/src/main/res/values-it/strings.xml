@@ -274,7 +274,7 @@
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">Passare da uno schermo all’altro è più facile che mai</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
-    <string name="onboarding_home_sync_description">Riprendi da dove avevi interrotto con le schede di altri dispositivi, ora disponibili direttamente dalla pagina iniziale.</string>
+    <string name="onboarding_home_sync_description">Riprendi da dove eri rimasto con le schede di altri dispositivi, ora disponibili direttamente dalla pagina iniziale.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Inizia</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
@@ -283,7 +283,7 @@
     <string name="onboarding_home_skip_button">Salta</string>
 
     <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
-    <string name="sync_cfr_message">La sincronizzazione delle tue schede è in corso. Riprendi da dove avevi interrotto sull’altro dispositivo.</string>
+    <string name="sync_cfr_message">La sincronizzazione delle tue schede è in corso. Riprendi da dove eri rimasto sull’altro dispositivo.</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">Chiudi</string>
@@ -1142,6 +1142,12 @@
     %1$s is a placeholder that will be replaced by the app name (Fenix). -->
     <string name="notification_default_browser_text">Imposta %1$s come browser predefinito</string>
 
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Prova la navigazione anonima</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Naviga senza salvare cookie o cronologia in %1$s</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Raccolta eliminata</string>
@@ -1275,7 +1281,7 @@
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">Un browser realizzato per le persone, non per il profitto.</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header">Riprendi da dove ti eri interrotto</string>
+    <string name="onboarding_account_sign_in_header">Riprendi da dove eri rimasto</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">Sincronizza le schede e le password tra i tuoi dispositivi per passare da uno schermo all’altro senza interruzioni.</string>
     <!-- Text for the button to manually sign into Firefox account. -->
