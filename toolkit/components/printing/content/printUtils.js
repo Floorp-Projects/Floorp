@@ -332,34 +332,22 @@ var PrintUtils = {
 
         // Prompt the user to choose a printer and make any desired print
         // settings changes.
+        let doPrint = false;
         try {
-          await Cc["@mozilla.org/widget/printdialog-service;1"]
-            .getService(Ci.nsIPrintDialogService)
-            .showPrintDialog(
-              browsingContext.topChromeWindow,
-              hasSelection,
-              settings
-            );
-        } catch (e) {
-          if (browser) {
-            browser.remove(); // don't leak this
+          doPrint = await PrintUtils.handleSystemPrintDialog(
+            browsingContext.topChromeWindow,
+            hasSelection,
+            settings
+          );
+          if (!doPrint) {
+            return;
           }
-          if (e.result == Cr.NS_ERROR_ABORT) {
-            return; // user cancelled
+        } finally {
+          // Clean up browser if we aren't going to use it.
+          if (!doPrint && browser) {
+            browser.remove();
           }
-          throw e;
         }
-
-        // Update the saved last used printer name and print settings:
-        Services.prefs.setStringPref("print_printer", settings.printerName);
-        var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
-          Ci.nsIPrintSettingsService
-        );
-        PSSVC.savePrintSettingsToPrefs(
-          settings,
-          true,
-          Ci.nsIPrintSettings.kInitSaveAll
-        );
       }
 
       // At some point we should handle the Promise that this returns (at
@@ -568,6 +556,35 @@ var PrintUtils = {
       Cu.reportError("PrintUtils.getPrintSettings failed: " + e + "\n");
     }
     return printSettings;
+  },
+
+  // Show the system print dialog, saving modified preferences.
+  // Returns true if the user clicked print (Not cancel).
+  async handleSystemPrintDialog(aWindow, aHasSelection, aSettings) {
+    // Prompt the user to choose a printer and make any desired print
+    // settings changes.
+    try {
+      const svc = Cc["@mozilla.org/widget/printdialog-service;1"].getService(
+        Ci.nsIPrintDialogService
+      );
+      await svc.showPrintDialog(aWindow, aHasSelection, aSettings);
+    } catch (e) {
+      if (e.result == Cr.NS_ERROR_ABORT) {
+        return false;
+      }
+      throw e;
+    }
+
+    // Update the saved last used printer name and print settings:
+    var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
+      Ci.nsIPrintSettingsService
+    );
+    PSSVC.savePrintSettingsToPrefs(
+      aSettings,
+      true,
+      Ci.nsIPrintSettings.kPrintDialogPersistSettings
+    );
+    return true;
   },
 };
 

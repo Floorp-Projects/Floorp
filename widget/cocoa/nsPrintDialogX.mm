@@ -120,12 +120,6 @@ nsPrintDialogServiceX::ShowPrintDialog(mozIDOMWindowProxy* aParent, bool aHaveSe
   // will be carried through.
   settingsX->SetFromPrintInfo(result, /* aAdoptPrintInfo = */ true);
 
-  // Save settings unless saving is pref'd off
-  if (Preferences::GetBool("print.save_print_settings", false)) {
-    printSettingsSvc->SavePrintSettingsToPrefs(settingsX, true,
-                                               nsIPrintSettings::kInitSaveNativeData);
-  }
-
   return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
@@ -164,8 +158,7 @@ nsPrintDialogServiceX::ShowPageSetupDialog(mozIDOMWindowProxy* aParent,
     nsCOMPtr<nsIPrintSettingsService> printSettingsService =
         do_GetService("@mozilla.org/gfx/printsettings-service;1");
     if (printSettingsService && Preferences::GetBool("print.save_print_settings", false)) {
-      uint32_t flags = nsIPrintSettings::kInitSaveNativeData |
-                       nsIPrintSettings::kInitSavePaperSize |
+      uint32_t flags = nsIPrintSettings::kInitSavePaperSize |
                        nsIPrintSettings::kInitSaveOrientation | nsIPrintSettings::kInitSaveScaling;
       printSettingsService->SavePrintSettingsToPrefs(aNSSettings, true, flags);
     }
