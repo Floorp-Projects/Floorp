@@ -1585,7 +1585,8 @@ static bool NumberClassFinish(JSContext* cx, HandleObject ctor,
 }
 
 const ClassSpec NumberObject::classSpec_ = {
-    GenericCreateConstructor<Number, 1, gc::AllocKind::FUNCTION>,
+    GenericCreateConstructor<Number, 1, gc::AllocKind::FUNCTION,
+                             &jit::JitInfo_Number>,
     NumberObject::createPrototype,
     number_static_methods,
     number_static_properties,
