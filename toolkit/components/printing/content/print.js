@@ -300,19 +300,30 @@ var PrintEventHandler = {
       // system dialog the title will be used to generate the prepopulated
       // filename in the file picker.
       settings.title = this.activeTitle;
-      Services.telemetry.scalarAdd("printing.dialog_opened_via_preview_tm", 1);
-      const doPrint = await this._showPrintDialog(
-        window,
-        this.hasSelection,
-        settings
-      );
-      if (!doPrint) {
+      const PRINTDIALOGSVC = Cc[
+        "@mozilla.org/widget/printdialog-service;1"
+      ].getService(Ci.nsIPrintDialogService);
+      try {
         Services.telemetry.scalarAdd(
-          "printing.dialog_via_preview_cancelled_tm",
+          "printing.dialog_opened_via_preview_tm",
           1
         );
-        window.close();
-        return;
+        await this._showPrintDialog(
+          PRINTDIALOGSVC,
+          window,
+          this.hasSelection,
+          settings
+        );
+      } catch (e) {
+        if (e.result == Cr.NS_ERROR_ABORT) {
+          Services.telemetry.scalarAdd(
+            "printing.dialog_via_preview_cancelled_tm",
+            1
+          );
+          window.close();
+          return; // user cancelled
+        }
+        throw e;
       }
       await this.print(settings);
     });
@@ -1024,8 +1035,7 @@ var PrintEventHandler = {
     aHaveSelection,
     aSettings
   ) {
-    return PrintUtils.handleSystemPrintDialog(
-      aPrintDialogService,
+    return aPrintDialogService.showPrintDialog(
       aWindow,
       aHaveSelection,
       aSettings
