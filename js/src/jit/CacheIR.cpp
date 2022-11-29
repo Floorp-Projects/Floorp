@@ -7712,6 +7712,43 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathFunction(
   return AttachDecision::Attach;
 }
 
+AttachDecision InlinableNativeIRGenerator::tryAttachNumber() {
+  // Expect a single string argument.
+  if (argc_ != 1 || !args_[0].isString()) {
+    return AttachDecision::NoAction;
+  }
+
+  double num;
+  if (!StringToNumber(cx_, args_[0].toString(), &num)) {
+    cx_->recoverFromOutOfMemory();
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  initializeInputOperand();
+
+  // Guard callee is the `Number` function.
+  emitNativeCalleeGuard();
+
+  // Guard that the argument is a string.
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  StringOperandId strId = writer.guardToString(argId);
+
+  // Return either an Int32 or Double result.
+  int32_t unused;
+  if (mozilla::NumberIsInt32(num, &unused)) {
+    Int32OperandId resultId = writer.guardStringToInt32(strId);
+    writer.loadInt32Result(resultId);
+  } else {
+    NumberOperandId resultId = writer.guardStringToNumber(strId);
+    writer.loadDoubleResult(resultId);
+  }
+  writer.returnFromIC();
+
+  trackAttached("Number");
+  return AttachDecision::Attach;
+}
+
 AttachDecision InlinableNativeIRGenerator::tryAttachNumberParseInt() {
   // Expected arguments: input (string or number), optional radix (int32).
   if (argc_ < 1 || argc_ > 2) {
@@ -10226,6 +10263,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
       return tryAttachGetNextMapSetEntryForIterator(/* isMap = */ true);
 
     // Number natives.
+    case InlinableNative::Number:
+      return tryAttachNumber();
     case InlinableNative::NumberParseInt:
       return tryAttachNumberParseInt();
     case InlinableNative::NumberToString:
