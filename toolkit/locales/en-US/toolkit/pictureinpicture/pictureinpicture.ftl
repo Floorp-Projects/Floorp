@@ -7,49 +7,49 @@ pictureinpicture-player-title = Picture-in-Picture
 ## Variables:
 ##   $shortcut (String) - Keyboard shortcut to execute the command.
 
-pictureinpicture-pause-cmd =
+pictureinpicture-pause-btn =
   .aria-label = Pause
-  .title = Pause (Spacebar)
-pictureinpicture-play-cmd =
+  .tooltip = Pause (Spacebar)
+pictureinpicture-play-btn =
   .aria-label = Play
-  .title = Play (Spacebar)
+  .tooltip = Play (Spacebar)
 
-pictureinpicture-mute-cmd =
+pictureinpicture-mute-btn =
   .aria-label = Mute
-  .title = Mute ({ $shortcut })
-pictureinpicture-unmute-cmd =
+  .tooltip = Mute ({ $shortcut })
+pictureinpicture-unmute-btn =
   .aria-label = Unmute
-  .title = Unmute ({ $shortcut })
+  .tooltip = Unmute ({ $shortcut })
 
-pictureinpicture-unpip-cmd =
+pictureinpicture-unpip-btn =
   .aria-label = Send back to tab
-  .title = Back to tab
+  .tooltip = Back to tab
 
-pictureinpicture-close-cmd =
+pictureinpicture-close-btn =
   .aria-label = Close
-  .title = Close ({ $shortcut })
+  .tooltip = Close ({ $shortcut })
 
-pictureinpicture-subtitles-cmd =
+pictureinpicture-subtitles-btn =
   .aria-label = Subtitles
-  .title = Subtitles
+  .tooltip = Subtitles
 
 ##
 
-pictureinpicture-fullscreen-cmd =
+pictureinpicture-fullscreen-btn =
   .aria-label = Fullscreen
-  .title = Fullscreen (double-click)
+  .tooltip = Fullscreen (double-click)
 
-pictureinpicture-exit-fullscreen-cmd =
+pictureinpicture-exit-fullscreen-btn =
   .aria-label = Exit fullscreen
-  .title = Exit fullscreen (double-click)
+  .tooltip = Exit fullscreen (double-click)
 
-pictureinpicture-seekbackward-cmd =
+pictureinpicture-seekbackward-btn =
   .aria-label = Backward
-  .title = Backward (←)
+  .tooltip = Backward (←)
 
-pictureinpicture-seekforward-cmd =
+pictureinpicture-seekforward-btn =
   .aria-label = Forward
-  .title = Forward (→)
+  .tooltip = Forward (→)
 
 pictureinpicture-subtitles-label = Subtitles
 

@@ -9,6 +9,7 @@
   --close-btn-bg-color: rgb(211,216,220);
   --close-btn-fill-color: #000;
   --resize-margin: 5px;
+  --control-item-half-width: clamp(calc(16px / 2), calc(10vmax / 2), calc(32px / 2));
 }
 
 button::-moz-focus-inner {
@@ -18,6 +19,7 @@ button::-moz-focus-inner {
 body {
   margin: 0;
   background-color: var(--player-bg-color);
+  overflow: hidden;
 }
 
 body:fullscreen {
@@ -54,7 +56,7 @@ browser {
 #controls[keying] button:-moz-focusring,
 .switch > input:focus-visible + .slider,
 .font-size-selection > label > input:focus-visible {
-  outline: 2px solid #fff;
+  outline: 3px solid #0060DF;
   box-shadow: 1px 2px 5px #000;
 }
 
@@ -103,8 +105,89 @@ browser {
   background-repeat: no-repeat;
 }
 
-#controls[keying] .control-item:focus {
-  border-radius: 0px;
+#controls[keying] .control-item:focus::after,
+.control-item:hover::after {
+  content: attr(tooltip);
+  display: inline-block;
+  width: max-content;
+  position: relative;
+  padding: .4em .5em;
+  background: #000000;
+  color: #ffffff;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* Set the tooltip position for different playback controls */
+
+#controls[keying] .tooltip-under-controls:focus::after,
+#controls .tooltip-under-controls:hover::after {
+  bottom: -3em;
+}
+
+#controls[keying] #close:focus::after,
+#controls #close:hover::after {
+  float: right;
+  transform: translateX(1em);
+}
+
+#controls[keying] #close[mac="true"]:focus::after,
+#controls #close[mac="true"]:hover::after {
+  float: left;
+  transform: translateX(-1em);
+}
+
+#controls[keying] .tooltip-over-controls:focus::after,
+#controls .tooltip-over-controls:hover::after {
+  bottom: 3em;
+}
+
+#controls[keying] .inline-end-tooltip:focus::after,
+#controls .inline-end-tooltip:hover::after {
+  float: inline-end;
+  inset-inline-end: -1em;
+}
+
+#controls[keying] .inline-start-tooltip:focus::after,
+#controls .inline-start-tooltip:hover::after {
+  float: inline-start;
+  inset-inline-start: -1em;
+}
+
+#controls[keying] .center-tooltip:focus::after,
+#controls .center-tooltip:hover::after {
+  inset-inline-end: 0.8em;
+  translate: calc(-50% + var(--control-item-half-width));
+}
+
+#controls[keying] .center-tooltip:dir(rtl):focus::after,
+#controls .center-tooltip:dir(rtl):hover::after {
+  translate: calc(50% - var(--control-item-half-width));
+}
+
+/* Since the unpip button icon is reversed for RTL locales,
+ * re-position the tooltip so that the tooltip is right aligned with the button. */
+#controls[keying] #unpip:dir(rtl):focus::after,
+#controls #unpip:dir(rtl):hover::after {
+  float: inline-end;
+  inset-inline-start: 1em;
+}
+
+/* Since the closed caption icon is reversed for RTL locales,
+ * re-position the tooltip so that the tooltip is left aligned with the button. */
+#controls[keying] .closed-caption.inline-end-tooltip:dir(rtl):focus::after,
+#controls .closed-caption.inline-end-tooltip:dir(rtl):hover::after {
+  float: inline-start;
+  inset-inline-end: 1em;
+}
+
+/* Since the unpip and closed caption icons are reversed for RTL locales,
+ * flip the tooltips back */
+#unpip:dir(rtl):focus::after,
+#controls #unpip:dir(rtl):hover::after,
+#controls[keying] .closed-caption:dir(rtl):focus::after,
+#controls .closed-caption:dir(rtl):hover::after {
+  scale: -1 1;
 }
 
 /* Set opacity for buttons when controls are visible on the pip window and are not hovered over. For fullscreen mode, only apply opacity if there is a showing attribute. */

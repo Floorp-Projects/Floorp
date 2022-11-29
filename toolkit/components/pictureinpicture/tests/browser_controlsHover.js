@@ -44,27 +44,27 @@ add_task(async () => {
         mute,
       ] = l10n.formatMessagesSync([
         {
-          id: "pictureinpicture-close-cmd",
+          id: "pictureinpicture-close-btn",
           args: {
             shortcut: ShortcutUtils.prettifyShortcut(
               pipWin.document.getElementById("closeShortcut")
             ),
           },
         },
-        { id: "pictureinpicture-play-cmd" },
+        { id: "pictureinpicture-play-btn" },
         {
-          id: "pictureinpicture-unmute-cmd",
+          id: "pictureinpicture-unmute-btn",
           args: {
             shortcut: ShortcutUtils.prettifyShortcut(
               pipWin.document.getElementById("unMuteShortcut")
             ),
           },
         },
-        { id: "pictureinpicture-unpip-cmd" },
-        { id: "pictureinpicture-subtitles-cmd" },
-        { id: "pictureinpicture-pause-cmd" },
+        { id: "pictureinpicture-unpip-btn" },
+        { id: "pictureinpicture-subtitles-btn" },
+        { id: "pictureinpicture-pause-btn" },
         {
-          id: "pictureinpicture-mute-cmd",
+          id: "pictureinpicture-mute-btn",
           args: {
             shortcut: ShortcutUtils.prettifyShortcut(
               pipWin.document.getElementById("muteShortcut")
@@ -83,7 +83,7 @@ add_task(async () => {
       await pipWin.document.l10n.translateFragment(closeButton);
       Assert.equal(
         close.attributes[1].value,
-        closeButton.title,
+        closeButton.getAttribute("tooltip"),
         "The close button title matches Fluent string"
       );
 
@@ -91,7 +91,7 @@ add_task(async () => {
       await pipWin.document.l10n.translateFragment(playPauseButton);
       Assert.equal(
         pause.attributes[1].value,
-        playPauseButton.title,
+        playPauseButton.getAttribute("tooltip"),
         "The play button title matches Fluent string"
       );
 
@@ -99,7 +99,7 @@ add_task(async () => {
       await pipWin.document.l10n.translateFragment(unpipButton);
       Assert.equal(
         unpip.attributes[1].value,
-        unpipButton.title,
+        unpipButton.getAttribute("tooltip"),
         "The unpip button title matches Fluent string"
       );
 
@@ -107,7 +107,7 @@ add_task(async () => {
       await pipWin.document.l10n.translateFragment(subtitlesButton);
       Assert.equal(
         subtitles.attributes[1].value,
-        subtitlesButton.title,
+        subtitlesButton.getAttribute("tooltip"),
         "The subtitles button title matches Fluent string"
       );
 
@@ -115,7 +115,7 @@ add_task(async () => {
       await pipWin.document.l10n.translateFragment(muteUnmuteButton);
       Assert.equal(
         mute.attributes[1].value,
-        muteUnmuteButton.title,
+        muteUnmuteButton.getAttribute("tooltip"),
         "The Unmute button title matches Fluent string"
       );
 
@@ -129,7 +129,7 @@ add_task(async () => {
       await pipWin.document.l10n.translateFragment(playPauseButton);
       Assert.equal(
         play.attributes[1].value,
-        playPauseButton.title,
+        playPauseButton.getAttribute("tooltip"),
         "The pause button title matches Fluent string"
       );
 
@@ -143,7 +143,7 @@ add_task(async () => {
       await pipWin.document.l10n.translateFragment(muteUnmuteButton);
       Assert.equal(
         unmute.attributes[1].value,
-        muteUnmuteButton.title,
+        muteUnmuteButton.getAttribute("tooltip"),
         "The mute button title matches Fluent string"
       );
     }
