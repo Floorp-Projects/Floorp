@@ -1904,6 +1904,151 @@ TEST_F(VideoConduitTest, TestVideoEncodeSimulcastScaleResolutionBy) {
   }
 }
 
+TEST_F(VideoConduitTest, TestVideoEncodeLargeScaleResolutionByFrameDropping) {
+  for (const auto& scales :
+       {std::vector{200U}, std::vector{200U, 300U}, std::vector{300U, 200U}}) {
+    mControl.Update([&](auto& aControl) {
+      aControl.mTransmitting = true;
+      VideoCodecConfig codecConfig(120, "VP8", EncodingConstraints());
+      for (const auto& scale : scales) {
+        auto& encoding = codecConfig.mEncodings.emplace_back();
+        encoding.constraints.scaleDownBy = scale;
+      }
+      aControl.mVideoSendCodec = Some(codecConfig);
+      aControl.mVideoSendRtpRtcpConfig =
+          Some(RtpRtcpConfig(webrtc::RtcpMode::kCompound));
+      aControl.mLocalSsrcs = scales;
+    });
+    ASSERT_TRUE(Call()->mVideoSendEncoderConfig);
+
+    UniquePtr<MockVideoSink> sink(new MockVideoSink());
+    rtc::VideoSinkWants wants;
+    mVideoConduit->AddOrUpdateSink(sink.get(), wants);
+
+    {
+      // If all layers' scaleDownBy is larger than any input dimension, that
+      // dimension becomes zero and we drop it.
+      // NB: libwebrtc doesn't CreateEncoderStreams() unless there's a real
+      //     frame, so no reason to call it here.
+      SendVideoFrame(199, 199, 1);
+      EXPECT_EQ(sink->mOnFrameCount, 0U);
+    }
+
+    {
+      // If only width becomes zero, we drop.
+      SendVideoFrame(199, 200, 2);
+      EXPECT_EQ(sink->mOnFrameCount, 0U);
+    }
+
+    {
+      // If only height becomes zero, we drop.
+      SendVideoFrame(200, 199, 3);
+      EXPECT_EQ(sink->mOnFrameCount, 0U);
+    }
+
+    {
+      // If dimensions are non-zero, we pass through.
+      SendVideoFrame(200, 200, 4);
+      EXPECT_EQ(sink->mOnFrameCount, 1U);
+    }
+
+    mVideoConduit->RemoveSink(sink.get());
+  }
+}
+
+TEST_F(VideoConduitTest, TestVideoEncodeLargeScaleResolutionByStreamCreation) {
+  for (const auto& scales :
+       {std::vector{200U}, std::vector{200U, 300U}, std::vector{300U, 200U}}) {
+    mControl.Update([&](auto& aControl) {
+      aControl.mTransmitting = true;
+      VideoCodecConfig codecConfig(120, "VP8", EncodingConstraints());
+      for (const auto& scale : scales) {
+        auto& encoding = codecConfig.mEncodings.emplace_back();
+        encoding.constraints.scaleDownBy = scale;
+      }
+      aControl.mVideoSendCodec = Some(codecConfig);
+      aControl.mVideoSendRtpRtcpConfig =
+          Some(RtpRtcpConfig(webrtc::RtcpMode::kCompound));
+      aControl.mLocalSsrcs = scales;
+    });
+    ASSERT_TRUE(Call()->mVideoSendEncoderConfig);
+
+    {
+      // If dimensions scale to <1, we create a 1x1 stream.
+      const std::vector<webrtc::VideoStream> videoStreams =
+          Call()->CreateEncoderStreams(199, 199);
+      ASSERT_EQ(videoStreams.size(), scales.size());
+      for (const auto& stream : videoStreams) {
+        EXPECT_EQ(stream.width, 1U);
+        EXPECT_EQ(stream.height, 1U);
+      }
+    }
+
+    {
+      // If width scales to <1, we create a 1x1 stream.
+      const std::vector<webrtc::VideoStream> videoStreams =
+          Call()->CreateEncoderStreams(199, 200);
+      ASSERT_EQ(videoStreams.size(), scales.size());
+      for (const auto& stream : videoStreams) {
+        EXPECT_EQ(stream.width, 1U);
+        EXPECT_EQ(stream.height, 1U);
+      }
+    }
+
+    {
+      // If height scales to <1, we create a 1x1 stream.
+      const std::vector<webrtc::VideoStream> videoStreams =
+          Call()->CreateEncoderStreams(200, 199);
+      ASSERT_EQ(videoStreams.size(), scales.size());
+      for (const auto& stream : videoStreams) {
+        EXPECT_EQ(stream.width, 1U);
+        EXPECT_EQ(stream.height, 1U);
+      }
+    }
+
+    {
+      // If dimensions scale to 1, we create a 1x1 stream.
+      const std::vector<webrtc::VideoStream> videoStreams =
+          Call()->CreateEncoderStreams(200, 200);
+      ASSERT_EQ(videoStreams.size(), scales.size());
+      for (const auto& stream : videoStreams) {
+        EXPECT_EQ(stream.width, 1U);
+        EXPECT_EQ(stream.height, 1U);
+      }
+    }
+
+    {
+      // If one dimension scales to 0 and the other >1, we create a 1x1 stream.
+      const std::vector<webrtc::VideoStream> videoStreams =
+          Call()->CreateEncoderStreams(400, 199);
+      ASSERT_EQ(videoStreams.size(), scales.size());
+      for (const auto& stream : videoStreams) {
+        EXPECT_EQ(stream.width, 1U);
+        EXPECT_EQ(stream.height, 1U);
+      }
+    }
+
+    {
+      // Legit case scaling down to more than 1x1.
+      const std::vector<webrtc::VideoStream> videoStreams =
+          Call()->CreateEncoderStreams(600, 400);
+      ASSERT_EQ(videoStreams.size(), scales.size());
+      for (size_t i = 0; i < scales.size(); ++i) {
+        // Streams are backwards for some reason
+        const auto& stream = videoStreams[scales.size() - i - 1];
+        const auto& scale = scales[i];
+        if (scale == 200U) {
+          EXPECT_EQ(stream.width, 3U);
+          EXPECT_EQ(stream.height, 2U);
+        } else {
+          EXPECT_EQ(stream.width, 2U);
+          EXPECT_EQ(stream.height, 1U);
+        }
+      }
+    }
+  }
+}
+
 TEST_F(VideoConduitTest, TestSettingRtpRtcpRsize) {
   mControl.Update([&](auto& aControl) {
     VideoCodecConfig codecConfig(120, "VP8", EncodingConstraints());
