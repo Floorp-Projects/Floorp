@@ -595,7 +595,7 @@ static bool num_parseInt(JSContext* cx, unsigned argc, Value* vp) {
      * 1e21, ToString(string) is in the form "NeM". 'e' marks the end of
      * the word, which would mean the result of parseInt(string) should be |N|.
      *
-     * To preserve this behaviour, we can't use the fast-path when string >
+     * To preserve this behaviour, we can't use the fast-path when string >=
      * 1e21, or else the result would be |NeM|.
      *
      * The same goes for values smaller than 1.0e-6, because the string would be
@@ -603,13 +603,13 @@ static bool num_parseInt(JSContext* cx, unsigned argc, Value* vp) {
      */
     if (args[0].isDouble()) {
       double d = args[0].toDouble();
-      if (DOUBLE_DECIMAL_IN_SHORTEST_LOW < d &&
+      if (DOUBLE_DECIMAL_IN_SHORTEST_LOW <= d &&
           d < DOUBLE_DECIMAL_IN_SHORTEST_HIGH) {
         args.rval().setNumber(floor(d));
         return true;
       }
       if (-DOUBLE_DECIMAL_IN_SHORTEST_HIGH < d &&
-          d < -DOUBLE_DECIMAL_IN_SHORTEST_LOW) {
+          d <= -DOUBLE_DECIMAL_IN_SHORTEST_LOW) {
         args.rval().setNumber(-floor(-d));
         return true;
       }
