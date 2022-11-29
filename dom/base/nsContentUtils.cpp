@@ -7863,8 +7863,8 @@ nsresult nsContentUtils::IPCTransferableToTransferable(
     nsITransferable* aTransferable, const bool aFilterUnknownFlavors) {
   aTransferable->SetIsPrivateData(aIsPrivateData);
 
-  nsresult rv = IPCTransferableToTransferable(aDataTransfer, aAddDataFlavor,
-                                              aTransferable, aFilterUnknownFlavors);
+  nsresult rv = IPCTransferableToTransferable(
+      aDataTransfer, aAddDataFlavor, aTransferable, aFilterUnknownFlavors);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aTransferable->SetRequestingPrincipal(aRequestingPrincipal);
