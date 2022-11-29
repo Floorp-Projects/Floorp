@@ -129,7 +129,7 @@ class SettingsTest {
         assertNull(settings.clearColor)
         assertFalse(settings.enterpriseRootsEnabled)
         assertEquals(EngineSession.CookieBannerHandlingMode.DISABLED, settings.cookieBannerHandlingMode)
-        assertEquals(EngineSession.CookieBannerHandlingMode.REJECT_ALL, settings.cookieBannerHandlingModePrivateBrowsing)
+        assertEquals(EngineSession.CookieBannerHandlingMode.DISABLED, settings.cookieBannerHandlingModePrivateBrowsing)
 
         val interceptor: RequestInterceptor = mock()
         val historyTrackingDelegate: HistoryTrackingDelegate = mock()

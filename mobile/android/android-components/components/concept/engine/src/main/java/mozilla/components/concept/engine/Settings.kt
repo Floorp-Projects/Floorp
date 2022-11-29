@@ -240,7 +240,7 @@ data class DefaultSettings(
     override var httpsOnlyMode: Engine.HttpsOnlyMode = Engine.HttpsOnlyMode.DISABLED,
     override var cookieBannerHandlingMode: CookieBannerHandlingMode = CookieBannerHandlingMode.DISABLED,
     override var cookieBannerHandlingModePrivateBrowsing: CookieBannerHandlingMode =
-        CookieBannerHandlingMode.REJECT_ALL,
+        CookieBannerHandlingMode.DISABLED,
 ) : Settings()
 
 class UnsupportedSetting<T> {

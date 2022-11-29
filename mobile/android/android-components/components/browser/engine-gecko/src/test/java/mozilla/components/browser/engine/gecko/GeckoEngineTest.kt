@@ -309,7 +309,7 @@ class GeckoEngineTest {
         )
 
         assertEquals(contentBlockingSettings.cookieBannerMode, EngineSession.CookieBannerHandlingMode.DISABLED.mode)
-        assertEquals(contentBlockingSettings.cookieBannerModePrivateBrowsing, EngineSession.CookieBannerHandlingMode.REJECT_ALL.mode)
+        assertEquals(contentBlockingSettings.cookieBannerModePrivateBrowsing, EngineSession.CookieBannerHandlingMode.DISABLED.mode)
 
         try {
             engine.settings.domStorageEnabled
@@ -728,7 +728,7 @@ class GeckoEngineTest {
         assertEquals(CookiePolicy.ACCEPT_ALL.id, contentBlockingSettings.cookieBehavior)
 
         assertEquals(EngineSession.CookieBannerHandlingMode.DISABLED.mode, contentBlockingSettings.cookieBannerMode)
-        assertEquals(EngineSession.CookieBannerHandlingMode.REJECT_ALL.mode, contentBlockingSettings.cookieBannerModePrivateBrowsing)
+        assertEquals(EngineSession.CookieBannerHandlingMode.DISABLED.mode, contentBlockingSettings.cookieBannerModePrivateBrowsing)
     }
 
     @Test
