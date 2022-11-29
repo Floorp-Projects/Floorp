@@ -1221,8 +1221,9 @@ export class SpecialPowersParent extends JSWindowActorParent {
 
         case "SPExtensionTerminateBackground": {
           let id = aMessage.data.id;
+          let args = aMessage.data.args;
           let extension = this._extensions.get(id);
-          return extension.terminateBackground();
+          return extension.terminateBackground(...args);
         }
 
         case "SPExtensionWakeupBackground": {
