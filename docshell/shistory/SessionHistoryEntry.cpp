@@ -379,7 +379,7 @@ void SessionHistoryInfo::SharedState::Init(
 
 static uint64_t gLoadingSessionHistoryInfoLoadId = 0;
 
-nsTHashMap<nsUint64HashKey, SessionHistoryEntry*>*
+nsTHashMap<nsUint64HashKey, SessionHistoryEntry::LoadingEntry>*
     SessionHistoryEntry::sLoadIdToEntry = nullptr;
 
 LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
@@ -395,8 +395,7 @@ LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
       mLoadIsFromSessionHistory(aInfo->mLoadIsFromSessionHistory),
       mOffset(aInfo->mOffset),
       mLoadingCurrentEntry(aInfo->mLoadingCurrentEntry) {
-  MOZ_ASSERT(SessionHistoryEntry::sLoadIdToEntry &&
-             SessionHistoryEntry::sLoadIdToEntry->Get(mLoadId) == aEntry);
+  MOZ_ASSERT(SessionHistoryEntry::GetByLoadId(mLoadId) == aEntry);
 }
 
 LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
@@ -423,19 +422,40 @@ SessionHistoryEntry* SessionHistoryEntry::GetByLoadId(uint64_t aLoadId) {
     return nullptr;
   }
 
-  return sLoadIdToEntry->Get(aLoadId);
+  if (auto entry = sLoadIdToEntry->Lookup(aLoadId)) {
+    return entry->mEntry;
+  }
+  return nullptr;
+}
+
+const SessionHistoryInfo*
+SessionHistoryEntry::GetInfoSnapshotForValidationByLoadId(uint64_t aLoadId) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  if (!sLoadIdToEntry) {
+    return nullptr;
+  }
+
+  if (auto entry = sLoadIdToEntry->Lookup(aLoadId)) {
+    return entry->mInfoSnapshotForValidation.get();
+  }
+  return nullptr;
 }
 
 void SessionHistoryEntry::SetByLoadId(uint64_t aLoadId,
                                       SessionHistoryEntry* aEntry) {
   if (!sLoadIdToEntry) {
-    sLoadIdToEntry = new nsTHashMap<nsUint64HashKey, SessionHistoryEntry*>();
+    sLoadIdToEntry = new nsTHashMap<nsUint64HashKey, LoadingEntry>();
   }
 
   MOZ_LOG(
       gSHLog, LogLevel::Verbose,
       ("SessionHistoryEntry::SetByLoadId(%" PRIu64 " - %p)", aLoadId, aEntry));
-  sLoadIdToEntry->InsertOrUpdate(aLoadId, aEntry);
+  sLoadIdToEntry->InsertOrUpdate(
+      aLoadId, LoadingEntry{
+                   .mEntry = aEntry,
+                   .mInfoSnapshotForValidation =
+                       MakeUnique<SessionHistoryInfo>(aEntry->Info()),
+               });
 }
 
 void SessionHistoryEntry::RemoveLoadId(uint64_t aLoadId) {
@@ -483,7 +503,7 @@ SessionHistoryEntry::~SessionHistoryEntry() {
 
   if (sLoadIdToEntry) {
     sLoadIdToEntry->RemoveIf(
-        [this](auto& aIter) { return aIter.Data() == this; });
+        [this](auto& aIter) { return aIter.Data().mEntry == this; });
     if (sLoadIdToEntry->IsEmpty()) {
       delete sLoadIdToEntry;
       sLoadIdToEntry = nullptr;
