@@ -234,6 +234,29 @@ void MacroAssembler::sub64(Imm64 imm, Register64 dest) {
   subPtr(ImmWord(imm.value), dest.reg);
 }
 
+void MacroAssembler::mulHighUnsigned32(Imm32 imm, Register src, Register dest) {
+  // To compute the unsigned multiplication using imulq, we have to ensure both
+  // operands don't have any bits set in the high word.
+
+  if (imm.value >= 0) {
+    // Clear the high word of |src|.
+    movl(src, src);
+
+    // |imm| and |src| are both positive, so directly perform imulq.
+    imulq(imm, src, dest);
+  } else {
+    // Store the low word of |src| into |dest|.
+    movl(src, dest);
+
+    // Compute the unsigned value of |imm| before performing imulq.
+    movl(imm, ScratchReg);
+    imulq(ScratchReg, dest);
+  }
+
+  // Move the high word into |dest|.
+  shrq(Imm32(32), dest);
+}
+
 void MacroAssembler::mulPtr(Register rhs, Register srcDest) {
   imulq(rhs, srcDest);
 }
