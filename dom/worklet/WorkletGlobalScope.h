@@ -73,6 +73,8 @@ class WorkletGlobalScope : public nsIGlobalObject, public nsWrapperCache {
  protected:
   ~WorkletGlobalScope();
 
+  bool IsSystemPrincipal() const override;
+
   const RefPtr<WorkletImpl> mImpl;
 
  private:
