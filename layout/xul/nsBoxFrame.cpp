@@ -843,52 +843,13 @@ nsresult nsBoxFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
 
 void nsBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                   const nsDisplayListSet& aLists) {
-  bool forceLayer = false;
-
-  if (GetContent()->IsXULElement()) {
-    // forcelayer is only supported on XUL elements with box layout
-    if (GetContent()->AsElement()->HasAttr(kNameSpaceID_None,
-                                           nsGkAtoms::layer)) {
-      forceLayer = true;
-    }
-  }
-
   nsDisplayListCollection tempLists(aBuilder);
-  const nsDisplayListSet& destination = (forceLayer) ? tempLists : aLists;
+  DisplayBorderBackgroundOutline(aBuilder, aLists);
 
-  DisplayBorderBackgroundOutline(aBuilder, destination);
-
-  Maybe<nsDisplayListBuilder::AutoContainerASRTracker> contASRTracker;
-  if (forceLayer) {
-    contASRTracker.emplace(aBuilder);
-  }
-
-  BuildDisplayListForChildren(aBuilder, destination);
+  BuildDisplayListForChildren(aBuilder, aLists);
 
   // see if we have to draw a selection frame around this container
-  DisplaySelectionOverlay(aBuilder, destination.Content());
-
-  if (forceLayer) {
-    // This is a bit of a hack. Collect up all descendant display items
-    // and merge them into a single Content() list. This can cause us
-    // to violate CSS stacking order, but forceLayer is a magic
-    // XUL-only extension anyway.
-    nsDisplayList masterList(aBuilder);
-    masterList.AppendToTop(tempLists.BorderBackground());
-    masterList.AppendToTop(tempLists.BlockBorderBackgrounds());
-    masterList.AppendToTop(tempLists.Floats());
-    masterList.AppendToTop(tempLists.Content());
-    masterList.AppendToTop(tempLists.PositionedDescendants());
-    masterList.AppendToTop(tempLists.Outlines());
-    const ActiveScrolledRoot* ownLayerASR = contASRTracker->GetContainerASR();
-    DisplayListClipState::AutoSaveRestore ownLayerClipState(aBuilder);
-
-    // Wrap the list to make it its own layer
-    aLists.Content()->AppendNewToTopWithIndex<nsDisplayOwnLayer>(
-        aBuilder, this, /* aIndex = */ nsDisplayOwnLayer::OwnLayerForBoxFrame,
-        &masterList, ownLayerASR, mozilla::nsDisplayOwnLayerFlags::None,
-        mozilla::layers::ScrollbarData{}, true, true);
-  }
+  DisplaySelectionOverlay(aBuilder, aLists.Content());
 }
 
 void nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder* aBuilder,
