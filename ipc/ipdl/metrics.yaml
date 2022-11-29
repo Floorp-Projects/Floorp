@@ -2470,6 +2470,10 @@ ipc.sent_messages:
       - ptemporary_ipcblob.m_operation_failed
       - ptemporary_ipcblob.r___delete__
       - ptest_basic.m_hello
+      - ptest_glean_msg_telemetry.m_hello_async
+      - ptest_glean_msg_telemetry.r_hello_async
+      - ptest_glean_msg_telemetry.m_hello_sync
+      - ptest_glean_msg_telemetry.r_hello_sync
       - ptest_many_handles.m_many_handles
       - ptest_shell_command.m___delete__
       - ptest_shell_command.r___delete__
