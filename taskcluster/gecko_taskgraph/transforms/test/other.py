@@ -6,6 +6,8 @@ import hashlib
 import json
 import re
 
+from gecko_taskgraph.transforms.test.variant import TEST_VARIANTS
+from gecko_taskgraph.util.platforms import platform_family
 from mozbuild.schedules import INCLUSIVE_COMPONENTS
 from mozbuild.util import ReadOnlyDict
 from taskgraph.transforms.base import TransformSequence
@@ -13,14 +15,7 @@ from taskgraph.util.attributes import keymatch
 from taskgraph.util.keyed_by import evaluate_keyed_by
 from taskgraph.util.schema import Schema, resolve_keyed_by
 from taskgraph.util.taskcluster import get_artifact_path, get_index_url
-from voluptuous import (
-    Any,
-    Optional,
-    Required,
-)
-
-from gecko_taskgraph.transforms.test.variant import TEST_VARIANTS
-from gecko_taskgraph.util.platforms import platform_family
+from voluptuous import Any, Optional, Required
 
 transforms = TransformSequence()
 
@@ -340,6 +335,7 @@ def setup_browsertime(config, tasks):
                 "linux64-chromedriver-105",
                 "linux64-chromedriver-106",
                 "linux64-chromedriver-107",
+                "linux64-chromedriver-108",
             ],
             "macosx.*": [
                 "mac64-chromedriver-102",
@@ -348,6 +344,7 @@ def setup_browsertime(config, tasks):
                 "mac64-chromedriver-105",
                 "mac64-chromedriver-106",
                 "mac64-chromedriver-107",
+                "mac64-chromedriver-108",
             ],
             "windows.*aarch64.*": [
                 "win32-chromedriver-102",
@@ -356,6 +353,7 @@ def setup_browsertime(config, tasks):
                 "win32-chromedriver-105",
                 "win32-chromedriver-106",
                 "win32-chromedriver-107",
+                "win32-chromedriver-108",
             ],
             "windows.*-32.*": [
                 "win32-chromedriver-102",
@@ -364,6 +362,7 @@ def setup_browsertime(config, tasks):
                 "win32-chromedriver-105",
                 "win32-chromedriver-106",
                 "win32-chromedriver-107",
+                "win32-chromedriver-108",
             ],
             "windows.*-64.*": [
                 "win32-chromedriver-102",
@@ -372,6 +371,7 @@ def setup_browsertime(config, tasks):
                 "win32-chromedriver-105",
                 "win32-chromedriver-106",
                 "win32-chromedriver-107",
+                "win32-chromedriver-108",
             ],
         }
 
