@@ -4,13 +4,11 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormHistory",
-  "resource://gre/modules/FormHistory.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
+});
 
-function FormHistoryStartup() {}
+export function FormHistoryStartup() {}
 
 FormHistoryStartup.prototype = {
   classID: Components.ID("{3A0012EB-007F-4BB8-AA81-A07385F77A25}"),
@@ -96,5 +94,3 @@ FormHistoryStartup.prototype = {
     }
   },
 };
-
-var EXPORTED_SYMBOLS = ["FormHistoryStartup"];

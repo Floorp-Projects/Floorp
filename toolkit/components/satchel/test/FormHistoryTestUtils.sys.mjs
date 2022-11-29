@@ -1,18 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["FormHistoryTestUtils"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  FormHistory: "resource://gre/modules/FormHistory.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
 });
 
 /**
@@ -22,7 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
  * additions and check, thus further changes may be necessary for different
  * use-cases.
  */
-var FormHistoryTestUtils = {
+export var FormHistoryTestUtils = {
   /**
    * Adds values to form history.
    *

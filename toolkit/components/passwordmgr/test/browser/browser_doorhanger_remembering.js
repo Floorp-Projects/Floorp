@@ -2,8 +2,9 @@
  * Test capture popup notifications
  */
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  FormHistoryTestUtils: "resource://testing-common/FormHistoryTestUtils.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  FormHistoryTestUtils:
+    "resource://testing-common/FormHistoryTestUtils.sys.mjs",
 });
 
 const BRAND_BUNDLE = Services.strings.createBundle(

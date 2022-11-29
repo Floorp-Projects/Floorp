@@ -25,11 +25,9 @@ var formHistoryStartup = Cc[
   "@mozilla.org/satchel/form-history-startup;1"
 ].getService(Ci.nsIObserver);
 formHistoryStartup.observe(null, "profile-after-change", null);
-ChromeUtils.defineModuleGetter(
-  this,
-  "FormHistory",
-  "resource://gre/modules/FormHistory.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
+});
 
 var timeInMicroseconds = Date.now() * 1000;
 

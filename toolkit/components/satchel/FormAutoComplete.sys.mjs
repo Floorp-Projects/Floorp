@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 function isAutocompleteDisabled(aField) {
   if (aField.autocomplete !== "") {
     return aField.autocomplete === "off";
@@ -172,7 +170,7 @@ FormHistoryClient.prototype = {
 
 FormHistoryClient.nextRequestID = 1;
 
-function FormAutoComplete() {
+export function FormAutoComplete() {
   this.init();
 }
 
@@ -505,8 +503,8 @@ FormAutoComplete.prototype = {
     // that we use the one defined here. To get around that, we explicitly
     // import the module here, out of the way of the other uses of
     // FormAutoCompleteResult.
-    let { FormAutoCompleteResult } = ChromeUtils.import(
-      "resource://gre/modules/nsFormAutoCompleteResult.jsm"
+    let { FormAutoCompleteResult } = ChromeUtils.importESModule(
+      "resource://gre/modules/nsFormAutoCompleteResult.sys.mjs"
     );
     return new FormAutoCompleteResult(
       datalistResult.searchString,
@@ -675,5 +673,3 @@ FormAutoCompleteResult.prototype = {
     this.client.remove(removedEntry.text, removedEntry.guid);
   },
 };
-
-var EXPORTED_SYMBOLS = ["FormAutoComplete"];

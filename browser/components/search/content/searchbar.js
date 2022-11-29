@@ -12,12 +12,9 @@
   const lazy = {};
 
   ChromeUtils.defineESModuleGetters(lazy, {
+    FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
     SearchSuggestionController:
       "resource://gre/modules/SearchSuggestionController.sys.mjs",
-  });
-
-  XPCOMUtils.defineLazyModuleGetters(lazy, {
-    FormHistory: "resource://gre/modules/FormHistory.jsm",
   });
 
   /**

@@ -11,8 +11,8 @@
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
-const { FormHistory } = ChromeUtils.import(
-  "resource://gre/modules/FormHistory.jsm"
+const { FormHistory } = ChromeUtils.importESModule(
+  "resource://gre/modules/FormHistory.sys.mjs"
 );
 const { SearchSuggestionController } = ChromeUtils.importESModule(
   "resource://gre/modules/SearchSuggestionController.sys.mjs"

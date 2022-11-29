@@ -19,13 +19,11 @@ const TEST_ENGINE2 = {
 const TEST_MSG = "ContentSearchUIControllerTest";
 
 ChromeUtils.defineESModuleGetters(this, {
+  ContentSearch: "resource:///actors/ContentSearchParent.sys.mjs",
+  FormHistoryTestUtils:
+    "resource://testing-common/FormHistoryTestUtils.sys.mjs",
   SearchSuggestionController:
     "resource://gre/modules/SearchSuggestionController.sys.mjs",
-  ContentSearch: "resource:///actors/ContentSearchParent.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  FormHistoryTestUtils: "resource://testing-common/FormHistoryTestUtils.jsm",
 });
 
 const pageURL = getRootDirectory(gTestPath) + TEST_PAGE_BASENAME;

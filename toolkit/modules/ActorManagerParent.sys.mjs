@@ -268,10 +268,10 @@ let JSWINDOWACTORS = {
 
   FormHistory: {
     parent: {
-      moduleURI: "resource://gre/actors/FormHistoryParent.jsm",
+      esModuleURI: "resource://gre/actors/FormHistoryParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource://gre/actors/FormHistoryChild.jsm",
+      esModuleURI: "resource://gre/actors/FormHistoryChild.sys.mjs",
       events: {
         DOMFormBeforeSubmit: {},
       },

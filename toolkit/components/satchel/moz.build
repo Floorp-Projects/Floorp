@@ -28,11 +28,11 @@ LOCAL_INCLUDES += [
 ]
 
 EXTRA_JS_MODULES += [
-    "FormAutoComplete.jsm",
-    "FormHistory.jsm",
-    "FormHistoryStartup.jsm",
-    "InputListAutoComplete.jsm",
-    "nsFormAutoCompleteResult.jsm",
+    "FormAutoComplete.sys.mjs",
+    "FormHistory.sys.mjs",
+    "FormHistoryStartup.sys.mjs",
+    "InputListAutoComplete.sys.mjs",
+    "nsFormAutoCompleteResult.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [
@@ -40,14 +40,14 @@ XPCOM_MANIFESTS += [
 ]
 
 TESTING_JS_MODULES += [
-    "test/FormHistoryTestUtils.jsm",
+    "test/FormHistoryTestUtils.sys.mjs",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_TARGET_FILES.actors += [
-    "FormHistoryChild.jsm",
-    "FormHistoryParent.jsm",
+    "FormHistoryChild.sys.mjs",
+    "FormHistoryParent.sys.mjs",
 ]
 
 FINAL_LIBRARY = "xul"

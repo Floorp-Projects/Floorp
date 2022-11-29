@@ -13,14 +13,10 @@ import {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PropertyListUtils: "resource://gre/modules/PropertyListUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormHistory",
-  "resource://gre/modules/FormHistory.jsm"
-);
 
 function Bookmarks(aBookmarksFile) {
   this._file = aBookmarksFile;
