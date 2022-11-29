@@ -875,7 +875,7 @@ void Animation::CommitStyles(ErrorResult& aRv) {
 // ---------------------------------------------------------------------------
 
 Nullable<double> Animation::GetStartTimeAsDouble() const {
-  return AnimationUtils::TimeDurationToDouble(mStartTime);
+  return AnimationUtils::TimeDurationToDouble(mStartTime, mRTPCallerType);
 }
 
 void Animation::SetStartTimeAsDouble(const Nullable<double>& aStartTime) {
@@ -883,7 +883,8 @@ void Animation::SetStartTimeAsDouble(const Nullable<double>& aStartTime) {
 }
 
 Nullable<double> Animation::GetCurrentTimeAsDouble() const {
-  return AnimationUtils::TimeDurationToDouble(GetCurrentTimeAsDuration());
+  return AnimationUtils::TimeDurationToDouble(GetCurrentTimeAsDuration(),
+                                              mRTPCallerType);
 }
 
 void Animation::SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
