@@ -614,95 +614,85 @@ static void reportHandshakeResult(int32_t bytesTransferred, bool wasReading,
   }
 }
 
-int32_t checkHandshake(int32_t bytesTransfered, bool wasReading,
+// Check the status of the handshake. This is where PSM checks for TLS
+// intolerance and potentially sets up TLS intolerance fallback by noting the
+// intolerance, setting the NSPR error to PR_CONNECT_RESET_ERROR, and returning
+// -1 as the bytes transferred so that necko retries the connection.
+// Otherwise, PSM returns the bytes transferred unchanged.
+int32_t checkHandshake(int32_t bytesTransferred, bool wasReading,
                        PRFileDesc* ssl_layer_fd, NSSSocketControl* socketInfo) {
   const PRErrorCode originalError = PR_GetError();
-  PRErrorCode err = originalError;
 
-  // This is where we work around all of those SSL servers that don't
-  // conform to the SSL spec and shutdown a connection when we request
-  // SSL v3.1 (aka TLS).  The spec says the client says what version
-  // of the protocol we're willing to perform, in our case SSL v3.1
-  // In its response, the server says which version it wants to perform.
-  // Many servers out there only know how to do v3.0.  Next, we're supposed
-  // to send back the version of the protocol we requested (ie v3.1).  At
-  // this point many servers's implementations are broken and they shut
-  // down the connection when they don't see the version they sent back.
-  // This is supposed to prevent a man in the middle from forcing one
-  // side to dumb down to a lower level of the protocol.  Unfortunately,
-  // there are enough broken servers out there that such a gross work-around
-  // is necessary.  :(
+  // If the connection would block, return early.
+  if (bytesTransferred < 0 && originalError == PR_WOULD_BLOCK_ERROR) {
+    PR_SetError(PR_WOULD_BLOCK_ERROR, 0);
+    return bytesTransferred;
+  }
 
-  // Do NOT assume TLS intolerance on a closed connection after bad cert ui was
-  // shown. Simply retry. This depends on the fact that Cert UI will not be
-  // shown again, should the user override the bad cert.
-
+  // We only need to do TLS intolerance checking for the first transfer.
   bool handleHandshakeResultNow = socketInfo->IsHandshakePending();
-
-  bool wantRetry = false;
-
-  if (0 > bytesTransfered) {
-    if (handleHandshakeResultNow) {
-      if (PR_WOULD_BLOCK_ERROR == err) {
-        PR_SetError(err, 0);
-        return bytesTransfered;
+  if (!handleHandshakeResultNow) {
+    // If we've encountered an error since the handshake, ensure the socket
+    // control is cancelled, so that getSocketInfoIfRunning will correctly
+    // cause us to fail if another part of Gecko (erroneously) calls an I/O
+    // function (PR_Send/PR_Recv/etc.) again on this socket.
+    if (bytesTransferred < 0) {
+      if (!socketInfo->IsCanceled()) {
+        socketInfo->SetCanceled(originalError);
       }
+      PR_SetError(originalError, 0);
+    }
+    return bytesTransferred;
+  }
 
-      wantRetry = retryDueToTLSIntolerance(err, socketInfo);
-    }
+  // TLS intolerant servers only cause the first transfer to fail, so let's
+  // set the HandshakePending attribute to false so that we don't try this logic
+  // again in a subsequent transfer.
+  socketInfo->SetHandshakeNotPending();
+  // Report the result once for each handshake. Note that this does not
+  // get handshakes which are cancelled before any reads or writes
+  // happen.
+  reportHandshakeResult(bytesTransferred, wasReading, originalError,
+                        socketInfo);
 
-    // This is the common place where we trigger non-cert-errors on a SSL
-    // socket. This might be reached at any time of the connection.
-    //
-    // IsCanceled() is backed by an atomic boolean. It will only ever go from
-    // false to true, so we will never erroneously not call SetCanceled here. We
-    // could in theory overwrite a previously-set error code, but we'll always
-    // have some sort of error.
-    if (!wantRetry && mozilla::psm::IsNSSErrorCode(err) &&
-        !socketInfo->IsCanceled()) {
-      socketInfo->SetCanceled(err);
+  // If there was no error, return early. The case where we read 0 bytes is not
+  // considered an error by NSS, but PSM interprets this as TLS intolerance, so
+  // we turn it into an error. Writes of 0 bytes are an error, because PR_Write
+  // is never supposed to return 0.
+  if (bytesTransferred > 0) {
+    return bytesTransferred;
+  }
+
+  // There was some sort of error. Determine what it was and if we want to
+  // retry the connection due to TLS intolerance.
+  PRErrorCode errorToUse = originalError;
+  // Turn zero-length reads into errors and handle zero-length write errors.
+  if (bytesTransferred == 0) {
+    if (wasReading) {
+      errorToUse = PR_END_OF_FILE_ERROR;
+    } else {
+      errorToUse = SEC_ERROR_LIBRARY_FAILURE;
     }
-  } else if (wasReading && 0 == bytesTransfered) {
-    // zero bytes on reading, socket closed
-    if (handleHandshakeResultNow) {
-      wantRetry = retryDueToTLSIntolerance(PR_END_OF_FILE_ERROR, socketInfo);
-    }
+    bytesTransferred = -1;
+  }
+  bool wantRetry = retryDueToTLSIntolerance(errorToUse, socketInfo);
+  // Set the error on the socket control and cancel it.
+  if (!socketInfo->IsCanceled()) {
+    socketInfo->SetCanceled(errorToUse);
   }
 
   if (wantRetry) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("[%p] checkHandshake: will retry with lower max TLS version\n",
+            ("[%p] checkHandshake: will retry with lower max TLS version",
              ssl_layer_fd));
-    // We want to cause the network layer to retry the connection.
-    err = PR_CONNECT_RESET_ERROR;
-    if (wasReading) bytesTransfered = -1;
+    // Setting the error PR_CONNECT_RESET_ERROR causes necko to retry the
+    // connection.
+    PR_SetError(PR_CONNECT_RESET_ERROR, 0);
+  } else {
+    PR_SetError(originalError, 0);
   }
 
-  // TLS intolerant servers only cause the first transfer to fail, so let's
-  // set the HandshakePending attribute to false so that we don't try the logic
-  // above again in a subsequent transfer.
-  if (handleHandshakeResultNow) {
-    // Report the result once for each handshake. Note that this does not
-    // get handshakes which are cancelled before any reads or writes
-    // happen.
-    reportHandshakeResult(bytesTransfered, wasReading, originalError,
-                          socketInfo);
-    socketInfo->SetHandshakeNotPending();
-  }
-
-  if (bytesTransfered < 0) {
-    // Remember that we encountered an error so that getSocketInfoIfRunning
-    // will correctly cause us to fail if another part of Gecko
-    // (erroneously) calls an I/O function (PR_Send/PR_Recv/etc.) again on
-    // this socket. Note that we use the original error because if we use
-    // PR_CONNECT_RESET_ERROR, we'll repeated try to reconnect.
-    if (originalError != PR_WOULD_BLOCK_ERROR && !socketInfo->IsCanceled()) {
-      socketInfo->SetCanceled(originalError);
-    }
-    PR_SetError(err, 0);
-  }
-
-  return bytesTransfered;
+  return bytesTransferred;
 }
 
 }  // namespace
