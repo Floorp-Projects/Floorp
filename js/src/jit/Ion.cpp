@@ -918,9 +918,11 @@ bool OptimizeMIR(MIRGenerator* mir) {
   gs.spewPass("BuildSSA");
   AssertBasicGraphCoherency(graph);
 
-  JitSpewCont(JitSpew_MIRExpressions, "\n");
-  DumpMIRExpressions(graph, mir->outerInfo(),
-                     "BuildSSA (== input to OptimizeMIR)");
+  if (JitSpewEnabled(JitSpew_MIRExpressions)) {
+    JitSpewCont(JitSpew_MIRExpressions, "\n");
+    DumpMIRExpressions(JitSpewPrinter(), graph, mir->outerInfo(),
+                       "BuildSSA (== input to OptimizeMIR)");
+  }
 
   if (!JitOptions.disablePruning && !mir->compilingWasm()) {
     JitSpewCont(JitSpew_Prune, "\n");
@@ -1393,9 +1395,11 @@ bool OptimizeMIR(MIRGenerator* mir) {
 
   AssertGraphCoherency(graph, /* force = */ true);
 
-  JitSpewCont(JitSpew_MIRExpressions, "\n");
-  DumpMIRExpressions(graph, mir->outerInfo(),
-                     "BeforeLIR (== result of OptimizeMIR)");
+  if (JitSpewEnabled(JitSpew_MIRExpressions)) {
+    JitSpewCont(JitSpew_MIRExpressions, "\n");
+    DumpMIRExpressions(JitSpewPrinter(), graph, mir->outerInfo(),
+                       "BeforeLIR (== result of OptimizeMIR)");
+  }
 
   return true;
 }

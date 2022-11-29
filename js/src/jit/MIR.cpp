@@ -130,6 +130,10 @@ void MDefinition::PrintOpcodeName(GenericPrinter& out, Opcode op) {
     out.printf("%c", unicode::ToLowerCase(name[i]));
   }
 }
+
+uint32_t js::jit::GetMBasicBlockId(const MBasicBlock* block) {
+  return block->id();
+}
 #endif
 
 static MConstant* EvaluateInt64ConstantOperands(TempAllocator& alloc,

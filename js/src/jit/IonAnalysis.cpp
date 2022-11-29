@@ -4629,51 +4629,52 @@ bool jit::MakeLoopsContiguous(MIRGraph& graph) {
   return true;
 }
 
+void jit::DumpMIRDefinition(GenericPrinter& out, MDefinition* def) {
 #ifdef JS_JITSPEW
-static void DumpDefinition(GenericPrinter& out, MDefinition* def,
-                           size_t depth) {
-  out.printf("%u:", def->id());
+  out.printf("%u = %s.", def->id(), StringFromMIRType(def->type()));
   if (def->isConstant()) {
     def->printOpcode(out);
   } else {
     MDefinition::PrintOpcodeName(out, def->op());
   }
 
-  if (depth == 0) {
-    return;
+  // Get any extra bits of text that the MIR node wants to show us.  Both the
+  // vector and the strings added to it belong to this function, so both will
+  // be automatically freed at exit.
+  ExtrasCollector extras;
+  def->getExtras(&extras);
+  for (size_t i = 0; i < extras.count(); i++) {
+    out.printf(" %s", extras.get(i).get());
   }
 
   for (size_t i = 0; i < def->numOperands(); i++) {
-    out.printf(" (");
-    DumpDefinition(out, def->getOperand(i), depth - 1);
-    out.printf(")");
+    out.printf(" %u", def->getOperand(i)->id());
   }
-}
 #endif
+}
 
-void jit::DumpMIRExpressions(MIRGraph& graph, const CompileInfo& info,
-                             const char* phase) {
+void jit::DumpMIRExpressions(GenericPrinter& out, MIRGraph& graph,
+                             const CompileInfo& info, const char* phase) {
 #ifdef JS_JITSPEW
   if (!JitSpewEnabled(JitSpew_MIRExpressions)) {
     return;
   }
 
-  Fprinter& out = JitSpewPrinter();
   out.printf("===== %s =====\n", phase);
 
-  size_t depth = 2;
-  bool isFirstBlock = true;
   for (ReversePostorderIterator block(graph.rpoBegin());
        block != graph.rpoEnd(); block++) {
-    if (isFirstBlock) {
-      isFirstBlock = false;
-    } else {
-      out.printf("  --\n");
+    out.printf("  Block%u:\n", block->id());
+    for (MPhiIterator iter(block->phisBegin()), end(block->phisEnd());
+         iter != end; iter++) {
+      out.printf("    ");
+      jit::DumpMIRDefinition(out, *iter);
+      out.printf("\n");
     }
     for (MInstructionIterator iter(block->begin()), end(block->end());
          iter != end; iter++) {
-      out.printf("  ");
-      DumpDefinition(out, *iter, depth);
+      out.printf("    ");
+      DumpMIRDefinition(out, *iter);
       out.printf("\n");
     }
   }
