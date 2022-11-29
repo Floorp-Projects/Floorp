@@ -196,6 +196,11 @@ static_assert(HugeMappedSize % PageSize == 0);
 // The size of the guard page for non huge-memories.
 static const size_t GuardSize = PageSize;
 
+// The size of the guard page that included NULL pointer. Reserve a smallest
+// range for typical hardware, to catch near NULL pointer accesses, e.g.
+// for a structure fields operations.
+static const size_t NullPtrGuardSize = 4096;
+
 }  // namespace wasm
 }  // namespace js
 

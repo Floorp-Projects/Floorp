@@ -998,6 +998,8 @@ bool wasm::MemoryAccessTraps(const RegisterState& regs, uint8_t* addr,
   switch (trap) {
     case Trap::OutOfBounds:
       break;
+    case Trap::NullPointerDereference:
+      break;
 #  ifdef WASM_HAS_HEAPREG
     case Trap::IndirectCallToNull:
       // We use the null pointer exception from loading the heapreg to
@@ -1015,6 +1017,11 @@ bool wasm::MemoryAccessTraps(const RegisterState& regs, uint8_t* addr,
   switch (trap) {
     case Trap::OutOfBounds:
       if (!instance.memoryAccessInGuardRegion((uint8_t*)addr, numBytes)) {
+        return false;
+      }
+      break;
+    case Trap::NullPointerDereference:
+      if ((uintptr_t)addr >= NullPtrGuardSize) {
         return false;
       }
       break;

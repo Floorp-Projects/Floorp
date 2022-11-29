@@ -1631,14 +1631,25 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitExternInternalize();
   [[nodiscard]] bool emitExternExternalize();
 
+  // Utility classes/methods to add trap information related to
+  // null pointer derefences/accesses.
+  struct NoNullCheck {
+    static void emitNullCheck(BaseCompiler*, RegRef) {}
+    static void emitTrapSite(BaseCompiler*) {}
+  };
+  struct SignalNullCheck {
+    static void emitNullCheck(BaseCompiler* bc, RegRef rp);
+    static void emitTrapSite(BaseCompiler* bc);
+  };
+
   void emitGcCanon(uint32_t typeIndex);
-  void emitGcNullCheck(RegRef rp);
   RegPtr emitGcArrayGetData(RegRef rp);
+  template <typename NullCheckPolicy>
   RegI32 emitGcArrayGetNumElements(RegRef rp);
   void emitGcArrayBoundsCheck(RegI32 index, RegI32 numElements);
-  template <typename T>
+  template <typename T, typename NullCheckPolicy>
   void emitGcGet(FieldType type, FieldWideningOp wideningOp, const T& src);
-  template <typename T>
+  template <typename T, typename NullCheckPolicy>
   void emitGcSetScalar(const T& dst, FieldType type, AnyReg value);
 
   // Write `value` to wasm struct `object`, at `areaBase + areaOffset`.  The
@@ -1646,6 +1657,7 @@ struct BaseCompiler final {
   // the latter two accordingly; this routine does not take that into account.
   // The value in `object` is unmodified, but `areaBase` and `value` may get
   // trashed.
+  template <typename NullCheckPolicy>
   [[nodiscard]] bool emitGcStructSet(RegRef object, RegPtr areaBase,
                                      uint32_t areaOffset, FieldType fieldType,
                                      AnyReg value);

@@ -336,6 +336,11 @@ inline uint8_t* WasmStructObject::fieldOffsetToAddress(FieldType fieldType,
          areaOffset;
 }
 
+// Ensure that faulting loads/stores for WasmStructObject and WasmArrayObject
+// are in the NULL pointer guard page.
+static_assert(WasmStructObject_MaxInlineBytes <= wasm::NullPtrGuardSize);
+static_assert(sizeof(WasmArrayObject) <= wasm::NullPtrGuardSize);
+
 }  // namespace js
 
 //=========================================================================
