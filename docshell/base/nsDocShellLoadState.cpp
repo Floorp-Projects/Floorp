@@ -435,6 +435,17 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
     nsDocShell::MaybeNotifyKeywordSearchLoading(searchProvider, keyword);
   }
 
+  if (aLoadURIOptions.mTriggeringRemoteType.WasPassed()) {
+    if (XRE_IsParentProcess()) {
+      loadState->SetTriggeringRemoteType(
+          aLoadURIOptions.mTriggeringRemoteType.Value());
+    } else if (ContentChild::GetSingleton()->GetRemoteType() !=
+               aLoadURIOptions.mTriggeringRemoteType.Value()) {
+      NS_WARNING("Invalid TriggeringRemoteType from LoadURIOptions in content");
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+
   if (aLoadURIOptions.mRemoteTypeOverride.WasPassed()) {
     loadState->SetRemoteTypeOverride(
         aLoadURIOptions.mRemoteTypeOverride.Value());

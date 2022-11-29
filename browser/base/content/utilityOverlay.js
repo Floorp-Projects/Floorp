@@ -306,6 +306,7 @@ function openLinkIn(url, where, params) {
   var aPrincipal = params.originPrincipal;
   var aStoragePrincipal = params.originStoragePrincipal;
   var aTriggeringPrincipal = params.triggeringPrincipal;
+  var aTriggeringRemoteType = params.triggeringRemoteType;
   var aCsp = params.csp;
   var aForceAboutBlankViewerInCurrent = params.forceAboutBlankViewerInCurrent;
   var aResolveOnNewTabCreated = params.resolveOnNewTabCreated;
@@ -416,6 +417,12 @@ function openLinkIn(url, where, params) {
     let extraOptions = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
       Ci.nsIWritablePropertyBag2
     );
+    if (aTriggeringRemoteType) {
+      extraOptions.setPropertyAsACString(
+        "triggeringRemoteType",
+        aTriggeringRemoteType
+      );
+    }
     if (params.hasValidUserGestureActivation !== undefined) {
       extraOptions.setPropertyAsBool(
         "hasValidUserGestureActivation",
@@ -626,6 +633,7 @@ function openLinkIn(url, where, params) {
         userContextId: aUserContextId,
         hasValidUserGestureActivation: params.hasValidUserGestureActivation,
         globalHistoryOptions: aGlobalHistoryOptions,
+        triggeringRemoteType: aTriggeringRemoteType,
       });
       if (aResolveOnContentBrowserReady) {
         aResolveOnContentBrowserReady(targetBrowser);
@@ -659,6 +667,7 @@ function openLinkIn(url, where, params) {
         originStoragePrincipal: aStoragePrincipal,
         triggeringPrincipal: aTriggeringPrincipal,
         allowInheritPrincipal: aAllowInheritPrincipal,
+        triggeringRemoteType: aTriggeringRemoteType,
         csp: aCsp,
         focusUrlBar,
         openerBrowser: params.openerBrowser,

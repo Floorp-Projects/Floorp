@@ -1691,6 +1691,7 @@
       var aCsp;
       var aSkipLoad;
       var aGlobalHistoryOptions;
+      var aTriggeringRemoteType;
       if (
         arguments.length == 2 &&
         typeof arguments[1] == "object" &&
@@ -1721,6 +1722,7 @@
         aCsp = params.csp;
         aSkipLoad = params.skipLoad;
         aGlobalHistoryOptions = params.globalHistoryOptions;
+        aTriggeringRemoteType = params.triggeringRemoteType;
       }
 
       // all callers of loadOneTab need to pass a valid triggeringPrincipal.
@@ -1761,6 +1763,7 @@
         csp: aCsp,
         skipLoad: aSkipLoad,
         globalHistoryOptions: aGlobalHistoryOptions,
+        triggeringRemoteType: aTriggeringRemoteType,
       });
       if (!bgLoad) {
         this.selectedTab = tab;
@@ -2611,6 +2614,7 @@
         skipLoad,
         batchInsertingTabs,
         globalHistoryOptions,
+        triggeringRemoteType,
       } = {}
     ) {
       // all callers of addTab that pass a params object need to pass
@@ -2943,6 +2947,7 @@
               postData,
               csp,
               globalHistoryOptions,
+              triggeringRemoteType,
             });
           } catch (ex) {
             Cu.reportError(ex);

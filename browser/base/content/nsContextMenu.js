@@ -268,6 +268,8 @@ class nsContextMenu {
       );
     }
 
+    this.remoteType = this.actor?.domProcess?.remoteType;
+
     const { gBrowser } = this.browser.ownerGlobal;
 
     this.textSelected = this.selectionInfo.text;
@@ -1363,6 +1365,7 @@ class nsContextMenu {
       originPrincipal: this.principal,
       originStoragePrincipal: this.storagePrincipal,
       triggeringPrincipal: this.principal,
+      triggeringRemoteType: this.remoteType,
       csp: this.csp,
       frameID: this.contentData.frameID,
       hasValidUserGestureActivation: true,
@@ -1580,6 +1583,7 @@ class nsContextMenu {
     openUILink(this.imageDescURL, e, {
       referrerInfo: this.contentData.referrerInfo,
       triggeringPrincipal: this.principal,
+      triggeringRemoteType: this.remoteType,
       csp: this.csp,
     });
   }
@@ -1634,6 +1638,7 @@ class nsContextMenu {
         referrerInfo,
         forceAllowDataURI: true,
         triggeringPrincipal: this.principal,
+        triggeringRemoteType: this.remoteType,
         csp: this.csp,
       });
     }
@@ -1699,6 +1704,7 @@ class nsContextMenu {
       referrerInfo: this.contentData.referrerInfo,
       forceAllowDataURI: true,
       triggeringPrincipal: this.principal,
+      triggeringRemoteType: this.remoteType,
       csp: this.csp,
     });
   }
