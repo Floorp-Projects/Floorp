@@ -10,6 +10,7 @@ import androidx.core.graphics.BlendModeCompat.SRC_IN
 import androidx.core.graphics.drawable.toBitmap
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.searchEngines
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.awesomebar.provider.BookmarksStorageSuggestionProvider
@@ -176,6 +177,7 @@ class AwesomeBarView(
                     BrowsingMode.Normal -> false
                     BrowsingMode.Private -> true
                 },
+                suggestionsHeader = getSearchEngineSuggestionsHeader(),
             )
 
         defaultSearchActionProvider =
@@ -184,6 +186,7 @@ class AwesomeBarView(
                 searchUseCase = searchUseCase,
                 icon = searchBitmap,
                 showDescription = false,
+                suggestionsHeader = getSearchEngineSuggestionsHeader(),
             )
 
         shortcutsEnginePickerProvider =
@@ -205,6 +208,25 @@ class AwesomeBarView(
             )
 
         searchSuggestionProviderMap = HashMap()
+    }
+
+    private fun getSearchEngineSuggestionsHeader(): String? {
+        val searchState = activity.components.core.store.state.search
+        var searchEngine = searchState.selectedOrDefaultSearchEngine?.name
+
+        if (!searchEngine.isNullOrEmpty()) {
+            searchEngine = when (searchEngine) {
+                GOOGLE_SEARCH_ENGINE_NAME -> activity.getString(
+                    R.string.google_search_engine_suggestion_header,
+                )
+                else -> activity.getString(
+                    R.string.other_default_search_engine_suggestion_header,
+                    searchEngine,
+                )
+            }
+        }
+
+        return searchEngine
     }
 
     fun update(state: SearchFragmentState) {
@@ -355,6 +377,8 @@ class AwesomeBarView(
     companion object {
         // Maximum number of suggestions returned.
         const val METADATA_SUGGESTION_LIMIT = 3
+
+        const val GOOGLE_SEARCH_ENGINE_NAME = "Google"
     }
 }
 
