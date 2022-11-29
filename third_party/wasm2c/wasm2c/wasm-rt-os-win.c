@@ -3,8 +3,8 @@
 // Check for windows (non cygwin) environment
 #if defined(_WIN32)
 
-#include "wasm-rt.h"
 #include "wasm-rt-os.h"
+#include "wasm-rt.h"
 
 #include <errno.h>
 #include <inttypes.h>
@@ -15,7 +15,8 @@
 #include <windows.h>
 
 #ifdef VERBOSE_LOGGING
-#define VERBOSE_LOG(...) { printf(__VA_ARGS__); }
+#define VERBOSE_LOG(...) \
+  { printf(__VA_ARGS__); }
 #else
 #define VERBOSE_LOG(...)
 #endif
@@ -28,7 +29,11 @@ size_t os_getpagesize() {
   return S.dwPageSize;
 }
 
-static void* win_mmap(void* hint, size_t size, int prot, int flags, DWORD alloc_flag) {
+static void* win_mmap(void* hint,
+                      size_t size,
+                      int prot,
+                      int flags,
+                      DWORD alloc_flag) {
   DWORD flProtect = PAGE_NOACCESS;
   size_t request_size, page_size;
   void* addr;
@@ -140,7 +145,7 @@ int os_mprotect(void* addr, size_t size, int prot) {
 
   DWORD old;
   BOOL succeeded = VirtualProtect((LPVOID)addr, size, flProtect, &old);
-  return succeeded? 0 : -1;
+  return succeeded ? 0 : -1;
 }
 
 #ifndef DONT_USE_VIRTUAL_ALLOC2
@@ -162,21 +167,22 @@ void* os_mmap_aligned(void* addr,
 #endif
   {
     size_t padded_length = requested_length + alignment + alignment_offset;
-    uintptr_t unaligned = (uintptr_t)win_mmap(addr, padded_length, prot, flags, MEM_RESERVE);
+    uintptr_t unaligned =
+        (uintptr_t)win_mmap(addr, padded_length, prot, flags, MEM_RESERVE);
 
-    VERBOSE_LOG("os_mmap_aligned: alignment:%llu, alignment_offset:%llu, requested_length:%llu, padded_length: %llu, initial mapping: %p\n",
-      (unsigned long long) alignment,
-      (unsigned long long) alignment_offset,
-      (unsigned long long) requested_length,
-      (unsigned long long) padded_length,
-      (void*) unaligned);
+    VERBOSE_LOG(
+        "os_mmap_aligned: alignment:%llu, alignment_offset:%llu, "
+        "requested_length:%llu, padded_length: %llu, initial mapping: %p\n",
+        (unsigned long long)alignment, (unsigned long long)alignment_offset,
+        (unsigned long long)requested_length, (unsigned long long)padded_length,
+        (void*)unaligned);
 
     if (!unaligned) {
       return (void*)unaligned;
     }
 
     // Round up the next address that has addr % alignment = 0
-    const size_t alignment_corrected = alignment == 0? 1 : alignment;
+    const size_t alignment_corrected = alignment == 0 ? 1 : alignment;
     uintptr_t aligned_nonoffset =
         (unaligned + (alignment_corrected - 1)) & ~(alignment_corrected - 1);
 
@@ -198,23 +204,27 @@ void* os_mmap_aligned(void* addr,
         (aligned + (requested_length - 1)) >
             (unaligned + (padded_length - 1)) ||
         (aligned + alignment_offset) % alignment_corrected != 0) {
-      VERBOSE_LOG("os_mmap_aligned: sanity check fail. aligned: %p\n", (void*) aligned);
+      VERBOSE_LOG("os_mmap_aligned: sanity check fail. aligned: %p\n",
+                  (void*)aligned);
       os_munmap((void*)unaligned, padded_length);
       return NULL;
     }
 
     // windows does not support partial unmapping, so unmap and remap
     os_munmap((void*)unaligned, padded_length);
-    aligned =
-        (uintptr_t)win_mmap((void*)aligned, requested_length, prot, flags, MEM_RESERVE);
-    VERBOSE_LOG("os_mmap_aligned: final mapping: %p\n", (void*) aligned);
+    aligned = (uintptr_t)win_mmap((void*)aligned, requested_length, prot, flags,
+                                  MEM_RESERVE);
+    VERBOSE_LOG("os_mmap_aligned: final mapping: %p\n", (void*)aligned);
     return (void*)aligned;
   }
 }
 
-int os_mmap_commit(void* curr_heap_end_pointer, size_t expanded_size, int prot) {
-  uintptr_t addr = (uintptr_t)win_mmap(curr_heap_end_pointer, expanded_size, prot, MMAP_MAP_NONE, MEM_COMMIT);
-  int ret = addr? 0 : -1;
+int os_mmap_commit(void* curr_heap_end_pointer,
+                   size_t expanded_size,
+                   int prot) {
+  uintptr_t addr = (uintptr_t)win_mmap(curr_heap_end_pointer, expanded_size,
+                                       prot, MMAP_MAP_NONE, MEM_COMMIT);
+  int ret = addr ? 0 : -1;
   return ret;
 }
 
@@ -226,7 +236,8 @@ static wasi_win_clock_info_t g_wasi_win_clock_info;
 static int g_os_data_initialized = 0;
 
 void os_init() {
-  // From here: https://stackoverflow.com/questions/5404277/porting-clock-gettime-to-windows/38212960#38212960
+  // From here:
+  // https://stackoverflow.com/questions/5404277/porting-clock-gettime-to-windows/38212960#38212960
   if (QueryPerformanceFrequency(&g_wasi_win_clock_info.counts_per_sec) == 0) {
     wasm_rt_trap(WASM_RT_TRAP_WASI);
   }
@@ -238,7 +249,8 @@ void os_clock_init(void** clock_data_pointer) {
     os_init();
   }
 
-  wasi_win_clock_info_t* alloc = (wasi_win_clock_info_t*) malloc(sizeof(wasi_win_clock_info_t));
+  wasi_win_clock_info_t* alloc =
+      (wasi_win_clock_info_t*)malloc(sizeof(wasi_win_clock_info_t));
   if (!alloc) {
     wasm_rt_trap(WASM_RT_TRAP_WASI);
   }
@@ -253,25 +265,32 @@ void os_clock_cleanup(void** clock_data_pointer) {
   }
 }
 
-int os_clock_gettime(void* clock_data, int clock_id, struct timespec* out_struct) {
-  wasi_win_clock_info_t* alloc = (wasi_win_clock_info_t*) clock_data;
+int os_clock_gettime(void* clock_data,
+                     int clock_id,
+                     struct timespec* out_struct) {
+  wasi_win_clock_info_t* alloc = (wasi_win_clock_info_t*)clock_data;
 
   LARGE_INTEGER count;
   (void)clock_id;
 
-  if (alloc->counts_per_sec.QuadPart <= 0 || QueryPerformanceCounter(&count) == 0) {
+  if (alloc->counts_per_sec.QuadPart <= 0 ||
+      QueryPerformanceCounter(&count) == 0) {
     return -1;
   }
 
 #define BILLION 1000000000LL
   out_struct->tv_sec = count.QuadPart / alloc->counts_per_sec.QuadPart;
-  out_struct->tv_nsec = ((count.QuadPart % alloc->counts_per_sec.QuadPart) * BILLION) / alloc->counts_per_sec.QuadPart;
+  out_struct->tv_nsec =
+      ((count.QuadPart % alloc->counts_per_sec.QuadPart) * BILLION) /
+      alloc->counts_per_sec.QuadPart;
 #undef BILLION
 
   return 0;
 }
 
-int os_clock_getres(void* clock_data, int clock_id, struct timespec* out_struct) {
+int os_clock_getres(void* clock_data,
+                    int clock_id,
+                    struct timespec* out_struct) {
   (void)clock_id;
   out_struct->tv_sec = 0;
   out_struct->tv_nsec = 1000;
@@ -279,14 +298,17 @@ int os_clock_getres(void* clock_data, int clock_id, struct timespec* out_struct)
 }
 
 void os_print_last_error(const char* msg) {
-  DWORD errorMessageID  = GetLastError();
+  DWORD errorMessageID = GetLastError();
   if (errorMessageID != 0) {
     LPSTR messageBuffer = 0;
-    //The api creates the buffer that holds the message
-    size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                                NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
-    (void) size;
-    //Copy the error message into a std::string.
+    // The api creates the buffer that holds the message
+    size_t size = FormatMessageA(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+            FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPSTR)&messageBuffer, 0, NULL);
+    (void)size;
+    // Copy the error message into a std::string.
     printf("%s. %s\n", msg, messageBuffer);
     LocalFree(messageBuffer);
   } else {
@@ -298,6 +320,6 @@ void os_print_last_error(const char* msg) {
 #undef DONT_USE_VIRTUAL_ALLOC2
 
 #else
-  // https://stackoverflow.com/questions/26541150/warning-iso-c-forbids-an-empty-translation-unit
-  typedef int make_iso_compilers_happy;
+// https://stackoverflow.com/questions/26541150/warning-iso-c-forbids-an-empty-translation-unit
+typedef int make_iso_compilers_happy;
 #endif

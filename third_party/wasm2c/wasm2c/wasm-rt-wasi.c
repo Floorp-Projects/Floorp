@@ -1,9 +1,16 @@
-// This file contains modified versions of the emscripten runtime (as well as the wasi support it includes ) adapted for
-//    - library sandboxing --- these apis have to support multiple wasm2c sandboxed components and cannot use global variables.
-//                             Instead they operate on the sbx context specified as the first parameter to the API
-//    - compatibility --- APIs like setjmp/longjmp are implemented in a very limited way upstream. Expanding this.
-//    - security --- APIs like args_get, sys_open, fd_write, sys_read seemed to have security bugs upstream.
-//                   Additionally, we don't want to allow any file system access. Restrict opens to the null file (/dev/null on unix, nul on windows)
+// This file contains modified versions of the emscripten runtime (as well as
+// the wasi support it includes ) adapted for
+//    - library sandboxing --- these apis have to support multiple wasm2c
+//    sandboxed components and cannot use global variables.
+//                             Instead they operate on the sbx context specified
+//                             as the first parameter to the API
+//    - compatibility --- APIs like setjmp/longjmp are implemented in a very
+//    limited way upstream. Expanding this.
+//    - security --- APIs like args_get, sys_open, fd_write, sys_read seemed to
+//    have security bugs upstream.
+//                   Additionally, we don't want to allow any file system
+//                   access. Restrict opens to the null file (/dev/null on unix,
+//                   nul on windows)
 
 /////////////////////////////////////////////////////////////
 ////////// File: Missing stuff from emscripten
@@ -48,8 +55,8 @@ typedef double f64;
 #ifdef _MSC_VER
 #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
-#endif // _MSC_VER
-#endif // _WIN32
+#endif  // _MSC_VER
+#endif  // _WIN32
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -61,8 +68,8 @@ typedef SSIZE_T ssize_t;
 #include <io.h>
 #endif
 
-#include "wasm-rt.h"
 #include "wasm-rt-impl.h"
+#include "wasm-rt.h"
 
 #if defined(__GNUC__)
 #define UNLIKELY(x) __builtin_expect(!!(x), 0)
@@ -82,24 +89,25 @@ typedef SSIZE_T ssize_t;
 
 #define MEMACCESS(mem, addr) ((void*)&(mem->data[addr]))
 
-#define UNCOND_MEMCHECK_SIZE(mem, a, sz)  \
-  if (UNLIKELY((a) + sz > mem->size)) TRAP(OOB)
+#define UNCOND_MEMCHECK_SIZE(mem, a, sz) \
+  if (UNLIKELY((a) + sz > mem->size))    \
+  TRAP(OOB)
 
-#define UNCOND_MEMCHECK(mem, a, t)  UNCOND_MEMCHECK_SIZE(mem, a, sizeof(t))
+#define UNCOND_MEMCHECK(mem, a, t) UNCOND_MEMCHECK_SIZE(mem, a, sizeof(t))
 
-#define DEFINE_WASI_LOAD(name, t1, t2, t3)              \
-  static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {   \
-    UNCOND_MEMCHECK(mem, addr, t1);                       \
-    t1 result;                                     \
-    memcpy(&result, MEMACCESS(mem, addr), sizeof(t1)); \
-    return (t3)(t2)result;                         \
+#define DEFINE_WASI_LOAD(name, t1, t2, t3)                 \
+  static inline t3 name(wasm_rt_memory_t* mem, u64 addr) { \
+    UNCOND_MEMCHECK(mem, addr, t1);                        \
+    t1 result;                                             \
+    memcpy(&result, MEMACCESS(mem, addr), sizeof(t1));     \
+    return (t3)(t2)result;                                 \
   }
 
-#define DEFINE_WASI_STORE(name, t1, t2)                           \
+#define DEFINE_WASI_STORE(name, t1, t2)                                \
   static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) { \
-    UNCOND_MEMCHECK(mem, addr, t1);                                 \
-    t1 wrapped = (t1)value;                                  \
-    memcpy(MEMACCESS(mem, addr), &wrapped, sizeof(t1));          \
+    UNCOND_MEMCHECK(mem, addr, t1);                                    \
+    t1 wrapped = (t1)value;                                            \
+    memcpy(MEMACCESS(mem, addr), &wrapped, sizeof(t1));                \
   }
 
 DEFINE_WASI_LOAD(wasm_i32_load, u32, u32, u32);
@@ -129,16 +137,17 @@ DEFINE_WASI_STORE(wasm_i64_store32, u32, u64);
 // Imports
 
 #ifdef VERBOSE_LOGGING
-#define VERBOSE_LOG(...) { printf(__VA_ARGS__); }
+#define VERBOSE_LOG(...) \
+  { printf(__VA_ARGS__); }
 #else
 #define VERBOSE_LOG(...)
 #endif
 
 #define STUB_IMPORT_IMPL(ret, name, params, returncode) \
-ret name params { \
-  VERBOSE_LOG("[stub import: " #name "]\n"); \
-  return returncode; \
-}
+  ret name params {                                     \
+    VERBOSE_LOG("[stub import: " #name "]\n");          \
+    return returncode;                                  \
+  }
 
 // Generic abort method for a runtime error in the runtime.
 
@@ -147,16 +156,25 @@ static void abort_with_message(const char* message) {
   TRAP(UNREACHABLE);
 }
 
-/////////////////////////////////////////// Emscripten runtime ///////////////////////////////////////////////
+/////////////////////////////////////////// Emscripten runtime
+//////////////////////////////////////////////////
 
-// Setjmp/longjmp are not currently supported safely. So lonjmp with abort, setjmp can be a noop.
-void Z_envZ_emscripten_longjmpZ_vii(wasm_sandbox_wasi_data* wasi_data, u32 buf, u32 value) {
+// Setjmp/longjmp are not currently supported safely. So lonjmp with abort,
+// setjmp can be a noop.
+void Z_envZ_emscripten_longjmpZ_vii(wasm_sandbox_wasi_data* wasi_data,
+                                    u32 buf,
+                                    u32 value) {
   abort_with_message("longjmp not supported");
 }
 
-STUB_IMPORT_IMPL(u32,  Z_envZ_emscripten_setjmpZ_ii, (wasm_sandbox_wasi_data* wasi_data, u32 buf), 0);
+STUB_IMPORT_IMPL(u32,
+                 Z_envZ_emscripten_setjmpZ_ii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 buf),
+                 0);
 
-void Z_envZ_emscripten_notify_memory_growthZ_vi(wasm_sandbox_wasi_data* wasi_data, u32 size) {}
+void Z_envZ_emscripten_notify_memory_growthZ_vi(
+    wasm_sandbox_wasi_data* wasi_data,
+    u32 size) {}
 
 u32 Z_envZ_getTempRet0Z_iv(wasm_sandbox_wasi_data* wasi_data) {
   return wasi_data->tempRet0;
@@ -166,39 +184,38 @@ void Z_envZ_setTempRet0Z_vi(wasm_sandbox_wasi_data* wasi_data, u32 x) {
   wasi_data->tempRet0 = x;
 }
 
-static const char* get_null_file_path()
-{
-  #ifdef _WIN32
-    const char* null_file = "nul";
-  #else
-    const char* null_file = "/dev/null";
-  #endif
+static const char* get_null_file_path() {
+#ifdef _WIN32
+  const char* null_file = "nul";
+#else
+  const char* null_file = "/dev/null";
+#endif
   return null_file;
 }
 
-static int get_null_file_mode()
-{
-  #ifdef _WIN32
-    const int null_file_mode = _S_IREAD | _S_IWRITE;
-  #else
-    const int null_file_mode = S_IRUSR | S_IWUSR;
-  #endif
+static int get_null_file_mode() {
+#ifdef _WIN32
+  const int null_file_mode = _S_IREAD | _S_IWRITE;
+#else
+  const int null_file_mode = S_IRUSR | S_IWUSR;
+#endif
   return null_file_mode;
 }
 
-static int get_null_file_flags()
-{
-  #ifdef _WIN32
-    const int null_file_flags = _O_CREAT;
-  #else
-    const int null_file_flags = O_CREAT;
-  #endif
+static int get_null_file_flags() {
+#ifdef _WIN32
+  const int null_file_flags = _O_CREAT;
+#else
+  const int null_file_flags = O_CREAT;
+#endif
   return null_file_flags;
 }
 
 static int is_null_file(wasm_sandbox_wasi_data* wasi_data, u32 path) {
-  const char* tainted_string = (const char*) MEMACCESS(wasi_data->heap_memory, path);
-  // deliberately truncate length to u32, else UNCOND_MEMCHECK_SIZE may have overflows
+  const char* tainted_string =
+      (const char*)MEMACCESS(wasi_data->heap_memory, path);
+  // deliberately truncate length to u32, else UNCOND_MEMCHECK_SIZE may have
+  // overflows
   u32 path_length = strlen(tainted_string) + 1;
   UNCOND_MEMCHECK_SIZE(wasi_data->heap_memory, path, path_length);
 
@@ -236,8 +253,10 @@ static u32 do_stat(wasm_sandbox_wasi_data* wasi_data, int nfd, u32 buf) {
   wasm_i32_store(wasi_data->heap_memory, buf + 32, 0);
   wasm_i64_store(wasi_data->heap_memory, buf + 40, nbuf.st_size);
 #ifdef _WIN32
-  wasm_i32_store(wasi_data->heap_memory, buf + 48, 512); // fixed blocksize on windows
-  wasm_i32_store(wasi_data->heap_memory, buf + 52, 0);   // but no reported blocks...
+  wasm_i32_store(wasi_data->heap_memory, buf + 48,
+                 512);  // fixed blocksize on windows
+  wasm_i32_store(wasi_data->heap_memory, buf + 52,
+                 0);  // but no reported blocks...
 #else
   wasm_i32_store(wasi_data->heap_memory, buf + 48, nbuf.st_blksize);
   wasm_i32_store(wasi_data->heap_memory, buf + 52, nbuf.st_blocks);
@@ -250,11 +269,14 @@ static u32 do_stat(wasm_sandbox_wasi_data* wasi_data, int nfd, u32 buf) {
   wasm_i32_store(wasi_data->heap_memory, buf + 72, nbuf.st_ctimespec.tv_sec);
   wasm_i32_store(wasi_data->heap_memory, buf + 76, nbuf.st_ctimespec.tv_nsec);
 #elif defined(_WIN32)
-  wasm_i32_store(wasi_data->heap_memory, buf + 56, gmtime(&nbuf.st_atime)->tm_sec);
+  wasm_i32_store(wasi_data->heap_memory, buf + 56,
+                 gmtime(&nbuf.st_atime)->tm_sec);
   wasm_i32_store(wasi_data->heap_memory, buf + 60, 0);
-  wasm_i32_store(wasi_data->heap_memory, buf + 64, gmtime(&nbuf.st_mtime)->tm_sec);
+  wasm_i32_store(wasi_data->heap_memory, buf + 64,
+                 gmtime(&nbuf.st_mtime)->tm_sec);
   wasm_i32_store(wasi_data->heap_memory, buf + 68, 0);
-  wasm_i32_store(wasi_data->heap_memory, buf + 72, gmtime(&nbuf.st_ctime)->tm_sec);
+  wasm_i32_store(wasi_data->heap_memory, buf + 72,
+                 gmtime(&nbuf.st_ctime)->tm_sec);
   wasm_i32_store(wasi_data->heap_memory, buf + 76, 0);
 #else
   wasm_i32_store(wasi_data->heap_memory, buf + 56, nbuf.st_atim.tv_sec);
@@ -268,10 +290,9 @@ static u32 do_stat(wasm_sandbox_wasi_data* wasi_data, int nfd, u32 buf) {
   return 0;
 }
 
-#define WASM_STDIN  0
+#define WASM_STDIN 0
 #define WASM_STDOUT 1
 #define WASM_STDERR 2
-
 
 static void init_fds(wasm_sandbox_wasi_data* wasi_data) {
 #ifndef _WIN32
@@ -309,8 +330,11 @@ static int get_native_fd(wasm_sandbox_wasi_data* wasi_data, u32 fd) {
   return wasi_data->wasm_fd_to_native[fd];
 }
 
-u32 Z_envZ___sys_accessZ_iii(wasm_sandbox_wasi_data* wasi_data, u32 pathname, u32 mode) {
-  VERBOSE_LOG("  access: %s 0x%x\n", MEMACCESS(wasi_data->heap_memory, pathname), mode);
+u32 Z_envZ___sys_accessZ_iii(wasm_sandbox_wasi_data* wasi_data,
+                             u32 pathname,
+                             u32 mode) {
+  VERBOSE_LOG("  access: %s 0x%x\n",
+              MEMACCESS(wasi_data->heap_memory, pathname), mode);
 
   // only permit access checks on the the null file
   if (!is_null_file(wasi_data, pathname)) {
@@ -328,8 +352,12 @@ u32 Z_envZ___sys_accessZ_iii(wasm_sandbox_wasi_data* wasi_data, u32 pathname, u3
   return 0;
 }
 
-u32 Z_envZ___sys_openZ_iiii(wasm_sandbox_wasi_data* wasi_data, u32 path, u32 flags, u32 varargs) {
-  VERBOSE_LOG("  open: %s %d\n", MEMACCESS(wasi_data->heap_memory, path), flags);
+u32 Z_envZ___sys_openZ_iiii(wasm_sandbox_wasi_data* wasi_data,
+                            u32 path,
+                            u32 flags,
+                            u32 varargs) {
+  VERBOSE_LOG("  open: %s %d\n", MEMACCESS(wasi_data->heap_memory, path),
+              flags);
 
   // only permit opening the null file
   if (!is_null_file(wasi_data, path)) {
@@ -340,7 +368,8 @@ u32 Z_envZ___sys_openZ_iiii(wasm_sandbox_wasi_data* wasi_data, u32 path, u32 fla
   const int null_file_flags = get_null_file_flags();
   const int null_file_mode = get_null_file_mode();
 
-  // Specify the mode manually to make sure the sandboxed code is not using unusual values
+  // Specify the mode manually to make sure the sandboxed code is not using
+  // unusual values
   int nfd = POSIX_PREFIX(open)(null_file, null_file_flags, null_file_mode);
   VERBOSE_LOG("    => native %d\n", nfd);
   if (nfd >= 0) {
@@ -351,7 +380,9 @@ u32 Z_envZ___sys_openZ_iiii(wasm_sandbox_wasi_data* wasi_data, u32 path, u32 fla
   return -1;
 }
 
-u32 Z_envZ___sys_fstat64Z_iii(wasm_sandbox_wasi_data* wasi_data, u32 fd, u32 buf) {
+u32 Z_envZ___sys_fstat64Z_iii(wasm_sandbox_wasi_data* wasi_data,
+                              u32 fd,
+                              u32 buf) {
   int nfd = get_native_fd(wasi_data, fd);
   VERBOSE_LOG("  fstat64 %d (=> %d) %d\n", fd, nfd, buf);
   if (nfd < 0) {
@@ -360,7 +391,9 @@ u32 Z_envZ___sys_fstat64Z_iii(wasm_sandbox_wasi_data* wasi_data, u32 fd, u32 buf
   return do_stat(wasi_data, nfd, buf);
 }
 
-u32 Z_envZ___sys_stat64Z_iii(wasm_sandbox_wasi_data* wasi_data, u32 path, u32 buf) {
+u32 Z_envZ___sys_stat64Z_iii(wasm_sandbox_wasi_data* wasi_data,
+                             u32 path,
+                             u32 buf) {
   VERBOSE_LOG("  stat64: %s\n", MEMACCESS(wasi_data->heap_memory, path));
   int fd = Z_envZ___sys_openZ_iiii(wasi_data, path, 0 /* read_only */, 0);
   int nfd = get_native_fd(wasi_data, fd);
@@ -371,7 +404,10 @@ u32 Z_envZ___sys_stat64Z_iii(wasm_sandbox_wasi_data* wasi_data, u32 path, u32 bu
   return do_stat(wasi_data, nfd, buf);
 }
 
-u32 Z_envZ___sys_readZ_iiii(wasm_sandbox_wasi_data* wasi_data, u32 fd, u32 buf, u32 count) {
+u32 Z_envZ___sys_readZ_iiii(wasm_sandbox_wasi_data* wasi_data,
+                            u32 fd,
+                            u32 buf,
+                            u32 count) {
   int nfd = get_native_fd(wasi_data, fd);
   VERBOSE_LOG("  read %d (=> %d) %d %d\n", fd, nfd, buf, count);
   if (nfd < 0) {
@@ -391,92 +427,174 @@ u32 Z_envZ___sys_readZ_iiii(wasm_sandbox_wasi_data* wasi_data, u32 fd, u32 buf, 
   return ret;
 }
 
+STUB_IMPORT_IMPL(u32,
+                 Z_envZ_dlopenZ_iii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b),
+                 1);
+STUB_IMPORT_IMPL(u32,
+                 Z_envZ_dlcloseZ_ii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a),
+                 1);
+STUB_IMPORT_IMPL(u32,
+                 Z_envZ_dlsymZ_iii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b),
+                 0);
+STUB_IMPORT_IMPL(u32,
+                 Z_envZ_dlerrorZ_iv,
+                 (wasm_sandbox_wasi_data * wasi_data),
+                 0);
+STUB_IMPORT_IMPL(u32,
+                 Z_envZ_signalZ_iii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b),
+                 -1);
+STUB_IMPORT_IMPL(u32,
+                 Z_envZ_systemZ_ii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a),
+                 -1);
+STUB_IMPORT_IMPL(u32,
+                 Z_envZ_utimesZ_iii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b),
+                 -1);
+STUB_IMPORT_IMPL(u32,
+                 Z_envZ___sys_rmdirZ_ii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a),
+                 EM_EACCES);
+STUB_IMPORT_IMPL(u32,
+                 Z_envZ___sys_renameZ_iii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b),
+                 EM_EACCES);
+STUB_IMPORT_IMPL(u32,
+                 Z_envZ___sys_lstat64Z_iii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b),
+                 EM_EACCES);
+STUB_IMPORT_IMPL(u32,
+                 Z_envZ___sys_dup3Z_iiii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b, u32 c),
+                 EM_EACCES);
+STUB_IMPORT_IMPL(u32,
+                 Z_envZ___sys_dup2Z_iii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b),
+                 EM_EACCES);
+STUB_IMPORT_IMPL(u32,
+                 Z_envZ___sys_getcwdZ_iii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b),
+                 EM_EACCES);
+STUB_IMPORT_IMPL(
+    u32,
+    Z_envZ___sys_ftruncate64Z_iiiii,
+    (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b, u32 c, u32 d),
+    EM_EACCES);
+STUB_IMPORT_IMPL(u32,
+                 Z_envZ___sys_unlinkZ_ii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 path),
+                 EACCES);
+STUB_IMPORT_IMPL(u32,
+                 Z_envZ_pthread_mutexattr_initZ_ii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a),
+                 0);
+STUB_IMPORT_IMPL(u32,
+                 Z_envZ_pthread_mutexattr_settypeZ_iii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b),
+                 0);
+STUB_IMPORT_IMPL(u32,
+                 Z_envZ_pthread_mutexattr_destroyZ_ii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a),
+                 0);
+STUB_IMPORT_IMPL(
+    u32,
+    Z_envZ_pthread_createZ_iiiii,
+    (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b, u32 c, u32 d),
+    -1);
+STUB_IMPORT_IMPL(u32,
+                 Z_envZ_pthread_joinZ_iii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b),
+                 -1);
+STUB_IMPORT_IMPL(u32,
+                 Z_envZ___cxa_thread_atexitZ_iiii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b, u32 c),
+                 -1);
 
-STUB_IMPORT_IMPL(u32, Z_envZ_dlopenZ_iii, (wasm_sandbox_wasi_data* wasi_data, u32 a, u32 b), 1);
-STUB_IMPORT_IMPL(u32, Z_envZ_dlcloseZ_ii, (wasm_sandbox_wasi_data* wasi_data, u32 a), 1);
-STUB_IMPORT_IMPL(u32, Z_envZ_dlsymZ_iii, (wasm_sandbox_wasi_data* wasi_data, u32 a, u32 b), 0);
-STUB_IMPORT_IMPL(u32, Z_envZ_dlerrorZ_iv, (wasm_sandbox_wasi_data* wasi_data), 0);
-STUB_IMPORT_IMPL(u32, Z_envZ_signalZ_iii, (wasm_sandbox_wasi_data* wasi_data, u32 a, u32 b), -1);
-STUB_IMPORT_IMPL(u32, Z_envZ_systemZ_ii, (wasm_sandbox_wasi_data* wasi_data, u32 a), -1);
-STUB_IMPORT_IMPL(u32, Z_envZ_utimesZ_iii, (wasm_sandbox_wasi_data* wasi_data, u32 a, u32 b), -1);
-STUB_IMPORT_IMPL(u32, Z_envZ___sys_rmdirZ_ii, (wasm_sandbox_wasi_data* wasi_data, u32 a), EM_EACCES);
-STUB_IMPORT_IMPL(u32, Z_envZ___sys_renameZ_iii, (wasm_sandbox_wasi_data* wasi_data, u32 a, u32 b), EM_EACCES);
-STUB_IMPORT_IMPL(u32, Z_envZ___sys_lstat64Z_iii, (wasm_sandbox_wasi_data* wasi_data, u32 a, u32 b), EM_EACCES);
-STUB_IMPORT_IMPL(u32, Z_envZ___sys_dup3Z_iiii, (wasm_sandbox_wasi_data* wasi_data, u32 a, u32 b, u32 c), EM_EACCES);
-STUB_IMPORT_IMPL(u32, Z_envZ___sys_dup2Z_iii, (wasm_sandbox_wasi_data* wasi_data, u32 a, u32 b), EM_EACCES);
-STUB_IMPORT_IMPL(u32, Z_envZ___sys_getcwdZ_iii, (wasm_sandbox_wasi_data* wasi_data, u32 a, u32 b), EM_EACCES);
-STUB_IMPORT_IMPL(u32, Z_envZ___sys_ftruncate64Z_iiiii, (wasm_sandbox_wasi_data* wasi_data, u32 a, u32 b, u32 c, u32 d), EM_EACCES);
-STUB_IMPORT_IMPL(u32, Z_envZ___sys_unlinkZ_ii, (wasm_sandbox_wasi_data* wasi_data, u32 path), EACCES);
-STUB_IMPORT_IMPL(u32, Z_envZ_pthread_mutexattr_initZ_ii, (wasm_sandbox_wasi_data* wasi_data, u32 a), 0);
-STUB_IMPORT_IMPL(u32, Z_envZ_pthread_mutexattr_settypeZ_iii, (wasm_sandbox_wasi_data* wasi_data, u32 a, u32 b), 0);
-STUB_IMPORT_IMPL(u32, Z_envZ_pthread_mutexattr_destroyZ_ii, (wasm_sandbox_wasi_data* wasi_data, u32 a), 0);
-STUB_IMPORT_IMPL(u32, Z_envZ_pthread_createZ_iiiii, (wasm_sandbox_wasi_data* wasi_data, u32 a, u32 b, u32 c, u32 d), -1);
-STUB_IMPORT_IMPL(u32, Z_envZ_pthread_joinZ_iii, (wasm_sandbox_wasi_data* wasi_data, u32 a, u32 b), -1);
-STUB_IMPORT_IMPL(u32, Z_envZ___cxa_thread_atexitZ_iiii, (wasm_sandbox_wasi_data* wasi_data, u32 a, u32 b, u32 c), -1);
-
-/////////////////////////////////////////// WASI runtime ///////////////////////////////////////////////
+/////////////////////////////////////////// WASI runtime
+//////////////////////////////////////////////////
 
 ////////////// Supported WASI APIs
-// errno_t clock_res_get(void* ctx, clockid_t clock_id, timestamp_t* resolution);
-// errno_t clock_time_get(void* ctx, clockid_t clock_id, timestamp_t precision, timestamp_t* time);
+// errno_t clock_res_get(void* ctx, clockid_t clock_id, timestamp_t*
+// resolution); errno_t clock_time_get(void* ctx, clockid_t clock_id,
+// timestamp_t precision, timestamp_t* time);
 
 // errno_t fd_close(void* ctx, fd_t fd);
-// errno_t fd_read(void* ctx, fd_t fd, const iovec_t* iovs, size_t iovs_len, size_t* nread);
-// errno_t fd_seek(void* ctx, fd_t fd, filedelta_t offset, whence_t whence, filesize_t* newoffset);
-// errno_t fd_write(void* ctx, fd_t fd, const ciovec_t* iovs, size_t iovs_len, size_t* nwritten);
-// --- Currently only the default descriptors of STDIN, STDOUT, STDERR and allowed by the runtime.
-//     seek and close additionally throw an error when operating on STDIN, STDOUT, STDERR.
-//     However, these functions are general if other descriptors are allowed by the runtime in the future.
+// errno_t fd_read(void* ctx, fd_t fd, const iovec_t* iovs, size_t iovs_len,
+// size_t* nread); errno_t fd_seek(void* ctx, fd_t fd, filedelta_t offset,
+// whence_t whence, filesize_t* newoffset); errno_t fd_write(void* ctx, fd_t fd,
+// const ciovec_t* iovs, size_t iovs_len, size_t* nwritten);
+// --- Currently only the default descriptors of STDIN, STDOUT, STDERR and
+// allowed by the runtime.
+//     seek and close additionally throw an error when operating on STDIN,
+//     STDOUT, STDERR. However, these functions are general if other descriptors
+//     are allowed by the runtime in the future.
 
 ////////////// Partially supported WASI APIs
 
 // errno_t args_get(void* ctx, char** argv, char* argv_buf);
 // errno_t args_sizes_get(void* ctx, size_t* argc, size_t* argv_buf_size);
-// --- Reads from wasi_data->main_argv, but the runtime does not provide a way for the host app to set wasi_data->main_argv right now
+// --- Reads from wasi_data->main_argv, but the runtime does not provide a way
+// for the host app to set wasi_data->main_argv right now
 
 // errno_t proc_exit(void* ctx, exitcode_t rval);
-// --- this is a no-op here in this runtime as the focus is on library sandboxing
+// --- this is a no-op here in this runtime as the focus is on library
+// sandboxing
 
 // errno_t environ_get(void* ctx, char** environment, char* environ_buf);
-// errno_t environ_sizes_get(void* ctx, size_t* environ_count, size_t* environ_buf_size);
+// errno_t environ_sizes_get(void* ctx, size_t* environ_count, size_t*
+// environ_buf_size);
 // --- the wasm2c module evironment variable is just an empty environment
 
 // errno_t fd_prestat_get(void* ctx, fd_t fd, prestat_t* buf);
 
 ////////////// Unsupported WASI APIs
-// errno_t fd_advise(void* ctx, fd_t fd, filesize_t offset, filesize_t len, advice_t advice);
-// errno_t fd_allocate(void* ctx, fd_t fd, filesize_t offset, filesize_t len);
-// errno_t fd_datasync(void* ctx, fd_t fd);
-// errno_t fd_fdstat_get(void* ctx, fd_t fd, fdstat_t* buf);
-// errno_t fd_fdstat_set_flags(void* ctx, fd_t fd, fdflags_t flags);
-// errno_t fd_fdstat_set_rights(void* ctx, fd_t fd, rights_t fs_rights_base, rights_t fs_rights_inheriting);
-// errno_t fd_filestat_get(void* ctx, fd_t fd, filestat_t* buf);
-// errno_t fd_filestat_set_size(void* ctx, fd_t fd, filesize_t st_size);
-// errno_t fd_filestat_set_times(void* ctx, fd_t fd, timestamp_t st_atim, timestamp_t st_mtim, fstflags_t fst_flags);
-// errno_t fd_pread(void* ctx, fd_t fd, const iovec_t* iovs, size_t iovs_len, filesize_t offset, size_t* nread);
-// errno_t fd_prestat_dir_name(void* ctx, fd_t fd, char* path, size_t path_len);
-// errno_t fd_pwrite(void* ctx, fd_t fd, const ciovec_t* iovs, size_t iovs_len, filesize_t offset, size_t* nwritten);
-// errno_t fd_readdir(void* ctx, fd_t fd, void* buf, size_t buf_len, dircookie_t cookie, size_t* bufused);
-// errno_t fd_renumber(void* ctx, fd_t from, fd_t to);
-// errno_t fd_sync(void* ctx, fd_t fd);
-// errno_t fd_tell(void* ctx, fd_t fd, filesize_t* offset);
-// errno_t path_create_directory(void* ctx, fd_t fd, const char* path, size_t path_len);
-// errno_t path_filestat_get(void* ctx, fd_t fd, lookupflags_t flags, const char* path, size_t path_len, filestat_t* buf);
-// errno_t path_filestat_set_times(void* ctx, fd_t fd, lookupflags_t flags, const char* path, size_t path_len, timestamp_t st_atim, timestamp_t st_mtim, fstflags_t fst_flags);
-// errno_t path_link(void* ctx, fd_t old_fd, lookupflags_t old_flags, const char* old_path, size_t old_path_len, fd_t new_fd, const char* new_path, size_t new_path_len);
-// errno_t path_open(void* ctx, fd_t dirfd, lookupflags_t dirflags, const char* path, size_t path_len, oflags_t o_flags, rights_t fs_rights_base, rights_t fs_rights_inheriting, fdflags_t fs_flags, fd_t* fd);
-// errno_t path_readlink(void* ctx, fd_t fd, const char* path, size_t path_len, char* buf, size_t buf_len, size_t* bufused);
-// errno_t path_remove_directory(void* ctx, fd_t fd, const char* path, size_t path_len);
-// errno_t path_rename(void* ctx, fd_t old_fd, const char* old_path, size_t old_path_len, fd_t new_fd, const char* new_path, size_t new_path_len);
-// errno_t path_symlink(void* ctx, const char* old_path, size_t old_path_len, fd_t fd, const char* new_path, size_t new_path_len);
-// errno_t path_unlink_file(void* ctx, fd_t fd, const char* path, size_t path_len);
-// errno_t poll_oneoff(void* ctx, const subscription_t* in, event_t* out, size_t nsubscriptions, size_t* nevents);
-// errno_t proc_raise(void* ctx, signal_t sig);
-// errno_t random_get(void* ctx, void* buf, size_t buf_len);
-// errno_t sched_yield(t* uvwasi);
-// errno_t sock_recv(void* ctx, fd_t sock, const iovec_t* ri_data, size_t ri_data_len, riflags_t ri_flags, size_t* ro_datalen, roflags_t* ro_flags);
-// errno_t sock_send(void* ctx, fd_t sock, const ciovec_t* si_data, size_t si_data_len, siflags_t si_flags, size_t* so_datalen);
-// errno_t sock_shutdown(void* ctx, fd_t sock, sdflags_t how);
+// errno_t fd_advise(void* ctx, fd_t fd, filesize_t offset, filesize_t len,
+// advice_t advice); errno_t fd_allocate(void* ctx, fd_t fd, filesize_t offset,
+// filesize_t len); errno_t fd_datasync(void* ctx, fd_t fd); errno_t
+// fd_fdstat_get(void* ctx, fd_t fd, fdstat_t* buf); errno_t
+// fd_fdstat_set_flags(void* ctx, fd_t fd, fdflags_t flags); errno_t
+// fd_fdstat_set_rights(void* ctx, fd_t fd, rights_t fs_rights_base, rights_t
+// fs_rights_inheriting); errno_t fd_filestat_get(void* ctx, fd_t fd,
+// filestat_t* buf); errno_t fd_filestat_set_size(void* ctx, fd_t fd, filesize_t
+// st_size); errno_t fd_filestat_set_times(void* ctx, fd_t fd, timestamp_t
+// st_atim, timestamp_t st_mtim, fstflags_t fst_flags); errno_t fd_pread(void*
+// ctx, fd_t fd, const iovec_t* iovs, size_t iovs_len, filesize_t offset,
+// size_t* nread); errno_t fd_prestat_dir_name(void* ctx, fd_t fd, char* path,
+// size_t path_len); errno_t fd_pwrite(void* ctx, fd_t fd, const ciovec_t* iovs,
+// size_t iovs_len, filesize_t offset, size_t* nwritten); errno_t
+// fd_readdir(void* ctx, fd_t fd, void* buf, size_t buf_len, dircookie_t cookie,
+// size_t* bufused); errno_t fd_renumber(void* ctx, fd_t from, fd_t to); errno_t
+// fd_sync(void* ctx, fd_t fd); errno_t fd_tell(void* ctx, fd_t fd, filesize_t*
+// offset); errno_t path_create_directory(void* ctx, fd_t fd, const char* path,
+// size_t path_len); errno_t path_filestat_get(void* ctx, fd_t fd, lookupflags_t
+// flags, const char* path, size_t path_len, filestat_t* buf); errno_t
+// path_filestat_set_times(void* ctx, fd_t fd, lookupflags_t flags, const char*
+// path, size_t path_len, timestamp_t st_atim, timestamp_t st_mtim, fstflags_t
+// fst_flags); errno_t path_link(void* ctx, fd_t old_fd, lookupflags_t
+// old_flags, const char* old_path, size_t old_path_len, fd_t new_fd, const
+// char* new_path, size_t new_path_len); errno_t path_open(void* ctx, fd_t
+// dirfd, lookupflags_t dirflags, const char* path, size_t path_len, oflags_t
+// o_flags, rights_t fs_rights_base, rights_t fs_rights_inheriting, fdflags_t
+// fs_flags, fd_t* fd); errno_t path_readlink(void* ctx, fd_t fd, const char*
+// path, size_t path_len, char* buf, size_t buf_len, size_t* bufused); errno_t
+// path_remove_directory(void* ctx, fd_t fd, const char* path, size_t path_len);
+// errno_t path_rename(void* ctx, fd_t old_fd, const char* old_path, size_t
+// old_path_len, fd_t new_fd, const char* new_path, size_t new_path_len);
+// errno_t path_symlink(void* ctx, const char* old_path, size_t old_path_len,
+// fd_t fd, const char* new_path, size_t new_path_len); errno_t
+// path_unlink_file(void* ctx, fd_t fd, const char* path, size_t path_len);
+// errno_t poll_oneoff(void* ctx, const subscription_t* in, event_t* out, size_t
+// nsubscriptions, size_t* nevents); errno_t proc_raise(void* ctx, signal_t
+// sig); errno_t random_get(void* ctx, void* buf, size_t buf_len); errno_t
+// sched_yield(t* uvwasi); errno_t sock_recv(void* ctx, fd_t sock, const
+// iovec_t* ri_data, size_t ri_data_len, riflags_t ri_flags, size_t* ro_datalen,
+// roflags_t* ro_flags); errno_t sock_send(void* ctx, fd_t sock, const ciovec_t*
+// si_data, size_t si_data_len, siflags_t si_flags, size_t* so_datalen); errno_t
+// sock_shutdown(void* ctx, fd_t sock, sdflags_t how);
 
 // Bad file descriptor.
 #define WASI_BADF_ERROR 8
@@ -486,39 +604,188 @@ STUB_IMPORT_IMPL(u32, Z_envZ___cxa_thread_atexitZ_iiii, (wasm_sandbox_wasi_data*
 #define WASI_PERM_ERROR 63
 #define WASI_DEFAULT_ERROR WASI_PERM_ERROR
 
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_adviseZ_iijji, (u32 a, u64 b, u64 c, u32 d), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_allocateZ_iijj, (u32 a, u64 b, u64 c), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_datasyncZ_ii, (u32 a), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_fdstat_getZ_iii, (u32 a, u32 b), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_fdstat_set_flagsZ_iii, (u32 a, u32 b), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_fdstat_set_rightsZ_iijj, (u32 a, u64 b, u64 c), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_filestat_getZ_iii, (u32 a, u32 b), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_filestat_set_sizeZ_iij, (u32 a, u64 b), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_filestat_set_timesZ_iijji, (u32 a, u64 b, u64 c, u32 d), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_preadZ_iiiiji, (u32 a, u32 b, u32 c, u64 d, u32 e), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_prestat_dir_nameZ_iiii, (u32 a, u32 b, u32 c), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_pwriteZ_iiiiji, (u32 a, u32 b, u32 c, u64 d, u32 e), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_readdirZ_iiiiji, (u32 a, u32 b, u32 c, u64 d, u32 e), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_renumberZ_iii, (u32 a, u32 b), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_syncZ_ii, (u32 a), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_fd_tellZ_iii, (u32 a, u32 b), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_path_create_directoryZ_iiii, (u32 a, u32 b, u32 c), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_path_filestat_getZ_iiiiii, (u32 a, u32 b, u32 c, u32 d, u32 e), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_path_filestat_set_timesZ_iiiiijji, (u32 a, u32 b, u32 c, u32 d, u64 e, u64 f, u32 g), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_path_linkZ_iiiiiiii, (u32 a, u32 b, u32 c, u32 d, u32 e, u32 f, u32 g), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_path_openZ_iiiiiijjii, (u32 a, u32 b, u32 c, u32 d, u32 e, u64 f, u64 g, u32 h, u32 i), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_path_readlinkZ_iiiiiii, (u32 a, u32 b, u32 c, u32 d, u32 e, u32 f), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_path_remove_directoryZ_iiii, (u32 a, u32 b, u32 c), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_path_renameZ_iiiiiii, (u32 a, u32 b, u32 c, u32 d, u32 e, u32 f), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_path_symlinkZ_iiiiii, (u32 a, u32 b, u32 c, u32 d, u32 e), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_path_unlink_fileZ_iiii, (u32 a, u32 b, u32 c), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_poll_oneoffZ_iiiii, (u32 a, u32 b, u32 c, u32 d), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_proc_raiseZ_ii, (u32 a), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_random_getZ_iii, (u32 a, u32 b), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_sched_yieldZ_i, (), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_sock_recvZ_iiiiiii, (u32 a, u32 b, u32 c, u32 d, u32 e, u32 f), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_sock_sendZ_iiiiii, (u32 a, u32 b, u32 c, u32 d, u32 e), WASI_DEFAULT_ERROR);
-STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_sock_shutdownZ_iii, (u32 a, u32 b), WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(
+    u32,
+    Z_wasi_snapshot_preview1Z_fd_adviseZ_iijji,
+    (wasm_sandbox_wasi_data * wasi_data, u32 a, u64 b, u64 c, u32 d),
+    WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_fd_allocateZ_iijj,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u64 b, u64 c),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_fd_datasyncZ_ii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_fd_fdstat_getZ_iii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_fd_fdstat_set_flagsZ_iii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_fd_fdstat_set_rightsZ_iijj,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u64 b, u64 c),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_fd_filestat_getZ_iii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_fd_filestat_set_sizeZ_iij,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u64 b),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(
+    u32,
+    Z_wasi_snapshot_preview1Z_fd_filestat_set_timesZ_iijji,
+    (wasm_sandbox_wasi_data * wasi_data, u32 a, u64 b, u64 c, u32 d),
+    WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(
+    u32,
+    Z_wasi_snapshot_preview1Z_fd_preadZ_iiiiji,
+    (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b, u32 c, u64 d, u32 e),
+    WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_fd_prestat_dir_nameZ_iiii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b, u32 c),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(
+    u32,
+    Z_wasi_snapshot_preview1Z_fd_pwriteZ_iiiiji,
+    (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b, u32 c, u64 d, u32 e),
+    WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(
+    u32,
+    Z_wasi_snapshot_preview1Z_fd_readdirZ_iiiiji,
+    (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b, u32 c, u64 d, u32 e),
+    WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_fd_renumberZ_iii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_fd_syncZ_ii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_fd_tellZ_iii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_path_create_directoryZ_iiii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b, u32 c),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(
+    u32,
+    Z_wasi_snapshot_preview1Z_path_filestat_getZ_iiiiii,
+    (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b, u32 c, u32 d, u32 e),
+    WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_path_filestat_set_timesZ_iiiiijji,
+                 (wasm_sandbox_wasi_data * wasi_data,
+                  u32 a,
+                  u32 b,
+                  u32 c,
+                  u32 d,
+                  u64 e,
+                  u64 f,
+                  u32 g),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_path_linkZ_iiiiiiii,
+                 (wasm_sandbox_wasi_data * wasi_data,
+                  u32 a,
+                  u32 b,
+                  u32 c,
+                  u32 d,
+                  u32 e,
+                  u32 f,
+                  u32 g),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_path_openZ_iiiiiijjii,
+                 (wasm_sandbox_wasi_data * wasi_data,
+                  u32 a,
+                  u32 b,
+                  u32 c,
+                  u32 d,
+                  u32 e,
+                  u64 f,
+                  u64 g,
+                  u32 h,
+                  u32 i),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_path_readlinkZ_iiiiiii,
+                 (wasm_sandbox_wasi_data * wasi_data,
+                  u32 a,
+                  u32 b,
+                  u32 c,
+                  u32 d,
+                  u32 e,
+                  u32 f),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_path_remove_directoryZ_iiii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b, u32 c),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_path_renameZ_iiiiiii,
+                 (wasm_sandbox_wasi_data * wasi_data,
+                  u32 a,
+                  u32 b,
+                  u32 c,
+                  u32 d,
+                  u32 e,
+                  u32 f),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(
+    u32,
+    Z_wasi_snapshot_preview1Z_path_symlinkZ_iiiiii,
+    (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b, u32 c, u32 d, u32 e),
+    WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_path_unlink_fileZ_iiii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b, u32 c),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(
+    u32,
+    Z_wasi_snapshot_preview1Z_poll_oneoffZ_iiiii,
+    (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b, u32 c, u32 d),
+    WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_proc_raiseZ_ii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_random_getZ_iii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_sched_yieldZ_iv,
+                 (wasm_sandbox_wasi_data * wasi_data),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_sock_recvZ_iiiiiii,
+                 (wasm_sandbox_wasi_data * wasi_data,
+                  u32 a,
+                  u32 b,
+                  u32 c,
+                  u32 d,
+                  u32 e,
+                  u32 f),
+                 WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(
+    u32,
+    Z_wasi_snapshot_preview1Z_sock_sendZ_iiiiii,
+    (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b, u32 c, u32 d, u32 e),
+    WASI_DEFAULT_ERROR);
+STUB_IMPORT_IMPL(u32,
+                 Z_wasi_snapshot_preview1Z_sock_shutdownZ_iii,
+                 (wasm_sandbox_wasi_data * wasi_data, u32 a, u32 b),
+                 WASI_DEFAULT_ERROR);
 
 /////////////////////////////////////////////////////////////
 ////////// App environment operations
@@ -526,7 +793,9 @@ STUB_IMPORT_IMPL(u32, Z_wasi_snapshot_preview1Z_sock_shutdownZ_iii, (u32 a, u32 
 
 // Original file: Modified emscripten/tools/wasm2c/main.c
 
-u32 Z_wasi_snapshot_preview1Z_args_getZ_iii(wasm_sandbox_wasi_data* wasi_data, u32 argv, u32 argv_buf) {
+u32 Z_wasi_snapshot_preview1Z_args_getZ_iii(wasm_sandbox_wasi_data* wasi_data,
+                                            u32 argv,
+                                            u32 argv_buf) {
   u32 buf_size = 0;
   for (u32 i = 0; i < wasi_data->main_argc; i++) {
     u32 ptr = argv_buf + buf_size;
@@ -534,7 +803,8 @@ u32 Z_wasi_snapshot_preview1Z_args_getZ_iii(wasm_sandbox_wasi_data* wasi_data, u
 
     char* arg = wasi_data->main_argv[i];
     // need to check length of argv strings before copying
-    // deliberately truncate length to u32, else UNCOND_MEMCHECK_SIZE may have overflows
+    // deliberately truncate length to u32, else UNCOND_MEMCHECK_SIZE may have
+    // overflows
     u32 len = strlen(arg) + 1;
     UNCOND_MEMCHECK_SIZE(wasi_data->heap_memory, ptr, len);
 
@@ -546,7 +816,10 @@ u32 Z_wasi_snapshot_preview1Z_args_getZ_iii(wasm_sandbox_wasi_data* wasi_data, u
   return 0;
 }
 
-u32 Z_wasi_snapshot_preview1Z_args_sizes_getZ_iii(wasm_sandbox_wasi_data* wasi_data, u32 pargc, u32 pargv_buf_size) {
+u32 Z_wasi_snapshot_preview1Z_args_sizes_getZ_iii(
+    wasm_sandbox_wasi_data* wasi_data,
+    u32 pargc,
+    u32 pargv_buf_size) {
   wasm_i32_store(wasi_data->heap_memory, pargc, wasi_data->main_argc);
   u32 buf_size = 0;
   for (u32 i = 0; i < wasi_data->main_argc; i++) {
@@ -559,27 +832,37 @@ u32 Z_wasi_snapshot_preview1Z_args_sizes_getZ_iii(wasm_sandbox_wasi_data* wasi_d
 // Original file: Modified emscripten/tools/wasm2c/os.c
 
 #ifdef WASM2C_WASI_EXIT_HOST_ON_MODULE_EXIT
-void Z_wasi_snapshot_preview1Z_proc_exitZ_vi(wasm_sandbox_wasi_data* wasi_data, u32 x) {
-    exit(1);
-  }
+void Z_wasi_snapshot_preview1Z_proc_exitZ_vi(wasm_sandbox_wasi_data* wasi_data,
+                                             u32 x) {
+  exit(1);
+}
 #else
-void Z_wasi_snapshot_preview1Z_proc_exitZ_vi(wasm_sandbox_wasi_data* wasi_data, u32 x) {
-    // upstream emscripten implements this as exit(x)
-    // This seems like a bad idea as a misbehaving sandbox will cause the app to exit
-    // Since this is a library sandboxing runtime, it's fine to do nothing here.
-    // Worst case the library continues execution and returns malformed data, which is already a possibility in any sandbox library
-    VERBOSE_LOG("wasm2c module called proc_exit: this is a noop in this runtime\n");
+void Z_wasi_snapshot_preview1Z_proc_exitZ_vi(wasm_sandbox_wasi_data* wasi_data,
+                                             u32 x) {
+  // upstream emscripten implements this as exit(x)
+  // This seems like a bad idea as a misbehaving sandbox will cause the app to
+  // exit Since this is a library sandboxing runtime, it's fine to do nothing
+  // here. Worst case the library continues execution and returns malformed
+  // data, which is already a possibility in any sandbox library
+  VERBOSE_LOG(
+      "wasm2c module called proc_exit: this is a noop in this runtime\n");
 }
 #endif
 
-u32 Z_wasi_snapshot_preview1Z_environ_sizes_getZ_iii(wasm_sandbox_wasi_data* wasi_data, u32 pcount, u32 pbuf_size) {
+u32 Z_wasi_snapshot_preview1Z_environ_sizes_getZ_iii(
+    wasm_sandbox_wasi_data* wasi_data,
+    u32 pcount,
+    u32 pbuf_size) {
   // TODO: Allow the sandbox to have its own env
   wasm_i32_store(wasi_data->heap_memory, pcount, 0);
   wasm_i32_store(wasi_data->heap_memory, pbuf_size, 0);
   return 0;
 }
 
-u32 Z_wasi_snapshot_preview1Z_environ_getZ_iii(wasm_sandbox_wasi_data* wasi_data, u32 __environ, u32 environ_buf) {
+u32 Z_wasi_snapshot_preview1Z_environ_getZ_iii(
+    wasm_sandbox_wasi_data* wasi_data,
+    u32 __environ,
+    u32 environ_buf) {
   // TODO: Allow the sandbox to have its own env
   return 0;
 }
@@ -588,7 +871,10 @@ u32 Z_wasi_snapshot_preview1Z_environ_getZ_iii(wasm_sandbox_wasi_data* wasi_data
 ////////// File operations
 /////////////////////////////////////////////////////////////
 
-u32 Z_wasi_snapshot_preview1Z_fd_prestat_getZ_iii(wasm_sandbox_wasi_data* wasi_data, u32 fd, u32 prestat) {
+u32 Z_wasi_snapshot_preview1Z_fd_prestat_getZ_iii(
+    wasm_sandbox_wasi_data* wasi_data,
+    u32 fd,
+    u32 prestat) {
   int nfd = get_native_fd(wasi_data, fd);
   VERBOSE_LOG("  fd_prestat_get wasm %d => native %d\n", fd, nfd);
   if (nfd < 0) {
@@ -598,7 +884,11 @@ u32 Z_wasi_snapshot_preview1Z_fd_prestat_getZ_iii(wasm_sandbox_wasi_data* wasi_d
   return WASI_DEFAULT_ERROR;
 }
 
-u32 Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii(wasm_sandbox_wasi_data* wasi_data, u32 fd, u32 iov, u32 iovcnt, u32 pnum) {
+u32 Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii(wasm_sandbox_wasi_data* wasi_data,
+                                              u32 fd,
+                                              u32 iov,
+                                              u32 iovcnt,
+                                              u32 pnum) {
   int nfd = get_native_fd(wasi_data, fd);
   VERBOSE_LOG("  fd_write wasm %d => native %d\n", fd, nfd);
   if (nfd < 0) {
@@ -621,13 +911,14 @@ u32 Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii(wasm_sandbox_wasi_data* wasi_data,
     } else if (fd == WASM_STDERR) {
       result = fwrite(MEMACCESS(wasi_data->heap_memory, ptr), 1, len, stderr);
     } else {
-      result = POSIX_PREFIX(write)(nfd, MEMACCESS(wasi_data->heap_memory, ptr), len);
+      result =
+          POSIX_PREFIX(write)(nfd, MEMACCESS(wasi_data->heap_memory, ptr), len);
     }
     if (result < 0) {
       VERBOSE_LOG("    error, %d %s\n", errno, strerror(errno));
       return WASI_DEFAULT_ERROR;
     }
-    if ((size_t) result != len) {
+    if ((size_t)result != len) {
       VERBOSE_LOG("    amount error, %ld %d\n", result, len);
       return WASI_DEFAULT_ERROR;
     }
@@ -638,7 +929,11 @@ u32 Z_wasi_snapshot_preview1Z_fd_writeZ_iiiii(wasm_sandbox_wasi_data* wasi_data,
   return 0;
 }
 
-u32 Z_wasi_snapshot_preview1Z_fd_readZ_iiiii(wasm_sandbox_wasi_data* wasi_data, u32 fd, u32 iov, u32 iovcnt, u32 pnum) {
+u32 Z_wasi_snapshot_preview1Z_fd_readZ_iiiii(wasm_sandbox_wasi_data* wasi_data,
+                                             u32 fd,
+                                             u32 iov,
+                                             u32 iovcnt,
+                                             u32 pnum) {
   int nfd = get_native_fd(wasi_data, fd);
   VERBOSE_LOG("  fd_read wasm %d => native %d\n", fd, nfd);
   if (nfd < 0) {
@@ -653,14 +948,15 @@ u32 Z_wasi_snapshot_preview1Z_fd_readZ_iiiii(wasm_sandbox_wasi_data* wasi_data, 
 
     UNCOND_MEMCHECK_SIZE(wasi_data->heap_memory, ptr, len);
 
-    ssize_t result = POSIX_PREFIX(read)(nfd, MEMACCESS(wasi_data->heap_memory, ptr), len);
+    ssize_t result =
+        POSIX_PREFIX(read)(nfd, MEMACCESS(wasi_data->heap_memory, ptr), len);
     if (result < 0) {
       VERBOSE_LOG("    error, %d %s\n", errno, strerror(errno));
       return WASI_DEFAULT_ERROR;
     }
     num += result;
-    if ((size_t) result != len) {
-      break; // nothing more to read
+    if ((size_t)result != len) {
+      break;  // nothing more to read
     }
   }
   VERBOSE_LOG("    success: %d\n", num);
@@ -668,38 +964,49 @@ u32 Z_wasi_snapshot_preview1Z_fd_readZ_iiiii(wasm_sandbox_wasi_data* wasi_data, 
   return 0;
 }
 
-u32 Z_wasi_snapshot_preview1Z_fd_closeZ_ii(wasm_sandbox_wasi_data* wasi_data, u32 fd) {
+u32 Z_wasi_snapshot_preview1Z_fd_closeZ_ii(wasm_sandbox_wasi_data* wasi_data,
+                                           u32 fd) {
   int nfd = get_native_fd(wasi_data, fd);
   VERBOSE_LOG("  close wasm %d => native %d\n", fd, nfd);
   if (nfd < 0) {
     return WASI_DEFAULT_ERROR;
   }
-  // For additional safety don't allow seeking on the input, output and error streams
+  // For additional safety don't allow seeking on the input, output and error
+  // streams
   if (nfd == WASM_STDOUT || nfd == WASM_STDERR || nfd == WASM_STDIN) {
-      return WASI_DEFAULT_ERROR;
+    return WASI_DEFAULT_ERROR;
   }
   POSIX_PREFIX(close)(nfd);
   return 0;
 }
 
 static int whence_to_native(u32 whence) {
-  if (whence == 0) return SEEK_SET;
-  if (whence == 1) return SEEK_CUR;
-  if (whence == 2) return SEEK_END;
+  if (whence == 0)
+    return SEEK_SET;
+  if (whence == 1)
+    return SEEK_CUR;
+  if (whence == 2)
+    return SEEK_END;
   return -1;
 }
 
-u32 Z_wasi_snapshot_preview1Z_fd_seekZ_iijii(wasm_sandbox_wasi_data* wasi_data, u32 fd, u64 offset, u32 whence, u32 new_offset) {
+u32 Z_wasi_snapshot_preview1Z_fd_seekZ_iijii(wasm_sandbox_wasi_data* wasi_data,
+                                             u32 fd,
+                                             u64 offset,
+                                             u32 whence,
+                                             u32 new_offset) {
   int nfd = get_native_fd(wasi_data, fd);
   int nwhence = whence_to_native(whence);
-  VERBOSE_LOG("  seek %d (=> native %d) %ld %d (=> %d) %d\n", fd, nfd, offset, whence, nwhence, new_offset);
+  VERBOSE_LOG("  seek %d (=> native %d) %ld %d (=> %d) %d\n", fd, nfd, offset,
+              whence, nwhence, new_offset);
   if (nfd < 0) {
     return WASI_DEFAULT_ERROR;
   }
 
-  // For additional safety don't allow seeking on the input, output and error streams
+  // For additional safety don't allow seeking on the input, output and error
+  // streams
   if (nfd == WASM_STDOUT || nfd == WASM_STDERR || nfd == WASM_STDIN) {
-      return WASI_DEFAULT_ERROR;
+    return WASI_DEFAULT_ERROR;
   }
 
   off_t off = POSIX_PREFIX(lseek)(nfd, offset, nwhence);
@@ -712,9 +1019,17 @@ u32 Z_wasi_snapshot_preview1Z_fd_seekZ_iijii(wasm_sandbox_wasi_data* wasi_data, 
   return 0;
 }
 
-// wasm2c includes a version of seek, the u64 offset in two u32 parts. Unclear if this is needed, as WASI does not require this, but no harm in including it.
-u32 Z_wasi_snapshot_preview1Z_fd_seekZ_iiiiii(wasm_sandbox_wasi_data* wasi_data, u32 a, u32 b, u32 c, u32 d, u32 e) {
-  return Z_wasi_snapshot_preview1Z_fd_seekZ_iijii(wasi_data, a, b + (((u64)c) << 32), d, e);
+// wasm2c includes a version of seek, the u64 offset in two u32 parts. Unclear
+// if this is needed, as WASI does not require this, but no harm in including
+// it.
+u32 Z_wasi_snapshot_preview1Z_fd_seekZ_iiiiii(wasm_sandbox_wasi_data* wasi_data,
+                                              u32 a,
+                                              u32 b,
+                                              u32 c,
+                                              u32 d,
+                                              u32 e) {
+  return Z_wasi_snapshot_preview1Z_fd_seekZ_iijii(wasi_data, a,
+                                                  b + (((u64)c) << 32), d, e);
 }
 
 /////////////////////////////////////////////////////////////
@@ -728,31 +1043,41 @@ u32 Z_wasi_snapshot_preview1Z_fd_seekZ_iiiiii(wasm_sandbox_wasi_data* wasi_data,
 
 static int check_clock(u32 clock_id) {
   return clock_id == WASM_CLOCK_REALTIME || clock_id == WASM_CLOCK_MONOTONIC ||
-         clock_id == WASM_CLOCK_PROCESS_CPUTIME || clock_id == WASM_CLOCK_THREAD_CPUTIME_ID;
+         clock_id == WASM_CLOCK_PROCESS_CPUTIME ||
+         clock_id == WASM_CLOCK_THREAD_CPUTIME_ID;
 }
 
 // out is a pointer to a u64 timestamp in nanoseconds
 // https://github.com/WebAssembly/WASI/blob/main/phases/snapshot/docs.md#-timestamp-u64
-u32 Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji(wasm_sandbox_wasi_data* wasi_data, u32 clock_id, u64 precision, u32 out) {
+u32 Z_wasi_snapshot_preview1Z_clock_time_getZ_iiji(
+    wasm_sandbox_wasi_data* wasi_data,
+    u32 clock_id,
+    u64 precision,
+    u32 out) {
   if (!check_clock(clock_id)) {
     return WASI_INVAL_ERROR;
   }
 
   struct timespec out_struct;
   int ret = os_clock_gettime(wasi_data->clock_data, clock_id, &out_struct);
-  u64 result = ((u64)out_struct.tv_sec)*1000*1000*1000 + ((u64)out_struct.tv_nsec);
+  u64 result =
+      ((u64)out_struct.tv_sec) * 1000 * 1000 * 1000 + ((u64)out_struct.tv_nsec);
   wasm_i64_store(wasi_data->heap_memory, out, result);
   return ret;
 }
 
-u32 Z_wasi_snapshot_preview1Z_clock_res_getZ_iii(wasm_sandbox_wasi_data* wasi_data, u32 clock_id, u32 out) {
+u32 Z_wasi_snapshot_preview1Z_clock_res_getZ_iii(
+    wasm_sandbox_wasi_data* wasi_data,
+    u32 clock_id,
+    u32 out) {
   if (!check_clock(clock_id)) {
     return WASI_INVAL_ERROR;
   }
 
   struct timespec out_struct;
   int ret = os_clock_getres(wasi_data->clock_data, clock_id, &out_struct);
-  u64 result = ((u64)out_struct.tv_sec)*1000*1000*1000 + ((u64)out_struct.tv_nsec);
+  u64 result =
+      ((u64)out_struct.tv_sec) * 1000 * 1000 * 1000 + ((u64)out_struct.tv_nsec);
   wasm_i64_store(wasi_data->heap_memory, out, result);
   return ret;
 }
@@ -768,29 +1093,29 @@ void wasm_rt_init_wasi(wasm_sandbox_wasi_data* wasi_data) {
   init_fds(wasi_data);
   os_clock_init(&(wasi_data->clock_data));
   // Remove unused function warnings
-  (void) wasm_i32_load;
-  (void) wasm_i64_load;
-  (void) wasm_f32_load;
-  (void) wasm_f64_load;
-  (void) wasm_i32_load8_s;
-  (void) wasm_i64_load8_s;
-  (void) wasm_i32_load8_u;
-  (void) wasm_i64_load8_u;
-  (void) wasm_i32_load16_s;
-  (void) wasm_i64_load16_s;
-  (void) wasm_i32_load16_u;
-  (void) wasm_i64_load16_u;
-  (void) wasm_i64_load32_s;
-  (void) wasm_i64_load32_u;
-  (void) wasm_i32_store;
-  (void) wasm_i64_store;
-  (void) wasm_f32_store;
-  (void) wasm_f64_store;
-  (void) wasm_i32_store8;
-  (void) wasm_i32_store16;
-  (void) wasm_i64_store8;
-  (void) wasm_i64_store16;
-  (void) wasm_i64_store32;
+  (void)wasm_i32_load;
+  (void)wasm_i64_load;
+  (void)wasm_f32_load;
+  (void)wasm_f64_load;
+  (void)wasm_i32_load8_s;
+  (void)wasm_i64_load8_s;
+  (void)wasm_i32_load8_u;
+  (void)wasm_i64_load8_u;
+  (void)wasm_i32_load16_s;
+  (void)wasm_i64_load16_s;
+  (void)wasm_i32_load16_u;
+  (void)wasm_i64_load16_u;
+  (void)wasm_i64_load32_s;
+  (void)wasm_i64_load32_u;
+  (void)wasm_i32_store;
+  (void)wasm_i64_store;
+  (void)wasm_f32_store;
+  (void)wasm_f64_store;
+  (void)wasm_i32_store8;
+  (void)wasm_i32_store16;
+  (void)wasm_i64_store8;
+  (void)wasm_i64_store16;
+  (void)wasm_i64_store32;
 }
 
 void wasm_rt_cleanup_wasi(wasm_sandbox_wasi_data* wasi_data) {

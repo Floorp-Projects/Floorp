@@ -19,4 +19,4 @@
 
 #include "wasm-rt.h"
 
-#endif // WASM_RT_IMPL_H_
+#endif  // WASM_RT_IMPL_H_

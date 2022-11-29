@@ -175,6 +175,7 @@ class CWriter {
                                string_view mangled_field_name);
   std::string DefineGlobalScopeName(const std::string&);
   std::string DefineLocalScopeName(const std::string&);
+  std::string DefineGlobalVarName(const std::string& name);
   std::string DefineStackVarName(Index, Type, string_view);
 
   void Indent(int size = INDENT_SIZE);
@@ -191,6 +192,7 @@ class CWriter {
   }
 
   std::string GetGlobalName(const std::string&) const;
+  std::string GetGlobalVarName(const std::string& name) const;
 
   void Write() {}
   void Write(Newline);
@@ -289,9 +291,11 @@ class CWriter {
 
   SymbolMap global_sym_map_;
   SymbolMap local_sym_map_;
+  SymbolMap globalvars_sym_map_;
   StackVarSymbolMap stack_var_sym_map_;
   SymbolSet global_syms_;
   SymbolSet local_syms_;
+  SymbolSet globalvars_syms_;
   SymbolSet import_syms_;
   TypeVector type_stack_;
   std::vector<Label> label_stack_;
@@ -510,6 +514,12 @@ std::string CWriter::DefineLocalScopeName(const std::string& name) {
   return unique;
 }
 
+std::string CWriter::DefineGlobalVarName(const std::string& name) {
+  std::string unique = DefineName(&globalvars_syms_, StripLeadingDollar(name));
+  globalvars_sym_map_.insert(SymbolMap::value_type(name, unique));
+  return unique;
+}
+
 std::string CWriter::DefineStackVarName(Index index,
                                         Type type,
                                         string_view name) {
@@ -592,6 +602,13 @@ std::string CWriter::GetGlobalName(const std::string& name) const {
   return iter->second;
 }
 
+std::string CWriter::GetGlobalVarName(const std::string& name) const {
+  assert(globalvars_sym_map_.count(name) == 1);
+  auto iter = globalvars_sym_map_.find(name);
+  assert(iter != globalvars_sym_map_.end());
+  return iter->second;
+}
+
 void CWriter::Write(const GlobalName& name) {
   Write(GetGlobalName(name.name));
 }
@@ -646,7 +663,7 @@ void CWriter::Write(const LabelDecl& label) {
 
 void CWriter::Write(const GlobalVar& var) {
   assert(var.var.is_name());
-  Write(ExternalRef(var.var.name()));
+  Write(GetGlobalVarName(var.var.name()));
 }
 
 void CWriter::Write(const StackVar& sv) {
@@ -1078,7 +1095,7 @@ void CWriter::WriteGlobals() {
     for (const Global* global : module_->globals) {
       bool is_import = global_index < module_->num_global_imports;
       if (!is_import) {
-        WriteGlobal(*global, DefineGlobalScopeName(global->name));
+        WriteGlobal(*global, DefineGlobalVarName(global->name));
         Write(";", Newline());
       }
       ++global_index;
@@ -1093,7 +1110,7 @@ void CWriter::WriteGlobalsExport() {
     for (const Global* global : module_->globals) {
       bool is_import = global_index < module_->num_global_imports;
       if (!is_import) {
-        std::string curr_global_name = GetGlobalName(global->name);
+        std::string curr_global_name = GetGlobalVarName(global->name);
         Writef("if (strcmp(\"%s\", name) == 0)", curr_global_name.c_str());
         Write(OpenBrace());
         Write("return &(sbx->", curr_global_name, ");", Newline());
@@ -1122,7 +1139,7 @@ void CWriter::WriteGlobalInitializers() {
       bool is_import = global_index < module_->num_global_imports;
       if (!is_import) {
         assert(!global->init_expr.empty());
-        Write("sbx->", GlobalName(global->name), " = ");
+        Write("sbx->", GetGlobalVarName(global->name), " = ");
         WriteInitExpr(global->init_expr);
         Write(";", Newline());
       }
@@ -1136,7 +1153,7 @@ void CWriter::WriteGlobalInitializers() {
     for (const Global* global : module_->globals) {
       bool is_import = global_index < module_->num_global_imports;
       if (!is_import) {
-        std::string global_name = GetGlobalName(global->name);
+        std::string global_name = GetGlobalVarName(global->name);
         std::string global_name_expr = "sbx->" + global_name;
         Write("WASM2C_SHADOW_MEMORY_RESERVE(&(sbx->", memory_name ,"), ", global_name_expr,  ", sizeof(", global_name_expr, "));", Newline());
         if (global_name == "w2c___heap_base") {
@@ -1597,7 +1614,7 @@ void CWriter::Write(const ExprList& exprs) {
           Write(StackVar(num_params - 1, func.GetResultType(0)), " = ");
         }
 
-        Write(GlobalVar(var), "(sbx");
+        Write(GlobalName(var.name()), "(sbx");
         for (Index i = 0; i < num_params; ++i) {
           Write(", ", StackVar(num_params - i - 1));
         }
