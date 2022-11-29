@@ -70,7 +70,8 @@ struct Http3TestServer {
     responses: HashMap<Http3OrWebTransportStream, Vec<u8>>,
     current_connection_hash: u64,
     sessions_to_close: HashMap<Instant, Vec<WebTransportRequest>>,
-    sessions_to_create_stream: Vec<WebTransportRequest>,
+    sessions_to_create_stream: Vec<(WebTransportRequest, StreamType)>,
+    webtransport_bidi_stream: HashSet<Http3OrWebTransportStream>,
 }
 
 impl ::std::fmt::Display for Http3TestServer {
@@ -88,6 +89,7 @@ impl Http3TestServer {
             current_connection_hash: 0,
             sessions_to_close: HashMap::new(),
             sessions_to_create_stream: Vec::new(),
+            webtransport_bidi_stream: HashSet::new(),
         }
     }
 
@@ -96,11 +98,17 @@ impl Http3TestServer {
             stream.stream_close_send().unwrap();
             return;
         }
-        let sent = stream.send_data(&data).unwrap();
-        if sent < data.len() {
-            self.responses.insert(stream, data.split_off(sent));
-        } else {
-            stream.stream_close_send().unwrap();
+        match stream.send_data(&data) {
+            Ok(sent) => {
+                if sent < data.len() {
+                    self.responses.insert(stream, data.split_off(sent));
+                } else {
+                    stream.stream_close_send().unwrap();
+                }
+            }
+            Err(e) => {
+                eprintln!("error is {:?}", e);
+            }
         }
     }
 
@@ -139,10 +147,15 @@ impl Http3TestServer {
         if self.sessions_to_create_stream.is_empty() {
             return;
         }
-        let mut session = self.sessions_to_create_stream.pop().unwrap();
-        let mut wt_server_stream = session.create_stream(StreamType::UniDi).unwrap();
-        let content = b"0123456789".to_vec();
-        wt_server_stream.send_data(&content).unwrap();
+        let tuple = self.sessions_to_create_stream.pop().unwrap();
+        let mut session = tuple.0;
+        let mut wt_server_stream = session.create_stream(tuple.1).unwrap();
+        if tuple.1 == StreamType::UniDi {
+            let content = b"0123456789".to_vec();
+            wt_server_stream.send_data(&content).unwrap();
+        } else {
+            self.webtransport_bidi_stream.insert(wt_server_stream);
+        }
     }
 }
 
@@ -354,6 +367,10 @@ impl HttpServer for Http3TestServer {
                     data,
                     fin,
                 } => {
+                    if self.webtransport_bidi_stream.contains(&stream) {
+                        self.new_response(stream, data);
+                        break;
+                    }
                     if let Some(r) = self.posts.get_mut(&stream) {
                         *r += data.len();
                     }
@@ -423,7 +440,10 @@ impl HttpServer for Http3TestServer {
                                     .push(session);
                             } else if path == "/create_unidi_stream" {
                                 session.response(true).unwrap();
-                                self.sessions_to_create_stream.push(session);
+                                self.sessions_to_create_stream.push((session, StreamType::UniDi));
+                            } else if path == "/create_bidi_stream" {
+                                session.response(true).unwrap();
+                                self.sessions_to_create_stream.push((session, StreamType::BiDi));
                             } else {
                                 session.response(true).unwrap();
                             }
@@ -443,8 +463,10 @@ impl HttpServer for Http3TestServer {
                         reason
                     );
                 }
-                Http3ServerEvent::WebTransport(WebTransportServerEvent::NewStream(id)) => {
-                    qdebug!("WebTransportServerEvent::NewStream {:?}", id);
+                Http3ServerEvent::WebTransport(WebTransportServerEvent::NewStream(stream)) => {
+                    if !stream.stream_info.is_http() {
+                        self.webtransport_bidi_stream.insert(stream);
+                    }
                 }
             }
         }

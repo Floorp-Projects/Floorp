@@ -179,7 +179,14 @@ nsresult Http3WebTransportStream::InitOutputPipe() {
     mSendStreamPipeOut = std::move(out);
   }
 
-  return mSendStreamPipeIn->AsyncWait(this, 0, 0, gSocketTransportService);
+  nsresult rv =
+      mSendStreamPipeIn->AsyncWait(this, 0, 0, gSocketTransportService);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  mSendState = SENDING;
+  return NS_OK;
 }
 
 nsresult Http3WebTransportStream::InitInputPipe() {
@@ -264,6 +271,9 @@ nsresult Http3WebTransportStream::OnReadSegment(const char* buf, uint32_t count,
       }
 
       rv = InitOutputPipe();
+      if (NS_SUCCEEDED(rv) && mStreamType == WebTransportStreamType::BiDi) {
+        rv = InitInputPipe();
+      }
       if (NS_FAILED(rv)) {
         LOG3(
             ("Http3WebTransportStream::OnReadSegment %p failed to create pipe "
@@ -275,7 +285,6 @@ nsresult Http3WebTransportStream::OnReadSegment(const char* buf, uint32_t count,
       }
 
       // Successfully activated.
-      mSendState = SENDING;
       mStreamReadyCallback(RefPtr{this});
       break;
     case SENDING: {

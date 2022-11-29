@@ -43,6 +43,11 @@ class WebTransportStreamProxy final : public nsIWebTransportReceiveStream,
   NS_IMETHOD AsyncWait(nsIInputStreamCallback* aCallback, uint32_t aFlags,
                        uint32_t aRequestedCount,
                        nsIEventTarget* aEventTarget) override;
+  // XPCConnect seems to be confused about the other AsyncWait (with
+  // nsIOutputStreamCallback), so we need this function for reading.
+  NS_IMETHOD AsyncWaitForRead(nsIInputStreamCallback* aCallback,
+                              uint32_t aFlags, uint32_t aRequestedCount,
+                              nsIEventTarget* aTarget) override;
 
   NS_IMETHOD Flush() override;
   NS_IMETHOD Write(const char* aBuf, uint32_t aCount,

@@ -418,6 +418,12 @@ Http3WebTransportSession::OnIncomingWebTransportStream(
     return nullptr;
   }
 
+  if (aType == WebTransportStreamType::BiDi) {
+    if (NS_FAILED(stream->InitOutputPipe())) {
+      return nullptr;
+    }
+  }
+
   if (!mListener) {
     return nullptr;
   }
