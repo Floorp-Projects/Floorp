@@ -5,6 +5,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CamerasParent.h"
+
+#include <atomic>
 #include "MediaEngineSource.h"
 #include "MediaUtils.h"
 #include "VideoFrameUtils.h"
@@ -1053,7 +1055,7 @@ void CamerasParent::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 nsString CamerasParent::GetNewName() {
-  static volatile uint64_t counter = 0;
+  static std::atomic<uint64_t> counter{0};
   nsString name(u"CamerasParent "_ns);
   name.AppendInt(++counter);
   return name;
