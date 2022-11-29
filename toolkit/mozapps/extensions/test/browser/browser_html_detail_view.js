@@ -963,6 +963,10 @@ add_task(async function testPrivateBrowsingExtension() {
 
   // Check the PB stuff.
   await updated;
+
+  // Not sure what better to await here.
+  await TestUtils.waitForCondition(() => !badge.hidden);
+
   ok(!badge.hidden, "The PB badge is now shown");
   ok(await hasPrivateAllowed(id), "PB is allowed");
   is(
