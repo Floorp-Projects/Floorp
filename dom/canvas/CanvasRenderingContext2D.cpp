@@ -56,7 +56,6 @@
 
 #include "nsFrameLoader.h"
 #include "nsBidiPresUtils.h"
-#include "Layers.h"
 #include "LayerUserData.h"
 #include "CanvasUtils.h"
 #include "nsIMemoryReporter.h"

@@ -10,7 +10,6 @@
 // Keep others in (case-insensitive) order:
 #include "gfxDrawable.h"
 
-#include "Layers.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSRendering.h"
 #include "nsDisplayList.h"

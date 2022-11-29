@@ -8,7 +8,6 @@
 #include <bitset>
 
 #include "ClientWebGLExtensions.h"
-#include "Layers.h"
 #include "gfxCrashReporterUtils.h"
 #include "HostWebGLContext.h"
 #include "js/PropertyAndElement.h"  // JS_DefineElement

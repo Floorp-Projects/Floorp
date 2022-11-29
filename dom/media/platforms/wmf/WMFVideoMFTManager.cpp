@@ -13,7 +13,6 @@
 #include "GMPUtils.h"  // For SplitAt. TODO: Move SplitAt to a central place.
 #include "IMFYCbCrImage.h"
 #include "ImageContainer.h"
-#include "Layers.h"
 #include "MediaInfo.h"
 #include "MediaTelemetryConstants.h"
 #include "VideoUtils.h"

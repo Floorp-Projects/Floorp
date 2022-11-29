@@ -162,7 +162,6 @@
 
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "gfxPlatform.h"
-#include "Layers.h"
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/ScriptSettings.h"

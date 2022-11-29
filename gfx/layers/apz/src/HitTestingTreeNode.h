@@ -7,9 +7,9 @@
 #ifndef mozilla_layers_HitTestingTreeNode_h
 #define mozilla_layers_HitTestingTreeNode_h
 
-#include "Layers.h"
 #include "mozilla/gfx/CompositorHitTestInfo.h"
 #include "mozilla/gfx/Matrix.h"                  // for Matrix4x4
+#include "mozilla/layers/LayerAttributes.h"      // for ScrollbarData
 #include "mozilla/layers/LayersTypes.h"          // for EventRegions
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid
 #include "mozilla/Maybe.h"                       // for Maybe

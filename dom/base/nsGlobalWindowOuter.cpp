@@ -213,7 +213,6 @@
 #include "mozilla/dom/VREventObserver.h"
 
 #include "nsRefreshDriver.h"
-#include "Layers.h"
 
 #include "mozilla/extensions/WebExtensionPolicy.h"
 
@@ -5465,9 +5464,9 @@ void nsGlobalWindowOuter::ResizeByOuter(int32_t aWidthDif, int32_t aHeightDif,
   CheckForDPIChange();
 }
 
-void nsGlobalWindowOuter::SizeToContentOuter(CallerType aCallerType,
-                                             const SizeToContentConstraints& aConstraints,
-                                             ErrorResult& aError) {
+void nsGlobalWindowOuter::SizeToContentOuter(
+    CallerType aCallerType, const SizeToContentConstraints& aConstraints,
+    ErrorResult& aError) {
   if (!mDocShell) {
     return;
   }
@@ -5489,7 +5488,8 @@ void nsGlobalWindowOuter::SizeToContentOuter(CallerType aCallerType,
     return aError.Throw(NS_ERROR_FAILURE);
   }
 
-  auto contentSize = cv->GetContentSize(aConstraints.mMaxWidth, aConstraints.mMaxHeight, aConstraints.mPrefWidth);
+  auto contentSize = cv->GetContentSize(
+      aConstraints.mMaxWidth, aConstraints.mMaxHeight, aConstraints.mPrefWidth);
   if (!contentSize) {
     return aError.Throw(NS_ERROR_FAILURE);
   }

@@ -68,7 +68,6 @@
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/StaticPresData.h"
 #include "nsRefreshDriver.h"
-#include "Layers.h"
 #include "LayerUserData.h"
 #include "mozilla/dom/NotifyPaintEvent.h"
 #include "nsFontCache.h"

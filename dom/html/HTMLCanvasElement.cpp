@@ -9,7 +9,6 @@
 #include "ImageEncoder.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "Layers.h"
 #include "MediaTrackGraph.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"

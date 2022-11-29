@@ -5,7 +5,6 @@
 #include "WebrtcMediaDataDecoderCodec.h"
 
 #include "ImageContainer.h"
-#include "Layers.h"
 #include "MediaDataDecoderProxy.h"
 #include "PDMFactory.h"
 #include "VideoUtils.h"

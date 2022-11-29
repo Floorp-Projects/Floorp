@@ -16,7 +16,6 @@
 #include "nsITheme.h"
 #include "nsIFrame.h"
 #include "mozilla/dom/Element.h"
-#include "Layers.h"
 
 #include "gfxUtils.h"
 #include "mozilla/layers/RenderRootStateManager.h"

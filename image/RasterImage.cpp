@@ -19,7 +19,6 @@
 #include "IDecodingTask.h"
 #include "ImageLogging.h"
 #include "ImageRegion.h"
-#include "Layers.h"
 #include "LookupResult.h"
 #include "OrientedImage.h"
 #include "SourceBuffer.h"

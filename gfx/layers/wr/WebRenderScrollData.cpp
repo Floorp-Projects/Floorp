@@ -8,7 +8,6 @@
 
 #include <ostream>
 
-#include "Layers.h"
 #include "mozilla/layers/LayersMessageUtils.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/ToString.h"

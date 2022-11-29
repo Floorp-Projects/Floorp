@@ -63,7 +63,6 @@
 #include "gfxQuartzSurface.h"
 #include "gfxUtils.h"
 #include "nsRegion.h"
-#include "Layers.h"
 #include "GfxTexturesReporter.h"
 #include "GLTextureImage.h"
 #include "GLContextProvider.h"

@@ -7,7 +7,6 @@
 #include "DisplayPortUtils.h"
 
 #include "FrameMetrics.h"
-#include "Layers.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/gfx/Point.h"

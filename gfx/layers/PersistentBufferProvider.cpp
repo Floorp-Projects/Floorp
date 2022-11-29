@@ -6,7 +6,6 @@
 
 #include "PersistentBufferProvider.h"
 
-#include "Layers.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/gfx/gfxVars.h"

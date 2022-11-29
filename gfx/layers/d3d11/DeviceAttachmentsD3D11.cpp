@@ -6,9 +6,9 @@
 
 #include "DeviceAttachmentsD3D11.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/Compositor.h"
 #include "CompositorD3D11Shaders.h"
-#include "Layers.h"
 #include "ShaderDefinitionsD3D11.h"
 
 namespace mozilla {

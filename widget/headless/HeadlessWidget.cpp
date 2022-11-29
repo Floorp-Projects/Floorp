@@ -5,7 +5,6 @@
 #include "HeadlessWidget.h"
 #include "ErrorList.h"
 #include "HeadlessCompositorWidget.h"
-#include "Layers.h"
 #include "BasicEvents.h"
 #include "MouseEvents.h"
 #include "mozilla/gfx/gfxVars.h"

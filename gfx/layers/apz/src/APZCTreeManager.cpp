@@ -14,7 +14,6 @@
 #include "HitTestingTreeNode.h"     // for HitTestingTreeNode
 #include "InputBlockState.h"        // for InputBlockState
 #include "InputData.h"              // for InputData, etc
-#include "Layers.h"                 // for Layer, etc
 #include "WRHitTester.h"            // for WRHitTester
 #include "mozilla/RecursiveMutex.h"
 #include "mozilla/dom/MouseEventBinding.h"  // for MouseEvent constants

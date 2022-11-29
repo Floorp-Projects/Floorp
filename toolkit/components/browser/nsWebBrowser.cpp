@@ -26,7 +26,6 @@
 #include "nsIURI.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsFocusManager.h"
-#include "Layers.h"
 #include "nsILoadContext.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDocShell.h"

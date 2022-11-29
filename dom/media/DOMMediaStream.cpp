@@ -8,7 +8,6 @@
 #include "AudioCaptureTrack.h"
 #include "AudioChannelAgent.h"
 #include "AudioStreamTrack.h"
-#include "Layers.h"
 #include "MediaTrackGraph.h"
 #include "MediaTrackGraphImpl.h"
 #include "MediaTrackListener.h"
