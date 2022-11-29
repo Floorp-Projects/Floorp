@@ -305,6 +305,9 @@ BROWSER_PROCESS += [
 
     # ASUS Web Storage (bug 1714940)
     DllBlocklistEntry("asuswsshellext64.dll", (1, 1, 0, 27)),
+
+    # ExplorerPatcher (bug 1798707)
+    DllBlocklistEntry("explorerpatcher.amd64.dll", ALL_VERSIONS),
 ]
 
 CHILD_PROCESSES += [
