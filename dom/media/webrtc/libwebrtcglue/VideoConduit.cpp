@@ -1329,7 +1329,7 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
     // Check if we need to drop this frame to meet a requested FPS
     auto videoStreamFactory = mVideoStreamFactory.Lock();
     auto& videoStreamFactoryRef = videoStreamFactory.ref();
-    if (videoStreamFactoryRef->ShouldDropFrame(aFrame.timestamp_us())) {
+    if (videoStreamFactoryRef->ShouldDropFrame(aFrame)) {
       return kMediaConduitNoError;
     }
   }

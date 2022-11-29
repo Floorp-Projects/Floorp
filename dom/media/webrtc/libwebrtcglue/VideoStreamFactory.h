@@ -17,6 +17,10 @@
 #include "common_video/framerate_controller.h"
 #include "rtc_base/time_utils.h"
 
+namespace webrtc {
+class VideoFrame;
+}
+
 namespace mozilla {
 
 // Factory class for VideoStreams... vie_encoder.cc will call this to
@@ -65,13 +69,13 @@ class VideoStreamFactory
                                        unsigned short aHeight);
 
   /**
-   * Function to determine if the frame should be dropped to achieve a lower
-   * framerate  based on the given timestamp.
-   * @param aTimestamp timestamp of frame to be evaluated.
-   * @return true if frame should be dropped to achieve a specific framerate,
-   * false otehrwise.
+   * Function to determine if the frame should be dropped based on the given
+   * frame's resolution (combined with the factory's scaleResolutionDownBy) or
+   * timestamp.
+   * @param aFrame frame to be evaluated.
+   * @return true if frame should be dropped, false otehrwise.
    */
-  bool ShouldDropFrame(int64_t aTimestamp);
+  bool ShouldDropFrame(const webrtc::VideoFrame& aFrame);
 
  private:
   /**
