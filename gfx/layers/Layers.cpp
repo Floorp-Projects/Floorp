@@ -61,26 +61,6 @@ using namespace mozilla::gfx;
 using namespace mozilla::Compression;
 
 #ifdef MOZ_DUMP_PAINTING
-template <typename T>
-void WriteSnapshotToDumpFile_internal(T* aObj, DataSourceSurface* aSurf) {
-  nsCString string(aObj->Name());
-  string.Append('-');
-  string.AppendInt((uint64_t)aObj);
-  if (gfxUtils::sDumpPaintFile != stderr) {
-    fprintf_stderr(gfxUtils::sDumpPaintFile, R"(array["%s"]=")",
-                   string.BeginReading());
-  }
-  gfxUtils::DumpAsDataURI(aSurf, gfxUtils::sDumpPaintFile);
-  if (gfxUtils::sDumpPaintFile != stderr) {
-    fprintf_stderr(gfxUtils::sDumpPaintFile, R"(";)");
-  }
-}
-
-void WriteSnapshotToDumpFile(Compositor* aCompositor, DrawTarget* aTarget) {
-  RefPtr<SourceSurface> surf = aTarget->Snapshot();
-  RefPtr<DataSourceSurface> dSurf = surf->GetDataSurface();
-  WriteSnapshotToDumpFile_internal(aCompositor, dSurf);
-}
 #endif
 
 IntRect ToOutsideIntRect(const gfxRect& aRect) {
