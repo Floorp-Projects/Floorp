@@ -41,6 +41,9 @@ def _get_all_deps(task):
 @transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
+        if not task["attributes"].get("build-type"):
+            task["attributes"]["build-type"] = task["name"]
+
         resolve_keyed_by(
             task,
             "treeherder.job-symbol",

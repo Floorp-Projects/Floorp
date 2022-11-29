@@ -27,7 +27,8 @@ def index_exists(index_path, reason=""):
 @_target_task("nightly")
 def target_tasks_nightly(full_task_graph, parameters, graph_config):
     def filter(task, parameters):
-        return task.attributes.get("build-type", "") == "nightly"
+        build_type = task.attributes.get("build-type", "")
+        return build_type == "nightly" or build_type == "focus-nightly"
 
     index_path = (
         f"{graph_config['trust-domain']}.v2.{parameters['project']}.branch."

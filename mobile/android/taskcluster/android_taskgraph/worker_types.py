@@ -142,6 +142,43 @@ def build_github_release_payload(config, task, task_def):
 
 
 @payload_builder(
+    "scriptworker-pushapk",
+    schema={
+        Required("upstream-artifacts"): [
+            {
+                Required("taskId"): taskref_or_string,
+                Required("taskType"): str,
+                Required("paths"): [str],
+            }
+        ],
+        Required("certificate-alias"): str,
+        Required("channel"): str,
+        Required("commit"): bool,
+        Required("product"): str,
+        Required("dep"): bool,
+    },
+)
+def build_push_apk_payload(config, task, task_def):
+    worker = task["worker"]
+
+    task_def["tags"]["worker-implementation"] = "scriptworker"
+
+    task_def["payload"] = {
+        "certificate_alias": worker["certificate-alias"],
+        "channel": worker["channel"],
+        "commit": worker["commit"],
+        "upstreamArtifacts": worker["upstream-artifacts"],
+    }
+
+    scope_prefix = config.graph_config["scriptworker"]["scope-prefix"]
+    task_def["scopes"].append(
+        "{}:googleplay:product:{}{}".format(
+            scope_prefix, worker["product"], ":dep" if worker["dep"] else ""
+        )
+    )
+
+
+@payload_builder(
     "scriptworker-shipit",
     schema={
         Required("release-name"): str,
