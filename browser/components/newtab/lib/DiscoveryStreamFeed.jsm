@@ -126,7 +126,7 @@ class DiscoveryStreamFeed {
       // istanbul ignore next
       this._prefCache.config = {};
       // istanbul ignore next
-      console.error(
+      Cu.reportError(
         `Could not parse preference. Try resetting ${PREF_CONFIG} in about:config. ${e}`
       );
     }
@@ -370,7 +370,7 @@ class DiscoveryStreamFeed {
 
   async fetchFromEndpoint(rawEndpoint, options = {}) {
     if (!rawEndpoint) {
-      console.error("Tried to fetch endpoint but none was configured.");
+      Cu.reportError("Tried to fetch endpoint but none was configured.");
       return null;
     }
 
@@ -414,7 +414,7 @@ class DiscoveryStreamFeed {
       clearTimeout(timeoutId);
       return response.json();
     } catch (error) {
-      console.error(`Failed to fetch ${endpoint}: ${error.message}`);
+      Cu.reportError(`Failed to fetch ${endpoint}: ${error.message}`);
     }
     return null;
   }
@@ -529,7 +529,7 @@ class DiscoveryStreamFeed {
 
         await this.cache.set("layout", layout);
       } else {
-        console.error("No response for response.layout prop");
+        Cu.reportError("No response for response.layout prop");
       }
     }
     return layout;
@@ -799,7 +799,7 @@ class DiscoveryStreamFeed {
           })
           .catch(
             /* istanbul ignore next */ error => {
-              console.error(
+              Cu.reportError(
                 `Error trying to load component feed ${url}: ${error}`
               );
             }
@@ -1099,7 +1099,7 @@ class DiscoveryStreamFeed {
             spocs: spocsState.spocs,
           });
         } else {
-          console.error("No response for spocs_endpoint prop");
+          Cu.reportError("No response for spocs_endpoint prop");
         }
       }
     }
@@ -1441,7 +1441,7 @@ class DiscoveryStreamFeed {
           },
         };
       } else {
-        console.error("No response for feed");
+        Cu.reportError("No response for feed");
       }
     }
 
@@ -1621,7 +1621,7 @@ class DiscoveryStreamFeed {
       // We only make one fetch, and control which to request when we fetch.
       // So for now we only care if we need to make this request at all.
       const spocsPromise = this.loadSpocs(dispatch, isStartup).catch(error =>
-        console.error(`Error trying to load spocs feeds: ${error}`)
+        Cu.reportError(`Error trying to load spocs feeds: ${error}`)
       );
       promises.push(spocsPromise);
       if (this.showStories) {
@@ -1629,7 +1629,7 @@ class DiscoveryStreamFeed {
           dispatch,
           isStartup
         ).catch(error =>
-          console.error(`Error trying to load component feeds: ${error}`)
+          Cu.reportError(`Error trying to load component feeds: ${error}`)
         );
         promises.push(storiesPromise);
       }

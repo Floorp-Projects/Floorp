@@ -942,7 +942,7 @@ const ASRouterTargeting = {
       if (onError) {
         onError(error, message);
       }
-      console.error(error);
+      Cu.reportError(error);
       result = false;
     }
     return result;

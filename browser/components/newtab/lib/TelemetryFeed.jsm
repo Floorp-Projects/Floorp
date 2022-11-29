@@ -764,7 +764,7 @@ class TelemetryFeed {
       if (ONBOARDING_ALLOWED_PAGE_VALUES.includes(session.page)) {
         event_context.page = session.page;
       } else {
-        console.error(`Invalid 'page' for Onboarding event: ${session.page}`);
+        Cu.reportError(`Invalid 'page' for Onboarding event: ${session.page}`);
       }
       ping.event_context = JSON.stringify(event_context);
     }
@@ -895,7 +895,7 @@ class TelemetryFeed {
         });
       }
     } else {
-      console.error("Unknown ping type for TopSites impression");
+      Cu.reportError("Unknown ping type for TopSites impression");
       return;
     }
 
@@ -960,7 +960,7 @@ class TelemetryFeed {
   async handleASRouterUserEvent(action) {
     const { ping, pingType } = await this.createASRouterEvent(action);
     if (!pingType) {
-      console.error("Unknown ping type for ASRouter telemetry");
+      Cu.reportError("Unknown ping type for ASRouter telemetry");
       return;
     }
     this.sendStructuredIngestionEvent(

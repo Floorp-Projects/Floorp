@@ -471,11 +471,11 @@ class TopSitesFeed {
     try {
       result = await this._remoteConfig.get();
     } catch (ex) {
-      console.error(ex);
+      Cu.reportError(ex);
       failed = true;
     }
     if (!result.length) {
-      console.error("Received empty top sites configuration!");
+      Cu.reportError("Received empty top sites configuration!");
       failed = true;
     }
     // If we failed, or the result is empty, try loading from the local dump.
@@ -924,7 +924,7 @@ class TopSitesFeed {
       storedPrefs = (await this._storage.get(SECTION_ID)) || {};
     } catch (e) {
       storedPrefs = {};
-      console.error("Problem getting stored prefs for TopSites");
+      Cu.reportError("Problem getting stored prefs for TopSites");
     }
     newAction.data.pref = getDefaultOptions(storedPrefs);
 

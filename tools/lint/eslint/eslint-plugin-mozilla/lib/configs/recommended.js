@@ -152,7 +152,6 @@ module.exports = {
     "mozilla/import-browser-window-globals": "error",
     "mozilla/import-globals": "error",
     "mozilla/no-compare-against-boolean-literals": "error",
-    "mozilla/no-cu-reportError": "error",
     "mozilla/no-define-cc-etc": "error",
     "mozilla/no-throw-cr-literal": "error",
     "mozilla/no-useless-parameters": "error",

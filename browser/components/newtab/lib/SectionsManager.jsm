@@ -265,13 +265,13 @@ const SectionsManager = {
       options = JSON.parse(optionsPrefValue);
     } catch (e) {
       options = {};
-      console.error(`Problem parsing options pref for ${feedPrefName}`);
+      Cu.reportError(`Problem parsing options pref for ${feedPrefName}`);
     }
     try {
       storedPrefs = (await this._storage.get(feedPrefName)) || {};
     } catch (e) {
       storedPrefs = {};
-      console.error(`Problem getting stored prefs for ${feedPrefName}`);
+      Cu.reportError(`Problem getting stored prefs for ${feedPrefName}`);
     }
     const defaultSection = BUILT_IN_SECTIONS(featureConfig)[feedPrefName](
       options
@@ -398,7 +398,7 @@ const SectionsManager = {
   _addCardTypeLinkMenuOptions(rows) {
     for (let card of rows) {
       if (!this.CONTEXT_MENU_OPTIONS_FOR_HIGHLIGHT_TYPES[card.type]) {
-        console.error(
+        Cu.reportError(
           `No context menu for highlight type ${card.type} is configured`
         );
       } else {

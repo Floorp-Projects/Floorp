@@ -2051,7 +2051,7 @@ describe("ASRouter", () => {
       sandbox.stub(Cu, "reportError");
 
       assert.equal(false, Router._validPreviewEndpoint("http://foo.com"));
-      assert.calledTwice(console.error);
+      assert.calledTwice(Cu.reportError);
     });
   });
 
