@@ -195,6 +195,9 @@ class gfxWindowsPlatform final : public gfxPlatform {
 
   static bool CheckVariationFontSupport();
 
+  // Always false for content processes.
+  bool SupportsHDR() override { return mSupportsHDR; }
+
  protected:
   bool AccelerateLayersByDefault() override { return true; }
   nsTArray<uint8_t> GetPlatformCMSOutputProfileData() override;
@@ -207,7 +210,10 @@ class gfxWindowsPlatform final : public gfxPlatform {
 
   BackendPrefsData GetBackendPrefs() const override;
 
+  void UpdateSupportsHDR();
+
   RenderMode mRenderMode;
+  bool mSupportsHDR;
 
  private:
   enum class DwmCompositionStatus : uint32_t {
