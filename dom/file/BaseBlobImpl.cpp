@@ -64,12 +64,10 @@ void BaseBlobImpl::SetLastModificationDatePrecisely(int64_t aDate) {
   mLastModificationDate = aDate;
 }
 
-void BaseBlobImpl::SetLastModificationDate(bool aCrossOriginIsolated,
+void BaseBlobImpl::SetLastModificationDate(RTPCallerType aRTPCallerType,
                                            int64_t aDate) {
   return SetLastModificationDatePrecisely(
-      nsRFPService::ReduceTimePrecisionAsUSecs(aDate, 0,
-                                               /* aIsSystemPrincipal */ false,
-                                               aCrossOriginIsolated));
+      nsRFPService::ReduceTimePrecisionAsUSecs(aDate, 0, aRTPCallerType));
   // mLastModificationDate is an absolute timestamp so we supply a zero
   // context mix-in
 }
