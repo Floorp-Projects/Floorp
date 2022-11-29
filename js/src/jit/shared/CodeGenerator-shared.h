@@ -31,11 +31,6 @@ class IonIC;
 
 class OutOfLineTruncateSlow;
 
-struct ReciprocalMulConstants {
-  int64_t multiplier;
-  int32_t shiftAmount;
-};
-
 class CodeGeneratorShared : public LElementVisitor {
   js::Vector<OutOfLineCode*, 0, SystemAllocPolicy> outOfLineCode_;
 
@@ -362,8 +357,6 @@ class CodeGeneratorShared : public LElementVisitor {
 
  protected:
   void addIC(LInstruction* lir, size_t cacheIndex);
-
-  ReciprocalMulConstants computeDivisionConstants(uint32_t d, int maxLog);
 
  protected:
   bool generatePrologue();

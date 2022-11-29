@@ -69,6 +69,7 @@ UNIFIED_SOURCES += [
     "PerfSpewer.cpp",
     "ProcessExecutableMemory.cpp",
     "RangeAnalysis.cpp",
+    "ReciprocalMulConstants.cpp",
     "Recover.cpp",
     "RegisterAllocator.cpp",
     "RematerializedFrame.cpp",
