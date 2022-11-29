@@ -24,6 +24,4 @@ UNIFIED_SOURCES += [
     "RtpLogger.cpp",
 ]
 
-DEFINES["TRACING"] = True
-
 FINAL_LIBRARY = "xul"

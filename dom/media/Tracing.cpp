@@ -16,7 +16,7 @@ mozilla::AsyncLogger gAudioCallbackTraceLogger;
 static std::atomic<int> gTracingStarted(0);
 
 void StartAudioCallbackTracing() {
-#ifdef TRACING
+#ifdef MOZ_REAL_TIME_TRACING
   int cnt = gTracingStarted.fetch_add(1, std::memory_order_seq_cst);
   if (cnt == 0) {
     // This is a noop if the logger has not been enabled.
@@ -26,7 +26,7 @@ void StartAudioCallbackTracing() {
 }
 
 void StopAudioCallbackTracing() {
-#ifdef TRACING
+#ifdef MOZ_REAL_TIME_TRACING
   int cnt = gTracingStarted.fetch_sub(1, std::memory_order_seq_cst);
   if (cnt == 1) {
     // This is a noop if the logger has not been enabled.
@@ -37,13 +37,17 @@ void StopAudioCallbackTracing() {
 
 void AutoTracer::PrintEvent(const char* aName, const char* aCategory,
                             const char* aComment, TracingPhase aPhase) {
+#ifdef MOZ_REAL_TIME_TRACING
   mLogger.Log(aName, aCategory, aComment, aPhase);
+#endif
 }
 
 void AutoTracer::PrintBudget(const char* aName, const char* aCategory,
                              uint64_t aDuration, uint64_t aFrames,
                              uint64_t aSampleRate) {
+#ifdef MOZ_REAL_TIME_TRACING
   mLogger.LogDuration(aName, aCategory, aDuration, aFrames, aSampleRate);
+#endif
 }
 
 AutoTracer::AutoTracer(AsyncLogger& aLogger, const char* aLocation,
