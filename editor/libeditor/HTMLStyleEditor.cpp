@@ -1038,7 +1038,8 @@ HTMLEditor::SplitAncestorStyledInlineElementsAt(
   // with nsGkAtoms::tt before calling SetInlinePropertyAsAction() if we
   // are handling a XUL command.  Only in that case, we need to check
   // IsCSSEnabled().
-  const bool useCSS = aStyle.mHTMLProperty != nsGkAtoms::tt || IsCSSEnabled();
+  const bool handleCSS =
+      aStyle.mHTMLProperty != nsGkAtoms::tt || IsCSSEnabled();
 
   AutoTArray<OwningNonNull<nsIContent>, 24> arrayOfParents;
   for (nsIContent* content :
@@ -1057,23 +1058,53 @@ HTMLEditor::SplitAncestorStyledInlineElementsAt(
   MOZ_ASSERT(!result.Handled());
   EditorDOMPoint pointToPutCaret;
   for (OwningNonNull<nsIContent>& content : arrayOfParents) {
-    bool isSetByCSS = false;
-    if (useCSS && MOZ_LIKELY(content->GetAsElementOrParentElement()) &&
-        aStyle.IsCSSEditable(*content->GetAsElementOrParentElement())) {
-      // The HTML style defined by aStyle has a CSS equivalence in this
-      // implementation for the node; let's check if it carries those CSS styles
-      nsAutoString firstValue;
-      Result<bool, nsresult> isSpecifiedByCSSOrError =
-          CSSEditUtils::IsSpecifiedCSSEquivalentTo(*this, *content, aStyle,
-                                                   firstValue);
-      if (MOZ_UNLIKELY(isSpecifiedByCSSOrError.isErr())) {
-        result.IgnoreCaretPointSuggestion();
-        NS_WARNING("CSSEditUtils::IsSpecifiedCSSEquivalentTo() failed");
-        return isSpecifiedByCSSOrError.propagateErr();
+    auto isSetByCSSOrError = [&]() -> Result<bool, nsresult> {
+      if (!handleCSS) {
+        return false;
       }
-      isSetByCSS = isSpecifiedByCSSOrError.unwrap();
+      // The HTML style defined by aStyle has a CSS equivalence in this
+      // implementation for the node; let's check if it carries those CSS
+      // styles
+      if (MOZ_LIKELY(content->GetAsElementOrParentElement()) &&
+          aStyle.IsCSSEditable(*content->GetAsElementOrParentElement())) {
+        nsAutoString firstValue;
+        Result<bool, nsresult> isSpecifiedByCSSOrError =
+            CSSEditUtils::IsSpecifiedCSSEquivalentTo(*this, *content, aStyle,
+                                                     firstValue);
+        if (MOZ_UNLIKELY(isSpecifiedByCSSOrError.isErr())) {
+          result.IgnoreCaretPointSuggestion();
+          NS_WARNING("CSSEditUtils::IsSpecifiedCSSEquivalentTo() failed");
+          return isSpecifiedByCSSOrError;
+        }
+        if (isSpecifiedByCSSOrError.unwrap()) {
+          return true;
+        }
+      }
+      // If this is <sub> or <sup>, we won't use vertical-align CSS property
+      // because <sub>/<sup> changes font size but neither `vertical-align:
+      // sub` nor `vertical-align: super` changes it (bug 394304 comment 2).
+      // Therefore, they are not equivalents.  However, they're obviously
+      // conflict with vertical-align style.  Thus, we need to remove ancestor
+      // elements having vertical-align style.
+      if (aStyle.IsStyleConflictingWithVerticalAlign()) {
+        nsAutoString value;
+        nsresult rv = CSSEditUtils::GetSpecifiedProperty(
+            *content, *nsGkAtoms::vertical_align, value);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("CSSEditUtils::GetSpecifiedProperty() failed");
+          result.IgnoreCaretPointSuggestion();
+          return Err(rv);
+        }
+        if (!value.IsEmpty()) {
+          return true;
+        }
+      }
+      return false;
+    }();
+    if (MOZ_UNLIKELY(isSetByCSSOrError.isErr())) {
+      return isSetByCSSOrError.propagateErr();
     }
-    if (!isSetByCSS) {
+    if (!isSetByCSSOrError.inspect()) {
       if (!content->IsElement()) {
         continue;
       }
@@ -1587,6 +1618,38 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveStyleInside(
         if (MOZ_LIKELY(unwrapSpanOrFontElementResult.isOk()) &&
             unwrapSpanOrFontElementResult.inspect().IsSet()) {
           pointToPutCaret = unwrapSpanOrFontElementResult.unwrap();
+        }
+      }
+    }
+  }
+
+  // If the style is <sub> or <sup>, we won't use vertical-align CSS property
+  // because <sub>/<sup> changes font size but neither `vertical-align: sub` nor
+  // `vertical-align: super` changes it (bug 394304 comment 2).  Therefore, they
+  // are not equivalents. However, they're obviously conflict with
+  // vertical-align style.  Thus, we need to remove the vertical-align style
+  // from elements.
+  if (aStyleToRemove.IsStyleConflictingWithVerticalAlign()) {
+    nsAutoString value;
+    nsresult rv = CSSEditUtils::GetSpecifiedProperty(
+        aElement, *nsGkAtoms::vertical_align, value);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CSSEditUtils::GetSpecifiedProperty() failed");
+      return Err(rv);
+    }
+    if (!value.IsEmpty()) {
+      if (nsStyledElement* styledElement =
+              nsStyledElement::FromNode(&aElement)) {
+        Result<EditorDOMPoint, nsresult> result =
+            CSSEditUtils::RemoveCSSInlineStyleWithTransaction(
+                *this, MOZ_KnownLive(*styledElement), nsGkAtoms::vertical_align,
+                value);
+        if (MOZ_UNLIKELY(result.isErr())) {
+          NS_WARNING("CSSEditUtils::RemoveCSSPropertyWithTransaction() failed");
+          return result.propagateErr();
+        }
+        if (result.inspect().IsSet()) {
+          pointToPutCaret = result.unwrap();
         }
       }
     }
