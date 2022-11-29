@@ -316,7 +316,9 @@ void AnimationEffect::GetComputedTimingAsDict(
   aRetVal.mFill = computedTiming.mFill;
   aRetVal.mActiveDuration = computedTiming.mActiveDuration.ToMilliseconds();
   aRetVal.mEndTime = computedTiming.mEndTime.ToMilliseconds();
-  aRetVal.mLocalTime = AnimationUtils::TimeDurationToDouble(currentTime);
+  aRetVal.mLocalTime = AnimationUtils::TimeDurationToDouble(
+      currentTime,
+      RTPCallerType::Normal /* dummy RTP Caller Type to be replaced */);
   aRetVal.mProgress = computedTiming.mProgress;
 
   if (!aRetVal.mProgress.IsNull()) {
