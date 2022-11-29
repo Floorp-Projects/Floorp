@@ -68,10 +68,6 @@ class Compositor;
 class TransformData;
 struct PropertyAnimationGroup;
 
-void RecordCompositionPayloadsPresented(
-    const TimeStamp& aCompositionEndTime,
-    const nsTArray<CompositionPayload>& aPayloads);
-
 }  // namespace layers
 }  // namespace mozilla
 
