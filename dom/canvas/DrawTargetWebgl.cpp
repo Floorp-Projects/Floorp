@@ -2536,9 +2536,7 @@ void PathCache::ClearVertexRanges() {
 
 inline bool DrawTargetWebgl::ShouldAccelPath(
     const DrawOptions& aOptions, const StrokeOptions* aStrokeOptions) {
-  return mWebglValid && SupportsDrawOptions(aOptions) &&
-         (!aStrokeOptions || mSharedContext->mPathAccelStroke) &&
-         PrepareContext();
+  return mWebglValid && SupportsDrawOptions(aOptions) && PrepareContext();
 }
 
 bool DrawTargetWebgl::SharedContext::DrawPathAccel(
@@ -2634,7 +2632,7 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
   }
 
   if (mPathVertexCapacity > 0 && !handle && entry && !aShadow &&
-      SupportsPattern(aPattern) &&
+      SupportsPattern(aPattern) && (!aStrokeOptions || mPathAccelStroke) &&
       entry->GetPath().mPath.num_types <= mPathMaxComplexity) {
     if (entry->GetVertexRange().IsValid()) {
       // If there is a valid cached vertex data in the path vertex buffer, then
