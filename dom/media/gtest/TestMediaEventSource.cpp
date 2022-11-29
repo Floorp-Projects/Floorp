@@ -231,7 +231,7 @@ TEST(MediaEventSource, ListenerType2)
     void OnNotify2(const int& i) { mInt += i; }
     void OnNotify3() { mInt += 1; }
     void OnNotify4(int i) const { mInt += i; }
-    void OnNotify5(int i) volatile { mInt += i; }
+    void OnNotify5(int i) volatile { mInt = mInt + i; }
     mutable int mInt;
   } foo;
 
