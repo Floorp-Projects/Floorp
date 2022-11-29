@@ -241,6 +241,10 @@ void MacroAssembler::sub64(Imm64 imm, Register64 dest) {
   as_dsubu(dest.reg, dest.reg, ScratchRegister);
 }
 
+void MacroAssembler::mulHighUnsigned32(Imm32 imm, Register src, Register dest) {
+  MOZ_CRASH("NYI");
+}
+
 void MacroAssembler::mulPtr(Register rhs, Register srcDest) {
 #ifdef MIPSR6
   as_dmulu(srcDest, srcDest, rhs);

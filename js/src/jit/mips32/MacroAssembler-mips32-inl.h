@@ -245,6 +245,10 @@ void MacroAssembler::sub64(Imm64 imm, Register64 dest) {
   ma_subu(dest.high, dest.high, imm.hi());
 }
 
+void MacroAssembler::mulHighUnsigned32(Imm32 imm, Register src, Register dest) {
+  MOZ_CRASH("NYI");
+}
+
 void MacroAssembler::mulPtr(Register rhs, Register srcDest) {
   as_mul(srcDest, srcDest, rhs);
 }

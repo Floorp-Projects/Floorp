@@ -414,6 +414,11 @@ void MacroAssembler::mul32(Imm32 imm, Register srcDest) {
   mul32(scratch, srcDest);
 }
 
+void MacroAssembler::mulHighUnsigned32(Imm32 imm, Register src, Register dest) {
+  ScratchRegisterScope scratch(*this);
+  ma_umull(src, imm, dest, scratch, scratch);
+}
+
 void MacroAssembler::mulPtr(Register rhs, Register srcDest) {
   as_mul(srcDest, srcDest, rhs);
 }

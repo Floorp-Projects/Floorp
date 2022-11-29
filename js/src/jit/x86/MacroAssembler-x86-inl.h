@@ -267,6 +267,39 @@ void MacroAssembler::sub64(Imm64 imm, Register64 dest) {
   sbbl(imm.hi(), dest.high);
 }
 
+void MacroAssembler::mulHighUnsigned32(Imm32 imm, Register src, Register dest) {
+  // Preserve edx:eax, unless they're the destination register.
+  if (edx != dest) {
+    push(edx);
+  }
+  if (eax != dest) {
+    push(eax);
+  }
+
+  if (src != eax) {
+    // Compute edx:eax := eax ∗ src
+    movl(imm, eax);
+    mull(src);
+  } else {
+    // Compute edx:eax := eax ∗ edx
+    movl(imm, edx);
+    mull(edx);
+  }
+
+  // Move the high word from edx into |dest|.
+  if (edx != dest) {
+    movl(edx, dest);
+  }
+
+  // Restore edx:eax.
+  if (eax != dest) {
+    pop(eax);
+  }
+  if (edx != dest) {
+    pop(edx);
+  }
+}
+
 void MacroAssembler::mulPtr(Register rhs, Register srcDest) {
   imull(rhs, srcDest);
 }
