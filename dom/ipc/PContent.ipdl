@@ -136,7 +136,6 @@ using mozilla::dom::MediaMetadataBase from "mozilla/dom/MediaMetadata.h";
 using mozilla::dom::MediaSessionAction from "mozilla/dom/MediaSessionBinding.h";
 using mozilla::dom::MediaSessionPlaybackState from "mozilla/dom/MediaSessionBinding.h";
 using mozilla::dom::PositionState from "mozilla/dom/MediaSession.h";
-[RefCounted] using class nsDocShellLoadState from "nsDocShellLoadState.h";
 using mozilla::dom::ServiceWorkerShutdownState::Progress from "mozilla/dom/ServiceWorkerShutdownState.h";
 using mozilla::ContentBlockingNotifier::StorageAccessPermissionGrantedReason from "mozilla/ContentBlockingNotifier.h";
 using mozilla::ContentBlockingNotifier::BlockingDecision from "mozilla/ContentBlockingNotifier.h";
@@ -1831,6 +1830,11 @@ parent:
 
     async RemoveFromSessionHistory(
         MaybeDiscardedBrowsingContext aContext, nsID changeID);
+
+    // Called when a nsDocShellLoadState which was received over IPC is
+    // destroyed in the content process to clean up pending state left behind
+    // tracking the load state in the parent process.
+    async CleanupPendingLoadState(uint64_t aLoadIdentifier);
 
 both:
     async ScriptError(nsString message, nsString sourceName, nsString sourceLine,

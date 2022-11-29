@@ -315,6 +315,10 @@ struct DocShellLoadStateInit
   // responsible for causing the load to occur.
   uint32_t TriggeringSandboxFlags;
 
+  // The provided remote type of the process responsible for causing the load to
+  // occur. Validated in the parent process.
+  nsCString TriggeringRemoteType;
+
   nsCString? OriginalURIString;
   int32_t? CancelContentJSEpoch;
 

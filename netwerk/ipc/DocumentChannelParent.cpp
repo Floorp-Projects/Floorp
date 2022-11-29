@@ -31,8 +31,7 @@ DocumentChannelParent::~DocumentChannelParent() {
 
 bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
                                  const DocumentChannelCreationArgs& aArgs) {
-  RefPtr<nsDocShellLoadState> loadState =
-      new nsDocShellLoadState(aArgs.loadState());
+  RefPtr<nsDocShellLoadState> loadState = aArgs.loadState();
   LOG(("DocumentChannelParent Init [this=%p, uri=%s]", this,
        loadState->URI()->GetSpecOrDefault().get()));
   if (aArgs.parentInitiatedNavigationEpoch() <

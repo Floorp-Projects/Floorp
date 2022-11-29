@@ -7,6 +7,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "ExternalHelperAppParent.h"
+#include "nsExternalHelperAppService.h"
 #include "nsIContent.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIExternalHelperAppService.h"
@@ -63,8 +64,9 @@ bool ExternalHelperAppParent::Init(
     const nsACString& aMimeContentType, const bool& aForceSave,
     nsIURI* aReferrer, BrowsingContext* aContext,
     const bool& aShouldCloseWindow) {
-  nsresult rv = mozilla::ipc::LoadInfoArgsToLoadInfo(aLoadInfoArgs,
-                                                     getter_AddRefs(mLoadInfo));
+  nsresult rv = mozilla::ipc::LoadInfoArgsToLoadInfo(
+      aLoadInfoArgs, ContentParent::Cast(Manager())->GetRemoteType(),
+      getter_AddRefs(mLoadInfo));
   if (NS_FAILED(rv)) {
     return false;
   }

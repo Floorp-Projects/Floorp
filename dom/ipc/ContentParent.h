@@ -143,6 +143,10 @@ class ContentParent final : public PContentParent,
 
   static LogModule* GetLog();
 
+  static ContentParent* Cast(PContentParent* aActor) {
+    return static_cast<ContentParent*>(aActor);
+  }
+
   /**
    * Create a ContentParent suitable for use later as a content process.
    */
@@ -408,6 +412,12 @@ class ContentParent final : public PContentParent,
   }
 
   bool NeedsPermissionsUpdate(const nsACString& aPermissionKey) const;
+
+  // Manage pending load states which have been sent to this process, and are
+  // expected to be used to start a load imminently.
+  already_AddRefed<nsDocShellLoadState> TakePendingLoadStateForId(
+      uint64_t aLoadIdentifier);
+  void StorePendingLoadState(nsDocShellLoadState* aLoadState);
 
   /**
    * Kill our subprocess and make sure it dies.  Should only be used
@@ -1400,6 +1410,8 @@ class ContentParent final : public PContentParent,
       const MaybeDiscarded<BrowsingContext>& aContext,
       const uint32_t aReloadFlags);
 
+  mozilla::ipc::IPCResult RecvCleanupPendingLoadState(uint64_t aLoadIdentifier);
+
   // Notify the ContentChild to enable the input event prioritization when
   // initializing.
   void MaybeEnableRemoteInputEventQueue();
@@ -1636,6 +1648,12 @@ class ContentParent final : public PContentParent,
 #endif
 
   nsTHashSet<RefPtr<BrowsingContextGroup>> mGroups;
+
+  // When we request a content process to load a document on our behalf, we'll
+  // record the nsDocShellLoadState we sent to the content process mapped by the
+  // load ID. If the load is then requested from the content process, we can
+  // compare the load state and ensure it matches.
+  nsTHashMap<uint64_t, RefPtr<nsDocShellLoadState>> mPendingLoadStates;
 
   // See `BrowsingContext::mEpochs` for an explanation of this field.
   uint64_t mBrowsingContextFieldEpoch = 0;

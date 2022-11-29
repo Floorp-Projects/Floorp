@@ -310,6 +310,21 @@ interface nsILoadInfo : nsISupports
   nsIPrincipal binaryTriggeringPrincipal();
 
   /**
+   * The remote type of the process which caused the network load to start. I.e.
+   * this is the remote type of the process which provided the URL to be loaded.
+   *
+   * For subresource loads, this should be the same as the process which will
+   * handle the response, however for document loads this may both be different
+   * than the final process, as well as different from the process which starts
+   * the navigation.
+   *
+   * This field is intentionally not perfectly preserved over IPC, and will be
+   * reset to the remote type of the sending process when sent from a content
+   * process to the parent process.
+   */
+  attribute AUTF8String triggeringRemoteType;
+
+  /**
    * For non-document loads the principalToInherit is always null. For
    * loads of type TYPE_DOCUMENT or TYPE_SUBDOCUMENT the principalToInherit
    * might be null. If it's non null, then this is the principal that is
