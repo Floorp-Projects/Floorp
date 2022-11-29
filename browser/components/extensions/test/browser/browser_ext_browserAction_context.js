@@ -7,7 +7,7 @@ async function runTests(options) {
     let manifest = browser.runtime.getManifest();
     let { manifest_version } = manifest;
     const action = manifest_version < 3 ? "browserAction" : "action";
-    async function checkDetails(expecting, details) {
+    async function checkExtAPIDetails(expecting, details) {
       let title = await browser[action].getTitle(details);
       browser.test.assertEq(
         expecting.title,
@@ -103,9 +103,9 @@ async function runTests(options) {
           active: true,
           currentWindow: true,
         });
-        await checkDetails(expectTab, { tabId });
-        await checkDetails(expectWindow, { windowId });
-        await checkDetails(expectGlobal, {});
+        await checkExtAPIDetails(expectTab, { tabId });
+        await checkExtAPIDetails(expectWindow, { windowId });
+        await checkExtAPIDetails(expectGlobal, {});
 
         // Check that the actual icon has the expected values, then
         // run the next test.
@@ -146,7 +146,7 @@ async function runTests(options) {
   }
 
   let browserActionId;
-  function checkDetails(details, windowId) {
+  async function checkWidgetDetails(details, windowId) {
     let { document } = Services.wm.getOuterWindowWithId(windowId);
     if (!browserActionId) {
       browserActionId = `${makeWidgetId(extension.id)}-browser-action`;
@@ -158,6 +158,28 @@ async function runTests(options) {
     ok(button, "button exists");
 
     let title = details.title || options.manifest.name;
+
+    // NOTE: resorting to waitForCondition to prevent frequent
+    // intermittent failures due to multiple action API calls
+    // being queued.
+    if (getListStyleImage(button) !== details.icon) {
+      info(`wait for action icon url to be set to ${details.icon}`);
+      await TestUtils.waitForCondition(
+        () => getListStyleImage(button) === details.icon,
+        "Wait for the expected icon URL to be set"
+      );
+    }
+
+    // NOTE: resorting to waitForCondition to prevent frequent
+    // intermittent failures due to multiple action API calls
+    // being queued.
+    if (button.getAttribute("tooltiptext") !== title) {
+      info(`wait for action tooltiptext to be set to ${title}`);
+      await TestUtils.waitForCondition(
+        () => button.getAttribute("tooltiptext") === title,
+        "Wait for expected title to be set"
+      );
+    }
 
     is(getListStyleImage(button), details.icon, "icon URL is correct");
     is(button.getAttribute("tooltiptext"), title, "image title is correct");
@@ -177,7 +199,16 @@ async function runTests(options) {
         color: serializeColor(details.badgeTextColor),
       };
       for (let [prop, value] of Object.entries(expected)) {
-        is(style[prop], value, `${prop} is correct`);
+        // NOTE: resorting to waitForCondition to prevent frequent
+        // intermittent failures due to multiple action API calls
+        // being queued.
+        if (style[prop] !== value) {
+          info(`wait for badge ${prop} to be set to ${value}`);
+          await TestUtils.waitForCondition(
+            () => window.getComputedStyle(badge)[prop] === value,
+            `Wait for expected badge ${prop} to be set`
+          );
+        }
       }
     }
 
@@ -189,8 +220,7 @@ async function runTests(options) {
       "nextTest",
       async (expecting, windowId, testsRemaining) => {
         await promiseAnimationFrame();
-
-        checkDetails(expecting, windowId);
+        await checkWidgetDetails(expecting, windowId);
 
         if (testsRemaining) {
           extension.sendMessage("runNextTest");
