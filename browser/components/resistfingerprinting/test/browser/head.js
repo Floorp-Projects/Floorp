@@ -594,7 +594,8 @@ async function runActualTest(
   iframe_domain,
   cross_origin_domain,
   testFunction,
-  expectedResults
+  expectedResults,
+  extraData
 ) {
   await BrowserTestUtils.withNewTab(
     {
@@ -604,16 +605,17 @@ async function runActualTest(
     async function(browser) {
       let result = await SpecialPowers.spawn(
         browser,
-        [iframe_domain, cross_origin_domain],
-        async function(iframe_domain_, cross_origin_domain_) {
+        [iframe_domain, cross_origin_domain, extraData],
+        async function(iframe_domain_, cross_origin_domain_, extraData_) {
           return content.wrappedJSObject.runTheTest(
             iframe_domain_,
-            cross_origin_domain_
+            cross_origin_domain_,
+            extraData_
           );
         }
       );
 
-      testFunction(result, expectedResults);
+      testFunction(result, expectedResults, extraData);
     }
   );
 }
@@ -623,15 +625,30 @@ async function defaultsTest(
   iframe_domain,
   cross_origin_domain,
   testFunction,
-  expectedResults
+  expectedResults,
+  extraData,
+  extraPrefs
 ) {
+  if (extraData == undefined) {
+    extraData = {};
+  }
+  extraData.testDesc = "default";
+  if (extraPrefs != undefined) {
+    await SpecialPowers.pushPrefEnv({
+      set: extraPrefs,
+    });
+  }
   await runActualTest(
     uri,
     iframe_domain,
     cross_origin_domain,
     testFunction,
-    expectedResults
+    expectedResults,
+    extraData
   );
+  if (extraPrefs != undefined) {
+    await SpecialPowers.popPrefEnv();
+  }
 }
 
 async function simpleRFPTest(
@@ -639,10 +656,16 @@ async function simpleRFPTest(
   iframe_domain,
   cross_origin_domain,
   testFunction,
-  expectedResults
+  expectedResults,
+  extraData,
+  extraPrefs
 ) {
+  if (extraData == undefined) {
+    extraData = {};
+  }
+  extraData.testDesc = "simple RFP enabled";
   await SpecialPowers.pushPrefEnv({
-    set: [["privacy.resistFingerprinting", true]],
+    set: [["privacy.resistFingerprinting", true]].concat(extraPrefs || []),
   });
 
   await runActualTest(
@@ -650,7 +673,8 @@ async function simpleRFPTest(
     iframe_domain,
     cross_origin_domain,
     testFunction,
-    expectedResults
+    expectedResults,
+    extraData
   );
 
   await SpecialPowers.popPrefEnv();
@@ -662,8 +686,14 @@ async function testA(
   iframe_domain,
   cross_origin_domain,
   testFunction,
-  expectedResults
+  expectedResults,
+  extraData,
+  extraPrefs
 ) {
+  if (extraData == undefined) {
+    extraData = {};
+  }
+  extraData.testDesc = "test (A)";
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
@@ -672,7 +702,7 @@ async function testA(
         "privacy.resistFingerprinting.exemptedDomains",
         "example.com, example.org, example.net",
       ],
-    ],
+    ].concat(extraPrefs || []),
   });
 
   await runActualTest(
@@ -680,7 +710,8 @@ async function testA(
     iframe_domain,
     cross_origin_domain,
     testFunction,
-    expectedResults
+    expectedResults,
+    extraData
   );
 
   await SpecialPowers.popPrefEnv();
@@ -692,8 +723,14 @@ async function testB(
   iframe_domain,
   cross_origin_domain,
   testFunction,
-  expectedResults
+  expectedResults,
+  extraData,
+  extraPrefs
 ) {
+  if (extraData == undefined) {
+    extraData = {};
+  }
+  extraData.testDesc = "test (B)";
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
@@ -702,7 +739,7 @@ async function testB(
         "privacy.resistFingerprinting.exemptedDomains",
         "example.com, example.org",
       ],
-    ],
+    ].concat(extraPrefs || []),
   });
 
   await runActualTest(
@@ -710,7 +747,8 @@ async function testB(
     iframe_domain,
     cross_origin_domain,
     testFunction,
-    expectedResults
+    expectedResults,
+    extraData
   );
 
   await SpecialPowers.popPrefEnv();
@@ -722,8 +760,14 @@ async function testC(
   iframe_domain,
   cross_origin_domain,
   testFunction,
-  expectedResults
+  expectedResults,
+  extraData,
+  extraPrefs
 ) {
+  if (extraData == undefined) {
+    extraData = {};
+  }
+  extraData.testDesc = "test (C)";
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
@@ -732,7 +776,7 @@ async function testC(
         "privacy.resistFingerprinting.exemptedDomains",
         "example.com, example.net",
       ],
-    ],
+    ].concat(extraPrefs || []),
   });
 
   await runActualTest(
@@ -740,7 +784,8 @@ async function testC(
     iframe_domain,
     cross_origin_domain,
     testFunction,
-    expectedResults
+    expectedResults,
+    extraData
   );
 
   await SpecialPowers.popPrefEnv();
@@ -752,14 +797,20 @@ async function testD(
   iframe_domain,
   cross_origin_domain,
   testFunction,
-  expectedResults
+  expectedResults,
+  extraData,
+  extraPrefs
 ) {
+  if (extraData == undefined) {
+    extraData = {};
+  }
+  extraData.testDesc = "test (D)";
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
       ["privacy.resistFingerprinting.testGranularityMask", 4],
       ["privacy.resistFingerprinting.exemptedDomains", "example.com"],
-    ],
+    ].concat(extraPrefs || []),
   });
 
   await runActualTest(
@@ -767,7 +818,8 @@ async function testD(
     iframe_domain,
     cross_origin_domain,
     testFunction,
-    expectedResults
+    expectedResults,
+    extraData
   );
 
   await SpecialPowers.popPrefEnv();
@@ -779,14 +831,20 @@ async function testE(
   iframe_domain,
   cross_origin_domain,
   testFunction,
-  expectedResults
+  expectedResults,
+  extraData,
+  extraPrefs
 ) {
+  if (extraData == undefined) {
+    extraData = {};
+  }
+  extraData.testDesc = "test (E)";
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
       ["privacy.resistFingerprinting.testGranularityMask", 4],
       ["privacy.resistFingerprinting.exemptedDomains", "example.net"],
-    ],
+    ].concat(extraPrefs || []),
   });
 
   await runActualTest(
@@ -794,7 +852,8 @@ async function testE(
     iframe_domain,
     cross_origin_domain,
     testFunction,
-    expectedResults
+    expectedResults,
+    extraData
   );
 
   await SpecialPowers.popPrefEnv();
@@ -806,14 +865,20 @@ async function testF(
   iframe_domain,
   cross_origin_domain,
   testFunction,
-  expectedResults
+  expectedResults,
+  extraData,
+  extraPrefs
 ) {
+  if (extraData == undefined) {
+    extraData = {};
+  }
+  extraData.testDesc = "test (F)";
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
       ["privacy.resistFingerprinting.testGranularityMask", 4],
       ["privacy.resistFingerprinting.exemptedDomains", ""],
-    ],
+    ].concat(extraPrefs || []),
   });
 
   await runActualTest(
@@ -821,7 +886,8 @@ async function testF(
     iframe_domain,
     cross_origin_domain,
     testFunction,
-    expectedResults
+    expectedResults,
+    extraData
   );
 
   await SpecialPowers.popPrefEnv();
@@ -833,8 +899,14 @@ async function testG(
   iframe_domain,
   cross_origin_domain,
   testFunction,
-  expectedResults
+  expectedResults,
+  extraData,
+  extraPrefs
 ) {
+  if (extraData == undefined) {
+    extraData = {};
+  }
+  extraData.testDesc = "test (G)";
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
@@ -843,7 +915,7 @@ async function testG(
         "privacy.resistFingerprinting.exemptedDomains",
         "example.org, example.net",
       ],
-    ],
+    ].concat(extraPrefs || []),
   });
 
   await runActualTest(
@@ -851,7 +923,8 @@ async function testG(
     iframe_domain,
     cross_origin_domain,
     testFunction,
-    expectedResults
+    expectedResults,
+    extraData
   );
 
   await SpecialPowers.popPrefEnv();
@@ -863,14 +936,20 @@ async function testH(
   iframe_domain,
   cross_origin_domain,
   testFunction,
-  expectedResults
+  expectedResults,
+  extraData,
+  extraPrefs
 ) {
+  if (extraData == undefined) {
+    extraData = {};
+  }
+  extraData.testDesc = "test (H)";
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
       ["privacy.resistFingerprinting.testGranularityMask", 4],
       ["privacy.resistFingerprinting.exemptedDomains", "example.org"],
-    ],
+    ].concat(extraPrefs || []),
   });
 
   await runActualTest(
@@ -878,7 +957,8 @@ async function testH(
     iframe_domain,
     cross_origin_domain,
     testFunction,
-    expectedResults
+    expectedResults,
+    extraData
   );
 
   await SpecialPowers.popPrefEnv();
