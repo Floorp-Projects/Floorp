@@ -4449,6 +4449,13 @@ void CodeGenerator::visitGuardSpecificSymbol(LGuardSpecificSymbol* guard) {
                 guard->snapshot());
 }
 
+void CodeGenerator::visitGuardSpecificInt32(LGuardSpecificInt32* guard) {
+  Register num = ToRegister(guard->num());
+
+  bailoutCmp32(Assembler::NotEqual, num, Imm32(guard->mir()->expected()),
+               guard->snapshot());
+}
+
 void CodeGenerator::visitGuardStringToIndex(LGuardStringToIndex* lir) {
   Register str = ToRegister(lir->string());
   Register output = ToRegister(lir->output());

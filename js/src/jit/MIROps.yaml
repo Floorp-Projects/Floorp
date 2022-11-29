@@ -1651,6 +1651,17 @@
 - name: GuardSpecificSymbol
   gen_boilerplate: false
 
+- name: GuardSpecificInt32
+  operands:
+    num: Int32
+  arguments:
+    expected: int32_t
+  result_type: Int32
+  guard: true
+  movable: true
+  folds_to: custom
+  alias_set: none
+
 - name: GuardStringToIndex
   operands:
     string: String

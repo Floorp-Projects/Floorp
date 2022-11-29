@@ -483,6 +483,14 @@
     sym: SymbolId
     expected: SymbolField
 
+- name: GuardSpecificInt32
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    num: Int32Id
+    expected: Int32Imm
+
 - name: GuardNoDenseElements
   shared: true
   transpile: true
