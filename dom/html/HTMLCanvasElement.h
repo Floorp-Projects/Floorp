@@ -114,7 +114,6 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   enum { DEFAULT_CANVAS_WIDTH = 300, DEFAULT_CANVAS_HEIGHT = 150 };
 
   typedef layers::CanvasRenderer CanvasRenderer;
-  typedef layers::Layer Layer;
   typedef layers::LayerManager LayerManager;
   typedef layers::WebRenderCanvasData WebRenderCanvasData;
 

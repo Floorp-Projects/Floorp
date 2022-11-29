@@ -208,7 +208,6 @@ class nsDisplayRemote final : public nsPaintedDisplayItem {
   typedef mozilla::dom::TabId TabId;
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
   typedef mozilla::layers::EventRegionsOverride EventRegionsOverride;
-  typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayersId LayersId;
   typedef mozilla::layers::StackingContextHelper StackingContextHelper;
   typedef mozilla::LayerState LayerState;

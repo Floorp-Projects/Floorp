@@ -68,8 +68,6 @@ class Compositor;
 class TransformData;
 struct PropertyAnimationGroup;
 
-class Layer {};
-
 #ifdef MOZ_DUMP_PAINTING
 void WriteSnapshotToDumpFile(Compositor* aCompositor, gfx::DrawTarget* aTarget);
 #endif

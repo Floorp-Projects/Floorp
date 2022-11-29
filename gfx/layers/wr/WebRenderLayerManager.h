@@ -56,7 +56,6 @@ class TransactionIdAllocator;
 class LayerUserData;
 
 class WebRenderLayerManager final : public WindowRenderer {
-  typedef nsTArray<RefPtr<Layer>> LayerRefArray;
   typedef nsTHashSet<RefPtr<WebRenderUserData>> WebRenderUserDataRefTable;
 
  public:
