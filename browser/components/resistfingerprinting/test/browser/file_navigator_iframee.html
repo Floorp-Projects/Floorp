@@ -40,13 +40,13 @@ window.addEventListener("message", async function listener(event) {
     result.worker_product = worker_result.product;
     result.worker_hardwareConcurrency = worker_result.hardwareConcurrency;
 
-    var one = fetch("browser_navigator_header.sjs?")
+    var one = fetch("file_navigator_header.sjs?")
     .then((response) => { return response.text(); })
     .then((content) => {
       result.userAgentHTTPHeader = content;
     });
 
-    var two = fetch(`https://${cross_origin_domain}/browser/browser/components/resistfingerprinting/test/browser/browser_navigator_header.sjs?`)
+    var two = fetch(`https://${cross_origin_domain}/browser/browser/components/resistfingerprinting/test/browser/file_navigator_header.sjs?`)
     .then((response) => { return response.text(); })
     .then((content) => {
       result.framee_crossOrigin_userAgentHTTPHeader = content;
