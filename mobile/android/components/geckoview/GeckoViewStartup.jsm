@@ -270,7 +270,9 @@ class GeckoViewStartup {
         // parent only: configure default prefs, set up pref observers, register
         // pdf content handler, and initializes parent side message manager
         // shim for privileged api access.
-        lazy.PdfJs.init(this._isNewProfile);
+        try {
+          lazy.PdfJs.init(this._isNewProfile);
+        } catch {}
         break;
       }
     }
