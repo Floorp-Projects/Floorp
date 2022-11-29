@@ -30,6 +30,7 @@ avoid-blacklist-and-whitelist:
         - java
         - kt
     exclude:
+        - '**/.eslintrc.js'
         - browser/app/profile/firefox.js
         - browser/app/winlauncher/LauncherProcessWin.cpp
         - browser/base/content/browser.js
