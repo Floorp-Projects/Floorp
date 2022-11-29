@@ -2,11 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { FormAutoCompleteResult } = ChromeUtils.import(
-  "resource://gre/modules/nsFormAutoCompleteResult.jsm"
-);
+import { FormAutoCompleteResult } from "resource://gre/modules/nsFormAutoCompleteResult.sys.mjs";
 
-function InputListAutoComplete() {}
+export function InputListAutoComplete() {}
 
 InputListAutoComplete.prototype = {
   classID: Components.ID("{bf1e01d0-953e-11df-981c-0800200c9a66}"),
@@ -64,5 +62,3 @@ InputListAutoComplete.prototype = {
     return items;
   },
 };
-
-var EXPORTED_SYMBOLS = ["InputListAutoComplete"];

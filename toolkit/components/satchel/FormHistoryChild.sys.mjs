@@ -2,13 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["FormHistoryChild"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -38,7 +32,7 @@ function log(message) {
   Services.console.logStringMessage("satchelFormListener: " + message);
 }
 
-class FormHistoryChild extends JSWindowActorChild {
+export class FormHistoryChild extends JSWindowActorChild {
   handleEvent(event) {
     switch (event.type) {
       case "DOMFormBeforeSubmit": {

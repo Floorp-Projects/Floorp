@@ -10,13 +10,12 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PrincipalsCollector: "resource://gre/modules/PrincipalsCollector.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  FormHistory: "resource://gre/modules/FormHistory.jsm",
-
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.jsm",
 });

@@ -1,7 +1,7 @@
 /* eslint-env mozilla/chrome-script */
 
-const { FormHistory } = ChromeUtils.import(
-  "resource://gre/modules/FormHistory.jsm"
+const { FormHistory } = ChromeUtils.importESModule(
+  "resource://gre/modules/FormHistory.sys.mjs"
 );
 const { ContentTaskUtils } = ChromeUtils.importESModule(
   "resource://testing-common/ContentTaskUtils.sys.mjs"

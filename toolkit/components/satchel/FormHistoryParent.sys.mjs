@@ -2,19 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["FormHistoryParent"];
-
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormHistory",
-  "resource://gre/modules/FormHistory.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
+});
 
-class FormHistoryParent extends JSWindowActorParent {
+export class FormHistoryParent extends JSWindowActorParent {
   receiveMessage(message) {
     switch (message.name) {
       case "FormHistory:FormSubmitEntries": {

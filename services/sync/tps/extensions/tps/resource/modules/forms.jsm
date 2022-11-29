@@ -11,8 +11,8 @@ var EXPORTED_SYMBOLS = ["FormData"];
 
 const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
 
-const { FormHistory } = ChromeUtils.import(
-  "resource://gre/modules/FormHistory.jsm"
+const { FormHistory } = ChromeUtils.importESModule(
+  "resource://gre/modules/FormHistory.sys.mjs"
 );
 
 /**
