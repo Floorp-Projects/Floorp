@@ -9594,6 +9594,31 @@ void CodeGenerator::visitNumberParseInt(LNumberParseInt* lir) {
   masm.bind(&done);
 }
 
+void CodeGenerator::visitDoubleParseInt(LDoubleParseInt* lir) {
+  FloatRegister number = ToFloatRegister(lir->number());
+  Register output = ToRegister(lir->output());
+  FloatRegister temp = ToFloatRegister(lir->temp0());
+
+  Label bail;
+  masm.branchDouble(Assembler::DoubleUnordered, number, number, &bail);
+  masm.branchTruncateDoubleToInt32(number, output, &bail);
+
+  Label ok;
+  masm.branch32(Assembler::NotEqual, output, Imm32(0), &ok);
+  {
+    // Accept both +0 and -0 and return 0.
+    masm.loadConstantDouble(0.0, temp);
+    masm.branchDouble(Assembler::DoubleEqual, number, temp, &ok);
+
+    // Fail if a non-zero input is in the exclusive range (-1, 1.0e-6).
+    masm.loadConstantDouble(DOUBLE_DECIMAL_IN_SHORTEST_LOW, temp);
+    masm.branchDouble(Assembler::DoubleLessThan, number, temp, &bail);
+  }
+  masm.bind(&ok);
+
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 void CodeGenerator::visitFloor(LFloor* lir) {
   FloatRegister input = ToFloatRegister(lir->input());
   Register output = ToRegister(lir->output());

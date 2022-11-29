@@ -2260,6 +2260,15 @@ void LIRGenerator::visitNumberParseInt(MNumberParseInt* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitDoubleParseInt(MDoubleParseInt* ins) {
+  MOZ_ASSERT(ins->number()->type() == MIRType::Double);
+
+  auto* lir =
+      new (alloc()) LDoubleParseInt(useRegister(ins->number()), tempDouble());
+  assignSnapshot(lir, ins->bailoutKind());
+  define(lir, ins);
+}
+
 void LIRGenerator::visitConcat(MConcat* ins) {
   MDefinition* lhs = ins->getOperand(0);
   MDefinition* rhs = ins->getOperand(1);
