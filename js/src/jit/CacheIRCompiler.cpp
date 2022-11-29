@@ -7720,6 +7720,37 @@ bool CacheIRCompiler::emitCallNumberToString(NumberOperandId inputId,
   return true;
 }
 
+bool CacheIRCompiler::emitInt32ToStringWithBaseResult(Int32OperandId inputId,
+                                                      Int32OperandId baseId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+  Register input = allocator.useRegister(masm, inputId);
+  Register base = allocator.useRegister(masm, baseId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // AutoCallVM's AutoSaveLiveRegisters aren't accounted for in FailurePath, so
+  // we can't use both at the same time. This isn't an issue here, because Ion
+  // doesn't support CallICs. If that ever changes, this code must be updated.
+  MOZ_ASSERT(isBaseline(), "Can't use FailurePath with AutoCallVM in Ion ICs");
+
+  masm.branch32(Assembler::LessThan, base, Imm32(2), failure->label());
+  masm.branch32(Assembler::GreaterThan, base, Imm32(36), failure->label());
+
+  callvm.prepare();
+
+  masm.Push(base);
+  masm.Push(input);
+
+  using Fn = JSString* (*)(JSContext*, int32_t, int32_t);
+  callvm.call<Fn, js::Int32ToStringWithBase>();
+  return true;
+}
+
 bool CacheIRCompiler::emitBooleanToString(BooleanOperandId inputId,
                                           StringOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

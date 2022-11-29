@@ -1677,6 +1677,14 @@
     input: NumberId
     result: StringId
 
+- name: Int32ToStringWithBaseResult
+  shared: true
+  transpile: true
+  cost_estimate: 3
+  args:
+    input: Int32Id
+    base: Int32Id
+
 - name: BooleanToString
   shared: true
   transpile: true

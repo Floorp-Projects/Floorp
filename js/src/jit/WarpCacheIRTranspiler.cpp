@@ -1365,6 +1365,21 @@ bool WarpCacheIRTranspiler::emitCallNumberToString(NumberOperandId inputId,
   return emitToString(inputId, resultId);
 }
 
+bool WarpCacheIRTranspiler::emitInt32ToStringWithBaseResult(
+    Int32OperandId inputId, Int32OperandId baseId) {
+  MDefinition* input = getOperand(inputId);
+  MDefinition* base = getOperand(baseId);
+
+  auto* guardedBase = MGuardInt32Range::New(alloc(), base, 2, 36);
+  add(guardedBase);
+
+  auto* ins = MInt32ToStringWithBase::New(alloc(), input, guardedBase);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitBooleanToString(BooleanOperandId inputId,
                                                 StringOperandId resultId) {
   return emitToString(inputId, resultId);
