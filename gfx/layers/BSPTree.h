@@ -18,8 +18,6 @@
 namespace mozilla {
 namespace layers {
 
-class Layer;
-
 /**
  * Represents a layer that might have a non-rectangular geometry.
  */
@@ -54,7 +52,11 @@ typedef mozilla::ArenaAllocator<4096, 8> BSPTreeArena;
 template <typename T>
 using PolygonList = std::list<BSPPolygon<T>>;
 
-using LayerPolygon = BSPPolygon<Layer>;
+// For tests. Needs to be defined here rather than in TestBSPTree.cpp because we
+// need to explicitly instantiate the out-of-line BSPTree methods for it in
+// BSPTree.cpp.
+class BSPTestData {};
+using TestPolygon = BSPPolygon<BSPTestData>;
 
 /**
  * Represents a node in a BSP tree. The node contains at least one layer with
