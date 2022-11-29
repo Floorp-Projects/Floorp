@@ -19,7 +19,7 @@ transforms:
 job-defaults:
     name: secondary-final-verify
     run-on-projects: []  # to make sure this never runs as part of CI
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         docker-image:
             in-tree: "update-verify"

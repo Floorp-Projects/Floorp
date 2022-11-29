@@ -22,7 +22,7 @@ job-defaults:
     run-on-projects: []  # to make sure this never runs as part of CI
     run-on-releases: [esr102]
     shipping-phase: promote
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         artifacts:
             - name: 'public/build/diff-summary.log'

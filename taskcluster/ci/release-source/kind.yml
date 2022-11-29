@@ -19,7 +19,7 @@ job-defaults:
     shipping-phase: promote
     treeherder:
         symbol: Src
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 3600
         env:

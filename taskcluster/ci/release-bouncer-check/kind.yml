@@ -18,7 +18,7 @@ job-defaults:
     description: release bouncer check
     run-on-projects: []  # to make sure this never runs as part of CI
     shipping-phase: push
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 1200
         docker-image: {in-tree: "update-verify"}
