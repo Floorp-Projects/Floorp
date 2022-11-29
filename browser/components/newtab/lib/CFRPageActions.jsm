@@ -322,7 +322,9 @@ class PageAction {
           return string.attributes[subAttribute];
         }
 
-        console.error(`String ${string.value} does not contain any attributes`);
+        Cu.reportError(
+          `String ${string.value} does not contain any attributes`
+        );
         return subAttribute;
       }
 
@@ -909,7 +911,7 @@ const CFRPageActions = {
         url = json.current_version.files[0].url;
       }
     } catch (e) {
-      console.error(
+      Cu.reportError(
         "Failed to get the latest add-on version for this recommendation"
       );
     }

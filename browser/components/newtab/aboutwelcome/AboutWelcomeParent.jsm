@@ -95,7 +95,7 @@ async function getImportableSites() {
       let path = PathUtils.join(dataPath, profile.id, "Top Sites");
       // Skip if top sites data is missing
       if (!(await IOUtils.exists(path))) {
-        console.error(`Missing file at ${path}`);
+        Cu.reportError(`Missing file at ${path}`);
         continue;
       }
 
@@ -110,7 +110,7 @@ async function getImportableSites() {
           sites.push(row.getString(0));
         }
       } catch (ex) {
-        console.error(
+        Cu.reportError(
           `Failed to get importable top sites from ${browserId} ${ex}`
         );
       }

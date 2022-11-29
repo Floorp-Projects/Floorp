@@ -113,7 +113,7 @@ class TopStoriesFeed {
         update()
       );
     } catch (e) {
-      console.error(`Problem initializing top stories feed: ${e.message}`);
+      Cu.reportError(`Problem initializing top stories feed: ${e.message}`);
     }
   }
 
@@ -217,7 +217,7 @@ class TopStoriesFeed {
       body._timestamp = this.storiesLastUpdated;
       this.cache.set("stories", body);
     } catch (error) {
-      console.error(`Failed to fetch content: ${error.message}`);
+      Cu.reportError(`Failed to fetch content: ${error.message}`);
     }
     return this.stories;
   }
@@ -309,7 +309,7 @@ class TopStoriesFeed {
         this.cache.set("topics", body);
       }
     } catch (error) {
-      console.error(`Failed to fetch topics: ${error.message}`);
+      Cu.reportError(`Failed to fetch topics: ${error.message}`);
     }
     return this.topics;
   }

@@ -261,7 +261,7 @@ class _ToolbarPanelHub {
       // Set platform specific path variables for SUMO articles
       url = Services.urlFormatter.formatURL(message.content.cta_url);
     } catch (e) {
-      console.error(e);
+      Cu.reportError(e);
       url = message.content.cta_url;
     }
     lazy.SpecialMessageActions.handleAction(

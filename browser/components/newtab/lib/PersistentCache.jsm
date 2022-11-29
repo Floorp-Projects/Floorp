@@ -70,7 +70,7 @@ class PersistentCache {
             !(error instanceof DOMException) ||
             error.name !== "NotFoundError"
           ) {
-            console.error(
+            Cu.reportError(
               `Failed to parse ${this._filename}: ${error.message}`
             );
           }

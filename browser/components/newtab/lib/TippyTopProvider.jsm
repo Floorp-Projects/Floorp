@@ -44,7 +44,7 @@ class TippyTopProvider {
       }
       this.initialized = true;
     } catch (error) {
-      console.error("Failed to load tippy top manifest.");
+      Cu.reportError("Failed to load tippy top manifest.");
     }
   }
 
