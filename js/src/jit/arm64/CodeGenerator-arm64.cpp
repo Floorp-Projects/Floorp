@@ -16,6 +16,7 @@
 #include "jit/JitRuntime.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
+#include "jit/ReciprocalMulConstants.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 #include "vm/Shape.h"
@@ -606,8 +607,7 @@ void CodeGenerator::visitDivConstantI(LDivConstantI* ins) {
 
   // We will first divide by Abs(d), and negate the answer if d is negative.
   // If desired, this can be avoided by generalizing computeDivisionConstants.
-  ReciprocalMulConstants rmc =
-      computeDivisionConstants(Abs(d), /* maxLog = */ 31);
+  auto rmc = ReciprocalMulConstants::computeSignedDivisionConstants(Abs(d));
 
   // We first compute (M * n) >> 32, where M = rmc.multiplier.
   masm.Mov(const32, int32_t(rmc.multiplier));
@@ -695,9 +695,9 @@ void CodeGenerator::visitUDivConstantI(LUDivConstantI* ins) {
   // The denominator isn't a power of 2 (see LDivPowTwoI).
   MOZ_ASSERT((d & (d - 1)) != 0);
 
-  ReciprocalMulConstants rmc = computeDivisionConstants(d, /* maxLog = */ 32);
+  auto rmc = ReciprocalMulConstants::computeUnsignedDivisionConstants(d);
 
-  // We first compute (M * n) >> 32, where M = rmc.multiplier.
+  // We first compute (M * n), where M = rmc.multiplier.
   masm.Mov(const32, int32_t(rmc.multiplier));
   masm.Umull(output64, const32, lhs32);
   if (rmc.multiplier > UINT32_MAX) {
