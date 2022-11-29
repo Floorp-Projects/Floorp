@@ -9,7 +9,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: ['ubuntu-20.04']
+        runs-on: ['ubuntu-22.04']
 
     steps:
     - name: Init
@@ -29,7 +29,7 @@ jobs:
         mkdir $GITHUB_WORKSPACE
 
     - name: Setup Disk & Swap Space 💿
-      if: matrix.runs-on == 'ubuntu-20.04'
+      if: matrix.runs-on == 'ubuntu-22.04'
       run: |
         echo Before:
         free -h
@@ -127,7 +127,7 @@ jobs:
     name: Generate profdata and jarlog
 
     needs: build-with-enable-profile-generate
-    runs-on: windows-2019
+    runs-on: windows-2022
     
     steps:
     - uses: actions/download-artifact@v3
@@ -169,7 +169,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: ['ubuntu-20.04']
+        runs-on: ['ubuntu-22.04']
 
     steps:
     - name: Init
@@ -189,7 +189,7 @@ jobs:
         mkdir $GITHUB_WORKSPACE
 
     - name: Setup Disk & Swap Space 💿
-      if: matrix.runs-on == 'ubuntu-20.04'
+      if: matrix.runs-on == 'ubuntu-22.04'
       run: |
         echo Before:
         free -h
