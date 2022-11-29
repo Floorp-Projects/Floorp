@@ -14,6 +14,9 @@ AddonTestUtils.createAppInfo(
 const { ExtensionScriptingStore } = ChromeUtils.import(
   "resource://gre/modules/ExtensionScriptingStore.jsm"
 );
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
+);
 
 const makeExtension = ({ manifest: manifestProps, ...otherProps }) => {
   return ExtensionTestUtils.loadExtension({
@@ -28,6 +31,17 @@ const makeExtension = ({ manifest: manifestProps, ...otherProps }) => {
 };
 
 const assertNumScriptsInStore = async (extension, expectedNum) => {
+  // `registerContentScripts`/`updateContentScripts()`/`unregisterContentScripts`
+  // call `ExtensionScriptingStore.persistAll()` without awaiting it, which
+  // isn't a problem in practice but this becomes a problem in this test given
+  // that we should make sure the startup cache is updated before checking it.
+  await TestUtils.waitForCondition(async () => {
+    let scripts = await ExtensionScriptingStore._getStoreForTesting().getByExtensionId(
+      extension.id
+    );
+    return scripts.length === expectedNum;
+  }, "wait until the store is updated with the expected number of scripts");
+
   let scripts = await ExtensionScriptingStore._getStoreForTesting().getByExtensionId(
     extension.id
   );
@@ -634,20 +648,20 @@ add_task(async function test_persisted_scripts_cleared_on_addon_updates() {
   });
 
   await extension1.startup();
-  await assertIsPersistentScriptsCachedFlag(extension1, false);
   await assertNumScriptsInStore(extension1, 0);
+  await assertIsPersistentScriptsCachedFlag(extension1, false);
 
   await extension2.startup();
-  await assertIsPersistentScriptsCachedFlag(extension2, false);
   await assertNumScriptsInStore(extension2, 0);
+  await assertIsPersistentScriptsCachedFlag(extension2, false);
 
   await registerContentScript(extension1, "script-1.js");
-  await assertIsPersistentScriptsCachedFlag(extension1, true);
   await assertNumScriptsInStore(extension1, 1);
+  await assertIsPersistentScriptsCachedFlag(extension1, true);
 
   await registerContentScript(extension2, "script-2.js");
-  await assertIsPersistentScriptsCachedFlag(extension2, true);
   await assertNumScriptsInStore(extension2, 1);
+  await assertIsPersistentScriptsCachedFlag(extension2, true);
 
   info("Verify that scripts are still registered on a browser startup");
   await AddonTestUtils.promiseRestartManager();
@@ -659,10 +673,10 @@ add_task(async function test_persisted_scripts_cleared_on_addon_updates() {
     "Got the expected startupReason on AOM restart"
   );
 
+  await assertNumScriptsInStore(extension1, 1);
   await assertIsPersistentScriptsCachedFlag(extension1, true);
+  await assertNumScriptsInStore(extension2, 1);
   await assertIsPersistentScriptsCachedFlag(extension2, true);
-  await assertNumScriptsInStore(extension2, 1);
-  await assertNumScriptsInStore(extension2, 1);
 
   async function testOnAddonUpdates(
     extensionUpdateData,
