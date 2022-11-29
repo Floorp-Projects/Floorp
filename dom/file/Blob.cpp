@@ -148,8 +148,9 @@ already_AddRefed<File> Blob::ToFile(const nsAString& aName,
   nsAutoString contentType;
   mImpl->GetType(contentType);
 
-  RefPtr<MultipartBlobImpl> impl = MultipartBlobImpl::Create(
-      std::move(blobImpls), aName, contentType, mGlobal->GetRTPCallerType(), aRv);
+  RefPtr<MultipartBlobImpl> impl =
+      MultipartBlobImpl::Create(std::move(blobImpls), aName, contentType,
+                                mGlobal->GetRTPCallerType(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
