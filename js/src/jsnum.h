@@ -209,6 +209,10 @@ double CharsToNumber(const CharT* chars, size_t length);
 // Infallible version of StringToNumber for linear strings.
 extern double LinearStringToNumber(JSLinearString* str);
 
+// Parse the input string as if Number.parseInt had been called.
+extern bool NumberParseInt(JSContext* cx, JS::HandleString str, int32_t radix,
+                           JS::MutableHandleValue result);
+
 /* ES5 9.3 ToNumber, overwriting *vp with the appropriate number value. */
 [[nodiscard]] MOZ_ALWAYS_INLINE bool ToNumber(JSContext* cx,
                                               JS::MutableHandleValue vp) {
