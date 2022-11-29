@@ -2312,6 +2312,20 @@ bool CacheIRCompiler::emitGuardNoDenseElements(ObjOperandId objId) {
   return true;
 }
 
+bool CacheIRCompiler::emitGuardSpecificInt32(Int32OperandId numId,
+                                             int32_t expected) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register num = allocator.useRegister(masm, numId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.branch32(Assembler::NotEqual, num, Imm32(expected), failure->label());
+  return true;
+}
+
 bool CacheIRCompiler::emitGuardStringToInt32(StringOperandId strId,
                                              Int32OperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
