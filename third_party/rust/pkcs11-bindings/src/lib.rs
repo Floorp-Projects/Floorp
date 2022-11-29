@@ -2,6 +2,7 @@
 
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
+#![allow(overflowing_literals)]
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 /// Constants from NSS [pkcs11n.h](https://hg.mozilla.org/projects/nss/file/tip/lib/util/pkcs11n.h)

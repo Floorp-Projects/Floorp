@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "pkcs11-bindings"
-version = "0.1.1"
+version = "0.1.4"
 authors = [
     "Dana Keeler <dkeeler@mozilla.com>",
     "John Schanck <jschanck@mozilla.com>",
@@ -21,9 +21,8 @@ build = "build.rs"
 description = "Rust bindings for the PKCS#11 specification"
 license = "MIT"
 repository = "https://github.com/mozilla/pkcs11-bindings"
-resolver = "1"
 
 [build-dependencies.bindgen]
-version = "0.59"
+version = ">= 0.59.2"
 features = ["runtime"]
 default-features = false
