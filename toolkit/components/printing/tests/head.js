@@ -36,9 +36,7 @@ class PrintHelper {
             null,
             true
           );
-          await SpecialPowers.spawn(browser, [pageUrl], contentUrl => {
-            content.location = contentUrl;
-          });
+          BrowserTestUtils.loadURI(browser, pageUrl);
           await loaded;
         }
         await testFn(new PrintHelper(browser));

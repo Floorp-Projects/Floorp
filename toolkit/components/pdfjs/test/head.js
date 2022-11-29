@@ -7,9 +7,7 @@ async function waitForPdfJS(browser, url) {
     null,
     true
   );
-  await SpecialPowers.spawn(browser, [url], contentUrl => {
-    content.location = contentUrl;
-  });
+  BrowserTestUtils.loadURI(browser, url);
   return loadPromise;
 }
 
@@ -21,9 +19,7 @@ async function waitForPdfJSAnnotationLayer(browser, url) {
     null,
     true
   );
-  await SpecialPowers.spawn(browser, [url], contentUrl => {
-    content.location = contentUrl;
-  });
+  BrowserTestUtils.loadURI(browser, url);
   return loadPromise;
 }
 
@@ -50,9 +46,7 @@ async function waitForPdfJSAllLayers(browser, url, layers) {
     true
   );
 
-  await SpecialPowers.spawn(browser, [url], contentUrl => {
-    content.location = contentUrl;
-  });
+  BrowserTestUtils.loadURI(browser, url);
   await Promise.all([loadPromise, annotationPromise, annotationEditorPromise]);
 
   await SpecialPowers.spawn(browser, [layers], async function(layers) {
@@ -86,9 +80,7 @@ async function waitForPdfJSCanvas(browser, url) {
     null,
     true
   );
-  await SpecialPowers.spawn(browser, [url], contentUrl => {
-    content.location = contentUrl;
-  });
+  BrowserTestUtils.loadURI(browser, url);
   return loadPromise;
 }
 

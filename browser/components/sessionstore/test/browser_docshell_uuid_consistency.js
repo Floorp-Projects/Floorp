@@ -69,14 +69,7 @@ add_task(async function contentToChromeNavigate() {
   }
 
   // Force the browser to navigate to the chrome process.
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
-    const CHROME_URL = "about:config";
-    let webnav = content.window.getInterface(Ci.nsIWebNavigation);
-    let loadURIOptions = {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    };
-    webnav.loadURI(CHROME_URL, loadURIOptions);
-  });
+  BrowserTestUtils.loadURI(tab.linkedBrowser, "about:config");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   // Check to be sure that we're in the chrome process.
