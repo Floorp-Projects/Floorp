@@ -43,8 +43,7 @@ class PerformanceEventTiming final
     if (mCachedProcessingStart.isNothing()) {
       mCachedProcessingStart.emplace(nsRFPService::ReduceTimePrecisionAsMSecs(
           mProcessingStart, mPerformance->GetRandomTimelineSeed(),
-          mPerformance->IsSystemPrincipal(),
-          mPerformance->CrossOriginIsolated()));
+          mPerformance->GetRTPCallerType()));
     }
     return mCachedProcessingStart.value();
   }
@@ -53,8 +52,7 @@ class PerformanceEventTiming final
     if (mCachedProcessingEnd.isNothing()) {
       mCachedProcessingEnd.emplace(nsRFPService::ReduceTimePrecisionAsMSecs(
           mProcessingEnd, mPerformance->GetRandomTimelineSeed(),
-          mPerformance->IsSystemPrincipal(),
-          mPerformance->CrossOriginIsolated()));
+          mPerformance->GetRTPCallerType()));
     }
     return mCachedProcessingEnd.value();
   }
@@ -76,8 +74,7 @@ class PerformanceEventTiming final
     if (mCachedDuration.isNothing()) {
       mCachedDuration.emplace(nsRFPService::ReduceTimePrecisionAsMSecs(
           mDuration, mPerformance->GetRandomTimelineSeed(),
-          mPerformance->IsSystemPrincipal(),
-          mPerformance->CrossOriginIsolated()));
+          mPerformance->GetRTPCallerType()));
     }
     return mCachedDuration.value();
   }
@@ -90,8 +87,7 @@ class PerformanceEventTiming final
     if (mCachedStartTime.isNothing()) {
       mCachedStartTime.emplace(nsRFPService::ReduceTimePrecisionAsMSecs(
           mStartTime, mPerformance->GetRandomTimelineSeed(),
-          mPerformance->IsSystemPrincipal(),
-          mPerformance->CrossOriginIsolated()));
+          mPerformance->GetRTPCallerType()));
     }
     return mCachedStartTime.value();
   }
