@@ -397,6 +397,11 @@ def show_taskgraph(options):
             if mod != __name__ and mod.split(".", 1)[0].endswith("taskgraph"):
                 del sys.modules[mod]
 
+        # Ensure gecko_taskgraph is ahead of taskcluster_taskgraph in sys.path.
+        # Without this, we may end up validating some things against the wrong
+        # schema.
+        import gecko_taskgraph  # noqa
+
         if options["diff"] == "default":
             base_ref = repo.base_ref
         else:
