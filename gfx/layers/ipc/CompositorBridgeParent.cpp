@@ -1950,5 +1950,45 @@ Maybe<CollectedFramesParams> CompositorBridgeParent::WrapCollectedFrames(
   return Some(std::move(ipcFrames));
 }
 
+void RecordCompositionPayloadsPresented(
+    const TimeStamp& aCompositionEndTime,
+    const nsTArray<CompositionPayload>& aPayloads) {
+  if (aPayloads.Length()) {
+    TimeStamp presented = aCompositionEndTime;
+    for (const CompositionPayload& payload : aPayloads) {
+      if (profiler_thread_is_being_profiled_for_markers()) {
+        MOZ_RELEASE_ASSERT(payload.mType <= kHighestCompositionPayloadType);
+        nsAutoCString name(
+            kCompositionPayloadTypeNames[uint8_t(payload.mType)]);
+        name.AppendLiteral(" Payload Presented");
+        // This doesn't really need to be a text marker. Once we have a version
+        // of profiler_add_marker that accepts both a start time and an end
+        // time, we could use that here.
+        nsPrintfCString text(
+            "Latency: %dms",
+            int32_t((presented - payload.mTimeStamp).ToMilliseconds()));
+        PROFILER_MARKER_TEXT(
+            name, GRAPHICS,
+            MarkerTiming::Interval(payload.mTimeStamp, presented), text);
+      }
+
+      if (payload.mType == CompositionPayloadType::eKeyPress) {
+        Telemetry::AccumulateTimeDelta(
+            mozilla::Telemetry::KEYPRESS_PRESENT_LATENCY, payload.mTimeStamp,
+            presented);
+      } else if (payload.mType == CompositionPayloadType::eAPZScroll) {
+        Telemetry::AccumulateTimeDelta(
+            mozilla::Telemetry::SCROLL_PRESENT_LATENCY, payload.mTimeStamp,
+            presented);
+      } else if (payload.mType ==
+                 CompositionPayloadType::eMouseUpFollowedByClick) {
+        Telemetry::AccumulateTimeDelta(
+            mozilla::Telemetry::MOUSEUP_FOLLOWED_BY_CLICK_PRESENT_LATENCY,
+            payload.mTimeStamp, presented);
+      }
+    }
+  }
+}
+
 }  // namespace layers
 }  // namespace mozilla

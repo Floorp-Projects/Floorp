@@ -658,6 +658,10 @@ int32_t RecordContentFrameTime(
     const TimeDuration& aVsyncRate, bool aContainsSVGGroup,
     bool aRecordUploadStats, wr::RendererStats* aStats = nullptr);
 
+void RecordCompositionPayloadsPresented(
+    const TimeStamp& aCompositionEndTime,
+    const nsTArray<CompositionPayload>& aPayloads);
+
 }  // namespace layers
 }  // namespace mozilla
 
