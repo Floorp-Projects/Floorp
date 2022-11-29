@@ -11,6 +11,8 @@ const INTERNAL_FIELDS = new Set(["_level", "_message", "_time", "_namespace"]);
  */
 function dumpError(text) {
   dump(text + "\n");
+  // TODO: Bug 1801091 - Figure out how to replace this.
+  // eslint-disable-next-line mozilla/no-cu-reportError
   Cu.reportError(text);
 }
 
@@ -716,6 +718,8 @@ class ConsoleAppender extends Appender {
     if (message) {
       let m = this._formatter.format(message);
       if (message.level > Log.Level.Warn) {
+        // TODO: Bug 1801091 - Figure out how to replace this.
+        // eslint-disable-next-line mozilla/no-cu-reportError
         Cu.reportError(m);
         return;
       }

@@ -53,6 +53,7 @@ module.exports = {
     "no-addtask-setup": require("../lib/rules/no-addtask-setup"),
     "no-arbitrary-setTimeout": require("../lib/rules/no-arbitrary-setTimeout"),
     "no-compare-against-boolean-literals": require("../lib/rules/no-compare-against-boolean-literals"),
+    "no-cu-reportError": require("../lib/rules/no-cu-reportError"),
     "no-define-cc-etc": require("../lib/rules/no-define-cc-etc"),
     "no-throw-cr-literal": require("../lib/rules/no-throw-cr-literal"),
     "no-useless-parameters": require("../lib/rules/no-useless-parameters"),
