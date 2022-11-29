@@ -130,10 +130,11 @@ parent:
 
   /*
    * Cache The World
-   * aFinal is false when paginating cache into several pushes,
-   * and then true on the final push.
+   * aDispatchShowEvent is true when a show event with the first accessible in
+   * the cache list as the target should be dispatched after the cache is
+   * populated. The show event will have a from-user flag value of false.
    */
-  async Cache(CacheUpdateType aUpdateType, CacheData[] aData, bool aFinal);
+  async Cache(CacheUpdateType aUpdateType, CacheData[] aData, bool aDispatchShowEvent);
 
   /*
    * Lists of accessibles that either gained or lost a selected state.

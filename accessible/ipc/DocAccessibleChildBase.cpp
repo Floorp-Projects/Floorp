@@ -109,7 +109,7 @@ void DocAccessibleChildBase::InsertIntoIpcTree(LocalAccessible* aParent,
         cache.AppendElement(CacheData(id, fields));
       }
     }
-    Unused << SendCache(CacheUpdateType::Initial, cache, true);
+    Unused << SendCache(CacheUpdateType::Initial, cache, !aSuppressShowEvent);
   }
 }
 
