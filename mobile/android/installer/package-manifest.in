@@ -114,8 +114,10 @@
 @BINPATH@/actors/*
 
 ; [Browser Chrome Files]
+#ifdef NIGHTLY_BUILD
 @BINPATH@/chrome/pdfjs.manifest
 @BINPATH@/chrome/pdfjs/*
+#endif
 @BINPATH@/chrome/toolkit@JAREXT@
 @BINPATH@/chrome/toolkit.manifest
 
