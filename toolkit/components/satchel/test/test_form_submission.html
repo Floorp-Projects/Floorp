@@ -184,6 +184,12 @@
     <button type="submit">Submit</button>
   </form>
 
+  <form purpose="nothing stored for input autocomplete=one-time-code"
+        id="form27">
+    <input type="text" name="test1" autocomplete="one-time-code">
+    <button type="submit">Submit</button>
+  </form>
+
   <!-- ===== Things that should be saved ===== -->
 
   <!-- Form 100 is submitted into an iframe, not declared here. -->
@@ -511,6 +517,11 @@ add_task(async function form26_does_not_save() {
   setUserInput(26, "test1", "s3cr3t");
   document.querySelector("form[id=form26] input[name=test1]").value = "script changed me";
   await checkSubmitDoesNotSave(26);
+});
+
+add_task(async function form27_does_not_save() {
+  setUserInput(27, "test1", "123456");
+  await checkSubmitDoesNotSave(27);
 });
 
 add_task(async function form100_saves() {
