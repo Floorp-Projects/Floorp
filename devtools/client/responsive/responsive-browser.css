@@ -19,7 +19,7 @@
 .browserContainer.responsive-mode > .rdm-toolbar {
   border: none;
   position: absolute;
-  z-index: var(--browser-stack-z-index-rdm-toolbar);
+  z-index: 1;
   height: 30px;
   top: 0;
   left: 0;
