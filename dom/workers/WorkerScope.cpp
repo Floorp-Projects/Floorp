@@ -842,6 +842,10 @@ WorkerGlobalScope::GetOrCreateServiceWorkerRegistration(
   return ref;
 }
 
+mozilla::dom::StorageManager* WorkerGlobalScope::GetStorageManager() {
+  return RefPtr(Navigator())->Storage();
+}
+
 void WorkerGlobalScope::StorageAccessPermissionGranted() {
   // Reset the IndexedDB factory.
   mIndexedDB = nullptr;
