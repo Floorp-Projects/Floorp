@@ -307,6 +307,15 @@ static int64_t ExpireTimeFromMaxAge(uint64_t maxAge) {
   return (PR_Now() / PR_USEC_PER_MSEC) + ((int64_t)maxAge * PR_MSEC_PER_SEC);
 }
 
+inline uint64_t AbsoluteDifference(int64_t a, int64_t b) {
+  if (a <= b) {
+    return b - a;
+  }
+  return a - b;
+}
+
+const uint64_t sOneDayInMilliseconds = 24 * 60 * 60 * 1000;
+
 nsresult nsSiteSecurityService::SetHSTSState(
     const char* aHost, int64_t maxage, bool includeSubdomains,
     SecurityPropertyState aHSTSState, SecurityPropertySource aSource,
@@ -343,14 +352,19 @@ nsresult nsSiteSecurityService::SetHSTSState(
   nsCString value = mSiteStateStorage->Get(storageKey, storageType);
   RefPtr<SiteHSTSState> curSiteState =
       new SiteHSTSState(hostname, aOriginAttributes, value);
-  if (curSiteState->mHSTSState != SecurityPropertyUnset &&
-      curSiteState->mHSTSSource != SourceUnknown) {
-    // don't override the source
-    siteState->mHSTSSource = curSiteState->mHSTSSource;
-    siteState->ToString(stateString);
+  // Only update the backing storage if the currently-stored state is
+  // different. In the case of expiration time, "different" means "is different
+  // by more than a day".
+  if (curSiteState->mHSTSState != siteState->mHSTSState ||
+      curSiteState->mHSTSIncludeSubdomains !=
+          siteState->mHSTSIncludeSubdomains ||
+      AbsoluteDifference(curSiteState->mHSTSExpireTime,
+                         siteState->mHSTSExpireTime) > sOneDayInMilliseconds) {
+    nsresult rv = mSiteStateStorage->Put(storageKey, stateString, storageType);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
-  nsresult rv = mSiteStateStorage->Put(storageKey, stateString, storageType);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }

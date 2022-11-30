@@ -8,7 +8,9 @@
 
 const EXPECTED_ENTRIES = 5;
 const EXPECTED_HSTS_COLUMNS = 4;
+
 var gProfileDir = null;
+var gExpectingWrites = true;
 
 const NON_ISSUED_KEY_HASH = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 
@@ -22,6 +24,7 @@ function checkStateWritten(aSubject, aTopic, aData) {
   }
 
   equal(aData, SSS_STATE_FILE_NAME);
+  ok(gExpectingWrites);
 
   let stateFile = gProfileDir.clone();
   stateFile.append(SSS_STATE_FILE_NAME);
@@ -40,14 +43,14 @@ function checkStateWritten(aSubject, aTopic, aData) {
     sites[host] = entry;
   }
 
-  // We can receive multiple data-storage-written events. In particular, we
-  // may receive one where DataStorage wrote out data before we were done
-  // processing all of our headers. In this case, the data may not be
-  // as we expect. We only care about the final one being correct, however,
-  // so we return and wait for the next event if things aren't as we expect.
-  // sites[url][1] corresponds to SecurityPropertySet (if 1) and
-  //                              SecurityPropertyUnset (if 0)
-  // sites[url][2] corresponds to includeSubdomains
+  // While we're still processing headers, multiple writes of the backing data
+  // can be scheduled, and thus we can receive multiple data-storage-written
+  // notifications. In these cases, the data may not be as we expect. We only
+  // care about the final one being correct, however, so we return and wait for
+  // the next event if things aren't as we expect.
+  // each sites[url][1] should be SecurityPropertySet (i.e. 1).
+  // sites[url][2] corresponds to includeSubdomains, so every other one should
+  // be set (i.e. 1);
   if (sites["includesubdomains.preloaded.test:HSTS"][1] != 1) {
     return;
   }
@@ -79,13 +82,21 @@ function checkStateWritten(aSubject, aTopic, aData) {
     return;
   }
 
-  do_test_finished();
+  // If we get here, the file was as expected and we no longer expect any
+  // data-storage-written notifications.
+  gExpectingWrites = false;
+
+  // Process the headers again to test that seeing them again after such a
+  // short delay doesn't cause another write.
+  process_headers();
+
+  // Wait a bit before finishing the test, to see if another write happens.
+  do_timeout(2000, function() {
+    do_test_finished();
+  });
 }
 
-function run_test() {
-  Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", true);
-  Services.prefs.setIntPref("test.datastorage.write_timer_ms", 100);
-  gProfileDir = do_get_profile();
+function process_headers() {
   let SSService = Cc["@mozilla.org/ssservice;1"].getService(
     Ci.nsISiteSecurityService
   );
@@ -100,10 +111,10 @@ function run_test() {
 
   for (let i = 0; i < 1000; i++) {
     let uriIndex = i % uris.length;
-    // vary max-age
-    let maxAge = "max-age=" + i * 1000;
-    // alternate setting includeSubdomains
-    let includeSubdomains = i % 2 == 0 ? "; includeSubdomains" : "";
+    // vary max-age, but have it be within one day of one year
+    let maxAge = "max-age=" + (i + 31536000);
+    // have every other URI set includeSubdomains
+    let includeSubdomains = uriIndex % 2 == 1 ? "; includeSubdomains" : "";
     let secInfo = Cc[
       "@mozilla.org/security/transportsecurityinfo;1"
     ].createInstance(Ci.nsITransportSecurityInfo);
@@ -114,7 +125,12 @@ function run_test() {
       Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
     );
   }
+}
 
+function run_test() {
+  Services.prefs.setIntPref("test.datastorage.write_timer_ms", 100);
+  gProfileDir = do_get_profile();
+  process_headers();
   do_test_pending();
   Services.obs.addObserver(checkStateWritten, "data-storage-written");
 }
