@@ -43,6 +43,15 @@ async function close_tab(tab) {
   await sessionStorePromise;
 }
 
+async function dismiss_tab(tab, content) {
+  info(`Dismissing tab ${tab.dataset.targetURI}`);
+  const closedObjectsChanged = () =>
+    TestUtils.topicObserved("sessionstore-closed-objects-changed");
+  let dismissButton = tab.querySelector(".closed-tab-li-dismiss");
+  EventUtils.synthesizeMouseAtCenter(dismissButton, {}, content);
+  await closedObjectsChanged();
+}
+
 add_task(async function test_empty_list() {
   clearHistory();
 
@@ -378,8 +387,8 @@ add_task(async function test_list_maintains_focus_when_restoring_tab() {
     let gBrowser = browser.getTabBrowser();
     const { document } = browser.contentWindow;
     const list = document.querySelectorAll(".closed-tab-li");
-    let expectedFocusedElement = list[1];
-    list[0].focus();
+    let expectedFocusedElement = list[1].querySelector(".closed-tab-li-main");
+    list[0].querySelector(".closed-tab-li-main").focus();
     EventUtils.synthesizeKey("KEY_Enter");
     let firefoxViewTab = gBrowser.tabs.find(tab => tab.label == "Firefox View");
     await BrowserTestUtils.switchTab(gBrowser, firefoxViewTab);
@@ -404,7 +413,7 @@ add_task(async function test_list_maintains_focus_when_restoring_tab() {
       "recently-closed-tabs-header-section"
     );
     const list = document.querySelectorAll(".closed-tab-li");
-    list[0].focus();
+    list[0].querySelector(".closed-tab-li-main").focus();
 
     EventUtils.synthesizeKey("KEY_Enter");
     let firefoxViewTab = gBrowser.tabs.find(tab => tab.label == "Firefox View");
@@ -539,7 +548,7 @@ add_task(async function test_restore_recently_closed_tabs() {
   );
 
   tabRestored = BrowserTestUtils.waitForNewTab(gBrowser, URLs[1]);
-  document.querySelector(".closed-tab-li").focus();
+  document.querySelector(".closed-tab-li .closed-tab-li-main").focus();
   EventUtils.synthesizeKey("KEY_Enter", {}, gBrowser.contentWindow);
 
   await tabRestored;
@@ -552,7 +561,7 @@ add_task(async function test_restore_recently_closed_tabs() {
   );
 
   tabRestored = BrowserTestUtils.waitForNewTab(gBrowser, URLs[0]);
-  document.querySelector(".closed-tab-li").focus();
+  document.querySelector(".closed-tab-li .closed-tab-li-main").focus();
   EventUtils.synthesizeKey(" ", {}, gBrowser.contentWindow);
 
   await tabRestored;
@@ -562,4 +571,77 @@ add_task(async function test_restore_recently_closed_tabs() {
   while (gBrowser.tabs.length > 1) {
     BrowserTestUtils.removeTab(gBrowser.tabs.at(-1));
   }
+});
+
+/**
+ * Asserts that tabs that have been recently closed can be
+ * dismissed by clicking on their respective dismiss buttons.
+ */
+add_task(async function test_dismiss_tab() {
+  Services.obs.notifyObservers(null, "browser:purge-session-history");
+  Assert.equal(
+    SessionStore.getClosedTabCount(window),
+    0,
+    "Closed tab count after purging session history"
+  );
+  await clearAllParentTelemetryEvents();
+
+  await withFirefoxView({ win: window }, async browser => {
+    const { document } = browser.contentWindow;
+
+    const closedObjectsChanged = () =>
+      TestUtils.topicObserved("sessionstore-closed-objects-changed");
+
+    const tab1 = await add_new_tab(URLs[0]);
+    const tab2 = await add_new_tab(URLs[1]);
+    const tab3 = await add_new_tab(URLs[2]);
+
+    await close_tab(tab3);
+    await closedObjectsChanged();
+
+    await close_tab(tab2);
+    await closedObjectsChanged();
+
+    await close_tab(tab1);
+    await closedObjectsChanged();
+
+    const tabsList = document.querySelector("ol.closed-tabs-list");
+
+    await dismiss_tab(tabsList.children[0], content);
+
+    Assert.equal(
+      tabsList.children[0].dataset.targetURI,
+      URLs[1],
+      `First recently closed item should be ${URLs[1]}`
+    );
+
+    Assert.equal(
+      tabsList.children.length,
+      2,
+      "recently-closed-tabs-list should have two list items"
+    );
+
+    await dismiss_tab(tabsList.children[0], content);
+
+    Assert.equal(
+      tabsList.children[0].dataset.targetURI,
+      URLs[2],
+      `First recently closed item should be ${URLs[2]}`
+    );
+
+    Assert.equal(
+      tabsList.children.length,
+      1,
+      "recently-closed-tabs-list should have one list item"
+    );
+
+    await dismiss_tab(tabsList.children[0], content);
+
+    testVisibility(browser, {
+      expectedVisible: {
+        "#recently-closed-tabs-placeholder": true,
+        "ol.closed-tabs-list": false,
+      },
+    });
+  });
 });

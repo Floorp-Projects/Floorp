@@ -61,7 +61,7 @@ add_task(async function test_keyboard_focus() {
 
     window.FirefoxViewHandler.openTab();
 
-    let recentlyClosedEle = document.querySelector(".closed-tab-li");
+    let recentlyClosedEle = document.querySelector(".closed-tab-li-main");
     document.querySelectorAll(".page-section-header")[1].focus();
 
     EventUtils.synthesizeKey("KEY_Tab");
