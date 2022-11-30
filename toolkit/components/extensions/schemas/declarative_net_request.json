@@ -76,6 +76,91 @@
         }
       },
       {
+        "id": "URLTransform",
+        "type": "object",
+        "description": "Describes the type of the Rule.action.redirect.transform property.",
+        "properties": {
+          "scheme": {
+            "type": "string",
+            "optional": true,
+            "description": "The new scheme for the request.",
+            "enum": ["http", "https", "moz-extension"]
+          },
+          "username": {
+            "type": "string",
+            "optional": true,
+            "description": "The new username for the request."
+          },
+          "password": {
+            "type": "string",
+            "optional": true,
+            "description": "The new password for the request."
+          },
+          "host": {
+            "type": "string",
+            "optional": true,
+            "description": "The new host name for the request."
+          },
+          "port": {
+            "type": "string",
+            "optional": true,
+            "description": "The new port for the request. If empty, the existing port is cleared."
+          },
+          "path": {
+            "type": "string",
+            "optional": true,
+            "description": "The new path for the request. If empty, the existing path is cleared."
+          },
+          "query": {
+            "type": "string",
+            "optional": true,
+            "description": "The new query for the request. Should be either empty, in which case the existing query is cleared; or should begin with '?'. Cannot be specified if 'queryTransform' is specified."
+          },
+          "queryTransform": {
+            "type": "object",
+            "optional": true,
+            "description": "Add, remove or replace query key-value pairs. Cannot be specified if 'query' is specified.",
+            "properties": {
+              "removeParams": {
+                "type": "array",
+                "optional": true,
+                "description": "The list of query keys to be removed.",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "addOrReplaceParams": {
+                "type": "array",
+                "optional": true,
+                "description": "The list of query key-value pairs to be added or replaced.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "replaceOnly": {
+                      "type": "boolean",
+                      "optional": true,
+                      "description": "If true, the query key is replaced only if it's already present. Otherwise, the key is also added if it's missing.",
+                      "default": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "fragment": {
+            "type": "string",
+            "optional": true,
+            "description": "The new fragment for the request. Should be either empty, in which case the existing fragment is cleared; or should begin with '#'."
+          }
+        }
+      },
+      {
         "id": "Rule",
         "type": "object",
         "properties": {
@@ -226,9 +311,9 @@
                     "description": "Path relative to the extension directory. Should start with '/'."
                   },
                   "transform": {
-                    "type": "object",
+                    "$ref": "URLTransform",
                     "optional": true,
-                    "description": "TODO: URLTransform - Url transformations to perform."
+                    "description": "Url transformations to perform."
                   },
                   "url": {
                     "type": "string",

@@ -149,6 +149,113 @@ class Ruleset {
   }
 }
 
+/**
+ * @param {string} uriQuery - The query of a nsIURI to transform.
+ * @param {object} queryTransform - The value of the
+ *   Rule.action.redirect.transform.queryTransform property as defined in
+ *   declarative_net_request.json.
+ * @returns {string} The uriQuery with the queryTransform applied to it.
+ */
+function applyQueryTransform(uriQuery, queryTransform) {
+  // URLSearchParams cannot be applied to the full query string, because that
+  // API formats the full query string using form-urlencoding. But the input
+  // may be in a different format. So we try to only modify matched params.
+
+  function urlencode(s) {
+    // Encode in application/x-www-form-urlencoded format.
+    // The only JS API to do that is URLSearchParams. encodeURIComponent is not
+    // the same, it differs in how it handles " " ("%20") and "!'()~" (raw).
+    // But urlencoded space should be "+" and the latter be "%21%27%28%29%7E".
+    return new URLSearchParams({ s }).toString().slice(2);
+  }
+  if (!uriQuery.length && !queryTransform.addOrReplaceParams) {
+    // Nothing to do.
+    return "";
+  }
+  const removeParamsSet = new Set(queryTransform.removeParams?.map(urlencode));
+  const addParams = (queryTransform.addOrReplaceParams || []).map(orig => ({
+    normalizedKey: urlencode(orig.key),
+    orig,
+  }));
+  const finalParams = [];
+  if (uriQuery.length) {
+    for (let part of uriQuery.split("&")) {
+      let key = part.split("=", 1)[0];
+      if (removeParamsSet.has(key)) {
+        continue;
+      }
+      let i = addParams.findIndex(p => p.normalizedKey === key);
+      if (i !== -1) {
+        // Replace found param with the key-value from addOrReplaceParams.
+        finalParams.push(`${key}=${urlencode(addParams[i].orig.value)}`);
+        // Omit param so that a future search for the same key can find the next
+        // specified key-value pair, if any. And to prevent the already-used
+        // key-value pairs from being appended after the loop.
+        addParams.splice(i, 1);
+      } else {
+        finalParams.push(part);
+      }
+    }
+  }
+  // Append remaining, unused key-value pairs.
+  for (let { normalizedKey, orig } of addParams) {
+    if (!orig.replaceOnly) {
+      finalParams.push(`${normalizedKey}=${urlencode(orig.value)}`);
+    }
+  }
+  return finalParams.length ? `?${finalParams.join("&")}` : "";
+}
+
+/**
+ * @param {nsIURI} uri - Usually a http(s) URL.
+ * @param {object} transform - The value of the Rule.action.redirect.transform
+ *   property as defined in declarative_net_request.json.
+ * @returns {nsIURI} uri - The new URL.
+ * @throws if the transformation is invalid.
+ */
+function applyURLTransform(uri, transform) {
+  let mut = uri.mutate();
+  if (transform.scheme) {
+    // Note: declarative_net_request.json only allows http(s)/moz-extension:.
+    mut.setScheme(transform.scheme);
+    if (uri.port !== -1 || transform.port) {
+      // If the URI contains a port or transform.port was specified, the default
+      // port is significant. So we must set it in that case.
+      if (transform.scheme === "https") {
+        mut.QueryInterface(Ci.nsIStandardURLMutator).setDefaultPort(443);
+      } else if (transform.scheme === "http") {
+        mut.QueryInterface(Ci.nsIStandardURLMutator).setDefaultPort(80);
+      }
+    }
+  }
+  if (transform.username != null) {
+    mut.setUsername(transform.username);
+  }
+  if (transform.password != null) {
+    mut.setPassword(transform.password);
+  }
+  if (transform.host != null) {
+    mut.setHost(transform.host);
+  }
+  if (transform.port != null) {
+    // The caller ensures that transform.port is a string consisting of digits
+    // only. When it is an empty string, it should be cleared (-1).
+    mut.setPort(transform.port || -1);
+  }
+  if (transform.path != null) {
+    mut.setFilePath(transform.path);
+  }
+  if (transform.query != null) {
+    mut.setQuery(transform.query);
+  } else if (transform.queryTransform) {
+    mut.setQuery(applyQueryTransform(uri.query, transform.queryTransform));
+  }
+  if (transform.fragment != null) {
+    mut.setRef(transform.fragment);
+  }
+  return mut.finalize();
+}
+
 class RuleValidator {
   constructor(alreadyValidatedRules) {
     this.rulesMap = new Map(alreadyValidatedRules.map(r => [r.id, r]));
@@ -285,8 +392,8 @@ class RuleValidator {
   }
 
   #checkActionRedirect(rule) {
-    const { extensionPath, url } = rule.action.redirect ?? {};
-    if (!url && extensionPath == null) {
+    const { extensionPath, url, transform } = rule.action.redirect ?? {};
+    if (!url && extensionPath == null && !transform) {
       this.#collectInvalidRule(
         rule,
         "A redirect rule must have a non-empty action.redirect object"
@@ -314,7 +421,60 @@ class RuleValidator {
     // http(s) URLs can (regardless of extension permissions).
     // data:-URLs are currently blocked due to bug 1622986.
 
-    // TODO bug 1801870: Implement rule.action.redirect.transform.
+    if (transform) {
+      if (transform.query != null && transform.queryTransform) {
+        this.#collectInvalidRule(
+          rule,
+          "redirect.transform.query and redirect.transform.queryTransform are mutually exclusive"
+        );
+        return false;
+      }
+      // Most of the validation is done by nsIURIMutator via applyURLTransform.
+      // nsIURIMutator is not very strict, so we perform some extra checks here
+      // to reject values that are not technically valid URLs.
+
+      if (transform.port && /\D/.test(transform.port)) {
+        // nsIURIMutator's setPort takes an int, so any string will implicitly
+        // be converted to a number. This part verifies that the input only
+        // consists of digits. setPort will ensure that it is at most 65535.
+        this.#collectInvalidRule(
+          rule,
+          "redirect.transform.port should be empty or an integer"
+        );
+        return false;
+      }
+
+      // Note: we don't verify whether transform.query starts with '/', because
+      // Chrome does not require it, and nsIURIMutator prepends it if missing.
+
+      if (transform.query && !transform.query.startsWith("?")) {
+        this.#collectInvalidRule(
+          rule,
+          "redirect.transform.query should be empty or start with a '?'"
+        );
+        return false;
+      }
+      if (transform.fragment && !transform.fragment.startsWith("#")) {
+        this.#collectInvalidRule(
+          rule,
+          "redirect.transform.fragment should be empty or start with a '#'"
+        );
+        return false;
+      }
+      try {
+        const dummyURI = Services.io.newURI("http://dummy");
+        // applyURLTransform uses nsIURIMutator to transform a URI, and throws
+        // if |transform| is invalid, e.g. invalid host, port, etc.
+        applyURLTransform(dummyURI, transform);
+      } catch (e) {
+        this.#collectInvalidRule(
+          rule,
+          "redirect.transform does not describe a valid URL transformation"
+        );
+        return false;
+      }
+    }
+
     // TODO bug 1745760: With regexFilter support, implement regexSubstitution.
     return true;
   }
@@ -900,8 +1060,7 @@ const NetworkIntegration = {
         .setPathQueryRef(redirect.extensionPath)
         .finalize();
     } else if (redirect.transform) {
-      // TODO bug 1801870: Implement transform.
-      throw new Error("transform not implemented");
+      redirectUri = applyURLTransform(channel.finalURI, redirect.transform);
     } else if (redirect.regexSubstitution) {
       // TODO bug 1745760: Implement along with regexFilter support.
       throw new Error("regexSubstitution not implemented");

@@ -11,6 +11,12 @@ const server = createHttpServer({
 server.registerPathHandler("/never_reached", (req, res) => {
   Assert.ok(false, "Server should never have been reached");
 });
+server.registerPathHandler("/source", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+});
+server.registerPathHandler("/destination", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+});
 
 add_task(async function block_request_with_dnr() {
   async function background() {
@@ -188,6 +194,89 @@ add_task(async function block_request_with_webRequest_after_allow_with_dnr() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     temporarilyInstalled: true, // Needed for granted_host_permissions
+    manifest: {
+      manifest_version: 3,
+      granted_host_permissions: true,
+      host_permissions: ["*://example.com/*"],
+      permissions: [
+        "declarativeNetRequest",
+        "webRequest",
+        "webRequestBlocking",
+      ],
+    },
+  });
+  await extension.startup();
+  await extension.awaitFinish();
+  await extension.unload();
+});
+
+add_task(async function redirect_with_webRequest_after_failing_dnr_redirect() {
+  async function background() {
+    // Maximum length of a UTL is 1048576 (network.standard-url.max-length).
+    const network_standard_url_max_length = 1048576;
+    // updateSessionRules does some validation on the limit (as seen by
+    // validate_action_redirect_transform in test_ext_dnr_session_rules.js),
+    // but it is still possible to pass validation and fail in practice when
+    // the existing URL + new component exceeds the limit.
+    const VERY_LONG_STRING = "x".repeat(network_standard_url_max_length - 20);
+
+    browser.webRequest.onBeforeRequest.addListener(
+      d => {
+        return { redirectUrl: "http://redir/destination?by-webrequest" };
+      },
+      { urls: ["*://example.com/*"] },
+      ["blocking"]
+    );
+    await browser.declarativeNetRequest.updateSessionRules({
+      addRules: [
+        {
+          id: 1,
+          condition: { requestDomains: ["example.com"] },
+          action: {
+            type: "redirect",
+            redirect: {
+              transform: {
+                host: "redir",
+                path: "/destination",
+                queryTransform: {
+                  addOrReplaceParams: [
+                    { key: "dnr", value: VERY_LONG_STRING, replaceOnly: true },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      ],
+    });
+
+    // Note: we are not expecting successful DNR redirects below, but in case
+    // that ever changes (e.g. due to VERY_LONG_STRING not resulting in an
+    // invalid URL), we will truncate the URL out of caution.
+    // VERY_LONG_STRING consists of many 'X'. Shorten to avoid logspam.
+    const shortx = s => s.replace(/x{10,}/g, xxx => `x{${xxx.length}}`);
+
+    browser.test.assertEq(
+      "http://redir/destination?1",
+      shortx((await fetch("http://example.com/never_reached?1")).url),
+      "Successful DNR redirect."
+    );
+
+    // DNR redirect failure is expected to be very rare, and only to occur when
+    // an extension intentionally explores the boundaries of the DNR API. When
+    // DNR fails, we fall back to allowing webRequest to take over.
+    browser.test.assertEq(
+      "http://redir/destination?by-webrequest",
+      shortx((await fetch("http://example.com/source?dnr")).url),
+      "When DNR fails, we fall back to webRequest redirect"
+    );
+
+    browser.test.notifyPass();
+  }
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    temporarilyInstalled: true, // Needed for granted_host_permissions
+    allowInsecureRequests: true,
     manifest: {
       manifest_version: 3,
       granted_host_permissions: true,
