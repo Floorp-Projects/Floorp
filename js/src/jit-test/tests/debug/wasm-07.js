@@ -27,7 +27,7 @@ wasmRunWithDebugger(
     },
     function ({wasmScript, error}) {
         assertEq(error, undefined);
-        assertEq(offsets.length, 5);
+        assertEq(offsets.length, 4);
         offsets.forEach(offset => {
             var loc = wasmScript.getOffsetLocation(offset);
             assertEq(loc.isEntryPoint, true);
