@@ -2,15 +2,13 @@
 // Test for bug 1170531
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1170531
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 add_task(async function() {
   // Get a bunch of DOM nodes
   let editMenu = document.getElementById("edit-menu");
   let menuPopup = editMenu.menupopup;
 
   let closeMenu = function(aCallback) {
-    if (OS.Constants.Sys.Name == "Darwin") {
+    if (Services.appinfo.OS == "Darwin") {
       executeSoon(aCallback);
       return;
     }
@@ -29,7 +27,7 @@ add_task(async function() {
   };
 
   let openMenu = function(aCallback) {
-    if (OS.Constants.Sys.Name == "Darwin") {
+    if (Services.appinfo.OS == "Darwin") {
       goUpdateGlobalEditMenuItems();
       // On OSX, we have a native menu, so it has to be updated. In single process browsers,
       // this happens synchronously, but in e10s, we have to wait for the main thread
