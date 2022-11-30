@@ -126,6 +126,9 @@ goblin = { path = "build/rust/goblin" }
 # Patch hashbrown 0.11 to 0.12
 hashbrown = { path = "build/rust/hashbrown" }
 
+# Patch bindgen 0.59 to 0.63
+bindgen = { path = "build/rust/bindgen" }
+
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 
