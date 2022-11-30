@@ -1476,6 +1476,92 @@ export class SearchEngine {
     return url.getSubmission(submissionData, this, purpose);
   }
 
+  /**
+   * Returns the search term of a possible search result URI if and only if:
+   * - The URI has the same scheme, host, and path as the engine.
+   * - All query parameters of the URI have a matching name and value in the engine.
+   * - An exception to the equality check is the engine's termsParameterName
+   *   value, which contains a placeholder, i.e. {searchTerms}.
+   * - If an engine has query parameters with "null" values, they will be ignored.
+   *
+   * @param {nsIURI} uri
+   *   A URI that may or may not be from a search result matching the engine.
+   *
+   * @returns {string}
+   *   A string representing the termsParameterName value of the URI,
+   *   or an empty string if the URI isn't matched to the engine.
+   */
+  searchTermFromResult(uri) {
+    let url = this._getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH);
+    if (!url) {
+      return "";
+    }
+
+    // The engine URL and URI should have the same scheme, host, and path.
+    if (
+      uri.spec.split("?")[0].toLowerCase() !=
+      url.template.split("?")[0].toLowerCase()
+    ) {
+      return "";
+    }
+
+    let engineParams;
+    if (url.params.length) {
+      engineParams = new URLSearchParams();
+      for (let { name, value } of url.params) {
+        // Some values might be null, so avoid adding
+        // them since the input is unlikely to have it too.
+        if (value) {
+          // Use append() rather than set() so multiple
+          // values of the same name can be stored.
+          engineParams.append(name, value);
+        }
+      }
+    } else {
+      // Try checking the template for the presence of query params.
+      engineParams = new URL(url.template).searchParams;
+    }
+
+    let uriParams = new URLSearchParams(uri.query);
+    if (
+      new Set([...uriParams.keys()]).size !=
+      new Set([...engineParams.keys()]).size
+    ) {
+      return "";
+    }
+
+    let termsParameterName = this.getURLParsingInfo().termsParameterName;
+    for (let [name, value] of uriParams.entries()) {
+      // Don't check the name matching the search
+      // query because its value will differ.
+      if (name == termsParameterName) {
+        continue;
+      }
+      // All params of an input must have a matching
+      // key and value in the list of engine parameters.
+      if (!engineParams.getAll(name).includes(value)) {
+        return "";
+      }
+    }
+
+    // An engine can use a non UTF-8 charset, which URLSearchParams
+    // might not parse properly. Convert the terms parameter value
+    // from the original input using the appropriate charset.
+    if (this.queryCharset.toLowerCase() != "utf-8") {
+      let name = `${termsParameterName}=`;
+      let queryString = uri.query
+        .split("&")
+        .filter(str => str.startsWith(name))
+        .pop();
+      return Services.textToSubURI.UnEscapeAndConvert(
+        this.queryCharset,
+        queryString.substring(queryString.indexOf("=") + 1).replace(/\+/g, " ")
+      );
+    }
+
+    return uriParams.get(termsParameterName);
+  }
+
   get searchUrlQueryParamName() {
     if (this._searchUrlQueryParamName != null) {
       return this._searchUrlQueryParamName;

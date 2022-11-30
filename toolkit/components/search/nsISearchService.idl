@@ -49,6 +49,21 @@ interface nsISearchEngine : nsISupports
   nsISearchSubmission getSubmission(in AString data,
                                     [optional] in AString responseType,
                                     [optional] in AString purpose);
+  /**
+   * Returns the search term of a possible search result URI if and only if:
+   * - The URI has the same scheme, host, and path as the engine.
+   * - All query parameters of the URI have a matching name and value in the engine.
+   * - An exception to the equality check is the engine's termsParameterName
+   *   value, which contains a placeholder, i.e. {searchTerms}.
+   * - If an engine has query parameters with "null" values, they will be ignored.
+   *
+   * @param  uri
+   *         A URI that may or may not be from a search result matching the engine.
+   *
+   * @returns A string representing the termsParameterName value of the URI,
+   *          or an empty string if the URI isn't matched to the engine.
+   */
+  AString searchTermFromResult(in nsIURI uri);
 
   /**
    * Returns the name of the parameter used for the search terms for a submission

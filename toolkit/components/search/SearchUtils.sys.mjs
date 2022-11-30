@@ -176,6 +176,17 @@ export var SearchUtils = {
     LOCALE: "moz:locale",
   },
 
+  // Query parameters can have the property "purpose", whose value
+  // indicates the context that initiated a search. This list contains
+  // defined search contexts.
+  PARAM_PURPOSES: {
+    CONTEXTMENU: "contextmenu",
+    HOMEPAGE: "homepage",
+    KEYWORD: "keyword",
+    NEWTAB: "newtab",
+    SEARCHBAR: "searchbar",
+  },
+
   LoadListener,
 
   // This is a list of search engines that we currently consider to be "General"
