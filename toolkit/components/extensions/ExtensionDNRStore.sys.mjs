@@ -246,6 +246,25 @@ class RulesetsStore {
     return data?.staticRulesets;
   }
 
+  async getAvailableStaticRuleCount(extension) {
+    const { GUARANTEED_MINIMUM_STATIC_RULES } = lazy.ExtensionDNR.limits;
+
+    const ruleResources =
+      extension.manifest.declarative_net_request?.rule_resources;
+    // TODO: return maximum rules count when no static rules is listed in the manifest?
+    if (!Array.isArray(ruleResources)) {
+      return GUARANTEED_MINIMUM_STATIC_RULES;
+    }
+
+    const enabledRulesets = await this.getEnabledStaticRulesets(extension);
+    const enabledRulesCount = Array.from(enabledRulesets.values()).reduce(
+      (acc, ruleset) => acc + ruleset.rules.length,
+      0
+    );
+
+    return GUARANTEED_MINIMUM_STATIC_RULES - enabledRulesCount;
+  }
+
   /**
    * Update the enabled rulesets, queue changes to prevent races between calls
    * that may be triggered while an update is still in process.
@@ -428,7 +447,15 @@ class RulesetsStore {
    *        API method).
    * @returns {Promise<Map<ruleset_id, object>> | void}
    */
-  async #getManifestStaticRulesets(extension, enabledRulesetIds = null) {
+  async #getManifestStaticRulesets(
+    extension,
+    {
+      enabledRulesetIds = null,
+      availableStaticRuleCount = lazy.ExtensionDNR.limits
+        .GUARANTEED_MINIMUM_STATIC_RULES,
+      isUpdateEnabledRulesets = false,
+    } = {}
+  ) {
     const ruleResources =
       extension.manifest.declarative_net_request?.rule_resources;
     if (!Array.isArray(ruleResources)) {
@@ -554,11 +581,31 @@ class RulesetsStore {
         );
       }
 
-      const ruleset = {
-        idx,
-        rules: ruleValidator.getValidatedRules(),
-      };
-      rulesets.set(id, ruleset);
+      const validatedRules = ruleValidator.getValidatedRules();
+
+      // NOTE: this is currently only accounting for valid rules because
+      // only the valid rules will be actually be loaded. Reconsider if
+      // we should instead also account for the rules that have been
+      // ignored as invalid.
+      if (availableStaticRuleCount - validatedRules.length < 0) {
+        if (isUpdateEnabledRulesets) {
+          throw new ExtensionError(
+            "updateEnabledRulesets request is exceeding the available static rule count"
+          );
+        }
+
+        // TODO(Bug 1803363): consider collect telemetry.
+        Cu.reportError(
+          `Ignoring static ruleset exceeding the available static rule count: ruleset_id "${id}" (extension: "${extension.id}")`
+        );
+        // TODO: currently ignoring the current ruleset but would load the one that follows if it
+        // fits in the available rule count when loading the rule on extension startup,
+        // should it stop loading additional rules instead?
+        continue;
+      }
+      availableStaticRuleCount -= validatedRules.length;
+
+      rulesets.set(id, { idx, rules: validatedRules });
     }
 
     return rulesets;
@@ -645,7 +692,11 @@ class RulesetsStore {
         // Only load the rules from rulesets that are enabled in the stored DNR data,
         // if the array (eventually empty) of the enabled static rules isn't in the
         // stored data, then load all the ones enabled in the manifest.
-        Array.isArray(data.staticRulesets) ? data.staticRulesets : null
+        {
+          enabledRulesetIds: Array.isArray(data.staticRulesets)
+            ? data.staticRulesets
+            : null,
+        }
       );
       return new StoreData(data);
     } catch (e) {
@@ -740,7 +791,10 @@ class RulesetsStore {
       }
     }
 
-    const { MAX_NUMBER_OF_ENABLED_STATIC_RULESETS } = lazy.ExtensionDNR.limits;
+    const {
+      MAX_NUMBER_OF_ENABLED_STATIC_RULESETS,
+      GUARANTEED_MINIMUM_STATIC_RULES,
+    } = lazy.ExtensionDNR.limits;
 
     const maxNewRulesetsCount =
       MAX_NUMBER_OF_ENABLED_STATIC_RULESETS - updatedEnabledRulesets.size;
@@ -752,10 +806,18 @@ class RulesetsStore {
       );
     }
 
-    const newRulesets = await this.#getManifestStaticRulesets(
-      extension,
-      Array.from(enableIds)
-    );
+    const availableStaticRuleCount =
+      GUARANTEED_MINIMUM_STATIC_RULES -
+      Array.from(updatedEnabledRulesets.values()).reduce(
+        (acc, ruleset) => acc + ruleset.rules.length,
+        0
+      );
+
+    const newRulesets = await this.#getManifestStaticRulesets(extension, {
+      enabledRulesetIds: Array.from(enableIds),
+      availableStaticRuleCount,
+      isUpdateEnabledRulesets: true,
+    });
 
     for (const [rulesetId, ruleset] of newRulesets.entries()) {
       updatedEnabledRulesets.set(rulesetId, ruleset);
