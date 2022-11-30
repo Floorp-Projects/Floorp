@@ -1,6 +1,11 @@
 ..
     This file was automatically generated using `mots export`.
 
+..
+    See https://mots.readthedocs.io/en/latest/#quick-start for quick start
+    documentation and how to modify this file.
+
+
 ==========
 Governance
 ==========
@@ -710,23 +715,21 @@ Gecko's built-in profiler
         | `Markus Stange (mstange) <https://people.mozilla.org/s?query=mstange>`__
     * - Peer(s)
       -
-        | `Gerald Squelart (mozbugz) <https://people.mozilla.org/s?query=mozbugz>`__
-        | `Greg Tatum (gregtatum) <https://people.mozilla.org/s?query=gregtatum>`__
         | `Nazım Can Altınova (canova) <https://people.mozilla.org/s?query=canova>`__
+        | `Florian Quèze (bmo) <https://people.mozilla.org/s?query=bmo>`__
         | `Julian Seward (jseward) <https://people.mozilla.org/s?query=jseward>`__
-        | `Kannan Vijayan (djvj) <https://people.mozilla.org/s?query=djvj>`__
-        | `Barret Rennie (barret) <https://people.mozilla.org/s?query=barret>`__
     * - Owner(s) Emeritus
       - Benoit Girard
     * - Peer(s) Emeritus
-      - Shu-yu Guo (JS integration), Thinker Lee (TaskTracer), Cervantes Yu (TaskTracer), Nicholas Nethercote
+      - Shu-yu Guo (JS integration), Thinker Lee (TaskTracer), Cervantes Yu (TaskTracer), Nicholas Nethercote, Gerald Squelart, Kannan Vijayan, Barret Rennie, Greg Tatum
     * - Includes
       -
         | `tools/profiler/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=tools/profiler/\*\*/\*>`__
+        | `mozglue/baseprofiler/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=mozglue/baseprofiler/\*\*/\*>`__
     * - Group
       - dev-platform
     * - URL
-      - https://profiler.firefox.com/docs/
+      - https://firefox-source-docs.mozilla.org/tools/profiler/
     * - Bugzilla Components
       - Core::Gecko Profiler
 
