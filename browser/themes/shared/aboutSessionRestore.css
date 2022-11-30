@@ -2,13 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.container.restore-chosen {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  justify-content: center;
-  margin: 5vh 0;
-}
+@import url("chrome://browser/skin/tab-list-tree.css");
 
 #tabsToggle {
   cursor: pointer;
@@ -41,56 +35,21 @@
   background-position-x: left;
 }
 
-#tabsToggle:not(.show-tabs)::after {
+#tabsToggle:not(.tabs-hidden)::after {
   background-image: url("chrome://global/skin/icons/arrow-up.svg");
 }
 
-#tabsToggle.show-tabs > #hideTabs,
-#tabsToggle:not(.show-tabs) > #showTabs {
+#tabsToggle.tabs-hidden > #hideTabs,
+#tabsToggle:not(.tabs-hidden) > #showTabs {
   display: none;
 }
 
-.tree-container:not(.expanded) {
-  visibility: collapse;
+#tabList {
+  flex: 1;
+  min-height: 12em;
+  margin-top: 1.2em;
 }
 
 .button-container {
   text-align: end;
-}
-
-treechildren::-moz-tree-image(icon),
-treechildren::-moz-tree-image(noicon) {
-  padding-inline-end: 2px;
-  margin: 0 2px;
-  width: 16px;
-  height: 16px;
-}
-
-treechildren::-moz-tree-image(noicon) {
-  list-style-image: url("chrome://global/skin/icons/defaultFavicon.svg");
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-treechildren::-moz-tree-image(container, noicon) {
-  list-style-image: url("chrome://browser/skin/window.svg");
-}
-
-treechildren::-moz-tree-image(checked),
-treechildren::-moz-tree-image(partial) {
-  -moz-context-properties: fill, stroke;
-  fill: var(--in-content-accent-color);
-}
-
-treechildren::-moz-tree-image(checked, selected),
-treechildren::-moz-tree-image(partial, selected) {
-  fill: var(--in-content-item-selected-text);
-  stroke: var(--in-content-item-selected);
-}
-
-treechildren::-moz-tree-image(checked) {
-  list-style-image: url("chrome://global/skin/icons/check.svg");
-}
-
-treechildren::-moz-tree-image(partial) {
-  list-style-image: url("chrome://global/skin/icons/check-partial.svg");
 }
