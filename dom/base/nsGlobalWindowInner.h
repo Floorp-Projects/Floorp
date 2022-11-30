@@ -266,6 +266,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   mozilla::Result<mozilla::ipc::PrincipalInfo, nsresult> GetStorageKey()
       override;
 
+  mozilla::dom::StorageManager* GetStorageManager() override;
+
   void TraceGlobalJSObject(JSTracer* aTrc);
 
   virtual nsresult EnsureScriptEnvironment() override;

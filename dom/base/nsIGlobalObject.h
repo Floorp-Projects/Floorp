@@ -49,6 +49,7 @@ class ReportingObserver;
 class ServiceWorker;
 class ServiceWorkerRegistration;
 class ServiceWorkerRegistrationDescriptor;
+class StorageManager;
 }  // namespace dom
 namespace ipc {
 class PrincipalInfo;
@@ -277,6 +278,8 @@ class nsIGlobalObject : public nsISupports,
   GetStorageKey();
   mozilla::Result<bool, nsresult> HasEqualStorageKey(
       const mozilla::ipc::PrincipalInfo& aStorageKey);
+
+  virtual mozilla::dom::StorageManager* GetStorageManager() { return nullptr; }
 
  protected:
   virtual ~nsIGlobalObject();
