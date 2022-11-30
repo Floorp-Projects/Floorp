@@ -6825,6 +6825,28 @@
         this.mBrowser.lastURI = aLocation;
         this.mBrowser.lastLocationChange = Date.now();
       }
+
+      // For now, only check for Feature Callout messages
+      // when viewing PDFs. Later, we can expand this to check
+      // for callout messages on every change of tab location.
+      if (aLocation.spec.endsWith(".pdf")) {
+        this.showFeatureCalloutIfApplicable(aLocation);
+      }
+    }
+
+    showFeatureCalloutIfApplicable(location) {
+      // Show Feature Callout in browser chrome when applicable
+      const { FeatureCallout } = ChromeUtils.importESModule(
+        "chrome://browser/content/featureCallout.mjs"
+      );
+      // Note - once we have additional browser chrome messages,
+      // only use PDF.js pref value when navigating to PDF viewer
+      let Callout = new FeatureCallout({
+        win: window,
+        prefName: "browser.pdfjs.feature-tour",
+        source: location.spec,
+      });
+      Callout.showFeatureCallout();
     }
 
     onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
