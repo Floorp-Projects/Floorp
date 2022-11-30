@@ -380,6 +380,8 @@ class FrameIter {
   // This is used to provide a raw interface for debugging.
   void* rawFramePtr() const;
 
+  bool inPrologue() const;
+
  private:
   Data data_;
   jit::InlineFrameIterator ionInlineFrames_;
