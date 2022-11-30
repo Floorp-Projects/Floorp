@@ -1,3 +1,13 @@
+commit 7c15f5fd3a6f7787768284a768b574f6c3b0dc96
+Author: Kelsey Gilbert <jdashg@gmail.com>
+Date:   Wed Nov 30 15:18:47 2022 -0800
+
+    [backport] Add test of gl_VertexID and gl_InstanceID.
+    
+    Includes details in new test about both state-of-specification, and known errata.
+    
+    Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1779800
+
 commit b60bd4bf29a9bcd0383f654cab59dd5dda649134
 Author: Jeff Gilbert <jdashg@gmail.com>
 Date:   Thu Aug 26 17:14:18 2021 -0700

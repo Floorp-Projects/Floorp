@@ -115,8 +115,9 @@ void WebGLBuffer::BufferData(const GLenum target, const uint64_t size,
   MOZ_ASSERT(uploadData);
 
   UniqueBuffer newIndexCache;
-  if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER &&
-      mContext->mNeedsIndexValidation) {
+  const bool needsIndexCache = mContext->mNeedsIndexValidation ||
+                               mContext->mMaybeNeedsLegacyVertexAttrib0Handling;
+  if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER && needsIndexCache) {
     newIndexCache = UniqueBuffer::Take(malloc(AssertedCast<size_t>(size)));
     if (!newIndexCache) {
       mContext->ErrorOutOfMemory("Failed to alloc index cache.");

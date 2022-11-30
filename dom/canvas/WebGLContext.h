@@ -867,7 +867,8 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   // PROTECTED
  protected:
   WebGLVertexAttrib0Status WhatDoesVertexAttrib0Need() const;
-  bool DoFakeVertexAttrib0(uint64_t vertexCount);
+  bool DoFakeVertexAttrib0(uint64_t fakeVertexCount,
+                           WebGLVertexAttrib0Status whatDoesAttrib0Need);
   void UndoFakeVertexAttrib0();
 
   bool mResetLayer = true;
@@ -1210,7 +1211,10 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   bool mDriverDepthTest = false;
   bool mDriverStencilTest = false;
 
+  bool mNeedsLegacyVertexAttrib0Handling = false;
+  bool mMaybeNeedsLegacyVertexAttrib0Handling = false;
   bool mNeedsIndexValidation = false;
+  bool mBug_DrawArraysInstancedUserAttribFetchAffectedByFirst = false;
 
   const bool mAllowFBInvalidation;
 

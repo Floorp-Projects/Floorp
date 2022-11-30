@@ -118,6 +118,7 @@ struct LinkedProgramInfo final : public RefCounted<LinkedProgramInfo>,
   mutable std::vector<size_t> componentsPerTFVert;
 
   bool attrib0Active = false;
+  GLint webgl_gl_VertexID_Offset = -1;  // Location
 
   // -
 

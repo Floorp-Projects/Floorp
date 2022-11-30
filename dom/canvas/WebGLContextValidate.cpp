@@ -8,6 +8,7 @@
 #include <algorithm>
 #include "GLSLANG/ShaderLang.h"
 #include "CanvasUtils.h"
+#include "gfxEnv.h"
 #include "GLContext.h"
 #include "jsfriendapi.h"
 #include "mozilla/CheckedInt.h"
@@ -542,6 +543,8 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
 
   mPrimRestartTypeBytes = 0;
 
+  // -
+
   mGenericVertexAttribTypes.assign(limits.maxVertexAttribs,
                                    webgl::AttribBaseType::Float);
   mGenericVertexAttribTypeInvalidator.InvalidateCaches();
@@ -551,6 +554,33 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
          sizeof(mGenericVertexAttrib0Data));
 
   mFakeVertexAttrib0BufferObject = 0;
+
+  mNeedsLegacyVertexAttrib0Handling = gl->IsCompatibilityProfile();
+  if (gl->WorkAroundDriverBugs() && kIsMacOS) {
+    // Failures in conformance/attribs/gl-disabled-vertex-attrib.
+    // Even in Core profiles on NV. Sigh.
+    mNeedsLegacyVertexAttrib0Handling |= (gl->Vendor() == gl::GLVendor::NVIDIA);
+
+    mBug_DrawArraysInstancedUserAttribFetchAffectedByFirst |=
+        (gl->Vendor() == gl::GLVendor::Intel);
+
+    // Failures for programs with no attribs:
+    // conformance/attribs/gl-vertex-attrib-unconsumed-out-of-bounds.html
+    mMaybeNeedsLegacyVertexAttrib0Handling = true;
+  }
+  mMaybeNeedsLegacyVertexAttrib0Handling |= mNeedsLegacyVertexAttrib0Handling;
+
+  if (const auto& env =
+          PR_GetEnv("MOZ_WEBGL_WORKAROUND_FIRST_AFFECTS_INSTANCE_ID")) {
+    const auto was = mBug_DrawArraysInstancedUserAttribFetchAffectedByFirst;
+    mBug_DrawArraysInstancedUserAttribFetchAffectedByFirst =
+        (std::string{env} != "0");
+    printf_stderr(
+        "mBug_DrawArraysInstancedUserAttribFetchAffectedByFirst: %i -> %i\n",
+        int(was), int(mBug_DrawArraysInstancedUserAttribFetchAffectedByFirst));
+  }
+
+  // -
 
   mNeedsIndexValidation =
       !gl->IsSupported(gl::GLFeature::robust_buffer_access_behavior);
