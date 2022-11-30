@@ -10,7 +10,6 @@
     "tabs",
     "storage",
     "clipboardWrite",
-    "browserSettings",
     "mozillaAddons",
     "about:*",
     "downloads"
