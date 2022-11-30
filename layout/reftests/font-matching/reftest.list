@@ -183,5 +183,13 @@ random-if(!winWidget&&!cocoaWidget) != wingdings-1.html wingdings-1-notref.html
 # Test for legacy name of Hiragino Sans, expected to work on macOS only
 skip-if(!cocoaWidget) != hiragino-kaku-1.html hiragino-kaku-1-notref.html
 
+pref(ui.font.menu,"serif") == system-font-pref.html system-font-pref.html
+# These make some assumptions about the menu font that seem to hold across
+# platforms, like menu being a sans font by default.
+test-pref(ui.font.menu,"serif") != system-font-pref.html system-font-pref.html
+pref(ui.font.menu,"serif") test-pref(ui.font.menu.italic,true) != system-font-pref.html system-font-pref.html
+pref(ui.font.menu,"serif") test-pref(ui.font.menu.size,"2.0") != system-font-pref.html system-font-pref.html
+pref(ui.font.menu,"serif") test-pref(ui.font.menu.weight,"800") != system-font-pref.html system-font-pref.html
+
 # Reset default prefs.
 defaults
