@@ -146,10 +146,13 @@ mozilla::LazyLogModule ApplicationReputationService::prlog(
 // reputation checks.
 /* static */
 const char* const ApplicationReputationService::kNonBinaryExecutables[] = {
+    // clang-format off
     ".ad",
+    ".afploc",
     ".air",
-    ".fileloc",
-    ".inetloc",
+    ".atloc",
+    ".ftploc",
+    // clang-format on
 };
 
 // Items that should be submitted for application reputation checks that users

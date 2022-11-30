@@ -1713,10 +1713,15 @@ nsLocalFile::IsExecutable(bool* aResult) {
 
     // Search for any of the set of executable extensions.
     static const char* const executableExts[] = {
+#ifdef MOZ_WIDGET_COCOA
+        "afploc",  // Can point to other files.
+#endif
         "air",  // Adobe AIR installer
 #ifdef MOZ_WIDGET_COCOA
+        "atloc",    // Can point to other files.
         "fileloc",  // File location files can be used to point to other
                     // files.
+        "ftploc",   // Can point to other files.
         "inetloc",  // Shouldn't be able to do the same, but can, due to
                     // macOS vulnerabilities.
 #endif

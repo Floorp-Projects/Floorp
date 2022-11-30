@@ -35,10 +35,12 @@ const char* const sExecutableExts[] = {
   ".ad",
   ".ade",         // access project extension
   ".adp",
+  ".afploc",      // Apple Filing Protocol Location
   ".air",         // Adobe AIR installer
   ".app",         // executable application
   ".application", // from bug 348763
   ".asp",
+  ".atloc",       // Appletalk Location
   ".bas",
   ".bat",
   ".cer",         // Signed certificate file
@@ -50,6 +52,7 @@ const char* const sExecutableExts[] = {
   ".der",
   ".exe",
   ".fileloc",     // Apple finder internet location data file
+  ".ftploc",      // Apple FTP Location
   ".fxp",         // FoxPro compiled app
   ".hlp",
   ".hta",

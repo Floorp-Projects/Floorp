@@ -17,6 +17,7 @@ static const char* const kTestFileExtensions[] = {
     ".ad",      // Windows (ignored for app rep)
     ".ade",     // MS Access
     ".adp",     // MS Access
+    ".afploc",  // Apple Filing Protocol Location (ignored for app rep)
     ".air",     // Adobe Air (ignored for app rep)
     ".apk",     // Android package
     ".app",     // Executable application
@@ -26,6 +27,7 @@ static const char* const kTestFileExtensions[] = {
     ".as",           // Mac archive
     ".asp",          // Windows Server script
     ".asx",          // Windows Media Player
+    ".atloc",        // Appletalk Location (ignored for app rep)
     ".bas",          // Basic script
     ".bash",         // Linux shell
     ".bat",          // Windows shell
@@ -87,6 +89,7 @@ static const char* const kTestFileExtensions[] = {
     ".exe",            // Windows executable
     ".fileloc",        // Apple finder internet location data file
     ".fon",            // Windows font
+    ".ftploc",         // Apple FTP Location (ignored for app rep)
     ".fxp",            // MS FoxPro
     ".gadget",         // Windows
     ".grp",            // Windows
@@ -97,14 +100,13 @@ static const char* const kTestFileExtensions[] = {
     ".hqx",            // Mac archive
     ".hta",            // HTML trusted application
     ".htm", ".html",
-    ".htt",      // MS HTML template
-    ".img",      // Mac disk image
-    ".imgpart",  // Mac disk image
-    ".inetloc",  // Apple finder internet location data file (ignored for app
-                 // rep)
-    ".inf",      // Windows installer
-    ".ini",      // Generic config file
-    ".ins",      // IIS config
+    ".htt",                // MS HTML template
+    ".img",                // Mac disk image
+    ".imgpart",            // Mac disk image
+    ".inetloc",            // Apple finder internet location data file
+    ".inf",                // Windows installer
+    ".ini",                // Generic config file
+    ".ins",                // IIS config
     ".internetconnect",    // Configuration file for Apple system
     ".iso",                // CD image
     ".isp",                // IIS config
