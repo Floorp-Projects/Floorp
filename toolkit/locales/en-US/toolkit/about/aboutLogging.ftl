@@ -22,6 +22,7 @@ about-logging-log-modules-selection = Log module selection
 about-logging-new-log-modules = New log modules:
 about-logging-logging-output-selection = Logging output
 about-logging-logging-to-file = Logging to a file
+about-logging-logging-to-profiler = Logging to the { -profiler-brand-name }
 about-logging-no-log-modules = None
 about-logging-logging-preset-selector-text = Logging preset:
 
