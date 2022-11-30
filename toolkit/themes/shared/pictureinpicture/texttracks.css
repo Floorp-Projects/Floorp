@@ -18,7 +18,7 @@
      * NOTE: if changing player.css values, change values here too.
      */
     --resize-margin: 5px;
-    --player-controls-height: calc(100% - 2 * var(--resize-margin));
+    --player-controls-height: calc(100vh - 2 * var(--resize-margin));
     --player-controls-bottom-distance: calc(100vh - var(--player-controls-height));
     --player-controls-button-height: 10vmax;
     --player-controls-button-max-height: 32px;
