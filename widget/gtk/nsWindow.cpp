@@ -3031,7 +3031,7 @@ void nsWindow::MoveToWorkspace(const nsAString& workspaceIDStr) {
 
 void nsWindow::SetUserTimeAndStartupTokenForActivatedWindow() {
   nsGTKToolkit* toolkit = nsGTKToolkit::GetToolkit();
-  if (!toolkit) {
+  if (!toolkit || MOZ_UNLIKELY(mWindowType == eWindowType_invisible)) {
     return;
   }
 
@@ -6616,7 +6616,9 @@ void nsWindow::NativeShow(bool aAction) {
       }
     }
     // Set up usertime/startupID metadata for the created window.
-    if (mWindowType != eWindowType_invisible) {
+    // On X11 we use gtk_window_set_startup_id() so we need to call it
+    // before show.
+    if (GdkIsX11Display()) {
       SetUserTimeAndStartupTokenForActivatedWindow();
     }
     if (GdkIsWaylandDisplay()) {
@@ -6625,17 +6627,19 @@ void nsWindow::NativeShow(bool aAction) {
       } else {
         ShowWaylandToplevelWindow();
       }
+    } else {
+      LOG("  calling gtk_widget_show(mShell)\n");
+      gtk_widget_show(mShell);
+    }
+    if (GdkIsWaylandDisplay()) {
+      SetUserTimeAndStartupTokenForActivatedWindow();
 #ifdef MOZ_WAYLAND
       auto token = std::move(mWindowActivationTokenFromEnv);
       if (!token.IsEmpty()) {
         FocusWaylandWindow(token.get());
       }
 #endif
-    } else {
-      LOG("  calling gtk_widget_show(mShell)\n");
-      gtk_widget_show(mShell);
     }
-
     if (mHiddenPopupPositioned && IsPopup()) {
       LOG("  re-position hidden popup window");
       gtk_window_move(GTK_WINDOW(mShell), mPopupPosition.x, mPopupPosition.y);
