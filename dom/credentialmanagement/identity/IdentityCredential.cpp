@@ -231,6 +231,22 @@ IdentityCredential::CreateCredential(nsIPrincipal* aPrincipal,
           })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
+          [argumentPrincipal, browsingContext,
+           aProvider](const Tuple<IdentityInternalManifest, IdentityAccount>&
+                          promiseResult) {
+            IdentityInternalManifest currentManifest;
+            IdentityAccount account;
+            Tie(currentManifest, account) = promiseResult;
+            return IdentityCredential::PromptUserWithPolicy(
+                browsingContext, argumentPrincipal, account, currentManifest,
+                aProvider);
+          },
+          [](nsresult error) {
+            return IdentityCredential::GetAccountPromise::CreateAndReject(
+                error, __func__);
+          })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
           [argumentPrincipal,
            aProvider](const Tuple<IdentityInternalManifest, IdentityAccount>&
                           promiseResult) {
@@ -553,6 +569,53 @@ RefPtr<IdentityCredential::GetTokenPromise> IdentityCredential::FetchToken(
 }
 
 // static
+RefPtr<IdentityCredential::GetMetadataPromise>
+IdentityCredential::FetchMetadata(nsIPrincipal* aPrincipal,
+                                  const IdentityInternalManifest& aManifest) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(aPrincipal);
+  // Build the URL
+  nsCString configLocation =
+      NS_ConvertUTF16toUTF8(aManifest.mClient_metadata_endpoint);
+
+  // Create the global
+  nsIXPConnect* xpc = nsContentUtils::XPConnect();
+  MOZ_ASSERT(xpc, "This should never be null!");
+  nsCOMPtr<nsIGlobalObject> global;
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JSObject*> sandbox(cx);
+  nsresult rv = xpc->CreateSandbox(cx, aPrincipal, sandbox.address());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return IdentityCredential::GetMetadataPromise::CreateAndReject(rv,
+                                                                   __func__);
+  }
+  MOZ_ASSERT(JS_IsGlobalObject(sandbox));
+  global = xpc::NativeGlobal(sandbox);
+  if (NS_WARN_IF(!global)) {
+    return IdentityCredential::GetMetadataPromise::CreateAndReject(
+        NS_ERROR_FAILURE, __func__);
+  }
+
+  // Create a new request
+  constexpr auto fragment = ""_ns;
+  auto internalRequest =
+      MakeSafeRefPtr<InternalRequest>(configLocation, fragment);
+  internalRequest->SetRedirectMode(RequestRedirect::Error);
+  internalRequest->SetCredentialsMode(RequestCredentials::Omit);
+  internalRequest->SetReferrerPolicy(ReferrerPolicy::No_referrer);
+  internalRequest->SetMode(RequestMode::Cors);
+  internalRequest->SetCacheMode(RequestCache::No_cache);
+  internalRequest->SetHeaders(new InternalHeaders(HeadersGuardEnum::Request));
+  internalRequest->OverrideContentPolicyType(
+      nsContentPolicyType::TYPE_WEB_IDENTITY);
+  RefPtr<Request> request =
+      new Request(global, std::move(internalRequest), nullptr);
+  return FetchJSONStructure<IdentityClientMetadata>(request);
+}
+
+// static
 RefPtr<IdentityCredential::GetIdentityProviderPromise>
 IdentityCredential::PromptUserToSelectProvider(
     BrowsingContext* aBrowsingContext,
@@ -663,6 +726,126 @@ IdentityCredential::PromptUserToSelectAccount(
   showPromptPromise->AppendNativeHandler(listener);
 
   return resultPromise;
+}
+
+// static
+RefPtr<IdentityCredential::GetAccountPromise>
+IdentityCredential::PromptUserWithPolicy(
+    BrowsingContext* aBrowsingContext, nsIPrincipal* aPrincipal,
+    const IdentityAccount& aAccount, const IdentityInternalManifest& aManifest,
+    const IdentityProvider& aProvider) {
+  MOZ_ASSERT(aBrowsingContext);
+  MOZ_ASSERT(aPrincipal);
+
+  nsresult error;
+  nsCOMPtr<nsIIdentityCredentialStorageService> icStorageService =
+      mozilla::components::IdentityCredentialStorageService::Service(&error);
+  if (NS_WARN_IF(!icStorageService)) {
+    return IdentityCredential::GetAccountPromise::CreateAndReject(error,
+                                                                  __func__);
+  }
+
+  // Check the storage bit
+  nsCString configLocation =
+      NS_ConvertUTF16toUTF8(aManifest.mAccounts_endpoint);
+  nsCOMPtr<nsIURI> idpURI;
+  error = NS_NewURI(getter_AddRefs(idpURI), configLocation);
+  if (NS_WARN_IF(NS_FAILED(error))) {
+    return IdentityCredential::GetAccountPromise::CreateAndReject(error,
+                                                                  __func__);
+  }
+  bool registered = false;
+  bool allowLogout = false;
+  nsCOMPtr<nsIPrincipal> idpPrincipal = BasePrincipal::CreateContentPrincipal(
+      idpURI, aPrincipal->OriginAttributesRef());
+  error = icStorageService->GetState(aPrincipal, idpPrincipal,
+                                     NS_ConvertUTF16toUTF8(aAccount.mId),
+                                     &registered, &allowLogout);
+  if (NS_WARN_IF(NS_FAILED(error))) {
+    return IdentityCredential::GetAccountPromise::CreateAndReject(error,
+                                                                  __func__);
+  }
+
+  // if registered, return
+  if (registered) {
+    return IdentityCredential::GetAccountPromise::CreateAndResolve(
+        MakeTuple(aManifest, aAccount), __func__);
+  }
+
+  // otherwise, fetch ->Then display ->Then return ->Catch reject
+  RefPtr<BrowsingContext> browsingContext(aBrowsingContext);
+  return FetchMetadata(aPrincipal, aManifest)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [aProvider, browsingContext](const IdentityClientMetadata& metadata)
+              -> RefPtr<GenericPromise> {
+            nsresult error;
+            nsCOMPtr<nsIIdentityCredentialPromptService> icPromptService =
+                mozilla::components::IdentityCredentialPromptService::Service(
+                    &error);
+            if (NS_WARN_IF(!icPromptService)) {
+              return GenericPromise::CreateAndReject(error, __func__);
+            }
+            nsCOMPtr<nsIXPConnectWrappedJS> wrapped =
+                do_QueryInterface(icPromptService);
+            AutoJSAPI jsapi;
+            if (NS_WARN_IF(!jsapi.Init(wrapped->GetJSObjectGlobal()))) {
+              return GenericPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                     __func__);
+            }
+
+            JS::Rooted<JS::Value> providerJS(jsapi.cx());
+            bool success = ToJSValue(jsapi.cx(), aProvider, &providerJS);
+            if (NS_WARN_IF(!success)) {
+              return GenericPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                     __func__);
+            }
+            JS::Rooted<JS::Value> metadataJS(jsapi.cx());
+            success = ToJSValue(jsapi.cx(), metadata, &metadataJS);
+            if (NS_WARN_IF(!success)) {
+              return GenericPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                     __func__);
+            }
+
+            RefPtr<Promise> showPromptPromise;
+            icPromptService->ShowPolicyPrompt(
+                browsingContext, providerJS, metadataJS,
+                getter_AddRefs(showPromptPromise));
+
+            RefPtr<GenericPromise::Private> resultPromise =
+                new GenericPromise::Private(__func__);
+            RefPtr<DomPromiseListener> listener = new DomPromiseListener(
+                [resultPromise](JSContext* aCx, JS::Handle<JS::Value> aValue) {
+                  bool isBool = aValue.isBoolean();
+                  if (!isBool) {
+                    resultPromise->Reject(NS_ERROR_FAILURE, __func__);
+                    return;
+                  }
+                  resultPromise->Resolve(aValue.toBoolean(), __func__);
+                },
+                [resultPromise](nsresult aRv) {
+                  resultPromise->Reject(aRv, __func__);
+                });
+            showPromptPromise->AppendNativeHandler(listener);
+            return resultPromise;
+          },
+          [](nsresult error) {
+            return GenericPromise::CreateAndReject(error, __func__);
+          })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [aManifest, aAccount](bool success) {
+            if (success) {
+              return IdentityCredential::GetAccountPromise::CreateAndResolve(
+                  MakeTuple(aManifest, aAccount), __func__);
+            }
+            return IdentityCredential::GetAccountPromise::CreateAndReject(
+                NS_ERROR_FAILURE, __func__);
+          },
+          [](nsresult error) {
+            return IdentityCredential::GetAccountPromise::CreateAndReject(
+                error, __func__);
+          });
 }
 
 // static

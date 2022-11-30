@@ -35,7 +35,7 @@ function handleRequest(request, response) {
     accounts_endpoint:
       "https://example.net/tests/dom/credentialmanagement/identity/tests/mochitest/server_TESTNAME_accounts.sjs",
     client_metadata_endpoint:
-      "https://example.net/tests/dom/credentialmanagement/identity/tests/mochitest/server_TESTNAME_metadata.sjs",
+      "https://example.net/tests/dom/credentialmanagement/identity/tests/mochitest/server_metadata.json",
     id_token_endpoint:
       "https://example.net/tests/dom/credentialmanagement/identity/tests/mochitest/server_TESTNAME_idtoken.sjs",
   };
