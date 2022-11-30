@@ -47,11 +47,17 @@ interface nsIDocumentEncoder : nsISupports
    */
   const unsigned long OutputSelectionOnly = (1 << 0);
 
-  /** Plaintext output: Convert html to plaintext that looks like the html.
-    * Can't be used in conjunction with `OutputPreformatted`.
-    * Implies wrap (except inside <pre>), since html wraps.
-    * HTML, XHTML and XML output: do prettyprinting, ignoring existing formatting.
-    * XML output : it doesn't implicitly wrap
+  /**
+    * Plaintext output:
+    * - Convert html to plaintext that looks like the html.
+    * - Can't be used in conjunction with `OutputPreformatted`.
+    * - Implies wrap (except inside <pre>), since html wraps.
+    * HTML and XHTML output:
+    * - Do prettyprinting, ignoring existing formatting.
+    * - Implies wrap (except in attribute values and inside <pre>).
+    * XML output:
+    * - Do prettyprinting, ignoring existing formatting.
+    * - Doesn't implicitly wrap
     */
   const unsigned long OutputFormatted     = (1 << 1);
 
@@ -84,6 +90,7 @@ interface nsIDocumentEncoder : nsISupports
    * Supported in XML, XHTML, HTML and Plaintext output.
    * Set implicitly in HTML/XHTML output when no OutputRaw.
    * Ignored when OutputRaw.
+   * For XML, XHTML and  HTML: does not wrap values in attributes.
    * XXXLJ: set implicitly in HTML/XHTML output, to keep compatible behaviors
    *        for old callers of this interface
    * XXXbz How does this interact with OutputFormatFlowed?

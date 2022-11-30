@@ -19,7 +19,7 @@ async function xmlEncode(aFile, aFlags, aCharset) {
   return encoder.encodeToString();
 }
 
-add_task(async function() {
+add_task(async function test_encoding() {
   var result, expected;
   const de = Ci.nsIDocumentEncoder;
 
@@ -119,5 +119,61 @@ add_task(async function() {
   encoder.setWrapColumn(40);
   result = encoder.encodeToString();
   expected = loadContentFile("4_result_6.xml");
+  Assert.equal(expected, result);
+});
+
+// OutputRaw should cause OutputWrap and OutputFormatted to be ignored.
+// Check by encoding each test file and making sure the result matches what
+// was fed in.
+add_task(async function test_outputRaw() {
+  let result, expected;
+  const de = Ci.nsIDocumentEncoder;
+
+  expected = loadContentFile("2_original.xml");
+  result = await xmlEncode(
+    "2_original.xml",
+    de.OutputRaw | de.OutputLFLineBreak | de.OutputWrap
+  );
+  Assert.equal(expected, result);
+
+  result = await xmlEncode(
+    "2_original.xml",
+    de.OutputRaw | de.OutputLFLineBreak | de.OutputFormatted | de.OutputWrap
+  );
+  Assert.equal(expected, result);
+
+  expected = loadContentFile("3_original.xml");
+  result = await xmlEncode(
+    "3_original.xml",
+    de.OutputRaw | de.OutputLFLineBreak | de.OutputWrap
+  );
+  Assert.equal(expected, result);
+
+  result = await xmlEncode(
+    "3_original.xml",
+    de.OutputRaw | de.OutputLFLineBreak | de.OutputFormatted | de.OutputWrap
+  );
+  Assert.equal(expected, result);
+
+  expected = loadContentFile("4_original.xml");
+  let doc = await do_parse_document("4_original.xml", "text/xml");
+  let encoder = Cu.createDocumentEncoder("text/xml");
+  encoder.setCharset("UTF-8");
+  encoder.init(
+    doc,
+    "text/xml",
+    de.OutputRaw | de.OutputLFLineBreak | de.OutputWrap
+  );
+  encoder.setWrapColumn(40);
+  result = encoder.encodeToString();
+  Assert.equal(expected, result);
+
+  encoder.init(
+    doc,
+    "text/xml",
+    de.OutputRaw | de.OutputLFLineBreak | de.OutputFormatted | de.OutputWrap
+  );
+  encoder.setWrapColumn(40);
+  result = encoder.encodeToString();
   Assert.equal(expected, result);
 });

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE whatever PUBLIC "-//MOZ//WHATEVER//EN" "http://mozilla.org/ns/foo">
 <foo xmlns="http://mozilla.org/ns"
-  xmlns:falsexul="http://mozilla.org/ns3">
+xmlns:falsexul="http://mozilla.org/ns3">
   <!-- document to test namespaces-->
   <baz/>
   <bar> &lt;robots&gt; &amp;
@@ -27,7 +27,7 @@ xmlns:other="http://mozilla.org/ns/other">
       <other:what>lorem ipsum</other:what>
       <description>xul fake</description>
       <what
-        xmlns="http://mozilla.org/ns/other">lorem
+xmlns="http://mozilla.org/ns/other">lorem
         ipsum
         <falsexul:label value="hello"/>
         the return</what>

@@ -665,12 +665,17 @@ bool nsXMLContentSerializer::SerializeAttr(const nsAString& aPrefix,
     NS_ENSURE_TRUE(attrString.Append(sValue, mozilla::fallible), false);
     NS_ENSURE_TRUE(attrString.Append(cDelimiter, mozilla::fallible), false);
   }
-  if (mDoRaw || PreLevel() > 0) {
-    NS_ENSURE_TRUE(AppendToStringConvertLF(attrString, aStr), false);
-  } else if (mDoFormat) {
-    NS_ENSURE_TRUE(AppendToStringFormatedWrapped(attrString, aStr), false);
-  } else if (mDoWrap) {
-    NS_ENSURE_TRUE(AppendToStringWrapped(attrString, aStr), false);
+
+  if (mDoWrap && mColPos + attrString.Length() > mMaxColumn) {
+    // Attr would cause us to overrun the max width, so begin a new line.
+    NS_ENSURE_TRUE(AppendNewLineToString(aStr), false);
+
+    // Chomp the leading space.
+    nsDependentSubstring chomped(attrString, 1);
+    if (mDoFormat && mIndent.Length() + chomped.Length() <= mMaxColumn) {
+      NS_ENSURE_TRUE(AppendIndentation(aStr), false);
+    }
+    NS_ENSURE_TRUE(AppendToStringConvertLF(chomped, aStr), false);
   } else {
     NS_ENSURE_TRUE(AppendToStringConvertLF(attrString, aStr), false);
   }
