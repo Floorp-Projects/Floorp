@@ -289,31 +289,6 @@ BaseWebSocketChannel::GetScheme(nsACString& aScheme) {
 }
 
 NS_IMETHODIMP
-BaseWebSocketChannel::GetDefaultPort(int32_t* aDefaultPort) {
-  LOG(("BaseWebSocketChannel::GetDefaultPort() %p\n", this));
-
-  if (mEncrypted) {
-    *aDefaultPort = kDefaultWSSPort;
-  } else {
-    *aDefaultPort = kDefaultWSPort;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BaseWebSocketChannel::GetProtocolFlags(uint32_t* aProtocolFlags) {
-  LOG(("BaseWebSocketChannel::GetProtocolFlags() %p\n", this));
-
-  *aProtocolFlags = URI_NORELATIVE | URI_NON_PERSISTABLE | ALLOWS_PROXY |
-                    ALLOWS_PROXY_HTTP | URI_DOES_NOT_RETURN_DATA |
-                    URI_DANGEROUS_TO_LOAD;
-  if (mEncrypted) {
-    *aProtocolFlags |= URI_IS_POTENTIALLY_TRUSTWORTHY;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 BaseWebSocketChannel::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
                                  nsIChannel** outChannel) {
   LOG(("BaseWebSocketChannel::NewChannel() %p\n", this));

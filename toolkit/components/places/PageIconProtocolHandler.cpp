@@ -181,18 +181,6 @@ NS_IMETHODIMP PageIconProtocolHandler::GetScheme(nsACString& aScheme) {
   return NS_OK;
 }
 
-NS_IMETHODIMP PageIconProtocolHandler::GetDefaultPort(int32_t* aPort) {
-  *aPort = -1;
-  return NS_OK;
-}
-
-NS_IMETHODIMP PageIconProtocolHandler::GetProtocolFlags(uint32_t* aFlags) {
-  *aFlags = URI_STD | URI_IS_UI_RESOURCE | URI_IS_LOCAL_RESOURCE |
-            URI_NORELATIVE | URI_NOAUTH;
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP PageIconProtocolHandler::AllowPort(int32_t, const char*,
                                                  bool* aAllow) {
   *aAllow = false;

@@ -1152,20 +1152,6 @@ nsJSProtocolHandler::GetScheme(nsACString& result) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsJSProtocolHandler::GetDefaultPort(int32_t* result) {
-  *result = -1;  // no port for javascript: URLs
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJSProtocolHandler::GetProtocolFlags(uint32_t* result) {
-  *result = URI_NORELATIVE | URI_NOAUTH | URI_INHERITS_SECURITY_CONTEXT |
-            URI_LOADABLE_BY_ANYONE | URI_NON_PERSISTABLE |
-            URI_OPENING_EXECUTES_SCRIPT;
-  return NS_OK;
-}
-
 /* static */ nsresult nsJSProtocolHandler::CreateNewURI(const nsACString& aSpec,
                                                         const char* aCharset,
                                                         nsIURI* aBaseURI,
