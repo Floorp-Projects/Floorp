@@ -21,19 +21,6 @@ ProtocolHandler.prototype = {
   get scheme() {
     return "x-bug894586";
   },
-  get defaultPort() {
-    return -1;
-  },
-  get protocolFlags() {
-    return (
-      Ci.nsIProtocolHandler.URI_NORELATIVE |
-      Ci.nsIProtocolHandler.URI_NOAUTH |
-      Ci.nsIProtocolHandler.URI_IS_UI_RESOURCE |
-      Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE |
-      Ci.nsIProtocolHandler.URI_NON_PERSISTABLE |
-      Ci.nsIProtocolHandler.URI_SYNC_LOAD_IS_OK
-    );
-  },
   newChannel(aURI, aLoadInfo) {
     this.loadInfo = aLoadInfo;
     return this;
@@ -106,19 +93,12 @@ ProtocolHandler.prototype = {
     Ci.nsIRequest.INHIBIT_CACHING |
     Ci.nsIRequest.LOAD_BYPASS_CACHE,
 
-  /** nsIFactory */
-  createInstance(aIID) {
-    return this.QueryInterface(aIID);
-  },
-
   /** nsISupports */
   QueryInterface: ChromeUtils.generateQI([
     "nsIProtocolHandler",
     "nsIRequest",
     "nsIChannel",
-    "nsIFactory",
   ]),
-  classID: Components.ID("{16d594bc-d9d8-47ae-a139-ea714dc0c35c}"),
 };
 
 /**
@@ -127,12 +107,17 @@ ProtocolHandler.prototype = {
  */
 function run_test() {
   var handler = new ProtocolHandler();
-  var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  registrar.registerFactory(
-    handler.classID,
-    "",
-    "@mozilla.org/network/protocol;1?name=" + handler.scheme,
-    handler
+
+  Services.io.registerProtocolHandler(
+    handler.scheme,
+    handler,
+    Ci.nsIProtocolHandler.URI_NORELATIVE |
+      Ci.nsIProtocolHandler.URI_NOAUTH |
+      Ci.nsIProtocolHandler.URI_IS_UI_RESOURCE |
+      Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE |
+      Ci.nsIProtocolHandler.URI_NON_PERSISTABLE |
+      Ci.nsIProtocolHandler.URI_SYNC_LOAD_IS_OK,
+    -1
   );
   try {
     var ss = Cc["@mozilla.org/content/style-sheet-service;1"].getService(
@@ -143,7 +128,7 @@ function run_test() {
       ss.sheetRegistered(handler.uri, Ci.nsIStyleSheetService.AGENT_SHEET)
     );
   } finally {
-    registrar.unregisterFactory(handler.classID, handler);
+    Services.io.unregisterProtocolHandler(handler.scheme);
   }
 }
 

@@ -18,10 +18,7 @@ var uris = [
 function run_test() {
   for (let i = 0; i < uris.length; i++) {
     let uri = ios.newURI(uris[i].uri);
-    let handler = ios
-      .getProtocolHandler(uri.scheme)
-      .QueryInterface(Ci.nsIProtocolHandler);
-    let flags = handler.protocolFlags;
+    let flags = ios.getDynamicProtocolFlags(uri);
 
     Assert.equal(
       Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE & flags,

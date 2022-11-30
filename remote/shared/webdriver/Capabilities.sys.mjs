@@ -249,7 +249,7 @@ export class Proxy {
         if (scheme === "socks") {
           port = null;
         } else {
-          port = Services.io.getProtocolHandler(scheme).defaultPort;
+          port = Services.io.getDefaultPort(scheme);
         }
       }
 

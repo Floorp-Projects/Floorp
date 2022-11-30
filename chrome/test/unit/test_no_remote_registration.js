@@ -7,14 +7,11 @@
 var manifests = [do_get_file("data/test_no_remote_registration.manifest")];
 registerManifests(manifests);
 
-function ProtocolHandler(aScheme, aFlags) {
+function ProtocolHandler(aScheme) {
   this.scheme = aScheme;
-  this.protocolFlags = aFlags;
-  this.contractID = "@mozilla.org/network/protocol;1?name=" + aScheme;
 }
 
 ProtocolHandler.prototype = {
-  defaultPort: -1,
   allowPort: () => false,
   newChannel() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
@@ -28,7 +25,6 @@ var testProtocols = [
   {
     scheme: "moz-protocol-ui-resource",
     flags: Ci.nsIProtocolHandler.URI_IS_UI_RESOURCE,
-    CID: Components.ID("{d6dedc93-558f-44fe-90f4-3b4bba8a0b14}"),
     shouldRegister: false,
   },
   // It doesn't matter if it has this flag - the only flag we accept is
@@ -36,21 +32,18 @@ var testProtocols = [
   {
     scheme: "moz-protocol-local-file",
     flags: Ci.nsIProtocolHandler.URI_IS_LOCAL_FILE,
-    CID: Components.ID("{ee30d594-0a2d-4f47-89cc-d4cde320ab69}"),
     shouldRegister: false,
   },
   // This clearly is non-local
   {
     scheme: "moz-protocol-loadable-by-anyone",
     flags: Ci.nsIProtocolHandler.URI_LOADABLE_BY_ANYONE,
-    CID: Components.ID("{c3735f23-3b0c-4a33-bfa0-79436dcd40b2}"),
     shouldRegister: false,
   },
   // This should always be last (unless we add more flags that are OK)
   {
     scheme: "moz-protocol-local-resource",
     flags: Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE,
-    CID: Components.ID("{b79e977c-f840-469a-b413-0125cc1b62a5}"),
     shouldRegister: true,
   },
 ];
@@ -77,34 +70,16 @@ function run_test() {
     },
   };
 
-  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-
-  // Create factories
-  let factories = [];
-  for (let i = 0; i < testProtocols.length; i++) {
-    factories[i] = {
-      scheme: testProtocols[i].scheme,
-      flags: testProtocols[i].flags,
-      CID: testProtocols[i].CID,
-      contractID:
-        "@mozilla.org/network/protocol;1?name=" + testProtocols[i].scheme,
-      createInstance(aIID) {
-        let handler = new ProtocolHandler(this.scheme, this.flags, this.CID);
-        return handler.QueryInterface(aIID);
-      },
-    };
-  }
-
-  // Register our factories
-  for (let i = 0; i < factories.length; i++) {
-    let factory = factories[i];
-    registrar.registerFactory(
-      factory.CID,
-      "test-" + factory.scheme,
-      factory.contractID,
-      factory
+  for (let protocol of testProtocols) {
+    Services.io.registerProtocolHandler(
+      protocol.scheme,
+      new ProtocolHandler(protocol.scheme),
+      protocol.flags,
+      -1
     );
   }
+
+  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
   // Register the XULAppInfoFactory
   // Make sure the class ID has not already been registered
@@ -209,10 +184,9 @@ function run_test() {
     }
   }
 
-  // Unregister our factories so we do not leak
-  for (let i = 0; i < factories.length; i++) {
-    let factory = factories[i];
-    registrar.unregisterFactory(factory.CID, factory);
+  // Unregister our protocol handlers so we do not leak
+  for (let protocol of testProtocols) {
+    Services.io.unregisterProtocolHandler(protocol.scheme);
   }
 
   // Unregister XULAppInfoFactory
