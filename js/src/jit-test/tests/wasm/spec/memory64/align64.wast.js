@@ -16,864 +16,569 @@
 // ./test/core/align64.wast
 
 // ./test/core/align64.wast:3
-let $0 = instantiate(
-  `(module (memory i64 0) (func (drop (i32.load8_s align=1 (i64.const 0)))))`,
-);
+let $0 = instantiate(`(module (memory i64 0) (func (drop (i32.load8_s align=1 (i64.const 0)))))`);
 
 // ./test/core/align64.wast:4
-let $1 = instantiate(
-  `(module (memory i64 0) (func (drop (i32.load8_u align=1 (i64.const 0)))))`,
-);
+let $1 = instantiate(`(module (memory i64 0) (func (drop (i32.load8_u align=1 (i64.const 0)))))`);
 
 // ./test/core/align64.wast:5
-let $2 = instantiate(
-  `(module (memory i64 0) (func (drop (i32.load16_s align=2 (i64.const 0)))))`,
-);
+let $2 = instantiate(`(module (memory i64 0) (func (drop (i32.load16_s align=2 (i64.const 0)))))`);
 
 // ./test/core/align64.wast:6
-let $3 = instantiate(
-  `(module (memory i64 0) (func (drop (i32.load16_u align=2 (i64.const 0)))))`,
-);
+let $3 = instantiate(`(module (memory i64 0) (func (drop (i32.load16_u align=2 (i64.const 0)))))`);
 
 // ./test/core/align64.wast:7
-let $4 = instantiate(
-  `(module (memory i64 0) (func (drop (i32.load align=4 (i64.const 0)))))`,
-);
+let $4 = instantiate(`(module (memory i64 0) (func (drop (i32.load align=4 (i64.const 0)))))`);
 
 // ./test/core/align64.wast:8
-let $5 = instantiate(
-  `(module (memory i64 0) (func (drop (i64.load8_s align=1 (i64.const 0)))))`,
-);
+let $5 = instantiate(`(module (memory i64 0) (func (drop (i64.load8_s align=1 (i64.const 0)))))`);
 
 // ./test/core/align64.wast:9
-let $6 = instantiate(
-  `(module (memory i64 0) (func (drop (i64.load8_u align=1 (i64.const 0)))))`,
-);
+let $6 = instantiate(`(module (memory i64 0) (func (drop (i64.load8_u align=1 (i64.const 0)))))`);
 
 // ./test/core/align64.wast:10
-let $7 = instantiate(
-  `(module (memory i64 0) (func (drop (i64.load16_s align=2 (i64.const 0)))))`,
-);
+let $7 = instantiate(`(module (memory i64 0) (func (drop (i64.load16_s align=2 (i64.const 0)))))`);
 
 // ./test/core/align64.wast:11
-let $8 = instantiate(
-  `(module (memory i64 0) (func (drop (i64.load16_u align=2 (i64.const 0)))))`,
-);
+let $8 = instantiate(`(module (memory i64 0) (func (drop (i64.load16_u align=2 (i64.const 0)))))`);
 
 // ./test/core/align64.wast:12
-let $9 = instantiate(
-  `(module (memory i64 0) (func (drop (i64.load32_s align=4 (i64.const 0)))))`,
-);
+let $9 = instantiate(`(module (memory i64 0) (func (drop (i64.load32_s align=4 (i64.const 0)))))`);
 
 // ./test/core/align64.wast:13
-let $10 = instantiate(
-  `(module (memory i64 0) (func (drop (i64.load32_u align=4 (i64.const 0)))))`,
-);
+let $10 = instantiate(`(module (memory i64 0) (func (drop (i64.load32_u align=4 (i64.const 0)))))`);
 
 // ./test/core/align64.wast:14
-let $11 = instantiate(
-  `(module (memory i64 0) (func (drop (i64.load align=8 (i64.const 0)))))`,
-);
+let $11 = instantiate(`(module (memory i64 0) (func (drop (i64.load align=8 (i64.const 0)))))`);
 
 // ./test/core/align64.wast:15
-let $12 = instantiate(
-  `(module (memory i64 0) (func (drop (f32.load align=4 (i64.const 0)))))`,
-);
+let $12 = instantiate(`(module (memory i64 0) (func (drop (f32.load align=4 (i64.const 0)))))`);
 
 // ./test/core/align64.wast:16
-let $13 = instantiate(
-  `(module (memory i64 0) (func (drop (f64.load align=8 (i64.const 0)))))`,
-);
+let $13 = instantiate(`(module (memory i64 0) (func (drop (f64.load align=8 (i64.const 0)))))`);
 
 // ./test/core/align64.wast:17
-let $14 = instantiate(
-  `(module (memory i64 0) (func (i32.store8 align=1 (i64.const 0) (i32.const 1))))`,
-);
+let $14 = instantiate(`(module (memory i64 0) (func (i32.store8 align=1 (i64.const 0) (i32.const 1))))`);
 
 // ./test/core/align64.wast:18
-let $15 = instantiate(
-  `(module (memory i64 0) (func (i32.store16 align=2 (i64.const 0) (i32.const 1))))`,
-);
+let $15 = instantiate(`(module (memory i64 0) (func (i32.store16 align=2 (i64.const 0) (i32.const 1))))`);
 
 // ./test/core/align64.wast:19
-let $16 = instantiate(
-  `(module (memory i64 0) (func (i32.store align=4 (i64.const 0) (i32.const 1))))`,
-);
+let $16 = instantiate(`(module (memory i64 0) (func (i32.store align=4 (i64.const 0) (i32.const 1))))`);
 
 // ./test/core/align64.wast:20
-let $17 = instantiate(
-  `(module (memory i64 0) (func (i64.store8 align=1 (i64.const 0) (i64.const 1))))`,
-);
+let $17 = instantiate(`(module (memory i64 0) (func (i64.store8 align=1 (i64.const 0) (i64.const 1))))`);
 
 // ./test/core/align64.wast:21
-let $18 = instantiate(
-  `(module (memory i64 0) (func (i64.store16 align=2 (i64.const 0) (i64.const 1))))`,
-);
+let $18 = instantiate(`(module (memory i64 0) (func (i64.store16 align=2 (i64.const 0) (i64.const 1))))`);
 
 // ./test/core/align64.wast:22
-let $19 = instantiate(
-  `(module (memory i64 0) (func (i64.store32 align=4 (i64.const 0) (i64.const 1))))`,
-);
+let $19 = instantiate(`(module (memory i64 0) (func (i64.store32 align=4 (i64.const 0) (i64.const 1))))`);
 
 // ./test/core/align64.wast:23
-let $20 = instantiate(
-  `(module (memory i64 0) (func (i64.store align=8 (i64.const 0) (i64.const 1))))`,
-);
+let $20 = instantiate(`(module (memory i64 0) (func (i64.store align=8 (i64.const 0) (i64.const 1))))`);
 
 // ./test/core/align64.wast:24
-let $21 = instantiate(
-  `(module (memory i64 0) (func (f32.store align=4 (i64.const 0) (f32.const 1.0))))`,
-);
+let $21 = instantiate(`(module (memory i64 0) (func (f32.store align=4 (i64.const 0) (f32.const 1.0))))`);
 
 // ./test/core/align64.wast:25
-let $22 = instantiate(
-  `(module (memory i64 0) (func (f64.store align=8 (i64.const 0) (f64.const 1.0))))`,
-);
+let $22 = instantiate(`(module (memory i64 0) (func (f64.store align=8 (i64.const 0) (f64.const 1.0))))`);
 
 // ./test/core/align64.wast:27
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i32.load8_s align=0 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i32.load8_s align=0 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:33
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i32.load8_s align=7 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i32.load8_s align=7 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:39
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i32.load8_u align=0 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i32.load8_u align=0 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:45
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i32.load8_u align=7 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i32.load8_u align=7 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:51
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i32.load16_s align=0 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i32.load16_s align=0 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:57
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i32.load16_s align=7 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i32.load16_s align=7 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:63
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i32.load16_u align=0 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i32.load16_u align=0 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:69
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i32.load16_u align=7 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i32.load16_u align=7 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:75
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i32.load align=0 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i32.load align=0 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:81
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i32.load align=7 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i32.load align=7 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:87
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load8_s align=0 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load8_s align=0 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:93
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load8_s align=7 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load8_s align=7 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:99
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load8_u align=0 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load8_u align=0 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:105
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load8_u align=7 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load8_u align=7 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:111
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load16_s align=0 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load16_s align=0 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:117
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load16_s align=7 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load16_s align=7 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:123
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load16_u align=0 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load16_u align=0 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:129
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load16_u align=7 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load16_u align=7 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:135
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load32_s align=0 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load32_s align=0 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:141
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load32_s align=7 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load32_s align=7 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:147
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load32_u align=0 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load32_u align=0 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:153
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load32_u align=7 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load32_u align=7 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:159
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load align=0 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load align=0 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:165
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load align=7 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load align=7 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:171
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (f32.load align=0 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (f32.load align=0 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:177
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (f32.load align=7 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (f32.load align=7 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:183
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (f64.load align=0 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (f64.load align=0 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:189
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (f64.load align=7 (i64.const 0))))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (f64.load align=7 (i64.const 0))))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:196
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i32.store8 align=0 (i64.const 0) (i32.const 0)))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i32.store8 align=0 (i64.const 0) (i32.const 0)))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:202
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i32.store8 align=7 (i64.const 0) (i32.const 0)))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i32.store8 align=7 (i64.const 0) (i32.const 0)))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:208
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i32.store16 align=0 (i64.const 0) (i32.const 0)))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i32.store16 align=0 (i64.const 0) (i32.const 0)))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:214
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i32.store16 align=7 (i64.const 0) (i32.const 0)))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i32.store16 align=7 (i64.const 0) (i32.const 0)))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:220
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i32.store align=0 (i64.const 0) (i32.const 0)))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i32.store align=0 (i64.const 0) (i32.const 0)))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:226
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i32.store align=7 (i64.const 0) (i32.const 0)))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i32.store align=7 (i64.const 0) (i32.const 0)))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:232
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i64.store8 align=0 (i64.const 0) (i64.const 0)))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i64.store8 align=0 (i64.const 0) (i64.const 0)))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:238
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i64.store8 align=7 (i64.const 0) (i64.const 0)))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i64.store8 align=7 (i64.const 0) (i64.const 0)))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:244
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i64.store16 align=0 (i64.const 0) (i64.const 0)))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i64.store16 align=0 (i64.const 0) (i64.const 0)))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:250
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i64.store16 align=7 (i64.const 0) (i64.const 0)))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i64.store16 align=7 (i64.const 0) (i64.const 0)))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:256
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i64.store32 align=0 (i64.const 0) (i64.const 0)))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i64.store32 align=0 (i64.const 0) (i64.const 0)))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:262
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i64.store32 align=7 (i64.const 0) (i64.const 0)))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i64.store32 align=7 (i64.const 0) (i64.const 0)))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:268
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i64.store align=0 (i64.const 0) (i64.const 0)))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i64.store align=0 (i64.const 0) (i64.const 0)))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:274
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i64.store align=7 (i64.const 0) (i64.const 0)))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i64.store align=7 (i64.const 0) (i64.const 0)))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:280
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (f32.store align=0 (i64.const 0) (f32.const 0)))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (f32.store align=0 (i64.const 0) (f32.const 0)))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:286
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (f32.store align=7 (i64.const 0) (f32.const 0)))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (f32.store align=7 (i64.const 0) (f32.const 0)))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:292
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (f64.store align=0 (i64.const 0) (f32.const 0)))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (f64.store align=0 (i64.const 0) (f32.const 0)))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:298
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (f64.store align=7 (i64.const 0) (f32.const 0)))) `,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (f64.store align=7 (i64.const 0) (f32.const 0)))) `),
   `alignment`,
 );
 
 // ./test/core/align64.wast:305
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i32.load8_s align=2 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i32.load8_s align=2 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:309
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i32.load8_u align=2 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i32.load8_u align=2 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:313
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i32.load16_s align=4 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i32.load16_s align=4 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:317
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i32.load16_u align=4 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i32.load16_u align=4 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:321
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i32.load align=8 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i32.load align=8 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:325
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load8_s align=2 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load8_s align=2 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:329
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load8_u align=2 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load8_u align=2 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:333
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load16_s align=4 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load16_s align=4 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:337
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load16_u align=4 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load16_u align=4 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:341
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load32_s align=8 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load32_s align=8 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:345
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load32_u align=8 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load32_u align=8 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:349
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load align=16 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load align=16 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:353
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (f32.load align=8 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (f32.load align=8 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:357
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (f64.load align=16 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (f64.load align=16 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:362
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i32.load8_s align=2 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i32.load8_s align=2 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:366
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i32.load8_u align=2 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i32.load8_u align=2 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:370
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i32.load16_s align=4 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i32.load16_s align=4 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:374
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i32.load16_u align=4 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i32.load16_u align=4 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:378
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i32.load align=8 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i32.load align=8 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:382
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load8_s align=2 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load8_s align=2 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:386
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load8_u align=2 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load8_u align=2 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:390
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load16_s align=4 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load16_s align=4 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:394
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load16_u align=4 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load16_u align=4 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:398
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load32_s align=8 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load32_s align=8 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:402
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load32_u align=8 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load32_u align=8 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:406
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (i64.load align=16 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (i64.load align=16 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:410
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (f32.load align=8 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (f32.load align=8 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:414
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (drop (f64.load align=16 (i64.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (drop (f64.load align=16 (i64.const 0)))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:419
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i32.store8 align=2 (i64.const 0) (i32.const 0))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i32.store8 align=2 (i64.const 0) (i32.const 0))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:423
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i32.store16 align=4 (i64.const 0) (i32.const 0))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i32.store16 align=4 (i64.const 0) (i32.const 0))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:427
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i32.store align=8 (i64.const 0) (i32.const 0))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i32.store align=8 (i64.const 0) (i32.const 0))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:431
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i64.store8 align=2 (i64.const 0) (i64.const 0))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i64.store8 align=2 (i64.const 0) (i64.const 0))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:435
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i64.store16 align=4 (i64.const 0) (i64.const 0))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i64.store16 align=4 (i64.const 0) (i64.const 0))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:439
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i64.store32 align=8 (i64.const 0) (i64.const 0))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i64.store32 align=8 (i64.const 0) (i64.const 0))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:443
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (i64.store align=16 (i64.const 0) (i64.const 0))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (i64.store align=16 (i64.const 0) (i64.const 0))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:447
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (f32.store align=8 (i64.const 0) (f32.const 0))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (f32.store align=8 (i64.const 0) (f32.const 0))))`),
   `alignment must not be larger than natural`,
 );
 
 // ./test/core/align64.wast:451
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory i64 0) (func (f64.store align=16 (i64.const 0) (f64.const 0))))`,
-    ),
+  () => instantiate(`(module (memory i64 0) (func (f64.store align=16 (i64.const 0) (f64.const 0))))`),
   `alignment must not be larger than natural`,
 );
 
@@ -1250,189 +955,115 @@ assert_return(() => invoke($23, `f64_align_switch`, [3]), [value("f64", 10)]);
 assert_return(() => invoke($23, `f64_align_switch`, [4]), [value("f64", 10)]);
 
 // ./test/core/align64.wast:813
-assert_return(() => invoke($23, `i32_align_switch`, [0, 0]), [
-  value("i32", 10),
-]);
+assert_return(() => invoke($23, `i32_align_switch`, [0, 0]), [value("i32", 10)]);
 
 // ./test/core/align64.wast:814
-assert_return(() => invoke($23, `i32_align_switch`, [0, 1]), [
-  value("i32", 10),
-]);
+assert_return(() => invoke($23, `i32_align_switch`, [0, 1]), [value("i32", 10)]);
 
 // ./test/core/align64.wast:815
-assert_return(() => invoke($23, `i32_align_switch`, [1, 0]), [
-  value("i32", 10),
-]);
+assert_return(() => invoke($23, `i32_align_switch`, [1, 0]), [value("i32", 10)]);
 
 // ./test/core/align64.wast:816
-assert_return(() => invoke($23, `i32_align_switch`, [1, 1]), [
-  value("i32", 10),
-]);
+assert_return(() => invoke($23, `i32_align_switch`, [1, 1]), [value("i32", 10)]);
 
 // ./test/core/align64.wast:817
-assert_return(() => invoke($23, `i32_align_switch`, [2, 0]), [
-  value("i32", 10),
-]);
+assert_return(() => invoke($23, `i32_align_switch`, [2, 0]), [value("i32", 10)]);
 
 // ./test/core/align64.wast:818
-assert_return(() => invoke($23, `i32_align_switch`, [2, 1]), [
-  value("i32", 10),
-]);
+assert_return(() => invoke($23, `i32_align_switch`, [2, 1]), [value("i32", 10)]);
 
 // ./test/core/align64.wast:819
-assert_return(() => invoke($23, `i32_align_switch`, [2, 2]), [
-  value("i32", 10),
-]);
+assert_return(() => invoke($23, `i32_align_switch`, [2, 2]), [value("i32", 10)]);
 
 // ./test/core/align64.wast:820
-assert_return(() => invoke($23, `i32_align_switch`, [3, 0]), [
-  value("i32", 10),
-]);
+assert_return(() => invoke($23, `i32_align_switch`, [3, 0]), [value("i32", 10)]);
 
 // ./test/core/align64.wast:821
-assert_return(() => invoke($23, `i32_align_switch`, [3, 1]), [
-  value("i32", 10),
-]);
+assert_return(() => invoke($23, `i32_align_switch`, [3, 1]), [value("i32", 10)]);
 
 // ./test/core/align64.wast:822
-assert_return(() => invoke($23, `i32_align_switch`, [3, 2]), [
-  value("i32", 10),
-]);
+assert_return(() => invoke($23, `i32_align_switch`, [3, 2]), [value("i32", 10)]);
 
 // ./test/core/align64.wast:823
-assert_return(() => invoke($23, `i32_align_switch`, [4, 0]), [
-  value("i32", 10),
-]);
+assert_return(() => invoke($23, `i32_align_switch`, [4, 0]), [value("i32", 10)]);
 
 // ./test/core/align64.wast:824
-assert_return(() => invoke($23, `i32_align_switch`, [4, 1]), [
-  value("i32", 10),
-]);
+assert_return(() => invoke($23, `i32_align_switch`, [4, 1]), [value("i32", 10)]);
 
 // ./test/core/align64.wast:825
-assert_return(() => invoke($23, `i32_align_switch`, [4, 2]), [
-  value("i32", 10),
-]);
+assert_return(() => invoke($23, `i32_align_switch`, [4, 2]), [value("i32", 10)]);
 
 // ./test/core/align64.wast:826
-assert_return(() => invoke($23, `i32_align_switch`, [4, 4]), [
-  value("i32", 10),
-]);
+assert_return(() => invoke($23, `i32_align_switch`, [4, 4]), [value("i32", 10)]);
 
 // ./test/core/align64.wast:828
-assert_return(() => invoke($23, `i64_align_switch`, [0, 0]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [0, 0]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:829
-assert_return(() => invoke($23, `i64_align_switch`, [0, 1]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [0, 1]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:830
-assert_return(() => invoke($23, `i64_align_switch`, [1, 0]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [1, 0]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:831
-assert_return(() => invoke($23, `i64_align_switch`, [1, 1]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [1, 1]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:832
-assert_return(() => invoke($23, `i64_align_switch`, [2, 0]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [2, 0]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:833
-assert_return(() => invoke($23, `i64_align_switch`, [2, 1]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [2, 1]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:834
-assert_return(() => invoke($23, `i64_align_switch`, [2, 2]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [2, 2]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:835
-assert_return(() => invoke($23, `i64_align_switch`, [3, 0]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [3, 0]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:836
-assert_return(() => invoke($23, `i64_align_switch`, [3, 1]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [3, 1]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:837
-assert_return(() => invoke($23, `i64_align_switch`, [3, 2]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [3, 2]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:838
-assert_return(() => invoke($23, `i64_align_switch`, [4, 0]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [4, 0]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:839
-assert_return(() => invoke($23, `i64_align_switch`, [4, 1]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [4, 1]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:840
-assert_return(() => invoke($23, `i64_align_switch`, [4, 2]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [4, 2]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:841
-assert_return(() => invoke($23, `i64_align_switch`, [4, 4]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [4, 4]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:842
-assert_return(() => invoke($23, `i64_align_switch`, [5, 0]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [5, 0]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:843
-assert_return(() => invoke($23, `i64_align_switch`, [5, 1]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [5, 1]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:844
-assert_return(() => invoke($23, `i64_align_switch`, [5, 2]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [5, 2]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:845
-assert_return(() => invoke($23, `i64_align_switch`, [5, 4]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [5, 4]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:846
-assert_return(() => invoke($23, `i64_align_switch`, [6, 0]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [6, 0]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:847
-assert_return(() => invoke($23, `i64_align_switch`, [6, 1]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [6, 1]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:848
-assert_return(() => invoke($23, `i64_align_switch`, [6, 2]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [6, 2]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:849
-assert_return(() => invoke($23, `i64_align_switch`, [6, 4]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [6, 4]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:850
-assert_return(() => invoke($23, `i64_align_switch`, [6, 8]), [
-  value("i64", 10n),
-]);
+assert_return(() => invoke($23, `i64_align_switch`, [6, 8]), [value("i64", 10n)]);
 
 // ./test/core/align64.wast:854
 let $24 = instantiate(`(module

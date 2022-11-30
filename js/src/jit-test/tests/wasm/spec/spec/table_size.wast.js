@@ -150,19 +150,23 @@ assert_return(() => invoke($0, `grow-t3`, [1]), []);
 assert_return(() => invoke($0, `size-t3`, []), [value("i32", 8)]);
 
 // ./test/core/table_size.wast:69
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (table $$t 1 externref)
     (func $$type-result-i32-vs-empty
       (table.size $$t)
     )
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);
 
 // ./test/core/table_size.wast:78
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (table $$t 1 externref)
     (func $$type-result-i32-vs-f32 (result f32)
       (table.size $$t)
     )
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);

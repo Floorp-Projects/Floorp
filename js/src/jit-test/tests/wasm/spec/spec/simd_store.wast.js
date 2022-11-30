@@ -56,66 +56,55 @@ let $0 = instantiate(`(module
 )`);
 
 // ./test/core/simd/simd_store.wast:40
-assert_return(() => invoke($0, `v128.store_i8x16`, []), [
-  i8x16([
-    0x0,
-    0x1,
-    0x2,
-    0x3,
-    0x4,
-    0x5,
-    0x6,
-    0x7,
-    0x8,
-    0x9,
-    0xa,
-    0xb,
-    0xc,
-    0xd,
-    0xe,
-    0xf,
-  ]),
-]);
+assert_return(
+  () => invoke($0, `v128.store_i8x16`, []),
+  [
+    i8x16([0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf]),
+  ],
+);
 
 // ./test/core/simd/simd_store.wast:41
-assert_return(() => invoke($0, `v128.store_i16x8`, []), [
-  i16x8([0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7]),
-]);
+assert_return(() => invoke($0, `v128.store_i16x8`, []), [i16x8([0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7])]);
 
 // ./test/core/simd/simd_store.wast:42
-assert_return(() => invoke($0, `v128.store_i16x8_2`, []), [
-  i16x8([0x3039, 0x3039, 0x3039, 0x3039, 0x3039, 0x3039, 0x3039, 0x3039]),
-]);
+assert_return(
+  () => invoke($0, `v128.store_i16x8_2`, []),
+  [i16x8([0x3039, 0x3039, 0x3039, 0x3039, 0x3039, 0x3039, 0x3039, 0x3039])],
+);
 
 // ./test/core/simd/simd_store.wast:43
-assert_return(() => invoke($0, `v128.store_i16x8_3`, []), [
-  i16x8([0x1234, 0x1234, 0x1234, 0x1234, 0x1234, 0x1234, 0x1234, 0x1234]),
-]);
+assert_return(
+  () => invoke($0, `v128.store_i16x8_3`, []),
+  [i16x8([0x1234, 0x1234, 0x1234, 0x1234, 0x1234, 0x1234, 0x1234, 0x1234])],
+);
 
 // ./test/core/simd/simd_store.wast:44
-assert_return(() => invoke($0, `v128.store_i32x4`, []), [
-  i32x4([0x0, 0x1, 0x2, 0x3]),
-]);
+assert_return(() => invoke($0, `v128.store_i32x4`, []), [i32x4([0x0, 0x1, 0x2, 0x3])]);
 
 // ./test/core/simd/simd_store.wast:45
-assert_return(() => invoke($0, `v128.store_i32x4_2`, []), [
-  i32x4([0x75bcd15, 0x75bcd15, 0x75bcd15, 0x75bcd15]),
-]);
+assert_return(
+  () => invoke($0, `v128.store_i32x4_2`, []),
+  [i32x4([0x75bcd15, 0x75bcd15, 0x75bcd15, 0x75bcd15])],
+);
 
 // ./test/core/simd/simd_store.wast:46
-assert_return(() => invoke($0, `v128.store_i32x4_3`, []), [
-  i32x4([0x12345678, 0x12345678, 0x12345678, 0x12345678]),
-]);
+assert_return(
+  () => invoke($0, `v128.store_i32x4_3`, []),
+  [i32x4([0x12345678, 0x12345678, 0x12345678, 0x12345678])],
+);
 
 // ./test/core/simd/simd_store.wast:47
-assert_return(() => invoke($0, `v128.store_f32x4`, []), [
-  new F32x4Pattern(
-    value("f32", 0),
-    value("f32", 1),
-    value("f32", 2),
-    value("f32", 3),
-  ),
-]);
+assert_return(
+  () => invoke($0, `v128.store_f32x4`, []),
+  [
+    new F32x4Pattern(
+      value("f32", 0),
+      value("f32", 1),
+      value("f32", 2),
+      value("f32", 3),
+    ),
+  ],
+);
 
 // ./test/core/simd/simd_store.wast:52
 let $1 = instantiate(`(module
@@ -184,78 +173,66 @@ assert_return(() => invoke($1, `as-if-else`, []), []);
 
 // ./test/core/simd/simd_store.wast:102
 assert_malformed(
-  () =>
-    instantiate(
-      `(memory 1) (func (v128.store8 (i32.const 0) (v128.const i32x4 0 0 0 0))) `,
-    ),
+  () => instantiate(`(memory 1) (func (v128.store8 (i32.const 0) (v128.const i32x4 0 0 0 0))) `),
   `unknown operator`,
 );
 
 // ./test/core/simd/simd_store.wast:109
 assert_malformed(
-  () =>
-    instantiate(
-      `(memory 1) (func (v128.store16 (i32.const 0) (v128.const i32x4 0 0 0 0))) `,
-    ),
+  () => instantiate(`(memory 1) (func (v128.store16 (i32.const 0) (v128.const i32x4 0 0 0 0))) `),
   `unknown operator`,
 );
 
 // ./test/core/simd/simd_store.wast:116
 assert_malformed(
-  () =>
-    instantiate(
-      `(memory 1) (func (v128.store32 (i32.const 0) (v128.const i32x4 0 0 0 0))) `,
-    ),
+  () => instantiate(`(memory 1) (func (v128.store32 (i32.const 0) (v128.const i32x4 0 0 0 0))) `),
   `unknown operator`,
 );
 
 // ./test/core/simd/simd_store.wast:127
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory 1) (func (v128.store (f32.const 0) (v128.const i32x4 0 0 0 0))))`,
-    ),
+  () => instantiate(`(module (memory 1) (func (v128.store (f32.const 0) (v128.const i32x4 0 0 0 0))))`),
   `type mismatch`,
 );
 
 // ./test/core/simd/simd_store.wast:131
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory 1) (func (local v128) (block (br_if 0 (v128.store)))))`,
-    ),
+  () => instantiate(`(module (memory 1) (func (local v128) (block (br_if 0 (v128.store)))))`),
   `type mismatch`,
 );
 
 // ./test/core/simd/simd_store.wast:135
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory 1) (func (result v128) (v128.store (i32.const 0) (v128.const i32x4 0 0 0 0))))`,
-    ),
+  () => instantiate(`(module (memory 1) (func (result v128) (v128.store (i32.const 0) (v128.const i32x4 0 0 0 0))))`),
   `type mismatch`,
 );
 
 // ./test/core/simd/simd_store.wast:143
-assert_invalid(() =>
-  instantiate(`(module (memory 0)
+assert_invalid(
+  () => instantiate(`(module (memory 0)
     (func $$v128.store-1st-arg-empty
       (v128.store (v128.const i32x4 0 0 0 0))
     )
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);
 
 // ./test/core/simd/simd_store.wast:151
-assert_invalid(() =>
-  instantiate(`(module (memory 0)
+assert_invalid(
+  () => instantiate(`(module (memory 0)
     (func $$v128.store-2nd-arg-empty
       (v128.store (i32.const 0))
     )
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);
 
 // ./test/core/simd/simd_store.wast:159
-assert_invalid(() =>
-  instantiate(`(module (memory 0)
+assert_invalid(
+  () => instantiate(`(module (memory 0)
     (func $$v128.store-arg-empty
       (v128.store)
     )
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);

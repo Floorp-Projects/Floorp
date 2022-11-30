@@ -647,9 +647,7 @@ assert_return(() => invoke($2, `$$`, []), [value("i32", 4)]);
 assert_return(() => invoke($2, `@`, []), [value("i32", 5)]);
 
 // ./test/core/names.wast:621
-assert_return(() => invoke($2, `~!@#$$%^&*()_+\`-={}|[]\\:";'<>?,./ `, []), [
-  value("i32", 6),
-]);
+assert_return(() => invoke($2, `~!@#$$%^&*()_+\`-={}|[]\\:";'<>?,./ `, []), [value("i32", 6)]);
 
 // ./test/core/names.wast:622
 assert_return(() => invoke($2, `NaN`, []), [value("i32", 7)]);
@@ -697,22 +695,15 @@ assert_return(() => invoke($2, `f\u{fb01}`, []), [value("i32", 20)]);
 assert_return(() => invoke($2, `ffi`, []), [value("i32", 21)]);
 
 // ./test/core/names.wast:637
-assert_return(() =>
-  invoke(
-    $2,
-    `\x00\x01\x02\x03\x04\x05\x06\x07\x08	
-\x0b\x0c\x0d\x0e\x0f`,
-    [],
-  ), [value("i32", 22)]);
+assert_return(
+  () => invoke($2, `\x00\x01\x02\x03\x04\x05\x06\x07\x08	
+\x0b\x0c\x0d\x0e\x0f`, []),
+  [value("i32", 22)],
+);
 
 // ./test/core/names.wast:638
 assert_return(
-  () =>
-    invoke(
-      $2,
-      `\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f`,
-      [],
-    ),
+  () => invoke($2, `\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f`, []),
   [value("i32", 23)],
 );
 
@@ -721,67 +712,37 @@ assert_return(() => invoke($2, ` \x7f`, []), [value("i32", 24)]);
 
 // ./test/core/names.wast:640
 assert_return(
-  () =>
-    invoke(
-      $2,
-      `\u{80}\u{81}\u{82}\u{83}\u{84}\u{85}\u{86}\u{87}\u{88}\u{89}\u{8a}\u{8b}\u{8c}\u{8d}\u{8e}\u{8f}`,
-      [],
-    ),
+  () => invoke($2, `\u{80}\u{81}\u{82}\u{83}\u{84}\u{85}\u{86}\u{87}\u{88}\u{89}\u{8a}\u{8b}\u{8c}\u{8d}\u{8e}\u{8f}`, []),
   [value("i32", 25)],
 );
 
 // ./test/core/names.wast:641
 assert_return(
-  () =>
-    invoke(
-      $2,
-      `\u{90}\u{91}\u{92}\u{93}\u{94}\u{95}\u{96}\u{97}\u{98}\u{99}\u{9a}\u{9b}\u{9c}\u{9d}\u{9e}\u{9f}`,
-      [],
-    ),
+  () => invoke($2, `\u{90}\u{91}\u{92}\u{93}\u{94}\u{95}\u{96}\u{97}\u{98}\u{99}\u{9a}\u{9b}\u{9c}\u{9d}\u{9e}\u{9f}`, []),
   [value("i32", 26)],
 );
 
 // ./test/core/names.wast:642
 assert_return(
-  () =>
-    invoke(
-      $2,
-      `\u{fff0}\u{fff1}\u{fff2}\u{fff3}\u{fff4}\u{fff5}\u{fff6}\u{fff7}`,
-      [],
-    ),
+  () => invoke($2, `\u{fff0}\u{fff1}\u{fff2}\u{fff3}\u{fff4}\u{fff5}\u{fff6}\u{fff7}`, []),
   [value("i32", 27)],
 );
 
 // ./test/core/names.wast:643
 assert_return(
-  () =>
-    invoke(
-      $2,
-      `\u{fff8}\u{fff9}\u{fffa}\u{fffb}\u{fffc}\u{fffd}\u{fffe}\u{ffff}`,
-      [],
-    ),
+  () => invoke($2, `\u{fff8}\u{fff9}\u{fffa}\u{fffb}\u{fffc}\u{fffd}\u{fffe}\u{ffff}`, []),
   [value("i32", 28)],
 );
 
 // ./test/core/names.wast:644
 assert_return(
-  () =>
-    invoke(
-      $2,
-      `\u{2400}\u{2401}\u{2402}\u{2403}\u{2404}\u{2405}\u{2406}\u{2407}\u{2408}\u{2409}\u{240a}\u{240b}\u{240c}\u{240d}\u{240e}\u{240f}`,
-      [],
-    ),
+  () => invoke($2, `\u{2400}\u{2401}\u{2402}\u{2403}\u{2404}\u{2405}\u{2406}\u{2407}\u{2408}\u{2409}\u{240a}\u{240b}\u{240c}\u{240d}\u{240e}\u{240f}`, []),
   [value("i32", 29)],
 );
 
 // ./test/core/names.wast:645
 assert_return(
-  () =>
-    invoke(
-      $2,
-      `\u{2410}\u{2411}\u{2412}\u{2413}\u{2414}\u{2415}\u{2416}\u{2417}\u{2418}\u{2419}\u{241a}\u{241b}\u{241c}\u{241d}\u{241e}\u{241f}`,
-      [],
-    ),
+  () => invoke($2, `\u{2410}\u{2411}\u{2412}\u{2413}\u{2414}\u{2415}\u{2416}\u{2417}\u{2418}\u{2419}\u{241a}\u{241b}\u{241c}\u{241d}\u{241e}\u{241f}`, []),
   [value("i32", 30)],
 );
 
@@ -790,12 +751,7 @@ assert_return(() => invoke($2, `\u{2420}\u{2421}`, []), [value("i32", 31)]);
 
 // ./test/core/names.wast:647
 assert_return(
-  () =>
-    invoke(
-      $2,
-      `\u{fff0}\u{fff1}\u{fff2}\u{fff3}\u{fff4}\u{fff5}\u{fff6}\u{fff7}\u{fff8}\u{fff9}\u{fffa}\u{fffb}\u{fffc}\u{fffd}`,
-      [],
-    ),
+  () => invoke($2, `\u{fff0}\u{fff1}\u{fff2}\u{fff3}\u{fff4}\u{fff5}\u{fff6}\u{fff7}\u{fff8}\u{fff9}\u{fffa}\u{fffb}\u{fffc}\u{fffd}`, []),
   [value("i32", 32)],
 );
 
@@ -822,23 +778,13 @@ assert_return(() => invoke($2, `\u{180e}`, []), [value("i32", 39)]);
 
 // ./test/core/names.wast:655
 assert_return(
-  () =>
-    invoke(
-      $2,
-      `\u{ffef}\u{200b}\u{a0}\u{ad}\u{2060}\u{1680}\u{202e}\u{202d}`,
-      [],
-    ),
+  () => invoke($2, `\u{ffef}\u{200b}\u{a0}\u{ad}\u{2060}\u{1680}\u{202e}\u{202d}`, []),
   [value("i32", 40)],
 );
 
 // ./test/core/names.wast:656
 assert_return(
-  () =>
-    invoke(
-      $2,
-      `\u{200e}\u{200f}\u{2011}\u{2028}\u{2029}\u{202a}\u{202b}\u{202c}\u{202f}\u{2066}\u{2067}\u{2068}\u{2069}`,
-      [],
-    ),
+  () => invoke($2, `\u{200e}\u{200f}\u{2011}\u{2028}\u{2029}\u{202a}\u{202b}\u{202c}\u{202f}\u{2066}\u{2067}\u{2068}\u{2069}`, []),
   [value("i32", 41)],
 );
 
@@ -849,30 +795,19 @@ assert_return(
 );
 
 // ./test/core/names.wast:658
-assert_return(() => invoke($2, `\u{2061}\u{2062}\u{2063}\u{2064}`, []), [
-  value("i32", 43),
-]);
+assert_return(() => invoke($2, `\u{2061}\u{2062}\u{2063}\u{2064}`, []), [value("i32", 43)]);
 
 // ./test/core/names.wast:659
-assert_return(() => invoke($2, `\u{10000}\u{dffff}\u{10ffff}`, []), [
-  value("i32", 44),
-]);
+assert_return(() => invoke($2, `\u{10000}\u{dffff}\u{10ffff}`, []), [value("i32", 44)]);
 
 // ./test/core/names.wast:660
 assert_return(
-  () =>
-    invoke(
-      $2,
-      `Z\u{30f}\u{346}\u{306}\u{35b}\u{34c}\u{334}\u{358}\u{35e}\u{347}\u{32b}\u{325}\u{32a}\u{353}\u{348}\u{354}\u{34e}\u{317}\u{31e}\u{33a}\u{32f}\u{331}\u{31e}\u{319}\u{331}\u{31c}\u{316}\u{320}a\u{357}\u{368}\u{30e}\u{304}\u{306}\u{357}\u{33f}\u{361}\u{35f}\u{340}\u{336}\u{341}\u{325}\u{330}\u{333}\u{32d}\u{359}\u{332}\u{331}\u{339}\u{31d}\u{34e}\u{33c}l\u{344}\u{34a}\u{31a}\u{357}\u{366}\u{344}\u{36b}\u{307}\u{341}\u{336}\u{337}\u{349}\u{329}\u{339}\u{32b}\u{31d}\u{356}\u{345}\u{319}\u{332}\u{33c}\u{347}\u{35a}\u{34d}\u{32e}\u{34e}\u{325}\u{345}\u{31e}g\u{343}\u{310}\u{305}\u{36e}\u{314}\u{310}\u{30e}\u{302}\u{30f}\u{33e}\u{34a}\u{30d}\u{34b}\u{34a}\u{367}\u{301}\u{306}\u{366}\u{35e}\u{336}\u{355}\u{354}\u{35a}\u{329}o\u{34b}\u{314}\u{350}\u{36a}\u{369}\u{321}\u{34f}\u{322}\u{327}\u{341}\u{32b}\u{319}\u{324}\u{32e}\u{356}\u{359}\u{353}\u{33a}\u{31c}\u{329}\u{33c}\u{318}\u{320}`,
-      [],
-    ),
+  () => invoke($2, `Z\u{30f}\u{346}\u{306}\u{35b}\u{34c}\u{334}\u{358}\u{35e}\u{347}\u{32b}\u{325}\u{32a}\u{353}\u{348}\u{354}\u{34e}\u{317}\u{31e}\u{33a}\u{32f}\u{331}\u{31e}\u{319}\u{331}\u{31c}\u{316}\u{320}a\u{357}\u{368}\u{30e}\u{304}\u{306}\u{357}\u{33f}\u{361}\u{35f}\u{340}\u{336}\u{341}\u{325}\u{330}\u{333}\u{32d}\u{359}\u{332}\u{331}\u{339}\u{31d}\u{34e}\u{33c}l\u{344}\u{34a}\u{31a}\u{357}\u{366}\u{344}\u{36b}\u{307}\u{341}\u{336}\u{337}\u{349}\u{329}\u{339}\u{32b}\u{31d}\u{356}\u{345}\u{319}\u{332}\u{33c}\u{347}\u{35a}\u{34d}\u{32e}\u{34e}\u{325}\u{345}\u{31e}g\u{343}\u{310}\u{305}\u{36e}\u{314}\u{310}\u{30e}\u{302}\u{30f}\u{33e}\u{34a}\u{30d}\u{34b}\u{34a}\u{367}\u{301}\u{306}\u{366}\u{35e}\u{336}\u{355}\u{354}\u{35a}\u{329}o\u{34b}\u{314}\u{350}\u{36a}\u{369}\u{321}\u{34f}\u{322}\u{327}\u{341}\u{32b}\u{319}\u{324}\u{32e}\u{356}\u{359}\u{353}\u{33a}\u{31c}\u{329}\u{33c}\u{318}\u{320}`, []),
   [value("i32", 45)],
 );
 
 // ./test/core/names.wast:661
-assert_return(() => invoke($2, `\u{115f}\u{1160}\u{3164}\u{ffa0}`, []), [
-  value("i32", 46),
-]);
+assert_return(() => invoke($2, `\u{115f}\u{1160}\u{3164}\u{ffa0}`, []), [value("i32", 46)]);
 
 // ./test/core/names.wast:662
 assert_return(() => invoke($2, `\u{fe00}`, []), [value("i32", 47)]);
@@ -890,13 +825,8 @@ assert_return(() => invoke($2, `\u{e01ef}`, []), [value("i32", 50)]);
 assert_return(() => invoke($2, `\u{308}`, []), [value("i32", 51)]);
 
 // ./test/core/names.wast:667
-assert_return(() =>
-  invoke(
-    $2,
-    `
-`,
-    [],
-  ), [value("i32", 52)]);
+assert_return(() => invoke($2, `
+`, []), [value("i32", 52)]);
 
 // ./test/core/names.wast:668
 assert_return(() => invoke($2, `\u{2424}`, []), [value("i32", 53)]);
@@ -908,22 +838,12 @@ assert_return(() => invoke($2, `\u{2028}`, []), [value("i32", 54)]);
 assert_return(() => invoke($2, `\x0d`, []), [value("i32", 55)]);
 
 // ./test/core/names.wast:671
-assert_return(() =>
-  invoke(
-    $2,
-    `\x0d
-`,
-    [],
-  ), [value("i32", 56)]);
+assert_return(() => invoke($2, `\x0d
+`, []), [value("i32", 56)]);
 
 // ./test/core/names.wast:672
-assert_return(() =>
-  invoke(
-    $2,
-    `
-\x0d`,
-    [],
-  ), [value("i32", 57)]);
+assert_return(() => invoke($2, `
+\x0d`, []), [value("i32", 57)]);
 
 // ./test/core/names.wast:673
 assert_return(() => invoke($2, `\x1e`, []), [value("i32", 58)]);
@@ -1178,9 +1098,7 @@ assert_return(() => invoke($2, `\u{10fffe}`, []), [value("i32", 140)]);
 assert_return(() => invoke($2, `\u{10ffff}`, []), [value("i32", 141)]);
 
 // ./test/core/names.wast:757
-assert_return(() => invoke($2, `\u{308}\u{203d}\u{308}\u{309}`, []), [
-  value("i32", 142),
-]);
+assert_return(() => invoke($2, `\u{308}\u{203d}\u{308}\u{309}`, []), [value("i32", 142)]);
 
 // ./test/core/names.wast:758
 assert_return(() => invoke($2, `abc`, []), [value("i32", 143)]);
@@ -1952,23 +1870,13 @@ assert_return(() => invoke($2, `\u{13aa}`, []), [value("i32", 398)]);
 
 // ./test/core/names.wast:1014
 assert_return(
-  () =>
-    invoke(
-      $2,
-      `)\u{2fa}\u{2fc}\u{145cf}\u{1d174}\u{1d176}\u{1d178}\u{1d17a}\u{207e}\u{208e}\u{2769}\u{276b}\u{27ef}\u{fd3f}\u{fe36}\u{fe5a}\u{ff09}\u{ff60}\u{e0029}\u{2773}\u{2775}\u{27e7}\u{27e9}\u{27eb}\u{27ed}\u{2988}\u{298a}\u{2996}\u{2e23}\u{2e25}\u{fe18}\u{fe38}\u{fe3a}\u{fe3c}\u{fe3e}\u{fe40}\u{fe42}\u{fe44}\u{fe48}\u{fe5c}\u{fe5e}\u{ff3d}\u{ff5d}\u{ff63}\u{e005d}\u{e007d}\u{bb}\u{2019}\u{201d}\u{203a}\u{276f}`,
-      [],
-    ),
+  () => invoke($2, `)\u{2fa}\u{2fc}\u{145cf}\u{1d174}\u{1d176}\u{1d178}\u{1d17a}\u{207e}\u{208e}\u{2769}\u{276b}\u{27ef}\u{fd3f}\u{fe36}\u{fe5a}\u{ff09}\u{ff60}\u{e0029}\u{2773}\u{2775}\u{27e7}\u{27e9}\u{27eb}\u{27ed}\u{2988}\u{298a}\u{2996}\u{2e23}\u{2e25}\u{fe18}\u{fe38}\u{fe3a}\u{fe3c}\u{fe3e}\u{fe40}\u{fe42}\u{fe44}\u{fe48}\u{fe5c}\u{fe5e}\u{ff3d}\u{ff5d}\u{ff63}\u{e005d}\u{e007d}\u{bb}\u{2019}\u{201d}\u{203a}\u{276f}`, []),
   [value("i32", 399)],
 );
 
 // ./test/core/names.wast:1015
 assert_return(
-  () =>
-    invoke(
-      $2,
-      `(\u{2f9}\u{2fb}\u{145ce}\u{1d173}\u{1d175}\u{1d177}\u{1d179}\u{207d}\u{208d}\u{2768}\u{276a}\u{27ee}\u{fd3e}\u{fe35}\u{fe59}\u{ff08}\u{ff5f}\u{e0028}\u{2772}\u{2774}\u{27e6}\u{27e8}\u{27ea}\u{27ec}\u{2987}\u{2989}\u{2995}\u{2e22}\u{2e24}\u{fe17}\u{fe37}\u{fe39}\u{fe3b}\u{fe3d}\u{fe3f}\u{fe41}\u{fe43}\u{fe47}\u{fe5b}\u{fe5d}\u{ff3b}\u{ff5b}\u{ff62}\u{e005b}\u{e007b}\u{ab}\u{2018}\u{201c}\u{2039}\u{276e}`,
-      [],
-    ),
+  () => invoke($2, `(\u{2f9}\u{2fb}\u{145ce}\u{1d173}\u{1d175}\u{1d177}\u{1d179}\u{207d}\u{208d}\u{2768}\u{276a}\u{27ee}\u{fd3e}\u{fe35}\u{fe59}\u{ff08}\u{ff5f}\u{e0028}\u{2772}\u{2774}\u{27e6}\u{27e8}\u{27ea}\u{27ec}\u{2987}\u{2989}\u{2995}\u{2e22}\u{2e24}\u{fe17}\u{fe37}\u{fe39}\u{fe3b}\u{fe3d}\u{fe3f}\u{fe41}\u{fe43}\u{fe47}\u{fe5b}\u{fe5d}\u{ff3b}\u{ff5b}\u{ff62}\u{e005b}\u{e007b}\u{ab}\u{2018}\u{201c}\u{2039}\u{276e}`, []),
   [value("i32", 400)],
 );
 

@@ -125,10 +125,7 @@ assert_return(() => invoke($0, `rethrow-recatch`, [1]), [value("i32", 42)]);
 assert_exception(() => invoke($0, `rethrow-stack-polymorphism`, []));
 
 // ./test/core/rethrow.wast:93
-assert_invalid(
-  () => instantiate(`(module (func (rethrow 0)))`),
-  `invalid rethrow label`,
-);
+assert_invalid(() => instantiate(`(module (func (rethrow 0)))`), `invalid rethrow label`);
 
 // ./test/core/rethrow.wast:94
 assert_invalid(

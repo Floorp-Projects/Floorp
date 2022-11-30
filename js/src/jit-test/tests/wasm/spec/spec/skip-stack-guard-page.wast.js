@@ -2290,61 +2290,31 @@ let $0 = instantiate(`(module
 )`);
 
 // ./test/core/skip-stack-guard-page.wast:2275
-assert_exhaustion(
-  () => invoke($0, `test-guard-page-skip`, [0]),
-  `call stack exhausted`,
-);
+assert_exhaustion(() => invoke($0, `test-guard-page-skip`, [0]), `call stack exhausted`);
 
 // ./test/core/skip-stack-guard-page.wast:2276
-assert_exhaustion(
-  () => invoke($0, `test-guard-page-skip`, [100]),
-  `call stack exhausted`,
-);
+assert_exhaustion(() => invoke($0, `test-guard-page-skip`, [100]), `call stack exhausted`);
 
 // ./test/core/skip-stack-guard-page.wast:2277
-assert_exhaustion(
-  () => invoke($0, `test-guard-page-skip`, [200]),
-  `call stack exhausted`,
-);
+assert_exhaustion(() => invoke($0, `test-guard-page-skip`, [200]), `call stack exhausted`);
 
 // ./test/core/skip-stack-guard-page.wast:2278
-assert_exhaustion(
-  () => invoke($0, `test-guard-page-skip`, [300]),
-  `call stack exhausted`,
-);
+assert_exhaustion(() => invoke($0, `test-guard-page-skip`, [300]), `call stack exhausted`);
 
 // ./test/core/skip-stack-guard-page.wast:2279
-assert_exhaustion(
-  () => invoke($0, `test-guard-page-skip`, [400]),
-  `call stack exhausted`,
-);
+assert_exhaustion(() => invoke($0, `test-guard-page-skip`, [400]), `call stack exhausted`);
 
 // ./test/core/skip-stack-guard-page.wast:2280
-assert_exhaustion(
-  () => invoke($0, `test-guard-page-skip`, [500]),
-  `call stack exhausted`,
-);
+assert_exhaustion(() => invoke($0, `test-guard-page-skip`, [500]), `call stack exhausted`);
 
 // ./test/core/skip-stack-guard-page.wast:2281
-assert_exhaustion(
-  () => invoke($0, `test-guard-page-skip`, [600]),
-  `call stack exhausted`,
-);
+assert_exhaustion(() => invoke($0, `test-guard-page-skip`, [600]), `call stack exhausted`);
 
 // ./test/core/skip-stack-guard-page.wast:2282
-assert_exhaustion(
-  () => invoke($0, `test-guard-page-skip`, [700]),
-  `call stack exhausted`,
-);
+assert_exhaustion(() => invoke($0, `test-guard-page-skip`, [700]), `call stack exhausted`);
 
 // ./test/core/skip-stack-guard-page.wast:2283
-assert_exhaustion(
-  () => invoke($0, `test-guard-page-skip`, [800]),
-  `call stack exhausted`,
-);
+assert_exhaustion(() => invoke($0, `test-guard-page-skip`, [800]), `call stack exhausted`);
 
 // ./test/core/skip-stack-guard-page.wast:2284
-assert_exhaustion(
-  () => invoke($0, `test-guard-page-skip`, [900]),
-  `call stack exhausted`,
-);
+assert_exhaustion(() => invoke($0, `test-guard-page-skip`, [900]), `call stack exhausted`);

@@ -72,10 +72,7 @@ assert_return(() => invoke($2, `load8_u`, [1]), [value("i32", 170)]);
 invoke($2, `fill`, [0, 0, 65536]);
 
 // ./test/core/bulk.wast:43
-assert_trap(
-  () => invoke($2, `fill`, [65280, 1, 257]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($2, `fill`, [65280, 1, 257]), `out of bounds memory access`);
 
 // ./test/core/bulk.wast:45
 assert_return(() => invoke($2, `load8_u`, [65280]), [value("i32", 0)]);
@@ -87,10 +84,7 @@ assert_return(() => invoke($2, `load8_u`, [65535]), [value("i32", 0)]);
 invoke($2, `fill`, [65536, 0, 0]);
 
 // ./test/core/bulk.wast:52
-assert_trap(
-  () => invoke($2, `fill`, [65537, 0, 0]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($2, `fill`, [65537, 0, 0]), `out of bounds memory access`);
 
 // ./test/core/bulk.wast:57
 let $3 = instantiate(`(module
@@ -185,16 +179,10 @@ invoke($3, `copy`, [65536, 0, 0]);
 invoke($3, `copy`, [0, 65536, 0]);
 
 // ./test/core/bulk.wast:108
-assert_trap(
-  () => invoke($3, `copy`, [65537, 0, 0]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($3, `copy`, [65537, 0, 0]), `out of bounds memory access`);
 
 // ./test/core/bulk.wast:110
-assert_trap(
-  () => invoke($3, `copy`, [0, 65537, 0]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($3, `copy`, [0, 65537, 0]), `out of bounds memory access`);
 
 // ./test/core/bulk.wast:115
 let $4 = instantiate(`(module
@@ -227,10 +215,7 @@ assert_return(() => invoke($4, `load8_u`, [2]), [value("i32", 0)]);
 invoke($4, `init`, [65532, 0, 4]);
 
 // ./test/core/bulk.wast:138
-assert_trap(
-  () => invoke($4, `init`, [65534, 0, 3]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($4, `init`, [65534, 0, 3]), `out of bounds memory access`);
 
 // ./test/core/bulk.wast:140
 assert_return(() => invoke($4, `load8_u`, [65534]), [value("i32", 204)]);
@@ -245,10 +230,7 @@ invoke($4, `init`, [65536, 0, 0]);
 invoke($4, `init`, [0, 4, 0]);
 
 // ./test/core/bulk.wast:148
-assert_trap(
-  () => invoke($4, `init`, [65537, 0, 0]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($4, `init`, [65537, 0, 0]), `out of bounds memory access`);
 
 // ./test/core/bulk.wast:150
 assert_trap(() => invoke($4, `init`, [0, 5, 0]), `out of bounds memory access`);
@@ -281,10 +263,7 @@ invoke($5, `drop_passive`, []);
 assert_return(() => invoke($5, `init_passive`, [0]), []);
 
 // ./test/core/bulk.wast:172
-assert_trap(
-  () => invoke($5, `init_passive`, [1]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($5, `init_passive`, [1]), `out of bounds memory access`);
 
 // ./test/core/bulk.wast:173
 invoke($5, `init_passive`, [0]);
@@ -296,10 +275,7 @@ invoke($5, `drop_active`, []);
 assert_return(() => invoke($5, `init_active`, [0]), []);
 
 // ./test/core/bulk.wast:176
-assert_trap(
-  () => invoke($5, `init_active`, [1]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($5, `init_active`, [1]), `out of bounds memory access`);
 
 // ./test/core/bulk.wast:177
 invoke($5, `init_active`, [0]);
@@ -406,10 +382,7 @@ invoke($9, `drop_passive`, []);
 assert_return(() => invoke($9, `init_passive`, [0]), []);
 
 // ./test/core/bulk.wast:265
-assert_trap(
-  () => invoke($9, `init_passive`, [1]),
-  `out of bounds table access`,
-);
+assert_trap(() => invoke($9, `init_passive`, [1]), `out of bounds table access`);
 
 // ./test/core/bulk.wast:266
 invoke($9, `init_passive`, [0]);
@@ -450,9 +423,7 @@ let $10 = instantiate(`(module
   (func (elem.drop 64)))`);
 
 // ./test/core/bulk.wast:297
-let $11 = instantiate(
-  `(module (elem funcref (ref.func 0)) (func (elem.drop 0)))`,
-);
+let $11 = instantiate(`(module (elem funcref (ref.func 0)) (func (elem.drop 0)))`);
 
 // ./test/core/bulk.wast:300
 let $12 = instantiate(`(module
@@ -522,13 +493,7 @@ invoke($12, `copy`, [10, 0, 0]);
 invoke($12, `copy`, [0, 10, 0]);
 
 // ./test/core/bulk.wast:348
-assert_trap(
-  () => invoke($12, `copy`, [11, 0, 0]),
-  `out of bounds table access`,
-);
+assert_trap(() => invoke($12, `copy`, [11, 0, 0]), `out of bounds table access`);
 
 // ./test/core/bulk.wast:350
-assert_trap(
-  () => invoke($12, `copy`, [0, 11, 0]),
-  `out of bounds table access`,
-);
+assert_trap(() => invoke($12, `copy`, [0, 11, 0]), `out of bounds table access`);

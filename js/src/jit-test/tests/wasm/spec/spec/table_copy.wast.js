@@ -4501,10 +4501,7 @@ let $41 = instantiate(`(module
     (table.copy (local.get $$targetOffs) (local.get $$srcOffs) (local.get $$len))))`);
 
 // ./test/core/table_copy.wast:2247
-assert_trap(
-  () => invoke($41, `run`, [24, 0, 16]),
-  `out of bounds table access`,
-);
+assert_trap(() => invoke($41, `run`, [24, 0, 16]), `out of bounds table access`);
 
 // ./test/core/table_copy.wast:2249
 assert_return(() => invoke($41, `test`, [0]), [value("i32", 0)]);
@@ -4630,10 +4627,7 @@ let $42 = instantiate(`(module
     (table.copy (local.get $$targetOffs) (local.get $$srcOffs) (local.get $$len))))`);
 
 // ./test/core/table_copy.wast:2308
-assert_trap(
-  () => invoke($42, `run`, [23, 0, 15]),
-  `out of bounds table access`,
-);
+assert_trap(() => invoke($42, `run`, [23, 0, 15]), `out of bounds table access`);
 
 // ./test/core/table_copy.wast:2310
 assert_return(() => invoke($42, `test`, [0]), [value("i32", 0)]);
@@ -4759,10 +4753,7 @@ let $43 = instantiate(`(module
     (table.copy (local.get $$targetOffs) (local.get $$srcOffs) (local.get $$len))))`);
 
 // ./test/core/table_copy.wast:2369
-assert_trap(
-  () => invoke($43, `run`, [0, 24, 16]),
-  `out of bounds table access`,
-);
+assert_trap(() => invoke($43, `run`, [0, 24, 16]), `out of bounds table access`);
 
 // ./test/core/table_copy.wast:2371
 assert_trap(() => invoke($43, `test`, [0]), `uninitialized element`);
@@ -4888,10 +4879,7 @@ let $44 = instantiate(`(module
     (table.copy (local.get $$targetOffs) (local.get $$srcOffs) (local.get $$len))))`);
 
 // ./test/core/table_copy.wast:2430
-assert_trap(
-  () => invoke($44, `run`, [0, 23, 15]),
-  `out of bounds table access`,
-);
+assert_trap(() => invoke($44, `run`, [0, 23, 15]), `out of bounds table access`);
 
 // ./test/core/table_copy.wast:2432
 assert_trap(() => invoke($44, `test`, [0]), `uninitialized element`);
@@ -5017,10 +5005,7 @@ let $45 = instantiate(`(module
     (table.copy (local.get $$targetOffs) (local.get $$srcOffs) (local.get $$len))))`);
 
 // ./test/core/table_copy.wast:2491
-assert_trap(
-  () => invoke($45, `run`, [24, 11, 16]),
-  `out of bounds table access`,
-);
+assert_trap(() => invoke($45, `run`, [24, 11, 16]), `out of bounds table access`);
 
 // ./test/core/table_copy.wast:2493
 assert_trap(() => invoke($45, `test`, [0]), `uninitialized element`);
@@ -5146,10 +5131,7 @@ let $46 = instantiate(`(module
     (table.copy (local.get $$targetOffs) (local.get $$srcOffs) (local.get $$len))))`);
 
 // ./test/core/table_copy.wast:2552
-assert_trap(
-  () => invoke($46, `run`, [11, 24, 16]),
-  `out of bounds table access`,
-);
+assert_trap(() => invoke($46, `run`, [11, 24, 16]), `out of bounds table access`);
 
 // ./test/core/table_copy.wast:2554
 assert_trap(() => invoke($46, `test`, [0]), `uninitialized element`);
@@ -5275,10 +5257,7 @@ let $47 = instantiate(`(module
     (table.copy (local.get $$targetOffs) (local.get $$srcOffs) (local.get $$len))))`);
 
 // ./test/core/table_copy.wast:2613
-assert_trap(
-  () => invoke($47, `run`, [24, 21, 16]),
-  `out of bounds table access`,
-);
+assert_trap(() => invoke($47, `run`, [24, 21, 16]), `out of bounds table access`);
 
 // ./test/core/table_copy.wast:2615
 assert_trap(() => invoke($47, `test`, [0]), `uninitialized element`);
@@ -5404,10 +5383,7 @@ let $48 = instantiate(`(module
     (table.copy (local.get $$targetOffs) (local.get $$srcOffs) (local.get $$len))))`);
 
 // ./test/core/table_copy.wast:2674
-assert_trap(
-  () => invoke($48, `run`, [21, 24, 16]),
-  `out of bounds table access`,
-);
+assert_trap(() => invoke($48, `run`, [21, 24, 16]), `out of bounds table access`);
 
 // ./test/core/table_copy.wast:2676
 assert_trap(() => invoke($48, `test`, [0]), `uninitialized element`);
@@ -5533,10 +5509,7 @@ let $49 = instantiate(`(module
     (table.copy (local.get $$targetOffs) (local.get $$srcOffs) (local.get $$len))))`);
 
 // ./test/core/table_copy.wast:2735
-assert_trap(
-  () => invoke($49, `run`, [21, 21, 16]),
-  `out of bounds table access`,
-);
+assert_trap(() => invoke($49, `run`, [21, 21, 16]), `out of bounds table access`);
 
 // ./test/core/table_copy.wast:2737
 assert_trap(() => invoke($49, `test`, [0]), `uninitialized element`);
@@ -5662,10 +5635,7 @@ let $50 = instantiate(`(module
     (table.copy (local.get $$targetOffs) (local.get $$srcOffs) (local.get $$len))))`);
 
 // ./test/core/table_copy.wast:2796
-assert_trap(
-  () => invoke($50, `run`, [0, 112, -32]),
-  `out of bounds table access`,
-);
+assert_trap(() => invoke($50, `run`, [0, 112, -32]), `out of bounds table access`);
 
 // ./test/core/table_copy.wast:2798
 assert_trap(() => invoke($50, `test`, [0]), `uninitialized element`);
@@ -6079,10 +6049,7 @@ let $51 = instantiate(`(module
     (table.copy (local.get $$targetOffs) (local.get $$srcOffs) (local.get $$len))))`);
 
 // ./test/core/table_copy.wast:2953
-assert_trap(
-  () => invoke($51, `run`, [112, 0, -32]),
-  `out of bounds table access`,
-);
+assert_trap(() => invoke($51, `run`, [112, 0, -32]), `out of bounds table access`);
 
 // ./test/core/table_copy.wast:2955
 assert_return(() => invoke($51, `test`, [0]), [value("i32", 0)]);

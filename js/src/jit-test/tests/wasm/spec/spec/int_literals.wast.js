@@ -62,22 +62,16 @@ assert_return(() => invoke($0, `i32.umax`, []), [value("i32", -1)]);
 assert_return(() => invoke($0, `i32.smax`, []), [value("i32", 2147483647)]);
 
 // ./test/core/int_literals.wast:40
-assert_return(() => invoke($0, `i32.neg_smax`, []), [
-  value("i32", -2147483647),
-]);
+assert_return(() => invoke($0, `i32.neg_smax`, []), [value("i32", -2147483647)]);
 
 // ./test/core/int_literals.wast:41
 assert_return(() => invoke($0, `i32.smin`, []), [value("i32", -2147483648)]);
 
 // ./test/core/int_literals.wast:42
-assert_return(() => invoke($0, `i32.alt_smin`, []), [
-  value("i32", -2147483648),
-]);
+assert_return(() => invoke($0, `i32.alt_smin`, []), [value("i32", -2147483648)]);
 
 // ./test/core/int_literals.wast:43
-assert_return(() => invoke($0, `i32.inc_smin`, []), [
-  value("i32", -2147483647),
-]);
+assert_return(() => invoke($0, `i32.inc_smin`, []), [value("i32", -2147483647)]);
 
 // ./test/core/int_literals.wast:44
 assert_return(() => invoke($0, `i32.neg_zero`, []), [value("i32", 0)]);
@@ -92,37 +86,25 @@ assert_return(() => invoke($0, `i32.unsigned_decimal`, []), [value("i32", -1)]);
 assert_return(() => invoke($0, `i32.plus_sign`, []), [value("i32", 42)]);
 
 // ./test/core/int_literals.wast:49
-assert_return(() => invoke($0, `i64.test`, []), [
-  value("i64", 913028331277281902n),
-]);
+assert_return(() => invoke($0, `i64.test`, []), [value("i64", 913028331277281902n)]);
 
 // ./test/core/int_literals.wast:50
 assert_return(() => invoke($0, `i64.umax`, []), [value("i64", -1n)]);
 
 // ./test/core/int_literals.wast:51
-assert_return(() => invoke($0, `i64.smax`, []), [
-  value("i64", 9223372036854775807n),
-]);
+assert_return(() => invoke($0, `i64.smax`, []), [value("i64", 9223372036854775807n)]);
 
 // ./test/core/int_literals.wast:52
-assert_return(() => invoke($0, `i64.neg_smax`, []), [
-  value("i64", -9223372036854775807n),
-]);
+assert_return(() => invoke($0, `i64.neg_smax`, []), [value("i64", -9223372036854775807n)]);
 
 // ./test/core/int_literals.wast:53
-assert_return(() => invoke($0, `i64.smin`, []), [
-  value("i64", -9223372036854775808n),
-]);
+assert_return(() => invoke($0, `i64.smin`, []), [value("i64", -9223372036854775808n)]);
 
 // ./test/core/int_literals.wast:54
-assert_return(() => invoke($0, `i64.alt_smin`, []), [
-  value("i64", -9223372036854775808n),
-]);
+assert_return(() => invoke($0, `i64.alt_smin`, []), [value("i64", -9223372036854775808n)]);
 
 // ./test/core/int_literals.wast:55
-assert_return(() => invoke($0, `i64.inc_smin`, []), [
-  value("i64", -9223372036854775807n),
-]);
+assert_return(() => invoke($0, `i64.inc_smin`, []), [value("i64", -9223372036854775807n)]);
 
 // ./test/core/int_literals.wast:56
 assert_return(() => invoke($0, `i64.neg_zero`, []), [value("i64", 0n)]);
@@ -131,9 +113,7 @@ assert_return(() => invoke($0, `i64.neg_zero`, []), [value("i64", 0n)]);
 assert_return(() => invoke($0, `i64.not_octal`, []), [value("i64", 10n)]);
 
 // ./test/core/int_literals.wast:58
-assert_return(() => invoke($0, `i64.unsigned_decimal`, []), [
-  value("i64", -1n),
-]);
+assert_return(() => invoke($0, `i64.unsigned_decimal`, []), [value("i64", -1n)]);
 
 // ./test/core/int_literals.wast:59
 assert_return(() => invoke($0, `i64.plus_sign`, []), [value("i64", 42n)]);
@@ -157,36 +137,22 @@ assert_return(() => invoke($0, `i64-dec-sep1`, []), [value("i64", 1000000n)]);
 assert_return(() => invoke($0, `i64-dec-sep2`, []), [value("i64", 1000n)]);
 
 // ./test/core/int_literals.wast:68
-assert_return(() => invoke($0, `i64-hex-sep1`, []), [
-  value("i64", 3078696982321561n),
-]);
+assert_return(() => invoke($0, `i64-hex-sep1`, []), [value("i64", 3078696982321561n)]);
 
 // ./test/core/int_literals.wast:69
 assert_return(() => invoke($0, `i64-hex-sep2`, []), [value("i64", 109071n)]);
 
 // ./test/core/int_literals.wast:71
-assert_malformed(
-  () => instantiate(`(global i32 (i32.const _100)) `),
-  `unknown operator`,
-);
+assert_malformed(() => instantiate(`(global i32 (i32.const _100)) `), `unknown operator`);
 
 // ./test/core/int_literals.wast:75
-assert_malformed(
-  () => instantiate(`(global i32 (i32.const +_100)) `),
-  `unknown operator`,
-);
+assert_malformed(() => instantiate(`(global i32 (i32.const +_100)) `), `unknown operator`);
 
 // ./test/core/int_literals.wast:79
-assert_malformed(
-  () => instantiate(`(global i32 (i32.const -_100)) `),
-  `unknown operator`,
-);
+assert_malformed(() => instantiate(`(global i32 (i32.const -_100)) `), `unknown operator`);
 
 // ./test/core/int_literals.wast:83
-assert_malformed(
-  () => instantiate(`(global i32 (i32.const 99_)) `),
-  `unknown operator`,
-);
+assert_malformed(() => instantiate(`(global i32 (i32.const 99_)) `), `unknown operator`);
 
 // ./test/core/int_literals.wast:87
 assert_malformed(
@@ -213,10 +179,7 @@ assert_malformed(
 );
 
 // ./test/core/int_literals.wast:103
-assert_malformed(
-  () => instantiate(`(global i32 (i32.const 0x00_)) `),
-  `unknown operator`,
-);
+assert_malformed(() => instantiate(`(global i32 (i32.const 0x00_)) `), `unknown operator`);
 
 // ./test/core/int_literals.wast:107
 assert_malformed(
@@ -225,28 +188,16 @@ assert_malformed(
 );
 
 // ./test/core/int_literals.wast:112
-assert_malformed(
-  () => instantiate(`(global i64 (i64.const _100)) `),
-  `unknown operator`,
-);
+assert_malformed(() => instantiate(`(global i64 (i64.const _100)) `), `unknown operator`);
 
 // ./test/core/int_literals.wast:116
-assert_malformed(
-  () => instantiate(`(global i64 (i64.const +_100)) `),
-  `unknown operator`,
-);
+assert_malformed(() => instantiate(`(global i64 (i64.const +_100)) `), `unknown operator`);
 
 // ./test/core/int_literals.wast:120
-assert_malformed(
-  () => instantiate(`(global i64 (i64.const -_100)) `),
-  `unknown operator`,
-);
+assert_malformed(() => instantiate(`(global i64 (i64.const -_100)) `), `unknown operator`);
 
 // ./test/core/int_literals.wast:124
-assert_malformed(
-  () => instantiate(`(global i64 (i64.const 99_)) `),
-  `unknown operator`,
-);
+assert_malformed(() => instantiate(`(global i64 (i64.const 99_)) `), `unknown operator`);
 
 // ./test/core/int_literals.wast:128
 assert_malformed(
@@ -273,10 +224,7 @@ assert_malformed(
 );
 
 // ./test/core/int_literals.wast:144
-assert_malformed(
-  () => instantiate(`(global i64 (i64.const 0x00_)) `),
-  `unknown operator`,
-);
+assert_malformed(() => instantiate(`(global i64 (i64.const 0x00_)) `), `unknown operator`);
 
 // ./test/core/int_literals.wast:148
 assert_malformed(

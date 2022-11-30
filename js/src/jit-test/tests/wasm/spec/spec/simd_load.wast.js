@@ -27,36 +27,21 @@ let $0 = instantiate(`(module
 )`);
 
 // ./test/core/simd/simd_load.wast:11
-assert_return(() => invoke($0, `v128.load`, []), [
-  i8x16([
-    0x0,
-    0x1,
-    0x2,
-    0x3,
-    0x4,
-    0x5,
-    0x6,
-    0x7,
-    0x8,
-    0x9,
-    0xa,
-    0xb,
-    0xc,
-    0xd,
-    0xe,
-    0xf,
-  ]),
-]);
+assert_return(
+  () => invoke($0, `v128.load`, []),
+  [
+    i8x16([0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf]),
+  ],
+);
 
 // ./test/core/simd/simd_load.wast:12
-assert_return(() => invoke($0, `v128.load`, []), [
-  i16x8([0x100, 0x302, 0x504, 0x706, 0x908, 0xb0a, 0xd0c, 0xf0e]),
-]);
+assert_return(
+  () => invoke($0, `v128.load`, []),
+  [i16x8([0x100, 0x302, 0x504, 0x706, 0x908, 0xb0a, 0xd0c, 0xf0e])],
+);
 
 // ./test/core/simd/simd_load.wast:13
-assert_return(() => invoke($0, `v128.load`, []), [
-  i32x4([0x3020100, 0x7060504, 0xb0a0908, 0xf0e0d0c]),
-]);
+assert_return(() => invoke($0, `v128.load`, []), [i32x4([0x3020100, 0x7060504, 0xb0a0908, 0xf0e0d0c])]);
 
 // ./test/core/simd/simd_load.wast:18
 let $1 = instantiate(`(module (memory 1)
@@ -67,9 +52,7 @@ let $1 = instantiate(`(module (memory 1)
 )`);
 
 // ./test/core/simd/simd_load.wast:24
-assert_return(() => invoke($1, `as-i8x16_extract_lane_s-value/0`, []), [
-  value("i32", 0),
-]);
+assert_return(() => invoke($1, `as-i8x16_extract_lane_s-value/0`, []), [value("i32", 0)]);
 
 // ./test/core/simd/simd_load.wast:26
 let $2 = instantiate(`(module (memory 1)
@@ -80,9 +63,7 @@ let $2 = instantiate(`(module (memory 1)
 )`);
 
 // ./test/core/simd/simd_load.wast:32
-assert_return(() => invoke($2, `as-i8x16.eq-operand`, []), [
-  i32x4([0xffffffff, 0x0, 0x0, 0x0]),
-]);
+assert_return(() => invoke($2, `as-i8x16.eq-operand`, []), [i32x4([0xffffffff, 0x0, 0x0, 0x0])]);
 
 // ./test/core/simd/simd_load.wast:34
 let $3 = instantiate(`(module (memory 1)
@@ -96,14 +77,13 @@ let $3 = instantiate(`(module (memory 1)
 )`);
 
 // ./test/core/simd/simd_load.wast:43
-assert_return(() => invoke($3, `as-v128.not-operand`, []), [
-  i32x4([0xfcfdfeff, 0xf8f9fafb, 0xf4f5f6f7, 0xf0f1f2f3]),
-]);
+assert_return(
+  () => invoke($3, `as-v128.not-operand`, []),
+  [i32x4([0xfcfdfeff, 0xf8f9fafb, 0xf4f5f6f7, 0xf0f1f2f3])],
+);
 
 // ./test/core/simd/simd_load.wast:44
-assert_return(() => invoke($3, `as-i8x16.all_true-operand`, []), [
-  value("i32", 0),
-]);
+assert_return(() => invoke($3, `as-i8x16.all_true-operand`, []), [value("i32", 0)]);
 
 // ./test/core/simd/simd_load.wast:46
 let $4 = instantiate(`(module (memory 1)
@@ -116,9 +96,10 @@ let $4 = instantiate(`(module (memory 1)
 )`);
 
 // ./test/core/simd/simd_load.wast:54
-assert_return(() => invoke($4, `as-v128.bitselect-operand`, []), [
-  i32x4([0xabababab, 0xaaaaaaaa, 0xbbbbbbbb, 0xbbaabbaa]),
-]);
+assert_return(
+  () => invoke($4, `as-v128.bitselect-operand`, []),
+  [i32x4([0xabababab, 0xaaaaaaaa, 0xbbbbbbbb, 0xbbaabbaa])],
+);
 
 // ./test/core/simd/simd_load.wast:56
 let $5 = instantiate(`(module (memory 1)
@@ -129,9 +110,10 @@ let $5 = instantiate(`(module (memory 1)
 )`);
 
 // ./test/core/simd/simd_load.wast:62
-assert_return(() => invoke($5, `as-i8x16.shl-operand`, []), [
-  i32x4([0x54545454, 0x54545454, 0x54545454, 0x54545454]),
-]);
+assert_return(
+  () => invoke($5, `as-i8x16.shl-operand`, []),
+  [i32x4([0x54545454, 0x54545454, 0x54545454, 0x54545454])],
+);
 
 // ./test/core/simd/simd_load.wast:64
 let $6 = instantiate(`(module (memory 1)
@@ -148,9 +130,7 @@ let $6 = instantiate(`(module (memory 1)
 )`);
 
 // ./test/core/simd/simd_load.wast:76
-assert_return(() => invoke($6, `as-add/sub-operand`, []), [
-  i32x4([0x2, 0x2, 0x2, 0x2]),
-]);
+assert_return(() => invoke($6, `as-add/sub-operand`, []), [i32x4([0x2, 0x2, 0x2, 0x2])]);
 
 // ./test/core/simd/simd_load.wast:78
 let $7 = instantiate(`(module (memory 1)
@@ -162,14 +142,17 @@ let $7 = instantiate(`(module (memory 1)
 )`);
 
 // ./test/core/simd/simd_load.wast:85
-assert_return(() => invoke($7, `as-f32x4.mul-operand`, []), [
-  new F32x4Pattern(
-    value("f32", 256),
-    value("f32", 2),
-    value("f32", 3.6),
-    value("f32", -2),
-  ),
-]);
+assert_return(
+  () => invoke($7, `as-f32x4.mul-operand`, []),
+  [
+    new F32x4Pattern(
+      value("f32", 256),
+      value("f32", 2),
+      value("f32", 3.6),
+      value("f32", -2),
+    ),
+  ],
+);
 
 // ./test/core/simd/simd_load.wast:87
 let $8 = instantiate(`(module (memory 1)
@@ -180,9 +163,10 @@ let $8 = instantiate(`(module (memory 1)
 )`);
 
 // ./test/core/simd/simd_load.wast:93
-assert_return(() => invoke($8, `as-f32x4.abs-operand`, []), [
-  i32x4([0x7fffffff, 0x7fffffff, 0x7fffffff, 0x7fffffff]),
-]);
+assert_return(
+  () => invoke($8, `as-f32x4.abs-operand`, []),
+  [i32x4([0x7fffffff, 0x7fffffff, 0x7fffffff, 0x7fffffff])],
+);
 
 // ./test/core/simd/simd_load.wast:95
 let $9 = instantiate(`(module (memory 1)
@@ -194,9 +178,10 @@ let $9 = instantiate(`(module (memory 1)
 )`);
 
 // ./test/core/simd/simd_load.wast:102
-assert_return(() => invoke($9, `as-f32x4.min-operand`, []), [
-  i32x4([0xaaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa]),
-]);
+assert_return(
+  () => invoke($9, `as-f32x4.min-operand`, []),
+  [i32x4([0xaaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa])],
+);
 
 // ./test/core/simd/simd_load.wast:104
 let $10 = instantiate(`(module (memory 1)
@@ -207,9 +192,10 @@ let $10 = instantiate(`(module (memory 1)
 )`);
 
 // ./test/core/simd/simd_load.wast:110
-assert_return(() => invoke($10, `as-i32x4.trunc_sat_f32x4_s-operand`, []), [
-  i32x4([0x80, 0x1, 0x1, 0xffffffff]),
-]);
+assert_return(
+  () => invoke($10, `as-i32x4.trunc_sat_f32x4_s-operand`, []),
+  [i32x4([0x80, 0x1, 0x1, 0xffffffff])],
+);
 
 // ./test/core/simd/simd_load.wast:112
 let $11 = instantiate(`(module (memory 1)
@@ -220,14 +206,17 @@ let $11 = instantiate(`(module (memory 1)
 )`);
 
 // ./test/core/simd/simd_load.wast:118
-assert_return(() => invoke($11, `as-f32x4.convert_i32x4_u-operand`, []), [
-  new F32x4Pattern(
-    value("f32", 2),
-    value("f32", 2),
-    value("f32", 2),
-    value("f32", 2),
-  ),
-]);
+assert_return(
+  () => invoke($11, `as-f32x4.convert_i32x4_u-operand`, []),
+  [
+    new F32x4Pattern(
+      value("f32", 2),
+      value("f32", 2),
+      value("f32", 2),
+      value("f32", 2),
+    ),
+  ],
+);
 
 // ./test/core/simd/simd_load.wast:120
 let $12 = instantiate(`(module (memory 1)
@@ -239,26 +228,12 @@ let $12 = instantiate(`(module (memory 1)
 )`);
 
 // ./test/core/simd/simd_load.wast:127
-assert_return(() => invoke($12, `as-i8x16.swizzle-operand`, []), [
-  i8x16([
-    0x73,
-    0x72,
-    0x71,
-    0x70,
-    0x6f,
-    0x6e,
-    0x6d,
-    0x6c,
-    0x6b,
-    0x6a,
-    0x69,
-    0x68,
-    0x67,
-    0x66,
-    0x65,
-    0x64,
-  ]),
-]);
+assert_return(
+  () => invoke($12, `as-i8x16.swizzle-operand`, []),
+  [
+    i8x16([0x73, 0x72, 0x71, 0x70, 0x6f, 0x6e, 0x6d, 0x6c, 0x6b, 0x6a, 0x69, 0x68, 0x67, 0x66, 0x65, 0x64]),
+  ],
+);
 
 // ./test/core/simd/simd_load.wast:129
 let $13 = instantiate(`(module (memory 1)
@@ -269,68 +244,47 @@ let $13 = instantiate(`(module (memory 1)
 )`);
 
 // ./test/core/simd/simd_load.wast:135
-assert_return(() => invoke($13, `as-br-value`, []), [
-  i32x4([0x3020100, 0x7060504, 0xb0a0908, 0xf0e0d0c]),
-]);
+assert_return(() => invoke($13, `as-br-value`, []), [i32x4([0x3020100, 0x7060504, 0xb0a0908, 0xf0e0d0c])]);
 
 // ./test/core/simd/simd_load.wast:140
 assert_malformed(
-  () =>
-    instantiate(
-      `(memory 1) (func (local v128) (drop (v128.load8 (i32.const 0)))) `,
-    ),
+  () => instantiate(`(memory 1) (func (local v128) (drop (v128.load8 (i32.const 0)))) `),
   `unknown operator`,
 );
 
 // ./test/core/simd/simd_load.wast:147
 assert_malformed(
-  () =>
-    instantiate(
-      `(memory 1) (func (local v128) (drop (v128.load16 (i32.const 0)))) `,
-    ),
+  () => instantiate(`(memory 1) (func (local v128) (drop (v128.load16 (i32.const 0)))) `),
   `unknown operator`,
 );
 
 // ./test/core/simd/simd_load.wast:154
 assert_malformed(
-  () =>
-    instantiate(
-      `(memory 1) (func (local v128) (drop (v128.load32 (i32.const 0)))) `,
-    ),
+  () => instantiate(`(memory 1) (func (local v128) (drop (v128.load32 (i32.const 0)))) `),
   `unknown operator`,
 );
 
 // ./test/core/simd/simd_load.wast:165
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory 1) (func (local v128) (drop (v128.load (f32.const 0)))))`,
-    ),
+  () => instantiate(`(module (memory 1) (func (local v128) (drop (v128.load (f32.const 0)))))`),
   `type mismatch`,
 );
 
 // ./test/core/simd/simd_load.wast:169
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory 1) (func (local v128) (block (br_if 0 (v128.load (i32.const 0))))))`,
-    ),
+  () => instantiate(`(module (memory 1) (func (local v128) (block (br_if 0 (v128.load (i32.const 0))))))`),
   `type mismatch`,
 );
 
 // ./test/core/simd/simd_load.wast:173
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory 1) (func (local v128) (v128.load (i32.const 0))))`,
-    ),
+  () => instantiate(`(module (memory 1) (func (local v128) (v128.load (i32.const 0))))`),
   `type mismatch`,
 );
 
 // ./test/core/simd/simd_load.wast:181
 assert_invalid(
-  () =>
-    instantiate(`(module (memory 1) (func (drop (v128.load (local.get 2)))))`),
+  () => instantiate(`(module (memory 1) (func (drop (v128.load (local.get 2)))))`),
   `unknown local 2`,
 );
 

@@ -764,32 +764,34 @@ assert_trap(() => invoke($6, `check`, [28]), `uninitialized element`);
 assert_trap(() => invoke($6, `check`, [29]), `uninitialized element`);
 
 // ./test/core/table_init.wast:378
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (func (export "test")
-      (elem.drop 0)))`), `unknown elem segment 0`);
+      (elem.drop 0)))`),
+  `unknown elem segment 0`,
+);
 
 // ./test/core/table_init.wast:384
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (func (export "test")
       (table.init 0 (i32.const 12) (i32.const 1) (i32.const 1))))`),
   `unknown table 0`,
 );
 
 // ./test/core/table_init.wast:390
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (elem funcref (ref.func 0))
     (func (result i32) (i32.const 0))
     (func (export "test")
-      (elem.drop 4)))`), `unknown elem segment 4`);
+      (elem.drop 4)))`),
+  `unknown elem segment 4`,
+);
 
 // ./test/core/table_init.wast:398
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (elem funcref (ref.func 0))
     (func (result i32) (i32.const 0))
     (func (export "test")
@@ -1366,8 +1368,7 @@ assert_trap(() => invoke($27, `test`, []), `out of bounds table access`);
 
 // ./test/core/table_init.wast:911
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1378,8 +1379,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:920
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1390,8 +1390,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:929
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1402,8 +1401,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:938
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1414,8 +1412,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:947
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1426,8 +1423,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:956
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1438,8 +1434,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:965
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1450,8 +1445,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:974
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1462,8 +1456,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:983
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1474,8 +1467,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:992
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1486,8 +1478,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1001
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1498,8 +1489,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1010
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1510,8 +1500,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1019
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1522,8 +1511,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1028
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1534,8 +1522,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1037
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1546,8 +1533,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1046
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1558,8 +1544,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1055
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1570,8 +1555,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1064
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1582,8 +1566,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1073
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1594,8 +1577,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1082
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1606,8 +1588,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1091
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1618,8 +1599,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1100
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1630,8 +1610,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1109
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1642,8 +1621,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1118
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1654,8 +1632,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1127
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1666,8 +1643,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1136
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1678,8 +1654,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1145
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1690,8 +1665,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1154
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1702,8 +1676,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1163
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1714,8 +1687,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1172
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1726,8 +1698,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1181
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1738,8 +1709,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1190
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1750,8 +1720,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1199
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1762,8 +1731,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1208
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1774,8 +1742,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1217
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1786,8 +1753,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1226
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1798,8 +1764,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1235
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1810,8 +1775,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1244
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1822,8 +1786,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1253
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1834,8 +1797,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1262
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1846,8 +1808,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1271
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1858,8 +1819,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1280
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1870,8 +1830,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1289
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1882,8 +1841,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1298
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1894,8 +1852,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1307
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1906,8 +1863,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1316
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1918,8 +1874,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1325
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1930,8 +1885,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1334
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1942,8 +1896,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1343
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1954,8 +1907,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1352
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1966,8 +1918,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1361
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1978,8 +1929,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1370
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -1990,8 +1940,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1379
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -2002,8 +1951,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1388
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -2014,8 +1962,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1397
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -2026,8 +1973,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1406
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -2038,8 +1984,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1415
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -2050,8 +1995,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1424
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -2062,8 +2006,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1433
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -2074,8 +2017,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1442
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -2086,8 +2028,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1451
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -2098,8 +2039,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1460
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)
@@ -2110,8 +2050,7 @@ assert_invalid(
 
 // ./test/core/table_init.wast:1469
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (table 10 funcref)
     (elem funcref (ref.func $$f0) (ref.func $$f0) (ref.func $$f0))
     (func $$f0)

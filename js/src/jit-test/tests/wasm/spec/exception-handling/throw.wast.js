@@ -82,7 +82,6 @@ assert_invalid(
 
 // ./test/core/throw.wast:50
 assert_invalid(
-  () =>
-    instantiate(`(module (tag (param i32)) (func (i64.const 5) (throw 0)))`),
+  () => instantiate(`(module (tag (param i32)) (func (i64.const 5) (throw 0)))`),
   `type mismatch: instruction requires [i32] but stack has [i64]`,
 );

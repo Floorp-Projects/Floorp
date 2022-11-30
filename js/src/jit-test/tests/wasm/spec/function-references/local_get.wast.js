@@ -141,14 +141,10 @@ assert_return(() => invoke($0, `type-param-i32`, [2]), [value("i32", 2)]);
 assert_return(() => invoke($0, `type-param-i64`, [3n]), [value("i64", 3n)]);
 
 // ./test/core/local_get.wast:116
-assert_return(() => invoke($0, `type-param-f32`, [value("f32", 4.4)]), [
-  value("f32", 4.4),
-]);
+assert_return(() => invoke($0, `type-param-f32`, [value("f32", 4.4)]), [value("f32", 4.4)]);
 
 // ./test/core/local_get.wast:117
-assert_return(() => invoke($0, `type-param-f64`, [value("f64", 5.5)]), [
-  value("f64", 5.5),
-]);
+assert_return(() => invoke($0, `type-param-f64`, [value("f64", 5.5)]), [value("f64", 5.5)]);
 
 // ./test/core/local_get.wast:119
 assert_return(() => invoke($0, `as-block-value`, [6]), [value("i32", 6)]);
@@ -163,9 +159,7 @@ assert_return(() => invoke($0, `as-br-value`, [8]), [value("i32", 8)]);
 assert_return(() => invoke($0, `as-br_if-value`, [9]), [value("i32", 9)]);
 
 // ./test/core/local_get.wast:124
-assert_return(() => invoke($0, `as-br_if-value-cond`, [10]), [
-  value("i32", 10),
-]);
+assert_return(() => invoke($0, `as-br_if-value-cond`, [10]), [value("i32", 10)]);
 
 // ./test/core/local_get.wast:125
 assert_return(() => invoke($0, `as-br_table-value`, [1]), [value("i32", 2)]);
@@ -180,11 +174,7 @@ assert_return(() => invoke($0, `as-if-then`, [1]), [value("i32", 1)]);
 assert_return(() => invoke($0, `as-if-else`, [0]), [value("i32", 0)]);
 
 // ./test/core/local_get.wast:132
-assert_return(
-  () =>
-    invoke($0, `type-mixed`, [1n, value("f32", 2.2), value("f64", 3.3), 4, 5]),
-  [],
-);
+assert_return(() => invoke($0, `type-mixed`, [1n, value("f32", 2.2), value("f64", 3.3), 4, 5]), []);
 
 // ./test/core/local_get.wast:138
 assert_return(
@@ -194,145 +184,97 @@ assert_return(
 
 // ./test/core/local_get.wast:148
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-local-num-vs-num (result i64) (local i32) (local.get 0)))`,
-    ),
+  () => instantiate(`(module (func $$type-local-num-vs-num (result i64) (local i32) (local.get 0)))`),
   `type mismatch`,
 );
 
 // ./test/core/local_get.wast:152
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-local-num-vs-num (result i32) (local f32) (i32.eqz (local.get 0))))`,
-    ),
+  () => instantiate(`(module (func $$type-local-num-vs-num (result i32) (local f32) (i32.eqz (local.get 0))))`),
   `type mismatch`,
 );
 
 // ./test/core/local_get.wast:156
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-local-num-vs-num (result f64) (local f64 i64) (f64.neg (local.get 1))))`,
-    ),
+  () => instantiate(`(module (func $$type-local-num-vs-num (result f64) (local f64 i64) (f64.neg (local.get 1))))`),
   `type mismatch`,
 );
 
 // ./test/core/local_get.wast:164
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-param-num-vs-num (param i32) (result i64) (local.get 0)))`,
-    ),
+  () => instantiate(`(module (func $$type-param-num-vs-num (param i32) (result i64) (local.get 0)))`),
   `type mismatch`,
 );
 
 // ./test/core/local_get.wast:168
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-param-num-vs-num (param f32) (result i32) (i32.eqz (local.get 0))))`,
-    ),
+  () => instantiate(`(module (func $$type-param-num-vs-num (param f32) (result i32) (i32.eqz (local.get 0))))`),
   `type mismatch`,
 );
 
 // ./test/core/local_get.wast:172
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-param-num-vs-num (param f64 i64) (result f64) (f64.neg (local.get 1))))`,
-    ),
+  () => instantiate(`(module (func $$type-param-num-vs-num (param f64 i64) (result f64) (f64.neg (local.get 1))))`),
   `type mismatch`,
 );
 
 // ./test/core/local_get.wast:180
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-empty-vs-i32 (local i32) (local.get 0)))`,
-    ),
+  () => instantiate(`(module (func $$type-empty-vs-i32 (local i32) (local.get 0)))`),
   `type mismatch`,
 );
 
 // ./test/core/local_get.wast:184
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-empty-vs-i64 (local i64) (local.get 0)))`,
-    ),
+  () => instantiate(`(module (func $$type-empty-vs-i64 (local i64) (local.get 0)))`),
   `type mismatch`,
 );
 
 // ./test/core/local_get.wast:188
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-empty-vs-f32 (local f32) (local.get 0)))`,
-    ),
+  () => instantiate(`(module (func $$type-empty-vs-f32 (local f32) (local.get 0)))`),
   `type mismatch`,
 );
 
 // ./test/core/local_get.wast:192
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-empty-vs-f64 (local f64) (local.get 0)))`,
-    ),
+  () => instantiate(`(module (func $$type-empty-vs-f64 (local f64) (local.get 0)))`),
   `type mismatch`,
 );
 
 // ./test/core/local_get.wast:200
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$unbound-local (local i32 i64) (local.get 3) drop))`,
-    ),
+  () => instantiate(`(module (func $$unbound-local (local i32 i64) (local.get 3) drop))`),
   `unknown local`,
 );
 
 // ./test/core/local_get.wast:204
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$large-local (local i32 i64) (local.get 14324343) drop))`,
-    ),
+  () => instantiate(`(module (func $$large-local (local i32 i64) (local.get 14324343) drop))`),
   `unknown local`,
 );
 
 // ./test/core/local_get.wast:209
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$unbound-param (param i32 i64) (local.get 2) drop))`,
-    ),
+  () => instantiate(`(module (func $$unbound-param (param i32 i64) (local.get 2) drop))`),
   `unknown local`,
 );
 
 // ./test/core/local_get.wast:213
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$large-param (param i32 i64) (local.get 714324343) drop))`,
-    ),
+  () => instantiate(`(module (func $$large-param (param i32 i64) (local.get 714324343) drop))`),
   `unknown local`,
 );
 
 // ./test/core/local_get.wast:218
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$unbound-mixed (param i32) (local i32 i64) (local.get 3) drop))`,
-    ),
+  () => instantiate(`(module (func $$unbound-mixed (param i32) (local i32 i64) (local.get 3) drop))`),
   `unknown local`,
 );
 
 // ./test/core/local_get.wast:222
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$large-mixed (param i64) (local i32 i64) (local.get 214324343) drop))`,
-    ),
+  () => instantiate(`(module (func $$large-mixed (param i64) (local i32 i64) (local.get 214324343) drop))`),
   `unknown local`,
 );
 
@@ -357,19 +299,18 @@ let $1 = instantiate(`(module
 
 // ./test/core/local_get.wast:252
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$uninit (local $$x (ref extern)) (drop (local.get $$x))))`,
-    ),
+  () => instantiate(`(module (func $$uninit (local $$x (ref extern)) (drop (local.get $$x))))`),
   `uninitialized local`,
 );
 
 // ./test/core/local_get.wast:256
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (func $$uninit-after-end (param $$p (ref extern))
       (local $$x (ref extern))
       (block (local.set $$x (local.get $$p)) (drop (local.tee $$x (local.get $$p))))
       (drop (local.get $$x))
     )
-  )`), `uninitialized local`);
+  )`),
+  `uninitialized local`,
+);

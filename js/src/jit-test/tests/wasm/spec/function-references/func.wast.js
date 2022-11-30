@@ -264,9 +264,7 @@ assert_return(() => invoke($0, `type-use-2`, []), [value("i32", 0)]);
 assert_return(() => invoke($0, `type-use-3`, [1]), []);
 
 // ./test/core/func.wast:244
-assert_return(() => invoke($0, `type-use-4`, [1, value("f64", 1), 1]), [
-  value("i32", 0),
-]);
+assert_return(() => invoke($0, `type-use-4`, [1, value("f64", 1), 1]), [value("i32", 0)]);
 
 // ./test/core/func.wast:248
 assert_return(() => invoke($0, `type-use-5`, []), [value("i32", 0)]);
@@ -275,9 +273,7 @@ assert_return(() => invoke($0, `type-use-5`, []), [value("i32", 0)]);
 assert_return(() => invoke($0, `type-use-6`, [1]), []);
 
 // ./test/core/func.wast:250
-assert_return(() => invoke($0, `type-use-7`, [1, value("f64", 1), 1]), [
-  value("i32", 0),
-]);
+assert_return(() => invoke($0, `type-use-7`, [1, value("f64", 1), 1]), [value("i32", 0)]);
 
 // ./test/core/func.wast:255
 assert_return(() => invoke($0, `local-first-i32`, []), [value("i32", 0)]);
@@ -310,9 +306,7 @@ assert_return(() => invoke($0, `local-mixed`, []), [value("f64", 0)]);
 assert_return(() => invoke($0, `param-first-i32`, [2, 3]), [value("i32", 2)]);
 
 // ./test/core/func.wast:268
-assert_return(() => invoke($0, `param-first-i64`, [2n, 3n]), [
-  value("i64", 2n),
-]);
+assert_return(() => invoke($0, `param-first-i64`, [2n, 3n]), [value("i64", 2n)]);
 
 // ./test/core/func.wast:271
 assert_return(
@@ -330,9 +324,7 @@ assert_return(
 assert_return(() => invoke($0, `param-second-i32`, [2, 3]), [value("i32", 3)]);
 
 // ./test/core/func.wast:280
-assert_return(() => invoke($0, `param-second-i64`, [2n, 3n]), [
-  value("i64", 3n),
-]);
+assert_return(() => invoke($0, `param-second-i64`, [2n, 3n]), [value("i64", 3n)]);
 
 // ./test/core/func.wast:283
 assert_return(
@@ -348,15 +340,7 @@ assert_return(
 
 // ./test/core/func.wast:290
 assert_return(
-  () =>
-    invoke($0, `param-mixed`, [
-      value("f32", 1),
-      2,
-      3n,
-      4,
-      value("f64", 5.5),
-      6,
-    ]),
+  () => invoke($0, `param-mixed`, [value("f32", 1), 2, 3n, 4, value("f64", 5.5), 6]),
   [value("f64", 5.5)],
 );
 
@@ -379,17 +363,13 @@ assert_return(() => invoke($0, `value-f32`, []), [value("f32", 77.7)]);
 assert_return(() => invoke($0, `value-f64`, []), [value("f64", 77.77)]);
 
 // ./test/core/func.wast:304
-assert_return(() => invoke($0, `value-i32-f64`, []), [
-  value("i32", 77),
-  value("f64", 7),
-]);
+assert_return(() => invoke($0, `value-i32-f64`, []), [value("i32", 77), value("f64", 7)]);
 
 // ./test/core/func.wast:305
-assert_return(() => invoke($0, `value-i32-i32-i32`, []), [
-  value("i32", 1),
-  value("i32", 2),
-  value("i32", 3),
-]);
+assert_return(
+  () => invoke($0, `value-i32-i32-i32`, []),
+  [value("i32", 1), value("i32", 2), value("i32", 3)],
+);
 
 // ./test/core/func.wast:308
 assert_return(() => invoke($0, `value-block-void`, []), []);
@@ -398,10 +378,7 @@ assert_return(() => invoke($0, `value-block-void`, []), []);
 assert_return(() => invoke($0, `value-block-i32`, []), [value("i32", 77)]);
 
 // ./test/core/func.wast:310
-assert_return(() => invoke($0, `value-block-i32-i64`, []), [
-  value("i32", 1),
-  value("i64", 2n),
-]);
+assert_return(() => invoke($0, `value-block-i32-i64`, []), [value("i32", 1), value("i64", 2n)]);
 
 // ./test/core/func.wast:312
 assert_return(() => invoke($0, `return-empty`, []), []);
@@ -419,26 +396,19 @@ assert_return(() => invoke($0, `return-f32`, []), [value("f32", 78.7)]);
 assert_return(() => invoke($0, `return-f64`, []), [value("f64", 78.78)]);
 
 // ./test/core/func.wast:317
-assert_return(() => invoke($0, `return-i32-f64`, []), [
-  value("i32", 78),
-  value("f64", 78.78),
-]);
+assert_return(() => invoke($0, `return-i32-f64`, []), [value("i32", 78), value("f64", 78.78)]);
 
 // ./test/core/func.wast:318
-assert_return(() => invoke($0, `return-i32-i32-i32`, []), [
-  value("i32", 1),
-  value("i32", 2),
-  value("i32", 3),
-]);
+assert_return(
+  () => invoke($0, `return-i32-i32-i32`, []),
+  [value("i32", 1), value("i32", 2), value("i32", 3)],
+);
 
 // ./test/core/func.wast:321
 assert_return(() => invoke($0, `return-block-i32`, []), [value("i32", 77)]);
 
 // ./test/core/func.wast:322
-assert_return(() => invoke($0, `return-block-i32-i64`, []), [
-  value("i32", 1),
-  value("i64", 2n),
-]);
+assert_return(() => invoke($0, `return-block-i32-i64`, []), [value("i32", 1), value("i64", 2n)]);
 
 // ./test/core/func.wast:324
 assert_return(() => invoke($0, `break-empty`, []), []);
@@ -456,26 +426,19 @@ assert_return(() => invoke($0, `break-f32`, []), [value("f32", 79.9)]);
 assert_return(() => invoke($0, `break-f64`, []), [value("f64", 79.79)]);
 
 // ./test/core/func.wast:329
-assert_return(() => invoke($0, `break-i32-f64`, []), [
-  value("i32", 79),
-  value("f64", 79.79),
-]);
+assert_return(() => invoke($0, `break-i32-f64`, []), [value("i32", 79), value("f64", 79.79)]);
 
 // ./test/core/func.wast:330
-assert_return(() => invoke($0, `break-i32-i32-i32`, []), [
-  value("i32", 1),
-  value("i32", 2),
-  value("i32", 3),
-]);
+assert_return(
+  () => invoke($0, `break-i32-i32-i32`, []),
+  [value("i32", 1), value("i32", 2), value("i32", 3)],
+);
 
 // ./test/core/func.wast:333
 assert_return(() => invoke($0, `break-block-i32`, []), [value("i32", 77)]);
 
 // ./test/core/func.wast:334
-assert_return(() => invoke($0, `break-block-i32-i64`, []), [
-  value("i32", 1),
-  value("i64", 2n),
-]);
+assert_return(() => invoke($0, `break-block-i32-i64`, []), [value("i32", 1), value("i64", 2n)]);
 
 // ./test/core/func.wast:336
 assert_return(() => invoke($0, `break-br_if-empty`, [0]), []);
@@ -490,16 +453,10 @@ assert_return(() => invoke($0, `break-br_if-num`, [0]), [value("i32", 51)]);
 assert_return(() => invoke($0, `break-br_if-num`, [1]), [value("i32", 50)]);
 
 // ./test/core/func.wast:340
-assert_return(() => invoke($0, `break-br_if-num-num`, [0]), [
-  value("i32", 51),
-  value("i64", 52n),
-]);
+assert_return(() => invoke($0, `break-br_if-num-num`, [0]), [value("i32", 51), value("i64", 52n)]);
 
 // ./test/core/func.wast:343
-assert_return(() => invoke($0, `break-br_if-num-num`, [1]), [
-  value("i32", 50),
-  value("i64", 51n),
-]);
+assert_return(() => invoke($0, `break-br_if-num-num`, [1]), [value("i32", 50), value("i64", 51n)]);
 
 // ./test/core/func.wast:347
 assert_return(() => invoke($0, `break-br_table-empty`, [0]), []);
@@ -523,33 +480,19 @@ assert_return(() => invoke($0, `break-br_table-num`, [1]), [value("i32", 50)]);
 assert_return(() => invoke($0, `break-br_table-num`, [10]), [value("i32", 50)]);
 
 // ./test/core/func.wast:354
-assert_return(() => invoke($0, `break-br_table-num`, [-100]), [
-  value("i32", 50),
-]);
+assert_return(() => invoke($0, `break-br_table-num`, [-100]), [value("i32", 50)]);
 
 // ./test/core/func.wast:355
-assert_return(() => invoke($0, `break-br_table-num-num`, [0]), [
-  value("f32", 50),
-  value("i64", 51n),
-]);
+assert_return(() => invoke($0, `break-br_table-num-num`, [0]), [value("f32", 50), value("i64", 51n)]);
 
 // ./test/core/func.wast:358
-assert_return(() => invoke($0, `break-br_table-num-num`, [1]), [
-  value("f32", 50),
-  value("i64", 51n),
-]);
+assert_return(() => invoke($0, `break-br_table-num-num`, [1]), [value("f32", 50), value("i64", 51n)]);
 
 // ./test/core/func.wast:361
-assert_return(() => invoke($0, `break-br_table-num-num`, [10]), [
-  value("f32", 50),
-  value("i64", 51n),
-]);
+assert_return(() => invoke($0, `break-br_table-num-num`, [10]), [value("f32", 50), value("i64", 51n)]);
 
 // ./test/core/func.wast:364
-assert_return(() => invoke($0, `break-br_table-num-num`, [-100]), [
-  value("f32", 50),
-  value("i64", 51n),
-]);
+assert_return(() => invoke($0, `break-br_table-num-num`, [-100]), [value("f32", 50), value("i64", 51n)]);
 
 // ./test/core/func.wast:367
 assert_return(() => invoke($0, `break-br_table-nested-empty`, [0]), []);
@@ -564,71 +507,62 @@ assert_return(() => invoke($0, `break-br_table-nested-empty`, [3]), []);
 assert_return(() => invoke($0, `break-br_table-nested-empty`, [-2]), []);
 
 // ./test/core/func.wast:371
-assert_return(() => invoke($0, `break-br_table-nested-num`, [0]), [
-  value("i32", 52),
-]);
+assert_return(() => invoke($0, `break-br_table-nested-num`, [0]), [value("i32", 52)]);
 
 // ./test/core/func.wast:374
-assert_return(() => invoke($0, `break-br_table-nested-num`, [1]), [
-  value("i32", 50),
-]);
+assert_return(() => invoke($0, `break-br_table-nested-num`, [1]), [value("i32", 50)]);
 
 // ./test/core/func.wast:377
-assert_return(() => invoke($0, `break-br_table-nested-num`, [2]), [
-  value("i32", 52),
-]);
+assert_return(() => invoke($0, `break-br_table-nested-num`, [2]), [value("i32", 52)]);
 
 // ./test/core/func.wast:380
-assert_return(() => invoke($0, `break-br_table-nested-num`, [-3]), [
-  value("i32", 52),
-]);
+assert_return(() => invoke($0, `break-br_table-nested-num`, [-3]), [value("i32", 52)]);
 
 // ./test/core/func.wast:383
-assert_return(() => invoke($0, `break-br_table-nested-num-num`, [0]), [
-  value("i32", 101),
-  value("i32", 52),
-]);
+assert_return(
+  () => invoke($0, `break-br_table-nested-num-num`, [0]),
+  [value("i32", 101), value("i32", 52)],
+);
 
 // ./test/core/func.wast:387
-assert_return(() => invoke($0, `break-br_table-nested-num-num`, [1]), [
-  value("i32", 50),
-  value("i32", 51),
-]);
+assert_return(
+  () => invoke($0, `break-br_table-nested-num-num`, [1]),
+  [value("i32", 50), value("i32", 51)],
+);
 
 // ./test/core/func.wast:391
-assert_return(() => invoke($0, `break-br_table-nested-num-num`, [2]), [
-  value("i32", 101),
-  value("i32", 52),
-]);
+assert_return(
+  () => invoke($0, `break-br_table-nested-num-num`, [2]),
+  [value("i32", 101), value("i32", 52)],
+);
 
 // ./test/core/func.wast:395
-assert_return(() => invoke($0, `break-br_table-nested-num-num`, [-3]), [
-  value("i32", 101),
-  value("i32", 52),
-]);
+assert_return(
+  () => invoke($0, `break-br_table-nested-num-num`, [-3]),
+  [value("i32", 101), value("i32", 52)],
+);
 
 // ./test/core/func.wast:400
 assert_return(
-  () =>
-    invoke($0, `large-sig`, [
-      0,
-      1n,
-      value("f32", 2),
-      value("f32", 3),
-      4,
-      value("f64", 5),
-      value("f32", 6),
-      7,
-      8,
-      9,
-      value("f32", 10),
-      value("f64", 11),
-      value("f64", 12),
-      value("f64", 13),
-      14,
-      15,
-      value("f32", 16),
-    ]),
+  () => invoke($0, `large-sig`, [
+    0,
+    1n,
+    value("f32", 2),
+    value("f32", 3),
+    4,
+    value("f64", 5),
+    value("f32", 6),
+    7,
+    8,
+    9,
+    value("f32", 10),
+    value("f64", 11),
+    value("f64", 12),
+    value("f64", 13),
+    14,
+    15,
+    value("f32", 16),
+  ]),
   [
     value("f64", 5),
     value("f32", 2),
@@ -676,22 +610,21 @@ let $1 = instantiate(`(module
 )`);
 
 // ./test/core/func.wast:435
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (func $$f (result f64) (f64.const 0))  ;; adds implicit type definition
     (func $$g (param i32))                 ;; reuses explicit type definition
     (func $$h (result f64) (f64.const 1))  ;; reuses implicit type definition
     (type $$t (func (param i32)))
 
     (func (type 2))  ;; does not exist
-  )`), `unknown type`);
+  )`),
+  `unknown type`,
+);
 
 // ./test/core/func.wast:447
 assert_malformed(
-  () =>
-    instantiate(
-      `(func $$f (result f64) (f64.const 0)) (func $$g (param i32)) (func $$h (result f64) (f64.const 1)) (type $$t (func (param i32))) (func (type 2) (param i32)) `,
-    ),
+  () => instantiate(`(func $$f (result f64) (f64.const 0)) (func $$g (param i32)) (func $$h (result f64) (f64.const 1)) (type $$t (func (param i32))) (func (type 2) (param i32)) `),
   `unknown type`,
 );
 
@@ -807,46 +740,31 @@ assert_return(() => invoke($3, `signature-implicit-duplicate`, []), []);
 
 // ./test/core/func.wast:559
 assert_malformed(
-  () =>
-    instantiate(
-      `(type $$sig (func (param i32) (result i32))) (func (type $$sig) (result i32) (param i32) (i32.const 0)) `,
-    ),
+  () => instantiate(`(type $$sig (func (param i32) (result i32))) (func (type $$sig) (result i32) (param i32) (i32.const 0)) `),
   `unexpected token`,
 );
 
 // ./test/core/func.wast:566
 assert_malformed(
-  () =>
-    instantiate(
-      `(type $$sig (func (param i32) (result i32))) (func (param i32) (type $$sig) (result i32) (i32.const 0)) `,
-    ),
+  () => instantiate(`(type $$sig (func (param i32) (result i32))) (func (param i32) (type $$sig) (result i32) (i32.const 0)) `),
   `unexpected token`,
 );
 
 // ./test/core/func.wast:573
 assert_malformed(
-  () =>
-    instantiate(
-      `(type $$sig (func (param i32) (result i32))) (func (param i32) (result i32) (type $$sig) (i32.const 0)) `,
-    ),
+  () => instantiate(`(type $$sig (func (param i32) (result i32))) (func (param i32) (result i32) (type $$sig) (i32.const 0)) `),
   `unexpected token`,
 );
 
 // ./test/core/func.wast:580
 assert_malformed(
-  () =>
-    instantiate(
-      `(type $$sig (func (param i32) (result i32))) (func (result i32) (type $$sig) (param i32) (i32.const 0)) `,
-    ),
+  () => instantiate(`(type $$sig (func (param i32) (result i32))) (func (result i32) (type $$sig) (param i32) (i32.const 0)) `),
   `unexpected token`,
 );
 
 // ./test/core/func.wast:587
 assert_malformed(
-  () =>
-    instantiate(
-      `(type $$sig (func (param i32) (result i32))) (func (result i32) (param i32) (type $$sig) (i32.const 0)) `,
-    ),
+  () => instantiate(`(type $$sig (func (param i32) (result i32))) (func (result i32) (param i32) (type $$sig) (i32.const 0)) `),
   `unexpected token`,
 );
 
@@ -858,112 +776,83 @@ assert_malformed(
 
 // ./test/core/func.wast:601
 assert_malformed(
-  () =>
-    instantiate(
-      `(type $$sig (func)) (func (type $$sig) (result i32) (i32.const 0)) `,
-    ),
+  () => instantiate(`(type $$sig (func)) (func (type $$sig) (result i32) (i32.const 0)) `),
   `inline function type`,
 );
 
 // ./test/core/func.wast:608
 assert_malformed(
-  () =>
-    instantiate(
-      `(type $$sig (func (param i32) (result i32))) (func (type $$sig) (result i32) (i32.const 0)) `,
-    ),
+  () => instantiate(`(type $$sig (func (param i32) (result i32))) (func (type $$sig) (result i32) (i32.const 0)) `),
   `inline function type`,
 );
 
 // ./test/core/func.wast:615
 assert_malformed(
-  () =>
-    instantiate(
-      `(type $$sig (func (param i32) (result i32))) (func (type $$sig) (param i32) (i32.const 0)) `,
-    ),
+  () => instantiate(`(type $$sig (func (param i32) (result i32))) (func (type $$sig) (param i32) (i32.const 0)) `),
   `inline function type`,
 );
 
 // ./test/core/func.wast:622
 assert_malformed(
-  () =>
-    instantiate(
-      `(type $$sig (func (param i32 i32) (result i32))) (func (type $$sig) (param i32) (result i32) (unreachable)) `,
-    ),
+  () => instantiate(`(type $$sig (func (param i32 i32) (result i32))) (func (type $$sig) (param i32) (result i32) (unreachable)) `),
   `inline function type`,
 );
 
 // ./test/core/func.wast:630
-assert_invalid(
-  () => instantiate(`(module (func $$g (type 4)))`),
-  `unknown type`,
-);
+assert_invalid(() => instantiate(`(module (func $$g (type 4)))`), `unknown type`);
 
 // ./test/core/func.wast:634
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (func $$f (drop (ref.func $$g)))
     (func $$g (type 4))
     (elem declare func $$g)
-  )`), `unknown type`);
+  )`),
+  `unknown type`,
+);
 
 // ./test/core/func.wast:646
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-local-num-vs-num (result i64) (local i32) (local.get 0)))`,
-    ),
+  () => instantiate(`(module (func $$type-local-num-vs-num (result i64) (local i32) (local.get 0)))`),
   `type mismatch`,
 );
 
 // ./test/core/func.wast:650
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-local-num-vs-num (local f32) (i32.eqz (local.get 0))))`,
-    ),
+  () => instantiate(`(module (func $$type-local-num-vs-num (local f32) (i32.eqz (local.get 0))))`),
   `type mismatch`,
 );
 
 // ./test/core/func.wast:654
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-local-num-vs-num (local f64 i64) (f64.neg (local.get 1))))`,
-    ),
+  () => instantiate(`(module (func $$type-local-num-vs-num (local f64 i64) (f64.neg (local.get 1))))`),
   `type mismatch`,
 );
 
 // ./test/core/func.wast:659
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (type $$t (func))
     (func $$type-local-uninitialized (local $$x (ref $$t)) (drop (local.get $$x)))
-  )`), `uninitialized local`);
+  )`),
+  `uninitialized local`,
+);
 
 // ./test/core/func.wast:670
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-param-num-vs-num (param i32) (result i64) (local.get 0)))`,
-    ),
+  () => instantiate(`(module (func $$type-param-num-vs-num (param i32) (result i64) (local.get 0)))`),
   `type mismatch`,
 );
 
 // ./test/core/func.wast:674
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-param-num-vs-num (param f32) (i32.eqz (local.get 0))))`,
-    ),
+  () => instantiate(`(module (func $$type-param-num-vs-num (param f32) (i32.eqz (local.get 0))))`),
   `type mismatch`,
 );
 
 // ./test/core/func.wast:678
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-param-num-vs-num (param f64 i64) (f64.neg (local.get 1))))`,
-    ),
+  () => instantiate(`(module (func $$type-param-num-vs-num (param f64 i64) (f64.neg (local.get 1))))`),
   `type mismatch`,
 );
 
@@ -999,8 +888,7 @@ assert_invalid(
 
 // ./test/core/func.wast:707
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-value-void-vs-num (result i32)
+  () => instantiate(`(module (func $$type-value-void-vs-num (result i32)
     (nop)
   ))`),
   `type mismatch`,
@@ -1008,29 +896,31 @@ assert_invalid(
 
 // ./test/core/func.wast:713
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-value-void-vs-nums (result i32 i32)
+  () => instantiate(`(module (func $$type-value-void-vs-nums (result i32 i32)
     (nop)
   ))`),
   `type mismatch`,
 );
 
 // ./test/core/func.wast:719
-assert_invalid(() =>
-  instantiate(`(module (func $$type-value-num-vs-void
+assert_invalid(
+  () => instantiate(`(module (func $$type-value-num-vs-void
     (i32.const 0)
-  ))`), `type mismatch`);
+  ))`),
+  `type mismatch`,
+);
 
 // ./test/core/func.wast:725
-assert_invalid(() =>
-  instantiate(`(module (func $$type-value-nums-vs-void
+assert_invalid(
+  () => instantiate(`(module (func $$type-value-nums-vs-void
     (i32.const 0) (i64.const 0)
-  ))`), `type mismatch`);
+  ))`),
+  `type mismatch`,
+);
 
 // ./test/core/func.wast:731
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-value-num-vs-num (result i32)
+  () => instantiate(`(module (func $$type-value-num-vs-num (result i32)
     (f32.const 0)
   ))`),
   `type mismatch`,
@@ -1038,8 +928,7 @@ assert_invalid(
 
 // ./test/core/func.wast:737
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-value-num-vs-nums (result f32 f32)
+  () => instantiate(`(module (func $$type-value-num-vs-nums (result f32 f32)
     (f32.const 0)
   ))`),
   `type mismatch`,
@@ -1047,8 +936,7 @@ assert_invalid(
 
 // ./test/core/func.wast:743
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-value-nums-vs-num (result f32)
+  () => instantiate(`(module (func $$type-value-nums-vs-num (result f32)
     (f32.const 0) (f32.const 0)
   ))`),
   `type mismatch`,
@@ -1056,8 +944,7 @@ assert_invalid(
 
 // ./test/core/func.wast:750
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-return-last-empty-vs-num (result i32)
+  () => instantiate(`(module (func $$type-return-last-empty-vs-num (result i32)
     (return)
   ))`),
   `type mismatch`,
@@ -1065,8 +952,7 @@ assert_invalid(
 
 // ./test/core/func.wast:756
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-return-last-empty-vs-nums (result i32 i32)
+  () => instantiate(`(module (func $$type-return-last-empty-vs-nums (result i32 i32)
     (return)
   ))`),
   `type mismatch`,
@@ -1074,8 +960,7 @@ assert_invalid(
 
 // ./test/core/func.wast:762
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-return-last-void-vs-num (result i32)
+  () => instantiate(`(module (func $$type-return-last-void-vs-num (result i32)
     (return (nop))
   ))`),
   `type mismatch`,
@@ -1083,8 +968,7 @@ assert_invalid(
 
 // ./test/core/func.wast:768
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-return-last-void-vs-nums (result i32 i64)
+  () => instantiate(`(module (func $$type-return-last-void-vs-nums (result i32 i64)
     (return (nop))
   ))`),
   `type mismatch`,
@@ -1092,8 +976,7 @@ assert_invalid(
 
 // ./test/core/func.wast:774
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-return-last-num-vs-num (result i32)
+  () => instantiate(`(module (func $$type-return-last-num-vs-num (result i32)
     (return (i64.const 0))
   ))`),
   `type mismatch`,
@@ -1101,8 +984,7 @@ assert_invalid(
 
 // ./test/core/func.wast:780
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-return-last-num-vs-nums (result i64 i64)
+  () => instantiate(`(module (func $$type-return-last-num-vs-nums (result i64 i64)
     (return (i64.const 0))
   ))`),
   `type mismatch`,
@@ -1110,8 +992,7 @@ assert_invalid(
 
 // ./test/core/func.wast:787
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-return-empty-vs-num (result i32)
+  () => instantiate(`(module (func $$type-return-empty-vs-num (result i32)
     (return) (i32.const 1)
   ))`),
   `type mismatch`,
@@ -1119,8 +1000,7 @@ assert_invalid(
 
 // ./test/core/func.wast:793
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-return-empty-vs-nums (result i32 i32)
+  () => instantiate(`(module (func $$type-return-empty-vs-nums (result i32 i32)
     (return) (i32.const 1) (i32.const 2)
   ))`),
   `type mismatch`,
@@ -1128,8 +1008,7 @@ assert_invalid(
 
 // ./test/core/func.wast:799
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-return-partial-vs-nums (result i32 i32)
+  () => instantiate(`(module (func $$type-return-partial-vs-nums (result i32 i32)
     (i32.const 1) (return) (i32.const 2)
   ))`),
   `type mismatch`,
@@ -1137,8 +1016,7 @@ assert_invalid(
 
 // ./test/core/func.wast:805
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-return-void-vs-num (result i32)
+  () => instantiate(`(module (func $$type-return-void-vs-num (result i32)
     (return (nop)) (i32.const 1)
   ))`),
   `type mismatch`,
@@ -1146,8 +1024,7 @@ assert_invalid(
 
 // ./test/core/func.wast:811
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-return-void-vs-nums (result i32 i32)
+  () => instantiate(`(module (func $$type-return-void-vs-nums (result i32 i32)
     (return (nop)) (i32.const 1)
   ))`),
   `type mismatch`,
@@ -1155,8 +1032,7 @@ assert_invalid(
 
 // ./test/core/func.wast:817
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-return-num-vs-num (result i32)
+  () => instantiate(`(module (func $$type-return-num-vs-num (result i32)
     (return (i64.const 1)) (i32.const 1)
   ))`),
   `type mismatch`,
@@ -1164,8 +1040,7 @@ assert_invalid(
 
 // ./test/core/func.wast:823
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-return-num-vs-nums (result i32 i32)
+  () => instantiate(`(module (func $$type-return-num-vs-nums (result i32 i32)
     (return (i64.const 1)) (i32.const 1) (i32.const 2)
   ))`),
   `type mismatch`,
@@ -1173,8 +1048,7 @@ assert_invalid(
 
 // ./test/core/func.wast:829
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-return-first-num-vs-num (result i32)
+  () => instantiate(`(module (func $$type-return-first-num-vs-num (result i32)
     (return (i64.const 1)) (return (i32.const 1))
   ))`),
   `type mismatch`,
@@ -1182,8 +1056,7 @@ assert_invalid(
 
 // ./test/core/func.wast:835
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-return-first-num-vs-nums (result i32 i32)
+  () => instantiate(`(module (func $$type-return-first-num-vs-nums (result i32 i32)
     (return (i32.const 1)) (return (i32.const 1) (i32.const 2))
   ))`),
   `type mismatch`,
@@ -1191,8 +1064,7 @@ assert_invalid(
 
 // ./test/core/func.wast:842
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-break-last-void-vs-num (result i32)
+  () => instantiate(`(module (func $$type-break-last-void-vs-num (result i32)
     (br 0)
   ))`),
   `type mismatch`,
@@ -1200,8 +1072,7 @@ assert_invalid(
 
 // ./test/core/func.wast:848
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-break-last-void-vs-nums (result i32 i32)
+  () => instantiate(`(module (func $$type-break-last-void-vs-nums (result i32 i32)
     (br 0)
   ))`),
   `type mismatch`,
@@ -1209,8 +1080,7 @@ assert_invalid(
 
 // ./test/core/func.wast:854
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-break-last-num-vs-num (result i32)
+  () => instantiate(`(module (func $$type-break-last-num-vs-num (result i32)
     (br 0 (f32.const 0))
   ))`),
   `type mismatch`,
@@ -1218,8 +1088,7 @@ assert_invalid(
 
 // ./test/core/func.wast:860
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-break-last-num-vs-nums (result i32 i32)
+  () => instantiate(`(module (func $$type-break-last-num-vs-nums (result i32 i32)
     (br 0 (i32.const 0))
   ))`),
   `type mismatch`,
@@ -1227,8 +1096,7 @@ assert_invalid(
 
 // ./test/core/func.wast:866
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-break-void-vs-num (result i32)
+  () => instantiate(`(module (func $$type-break-void-vs-num (result i32)
     (br 0) (i32.const 1)
   ))`),
   `type mismatch`,
@@ -1236,8 +1104,7 @@ assert_invalid(
 
 // ./test/core/func.wast:872
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-break-void-vs-nums (result i32 i32)
+  () => instantiate(`(module (func $$type-break-void-vs-nums (result i32 i32)
     (br 0) (i32.const 1) (i32.const 2)
   ))`),
   `type mismatch`,
@@ -1245,8 +1112,7 @@ assert_invalid(
 
 // ./test/core/func.wast:878
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-break-num-vs-num (result i32)
+  () => instantiate(`(module (func $$type-break-num-vs-num (result i32)
     (br 0 (i64.const 1)) (i32.const 1)
   ))`),
   `type mismatch`,
@@ -1254,8 +1120,7 @@ assert_invalid(
 
 // ./test/core/func.wast:884
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-break-num-vs-nums (result i32 i32)
+  () => instantiate(`(module (func $$type-break-num-vs-nums (result i32 i32)
     (br 0 (i32.const 1)) (i32.const 1) (i32.const 2)
   ))`),
   `type mismatch`,
@@ -1263,8 +1128,7 @@ assert_invalid(
 
 // ./test/core/func.wast:890
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-break-first-num-vs-num (result i32)
+  () => instantiate(`(module (func $$type-break-first-num-vs-num (result i32)
     (br 0 (i64.const 1)) (br 0 (i32.const 1))
   ))`),
   `type mismatch`,
@@ -1272,8 +1136,7 @@ assert_invalid(
 
 // ./test/core/func.wast:897
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-break-nested-empty-vs-num (result i32)
+  () => instantiate(`(module (func $$type-break-nested-empty-vs-num (result i32)
     (block (br 1)) (br 0 (i32.const 1))
   ))`),
   `type mismatch`,
@@ -1281,19 +1144,15 @@ assert_invalid(
 
 // ./test/core/func.wast:903
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-break-nested-empty-vs-nums (result i32 i32)
+  () => instantiate(`(module (func $$type-break-nested-empty-vs-nums (result i32 i32)
     (block (br 1)) (br 0 (i32.const 1) (i32.const 2))
-  ))`,
-    ),
+  ))`),
   `type mismatch`,
 );
 
 // ./test/core/func.wast:909
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-break-nested-void-vs-num (result i32)
+  () => instantiate(`(module (func $$type-break-nested-void-vs-num (result i32)
     (block (br 1 (nop))) (br 0 (i32.const 1))
   ))`),
   `type mismatch`,
@@ -1301,8 +1160,7 @@ assert_invalid(
 
 // ./test/core/func.wast:915
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-break-nested-void-vs-nums (result i32 i32)
+  () => instantiate(`(module (func $$type-break-nested-void-vs-nums (result i32 i32)
     (block (br 1 (nop))) (br 0 (i32.const 1) (i32.const 2))
   ))`),
   `type mismatch`,
@@ -1310,8 +1168,7 @@ assert_invalid(
 
 // ./test/core/func.wast:921
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-break-nested-num-vs-num (result i32)
+  () => instantiate(`(module (func $$type-break-nested-num-vs-num (result i32)
     (block (br 1 (i64.const 1))) (br 0 (i32.const 1))
   ))`),
   `type mismatch`,
@@ -1319,36 +1176,23 @@ assert_invalid(
 
 // ./test/core/func.wast:927
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-break-nested-num-vs-nums (result i32 i32)
+  () => instantiate(`(module (func $$type-break-nested-num-vs-nums (result i32 i32)
     (block (result i32) (br 1 (i32.const 1))) (br 0 (i32.const 1) (i32.const 2))
   ))`),
   `type mismatch`,
 );
 
 // ./test/core/func.wast:937
-assert_malformed(
-  () => instantiate(`(func (nop) (local i32)) `),
-  `unexpected token`,
-);
+assert_malformed(() => instantiate(`(func (nop) (local i32)) `), `unexpected token`);
 
 // ./test/core/func.wast:941
-assert_malformed(
-  () => instantiate(`(func (nop) (param i32)) `),
-  `unexpected token`,
-);
+assert_malformed(() => instantiate(`(func (nop) (param i32)) `), `unexpected token`);
 
 // ./test/core/func.wast:945
-assert_malformed(
-  () => instantiate(`(func (nop) (result i32)) `),
-  `unexpected token`,
-);
+assert_malformed(() => instantiate(`(func (nop) (result i32)) `), `unexpected token`);
 
 // ./test/core/func.wast:949
-assert_malformed(
-  () => instantiate(`(func (local i32) (param i32)) `),
-  `unexpected token`,
-);
+assert_malformed(() => instantiate(`(func (local i32) (param i32)) `), `unexpected token`);
 
 // ./test/core/func.wast:953
 assert_malformed(
@@ -1363,10 +1207,7 @@ assert_malformed(
 );
 
 // ./test/core/func.wast:964
-assert_malformed(
-  () => instantiate(`(func $$foo) (func $$foo) `),
-  `duplicate func`,
-);
+assert_malformed(() => instantiate(`(func $$foo) (func $$foo) `), `duplicate func`);
 
 // ./test/core/func.wast:968
 assert_malformed(

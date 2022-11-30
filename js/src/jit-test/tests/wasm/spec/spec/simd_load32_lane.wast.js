@@ -109,120 +109,103 @@ assert_return(
 
 // ./test/core/simd/simd_load32_lane.wast:81
 assert_return(
-  () =>
-    invoke($0, `v128.load32_lane_0_offset_0`, [i32x4([0x0, 0x0, 0x0, 0x0])]),
+  () => invoke($0, `v128.load32_lane_0_offset_0`, [i32x4([0x0, 0x0, 0x0, 0x0])]),
   [i32x4([0x3020100, 0x0, 0x0, 0x0])],
 );
 
 // ./test/core/simd/simd_load32_lane.wast:83
 assert_return(
-  () =>
-    invoke($0, `v128.load32_lane_1_offset_1`, [i32x4([0x0, 0x0, 0x0, 0x0])]),
+  () => invoke($0, `v128.load32_lane_1_offset_1`, [i32x4([0x0, 0x0, 0x0, 0x0])]),
   [i32x4([0x0, 0x4030201, 0x0, 0x0])],
 );
 
 // ./test/core/simd/simd_load32_lane.wast:85
 assert_return(
-  () =>
-    invoke($0, `v128.load32_lane_2_offset_2`, [i32x4([0x0, 0x0, 0x0, 0x0])]),
+  () => invoke($0, `v128.load32_lane_2_offset_2`, [i32x4([0x0, 0x0, 0x0, 0x0])]),
   [i32x4([0x0, 0x0, 0x5040302, 0x0])],
 );
 
 // ./test/core/simd/simd_load32_lane.wast:87
 assert_return(
-  () =>
-    invoke($0, `v128.load32_lane_3_offset_3`, [i32x4([0x0, 0x0, 0x0, 0x0])]),
+  () => invoke($0, `v128.load32_lane_3_offset_3`, [i32x4([0x0, 0x0, 0x0, 0x0])]),
   [i32x4([0x0, 0x0, 0x0, 0x6050403])],
 );
 
 // ./test/core/simd/simd_load32_lane.wast:89
 assert_return(
-  () =>
-    invoke($0, `v128.load32_lane_0_align_1`, [0, i32x4([0x0, 0x0, 0x0, 0x0])]),
+  () => invoke($0, `v128.load32_lane_0_align_1`, [0, i32x4([0x0, 0x0, 0x0, 0x0])]),
   [i32x4([0x3020100, 0x0, 0x0, 0x0])],
 );
 
 // ./test/core/simd/simd_load32_lane.wast:92
 assert_return(
-  () =>
-    invoke($0, `v128.load32_lane_0_align_2`, [0, i32x4([0x0, 0x0, 0x0, 0x0])]),
+  () => invoke($0, `v128.load32_lane_0_align_2`, [0, i32x4([0x0, 0x0, 0x0, 0x0])]),
   [i32x4([0x3020100, 0x0, 0x0, 0x0])],
 );
 
 // ./test/core/simd/simd_load32_lane.wast:95
 assert_return(
-  () =>
-    invoke($0, `v128.load32_lane_0_align_4`, [0, i32x4([0x0, 0x0, 0x0, 0x0])]),
+  () => invoke($0, `v128.load32_lane_0_align_4`, [0, i32x4([0x0, 0x0, 0x0, 0x0])]),
   [i32x4([0x3020100, 0x0, 0x0, 0x0])],
 );
 
 // ./test/core/simd/simd_load32_lane.wast:98
 assert_return(
-  () =>
-    invoke($0, `v128.load32_lane_1_align_1`, [1, i32x4([0x0, 0x0, 0x0, 0x0])]),
+  () => invoke($0, `v128.load32_lane_1_align_1`, [1, i32x4([0x0, 0x0, 0x0, 0x0])]),
   [i32x4([0x0, 0x4030201, 0x0, 0x0])],
 );
 
 // ./test/core/simd/simd_load32_lane.wast:101
 assert_return(
-  () =>
-    invoke($0, `v128.load32_lane_1_align_2`, [1, i32x4([0x0, 0x0, 0x0, 0x0])]),
+  () => invoke($0, `v128.load32_lane_1_align_2`, [1, i32x4([0x0, 0x0, 0x0, 0x0])]),
   [i32x4([0x0, 0x4030201, 0x0, 0x0])],
 );
 
 // ./test/core/simd/simd_load32_lane.wast:104
 assert_return(
-  () =>
-    invoke($0, `v128.load32_lane_1_align_4`, [1, i32x4([0x0, 0x0, 0x0, 0x0])]),
+  () => invoke($0, `v128.load32_lane_1_align_4`, [1, i32x4([0x0, 0x0, 0x0, 0x0])]),
   [i32x4([0x0, 0x4030201, 0x0, 0x0])],
 );
 
 // ./test/core/simd/simd_load32_lane.wast:107
 assert_return(
-  () =>
-    invoke($0, `v128.load32_lane_2_align_1`, [2, i32x4([0x0, 0x0, 0x0, 0x0])]),
+  () => invoke($0, `v128.load32_lane_2_align_1`, [2, i32x4([0x0, 0x0, 0x0, 0x0])]),
   [i32x4([0x0, 0x0, 0x5040302, 0x0])],
 );
 
 // ./test/core/simd/simd_load32_lane.wast:110
 assert_return(
-  () =>
-    invoke($0, `v128.load32_lane_2_align_2`, [2, i32x4([0x0, 0x0, 0x0, 0x0])]),
+  () => invoke($0, `v128.load32_lane_2_align_2`, [2, i32x4([0x0, 0x0, 0x0, 0x0])]),
   [i32x4([0x0, 0x0, 0x5040302, 0x0])],
 );
 
 // ./test/core/simd/simd_load32_lane.wast:113
 assert_return(
-  () =>
-    invoke($0, `v128.load32_lane_2_align_4`, [2, i32x4([0x0, 0x0, 0x0, 0x0])]),
+  () => invoke($0, `v128.load32_lane_2_align_4`, [2, i32x4([0x0, 0x0, 0x0, 0x0])]),
   [i32x4([0x0, 0x0, 0x5040302, 0x0])],
 );
 
 // ./test/core/simd/simd_load32_lane.wast:116
 assert_return(
-  () =>
-    invoke($0, `v128.load32_lane_3_align_1`, [3, i32x4([0x0, 0x0, 0x0, 0x0])]),
+  () => invoke($0, `v128.load32_lane_3_align_1`, [3, i32x4([0x0, 0x0, 0x0, 0x0])]),
   [i32x4([0x0, 0x0, 0x0, 0x6050403])],
 );
 
 // ./test/core/simd/simd_load32_lane.wast:119
 assert_return(
-  () =>
-    invoke($0, `v128.load32_lane_3_align_2`, [3, i32x4([0x0, 0x0, 0x0, 0x0])]),
+  () => invoke($0, `v128.load32_lane_3_align_2`, [3, i32x4([0x0, 0x0, 0x0, 0x0])]),
   [i32x4([0x0, 0x0, 0x0, 0x6050403])],
 );
 
 // ./test/core/simd/simd_load32_lane.wast:122
 assert_return(
-  () =>
-    invoke($0, `v128.load32_lane_3_align_4`, [3, i32x4([0x0, 0x0, 0x0, 0x0])]),
+  () => invoke($0, `v128.load32_lane_3_align_4`, [3, i32x4([0x0, 0x0, 0x0, 0x0])]),
   [i32x4([0x0, 0x0, 0x0, 0x6050403])],
 );
 
 // ./test/core/simd/simd_load32_lane.wast:127
 assert_invalid(
-  () =>
-    instantiate(`(module (memory 1)
+  () => instantiate(`(module (memory 1)
           (func (param $$x v128) (result v128)
             (v128.load32_lane 0 (local.get $$x) (i32.const 0))))`),
   `type mismatch`,
@@ -230,8 +213,7 @@ assert_invalid(
 
 // ./test/core/simd/simd_load32_lane.wast:133
 assert_invalid(
-  () =>
-    instantiate(`(module (memory 1)
+  () => instantiate(`(module (memory 1)
           (func (param $$x v128) (result v128)
             (v128.load32_lane 4 (i32.const 0) (local.get $$x))))`),
   `invalid lane index`,
@@ -239,8 +221,7 @@ assert_invalid(
 
 // ./test/core/simd/simd_load32_lane.wast:139
 assert_invalid(
-  () =>
-    instantiate(`(module (memory 1)
+  () => instantiate(`(module (memory 1)
           (func (param $$x v128) (result v128)
           (v128.load32_lane align=8 0 (i32.const 0) (local.get $$x))))`),
   `alignment must not be larger than natural`,

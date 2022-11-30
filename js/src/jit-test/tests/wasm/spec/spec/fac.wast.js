@@ -118,37 +118,22 @@ let $0 = instantiate(`(module
 )`);
 
 // ./test/core/fac.wast:102
-assert_return(() => invoke($0, `fac-rec`, [25n]), [
-  value("i64", 7034535277573963776n),
-]);
+assert_return(() => invoke($0, `fac-rec`, [25n]), [value("i64", 7034535277573963776n)]);
 
 // ./test/core/fac.wast:103
-assert_return(() => invoke($0, `fac-iter`, [25n]), [
-  value("i64", 7034535277573963776n),
-]);
+assert_return(() => invoke($0, `fac-iter`, [25n]), [value("i64", 7034535277573963776n)]);
 
 // ./test/core/fac.wast:104
-assert_return(() => invoke($0, `fac-rec-named`, [25n]), [
-  value("i64", 7034535277573963776n),
-]);
+assert_return(() => invoke($0, `fac-rec-named`, [25n]), [value("i64", 7034535277573963776n)]);
 
 // ./test/core/fac.wast:105
-assert_return(() => invoke($0, `fac-iter-named`, [25n]), [
-  value("i64", 7034535277573963776n),
-]);
+assert_return(() => invoke($0, `fac-iter-named`, [25n]), [value("i64", 7034535277573963776n)]);
 
 // ./test/core/fac.wast:106
-assert_return(() => invoke($0, `fac-opt`, [25n]), [
-  value("i64", 7034535277573963776n),
-]);
+assert_return(() => invoke($0, `fac-opt`, [25n]), [value("i64", 7034535277573963776n)]);
 
 // ./test/core/fac.wast:107
-assert_return(() => invoke($0, `fac-ssa`, [25n]), [
-  value("i64", 7034535277573963776n),
-]);
+assert_return(() => invoke($0, `fac-ssa`, [25n]), [value("i64", 7034535277573963776n)]);
 
 // ./test/core/fac.wast:109
-assert_exhaustion(
-  () => invoke($0, `fac-rec`, [1073741824n]),
-  `call stack exhausted`,
-);
+assert_exhaustion(() => invoke($0, `fac-rec`, [1073741824n]), `call stack exhausted`);
