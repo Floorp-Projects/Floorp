@@ -5,10 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PLDHashTable.h"
-#include "nsCOMPtr.h"
-#include "nsICrashReporter.h"
-#include "nsServiceManagerUtils.h"
 #include "gtest/gtest.h"
+#include "mozilla/gtest/MozHelpers.h"
 
 // This test mostly focuses on edge cases. But more coverage of normal
 // operations wouldn't be a bad thing.
@@ -17,9 +15,6 @@
 #  include <unistd.h>
 #  include <sys/types.h>
 #  include <sys/wait.h>
-
-// This global variable is defined in toolkit/xre/nsSigHandlers.cpp.
-extern unsigned int _gdb_sleep_duration;
 #endif
 
 // We can test that certain operations cause expected aborts by forking
@@ -34,8 +29,7 @@ static void TestCrashyOperation(const char* label, void (*aCrashyOperation)()) {
 #if defined(XP_UNIX) && defined(DEBUG) && !defined(MOZ_ASAN)
   // We're about to trigger a crash. When it happens don't pause to allow GDB
   // to be attached.
-  unsigned int old_gdb_sleep_duration = _gdb_sleep_duration;
-  _gdb_sleep_duration = 0;
+  SAVE_GDB_SLEEP_LOCAL();
 
   int pid = fork();
   ASSERT_NE(pid, -1);
@@ -44,11 +38,7 @@ static void TestCrashyOperation(const char* label, void (*aCrashyOperation)()) {
     // Disable the crashreporter -- writing a crash dump in the child will
     // prevent the parent from writing a subsequent dump. Crashes here are
     // expected, so we don't want their stacks to show up in the log anyway.
-    nsCOMPtr<nsICrashReporter> crashreporter =
-        do_GetService("@mozilla.org/toolkit/crash-reporter;1");
-    if (crashreporter) {
-      crashreporter->SetEnabled(false);
-    }
+    mozilla::gtest::DisableCrashReporter();
 
     // Child: perform the crashy operation.
     FILE* stderr_dup = fdopen(dup(fileno(stderr)), "w");
@@ -86,7 +76,7 @@ static void TestCrashyOperation(const char* label, void (*aCrashyOperation)()) {
     }
   }
 
-  _gdb_sleep_duration = old_gdb_sleep_duration;
+  RESTORE_GDB_SLEEP_LOCAL();
 #endif
 }
 

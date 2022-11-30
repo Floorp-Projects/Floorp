@@ -8,45 +8,15 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
+#include "mozilla/gtest/MozHelpers.h"
 #include "mozmemory.h"
 #include "nsCOMPtr.h"
-#include "nsICrashReporter.h"
-#include "nsServiceManagerUtils.h"
 #include "Utils.h"
 
 #include "gtest/gtest.h"
 
 #ifdef MOZ_PHC
 #  include "replace_malloc_bridge.h"
-#endif
-
-#if defined(DEBUG) && !defined(XP_WIN) && !defined(ANDROID)
-#  define HAS_GDB_SLEEP_DURATION 1
-extern unsigned int _gdb_sleep_duration;
-#endif
-
-// Death tests are too slow on OSX because of the system crash reporter.
-#ifndef XP_DARWIN
-static void DisableCrashReporter() {
-  nsCOMPtr<nsICrashReporter> crashreporter =
-      do_GetService("@mozilla.org/toolkit/crash-reporter;1");
-  if (crashreporter) {
-    crashreporter->SetEnabled(false);
-  }
-}
-
-// Wrap ASSERT_DEATH_IF_SUPPORTED to disable the crash reporter
-// when entering the subprocess, so that the expected crashes don't
-// create a minidump that the gtest harness will interpret as an error.
-#  define ASSERT_DEATH_WRAP(a, b) \
-    ASSERT_DEATH_IF_SUPPORTED(    \
-        {                         \
-          DisableCrashReporter(); \
-          a;                      \
-        },                        \
-        b)
-#else
-#  define ASSERT_DEATH_WRAP(a, b)
 #endif
 
 using namespace mozilla;
@@ -295,11 +265,8 @@ TEST(Jemalloc, Arenas)
   free(ptr);
   moz_dispose_arena(arena);
 
-#ifdef HAS_GDB_SLEEP_DURATION
   // Avoid death tests adding some unnecessary (long) delays.
-  unsigned int old_gdb_sleep_duration = _gdb_sleep_duration;
-  _gdb_sleep_duration = 0;
-#endif
+  SAVE_GDB_SLEEP_LOCAL();
 
   // Can't use an arena after it's disposed.
   // ASSERT_DEATH_WRAP(moz_arena_malloc(arena, 80), "");
@@ -333,9 +300,7 @@ TEST(Jemalloc, Arenas)
   moz_dispose_arena(arena2);
   moz_dispose_arena(arena);
 
-#ifdef HAS_GDB_SLEEP_DURATION
-  _gdb_sleep_duration = old_gdb_sleep_duration;
-#endif
+  RESTORE_GDB_SLEEP_LOCAL();
 }
 
 // Check that a buffer aPtr is entirely filled with a given character from
@@ -464,11 +429,8 @@ TEST(Jemalloc, JunkPoison)
   jemalloc_stats_t stats;
   jemalloc_stats(&stats);
 
-#  ifdef HAS_GDB_SLEEP_DURATION
   // Avoid death tests adding some unnecessary (long) delays.
-  unsigned int old_gdb_sleep_duration = _gdb_sleep_duration;
-  _gdb_sleep_duration = 0;
-#  endif
+  SAVE_GDB_SLEEP_LOCAL();
 
   // Create buffers in a separate arena, for faster comparisons with
   // bulk_compare.
@@ -654,9 +616,7 @@ TEST(Jemalloc, JunkPoison)
   moz_arena_free(buf_arena, fill_buf);
   moz_dispose_arena(buf_arena);
 
-#  ifdef HAS_GDB_SLEEP_DURATION
-  _gdb_sleep_duration = old_gdb_sleep_duration;
-#  endif
+  RESTORE_GDB_SLEEP_LOCAL();
 }
 #endif  // !defined(XP_WIN) || !defined(MOZ_CODE_COVERAGE)
 
@@ -669,11 +629,8 @@ TEST(Jemalloc, TrailingGuard)
   jemalloc_stats_t stats;
   jemalloc_stats(&stats);
 
-#ifdef HAS_GDB_SLEEP_DURATION
   // Avoid death tests adding some unnecessary (long) delays.
-  unsigned int old_gdb_sleep_duration = _gdb_sleep_duration;
-  _gdb_sleep_duration = 0;
-#endif
+  SAVE_GDB_SLEEP_LOCAL();
 
   arena_id_t arena = moz_create_arena();
   ASSERT_TRUE(arena != 0);
@@ -705,9 +662,7 @@ TEST(Jemalloc, TrailingGuard)
 
   moz_dispose_arena(arena);
 
-#ifdef HAS_GDB_SLEEP_DURATION
-  _gdb_sleep_duration = old_gdb_sleep_duration;
-#endif
+  RESTORE_GDB_SLEEP_LOCAL();
 }
 
 TEST(Jemalloc, LeadingGuard)
@@ -719,11 +674,8 @@ TEST(Jemalloc, LeadingGuard)
   jemalloc_stats_t stats;
   jemalloc_stats(&stats);
 
-#ifdef HAS_GDB_SLEEP_DURATION
   // Avoid death tests adding some unnecessary (long) delays.
-  unsigned int old_gdb_sleep_duration = _gdb_sleep_duration;
-  _gdb_sleep_duration = 0;
-#endif
+  SAVE_GDB_SLEEP_LOCAL();
 
   arena_id_t arena = moz_create_arena();
   ASSERT_TRUE(arena != 0);
@@ -755,9 +707,7 @@ TEST(Jemalloc, LeadingGuard)
   moz_arena_free(arena, ptr);
   moz_dispose_arena(arena);
 
-#ifdef HAS_GDB_SLEEP_DURATION
-  _gdb_sleep_duration = old_gdb_sleep_duration;
-#endif
+  RESTORE_GDB_SLEEP_LOCAL();
 }
 
 TEST(Jemalloc, DisposeArena)
@@ -765,11 +715,8 @@ TEST(Jemalloc, DisposeArena)
   jemalloc_stats_t stats;
   jemalloc_stats(&stats);
 
-#ifdef HAS_GDB_SLEEP_DURATION
   // Avoid death tests adding some unnecessary (long) delays.
-  unsigned int old_gdb_sleep_duration = _gdb_sleep_duration;
-  _gdb_sleep_duration = 0;
-#endif
+  SAVE_GDB_SLEEP_LOCAL();
 
   arena_id_t arena = moz_create_arena();
   void* ptr = moz_arena_malloc(arena, 42);
@@ -805,7 +752,5 @@ TEST(Jemalloc, DisposeArena)
   // Using the arena after it's been disposed of is MOZ_CRASH-worthy.
   ASSERT_DEATH_WRAP(moz_arena_malloc(arena, 42), "");
 
-#ifdef HAS_GDB_SLEEP_DURATION
-  _gdb_sleep_duration = old_gdb_sleep_duration;
-#endif
+  RESTORE_GDB_SLEEP_LOCAL();
 }
