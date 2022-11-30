@@ -72,7 +72,7 @@ tasks:
         attributes:
             release-type: release
             shipping_phase: promote
-        run-on-tasks-for: [github-pull-request]
+        run-on-tasks-for: []
         include-shippable-secrets: true
         include-release-version: true
         run:
@@ -87,7 +87,7 @@ tasks:
         attributes:
             release-type: release
             shipping_phase: promote
-        run-on-tasks-for: [github-pull-request]
+        run-on-tasks-for: []
         include-shippable-secrets: true
         include-release-version: true
         run:
