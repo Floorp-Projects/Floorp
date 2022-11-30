@@ -24,16 +24,27 @@ public final class HardwareCodecCapabilityUtils {
   private static final String[] supportedVp8HwEncCodecPrefixes = {"OMX.qcom.", "OMX.Intel."};
   // List of supported HW VP8 decoders.
   private static final String[] supportedVp8HwDecCodecPrefixes = {
-    "OMX.qcom.", "OMX.Nvidia.", "OMX.Exynos.", "OMX.Intel."
+    "OMX.qcom.", "OMX.Nvidia.", "OMX.Exynos.", "c2.exynos", "OMX.Intel."
   };
   private static final String VP8_MIME_TYPE = "video/x-vnd.on2.vp8";
   // List of supported HW VP9 codecs.
-  private static final String[] supportedVp9HwCodecPrefixes = {"OMX.qcom.", "OMX.Exynos."};
+  private static final String[] supportedVp9HwCodecPrefixes = {
+    "OMX.qcom.", "OMX.Exynos.", "c2.exynos"
+  };
   private static final String VP9_MIME_TYPE = "video/x-vnd.on2.vp9";
   // List of supported HW H.264 codecs.
   private static final String[] supportedH264HwCodecPrefixes = {
-    "OMX.qcom.", "OMX.Intel.", "OMX.Exynos.", "OMX.Nvidia", "OMX.SEC.",
-    "OMX.IMG.", "OMX.k3.", "OMX.hisi.", "OMX.TI.", "OMX.MTK."
+    "OMX.qcom.",
+    "OMX.Intel.",
+    "OMX.Exynos.",
+    "c2.exynos",
+    "OMX.Nvidia",
+    "OMX.SEC.",
+    "OMX.IMG.",
+    "OMX.k3.",
+    "OMX.hisi.",
+    "OMX.TI.",
+    "OMX.MTK."
   };
   private static final String H264_MIME_TYPE = "video/avc";
   // NV12 color format supported by QCOM codec, but not declared in MediaCodec -
