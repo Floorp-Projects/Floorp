@@ -38,6 +38,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozpkix/pkixnss.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -2456,6 +2457,49 @@ nsNSSComponent::ClearSSLExternalAndInternalSessionCache() {
     }
   }
   DoClearSSLExternalAndInternalSessionCache();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSComponent::AsyncClearSSLExternalAndInternalSessionCache(
+    JSContext* aCx, ::mozilla::dom::Promise** aPromise) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsIGlobalObject* globalObject = xpc::CurrentNativeGlobal(aCx);
+  if (NS_WARN_IF(!globalObject)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ErrorResult result;
+  RefPtr<mozilla::dom::Promise> promise =
+      mozilla::dom::Promise::Create(globalObject, result);
+  if (NS_WARN_IF(result.Failed())) {
+    return result.StealNSResult();
+  }
+
+  if (mozilla::net::nsIOService::UseSocketProcess() &&
+      mozilla::net::gIOService) {
+    mozilla::net::gIOService->CallOrWaitForSocketProcess(
+        [p = RefPtr{promise}]() {
+          Unused << mozilla::net::SocketProcessParent::GetSingleton()
+                        ->SendClearSessionCache()
+                        ->Then(
+                            GetCurrentSerialEventTarget(), __func__,
+                            [promise = RefPtr{p}] {
+                              promise->MaybeResolveWithUndefined();
+                            },
+                            [promise = RefPtr{p}] {
+                              promise->MaybeReject(NS_ERROR_UNEXPECTED);
+                            });
+        });
+  } else {
+    promise->MaybeResolveWithUndefined();
+  }
+  DoClearSSLExternalAndInternalSessionCache();
+  promise.forget(aPromise);
   return NS_OK;
 }
 
