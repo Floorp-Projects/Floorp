@@ -1,8 +1,14 @@
 %YAML 1.2
 ---
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+# See https://mots.readthedocs.io/en/latest/#quick-start for quick start
+# documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-11-25T15:09:17.773034'
+updated_at: '2022-11-30T12:24:52.251425'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -343,8 +349,7 @@ people:
     bmo_id: 420446
     name: Gregory Szorc
     nick: gps
-  - &gregtatum
-    bmo_id: 561658
+  - bmo_id: 561658
     name: Greg Tatum
     nick: gregtatum
   - &gsvelto
@@ -617,10 +622,6 @@ people:
     bmo_id: 91159
     name: Dave Townsend
     nick: mossop
-  - &mozbugz
-    bmo_id: 515575
-    name: Gerald Squelart
-    nick: mozbugz
   - &mrbkap
     bmo_id: 69426
     name: Blake Kaplan
@@ -1428,6 +1429,7 @@ modules:
     description: Gecko's built-in profiler
     includes:
       - tools/profiler/**/*
+      - mozglue/baseprofiler/**/*
     meta:
       owners_emeritus:
         - Benoit Girard
@@ -1436,19 +1438,20 @@ modules:
         - Thinker Lee (TaskTracer)
         - Cervantes Yu (TaskTracer)
         - Nicholas Nethercote
+        - Gerald Squelart
+        - Kannan Vijayan
+        - Barret Rennie
+        - Greg Tatum
       group: dev-platform
-      url: https://profiler.firefox.com/docs/
+      url: https://firefox-source-docs.mozilla.org/tools/profiler/
       components:
         - Core::Gecko Profiler
     owners:
       - *mstange
     peers:
-      - *mozbugz
-      - *gregtatum
       - *canova
+      - *bmo
       - *jseward
-      - *djvj
-      - *barret
     machine_name: core_gecko_profiler
 
   - name: 'Core: GeckoView'
@@ -3652,5 +3655,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 153a286c9bba144273342ae039dd7d2e6fe5cf27
-  export: e5897888bdf56e2fbce132ed4fadf7e1dfe0f7e5
+  config: 426b6ba19d817c9605570db5f5dac05d36d435b9
+  export: 2433164179899f1b2b2e051ef36d27744b9e1f6e
