@@ -26,6 +26,7 @@ EXPORTS.mozilla.dom += [
     "PerformanceStorage.h",
     "PerformanceStorageWorker.h",
     "PerformanceTiming.h",
+    "PerformanceWorker.h",
 ]
 
 UNIFIED_SOURCES += [
