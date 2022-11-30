@@ -9,7 +9,6 @@ DIRS += [
     "translate",
     "treestyletab",
     "undo-closed-tab",
-    "webpanel-ua",
     "multirow-tabs",
 ]
 

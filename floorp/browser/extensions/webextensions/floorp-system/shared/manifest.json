@@ -33,7 +33,17 @@
         "script": "API/BrowserInfo.js",
         "paths": [["BrowserInfo"]]
       }
-   }
+    },
+    "webRequestExt": {
+      "schema": "API/webRequestExt.json",
+      "parent": {
+        "scopes": [
+          "addon_parent"
+        ],
+        "script": "API/webRequestExt.js",
+        "paths": [["webRequestExt"]]
+      }
+    }
   },
   "browser_action": {
 		"default_icon":  "icons/floorp.png",
@@ -54,7 +64,8 @@
       "webcompat.js",
       "official-site-ua.js",
       "update.js",
-      "download-notification.js"
+      "download-notification.js",
+      "webpanel-ua.js"
     ]
   },
    "applications": {
