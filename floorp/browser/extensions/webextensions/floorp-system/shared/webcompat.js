@@ -24,6 +24,7 @@ async function unregist_webcompat_contentScripts() {
   for (let REGISTED_CONTENT_SCRIPT of REGISTED_CONTENT_SCRIPTS) {
     REGISTED_CONTENT_SCRIPT.unregister();
   }
+  REGISTED_CONTENT_SCRIPTS = [];
 }
 
 (async() => {
