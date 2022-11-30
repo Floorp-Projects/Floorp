@@ -48,7 +48,7 @@
   },
   "background": {
     "scripts": [
-      "background-script.js",
+      "webcompat.js",
       "update.js",
       "download-notification.js"
     ]
