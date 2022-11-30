@@ -2563,16 +2563,15 @@ void ClientWebGLContext::GetUniform(JSContext* const cx,
   if (!prog.ValidateUsable(*this, "prog")) return;
   if (!loc.ValidateUsable(*this, "loc")) return;
 
-  const auto& progLinkResult = GetLinkResult(prog);
-  if (!progLinkResult.success) {
-    EnqueueError(LOCAL_GL_INVALID_OPERATION, "Program is not linked.");
+  const auto& activeLinkResult = GetActiveLinkResult();
+  if (!activeLinkResult) {
+    EnqueueError(LOCAL_GL_INVALID_OPERATION, "No active linked Program.");
     return;
   }
-  const auto& uniformLinkResult = loc.mParent.lock();
-  if (uniformLinkResult.get() != &progLinkResult) {
-    EnqueueError(
-        LOCAL_GL_INVALID_OPERATION,
-        "UniformLocation is not from the most recent linking of Program.");
+  const auto& reqLinkInfo = loc.mParent.lock();
+  if (reqLinkInfo.get() != activeLinkResult) {
+    EnqueueError(LOCAL_GL_INVALID_OPERATION,
+                 "UniformLocation is not from the current active Program.");
     return;
   }
 
