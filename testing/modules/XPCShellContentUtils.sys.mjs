@@ -359,11 +359,18 @@ export var XPCShellContentUtils = {
     server.start(port);
 
     if (hosts) {
-      hosts = new Set(hosts);
+      const hostsSet = new Set();
       const serverHost = "localhost";
       const serverPort = server.identity.primaryPort;
 
       for (let host of hosts) {
+        if (host.startsWith("[") && host.endsWith("]")) {
+          // HttpServer expects IPv6 addresses in bracket notation, but the
+          // proxy filter uses nsIURI.host, which does not have brackets.
+          hostsSet.add(host.slice(1, -1));
+        } else {
+          hostsSet.add(host);
+        }
         server.identity.add("http", host, 80);
       }
 
@@ -380,7 +387,7 @@ export var XPCShellContentUtils = {
         ),
 
         applyFilter(channel, defaultProxyInfo, callback) {
-          if (hosts.has(channel.URI.host)) {
+          if (hostsSet.has(channel.URI.host)) {
             callback.onProxyFilterResult(this.proxyInfo);
           } else {
             callback.onProxyFilterResult(defaultProxyInfo);

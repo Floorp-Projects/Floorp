@@ -992,16 +992,28 @@ class NodeServer {
 // toplabel    = alpha | alpha *( alphanum | "-" ) alphanum
 // IPv4address = 1*digit "." 1*digit "." 1*digit "." 1*digit
 //
+// IPv6 addresses are notably lacking in the above definition of 'host'.
+// RFC 2732 section 3 extends the host definition:
+// host          = hostname | IPv4address | IPv6reference
+// ipv6reference = "[" IPv6address "]"
+//
+// RFC 3986 supersedes RFC 2732 and offers a more precise definition of a IPv6
+// address. For simplicity, the regexp below captures all canonical IPv6
+// addresses (e.g. [::1]), but may also match valid non-canonical IPv6 addresses
+// (e.g. [::127.0.0.1]) and even invalid bracketed addresses ([::], [99999::]).
 
 const HOST_REGEX = new RegExp(
   "^(?:" +
     // *( domainlabel "." )
     "(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)*" +
-    // toplabel
-    "[a-z](?:[a-z0-9-]*[a-z0-9])?" +
+    // toplabel [ "." ]
+    "[a-z](?:[a-z0-9-]*[a-z0-9])?\\.?" +
     "|" +
     // IPv4 address
     "\\d+\\.\\d+\\.\\d+\\.\\d+" +
+    "|" +
+    // IPv6 addresses (e.g. [::1])
+    "\\[[:0-9a-f]+\\]" +
     ")$",
   "i"
 );
@@ -1243,7 +1255,7 @@ ServerIdentity.prototype = {
       dumpStack();
       throw Components.Exception("", Cr.NS_ERROR_ILLEGAL_VALUE);
     }
-    if (!HOST_REGEX.test(host) && host != "[::1]") {
+    if (!HOST_REGEX.test(host)) {
       dumpn("*** unexpected host: '" + host + "'");
       throw Components.Exception("", Cr.NS_ERROR_ILLEGAL_VALUE);
     }
@@ -1706,10 +1718,7 @@ RequestReader.prototype = {
         // NB: We allow an empty port here because, oddly, a colon may be
         //     present even without a port number, e.g. "example.com:"; in this
         //     case the default port applies.
-        if (
-          (!HOST_REGEX.test(host) && host != "[::1]") ||
-          !/^\d*$/.test(port)
-        ) {
+        if (!HOST_REGEX.test(host) || !/^\d*$/.test(port)) {
           dumpn(
             "*** malformed hostname (" +
               hostPort +
@@ -1876,7 +1885,15 @@ RequestReader.prototype = {
         var uri = Services.io.newURI(fullPath);
         fullPath = uri.pathQueryRef;
         scheme = uri.scheme;
-        host = metadata._host = uri.asciiHost;
+        host = uri.asciiHost;
+        if (host.includes(":")) {
+          // If the host still contains a ":", then it is an IPv6 address.
+          // IPv6 addresses-as-host are registered with brackets, so we need to
+          // wrap the host in brackets because nsIURI's host lacks them.
+          // This inconsistency in nsStandardURL is tracked at bug 1195459.
+          host = `[${host}]`;
+        }
+        metadata._host = host;
         port = uri.port;
         if (port === -1) {
           if (scheme === "http") {
