@@ -1495,19 +1495,21 @@ nsresult nsLocalFile::GetDiskInfo(StatInfoFunc&& aStatInfoFunc,
     return NS_ERROR_CANNOT_CONVERT_DATA;
   }
 
-  // If we return an error, *aValue will not be modified.
+  // If we return an error, *aResult will not be modified.
   int64_t tentativeResult = checkedResult.value();
 
 #  if defined(USE_LINUX_QUOTACTL)
 
   if (!FillStatCache()) {
     // Return info from statfs
+    *aResult = tentativeResult;
     return NS_OK;
   }
 
-  nsCString deviceName;
+  nsAutoCString deviceName;
   if (!GetDeviceName(major(mCachedStat.st_dev), minor(mCachedStat.st_dev),
                      deviceName)) {
+    *aResult = tentativeResult;
     return NS_OK;
   }
 
