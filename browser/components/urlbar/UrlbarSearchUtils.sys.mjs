@@ -295,33 +295,16 @@ class SearchUtils {
       return "";
     }
 
-    let uriHost;
-    let searchUri, searchHost;
-    // Creating a URI and accessing nsIURI.host can throw.
+    // Creating a URI can throw.
     try {
       if (typeof uri == "string") {
         uri = Services.io.newURI(uri);
       }
-      uriHost = uri.host;
-      searchUri = Services.io.newURI(Services.search.defaultEngine.searchForm);
-      searchHost = searchUri.host;
     } catch (e) {
       return "";
     }
 
-    if (searchHost == uriHost && searchUri.scheme == uri.scheme) {
-      let { engine, terms } = Services.search.parseSubmissionURL(uri.spec);
-      if (engine && terms) {
-        let [expectedSearchUrl] = lazy.UrlbarUtils.getSearchQueryUrl(
-          engine,
-          terms
-        );
-        if (this.serpsAreEquivalent(uri.spec, expectedSearchUrl)) {
-          return terms;
-        }
-      }
-    }
-    return "";
+    return Services.search.defaultEngine.searchTermFromResult(uri);
   }
 
   /**
