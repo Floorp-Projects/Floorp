@@ -59,6 +59,28 @@ power:
       - utility
     telemetry_mirror: POWER_CPU_TIME_PER_PROCESS_TYPE_MS
 
+  cpu_time_per_tracker_type_ms:
+    type: labeled_counter
+    description: >
+      CPU time used by content processes used only for tracking resources,
+      labeled by the category of the tracker.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1802361
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1802361
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - florian@mozilla.com
+    expires: never
+    labels:
+      - ad
+      - analytics
+      - cryptomining
+      - fingerprinting
+      - social
+      - unknown
+
   gpu_time_per_process_type_ms:
     type: labeled_counter
     description: >
