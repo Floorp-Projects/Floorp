@@ -867,11 +867,7 @@ static const JSPropertySpec intl_static_properties[] = {
     JS_STRING_SYM_PS(toStringTag, "Intl", JSPROP_READONLY), JS_PS_END};
 
 static JSObject* CreateIntlObject(JSContext* cx, JSProtoKey key) {
-  Handle<GlobalObject*> global = cx->global();
-  RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
-  if (!proto) {
-    return nullptr;
-  }
+  RootedObject proto(cx, &cx->global()->getObjectPrototype());
 
   // The |Intl| object is just a plain object with some "static" function
   // properties and some constructor properties.

@@ -674,17 +674,17 @@ JS_PUBLIC_API bool JS::MaybeFreezeCtorAndPrototype(JSContext* cx,
 
 JS_PUBLIC_API JSObject* JS::GetRealmObjectPrototype(JSContext* cx) {
   CHECK_THREAD(cx);
-  return GlobalObject::getOrCreateObjectPrototype(cx, cx->global());
+  return &cx->global()->getObjectPrototype();
 }
 
 JS_PUBLIC_API JS::Handle<JSObject*> JS::GetRealmObjectPrototypeHandle(
     JSContext* cx) {
-  return GlobalObject::getOrCreateObjectPrototypeHandle(cx, cx->global());
+  return cx->global()->getObjectPrototypeHandle();
 }
 
 JS_PUBLIC_API JSObject* JS::GetRealmFunctionPrototype(JSContext* cx) {
   CHECK_THREAD(cx);
-  return GlobalObject::getOrCreateFunctionPrototype(cx, cx->global());
+  return &cx->global()->getFunctionPrototype();
 }
 
 JS_PUBLIC_API JSObject* JS::GetRealmArrayPrototype(JSContext* cx) {

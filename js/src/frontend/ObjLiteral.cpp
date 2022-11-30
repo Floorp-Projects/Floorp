@@ -262,15 +262,10 @@ Shape* InterpretObjLiteralShape(JSContext* cx,
     slot++;
   }
 
-  RootedObject proto(cx,
-                     GlobalObject::getOrCreatePrototype(cx, JSProto_Object));
-  if (!proto) {
-    return nullptr;
-  }
-
+  JSObject* proto = &cx->global()->getObjectPrototype();
   return SharedShape::getInitialOrPropMapShape(
-      cx, &PlainObject::class_, cx->realm(), AsTaggedProto(proto),
-      numFixedSlots, map, mapLength, objectFlags);
+      cx, &PlainObject::class_, cx->realm(), TaggedProto(proto), numFixedSlots,
+      map, mapLength, objectFlags);
 }
 
 static Shape* InterpretObjLiteralShape(

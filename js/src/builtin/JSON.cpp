@@ -1371,11 +1371,7 @@ static const JSPropertySpec json_static_properties[] = {
     JS_STRING_SYM_PS(toStringTag, "JSON", JSPROP_READONLY), JS_PS_END};
 
 static JSObject* CreateJSONObject(JSContext* cx, JSProtoKey key) {
-  Handle<GlobalObject*> global = cx->global();
-  RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
-  if (!proto) {
-    return nullptr;
-  }
+  RootedObject proto(cx, &cx->global()->getObjectPrototype());
   return NewTenuredObjectWithGivenProto(cx, &JSONClass, proto);
 }
 

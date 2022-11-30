@@ -1075,11 +1075,7 @@ static const JSPropertySpec math_static_properties[] = {
     JS_PS_END};
 
 static JSObject* CreateMathObject(JSContext* cx, JSProtoKey key) {
-  Handle<GlobalObject*> global = cx->global();
-  RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
-  if (!proto) {
-    return nullptr;
-  }
+  RootedObject proto(cx, &cx->global()->getObjectPrototype());
   return NewTenuredObjectWithGivenProto(cx, &MathClass, proto);
 }
 

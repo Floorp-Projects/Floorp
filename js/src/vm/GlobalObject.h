@@ -476,44 +476,26 @@ class GlobalObject : public NativeObject {
     return res ? &res->template as<T>() : nullptr;
   }
 
-  static JSObject* getOrCreateObjectPrototype(JSContext* cx,
-                                              Handle<GlobalObject*> global) {
-    if (!global->functionObjectClassesInitialized()) {
-      if (!ensureConstructor(cx, global, JSProto_Object)) {
-        return nullptr;
-      }
-    }
-    return &global->getPrototype(JSProto_Object);
+  // Object, Function, and eval are eagerly resolved when creating the global.
+  JSObject& getObjectPrototype() {
+    MOZ_ASSERT(functionObjectClassesInitialized());
+    return getPrototype(JSProto_Object);
   }
-
-  static Handle<JSObject*> getOrCreateObjectPrototypeHandle(
-      JSContext* cx, Handle<GlobalObject*> global) {
-    if (!global->functionObjectClassesInitialized()) {
-      if (!ensureConstructor(cx, global, JSProto_Object)) {
-        return nullptr;
-      }
-    }
-    return global->getPrototypeHandle(JSProto_Object);
+  Handle<JSObject*> getObjectPrototypeHandle() {
+    MOZ_ASSERT(functionObjectClassesInitialized());
+    return getPrototypeHandle(JSProto_Object);
   }
-
-  static JSObject* getOrCreateFunctionConstructor(
-      JSContext* cx, Handle<GlobalObject*> global) {
-    if (!global->functionObjectClassesInitialized()) {
-      if (!ensureConstructor(cx, global, JSProto_Object)) {
-        return nullptr;
-      }
-    }
-    return &global->getConstructor(JSProto_Function);
+  JSObject& getFunctionConstructor() {
+    MOZ_ASSERT(functionObjectClassesInitialized());
+    return getConstructor(JSProto_Function);
   }
-
-  static JSObject* getOrCreateFunctionPrototype(JSContext* cx,
-                                                Handle<GlobalObject*> global) {
-    if (!global->functionObjectClassesInitialized()) {
-      if (!ensureConstructor(cx, global, JSProto_Object)) {
-        return nullptr;
-      }
-    }
-    return &global->getPrototype(JSProto_Function);
+  JSObject& getFunctionPrototype() {
+    MOZ_ASSERT(functionObjectClassesInitialized());
+    return getPrototype(JSProto_Function);
+  }
+  JSFunction& getEvalFunction() {
+    MOZ_ASSERT(data().eval);
+    return *data().eval;
   }
 
   static NativeObject* getOrCreateArrayPrototype(JSContext* cx,
@@ -953,9 +935,6 @@ class GlobalObject : public NativeObject {
 
   static JSObject* getOrCreateThrowTypeError(JSContext* cx,
                                              Handle<GlobalObject*> global);
-
-  static bool getOrCreateEval(JSContext* cx, Handle<GlobalObject*> global,
-                              MutableHandleObject eval);
 
   // Infallibly test whether the given value is the eval function for this
   // global.
