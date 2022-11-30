@@ -130,9 +130,8 @@ places-forget-about-this-site-confirmation-message =
 
 places-forget-about-this-site-forget = Forget
 
-places-library2 =
+places-library3 =
   .title = Library
-  .style = min-width:700px; min-height:500px;
 
 places-organize-button =
   .label = Organize
