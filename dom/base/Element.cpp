@@ -724,7 +724,8 @@ bool Element::CheckVisibility(const CheckVisibilityOptions& aOptions) {
     return false;
   }
 
-  if (f->IsHiddenByContentVisibilityOnAnyAncestor()) {
+  if (f->IsHiddenByContentVisibilityOnAnyAncestor(
+          nsIFrame::IncludeContentVisibility::Hidden)) {
     // 2. If a shadow-including ancestor of this has content-visibility: hidden,
     // return false.
     return false;
