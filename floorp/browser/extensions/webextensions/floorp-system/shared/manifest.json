@@ -12,7 +12,10 @@
     "clipboardWrite",
     "mozillaAddons",
     "about:*",
-    "downloads"
+    "downloads",
+    "webRequest",
+    "webRequestBlocking",
+    "<all_urls>"
   ],
   "experiment_apis": {
     "aboutConfigPrefs": {
@@ -49,6 +52,7 @@
     "scripts": [
       "browserAction-manage.js",
       "webcompat.js",
+      "official-site-ua.js",
       "update.js",
       "download-notification.js"
     ]
