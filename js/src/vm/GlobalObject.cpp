@@ -608,7 +608,8 @@ GlobalObject* GlobalObject::new_(JSContext* cx, const JSClass* clasp,
     }
 
     // Make transactional initialization of these constructors by discarding the
-    // incompletely initialized global if an error occur.
+    // incompletely initialized global if an error occur. This also ensures the
+    // global's prototype chain is initialized (in FinishObjectClassInit).
     if (!ensureConstructor(cx, global, JSProto_Object) ||
         !ensureConstructor(cx, global, JSProto_Function)) {
       return nullptr;

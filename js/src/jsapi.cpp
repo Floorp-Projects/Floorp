@@ -947,12 +947,8 @@ JS_PUBLIC_API bool JS_ResolveStandardClass(JSContext* cx, HandleObject obj,
     }
   } while (false);
 
-  // There is no such property to resolve. An ordinary resolve hook would
-  // just return true at this point. But the global object is special in one
-  // more way: its prototype chain is lazily initialized. That is,
-  // global->getProto() might be null right now because we haven't created
-  // Object.prototype yet. Force it now.
-  return GlobalObject::getOrCreateObjectPrototype(cx, global);
+  // There is no such property to resolve.
+  return true;
 }
 
 JS_PUBLIC_API bool JS_MayResolveStandardClass(const JSAtomState& names, jsid id,

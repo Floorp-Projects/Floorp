@@ -2134,16 +2134,6 @@ bool js::SetImmutablePrototype(JSContext* cx, HandleObject obj,
     return Proxy::setImmutablePrototype(cx, obj, succeeded);
   }
 
-  // If this is a global object, resolve the Object class first to ensure the
-  // global's prototype is set to Object.prototype before we mark the global as
-  // having an immutable prototype.
-  if (obj->is<GlobalObject>()) {
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
-    if (!GlobalObject::ensureConstructor(cx, global, JSProto_Object)) {
-      return false;
-    }
-  }
-
   if (!JSObject::setFlag(cx, obj, ObjectFlag::ImmutablePrototype)) {
     return false;
   }
