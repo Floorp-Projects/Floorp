@@ -4539,6 +4539,7 @@ class Document : public nsINode,
   // GetPermissionDelegateHandler
   RefPtr<PermissionDelegateHandler> mPermissionDelegateHandler;
 
+  bool mCachedStateObjectValid : 1;
   bool mBlockAllMixedContent : 1;
   bool mBlockAllMixedContentPreloads : 1;
   bool mUpgradeInsecureRequests : 1;
@@ -5035,7 +5036,7 @@ class Document : public nsINode,
   nsString mBaseTarget;
 
   nsCOMPtr<nsIStructuredCloneContainer> mStateObjectContainer;
-  Maybe<JS::Heap<JS::Value>> mStateObjectCached;
+  JS::Heap<JS::Value> mCachedStateObject;
 
   uint32_t mInSyncOperationCount;
 

@@ -1319,6 +1319,7 @@ Document::Document(const char* aContentType)
 #ifdef DEBUG
       mStyledLinksCleared(false),
 #endif
+      mCachedStateObjectValid(false),
       mBlockAllMixedContent(false),
       mBlockAllMixedContentPreloads(false),
       mUpgradeInsecureRequests(false),
@@ -2588,9 +2589,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Document)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Document)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-  if (tmp->mStateObjectCached.isSome()) {
-    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mStateObjectCached.ref())
-  }
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mCachedStateObject)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
@@ -13197,7 +13196,7 @@ nsresult Document::GetStateObject(JS::MutableHandle<JS::Value> aState) {
   // mStateObjectContainer may be null; this just means that there's no
   // current state object.
 
-  if (mStateObjectCached.isNothing()) {
+  if (!mCachedStateObjectValid) {
     if (mStateObjectContainer) {
       AutoJSAPI jsapi;
       // Init with null is "OK" in the sense that it will just fail.
@@ -13209,17 +13208,17 @@ nsresult Document::GetStateObject(JS::MutableHandle<JS::Value> aState) {
           mStateObjectContainer->DeserializeToJsval(jsapi.cx(), &value);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      mStateObjectCached.emplace(value);
+      mCachedStateObject = value;
       if (!value.isNullOrUndefined()) {
         mozilla::HoldJSObjects(this);
       }
     } else {
-      mStateObjectCached.emplace(JS::NullValue());
+      mCachedStateObject = JS::NullValue();
     }
+    mCachedStateObjectValid = true;
   }
 
-  aState.set(mStateObjectCached.ref());
-
+  aState.set(mCachedStateObject);
   return NS_OK;
 }
 
@@ -15818,7 +15817,8 @@ nsIDocShell* Document::GetDocShell() const { return mDocumentContainer; }
 
 void Document::SetStateObject(nsIStructuredCloneContainer* scContainer) {
   mStateObjectContainer = scContainer;
-  mStateObjectCached.reset();
+  mCachedStateObject = JS::UndefinedValue();
+  mCachedStateObjectValid = false;
 }
 
 bool Document::ComputeDocumentLWTheme() const {
