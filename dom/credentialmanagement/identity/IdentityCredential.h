@@ -51,6 +51,11 @@ class IdentityCredential final : public Credential {
   void GetToken(nsAString& aToken) const;
   void SetToken(const nsAString& aToken);
 
+  static already_AddRefed<Promise> LogoutRPs(
+      GlobalObject& aGlobal,
+      const Sequence<IdentityCredentialLogoutRPsRequest>& aLogoutRequests,
+      ErrorResult& aRv);
+
   static RefPtr<GetIdentityCredentialPromise> DiscoverFromExternalSource(
       nsPIDOMWindowInner* aParent, const CredentialRequestOptions& aOptions,
       bool aSameOriginWithAncestors);
