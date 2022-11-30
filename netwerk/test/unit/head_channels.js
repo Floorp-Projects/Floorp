@@ -352,24 +352,10 @@ function deserialize_from_escaped_string(str) {
   return objectInStream.readObject(true);
 }
 
-// Copied from head_psm.js.
-function add_tls_server_setup(serverBinName, certsPath, addDefaultRoot = true) {
-  add_test(function() {
-    _setupTLSServerTest(serverBinName, certsPath, addDefaultRoot);
-  });
-}
-
-// Do not call this directly; use add_tls_server_setup
-function _setupTLSServerTest(serverBinName, certsPath, addDefaultRoot) {
-  asyncStartTLSTestServer(serverBinName, certsPath, addDefaultRoot).then(
-    run_next_test
-  );
-}
-
 async function asyncStartTLSTestServer(
   serverBinName,
   certsPath,
-  addDefaultRoot
+  addDefaultRoot = true
 ) {
   const { HttpServer } = ChromeUtils.import(
     "resource://testing-common/httpd.js"
