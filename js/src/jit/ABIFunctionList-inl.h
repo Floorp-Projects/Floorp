@@ -13,12 +13,12 @@
 #include "jsnum.h"      // js::StringToNumberPure, js::Int32ToStringPure,
                         // js::NumberToStringPure
 
-#include "builtin/Array.h"      // js::ArrayShiftMoveElements
-#include "builtin/MapObject.h"  // js::MapIteratorObject::next,
-                                // js::SetIteratorObject::next
-#include "builtin/Object.h"     // js::ObjectClassToString
-#include "builtin/RegExp.h"     // js::RegExpPrototypeOptimizableRaw,
-                                // js::RegExpInstanceOptimizableRaw
+#include "builtin/Array.h"             // js::ArrayShiftMoveElements
+#include "builtin/MapObject.h"         // js::MapIteratorObject::next,
+                                       // js::SetIteratorObject::next
+#include "builtin/Object.h"            // js::ObjectClassToString
+#include "builtin/RegExp.h"            // js::RegExpPrototypeOptimizableRaw,
+                                       // js::RegExpInstanceOptimizableRaw
 #include "builtin/TestingFunctions.h"  // js::FuzzilliHash*
 
 #include "irregexp/RegExpAPI.h"
@@ -159,7 +159,6 @@ namespace jit {
   _(js::jit::PostWriteElementBarrier<IndexInBounds::Maybe>)           \
   _(js::jit::Printf0)                                                 \
   _(js::jit::Printf1)                                                 \
-  _(js::jit::SetDenseElementPure)                                     \
   _(js::jit::SetNativeDataPropertyPure)                               \
   _(js::jit::StringFromCharCodeNoGC)                                  \
   _(js::jit::TypeOfNameObject)                                        \
