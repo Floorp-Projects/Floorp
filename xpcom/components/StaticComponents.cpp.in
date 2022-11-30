@@ -168,6 +168,8 @@ static nsresult ConstructESModuleComponent(const nsACString& aURI,
 
 //# @js_services_table@
 
+//# @protocol_handlers_table@
+
 static inline bool CalledInit(size_t aIdx) {
   return GetBit(gInitCalled, aIdx);
 }
@@ -312,6 +314,15 @@ JSServiceEntry::InterfaceList JSServiceEntry::Interfaces() const {
 /* static */
 const JSServiceEntry* JSServiceEntry::Lookup(const nsACString& aName) {
   return LookupJSService(aName);
+}
+
+nsCString StaticProtocolHandler::Scheme() const {
+  return GetString(mScheme);
+}
+
+/* static */
+const StaticProtocolHandler* StaticProtocolHandler::Lookup(const nsACString& aScheme) {
+  return LookupProtocolHandler(aScheme);
 }
 
 /* static */ const StaticModule* StaticComponents::LookupByCID(

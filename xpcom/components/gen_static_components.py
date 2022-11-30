@@ -13,6 +13,8 @@ NO_CONTRACT_ID = 0xFFFFFFFF
 
 PHF_SIZE = 512
 
+TINY_PHF_SIZE = 16
+
 # In tests, we might not have a (complete) buildconfig.
 ENDIAN = (
     "<" if buildconfig.substs.get("TARGET_ENDIANNESS", "little") == "little" else ">"
@@ -287,6 +289,8 @@ class ModuleEntry(object):
         )
         self.singleton = data.get("singleton", False)
         self.overridable = data.get("overridable", False)
+
+        self.protocol_config = data.get("protocol_config", None)
 
         if "name" in data:
             self.anonymous = False
@@ -596,6 +600,44 @@ class ContractEntry(object):
         )
 
 
+# Represents a static ProtocolHandler entry, corresponding to a C++
+# ProtocolEntry struct, mapping a scheme to a static module entry and metadata.
+class ProtocolHandler(object):
+    def __init__(self, config, module):
+        def error(str_):
+            raise Exception(
+                "Error defining protocol handler %s (%s): %s"
+                % (str(module.cid), ", ".join(map(repr, module.contract_ids)), str_)
+            )
+
+        self.module = module
+        self.scheme = config.get("scheme", None)
+        if self.scheme is None:
+            error("No scheme defined for protocol component")
+        self.flags = config.get("flags", None)
+        if self.flags is None:
+            error("No flags defined for protocol component")
+        self.default_port = config.get("default_port", -1)
+        self.has_dynamic_flags = config.get("has_dynamic_flags", False)
+
+    def to_cxx(self):
+        return """
+        {{
+          .mScheme = {scheme},
+          .mModuleID = {module_id},
+          .mProtocolFlags = {flags},
+          .mDefaultPort = {default_port},
+          .mHasDynamicFlags = {has_dynamic_flags},
+        }}
+        """.format(
+            scheme=strings.entry_to_cxx(self.scheme),
+            module_id=lower_module_id(self.module),
+            flags=" | ".join("nsIProtocolHandler::%s" % flag for flag in self.flags),
+            default_port=self.default_port,
+            has_dynamic_flags="true" if self.has_dynamic_flags else "false",
+        )
+
+
 # Generates the C++ code for the StaticCategoryEntry and StaticCategory
 # structs for all category entries declared in XPCOM manifests.
 def gen_categories(substs, categories):
@@ -820,6 +862,7 @@ def gen_substs(manifests):
     contracts = []
     contract_map = {}
     js_services = {}
+    protocol_handlers = {}
 
     jsms = set()
     esModules = set()
@@ -855,6 +898,12 @@ def gen_substs(manifests):
                 raise Exception("Duplicate JS service name: %s" % mod.js_name)
             js_services[mod.js_name] = mod
 
+        if mod.protocol_config:
+            handler = ProtocolHandler(mod.protocol_config, mod)
+            if handler.scheme in protocol_handlers:
+                raise Exception("Duplicate protocol handler: %s" % handler.scheme)
+            protocol_handlers[handler.scheme] = handler
+
         if str(mod.cid) in cids:
             raise Exception("Duplicate cid: %s" % str(mod.cid))
         cids.add(str(mod.cid))
@@ -865,6 +914,10 @@ def gen_substs(manifests):
 
     js_services_phf = PerfectHash(
         list(js_services.values()), PHF_SIZE, key=lambda entry: entry.js_name
+    )
+
+    protocol_handlers_phf = PerfectHash(
+        list(protocol_handlers.values()), TINY_PHF_SIZE, key=lambda entry: entry.scheme
     )
 
     js_services_json = {}
@@ -880,6 +933,9 @@ def gen_substs(manifests):
 
     substs["module_count"] = len(modules)
     substs["contract_count"] = len(contracts)
+    substs["protocol_handler_count"] = len(protocol_handlers)
+
+    substs["default_protocol_handler_idx"] = protocol_handlers_phf.get_index("default")
 
     gen_module_funcs(substs, module_funcs)
 
@@ -938,6 +994,18 @@ def gen_substs(manifests):
         lower_entry=lambda entry: entry.lower_js_service(),
         return_type="const JSServiceEntry*",
         return_entry="return entry.Name() == aKey ? &entry : nullptr;",
+        key_type="const nsACString&",
+        key_bytes="aKey.BeginReading()",
+        key_length="aKey.Length()",
+    )
+
+    substs["protocol_handlers_table"] = protocol_handlers_phf.cxx_codegen(
+        name="LookupProtocolHandler",
+        entry_type="StaticProtocolHandler",
+        entries_name="gStaticProtocolHandlers",
+        lower_entry=lambda entry: entry.to_cxx(),
+        return_type="const StaticProtocolHandler*",
+        return_entry="return entry.Scheme() == aKey ? &entry : nullptr;",
         key_type="const nsACString&",
         key_bytes="aKey.BeginReading()",
         key_length="aKey.Length()",
@@ -1021,6 +1089,10 @@ static constexpr size_t kContractCount = %(contract_count)d;
 static constexpr size_t kStaticCategoryCount = %(category_count)d;
 
 static constexpr size_t kModuleInitCount = %(init_count)d;
+
+static constexpr size_t kStaticProtocolHandlerCount = %(protocol_handler_count)d;
+
+static constexpr size_t kDefaultProtocolHandlerIndex = %(default_protocol_handler_idx)d;
 
 }  // namespace xpcom
 }  // namespace mozilla
