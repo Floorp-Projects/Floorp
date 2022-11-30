@@ -414,9 +414,16 @@ dependencies = [
 
 [[package]]
 name = "bindgen"
-version = "0.59.2"
+version = "0.59.999"
+dependencies = [
+ "bindgen 0.63.0",
+]
+
+[[package]]
+name = "bindgen"
+version = "0.63.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2bd2a9a458e8f4304c52c43ebb0cfbd520289f8379a52e329a38afda99bf8eb8"
+checksum = "36d860121800b2a9a94f9b5604b332d5cffb234ce17609ea479d723dbc9d3885"
 dependencies = [
  "bitflags",
  "cexpr",
@@ -429,6 +436,7 @@ dependencies = [
  "regex",
  "rustc-hash",
  "shlex",
+ "syn",
 ]
 
 [[package]]
@@ -572,7 +580,7 @@ dependencies = [
 name = "builtins-static"
 version = "0.1.0"
 dependencies = [
- "bindgen",
+ "bindgen 0.63.0",
  "nom 7.1.1",
  "pkcs11-bindings",
  "smallvec",
@@ -892,7 +900,7 @@ version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3dff444d80630d7073077d38d40b4501fd518bd2b922c2a55edcc8b0f7be57e6"
 dependencies = [
- "bindgen",
+ "bindgen 0.59.999",
 ]
 
 [[package]]
@@ -1995,7 +2003,7 @@ name = "gecko-profiler"
 version = "0.1.0"
 dependencies = [
  "bincode",
- "bindgen",
+ "bindgen 0.63.0",
  "lazy_static",
  "mozbuild",
  "profiler-macros",
@@ -2545,7 +2553,7 @@ name = "http3server"
 version = "0.1.1"
 dependencies = [
  "base64",
- "bindgen",
+ "bindgen 0.63.0",
  "log",
  "mio 0.6.23",
  "mio-extras",
@@ -3467,7 +3475,7 @@ dependencies = [
 name = "mozilla-central-workspace-hack"
 version = "0.1.0"
 dependencies = [
- "bindgen",
+ "bindgen 0.63.0",
  "libc",
  "quote",
  "serde",
@@ -3602,7 +3610,7 @@ name = "neqo-crypto"
 version = "0.6.1"
 source = "git+https://github.com/mozilla/neqo?tag=v0.6.1#e71e860489447fed25b64bd8ec31a804dccb0dad"
 dependencies = [
- "bindgen",
+ "bindgen 0.59.999",
  "log",
  "mozbuild",
  "neqo-common",
@@ -4096,7 +4104,7 @@ version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c20556de5b64f5d7213b8ea103b92261cac789b59978652d9cd831ba9f477c53"
 dependencies = [
- "bindgen",
+ "bindgen 0.63.0",
 ]
 
 [[package]]
@@ -4992,7 +5000,7 @@ dependencies = [
  "app_units",
  "arrayvec",
  "atomic_refcell",
- "bindgen",
+ "bindgen 0.63.0",
  "bitflags",
  "byteorder",
  "cssparser",
