@@ -29,14 +29,6 @@ const NOTIFY_RESTORING_ON_STARTUP = "sessionstore-restoring-on-startup";
 const NOTIFY_INITIATING_MANUAL_RESTORE =
   "sessionstore-initiating-manual-restore";
 const NOTIFY_CLOSED_OBJECTS_CHANGED = "sessionstore-closed-objects-changed";
-// This next topic is an ugly hack to avoid increasing the notification volume
-// on NOTIFY_CLOSED_OBJECTS_CHANGED, but still have notifications when the
-// tab state gets updated via the Session History in Parent TabListener
-// and/or storage updater functions in SessionStoreFunctions.jsm,
-// UpdateSessionStore() and UpdateSessionStoreForStorage().
-// Bug 1789043 covers making this better.
-const NOTIFY_CLOSED_OBJECTS_TAB_STATE_CHANGED =
-  "sessionstore-closed-objects-tab-state-changed";
 
 const NOTIFY_TAB_RESTORED = "sessionstore-debug-tab-restored"; // WARNING: debug-only
 const NOTIFY_DOMWINDOWCLOSED_HANDLED =
@@ -1315,15 +1307,6 @@ var SessionStoreInternal = {
       // Update the closed tab's state. This will be reflected in its
       // window's list of closed tabs as that refers to the same object.
       lazy.TabState.copyFromCache(permanentKey, closedTab.tabData.state);
-
-      // This is quite hacky, see note at NOTIFY_CLOSED_OBJECTS_TAB_STATE_CHANGED
-      // definition above.
-      lazy.setTimeout(() => {
-        Services.obs.notifyObservers(
-          null,
-          NOTIFY_CLOSED_OBJECTS_TAB_STATE_CHANGED
-        );
-      }, 0);
     }
   },
 
