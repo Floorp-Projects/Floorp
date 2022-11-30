@@ -24,13 +24,21 @@ async function runTest(expectUtility) {
       continue;
     }
 
+    const expectation = expectations[platform];
+
     info(`Add media tabs: ${src}`);
     let tabs = [await addMediaTab(src), await addMediaTab(src)];
     let playback = [];
 
     info("Play tabs");
     for (let tab of tabs) {
-      playback.push(play(tab, expectUtility ? expectations[platform] : "RDD"));
+      playback.push(
+        play(
+          tab,
+          expectUtility ? expectation.process : "RDD",
+          expectation.decoder
+        )
+      );
     }
 
     info("Wait all playback");

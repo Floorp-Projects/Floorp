@@ -75,39 +75,84 @@ function audioTestData() {
     {
       src: "small-shot.ogg",
       expectations: {
-        Android: "Utility Generic",
-        Linux: "Utility Generic",
-        WINNT: "Utility Generic",
-        Darwin: "Utility Generic",
+        Android: {
+          process: "Utility Generic",
+          decoder: "vorbis audio decoder",
+        },
+        Linux: {
+          process: "Utility Generic",
+          decoder: "vorbis audio decoder",
+        },
+        WINNT: {
+          process: "Utility Generic",
+          decoder: "vorbis audio decoder",
+        },
+        Darwin: {
+          process: "Utility Generic",
+          decoder: "vorbis audio decoder",
+        },
       },
     },
     {
       src: "small-shot.mp3",
       expectations: {
-        Android: "Utility Generic",
-        Linux: "Utility Generic",
-        WINNT: SpecialPowers.getBoolPref("media.ffvpx.mp3.enabled")
-          ? "Utility Generic"
-          : "Utility WMF",
-        Darwin: "Utility Generic",
+        Android: { process: "Utility Generic", decoder: "ffvpx audio decoder" },
+        Linux: {
+          process: "Utility Generic",
+          decoder: "ffvpx audio decoder",
+        },
+        WINNT: {
+          process: SpecialPowers.getBoolPref("media.ffvpx.mp3.enabled")
+            ? "Utility Generic"
+            : "Utility WMF",
+          decoder: SpecialPowers.getBoolPref("media.ffvpx.mp3.enabled")
+            ? "ffvpx audio decoder"
+            : "wmf audio decoder",
+        },
+        Darwin: {
+          process: SpecialPowers.getBoolPref("media.ffvpx.mp3.enabled")
+            ? "Utility Generic"
+            : "Utility AppleMedia",
+          decoder: SpecialPowers.getBoolPref("media.ffvpx.mp3.enabled")
+            ? "ffvpx audio decoder"
+            : "apple coremedia decoder",
+        },
       },
     },
     {
       src: "small-shot.m4a",
       expectations: {
         // Add Android after Bug 1771196
-        Linux: "Utility Generic",
-        WINNT: "Utility WMF",
-        Darwin: "Utility AppleMedia",
+        Linux: {
+          process: "Utility Generic",
+          decoder: "ffmpeg audio decoder",
+        },
+        WINNT: {
+          process: "Utility WMF",
+          decoder: "wmf audio decoder",
+        },
+        Darwin: {
+          process: "Utility AppleMedia",
+          decoder: "apple coremedia decoder",
+        },
       },
     },
     {
       src: "small-shot.flac",
       expectations: {
-        Android: "Utility Generic",
-        Linux: "Utility Generic",
-        WINNT: "Utility Generic",
-        Darwin: "Utility Generic",
+        Android: { process: "Utility Generic", decoder: "ffvpx audio decoder" },
+        Linux: {
+          process: "Utility Generic",
+          decoder: "ffvpx audio decoder",
+        },
+        WINNT: {
+          process: "Utility Generic",
+          decoder: "ffvpx audio decoder",
+        },
+        Darwin: {
+          process: "Utility Generic",
+          decoder: "ffvpx audio decoder",
+        },
       },
     },
   ];
@@ -126,13 +171,14 @@ async function addMediaTab(src) {
 async function play(
   tab,
   expectUtility,
+  expectDecoder,
   expectContent = false,
   expectJava = false
 ) {
   let browser = tab.linkedBrowser;
   return SpecialPowers.spawn(
     browser,
-    [expectUtility, expectContent, expectJava],
+    [expectUtility, expectDecoder, expectContent, expectJava],
     checkAudioDecoder
   );
 }
@@ -157,6 +203,7 @@ async function createAudioElement(src) {
 
 async function checkAudioDecoder(
   expectedProcess,
+  expectedDecoder,
   expectContent = false,
   expectJava = false
 ) {
@@ -166,17 +213,25 @@ async function checkAudioDecoder(
     const timeUpdateHandler = async ev => {
       const debugInfo = await SpecialPowers.wrap(audio).mozRequestDebugInfo();
       const audioDecoderName = debugInfo.decoder.reader.audioDecoderName;
-      const isExpected =
+
+      const isExpectedDecoder =
+        audioDecoderName.indexOf(`${expectedDecoder}`) == 0;
+      ok(
+        isExpectedDecoder,
+        `playback ${audio.src} was from decoder '${audioDecoderName}', expected '${expectedDecoder}'`
+      );
+
+      const isExpectedProcess =
         audioDecoderName.indexOf(`(${expectedProcess} remote)`) > 0;
       const isJavaRemote = audioDecoderName.indexOf("(remote)") > 0;
       const isOk =
-        (isExpected && !isJavaRemote && !expectContent && !expectJava) || // Running in Utility/RDD
-        (expectJava && !isExpected && isJavaRemote) || // Running in Java remote
-        (expectContent && !isExpected && !isJavaRemote); // Running in Content
+        (isExpectedProcess && !isJavaRemote && !expectContent && !expectJava) || // Running in Utility/RDD
+        (expectJava && !isExpectedProcess && isJavaRemote) || // Running in Java remote
+        (expectContent && !isExpectedProcess && !isJavaRemote); // Running in Content
 
       ok(
         isOk,
-        `playback ${audio.src} was from decoder '${audioDecoderName}', expected '${expectedProcess}'`
+        `playback ${audio.src} was from process '${audioDecoderName}', expected '${expectedProcess}'`
       );
 
       if (isOk) {
@@ -211,7 +266,12 @@ async function checkAudioDecoder(
 
 async function runMochitestUtilityAudio(
   src,
-  { expectUtility, expectContent = false, expectJava = false } = {}
+  {
+    expectUtility,
+    expectDecoder,
+    expectContent = false,
+    expectJava = false,
+  } = {}
 ) {
   info(`Add media: ${src}`);
   await createAudioElement(src);
@@ -219,7 +279,12 @@ async function runMochitestUtilityAudio(
   ok(audio, "Found an audio element created");
 
   info(`Play media: ${src}`);
-  await checkAudioDecoder(expectUtility, expectContent, expectJava);
+  await checkAudioDecoder(
+    expectUtility,
+    expectDecoder,
+    expectContent,
+    expectJava
+  );
 
   info(`Pause media: ${src}`);
   await audio.pause();
