@@ -17,11 +17,6 @@ body {
   text-rendering: optimizeLegibility;
   min-height: 95px;
   min-width: 95px;
-
-  /* z-indices that fight on the browser stack */
-  --browser-stack-z-index-devtools-splitter: 1;
-  --browser-stack-z-index-dialog-stack: 2;
-  --browser-stack-z-index-rdm-toolbar: 3;
 }
 
 :root:-moz-locale-dir(rtl) {
@@ -1520,7 +1515,9 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
  */
 
 .dialogStack {
-  z-index: var(--browser-stack-z-index-dialog-stack);
+  /* Should outrank the z-index values of other UI elements, particularly the devtools
+     splitter element. */
+  z-index: 2;
   position: absolute;
   inset: 0;
 }
