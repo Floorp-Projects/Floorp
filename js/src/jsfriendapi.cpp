@@ -24,8 +24,8 @@
 #include "js/friend/StackLimits.h"    // JS_STACK_GROWTH_DIRECTION
 #include "js/friend/WindowProxy.h"    // js::ToWindowIfWindowProxy
 #include "js/HashTable.h"
-#include "js/Object.h"                // JS::GetClass
-#include "js/PropertyAndElement.h"    // JS_DefineProperty
+#include "js/Object.h"              // JS::GetClass
+#include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "js/Proxy.h"
 #include "js/Stack.h"   // JS::NativeStackLimitMax
 #include "js/String.h"  // JS::detail::StringToLinearStringSlow
@@ -454,7 +454,8 @@ JS_PUBLIC_API JSObject* js::GetStaticPrototype(JSObject* obj) {
 
 JS_PUBLIC_API bool js::GetRealmOriginalEval(JSContext* cx,
                                             MutableHandleObject eval) {
-  return GlobalObject::getOrCreateEval(cx, cx->global(), eval);
+  eval.set(&cx->global()->getEvalFunction());
+  return true;
 }
 
 void JS::detail::SetReservedSlotWithBarrier(JSObject* obj, size_t slot,

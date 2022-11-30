@@ -122,11 +122,7 @@ Shape* GlobalObject::createPlainObjectShapeWithDefaultProto(
       cx->global()->data().plainObjectShapesWithDefaultProto[slotsKind];
   MOZ_ASSERT(!shapeRef);
 
-  JSObject* proto = GlobalObject::getOrCreatePrototype(cx, JSProto_Object);
-  if (!proto) {
-    return nullptr;
-  }
-
+  JSObject* proto = &cx->global()->getObjectPrototype();
   Shape* shape = GetPlainObjectShapeWithProto(cx, proto, kind);
   if (!shape) {
     return nullptr;

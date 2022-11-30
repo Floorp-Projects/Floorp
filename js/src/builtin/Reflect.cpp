@@ -223,11 +223,7 @@ static const JSPropertySpec reflect_properties[] = {
 /*** Setup ******************************************************************/
 
 static JSObject* CreateReflectObject(JSContext* cx, JSProtoKey key) {
-  Handle<GlobalObject*> global = cx->global();
-  RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
-  if (!proto) {
-    return nullptr;
-  }
+  RootedObject proto(cx, &cx->global()->getObjectPrototype());
   return NewPlainObjectWithProto(cx, proto, TenuredObject);
 }
 

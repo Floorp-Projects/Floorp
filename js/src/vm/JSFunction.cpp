@@ -371,7 +371,7 @@ static bool ResolveInterpretedFunctionPrototype(JSContext* cx,
   } else if (isGenerator) {
     objProto = GlobalObject::getOrCreateGeneratorObjectPrototype(cx, global);
   } else {
-    objProto = GlobalObject::getOrCreateObjectPrototype(cx, global);
+    objProto = &global->getObjectPrototype();
   }
   if (!objProto) {
     return false;

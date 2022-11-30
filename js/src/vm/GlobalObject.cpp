@@ -628,17 +628,6 @@ GlobalScope& GlobalObject::emptyGlobalScope() const {
   return *data().emptyGlobalScope;
 }
 
-/* static */
-bool GlobalObject::getOrCreateEval(JSContext* cx, Handle<GlobalObject*> global,
-                                   MutableHandleObject eval) {
-  if (!getOrCreateObjectPrototype(cx, global)) {
-    return false;
-  }
-  eval.set(global->data().eval);
-  MOZ_ASSERT(eval);
-  return true;
-}
-
 bool GlobalObject::valueIsEval(const Value& val) {
   return val.isObject() && data().eval == &val.toObject();
 }
@@ -704,11 +693,7 @@ static NativeObject* CreateBlankProto(JSContext* cx, const JSClass* clasp,
 NativeObject* GlobalObject::createBlankPrototype(JSContext* cx,
                                                  Handle<GlobalObject*> global,
                                                  const JSClass* clasp) {
-  RootedObject objectProto(cx, getOrCreateObjectPrototype(cx, global));
-  if (!objectProto) {
-    return nullptr;
-  }
-
+  RootedObject objectProto(cx, &global->getObjectPrototype());
   return CreateBlankProto(cx, clasp, objectProto);
 }
 

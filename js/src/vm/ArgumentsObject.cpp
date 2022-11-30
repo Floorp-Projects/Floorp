@@ -265,11 +265,7 @@ ArgumentsObject* ArgumentsObject::createTemplateObject(JSContext* cx,
   const JSClass* clasp = mapped ? &MappedArgumentsObject::class_
                                 : &UnmappedArgumentsObject::class_;
 
-  RootedObject proto(
-      cx, GlobalObject::getOrCreateObjectPrototype(cx, cx->global()));
-  if (!proto) {
-    return nullptr;
-  }
+  RootedObject proto(cx, &cx->global()->getObjectPrototype());
 
   constexpr ObjectFlags objectFlags = {ObjectFlag::Indexed};
   Rooted<Shape*> shape(cx, SharedShape::getInitialShape(
