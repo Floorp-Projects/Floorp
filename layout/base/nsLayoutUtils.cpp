@@ -9709,15 +9709,24 @@ void nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont,
   if (aFontID == LookAndFeel::FontID::MozField ||
       aFontID == LookAndFeel::FontID::MozButton ||
       aFontID == LookAndFeel::FontID::MozList) {
-    // For textfields, buttons and selects, we use whatever font is defined by
-    // the system. Which it appears (and the assumption is) it is always a
-    // proportional font. Then we always use 2 points smaller than what the
-    // browser has defined as the default proportional font.
-    //
-    // This matches historical Windows behavior and other browsers.
-    auto newSize =
-        aDefaultVariableFont.size.ToCSSPixels() - CSSPixel::FromPoints(2.0f);
-    aSystemFont->size = Length::FromPixels(std::max(float(newSize), 0.0f));
+    const bool isWindowsOrNonNativeTheme =
+#ifdef XP_WIN
+        true;
+#else
+        aDocument->ShouldAvoidNativeTheme();
+#endif
+
+    if (isWindowsOrNonNativeTheme) {
+      // For textfields, buttons and selects, we use whatever font is defined by
+      // the system. Which it appears (and the assumption is) it is always a
+      // proportional font. Then we always use 2 points smaller than what the
+      // browser has defined as the default proportional font.
+      //
+      // This matches historical Windows behavior and other browsers.
+      auto newSize =
+          aDefaultVariableFont.size.ToCSSPixels() - CSSPixel::FromPoints(2.0f);
+      aSystemFont->size = Length::FromPixels(std::max(float(newSize), 0.0f));
+    }
   }
 }
 
