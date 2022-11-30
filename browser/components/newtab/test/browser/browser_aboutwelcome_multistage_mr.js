@@ -1,7 +1,5 @@
 "use strict";
 
-const MR_TEMPLATE_PREF = "browser.aboutwelcome.templateMR";
-
 const { ExperimentAPI } = ChromeUtils.import(
   "resource://nimbus/ExperimentAPI.jsm"
 );
@@ -14,25 +12,6 @@ const { AboutWelcomeParent } = ChromeUtils.import(
 const { OnboardingMessageProvider } = ChromeUtils.import(
   "resource://activity-stream/lib/OnboardingMessageProvider.jsm"
 );
-
-async function openMRAboutWelcome() {
-  await pushPrefs([MR_TEMPLATE_PREF, true]);
-  await setAboutWelcomePref(true); // NB: Calls pushPrefs
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    "about:welcome",
-    true
-  );
-
-  return {
-    browser: tab.linkedBrowser,
-    cleanup: async () => {
-      BrowserTestUtils.removeTab(tab);
-      await popPrefs(); // for setAboutWelcomePref()
-      await popPrefs(); // for pushPrefs()
-    },
-  };
-}
 
 async function clickVisibleButton(browser, selector) {
   // eslint-disable-next-line no-shadow
