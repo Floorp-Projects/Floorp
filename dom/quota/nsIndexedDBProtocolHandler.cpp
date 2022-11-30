@@ -30,19 +30,6 @@ NS_IMETHODIMP nsIndexedDBProtocolHandler::GetScheme(nsACString& aScheme) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIndexedDBProtocolHandler::GetDefaultPort(
-    int32_t* aDefaultPort) {
-  *aDefaultPort = -1;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsIndexedDBProtocolHandler::GetProtocolFlags(
-    uint32_t* aProtocolFlags) {
-  *aProtocolFlags = URI_STD | URI_DANGEROUS_TO_LOAD | URI_DOES_NOT_RETURN_DATA |
-                    URI_NON_PERSISTABLE;
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsIndexedDBProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
                                        nsIChannel** _retval) {

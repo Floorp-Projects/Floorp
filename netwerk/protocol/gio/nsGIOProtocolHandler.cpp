@@ -906,19 +906,6 @@ nsGIOProtocolHandler::GetScheme(nsACString& aScheme) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGIOProtocolHandler::GetDefaultPort(int32_t* aDefaultPort) {
-  *aDefaultPort = -1;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGIOProtocolHandler::GetProtocolFlags(uint32_t* aProtocolFlags) {
-  // Is URI_STD true of all GnomeVFS URI types?
-  *aProtocolFlags = URI_STD | URI_DANGEROUS_TO_LOAD;
-  return NS_OK;
-}
-
 static bool IsValidGIOScheme(const nsACString& aScheme) {
   // Verify that GIO supports this URI scheme.
   GVfs* gvfs = g_vfs_get_default();

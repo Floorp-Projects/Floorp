@@ -41,22 +41,10 @@ nsChromeProtocolHandler::GetScheme(nsACString& result) {
 }
 
 NS_IMETHODIMP
-nsChromeProtocolHandler::GetDefaultPort(int32_t* result) {
-  *result = -1;  // no port for chrome: URLs
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsChromeProtocolHandler::AllowPort(int32_t port, const char* scheme,
                                    bool* _retval) {
   // don't override anything.
   *_retval = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsChromeProtocolHandler::GetProtocolFlags(uint32_t* result) {
-  *result = URI_STD | URI_IS_UI_RESOURCE | URI_IS_LOCAL_RESOURCE;
   return NS_OK;
 }
 

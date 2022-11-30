@@ -56,44 +56,6 @@ interface nsIProtocolHandler : nsISupports
     readonly attribute ACString scheme;
 
     /**
-     * The default port is the port that this protocol normally uses.
-     * If a port does not make sense for the protocol (e.g., "about:")
-     * then -1 will be returned.
-     */
-    readonly attribute long defaultPort;
-
-    /**
-     * Returns the protocol specific flags (see flag definitions below).
-     */
-    readonly attribute unsigned long protocolFlags;
-
-%{C++
-  // Helper method to get the protocol flags in the right way.
-  nsresult DoGetProtocolFlags(nsIURI* aURI, uint32_t* aFlags)
-  {
-      nsCOMPtr<nsIProtocolHandlerWithDynamicFlags> dh = do_QueryInterface(this);
-      nsresult rv = dh ? dh->GetFlagsForURI(aURI, aFlags) : GetProtocolFlags(aFlags);
-      if (NS_SUCCEEDED(rv)) {
-#ifdef DEBUG
-        if (dh) {
-          uint32_t staticFlags;
-          MOZ_ASSERT(NS_SUCCEEDED(GetProtocolFlags(&staticFlags)));
-          MOZ_ASSERT((staticFlags & ~nsIProtocolHandler::DYNAMIC_URI_FLAGS) ==
-                         (*aFlags & ~nsIProtocolHandler::DYNAMIC_URI_FLAGS),
-                     "only DYNAMIC_URI_FLAGS may be changed by a "
-                     "nsIProtocolHandlerWithDynamicFlags implementation");
-        }
-#endif
-#if !IS_ORIGIN_IS_FULL_SPEC_DEFINED
-        MOZ_RELEASE_ASSERT(!(*aFlags & nsIProtocolHandler::ORIGIN_IS_FULL_SPEC),
-                           "ORIGIN_IS_FULL_SPEC is unsupported but used");
-#endif
-      }
-      return rv;
-  }
-%}
-
-    /**
      * Constructs a new channel from the given URI for this protocol handler and
      * sets the loadInfo for the constructed channel.
      */

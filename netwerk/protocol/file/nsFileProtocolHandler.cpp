@@ -165,19 +165,6 @@ nsFileProtocolHandler::GetScheme(nsACString& result) {
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::GetDefaultPort(int32_t* result) {
-  *result = -1;  // no port for file: URLs
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileProtocolHandler::GetProtocolFlags(uint32_t* result) {
-  *result = URI_NOAUTH | URI_IS_LOCAL_FILE | URI_IS_LOCAL_RESOURCE |
-            URI_IS_POTENTIALLY_TRUSTWORTHY;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsFileProtocolHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
                                   nsIChannel** result) {
   nsresult rv;

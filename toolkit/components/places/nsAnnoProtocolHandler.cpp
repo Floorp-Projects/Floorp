@@ -254,25 +254,6 @@ nsAnnoProtocolHandler::GetScheme(nsACString& aScheme) {
   return NS_OK;
 }
 
-// nsAnnoProtocolHandler::GetDefaultPort
-//
-//    There is no default port for annotation URLs
-
-NS_IMETHODIMP
-nsAnnoProtocolHandler::GetDefaultPort(int32_t* aDefaultPort) {
-  *aDefaultPort = -1;
-  return NS_OK;
-}
-
-// nsAnnoProtocolHandler::GetProtocolFlags
-
-NS_IMETHODIMP
-nsAnnoProtocolHandler::GetProtocolFlags(uint32_t* aProtocolFlags) {
-  *aProtocolFlags = (URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD |
-                     URI_IS_LOCAL_RESOURCE);
-  return NS_OK;
-}
-
 // nsAnnoProtocolHandler::NewChannel
 //
 

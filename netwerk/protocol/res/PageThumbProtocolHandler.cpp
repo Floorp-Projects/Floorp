@@ -70,10 +70,7 @@ PageThumbProtocolHandler::GetSingleton() {
 // A moz-page-thumb URI is only loadable by chrome pages in the parent process,
 // or privileged content running in the privileged about content process.
 PageThumbProtocolHandler::PageThumbProtocolHandler()
-    : SubstitutingProtocolHandler(PAGE_THUMB_SCHEME,
-                                  URI_STD | URI_IS_UI_RESOURCE |
-                                      URI_IS_LOCAL_RESOURCE | URI_NORELATIVE |
-                                      URI_NOAUTH) {}
+    : SubstitutingProtocolHandler(PAGE_THUMB_SCHEME) {}
 
 RefPtr<RemoteStreamPromise> PageThumbProtocolHandler::NewStream(
     nsIURI* aChildURI, bool* aTerminateSender) {
