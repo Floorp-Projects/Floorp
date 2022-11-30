@@ -52,7 +52,7 @@ using dom::Promise;
 
 #define DEFAULT_CSP_PREF_V3 \
   "extensions.webextensions.default-content-security-policy.v3"
-#define DEFAULT_DEFAULT_CSP_V3 "script-src 'self';"
+#define DEFAULT_DEFAULT_CSP_V3 "script-src 'self'; upgrade-insecure-requests;"
 
 #define OBS_TOPIC_PRELOAD_SCRIPT "web-extension-preload-content-script"
 #define OBS_TOPIC_LOAD_SCRIPT "web-extension-load-content-script"
