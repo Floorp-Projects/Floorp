@@ -9,6 +9,7 @@ DEFINES["MOZ_APP_MAXVERSION"] = CONFIG["MOZ_APP_MAXVERSION"]
 
 
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"] += [
+    "browserAction-manage.js",
     "download-notification.js",
     "manifest.json",
     "update.js",

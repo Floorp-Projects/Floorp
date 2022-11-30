@@ -48,6 +48,7 @@
   },
   "background": {
     "scripts": [
+      "browserAction-manage.js",
       "webcompat.js",
       "update.js",
       "download-notification.js"
