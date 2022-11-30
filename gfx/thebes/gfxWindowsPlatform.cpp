@@ -596,9 +596,15 @@ void gfxWindowsPlatform::UpdateSupportsHDR() {
       case DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P2020:
       case DXGI_COLOR_SPACE_YCBCR_STUDIO_GHLG_TOPLEFT_P2020:
       case DXGI_COLOR_SPACE_YCBCR_FULL_GHLG_TOPLEFT_P2020:
+#ifndef __MINGW32__
+      // Windows MinGW has an older dxgicommon.h that doesn't define
+      // these enums. We'd like to define them ourselves in that case,
+      // but there's no compilable way to add new enums to an existing
+      // enum type. So instead we just don't check for these values.
       case DXGI_COLOR_SPACE_RGB_STUDIO_G24_NONE_P2020:
       case DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_LEFT_P2020:
       case DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_TOPLEFT_P2020:
+#endif
         mSupportsHDR = true;
         return;
       default:
