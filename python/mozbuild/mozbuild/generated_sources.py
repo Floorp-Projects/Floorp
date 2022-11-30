@@ -8,8 +8,10 @@ import hashlib
 import json
 import os
 
-from mozpack.files import FileFinder
 import mozpack.path as mozpath
+from mozpack.files import FileFinder
+
+GENERATED_SOURCE_EXTS = (".rs", ".c", ".h", ".cc", ".cpp")
 
 
 def sha512_digest(data):
@@ -56,7 +58,7 @@ def get_generated_sources():
     base = mozpath.join(buildconfig.substs["RUST_TARGET"], rust_build_kind, "build")
     finder = FileFinder(mozpath.join(buildconfig.topobjdir, base))
     for p, f in finder:
-        if p.endswith((".rs", ".c", ".h", ".cc", ".cpp")):
+        if p.endswith(GENERATED_SOURCE_EXTS):
             yield mozpath.join(base, p), f
 
 
