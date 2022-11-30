@@ -18,7 +18,7 @@ function handlerCount(path) {
   return handlerCallbacks[path] || 0;
 }
 
-add_setup(async () => {
+function setup() {
   httpServer = new HttpServer();
   httpServer.registerPrefixHandler("/callback/", listenHandler);
   httpServer.start(-1);
@@ -32,13 +32,16 @@ add_setup(async () => {
     httpServer.identity.primaryPort
   );
   Services.env.set("MOZ_TLS_SERVER_0RTT", "1");
-  await asyncStartTLSTestServer(
+  add_tls_server_setup(
     "FaultyServer",
     "../../../security/manager/ssl/tests/unit/test_faulty_server"
   );
+
   let nssComponent = Cc["@mozilla.org/psm;1"].getService(Ci.nsINSSComponent);
-  await nssComponent.asyncClearSSLExternalAndInternalSessionCache();
-});
+  nssComponent.clearSSLExternalAndInternalSessionCache();
+}
+
+setup();
 
 async function sleep(time) {
   return new Promise(resolve => {

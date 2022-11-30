@@ -51,11 +51,9 @@ function setup() {
   Services.prefs.setIntPref("network.http.speculative-parallel-limit", 0);
   Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRONLY);
 
-  add_setup(
-    asyncStartTLSTestServer(
-      "EncryptedClientHelloServer",
-      "../../../security/manager/ssl/tests/unit/test_encrypted_client_hello"
-    )
+  add_tls_server_setup(
+    "EncryptedClientHelloServer",
+    "../../../security/manager/ssl/tests/unit/test_encrypted_client_hello"
   );
 
   h3Port = Services.env.get("MOZHTTP3_PORT_ECH");

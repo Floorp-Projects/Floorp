@@ -104,8 +104,7 @@ class SocketProcessChild final : public PSocketProcessChild {
   Maybe<RefPtr<BackgroundDataBridgeParent>> GetAndRemoveDataBridge(
       uint64_t aChannelId);
 
-  mozilla::ipc::IPCResult RecvClearSessionCache(
-      ClearSessionCacheResolver&& aResolve);
+  mozilla::ipc::IPCResult RecvClearSessionCache();
 
   already_AddRefed<PTRRServiceChild> AllocPTRRServiceChild(
       const bool& aCaptiveIsPassed, const bool& aParentalControlEnabled,
