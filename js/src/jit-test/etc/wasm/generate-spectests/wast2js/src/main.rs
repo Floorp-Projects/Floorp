@@ -18,6 +18,7 @@ use std::env;
 use std::path::Path;
 
 mod convert;
+mod out;
 
 fn main() -> Result<()> {
     let files = env::args().collect::<Vec<String>>();

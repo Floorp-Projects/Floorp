@@ -8,5 +8,4 @@ edition = "2018"
 
 [dependencies]
 anyhow = "1.0.19"
-wast = { version = "47.0.0" }
-dprint-plugin-typescript = { version = "0.46.0" }
+wast = "47.0.0"

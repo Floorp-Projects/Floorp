@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 /* Copyright 2021 Mozilla Foundation
  *
@@ -32,27 +32,27 @@ function value(type, value) {
 
 function i8x16(elements) {
   let typedBuffer = new Uint8Array(elements);
-  return wasmGlobalFromArrayBuffer('v128', typedBuffer.buffer);
+  return wasmGlobalFromArrayBuffer("v128", typedBuffer.buffer);
 }
 function i16x8(elements) {
   let typedBuffer = new Uint16Array(elements);
-  return wasmGlobalFromArrayBuffer('v128', typedBuffer.buffer);
+  return wasmGlobalFromArrayBuffer("v128", typedBuffer.buffer);
 }
 function i32x4(elements) {
   let typedBuffer = new Uint32Array(elements);
-  return wasmGlobalFromArrayBuffer('v128', typedBuffer.buffer);
+  return wasmGlobalFromArrayBuffer("v128", typedBuffer.buffer);
 }
 function i64x2(elements) {
   let typedBuffer = new BigUint64Array(elements);
-  return wasmGlobalFromArrayBuffer('v128', typedBuffer.buffer);
+  return wasmGlobalFromArrayBuffer("v128", typedBuffer.buffer);
 }
 function f32x4(elements) {
   let typedBuffer = new Float32Array(elements);
-  return wasmGlobalFromArrayBuffer('v128', typedBuffer.buffer);
+  return wasmGlobalFromArrayBuffer("v128", typedBuffer.buffer);
 }
 function f64x2(elements) {
   let typedBuffer = new Float64Array(elements);
-  return wasmGlobalFromArrayBuffer('v128', typedBuffer.buffer);
+  return wasmGlobalFromArrayBuffer("v128", typedBuffer.buffer);
 }
 
 function either(...arr) {
@@ -78,7 +78,7 @@ class F64x2Pattern {
 let externrefs = {};
 let externsym = Symbol("externref");
 function externref(s) {
-  if (! (s in externrefs)) externrefs[s] = {[externsym]: s};
+  if (!(s in externrefs)) externrefs[s] = { [externsym]: s };
   return externrefs[s];
 }
 function is_externref(x) {
@@ -110,8 +110,12 @@ let spectest = {
   global_i64: 666n,
   global_f32: 666,
   global_f64: 666,
-  table: new WebAssembly.Table({initial: 10, maximum: 20, element: 'anyfunc'}),
-  memory: new WebAssembly.Memory({initial: 1, maximum: 2})
+  table: new WebAssembly.Table({
+    initial: 10,
+    maximum: 20,
+    element: "anyfunc",
+  }),
+  memory: new WebAssembly.Memory({ initial: 1, maximum: 2 }),
 };
 
 let linkage = {
@@ -119,8 +123,12 @@ let linkage = {
 };
 
 function getInstance(instanceish) {
-  if (typeof instanceish === 'string') {
-    assertEq(instanceish in linkage, true, `'${instanceish}'' must be registered`);
+  if (typeof instanceish === "string") {
+    assertEq(
+      instanceish in linkage,
+      true,
+      `'${instanceish}'' must be registered`,
+    );
     return linkage[instanceish];
   }
   return instanceish;
@@ -139,13 +147,17 @@ function register(instanceish, name) {
 
 function invoke(instanceish, field, params) {
   let func = getInstance(instanceish)[field];
-  assertEq(func instanceof Function, true, 'expected a function');
+  assertEq(func instanceof Function, true, "expected a function");
   return wasmLosslessInvoke(func, ...params);
 }
 
 function get(instanceish, field) {
   let global = getInstance(instanceish)[field];
-  assertEq(global instanceof WebAssembly.Global, true, 'expected a WebAssembly.Global');
+  assertEq(
+    global instanceof WebAssembly.Global,
+    true,
+    "expected a WebAssembly.Global",
+  );
   return global;
 }
 
@@ -155,19 +167,31 @@ function assert_trap(thunk, message) {
     assertEq("normal return", "trap");
   } catch (err) {
     assertEq(
-      err instanceof WebAssembly.RuntimeError, true, "expected trap");
+      err instanceof WebAssembly.RuntimeError,
+      true,
+      "expected trap",
+    );
   }
 }
 
 let StackOverflow;
-try { (function f() { 1 + f() })() } catch (e) { StackOverflow = e.constructor }
+try {
+  (function f() {
+    1 + f();
+  })();
+} catch (e) {
+  StackOverflow = e.constructor;
+}
 function assert_exhaustion(thunk, message) {
   try {
     thunk();
     assertEq("normal return", "exhaustion");
   } catch (err) {
     assertEq(
-      err instanceof StackOverflow, true, "expected exhaustion");
+      err instanceof StackOverflow,
+      true,
+      "expected exhaustion",
+    );
   }
 }
 
@@ -176,8 +200,12 @@ function assert_invalid(thunk, message) {
     thunk();
     assertEq("valid module", "invalid module");
   } catch (err) {
-    assertEq(err instanceof WebAssembly.LinkError ||
-             err instanceof WebAssembly.CompileError, true, "expected an invalid module");
+    assertEq(
+      err instanceof WebAssembly.LinkError ||
+        err instanceof WebAssembly.CompileError,
+      true,
+      "expected an invalid module",
+    );
   }
 }
 
@@ -186,8 +214,12 @@ function assert_unlinkable(thunk, message) {
     thunk();
     assertEq(true, false, "expected an unlinkable module");
   } catch (err) {
-    assertEq(err instanceof WebAssembly.LinkError ||
-             err instanceof WebAssembly.CompileError, true, "expected an unlinkable module");
+    assertEq(
+      err instanceof WebAssembly.LinkError ||
+        err instanceof WebAssembly.CompileError,
+      true,
+      "expected an unlinkable module",
+    );
   }
 }
 
@@ -196,11 +228,14 @@ function assert_malformed(thunk, message) {
     thunk();
     assertEq("valid module", "malformed module");
   } catch (err) {
-    assertEq(err instanceof TypeError ||
-             err instanceof SyntaxError ||
-             err instanceof WebAssembly.CompileError ||
-             err instanceof WebAssembly.LinkError, true,
-             `expected a malformed module`);
+    assertEq(
+      err instanceof TypeError ||
+        err instanceof SyntaxError ||
+        err instanceof WebAssembly.CompileError ||
+        err instanceof WebAssembly.LinkError,
+      true,
+      `expected a malformed module`,
+    );
   }
 }
 
@@ -227,17 +262,18 @@ function assert_return(thunk, expected) {
   }
 
   if (!compareResults(results, expected)) {
-    let got = results.map((x) => formatResult(x)).join(', ');
-    let wanted = expected.map((x) => formatExpected(x)).join(', ');
+    let got = results.map((x) => formatResult(x)).join(", ");
+    let wanted = expected.map((x) => formatExpected(x)).join(", ");
     assertEq(
       `[${got}]`,
-      `[${wanted}]`);
+      `[${wanted}]`,
+    );
     assertEq(true, false, `${got} !== ${wanted}`);
   }
 }
 
 function formatResult(result) {
-  if (typeof(result) === 'object') {
+  if (typeof (result) === "object") {
     return wasmGlobalToString(result);
   } else {
     return `${result}`;
@@ -245,28 +281,36 @@ function formatResult(result) {
 }
 
 function formatExpected(expected) {
-  if (expected === `f32_canonical_nan` ||
-      expected === `f32_arithmetic_nan` ||
-      expected === `f64_canonical_nan` ||
-      expected === `f64_arithmetic_nan`) {
+  if (
+    expected === `f32_canonical_nan` ||
+    expected === `f32_arithmetic_nan` ||
+    expected === `f64_canonical_nan` ||
+    expected === `f64_arithmetic_nan`
+  ) {
     return expected;
   } else if (expected instanceof F32x4Pattern) {
-    return `f32x4(${formatExpected(expected.x)}, ${formatExpected(expected.y)}, ${formatExpected(expected.z)}, ${formatExpected(expected.w)})`
+    return `f32x4(${formatExpected(expected.x)}, ${
+      formatExpected(expected.y)
+    }, ${formatExpected(expected.z)}, ${formatExpected(expected.w)})`;
   } else if (expected instanceof F64x2Pattern) {
-    return `f64x2(${formatExpected(expected.x)}, ${formatExpected(expected.y)})`
+    return `f64x2(${formatExpected(expected.x)}, ${
+      formatExpected(expected.y)
+    })`;
   } else if (expected instanceof EitherVariants) {
     return expected.formatExpected();
-  } else if (typeof(expected) === 'object') {
+  } else if (typeof (expected) === "object") {
     return wasmGlobalToString(expected);
   } else {
-    throw new Error('unknown expected result');
+    throw new Error("unknown expected result");
   }
 }
 
 class EitherVariants {
-  constructor(arr) { this.arr = arr; }
+  constructor(arr) {
+    this.arr = arr;
+  }
   matches(v) {
-    return this.arr.some(e => compareResult(v, e));
+    return this.arr.some((e) => compareResult(v, e));
   }
   formatExpected() {
     return `either(${this.arr.map(formatExpected).join(", ")})`;
@@ -289,22 +333,28 @@ function compareResults(results, expected) {
 }
 
 function compareResult(result, expected) {
-  if (expected === `canonical_nan` ||
-      expected === `arithmetic_nan`) {
+  if (
+    expected === `canonical_nan` ||
+    expected === `arithmetic_nan`
+  ) {
     return wasmGlobalIsNaN(result, expected);
   } else if (expected instanceof F32x4Pattern) {
-    return compareResult(wasmGlobalExtractLane(result, 'f32x4', 0), expected.x) &&
-      compareResult(wasmGlobalExtractLane(result, 'f32x4', 1), expected.y) &&
-      compareResult(wasmGlobalExtractLane(result, 'f32x4', 2), expected.z) &&
-      compareResult(wasmGlobalExtractLane(result, 'f32x4', 3), expected.w);
+    return compareResult(
+      wasmGlobalExtractLane(result, "f32x4", 0),
+      expected.x,
+    ) &&
+      compareResult(wasmGlobalExtractLane(result, "f32x4", 1), expected.y) &&
+      compareResult(wasmGlobalExtractLane(result, "f32x4", 2), expected.z) &&
+      compareResult(wasmGlobalExtractLane(result, "f32x4", 3), expected.w);
   } else if (expected instanceof F64x2Pattern) {
-    return compareResult(wasmGlobalExtractLane(result, 'f64x2', 0), expected.x) &&
-      compareResult(wasmGlobalExtractLane(result, 'f64x2', 1), expected.y);
-  } else if (typeof(expected) === 'object') {
-    return wasmGlobalsEqual(result,
-      expected
-    );
+    return compareResult(
+      wasmGlobalExtractLane(result, "f64x2", 0),
+      expected.x,
+    ) &&
+      compareResult(wasmGlobalExtractLane(result, "f64x2", 1), expected.y);
+  } else if (typeof (expected) === "object") {
+    return wasmGlobalsEqual(result, expected);
   } else {
-    throw new Error('unknown expected result');
+    throw new Error("unknown expected result");
   }
 }
