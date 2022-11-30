@@ -1488,28 +1488,25 @@ nsresult nsLocalFile::GetDiskInfo(StatInfoFunc&& aStatInfoFunc,
     return NS_ERROR_FAILURE;
   }
 
-  CheckedInt64 checkedResult;
-
-  checkedResult = std::forward<StatInfoFunc>(aStatInfoFunc)(fs_buf);
-  if (!checkedResult.isValid()) {
+  CheckedInt64 statfsResult = std::forward<StatInfoFunc>(aStatInfoFunc)(fs_buf);
+  if (!statfsResult.isValid()) {
     return NS_ERROR_CANNOT_CONVERT_DATA;
   }
 
-  // If we return an error, *aResult will not be modified.
-  int64_t tentativeResult = checkedResult.value();
+  // Assign statfsResult to *aResult in case one of the quota calls fails.
+  *aResult = statfsResult.value();
 
 #  if defined(USE_LINUX_QUOTACTL)
 
   if (!FillStatCache()) {
-    // Return info from statfs
-    *aResult = tentativeResult;
+    // Returns info from statfs
     return NS_OK;
   }
 
   nsAutoCString deviceName;
   if (!GetDeviceName(major(mCachedStat.st_dev), minor(mCachedStat.st_dev),
                      deviceName)) {
-    *aResult = tentativeResult;
+    // Returns info from statfs
     return NS_OK;
   }
 
@@ -1520,26 +1517,25 @@ nsresult nsLocalFile::GetDiskInfo(StatInfoFunc&& aStatInfoFunc,
       && dq.dqb_valid & QIF_BLIMITS
 #    endif
       && dq.dqb_bhardlimit) {
-    checkedResult = std::forward<QuotaInfoFunc>(aQuotaInfoFunc)(dq);
-    if (!checkedResult.isValid()) {
-      return NS_ERROR_CANNOT_CONVERT_DATA;
+    CheckedInt64 quotaResult = std::forward<QuotaInfoFunc>(aQuotaInfoFunc)(dq);
+    if (!quotaResult.isValid()) {
+      // Returns info from statfs
+      return NS_OK;
     }
 
-    if (checkedResult.value() < tentativeResult) {
-      tentativeResult = checkedResult.value();
+    if (quotaResult.value() < *aResult) {
+      *aResult = quotaResult.value();
     }
   }
-#  endif
+#  endif  // defined(USE_LINUX_QUOTACTL)
 
 #  ifdef DEBUG_DISK_SPACE
-  printf("DiskInfo: %lu bytes\n", tentativeResult);
+  printf("DiskInfo: %lu bytes\n", *aResult);
 #  endif
-
-  *aResult = tentativeResult;
 
   return NS_OK;
 
-#else
+#else  // STATFS
   /*
    * This platform doesn't have statfs or statvfs.  I'm sure that there's
    * a way to check for free disk space and disk capacity on platforms that
@@ -1553,7 +1549,7 @@ nsresult nsLocalFile::GetDiskInfo(StatInfoFunc&& aStatInfoFunc,
 #  endif
   return NS_ERROR_NOT_IMPLEMENTED;
 
-#endif /* STATFS */
+#endif  // STATFS
 }
 
 NS_IMETHODIMP
