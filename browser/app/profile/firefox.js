@@ -2143,6 +2143,8 @@ pref("browser.migrate.safari.enabled", true);
 pref("browser.migrate.opera.enabled", false);
 pref("browser.migrate.vivaldi.enabled", false);
 
+pref("browser.migrate.content-modal.enabled", false);
+
 pref("extensions.pocket.api", "api.getpocket.com");
 pref("extensions.pocket.enabled", true);
 pref("extensions.pocket.oAuthConsumerKey", "40249-e88c401e1b1f2242d9e441c4");

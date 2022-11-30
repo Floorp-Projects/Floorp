@@ -854,6 +854,7 @@ export var MigrationUtils = Object.seal({
    *        (the migration entry point for purposes of telemetry).
    */
   showMigrationWizard: function MU_showMigrationWizard(aOpener, aParams) {
+    const DIALOG_URL = "chrome://browser/content/migration/migration.xhtml";
     let features = "chrome,dialog,modal,centerscreen,titlebar,resizable=no";
     if (AppConstants.platform == "macosx" && !this.isStartupMigration) {
       let win = Services.wm.getMostRecentWindow("Browser:MigrationWizard");
@@ -915,13 +916,20 @@ export var MigrationUtils = Object.seal({
       params = aParams;
     }
 
-    Services.ww.openWindow(
-      aOpener,
-      "chrome://browser/content/migration/migration.xhtml",
-      "_blank",
-      features,
-      params
-    );
+    if (
+      Services.prefs.getBoolPref(
+        "browser.migrate.content-modal.enabled",
+        false
+      ) &&
+      aOpener &&
+      aOpener.gBrowser
+    ) {
+      const { gBrowser } = aOpener;
+      const { selectedBrowser } = gBrowser;
+      gBrowser.getTabDialogBox(selectedBrowser).open(DIALOG_URL, params);
+    } else {
+      Services.ww.openWindow(aOpener, DIALOG_URL, "_blank", features, params);
+    }
   },
 
   /**
