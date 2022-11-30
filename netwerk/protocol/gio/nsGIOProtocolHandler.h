@@ -32,7 +32,7 @@ class nsGIOProtocolHandler final : public nsIProtocolHandler,
   void InitSupportedProtocolsPref(nsIPrefBranch* prefs);
 
   static mozilla::StaticRefPtr<nsGIOProtocolHandler> sSingleton;
-  nsCString mSupportedProtocols;
+  nsTArray<nsCString> mSupportedProtocols;
 };
 
 #endif  // nsGIOProtocolHandler_h___
