@@ -98,8 +98,8 @@ let $3 = instantiate(`(module
 assert_trap(() => invoke($3, `unreachable`, []), `unreachable`);
 
 // ./test/core/call_ref.wast:167
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (elem declare func $$f)
     (type $$t (func (param i32) (result i32)))
     (func $$f (param i32) (result i32) (local.get 0))
@@ -110,11 +110,13 @@ assert_invalid(() =>
       (ref.func $$f)
       (call_ref $$t)
     )
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);
 
 // ./test/core/call_ref.wast:183
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (elem declare func $$f)
     (type $$t (func (param i32) (result i32)))
     (func $$f (param i32) (result i32) (local.get 0))
@@ -126,13 +128,17 @@ assert_invalid(() =>
       (drop)
       (i64.const 0)
     )
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);
 
 // ./test/core/call_ref.wast:200
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (type $$t (func))
     (func $$f (param $$r externref)
       (call_ref $$t (local.get $$r))
     )
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);

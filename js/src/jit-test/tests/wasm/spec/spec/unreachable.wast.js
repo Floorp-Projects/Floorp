@@ -334,9 +334,7 @@ assert_return(() => invoke($0, `as-if-else`, [1, 6]), [value("i32", 6)]);
 assert_trap(() => invoke($0, `as-if-then-no-else`, [1, 6]), `unreachable`);
 
 // ./test/core/unreachable.wast:262
-assert_return(() => invoke($0, `as-if-then-no-else`, [0, 6]), [
-  value("i32", 6),
-]);
+assert_return(() => invoke($0, `as-if-then-no-else`, [0, 6]), [value("i32", 6)]);
 
 // ./test/core/unreachable.wast:264
 assert_trap(() => invoke($0, `as-select-first`, [0, 6]), `unreachable`);

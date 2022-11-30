@@ -16,10 +16,7 @@
 // ./test/core/token.wast
 
 // ./test/core/token.wast:3
-assert_malformed(
-  () => instantiate(`(func (drop (i32.const0))) `),
-  `unknown operator`,
-);
+assert_malformed(() => instantiate(`(func (drop (i32.const0))) `), `unknown operator`);
 
 // ./test/core/token.wast:7
 assert_malformed(() => instantiate(`(func br 0drop) `), `unknown operator`);

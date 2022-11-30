@@ -35,54 +35,36 @@ assert_invalid(
 
 // ./test/core/memory64.wast:9
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory (import "spectest" "memory") i64 0) (memory i64 0))`,
-    ),
+  () => instantiate(`(module (memory (import "spectest" "memory") i64 0) (memory i64 0))`),
   `multiple memories`,
 );
 
 // ./test/core/memory64.wast:11
-let $4 = instantiate(
-  `(module (memory i64 (data)) (func (export "memsize") (result i64) (memory.size)))`,
-);
+let $4 = instantiate(`(module (memory i64 (data)) (func (export "memsize") (result i64) (memory.size)))`);
 
 // ./test/core/memory64.wast:12
 assert_return(() => invoke($4, `memsize`, []), [value("i64", 0n)]);
 
 // ./test/core/memory64.wast:13
-let $5 = instantiate(
-  `(module (memory i64 (data "")) (func (export "memsize") (result i64) (memory.size)))`,
-);
+let $5 = instantiate(`(module (memory i64 (data "")) (func (export "memsize") (result i64) (memory.size)))`);
 
 // ./test/core/memory64.wast:14
 assert_return(() => invoke($5, `memsize`, []), [value("i64", 0n)]);
 
 // ./test/core/memory64.wast:15
-let $6 = instantiate(
-  `(module (memory i64 (data "x")) (func (export "memsize") (result i64) (memory.size)))`,
-);
+let $6 = instantiate(`(module (memory i64 (data "x")) (func (export "memsize") (result i64) (memory.size)))`);
 
 // ./test/core/memory64.wast:16
 assert_return(() => invoke($6, `memsize`, []), [value("i64", 1n)]);
 
 // ./test/core/memory64.wast:18
-assert_invalid(
-  () => instantiate(`(module (data (i64.const 0)))`),
-  `unknown memory`,
-);
+assert_invalid(() => instantiate(`(module (data (i64.const 0)))`), `unknown memory`);
 
 // ./test/core/memory64.wast:19
-assert_invalid(
-  () => instantiate(`(module (data (i64.const 0) ""))`),
-  `unknown memory`,
-);
+assert_invalid(() => instantiate(`(module (data (i64.const 0) ""))`), `unknown memory`);
 
 // ./test/core/memory64.wast:20
-assert_invalid(
-  () => instantiate(`(module (data (i64.const 0) "x"))`),
-  `unknown memory`,
-);
+assert_invalid(() => instantiate(`(module (data (i64.const 0) "x"))`), `unknown memory`);
 
 // ./test/core/memory64.wast:22
 assert_invalid(
@@ -249,37 +231,25 @@ assert_return(() => invoke($7, `i32_load16_u`, [40000]), [value("i32", 40000)]);
 assert_return(() => invoke($7, `i32_load8_s`, [-19110589]), [value("i32", 67)]);
 
 // ./test/core/memory64.wast:155
-assert_return(() => invoke($7, `i32_load8_s`, [878104047]), [
-  value("i32", -17),
-]);
+assert_return(() => invoke($7, `i32_load8_s`, [878104047]), [value("i32", -17)]);
 
 // ./test/core/memory64.wast:156
 assert_return(() => invoke($7, `i32_load8_u`, [-19110589]), [value("i32", 67)]);
 
 // ./test/core/memory64.wast:157
-assert_return(() => invoke($7, `i32_load8_u`, [878104047]), [
-  value("i32", 239),
-]);
+assert_return(() => invoke($7, `i32_load8_u`, [878104047]), [value("i32", 239)]);
 
 // ./test/core/memory64.wast:158
-assert_return(() => invoke($7, `i32_load16_s`, [-19110589]), [
-  value("i32", 25923),
-]);
+assert_return(() => invoke($7, `i32_load16_s`, [-19110589]), [value("i32", 25923)]);
 
 // ./test/core/memory64.wast:159
-assert_return(() => invoke($7, `i32_load16_s`, [878104047]), [
-  value("i32", -12817),
-]);
+assert_return(() => invoke($7, `i32_load16_s`, [878104047]), [value("i32", -12817)]);
 
 // ./test/core/memory64.wast:160
-assert_return(() => invoke($7, `i32_load16_u`, [-19110589]), [
-  value("i32", 25923),
-]);
+assert_return(() => invoke($7, `i32_load16_u`, [-19110589]), [value("i32", 25923)]);
 
 // ./test/core/memory64.wast:161
-assert_return(() => invoke($7, `i32_load16_u`, [878104047]), [
-  value("i32", 52719),
-]);
+assert_return(() => invoke($7, `i32_load16_u`, [878104047]), [value("i32", 52719)]);
 
 // ./test/core/memory64.wast:163
 assert_return(() => invoke($7, `i64_load8_s`, [-1n]), [value("i64", -1n)]);
@@ -297,9 +267,7 @@ assert_return(() => invoke($7, `i64_load16_u`, [-1n]), [value("i64", 65535n)]);
 assert_return(() => invoke($7, `i64_load32_s`, [-1n]), [value("i64", -1n)]);
 
 // ./test/core/memory64.wast:168
-assert_return(() => invoke($7, `i64_load32_u`, [-1n]), [
-  value("i64", 4294967295n),
-]);
+assert_return(() => invoke($7, `i64_load32_u`, [-1n]), [value("i64", 4294967295n)]);
 
 // ./test/core/memory64.wast:170
 assert_return(() => invoke($7, `i64_load8_s`, [100n]), [value("i64", 100n)]);
@@ -308,81 +276,49 @@ assert_return(() => invoke($7, `i64_load8_s`, [100n]), [value("i64", 100n)]);
 assert_return(() => invoke($7, `i64_load8_u`, [200n]), [value("i64", 200n)]);
 
 // ./test/core/memory64.wast:172
-assert_return(() => invoke($7, `i64_load16_s`, [20000n]), [
-  value("i64", 20000n),
-]);
+assert_return(() => invoke($7, `i64_load16_s`, [20000n]), [value("i64", 20000n)]);
 
 // ./test/core/memory64.wast:173
-assert_return(() => invoke($7, `i64_load16_u`, [40000n]), [
-  value("i64", 40000n),
-]);
+assert_return(() => invoke($7, `i64_load16_u`, [40000n]), [value("i64", 40000n)]);
 
 // ./test/core/memory64.wast:174
-assert_return(() => invoke($7, `i64_load32_s`, [20000n]), [
-  value("i64", 20000n),
-]);
+assert_return(() => invoke($7, `i64_load32_s`, [20000n]), [value("i64", 20000n)]);
 
 // ./test/core/memory64.wast:175
-assert_return(() => invoke($7, `i64_load32_u`, [40000n]), [
-  value("i64", 40000n),
-]);
+assert_return(() => invoke($7, `i64_load32_u`, [40000n]), [value("i64", 40000n)]);
 
 // ./test/core/memory64.wast:177
-assert_return(() => invoke($7, `i64_load8_s`, [-81985529755441853n]), [
-  value("i64", 67n),
-]);
+assert_return(() => invoke($7, `i64_load8_s`, [-81985529755441853n]), [value("i64", 67n)]);
 
 // ./test/core/memory64.wast:178
-assert_return(() => invoke($7, `i64_load8_s`, [3771275841602506223n]), [
-  value("i64", -17n),
-]);
+assert_return(() => invoke($7, `i64_load8_s`, [3771275841602506223n]), [value("i64", -17n)]);
 
 // ./test/core/memory64.wast:179
-assert_return(() => invoke($7, `i64_load8_u`, [-81985529755441853n]), [
-  value("i64", 67n),
-]);
+assert_return(() => invoke($7, `i64_load8_u`, [-81985529755441853n]), [value("i64", 67n)]);
 
 // ./test/core/memory64.wast:180
-assert_return(() => invoke($7, `i64_load8_u`, [3771275841602506223n]), [
-  value("i64", 239n),
-]);
+assert_return(() => invoke($7, `i64_load8_u`, [3771275841602506223n]), [value("i64", 239n)]);
 
 // ./test/core/memory64.wast:181
-assert_return(() => invoke($7, `i64_load16_s`, [-81985529755441853n]), [
-  value("i64", 25923n),
-]);
+assert_return(() => invoke($7, `i64_load16_s`, [-81985529755441853n]), [value("i64", 25923n)]);
 
 // ./test/core/memory64.wast:182
-assert_return(() => invoke($7, `i64_load16_s`, [3771275841602506223n]), [
-  value("i64", -12817n),
-]);
+assert_return(() => invoke($7, `i64_load16_s`, [3771275841602506223n]), [value("i64", -12817n)]);
 
 // ./test/core/memory64.wast:183
-assert_return(() => invoke($7, `i64_load16_u`, [-81985529755441853n]), [
-  value("i64", 25923n),
-]);
+assert_return(() => invoke($7, `i64_load16_u`, [-81985529755441853n]), [value("i64", 25923n)]);
 
 // ./test/core/memory64.wast:184
-assert_return(() => invoke($7, `i64_load16_u`, [3771275841602506223n]), [
-  value("i64", 52719n),
-]);
+assert_return(() => invoke($7, `i64_load16_u`, [3771275841602506223n]), [value("i64", 52719n)]);
 
 // ./test/core/memory64.wast:185
-assert_return(() => invoke($7, `i64_load32_s`, [-81985529755441853n]), [
-  value("i64", 1446274371n),
-]);
+assert_return(() => invoke($7, `i64_load32_s`, [-81985529755441853n]), [value("i64", 1446274371n)]);
 
 // ./test/core/memory64.wast:186
-assert_return(() => invoke($7, `i64_load32_s`, [3771275841602506223n]), [
-  value("i64", -1732588049n),
-]);
+assert_return(() => invoke($7, `i64_load32_s`, [3771275841602506223n]), [value("i64", -1732588049n)]);
 
 // ./test/core/memory64.wast:187
-assert_return(() => invoke($7, `i64_load32_u`, [-81985529755441853n]), [
-  value("i64", 1446274371n),
-]);
+assert_return(() => invoke($7, `i64_load32_u`, [-81985529755441853n]), [value("i64", 1446274371n)]);
 
 // ./test/core/memory64.wast:188
-assert_return(() => invoke($7, `i64_load32_u`, [3771275841602506223n]), [
-  value("i64", 2562379247n),
-]);
+assert_return(() => invoke($7, `i64_load32_u`, [3771275841602506223n]), [value("i64", 2562379247n)]);

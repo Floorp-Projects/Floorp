@@ -150,17 +150,11 @@ assert_return(() => invoke($0, `delegate-to-catch`, []), [value("i32", 1)]);
 assert_exception(() => invoke($0, `delegate-to-caller`, []));
 
 // ./test/core/try_delegate.wast:117
-assert_malformed(
-  () => instantiate(`(module (func (delegate 0))) `),
-  `unexpected token`,
-);
+assert_malformed(() => instantiate(`(module (func (delegate 0))) `), `unexpected token`);
 
 // ./test/core/try_delegate.wast:122
 assert_malformed(
-  () =>
-    instantiate(
-      `(module (tag $$e) (func (try (do) (catch $$e) (delegate 0)))) `,
-    ),
+  () => instantiate(`(module (tag $$e) (func (try (do) (catch $$e) (delegate 0)))) `),
   `unexpected token`,
 );
 

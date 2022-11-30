@@ -162,19 +162,13 @@ let $0 = instantiate(`(module
 )`);
 
 // ./test/core/stack.wast:146
-assert_return(() => invoke($0, `fac-expr`, [25n]), [
-  value("i64", 7034535277573963776n),
-]);
+assert_return(() => invoke($0, `fac-expr`, [25n]), [value("i64", 7034535277573963776n)]);
 
 // ./test/core/stack.wast:147
-assert_return(() => invoke($0, `fac-stack`, [25n]), [
-  value("i64", 7034535277573963776n),
-]);
+assert_return(() => invoke($0, `fac-stack`, [25n]), [value("i64", 7034535277573963776n)]);
 
 // ./test/core/stack.wast:148
-assert_return(() => invoke($0, `fac-mixed`, [25n]), [
-  value("i64", 7034535277573963776n),
-]);
+assert_return(() => invoke($0, `fac-mixed`, [25n]), [value("i64", 7034535277573963776n)]);
 
 // ./test/core/stack.wast:150
 assert_return(() => invoke($0, `not-quite-a-tree`, []), [value("i32", 3)]);

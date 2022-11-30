@@ -489,9 +489,7 @@ assert_return(() => invoke($0, `as-br_table-first`, []), [value("i32", 1)]);
 assert_return(() => invoke($0, `as-br_table-last`, []), [value("i32", 2)]);
 
 // ./test/core/loop.wast:450
-assert_return(() => invoke($0, `as-call_indirect-first`, []), [
-  value("i32", 1),
-]);
+assert_return(() => invoke($0, `as-call_indirect-first`, []), [value("i32", 1)]);
 
 // ./test/core/loop.wast:451
 assert_return(() => invoke($0, `as-call_indirect-mid`, []), [value("i32", 2)]);
@@ -560,11 +558,10 @@ assert_return(() => invoke($0, `break-bare`, []), [value("i32", 19)]);
 assert_return(() => invoke($0, `break-value`, []), [value("i32", 18)]);
 
 // ./test/core/loop.wast:477
-assert_return(() => invoke($0, `break-multi-value`, []), [
-  value("i32", 18),
-  value("i32", -18),
-  value("i64", 18n),
-]);
+assert_return(
+  () => invoke($0, `break-multi-value`, []),
+  [value("i32", 18), value("i32", -18), value("i64", 18n)],
+);
 
 // ./test/core/loop.wast:480
 assert_return(() => invoke($0, `break-repeated`, []), [value("i32", 18)]);
@@ -609,9 +606,7 @@ assert_return(() => invoke($0, `while`, [3n]), [value("i64", 6n)]);
 assert_return(() => invoke($0, `while`, [5n]), [value("i64", 120n)]);
 
 // ./test/core/loop.wast:497
-assert_return(() => invoke($0, `while`, [20n]), [
-  value("i64", 2432902008176640000n),
-]);
+assert_return(() => invoke($0, `while`, [20n]), [value("i64", 2432902008176640000n)]);
 
 // ./test/core/loop.wast:499
 assert_return(() => invoke($0, `for`, [0n]), [value("i64", 1n)]);
@@ -629,82 +624,52 @@ assert_return(() => invoke($0, `for`, [3n]), [value("i64", 6n)]);
 assert_return(() => invoke($0, `for`, [5n]), [value("i64", 120n)]);
 
 // ./test/core/loop.wast:504
-assert_return(() => invoke($0, `for`, [20n]), [
-  value("i64", 2432902008176640000n),
-]);
+assert_return(() => invoke($0, `for`, [20n]), [value("i64", 2432902008176640000n)]);
 
 // ./test/core/loop.wast:506
-assert_return(() => invoke($0, `nesting`, [value("f32", 0), value("f32", 7)]), [
-  value("f32", 0),
-]);
+assert_return(() => invoke($0, `nesting`, [value("f32", 0), value("f32", 7)]), [value("f32", 0)]);
 
 // ./test/core/loop.wast:507
-assert_return(() => invoke($0, `nesting`, [value("f32", 7), value("f32", 0)]), [
-  value("f32", 0),
-]);
+assert_return(() => invoke($0, `nesting`, [value("f32", 7), value("f32", 0)]), [value("f32", 0)]);
 
 // ./test/core/loop.wast:508
-assert_return(() => invoke($0, `nesting`, [value("f32", 1), value("f32", 1)]), [
-  value("f32", 1),
-]);
+assert_return(() => invoke($0, `nesting`, [value("f32", 1), value("f32", 1)]), [value("f32", 1)]);
 
 // ./test/core/loop.wast:509
-assert_return(() => invoke($0, `nesting`, [value("f32", 1), value("f32", 2)]), [
-  value("f32", 2),
-]);
+assert_return(() => invoke($0, `nesting`, [value("f32", 1), value("f32", 2)]), [value("f32", 2)]);
 
 // ./test/core/loop.wast:510
-assert_return(() => invoke($0, `nesting`, [value("f32", 1), value("f32", 3)]), [
-  value("f32", 4),
-]);
+assert_return(() => invoke($0, `nesting`, [value("f32", 1), value("f32", 3)]), [value("f32", 4)]);
 
 // ./test/core/loop.wast:511
-assert_return(() => invoke($0, `nesting`, [value("f32", 1), value("f32", 4)]), [
-  value("f32", 6),
-]);
+assert_return(() => invoke($0, `nesting`, [value("f32", 1), value("f32", 4)]), [value("f32", 6)]);
 
 // ./test/core/loop.wast:512
-assert_return(
-  () => invoke($0, `nesting`, [value("f32", 1), value("f32", 100)]),
-  [value("f32", 2550)],
-);
+assert_return(() => invoke($0, `nesting`, [value("f32", 1), value("f32", 100)]), [value("f32", 2550)]);
 
 // ./test/core/loop.wast:513
-assert_return(
-  () => invoke($0, `nesting`, [value("f32", 1), value("f32", 101)]),
-  [value("f32", 2601)],
-);
+assert_return(() => invoke($0, `nesting`, [value("f32", 1), value("f32", 101)]), [value("f32", 2601)]);
 
 // ./test/core/loop.wast:514
-assert_return(() => invoke($0, `nesting`, [value("f32", 2), value("f32", 1)]), [
-  value("f32", 1),
-]);
+assert_return(() => invoke($0, `nesting`, [value("f32", 2), value("f32", 1)]), [value("f32", 1)]);
 
 // ./test/core/loop.wast:515
-assert_return(() => invoke($0, `nesting`, [value("f32", 3), value("f32", 1)]), [
-  value("f32", 1),
-]);
+assert_return(() => invoke($0, `nesting`, [value("f32", 3), value("f32", 1)]), [value("f32", 1)]);
 
 // ./test/core/loop.wast:516
-assert_return(
-  () => invoke($0, `nesting`, [value("f32", 10), value("f32", 1)]),
-  [value("f32", 1)],
-);
+assert_return(() => invoke($0, `nesting`, [value("f32", 10), value("f32", 1)]), [value("f32", 1)]);
 
 // ./test/core/loop.wast:517
-assert_return(() => invoke($0, `nesting`, [value("f32", 2), value("f32", 2)]), [
-  value("f32", 3),
-]);
+assert_return(() => invoke($0, `nesting`, [value("f32", 2), value("f32", 2)]), [value("f32", 3)]);
 
 // ./test/core/loop.wast:518
-assert_return(() => invoke($0, `nesting`, [value("f32", 2), value("f32", 3)]), [
-  value("f32", 4),
-]);
+assert_return(() => invoke($0, `nesting`, [value("f32", 2), value("f32", 3)]), [value("f32", 4)]);
 
 // ./test/core/loop.wast:519
-assert_return(() => invoke($0, `nesting`, [value("f32", 7), value("f32", 4)]), [
-  value("f32", 10.309524),
-]);
+assert_return(
+  () => invoke($0, `nesting`, [value("f32", 7), value("f32", 4)]),
+  [value("f32", 10.309524)],
+);
 
 // ./test/core/loop.wast:520
 assert_return(
@@ -713,56 +678,38 @@ assert_return(
 );
 
 // ./test/core/loop.wast:521
-assert_return(
-  () => invoke($0, `nesting`, [value("f32", 7), value("f32", 101)]),
-  [value("f32", 2601)],
-);
+assert_return(() => invoke($0, `nesting`, [value("f32", 7), value("f32", 101)]), [value("f32", 2601)]);
 
 // ./test/core/loop.wast:523
 assert_return(() => invoke($0, `type-use`, []), []);
 
 // ./test/core/loop.wast:525
 assert_malformed(
-  () =>
-    instantiate(
-      `(type $$sig (func (param i32) (result i32))) (func (i32.const 0) (loop (type $$sig) (result i32) (param i32))) `,
-    ),
+  () => instantiate(`(type $$sig (func (param i32) (result i32))) (func (i32.const 0) (loop (type $$sig) (result i32) (param i32))) `),
   `unexpected token`,
 );
 
 // ./test/core/loop.wast:532
 assert_malformed(
-  () =>
-    instantiate(
-      `(type $$sig (func (param i32) (result i32))) (func (i32.const 0) (loop (param i32) (type $$sig) (result i32))) `,
-    ),
+  () => instantiate(`(type $$sig (func (param i32) (result i32))) (func (i32.const 0) (loop (param i32) (type $$sig) (result i32))) `),
   `unexpected token`,
 );
 
 // ./test/core/loop.wast:539
 assert_malformed(
-  () =>
-    instantiate(
-      `(type $$sig (func (param i32) (result i32))) (func (i32.const 0) (loop (param i32) (result i32) (type $$sig))) `,
-    ),
+  () => instantiate(`(type $$sig (func (param i32) (result i32))) (func (i32.const 0) (loop (param i32) (result i32) (type $$sig))) `),
   `unexpected token`,
 );
 
 // ./test/core/loop.wast:546
 assert_malformed(
-  () =>
-    instantiate(
-      `(type $$sig (func (param i32) (result i32))) (func (i32.const 0) (loop (result i32) (type $$sig) (param i32))) `,
-    ),
+  () => instantiate(`(type $$sig (func (param i32) (result i32))) (func (i32.const 0) (loop (result i32) (type $$sig) (param i32))) `),
   `unexpected token`,
 );
 
 // ./test/core/loop.wast:553
 assert_malformed(
-  () =>
-    instantiate(
-      `(type $$sig (func (param i32) (result i32))) (func (i32.const 0) (loop (result i32) (param i32) (type $$sig))) `,
-    ),
+  () => instantiate(`(type $$sig (func (param i32) (result i32))) (func (i32.const 0) (loop (result i32) (param i32) (type $$sig))) `),
   `unexpected token`,
 );
 
@@ -780,46 +727,36 @@ assert_malformed(
 
 // ./test/core/loop.wast:571
 assert_malformed(
-  () =>
-    instantiate(
-      `(type $$sig (func)) (func (loop (type $$sig) (result i32) (i32.const 0)) (unreachable)) `,
-    ),
+  () => instantiate(`(type $$sig (func)) (func (loop (type $$sig) (result i32) (i32.const 0)) (unreachable)) `),
   `inline function type`,
 );
 
 // ./test/core/loop.wast:578
 assert_malformed(
-  () =>
-    instantiate(
-      `(type $$sig (func (param i32) (result i32))) (func (loop (type $$sig) (result i32) (i32.const 0)) (unreachable)) `,
-    ),
+  () => instantiate(`(type $$sig (func (param i32) (result i32))) (func (loop (type $$sig) (result i32) (i32.const 0)) (unreachable)) `),
   `inline function type`,
 );
 
 // ./test/core/loop.wast:585
 assert_malformed(
-  () =>
-    instantiate(
-      `(type $$sig (func (param i32) (result i32))) (func (i32.const 0) (loop (type $$sig) (param i32) (drop)) (unreachable)) `,
-    ),
+  () => instantiate(`(type $$sig (func (param i32) (result i32))) (func (i32.const 0) (loop (type $$sig) (param i32) (drop)) (unreachable)) `),
   `inline function type`,
 );
 
 // ./test/core/loop.wast:592
 assert_malformed(
-  () =>
-    instantiate(
-      `(type $$sig (func (param i32 i32) (result i32))) (func (i32.const 0) (loop (type $$sig) (param i32) (result i32)) (unreachable)) `,
-    ),
+  () => instantiate(`(type $$sig (func (param i32 i32) (result i32))) (func (i32.const 0) (loop (type $$sig) (param i32) (result i32)) (unreachable)) `),
   `inline function type`,
 );
 
 // ./test/core/loop.wast:600
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (type $$sig (func))
     (func (loop (type $$sig) (i32.const 0)))
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);
 
 // ./test/core/loop.wast:608
 assert_invalid(
@@ -846,21 +783,24 @@ assert_invalid(
 );
 
 // ./test/core/loop.wast:625
-assert_invalid(() =>
-  instantiate(`(module (func $$type-value-num-vs-void
+assert_invalid(
+  () => instantiate(`(module (func $$type-value-num-vs-void
     (loop (i32.const 1))
-  ))`), `type mismatch`);
+  ))`),
+  `type mismatch`,
+);
 
 // ./test/core/loop.wast:631
-assert_invalid(() =>
-  instantiate(`(module (func $$type-value-nums-vs-void
+assert_invalid(
+  () => instantiate(`(module (func $$type-value-nums-vs-void
     (loop (i32.const 1) (i32.const 2))
-  ))`), `type mismatch`);
+  ))`),
+  `type mismatch`,
+);
 
 // ./test/core/loop.wast:637
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-value-empty-vs-num (result i32)
+  () => instantiate(`(module (func $$type-value-empty-vs-num (result i32)
     (loop (result i32))
   ))`),
   `type mismatch`,
@@ -868,8 +808,7 @@ assert_invalid(
 
 // ./test/core/loop.wast:643
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-value-empty-vs-nums (result i32 i32)
+  () => instantiate(`(module (func $$type-value-empty-vs-nums (result i32 i32)
     (loop (result i32 i32))
   ))`),
   `type mismatch`,
@@ -877,8 +816,7 @@ assert_invalid(
 
 // ./test/core/loop.wast:649
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-value-void-vs-num (result i32)
+  () => instantiate(`(module (func $$type-value-void-vs-num (result i32)
     (loop (result i32) (nop))
   ))`),
   `type mismatch`,
@@ -886,8 +824,7 @@ assert_invalid(
 
 // ./test/core/loop.wast:655
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-value-void-vs-nums (result i32 i32)
+  () => instantiate(`(module (func $$type-value-void-vs-nums (result i32 i32)
     (loop (result i32 i32) (nop))
   ))`),
   `type mismatch`,
@@ -895,8 +832,7 @@ assert_invalid(
 
 // ./test/core/loop.wast:661
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-value-num-vs-num (result i32)
+  () => instantiate(`(module (func $$type-value-num-vs-num (result i32)
     (loop (result i32) (f32.const 0))
   ))`),
   `type mismatch`,
@@ -904,8 +840,7 @@ assert_invalid(
 
 // ./test/core/loop.wast:667
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-value-num-vs-nums (result i32 i32)
+  () => instantiate(`(module (func $$type-value-num-vs-nums (result i32 i32)
     (loop (result i32 i32) (i32.const 0))
   ))`),
   `type mismatch`,
@@ -913,8 +848,7 @@ assert_invalid(
 
 // ./test/core/loop.wast:673
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-value-partial-vs-nums (result i32 i32)
+  () => instantiate(`(module (func $$type-value-partial-vs-nums (result i32 i32)
     (i32.const 1) (loop (result i32 i32) (i32.const 2))
   ))`),
   `type mismatch`,
@@ -922,8 +856,7 @@ assert_invalid(
 
 // ./test/core/loop.wast:679
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-value-nums-vs-num (result i32)
+  () => instantiate(`(module (func $$type-value-nums-vs-num (result i32)
     (loop (result i32) (i32.const 1) (i32.const 2))
   ))`),
   `type mismatch`,
@@ -931,92 +864,112 @@ assert_invalid(
 
 // ./test/core/loop.wast:685
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-value-unreached-select (result i32)
+  () => instantiate(`(module (func $$type-value-unreached-select (result i32)
     (loop (result i64) (select (unreachable) (unreachable) (unreachable)))
   ))`),
   `type mismatch`,
 );
 
 // ./test/core/loop.wast:692
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (func $$type-value-empty-in-block
       (i32.const 0)
       (block (loop (result i32)) (drop))
     )
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);
 
 // ./test/core/loop.wast:701
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (func $$type-value-empty-in-loop
       (i32.const 0)
       (loop (loop (result i32)) (drop))
     )
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);
 
 // ./test/core/loop.wast:710
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (func $$type-value-empty-in-then
       (i32.const 0) (i32.const 0)
       (if (then (loop (result i32)) (drop)))
     )
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);
 
 // ./test/core/loop.wast:720
-assert_invalid(() =>
-  instantiate(`(module (func $$type-param-void-vs-num
+assert_invalid(
+  () => instantiate(`(module (func $$type-param-void-vs-num
     (loop (param i32) (drop))
-  ))`), `type mismatch`);
+  ))`),
+  `type mismatch`,
+);
 
 // ./test/core/loop.wast:726
-assert_invalid(() =>
-  instantiate(`(module (func $$type-param-void-vs-nums
+assert_invalid(
+  () => instantiate(`(module (func $$type-param-void-vs-nums
     (loop (param i32 f64) (drop) (drop))
-  ))`), `type mismatch`);
+  ))`),
+  `type mismatch`,
+);
 
 // ./test/core/loop.wast:732
-assert_invalid(() =>
-  instantiate(`(module (func $$type-param-num-vs-num
+assert_invalid(
+  () => instantiate(`(module (func $$type-param-num-vs-num
     (f32.const 0) (loop (param i32) (drop))
-  ))`), `type mismatch`);
+  ))`),
+  `type mismatch`,
+);
 
 // ./test/core/loop.wast:738
-assert_invalid(() =>
-  instantiate(`(module (func $$type-param-num-vs-nums
+assert_invalid(
+  () => instantiate(`(module (func $$type-param-num-vs-nums
     (f32.const 0) (loop (param f32 i32) (drop) (drop))
-  ))`), `type mismatch`);
+  ))`),
+  `type mismatch`,
+);
 
 // ./test/core/loop.wast:744
-assert_invalid(() =>
-  instantiate(`(module (func $$type-param-nested-void-vs-num
+assert_invalid(
+  () => instantiate(`(module (func $$type-param-nested-void-vs-num
     (block (loop (param i32) (drop)))
-  ))`), `type mismatch`);
+  ))`),
+  `type mismatch`,
+);
 
 // ./test/core/loop.wast:750
-assert_invalid(() =>
-  instantiate(`(module (func $$type-param-void-vs-nums
+assert_invalid(
+  () => instantiate(`(module (func $$type-param-void-vs-nums
     (block (loop (param i32 f64) (drop) (drop)))
-  ))`), `type mismatch`);
+  ))`),
+  `type mismatch`,
+);
 
 // ./test/core/loop.wast:756
-assert_invalid(() =>
-  instantiate(`(module (func $$type-param-num-vs-num
+assert_invalid(
+  () => instantiate(`(module (func $$type-param-num-vs-num
     (block (f32.const 0) (loop (param i32) (drop)))
-  ))`), `type mismatch`);
+  ))`),
+  `type mismatch`,
+);
 
 // ./test/core/loop.wast:762
-assert_invalid(() =>
-  instantiate(`(module (func $$type-param-num-vs-nums
+assert_invalid(
+  () => instantiate(`(module (func $$type-param-num-vs-nums
     (block (f32.const 0) (loop (param f32 i32) (drop) (drop)))
-  ))`), `type mismatch`);
+  ))`),
+  `type mismatch`,
+);
 
 // ./test/core/loop.wast:769
 assert_malformed(
-  () =>
-    instantiate(`(func (param i32) (result i32) loop (param $$x i32) end) `),
+  () => instantiate(`(func (param i32) (result i32) loop (param $$x i32) end) `),
   `unexpected token`,
 );
 
@@ -1027,13 +980,7 @@ assert_malformed(
 );
 
 // ./test/core/loop.wast:778
-assert_malformed(
-  () => instantiate(`(func loop end $$l) `),
-  `mismatching label`,
-);
+assert_malformed(() => instantiate(`(func loop end $$l) `), `mismatching label`);
 
 // ./test/core/loop.wast:782
-assert_malformed(
-  () => instantiate(`(func loop $$a end $$l) `),
-  `mismatching label`,
-);
+assert_malformed(() => instantiate(`(func loop $$a end $$l) `), `mismatching label`);

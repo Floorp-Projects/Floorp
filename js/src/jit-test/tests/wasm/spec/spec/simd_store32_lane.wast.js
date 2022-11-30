@@ -141,192 +141,163 @@ let $0 = instantiate(`(module
 
 // ./test/core/simd/simd_store32_lane.wast:125
 assert_return(
-  () =>
-    invoke($0, `v128.store32_lane_0`, [0, i32x4([0x3020100, 0x0, 0x0, 0x0])]),
+  () => invoke($0, `v128.store32_lane_0`, [0, i32x4([0x3020100, 0x0, 0x0, 0x0])]),
   [value("i64", 50462976n)],
 );
 
 // ./test/core/simd/simd_store32_lane.wast:128
 assert_return(
-  () =>
-    invoke($0, `v128.store32_lane_1`, [1, i32x4([0x0, 0x4030201, 0x0, 0x0])]),
+  () => invoke($0, `v128.store32_lane_1`, [1, i32x4([0x0, 0x4030201, 0x0, 0x0])]),
   [value("i64", 67305985n)],
 );
 
 // ./test/core/simd/simd_store32_lane.wast:131
 assert_return(
-  () =>
-    invoke($0, `v128.store32_lane_2`, [2, i32x4([0x0, 0x0, 0x5040302, 0x0])]),
+  () => invoke($0, `v128.store32_lane_2`, [2, i32x4([0x0, 0x0, 0x5040302, 0x0])]),
   [value("i64", 84148994n)],
 );
 
 // ./test/core/simd/simd_store32_lane.wast:134
 assert_return(
-  () =>
-    invoke($0, `v128.store32_lane_3`, [3, i32x4([0x0, 0x0, 0x0, 0x6050403])]),
+  () => invoke($0, `v128.store32_lane_3`, [3, i32x4([0x0, 0x0, 0x0, 0x6050403])]),
   [value("i64", 100992003n)],
 );
 
 // ./test/core/simd/simd_store32_lane.wast:137
 assert_return(
-  () =>
-    invoke($0, `v128.store32_lane_0_offset_0`, [
-      i32x4([0x3020100, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store32_lane_0_offset_0`, [i32x4([0x3020100, 0x0, 0x0, 0x0])]),
   [value("i64", 50462976n)],
 );
 
 // ./test/core/simd/simd_store32_lane.wast:139
 assert_return(
-  () =>
-    invoke($0, `v128.store32_lane_1_offset_1`, [
-      i32x4([0x0, 0x4030201, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store32_lane_1_offset_1`, [i32x4([0x0, 0x4030201, 0x0, 0x0])]),
   [value("i64", 67305985n)],
 );
 
 // ./test/core/simd/simd_store32_lane.wast:141
 assert_return(
-  () =>
-    invoke($0, `v128.store32_lane_2_offset_2`, [
-      i32x4([0x0, 0x0, 0x5040302, 0x0]),
-    ]),
+  () => invoke($0, `v128.store32_lane_2_offset_2`, [i32x4([0x0, 0x0, 0x5040302, 0x0])]),
   [value("i64", 84148994n)],
 );
 
 // ./test/core/simd/simd_store32_lane.wast:143
 assert_return(
-  () =>
-    invoke($0, `v128.store32_lane_3_offset_3`, [
-      i32x4([0x0, 0x0, 0x0, 0x6050403]),
-    ]),
+  () => invoke($0, `v128.store32_lane_3_offset_3`, [i32x4([0x0, 0x0, 0x0, 0x6050403])]),
   [value("i64", 100992003n)],
 );
 
 // ./test/core/simd/simd_store32_lane.wast:145
 assert_return(
-  () =>
-    invoke($0, `v128.store32_lane_0_align_1`, [
-      0,
-      i32x4([0x3020100, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store32_lane_0_align_1`, [
+    0,
+    i32x4([0x3020100, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 50462976n)],
 );
 
 // ./test/core/simd/simd_store32_lane.wast:148
 assert_return(
-  () =>
-    invoke($0, `v128.store32_lane_0_align_2`, [
-      0,
-      i32x4([0x3020100, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store32_lane_0_align_2`, [
+    0,
+    i32x4([0x3020100, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 50462976n)],
 );
 
 // ./test/core/simd/simd_store32_lane.wast:151
 assert_return(
-  () =>
-    invoke($0, `v128.store32_lane_0_align_4`, [
-      0,
-      i32x4([0x3020100, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store32_lane_0_align_4`, [
+    0,
+    i32x4([0x3020100, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 50462976n)],
 );
 
 // ./test/core/simd/simd_store32_lane.wast:154
 assert_return(
-  () =>
-    invoke($0, `v128.store32_lane_1_align_1`, [
-      1,
-      i32x4([0x0, 0x4030201, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store32_lane_1_align_1`, [
+    1,
+    i32x4([0x0, 0x4030201, 0x0, 0x0]),
+  ]),
   [value("i64", 67305985n)],
 );
 
 // ./test/core/simd/simd_store32_lane.wast:157
 assert_return(
-  () =>
-    invoke($0, `v128.store32_lane_1_align_2`, [
-      1,
-      i32x4([0x0, 0x4030201, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store32_lane_1_align_2`, [
+    1,
+    i32x4([0x0, 0x4030201, 0x0, 0x0]),
+  ]),
   [value("i64", 67305985n)],
 );
 
 // ./test/core/simd/simd_store32_lane.wast:160
 assert_return(
-  () =>
-    invoke($0, `v128.store32_lane_1_align_4`, [
-      1,
-      i32x4([0x0, 0x4030201, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store32_lane_1_align_4`, [
+    1,
+    i32x4([0x0, 0x4030201, 0x0, 0x0]),
+  ]),
   [value("i64", 67305985n)],
 );
 
 // ./test/core/simd/simd_store32_lane.wast:163
 assert_return(
-  () =>
-    invoke($0, `v128.store32_lane_2_align_1`, [
-      2,
-      i32x4([0x0, 0x0, 0x5040302, 0x0]),
-    ]),
+  () => invoke($0, `v128.store32_lane_2_align_1`, [
+    2,
+    i32x4([0x0, 0x0, 0x5040302, 0x0]),
+  ]),
   [value("i64", 84148994n)],
 );
 
 // ./test/core/simd/simd_store32_lane.wast:166
 assert_return(
-  () =>
-    invoke($0, `v128.store32_lane_2_align_2`, [
-      2,
-      i32x4([0x0, 0x0, 0x5040302, 0x0]),
-    ]),
+  () => invoke($0, `v128.store32_lane_2_align_2`, [
+    2,
+    i32x4([0x0, 0x0, 0x5040302, 0x0]),
+  ]),
   [value("i64", 84148994n)],
 );
 
 // ./test/core/simd/simd_store32_lane.wast:169
 assert_return(
-  () =>
-    invoke($0, `v128.store32_lane_2_align_4`, [
-      2,
-      i32x4([0x0, 0x0, 0x5040302, 0x0]),
-    ]),
+  () => invoke($0, `v128.store32_lane_2_align_4`, [
+    2,
+    i32x4([0x0, 0x0, 0x5040302, 0x0]),
+  ]),
   [value("i64", 84148994n)],
 );
 
 // ./test/core/simd/simd_store32_lane.wast:172
 assert_return(
-  () =>
-    invoke($0, `v128.store32_lane_3_align_1`, [
-      3,
-      i32x4([0x0, 0x0, 0x0, 0x6050403]),
-    ]),
+  () => invoke($0, `v128.store32_lane_3_align_1`, [
+    3,
+    i32x4([0x0, 0x0, 0x0, 0x6050403]),
+  ]),
   [value("i64", 100992003n)],
 );
 
 // ./test/core/simd/simd_store32_lane.wast:175
 assert_return(
-  () =>
-    invoke($0, `v128.store32_lane_3_align_2`, [
-      3,
-      i32x4([0x0, 0x0, 0x0, 0x6050403]),
-    ]),
+  () => invoke($0, `v128.store32_lane_3_align_2`, [
+    3,
+    i32x4([0x0, 0x0, 0x0, 0x6050403]),
+  ]),
   [value("i64", 100992003n)],
 );
 
 // ./test/core/simd/simd_store32_lane.wast:178
 assert_return(
-  () =>
-    invoke($0, `v128.store32_lane_3_align_4`, [
-      3,
-      i32x4([0x0, 0x0, 0x0, 0x6050403]),
-    ]),
+  () => invoke($0, `v128.store32_lane_3_align_4`, [
+    3,
+    i32x4([0x0, 0x0, 0x0, 0x6050403]),
+  ]),
   [value("i64", 100992003n)],
 );
 
 // ./test/core/simd/simd_store32_lane.wast:183
 assert_invalid(
-  () =>
-    instantiate(`(module (memory 1)
+  () => instantiate(`(module (memory 1)
           (func (param $$x v128) (result v128)
             (v128.store32_lane 0 (local.get $$x) (i32.const 0))))`),
   `type mismatch`,
@@ -334,8 +305,7 @@ assert_invalid(
 
 // ./test/core/simd/simd_store32_lane.wast:189
 assert_invalid(
-  () =>
-    instantiate(`(module (memory 1)
+  () => instantiate(`(module (memory 1)
           (func (param $$x v128) (result v128)
             (v128.store32_lane 4 (i32.const 0) (local.get $$x))))`),
   `invalid lane index`,
@@ -343,8 +313,7 @@ assert_invalid(
 
 // ./test/core/simd/simd_store32_lane.wast:195
 assert_invalid(
-  () =>
-    instantiate(`(module (memory 1)
+  () => instantiate(`(module (memory 1)
           (func (param $$x v128) (result v128)
           (v128.store32_lane align=8 0 (i32.const 0) (local.get $$x))))`),
   `alignment must not be larger than natural`,

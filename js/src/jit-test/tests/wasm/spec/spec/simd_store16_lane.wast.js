@@ -209,320 +209,287 @@ let $0 = instantiate(`(module
 
 // ./test/core/simd/simd_store16_lane.wast:193
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_0`, [
-      0,
-      i16x8([0x100, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_0`, [
+    0,
+    i16x8([0x100, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 256n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:196
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_1`, [
-      1,
-      i16x8([0x0, 0x201, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_1`, [
+    1,
+    i16x8([0x0, 0x201, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 513n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:199
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_2`, [
-      2,
-      i16x8([0x0, 0x0, 0x302, 0x0, 0x0, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_2`, [
+    2,
+    i16x8([0x0, 0x0, 0x302, 0x0, 0x0, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 770n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:202
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_3`, [
-      3,
-      i16x8([0x0, 0x0, 0x0, 0x403, 0x0, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_3`, [
+    3,
+    i16x8([0x0, 0x0, 0x0, 0x403, 0x0, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 1027n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:205
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_4`, [
-      4,
-      i16x8([0x0, 0x0, 0x0, 0x0, 0x504, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_4`, [
+    4,
+    i16x8([0x0, 0x0, 0x0, 0x0, 0x504, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 1284n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:208
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_5`, [
-      5,
-      i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x605, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_5`, [
+    5,
+    i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x605, 0x0, 0x0]),
+  ]),
   [value("i64", 1541n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:211
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_6`, [
-      6,
-      i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x706, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_6`, [
+    6,
+    i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x706, 0x0]),
+  ]),
   [value("i64", 1798n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:214
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_7`, [
-      7,
-      i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x807]),
-    ]),
+  () => invoke($0, `v128.store16_lane_7`, [
+    7,
+    i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x807]),
+  ]),
   [value("i64", 2055n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:217
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_0_offset_0`, [
-      i16x8([0x100, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_0_offset_0`, [
+    i16x8([0x100, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 256n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:219
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_1_offset_1`, [
-      i16x8([0x0, 0x201, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_1_offset_1`, [
+    i16x8([0x0, 0x201, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 513n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:221
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_2_offset_2`, [
-      i16x8([0x0, 0x0, 0x302, 0x0, 0x0, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_2_offset_2`, [
+    i16x8([0x0, 0x0, 0x302, 0x0, 0x0, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 770n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:223
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_3_offset_3`, [
-      i16x8([0x0, 0x0, 0x0, 0x403, 0x0, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_3_offset_3`, [
+    i16x8([0x0, 0x0, 0x0, 0x403, 0x0, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 1027n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:225
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_4_offset_4`, [
-      i16x8([0x0, 0x0, 0x0, 0x0, 0x504, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_4_offset_4`, [
+    i16x8([0x0, 0x0, 0x0, 0x0, 0x504, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 1284n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:227
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_5_offset_5`, [
-      i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x605, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_5_offset_5`, [
+    i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x605, 0x0, 0x0]),
+  ]),
   [value("i64", 1541n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:229
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_6_offset_6`, [
-      i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x706, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_6_offset_6`, [
+    i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x706, 0x0]),
+  ]),
   [value("i64", 1798n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:231
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_7_offset_7`, [
-      i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x807]),
-    ]),
+  () => invoke($0, `v128.store16_lane_7_offset_7`, [
+    i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x807]),
+  ]),
   [value("i64", 2055n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:233
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_0_align_1`, [
-      0,
-      i16x8([0x100, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_0_align_1`, [
+    0,
+    i16x8([0x100, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 256n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:236
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_0_align_2`, [
-      0,
-      i16x8([0x100, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_0_align_2`, [
+    0,
+    i16x8([0x100, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 256n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:239
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_1_align_1`, [
-      1,
-      i16x8([0x0, 0x201, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_1_align_1`, [
+    1,
+    i16x8([0x0, 0x201, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 513n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:242
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_1_align_2`, [
-      1,
-      i16x8([0x0, 0x201, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_1_align_2`, [
+    1,
+    i16x8([0x0, 0x201, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 513n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:245
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_2_align_1`, [
-      2,
-      i16x8([0x0, 0x0, 0x302, 0x0, 0x0, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_2_align_1`, [
+    2,
+    i16x8([0x0, 0x0, 0x302, 0x0, 0x0, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 770n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:248
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_2_align_2`, [
-      2,
-      i16x8([0x0, 0x0, 0x302, 0x0, 0x0, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_2_align_2`, [
+    2,
+    i16x8([0x0, 0x0, 0x302, 0x0, 0x0, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 770n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:251
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_3_align_1`, [
-      3,
-      i16x8([0x0, 0x0, 0x0, 0x403, 0x0, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_3_align_1`, [
+    3,
+    i16x8([0x0, 0x0, 0x0, 0x403, 0x0, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 1027n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:254
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_3_align_2`, [
-      3,
-      i16x8([0x0, 0x0, 0x0, 0x403, 0x0, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_3_align_2`, [
+    3,
+    i16x8([0x0, 0x0, 0x0, 0x403, 0x0, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 1027n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:257
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_4_align_1`, [
-      4,
-      i16x8([0x0, 0x0, 0x0, 0x0, 0x504, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_4_align_1`, [
+    4,
+    i16x8([0x0, 0x0, 0x0, 0x0, 0x504, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 1284n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:260
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_4_align_2`, [
-      4,
-      i16x8([0x0, 0x0, 0x0, 0x0, 0x504, 0x0, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_4_align_2`, [
+    4,
+    i16x8([0x0, 0x0, 0x0, 0x0, 0x504, 0x0, 0x0, 0x0]),
+  ]),
   [value("i64", 1284n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:263
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_5_align_1`, [
-      5,
-      i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x605, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_5_align_1`, [
+    5,
+    i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x605, 0x0, 0x0]),
+  ]),
   [value("i64", 1541n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:266
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_5_align_2`, [
-      5,
-      i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x605, 0x0, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_5_align_2`, [
+    5,
+    i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x605, 0x0, 0x0]),
+  ]),
   [value("i64", 1541n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:269
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_6_align_1`, [
-      6,
-      i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x706, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_6_align_1`, [
+    6,
+    i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x706, 0x0]),
+  ]),
   [value("i64", 1798n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:272
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_6_align_2`, [
-      6,
-      i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x706, 0x0]),
-    ]),
+  () => invoke($0, `v128.store16_lane_6_align_2`, [
+    6,
+    i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x706, 0x0]),
+  ]),
   [value("i64", 1798n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:275
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_7_align_1`, [
-      7,
-      i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x807]),
-    ]),
+  () => invoke($0, `v128.store16_lane_7_align_1`, [
+    7,
+    i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x807]),
+  ]),
   [value("i64", 2055n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:278
 assert_return(
-  () =>
-    invoke($0, `v128.store16_lane_7_align_2`, [
-      7,
-      i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x807]),
-    ]),
+  () => invoke($0, `v128.store16_lane_7_align_2`, [
+    7,
+    i16x8([0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x807]),
+  ]),
   [value("i64", 2055n)],
 );
 
 // ./test/core/simd/simd_store16_lane.wast:283
 assert_invalid(
-  () =>
-    instantiate(`(module (memory 1)
+  () => instantiate(`(module (memory 1)
           (func (param $$x v128) (result v128)
             (v128.store16_lane 0 (local.get $$x) (i32.const 0))))`),
   `type mismatch`,
@@ -530,8 +497,7 @@ assert_invalid(
 
 // ./test/core/simd/simd_store16_lane.wast:289
 assert_invalid(
-  () =>
-    instantiate(`(module (memory 1)
+  () => instantiate(`(module (memory 1)
           (func (param $$x v128) (result v128)
             (v128.store16_lane 8 (i32.const 0) (local.get $$x))))`),
   `invalid lane index`,
@@ -539,8 +505,7 @@ assert_invalid(
 
 // ./test/core/simd/simd_store16_lane.wast:295
 assert_invalid(
-  () =>
-    instantiate(`(module (memory 1)
+  () => instantiate(`(module (memory 1)
           (func (param $$x v128) (result v128)
           (v128.store16_lane align=4 0 (i32.const 0) (local.get $$x))))`),
   `alignment must not be larger than natural`,

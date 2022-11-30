@@ -444,18 +444,22 @@ assert_return(() => invoke($3, `load8_u`, [28]), [value("i32", 0)]);
 assert_return(() => invoke($3, `load8_u`, [29]), [value("i32", 0)]);
 
 // ./test/core/memory_init.wast:189
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
      (func (export "test")
-       (data.drop 0)))`), `unknown data segment`);
+       (data.drop 0)))`),
+  `unknown data segment`,
+);
 
 // ./test/core/memory_init.wast:195
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
-      (data.drop 4)))`), `unknown data segment`);
+      (data.drop 4)))`),
+  `unknown data segment`,
+);
 
 // ./test/core/memory_init.wast:203
 let $4 = instantiate(`(module
@@ -491,8 +495,7 @@ assert_trap(() => invoke($6, `test`, []), `out of bounds memory access`);
 
 // ./test/core/memory_init.wast:226
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (func (export "test")
       (memory.init 1 (i32.const 1234) (i32.const 1) (i32.const 1))))`),
   `unknown memory 0`,
@@ -500,8 +503,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:232
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -612,8 +614,7 @@ assert_trap(() => invoke($16, `test`, []), `out of bounds memory access`);
 
 // ./test/core/memory_init.wast:311
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -623,8 +624,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:319
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -634,8 +634,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:327
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -645,8 +644,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:335
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -656,8 +654,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:343
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -667,8 +664,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:351
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -678,8 +674,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:359
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -689,8 +684,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:367
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -700,8 +694,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:375
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -711,8 +704,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:383
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -722,8 +714,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:391
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -733,8 +724,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:399
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -744,8 +734,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:407
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -755,8 +744,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:415
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -766,8 +754,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:423
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -777,8 +764,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:431
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -788,8 +774,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:439
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -799,8 +784,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:447
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -810,8 +794,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:455
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -821,8 +804,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:463
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -832,8 +814,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:471
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -843,8 +824,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:479
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -854,8 +834,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:487
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -865,8 +844,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:495
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -876,8 +854,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:503
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -887,8 +864,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:511
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -898,8 +874,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:519
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -909,8 +884,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:527
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -920,8 +894,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:535
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -931,8 +904,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:543
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -942,8 +914,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:551
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -953,8 +924,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:559
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -964,8 +934,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:567
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -975,8 +944,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:575
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -986,8 +954,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:583
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -997,8 +964,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:591
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1008,8 +974,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:599
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1019,8 +984,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:607
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1030,8 +994,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:615
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1041,8 +1004,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:623
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1052,8 +1014,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:631
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1063,8 +1024,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:639
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1074,8 +1034,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:647
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1085,8 +1044,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:655
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1096,8 +1054,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:663
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1107,8 +1064,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:671
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1118,8 +1074,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:679
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1129,8 +1084,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:687
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1140,8 +1094,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:695
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1151,8 +1104,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:703
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1162,8 +1114,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:711
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1173,8 +1124,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:719
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1184,8 +1134,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:727
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1195,8 +1144,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:735
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1206,8 +1154,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:743
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1217,8 +1164,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:751
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1228,8 +1174,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:759
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1239,8 +1184,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:767
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1250,8 +1194,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:775
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1261,8 +1204,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:783
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1272,8 +1214,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:791
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1283,8 +1224,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:799
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1294,8 +1234,7 @@ assert_invalid(
 
 // ./test/core/memory_init.wast:807
 assert_invalid(
-  () =>
-    instantiate(`(module
+  () => instantiate(`(module
     (memory 1)
     (data "\\37")
     (func (export "test")
@@ -1323,10 +1262,7 @@ let $17 = instantiate(`(module
     (memory.init 0 (local.get $$offs) (i32.const 0) (local.get $$len))))`);
 
 // ./test/core/memory_init.wast:833
-assert_trap(
-  () => invoke($17, `run`, [65528, 16]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($17, `run`, [65528, 16]), `out of bounds memory access`);
 
 // ./test/core/memory_init.wast:836
 assert_return(() => invoke($17, `checkRange`, [0, 1, 0]), [value("i32", -1)]);
@@ -1351,10 +1287,7 @@ let $18 = instantiate(`(module
     (memory.init 0 (local.get $$offs) (i32.const 0) (local.get $$len))))`);
 
 // ./test/core/memory_init.wast:856
-assert_trap(
-  () => invoke($18, `run`, [65527, 16]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($18, `run`, [65527, 16]), `out of bounds memory access`);
 
 // ./test/core/memory_init.wast:859
 assert_return(() => invoke($18, `checkRange`, [0, 1, 0]), [value("i32", -1)]);
@@ -1379,10 +1312,7 @@ let $19 = instantiate(`(module
     (memory.init 0 (local.get $$offs) (i32.const 0) (local.get $$len))))`);
 
 // ./test/core/memory_init.wast:879
-assert_trap(
-  () => invoke($19, `run`, [65472, 30]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($19, `run`, [65472, 30]), `out of bounds memory access`);
 
 // ./test/core/memory_init.wast:882
 assert_return(() => invoke($19, `checkRange`, [0, 1, 0]), [value("i32", -1)]);
@@ -1407,10 +1337,7 @@ let $20 = instantiate(`(module
     (memory.init 0 (local.get $$offs) (i32.const 0) (local.get $$len))))`);
 
 // ./test/core/memory_init.wast:902
-assert_trap(
-  () => invoke($20, `run`, [65473, 31]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($20, `run`, [65473, 31]), `out of bounds memory access`);
 
 // ./test/core/memory_init.wast:905
 assert_return(() => invoke($20, `checkRange`, [0, 1, 0]), [value("i32", -1)]);
@@ -1435,10 +1362,7 @@ let $21 = instantiate(`(module
     (memory.init 0 (local.get $$offs) (i32.const 0) (local.get $$len))))`);
 
 // ./test/core/memory_init.wast:925
-assert_trap(
-  () => invoke($21, `run`, [65528, -256]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($21, `run`, [65528, -256]), `out of bounds memory access`);
 
 // ./test/core/memory_init.wast:928
 assert_return(() => invoke($21, `checkRange`, [0, 1, 0]), [value("i32", -1)]);

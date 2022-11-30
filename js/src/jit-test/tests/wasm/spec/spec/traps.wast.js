@@ -28,40 +28,22 @@ let $0 = instantiate(`(module
 )`);
 
 // ./test/core/traps.wast:16
-assert_trap(
-  () => invoke($0, `no_dce.i32.div_s`, [1, 0]),
-  `integer divide by zero`,
-);
+assert_trap(() => invoke($0, `no_dce.i32.div_s`, [1, 0]), `integer divide by zero`);
 
 // ./test/core/traps.wast:17
-assert_trap(
-  () => invoke($0, `no_dce.i32.div_u`, [1, 0]),
-  `integer divide by zero`,
-);
+assert_trap(() => invoke($0, `no_dce.i32.div_u`, [1, 0]), `integer divide by zero`);
 
 // ./test/core/traps.wast:18
-assert_trap(
-  () => invoke($0, `no_dce.i64.div_s`, [1n, 0n]),
-  `integer divide by zero`,
-);
+assert_trap(() => invoke($0, `no_dce.i64.div_s`, [1n, 0n]), `integer divide by zero`);
 
 // ./test/core/traps.wast:19
-assert_trap(
-  () => invoke($0, `no_dce.i64.div_u`, [1n, 0n]),
-  `integer divide by zero`,
-);
+assert_trap(() => invoke($0, `no_dce.i64.div_u`, [1n, 0n]), `integer divide by zero`);
 
 // ./test/core/traps.wast:20
-assert_trap(
-  () => invoke($0, `no_dce.i32.div_s`, [-2147483648, -1]),
-  `integer overflow`,
-);
+assert_trap(() => invoke($0, `no_dce.i32.div_s`, [-2147483648, -1]), `integer overflow`);
 
 // ./test/core/traps.wast:21
-assert_trap(
-  () => invoke($0, `no_dce.i64.div_s`, [-9223372036854775808n, -1n]),
-  `integer overflow`,
-);
+assert_trap(() => invoke($0, `no_dce.i64.div_s`, [-9223372036854775808n, -1n]), `integer overflow`);
 
 // ./test/core/traps.wast:23
 let $1 = instantiate(`(module
@@ -76,28 +58,16 @@ let $1 = instantiate(`(module
 )`);
 
 // ./test/core/traps.wast:34
-assert_trap(
-  () => invoke($1, `no_dce.i32.rem_s`, [1, 0]),
-  `integer divide by zero`,
-);
+assert_trap(() => invoke($1, `no_dce.i32.rem_s`, [1, 0]), `integer divide by zero`);
 
 // ./test/core/traps.wast:35
-assert_trap(
-  () => invoke($1, `no_dce.i32.rem_u`, [1, 0]),
-  `integer divide by zero`,
-);
+assert_trap(() => invoke($1, `no_dce.i32.rem_u`, [1, 0]), `integer divide by zero`);
 
 // ./test/core/traps.wast:36
-assert_trap(
-  () => invoke($1, `no_dce.i64.rem_s`, [1n, 0n]),
-  `integer divide by zero`,
-);
+assert_trap(() => invoke($1, `no_dce.i64.rem_s`, [1n, 0n]), `integer divide by zero`);
 
 // ./test/core/traps.wast:37
-assert_trap(
-  () => invoke($1, `no_dce.i64.rem_u`, [1n, 0n]),
-  `integer divide by zero`,
-);
+assert_trap(() => invoke($1, `no_dce.i64.rem_u`, [1n, 0n]), `integer divide by zero`);
 
 // ./test/core/traps.wast:39
 let $2 = instantiate(`(module
@@ -113,73 +83,57 @@ let $2 = instantiate(`(module
 
 // ./test/core/traps.wast:50
 assert_trap(
-  () =>
-    invoke($2, `no_dce.i32.trunc_f32_s`, [
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-    ]),
+  () => invoke($2, `no_dce.i32.trunc_f32_s`, [bytes("f32", [0x0, 0x0, 0xc0, 0x7f])]),
   `invalid conversion to integer`,
 );
 
 // ./test/core/traps.wast:51
 assert_trap(
-  () =>
-    invoke($2, `no_dce.i32.trunc_f32_u`, [
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-    ]),
+  () => invoke($2, `no_dce.i32.trunc_f32_u`, [bytes("f32", [0x0, 0x0, 0xc0, 0x7f])]),
   `invalid conversion to integer`,
 );
 
 // ./test/core/traps.wast:52
 assert_trap(
-  () =>
-    invoke($2, `no_dce.i32.trunc_f64_s`, [
-      bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f]),
-    ]),
+  () => invoke($2, `no_dce.i32.trunc_f64_s`, [
+    bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f]),
+  ]),
   `invalid conversion to integer`,
 );
 
 // ./test/core/traps.wast:53
 assert_trap(
-  () =>
-    invoke($2, `no_dce.i32.trunc_f64_u`, [
-      bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f]),
-    ]),
+  () => invoke($2, `no_dce.i32.trunc_f64_u`, [
+    bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f]),
+  ]),
   `invalid conversion to integer`,
 );
 
 // ./test/core/traps.wast:54
 assert_trap(
-  () =>
-    invoke($2, `no_dce.i64.trunc_f32_s`, [
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-    ]),
+  () => invoke($2, `no_dce.i64.trunc_f32_s`, [bytes("f32", [0x0, 0x0, 0xc0, 0x7f])]),
   `invalid conversion to integer`,
 );
 
 // ./test/core/traps.wast:55
 assert_trap(
-  () =>
-    invoke($2, `no_dce.i64.trunc_f32_u`, [
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-    ]),
+  () => invoke($2, `no_dce.i64.trunc_f32_u`, [bytes("f32", [0x0, 0x0, 0xc0, 0x7f])]),
   `invalid conversion to integer`,
 );
 
 // ./test/core/traps.wast:56
 assert_trap(
-  () =>
-    invoke($2, `no_dce.i64.trunc_f64_s`, [
-      bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f]),
-    ]),
+  () => invoke($2, `no_dce.i64.trunc_f64_s`, [
+    bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f]),
+  ]),
   `invalid conversion to integer`,
 );
 
 // ./test/core/traps.wast:57
 assert_trap(
-  () =>
-    invoke($2, `no_dce.i64.trunc_f64_u`, [
-      bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f]),
-    ]),
+  () => invoke($2, `no_dce.i64.trunc_f64_u`, [
+    bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f]),
+  ]),
   `invalid conversion to integer`,
 );
 
@@ -204,85 +158,43 @@ let $3 = instantiate(`(module
 )`);
 
 // ./test/core/traps.wast:78
-assert_trap(
-  () => invoke($3, `no_dce.i32.load`, [65536]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($3, `no_dce.i32.load`, [65536]), `out of bounds memory access`);
 
 // ./test/core/traps.wast:79
-assert_trap(
-  () => invoke($3, `no_dce.i32.load16_s`, [65536]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($3, `no_dce.i32.load16_s`, [65536]), `out of bounds memory access`);
 
 // ./test/core/traps.wast:80
-assert_trap(
-  () => invoke($3, `no_dce.i32.load16_u`, [65536]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($3, `no_dce.i32.load16_u`, [65536]), `out of bounds memory access`);
 
 // ./test/core/traps.wast:81
-assert_trap(
-  () => invoke($3, `no_dce.i32.load8_s`, [65536]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($3, `no_dce.i32.load8_s`, [65536]), `out of bounds memory access`);
 
 // ./test/core/traps.wast:82
-assert_trap(
-  () => invoke($3, `no_dce.i32.load8_u`, [65536]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($3, `no_dce.i32.load8_u`, [65536]), `out of bounds memory access`);
 
 // ./test/core/traps.wast:83
-assert_trap(
-  () => invoke($3, `no_dce.i64.load`, [65536]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($3, `no_dce.i64.load`, [65536]), `out of bounds memory access`);
 
 // ./test/core/traps.wast:84
-assert_trap(
-  () => invoke($3, `no_dce.i64.load32_s`, [65536]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($3, `no_dce.i64.load32_s`, [65536]), `out of bounds memory access`);
 
 // ./test/core/traps.wast:85
-assert_trap(
-  () => invoke($3, `no_dce.i64.load32_u`, [65536]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($3, `no_dce.i64.load32_u`, [65536]), `out of bounds memory access`);
 
 // ./test/core/traps.wast:86
-assert_trap(
-  () => invoke($3, `no_dce.i64.load16_s`, [65536]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($3, `no_dce.i64.load16_s`, [65536]), `out of bounds memory access`);
 
 // ./test/core/traps.wast:87
-assert_trap(
-  () => invoke($3, `no_dce.i64.load16_u`, [65536]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($3, `no_dce.i64.load16_u`, [65536]), `out of bounds memory access`);
 
 // ./test/core/traps.wast:88
-assert_trap(
-  () => invoke($3, `no_dce.i64.load8_s`, [65536]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($3, `no_dce.i64.load8_s`, [65536]), `out of bounds memory access`);
 
 // ./test/core/traps.wast:89
-assert_trap(
-  () => invoke($3, `no_dce.i64.load8_u`, [65536]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($3, `no_dce.i64.load8_u`, [65536]), `out of bounds memory access`);
 
 // ./test/core/traps.wast:90
-assert_trap(
-  () => invoke($3, `no_dce.f32.load`, [65536]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($3, `no_dce.f32.load`, [65536]), `out of bounds memory access`);
 
 // ./test/core/traps.wast:91
-assert_trap(
-  () => invoke($3, `no_dce.f64.load`, [65536]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($3, `no_dce.f64.load`, [65536]), `out of bounds memory access`);

@@ -29,14 +29,10 @@ let $0 = instantiate(`(module
 )`);
 
 // ./test/core/int_exprs.wast:18
-assert_return(() => invoke($0, `i32.no_fold_cmp_s_offset`, [2147483647, 0]), [
-  value("i32", 1),
-]);
+assert_return(() => invoke($0, `i32.no_fold_cmp_s_offset`, [2147483647, 0]), [value("i32", 1)]);
 
 // ./test/core/int_exprs.wast:19
-assert_return(() => invoke($0, `i32.no_fold_cmp_u_offset`, [-1, 0]), [
-  value("i32", 1),
-]);
+assert_return(() => invoke($0, `i32.no_fold_cmp_u_offset`, [-1, 0]), [value("i32", 1)]);
 
 // ./test/core/int_exprs.wast:20
 assert_return(
@@ -45,9 +41,7 @@ assert_return(
 );
 
 // ./test/core/int_exprs.wast:21
-assert_return(() => invoke($0, `i64.no_fold_cmp_u_offset`, [-1n, 0n]), [
-  value("i32", 1),
-]);
+assert_return(() => invoke($0, `i64.no_fold_cmp_u_offset`, [-1n, 0n]), [value("i32", 1)]);
 
 // ./test/core/int_exprs.wast:25
 let $1 = instantiate(`(module
@@ -93,26 +87,16 @@ let $3 = instantiate(`(module
 )`);
 
 // ./test/core/int_exprs.wast:56
-assert_return(() => invoke($3, `i32.no_fold_shl_shr_s`, [-2147483648]), [
-  value("i32", 0),
-]);
+assert_return(() => invoke($3, `i32.no_fold_shl_shr_s`, [-2147483648]), [value("i32", 0)]);
 
 // ./test/core/int_exprs.wast:57
-assert_return(() => invoke($3, `i32.no_fold_shl_shr_u`, [-2147483648]), [
-  value("i32", 0),
-]);
+assert_return(() => invoke($3, `i32.no_fold_shl_shr_u`, [-2147483648]), [value("i32", 0)]);
 
 // ./test/core/int_exprs.wast:58
-assert_return(
-  () => invoke($3, `i64.no_fold_shl_shr_s`, [-9223372036854775808n]),
-  [value("i64", 0n)],
-);
+assert_return(() => invoke($3, `i64.no_fold_shl_shr_s`, [-9223372036854775808n]), [value("i64", 0n)]);
 
 // ./test/core/int_exprs.wast:59
-assert_return(
-  () => invoke($3, `i64.no_fold_shl_shr_u`, [-9223372036854775808n]),
-  [value("i64", 0n)],
-);
+assert_return(() => invoke($3, `i64.no_fold_shl_shr_u`, [-9223372036854775808n]), [value("i64", 0n)]);
 
 // ./test/core/int_exprs.wast:63
 let $4 = instantiate(`(module
@@ -128,24 +112,16 @@ let $4 = instantiate(`(module
 )`);
 
 // ./test/core/int_exprs.wast:75
-assert_return(() => invoke($4, `i32.no_fold_shr_s_shl`, [1]), [
-  value("i32", 0),
-]);
+assert_return(() => invoke($4, `i32.no_fold_shr_s_shl`, [1]), [value("i32", 0)]);
 
 // ./test/core/int_exprs.wast:76
-assert_return(() => invoke($4, `i32.no_fold_shr_u_shl`, [1]), [
-  value("i32", 0),
-]);
+assert_return(() => invoke($4, `i32.no_fold_shr_u_shl`, [1]), [value("i32", 0)]);
 
 // ./test/core/int_exprs.wast:77
-assert_return(() => invoke($4, `i64.no_fold_shr_s_shl`, [1n]), [
-  value("i64", 0n),
-]);
+assert_return(() => invoke($4, `i64.no_fold_shr_s_shl`, [1n]), [value("i64", 0n)]);
 
 // ./test/core/int_exprs.wast:78
-assert_return(() => invoke($4, `i64.no_fold_shr_u_shl`, [1n]), [
-  value("i64", 0n),
-]);
+assert_return(() => invoke($4, `i64.no_fold_shr_u_shl`, [1n]), [value("i64", 0n)]);
 
 // ./test/core/int_exprs.wast:82
 let $5 = instantiate(`(module
@@ -161,24 +137,16 @@ let $5 = instantiate(`(module
 )`);
 
 // ./test/core/int_exprs.wast:94
-assert_return(() => invoke($5, `i32.no_fold_div_s_mul`, [1]), [
-  value("i32", 0),
-]);
+assert_return(() => invoke($5, `i32.no_fold_div_s_mul`, [1]), [value("i32", 0)]);
 
 // ./test/core/int_exprs.wast:95
-assert_return(() => invoke($5, `i32.no_fold_div_u_mul`, [1]), [
-  value("i32", 0),
-]);
+assert_return(() => invoke($5, `i32.no_fold_div_u_mul`, [1]), [value("i32", 0)]);
 
 // ./test/core/int_exprs.wast:96
-assert_return(() => invoke($5, `i64.no_fold_div_s_mul`, [1n]), [
-  value("i64", 0n),
-]);
+assert_return(() => invoke($5, `i64.no_fold_div_s_mul`, [1n]), [value("i64", 0n)]);
 
 // ./test/core/int_exprs.wast:97
-assert_return(() => invoke($5, `i64.no_fold_div_u_mul`, [1n]), [
-  value("i64", 0n),
-]);
+assert_return(() => invoke($5, `i64.no_fold_div_u_mul`, [1n]), [value("i64", 0n)]);
 
 // ./test/core/int_exprs.wast:101
 let $6 = instantiate(`(module
@@ -194,28 +162,16 @@ let $6 = instantiate(`(module
 )`);
 
 // ./test/core/int_exprs.wast:113
-assert_trap(
-  () => invoke($6, `i32.no_fold_div_s_self`, [0]),
-  `integer divide by zero`,
-);
+assert_trap(() => invoke($6, `i32.no_fold_div_s_self`, [0]), `integer divide by zero`);
 
 // ./test/core/int_exprs.wast:114
-assert_trap(
-  () => invoke($6, `i32.no_fold_div_u_self`, [0]),
-  `integer divide by zero`,
-);
+assert_trap(() => invoke($6, `i32.no_fold_div_u_self`, [0]), `integer divide by zero`);
 
 // ./test/core/int_exprs.wast:115
-assert_trap(
-  () => invoke($6, `i64.no_fold_div_s_self`, [0n]),
-  `integer divide by zero`,
-);
+assert_trap(() => invoke($6, `i64.no_fold_div_s_self`, [0n]), `integer divide by zero`);
 
 // ./test/core/int_exprs.wast:116
-assert_trap(
-  () => invoke($6, `i64.no_fold_div_u_self`, [0n]),
-  `integer divide by zero`,
-);
+assert_trap(() => invoke($6, `i64.no_fold_div_u_self`, [0n]), `integer divide by zero`);
 
 // ./test/core/int_exprs.wast:120
 let $7 = instantiate(`(module
@@ -231,28 +187,16 @@ let $7 = instantiate(`(module
 )`);
 
 // ./test/core/int_exprs.wast:132
-assert_trap(
-  () => invoke($7, `i32.no_fold_rem_s_self`, [0]),
-  `integer divide by zero`,
-);
+assert_trap(() => invoke($7, `i32.no_fold_rem_s_self`, [0]), `integer divide by zero`);
 
 // ./test/core/int_exprs.wast:133
-assert_trap(
-  () => invoke($7, `i32.no_fold_rem_u_self`, [0]),
-  `integer divide by zero`,
-);
+assert_trap(() => invoke($7, `i32.no_fold_rem_u_self`, [0]), `integer divide by zero`);
 
 // ./test/core/int_exprs.wast:134
-assert_trap(
-  () => invoke($7, `i64.no_fold_rem_s_self`, [0n]),
-  `integer divide by zero`,
-);
+assert_trap(() => invoke($7, `i64.no_fold_rem_s_self`, [0n]), `integer divide by zero`);
 
 // ./test/core/int_exprs.wast:135
-assert_trap(
-  () => invoke($7, `i64.no_fold_rem_u_self`, [0n]),
-  `integer divide by zero`,
-);
+assert_trap(() => invoke($7, `i64.no_fold_rem_u_self`, [0n]), `integer divide by zero`);
 
 // ./test/core/int_exprs.wast:139
 let $8 = instantiate(`(module
@@ -268,26 +212,16 @@ let $8 = instantiate(`(module
 )`);
 
 // ./test/core/int_exprs.wast:151
-assert_return(() => invoke($8, `i32.no_fold_mul_div_s`, [-2147483648]), [
-  value("i32", 0),
-]);
+assert_return(() => invoke($8, `i32.no_fold_mul_div_s`, [-2147483648]), [value("i32", 0)]);
 
 // ./test/core/int_exprs.wast:152
-assert_return(() => invoke($8, `i32.no_fold_mul_div_u`, [-2147483648]), [
-  value("i32", 0),
-]);
+assert_return(() => invoke($8, `i32.no_fold_mul_div_u`, [-2147483648]), [value("i32", 0)]);
 
 // ./test/core/int_exprs.wast:153
-assert_return(
-  () => invoke($8, `i64.no_fold_mul_div_s`, [-9223372036854775808n]),
-  [value("i64", 0n)],
-);
+assert_return(() => invoke($8, `i64.no_fold_mul_div_s`, [-9223372036854775808n]), [value("i64", 0n)]);
 
 // ./test/core/int_exprs.wast:154
-assert_return(
-  () => invoke($8, `i64.no_fold_mul_div_u`, [-9223372036854775808n]),
-  [value("i64", 0n)],
-);
+assert_return(() => invoke($8, `i64.no_fold_mul_div_u`, [-9223372036854775808n]), [value("i64", 0n)]);
 
 // ./test/core/int_exprs.wast:158
 let $9 = instantiate(`(module
@@ -299,14 +233,10 @@ let $9 = instantiate(`(module
 )`);
 
 // ./test/core/int_exprs.wast:166
-assert_return(() => invoke($9, `i32.no_fold_div_s_2`, [-11]), [
-  value("i32", -5),
-]);
+assert_return(() => invoke($9, `i32.no_fold_div_s_2`, [-11]), [value("i32", -5)]);
 
 // ./test/core/int_exprs.wast:167
-assert_return(() => invoke($9, `i64.no_fold_div_s_2`, [-11n]), [
-  value("i64", -5n),
-]);
+assert_return(() => invoke($9, `i64.no_fold_div_s_2`, [-11n]), [value("i64", -5n)]);
 
 // ./test/core/int_exprs.wast:171
 let $10 = instantiate(`(module
@@ -318,14 +248,10 @@ let $10 = instantiate(`(module
 )`);
 
 // ./test/core/int_exprs.wast:179
-assert_return(() => invoke($10, `i32.no_fold_rem_s_2`, [-11]), [
-  value("i32", -1),
-]);
+assert_return(() => invoke($10, `i32.no_fold_rem_s_2`, [-11]), [value("i32", -1)]);
 
 // ./test/core/int_exprs.wast:180
-assert_return(() => invoke($10, `i64.no_fold_rem_s_2`, [-11n]), [
-  value("i64", -1n),
-]);
+assert_return(() => invoke($10, `i64.no_fold_rem_s_2`, [-11n]), [value("i64", -1n)]);
 
 // ./test/core/int_exprs.wast:184
 let $11 = instantiate(`(module
@@ -369,33 +295,31 @@ let $12 = instantiate(`(module
 assert_return(() => invoke($12, `i32.div_s_3`, [71]), [value("i32", 23)]);
 
 // ./test/core/int_exprs.wast:216
-assert_return(() => invoke($12, `i32.div_s_3`, [1610612736]), [
-  value("i32", 536870912),
-]);
+assert_return(() => invoke($12, `i32.div_s_3`, [1610612736]), [value("i32", 536870912)]);
 
 // ./test/core/int_exprs.wast:217
 assert_return(() => invoke($12, `i32.div_u_3`, [71]), [value("i32", 23)]);
 
 // ./test/core/int_exprs.wast:218
-assert_return(() => invoke($12, `i32.div_u_3`, [-1073741824]), [
-  value("i32", 1073741824),
-]);
+assert_return(() => invoke($12, `i32.div_u_3`, [-1073741824]), [value("i32", 1073741824)]);
 
 // ./test/core/int_exprs.wast:219
 assert_return(() => invoke($12, `i64.div_s_3`, [71n]), [value("i64", 23n)]);
 
 // ./test/core/int_exprs.wast:220
-assert_return(() => invoke($12, `i64.div_s_3`, [3458764513820540928n]), [
-  value("i64", 1152921504606846976n),
-]);
+assert_return(
+  () => invoke($12, `i64.div_s_3`, [3458764513820540928n]),
+  [value("i64", 1152921504606846976n)],
+);
 
 // ./test/core/int_exprs.wast:221
 assert_return(() => invoke($12, `i64.div_u_3`, [71n]), [value("i64", 23n)]);
 
 // ./test/core/int_exprs.wast:222
-assert_return(() => invoke($12, `i64.div_u_3`, [-4611686018427387904n]), [
-  value("i64", 4611686018427387904n),
-]);
+assert_return(
+  () => invoke($12, `i64.div_u_3`, [-4611686018427387904n]),
+  [value("i64", 4611686018427387904n)],
+);
 
 // ./test/core/int_exprs.wast:226
 let $13 = instantiate(`(module
@@ -414,33 +338,31 @@ let $13 = instantiate(`(module
 assert_return(() => invoke($13, `i32.div_s_5`, [71]), [value("i32", 14)]);
 
 // ./test/core/int_exprs.wast:239
-assert_return(() => invoke($13, `i32.div_s_5`, [1342177280]), [
-  value("i32", 268435456),
-]);
+assert_return(() => invoke($13, `i32.div_s_5`, [1342177280]), [value("i32", 268435456)]);
 
 // ./test/core/int_exprs.wast:240
 assert_return(() => invoke($13, `i32.div_u_5`, [71]), [value("i32", 14)]);
 
 // ./test/core/int_exprs.wast:241
-assert_return(() => invoke($13, `i32.div_u_5`, [-1610612736]), [
-  value("i32", 536870912),
-]);
+assert_return(() => invoke($13, `i32.div_u_5`, [-1610612736]), [value("i32", 536870912)]);
 
 // ./test/core/int_exprs.wast:242
 assert_return(() => invoke($13, `i64.div_s_5`, [71n]), [value("i64", 14n)]);
 
 // ./test/core/int_exprs.wast:243
-assert_return(() => invoke($13, `i64.div_s_5`, [5764607523034234880n]), [
-  value("i64", 1152921504606846976n),
-]);
+assert_return(
+  () => invoke($13, `i64.div_s_5`, [5764607523034234880n]),
+  [value("i64", 1152921504606846976n)],
+);
 
 // ./test/core/int_exprs.wast:244
 assert_return(() => invoke($13, `i64.div_u_5`, [71n]), [value("i64", 14n)]);
 
 // ./test/core/int_exprs.wast:245
-assert_return(() => invoke($13, `i64.div_u_5`, [-6917529027641081856n]), [
-  value("i64", 2305843009213693952n),
-]);
+assert_return(
+  () => invoke($13, `i64.div_u_5`, [-6917529027641081856n]),
+  [value("i64", 2305843009213693952n)],
+);
 
 // ./test/core/int_exprs.wast:249
 let $14 = instantiate(`(module
@@ -459,33 +381,31 @@ let $14 = instantiate(`(module
 assert_return(() => invoke($14, `i32.div_s_7`, [71]), [value("i32", 10)]);
 
 // ./test/core/int_exprs.wast:262
-assert_return(() => invoke($14, `i32.div_s_7`, [1879048192]), [
-  value("i32", 268435456),
-]);
+assert_return(() => invoke($14, `i32.div_s_7`, [1879048192]), [value("i32", 268435456)]);
 
 // ./test/core/int_exprs.wast:263
 assert_return(() => invoke($14, `i32.div_u_7`, [71]), [value("i32", 10)]);
 
 // ./test/core/int_exprs.wast:264
-assert_return(() => invoke($14, `i32.div_u_7`, [-536870912]), [
-  value("i32", 536870912),
-]);
+assert_return(() => invoke($14, `i32.div_u_7`, [-536870912]), [value("i32", 536870912)]);
 
 // ./test/core/int_exprs.wast:265
 assert_return(() => invoke($14, `i64.div_s_7`, [71n]), [value("i64", 10n)]);
 
 // ./test/core/int_exprs.wast:266
-assert_return(() => invoke($14, `i64.div_s_7`, [8070450532247928832n]), [
-  value("i64", 1152921504606846976n),
-]);
+assert_return(
+  () => invoke($14, `i64.div_s_7`, [8070450532247928832n]),
+  [value("i64", 1152921504606846976n)],
+);
 
 // ./test/core/int_exprs.wast:267
 assert_return(() => invoke($14, `i64.div_u_7`, [71n]), [value("i64", 10n)]);
 
 // ./test/core/int_exprs.wast:268
-assert_return(() => invoke($14, `i64.div_u_7`, [-2305843009213693952n]), [
-  value("i64", 2305843009213693952n),
-]);
+assert_return(
+  () => invoke($14, `i64.div_u_7`, [-2305843009213693952n]),
+  [value("i64", 2305843009213693952n)],
+);
 
 // ./test/core/int_exprs.wast:272
 let $15 = instantiate(`(module
@@ -504,33 +424,25 @@ let $15 = instantiate(`(module
 assert_return(() => invoke($15, `i32.rem_s_3`, [71]), [value("i32", 2)]);
 
 // ./test/core/int_exprs.wast:285
-assert_return(() => invoke($15, `i32.rem_s_3`, [1610612736]), [
-  value("i32", 0),
-]);
+assert_return(() => invoke($15, `i32.rem_s_3`, [1610612736]), [value("i32", 0)]);
 
 // ./test/core/int_exprs.wast:286
 assert_return(() => invoke($15, `i32.rem_u_3`, [71]), [value("i32", 2)]);
 
 // ./test/core/int_exprs.wast:287
-assert_return(() => invoke($15, `i32.rem_u_3`, [-1073741824]), [
-  value("i32", 0),
-]);
+assert_return(() => invoke($15, `i32.rem_u_3`, [-1073741824]), [value("i32", 0)]);
 
 // ./test/core/int_exprs.wast:288
 assert_return(() => invoke($15, `i64.rem_s_3`, [71n]), [value("i64", 2n)]);
 
 // ./test/core/int_exprs.wast:289
-assert_return(() => invoke($15, `i64.rem_s_3`, [3458764513820540928n]), [
-  value("i64", 0n),
-]);
+assert_return(() => invoke($15, `i64.rem_s_3`, [3458764513820540928n]), [value("i64", 0n)]);
 
 // ./test/core/int_exprs.wast:290
 assert_return(() => invoke($15, `i64.rem_u_3`, [71n]), [value("i64", 2n)]);
 
 // ./test/core/int_exprs.wast:291
-assert_return(() => invoke($15, `i64.rem_u_3`, [-4611686018427387904n]), [
-  value("i64", 0n),
-]);
+assert_return(() => invoke($15, `i64.rem_u_3`, [-4611686018427387904n]), [value("i64", 0n)]);
 
 // ./test/core/int_exprs.wast:295
 let $16 = instantiate(`(module
@@ -549,33 +461,25 @@ let $16 = instantiate(`(module
 assert_return(() => invoke($16, `i32.rem_s_5`, [71]), [value("i32", 1)]);
 
 // ./test/core/int_exprs.wast:308
-assert_return(() => invoke($16, `i32.rem_s_5`, [1342177280]), [
-  value("i32", 0),
-]);
+assert_return(() => invoke($16, `i32.rem_s_5`, [1342177280]), [value("i32", 0)]);
 
 // ./test/core/int_exprs.wast:309
 assert_return(() => invoke($16, `i32.rem_u_5`, [71]), [value("i32", 1)]);
 
 // ./test/core/int_exprs.wast:310
-assert_return(() => invoke($16, `i32.rem_u_5`, [-1610612736]), [
-  value("i32", 0),
-]);
+assert_return(() => invoke($16, `i32.rem_u_5`, [-1610612736]), [value("i32", 0)]);
 
 // ./test/core/int_exprs.wast:311
 assert_return(() => invoke($16, `i64.rem_s_5`, [71n]), [value("i64", 1n)]);
 
 // ./test/core/int_exprs.wast:312
-assert_return(() => invoke($16, `i64.rem_s_5`, [5764607523034234880n]), [
-  value("i64", 0n),
-]);
+assert_return(() => invoke($16, `i64.rem_s_5`, [5764607523034234880n]), [value("i64", 0n)]);
 
 // ./test/core/int_exprs.wast:313
 assert_return(() => invoke($16, `i64.rem_u_5`, [71n]), [value("i64", 1n)]);
 
 // ./test/core/int_exprs.wast:314
-assert_return(() => invoke($16, `i64.rem_u_5`, [-6917529027641081856n]), [
-  value("i64", 0n),
-]);
+assert_return(() => invoke($16, `i64.rem_u_5`, [-6917529027641081856n]), [value("i64", 0n)]);
 
 // ./test/core/int_exprs.wast:318
 let $17 = instantiate(`(module
@@ -594,33 +498,25 @@ let $17 = instantiate(`(module
 assert_return(() => invoke($17, `i32.rem_s_7`, [71]), [value("i32", 1)]);
 
 // ./test/core/int_exprs.wast:331
-assert_return(() => invoke($17, `i32.rem_s_7`, [1879048192]), [
-  value("i32", 0),
-]);
+assert_return(() => invoke($17, `i32.rem_s_7`, [1879048192]), [value("i32", 0)]);
 
 // ./test/core/int_exprs.wast:332
 assert_return(() => invoke($17, `i32.rem_u_7`, [71]), [value("i32", 1)]);
 
 // ./test/core/int_exprs.wast:333
-assert_return(() => invoke($17, `i32.rem_u_7`, [-536870912]), [
-  value("i32", 0),
-]);
+assert_return(() => invoke($17, `i32.rem_u_7`, [-536870912]), [value("i32", 0)]);
 
 // ./test/core/int_exprs.wast:334
 assert_return(() => invoke($17, `i64.rem_s_7`, [71n]), [value("i64", 1n)]);
 
 // ./test/core/int_exprs.wast:335
-assert_return(() => invoke($17, `i64.rem_s_7`, [8070450532247928832n]), [
-  value("i64", 0n),
-]);
+assert_return(() => invoke($17, `i64.rem_s_7`, [8070450532247928832n]), [value("i64", 0n)]);
 
 // ./test/core/int_exprs.wast:336
 assert_return(() => invoke($17, `i64.rem_u_7`, [71n]), [value("i64", 1n)]);
 
 // ./test/core/int_exprs.wast:337
-assert_return(() => invoke($17, `i64.rem_u_7`, [-2305843009213693952n]), [
-  value("i64", 0n),
-]);
+assert_return(() => invoke($17, `i64.rem_u_7`, [-2305843009213693952n]), [value("i64", 0n)]);
 
 // ./test/core/int_exprs.wast:341
 let $18 = instantiate(`(module
@@ -632,13 +528,7 @@ let $18 = instantiate(`(module
 )`);
 
 // ./test/core/int_exprs.wast:349
-assert_trap(
-  () => invoke($18, `i32.no_fold_div_neg1`, [-2147483648]),
-  `integer overflow`,
-);
+assert_trap(() => invoke($18, `i32.no_fold_div_neg1`, [-2147483648]), `integer overflow`);
 
 // ./test/core/int_exprs.wast:350
-assert_trap(
-  () => invoke($18, `i64.no_fold_div_neg1`, [-9223372036854775808n]),
-  `integer overflow`,
-);
+assert_trap(() => invoke($18, `i64.no_fold_div_neg1`, [-9223372036854775808n]), `integer overflow`);

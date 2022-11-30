@@ -428,14 +428,10 @@ assert_return(() => invoke($0, `as-block-last`, [0]), []);
 assert_return(() => invoke($0, `as-block-last`, [1]), []);
 
 // ./test/core/br_if.wast:389
-assert_return(() => invoke($0, `as-block-first-value`, [0]), [
-  value("i32", 11),
-]);
+assert_return(() => invoke($0, `as-block-first-value`, [0]), [value("i32", 11)]);
 
 // ./test/core/br_if.wast:390
-assert_return(() => invoke($0, `as-block-first-value`, [1]), [
-  value("i32", 10),
-]);
+assert_return(() => invoke($0, `as-block-first-value`, [1]), [value("i32", 10)]);
 
 // ./test/core/br_if.wast:391
 assert_return(() => invoke($0, `as-block-mid-value`, [0]), [value("i32", 21)]);
@@ -489,9 +485,7 @@ assert_return(() => invoke($0, `as-br_table-index`, []), []);
 assert_return(() => invoke($0, `as-br_table-value`, []), [value("i32", 1)]);
 
 // ./test/core/br_if.wast:412
-assert_return(() => invoke($0, `as-br_table-value-index`, []), [
-  value("i32", 1),
-]);
+assert_return(() => invoke($0, `as-br_table-value-index`, []), [value("i32", 1)]);
 
 // ./test/core/br_if.wast:414
 assert_return(() => invoke($0, `as-return-value`, []), [value("i64", 1n)]);
@@ -554,9 +548,7 @@ assert_return(() => invoke($0, `as-call-last`, []), [value("i32", 14)]);
 assert_return(() => invoke($0, `as-call_indirect-func`, []), [value("i32", 4)]);
 
 // ./test/core/br_if.wast:438
-assert_return(() => invoke($0, `as-call_indirect-first`, []), [
-  value("i32", 4),
-]);
+assert_return(() => invoke($0, `as-call_indirect-first`, []), [value("i32", 4)]);
 
 // ./test/core/br_if.wast:439
 assert_return(() => invoke($0, `as-call_indirect-mid`, []), [value("i32", 4)]);
@@ -640,111 +632,74 @@ assert_return(() => invoke($0, `nested-br_if-value`, [0]), [value("i32", 5)]);
 assert_return(() => invoke($0, `nested-br_if-value`, [1]), [value("i32", 9)]);
 
 // ./test/core/br_if.wast:473
-assert_return(() => invoke($0, `nested-br_if-value-cond`, [0]), [
-  value("i32", 5),
-]);
+assert_return(() => invoke($0, `nested-br_if-value-cond`, [0]), [value("i32", 5)]);
 
 // ./test/core/br_if.wast:474
-assert_return(() => invoke($0, `nested-br_if-value-cond`, [1]), [
-  value("i32", 9),
-]);
+assert_return(() => invoke($0, `nested-br_if-value-cond`, [1]), [value("i32", 9)]);
 
 // ./test/core/br_if.wast:475
-assert_return(() => invoke($0, `nested-br_table-value`, [0]), [
-  value("i32", 5),
-]);
+assert_return(() => invoke($0, `nested-br_table-value`, [0]), [value("i32", 5)]);
 
 // ./test/core/br_if.wast:476
-assert_return(() => invoke($0, `nested-br_table-value`, [1]), [
-  value("i32", 9),
-]);
+assert_return(() => invoke($0, `nested-br_table-value`, [1]), [value("i32", 9)]);
 
 // ./test/core/br_if.wast:477
-assert_return(() => invoke($0, `nested-br_table-value-index`, [0]), [
-  value("i32", 5),
-]);
+assert_return(() => invoke($0, `nested-br_table-value-index`, [0]), [value("i32", 5)]);
 
 // ./test/core/br_if.wast:478
-assert_return(() => invoke($0, `nested-br_table-value-index`, [1]), [
-  value("i32", 9),
-]);
+assert_return(() => invoke($0, `nested-br_table-value-index`, [1]), [value("i32", 9)]);
 
 // ./test/core/br_if.wast:480
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-false-i32 (block (i32.ctz (br_if 0 (i32.const 0))))))`,
-    ),
+  () => instantiate(`(module (func $$type-false-i32 (block (i32.ctz (br_if 0 (i32.const 0))))))`),
   `type mismatch`,
 );
 
 // ./test/core/br_if.wast:484
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-false-i64 (block (i64.ctz (br_if 0 (i32.const 0))))))`,
-    ),
+  () => instantiate(`(module (func $$type-false-i64 (block (i64.ctz (br_if 0 (i32.const 0))))))`),
   `type mismatch`,
 );
 
 // ./test/core/br_if.wast:488
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-false-f32 (block (f32.neg (br_if 0 (i32.const 0))))))`,
-    ),
+  () => instantiate(`(module (func $$type-false-f32 (block (f32.neg (br_if 0 (i32.const 0))))))`),
   `type mismatch`,
 );
 
 // ./test/core/br_if.wast:492
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-false-f64 (block (f64.neg (br_if 0 (i32.const 0))))))`,
-    ),
+  () => instantiate(`(module (func $$type-false-f64 (block (f64.neg (br_if 0 (i32.const 0))))))`),
   `type mismatch`,
 );
 
 // ./test/core/br_if.wast:497
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-true-i32 (block (i32.ctz (br_if 0 (i32.const 1))))))`,
-    ),
+  () => instantiate(`(module (func $$type-true-i32 (block (i32.ctz (br_if 0 (i32.const 1))))))`),
   `type mismatch`,
 );
 
 // ./test/core/br_if.wast:501
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-true-i64 (block (i64.ctz (br_if 0 (i64.const 1))))))`,
-    ),
+  () => instantiate(`(module (func $$type-true-i64 (block (i64.ctz (br_if 0 (i64.const 1))))))`),
   `type mismatch`,
 );
 
 // ./test/core/br_if.wast:505
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-true-f32 (block (f32.neg (br_if 0 (f32.const 1))))))`,
-    ),
+  () => instantiate(`(module (func $$type-true-f32 (block (f32.neg (br_if 0 (f32.const 1))))))`),
   `type mismatch`,
 );
 
 // ./test/core/br_if.wast:509
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$type-true-f64 (block (f64.neg (br_if 0 (i64.const 1))))))`,
-    ),
+  () => instantiate(`(module (func $$type-true-f64 (block (f64.neg (br_if 0 (i64.const 1))))))`),
   `type mismatch`,
 );
 
 // ./test/core/br_if.wast:514
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-false-arg-void-vs-num (result i32)
+  () => instantiate(`(module (func $$type-false-arg-void-vs-num (result i32)
     (block (result i32) (br_if 0 (i32.const 0)) (i32.const 1))
   ))`),
   `type mismatch`,
@@ -752,29 +707,31 @@ assert_invalid(
 
 // ./test/core/br_if.wast:520
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-true-arg-void-vs-num (result i32)
+  () => instantiate(`(module (func $$type-true-arg-void-vs-num (result i32)
     (block (result i32) (br_if 0 (i32.const 1)) (i32.const 1))
   ))`),
   `type mismatch`,
 );
 
 // ./test/core/br_if.wast:526
-assert_invalid(() =>
-  instantiate(`(module (func $$type-false-arg-num-vs-void
+assert_invalid(
+  () => instantiate(`(module (func $$type-false-arg-num-vs-void
     (block (br_if 0 (i32.const 0) (i32.const 0)))
-  ))`), `type mismatch`);
+  ))`),
+  `type mismatch`,
+);
 
 // ./test/core/br_if.wast:532
-assert_invalid(() =>
-  instantiate(`(module (func $$type-true-arg-num-vs-void
+assert_invalid(
+  () => instantiate(`(module (func $$type-true-arg-num-vs-void
     (block (br_if 0 (i32.const 0) (i32.const 1)))
-  ))`), `type mismatch`);
+  ))`),
+  `type mismatch`,
+);
 
 // ./test/core/br_if.wast:539
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-false-arg-void-vs-num (result i32)
+  () => instantiate(`(module (func $$type-false-arg-void-vs-num (result i32)
     (block (result i32) (br_if 0 (nop) (i32.const 0)) (i32.const 1))
   ))`),
   `type mismatch`,
@@ -782,8 +739,7 @@ assert_invalid(
 
 // ./test/core/br_if.wast:545
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-true-arg-void-vs-num (result i32)
+  () => instantiate(`(module (func $$type-true-arg-void-vs-num (result i32)
     (block (result i32) (br_if 0 (nop) (i32.const 1)) (i32.const 1))
   ))`),
   `type mismatch`,
@@ -791,8 +747,7 @@ assert_invalid(
 
 // ./test/core/br_if.wast:551
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-false-arg-num-vs-num (result i32)
+  () => instantiate(`(module (func $$type-false-arg-num-vs-num (result i32)
     (block (result i32)
       (drop (br_if 0 (i64.const 1) (i32.const 0))) (i32.const 1)
     )
@@ -802,8 +757,7 @@ assert_invalid(
 
 // ./test/core/br_if.wast:559
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-true-arg-num-vs-num (result i32)
+  () => instantiate(`(module (func $$type-true-arg-num-vs-num (result i32)
     (block (result i32)
       (drop (br_if 0 (i64.const 1) (i32.const 0))) (i32.const 1)
     )
@@ -812,27 +766,32 @@ assert_invalid(
 );
 
 // ./test/core/br_if.wast:568
-assert_invalid(() =>
-  instantiate(`(module (func $$type-cond-empty-vs-i32
+assert_invalid(
+  () => instantiate(`(module (func $$type-cond-empty-vs-i32
     (block (br_if 0))
-  ))`), `type mismatch`);
+  ))`),
+  `type mismatch`,
+);
 
 // ./test/core/br_if.wast:574
-assert_invalid(() =>
-  instantiate(`(module (func $$type-cond-void-vs-i32
+assert_invalid(
+  () => instantiate(`(module (func $$type-cond-void-vs-i32
     (block (br_if 0 (nop)))
-  ))`), `type mismatch`);
+  ))`),
+  `type mismatch`,
+);
 
 // ./test/core/br_if.wast:580
-assert_invalid(() =>
-  instantiate(`(module (func $$type-cond-num-vs-i32
+assert_invalid(
+  () => instantiate(`(module (func $$type-cond-num-vs-i32
     (block (br_if 0 (i64.const 0)))
-  ))`), `type mismatch`);
+  ))`),
+  `type mismatch`,
+);
 
 // ./test/core/br_if.wast:586
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-arg-cond-void-vs-i32 (result i32)
+  () => instantiate(`(module (func $$type-arg-cond-void-vs-i32 (result i32)
     (block (result i32) (br_if 0 (i32.const 0) (nop)) (i32.const 1))
   ))`),
   `type mismatch`,
@@ -840,8 +799,7 @@ assert_invalid(
 
 // ./test/core/br_if.wast:592
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-arg-void-vs-num-nested (result i32)
+  () => instantiate(`(module (func $$type-arg-void-vs-num-nested (result i32)
     (block (result i32) (i32.const 0) (block (br_if 1 (i32.const 1))))
   ))`),
   `type mismatch`,
@@ -849,16 +807,15 @@ assert_invalid(
 
 // ./test/core/br_if.wast:598
 assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-arg-cond-num-vs-i32 (result i32)
+  () => instantiate(`(module (func $$type-arg-cond-num-vs-i32 (result i32)
     (block (result i32) (br_if 0 (i32.const 0) (i64.const 0)) (i32.const 1))
   ))`),
   `type mismatch`,
 );
 
 // ./test/core/br_if.wast:605
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (func $$type-1st-cond-empty-in-then
       (block
         (i32.const 0) (i32.const 0)
@@ -866,11 +823,13 @@ assert_invalid(() =>
       )
       (i32.eqz) (drop)
     )
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);
 
 // ./test/core/br_if.wast:617
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (func $$type-2nd-cond-empty-in-then
       (block
         (i32.const 0) (i32.const 0)
@@ -878,29 +837,35 @@ assert_invalid(() =>
       )
       (i32.eqz) (drop)
     )
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);
 
 // ./test/core/br_if.wast:629
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (func $$type-1st-cond-empty-in-return
       (block (result i32)
         (return (br_if 0))
       )
       (i32.eqz) (drop)
     )
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);
 
 // ./test/core/br_if.wast:640
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (func $$type-2nd-cond-empty-in-return
       (block (result i32)
         (return (br_if 0 (i32.const 1)))
       )
       (i32.eqz) (drop)
     )
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);
 
 // ./test/core/br_if.wast:653
 assert_invalid(
@@ -910,18 +875,12 @@ assert_invalid(
 
 // ./test/core/br_if.wast:657
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$unbound-nested-label (block (block (br_if 5 (i32.const 1))))))`,
-    ),
+  () => instantiate(`(module (func $$unbound-nested-label (block (block (br_if 5 (i32.const 1))))))`),
   `unknown label`,
 );
 
 // ./test/core/br_if.wast:661
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$large-label (br_if 0x10000001 (i32.const 1))))`,
-    ),
+  () => instantiate(`(module (func $$large-label (br_if 0x10000001 (i32.const 1))))`),
   `unknown label`,
 );

@@ -55,10 +55,7 @@ assert_return(() => invoke($0, `three`, [13]), [value("i32", 11)]);
 invoke($0, `four`, [83]);
 
 // ./test/core/func_ptrs.wast:32
-assert_invalid(
-  () => instantiate(`(module (elem (i32.const 0)))`),
-  `unknown table`,
-);
+assert_invalid(() => instantiate(`(module (elem (i32.const 0)))`), `unknown table`);
 
 // ./test/core/func_ptrs.wast:33
 assert_invalid(
@@ -74,8 +71,7 @@ assert_invalid(
 
 // ./test/core/func_ptrs.wast:39
 assert_invalid(
-  () =>
-    instantiate(`(module (table 1 funcref) (elem (i32.ctz (i32.const 0))))`),
+  () => instantiate(`(module (table 1 funcref) (elem (i32.ctz (i32.const 0))))`),
   `constant expression required`,
 );
 
@@ -90,8 +86,7 @@ assert_invalid(() => instantiate(`(module (func (type 42)))`), `unknown type`);
 
 // ./test/core/func_ptrs.wast:49
 assert_invalid(
-  () =>
-    instantiate(`(module (import "spectest" "print_i32" (func (type 43))))`),
+  () => instantiate(`(module (import "spectest" "print_i32" (func (type 43))))`),
   `unknown type`,
 );
 

@@ -86,10 +86,7 @@ assert_return(() => invoke($0, `externref-elem`, [1]), [value("i32", 1)]);
 
 // ./test/core/ref_is_null.wast:51
 assert_invalid(
-  () =>
-    instantiate(
-      `(module (func $$ref-vs-num (param i32) (ref.is_null (local.get 0))))`,
-    ),
+  () => instantiate(`(module (func $$ref-vs-num (param i32) (ref.is_null (local.get 0))))`),
   `type mismatch`,
 );
 

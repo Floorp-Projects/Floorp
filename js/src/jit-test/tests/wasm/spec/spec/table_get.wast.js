@@ -43,17 +43,13 @@ let $0 = instantiate(`(module
 invoke($0, `init`, [externref(1)]);
 
 // ./test/core/table_get.wast:26
-assert_return(() => invoke($0, `get-externref`, [0]), [
-  value("externref", null),
-]);
+assert_return(() => invoke($0, `get-externref`, [0]), [value('externref', null)]);
 
 // ./test/core/table_get.wast:27
-assert_return(() => invoke($0, `get-externref`, [1]), [
-  value("externref", externref(1)),
-]);
+assert_return(() => invoke($0, `get-externref`, [1]), [value('externref', externref(1))]);
 
 // ./test/core/table_get.wast:29
-assert_return(() => invoke($0, `get-funcref`, [0]), [value("anyfunc", null)]);
+assert_return(() => invoke($0, `get-funcref`, [0]), [value('anyfunc', null)]);
 
 // ./test/core/table_get.wast:30
 assert_return(() => invoke($0, `is_null-funcref`, [1]), [value("i32", 0)]);
@@ -62,68 +58,69 @@ assert_return(() => invoke($0, `is_null-funcref`, [1]), [value("i32", 0)]);
 assert_return(() => invoke($0, `is_null-funcref`, [2]), [value("i32", 0)]);
 
 // ./test/core/table_get.wast:33
-assert_trap(
-  () => invoke($0, `get-externref`, [2]),
-  `out of bounds table access`,
-);
+assert_trap(() => invoke($0, `get-externref`, [2]), `out of bounds table access`);
 
 // ./test/core/table_get.wast:34
 assert_trap(() => invoke($0, `get-funcref`, [3]), `out of bounds table access`);
 
 // ./test/core/table_get.wast:35
-assert_trap(
-  () => invoke($0, `get-externref`, [-1]),
-  `out of bounds table access`,
-);
+assert_trap(() => invoke($0, `get-externref`, [-1]), `out of bounds table access`);
 
 // ./test/core/table_get.wast:36
-assert_trap(
-  () => invoke($0, `get-funcref`, [-1]),
-  `out of bounds table access`,
-);
+assert_trap(() => invoke($0, `get-funcref`, [-1]), `out of bounds table access`);
 
 // ./test/core/table_get.wast:41
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (table $$t 10 externref)
     (func $$type-index-empty-vs-i32 (result externref)
       (table.get $$t)
     )
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);
 
 // ./test/core/table_get.wast:50
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (table $$t 10 externref)
     (func $$type-index-f32-vs-i32 (result externref)
       (table.get $$t (f32.const 1))
     )
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);
 
 // ./test/core/table_get.wast:60
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (table $$t 10 externref)
     (func $$type-result-externref-vs-empty
       (table.get $$t (i32.const 0))
     )
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);
 
 // ./test/core/table_get.wast:69
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (table $$t 10 externref)
     (func $$type-result-externref-vs-funcref (result funcref)
       (table.get $$t (i32.const 1))
     )
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);
 
 // ./test/core/table_get.wast:79
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (table $$t1 1 funcref)
     (table $$t2 1 externref)
     (func $$type-result-externref-vs-funcref-multi (result funcref)
       (table.get $$t2 (i32.const 0))
     )
-  )`), `type mismatch`);
+  )`),
+  `type mismatch`,
+);

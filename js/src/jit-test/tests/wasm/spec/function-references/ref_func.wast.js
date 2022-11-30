@@ -105,12 +105,14 @@ invoke($1, `set-f`, []);
 assert_return(() => invoke($1, `call-v`, [4]), [value("i32", 4)]);
 
 // ./test/core/ref_func.wast:68
-assert_invalid(() =>
-  instantiate(`(module
+assert_invalid(
+  () => instantiate(`(module
     (func $$f (import "M" "f") (param i32) (result i32))
     (func $$g (import "M" "g") (param i32) (result i32))
     (global funcref (ref.func 7))
-  )`), `unknown function 7`);
+  )`),
+  `unknown function 7`,
+);
 
 // ./test/core/ref_func.wast:80
 let $2 = instantiate(`(module

@@ -195,10 +195,7 @@ let $26 = instantiate(`(module
 )`);
 
 // ./test/core/tokens.wast:163
-assert_malformed(
-  () => instantiate(`(data $$l"\u{f61a}\u{f4a9}") `),
-  `unknown operator`,
-);
+assert_malformed(() => instantiate(`(data $$l"\u{f61a}\u{f4a9}") `), `unknown operator`);
 
 // ./test/core/tokens.wast:170
 let $27 = instantiate(`(module
@@ -206,10 +203,7 @@ let $27 = instantiate(`(module
 )`);
 
 // ./test/core/tokens.wast:173
-assert_malformed(
-  () => instantiate(`(data $$l" \u{f61a}\u{f4a9}") `),
-  `unknown operator`,
-);
+assert_malformed(() => instantiate(`(data $$l" \u{f61a}\u{f4a9}") `), `unknown operator`);
 
 // ./test/core/tokens.wast:180
 let $28 = instantiate(`(module
@@ -217,10 +211,7 @@ let $28 = instantiate(`(module
 )`);
 
 // ./test/core/tokens.wast:183
-assert_malformed(
-  () => instantiate(`(data $$l"\u{f61a}\u{f4a9} ") `),
-  `unknown operator`,
-);
+assert_malformed(() => instantiate(`(data $$l"\u{f61a}\u{f4a9} ") `), `unknown operator`);
 
 // ./test/core/tokens.wast:190
 let $29 = instantiate(`(module

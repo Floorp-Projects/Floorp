@@ -83,9 +83,10 @@ assert_return(() => invoke($0, `test_redundant_load`, []), [value("i32", 128)]);
 invoke($0, `zero_everything`, []);
 
 // ./test/core/memory_redundancy64.wast:63
-assert_return(() => invoke($0, `test_dead_store`, []), [
-  value("f32", 0.000000000000000000000000000000000000000000049),
-]);
+assert_return(
+  () => invoke($0, `test_dead_store`, []),
+  [value("f32", 0.000000000000000000000000000000000000000000049)],
+);
 
 // ./test/core/memory_redundancy64.wast:64
 invoke($0, `zero_everything`, []);

@@ -21,15 +21,15 @@ user: Ryan Hunt
 diff --git a/js/src/jit-test/tests/wasm/spec/memory64/align64.wast.js b/js/src/jit-test/tests/wasm/spec/memory64/align64.wast.js
 --- a/js/src/jit-test/tests/wasm/spec/memory64/align64.wast.js
 +++ b/js/src/jit-test/tests/wasm/spec/memory64/align64.wast.js
-@@ -1445,11 +1445,15 @@ let $24 = instantiate(`(module
+@@ -1076,8 +1076,15 @@ let $24 = instantiate(`(module
    )
  )`);
- 
+
 -// ./test/core/align64.wast:864
--assert_trap(
--  () => invoke($24, `store`, [65532n, -1n]),
--  `out of bounds memory access`,
--);
+-assert_trap(() => invoke($24, `store`, [65532n, -1n]), `out of bounds memory access`);
+-
+-// ./test/core/align64.wast:866
+-assert_return(() => invoke($24, `load`, [65532n]), [value("i32", 0)]);
 +// Bug 1737225 - do not observe the partial store caused by bug 1666747 on
 +// some native platforms.
 +if (!partialOobWriteMayWritePartialData()) {
@@ -38,9 +38,7 @@ diff --git a/js/src/jit-test/tests/wasm/spec/memory64/align64.wast.js b/js/src/j
 +        () => invoke($24, `store`, [65532n, -1n]),
 +        `out of bounds memory access`,
 +    );
- 
--// ./test/core/align64.wast:866
--assert_return(() => invoke($24, `load`, [65532n]), [value("i32", 0)]);
++
 +    // ./test/core/align64.wast:866
 +    assert_return(() => invoke($24, `load`, [65532n]), [value("i32", 0)]);
 +}
@@ -68,14 +66,15 @@ diff --git a/js/src/jit-test/tests/wasm/spec/memory64/harness/harness.js b/js/sr
 diff --git a/js/src/jit-test/tests/wasm/spec/memory64/memory_trap64.wast.js b/js/src/jit-test/tests/wasm/spec/memory64/memory_trap64.wast.js
 --- a/js/src/jit-test/tests/wasm/spec/memory64/memory_trap64.wast.js
 +++ b/js/src/jit-test/tests/wasm/spec/memory64/memory_trap64.wast.js
-@@ -1028,12 +1028,17 @@ assert_trap(
-   `out of bounds memory access`,
- );
+@@ -617,8 +617,16 @@ assert_trap(() => invoke($1, `i64.load32_u`, [-3n]), `out of bounds memory acces
+ // ./test/core/memory_trap64.wast:265
+ assert_trap(() => invoke($1, `i64.load32_u`, [-4n]), `out of bounds memory access`);
  
 -// ./test/core/memory_trap64.wast:268
--assert_return(() => invoke($1, `i64.load`, [65528n]), [
--  value("i64", 7523094288207667809n),
--]);
+-assert_return(() => invoke($1, `i64.load`, [65528n]), [value("i64", 7523094288207667809n)]);
+-
+-// ./test/core/memory_trap64.wast:269
+-assert_return(() => invoke($1, `i64.load`, [0n]), [value("i64", 7523094288207667809n)]);
 +// Bug 1737225 - do not observe the partial store caused by bug 1666747 on
 +// some native platforms.
 +if (!partialOobWriteMayWritePartialData()) {
@@ -83,17 +82,12 @@ diff --git a/js/src/jit-test/tests/wasm/spec/memory64/memory_trap64.wast.js b/js
 +    assert_return(() => invoke($1, `i64.load`, [65528n]), [
 +        value("i64", 7523094288207667809n),
 +    ]);
- 
--// ./test/core/memory_trap64.wast:269
--assert_return(() => invoke($1, `i64.load`, [0n]), [
--  value("i64", 7523094288207667809n),
--]);
++
 +    // ./test/core/memory_trap64.wast:269
 +    assert_return(() => invoke($1, `i64.load`, [0n]), [
 +        value("i64", 7523094288207667809n),
 +    ]);
 +}
-+
 diff --git a/js/src/jit-test/tests/wasm/spec/spec/simd_address.wast.js b/js/src/jit-test/tests/wasm/spec/spec/simd_address.wast.js
 --- a/js/src/jit-test/tests/wasm/spec/spec/simd_address.wast.js
 +++ b/js/src/jit-test/tests/wasm/spec/spec/simd_address.wast.js
@@ -668,10 +662,10 @@ TODO non-nullable references not supported in globals
  )`);
  
  // ./test/core/call_ref.wast:94
-@@ -118,73 +50,6 @@ assert_return(() => invoke($0, `run`, [3
+@@ -118,69 +50,6 @@ assert_return(() => invoke($0, `run`, [3
  // ./test/core/call_ref.wast:97
  assert_trap(() => invoke($0, `null`, []), `null function`);
- 
+
 -// ./test/core/call_ref.wast:99
 -assert_return(() => invoke($0, `fac`, [0n]), [value("i64", 1n)]);
 -
@@ -682,9 +676,7 @@ TODO non-nullable references not supported in globals
 -assert_return(() => invoke($0, `fac`, [5n]), [value("i64", 120n)]);
 -
 -// ./test/core/call_ref.wast:102
--assert_return(() => invoke($0, `fac`, [25n]), [
--  value("i64", 7034535277573963776n),
--]);
+-assert_return(() => invoke($0, `fac`, [25n]), [value("i64", 7034535277573963776n)]);
 -
 -// ./test/core/call_ref.wast:103
 -assert_return(() => invoke($0, `fac-acc`, [0n, 1n]), [value("i64", 1n)]);
@@ -696,9 +688,7 @@ TODO non-nullable references not supported in globals
 -assert_return(() => invoke($0, `fac-acc`, [5n, 1n]), [value("i64", 120n)]);
 -
 -// ./test/core/call_ref.wast:106
--assert_return(() => invoke($0, `fac-acc`, [25n, 1n]), [
--  value("i64", 7034535277573963776n),
--]);
+-assert_return(() => invoke($0, `fac-acc`, [25n, 1n]), [value("i64", 7034535277573963776n)]);
 -
 -// ./test/core/call_ref.wast:111
 -assert_return(() => invoke($0, `fib`, [0n]), [value("i64", 1n)]);
@@ -746,25 +736,22 @@ diff --git a/js/src/jit-test/tests/wasm/spec/function-references/local_get.wast.
 TODO Error: globals are of different type
 --- a/js/src/jit-test/tests/wasm/spec/function-references/local_get.wast.js
 +++ b/js/src/jit-test/tests/wasm/spec/function-references/local_get.wast.js
-@@ -355,21 +355,6 @@ let $1 = instantiate(`(module
+@@ -297,18 +297,6 @@ let $1 = instantiate(`(module
    )
  )`);
- 
+
 -// ./test/core/local_get.wast:248
--assert_return(() => invoke($1, `get-after-set`, [externref(1)]), [
--  value("externref", externref(1)),
--]);
+-assert_return(() => invoke($1, `get-after-set`, [externref(1)]), [value('externref', externref(1))]);
 -
 -// ./test/core/local_get.wast:249
--assert_return(() => invoke($1, `get-after-tee`, [externref(2)]), [
--  value("externref", externref(2)),
--]);
+-assert_return(() => invoke($1, `get-after-tee`, [externref(2)]), [value('externref', externref(2))]);
 -
 -// ./test/core/local_get.wast:250
--assert_return(() => invoke($1, `get-in-block-after-set`, [externref(3)]), [
--  value("externref", externref(3)),
--]);
+-assert_return(
+-  () => invoke($1, `get-in-block-after-set`, [externref(3)]),
+-  [value('externref', externref(3))],
+-);
 -
  // ./test/core/local_get.wast:252
  assert_invalid(
-   () =>
+   () => instantiate(`(module (func $$uninit (local $$x (ref extern)) (drop (local.get $$x))))`),

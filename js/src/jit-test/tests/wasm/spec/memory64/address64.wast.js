@@ -340,10 +340,7 @@ assert_return(() => invoke($0, `32_good3`, [65508n]), [value("i32", 0)]);
 assert_return(() => invoke($0, `32_good4`, [65508n]), [value("i32", 0)]);
 
 // ./test/core/address64.wast:192
-assert_trap(
-  () => invoke($0, `32_good5`, [65508n]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($0, `32_good5`, [65508n]), `out of bounds memory access`);
 
 // ./test/core/address64.wast:194
 assert_trap(() => invoke($0, `8u_bad`, [0n]), `out of bounds memory access`);
@@ -606,24 +603,16 @@ assert_return(() => invoke($1, `32s_good4`, [0n]), [value("i64", 1717920867n)]);
 assert_return(() => invoke($1, `32s_good5`, [0n]), [value("i64", 122n)]);
 
 // ./test/core/address64.wast:384
-assert_return(() => invoke($1, `64_good1`, [0n]), [
-  value("i64", 7523094288207667809n),
-]);
+assert_return(() => invoke($1, `64_good1`, [0n]), [value("i64", 7523094288207667809n)]);
 
 // ./test/core/address64.wast:385
-assert_return(() => invoke($1, `64_good2`, [0n]), [
-  value("i64", 7523094288207667809n),
-]);
+assert_return(() => invoke($1, `64_good2`, [0n]), [value("i64", 7523094288207667809n)]);
 
 // ./test/core/address64.wast:386
-assert_return(() => invoke($1, `64_good3`, [0n]), [
-  value("i64", 7595434461045744482n),
-]);
+assert_return(() => invoke($1, `64_good3`, [0n]), [value("i64", 7595434461045744482n)]);
 
 // ./test/core/address64.wast:387
-assert_return(() => invoke($1, `64_good4`, [0n]), [
-  value("i64", 7667774633883821155n),
-]);
+assert_return(() => invoke($1, `64_good4`, [0n]), [value("i64", 7667774633883821155n)]);
 
 // ./test/core/address64.wast:388
 assert_return(() => invoke($1, `64_good5`, [0n]), [value("i64", 122n)]);
@@ -836,10 +825,7 @@ assert_return(() => invoke($1, `64_good3`, [65504n]), [value("i64", 0n)]);
 assert_return(() => invoke($1, `64_good4`, [65504n]), [value("i64", 0n)]);
 
 // ./test/core/address64.wast:472
-assert_trap(
-  () => invoke($1, `64_good5`, [65504n]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($1, `64_good5`, [65504n]), `out of bounds memory access`);
 
 // ./test/core/address64.wast:474
 assert_trap(() => invoke($1, `8u_bad`, [0n]), `out of bounds memory access`);
@@ -921,9 +907,7 @@ assert_return(() => invoke($2, `32_good3`, [0n]), [value("f32", 0)]);
 assert_return(() => invoke($2, `32_good4`, [0n]), [value("f32", 0)]);
 
 // ./test/core/address64.wast:520
-assert_return(() => invoke($2, `32_good5`, [0n]), [
-  bytes("f32", [0x1, 0x0, 0xd0, 0x7f]),
-]);
+assert_return(() => invoke($2, `32_good5`, [0n]), [bytes("f32", [0x1, 0x0, 0xd0, 0x7f])]);
 
 // ./test/core/address64.wast:522
 assert_return(() => invoke($2, `32_good1`, [65524n]), [value("f32", 0)]);
@@ -953,10 +937,7 @@ assert_return(() => invoke($2, `32_good3`, [65525n]), [value("f32", 0)]);
 assert_return(() => invoke($2, `32_good4`, [65525n]), [value("f32", 0)]);
 
 // ./test/core/address64.wast:532
-assert_trap(
-  () => invoke($2, `32_good5`, [65525n]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($2, `32_good5`, [65525n]), `out of bounds memory access`);
 
 // ./test/core/address64.wast:534
 assert_trap(() => invoke($2, `32_bad`, [0n]), `out of bounds memory access`);
@@ -1002,9 +983,10 @@ assert_return(() => invoke($3, `64_good3`, [0n]), [value("f64", 0)]);
 assert_return(() => invoke($3, `64_good4`, [0n]), [value("f64", 0)]);
 
 // ./test/core/address64.wast:567
-assert_return(() => invoke($3, `64_good5`, [0n]), [
-  bytes("f64", [0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0xfc, 0x7f]),
-]);
+assert_return(
+  () => invoke($3, `64_good5`, [0n]),
+  [bytes("f64", [0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0xfc, 0x7f])],
+);
 
 // ./test/core/address64.wast:569
 assert_return(() => invoke($3, `64_good1`, [65510n]), [value("f64", 0)]);
@@ -1034,10 +1016,7 @@ assert_return(() => invoke($3, `64_good3`, [65511n]), [value("f64", 0)]);
 assert_return(() => invoke($3, `64_good4`, [65511n]), [value("f64", 0)]);
 
 // ./test/core/address64.wast:579
-assert_trap(
-  () => invoke($3, `64_good5`, [65511n]),
-  `out of bounds memory access`,
-);
+assert_trap(() => invoke($3, `64_good5`, [65511n]), `out of bounds memory access`);
 
 // ./test/core/address64.wast:581
 assert_trap(() => invoke($3, `64_bad`, [0n]), `out of bounds memory access`);
