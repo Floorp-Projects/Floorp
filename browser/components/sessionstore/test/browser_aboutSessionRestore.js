@@ -26,6 +26,11 @@ add_task(async function() {
 
   ok(gBrowser.tabs.length > 1, "we have more than one tab");
 
+  let tabsToggle = browser.contentDocument.getElementById("tabsToggle");
+  tabsToggle.click();
+  await BrowserTestUtils.waitForCondition(
+    () => browser.contentWindow.gTreeInitialized
+  );
   let tree = browser.contentDocument.getElementById("tabList");
   let view = tree.view;
   ok(view.isContainer(0), "first entry is the window");

@@ -12,6 +12,7 @@
   skin/classic/browser/aboutSessionRestore.css                 (../shared/aboutSessionRestore.css)
   skin/classic/browser/aboutTabCrashed.css                     (../shared/aboutTabCrashed.css)
   skin/classic/browser/aboutWelcomeBack.css                    (../shared/aboutWelcomeBack.css)
+  skin/classic/browser/tab-list-tree.css                       (../shared/tab-list-tree.css)
   skin/classic/browser/addon-notification.css                  (../shared/addon-notification.css)
   skin/classic/browser/autocomplete.css                        (../shared/autocomplete.css)
   skin/classic/browser/blockedSite.css                         (../shared/blockedSite.css)
