@@ -2,7 +2,7 @@
 
 // We need to test a lot of permutations here, and there isn't any sensible way
 // to split them up or run them faster.
-requestLongerTimeout(6);
+requestLongerTimeout(12);
 
 Services.scriptloader.loadSubScript(
   getRootDirectory(gTestPath) + "head_browser_onbeforeunload.js",
