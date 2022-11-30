@@ -331,6 +331,23 @@ already_AddRefed<Promise> ScreenOrientation::LockInternal(
     return nullptr;
   }
 
+  // Step 3.
+  // If document has the sandboxed orientation lock browsing context flag set,
+  // or doesn't meet the pre-lock conditions, or locking would be a security
+  // risk, return a promise rejected with a "SecurityError" DOMException and
+  // abort these steps.
+
+  LockPermission perm = GetLockOrientationPermission(true);
+  if (perm == LOCK_DENIED) {
+    p->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
+    return p.forget();
+  }
+
+  // Step 4.
+  // If the user agent does not support locking the screen orientation to
+  // orientation, return a promise rejected with a "NotSupportedError"
+  // DOMException and abort these steps.
+
 #if !defined(MOZ_WIDGET_ANDROID) && !defined(XP_WIN)
   // User agent does not support locking the screen orientation.
   p->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
@@ -339,12 +356,6 @@ already_AddRefed<Promise> ScreenOrientation::LockInternal(
   // Bypass locking screen orientation if preference is false
   if (!StaticPrefs::dom_screenorientation_allow_lock()) {
     p->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return p.forget();
-  }
-
-  LockPermission perm = GetLockOrientationPermission(true);
-  if (perm == LOCK_DENIED) {
-    p->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return p.forget();
   }
 
