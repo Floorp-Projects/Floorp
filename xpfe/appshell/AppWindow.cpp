@@ -29,7 +29,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsPIDOMWindow.h"
 #include "nsScreen.h"
-#include "nsIEmbeddingSiteWindow.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIIOService.h"
@@ -284,13 +283,9 @@ NS_IMETHODIMP AppWindow::GetInterface(const nsIID& aIID, void** aSink) {
   }
   if (aIID.Equals(NS_GET_IID(nsIWebBrowserChrome)) &&
       NS_SUCCEEDED(EnsureContentTreeOwner()) &&
-      NS_SUCCEEDED(mContentTreeOwner->QueryInterface(aIID, aSink)))
+      NS_SUCCEEDED(mContentTreeOwner->QueryInterface(aIID, aSink))) {
     return NS_OK;
-
-  if (aIID.Equals(NS_GET_IID(nsIEmbeddingSiteWindow)) &&
-      NS_SUCCEEDED(EnsureContentTreeOwner()) &&
-      NS_SUCCEEDED(mContentTreeOwner->QueryInterface(aIID, aSink)))
-    return NS_OK;
+  }
 
   return QueryInterface(aIID, aSink);
 }
@@ -789,6 +784,23 @@ NS_IMETHODIMP AppWindow::GetPositionAndSize(int32_t* x, int32_t* y, int32_t* cx,
   if (cy) *cy = rect.Height();
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+AppWindow::SetDimensions(DimensionRequest&& aRequest) {
+  // For the chrome the inner size is the root shell size, and for the content
+  // it's the primary content size. We lack an indicator here that would allow
+  // us to distinguish between the two.
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+AppWindow::GetDimensions(DimensionKind aDimensionKind, int32_t* aX, int32_t* aY,
+                         int32_t* aCX, int32_t* aCY) {
+  // For the chrome the inner size is the root shell size, and for the content
+  // it's the primary content size. We lack an indicator here that would allow
+  // us to distinguish between the two.
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP AppWindow::Center(nsIAppWindow* aRelative, bool aScreen,
