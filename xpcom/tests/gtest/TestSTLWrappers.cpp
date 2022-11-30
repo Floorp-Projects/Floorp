@@ -10,10 +10,6 @@
 #  error "failed to wrap <vector>"
 #endif
 
-#include "nsCOMPtr.h"
-#include "nsICrashReporter.h"
-#include "nsServiceManagerUtils.h"
-
 // gcc errors out if we |try ... catch| with -fno-exceptions, but we
 // can still test on windows
 #ifdef _MSC_VER
@@ -29,20 +25,12 @@
 
 #include "gtest/gtest.h"
 
-#if defined(XP_UNIX)
-extern unsigned int _gdb_sleep_duration;
-#endif
+#include "mozilla/gtest/MozHelpers.h"
 
 void ShouldAbort() {
-#if defined(XP_UNIX)
-  _gdb_sleep_duration = 0;
-#endif
+  ZERO_GDB_SLEEP();
 
-  nsCOMPtr<nsICrashReporter> crashreporter =
-      do_GetService("@mozilla.org/toolkit/crash-reporter;1");
-  if (crashreporter) {
-    crashreporter->SetEnabled(false);
-  }
+  mozilla::gtest::DisableCrashReporter();
 
   std::vector<int> v;
 

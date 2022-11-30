@@ -14,7 +14,7 @@
 #endif  // defined(MOZ_WIDGET_ANDROID) || defined(XP_MACOSX)
 
 #if defined(XP_WIN)
-#  include "TestUtils.h"
+#  include "mozilla/gtest/MozHelpers.h"
 #  include "mozilla/ipc/UtilityProcessImpl.h"
 #endif  // defined(XP_WIN)
 
@@ -141,7 +141,7 @@ TEST_F(UtilityProcess, DestroyProcess) {
 
 #if defined(XP_WIN)
 static void LoadLibraryCrash_Test() {
-  DisableCrashReporter();
+  mozilla::gtest::DisableCrashReporter();
   // Just a uuidgen name to have something random
   UtilityProcessImpl::LoadLibraryOrCrash(
       L"2b49036e-6ba3-400c-a297-38fa1f6c5255.dll");

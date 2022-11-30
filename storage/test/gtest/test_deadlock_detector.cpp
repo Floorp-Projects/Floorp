@@ -14,6 +14,9 @@
 #include "mozilla/ReentrantMonitor.h"
 #include "SQLiteMutex.h"
 
+// We need this one so _gdb_sleep_duration is also in "storage" namespace
+#include "mozilla/gtest/MozHelpers.h"
+
 #include "gtest/gtest.h"
 
 using namespace mozilla;
@@ -39,11 +42,6 @@ class TestMutex : public mozilla::storage::SQLiteMutex {
  private:
   sqlite3_mutex* mInner;
 };
-
-// This global variable is defined in toolkit/xre/nsSigHandlers.cpp.
-// It's declared in xpcom/tests/gtest/TestDeadlockDetector.cpp, but we #include
-// that within the |storage| namespace, so we need to declare it again here.
-extern unsigned int _gdb_sleep_duration;
 
 // These are the two macros that differentiate this file from the XPCOM one.
 #define MUTEX TestMutex
