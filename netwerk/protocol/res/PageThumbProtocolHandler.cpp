@@ -53,7 +53,6 @@ StaticRefPtr<PageThumbProtocolHandler> PageThumbProtocolHandler::sSingleton;
 
 NS_IMPL_QUERY_INTERFACE(PageThumbProtocolHandler,
                         nsISubstitutingProtocolHandler, nsIProtocolHandler,
-                        nsIProtocolHandlerWithDynamicFlags,
                         nsISupportsWeakReference)
 NS_IMPL_ADDREF_INHERITED(PageThumbProtocolHandler, SubstitutingProtocolHandler)
 NS_IMPL_RELEASE_INHERITED(PageThumbProtocolHandler, SubstitutingProtocolHandler)
@@ -68,18 +67,13 @@ PageThumbProtocolHandler::GetSingleton() {
   return do_AddRef(sSingleton);
 }
 
+// A moz-page-thumb URI is only loadable by chrome pages in the parent process,
+// or privileged content running in the privileged about content process.
 PageThumbProtocolHandler::PageThumbProtocolHandler()
-    : SubstitutingProtocolHandler(PAGE_THUMB_SCHEME) {}
-
-nsresult PageThumbProtocolHandler::GetFlagsForURI(nsIURI* aURI,
-                                                  uint32_t* aFlags) {
-  // A moz-page-thumb URI is only loadable by chrome pages in the parent
-  // process, or privileged content running in the privileged about content
-  // process.
-  *aFlags = URI_STD | URI_IS_UI_RESOURCE | URI_IS_LOCAL_RESOURCE |
-            URI_NORELATIVE | URI_NOAUTH;
-  return NS_OK;
-}
+    : SubstitutingProtocolHandler(PAGE_THUMB_SCHEME,
+                                  URI_STD | URI_IS_UI_RESOURCE |
+                                      URI_IS_LOCAL_RESOURCE | URI_NORELATIVE |
+                                      URI_NOAUTH) {}
 
 RefPtr<RemoteStreamPromise> PageThumbProtocolHandler::NewStream(
     nsIURI* aChildURI, bool* aTerminateSender) {
