@@ -395,7 +395,9 @@ ExtensionProtocolHandler::GetSingleton() {
 }
 
 ExtensionProtocolHandler::ExtensionProtocolHandler()
-    : SubstitutingProtocolHandler(EXTENSION_SCHEME) {
+    : SubstitutingProtocolHandler(
+          EXTENSION_SCHEME,
+          URI_STD | URI_IS_LOCAL_RESOURCE | URI_IS_POTENTIALLY_TRUSTWORTHY) {
   // Note, extensions.webextensions.protocol.remote=false is for
   // debugging purposes only. With process-level sandboxing, child
   // processes (specifically content and extension processes), will
@@ -412,8 +414,8 @@ static inline ExtensionPolicyService& EPS() {
 
 nsresult ExtensionProtocolHandler::GetFlagsForURI(nsIURI* aURI,
                                                   uint32_t* aFlags) {
-  uint32_t flags =
-      URI_STD | URI_IS_LOCAL_RESOURCE | URI_IS_POTENTIALLY_TRUSTWORTHY;
+  uint32_t flags;
+  GetProtocolFlags(&flags);
 
   URLInfo url(aURI);
   if (auto* policy = EPS().GetByURL(url)) {

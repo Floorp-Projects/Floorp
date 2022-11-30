@@ -207,18 +207,10 @@ SubstitutingProtocolHandler::SubstitutingProtocolHandler(const char* aScheme,
                                                          uint32_t aFlags,
                                                          bool aEnforceFileOrJar)
     : mScheme(aScheme),
+      mFlags(aFlags),
       mSubstitutionsLock("SubstitutingProtocolHandler::mSubstitutions"),
       mSubstitutions(16),
       mEnforceFileOrJar(aEnforceFileOrJar) {
-  mFlags.emplace(aFlags);
-  ConstructInternal();
-}
-
-SubstitutingProtocolHandler::SubstitutingProtocolHandler(const char* aScheme)
-    : mScheme(aScheme),
-      mSubstitutionsLock("SubstitutingProtocolHandler::mSubstitutions"),
-      mSubstitutions(16),
-      mEnforceFileOrJar(true) {
   ConstructInternal();
 }
 
@@ -296,14 +288,7 @@ nsresult SubstitutingProtocolHandler::GetDefaultPort(int32_t* result) {
 }
 
 nsresult SubstitutingProtocolHandler::GetProtocolFlags(uint32_t* result) {
-  if (mFlags.isNothing()) {
-    NS_WARNING(
-        "Trying to get protocol flags the wrong way - use "
-        "nsIProtocolHandlerWithDynamicFlags instead");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  *result = mFlags.ref();
+  *result = mFlags;
   return NS_OK;
 }
 
