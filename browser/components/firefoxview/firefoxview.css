@@ -307,7 +307,8 @@ button.close {
 
 .error-state {
   text-align: center;
-  padding: 0 0 20px;
+  padding-block: 0 1.3em;
+  padding-inline: 1em;
   border: 1px solid var(--fxview-contrast-border);
   border-radius: 4px;
 }
