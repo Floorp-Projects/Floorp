@@ -8,12 +8,12 @@
 
 "use strict";
 
-async function runTest(src, expectation) {
+async function runTest(src, process, decoder) {
   info(`Add media tabs: ${src}`);
   let tab = await addMediaTab(src);
 
   info("Play tab");
-  await play(tab, expectation);
+  await play(tab, process, decoder);
 
   info("Stop tab");
   await stop(tab);
@@ -42,7 +42,7 @@ add_setup(async function setup() {
 });
 
 add_task(async function testKill() {
-  await runTest("small-shot.ogg", "Utility Generic");
+  await runTest("small-shot.ogg", "Utility Generic", "vorbis audio decoder");
 
   const audioDecoderPid = await findGenericAudioDecoder();
   ok(audioDecoderPid > 0, `Valid PID found: ${audioDecoderPid}`);
@@ -59,7 +59,7 @@ add_task(async function testKill() {
 });
 
 add_task(async function testShutdown() {
-  await runTest("small-shot.ogg", "Utility Generic");
+  await runTest("small-shot.ogg", "Utility Generic", "vorbis audio decoder");
 
   const audioDecoderPid = await findGenericAudioDecoder();
   ok(audioDecoderPid > 0, `Valid PID found: ${audioDecoderPid}`);
