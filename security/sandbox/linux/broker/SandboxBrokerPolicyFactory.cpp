@@ -941,6 +941,7 @@ SandboxBrokerPolicyFactory::GetUtilityProcessPolicy(int aPid) {
   policy->AddPath(rdonly, "/dev/urandom");
   policy->AddPath(rdonly, "/proc/cpuinfo");
   policy->AddPath(rdonly, "/proc/meminfo");
+  policy->AddPath(rdonly, nsPrintfCString("/proc/%d/exe", aPid).get());
   policy->AddDir(rdonly, "/sys/devices/cpu");
   policy->AddDir(rdonly, "/sys/devices/system/cpu");
   policy->AddDir(rdonly, "/lib");
