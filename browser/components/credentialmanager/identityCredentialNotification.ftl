@@ -4,13 +4,22 @@
 
 ## Credential panel
 ##  $host (String): the hostname of the site that is being displayed.
+##  $provider (String): the hostname of another website you are using to log in to the site being displayed
 
-credential-header-providers = Sign in to { $host }.
-credential-header-accounts = Pick a { $host } account.
+identity-credential-header-providers = Sign in to { $host }
+identity-credential-header-accounts = Pick a { $host } account
 # Identity providers are websites you use to log into another website, for example: Google when you Log in with Google.
-credential-description-provider-explanation = These are the identity providers that would like to help you log in.
-credential-description-account-explanation = Picking an account here shares that identity with { $host }.
-urlbar-identity-credential-anchor =
+identity-credential-description-provider-explanation = These are the identity providers that would like to help you log in.
+identity-credential-description-account-explanation = Picking an account here shares that identity with { $host }.
+identity-credential-urlbar-anchor =
     .tooltiptext = Open federated login panel
-credential-cancel-label = Cancel
-credential-cancel-accesskey = C
+identity-credential-cancel-button =
+    .label = Cancel
+    .accesskey = C
+identity-credential-accept-button =
+    .label = Okay
+    .accesskey = O
+identity-credential-policy-title = Legal information
+identity-credential-policy-description = Logging into { $host } with an account from { $provider } is controlled by these legal policies. This is optional and you can cancel this and try to log in again using another method.
+identity-credential-privacy-policy = Privacy Policy
+identity-credential-terms-of-service = Terms of Service
