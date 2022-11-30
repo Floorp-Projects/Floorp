@@ -77,31 +77,11 @@ class RecentlyClosedTabsList extends HTMLElement {
       (event.type == "keydown" && event.keyCode == KeyEvent.DOM_VK_RETURN) ||
       (event.type == "keydown" && event.keyCode == KeyEvent.DOM_VK_SPACE)
     ) {
-      this.openTabAndUpdate(event);
-    } else if (
-      event.type == "keydown" &&
-      !event.shiftKey &&
-      !event.ctrlKey &&
-      event.target.classList.contains("closed-tab-li")
-    ) {
-      switch (event.key) {
-        case "ArrowDown":
-          event.preventDefault();
-          event.target.nextSibling?.focus();
-          break;
-        case "ArrowUp":
-          event.preventDefault();
-          event.target.previousSibling?.focus();
-          break;
+      if (!event.target.classList.contains("closed-tab-li-dismiss")) {
+        this.openTabAndUpdate(event);
+      } else {
+        this.dismissTabAndUpdate(event);
       }
-    } else if (
-      event.type == "keydown" &&
-      event.shiftKey &&
-      event.key == "Tab" &&
-      event.target.classList.contains("closed-tab-li")
-    ) {
-      event.preventDefault();
-      document.getElementById("recently-closed-tabs-header-section").focus();
     }
   }
 
@@ -127,6 +107,33 @@ class RecentlyClosedTabsList extends HTMLElement {
     return value;
   }
 
+  focusFirstItemOrHeader(dismissedIndex) {
+    // When a tab is removed from the list, the focus should
+    // remain on the list or the list header. This prevents context
+    // switching when navigating back to Firefox View.
+    let recentlyClosedList = [...this.tabsList.children];
+    if (recentlyClosedList.length) {
+      recentlyClosedList.forEach(element =>
+        element.setAttribute("tabindex", "-1")
+      );
+      let mainContent;
+      if (dismissedIndex) {
+        // Select the item above the one that was just dismissed
+        mainContent = recentlyClosedList[dismissedIndex - 1].querySelector(
+          ".closed-tab-li-main"
+        );
+      } else {
+        mainContent = recentlyClosedList[0].querySelector(
+          ".closed-tab-li-main"
+        );
+      }
+      mainContent.setAttribute("tabindex", "0");
+      mainContent.focus();
+    } else {
+      document.getElementById("recently-closed-tabs-header-section").focus();
+    }
+  }
+
   openTabAndUpdate(event) {
     event.preventDefault();
     const item = event.target.closest(".closed-tab-li");
@@ -137,19 +144,7 @@ class RecentlyClosedTabsList extends HTMLElement {
     lazy.SessionStore.undoCloseById(closedId);
     this.tabsList.removeChild(item);
 
-    // When a tab is removed from the list, the focus should
-    // remain on the list or the list header. This prevents context
-    // switching when navigating back to Firefox View.
-    let recentlyClosedList = [...this.tabsList.children];
-    if (recentlyClosedList.length) {
-      recentlyClosedList.forEach(element =>
-        element.setAttribute("tabindex", "-1")
-      );
-      recentlyClosedList[0].setAttribute("tabindex", "0");
-      recentlyClosedList[0].focus();
-    } else {
-      document.getElementById("recently-closed-tabs-header-section").focus();
-    }
+    this.focusFirstItemOrHeader();
 
     // record telemetry
     let tabClosedAt = parseInt(
@@ -165,6 +160,40 @@ class RecentlyClosedTabsList extends HTMLElement {
       null,
       {
         position: position.toString(),
+        delta: deltaSeconds.toString(),
+      }
+    );
+  }
+
+  dismissTabAndUpdate(event) {
+    event.preventDefault();
+    const item = event.target.closest(".closed-tab-li");
+    let recentlyClosedList = lazy.SessionStore.getClosedTabData(getWindow());
+    let closedTabIndex = recentlyClosedList.findIndex(closedTab => {
+      return closedTab.closedId === parseInt(item.dataset.tabid, 10);
+    });
+    if (closedTabIndex < 0) {
+      // Tab not found in recently closed list
+      return;
+    }
+    this.tabsList.removeChild(item);
+    lazy.SessionStore.forgetClosedTab(getWindow(), closedTabIndex);
+
+    this.focusFirstItemOrHeader(closedTabIndex);
+
+    // record telemetry
+    let tabClosedAt = parseInt(
+      item.querySelector(".closed-tab-li-time").dataset.timestamp
+    );
+
+    let now = Date.now();
+    let deltaSeconds = (now - tabClosedAt) / 1000;
+    Services.telemetry.recordEvent(
+      "firefoxview",
+      "recently_closed",
+      "tabs",
+      null,
+      {
         delta: deltaSeconds.toString(),
       }
     );
@@ -222,11 +251,12 @@ class RecentlyClosedTabsList extends HTMLElement {
         this.tabsList.lastChild.remove();
       }
       let li = this.generateListItem(tab);
+      let mainContent = li.querySelector(".closed-tab-li-main");
       // Only the first item in the list should be focusable
       if (!this.tabsList.children.length) {
-        li.setAttribute("tabindex", "0");
+        mainContent.setAttribute("tabindex", "0");
       } else if (this.tabsList.children.length) {
-        li.setAttribute("tabindex", "0");
+        mainContent.setAttribute("tabindex", "0");
         this.tabsList.children[0].setAttribute("tabindex", "-1");
       }
       this.tabsList.prepend(li);
@@ -254,8 +284,6 @@ class RecentlyClosedTabsList extends HTMLElement {
     const li = document.createElement("li");
     li.classList.add("closed-tab-li");
     li.dataset.tabid = tab.closedId;
-    li.setAttribute("tabindex", "-1");
-    li.setAttribute("role", "button");
 
     const title = document.createElement("span");
     title.textContent = `${tab.title}`;
@@ -264,17 +292,30 @@ class RecentlyClosedTabsList extends HTMLElement {
     const targetURI = this.getTabStateValue(tab, "url");
     const image = tab.image;
     const favicon = createFaviconElement(image, targetURI);
-    li.append(favicon);
 
     const urlElement = document.createElement("span");
     urlElement.classList.add("closed-tab-li-url");
 
     const time = document.createElement("span");
-    time.textContent = convertTimestamp(tab.closedAt, this.fluentStrings);
+    const convertedTime = convertTimestamp(tab.closedAt, this.fluentStrings);
+    time.textContent = convertedTime;
     time.setAttribute("data-timestamp", tab.closedAt);
     time.classList.add("closed-tab-li-time");
 
-    li.append(title, urlElement, time);
+    const mainContent = document.createElement("span");
+    mainContent.classList.add("closed-tab-li-main");
+    mainContent.setAttribute("role", "link");
+    mainContent.setAttribute("tabindex", 0);
+    mainContent.append(favicon, title, urlElement, time);
+
+    const dismissButton = document.createElement("button");
+    let dismissLabel = this.fluentStrings.formatValueSync(
+      "firefoxview-closed-tabs-dismiss"
+    );
+    dismissButton.setAttribute("aria-label", `${dismissLabel} ${tab.title}`);
+    dismissButton.classList.add("closed-tab-li-dismiss");
+
+    li.append(mainContent, dismissButton);
     this.updateURLForListItem(li, targetURI);
     return li;
   }
@@ -403,7 +444,7 @@ class RecentlyClosedTabsContainer extends HTMLDetailsElement {
       // More tabs may have been added to the list, so we'll refocus
       // the first item in the list.
       if (listItems.length) {
-        listItems[0].focus();
+        listItems[0].querySelector(".closed-tab-li-main").focus();
       } else {
         this.querySelector("summary").focus();
       }
