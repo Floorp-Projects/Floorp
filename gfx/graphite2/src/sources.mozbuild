@@ -13,7 +13,7 @@ graphite_sources = [
     'Decompressor.cpp',
     'Face.cpp',
     'FeatureMap.cpp',
-    'FileFace.cpp',
+    # 'FileFace.cpp', # Unused file.
     'Font.cpp',
     'GlyphCache.cpp',
     'GlyphFace.cpp',
@@ -25,7 +25,7 @@ graphite_sources = [
     'gr_segment.cpp',
     'gr_slot.cpp',
     'Intervals.cpp',
-    'json.cpp',
+    # 'json.cpp', # Unused file.
     'Justifier.cpp',
     'NameTable.cpp',
     'Pass.cpp',
