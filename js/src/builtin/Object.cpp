@@ -2273,7 +2273,7 @@ static bool FinishObjectClassInit(JSContext* cx, JS::HandleObject ctor,
                                   JS::HandleObject proto) {
   Rooted<GlobalObject*> global(cx, cx->global());
 
-  /* ES5 15.1.2.1. */
+  // ES5 15.1.2.1.
   RootedId evalId(cx, NameToId(cx->names().eval));
   JSFunction* evalobj =
       DefineFunction(cx, global, evalId, IndirectEval, 1, JSPROP_RESOLVING);
@@ -2291,21 +2291,10 @@ static bool FinishObjectClassInit(JSContext* cx, JS::HandleObject ctor,
   }
 #endif
 
-  /*
-   * The global object should have |Object.prototype| as its [[Prototype]].
-   * Eventually we'd like to have standard classes be there from the start,
-   * and thus we would know we were always setting what had previously been a
-   * null [[Prototype]], but right now some code assumes it can set the
-   * [[Prototype]] before standard classes have been initialized.  For now,
-   * only set the [[Prototype]] if it hasn't already been set.
-   */
-  if (global->staticPrototype() == nullptr) {
-    MOZ_ASSERT(!global->staticPrototypeIsImmutable());
-    if (!SetPrototype(cx, global, proto)) {
-      return false;
-    }
-  }
-  return true;
+  // The global object should have |Object.prototype| as its [[Prototype]].
+  MOZ_ASSERT(global->staticPrototype() == nullptr);
+  MOZ_ASSERT(!global->staticPrototypeIsImmutable());
+  return SetPrototype(cx, global, proto);
 }
 
 static const ClassSpec PlainObjectClassSpec = {
