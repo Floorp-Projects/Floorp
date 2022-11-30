@@ -92,6 +92,21 @@ inline constexpr nsSize kFallbackIntrinsicSize(kFallbackIntrinsicWidth,
  */
 enum class IntrinsicISizeType { MinISize, PrefISize };
 
+enum class ContentRelevancyReason {
+  // If the content of this Frame is on screen or nearly on screen.
+  Visible,
+
+  // If this Frame's element is a descendant of a top layer element.
+  DescendantOfTopLayerElement,
+
+  // If this Frame's element has focus in its subtree.
+  FocusInSubtree,
+
+  // If this Frame's content is part of a selection.
+  Selected,
+};
+using ContentRelevancy = EnumSet<ContentRelevancyReason, uint8_t>;
+
 }  // namespace mozilla
 
 #endif  // LayoutConstants_h___
