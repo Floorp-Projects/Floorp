@@ -573,15 +573,9 @@ void nsWindow::DestroyChildWindows() {
 }
 
 void nsWindow::Destroy() {
-  // Allow to call ~nsWindow from different thread (Compositor for instance)
-  // in case that nsWindow is already destroyed.
-  if (mIsDestroyed) {
-    return;
-  }
-
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
 
-  if (!mCreated) {
+  if (mIsDestroyed || !mCreated) {
     return;
   }
 
