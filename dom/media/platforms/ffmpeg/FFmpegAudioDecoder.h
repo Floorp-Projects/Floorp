@@ -32,7 +32,11 @@ class FFmpegAudioDecoder<LIBAV_VER>
   void InitCodecContext() MOZ_REQUIRES(sMutex) override;
   static AVCodecID GetCodecId(const nsACString& aMimeType);
   nsCString GetDescriptionName() const override {
+#ifdef USING_MOZFFVPX
+    return "ffvpx audio decoder"_ns;
+#else
     return "ffmpeg audio decoder"_ns;
+#endif
   }
 
  private:
