@@ -383,8 +383,6 @@ bool NativeKeyBindings::GetEditCommandsInternal(
 
   gCurrentCommands = nullptr;
 
-  MOZ_ASSERT(!gHandled || !aCommands.IsEmpty());
-
   return gHandled;
 }
 
