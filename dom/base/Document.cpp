@@ -2781,6 +2781,8 @@ nsresult Document::Init() {
 
   mStyleSet = MakeUnique<ServoStyleSet>(*this);
 
+  RecomputeResistFingerprinting();
+
   return NS_OK;
 }
 
