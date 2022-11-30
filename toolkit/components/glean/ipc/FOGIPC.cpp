@@ -8,8 +8,11 @@
 #include <limits>
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/glean/GleanMetrics.h"
+#include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/gfx/GPUChild.h"
 #include "mozilla/gfx/GPUParent.h"
@@ -29,6 +32,7 @@
 #include "mozilla/Unused.h"
 #include "GMPPlatform.h"
 #include "GMPServiceParent.h"
+#include "nsIClassifiedChannel.h"
 #include "nsIXULRuntime.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
@@ -52,14 +56,19 @@ struct ProcessingTimeMarker {
   }
   static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
                                    int64_t aDiffMs,
-                                   const ProfilerString8View& aType) {
+                                   const ProfilerString8View& aType,
+                                   const ProfilerString8View& aTrackerType) {
     aWriter.IntProperty("time", aDiffMs);
     aWriter.StringProperty("label", aType);
+    if (aTrackerType.Length() > 0) {
+      aWriter.StringProperty("tracker", aTrackerType);
+    }
   }
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
     schema.AddKeyLabelFormat("time", "Recorded Time", MS::Format::Milliseconds);
+    schema.AddKeyLabelFormat("tracker", "Tracker Type", MS::Format::String);
     schema.SetTooltipLabel("{marker.name} - {marker.data.label}");
     schema.SetTableLabel(
         "{marker.name} - {marker.data.label}: {marker.data.time}");
@@ -184,6 +193,57 @@ void RecordIPCReceivedMessage(uint32_t aMessageType) {
 #  define RESET_PROCESS_TYPE_SPECIFIC_METRICS()
 #endif
 
+void GetTrackerType(nsAutoCString& aTrackerType) {
+  using namespace mozilla::dom;
+  uint32_t trackingFlags =
+      (nsIClassifiedChannel::CLASSIFIED_CRYPTOMINING |
+       nsIClassifiedChannel::CLASSIFIED_FINGERPRINTING |
+       nsIClassifiedChannel::CLASSIFIED_TRACKING |
+       nsIClassifiedChannel::CLASSIFIED_TRACKING_AD |
+       nsIClassifiedChannel::CLASSIFIED_TRACKING_ANALYTICS |
+       nsIClassifiedChannel::CLASSIFIED_TRACKING_SOCIAL);
+  AutoTArray<RefPtr<BrowsingContextGroup>, 5> bcGroups;
+  BrowsingContextGroup::GetAllGroups(bcGroups);
+  for (auto& bcGroup : bcGroups) {
+    AutoTArray<DocGroup*, 5> docGroups;
+    bcGroup->GetDocGroups(docGroups);
+    for (auto* docGroup : docGroups) {
+      for (Document* doc : *docGroup) {
+        nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
+            do_QueryInterface(doc->GetChannel());
+        if (classifiedChannel) {
+          uint32_t classificationFlags =
+              classifiedChannel->GetThirdPartyClassificationFlags();
+          trackingFlags &= classificationFlags;
+          if (!trackingFlags) {
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  // The if-elseif-else chain works because the tracker types listed here are
+  // currently mutually exclusive and should be maintained that way by policy.
+  if (trackingFlags == nsIClassifiedChannel::CLASSIFIED_TRACKING_AD) {
+    aTrackerType = "ad";
+  } else if (trackingFlags ==
+             nsIClassifiedChannel::CLASSIFIED_TRACKING_ANALYTICS) {
+    aTrackerType = "analytics";
+  } else if (trackingFlags ==
+             nsIClassifiedChannel::CLASSIFIED_TRACKING_SOCIAL) {
+    aTrackerType = "social";
+  } else if (trackingFlags == nsIClassifiedChannel::CLASSIFIED_CRYPTOMINING) {
+    aTrackerType = "cryptomining";
+  } else if (trackingFlags == nsIClassifiedChannel::CLASSIFIED_FINGERPRINTING) {
+    aTrackerType = "fingerprinting";
+  } else if (trackingFlags == nsIClassifiedChannel::CLASSIFIED_TRACKING) {
+    // CLASSIFIED_TRACKING means we were not able to identify the type of
+    // classification.
+    aTrackerType = "unknown";
+  }
+}
+
 void RecordPowerMetrics() {
   static uint64_t previousCpuTime = 0, previousGpuTime = 0;
 
@@ -208,6 +268,7 @@ void RecordPowerMetrics() {
 
   // Compute the process type string.
   nsAutoCString type(XRE_GetProcessTypeString());
+  nsAutoCString trackerType;
   if (XRE_IsContentProcess()) {
     auto* cc = dom::ContentChild::GetSingleton();
     if (cc) {
@@ -232,6 +293,7 @@ void RecordPowerMetrics() {
             break;
         }
       }
+      GetTrackerType(trackerType);
     } else {
       RESET_PROCESS_TYPE_SPECIFIC_METRICS();
     }
@@ -268,11 +330,14 @@ void RecordPowerMetrics() {
     if (newCpuTime < std::numeric_limits<int32_t>::max()) {
       power::total_cpu_time_ms.Add(nNewCpuTime);
       power::cpu_time_per_process_type_ms.Get(type).Add(nNewCpuTime);
+      if (!trackerType.IsEmpty()) {
+        power::cpu_time_per_tracker_type_ms.Get(trackerType).Add(nNewCpuTime);
+      }
     } else {
       power::cpu_time_bogus_values.Add(1);
     }
     PROFILER_MARKER("Process CPU Time", OTHER, {}, ProcessingTimeMarker,
-                    nNewCpuTime, type);
+                    nNewCpuTime, type, trackerType);
     previousCpuTime += newCpuTime;
   }
 
@@ -285,7 +350,7 @@ void RecordPowerMetrics() {
       power::gpu_time_bogus_values.Add(1);
     }
     PROFILER_MARKER("Process GPU Time", OTHER, {}, ProcessingTimeMarker,
-                    nNewGpuTime, type);
+                    nNewGpuTime, type, trackerType);
     previousGpuTime += newGpuTime;
   }
 
