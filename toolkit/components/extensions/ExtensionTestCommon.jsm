@@ -428,6 +428,23 @@ ExtensionTestCommon = class ExtensionTestCommon {
       data.useServiceWorker = ExtensionTestCommon.isInBackgroundServiceWorkerTests();
     }
 
+    // allowInsecureRequests is a shortcut to removing upgrade-insecure-requests from default csp.
+    if (data.allowInsecureRequests) {
+      // upgrade-insecure-requests is only added automatically to MV3.
+      // This flag is therefore not needed in MV2.
+      if (manifest.manifest_version < 3) {
+        throw new Error("allowInsecureRequests requires manifest_version 3");
+      }
+      if (manifest.content_security_policy) {
+        throw new Error(
+          "allowInsecureRequests cannot be used with manifest.content_security_policy"
+        );
+      }
+      manifest.content_security_policy = {
+        extension_pages: `script-src 'self'`,
+      };
+    }
+
     if (data.background) {
       let bgScript = Services.uuid.generateUUID().number + ".js";
 
