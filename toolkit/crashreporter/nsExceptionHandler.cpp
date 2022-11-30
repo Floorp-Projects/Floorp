@@ -1361,7 +1361,7 @@ static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
 
   double uptimeTS = (TimeStamp::NowLoRes() - TimeStamp::ProcessCreation())
                         .ToSecondsSigDigits();
-  char uptimeTSString[64];
+  char uptimeTSString[64] = {};
   SimpleNoCLibDtoA(uptimeTS, uptimeTSString, sizeof(uptimeTSString));
   writer.Write(Annotation::UptimeTS, uptimeTSString);
 

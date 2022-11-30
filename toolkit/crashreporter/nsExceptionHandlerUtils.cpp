@@ -6,6 +6,8 @@
 
 #include "nsExceptionHandlerUtils.h"
 
+#include <algorithm>
+
 #include "double-conversion/double-conversion.h"
 
 // Format a non-negative double to a string, without using C-library functions,
@@ -31,7 +33,7 @@ bool SimpleNoCLibDtoA(double aValue, char* aBuffer, int aBufferLength) {
     // We have to insert a decimal point.  Not worried about adding a leading
     // zero in the < 1 (point == 0) case.
     aBuffer[length + 1] = '\0';
-    for (i = length; i > point; i -= 1) {
+    for (i = length; i > std::max(point, 0); i -= 1) {
       aBuffer[i] = aBuffer[i - 1];
     }
     aBuffer[i] = '.';  // Not worried about locales
