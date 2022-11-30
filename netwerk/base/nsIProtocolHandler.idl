@@ -37,6 +37,9 @@ interface nsIProtocolHandlerWithDynamicFlags : nsISupports
     /*
      * Returns protocol flags for the given URI, which may be different from the
      * flags for another URI of the same scheme.
+     *
+     * Only DYNAMIC_URI_FLAGS may be different from the registered flags for the
+     * protocol handler.
      */
     unsigned long getFlagsForURI(in nsIURI aURI);
 };
@@ -111,6 +114,10 @@ interface nsIProtocolHandler : nsISupports
     /**************************************************************************
      * Constants for the protocol flags (the first is the default mask, the
      * others are deviations):
+     *
+     * NOTE: Protocol flags are provided when the protocol handler is
+     * registered, either through a static component or dynamically with
+     * `nsIIOService.registerProtocolHandler`.
      *
      * NOTE: Implementation must ignore any flags they do not understand.
      */
@@ -331,7 +338,8 @@ interface nsIProtocolHandler : nsISupports
      * Flags which are allowed to be different from the static flags when
      * returned from `nsIProtocolHandlerWithDynamicFlags::getFlagsForURI`.
      *
-     * All other flags must match the `protocolFlags` attribute.
+     * All other flags must match the flags provided when the protocol handler
+     * was registered.
      */
     const unsigned long DYNAMIC_URI_FLAGS =
         URI_LOADABLE_BY_ANYONE | URI_DANGEROUS_TO_LOAD |
