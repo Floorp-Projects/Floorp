@@ -30,6 +30,15 @@ export class _TopSites extends React.PureComponent {
     );
   }
 
+  reformatImageURL(url, width, height) {
+    // Change the image URL to request a size tailored for the parent container width
+    // Also: force JPEG, quality 60, no upscaling, no EXIF data
+    // Uses Thumbor: https://thumbor.readthedocs.io/en/latest/usage.html
+    return `https://img-getpocket.cdn.mozilla.net/${width}x${height}/filters:format(jpeg):quality(60):no_upscale():strip_exif()/${encodeURIComponent(
+      url
+    )}`;
+  }
+
   // For the time being we only support 1 position.
   insertSpocContent(TopSites, data, promoPosition) {
     if (
@@ -49,7 +58,11 @@ export class _TopSites extends React.PureComponent {
     }
 
     const link = {
-      customScreenshotURL: topSiteSpoc.image_src,
+      customScreenshotURL: this.reformatImageURL(
+        topSiteSpoc.raw_image_src,
+        40,
+        40
+      ),
       type: "SPOC",
       label: topSiteSpoc.title || topSiteSpoc.sponsor,
       title: topSiteSpoc.title || topSiteSpoc.sponsor,

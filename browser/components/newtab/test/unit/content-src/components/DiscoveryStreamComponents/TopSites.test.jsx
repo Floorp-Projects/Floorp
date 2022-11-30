@@ -76,14 +76,15 @@ describe("Discovery Stream <TopSites>", () => {
     const topSiteSpoc = {
       url: "foo",
       sponsor: "bar",
-      image_src: "foobar",
+      raw_image_src: "foobar",
       flight_id: "1234",
       id: "5678",
       shim: { impression: "1011" },
     };
     const data = { spocs: [topSiteSpoc] };
     const resultSpocFirst = {
-      customScreenshotURL: "foobar",
+      customScreenshotURL:
+        "https://img-getpocket.cdn.mozilla.net/40x40/filters:format(jpeg):quality(60):no_upscale():strip_exif()/foobar",
       type: "SPOC",
       label: "bar",
       title: "bar",
@@ -97,7 +98,8 @@ describe("Discovery Stream <TopSites>", () => {
       pos: 0,
     };
     const resultSpocForth = {
-      customScreenshotURL: "foobar",
+      customScreenshotURL:
+        "https://img-getpocket.cdn.mozilla.net/40x40/filters:format(jpeg):quality(60):no_upscale():strip_exif()/foobar",
       type: "SPOC",
       label: "bar",
       title: "bar",
@@ -143,7 +145,7 @@ describe("Discovery Stream <TopSites>", () => {
           {
             url: "foo2",
             sponsor: "bar2",
-            image_src: "foobar2",
+            raw_image_src: "foobar2",
             flight_id: "1234",
             id: "5678",
             shim: { impression: "1011" },
@@ -158,7 +160,8 @@ describe("Discovery Stream <TopSites>", () => {
       );
 
       const availableSpoc = {
-        customScreenshotURL: "foobar2",
+        customScreenshotURL:
+          "https://img-getpocket.cdn.mozilla.net/40x40/filters:format(jpeg):quality(60):no_upscale():strip_exif()/foobar2",
         type: "SPOC",
         label: "bar2",
         title: "bar2",

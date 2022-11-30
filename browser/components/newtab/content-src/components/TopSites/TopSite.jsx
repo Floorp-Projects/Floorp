@@ -219,7 +219,7 @@ export class TopSiteLink extends React.PureComponent {
         backgroundColor: link.backgroundColor,
         backgroundImage: hasScreenshotImage
           ? `url(${this.state.screenshotImage.url})`
-          : `url(${spocImgURL})`,
+          : `url('${spocImgURL}')`,
       };
     } else if (tippyTopIcon || faviconSize >= MIN_RICH_FAVICON_SIZE) {
       // styles and class names for top sites with rich icons
