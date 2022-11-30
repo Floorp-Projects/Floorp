@@ -21,7 +21,7 @@ graphite_sources = [
     'gr_face.cpp',
     'gr_features.cpp',
     'gr_font.cpp',
-    'gr_logging.cpp',
+    # 'gr_logging.cpp', # Unused file.
     'gr_segment.cpp',
     'gr_slot.cpp',
     'Intervals.cpp',
