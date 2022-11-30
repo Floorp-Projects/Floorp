@@ -2132,13 +2132,13 @@ export class SearchService {
     }
 
     for (let engineSetting of engineSettings) {
-      if (this._engines.has(engineSetting.id)) {
+      let eng = this.#getEngineByName(engineSetting._name);
+      if (eng) {
         lazy.logConsole.debug(
           "#loadEnginesMetadataFromSettings, transfering metadata for",
           engineSetting._name,
           engineSetting._metaData
         );
-        let eng = this._engines.get(engineSetting.id);
 
         // We used to store the alias in metadata.alias, in 1621892 that was
         // changed to only store the user set alias in metadata.alias, remove
