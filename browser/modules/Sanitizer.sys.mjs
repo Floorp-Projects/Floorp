@@ -523,7 +523,8 @@ export var Sanitizer = {
             Ci.nsIClearDataService.CLEAR_CONTENT_PREFERENCES |
             Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS |
             Ci.nsIClearDataService.CLEAR_CLIENT_AUTH_REMEMBER_SERVICE |
-            Ci.nsIClearDataService.CLEAR_CERT_EXCEPTIONS
+            Ci.nsIClearDataService.CLEAR_CERT_EXCEPTIONS |
+            Ci.nsIClearDataService.CLEAR_CREDENTIAL_MANAGER_STATE
         );
         TelemetryStopwatch.finish("FX_SANITIZE_SITESETTINGS", refObj);
       },
