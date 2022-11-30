@@ -1344,9 +1344,6 @@ inline void GCMarker::processMarkStackTop(SliceBudget& budget) {
    * stack.
    */
 
-  MOZ_ASSERT_IF(markColor() == MarkColor::Black, hasBlackEntries());
-  MOZ_ASSERT_IF(markColor() == MarkColor::Gray, hasGrayEntries());
-
   JSObject* obj;             // The object being scanned.
   SlotsOrElementsKind kind;  // The kind of slot range being scanned, if any.
   HeapSlot* base;            // Slot range base pointer.
@@ -1612,7 +1609,9 @@ inline MarkStack::TaggedPtr MarkStack::SlotsOrElementsRange::ptr() const {
   return ptr_;
 }
 
-MarkStack::MarkStack() { MOZ_ASSERT(isEmpty()); }
+MarkStack::MarkStack() : grayPosition_(0), markColor_(MarkColor::Black) {
+  MOZ_ASSERT(isEmpty());
+}
 
 MarkStack::~MarkStack() {
   MOZ_ASSERT(isEmpty());
@@ -1648,6 +1647,35 @@ void MarkStack::setMaxCapacity(size_t maxCapacity) {
 }
 #endif
 
+void MarkStack::setMarkColor(gc::MarkColor newColor) {
+  if (markColor_ == newColor) {
+    return;
+  }
+
+  MOZ_ASSERT(!hasBlackEntries());
+
+  markColor_ = newColor;
+  if (markColor_ == MarkColor::Black) {
+    grayPosition_ = position();
+  } else {
+    grayPosition_ = SIZE_MAX;
+  }
+
+  assertGrayPositionValid();
+}
+
+inline void MarkStack::assertGrayPositionValid() const {
+  // Check grayPosition_ is consistent with the current mark color. This ensures
+  // that anything pushed on to the stack will end up marked with the correct
+  // color.
+  MOZ_ASSERT((markColor() == MarkColor::Black) ==
+             (position() >= grayPosition_));
+}
+
+bool MarkStack::hasEntries(MarkColor color) const {
+  return color == MarkColor::Black ? hasBlackEntries() : hasGrayEntries();
+}
+
 void MarkStack::clear() {
   // Fall back to the smaller initial capacity so we don't hold on to excess
   // memory between GCs.
@@ -1659,6 +1687,8 @@ void MarkStack::clear() {
 inline MarkStack::TaggedPtr* MarkStack::topPtr() { return &stack()[topIndex_]; }
 
 inline bool MarkStack::pushTaggedPtr(Tag tag, Cell* ptr) {
+  assertGrayPositionValid();
+
   if (!ensureSpace(1)) {
     return false;
   }
@@ -1684,6 +1714,7 @@ inline bool MarkStack::push(JSObject* obj, SlotsOrElementsKind kind,
 
 inline bool MarkStack::push(const SlotsOrElementsRange& array) {
   array.assertValid();
+  assertGrayPositionValid();
 
   if (!ensureSpace(ValueRangeWords)) {
     return false;
@@ -1697,7 +1728,7 @@ inline bool MarkStack::push(const SlotsOrElementsRange& array) {
 }
 
 inline const MarkStack::TaggedPtr& MarkStack::peekPtr() const {
-  MOZ_ASSERT(!isEmpty());
+  MOZ_ASSERT(hasEntries(markColor()));
   return stack()[topIndex_ - 1];
 }
 
@@ -1707,7 +1738,7 @@ inline MarkStack::Tag MarkStack::peekTag() const {
 }
 
 inline MarkStack::TaggedPtr MarkStack::popPtr() {
-  MOZ_ASSERT(!isEmpty());
+  MOZ_ASSERT(hasEntries(markColor()));
   MOZ_ASSERT(!TagIsRangeTag(peekTag()));
   peekPtr().assertValid();
   topIndex_--;
@@ -1715,6 +1746,7 @@ inline MarkStack::TaggedPtr MarkStack::popPtr() {
 }
 
 inline MarkStack::SlotsOrElementsRange MarkStack::popSlotsOrElementsRange() {
+  MOZ_ASSERT(hasEntries(markColor()));
   MOZ_ASSERT(TagIsRangeTag(peekTag()));
   MOZ_ASSERT(position() >= ValueRangeWords);
 
@@ -1784,8 +1816,6 @@ GCMarker::GCMarker(JSRuntime* rt)
     : tracer_(mozilla::VariantType<MarkingTracer>(), rt),
       runtime_(rt),
       stack(),
-      grayPosition(0),
-      markColor_(MarkColor::Black),
       delayedMarkingList(nullptr),
       delayedMarkingWorkAdded(false),
       state(NotActive),
@@ -1806,9 +1836,10 @@ bool GCMarker::isDrained() { return isMarkStackEmpty() && !delayedMarkingList; }
 
 void GCMarker::start() {
   MOZ_ASSERT(state == NotActive);
+  MOZ_ASSERT(stack.isEmpty());
   state = RegularMarking;
   haveAllImplicitEdges = true;
-  markColor_ = MarkColor::Black;
+  setMarkColor(MarkColor::Black);
 
   MOZ_ASSERT(!delayedMarkingList);
   MOZ_ASSERT(markLaterArenas == 0);
@@ -1852,11 +1883,11 @@ inline void GCMarker::forEachDelayedMarkingArena(F&& f) {
 }
 
 void GCMarker::reset() {
-  markColor_ = MarkColor::Black;
-
   stack.clear();
   ClearEphemeronEdges(runtime());
   MOZ_ASSERT(isMarkStackEmpty());
+
+  setMarkColor(MarkColor::Black);
 
   forEachDelayedMarkingArena([&](Arena* arena) {
     MOZ_ASSERT(arena->onDelayedMarkingList());
@@ -1872,27 +1903,9 @@ void GCMarker::reset() {
   MOZ_ASSERT(!markLaterArenas);
 }
 
-void GCMarker::setMarkColor(gc::MarkColor newColor) {
-  if (markColor_ == newColor) {
-    return;
-  }
-
-  MOZ_ASSERT(!hasBlackEntries());
-
-  markColor_ = newColor;
-  if (markColor_ == MarkColor::Black) {
-    grayPosition = stack.position();
-  } else {
-    grayPosition = SIZE_MAX;
-  }
-}
-
 template <typename T>
 inline void GCMarker::pushTaggedPtr(T* ptr) {
   checkZone(ptr);
-  MOZ_ASSERT((markColor() == MarkColor::Black) ==
-             (stack.position() >= grayPosition));
-
   if (!stack.push(ptr)) {
     delayMarkingChildrenOnOOM(ptr);
   }
@@ -1903,8 +1916,6 @@ void GCMarker::pushValueRange(JSObject* obj, SlotsOrElementsKind kind,
   checkZone(obj);
   MOZ_ASSERT(obj->is<NativeObject>());
   MOZ_ASSERT(start <= end);
-  MOZ_ASSERT((markColor() == MarkColor::Black) ==
-             (stack.position() >= grayPosition));
 
   if (start == end) {
     return;
@@ -2076,8 +2087,7 @@ void GCMarker::processDelayedMarkingList(MarkColor color) {
         markDelayedChildren(arena);
       }
     }
-    while ((color == MarkColor::Black && hasBlackEntries()) ||
-           (color == MarkColor::Gray && hasGrayEntries())) {
+    while (stack.hasEntries(color)) {
       SliceBudget budget = SliceBudget::unlimited();
       processMarkStackTop(budget);
     }
