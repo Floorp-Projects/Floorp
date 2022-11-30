@@ -56,7 +56,7 @@ SOURCES += [
     's_cbrt.cpp',
     's_ceil.cpp',
     's_ceilf.cpp',
-    's_copysign.cpp',
+    # 's_copysign.cpp', # Unused file.
     's_cos.cpp',
     's_expm1.cpp',
     's_fabs.cpp',
