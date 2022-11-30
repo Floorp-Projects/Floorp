@@ -117,3 +117,8 @@ Success!
 
 At this point, you should be able to invoke Mach and manage your version control system outside
 of MozillaBuild.
+
+.. tip::
+
+  `See here <https://crisal.io/words/2022/11/22/msys2-firefox-development.html>`__ for a detailed guide on
+  installing and customizing a development environment with MSYS2, zsh, and Windows Terminal.
