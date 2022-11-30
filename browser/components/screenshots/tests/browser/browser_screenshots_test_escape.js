@@ -17,11 +17,29 @@ add_task(async function test_fullpageScreenshot() {
       // click toolbar button so panel shows
       helper.triggerUIFromToolbar();
 
-      await helper.waitForOverlay();
+      let panel = gBrowser.selectedBrowser.ownerDocument.querySelector(
+        "#screenshotsPagePanel"
+      );
+      await BrowserTestUtils.waitForMutationCondition(
+        panel,
+        { attributes: true },
+        () => {
+          return BrowserTestUtils.is_visible(panel);
+        }
+      );
+      ok(BrowserTestUtils.is_visible(panel), "Panel buttons are visible");
 
-      BrowserTestUtils.synthesizeKey("KEY_Escape", {}, browser);
+      EventUtils.synthesizeKey("KEY_Escape");
 
-      await helper.waitForOverlayClosed();
+      await BrowserTestUtils.waitForMutationCondition(
+        panel,
+        { attributes: true },
+        () => {
+          return BrowserTestUtils.is_hidden(panel);
+        }
+      );
+
+      ok(BrowserTestUtils.is_hidden(panel), "Panel buttons are hidden");
     }
   );
 });
