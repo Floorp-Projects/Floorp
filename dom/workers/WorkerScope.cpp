@@ -451,6 +451,13 @@ void WorkerGlobalScope::NoteShuttingDown() {
     mNavigator->Invalidate();
     mNavigator = nullptr;
   }
+
+  if (mPerformance) {
+    RefPtr<PerformanceWorker> pw =
+        static_cast<PerformanceWorker*>(mPerformance.get());
+    MOZ_ASSERT(pw);
+    pw->NoteShuttingDown();
+  }
 }
 
 Crypto* WorkerGlobalScope::GetCrypto(ErrorResult& aError) {

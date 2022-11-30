@@ -82,6 +82,8 @@ class PerformanceWorker final : public Performance {
 
   bool CrossOriginIsolated() const override;
 
+  void NoteShuttingDown();
+
  protected:
   ~PerformanceWorker();
 

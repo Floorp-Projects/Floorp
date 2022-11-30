@@ -19,6 +19,7 @@
 #include "mozilla/dom/AnimationFrameProvider.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ImageBitmapSource.h"
+#include "mozilla/dom/PerformanceWorker.h"
 #include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "nsCOMPtr.h"

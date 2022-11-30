@@ -18,7 +18,9 @@ PerformanceWorker::PerformanceWorker(WorkerPrivate* aWorkerPrivate)
 }
 
 PerformanceWorker::~PerformanceWorker() {
-  mWorkerPrivate->AssertIsOnWorkerThread();
+  if (mWorkerPrivate) {
+    mWorkerPrivate->AssertIsOnWorkerThread();
+  }
 }
 
 void PerformanceWorker::InsertUserEntry(PerformanceEntry* aEntry) {
@@ -35,19 +37,37 @@ void PerformanceWorker::InsertUserEntry(PerformanceEntry* aEntry) {
 }
 
 TimeStamp PerformanceWorker::CreationTimeStamp() const {
-  return mWorkerPrivate->CreationTimeStamp();
+  MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate);
+  if (mWorkerPrivate) {
+    return mWorkerPrivate->CreationTimeStamp();
+  }
+  return TimeStamp();
 }
 
 DOMHighResTimeStamp PerformanceWorker::CreationTime() const {
-  return mWorkerPrivate->CreationTime();
+  MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate);
+  if (mWorkerPrivate) {
+    return mWorkerPrivate->CreationTime();
+  }
+  return DOMHighResTimeStamp();
 }
 
 uint64_t PerformanceWorker::GetRandomTimelineSeed() {
-  return mWorkerPrivate->GetRandomTimelineSeed();
+  MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate);
+  if (mWorkerPrivate) {
+    return mWorkerPrivate->GetRandomTimelineSeed();
+  }
+  return 0;
 }
 
 bool PerformanceWorker::CrossOriginIsolated() const {
-  return mWorkerPrivate->CrossOriginIsolated();
+  MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate);
+  if (mWorkerPrivate) {
+    return mWorkerPrivate->CrossOriginIsolated();
+  }
+  return false;
 }
+
+void PerformanceWorker::NoteShuttingDown() { mWorkerPrivate = nullptr; }
 
 }  // namespace mozilla::dom
