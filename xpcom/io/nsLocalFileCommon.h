@@ -7,6 +7,6 @@
 #ifndef _NS_LOCAL_FILE_COMMON_H_
 #define _NS_LOCAL_FILE_COMMON_H_
 
-extern const char* const sExecutableExts[98];
+extern const char* const sExecutableExts[101];
 
 #endif
