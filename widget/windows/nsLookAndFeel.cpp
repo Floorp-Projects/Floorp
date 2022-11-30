@@ -744,6 +744,7 @@ LookAndFeelFont nsLookAndFeel::GetLookAndFeelFont(LookAndFeel::FontID anID) {
     case LookAndFeel::FontID::StatusBar:
       result = GetLookAndFeelFontInternal(ncm.lfStatusFont, false);
       break;
+    case LookAndFeel::FontID::MozDialog:
     case LookAndFeel::FontID::MozButton:
     case LookAndFeel::FontID::MozField:
     case LookAndFeel::FontID::MozList:
