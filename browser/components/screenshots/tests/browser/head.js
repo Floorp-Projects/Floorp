@@ -94,6 +94,21 @@ class ScreenshotsHelper {
   }
 
   async waitForOverlayClosed() {
+    let panel = gBrowser.selectedBrowser.ownerDocument.querySelector(
+      "#screenshotsPagePanel"
+    );
+    if (!panel) {
+      panel = await this.waitForPanel();
+    }
+    await BrowserTestUtils.waitForMutationCondition(
+      panel,
+      { attributes: true },
+      () => {
+        return BrowserTestUtils.is_hidden(panel);
+      }
+    );
+    ok(BrowserTestUtils.is_hidden(panel), "Panel buttons are hidden");
+
     await BrowserTestUtils.waitForCondition(async () => {
       let init = !(await this.isOverlayInitialized());
       info("Is overlay initialized: " + !init);
@@ -181,6 +196,10 @@ class ScreenshotsHelper {
     await ContentTask.spawn(this.browser, [x, y], async ([xPos, yPos]) => {
       content.window.scroll(xPos, yPos);
     });
+  }
+
+  clickDownloadButton() {
+    mouse.click(this.endX - 60, this.endY + 30);
   }
 
   clickCopyButton(overrideX = null, overrideY = null) {
