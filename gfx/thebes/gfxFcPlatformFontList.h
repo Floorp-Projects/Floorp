@@ -409,6 +409,12 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
  private:
 #endif
 
+  // Cache for most recently used language code in FindAndAddFamiliesLocked,
+  // and the result of checking whether to use lang-specific lookups.
+  RefPtr<nsAtom> mPrevLanguage;
+  nsCString mSampleLang;
+  bool mUseCustomLookups = false;
+
   // By default, font prefs under Linux are set to simply lookup
   // via fontconfig the appropriate font for serif/sans-serif/monospace.
   // Rather than check each time a font pref is used, check them all at startup
