@@ -27,6 +27,19 @@ function backgroundWithDNRAPICallHandlers() {
             )
           );
         break;
+      case "updateEnabledRulesets":
+        // Run (one or more than one concurrently) updateEnabledRulesets calls
+        // and report back the results.
+        result = await Promise.all(
+          args.map(arg => {
+            return browser.declarativeNetRequest
+              .updateEnabledRulesets(arg)
+              .catch(err => {
+                return { rejectedWithErrorMessage: err.message };
+              });
+          })
+        );
+        break;
       default:
         browser.test.fail(`Unexpected test message: ${msg}`);
         return;
@@ -142,6 +155,18 @@ const assertDNRTestMatchOutcome = async (
   );
 };
 
+const assertDNRGetEnabledRulesets = async (
+  extensionTestWrapper,
+  expectedRulesetIds
+) => {
+  extensionTestWrapper.sendMessage("getEnabledRulesets");
+  Assert.deepEqual(
+    await extensionTestWrapper.awaitMessage("getEnabledRulesets:done"),
+    expectedRulesetIds,
+    "Got the expected enabled ruleset ids from dnr.getEnabledRulesets API method"
+  );
+};
+
 const assertDNRStoreData = async (
   dnrStore,
   extensionTestWrapper,
@@ -159,13 +184,6 @@ const assertDNRStoreData = async (
     );
     return acc;
   }, new Map());
-
-  extensionTestWrapper.sendMessage("getEnabledRulesets");
-  Assert.deepEqual(
-    await extensionTestWrapper.awaitMessage("getEnabledRulesets:done"),
-    expectedRulesetIds,
-    "Got the expected enabled ruleset ids from dnr.getEnabledRulesets API method"
-  );
 
   ok(
     dnrStore._dataPromises.has(extUUID),
@@ -267,6 +285,8 @@ add_task(async function test_load_static_rules() {
   const dnrStore = ExtensionDNRStore._getStoreForTesting();
 
   info("Verify DNRStore data for the test extension");
+  await assertDNRGetEnabledRulesets(extension, ["ruleset_1", "ruleset_2"]);
+
   await assertDNRStoreData(dnrStore, extension, {
     ruleset_1: getSchemaNormalizedRules(extension, ruleset1Data),
     ruleset_2: getSchemaNormalizedRules(extension, ruleset2Data),
@@ -338,6 +358,8 @@ add_task(async function test_load_static_rules() {
 
   await addon.enable();
   await extension.awaitMessage("bgpage:ready");
+  await assertDNRGetEnabledRulesets(extension, ["ruleset_1", "ruleset_2"]);
+
   await assertDNRStoreData(dnrStore, extension, {
     ruleset_1: getSchemaNormalizedRules(extension, ruleset1Data),
     ruleset_2: getSchemaNormalizedRules(extension, ruleset2Data),
@@ -377,6 +399,7 @@ add_task(async function test_load_static_rules() {
     })
   );
   await extension.awaitMessage("bgpage:ready");
+  await assertDNRGetEnabledRulesets(extension, ["ruleset_2"]);
   await assertDNRStoreData(dnrStore, extension, {
     ruleset_2: getSchemaNormalizedRules(extension, ruleset2Data),
   });
@@ -416,6 +439,7 @@ add_task(async function test_load_static_rules() {
     })
   );
   await extension.awaitMessage("bgpage:ready");
+  await assertDNRGetEnabledRulesets(extension, ["ruleset_1"]);
   await assertDNRStoreData(dnrStore, extension, {
     ruleset_1: getSchemaNormalizedRules(extension, ruleset1Data),
   });
@@ -443,6 +467,7 @@ add_task(async function test_load_static_rules() {
     })
   );
   await extension.awaitMessage("bgpage:ready");
+  await assertDNRGetEnabledRulesets(extension, []);
   await assertDNRStoreData(dnrStore, extension, {});
 
   info("Verify matched rules using testMatchOutcome");
@@ -672,6 +697,137 @@ add_task(async function test_ruleset_validation() {
   }
 });
 
+add_task(async function test_updateEnabledRuleset_id_validation() {
+  const rule_resources = [
+    {
+      id: "ruleset_1",
+      enabled: true,
+      path: "ruleset_1.json",
+    },
+    {
+      id: "ruleset_2",
+      enabled: false,
+      path: "ruleset_2.json",
+    },
+  ];
+
+  const ruleset1Data = [
+    getDNRRule({
+      action: { type: "allow" },
+      condition: { resourceTypes: ["main_frame"] },
+    }),
+  ];
+  const ruleset2Data = [
+    getDNRRule({
+      action: { type: "block" },
+      condition: { resourceTypes: ["main_frame", "script"] },
+    }),
+  ];
+
+  const files = {
+    "ruleset_1.json": JSON.stringify(ruleset1Data),
+    "ruleset_2.json": JSON.stringify(ruleset2Data),
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(
+    getDNRExtension({ rule_resources, files })
+  );
+
+  await extension.startup();
+  await extension.awaitMessage("bgpage:ready");
+
+  await assertDNRGetEnabledRulesets(extension, ["ruleset_1"]);
+
+  const dnrStore = ExtensionDNRStore._getStoreForTesting();
+  await assertDNRStoreData(dnrStore, extension, {
+    ruleset_1: getSchemaNormalizedRules(extension, ruleset1Data),
+  });
+
+  const invalidStaticRulesetIds = [
+    // The following two are reserved for session and dynamic rules.
+    "_session",
+    "_dynamic",
+    "ruleset_non_existing",
+  ];
+
+  for (const invalidRSId of invalidStaticRulesetIds) {
+    extension.sendMessage(
+      "updateEnabledRulesets",
+      // Only in rulesets to be disabled.
+      { disableRulesetIds: [invalidRSId] },
+      // Only in rulesets to be enabled.
+      { enableRulesetIds: [invalidRSId] },
+      // In both rulesets to be enabled and disabled.
+      { disableRulesetIds: [invalidRSId], enableRulesetIds: [invalidRSId] },
+      // Along with existing rulesets (and expected the existing rulesets
+      // to stay unchanged due to the invalid ruleset ids.)
+      {
+        disableRulesetIds: [invalidRSId, "ruleset_1"],
+        enableRulesetIds: [invalidRSId, "ruleset_2"],
+      }
+    );
+    const [
+      resInDisable,
+      resInEnable,
+      resInEnableAndDisable,
+      resInSameRequestAsValid,
+    ] = await extension.awaitMessage("updateEnabledRulesets:done");
+    await Assert.rejects(
+      Promise.reject(resInDisable?.rejectedWithErrorMessage),
+      new RegExp(`Invalid ruleset id: "${invalidRSId}"`),
+      `Got the expected rejection on invalid ruleset id "${invalidRSId}" in disableRulesetIds`
+    );
+    await Assert.rejects(
+      Promise.reject(resInEnable?.rejectedWithErrorMessage),
+      new RegExp(`Invalid ruleset id: "${invalidRSId}"`),
+      `Got the expected rejection on invalid ruleset id "${invalidRSId}" in enableRulesetIds`
+    );
+    await Assert.rejects(
+      Promise.reject(resInEnableAndDisable?.rejectedWithErrorMessage),
+      new RegExp(`Invalid ruleset id: "${invalidRSId}"`),
+      `Got the expected rejection on invalid ruleset id "${invalidRSId}" in both enable/disableRulesetIds`
+    );
+    await Assert.rejects(
+      Promise.reject(resInSameRequestAsValid?.rejectedWithErrorMessage),
+      new RegExp(`Invalid ruleset id: "${invalidRSId}"`),
+      `Got the expected rejection on invalid ruleset id "${invalidRSId}" along with valid ruleset ids`
+    );
+  }
+
+  // Confirm that the expected rulesets didn't change neither.
+  await assertDNRGetEnabledRulesets(extension, ["ruleset_1"]);
+  await assertDNRStoreData(dnrStore, extension, {
+    ruleset_1: getSchemaNormalizedRules(extension, ruleset1Data),
+  });
+
+  // - List the same ruleset ids more than ones is expected to work and
+  //   to be resulting in the same set of rules being enabled
+  // - Disabling and Enabling the same ruleset id should result in the
+  //   ruleset being enabled.
+  await extension.sendMessage("updateEnabledRulesets", {
+    disableRulesetIds: [
+      "ruleset_1",
+      "ruleset_1",
+      "ruleset_2",
+      "ruleset_2",
+      "ruleset_2",
+    ],
+    enableRulesetIds: ["ruleset_2", "ruleset_2"],
+  });
+  Assert.deepEqual(
+    await extension.awaitMessage("updateEnabledRulesets:done"),
+    [undefined],
+    "Expect the updateEnabledRulesets to result successfully"
+  );
+
+  await assertDNRGetEnabledRulesets(extension, ["ruleset_2"]);
+  await assertDNRStoreData(dnrStore, extension, {
+    ruleset_2: getSchemaNormalizedRules(extension, ruleset2Data),
+  });
+
+  await extension.unload();
+});
+
 add_task(async function test_static_rulesets_limits() {
   const dnrStore = ExtensionDNRStore._getStoreForTesting();
 
@@ -719,13 +875,14 @@ add_task(async function test_static_rulesets_limits() {
     })
   );
 
+  const expectedEnabledRulesets = {};
+
   const { messages } = await AddonTestUtils.promiseConsoleOutput(async () => {
     ExtensionTestUtils.failOnSchemaWarnings(false);
     await extension.startup();
     ExtensionTestUtils.failOnSchemaWarnings(true);
     await extension.awaitMessage("bgpage:ready");
 
-    const expectedEnabledRulesets = {};
     for (let i = 0; i < MAX_NUMBER_OF_ENABLED_STATIC_RULESETS; i++) {
       expectedEnabledRulesets[`ruleset_${i}`] = getSchemaNormalizedRules(
         extension,
@@ -733,6 +890,10 @@ add_task(async function test_static_rulesets_limits() {
       );
     }
 
+    await assertDNRGetEnabledRulesets(
+      extension,
+      Array.from(Object.keys(expectedEnabledRulesets))
+    );
     await assertDNRStoreData(dnrStore, extension, expectedEnabledRulesets);
   });
 
@@ -752,6 +913,85 @@ add_task(async function test_static_rulesets_limits() {
       },
     ],
   });
+
+  info(
+    "Verify updateEnabledRulesets reject when the request is exceeding the enabled rulesets count limit"
+  );
+  extension.sendMessage("updateEnabledRulesets", {
+    disableRulesetIds: ["ruleset_0"],
+    enableRulesetIds: ["ruleset_10", "ruleset_11"],
+  });
+
+  await Assert.rejects(
+    extension.awaitMessage("updateEnabledRulesets:done").then(results => {
+      if (results[0].rejectedWithErrorMessage) {
+        return Promise.reject(new Error(results[0].rejectedWithErrorMessage));
+      }
+      return results[0];
+    }),
+    /updatedEnabledRulesets request is exceeding MAX_NUMBER_OF_ENABLED_STATIC_RULESETS/,
+    "Expected rejection on updateEnabledRulesets exceeting enabled rulesets count limit"
+  );
+
+  // Confirm that the expected rulesets didn't change neither.
+  await assertDNRGetEnabledRulesets(
+    extension,
+    Array.from(Object.keys(expectedEnabledRulesets))
+  );
+  await assertDNRStoreData(dnrStore, extension, expectedEnabledRulesets);
+
+  info(
+    "Verify updateEnabledRulesets applies the expected changes when resolves successfully"
+  );
+  extension.sendMessage(
+    "updateEnabledRulesets",
+    {
+      disableRulesetIds: ["ruleset_0"],
+      enableRulesetIds: ["ruleset_10"],
+    },
+    {
+      disableRulesetIds: ["ruleset_10"],
+      enableRulesetIds: ["ruleset_11"],
+    }
+  );
+  await extension.awaitMessage("updateEnabledRulesets:done");
+
+  // Expect ruleset_0 disabled, ruleset_10 to be enabled but then disabled by the
+  // second update queued after the first one, and ruleset_11 to be enabled.
+  delete expectedEnabledRulesets.ruleset_0;
+  expectedEnabledRulesets.ruleset_11 = getSchemaNormalizedRules(
+    extension,
+    rules
+  );
+
+  await assertDNRGetEnabledRulesets(
+    extension,
+    Array.from(Object.keys(expectedEnabledRulesets))
+  );
+  await assertDNRStoreData(dnrStore, extension, expectedEnabledRulesets);
+
+  // Ensure all changes were stored and reloaded from disk store and the
+  // DNR store update queue can accept new updates.
+  info("Verify static rules load and updates after extension is restarted");
+  await AddonTestUtils.promiseRestartManager();
+  await extension.awaitStartup();
+  await extension.awaitMessage("bgpage:ready");
+  await assertDNRGetEnabledRulesets(
+    extension,
+    Array.from(Object.keys(expectedEnabledRulesets))
+  );
+  await assertDNRStoreData(dnrStore, extension, expectedEnabledRulesets);
+
+  extension.sendMessage("updateEnabledRulesets", {
+    disableRulesetIds: ["ruleset_11"],
+  });
+  await extension.awaitMessage("updateEnabledRulesets:done");
+  delete expectedEnabledRulesets.ruleset_11;
+  await assertDNRGetEnabledRulesets(
+    extension,
+    Array.from(Object.keys(expectedEnabledRulesets))
+  );
+  await assertDNRStoreData(dnrStore, extension, expectedEnabledRulesets);
 
   await extension.unload();
 });

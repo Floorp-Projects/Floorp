@@ -6,18 +6,24 @@ const { ExtensionParent } = ChromeUtils.import(
   "resource://gre/modules/ExtensionParent.jsm"
 );
 
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
+
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Schemas: "resource://gre/modules/Schemas.jsm",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
   ExtensionDNR: "resource://gre/modules/ExtensionDNR.sys.mjs",
 });
 
+const { DefaultMap, ExtensionError } = ExtensionUtils;
 const { StartupCache } = ExtensionParent;
 
 // DNR Rules store subdirectory/file names and file extensions.
@@ -79,6 +85,63 @@ class StoreData {
   }
 }
 
+class Queue {
+  #tasks = [];
+  #runningTask = null;
+  #closed = false;
+
+  get hasPendingTasks() {
+    return !!this.#runningTask || !!this.#tasks.length;
+  }
+
+  get isClosed() {
+    return this.#closed;
+  }
+
+  async close() {
+    if (this.#closed) {
+      return;
+    }
+    const drainedQueuePromise = this.queueTask(() => {});
+    this.#closed = true;
+    return drainedQueuePromise;
+  }
+
+  queueTask(callback) {
+    if (this.#closed) {
+      throw new Error("Unexpected queueTask call on closed queue");
+    }
+    const deferred = lazy.PromiseUtils.defer();
+    this.#tasks.push({ callback, deferred });
+    // Run the queued task right away if there isn't one already running.
+    if (!this.#runningTask) {
+      this.#runNextTask();
+    }
+    return deferred.promise;
+  }
+
+  async #runNextTask() {
+    if (!this.#tasks.length) {
+      this.#runningTask = null;
+      return;
+    }
+
+    this.#runningTask = this.#tasks.shift();
+    const { callback, deferred } = this.#runningTask;
+    try {
+      let result = callback();
+      if (result instanceof Promise) {
+        result = await result;
+      }
+      deferred.resolve(result);
+    } catch (err) {
+      deferred.reject(err);
+    }
+
+    this.#runNextTask();
+  }
+}
+
 /**
  * Class managing the rulesets persisted across browser sessions.
  *
@@ -103,6 +166,8 @@ class RulesetsStore {
     this._dataPromises = new Map();
     // Map<extensionUUID, Promise<void>>
     this._savePromises = new Map();
+    // Map<extensionUUID, Queue>
+    this._dataUpdateQueues = new DefaultMap(() => new Queue());
     // Map<extensionUUID, { close: Function }>
     this._shutdownHandlers = new Map();
     // Promise to await on to ensure the store parent directory exist
@@ -182,6 +247,27 @@ class RulesetsStore {
   }
 
   /**
+   * Update the enabled rulesets, queue changes to prevent races between calls
+   * that may be triggered while an update is still in process.
+   *
+   * @param {Extension}     extension
+   * @param {object}        params
+   * @param {Array<string>} [params.disableRulesetIds=[]]
+   * @param {Array<string>} [params.enableRulesetIds=[]]
+   */
+  async updateEnabledStaticRulesets(
+    extension,
+    { disableRulesetIds, enableRulesetIds }
+  ) {
+    return this._dataUpdateQueues.get(extension.uuid).queueTask(() => {
+      return this.#updateEnabledStaticRulesets(extension, {
+        disableRulesetIds,
+        enableRulesetIds,
+      });
+    });
+  }
+
+  /**
    * Return the store file path for the given the extension's uuid.
    *
    * @param {string} extensionUUID
@@ -227,7 +313,23 @@ class RulesetsStore {
     let shutdownHandler = this._shutdownHandlers.get(extensionUUID);
     if (!shutdownHandler) {
       shutdownHandler = {
-        close: () => this.unloadData(extensionUUID),
+        close: async () => {
+          // Wait for the update tasks to have been executed, then unload the
+          // data.
+          const dataUpdateQueue = this._dataUpdateQueues.has(extensionUUID)
+            ? this._dataUpdateQueues.get(extensionUUID)
+            : undefined;
+          if (dataUpdateQueue) {
+            try {
+              await dataUpdateQueue.close();
+            } catch (err) {
+              // Unexpected error on closing the update queue.
+              Cu.reportError(err);
+            }
+            this._dataUpdateQueues.delete(extensionUUID);
+          }
+          this.unloadData(extensionUUID);
+        },
       };
       this._shutdownHandlers.set(extensionUUID, shutdownHandler);
     }
@@ -247,6 +349,7 @@ class RulesetsStore {
       await savePromise;
       this._savePromises.delete(extensionUUID);
     }
+
     this._dataPromises.delete(extensionUUID);
     this._data.delete(extensionUUID);
   }
@@ -588,6 +691,80 @@ class RulesetsStore {
       this._savePromises.delete(extensionUUID);
     }
   }
+
+  /**
+   * Internal implementation for updating the enabled rulesets and enforcing
+   * static rulesets and rules count limits.
+   *
+   * @param {Extension}     extension
+   * @param {object}        params
+   * @param {Array<string>} [params.disableRulesetIds=[]]
+   * @param {Array<string>} [params.enableRulesetIds=[]]
+   */
+  async #updateEnabledStaticRulesets(
+    extension,
+    { disableRulesetIds, enableRulesetIds }
+  ) {
+    const ruleResources =
+      extension.manifest.declarative_net_request?.rule_resources;
+    if (!Array.isArray(ruleResources)) {
+      return;
+    }
+
+    const enabledRulesets = await this.getEnabledStaticRulesets(extension);
+    const updatedEnabledRulesets = new Map();
+    let disableIds = new Set(disableRulesetIds);
+    let enableIds = new Set(enableRulesetIds);
+
+    // valiate the ruleset ids for existence (which will also reject calls
+    // including the reserved _session and _dynamic, because static rulesets
+    // id are validated as part of the manifest validation and they are not
+    // allowed to start with '_').
+    const existingIds = new Set(ruleResources.map(rs => rs.id));
+    const errorOnInvalidRulesetIds = rsIdSet => {
+      for (const rsId of rsIdSet) {
+        if (!existingIds.has(rsId)) {
+          throw new ExtensionError(`Invalid ruleset id: "${rsId}"`);
+        }
+      }
+    };
+    errorOnInvalidRulesetIds(disableIds);
+    errorOnInvalidRulesetIds(enableIds);
+
+    // Copy into the updatedEnabledRulesets Map any ruleset that is not
+    // requested to be disabled or is enabled back in the same request.
+    for (const [rulesetId, ruleset] of enabledRulesets) {
+      if (!disableIds.has(rulesetId) || enableIds.has(rulesetId)) {
+        updatedEnabledRulesets.set(rulesetId, ruleset);
+        enableIds.delete(rulesetId);
+      }
+    }
+
+    const { MAX_NUMBER_OF_ENABLED_STATIC_RULESETS } = lazy.ExtensionDNR.limits;
+
+    const maxNewRulesetsCount =
+      MAX_NUMBER_OF_ENABLED_STATIC_RULESETS - updatedEnabledRulesets.size;
+
+    if (enableIds.size > maxNewRulesetsCount) {
+      // Log an error for the developer.
+      throw new ExtensionError(
+        `updatedEnabledRulesets request is exceeding MAX_NUMBER_OF_ENABLED_STATIC_RULESETS`
+      );
+    }
+
+    const newRulesets = await this.#getManifestStaticRulesets(
+      extension,
+      Array.from(enableIds)
+    );
+
+    for (const [rulesetId, ruleset] of newRulesets.entries()) {
+      updatedEnabledRulesets.set(rulesetId, ruleset);
+    }
+
+    this._data.get(extension.uuid).staticRulesets = updatedEnabledRulesets;
+    await this.save(extension);
+    await this.updateRulesetManager(extension);
+  }
 }
 
 const store = new RulesetsStore();
@@ -659,7 +836,9 @@ export const ExtensionDNRStore = {
     return store.clearOnUninstall(extensionUUID);
   },
   initExtension,
-
+  async updateEnabledStaticRulesets(extension, updateRulesetOptions) {
+    await store.updateEnabledStaticRulesets(extension, updateRulesetOptions);
+  },
   // Test-only helpers
   _getStoreForTesting() {
     requireTestOnlyCallers();
