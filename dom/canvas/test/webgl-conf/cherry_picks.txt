@@ -1,3 +1,12 @@
+commit 4f57098d0dbad68f41c87835fca5a6f0ba669350
+Author: Gregg Tavares <github@greggman.com>
+Date:   Thu Nov 24 10:29:32 2022 -0800
+
+    Test calling getUniform from non-current program
+    
+    It's possible this is already tested but I didn't see anything
+    obvious and Firefox fails this test
+
 commit d308751948807f08b36d06b0e8c835a1ffe078ae
 Author: Kelsey Gilbert <jdashg@gmail.com>
 Date:   Tue Oct 18 15:21:32 2022 -0700
