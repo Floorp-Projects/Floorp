@@ -19,47 +19,39 @@ async function testWithPref() {
       r
     );
   });
-  expectParseable("(forced-colors: none)");
-  expectParseable("(forced-colors: active)");
-  expectParseable("(forced-colors)");
+  expectKnown("(forced-colors: none)");
+  expectKnown("(forced-colors: active)");
+  expectKnown("(forced-colors)");
   SimpleTest.finish();
 }
 
-function expect(q, shouldBeParseable) {
-  const NOT_PARSEABLE_TEXT = "@media screen, not all {\n}";
-
-  let text = "@media screen, " + q + " {\n}";
-  SHEET.textContent = text;
-
-  let rules = SHEET.sheet.cssRules;
-  is(rules.length, 1, `Rule not parsed for ${q}`);
-  is(rules[0].cssText,
-     shouldBeParseable ? text : NOT_PARSEABLE_TEXT,
-     `Serialization for ${q}`);
+function expect(q, shouldBeKnown) {
+  is(matchMedia(q).media, q, "Serialization should roundtrip");
+  is(matchMedia(`${q} or (not ${q})`).matches, shouldBeKnown, `Query should${shouldBeKnown ? "" : " not"} be known`);
 }
 
-function expectParseable(q) {
+function expectKnown(q) {
   expect(q, true);
 }
 
-function expectNonParseable(q) {
+function expectUnkown(q) {
   expect(q, false);
 }
 
 // Test a toggle that should always match for `1` or `0`.
 function testToggle(toggle) {
-  expectParseable(`(${toggle})`);
-  expectParseable(`(${toggle}: 1)`);
-  expectParseable(`(${toggle}: 0)`);
+  expectKnown(`(${toggle})`);
+  expectKnown(`(${toggle}: 1)`);
+  expectKnown(`(${toggle}: 0)`);
 
-  expectNonParseable(`(${toggle}: foo)`);
-  expectNonParseable(`(${toggle}: true)`);
-  expectNonParseable(`(${toggle}: false)`);
-  expectNonParseable(`(${toggle}: -1)`);
-  expectNonParseable(`(min-${toggle}: 0)`);
-  expectNonParseable(`(max-${toggle}: 0)`);
-  expectNonParseable(`(max-${toggle})`);
-  expectNonParseable(`(min-${toggle})`);
+  expectUnkown(`(${toggle}: foo)`);
+  expectUnkown(`(${toggle}: true)`);
+  expectUnkown(`(${toggle}: false)`);
+  expectUnkown(`(${toggle}: -1)`);
+  expectUnkown(`(min-${toggle}: 0)`);
+  expectUnkown(`(max-${toggle}: 0)`);
+  expectUnkown(`(max-${toggle})`);
+  expectUnkown(`(min-${toggle})`);
 
   let matches_1 = matchMedia(`(${toggle}: 1)`).matches;
   let matches_0 = matchMedia(`(${toggle}: 0)`).matches;
@@ -72,21 +64,21 @@ for (let toggle of CHROME_ONLY_TOGGLES) {
 }
 
 for (let query of CHROME_ONLY_QUERIES) {
-  expectParseable(query);
+  expectKnown(query);
 }
 
 // These might be exposed to content by pref, we just want to make sure they're
 // always exposed to chrome.
-expectParseable("(prefers-contrast: more)")
-expectParseable("(prefers-contrast: no-preference)")
-expectParseable("(prefers-contrast: less)");
-expectParseable("(prefers-contrast)")
+expectKnown("(prefers-contrast: more)")
+expectKnown("(prefers-contrast: no-preference)")
+expectKnown("(prefers-contrast: less)");
+expectKnown("(prefers-contrast)")
 
-expectParseable("(forced-colors: none)");
-expectParseable("(forced-colors: active)");
-expectParseable("(forced-colors)");
+expectKnown("(forced-colors: none)");
+expectKnown("(forced-colors: active)");
+expectKnown("(forced-colors)");
 
-expectNonParseable("(-moz-platform: )");
+expectUnkown("(-moz-platform: )");
 
 testWithPref();
 </script>
