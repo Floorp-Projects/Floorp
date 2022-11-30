@@ -35,7 +35,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 
 class GeckoViewStorage extends JSONFile {
   constructor() {
-    super({ path: null });
+    super({ path: null, sanitizedBasename: "GeckoViewStorage" });
   }
 
   async updateCreditCards() {
