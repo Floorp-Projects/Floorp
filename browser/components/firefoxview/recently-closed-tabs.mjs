@@ -22,8 +22,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 );
 
 const SS_NOTIFY_CLOSED_OBJECTS_CHANGED = "sessionstore-closed-objects-changed";
-const SS_NOTIFY_CLOSED_OBJECTS_TAB_STATE_CHANGED =
-  "sessionstore-closed-objects-tab-state-changed";
+const SS_NOTIFY_BROWSER_SHUTDOWN_FLUSH = "sessionstore-browser-shutdown-flush";
 const UI_OPEN_STATE =
   "browser.tabs.firefox-view.ui-state.recently-closed-tabs.open";
 
@@ -332,7 +331,7 @@ class RecentlyClosedTabsContainer extends HTMLDetailsElement {
       );
       Services.obs.addObserver(
         this.boundObserve,
-        SS_NOTIFY_CLOSED_OBJECTS_TAB_STATE_CHANGED
+        SS_NOTIFY_BROWSER_SHUTDOWN_FLUSH
       );
       this.observerAdded = true;
     }
@@ -346,7 +345,7 @@ class RecentlyClosedTabsContainer extends HTMLDetailsElement {
       );
       Services.obs.removeObserver(
         this.boundObserve,
-        SS_NOTIFY_CLOSED_OBJECTS_TAB_STATE_CHANGED
+        SS_NOTIFY_BROWSER_SHUTDOWN_FLUSH
       );
       this.observerAdded = false;
     }
@@ -365,7 +364,15 @@ class RecentlyClosedTabsContainer extends HTMLDetailsElement {
     }
   }
 
-  observe = () => this.list.updateTabsList();
+  observe(subject, topic, data) {
+    if (
+      topic == SS_NOTIFY_CLOSED_OBJECTS_CHANGED ||
+      (topic == SS_NOTIFY_BROWSER_SHUTDOWN_FLUSH &&
+        subject.ownerGlobal == getWindow())
+    ) {
+      this.list.updateTabsList();
+    }
+  }
 
   onLoad() {
     if (this.getClosedTabCount() == 0) {
