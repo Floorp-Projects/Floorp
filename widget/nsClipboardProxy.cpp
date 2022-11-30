@@ -58,7 +58,7 @@ nsClipboardProxy::GetData(nsITransferable* aTransferable,
                                                  &dataTransfer);
   return nsContentUtils::IPCTransferableToTransferable(
       dataTransfer, false /* aAddDataFlavor */, aTransferable,
-      ContentChild::GetSingleton());
+      ContentChild::GetSingleton(), false /* aFilterUnknownFlavors */);
 }
 
 NS_IMETHODIMP

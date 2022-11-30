@@ -2884,17 +2884,20 @@ class nsContentUtils {
    */
   static bool IsFlavorImage(const nsACString& aFlavor);
 
+  static bool IPCDataTransferItemHasKnownFlavor(
+      const mozilla::dom::IPCDataTransferItem& aItem);
+
   static nsresult IPCTransferableToTransferable(
       const mozilla::dom::IPCDataTransfer& aDataTransfer, bool aAddDataFlavor,
       nsITransferable* aTransferable,
-      mozilla::ipc::IShmemAllocator* aAllocator);
+      mozilla::ipc::IShmemAllocator* aAllocator, bool aFilterUnknownFlavors);
 
   static nsresult IPCTransferableToTransferable(
       const mozilla::dom::IPCDataTransfer& aDataTransfer,
       const bool& aIsPrivateData, nsIPrincipal* aRequestingPrincipal,
       const nsContentPolicyType& aContentPolicyType, bool aAddDataFlavor,
       nsITransferable* aTransferable,
-      mozilla::ipc::IShmemAllocator* aAllocator);
+      mozilla::ipc::IShmemAllocator* aAllocator, bool aFilterUnknownFlavors);
 
   static nsresult IPCTransferableItemToVariant(
       const mozilla::dom::IPCDataTransferItem& aDataTransferItem,
