@@ -25,3 +25,6 @@ origin	remote-troubleshooting	1	https://support.mozilla.org
 
 # addon install
 origin	install	1	https://fpn.firefox.com
+
+# autoplay video/audio
+origin	autoplay-media	1	about:welcome

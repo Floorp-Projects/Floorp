@@ -1,7 +1,6 @@
 "use strict";
 
 const DID_SEE_ABOUT_WELCOME_PREF = "trailhead.firstrun.didSeeAboutWelcome";
-const MR_TEMPLATE_PREF = "browser.aboutwelcome.templateMR";
 
 const TEST_PROTON_CONTENT = [
   {
