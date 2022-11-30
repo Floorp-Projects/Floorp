@@ -370,7 +370,7 @@ add_task(async function change_active_colorway_test() {
   let theme = await AddonManager.getAddonByID(NO_INTENSITY_COLORWAY_THEME_ID);
   await theme.enable();
   try {
-    await withFirefoxView({}, async browser => {
+    await withFirefoxView({ win: window }, async browser => {
       info("Start with no intensity theme");
       const { document } = browser.contentWindow;
       let el = getTestElements(document);
