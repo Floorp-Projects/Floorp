@@ -501,9 +501,6 @@ JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
 JSString* StringReplace(JSContext* cx, HandleString string,
                         HandleString pattern, HandleString repl);
 
-[[nodiscard]] bool SetDenseElementPure(JSContext* cx, NativeObject* obj,
-                                       int32_t index, Value* value);
-
 void AssertValidBigIntPtr(JSContext* cx, JS::BigInt* bi);
 void AssertValidObjectPtr(JSContext* cx, JSObject* obj);
 void AssertValidStringPtr(JSContext* cx, JSString* str);

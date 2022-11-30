@@ -1290,28 +1290,6 @@ JSString* StringReplace(JSContext* cx, HandleString string,
   return str_replace_string_raw(cx, string, pattern, repl);
 }
 
-bool SetDenseElementPure(JSContext* cx, NativeObject* obj, int32_t index,
-                         Value* value) {
-  AutoUnsafeCallWithABI unsafe;
-
-  // This function is called from Ion code for StoreElementHole's OOL path.
-  // In this case we know the object is native, extensible, and has no indexed
-  // properties.
-  MOZ_ASSERT(obj->isExtensible());
-  MOZ_ASSERT(!obj->isIndexed());
-  MOZ_ASSERT(index >= 0);
-  MOZ_ASSERT(!obj->is<TypedArrayObject>());
-  MOZ_ASSERT_IF(obj->is<ArrayObject>(),
-                obj->as<ArrayObject>().lengthIsWritable());
-
-  DenseElementResult result =
-      obj->setOrExtendDenseElements(cx, index, value, 1);
-  if (result == DenseElementResult::Failure) {
-    cx->recoverFromOutOfMemory();
-  }
-  return result == DenseElementResult::Success;
-}
-
 void AssertValidBigIntPtr(JSContext* cx, JS::BigInt* bi) {
   AutoUnsafeCallWithABI unsafe;
   // FIXME: check runtime?

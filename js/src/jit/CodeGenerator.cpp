@@ -11753,7 +11753,6 @@ void CodeGenerator::visitSpectreMaskIndex(LSpectreMaskIndex* lir) {
 
 class OutOfLineStoreElementHole : public OutOfLineCodeBase<CodeGenerator> {
   LInstruction* ins_;
-  Label rejoinStore_;
 
  public:
   explicit OutOfLineStoreElementHole(LInstruction* ins) : ins_(ins) {
@@ -11769,7 +11768,6 @@ class OutOfLineStoreElementHole : public OutOfLineCodeBase<CodeGenerator> {
                                        : ins_->toStoreElementHoleT()->mir();
   }
   LInstruction* ins() const { return ins_; }
-  Label* rejoinStore() { return &rejoinStore_; }
 };
 
 void CodeGenerator::emitStoreHoleCheck(Register elements,
@@ -11862,11 +11860,9 @@ void CodeGenerator::visitStoreElementHoleT(LStoreElementHoleT* lir) {
 
   emitPreBarrier(elements, lir->index());
 
-  masm.bind(ool->rejoinStore());
+  masm.bind(ool->rejoin());
   emitStoreElementTyped(lir->value(), lir->mir()->value()->type(), elements,
                         lir->index());
-
-  masm.bind(ool->rejoin());
 }
 
 void CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV* lir) {
@@ -11883,10 +11879,8 @@ void CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV* lir) {
 
   emitPreBarrier(elements, lir->index());
 
-  masm.bind(ool->rejoinStore());
-  masm.storeValue(value, BaseObjectElementIndex(elements, index));
-
   masm.bind(ool->rejoin());
+  masm.storeValue(value, BaseObjectElementIndex(elements, index));
 }
 
 void CodeGenerator::visitOutOfLineStoreElementHole(
@@ -11920,84 +11914,65 @@ void CodeGenerator::visitOutOfLineStoreElementHole(
     temp = ToRegister(store->temp0());
   }
 
-  // If index == initializedLength, try to bump the initialized length inline.
-  // If index > initializedLength, call a stub. Note that this relies on the
+  Address initLength(elements, ObjectElements::offsetOfInitializedLength());
+
+  // We're out-of-bounds. We only handle the index == initlength case.
+  // If index > initializedLength, bail out. Note that this relies on the
   // condition flags sticking from the incoming branch.
   // Also note: this branch does not need Spectre mitigations, doing that for
   // the capacity check below is sufficient.
-  Label callStub;
+  Label allocElement, addNewElement;
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64) || \
     defined(JS_CODEGEN_LOONG64)
   // Had to reimplement for MIPS because there are no flags.
-  Address initLength(elements, ObjectElements::offsetOfInitializedLength());
-  masm.branch32(Assembler::NotEqual, initLength, index, &callStub);
+  bailoutCmp32(Assembler::NotEqual, initLength, index, ins->snapshot());
 #else
-  masm.j(Assembler::NotEqual, &callStub);
+  bailoutIf(Assembler::NotEqual, ins->snapshot());
 #endif
 
-  // Check array capacity.
+  // If index < capacity, we can add a dense element inline. If not, we need
+  // to allocate more elements first.
   masm.spectreBoundsCheck32(
       index, Address(elements, ObjectElements::offsetOfCapacity()), temp,
-      &callStub);
+      &allocElement);
+  masm.jump(&addNewElement);
 
-  // Update initialized length. The capacity guard above ensures this won't
-  // overflow, due to MAX_DENSE_ELEMENTS_COUNT.
-  masm.add32(Imm32(1), index);
-  masm.store32(index,
-               Address(elements, ObjectElements::offsetOfInitializedLength()));
+  masm.bind(&allocElement);
 
-  // Update length if length < initializedLength.
-  Label dontUpdate;
-  masm.branch32(Assembler::AboveOrEqual,
-                Address(elements, ObjectElements::offsetOfLength()), index,
-                &dontUpdate);
-  masm.store32(index, Address(elements, ObjectElements::offsetOfLength()));
-  masm.bind(&dontUpdate);
-
-  masm.sub32(Imm32(1), index);
-
-  // Jump to the inline path where we will store the value.
-  masm.jump(ool->rejoinStore());
-
-  masm.bind(&callStub);
-
-  if (ool->mir()->needsNegativeIntCheck()) {
-    bailoutCmp32(Assembler::LessThan, index, Imm32(0), ins->snapshot());
-  }
-
-  // There aren't enough registers on x86, so reuse the |elements| register as
-  // an additional temporary.
-  Register valueTemp = elements;
-
-  // Save all live volatile registers, except |temp|. Additionally save
-  // |elements|, because it's used as an additional temporary register.
+  // Save all live volatile registers, except |temp|.
   LiveRegisterSet liveRegs = liveVolatileRegs(ins);
   liveRegs.takeUnchecked(temp);
-  liveRegs.addUnchecked(elements);
-
   masm.PushRegsInMask(liveRegs);
-
-  masm.Push(value.ref());
-  masm.moveStackPtrTo(valueTemp);
 
   masm.setupAlignedABICall();
   masm.loadJSContext(temp);
   masm.passABIArg(temp);
   masm.passABIArg(object);
-  masm.passABIArg(index);
-  masm.passABIArg(valueTemp);
 
-  using Fn = bool (*)(JSContext*, NativeObject*, int32_t, Value*);
-  masm.callWithABI<Fn, jit::SetDenseElementPure>();
+  using Fn = bool (*)(JSContext*, NativeObject*);
+  masm.callWithABI<Fn, NativeObject::addDenseElementPure>();
   masm.storeCallPointerResult(temp);
 
-  masm.freeStack(sizeof(Value));  // Discard pushed Value.
-
-  MOZ_ASSERT(!liveRegs.has(temp));
   masm.PopRegsInMask(liveRegs);
-
   bailoutIfFalseBool(temp, ins->snapshot());
 
+  // Load the reallocated elements pointer.
+  masm.loadPtr(Address(object, NativeObject::offsetOfElements()), elements);
+
+  masm.bind(&addNewElement);
+
+  // Increment initLength
+  masm.add32(Imm32(1), initLength);
+
+  // If length is now <= index, increment length too.
+  Label skipIncrementLength;
+  Address length(elements, ObjectElements::offsetOfLength());
+  masm.branch32(Assembler::Above, length, index, &skipIncrementLength);
+  masm.add32(Imm32(1), length);
+  masm.bind(&skipIncrementLength);
+
+  // Jump to the inline path where we will store the value.
+  // We rejoin after the prebarrier, because the memory is uninitialized.
   masm.jump(ool->rejoin());
 }
 
