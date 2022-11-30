@@ -35,10 +35,10 @@ async function runTest(src, withClose, expectation) {
   let tab = await addMediaTab(src);
 
   info("Play tab");
-  await play(tab, expectation);
+  await play(tab, expectation.process, expectation.decoder);
 
   info("Crash decoder");
-  await crashDecoder(expectation);
+  await crashDecoder(expectation.process);
 
   if (withClose) {
     info("Stop tab");
@@ -52,7 +52,7 @@ async function runTest(src, withClose, expectation) {
   }
 
   info("Play tab again");
-  await play(tab, expectation);
+  await play(tab, expectation.process, expectation.decoder);
 
   info("Stop tab");
   await stop(tab);
