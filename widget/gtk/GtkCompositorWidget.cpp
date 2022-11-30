@@ -69,6 +69,8 @@ GtkCompositorWidget::GtkCompositorWidget(
 GtkCompositorWidget::~GtkCompositorWidget() {
   LOG("GtkCompositorWidget::~GtkCompositorWidget [%p]\n", (void*)mWidget.get());
   DisableRendering();
+  RefPtr<nsIWidget> widget = mWidget.forget();
+  NS_ReleaseOnMainThread("GtkCompositorWidget::mWidget", widget.forget());
 }
 
 already_AddRefed<gfx::DrawTarget> GtkCompositorWidget::StartRemoteDrawing() {
