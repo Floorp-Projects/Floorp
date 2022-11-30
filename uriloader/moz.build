@@ -6,7 +6,10 @@
 
 SPHINX_TREES["/uriloader"] = "docs"
 
-with Files("**"):
+with Files("moz.build"):
+    BUG_COMPONENT = ("Firefox Build System", "General")
+
+with Files("docs/**"):
     BUG_COMPONENT = ("Firefox", "File Handling")
 
 DIRS += [
