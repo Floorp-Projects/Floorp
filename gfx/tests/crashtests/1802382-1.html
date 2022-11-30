@@ -1,0 +1,7 @@
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  let worker = new Worker('1802382-1-worker.js')
+  worker.postMessage([], [])
+  worker.postMessage(undefined)
+})
+</script>

@@ -98,9 +98,6 @@ struct gfxFontFaceSrc {
 };
 
 inline bool operator==(const gfxFontFaceSrc& a, const gfxFontFaceSrc& b) {
-  // The mReferrer and mOriginPrincipal comparisons aren't safe OMT.
-  MOZ_ASSERT(NS_IsMainThread());
-
   if (a.mSourceType != b.mSourceType) {
     return false;
   }
@@ -111,9 +108,12 @@ inline bool operator==(const gfxFontFaceSrc& a, const gfxFontFaceSrc& b) {
       if (a.mUseOriginPrincipal != b.mUseOriginPrincipal) {
         return false;
       }
-      if (a.mUseOriginPrincipal &&
-          !a.mOriginPrincipal->Equals(b.mOriginPrincipal)) {
-        return false;
+      if (a.mUseOriginPrincipal) {
+        // The mOriginPrincipal comparison isn't safe OMT.
+        MOZ_ASSERT(NS_IsMainThread());
+        if (!a.mOriginPrincipal->Equals(b.mOriginPrincipal)) {
+          return false;
+        }
       }
       bool equals;
       return a.mFormatHint == b.mFormatHint && a.mTechFlags == b.mTechFlags &&
