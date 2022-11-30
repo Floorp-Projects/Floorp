@@ -1197,7 +1197,7 @@ name = "dap_ffi"
 version = "0.1.0"
 dependencies = [
  "prio",
- "rand 0.7.999",
+ "rand 0.8.5",
  "thin-vec",
 ]
 
