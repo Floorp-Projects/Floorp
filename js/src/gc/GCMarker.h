@@ -64,6 +64,10 @@ using EphemeronEdgeTable =
                    js::SystemAllocPolicy>;
 
 /*
+ * The mark stack. Pointers in this stack are "gray" in the GC sense, but
+ * their references may be marked either black or gray (in the CC sense)
+ * depending on whether they are above or below grayPosition_.
+ *
  * When the mark stack is full, the GC does not call js::TraceChildren to mark
  * the reachable "children" of the thing. Rather the thing is put aside and
  * js::TraceChildren is called later when the mark stack is empty.
@@ -147,6 +151,13 @@ class MarkStack {
   void setMaxCapacity(size_t maxCapacity);
 #endif
 
+  void setMarkColor(MarkColor newColor);
+  MarkColor markColor() const { return markColor_; }
+
+  bool hasBlackEntries() const { return position() > grayPosition_; }
+  bool hasGrayEntries() const { return grayPosition_ > 0 && !isEmpty(); }
+  bool hasEntries(MarkColor color) const;
+
   template <typename T>
   [[nodiscard]] bool push(T* ptr);
 
@@ -187,11 +198,19 @@ class MarkStack {
   const TaggedPtr& peekPtr() const;
   [[nodiscard]] bool pushTaggedPtr(Tag tag, Cell* ptr);
 
+  void assertGrayPositionValid() const;
+
   // Vector containing allocated stack memory. Unused beyond topIndex_.
   MainThreadOrGCTaskData<StackVector> stack_;
 
   // Index of the top of the stack.
   MainThreadOrGCTaskData<size_t> topIndex_;
+
+  // Stack entries at positions below this are considered gray.
+  MainThreadOrGCTaskData<size_t> grayPosition_;
+
+  // The current mark color. This is only applied to objects and functions.
+  MainThreadOrGCTaskData<gc::MarkColor> markColor_;
 
 #ifdef JS_GC_ZEAL
   // The maximum stack capacity to grow to.
@@ -271,7 +290,7 @@ class GCMarker {
   bool isRegularMarking() const { return state == RegularMarking; }
   bool isWeakMarking() const { return state == WeakMarking; }
 
-  gc::MarkColor markColor() const { return markColor_; }
+  gc::MarkColor markColor() const { return stack.markColor(); }
 
   bool isDrained();
 
@@ -337,13 +356,12 @@ class GCMarker {
    * objects. If this invariant is violated, the cycle collector may free
    * objects that are still reachable.
    */
-  void setMarkColor(gc::MarkColor newColor);
+  void setMarkColor(gc::MarkColor newColor) { stack.setMarkColor(newColor); }
   friend class js::gc::AutoSetMarkColor;
 
-  bool isMarkStackEmpty() { return stack.isEmpty(); }
-
-  bool hasBlackEntries() const { return stack.position() > grayPosition; }
-  bool hasGrayEntries() const { return grayPosition > 0 && !stack.isEmpty(); }
+  bool isMarkStackEmpty() const { return stack.isEmpty(); }
+  bool hasBlackEntries() const { return stack.hasBlackEntries(); }
+  bool hasGrayEntries() const { return stack.hasGrayEntries(); }
 
   void processMarkStackTop(SliceBudget& budget);
   friend class gc::GCRuntime;
@@ -446,18 +464,8 @@ class GCMarker {
 
   JSRuntime* const runtime_;
 
-  /*
-   * The mark stack. Pointers in this stack are "gray" in the GC sense, but
-   * their references may be marked either black or gray (in the CC sense)
-   * depending on whether they are above or below grayPosition.
-   */
+  /* The stack of remaining marking work . */
   gc::MarkStack stack;
-
-  /* Stack entries at positions below this are considered gray. */
-  MainThreadOrGCTaskData<size_t> grayPosition;
-
-  /* The current mark color. This is only applied to objects and functions. */
-  MainThreadOrGCTaskData<gc::MarkColor> markColor_;
 
   /* Pointer to the top of the stack of arenas we are delaying marking on. */
   MainThreadOrGCTaskData<js::gc::Arena*> delayedMarkingList;
