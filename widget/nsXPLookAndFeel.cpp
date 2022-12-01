@@ -325,6 +325,23 @@ static const char sColorPrefs[][41] = {
 static_assert(ArrayLength(sColorPrefs) == size_t(LookAndFeel::ColorID::End),
               "Should have a pref for each color value");
 
+// This array MUST be kept in the same order as the SystemFont enum.
+static const char sFontPrefs[][41] = {
+    "ui.font.caption",
+    "ui.font.icon",
+    "ui.font.menu",
+    "ui.font.message-box",
+    "ui.font.small-caption",
+    "ui.font.status-bar",
+    "ui.font.-moz-pull-down-menu",
+    "ui.font.-moz-button",
+    "ui.font.-moz-list",
+    "ui.font.-moz-field",
+};
+
+static_assert(ArrayLength(sFontPrefs) == size_t(LookAndFeel::FontID::End),
+              "Should have a pref for each font value");
+
 const char* nsXPLookAndFeel::GetColorPrefName(ColorID aId) {
   return sColorPrefs[size_t(aId)];
 }
@@ -427,6 +444,11 @@ static void ColorPrefChanged() {
   LookAndFeel::NotifyChangedAllWindows(widget::ThemeChangeKind::Style);
 }
 
+static void FontPrefChanged() {
+  // Color prefs affect style, because they by definition change system fonts.
+  LookAndFeel::NotifyChangedAllWindows(widget::ThemeChangeKind::Style);
+}
+
 // static
 void nsXPLookAndFeel::OnPrefChanged(const char* aPref, void* aClosure) {
   nsDependentCString prefName(aPref);
@@ -448,6 +470,13 @@ void nsXPLookAndFeel::OnPrefChanged(const char* aPref, void* aClosure) {
     // We use StringBeginsWith to handle .dark prefs too.
     if (StringBeginsWith(prefName, nsDependentCString(pref))) {
       ColorPrefChanged();
+      return;
+    }
+  }
+
+  for (const char* pref : sFontPrefs) {
+    if (StringBeginsWith(prefName, nsDependentCString(pref))) {
+      FontPrefChanged();
       return;
     }
   }
@@ -1083,14 +1112,39 @@ bool nsXPLookAndFeel::GetFontValue(FontID aID, nsString& aName,
   if (const LookAndFeelFont* cached = sFontCache.Get(aID)) {
     return LookAndFeelFontToStyle(*cached, aName, aStyle);
   }
+
   LookAndFeelFont font;
-  const bool haveFont = NativeGetFont(aID, aName, aStyle);
-  font.haveFont() = haveFont;
-  if (haveFont) {
+  auto GetFontsFromPrefs = [&]() -> bool {
+    nsDependentCString pref(sFontPrefs[size_t(aID)]);
+    if (NS_FAILED(Preferences::GetString(pref.get(), aName))) {
+      return false;
+    }
+    font.haveFont() = true;
+    font.name() = aName;
+    font.size() = Preferences::GetFloat(nsAutoCString(pref + ".size"_ns).get());
+    // This is written this way rather than using the fallback so that an empty
+    // pref (such like the one about:config creates) doesn't cause system fonts
+    // to have zero-size.
+    if (font.size() < 1.0f) {
+      font.size() = StyleFONT_MEDIUM_PX;
+    }
+    font.weight() = Preferences::GetFloat(
+        nsAutoCString(pref + ".weight"_ns).get(), FontWeight::NORMAL.ToFloat());
+    font.italic() =
+        Preferences::GetBool(nsAutoCString(pref + ".italic"_ns).get());
+    return true;
+  };
+
+  if (GetFontsFromPrefs()) {
+    LookAndFeelFontToStyle(font, aName, aStyle);
+  } else if (NativeGetFont(aID, aName, aStyle)) {
     font = StyleToLookAndFeelFont(aName, aStyle);
+  } else {
+    MOZ_ASSERT(!font.haveFont());
   }
+  bool success = font.haveFont();
   sFontCache.Insert(aID, std::move(font));
-  return haveFont;
+  return success;
 }
 
 void nsXPLookAndFeel::RefreshImpl() {
