@@ -39,19 +39,6 @@ NS_IMPL_ISUPPORTS(FontTableURIProtocolHandler, nsIProtocolHandler,
                   nsISupportsWeakReference)
 
 NS_IMETHODIMP
-FontTableURIProtocolHandler::GetDefaultPort(int32_t* result) {
-  *result = -1;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FontTableURIProtocolHandler::GetProtocolFlags(uint32_t* result) {
-  *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_SUBSUMERS |
-            URI_NON_PERSISTABLE | URI_IS_LOCAL_RESOURCE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 FontTableURIProtocolHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
                                         nsIChannel** result) {
   return NS_ERROR_DOM_BAD_URI;
