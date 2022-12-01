@@ -89,7 +89,7 @@ check_abi()
   abi_diff
 }
 
-#Slightly modified from builbot-slave/build.sh
+#Slightly modified from build.sh in this directory
 abi_diff()
 {
   ABI_PROBLEM_FOUND=0
@@ -123,7 +123,7 @@ abi_diff()
       # If abidiff reports an error, or a usage error, or if it sets a result
       # bit value this script doesn't know yet about, we'll report failure.
       # For ABI changes, we don't yet report an error. We'll compare the
-      # result report with our whitelist. This allows us to silence changes
+      # result report with our allowlist. This allows us to silence changes
       # that we're already aware of and have been declared acceptable.
 
       REPORT_RET_AS_FAILURE=0
@@ -141,10 +141,10 @@ abi_diff()
       fi
 
       if [ $ABIDIFF_ABI_CHANGE -ne 0 ]; then
-          echo "Ignoring abidiff result ABI_CHANGE, instead we'll check for non-whitelisted differences."
+          echo "Ignoring abidiff result ABI_CHANGE, instead we'll check for non-allowlisted differences."
       fi
       if [ $ABIDIFF_ABI_INCOMPATIBLE_CHANGE -ne 0 ]; then
-          echo "Ignoring abidiff result ABIDIFF_ABI_INCOMPATIBLE_CHANGE, instead we'll check for non-whitelisted differences."
+          echo "Ignoring abidiff result ABIDIFF_ABI_INCOMPATIBLE_CHANGE, instead we'll check for non-allowlisted differences."
       fi
 
       if [ $REPORT_RET_AS_FAILURE -ne 0 ]; then

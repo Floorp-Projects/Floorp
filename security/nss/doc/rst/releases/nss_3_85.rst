@@ -1,0 +1,72 @@
+.. _mozilla_projects_nss_nss_3_85_release_notes:
+
+NSS 3.85 release notes
+======================
+
+`Introduction <#introduction>`__
+--------------------------------
+
+.. container::
+
+   Network Security Services (NSS) 3.85 was released on **10 November 2022**.
+
+
+.. _distribution_information:
+
+`Distribution Information <#distribution_information>`__
+--------------------------------------------------------
+
+.. container::
+
+   The HG tag is NSS_3_85_RTM. NSS 3.85 requires NSPR 4.35 or newer.
+
+   NSS 3.85 source distributions are available on ftp.mozilla.org for secure HTTPS download:
+
+   -  Source tarballs:
+      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_85_RTM/src/
+
+   Other releases are available :ref:`mozilla_projects_nss_releases`.
+
+.. _changes_in_nss_3.85:
+
+`Changes in NSS 3.85 <#changes_in_nss_3.85>`__
+----------------------------------------------------
+
+.. container::
+
+   - Bug 1792821 - Modification of the primes.c and dhe-params.c in order to have better looking tables.
+   - Bug 1796815 - Update zlib in NSS to 1.2.13.
+   - Bug 1796504 - Skip building modutil and shlibsign when building in Firefox.
+   - Bug 1796504 - Use __STDC_VERSION__ rather than __STDC__ as a guard. 
+   - Bug 1796407 - Fix -Wunused-but-set-variable warning from clang 15.
+   - Bug 1796308 - Fix -Wtautological-constant-out-of-range-compare and -Wtype-limits warnings. 
+   - Bug 1796281 - Followup: add missing stdint.h include.
+   - Bug 1796281 - Fix -Wint-to-void-pointer-cast warnings.
+   - Bug 1796280 - Fix -Wunused-{function,variable,but-set-variable} warnings on Windows.
+   - Bug 1796079 - Fix -Wstring-conversion warnings.
+   - Bug 1796075 - Fix -Wempty-body warnings.
+   - Bug 1795242 - Fix unused-but-set-parameter warning.
+   - Bug 1795241 - Fix unreachable-code warnings.
+   - Bug 1795222 - Mark _nss_version_c unused on clang-cl.
+   - Bug 1795668 - Remove redundant variable definitions in lowhashtest.
+   - No bug - Add note about python executable to build instructions.
+
+`Compatibility <#compatibility>`__
+----------------------------------
+
+.. container::
+
+   NSS 3.85 shared libraries are backwards-compatible with all older NSS 3.x shared
+   libraries. A program linked with older NSS 3.x shared libraries will work with
+   this new version of the shared libraries without recompiling or
+   relinking. Furthermore, applications that restrict their use of NSS APIs to the
+   functions listed in NSS Public Functions will remain compatible with future
+   versions of the NSS shared libraries.
+
+`Feedback <#feedback>`__
+------------------------
+
+.. container::
+
+   Bugs discovered should be reported by filing a bug report on
+   `bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product NSS).
