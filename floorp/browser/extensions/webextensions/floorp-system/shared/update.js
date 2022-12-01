@@ -20,7 +20,7 @@
         let handle_onClosed = (notificationId) => {
             if (created_notificationId === notificationId) {
                 browser.notifications.onClicked.removeListener(handle_onClicked);
-                browser.notifications.onClosed.removeListener(handle_onClicked);
+                browser.notifications.onClosed.removeListener(handle_onClosed);
             }
         }
         browser.notifications.onClosed.addListener(handle_onClosed);
