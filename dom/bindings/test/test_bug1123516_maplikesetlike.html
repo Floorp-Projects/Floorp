@@ -44,8 +44,8 @@
                      while (owner) {
                          var propDesc = Object.getOwnPropertyDescriptor(owner, name);
                          if (propDesc) {
-                             ok(!propDesc.enumerable,
-                                `${prefix} object property ${name} is not enumerable`);
+                             ok(propDesc.enumerable,
+                                `${prefix} object property ${name} should be enumerable`);
                              break;
                          }
                          owner = Object.getPrototypeOf(owner);
