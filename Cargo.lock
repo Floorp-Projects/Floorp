@@ -2855,6 +2855,7 @@ version = "0.1.0"
 dependencies = [
  "jsrust_shared",
  "mozglue-static",
+ "wasmparser",
  "wast",
 ]
 
