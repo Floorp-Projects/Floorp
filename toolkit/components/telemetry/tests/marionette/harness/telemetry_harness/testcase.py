@@ -25,12 +25,14 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
         """Initialize the test case and create a ping server."""
         super(TelemetryTestCase, self).__init__(*args, **kwargs)
 
+    def setUp(self, *args, **kwargs):
+        """Set up the test case and start the ping server."""
+
         self.ping_server = PingServer(
             self.testvars["server_root"], self.testvars["server_url"]
         )
+        self.ping_server.start()
 
-    def setUp(self, *args, **kwargs):
-        """Set up the test case and start the ping server."""
         super(TelemetryTestCase, self).setUp(*args, **kwargs)
 
         # Store IDs of addons installed via self.install_addon()
@@ -38,8 +40,6 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
 
         with self.marionette.using_context(self.marionette.CONTEXT_CONTENT):
             self.marionette.navigate("about:about")
-
-        self.ping_server.start()
 
     def disable_telemetry(self):
         """Disable the Firefox Data Collection and Use in the current browser."""
