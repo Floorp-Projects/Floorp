@@ -868,18 +868,24 @@ nsresult nsGIOProtocolHandler::Init() {
 }
 
 void nsGIOProtocolHandler::InitSupportedProtocolsPref(nsIPrefBranch* prefs) {
+  nsCOMPtr<nsIIOService> ioService = components::IO::Service();
+  if (NS_WARN_IF(!ioService)) {
+    LOG(("gio: ioservice not available\n"));
+    return;
+  }
+
   // Get user preferences to determine which protocol is supported.
   // Gvfs/GIO has a set of supported protocols like obex, network, archive,
   // computer, dav, cdda, gphoto2, trash, etc. Some of these seems to be
-  // irrelevant to process by browser. By default accept only smb and sftp
-  // protocols so far.
-  nsresult rv =
-      prefs->GetCharPref(MOZ_GIO_SUPPORTED_PROTOCOLS, mSupportedProtocols);
+  // irrelevant to process by browser. By default accept only sftp protocol so
+  // far.
+  nsAutoCString prefValue;
+  nsresult rv = prefs->GetCharPref(MOZ_GIO_SUPPORTED_PROTOCOLS, prefValue);
   if (NS_SUCCEEDED(rv)) {
-    mSupportedProtocols.StripWhitespace();
-    ToLowerCase(mSupportedProtocols);
+    prefValue.StripWhitespace();
+    ToLowerCase(prefValue);
   } else {
-    mSupportedProtocols.AssignLiteral(
+    prefValue.AssignLiteral(
 #ifdef MOZ_PROXY_BYPASS_PROTECTION
         ""  // use none
 #else
@@ -887,13 +893,39 @@ void nsGIOProtocolHandler::InitSupportedProtocolsPref(nsIPrefBranch* prefs) {
 #endif
     );
   }
-  LOG(("gio: supported protocols \"%s\"\n", mSupportedProtocols.get()));
+  LOG(("gio: supported protocols \"%s\"\n", prefValue.get()));
+
+  // Unregister any previously registered dynamic protocols.
+  for (const nsCString& scheme : mSupportedProtocols) {
+    LOG(("gio: unregistering handler for \"%s\"", scheme.get()));
+    ioService->UnregisterProtocolHandler(scheme);
+  }
+  mSupportedProtocols.Clear();
+
+  // Register each protocol from the pref branch to reference
+  // nsGIOProtocolHandler.
+  for (const nsDependentCSubstring& protocol : prefValue.Split(',')) {
+    if (NS_WARN_IF(!StringEndsWith(protocol, ":"_ns))) {
+      continue;  // each protocol must end with a `:` character to be recognized
+    }
+
+    nsCString scheme(Substring(protocol, 0, protocol.Length() - 1));
+    if (NS_SUCCEEDED(ioService->RegisterProtocolHandler(
+            scheme, this,
+            nsIProtocolHandler::URI_STD |
+                nsIProtocolHandler::URI_DANGEROUS_TO_LOAD,
+            /* aDefaultPort */ -1))) {
+      LOG(("gio: successfully registered handler for \"%s\"", scheme.get()));
+      mSupportedProtocols.AppendElement(scheme);
+    } else {
+      LOG(("gio: failed to register handler for \"%s\"", scheme.get()));
+    }
+  }
 }
 
 bool nsGIOProtocolHandler::IsSupportedProtocol(const nsCString& aScheme) {
-  nsAutoCString schemeWithColon = aScheme + ":"_ns;
-  for (const auto& protocol : mSupportedProtocols.Split(',')) {
-    if (schemeWithColon.Equals(protocol, nsCaseInsensitiveCStringComparator)) {
+  for (const auto& protocol : mSupportedProtocols) {
+    if (aScheme.EqualsIgnoreCase(protocol)) {
       return true;
     }
   }
