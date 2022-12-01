@@ -56,7 +56,7 @@ pref("browser.disable.nt.image.gb", false);// 画像を表示しない
 pref("floorp.enable.dualtheme", false); //デュアルテーマの有効・無効 
 pref("floorp.dualtheme.theme", "[]"); //デュアルテーマのリスト
 
-pref("floorp.download.notification", 1); //ダウンロード通知
+pref("floorp.download.notification", 4); //ダウンロード通知
 
 pref("contentblocking.cryptomining_blocking_enabled", true);
 pref("contentblocking.cryptomining_blocking_enabled",true);
