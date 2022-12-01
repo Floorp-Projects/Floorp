@@ -388,32 +388,47 @@ nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
 Result<bool, nsresult>
 HTMLEditor::AutoInlineStyleSetter::ElementIsGoodContainerForTheStyle(
     HTMLEditor& aHTMLEditor, Element& aElement) const {
-  // First check for <b>, <i>, etc.
-  if (aElement.IsHTMLElement(&HTMLPropertyRef()) && !aElement.GetAttrCount() &&
-      !mAttribute) {
-    return true;
-  }
-
-  // Now look for things like <font>
-  if (mAttribute) {
-    nsString attrValue;
+  // If the editor is in the CSS mode and the style can be specified with CSS,
+  // we should not use existing HTML element as a new container.
+  const bool isCSSEditable = IsCSSEditable(aElement);
+  if (!aHTMLEditor.IsCSSEnabled() || !isCSSEditable) {
+    // First check for <b>, <i>, etc.
     if (aElement.IsHTMLElement(&HTMLPropertyRef()) &&
-        !HTMLEditUtils::ElementHasAttributeExcept(aElement, *mAttribute) &&
-        aElement.GetAttr(kNameSpaceID_None, mAttribute, attrValue) &&
-        attrValue.Equals(mAttributeValue, nsCaseInsensitiveStringComparator)) {
-      // This is not quite correct, because it excludes cases like
-      // <font face=000> being the same as <font face=#000000>.
-      // Property-specific handling is needed (bug 760211).
+        !aElement.GetAttrCount() && !mAttribute) {
       return true;
+    }
+
+    // Now look for things like <font>
+    if (mAttribute) {
+      nsString attrValue;
+      if (aElement.IsHTMLElement(&HTMLPropertyRef()) &&
+          !HTMLEditUtils::ElementHasAttributeExcept(aElement, *mAttribute) &&
+          aElement.GetAttr(kNameSpaceID_None, mAttribute, attrValue) &&
+          attrValue.Equals(mAttributeValue,
+                           nsCaseInsensitiveStringComparator)) {
+        // This is not quite correct, because it excludes cases like
+        // <font face=000> being the same as <font face=#000000>.
+        // Property-specific handling is needed (bug 760211).
+        return true;
+      }
+    }
+
+    if (!isCSSEditable) {
+      return false;
     }
   }
 
   // No luck so far.  Now we check for a <span> with a single style=""
   // attribute that sets only the style we're looking for, if this type of
   // style supports it
-  if (!IsCSSEditable(aElement) || !aElement.IsHTMLElement(nsGkAtoms::span) ||
-      aElement.GetAttrCount() != 1 ||
-      !aElement.HasAttr(kNameSpaceID_None, nsGkAtoms::style)) {
+  if (!aElement.IsHTMLElement(nsGkAtoms::span) ||
+      !aElement.HasAttr(kNameSpaceID_None, nsGkAtoms::style) ||
+      HTMLEditUtils::ElementHasAttributeExcept(aElement, *nsGkAtoms::style)) {
+    return false;
+  }
+
+  nsStyledElement* styledElement = nsStyledElement::FromNode(&aElement);
+  if (MOZ_UNLIKELY(!styledElement)) {
     return false;
   }
 
@@ -432,24 +447,18 @@ HTMLEditor::AutoInlineStyleSetter::ElementIsGoodContainerForTheStyle(
   if (MOZ_UNLIKELY(!styledNewSpanElement)) {
     return false;
   }
-  if (IsCSSEditable(*styledNewSpanElement)) {
-    // MOZ_KnownLive(*styledNewSpanElement): It's newSpanElement whose type is
-    // RefPtr.
-    Result<size_t, nsresult> result = CSSEditUtils::SetCSSEquivalentToStyle(
-        WithTransaction::No, aHTMLEditor, MOZ_KnownLive(*styledNewSpanElement),
-        *this, &mAttributeValue);
-    if (MOZ_UNLIKELY(result.isErr())) {
-      // The call shouldn't return destroyed error because it must be
-      // impossible to run script with modifying the new orphan node.
-      MOZ_ASSERT_UNREACHABLE("How did you destroy this editor?");
-      if (NS_WARN_IF(result.inspectErr() == NS_ERROR_EDITOR_DESTROYED)) {
-        return Err(NS_ERROR_EDITOR_DESTROYED);
-      }
-      return false;
+  // MOZ_KnownLive(*styledNewSpanElement): It's newSpanElement whose type is
+  // RefPtr.
+  Result<size_t, nsresult> result = CSSEditUtils::SetCSSEquivalentToStyle(
+      WithTransaction::No, aHTMLEditor, MOZ_KnownLive(*styledNewSpanElement),
+      *this, &mAttributeValue);
+  if (MOZ_UNLIKELY(result.isErr())) {
+    // The call shouldn't return destroyed error because it must be
+    // impossible to run script with modifying the new orphan node.
+    MOZ_ASSERT_UNREACHABLE("How did you destroy this editor?");
+    if (NS_WARN_IF(result.inspectErr() == NS_ERROR_EDITOR_DESTROYED)) {
+      return Err(NS_ERROR_EDITOR_DESTROYED);
     }
-  }
-  nsStyledElement* styledElement = nsStyledElement::FromNode(&aElement);
-  if (MOZ_UNLIKELY(!styledElement)) {
     return false;
   }
   return CSSEditUtils::DoStyledElementsHaveSameStyle(*styledNewSpanElement,
