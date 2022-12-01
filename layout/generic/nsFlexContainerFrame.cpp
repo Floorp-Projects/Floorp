@@ -840,9 +840,7 @@ class nsFlexContainerFrame::FlexItem final {
   nsBlockFrame* BlockFrame() const;
 
  protected:
-  // Helper called by the constructor, to set mNeedsMinSizeAutoResolution:
-  void CheckForMinSizeAuto(const ReflowInput& aFlexItemReflowInput,
-                           const FlexboxAxisTracker& aAxisTracker);
+  bool IsMinSizeAutoResolutionNeeded() const;
 
   uint32_t NumAutoMarginsInAxis(LogicalAxis aAxis) const;
 
@@ -918,7 +916,12 @@ class nsFlexContainerFrame::FlexItem final {
   // constructor.
   bool mIsInlineAxisMainAxis = true;
 
-  // Does this item need to resolve a min-[width|height]:auto (in main-axis).
+  // Does this item need to resolve a min-[width|height]:auto (in main-axis)?
+  //
+  // Note: mNeedsMinSizeAutoResolution needs to be declared towards the end of
+  // the member variables since it's initialized in a method that depends on
+  // other members declared above such as mCBWM, mMainAxis, and
+  // mIsInlineAxisMainAxis.
   bool mNeedsMinSizeAutoResolution = false;
 
   // Should we take care to treat this item's resolved BSize as indefinite?
@@ -2082,8 +2085,8 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
       mCrossMinSize(aCrossMinSize),
       mCrossMaxSize(aCrossMaxSize),
       mCrossSize(aTentativeCrossSize),
-      mIsInlineAxisMainAxis(aAxisTracker.IsInlineAxisMainAxis(mWM))
-// mNeedsMinSizeAutoResolution is initialized in CheckForMinSizeAuto()
+      mIsInlineAxisMainAxis(aAxisTracker.IsInlineAxisMainAxis(mWM)),
+      mNeedsMinSizeAutoResolution(IsMinSizeAutoResolutionNeeded())
 // mAlignSelf, mHasAnyAutoMargin see below
 {
   MOZ_ASSERT(mFrame, "expecting a non-null child frame");
@@ -2165,7 +2168,6 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
   }
 
   SetFlexBaseSizeAndMainSize(aFlexBaseSize);
-  CheckForMinSizeAuto(aFlexItemReflowInput, aAxisTracker);
 
   const nsStyleMargin* styleMargin = aFlexItemReflowInput.mStyleMargin;
   mHasAnyAutoMargin = styleMargin->HasInlineAxisAuto(mCBWM) ||
@@ -2227,28 +2229,18 @@ FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize,
              "out-of-flow frames should not be treated as flex items");
 }
 
-void FlexItem::CheckForMinSizeAuto(const ReflowInput& aFlexItemReflowInput,
-                                   const FlexboxAxisTracker& aAxisTracker) {
-  const nsStylePosition* pos = aFlexItemReflowInput.mStylePosition;
-  const nsStyleDisplay* disp = aFlexItemReflowInput.mStyleDisplay;
-
+bool FlexItem::IsMinSizeAutoResolutionNeeded() const {
   // We'll need special behavior for "min-[width|height]:auto" (whichever is in
   // the flex container's main axis) iff:
-  // (a) its computed value is "auto"
-  // (b) the "overflow" sub-property in the same axis (the main axis) has a
-  //     computed value of "visible" and the item does not create a scroll
-  //     container.
-  const auto& mainMinSize = aAxisTracker.IsRowOriented()
-                                ? pos->MinISize(aAxisTracker.GetWritingMode())
-                                : pos->MinBSize(aAxisTracker.GetWritingMode());
+  // (a) its computed value is "auto", and
+  // (b) the item is *not* a scroll container. (A scroll container's automatic
+  //     minimum size is zero.)
+  // https://drafts.csswg.org/css-flexbox-1/#min-size-auto
+  const auto& mainMinSize =
+      Frame()->StylePosition()->MinSize(MainAxis(), ContainingBlockWM());
 
-  // If the scrollable overflow makes us create a scroll container, then we
-  // don't need to do any extra resolution for our `min-size:auto` value.
-  // We don't need to check for scrollable overflow in a particular axis
-  // because this will be true for both or neither axis.
-  mNeedsMinSizeAutoResolution =
-      IsAutoOrEnumOnBSize(mainMinSize, IsInlineAxisMainAxis()) &&
-      !disp->IsScrollableOverflow();
+  return IsAutoOrEnumOnBSize(mainMinSize, IsInlineAxisMainAxis()) &&
+         !Frame()->StyleDisplay()->IsScrollableOverflow();
 }
 
 nscoord FlexItem::BaselineOffsetFromOuterCrossEdge(
