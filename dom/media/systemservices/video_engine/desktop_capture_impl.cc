@@ -31,6 +31,8 @@
 #include "modules/video_capture/video_capture.h"
 #include "mozilla/StaticPrefs_media.h"
 
+#include "PerformanceRecorder.h"
+
 #if defined(_WIN32)
 #  include "platform_uithread.h"
 #else
@@ -483,6 +485,8 @@ int32_t DesktopCaptureImpl::IncomingFrame(
   // In Windows, the image starts bottom left, instead of top left.
   // Setting a negative source height, inverts the image (within LibYuv).
 
+  mozilla::PerformanceRecorder<mozilla::CopyVideoStage> rec(
+      "DesktopCaptureImpl::ConvertToI420"_ns, width, abs(height));
   // TODO(nisse): Use a pool?
   rtc::scoped_refptr<I420Buffer> buffer =
       I420Buffer::Create(width, abs(height), stride_y, stride_uv, stride_uv);
@@ -499,6 +503,7 @@ int32_t DesktopCaptureImpl::IncomingFrame(
                       << static_cast<int>(frameInfo.videoType) << "to I420.";
     return -1;
   }
+  rec.Record();
 
   VideoFrame captureFrame(buffer, 0, rtc::TimeMillis(), kVideoRotation_0);
 

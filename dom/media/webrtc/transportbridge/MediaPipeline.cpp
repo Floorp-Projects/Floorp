@@ -1526,6 +1526,10 @@ class MediaPipelineReceiveVideo::PipelineListener
 
       MOZ_ASSERT(i420->DataY());
       // Create a video frame using |buffer|.
+      PerformanceRecorder<CopyVideoStage> rec(
+          "MediaPipelineReceiveVideo::CopyToImage"_ns, i420->width(),
+          i420->height());
+
       RefPtr<PlanarYCbCrImage> yuvImage =
           mImageContainer->CreatePlanarYCbCrImage();
 
@@ -1547,6 +1551,7 @@ class MediaPipelineReceiveVideo::PipelineListener
         MOZ_ASSERT(false);
         return;
       }
+      rec.Record();
 
       image = std::move(yuvImage);
     }
