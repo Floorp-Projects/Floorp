@@ -4594,14 +4594,17 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
       ReflowChildren(aReflowInput, containerSize, availableSizeForItems,
                      borderPadding, sumOfChildrenBlockSize, axisTracker, flr);
 
-  // maxBlockEndEdgeOfChildren is relative to border-box, so we need to subtract
-  // block-start border and padding to make it relative to our content-box. Note
-  // that if there is a packing space in between the last flex item's block-end
-  // edge and the available space's block-end edge, we want to record the
-  // available size of item to consume part of the packing space.
-  sumOfChildrenBlockSize +=
-      std::max(maxBlockEndEdgeOfChildren - borderPadding.BStart(wm),
-               availableSizeForItems.BSize(wm));
+  if (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE) {
+    // maxBlockEndEdgeOfChildren is relative to border-box, so we need to
+    // subtract block-start border and padding to make it relative to our
+    // content-box. Note that if there is a packing space in between the last
+    // flex item's block-end edge and the available space's block-end edge, we
+    // want to record the available size of item to consume part of the packing
+    // space.
+    sumOfChildrenBlockSize +=
+        std::max(maxBlockEndEdgeOfChildren - borderPadding.BStart(wm),
+                 availableSizeForItems.BSize(wm));
+  }
 
   PopulateReflowOutput(aReflowOutput, aReflowInput, aStatus, contentBoxSize,
                        borderPadding, consumedBSize, mayNeedNextInFlow,
@@ -4639,31 +4642,33 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     UpdateFlexLineAndItemInfo(*containerInfo, flr.mLines);
   }
 
-  // If we are the first-in-flow, we want to store data for our next-in-flows,
-  // or clear the existing data if it is not needed.
-  if (!GetPrevInFlow()) {
-    SharedFlexData* data = GetProperty(SharedFlexData::Prop());
-    if (!aStatus.IsFullyComplete()) {
-      if (!data) {
-        data = new SharedFlexData;
-        SetProperty(SharedFlexData::Prop(), data);
-      }
-      data->mLines = std::move(flr.mLines);
-      data->mContentBoxMainSize = flr.mContentBoxMainSize;
-      data->mContentBoxCrossSize = flr.mContentBoxCrossSize;
+  if (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE) {
+    // If we are the first-in-flow, we want to store data for our next-in-flows,
+    // or clear the existing data if it is not needed.
+    if (!GetPrevInFlow()) {
+      SharedFlexData* data = GetProperty(SharedFlexData::Prop());
+      if (!aStatus.IsFullyComplete()) {
+        if (!data) {
+          data = new SharedFlexData;
+          SetProperty(SharedFlexData::Prop(), data);
+        }
+        data->mLines = std::move(flr.mLines);
+        data->mContentBoxMainSize = flr.mContentBoxMainSize;
+        data->mContentBoxCrossSize = flr.mContentBoxCrossSize;
 
+        SetProperty(SumOfChildrenBlockSizeProperty(), sumOfChildrenBlockSize);
+      } else if (data && !GetNextInFlow()) {
+        // We are fully-complete, so no next-in-flow is needed. However, if we
+        // report SetInlineLineBreakBeforeAndReset() in an incremental reflow,
+        // our next-in-flow might still exist. It can be reflowed again before
+        // us if it is an overflow container. Delete the existing data only if
+        // we don't have a next-in-flow.
+        RemoveProperty(SharedFlexData::Prop());
+        RemoveProperty(SumOfChildrenBlockSizeProperty());
+      }
+    } else {
       SetProperty(SumOfChildrenBlockSizeProperty(), sumOfChildrenBlockSize);
-    } else if (data && !GetNextInFlow()) {
-      // We are fully-complete, so no next-in-flow is needed. However, if we
-      // report SetInlineLineBreakBeforeAndReset() in a incremental reflow, our
-      // next-in-flow might still exist. It can be reflowed again before us if
-      // it is an overflow container. Delete the existing data only if we don't
-      // have a next-in-flow.
-      RemoveProperty(SharedFlexData::Prop());
-      RemoveProperty(SumOfChildrenBlockSizeProperty());
     }
-  } else {
-    SetProperty(SumOfChildrenBlockSizeProperty(), sumOfChildrenBlockSize);
   }
 }
 
@@ -5220,7 +5225,7 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
         // The item is a continuation. Lay it out at the beginning of the
         // available space.
         framePos.B(flexWM) = 0;
-      } else {
+      } else if (GetPrevInFlow()) {
         // We haven't laid the item out. Subtract its block-direction position
         // by the sum of our prev-in-flows' content block-end.
         framePos.B(flexWM) -= aSumOfPrevInFlowsChildrenBlockSize;
