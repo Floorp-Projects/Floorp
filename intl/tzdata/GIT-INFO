@@ -1,5 +1,5 @@
-commit e47d7d15663333c72f1f01900223635b665146f4
+commit 02968a65f05cb5403bc2fa3d41d0a6d60f90d5e4
 Author: yumaoka <y.umaoka@gmail.com>
-Date:   Tue Nov 1 10:29:13 2022 -0400
+Date:   Wed Nov 30 14:10:34 2022 -0500
 
-    ICU-22196 TZ Database 2022f updates (icu-data)
+    ICU-22217 TZ Database 2022g updates
