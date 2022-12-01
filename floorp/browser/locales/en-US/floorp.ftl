@@ -34,7 +34,7 @@ enable-doble-click-block =
 operation-settings = 
   .label = Browser Operation Settings
 Mouse-side-button = 
-  .label = Browser optimized for mouse operation with side buttons
+  .label = Optimise browser for mouse with side buttons
 
 tabbar-preference = Tabbar
 
@@ -42,16 +42,16 @@ None-mode =
  .label= Normal mode
 
 hide-horizontality-tabs = 
- .label= Hide horizontality tabbar
+ .label= Hide horizontal tabbar
 
 verticalTab-setting = 
- .label = Browser optimized for vertical tabs
+ .label = Optimise browser for vertical tabs
 
 move-tabbar-position =
  .label = Show tabbar at the bottom of the toolbar
 
 tabbar-on-bottom = 
- .label = Display at the Bottom of the Window
+ .label = Display tabbar at the bottom of the window
 
 treestyletabSettings-l10 = Tree Style vertical tab settings
 treestyletab-Settings = 
@@ -84,7 +84,7 @@ allow-auto-restart =
  .label = Automatic restart when settings are changed that require a restart
 
 browser-rest-mode =
- .label = Enable Rest-mode hotkey (F9)
+ .label = Enable Rest-mode shortcut (F9)
 
 disable-fullscreen-notification =
  .label = Disable video fullscreen notification
@@ -235,7 +235,7 @@ bsb-header = Browser Manager Sidebar
 bsb-context = Select Container Tabs
 bsb-userAgent-label = 
   .label = Use Mobile version UserAgent in this panel
-bsb-width = Width (If this is 0, use global values)
+bsb-width = Width (If set to 0, use global values)
 bsb-page = Page to open
 
 bsb-add = Add webpanel on Browser Manager Sidebar
@@ -316,7 +316,7 @@ newtab-background-not-background =
 
 ## lepton preferences
 
-about-lepton = Customize { -brand-short-name } with Lepton.  A change needless to restart { -brand-short-name }.
+about-lepton = Customize { -brand-short-name } with Lepton
 
 lepton-preference-button =
     .label = Lepton Preferences...
@@ -378,7 +378,7 @@ floorp-lepton-enable-centered-tab =
 floorp-lepton-enable-centered-urlbar =
     .label = Centered URLBar
 floorp-lepton-enable-centered-bookmarkbar =
-    .label = Centered bookmarkbar
+    .label = Centered Bookmark Bar
 
 urlbar-preferences = URLbar
 
@@ -530,16 +530,16 @@ test-content-css =
     .label = Test userContent.css
     .accesskey = W
 
-not-found-editor-path = Editor path not found
+not-found-editor-path = Path to the editor was not found
 set-pref-description = This operation requires a path to the editor. Set "view_source.editor.path" in "about:config"
 
 
 ################################################################### about:addons ###############################################################
 
 # DualTheme
-dual-theme-enable-addon-button = Enable (Sub Theme)
-dual-theme-disable-addon-button = Disable (Sub Theme)
-dual-theme-enabled-heading = Enabled (Sub Theme)
+dual-theme-enable-addon-button = Enable as a sub theme
+dual-theme-disable-addon-button = Disable as a sub theme
+dual-theme-enabled-heading = Enabled as a sub theme
 
 ##################################################################### migration  ###############################################################
 
