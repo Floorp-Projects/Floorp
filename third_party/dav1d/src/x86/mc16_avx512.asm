@@ -1604,7 +1604,7 @@ cglobal put_8tap_16bpc, 4, 9, 16, dst, ds, src, ss, w, h, mx, my
     vpbroadcastd        m11, [buf+ 4]
     vpbroadcastd        m12, [buf+ 8]
     vpbroadcastd        m13, [buf+12]
-    cmp                  wd, 16
+    sub                  wd, 16
     je .h_w16
     jg .h_w32
 .h_w8:

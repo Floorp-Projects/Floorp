@@ -63,7 +63,7 @@ endforeach
 # ASM option
 is_asm_enabled = (get_option('enable_asm') == true and
     (host_machine.cpu_family() == 'x86' or
-     (host_machine.cpu_family() == 'x86_64' and cc.get_define('__ILP32__') == '') or
+     (host_machine.cpu_family() == 'x86_64' and cc.get_define('__ILP32__').strip() == '') or
      host_machine.cpu_family() == 'aarch64'      or
      host_machine.cpu_family().startswith('arm') or
      host_machine.cpu() == 'ppc64le'))
@@ -87,16 +87,11 @@ cdata.set10('CONFIG_LOG', get_option('logging'))
 test_args = []
 
 optional_arguments = []
+optional_link_arguments = []
 
-if host_machine.system() == 'linux'
+if host_machine.system() in ['linux', 'gnu']
     test_args += '-D_GNU_SOURCE'
     add_project_arguments('-D_GNU_SOURCE', language: 'c')
-elif host_machine.system() == 'darwin'
-    test_args += '-D_DARWIN_C_SOURCE'
-    add_project_arguments('-D_DARWIN_C_SOURCE', language: 'c')
-else
-    test_args += '-D_POSIX_C_SOURCE=200112L'
-    add_project_arguments('-D_POSIX_C_SOURCE=200112L', language: 'c')
 endif
 
 if host_machine.system() == 'windows'
@@ -110,6 +105,18 @@ if host_machine.system() == 'windows'
     else
         cdata.set('fseeko', '_fseeki64')
         cdata.set('ftello', '_ftelli64')
+    endif
+
+    if host_machine.cpu_family() == 'x86_64'
+        if cc.get_argument_syntax() != 'msvc'
+            optional_link_arguments += '-Wl,--dynamicbase,--nxcompat,--tsaware,--high-entropy-va'
+        endif
+    elif host_machine.cpu_family() == 'x86' or host_machine.cpu_family() == 'arm'
+        if cc.get_argument_syntax() == 'msvc'
+            optional_link_arguments += '/largeaddressaware'
+        else
+            optional_link_arguments += '-Wl,--dynamicbase,--nxcompat,--tsaware,--large-address-aware'
+        endif
     endif
 
     # On Windows, we use a compatibility layer to emulate pthread
@@ -135,7 +142,7 @@ else
     rt_dependency = []
     if cc.has_function('clock_gettime', prefix : '#include <time.h>', args : test_args)
         cdata.set('HAVE_CLOCK_GETTIME', 1)
-    elif host_machine.system() != 'darwin'
+    elif host_machine.system() not in ['darwin', 'ios', 'tvos']
         rt_dependency = cc.find_library('rt', required: false)
         if not cc.has_function('clock_gettime', prefix : '#include <time.h>', args : test_args, dependencies : rt_dependency)
             error('clock_gettime not found')
@@ -248,6 +255,10 @@ if cc.has_function('pthread_getaffinity_np', prefix : pthread_np_prefix, args : 
     cdata.set('HAVE_PTHREAD_GETAFFINITY_NP', 1)
 endif
 
+if cc.compiles('int x = _Generic(0, default: 0);', name: '_Generic', args: test_args)
+    cdata.set('HAVE_C11_GENERIC', 1)
+endif
+
 # Compiler flag tests
 
 if cc.has_argument('-fvisibility=hidden')
@@ -289,13 +300,14 @@ if (get_option('buildtype') != 'debug' and get_option('buildtype') != 'plain')
     optional_arguments += '-ffast-math'
 endif
 
-if (host_machine.system() == 'darwin' and cc.get_id() == 'clang' and
+if (host_machine.system() in ['darwin', 'ios', 'tvos'] and cc.get_id() == 'clang' and
     cc.version().startswith('11'))
     # Workaround for Xcode 11 -fstack-check bug, see #301
     optional_arguments += '-fno-stack-check'
 endif
 
 add_project_arguments(cc.get_supported_arguments(optional_arguments), language : 'c')
+add_project_link_arguments(cc.get_supported_link_arguments(optional_link_arguments), language : 'c')
 
 # libFuzzer related things
 fuzzing_engine = get_option('fuzzing_engine')
@@ -330,7 +342,7 @@ if host_machine.cpu_family().startswith('x86')
             stack_alignment = 16
         endif
     else
-        if host_machine.system() == 'linux' or host_machine.system() == 'darwin'
+        if host_machine.system() == 'linux' or host_machine.system() in ['darwin', 'ios', 'tvos']
             stack_alignment = 16
         elif cc.has_argument('-mpreferred-stack-boundary=4')
             stackalign_flag = ['-mpreferred-stack-boundary=4']
@@ -391,7 +403,7 @@ if host_machine.cpu_family().startswith('x86')
     cdata_asm.set10('PIC', true)
 
     # Convert SSE asm into (128-bit) AVX when compiler flags are set to use AVX instructions
-    cdata_asm.set10('FORCE_VEX_ENCODING', cc.get_define('__AVX__') != '')
+    cdata_asm.set10('FORCE_VEX_ENCODING', cc.get_define('__AVX__').strip() != '')
 endif
 
 cdata.set10('ARCH_PPC64LE', host_machine.cpu() == 'ppc64le')
@@ -399,7 +411,7 @@ cdata.set10('ARCH_PPC64LE', host_machine.cpu() == 'ppc64le')
 # meson's cc.symbols_have_underscore_prefix() is unfortunately unrelieably
 # when additional flags like '-fprofile-instr-generate' are passed via CFLAGS
 # see following meson issue https://github.com/mesonbuild/meson/issues/5482
-if (host_machine.system() == 'darwin' or
+if (host_machine.system() in ['darwin', 'ios', 'tvos'] or
    (host_machine.system() == 'windows' and host_machine.cpu_family() == 'x86'))
     cdata.set10('PREFIX', true)
     cdata_asm.set10('PREFIX', true)
@@ -433,7 +445,7 @@ if is_asm_enabled and host_machine.cpu_family().startswith('x86')
 
     if host_machine.system() == 'windows'
         nasm_format = 'win'
-    elif host_machine.system() == 'darwin'
+    elif host_machine.system() in ['darwin', 'ios', 'tvos']
         nasm_format = 'macho'
     else
         nasm_format = 'elf'
@@ -462,7 +474,8 @@ use_gaspp = false
 if (is_asm_enabled and
     (host_machine.cpu_family() == 'aarch64' or
      host_machine.cpu_family().startswith('arm')) and
-    cc.get_argument_syntax() == 'msvc')
+    cc.get_argument_syntax() == 'msvc' and
+    (cc.get_id() != 'clang-cl' or meson.version().version_compare('<0.58.0')))
     gaspp = find_program('gas-preprocessor.pl')
     use_gaspp = true
     gaspp_gen = generator(gaspp,

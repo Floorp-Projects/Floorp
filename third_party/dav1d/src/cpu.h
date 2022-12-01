@@ -43,8 +43,8 @@
 #include "src/x86/cpu.h"
 #endif
 
-extern unsigned dav1d_cpu_flags;
-extern unsigned dav1d_cpu_flags_mask;
+EXTERN unsigned dav1d_cpu_flags;
+EXTERN unsigned dav1d_cpu_flags_mask;
 
 void dav1d_init_cpu(void);
 DAV1D_API void dav1d_set_cpu_flags_mask(unsigned mask);

@@ -121,15 +121,15 @@ static struct {
     CheckasmFunc *current_func;
     CheckasmFuncVersion *current_func_ver;
     const char *current_test_name;
-    const char *bench_pattern;
-    size_t bench_pattern_len;
     int num_checked;
     int num_failed;
     int nop_time;
     unsigned cpu_flag;
     const char *cpu_flag_name;
-    const char *test_name;
+    const char *test_pattern;
+    const char *function_pattern;
     unsigned seed;
+    int bench;
     int bench_c;
     int verbose;
     int function_listing;
@@ -489,6 +489,21 @@ static void signal_handler(const int s) {
 }
 #endif
 
+/* Compares a string with a wildcard pattern. */
+static int wildstrcmp(const char *str, const char *pattern) {
+    const char *wild = strchr(pattern, '*');
+    if (wild) {
+        const size_t len = wild - pattern;
+        if (strncmp(str, pattern, len)) return 1;
+        while (*++wild == '*');
+        if (!*wild) return 0;
+        str += len;
+        while (*str && wildstrcmp(str, wild)) str++;
+        return !*str;
+    }
+    return strcmp(str, pattern);
+}
+
 /* Perform tests and benchmarks for the specified
  * cpu flag if supported by the host */
 static void check_cpu_flag(const char *const name, unsigned flag) {
@@ -501,7 +516,7 @@ static void check_cpu_flag(const char *const name, unsigned flag) {
     if (!flag || state.cpu_flag != old_cpu_flag) {
         state.cpu_flag_name = name;
         for (int i = 0; tests[i].func; i++) {
-            if (state.test_name && strcmp(tests[i].name, state.test_name))
+            if (state.test_pattern && wildstrcmp(tests[i].name, state.test_pattern))
                 continue;
             xor128_srand(state.seed);
             state.current_test_name = tests[i].name;
@@ -536,33 +551,40 @@ int main(int argc, char *argv[]) {
     state.seed = get_seed();
 
     while (argc > 1) {
-        if (!strncmp(argv[1], "--help", 6)) {
+        if (!strncmp(argv[1], "--help", 6) || !strcmp(argv[1], "-h")) {
             fprintf(stderr,
                     "checkasm [options] <random seed>\n"
-                    "    <random seed>       Numeric value to seed the rng\n"
+                    "    <random seed>              Numeric value to seed the rng\n"
                     "Options:\n"
-                    "    --test=<test_name>  Test only <test_name>\n"
-                    "    --bench=<pattern>   Test and benchmark the functions matching <pattern>\n"
-                    "    --list-functions    List available functions\n"
-                    "    --list-tests        List available tests\n"
-                    "    --bench-c           Benchmark the C-only functions\n"
-                    "    --verbose -v        Print failures verbosely\n");
+                    "    --test=<pattern>           Test only <pattern>\n"
+                    "    --function=<pattern> -f    Test only the functions matching <pattern>\n"
+                    "    --bench -b                 Benchmark the tested functions\n"
+                    "    --list-functions           List available functions\n"
+                    "    --list-tests               List available tests\n"
+                    "    --bench-c -c               Benchmark the C-only functions\n"
+                    "    --verbose -v               Print failures verbosely\n");
             return 0;
-        } else if (!strncmp(argv[1], "--bench-c", 9)) {
+        } else if (!strcmp(argv[1], "--bench-c") || !strcmp(argv[1], "-c")) {
             state.bench_c = 1;
-        } else if (!strncmp(argv[1], "--bench", 7)) {
+        } else if (!strcmp(argv[1], "--bench") || !strcmp(argv[1], "-b")) {
 #ifndef readtime
             fprintf(stderr,
                     "checkasm: --bench is not supported on your system\n");
             return 1;
 #endif
-            if (argv[1][7] == '=') {
-                state.bench_pattern = argv[1] + 8;
-                state.bench_pattern_len = strlen(state.bench_pattern);
-            } else
-                state.bench_pattern = "";
+            state.bench = 1;
         } else if (!strncmp(argv[1], "--test=", 7)) {
-            state.test_name = argv[1] + 7;
+            state.test_pattern = argv[1] + 7;
+        } else if (!strcmp(argv[1], "-t")) {
+            state.test_pattern = argc > 1 ? argv[2] : "";
+            argc--;
+            argv++;
+        } else if (!strncmp(argv[1], "--function=", 11)) {
+            state.function_pattern = argv[1] + 11;
+        } else if (!strcmp(argv[1], "-f")) {
+            state.function_pattern = argc > 1 ? argv[2] : "";
+            argc--;
+            argv++;
         } else if (!strcmp(argv[1], "--list-functions")) {
             state.function_listing = 1;
         } else if (!strcmp(argv[1], "--list-tests")) {
@@ -602,7 +624,7 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifdef readtime
-    if (state.bench_pattern) {
+    if (state.bench) {
         static int testing = 0;
         checkasm_save_context();
         if (!testing) {
@@ -658,7 +680,7 @@ int main(int argc, char *argv[]) {
         } else {
             fprintf(stderr, "checkasm: all %d tests passed\n", state.num_checked);
 #ifdef readtime
-            if (state.bench_pattern) {
+            if (state.bench) {
                 state.nop_time = measure_nop_time();
                 printf("nop: %d.%d\n", state.nop_time/10, state.nop_time%10);
                 print_benchs(state.funcs);
@@ -682,8 +704,11 @@ void *checkasm_check_func(void *const func, const char *const name, ...) {
     const int name_length = vsnprintf(name_buf, sizeof(name_buf), name, arg);
     va_end(arg);
 
-    if (!func || name_length <= 0 || (size_t)name_length >= sizeof(name_buf))
+    if (!func || name_length <= 0 || (size_t)name_length >= sizeof(name_buf) ||
+        (state.function_pattern && wildstrcmp(name_buf, state.function_pattern)))
+    {
         return NULL;
+    }
 
     state.current_func = get_func(&state.funcs, name_buf);
 
@@ -724,9 +749,7 @@ void *checkasm_check_func(void *const func, const char *const name, ...) {
 
 /* Decide whether or not the current function needs to be benchmarked */
 int checkasm_bench_func(void) {
-    return !state.num_failed && state.bench_pattern &&
-           !strncmp(state.current_func->name, state.bench_pattern,
-                    state.bench_pattern_len);
+    return !state.num_failed && state.bench;
 }
 
 /* Indicate that the current test has failed, return whether verbose printing

@@ -483,10 +483,10 @@ endfunc
         add             \o1\().4s, v5.4s,     v7.4s
         sub             \o3\().4s, \o3\().4s, v7.4s
 
-        rshrn           \o0\().4h, \o0\().4s, #12
-        rshrn           \o2\().4h, \o2\().4s, #12
-        rshrn           \o1\().4h, \o1\().4s, #12
-        rshrn           \o3\().4h, \o3\().4s, #12
+        sqrshrn         \o0\().4h, \o0\().4s, #12
+        sqrshrn         \o2\().4h, \o2\().4s, #12
+        sqrshrn         \o1\().4h, \o1\().4s, #12
+        sqrshrn         \o3\().4h, \o3\().4s, #12
 .endm
 
 function inv_adst_4h_x4_neon, export=1
@@ -538,21 +538,21 @@ endfunc
         sub             v4.4s,   v4.4s,   v2.4s // out3
         sub             v5.4s,   v5.4s,   v3.4s
 
-        rshrn           v18.4h,  v18.4s, #12
-        rshrn2          v18.8h,  v19.4s, #12
+        sqrshrn         v18.4h,  v18.4s, #12
+        sqrshrn2        v18.8h,  v19.4s, #12
 
-        rshrn           \o0\().4h, v16.4s, #12
-        rshrn2          \o0\().8h, v17.4s, #12
+        sqrshrn         \o0\().4h, v16.4s, #12
+        sqrshrn2        \o0\().8h, v17.4s, #12
 
 .ifc \o2, v17
         mov             v17.16b,   v18.16b
 .endif
 
-        rshrn           \o1\().4h, v6.4s,  #12
-        rshrn2          \o1\().8h, v7.4s,  #12
+        sqrshrn         \o1\().4h, v6.4s,  #12
+        sqrshrn2        \o1\().8h, v7.4s,  #12
 
-        rshrn           \o3\().4h, v4.4s,  #12
-        rshrn2          \o3\().8h, v5.4s,  #12
+        sqrshrn         \o3\().4h, v4.4s,  #12
+        sqrshrn2        \o3\().8h, v5.4s,  #12
 .endm
 
 function inv_adst_8h_x4_neon, export=1

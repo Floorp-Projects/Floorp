@@ -31,11 +31,11 @@
 #include "src/levels.h"
 
 void dav1d_init_wedge_masks(void);
-extern const uint8_t *dav1d_wedge_masks[N_BS_SIZES][3 /* 444/luma, 422, 420 */]
+EXTERN const uint8_t *dav1d_wedge_masks[N_BS_SIZES][3 /* 444/luma, 422, 420 */]
                                  [2 /* sign */][16 /* wedge_idx */];
 
 void dav1d_init_interintra_masks(void);
-extern const uint8_t *dav1d_ii_masks[N_BS_SIZES][3 /* 444/luma, 422, 420 */]
+EXTERN const uint8_t *dav1d_ii_masks[N_BS_SIZES][3 /* 444/luma, 422, 420 */]
                                     [N_INTER_INTRA_PRED_MODES];
 
 #endif /* DAV1D_SRC_WEDGE_H */

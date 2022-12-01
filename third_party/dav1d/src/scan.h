@@ -32,6 +32,6 @@
 
 #include "src/levels.h"
 
-extern const uint16_t *const dav1d_scans[N_RECT_TX_SIZES];
+EXTERN const uint16_t *const dav1d_scans[N_RECT_TX_SIZES];
 
 #endif /* DAV1D_SRC_SCAN_H */
