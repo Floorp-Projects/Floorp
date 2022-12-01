@@ -51,7 +51,6 @@ add_task(async function block_request_with_dnr() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     temporarilyInstalled: true, // Needed for granted_host_permissions
-    allowInsecureRequests: true,
     manifest: {
       manifest_version: 3,
       granted_host_permissions: true,
@@ -195,7 +194,6 @@ add_task(async function block_request_with_webRequest_after_allow_with_dnr() {
   let extension = ExtensionTestUtils.loadExtension({
     background,
     temporarilyInstalled: true, // Needed for granted_host_permissions
-    allowInsecureRequests: true,
     manifest: {
       manifest_version: 3,
       granted_host_permissions: true,
