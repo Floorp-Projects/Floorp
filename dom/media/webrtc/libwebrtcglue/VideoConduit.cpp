@@ -316,7 +316,6 @@ WebrtcVideoConduit::Control::Control(const RefPtr<AbstractThread>& aCallThread)
 WebrtcVideoConduit::WebrtcVideoConduit(
     RefPtr<WebrtcCallWrapper> aCall, nsCOMPtr<nsISerialEventTarget> aStsThread,
     Options aOptions, std::string aPCHandle,
-    // TODO(pehrsons): Use for decoders
     const TrackingId& aRecvTrackingId)
     : mRendererMonitor("WebrtcVideoConduit::mRendererMonitor"),
       mCallThread(aCall->mCallThread),
@@ -324,8 +323,8 @@ WebrtcVideoConduit::WebrtcVideoConduit(
       mControl(aCall->mCallThread),
       mWatchManager(this, aCall->mCallThread),
       mMutex("WebrtcVideoConduit::mMutex"),
-      mDecoderFactory(
-          MakeUnique<WebrtcVideoDecoderFactory>(mCallThread.get(), aPCHandle)),
+      mDecoderFactory(MakeUnique<WebrtcVideoDecoderFactory>(
+          mCallThread.get(), aPCHandle, aRecvTrackingId)),
       mEncoderFactory(MakeUnique<WebrtcVideoEncoderFactory>(
           mCallThread.get(), std::move(aPCHandle))),
       mBufferPool(false, SCALER_BUFFER_POOL_SIZE),

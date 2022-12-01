@@ -41,7 +41,8 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
         aParams.mImageContainer,
         aParams.mOptions.contains(CreateDecoderParams::Option::LowLatency),
         aParams.mOptions.contains(
-            CreateDecoderParams::Option::HardwareDecoderNotAllowed));
+            CreateDecoderParams::Option::HardwareDecoderNotAllowed),
+        aParams.mTrackingId);
     return decoder.forget();
   }
 

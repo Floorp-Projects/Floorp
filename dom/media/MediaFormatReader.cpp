@@ -377,7 +377,7 @@ void MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData) {
           {*ownerData.GetCurrentInfo()->GetAsAudioInfo(), mOwner->mCrashHelper,
            CreateDecoderParams::UseNullDecoder(ownerData.mIsNullDecode),
            TrackInfo::kAudioTrack, std::move(onWaitingForKeyEvent),
-           mOwner->mMediaEngineId});
+           mOwner->mMediaEngineId, mOwner->mTrackingId});
       break;
     }
 
@@ -397,7 +397,7 @@ void MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData) {
            OptionSet(ownerData.mHardwareDecodingDisabled
                          ? Option::HardwareDecoderNotAllowed
                          : Option::Default),
-           mOwner->mMediaEngineId});
+           mOwner->mMediaEngineId, mOwner->mTrackingId});
       break;
     }
 
@@ -882,7 +882,8 @@ MediaFormatReader::MediaFormatReader(MediaFormatReaderInit& aInit,
       mBuffered(mTaskQueue, TimeIntervals(),
                 "MediaFormatReader::mBuffered (Canonical)"),
       mFrameStats(aInit.mFrameStats),
-      mMediaDecoderOwnerID(aInit.mMediaDecoderOwnerID) {
+      mMediaDecoderOwnerID(aInit.mMediaDecoderOwnerID),
+      mTrackingId(std::move(aInit.mTrackingId)) {
   MOZ_ASSERT(aDemuxer);
   MOZ_COUNT_CTOR(MediaFormatReader);
   DDLINKCHILD("audio decoder data", "MediaFormatReader::DecoderDataWithPromise",

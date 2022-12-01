@@ -92,7 +92,8 @@ class MediaDataHelper {
 };
 
 OmxDataDecoder::OmxDataDecoder(const TrackInfo& aTrackInfo,
-                               layers::ImageContainer* aImageContainer)
+                               layers::ImageContainer* aImageContainer,
+                               Maybe<TrackingId> aTrackingId)
     : mOmxTaskQueue(
           CreateMediaDecodeTaskQueue("OmxDataDecoder::mOmxTaskQueue")),
       mImageContainer(aImageContainer),
@@ -102,7 +103,8 @@ OmxDataDecoder::OmxDataDecoder(const TrackInfo& aTrackInfo,
       mFlushing(false),
       mShuttingDown(false),
       mCheckingInputExhausted(false),
-      mPortSettingsChanged(-1, "OmxDataDecoder::mPortSettingsChanged") {
+      mPortSettingsChanged(-1, "OmxDataDecoder::mPortSettingsChanged"),
+      mTrackingId(std::move(aTrackingId)) {
   LOG("");
   mOmxLayer = new OmxPromiseLayer(mOmxTaskQueue, this, aImageContainer);
 }
@@ -163,12 +165,14 @@ RefPtr<MediaDataDecoder::DecodePromise> OmxDataDecoder::Decode(
   return InvokeAsync(mOmxTaskQueue, __func__, [self, this, sample]() {
     RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
 
-    MediaInfoFlag flag = MediaInfoFlag::None;
-    flag |= (sample->mKeyframe ? MediaInfoFlag::KeyFrame
-                               : MediaInfoFlag::NonKeyFrame);
+    mTrackingId.apply([&](const auto& aId) {
+      MediaInfoFlag flag = MediaInfoFlag::None;
+      flag |= (sample->mKeyframe ? MediaInfoFlag::KeyFrame
+                                 : MediaInfoFlag::NonKeyFrame);
 
-    mPerformanceRecorder.Start(sample->mTimecode.ToMicroseconds(),
-                               "OmxDataDecoder"_ns, flag);
+      mPerformanceRecorder.Start(sample->mTimecode.ToMicroseconds(),
+                                 "OmxDataDecoder"_ns, aId, flag);
+    });
     mMediaRawDatas.AppendElement(std::move(sample));
 
     // Start to fill/empty buffers.

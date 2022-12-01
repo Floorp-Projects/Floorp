@@ -259,9 +259,9 @@ ProfilerString8View DecodeStage::Name() const {
     mYUVColorSpace.apply([&](gfx::YUVColorSpace aColorSpace) {
       AppendYUVColorSpaceToName(extras, aColorSpace);
     });
-    mName = Some(nsPrintfCString("DecodeFrame %s %dx%d %s", mSource.Data(),
+    mName = Some(nsPrintfCString("DecodeFrame %s %dx%d %s %s", mSource.Data(),
                                  mWidth.valueOr(-1), mHeight.valueOr(-1),
-                                 extras.get()));
+                                 extras.get(), mTrackingId.ToString().get()));
   }
   return *mName;
 }

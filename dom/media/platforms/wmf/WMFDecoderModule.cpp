@@ -366,7 +366,8 @@ already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateVideoDecoder(
 
   UniquePtr<WMFVideoMFTManager> manager(new WMFVideoMFTManager(
       aParams.VideoConfig(), aParams.mKnowsCompositor, aParams.mImageContainer,
-      aParams.mRate.mValue, aParams.mOptions, sDXVAEnabled));
+      aParams.mRate.mValue, aParams.mOptions, sDXVAEnabled,
+      aParams.mTrackingId));
 
   MediaResult result = manager->Init();
   if (NS_FAILED(result)) {

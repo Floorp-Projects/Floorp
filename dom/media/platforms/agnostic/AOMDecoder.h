@@ -275,6 +275,7 @@ class AOMDecoder : public MediaDataDecoder,
   aom_codec_ctx_t mCodec;
 
   const VideoInfo mInfo;
+  const Maybe<TrackingId> mTrackingId;
   PerformanceRecorderMulti<DecodeStage> mPerformanceRecorder;
 };
 

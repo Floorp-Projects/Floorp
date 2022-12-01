@@ -9,6 +9,7 @@
 #include "api/video_codecs/video_decoder_factory.h"
 #include "api/video_codecs/video_encoder_factory.h"
 #include "MediaEventSource.h"
+#include "PerformanceRecorder.h"
 
 namespace mozilla {
 class GmpPluginNotifierInterface {
@@ -50,9 +51,10 @@ class WebrtcVideoDecoderFactory : public GmpPluginNotifier,
                                   public webrtc::VideoDecoderFactory {
  public:
   WebrtcVideoDecoderFactory(nsCOMPtr<nsISerialEventTarget> aOwningThread,
-                            std::string aPCHandle)
+                            std::string aPCHandle, TrackingId aTrackingId)
       : GmpPluginNotifier(std::move(aOwningThread)),
-        mPCHandle(std::move(aPCHandle)) {}
+        mPCHandle(std::move(aPCHandle)),
+        mTrackingId(std::move(aTrackingId)) {}
 
   std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override {
     MOZ_CRASH("Unexpected call");
@@ -64,6 +66,7 @@ class WebrtcVideoDecoderFactory : public GmpPluginNotifier,
 
  private:
   const std::string mPCHandle;
+  const TrackingId mTrackingId;
 };
 
 class WebrtcVideoEncoderFactory : public GmpPluginNotifierInterface,

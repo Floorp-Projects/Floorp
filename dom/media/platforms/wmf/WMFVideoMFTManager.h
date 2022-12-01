@@ -27,7 +27,7 @@ class WMFVideoMFTManager : public MFTManager {
                      layers::KnowsCompositor* aKnowsCompositor,
                      layers::ImageContainer* aImageContainer, float aFramerate,
                      const CreateDecoderParams::OptionSet& aOptions,
-                     bool aDXVAEnabled);
+                     bool aDXVAEnabled, Maybe<TrackingId> aTrackingId);
   ~WMFVideoMFTManager();
 
   MediaResult Init();
@@ -122,6 +122,7 @@ class WMFVideoMFTManager : public MFTManager {
   const bool mLowLatency;
 
   PerformanceRecorderMulti<DecodeStage> mPerformanceRecorder;
+  const Maybe<TrackingId> mTrackingId;
 };
 
 }  // namespace mozilla

@@ -638,14 +638,16 @@ void WebrtcGmpVideoEncoder::Encoded(
 }
 
 // Decoder.
-WebrtcGmpVideoDecoder::WebrtcGmpVideoDecoder(std::string aPCHandle)
+WebrtcGmpVideoDecoder::WebrtcGmpVideoDecoder(std::string aPCHandle,
+                                             TrackingId aTrackingId)
     : mGMP(nullptr),
       mInitting(false),
       mHost(nullptr),
       mCallbackMutex("WebrtcGmpVideoDecoder decoded callback mutex"),
       mCallback(nullptr),
       mDecoderStatus(GMPNoErr),
-      mPCHandle(std::move(aPCHandle)) {
+      mPCHandle(std::move(aPCHandle)),
+      mTrackingId(std::move(aTrackingId)) {
   MOZ_ASSERT(!mPCHandle.empty());
 }
 
@@ -794,7 +796,7 @@ int32_t WebrtcGmpVideoDecoder::Decode(const webrtc::EncodedImage& aInputImage,
   flag |= MediaInfoFlag::SoftwareDecoding;
   flag |= MediaInfoFlag::VIDEO_H264;
   mPerformanceRecorder.Start((aInputImage.Timestamp() * 1000ll) / 90,
-                             "WebrtcGmpVideoDecoder"_ns, flag);
+                             "WebrtcGmpVideoDecoder"_ns, mTrackingId, flag);
 
   // This is an ugly solution to asynchronous decoding errors
   // from Decode_g() not being returned to the synchronous Decode() method.

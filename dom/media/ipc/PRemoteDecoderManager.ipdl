@@ -18,6 +18,7 @@ using mozilla::AudioInfo from "MediaInfo.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
 using mozilla::CreateDecoderParams::OptionSet from "PlatformDecoderModule.h";
 using mozilla::DecoderDoctorDiagnostics from "DecoderDoctorDiagnostics.h";
+using mozilla::TrackingId from "PerformanceRecorder.h";
 
 namespace mozilla {
 
@@ -48,7 +49,8 @@ parent:
   async PRemoteDecoder(RemoteDecoderInfoIPDL info,
                        OptionSet options,
                        TextureFactoryIdentifier? identifier,
-                       uint64_t? mediaEngineId);
+                       uint64_t? mediaEngineId,
+                       TrackingId? trackingId);
 
   sync Readback(SurfaceDescriptorGPUVideo sd) returns (SurfaceDescriptor aResult);
 

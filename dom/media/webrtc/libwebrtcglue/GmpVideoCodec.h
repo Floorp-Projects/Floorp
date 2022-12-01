@@ -5,6 +5,10 @@
 #ifndef GMPVIDEOCODEC_H_
 #define GMPVIDEOCODEC_H_
 
+#include <string>
+
+#include "PerformanceRecorder.h"
+
 namespace mozilla {
 
 class WebrtcVideoDecoder;
@@ -13,7 +17,8 @@ class WebrtcVideoEncoder;
 class GmpVideoCodec {
  public:
   static WebrtcVideoEncoder* CreateEncoder(std::string aPCHandle);
-  static WebrtcVideoDecoder* CreateDecoder(std::string aPCHandle);
+  static WebrtcVideoDecoder* CreateDecoder(std::string aPCHandle,
+                                           TrackingId aTrackingId);
 };
 
 }  // namespace mozilla

@@ -29,7 +29,8 @@ class AppleVTDecoder : public MediaDataDecoder,
   AppleVTDecoder(const VideoInfo& aConfig,
                  layers::ImageContainer* aImageContainer,
                  CreateDecoderParams::OptionSet aOptions,
-                 layers::KnowsCompositor* aKnowsCompositor);
+                 layers::KnowsCompositor* aKnowsCompositor,
+                 Maybe<TrackingId> aTrackingId);
 
   class AppleFrameRef {
    public:
@@ -110,6 +111,7 @@ class AppleVTDecoder : public MediaDataDecoder,
   const RefPtr<layers::ImageContainer> mImageContainer;
   const RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   const bool mUseSoftwareImages;
+  const Maybe<TrackingId> mTrackingId;
 
   // Set on reader/decode thread calling Flush() to indicate that output is
   // not required and so input samples on mTaskQueue need not be processed.

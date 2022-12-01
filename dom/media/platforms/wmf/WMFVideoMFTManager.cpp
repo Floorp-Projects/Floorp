@@ -124,7 +124,8 @@ LayersBackend GetCompositorBackendType(
 WMFVideoMFTManager::WMFVideoMFTManager(
     const VideoInfo& aConfig, layers::KnowsCompositor* aKnowsCompositor,
     layers::ImageContainer* aImageContainer, float aFramerate,
-    const CreateDecoderParams::OptionSet& aOptions, bool aDXVAEnabled)
+    const CreateDecoderParams::OptionSet& aOptions, bool aDXVAEnabled,
+    Maybe<TrackingId> aTrackingId)
     : mVideoInfo(aConfig),
       mImageSize(aConfig.mImage),
       mStreamType(GetStreamTypeFromMimeType(aConfig.mMimeType)),
@@ -140,7 +141,8 @@ WMFVideoMFTManager::WMFVideoMFTManager(
                        CreateDecoderParams::Option::HardwareDecoderNotAllowed)),
       mZeroCopyNV12Texture(false),
       mFramerate(aFramerate),
-      mLowLatency(aOptions.contains(CreateDecoderParams::Option::LowLatency))
+      mLowLatency(aOptions.contains(CreateDecoderParams::Option::LowLatency)),
+      mTrackingId(std::move(aTrackingId))
 // mVideoStride, mVideoWidth, mVideoHeight, mUseHwAccel are initialized in
 // Init().
 {
@@ -547,29 +549,31 @@ WMFVideoMFTManager::Input(MediaRawData* aSample) {
     return E_FAIL;
   }
 
-  MediaInfoFlag flag = MediaInfoFlag::None;
-  flag |= (aSample->mKeyframe ? MediaInfoFlag::KeyFrame
-                              : MediaInfoFlag::NonKeyFrame);
-  flag |= (mUseHwAccel ? MediaInfoFlag::HardwareDecoding
-                       : MediaInfoFlag::SoftwareDecoding);
-  switch (mStreamType) {
-    case WMFStreamType::H264:
-      flag |= MediaInfoFlag::VIDEO_H264;
-      break;
-    case WMFStreamType::VP8:
-      flag |= MediaInfoFlag::VIDEO_VP8;
-      break;
-    case WMFStreamType::VP9:
-      flag |= MediaInfoFlag::VIDEO_VP9;
-      break;
-    case WMFStreamType::AV1:
-      flag |= MediaInfoFlag::VIDEO_AV1;
-      break;
-    default:
-      break;
-  };
-  mPerformanceRecorder.Start(aSample->mTime.ToMicroseconds(),
-                             "WMFVideoDecoder"_ns, flag);
+  mTrackingId.apply([&](const auto& aId) {
+    MediaInfoFlag flag = MediaInfoFlag::None;
+    flag |= (aSample->mKeyframe ? MediaInfoFlag::KeyFrame
+                                : MediaInfoFlag::NonKeyFrame);
+    flag |= (mUseHwAccel ? MediaInfoFlag::HardwareDecoding
+                         : MediaInfoFlag::SoftwareDecoding);
+    switch (mStreamType) {
+      case WMFStreamType::H264:
+        flag |= MediaInfoFlag::VIDEO_H264;
+        break;
+      case WMFStreamType::VP8:
+        flag |= MediaInfoFlag::VIDEO_VP8;
+        break;
+      case WMFStreamType::VP9:
+        flag |= MediaInfoFlag::VIDEO_VP9;
+        break;
+      case WMFStreamType::AV1:
+        flag |= MediaInfoFlag::VIDEO_AV1;
+        break;
+      default:
+        break;
+    };
+    mPerformanceRecorder.Start(aSample->mTime.ToMicroseconds(),
+                               "WMFVideoDecoder"_ns, aId, flag);
+  });
 
   RefPtr<IMFSample> inputSample;
   HRESULT hr = mDecoder->CreateInputSample(

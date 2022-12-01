@@ -23,6 +23,7 @@
 #  include "mozilla/layers/KnowsCompositor.h"
 #  include "mozilla/layers/LayersTypes.h"
 #  include "nsTArray.h"
+#  include "PerformanceRecorder.h"
 
 namespace mozilla {
 class TrackInfo;
@@ -109,6 +110,7 @@ struct CreateDecoderParamsForAsync {
   const OptionSet mOptions = OptionSet(Option::Default);
   const media::VideoFrameRate mRate;
   const Maybe<uint64_t> mMediaEngineId;
+  const Maybe<TrackingId> mTrackingId;
 };
 
 struct MOZ_STACK_CLASS CreateDecoderParams final {
@@ -132,7 +134,8 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
         mOnWaitingForKeyEvent(aParams.mOnWaitingForKeyEvent),
         mOptions(aParams.mOptions),
         mRate(aParams.mRate),
-        mMediaEngineId(aParams.mMediaEngineId) {}
+        mMediaEngineId(aParams.mMediaEngineId),
+        mTrackingId(aParams.mTrackingId) {}
 
   template <typename T1, typename... Ts>
   CreateDecoderParams(const TrackInfo& aConfig, T1&& a1, Ts&&... args)
@@ -180,6 +183,7 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
   media::VideoFrameRate mRate;
   // Used on Windows when the MF media engine playback is enabled.
   Maybe<uint64_t> mMediaEngineId;
+  Maybe<TrackingId> mTrackingId;
 
  private:
   void Set(layers::ImageContainer* aImageContainer) {
@@ -211,6 +215,7 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
   void Set(const Maybe<uint64_t>& aMediaEngineId) {
     mMediaEngineId = aMediaEngineId;
   }
+  void Set(const Maybe<TrackingId>& aTrackingId) { mTrackingId = aTrackingId; }
   void Set(const CreateDecoderParams& aParams) {
     // Set all but mTrackInfo;
     mImageContainer = aParams.mImageContainer;
@@ -224,6 +229,7 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
     mOptions = aParams.mOptions;
     mRate = aParams.mRate;
     mMediaEngineId = aParams.mMediaEngineId;
+    mTrackingId = aParams.mTrackingId;
   }
   template <typename T1, typename T2, typename... Ts>
   void Set(T1&& a1, T2&& a2, Ts&&... args) {

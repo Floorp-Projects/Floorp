@@ -29,7 +29,7 @@ class TaskQueue;
 
 class WebrtcMediaDataDecoder : public WebrtcVideoDecoder {
  public:
-  explicit WebrtcMediaDataDecoder(nsACString& aCodecMimeType);
+  WebrtcMediaDataDecoder(nsACString& aCodecMimeType, TrackingId aTrackingId);
 
   bool Configure(const webrtc::VideoDecoder::Settings& settings) override;
 
@@ -62,6 +62,7 @@ class WebrtcMediaDataDecoder : public WebrtcVideoDecoder {
   MediaDataDecoder::DecodedData mResults;
   const nsCString mCodecType;
   bool mDisabledHardwareAcceleration = false;
+  const TrackingId mTrackingId;
 };
 
 }  // namespace mozilla

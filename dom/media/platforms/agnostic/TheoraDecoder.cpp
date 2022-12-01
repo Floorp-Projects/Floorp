@@ -54,7 +54,8 @@ TheoraDecoder::TheoraDecoder(const CreateDecoderParams& aParams)
       mTheoraSetupInfo(nullptr),
       mTheoraDecoderContext(nullptr),
       mPacketCount(0),
-      mInfo(aParams.VideoConfig()) {
+      mInfo(aParams.VideoConfig()),
+      mTrackingId(aParams.mTrackingId) {
   MOZ_COUNT_CTOR(TheoraDecoder);
 }
 
@@ -142,7 +143,10 @@ RefPtr<MediaDataDecoder::DecodePromise> TheoraDecoder::ProcessDecode(
                               : MediaInfoFlag::NonKeyFrame);
   flag |= MediaInfoFlag::SoftwareDecoding;
   flag |= MediaInfoFlag::VIDEO_THEORA;
-  PerformanceRecorder<DecodeStage> rec("TheoraDecoder"_ns, flag);
+  Maybe<PerformanceRecorder<DecodeStage>> rec =
+      mTrackingId.map([&](const auto& aId) {
+        return PerformanceRecorder<DecodeStage>("TheoraDecoder"_ns, aId, flag);
+      });
 
   const unsigned char* aData = aSample->Data();
   size_t aLength = aSample->Size();
@@ -210,25 +214,27 @@ RefPtr<MediaDataDecoder::DecodePromise> TheoraDecoder::ProcessDecode(
           __func__);
     }
 
-    rec.Record([&](DecodeStage& aStage) {
-      aStage.SetResolution(static_cast<int>(mTheoraInfo.frame_width),
-                           static_cast<int>(mTheoraInfo.frame_height));
-      auto format = [&]() -> Maybe<DecodeStage::ImageFormat> {
-        switch (mTheoraInfo.pixel_fmt) {
-          case TH_PF_420:
-            return Some(DecodeStage::YUV420P);
-          case TH_PF_422:
-            return Some(DecodeStage::YUV422P);
-          case TH_PF_444:
-            return Some(DecodeStage::YUV444P);
-          default:
-            return Nothing();
-        }
-      }();
-      format.apply([&](auto& aFmt) { aStage.SetImageFormat(aFmt); });
-      aStage.SetYUVColorSpace(b.mYUVColorSpace);
-      aStage.SetColorRange(b.mColorRange);
-      aStage.SetColorDepth(b.mColorDepth);
+    rec.apply([&](auto& aRec) {
+      aRec.Record([&](DecodeStage& aStage) {
+        aStage.SetResolution(static_cast<int>(mTheoraInfo.frame_width),
+                             static_cast<int>(mTheoraInfo.frame_height));
+        auto format = [&]() -> Maybe<DecodeStage::ImageFormat> {
+          switch (mTheoraInfo.pixel_fmt) {
+            case TH_PF_420:
+              return Some(DecodeStage::YUV420P);
+            case TH_PF_422:
+              return Some(DecodeStage::YUV422P);
+            case TH_PF_444:
+              return Some(DecodeStage::YUV444P);
+            default:
+              return Nothing();
+          }
+        }();
+        format.apply([&](auto& aFmt) { aStage.SetImageFormat(aFmt); });
+        aStage.SetYUVColorSpace(b.mYUVColorSpace);
+        aStage.SetColorRange(b.mColorRange);
+        aStage.SetColorDepth(b.mColorDepth);
+      });
     });
 
     return DecodePromise::CreateAndResolve(DecodedData{v}, __func__);
