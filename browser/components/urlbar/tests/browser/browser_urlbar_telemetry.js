@@ -1022,6 +1022,13 @@ add_task(async function test_formHistory_enterSelection() {
 });
 
 add_task(async function test_privateWindow() {
+  // This test assumes the showSearchTerms feature is not enabled,
+  // as multiple searches are made one after another, relying on
+  // urlbar as the keyed scalar SAP, not urlbar_persisted.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.showSearchTerms.featureGate", false]],
+  });
+
   // Override the search telemetry search provider info to
   // count in-content SEARCH_COUNTs telemetry for our test engine.
   SearchSERPTelemetry.overrideSearchTelemetryForTests([
@@ -1217,4 +1224,5 @@ add_task(async function test_privateWindow() {
   // Reset the search provider info.
   SearchSERPTelemetry.overrideSearchTelemetryForTests();
   await UrlbarTestUtils.formHistory.clear();
+  await SpecialPowers.popPrefEnv();
 });
