@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test for the following data of engagement telemetry.
+// Test for the following data of abandonment telemetry.
 // - sap
 
 /* import-globals-from head-glean.js */
@@ -16,15 +16,24 @@ add_setup(async function() {
   await setup();
 });
 
+add_task(async function sap_urlbar_newtab() {
+  await doTest(async browser => {
+    await openPopup("x");
+    await doBlur();
+
+    assertAbandonmentTelemetry([{ sap: "urlbar_newtab" }]);
+  });
+});
+
 add_task(async function sap_urlbar() {
   await doTest(async browser => {
     await openPopup("x");
     await doEnter();
 
     await openPopup("y");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([{ sap: "urlbar_newtab" }, { sap: "urlbar" }]);
+    assertAbandonmentTelemetry([{ sap: "urlbar" }]);
   });
 });
 
@@ -37,9 +46,9 @@ add_task(async function sap_handoff() {
       searchInput.click();
     });
     EventUtils.synthesizeKey("x");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([{ sap: "handoff" }]);
+    assertAbandonmentTelemetry([{ sap: "handoff" }]);
   });
 });
 
@@ -60,9 +69,9 @@ add_task(async function sap_urlbar_addonpage() {
 
     gURLBar.select();
     await openPopup("x");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([{ sap: "urlbar_addonpage" }]);
+    assertAbandonmentTelemetry([{ sap: "urlbar_addonpage" }]);
   });
 
   await extension.unload();

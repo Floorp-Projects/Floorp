@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test for the following data of engagement telemetry.
+// Test for the following data of abandonment telemetry.
 // - groups
 // - results
 // - n_results
@@ -21,9 +21,9 @@ add_setup(async function() {
 add_task(async function groups_heuristics() {
   await doTest(async browser => {
     await openPopup("x");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([
+    assertAbandonmentTelemetry([
       { groups: "heuristic", results: "search_engine" },
     ]);
   });
@@ -38,10 +38,9 @@ add_task(async function groups_adaptive_history() {
     await PlacesTestUtils.addVisits(["https://example.com/test"]);
     await UrlbarUtils.addToInputHistory("https://example.com/test", "examp");
     await openPopup("exa");
-    await selectRowByURL("https://example.com/test");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([
+    assertAbandonmentTelemetry([
       {
         groups: "heuristic,adaptive_history",
         results: "search_engine,history",
@@ -65,10 +64,9 @@ add_task(async function groups_search_history() {
     await UrlbarTestUtils.formHistory.add(["foofoo", "foobar"]);
 
     await openPopup("foo");
-    await selectRowByURL("http://mochi.test:8888/?terms=foofoo");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([
+    assertAbandonmentTelemetry([
       {
         groups: "heuristic,search_history,search_history",
         results: "search_engine,search_history,search_history",
@@ -90,10 +88,9 @@ add_task(async function groups_search_suggest() {
 
   await doTest(async browser => {
     await openPopup("foo");
-    await selectRowByURL("http://mochi.test:8888/?terms=foofoo");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([
+    assertAbandonmentTelemetry([
       {
         groups: "heuristic,search_suggest,search_suggest",
         results: "search_engine,search_suggest,search_suggest",
@@ -114,10 +111,9 @@ add_task(async function groups_top_pick() {
 
   await doTest(async browser => {
     await openPopup("sponsored");
-    await selectRowByURL("https://example.com/sponsored");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([
+    assertAbandonmentTelemetry([
       {
         groups: "heuristic,top_pick,search_suggest,search_suggest",
         results: "search_engine,suggest_sponsor,search_suggest,search_suggest",
@@ -134,10 +130,9 @@ add_task(async function groups_top_site() {
   await doTest(async browser => {
     await addTopSites("https://example.com/");
     await showResultByArrowDown();
-    await selectRowByURL("https://example.com/");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([
+    assertAbandonmentTelemetry([
       {
         groups: "top_site,suggested_index",
         results: "top_site,action",
@@ -152,10 +147,9 @@ add_task(async function group_remote_tab() {
 
   await doTest(async browser => {
     await openPopup("example");
-    await selectRowByProvider("RemoteTabs");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([
+    assertAbandonmentTelemetry([
       {
         groups: "heuristic,remote_tab",
         results: "search_engine,remote_tab",
@@ -173,9 +167,9 @@ add_task(async function group_addon() {
 
   await doTest(async browser => {
     await openPopup("omni test");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([
+    assertAbandonmentTelemetry([
       {
         groups: "addon",
         results: "addon",
@@ -196,13 +190,13 @@ add_task(async function group_general() {
     });
 
     await openPopup("bookmark");
-    await selectRowByURL("https://example.com/bookmark");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([
+    assertAbandonmentTelemetry([
       {
         groups: "heuristic,suggested_index,general",
         results: "search_engine,action,bookmark",
+        n_results: 3,
       },
     ]);
   });
@@ -214,10 +208,9 @@ add_task(async function group_general() {
     await PlacesTestUtils.addVisits("https://example.com/test");
 
     await openPopup("example");
-    await selectRowByURL("https://example.com/test");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([
+    assertAbandonmentTelemetry([
       {
         groups: "heuristic,general",
         results: "search_engine,history",
@@ -237,10 +230,9 @@ add_task(async function group_suggest() {
 
   await doTest(async browser => {
     await openPopup("nonsponsored");
-    await selectRowByURL("https://example.com/nonsponsored");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([
+    assertAbandonmentTelemetry([
       {
         groups: "heuristic,suggest",
         results: "search_engine,suggest_non_sponsor",
@@ -260,10 +252,9 @@ add_task(async function group_about_page() {
 
   await doTest(async browser => {
     await openPopup("about:");
-    await selectRowByURL("about:robots");
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([
+    assertAbandonmentTelemetry([
       {
         groups: "heuristic,about_page,about_page",
         results: "search_engine,history,history",
@@ -282,12 +273,9 @@ add_task(async function group_suggested_index() {
 
   await doTest(async browser => {
     await openPopup("1m to cm");
-    await selectRowByProvider("UnitConversion");
-    await SimpleTest.promiseClipboardChange("100 cm", () => {
-      EventUtils.synthesizeKey("KEY_Enter");
-    });
+    await doBlur();
 
-    assertEngagementTelemetry([
+    assertAbandonmentTelemetry([
       {
         groups: "heuristic,suggested_index",
         results: "search_engine,unit",

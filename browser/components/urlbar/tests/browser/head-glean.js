@@ -25,14 +25,22 @@ async function addTopSites(url) {
   });
 }
 
-function assertGleanTelemetry(expectedExtraList) {
-  const telemetries = Glean.urlbar.engagement.testGetValue() ?? [];
+function assertAbandonmentTelemetry(expectedExtraList) {
+  _assertGleanTelemetry("abandonment", expectedExtraList);
+}
+
+function assertEngagementTelemetry(expectedExtraList) {
+  _assertGleanTelemetry("engagement", expectedExtraList);
+}
+
+function _assertGleanTelemetry(telemetryName, expectedExtraList) {
+  const telemetries = Glean.urlbar[telemetryName].testGetValue() ?? [];
   Assert.equal(telemetries.length, expectedExtraList.length);
 
   for (let i = 0; i < telemetries.length; i++) {
     const telemetry = telemetries[i];
     Assert.equal(telemetry.category, "urlbar");
-    Assert.equal(telemetry.name, "engagement");
+    Assert.equal(telemetry.name, telemetryName);
 
     const expectedExtra = expectedExtraList[i];
     for (const key of Object.keys(expectedExtra)) {
@@ -83,6 +91,12 @@ async function doTest(testFn) {
   await updateTopSites(() => true);
 
   await BrowserTestUtils.withNewTab(gBrowser, testFn);
+}
+
+async function doBlur() {
+  await UrlbarTestUtils.promisePopupClose(window, () => {
+    gURLBar.blur();
+  });
 }
 
 async function doClick() {

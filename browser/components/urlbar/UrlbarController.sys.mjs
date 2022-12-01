@@ -976,10 +976,6 @@ class TelemetryEvent {
     numChars,
     details,
   }) {
-    if (method !== "engagement") {
-      return;
-    }
-
     const browserWindow = this._controller.browserWindow;
     let sap = "urlbar";
     if (details.searchSource === "urlbar-handoff") {
@@ -1008,32 +1004,51 @@ class TelemetryEvent {
     }
     this._previousSearchWordsSet = searchWordsSet;
 
-    const results = queryContext ? queryContext.results : [];
-    const result = results[details.selIndex];
+    const currentResults = queryContext?.results ?? [];
+    const numResults = currentResults.length;
+    const groups = currentResults
+      .map(r => lazy.UrlbarUtils.searchEngagementTelemetryGroup(r))
+      .join(",");
+    const results = currentResults
+      .map(r => lazy.UrlbarUtils.searchEngagementTelemetryType(r))
+      .join(",");
 
-    Glean.urlbar.engagement.record({
-      sap,
-      interaction,
-      n_chars: numChars,
-      n_words: numWords,
-      n_results: results.length,
-      selected_result: lazy.UrlbarUtils.searchEngagementTelemetryType(result),
-      selected_result_subtype: lazy.UrlbarUtils.searchEngagementTelemetrySubtype(
-        result,
-        details.element
-      ),
-      provider: details.provider,
-      engagement_type:
-        details.selType === "help" || details.selType === "dismiss"
-          ? details.selType
-          : action,
-      groups: results
-        .map(r => lazy.UrlbarUtils.searchEngagementTelemetryGroup(r))
-        .join(","),
-      results: results
-        .map(r => lazy.UrlbarUtils.searchEngagementTelemetryType(r))
-        .join(","),
-    });
+    if (method === "engagement") {
+      const selectedResult = currentResults[details.selIndex];
+      Glean.urlbar.engagement.record({
+        sap,
+        interaction,
+        n_chars: numChars,
+        n_words: numWords,
+        n_results: numResults,
+        selected_result: lazy.UrlbarUtils.searchEngagementTelemetryType(
+          selectedResult
+        ),
+        selected_result_subtype: lazy.UrlbarUtils.searchEngagementTelemetrySubtype(
+          selectedResult,
+          details.element
+        ),
+        provider: details.provider,
+        engagement_type:
+          details.selType === "help" || details.selType === "dismiss"
+            ? details.selType
+            : action,
+        groups,
+        results,
+      });
+    } else if (method === "abandonment") {
+      Glean.urlbar.abandonment.record({
+        sap,
+        interaction,
+        n_chars: numChars,
+        n_words: numWords,
+        n_results: numResults,
+        groups,
+        results,
+      });
+    } else {
+      Cu.reportError(`Unknown telemetry event method: ${method}`);
+    }
   }
 
   /**

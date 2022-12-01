@@ -24,7 +24,7 @@ add_task(async function selected_result_autofill_about() {
     await openPopup("about:about");
     await doEnter();
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "autofill_about",
         selected_result_subtype: "",
@@ -46,7 +46,7 @@ add_task(async function selected_result_autofill_adaptive() {
     await openPopup("exa");
     await doEnter();
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "autofill_adaptive",
         selected_result_subtype: "",
@@ -65,7 +65,7 @@ add_task(async function selected_result_autofill_origin() {
     await openPopup("exa");
     await doEnter();
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "autofill_origin",
         selected_result_subtype: "",
@@ -82,7 +82,7 @@ add_task(async function selected_result_autofill_url() {
     await openPopup("https://example.com/test");
     await doEnter();
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "autofill_url",
         selected_result_subtype: "",
@@ -105,7 +105,7 @@ add_task(async function selected_result_bookmark() {
     await selectRowByURL("https://example.com/bookmark");
     await doEnter();
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "bookmark",
         selected_result_subtype: "",
@@ -128,7 +128,7 @@ add_task(async function selected_result_history() {
     await selectRowByURL("https://example.com/test");
     await doEnter();
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "history",
         selected_result_subtype: "",
@@ -151,7 +151,7 @@ add_task(async function selected_result_keyword() {
     await openPopup("keyword test");
     await doEnter();
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "keyword",
         selected_result_subtype: "",
@@ -169,7 +169,7 @@ add_task(async function selected_result_search_engine() {
     await openPopup("x");
     await doEnter();
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "search_engine",
         selected_result_subtype: "",
@@ -193,7 +193,7 @@ add_task(async function selected_result_search_suggest() {
     await selectRowByURL("http://mochi.test:8888/?terms=foofoo");
     await doEnter();
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "search_suggest",
         selected_result_subtype: "",
@@ -221,7 +221,7 @@ add_task(async function selected_result_search_history() {
     await selectRowByURL("http://mochi.test:8888/?terms=foofoo");
     await doEnter();
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "search_history",
         selected_result_subtype: "",
@@ -239,7 +239,7 @@ add_task(async function selected_result_url() {
     await openPopup("https://example.com/");
     await doEnter();
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "url",
         selected_result_subtype: "",
@@ -258,7 +258,7 @@ add_task(async function selected_result_action() {
     doClickSubButton(".urlbarView-quickaction-row[data-key=addons]");
     await onLoad;
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "action",
         selected_result_subtype: "addons",
@@ -278,7 +278,7 @@ add_task(async function selected_result_tab() {
     EventUtils.synthesizeKey("KEY_Enter");
     await BrowserTestUtils.waitForCondition(() => gBrowser.selectedTab === tab);
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "tab",
         selected_result_subtype: "",
@@ -299,7 +299,7 @@ add_task(async function selected_result_remote_tab() {
     await selectRowByProvider("RemoteTabs");
     await doEnter();
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "remote_tab",
         selected_result_subtype: "",
@@ -320,7 +320,7 @@ add_task(async function selected_result_addon() {
     await openPopup("omni test");
     await doEnter();
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "addon",
         selected_result_subtype: "",
@@ -354,7 +354,7 @@ add_task(async function selected_result_tab_to_search() {
     EventUtils.synthesizeKey("KEY_Enter");
     await onComplete;
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "tab_to_search",
         selected_result_subtype: "",
@@ -374,7 +374,7 @@ add_task(async function selected_result_top_site() {
     await selectRowByURL("https://example.com/");
     await doEnter();
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "top_site",
         selected_result_subtype: "",
@@ -397,7 +397,7 @@ add_task(async function selected_result_calc() {
       EventUtils.synthesizeKey("KEY_Enter");
     });
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "calc",
         selected_result_subtype: "",
@@ -422,7 +422,7 @@ add_task(async function selected_result_unit() {
       EventUtils.synthesizeKey("KEY_Enter");
     });
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "unit",
         selected_result_subtype: "",
@@ -443,7 +443,7 @@ add_task(async function selected_result_suggest_sponsor() {
     await selectRowByURL("https://example.com/sponsored");
     await doEnter();
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "suggest_sponsor",
         selected_result_subtype: "",
@@ -464,7 +464,7 @@ add_task(async function selected_result_suggest_non_sponsor() {
     await selectRowByURL("https://example.com/nonsponsored");
     await doEnter();
 
-    assertGleanTelemetry([
+    assertEngagementTelemetry([
       {
         selected_result: "suggest_non_sponsor",
         selected_result_subtype: "",

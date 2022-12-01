@@ -3015,9 +3015,6 @@ export class UrlbarInput {
   }
 
   _on_blur(event) {
-    this.focusedViaMousedown = false;
-    this._handoffSession = undefined;
-
     // We cannot count every blur events after a missed engagement as abandoment
     // because the user may have clicked on some view element that executes
     // a command causing a focus change. For example opening preferences from
@@ -3026,8 +3023,11 @@ export class UrlbarInput {
     // may want to figure out a more robust way to detect abandonment.
     this.controller.engagementEvent.record(event, {
       searchString: this._lastSearchString,
+      searchSource: this._getSearchSource(event),
     });
 
+    this.focusedViaMousedown = false;
+    this._handoffSession = undefined;
     this.removeAttribute("focused");
 
     if (this._autofillPlaceholder && this.window.gBrowser.userTypedValue) {

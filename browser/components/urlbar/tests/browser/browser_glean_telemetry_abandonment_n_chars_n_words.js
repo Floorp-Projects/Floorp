@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test for the following data of engagement telemetry.
+// Test for the following data of abandonment telemetry.
 // - n_chars
 // - n_words
 
@@ -21,9 +21,9 @@ add_task(async function n_chars() {
   for (const input of ["x", "xx", "xx x", "xx x "]) {
     await doTest(async browser => {
       await openPopup(input);
-      await doEnter();
+      await doBlur();
 
-      assertEngagementTelemetry([{ n_chars: input.length }]);
+      assertAbandonmentTelemetry([{ n_chars: input.length }]);
     });
   }
 
@@ -34,9 +34,9 @@ add_task(async function n_chars() {
     }
 
     await openPopup(input);
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([{ n_chars: UrlbarUtils.MAX_TEXT_LENGTH * 2 }]);
+    assertAbandonmentTelemetry([{ n_chars: UrlbarUtils.MAX_TEXT_LENGTH * 2 }]);
   });
 });
 
@@ -44,10 +44,10 @@ add_task(async function n_words() {
   for (const input of ["x", "xx", "xx x", "xx x "]) {
     await doTest(async browser => {
       await openPopup(input);
-      await doEnter();
+      await doBlur();
 
       const splits = input.trim().split(" ");
-      assertEngagementTelemetry([{ n_words: splits.length }]);
+      assertAbandonmentTelemetry([{ n_words: splits.length }]);
     });
   }
 
@@ -59,9 +59,9 @@ add_task(async function n_words() {
     }
 
     await openPopup(input);
-    await doEnter();
+    await doBlur();
 
-    assertEngagementTelemetry([
+    assertAbandonmentTelemetry([
       { n_words: UrlbarUtils.MAX_TEXT_LENGTH / word.length },
     ]);
   });
