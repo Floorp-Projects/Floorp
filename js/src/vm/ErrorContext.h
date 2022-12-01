@@ -177,6 +177,34 @@ class MOZ_STACK_CLASS AutoReportFrontendContext : public OffThreadErrorContext {
   }
 };
 
+class ManualReportFrontendContext : public OffThreadErrorContext {
+  JSContext* cx_;
+#ifdef DEBUG
+  bool handled_ = false;
+#endif
+
+ public:
+  explicit ManualReportFrontendContext(JSContext* cx)
+      : OffThreadErrorContext(), cx_(cx) {
+    setCurrentJSContext(cx_);
+  }
+
+  ~ManualReportFrontendContext() { MOZ_ASSERT(handled_); }
+
+  void ok() {
+#ifdef DEBUG
+    handled_ = true;
+#endif
+  }
+
+  void failure() {
+#ifdef DEBUG
+    handled_ = true;
+#endif
+    convertToRuntimeError(cx_);
+  }
+};
+
 }  // namespace js
 
 #endif /* vm_ErrorContext_h */
