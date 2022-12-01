@@ -4490,7 +4490,8 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   ComputedFlexContainerInfo* containerInfo = CreateOrClearFlexContainerInfo();
 
   FlexLayoutResult flr;
-  if (!GetPrevInFlow()) {
+  const nsIFrame* prevInFlow = GetPrevInFlow();
+  if (!prevInFlow) {
     const LogicalSize tentativeContentBoxSize = aReflowInput.ComputedSize();
     const nscoord tentativeContentBoxMainSize =
         axisTracker.MainComponent(tentativeContentBoxSize);
@@ -4574,7 +4575,6 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
                aReflowInput.AvailableBSize()));
   const nsSize containerSize = tentativeBorderBoxSize.GetPhysicalSize(wm);
 
-  const auto* prevInFlow = static_cast<nsFlexContainerFrame*>(GetPrevInFlow());
   OverflowAreas ocBounds;
   nsReflowStatus ocStatus;
   nscoord sumOfChildrenBlockSize;
@@ -4645,7 +4645,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   if (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE) {
     // If we are the first-in-flow, we want to store data for our next-in-flows,
     // or clear the existing data if it is not needed.
-    if (!GetPrevInFlow()) {
+    if (!prevInFlow) {
       SharedFlexData* data = GetProperty(SharedFlexData::Prop());
       if (!aStatus.IsFullyComplete()) {
         if (!data) {
