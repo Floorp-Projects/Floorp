@@ -106,8 +106,8 @@ SOURCES += [
     'src/google/protobuf/stubs/int128.cc', # port_def conflicts
     'src/google/protobuf/stubs/status.cc', # port_def conflicts
     # 'src/google/protobuf/stubs/statusor.cc', # Unused file. # port_def conflicts
-    'src/google/protobuf/stubs/stringprintf.cc', # port_def conflicts
-    'src/google/protobuf/stubs/time.cc',  # GetCurrentTime conflict in winbase.h
+    # 'src/google/protobuf/stubs/stringprintf.cc', # Unused file # port_def conflicts
+    # 'src/google/protobuf/stubs/time.cc', # Unused file # GetCurrentTime conflict in winbase.h
     'src/google/protobuf/wire_format_lite.cc', # port_def conflicts
 ]
 
