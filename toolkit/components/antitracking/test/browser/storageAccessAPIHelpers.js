@@ -141,12 +141,13 @@ async function callRequestStorageAccess(callback, expectFail) {
     window.location.search != "?disableWaitUntilPermission" &&
     origin != TEST_ANOTHER_3RD_PARTY_ORIGIN
   ) {
+    let protocol = isSecureContext ? "https" : "http";
     // Wait until the permission is visible in parent process to avoid race
     // conditions. We don't need to wait the permission to be visible in content
     // processes since the content process doesn't rely on the permission to
     // know the storage access is updated.
     await waitUntilPermission(
-      "http://example.net/browser/toolkit/components/antitracking/test/browser/page.html",
+      `${protocol}://example.net/browser/toolkit/components/antitracking/test/browser/page.html`,
       "3rdPartyStorage^" + window.origin
     );
   }

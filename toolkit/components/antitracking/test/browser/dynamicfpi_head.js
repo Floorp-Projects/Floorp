@@ -8,7 +8,29 @@
 "use strict";
 
 this.DynamicFPIHelper = {
-  runTest(name, callback, cleanupFunction, extraPrefs, runInPrivateWindow) {
+  getTestPageConfig(runInSecureContext) {
+    if (runInSecureContext) {
+      return {
+        topPage: TEST_TOP_PAGE_HTTPS,
+        thirdPartyPage: TEST_4TH_PARTY_STORAGE_PAGE_HTTPS,
+        partitionKey: "(https,example.net)",
+      };
+    }
+    return {
+      topPage: TEST_TOP_PAGE,
+      thirdPartyPage: TEST_4TH_PARTY_STORAGE_PAGE,
+      partitionKey: "(http,example.net)",
+    };
+  },
+
+  runTest(
+    name,
+    callback,
+    cleanupFunction,
+    extraPrefs,
+    runInPrivateWindow,
+    { runInSecureContext = false } = {}
+  ) {
     add_task(async _ => {
       info(
         "Starting test `" +
@@ -52,8 +74,12 @@ this.DynamicFPIHelper = {
         await TestUtils.topicObserved("browser-delayed-startup-finished");
       }
 
+      const { topPage, thirdPartyPage, partitionKey } = this.getTestPageConfig(
+        runInSecureContext
+      );
+
       info("Creating a new tab");
-      let tab = BrowserTestUtils.addTab(win.gBrowser, TEST_TOP_PAGE);
+      let tab = BrowserTestUtils.addTab(win.gBrowser, topPage);
       win.gBrowser.selectedTab = tab;
 
       let browser = win.gBrowser.getBrowserForTab(tab);
@@ -71,7 +97,7 @@ this.DynamicFPIHelper = {
       );
       is(
         browser.cookieJarSettings.partitionKey,
-        "(http,example.net)",
+        partitionKey,
         "The cookieJarSettings has the correct partitionKey"
       );
 
@@ -80,15 +106,16 @@ this.DynamicFPIHelper = {
         browser,
         [
           {
-            page: TEST_4TH_PARTY_STORAGE_PAGE,
+            page: thirdPartyPage,
             callback: callback.toString(),
+            partitionKey,
           },
         ],
         async obj => {
           await new content.Promise(resolve => {
             let ifr = content.document.createElement("iframe");
             ifr.onload = async _ => {
-              await SpecialPowers.spawn(ifr, [], async _ => {
+              await SpecialPowers.spawn(ifr, [obj], async obj => {
                 is(
                   content.document.nodePrincipal.originAttributes.partitionKey,
                   "",
@@ -97,7 +124,7 @@ this.DynamicFPIHelper = {
                 is(
                   content.document.effectiveStoragePrincipal.originAttributes
                     .partitionKey,
-                  "(http,example.net)",
+                  obj.partitionKey,
                   "We have first-party set on storagePrincipal"
                 );
               });
