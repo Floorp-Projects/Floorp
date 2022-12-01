@@ -2400,7 +2400,8 @@ bool CompilationStencil::instantiateStencils(JSContext* cx,
                                              CompilationInput& input,
                                              const CompilationStencil& stencil,
                                              CompilationGCOutput& gcOutput) {
-  if (!prepareForInstantiate(cx, input.atomCache, stencil, gcOutput)) {
+  AutoReportFrontendContext ec(cx);
+  if (!prepareForInstantiate(&ec, input.atomCache, stencil, gcOutput)) {
     return false;
   }
 
@@ -2694,16 +2695,15 @@ bool CompilationStencil::delazifySelfHostedFunction(
 
 /* static */
 bool CompilationStencil::prepareForInstantiate(
-    JSContext* cx, CompilationAtomCache& atomCache,
+    ErrorContext* ec, CompilationAtomCache& atomCache,
     const CompilationStencil& stencil, CompilationGCOutput& gcOutput) {
   // Reserve the `gcOutput` vectors.
-  AutoReportFrontendContext ec(cx);
-  if (!gcOutput.ensureReserved(&ec, stencil.scriptData.size(),
+  if (!gcOutput.ensureReserved(ec, stencil.scriptData.size(),
                                stencil.scopeData.size())) {
     return false;
   }
 
-  return atomCache.allocate(&ec, stencil.parserAtomData.size());
+  return atomCache.allocate(ec, stencil.parserAtomData.size());
 }
 
 bool CompilationStencil::serializeStencils(JSContext* cx,
