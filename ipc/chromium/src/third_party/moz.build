@@ -34,7 +34,7 @@ UNIFIED_SOURCES += [
     'libevent/poll.c',
     'libevent/select.c',
     'libevent/signal.c',
-    'libevent/strlcpy.c',
+    # 'libevent/strlcpy.c', # Unused file.
 ]
 
 SOURCES += [
