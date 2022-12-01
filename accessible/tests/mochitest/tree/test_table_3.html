@@ -117,19 +117,19 @@ function doTest() {
          },
       ] },
       { ROW: [
-        { CELL: [ { role: TEXT_LEAF, name: "Film Title" } ] },
-        { CELL: [ { role: TEXT_LEAF, name: "Released" } ] },
-        { CELL: [ { role: TEXT_LEAF, name: "Studio" } ] },
-        { CELL: [ { role: TEXT_LEAF, name: "Worldwide Gross" } ] },
-        { CELL: [ { role: TEXT_LEAF, name: "Domestic Gross" } ] },
-        { CELL: [ { role: TEXT_LEAF, name: "Foreign Gross" } ] },
-        { CELL: [ { role: TEXT_LEAF, name: "Budget" } ] },
+        { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Film Title" } ] },
+        { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Released" } ] },
+        { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Studio" } ] },
+        { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Worldwide Gross" } ] },
+        { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Domestic Gross" } ] },
+        { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Foreign Gross" } ] },
+        { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Budget" } ] },
       ] },
       { ROW: [
         { role: CELL },
       ] },
       { ROW: [
-        { CELL: [ { role: TEXT_LEAF, name: "Toy Story 3" } ] },
+        { ROWHEADER: [ { role: TEXT_LEAF, name: "Toy Story 3" } ] },
         { CELL: [
           { role: STATICTEXT, name: "Released" },
           { role: TEXT_LEAF, name: "2010" },
@@ -156,7 +156,7 @@ function doTest() {
         ]},
       ] },
       { ROW: [
-        { CELL: [ { role: TEXT_LEAF, name: "Shrek Forever After" } ] },
+        { ROWHEADER: [ { role: TEXT_LEAF, name: "Shrek Forever After" } ] },
         { CELL: [
           { role: STATICTEXT, name: "Released" },
           { role: TEXT_LEAF, name: "2010" },
