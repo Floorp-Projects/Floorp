@@ -83,7 +83,7 @@ class MatchURLFilters {
         if (["resource", "chrome"].includes(uri.scheme)) {
           port = undefined;
         } else {
-          port = Services.io.getProtocolHandler(uri.scheme).defaultPort;
+          port = Services.io.getDefaultPort(uri.scheme);
         }
       }
 
