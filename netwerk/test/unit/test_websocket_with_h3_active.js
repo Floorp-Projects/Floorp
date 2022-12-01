@@ -24,8 +24,6 @@ add_task(async function setup() {
   await http3_setup_tests("h3");
 });
 
-let WebSocketListener = function() {};
-
 WebSocketListener.prototype = {
   onAcknowledge(aContext, aSize) {},
   onBinaryMessageAvailable(aContext, aMsg) {},

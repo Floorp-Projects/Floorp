@@ -24,7 +24,7 @@ class ASpdySession : public nsAHttpTransaction {
   ASpdySession() = default;
   virtual ~ASpdySession() = default;
 
-  [[nodiscard]] virtual bool AddStream(nsAHttpTransaction*, int32_t, bool,
+  [[nodiscard]] virtual bool AddStream(nsAHttpTransaction*, int32_t,
                                        nsIInterfaceRequestor*) = 0;
   virtual bool CanReuse() = 0;
   virtual bool RoomForMoreStreams() = 0;
@@ -82,7 +82,7 @@ class ASpdySession : public nsAHttpTransaction {
   }
 
   virtual void SetCleanShutdown(bool) = 0;
-  virtual bool CanAcceptWebsocket() = 0;
+  virtual WebSocketSupport GetWebSocketSupport() = 0;
 
   virtual already_AddRefed<mozilla::net::nsHttpConnection> CreateTunnelStream(
       nsAHttpTransaction* aHttpTransaction, nsIInterfaceRequestor* aCallbacks,

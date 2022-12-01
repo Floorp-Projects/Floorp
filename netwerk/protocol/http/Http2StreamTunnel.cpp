@@ -15,7 +15,6 @@
 
 #include "nsHttpHandler.h"
 #include "Http2StreamTunnel.h"
-#include "Http2ConnectTransaction.h"
 #include "nsHttpConnectionInfo.h"
 #include "nsQueryObject.h"
 #include "nsProxyRelease.h"
@@ -35,7 +34,7 @@ bool Http2StreamTunnel::DispatchRelease() {
   return true;
 }
 
-NS_IMPL_ADDREF_INHERITED(Http2StreamTunnel, Http2StreamBase)
+NS_IMPL_ADDREF(Http2StreamTunnel)
 NS_IMETHODIMP_(MozExternalRefCountType)
 Http2StreamTunnel::Release() {
   nsrefcnt count = mRefCnt - 1;
@@ -64,6 +63,12 @@ NS_INTERFACE_MAP_BEGIN(Http2StreamTunnel)
   NS_INTERFACE_MAP_ENTRY(nsISocketTransport)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_INHERITING(Http2StreamTunnel)
+
+Http2StreamTunnel::Http2StreamTunnel(Http2Session* session, int32_t priority,
+                                     uint64_t bcId,
+                                     nsHttpConnectionInfo* aConnectionInfo)
+    : Http2StreamBase(0, session, priority, bcId),
+      mConnectionInfo(aConnectionInfo) {}
 
 Http2StreamTunnel::~Http2StreamTunnel() { ClearTransactionsBlockedOnTunnel(); }
 
@@ -101,7 +106,7 @@ Http2StreamTunnel::GetSecurityCallbacks(
 NS_IMETHODIMP
 Http2StreamTunnel::SetSecurityCallbacks(
     nsIInterfaceRequestor* aSecurityCallbacks) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -153,7 +158,7 @@ Http2StreamTunnel::Close(nsresult aReason) {
 NS_IMETHODIMP
 Http2StreamTunnel::SetEventSink(nsITransportEventSink* aSink,
                                 nsIEventTarget* aEventTarget) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -471,7 +476,7 @@ OutputStreamTunnel::AsyncWait(nsIOutputStreamCallback* callback, uint32_t flags,
   // The following parametr are not used:
   MOZ_ASSERT(!flags);
   MOZ_ASSERT(!amount);
-  MOZ_ASSERT(!target);
+  Unused << target;
 
   RefPtr<OutputStreamTunnel> self(this);
   if (NS_FAILED(mCondition)) {
@@ -595,17 +600,18 @@ InputStreamTunnel::CloseWithStatus(nsresult reason) {
 NS_IMETHODIMP
 InputStreamTunnel::AsyncWait(nsIInputStreamCallback* callback, uint32_t flags,
                              uint32_t amount, nsIEventTarget* target) {
-  LOG(("InputStreamTunnel::AsyncWait [this=%p]\n", this));
+  LOG(("InputStreamTunnel::AsyncWait [this=%p mCondition=%x]\n", this,
+       static_cast<uint32_t>(mCondition)));
 
   // The following parametr are not used:
   MOZ_ASSERT(!flags);
   MOZ_ASSERT(!amount);
-  MOZ_ASSERT(!target);
+  Unused << target;
 
   RefPtr<InputStreamTunnel> self(this);
   if (NS_FAILED(mCondition)) {
     Unused << NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-        "OutputStreamTunnel::CallOnSocketReady",
+        "InputStreamTunnel::CallOnSocketReady",
         [self{std::move(self)}]() { self->OnSocketReady(NS_OK); }));
   } else if (callback) {
     // Inform the proxy connection that the inner connetion wants to
@@ -680,6 +686,59 @@ nsresult InputStreamTunnel::GetSession(Http2Session** aSession) {
 
   session.forget(aSession);
   return NS_OK;
+}
+
+Http2StreamWebSocket::Http2StreamWebSocket(
+    Http2Session* session, int32_t priority, uint64_t bcId,
+    nsHttpConnectionInfo* aConnectionInfo)
+    : Http2StreamTunnel(session, priority, bcId, aConnectionInfo) {
+  LOG(("Http2StreamWebSocket ctor:%p", this));
+}
+
+Http2StreamWebSocket::~Http2StreamWebSocket() {
+  LOG(("Http2StreamWebSocket dtor:%p", this));
+}
+
+nsresult Http2StreamWebSocket::GenerateHeaders(nsCString& aCompressedData,
+                                               uint8_t& firstFrameFlags) {
+  nsHttpRequestHead* head = mTransaction->RequestHead();
+
+  nsAutoCString authorityHeader;
+  nsresult rv = head->GetHeader(nsHttp::Host, authorityHeader);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  RefPtr<Http2Session> session = Session();
+  LOG3(("Http2StreamWebSocket %p Stream ID 0x%X [session=%p] for %s\n", this,
+        mStreamID, session.get(), authorityHeader.get()));
+
+  nsDependentCString scheme(head->IsHTTPS() ? "https" : "http");
+  nsAutoCString path;
+  head->Path(path);
+
+  rv = session->Compressor()->EncodeHeaderBlock(
+      mFlatHttpRequestHeaders, "CONNECT"_ns, path, authorityHeader, scheme,
+      "websocket"_ns, false, aCompressedData);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mRequestBodyLenRemaining = 0x0fffffffffffffffULL;
+
+  // The size of the input headers is approximate
+  uint32_t ratio =
+      aCompressedData.Length() * 100 /
+      (11 + authorityHeader.Length() + mFlatHttpRequestHeaders.Length());
+
+  Telemetry::Accumulate(Telemetry::SPDY_SYN_RATIO, ratio);
+  return NS_OK;
+}
+
+void Http2StreamWebSocket::CloseStream(nsresult aReason) {
+  LOG(("Http2StreamWebSocket::CloseStream this=%p aReason=%x", this,
+       static_cast<uint32_t>(aReason)));
+  if (mTransaction) {
+    mTransaction->Close(aReason);
+    mTransaction = nullptr;
+  }
+  Http2StreamTunnel::CloseStream(aReason);
 }
 
 }  // namespace mozilla::net

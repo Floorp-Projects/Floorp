@@ -35,7 +35,8 @@ async function channelOpenPromise(url, msg) {
   return [status, res];
 }
 
-add_task(async function test_websocket() {
+// h1.1 direct
+async function test_h1_websocket_direct() {
   let wss = new NodeWebSocketServer();
   await wss.start();
   registerCleanupFunction(async () => wss.stop());
@@ -68,52 +69,10 @@ add_task(async function test_websocket() {
 
   Assert.equal(status, Cr.NS_OK);
   await wss.stop();
-});
+}
 
-add_task(async function test_two_clients() {
-  let wss = new NodeWebSocketServer();
-  await wss.start();
-  registerCleanupFunction(async () => wss.stop());
-  Assert.notEqual(wss.port(), null);
-  await wss.registerMessageHandler((data, ws) => {
-    ws.send(data);
-  });
-  let url = `wss://localhost:${wss.port()}`;
-
-  let conn1 = new WebSocketConnection();
-  await conn1.open(url);
-
-  let conn2 = new WebSocketConnection();
-  await conn2.open(url);
-
-  conn1.send("msg1");
-  conn2.send("msg2");
-
-  let mess2 = await conn2.receiveMessages();
-  Assert.deepEqual(mess2, ["msg2"]);
-
-  conn1.send("msg1 again");
-  let mess1 = [];
-  while (mess1.length < 2) {
-    // receive could return only the fist or both replies.
-    mess1 = mess1.concat(await conn1.receiveMessages());
-  }
-  Assert.deepEqual(mess1, ["msg1", "msg1 again"]);
-
-  conn1.close();
-  conn2.close();
-  Assert.deepEqual({ status: Cr.NS_OK }, await conn1.finished());
-  Assert.deepEqual({ status: Cr.NS_OK }, await conn2.finished());
-  await wss.stop();
-});
-
-add_task(async function test_ws_through_https_proxy() {
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
-    Ci.nsIX509CertDB
-  );
-  addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
-  addCertFromFile(certdb, "proxy-ca.pem", "CTu,u,u");
-
+// h1 server with secure h1.1 proxy
+async function test_h1_ws_with_secure_h1_proxy() {
   let proxy = new NodeHTTPSProxyServer();
   await proxy.start();
 
@@ -125,16 +84,16 @@ add_task(async function test_ws_through_https_proxy() {
   });
 
   let url = `wss://localhost:${wss.port()}`;
-  const msg = "test websocket through proxy";
+  const msg = "test h1.1 websocket with h1.1 secure proxy";
   let [status, res] = await channelOpenPromise(url, msg);
   Assert.equal(status, Cr.NS_OK);
   Assert.deepEqual(res, [msg]);
 
   await proxy.stop();
   await wss.stop();
-});
+}
 
-add_task(async function test_websocket_over_h2() {
+async function test_h2_websocket_direct() {
   Services.prefs.setBoolPref("network.http.http2.websockets", true);
   let wss = new NodeWebSocketHttp2Server();
   await wss.start();
@@ -143,9 +102,137 @@ add_task(async function test_websocket_over_h2() {
     ws.send(data);
   });
   let url = `wss://localhost:${wss.port()}`;
-  const msg = "test websocket";
+  const msg = "test h2 websocket h2 direct";
   let [status, res] = await channelOpenPromise(url, msg);
   Assert.equal(status, Cr.NS_OK);
   Assert.deepEqual(res, [msg]);
   await wss.stop();
-});
+}
+
+// ws h1.1 with insecure h1.1 proxy
+async function test_h1_ws_with_h1_insecure_proxy() {
+  Services.prefs.setBoolPref("network.http.http2.websockets", false);
+  let proxy = new NodeHTTPProxyServer();
+  await proxy.start();
+
+  let wss = new NodeWebSocketServer();
+  await wss.start();
+  Assert.notEqual(wss.port(), null);
+
+  await wss.registerMessageHandler((data, ws) => {
+    ws.send(data);
+  });
+  let url = `wss://localhost:${wss.port()}`;
+  const msg = "test h1 websocket with h1 insecure proxy";
+  let [status, res] = await channelOpenPromise(url, msg);
+  Assert.equal(status, Cr.NS_OK);
+  Assert.deepEqual(res, [msg]);
+
+  await proxy.stop();
+  await wss.stop();
+}
+
+// ws h1.1 with h2 proxy
+async function test_h1_ws_with_h2_proxy() {
+  Services.prefs.setBoolPref("network.http.http2.websockets", false);
+
+  let proxy = new NodeHTTP2ProxyServer();
+  await proxy.start();
+
+  let wss = new NodeWebSocketServer();
+  await wss.start();
+  Assert.notEqual(wss.port(), null);
+  await wss.registerMessageHandler((data, ws) => {
+    ws.send(data);
+  });
+
+  let url = `wss://localhost:${wss.port()}`;
+  const msg = "test h1 websocket with h2 proxy";
+  let [status, res] = await channelOpenPromise(url, msg);
+  Assert.equal(status, Cr.NS_OK);
+  Assert.deepEqual(res, [msg]);
+
+  await proxy.stop();
+  await wss.stop();
+}
+
+// ws h2 with insecure h1.1 proxy
+async function test_h2_ws_with_h1_insecure_proxy() {
+  Services.prefs.setBoolPref("network.http.http2.websockets", true);
+
+  let proxy = new NodeHTTPProxyServer();
+  await proxy.start();
+
+  let wss = new NodeWebSocketHttp2Server();
+  await wss.start();
+  Assert.notEqual(wss.port(), null);
+  await wss.registerMessageHandler((data, ws) => {
+    ws.send(data);
+  });
+
+  let url = `wss://localhost:${wss.port()}`;
+  const msg = "test h2 websocket with h1 insecure proxy";
+  let [status, res] = await channelOpenPromise(url, msg);
+  Assert.equal(status, Cr.NS_OK);
+  Assert.deepEqual(res, [msg]);
+
+  await proxy.stop();
+  await wss.stop();
+}
+
+// ws h2 with secure h1 proxy
+async function test_h2_ws_with_h1_secure_proxy() {
+  Services.prefs.setBoolPref("network.http.http2.websockets", true);
+
+  let proxy = new NodeHTTPSProxyServer();
+  await proxy.start();
+
+  let wss = new NodeWebSocketHttp2Server();
+  await wss.start();
+  Assert.notEqual(wss.port(), null);
+  await wss.registerMessageHandler((data, ws) => {
+    ws.send(data);
+  });
+
+  let url = `wss://localhost:${wss.port()}`;
+  const msg = "test h2 websocket with h1 secure proxy";
+  let [status, res] = await channelOpenPromise(url, msg);
+  Assert.equal(status, Cr.NS_OK);
+  Assert.deepEqual(res, [msg]);
+
+  await proxy.stop();
+  await wss.stop();
+}
+
+// ws h2 with secure h2 proxy
+async function test_h2_ws_with_h2_proxy() {
+  Services.prefs.setBoolPref("network.http.http2.websockets", true);
+
+  let proxy = new NodeHTTP2ProxyServer();
+  await proxy.start(); // start and register proxy "filter"
+
+  let wss = new NodeWebSocketServer();
+  await wss.start(); // init port
+  Assert.notEqual(wss.port(), null);
+  await wss.registerMessageHandler((data, ws) => {
+    ws.send(data);
+  });
+
+  let url = `wss://localhost:${wss.port()}`;
+  const msg = "test h2 websocket with h2 proxy";
+  let [status, res] = await channelOpenPromise(url, msg);
+  Assert.equal(status, Cr.NS_OK);
+  Assert.deepEqual(res, [msg]);
+
+  await proxy.stop();
+  await wss.stop();
+}
+
+add_task(test_h1_websocket_direct);
+add_task(test_h2_websocket_direct);
+add_task(test_h1_ws_with_secure_h1_proxy);
+add_task(test_h1_ws_with_h1_insecure_proxy);
+add_task(test_h1_ws_with_h2_proxy);
+add_task(test_h2_ws_with_h1_insecure_proxy);
+add_task(test_h2_ws_with_h1_secure_proxy);
+add_task(test_h2_ws_with_h2_proxy);

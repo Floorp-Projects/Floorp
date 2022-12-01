@@ -1347,12 +1347,39 @@ nsresult nsHttpConnectionMgr::TryDispatchTransaction(
        (caps & NS_HTTP_DISALLOW_SPDY)),
       (!nsHttpHandler::IsHttp3Enabled() || (caps & NS_HTTP_DISALLOW_HTTP3)));
   if (conn) {
-    if (trans->IsWebsocketUpgrade() && !conn->CanAcceptWebsocket()) {
-      // This is a websocket transaction and we already have a h2 connection
-      // that do not support websockets, we should disable h2 for this
-      // transaction.
-      trans->DisableSpdy();
-      caps &= NS_HTTP_DISALLOW_SPDY;
+    LOG(("TryingDispatchTransaction: an active h2 connection exists"));
+    WebSocketSupport wsSupp = conn->GetWebSocketSupport();
+    if (trans->IsWebsocketUpgrade()) {
+      LOG(("TryingDispatchTransaction: this is a websocket upgrade"));
+      if (wsSupp == WebSocketSupport::NO_SUPPORT) {
+        LOG((
+            "TryingDispatchTransaction: no support for websockets over Http2"));
+        // This is a websocket transaction and we already have a h2 connection
+        // that do not support websockets, we should disable h2 for this
+        // transaction.
+        trans->DisableSpdy();
+        caps &= NS_HTTP_DISALLOW_SPDY;
+      } else if (wsSupp == WebSocketSupport::SUPPORTED) {
+        RefPtr<nsHttpConnection> connTCP = do_QueryObject(conn);
+        LOG(("TryingDispatchTransaction: websockets over Http2"));
+
+        // No limit for number of websockets, dispatch transaction to the tunnel
+        RefPtr<nsHttpConnection> connToTunnel;
+        connTCP->CreateTunnelStream(trans, getter_AddRefs(connToTunnel), true);
+        trans->SetConnection(nullptr);
+        connToTunnel->SetInSpdyTunnel();  // tells conn it is already in tunnel
+        trans->SetIsHttp2Websocket(true);
+        nsresult rv = DispatchTransaction(ent, trans, connToTunnel);
+        // need to undo NonSticky bypass for transaction reset to continue
+        // for correct websocket upgrade handling
+        trans->MakeSticky();
+        return rv;
+      } else {
+        // if we aren't sure that websockets are supported yet or we are
+        // already at the connection limit then we queue the transaction
+        LOG(("TryingDispatchTransaction: unsure if websockets over Http2"));
+        return NS_ERROR_NOT_AVAILABLE;
+      }
     } else {
       if ((caps & NS_HTTP_ALLOW_KEEPALIVE) ||
           (caps & NS_HTTP_ALLOW_SPDY_WITHOUT_KEEPALIVE) ||
@@ -1595,11 +1622,6 @@ nsresult nsHttpConnectionMgr::DispatchTransaction(ConnectionEntry* ent,
   return rv;
 }
 
-nsAHttpConnection* nsHttpConnectionMgr::MakeConnectionHandle(
-    HttpConnectionBase* aWrapped) {
-  return new ConnectionHandle(aWrapped);
-}
-
 // Use this method for dispatching nsAHttpTransction's. It can only safely be
 // used upon first use of a connection when NPN has not negotiated SPDY vs
 // HTTP/1 yet as multiplexing onto an existing SPDY session requires a
@@ -1678,7 +1700,7 @@ nsresult nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction* trans) {
       RefPtr<Http2Session> session = pushedStream->Session();
       LOG(("  ProcessNewTransaction %p tied to h2 session push %p\n", trans,
            session.get()));
-      return session->AddStream(trans, trans->Priority(), false, nullptr)
+      return session->AddStream(trans, trans->Priority(), nullptr)
                  ? NS_OK
                  : NS_ERROR_UNEXPECTED;
     }
@@ -1761,6 +1783,8 @@ nsresult nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction* trans) {
         trans->SetConnection(nullptr);
         newTunnel->SetInSpdyTunnel();
         rv = DispatchTransaction(ent, trans, newTunnel);
+        // need to undo the bypass for transaction reset for proxy
+        trans->MakeNonRestartable();
       }
     } else {
       rv = DispatchTransaction(ent, trans, connTCP);

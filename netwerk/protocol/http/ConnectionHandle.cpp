@@ -24,7 +24,8 @@ ConnectionHandle::~ConnectionHandle() {
     if (NS_FAILED(rv)) {
       LOG(
           ("ConnectionHandle::~ConnectionHandle\n"
-           "    failed to reclaim connection\n"));
+           "    failed to reclaim connection %p\n",
+           mConn.get()));
     }
   }
 }

@@ -18,13 +18,11 @@
 #include "AltServiceChild.h"
 #include "CacheControlParser.h"
 #include "CachePushChecker.h"
-#include "Http2ConnectTransaction.h"
 #include "Http2Push.h"
 #include "Http2Session.h"
 #include "Http2Stream.h"
 #include "Http2StreamBase.h"
 #include "Http2StreamTunnel.h"
-#include "Http2StreamWebSocket.h"
 #include "LoadContextInfo.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/Preferences.h"
@@ -457,7 +455,7 @@ uint32_t Http2Session::RegisterStreamID(Http2StreamBase* stream,
 }
 
 bool Http2Session::AddStream(nsAHttpTransaction* aHttpTransaction,
-                             int32_t aPriority, bool aIsWebsocket,
+                             int32_t aPriority,
                              nsIInterfaceRequestor* aCallbacks) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
@@ -506,69 +504,6 @@ bool Http2Session::AddStream(nsAHttpTransaction* aHttpTransaction,
   aHttpTransaction->SetConnection(this);
   aHttpTransaction->OnActivated();
 
-  if (aIsWebsocket) {
-    nsHttpTransaction* trans = aHttpTransaction->QueryHttpTransaction();
-    MOZ_ASSERT(trans, "Websocket without transaction?!");
-    if (!trans) {
-      LOG3(("Http2Session::AddStream %p websocket without transaction. WAT?!",
-            this));
-      return true;
-    }
-
-    if (!mEnableWebsockets) {
-      LOG3(
-          ("Http2Session::AddStream %p Re-queuing websocket as h1 due to "
-           "mEnableWebsockets=false",
-           this));
-      aHttpTransaction->SetConnection(nullptr);
-      aHttpTransaction->DisableSpdy();
-      nsresult rv = gHttpHandler->InitiateTransaction(trans, trans->Priority());
-      if (NS_FAILED(rv)) {
-        LOG3(
-            ("Http2Session::AddStream %p failed to reinitiate websocket "
-             "transaction (0x%08x).",
-             this, static_cast<uint32_t>(rv)));
-      }
-
-      return true;
-    }
-
-    if (!mPeerAllowsWebsockets) {
-      LOG3(("Http2Session::AddStream %p mPeerAllowsWebsockets=false", this));
-      if (!mProcessedWaitingWebsockets) {
-        LOG3(
-            ("Http2Session::AddStream %p waiting for SETTINGS to determine "
-             "fate of websocket",
-             this));
-        mWaitingWebsockets.AppendElement(aHttpTransaction);
-        mWaitingWebsocketCallbacks.AppendElement(aCallbacks);
-      } else {
-        LOG3(
-            ("Http2Session::AddStream %p Re-queuing websocket as h1 due to "
-             "mPeerAllowsWebsockets=false",
-             this));
-        aHttpTransaction->SetConnection(nullptr);
-        aHttpTransaction->DisableSpdy();
-        if (trans) {
-          nsresult rv =
-              gHttpHandler->InitiateTransaction(trans, trans->Priority());
-          if (NS_FAILED(rv)) {
-            LOG3(
-                ("Http2Session::AddStream %p failed to reinitiate websocket "
-                 "transaction (%08x).\n",
-                 this, static_cast<uint32_t>(rv)));
-          }
-        }
-      }
-      return true;
-    }
-
-    LOG3(("Http2Session::AddStream session=%p trans=%p websocket", this,
-          aHttpTransaction));
-    CreateWebsocketStream(aHttpTransaction, aCallbacks);
-    return true;
-  }
-
   CreateStream(aHttpTransaction, aPriority, Http2StreamBaseType::Normal);
   return true;
 }
@@ -583,9 +518,6 @@ void Http2Session::CreateStream(nsAHttpTransaction* aHttpTransaction,
                                   mCurrentTopBrowsingContextId);
       break;
     case Http2StreamBaseType::WebSocket:
-      refStream = new Http2StreamWebSocket(aHttpTransaction, this, aPriority,
-                                           mCurrentTopBrowsingContextId);
-      break;
     case Http2StreamBaseType::Tunnel:
     case Http2StreamBaseType::ServerPush:
       MOZ_RELEASE_ASSERT(false);
@@ -621,9 +553,8 @@ void Http2Session::CreateStream(nsAHttpTransaction* aHttpTransaction,
 already_AddRefed<nsHttpConnection> Http2Session::CreateTunnelStream(
     nsAHttpTransaction* aHttpTransaction, nsIInterfaceRequestor* aCallbacks,
     PRIntervalTime aRtt) {
-  RefPtr<Http2StreamTunnel> refStream = new Http2StreamTunnel(
-      this, nsISupportsPriority::PRIORITY_NORMAL, mCurrentTopBrowsingContextId,
-      aHttpTransaction->ConnectionInfo());
+  RefPtr<Http2StreamTunnel> refStream = CreateTunnelStreamFromConnInfo(
+      this, mCurrentTopBrowsingContextId, aHttpTransaction->ConnectionInfo());
 
   RefPtr<nsHttpConnection> newConn =
       refStream->CreateHttpConnection(aHttpTransaction, aCallbacks, aRtt);
@@ -827,8 +758,7 @@ void Http2Session::IncrementConcurrent(Http2StreamBase* stream) {
              "Do not activate pushed streams");
 
   nsAHttpTransaction* trans = stream->Transaction();
-  if (!trans || !trans->IsNullTransaction() ||
-      trans->QueryHttp2ConnectTransaction()) {
+  if (!trans || !trans->IsNullTransaction()) {
     MOZ_ASSERT(!stream->CountAsActive());
     stream->SetCountAsActive(true);
     ++mConcurrent;
@@ -1233,6 +1163,22 @@ bool Http2Session::VerifyStream(Http2StreamBase* aStream,
 #endif  // DEBUG
 }
 
+// static
+Http2StreamTunnel* Http2Session::CreateTunnelStreamFromConnInfo(
+    Http2Session* session, uint64_t bcId, nsHttpConnectionInfo* info) {
+  MOZ_ASSERT(info);
+  MOZ_ASSERT(session);
+  if (info->UsingHttpProxy() && info->UsingConnect()) {
+    LOG(("Http2Session creating Http2StreamTunnel"));
+    return new Http2StreamTunnel(session, nsISupportsPriority::PRIORITY_NORMAL,
+                                 bcId, info);
+  }
+  MOZ_ASSERT(session->GetWebSocketSupport() == WebSocketSupport::SUPPORTED);
+  LOG(("Http2Session creating Http2StreamWebSocket"));
+  return new Http2StreamWebSocket(session, nsISupportsPriority::PRIORITY_NORMAL,
+                                  bcId, info);
+}
+
 void Http2Session::CleanupStream(Http2StreamBase* aStream, nsresult aResult,
                                  errorType aResetCode) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
@@ -1310,6 +1256,7 @@ void Http2Session::CleanupStream(Http2StreamBase* aStream, nsresult aResult,
   // delete the Http2StreamBase and drop the reference to
   // its transaction
   mStreamTransactionHash.Remove(aStream->Transaction());
+  mTunnelStreams.RemoveElement(aStream);
 
   if (mShouldGoAway && !mStreamTransactionHash.Count()) Close(NS_OK);
 
@@ -1763,6 +1710,11 @@ nsresult Http2Session::RecvSettings(Http2Session* self) {
           LOG3(("Peer tried to re-disable extended CONNECT"));
           return self->SessionError(PROTOCOL_ERROR);
         }
+        // trigger a queued websockets transaction -- enabled or not
+        LOG3(("Http2Sesssion::RecvSettings triggering queued websocket"));
+        RefPtr<nsHttpConnectionInfo> ci;
+        self->GetConnectionInfo(getter_AddRefs(ci));
+        gHttpHandler->ConnMgr()->ProcessPendingQ(ci);
       } break;
 
       default:
@@ -1780,7 +1732,7 @@ nsresult Http2Session::RecvSettings(Http2Session* self) {
   }
 
   if (!self->mProcessedWaitingWebsockets) {
-    self->ProcessWaitingWebsockets();
+    self->mProcessedWaitingWebsockets = true;
   }
 
   return NS_OK;
@@ -3769,37 +3721,8 @@ void Http2Session::Close(nsresult aReason) {
 
   mStreamIDHash.Clear();
   mStreamTransactionHash.Clear();
-
-  // If we have any websocket transactions waiting for settings frame,
-  // reinitiate them. This can happend if we close a h2 connection before the
-  // settings frame is received.
-  if (mWaitingWebsockets.Length()) {
-    MOZ_ASSERT(!mProcessedWaitingWebsockets);
-    MOZ_ASSERT(mWaitingWebsockets.Length() ==
-               mWaitingWebsocketCallbacks.Length());
-
-    mProcessedWaitingWebsockets = true;
-    for (size_t i = 0; i < mWaitingWebsockets.Length(); ++i) {
-      RefPtr<nsAHttpTransaction> httpTransaction = mWaitingWebsockets[i];
-      LOG3(("Http2Session::Close %p Re-queuing websocket.", this));
-      httpTransaction->SetConnection(nullptr);
-      nsHttpTransaction* trans = httpTransaction->QueryHttpTransaction();
-      if (trans) {
-        nsresult rv =
-            gHttpHandler->InitiateTransaction(trans, trans->Priority());
-        if (NS_FAILED(rv)) {
-          LOG3(
-              ("Http2Session::Close %p failed to reinitiate websocket "
-               "transaction (%08x).\n",
-               this, static_cast<uint32_t>(rv)));
-        }
-      } else {
-        LOG3(("Http2Session::Close %p missing transaction?!", this));
-      }
-    }
-    mWaitingWebsockets.Clear();
-    mWaitingWebsocketCallbacks.Clear();
-  }
+  mTunnelStreams.Clear();
+  mProcessedWaitingWebsockets = true;
 
   uint32_t goAwayReason;
   if (mGoAwayReason != NO_HTTP_ERROR) {
@@ -4512,83 +4435,24 @@ void Http2Session::SetCleanShutdown(bool aCleanShutdown) {
   mCleanShutdown = aCleanShutdown;
 }
 
-void Http2Session::CreateWebsocketStream(
-    nsAHttpTransaction* aOriginalTransaction,
-    nsIInterfaceRequestor* aCallbacks) {
-  LOG(("Http2Session::CreateWebsocketStream %p %p\n", this,
-       aOriginalTransaction));
-
-  nsHttpTransaction* trans = aOriginalTransaction->QueryHttpTransaction();
-  MOZ_ASSERT(trans);
-
-  nsHttpConnectionInfo* ci = aOriginalTransaction->ConnectionInfo();
-  MOZ_ASSERT(ci);
-
-  RefPtr<nsHttpConnectionInfo> clone(ci->Clone());
-  RefPtr<Http2ConnectTransaction> connectTrans = new Http2ConnectTransaction(
-      clone, aCallbacks, trans->Caps(), trans, this, true);
-
-  CreateStream(connectTrans, nsISupportsPriority::PRIORITY_NORMAL,
-               Http2StreamBaseType::WebSocket);
-}
-
-void Http2Session::ProcessWaitingWebsockets() {
-  MOZ_ASSERT(!mProcessedWaitingWebsockets);
-  MOZ_ASSERT(mWaitingWebsockets.Length() ==
-             mWaitingWebsocketCallbacks.Length());
-
-  mProcessedWaitingWebsockets = true;
-
-  if (!mWaitingWebsockets.Length()) {
-    // Nothing to do here
-    LOG3(("Http2Session::ProcessWaitingWebsockets %p nothing to do", this));
-    return;
-  }
-
-  for (size_t i = 0; i < mWaitingWebsockets.Length(); ++i) {
-    RefPtr<nsAHttpTransaction> httpTransaction = mWaitingWebsockets[i];
-    nsCOMPtr<nsIInterfaceRequestor> callbacks = mWaitingWebsocketCallbacks[i];
-
-    if (mPeerAllowsWebsockets) {
-      LOG3(
-          ("Http2Session::ProcessWaitingWebsockets session=%p trans=%p "
-           "websocket",
-           this, httpTransaction.get()));
-      CreateWebsocketStream(httpTransaction, callbacks);
-    } else {
-      LOG3(
-          ("Http2Session::ProcessWaitingWebsockets %p Re-queuing websocket as "
-           "h1 due to mPeerAllowsWebsockets=false",
-           this));
-      httpTransaction->SetConnection(nullptr);
-      httpTransaction->DisableSpdy();
-      nsHttpTransaction* trans = httpTransaction->QueryHttpTransaction();
-      if (trans) {
-        nsresult rv =
-            gHttpHandler->InitiateTransaction(trans, trans->Priority());
-        if (NS_FAILED(rv)) {
-          LOG3(
-              ("Http2Session::ProcessWaitingWebsockets %p failed to reinitiate "
-               "websocket transaction (%08x).\n",
-               this, static_cast<uint32_t>(rv)));
-        }
-      } else {
-        LOG3(("Http2Session::ProcessWaitingWebsockets %p missing transaction?!",
-              this));
-      }
-    }
-  }
-
-  mWaitingWebsockets.Clear();
-  mWaitingWebsocketCallbacks.Clear();
-}
-
-bool Http2Session::CanAcceptWebsocket() {
-  LOG3(("Http2Session::CanAcceptWebsocket %p enable=%d allow=%d processed=%d",
+WebSocketSupport Http2Session::GetWebSocketSupport() {
+  LOG3(("Http2Session::GetWebSocketSupport %p enable=%d allow=%d processed=%d",
         this, mEnableWebsockets, mPeerAllowsWebsockets,
         mProcessedWaitingWebsockets));
-  return mEnableWebsockets &&
-         (mPeerAllowsWebsockets || !mProcessedWaitingWebsockets);
+
+  if (!mEnableWebsockets) {
+    return WebSocketSupport::NO_SUPPORT;
+  }
+
+  if (mPeerAllowsWebsockets) {
+    return WebSocketSupport::SUPPORTED;
+  }
+
+  if (!mProcessedWaitingWebsockets) {
+    return WebSocketSupport::UNSURE;
+  }
+
+  return WebSocketSupport::NO_SUPPORT;
 }
 
 PRIntervalTime Http2Session::LastWriteTime() {

@@ -956,8 +956,6 @@ add_task(async function testAllRecordsInHttp3ExcludedList() {
   await trrServer.stop();
 });
 
-let WebSocketListener = function() {};
-
 WebSocketListener.prototype = {
   onAcknowledge(aContext, aSize) {},
   onBinaryMessageAvailable(aContext, aMsg) {},

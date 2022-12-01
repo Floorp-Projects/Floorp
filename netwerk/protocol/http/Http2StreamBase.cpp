@@ -19,7 +19,6 @@
 #include "Http2Session.h"
 #include "Http2StreamBase.h"
 #include "Http2Stream.h"
-#include "Http2ConnectTransaction.h"
 
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Telemetry.h"
