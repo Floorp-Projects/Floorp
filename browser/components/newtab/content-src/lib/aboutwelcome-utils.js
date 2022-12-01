@@ -34,6 +34,13 @@ export const AboutWelcomeUtils = {
     };
     window.AWSendEventTelemetry?.(ping);
   },
+  sendDismissTelemetry(messageId, elementId) {
+    // Don't send DISMISS telemetry in spotlight modals since they already send
+    // their own equivalent telemetry.
+    if (page !== "spotlight") {
+      this.sendActionTelemetry(messageId, elementId, "DISMISS");
+    }
+  },
   async fetchFlowParams(metricsFlowUri) {
     let flowParams;
     try {

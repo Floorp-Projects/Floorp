@@ -66,6 +66,14 @@ const AboutWelcomeUtils = {
     (_window$AWSendEventTe2 = (_window2 = window).AWSendEventTelemetry) === null || _window$AWSendEventTe2 === void 0 ? void 0 : _window$AWSendEventTe2.call(_window2, ping);
   },
 
+  sendDismissTelemetry(messageId, elementId) {
+    // Don't send DISMISS telemetry in spotlight modals since they already send
+    // their own equivalent telemetry.
+    if (page !== "spotlight") {
+      this.sendActionTelemetry(messageId, elementId, "DISMISS");
+    }
+  },
+
   async fetchFlowParams(metricsFlowUri) {
     let flowParams;
 
@@ -454,7 +462,14 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     } // Send telemetry before waiting on actions
 
 
-    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, event.currentTarget.value, event.name);
+    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, value, event.name); // Send additional telemetry if a messaging surface like feature callout is
+    // dismissed via the dismiss button. Other causes of dismissal will be
+    // handled separately by the messaging surface's own code.
+
+    if (value === "dismiss_button" && !event.name) {
+      _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendDismissTelemetry(props.messageId, value);
+    }
+
     let {
       action
     } = targetContent;

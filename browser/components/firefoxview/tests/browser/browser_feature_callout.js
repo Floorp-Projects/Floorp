@@ -6,10 +6,6 @@ const { MessageLoaderUtils } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );
 
-const { AboutWelcomeParent } = ChromeUtils.import(
-  "resource:///actors/AboutWelcomeParent.jsm"
-);
-
 const { BuiltInThemes } = ChromeUtils.importESModule(
   "resource:///modules/BuiltInThemes.sys.mjs"
 );
@@ -137,6 +133,7 @@ add_task(async function feature_callout_closes_on_dismiss() {
     "FIREFOX_VIEW_FEATURE_TOUR_2_NO_CWS"
   );
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
+  const spy = new TelemetrySpy(sandbox);
 
   await BrowserTestUtils.withNewTab(
     {
@@ -163,6 +160,24 @@ add_task(async function feature_callout_closes_on_dismiss() {
         tourComplete,
         `Tour is recorded as complete in ${featureTourPref} preference value`
       );
+
+      // Test that appropriate telemetry is sent
+      spy.assertCalledWith({
+        event: "CLICK_BUTTON",
+        event_context: {
+          source: "dismiss_button",
+          page: document.location.href,
+        },
+        message_id: sinon.match("FEATURE_CALLOUT_2"),
+      });
+      spy.assertCalledWith({
+        event: "DISMISS",
+        event_context: {
+          source: "dismiss_button",
+          page: document.location.href,
+        },
+        message_id: sinon.match("FEATURE_CALLOUT_2"),
+      });
     }
   );
   sandbox.restore();
@@ -366,10 +381,8 @@ add_task(async function feature_callout_dismiss_on_page_click() {
   const screenId = "FIREFOX_VIEW_COLORWAYS_REMINDER";
   const testMessage = getCalloutMessageById(screenId);
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
+  const spy = new TelemetrySpy(sandbox);
 
-  const spy = sandbox
-    .spy(AboutWelcomeParent.prototype, "onContentMessage")
-    .withArgs("AWPage:TELEMETRY_EVENT");
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -386,27 +399,30 @@ add_task(async function feature_callout_dismiss_on_page_click() {
       await waitForCalloutRemoved(document);
 
       // Test that appropriate telemetry is sent
-      let calledWith = spy.calledWith(
-        "AWPage:TELEMETRY_EVENT",
-        {
-          event: "PAGE_EVENT",
-          event_context: {
-            action: "DISMISS",
-            reason: "CLICK",
-            source: sinon.match("#colorways-button"),
-            page: document.location.href,
-          },
-          message_id: screenId,
+      spy.assertCalledWith({
+        event: "PAGE_EVENT",
+        event_context: {
+          action: "DISMISS",
+          reason: "CLICK",
+          source: sinon.match("#colorways-button"),
+          page: document.location.href,
         },
-        document
-      );
-      if (calledWith) {
-        ok(true, "Expected telemetry sent");
-      } else if (spy.called) {
-        ok(false, "Wrong telemetry sent: " + JSON.stringify(spy.lastCall.args));
-      } else {
-        ok(false, "No telemetry sent");
-      }
+        message_id: screenId,
+      });
+      spy.assertCalledWith({
+        event: "DISMISS",
+        event_context: {
+          source: sinon
+            .match("PAGE_EVENT:")
+            .and(sinon.match("#colorways-button")),
+          page: document.location.href,
+        },
+        message_id: screenId,
+      });
+
+      browser.tabDialogBox
+        ?.getTabDialogManager()
+        .dialogs.forEach(dialog => dialog.close());
     }
   );
   Services.prefs.clearUserPref("browser.firefox-view.view-count");
